@@ -113,7 +113,7 @@ describe('Canvas calculated column authoring', () => {
       request: { nodeId: source.id, kind: 'string-literal', alias: 'channel', value: 'web' },
     });
 
-    expect(result).toEqual({ outcome: 'rejected' });
+    expect(result).toEqual({ outcome: 'rejected', reason: 'invalid_target' });
     expect(initial.localNodeCatalog?.[source.id]).toBe(source);
     expect(source.metadata).not.toHaveProperty('transformAuthoring');
   });
@@ -214,7 +214,7 @@ describe('Canvas calculated column authoring', () => {
       },
     });
 
-    expect(result).toEqual({ outcome: 'rejected' });
+    expect(result).toEqual({ outcome: 'rejected', reason: 'invalid_reference' });
     expect(initial.localNodeCatalog?.[transform.id]).toBe(transform);
     expect(inspect(transform).outputs).toHaveLength(2);
   });
@@ -261,7 +261,7 @@ describe('Canvas calculated column authoring', () => {
           capabilityId: upper.capabilityId,
         },
       })
-    ).toEqual({ outcome: 'rejected' });
+    ).toEqual({ outcome: 'rejected', reason: 'invalid_reference' });
 
     const second = applyCanvasCalculatedColumn({
       draftSession: first.draftSession,
@@ -390,7 +390,7 @@ describe('Canvas calculated column authoring', () => {
       request: { nodeId: transform.id, kind: 'string-literal', alias: 'customer', value: 'x' },
     });
 
-    expect(result).toEqual({ outcome: 'rejected' });
+    expect(result).toEqual({ outcome: 'rejected', reason: 'duplicate_alias' });
     expect(initial.localNodeCatalog?.[transform.id]).toBe(transform);
   });
 
@@ -417,8 +417,8 @@ describe('Canvas calculated column authoring', () => {
       },
     });
 
-    expect(timestamp).toEqual({ outcome: 'rejected' });
-    expect(rowNumber).toEqual({ outcome: 'rejected' });
+    expect(timestamp).toEqual({ outcome: 'rejected', reason: 'invalid_target' });
+    expect(rowNumber).toEqual({ outcome: 'rejected', reason: 'invalid_target' });
     expect(initial.localNodeCatalog?.[source.id]).toBe(source);
   });
 
@@ -431,27 +431,33 @@ describe('Canvas calculated column authoring', () => {
       [transform.id, transform],
     ]);
 
-    for (const request of [
-      {
-        nodeId: transform.id,
-        kind: 'field-ref' as const,
-        alias: 'x'.repeat(64),
-        inputFieldId: 'output:customer',
-      },
-      {
-        nodeId: transform.id,
-        kind: 'string-literal' as const,
-        alias: 'channel',
-        value: '😀'.repeat(1025),
-      },
-    ]) {
+    for (const [request, reason] of [
+      [
+        {
+          nodeId: transform.id,
+          kind: 'field-ref' as const,
+          alias: 'x'.repeat(64),
+          inputFieldId: 'output:customer',
+        },
+        'invalid_alias',
+      ],
+      [
+        {
+          nodeId: transform.id,
+          kind: 'string-literal' as const,
+          alias: 'channel',
+          value: '😀'.repeat(1025),
+        },
+        'invalid_literal',
+      ],
+    ] as const) {
       expect(
         applyCanvasCalculatedColumn({
           draftSession: initial,
           canonicalNodesById: context,
           request,
         })
-      ).toEqual({ outcome: 'rejected' });
+      ).toEqual({ outcome: 'rejected', reason });
       expect(initial.localNodeCatalog?.[transform.id]).toBe(transform);
     }
   });

@@ -139,6 +139,15 @@ export function canonicalizeDvtSubstraitProjectionDataType(dataType: unknown): s
     'unknown'
   );
 }
+export type DvtSubstraitProjectionAuthoringRejection =
+  | 'invalid_alias'
+  | 'duplicate_alias'
+  | 'invalid_literal'
+  | 'unsupported_capability'
+  | 'invalid_reference'
+  | 'invalid_target'
+  | 'invalid_document';
+
 export type DvtSubstraitProjectionField = Readonly<{
   name: string;
   dataType: string;

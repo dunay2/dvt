@@ -11,6 +11,7 @@ import {
   encodeDvtSubstraitProjectionDocument,
   resolveDvtSubstraitProjectionEntry,
   type DvtSubstraitProjection,
+  type DvtSubstraitProjectionAuthoringRejection,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
@@ -44,7 +45,7 @@ export type CanvasCalculatedColumnRequest =
 
 export type CanvasCalculatedColumnResult =
   | Readonly<{ outcome: 'applied'; draftSession: CanvasDraftSession; createdFieldId: string }>
-  | Readonly<{ outcome: 'rejected' }>;
+  | Readonly<{ outcome: 'rejected'; reason: DvtSubstraitProjectionAuthoringRejection }>;
 
 function nodeCatalog(
   draftSession: CanvasDraftSession,
@@ -108,19 +109,23 @@ function createOutput(args: {
   );
 }
 
+type CanvasCalculatedColumnTransformResult =
+  | Readonly<{ outcome: 'applied'; node: CanonicalNode; createdFieldId: string }>
+  | Readonly<{ outcome: 'rejected'; reason: DvtSubstraitProjectionAuthoringRejection }>;
+
 function applyToTransform(args: {
   target: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: CanvasDraftSession['workingSet']['visibleEdges'];
   request: CanvasCalculatedColumnRequest;
-}): Readonly<{ node: CanonicalNode; createdFieldId: string }> | null {
+}): CanvasCalculatedColumnTransformResult {
   const metadata = createDvtNodeAuthoringMetadata(args.target);
   if (
     metadata?.kind !== 'transform' ||
     metadata.mode !== 'substrait' ||
     metadata.shape !== 'projection'
   ) {
-    return null;
+    return { outcome: 'rejected', reason: 'invalid_target' };
   }
   const draft = { plan: metadata.plan, sidecar: metadata.sidecar };
   const projection = resolveDvtSubstraitProjectionEntry({
@@ -129,10 +134,11 @@ function applyToTransform(args: {
     edges: args.edges,
     draft,
   });
-  if (projection == null) return null;
+  if (projection == null) return { outcome: 'rejected', reason: 'invalid_reference' };
   const creation = createOutput({ request: args.request, projection, draft });
-  if (creation.outcome !== 'applied') return null;
+  if (creation.outcome === 'rejected') return creation;
   return {
+    outcome: 'applied',
     node: applyDvtSubstraitSemanticDocument(
       args.target,
       encodeDvtSubstraitProjectionDocument(creation.draft)
@@ -149,24 +155,23 @@ export function applyCanvasCalculatedColumn(args: {
   try {
     const catalog = nodeCatalog(args.draftSession, args.canonicalNodesById);
     const target = catalog.get(args.request.nodeId);
-    if (target == null) return { outcome: 'rejected' };
-    const update =
-      target.kind === 'dvt:transform'
-        ? applyToTransform({
-            target,
-            nodes: [...catalog.values()],
-            edges: args.draftSession.workingSet.visibleEdges,
-            request: args.request,
-          })
-        : null;
-    return update == null
-      ? { outcome: 'rejected' }
+    if (target == null || target.kind !== 'dvt:transform') {
+      return { outcome: 'rejected', reason: 'invalid_target' };
+    }
+    const update = applyToTransform({
+      target,
+      nodes: [...catalog.values()],
+      edges: args.draftSession.workingSet.visibleEdges,
+      request: args.request,
+    });
+    return update.outcome === 'rejected'
+      ? update
       : {
           outcome: 'applied',
           draftSession: canvasDraftSession.workingSet.upsertNode(args.draftSession, update.node),
           createdFieldId: update.createdFieldId,
         };
   } catch {
-    return { outcome: 'rejected' };
+    return { outcome: 'rejected', reason: 'invalid_document' };
   }
 }

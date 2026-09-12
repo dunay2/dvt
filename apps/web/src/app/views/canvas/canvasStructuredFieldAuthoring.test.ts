@@ -127,6 +127,7 @@ describe('ConfigureCanvasDvtNode structured-field command', () => {
     });
     expect(created?.fieldId).toMatch(OPAQUE_FIELD_ID);
     expect(created?.fieldId).not.toContain('identity');
+    expect(result.createdFieldId).toBe(created?.fieldId);
   });
 
   it('rejects an unsupported node without mutating the session', () => {
@@ -143,7 +144,7 @@ describe('ConfigureCanvasDvtNode structured-field command', () => {
           parentName: 'identity',
         },
       })
-    ).toEqual({ outcome: 'rejected' });
+    ).toEqual({ outcome: 'rejected', reason: 'invalid_target' });
     expect(draftSession.localNodeCatalog?.[target.id]).toBe(target);
   });
 
