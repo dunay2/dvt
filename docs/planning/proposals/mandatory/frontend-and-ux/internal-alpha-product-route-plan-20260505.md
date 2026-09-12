@@ -80,9 +80,9 @@ It did not cover:
 | Surface                   | Evidence role                         | Rule                                                                                                        |
 | ------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | This plan                 | Accepted route-proof record           | Records the closed `F-27` route model and alpha closure prerequisites.                                      |
-| F-27 closeout             | Closure authority                     | Records that the parent alpha-full gate is closed with no remaining blockers.                              |
+| F-27 closeout             | Closure authority                     | Records that the parent alpha-full gate is closed with no remaining blockers.                               |
 | GitHub Issues             | Executable task lifecycle             | Owns any follow-up implementation status, ownership, blockers, evidence, and closure.                       |
-| Planning DB               | Architecture/mechanization governance | Owns architecture, capabilities, relations, command/query rails, and governed mechanization.               |
+| Planning DB               | Architecture/mechanization governance | Owns architecture, capabilities, relations, command/query rails, and governed mechanization.                |
 | Internal alpha review     | Route review and gap evidence         | Records the route stages and proof posture that led to closure.                                             |
 | Architecture view         | Route boundary lens                   | Explains route, rail, state, evidence, and risk boundaries without creating a backlog.                      |
 | Critique v3               | Accepted intake history               | Records source-grounded findings absorbed into the closed route proof.                                      |
@@ -102,8 +102,8 @@ command or query rail.
 | `ListWorkspaceFiles`                | query   | Operational evidence read models     | `WorkspaceFileTree`                    | Code tab           |
 | `GetWorkspaceFileContent`           | query   | Operational evidence read models     | `WorkspaceFileContent`                 | Code tab           |
 | `SaveWorkspaceFileContent`          | command | Project workspace I/O                | `WorkspaceFileContent` aggregate       | Code tab           |
-| `ObservePlanRunReadiness`           | query   | Runtime admission and plan readiness | `PlanRunReadinessReadModel`             | Plan/run readiness |
-| `MapRouteRecoveryState`             | query   | Web route presentation               | `RouteRecoveryState` read model         | Recovery states    |
+| `ObservePlanRunReadiness`           | query   | Runtime admission and plan readiness | `PlanRunReadinessReadModel`            | Plan/run readiness |
+| `MapRouteRecoveryState`             | query   | Web route presentation               | `RouteRecoveryState` read model        | Recovery states    |
 
 These rails are retained as the published language of the accepted route proof.
 New implementation work must reuse current rails or update the governed rail
@@ -111,26 +111,26 @@ catalog before code; this closed plan does not create new executable tasks.
 
 ## Fowler Opportunity Matrix
 
-| Opportunity          | Route risk                                                       | Required correction                                                   |
-| -------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Boundary drift       | Child slices can become route authority.                         | Keep route proof bounded and child behavior in child owners.          |
-| Duplicate semantics  | Recovery and readiness copy can diverge by stage.                | Keep one source-owned recovery/readiness vocabulary.                  |
-| Test-only confidence | Cypress can prove Code while startup or plan/run stays unproven. | Retain the route-level fixture matrix as closure evidence.            |
-| Documentation drift  | Historical review and accepted closure can disagree.             | Treat the closeout as lifecycle truth and this plan as accepted proof.|
-| Stage saturation     | One route review can absorb too much child detail.               | Child slices keep depth; this plan preserves only route proof.        |
+| Opportunity          | Route risk                                                       | Required correction                                                    |
+| -------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Boundary drift       | Child slices can become route authority.                         | Keep route proof bounded and child behavior in child owners.           |
+| Duplicate semantics  | Recovery and readiness copy can diverge by stage.                | Keep one source-owned recovery/readiness vocabulary.                   |
+| Test-only confidence | Cypress can prove Code while startup or plan/run stays unproven. | Retain the route-level fixture matrix as closure evidence.             |
+| Documentation drift  | Historical review and accepted closure can disagree.             | Treat the closeout as lifecycle truth and this plan as accepted proof. |
+| Stage saturation     | One route review can absorb too much child detail.               | Child slices keep depth; this plan preserves only route proof.         |
 
 ## Closed Child-Slice Requirements
 
-| Stage              | Proof owner / dependency                              | Minimum closure evidence                                                                                                              |
-| ------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Startup gate       | Web shell with runtime readiness input                | Stable startup terminal and blocker states plus browser proof.                                                                        |
-| Workspace context  | Workspace context with protected runtime scope input  | Tenant, project, and environment visible and fail-closed.                                                                             |
-| Canvas             | Canvas with protected draft input                     | Draggable graph, draft retry/recovery, and no local persistence authority.                                                            |
-| Code tab           | Workspace-files component plus ADR-0060               | Tree, preview, revision-guarded synchronization, conflict, empty, unavailable, unauthorized, not-found, and filesystem safety proofs. |
-| Plan/run readiness | Frontend plus runtime/planner readiness inputs        | Distinct copy for integrity, backpressure, capability, adapter, and authorization blockers.                                           |
-| Recovery states    | Web route presentation                                | Source-owned vocabulary and tests across startup, Canvas, Code, and plan/run.                                                         |
-| Alpha cadence      | Product / Architecture                                | Tester audience, duration, entry date, exit owner, and extension rules.                                                               |
-| Risk triage        | Architecture / Docs                                   | Route-stage triage of `docs/risk-register/quality/**` with inclusion/exclusion rationale.                                             |
+| Stage              | Proof owner / dependency                             | Minimum closure evidence                                                                                                              |
+| ------------------ | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Startup gate       | Web shell with runtime readiness input               | Stable startup terminal and blocker states plus browser proof.                                                                        |
+| Workspace context  | Workspace context with protected runtime scope input | Tenant, project, and environment visible and fail-closed.                                                                             |
+| Canvas             | Canvas with protected draft input                    | Draggable graph, draft retry/recovery, and no local persistence authority.                                                            |
+| Code tab           | Workspace-files component plus ADR-0060              | Tree, preview, revision-guarded synchronization, conflict, empty, unavailable, unauthorized, not-found, and filesystem safety proofs. |
+| Plan/run readiness | Frontend plus runtime/planner readiness inputs       | Distinct copy for integrity, backpressure, capability, adapter, and authorization blockers.                                           |
+| Recovery states    | Web route presentation                               | Source-owned vocabulary and tests across startup, Canvas, Code, and plan/run.                                                         |
+| Alpha cadence      | Product / Architecture                               | Tester audience, duration, entry date, exit owner, and extension rules.                                                               |
+| Risk triage        | Architecture / Docs                                  | Route-stage triage of `docs/risk-register/quality/**` with inclusion/exclusion rationale.                                             |
 
 ## Historical Implementation Order
 

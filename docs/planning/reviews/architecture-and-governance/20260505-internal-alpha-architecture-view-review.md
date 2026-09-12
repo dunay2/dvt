@@ -104,16 +104,16 @@ is not a current task queue.
 
 ## Boundary Map
 
-| Boundary          | Owning source or rail                                      | Architecture failure if missing                                 |
-| ----------------- | ---------------------------------------------------------- | --------------------------------------------------------------- |
-| Startup readiness | `ObserveAppBootstrapRouteReadiness`                        | First load can look broken, blocked, or complete without proof. |
-| Workspace context | `ObserveWorkspaceContext`                                  | Tenant, project, and environment can become implicit UI state.  |
-| Canvas draft      | `GetWorkspaceGraphDraft`, `SaveWorkspaceGraphDraft`        | Graph state can be treated as local product authority.          |
-| Code files        | `ListWorkspaceFiles`, `GetWorkspaceFileContent`            | File reads can drift from authorization and filesystem policy.  |
-| Plan/run posture  | `ObservePlanRunReadiness`                                  | Disabled execution can collapse into generic copy.              |
-| Recovery states   | `MapRouteRecoveryState`                                    | Equivalent failures can use unrelated stage-specific language.  |
-| Alpha cadence     | F-27 accepted route proof and closure evidence             | Alpha can mean either a smoke test or a readiness program.      |
-| Route risk triage | `docs/risk-register/**` plus accepted F-27 route evidence  | Residual risk inclusion becomes accidental.                     |
+| Boundary          | Owning source or rail                                     | Architecture failure if missing                                 |
+| ----------------- | --------------------------------------------------------- | --------------------------------------------------------------- |
+| Startup readiness | `ObserveAppBootstrapRouteReadiness`                       | First load can look broken, blocked, or complete without proof. |
+| Workspace context | `ObserveWorkspaceContext`                                 | Tenant, project, and environment can become implicit UI state.  |
+| Canvas draft      | `GetWorkspaceGraphDraft`, `SaveWorkspaceGraphDraft`       | Graph state can be treated as local product authority.          |
+| Code files        | `ListWorkspaceFiles`, `GetWorkspaceFileContent`           | File reads can drift from authorization and filesystem policy.  |
+| Plan/run posture  | `ObservePlanRunReadiness`                                 | Disabled execution can collapse into generic copy.              |
+| Recovery states   | `MapRouteRecoveryState`                                   | Equivalent failures can use unrelated stage-specific language.  |
+| Alpha cadence     | F-27 accepted route proof and closure evidence            | Alpha can mean either a smoke test or a readiness program.      |
+| Route risk triage | `docs/risk-register/**` plus accepted F-27 route evidence | Residual risk inclusion becomes accidental.                     |
 
 ## Architecture Invariants
 
@@ -141,16 +141,16 @@ The F-27 closure evidence records an accepted alpha-full route with no remaining
 parent blockers. The architecture remains governable because the accepted proof
 keeps route-decision semantics distinct from child implementation ownership.
 
-| Area                          | Accepted posture                                                                 |
-| ----------------------------- | -------------------------------------------------------------------------------- |
-| Route proof                   | `F-27` and its closeout preserve the accepted sequencing and closure evidence.   |
-| Executable follow-up          | GitHub Issues own new task lifecycle; the closed plan is not reopened.           |
+| Area                          | Accepted posture                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------- |
+| Route proof                   | `F-27` and its closeout preserve the accepted sequencing and closure evidence.  |
+| Executable follow-up          | GitHub Issues own new task lifecycle; the closed plan is not reopened.          |
 | Child-slice separation        | Workspace-files and other child components retain stage implementation depth.   |
 | Route review                  | Reviews preserve the route stages, owners, and evidence that supported closure. |
 | Runtime dependency visibility | Protected runtime/admission rails provide the safety inputs consumed by route.  |
-| Code workbench rails          | File-tree and file-content behavior have named query rails.                      |
-| Fixture matrix                | Combined route proof covers happy and fail-closed route states.                  |
-| Risk and cadence              | The acceptance matrix and closeout record accepted risk/cadence evidence.        |
+| Code workbench rails          | File-tree and file-content behavior have named query rails.                     |
+| Fixture matrix                | Combined route proof covers happy and fail-closed route states.                 |
+| Risk and cadence              | The acceptance matrix and closeout record accepted risk/cadence evidence.       |
 
 A regression in route order, rails, risk, cadence, or child proof can still move
 the semantic route decision from `accepted` back to `review` or `blocked`; that
@@ -165,13 +165,13 @@ current components, rails, and GitHub issues.
 
 Use this rule:
 
-| Need                                                        | Correct surface                                                   |
-| ----------------------------------------------------------- | ----------------------------------------------------------------- |
-| Regress or reassess route acceptance semantics              | Route-gate component, accepted F-27 evidence, and new GitHub issue|
-| Prove startup, context, Canvas, Code, or readiness behavior | A child component/proposal plus current issue when work is needed |
-| Add or rename executable behavior                           | Command/query rail catalog before implementation                  |
-| Explain residual risk                                       | Risk register entry/update plus current issue when actionable     |
-| Capture proof                                               | Evidence docs, closeouts, and stage-specific tests                |
+| Need                                                        | Correct surface                                                    |
+| ----------------------------------------------------------- | ------------------------------------------------------------------ |
+| Regress or reassess route acceptance semantics              | Route-gate component, accepted F-27 evidence, and new GitHub issue |
+| Prove startup, context, Canvas, Code, or readiness behavior | A child component/proposal plus current issue when work is needed  |
+| Add or rename executable behavior                           | Command/query rail catalog before implementation                   |
+| Explain residual risk                                       | Risk register entry/update plus current issue when actionable      |
+| Capture proof                                               | Evidence docs, closeouts, and stage-specific tests                 |
 
 ## Architectural Closure Artifact
 
