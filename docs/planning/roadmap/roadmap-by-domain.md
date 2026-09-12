@@ -2,7 +2,7 @@
 title: Roadmap By Domain
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-09-10
+last_reviewed: 2026-09-12
 planning_type: proposal
 ---
 
@@ -110,18 +110,15 @@ flowchart LR
   [UI / Visualization Domain](../../architecture/domain-ui.md),
   [20260417 DVT artifacts review](../reviews/architecture-and-governance/20260417-dvt-artifacts-review.md),
   [20260425 Canvas graph strategy Fowler hard QA review](../reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md),
-  [Internal Alpha Product Route Plan 2026-05-05](../proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md),
   [Documentation and UX implementation guide](../../architecture/components/web/ux-implementation-guide.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
-  Near-term target: keep the first SQL-first operator loop stable now that
-  authoring, persisted preview-to-run handoff, and snapshot-owned result
-  surfaces are live, while the remaining Lane E work shifts to parent
-  acceptance consolidation, the `TF-E2-L` graph-strategy ownership remediation,
-  the `F-27` internal alpha route gate, and broader workbench and plugin
-  professionalization.
+  Near-term target: keep the canonical Substrait authoring and persisted Canvas
+  semantic-revision path stable while current GitHub Issues own the remaining
+  UI/frontend convergence, especially the one-Canvas/product-vocabulary hard
+  cut (#2902), native Canvas Preview/Run/result integration (#3021), and bounded
+  workbench, expression, and plugin professionalization.
 - `Documentation Governance`
   Current sources: [Governance Inventory](../status/governance-document-rule-inventory.md),
-  [Doc-driven framework and tooling plan 2026-04-04](../proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md),
   [Documentation maintenance guide](../../guides/documentation-maintenance-guide-20260407.md),
   [Documentation information architecture current vs target 2026-04-07](../status/documentation-information-architecture-current-vs-target-20260407.md)
   Near-term target: keep GitHub issue lifecycle, roadmaps, and generated
@@ -131,7 +128,6 @@ flowchart LR
 ## Related Diagrams
 
 - [Strategic Product Roadmap](strategic-product-roadmap.md)
-- [Planning Dashboard](../state/planning-dashboard.md)
 - [Review Sprint Critical Path 2026-04](./diagrams/review-sprint-critical-path-2026-04.md)
 - [Planning Domain Map](./diagrams/planning-domain-map.md)
 - [Execution Runtime Architecture Delta](./diagrams/execution-runtime-architecture-delta.md)

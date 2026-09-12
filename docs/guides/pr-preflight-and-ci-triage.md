@@ -2,7 +2,7 @@
 title: PR Preflight And CI Triage
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-08-07
+last_reviewed: 2026-09-10
 ---
 
 # PR Preflight And CI Triage
@@ -17,7 +17,7 @@ Use this guide for implementation slices and PR-green recovery work.
 
 - `AGENTS.md`
 - `docs/guides/ai-work-protocol.md`
-- `docs/planning/state/planning-control-tower.md`
+- `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md`
 - `docs/planning/reviews/ci-and-delivery/20260330-ci-prepush-pr-process-observations.md`
 

@@ -18,8 +18,9 @@ specifically about execution invariants or adapters.
   [Contracts](./contracts/index.md)
 - See current implementation and delivery status:
   [System Delivery Status](./architecture/system-delivery-status.md)
-- Follow active work, proposals, and gaps:
-  [Planning Dashboard](./planning/state/planning-dashboard.md)
+- Follow active work: [GitHub Issues](https://github.com/dunay2/dvt/issues)
+- Read durable product sequencing and gaps: [Roadmap Of Record](./planning/roadmap/index.md)
+  and [Planning Gaps](./planning/gaps/index.md)
 - Operate or troubleshoot the system: [Runbooks](./runbooks/index.md)
 - Review unresolved debt and acceptance posture: [Risk Register](./risk-register/index.md)
 - Review decisions and decision history: [ADRs](./adr/index.md)
@@ -38,7 +39,6 @@ specifically about execution invariants or adapters.
 - [Infra Architecture](./architecture/infra/index.md)
 - [Engine Architecture](./architecture/components/engine/index.md)
 - [Roadmap Of Record](./planning/roadmap/index.md)
-- [Planning Dashboard](./planning/state/planning-dashboard.md)
 - [GitHub MVP Issue Workflow](./planning/state/github-mvp-issue-workflow.md)
 - [Planning Gaps](./planning/gaps/index.md)
 - [Current Delivery Status](./architecture/system-delivery-status.md)
@@ -61,10 +61,9 @@ specifically about execution invariants or adapters.
 2. [Current Delivery Status](./architecture/system-delivery-status.md)
 3. [Shared Package Architecture](./architecture/shared/index.md)
 4. [Architecture Index](./architecture/index.md)
-5. [Planning Dashboard](./planning/state/planning-dashboard.md)
-6. [GitHub MVP Issue Workflow](./planning/state/github-mvp-issue-workflow.md)
-7. [Risk Register](./risk-register/index.md)
-8. [Evidence](./evidence/index.md)
+5. [GitHub MVP Issue Workflow](./planning/state/github-mvp-issue-workflow.md)
+6. [Risk Register](./risk-register/index.md)
+7. [Evidence](./evidence/index.md)
 
 ### Operator or reviewer
 

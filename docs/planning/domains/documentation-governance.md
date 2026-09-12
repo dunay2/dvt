@@ -2,7 +2,7 @@
 title: Domain - Documentation Governance
 status: Review
 owner: Docs / Architecture
-last_reviewed: 2026-09-10
+last_reviewed: 2026-09-12
 planning_type: reference
 ---
 
@@ -15,15 +15,13 @@ gates.
 
 - [Governance Document and Rule Inventory](../status/governance-document-rule-inventory.md)
 - [Roadmap Of Record](../roadmap/index.md)
-- [Planning Dashboard](../state/planning-dashboard.md) for human navigation; GitHub Issues owns task lifecycle
+- [GitHub Issues](https://github.com/dunay2/dvt/issues) for task lifecycle
 
 ## Active Proposal Set
 
 - [Architecture Documentation Reconciliation Plan 2026-04-02](../proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md)
 - [Architecture Documentation Reconciliation Canon Plan 2026-05-23](../proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md)
 - [Architecture Governance Review Canon Plan 2026-05-24](../proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md)
-- [Generated Planning Surfaces Extraction Plan 2026-04-03](../proposals/mandatory/governance-and-docs/generated-planning-surfaces-extraction-plan-20260403.md)
-- [Doc-driven framework and tooling plan 2026-04-04](../proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md)
 - [CI Delivery Governance Consolidated Action Plan](../proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md)
 
 ## Relevant Reviews And Closeouts

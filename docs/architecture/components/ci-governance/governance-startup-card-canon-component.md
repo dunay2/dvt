@@ -2,7 +2,7 @@
 title: Governance Startup Card Canon Component
 status: Active
 owner: Docs / Architecture / Delivery
-last_reviewed: 2026-05-24
+last_reviewed: 2026-09-11
 component_type: governance
 ---
 
@@ -30,10 +30,16 @@ component_type: governance
 - Every route must name the next documents, deep-read condition, and minimum
   validation baseline.
 - `contracts`, `ci`, and `cross-cutting` routes always require deeper reading.
+- GitHub Issues owns task lifecycle, priority, blockers, acceptance, evidence,
+  and closure for executable work.
+- Planning DB owns architecture, capabilities, relationships, command/query
+  rails, feature mechanization, and governed evidence; it is not a task tracker.
+- Generated workboards, local lane files, and task-row projections are not
+  active lifecycle authorities.
 - No second active governance inventory or startup note may own the same
   product intent.
 - Docs, proposal, component guide, user stories, canonical Fowler
-  mechanization, and semantic test must name the same rails.
+  mechanization, and semantic test must name the same rails and authority split.
 
 ## Transitions
 
@@ -58,8 +64,8 @@ stateDiagram-v2
   without paying full inventory cost for local docs or code work.
 - Cross-cutting implementers use deep-read escalation rules before touching
   multiple contexts or public boundaries.
-- Planning operators use the planning route to keep task lifecycle writes in
-  Planning DB and regenerate planning views only through generators.
+- Planning operators use the planning route to keep task lifecycle in GitHub
+  Issues and use Planning DB only when architecture or mechanization changes.
 - PR reviewers use this component to evaluate whether a governance startup
   change preserved route semantics instead of only preserving markdown shape.
 
@@ -77,7 +83,9 @@ stateDiagram-v2
 guide, user stories, original router plan, documentation-governance domain, and
 canonical Fowler mechanization tokens all retain the same rails. It also checks
 that the active inventory still lists every route: `code`, `docs`, `planning`,
-`contracts`, `ci`, and `cross-cutting`.
+`contracts`, `ci`, and `cross-cutting`; that task lifecycle routes to GitHub
+Issues rather than retired workboards or Planning DB task rows; and that active
+entrypoints do not link retired planning paths.
 
 ## Current State Diagram
 
@@ -94,16 +102,19 @@ flowchart TD
   Route --> CrossCutting[cross-cutting]
   Code --> Baseline[touched validation + verify:prepush]
   Docs --> Baseline
-  Planning --> Workboard[Planning DB + generated workboard checks]
+  Planning --> Issues[GitHub Issues: task lifecycle]
+  Planning --> PlanningDB[Planning DB: architecture/mechanization when required]
   Contracts --> DeepRead[Deep governing references]
   CI --> DeepRead
   CrossCutting --> DeepRead
-  Workboard --> Baseline
+  Issues --> Baseline
+  PlanningDB --> Baseline
   DeepRead --> Baseline
 ```
 
 ## Future Change Rule
 
-Any future route addition, removal, or validation-baseline change must update
-the canon plan, component guide, user stories, domain index, original router
-plan, and `tools/ci/startup-card-canon.test.mjs` in the same slice.
+Any future route addition, removal, authority change, or validation-baseline
+change must update the canon plan, component guide, user stories, domain index,
+original router plan, and `tools/ci/startup-card-canon.test.mjs` in the same
+slice.
