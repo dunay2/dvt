@@ -147,15 +147,28 @@ export const graphNodeColumnClasses = {
     'pointer-events-none absolute left-1/2 top-1/2 size-px border-0 bg-transparent p-0 opacity-0',
   compositionMenuAnchor:
     'pointer-events-none absolute left-1/2 top-1/2 size-px border-0 bg-transparent p-0 opacity-0',
-  functionAliasAnchor:
+  expressionComposerAnchor:
     'pointer-events-none absolute left-1/2 top-1/2 size-px border-0 bg-transparent p-0 opacity-0',
-  functionAliasForm: 'nodrag nopan w-64 border-slate-700 bg-slate-950 p-3',
-  functionAliasLabel: 'mb-2 block text-xs font-medium text-slate-200',
-  functionAliasError: 'mt-1 text-xs text-red-300',
-  functionAliasActions: 'mt-3 flex justify-end gap-2',
-  functionAliasCancel:
+  expressionComposer: 'nodrag nopan w-80 border-slate-700 bg-slate-950 p-3 text-slate-100',
+  expressionComposerFields: 'space-y-3',
+  expressionComposerTitle: 'text-sm font-semibold text-slate-50',
+  expressionComposerLabel: 'grid gap-1 text-xs font-medium text-slate-300',
+  expressionComposerControl:
+    'h-8 min-w-0 w-full rounded border border-slate-700 bg-slate-900 px-2 text-xs text-slate-100 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400',
+  expressionComposerOperands: 'space-y-1.5',
+  expressionComposerLegend: 'mb-1 text-xs font-medium text-slate-300',
+  expressionComposerOperand: 'grid grid-cols-[minmax(0,1fr)_1.75rem_1.75rem_1.75rem] gap-1',
+  expressionComposerIconButton:
+    'inline-flex size-7 items-center justify-center rounded border border-slate-700 text-slate-300 hover:border-blue-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-35',
+  expressionComposerAddOperand:
+    'inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-blue-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-35',
+  expressionComposerPreview:
+    'grid gap-1 rounded border border-slate-800 bg-slate-900/70 p-2 text-[11px] text-slate-400 [&_code]:break-all [&_code]:text-slate-100',
+  expressionComposerError: 'text-xs text-red-300',
+  expressionComposerActions: 'flex justify-end gap-2',
+  expressionComposerCancel:
     'rounded px-2 py-1 text-xs text-slate-300 hover:bg-slate-800 hover:text-white',
-  functionAliasSubmit:
+  expressionComposerSubmit:
     'rounded bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40',
   piece:
     'nodrag nopan flex min-h-8 w-full flex-wrap items-center gap-2 rounded-md border border-slate-700/90 bg-slate-950/90 px-3 py-1.5 text-xs shadow-sm transition hover:border-blue-400/70 hover:bg-slate-900 focus-visible:border-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70',

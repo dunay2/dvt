@@ -983,6 +983,74 @@ describe('Canvas column mapping authoring', () => {
       'output:amount',
     ]);
   });
+  it('unmaps the only Transform output after its Source projection is reduced to one field', () => {
+    const columns = [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+      { name: 'amount', type: 'numeric' },
+    ];
+    const source = buildNode('source', 'dvt:source', 'input', columns);
+    const model = buildNode('model', 'dvt:transform', 'transform');
+    const canonicalNodesById = new Map([source, model].map((node) => [node.id, node]));
+    const initial = buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]);
+
+    const withoutCustomer = setCanvasColumnOutputIncluded({
+      draftSession: initial,
+      canonicalNodesById,
+      targetNodeId: source.id,
+      columnId: 'customer',
+      columnType: 'text',
+      output: false,
+    });
+    expect(withoutCustomer.outcome).toBe('applied');
+    if (withoutCustomer.outcome !== 'applied') return;
+    const reduced = setCanvasColumnOutputIncluded({
+      draftSession: withoutCustomer.draftSession,
+      canonicalNodesById,
+      targetNodeId: source.id,
+      columnId: 'amount',
+      columnType: 'numeric',
+      output: false,
+    });
+    expect(reduced.outcome).toBe('applied');
+    if (reduced.outcome !== 'applied') return;
+
+    const mapped = applyCanvasColumnMapping({
+      draftSession: reduced.draftSession,
+      canonicalNodesById,
+      source: { nodeId: source.id, columnId: 'order_id' },
+      target: { nodeId: model.id, columnName: 'order_id', dataType: 'integer' },
+    });
+    expect(mapped.outcome).toBe('applied');
+    if (mapped.outcome !== 'applied') return;
+    const mappedModel = mapped.draftSession.localNodeCatalog?.model;
+    if (mappedModel == null) throw new Error('Expected mapped Transform.');
+    const outputFieldId = readOutputFieldId(mappedModel, 'order_id');
+    expect(outputFieldId).toMatch(OPAQUE_FIELD_ID);
+
+    const unmapped = setCanvasColumnOutputIncluded({
+      draftSession: mapped.draftSession,
+      canonicalNodesById,
+      targetNodeId: model.id,
+      columnId: outputFieldId,
+      columnType: 'integer',
+      output: false,
+    });
+
+    expect(unmapped.outcome).toBe('applied');
+    if (unmapped.outcome !== 'applied') return;
+    const unmappedModel = unmapped.draftSession.localNodeCatalog?.model;
+    if (unmappedModel == null) throw new Error('Expected unmapped Transform.');
+    const authority = readDvtTransformAuthoringAuthority(unmappedModel);
+    if (authority?.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      throw new Error('Expected Transform projection authority.');
+    }
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    expect(inspection.ok && inspection.projection.outputs).toEqual([]);
+  });
+
   it('persists a Source output subset and restores physical order without changing surviving ids', () => {
     const columns = [
       { name: 'order_id', type: 'integer' },

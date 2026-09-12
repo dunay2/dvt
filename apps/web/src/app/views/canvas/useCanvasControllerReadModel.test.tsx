@@ -942,7 +942,14 @@ describe('useCanvasControllerReadModel', () => {
             sourceType: string;
           }) => readonly Readonly<{ name: string }>[]
         )({ targetType: 'text', sourceType: 'text' })
-      ).toEqual([expect.objectContaining({ name: 'concat' })]);
+      ).toEqual([
+        expect.objectContaining({ name: 'coalesce', minimumArgumentCount: 2 }),
+        expect.objectContaining({
+          name: 'concat',
+          minimumArgumentCount: 2,
+          maximumArgumentCount: 2,
+        }),
+      ]);
       expect(transformData.onApplyCanvasStructuredField).toBe(
         args.graphHandlers.handleApplyCanvasStructuredField
       );

@@ -377,7 +377,7 @@ function projectCanvasNodePresentationTruthInternal(
       return upstreamTruth.columns.visible
         .filter((column) => column.selected !== false)
         .filter((column) => activeColumnNames == null || activeColumnNames.has(column.name))
-        .map((column) => ({
+        .map(({ selected: _sourceSelection, ...column }) => ({
           ...column,
           provenance: 'inherited' as const,
           sourceNodeId: node.id,

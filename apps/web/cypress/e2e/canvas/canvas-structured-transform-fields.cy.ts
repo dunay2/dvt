@@ -86,17 +86,33 @@ function latestStructuredFields(): ReturnType<typeof inspectDvtSubstraitStructur
 }
 
 function latestProjection(): ReturnType<typeof inspectDvtSubstraitProjectionDraft> {
-  const inspections = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+  const savedModels = getE2eApiCalls('/workspace/graph/draft', 'PUT')
     .map((call) => call.body as DraftSave)
     .map((save) => save.draft.nodes.find((node) => node.id === 'model-orders'))
-    .filter((node) => node != null)
-    .map((model) => {
-      const authority = model.metadata?.transformAuthoring as
-        { semanticDocument?: unknown } | undefined;
-      return inspectDvtSubstraitProjectionDraft(
-        decodeDvtSubstraitProjectionDocument(authority?.semanticDocument)
+    .filter((node) => node != null);
+  const firstSemanticSave = savedModels.findIndex((model) => {
+    const authority = model.metadata?.transformAuthoring as
+      { semanticDocument?: unknown } | undefined;
+    return authority?.semanticDocument != null;
+  });
+  if (firstSemanticSave < 0) {
+    throw new Error('No Draft PUT persisted Transform semantic authority.');
+  }
+  const inspections = savedModels.slice(firstSemanticSave).map((model, index) => {
+    const authority = model.metadata?.transformAuthoring as
+      { semanticDocument?: unknown } | undefined;
+    if (authority?.semanticDocument == null) {
+      throw new Error(
+        'Draft PUT ' +
+          String(firstSemanticSave + index) +
+          ' lost Transform semantic authority: ' +
+          JSON.stringify(model.metadata)
       );
-    });
+    }
+    return inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+  });
   return inspections.at(-1)!;
 }
 
@@ -167,7 +183,7 @@ describe('Canvas structured Transform fields', () => {
       .rightclick(20, 10);
     cy.get('[data-slot="graph-node-column-function-menu"]').should('be.visible');
     cy.get('[data-slot="graph-node-column-function"]').should('contain.text', 'UPPER');
-    cy.get('[data-slot="graph-node-column-function"]').should('not.contain.text', 'CONCAT');
+    cy.get('[data-slot="graph-node-column-function"]').should('contain.text', 'CONCAT');
     cy.get('body').type('{esc}');
     modelCard()
       .find('[data-slot="graph-node-column-piece"][data-column-name="status_region"]')
@@ -201,6 +217,90 @@ describe('Canvas structured Transform fields', () => {
         inspection.projection.outputs.find((output) => output.name === 'region_status_region')
           ?.operandFieldIds
       ).to.have.length(2);
+    });
+  });
+
+  it('persists and reuses an ordered three-operand COALESCE expression', () => {
+    cy.viewport(1920, 1080);
+    visitCanvas();
+    expandAndAssignColumns();
+
+    modelCard().contains('button', 'Show remaining columns').click();
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"][data-column-name="status"]')
+      .rightclick(20, 10);
+    cy.contains('[data-slot="graph-node-column-function"]', 'COALESCE').click();
+    cy.get('[data-slot="graph-node-expression-composer"]').should('be.visible');
+    cy.get('[data-slot="graph-node-expression-operand"]').should('have.length', 2);
+    cy.get('[data-slot="graph-node-expression-add-operand"]').click();
+    cy.get('[data-slot="graph-node-expression-operand"]').should('have.length', 3);
+    cy.get('[data-slot="graph-node-expression-move-up"]').eq(2).click();
+    cy.get('[data-slot="graph-node-column-function-expression"]').should(
+      'have.text',
+      'COALESCE(status, region, customer)'
+    );
+    cy.get('[data-slot="graph-node-column-function-alias-input"]')
+      .click()
+      .should('be.focused')
+      .type('resolved_status')
+      .should('have.value', 'resolved_status')
+      .and('have.attr', 'aria-invalid', 'false');
+    cy.get('[data-slot="graph-node-column-function-alias-submit"]')
+      .should('not.be.disabled')
+      .click();
+
+    cy.wrap(null, { timeout: 10_000 }).should(() => {
+      const inspection = latestProjection();
+      expect(inspection.ok).to.equal(true);
+      if (!inspection.ok) return;
+      const resolved = inspection.projection.outputs.find(
+        (output) => output.name === 'resolved_status'
+      );
+      expect(resolved?.operandFieldIds).to.have.length(3);
+      expect(resolved?.scalarExpression).to.deep.equal({
+        kind: 'scalar-function',
+        functionName: 'coalesce',
+        arguments: [
+          { kind: 'field-reference', sourceFieldName: 'status' },
+          { kind: 'field-reference', sourceFieldName: 'region' },
+          { kind: 'field-reference', sourceFieldName: 'customer' },
+        ],
+      });
+    });
+
+    visitCanvas();
+    modelCard().find('[data-slot="graph-node-column-toggle"]').click();
+    modelCard().contains('button', 'Show remaining columns').click();
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"][data-column-name="resolved_status"]')
+      .should('be.visible')
+      .rightclick(20, 10);
+    cy.contains('[data-slot="graph-node-column-function"]', 'UPPER').click();
+    cy.get('[data-slot="graph-node-column-function-alias-input"]').type('upper_resolved_status');
+    cy.get('[data-slot="graph-node-column-function-alias-submit"]').click();
+
+    cy.wrap(null, { timeout: 10_000 }).should(() => {
+      const inspection = latestProjection();
+      expect(inspection.ok).to.equal(true);
+      if (!inspection.ok) return;
+      const reused = inspection.projection.outputs.find(
+        (output) => output.name === 'upper_resolved_status'
+      );
+      expect(reused?.scalarExpression).to.deep.equal({
+        kind: 'scalar-function',
+        functionName: 'upper',
+        arguments: [
+          {
+            kind: 'scalar-function',
+            functionName: 'coalesce',
+            arguments: [
+              { kind: 'field-reference', sourceFieldName: 'status' },
+              { kind: 'field-reference', sourceFieldName: 'region' },
+              { kind: 'field-reference', sourceFieldName: 'customer' },
+            ],
+          },
+        ],
+      });
     });
   });
 

@@ -4,7 +4,8 @@ import type { ActiveColumnPlacement } from './useGraphNodeColumnOrder';
 export type GraphNodeColumnFunction = Readonly<{
   capabilityId: string;
   name: string;
-  argumentCount: number;
+  minimumArgumentCount: number;
+  maximumArgumentCount?: number;
   expressionTemplate?: string;
 }>;
 

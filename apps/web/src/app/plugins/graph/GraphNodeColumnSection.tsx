@@ -81,6 +81,7 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
                 activeColumnHandleId={activeColumnHandleId}
                 copy={copy}
                 reorder={section.columnReorder}
+                expressionOperandCandidates={section.columnReorder.orderedColumns}
                 unavailableAliases={section.columnReorder.orderedColumns
                   .filter(
                     (candidate) => (candidate.id ?? candidate.name) !== (column.id ?? column.name)

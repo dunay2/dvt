@@ -37,7 +37,8 @@ function addMenu(args: {
   const items = resolveDvtSubstraitColumnFunctions({
     dataType: args.dataType,
     provider: args.provider,
-  }).filter((item) => item.argumentCount === 1);
+    resolution: 'proposal',
+  });
   const category = items[0]?.category;
   if (category == null || items.length === 0) return;
   const value = {
@@ -57,7 +58,12 @@ export function resolveCanvasColumnCompositionFunctions(args: {
   return resolveDvtSubstraitColumnFunctions({
     dataTypes: [args.targetType, args.sourceType],
     provider: args.provider,
-  }).filter((item) => item.argumentCount === 2);
+    resolution: 'complete',
+  }).filter(
+    (item) =>
+      item.minimumArgumentCount <= 2 &&
+      (item.maximumArgumentCount == null || item.maximumArgumentCount >= 2)
+  );
 }
 
 function projectDvtTransformMenus(args: {

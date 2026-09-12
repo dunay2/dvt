@@ -183,6 +183,70 @@ describe('Transform output-selection presentation', () => {
     expect(visibleByName.get('amount')).toMatchObject({ provenance: 'declared' });
     expect(visibleByName.get('status')).toMatchObject({ provenance: 'inherited' });
   });
+  it('does not inherit Source selection as an empty Transform output selection', () => {
+    const sourceDraft = createDvtSubstraitProjectionDraft({
+      source: {
+        nodeId: source.id,
+        schema: 'raw',
+        table: 'orders',
+        sourceRef: connectedSourceRef,
+        fields: [
+          { name: 'order_id', dataType: 'integer' },
+          { name: 'customer', dataType: 'text' },
+          { name: 'amount', dataType: 'numeric' },
+        ],
+      },
+      targetNodeId: source.id,
+      outputs: [{ fieldId: 'source:order_id', name: 'order_id', sourceFieldName: 'order_id' }],
+    });
+    const projectedSource = applyDvtSubstraitSemanticDocument(
+      source,
+      encodeDvtSubstraitProjectionDocument(sourceDraft)
+    );
+    const transform = applyDvtSubstraitSemanticDocument(
+      {
+        id: 'transform-empty-projection',
+        name: 'Empty projection',
+        pluginId: 'dvt',
+        kind: 'dvt:transform',
+        role: 'transform',
+        status: 'idle',
+        tags: [],
+        metadata: {},
+      },
+      encodeDvtSubstraitProjectionDocument(
+        createDvtSubstraitProjectionDraft({
+          source: {
+            nodeId: source.id,
+            schema: 'raw',
+            table: 'orders',
+            sourceRef: connectedSourceRef,
+            fields: [
+              { name: 'order_id', dataType: 'integer' },
+              { name: 'customer', dataType: 'text' },
+              { name: 'amount', dataType: 'numeric' },
+            ],
+          },
+          targetNodeId: 'transform-empty-projection',
+          outputs: [],
+        })
+      )
+    );
+    const truth = projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [projectedSource, transform],
+      edges: [{ sourceId: projectedSource.id, targetId: transform.id }],
+    });
+
+    expect(truth.columns.visible).toEqual([
+      expect.objectContaining({
+        name: 'order_id',
+        provenance: 'inherited',
+      }),
+    ]);
+    expect(truth.columns.visible[0]?.selected).toBeUndefined();
+  });
+
   it('keeps every physical Source field visible while downstream nodes receive only its projection', () => {
     const sourceDraft = createDvtSubstraitProjectionDraft({
       source: {

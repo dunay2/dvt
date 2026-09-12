@@ -175,6 +175,15 @@ export type DvtSubstraitScalarExpression =
     }>
   | Readonly<{
       kind: 'scalar-function';
+      functionName: 'coalesce';
+      arguments: readonly [
+        DvtSubstraitScalarExpression,
+        DvtSubstraitScalarExpression,
+        ...DvtSubstraitScalarExpression[],
+      ];
+    }>
+  | Readonly<{
+      kind: 'scalar-function';
       functionName: 'extract';
       arguments: readonly [DvtSubstraitScalarExpression];
       component: 'YEAR';
@@ -199,9 +208,48 @@ export type DvtSubstraitColumnFunction = Readonly<{
   capabilityId: string;
   name: string;
   category: 'text' | 'date-time';
-  argumentCount: number;
+  minimumArgumentCount: number;
+  maximumArgumentCount?: number;
   expressionTemplate?: string;
 }>;
+
+function invocationArgumentRange(
+  invocation:
+    | Readonly<{
+        minimumArgumentCount: number;
+        maximumArgumentCount?: number;
+      }>
+    | undefined
+): Readonly<{ minimumArgumentCount: number; maximumArgumentCount?: number }> {
+  return invocation == null
+    ? { minimumArgumentCount: 1, maximumArgumentCount: 1 }
+    : {
+        minimumArgumentCount: invocation.minimumArgumentCount,
+        ...(invocation.maximumArgumentCount == null
+          ? {}
+          : { maximumArgumentCount: invocation.maximumArgumentCount }),
+      };
+}
+
+function admitsProposedArgumentCount(
+  range: Readonly<{ minimumArgumentCount: number; maximumArgumentCount?: number }>,
+  proposedCount: number
+): boolean {
+  return (
+    proposedCount > 0 &&
+    (range.maximumArgumentCount == null || proposedCount <= range.maximumArgumentCount)
+  );
+}
+
+function admitsCompleteArgumentCount(
+  range: Readonly<{ minimumArgumentCount: number; maximumArgumentCount?: number }>,
+  completeCount: number
+): boolean {
+  return (
+    completeCount >= range.minimumArgumentCount &&
+    (range.maximumArgumentCount == null || completeCount <= range.maximumArgumentCount)
+  );
+}
 
 export type DvtSubstraitProjectionDraft = Readonly<{
   plan: Plan;
@@ -233,6 +281,7 @@ export function resolveDvtSubstraitColumnFunctions(args: {
   dataType?: string;
   dataTypes?: readonly string[];
   provider: string;
+  resolution?: 'proposal' | 'complete';
 }): readonly DvtSubstraitColumnFunction[] {
   const normalizedTypes = (args.dataTypes ?? (args.dataType == null ? [] : [args.dataType])).map(
     normalizeProjectionDataType
@@ -252,15 +301,24 @@ export function resolveDvtSubstraitColumnFunctions(args: {
       ) {
         return [];
       }
-      if (stringOperands && entry.identity.urn === 'extension:io.substrait:functions_string') {
-        const argumentCount = entry.invocation?.argumentCount ?? 1;
-        return argumentCount === normalizedTypes.length
+      const textFunction =
+        entry.identity.urn === 'extension:io.substrait:functions_string' ||
+        (entry.identity.urn === 'extension:io.substrait:functions_comparison' &&
+          entry.identity.name === 'coalesce' &&
+          entry.invocation?.signature === 'coalesce:any1');
+      if (stringOperands && textFunction) {
+        const range = invocationArgumentRange(entry.invocation);
+        const admitted =
+          args.resolution === 'proposal'
+            ? admitsProposedArgumentCount(range, normalizedTypes.length)
+            : admitsCompleteArgumentCount(range, normalizedTypes.length);
+        return admitted
           ? [
               {
                 capabilityId: entry.entryId,
                 name: entry.identity.name,
                 category: 'text' as const,
-                argumentCount,
+                ...range,
               },
             ]
           : [];
@@ -271,7 +329,8 @@ export function resolveDvtSubstraitColumnFunctions(args: {
         entry.identity.name === 'extract' &&
         entry.invocation?.signature === 'extract:req_ptstz_str' &&
         entry.invocation.argumentTypes.join('_') === 'req_ptstz_str' &&
-        entry.invocation.argumentCount === 3 &&
+        entry.invocation.minimumArgumentCount === 3 &&
+        entry.invocation.maximumArgumentCount === 3 &&
         entry.invocation.outputType === 'i64' &&
         entry.invocation.options.length === 0
       ) {
@@ -280,7 +339,8 @@ export function resolveDvtSubstraitColumnFunctions(args: {
             capabilityId: entry.entryId,
             name: 'extract year (UTC)',
             category: 'date-time' as const,
-            argumentCount: 1,
+            minimumArgumentCount: 1,
+            maximumArgumentCount: 1,
             expressionTemplate: "EXTRACT(YEAR FROM {column} AT TIME ZONE 'UTC')",
           },
         ];
@@ -1005,11 +1065,23 @@ export function inspectDvtSubstraitProjectionDraft(
       }>
     | Readonly<{
         kind: 'scalar-function';
+        functionName: 'coalesce';
+        arguments: readonly [InspectedScalar, InspectedScalar, ...InspectedScalar[]];
+      }>
+    | Readonly<{
+        kind: 'scalar-function';
         functionName: 'extract';
         arguments: readonly [InspectedScalar];
         component: 'YEAR';
         timezone: 'UTC';
       }>;
+  const inspectedScalarDataType = (expression: InspectedScalar): string => {
+    if (expression.kind === 'field-reference') {
+      return inspectProjectionDataType(sourceTypes[expression.sourceOrdinal]!) ?? 'unknown';
+    }
+    if (expression.kind === 'timestamp-literal') return 'timestamp with time zone';
+    return expression.functionName === 'extract' ? 'bigint' : 'string';
+  };
   const inspectScalar = (expression: Expression): InspectedScalar | null => {
     if (expression.rexType.case === 'selection') {
       const fieldReference = expression.rexType.value;
@@ -1076,8 +1148,9 @@ export function inspectDvtSubstraitProjectionDraft(
       return null;
     }
     const expectedOptions = entry.invocation?.options ?? [];
+    const invocationRange = invocationArgumentRange(entry.invocation);
     if (
-      scalarFunction.arguments.length !== (entry.invocation?.argumentCount ?? 1) ||
+      !admitsCompleteArgumentCount(invocationRange, scalarFunction.arguments.length) ||
       scalarFunction.options.length !== expectedOptions.length ||
       !expectedOptions.every((expected, index) => {
         const actual = scalarFunction.options[index];
@@ -1102,6 +1175,7 @@ export function inspectDvtSubstraitProjectionDraft(
         component?.case !== 'enum' ||
         component.value !== 'YEAR' ||
         inspectedInput == null ||
+        !TIMESTAMPTZ_DATA_TYPES.has(inspectedScalarDataType(inspectedInput)) ||
         timezoneLiteral?.case !== 'literal' ||
         timezoneLiteral.value.literalType.case !== 'string' ||
         timezoneLiteral.value.literalType.value !== 'UTC'
@@ -1121,7 +1195,30 @@ export function inspectDvtSubstraitProjectionDraft(
       argument.argType.case === 'value' ? inspectScalar(argument.argType.value) : null
     );
     if (arguments_.some((argument) => argument == null)) return null;
+    const textFunction =
+      entry.identity.urn === 'extension:io.substrait:functions_string' ||
+      (entry.identity.urn === 'extension:io.substrait:functions_comparison' &&
+        entry.identity.name === 'coalesce');
+    if (
+      textFunction &&
+      arguments_.some(
+        (argument) => argument == null || inspectedScalarDataType(argument) !== 'string'
+      )
+    ) {
+      return null;
+    }
     usedFunctionAnchors.add(scalarFunction.functionReference);
+    if (entry.identity.name === 'coalesce' && arguments_.length >= 2) {
+      return {
+        kind: 'scalar-function',
+        functionName: 'coalesce',
+        arguments: [arguments_[0]!, arguments_[1]!, ...arguments_.slice(2)] as [
+          InspectedScalar,
+          InspectedScalar,
+          ...InspectedScalar[],
+        ],
+      };
+    }
     if (entry.identity.name === 'concat' && arguments_.length === 2) {
       return {
         kind: 'scalar-function',
@@ -1152,29 +1249,39 @@ export function inspectDvtSubstraitProjectionDraft(
         }
       : expression.kind === 'timestamp-literal'
         ? { kind: 'timestamp-literal', value: expression.value }
-        : expression.functionName === 'concat'
+        : expression.functionName === 'coalesce'
           ? {
               kind: 'scalar-function',
-              functionName: 'concat',
-              arguments: [
-                publicScalar(expression.arguments[0]),
-                publicScalar(expression.arguments[1]),
+              functionName: 'coalesce',
+              arguments: expression.arguments.map(publicScalar) as [
+                DvtSubstraitScalarExpression,
+                DvtSubstraitScalarExpression,
+                ...DvtSubstraitScalarExpression[],
               ],
-              nullHandling: expression.nullHandling,
             }
-          : expression.functionName === 'extract'
+          : expression.functionName === 'concat'
             ? {
                 kind: 'scalar-function',
-                functionName: 'extract',
-                arguments: [publicScalar(expression.arguments[0])],
-                component: expression.component,
-                timezone: expression.timezone,
+                functionName: 'concat',
+                arguments: [
+                  publicScalar(expression.arguments[0]),
+                  publicScalar(expression.arguments[1]),
+                ],
+                nullHandling: expression.nullHandling,
               }
-            : {
-                kind: 'scalar-function',
-                functionName: expression.functionName,
-                arguments: [publicScalar(expression.arguments[0])],
-              };
+            : expression.functionName === 'extract'
+              ? {
+                  kind: 'scalar-function',
+                  functionName: 'extract',
+                  arguments: [publicScalar(expression.arguments[0])],
+                  component: expression.component,
+                  timezone: expression.timezone,
+                }
+              : {
+                  kind: 'scalar-function',
+                  functionName: expression.functionName,
+                  arguments: [publicScalar(expression.arguments[0])],
+                };
   const scalarOperations = (expression: DvtSubstraitScalarExpression): readonly string[] =>
     expression.kind !== 'scalar-function'
       ? []
@@ -1189,7 +1296,13 @@ export function inspectDvtSubstraitProjectionDraft(
       return { sourceOrdinal: expression.sourceOrdinal, operations: [] };
     }
     if (expression.kind === 'timestamp-literal') return null;
-    if (expression.functionName === 'concat' || expression.functionName === 'extract') return null;
+    if (
+      expression.functionName === 'concat' ||
+      expression.functionName === 'coalesce' ||
+      expression.functionName === 'extract'
+    ) {
+      return null;
+    }
     const input = legacyLineage(expression.arguments[0]);
     return input == null
       ? null
@@ -1215,6 +1328,21 @@ export function inspectDvtSubstraitProjectionDraft(
     const legacy = legacyLineage(scalar);
     return legacy ?? { scalarExpression: publicScalar(scalar) };
   };
+  const mappedExpression = (outputOrdinal: number): Expression | null => {
+    const mapping = mappings.value.outputMapping[outputOrdinal];
+    if (mapping == null) return null;
+    if (mapping < sourceFields.length) return dvtSubstraitExpression.field(mapping);
+    return project.expressions[mapping - sourceFields.length] ?? null;
+  };
+  const expressionsMatch = (left: Expression, right: Expression): boolean => {
+    const leftScalar = inspectScalar(left);
+    const rightScalar = inspectScalar(right);
+    return (
+      leftScalar != null &&
+      rightScalar != null &&
+      JSON.stringify(publicScalar(leftScalar)) === JSON.stringify(publicScalar(rightScalar))
+    );
+  };
   const outputs = mappings.value.outputMapping.map((mapping, outputOrdinal) => {
     const expressionOrdinal = mapping - sourceFields.length;
     const resolvedExpression =
@@ -1239,6 +1367,27 @@ export function inspectDvtSubstraitProjectionDraft(
         ? resolvedExpression.scalarExpression
         : undefined;
     const targetField = targetFields[outputOrdinal];
+    const persistedOperandFieldIds = targetField?.operandFieldIds;
+    const rawExpression = mappedExpression(outputOrdinal);
+    const rawScalarArguments =
+      rawExpression?.rexType.case === 'scalarFunction'
+        ? rawExpression.rexType.value.arguments.flatMap((argument) =>
+            argument.argType.case === 'value' ? [argument.argType.value] : []
+          )
+        : [];
+    const persistedOperandsMatch =
+      persistedOperandFieldIds != null &&
+      persistedOperandFieldIds.length === rawScalarArguments.length &&
+      persistedOperandFieldIds.every((fieldId, index) => {
+        const operandField = targetFields.find((field) => field.fieldId === fieldId);
+        const operandExpression =
+          operandField == null ? null : mappedExpression(operandField.outputOrdinal);
+        return (
+          fieldId !== targetField?.fieldId &&
+          operandExpression != null &&
+          expressionsMatch(operandExpression, rawScalarArguments[index]!)
+        );
+      });
     if (
       resolvedExpression == null ||
       ('sourceOrdinal' in resolvedExpression && sourceField == null) ||
@@ -1247,6 +1396,7 @@ export function inspectDvtSubstraitProjectionDraft(
       (sourceField != null &&
         targetField.sourceFieldId != null &&
         targetField.sourceFieldId !== sourceField.fieldId) ||
+      (persistedOperandFieldIds != null && !persistedOperandsMatch) ||
       (calculation?.kind === 'row-number' && calculation.orderSourceOrdinal >= sourceFields.length)
     ) {
       return null;
@@ -1318,6 +1468,7 @@ export function inspectDvtSubstraitProjectionDraft(
         !declaredUrnAnchors.has(entry.extensionUrnAnchor) ||
         (entry.urn !== 'extension:io.substrait:functions_string' &&
           entry.urn !== 'extension:io.substrait:functions_arithmetic' &&
+          entry.urn !== 'extension:io.substrait:functions_comparison' &&
           entry.urn !== 'extension:io.substrait:functions_datetime')
     )
   ) {
@@ -1380,12 +1531,14 @@ export function applyDvtSubstraitProjectionFunction(
       ? resolveDvtSubstraitColumnFunctions({
           dataTypes: operands.map((operand) => operand!.dataType),
           provider: inspection.projection.source.sourceRef.connectionRef.provider,
+          resolution: 'complete',
         }).find((entry) => entry.capabilityId === args.capabilityId)
       : undefined;
   if (
     !inspection.ok ||
     args.provider !== inspection.projection.source.sourceRef.connectionRef.provider ||
     capability == null ||
+    !admitsCompleteArgumentCount(capability, operandFieldIds.length) ||
     !PostgresIdentifierV1Schema.safeParse(alias).success ||
     output == null ||
     operands.some((operand) => operand == null) ||
@@ -1514,7 +1667,11 @@ export function applyDvtSubstraitProjectionFunction(
       ...draft.sidecar,
       fields: draft.sidecar.fields.map((field) => {
         if (field.fieldId !== output.fieldId) return field;
-        const { sourceFieldId: _sourceFieldId, ...preserved } = field;
+        const {
+          sourceFieldId: _sourceFieldId,
+          operandFieldIds: _operandFieldIds,
+          ...preserved
+        } = field;
         return {
           ...preserved,
           displayName: alias,

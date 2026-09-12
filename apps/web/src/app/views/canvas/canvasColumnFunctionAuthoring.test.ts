@@ -297,4 +297,85 @@ describe('Canvas column function authoring', () => {
     expect(result).toEqual({ outcome: 'rejected' });
     expect(initial.localNodeCatalog?.[externalModel.id]).toBe(externalModel);
   });
+  it('appends one variadic COALESCE output from ordered reusable FieldIds', () => {
+    const transform = projectionTransform();
+    const functions = resolveDvtSubstraitColumnFunctions({
+      dataType: 'text',
+      provider: 'postgres',
+      resolution: 'proposal',
+    });
+    const trim = functions.find((candidate) => candidate.name === 'trim');
+    const coalesce = functions.find((candidate) => candidate.name === 'coalesce');
+    if (trim == null || coalesce == null) {
+      throw new Error('Expected admitted TRIM and COALESCE capabilities.');
+    }
+    const initial = draftSession(source, transform);
+    const before = inspect(transform);
+    const eventId = before.outputs.find((output) => output.name === 'event_id');
+    const eventType = before.outputs.find((output) => output.name === 'event_type');
+    if (eventId == null || eventType == null) throw new Error('Expected base operands.');
+
+    const trimmed = applyCanvasColumnFunction({
+      draftSession: initial,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [transform.id, transform],
+      ]),
+      identity: {
+        nodeId: transform.id,
+
+        operandFieldIds: [eventType.fieldId],
+        capabilityId: trim.capabilityId,
+        alias: 'event_type_clean',
+      },
+    });
+    if (trimmed.outcome !== 'applied') throw new Error('Expected reusable derived output.');
+
+    expect(
+      applyCanvasColumnFunction({
+        draftSession: trimmed.draftSession,
+        canonicalNodesById: new Map([
+          [source.id, source],
+          [transform.id, transform],
+        ]),
+        identity: {
+          nodeId: transform.id,
+
+          operandFieldIds: [eventId.fieldId],
+          capabilityId: coalesce.capabilityId,
+          alias: 'preferred_event',
+        },
+      })
+    ).toEqual({ outcome: 'rejected' });
+
+    const composed = applyCanvasColumnFunction({
+      draftSession: trimmed.draftSession,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [transform.id, transform],
+      ]),
+      identity: {
+        nodeId: transform.id,
+
+        operandFieldIds: [eventId.fieldId, eventType.fieldId, trimmed.createdFieldId],
+        capabilityId: coalesce.capabilityId,
+        alias: 'preferred_event',
+      },
+    });
+    if (composed.outcome !== 'applied') throw new Error('Expected COALESCE output.');
+    const nextNode = composed.draftSession.localNodeCatalog?.[transform.id];
+    if (nextNode == null) throw new Error('Expected updated Transform.');
+    const after = inspect(nextNode);
+
+    expect(after.outputs).toHaveLength(before.outputs.length + 2);
+    expect(after.outputs.slice(0, before.outputs.length)).toEqual(before.outputs);
+    expect(after.outputs.find((output) => output.name === 'preferred_event')).toMatchObject({
+      fieldId: composed.createdFieldId,
+      operandFieldIds: [eventId.fieldId, eventType.fieldId, trimmed.createdFieldId],
+      scalarExpression: {
+        kind: 'scalar-function',
+        functionName: 'coalesce',
+      },
+    });
+  });
 });

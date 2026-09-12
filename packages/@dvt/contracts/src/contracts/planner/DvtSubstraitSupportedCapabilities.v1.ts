@@ -50,6 +50,7 @@ interface SupportedCapabilityGroup {
 
 const LOWER_ID = functionId('scalar-function', 'functions_string', 'lower');
 const CONCAT_ID = functionId('scalar-function', 'functions_string', 'concat');
+const COALESCE_ID = functionId('scalar-function', 'functions_comparison', 'coalesce');
 const EXTRACT_ID = functionId('scalar-function', 'functions_datetime', 'extract');
 const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
   {
@@ -79,9 +80,24 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
       [CONCAT_ID]: {
         signature: 'concat:str',
         argumentTypes: ['str'],
-        argumentCount: 2,
+        minimumArgumentCount: 2,
+        maximumArgumentCount: 2,
         outputType: 'str',
         options: [{ name: 'null_handling', preference: ['ACCEPT_NULLS'] }],
+      },
+    },
+  },
+  {
+    entryIds: [COALESCE_ID],
+    useCaseRefs: ['dvt:#2935'],
+    proofRef: 'docs/evidence/ED-20260911-substrait-coalesce-variadic-admission.md',
+    invocationByEntryId: {
+      [COALESCE_ID]: {
+        signature: 'coalesce:any1',
+        argumentTypes: ['any1'],
+        minimumArgumentCount: 2,
+        outputType: 'any1',
+        options: [],
       },
     },
   },
@@ -97,7 +113,8 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
       [EXTRACT_ID]: {
         signature: 'extract:req_ptstz_str',
         argumentTypes: ['req', 'ptstz', 'str'],
-        argumentCount: 3,
+        minimumArgumentCount: 3,
+        maximumArgumentCount: 3,
         outputType: 'i64',
         options: [],
       },
