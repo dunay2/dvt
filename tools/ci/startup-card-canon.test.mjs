@@ -167,7 +167,10 @@ const forbiddenTaskAuthorityPatterns = [
 ];
 
 function hasExplicitRetirementOrNonAuthorityAssertion(statement) {
-  if (negatedRetirementLanguage.test(statement) || explicitActiveAuthorityLanguage.test(statement)) {
+  if (
+    negatedRetirementLanguage.test(statement) ||
+    explicitActiveAuthorityLanguage.test(statement)
+  ) {
     return false;
   }
   return explicitRetirementLanguage.test(statement) || explicitNonAuthorityLanguage.test(statement);
@@ -219,7 +222,9 @@ function collectMarkdownBlock(lines, lineIndex) {
 
 function activePlanningSectionLines(content) {
   const lines = content.split(/\r?\n/u);
-  const sectionStart = lines.findIndex((line) => /^## Active (?:Planning Inputs|Proposal Set)\s*$/u.test(line));
+  const sectionStart = lines.findIndex((line) =>
+    /^## Active (?:Planning Inputs|Proposal Set)\s*$/u.test(line)
+  );
   if (sectionStart === -1) return [];
 
   const section = [];
@@ -302,7 +307,9 @@ function collectLinkedCurrentRoadmapDocuments(roadmapPaths) {
 }
 
 const linkedActivePlanningPlans = collectLinkedActivePlanningPlans(planningDomainEntrypoints);
-const linkedCurrentRoadmapDocuments = collectLinkedCurrentRoadmapDocuments(planningRoadmapEntrypoints);
+const linkedCurrentRoadmapDocuments = collectLinkedCurrentRoadmapDocuments(
+  planningRoadmapEntrypoints
+);
 const linkedCurrentRoadmapRoutingDocuments = linkedCurrentRoadmapDocuments.filter(
   (pathname) => !historicalEvidencePathPattern.test(pathname)
 );
@@ -380,9 +387,17 @@ test('planning startup artifacts preserve GitHub task authority', () => {
   for (const pathname of planningAuthorityFiles) {
     const content = readRepoFile(pathname);
     assert.match(content, /GitHub Issues/i, `${pathname} must name GitHub Issues task authority`);
-    assert.match(content, /Planning DB/i, `${pathname} must preserve Planning DB architecture scope`);
+    assert.match(
+      content,
+      /Planning DB/i,
+      `${pathname} must preserve Planning DB architecture scope`
+    );
     for (const forbidden of forbiddenTaskAuthorityPatterns) {
-      assert.doesNotMatch(content, forbidden, `${pathname} must not restore retired task authority`);
+      assert.doesNotMatch(
+        content,
+        forbidden,
+        `${pathname} must not restore retired task authority`
+      );
     }
   }
 
@@ -466,7 +481,10 @@ test('retirement wording never permits links, negated retirement, or Markdown bl
     assertNoActiveRetiredReference(
       'fixture.md',
       collectMarkdownBlock(
-        ['No Planning Dashboard, local workboard, lane file, closeout file, or generated', 'planning view is a task authority.'],
+        [
+          'No Planning Dashboard, local workboard, lane file, closeout file, or generated',
+          'planning view is a task authority.',
+        ],
         0
       ),
       retiredDashboard
