@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.18.0 (2026-09-12)
+
+## What's Changed
+* fix(planner): Preserve referenced feature rails by @dunay2 in https://github.com/dunay2/dvt/pull/3132
+* docs(docs): Retire redundant planning dashboards by @dunay2 in https://github.com/dunay2/dvt/pull/3105
+* fix(ci): Restore HET1 MinIO image pull by @dunay2 in https://github.com/dunay2/dvt/pull/3129
+* feat(web): Add catalog-driven expression composer by @dunay2 in https://github.com/dunay2/dvt/pull/3131
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.17.0...v0.18.0
+
 ## 0.17.0 (2026-09-11)
 
 ## What's Changed
