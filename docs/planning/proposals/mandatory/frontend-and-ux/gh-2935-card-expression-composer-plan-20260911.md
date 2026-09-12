@@ -15,6 +15,7 @@ task_id: GH-2935
 - `docs/planning/status/governance-document-rule-inventory.md`
 - Planning DB architecture designs and command/query rails
 - `docs/architecture/command-query-rail-governance.md`
+- `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md`
 - GitHub `#2641`, `#2920`, `#2921`, `#2935`, and `#3020`
 
@@ -155,6 +156,146 @@ for PostgreSQL text operands:
       "fowlerSignals": ["Boundary drift"],
       "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts",
       "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2935-CARD-EXPRESSION-COMPOSER"
+    },
+    {
+      "name": "PendingExpression",
+      "path": "apps/web/src/app/plugins/graph/GraphNodeColumnDropCompositionFlow.tsx",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": ["apps/web/src/app/plugins/graph/GraphNodeColumnSection.composition.test.tsx"],
+      "fowlerSignals": ["Duplicate interaction state"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2935-CARD-EXPRESSION-COMPOSER"
+    },
+    {
+      "name": "PendingFunctionRequest",
+      "path": "apps/web/src/app/plugins/graph/GraphNodeColumnRow.tsx",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": ["apps/web/src/app/plugins/graph/GraphNodeColumnSection.test.tsx"],
+      "fowlerSignals": ["Duplicate interaction state"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2935-CARD-EXPRESSION-COMPOSER"
+    },
+    {
+      "name": "GraphNodeExpressionComposerFunction",
+      "path": "apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.tsx",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": ["apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.test.tsx"],
+      "fowlerSignals": ["Primitive arity"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2935-CARD-EXPRESSION-COMPOSER"
+    },
+    {
+      "name": "OperandOption",
+      "path": "apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.tsx",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": ["apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.test.tsx"],
+      "fowlerSignals": ["Primitive arity"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2935-CARD-EXPRESSION-COMPOSER"
+    },
+    {
+      "name": "boundsFor",
+      "path": "apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.tsx",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": ["apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.test.tsx"],
+      "fowlerSignals": ["Primitive arity"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2935-CARD-EXPRESSION-COMPOSER"
+    },
+    {
+      "name": "compatibleOperandOptions",
+      "path": "apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.tsx",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": ["apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.test.tsx"],
+      "fowlerSignals": ["Hidden semantic authority"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2935-CARD-EXPRESSION-COMPOSER"
+    },
+    {
+      "name": "expressionPreview",
+      "path": "apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.tsx",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": ["apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.test.tsx"],
+      "fowlerSignals": ["Duplicate interaction state"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2935-CARD-EXPRESSION-COMPOSER"
+    },
+    {
+      "name": "normalizeOperands",
+      "path": "apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.tsx",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": ["apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.test.tsx"],
+      "fowlerSignals": ["Primitive arity"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2935-CARD-EXPRESSION-COMPOSER"
+    },
+    {
+      "name": "operandOptions",
+      "path": "apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.tsx",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": ["apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.test.tsx"],
+      "fowlerSignals": ["Duplicate interaction state"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2935-CARD-EXPRESSION-COMPOSER"
+    },
+    {
+      "name": "pgCoalesce",
+      "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "PostgreSQL semantic projection",
+      "unitTests": ["apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts"],
+      "fowlerSignals": ["Boundary drift"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2935-CARD-EXPRESSION-COMPOSER"
+    },
+    {
+      "name": "admitsCompleteArgumentCount",
+      "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Substrait projection authoring",
+      "unitTests": ["apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.fieldComposition.test.ts"],
+      "fowlerSignals": ["Primitive arity"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2935-CARD-EXPRESSION-COMPOSER"
+    },
+    {
+      "name": "admitsProposedArgumentCount",
+      "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Substrait projection authoring",
+      "unitTests": ["apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.fieldComposition.test.ts"],
+      "fowlerSignals": ["Primitive arity"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2935-CARD-EXPRESSION-COMPOSER"
+    },
+    {
+      "name": "invocationArgumentRange",
+      "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Substrait projection authoring",
+      "unitTests": ["apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.fieldComposition.test.ts"],
+      "fowlerSignals": ["Primitive arity"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2935-CARD-EXPRESSION-COMPOSER"
+    },
+    {
+      "name": "COALESCE_ID",
+      "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Substrait capability profile",
+      "unitTests": ["packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts"],
+      "fowlerSignals": ["Hidden semantic authority"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2935-CARD-EXPRESSION-COMPOSER"
     }
   ],
   "completionGate": [
@@ -190,6 +331,7 @@ for PostgreSQL text operands:
     "AGENTS.md",
     "docs/planning/status/governance-document-rule-inventory.md",
     "docs/architecture/command-query-rail-governance.md",
+    "docs/architecture/fowler-opportunity-planning-governance.md",
     "docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md",
     "https://github.com/dunay2/dvt/issues/2935"
   ],
@@ -222,6 +364,7 @@ for PostgreSQL text operands:
     "packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts",
     "apps/web/src/app/plugins/graph/**",
     "apps/web/src/app/views/canvas/**",
+    "apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts",
     "docs/architecture/system/subsystems/semantic-transformation/index.md",
     "docs/evidence/**",
@@ -229,6 +372,7 @@ for PostgreSQL text operands:
     "docs/**/index.md",
     "docs/planning/status/**",
     "docs/.manifest.json",
+    "docs/planning/proposals/mandatory/frontend-and-ux/gh-2935-card-unary-derived-output-plan-20260907.md",
     "docs/planning/proposals/mandatory/frontend-and-ux/gh-2935-card-expression-composer-plan-20260911.md"
   ],
   "forbiddenImplementationSurfaces": [
