@@ -1,8 +1,8 @@
 ---
 title: Internal Alpha Product Route Plan 2026-05-05
-status: Active
+status: Accepted
 owner: Product / Architecture / Frontend / Runtime Safety
-last_reviewed: 2026-05-05
+last_reviewed: 2026-09-12
 planning_type: proposal
 lane: E
 task_ids:
@@ -11,22 +11,40 @@ task_ids:
 
 # Internal Alpha Product Route Plan 2026-05-05
 
+## Closure Disposition
+
+`F-27` is closed. The authoritative closure evidence is
+`docs/planning/closeouts/20260514-f27-alpha-route-acceptance-matrix-closeout.md`,
+which records no remaining alpha-full blockers.
+
+This file remains at its original path because feature-mechanization manifests,
+architecture tests, component docs, and historical reviews still reference that
+exact path. The frontend proposal classification already lists it under
+`superseded/`; physical movement is deferred to the dedicated link-migration
+slice described by `docs/planning/proposals/mandatory/frontend-and-ux/index.md`.
+
+The route rails, fixtures, acceptance matrix, and F-27 identifier below are
+retained as proof of the closed route-gate decision. They are not a current task
+queue. GitHub Issues owns any new executable task lifecycle; Planning DB owns
+architecture and mechanization records. Historical Lane/Control-Tower wording is
+not task authority after this disposition.
+
 ## Purpose
 
-This plan gives the internal alpha route its own planning authority. It fixes
-the prior coupling where the Code workbench workspace-files child slice carried
-route-level alpha context inside a closed child-slice manifest.
+This plan recorded the internal alpha route planning, routing, and proof model.
+It fixed the prior coupling where the Code workbench workspace-files child slice
+carried route-level alpha context inside a closed child-slice manifest.
 
-This plan governs the planning, routing, and proof model for internal alpha.
-The route-level gate is accepted only through F-27; child slices remain
-stage-specific authorities and cannot declare alpha full by implication.
+The route-level gate was accepted through F-27; child slices remain
+stage-specific architecture/evidence owners and cannot retroactively redefine
+the alpha-full decision.
 
 ## Governing Sources
 
 - `AGENTS.md`
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
-- `docs/planning/state/planning-control-tower.md`
+- `docs/planning/state/github-mvp-issue-workflow.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/reference-architecture.md`
@@ -34,40 +52,41 @@ stage-specific authorities and cannot declare alpha full by implication.
 - `docs/planning/reviews/architecture-and-governance/20260505-internal-alpha-architecture-view-review.md`
 - `docs/planning/reviews/architecture-and-governance/20260505-alpha-evolution-route-v3-critique.md`
 - `docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md`
+- `docs/planning/closeouts/20260514-f27-alpha-route-acceptance-matrix-closeout.md`
 - `docs/architecture/components/web/internal-alpha-route-gate-component.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-workspace-files-query-rail-plan-20260504.md`
 
-## Scope
+## Historical Scope
 
-In scope:
+The closed slice covered:
 
-- [Task: E-PROP-DISP-1] one route-level alpha task in Lane E;
-- Lane C dependency visibility for protected runtime and plan/run readiness
-  inputs;
-- explicit separation between route-level alpha authority and child-slice
+- one route-level internal-alpha gate identified by `F-27`;
+- runtime-safety dependency visibility for protected runtime and plan/run
+  readiness inputs;
+- explicit separation between route-level alpha proof and child-slice
   workspace-files authority;
-- review-board and roadmap links so the route is discoverable;
 - route-level closure requirements for startup, context, Canvas, Code,
   plan/run readiness, recovery, cadence, and risk triage.
 
-Out of scope:
+It did not cover:
 
 - implementing new startup, Canvas, Code, or plan/run UI behavior;
 - adding new API routes, contracts, adapters, or packages;
 - declaring launch, beta, public availability, or GTM cadence;
 - changing the already closed workspace-files child-slice evidence.
 
-## Route Authority Model
+## Route Evidence Model
 
-| Surface                   | Role                                 | Rule                                                                                                        |
-| ------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| This plan                 | Route-level planning authority       | Owns `F-27` routing and alpha closure prerequisites.                                                        |
-| Internal alpha review     | Route review and gap model           | Names the route stages, current proof posture, and remaining gaps.                                          |
-| Architecture view         | Route boundary lens                  | Explains route, rail, state, evidence, and risk boundaries without creating a backlog.                      |
-| Critique v3               | Accepted intake history              | Records source-grounded findings already absorbed into the route review and this plan.                      |
-| Workspace-files component | Child-slice implementation authority | Owns `ListWorkspaceFiles`, `GetWorkspaceFileContent`, and revision-guarded `SaveWorkspaceFileContent` work. |
-| Lane E YAML               | Primary execution registry           | Owns the user-visible route closure task.                                                                   |
-| Lane C YAML               | Runtime safety dependency registry   | Names protected runtime and admission inputs consumed by the route.                                         |
+| Surface                   | Evidence role                         | Rule                                                                                                        |
+| ------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| This plan                 | Accepted route-proof record           | Records the closed `F-27` route model and alpha closure prerequisites.                                      |
+| F-27 closeout             | Closure authority                     | Records that the parent alpha-full gate is closed with no remaining blockers.                              |
+| GitHub Issues             | Executable task lifecycle             | Owns any follow-up implementation status, ownership, blockers, evidence, and closure.                       |
+| Planning DB               | Architecture/mechanization governance | Owns architecture, capabilities, relations, command/query rails, and governed mechanization.               |
+| Internal alpha review     | Route review and gap evidence         | Records the route stages and proof posture that led to closure.                                             |
+| Architecture view         | Route boundary lens                   | Explains route, rail, state, evidence, and risk boundaries without creating a backlog.                      |
+| Critique v3               | Accepted intake history               | Records source-grounded findings absorbed into the closed route proof.                                      |
+| Workspace-files component | Child-slice implementation authority  | Owns `ListWorkspaceFiles`, `GetWorkspaceFileContent`, and revision-guarded `SaveWorkspaceFileContent` work. |
 
 ## Command And Query Rail Binding
 
@@ -82,64 +101,67 @@ command or query rail.
 | `SaveWorkspaceGraphDraft`           | command | Workspace graph drafting             | `WorkspaceGraphDraft` aggregate        | Canvas             |
 | `ListWorkspaceFiles`                | query   | Operational evidence read models     | `WorkspaceFileTree`                    | Code tab           |
 | `GetWorkspaceFileContent`           | query   | Operational evidence read models     | `WorkspaceFileContent`                 | Code tab           |
-| `SaveWorkspaceFileContent`          | command | Project workspace I/O                | `WorkspaceFileContent`                 | Code tab           |
-| `ObservePlanRunReadiness`           | query   | Runtime admission and plan readiness | `PlanRunReadinessReadModel`            | Plan/run readiness |
-| `MapRouteRecoveryState`             | query   | Web route presentation               | `RouteRecoveryState` read model        | Recovery states    |
+| `SaveWorkspaceFileContent`          | command | Project workspace I/O                | `WorkspaceFileContent` aggregate       | Code tab           |
+| `ObservePlanRunReadiness`           | query   | Runtime admission and plan readiness | `PlanRunReadinessReadModel`             | Plan/run readiness |
+| `MapRouteRecoveryState`             | query   | Web route presentation               | `RouteRecoveryState` read model         | Recovery states    |
 
-`GetEffectiveWorkspaceContext`, `ObservePlanRunReadiness`, and
-`MapRouteRecoveryState` are route-level planning rails until their owning child
-slices bind them to exact code ports and tests. Implementation must either
-reuse existing rails or update the catalog before code.
+These rails are retained as the published language of the accepted route proof.
+New implementation work must reuse current rails or update the governed rail
+catalog before code; this closed plan does not create new executable tasks.
 
 ## Fowler Opportunity Matrix
 
 | Opportunity          | Route risk                                                       | Required correction                                                   |
 | -------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Boundary drift       | Child slices can become route authority.                         | Keep route gate in this plan and child behavior in child plans.       |
-| Duplicate semantics  | Recovery and readiness copy can diverge by stage.                | Add one source-owned recovery/readiness vocabulary before UI closure. |
-| Test-only confidence | Cypress can prove Code while startup or plan/run stays unproven. | Require a route-level fixture matrix before alpha full.               |
-| Documentation drift  | Accepted critique and active review can disagree.                | Mark critique as accepted intake and point active truth to this plan. |
-| Stage saturation     | One route review can absorb too much child detail.               | Child slices keep depth; this plan owns sequencing and gate posture.  |
+| Boundary drift       | Child slices can become route authority.                         | Keep route proof bounded and child behavior in child owners.          |
+| Duplicate semantics  | Recovery and readiness copy can diverge by stage.                | Keep one source-owned recovery/readiness vocabulary.                  |
+| Test-only confidence | Cypress can prove Code while startup or plan/run stays unproven. | Retain the route-level fixture matrix as closure evidence.            |
+| Documentation drift  | Historical review and accepted closure can disagree.             | Treat the closeout as lifecycle truth and this plan as accepted proof.|
+| Stage saturation     | One route review can absorb too much child detail.               | Child slices keep depth; this plan preserves only route proof.        |
 
-## Required Child-Slice Closure
+## Closed Child-Slice Requirements
 
-| Stage              | Required owner before implementation                   | Minimum closure evidence                                                                                                              |
-| ------------------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Startup gate       | Lane E, with runtime readiness input from Lane C       | Stable startup terminal and blocker states plus browser proof.                                                                        |
-| Workspace context  | Lane E, with protected runtime scope input from Lane C | Tenant, project, and environment visible and fail-closed.                                                                             |
-| Canvas             | Lane E, with `TF-C4` protected draft input             | Draggable graph, draft retry/recovery, and no local persistence authority.                                                            |
-| Code tab           | Workspace-files component plus ADR-0060                | Tree, preview, revision-guarded synchronization, conflict, empty, unavailable, unauthorized, not-found, and filesystem safety proofs. |
-| Plan/run readiness | Lane E plus Lane C/A inputs                            | Distinct copy for integrity, backpressure, capability, adapter, and authorization blockers.                                           |
-| Recovery states    | Lane E                                                 | Source-owned vocabulary and tests across startup, Canvas, Code, and plan/run.                                                         |
-| Alpha cadence      | Product / Architecture                                 | Tester audience, duration, entry date, exit owner, and extension rules.                                                               |
-| Risk triage        | Architecture / Docs                                    | Route-stage triage of `docs/risk-register/quality/**` with inclusion/exclusion rationale.                                             |
+| Stage              | Proof owner / dependency                              | Minimum closure evidence                                                                                                              |
+| ------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Startup gate       | Web shell with runtime readiness input                | Stable startup terminal and blocker states plus browser proof.                                                                        |
+| Workspace context  | Workspace context with protected runtime scope input  | Tenant, project, and environment visible and fail-closed.                                                                             |
+| Canvas             | Canvas with protected draft input                     | Draggable graph, draft retry/recovery, and no local persistence authority.                                                            |
+| Code tab           | Workspace-files component plus ADR-0060               | Tree, preview, revision-guarded synchronization, conflict, empty, unavailable, unauthorized, not-found, and filesystem safety proofs. |
+| Plan/run readiness | Frontend plus runtime/planner readiness inputs        | Distinct copy for integrity, backpressure, capability, adapter, and authorization blockers.                                           |
+| Recovery states    | Web route presentation                                | Source-owned vocabulary and tests across startup, Canvas, Code, and plan/run.                                                         |
+| Alpha cadence      | Product / Architecture                                | Tester audience, duration, entry date, exit owner, and extension rules.                                                               |
+| Risk triage        | Architecture / Docs                                   | Route-stage triage of `docs/risk-register/quality/**` with inclusion/exclusion rationale.                                             |
 
-## Implementation Order
+## Historical Implementation Order
 
-1. Keep this route plan and Lane E `F-27` entry as the route authority.
+The completed route followed this sequence:
+
+1. Establish the F-27 route plan and route-level proof boundary.
 2. Close route-risk triage and cadence before any alpha-full claim.
 3. Bind startup, context, recovery, and plan/run readiness to exact rails and
    component owners.
 4. Route each child implementation through its own mandatory proposal or
    existing child plan.
-5. Add the route-level fixture matrix after child rails are named.
-6. Close alpha full only after route smoke, child proofs, negative paths,
-   `traceability:adr0`, and `pnpm verify:prepush` pass.
+5. Add the route-level fixture matrix after child rails were named.
+6. Accept alpha full only after route smoke, child proofs, negative paths,
+   `traceability:adr0`, and `pnpm verify:prepush` passed.
+
+Any new executable follow-up now starts in GitHub Issues rather than reopening
+this sequence.
 
 ## Route Acceptance Matrix
 
-The route-level fixture and acceptance surface is now
+The route-level fixture and acceptance evidence is
 `docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md`.
-It owns the stage-by-stage acceptance table for F-27 and keeps alpha-full
-blocked while any route stage lacks happy-path proof, fail-closed proof,
-cadence, or risk triage. Child slices may close their own behavior, but they
-cannot declare alpha full.
+It owns the stage-by-stage proof that supported F-27 closure. The corresponding
+closeout records that alpha-full is accepted and that the parent gate has no
+remaining blockers.
 
 ## Feature Mechanization Scope
 
-This manifest mechanizes the planning-authority correction and the test-only
-combined route proof fixture. It does not implement product route behavior; it
-does own the route-level alpha-full gate decision.
+This manifest records the closed planning-authority correction and the
+combined route proof fixture. It does not implement product route behavior and
+it does not create a current task authority.
 
 ```feature-mechanization
 version: 1
@@ -161,9 +183,10 @@ governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
   - docs/guides/ai-work-protocol.md
-  - docs/planning/state/planning-control-tower.md
+  - docs/planning/state/github-mvp-issue-workflow.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/closeouts/20260514-f27-alpha-route-acceptance-matrix-closeout.md
 allowedImplementationSurfaces:
   - docs/.manifest.json
   - docs/**/index.md
@@ -174,7 +197,6 @@ allowedImplementationSurfaces:
   - docs/planning/reviews/architecture-and-governance/20260505-internal-alpha-architecture-view-review.md
   - docs/planning/reviews/architecture-and-governance/20260505-alpha-evolution-route-v3-critique.md
   - docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md
-  - docs/planning/reviews/review-status-board.md
   - docs/planning/roadmap/index.md
   - docs/planning/roadmap/roadmap-by-domain.md
   - docs/architecture/components/web/internal-alpha-route-gate-component.md
@@ -196,9 +218,6 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/PlanRunReadinessPanel.test.tsx
   - apps/web/src/app/views/canvas/canvasPlanReadiness.ts
   - apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts
-  - apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts
-  - docs/planning/state/agent-lane-c.yaml
-  - docs/planning/state/agent-lane-e.yaml
   - docs/planning/status/**
 forbiddenImplementationSurfaces:
   - packages/**
@@ -259,12 +278,10 @@ fowlerSignals:
   - Stage saturation
 architectureGuards:
   - pnpm docs:feature-mechanization:implementation
-  - pnpm docs:workboard:generate
 cypressFlows:
-  - N/A - planning-authority correction only; route-level Cypress is a child closure prerequisite.
+  - N/A - closed route-proof governance slice; product Cypress lives with child behavior.
 completionGate:
   - pnpm docs:feature-mechanization:implementation
-  - pnpm docs:workboard:generate
   - pnpm docs:sync
   - pnpm verify:prepush
 redGreenCycles:
@@ -276,9 +293,6 @@ redGreenCycles:
       - docs/planning/reviews/architecture-and-governance/20260504-internal-alpha-evolution-route.md
       - docs/planning/reviews/architecture-and-governance/20260505-internal-alpha-architecture-view-review.md
       - docs/planning/reviews/architecture-and-governance/20260505-alpha-evolution-route-v3-critique.md
-      - docs/planning/state/agent-lane-e.yaml
-      - docs/planning/state/agent-lane-c.yaml
-      - docs/planning/reviews/review-status-board.md
       - docs/planning/roadmap/index.md
       - docs/planning/roadmap/roadmap-by-domain.md
       - docs/planning/proposals/portfolio-map-20260403.md
@@ -287,7 +301,7 @@ redGreenCycles:
 symbols:
   - name: InternalAlphaProductRoutePlan
     path: docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md
-    dddOwner: InternalAlphaRouteGate planning authority
+    dddOwner: InternalAlphaRouteGate accepted route-proof evidence
     cqRails:
       - ObserveAppBootstrapRouteReadiness
       - GetEffectiveWorkspaceContext
@@ -302,7 +316,7 @@ symbols:
       - Documentation drift
       - Stage saturation
     architectureGuard: pnpm docs:feature-mechanization:implementation
-    cypressCoverage: N/A - planning-authority correction only.
+    cypressCoverage: N/A - accepted route-proof evidence only.
     unitTests:
       - pnpm docs:feature-mechanization:implementation
   - name: InternalAlphaProductRouteReview
@@ -602,7 +616,6 @@ symbols:
     dddOwner: InternalAlphaRouteGate combined route proof fixture
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - GetEffectiveWorkspaceContext
       - GetWorkspaceGraphDraft
       - SaveWorkspaceGraphDraft
       - ListWorkspaceFiles
@@ -823,16 +836,19 @@ symbols:
 
 ## Completion Criteria
 
-- `F-27` exists in Lane E and names the route-level plan.
+- `F-27` closure is recorded by
+  `docs/planning/closeouts/20260514-f27-alpha-route-acceptance-matrix-closeout.md`.
 - The route acceptance matrix names every stage, rail or owner, happy-path
   fixture, fail-closed fixture, evidence source, risk decision, and alpha exit
   impact.
-- Lane C notes name the runtime safety dependencies consumed by alpha.
-- The review status board and roadmap surfaces route readers to this plan.
 - The architecture view records route, rail, state, evidence, and risk
   boundaries without creating a parallel work queue.
 - The workspace-files child-slice manifest no longer owns the alpha critique or
   route review as implementation surfaces.
 - The critique v3 file is retained only as accepted intake history.
+- This proposal is classified under the frontend superseded/closed view and is
+  not presented as current Mandatory work in the portfolio or roadmap.
+- GitHub Issues owns any new executable task lifecycle; no Lane or retired
+  Control-Tower surface is a current task authority.
 - `pnpm docs:feature-mechanization:implementation` and `pnpm verify:prepush`
   pass after generated governance files are refreshed.
