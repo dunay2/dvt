@@ -71,7 +71,7 @@ test('starts the pinned MinIO image on loopback only', () => {
       'MINIO_ROOT_USER=minioadmin',
       '--env',
       'MINIO_ROOT_PASSWORD=minioadmin',
-      'minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e',
+      'quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e',
       'server',
       '/data',
       '--console-address',
