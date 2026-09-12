@@ -2,7 +2,7 @@
 title: Proposal Portfolio Map 2026-04-03
 status: Active
 owner: Product / Architecture / Delivery
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-12
 planning_type: proposal
 ---
 
@@ -88,7 +88,6 @@ planning_type: proposal
 - [TF-E2-M-C first canvas and first node live proof implementation plan 2026-05-01](./mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md)
 - [DVT+ Web user stories 2026-04-29](./web-user-stories-20260429.md)
 - [Web auth, project onboarding, and actionable product gaps 2026-05-01](./mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md)
-- [Internal Alpha Product Route Plan 2026-05-05](./mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md)
 - [Top menu templates artifact graph flow plan
   2026-05-27](./mandatory/frontend-and-ux/top-menu-templates-artifact-graph-flow-plan-20260527.md)
 - [Canvas workspace explorer console theme modeling plan
