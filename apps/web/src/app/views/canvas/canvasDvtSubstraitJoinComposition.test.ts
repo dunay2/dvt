@@ -30,10 +30,14 @@ import {
   type DvtSubstraitJoinSource,
   type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
-import { dvtSubstraitJoinConditionKey } from './canvasDvtSubstraitJoinCondition';
+import {
+  dvtSubstraitJoinConditionKey,
+  isDvtSubstraitJoinNullCondition,
+} from './canvasDvtSubstraitJoinCondition';
 import { dvtSubstraitJoinOperandKey } from './canvasDvtSubstraitJoinOperand';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { resolveDvtSubstraitColumnFunctions } from './canvasDvtSubstraitProjection';
+import { projectDvtSubstraitInnerJoinToPostgresSql } from './canvasDvtSubstraitPostgresProjection';
 
 const OPAQUE_RELATION_ID =
   /^dvt_rel_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -203,6 +207,52 @@ function legacyBinaryDraft(draft: DvtSubstraitInnerJoinDraft): DvtSubstraitInner
 }
 
 describe('DVT Substrait INNER JOIN identity', () => {
+  it.each(['is_null', 'is_not_null'] as const)(
+    'round-trips unary %s without a right operand and renders PostgreSQL',
+    async (operator) => {
+      const draft = fixture();
+      const before = inspectNInput(draft);
+      const condition = {
+        left: { kind: 'field' as const, sourceFieldId: inputFieldId(before, 0, 'name') },
+        operator,
+      };
+      const edited = addDvtSubstraitJoinPredicateCondition({
+        draft,
+        joinRelationId: before.joinRelations[0]!.relationId,
+        condition,
+      });
+      expect(edited).not.toBe(draft);
+      const reloaded = decodeDvtSubstraitInnerJoinDocument(
+        encodeDvtSubstraitInnerJoinDocument(edited)
+      );
+      expect(inspectNInput(reloaded).joins[0]?.additionalConditions).toEqual([condition]);
+      expect(inspectNInput(reloaded).outputs).toEqual(before.outputs);
+      const sql = (await projectDvtSubstraitInnerJoinToPostgresSql(reloaded))
+        .replaceAll(/\s+/g, ' ')
+        .toLowerCase();
+      expect(sql).toContain(`and left_source.name ${operator.replaceAll('_', ' ')}`);
+      const root = reloaded.plan.relations[0]!.relType;
+      if (root.case !== 'root' || root.value.input?.relType.case !== 'join') {
+        throw new Error('Expected JOIN root.');
+      }
+      const conjunction = root.value.input.relType.value.expression?.rexType;
+      if (conjunction?.case !== 'scalarFunction') throw new Error('Expected conjunction.');
+      const argument = conjunction.value.arguments[1]?.argType;
+      if (argument?.case !== 'value' || argument.value.rexType.case !== 'scalarFunction') {
+        throw new Error('Expected unary scalar predicate.');
+      }
+      const unary = argument.value.rexType.value;
+      expect(unary.arguments).toHaveLength(1);
+      unary.arguments.push(unary.arguments[0]!);
+      expect(
+        inspectDvtSubstraitNInputJoinDraft({
+          ...reloaded,
+          sidecar: { ...reloaded.sidecar, semanticPlanSha256: '0'.repeat(64) },
+        }).ok
+      ).toBe(false);
+    }
+  );
+
   it('allocates opaque persisted identities while keeping predicates structural', () => {
     const draft = fixture();
     const projection = inspectNInput(draft);
@@ -644,7 +694,10 @@ describe('DVT Substrait INNER JOIN identity', () => {
     if (country == null || country.kind === 'group' || active == null || active.kind === 'group') {
       throw new Error('Expected two comparison conditions.');
     }
-    const conditionKey = (condition: typeof country): string =>
+    if (isDvtSubstraitJoinNullCondition(country) || isDvtSubstraitJoinNullCondition(active)) {
+      throw new Error('Expected binary comparisons.');
+    }
+    const conditionKey = (condition: (typeof group.conditions)[number]): string =>
       dvtSubstraitJoinConditionKey(condition, (operand) =>
         dvtSubstraitJoinOperandKey(operand, (field) => field.sourceFieldId)
       );

@@ -4,6 +4,24 @@ import type { DvtSubstraitJoinPredicateCondition } from '../views/canvas/canvasD
 import { projectSemanticWorkbenchJoinConditionRows } from '../views/canvas/SemanticWorkbenchJoinConditionEditor';
 
 describe('SemanticWorkbenchJoinConditionEditor', () => {
+  it('labels null predicates without a right operand', () => {
+    const rows = projectSemanticWorkbenchJoinConditionRows({
+      conditions: [
+        { left: { kind: 'field', sourceFieldId: 'country' }, operator: 'is_null' },
+        {
+          left: { kind: 'field', sourceFieldId: 'country' },
+          operator: 'is_not_null',
+          combination: 'or',
+        },
+      ],
+      fieldLabelById: new Map([['country', 'raw.client.country']]),
+    });
+    expect(rows.map((row) => row.label)).toEqual([
+      'AND raw.client.country IS NULL',
+      'OR raw.client.country IS NOT NULL',
+    ]);
+  });
+
   it('projects grouped conditions in deterministic semantic order with explicit parentheses', () => {
     const conditions: readonly DvtSubstraitJoinPredicateCondition[] = [
       {

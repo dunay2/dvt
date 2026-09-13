@@ -42,7 +42,10 @@ import {
   type DvtSubstraitJoinPredicateOperand,
   type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
-import { reduceDvtSubstraitJoinConditions } from './canvasDvtSubstraitJoinCondition';
+import {
+  isDvtSubstraitJoinNullCondition,
+  reduceDvtSubstraitJoinConditions,
+} from './canvasDvtSubstraitJoinCondition';
 import { resolveDvtSubstraitJoinUnaryFunction } from './canvasDvtSubstraitJoinOperand';
 import {
   inspectDvtSubstraitUnionAllGroupedWindowDraft,
@@ -64,6 +67,7 @@ import {
   pgExtractYearUtc,
   pgCountRows,
   pgComparison,
+  pgNullTest,
   pgFp64Literal,
   pgFunction,
   pgI64Literal,
@@ -642,11 +646,13 @@ function buildNInputJoinPostgresAst(projection: DvtSubstraitNInputJoinProjection
       initial: conditionExpression,
       conditions: predicate.additionalConditions ?? [],
       comparison: (condition) =>
-        pgComparison(
-          POSTGRES_JOIN_COMPARISON[condition.operator ?? 'equal'],
-          predicateOperand(condition.left),
-          predicateOperand(condition.right)
-        ),
+        isDvtSubstraitJoinNullCondition(condition)
+          ? pgNullTest(predicateOperand(condition.left), condition.operator === 'is_not_null')
+          : pgComparison(
+              POSTGRES_JOIN_COMPARISON[condition.operator ?? 'equal'],
+              predicateOperand(condition.left),
+              predicateOperand(condition.right)
+            ),
       combine: (combination, leftExpression, rightExpression) =>
         combination === 'and'
           ? pgAnd([leftExpression, rightExpression])

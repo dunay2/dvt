@@ -17,17 +17,53 @@ export const DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS = [
 export type DvtSubstraitJoinComparisonOperator =
   (typeof DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS)[number];
 
+export const DVT_SUBSTRAIT_JOIN_NULL_OPERATORS = ['is_null', 'is_not_null'] as const;
+export const DVT_SUBSTRAIT_JOIN_PREDICATE_OPERATORS = [
+  ...DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS,
+  ...DVT_SUBSTRAIT_JOIN_NULL_OPERATORS,
+] as const;
+export type DvtSubstraitJoinPredicateOperator =
+  (typeof DVT_SUBSTRAIT_JOIN_PREDICATE_OPERATORS)[number];
+
+export function isDvtSubstraitJoinNullOperator(
+  operator: DvtSubstraitJoinPredicateOperator | undefined
+): operator is (typeof DVT_SUBSTRAIT_JOIN_NULL_OPERATORS)[number] {
+  return operator === 'is_null' || operator === 'is_not_null';
+}
+
 export const DVT_SUBSTRAIT_JOIN_CONDITION_COMBINATIONS = ['and', 'or'] as const;
 export type DvtSubstraitJoinConditionCombination =
   (typeof DVT_SUBSTRAIT_JOIN_CONDITION_COMBINATIONS)[number];
 
-export type DvtSubstraitJoinComparisonCondition<Operand> = Readonly<{
-  kind?: 'comparison';
-  left: Operand;
-  right: Operand;
-  operator?: DvtSubstraitJoinComparisonOperator;
-  combination?: DvtSubstraitJoinConditionCombination;
-}>;
+export type DvtSubstraitJoinComparisonCondition<Operand> = Readonly<
+  {
+    kind?: 'comparison';
+    left: Operand;
+    combination?: DvtSubstraitJoinConditionCombination;
+  } & (
+    | { right: NoInfer<Operand>; operator?: DvtSubstraitJoinComparisonOperator }
+    | { right?: never; operator: (typeof DVT_SUBSTRAIT_JOIN_NULL_OPERATORS)[number] }
+  )
+>;
+
+export function isDvtSubstraitJoinNullCondition<Operand>(
+  condition: DvtSubstraitJoinComparisonCondition<Operand>
+): condition is Extract<
+  DvtSubstraitJoinComparisonCondition<Operand>,
+  {
+    operator: (typeof DVT_SUBSTRAIT_JOIN_NULL_OPERATORS)[number];
+  }
+> {
+  return isDvtSubstraitJoinNullOperator(condition.operator);
+}
+
+export function dvtSubstraitJoinConditionOperands<Operand>(
+  condition: DvtSubstraitJoinComparisonCondition<Operand>
+): readonly Operand[] {
+  return isDvtSubstraitJoinNullCondition(condition)
+    ? [condition.left]
+    : [condition.left, condition.right];
+}
 
 export type DvtSubstraitJoinCondition<Operand> =
   | DvtSubstraitJoinComparisonCondition<Operand>
@@ -93,9 +129,11 @@ export function dvtSubstraitJoinConditionKey<Operand>(
       .map((child) => dvtSubstraitJoinConditionKey(child, operandKey))
       .join(',')}]`;
   }
-  return `${condition.combination ?? 'and'}:${condition.operator ?? 'equal'}:${operandKey(
-    condition.left
-  )}:${operandKey(condition.right)}`;
+  return `${condition.combination ?? 'and'}:${condition.operator ?? 'equal'}:${dvtSubstraitJoinConditionOperands(
+    condition
+  )
+    .map(operandKey)
+    .join(':')}`;
 }
 
 export function mapDvtSubstraitJoinConditionOperands<
@@ -116,6 +154,10 @@ export function mapDvtSubstraitJoinConditionOperands<
       : { ...condition, conditions: conditions.filter((child) => child != null) };
   }
   const left = mapOperand(condition.left);
+  if (left == null) return null;
+  if (isDvtSubstraitJoinNullCondition(condition)) {
+    return condition.right === undefined ? { ...condition, left } : null;
+  }
   const right = mapOperand(condition.right);
   return left == null || right == null ? null : { ...condition, left, right };
 }
@@ -128,6 +170,15 @@ export function compactDvtSubstraitJoinConditionDefaults<Operand>(
       kind: 'group',
       combination: condition.combination ?? 'and',
       conditions: condition.conditions.map(compactDvtSubstraitJoinConditionDefaults),
+    };
+  }
+  if (isDvtSubstraitJoinNullCondition(condition)) {
+    return {
+      left: condition.left,
+      operator: condition.operator,
+      ...(condition.combination == null || condition.combination === 'and'
+        ? {}
+        : { combination: condition.combination }),
     };
   }
   return {

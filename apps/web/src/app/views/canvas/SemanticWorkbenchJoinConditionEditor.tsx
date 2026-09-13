@@ -7,12 +7,14 @@ import type {
   DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
 import {
-  DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS,
+  DVT_SUBSTRAIT_JOIN_PREDICATE_OPERATORS,
   DVT_SUBSTRAIT_JOIN_CONDITION_COMBINATIONS,
   dvtSubstraitJoinConditionKey,
   isDvtSubstraitJoinConditionGroup,
+  isDvtSubstraitJoinNullCondition,
+  isDvtSubstraitJoinNullOperator,
   type DvtSubstraitJoinComparisonCondition,
-  type DvtSubstraitJoinComparisonOperator,
+  type DvtSubstraitJoinPredicateOperator,
   type DvtSubstraitJoinConditionCombination,
   type DvtSubstraitJoinPredicateCondition,
 } from './canvasDvtSubstraitJoinCondition';
@@ -34,13 +36,15 @@ const border = '#263b5c';
 const panel = '#09111f';
 const muted = '#94a3b8';
 const accent = '#7dd3fc';
-const COMPARISON_LABEL: Readonly<Record<DvtSubstraitJoinComparisonOperator, string>> = {
+const COMPARISON_LABEL: Readonly<Record<DvtSubstraitJoinPredicateOperator, string>> = {
   equal: '=',
   not_equal: '!=',
   gt: '>',
   gte: '>=',
   lt: '<',
   lte: '<=',
+  is_null: 'IS NULL',
+  is_not_null: 'IS NOT NULL',
 };
 const SELECT_STYLE = {
   width: '100%',
@@ -61,7 +65,7 @@ type ConditionDraft = Readonly<{
   dataType: DvtSubstraitJoinDataType;
   left: SemanticWorkbenchJoinOperandDraft;
   right: SemanticWorkbenchJoinOperandDraft;
-  operator: DvtSubstraitJoinComparisonOperator;
+  operator: DvtSubstraitJoinPredicateOperator;
   combination: DvtSubstraitJoinConditionCombination;
   combinationEditable: boolean;
   groupWithPrevious: boolean;
@@ -130,11 +134,11 @@ export function projectSemanticWorkbenchJoinConditionRows(args: {
         condition.left,
         args.fieldLabelById,
         functionNameById
-      )} ${COMPARISON_LABEL[condition.operator ?? 'equal']} ${operandText(
-        condition.right,
-        args.fieldLabelById,
-        functionNameById
-      )}`,
+      )} ${COMPARISON_LABEL[condition.operator ?? 'equal']}${
+        isDvtSubstraitJoinNullCondition(condition)
+          ? ''
+          : ` ${operandText(condition.right, args.fieldLabelById, functionNameById)}`
+      }`,
       conditionKey: dvtSubstraitJoinConditionKey(condition, predicateOperandKey),
       condition,
       combinationEditable: showCombination,
@@ -252,7 +256,9 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
     return fields.filter(
       (field) =>
         field.dataType === conditionDraft.dataType &&
-        (other.kind !== 'field' || field.fieldId !== other.fieldId)
+        (isDvtSubstraitJoinNullOperator(conditionDraft.operator) ||
+          other.kind !== 'field' ||
+          field.fieldId !== other.fieldId)
     );
   };
   const functions =
@@ -276,6 +282,9 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
           draft: conditionDraft.right,
           dataType: conditionDraft.dataType,
         });
+
+  const unary = conditionDraft != null && isDvtSubstraitJoinNullOperator(conditionDraft.operator);
+  const canApply = leftOperand != null && (unary || rightOperand != null);
 
   const startNewCondition = () => {
     const left = fields[0];
@@ -309,17 +318,26 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
       row.condition.left,
       (field) => fieldById.get(field.sourceFieldId)?.dataType ?? null
     );
-    const rightDataType = resolveDvtSubstraitJoinOperandDataType(
-      row.condition.right,
-      (field) => fieldById.get(field.sourceFieldId)?.dataType ?? null
-    );
+    const rightDataType = isDvtSubstraitJoinNullCondition(row.condition)
+      ? dataType
+      : resolveDvtSubstraitJoinOperandDataType(
+          row.condition.right,
+          (field) => fieldById.get(field.sourceFieldId)?.dataType ?? null
+        );
     const fallback = fields.find((field) => field.dataType === dataType);
     if (dataType == null || dataType !== rightDataType || fallback == null) return;
     setConditionDraft({
       conditionKey: row.conditionKey,
       dataType,
       left: operandDraft(row.condition.left, fallback.fieldId),
-      right: operandDraft(row.condition.right, fallback.fieldId),
+      right: isDvtSubstraitJoinNullCondition(row.condition)
+        ? {
+            kind: 'literal',
+            fieldId: fallback.fieldId,
+            rawValue: defaultSemanticWorkbenchJoinLiteralValue(dataType),
+            functionIds: [],
+          }
+        : operandDraft(row.condition.right, fallback.fieldId),
       operator: row.condition.operator ?? 'equal',
       combination: row.condition.combination ?? 'and',
       combinationEditable: row.combinationEditable,
@@ -491,25 +509,27 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
               onChange={(event) =>
                 setConditionDraft({
                   ...conditionDraft,
-                  operator: event.currentTarget.value as DvtSubstraitJoinComparisonOperator,
+                  operator: event.currentTarget.value as DvtSubstraitJoinPredicateOperator,
                 })
               }
             >
-              {DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS.map((operator) => (
+              {DVT_SUBSTRAIT_JOIN_PREDICATE_OPERATORS.map((operator) => (
                 <option key={operator} value={operator}>
                   {COMPARISON_LABEL[operator]}
                 </option>
               ))}
             </select>
           </label>
-          <SemanticWorkbenchJoinOperandEditor
-            side="derecho"
-            operand={conditionDraft.right}
-            dataType={conditionDraft.dataType}
-            fields={fieldOptions('right')}
-            functions={functions}
-            onChange={(right) => setConditionDraft({ ...conditionDraft, right })}
-          />
+          {unary ? null : (
+            <SemanticWorkbenchJoinOperandEditor
+              side="derecho"
+              operand={conditionDraft.right}
+              dataType={conditionDraft.dataType}
+              fields={fieldOptions('right')}
+              functions={functions}
+              onChange={(right) => setConditionDraft({ ...conditionDraft, right })}
+            />
+          )}
           {conditionDraft.conditionKey != null || props.conditions.length === 0 ? null : (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -548,15 +568,25 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
           )}
           <button
             type="button"
-            disabled={leftOperand == null || rightOperand == null}
+            disabled={!canApply}
             onClick={() => {
-              if (leftOperand == null || rightOperand == null) return;
-              const condition = {
-                left: leftOperand,
-                right: rightOperand,
-                operator: conditionDraft.operator,
-                combination: conditionDraft.combination,
-              };
+              if (leftOperand == null) return;
+              const condition: DvtSubstraitJoinComparisonCondition<DvtSubstraitJoinPredicateOperand> | null =
+                isDvtSubstraitJoinNullOperator(conditionDraft.operator)
+                  ? {
+                      left: leftOperand,
+                      operator: conditionDraft.operator,
+                      combination: conditionDraft.combination,
+                    }
+                  : rightOperand == null
+                    ? null
+                    : {
+                        left: leftOperand,
+                        right: rightOperand,
+                        operator: conditionDraft.operator,
+                        combination: conditionDraft.combination,
+                      };
+              if (condition == null) return;
               if (conditionDraft.conditionKey == null) {
                 props.onAdd(condition, conditionDraft.groupWithPrevious);
               } else {
@@ -569,10 +599,10 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
               marginTop: 7,
               border: '1px solid #0f766e',
               borderRadius: 6,
-              background: leftOperand == null || rightOperand == null ? '#111827' : '#064e3b',
+              background: !canApply ? '#111827' : '#064e3b',
               padding: '8px 9px',
-              color: leftOperand == null || rightOperand == null ? '#64748b' : '#d1fae5',
-              cursor: leftOperand == null || rightOperand == null ? 'not-allowed' : 'pointer',
+              color: !canApply ? '#64748b' : '#d1fae5',
+              cursor: !canApply ? 'not-allowed' : 'pointer',
               fontSize: 9,
               fontWeight: 700,
             }}

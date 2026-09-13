@@ -10,7 +10,10 @@ import {
   type DvtSubstraitJoinPredicateOperand,
   type DvtSubstraitJoinSource,
 } from '../views/canvas/canvasDvtSubstraitJoinComposition';
-import { reduceDvtSubstraitJoinConditions } from '../views/canvas/canvasDvtSubstraitJoinCondition';
+import {
+  isDvtSubstraitJoinNullCondition,
+  reduceDvtSubstraitJoinConditions,
+} from '../views/canvas/canvasDvtSubstraitJoinCondition';
 import { resolveDvtSubstraitJoinUnaryFunction } from '../views/canvas/canvasDvtSubstraitJoinOperand';
 import {
   applyDvtSubstraitSemanticDocument,
@@ -238,6 +241,7 @@ export function buildSemanticWorkbenchFixture(
                   inputDataType: input.dataType,
                 });
                 if (capability == null) return null;
+                if (input.value === null) return input;
                 const value = String(input.value);
                 if (capability.name === 'trim') {
                   return { dataType: 'string' as const, value: value.trim() };
@@ -265,6 +269,8 @@ export function buildSemanticWorkbenchFixture(
               if (
                 leftValue == null ||
                 rightValue == null ||
+                leftValue.value === null ||
+                rightValue.value === null ||
                 leftValue.dataType !== rightValue.dataType
               ) {
                 return false;
@@ -306,8 +312,22 @@ export function buildSemanticWorkbenchFixture(
                 predicate.operator ?? 'equal'
               ),
               conditions: predicate.additionalConditions ?? [],
-              comparison: (condition) =>
-                compareOperands(condition.left, condition.right, condition.operator ?? 'equal'),
+              comparison: (condition) => {
+                if (isDvtSubstraitJoinNullCondition(condition)) {
+                  const operand = operandValue(condition.left);
+                  return (
+                    operand != null &&
+                    (condition.operator === 'is_null'
+                      ? operand.value === null
+                      : operand.value !== null)
+                  );
+                }
+                return compareOperands(
+                  condition.left,
+                  condition.right,
+                  condition.operator ?? 'equal'
+                );
+              },
               combine: (combination, left, right) =>
                 combination === 'and' ? left && right : left || right,
             });

@@ -208,6 +208,8 @@ function operatorLabel(name: string): string {
   const aliases: Readonly<Record<string, string>> = {
     equal: '=',
     not_equal: '!=',
+    is_null: 'IS NULL',
+    is_not_null: 'IS NOT NULL',
     gt: '>',
     gte: '>=',
     lt: '<',
@@ -413,9 +415,11 @@ export function projectSemanticWorkbenchGraph(
           : []
       );
       const detail =
-        argumentsList.length === 2
-          ? `${argumentsList[0]} ${operator} ${argumentsList[1]}`
-          : `${operator}(${argumentsList.join(', ')})`;
+        argumentsList.length === 1 && (functionName === 'is_null' || functionName === 'is_not_null')
+          ? `${argumentsList[0]} ${operator}`
+          : argumentsList.length === 2
+            ? `${argumentsList[0]} ${operator} ${argumentsList[1]}`
+            : `${operator}(${argumentsList.join(', ')})`;
       return nested && (functionName === 'and' || functionName === 'or') ? `(${detail})` : detail;
     }
     return expression.rexType.case ?? 'expression';

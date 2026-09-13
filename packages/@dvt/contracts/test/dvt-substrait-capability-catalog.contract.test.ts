@@ -34,6 +34,25 @@ function standardEntry(
 }
 
 describe('DVT Substrait capability catalog V1', () => {
+  it.each(['is_null', 'is_not_null'])('admits %s with JOIN evidence', (name) => {
+    expect(
+      findCapability(
+        buildDvtSubstraitStandardCapabilityId('scalar-function', {
+          sourceKind: 'simple-extension',
+          urn: 'extension:io.substrait:functions_comparison',
+          name,
+        })
+      )
+    ).toMatchObject({
+      profileStatus: 'supported-profile',
+      admission: {
+        productUseCaseRef: 'dvt:#3135',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+  });
+
   it('admits only entries with complete evidence under the pinned profile', () => {
     expect(
       DvtSubstraitCapabilityCatalogV1Schema.safeParse(DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1).success

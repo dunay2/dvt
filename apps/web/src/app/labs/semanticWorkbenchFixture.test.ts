@@ -26,6 +26,107 @@ import { loadSemanticWorkbenchDataset } from './semanticWorkbenchDataset';
 import { projectSemanticWorkbenchGraph } from '../views/canvas/semanticWorkbenchProjection';
 
 describe('semanticWorkbenchFixture', () => {
+  it('preserves null through nested functions and grouped AND/OR conditions', () => {
+    const orders = {
+      ...ordersFixture,
+      columns: ordersFixture.columns.map((column) =>
+        column.name === 'country' ? { ...column, nullable: true } : column
+      ),
+      rows: ordersFixture.rows.map((row, index) => (index === 0 ? { ...row, country: null } : row)),
+    };
+    const fixture = buildSemanticWorkbenchFixture({ orders });
+    const draft = decodeDvtSubstraitInnerJoinDocument(
+      readDvtTransformAuthoringAuthority(fixture.transform)!.semanticDocument
+    );
+    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    if (!inspection.ok) throw new Error('Expected JOIN.');
+    const fields = inspection.projection.inputs[0]!.fields;
+    const joinRelationId = inspection.projection.joinRelations[0]!.relationId;
+    const functions = resolveDvtSubstraitJoinUnaryFunctions({
+      dataType: 'string',
+      provider: 'postgres',
+    });
+    const upper = functions.find((entry) => entry.name === 'upper')!;
+    const trim = functions.find((entry) => entry.name === 'trim')!;
+    const first = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        operator: 'is_null',
+        left: {
+          kind: 'function',
+          capabilityId: upper.capabilityId,
+          input: {
+            kind: 'function',
+            capabilityId: trim.capabilityId,
+            input: {
+              kind: 'field',
+              sourceFieldId: fields.find((field) => field.name === 'country')!.fieldId,
+            },
+          },
+        },
+      },
+    });
+    const grouped = addDvtSubstraitJoinPredicateCondition({
+      draft: first,
+      joinRelationId,
+      groupWithPrevious: true,
+      condition: {
+        operator: 'is_null',
+        combination: 'or',
+        left: {
+          kind: 'field',
+          sourceFieldId: fields.find((field) => field.name === 'discount')!.fieldId,
+        },
+      },
+    });
+    const transform = applyDvtSubstraitSemanticDocument(
+      fixture.transform,
+      encodeDvtSubstraitInnerJoinDocument(grouped)
+    );
+    expect(fixture.projectTransformSample(transform)?.rows).toHaveLength(3);
+    expect(
+      projectSemanticWorkbenchGraph(transform).nodes.find((node) => node.id === joinRelationId)
+        ?.data.label
+    ).toContain('AND (upper(trim(raw.orders.country)) IS NULL OR raw.orders.discount IS NULL)');
+  });
+
+  it.each([
+    ['is_null', 1],
+    ['is_not_null', 9],
+  ] as const)(
+    'evaluates %s on real nullable JSON and projects a unary expression tree',
+    (operator, count) => {
+      const fixture = buildSemanticWorkbenchFixture();
+      const authority = readDvtTransformAuthoringAuthority(fixture.transform)!;
+      const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+      const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+      if (!inspection.ok) throw new Error('Expected JOIN.');
+      const field = inspection.projection.inputs[0]!.fields.find(
+        (item) => item.name === 'discount'
+      )!;
+      const joinRelationId = inspection.projection.joinRelations[0]!.relationId;
+      const edited = addDvtSubstraitJoinPredicateCondition({
+        draft,
+        joinRelationId,
+        condition: { left: { kind: 'field', sourceFieldId: field.fieldId }, operator },
+      });
+      const transform = applyDvtSubstraitSemanticDocument(
+        fixture.transform,
+        encodeDvtSubstraitInnerJoinDocument(edited)
+      );
+      const sample = fixture.projectTransformSample(transform);
+      expect(sample?.rows).toHaveLength(count);
+      const graph = projectSemanticWorkbenchGraph(transform);
+      const unary = graph.nodes.find((node) => node.data.label.startsWith(operator.toUpperCase()));
+      expect(unary).toBeDefined();
+      expect(graph.edges.filter((edge) => edge.target === unary?.id)).toHaveLength(1);
+      expect(graph.nodes.find((node) => node.id === joinRelationId)?.data.label).toContain(
+        `raw.orders.discount ${operator.replaceAll('_', ' ').toUpperCase()}`
+      );
+    }
+  );
+
   it('derives all three canonical source cards from the JSON dataset schemas', () => {
     const datasets = [
       loadSemanticWorkbenchDataset(ordersFixture),

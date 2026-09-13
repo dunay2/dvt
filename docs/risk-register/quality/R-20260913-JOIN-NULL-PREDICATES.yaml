@@ -1,0 +1,15 @@
+---
+id: R-20260913-JOIN-NULL-PREDICATES
+title: Unary JOIN null predicates must preserve arity and null semantics
+status: Open
+date: 2026-09-13
+owners:
+  - apps/web
+  - packages/@dvt/contracts
+severity: Low
+probability: Low
+description: >-
+  A binary-only consumer could invent a right operand or coerce null.
+mitigation: >-
+  Unary/binary condition union, strict arity, round-trip and SQL projection tests, and mixed-null
+  JSON sample evidence. Provider-native validation remains authoritative for runtime readiness.
