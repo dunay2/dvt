@@ -162,6 +162,14 @@ affected Web tests, lint, typecheck and pre-push before declaring readiness.
 
 ## Feature mechanization
 
+Viewport correction (#3146): `ConfigureCanvasDvtNode` updates must preserve the
+existing React Flow `measured` dimensions when reprojecting a node. Currently,
+semantic edit -> discarded measurements -> all cards hidden -> measurement;
+instead, semantic edit -> retain viewport measurements -> normal resize updates.
+Measurements remain transient viewport state, never semantic authority or fixed
+CSS sizes. New nodes start unmeasured. Validate existing and new nodes, subsequent
+dimension updates, and real checkbox gestures without hiding measured cards.
+
 ```feature-mechanization
 version: 1
 featureId: VTX2-WEB-VTX1-AUTHORING-HARDCUT-2600
