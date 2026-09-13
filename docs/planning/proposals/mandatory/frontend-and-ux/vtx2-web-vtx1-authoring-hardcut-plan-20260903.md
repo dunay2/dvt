@@ -160,6 +160,25 @@ serialization/reopen and the real checkbox gesture. JOIN/aggregate presentation,
 upstream Transform reinclusion and the sample query route are unchanged. Run the
 affected Web tests, lint, typecheck and pre-push before declaring readiness.
 
+## Calculated upstream input selection (#3144)
+
+An upstream Transform's exposed outputs are inputs, not editable mappings in
+the consuming Transform. Reading them must validate the canonical projection
+and connected RelationId/FieldIds without requiring every upstream expression
+to support the simple mapping editor. Keep that editor's existing restrictions.
+
+```text
+Before: upstream outputs -> simple-mapping eligibility -> literal blocks inputs
+After:  upstream outputs -> canonical projection read -> existing FieldId mapping
+```
+
+Reuse the projection reader in `canvasColumnProjectionAuthority.ts`; do not port
+the old structural-append changes for UPPER/CONCAT cases already working on main.
+Verify removal/reinclusion, placement, surviving identities and upstream AST with
+and without a literal; unknown, stale, disconnected and malformed inputs reject
+without mutation. Prove the real checkbox and persisted derived SQL. Changes to
+an upstream schema after a downstream draft exists remain outside this slice.
+
 ## Feature mechanization
 
 Viewport correction (#3146): `ConfigureCanvasDvtNode` updates must preserve the
@@ -287,6 +306,7 @@ symbols:
   - { <<: *vtx2Symbol, name: copyOutputDescriptions, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
   - { <<: *vtx2Symbol, name: isSimpleCanvasPassthrough, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
   - { <<: *vtx2Symbol, name: persistCanvasProjectionOutputs, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
+  - { <<: *vtx2Symbol, name: readCanvasProjectionEntry, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
   - { <<: *vtx2Symbol, name: readEditableCanvasProjection, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
   - { <<: *vtx2Symbol, name: resolveCanvasColumnMappingTarget, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
   - { <<: *vtx2Symbol, name: DvtNodeAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtAuthoringTypes.ts }

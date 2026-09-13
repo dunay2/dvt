@@ -5,9 +5,14 @@ import type { ConnectedSourceRef } from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import { setCanvasColumnOutputIncluded } from './canvasColumnOutputAuthoring';
+import {
+  readCanvasColumnMappingInputFields,
+  readEditableCanvasProjectionEntry,
+} from './canvasColumnProjectionAuthority';
 import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
 import {
   createDvtSubstraitProjectionDraft,
+  createDvtSubstraitProjectionDraftFromTransform,
   decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
@@ -367,4 +372,173 @@ describe('physical field reinclusion beside calculations', () => {
       expect(truth.columns.visible.some((column) => column.name === 'customer')).toBe(false);
     }
   });
+});
+
+describe('calculated upstream field reinclusion', () => {
+  it.each([false, true])(
+    'preserves upstream expressions and FieldIds (literal: %s)',
+    (withLiteral) => {
+      const { source, model, session } = fixture(withLiteral);
+      const upstream = readDraft(session);
+      const inspection = inspectDvtSubstraitProjectionDraft(upstream);
+      if (!inspection.ok) throw new Error('Expected upstream projection.');
+      const outputs = inspection.projection.outputs;
+      const downstreamDraft = createDvtSubstraitProjectionDraftFromTransform({
+        source: upstream,
+        targetNodeId: 'downstream',
+        outputs: outputs.map((output) => ({
+          fieldId: `downstream:${output.name}`,
+          name: output.name,
+          sourceFieldId: output.fieldId,
+        })),
+      });
+      const downstream = applyDvtSubstraitSemanticDocument(
+        { ...model, id: 'downstream', name: 'Downstream' },
+        encodeDvtSubstraitProjectionDocument(downstreamDraft)
+      );
+      const nodes = new Map([source, model, downstream].map((node) => [node.id, node]));
+      let current: CanvasDraftSession = {
+        ...session,
+        localNodeCatalog: { ...session.localNodeCatalog, downstream },
+        workingSet: {
+          ...session.workingSet,
+          visibleNodeIds: [...session.workingSet.visibleNodeIds, downstream.id],
+          visibleEdges: [
+            ...session.workingSet.visibleEdges,
+            { sourceId: model.id, targetId: downstream.id },
+          ],
+        },
+      };
+      expect(
+        readCanvasColumnMappingInputFields({
+          sourceNode: model,
+          edges: current.workingSet.visibleEdges,
+          resolveNode: (id) => nodes.get(id),
+        }).map((field) => field.columnId)
+      ).toEqual(outputs.map((output) => output.fieldId));
+      if (withLiteral) {
+        expect(
+          readEditableCanvasProjectionEntry({
+            targetNode: model,
+            edges: current.workingSet.visibleEdges,
+            resolveNode: (id) => nodes.get(id),
+          }).outcome
+        ).toBe('rejected');
+      }
+
+      for (const name of ['customer_upper', 'customer_pair', ...(withLiteral ? ['channel'] : [])]) {
+        const original = JSON.stringify(current);
+        const toggle = (
+          draftSession: CanvasDraftSession,
+          columnId: string,
+          output: boolean
+        ): ReturnType<typeof setCanvasColumnOutputIncluded> =>
+          setCanvasColumnOutputIncluded({
+            draftSession,
+            canonicalNodesById: nodes,
+            targetNodeId: downstream.id,
+            columnId,
+            columnType: 'text',
+            output,
+            ...(output
+              ? { placement: { targetColumnId: 'downstream:amount', placement: 'before' as const } }
+              : {}),
+          });
+        const hidden = toggle(current, `downstream:${name}`, false);
+        expect(hidden.outcome).toBe('applied');
+        if (hidden.outcome !== 'applied') return;
+        const inputId = outputs.find((output) => output.name === name)!.fieldId;
+        for (const scenario of [
+          'unknown',
+          'mutable-name',
+          'disconnected',
+          'stale-upstream',
+          'malformed-upstream',
+          'invalid-placement',
+        ]) {
+          const invalid = structuredClone(hidden.draftSession);
+          if (scenario === 'disconnected') invalid.workingSet.visibleEdges = [];
+          if (scenario === 'stale-upstream')
+            invalid.localNodeCatalog!.model = fixture(withLiteral).model;
+          if (scenario === 'malformed-upstream') {
+            const authority = readDvtTransformAuthoringAuthority(model)!;
+            invalid.localNodeCatalog!.model = {
+              ...model,
+              metadata: {
+                ...model.metadata,
+                transformAuthoring: {
+                  ...authority,
+                  semanticDocument: {
+                    ...authority.semanticDocument,
+                    semanticPlan: {
+                      ...authority.semanticDocument.semanticPlan,
+                      bytesBase64: 'invalid',
+                    },
+                  },
+                },
+              },
+            };
+          }
+          const snapshot = JSON.stringify(invalid);
+          expect(
+            setCanvasColumnOutputIncluded({
+              draftSession: invalid,
+              canonicalNodesById: nodes,
+              targetNodeId: downstream.id,
+              columnId:
+                scenario === 'unknown' ? 'missing' : scenario === 'mutable-name' ? name : inputId,
+              columnType: 'text',
+              output: true,
+              ...(scenario === 'invalid-placement'
+                ? { placement: { targetColumnId: 'missing', placement: 'before' as const } }
+                : {}),
+            }).outcome,
+            scenario
+          ).toBe('rejected');
+          expect(JSON.stringify(invalid), scenario).toBe(snapshot);
+        }
+        const restored = toggle(hidden.draftSession, inputId, true);
+        expect(restored.outcome).toBe('applied');
+        if (restored.outcome !== 'applied') return;
+        const beforeAuthority = readDvtTransformAuthoringAuthority(
+          hidden.draftSession.localNodeCatalog!.downstream!
+        )!;
+        const afterAuthority = readDvtTransformAuthoringAuthority(
+          restored.draftSession.localNodeCatalog!.downstream!
+        )!;
+        const before = decodeDvtSubstraitProjectionDocument(beforeAuthority.semanticDocument);
+        const after = decodeDvtSubstraitProjectionDocument(afterAuthority.semanticDocument);
+        const root = after.plan.relations[0]?.relType;
+        const previousRoot = before.plan.relations[0]?.relType;
+        if (root?.case !== 'root' || previousRoot?.case !== 'root')
+          throw new Error('Expected roots.');
+        const project = root.value.input?.relType;
+        const previousProject = previousRoot.value.input?.relType;
+        if (project?.case !== 'project' || previousProject?.case !== 'project')
+          throw new Error('Expected projections.');
+        expect(project.value.input).toEqual(previousProject.value.input);
+        expect(project.value.expressions).toEqual(previousProject.value.expressions);
+        expect(after.plan.extensions).toEqual(before.plan.extensions);
+        expect(after.plan.extensionUrns).toEqual(before.plan.extensionUrns);
+        expect(after.sidecar.relations).toEqual(before.sidecar.relations);
+        for (const field of before.sidecar.fields) {
+          const { outputOrdinal: _ordinal, ...identity } = field;
+          expect(after.sidecar.fields.find((item) => item.fieldId === field.fieldId)).toMatchObject(
+            identity
+          );
+        }
+        const result = inspectDvtSubstraitProjectionDraft(after);
+        if (!result.ok) throw new Error('Expected valid restored projection.');
+        const names = result.projection.outputs.map((output) => output.name);
+        expect(names).toHaveLength(outputs.length);
+        expect(names[names.indexOf('amount') - 1]).toBe(name);
+        expect(result.projection.outputs.find((output) => output.name === name)).toMatchObject({
+          sourceFieldId: inputId,
+        });
+        expect(JSON.stringify(current)).toBe(original);
+        expect(restored.draftSession.localNodeCatalog!.model).toEqual(model);
+        current = JSON.parse(JSON.stringify(restored.draftSession)) as CanvasDraftSession;
+      }
+    }
+  );
 });
