@@ -28,10 +28,6 @@ import {
   RelRootSchema,
   RelSchema,
   type Expression,
-  type ProjectRel,
-  type ReadRel,
-  type Rel,
-  type RelCommon,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import {
   PlanRelSchema,
@@ -43,11 +39,8 @@ import {
   TypeSchema,
   Type_I64Schema,
   Type_Nullability,
-  Type_PrecisionTimestampTZSchema,
   Type_StringSchema,
   Type_StructSchema,
-  Type_UnboundSchema,
-  type Type,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import {
   ConnectedSourceRefSchema,
@@ -59,7 +52,6 @@ import {
   allocateDvtRelationId,
   type ConnectedSourceRef,
   type DvtSubstraitAuthoringSidecarV1,
-  type DvtSubstraitFieldBindingV1,
   type DvtSubstraitSemanticDocumentV1,
 } from '@dvt/contracts';
 
@@ -75,74 +67,17 @@ import {
   encodeDvtSubstraitSemanticDocument,
 } from './canvasDvtSubstraitSemanticDocument';
 
+import {
+  createProjectionType,
+  inspectProjectionDataType,
+  readHasOnlyProjectionSemantics,
+  projectHasOnlyFieldSelection,
+  sortedRelationFields,
+} from './canvasDvtSubstraitProjectionStructure';
+import { inspectChainedDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjectionChainInspection';
+export { canonicalizeDvtSubstraitProjectionDataType } from './canvasDvtSubstraitProjectionStructure';
+
 const ZERO_SHA256 = '0'.repeat(64);
-const I64_DATA_TYPES = new Set(['bigint', 'int8', 'i64']);
-
-function createProjectionType(dataType: string): Type {
-  const normalized = normalizeProjectionDataType(dataType);
-  if (STRING_DATA_TYPES.has(normalized)) {
-    return create(TypeSchema, {
-      kind: {
-        case: 'string',
-        value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
-      },
-    });
-  }
-  if (TIMESTAMPTZ_DATA_TYPES.has(normalized)) {
-    return create(TypeSchema, {
-      kind: {
-        case: 'precisionTimestampTz',
-        value: create(Type_PrecisionTimestampTZSchema, {
-          precision: 6,
-          nullability: Type_Nullability.NULLABLE,
-        }),
-      },
-    });
-  }
-  if (I64_DATA_TYPES.has(normalized)) {
-    return create(TypeSchema, {
-      kind: {
-        case: 'i64',
-        value: create(Type_I64Schema, { nullability: Type_Nullability.NULLABLE }),
-      },
-    });
-  }
-  return create(TypeSchema, { kind: { case: 'unbound', value: create(Type_UnboundSchema) } });
-}
-
-function inspectProjectionDataType(type: Type): string | null {
-  if (type.kind.case === 'unbound') return 'unknown';
-  if (
-    type.kind.case === 'string' &&
-    type.kind.value.typeVariationReference === 0 &&
-    type.kind.value.nullability === Type_Nullability.NULLABLE
-  ) {
-    return 'string';
-  }
-  if (
-    type.kind.case === 'precisionTimestampTz' &&
-    type.kind.value.precision === 6 &&
-    type.kind.value.typeVariationReference === 0 &&
-    type.kind.value.nullability === Type_Nullability.NULLABLE
-  ) {
-    return 'timestamp with time zone';
-  }
-  if (
-    type.kind.case === 'i64' &&
-    type.kind.value.typeVariationReference === 0 &&
-    type.kind.value.nullability === Type_Nullability.NULLABLE
-  ) {
-    return 'bigint';
-  }
-  return null;
-}
-
-export function canonicalizeDvtSubstraitProjectionDataType(dataType: unknown): string {
-  return (
-    inspectProjectionDataType(createProjectionType(normalizeProjectionDataType(dataType))) ??
-    'unknown'
-  );
-}
 export type DvtSubstraitProjectionAuthoringRejection =
   | 'invalid_alias'
   | 'duplicate_alias'
@@ -304,41 +239,6 @@ function hasPinnedPlanVersion(plan: Plan): boolean {
     plan.version.minorNumber === 101 &&
     plan.version.patchNumber === 0
   );
-}
-
-function commonHasNoHiddenSemantics(common: RelCommon | undefined): boolean {
-  return common != null && common.hint == null && common.advancedExtension == null;
-}
-
-function readHasOnlyProjectionSemantics(read: ReadRel): boolean {
-  return (
-    commonHasNoHiddenSemantics(read.common) &&
-    read.common?.emitKind.case === undefined &&
-    read.baseSchema != null &&
-    read.filter == null &&
-    read.bestEffortFilter == null &&
-    read.projection == null &&
-    read.advancedExtension == null &&
-    read.readType.case === 'namedTable' &&
-    read.readType.value.advancedExtension == null
-  );
-}
-
-function projectHasOnlyFieldSelection(project: ProjectRel): boolean {
-  return (
-    commonHasNoHiddenSemantics(project.common) &&
-    project.common?.emitKind.case === 'emit' &&
-    project.advancedExtension == null
-  );
-}
-
-function sortedRelationFields(
-  sidecar: DvtSubstraitAuthoringSidecarV1,
-  relationId: string
-): DvtSubstraitFieldBindingV1[] {
-  return [...sidecar.fields]
-    .filter((field) => field.relationId === relationId)
-    .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
 }
 
 export function createDvtSubstraitProjectionDraft(args: {
@@ -622,246 +522,6 @@ export function reorderDvtSubstraitProjectionOutputs(
   };
 }
 
-function inspectChainedDvtSubstraitProjectionDraft(
-  draft: DvtSubstraitProjectionDraft,
-  root: Extract<Plan['relations'][number]['relType'], { case: 'root' }>['value'],
-  project: ProjectRel
-): DvtSubstraitProjectionInspection {
-  const inputProject = project.input?.relType;
-  const inputAnchor =
-    inputProject?.case === 'project' ? inputProject.value.common?.relAnchor : undefined;
-  const targetAnchor = project.common?.relAnchor;
-  if (
-    inputProject?.case !== 'project' ||
-    inputAnchor == null ||
-    targetAnchor == null ||
-    inputAnchor === targetAnchor ||
-    !projectHasOnlyFieldSelection(project)
-  ) {
-    return { ok: false };
-  }
-  const inputBindings = draft.sidecar.relations.filter(
-    (relation) => relation.relAnchor === inputAnchor
-  );
-  const targetBindings = draft.sidecar.relations.filter(
-    (relation) => relation.relAnchor === targetAnchor
-  );
-  const inputBinding = inputBindings.length === 1 ? inputBindings[0] : null;
-  const targetBinding = targetBindings.length === 1 ? targetBindings[0] : null;
-  if (
-    inputBinding == null ||
-    inputBinding.sourceRef != null ||
-    targetBinding == null ||
-    targetBinding.sourceRef != null ||
-    inputBinding.relationId === targetBinding.relationId ||
-    new Set(draft.sidecar.relations.map((relation) => relation.relationId)).size !==
-      draft.sidecar.relations.length ||
-    new Set(draft.sidecar.fields.map((field) => field.fieldId)).size !== draft.sidecar.fields.length
-  ) {
-    return { ok: false };
-  }
-  const inputFields = sortedRelationFields(draft.sidecar, inputBinding.relationId);
-  const targetFields = sortedRelationFields(draft.sidecar, targetBinding.relationId);
-  const mappings = project.common?.emitKind;
-  if (
-    mappings?.case !== 'emit' ||
-    inputFields.length === 0 ||
-    targetFields.length !== root.names.length ||
-    mappings.value.outputMapping.length !== targetFields.length ||
-    inputFields.some(
-      (field, ordinal) =>
-        field.outputOrdinal !== ordinal || field.displayName == null || field.parentFieldId != null
-    ) ||
-    targetFields.some(
-      (field, ordinal) =>
-        field.outputOrdinal !== ordinal || field.displayName !== root.names[ordinal]
-    )
-  ) {
-    return { ok: false };
-  }
-
-  const upstreamPlan = fromBinary(PlanSchema, toBinary(PlanSchema, draft.plan));
-  const upstreamRoot = upstreamPlan.relations[0]?.relType;
-  if (upstreamRoot?.case !== 'root') return { ok: false };
-  upstreamRoot.value.input = project.input;
-  upstreamRoot.value.names = inputFields.map((field) => field.displayName!);
-  const upstreamFunctionAnchors = new Set<number>();
-  const collectExpressionFunctionAnchors = (expression: Expression): void => {
-    if (expression.rexType.case !== 'scalarFunction') return;
-    upstreamFunctionAnchors.add(expression.rexType.value.functionReference);
-    expression.rexType.value.arguments.forEach((argument) => {
-      if (argument.argType.case === 'value')
-        collectExpressionFunctionAnchors(argument.argType.value);
-    });
-  };
-  const collectRelationFunctionAnchors = (relation: Rel | undefined): void => {
-    if (relation?.relType.case !== 'project') return;
-    relation.relType.value.expressions.forEach(collectExpressionFunctionAnchors);
-    collectRelationFunctionAnchors(relation.relType.value.input);
-  };
-  collectRelationFunctionAnchors(upstreamRoot.value.input);
-  upstreamPlan.extensions = upstreamPlan.extensions.filter(
-    (entry) =>
-      entry.mappingType.case !== 'extensionFunction' ||
-      upstreamFunctionAnchors.has(entry.mappingType.value.functionAnchor)
-  );
-  const upstreamUrnAnchors = new Set(
-    upstreamPlan.extensions.flatMap((entry) =>
-      entry.mappingType.case === 'extensionFunction'
-        ? [entry.mappingType.value.extensionUrnReference]
-        : []
-    )
-  );
-  upstreamPlan.extensionUrns = upstreamPlan.extensionUrns.filter((entry) =>
-    upstreamUrnAnchors.has(entry.extensionUrnAnchor)
-  );
-  const upstreamDraft: DvtSubstraitProjectionDraft = {
-    plan: upstreamPlan,
-    sidecar: {
-      ...draft.sidecar,
-      relations: draft.sidecar.relations.filter(
-        (relation) => relation.relationId !== targetBinding.relationId
-      ),
-      fields: draft.sidecar.fields.filter((field) => field.relationId !== targetBinding.relationId),
-    },
-  };
-  const upstreamInspection = inspectDvtSubstraitProjectionDraft(upstreamDraft);
-  if (
-    !upstreamInspection.ok ||
-    upstreamInspection.projection.targetRelationId !== inputBinding.relationId ||
-    upstreamInspection.projection.outputs.length !== inputFields.length ||
-    upstreamInspection.projection.outputs.some((output, ordinal) => {
-      const field = inputFields[ordinal];
-      return (
-        field == null ||
-        output.fieldId !== field.fieldId ||
-        output.name !== field.displayName ||
-        output.outputOrdinal !== field.outputOrdinal
-      );
-    })
-  ) {
-    return { ok: false };
-  }
-
-  if (project.expressions.length > 0) {
-    const validationPlan = fromBinary(PlanSchema, toBinary(PlanSchema, draft.plan));
-    const validationRoot = validationPlan.relations[0]?.relType;
-    const validationProject =
-      validationRoot?.case === 'root' ? validationRoot.value.input?.relType : undefined;
-    if (validationRoot?.case !== 'root' || validationProject?.case !== 'project') {
-      return { ok: false };
-    }
-    validationProject.value.input = create(RelSchema, {
-      relType: {
-        case: 'read',
-        value: create(ReadRelSchema, {
-          common: create(RelCommonSchema, { relAnchor: inputAnchor }),
-          baseSchema: create(NamedStructSchema, {
-            names: inputFields.map((field) => field.displayName!),
-            struct: create(Type_StructSchema, {
-              types: upstreamInspection.projection.outputs.map((output) =>
-                createProjectionType(output.dataType)
-              ),
-              nullability: Type_Nullability.REQUIRED,
-            }),
-          }),
-          readType: {
-            case: 'namedTable',
-            value: create(ReadRel_NamedTableSchema, {
-              names: [
-                upstreamInspection.projection.source.schema,
-                upstreamInspection.projection.source.table,
-              ],
-            }),
-          },
-        }),
-      },
-    });
-    const validationInspection = inspectDvtSubstraitProjectionDraft({
-      plan: validationPlan,
-      sidecar: {
-        ...draft.sidecar,
-        relations: [
-          { ...inputBinding, sourceRef: upstreamInspection.projection.source.sourceRef },
-          targetBinding,
-        ],
-        fields: draft.sidecar.fields.filter(
-          (field) =>
-            field.relationId === inputBinding.relationId ||
-            field.relationId === targetBinding.relationId
-        ),
-      },
-    });
-    if (!validationInspection.ok) return { ok: false };
-    const actualTypeByFieldId = new Map(
-      upstreamInspection.projection.outputs.map(
-        (output) => [output.fieldId, output.dataType] as const
-      )
-    );
-    return {
-      ok: true,
-      projection: {
-        ...validationInspection.projection,
-        source: upstreamInspection.projection.source,
-        inputProjection: upstreamInspection.projection,
-        inputRelationId: inputBinding.relationId,
-        inputFields: inputFields.map((field, ordinal) => ({
-          fieldId: field.fieldId,
-          name: field.displayName!,
-          dataType: upstreamInspection.projection.outputs[ordinal]!.dataType,
-        })),
-        targetRelationId: targetBinding.relationId,
-        outputs: validationInspection.projection.outputs.map((output) => ({
-          ...output,
-          ...(output.sourceFieldId == null ||
-          output.calculation != null ||
-          output.scalarExpression != null
-            ? {}
-            : { dataType: actualTypeByFieldId.get(output.sourceFieldId) ?? output.dataType }),
-        })),
-      },
-    };
-  }
-  const outputs = mappings.value.outputMapping.map((sourceOrdinal, outputOrdinal) => {
-    const sourceField = inputFields[sourceOrdinal];
-    const sourceOutput = upstreamInspection.projection.outputs[sourceOrdinal];
-    const targetField = targetFields[outputOrdinal];
-    if (
-      sourceField == null ||
-      sourceOutput == null ||
-      targetField == null ||
-      targetField.sourceFieldId !== sourceField.fieldId
-    ) {
-      return null;
-    }
-    return {
-      fieldId: targetField.fieldId,
-      name: targetField.displayName!,
-      sourceFieldId: sourceField.fieldId,
-      sourceFieldName: sourceField.displayName!,
-      dataType: sourceOutput.dataType,
-      outputOrdinal,
-      ...(targetField.description == null ? {} : { description: targetField.description }),
-    };
-  });
-  if (outputs.some((output) => output == null)) return { ok: false };
-
-  return {
-    ok: true,
-    projection: {
-      source: upstreamInspection.projection.source,
-      inputProjection: upstreamInspection.projection,
-      inputRelationId: inputBinding.relationId,
-      inputFields: inputFields.map((field, ordinal) => ({
-        fieldId: field.fieldId,
-        name: field.displayName!,
-        dataType: upstreamInspection.projection.outputs[ordinal]!.dataType,
-      })),
-      targetRelationId: targetBinding.relationId,
-      outputs: outputs.filter((output) => output != null),
-    },
-  };
-}
 export function inspectDvtSubstraitProjectionDraft(
   draft: DvtSubstraitProjectionDraft
 ): DvtSubstraitProjectionInspection {
@@ -875,7 +535,12 @@ export function inspectDvtSubstraitProjectionDraft(
   const project = projectRelation.value;
   if (!projectHasOnlyFieldSelection(project)) return { ok: false };
   if (project.input?.relType.case === 'project') {
-    return inspectChainedDvtSubstraitProjectionDraft(draft, rootRelation.value, project);
+    return inspectChainedDvtSubstraitProjectionDraft(
+      draft,
+      rootRelation.value,
+      project,
+      inspectDvtSubstraitProjectionDraft
+    );
   }
   const readRelation = project.input?.relType;
   if (readRelation?.case !== 'read' || !readHasOnlyProjectionSemantics(readRelation.value)) {

@@ -364,6 +364,26 @@ symbols:
   - { <<: *projectionSqlSymbol, name: calculatedExpression }
   - { <<: *projectionSqlSymbol, name: outputExpression }
   - { <<: *projectionSqlSymbol, name: pgRangeSubselect, path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts }
+  - &projectionChainSymbol
+    <<: *projectionSqlSymbol
+    name: inspectChainedDvtSubstraitProjectionDraft
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitProjectionChainInspection.ts
+    fowlerSignals: [Separate chain inspection from authoring]
+    unitTests: [apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.identity.test.ts, apps/web/src/app/views/canvas/canvasDvtSubstraitOutputProjection.test.ts]
+  - { <<: *projectionChainSymbol, name: collectExpressionFunctionAnchors }
+  - { <<: *projectionChainSymbol, name: collectRelationFunctionAnchors }
+  - &projectionStructureSymbol
+    <<: *projectionChainSymbol
+    name: createProjectionType
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitProjectionStructure.ts
+    fowlerSignals: [Share existing structural admission rules without duplication]
+  - { <<: *projectionStructureSymbol, name: inspectProjectionDataType }
+  - { <<: *projectionStructureSymbol, name: canonicalizeDvtSubstraitProjectionDataType }
+  - { <<: *projectionStructureSymbol, name: commonHasNoHiddenSemantics }
+  - { <<: *projectionStructureSymbol, name: readHasOnlyProjectionSemantics }
+  - { <<: *projectionStructureSymbol, name: projectHasOnlyFieldSelection }
+  - { <<: *projectionStructureSymbol, name: sortedRelationFields }
+  - { <<: *projectionStructureSymbol, name: I64_DATA_TYPES }
   - &vtx2Symbol
     name: readDvtTransformAuthoringAuthority
     path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts
