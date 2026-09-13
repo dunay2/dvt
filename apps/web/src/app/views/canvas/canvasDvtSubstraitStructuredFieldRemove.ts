@@ -2,7 +2,10 @@
 import { fromBinary, toBinary } from '@bufbuild/protobuf';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 
-import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
+import {
+  inspectDvtSubstraitProjectionDraft,
+  type DvtSubstraitProjectionDraft,
+} from './canvasDvtSubstraitProjection';
 import {
   buildDvtSubstraitFieldTree,
   flattenDvtSubstraitFieldNames,
@@ -18,6 +21,8 @@ export function removeDvtSubstraitProjectionRoot(
   const inspection = inspectDvtSubstraitStructuredFieldDraft(draft);
   const sourceParts = resolveDvtSubstraitStructuredProjectionParts(draft);
   if (!inspection.ok || sourceParts == null) return draft;
+  const flat = !draft.sidecar.fields.some((field) => field.parentFieldId != null);
+  if (flat && !inspectDvtSubstraitProjectionDraft(draft).ok) return draft;
   const roots = orderedDvtSubstraitFields(
     draft.sidecar.fields,
     sourceParts.targetRelation.relationId
@@ -39,7 +44,7 @@ export function removeDvtSubstraitProjectionRoot(
   const parts = resolveDvtSubstraitStructuredProjectionParts(next);
   if (parts == null) return draft;
   parts.emit.outputMapping.splice(rootIndex, 1);
-  if (removedMapping >= sourceCount) {
+  if (removedMapping >= sourceCount && !parts.emit.outputMapping.includes(removedMapping)) {
     const expressionIndex = removedMapping - sourceCount;
     if (parts.project.expressions[expressionIndex] == null) return draft;
     parts.project.expressions.splice(expressionIndex, 1);
@@ -81,8 +86,41 @@ export function removeDvtSubstraitProjectionRoot(
       ),
     ],
   };
+  next.sidecar = {
+    ...next.sidecar,
+    fields: next.sidecar.fields.map((field) => {
+      if (!field.operandFieldIds?.some((fieldId) => removedIds.has(fieldId))) return field;
+      const { operandFieldIds: _operandFieldIds, ...preserved } = field;
+      return preserved;
+    }),
+  };
+  const usedFunctions = new Set<number>();
+  const visit = (value: unknown): void => {
+    if (value == null || typeof value !== 'object') return;
+    for (const [key, child] of Object.entries(value)) {
+      if (key === 'functionReference' && typeof child === 'number') usedFunctions.add(child);
+      else visit(child);
+    }
+  };
+  visit(next.plan.relations);
+  next.plan.extensions = next.plan.extensions.filter(
+    (entry) =>
+      entry.mappingType.case !== 'extensionFunction' ||
+      usedFunctions.has(entry.mappingType.value.functionAnchor)
+  );
+  const usedUrns = new Set(
+    next.plan.extensions.flatMap((entry) =>
+      entry.mappingType.value == null ? [] : [entry.mappingType.value.extensionUrnReference]
+    )
+  );
+  next.plan.extensionUrns = next.plan.extensionUrns.filter((entry) =>
+    usedUrns.has(entry.extensionUrnAnchor)
+  );
   parts.root.names = flattenDvtSubstraitFieldNames(
     retainedRoots.map((field) => buildDvtSubstraitFieldTree(field, next.sidecar.fields))
   );
-  return inspectDvtSubstraitStructuredFieldDraft(next).ok ? next : draft;
+  return inspectDvtSubstraitStructuredFieldDraft(next).ok &&
+    (!flat || inspectDvtSubstraitProjectionDraft(next).ok)
+    ? next
+    : draft;
 }
