@@ -222,6 +222,27 @@ authority inspection in composition for A2. Verify candidate connection/target,
 source identity exclusion, column admission, deterministic order and unchanged
 graph/plan/sidecar, plus the direct consumer and JOIN composition regressions.
 
+## Chained PostgreSQL projection correction (#3149)
+
+The existing `InspectCanvasNode` query must render the connected canonical
+ProjectRel chain, not treat derived output aliases as physical table columns.
+Keep the already validated upstream projection in the read model and reuse
+`pgRangeSubselect` recursively. This is derived, transient data, not another
+semantic authority, persisted document or execution rail.
+
+```text
+Before: Source -> A(UPPER/CONCAT/literal) -> B -> SELECT A_alias FROM source
+After:  Source -> A(UPPER/CONCAT/literal) -> B -> SELECT A_alias FROM (SELECT ...) A
+```
+
+One correction, no general renderer extraction: the existing recursion already
+owns validation and the existing AST builder owns projection. Preserve aliases,
+output order, calculations, identity checks and unsupported-shape rejection.
+Verify Source -> A -> B -> C, serialization, malformed/disconnected/stale inputs,
+the real SQL viewer and read-only execution against test PostgreSQL. Existing
+filter admission is unchanged; unsupported nested relations still fail closed.
+Schema evolution (#3150) and Canvas runtime execution (#2723) are excluded.
+
 ## Feature mechanization
 
 Viewport correction (#3146): `ConfigureCanvasDvtNode` updates must preserve the

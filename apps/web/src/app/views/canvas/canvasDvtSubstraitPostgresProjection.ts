@@ -216,7 +216,12 @@ function buildConnectedFieldPostgresAst(
         },
       })),
       fromClause: [
-        pgRangeVar({ schema: projection.source.schema, table: projection.source.table }),
+        projection.inputProjection == null
+          ? pgRangeVar({ schema: projection.source.schema, table: projection.source.table })
+          : pgRangeSubselect(
+              buildConnectedFieldPostgresAst(projection.inputProjection),
+              'projection_input'
+            ),
       ],
       ...(whereClause == null ? {} : { whereClause }),
       limitOption: 'LIMIT_OPTION_DEFAULT',

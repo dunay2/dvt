@@ -230,6 +230,7 @@ export type DvtSubstraitProjection = Readonly<{
 
 export type DvtSubstraitProjectionSemantics = Readonly<{
   source: DvtSubstraitProjectionSemanticSource;
+  inputProjection?: DvtSubstraitProjectionSemantics;
   inputRelationId: string;
   inputFields: readonly Readonly<{
     fieldId: string;
@@ -802,6 +803,7 @@ function inspectChainedDvtSubstraitProjectionDraft(
       projection: {
         ...validationInspection.projection,
         source: upstreamInspection.projection.source,
+        inputProjection: upstreamInspection.projection,
         inputRelationId: inputBinding.relationId,
         inputFields: inputFields.map((field, ordinal) => ({
           fieldId: field.fieldId,
@@ -848,6 +850,7 @@ function inspectChainedDvtSubstraitProjectionDraft(
     ok: true,
     projection: {
       source: upstreamInspection.projection.source,
+      inputProjection: upstreamInspection.projection,
       inputRelationId: inputBinding.relationId,
       inputFields: inputFields.map((field, ordinal) => ({
         fieldId: field.fieldId,
