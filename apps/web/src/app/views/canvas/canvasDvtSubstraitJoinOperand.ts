@@ -16,7 +16,7 @@ import {
 import {
   resolveDvtSubstraitColumnFunctions,
   type DvtSubstraitColumnFunction,
-} from './canvasDvtSubstraitProjection';
+} from './canvasDvtSubstraitColumnFunctionProjection';
 
 type JoinFieldOperand = Readonly<{ kind: 'field' }>;
 
