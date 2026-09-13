@@ -1,4 +1,4 @@
-/** Owned concern: serialize Canvas column-output commands over the latest draft session. */
+/** Owned concern: serialize Canvas column-authoring commands over the latest draft session. */
 import { useCallback, useMemo } from 'react';
 
 import type {
@@ -32,21 +32,21 @@ import {
   reorderCanvasStructuredFieldChildren,
 } from './canvasStructuredFieldAuthoring';
 
-type CanvasColumnOutputCommandRunnerState = {
+type CanvasColumnAuthoringCommandRunnerState = {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   draftSession: CanvasDraftSession;
 };
 
-type CanvasColumnOutputCommandRunnerEffects = {
+type CanvasColumnAuthoringCommandRunnerEffects = {
   runDraftSessionCommand: CanvasDraftSessionCommandRunner;
 };
 
-type UseCanvasColumnOutputCommandRunnerArgs = {
-  state: CanvasColumnOutputCommandRunnerState;
-  effects: CanvasColumnOutputCommandRunnerEffects;
+type UseCanvasColumnAuthoringCommandRunnerArgs = {
+  state: CanvasColumnAuthoringCommandRunnerState;
+  effects: CanvasColumnAuthoringCommandRunnerEffects;
 };
 
-export type CanvasColumnOutputCommandRunner = {
+export type CanvasColumnAuthoringCommandRunner = {
   toggleOutput: (identity: GraphNodeColumnOutputToggleIdentity) => CanvasColumnMappingResult;
   reorderOutput: (identity: GraphNodeColumnReorderIdentity) => CanvasColumnMappingResult;
   applyFunction: (
@@ -137,10 +137,10 @@ function applyReorderOutput(
   });
 }
 
-export function useCanvasColumnOutputCommandRunner({
+export function useCanvasColumnAuthoringCommandRunner({
   state,
   effects,
-}: UseCanvasColumnOutputCommandRunnerArgs): CanvasColumnOutputCommandRunner {
+}: UseCanvasColumnAuthoringCommandRunnerArgs): CanvasColumnAuthoringCommandRunner {
   const { canonicalNodesById } = state;
   const { runDraftSessionCommand } = effects;
   const toggleOutput = useCallback(

@@ -2,7 +2,7 @@
 
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { type CanvasDraftSession } from './canvasDraftSession';
@@ -19,9 +19,9 @@ import {
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
 import {
-  useCanvasColumnOutputCommandRunner,
-  type CanvasColumnOutputCommandRunner,
-} from './useCanvasColumnOutputCommandRunner';
+  useCanvasColumnAuthoringCommandRunner,
+  type CanvasColumnAuthoringCommandRunner,
+} from './useCanvasColumnAuthoringCommandRunner';
 
 const source: CanonicalNode = {
   id: 'source-orders',
@@ -99,7 +99,7 @@ function buildSavingSession(): CanvasDraftSession {
   };
 }
 
-describe('useCanvasColumnOutputCommandRunner', () => {
+describe('useCanvasColumnAuthoringCommandRunner', () => {
   let container: HTMLDivElement;
   let root: Root;
 
@@ -119,7 +119,7 @@ describe('useCanvasColumnOutputCommandRunner', () => {
 
   it('serializes two calculated-output submissions over the latest draft', () => {
     const transform = buildProjectionTransform();
-    let runner!: CanvasColumnOutputCommandRunner;
+    let runner!: CanvasColumnAuthoringCommandRunner;
     let currentSession: CanvasDraftSession = {
       syncState: 'editing',
       baseline: { record: null },
@@ -140,7 +140,7 @@ describe('useCanvasColumnOutputCommandRunner', () => {
     };
 
     function Harness(): null {
-      runner = useCanvasColumnOutputCommandRunner({
+      runner = useCanvasColumnAuthoringCommandRunner({
         state: {
           canonicalNodesById: new Map([
             [source.id, source],
@@ -183,7 +183,7 @@ describe('useCanvasColumnOutputCommandRunner', () => {
   });
 
   it('serializes Source toggle and reorder while an autosave is in flight', () => {
-    let runner!: CanvasColumnOutputCommandRunner;
+    let runner!: CanvasColumnAuthoringCommandRunner;
     let currentSession = buildSavingSession();
     let commandCalls = 0;
     const runDraftSessionCommand: CanvasDraftSessionCommandRunner = (command) => {
@@ -194,7 +194,7 @@ describe('useCanvasColumnOutputCommandRunner', () => {
     };
 
     function Harness(): null {
-      runner = useCanvasColumnOutputCommandRunner({
+      runner = useCanvasColumnAuthoringCommandRunner({
         state: {
           canonicalNodesById: new Map([[source.id, source]]),
           draftSession: currentSession,
