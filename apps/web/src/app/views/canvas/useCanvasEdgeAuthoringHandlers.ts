@@ -32,7 +32,7 @@ import {
   type CanvasColumnHandleIdentity,
   type CanvasColumnLineageEdgeData,
 } from './canvasColumnLineageProjection';
-import type { CanvasColumnOutputCommandRunner } from './useCanvasColumnOutputCommandRunner';
+import type { CanvasColumnAuthoringCommandRunner } from './useCanvasColumnAuthoringCommandRunner';
 import {
   useCanvasEdgeCommandRunner,
   type CanvasEdgeCommandRunner,
@@ -114,7 +114,7 @@ function resolveCurrentNode(
 
 function useCanvasColumnMappingHandlers(
   { state, effects, policy }: CanvasEdgeAuthoringContracts,
-  columnOutputCommandRunner: CanvasColumnOutputCommandRunner
+  columnAuthoringCommandRunner: CanvasColumnAuthoringCommandRunner
 ) {
   const [pendingSource, setPendingSource] = useState<CanvasColumnHandleIdentity | null>(null);
   const { canonicalNodesById, draftSession } = state;
@@ -223,12 +223,12 @@ function useCanvasColumnMappingHandlers(
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
-      const result = columnOutputCommandRunner.toggleOutput(identity);
+      const result = columnAuthoringCommandRunner.toggleOutput(identity);
       if (result.outcome === 'rejected') {
         toast.error(formatColumnMappingRejection(result.reason));
       }
     },
-    [canEditEdges, columnOutputCommandRunner]
+    [canEditEdges, columnAuthoringCommandRunner]
   );
 
   const handleReorderCanvasColumnOutput = useCallback(
@@ -237,12 +237,12 @@ function useCanvasColumnMappingHandlers(
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
-      const result = columnOutputCommandRunner.reorderOutput(identity);
+      const result = columnAuthoringCommandRunner.reorderOutput(identity);
       if (result.outcome === 'rejected') {
         toast.error(formatColumnMappingRejection(result.reason));
       }
     },
-    [canEditEdges, columnOutputCommandRunner]
+    [canEditEdges, columnAuthoringCommandRunner]
   );
   const handleRemoveColumnMapping = useCallback(
     (mapping: CanvasColumnLineageEdgeData) => {
@@ -342,7 +342,7 @@ function useCanvasEdgeReconnectHandler({
 
 export function useCanvasEdgeAuthoringHandlers(
   { state, effects, policy }: UseCanvasEdgeAuthoringHandlersArgs,
-  columnOutputCommandRunner: CanvasColumnOutputCommandRunner
+  columnAuthoringCommandRunner: CanvasColumnAuthoringCommandRunner
 ): UseCanvasEdgeAuthoringHandlersResult {
   const pluginPortMap = useMemo(
     () =>
@@ -359,7 +359,7 @@ export function useCanvasEdgeAuthoringHandlers(
   });
   const columnMappingHandlers = useCanvasColumnMappingHandlers(
     { state, effects, policy },
-    columnOutputCommandRunner
+    columnAuthoringCommandRunner
   );
 
   const createNodeConnection = useCanvasConnectionCreationHandler({
