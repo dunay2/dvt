@@ -17,6 +17,10 @@ import type { GraphNodeColumnCopy } from './GraphNodeColumnPiece';
 import { graphNodeColumnClasses } from './graphVisualTokens';
 
 export type GraphNodeExpressionComposerFunction = GraphNodeColumnFunction;
+type GraphNodeExpressionComposerRejection = Extract<
+  GraphNodeColumnFunctionApplyResult,
+  { outcome: 'rejected' }
+>['reason'];
 
 type OperandOption = Readonly<{ fieldId: string; label: string }>;
 
@@ -96,6 +100,16 @@ function expressionPreview(
   return operation.name.toUpperCase() + '(' + operands.join(', ') + ')';
 }
 
+function rejectionLabel(reason: GraphNodeExpressionComposerRejection, copy: GraphNodeColumnCopy): string {
+  if (reason === 'invalid_alias') return copy.columnFunctionAliasPolicyErrorLabel;
+  if (reason === 'duplicate_alias') return copy.columnFunctionAliasConflictLabel;
+  if (reason === 'invalid_literal') return copy.calculatedColumnLiteralPolicyError;
+  if (reason === 'unsupported_capability') return copy.noCompatibleColumnFunctionsLabel;
+  if (reason === 'invalid_reference') return copy.columnAuthoringInvalidReferenceLabel;
+  if (reason === 'invalid_target') return copy.noColumnActionsLabel;
+  return copy.expressionComposerRejectedLabel;
+}
+
 export function GraphNodeExpressionComposer(props: {
   nodeId: string;
   columnId: string;
@@ -139,7 +153,8 @@ export function GraphNodeExpressionComposer(props: {
     normalizeOperands(props.initialOperandFieldIds, initialOptions, initialBounds)
   );
   const [alias, setAlias] = useState('');
-  const [commandRejected, setCommandRejected] = useState(false);
+  const [commandRejection, setCommandRejection] =
+    useState<GraphNodeExpressionComposerRejection | null>(null);
   const aliasId = useId();
   const errorId = useId();
 
@@ -176,8 +191,8 @@ export function GraphNodeExpressionComposer(props: {
       alias,
       operandFieldIds: fieldIds as [string, ...string[]],
     });
-    if (result?.outcome !== 'applied') {
-      setCommandRejected(true);
+    if (result.outcome === 'rejected') {
+      setCommandRejection(result.reason);
       return;
     }
     props.onApplied?.(result.createdFieldId);
@@ -221,7 +236,7 @@ export function GraphNodeExpressionComposer(props: {
                 });
                 setCapabilityId(next.capabilityId);
                 setFieldIds((current) => normalizeOperands(current, nextOptions, boundsFor(next)));
-                setCommandRejected(false);
+                setCommandRejection(null);
               }}
             >
               {functions.map((item) => (
@@ -253,7 +268,7 @@ export function GraphNodeExpressionComposer(props: {
                     setFieldIds((current) =>
                       current.map((item, itemIndex) => (itemIndex === index ? nextFieldId : item))
                     );
-                    setCommandRejected(false);
+                    setCommandRejection(null);
                   }}
                 >
                   {options.map((option) => (
@@ -353,22 +368,22 @@ export function GraphNodeExpressionComposer(props: {
             value={alias}
             autoFocus
             required
-            aria-invalid={aliasConflict || aliasViolatesPolicy || commandRejected}
+            aria-invalid={aliasConflict || aliasViolatesPolicy || commandRejection != null}
             aria-describedby={
-              aliasConflict || aliasViolatesPolicy || commandRejected ? errorId : undefined
+              aliasConflict || aliasViolatesPolicy || commandRejection != null ? errorId : undefined
             }
             onChange={(event) => {
               setAlias(event.currentTarget.value);
-              setCommandRejected(false);
+              setCommandRejection(null);
             }}
           />
-          {aliasConflict || aliasViolatesPolicy || commandRejected ? (
+          {aliasConflict || aliasViolatesPolicy || commandRejection != null ? (
             <p id={errorId} role="alert" className={graphNodeColumnClasses.expressionComposerError}>
               {aliasConflict
                 ? props.copy.columnFunctionAliasConflictLabel
                 : aliasViolatesPolicy
                   ? props.copy.columnFunctionAliasPolicyErrorLabel
-                  : props.copy.expressionComposerRejectedLabel}
+                  : rejectionLabel(commandRejection!, props.copy)}
             </p>
           ) : null}
           <div className={graphNodeColumnClasses.expressionComposerActions}>
