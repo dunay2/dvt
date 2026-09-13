@@ -264,7 +264,16 @@ export function setCanvasColumnOutputIncluded(args: {
     resolveNode: (nodeId) =>
       resolveCanvasSessionNode(args.draftSession, args.canonicalNodesById, nodeId),
   });
-  if (projectionResult.outcome === 'rejected') {
+  if (
+    projectionResult.outcome === 'rejected' ||
+    (!args.output &&
+      projectionResult.projection != null &&
+      resolveCanvasSessionNode(
+        args.draftSession,
+        args.canonicalNodesById,
+        projectionResult.projection.source.nodeId
+      )?.kind !== 'dvt:transform')
+  ) {
     const structuredResult = setCanvasStructuredRootOutputIncluded({
       draftSession: args.draftSession,
       canonicalNodesById: args.canonicalNodesById,
@@ -401,14 +410,7 @@ export function setCanvasColumnOutputIncluded(args: {
     outputId: existingOutput.fieldId,
     source: {
       nodeId: projectionResult.projection.source.nodeId,
-      columnId:
-        resolveCanvasSessionNode(
-          args.draftSession,
-          args.canonicalNodesById,
-          projectionResult.projection.source.nodeId
-        )?.kind === 'dvt:transform'
-          ? (existingOutput.sourceFieldId ?? existingOutput.sourceFieldName)
-          : existingOutput.sourceFieldName,
+      columnId: existingOutput.sourceFieldId ?? existingOutput.sourceFieldName,
     },
   });
 }

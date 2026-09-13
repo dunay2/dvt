@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
-import type { GraphNodeColumn } from './graphNodeColumnContracts';
+import type { GraphNodeColumn, GraphNodeColumnSectionProps } from './graphNodeColumnContracts';
 
 describe('GraphNodeColumnSection', () => {
   const EIGHT_COLUMNS = [
@@ -296,7 +296,9 @@ describe('GraphNodeColumnSection', () => {
   });
 
   it('requires an output alias before applying a function from pointer or keyboard menus', async () => {
-    const onColumnFunctionApply = vi.fn();
+    const onColumnFunctionApply = vi
+      .fn<NonNullable<GraphNodeColumnSectionProps['onColumnFunctionApply']>>()
+      .mockReturnValue({ outcome: 'applied', createdFieldId: 'output:customer_clean' });
     await act(async () => {
       root.render(
         <GraphNodeColumnSection
@@ -396,6 +398,7 @@ describe('GraphNodeColumnSection', () => {
       capabilityId: 'capability:upper',
       alias: 'customer_clean',
     });
+    expect(document.body.querySelector('[data-slot="graph-node-expression-composer"]')).toBeNull();
 
     await act(async () => {
       piece.focus();

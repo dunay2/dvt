@@ -107,6 +107,28 @@ flowchart LR
 - **Validation:** focused Contracts/Web tests, Web lint/typecheck, ARC check, governance
   refresh, and `pnpm verify:prepush`.
 
+## Output exclusion correction (#3136)
+
+This cut changes only hiding an existing Transform output with a physical input,
+through `ConfigureCanvasDvtNode`. It must preserve the input, surviving FieldIds,
+descriptions and calculated Substrait expressions, including calculations using
+the hidden output. Optional operand-selection metadata naming a removed output
+must not override or invalidate those expressions.
+
+```text
+Before: output:false -> reconstruct simple mappings -> lose calculated outputs
+After:  output:false -> existing root removal -> retain expressions and input
+```
+
+Reuse root removal; retain shared expression slots until their last exposed alias
+is removed and retire only unused function declarations. Invalid flat documents
+and missing identities reject without mutation. Source policy, reinclusion,
+reorder, chained Transform inputs and downstream cascade approval are unchanged.
+
+Microcommits: root removal plus focused tests; command wiring plus handler proof.
+Test CONCAT both with and without a literal, serialization/reopen, derived SQL,
+shared slots and malformed documents. Run Web tests, lint, typecheck and pre-push.
+
 ## Feature mechanization
 
 ```feature-mechanization
