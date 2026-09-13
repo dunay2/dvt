@@ -55,6 +55,14 @@ const EXTRACT_ID = functionId('scalar-function', 'functions_datetime', 'extract'
 const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
   {
     entryIds: [
+      functionId('scalar-function', 'functions_comparison', 'is_null'),
+      functionId('scalar-function', 'functions_comparison', 'is_not_null'),
+    ],
+    useCaseRefs: ['dvt:#3135'],
+    proofRef: 'docs/evidence/ED-20260913-join-null-predicates.md',
+  },
+  {
+    entryIds: [
       standardId('relation', 'substrait.ReadRel', 'read_type.named_table'),
       standardId('relation', 'substrait.RelCommon', 'emit_kind.emit'),
       standardId('relation', 'substrait.ProjectRel'),

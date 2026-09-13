@@ -1,6 +1,6 @@
 export function loadSemanticWorkbenchDataset(input: unknown) {
   type ColumnType = 'integer' | 'numeric' | 'text' | 'boolean' | 'timestamp';
-  type Value = string | number | boolean;
+  type Value = string | number | boolean | null;
   const columnTypes = new Set<ColumnType>(['integer', 'numeric', 'text', 'boolean', 'timestamp']);
   const isRecord = (value: unknown): value is Record<string, unknown> =>
     value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -56,7 +56,14 @@ export function loadSemanticWorkbenchDataset(input: unknown) {
     }
     if (columnNames.has(name)) throw new Error(`${tableName} column "${name}" is duplicated.`);
     columnNames.add(name);
-    return Object.freeze({ name, type: type as ColumnType });
+    if (value.nullable !== undefined && typeof value.nullable !== 'boolean') {
+      throw new Error(`${tableName} column "${name}" nullable must be boolean.`);
+    }
+    return Object.freeze({
+      name,
+      type: type as ColumnType,
+      ...(value.nullable === true ? { nullable: true as const } : {}),
+    });
   });
   if (!columnNames.has(primaryKey)) {
     throw new Error(`${tableName} primary key "${primaryKey}" is not a declared column.`);
@@ -73,7 +80,10 @@ export function loadSemanticWorkbenchDataset(input: unknown) {
     const row: Record<string, Value> = {};
     columns.forEach((column) => {
       const fieldValue = value[column.name];
-      if (!valueMatchesType(fieldValue, column.type)) {
+      if (
+        !(fieldValue === null && column.nullable && column.name !== primaryKey) &&
+        !valueMatchesType(fieldValue, column.type)
+      ) {
         throw new Error(
           `${tableName} row ${index + 1} field "${column.name}" must be ${column.type}.`
         );

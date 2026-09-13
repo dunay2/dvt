@@ -13,16 +13,13 @@ import { ArrowLeft, Braces, Database, Equal, GitMerge, Hash, Maximize2 } from 'l
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import type { CanonicalNode } from '../../types/canonical';
 import {
-  DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS,
   addDvtSubstraitJoinPredicateCondition,
   decodeDvtSubstraitInnerJoinDocument,
   encodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitNInputJoinDraft,
   removeDvtSubstraitJoinPredicateCondition,
-  setDvtSubstraitJoinPredicateFields,
   updateDvtSubstraitJoinPredicateCondition,
   type DvtSubstraitInnerJoinDraft,
-  type DvtSubstraitJoinComparisonOperator,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   applyDvtSubstraitSemanticDocument,
@@ -31,21 +28,6 @@ import {
 import { SemanticWorkbenchJoinConditionEditor } from './SemanticWorkbenchJoinConditionEditor';
 import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 
-const COMPARISON_LABEL: Readonly<Record<DvtSubstraitJoinComparisonOperator, string>> = {
-  equal: '=',
-  not_equal: '!=',
-  gt: '>',
-  gte: '>=',
-  lt: '<',
-  lte: '<=',
-};
-
-type PendingJoinPredicate = Readonly<{
-  joinRelationId: string;
-  leftSourceFieldId: string;
-  rightSourceFieldId: string;
-  operator: DvtSubstraitJoinComparisonOperator;
-}>;
 type EditableJoinCondition = Parameters<
   typeof addDvtSubstraitJoinPredicateCondition
 >[0]['condition'];
@@ -137,9 +119,6 @@ export function SemanticTransformFocusPanel({
   onTransformChange,
 }: SemanticTransformFocusPanelProps): JSX.Element {
   const [expandedJoinRelationId, setExpandedJoinRelationId] = useState<string | null>(null);
-  const [pendingJoinPredicate, setPendingJoinPredicate] = useState<PendingJoinPredicate | null>(
-    null
-  );
   const authorityGraph = useMemo(() => projectSemanticWorkbenchGraph(transform), [transform]);
   const semanticGraph = useMemo(
     () =>
@@ -184,57 +163,13 @@ export function SemanticTransformFocusPanel({
     const predicate = joinProjection.joins[stageIndex];
     if (stageIndex < 0 || predicate == null) return null;
     const rightInputIndex = stageIndex + 1;
-    const selectedOutputFieldIds = new Set(
-      joinProjection.outputs.map((output) => output.source.fieldId)
-    );
-    const optionsFor = (operand: 'left' | 'right') =>
-      joinProjection.inputs.flatMap((input, inputIndex) =>
-        (operand === 'left' ? inputIndex < rightInputIndex : inputIndex === rightInputIndex)
-          ? input.fields.flatMap((field) =>
-              selectedOutputFieldIds.has(field.fieldId) ||
-              field.fieldId === predicate.leftSourceFieldId ||
-              field.fieldId === predicate.rightSourceFieldId
-                ? [
-                    {
-                      fieldId: field.fieldId,
-                      label: `${input.schema}.${input.table}.${field.name}`,
-                      dataType: field.dataType,
-                    },
-                  ]
-                : []
-            )
-          : []
-      );
-    const pending =
-      pendingJoinPredicate?.joinRelationId === joinRelationId
-        ? pendingJoinPredicate
-        : {
-            joinRelationId,
-            leftSourceFieldId: predicate.leftSourceFieldId,
-            rightSourceFieldId: predicate.rightSourceFieldId,
-            operator: predicate.operator ?? 'equal',
-          };
-    const fieldTypeById = new Map(
-      joinProjection.inputs.flatMap((input) =>
-        input.fields.map((field) => [field.fieldId, field.dataType] as const)
-      )
-    );
     return {
-      ...pending,
+      joinRelationId,
       projection: joinProjection,
       rightInputIndex,
-      additionalConditions: predicate.additionalConditions ?? [],
-      leftOptions: optionsFor('left'),
-      rightOptions: optionsFor('right'),
-      compatible:
-        fieldTypeById.get(pending.leftSourceFieldId) ===
-        fieldTypeById.get(pending.rightSourceFieldId),
-      dirty:
-        pending.leftSourceFieldId !== predicate.leftSourceFieldId ||
-        pending.rightSourceFieldId !== predicate.rightSourceFieldId ||
-        pending.operator !== (predicate.operator ?? 'equal'),
+      conditions: predicate.conditions,
     };
-  }, [joinProjection, pendingJoinPredicate, selectedSemantic]);
+  }, [joinProjection, selectedSemantic]);
 
   const editJoinDraft = useCallback(
     (edit: (draft: DvtSubstraitInnerJoinDraft) => DvtSubstraitInnerJoinDraft) => {
@@ -486,113 +421,12 @@ export function SemanticTransformFocusPanel({
               )}
               {selectedJoinPredicate == null ? null : (
                 <div className="mt-4">
-                  <div className="text-[9px] font-bold text-slate-400">CONDICIÓN DEL JOIN</div>
-                  <label className="mt-2 block text-[9px] text-slate-400">
-                    CAMPO IZQUIERDO
-                    <select
-                      data-slot="semantic-workbench-left-field-select"
-                      aria-label="Cambiar campo izquierdo del join"
-                      title="Campos habilitados en la conexión superior izquierda."
-                      value={selectedJoinPredicate.leftSourceFieldId}
-                      disabled={!canEdit}
-                      onChange={(event) =>
-                        setPendingJoinPredicate({
-                          joinRelationId: selectedJoinPredicate.joinRelationId,
-                          leftSourceFieldId: event.currentTarget.value,
-                          rightSourceFieldId: selectedJoinPredicate.rightSourceFieldId,
-                          operator: selectedJoinPredicate.operator,
-                        })
-                      }
-                      className="mt-1.5 w-full rounded-md border border-sky-800 bg-slate-950 px-2.5 py-2 font-mono text-[10px] text-sky-300"
-                    >
-                      {selectedJoinPredicate.leftOptions.map((option) => (
-                        <option key={option.fieldId} value={option.fieldId}>
-                          {option.label} · {option.dataType}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <select
-                    aria-label="Comparador de la condición principal"
-                    title="Operador aplicado entre los dos campos del JOIN."
-                    value={selectedJoinPredicate.operator}
-                    disabled={!canEdit}
-                    className="mt-2 w-full rounded-md border border-emerald-700 bg-slate-950 px-2.5 py-2 font-mono text-[9px] text-emerald-400"
-                    onChange={(event) =>
-                      setPendingJoinPredicate({
-                        ...selectedJoinPredicate,
-                        operator: event.currentTarget.value as DvtSubstraitJoinComparisonOperator,
-                      })
-                    }
-                  >
-                    {DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS.map((operator) => (
-                      <option key={operator} value={operator}>
-                        {COMPARISON_LABEL[operator]}
-                      </option>
-                    ))}
-                  </select>
-                  <label className="mt-2 block text-[9px] text-slate-400">
-                    CAMPO DERECHO
-                    <select
-                      data-slot="semantic-workbench-right-field-select"
-                      aria-label="Cambiar campo derecho del join"
-                      title="Campos habilitados en la conexión superior derecha."
-                      value={selectedJoinPredicate.rightSourceFieldId}
-                      disabled={!canEdit}
-                      onChange={(event) =>
-                        setPendingJoinPredicate({
-                          joinRelationId: selectedJoinPredicate.joinRelationId,
-                          leftSourceFieldId: selectedJoinPredicate.leftSourceFieldId,
-                          rightSourceFieldId: event.currentTarget.value,
-                          operator: selectedJoinPredicate.operator,
-                        })
-                      }
-                      className="mt-1.5 w-full rounded-md border border-sky-800 bg-slate-950 px-2.5 py-2 font-mono text-[10px] text-sky-300"
-                    >
-                      {selectedJoinPredicate.rightOptions.map((option) => (
-                        <option key={option.fieldId} value={option.fieldId}>
-                          {option.label} · {option.dataType}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <button
-                    type="button"
-                    disabled={
-                      !canEdit || !selectedJoinPredicate.compatible || !selectedJoinPredicate.dirty
-                    }
-                    title={
-                      selectedJoinPredicate.compatible
-                        ? 'Aplicar ambos campos a la condición.'
-                        : 'Los dos campos deben tener el mismo tipo.'
-                    }
-                    onClick={() => {
-                      editJoinDraft((draft) =>
-                        setDvtSubstraitJoinPredicateFields({
-                          draft,
-                          joinRelationId: selectedJoinPredicate.joinRelationId,
-                          leftSourceFieldId: selectedJoinPredicate.leftSourceFieldId,
-                          rightSourceFieldId: selectedJoinPredicate.rightSourceFieldId,
-                          operator: selectedJoinPredicate.operator,
-                        })
-                      );
-                      setPendingJoinPredicate(null);
-                    }}
-                    className="mt-3 w-full rounded-md border border-blue-600 bg-blue-950 px-3 py-2 text-[10px] font-bold text-blue-100 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900 disabled:text-slate-500"
-                  >
-                    Aplicar condición
-                  </button>
-                  {!selectedJoinPredicate.compatible ? (
-                    <div className="mt-2 text-[9px] text-amber-300">
-                      Selecciona dos campos del mismo tipo.
-                    </div>
-                  ) : null}
                   {canEdit ? (
                     <SemanticWorkbenchJoinConditionEditor
                       key={selectedJoinPredicate.joinRelationId}
                       projection={selectedJoinPredicate.projection}
                       rightInputIndex={selectedJoinPredicate.rightInputIndex}
-                      conditions={selectedJoinPredicate.additionalConditions}
+                      conditions={selectedJoinPredicate.conditions}
                       onAdd={(condition, groupWithPrevious) =>
                         addCondition(
                           selectedJoinPredicate.joinRelationId,
