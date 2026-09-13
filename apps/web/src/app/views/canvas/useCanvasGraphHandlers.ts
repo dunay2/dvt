@@ -18,7 +18,7 @@ import { useCanvasLayoutHandlers } from './useCanvasLayoutHandlers';
 import { useCanvasNodeAuthoringHandlers } from './useCanvasNodeAuthoringHandlers';
 import { useCanvasSelectionHandlers } from './useCanvasSelectionHandlers';
 import { useCanvasAlgebraicCompositionHandler } from './useCanvasAlgebraicCompositionHandler';
-import { useCanvasColumnOutputCommandRunner } from './useCanvasColumnOutputCommandRunner';
+import { useCanvasColumnAuthoringCommandRunner } from './useCanvasColumnAuthoringCommandRunner';
 
 export function useCanvasGraphHandlers({
   graphStrategy,
@@ -81,7 +81,7 @@ export function useCanvasGraphHandlers({
     policy: interactionPolicy,
   };
 
-  const columnCommandRunner = useCanvasColumnOutputCommandRunner({
+  const columnCommandRunner = useCanvasColumnAuthoringCommandRunner({
     state: interactionState,
     effects: { runDraftSessionCommand },
   });
