@@ -17,7 +17,7 @@ describe('GraphNodeExpressionComposer', () => {
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
     container = document.createElement('div');
-    document.body.append(container);
+    document.body.appendChild(container);
     root = createRoot(container);
   });
 
@@ -32,7 +32,7 @@ describe('GraphNodeExpressionComposer', () => {
   it('adds, reorders, and removes FieldId operands within the admitted bounds', async () => {
     const onApply = vi
       .fn()
-      .mockReturnValueOnce({ outcome: 'rejected' })
+      .mockReturnValueOnce({ outcome: 'rejected', reason: 'invalid_reference' })
       .mockReturnValueOnce({ outcome: 'applied', createdFieldId: 'field:derived' });
     const onApplied = vi.fn();
     const onCancel = vi.fn();
@@ -118,7 +118,11 @@ describe('GraphNodeExpressionComposer', () => {
     expect(
       document.body.querySelector('[data-slot="graph-node-expression-composer"]')
     ).not.toBeNull();
-    expect(composer.querySelector('[role="alert"]')?.textContent).toContain('could not be created');
+    expect(alias.value).toBe('combined');
+    expect(document.activeElement).toBe(alias);
+    expect(composer.querySelector('[role="alert"]')?.textContent).toContain(
+      'selected fields are no longer available'
+    );
 
     await act(async () => {
       fireEvent.submit(composer.querySelector('form')!);
@@ -128,7 +132,10 @@ describe('GraphNodeExpressionComposer', () => {
   });
 
   it('updates function, operands, and preview as one accessible proposal', async () => {
-    const onApply = vi.fn().mockReturnValue({ outcome: 'rejected' });
+    const onApply = vi.fn().mockReturnValue({
+      outcome: 'rejected',
+      reason: 'unsupported_capability',
+    });
 
     await act(async () => {
       root.render(
