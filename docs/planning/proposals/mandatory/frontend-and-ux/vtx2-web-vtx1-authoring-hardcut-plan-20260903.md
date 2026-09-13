@@ -235,8 +235,14 @@ Before: Source -> A(UPPER/CONCAT/literal) -> B -> SELECT A_alias FROM source
 After:  Source -> A(UPPER/CONCAT/literal) -> B -> SELECT A_alias FROM (SELECT ...) A
 ```
 
-One correction, no general renderer extraction: the existing recursion already
-owns validation and the existing AST builder owns projection. Preserve aliases,
+The functional correction is followed by responsibility-only extractions, as
+requested in review. Move connected Project SQL construction out of the mixed
+renderer; reuse the AST subquery helper and preserve its error contract. Move
+chained inspection out of the authoring module, sharing structural predicates
+and type conversion rather than copying them. The chain inspector receives the
+existing recursive inspection function; it cannot own a second admission policy.
+Keep existing public entry points and avoid runtime import cycles. No JOIN/UNION,
+new authoring capability or validation-policy changes. Preserve aliases,
 output order, calculations, identity checks and unsupported-shape rejection.
 Verify Source -> A -> B -> C, serialization, malformed/disconnected/stale inputs,
 the real SQL viewer and read-only execution against test PostgreSQL. Existing
@@ -301,6 +307,11 @@ forbiddenImplementationSurfaces:
   - packages/@dvt/planner/**
   - packages/@dvt/adapter-*/**
 commandQueryRails:
+  - name: InspectCanvasNode
+    type: query
+    referenceOnly: true
+    authorityRef: docs/planning/proposals/mandatory/frontend-and-ux/vtx1-column-lineage-mapping-projection-plan-20260816.md
+    dddOwner: CanvasNodeInspector
   - name: ConfigureCanvasDvtNode
     type: command
     status: implemented
@@ -338,6 +349,21 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts
     greenTest: apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx
 symbols:
+  - &projectionSqlSymbol
+    name: buildDvtSubstraitProjectionPostgresAst
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitProjectPostgresAst.ts
+    dddOwner: CanvasNodeInspector
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Separate connected projection from unrelated renderers]
+    architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts
+    unitTests: [apps/web/src/app/views/canvas/canvasDvtSubstraitOutputProjection.test.ts, apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts]
+  - { <<: *projectionSqlSymbol, name: requireConnectedFieldProjection }
+  - { <<: *projectionSqlSymbol, name: buildScalarExpressionPostgresAst }
+  - { <<: *projectionSqlSymbol, name: buildConnectedFieldPostgresAst }
+  - { <<: *projectionSqlSymbol, name: calculatedExpression }
+  - { <<: *projectionSqlSymbol, name: outputExpression }
+  - { <<: *projectionSqlSymbol, name: pgRangeSubselect, path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts }
   - &vtx2Symbol
     name: readDvtTransformAuthoringAuthority
     path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts

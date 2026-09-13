@@ -14,12 +14,7 @@ import {
   type DvtSubstraitPilotDraft,
   type DvtSubstraitPilotProjection,
 } from './canvasDvtSubstraitPilot';
-import {
-  inspectDvtSubstraitProjectionDraft,
-  type DvtSubstraitProjectionDraft,
-  type DvtSubstraitProjectionSemantics,
-  type DvtSubstraitScalarExpression,
-} from './canvasDvtSubstraitProjection';
+import { type DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import {
   inspectDvtSubstraitPilotAggregationDraft,
   removeDvtSubstraitPilotAggregation,
@@ -46,7 +41,6 @@ import {
   type DvtSubstraitInnerJoinGroupedWindowProjection,
   type DvtSubstraitInnerJoinGroupingProjection,
   type DvtSubstraitInnerJoinProjection,
-  type DvtSubstraitJoinComparisonOperator,
   type DvtSubstraitJoinPredicateOperand,
   type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
@@ -70,29 +64,24 @@ import {
   pgAnd,
   pgBooleanLiteral,
   pgColumnRef,
-  pgCoalesce,
-  pgConcatAcceptNulls,
-  pgExtractYearUtc,
   pgCountRows,
   pgComparison,
   pgNullTest,
   pgFp64Literal,
   pgFunction,
   pgI64Literal,
-  pgOrderedRowNumber,
   pgOr,
   pgQualifiedColumnRef,
   pgRangeVar,
+  pgRangeSubselect,
   pgRowNumber,
   pgRowNumberOverCount,
   pgString,
   pgStringLiteral,
   pgTimestampTzLiteral,
-  type PostgresComparisonOperator,
   type PostgresAstNode,
 } from './canvasDvtSubstraitPostgresAst';
-import { resolveDvtSubstraitFilterPostgresProjection } from './canvasDvtSubstraitFilterPostgresProjection';
-
+import { buildDvtSubstraitProjectionPostgresAst } from './canvasDvtSubstraitProjectPostgresAst';
 export type DvtSubstraitPostgresSourceBinding = Readonly<{
   schema: string;
   table: string;
@@ -103,131 +92,6 @@ function buildPilotOutputExpression(projection: DvtSubstraitPilotProjection): Po
     (expression, operation) => pgFunction(operation, expression),
     pgColumnRef(projection.inputFieldName)
   );
-}
-
-function requireConnectedFieldProjection(
-  draft: DvtSubstraitProjectionDraft
-): DvtSubstraitProjectionSemantics {
-  const inspection = inspectDvtSubstraitProjectionDraft(draft);
-  if (!inspection.ok) {
-    throw new DvtSubstraitPostgresProjectionError(
-      'unsupported_shape',
-      'PostgreSQL projection supports only the admitted connected-field Substrait shape.'
-    );
-  }
-  return inspection.projection;
-}
-
-function buildScalarExpressionPostgresAst(
-  expression: DvtSubstraitScalarExpression
-): PostgresAstNode {
-  if (expression.kind === 'field-reference') {
-    return pgColumnRef(expression.sourceFieldName);
-  }
-  if (expression.kind === 'timestamp-literal') {
-    return pgTimestampTzLiteral(expression.value);
-  }
-  if (
-    expression.kind === 'scalar-function' &&
-    (expression.functionName === 'trim' ||
-      expression.functionName === 'upper' ||
-      expression.functionName === 'lower') &&
-    expression.arguments.length === 1
-  ) {
-    return pgFunction(
-      expression.functionName,
-      buildScalarExpressionPostgresAst(expression.arguments[0])
-    );
-  }
-  if (
-    expression.kind === 'scalar-function' &&
-    expression.functionName === 'extract' &&
-    expression.arguments.length === 1 &&
-    expression.component === 'YEAR' &&
-    expression.timezone === 'UTC'
-  ) {
-    return pgExtractYearUtc(buildScalarExpressionPostgresAst(expression.arguments[0]));
-  }
-  if (
-    expression.kind === 'scalar-function' &&
-    expression.functionName === 'coalesce' &&
-    expression.arguments.length >= 2
-  ) {
-    return pgCoalesce(expression.arguments.map(buildScalarExpressionPostgresAst));
-  }
-  if (
-    expression.kind === 'scalar-function' &&
-    expression.functionName === 'concat' &&
-    expression.arguments.length === 2 &&
-    expression.nullHandling === 'ACCEPT_NULLS'
-  ) {
-    return pgConcatAcceptNulls(
-      buildScalarExpressionPostgresAst(expression.arguments[0]),
-      buildScalarExpressionPostgresAst(expression.arguments[1])
-    );
-  }
-  throw new DvtSubstraitPostgresProjectionError(
-    'unsupported_shape',
-    'Projection output contains an unsupported scalar expression.'
-  );
-}
-
-function buildConnectedFieldPostgresAst(
-  projection: DvtSubstraitProjectionSemantics,
-  whereClause?: PostgresAstNode
-): PostgresAstNode {
-  const calculatedExpression = (
-    output: DvtSubstraitProjectionSemantics['outputs'][number]
-  ): PostgresAstNode | null => {
-    const calculation = output.calculation;
-    if (calculation?.kind === 'string-literal') return pgStringLiteral(calculation.value);
-    if (calculation?.kind === 'timestamp-literal') return pgTimestampTzLiteral(calculation.value);
-    if (calculation?.kind === 'row-number') {
-      const orderField = projection.source.fields[calculation.orderSourceOrdinal];
-      return orderField == null ? null : pgOrderedRowNumber(orderField.name);
-    }
-    return null;
-  };
-  const outputExpression = (
-    output: DvtSubstraitProjectionSemantics['outputs'][number]
-  ): PostgresAstNode => {
-    const calculated = calculatedExpression(output);
-    if (calculated != null) return calculated;
-    if (output.scalarExpression != null) {
-      return buildScalarExpressionPostgresAst(output.scalarExpression);
-    }
-    if (output.sourceFieldName == null) {
-      throw new DvtSubstraitPostgresProjectionError(
-        'unsupported_shape',
-        'Projection output has no admitted source or calculation.'
-      );
-    }
-    return (output.operations ?? []).reduce<PostgresAstNode>(
-      (expression, operation) => pgFunction(operation, expression),
-      pgColumnRef(output.sourceFieldName)
-    );
-  };
-  return {
-    SelectStmt: {
-      targetList: projection.outputs.map((output) => ({
-        ResTarget: {
-          ...(output.name === output.sourceFieldName ? {} : { name: output.name }),
-          val: outputExpression(output),
-        },
-      })),
-      fromClause: [
-        projection.inputProjection == null
-          ? pgRangeVar({ schema: projection.source.schema, table: projection.source.table })
-          : pgRangeSubselect(
-              buildConnectedFieldPostgresAst(projection.inputProjection),
-              'projection_input'
-            ),
-      ],
-      ...(whereClause == null ? {} : { whereClause }),
-      limitOption: 'LIMIT_OPTION_DEFAULT',
-      op: 'SETOP_NONE',
-    },
-  };
 }
 
 function requireFinalPilotProjection(draft: DvtSubstraitPilotDraft): DvtSubstraitPilotProjection {
@@ -649,15 +513,6 @@ function buildUnionAllPostgresAst(projection: DvtSubstraitUnionAllProjection): P
   return { SelectStmt: union };
 }
 
-function pgRangeSubselect(subquery: PostgresAstNode, alias: string): PostgresAstNode {
-  return {
-    RangeSubselect: {
-      subquery,
-      alias: { aliasname: alias },
-    },
-  };
-}
-
 function buildGroupedUnionAllPostgresAst(
   composition: DvtSubstraitUnionAllGroupingProjection | DvtSubstraitUnionAllGroupedWindowProjection,
   unionAll: DvtSubstraitUnionAllProjection
@@ -712,13 +567,7 @@ async function deparseBoundedPostgresAst(postgresAst: PostgresAstNode): Promise<
 export async function projectDvtSubstraitProjectionToPostgresSql(
   draft: DvtSubstraitProjectionDraft
 ): Promise<string> {
-  const filter = resolveDvtSubstraitFilterPostgresProjection(draft);
-  return deparseBoundedPostgresAst(
-    buildConnectedFieldPostgresAst(
-      requireConnectedFieldProjection(filter.baseDraft),
-      filter.whereClause
-    )
-  );
+  return deparseBoundedPostgresAst(buildDvtSubstraitProjectionPostgresAst(draft));
 }
 
 export async function projectDvtSubstraitPilotToPostgresSql(
