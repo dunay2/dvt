@@ -6,10 +6,8 @@ import type {
 } from '../../plugins/graph/graphNodeColumnContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
-import {
-  resolveDvtSubstraitColumnFunctions,
-  resolveDvtSubstraitProjectionEntry,
-} from './canvasDvtSubstraitProjection';
+import { resolveDvtSubstraitColumnFunctions } from './canvasDvtSubstraitColumnFunctionProjection';
+import { resolveDvtSubstraitProjectionEntry } from './canvasDvtSubstraitProjection';
 
 export type CanvasColumnFunctionMenuMap = Map<
   string,
