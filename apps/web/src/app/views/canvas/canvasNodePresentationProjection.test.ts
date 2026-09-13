@@ -147,13 +147,14 @@ describe('projectCanvasNodePresentationTruth', () => {
 
     expect(truth.code).toMatchObject({ kind: 'canonical', language: 'json' });
     expect(truth.columns.visible).toEqual([
-      expect.objectContaining({ name: 'order_id', provenance: 'inherited' }),
       expect.objectContaining({
         name: 'customer_clean',
         provenance: 'declared',
         sourceFieldName: 'customer',
         operations: ['trim'],
       }),
+      expect.objectContaining({ name: 'order_id', provenance: 'inherited' }),
+      expect.objectContaining({ name: 'customer', provenance: 'inherited' }),
       expect.objectContaining({ name: 'amount', provenance: 'inherited' }),
     ]);
   });

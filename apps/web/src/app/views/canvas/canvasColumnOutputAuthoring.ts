@@ -357,6 +357,23 @@ export function setCanvasColumnOutputIncluded(args: {
       return { outcome: 'rejected', reason: 'mapping_not_found' };
     }
     const selectedInput = matchingInputs[0]!;
+    if (
+      projectionResult.projection != null &&
+      selectedInput.sourceNode.kind !== 'dvt:transform' &&
+      selectedInput.sourceNode.id === projectionResult.projection.source.nodeId
+    ) {
+      const restored = setCanvasStructuredRootOutputIncluded({
+        draftSession: args.draftSession,
+        canonicalNodesById: args.canonicalNodesById,
+        nodeId: targetNode.id,
+        columnId: selectedInput.field.name,
+        output: true,
+        ...(args.placement == null ? {} : { placement: args.placement }),
+      });
+      return restored.outcome === 'applied'
+        ? restored
+        : { outcome: 'rejected', reason: 'mapping_not_found' };
+    }
     const mapped = applyCanvasColumnMapping({
       draftSession: args.draftSession,
       canonicalNodesById: args.canonicalNodesById,

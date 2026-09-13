@@ -5,6 +5,7 @@ type PresentedOutput = Readonly<{
   name: string;
   sourceNodeId?: string;
   sourceFieldName?: string;
+  selectsSourceField?: boolean;
 }>;
 
 type OrderedColumn = Readonly<{
@@ -29,6 +30,7 @@ export function projectTransformColumnsInStableOrder(args: {
   );
   const projectedSourceKeys = new Set(
     args.outputs.flatMap((output) => {
+      if (output.selectsSourceField === false) return [];
       const key = sourceKey(output.sourceNodeId, output.sourceFieldName);
       return key == null ? [] : [key];
     })
@@ -36,7 +38,10 @@ export function projectTransformColumnsInStableOrder(args: {
   const declaredNames = new Set(args.declared.map((column) => column.name));
   const ordered: OrderedColumn[] = args.declared.map((column, outputOrdinal) => {
     const output = args.outputs[outputOrdinal];
-    const key = sourceKey(output?.sourceNodeId, output?.sourceFieldName);
+    const key =
+      output?.selectsSourceField === false
+        ? null
+        : sourceKey(output?.sourceNodeId, output?.sourceFieldName);
     return {
       column,
       sourceOrdinal: key == null ? null : (inheritedOrdinalBySource.get(key) ?? null),

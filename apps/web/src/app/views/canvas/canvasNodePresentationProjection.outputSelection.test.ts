@@ -43,7 +43,7 @@ const source: CanonicalNode = {
 };
 
 describe('Transform output-selection presentation', () => {
-  it('keeps an excluded middle field in its source-relative position', () => {
+  it('keeps an excluded physical field in place without admitting an unrelated Source', () => {
     const semanticDocument = encodeDvtSubstraitProjectionDocument(
       createDvtSubstraitProjectionDraft({
         source: {
@@ -103,7 +103,6 @@ describe('Transform output-selection presentation', () => {
       { name: 'order_id', provenance: 'declared' },
       { name: 'customer', provenance: 'inherited' },
       { name: 'amount', provenance: 'declared' },
-      { name: 'id', provenance: 'inherited' },
     ]);
     expect(truth.columns.visible.find((column) => column.name === 'customer')?.nullable).toBe(
       false
