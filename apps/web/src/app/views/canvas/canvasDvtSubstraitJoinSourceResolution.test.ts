@@ -35,7 +35,9 @@ function sourceNode(args: {
   };
 }
 
-function joinInput(node: CanonicalNode) {
+function joinInput(
+  node: CanonicalNode
+): Parameters<typeof createDvtSubstraitStringInnerJoinDraft>[0]['left'] {
   const metadata = node.metadata!;
   const columns = metadata.columns as readonly Readonly<{ name: string }>[];
   return {
