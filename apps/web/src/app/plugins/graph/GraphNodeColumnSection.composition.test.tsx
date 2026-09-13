@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import type { GraphNodeColumnSectionProps } from './graphNodeColumnContracts';
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
 
 describe('GraphNodeColumnSection functional composition', () => {
@@ -51,7 +52,9 @@ describe('GraphNodeColumnSection functional composition', () => {
     onColumnReorder: ReturnType<typeof vi.fn>;
     resolveColumnCompositionFunctions: ReturnType<typeof vi.fn>;
   }> {
-    const onColumnFunctionApply = vi.fn();
+    const onColumnFunctionApply = vi
+      .fn<NonNullable<GraphNodeColumnSectionProps['onColumnFunctionApply']>>()
+      .mockReturnValue({ outcome: 'applied', createdFieldId: 'output:buyer_clean' });
     const onColumnReorder = vi.fn();
     const resolveColumnCompositionFunctions = vi.fn(
       ({ targetType, sourceType }: { targetType: string; sourceType: string }) =>
@@ -200,6 +203,7 @@ describe('GraphNodeColumnSection functional composition', () => {
       capabilityId: 'capability:concat',
       alias: 'buyer_clean',
     });
+    expect(document.body.querySelector('[data-slot="graph-node-expression-composer"]')).toBeNull();
   });
 
   it('dismisses the composition decision on Escape', async () => {
