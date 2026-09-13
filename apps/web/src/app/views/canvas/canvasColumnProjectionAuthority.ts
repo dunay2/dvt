@@ -69,7 +69,7 @@ export function readCanvasColumnMappingInputFields(args: {
     }
   }
   if (args.sourceNode.pluginId !== 'dvt' || args.sourceNode.kind !== 'dvt:transform') return [];
-  const entry = readEditableCanvasProjectionEntry({
+  const entry = readCanvasProjectionEntry({
     targetNode: args.sourceNode,
     edges: args.edges,
     resolveNode: args.resolveNode,
@@ -83,7 +83,7 @@ export function readCanvasColumnMappingInputFields(args: {
     : [];
 }
 
-function hasEditableOutputs(projection: DvtSubstraitProjectionSemantics): boolean {
+function hasEditableOutputs(projection: Pick<DvtSubstraitProjectionSemantics, 'outputs'>): boolean {
   return projection.outputs.every(
     (output) =>
       (output.sourceFieldName != null || output.scalarExpression != null) &&
@@ -281,7 +281,7 @@ export function readEditableCanvasProjection(targetNode: CanonicalNode): Editabl
   }
 }
 
-export function readEditableCanvasProjectionEntry(args: {
+function readCanvasProjectionEntry(args: {
   targetNode: CanonicalNode;
   edges: readonly Readonly<{ sourceId: string; targetId: string }>[];
   resolveNode: (nodeId: string) => CanonicalNode | undefined;
@@ -294,7 +294,7 @@ export function readEditableCanvasProjectionEntry(args: {
     if (authority == null) return { outcome: 'ready', projection: null };
     const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
     const inspection = inspectDvtSubstraitProjectionDraft(draft);
-    if (!inspection.ok || !hasEditableOutputs(inspection.projection)) {
+    if (!inspection.ok) {
       return { outcome: 'rejected', reason: 'target_not_canonical_transform' };
     }
     const nodeIds = new Set<string>([args.targetNode.id]);
@@ -335,6 +335,17 @@ export function readEditableCanvasProjectionEntry(args: {
   } catch {
     return { outcome: 'rejected', reason: 'invalid_transform_authority' };
   }
+}
+
+export function readEditableCanvasProjectionEntry(
+  args: Parameters<typeof readCanvasProjectionEntry>[0]
+): EditableCanvasProjectionEntry {
+  const entry = readCanvasProjectionEntry(args);
+  return entry.outcome === 'ready' &&
+    entry.projection != null &&
+    !hasEditableOutputs(entry.projection)
+    ? { outcome: 'rejected', reason: 'target_not_canonical_transform' }
+    : entry;
 }
 
 export function canAuthorCanvasColumnMappings(targetNode: CanonicalNode): boolean {
