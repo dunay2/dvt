@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
-import { createDvtSubstraitStringInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { createDvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { resolveDvtSubstraitJoinAppendCandidates } from './canvasDvtSubstraitJoinSourceResolution';
 
 function sourceNode(args: {
@@ -35,19 +35,15 @@ function sourceNode(args: {
   };
 }
 
-function joinInput(
+function joinSource(
   node: CanonicalNode
-): Parameters<typeof createDvtSubstraitStringInnerJoinDraft>[0]['left'] {
+): Parameters<typeof createDvtSubstraitInnerJoinDraft>[0]['left'] {
   const metadata = node.metadata!;
-  const columns = metadata.columns as readonly Readonly<{ name: string }>[];
   return {
-    source: {
-      nodeId: node.id,
-      schema: metadata.schema as string,
-      table: metadata.tableName as string,
-      sourceRef: metadata.connectedSourceRef as never,
-    },
-    fields: columns.map((column) => column.name),
+    nodeId: node.id,
+    schema: metadata.schema as string,
+    table: metadata.tableName as string,
+    sourceRef: metadata.connectedSourceRef as never,
   };
 }
 
@@ -83,11 +79,9 @@ describe('canvasDvtSubstraitJoinSourceResolution', () => {
       status: 'idle',
       tags: [],
     };
-    const draft = createDvtSubstraitStringInnerJoinDraft({
-      left: joinInput(customers),
-      right: joinInput(orders),
-      leftFieldName: 'customer_id',
-      rightFieldName: 'customer_id',
+    const draft = createDvtSubstraitInnerJoinDraft({
+      left: joinSource(customers),
+      right: joinSource(orders),
       targetNodeId: target.id,
     });
 
