@@ -64,6 +64,7 @@ type DvtSubstraitPresentedOutput = Readonly<{
   nullable?: boolean;
   description?: string;
   children?: readonly DvtSubstraitPresentedOutput[];
+  selectsSourceField?: boolean;
 }>;
 
 function presentSubstraitOutput(
@@ -142,6 +143,7 @@ function projectCanvasNodePresentationTruthInternal(
         };
   let substraitOutputs: readonly DvtSubstraitPresentedOutput[] | null = null;
   let sourceOutputProjection: DvtSourceOutputProjection | null = null;
+  let physicalTransformInput: DvtSourceOutputProjection | null = null;
   let substraitRejected = false;
   let unresolvedMultiInputProjection = false;
   let canonicalSubstraitCode: Extract<CanvasNodeCodeTruth, { kind: 'canonical' }> | null = null;
@@ -176,6 +178,10 @@ function projectCanvasNodePresentationTruthInternal(
             draft: resolvedProjectionDraft,
           });
           if (projection != null) {
+            const input = args.nodes.find((node) => node.id === projection.source.nodeId);
+            if (input != null && isDvtSourceOutputProjectionNode(input)) {
+              physicalTransformInput = readDvtSourceOutputProjection(input);
+            }
             substraitOutputs = projection.outputs.map((output) => {
               const calculation = output.calculation;
               const rowOrderField =
@@ -195,6 +201,14 @@ function projectCanvasNodePresentationTruthInternal(
                 name: output.name,
                 fieldId: output.fieldId,
                 dataType: output.dataType,
+                ...(physicalTransformInput == null
+                  ? {}
+                  : {
+                      selectsSourceField:
+                        output.calculation == null &&
+                        output.scalarExpression == null &&
+                        (output.operations?.length ?? 0) === 0,
+                    }),
                 ...(sourceFieldName == null
                   ? {}
                   : {
@@ -457,14 +471,25 @@ function projectCanvasNodePresentationTruthInternal(
     const declared = substraitOutputs.map((output) =>
       presentSubstraitOutput(output, presentationTruth.columns.inherited)
     );
-    const preservesSourceRelativeInputs = substraitOutputs.every(
-      (output) =>
-        (output.sourceNodeId != null && output.sourceFieldName != null) || output.children != null
-    );
+    const preservesSourceRelativeInputs =
+      physicalTransformInput != null ||
+      substraitOutputs.every(
+        (output) =>
+          (output.sourceNodeId != null && output.sourceFieldName != null) || output.children != null
+      );
     const visible = preservesSourceRelativeInputs
       ? projectTransformColumnsInStableOrder({
           declared,
-          inherited: presentationTruth.columns.inherited,
+          inherited:
+            physicalTransformInput == null
+              ? presentationTruth.columns.inherited
+              : presentationTruth.columns.inherited.filter(
+                  (column) =>
+                    column.sourceNodeId === physicalTransformInput.source.nodeId &&
+                    physicalTransformInput.outputs.some(
+                      (output) => output.sourceFieldName === column.name
+                    )
+                ),
           outputs: substraitOutputs,
         })
       : declared;

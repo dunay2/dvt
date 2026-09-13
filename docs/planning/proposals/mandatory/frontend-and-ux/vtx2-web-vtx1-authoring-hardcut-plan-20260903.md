@@ -129,6 +129,37 @@ Microcommits: root removal plus focused tests; command wiring plus handler proof
 Test CONCAT both with and without a literal, serialization/reopen, derived SQL,
 shared slots and malformed documents. Run Web tests, lint, typecheck and pre-push.
 
+## Physical field reinclusion correction (#3144)
+
+A validated projection from a physical Source distinguishes a selected input
+from a calculation that depends on it. Hiding `customer` beside
+`UPPER(customer)` and `CONCAT(customer, customer_upper)` retains the calculations
+and presents `customer` as an inactive, available input. Renamed passthroughs
+remain selected inputs; expression lineage is not selection state.
+
+```text
+Before: hide output -> calculation lineage suppresses inactive physical input
+        reinclude -> reconstruct simple mappings -> reject scalar expression
+After:  valid physical projection -> existing stable-order inactive inputs
+        reinclude -> existing root append -> ConfigureCanvasDvtNode
+```
+
+Reuse existing presentation/order helpers and structural root append. Admit only
+fields still exposed by the connected physical Source identified by the
+projection. Preserve surviving FieldIds, descriptions, expression AST, ordering
+and extension declarations. Recreated outputs receive new FieldIds with the
+original source identity; the admitted no-literal route retains its existing
+already-selected no-op. The pre-existing literal fallback rejects a repeated
+inclusion of an already-selected output; correcting that is outside this slice.
+Unknown,
+unavailable, disconnected or wrong-source inputs, invalid placement and malformed
+documents reject without mutation. No parallel selection state or mapping rail.
+
+Validate CONCAT with and without a literal, unary-derived dependencies,
+serialization/reopen and the real checkbox gesture. JOIN/aggregate presentation,
+upstream Transform reinclusion and the sample query route are unchanged. Run the
+affected Web tests, lint, typecheck and pre-push before declaring readiness.
+
 ## Feature mechanization
 
 ```feature-mechanization
