@@ -508,47 +508,6 @@ function resolveGraphInputs(args: {
   return resolved;
 }
 
-export function resolveDvtSubstraitJoinAppendCandidates(args: {
-  targetNode: CanonicalNode;
-  nodes: readonly CanonicalNode[];
-  edges: readonly CanonicalEdge[];
-  draft: DvtSubstraitInnerJoinDraft;
-}): readonly DvtSubstraitJoinInput[] {
-  if (
-    args.targetNode.pluginId !== 'dvt' ||
-    args.targetNode.kind !== 'dvt:transform' ||
-    args.targetNode.role !== 'transform'
-  ) {
-    return [];
-  }
-  const inspection = inspectDvtSubstraitNInputJoinDraft(args.draft);
-  if (!inspection.ok) return [];
-  const firstInput = inspection.projection.inputs[0];
-  if (firstInput == null) return [];
-  const connectedIds = new Set(
-    args.edges.filter((edge) => edge.targetId === args.targetNode.id).map((edge) => edge.sourceId)
-  );
-  return args.nodes
-    .filter((node) => connectedIds.has(node.id))
-    .map(resolveJoinInput)
-    .filter(
-      (input): input is DvtSubstraitJoinInput =>
-        input != null &&
-        hasSameConnectionRef(
-          firstInput.sourceRef.connectionRef,
-          input.source.sourceRef.connectionRef
-        ) &&
-        !inspection.projection.inputs.some((existing) =>
-          hasSameConnectedSourceRef(existing.sourceRef, input.source.sourceRef)
-        )
-    )
-    .sort((left, right) =>
-      `${left.source.table}:${left.source.nodeId}`.localeCompare(
-        `${right.source.table}:${right.source.nodeId}`
-      )
-    );
-}
-
 export function resolveDvtSubstraitInnerJoinEntry(args: {
   targetNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
