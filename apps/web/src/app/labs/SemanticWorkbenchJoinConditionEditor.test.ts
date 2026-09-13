@@ -17,7 +17,7 @@ describe('SemanticWorkbenchJoinConditionEditor', () => {
       fieldLabelById: new Map([['country', 'raw.client.country']]),
     });
     expect(rows.map((row) => row.label)).toEqual([
-      'AND raw.client.country IS NULL',
+      'raw.client.country IS NULL',
       'OR raw.client.country IS NOT NULL',
     ]);
   });
@@ -50,7 +50,7 @@ describe('SemanticWorkbenchJoinConditionEditor', () => {
     });
 
     expect(rows.map(({ kind, depth, label }) => ({ kind, depth, label }))).toEqual([
-      { kind: 'group-open', depth: 0, label: 'AND (' },
+      { kind: 'group-open', depth: 0, label: '(' },
       { kind: 'comparison', depth: 1, label: "raw.client.country = 'ES'" },
       { kind: 'comparison', depth: 1, label: 'OR raw.client.active = false' },
       { kind: 'group-close', depth: 0, label: ')' },

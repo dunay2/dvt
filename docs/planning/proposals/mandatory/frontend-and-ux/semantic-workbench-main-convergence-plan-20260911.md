@@ -29,7 +29,10 @@ selected join.
 
 Issue #3135 admits unary null predicates through the same rail. The editor
 omits the right operand; SQL and the contextual tree preserve unary arity.
-Nullable JSON samples prove the result. Condition inspection moves into its
+Nullable JSON samples prove the result. Every condition, including the first,
+uses the same recursive list and FIELD/VALUE/function editor. No mandatory
+field-pair anchor remains; the existing Substrait relation inputs own topology.
+Condition inspection moves into its
 own module. The inventory below records the new and relocated symbols and
 removes the helpers retired by that extraction. Admission and validation:
 `docs/evidence/ED-20260913-join-null-predicates.md`.
@@ -150,13 +153,7 @@ symbols:
     name: OperationalDrawerTabId
     path: apps/web/src/app/components/shell/operationalDrawerContributionStore.ts
   - <<: *semanticSymbol
-    name: COMPARISON_LABEL
-    path: apps/web/src/app/views/canvas/SemanticTransformFocusPanel.tsx
-  - <<: *semanticSymbol
     name: EditableJoinCondition
-    path: apps/web/src/app/views/canvas/SemanticTransformFocusPanel.tsx
-  - <<: *semanticSymbol
-    name: PendingJoinPredicate
     path: apps/web/src/app/views/canvas/SemanticTransformFocusPanel.tsx
   - <<: *semanticSymbol
     name: SemanticTransformFocusPanel
@@ -502,9 +499,6 @@ symbols:
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
   - <<: *semanticSymbol
     name: setDvtSubstraitJoinConnectionFieldSelected
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
-  - <<: *semanticSymbol
-    name: setDvtSubstraitJoinPredicateFields
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
   - <<: *semanticSymbol
     name: updateDvtSubstraitJoinPredicateCondition

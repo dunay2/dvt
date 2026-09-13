@@ -230,7 +230,7 @@ function literalLabel(expression: Expression): string {
   const literal = expression.rexType.value.literalType;
   if (literal.case === 'string') return `'${literal.value}'`;
   if (literal.case === undefined) return 'NULL';
-  return `${literal.case}: ${String(literal.value)}`;
+  return String(literal.value);
 }
 
 function routeEdgesByTransition(

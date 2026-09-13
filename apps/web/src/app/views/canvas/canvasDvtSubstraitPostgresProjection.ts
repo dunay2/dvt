@@ -635,16 +635,8 @@ function buildNInputJoinPostgresAst(projection: DvtSubstraitNInputJoinProjection
   for (let inputIndex = 1; inputIndex < projection.inputs.length; inputIndex += 1) {
     const input = projection.inputs[inputIndex]!;
     const predicate = projection.joins[inputIndex - 1]!;
-    const left = requireFieldBinding(predicate.leftSourceFieldId);
-    const right = requireFieldBinding(predicate.rightSourceFieldId);
-    let conditionExpression = pgComparison(
-      POSTGRES_JOIN_COMPARISON[predicate.operator ?? 'equal'],
-      pgQualifiedColumnRef(left.alias, left.name),
-      pgQualifiedColumnRef(right.alias, right.name)
-    );
-    conditionExpression = reduceDvtSubstraitJoinConditions({
-      initial: conditionExpression,
-      conditions: predicate.additionalConditions ?? [],
+    const conditionExpression = reduceDvtSubstraitJoinConditions({
+      conditions: predicate.conditions,
       comparison: (condition) =>
         isDvtSubstraitJoinNullCondition(condition)
           ? pgNullTest(predicateOperand(condition.left), condition.operator === 'is_not_null')

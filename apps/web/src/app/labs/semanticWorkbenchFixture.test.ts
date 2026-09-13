@@ -7,7 +7,10 @@ import {
   encodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitNInputJoinDraft,
   setDvtSubstraitJoinConnectionFieldSelected,
+  updateDvtSubstraitJoinPredicateCondition,
 } from '../views/canvas/canvasDvtSubstraitJoinComposition';
+import { dvtSubstraitJoinConditionKey } from '../views/canvas/canvasDvtSubstraitJoinCondition';
+import { dvtSubstraitJoinOperandKey } from '../views/canvas/canvasDvtSubstraitJoinOperand';
 import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
@@ -26,6 +29,53 @@ import { loadSemanticWorkbenchDataset } from './semanticWorkbenchDataset';
 import { projectSemanticWorkbenchGraph } from '../views/canvas/semanticWorkbenchProjection';
 
 describe('semanticWorkbenchFixture', () => {
+  it.each([
+    [0, 50],
+    [1, 80],
+  ])('replaces the first condition of JOIN %i with 1 = 1', (stage, expectedRows) => {
+    const fixture = buildSemanticWorkbenchFixture();
+    const draft = decodeDvtSubstraitInnerJoinDocument(
+      readDvtTransformAuthoringAuthority(fixture.transform)!.semanticDocument
+    );
+    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    if (!inspection.ok) throw new Error('Expected JOIN.');
+    const projection = inspection.projection;
+    const keyName = stage === 0 ? 'client_id' : 'order_id';
+    const sourceId = (index: number): string =>
+      projection.inputs[index]!.fields.find((field) => field.name === keyName)!.fieldId;
+    const conditionKey = dvtSubstraitJoinConditionKey(
+      {
+        left: { kind: 'field' as const, sourceFieldId: sourceId(0) },
+        right: { kind: 'field' as const, sourceFieldId: sourceId(stage + 1) },
+      },
+      (operand) => dvtSubstraitJoinOperandKey(operand, (field) => field.sourceFieldId)
+    );
+    const one = { kind: 'literal' as const, literal: { dataType: 'fp64' as const, value: 1 } };
+    const edited = updateDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId: projection.joinRelations[stage]!.relationId,
+      conditionKey,
+      condition: { left: one, right: one },
+    });
+    expect(edited).not.toBe(draft);
+    const transform = applyDvtSubstraitSemanticDocument(
+      fixture.transform,
+      encodeDvtSubstraitInnerJoinDocument(edited)
+    );
+    expect(fixture.projectTransformSample(transform)?.rows).toHaveLength(expectedRows);
+    const reloaded = inspectDvtSubstraitNInputJoinDraft(
+      decodeDvtSubstraitInnerJoinDocument(
+        readDvtTransformAuthoringAuthority(transform)!.semanticDocument
+      )
+    );
+    expect(reloaded.ok && reloaded.projection.joinRelations).toEqual(projection.joinRelations);
+    expect(
+      projectSemanticWorkbenchGraph(transform).nodes.find(
+        (node) => node.id === projection.joinRelations[stage]!.relationId
+      )?.data.label
+    ).toContain('1 = 1');
+  });
+
   it('preserves null through nested functions and grouped AND/OR conditions', () => {
     const orders = {
       ...ordersFixture,
@@ -473,10 +523,10 @@ describe('semanticWorkbenchFixture', () => {
     expect(sample?.rows.map((row) => row.values[orderIdIndex])).not.toContain('ORD-1004');
     const graph = projectSemanticWorkbenchGraph(transform);
     expect(graph.nodes.map((node) => node.data.label)).toEqual(
-      expect.arrayContaining(['AND\nAND', 'NOT_EQUAL\n!=', 'VALUE\nboolean: false'])
+      expect.arrayContaining(['AND\nAND', 'NOT_EQUAL\n!=', 'VALUE\nfalse'])
     );
     expect(graph.nodes.find((node) => node.id === joinRelationId)?.data.label).toContain(
-      'raw.client.active != boolean: false'
+      'raw.client.active != false'
     );
   });
 
@@ -596,7 +646,7 @@ describe('semanticWorkbenchFixture', () => {
     ).toBe(true);
     expect(
       relationGraph.nodes.find((node) => node.id === joinRelationId)?.data.expression
-    ).toContain("AND (raw.client.country = 'ES' OR raw.client.active = boolean: false)");
+    ).toContain("AND (raw.client.country = 'ES' OR raw.client.active = false)");
   });
 
   it('evaluates and organizes an N-function JOIN operand from the real JSON rows', () => {

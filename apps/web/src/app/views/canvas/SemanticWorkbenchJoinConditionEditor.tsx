@@ -144,7 +144,7 @@ export function projectSemanticWorkbenchJoinConditionRows(args: {
       combinationEditable: showCombination,
     });
   };
-  args.conditions.forEach((condition) => visit(condition, 0, true));
+  args.conditions.forEach((condition, index) => visit(condition, 0, index > 0));
   return rows;
 }
 
@@ -250,17 +250,10 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
       }),
     [fields, functionNameById, props.conditions]
   );
-  const fieldOptions = (side: 'left' | 'right') => {
-    if (conditionDraft == null) return [];
-    const other = side === 'left' ? conditionDraft.right : conditionDraft.left;
-    return fields.filter(
-      (field) =>
-        field.dataType === conditionDraft.dataType &&
-        (isDvtSubstraitJoinNullOperator(conditionDraft.operator) ||
-          other.kind !== 'field' ||
-          field.fieldId !== other.fieldId)
-    );
-  };
+  const fieldOptions =
+    conditionDraft == null
+      ? []
+      : fields.filter((field) => field.dataType === conditionDraft.dataType);
   const functions =
     conditionDraft == null
       ? []
@@ -348,13 +341,13 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
   return (
     <div data-slot="semantic-workbench-join-condition-list" style={{ marginTop: 12 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ color: muted, fontSize: 9, fontWeight: 700 }}>CONDICIONES ADICIONALES</span>
+        <span style={{ color: muted, fontSize: 9, fontWeight: 700 }}>CONDICIONES DEL JOIN</span>
         <IconAction label="Añadir condición" onClick={startNewCondition}>
           <Plus aria-hidden="true" size={13} />
         </IconAction>
       </div>
       {rows.length === 0 ? (
-        <div style={{ marginTop: 7, color: muted, fontSize: 9 }}>Sin condiciones adicionales.</div>
+        <div style={{ marginTop: 7, color: muted, fontSize: 9 }}>Sin condiciones.</div>
       ) : (
         <div style={{ display: 'grid', gap: 4, marginTop: 8 }}>
           {rows.map((row, index) =>
@@ -388,17 +381,19 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
                 <IconAction label="Editar condición" onClick={() => editCondition(row)}>
                   <Pencil aria-hidden="true" size={11} />
                 </IconAction>
-                <IconAction
-                  label="Eliminar condición"
-                  onClick={() => {
-                    props.onRemove(row.conditionKey);
-                    setConditionDraft((current) =>
-                      current?.conditionKey === row.conditionKey ? null : current
-                    );
-                  }}
-                >
-                  <Trash2 aria-hidden="true" size={11} />
-                </IconAction>
+                {rows.filter((item) => item.kind === 'comparison').length > 1 ? (
+                  <IconAction
+                    label="Eliminar condición"
+                    onClick={() => {
+                      props.onRemove(row.conditionKey);
+                      setConditionDraft((current) =>
+                        current?.conditionKey === row.conditionKey ? null : current
+                      );
+                    }}
+                  >
+                    <Trash2 aria-hidden="true" size={11} />
+                  </IconAction>
+                ) : null}
               </div>
             ) : (
               <div
@@ -437,13 +432,13 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
             </IconAction>
           </div>
           <select
-            aria-label="Conector de la condición adicional"
+            aria-label="Conector de la condición"
             value={conditionDraft.combination}
             disabled={!conditionDraft.combinationEditable}
             title={
               conditionDraft.combinationEditable
                 ? 'Conector booleano con la condición anterior.'
-                : 'El primer elemento hereda el conector de su grupo.'
+                : 'La primera condición no tiene conector anterior.'
             }
             style={SELECT_STYLE}
             onChange={(event) =>
@@ -462,7 +457,7 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
           <label style={{ display: 'block', marginTop: 8, color: muted, fontSize: 9 }}>
             TIPO DE DATO
             <select
-              aria-label="Tipo de dato de la condición adicional"
+              aria-label="Tipo de dato de la condición"
               value={conditionDraft.dataType}
               style={SELECT_STYLE}
               onChange={(event) => {
@@ -496,14 +491,14 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
             side="izquierdo"
             operand={conditionDraft.left}
             dataType={conditionDraft.dataType}
-            fields={fieldOptions('left')}
+            fields={fieldOptions}
             functions={functions}
             onChange={(left) => setConditionDraft({ ...conditionDraft, left })}
           />
           <label style={{ display: 'block', marginTop: 8, color: muted, fontSize: 9 }}>
             COMPARACIÓN
             <select
-              aria-label="Comparador de la condición adicional"
+              aria-label="Comparador de la condición"
               value={conditionDraft.operator}
               style={SELECT_STYLE}
               onChange={(event) =>
@@ -525,7 +520,7 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
               side="derecho"
               operand={conditionDraft.right}
               dataType={conditionDraft.dataType}
-              fields={fieldOptions('right')}
+              fields={fieldOptions}
               functions={functions}
               onChange={(right) => setConditionDraft({ ...conditionDraft, right })}
             />

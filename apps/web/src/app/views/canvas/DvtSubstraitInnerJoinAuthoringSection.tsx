@@ -28,6 +28,8 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import { canvasViewCopy } from './copy';
+import { projectSemanticWorkbenchJoinConditionRows } from './SemanticWorkbenchJoinConditionEditor';
+import { resolveDvtSubstraitJoinUnaryFunctions } from './canvasDvtSubstraitJoinOperand';
 
 export function DvtSubstraitInnerJoinAuthoringSection({
   disabled,
@@ -520,25 +522,32 @@ export function DvtSubstraitInnerJoinAuthoringSection({
           {projection.inputs.map((input) => input.table).join(' + ')}
         </p>
         <ul className="space-y-1 text-xs" data-slot="dvt-substrait-n-input-predicates">
-          {projection.joins.map((join) => {
-            const leftInput = projection.inputs.find((input) =>
-              input.fields.some((field) => field.fieldId === join.leftSourceFieldId)
-            );
-            const rightInput = projection.inputs.find((input) =>
-              input.fields.some((field) => field.fieldId === join.rightSourceFieldId)
-            );
-            const leftField = leftInput?.fields.find(
-              (field) => field.fieldId === join.leftSourceFieldId
-            );
-            const rightField = rightInput?.fields.find(
-              (field) => field.fieldId === join.rightSourceFieldId
-            );
-            return (
-              <li key={`${join.leftSourceFieldId}:${join.rightSourceFieldId}`}>
-                {leftInput?.table}.{leftField?.name} = {rightInput?.table}.{rightField?.name}
-              </li>
-            );
-          })}
+          {projection.joins.map((join, index) => (
+            <li key={projection.joinRelations[index]!.relationId}>
+              {projectSemanticWorkbenchJoinConditionRows({
+                conditions: join.conditions,
+                fieldLabelById: new Map(
+                  projection.inputs.flatMap((input) =>
+                    input.fields.map(
+                      (field) => [field.fieldId, `${input.table}.${field.name}`] as const
+                    )
+                  )
+                ),
+                functionNameById: new Map(
+                  projection.inputs.flatMap((input) =>
+                    input.fields.flatMap((field) =>
+                      resolveDvtSubstraitJoinUnaryFunctions({
+                        dataType: field.dataType,
+                        provider: 'postgres',
+                      }).map((fn) => [fn.capabilityId, fn.name] as const)
+                    )
+                  )
+                ),
+              })
+                .map((row) => row.label)
+                .join(' ')}
+            </li>
+          ))}
         </ul>
         <dl className="space-y-2 text-xs">
           <div className="space-y-2">

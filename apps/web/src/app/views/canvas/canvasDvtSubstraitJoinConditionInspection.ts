@@ -7,8 +7,6 @@ import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import {
   DVT_SUBSTRAIT_JOIN_PREDICATE_OPERATORS,
   DVT_SUBSTRAIT_JOIN_CONDITION_COMBINATIONS,
-  isDvtSubstraitJoinConditionGroup,
-  isDvtSubstraitJoinNullCondition,
   isDvtSubstraitJoinNullOperator,
   type DvtSubstraitJoinComparisonCondition,
   type DvtSubstraitJoinCondition,
@@ -96,11 +94,5 @@ function inspectJoinConditionList(
 }
 
 export function inspectJoinConditionChain(plan: Plan, expression: Expression | undefined) {
-  const conditions = inspectJoinConditionList(plan, expression);
-  const [base, ...additionalConditions] = conditions ?? [];
-  return base == null ||
-    isDvtSubstraitJoinConditionGroup(base) ||
-    isDvtSubstraitJoinNullCondition(base)
-    ? null
-    : { base: { ...base, operator: base.operator ?? 'equal' }, additionalConditions };
+  return inspectJoinConditionList(plan, expression);
 }

@@ -214,18 +214,8 @@ export function buildSemanticWorkbenchFixture(
 
       for (const [predicateIndex, predicate] of inspection.projection.joins.entries()) {
         const rightInputIndex = predicateIndex + 1;
-        const left = fieldById.get(predicate.leftSourceFieldId);
-        const right = fieldById.get(predicate.rightSourceFieldId);
         const rightRows = inputRows[rightInputIndex];
-        if (
-          left == null ||
-          right == null ||
-          right.inputIndex !== rightInputIndex ||
-          left.inputIndex >= rightInputIndex ||
-          rightRows == null
-        ) {
-          return null;
-        }
+        if (rightRows == null) return null;
         joinedRows = joinedRows.flatMap((joined) =>
           rightRows.flatMap((rightRow) => {
             const candidate = new Map(joined).set(rightInputIndex, rightRow);
@@ -306,12 +296,7 @@ export function buildSemanticWorkbenchFixture(
               return comparison <= 0;
             };
             const matches = reduceDvtSubstraitJoinConditions({
-              initial: compareOperands(
-                { kind: 'field', sourceFieldId: predicate.leftSourceFieldId },
-                { kind: 'field', sourceFieldId: predicate.rightSourceFieldId },
-                predicate.operator ?? 'equal'
-              ),
-              conditions: predicate.additionalConditions ?? [],
+              conditions: predicate.conditions,
               comparison: (condition) => {
                 if (isDvtSubstraitJoinNullCondition(condition)) {
                   const operand = operandValue(condition.left);

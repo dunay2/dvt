@@ -296,7 +296,6 @@ export function removeDvtSubstraitJoinComparison<Operand>(args: {
 }
 
 export function reduceDvtSubstraitJoinConditions<Operand, Result>(args: {
-  initial: Result;
   conditions: readonly DvtSubstraitJoinCondition<Operand>[];
   comparison: (condition: DvtSubstraitJoinComparisonCondition<Operand>) => Result;
   combine: (
@@ -316,8 +315,10 @@ export function reduceDvtSubstraitJoinConditions<Operand, Result>(args: {
       term(first)
     );
   };
-  return args.conditions.reduce(
+  const [first, ...rest] = args.conditions;
+  if (first == null) throw new Error('VTX2 INNER JOIN requires at least one condition.');
+  return rest.reduce(
     (left, condition) => args.combine(condition.combination ?? 'and', left, term(condition)),
-    args.initial
+    term(first)
   );
 }

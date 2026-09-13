@@ -36,11 +36,32 @@ After:  operand -> null predicate -> existing AND/OR group -> JoinRel
 ```
 
 The right operand is absent, not a dummy value. Reject malformed arity, unknown
-fields and future-input references. Keep the binary relation link unchanged.
+fields and future-input references. The first condition has the same operand
+and comparison support as every other condition. Join topology is determined
+by relation inputs, not a compulsory field-pair predicate.
 Extract only condition inspection from the oversized JOIN composition module.
 JSON samples may declare nullable non-key columns; missing cells, null primary
 keys and invalid typed values remain errors. Functions propagate null inputs;
 comparisons do not convert nulls to strings or zero.
+
+## First-condition correction
+
+The first live review exposed a missed restriction: a separate field-only base
+predicate preceded the editable conditions. That restriction is removed, not
+hidden behind another predicate. One non-empty recursive list now owns the
+entire ON expression, including constants, functions and unary tests. The old
+base-field form and mutation helper are removed. The existing add/update/remove
+rail addresses all comparisons. Removing the final comparison is rejected.
+
+```text
+Before: mandatory field pair + additional conditions -> JoinRel.expression
+After:  one recursive conditions list -> JoinRel.expression -> SQL / tree / sample
+```
+
+First-JOIN `1 = 1` yields 50 JSON sample rows; the second JOIN stays unchanged.
+Replacing the second JOIN alone gives 80 rows. Both paths preserve relation IDs
+through semantic encode/decode. Unknown/future fields and malformed unary arity
+remain rejected. These are local sample checks, not backend execution claims.
 
 ## Validation evidence
 
