@@ -16,19 +16,19 @@ export type DvtSubstraitColumnFunction = Readonly<{
   expressionTemplate?: string;
 }>;
 
-type ArgumentRange = Readonly<{
+export type DvtSubstraitColumnFunctionArgumentRange = Readonly<{
   minimumArgumentCount: number;
   maximumArgumentCount?: number;
 }>;
 
-function invocationArgumentRange(
+export function resolveDvtSubstraitColumnFunctionArgumentRange(
   invocation:
     | Readonly<{
         minimumArgumentCount: number;
         maximumArgumentCount?: number;
       }>
     | undefined
-): ArgumentRange {
+): DvtSubstraitColumnFunctionArgumentRange {
   return invocation == null
     ? { minimumArgumentCount: 1, maximumArgumentCount: 1 }
     : {
@@ -39,7 +39,10 @@ function invocationArgumentRange(
       };
 }
 
-function admitsProposedArgumentCount(range: ArgumentRange, proposedCount: number): boolean {
+function admitsProposedArgumentCount(
+  range: DvtSubstraitColumnFunctionArgumentRange,
+  proposedCount: number
+): boolean {
   return (
     proposedCount > 0 &&
     (range.maximumArgumentCount == null || proposedCount <= range.maximumArgumentCount)
@@ -47,7 +50,7 @@ function admitsProposedArgumentCount(range: ArgumentRange, proposedCount: number
 }
 
 export function admitsCompleteDvtSubstraitColumnFunctionArgumentCount(
-  range: ArgumentRange,
+  range: DvtSubstraitColumnFunctionArgumentRange,
   completeCount: number
 ): boolean {
   return (
@@ -86,7 +89,7 @@ export function resolveDvtSubstraitColumnFunctions(args: {
           entry.identity.name === 'coalesce' &&
           entry.invocation?.signature === 'coalesce:any1');
       if (stringOperands && textFunction) {
-        const range = invocationArgumentRange(entry.invocation);
+        const range = resolveDvtSubstraitColumnFunctionArgumentRange(entry.invocation);
         const admitted =
           args.resolution === 'proposal'
             ? admitsProposedArgumentCount(range, normalizedTypes.length)
