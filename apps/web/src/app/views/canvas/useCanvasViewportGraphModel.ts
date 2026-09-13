@@ -103,6 +103,7 @@ function projectViewportNodes(args: {
     });
     return {
       ...projectedNode,
+      ...(fallbackNode?.measured == null ? {} : { measured: fallbackNode.measured }),
       data: {
         ...projectedNode.data,
         columnDisclosureExpanded: fallbackNode?.data.columnDisclosureExpanded === true,
