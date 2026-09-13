@@ -37,6 +37,7 @@ function sourceNode(args: {
 
 function joinInput(node: CanonicalNode) {
   const metadata = node.metadata!;
+  const columns = metadata.columns as readonly Readonly<{ name: string }>[];
   return {
     source: {
       nodeId: node.id,
@@ -44,7 +45,7 @@ function joinInput(node: CanonicalNode) {
       table: metadata.tableName as string,
       sourceRef: metadata.connectedSourceRef as never,
     },
-    fields: (metadata.columns as readonly Readonly<{ name: string }>[])?.map((column) => column.name),
+    fields: columns.map((column) => column.name),
   };
 }
 
