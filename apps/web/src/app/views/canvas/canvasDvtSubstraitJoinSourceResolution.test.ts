@@ -30,7 +30,7 @@ function sourceNode(args: {
         },
         sourceObjectId: `raw.${args.table}`,
       },
-      columns: args.columns.map((name) => ({ name, type: 'text' })),
+      columns: args.columns.map((name) => ({ name, type: 'string' })),
     },
   };
 }
