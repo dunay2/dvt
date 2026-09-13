@@ -2,21 +2,11 @@
 import { ConnectedSourceRefSchema, type ConnectedSourceRef } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { inspectDvtSubstraitNInputJoinDraft } from './canvasDvtSubstraitJoinComposition';
-
-type DvtJoinSource = Readonly<{
-  nodeId: string;
-  schema: string;
-  table: string;
-  sourceRef: ConnectedSourceRef;
-}>;
-
-type DvtJoinInput = Readonly<{
-  source: DvtJoinSource;
-  fields: readonly string[];
-}>;
-
-type DvtJoinDraft = Parameters<typeof inspectDvtSubstraitNInputJoinDraft>[0];
+import {
+  inspectDvtSubstraitNInputJoinDraft,
+  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinInput,
+} from './canvasDvtSubstraitJoinComposition';
 
 function readMetadataText(node: CanonicalNode, key: string): string | null {
   const value = node.metadata?.[key];
@@ -37,7 +27,7 @@ function readSourceColumnNames(node: CanonicalNode): readonly string[] | null {
   return names.some((name) => name == null) ? null : names.filter((name) => name != null);
 }
 
-function resolveJoinInput(node: CanonicalNode): DvtJoinInput | null {
+function resolveJoinInput(node: CanonicalNode): DvtSubstraitJoinInput | null {
   if (node.kind !== 'dvt:source' || node.role !== 'input') return null;
   const connectedSourceRef = ConnectedSourceRefSchema.safeParse(node.metadata?.connectedSourceRef);
   const schema = readMetadataText(node, 'schema');
@@ -81,8 +71,8 @@ export function resolveDvtSubstraitJoinAppendCandidates(args: {
   targetNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
-  draft: DvtJoinDraft;
-}): readonly DvtJoinInput[] {
+  draft: DvtSubstraitInnerJoinDraft;
+}): readonly DvtSubstraitJoinInput[] {
   if (
     args.targetNode.pluginId !== 'dvt' ||
     args.targetNode.kind !== 'dvt:transform' ||
@@ -101,7 +91,7 @@ export function resolveDvtSubstraitJoinAppendCandidates(args: {
     .filter((node) => connectedIds.has(node.id))
     .map(resolveJoinInput)
     .filter(
-      (input): input is DvtJoinInput =>
+      (input): input is DvtSubstraitJoinInput =>
         input != null &&
         hasSameConnectionRef(
           firstInput.sourceRef.connectionRef,
