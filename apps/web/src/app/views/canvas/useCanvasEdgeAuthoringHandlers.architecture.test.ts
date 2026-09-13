@@ -10,9 +10,9 @@ const EDGE_COMMAND_RUNNER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'useCanvasEdgeCommandRunner.ts'
 );
-const COLUMN_OUTPUT_COMMAND_RUNNER_SOURCE = readArchitectureSiblingSource(
+const COLUMN_AUTHORING_COMMAND_RUNNER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
-  'useCanvasColumnOutputCommandRunner.ts'
+  'useCanvasColumnAuthoringCommandRunner.ts'
 );
 
 describe('useCanvasEdgeAuthoringHandlers architecture', () => {
@@ -23,19 +23,16 @@ describe('useCanvasEdgeAuthoringHandlers architecture', () => {
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).not.toContain('UseCanvasGraphHandlersResult');
   });
 
-  it('routes edge creation and reconnect through a command runner instead of updater side effects', () => {
+  it('delegates edge and column authoring through their command runners', () => {
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasEdgeCommandRunner');
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('resolveVisibleDraftPluginPortMap');
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('getPluginPortMap(args.runtimeCapabilities)');
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('state.canonicalNodesById');
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).not.toContain('setEdges((existingEdges)');
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).not.toContain('setDraftSession((currentSession)');
-    expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasColumnOutputCommandRunner');
-    expect(COLUMN_OUTPUT_COMMAND_RUNNER_SOURCE).toContain('latestDraftSessionRef');
-    expect(COLUMN_OUTPUT_COMMAND_RUNNER_SOURCE).toContain('setDraftSession((currentDraftSession)');
-    expect(COLUMN_OUTPUT_COMMAND_RUNNER_SOURCE).toContain('setCanvasColumnOutputIncluded');
-    expect(COLUMN_OUTPUT_COMMAND_RUNNER_SOURCE).toContain('configureDbtModelColumnOutput');
-    expect(COLUMN_OUTPUT_COMMAND_RUNNER_SOURCE).toContain('reorderCanvasStructuredFieldChildren');
+    expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('CanvasColumnAuthoringCommandRunner');
+    expect(COLUMN_AUTHORING_COMMAND_RUNNER_SOURCE).toContain('runDraftSessionCommand');
+    expect(COLUMN_AUTHORING_COMMAND_RUNNER_SOURCE).not.toContain('setDraftSession(');
     expect(EDGE_COMMAND_RUNNER_SOURCE).toContain('resolveCanvasEdgeCreationTransaction');
     expect(EDGE_COMMAND_RUNNER_SOURCE).toContain('resolveCanvasEdgeReconnectTransaction');
     expect(EDGE_COMMAND_RUNNER_SOURCE).toContain('setEdges(args.transaction.edges)');
