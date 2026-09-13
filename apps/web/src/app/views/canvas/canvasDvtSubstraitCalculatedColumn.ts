@@ -13,10 +13,10 @@ import {
   buildDvtSubstraitCalculatedExpression,
   type DvtSubstraitCalculatedExpression,
 } from './canvasDvtSubstraitCalculatedExpression';
+import { resolveDvtSubstraitColumnFunctions } from './canvasDvtSubstraitColumnFunctionProjection';
 import {
   applyDvtSubstraitProjectionFunction,
   inspectDvtSubstraitProjectionDraft,
-  resolveDvtSubstraitColumnFunctions,
   type DvtSubstraitProjectionAuthoringRejection,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
