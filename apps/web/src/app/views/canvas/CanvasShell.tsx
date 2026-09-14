@@ -384,7 +384,10 @@ export default function CanvasShell({
             ? copy.sourceDataSampleInteractionLabel
             : undefined,
           onSelectNode: canOpenSemantic ? () => openSemanticTransform(node.id) : data.onSelectNode,
-          onOpenNode: canOpenSemantic ? () => openSemanticTransform(node.id) : data.onOpenNode,
+          onOpenNode:
+            data.role === 'transform' && typeof data.onInspectNode === 'function'
+              ? () => data.onInspectNode?.(node.id, 'general')
+              : data.onOpenNode,
         };
 
         return {

@@ -92,6 +92,7 @@ describe('CanvasShell operational drawer registration', () => {
     const fixture = buildSemanticWorkbenchFixture();
     const position = { x: 320, y: 140 };
     const onApplyNodeDraft = vi.fn();
+    const onInspectNode = vi.fn();
     await renderShell({
       panels: {
         inspectorGraphNodes: [...fixture.sources, fixture.transform],
@@ -106,7 +107,7 @@ describe('CanvasShell operational drawer registration', () => {
             data: {
               ...fixture.transform,
               pluginKind: fixture.transform.kind,
-              onInspectNode: vi.fn(),
+              onInspectNode,
             },
           },
         ],
@@ -125,6 +126,13 @@ describe('CanvasShell operational drawer registration', () => {
 
     expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('semantic');
     expect(useUiLayoutStore.getState().bottomDrawerVisible).toBe(true);
+    expect(projectedNode?.position).toBe(position);
+    expect(onInspectNode).not.toHaveBeenCalled();
+
+    act(() => {
+      (projectedNode?.data.onOpenNode as (() => void) | undefined)?.();
+    });
+    expect(onInspectNode).toHaveBeenCalledExactlyOnceWith(fixture.transform.id, 'general');
     expect(projectedNode?.position).toBe(position);
 
     const semanticBody = useOperationalDrawerContributionStore
