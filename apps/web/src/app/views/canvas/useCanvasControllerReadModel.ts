@@ -378,7 +378,8 @@ export function useCanvasControllerReadModel({
             hasEditableProjection ||
             hasStructuredProjection ||
             canAuthorDbtModelColumns ||
-            canProjectSourceOutputs
+            canProjectSourceOutputs ||
+            joinOutputs != null
               ? node.data.onReorderCanvasColumnOutput
               : undefined,
           onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,

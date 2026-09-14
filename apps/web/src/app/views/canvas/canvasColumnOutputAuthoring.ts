@@ -35,7 +35,10 @@ import {
   setDvtSourceOutputIncluded,
 } from './canvasDvtSourceSemanticAuthoring';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
-import { setCanvasJoinColumnOutputIncluded } from './canvasJoinColumnOutputAuthoring';
+import {
+  reorderCanvasJoinColumnOutput,
+  setCanvasJoinColumnOutputIncluded,
+} from './canvasJoinColumnOutputAuthoring';
 import {
   reorderCanvasStructuredFieldRoots,
   setCanvasStructuredRootOutputIncluded,
@@ -151,6 +154,8 @@ export function reorderCanvasColumnOutput(args: {
     args.targetNodeId
   );
   if (targetNode == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
+  const joinResult = reorderCanvasJoinColumnOutput({ ...args, targetNode });
+  if (joinResult != null) return joinResult;
   if (isDvtSourceOutputProjectionNode(targetNode)) {
     const result = reorderDvtSourceOutputs(
       targetNode,

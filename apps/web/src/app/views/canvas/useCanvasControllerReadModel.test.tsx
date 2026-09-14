@@ -277,6 +277,9 @@ describe('useCanvasControllerReadModel', () => {
         expect(data.onToggleCanvasColumnOutput).toBe(
           editable ? args.graphHandlers.handleToggleCanvasColumnOutput : undefined
         );
+        expect(data.onReorderCanvasColumnOutput).toBe(
+          editable ? args.graphHandlers.handleReorderCanvasColumnOutput : undefined
+        );
         expect(data.onColumnPortActivate).toBeUndefined();
         expect(data.onApplyCanvasColumnFunction).toBeUndefined();
         expect(data.onAddCanvasCalculatedColumn).toBeUndefined();

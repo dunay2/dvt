@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
-import { setCanvasColumnOutputIncluded } from './canvasColumnOutputAuthoring';
+import {
+  reorderCanvasColumnOutput,
+  setCanvasColumnOutputIncluded,
+} from './canvasColumnOutputAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
   appendDvtSubstraitInnerJoinInput,
@@ -92,6 +95,109 @@ function inspect(node: CanonicalNode): DvtSubstraitNInputJoinProjection {
 }
 
 describe('JOIN card output selection', () => {
+  it.each([2, 3])('reorders a %i-source JOIN without replacing fields or predicates', (count) => {
+    const { node, session, nodes } = fixture(count);
+    const before = inspect(node);
+    const moved = before.outputs.at(-1)!;
+    const target = before.outputs[0]!;
+    const result = reorderCanvasColumnOutput({
+      draftSession: session,
+      canonicalNodesById: nodes,
+      targetNodeId: node.id,
+      columnId: moved.fieldId,
+      targetColumnId: target.fieldId,
+      placement: 'before',
+    });
+    expect(result.outcome).toBe('applied');
+    if (result.outcome !== 'applied') return;
+    const after = inspect(result.draftSession.localNodeCatalog![node.id]!);
+    expect(after.outputs).toEqual(
+      [moved, ...before.outputs.slice(0, -1)].map((field, outputOrdinal) => ({
+        ...field,
+        outputOrdinal,
+      }))
+    );
+    expect(after.inputs).toEqual(before.inputs);
+    expect(after.joins).toEqual(before.joins);
+    expect(after.joinRelations).toEqual(before.joinRelations);
+    expect(result.draftSession.workingSet).toEqual(session.workingSet);
+    const reversed = reorderCanvasColumnOutput({
+      draftSession: result.draftSession,
+      canonicalNodesById: nodes,
+      targetNodeId: node.id,
+      columnId: moved.fieldId,
+      targetColumnId: before.outputs.at(-2)!.fieldId,
+      placement: 'after',
+    });
+    expect(reversed.outcome).toBe('applied');
+    if (reversed.outcome === 'applied')
+      expect(inspect(reversed.draftSession.localNodeCatalog![node.id]!)).toEqual(before);
+  });
+
+  it.each([2, 3])(
+    'restores an excluded field at its staged position in a %i-source JOIN',
+    (count) => {
+      const { node, session, nodes } = fixture(count);
+      const before = inspect(node);
+      const removed = before.outputs[0]!;
+      const request = {
+        draftSession: session,
+        canonicalNodesById: nodes,
+        targetNodeId: node.id,
+        columnId: removed.fieldId,
+        columnType: removed.dataType,
+        output: false,
+      };
+      const excluded = setCanvasColumnOutputIncluded(request);
+      if (excluded.outcome !== 'applied') throw new Error('Expected output exclusion.');
+      const restored = setCanvasColumnOutputIncluded({
+        ...request,
+        draftSession: excluded.draftSession,
+        columnId: removed.source.fieldId,
+        output: true,
+        placement: { targetColumnId: before.outputs[1]!.fieldId, placement: 'before' },
+      });
+      expect(restored.outcome).toBe('applied');
+      if (restored.outcome !== 'applied') return;
+      const after = inspect(restored.draftSession.localNodeCatalog![node.id]!);
+      expect(after.outputs.map((field) => field.source)).toEqual(
+        before.outputs.map((field) => field.source)
+      );
+      expect(after.outputs.slice(1)).toEqual(before.outputs.slice(1));
+      expect(after.joins).toEqual(before.joins);
+    }
+  );
+
+  it('rejects unknown, inactive and self reorder targets without changing authority', () => {
+    const { node, session, nodes } = fixture(3);
+    const entry = readCanvasJoinColumnOutputs(node)!;
+    const active = entry.fields[0]!;
+    const inactive = entry.fields.find((field) => !field.selected)!;
+    for (const targetColumnId of ['missing', inactive.columnId, active.columnId]) {
+      expect(
+        reorderCanvasColumnOutput({
+          draftSession: session,
+          canonicalNodesById: nodes,
+          targetNodeId: node.id,
+          columnId: active.columnId,
+          targetColumnId,
+          placement: 'before',
+        }).outcome
+      ).toBe('rejected');
+    }
+    expect(
+      reorderCanvasColumnOutput({
+        draftSession: session,
+        canonicalNodesById: nodes,
+        targetNodeId: node.id,
+        columnId: inactive.columnId,
+        targetColumnId: active.columnId,
+        placement: 'before',
+      }).outcome
+    ).toBe('rejected');
+    expect(session.localNodeCatalog![node.id]).toBe(node);
+  });
+
   it.each([2, 3])(
     'excludes and restores a field in a %i-source JOIN through the column command',
     (count) => {
