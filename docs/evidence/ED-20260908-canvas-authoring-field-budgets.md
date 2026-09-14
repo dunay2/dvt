@@ -40,3 +40,22 @@ The cut removes the UTF-16 tag truncation helper. It adds no parallel profile,
 compatibility parser, fallback enum, stub or fake persistence path. Existing
 stored rows that violate the new policy fail closed at the v1 read boundary
 until an explicit operator cleanup; they are never silently rewritten.
+
+## Native Transform discriminator regression — 2026-09-14
+
+Issue #3167 extends the existing materialization predicate to the native
+`pluginId: dvt, kind: transform` identity used by protected Preview. The namespaced
+identity keeps its existing policy; other plugins are not constrained by DVT enums.
+No new enum, default, property, runtime descriptor or persistence owner is added.
+
+RED reproduced twelve contract failures and a real PostgreSQL write accepting
+unsupported `incremental`. GREEN covers 52 field-policy cases, protected HTTP
+rejection before persistence, and real PostgreSQL refusal of invalid direct writes
+including nested Canvas nodes. Valid `table` configuration reloads unchanged;
+rejected writes preserve the prior draft and revision. The existing 1/2/3-input
+Preview persistence/replay suite remains green.
+
+The full semantic-persistence suite also exposed a separate native-kind mismatch
+in semantic authority validation and its test helpers. That finding is not hidden
+by the focused materialization evidence and needs its own correction before full
+suite closeout. No native Run or publication is claimed here.

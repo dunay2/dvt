@@ -129,6 +129,69 @@ describeWithPostgres('workspace graph canonical semantic persistence', () => {
     });
   });
 
+  it.each(['transform', 'dvt:transform'])(
+    'preserves admitted %s disposition and rejects invalid SQL writes without changing the draft',
+    async (kind) => {
+      const base = buildCanonicalSemanticWorkspaceGraphDraft();
+      const draft = {
+        ...base,
+        nodes: base.nodes.map((node) =>
+          node.role === 'transform'
+            ? { ...node, kind, metadata: { ...node.metadata, config: { materialized: 'table' } } }
+            : node
+        ),
+      };
+      const saved = await buildSemanticSaveUseCase(store!).execute({
+        request: buildWorkspaceGraphDraftSaveRequest({ draft }),
+        decision: writableSemanticDecision(),
+      });
+      expect(saved.response.kind).toBe('saved');
+      const get = buildSemanticGetUseCase(store!);
+      const before = await get.execute(writableSemanticDecision());
+      expect(before.response.kind).toBe('ok');
+      if (before.response.kind !== 'ok') throw new Error('Expected a persisted draft.');
+      expect(
+        before.response.record.draft.nodes.find((node) => node.role === 'transform')?.metadata
+      ).toMatchObject({ config: { materialized: 'table' } });
+
+      for (const config of [
+        { materialized: 'incremental' },
+        { materialized: 'ephemeral' },
+        { materialized: null },
+        { materialized: 1 },
+        { materialized: ' table ' },
+        null,
+        'table',
+        [],
+      ]) {
+        const invalid = {
+          ...draft,
+          nodes: draft.nodes.map((node) =>
+            node.role === 'transform' ? { ...node, metadata: { ...node.metadata, config } } : node
+          ),
+        };
+        await expect(
+          pool!.query(`UPDATE "${schema}".workspace_graph_drafts SET draft_json = $1::jsonb`, [
+            JSON.stringify(invalid),
+          ])
+        ).rejects.toMatchObject({
+          code: '23514',
+          constraint: 'workspace_graph_drafts_field_budget_check',
+        });
+        const nested = {
+          ...draft,
+          canvases: [{ ...invalid, canvas: { ...invalid.canvas, id: 'nested-canvas' } }],
+        };
+        const checked = await pool!.query<{ accepted: boolean }>(
+          `SELECT "${schema}".workspace_graph_draft_fields_within_budget($1::jsonb) AS accepted`,
+          [JSON.stringify(nested)]
+        );
+        expect(checked.rows[0]?.accepted).toBe(false);
+      }
+      expect((await get.execute(writableSemanticDecision())).response).toEqual(before.response);
+    }
+  );
+
   it('rejects oversized names at the database boundary without rewriting stored drafts', async () => {
     const save = buildSemanticSaveUseCase(store!);
     await save.execute({

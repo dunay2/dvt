@@ -197,7 +197,8 @@ export function addDvtNodeFieldPolicyIssues(
     node.kind === 'dvt:source' &&
     (node.pluginId === 'dvt' || node.pluginId === 'dvt.warehouse-source');
   const isSink = node.kind === 'dvt:sink' && node.pluginId === 'dvt';
-  const isTransform = node.kind === 'dvt:transform' && node.pluginId === 'dvt';
+  const isTransform =
+    node.pluginId === 'dvt' && (node.kind === 'transform' || node.kind === 'dvt:transform');
   if (!isSource && !isSink && !isTransform) return;
 
   const metadata = node.metadata ?? {};

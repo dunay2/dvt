@@ -241,7 +241,7 @@ export class PostgresWorkspaceGraphDraftStore implements IWorkspaceGraphDraftSto
           END IF;
 
           IF node_item ->> 'pluginId' = 'dvt'
-            AND node_item ->> 'kind' = 'dvt:transform'
+            AND node_item ->> 'kind' IN ('transform', 'dvt:transform')
           THEN
             config_item := node_item #> '{metadata,config}';
             IF config_item IS NOT NULL AND jsonb_typeof(config_item) <> 'object'

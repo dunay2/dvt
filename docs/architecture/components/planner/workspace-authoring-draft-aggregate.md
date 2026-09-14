@@ -74,6 +74,14 @@ and Engine/runtime handles execution lifecycle.
 - semantic edges reference declared semantic nodes.
 - zero nodes, one node, disconnected graphs, and partially connected graphs are
   valid authoring states.
+- DVT Transform configuration uses the same field policy for the native
+  `pluginId: dvt, kind: transform` identity used by Preview and for
+  `kind: dvt:transform`. Explicit `config.materialized` admits only `table` or
+  `view`; missing configuration remains an editable, unconfigured draft. Invalid
+  values reject on commands, save/reload and new PostgreSQL writes without
+  normalization or rewriting existing rows. Other plugins keep their own policy.
+  This authoring invariant does not admit runtime result dispositions or make a
+  Sink mandatory; that distinction remains governed by issue #3115.
 - compile invariants do not belong to the persisted aggregate.
 - the canonical Substrait execution plan is derived only after selection; it is
   not the editable persistence payload.
