@@ -11,6 +11,7 @@ import {
 import {
   DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY,
   DvtOperationalWorkloadContractV1,
+  DvtOperationalWorkloadContractV2,
   KNOWN_STEP_KINDS,
   createDefaultStepTypeRegistry,
   parseExecutionSelection,
@@ -75,13 +76,47 @@ describeIfPostgres('protected DVT Preview integration', () => {
     await rm(artifactRoot, { recursive: true, force: true });
   });
 
-  it.each([1, 2, 3] as const)(
-    'persists and replays %i protected inputs as one rejected plan without client graphSource',
-    async (inputCount) => {
-      const draft =
+  it.each([
+    [1, 'preview'],
+    [2, 'preview'],
+    [3, 'preview'],
+    [2, 'run'],
+  ] as const)(
+    'persists and replays %i protected inputs as one %s plan without client graphSource',
+    async (inputCount, intent) => {
+      const baseDraft =
         inputCount === 1
           ? buildDvtTerminalTransformPreviewDraft()
           : buildDvtJoinPreviewDraft(inputCount);
+      const draft =
+        intent === 'preview'
+          ? baseDraft
+          : {
+              ...baseDraft,
+              nodes: baseDraft.nodes.map((node) =>
+                node.id === 'transform-orders'
+                  ? {
+                      ...node,
+                      metadata: {
+                        ...node.metadata,
+                        config: {
+                          materialized: 'table',
+                          resultTarget: {
+                            schemaVersion: 'dvt-transform-result-target.v1',
+                            connectionRef: {
+                              schemaVersion: 'connection-ref.v1',
+                              connectionId: 'local-postgres-proof',
+                              provider: 'postgres',
+                            },
+                            schema: 'analytics',
+                            relation: 'orders_result',
+                          },
+                        },
+                      },
+                    }
+                  : node
+              ),
+            };
       const planner = new PlannerFacade();
       const graphDraftResolver = new ResolveAuthorizedExecutableSubgraphService({
         planner,
@@ -195,13 +230,16 @@ describeIfPostgres('protected DVT Preview integration', () => {
           dependsOn: [],
         }),
       ]);
-      const workload = DvtOperationalWorkloadContractV1.schema.parse(
-        result.plan.steps[0]?.stepTypeConfig
-      );
+      const workload =
+        intent === 'preview'
+          ? DvtOperationalWorkloadContractV1.schema.parse(result.plan.steps[0]?.stepTypeConfig)
+          : DvtOperationalWorkloadContractV2.schema.parse(result.plan.steps[0]?.stepTypeConfig);
       expect(workload.graph.selectedNodeIds).toEqual([...draft.nodeIds].sort());
       expect(workload.graph.selectedEdgeIds).toEqual(draft.edges.map((edge) => edge.id).sort());
       expect(workload.semantics).toHaveLength(1);
-      expect(workload.output.kind).toBe('ephemeral-preview');
+      expect(workload.output.kind).toBe(
+        intent === 'preview' ? 'ephemeral-preview' : 'transform-result'
+      );
       await expect(
         planStore.getPlanRecordByRef({
           ...scope,
