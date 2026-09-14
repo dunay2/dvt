@@ -15,6 +15,8 @@ import { canvasViewCopy } from './copy';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import type { SemanticTransformFocusPanelProps } from './SemanticTransformFocusPanel';
+import type { SourceDataSample } from '../../ports/workspace';
+import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 
 describe('CanvasShell operational drawer registration', () => {
   let renderShell: (overrides?: CanvasShellPropsOverrides) => Promise<CanvasShellProps>;
@@ -132,7 +134,14 @@ describe('CanvasShell operational drawer registration', () => {
     act(() => {
       (projectedNode?.data.onOpenNode as (() => void) | undefined)?.();
     });
-    expect(onInspectNode).toHaveBeenCalledExactlyOnceWith(fixture.transform.id, 'general');
+    expect(onInspectNode).not.toHaveBeenCalled();
+    expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
+      activeTab: 'data',
+      contribution: {
+        dataSample: { status: 'error', nodeName: fixture.transform.name, reason: 'unavailable' },
+      },
+    });
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
     expect(projectedNode?.position).toBe(position);
 
     const semanticBody = useOperationalDrawerContributionStore
@@ -171,5 +180,95 @@ describe('CanvasShell operational drawer registration', () => {
     });
 
     expect(useOperationalDrawerContributionStore.getState().contribution).toBeNull();
+  });
+
+  it('does not replace Transform data with a late source response or query another node', async () => {
+    const fixture = buildSemanticWorkbenchFixture();
+    let resolveSample: ((sample: SourceDataSample) => void) | undefined;
+    const previewSourceObjectRows = vi.fn(
+      () =>
+        new Promise<SourceDataSample>((resolve) => {
+          resolveSample = resolve;
+        })
+    );
+    const runMaterializationSampleQuery = vi.fn();
+    const onInspectNode = vi.fn();
+    await renderShell({
+      warehouseSourceDataSampleQuery: { previewSourceObjectRows },
+      runMaterializationSampleQuery,
+      panels: { inspectorGraphNodes: [...fixture.sources, fixture.transform] },
+      graph: {
+        nodesWithImpact: [
+          {
+            id: 'source',
+            type: 'dbtNode',
+            position: { x: 0, y: 0 },
+            data: {
+              name: 'Source',
+              status: 'idle',
+              metadata: {
+                connectedSourceRef: {
+                  schemaVersion: 'connected-source-ref.v1',
+                  connectionRef: {
+                    schemaVersion: 'connection-ref.v1',
+                    connectionId: 'postgres',
+                    provider: 'postgres',
+                  },
+                  sourceObjectId: 'relation/dvt/public/orders',
+                },
+              },
+            },
+          },
+          {
+            id: fixture.transform.id,
+            type: 'dbtNode',
+            position: { x: 100, y: 0 },
+            data: { ...fixture.transform, pluginKind: fixture.transform.kind, onInspectNode },
+          },
+        ],
+      },
+    });
+    const nodes = getCanvasShellState().canvasViewportProps?.nodesWithImpact as Array<{
+      data: DbtNodeData;
+    }>;
+    act(() => {
+      nodes[1]?.data.onSelectNode?.(fixture.transform.id);
+    });
+    expect(previewSourceObjectRows).not.toHaveBeenCalled();
+    act(() => {
+      nodes[0]?.data.onOpenSourceDataSample?.('source');
+      nodes[1]?.data.onOpenNode?.(fixture.transform.id);
+    });
+    const sourceSample: SourceDataSample = {
+      contractVersion: 1,
+      connectionId: 'postgres',
+      objectId: 'relation/dvt/public/orders',
+      columns: [{ name: 'id', type: 'integer', nullable: false }],
+      rows: [{ values: ['1'] }],
+      limit: 20,
+      truncated: false,
+      sampledAt: '2026-09-14T00:00:00Z',
+    };
+    await act(async () => {
+      resolveSample?.(sourceSample);
+    });
+    expect(useOperationalDrawerContributionStore.getState().contribution?.dataSample).toEqual({
+      status: 'error',
+      nodeName: fixture.transform.name,
+      reason: 'unavailable',
+    });
+    expect(previewSourceObjectRows).toHaveBeenCalledOnce();
+    expect(runMaterializationSampleQuery).not.toHaveBeenCalled();
+    expect(onInspectNode).not.toHaveBeenCalled();
+    await act(async () => {
+      nodes[0]?.data.onOpenSourceDataSample?.('source');
+      resolveSample?.(sourceSample);
+    });
+    expect(useOperationalDrawerContributionStore.getState().contribution?.dataSample).toEqual({
+      status: 'ready',
+      nodeName: 'Source',
+      sample: sourceSample,
+    });
+    expect(previewSourceObjectRows).toHaveBeenCalledTimes(2);
   });
 });

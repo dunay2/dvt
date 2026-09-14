@@ -64,6 +64,58 @@ function visitCanvas(): void {
 describe('Canvas calculated-column authoring', () => {
   beforeEach(() => stubCanvas());
 
+  it('keeps Transform data entry separate from semantics, Properties and column controls', () => {
+    cy.viewport(1920, 1080);
+    visitCanvas();
+    const node = '.react-flow__node[data-id="model-orders"]';
+    const title = `${node} [data-slot="graph-node-card-title"]`;
+    const dataTab = '[data-slot="bottom-operational-drawer-tab"][data-tab="data"]';
+    const semanticTab = '[data-slot="bottom-operational-drawer-tab"][data-tab="semantic"]';
+    cy.get(node).contains('button', 'Columns').click();
+    cy.get(node).contains('button', 'Map compatible columns').click();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.wrap(null).should(() => {
+      const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as DraftSave;
+      const authority = saved?.draft.nodes.find((item) => item.id === 'model-orders')?.metadata
+        ?.transformAuthoring as { semanticDocument?: unknown } | undefined;
+      expect(
+        inspectDvtSubstraitProjectionDraft(
+          decodeDvtSubstraitProjectionDocument(authority?.semanticDocument)
+        ).ok,
+        'mapped projection was saved before testing navigation'
+      ).to.equal(true);
+    });
+    cy.get(node).then(($node) => {
+      const position = $node[0]?.style.transform;
+      const saves = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+      for (const entry of ['title', 'metrics', 'keyboard']) {
+        cy.get(title).click();
+        cy.get(semanticTab).should('have.attr', 'aria-selected', 'true');
+        if (entry === 'title') cy.get(title).dblclick();
+        else if (entry === 'metrics')
+          cy.get(`${node} [data-slot="graph-node-operational-rail"]`).dblclick();
+        else cy.get(node).focus().type('{enter}');
+        cy.get(dataTab).should('have.attr', 'aria-selected', 'true');
+        cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+        cy.wrap(null).should(() => {
+          expect(
+            getE2eApiCalls('/workspace/graph/draft', 'PUT'),
+            `${entry} is navigation only`
+          ).to.have.length(saves);
+        });
+      }
+      cy.get(node).contains('button', 'Columns').click();
+      cy.get(dataTab).should('have.attr', 'aria-selected', 'true');
+      cy.get(title).rightclick();
+      cy.get('[role="menuitem"]').contains('Properties').click();
+      cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
+      cy.get(node).should(($current) => {
+        expect($current[0]?.style.transform).to.equal(position);
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(saves);
+      });
+    });
+  });
+
   for (const entry of ['add-column', 'field-context-menu'] as const) {
     it(`creates, persists, and restores a direct alias through ${entry}`, () => {
       cy.viewport(1920, 1080);
@@ -89,6 +141,16 @@ describe('Canvas calculated-column authoring', () => {
         cy.get(
           '.react-flow__node[data-id="model-orders"] [data-slot="graph-node-card-title"]'
         ).dblclick();
+        cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data"]').should(
+          'have.attr',
+          'aria-selected',
+          'true'
+        );
+        cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+        cy.get(
+          '.react-flow__node[data-id="model-orders"] [data-slot="graph-node-card-title"]'
+        ).rightclick();
+        cy.get('[role="menuitem"]').contains('Properties').click();
         cy.get('[data-slot="canvas-node-workbench-overlay"]').within(() => {
           cy.contains('[role="tab"]', 'General').should('have.attr', 'aria-selected', 'true');
           cy.get('button[aria-label="Close"]').click();
