@@ -3,7 +3,6 @@
  * into one generic ephemeral PostgreSQL workload.
  */
 import {
-  DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DvtOperationalWorkloadContractV1,
   GENERIC_GRAPH_SOURCE_KIND,
@@ -23,6 +22,7 @@ export type DvtTerminalTransformProjectionBinding = {
   readonly outputNodeId: string;
   readonly semanticPlanSha256: string;
   readonly connectionRef: ConnectionRef;
+  readonly profileId: DvtOperationalWorkloadV1['targetProjection']['profileId'];
   readonly artifact: DvtOperationalWorkloadV1['targetProjection']['artifact'];
 };
 
@@ -51,7 +51,8 @@ export class DvtOperationalWorkloadProjector {
       if (
         projection.outputNodeId !== closure.transform.id ||
         projection.semanticPlanSha256 !== semanticDocument.semanticPlan.sha256 ||
-        !sameConnection(projection.connectionRef, closure.connectedSource.connectionRef)
+        projection.profileId !== closure.profileId ||
+        !sameConnection(projection.connectionRef, closure.connectionRef)
       ) {
         throw new Error('Target projection is stale or belongs to another output or connection.');
       }
@@ -62,8 +63,11 @@ export class DvtOperationalWorkloadProjector {
         graph: {
           draftRevision: input.draftRevision,
           canvasId: input.canvasId,
-          selectedNodeIds: [closure.source.id, closure.transform.id],
-          selectedEdgeIds: [closure.edge.id],
+          selectedNodeIds: [
+            ...closure.sources.map(({ node }) => node.id),
+            closure.transform.id,
+          ].sort(),
+          selectedEdgeIds: closure.edges.map((edge) => edge.id).sort(),
         },
         semantics: [
           {
@@ -73,12 +77,12 @@ export class DvtOperationalWorkloadProjector {
           },
         ],
         targetProjection: {
-          profileId: DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
+          profileId: closure.profileId,
           toolIdentity: DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
           semanticPlanSha256: semanticDocument.semanticPlan.sha256,
           artifact: projection.artifact,
         },
-        connectionRef: closure.connectedSource.connectionRef,
+        connectionRef: closure.connectionRef,
         output: {
           kind: 'ephemeral-preview',
           nodeId: closure.transform.id,

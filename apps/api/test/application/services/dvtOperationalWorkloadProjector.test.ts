@@ -114,6 +114,7 @@ function input(
     selectedNodeIds: ['source-a', 'transform-a'],
     selectedEdgeIds: ['source-transform'],
     targetProjection: {
+      profileId: 'dvt.vtx2.postgres.project-rel.v1',
       outputNodeId: 'transform-a',
       semanticPlanSha256: semantic.semanticPlan.sha256,
       connectionRef: CONNECTION,

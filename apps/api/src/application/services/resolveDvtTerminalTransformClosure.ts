@@ -4,6 +4,8 @@
  */
 import {
   ConnectedSourceRefSchema,
+  DVT_POSTGRES_INNER_JOIN_PROFILE_ID,
+  DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
   DvtTransformAuthoringAuthorityV1Schema,
   WorkspaceGraphAuthoringDraftSchema,
   isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
@@ -17,10 +19,12 @@ import {
 
 export type DvtTerminalTransformClosure = {
   readonly draft: WorkspaceGraphAuthoringDraft;
-  readonly source: WorkspaceGraphAuthoringNode;
+  readonly sources: readonly { node: WorkspaceGraphAuthoringNode; ref: ConnectedSourceRef }[];
   readonly transform: WorkspaceGraphAuthoringNode;
-  readonly edge: WorkspaceGraphAuthoringEdge;
-  readonly connectedSource: ConnectedSourceRef;
+  readonly edges: readonly WorkspaceGraphAuthoringEdge[];
+  readonly connectionRef: ConnectionRef;
+  readonly profileId:
+    typeof DVT_POSTGRES_PROJECT_REL_PROFILE_ID | typeof DVT_POSTGRES_INNER_JOIN_PROFILE_ID;
   readonly authority: DvtTransformAuthoringAuthorityV1;
 };
 
@@ -30,12 +34,12 @@ export function resolveDvtTerminalTransformClosure(input: {
   readonly selectedEdgeIds: readonly string[];
 }): DvtTerminalTransformClosure {
   const draft = WorkspaceGraphAuthoringDraftSchema.parse(input.draft);
-  requireUniqueExactCount(input.selectedNodeIds, 2, 'selected node');
-  requireUniqueExactCount(input.selectedEdgeIds, 1, 'selected edge');
+  requireUniqueIdentities(input.selectedNodeIds, 'selected node');
+  requireUniqueIdentities(input.selectedEdgeIds, 'selected edge');
 
   const selectedNodes = selectExact(draft.nodes, input.selectedNodeIds, 'node');
   const selectedEdges = selectExact(draft.edges, input.selectedEdgeIds, 'edge');
-  const source = selectedNodes.find(
+  const sourceNodes = selectedNodes.filter(
     (node) =>
       (node.pluginId === 'dvt' || node.pluginId === 'dvt.warehouse-source') &&
       node.kind === 'dvt:source' &&
@@ -45,12 +49,11 @@ export function resolveDvtTerminalTransformClosure(input: {
     (node) => node.pluginId === 'dvt' && node.kind === 'transform' && node.role === 'transform'
   );
   if (
-    source === undefined ||
+    sourceNodes.length === 0 ||
     transform === undefined ||
-    source.id === transform.id ||
-    selectedNodes.some((node) => node.id !== source.id && node.id !== transform.id)
+    selectedNodes.length !== sourceNodes.length + 1
   ) {
-    throw new Error('Selection must contain exactly one DVT Source and one DVT Transform.');
+    throw new Error('Selection must contain DVT Sources and exactly one DVT Transform.');
   }
 
   if (
@@ -63,28 +66,69 @@ export function resolveDvtTerminalTransformClosure(input: {
     throw new Error('Selected DVT Transform must be terminal in the protected Canvas.');
   }
 
-  const edge = selectedEdges[0]!;
+  const sourceIds = new Set(sourceNodes.map((source) => source.id));
   if (
-    edge.sourceId !== source.id ||
-    edge.targetId !== transform.id ||
-    edge.relation !== 'lineage' ||
-    !isWorkspaceGraphAuthoringEdgeEffectivelyExecutable(edge)
+    selectedEdges.length !== sourceNodes.length ||
+    new Set(selectedEdges.map((edge) => edge.sourceId)).size !== sourceNodes.length ||
+    selectedEdges.some(
+      (edge) =>
+        !sourceIds.has(edge.sourceId) ||
+        edge.targetId !== transform.id ||
+        edge.relation !== 'lineage' ||
+        !isWorkspaceGraphAuthoringEdgeEffectivelyExecutable(edge)
+    ) ||
+    draft.edges.some(
+      (edge) =>
+        edge.targetId === transform.id &&
+        isWorkspaceGraphAuthoringEdgeEffectivelyExecutable(edge) &&
+        !input.selectedEdgeIds.includes(edge.id)
+    )
   ) {
-    throw new Error('Selection must contain one effective lineage Source to Transform dependency.');
+    throw new Error(
+      'Selection must contain every effective lineage Source to Transform dependency exactly once.'
+    );
   }
 
-  const connectedSource = ConnectedSourceRefSchema.parse(source.metadata?.connectedSourceRef);
+  const sources = sourceNodes.map((node) => ({
+    node,
+    ref: ConnectedSourceRefSchema.parse(node.metadata?.connectedSourceRef),
+  }));
+  const connectionRef = sources[0]!.ref.connectionRef;
   const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
     transform.metadata?.transformAuthoring
   );
   const semanticSources = authority.semanticDocument.sidecar.relations.flatMap(({ sourceRef }) =>
     sourceRef === undefined ? [] : [sourceRef]
   );
-  if (semanticSources.length !== 1 || !sameConnectedSource(semanticSources[0]!, connectedSource)) {
-    throw new Error('Transform semantic source must match the selected connected Source.');
+  if (
+    connectionRef.provider !== 'postgres' ||
+    sources.some(({ ref }) => !sameConnection(ref.connectionRef, connectionRef)) ||
+    semanticSources.length !== sources.length ||
+    sources.some(
+      ({ ref }) =>
+        semanticSources.filter((semantic) => sameConnectedSource(semantic, ref)).length !== 1
+    ) ||
+    semanticSources.some(
+      (semantic) => sources.filter(({ ref }) => sameConnectedSource(semantic, ref)).length !== 1
+    )
+  ) {
+    throw new Error(
+      'Transform semantic sources must exactly match the selected connected Sources on one PostgreSQL connection.'
+    );
   }
 
-  return { draft, source, transform, edge, connectedSource, authority };
+  return {
+    draft,
+    sources,
+    transform,
+    edges: selectedEdges,
+    connectionRef,
+    authority,
+    profileId:
+      sources.length === 1
+        ? DVT_POSTGRES_PROJECT_REL_PROFILE_ID
+        : DVT_POSTGRES_INNER_JOIN_PROFILE_ID,
+  };
 }
 
 function selectExact<T extends { readonly id: string }>(
@@ -100,9 +144,9 @@ function selectExact<T extends { readonly id: string }>(
   });
 }
 
-function requireUniqueExactCount(ids: readonly string[], count: number, label: string): void {
-  if (ids.length !== count || new Set(ids).size !== count) {
-    throw new Error(`Expected exactly ${count} unique ${label} identities.`);
+function requireUniqueIdentities(ids: readonly string[], label: string): void {
+  if (ids.length === 0 || new Set(ids).size !== ids.length) {
+    throw new Error(`Expected unique ${label} identities.`);
   }
 }
 
@@ -114,7 +158,7 @@ export function sameConnection(left: ConnectionRef, right: ConnectionRef): boole
   );
 }
 
-function sameConnectedSource(left: ConnectedSourceRef, right: ConnectedSourceRef): boolean {
+export function sameConnectedSource(left: ConnectedSourceRef, right: ConnectedSourceRef): boolean {
   return (
     left.schemaVersion === right.schemaVersion &&
     left.sourceObjectId === right.sourceObjectId &&

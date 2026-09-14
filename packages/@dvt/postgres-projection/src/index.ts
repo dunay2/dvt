@@ -91,6 +91,7 @@ export {
   nInputJoinAlias,
   POSTGRES_JOIN_COMPARISON,
   buildNInputJoinPostgresAst,
+  projectDvtInnerJoinDraftToPostgresSql,
 } from './joinPostgresProjection.js';
 export {
   buildConnectedFieldPostgresAst,
