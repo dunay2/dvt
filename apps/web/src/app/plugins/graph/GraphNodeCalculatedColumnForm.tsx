@@ -200,6 +200,7 @@ export function GraphNodeCalculatedColumnForm(props: {
       </div>
       <PopoverContent
         data-slot="graph-node-calculated-column-form"
+        {...canvasNodeEmbeddedControlProps}
         side="right"
         align="end"
         className={graphNodeColumnClasses.addForm}
