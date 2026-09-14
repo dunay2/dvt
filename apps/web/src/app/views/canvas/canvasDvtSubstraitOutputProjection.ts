@@ -5,9 +5,9 @@ import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAg
 import {
   decodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitInnerJoinAcceptedDraft,
-  resolveDvtSubstraitInnerJoinEntry,
   resolveDvtSubstraitNInputJoinEntry,
 } from './canvasDvtSubstraitJoinComposition';
+import { resolveDvtSubstraitInnerJoinEntry } from './canvasDvtSubstraitJoinSourceResolution';
 import {
   decodeDvtSubstraitPilotDocument,
   inspectDvtSubstraitPilotDraft,
