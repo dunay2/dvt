@@ -95,7 +95,9 @@ describe('N-input DVT Preview live', () => {
       { force: true }
     );
     cy.get('body').type('{esc}');
-    sources.forEach((source) => getVisibleCanvasNode(source.id).should('exist'));
+    sources.forEach((source) => {
+      getVisibleCanvasNode(source.id).should('exist');
+    });
     getVisibleCanvasNode(transform.id).should('be.visible');
 
     cy.intercept('POST', '**/plans/preview', (request) => {
