@@ -123,10 +123,32 @@ describe('N-input DVT Preview live', () => {
       expect(details.validation.cause).to.equal(
         DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY
       );
+      cy.wrap({
+        planRef: details.planRef,
+        persisted: details.persisted,
+        validation: details.validation,
+      }).as('originalPreview');
     });
     cy.get('[data-testid="plan-preview-modal"]')
       .should('be.visible')
       .and('contain.text', 'source-order_details');
+    cy.get('[data-slot="plan-preview-start-run"]').should('be.disabled');
+
+    cy.reload();
+    selectCanvasClosure([transform.id]);
+    clickPreviewExecutionPlanFromOperationalDrawer();
+    cy.wait('@joinPreview', { timeout: 30_000 }).then(({ response }) => {
+      expect(response?.statusCode).to.equal(422);
+      cy.get('@originalPreview').then((original) => {
+        const repeated = response?.body.error.details;
+        expect({
+          planRef: repeated.planRef,
+          persisted: repeated.persisted,
+          validation: repeated.validation,
+        }).to.deep.equal(original);
+      });
+    });
+    cy.get('[data-testid="plan-preview-modal"]').should('be.visible');
     cy.get('[data-slot="plan-preview-start-run"]').should('be.disabled');
   });
 });

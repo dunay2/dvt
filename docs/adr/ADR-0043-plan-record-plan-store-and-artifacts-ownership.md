@@ -249,6 +249,13 @@ There is no compatibility facade for `IPlanValidationLifecycleStore`,
 `IPlanFetcher`, or API-local stored-plan validation ports in the active model.
 Consumers that still depend on those names must fail in tests or type-checks.
 
+An identical `storePlanArtifact` request is idempotent in every validation state,
+including `INVALID`: it returns the original `PlanRef` without resetting the
+validation state or rejection report. Identity, scope and collision checks still
+apply. Repeating `PreviewPlan` therefore returns the persisted rejection through
+the existing admission coordinator; it neither revalidates nor makes the plan
+executable. Runtime materialization of an invalid artifact remains forbidden.
+
 ### 8. `bindingState` is out of scope for S08-v1
 
 S08-v1 does not introduce `bindingState`.
