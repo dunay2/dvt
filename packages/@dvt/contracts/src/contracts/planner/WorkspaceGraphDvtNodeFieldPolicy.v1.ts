@@ -1,4 +1,10 @@
-/** Owns DVT metadata field policy shared by graph nodes and node commands. */
+/**
+ * Owns DVT metadata field policy shared by graph nodes and node commands.
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @decision Validate recognized DVT metadata through one shared policy.
+ * @consequence Graph saves and node commands cannot drift on admitted field values.
+ * @version 1.0.0
+ */
 import type { z } from 'zod';
 
 import { PostgresIdentifierV1Schema } from './CanvasAuthoringFieldPolicy.v1.js';

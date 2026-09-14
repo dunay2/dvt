@@ -1,4 +1,10 @@
-/** Owns the explicit, non-secret destination of a durable DVT Transform result. */
+/**
+ * Owns the explicit, non-secret destination of a durable DVT Transform result.
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @decision Reuse governed connection and identifier value objects for an explicit destination.
+ * @consequence Authoring records intent without granting connection access or executing SQL.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import { ConnectionRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
