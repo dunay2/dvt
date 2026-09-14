@@ -111,6 +111,7 @@ describe('canvasNodeContextMenuModel', () => {
         columnName: 'identity',
       },
       label: 'Actions for identity',
+      createAliasLabel: 'Column alias',
       functions: [{ id: 'capability:trim', label: 'TRIM' }],
       appendFields: [{ id: 'output:amount', label: 'Add amount' }],
       removeStructuredFieldLabel: 'Remove grouping',
@@ -125,6 +126,7 @@ describe('canvasNodeContextMenuModel', () => {
 
     expect(model.target).toMatchObject({ kind: 'column', columnId: 'output:identity' });
     expect(model.actions).toEqual([
+      { id: 'create-alias', label: 'Column alias', disabled: false },
       {
         id: 'invoke-function',
         targetId: 'capability:trim',

@@ -30,6 +30,7 @@ type FunctionMenu = NonNullable<GraphNodeColumn['functionMenu']>;
 
 function actionSlot(action: CanvasColumnContextMenuAction): string | undefined {
   if (action.id === 'invoke-function') return 'graph-node-column-function';
+  if (action.id === 'create-alias') return 'graph-node-column-alias-action';
   if (action.id === 'append-field') return 'graph-node-structured-field-append';
   if (action.id === 'remove-structured-field') return 'graph-node-structured-field-remove';
   return undefined;
@@ -45,13 +46,14 @@ export function GraphNodeColumnFunctionMenu(props: {
   keyboardOpen: boolean;
   onKeyboardOpenChange: (open: boolean) => void;
   onRequest?: (capabilityId: string) => void;
+  onCreateAlias?: () => void;
   onStructuredAppend?: (column: GraphNodeColumn) => void;
   onStructuredRemove?: () => void;
   piece: ReactElement;
   tooltip: ReactElement;
 }): ReactElement {
-  const pendingPointerFunction = useRef<string | null>(null);
-  const pendingKeyboardFunction = useRef<string | null>(null);
+  const pendingPointerFunction = useRef<(() => void) | null>(null);
+  const pendingKeyboardFunction = useRef<(() => void) | null>(null);
   const categoryLabel =
     props.menu == null
       ? props.copy.columnActionsLabelTemplate.replace('{column}', props.columnName)
@@ -65,6 +67,8 @@ export function GraphNodeColumnFunctionMenu(props: {
       columnName: props.columnName,
     },
     label: categoryLabel,
+    createAliasLabel:
+      props.onCreateAlias == null ? undefined : props.copy.calculatedColumnKindLabels['field-ref'],
     functions:
       props.onRequest == null
         ? []
@@ -88,9 +92,13 @@ export function GraphNodeColumnFunctionMenu(props: {
   });
   const selectAction = (action: CanvasColumnContextMenuAction, channel: 'pointer' | 'keyboard') => {
     if (action.disabled) return;
-    if (action.id === 'invoke-function') {
-      if (channel === 'pointer') pendingPointerFunction.current = action.targetId;
-      else pendingKeyboardFunction.current = action.targetId;
+    if (action.id === 'invoke-function' || action.id === 'create-alias') {
+      const request =
+        action.id === 'invoke-function'
+          ? () => props.onRequest?.(action.targetId)
+          : () => props.onCreateAlias?.();
+      if (channel === 'pointer') pendingPointerFunction.current = request;
+      else pendingKeyboardFunction.current = request;
       return;
     }
     if (action.id === 'append-field') {
@@ -103,12 +111,15 @@ export function GraphNodeColumnFunctionMenu(props: {
     if (action.id === 'remove-structured-field') props.onStructuredRemove?.();
   };
   const [pointerOpen, setPointerOpen] = useState(false);
-  const applyPendingFunction = (pendingFunction: { current: string | null }, event: Event) => {
-    const capabilityId = pendingFunction.current;
-    if (capabilityId == null) return;
+  const applyPendingFunction = (
+    pendingFunction: { current: (() => void) | null },
+    event: Event
+  ) => {
+    const request = pendingFunction.current;
+    if (request == null) return;
     pendingFunction.current = null;
     event.preventDefault();
-    requestAnimationFrame(() => props.onRequest?.(capabilityId));
+    requestAnimationFrame(request);
   };
 
   return (

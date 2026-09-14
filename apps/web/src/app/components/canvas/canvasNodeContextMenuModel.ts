@@ -170,7 +170,7 @@ export type CanvasColumnContextMenuAction =
       disabled: boolean;
     }>
   | Readonly<{
-      id: 'remove-structured-field';
+      id: 'create-alias' | 'remove-structured-field';
       label: string;
       disabled: false;
     }>
@@ -190,6 +190,7 @@ export function buildCanvasColumnContextMenuModel(args: {
   target: CanvasColumnContextMenuTarget;
   label: string;
   functions?: readonly Readonly<{ id: string; label: string }>[];
+  createAliasLabel?: string;
   appendFields?: readonly Readonly<{ id: string; label: string }>[];
   removeStructuredFieldLabel?: string;
   move?: Readonly<{
@@ -201,6 +202,9 @@ export function buildCanvasColumnContextMenuModel(args: {
   unavailableLabel: string;
 }): CanvasColumnContextMenuModel {
   const actions: CanvasColumnContextMenuAction[] = [
+    ...(args.createAliasLabel == null
+      ? []
+      : [{ id: 'create-alias' as const, label: args.createAliasLabel, disabled: false as const }]),
     ...(args.functions ?? []).map((item) => ({
       id: 'invoke-function' as const,
       targetId: item.id,
