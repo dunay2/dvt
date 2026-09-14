@@ -16,6 +16,8 @@ import {
 } from './canvasDvtAuthoringModel';
 import { resolveDvtSubstraitJoinAppendCandidates } from './canvasDvtSubstraitJoinSourceResolution';
 import { DvtSinkAuthoringSection } from './DvtSinkAuthoringSection';
+import { DvtTransformResultTargetFields } from './DvtTransformResultTargetFields';
+import { resolveDvtResultTargetConnection } from './canvasDvtResultTargetConnection';
 import { DvtSourceAuthoringSection } from './DvtSourceAuthoringSection';
 import { DvtRelationFilterAuthoringSection } from './DvtRelationFilterAuthoringSection';
 import { DvtSubstraitCompositionStart } from './DvtSubstraitCompositionStart';
@@ -132,12 +134,27 @@ export function DvtAuthoringFields({
 
   if (draft.dvt.kind === 'transform') {
     const materializationField = (
-      <DvtTransformMaterializationField
-        disabled={disabled}
-        draft={draft.dvt}
-        errors={errors.dvt}
-        onChange={onChange}
-      />
+      <div className="space-y-4">
+        <DvtTransformMaterializationField
+          disabled={disabled}
+          draft={draft.dvt}
+          errors={errors.dvt}
+          onChange={onChange}
+        />
+        <DvtTransformResultTargetFields
+          target={draft.dvt.resultTarget}
+          connection={resolveDvtResultTargetConnection({ node, nodes, edges })}
+          disabled={disabled}
+          errors={errors.dvt}
+          onChange={(resultTarget) =>
+            onChange((current) =>
+              current.dvt?.kind === 'transform'
+                ? { ...current, dvt: { ...current.dvt, resultTarget } }
+                : current
+            )
+          }
+        />
+      </div>
     );
     if (section === 'general') return materializationField;
 
