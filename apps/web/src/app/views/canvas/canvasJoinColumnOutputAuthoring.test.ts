@@ -267,10 +267,11 @@ describe('JOIN card output selection', () => {
     expect(session.localNodeCatalog![node.id]).toBe(node);
   });
 
-  it('keeps the final JOIN output and fails closed on malformed or non-JOIN authority', () => {
-    const { node, session, nodes } = fixture(2);
+  it.each([2, 3])('clears and restores every output of a detached %i-source JOIN', (count) => {
+    const { node, session, nodes } = fixture(count);
+    const before = inspect(node);
     let current = session;
-    for (const field of inspect(node).outputs.slice(1)) {
+    for (const field of before.outputs) {
       const result = setCanvasColumnOutputIncluded({
         draftSession: current,
         canonicalNodesById: nodes,
@@ -282,17 +283,41 @@ describe('JOIN card output selection', () => {
       if (result.outcome !== 'applied') throw new Error('Expected output exclusion.');
       current = result.draftSession;
     }
-    const remaining = inspect(current.localNodeCatalog![node.id]!).outputs[0]!;
-    expect(
-      setCanvasColumnOutputIncluded({
-        draftSession: current,
-        canonicalNodesById: nodes,
-        targetNodeId: node.id,
-        columnId: remaining.fieldId,
-        columnType: remaining.dataType,
-        output: false,
-      }).outcome
-    ).toBe('rejected');
+    const emptyNode = current.localNodeCatalog![node.id]!;
+    const empty = inspect(emptyNode);
+    expect(empty.outputs).toEqual([]);
+    expect(empty.inputs).toEqual(before.inputs);
+    expect(empty.joins).toEqual(before.joins);
+    expect(empty.joinRelations).toEqual(before.joinRelations);
+    expect(current.workingSet).toEqual(session.workingSet);
+    expect(inspect(node)).toEqual(before);
+
+    const reloadedNode = JSON.parse(JSON.stringify(emptyNode)) as CanonicalNode;
+    expect(inspect(reloadedNode)).toEqual(empty);
+    const available = readCanvasJoinColumnOutputs(reloadedNode)!;
+    expect(available.fields.length).toBeGreaterThan(0);
+    expect(available.fields.every((field) => !field.selected)).toBe(true);
+    const field = available.fields[0]!;
+    const restored = setCanvasColumnOutputIncluded({
+      draftSession: { ...current, localNodeCatalog: { [node.id]: reloadedNode } },
+      canonicalNodesById: nodes,
+      targetNodeId: node.id,
+      columnId: field.columnId,
+      columnType: field.dataType,
+      output: true,
+    });
+    expect(restored.outcome).toBe('applied');
+    if (restored.outcome !== 'applied') return;
+    const after = inspect(restored.draftSession.localNodeCatalog![node.id]!);
+    expect(after.outputs).toHaveLength(1);
+    expect(after.outputs[0]!.source.fieldId).toBe(field.sourceFieldId);
+    expect(after.inputs).toEqual(before.inputs);
+    expect(after.joins).toEqual(before.joins);
+    expect(after.joinRelations).toEqual(before.joinRelations);
+  });
+
+  it('fails closed on malformed or non-JOIN authority', () => {
+    const { node } = fixture(2);
     expect(
       readCanvasJoinColumnOutputs({ ...node, metadata: { transformAuthoring: {} } })
     ).toBeNull();

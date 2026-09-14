@@ -844,7 +844,6 @@ function createDvtSubstraitNInputJoinDraft(args: {
     throw new Error('VTX2 INNER JOIN requires distinct source identities.');
   }
   if (
-    args.outputs.length === 0 ||
     args.outputs.some(
       (output) =>
         output.name.length === 0 ||
@@ -1025,7 +1024,10 @@ function createDvtSubstraitNInputJoinDraft(args: {
         field != null &&
         fields.findIndex((candidate) => candidate?.fieldId === field.fieldId) === index
     );
-    if (selected.length === 0 || selectedOutputs.some((field) => field == null)) {
+    if (
+      (selected.length === 0 && predicateIndex !== args.predicates.length - 1) ||
+      selectedOutputs.some((field) => field == null)
+    ) {
       throw new Error('VTX2 INNER JOIN output is unavailable at its join stage.');
     }
     const nextFields = selected.filter((field) => field != null);
@@ -1603,7 +1605,6 @@ export function applyDvtSubstraitInnerJoinFieldEdit(
     if (edit.kind === 'set-selected') {
       if (edit.selected === currentIndex >= 0) return draft;
       if (!edit.selected) {
-        if (outputs.length === 1) return draft;
         outputs = outputs.filter((output) => !sameLocator(output.source, locator));
       } else {
         const input = projection.inputs[locator.inputIndex];
@@ -1676,7 +1677,6 @@ export function applyDvtSubstraitInnerJoinFieldEdit(
   if (edit.kind === 'set-selected') {
     if (edit.selected === currentIndex >= 0) return draft;
     if (!edit.selected) {
-      if (outputs.length === 1) return draft;
       outputs = outputs.filter((output) => !sameLocator(output.source, field.locator));
     } else {
       outputs.push({ name: field.defaultName, source: field.locator });

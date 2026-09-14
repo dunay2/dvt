@@ -129,6 +129,28 @@ Microcommits: root removal plus focused tests; command wiring plus handler proof
 Test CONCAT both with and without a literal, serialization/reopen, derived SQL,
 shared slots and malformed documents. Run Web tests, lint, typecheck and pre-push.
 
+## Empty JOIN output selection (#3180)
+
+A binary or N-input JOIN may retain no selected final outputs while being edited,
+including after its Canvas input edges are removed. The canonical final emit and
+root names are both empty; input identities, intermediate outputs, predicates and
+relation identities remain intact. Reopening reconstructs unchecked, available
+fields from that same document, and selecting one creates a real output again.
+
+```text
+Checkbox -> ConfigureCanvasDvtNode -> empty final emit -> save/read -> unchecked fields
+Empty final emit -> PostgreSQL AST projection -> explicit unsupported-shape rejection
+```
+
+This distinguishes authoring state from target readiness; it does not remove
+input/predicate/identity checks or admit empty intermediate JOIN outputs. Reuse
+the existing JOIN field editor, shared reader and SQL projection boundary. Do not
+add a visual-only selection flag, fabricated output or execution fallback. Source
+last-output policy, downstream removal approval and connection composition are
+unchanged. Prove clearing and restoring binary/N-input outputs, detached edges,
+save/reload, preserved identities and SQL rejection with focused unit and browser
+regressions. Issue #3180 owns the implementation journal and evidence.
+
 ## Physical field reinclusion correction (#3144)
 
 A validated projection from a physical Source distinguishes a selected input
