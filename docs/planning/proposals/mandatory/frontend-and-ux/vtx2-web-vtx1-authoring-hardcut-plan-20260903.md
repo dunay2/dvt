@@ -186,7 +186,7 @@ directly. That module owns connected-source admission and identity matching;
 composition reuses its helpers instead of retaining copies. Semantic inspection
 and connection comparison reuse the current `@dvt/postgres-projection` owner.
 The existing draft/input contracts and literal `column.type === 'string'` policy
-are unchanged, including empty or duplicate column names admitted by that policy.
+are unchanged, including empty column lists and duplicate names admitted by that policy.
 There is no new rail, semantic mutation, compatibility export or input catalog.
 
 ```text

@@ -132,7 +132,7 @@ describe('canvasDvtSubstraitJoinSourceResolution', () => {
     ];
     args.nodes.push(...additions);
     args.edges.push(
-      ...additions.map((node) => ({
+      ...additions.map((node): CanonicalEdge => ({
         id: node.id,
         sourceId: node.id,
         targetId: 'join',
