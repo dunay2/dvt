@@ -39,6 +39,14 @@ export type GraphNodeColumnCompositionFunctionResolver = (
   }>
 ) => readonly GraphNodeColumnFunction[];
 
+export type GraphNodeColumnInspect = (
+  identity: Readonly<{
+    nodeId: string;
+    fieldId: string;
+    anchorElement: HTMLElement;
+  }>
+) => void;
+
 export type GraphNodeColumnPortDirection = 'source' | 'target';
 export type GraphNodeColumnPortIdentity = Readonly<{
   direction: GraphNodeColumnPortDirection;
@@ -94,6 +102,7 @@ export type GraphNodeCalculatedColumnIdentity =
     }>;
 
 export type GraphNodeColumnSectionProps = Readonly<{
+  onColumnInspect?: GraphNodeColumnInspect;
   columns: readonly GraphNodeColumn[];
   expanded?: boolean;
   nodeId?: string;
@@ -124,6 +133,10 @@ export function resolveGraphNodeColumnInteractionProps(args: {
 }) {
   const { data } = args;
   return {
+    onColumnInspect:
+      args.nodeRole === 'transform' && typeof data.onInspectCanvasColumn === 'function'
+        ? (data.onInspectCanvasColumn as GraphNodeColumnInspect)
+        : undefined,
     nodeId: args.nodeId,
     columnPortDirections: Array.isArray(data.columnPortDirections)
       ? (data.columnPortDirections as readonly GraphNodeColumnPortDirection[])

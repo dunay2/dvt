@@ -2,9 +2,11 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 
 import { CanvasNodePortHandle } from '../../components/canvas/CanvasNodePortHandle';
+import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { Tooltip, TooltipTrigger } from '../../components/ui/tooltip';
 import type {
   GraphNodeColumn,
+  GraphNodeColumnInspect,
   GraphNodeColumnCompositionFunctionResolver,
   GraphNodeColumnFunctionApplyIdentity,
   GraphNodeColumnFunctionApplyResult,
@@ -28,6 +30,7 @@ import type { GraphNodeColumnReorderController } from './useGraphNodeColumnReord
 type PendingFunctionRequest = Readonly<{ capabilityId: string }>;
 
 export function GraphNodeColumnRow(props: {
+  onColumnInspect?: GraphNodeColumnInspect;
   column: GraphNodeColumn;
   nodeId?: string;
   portDirections: readonly GraphNodeColumnPortDirection[];
@@ -63,6 +66,16 @@ export function GraphNodeColumnRow(props: {
   const { column, nodeId, copy, reorder } = props;
   const columnId = column.id ?? column.name;
   const isOutput = column.output !== false;
+  const canInspect =
+    isOutput && column.id != null && nodeId != null && props.onColumnInspect != null;
+  function inspect() {
+    if (!canInspect || pieceRef.current == null) return;
+    props.onColumnInspect?.({
+      nodeId: nodeId!,
+      fieldId: column.id!,
+      anchorElement: pieceRef.current,
+    });
+  }
   useEffect(() => {
     if (!props.focusRequested) return;
     pieceRef.current?.focus();
@@ -70,6 +83,7 @@ export function GraphNodeColumnRow(props: {
   }, [props.focusRequested, props.onFocusFulfilled]);
   const piece = (
     <GraphNodeColumnPiece
+      {...(canInspect ? canvasNodeEmbeddedControlProps : {})}
       ref={pieceRef}
       column={column}
       isOutput={isOutput}
@@ -80,6 +94,31 @@ export function GraphNodeColumnRow(props: {
       onNestedColumnReorder={props.onColumnReorder}
       onDragStart={(event) => reorder.startDrag(column, event)}
       onDragEnd={reorder.endDrag}
+      aria-keyshortcuts={canInspect ? 'Enter' : undefined}
+      onDoubleClick={(event) => {
+        if (
+          !canInspect ||
+          (event.target instanceof Element && event.target.closest('button') != null)
+        )
+          return;
+        event.stopPropagation();
+        inspect();
+      }}
+      onKeyDown={(event) => {
+        if (
+          !canInspect ||
+          event.target !== event.currentTarget ||
+          event.key !== 'Enter' ||
+          event.ctrlKey ||
+          event.altKey ||
+          event.shiftKey ||
+          event.metaKey
+        )
+          return;
+        event.preventDefault();
+        event.stopPropagation();
+        inspect();
+      }}
       onOutputToggle={() => {
         if (nodeId == null) return;
         props.onColumnOutputToggle?.({

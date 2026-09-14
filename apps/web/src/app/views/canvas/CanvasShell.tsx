@@ -6,10 +6,9 @@ import { getSourceImportContributions, getSourceImportOptions } from '../../plug
 import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { CanvasShellMainPanel } from './CanvasShellMainPanel';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
-import {
-  SemanticTransformFocusPanel,
-  canOpenSemanticTransformFocus,
-} from './SemanticTransformFocusPanel';
+import { SemanticTransformFocusPanel } from './SemanticTransformFocusPanel';
+import { useCanvasSemanticFocus } from './useCanvasSemanticFocus';
+import { SemanticOutputExpressionPanel } from './SemanticOutputExpressionPanel';
 import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
 import { CanvasSettingsDialog } from './CanvasSettingsDialog';
@@ -85,42 +84,19 @@ export default function CanvasShell({
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
   const [dataSample, setDataSample] = useState<OperationalDrawerDataSample>({ status: 'idle' });
-  const [semanticTransformId, setSemanticTransformId] = useState<string | null>(null);
   const dataSampleRequestIdRef = useRef(0);
   const showBottomDrawer = useUiLayoutStore((state) => state.showBottomDrawer);
   const selectOperationalDrawerTab = useOperationalDrawerContributionStore(
     (state) => state.selectOperationalDrawerTab
   );
-  const semanticTransformIds = useMemo(
-    () =>
-      new Set(
-        panels.inspectorGraphNodes.filter(canOpenSemanticTransformFocus).map((node) => node.id)
-      ),
-    [panels.inspectorGraphNodes]
-  );
-  const semanticTransform = useMemo(
-    () =>
-      panels.inspectorGraphNodes.find(
-        (node) => node.id === semanticTransformId && semanticTransformIds.has(node.id)
-      ) ?? null,
-    [panels.inspectorGraphNodes, semanticTransformId, semanticTransformIds]
-  );
-  const openSemanticTransform = useCallback(
-    (nodeId: string) => {
-      if (!semanticTransformIds.has(nodeId)) return;
-      setSemanticTransformId(nodeId);
-      selectOperationalDrawerTab('semantic');
-      showBottomDrawer(360);
-      window.requestAnimationFrame(() => {
-        document
-          .querySelector<HTMLButtonElement>(
-            '[data-slot="bottom-operational-drawer-tab"][data-tab="semantic"]'
-          )
-          ?.focus({ preventScroll: true });
-      });
-    },
-    [selectOperationalDrawerTab, semanticTransformIds, showBottomDrawer]
-  );
+  const {
+    semanticTransformIds,
+    semanticTransform,
+    openSemanticTransform,
+    outputFieldId,
+    openOutputExpression,
+    closeOutputExpression,
+  } = useCanvasSemanticFocus(panels.inspectorGraphNodes);
   const applySemanticTransform = useCallback(
     (transform: (typeof panels.inspectorGraphNodes)[number]) => {
       panels.inspectorAuthoring.onApplyNodeDraft(createCanvasInspectorNodeDraft(transform));
@@ -383,6 +359,7 @@ export default function CanvasShell({
           sourceDataSampleInteractionLabel: canOpenDataSample
             ? copy.sourceDataSampleInteractionLabel
             : undefined,
+          onInspectCanvasColumn: canOpenSemantic ? openOutputExpression : undefined,
           onSelectNode: canOpenSemantic ? () => openSemanticTransform(node.id) : data.onSelectNode,
           onOpenNode:
             data.role === 'transform' && typeof data.onInspectNode === 'function'
@@ -402,6 +379,7 @@ export default function CanvasShell({
       graph,
       openSinkDataSample,
       openSemanticTransform,
+      openOutputExpression,
       openSourceDataSample,
       semanticTransformIds,
       runMaterializationSampleQuery,
@@ -487,6 +465,13 @@ export default function CanvasShell({
               <div className="grid h-full place-items-center p-4 text-sm text-muted-foreground">
                 {copy.operationalDrawerSemanticIdleMessage}
               </div>
+            ) : outputFieldId != null ? (
+              <SemanticOutputExpressionPanel
+                key={semanticTransform.id + outputFieldId}
+                transform={semanticTransform}
+                fieldId={outputFieldId}
+                onClose={closeOutputExpression}
+              />
             ) : (
               <SemanticTransformFocusPanel
                 transform={semanticTransform}

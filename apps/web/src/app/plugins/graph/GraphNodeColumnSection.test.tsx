@@ -42,6 +42,68 @@ describe('GraphNodeColumnSection', () => {
     };
   });
 
+  it('inspects an output by stable identity using double-click or Enter without authoring', () => {
+    const onColumnInspect = vi.fn();
+    const onColumnOutputToggle = vi.fn();
+    const onColumnReorder = vi.fn();
+    act(() =>
+      root.render(
+        <GraphNodeColumnSection
+          nodeId="transform"
+          expanded
+          columns={[{ id: 'opaque-field-id', name: 'alias', type: 'text' }]}
+          onColumnInspect={onColumnInspect}
+          onColumnOutputToggle={onColumnOutputToggle}
+          onColumnReorder={onColumnReorder}
+        />
+      )
+    );
+    const piece = container.querySelector<HTMLElement>('[data-column-name="alias"]')!;
+    expect(piece.hasAttribute('data-canvas-node-control')).toBe(true);
+    act(() => {
+      fireEvent.doubleClick(piece);
+      fireEvent.keyDown(piece, { key: 'Enter' });
+    });
+    expect(onColumnInspect).toHaveBeenCalledTimes(2);
+    expect(onColumnInspect).toHaveBeenLastCalledWith({
+      nodeId: 'transform',
+      fieldId: 'opaque-field-id',
+      anchorElement: piece,
+    });
+    expect(onColumnOutputToggle).not.toHaveBeenCalled();
+    expect(onColumnReorder).not.toHaveBeenCalled();
+    const checkbox = piece.querySelector('button')!;
+    act(() => {
+      fireEvent.doubleClick(checkbox);
+      fireEvent.keyDown(checkbox, { key: 'Enter' });
+    });
+    expect(onColumnInspect).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not inspect inactive inputs or fabricate output identity from an alias', () => {
+    const onColumnInspect = vi.fn();
+    act(() =>
+      root.render(
+        <GraphNodeColumnSection
+          nodeId="transform"
+          expanded
+          columns={[
+            { id: 'inactive', name: 'input', type: 'text', output: false },
+            { name: 'alias-only', type: 'text' },
+          ]}
+          onColumnInspect={onColumnInspect}
+        />
+      )
+    );
+    for (const piece of container.querySelectorAll('[data-slot="graph-node-column-piece"]')) {
+      act(() => {
+        fireEvent.doubleClick(piece);
+        fireEvent.keyDown(piece, { key: 'Enter' });
+      });
+    }
+    expect(onColumnInspect).not.toHaveBeenCalled();
+  });
+
   it('shows five columns before explicitly revealing and hiding the remainder', () => {
     act(() => {
       root.render(<GraphNodeColumnSection columns={EIGHT_COLUMNS} />);

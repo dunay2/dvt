@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/too
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
 import type {
   GraphNodeColumn,
+  GraphNodeColumnInspect,
   GraphNodeCalculatedColumnIdentity,
   GraphNodeColumnCompositionFunctionResolver,
   GraphNodeColumnFunctionApplyIdentity,
@@ -37,6 +38,7 @@ import {
 export type GraphNodeCardColumn = GraphNodeColumn;
 
 export type GraphNodeCardViewProps = Readonly<{
+  onColumnInspect?: GraphNodeColumnInspect;
   cardModel: GraphNodeCardReadModel;
   typeLabel: string;
   tags: readonly Readonly<{ value: string; label: string }>[];
@@ -133,6 +135,7 @@ function GraphNodeCardTitle({ cardModel }: { cardModel: GraphNodeCardReadModel }
 }
 
 export function GraphNodeCardView({
+  onColumnInspect,
   cardModel,
   typeLabel,
   tags,
@@ -245,6 +248,7 @@ export function GraphNodeCardView({
 
         {showColumns && (
           <GraphNodeColumnSection
+            onColumnInspect={onColumnInspect}
             columns={columns}
             expanded={columnDisclosureExpanded}
             nodeId={nodeId}
