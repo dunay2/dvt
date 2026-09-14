@@ -74,6 +74,7 @@ function fixture(sourceCount: number): {
   const session: CanvasDraftSession = {
     syncState: 'editing',
     baseline: { record: null },
+    draftRevision: 'rev-1',
     workingSet: { visibleNodeIds: [node.id], visibleEdges: [], pendingExplicitNodeIds: [] },
     localNodeCatalog: { [node.id]: node },
   };
