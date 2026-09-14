@@ -1,12 +1,13 @@
 /** Owned concern: resolve connected Canvas Sources that can participate in DVT INNER JOIN authoring. */
 import { ConnectedSourceRefSchema, type ConnectedSourceRef } from '@dvt/contracts';
-
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
+  hasSameConnectionRef,
   inspectDvtSubstraitNInputJoinDraft,
   type DvtSubstraitInnerJoinDraft,
-  type DvtSubstraitJoinInput,
-} from './canvasDvtSubstraitJoinComposition';
+} from '@dvt/postgres-projection';
+
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { DvtSubstraitJoinInput } from './canvasDvtSubstraitJoinComposition';
 
 function readMetadataText(node: CanonicalNode, key: string): string | null {
   const value = node.metadata?.[key];
@@ -27,7 +28,7 @@ function readSourceColumnNames(node: CanonicalNode): readonly string[] | null {
   return names.some((name) => name == null) ? null : names.filter((name) => name != null);
 }
 
-function resolveJoinInput(node: CanonicalNode): DvtSubstraitJoinInput | null {
+export function resolveJoinInput(node: CanonicalNode): DvtSubstraitJoinInput | null {
   if (node.kind !== 'dvt:source' || node.role !== 'input') return null;
   const connectedSourceRef = ConnectedSourceRefSchema.safeParse(node.metadata?.connectedSourceRef);
   const schema = readMetadataText(node, 'schema');
@@ -48,18 +49,10 @@ function resolveJoinInput(node: CanonicalNode): DvtSubstraitJoinInput | null {
   };
 }
 
-function hasSameConnectionRef(
-  first: ConnectedSourceRef['connectionRef'],
-  second: ConnectedSourceRef['connectionRef']
+export function hasSameConnectedSourceRef(
+  first: ConnectedSourceRef,
+  second: ConnectedSourceRef
 ): boolean {
-  return (
-    first.schemaVersion === second.schemaVersion &&
-    first.provider === second.provider &&
-    first.connectionId === second.connectionId
-  );
-}
-
-function hasSameConnectedSourceRef(first: ConnectedSourceRef, second: ConnectedSourceRef): boolean {
   return (
     first.schemaVersion === second.schemaVersion &&
     first.sourceObjectId === second.sourceObjectId &&

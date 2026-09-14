@@ -93,6 +93,10 @@ import {
   removeDvtSubstraitCountExtension,
 } from './canvasDvtSubstraitAggregation';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import {
+  hasSameConnectedSourceRef,
+  resolveJoinInput,
+} from './canvasDvtSubstraitJoinSourceResolution';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import {
   appendDvtSubstraitJoinComparison,
@@ -387,25 +391,6 @@ type JoinBuildPredicate = Readonly<{
   conditions: readonly DvtSubstraitJoinCondition<JoinBuildPredicateOperand>[];
 }>;
 
-function readMetadataText(node: CanonicalNode, key: string): string | null {
-  const value = node.metadata?.[key];
-  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
-}
-
-function readSourceColumnNames(node: CanonicalNode): readonly string[] | null {
-  const columns = node.metadata?.columns;
-  if (!Array.isArray(columns)) return null;
-  const names = columns.map((column) => {
-    if (column == null || typeof column !== 'object' || Array.isArray(column)) return null;
-    const name = (column as Record<string, unknown>).name;
-    const type = (column as Record<string, unknown>).type;
-    return typeof name === 'string' && name.trim().length > 0 && type === 'string'
-      ? name.trim()
-      : null;
-  });
-  return names.some((name) => name == null) ? null : names.filter((name) => name != null);
-}
-
 function resolveJoinSource(
   node: CanonicalNode,
   expectedColumns: readonly string[]
@@ -414,35 +399,6 @@ function resolveJoinSource(
   return input == null || input.fields.join('\u0000') !== expectedColumns.join('\u0000')
     ? null
     : input.source;
-}
-
-function resolveJoinInput(node: CanonicalNode): DvtSubstraitJoinInput | null {
-  if (node.kind !== 'dvt:source' || node.role !== 'input') return null;
-  const connectedSourceRef = ConnectedSourceRefSchema.safeParse(node.metadata?.connectedSourceRef);
-  const schema = readMetadataText(node, 'schema');
-  const table = readMetadataText(node, 'tableName');
-  const columns = readSourceColumnNames(node);
-  if (
-    !connectedSourceRef.success ||
-    connectedSourceRef.data.connectionRef.provider !== 'postgres' ||
-    schema == null ||
-    table == null ||
-    columns == null
-  ) {
-    return null;
-  }
-  return {
-    source: { nodeId: node.id, schema, table, sourceRef: connectedSourceRef.data },
-    fields: columns,
-  };
-}
-
-function hasSameConnectedSourceRef(first: ConnectedSourceRef, second: ConnectedSourceRef): boolean {
-  return (
-    first.schemaVersion === second.schemaVersion &&
-    first.sourceObjectId === second.sourceObjectId &&
-    hasSameConnectionRef(first.connectionRef, second.connectionRef)
-  );
 }
 
 function sameInputShape(
