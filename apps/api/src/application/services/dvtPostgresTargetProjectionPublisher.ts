@@ -4,6 +4,7 @@
  */
 import type { IContentAddressedArtifactStore } from '@dvt/artifacts';
 import {
+  createDvtPostgresOutputSchemaDigestV1,
   decodeDvtSubstraitPlanV1,
   DVT_POSTGRES_INNER_JOIN_PROFILE_ID,
   type DvtSubstraitSemanticDocumentV1,
@@ -11,6 +12,7 @@ import {
 } from '@dvt/contracts';
 import { sha256Hex } from '@dvt/crypto';
 import {
+  projectDvtPostgresOutputSchemaV1,
   projectDvtConnectedFieldDraftToPostgresSql,
   projectDvtInnerJoinDraftToPostgresSql,
   type ProjectedDvtConnectedFieldSql,
@@ -58,7 +60,9 @@ export class DvtPostgresTargetProjectionPublisher {
   ): Promise<DvtTerminalTransformProjectionBinding> {
     const closure = resolveDvtTerminalTransformClosure(input);
     const semanticDocument = closure.authority.semanticDocument;
-    const sql = await this.projectClosure(closure);
+    const projected = await this.projectClosure(closure);
+    const sql = projected.sql;
+    const outputSchema = projectDvtPostgresOutputSchemaV1(projected.outputs);
     const bytes = Buffer.from(sql, 'utf8');
     const sha256 = sha256Hex(bytes);
     const storageUri = this.deps.locateArtifact({
@@ -85,6 +89,9 @@ export class DvtPostgresTargetProjectionPublisher {
     return {
       outputNodeId: closure.transform.id,
       semanticPlanSha256: semanticDocument.semanticPlan.sha256,
+      ...(outputSchema == null
+        ? {}
+        : { schemaDigestSha256: createDvtPostgresOutputSchemaDigestV1(outputSchema) }),
       connectionRef: closure.connectionRef,
       profileId: closure.profileId,
       artifact: {
@@ -97,7 +104,12 @@ export class DvtPostgresTargetProjectionPublisher {
     };
   }
 
-  private async projectClosure(closure: DvtTerminalTransformClosure): Promise<string> {
+  private async projectClosure(closure: DvtTerminalTransformClosure): Promise<
+    Readonly<{
+      sql: string;
+      outputs: readonly Readonly<{ name: string; dataType: string; outputOrdinal: number }>[];
+    }>
+  > {
     const document = closure.authority.semanticDocument;
     if (closure.profileId === DVT_POSTGRES_INNER_JOIN_PROFILE_ID) {
       const projected = await projectDvtInnerJoinDraftToPostgresSql({
@@ -118,7 +130,7 @@ export class DvtPostgresTargetProjectionPublisher {
       ) {
         throw new Error('PostgreSQL JOIN inputs do not match the protected terminal closure.');
       }
-      return projected.sql;
+      return { sql: projected.sql, outputs: projected.projection.outputs };
     }
     const source = closure.sources[0]!;
     const project = this.deps.projectSemanticDocument ?? projectCanonicalConnectedFieldDocument;
@@ -133,7 +145,7 @@ export class DvtPostgresTargetProjectionPublisher {
     ) {
       throw new Error('PostgreSQL projection does not match the protected terminal closure.');
     }
-    return projected.sql;
+    return { sql: projected.sql, outputs: projected.projection.outputs };
   }
 }
 

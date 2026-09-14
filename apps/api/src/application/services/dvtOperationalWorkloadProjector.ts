@@ -21,6 +21,7 @@ import {
 export type DvtTerminalTransformProjectionBinding = {
   readonly outputNodeId: string;
   readonly semanticPlanSha256: string;
+  readonly schemaDigestSha256?: string;
   readonly connectionRef: ConnectionRef;
   readonly profileId: DvtOperationalWorkloadV1['targetProjection']['profileId'];
   readonly artifact: DvtOperationalWorkloadV1['targetProjection']['artifact'];
