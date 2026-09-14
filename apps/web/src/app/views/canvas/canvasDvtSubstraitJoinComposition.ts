@@ -1,3 +1,26 @@
+import {
+  ZERO_SHA256,
+  type DvtSubstraitJoinDataType,
+  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitNInputJoinProjection,
+  type DvtSubstraitJoinPredicate,
+  type JoinOriginField,
+  type InspectedJoinStructure,
+  hasSameConnectionRef,
+  hasPinnedPlanVersion,
+  hasUniqueInnerJoinSidecarIdentity,
+  hasCurrentInnerJoinSemanticHash,
+  inspectNInputJoinStructure,
+  inspectDvtSubstraitNInputJoinDraft,
+} from '@dvt/postgres-projection';
+export {
+  type DvtSubstraitJoinDataType,
+  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitNInputJoinProjection,
+  type DvtSubstraitNInputJoinInspection,
+  type DvtSubstraitJoinPredicate,
+  inspectDvtSubstraitNInputJoinDraft,
+} from '@dvt/postgres-projection';
 /** Owned concern: build and inspect the admitted DVT INNER JOIN semantic shapes. */
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import {
@@ -117,8 +140,6 @@ import {
   isDvtSubstraitRowNumberFunction,
   removeDvtSubstraitRowNumberExtension,
 } from './canvasDvtSubstraitWindow';
-
-const ZERO_SHA256 = '0'.repeat(64);
 export {
   DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS,
   DVT_SUBSTRAIT_JOIN_CONDITION_COMBINATIONS,
@@ -188,13 +209,6 @@ export type DvtSubstraitJoinSource = Readonly<{
   sourceRef: ConnectedSourceRef;
 }>;
 
-export type DvtSubstraitJoinDataType = 'string' | 'bool' | 'i64' | 'fp64' | 'precisionTimestampTz';
-
-export type DvtSubstraitInnerJoinDraft = Readonly<{
-  plan: Plan;
-  sidecar: DvtSubstraitAuthoringSidecarV1;
-}>;
-
 export type DvtSubstraitInnerJoinProjection = Readonly<{
   left: Readonly<{ schema: string; table: string; sourceRef: ConnectedSourceRef }>;
   right: Readonly<{ schema: string; table: string; sourceRef: ConnectedSourceRef }>;
@@ -212,32 +226,6 @@ export type DvtSubstraitInnerJoinProjection = Readonly<{
 
 export type DvtSubstraitInnerJoinInspection =
   Readonly<{ ok: true; projection: DvtSubstraitInnerJoinProjection }> | Readonly<{ ok: false }>;
-
-export type DvtSubstraitNInputJoinProjection = Readonly<{
-  inputs: readonly Readonly<{
-    relationId: string;
-    schema: string;
-    table: string;
-    sourceRef: ConnectedSourceRef;
-    fields: readonly Readonly<{
-      name: string;
-      fieldId: string;
-      dataType: DvtSubstraitJoinDataType;
-    }>[];
-  }>[];
-  joinRelations: readonly Readonly<{ relationId: string; relAnchor: number }>[];
-  joins: readonly DvtSubstraitJoinPredicate[];
-  outputs: readonly Readonly<{
-    name: string;
-    fieldId: string;
-    dataType: DvtSubstraitJoinDataType;
-    outputOrdinal: number;
-    source: Readonly<{ inputIndex: number; name: string; fieldId: string }>;
-  }>[];
-}>;
-
-export type DvtSubstraitNInputJoinInspection =
-  Readonly<{ ok: true; projection: DvtSubstraitNInputJoinProjection }> | Readonly<{ ok: false }>;
 
 type DvtSubstraitInnerJoinGroupingCommon = Readonly<{
   measure: Readonly<{ name: string; fieldId: string; capabilityId: string }>;
@@ -346,10 +334,6 @@ export type DvtSubstraitJoinInput = Readonly<{
 /** These values are references to persisted input FieldIds, not graph node/name locators. */
 export type { DvtSubstraitJoinPredicateOperand } from './canvasDvtSubstraitJoinOperand';
 
-export type DvtSubstraitJoinPredicate = Readonly<{
-  conditions: readonly DvtSubstraitJoinPredicateCondition[];
-}>;
-
 export type DvtSubstraitJoinOutputSelection = Readonly<{
   name: string;
   sourceFieldId: string;
@@ -402,27 +386,6 @@ type JoinBuildPredicateOperand = DvtSubstraitJoinOperand<
 type JoinBuildPredicate = Readonly<{
   conditions: readonly DvtSubstraitJoinCondition<JoinBuildPredicateOperand>[];
 }>;
-type JoinOriginField = Readonly<{
-  inputIndex: number;
-  name: string;
-  fieldId: string;
-  dataType: DvtSubstraitJoinDataType;
-}>;
-type InspectedJoinStage = Readonly<{
-  relationId: string;
-  relAnchor: number;
-  fields: readonly Readonly<{
-    fieldId: string;
-    displayName: string;
-    sourceFieldId: string;
-  }>[];
-}>;
-type InspectedJoinStructure = Readonly<{
-  inputs: DvtSubstraitNInputJoinProjection['inputs'];
-  stages: readonly InspectedJoinStage[];
-  joins: readonly DvtSubstraitJoinPredicate[];
-  outputs: DvtSubstraitNInputJoinProjection['outputs'];
-}>;
 
 function readMetadataText(node: CanonicalNode, key: string): string | null {
   const value = node.metadata?.[key];
@@ -472,17 +435,6 @@ function resolveJoinInput(node: CanonicalNode): DvtSubstraitJoinInput | null {
     source: { nodeId: node.id, schema, table, sourceRef: connectedSourceRef.data },
     fields: columns,
   };
-}
-
-function hasSameConnectionRef(
-  first: ConnectedSourceRef['connectionRef'],
-  second: ConnectedSourceRef['connectionRef']
-): boolean {
-  return (
-    first.schemaVersion === second.schemaVersion &&
-    first.provider === second.provider &&
-    first.connectionId === second.connectionId
-  );
 }
 
 function hasSameConnectedSourceRef(first: ConnectedSourceRef, second: ConnectedSourceRef): boolean {
@@ -726,16 +678,6 @@ function resolveJoinFieldTypes(input: JoinBuildInput): readonly DvtSubstraitJoin
     throw new Error('VTX2 INNER JOIN field names and types must have the same length.');
   }
   return fieldTypes;
-}
-
-function joinDataType(type: Type): DvtSubstraitJoinDataType | null {
-  return type.kind.case === 'string' ||
-    type.kind.case === 'bool' ||
-    type.kind.case === 'i64' ||
-    type.kind.case === 'fp64' ||
-    type.kind.case === 'precisionTimestampTz'
-    ? type.kind.case
-    : null;
 }
 
 function stringType() {
@@ -1412,327 +1354,8 @@ export function createDvtSubstraitInnerJoinDraft(args: {
   });
 }
 
-function namedTableIdentity(rel: Rel): { schema: string; table: string } | null {
-  if (rel.relType.case !== 'read') return null;
-  const read = rel.relType.value;
-  if (read.common?.emitKind.case !== undefined || read.common?.hint != null) return null;
-  if (read.common?.advancedExtension != null || read.advancedExtension != null) return null;
-  if (read.filter != null || read.bestEffortFilter != null || read.projection != null) return null;
-  if (read.readType.case !== 'namedTable' || read.readType.value.advancedExtension != null)
-    return null;
-  const names = read.readType.value.names;
-  if (names.some((name) => name.trim().length === 0 || name !== name.trim())) return null;
-  return names.length === 2 && names[0] != null && names[1] != null
-    ? { schema: names[0], table: names[1] }
-    : null;
-}
-
-function hasPinnedPlanVersion(plan: Plan): boolean {
-  return (
-    plan.version?.majorNumber === 0 &&
-    plan.version.minorNumber === 101 &&
-    plan.version.patchNumber === 0
-  );
-}
-
 function clonePlan(plan: Plan): Plan {
   return fromBinary(PlanSchema, toBinary(PlanSchema, plan));
-}
-
-function hasUniqueInnerJoinSidecarIdentity(draft: DvtSubstraitInnerJoinDraft): boolean {
-  return (
-    new Set(draft.sidecar.relations.map((relation) => relation.relationId)).size ===
-      draft.sidecar.relations.length &&
-    new Set(draft.sidecar.relations.map((relation) => relation.relAnchor)).size ===
-      draft.sidecar.relations.length &&
-    new Set(draft.sidecar.fields.map((field) => field.fieldId)).size === draft.sidecar.fields.length
-  );
-}
-
-function hasCurrentInnerJoinSemanticHash(draft: DvtSubstraitInnerJoinDraft): boolean {
-  const planSha256 = sha256Hex(toBinary(PlanSchema, draft.plan));
-  return (
-    draft.sidecar.semanticPlanSha256 === ZERO_SHA256 ||
-    draft.sidecar.semanticPlanSha256 === planSha256
-  );
-}
-
-type InspectedJoinPredicateOperand = DvtSubstraitInspectedJoinOperand;
-
-function inspectNInputJoinNode(
-  plan: Plan,
-  rel: Rel,
-  relAnchor: number
-): Readonly<{
-  conditions: readonly InspectedJoinCondition[];
-  outputMapping: readonly number[];
-}> | null {
-  if (rel.relType.case !== 'join') return null;
-  const join = rel.relType.value;
-  if (
-    join.type !== JoinRel_JoinType.INNER ||
-    join.postJoinFilter != null ||
-    join.advancedExtension != null ||
-    join.common?.hint != null ||
-    join.common?.advancedExtension != null ||
-    join.common?.relAnchor !== relAnchor ||
-    join.common.emitKind.case !== 'emit' ||
-    join.left == null ||
-    join.right == null
-  ) {
-    return null;
-  }
-  const conditions = inspectJoinConditionChain(plan, join.expression);
-  if (conditions == null || conditions.length === 0) return null;
-  return {
-    conditions,
-    outputMapping: join.common.emitKind.value.outputMapping,
-  };
-}
-
-function flattenNInputJoinTree(
-  rel: Rel
-): Readonly<{ reads: readonly Rel[]; joins: readonly Rel[] }> | null {
-  if (rel.relType.case === 'read') return { reads: [rel], joins: [] };
-  if (rel.relType.case !== 'join') return null;
-  const join = rel.relType.value;
-  if (join.left == null || join.right == null || join.right.relType.case !== 'read') return null;
-  const left = flattenNInputJoinTree(join.left);
-  return left == null ? null : { reads: [...left.reads, join.right], joins: [...left.joins, rel] };
-}
-
-function inspectNInputJoinStructure(
-  draft: DvtSubstraitInnerJoinDraft
-): InspectedJoinStructure | null {
-  const { plan, sidecar } = draft;
-  if (
-    !hasPinnedPlanVersion(plan) ||
-    plan.relations.length !== 1 ||
-    sidecar.schemaVersion !== DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION ||
-    !hasUniqueInnerJoinSidecarIdentity(draft) ||
-    !hasCurrentInnerJoinSemanticHash(draft)
-  ) {
-    return null;
-  }
-  const root = plan.relations[0]?.relType;
-  if (
-    root?.case !== 'root' ||
-    root.value.input == null ||
-    root.value.names.length === 0 ||
-    root.value.names.some((name) => name.length === 0) ||
-    new Set(root.value.names).size !== root.value.names.length
-  ) {
-    return null;
-  }
-  const tree = flattenNInputJoinTree(root.value.input);
-  if (
-    tree == null ||
-    tree.reads.length < 2 ||
-    tree.joins.length !== tree.reads.length - 1 ||
-    sidecar.relations.length !== tree.reads.length + tree.joins.length
-  ) {
-    return null;
-  }
-
-  const inputs: DvtSubstraitNInputJoinProjection['inputs'][number][] = [];
-  for (const [index, readRel] of tree.reads.entries()) {
-    if (readRel.relType.case !== 'read' || readRel.relType.value.common?.relAnchor !== index + 1) {
-      return null;
-    }
-    const table = namedTableIdentity(readRel);
-    const fieldNames = readRel.relType.value.baseSchema?.names;
-    const fieldTypes = readRel.relType.value.baseSchema?.struct?.types;
-    const dataTypes = fieldTypes?.map(joinDataType);
-    const binding = sidecar.relations.find((relation) => relation.relAnchor === index + 1);
-    if (
-      table == null ||
-      fieldNames == null ||
-      fieldNames.length === 0 ||
-      fieldNames.some((name) => name.length === 0 || name !== name.trim()) ||
-      new Set(fieldNames).size !== fieldNames.length ||
-      fieldTypes == null ||
-      fieldTypes.length !== fieldNames.length ||
-      dataTypes == null ||
-      dataTypes.some((dataType) => dataType == null) ||
-      binding == null ||
-      binding.sourceRef == null ||
-      binding.displayName !== table.table
-    ) {
-      return null;
-    }
-    const fields = sidecar.fields
-      .filter((field) => field.relationId === binding.relationId)
-      .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
-    if (
-      fields.length !== fieldNames.length ||
-      fields.some(
-        (field, fieldIndex) =>
-          field.outputOrdinal !== fieldIndex || field.displayName !== fieldNames[fieldIndex]
-      )
-    ) {
-      return null;
-    }
-    inputs.push({
-      relationId: binding.relationId,
-      ...table,
-      sourceRef: binding.sourceRef,
-      fields: fields.map((field, fieldIndex) => ({
-        name: fieldNames[fieldIndex]!,
-        fieldId: field.fieldId,
-        dataType: dataTypes[fieldIndex]!,
-      })),
-    });
-  }
-  if (
-    new Set(
-      inputs.map(
-        (input) => `${input.sourceRef.connectionRef.connectionId}:${input.sourceRef.sourceObjectId}`
-      )
-    ).size !== inputs.length ||
-    inputs.some(
-      (input) =>
-        input.sourceRef.connectionRef.provider !== 'postgres' ||
-        !hasSameConnectionRef(inputs[0]!.sourceRef.connectionRef, input.sourceRef.connectionRef)
-    )
-  ) {
-    return null;
-  }
-
-  let workingFields = inputs[0]!.fields.map<JoinOriginField>((field) => ({
-    inputIndex: 0,
-    name: field.name,
-    fieldId: field.fieldId,
-    dataType: field.dataType,
-  }));
-  const joins: DvtSubstraitJoinPredicate[] = [];
-  const stages: InspectedJoinStage[] = [];
-  let outputs: DvtSubstraitNInputJoinProjection['outputs'][number][] = [];
-  for (const [joinIndex, joinRel] of tree.joins.entries()) {
-    const relAnchor = inputs.length + joinIndex + 1;
-    const inspectedJoin = inspectNInputJoinNode(plan, joinRel, relAnchor);
-    const rightInput = inputs[joinIndex + 1]!;
-    const rightFields = rightInput.fields.map<JoinOriginField>((field) => ({
-      inputIndex: joinIndex + 1,
-      name: field.name,
-      fieldId: field.fieldId,
-      dataType: field.dataType,
-    }));
-    const available = [...workingFields, ...rightFields];
-    const relationBinding = sidecar.relations.find((relation) => relation.relAnchor === relAnchor);
-    if (
-      inspectedJoin == null ||
-      relationBinding == null ||
-      relationBinding.sourceRef != null ||
-      relationBinding.displayName !==
-        inputs
-          .slice(0, joinIndex + 2)
-          .map((input) => input.table)
-          .join('+') ||
-      inspectedJoin.outputMapping.length === 0 ||
-      new Set(inspectedJoin.outputMapping).size !== inspectedJoin.outputMapping.length ||
-      inspectedJoin.outputMapping.some((ordinal) => ordinal < 0 || ordinal >= available.length)
-    ) {
-      return null;
-    }
-    const conditions: DvtSubstraitJoinPredicateCondition[] = [];
-    const convertOperand = (
-      operand: InspectedJoinPredicateOperand
-    ): DvtSubstraitJoinPredicateOperand | null => {
-      return mapDvtSubstraitJoinOperandFields(operand, (field) => {
-        const origin = available[field.ordinal];
-        return origin == null ? null : { kind: 'field', sourceFieldId: origin.fieldId };
-      });
-    };
-    for (const condition of inspectedJoin.conditions) {
-      const converted = mapDvtSubstraitJoinConditionOperands(condition, convertOperand);
-      if (converted == null) return null;
-      const operandType = (operand: DvtSubstraitJoinPredicateOperand) =>
-        resolveDvtSubstraitJoinOperandDataType(
-          operand,
-          (field) =>
-            available.find((candidate) => candidate.fieldId === field.sourceFieldId)?.dataType ??
-            null
-        );
-      for (const comparison of collectDvtSubstraitJoinConditionComparisons(converted)) {
-        if (
-          operandType(comparison.left) == null ||
-          (!isDvtSubstraitJoinNullCondition(comparison) &&
-            operandType(comparison.left) !== operandType(comparison.right))
-        ) {
-          return null;
-        }
-      }
-      conditions.push(compactDvtSubstraitJoinConditionDefaults(converted));
-    }
-    const nextFields = inspectedJoin.outputMapping.map((ordinal) => available[ordinal]!);
-    const stageFields = sidecar.fields
-      .filter((field) => field.relationId === relationBinding.relationId)
-      .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
-    const finalStage = joinIndex === tree.joins.length - 1;
-    const names = finalStage ? root.value.names : stageFields.map((field) => field.displayName);
-    if (
-      names.length !== nextFields.length ||
-      stageFields.length !== nextFields.length ||
-      stageFields.some((field, outputOrdinal) => {
-        const name = names[outputOrdinal];
-        const expectedOrigin = nextFields[outputOrdinal];
-        return (
-          name == null ||
-          field.outputOrdinal !== outputOrdinal ||
-          field.displayName !== name ||
-          expectedOrigin == null ||
-          (field.sourceFieldId != null && field.sourceFieldId !== expectedOrigin.fieldId)
-        );
-      })
-    ) {
-      return null;
-    }
-    stages.push({
-      relationId: relationBinding.relationId,
-      relAnchor,
-      fields: stageFields.map((field, outputOrdinal) => ({
-        fieldId: field.fieldId,
-        displayName: names[outputOrdinal]!,
-        sourceFieldId: nextFields[outputOrdinal]!.fieldId,
-      })),
-    });
-    joins.push({ conditions });
-    workingFields = nextFields;
-    if (finalStage) {
-      outputs = nextFields.map((origin, outputOrdinal) => ({
-        name: names[outputOrdinal]!,
-        fieldId: stageFields[outputOrdinal]!.fieldId,
-        dataType: origin.dataType,
-        outputOrdinal,
-        source: {
-          inputIndex: origin.inputIndex,
-          name: origin.name,
-          fieldId: origin.fieldId,
-        },
-      }));
-    }
-  }
-  return { inputs, stages, joins, outputs };
-}
-
-export function inspectDvtSubstraitNInputJoinDraft(
-  draft: DvtSubstraitInnerJoinDraft
-): DvtSubstraitNInputJoinInspection {
-  const structure = inspectNInputJoinStructure(draft);
-  return structure == null
-    ? { ok: false }
-    : {
-        ok: true,
-        projection: {
-          inputs: structure.inputs,
-          joinRelations: structure.stages.map((stage) => ({
-            relationId: stage.relationId,
-            relAnchor: stage.relAnchor,
-          })),
-          joins: structure.joins,
-          outputs: structure.outputs,
-        },
-      };
 }
 
 function fieldIdForLocator(

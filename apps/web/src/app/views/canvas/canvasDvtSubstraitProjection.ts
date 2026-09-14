@@ -1,3 +1,21 @@
+import {
+  STRING_DATA_TYPES,
+  TIMESTAMPTZ_DATA_TYPES,
+  normalizeProjectionDataType,
+  invocationArgumentRange,
+  admitsCompleteArgumentCount,
+  resolveDvtSubstraitColumnFunctions,
+} from '@dvt/postgres-projection';
+export {
+  STRING_DATA_TYPES,
+  TIMESTAMPTZ_DATA_TYPES,
+  normalizeProjectionDataType,
+  type DvtSubstraitColumnFunction,
+  invocationArgumentRange,
+  admitsProposedArgumentCount,
+  admitsCompleteArgumentCount,
+  resolveDvtSubstraitColumnFunctions,
+} from '@dvt/postgres-projection';
 /** Owned concern: author and inspect one connected-source field projection as canonical Substrait. */
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import {
@@ -58,21 +76,7 @@ import {
 } from './canvasDvtSubstraitSemanticDocument';
 
 const ZERO_SHA256 = '0'.repeat(64);
-const STRING_DATA_TYPES = new Set([
-  'text',
-  'string',
-  'varchar',
-  'character varying',
-  'char',
-  'character',
-  'bpchar',
-]);
-const TIMESTAMPTZ_DATA_TYPES = new Set(['timestamp with time zone', 'timestamptz', 'timestamp_tz']);
 const I64_DATA_TYPES = new Set(['bigint', 'int8', 'i64']);
-
-function normalizeProjectionDataType(dataType: unknown): string {
-  return typeof dataType === 'string' ? dataType.trim().toLowerCase().replaceAll(/\s+/g, ' ') : '';
-}
 
 function createProjectionType(dataType: string): Type {
   const normalized = normalizeProjectionDataType(dataType);
@@ -213,53 +217,6 @@ export type DvtSubstraitProjectionOutput = Readonly<{
   operandFieldIds?: readonly string[];
 }>;
 
-export type DvtSubstraitColumnFunction = Readonly<{
-  capabilityId: string;
-  name: string;
-  category: 'text' | 'date-time';
-  minimumArgumentCount: number;
-  maximumArgumentCount?: number;
-  expressionTemplate?: string;
-}>;
-
-function invocationArgumentRange(
-  invocation:
-    | Readonly<{
-        minimumArgumentCount: number;
-        maximumArgumentCount?: number;
-      }>
-    | undefined
-): Readonly<{ minimumArgumentCount: number; maximumArgumentCount?: number }> {
-  return invocation == null
-    ? { minimumArgumentCount: 1, maximumArgumentCount: 1 }
-    : {
-        minimumArgumentCount: invocation.minimumArgumentCount,
-        ...(invocation.maximumArgumentCount == null
-          ? {}
-          : { maximumArgumentCount: invocation.maximumArgumentCount }),
-      };
-}
-
-function admitsProposedArgumentCount(
-  range: Readonly<{ minimumArgumentCount: number; maximumArgumentCount?: number }>,
-  proposedCount: number
-): boolean {
-  return (
-    proposedCount > 0 &&
-    (range.maximumArgumentCount == null || proposedCount <= range.maximumArgumentCount)
-  );
-}
-
-function admitsCompleteArgumentCount(
-  range: Readonly<{ minimumArgumentCount: number; maximumArgumentCount?: number }>,
-  completeCount: number
-): boolean {
-  return (
-    completeCount >= range.minimumArgumentCount &&
-    (range.maximumArgumentCount == null || completeCount <= range.maximumArgumentCount)
-  );
-}
-
 export type DvtSubstraitProjectionDraft = Readonly<{
   plan: Plan;
   sidecar: DvtSubstraitAuthoringSidecarV1;
@@ -285,79 +242,6 @@ export type DvtSubstraitProjectionSemantics = Readonly<{
 
 export type DvtSubstraitProjectionInspection =
   Readonly<{ ok: true; projection: DvtSubstraitProjectionSemantics }> | Readonly<{ ok: false }>;
-
-export function resolveDvtSubstraitColumnFunctions(args: {
-  dataType?: string;
-  dataTypes?: readonly string[];
-  provider: string;
-  resolution?: 'proposal' | 'complete';
-}): readonly DvtSubstraitColumnFunction[] {
-  const normalizedTypes = (args.dataTypes ?? (args.dataType == null ? [] : [args.dataType])).map(
-    normalizeProjectionDataType
-  );
-  if (args.provider !== 'postgres' || normalizedTypes.length === 0) return [];
-  const stringOperands = normalizedTypes.every((dataType) => STRING_DATA_TYPES.has(dataType));
-  const timestampOperand =
-    normalizedTypes.length === 1 && TIMESTAMPTZ_DATA_TYPES.has(normalizedTypes[0]!);
-
-  return DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.flatMap<DvtSubstraitColumnFunction>(
-    (entry) => {
-      if (
-        entry.kind !== 'standard' ||
-        entry.category !== 'scalar-function' ||
-        entry.profileStatus !== 'supported-profile' ||
-        entry.identity.sourceKind !== 'simple-extension'
-      ) {
-        return [];
-      }
-      const textFunction =
-        entry.identity.urn === 'extension:io.substrait:functions_string' ||
-        (entry.identity.urn === 'extension:io.substrait:functions_comparison' &&
-          entry.identity.name === 'coalesce' &&
-          entry.invocation?.signature === 'coalesce:any1');
-      if (stringOperands && textFunction) {
-        const range = invocationArgumentRange(entry.invocation);
-        const admitted =
-          args.resolution === 'proposal'
-            ? admitsProposedArgumentCount(range, normalizedTypes.length)
-            : admitsCompleteArgumentCount(range, normalizedTypes.length);
-        return admitted
-          ? [
-              {
-                capabilityId: entry.entryId,
-                name: entry.identity.name,
-                category: 'text' as const,
-                ...range,
-              },
-            ]
-          : [];
-      }
-      if (
-        timestampOperand &&
-        entry.identity.urn === 'extension:io.substrait:functions_datetime' &&
-        entry.identity.name === 'extract' &&
-        entry.invocation?.signature === 'extract:req_ptstz_str' &&
-        entry.invocation.argumentTypes.join('_') === 'req_ptstz_str' &&
-        entry.invocation.minimumArgumentCount === 3 &&
-        entry.invocation.maximumArgumentCount === 3 &&
-        entry.invocation.outputType === 'i64' &&
-        entry.invocation.options.length === 0
-      ) {
-        return [
-          {
-            capabilityId: entry.entryId,
-            name: 'extract year (UTC)',
-            category: 'date-time' as const,
-            minimumArgumentCount: 1,
-            maximumArgumentCount: 1,
-            expressionTemplate: "EXTRACT(YEAR FROM {column} AT TIME ZONE 'UTC')",
-          },
-        ];
-      }
-      return [];
-    }
-  );
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
