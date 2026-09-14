@@ -67,6 +67,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 
 ## Repository-local documents
 
+- [DVT Operational Run Workload v2](dvt-operational-run-workload-v2.md)
 - [DVT Transform Result Target v1](dvt-transform-result-target-v1.md)
 - [Execution selection and executable subgraph v1](execution-selection-and-executable-subgraph-v1.md)
 - [Plan store records v1](plan-store-records-v1.md)
