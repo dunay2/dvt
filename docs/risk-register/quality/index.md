@@ -32,6 +32,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [AR-C2 Prometheus metric hardcut may require dashboard and alert query updates](R-20260514-AR-C2-PROM-SLA-HARDCUT.yaml)
 - [AR-D continuation safety residual capacity tuning](r-20260430-ar-d-continuation-safety.yaml)
 - [Archive redaction baseline can drift from runtime composition config](R-20260607-ARCHIVE-REDACTION-BASELINE.yaml)
+- [Authored destination mistaken for authorized runtime publication](R-20260914-TRANSFORM-RESULT-TARGET.yaml)
 - [Automatic lineage DLQ replay may requeue persistent poison events repeatedly](R-20260330-LINEAGE-DLQ-AUTO-REPLAY.md)
 - [Binary Canvas composition could drift from admitted Substrait semantics](R-20260908-ALGEBRAIC-DERIVED-OUTPUT-DRIFT.yaml)
 - [Bounded aggregation authoring could drift from admitted Substrait semantics](R-20260831-SUBSTRAIT-AGGREGATE-DRIFT.yaml)

@@ -30,6 +30,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitStandardCandidates.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtTransformResultTarget.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts`
@@ -62,9 +63,11 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDvtNodeFieldPolicy.v1.ts`
 
 ## Repository-local documents
 
+- [DVT Transform Result Target v1](dvt-transform-result-target-v1.md)
 - [Execution selection and executable subgraph v1](execution-selection-and-executable-subgraph-v1.md)
 - [Plan store records v1](plan-store-records-v1.md)
 - [Workspace graph draft persistence v1](workspace-graph-draft-persistence-v1.md)

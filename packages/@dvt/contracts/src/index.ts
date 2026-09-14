@@ -60,6 +60,8 @@ export {
   DvtOperationalWorkloadV1Schema,
 } from './contracts/planner/DvtOperationalWorkload.v1.js';
 export type { DvtOperationalWorkloadV1 } from './contracts/planner/DvtOperationalWorkload.v1.js';
+export { DvtTransformResultTargetV1Schema } from './contracts/planner/DvtTransformResultTarget.v1.js';
+export type { DvtTransformResultTargetV1 } from './contracts/planner/DvtTransformResultTarget.v1.js';
 export {
   ACQUIRE_HTTP_JSON_ARTIFACT_MAX_BYTES,
   ACQUIRE_HTTP_JSON_ARTIFACT_REQUIRED_CAPABILITY,
