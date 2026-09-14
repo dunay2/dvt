@@ -52,7 +52,6 @@ export function inspectNInputJoinStructure(
   if (
     root?.case !== 'root' ||
     root.value.input == null ||
-    root.value.names.length === 0 ||
     root.value.names.some((name) => name.length === 0) ||
     new Set(root.value.names).size !== root.value.names.length
   ) {
@@ -162,7 +161,7 @@ export function inspectNInputJoinStructure(
           .slice(0, joinIndex + 2)
           .map((input) => input.table)
           .join('+') ||
-      inspectedJoin.outputMapping.length === 0 ||
+      (inspectedJoin.outputMapping.length === 0 && joinIndex !== tree.joins.length - 1) ||
       new Set(inspectedJoin.outputMapping).size !== inspectedJoin.outputMapping.length ||
       inspectedJoin.outputMapping.some((ordinal) => ordinal < 0 || ordinal >= available.length)
     ) {

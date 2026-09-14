@@ -68,6 +68,12 @@ export const POSTGRES_JOIN_COMPARISON: Readonly<
 export function buildNInputJoinPostgresAst(
   projection: DvtSubstraitNInputJoinProjection
 ): PostgresAstNode {
+  if (projection.outputs.length === 0) {
+    throw new DvtSubstraitPostgresProjectionError(
+      'unsupported_shape',
+      'PostgreSQL projection requires at least one selected JOIN output.'
+    );
+  }
   const fieldBindings = new Map<string, Readonly<{ alias: string; name: string }>>();
   projection.inputs.forEach((input, inputIndex) => {
     const alias = nInputJoinAlias(inputIndex);
