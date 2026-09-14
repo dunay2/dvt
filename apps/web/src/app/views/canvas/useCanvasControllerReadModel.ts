@@ -24,6 +24,7 @@ import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 import { projectCanvasColumnFunctionMenus } from './canvasColumnFunctionMenuProjection';
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import { isDvtSourceOutputProjectionNode } from './canvasDvtSourceSemanticAuthoring';
+import { readCanvasJoinColumnOutputs } from './canvasJoinColumnOutputModel';
 
 function isInteractiveColumn(value: unknown): value is GraphNodeColumn {
   if (
@@ -52,9 +53,10 @@ function projectInteractiveColumns(
       dataType: string;
       menu: NonNullable<GraphNodeColumn['functionMenu']>;
     }>
-  >
+  >,
+  columnOverrides?: GraphNodeColumn[]
 ): GraphNodeColumn[] {
-  const columns = readInteractiveColumns(node);
+  const columns = columnOverrides ?? readInteractiveColumns(node);
   const presentationTruth = node.data.presentationTruth as CanvasNodePresentationTruth | undefined;
   const presentationColumns = presentationTruth?.columns.visible ?? [];
   const presentationColumnsByReference = new Map(
@@ -72,7 +74,7 @@ function projectInteractiveColumns(
     const sourceNodeId = presentationColumn?.sourceNodeId;
     const sourceNode = sourceNodeId == null ? undefined : canonicalNodesById.get(sourceNodeId);
     const id =
-      presentationColumn == null
+      columnOverrides != null || presentationColumn == null
         ? (column.id ?? column.name)
         : presentationColumn.provenance === 'declared' || sourceNode?.kind === 'dvt:transform'
           ? (presentationColumn.reference ?? column.id ?? column.name)
@@ -296,6 +298,8 @@ export function useCanvasControllerReadModel({
         },
       }).map((node) => {
         const canonicalNode = graphModel.canonicalNodesById.get(node.id);
+        const joinOutputs =
+          canonicalNode == null ? null : readCanvasJoinColumnOutputs(canonicalNode);
         const canAuthorColumnMappings =
           canonicalNode?.role !== 'transform' || canAuthorCanvasColumnMappings(canonicalNode);
         const canAuthorDbtModelColumns =
@@ -366,21 +370,31 @@ export function useCanvasControllerReadModel({
             (canAuthorColumnMappings && (hasEditableProjection || hasMaterializableMappingInput)) ||
             hasStructuredProjection ||
             canAuthorDbtModelColumns ||
-            canProjectSourceOutputs
+            canProjectSourceOutputs ||
+            joinOutputs != null
               ? node.data.onToggleCanvasColumnOutput
               : undefined,
           onReorderCanvasColumnOutput:
             hasEditableProjection ||
             hasStructuredProjection ||
             canAuthorDbtModelColumns ||
-            canProjectSourceOutputs
+            canProjectSourceOutputs ||
+            joinOutputs != null
               ? node.data.onReorderCanvasColumnOutput
               : undefined,
           onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
           columns: projectInteractiveColumns(
             node,
             graphModel.canonicalNodesById,
-            columnFunctionMenus
+            columnFunctionMenus,
+            joinOutputs?.fields.map((field) => ({
+              id: field.columnId,
+              name: field.name,
+              type: field.dataType,
+              output: field.selected,
+              reference: field.columnId,
+              sourceReference: field.sourceReference,
+            }))
           ),
           columnPortDirections:
             canonicalNode != null
