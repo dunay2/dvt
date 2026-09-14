@@ -135,7 +135,11 @@ export function GraphNodeOperationalRail({
 
   if (onOpen == null && onOpenDataSample == null) {
     return (
-      <div data-slot="graph-node-operational-rail" className={graphNodeOperationalRailClasses.root}>
+      <div
+        data-slot="graph-node-operational-rail"
+        {...canvasNodeEmbeddedControlProps}
+        className={graphNodeOperationalRailClasses.root}
+      >
         {renderMetrics(metrics)}
       </div>
     );

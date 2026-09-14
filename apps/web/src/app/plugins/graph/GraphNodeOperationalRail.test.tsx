@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
+import { CanvasNodeShell } from '../../components/canvas/CanvasNodeShell';
 
 describe('GraphNodeOperationalRail', () => {
   let container: HTMLDivElement;
@@ -88,6 +89,36 @@ describe('GraphNodeOperationalRail', () => {
     expect(metric?.getAttribute('data-tone')).toBe('warning');
     expect(value?.getAttribute('data-tone')).toBe('estimated');
     expect(value?.className).toContain('text-amber');
+  });
+
+  it('does not open card information from lower metrics without a data provider', () => {
+    const onOpenNode = vi.fn();
+    act(() => {
+      root.render(
+        <CanvasNodeShell
+          contextMenuModel={{
+            target: { kind: 'node', nodeId: 'transform', nodeName: 'Transform' },
+            actionGroups: [],
+          }}
+          shouldShowSourceHandle={false}
+          shouldShowTargetHandle={false}
+          onContextMenuAction={vi.fn()}
+          onOpenNode={onOpenNode}
+        >
+          <GraphNodeOperationalRail
+            metrics={[{ id: 'rows', label: 'Rows', value: 'Not calculated' }]}
+          />
+        </CanvasNodeShell>
+      );
+    });
+    act(() => {
+      fireEvent.doubleClick(container.querySelector('[data-slot="graph-node-operational-rail"]')!);
+    });
+    expect(onOpenNode).not.toHaveBeenCalled();
+    act(() => {
+      fireEvent.doubleClick(container.querySelector('[data-slot="canvas-node-shell"]')!);
+    });
+    expect(onOpenNode).toHaveBeenCalledOnce();
   });
 
   it('uses the supplied accessible label for interactive rails', () => {
