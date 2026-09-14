@@ -25,7 +25,7 @@ evidence:
 ## Authority and scope
 
 [Issue #3115](https://github.com/dunay2/dvt/issues/3115),
-[the target contract](../contracts/planner/DvtTransformResultTarget.v1.md),
+[the target contract](../contracts/planner/dvt-transform-result-target-v1.md),
 ADR-0035 and the existing `ConfigureCanvasDvtNode` rail govern this slice.
 Planning DB design `GH-3115-EXPLICIT-RESULT-TARGET` and feature
 `CANVAS-TRANSFORM-RESULT-TARGET-3115` precede implementation. The issue carries
