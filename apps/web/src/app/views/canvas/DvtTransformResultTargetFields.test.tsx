@@ -48,7 +48,7 @@ describe('Explicit result target form', () => {
     vi.unstubAllGlobals();
   });
 
-  it('requires explicit selection, starts with blank names, and can remove the target', () => {
+  it('requires explicit selection, starts with blank names, and can remove the target', async () => {
     act(() => root.render(<Harness />));
     const select = getByLabelText(
       host,
@@ -56,26 +56,26 @@ describe('Explicit result target form', () => {
     ) as HTMLSelectElement;
     expect(select.value).toBe('');
     expect(value).toBeUndefined();
-    act(() => fireEvent.change(select, { target: { value: connectionRef.connectionId } }));
+    await act(() => fireEvent.change(select, { target: { value: connectionRef.connectionId } }));
     expect(value).toMatchObject({ connectionRef, schema: '', relation: '' });
-    act(() =>
+    await act(() =>
       fireEvent.change(getByLabelText(host, canvasViewCopy.inspectorDvtSchemaLabel), {
         target: { value: 'analytics' },
       })
     );
-    act(() =>
+    await act(() =>
       fireEvent.change(getByLabelText(host, canvasViewCopy.inspectorDvtTableLabel), {
         target: { value: 'orders_enriched' },
       })
     );
     expect(value).toMatchObject({ schema: 'analytics', relation: 'orders_enriched' });
-    act(() => fireEvent.change(select, { target: { value: '' } }));
+    await act(() => fireEvent.change(select, { target: { value: '' } }));
     expect(value).toBeNull();
   });
 
-  it('keeps the saved connection when the input candidate changes or disappears', () => {
+  it('keeps the saved connection when the input candidate changes or disappears', async () => {
     act(() => root.render(<Harness />));
-    act(() =>
+    await act(() =>
       fireEvent.change(getByLabelText(host, canvasViewCopy.inspectorDvtConnectionLabel), {
         target: { value: connectionRef.connectionId },
       })
