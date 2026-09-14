@@ -1,0 +1,20 @@
+---
+id: R-20260914-N-INPUT-JOIN-PREVIEW
+title: N-input Preview must not omit protected dependencies or overclaim executability
+status: Open
+date: 2026-09-14
+owners:
+  - '@dvt/contracts'
+  - '@dvt/postgres-projection'
+severity: Medium
+probability: Low
+mitigations:
+  - Exact source, physical table, connection and effective-edge binding before CAS.
+  - Profile-specific cardinality preserves the existing single-source ProjectRel contract.
+  - Shared Canvas reader rejects unsupported JOIN shapes instead of dropping semantics.
+  - Real PostgreSQL persistence and live browser tests retain the missing executor rejection.
+evidence:
+  - docs/evidence/ED-20260914-n-input-join-preview.md
+tracking:
+  - https://github.com/dunay2/dvt/issues/2524
+  - https://github.com/dunay2/dvt/issues/2723
