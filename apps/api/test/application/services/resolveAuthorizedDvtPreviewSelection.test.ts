@@ -49,6 +49,7 @@ const graphSource: GenericGraphSourceV1 = {
 const targetProjection = {
   outputNodeId: 'transform-a',
   semanticPlanSha256: 'a'.repeat(64),
+  profileId: 'dvt.vtx2.postgres.project-rel.v1',
   connectionRef: {
     schemaVersion: 'connection-ref.v1',
     connectionId: 'warehouse-main',

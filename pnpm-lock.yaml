@@ -414,6 +414,9 @@ importers:
       '@dvt/crypto':
         specifier: workspace:*
         version: link:../../packages/@dvt/crypto
+      '@dvt/postgres-projection':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/postgres-projection
       '@emotion/react':
         specifier: 11.14.0
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -967,9 +970,15 @@ importers:
       '@buf/substrait_substrait.bufbuild_es':
         specifier: 2.14.0-20260816025439-ce0808dab3ac.1
         version: 2.14.0-20260816025439-ce0808dab3ac.1(@bufbuild/protobuf@2.14.0)
+      '@bufbuild/protobuf':
+        specifier: 2.14.0
+        version: 2.14.0
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../crypto
       pgsql-deparser:
         specifier: 16.1.1
         version: 16.1.1

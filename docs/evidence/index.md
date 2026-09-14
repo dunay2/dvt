@@ -159,6 +159,7 @@ Evidence documents that justify or validate relevant changes.
 - [Retire S08 Lifecycle Contract Vocabulary](ed-20260515-s08-lifecycle-contract-retirement.md)
 - [Run Execution Context Admission Test SRP Hardening](ed-20260429-run-execution-context-admission-test-srp.md)
 - [Runtime Root Subdivision Evidence](ed-20260513-runtime-root-subdivision.md)
+- [Scope and authority](ED-20260914-n-input-join-preview.md)
 - [Semantic Workbench join composition evidence](ED-20260911-semantic-workbench-join-composition.md)
 - [Start Failure Preparation Authority](ed-20260906-eng1-start-mutation-authority.md)
 - [StartRunApplicationService QA Closeout](ED-20260405-start-run-application-service-qa.md)

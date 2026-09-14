@@ -19,6 +19,7 @@ import type { PlanOwnership } from './ExecutionPlan.v1.js';
 export const DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY =
   'executor.dvt-postgres-operational-workload' as const;
 export const DVT_POSTGRES_PROJECT_REL_PROFILE_ID = 'dvt.vtx2.postgres.project-rel.v1' as const;
+export const DVT_POSTGRES_INNER_JOIN_PROFILE_ID = 'dvt.vtx2.postgres.inner-join.v1' as const;
 export const DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY = 'pgsql-deparser@16.1.1' as const;
 
 const NonBlankStringSchema = z
@@ -36,8 +37,8 @@ const GraphRefSchema = z
   .object({
     draftRevision: NonBlankStringSchema,
     canvasId: NonBlankStringSchema,
-    selectedNodeIds: z.array(NonBlankStringSchema).length(2),
-    selectedEdgeIds: z.array(NonBlankStringSchema).length(1),
+    selectedNodeIds: z.array(NonBlankStringSchema).min(2),
+    selectedEdgeIds: z.array(NonBlankStringSchema).min(1),
   })
   .strict();
 const SemanticRefSchema = z
@@ -52,7 +53,7 @@ const CompiledSqlArtifactRefSchema = StepArtifactRefSchema.extend({
 }).strict();
 const TargetProjectionRefSchema = z
   .object({
-    profileId: z.literal(DVT_POSTGRES_PROJECT_REL_PROFILE_ID),
+    profileId: z.enum([DVT_POSTGRES_PROJECT_REL_PROFILE_ID, DVT_POSTGRES_INNER_JOIN_PROFILE_ID]),
     toolIdentity: z.literal(DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY),
     semanticPlanSha256: Sha256Schema,
     artifact: CompiledSqlArtifactRefSchema,
@@ -85,6 +86,20 @@ export const DvtOperationalWorkloadV1Schema = CommonStepTypeConfigSchema.pick({
   .superRefine((workload, context) => {
     addUniqueIssue(workload.graph.selectedNodeIds, ['graph', 'selectedNodeIds'], context);
     addUniqueIssue(workload.graph.selectedEdgeIds, ['graph', 'selectedEdgeIds'], context);
+
+    const nodeCount = workload.graph.selectedNodeIds.length;
+    const edgeCount = workload.graph.selectedEdgeIds.length;
+    const cardinalityMatches =
+      workload.targetProjection.profileId === DVT_POSTGRES_PROJECT_REL_PROFILE_ID
+        ? nodeCount === 2 && edgeCount === 1
+        : nodeCount >= 3 && edgeCount === nodeCount - 1;
+    if (!cardinalityMatches) {
+      context.addIssue({
+        code: 'custom',
+        path: ['graph'],
+        message: 'Selected graph cardinality must match the bounded target projection profile.',
+      });
+    }
 
     const semantic = workload.semantics[0];
     if (semantic === undefined) return;

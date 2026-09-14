@@ -3,7 +3,9 @@ import {
   isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
   parseExecutionSelection,
   type ExecutionSelection,
+  ConnectedSourceRefSchema,
 } from '@dvt/contracts';
+import { inspectDvtSubstraitNInputJoinDraft, hasSameConnectionRef } from '@dvt/postgres-projection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
@@ -29,9 +31,9 @@ export type ProtectedDvtPreviewProjection =
     };
 
 type TerminalProjectionClosure = {
-  readonly source: CanonicalNode;
+  readonly sources: readonly CanonicalNode[];
   readonly transform: CanonicalNode;
-  readonly edge: CanonicalEdge;
+  readonly edges: readonly CanonicalEdge[];
 };
 
 function resolveTerminalProjectionClosure(
@@ -48,30 +50,59 @@ function resolveTerminalProjectionClosure(
     return null;
   }
 
-  const incoming = edges.filter((edge) => edge.targetId === transform.id);
-  if (incoming.length !== 1) return null;
-  const edge = incoming[0];
-  if (edge === undefined || edge.relation !== 'lineage') return null;
-  const source = nodesById.get(edge.sourceId);
+  const incoming = edges
+    .filter((edge) => edge.targetId === transform.id)
+    .sort((a, b) => a.id.localeCompare(b.id));
+  if (incoming.length === 0 || incoming.some((edge) => edge.relation !== 'lineage')) return null;
+  const sources = incoming
+    .map((edge) => nodesById.get(edge.sourceId))
+    .filter(
+      (source): source is CanonicalNode =>
+        source !== undefined &&
+        source.kind === 'dvt:source' &&
+        source.role === 'input' &&
+        (source.pluginId === 'dvt' || source.pluginId === 'dvt.warehouse-source')
+    );
   if (
-    source === undefined ||
-    source.kind !== 'dvt:source' ||
-    source.role !== 'input' ||
-    (source.pluginId !== 'dvt' && source.pluginId !== 'dvt.warehouse-source')
-  ) {
+    sources.length !== incoming.length ||
+    new Set(sources.map((source) => source.id)).size !== sources.length
+  )
     return null;
-  }
+  sources.sort((a, b) => a.id.localeCompare(b.id));
 
   try {
-    if (resolveEffectiveDvtConnectionRef(source) === undefined) return null;
+    if (sources.some((source) => resolveEffectiveDvtConnectionRef(source) === undefined))
+      return null;
     const authority = readDvtTransformAuthoringAuthority(transform);
     if (authority === null) return null;
-    decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+    const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+    if (sources.length > 1) {
+      const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+      if (!inspection.ok || inspection.projection.inputs.length !== sources.length) return null;
+      const refs = sources.map((source) =>
+        ConnectedSourceRefSchema.parse(source.metadata?.connectedSourceRef)
+      );
+      if (
+        inspection.projection.inputs.some(
+          (input) =>
+            refs.filter(
+              (ref) =>
+                ref.sourceObjectId === input.sourceRef.sourceObjectId &&
+                hasSameConnectionRef(ref.connectionRef, input.sourceRef.connectionRef)
+            ).length !== 1
+        )
+      )
+        return null;
+    } else if (
+      draft.sidecar.relations.filter((relation) => relation.sourceRef !== undefined).length !== 1
+    ) {
+      return null;
+    }
   } catch {
     return null;
   }
 
-  return { source, transform, edge };
+  return { sources, transform, edges: incoming };
 }
 
 function buildDraftSignature(
@@ -83,10 +114,10 @@ function buildDraftSignature(
     toCanvasAuthoringSerializableValue({
       canvasId,
       selection,
-      nodes: [closure.source, closure.transform].sort((left, right) =>
+      nodes: [...closure.sources, closure.transform].sort((left, right) =>
         left.id.localeCompare(right.id)
       ),
-      edges: [closure.edge],
+      edges: closure.edges,
     })
   );
 }
@@ -150,8 +181,8 @@ export function buildProtectedDvtPreviewProjection(args: {
     selection,
     selectionMode: 'explicit',
     requestedRootNodeIds: [closure.transform.id],
-    derivedDependencyNodeIds: [closure.source.id],
-    scopedNodeIds: [closure.source.id, closure.transform.id],
+    derivedDependencyNodeIds: closure.sources.map((source) => source.id),
+    scopedNodeIds: [...closure.sources.map((source) => source.id), closure.transform.id].sort(),
     draftSignature: buildDraftSignature(args.canvasId, closure, selection),
   };
 }

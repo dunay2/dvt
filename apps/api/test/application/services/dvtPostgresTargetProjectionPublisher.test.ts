@@ -166,6 +166,7 @@ describe('DvtPostgresTargetProjectionPublisher', () => {
       bytes,
     });
     expect(binding).toEqual({
+      profileId: 'dvt.vtx2.postgres.project-rel.v1',
       outputNodeId: 'transform-a',
       semanticPlanSha256: semanticDocument().semanticPlan.sha256,
       connectionRef: CONNECTION,

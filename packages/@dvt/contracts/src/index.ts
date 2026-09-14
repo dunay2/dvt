@@ -54,6 +54,7 @@ export type { LoadObjectFileToPostgresStepTypeConfig } from './contracts/planner
 export {
   DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY,
   DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
+  DVT_POSTGRES_INNER_JOIN_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DvtOperationalWorkloadContractV1,
   DvtOperationalWorkloadV1Schema,

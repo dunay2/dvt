@@ -120,6 +120,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Mixed-tenant archive units can delay aggressive tenant retention](R-20260522-AR-D5-TENANT-RETENTION-POLICY.yaml)
 - [Multi-canvas draft compatibility across active-graph consumers](R-20260527-CANVAS-MULTI-WORKSHEET.yaml)
 - [Mutable physical bindings may silently become logical identity authorities](R-20260905-GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING.yaml)
+- [N-input Preview must not omit protected dependencies or overclaim executability](R-20260914-N-INPUT-JOIN-PREVIEW.yaml)
 - [Narrowed engine read boundary could regress through facade re-growth](R-20260412-AR-A12-C-READ-BOUNDARY-PURITY-REGRESSION.yaml)
 - [Native Temporal cancellation can lose canonical terminal events](R-20260817-TEMPORAL-NATIVE-CANCEL-EVENT-LOSS.yaml)
 - [Object-file load admission could cross scope or imply unavailable execution](R-20260804-OBJECT-FILE-POSTGRES-ADMISSION.yaml)
