@@ -4,36 +4,21 @@ import {
   hasSameConnectionRef,
   inspectDvtSubstraitNInputJoinDraft,
   type DvtSubstraitInnerJoinDraft,
-  type DvtSubstraitJoinDataType,
 } from '@dvt/postgres-projection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import type {
+  DvtSubstraitInnerJoinEntry,
+  DvtSubstraitJoinInput,
+  DvtSubstraitJoinSource,
+} from './canvasDvtSubstraitJoinComposition';
 import {
   DVT_SUBSTRAIT_INNER_JOIN_LEFT_FIELD_NAMES,
   DVT_SUBSTRAIT_INNER_JOIN_RIGHT_FIELD_NAMES,
   hasDvtSubstraitLegacyBinaryInnerJoinShape,
 } from './canvasDvtSubstraitInnerJoinShape';
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
-
-export type DvtSubstraitJoinSource = Readonly<{
-  nodeId: string;
-  schema: string;
-  table: string;
-  sourceRef: ConnectedSourceRef;
-}>;
-
-export type DvtSubstraitJoinInput = Readonly<{
-  source: DvtSubstraitJoinSource;
-  fields: readonly string[];
-  fieldTypes?: readonly DvtSubstraitJoinDataType[];
-}>;
-
-export type DvtSubstraitInnerJoinEntry = Readonly<{
-  left: DvtSubstraitJoinSource;
-  right: DvtSubstraitJoinSource;
-  targetNodeId: string;
-}>;
 
 function readMetadataText(node: CanonicalNode, key: string): string | null {
   const value = node.metadata?.[key];
