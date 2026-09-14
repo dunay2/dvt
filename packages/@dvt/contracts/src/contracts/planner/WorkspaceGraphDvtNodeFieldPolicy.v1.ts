@@ -2,6 +2,7 @@
 import type { z } from 'zod';
 
 import { PostgresIdentifierV1Schema } from './CanvasAuthoringFieldPolicy.v1.js';
+import { DvtTransformResultTargetV1Schema } from './DvtTransformResultTarget.v1.js';
 import type { WorkspaceGraphAuthoringNode } from './WorkspaceGraphAuthoringDraft.v1.js';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -87,6 +88,17 @@ export function addDvtNodeFieldPolicyIssues(
       );
     }
     if (isTransform) {
+      if (Object.hasOwn(config, 'resultTarget')) {
+        const target = DvtTransformResultTargetV1Schema.safeParse(config['resultTarget']);
+        if (!target.success) {
+          for (const issue of target.error.issues) {
+            context.addIssue({
+              ...issue,
+              path: ['metadata', 'config', 'resultTarget', ...issue.path],
+            });
+          }
+        }
+      }
       addStringEnumMetadataIssue(
         config,
         'materialized',
