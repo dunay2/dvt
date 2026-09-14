@@ -87,13 +87,13 @@ export function AppShellFrame({
 
               {showOperationalDrawer && (
                 <>
-                  <ResizableHandle id="app-shell-bottom-drawer-resize-handle" />
+                  <ResizableHandle id="app-shell-bottom-drawer-resize-handle" withHandle />
                   <ResizablePanel
                     id="app-shell-bottom-drawer-panel"
                     order={2}
                     defaultSize={22}
                     minSize={12}
-                    maxSize={40}
+                    maxSize={90}
                   >
                     <div data-slot="app-shell-bottom-drawer" className="h-full min-h-0">
                       {bottomDrawer}

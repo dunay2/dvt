@@ -88,6 +88,7 @@ describe('AppShellFrame', () => {
     expect(panels.map((panel) => panel.getAttribute('id'))).toContain(
       'app-shell-bottom-drawer-panel'
     );
+    expect(container.querySelector('#app-shell-bottom-drawer-resize-handle svg')).not.toBeNull();
     expect(skipLinks).toHaveLength(1);
     expect(skipLinks[0]?.textContent).toBe('Skip to main content');
     expect(skipLinks[0]?.getAttribute('href')).toBe('#app-shell-main-content');
