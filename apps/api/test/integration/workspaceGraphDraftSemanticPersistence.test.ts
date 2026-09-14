@@ -188,6 +188,27 @@ describeWithPostgres('workspace graph canonical semantic persistence', () => {
         );
         expect(checked.rows[0]?.accepted).toBe(false);
       }
+      const document = buildCanonicalSemanticDocument();
+      const oversizedSidecar = withSemanticDocument(draft, {
+        ...document,
+        sidecar: {
+          ...document.sidecar,
+          fields: document.sidecar.fields.map((field) => ({
+            ...field,
+            displayName: 'x'.repeat(
+              CANVAS_AUTHORING_FIELD_LIMITS_V1.postgresIdentifierUtf8Bytes + 1
+            ),
+          })),
+        },
+      });
+      await expect(
+        pool!.query(`UPDATE "${schema}".workspace_graph_drafts SET draft_json = $1::jsonb`, [
+          JSON.stringify(oversizedSidecar),
+        ])
+      ).rejects.toMatchObject({
+        code: '23514',
+        constraint: 'workspace_graph_drafts_field_budget_check',
+      });
       expect((await get.execute(writableSemanticDecision())).response).toEqual(before.response);
     }
   );

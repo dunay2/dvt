@@ -91,7 +91,7 @@ and Engine/runtime handles execution lifecycle.
   before idempotent replay; revoked authority may refuse a prior replay.
 - Unsupported stored schema versions fail closed. No migration-state or
   compatibility path exists in this rail.
-- A `dvt:transform` node may remain unconfigured, but once its
+- A native DVT `transform` or `dvt:transform` node may remain unconfigured, but once its
   `transformAuthoring` metadata exists it must decode as the exact pinned
   Substrait Plan and validate its semantic digest, profile coordinates and DVT
   sidecar binding.

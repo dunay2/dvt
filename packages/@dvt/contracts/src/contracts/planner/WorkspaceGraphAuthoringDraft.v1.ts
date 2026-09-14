@@ -253,7 +253,7 @@ function canonicalizeDvtTransformAuthoringAuthority<Node extends WorkspaceGraphA
   node: Node
 ): Node {
   if (
-    node.kind !== 'dvt:transform' ||
+    (node.kind !== 'dvt:transform' && !(node.pluginId === 'dvt' && node.kind === 'transform')) ||
     node.metadata === undefined ||
     !Object.hasOwn(node.metadata, DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY)
   ) {
@@ -381,7 +381,7 @@ function addGraphShapeIssues(
 
   graph.nodes.forEach((node, index) => {
     if (
-      node.kind !== 'dvt:transform' ||
+      (node.kind !== 'dvt:transform' && !(node.pluginId === 'dvt' && node.kind === 'transform')) ||
       node.metadata === undefined ||
       !Object.hasOwn(node.metadata, DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY)
     ) {

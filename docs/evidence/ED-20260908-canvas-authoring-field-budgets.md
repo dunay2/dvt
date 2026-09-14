@@ -59,3 +59,24 @@ The full semantic-persistence suite also exposed a separate native-kind mismatch
 in semantic authority validation and its test helpers. That finding is not hidden
 by the focused materialization evidence and needs its own correction before full
 suite closeout. No native Run or publication is claimed here.
+
+## Native semantic authority follow-up — 2026-09-14
+
+Issue #3168 corrects that separate discriminator mismatch. Native DVT Transforms
+now reuse canonical semantic validation/canonicalization on save and reload, and
+the existing PostgreSQL sidecar budget predicate. The persistence test helpers
+inspect and mutate the actual native fixture instead of missing it by kind name.
+The original namespaced behavior and foreign-plugin ownership remain unchanged.
+
+RED: three native semantic contract cases failed (canonicalized label, corrupt
+bytes, retired authority). GREEN: all 581 contract tests pass, including both node
+kinds and schema synchronization. The complete affected PostgreSQL suites pass
+all nine cases, including exact semantic save/reload, corrupted-payload rejection,
+direct invalid writes and the 1/2/3-input protected Preview replay regression.
+
+Live browser proof uses the existing protected API client in project
+`preview-replay-3165-33bdb67b`: unsupported materialization and invalid semantic
+authority both return HTTP 400, with unchanged stored draft and revision.
+Ordinary Canvas selection still opens the semantic tree; Preview displays
+`MISSING_CAPABILITY executor.dvt-postgres-operational-workload` with Run disabled.
+This proves validation/persistence, not native provider execution or publication.

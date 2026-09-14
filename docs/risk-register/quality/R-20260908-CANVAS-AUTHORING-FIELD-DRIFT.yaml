@@ -30,6 +30,10 @@ mitigations:
     policy in shared command/node schemas and the PostgreSQL CHECK; retain foreign-plugin isolation
     and unchanged draft/revision after rejection.
   - >
+    Exercise canonical semantic admission and sidecar field-budget rejection with the actual native
+    Transform identity; corruption tests must mutate that node, and valid save/reload must preserve
+    exact semantic identity.
+  - >
     Keep the PostgreSQL constraint NOT VALID so migration does not silently rewrite data; contract
     reads fail closed for incompatible existing rows until an explicit operator cleanup.
 review_after: 2026-12-08
