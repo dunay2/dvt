@@ -190,7 +190,9 @@ describe('Canvas route authoring bootstrap integration', () => {
     await waitForReactQuery(() => getCanvasDraftPresentationState().routeState === 'ready', {
       description: 'Canvas authoring bootstrap readiness',
       timeoutMs: 1_000,
-      tick: () => vi.advanceTimersByTimeAsync(20),
+      tick: async () => {
+        await vi.advanceTimersByTimeAsync(20);
+      },
     });
 
     expect(getCanvasDraftPresentationState()).toMatchObject({
