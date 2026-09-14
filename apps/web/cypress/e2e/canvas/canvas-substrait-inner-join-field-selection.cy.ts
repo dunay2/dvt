@@ -19,6 +19,7 @@ import {
 
 type CanvasDraftSaveRequestBody = {
   draft: {
+    edges?: Array<{ sourceId: string; targetId: string }>;
     nodes: Array<{
       id: string;
       metadata?: Record<string, unknown>;
@@ -162,6 +163,89 @@ function proveCardOutputControls(sourceCount: number): void {
   expectSavedOrder(['customer_id', 'order_id', 'name']);
 }
 
+function proveEmptyJoinOutput(sourceCount: number): void {
+  const card = '.react-flow__node[data-id="join-transform"]';
+  const controls = `${card} [data-slot="graph-node-column-output-state"]`;
+  const stageEdges = '.react-flow__edge:not(.react-flow__edge-columnLineage)';
+  let baseline: ReturnType<typeof inspectDvtSubstraitNInputJoinDraft>;
+  const assertSaved = (outputCount?: number): void => {
+    cy.wrap(null).should(() => {
+      expect(getE2eApiCalls('/workspace/graph/draft').at(-1)?.method).to.equal('GET');
+      const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)
+        ?.body as CanvasDraftSaveRequestBody;
+      expect(saved.draft.edges?.filter((edge) => edge.targetId === 'join-transform')).to.deep.equal(
+        []
+      );
+      const authoring = saved.draft.nodes.find((node) => node.id === 'join-transform')?.metadata
+        ?.transformAuthoring as { semanticDocument?: unknown };
+      const inspected = inspectDvtSubstraitNInputJoinDraft(
+        decodeDvtSubstraitInnerJoinDocument(authoring.semanticDocument)
+      );
+      expect(inspected.ok).to.equal(true);
+      if (!inspected.ok) return;
+      expect(inspected.projection.inputs).to.have.length(sourceCount);
+      if (outputCount == null) baseline = inspected;
+      else {
+        expect(inspected.projection.outputs).to.have.length(outputCount);
+        if (baseline?.ok) {
+          expect(inspected.projection.inputs).to.deep.equal(baseline.projection.inputs);
+          expect(inspected.projection.joins).to.deep.equal(baseline.projection.joins);
+          expect(inspected.projection.joinRelations).to.deep.equal(
+            baseline.projection.joinRelations
+          );
+        }
+      }
+    });
+  };
+  cy.get(stageEdges).then(($edges) => {
+    for (let index = 0; index < $edges.length; index += 1) {
+      cy.get<SVGPathElement>(`${stageEdges} .react-flow__edge-interaction`)
+        .first()
+        .then(($path) => {
+          const path = $path[0]!;
+          const matrix = path.getScreenCTM()!;
+          const rect = path.getBoundingClientRect();
+          const points = Array.from({ length: 19 }, (_, index) =>
+            path
+              .getPointAtLength((path.getTotalLength() * (index + 1)) / 20)
+              .matrixTransform(matrix)
+          );
+          const visible = points.find(
+            (point) => path.ownerDocument.elementFromPoint(point.x, point.y) === path
+          );
+          expect(visible, 'visible connection segment').not.to.equal(undefined);
+          cy.wrap($path).rightclick(visible!.x - rect.left, visible!.y - rect.top);
+        });
+      cy.contains('[data-slot="canvas-context-menu-item"]', 'Remove connection').click();
+      cy.get(stageEdges).should('have.length', $edges.length - index - 1);
+    }
+  });
+  assertSaved();
+  toggleColumns('join-transform');
+  cy.get(`${controls}[aria-pressed="true"]`).then(($selected) => {
+    const names = [...$selected].map(
+      (element) => element.closest<HTMLElement>('[data-column-name]')!.dataset.columnName!
+    );
+    names.forEach((name, index) => {
+      cy.get(
+        `${card} [data-column-name="${name}"] [data-slot="graph-node-column-output-state"]`
+      ).click();
+      assertSaved(names.length - index - 1);
+    });
+  });
+  cy.get(controls).should('have.attr', 'aria-pressed', 'false');
+  cy.get(`${controls}[aria-pressed="true"]`).should('not.exist');
+  cy.on('window:before:load', installE2eApiFetchStub);
+  cy.reload();
+  toggleColumns('join-transform');
+  cy.get(controls).should('have.attr', 'aria-pressed', 'false');
+  cy.get(`${controls}[aria-pressed="true"]`).should('not.exist');
+  cy.screenshot(`empty-${sourceCount}-input-join`, { capture: 'viewport' });
+  cy.get(controls).first().click();
+  assertSaved(1);
+  cy.get(`${controls}[aria-pressed="true"]`).should('have.length', 1);
+}
+
 describe('Canvas Substrait INNER JOIN field selection', () => {
   beforeEach(() => {
     stubRuntimeCapabilities();
@@ -175,6 +259,12 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
     cy.viewport(1440, 1000);
     visitCanvas();
     proveCardOutputControls(2);
+  });
+
+  it('clears the last output after disconnecting both Sources and restores it after reload', () => {
+    cy.viewport(1440, 1000);
+    visitCanvas();
+    proveEmptyJoinOutput(2);
   });
 
   it('shows canonical Substrait provenance without SQL or dbt authority in the Transform inspector', () => {
@@ -295,6 +385,20 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
     proveCardOutputControls(3);
   });
 
+  it('clears the last N-input output after disconnecting Sources and restores it after reload', () => {
+    cy.viewport(1440, 1000);
+    visitCanvas();
+    openJoinWorkbench();
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+    cy.get('[data-slot="dvt-substrait-append-right-field"]').select(
+      'source-shipments\u001fcustomer_id'
+    );
+    cy.get('[data-slot="dvt-substrait-append-submit"]').click();
+    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    proveEmptyJoinOutput(3);
+  });
+
   it('appends, edits, groups, ranks, and reloads N-input joins through one revision', () => {
     visitCanvas();
 
@@ -327,9 +431,7 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
       .type('shipping_customer', { delay: 0 });
     cy.get(
       'input[data-slot="dvt-substrait-n-input-output-name"][aria-label$="shipments.customer_id"]'
-    )
-      .should('have.value', 'shipping_customer')
-      .blur();
+    ).should('have.value', 'shipping_customer');
     cy.get(
       'input[data-slot="dvt-substrait-n-input-output-name"][aria-label$="shipments.customer_id"]'
     )
