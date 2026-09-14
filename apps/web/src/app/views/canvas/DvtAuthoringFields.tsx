@@ -14,7 +14,7 @@ import {
   type DvtSubstraitTransformAuthoringMetadata,
   type DvtUninitializedTransformAuthoringMetadata,
 } from './canvasDvtAuthoringModel';
-import { resolveDvtSubstraitJoinAppendCandidates } from './canvasDvtSubstraitJoinComposition';
+import { resolveDvtSubstraitJoinAppendCandidates } from './canvasDvtSubstraitJoinSourceResolution';
 import { DvtSinkAuthoringSection } from './DvtSinkAuthoringSection';
 import { DvtSourceAuthoringSection } from './DvtSourceAuthoringSection';
 import { DvtRelationFilterAuthoringSection } from './DvtRelationFilterAuthoringSection';

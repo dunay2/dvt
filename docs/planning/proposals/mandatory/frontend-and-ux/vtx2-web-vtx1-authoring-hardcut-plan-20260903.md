@@ -179,6 +179,27 @@ and without a literal; unknown, stale, disconnected and malformed inputs reject
 without mutation. Prove the real checkbox and persisted derived SQL. Changes to
 an upstream schema after a downstream draft exists remain outside this slice.
 
+## JOIN Source resolution ownership (#3086 A1)
+
+`DvtAuthoringFields` consumes `canvasDvtSubstraitJoinSourceResolution.ts`
+directly. That module owns connected-source admission and identity matching;
+composition reuses its helpers instead of retaining copies. Semantic inspection
+and connection comparison reuse the current `@dvt/postgres-projection` owner.
+The existing draft/input contracts and literal `column.type === 'string'` policy
+are unchanged, including empty column lists and duplicate names admitted by that policy.
+There is no new rail, semantic mutation, compatibility export or input catalog.
+
+```text
+Before: DvtAuthoringFields -> JoinComposition -> shared semantic reader
+After:  DvtAuthoringFields -> JoinSourceResolution -> shared semantic reader
+        JoinComposition -> same Source admission/identity helpers
+```
+
+Keep `resolveDvtSubstraitInnerJoinEntry`, binary shape constants and persisted
+authority inspection in composition for A2. Verify candidate connection/target,
+source identity exclusion, column admission, deterministic order and unchanged
+graph/plan/sidecar, plus the direct consumer and JOIN composition regressions.
+
 ## Feature mechanization
 
 Viewport correction (#3146): `ConfigureCanvasDvtNode` updates must preserve the
@@ -357,4 +378,17 @@ symbols:
   - { <<: *vtx2Symbol, name: DVT_TRANSFORM_AUTHORING_MODE, path: packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts }
   - { <<: *vtx2Symbol, name: DvtTransformAuthoringAuthorityV1, path: packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts }
   - { <<: *vtx2Symbol, name: DvtTransformAuthoringAuthorityV1Schema, path: packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts }
+  - &joinSourceResolutionSymbol
+    <<: *vtx2Symbol
+    name: resolveDvtSubstraitJoinAppendCandidates
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinSourceResolution.ts
+    fowlerSignals: [Divergent change, Duplicate semantics]
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasDvtSubstraitJoinSourceResolution.test.ts
+      - apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx
+      - apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.test.ts
+  - { <<: *joinSourceResolutionSymbol, name: resolveJoinInput }
+  - { <<: *joinSourceResolutionSymbol, name: readMetadataText }
+  - { <<: *joinSourceResolutionSymbol, name: readSourceColumnNames }
+  - { <<: *joinSourceResolutionSymbol, name: hasSameConnectedSourceRef }
 ```
