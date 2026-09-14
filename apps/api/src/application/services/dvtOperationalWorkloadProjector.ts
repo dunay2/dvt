@@ -5,10 +5,13 @@
 import {
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DvtOperationalWorkloadContractV1,
+  DvtOperationalWorkloadContractV2,
+  DvtTransformResultTargetV1Schema,
   GENERIC_GRAPH_SOURCE_KIND,
   KNOWN_STEP_KINDS,
   type ConnectionRef,
   type DvtOperationalWorkloadV1,
+  type DvtTransformResultTargetV1,
   type GenericGraphSourceV1,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
@@ -49,6 +52,7 @@ export class DvtOperationalWorkloadProjector {
       const closure = resolveDvtTerminalTransformClosure(input);
       const semanticDocument = closure.authority.semanticDocument;
       const projection = input.targetProjection;
+      const runTarget = resolveRunTarget(closure.transform);
       if (
         projection.outputNodeId !== closure.transform.id ||
         projection.semanticPlanSha256 !== semanticDocument.semanticPlan.sha256 ||
@@ -58,8 +62,11 @@ export class DvtOperationalWorkloadProjector {
         throw new Error('Target projection is stale or belongs to another output or connection.');
       }
 
-      const workload = DvtOperationalWorkloadContractV1.schema.parse({
-        schemaVersion: 'dvt-operational-workload.v1',
+      if (runTarget !== null && projection.schemaDigestSha256 === undefined) {
+        throw new Error('Configured Run requires a canonical PostgreSQL output schema digest.');
+      }
+
+      const commonWorkload = {
         scope: input.scope,
         graph: {
           draftRevision: input.draftRevision,
@@ -84,11 +91,31 @@ export class DvtOperationalWorkloadProjector {
           artifact: projection.artifact,
         },
         connectionRef: closure.connectionRef,
-        output: {
-          kind: 'ephemeral-preview',
-          nodeId: closure.transform.id,
-        },
-      });
+      };
+      const workload =
+        runTarget === null
+          ? DvtOperationalWorkloadContractV1.schema.parse({
+              ...commonWorkload,
+              schemaVersion: 'dvt-operational-workload.v1',
+              output: { kind: 'ephemeral-preview', nodeId: closure.transform.id },
+            })
+          : DvtOperationalWorkloadContractV2.schema.parse({
+              ...commonWorkload,
+              schemaVersion: 'dvt-operational-workload.v2',
+              executionIntent: 'run',
+              targetProjection: {
+                ...commonWorkload.targetProjection,
+                schemaDigestSha256: projection.schemaDigestSha256,
+              },
+              output: {
+                kind: 'transform-result',
+                nodeId: closure.transform.id,
+                disposition: 'table',
+                target: runTarget,
+                publicationPolicy: 'postgres-stable-table-publication.v1',
+              },
+              publicationBoundaries: [],
+            });
 
       return {
         ok: true,
@@ -114,4 +141,29 @@ export class DvtOperationalWorkloadProjector {
       };
     }
   }
+}
+
+function resolveRunTarget(
+  transform: WorkspaceGraphAuthoringDraft['nodes'][number]
+): DvtTransformResultTargetV1 | null {
+  const config = transform.metadata?.['config'];
+  if (config === undefined) return null;
+  if (!isRecord(config)) {
+    throw new Error('Transform config must be an object.');
+  }
+
+  const hasDisposition = Object.hasOwn(config, 'materialized');
+  const hasTarget = Object.hasOwn(config, 'resultTarget');
+  if (!hasDisposition && !hasTarget) return null;
+  if (config['materialized'] !== 'table') {
+    throw new Error('Configured Run supports only table result disposition.');
+  }
+  const target = DvtTransformResultTargetV1Schema.safeParse(config['resultTarget']);
+  if (!target.success)
+    throw new Error('Configured Run requires one valid PostgreSQL result target.');
+  return target.data;
+}
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
