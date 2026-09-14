@@ -112,7 +112,7 @@ describe('GraphNodeColumnFunctionMenu pointer lifecycle', () => {
           />
         );
       });
-      const openAlias = async () => {
+      const openAlias = async (): Promise<HTMLFormElement> => {
         const piece = container.querySelector<HTMLElement>('[data-column-name="amount"]')!;
         act(() => {
           if (gesture === 'pointer') fireEvent.contextMenu(piece);
@@ -152,7 +152,9 @@ describe('GraphNodeColumnFunctionMenu pointer lifecycle', () => {
           target: { value: 'amount_alias' },
         });
       });
-      act(() => fireEvent.submit(form));
+      act(() => {
+        fireEvent.submit(form);
+      });
       expect(onCalculatedColumnAdd).toHaveBeenCalledExactlyOnceWith({
         nodeId: 'transform-orders',
         kind: 'field-ref',
