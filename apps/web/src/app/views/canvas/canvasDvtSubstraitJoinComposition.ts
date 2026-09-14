@@ -97,12 +97,17 @@ import {
   hasSameConnectedSourceRef,
   resolveJoinInput,
 } from './canvasDvtSubstraitJoinSourceResolution';
+import {
+  DVT_SUBSTRAIT_INNER_JOIN_LEFT_FIELD_NAMES as LEFT_FIELD_NAMES,
+  DVT_SUBSTRAIT_INNER_JOIN_OUTPUT_FIELDS as INNER_JOIN_OUTPUT_FIELDS,
+  DVT_SUBSTRAIT_INNER_JOIN_RIGHT_FIELD_NAMES as RIGHT_FIELD_NAMES,
+  hasDvtSubstraitLegacyBinaryInnerJoinShape,
+} from './canvasDvtSubstraitInnerJoinShape';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import {
   appendDvtSubstraitJoinComparison,
   dvtSubstraitJoinConditionOperands,
   isDvtSubstraitJoinNullCondition,
-  isDvtSubstraitJoinConditionGroup,
   collectDvtSubstraitJoinConditionCombinations,
   collectDvtSubstraitJoinConditionComparisons,
   compactDvtSubstraitJoinConditionDefaults,
@@ -151,31 +156,6 @@ export {
   type DvtSubstraitJoinConditionCombination,
   type DvtSubstraitJoinPredicateCondition,
 } from './canvasDvtSubstraitJoinCondition';
-const LEFT_FIELD_NAMES = ['customer_id', 'name'] as const;
-const RIGHT_FIELD_NAMES = ['order_id', 'customer_id'] as const;
-const INNER_JOIN_OUTPUT_FIELDS = [
-  {
-    fieldKey: 'left.customer_id',
-    outputMapping: 0,
-    defaultName: 'customer_id',
-    source: { relation: 'left', name: 'customer_id' },
-    locator: { inputIndex: 0, fieldName: 'customer_id' },
-  },
-  {
-    fieldKey: 'left.name',
-    outputMapping: 1,
-    defaultName: 'name',
-    source: { relation: 'left', name: 'name' },
-    locator: { inputIndex: 0, fieldName: 'name' },
-  },
-  {
-    fieldKey: 'right.order_id',
-    outputMapping: 2,
-    defaultName: 'order_id',
-    source: { relation: 'right', name: 'order_id' },
-    locator: { inputIndex: 1, fieldName: 'order_id' },
-  },
-] as const;
 const OUTPUT_FIELD_NAMES = INNER_JOIN_OUTPUT_FIELDS.map((field) => field.defaultName);
 
 export type DvtSubstraitInnerJoinFieldKey = (typeof INNER_JOIN_OUTPUT_FIELDS)[number]['fieldKey'];
@@ -391,16 +371,6 @@ type JoinBuildPredicate = Readonly<{
   conditions: readonly DvtSubstraitJoinCondition<JoinBuildPredicateOperand>[];
 }>;
 
-function resolveJoinSource(
-  node: CanonicalNode,
-  expectedColumns: readonly string[]
-): DvtSubstraitJoinSource | null {
-  const input = resolveJoinInput(node);
-  return input == null || input.fields.join('\u0000') !== expectedColumns.join('\u0000')
-    ? null
-    : input.source;
-}
-
 function sameInputShape(
   left: Readonly<{
     schema: string;
@@ -462,65 +432,6 @@ function resolveGraphInputs(args: {
     resolved.push(match);
   }
   return resolved;
-}
-
-export function resolveDvtSubstraitInnerJoinEntry(args: {
-  targetNode: CanonicalNode;
-  nodes: readonly CanonicalNode[];
-  edges: readonly CanonicalEdge[];
-  requirePersistedAuthority?: boolean;
-}): DvtSubstraitInnerJoinEntry | null {
-  if (
-    args.targetNode.pluginId !== 'dvt' ||
-    args.targetNode.kind !== 'dvt:transform' ||
-    args.targetNode.role !== 'transform'
-  ) {
-    return null;
-  }
-  const sourceIds = [
-    ...new Set(
-      args.edges.filter((edge) => edge.targetId === args.targetNode.id).map((edge) => edge.sourceId)
-    ),
-  ];
-  if (sourceIds.length !== 2) return null;
-  const sources = sourceIds
-    .map((sourceId) => args.nodes.find((node) => node.id === sourceId))
-    .filter((node): node is CanonicalNode => node != null);
-  if (sources.length !== 2) return null;
-
-  const left = sources
-    .map((candidate) => resolveJoinSource(candidate, LEFT_FIELD_NAMES))
-    .find(Boolean);
-  const right = sources
-    .map((candidate) => resolveJoinSource(candidate, RIGHT_FIELD_NAMES))
-    .find(Boolean);
-  if (left == null || right == null || left.nodeId === right.nodeId) return null;
-  if (!hasSameConnectionRef(left.sourceRef.connectionRef, right.sourceRef.connectionRef))
-    return null;
-
-  if (args.requirePersistedAuthority) {
-    try {
-      const authority = readDvtTransformAuthoringAuthority(args.targetNode);
-      if (authority == null) return null;
-      const inspection = inspectDvtSubstraitInnerJoinDraft(
-        decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
-      );
-      if (!inspection.ok) return null;
-      if (
-        inspection.projection.left.schema !== left.schema ||
-        inspection.projection.left.table !== left.table ||
-        !hasSameConnectedSourceRef(inspection.projection.left.sourceRef, left.sourceRef) ||
-        inspection.projection.right.schema !== right.schema ||
-        inspection.projection.right.table !== right.table ||
-        !hasSameConnectedSourceRef(inspection.projection.right.sourceRef, right.sourceRef)
-      ) {
-        return null;
-      }
-    } catch {
-      return null;
-    }
-  }
-  return { left, right, targetNodeId: args.targetNode.id };
 }
 
 export function resolveDvtSubstraitNInputJoinEntry(args: {
@@ -1275,16 +1186,6 @@ function clonePlan(plan: Plan): Plan {
   return fromBinary(PlanSchema, toBinary(PlanSchema, plan));
 }
 
-function fieldIdForLocator(
-  projection: DvtSubstraitNInputJoinProjection,
-  locator: JoinFieldLocator
-): string | null {
-  return (
-    projection.inputs[locator.inputIndex]?.fields.find((field) => field.name === locator.fieldName)
-      ?.fieldId ?? null
-  );
-}
-
 function locatorForFieldId(
   projection: DvtSubstraitNInputJoinProjection,
   fieldId: string
@@ -1350,36 +1251,10 @@ export function inspectDvtSubstraitInnerJoinDraft(
   draft: DvtSubstraitInnerJoinDraft
 ): DvtSubstraitInnerJoinInspection {
   const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
-  if (!inspection.ok) return { ok: false };
+  if (!inspection.ok || !hasDvtSubstraitLegacyBinaryInnerJoinShape(inspection.projection)) {
+    return { ok: false };
+  }
   const { projection } = inspection;
-  if (
-    projection.inputs.length !== 2 ||
-    projection.inputs[0]?.fields.map((field) => field.name).join(',') !==
-      LEFT_FIELD_NAMES.join(',') ||
-    projection.inputs[1]?.fields.map((field) => field.name).join(',') !==
-      RIGHT_FIELD_NAMES.join(',') ||
-    projection.joins.length !== 1
-  ) {
-    return { ok: false };
-  }
-  const leftKeyId = fieldIdForLocator(projection, { inputIndex: 0, fieldName: 'customer_id' });
-  const rightKeyId = fieldIdForLocator(projection, { inputIndex: 1, fieldName: 'customer_id' });
-  const predicate = projection.joins[0]?.conditions[0];
-  if (
-    leftKeyId == null ||
-    rightKeyId == null ||
-    predicate == null ||
-    isDvtSubstraitJoinConditionGroup(predicate) ||
-    isDvtSubstraitJoinNullCondition(predicate) ||
-    predicate.left.kind !== 'field' ||
-    predicate.right.kind !== 'field' ||
-    predicate.left.sourceFieldId !== leftKeyId ||
-    predicate.right.sourceFieldId !== rightKeyId ||
-    (predicate.operator ?? 'equal') !== 'equal' ||
-    projection.joins[0]!.conditions.length !== 1
-  ) {
-    return { ok: false };
-  }
   const outputs = projection.outputs.map((output) => {
     const field = binaryFieldForLocator({
       inputIndex: output.source.inputIndex,
