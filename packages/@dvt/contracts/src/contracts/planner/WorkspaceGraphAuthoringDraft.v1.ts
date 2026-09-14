@@ -197,7 +197,8 @@ export function addDvtNodeFieldPolicyIssues(
     node.kind === 'dvt:source' &&
     (node.pluginId === 'dvt' || node.pluginId === 'dvt.warehouse-source');
   const isSink = node.kind === 'dvt:sink' && node.pluginId === 'dvt';
-  const isTransform = node.kind === 'dvt:transform' && node.pluginId === 'dvt';
+  const isTransform =
+    node.pluginId === 'dvt' && (node.kind === 'transform' || node.kind === 'dvt:transform');
   if (!isSource && !isSink && !isTransform) return;
 
   const metadata = node.metadata ?? {};
@@ -252,7 +253,7 @@ function canonicalizeDvtTransformAuthoringAuthority<Node extends WorkspaceGraphA
   node: Node
 ): Node {
   if (
-    node.kind !== 'dvt:transform' ||
+    (node.kind !== 'dvt:transform' && !(node.pluginId === 'dvt' && node.kind === 'transform')) ||
     node.metadata === undefined ||
     !Object.hasOwn(node.metadata, DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY)
   ) {
@@ -380,7 +381,7 @@ function addGraphShapeIssues(
 
   graph.nodes.forEach((node, index) => {
     if (
-      node.kind !== 'dvt:transform' ||
+      (node.kind !== 'dvt:transform' && !(node.pluginId === 'dvt' && node.kind === 'transform')) ||
       node.metadata === undefined ||
       !Object.hasOwn(node.metadata, DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY)
     ) {

@@ -197,6 +197,57 @@ describe('Canvas authoring field policy v1', () => {
     ).toBe(false);
   });
 
+  describe.each(['transform', 'dvt:transform'])('%s materialization policy', (kind) => {
+    const transform = { ...baseNode, kind, role: 'transform' as const };
+
+    it.each(['incremental', 'ephemeral', 'unknown', '', ' table ', null, 1, false])(
+      'rejects explicit unsupported materialized %j in nodes and commands',
+      (materialized) => {
+        const metadata = { config: { materialized } };
+        expect(
+          WorkspaceGraphAuthoringNodeSchema.safeParse({ ...transform, metadata }).success
+        ).toBe(false);
+        expect(
+          WorkspaceGraphAuthoringCommandSchema.safeParse({
+            type: WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE.updateNode,
+            nodeId: transform.id,
+            patch: { pluginId: transform.pluginId, kind, metadata },
+          }).success
+        ).toBe(false);
+      }
+    );
+
+    it.each([null, 'table', [], 1].map((config) => ({ config })))(
+      'rejects malformed config $config',
+      ({ config }) => {
+        expect(
+          WorkspaceGraphAuthoringNodeSchema.safeParse({
+            ...transform,
+            metadata: { config },
+          }).success
+        ).toBe(false);
+      }
+    );
+
+    it.each([{}, { materialized: 'table' }, { materialized: 'view' }])(
+      'preserves admitted or unconfigured metadata %j',
+      (config) => {
+        const node = { ...transform, metadata: { config } };
+        expect(WorkspaceGraphAuthoringNodeSchema.parse(node)).toEqual(node);
+      }
+    );
+
+    it('does not apply DVT materialization policy to a foreign plugin', () => {
+      const node = {
+        ...transform,
+        pluginId: 'dbt',
+        metadata: { config: { materialized: 'incremental' } },
+      };
+      expect(WorkspaceGraphAuthoringNodeSchema.parse(node)).toEqual(node);
+      expect(WorkspaceGraphAuthoringNodeSchema.parse(transform)).toEqual(transform);
+    });
+  });
+
   it.each([
     [
       'oversized source alias',
