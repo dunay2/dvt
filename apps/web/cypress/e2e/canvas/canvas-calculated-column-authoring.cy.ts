@@ -64,64 +64,92 @@ function visitCanvas(): void {
 describe('Canvas calculated-column authoring', () => {
   beforeEach(() => stubCanvas());
 
-  it('creates, persists, and restores a direct alias on the Transform', () => {
-    cy.viewport(1920, 1080);
-    visitCanvas();
-    cy.get('.react-flow__node[data-id="model-orders"]')
-      .find('button[aria-expanded]')
-      .contains('Columns')
-      .click();
-    cy.get('.react-flow__node[data-id="model-orders"]')
-      .contains('button', 'Map compatible columns')
-      .click();
-    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+  for (const entry of ['add-column', 'field-context-menu'] as const) {
+    it(`creates, persists, and restores a direct alias through ${entry}`, () => {
+      cy.viewport(1920, 1080);
+      visitCanvas();
+      cy.get('.react-flow__node[data-id="model-orders"]')
+        .find('button[aria-expanded]')
+        .contains('Columns')
+        .click();
+      cy.get('.react-flow__node[data-id="model-orders"]')
+        .contains('button', 'Map compatible columns')
+        .click();
+      waitForE2eApiCall('/workspace/graph/draft', 'PUT');
 
-    cy.get('.react-flow__node[data-id="model-orders"]')
-      .find('[data-slot="graph-node-calculated-column-trigger"]')
-      .focus()
-      .should('have.focus')
-      .click();
-    cy.get('[data-slot="graph-node-calculated-column-form"]').within(() => {
-      cy.get('select[name="kind"]').should('have.value', 'field-ref');
-      cy.get('select[name="inputFieldId"]').select('customer');
-      cy.get('input[name="alias"]').type('customer_alias');
-      cy.get('input[name="alias"]').should('have.value', 'customer_alias');
-      cy.get('select[name="inputFieldId"]').should('not.have.value', '');
-      cy.get('button[type="submit"]').should('be.enabled').click();
-    });
+      if (entry === 'field-context-menu') {
+        cy.get(
+          '.react-flow__node[data-id="model-orders"] [data-slot="graph-node-card-title"]'
+        ).click();
+        cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="semantic"]').should(
+          'have.attr',
+          'aria-selected',
+          'true'
+        );
+        cy.get(
+          '.react-flow__node[data-id="model-orders"] [data-slot="graph-node-card-title"]'
+        ).dblclick();
+        cy.get('[data-slot="canvas-node-workbench-overlay"]').within(() => {
+          cy.contains('[role="tab"]', 'General').should('have.attr', 'aria-selected', 'true');
+          cy.get('button[aria-label="Close"]').click();
+        });
+      }
 
-    cy.wrap(null).should(() => {
-      const savedNode = getE2eApiCalls('/workspace/graph/draft', 'PUT')
-        .map((call) => call.body as DraftSave)
-        .map((save) => save.draft.nodes.find((node) => node.id === 'model-orders'))
-        .filter((node) => node != null)
-        .at(-1);
-      const authority = savedNode?.metadata?.transformAuthoring as
-        { semanticDocument?: unknown } | undefined;
-      const inspection = inspectDvtSubstraitProjectionDraft(
-        decodeDvtSubstraitProjectionDocument(authority?.semanticDocument)
-      );
-      const alias = inspection.ok ? inspection.projection.outputs.at(-1) : null;
-      expect(alias).to.deep.include({
-        name: 'customer_alias',
-        sourceFieldName: 'customer',
+      if (entry === 'field-context-menu') {
+        cy.get(
+          '.react-flow__node[data-id="model-orders"] [data-column-name="customer"]'
+        ).rightclick();
+        cy.get('[data-slot="graph-node-column-alias-action"]').click();
+      } else {
+        cy.get('.react-flow__node[data-id="model-orders"]')
+          .find('[data-slot="graph-node-calculated-column-trigger"]')
+          .focus()
+          .should('have.focus')
+          .click();
+      }
+      cy.get('[data-slot="graph-node-calculated-column-form"]').within(() => {
+        cy.get('select[name="kind"]').should('have.value', 'field-ref');
+        if (entry === 'add-column') cy.get('select[name="inputFieldId"]').select('customer');
+        else cy.get('select[name="inputFieldId"] option:selected').should('have.text', 'customer');
+        cy.get('input[name="alias"]').type('customer_alias');
+        cy.get('input[name="alias"]').should('have.value', 'customer_alias');
+        cy.get('select[name="inputFieldId"]').should('not.have.value', '');
+        cy.get('button[type="submit"]').should('be.enabled').click();
       });
-      expect(alias?.fieldId).to.match(
-        /^dvt_fld_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-      );
-      expect(alias).not.to.have.property('operations');
+
+      cy.wrap(null).should(() => {
+        const savedNode = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+          .map((call) => call.body as DraftSave)
+          .map((save) => save.draft.nodes.find((node) => node.id === 'model-orders'))
+          .filter((node) => node != null)
+          .at(-1);
+        const authority = savedNode?.metadata?.transformAuthoring as
+          { semanticDocument?: unknown } | undefined;
+        const inspection = inspectDvtSubstraitProjectionDraft(
+          decodeDvtSubstraitProjectionDocument(authority?.semanticDocument)
+        );
+        const alias = inspection.ok ? inspection.projection.outputs.at(-1) : null;
+        expect(alias).to.deep.include({
+          name: 'customer_alias',
+          sourceFieldName: 'customer',
+        });
+        expect(alias?.fieldId).to.match(
+          /^dvt_fld_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+        );
+        expect(alias).not.to.have.property('operations');
+      });
+
+      cy.get('.react-flow__node[data-id="model-orders"]').should('contain.text', 'customer_alias');
+
+      visitCanvas();
+      cy.get('.react-flow__node[data-id="model-orders"]')
+        .find('button[aria-expanded]')
+        .contains('Columns')
+        .click();
+      cy.get('.react-flow__node[data-id="model-orders"]')
+        .contains('button', /Show remaining columns/)
+        .click();
+      cy.get('.react-flow__node[data-id="model-orders"]').should('contain.text', 'customer_alias');
     });
-
-    cy.get('.react-flow__node[data-id="model-orders"]').should('contain.text', 'customer_alias');
-
-    visitCanvas();
-    cy.get('.react-flow__node[data-id="model-orders"]')
-      .find('button[aria-expanded]')
-      .contains('Columns')
-      .click();
-    cy.get('.react-flow__node[data-id="model-orders"]')
-      .contains('button', /Show remaining columns/)
-      .click();
-    cy.get('.react-flow__node[data-id="model-orders"]').should('contain.text', 'customer_alias');
-  });
+  }
 });

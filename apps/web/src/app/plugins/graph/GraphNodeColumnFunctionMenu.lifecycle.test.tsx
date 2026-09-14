@@ -90,4 +90,77 @@ describe('GraphNodeColumnFunctionMenu pointer lifecycle', () => {
   function menu(): Element | null {
     return document.querySelector('[data-slot="graph-node-column-function-menu"]');
   }
+
+  it.each(['pointer', 'keyboard'] as const)(
+    'opens the existing alias form for the selected output through %s without changing the original',
+    async (gesture) => {
+      const onCalculatedColumnAdd = vi.fn().mockReturnValue({
+        outcome: 'applied',
+        createdFieldId: 'output:amount_alias',
+      });
+      const columns = [
+        { id: 'output:customer', name: 'customer', type: 'text' },
+        { id: 'output:amount', name: 'amount', type: 'numeric' },
+      ];
+      act(() => {
+        root.render(
+          <GraphNodeColumnSection
+            expanded
+            nodeId="transform-orders"
+            columns={columns}
+            onCalculatedColumnAdd={onCalculatedColumnAdd}
+          />
+        );
+      });
+      const openAlias = async () => {
+        const piece = container.querySelector<HTMLElement>('[data-column-name="amount"]')!;
+        act(() => {
+          if (gesture === 'pointer') fireEvent.contextMenu(piece);
+          else fireEvent.keyDown(piece, { key: 'F10', shiftKey: true });
+        });
+        const aliasAction = menu()?.querySelector<HTMLElement>(
+          '[data-slot="graph-node-column-alias-action"]'
+        );
+        expect(aliasAction).not.toBeNull();
+        expect(aliasAction).toBeDefined();
+        await act(async () => {
+          fireEvent.click(aliasAction!);
+          await vi.advanceTimersByTimeAsync(100);
+        });
+        const form = document.querySelector<HTMLFormElement>(
+          '[data-slot="graph-node-calculated-column-form"] form'
+        )!;
+        expect(form).not.toBeNull();
+        expect((form.elements.namedItem('inputFieldId') as HTMLSelectElement).value).toBe(
+          'output:amount'
+        );
+        return form;
+      };
+
+      const cancelled = await openAlias();
+      act(() => {
+        fireEvent.click(
+          Array.from(cancelled.querySelectorAll('button')).find(
+            (button) => button.textContent === 'Cancelar'
+          )!
+        );
+      });
+      expect(onCalculatedColumnAdd).not.toHaveBeenCalled();
+      const form = await openAlias();
+      act(() => {
+        fireEvent.input(form.elements.namedItem('alias') as HTMLInputElement, {
+          target: { value: 'amount_alias' },
+        });
+      });
+      act(() => fireEvent.submit(form));
+      expect(onCalculatedColumnAdd).toHaveBeenCalledExactlyOnceWith({
+        nodeId: 'transform-orders',
+        kind: 'field-ref',
+        inputFieldId: 'output:amount',
+        alias: 'amount_alias',
+      });
+      expect(container.querySelector('[data-column-name="amount"]')).not.toBeNull();
+      expect(columns).toHaveLength(2);
+    }
+  );
 });

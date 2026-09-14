@@ -1,6 +1,6 @@
 /** Owned concern: render recorded graph-node columns as a compact disclosure. */
 import { ChevronDown, ChevronUp, Table } from 'lucide-react';
-import { useId, type ReactElement } from 'react';
+import { useId, useState, type ReactElement } from 'react';
 
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
@@ -33,6 +33,7 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
   const copy = resolveGraphNodeCardCopy(applicationLanguage);
   const columnListId = useId();
   const section = useGraphNodeColumnSectionState(props);
+  const [aliasFieldId, setAliasFieldId] = useState<string | null>(null);
   const remainderActionLabel = copy.remainingColumnsLabelTemplate.replace(
     '{count}',
     String(section.remainingColumnCount)
@@ -114,6 +115,11 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
                 focusRequested={section.pendingFocusFieldId === (column.id ?? column.name)}
                 onFocusFulfilled={section.fulfillCreatedColumnFocus}
                 onFunctionApplied={section.revealCreatedColumn}
+                onCreateAlias={
+                  onCalculatedColumnAdd == null || column.output === false
+                    ? undefined
+                    : () => setAliasFieldId(column.id ?? column.name)
+                }
                 onColumnPortActivate={onColumnPortActivate}
                 onColumnFunctionApply={onColumnFunctionApply}
                 resolveColumnCompositionFunctions={resolveColumnCompositionFunctions}
@@ -125,7 +131,10 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
           </div>
           {nodeId != null && onCalculatedColumnAdd != null && columns.length > 0 ? (
             <GraphNodeCalculatedColumnForm
+              key={aliasFieldId ?? 'new-column'}
               nodeId={nodeId}
+              initialInputFieldId={aliasFieldId ?? undefined}
+              onClose={() => setAliasFieldId(null)}
               columns={section.columnReorder.orderedColumns}
               onSubmit={onCalculatedColumnAdd}
               onApplied={section.revealCreatedColumn}

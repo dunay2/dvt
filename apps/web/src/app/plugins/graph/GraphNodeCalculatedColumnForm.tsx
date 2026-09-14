@@ -61,12 +61,14 @@ function resolveCalculatedColumnCommandError(
 export function GraphNodeCalculatedColumnForm(props: {
   nodeId: string;
   columns: readonly GraphNodeColumn[];
+  initialInputFieldId?: string;
+  onClose?: () => void;
   onSubmit: (identity: GraphNodeCalculatedColumnIdentity) => GraphNodeColumnFunctionApplyResult;
   onApplied?: (createdFieldId: string) => void;
 }): ReactElement {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveGraphNodeCardCopy(language);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(props.initialInputFieldId != null);
   const [kind, setKind] = useState<CalculationKind>('field-ref');
   const [alias, setAlias] = useState('');
   const [value, setValue] = useState('');
@@ -75,7 +77,7 @@ export function GraphNodeCalculatedColumnForm(props: {
   const valueInputRef = useRef<HTMLInputElement>(null);
   const inputFieldRef = useRef<HTMLSelectElement>(null);
   const [inputFieldId, setInputFieldId] = useState(
-    props.columns[0]?.id ?? props.columns[0]?.name ?? ''
+    props.initialInputFieldId ?? props.columns[0]?.id ?? props.columns[0]?.name ?? ''
   );
   const functions = useMemo(
     () =>
@@ -173,6 +175,7 @@ export function GraphNodeCalculatedColumnForm(props: {
     setAlias('');
     setValue('');
     setCommandError(null);
+    props.onClose?.();
   };
 
   return (
@@ -181,7 +184,10 @@ export function GraphNodeCalculatedColumnForm(props: {
       open={open}
       onOpenChange={(nextOpen) => {
         setOpen(nextOpen);
-        if (!nextOpen) setCommandError(null);
+        if (!nextOpen) {
+          setCommandError(null);
+          props.onClose?.();
+        }
       }}
     >
       <div data-slot="graph-node-calculated-column-gap" className={graphNodeColumnClasses.addGap}>
@@ -310,7 +316,10 @@ export function GraphNodeCalculatedColumnForm(props: {
           <div className={graphNodeColumnClasses.addActions}>
             <button
               type="button"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+                props.onClose?.();
+              }}
               className={graphNodeColumnClasses.addCancel}
             >
               {copy.calculatedColumnCancelLabel}

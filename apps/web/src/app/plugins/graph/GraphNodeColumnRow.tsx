@@ -45,6 +45,7 @@ export function GraphNodeColumnRow(props: {
   focusRequested?: boolean;
   onFocusFulfilled?: () => void;
   onFunctionApplied?: (createdFieldId: string) => void;
+  onCreateAlias?: () => void;
   resolveColumnCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   onColumnFunctionApply?: (
@@ -103,6 +104,7 @@ export function GraphNodeColumnRow(props: {
         copy={copy}
         keyboardOpen={keyboardFunctionMenuOpen}
         onKeyboardOpenChange={setKeyboardFunctionMenuOpen}
+        onCreateAlias={props.onCreateAlias}
         onRequest={
           props.onColumnFunctionApply == null
             ? undefined
