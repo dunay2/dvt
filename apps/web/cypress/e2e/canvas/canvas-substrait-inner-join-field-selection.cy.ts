@@ -2,9 +2,15 @@
 import {
   decodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
+  inspectDvtSubstraitNInputJoinDraft,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
-import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  getE2eApiCalls,
+  installE2eApiFetchStub,
+  stubE2eJsonApi,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -67,6 +73,95 @@ function toggleColumns(nodeId: string): void {
     .click();
 }
 
+function openJoinWorkbench(): void {
+  cy.get(
+    '.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]'
+  ).rightclick();
+  cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Properties').click();
+}
+
+function proveCardOutputControls(sourceCount: number): void {
+  const card = '.react-flow__node[data-id="join-transform"]';
+  const field = (name: string): string =>
+    `${card} [data-slot="graph-node-column-piece"][data-column-name="${name}"]`;
+  const toggle = `${field('order_id')} [data-slot="graph-node-column-output-state"]`;
+  let position: string;
+  let baseline: ReturnType<typeof inspectDvtSubstraitNInputJoinDraft>;
+  const inspectSave = (): ReturnType<typeof inspectDvtSubstraitNInputJoinDraft> => {
+    expect(getE2eApiCalls('/workspace/graph/draft').at(-1)?.method).to.equal('GET');
+    const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+      CanvasDraftSaveRequestBody | undefined;
+    const node = saved?.draft.nodes.find((candidate) => candidate.id === 'join-transform');
+    const authoring = node?.metadata?.transformAuthoring as
+      { semanticDocument?: unknown } | undefined;
+    return inspectDvtSubstraitNInputJoinDraft(
+      decodeDvtSubstraitInnerJoinDocument(authoring?.semanticDocument)
+    );
+  };
+  const expectSavedOrder = (names: string[]): void => {
+    cy.wrap(null).should(() => {
+      const result = inspectSave();
+      expect(result.ok && result.projection.inputs.length).to.equal(sourceCount);
+      expect(
+        result.ok && result.projection.outputs.slice(0, 3).map((output) => output.name)
+      ).to.deep.equal(names);
+      if (baseline?.ok && result.ok) {
+        expect(result.projection.inputs).to.deep.equal(baseline.projection.inputs);
+        expect(result.projection.joins).to.deep.equal(baseline.projection.joins);
+      }
+    });
+  };
+
+  toggleColumns('join-transform');
+  cy.get(card).then(($card) => {
+    position = $card[0]!.style.transform;
+  });
+  cy.get(toggle).should('not.be.disabled').and('have.attr', 'aria-pressed', 'true').click();
+  cy.get(toggle).should('have.attr', 'aria-pressed', 'false');
+  cy.wrap(null).should(() => {
+    const result = inspectSave();
+    expect(
+      result.ok && result.projection.outputs.some((output) => output.name === 'order_id')
+    ).to.equal(false);
+    baseline = result;
+  });
+  cy.get(card).should(($card) => expect($card[0]!.style.transform).to.equal(position));
+  cy.get(toggle).click();
+  cy.get(toggle).should('have.attr', 'aria-pressed', 'true');
+  expectSavedOrder(['customer_id', 'name', 'order_id']);
+
+  cy.window().then((window) => {
+    const dataTransfer = new window.DataTransfer();
+    cy.get(field('order_id'))
+      .should('have.attr', 'draggable', 'true')
+      .trigger('dragstart', { dataTransfer });
+    cy.get(field('customer_id'))
+      .closest('[data-slot="graph-node-column-row"]')
+      .then(($target) => {
+        const clientY = $target[0]!.getBoundingClientRect().top + 1;
+        cy.wrap($target)
+          .trigger('dragover', { clientY, dataTransfer })
+          .trigger('drop', { clientY, dataTransfer });
+      });
+    cy.get(field('order_id')).trigger('dragend');
+  });
+  expectSavedOrder(['order_id', 'customer_id', 'name']);
+  cy.get(card).should(($card) => expect($card[0]!.style.transform).to.equal(position));
+  cy.on('window:before:load', installE2eApiFetchStub);
+  cy.reload();
+  toggleColumns('join-transform');
+  cy.get(`${card} [data-slot="graph-node-column-piece"]`).should(($fields) => {
+    expect([...$fields].slice(0, 3).map((element) => element.dataset.columnName)).to.deep.equal([
+      'order_id',
+      'customer_id',
+      'name',
+    ]);
+  });
+  cy.get(toggle).should('have.attr', 'aria-pressed', 'true');
+  cy.get(field('order_id')).focus().trigger('keydown', { key: 'ArrowDown', altKey: true });
+  expectSavedOrder(['customer_id', 'order_id', 'name']);
+}
+
 describe('Canvas Substrait INNER JOIN field selection', () => {
   beforeEach(() => {
     stubRuntimeCapabilities();
@@ -76,6 +171,12 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
     });
   });
 
+  it('retains checkbox, drag, keyboard order and reload behavior on the JOIN card', () => {
+    cy.viewport(1440, 1000);
+    visitCanvas();
+    proveCardOutputControls(2);
+  });
+
   it('shows canonical Substrait provenance without SQL or dbt authority in the Transform inspector', () => {
     visitCanvas();
 
@@ -83,9 +184,8 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
       .should('contain.text', 'Customer Orders')
       .and('contain.text', 'Not calculated')
       .and('not.contain.text', 'SQL transform')
-      .and('not.contain.text', 'DBT artifact')
-      .find('[data-slot="graph-node-card-title"]')
-      .dblclick();
+      .and('not.contain.text', 'DBT artifact');
+    openJoinWorkbench();
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
     cy.get('[data-slot="canvas-node-workbench-code-content"]')
       .should('contain.text', 'Canonical Substrait document')
@@ -100,22 +200,30 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
   it('selects, groups, ranks, persists, and reloads fields from Substrait authority', () => {
     visitCanvas();
 
-    cy.get(
-      '.react-flow__node[data-id="join-transform"] [data-slot="graph-node-card-title"]'
-    ).dblclick();
+    openJoinWorkbench();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('input[name="dvt-substrait-inner-join-field"][value="left.customer_id"]').uncheck();
     cy.get('input[data-slot="dvt-substrait-inner-join-output-name"][data-field-key="left.name"]')
       .clear()
-      .type('customer_name')
+      .type('customer_name', { delay: 0 });
+    cy.get('input[data-slot="dvt-substrait-inner-join-output-name"][data-field-key="left.name"]')
+      .should('have.value', 'customer_name')
       .blur();
     cy.get(
       'button[data-action="move-substrait-inner-join-field-up"][data-field-key="right.order_id"]'
     ).click();
     cy.get('[data-slot="dvt-substrait-inner-join-grain-field"]').select('customer_name');
-    cy.get('[data-slot="dvt-substrait-inner-join-count-output-name"]').clear().type('order_count');
+    cy.get('[data-slot="dvt-substrait-inner-join-count-output-name"]')
+      .clear()
+      .type('order_count', { delay: 0 });
     cy.get('[data-slot="dvt-substrait-inner-join-apply-grouping"]').click();
-    cy.get('[data-slot="dvt-substrait-inner-join-window-output-name"]').clear().type('count_rank');
+    cy.get('[data-slot="dvt-substrait-inner-join-window-output-name"]')
+      .clear()
+      .type('count_rank', { delay: 0 });
+    cy.get('[data-slot="dvt-substrait-inner-join-window-output-name"]').should(
+      'have.value',
+      'count_rank'
+    );
     cy.get('[data-slot="dvt-substrait-inner-join-apply-window"]').click();
     cy.get('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]').should('exist');
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
@@ -154,9 +262,7 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     visitCanvas();
-    cy.get(
-      '.react-flow__node[data-id="join-transform"] [data-slot="graph-node-card-title"]'
-    ).dblclick();
+    openJoinWorkbench();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]').should('exist');
     cy.get('[data-slot="dvt-substrait-inner-join-window-output-name"]').should(
@@ -175,12 +281,24 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
     });
   });
 
+  it('retains the same card output controls after adding a third Source', () => {
+    cy.viewport(1440, 1000);
+    visitCanvas();
+    openJoinWorkbench();
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+    cy.get('[data-slot="dvt-substrait-append-right-field"]').select(
+      'source-shipments\u001fcustomer_id'
+    );
+    cy.get('[data-slot="dvt-substrait-append-submit"]').click();
+    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    proveCardOutputControls(3);
+  });
+
   it('appends, edits, groups, ranks, and reloads N-input joins through one revision', () => {
     visitCanvas();
 
-    cy.get(
-      '.react-flow__node[data-id="join-transform"] [data-slot="graph-node-card-title"]'
-    ).dblclick();
+    openJoinWorkbench();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="dvt-substrait-append-right-field"]').select(
       'source-shipments\u001fcustomer_id'
@@ -206,7 +324,11 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
     )
       .should('have.value', 'shipments_customer_id')
       .clear()
-      .type('shipping_customer')
+      .type('shipping_customer', { delay: 0 });
+    cy.get(
+      'input[data-slot="dvt-substrait-n-input-output-name"][aria-label$="shipments.customer_id"]'
+    )
+      .should('have.value', 'shipping_customer')
       .blur();
     cy.get(
       'input[data-slot="dvt-substrait-n-input-output-name"][aria-label$="shipments.customer_id"]'
@@ -217,12 +339,16 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
     cy.get('[data-slot="dvt-substrait-inner-join-grain-field"]').select('shipment_id');
     cy.get('[data-slot="dvt-substrait-inner-join-count-output-name"]')
       .clear()
-      .type('shipment_count');
+      .type('shipment_count', { delay: 0 });
     cy.get('[data-slot="dvt-substrait-inner-join-apply-grouping"]').click();
     cy.get('[data-slot="dvt-substrait-inner-join-grouping-authoring"]').should('exist');
     cy.get('[data-slot="dvt-substrait-inner-join-window-output-name"]')
       .clear()
-      .type('shipment_rank');
+      .type('shipment_rank', { delay: 0 });
+    cy.get('[data-slot="dvt-substrait-inner-join-window-output-name"]').should(
+      'have.value',
+      'shipment_rank'
+    );
     cy.get('[data-slot="dvt-substrait-inner-join-apply-window"]').click();
     cy.get('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]').should('exist');
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
@@ -264,9 +390,7 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     visitCanvas();
-    cy.get(
-      '.react-flow__node[data-id="join-transform"] [data-slot="graph-node-card-title"]'
-    ).dblclick();
+    openJoinWorkbench();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]').should(
       'contain.text',
