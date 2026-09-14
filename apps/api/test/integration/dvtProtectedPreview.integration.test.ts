@@ -76,7 +76,7 @@ describeIfPostgres('protected DVT Preview integration', () => {
   });
 
   it.each([1, 2, 3] as const)(
-    'persists %i protected inputs as one Planner-built step without client graphSource',
+    'persists and replays %i protected inputs as one rejected plan without client graphSource',
     async (inputCount) => {
       const draft =
         inputCount === 1
@@ -218,6 +218,20 @@ describeIfPostgres('protected DVT Preview integration', () => {
         })
       ).resolves.toMatchObject({
         state: 'INVALID',
+      });
+
+      const repeated = await useCase.execute(command, context);
+      expect(repeated).toMatchObject({
+        kind: 'plan-invalid',
+        planRef: result.planRef,
+        planRecord: {
+          planId: result.planRecord.planId,
+          canonicalHash: result.planRecord.canonicalHash,
+          canonicalPlanJson: result.planRecord.canonicalPlanJson,
+          sourceRef: result.planRecord.sourceRef,
+          createdAtIso: result.planRecord.createdAtIso,
+        },
+        validation: result.validation,
       });
     }
   );
