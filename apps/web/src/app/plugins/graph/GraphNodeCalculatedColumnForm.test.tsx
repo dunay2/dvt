@@ -5,6 +5,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { CanvasNodeShell } from '../../components/canvas/CanvasNodeShell';
 import { GraphNodeCalculatedColumnForm } from './GraphNodeCalculatedColumnForm';
 
 describe('GraphNodeCalculatedColumnForm', () => {
@@ -73,45 +74,59 @@ describe('GraphNodeCalculatedColumnForm', () => {
     });
   });
 
-  it('creates a function output from a keyboard-accessible gap action', () => {
+  it('creates a function output without activating its owning Canvas node', () => {
     const onSubmit = vi
       .fn()
       .mockReturnValue({ outcome: 'applied', createdFieldId: 'created-field' });
+    const onSelectNode = vi.fn();
+    const onOpenNode = vi.fn();
     act(() => {
       root.render(
-        <GraphNodeCalculatedColumnForm
-          nodeId="orders"
-          columns={[
-            {
-              id: 'output:customer',
-              name: 'customer',
-              type: 'text',
-              functionMenu: {
-                category: 'text',
-                items: [
-                  {
-                    capabilityId: 'trim-capability',
-                    name: 'trim',
-                    minimumArgumentCount: 1,
-                    maximumArgumentCount: 1,
-                  },
-                  {
-                    capabilityId: 'concat-capability',
-                    name: 'concat',
-                    minimumArgumentCount: 2,
-                    maximumArgumentCount: 2,
-                  },
-                  {
-                    capabilityId: 'coalesce-capability',
-                    name: 'coalesce',
-                    minimumArgumentCount: 2,
-                  },
-                ],
+        <CanvasNodeShell
+          contextMenuModel={{
+            target: { kind: 'node', nodeId: 'orders', nodeName: 'Orders' },
+            actionGroups: [],
+          }}
+          shouldShowSourceHandle={false}
+          shouldShowTargetHandle={false}
+          onContextMenuAction={vi.fn()}
+          onSelectNode={onSelectNode}
+          onOpenNode={onOpenNode}
+        >
+          <GraphNodeCalculatedColumnForm
+            nodeId="orders"
+            columns={[
+              {
+                id: 'output:customer',
+                name: 'customer',
+                type: 'text',
+                functionMenu: {
+                  category: 'text',
+                  items: [
+                    {
+                      capabilityId: 'trim-capability',
+                      name: 'trim',
+                      minimumArgumentCount: 1,
+                      maximumArgumentCount: 1,
+                    },
+                    {
+                      capabilityId: 'concat-capability',
+                      name: 'concat',
+                      minimumArgumentCount: 2,
+                      maximumArgumentCount: 2,
+                    },
+                    {
+                      capabilityId: 'coalesce-capability',
+                      name: 'coalesce',
+                      minimumArgumentCount: 2,
+                    },
+                  ],
+                },
               },
-            },
-          ]}
-          onSubmit={onSubmit}
-        />
+            ]}
+            onSubmit={onSubmit}
+          />
+        </CanvasNodeShell>
       );
     });
 
@@ -129,17 +144,33 @@ describe('GraphNodeCalculatedColumnForm', () => {
     const form = surface?.querySelector('form');
     const kind = form?.elements.namedItem('kind') as HTMLSelectElement;
     const alias = form?.elements.namedItem('alias') as HTMLInputElement;
+    for (const option of [...kind.options]) {
+      act(() => {
+        fireEvent.click(kind);
+        fireEvent.change(kind, { target: { value: option.value } });
+        fireEvent.dblClick(kind);
+      });
+      expect(kind.value).toBe(option.value);
+      expect(onSelectNode).not.toHaveBeenCalled();
+      expect(onOpenNode).not.toHaveBeenCalled();
+      expect(onSubmit).not.toHaveBeenCalled();
+    }
     act(() => {
       fireEvent.change(kind, { target: { value: 'scalar-function' } });
+      fireEvent.click(alias);
       fireEvent.input(alias, { target: { value: 'customer_clean' } });
     });
     const functionSelect = form?.elements.namedItem('capabilityId') as HTMLSelectElement;
     expect([...functionSelect.options].map((option) => option.textContent)).toEqual(['TRIM']);
     act(() => {
+      fireEvent.click(form?.elements.namedItem('inputFieldId') as HTMLSelectElement);
+      fireEvent.click(functionSelect);
       fireEvent.change(functionSelect, { target: { value: 'trim-capability' } });
-      fireEvent.submit(form!);
+      fireEvent.click(form!.querySelector('button[type="submit"]')!);
     });
 
+    expect(onSelectNode).not.toHaveBeenCalled();
+    expect(onOpenNode).not.toHaveBeenCalled();
     expect(onSubmit).toHaveBeenCalledWith({
       nodeId: 'orders',
       kind: 'scalar-function',
