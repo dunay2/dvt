@@ -1,11 +1,10 @@
 // @vitest-environment jsdom
 
-import { waitFor } from '@testing-library/dom';
-import React, { act } from 'react';
-import { createRoot, type Root } from 'react-dom/client';
+import React from 'react';
 import { RouterProvider, createMemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
+import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
 
 import AppProviders from '../AppProviders';
 import Canvas from './Canvas';
@@ -95,12 +94,12 @@ const CANVAS_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration('dbt.c
 })!;
 
 describe('Canvas route authoring bootstrap integration', () => {
-  let root: Root | null = null;
-  let container: HTMLDivElement | null = null;
+  let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | null = null;
   let harness: ReturnType<typeof setupCanvasControllerHarness> | null = null;
   let queryClient: QueryClient | null = null;
 
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     (
       globalThis as typeof globalThis & {
         ResizeObserver?: new (callback: ResizeObserverCallback) => ResizeObserver;
@@ -112,20 +111,16 @@ describe('Canvas route authoring bootstrap integration', () => {
     } as unknown as new (callback: ResizeObserverCallback) => ResizeObserver;
   });
 
-  afterEach(() => {
-    act(() => {
-      root?.unmount();
-    });
+  afterEach(async () => {
+    await mounted?.cleanup();
     harness?.cleanup();
     resetCanvasDraftPresentationState();
     resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
-    container?.remove();
-    queryClient?.clear();
-    root = null;
-    container = null;
+    mounted = null;
     harness = null;
     queryClient = null;
     Reflect.deleteProperty(globalThis, 'ResizeObserver');
+    vi.useRealTimers();
   });
 
   it('publishes a complete route bootstrap state when hydrating a graph-ready protected draft', async () => {
@@ -148,10 +143,6 @@ describe('Canvas route authoring bootstrap integration', () => {
         },
       },
     });
-
-    container = document.createElement('div');
-    document.body.appendChild(container);
-    root = createRoot(container);
 
     const router = createMemoryRouter(
       [
@@ -195,11 +186,11 @@ describe('Canvas route authoring bootstrap integration', () => {
       }
     );
 
-    await act(async () => {
-      root?.render(<RouterProvider router={router} />);
-    });
-    await waitFor(() => {
-      expect(getCanvasDraftPresentationState().routeState).toBe('ready');
+    mounted = await withTestQueryClient(<RouterProvider router={router} />, queryClient);
+    await waitForReactQuery(() => getCanvasDraftPresentationState().routeState === 'ready', {
+      description: 'Canvas authoring bootstrap readiness',
+      timeoutMs: 1_000,
+      tick: () => vi.advanceTimersByTimeAsync(20),
     });
 
     expect(getCanvasDraftPresentationState()).toMatchObject({
@@ -211,6 +202,12 @@ describe('Canvas route authoring bootstrap integration', () => {
     ).toMatchObject({
       status: 'complete',
     });
-    expect(container.textContent).not.toContain('The application hit an unexpected error.');
+    expect(mounted.container.textContent).not.toContain('The application hit an unexpected error.');
+    expect(
+      harness.state.services.workspaceGraphDraftAuthoringPort.readGraphDraft
+    ).toHaveBeenCalledOnce();
+    expect(
+      harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft
+    ).not.toHaveBeenCalled();
   });
 });
