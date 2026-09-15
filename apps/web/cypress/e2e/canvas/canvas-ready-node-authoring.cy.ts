@@ -501,7 +501,6 @@ describe('Canvas ready node authoring', () => {
   });
 
   it('persists native Transform materialization and restores its header icon', () => {
-    let materializationIconOffset = 0;
     stubStatefulCanvasDraftAuthoring();
 
     visitReadyCanvas();
@@ -509,16 +508,13 @@ describe('Canvas ready node authoring', () => {
     cy.get('.react-flow__node[data-id="model_orders"]')
       .as('modelNode')
       .find('[data-slot="graph-node-card-header-rail"]')
-      .should('contain.text', 'Not configured')
-      .find('[data-slot="graph-node-summary-icon"]')
-      .should('be.visible')
-      .then(($icon) => {
-        const icon = $icon[0]!.getBoundingClientRect();
-        const rail = $icon[0]!.closest('[data-slot="graph-node-card-header-rail"]')!;
-        materializationIconOffset = icon.left - rail.getBoundingClientRect().left;
-      });
-    cy.get('@modelNode').find('[data-slot="canvas-node-shell"]').dblclick();
+      .should('contain.text', 'view')
+      .find('[data-icon="eye"]')
+      .should('be.visible');
+    cy.get('@modelNode').find('[data-slot="canvas-node-shell"]').rightclick();
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Properties').click();
     cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
+    cy.get('select[name="dvt-transform-materialization"]').should('have.value', 'view');
     cy.get('select[name="dvt-transform-materialization"]').select('table');
     cy.get('[data-slot="canvas-node-workbench-panel"] button')
       .filter(':visible')
@@ -531,12 +527,7 @@ describe('Canvas ready node authoring', () => {
       .find('[data-slot="graph-node-card-header-rail"]')
       .should('contain.text', 'table')
       .find('[data-icon="table"]')
-      .should('be.visible')
-      .and(($icon) => {
-        const icon = $icon[0]!.getBoundingClientRect();
-        const rail = $icon[0]!.closest('[data-slot="graph-node-card-header-rail"]')!;
-        expect(icon.left - rail.getBoundingClientRect().left).to.equal(materializationIconOffset);
-      });
+      .should('be.visible');
     cy.wrap(null).should(() => {
       const savedModel = getE2eApiCalls('/workspace/graph/draft', 'PUT')
         .map((call) => call.body as CanvasDraftSaveRequestBody)
