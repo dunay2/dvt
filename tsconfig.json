@@ -71,6 +71,12 @@
       "@dvt/temporal-dbt-plugin/*": [
         "./packages/@dvt/temporal-dbt-plugin/src/*"
       ],
+      "@dvt/temporal-dvt-postgres-plugin": [
+        "./packages/@dvt/temporal-dvt-postgres-plugin/src/index.ts"
+      ],
+      "@dvt/temporal-dvt-postgres-plugin/*": [
+        "./packages/@dvt/temporal-dvt-postgres-plugin/src/*"
+      ],
       "@dvt/temporal-http-json-plugin": [
         "./packages/@dvt/temporal-http-json-plugin/src/index.ts"
       ],
