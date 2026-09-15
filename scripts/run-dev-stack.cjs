@@ -139,6 +139,8 @@ function buildApiEnv(options, env = process.env) {
           DVT_POSTGRES_CREDENTIAL_BINDINGS:
             readNonEmptyEnv(env.DVT_POSTGRES_CREDENTIAL_BINDINGS) ??
             JSON.stringify({ [LOCAL_POSTGRES_CREDENTIAL_REF]: databaseUrl }),
+          DVT_TEMPORAL_DVT_POSTGRES_ENABLED:
+            readNonEmptyEnv(env.DVT_TEMPORAL_DVT_POSTGRES_ENABLED) ?? 'true',
           DVT_DB_READY_ENABLED: 'true',
         }),
   };

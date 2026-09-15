@@ -80,6 +80,7 @@ test('buildApiEnv injects readiness flags and local postgres defaults for the co
     apiEnv.DVT_POSTGRES_CREDENTIAL_BINDINGS,
     JSON.stringify({ 'postgres:local-postgres-proof': defaultPgUrl })
   );
+  assert.equal(apiEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'true');
   assert.equal(apiEnv.TEMPORAL_ADDRESS, '127.0.0.1:7233');
   assert.equal(apiEnv.TEMPORAL_NAMESPACE, 'default');
   assert.equal(apiEnv.TEMPORAL_TASK_QUEUE, 'dvt-temporal');
@@ -106,6 +107,7 @@ test('buildApiEnv leaves database unset when postgres bootstrap is explicitly sk
   assert.equal(apiEnv.DATABASE_URL, undefined);
   assert.equal(apiEnv.DVT_LOCAL_POSTGRES_WAREHOUSE_URL, undefined);
   assert.equal(apiEnv.DVT_POSTGRES_CREDENTIAL_BINDINGS, undefined);
+  assert.equal(apiEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, undefined);
   assert.equal(apiEnv.TEMPORAL_ADDRESS, undefined);
   assert.equal(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL, undefined);
 });
@@ -236,6 +238,7 @@ test('buildCoordinatedTemporalWorkerEnv preserves an explicit DVT PostgreSQL opt
     {}
   );
 
+  assert.equal(apiEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'false');
   assert.equal(workerEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'false');
 });
 
