@@ -143,6 +143,25 @@ export function readLiveGraphDraft(
   });
 }
 
+export function readLiveRunIds(
+  session: CanvasDraftSessionScope = resolveLiveWorkspaceSession()
+): Cypress.Chainable<string[]> {
+  const query = new URLSearchParams(session);
+
+  return cy
+    .request({
+      method: 'GET',
+      url: `${readRequiredEnv('apiBaseUrl')}/runs?${query.toString()}`,
+      headers: buildAuthorizationHeaders(),
+      auth: buildBearerAuth(),
+    })
+    .then((response) => {
+      expect(response.status).to.equal(200);
+      const items = (response.body as { readonly items?: ReadonlyArray<{ runId?: string }> }).items;
+      return (items ?? []).flatMap(({ runId }) => (runId === undefined ? [] : [runId])).sort();
+    });
+}
+
 export function readLiveRunSnapshot(runId: string): Cypress.Chainable<Cypress.Response<unknown>> {
   const session = resolveLiveWorkspaceSession();
   const query = new URLSearchParams(session);
