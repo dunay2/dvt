@@ -10,7 +10,6 @@ const {
   FeatureMechanizationGitDiffReader,
   normalizeDbFeatureMechanizationManifestRows,
   readFeatureMechanizationManifestsFromDb,
-  shouldRefreshFeatureMechanizationManifestDb,
   validateFeatureImplementationManifests,
   validateFeatureMechanizationManifest,
   validateFeatureMechanizationDocs,
@@ -382,30 +381,15 @@ test('validateFeatureMechanizationManifestEntries validates DB-backed manifests'
   assert.deepEqual(result.features, ['TF-E2-M-B']);
 });
 
-test('readFeatureMechanizationManifestsFromDb imports and queries DB manifests', async () => {
+test('readFeatureMechanizationManifestsFromDb rejects stale authority without importing', async () => {
   const importCalls = [];
-  const queryCalls = [];
   const client = {
-    async query(sql, params) {
-      queryCalls.push({ sql, params });
-      assert.match(sql, /raw_manifest \? 'featureId'/);
-
-      if (params) {
-        assert.match(sql, /planning_query_store\.command_query_rails/);
-        return {
-          rows: [
-            {
-              source_path: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
-              source_content_sha256: 'stale',
-            },
-          ],
-        };
-      }
-
+    async query() {
       return {
         rows: [
           {
             source_path: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
+            source_content_sha256: 'stale',
             raw_manifest: validManifest,
           },
         ],
@@ -413,73 +397,36 @@ test('readFeatureMechanizationManifestsFromDb imports and queries DB manifests',
     },
   };
 
-  const result = await readFeatureMechanizationManifestsFromDb({
-    client,
-    databaseUrl: 'postgresql://example.local/planning',
-    currentSourceHashes: new Map([
-      ['docs/planning/proposals/mandatory/frontend-and-ux/example.md', 'fresh'],
-    ]),
-    deps: {
-      async runPlanningImport(options, deps) {
-        importCalls.push({
-          databaseUrl: options.databaseUrl,
-          ifStale: options.ifStale,
-          silent: options.silent,
-          logger: typeof deps.logger.log,
-        });
-      },
-    },
-  });
-
-  assert.deepEqual(importCalls, [
-    {
+  await assert.rejects(
+    readFeatureMechanizationManifestsFromDb({
+      client,
       databaseUrl: 'postgresql://example.local/planning',
-      ifStale: false,
-      silent: true,
-      logger: 'function',
-    },
-  ]);
-  assert.equal(queryCalls.length, 2);
-  assert.match(queryCalls[1].sql, /planning_query_store\.command_query_rail_manifest_query/);
-  assert.match(queryCalls[1].sql, /planning_query_store\.feature_mechanization_local_rails/);
-  assert.equal(
-    queryCalls[1].sql.match(/rail_id not like 'current#rail-decision#%'/g)?.length,
-    2,
-    'current rail decisions must be excluded from both feature-manifest projections'
+      currentSourceHashes: new Map([
+        ['docs/planning/proposals/mandatory/frontend-and-ux/example.md', 'fresh'],
+      ]),
+      deps: {
+        async runPlanningImport() {
+          importCalls.push('unexpected');
+        },
+      },
+    }),
+    /stale/i
   );
-  assert.match(queryCalls[1].sql, /partition by rail_id/);
-  assert.doesNotMatch(queryCalls[1].sql, /distinct on/i);
-  assert.deepEqual(result, [
-    {
-      sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
-      manifest: validManifest,
-    },
-  ]);
+
+  assert.deepEqual(importCalls, []);
 });
 
-test('readFeatureMechanizationManifestsFromDb skips import when DB manifests are fresh', async () => {
+test('readFeatureMechanizationManifestsFromDb normalizes fresh effective authority in one read', async () => {
   const importCalls = [];
   const queryCalls = [];
   const client = {
-    async query(sql, params) {
-      queryCalls.push({ sql, params });
-
-      if (params) {
-        assert.match(sql, /planning_query_store\.command_query_rails/);
-        return {
-          rows: [
-            {
-              source_path: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
-              source_content_sha256: 'fresh',
-            },
-          ],
-        };
-      }
-
+    async query(sql) {
+      queryCalls.push(sql);
       return {
         rows: [
           {
             source_path: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
+            source_content_sha256: 'fresh',
             raw_manifest: validManifest,
           },
         ],
@@ -500,20 +447,19 @@ test('readFeatureMechanizationManifestsFromDb skips import when DB manifests are
   });
 
   assert.deepEqual(importCalls, []);
-  assert.match(queryCalls[1].sql, /planning_query_store\.command_query_rail_manifest_query/);
-  assert.match(queryCalls[1].sql, /planning_query_store\.feature_mechanization_local_rails/);
-  assert.equal(result.length, 1);
-});
-
-test('shouldRefreshFeatureMechanizationManifestDb refreshes an empty DB projection', async () => {
-  const client = {
-    async query(sql) {
-      assert.match(sql, /count\(\*\)::int as manifest_count/);
-      return { rows: [{ manifest_count: 0 }] };
+  assert.equal(queryCalls.length, 1);
+  assert.match(queryCalls[0], /planning_query_store\.command_query_rail_manifest_query/);
+  assert.match(queryCalls[0], /planning_query_store\.feature_mechanization_local_rails/);
+  assert.equal(queryCalls[0].match(/rail_id not like 'current#rail-decision#%'/g)?.length, 2);
+  assert.match(queryCalls[0], /partition by rail_id/);
+  assert.match(queryCalls[0], /order by projection_priority, imported_at desc/);
+  assert.doesNotMatch(queryCalls[0], /distinct on/i);
+  assert.deepEqual(result, [
+    {
+      sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
+      manifest: validManifest,
     },
-  };
-
-  assert.equal(await shouldRefreshFeatureMechanizationManifestDb(client, new Map()), true);
+  ]);
 });
 
 test('validateFeatureImplementationManifests rejects changed files outside allowed implementation surfaces', () => {
