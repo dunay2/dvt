@@ -55,16 +55,17 @@ export function buildCanvasTransformOutputSampleAuthority(): CanvasTransformOutp
       },
     },
   };
+  const planRef = PlanRefSchema.parse({
+    schemaVersion: 'plan-ref.v1',
+    planId: 'plan-1',
+    planVersion: '1.0',
+    uri: 'artifact://plans/plan-1/1.0',
+    sha256: 'a'.repeat(64),
+  });
   const currentPlan: PlanViewModel = {
     planId: 'plan-1',
     planVersion: '1.0',
-    planRef: PlanRefSchema.parse({
-      schemaVersion: 'plan-ref.v1',
-      planId: 'plan-1',
-      planVersion: '1.0',
-      uri: 'artifact://plans/plan-1/1.0',
-      sha256: 'a'.repeat(64),
-    }),
+    planRef,
     generatedAt: '2026-09-15T10:00:00.000Z',
     adapter: 'postgres',
     target: 'postgresql-local',
@@ -77,7 +78,7 @@ export function buildCanvasTransformOutputSampleAuthority(): CanvasTransformOutp
     plan: {
       planId: currentPlan.planId,
       planVersion: currentPlan.planVersion,
-      sha256: currentPlan.planRef.sha256,
+      sha256: planRef.sha256,
     },
     workloadSha256: 'b'.repeat(64),
     semanticPlanSha256: authoring.sidecar.semanticPlanSha256,
