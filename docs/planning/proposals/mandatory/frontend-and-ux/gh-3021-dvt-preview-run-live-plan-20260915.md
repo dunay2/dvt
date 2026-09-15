@@ -19,28 +19,27 @@ task_id: GH-3021
 
 ## Current state
 
-`main` now executes a protected terminal Transform through PostgreSQL and
-projects its validated `dvt-postgres-publication` evidence through
-`GetRunSnapshot`. The Runs result tab restores the immutable Preview SHA and
-publication token after a browser reload. The remaining question for this cut
-is whether editing the Canvas after Preview can silently start the obsolete
-plan.
+`main` now executes a protected single-source terminal Transform through
+PostgreSQL, restores its evidence after reload, and rejects a stale Preview
+after the Canvas changes. The existing three-source JOIN browser fixture stops
+at a Preview-only V1 workload and therefore does not prove the required T05
+product journey.
 
 ```mermaid
 flowchart LR
-  A[Persisted Canvas revision A] --> B[PreviewPlan A]
-  B --> C[Persisted PlanRef A]
-  C --> D[User edits Canvas to revision B]
-  D --> E{Can StartRun still use A?}
+  A[Three persisted Sources] --> B[Terminal JOIN Transform]
+  B --> C[Preview-only workload V1]
+  C --> D[Missing capability]
+  D --> E[Run disabled]
 ```
 
 ## Product cut
 
-Extend the existing live acceptance flow with one second scenario: Preview a
-persisted terminal Transform, close the Preview, edit that Transform through
-its real properties command, and observe the execution controls. The active
-draft signature must no longer match the signature captured by Preview. The UI
-must require a new Preview and must not call `StartRun`.
+Promote that same fixture to the already governed V2 Run contract by assigning
+one explicit PostgreSQL table target to the terminal Transform. Seed the three
+physical source relations in the local product stack, execute the one admitted
+workload, and compare the published schema and rows through the existing
+bounded warehouse-sample query with an independent expected oracle.
 
 ```mermaid
 sequenceDiagram
@@ -48,12 +47,14 @@ sequenceDiagram
   participant C as Canvas
   participant P as PreviewPlan
   participant R as StartRun
-  U->>C: Select terminal Transform
-  C->>P: Preview persisted revision A
-  P-->>C: Persisted PlanRef A
-  U->>C: Edit Transform to revision B
-  C-->>U: Preview stale; Run disabled
-  C-xR: No command sent
+  participant PG as PostgreSQL
+  U->>C: Import and select three-source JOIN
+  C->>P: Preview exact persisted closure
+  P-->>C: One admitted V2 workload and PlanRef
+  U->>R: Start exact PlanRef
+  R->>PG: Execute JOIN and publish stable table
+  PG-->>C: Evidence plus bounded current sample
+  C-->>U: Expected columns and rows
 ```
 
 ## Existing rails and boundaries
@@ -65,14 +66,15 @@ sequenceDiagram
 | Observe completion and evidence    | `GetRunSnapshot`, `GetRunEvents` | Existing Runs read models          |
 
 This cut does not add a command, query, planner, result store, or SQL-first
-fallback. It does not restore `/runs/:runId/materialization-rows`; historical row
-reading remains owned by #2582 and requires publication-token consistency.
+fallback. The oracle reads only the current target through
+`PreviewWarehouseSourceObjectRows`; it does not restore
+`/runs/:runId/materialization-rows` or claim historical rows. Historical row
+identity remains owned by #2582.
 
 ## Verification
 
-The existing live Cypress spec remains the acceptance boundary. Its execution
-scenario proves exact PlanRef execution, PostgreSQL publication and evidence
-reload. The stale-Preview scenario uses the same protected draft and real
-Preview service, edits through the visible Canvas properties surface, and
-observes that Run becomes unavailable without any `/runs/start` request.
-Existing unit tests continue to cover the pure signature and run-start guards.
+The existing three-source live Cypress spec remains the acceptance boundary.
+It must observe one V2 workload, exact PlanRef execution, completed PostgreSQL
+publication evidence, and the expected five-column three-row JOIN result from
+the scoped warehouse query. No Preview, draft, Run, event, evidence, or sample
+response is stubbed.
