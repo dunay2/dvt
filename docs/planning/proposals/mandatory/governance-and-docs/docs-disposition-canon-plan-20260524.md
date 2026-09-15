@@ -148,6 +148,7 @@ allowedImplementationSurfaces:
   - docs/planning/reviews/sprints/**
   - docs/planning/status/**
   - tools/ci/docs-disposition-canon.test.mjs
+  - tools/docs/validate-planner-stage-1-1-manifest.ts
   - tools/planning-db/state/db-governance-surfaces.json
 forbiddenImplementationSurfaces:
   - apps/**

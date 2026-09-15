@@ -21,7 +21,7 @@ what the current repository can realistically absorb.
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [ADR-0009: Outbox Publication Ordering Guarantees](../../adr/ADR-0009_Outbox_Ordering.md)
 - [ADR-0033 - Outbox Worker Sharding And Fencing Model](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
-- Reference material only: [archived gap5 review packs (historical Git snapshot)](https://github.com/dunay2/dvt/tree/65f1fe8291fbcc17439f9d13a76174f104ad4507/docs/archive/planning/gaps/gap5)
+- Reference material only: [archived gap5 review packs](../planning/gaps/gap5)
 
 ## Traceability tuple
 
@@ -76,7 +76,7 @@ For the current repository state, `G5` is **not**:
 - a CDC/polling coexistence framework,
 - or a drop-in import of the `gap5` repo-ready package.
 
-The archived material in [`docs/archive/planning/gaps/gap5/` (historical Git snapshot)](https://github.com/dunay2/dvt/tree/65f1fe8291fbcc17439f9d13a76174f104ad4507/docs/archive/planning/gaps/gap5)
+The archived material in [`docs/archive/planning/gaps/gap5/`](../planning/gaps/gap5)
 remains useful as reference, but it is **reference design**, not an
 implementation source of truth.
 
