@@ -53,6 +53,12 @@ export function normalizeProtectedRuntimeRejection(error: unknown): Error | null
   const rejectionReason =
     readString(detailsRecord?.rejectionReason) ?? readString(detailsRecord?.message);
 
+  if (reason === 'capacity_signal_unavailable') {
+    return new Error(
+      'Execution runtime readiness is unavailable. Canvas authoring remains available; try again later.'
+    );
+  }
+
   if (reason === 'plan_rejected') {
     if (cause === 'dependency_gap') {
       return new Error(DEPENDENCY_GAP_MESSAGE);

@@ -31,4 +31,25 @@ describe('normalizeProtectedRuntimeRejection', () => {
     expect(normalized?.message).toContain(expectedMessagePart);
     expect(normalized?.message).not.toMatch(/\bre-run Plan\b/i);
   });
+
+  it('keeps an unavailable execution-capacity signal distinct from generic HTTP failure', () => {
+    const normalized = normalizeProtectedRuntimeRejection(
+      new ApiError({
+        message: 'Request to /runs/start failed (503)',
+        endpoint: '/runs/start',
+        statusCode: 503,
+        category: 'server',
+        responseBody: {
+          error: {
+            type: 'service_unavailable',
+            reason: 'capacity_signal_unavailable',
+          },
+        },
+      })
+    );
+
+    expect(normalized?.message).toBe(
+      'Execution runtime readiness is unavailable. Canvas authoring remains available; try again later.'
+    );
+  });
 });
