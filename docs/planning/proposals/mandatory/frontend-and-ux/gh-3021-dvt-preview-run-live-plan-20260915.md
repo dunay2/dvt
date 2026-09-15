@@ -21,45 +21,48 @@ task_id: GH-3021
 
 `main` now proves T05 for both the single-source terminal Transform and the
 three-source JOIN, restores PostgreSQL evidence after reload, rejects a stale
-Preview, visibly rejects unsupported `view` disposition before Run, and rejects
-a cross-project or corrupt-PlanRef `StartRun` without creating a Run or
-disclosing the PlanRef. The remaining T08 authorization boundary has transport
-coverage but lacks proof against the real principal-grant adapter and protected
-runtime.
+Preview, visibly rejects unsupported `view` disposition before Run, and proves
+all four T08 boundaries against the protected runtime without creating a Run or
+disclosing the PlanRef. The next uncovered product boundary is runtime absence:
+the API preserves the execution-capacity reason, but Web currently reduces it
+to a generic HTTP 503 message.
 
 ```mermaid
 flowchart LR
-  A[Preview authorized Canvas revision] --> B[Exact persisted PlanRef]
-  B --> C[Same workspace; restricted principal]
-  C --> D[StartRun action boundary unproven]
+  A[Authorized Canvas authoring] --> B[Preview exact persisted revision]
+  B --> C[StartRun probes execution capacity]
+  C --> D[Worker runtime absent]
+  D --> E[Precise unavailable reason; no Run]
+  D --> F[Canvas authoring remains available]
 ```
 
 ## Product cut
 
-Complete the next T08 authorization boundary with the existing rails: obtain an
-exact PlanRef through native Canvas Preview, then submit it from an authenticated
-principal in the same tenant, project, and environment whose persisted grant
-lacks only `run:start`. `StartRun` must reject with the precise action-denied
-reason before the use case, disclose no PlanRef identity, and leave the
-authorized Run list unchanged. The test authority may issue the restricted
-principal and seed its real grant; it must not stub authentication,
-authorization, Preview, Run, or list responses.
+Prove runtime absence with the existing rails: obtain an exact PlanRef through
+native Canvas Preview while the Temporal worker is intentionally not started,
+then submit that same PlanRef through `StartRun`. The execution-capacity port
+must reject with its precise unavailable reason and `Retry-After`, Web must
+surface that reason, the authorized Run list must remain unchanged, and Canvas
+authoring must remain available. The proof stack may omit its real worker
+process; it must not stub health, Preview, StartRun, execution capacity, or Run
+list responses.
 
 ```mermaid
 sequenceDiagram
   participant C as Canvas
   participant P as PreviewPlan
   participant R as StartRun
-  participant A as Access decision
+  participant E as Execution capacity
   participant S as Run read model
   C->>P: Preview authorized Canvas revision
   P-->>C: Exact PlanRef
   C->>S: Read authorized Run ids
-  C->>R: Exact PlanRef; restricted same-scope principal
-  R->>A: Authorize run:start
-  A-->>R: ACTION_NOT_GRANTED
-  R-->>C: Sanitized 403 action_not_granted
+  C->>R: Exact PlanRef
+  R->>E: Probe configured worker readyz
+  E-->>R: CAPACITY_SIGNAL_UNAVAILABLE
+  R-->>C: 503 capacity_signal_unavailable + Retry-After
   C->>S: Authorized Run ids unchanged
+  C->>C: Authoring remains available
 ```
 
 ## Existing rails and boundaries
@@ -69,6 +72,7 @@ sequenceDiagram
 | Preview persisted Canvas semantics | `PreviewPlan`                    | Protected `/plans/preview` command |
 | Execute the admitted plan          | `StartRun`                       | Protected `/runs/start` command    |
 | Observe completion and evidence    | `GetRunSnapshot`, `GetRunEvents` | Existing Runs read models          |
+| Admit execution capacity           | `StartRun` admission             | Existing worker `readyz` port      |
 
 This cut does not add a command, query, planner, result store, or SQL-first
 fallback. The oracle reads only the current target through
@@ -78,10 +82,10 @@ identity remains owned by #2582.
 
 ## Verification
 
-The live StartRun-boundary Cypress spec receives the PlanRef from real Preview,
-compares authorized Run ids before and after the restricted principal's command,
-and proves a sanitized `403 action_not_granted` without returning PlanRef
-contents. The coordinated proof stack owns issuance of the second signed token
-and its persisted grant. Production behavior changes only if the proof exposes
-a real defect. No Preview, Run, authorization, validation, or list response is
-stubbed.
+The dedicated live runtime-unavailable Cypress spec receives the PlanRef from
+real Preview, compares authorized Run ids before and after the normal UI command,
+and proves `503 capacity_signal_unavailable` with `Retry-After` while Canvas
+authoring remains enabled. The coordinated proof stack starts the real API,
+database, authentication and Web processes, configures the real worker-readyz
+port, and deliberately omits only the worker process. No Preview, StartRun,
+capacity, validation, authorization, or list response is stubbed.
