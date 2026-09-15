@@ -380,6 +380,7 @@ function buildBaseEnv(): {
   DVT_DBT_BUNDLE_STORE_BACKEND: 'file' | 's3' | undefined;
   DVT_DBT_BUNDLE_S3_BUCKET: string | undefined;
   DVT_DBT_BUNDLE_FILE_ROOT: string | undefined;
+  DVT_CAS_FILE_ROOT: string | undefined;
   DVT_WORKSPACE_FILES_ROOT: string | undefined;
 } {
   return {
@@ -421,6 +422,7 @@ function buildBaseEnv(): {
     DVT_DBT_BUNDLE_STORE_BACKEND: undefined,
     DVT_DBT_BUNDLE_S3_BUCKET: undefined,
     DVT_DBT_BUNDLE_FILE_ROOT: undefined,
+    DVT_CAS_FILE_ROOT: undefined,
     DVT_WORKSPACE_FILES_ROOT: undefined,
   };
 }

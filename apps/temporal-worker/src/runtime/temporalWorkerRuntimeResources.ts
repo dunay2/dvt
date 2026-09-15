@@ -59,11 +59,7 @@ export function createTemporalWorkerRuntimeResources(
     options.runExecutionContextReaderFactory?.(env) ??
     new ArtifactBackedRunExecutionContextReader(runExecutionContextReaderOptions);
   const dbtProfile = createTemporalWorkerDbtProfile(env, options, runExecutionContextReader);
-  const dvtPostgresProfile = createTemporalWorkerDvtPostgresProfile(
-    env,
-    runExecutionContextReader,
-    runExecutionContextReaderOptions
-  );
+  const dvtPostgresProfile = createTemporalWorkerDvtPostgresProfile(env, runExecutionContextReader);
   const objectFilePostgresProfile = createTemporalWorkerObjectFilePostgresProfile(env, options);
   const httpJsonProfile = createTemporalWorkerHttpJsonProfile(env, options);
   const pluginProfiles = [

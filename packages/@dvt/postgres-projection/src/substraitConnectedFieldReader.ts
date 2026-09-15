@@ -182,7 +182,7 @@ export function inspectDvtConnectedFieldProjection(
         : { calculation }),
       dataType:
         calculation == null
-          ? 'unknown'
+          ? inspectSourceType(sourceTypes[source!.outputOrdinal]!)!
           : calculation.kind === 'string-literal'
             ? 'string'
             : calculation.kind === 'timestamp-literal'
