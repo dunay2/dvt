@@ -9,138 +9,72 @@ permissions:
   contents: read
 
 jobs:
-  prepare:
-    name: Prepare reviewed planning-history removal
+  transfer:
+    name: Transfer reviewed content-addressed retirement objects
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    env:
-      GIT_BASE: bec9a00d48ce1f02ec26199f670fcf1757680ad7
-      PLANNING_DB_INTEGRITY_SCOPE: bootstrap
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: write
     steps:
-      - name: Checkout confirmed merged main without credentials
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: bec9a00d48ce1f02ec26199f670fcf1757680ad7
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Apply only the reviewed hash-bound operations
+      - name: Verify artifact and transfer objects without updating any branch
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           python3 - <<'PY'
-          import base64, hashlib, json, lzma, os, pathlib, subprocess, urllib.request
-          root = pathlib.Path.cwd()
-          blob = 'd91856ca57040dbbb2472ac942144b7a7b3e7aef'
-          req = urllib.request.Request('https://api.github.com/repos/dunay2/dvt/git/blobs/' + blob, headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
-          with urllib.request.urlopen(req, timeout=30) as response:
-              data = base64.b64decode(json.load(response)['content'])
+          import base64, hashlib, io, json, lzma, os, urllib.error, urllib.request, zipfile
+          api = 'https://api.github.com/repos/dunay2/dvt'
+          base = 'bec9a00d48ce1f02ec26199f670fcf1757680ad7'
+          expected_tree = 'bf5b51a4219ab7fe74ef6de0a33734f5236e8c6d'
+          headers = {'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json'}
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, response_headers, newurl):
+                  return None
+          opener = urllib.request.build_opener(NoRedirect)
+          def request_json(path, body=None):
+              data = json.dumps(body).encode() if body is not None else None
+              request = urllib.request.Request(api + path, data=data, headers=headers, method='POST' if body is not None else 'GET')
+              with opener.open(request, timeout=30) as response:
+                  return json.load(response)
           def git_hash(data):
               return hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest()
-          assert git_hash(data) == blob
-          operations = json.loads(lzma.decompress(data))
-          assert operations['base'] == os.environ['GIT_BASE']
-          assert subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip() == operations['base']
-          deleted = operations['deleted']
-          assert len(deleted) == len(set(deleted)) == 112
-          assert len(operations['updates']) == 41
-          def checked(name):
-              target = (root / name).resolve()
-              assert target.is_relative_to(root) and '.git' not in pathlib.Path(name).parts
-              return target
-          for name in deleted:
-              target = checked(name)
-              assert target.is_file() and target.suffix == '.md'
-          for item in operations['updates']:
-              before = checked(item['path']).read_bytes()
-              assert git_hash(before) == item['before'], item['path']
-              lines = before.decode().splitlines(keepends=True)
-              for start, end, replacement in reversed(item['edits']):
-                  lines[start:end] = [replacement]
-              after = ''.join(lines).encode()
-              assert git_hash(after) == item['after'], item['target']
-              checked(item['target']).write_bytes(after)
-              if item['target'] != item['path']:
-                  checked(item['path']).unlink()
-          for name in deleted:
-              checked(name).unlink()
-          archive = root / 'docs/planning/archive'
-          for directory in sorted(archive.rglob('*'), reverse=True):
-              assert directory.is_dir(), directory
-              directory.rmdir()
-          archive.rmdir()
-          subprocess.run(['git', 'add', '-A'], check=True)
-          print('Applied 112 reviewed deletions and 41 exact content edits, including one current-risk rename.')
+          source_blob = 'd91856ca57040dbbb2472ac942144b7a7b3e7aef'
+          source_bytes = base64.b64decode(request_json('/git/blobs/' + source_blob)['content'])
+          assert git_hash(source_bytes) == source_blob
+          operations = json.loads(lzma.decompress(source_bytes))
+          assert operations['base'] == base
+          request = urllib.request.Request(api + '/actions/artifacts/10409413100/zip', headers=headers)
+          try:
+              with opener.open(request, timeout=30) as response:
+                  raw = response.read()
+          except urllib.error.HTTPError as error:
+              if error.code != 302:
+                  raise
+              url = error.headers['Location']
+              assert url.startswith('https://')
+              # The signed storage request receives no GitHub Authorization header.
+              with urllib.request.urlopen(url, timeout=30) as response:
+                  raw = response.read()
+          assert hashlib.sha256(raw).hexdigest() == '1030fd05f4c9751108b5680a4f503188f7aae71197ad8c760fd6860c10b2e43f'
+          with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+              payload = json.loads(archive.read('files.json'))
+          assert payload['base'] == base
+          files = payload['files']
+          expected = set(operations['deleted']) | {name for item in operations['updates'] for name in (item['path'], item['target'])} | {'docs/.manifest.json', 'docs/risk-register/quality/index.md'}
+          assert len(files) == len(expected) == 156
+          assert {item['path'] for item in files} == expected
+          assert sum(item['content'] is None for item in files) == 113
+          for item in files:
+              if item['content'] is not None:
+                  assert git_hash(item['content'].encode()) == item['sha'], item['path']
+          entries = []
+          for item in files:
+              if item['content'] is not None:
+                  result = request_json('/git/blobs', {'content': item['content'], 'encoding': 'utf-8'})
+                  assert result['sha'] == item['sha'], item['path']
+              entries.append({'path': item['path'], 'mode': '100644', 'type': 'blob', 'sha': item['sha']})
+          result = request_json('/git/trees', {'base_tree': '16363de699b4c1895ac709108400c20c11c58cb6', 'tree': entries})
+          assert result['sha'] == expected_tree, result['sha']
+          print(json.dumps({'base': base, 'tree': result['sha'], 'writtenBlobs': 43, 'deletedPaths': 113, 'note': '112 retired documents plus the old spelling of one renamed current risk. No commit or ref written.'}))
           PY
-      - name: Setup existing toolchain
-        uses: ./.github/actions/setup-node-pnpm
-        with:
-          node-version: 22.x
-      - name: Format only edited files with the canonical formatter
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import subprocess
-          files = subprocess.check_output(['git', 'diff', '--cached', '--name-only', '--diff-filter=ACMR', '-z']).decode().split('\0')
-          subprocess.run(['pnpm', 'exec', 'prettier', '--write', *[name for name in files if name]], check=True)
-          PY
-      - name: Build existing crypto dependency and run affected suites
-        run: |
-          pnpm --filter @dvt/crypto build
-          node --test scripts/documentation-publication.test.cjs scripts/planning-db-surface-inventory-check.test.cjs tools/ci/docs-disposition-canon.test.mjs
-      - name: Prepare the existing disposable CI database
-        uses: ./.github/actions/prepare-planning-db
-      - name: Generate indexes and governance from the current worktree
-        run: |
-          pnpm docs:sync
-          pnpm governance:refresh
-      - name: Evaluate documentation and edited-link diagnostics
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import json, os, pathlib, subprocess
-          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'planning-retirement'
-          output.mkdir(exist_ok=True)
-          paths = subprocess.check_output(['git', 'diff', '--name-only', '--diff-filter=ACMR', '-z', 'HEAD']).decode().split('\0')
-          environment = dict(os.environ, DOCS_GOV_CHANGED_FILES='\n'.join(name for name in paths if name))
-          commands = [['pnpm', 'ci:docs'], ['pnpm', 'docs:gov:filenames:changed'], ['pnpm', 'docs:gov:frontmatter:changed'], ['pnpm', 'docs:gov:links:changed']]
-          results = []
-          for index, command in enumerate(commands):
-              result = subprocess.run(command, env=environment, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=240)
-              (output / f'{index}.log').write_text(result.stdout)
-              results.append({'command': command, 'exitCode': result.returncode, 'log': f'{index}.log'})
-              print('CHECK', result.returncode, ' '.join(command), flush=True)
-              if result.returncode:
-                  print(result.stdout[-9000:], flush=True)
-          (output / 'checks.json').write_text(json.dumps(results, indent=2))
-          raise SystemExit(1 if any(row['exitCode'] for row in results) else 0)
-          PY
-      - name: Capture actual normalized changes even when diagnostics fail
-        if: always()
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import hashlib, json, os, pathlib, subprocess
-          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'planning-retirement'
-          output.mkdir(exist_ok=True)
-          names = subprocess.check_output(['git', 'diff', '--no-renames', '--name-only', '-z', 'HEAD']).decode().split('\0')
-          files = []
-          for name in names:
-              if not name:
-                  continue
-              data = pathlib.Path(name).read_bytes() if pathlib.Path(name).exists() else None
-              sha = hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest() if data is not None else None
-              files.append({'path': name, 'content': data.decode() if data is not None else None, 'sha': sha})
-          (output / 'files.json').write_text(json.dumps({'base': os.environ['GIT_BASE'], 'files': files}, indent=2))
-          (output / 'changes.patch').write_bytes(subprocess.check_output(['git', 'diff', '--binary', 'HEAD']))
-          (output / 'stat.txt').write_bytes(subprocess.check_output(['git', 'diff', '--stat', 'HEAD']))
-          print((output / 'stat.txt').read_text()[-5000:])
-          PY
-      - name: Upload short-lived changes and diagnostics
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: planning-retirement-bec9a00
-          path: ${{ runner.temp }}/planning-retirement/
-          retention-days: 1
-          if-no-files-found: error
