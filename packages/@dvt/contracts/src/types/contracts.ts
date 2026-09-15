@@ -124,7 +124,45 @@ export interface ArtifactAcquisitionEvidence {
   durationMs: number;
 }
 
-export type StepResultEvidence = MaterializationEvidence | ArtifactAcquisitionEvidence;
+export interface DvtPostgresPublicationEvidence {
+  evidenceType: 'dvt-postgres-publication';
+  environmentId: NonBlankString;
+  plan: {
+    planId: NonBlankString;
+    planVersion: NonBlankString;
+    sha256: Sha256HexString;
+  };
+  workloadSha256: Sha256HexString;
+  semanticPlanSha256: Sha256HexString;
+  projection: {
+    profileId: NonBlankString;
+    toolIdentity: NonBlankString;
+    schemaDigestSha256: Sha256HexString;
+    sqlArtifact: {
+      storageUri: NonBlankString;
+      sha256: Sha256HexString;
+      sizeBytes: number;
+    };
+  };
+  target: {
+    connectionRef: ConnectionRef & { readonly provider: 'postgres' };
+    schema: NonBlankString;
+    relation: NonBlankString;
+  };
+  publication: {
+    token: Sha256HexString;
+    predecessorToken: Sha256HexString | null;
+    outcome: 'created' | 'replaced' | 'verified-existing';
+  };
+  rowsWritten: number;
+  providerQueryId?: NonBlankString | undefined;
+  startedAt: IsoUtcString;
+  completedAt: IsoUtcString;
+  durationMs: number;
+}
+
+export type StepResultEvidence =
+  MaterializationEvidence | ArtifactAcquisitionEvidence | DvtPostgresPublicationEvidence;
 
 export interface TransformationFlowRuntimeBinding {
   previewProfile: NonBlankString;
