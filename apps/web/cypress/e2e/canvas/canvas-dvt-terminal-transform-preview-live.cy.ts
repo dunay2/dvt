@@ -15,6 +15,7 @@ import {
   hasLiveProtectedRuntimeEnv,
   readLiveRunEvents,
   readLiveRunSnapshot,
+  resolveLiveWorkspaceSession,
   seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
@@ -275,6 +276,82 @@ describe('DVT terminal Transform Preview and Run live', () => {
     cy.get('[data-slot="shell-run-command"]').should('be.disabled');
     cy.then(() => {
       expect(startRunRequests).to.equal(0);
+    });
+  });
+
+  it('rejects a cross-scope StartRun without creating a Run', () => {
+    type PlanRef = {
+      readonly uri: string;
+      readonly sha256: string;
+      readonly schemaVersion: string;
+      readonly planId: string;
+      readonly planVersion: string;
+    };
+    type RunList = {
+      readonly items?: ReadonlyArray<{ readonly runId?: string }>;
+    };
+    const session = resolveLiveWorkspaceSession();
+    const apiBaseUrl = String(Cypress.env('apiBaseUrl'));
+    const bearer = String(Cypress.env('apiBearerToken'));
+    const headers = { Authorization: `Bearer ${bearer}` };
+    const runListUrl = `${apiBaseUrl}/runs?${new URLSearchParams(session).toString()}`;
+    let authorizedRunIds: string[] = [];
+    let planRef: PlanRef | undefined;
+
+    seedLiveSelectedClosureDraft({
+      authoringGenerated: true,
+      terminalTransformPreview: true,
+      title: 'DVT cross-scope StartRun guard',
+    });
+    cy.intercept('POST', '**/plans/preview').as('crossScopePreview');
+    visitWithLiveWorkspaceSession('/canvas');
+    getVisibleCanvasNode('dvt-transform-1').should('be.visible');
+    selectCanvasClosure(['dvt-transform-1']);
+    clickPreviewExecutionPlanFromOperationalDrawer();
+
+    cy.wait('@crossScopePreview', { timeout: 30_000 }).then((interception) => {
+      expect(interception.response?.statusCode).to.equal(200);
+      planRef = (interception.response?.body as { readonly planRef?: PlanRef }).planRef;
+      expect(planRef?.sha256).to.match(/^[a-f0-9]{64}$/);
+      expect(planRef?.planId).to.be.a('string').and.not.to.equal('');
+    });
+    cy.request({ method: 'GET', url: runListUrl, headers, auth: { bearer } }).then((response) => {
+      expect(response.status).to.equal(200);
+      authorizedRunIds = ((response.body as RunList).items ?? [])
+        .flatMap(({ runId }) => (runId === undefined ? [] : [runId]))
+        .sort();
+    });
+    cy.then(() => {
+      expect(planRef).not.to.equal(undefined);
+      return cy.request({
+        method: 'POST',
+        url: `${apiBaseUrl}/runs/start`,
+        headers,
+        auth: { bearer },
+        failOnStatusCode: false,
+        body: {
+          tenantId: session.tenantId,
+          projectId: `${session.projectId}-other`,
+          environmentId: session.environmentId,
+          targetAdapter: 'temporal',
+          selection: { mode: 'explicit', nodeIds: ['dvt-transform-1'] },
+          planRef,
+        },
+      });
+    }).then((response) => {
+      expect(response.status).to.equal(403);
+      expect(response.body).to.deep.equal({
+        error: { type: 'forbidden', reason: 'project_not_granted' },
+      });
+      expect(JSON.stringify(response.body)).not.to.contain(planRef!.sha256);
+      expect(JSON.stringify(response.body)).not.to.contain(planRef!.planId);
+    });
+    cy.request({ method: 'GET', url: runListUrl, headers, auth: { bearer } }).then((response) => {
+      expect(response.status).to.equal(200);
+      const currentRunIds = ((response.body as RunList).items ?? [])
+        .flatMap(({ runId }) => (runId === undefined ? [] : [runId]))
+        .sort();
+      expect(currentRunIds).to.deep.equal(authorizedRunIds);
     });
   });
 });
