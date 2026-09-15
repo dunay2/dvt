@@ -9,36 +9,138 @@ permissions:
   contents: read
 
 jobs:
-  verify:
-    name: Verify exact cleanup integration candidate
+  prepare:
+    name: Prepare reviewed planning-history removal
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
-      GIT_BASE: 88b7922f7246386959700da5866e330076f8dd97
-      GIT_HEAD: 3a94a3d34ce7acb8cf5f5e4b78f6e609886771dc
+      GIT_BASE: bec9a00d48ce1f02ec26199f670fcf1757680ad7
       PLANNING_DB_INTEGRITY_SCOPE: bootstrap
     steps:
-      - name: Checkout exact candidate without credentials
+      - name: Checkout confirmed merged main without credentials
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 3a94a3d34ce7acb8cf5f5e4b78f6e609886771dc
+          ref: bec9a00d48ce1f02ec26199f670fcf1757680ad7
           fetch-depth: 0
           persist-credentials: false
+      - name: Apply only the reviewed hash-bound operations
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma, os, pathlib, subprocess, urllib.request
+          root = pathlib.Path.cwd()
+          blob = 'd91856ca57040dbbb2472ac942144b7a7b3e7aef'
+          req = urllib.request.Request('https://api.github.com/repos/dunay2/dvt/git/blobs/' + blob, headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
+          with urllib.request.urlopen(req, timeout=30) as response:
+              data = base64.b64decode(json.load(response)['content'])
+          def git_hash(data):
+              return hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest()
+          assert git_hash(data) == blob
+          operations = json.loads(lzma.decompress(data))
+          assert operations['base'] == os.environ['GIT_BASE']
+          assert subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip() == operations['base']
+          deleted = operations['deleted']
+          assert len(deleted) == len(set(deleted)) == 112
+          assert len(operations['updates']) == 41
+          def checked(name):
+              target = (root / name).resolve()
+              assert target.is_relative_to(root) and '.git' not in pathlib.Path(name).parts
+              return target
+          for name in deleted:
+              target = checked(name)
+              assert target.is_file() and target.suffix == '.md'
+          for item in operations['updates']:
+              before = checked(item['path']).read_bytes()
+              assert git_hash(before) == item['before'], item['path']
+              lines = before.decode().splitlines(keepends=True)
+              for start, end, replacement in reversed(item['edits']):
+                  lines[start:end] = [replacement]
+              after = ''.join(lines).encode()
+              assert git_hash(after) == item['after'], item['target']
+              checked(item['target']).write_bytes(after)
+              if item['target'] != item['path']:
+                  checked(item['path']).unlink()
+          for name in deleted:
+              checked(name).unlink()
+          archive = root / 'docs/planning/archive'
+          for directory in sorted(archive.rglob('*'), reverse=True):
+              assert directory.is_dir(), directory
+              directory.rmdir()
+          archive.rmdir()
+          subprocess.run(['git', 'add', '-A'], check=True)
+          print('Applied 112 reviewed deletions and 41 exact content edits, including one current-risk rename.')
+          PY
       - name: Setup existing toolchain
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
-      - name: Prepare existing disposable CI database
-        uses: ./.github/actions/prepare-planning-db
-      - name: Check generated documentation has no drift
+      - name: Format only edited files with the canonical formatter
+        shell: bash
         run: |
-          pnpm docs:sync:check
-          pnpm docs:gov:manifest:check
-      - name: Validate full documentation contract in CI scope
-        run: pnpm ci:docs
-      - name: Run canonical pre-push validation
-        run: pnpm verify:prepush
-      - name: Rerun the affected regression suites
-        run: node --test scripts/planning-db-surface-inventory-check.test.cjs tools/ci/docs-disposition-canon.test.mjs
-      - name: Reject any uncommitted tracked change
-        run: git diff --exit-code HEAD
+          python3 - <<'PY'
+          import subprocess
+          files = subprocess.check_output(['git', 'diff', '--cached', '--name-only', '--diff-filter=ACMR', '-z']).decode().split('\0')
+          subprocess.run(['pnpm', 'exec', 'prettier', '--write', *[name for name in files if name]], check=True)
+          PY
+      - name: Build existing crypto dependency and run affected suites
+        run: |
+          pnpm --filter @dvt/crypto build
+          node --test scripts/documentation-publication.test.cjs scripts/planning-db-surface-inventory-check.test.cjs tools/ci/docs-disposition-canon.test.mjs
+      - name: Prepare the existing disposable CI database
+        uses: ./.github/actions/prepare-planning-db
+      - name: Generate indexes and governance from the current worktree
+        run: |
+          pnpm docs:sync
+          pnpm governance:refresh
+      - name: Evaluate documentation and edited-link diagnostics
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'planning-retirement'
+          output.mkdir(exist_ok=True)
+          paths = subprocess.check_output(['git', 'diff', '--name-only', '--diff-filter=ACMR', '-z', 'HEAD']).decode().split('\0')
+          environment = dict(os.environ, DOCS_GOV_CHANGED_FILES='\n'.join(name for name in paths if name))
+          commands = [['pnpm', 'ci:docs'], ['pnpm', 'docs:gov:filenames:changed'], ['pnpm', 'docs:gov:frontmatter:changed'], ['pnpm', 'docs:gov:links:changed']]
+          results = []
+          for index, command in enumerate(commands):
+              result = subprocess.run(command, env=environment, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=240)
+              (output / f'{index}.log').write_text(result.stdout)
+              results.append({'command': command, 'exitCode': result.returncode, 'log': f'{index}.log'})
+              print('CHECK', result.returncode, ' '.join(command), flush=True)
+              if result.returncode:
+                  print(result.stdout[-9000:], flush=True)
+          (output / 'checks.json').write_text(json.dumps(results, indent=2))
+          raise SystemExit(1 if any(row['exitCode'] for row in results) else 0)
+          PY
+      - name: Capture actual normalized changes even when diagnostics fail
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'planning-retirement'
+          output.mkdir(exist_ok=True)
+          names = subprocess.check_output(['git', 'diff', '--no-renames', '--name-only', '-z', 'HEAD']).decode().split('\0')
+          files = []
+          for name in names:
+              if not name:
+                  continue
+              data = pathlib.Path(name).read_bytes() if pathlib.Path(name).exists() else None
+              sha = hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest() if data is not None else None
+              files.append({'path': name, 'content': data.decode() if data is not None else None, 'sha': sha})
+          (output / 'files.json').write_text(json.dumps({'base': os.environ['GIT_BASE'], 'files': files}, indent=2))
+          (output / 'changes.patch').write_bytes(subprocess.check_output(['git', 'diff', '--binary', 'HEAD']))
+          (output / 'stat.txt').write_bytes(subprocess.check_output(['git', 'diff', '--stat', 'HEAD']))
+          print((output / 'stat.txt').read_text()[-5000:])
+          PY
+      - name: Upload short-lived changes and diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: planning-retirement-bec9a00
+          path: ${{ runner.temp }}/planning-retirement/
+          retention-days: 1
+          if-no-files-found: error
