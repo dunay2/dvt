@@ -22,7 +22,7 @@ parallel workboard.
 - [DVT Docs Structure](../../DOCS_README.md)
 - [AI Work Protocol](../../guides/ai-work-protocol.md)
 - [Planning Control Tower](../state/planning-control-tower.md)
-- [Docs Staleness Audit 2026-05-05](./docs-staleness-audit-20260505.md)
+- [Historical Docs Staleness Audit 2026-05-05 (Git snapshot, not active guidance)](https://github.com/dunay2/dvt/blob/6dfe21143c7253dac7d06d5bb6b4565d89eb9f1e/docs/planning/status/docs-staleness-audit-20260505.md)
 - [ADR-0055 - Planning DB canonical operational source](../../adr/adr-0055-planning-db-canonical-operational-source.md)
 
 ## Inventory Scope
