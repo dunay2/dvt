@@ -1,4 +1,10 @@
-/** Owned concern: define a bounded, display-safe sample of one protected Canvas Transform. */
+/**
+ * Owned concern: define a bounded, display-safe sample of one protected Canvas Transform.
+ * @baseline ADR-0064: Substrait Semantic Reference And Bounded Logical Profile
+ * @decision Explore a protected Transform through semantic identity and server-owned bounds, never client SQL.
+ * @consequence API and Web exchange only the Transform identity, bounded rows, and display-safe values.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import { isSha256HexString } from '../../utils/contractPrimitives.js';

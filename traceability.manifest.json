@@ -1186,12 +1186,14 @@
         "Bind exact pinned Plan bytes to one identity-only DVT sidecar.",
         "Bind terminal Transform Preview to the exact protected graph, semantic plan, target SQL projection, and governed connection.",
         "Compose one catalog from standard candidates, admissions, and product gaps.",
+        "Explore a protected Transform through semantic identity and server-owned bounds, never client SQL.",
         "Export the pinned Substrait profile, stable authoring bindings, and single semantic capability catalog through one bounded public contract surface.",
         "Fail closed when persisted bytes are not one decodable Plan at the pinned version.",
         "Keep protected graph, semantic, projection, and connection identity checks shared across workload versions.",
         "Logical transformation semantics stay outside ExecutionPlan; plan steps represent runtime responsibilities only.",
         "Persist one strict, versioned ConnectedSourceRef instead of parallel loose connection and object binding coordinates.",
         "Pin one exact Substrait release and map stable DVT ids to rel_anchor/output ordinals.",
+        "Re-export only governed Canvas contracts from this narrow barrel.",
         "Rebind a persisted logical Source to one discovered physical object without changing logical identity.",
         "Require typed standard-first evidence before semantic admission.",
         "Retain product gaps separately from standard semantic identities.",
@@ -1201,6 +1203,8 @@
         "Version Run separately from the existing Preview workload and bind it to one explicit result target."
       ],
       "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/canvas/TransformDataSample.v1.ts",
+        "packages/@dvt/contracts/src/contracts/canvas/index.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.shared.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v2.ts",
