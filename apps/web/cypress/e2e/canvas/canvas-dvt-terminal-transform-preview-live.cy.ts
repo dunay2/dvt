@@ -228,4 +228,53 @@ describe('DVT terminal Transform Preview and Run live', () => {
       expect(startRunRequests).to.equal(0);
     });
   });
+
+  it('rejects an unsupported view disposition before Run', () => {
+    const targetSchemaValue = Cypress.env('postgresTargetSchema');
+    if (typeof targetSchemaValue !== 'string' || targetSchemaValue.trim().length === 0) {
+      throw new Error('Cypress env postgresTargetSchema is required for the DVT rejection proof.');
+    }
+    let startRunRequests = 0;
+
+    seedLiveSelectedClosureDraft({
+      authoringGenerated: true,
+      terminalTransformPreview: true,
+      terminalTransformResultTarget: {
+        schema: targetSchemaValue.trim(),
+        relation: 'unsupported_view_result',
+      },
+      title: 'DVT unsupported disposition guard',
+    });
+    cy.intercept('POST', '**/plans/preview').as('unsupportedDispositionPreview');
+    cy.intercept('POST', '**/runs/start', (request) => {
+      startRunRequests += 1;
+      request.continue();
+    });
+    visitWithLiveWorkspaceSession('/canvas');
+
+    getVisibleCanvasNode('dvt-transform-1')
+      .find('[data-slot="canvas-node-shell"]')
+      .rightclick('center', { force: true });
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', /^(Properties|Propiedades)$/)
+      .should('be.visible')
+      .click();
+    cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
+    cy.get('select[name="dvt-transform-materialization"]').select('view');
+    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Apply|Aplicar)$/).click();
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+
+    selectCanvasClosure(['dvt-transform-1']);
+    clickPreviewExecutionPlanFromOperationalDrawer();
+    cy.wait('@unsupportedDispositionPreview', { timeout: 30_000 })
+      .its('response.statusCode')
+      .should('equal', 422);
+    cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 })
+      .should('be.visible')
+      .and('contain.text', 'Configured Run supports only table result disposition.');
+    cy.get('[data-slot="plan-preview-start-run"]').should('not.exist');
+    cy.get('[data-slot="shell-run-command"]').should('be.disabled');
+    cy.then(() => {
+      expect(startRunRequests).to.equal(0);
+    });
+  });
 });
