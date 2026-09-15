@@ -185,6 +185,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Run execution context sha256 fields tightened to Sha256HexString; writers migrated to @dvt/crypto](R-20260903-RUN-EXECUTION-CONTEXT-SHA256-CRYPTO-MIGRATION.yaml)
 - [Run lifecycle could diverge across API, engine, persistence and public contracts](R-20260813-RUN-LIFECYCLE-RAIL.yaml)
 - [Run read evidence derivation can regress if attempt authority and event-history scope diverge](R-20260409-TF-C2-B-RUN-READ-EVIDENCE-ATTEMPT-SAFETY.yaml)
+- [Run workload target or output schema could drift before provider effects](R-20260915-TRANSFORM-RUN-WORKLOAD-DRIFT.yaml)
 - [Runtime boundary hardening can drift across engine ownership and API authorization seams](R-20260423-RUNTIME-BOUNDARY-HARDENING.yaml)
 - [Runtime circuit-breaker and worker operation tuning can drift after merge](R-20260415-AR-C4-RUNTIME-CIRCUIT-BREAKER-ROLL-OUT.yaml)
 - [Runtime control compatibility wrapper can regain cancel or signal ownership](R-20260512-DHM-WS4-RUNTIME-PATH-DECOMPOSITION.yaml)
