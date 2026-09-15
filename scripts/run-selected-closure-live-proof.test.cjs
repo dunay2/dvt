@@ -17,6 +17,7 @@ const {
   resolveLiveProofCypressRuntime,
   resolveLiveProofCypressHeaded,
   resolveLiveProofSpecPath,
+  resolveLiveProofTemporalWorkerRuntime,
   seedSelectedClosureLocalWarehouseProof,
 } = require('./run-selected-closure-live-proof.cjs');
 const { defaultPgUrl } = require('./run-local-postgres.cjs');
@@ -233,6 +234,23 @@ test('live proof keeps Chrome headless unless headed mode is explicit', () => {
   assert.throws(
     () => resolveLiveProofCypressHeaded({ DVT_SELECTED_CLOSURE_CYPRESS_HEADED: 'yes' }),
     /must be true or false/
+  );
+});
+
+test('live proof omits only the Temporal worker when runtime absence is explicit', () => {
+  assert.equal(resolveLiveProofTemporalWorkerRuntime({}), 'available');
+  assert.equal(
+    resolveLiveProofTemporalWorkerRuntime({
+      DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME: 'unavailable',
+    }),
+    'unavailable'
+  );
+  assert.throws(
+    () =>
+      resolveLiveProofTemporalWorkerRuntime({
+        DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME: 'stubbed',
+      }),
+    /must be available or unavailable/
   );
 });
 
