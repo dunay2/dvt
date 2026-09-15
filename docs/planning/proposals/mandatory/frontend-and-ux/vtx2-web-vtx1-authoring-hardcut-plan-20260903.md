@@ -310,7 +310,7 @@ commandQueryRails:
   - name: InspectCanvasNode
     type: query
     referenceOnly: true
-    authorityRef: docs/planning/proposals/mandatory/frontend-and-ux/vtx1-column-lineage-mapping-projection-plan-20260816.md
+    authorityRef: docs/planning/proposals/mandatory/frontend-and-ux/source-inspector-alias-deduplication-plan-20260904.md
     dddOwner: CanvasNodeInspector
   - name: ConfigureCanvasDvtNode
     type: command
