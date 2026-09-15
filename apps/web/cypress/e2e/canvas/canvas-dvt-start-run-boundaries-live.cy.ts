@@ -74,16 +74,16 @@ describe('DVT protected StartRun boundaries live', () => {
   function startRun(
     session: LiveSession,
     planRef: PlanRef,
-    projectId: string
+    projectId: string,
+    bearerToken = String(Cypress.env('apiBearerToken'))
   ): Cypress.Chainable<Cypress.Response<unknown>> {
     const apiBaseUrl = String(Cypress.env('apiBaseUrl'));
-    const bearer = String(Cypress.env('apiBearerToken'));
 
     return cy.request({
       method: 'POST',
       url: `${apiBaseUrl}/runs/start`,
-      headers: { Authorization: `Bearer ${bearer}` },
-      auth: { bearer },
+      headers: { Authorization: `Bearer ${bearerToken}` },
+      auth: { bearer: bearerToken },
       failOnStatusCode: false,
       body: {
         tenantId: session.tenantId,
@@ -94,6 +94,12 @@ describe('DVT protected StartRun boundaries live', () => {
         planRef,
       },
     });
+  }
+
+  function readRestrictedBearerToken(): string {
+    const token = Cypress.env('restrictedApiBearerToken');
+    expect(token).to.be.a('string').and.not.to.equal('');
+    return String(token);
   }
 
   beforeEach(function () {
@@ -153,6 +159,35 @@ describe('DVT protected StartRun boundaries live', () => {
       expect(responseText).not.to.contain(corruptedPlanRef.sha256);
       expect(responseText).not.to.contain(exactPlanRef.planId);
     });
+    readAuthorizedRunIds(session).then((currentRunIds) => {
+      expect(currentRunIds).to.deep.equal(authorizedRunIds);
+    });
+  });
+
+  it('rejects a same-scope principal without run:start permission', () => {
+    const session = resolveLiveWorkspaceSession();
+    const restrictedBearerToken = readRestrictedBearerToken();
+    let authorizedRunIds: string[] = [];
+    let planRef: PlanRef;
+
+    previewExactPlanRef('DVT StartRun action guard', 'actionDeniedPreview').then(
+      (previewPlanRef) => {
+        planRef = previewPlanRef;
+      }
+    );
+    readAuthorizedRunIds(session).then((runIds) => {
+      authorizedRunIds = runIds;
+    });
+    cy.then(() => startRun(session, planRef, session.projectId, restrictedBearerToken)).then(
+      (response) => {
+        expect(response.status).to.equal(403);
+        expect(response.body).to.deep.equal({
+          error: { type: 'forbidden', reason: 'action_not_granted' },
+        });
+        expect(JSON.stringify(response.body)).not.to.contain(planRef.sha256);
+        expect(JSON.stringify(response.body)).not.to.contain(planRef.planId);
+      }
+    );
     readAuthorizedRunIds(session).then((currentRunIds) => {
       expect(currentRunIds).to.deep.equal(authorizedRunIds);
     });
