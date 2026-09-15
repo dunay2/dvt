@@ -9,8 +9,7 @@ import type { DvtTransformResultTargetV1 } from '@dvt/contracts';
 import { Pool, type QueryResult } from 'pg';
 
 import type { IPostgresCredentialBindingResolver } from './PostgresCredentialBindingResolver.js';
-
-const MARKER_PATTERN = /^dvt:publication:v1;token=([0-9a-f]{64});schema=([0-9a-f]{64})$/u;
+import { parsePostgresDvtPublicationMarker } from './PostgresDvtPublicationMarker.js';
 
 export type DvtPublicationPredecessorObservation =
   | { readonly ok: true; readonly predecessorToken: string | null }
@@ -81,8 +80,10 @@ function toObservation(
   if (row.relationKind !== 'r' || !row.ownedByCurrentRole || row.marker === null) {
     return { ok: false, reason: 'unmanaged_target' };
   }
-  const marker = MARKER_PATTERN.exec(row.marker);
+  const marker = parsePostgresDvtPublicationMarker(row.marker);
   if (marker === null) return { ok: false, reason: 'unmanaged_target' };
-  if (marker[2] !== expectedSchemaDigest) return { ok: false, reason: 'schema_mismatch' };
-  return { ok: true, predecessorToken: marker[1] ?? null };
+  if (marker.schemaDigestSha256 !== expectedSchemaDigest) {
+    return { ok: false, reason: 'schema_mismatch' };
+  }
+  return { ok: true, predecessorToken: marker.token };
 }
