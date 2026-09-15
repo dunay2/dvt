@@ -360,6 +360,9 @@ function buildLiveProofCypressDockerInvocation(
     `CYPRESS_apiBaseUrl=http://host.docker.internal:${args.apiPort}`,
     '-e',
     `CYPRESS_apiBearerToken=${args.apiBearerToken}`,
+    ...(args.restrictedApiBearerToken === undefined
+      ? []
+      : ['-e', `CYPRESS_restrictedApiBearerToken=${args.restrictedApiBearerToken}`]),
     '-e',
     `CYPRESS_workspaceTenantId=${args.workspaceScope.tenantId}`,
     '-e',
@@ -407,6 +410,9 @@ function buildLiveProofCypressNativeInvocation(args) {
       CYPRESS_baseUrl: `http://127.0.0.1:${args.webPort}`,
       CYPRESS_apiBaseUrl: `http://127.0.0.1:${args.apiPort}`,
       CYPRESS_apiBearerToken: args.apiBearerToken,
+      ...(args.restrictedApiBearerToken === undefined
+        ? {}
+        : { CYPRESS_restrictedApiBearerToken: args.restrictedApiBearerToken }),
       CYPRESS_workspaceTenantId: args.workspaceScope.tenantId,
       CYPRESS_workspaceProjectId: args.workspaceScope.projectId,
       CYPRESS_workspaceEnvironmentId: args.workspaceScope.environmentId,
@@ -658,6 +664,10 @@ async function main() {
     env: process.env,
     host: LOCAL_AUTH_HOST,
   });
+  const restrictedPrincipalId = `${localProtectedRuntimeAuth.principalId}-without-run-start`;
+  const restrictedPrincipalToken = await localProtectedRuntimeAuth.issueBearerToken({
+    principalId: restrictedPrincipalId,
+  });
   const liveProofSchema = allocateLiveProofSchema();
   const processHandles = [];
 
@@ -714,6 +724,15 @@ async function main() {
       schema: liveProofSchema,
       principalId: localProtectedRuntimeAuth.principalId,
       tenantActions: LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
+      workspaceScope: localProtectedRuntimeAuth.workspaceScope,
+    });
+    await seedLocalProtectedRuntimeGrant({
+      databaseUrl,
+      schema: liveProofSchema,
+      principalId: restrictedPrincipalId,
+      tenantActions: LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.filter(
+        (action) => action !== 'run:start'
+      ),
       workspaceScope: localProtectedRuntimeAuth.workspaceScope,
     });
 
@@ -787,6 +806,7 @@ async function main() {
         apiPort: DEFAULT_API_PORT,
         webPort: DEFAULT_WEB_PORT,
         apiBearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
+        restrictedApiBearerToken: restrictedPrincipalToken.bearerToken,
         workspaceScope: localProtectedRuntimeAuth.workspaceScope,
         postgresTargetSchema: liveProofSchema,
         specPath,

@@ -61,6 +61,7 @@ test('buildLiveProofCypressDockerInvocation isolates the one governed spec in Cy
         apiPort: 3300,
         webPort: 4174,
         apiBearerToken: 'proof-token',
+        restrictedApiBearerToken: 'restricted-proof-token',
         specPath: '/repo/apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
         workspaceScope: {
           tenantId: 'tenant',
@@ -86,6 +87,8 @@ test('buildLiveProofCypressDockerInvocation isolates the one governed spec in Cy
       'CYPRESS_apiBaseUrl=http://host.docker.internal:3300',
       '-e',
       'CYPRESS_apiBearerToken=proof-token',
+      '-e',
+      'CYPRESS_restrictedApiBearerToken=restricted-proof-token',
       '-e',
       'CYPRESS_workspaceTenantId=tenant',
       '-e',
@@ -113,6 +116,7 @@ test('buildLiveProofCypressDockerInvocation mirrors Windows junction targets rea
       apiPort: 3300,
       webPort: 4174,
       apiBearerToken: 'proof-token',
+      restrictedApiBearerToken: 'restricted-proof-token',
       specPath: '/repo/apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts',
       workspaceScope: {
         tenantId: 'tenant',
@@ -143,6 +147,7 @@ test('buildLiveProofCypressNativeInvocation targets the already running host sta
       apiPort: 3300,
       webPort: 4174,
       apiBearerToken: 'proof-token',
+      restrictedApiBearerToken: 'restricted-proof-token',
       specPath: '/repo/apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
       workspaceScope: {
         tenantId: 'tenant',
@@ -170,6 +175,7 @@ test('buildLiveProofCypressNativeInvocation targets the already running host sta
         CYPRESS_baseUrl: 'http://127.0.0.1:4174',
         CYPRESS_apiBaseUrl: 'http://127.0.0.1:3300',
         CYPRESS_apiBearerToken: 'proof-token',
+        CYPRESS_restrictedApiBearerToken: 'restricted-proof-token',
         CYPRESS_workspaceTenantId: 'tenant',
         CYPRESS_workspaceProjectId: 'project',
         CYPRESS_workspaceEnvironmentId: 'dev',
