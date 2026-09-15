@@ -32,16 +32,24 @@ export function isSharedSourceModelKind(kind: PluginNodeKind): boolean {
   return SHARED_SOURCE_MODEL_KINDS.has(kind);
 }
 
-function resolveMaterialization(metadata: Record<string, unknown>): string | null {
+function resolveMaterialization(
+  node: CanonicalNode,
+  metadata: Record<string, unknown>
+): string | null {
   const dbt = metadata.dbt;
   const dbtRecord =
     typeof dbt === 'object' && dbt !== null && !Array.isArray(dbt)
       ? (dbt as Record<string, unknown>)
       : {};
   const config = metadata.config ?? dbtRecord.config;
-  if (typeof config !== 'object' || config === null || Array.isArray(config)) return null;
-  const record = config as Record<string, unknown>;
-  return stringValue(record.materialized) ?? stringValue(record.materialization);
+  const record =
+    typeof config === 'object' && config !== null && !Array.isArray(config)
+      ? (config as Record<string, unknown>)
+      : {};
+  const configured = stringValue(record.materialized) ?? stringValue(record.materialization);
+  if (configured != null) return configured;
+
+  return node.pluginId === 'dvt' && node.kind === 'dvt:transform' ? 'view' : null;
 }
 
 function containsDbtCompatibilityMetadata(metadata: Record<string, unknown>): boolean {
@@ -78,7 +86,7 @@ function buildAuthorityMetrics(
 ): GraphNodeCardMetric[] {
   const metrics: GraphNodeCardMetric[] = [];
   if (!isSource) {
-    const materialization = resolveMaterialization(metadata);
+    const materialization = resolveMaterialization(node, metadata);
     pushMetric(metrics, 'materialization', 'Mat.', materialization ?? copy.notConfiguredLabel, {
       placement: 'header',
       ...(resolveMaterializationIcon(materialization) == null
