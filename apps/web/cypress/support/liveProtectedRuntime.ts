@@ -167,6 +167,25 @@ export function readLiveRunEvents(runId: string): Cypress.Chainable<Cypress.Resp
   });
 }
 
+export function readLiveWarehouseSourceSample(
+  connectionId: string,
+  objectId: string,
+  limit: number
+): Cypress.Chainable<Cypress.Response<unknown>> {
+  const query = new URLSearchParams({
+    ...resolveLiveWorkspaceSession(),
+    objectId,
+    limit: String(limit),
+  });
+
+  return cy.request({
+    method: 'GET',
+    url: `${readRequiredEnv('apiBaseUrl')}/workspace/warehouse/connections/${encodeURIComponent(connectionId)}/source-data-sample?${query.toString()}`,
+    headers: buildAuthorizationHeaders(),
+    auth: buildBearerAuth(),
+  });
+}
+
 export function readLiveWorkspaceFile(
   path: string,
   session: CanvasDraftSessionScope = resolveLiveWorkspaceSession()
