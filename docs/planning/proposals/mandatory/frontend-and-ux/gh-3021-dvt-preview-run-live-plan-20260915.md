@@ -21,31 +21,39 @@ task_id: GH-3021
 
 `main` now executes a protected terminal Transform through PostgreSQL and
 projects its validated `dvt-postgres-publication` evidence through
-`GetRunSnapshot`. The Runs result tab shows the immutable Preview SHA and
-publication token. The remaining question for this cut is whether that identity
-comes back from persisted runtime evidence after the browser state is discarded.
+`GetRunSnapshot`. The Runs result tab restores the immutable Preview SHA and
+publication token after a browser reload. The remaining question for this cut
+is whether editing the Canvas after Preview can silently start the obsolete
+plan.
 
 ```mermaid
 flowchart LR
-  A[Completed run view] --> B[Browser reload]
-  B --> C[Fresh GetRunSnapshot]
-  C --> D[Persisted publication evidence]
-  D --> E[Same Preview SHA and publication token]
+  A[Persisted Canvas revision A] --> B[PreviewPlan A]
+  B --> C[Persisted PlanRef A]
+  C --> D[User edits Canvas to revision B]
+  D --> E{Can StartRun still use A?}
 ```
 
 ## Product cut
 
-Extend the existing live acceptance flow by reloading the completed Run route
-and reopening Result. The assertion must read the same Preview SHA and
-publication token from the fresh `GetRunSnapshot` response. No product state is
-seeded after execution and no additional query is introduced.
+Extend the existing live acceptance flow with one second scenario: Preview a
+persisted terminal Transform, close the Preview, edit that Transform through
+its real properties command, and observe the execution controls. The active
+draft signature must no longer match the signature captured by Preview. The UI
+must require a new Preview and must not call `StartRun`.
 
 ```mermaid
-flowchart LR
-  A[StartRun exact PlanRef] --> B[Temporal and PostgreSQL]
-  B --> C[Persisted current-attempt evidence]
-  C -->|reload Run route| D[GetRunSnapshot]
-  D --> E[Same visible SHA and token]
+sequenceDiagram
+  participant U as User
+  participant C as Canvas
+  participant P as PreviewPlan
+  participant R as StartRun
+  U->>C: Select terminal Transform
+  C->>P: Preview persisted revision A
+  P-->>C: Persisted PlanRef A
+  U->>C: Edit Transform to revision B
+  C-->>U: Preview stale; Run disabled
+  C-xR: No command sent
 ```
 
 ## Existing rails and boundaries
@@ -62,8 +70,9 @@ reading remains owned by #2582 and requires publication-token consistency.
 
 ## Verification
 
-The existing live Cypress spec remains the acceptance boundary. It first proves
-accepted Preview, exact PlanRef Run start and PostgreSQL publication. It then
-reloads the Run route and requires the same `dvt-postgres-publication` identity
-to be visible again. Existing unit tests continue to cover current-attempt
-selection, API projection, transport decoding and presentation.
+The existing live Cypress spec remains the acceptance boundary. Its execution
+scenario proves exact PlanRef execution, PostgreSQL publication and evidence
+reload. The stale-Preview scenario uses the same protected draft and real
+Preview service, edits through the visible Canvas properties surface, and
+observes that Run becomes unavailable without any `/runs/start` request.
+Existing unit tests continue to cover the pure signature and run-start guards.
