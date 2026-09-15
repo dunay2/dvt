@@ -35,6 +35,7 @@ import type {
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceModel';
 import { RunEventTimelineTable } from './RunEventTimelineTable';
 import { RunEventFeedHealthView } from './RunEventFeedHealthView';
+import { RunDvtPostgresPublicationCard } from './RunDvtPostgresPublicationCard';
 import { type RunStatesCopy, useRunStatesCopy } from './runStatesCopy';
 import { isKnownRunField } from './runStatesModel';
 import type { RunControlCommandController } from './useRunControlCommands';
@@ -552,7 +553,7 @@ export function RunWorkspaceStateView({
   );
   const executionProvenance = deriveExecutionProvenance(workspace);
   const materializationEvidence = deriveMaterializationEvidence(workspace);
-  const showMaterializationSection = snapshot.status === 'completed';
+  const showResultSection = snapshot.status === 'completed';
 
   return (
     <WorkbenchStateFrame title={copy.runTitle(snapshot.runId)} slotPrefix="runs-state">
@@ -568,7 +569,7 @@ export function RunWorkspaceStateView({
             <TabsTrigger
               value="result"
               className={routeWorkbenchTabTriggerClassName}
-              disabled={!showMaterializationSection}
+              disabled={!showResultSection}
             >
               {copy.runResultTabLabel}
             </TabsTrigger>
@@ -679,7 +680,10 @@ export function RunWorkspaceStateView({
         </TabsContent>
 
         <TabsContent value="result" className="mt-2 space-y-4">
-          {showMaterializationSection ? (
+          {snapshot.publication ? (
+            <RunDvtPostgresPublicationCard evidence={snapshot.publication} locale={locale} />
+          ) : null}
+          {showResultSection && (materializationEvidence || !snapshot.publication) ? (
             <Card
               data-slot="run-materialization-card"
               className="border-slate-700 bg-slate-900 p-5"
