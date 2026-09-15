@@ -19,33 +19,33 @@ task_id: GH-3021
 
 ## Current state
 
-`main` now projects a protected terminal Transform to an immutable PlanRef and
-executes its V2 PostgreSQL workload through Temporal. The worker persists exact
-`dvt-postgres-publication` evidence in the run events, but `GetRunSnapshot`
-currently projects only the older materialization evidence. The Runs result tab
-therefore cannot show the completed DVT publication identity.
+`main` now executes a protected terminal Transform through PostgreSQL and
+projects its validated `dvt-postgres-publication` evidence through
+`GetRunSnapshot`. The Runs result tab shows the immutable Preview SHA and
+publication token. The remaining question for this cut is whether that identity
+comes back from persisted runtime evidence after the browser state is discarded.
 
 ```mermaid
 flowchart LR
-  A[PostgreSQL publication] --> B[Run events with DVT evidence]
-  B --> C[GetRunSnapshot]
-  C --> D[Evidence omitted]
-  D --> E[Runs result tab has no publication identity]
+  A[Completed run view] --> B[Browser reload]
+  B --> C[Fresh GetRunSnapshot]
+  C --> D[Persisted publication evidence]
+  D --> E[Same Preview SHA and publication token]
 ```
 
 ## Product cut
 
-Keep the existing rails and extend the current run evidence projection. A
-completed snapshot without legacy materialization evidence reads the current
-logical attempt events, validates the existing DVT evidence contract, and
-returns it through `GetRunSnapshot`. The Runs result tab presents that immutable
-publication identity without querying PostgreSQL or claiming historical rows.
+Extend the existing live acceptance flow by reloading the completed Run route
+and reopening Result. The assertion must read the same Preview SHA and
+publication token from the fresh `GetRunSnapshot` response. No product state is
+seeded after execution and no additional query is introduced.
 
 ```mermaid
 flowchart LR
-  A[Run events] -->|latest logical attempt| B[DVT evidence validator]
-  B -->|GetRunSnapshot| C[Runs adapter]
-  C --> D[Publication evidence card]
+  A[StartRun exact PlanRef] --> B[Temporal and PostgreSQL]
+  B --> C[Persisted current-attempt evidence]
+  C -->|reload Run route| D[GetRunSnapshot]
+  D --> E[Same visible SHA and token]
 ```
 
 ## Existing rails and boundaries
@@ -62,8 +62,8 @@ reading remains owned by #2582 and requires publication-token consistency.
 
 ## Verification
 
-The existing live Cypress spec remains the acceptance boundary. It proves
-accepted Preview, exact PlanRef Run start, completed PostgreSQL publication, and
-the same `dvt-postgres-publication` identity in both the persisted event and the
-visible Runs result view. Unit tests cover current-attempt selection, API
-projection, transport decoding, and presentation.
+The existing live Cypress spec remains the acceptance boundary. It first proves
+accepted Preview, exact PlanRef Run start and PostgreSQL publication. It then
+reloads the Run route and requires the same `dvt-postgres-publication` identity
+to be visible again. Existing unit tests continue to cover current-attempt
+selection, API projection, transport decoding and presentation.
