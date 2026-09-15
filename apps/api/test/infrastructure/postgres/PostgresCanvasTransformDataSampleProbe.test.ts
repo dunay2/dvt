@@ -2,7 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PostgresCanvasTransformDataSampleProbe } from '../../../src/infrastructure/postgres/PostgresCanvasTransformDataSampleProbe.js';
 
-function harness(rows: readonly Readonly<Record<string, unknown>>[] = [{ order_id: 1 }]) {
+function harness(rows: readonly Readonly<Record<string, unknown>>[] = [{ order_id: 1 }]): Readonly<{
+  probe: PostgresCanvasTransformDataSampleProbe;
+  query: ReturnType<typeof vi.fn>;
+  connect: ReturnType<typeof vi.fn>;
+  end: ReturnType<typeof vi.fn>;
+  resolveCredential: ReturnType<typeof vi.fn>;
+}> {
   const query = vi.fn(async (sql: string) => {
     if (sql.startsWith('select * from (')) {
       return {

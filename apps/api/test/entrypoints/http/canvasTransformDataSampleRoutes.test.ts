@@ -1,4 +1,4 @@
-import Fastify from 'fastify';
+import Fastify, { type FastifyInstance } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
 import { registerCanvasTransformDataSampleRoutes } from '../../../src/entrypoints/http/canvasTransformDataSampleRoutes.js';
@@ -19,7 +19,11 @@ function principal(): Record<string, unknown> {
   };
 }
 
-function buildApp() {
+function buildApp(): Readonly<{
+  app: FastifyInstance;
+  execute: ReturnType<typeof vi.fn>;
+  authorize: ReturnType<typeof vi.fn>;
+}> {
   const execute = vi.fn(async () => ({
     contractVersion: 1 as const,
     canvasId: 'canvas-orders',

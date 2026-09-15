@@ -68,7 +68,11 @@ function catalog(): IWarehouseConnectionCatalog {
   };
 }
 
-function harness(canvasId = request.canvasId) {
+function harness(canvasId = request.canvasId): Readonly<{
+  executeWithAuthorizedDraft: ReturnType<typeof vi.fn>;
+  previewTransformRows: ReturnType<typeof vi.fn>;
+  useCase: PreviewCanvasTransformRowsUseCase;
+}> {
   const draft = {
     ...buildDvtJoinPreviewDraft(2),
     canvas: { id: canvasId, kind: 'transformation' as const, title: 'Joins' },
