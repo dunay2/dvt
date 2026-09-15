@@ -21,37 +21,40 @@ task_id: GH-3021
 
 `main` now proves T05 for both the single-source terminal Transform and the
 three-source JOIN, restores PostgreSQL evidence after reload, rejects a stale
-Preview, and visibly rejects unsupported `view` disposition before Run. The
-remaining T08 scope boundary is covered by route doubles but not by a real
-Preview PlanRef against the protected runtime.
+Preview, visibly rejects unsupported `view` disposition before Run, and rejects
+a cross-project `StartRun` without creating a Run or disclosing the PlanRef. The
+remaining T08 integrity boundary is covered below the browser but not by a real
+Canvas Preview PlanRef against the protected runtime.
 
 ```mermaid
 flowchart LR
-  A[Preview in authorized project A] --> B[Exact PlanRef]
-  B --> C[StartRun claims project B]
-  C --> D[Live boundary unproven]
+  A[Preview authorized Canvas revision] --> B[Exact persisted PlanRef]
+  B --> C[Alter only the valid-shaped digest]
+  C --> D[StartRun integrity boundary unproven]
 ```
 
 ## Product cut
 
-Complete one T08 scope boundary with the existing rails: obtain an exact
-PlanRef through the native Canvas Preview in authorized project A, submit that
-reference to `StartRun` while claiming project B, and prove a sanitized `403`
-plus an unchanged authorized Run list. No UI gesture can create this tampered
-request, so only the negative command crosses the protected HTTP boundary.
+Complete the next T08 integrity boundary with the existing rails: obtain an
+exact PlanRef through native Canvas Preview, alter only its digest while keeping
+the request structurally valid and in the authorized scope, and submit it to
+`StartRun`. The command must reject before execution, disclose neither the
+stored nor submitted digest or plan identity, and leave the authorized Run list
+unchanged. No UI gesture can construct a corrupted reference, so only the
+negative command crosses the protected HTTP boundary.
 
 ```mermaid
 sequenceDiagram
   participant C as Canvas
   participant P as PreviewPlan
   participant R as StartRun
-  participant S as Run state
-  C->>P: Preview authorized project A
+  participant S as Run read model
+  C->>P: Preview authorized Canvas revision
   P-->>C: Exact PlanRef
-  C->>S: Read Run ids in project A
-  C->>R: Same PlanRef; claim project B
-  R-->>C: 403 without plan disclosure
-  C->>S: Run ids in project A unchanged
+  C->>S: Read authorized Run ids
+  C->>R: Same scope and identity; changed digest
+  R-->>C: Sanitized integrity rejection
+  C->>S: Authorized Run ids unchanged
 ```
 
 ## Existing rails and boundaries
@@ -70,8 +73,8 @@ identity remains owned by #2582.
 
 ## Verification
 
-The terminal-Transform live Cypress spec remains the acceptance boundary. It
-must receive the PlanRef from real Preview, compare the authorized Run ids
-before and after the cross-scope command, and reject the command without
-returning PlanRef contents. No Preview, Run, authorization, or list response is
-stubbed.
+The live StartRun-boundary Cypress spec receives the PlanRef from real Preview,
+compares authorized Run ids before and after the corrupted command, and rejects
+the command without returning PlanRef contents. The production HTTP mapping is
+changed only if this proof exposes a real disclosure. No Preview, Run,
+authorization, validation, or list response is stubbed.

@@ -171,4 +171,24 @@ describe('httpErrorTranslation start-run results', () => {
       );
     }
   );
+
+  it('does not disclose PlanRef digests for integrity rejection', () => {
+    const submittedSha = '1'.repeat(64);
+    const storedSha = '2'.repeat(64);
+
+    expectCanonicalErrorResponse(
+      httpErrorTranslation.startRun.result({
+        kind: 'plan_rejected',
+        accepted: false,
+        code: 'REJECTED',
+        reason: `PLAN_INTEGRITY_VALIDATION_FAILED: expected=${submittedSha} actual=${storedSha}`,
+        cause: 'integrity',
+      }),
+      {
+        status: 422,
+        type: 'unprocessable',
+        reason: 'plan_rejected',
+      }
+    );
+  });
 });
