@@ -114,6 +114,9 @@ test('docs disposition canonization has semantic ownership and DB-first closure'
 test('retired historical packs and generators cannot return', () => {
   const retiredPaths = [
     'docs/archive',
+    'docs/planning/archive',
+    'docs/planning/status/planner-local-doc-triage-20260320.md',
+    'docs/planning/status/root-local-doc-triage-20260417.md',
     'docs/adr/_archive',
     'docs/evidence/archive',
     'docs/planning/proposals/disposable/manifests/planner-stage-1-1-canonicalization.manifest.json',

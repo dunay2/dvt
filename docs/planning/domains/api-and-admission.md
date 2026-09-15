@@ -25,18 +25,6 @@ and auth-runtime integration.
 - [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md)
 - [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
 
-## Historical Proposal Inputs
-
-These proposals informed the admission and API hardening path, but they are now
-archived planning inputs rather than active proposal authorities.
-
-- [Gap 4 Backpressure Admission Design](../archive/proposals/gap4-backpressure-admission-design-20260319.md)
-- [Gap 4 PR1 Admission Foundation](../archive/proposals/gap4-backpressure-admission-pr1-foundation-20260319.md)
-- [Gap 4 PR2 Raw Snapshot Store](../archive/proposals/gap4-backpressure-admission-pr2-raw-store-20260319.md)
-- [Gap 4 PR3 Resilience Envelope](../archive/proposals/gap4-backpressure-admission-pr3-resilience-20260319.md)
-- [Gap 4 PR4 Operability and Rollout](../archive/proposals/gap4-backpressure-admission-pr4-operability-20260319.md)
-- [Gap 4 PR5 Projected Read Model](../archive/proposals/gap4-backpressure-admission-pr5-projected-read-model-20260319.md)
-
 ## Relevant Reviews And Closeouts
 
 - [20260321 Planner-Backed StartRun QA Review](../reviews/execution-runtime/20260321-planner-backed-start-run-qa-review.md)

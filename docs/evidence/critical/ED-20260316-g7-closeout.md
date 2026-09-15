@@ -53,7 +53,7 @@ The delivered scope is:
 ## Verification tuple
 
 - Canonical spec:
-  [G7 - AI Execution Tracker](../../planning/archive/gaps/G7-AI-EXECUTION-TRACKER.md)
+  [G7 - AI Execution Tracker (Git provenance)](https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/gaps/G7-AI-EXECUTION-TRACKER.md)
   and
   [ADR-0004](../../adr/ADR-0004-event-sourcing-strategy.md)
   and
