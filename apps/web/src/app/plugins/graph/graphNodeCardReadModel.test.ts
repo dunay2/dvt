@@ -79,6 +79,22 @@ function buildNode(partial: Partial<CanonicalNode>): CanonicalNode {
 }
 
 describe('buildGraphNodeCardReadModel', () => {
+  it('shows the effective view materialization for a new DVT Transform', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({ kind: 'dvt:transform', pluginId: 'dvt', role: 'transform' }),
+      {},
+      CARD_STRATEGIES
+    );
+
+    expect(model.metrics[0]).toEqual({
+      id: 'materialization',
+      label: 'Mat.',
+      value: 'view',
+      icon: 'eye',
+      placement: 'header',
+    });
+  });
+
   it('keeps Code and Columns out of the compact upper metric row', () => {
     const presentationTruth = {
       columns: {
