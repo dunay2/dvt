@@ -76,7 +76,7 @@ export default function CanvasShell({
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
-  const { dataSample, projectNode: projectNodeDataSample } = useCanvasNodeDataSample({
+  const { dataSampleTabs, projectNode: projectNodeDataSample } = useCanvasNodeDataSample({
     graphNodes: panels.inspectorGraphNodes,
     runMaterializationSampleQuery,
     runOutputPreviewAuthority,
@@ -406,7 +406,7 @@ export default function CanvasShell({
           onPreviewExecutionPlan={chromeCommands.onPreviewExecutionPlan}
           onStartRun={chromeCommands.onRun}
           selectionRecoveryCommands={chromeCommands.executionSelectionRecovery}
-          dataSample={dataSample}
+          dataSampleTabs={dataSampleTabs}
           semanticBody={
             semanticTransform == null ? (
               <div className="grid h-full place-items-center p-4 text-sm text-muted-foreground">

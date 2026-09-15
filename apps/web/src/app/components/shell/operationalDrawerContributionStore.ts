@@ -14,7 +14,10 @@ import type { OperationalDrawerSelectionRecoveryMessages } from './operationalDr
 import type { SourceDataSample } from '../../ports/workspace';
 import type { ReactNode } from 'react';
 
-export type OperationalDrawerTabId = 'log' | 'problems' | 'runs' | 'preview' | 'data' | 'semantic';
+export type OperationalDrawerBuiltInTabId =
+  'log' | 'problems' | 'runs' | 'preview' | 'data' | 'semantic';
+export type OperationalDrawerDataTabId = `data:${string}`;
+export type OperationalDrawerTabId = OperationalDrawerBuiltInTabId | OperationalDrawerDataTabId;
 
 export type OperationalDrawerDataSample =
   | Readonly<{ status: 'idle' }>
@@ -23,14 +26,25 @@ export type OperationalDrawerDataSample =
   | Readonly<{
       status: 'error';
       nodeName: string;
-      reason: 'connection_not_found' | 'source_object_not_found' | 'unavailable' | 'unknown';
+      reason:
+        | 'connection_not_found'
+        | 'source_object_not_found'
+        | 'result_not_published'
+        | 'unavailable'
+        | 'unknown';
     }>;
+
+export type OperationalDrawerDataSampleTab = Readonly<{
+  id: OperationalDrawerDataTabId;
+  dataSample: OperationalDrawerDataSample;
+}>;
 
 export type OperationalDrawerTab = Readonly<{
   id: OperationalDrawerTabId;
   label: string;
   count: number | null;
   content?: ReactNode;
+  dataSample?: OperationalDrawerDataSample;
 }>;
 
 export type OperationalDrawerProblem = Readonly<{
@@ -74,6 +88,7 @@ export type OperationalDrawerContribution = Readonly<{
     dataEmptyTemplate: string;
     dataConnectionNotFoundTemplate: string;
     dataSourceObjectNotFoundTemplate: string;
+    dataResultNotPublishedTemplate: string;
     dataUnavailableTemplate: string;
     dataUnknownErrorTemplate: string;
     dataTruncatedTemplate: string;
@@ -106,7 +121,6 @@ export type OperationalDrawerContribution = Readonly<{
       messages: OperationalDrawerSelectionRecoveryMessages;
     }> | null;
   }>;
-  dataSample: OperationalDrawerDataSample;
 }>;
 
 type OperationalDrawerContributionState = {
@@ -176,14 +190,10 @@ export const useOperationalDrawerContributionStore = create<OperationalDrawerCon
     clearOperationalDrawerContribution: (contribution) =>
       set((state) => (state.contribution === contribution ? { contribution: null } : state)),
     selectOperationalDrawerTab: (tab) =>
-      set((state) =>
-        state.contribution?.tabs.some((candidate) => candidate.id === tab)
-          ? {
-              activeTab: tab,
-              hiddenTabs: state.hiddenTabs.filter((hiddenTab) => hiddenTab !== tab),
-            }
-          : state
-      ),
+      set((state) => ({
+        activeTab: tab,
+        hiddenTabs: state.hiddenTabs.filter((hiddenTab) => hiddenTab !== tab),
+      })),
     setOperationalDrawerTabVisibility: (command) =>
       set((state) => setOperationalDrawerTabVisibility(state, command)),
   })

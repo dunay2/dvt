@@ -77,11 +77,12 @@ describe('CanvasShell Transform output sample', () => {
       expectedPublicationToken: publication.publication.token,
       limit: 20,
     });
-    expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
-      activeTab: 'data',
-      contribution: {
-        dataSample: { status: 'ready', nodeName: transform.name },
-      },
+    const dataState = useOperationalDrawerContributionStore.getState();
+    expect(dataState.activeTab).toBe(`data:${transform.id}`);
+    expect(
+      dataState.contribution?.tabs.find((tab) => tab.id === `data:${transform.id}`)
+    ).toMatchObject({
+      dataSample: { status: 'ready', nodeName: transform.name },
     });
   });
 });

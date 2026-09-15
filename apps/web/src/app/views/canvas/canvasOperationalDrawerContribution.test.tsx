@@ -1,7 +1,7 @@
 /** Owned concern: prove Canvas operational drawer read-model projection. */
 import { describe, expect, it, vi } from 'vitest';
 
-import type { OperationalDrawerDataSample } from '../../components/shell/operationalDrawerContributionStore';
+import type { OperationalDrawerDataSampleTab } from '../../components/shell/operationalDrawerContributionStore';
 import { buildCanvasShellProps, buildPlanRunReadiness } from './CanvasShell.testHarness';
 import { buildCanvasOperationalDrawerContribution } from './canvasOperationalDrawerContribution';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
@@ -38,7 +38,6 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       { id: 'problems', label: 'Problems', count: 2 },
       { id: 'runs', label: 'Runs', count: 1 },
       { id: 'preview', label: 'Preview', count: 2 },
-      { id: 'data', label: 'Data', count: null },
       { id: 'semantic', label: 'Semantics', count: null },
     ]);
     expect(contribution.problems.items).toEqual([
@@ -143,49 +142,59 @@ describe('buildCanvasOperationalDrawerContribution', () => {
     expect(contribution.runs.controls).toBe(runControls);
   });
 
-  it('names the data tab after the active card without exposing the sample size', () => {
+  it('projects one stable data tab for every opened card', () => {
     const props = buildCanvasShellProps();
-    const dataSamples: readonly Exclude<
-      OperationalDrawerDataSample,
-      Readonly<{ status: 'idle' }>
-    >[] = [
-      { status: 'loading', nodeName: 'warehouse_orders' },
+    const dataSampleTabs: readonly OperationalDrawerDataSampleTab[] = [
       {
-        status: 'ready',
-        nodeName: 'curated_customers',
-        sample: {
-          contractVersion: 1,
-          connectionId: 'postgresql-local',
-          objectId: 'relation/dvt/public/curated_customers',
-          columns: [{ name: 'record_id', type: 'integer', nullable: false }],
-          rows: [{ values: ['1'] }, { values: ['2'] }],
-          limit: 20,
-          truncated: false,
-          sampledAt: '2026-09-03T10:00:00.000Z',
+        id: 'data:source-orders',
+        dataSample: { status: 'loading', nodeName: 'warehouse_orders' },
+      },
+      {
+        id: 'data:model-customers',
+        dataSample: {
+          status: 'ready',
+          nodeName: 'curated_customers',
+          sample: {
+            contractVersion: 1,
+            connectionId: 'postgresql-local',
+            objectId: 'relation/dvt/public/curated_customers',
+            columns: [{ name: 'record_id', type: 'integer', nullable: false }],
+            rows: [{ values: ['1'] }, { values: ['2'] }],
+            limit: 20,
+            truncated: false,
+            sampledAt: '2026-09-03T10:00:00.000Z',
+          },
         },
       },
-      { status: 'error', nodeName: 'finance_daily', reason: 'unavailable' },
     ];
 
-    for (const dataSample of dataSamples) {
-      const contribution = buildCanvasOperationalDrawerContribution({
-        policy: props.layout.surfaceStrategy!.operationalDrawer!,
-        canPlan: props.panels.userPermissions.canPlan,
-        activeRunId: null,
-        canPlanGraph: props.chromeState.canPlanGraph,
-        canStartRun: props.chromeState.canStartRun,
-        planRunReadiness: props.chromeState.planRunReadiness,
-        planStatusSummary: props.chromeState.planStatusSummary,
-        dataSample,
-        onPreviewExecutionPlan: vi.fn(),
-        onStartRun: vi.fn(),
-      });
+    const contribution = buildCanvasOperationalDrawerContribution({
+      policy: props.layout.surfaceStrategy!.operationalDrawer!,
+      canPlan: props.panels.userPermissions.canPlan,
+      activeRunId: null,
+      canPlanGraph: props.chromeState.canPlanGraph,
+      canStartRun: props.chromeState.canStartRun,
+      planRunReadiness: props.chromeState.planRunReadiness,
+      planStatusSummary: props.chromeState.planStatusSummary,
+      dataSampleTabs,
+      onPreviewExecutionPlan: vi.fn(),
+      onStartRun: vi.fn(),
+    });
 
-      expect(contribution.tabs.find((tab) => tab.id === 'data')).toMatchObject({
-        label: dataSample.nodeName,
+    expect(contribution.tabs.filter((tab) => tab.id.startsWith('data:'))).toEqual([
+      {
+        id: 'data:source-orders',
+        label: 'warehouse_orders',
         count: null,
-      });
-    }
+        dataSample: dataSampleTabs[0]!.dataSample,
+      },
+      {
+        id: 'data:model-customers',
+        label: 'curated_customers',
+        count: null,
+        dataSample: dataSampleTabs[1]!.dataSample,
+      },
+    ]);
   });
 
   it('projects blocked selection recovery without admitting Preview', () => {
@@ -289,7 +298,6 @@ describe('buildCanvasOperationalDrawerContribution', () => {
         { id: 'problems', label: 'Problemas', count: 2 },
         { id: 'runs', label: 'Ejecuciones', count: 1 },
         { id: 'preview', label: 'Vista previa', count: 2 },
-        { id: 'data', label: 'Datos', count: null },
         { id: 'semantic', label: 'Semántica', count: null },
       ],
     });
