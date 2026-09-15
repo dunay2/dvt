@@ -1,3 +1,7 @@
+import {
+  DvtPostgresPublicationEvidenceSchema,
+  type DvtPostgresPublicationEvidence,
+} from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AuthorizedExecutionContext } from '../../../src/application/ports/auth.js';
@@ -22,8 +26,11 @@ const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:view'
   authorizedAt: new Date('2026-09-15T00:00:00Z'),
 };
 
-function publicationEvidence(relation: string, tokenCharacter: string) {
-  return {
+function publicationEvidence(
+  relation: string,
+  tokenCharacter: string
+): DvtPostgresPublicationEvidence {
+  return DvtPostgresPublicationEvidenceSchema.parse({
     evidenceType: 'dvt-postgres-publication',
     environmentId: 'env-1',
     plan: {
@@ -61,10 +68,13 @@ function publicationEvidence(relation: string, tokenCharacter: string) {
     startedAt: '2026-09-15T10:00:01.000Z',
     completedAt: '2026-09-15T10:00:02.000Z',
     durationMs: 1000,
-  } as const;
+  });
 }
 
-function completedEvent(logicalAttemptId: number, resultEvidence: unknown) {
+function completedEvent(
+  logicalAttemptId: number,
+  resultEvidence: unknown
+): Record<string, unknown> {
   return {
     eventId: `evt-completed-${logicalAttemptId}`,
     eventType: 'StepCompleted',
