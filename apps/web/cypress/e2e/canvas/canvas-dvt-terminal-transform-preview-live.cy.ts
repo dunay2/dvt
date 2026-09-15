@@ -7,6 +7,7 @@ import { KNOWN_STEP_KINDS } from '@dvt/contracts';
 import {
   clickPreviewExecutionPlanFromOperationalDrawer,
   getVisibleCanvasNode,
+  revealOperationalDrawer,
   selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
@@ -175,6 +176,59 @@ describe('DVT terminal Transform Preview and Run live', () => {
       cy.get('[data-slot="run-dvt-publication-token"]').should(($value) => {
         expect($value.text()).to.equal(publicationToken);
       });
+    });
+  });
+
+  it('requires a new Preview after the Transform changes', () => {
+    let startRunRequests = 0;
+
+    seedLiveSelectedClosureDraft({
+      authoringGenerated: true,
+      terminalTransformPreview: true,
+      title: 'DVT stale Preview guard',
+    });
+    cy.intercept('POST', '**/plans/preview').as('dvtPreviewBeforeEdit');
+    cy.intercept('POST', '**/runs/start', (request) => {
+      startRunRequests += 1;
+      request.continue();
+    });
+    cy.intercept('PUT', '**/workspace/graph/draft').as('editedDvtDraft');
+
+    visitWithLiveWorkspaceSession('/canvas');
+    getVisibleCanvasNode('dvt-transform-1').should('be.visible');
+    selectCanvasClosure(['dvt-transform-1']);
+    clickPreviewExecutionPlanFromOperationalDrawer();
+    cy.wait('@dvtPreviewBeforeEdit', { timeout: 30_000 })
+      .its('response.statusCode')
+      .should('equal', 200);
+    cy.get('[data-slot="plan-preview-start-run"]').should('be.enabled');
+    cy.get('[data-testid="plan-preview-modal"]')
+      .contains('button', /^(Close|Cerrar)$/)
+      .click();
+    cy.get('[data-testid="plan-preview-modal"]').should('not.exist');
+
+    getVisibleCanvasNode('dvt-transform-1')
+      .find('[data-slot="canvas-node-shell"]')
+      .rightclick('center', { force: true });
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', /^(Properties|Propiedades)$/)
+      .should('be.visible')
+      .click();
+    cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
+    cy.get('input[name="node-name"]').clear().type('Transform after Preview');
+    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Apply|Aplicar)$/).click();
+    cy.wait('@editedDvtDraft', { timeout: 30_000 }).its('response.statusCode').should('equal', 200);
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+
+    cy.get('[data-slot="shell-run-command"]').should('be.disabled');
+    revealOperationalDrawer();
+    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="runs"]').click();
+    cy.get('[data-slot="bottom-operational-drawer-runs"]')
+      .should('be.visible')
+      .and('contain.text', 'Execution Preview')
+      .invoke('text')
+      .should('match', /(?:stale|obsoleto)/i);
+    cy.then(() => {
+      expect(startRunRequests).to.equal(0);
     });
   });
 });
