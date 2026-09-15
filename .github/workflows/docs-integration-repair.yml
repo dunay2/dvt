@@ -9,72 +9,65 @@ permissions:
   contents: read
 
 jobs:
-  transfer:
-    name: Transfer reviewed content-addressed retirement objects
+  verify:
+    name: Verify exact planning-retirement candidate
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      actions: read
-      contents: write
+    timeout-minutes: 20
+    env:
+      GIT_BASE: bec9a00d48ce1f02ec26199f670fcf1757680ad7
+      GIT_HEAD: d4276ce078a649e04782c5f7c9f01e23b9e71301
+      PLANNING_DB_INTEGRITY_SCOPE: bootstrap
     steps:
-      - name: Verify artifact and transfer objects without updating any branch
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Checkout exact published candidate without credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: d4276ce078a649e04782c5f7c9f01e23b9e71301
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup existing toolchain
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+      - name: Prepare existing disposable CI database
+        uses: ./.github/actions/prepare-planning-db
+      - name: Require generated documentation to match HEAD
+        run: |
+          pnpm docs:sync:check
+          pnpm docs:gov:manifest:check
+      - name: Validate the documentation contract in CI scope
+        run: pnpm ci:docs
+      - name: Run canonical pre-push checks
+        run: pnpm verify:prepush
+      - name: Run actual affected regression suites
+        run: node --test scripts/documentation-publication.test.cjs scripts/planning-db-surface-inventory-check.test.cjs tools/ci/docs-disposition-canon.test.mjs
+      - name: Prove current contract and retirement checks fail closed
         shell: bash
         run: |
           python3 - <<'PY'
-          import base64, hashlib, io, json, lzma, os, urllib.error, urllib.request, zipfile
-          api = 'https://api.github.com/repos/dunay2/dvt'
-          base = 'bec9a00d48ce1f02ec26199f670fcf1757680ad7'
-          expected_tree = 'bf5b51a4219ab7fe74ef6de0a33734f5236e8c6d'
-          headers = {'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json'}
-          class NoRedirect(urllib.request.HTTPRedirectHandler):
-              def redirect_request(self, req, fp, code, msg, response_headers, newurl):
-                  return None
-          opener = urllib.request.build_opener(NoRedirect)
-          def request_json(path, body=None):
-              data = json.dumps(body).encode() if body is not None else None
-              request = urllib.request.Request(api + path, data=data, headers=headers, method='POST' if body is not None else 'GET')
-              with opener.open(request, timeout=30) as response:
-                  return json.load(response)
-          def git_hash(data):
-              return hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest()
-          source_blob = 'd91856ca57040dbbb2472ac942144b7a7b3e7aef'
-          source_bytes = base64.b64decode(request_json('/git/blobs/' + source_blob)['content'])
-          assert git_hash(source_bytes) == source_blob
-          operations = json.loads(lzma.decompress(source_bytes))
-          assert operations['base'] == base
-          request = urllib.request.Request(api + '/actions/artifacts/10409413100/zip', headers=headers)
+          import pathlib, subprocess
+          current = pathlib.Path('docs/contracts/traceability/index.md')
+          content = current.read_bytes()
           try:
-              with opener.open(request, timeout=30) as response:
-                  raw = response.read()
-          except urllib.error.HTTPError as error:
-              if error.code != 302:
-                  raise
-              url = error.headers['Location']
-              assert url.startswith('https://')
-              # The signed storage request receives no GitHub Authorization header.
-              with urllib.request.urlopen(url, timeout=30) as response:
-                  raw = response.read()
-          assert hashlib.sha256(raw).hexdigest() == '1030fd05f4c9751108b5680a4f503188f7aae71197ad8c760fd6860c10b2e43f'
-          with zipfile.ZipFile(io.BytesIO(raw)) as archive:
-              payload = json.loads(archive.read('files.json'))
-          assert payload['base'] == base
-          files = payload['files']
-          expected = set(operations['deleted']) | {name for item in operations['updates'] for name in (item['path'], item['target'])} | {'docs/.manifest.json', 'docs/risk-register/quality/index.md'}
-          assert len(files) == len(expected) == 156
-          assert {item['path'] for item in files} == expected
-          assert sum(item['content'] is None for item in files) == 113
-          for item in files:
-              if item['content'] is not None:
-                  assert git_hash(item['content'].encode()) == item['sha'], item['path']
-          entries = []
-          for item in files:
-              if item['content'] is not None:
-                  result = request_json('/git/blobs', {'content': item['content'], 'encoding': 'utf-8'})
-                  assert result['sha'] == item['sha'], item['path']
-              entries.append({'path': item['path'], 'mode': '100644', 'type': 'blob', 'sha': item['sha']})
-          result = request_json('/git/trees', {'base_tree': '16363de699b4c1895ac709108400c20c11c58cb6', 'tree': entries})
-          assert result['sha'] == expected_tree, result['sha']
-          print(json.dumps({'base': base, 'tree': result['sha'], 'writtenBlobs': 43, 'deletedPaths': 113, 'note': '112 retired documents plus the old spelling of one renamed current risk. No commit or ref written.'}))
+              current.unlink()
+              result = subprocess.run(['node', 'scripts/docs-quality-check.cjs'], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+              assert result.returncode != 0, 'Missing current contract was incorrectly accepted'
+              assert 'docs/contracts/traceability/index.md -> required canonical surface is missing.' in result.stdout
+              print('PASS negative control: missing current traceability contract is rejected')
+          finally:
+              current.write_bytes(content)
+          archive = pathlib.Path('docs/planning/archive')
+          assert not archive.exists()
+          command = ['node', '--test', '--test-name-pattern=retired historical packs and generators cannot return', 'tools/ci/docs-disposition-canon.test.mjs']
+          try:
+              archive.mkdir()
+              result = subprocess.run(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+              assert result.returncode != 0, 'Reintroduced planning archive was incorrectly accepted'
+              assert 'docs/planning/archive' in result.stdout
+              print('PASS negative control: restored planning archive is rejected')
+          finally:
+              archive.rmdir()
+          subprocess.run(command, check=True)
+          print('PASS final retirement rerun after removing both controlled mutations')
           PY
+      - name: Require a clean tracked worktree
+        run: git diff --exit-code HEAD
