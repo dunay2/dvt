@@ -8,6 +8,7 @@ const https = require('node:https');
 const path = require('node:path');
 const readline = require('node:readline');
 const { defaultPgUrl } = require('./run-local-postgres.cjs');
+const { buildLocalPostgresProofSeedSql } = require('./run-dev-stack.postgres-seed.cjs');
 const {
   LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
   seedLocalProtectedRuntimeGrant,
@@ -223,36 +224,6 @@ function prepareTemporalWorkerRuntimeDependencies(apiEnv, { spawnCommand = spawn
   }
 
   return true;
-}
-
-function buildLocalPostgresProofSeedSql() {
-  return `
-CREATE SCHEMA IF NOT EXISTS raw;
-
-DROP TABLE IF EXISTS public.source_1;
-CREATE TABLE public.source_1 (
-  order_id integer PRIMARY KEY,
-  customer text NOT NULL,
-  amount numeric(12, 2) NOT NULL
-);
-INSERT INTO public.source_1 (order_id, customer, amount) VALUES
-  (1, 'Ada', 125.50),
-  (2, 'Grace', 98.00),
-  (3, 'Linus', 212.75);
-ANALYZE public.source_1;
-
-DROP TABLE IF EXISTS raw.orders;
-CREATE TABLE raw.orders (
-  order_id integer PRIMARY KEY,
-  customer text NOT NULL,
-  amount numeric(12, 2) NOT NULL
-);
-INSERT INTO raw.orders (order_id, customer, amount) VALUES
-  (1, 'Ada', 125.50),
-  (2, 'Grace', 98.00),
-  (3, 'Linus', 212.75);
-ANALYZE raw.orders;
-`.trim();
 }
 
 function buildLocalWarehouseConnectionRequest() {
