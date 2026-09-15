@@ -4,7 +4,12 @@ import {
   inspectDvtSubstraitProjectionDraft,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitProjection';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
-import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  getE2eApiCalls,
+  resetE2eApiStubs,
+  stubE2eJsonApi,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -20,7 +25,7 @@ type DraftSave = {
   };
 };
 
-function stubCanvas(): void {
+function stubCanvas(secondModel = false): void {
   stubShellBootstrapApis({
     scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
   });
@@ -33,7 +38,11 @@ function stubCanvas(): void {
     minFrontendVersion: '0.0.1',
     plugins: { dvt: { available: true } },
   });
-  stubStatefulCanvasDraftAuthoring({ canvasKind: 'transformation', columnMapping: true });
+  stubStatefulCanvasDraftAuthoring({
+    canvasKind: 'transformation',
+    columnMapping: true,
+    sourceInspectorOrdering: secondModel,
+  });
 }
 
 function visitCanvas(): void {
@@ -69,7 +78,7 @@ describe('Canvas calculated-column authoring', () => {
     visitCanvas();
     const node = '.react-flow__node[data-id="model-orders"]';
     const title = `${node} [data-slot="graph-node-card-title"]`;
-    const dataTab = '[data-slot="bottom-operational-drawer-tab"][data-tab="data"]';
+    const dataTab = '[data-slot="bottom-operational-drawer-tab"][data-tab="data:model-orders"]';
     const semanticTab = '[data-slot="bottom-operational-drawer-tab"][data-tab="semantic"]';
     cy.get(node).contains('button', 'Columns').click();
     cy.get(node).contains('button', 'Map compatible columns').click();
@@ -141,7 +150,7 @@ describe('Canvas calculated-column authoring', () => {
         cy.get(
           '.react-flow__node[data-id="model-orders"] [data-slot="graph-node-card-title"]'
         ).dblclick();
-        cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data"]').should(
+        cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data:model-orders"]').should(
           'have.attr',
           'aria-selected',
           'true'
@@ -214,4 +223,42 @@ describe('Canvas calculated-column authoring', () => {
       cy.get('.react-flow__node[data-id="model-orders"]').should('contain.text', 'customer_alias');
     });
   }
+
+  it('keeps one independent data tab per opened card', () => {
+    resetE2eApiStubs();
+    stubCanvas(true);
+    cy.viewport(1920, 1080);
+    visitCanvas();
+    const firstModel = '.react-flow__node[data-id="model-orders"]';
+    const secondModel = '.react-flow__node[data-id="model-orders-secondary"]';
+    const firstTab = '[data-slot="bottom-operational-drawer-tab"][data-tab="data:model-orders"]';
+    const secondTab =
+      '[data-slot="bottom-operational-drawer-tab"][data-tab="data:model-orders-secondary"]';
+
+    cy.get(`${firstModel} [data-slot="graph-node-card-title"]`).dblclick();
+    cy.get(firstTab).should('have.attr', 'aria-selected', 'true');
+    cy.contains(
+      '[data-slot="bottom-operational-drawer-data"]',
+      'Run Orders model to publish a result'
+    ).should('be.visible');
+
+    cy.get(`${secondModel} [data-slot="graph-node-card-title"]`).dblclick();
+    cy.get(secondTab).should('have.attr', 'aria-selected', 'true');
+    cy.get(firstTab).should('exist');
+    cy.contains(
+      '[data-slot="bottom-operational-drawer-data"]',
+      'Run Orders model secondary to publish a result'
+    ).should('be.visible');
+
+    cy.get(firstTab).click();
+    cy.contains(
+      '[data-slot="bottom-operational-drawer-data"]',
+      'Run Orders model to publish a result'
+    ).should('be.visible');
+    cy.get(secondTab).click();
+    cy.contains(
+      '[data-slot="bottom-operational-drawer-data"]',
+      'Run Orders model secondary to publish a result'
+    ).should('be.visible');
+  });
 });
