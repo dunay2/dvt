@@ -172,6 +172,8 @@ export const canvasViewExecutionCopyEs = {
     'La conexión gobernada de {nodeName} ya no está disponible.',
   operationalDrawerDataSourceObjectNotFoundTemplate:
     'El objeto de origen de {nodeName} ya no está disponible.',
+  operationalDrawerDataResultNotPublishedTemplate:
+    'Ejecuta {nodeName} para publicar un resultado antes de abrir sus datos.',
   operationalDrawerDataUnavailableTemplate: 'No se ha podido leer la muestra de {nodeName}.',
   operationalDrawerDataUnknownErrorTemplate: 'No se ha podido cargar la muestra de {nodeName}.',
   operationalDrawerDataTruncatedTemplate: 'Se muestran las primeras {limit} filas.',

@@ -19,6 +19,8 @@ import {
 } from './OperationalDrawerPanelPrimitives';
 import type {
   OperationalDrawerContribution,
+  OperationalDrawerDataSample,
+  OperationalDrawerTab,
   OperationalDrawerTabId,
 } from './operationalDrawerContributionStore';
 import { OperationalDrawerSelectionRecoveryView } from './OperationalDrawerSelectionRecoveryView';
@@ -32,8 +34,11 @@ function formatDataSampleTemplate(
 
 export function BottomOperationalDataSamplePanel({
   contribution,
-}: Readonly<{ contribution: OperationalDrawerContribution }>): JSX.Element {
-  const state = contribution.dataSample;
+  dataSample: state,
+}: Readonly<{
+  contribution: OperationalDrawerContribution;
+  dataSample: OperationalDrawerDataSample;
+}>): JSX.Element {
   let content: ReactNode;
 
   if (state.status === 'idle') {
@@ -55,9 +60,11 @@ export function BottomOperationalDataSamplePanel({
         ? contribution.copy.dataConnectionNotFoundTemplate
         : state.reason === 'source_object_not_found'
           ? contribution.copy.dataSourceObjectNotFoundTemplate
-          : state.reason === 'unavailable'
-            ? contribution.copy.dataUnavailableTemplate
-            : contribution.copy.dataUnknownErrorTemplate;
+          : state.reason === 'result_not_published'
+            ? contribution.copy.dataResultNotPublishedTemplate
+            : state.reason === 'unavailable'
+              ? contribution.copy.dataUnavailableTemplate
+              : contribution.copy.dataUnknownErrorTemplate;
     content = (
       <p role="alert">
         {formatDataSampleTemplate(template, { nodeName: state.nodeName, limit: '' })}
@@ -243,26 +250,25 @@ export function BottomOperationalDrawerBody({
     return <>{logBody}</>;
   }
 
-  let activeBody = logBody;
-  const contributedBody = contribution.tabs.find((tab) => tab.id === activeTab)?.content;
-
-  if (contributedBody !== undefined) {
-    activeBody = contributedBody;
-  } else if (activeTab === 'problems') {
-    activeBody = <BottomOperationalProblemsPanel contribution={contribution} />;
-  } else if (activeTab === 'runs') {
-    activeBody = <BottomOperationalRunsPanel contribution={contribution} />;
-  } else if (activeTab === 'preview') {
-    activeBody = <BottomOperationalPreviewPanel contribution={contribution} />;
-  } else if (activeTab === 'data') {
-    activeBody = <BottomOperationalDataSamplePanel contribution={contribution} />;
-  }
+  const renderTabBody = (tab: OperationalDrawerTab): ReactNode => {
+    if (tab.content !== undefined) return tab.content;
+    if (tab.id === 'problems')
+      return <BottomOperationalProblemsPanel contribution={contribution} />;
+    if (tab.id === 'runs') return <BottomOperationalRunsPanel contribution={contribution} />;
+    if (tab.id === 'preview') return <BottomOperationalPreviewPanel contribution={contribution} />;
+    if (tab.dataSample !== undefined) {
+      return (
+        <BottomOperationalDataSamplePanel contribution={contribution} dataSample={tab.dataSample} />
+      );
+    }
+    return logBody;
+  };
 
   return (
     <>
       {contribution.tabs.map((tab) => (
         <OperationalDrawerTabPanel key={tab.id} active={activeTab === tab.id} tabId={tab.id}>
-          {activeBody}
+          {renderTabBody(tab)}
         </OperationalDrawerTabPanel>
       ))}
     </>

@@ -36,14 +36,14 @@ export function useCanvasNodeDataSample({
   runSnapshot,
   warehouseSourceDataSampleQuery,
 }: CanvasNodeDataSampleArgs): Readonly<{
-  dataSample: ReturnType<typeof useCanvasDataSample>['dataSample'];
+  dataSampleTabs: ReturnType<typeof useCanvasDataSample>['dataSampleTabs'];
   projectNode: (nodeId: string, data: DbtNodeData) => CanvasNodeDataSampleProjection;
 }> {
-  const { dataSample, openDataSample } = useCanvasDataSample();
+  const { dataSampleTabs, openDataSample } = useCanvasDataSample();
   const openSource = useCallback(
-    (target: CanvasSourceDataSampleTarget) => {
+    (nodeId: string, target: CanvasSourceDataSampleTarget) => {
       if (warehouseSourceDataSampleQuery == null) return;
-      openDataSample(target.nodeName, () =>
+      openDataSample(nodeId, target.nodeName, () =>
         warehouseSourceDataSampleQuery.previewSourceObjectRows({
           connectionId: target.connectionId,
           objectId: target.objectId,
@@ -57,9 +57,9 @@ export function useCanvasNodeDataSample({
     [openDataSample, warehouseSourceDataSampleQuery]
   );
   const openSink = useCallback(
-    (target: CanvasSinkDataSampleTarget) => {
+    (nodeId: string, target: CanvasSinkDataSampleTarget) => {
       if (runMaterializationSampleQuery == null) return;
-      openDataSample(target.nodeName, () =>
+      openDataSample(nodeId, target.nodeName, () =>
         runMaterializationSampleQuery(target.runId, CANVAS_SOURCE_DATA_SAMPLE_LIMIT)
       );
     },
@@ -83,12 +83,12 @@ export function useCanvasNodeDataSample({
       const sinkTarget = resolveCanvasSinkDataSampleTarget(data, runSnapshot);
       const onOpen = isNativeTransform
         ? transformTarget == null
-          ? () => openDataSample(data.name)
-          : () => openSource(transformTarget)
+          ? () => openDataSample(nodeId, data.name, undefined, 'result_not_published')
+          : () => openSource(nodeId, transformTarget)
         : sourceTarget != null && warehouseSourceDataSampleQuery != null
-          ? () => openSource(sourceTarget)
+          ? () => openSource(nodeId, sourceTarget)
           : sinkTarget != null && runMaterializationSampleQuery != null
-            ? () => openSink(sinkTarget)
+            ? () => openSink(nodeId, sinkTarget)
             : undefined;
 
       return { canOpen: onOpen != null, onOpen, sinkResult: sinkTarget };
@@ -105,5 +105,5 @@ export function useCanvasNodeDataSample({
     ]
   );
 
-  return { dataSample, projectNode };
+  return { dataSampleTabs, projectNode };
 }

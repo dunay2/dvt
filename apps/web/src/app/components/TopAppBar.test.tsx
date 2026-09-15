@@ -91,6 +91,7 @@ describe('ShellTopBar workspace context', () => {
         dataEmptyTemplate: '{nodeName} returned no rows.',
         dataConnectionNotFoundTemplate: 'Connection missing for {nodeName}.',
         dataSourceObjectNotFoundTemplate: 'Object missing for {nodeName}.',
+        dataResultNotPublishedTemplate: 'Run {nodeName} first.',
         dataUnavailableTemplate: 'Sample unavailable for {nodeName}.',
         dataUnknownErrorTemplate: 'Sample failed for {nodeName}.',
         dataTruncatedTemplate: 'Showing {limit} rows.',
@@ -104,7 +105,6 @@ describe('ShellTopBar workspace context', () => {
         { id: 'problems', label: 'Problems', count: 1 },
         { id: 'runs', label: 'Runs', count: 1 },
         { id: 'preview', label: 'Preview', count: 1 },
-        { id: 'data', label: 'Data', count: null },
       ],
       problems: {
         items: [],
@@ -125,7 +125,6 @@ describe('ShellTopBar workspace context', () => {
         onPreviewExecutionPlan: vi.fn(),
         selectionRecovery: null,
       },
-      dataSample: { status: 'idle' },
       ...overrides,
     };
   }

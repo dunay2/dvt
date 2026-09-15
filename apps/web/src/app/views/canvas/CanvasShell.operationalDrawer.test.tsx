@@ -66,7 +66,6 @@ describe('CanvasShell operational drawer registration', () => {
         { id: 'problems', label: 'Problems' },
         { id: 'runs', label: 'Runs' },
         { id: 'preview', label: 'Preview' },
-        { id: 'data', label: 'Data' },
         { id: 'semantic', label: 'Semantics' },
       ],
       runs: {
@@ -136,9 +135,18 @@ describe('CanvasShell operational drawer registration', () => {
     });
     expect(onInspectNode).not.toHaveBeenCalled();
     expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
-      activeTab: 'data',
+      activeTab: `data:${fixture.transform.id}`,
       contribution: {
-        dataSample: { status: 'error', nodeName: fixture.transform.name, reason: 'unavailable' },
+        tabs: expect.arrayContaining([
+          expect.objectContaining({
+            id: `data:${fixture.transform.id}`,
+            dataSample: {
+              status: 'error',
+              nodeName: fixture.transform.name,
+              reason: 'result_not_published',
+            },
+          }),
+        ]),
       },
     });
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
@@ -182,7 +190,7 @@ describe('CanvasShell operational drawer registration', () => {
     expect(useOperationalDrawerContributionStore.getState().contribution).toBeNull();
   });
 
-  it('does not replace Transform data with a late source response or query another node', async () => {
+  it('keeps one isolated data tab per card when a source response arrives late', async () => {
     const fixture = buildSemanticWorkbenchFixture();
     let resolveSample: ((sample: SourceDataSample) => void) | undefined;
     const previewSourceObjectRows = vi.fn(
@@ -252,23 +260,32 @@ describe('CanvasShell operational drawer registration', () => {
     await act(async () => {
       resolveSample?.(sourceSample);
     });
-    expect(useOperationalDrawerContributionStore.getState().contribution?.dataSample).toEqual({
-      status: 'error',
-      nodeName: fixture.transform.name,
-      reason: 'unavailable',
+    expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
+      activeTab: `data:${fixture.transform.id}`,
+      contribution: {
+        tabs: expect.arrayContaining([
+          expect.objectContaining({
+            id: 'data:source',
+            dataSample: { status: 'ready', nodeName: 'Source', sample: sourceSample },
+          }),
+          expect.objectContaining({
+            id: `data:${fixture.transform.id}`,
+            dataSample: {
+              status: 'error',
+              nodeName: fixture.transform.name,
+              reason: 'result_not_published',
+            },
+          }),
+        ]),
+      },
     });
     expect(previewSourceObjectRows).toHaveBeenCalledOnce();
     expect(runMaterializationSampleQuery).not.toHaveBeenCalled();
     expect(onInspectNode).not.toHaveBeenCalled();
-    await act(async () => {
-      nodes[0]?.data.onOpenSourceDataSample?.('source');
-      resolveSample?.(sourceSample);
+    act(() => {
+      useOperationalDrawerContributionStore.getState().selectOperationalDrawerTab('data:source');
     });
-    expect(useOperationalDrawerContributionStore.getState().contribution?.dataSample).toEqual({
-      status: 'ready',
-      nodeName: 'Source',
-      sample: sourceSample,
-    });
-    expect(previewSourceObjectRows).toHaveBeenCalledTimes(2);
+    expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('data:source');
+    expect(previewSourceObjectRows).toHaveBeenCalledOnce();
   });
 });
