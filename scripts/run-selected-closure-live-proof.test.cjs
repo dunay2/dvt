@@ -359,6 +359,7 @@ test('buildLiveProofApiEnv exposes workspace file roots for live warehouse catal
   assert.equal(apiEnv.TEMPORAL_ADDRESS, '127.0.0.1:7233');
   assert.equal(apiEnv.TEMPORAL_NAMESPACE, 'default');
   assert.equal(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL, 'http://127.0.0.1:9468/readyz');
+  assert.equal(apiEnv.DVT_START_RUN_BACKPRESSURE_MODE, 'enforce');
   assert.equal(apiEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
   assert.equal(apiEnv.DVT_TEMPORAL_DBT_ENABLED, 'true');
   assert.equal(apiEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'true');

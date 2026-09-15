@@ -544,6 +544,8 @@ function buildLiveProofApiEnv({
   );
   const temporalSourceEnv = {
     ...buildLiveProofTemporalEnvOverrides(sourceEnv, temporalWorkerAdminPort),
+    DVT_START_RUN_BACKPRESSURE_MODE:
+      readNonEmptyEnv(sourceEnv.DVT_START_RUN_BACKPRESSURE_MODE) ?? 'enforce',
     DVT_TEMPORAL_DBT_ENABLED: readNonEmptyEnv(sourceEnv.DVT_TEMPORAL_DBT_ENABLED) ?? 'true',
     DVT_TEMPORAL_DVT_POSTGRES_ENABLED:
       readNonEmptyEnv(sourceEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED) ?? 'true',
