@@ -20,36 +20,38 @@ task_id: GH-3021
 ## Current state
 
 `main` now proves T05 for both the single-source terminal Transform and the
-three-source JOIN, restores PostgreSQL evidence after reload, and rejects a
-stale Preview after the Canvas changes. Unit coverage rejects an unsupported
-`view` result disposition, but the product journey does not yet prove that the
-user sees that rejection before any Run starts.
+three-source JOIN, restores PostgreSQL evidence after reload, rejects a stale
+Preview, and visibly rejects unsupported `view` disposition before Run. The
+remaining T08 scope boundary is covered by route doubles but not by a real
+Preview PlanRef against the protected runtime.
 
 ```mermaid
 flowchart LR
-  A[Transform configured as view] --> B[Preview]
-  B --> C[Unit rejection only]
-  C --> D[Browser behavior unproven]
+  A[Preview in authorized project A] --> B[Exact PlanRef]
+  B --> C[StartRun claims project B]
+  C --> D[Live boundary unproven]
 ```
 
 ## Product cut
 
-Complete one T08 boundary through the real product: a user changes the terminal
-Transform result disposition from supported `table` to unsupported `view`,
-requests Preview, sees the precise disposition rejection, cannot start a Run,
-and causes zero `StartRun` calls. This extends no contract and adds no fallback.
+Complete one T08 scope boundary with the existing rails: obtain an exact
+PlanRef through the native Canvas Preview in authorized project A, submit that
+reference to `StartRun` while claiming project B, and prove a sanitized `403`
+plus an unchanged authorized Run list. No UI gesture can create this tampered
+request, so only the negative command crosses the protected HTTP boundary.
 
 ```mermaid
 sequenceDiagram
-  participant U as User
   participant C as Canvas
   participant P as PreviewPlan
   participant R as StartRun
-  U->>C: Change table disposition to view
-  U->>P: Preview persisted closure
-  P-->>C: REJECTED with exact disposition reason
-  C-->>U: Visible rejection; Run unavailable
-  C-xR: No command
+  participant S as Run state
+  C->>P: Preview authorized project A
+  P-->>C: Exact PlanRef
+  C->>S: Read Run ids in project A
+  C->>R: Same PlanRef; claim project B
+  R-->>C: 403 without plan disclosure
+  C->>S: Run ids in project A unchanged
 ```
 
 ## Existing rails and boundaries
@@ -68,7 +70,8 @@ identity remains owned by #2582.
 
 ## Verification
 
-The existing terminal-Transform live Cypress spec is the acceptance boundary.
-It must perform the real authoring gesture, persist the changed draft, observe
-the protected Preview rejection and exact reason, and prove zero `StartRun`
-requests. No Preview, draft, Run, or rejection response is stubbed.
+The terminal-Transform live Cypress spec remains the acceptance boundary. It
+must receive the PlanRef from real Preview, compare the authorized Run ids
+before and after the cross-scope command, and reject the command without
+returning PlanRef contents. No Preview, Run, authorization, or list response is
+stubbed.
