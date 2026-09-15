@@ -73,6 +73,7 @@ const EnvSchema = z
     DVT_DBT_BUNDLE_STORE_BACKEND: z.enum(['file', 's3']).optional(),
     DVT_DBT_BUNDLE_S3_BUCKET: z.string().optional(),
     DVT_DBT_BUNDLE_FILE_ROOT: z.string().optional(),
+    DVT_CAS_FILE_ROOT: z.string().optional(),
     DVT_WORKSPACE_FILES_ROOT: z.string().optional(),
   })
   .superRefine((input, ctx) => {

@@ -116,6 +116,9 @@ function buildTemporalWorkerEnv(options, env = process.env, databaseUrl) {
     ...(readNonEmptyEnv(env.DVT_WORKSPACE_FILES_ROOT) === undefined
       ? {}
       : { DVT_WORKSPACE_FILES_ROOT: readNonEmptyEnv(env.DVT_WORKSPACE_FILES_ROOT) }),
+    ...(readNonEmptyEnv(env.DVT_CAS_FILE_ROOT) === undefined
+      ? {}
+      : { DVT_CAS_FILE_ROOT: readNonEmptyEnv(env.DVT_CAS_FILE_ROOT) }),
     ...(readNonEmptyEnv(env.DVT_DBT_BUNDLE_S3_BUCKET) === undefined
       ? {}
       : { DVT_DBT_BUNDLE_S3_BUCKET: readNonEmptyEnv(env.DVT_DBT_BUNDLE_S3_BUCKET) }),
