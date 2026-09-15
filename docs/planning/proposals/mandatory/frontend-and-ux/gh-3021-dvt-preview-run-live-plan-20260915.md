@@ -19,33 +19,33 @@ task_id: GH-3021
 
 ## Current state
 
-`main` already projects a protected terminal Transform to an immutable PlanRef
-and can execute its V2 PostgreSQL workload. The selected-closure local runner,
-however, starts the Temporal worker with only the dbt profile enabled. Its DVT
-browser proof therefore asserts the obsolete `MISSING_CAPABILITY` outcome.
+`main` now projects a protected terminal Transform to an immutable PlanRef and
+executes its V2 PostgreSQL workload through Temporal. The worker persists exact
+`dvt-postgres-publication` evidence in the run events, but `GetRunSnapshot`
+currently projects only the older materialization evidence. The Runs result tab
+therefore cannot show the completed DVT publication identity.
 
 ```mermaid
 flowchart LR
-  A[Canvas terminal Transform] --> B[PreviewPlan]
-  B --> C[Persisted PlanRef]
-  C --> D[Local worker without DVT profile]
-  D --> E[MISSING_CAPABILITY]
+  A[PostgreSQL publication] --> B[Run events with DVT evidence]
+  B --> C[GetRunSnapshot]
+  C --> D[Evidence omitted]
+  D --> E[Runs result tab has no publication identity]
 ```
 
 ## Product cut
 
-Keep the existing rails and enable the implemented DVT PostgreSQL worker profile
-in the governed local stack. The browser proof configures one explicit Transform
-table target, previews the persisted revision, starts that exact PlanRef, and
-observes completion plus PostgreSQL publication evidence through the current run
-read models.
+Keep the existing rails and extend the current run evidence projection. A
+completed snapshot without legacy materialization evidence reads the current
+logical attempt events, validates the existing DVT evidence contract, and
+returns it through `GetRunSnapshot`. The Runs result tab presents that immutable
+publication identity without querying PostgreSQL or claiming historical rows.
 
 ```mermaid
 flowchart LR
-  A[Persisted Canvas revision] -->|PreviewPlan| B[Exact PlanRef]
-  B -->|StartRun| C[DVT PostgreSQL worker]
-  C --> D[Stable table publication]
-  D -->|GetRunSnapshot and GetRunEvents| E[Visible run evidence]
+  A[Run events] -->|latest logical attempt| B[DVT evidence validator]
+  B -->|GetRunSnapshot| C[Runs adapter]
+  C --> D[Publication evidence card]
 ```
 
 ## Existing rails and boundaries
@@ -62,7 +62,8 @@ reading remains owned by #2582 and requires publication-token consistency.
 
 ## Verification
 
-The existing live Cypress spec is the acceptance boundary. It must fail before
-the local worker profile is enabled, then prove accepted Preview, exact PlanRef
-Run start, completed events, and `dvt-postgres-publication` evidence against real
-Temporal and PostgreSQL services. Unit tests cover environment composition.
+The existing live Cypress spec remains the acceptance boundary. It proves
+accepted Preview, exact PlanRef Run start, completed PostgreSQL publication, and
+the same `dvt-postgres-publication` identity in both the persisted event and the
+visible Runs result view. Unit tests cover current-attempt selection, API
+projection, transport decoding, and presentation.
