@@ -54,6 +54,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
     const targetSchema = targetSchemaValue.trim();
     const targetRelation = 'orders_result';
     let previewSha = '';
+    let publicationToken = '';
     const waitForCompletedRun = (runId: string, attempt = 0): Cypress.Chainable<void> =>
       readLiveRunSnapshot(runId).then((response) => {
         expect(response.status).to.equal(200);
@@ -129,8 +130,13 @@ describe('DVT terminal Transform Preview and Run live', () => {
             schema: targetSchema,
             relation: targetRelation,
           });
-          expect(evidence?.publication?.token).to.match(/^[a-f0-9]{64}$/);
-          expect(evidence?.publication?.outcome).to.be.oneOf(['created', 'replaced', 'unchanged']);
+          publicationToken = evidence?.publication?.token ?? '';
+          expect(publicationToken).to.match(/^[a-f0-9]{64}$/);
+          expect(evidence?.publication?.outcome).to.be.oneOf([
+            'created',
+            'replaced',
+            'verified-existing',
+          ]);
           expect(evidence?.rowsWritten).to.equal(3);
         });
       });
@@ -139,5 +145,11 @@ describe('DVT terminal Transform Preview and Run live', () => {
     cy.get('[data-slot="run-itinerary-card"]', { timeout: 30_000 })
       .should('be.visible')
       .and('contain.text', 'Completada');
+    cy.get('[data-slot="run-result-tab"]').click();
+    cy.get('[data-slot="run-dvt-postgres-publication-card"]', { timeout: 30_000 })
+      .should('be.visible')
+      .and('contain.text', `${targetSchema}.${targetRelation}`);
+    cy.get('[data-slot="run-dvt-publication-plan-sha"]').should('have.text', previewSha);
+    cy.get('[data-slot="run-dvt-publication-token"]').should('have.text', publicationToken);
   });
 });

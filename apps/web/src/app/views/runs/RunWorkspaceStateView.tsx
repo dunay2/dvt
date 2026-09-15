@@ -568,6 +568,7 @@ export function RunWorkspaceStateView({
             </TabsTrigger>
             <TabsTrigger
               value="result"
+              data-slot="run-result-tab"
               className={routeWorkbenchTabTriggerClassName}
               disabled={!showResultSection}
             >
