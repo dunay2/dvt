@@ -1,0 +1,91 @@
+name: Docs Integration Repair
+
+on:
+  push:
+    branches: [automation/3004-docs-integration-repair]
+    paths: [.github/workflows/docs-integration-repair.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-integration-repair-3004
+  cancel-in-progress: true
+
+jobs:
+  repair:
+    name: Collect canonical documentation repairs
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GIT_BASE: 88b7922f7246386959700da5866e330076f8dd97
+      GIT_HEAD: fcd5cf29cbd6a42e67a035e173d302896b0fc8d7
+    steps:
+      - name: Checkout exact cleanup candidate without credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: fcd5cf29cbd6a42e67a035e173d302896b0fc8d7
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup canonical dependency toolchain
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+
+      - name: Apply formatter to the four CI-reported files
+        run: |
+          pnpm exec prettier --write \
+            docs/guides/documentation-maintenance-guide-20260407.md \
+            docs/planning/proposals/mandatory/governance-and-docs/docs-disposition-canon-plan-20260524.md \
+            docs/planning/status/governance-document-rule-inventory.md \
+            tools/ci/docs-disposition-canon.test.mjs
+
+      - name: Run actual affected regression tests
+        run: |
+          pnpm --filter @dvt/crypto build
+          node --test scripts/planning-db-surface-inventory-check.test.cjs tools/ci/docs-disposition-canon.test.mjs
+
+      - name: Bootstrap disposable CI database using the existing action
+        uses: ./.github/actions/prepare-planning-db
+
+      - name: Run canonical documentation generation
+        run: pnpm docs:sync
+
+      - name: Run canonical repository governance refresh
+        run: pnpm governance:refresh
+
+      - name: Validate documentation integration
+        run: pnpm ci:docs
+
+      - name: Validate remaining local documentation links
+        run: pnpm docs:gov:links
+
+      - name: Collect exact worktree repairs even when validation fails
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/docs-integration-repair"
+          git diff --binary HEAD -- docs scripts tools package.json > "$RUNNER_TEMP/docs-integration-repair/repair.patch"
+          git diff --stat HEAD -- docs scripts tools package.json > "$RUNNER_TEMP/docs-integration-repair/stat.txt"
+          git rev-parse HEAD > "$RUNNER_TEMP/docs-integration-repair/base.txt"
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import { execFileSync } from 'node:child_process';
+          const paths = execFileSync('git', ['diff', '--name-only', '-z', 'HEAD', '--', 'docs', 'scripts', 'tools', 'package.json'], { encoding: 'utf8' }).split('\0').filter(Boolean);
+          const files = paths.map((name) => ({ path: name, content: fs.existsSync(name) ? fs.readFileSync(name, 'utf8') : null }));
+          fs.writeFileSync(path.join(process.env.RUNNER_TEMP, 'docs-integration-repair', 'files.json'), JSON.stringify({ base: process.env.GIT_HEAD, files }, null, 2));
+          console.log(`Captured ${files.length} changed files.`);
+          NODE
+          cat "$RUNNER_TEMP/docs-integration-repair/stat.txt"
+
+      - name: Upload short-lived repair artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: docs-integration-repair-fcd5cf29
+          path: ${{ runner.temp }}/docs-integration-repair/
+          retention-days: 1
+          if-no-files-found: error
