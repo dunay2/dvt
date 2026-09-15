@@ -67,6 +67,7 @@ test('buildLiveProofCypressDockerInvocation isolates the one governed spec in Cy
           projectId: 'project',
           environmentId: 'dev',
         },
+        postgresTargetSchema: 'proof_schema',
       },
       'C:/repo',
       { platform: 'linux' }
@@ -91,6 +92,8 @@ test('buildLiveProofCypressDockerInvocation isolates the one governed spec in Cy
       'CYPRESS_workspaceProjectId=project',
       '-e',
       'CYPRESS_workspaceEnvironmentId=dev',
+      '-e',
+      'CYPRESS_postgresTargetSchema=proof_schema',
       'cypress/included:15.18.1',
       '--project',
       '/repo/apps/web',
@@ -116,6 +119,7 @@ test('buildLiveProofCypressDockerInvocation mirrors Windows junction targets rea
         projectId: 'project',
         environmentId: 'dev',
       },
+      postgresTargetSchema: 'proof_schema',
     },
     'C:/repo',
     {
@@ -145,6 +149,7 @@ test('buildLiveProofCypressNativeInvocation targets the already running host sta
         projectId: 'project',
         environmentId: 'dev',
       },
+      postgresTargetSchema: 'proof_schema',
     }),
     {
       command: process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm',
@@ -168,6 +173,7 @@ test('buildLiveProofCypressNativeInvocation targets the already running host sta
         CYPRESS_workspaceTenantId: 'tenant',
         CYPRESS_workspaceProjectId: 'project',
         CYPRESS_workspaceEnvironmentId: 'dev',
+        CYPRESS_postgresTargetSchema: 'proof_schema',
       },
     }
   );
@@ -331,11 +337,13 @@ test('buildLiveProofApiEnv exposes workspace file roots for live warehouse catal
   assert.equal(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL, 'http://127.0.0.1:9468/readyz');
   assert.equal(apiEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
   assert.equal(apiEnv.DVT_TEMPORAL_DBT_ENABLED, 'true');
+  assert.equal(apiEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'true');
   assert.match(apiEnv.DVT_DBT_BUNDLE_FILE_ROOT, /[\\/]\.dvt[\\/]dev-stack[\\/]dbt-bundles$/);
   assert.match(
     apiEnv.DVT_WORKSPACE_FILES_ROOT,
     /[\\/]\.dvt[\\/]live-proofs[\\/]selected-closure[\\/]dvt_live_selected_closure_test[\\/]workspace-files$/
   );
+  assert.equal(apiEnv.DVT_CAS_FILE_ROOT, undefined);
   assert.match(
     apiEnv.DVT_DBT_ANALYZER_PROFILES_DIR,
     /[\\/]\.dvt[\\/]live-proofs[\\/]selected-closure[\\/]dvt_live_selected_closure_test[\\/]server-dbt-profiles$/
@@ -419,6 +427,7 @@ test('buildLiveProofTemporalWorkerEnv derives the worker from the selected live 
     oidcEnv: { OIDC_ISSUER: 'https://issuer.local.dvt/' },
     sourceEnv: {
       VITE_DEFAULT_TENANT_ID: 'tenant-live',
+      DVT_CAS_FILE_ROOT: 'C:\\live-proof\\cas',
     },
   });
 
@@ -433,6 +442,7 @@ test('buildLiveProofTemporalWorkerEnv derives the worker from the selected live 
   assert.equal(workerEnv.DVT_TEMPORAL_ADMIN_PORT, '19568');
   assert.equal(workerEnv.DVT_TEMPORAL_WORKER_RUN_MIGRATIONS, 'true');
   assert.equal(workerEnv.DVT_WORKSPACE_FILES_ROOT, apiEnv.DVT_WORKSPACE_FILES_ROOT);
+  assert.equal(workerEnv.DVT_CAS_FILE_ROOT, 'C:\\live-proof\\cas');
   assert.equal(workerEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
   assert.equal(workerEnv.DVT_TEMPORAL_DBT_ENABLED, 'true');
   assert.equal(workerEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'true');

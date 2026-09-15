@@ -45,6 +45,10 @@ export type StubCanvasDraftReadOptions = {
   importedWarehouseSource?: boolean;
   authoringGenerated?: boolean;
   terminalTransformPreview?: boolean;
+  terminalTransformResultTarget?: {
+    schema: string;
+    relation: string;
+  };
   columnMapping?: boolean;
   columnMappingDisconnected?: boolean;
   columnMappingSecondSource?: boolean;
@@ -80,6 +84,7 @@ export function buildCanvasAuthoringDraft({
   importedWarehouseSource = false,
   authoringGenerated = false,
   terminalTransformPreview = false,
+  terminalTransformResultTarget,
   columnMapping = false,
   columnMappingDisconnected = false,
   columnMappingSecondSource = false,
@@ -881,14 +886,22 @@ export function buildCanvasAuthoringDraft({
             sourceObjectId: 'raw.orders',
           },
           fields: [
-            { name: 'order_id', dataType: 'integer' },
-            { name: 'total', dataType: 'decimal' },
+            ...(terminalTransformPreview
+              ? [{ name: 'customer', dataType: 'string' }]
+              : [
+                  { name: 'order_id', dataType: 'integer' },
+                  { name: 'total', dataType: 'decimal' },
+                ]),
           ],
         },
         targetNodeId: 'dvt-transform-1',
         outputs: [
-          { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
-          { fieldId: 'output:total', name: 'total', sourceFieldName: 'total' },
+          ...(terminalTransformPreview
+            ? [{ fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' }]
+            : [
+                { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+                { fieldId: 'output:total', name: 'total', sourceFieldName: 'total' },
+              ]),
         ],
       })
     );
@@ -933,8 +946,12 @@ export function buildCanvasAuthoringDraft({
               sourceObjectId: 'raw.orders',
             },
             columns: [
-              { name: 'order_id', type: 'integer', nullable: false },
-              { name: 'total', type: 'decimal', nullable: false },
+              ...(terminalTransformPreview
+                ? [{ name: 'customer', type: 'text', nullable: false }]
+                : [
+                    { name: 'order_id', type: 'integer', nullable: false },
+                    { name: 'total', type: 'decimal', nullable: false },
+                  ]),
             ],
             config: {
               database: 'legacy_warehouse',
@@ -954,6 +971,22 @@ export function buildCanvasAuthoringDraft({
           tags: ['authoring'],
           metadata: {
             typeLabel: 'Transform',
+            ...(terminalTransformResultTarget === undefined
+              ? {}
+              : {
+                  config: {
+                    materialized: 'table',
+                    resultTarget: {
+                      schemaVersion: 'dvt-transform-result-target.v1',
+                      connectionRef: {
+                        schemaVersion: 'connection-ref.v1',
+                        provider: 'postgres',
+                        connectionId,
+                      },
+                      ...terminalTransformResultTarget,
+                    },
+                  },
+                }),
             transformAuthoring: {
               version: 'v1',
               mode: 'substrait',

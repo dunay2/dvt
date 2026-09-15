@@ -366,6 +366,9 @@ function buildLiveProofCypressDockerInvocation(
     `CYPRESS_workspaceProjectId=${args.workspaceScope.projectId}`,
     '-e',
     `CYPRESS_workspaceEnvironmentId=${args.workspaceScope.environmentId}`,
+    ...(args.postgresTargetSchema === undefined
+      ? []
+      : ['-e', `CYPRESS_postgresTargetSchema=${args.postgresTargetSchema}`]),
     CYPRESS_IMAGE,
     '--project',
     '/repo/apps/web',
@@ -407,6 +410,9 @@ function buildLiveProofCypressNativeInvocation(args) {
       CYPRESS_workspaceTenantId: args.workspaceScope.tenantId,
       CYPRESS_workspaceProjectId: args.workspaceScope.projectId,
       CYPRESS_workspaceEnvironmentId: args.workspaceScope.environmentId,
+      ...(args.postgresTargetSchema === undefined
+        ? {}
+        : { CYPRESS_postgresTargetSchema: args.postgresTargetSchema }),
     },
   };
 }
@@ -522,6 +528,8 @@ function buildLiveProofApiEnv({
   const temporalSourceEnv = {
     ...buildLiveProofTemporalEnvOverrides(sourceEnv, temporalWorkerAdminPort),
     DVT_TEMPORAL_DBT_ENABLED: readNonEmptyEnv(sourceEnv.DVT_TEMPORAL_DBT_ENABLED) ?? 'true',
+    DVT_TEMPORAL_DVT_POSTGRES_ENABLED:
+      readNonEmptyEnv(sourceEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED) ?? 'true',
     DVT_DBT_ANALYZER_BIN: dbtExecutable,
     DVT_DBT_BIN: dbtExecutable,
     DVT_DBT_EXECUTION_ADAPTER: 'postgres',
@@ -780,6 +788,7 @@ async function main() {
         webPort: DEFAULT_WEB_PORT,
         apiBearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
         workspaceScope: localProtectedRuntimeAuth.workspaceScope,
+        postgresTargetSchema: liveProofSchema,
         specPath,
         headed: cypressHeaded,
       },
