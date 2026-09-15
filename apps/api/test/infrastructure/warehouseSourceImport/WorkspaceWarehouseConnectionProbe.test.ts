@@ -22,7 +22,10 @@ vi.mock('pg', () => ({
   Client: pgMock.Client,
 }));
 
-import { SourceObjectNotFoundError } from '../../../src/application/ports/warehouseSourceImport.js';
+import {
+  SourceObjectNotFoundError,
+  WarehouseSourcePublicationChangedError,
+} from '../../../src/application/ports/warehouseSourceImport.js';
 import { WorkspaceWarehouseConnectionProbe } from '../../../src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.js';
 
 function expectedRelationIdentity(
@@ -328,7 +331,14 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
     pgMock.query
       .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [{ relation_kind: 'r' }] })
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            relation_kind: 'r',
+            relation_comment: `dvt:publication:v1;token=${'a'.repeat(64)};schema=${'b'.repeat(64)}`,
+          },
+        ],
+      })
       .mockResolvedValueOnce({
         rows: [
           { order_id: 1, customer: 'Ada' },
@@ -353,6 +363,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
         credentialRef: 'postgres:warehouse',
         objectId: 'relation/dvt/public/Order%20Lines',
         limit: 2,
+        expectedPublicationToken: 'a'.repeat(64),
       })
     ).resolves.toEqual({
       columns: [
@@ -363,12 +374,46 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       truncated: true,
       sampledAt: '2026-08-17T10:00:00.000Z',
     });
-    expect(pgMock.query.mock.calls[0]?.[0]).toBe('begin transaction read only');
+    expect(pgMock.query.mock.calls[0]?.[0]).toBe(
+      'begin transaction isolation level repeatable read read only'
+    );
     expect(pgMock.query.mock.calls[1]?.[0]).toContain('set local statement_timeout');
     expect(pgMock.query.mock.calls[2]?.[1]).toEqual(['dvt', 'public', 'Order Lines']);
     expect(pgMock.query.mock.calls[3]?.[0]).toBe('select * from "public"."Order Lines" limit 3');
     expect(pgMock.query.mock.calls[4]?.[0]).toBe('commit');
     expect(pgMock.end).toHaveBeenCalledOnce();
+  });
+
+  it('rejects a sample when the stable-table publication token has changed', async () => {
+    pgMock.query
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            relation_kind: 'r',
+            relation_comment: `dvt:publication:v1;token=${'c'.repeat(64)};schema=${'b'.repeat(64)}`,
+          },
+        ],
+      })
+      .mockResolvedValueOnce({ rows: [] });
+    const probe = new WorkspaceWarehouseConnectionProbe({
+      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
+      now: () => new Date('2026-08-17T10:00:00.000Z'),
+    });
+
+    await expect(
+      probe.previewSourceObjectRows({
+        type: 'postgres',
+        database: 'dvt',
+        credentialRef: 'postgres:warehouse',
+        objectId: 'relation/dvt/public/orders',
+        limit: 20,
+        expectedPublicationToken: 'a'.repeat(64),
+      })
+    ).rejects.toBeInstanceOf(WarehouseSourcePublicationChangedError);
+    expect(pgMock.query.mock.calls.some(([sql]) => sql.startsWith('select *'))).toBe(false);
+    expect(pgMock.query.mock.calls.at(-1)?.[0]).toBe('rollback');
   });
 
   it('fails closed when the governed connection cannot select the requested relation', async () => {

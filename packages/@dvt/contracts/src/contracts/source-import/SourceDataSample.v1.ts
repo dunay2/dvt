@@ -8,6 +8,8 @@
  */
 import { z } from 'zod';
 
+import { isSha256HexString } from '../../utils/contractPrimitives.js';
+
 import { SourceObjectColumnSchema } from './SourceObjectCatalog.js';
 
 export const SOURCE_DATA_SAMPLE_CONTRACT_VERSION = 1 as const;
@@ -29,6 +31,9 @@ export const SourceDataSampleRequestSchema = z
       (objectId) => objectId.startsWith('relation/'),
       'Source data samples require a relational source object ID.'
     ),
+    expectedPublicationToken: NonBlankStringSchema.refine(isSha256HexString, {
+      message: 'Expected a lowercase SHA-256 publication token.',
+    }).optional(),
     limit: z
       .number()
       .int()
