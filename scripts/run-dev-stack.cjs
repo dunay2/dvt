@@ -8,7 +8,7 @@ const https = require('node:https');
 const path = require('node:path');
 const readline = require('node:readline');
 const { defaultPgUrl } = require('./run-local-postgres.cjs');
-const { buildLocalPostgresProofSeedSql } = require('./run-dev-stack.postgres-seed.cjs');
+const buildLocalPostgresProofSeedSql = require('./run-dev-stack.postgres-seed.cjs');
 const {
   LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
   seedLocalProtectedRuntimeGrant,

@@ -1,7 +1,6 @@
 /** Owns deterministic PostgreSQL source fixtures used by the local product stack. */
-
-function buildLocalPostgresProofSeedSql() {
-  return `
+module.exports = () =>
+  `
 CREATE SCHEMA IF NOT EXISTS raw;
 
 DROP TABLE IF EXISTS public.source_1;
@@ -50,6 +49,3 @@ INSERT INTO raw.order_details (order_id, product) VALUES
   ('3', 'Laptop');
 ANALYZE raw.order_details;
 `.trim();
-}
-
-module.exports = { buildLocalPostgresProofSeedSql };

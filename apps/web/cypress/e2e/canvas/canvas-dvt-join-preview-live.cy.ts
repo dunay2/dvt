@@ -14,45 +14,10 @@ import {
   hasLiveProtectedRuntimeEnv,
   readLiveRunEvents,
   readLiveRunSnapshot,
-  readLiveWarehouseSourceSample,
   resolveLiveWorkspaceSession,
   seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
-
-type PreviewAcceptedEnvelope = {
-  readonly plan?: {
-    readonly metadata?: { readonly planId?: string };
-    readonly steps?: ReadonlyArray<{
-      readonly kind?: string;
-      readonly stepTypeConfig?: PreviewWorkload;
-    }>;
-  };
-  readonly planRef?: { readonly planId?: string; readonly sha256?: string };
-};
-
-type PreviewWorkload = {
-  readonly schemaVersion?: string;
-  readonly targetProjection?: { readonly profileId?: string };
-  readonly graph?: {
-    readonly selectedNodeIds?: readonly string[];
-    readonly selectedEdgeIds?: readonly string[];
-  };
-  readonly output?: { readonly kind?: string; readonly disposition?: string };
-};
-
-type RunEventResponse = {
-  readonly items?: ReadonlyArray<{
-    readonly eventType?: string;
-    readonly payload?: {
-      readonly resultEvidence?: {
-        readonly evidenceType?: string;
-        readonly plan?: { readonly sha256?: string };
-        readonly rowsWritten?: number;
-      };
-    };
-  }>;
-};
 
 describe('N-input DVT Run live', () => {
   beforeEach(function () {
@@ -175,7 +140,24 @@ describe('N-input DVT Run live', () => {
     clickPreviewExecutionPlanFromOperationalDrawer();
     cy.wait('@joinPreview', { timeout: 30_000 }).then(({ response }) => {
       expect(response?.statusCode).to.equal(200);
-      const preview = response?.body as PreviewAcceptedEnvelope;
+      const preview = response?.body as {
+        readonly plan?: {
+          readonly metadata?: { readonly planId?: string };
+          readonly steps?: ReadonlyArray<{
+            readonly kind?: string;
+            readonly stepTypeConfig?: {
+              readonly schemaVersion?: string;
+              readonly targetProjection?: { readonly profileId?: string };
+              readonly graph?: {
+                readonly selectedNodeIds?: readonly string[];
+                readonly selectedEdgeIds?: readonly string[];
+              };
+              readonly output?: { readonly kind?: string; readonly disposition?: string };
+            };
+          }>;
+        };
+        readonly planRef?: { readonly planId?: string; readonly sha256?: string };
+      };
       expect(preview.plan?.steps).to.have.length(1);
       expect(preview.plan?.steps?.[0]?.kind).to.equal(
         KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD
@@ -208,9 +190,20 @@ describe('N-input DVT Run live', () => {
       return waitForCompletedRun(runId!).then(() => {
         readLiveRunEvents(runId!).then((response) => {
           expect(response.status).to.equal(200);
-          const completedStep = (response.body as RunEventResponse).items?.find(
-            (event) => event.eventType === 'StepCompleted'
-          );
+          const completedStep = (
+            response.body as {
+              readonly items?: ReadonlyArray<{
+                readonly eventType?: string;
+                readonly payload?: {
+                  readonly resultEvidence?: {
+                    readonly evidenceType?: string;
+                    readonly plan?: { readonly sha256?: string };
+                    readonly rowsWritten?: number;
+                  };
+                };
+              }>;
+            }
+          ).items?.find((event) => event.eventType === 'StepCompleted');
           const evidence = completedStep?.payload?.resultEvidence;
           expect(evidence?.evidenceType).to.equal('dvt-postgres-publication');
           expect(evidence?.plan?.sha256).to.equal(previewSha);
@@ -227,11 +220,17 @@ describe('N-input DVT Run live', () => {
       .should('be.visible')
       .and('contain.text', `${targetSchema}.${targetRelation}`);
 
-    readLiveWarehouseSourceSample(
-      sourceConnectionRef.connectionId,
-      `relation/dvt/${targetSchema}/${targetRelation}`,
-      10
-    ).then((response) => {
+    const sampleQuery = new URLSearchParams({
+      ...resolveLiveWorkspaceSession(),
+      objectId: `relation/dvt/${targetSchema}/${targetRelation}`,
+      limit: '10',
+    });
+    cy.request({
+      method: 'GET',
+      url: `${String(Cypress.env('apiBaseUrl'))}/workspace/warehouse/connections/${encodeURIComponent(sourceConnectionRef.connectionId)}/source-data-sample?${sampleQuery.toString()}`,
+      headers: { Authorization: `Bearer ${String(Cypress.env('apiBearerToken'))}` },
+      auth: { bearer: String(Cypress.env('apiBearerToken')) },
+    }).then((response) => {
       expect(response.status).to.equal(200);
       const sample = response.body as {
         readonly columns: ReadonlyArray<{ readonly name: string }>;
