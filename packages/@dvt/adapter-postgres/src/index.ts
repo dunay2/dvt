@@ -100,6 +100,11 @@ export {
   parsePostgresCredentialBindings,
 } from './PostgresCredentialBindingResolver.js';
 export {
+  PostgresDvtPublicationPredecessorReader,
+  type DvtPublicationPredecessorObservation,
+  type PostgresDvtPublicationPredecessorReaderConfig,
+} from './PostgresDvtPublicationPredecessorReader.js';
+export {
   PostgresObjectFileLoader,
   resolvePostgresObjectFileScopeSchema,
   type PostgresObjectFileLoadInput,

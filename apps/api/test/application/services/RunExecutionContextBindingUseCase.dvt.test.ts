@@ -51,8 +51,12 @@ describe('RunExecutionContextBindingUseCase DVT runtime binding', () => {
       credentialRef: 'postgres:warehouse-a',
       sourceObjects: [],
     }));
+    const observe = vi.fn(async () => ({
+      ok: true as const,
+      predecessorToken: null,
+    }));
     const useCase = new RunExecutionContextBindingUseCase(
-      dependencies({ delegate, contextWriter, getConnection })
+      dependencies({ delegate, contextWriter, getConnection, observe })
     );
 
     const result = await useCase.executeAdmitted(
@@ -73,6 +77,8 @@ describe('RunExecutionContextBindingUseCase DVT runtime binding', () => {
           'dvt-postgres': {
             connectionRef: buildRunWorkload().connectionRef,
             credentialRef: 'postgres:warehouse-a',
+            publicationToken: expect.stringMatching(/^[0-9a-f]{64}$/u),
+            expectedPredecessorToken: 'absent',
           },
         },
       }),
@@ -113,6 +119,9 @@ function dependencies(input: {
   readonly delegate: Dependencies['delegate'];
   readonly contextWriter: Dependencies['contextWriter'];
   readonly getConnection: Dependencies['warehouseConnectionCatalog']['getConnection'];
+  readonly observe?: NonNullable<
+    Dependencies['dvtPostgresPublicationPredecessorReader']
+  >['observe'];
 }): Dependencies {
   const unexpected = vi.fn(async (): Promise<never> => {
     throw new Error('Unexpected dependency call');
@@ -134,6 +143,9 @@ function dependencies(input: {
       getConnection: input.getConnection,
       createConnection: unexpected,
       renameConnection: unexpected,
+    },
+    dvtPostgresPublicationPredecessorReader: {
+      observe: input.observe ?? unexpected,
     },
   };
 }

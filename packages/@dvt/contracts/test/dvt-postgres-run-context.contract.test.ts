@@ -27,6 +27,8 @@ describe('DVT PostgreSQL run context', () => {
             provider: 'postgres',
           },
           credentialRef: 'postgres:warehouse-a',
+          publicationToken: 'c'.repeat(64),
+          expectedPredecessorToken: 'absent',
         },
       },
     });
@@ -38,6 +40,8 @@ describe('DVT PostgreSQL run context', () => {
         provider: 'postgres',
       },
       credentialRef: 'postgres:warehouse-a',
+      publicationToken: 'c'.repeat(64),
+      expectedPredecessorToken: 'absent',
     });
   });
 
@@ -52,6 +56,8 @@ describe('DVT PostgreSQL run context', () => {
               connectionId: 'warehouse-a',
               provider: 'postgres',
             },
+            credentialRef: 'postgres:warehouse-a',
+            publicationToken: 'c'.repeat(64),
           },
         },
       })

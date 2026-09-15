@@ -77,6 +77,8 @@ export const DvtPostgresPluginContextSchema = z
   .object({
     connectionRef: ConnectionRefSchema.extend({ provider: z.literal('postgres') }).strict(),
     credentialRef: CredentialReferenceSchema,
+    publicationToken: Sha256HexStringSchema,
+    expectedPredecessorToken: z.union([Sha256HexStringSchema, z.literal('absent')]),
   })
   .strict();
 export type DvtPostgresPluginContextSchemaT = z.infer<typeof DvtPostgresPluginContextSchema>;

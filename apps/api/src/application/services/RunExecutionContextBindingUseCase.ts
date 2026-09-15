@@ -32,6 +32,7 @@ import type { WorkspaceStorageScope } from '../ports/workspaceFiles.js';
 import { resolveDbtExecutionConnectionBinding } from './dbtExecutionConnectionBinding.js';
 import { resolveDbtPlanExecutionBinding } from './dbtPlanExecutionBinding.js';
 import { resolveDvtPostgresExecutionContextBinding } from './dvtPostgresExecutionContextBinding.js';
+import type { DvtPostgresPublicationPredecessorReader } from './dvtPostgresExecutionContextBinding.js';
 import { buildRunExecutionContext } from './runExecutionContextFactory.js';
 import type { StoredPlanAdmissionResult } from './StoredPlanAdmissionCoordinator.js';
 
@@ -48,6 +49,7 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
       readonly executionConnectionBindingVerifier: IDbtExecutionConnectionBindingVerifier;
       readonly stepTypeRegistry: IStepTypeRegistry;
       readonly warehouseConnectionCatalog: IWarehouseConnectionCatalog;
+      readonly dvtPostgresPublicationPredecessorReader?: DvtPostgresPublicationPredecessorReader;
     }
   ) {}
 
@@ -69,12 +71,17 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
     const bindsDbt = isDbtPlan(plan, this.deps.stepTypeRegistry);
     const dvtBinding = await resolveDvtPostgresExecutionContextBinding({
       plan,
+      planRef: scopedPlanRef.planRef,
+      runId: command.runId,
       scope: {
         tenantId: scopedPlanRef.tenantId,
         projectId: scopedPlanRef.projectId,
         environmentId: scopedPlanRef.environmentId,
       },
       catalog: this.deps.warehouseConnectionCatalog,
+      ...(this.deps.dvtPostgresPublicationPredecessorReader === undefined
+        ? {}
+        : { predecessorReader: this.deps.dvtPostgresPublicationPredecessorReader }),
     });
     if (dvtBinding.kind === 'rejected') {
       return rejectRunExecutionContext(dvtBinding.reason);

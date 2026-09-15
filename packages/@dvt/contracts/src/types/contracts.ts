@@ -219,6 +219,8 @@ export interface DbtPluginContext {
 export interface DvtPostgresPluginContext {
   connectionRef: ConnectionRef & { readonly provider: 'postgres' };
   credentialRef: NonBlankString;
+  publicationToken: Sha256HexString;
+  expectedPredecessorToken: Sha256HexString | 'absent';
 }
 
 export interface RunExecutionContext {
