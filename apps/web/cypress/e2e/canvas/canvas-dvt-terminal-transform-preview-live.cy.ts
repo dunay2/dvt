@@ -24,7 +24,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
     resetE2eApiStubs();
   });
 
-  it('executes the exact accepted PlanRef and publishes PostgreSQL evidence', () => {
+  it('executes the exact PlanRef and reloads its PostgreSQL evidence', () => {
     type PreviewAcceptedEnvelope = {
       readonly plan?: {
         readonly metadata?: { readonly planId?: string };
@@ -154,6 +154,27 @@ describe('DVT terminal Transform Preview and Run live', () => {
     });
     cy.get('[data-slot="run-dvt-publication-token"]').should(($value) => {
       expect($value.text()).to.equal(publicationToken);
+    });
+
+    cy.location('pathname').then((pathname) => {
+      const runId = pathname.split('/').pop();
+      expect(runId).to.be.a('string').and.not.to.equal('');
+      cy.intercept('GET', `**/runs/${runId}?*`).as('reloadedDvtRunSnapshot');
+
+      cy.reload();
+      cy.wait('@reloadedDvtRunSnapshot', { timeout: 30_000 })
+        .its('response.statusCode')
+        .should('equal', 200);
+      cy.get('[data-slot="run-itinerary-card"]', { timeout: 30_000 })
+        .should('be.visible')
+        .and('contain.text', 'Completada');
+      cy.get('[data-slot="run-result-tab"]').click();
+      cy.get('[data-slot="run-dvt-publication-plan-sha"]').should(($value) => {
+        expect($value.text()).to.equal(previewSha);
+      });
+      cy.get('[data-slot="run-dvt-publication-token"]').should(($value) => {
+        expect($value.text()).to.equal(publicationToken);
+      });
     });
   });
 });
