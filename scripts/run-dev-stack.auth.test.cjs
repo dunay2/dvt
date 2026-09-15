@@ -215,6 +215,22 @@ test('startLocalProtectedRuntimeAuth publishes tenant actions for frontend permi
   }
 });
 
+test('startLocalProtectedRuntimeAuth can issue a token for a second governed principal', async () => {
+  const bootstrap = await startLocalProtectedRuntimeAuth();
+
+  try {
+    const issued = await bootstrap.issueBearerToken({
+      principalId: 'principal-without-run-start',
+    });
+    const payload = decodeJwtPayload(issued.bearerToken);
+
+    assert.equal(payload.sub, 'principal-without-run-start');
+    assert.deepEqual(payload.tenant_ids, ['tenant']);
+  } finally {
+    await bootstrap.close();
+  }
+});
+
 test('startLocalProtectedRuntimeAuth can assert additional live-proof project ids', async () => {
   const bootstrap = await startLocalProtectedRuntimeAuth({
     env: {
