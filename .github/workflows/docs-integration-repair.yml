@@ -15,13 +15,13 @@ jobs:
     timeout-minutes: 20
     env:
       GIT_BASE: bec9a00d48ce1f02ec26199f670fcf1757680ad7
-      GIT_HEAD: d4276ce078a649e04782c5f7c9f01e23b9e71301
+      GIT_HEAD: fbdb79b8404fdf07b95b0f045e3a3c910581ede0
       PLANNING_DB_INTEGRITY_SCOPE: bootstrap
     steps:
       - name: Checkout exact published candidate without credentials
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: d4276ce078a649e04782c5f7c9f01e23b9e71301
+          ref: fbdb79b8404fdf07b95b0f045e3a3c910581ede0
           fetch-depth: 0
           persist-credentials: false
       - name: Setup existing toolchain
