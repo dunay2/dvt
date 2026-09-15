@@ -1,0 +1,22 @@
+---
+id: R-20260915-DVT-POSTGRES-PUBLICATION
+title: Stable PostgreSQL publication could be bypassed by out-of-band owner writes
+status: Open
+date: 2026-09-15
+owners:
+  - '@dvt/adapter-postgres'
+  - '@dvt/temporal-dvt-postgres-plugin'
+severity: High
+probability: Low
+---
+description: >-
+  The stable-table fencing contract cannot detect a direct write performed with the dedicated DVT
+  owner credential between admission and publication unless that write also changes governed
+  metadata.
+mitigations:
+  - Resolve only governed postgres credential aliases from the immutable run execution context
+  - Reject non-table, wrong-owner, unmanaged, schema-drifted and write-granted targets before
+    mutation
+  - Serialize DVT publishers with a physical-target advisory lock and compare-and-swap token
+  - Keep the dedicated publication owner credential unavailable to user-authored workloads
+  - Cover stale, unmanaged, idempotent and stable-OID outcomes with PostgreSQL integration tests

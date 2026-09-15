@@ -1,6 +1,6 @@
 ---
 title: ADR-0066 - PostgreSQL Stable-Table Publication
-status: Proposed
+status: Accepted
 date: 2026-09-03
 owners:
   - architecture
@@ -14,10 +14,11 @@ arc_level: ARC-1
 
 ## Status
 
-Proposed.
+Accepted.
 
-The contract is frozen for the first implementation. Repository ADR governance
-requires an implementing file before `Accepted`; issue #2723 owns that transition.
+Issue #2723 implements the frozen contract through the existing StartRun and
+Temporal plugin rails. Its ARC-2 proof is recorded in
+`ED-20260915-dvt-postgres-operational-runtime.md`.
 
 ## Context
 
@@ -159,6 +160,18 @@ The first implementation is small and provider-native, while preserving the data
 objects consumers already reference. Large replacements still incur PostgreSQL WAL,
 dead tuples and writer contention; measurement can motivate a later, separately
 governed strategy without weakening this contract silently.
+
+## Implementation
+
+- StartRun freezes the governed connection, credential reference, publication
+  token and expected predecessor in the immutable run execution context.
+- The DVT PostgreSQL Temporal plugin verifies the SQL artifact and context before
+  resolving credentials or performing provider effects.
+- The PostgreSQL adapter creates the candidate before locking, fences stale and
+  unmanaged targets, preserves the stable table OID and commits rows plus marker
+  atomically.
+- `StepCompleted.resultEvidence` binds plan, workload, semantic plan, target
+  projection, SQL artifact, publication tokens, outcome, row count and timing.
 
 ## Verification obligations
 
