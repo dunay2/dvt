@@ -112,7 +112,3 @@ planning_type: proposal
 - [MVP-A1 Backend Contractual Inventory](./superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md)
 - [RC-C1 HTTP Error Envelope Normalization Plan](./superseded/runtime-and-contracts/rc-c1-http-error-envelope-normalization-plan-20260331.md)
 - [G4-PR4 Admission Control Operability Plan](./superseded/runtime-and-contracts/gap4-backpressure-admission-pr4-plan-20260326.md)
-
-## Disposable
-
-- [Experiments](./disposable/experiments/tabs-workbench/README.md)

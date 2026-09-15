@@ -10,11 +10,10 @@ planning_type: mandatory
 
 ## Owned Concern
 
-This plan canonizes `GD-DOC-DISPOSITION-CANON`. It closes the gap between the
-2026-05-10 docs disposition inventory and the current Planning DB queue: Draft,
-Superseded, and task-like identifier findings are not a parallel documentation
-backlog. They are resolved through the `docs-disposition` command/query rail and
-must remain linked, closed, or deliberately re-opened in Planning DB.
+This plan canonizes `GD-DOC-DISPOSITION-CANON`. Draft, Superseded, and task-like
+identifier findings are resolved through the existing `docs-disposition`
+command/query rail, not through a parallel Markdown backlog. The retired May
+inventories are historical Git content, not inputs required to operate the queue.
 
 ## Governing Sources
 
@@ -23,8 +22,6 @@ must remain linked, closed, or deliberately re-opened in Planning DB.
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/planning/state/planning-control-tower.md`
-- `docs/planning/status/docs-task-disposition-inventory-20260510.md`
 - `docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md`
 
 ## Fowler Analysis
@@ -42,8 +39,7 @@ must remain linked, closed, or deliberately re-opened in Planning DB.
 
 ### Antipatterns
 
-- Stale status snapshot: the 2026-05-10 inventory still reads like pending work
-  after the queue has no open rows.
+- Stale status snapshot: dated counts and closed work presented as a live queue.
 - Label-driven cleanup: Draft or Superseded frontmatter can tempt bulk moves
   without owner and evidence checks.
 - Identifier overloading: task-like strings include rails, user stories,
@@ -68,25 +64,6 @@ must remain linked, closed, or deliberately re-opened in Planning DB.
   supersede, and ignore decisions have different audit meanings.
 - Tests should validate semantic closure and ownership, not only generated index
   freshness.
-
-## Current-State Diagram
-
-```mermaid
-flowchart TD
-  Inventory["2026-05-10 docs disposition inventory"]
-  Import["planning DB import"]
-  Query["docs-disposition query"]
-  Actions["disposition action rows"]
-  Resolved["linked / resolved rows"]
-  Open["open rows"]
-
-  Inventory --> Import
-  Import --> Query
-  Query --> Actions
-  Actions --> Resolved
-  Actions --> Open
-  Open -->|2026-05-24 check| Empty["0 open rows"]
-```
 
 ## Target-State Diagram
 
@@ -115,7 +92,7 @@ flowchart LR
 | Superseded active doc    | Linked or explicitly archived by a focused follow-up  | `ResolveDocsDispositionQueue`      |
 | Unknown task-like ID     | Linked when classified as non-task governance ID      | `ClassifyDocsDispositionClosure`   |
 | New unresolved finding   | Reopened in Planning DB, not tracked only in prose    | `ResolveDocsDispositionQueue`      |
-| Inventory snapshot drift | Updated by canon note plus semantic guard             | `DocsDispositionClosure` read side |
+| Retired status snapshot  | Removed from Git; closure remains in Planning DB     | `DocsDispositionClosure` read side |
 
 No Draft, Superseded, or task-like identifier finding remains an open parallel
 documentation backlog after this plan.
@@ -128,15 +105,6 @@ documentation backlog after this plan.
 - `ClassifyDocsDispositionClosure`: query owned by the docs disposition closure
   read model. It returns whether a finding is open, linked, ignored, reopened,
   or requires a focused follow-up.
-
-## TDD Plan
-
-1. Red: add `docs-disposition-canon.test.mjs` before this plan and component
-   docs exist; verify it fails on missing canonical surfaces.
-2. Green: add this plan, component guide, user stories, documentation-governance
-   domain note, inventory canon note, component index link, and buzon analysis.
-3. Refactor: keep the slice docs/governance-only. Future document moves require
-   focused tasks and their own backlink evidence.
 
 ## ADR Decision
 
@@ -162,7 +130,6 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/planning/status/docs-task-disposition-inventory-20260510.md
 allowedImplementationSurfaces:
   - buzon/20260524-codex-fowler-docs-disposition-canon.md
   - docs/.manifest.json
@@ -179,11 +146,9 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/portfolio-map-20260403.md
   - docs/planning/reviews/architecture-and-governance/20260527-docs-engine-component-reconciliation-fowler-review.md
   - docs/planning/reviews/sprints/**
-  - docs/planning/state/agent-lane-a.md
-  - docs/planning/state/execution-workboard.md
-  - docs/planning/state/open-task-route.md
   - docs/planning/status/**
   - tools/ci/docs-disposition-canon.test.mjs
+  - tools/planning-db/state/db-governance-surfaces.json
 forbiddenImplementationSurfaces:
   - apps/**
   - packages/**
@@ -231,7 +196,6 @@ redGreenCycles:
       - docs/architecture/components/ci-governance/docs-disposition-canon-user-stories.md
       - docs/architecture/components/ci-governance/index.md
       - docs/planning/domains/documentation-governance.md
-      - docs/planning/status/docs-task-disposition-inventory-20260510.md
       - buzon/20260524-codex-fowler-docs-disposition-canon.md
     greenTest: node --test tools/ci/docs-disposition-canon.test.mjs
 symbols:
