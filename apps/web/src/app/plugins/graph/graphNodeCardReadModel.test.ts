@@ -14,8 +14,8 @@ const CARD_STRATEGIES = [
   dvtGraphNodeCardStrategy,
 ];
 
-const UNCONFIGURED_TRANSFORM_HEADER = [
-  { id: 'materialization', label: 'Mat.', value: 'Not configured', placement: 'header' },
+const DEFAULT_DVT_TRANSFORM_HEADER = [
+  { id: 'materialization', label: 'Mat.', value: 'view', icon: 'eye', placement: 'header' },
   {
     id: 'last-run',
     label: 'Last run',
@@ -93,6 +93,16 @@ describe('buildGraphNodeCardReadModel', () => {
       icon: 'eye',
       placement: 'header',
     });
+  });
+
+  it('does not default materialization for another plugin', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({ kind: 'dvt:transform', pluginId: 'custom', role: 'transform' }),
+      {},
+      [sharedSourceModelGraphNodeCardStrategy]
+    );
+
+    expect(model.metrics[0]?.value).toBe('Not configured');
   });
 
   it('keeps Code and Columns out of the compact upper metric row', () => {
@@ -501,7 +511,7 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.health).toEqual({ label: 'Completed', tone: 'healthy' });
     expect(model.accentTone).toBe('model');
     expect(model.metrics).toEqual([
-      { id: 'materialization', label: 'Mat.', value: 'Not configured', placement: 'header' },
+      { id: 'materialization', label: 'Mat.', value: 'view', icon: 'eye', placement: 'header' },
       { id: 'status', label: 'Status', value: 'completed' },
       { id: 'duration', label: 'Duration', value: '1m 15s' },
       { id: 'warnings', label: 'Warnings', value: '2' },
@@ -622,7 +632,7 @@ describe('buildGraphNodeCardReadModel', () => {
       },
       { id: 'duration', label: 'Duration', value: '1m 15s' },
       { id: 'cost', label: 'Cost', value: '$0.42' },
-      UNCONFIGURED_TRANSFORM_HEADER[1],
+      DEFAULT_DVT_TRANSFORM_HEADER[1],
     ]);
   });
 
@@ -914,7 +924,7 @@ describe('buildGraphNodeCardReadModel', () => {
       CARD_STRATEGIES
     );
 
-    expect(model.metrics).toEqual(UNCONFIGURED_TRANSFORM_HEADER);
+    expect(model.metrics).toEqual(DEFAULT_DVT_TRANSFORM_HEADER);
   });
 
   it('keeps localized code posture in the inspector instead of the graph card header', () => {
@@ -1039,10 +1049,10 @@ describe('buildGraphNodeCardReadModel', () => {
       CARD_STRATEGIES
     );
 
-    expect(generated.metrics).toEqual(UNCONFIGURED_TRANSFORM_HEADER);
-    expect(authored.metrics).toEqual(UNCONFIGURED_TRANSFORM_HEADER);
-    expect(fileBacked.metrics).toEqual(UNCONFIGURED_TRANSFORM_HEADER);
-    expect(canonical.metrics).toEqual(UNCONFIGURED_TRANSFORM_HEADER);
+    expect(generated.metrics).toEqual(DEFAULT_DVT_TRANSFORM_HEADER);
+    expect(authored.metrics).toEqual(DEFAULT_DVT_TRANSFORM_HEADER);
+    expect(fileBacked.metrics).toEqual(DEFAULT_DVT_TRANSFORM_HEADER);
+    expect(canonical.metrics).toEqual(DEFAULT_DVT_TRANSFORM_HEADER);
   });
 
   it('keeps Source row and byte evidence when dbt is the external authority', () => {
