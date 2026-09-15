@@ -158,6 +158,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Protected runtime rail closure is governed by executable C&Q evidence](R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml)
 - [Provider and telemetry seam extraction could diverge from existing runtime behavior](R-20260512-WE-HX-5-PROVIDER-TELEMETRY-SEAMS.yaml)
 - [Provider runtimes can regress to unchecked PlanRef execution](R-20260424-TEMPORAL-PLAN-REF-CONTRACT.yaml)
+- [Published Transform rows could change without a new publication token](R-20260915-TRANSFORM-OUTPUT-SAMPLE.yaml)
 - [R-20260307-GOLDEN-PATH-01 - Golden-path coverage debt can hide engine and adapter regressions](R-20260307-golden-path-coverage-debt.md)
 - [R-20260308-API-AUTH-01 - API auth runtime can regress without a full OIDC plus Postgres integration lane](R-20260308-api-auth-runtime-integration-coverage.md)
 - [R-20260311-G5-3-CORRECTNESS-01 - G5.3 correctness hardening is mergeable, but formal closeout still depends on real PostgreSQL evidence and policy alignment](R-20260311-g5-3-correctness-closeout-residuals.md)

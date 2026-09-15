@@ -3,6 +3,7 @@
  * canonized through the planning DB queue instead of acting as a parallel docs backlog.
  */
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { test } from 'node:test';
 
 import {
@@ -18,8 +19,46 @@ const requiredFiles = [
   'docs/architecture/components/ci-governance/docs-disposition-canon-component.md',
   'docs/architecture/components/ci-governance/docs-disposition-canon-user-stories.md',
   'docs/planning/domains/documentation-governance.md',
-  'docs/planning/status/docs-task-disposition-inventory-20260510.md',
 ];
+
+const retiredSnapshots = [
+  'docs/planning/status/docs-task-disposition-inventory-20260510.md',
+  'docs/planning/status/review-proposal-disposition-index-20260510.md',
+];
+
+// Historical text saying "no open rows" cannot prove current DB closure.
+// Protect the existing authority and retirement instead of freezing that text.
+test('retired disposition snapshots do not return as files or canonical authority', () => {
+  for (const path of retiredSnapshots) {
+    assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, path);
+  }
+
+  const { surfaces } = JSON.parse(
+    readRepoFile('tools/planning-db/state/db-governance-surfaces.json')
+  );
+  assert.ok(Array.isArray(surfaces));
+  assert.equal(
+    surfaces.some((surface) => surface.surfaceName === 'Docs task disposition inventory'),
+    false
+  );
+  for (const surface of surfaces) {
+    for (const path of retiredSnapshots) {
+      assert.equal(JSON.stringify(surface).includes(path), false, path);
+    }
+  }
+
+  const owners = surfaces.filter((surface) => surface.surfaceName === 'Docs resolution overlays');
+  assert.equal(owners.length, 1);
+  const [owner] = owners;
+  assert.equal(owner.authorityMode, 'database');
+  assert.equal(owner.writeRailKind, 'db_command');
+  assert.equal(owner.writeRail, 'pnpm planning:db:operate docs-disposition resolve');
+  assert.equal(owner.readQueryRail, 'pnpm planning:db:query docs-disposition --resolution <state>');
+  assert.equal(
+    owner.canonicalSource,
+    'planning_query_store.doc_resolution_overlays keyed to current source hashes'
+  );
+});
 
 test('docs disposition canonization has semantic ownership and DB-first closure', () => {
   assertFilesExist(requiredFiles);
@@ -40,19 +79,6 @@ test('docs disposition canonization has semantic ownership and DB-first closure'
   assertContains(
     'docs/planning/domains/documentation-governance.md',
     'No Draft, Superseded, or task-like identifier finding remains an open parallel documentation backlog'
-  );
-
-  assertContains(
-    'docs/planning/status/docs-task-disposition-inventory-20260510.md',
-    '2026-05-24 Canonical Disposition'
-  );
-  assertContains(
-    'docs/planning/status/docs-task-disposition-inventory-20260510.md',
-    'planning:db:query docs-disposition --resolution open'
-  );
-  assertContains(
-    'docs/planning/status/docs-task-disposition-inventory-20260510.md',
-    'returns no open rows'
   );
 
   const componentGuide = readRepoFile(
@@ -81,5 +107,47 @@ test('docs disposition canonization has semantic ownership and DB-first closure'
     'Governance operator',
   ]) {
     assert.match(userStories, new RegExp(escapeRegExp(persona)));
+  }
+});
+
+// This is a retirement guard, not a substitute for DB-backed docs generation.
+test('retired historical packs and generators cannot return', () => {
+  const retiredPaths = [
+    'docs/archive',
+    'docs/adr/_archive',
+    'docs/evidence/archive',
+    'docs/planning/proposals/disposable/manifests/planner-stage-1-1-canonicalization.manifest.json',
+    'docs/planning/proposals/disposable/manifests/planner-stage-1-1-canonicalization.manifest.schema.json',
+    'tools/docs/validate-planner-stage-1-1-manifest.ts',
+    'docs/planning/proposals/mandatory/governance-and-docs/planner-local-doc-archive-plan-20260601.md',
+  ];
+  for (const path of retiredPaths) {
+    assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, path);
+  }
+
+  const { scripts } = JSON.parse(readRepoFile('package.json'));
+  assert.equal(Object.hasOwn(scripts, 'docs:gov:planner-stage-1-1'), false);
+  for (const command of Object.values(scripts)) {
+    assert.equal(command.includes('docs:gov:planner-stage-1-1'), false);
+    assert.equal(command.includes('validate-planner-stage-1-1-manifest.ts'), false);
+  }
+
+  const syncSource = readRepoFile('scripts/sync-docs.cjs');
+  assert.doesNotMatch(syncSource, /relPath:\s*['"](?:archive|adr\/_archive)['"]/u);
+  assert.equal(syncSource.includes('[Archived ADRs](_archive/index.md)'), false);
+
+  const { artifactClasses } = JSON.parse(readRepoFile('docs/generated-docs-policy.json'));
+  const owners = artifactClasses.filter((entry) => entry.id === 'tracked-docs-sync-indexes');
+  assert.equal(owners.length, 1);
+  const [owner] = owners;
+  assert.equal(owner.generatorCommand, 'pnpm docs:sync');
+  assert.equal(owner.manualEditPolicy, 'generator-owned');
+  for (const path of ['docs/archive/index.md', 'docs/adr/_archive/index.md']) {
+    assert.equal(owner.artifacts.includes(path), false, path);
+    assert.equal(scripts['docs:sync:check'].includes(path), false, path);
+  }
+  for (const path of ['docs/adr/index.md', 'docs/evidence/index.md']) {
+    assert.ok(owner.artifacts.includes(path), path);
+    assert.ok(scripts['docs:sync:check'].includes(path), path);
   }
 });

@@ -15,7 +15,7 @@ planning_type: closeout
 - [Planning Control Tower](../state/planning-control-tower.md)
 - [Command And Query Rail Governance](../../architecture/command-query-rail-governance.md)
 - [Fowler Opportunity Planning Governance](../../architecture/fowler-opportunity-planning-governance.md)
-- [Web Architecture Docs Current Runtime Substantiation Plan](../proposals/mandatory/frontend-and-ux/web-architecture-docs-current-runtime-substantiation-plan-20260508.md)
+- [Web Architecture Docs Current Runtime Substantiation Plan (historical Git snapshot)](https://github.com/dunay2/dvt/blob/6dfe21143c7253dac7d06d5bb6b4565d89eb9f1e/docs/planning/proposals/mandatory/frontend-and-ux/web-architecture-docs-current-runtime-substantiation-plan-20260508.md)
 
 ## Think-First Analysis
 

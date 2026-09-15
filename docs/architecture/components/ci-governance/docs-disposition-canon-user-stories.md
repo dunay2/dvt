@@ -18,9 +18,9 @@ Acceptance:
 
 - Draft closeouts show linked disposition unless owner/evidence review reopens
   the action.
-- Superseded proposals are archived only by focused follow-up with backlink
-  evidence.
-- The inventory status document names the current closure posture.
+- Obsolete proposals are retired only by focused follow-up with owner and
+  backlink evidence. Their history remains in Git.
+- The Planning DB query reports the closure posture, not a dated inventory.
 
 ## Planning Steward
 
@@ -55,8 +55,9 @@ closure so that future docs refreshes do not reintroduce hidden backlog drift.
 
 Acceptance:
 
-- The semantic test validates plan, guide, stories, inventory, domain page, and
-  buzon analysis together.
+- The semantic test validates plan, guide, stories, and domain page together.
+- Retired inventories cannot return as files or canonical catalog sources; the
+  existing DB resolution owner remains required.
 - The test names `ResolveDocsDispositionQueue` and
   `ClassifyDocsDispositionClosure`.
 - `pnpm verify:prepush` includes the changed docs and guard.

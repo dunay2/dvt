@@ -75,7 +75,6 @@ confirmed.
 - [G5 US-G5.4 Operability And Ownership Hardening Plan](./gaps/G5-US-G5.4-OPERABILITY-AND-OWNERSHIP-HARDENING-PLAN.md)
 - [G5 US-G5.5 Sharding And Fencing Plan](./gaps/G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
 - [G5 Outbox Worker Guide](./gaps/g5-outbox-worker-guide.md)
-- [G5 gap5 README](./gaps/README.md)
 - [G6 OpenLineage CI And Schema Pin Plan](./gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
 - [G6 Architecture And QA Review](./gaps/g6/G6-ARCHITECTURE-QA-REVIEW-20260308.md)
 - [G7 AI Execution Tracker](./gaps/G7-AI-EXECUTION-TRACKER.md)

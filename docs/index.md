@@ -23,7 +23,7 @@ specifically about execution invariants or adapters.
   and [Planning Gaps](./planning/gaps/index.md)
 - Operate or troubleshoot the system: [Runbooks](./runbooks/index.md)
 - Review unresolved debt and acceptance posture: [Risk Register](./risk-register/index.md)
-- Review decisions and decision history: [ADRs](./adr/index.md)
+- Review governing decisions: [ADRs](./adr/index.md)
 
 ## Core Entry Points
 
@@ -89,4 +89,3 @@ specifically about execution invariants or adapters.
 
 - [Contribution Guide](./CONTRIBUTING.md)
 - [Docs Structure Baseline](./DOCS_README.md)
-- [Archive](./archive/index.md)

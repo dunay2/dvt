@@ -52,16 +52,6 @@
       "authorityMode": "database"
     },
     {
-      "surfaceName": "Docs task disposition inventory",
-      "canonicalSource": "docs/planning/status/docs-task-disposition-inventory-20260510.md and its governed planning documents",
-      "writeRail": "Edit the Git disposition inventory, then run pnpm governance:refresh",
-      "writeRailKind": "git_edit",
-      "readQueryRail": "pnpm planning:db:query docs-disposition",
-      "projection": "Disposition query rows and document-reference classifications",
-      "validation": "pnpm governance:db:check; pnpm docs:governance:changed-files:check",
-      "authorityMode": "git-indexed"
-    },
-    {
       "surfaceName": "Documentation lifecycle catalog",
       "canonicalSource": "Knowledge documents, links, actions, repository back-references, and lifecycle projections",
       "writeRail": "Edit the owning Git source, then run pnpm governance:refresh or pnpm governance:db:import",
