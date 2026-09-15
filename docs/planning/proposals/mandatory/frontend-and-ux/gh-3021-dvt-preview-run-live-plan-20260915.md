@@ -133,7 +133,7 @@ commandQueryRails:
     type: command
     dddOwner: Protected runtime planning
     referenceOnly: true
-    authorityRef: docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-generic-execution-workload-projection-plan-20260903.md
+    authorityRef: docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md
   - name: StartRun
     type: command
     dddOwner: Protected runtime execution
