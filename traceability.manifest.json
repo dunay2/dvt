@@ -111,12 +111,12 @@
       "number": "ADR-0003",
       "decisions": [
         "ADR-0030 section 3.3 - lookupRunRef derives workflowId from runId and probes Temporal to detect orphans",
+        "ADR-0066: Build a candidate before a target-scoped CAS transaction and preserve the target object.",
         "Administrative schema lifecycle stays separate from run-state and delivery port delegation",
         "Admit one UTF-8 CSV or JSON Lines object and one scoped staging relation.",
         "All adapter methods enforce tenant scope per ADR-0031",
         "AllowAllAuthorizer can reject instantiation in production mode via explicit constructor options",
         "Batch maintenance operations (detectStuckRuns) separated from IWorkflowEngine lifecycle",
-        "Build a candidate before a target-scoped CAS transaction and preserve the target object.",
         "Build run terminal event payloads from DVT runtime evidence instead of Temporal provider metadata",
         "Carry one bounded dbt selector in the admitted step configuration.",
         "Centralize identifier quoting and provider catalog queries outside orchestration.",
@@ -1223,6 +1223,16 @@
         "packages/@dvt/contracts/src/substrait.ts"
       ],
       "title": "ADR-0064 - Substrait as the Semantic Reference and Bounded Logical Profile for DVT Transformations"
+    },
+    {
+      "number": "ADR-0066",
+      "decisions": [
+        "ADR-0066: Build a candidate before a target-scoped CAS transaction and preserve the target object."
+      ],
+      "implemented_by": [
+        "packages/@dvt/adapter-postgres/src/PostgresDvtStableTablePublisher.ts"
+      ],
+      "title": "ADR-0066 - PostgreSQL Stable-Table Publication"
     },
     {
       "number": "ADR-0067",

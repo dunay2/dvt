@@ -1,7 +1,8 @@
 /**
  * Owned concern: publish one verified DVT projection into one stable PostgreSQL table.
  * @baseline ADR-0003: Execution Model
- * @decision Build a candidate before a target-scoped CAS transaction and preserve the target object.
+ * @baseline ADR-0066: PostgreSQL Stable-Table Publication
+ * @decision ADR-0066: Build a candidate before a target-scoped CAS transaction and preserve the target object.
  * @consequence Late runs, unmanaged collisions and schema drift fail without replacing the table.
  * @version 1.0.0
  */
