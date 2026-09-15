@@ -86,13 +86,13 @@ flowchart LR
 
 ## Disposition Matrix
 
-| Input class              | Canonical disposition                                 | Owner rail                         |
-| ------------------------ | ----------------------------------------------------- | ---------------------------------- |
-| Draft active closeout    | Linked unless owner/evidence check reopens the action | `ClassifyDocsDispositionClosure`   |
-| Superseded active doc    | Linked or explicitly archived by a focused follow-up  | `ResolveDocsDispositionQueue`      |
-| Unknown task-like ID     | Linked when classified as non-task governance ID      | `ClassifyDocsDispositionClosure`   |
-| New unresolved finding   | Reopened in Planning DB, not tracked only in prose    | `ResolveDocsDispositionQueue`      |
-| Retired status snapshot  | Removed from Git; closure remains in Planning DB     | `DocsDispositionClosure` read side |
+| Input class             | Canonical disposition                                 | Owner rail                         |
+| ----------------------- | ----------------------------------------------------- | ---------------------------------- |
+| Draft active closeout   | Linked unless owner/evidence check reopens the action | `ClassifyDocsDispositionClosure`   |
+| Superseded active doc   | Linked or explicitly archived by a focused follow-up  | `ResolveDocsDispositionQueue`      |
+| Unknown task-like ID    | Linked when classified as non-task governance ID      | `ClassifyDocsDispositionClosure`   |
+| New unresolved finding  | Reopened in Planning DB, not tracked only in prose    | `ResolveDocsDispositionQueue`      |
+| Retired status snapshot | Removed from Git; closure remains in Planning DB      | `DocsDispositionClosure` read side |
 
 No Draft, Superseded, or task-like identifier finding remains an open parallel
 documentation backlog after this plan.

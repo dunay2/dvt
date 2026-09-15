@@ -14,16 +14,16 @@ material belongs in Git, not in documentation archives or preservation summaries
 
 ## Minimum update rules by change type
 
-| Change type | Required documentation action |
-| --- | --- |
-| Runtime behavior or contract change | update the canonical spec or status doc that owns the behavior, then repair supporting maps that route readers there |
-| Code path rename or file move | update every active doc link that points to the old path; do not leave active docs pointing at renamed code |
-| New, renamed, or deleted doc under `docs/` | run `pnpm docs:sync` so governed indexes stay current |
-| MVP task lifecycle change | update the governing GitHub issue; do not create a local task mirror |
-| `docs:doctor` reports missing planning `last_reviewed` metadata | run `pnpm docs:planning:last-reviewed:backfill`, then explicitly re-review any doc whose content changed materially |
-| Supersede a document | verify the current owning authority, reconcile consumers, then delete the obsolete document; do not create an archive copy |
-| Add or remove workspaces under `apps/` or `packages/` | run DB-free `pnpm docs:status:generate --code-state-only`; do not create or commit a Repository Map copy |
-| Explicitly publish documentation | run `pnpm docs:publish`; it queries current DB authority without importing and assembles the untracked tree |
+| Change type                                                     | Required documentation action                                                                                              |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Runtime behavior or contract change                             | update the canonical spec or status doc that owns the behavior, then repair supporting maps that route readers there       |
+| Code path rename or file move                                   | update every active doc link that points to the old path; do not leave active docs pointing at renamed code                |
+| New, renamed, or deleted doc under `docs/`                      | run `pnpm docs:sync` so governed indexes stay current                                                                      |
+| MVP task lifecycle change                                       | update the governing GitHub issue; do not create a local task mirror                                                       |
+| `docs:doctor` reports missing planning `last_reviewed` metadata | run `pnpm docs:planning:last-reviewed:backfill`, then explicitly re-review any doc whose content changed materially        |
+| Supersede a document                                            | verify the current owning authority, reconcile consumers, then delete the obsolete document; do not create an archive copy |
+| Add or remove workspaces under `apps/` or `packages/`           | run DB-free `pnpm docs:status:generate --code-state-only`; do not create or commit a Repository Map copy                   |
+| Explicitly publish documentation                                | run `pnpm docs:publish`; it queries current DB authority without importing and assembles the untracked tree                |
 
 ## Architecture and design consultation
 

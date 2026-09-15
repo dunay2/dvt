@@ -33,7 +33,9 @@ test('retired disposition snapshots do not return as files or canonical authorit
     assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, path);
   }
 
-  const { surfaces } = JSON.parse(readRepoFile('tools/planning-db/state/db-governance-surfaces.json'));
+  const { surfaces } = JSON.parse(
+    readRepoFile('tools/planning-db/state/db-governance-surfaces.json')
+  );
   assert.ok(Array.isArray(surfaces));
   assert.equal(
     surfaces.some((surface) => surface.surfaceName === 'Docs task disposition inventory'),

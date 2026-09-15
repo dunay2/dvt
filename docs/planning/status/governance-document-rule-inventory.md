@@ -59,7 +59,7 @@ are retired and MUST NOT be recreated.
 | `enforcement`   | machine-enforced rules                           | `.arc-policy.yaml`, package scripts, hooks, workflows, CODEOWNERS     |
 | `status`        | what is true now                                 | code/test/CI state, system delivery status, canonical doc-code matrix |
 | `risk/evidence` | residual risk and proof                          | `docs/risk-register/**`, `docs/evidence/**`, runbooks                 |
-| `historical`    | prior decisions/workflows                        | Git revisions and PR records, not documentation archive copies       |
+| `historical`    | prior decisions/workflows                        | Git revisions and PR records, not documentation archive copies        |
 
 Historical material is consulted from Git when provenance is needed. It is not
 an active startup route, work queue, or reason to retain obsolete documents.
