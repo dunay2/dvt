@@ -147,6 +147,7 @@ allowedImplementationSurfaces:
   - docs/planning/reviews/architecture-and-governance/20260527-docs-engine-component-reconciliation-fowler-review.md
   - docs/planning/reviews/sprints/**
   - docs/planning/status/**
+  - infra/prototypes/api/README.md
   - scripts/docs-quality-check.cjs
   - scripts/documentation-publication.test.cjs
   - tools/ci/docs-disposition-canon.test.mjs
