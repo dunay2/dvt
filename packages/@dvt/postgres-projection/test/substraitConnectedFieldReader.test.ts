@@ -141,6 +141,23 @@ function opaqueIdentityDraft(): DvtSubstraitProjectionDraft {
   };
 }
 
+function typedCanonicalDraft(): DvtSubstraitProjectionDraft {
+  const draft = canonicalDraft();
+  const root = draft.plan.relations[0]?.relType;
+  const project = root?.case === 'root' ? root.value.input?.relType : undefined;
+  const read = project?.case === 'project' ? project.value.input?.relType : undefined;
+  if (read?.case !== 'read' || read.value.baseSchema?.struct == null) {
+    throw new Error('Expected canonical ReadRel schema.');
+  }
+  read.value.baseSchema.struct.types = read.value.baseSchema.struct.types.map(() => ({
+    kind: {
+      case: 'string',
+      value: { typeVariationReference: 0, nullability: 1 },
+    },
+  }));
+  return draft;
+}
+
 const NODE_BINDING = {
   sourceNodeId: 'source-orders',
   targetNodeId: 'transform-orders',
@@ -155,6 +172,20 @@ describe('connected-field Substrait reader', () => {
     expect(sql.replaceAll(/\s+/g, ' ').trim().toLowerCase()).toMatch(
       /^select order_id, customer as customer_name from raw\.orders;?$/
     );
+  });
+
+  it('preserves typed source fields in projected outputs', () => {
+    const inspection = inspectDvtConnectedFieldProjection(typedCanonicalDraft(), NODE_BINDING);
+
+    expect(inspection).toMatchObject({
+      ok: true,
+      projection: {
+        outputs: [
+          { name: 'order_id', dataType: 'string' },
+          { name: 'customer_name', dataType: 'string' },
+        ],
+      },
+    });
   });
 
   it('projects opaque semantic identities from the protected node binding', async () => {
