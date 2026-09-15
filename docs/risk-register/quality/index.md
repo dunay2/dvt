@@ -248,6 +248,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Timestamp derivation could drift by target timezone or invocation shape](R-20260910-TIMESTAMP-FUNCTION-DRIFT.yaml)
 - [Transform aliases and displayed lineage can drift from canonical Substrait fields](R-20260902-TRANSFORM-FUNCTION-ALIAS-DRIFT.yaml)
 - [Transform column comments can drift between Inspector and card projection](R-20260902-TRANSFORM-COLUMN-COMMENT-DRIFT.yaml)
+- [Transform exploration can load an expensive warehouse projection](R-20260915-TRANSFORM-ROW-PREVIEW.yaml)
 - [Tsconfig baseUrl deprecation migration can regress package alias resolution](R-20260403-TSCONFIG-BASEURL-DEPRECATION-MIGRATION.yaml)
 - [Turbo affected-task routing could diverge from required repository gates](R-20260423-RC-C2-TURBO-CI-GOVERNANCE.yaml)
 - [Turbo build cache or orchestration drift could hide missing dependency rebuilds](R-20260418-TURBO-BUILD-ORCHESTRATION-CACHE-DRIFT.yaml)
