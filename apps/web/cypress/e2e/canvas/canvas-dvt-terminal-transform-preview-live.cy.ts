@@ -18,49 +18,6 @@ import {
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 
-type PreviewAcceptedEnvelope = {
-  readonly plan?: {
-    readonly metadata?: { readonly planId?: string };
-    readonly steps?: ReadonlyArray<{ readonly kind?: string }>;
-  };
-  readonly planRef?: { readonly planId?: string; readonly sha256?: string };
-  readonly persisted?: { readonly canonicalPlanSha256?: string };
-};
-
-type RunEventResponse = {
-  readonly items?: ReadonlyArray<{
-    readonly eventType?: string;
-    readonly payload?: {
-      readonly resultEvidence?: {
-        readonly evidenceType?: string;
-        readonly plan?: { readonly sha256?: string };
-        readonly target?: { readonly schema?: string; readonly relation?: string };
-        readonly publication?: { readonly token?: string; readonly outcome?: string };
-        readonly rowsWritten?: number;
-      };
-    };
-  }>;
-};
-
-function readPostgresTargetSchema(): string {
-  const schema = Cypress.env('postgresTargetSchema');
-  if (typeof schema !== 'string' || schema.trim().length === 0) {
-    throw new Error('Cypress env postgresTargetSchema is required for the DVT Run proof.');
-  }
-  return schema.trim();
-}
-
-function waitForCompletedRun(runId: string, attempt = 0): Cypress.Chainable<void> {
-  return readLiveRunSnapshot(runId).then((response) => {
-    expect(response.status).to.equal(200);
-    const status = String((response.body as { status?: unknown }).status ?? '').toLowerCase();
-    if (status === 'completed') return;
-    if (status === 'failed') throw new Error(`Native DVT run ${runId} failed.`);
-    if (attempt >= 60) throw new Error(`Native DVT run ${runId} did not complete.`);
-    return cy.wait(500).then(() => waitForCompletedRun(runId, attempt + 1));
-  });
-}
-
 describe('DVT terminal Transform Preview and Run live', () => {
   beforeEach(function () {
     if (!hasLiveProtectedRuntimeEnv()) this.skip();
@@ -68,9 +25,44 @@ describe('DVT terminal Transform Preview and Run live', () => {
   });
 
   it('executes the exact accepted PlanRef and publishes PostgreSQL evidence', () => {
-    const targetSchema = readPostgresTargetSchema();
+    type PreviewAcceptedEnvelope = {
+      readonly plan?: {
+        readonly metadata?: { readonly planId?: string };
+        readonly steps?: ReadonlyArray<{ readonly kind?: string }>;
+      };
+      readonly planRef?: { readonly planId?: string; readonly sha256?: string };
+      readonly persisted?: { readonly canonicalPlanSha256?: string };
+    };
+    type RunEventResponse = {
+      readonly items?: ReadonlyArray<{
+        readonly eventType?: string;
+        readonly payload?: {
+          readonly resultEvidence?: {
+            readonly evidenceType?: string;
+            readonly plan?: { readonly sha256?: string };
+            readonly target?: { readonly schema?: string; readonly relation?: string };
+            readonly publication?: { readonly token?: string; readonly outcome?: string };
+            readonly rowsWritten?: number;
+          };
+        };
+      }>;
+    };
+    const targetSchemaValue = Cypress.env('postgresTargetSchema');
+    if (typeof targetSchemaValue !== 'string' || targetSchemaValue.trim().length === 0) {
+      throw new Error('Cypress env postgresTargetSchema is required for the DVT Run proof.');
+    }
+    const targetSchema = targetSchemaValue.trim();
     const targetRelation = 'orders_result';
     let previewSha = '';
+    const waitForCompletedRun = (runId: string, attempt = 0): Cypress.Chainable<void> =>
+      readLiveRunSnapshot(runId).then((response) => {
+        expect(response.status).to.equal(200);
+        const status = String((response.body as { status?: unknown }).status ?? '').toLowerCase();
+        if (status === 'completed') return;
+        if (status === 'failed') throw new Error(`Native DVT run ${runId} failed.`);
+        if (attempt >= 60) throw new Error(`Native DVT run ${runId} did not complete.`);
+        return cy.wait(500).then(() => waitForCompletedRun(runId, attempt + 1));
+      });
 
     seedLiveSelectedClosureDraft({
       authoringGenerated: true,
