@@ -4,6 +4,7 @@
  */
 import type {
   CancelRunReceipt,
+  DvtPostgresPublicationEvidence,
   ExecutionSelection,
   RecoverRunReceipt,
   RunControlAvailability,
@@ -158,6 +159,7 @@ export type RunSummaryItem = RunCommonSnapshotFields;
 export type RunSnapshot = RunCommonSnapshotFields & {
   executor?: RunExecutor;
   materialization?: MaterializationEvidence;
+  publication?: DvtPostgresPublicationEvidence;
   provenance?: RunProvenanceChain;
   planSummary?: RunPlanExecutionSummary;
   diagnostics?: RunDiagnostics;
