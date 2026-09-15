@@ -1,0 +1,21 @@
+---
+id: R-20260915-TRANSFORM-RUN-WORKLOAD-DRIFT
+title: Run workload target or output schema could drift before provider effects
+status: Open
+date: 2026-09-15
+owners:
+  - '@dvt/contracts'
+  - '@dvt/postgres-projection'
+  - dvt-api
+severity: High
+probability: Low
+---
+description: >-
+  A persisted Run plan could otherwise detach its canonical semantic revision, PostgreSQL target, or
+  expected output schema from the provider activity that eventually materializes it.
+mitigations:
+  - Strict V2 workload identities and exact target-to-workload connection equality
+  - JCS and SHA-256 fingerprint of ordered, admitted PostgreSQL output metadata
+  - Fail-closed lowering for incomplete target configuration or unknown output types
+  - PostgreSQL-backed plan persistence and replay regression coverage
+  - Issue 2723 must revalidate immutable refs before any provider effect

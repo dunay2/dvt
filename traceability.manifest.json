@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-09-14",
+  "generated": "2026-09-15",
   "repo": {
     "sha": "local"
   },
@@ -814,6 +814,7 @@
         "Carry one bounded dbt selector in the admitted step configuration.",
         "Define plan-compile step-type configuration schemas as explicit planner contract surface",
         "Enforce one shared budget contract across Canvas, API, and persistence boundaries.",
+        "Fingerprint the ordered PostgreSQL output schema before runtime publication.",
         "Keep common timeout, concurrency, and custom fields independent of step-family artifacts.",
         "Keep executable-selection intent as a canonical planner contract instead of UI-local state.",
         "Keep execution decisions in the persisted plan artifact so Web renders planner truth without reconstructing selection semantics.",
@@ -834,6 +835,7 @@
       "implemented_by": [
         "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringFieldPolicy.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtPostgresOutputSchema.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtTransformResultTarget.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts",
@@ -1172,6 +1174,7 @@
         "Compose one catalog from standard candidates, admissions, and product gaps.",
         "Export the pinned Substrait profile, stable authoring bindings, and single semantic capability catalog through one bounded public contract surface.",
         "Fail closed when persisted bytes are not one decodable Plan at the pinned version.",
+        "Keep protected graph, semantic, projection, and connection identity checks shared across workload versions.",
         "Logical transformation semantics stay outside ExecutionPlan; plan steps represent runtime responsibilities only.",
         "Persist one strict, versioned ConnectedSourceRef instead of parallel loose connection and object binding coordinates.",
         "Pin one exact Substrait release and map stable DVT ids to rel_anchor/output ordinals.",
@@ -1180,10 +1183,13 @@
         "Retain product gaps separately from standard semantic identities.",
         "Seed candidates only from pinned core and official extension identities.",
         "Validate and serialize the capability read model deterministically.",
-        "Validate stable FieldId hierarchy against the current structural binding independently from document transport. FieldId/relationId own logical identity; outputOrdinal is only the current sibling position and must never be used to mint or repair identity."
+        "Validate stable FieldId hierarchy against the current structural binding independently from document transport. FieldId/relationId own logical identity; outputOrdinal is only the current sibling position and must never be used to mint or repair identity.",
+        "Version Run separately from the existing Preview workload and bind it to one explicit result target."
       ],
       "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.shared.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v2.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitAuthoringIdentity.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts",

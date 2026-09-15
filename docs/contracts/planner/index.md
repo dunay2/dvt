@@ -16,7 +16,10 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.shared.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v2.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtPostgresOutputSchema.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitAuthoringIdentity.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts`
@@ -67,6 +70,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 
 ## Repository-local documents
 
+- [DVT Operational Run Workload v2](dvt-operational-run-workload-v2.md)
 - [DVT Transform Result Target v1](dvt-transform-result-target-v1.md)
 - [Execution selection and executable subgraph v1](execution-selection-and-executable-subgraph-v1.md)
 - [Plan store records v1](plan-store-records-v1.md)

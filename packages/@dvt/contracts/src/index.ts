@@ -60,6 +60,21 @@ export {
   DvtOperationalWorkloadV1Schema,
 } from './contracts/planner/DvtOperationalWorkload.v1.js';
 export type { DvtOperationalWorkloadV1 } from './contracts/planner/DvtOperationalWorkload.v1.js';
+export {
+  DvtOperationalWorkloadContract,
+  DvtOperationalWorkloadContractV2,
+  DvtOperationalWorkloadV2Schema,
+} from './contracts/planner/DvtOperationalWorkload.v2.js';
+export type { DvtOperationalWorkloadV2 } from './contracts/planner/DvtOperationalWorkload.v2.js';
+export {
+  DvtPostgresOutputSchemaV1Schema,
+  DvtPostgresOutputTypeV1Schema,
+  createDvtPostgresOutputSchemaDigestV1,
+} from './contracts/planner/DvtPostgresOutputSchema.v1.js';
+export type {
+  DvtPostgresOutputSchemaV1,
+  DvtPostgresOutputTypeV1,
+} from './contracts/planner/DvtPostgresOutputSchema.v1.js';
 export { DvtTransformResultTargetV1Schema } from './contracts/planner/DvtTransformResultTarget.v1.js';
 export type { DvtTransformResultTargetV1 } from './contracts/planner/DvtTransformResultTarget.v1.js';
 export {

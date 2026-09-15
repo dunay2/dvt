@@ -129,3 +129,4 @@ export type {
   DvtConnectedFieldProjection,
   DvtSubstraitProjectionDraft,
 } from './substraitProjectionReadModel.js';
+export { projectDvtPostgresOutputSchemaV1 } from './dvtPostgresOutputSchema.js';
