@@ -69,9 +69,7 @@ export function useCanvasRunStartHandler({
 
     if (!result.ok) {
       shellFeedback.error(result.message);
-      if (result.shouldOpenPlanModal) {
-        setPlanModalOpen(true);
-      }
+      setPlanModalOpen(result.shouldOpenPlanModal);
       return;
     }
 

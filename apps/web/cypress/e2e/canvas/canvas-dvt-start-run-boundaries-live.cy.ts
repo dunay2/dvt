@@ -10,6 +10,7 @@ import {
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
 import {
   hasLiveProtectedRuntimeEnv,
+  readLiveRunIds,
   resolveLiveWorkspaceSession,
   seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
@@ -22,10 +23,6 @@ describe('DVT protected StartRun boundaries live', () => {
     readonly schemaVersion: string;
     readonly planId: string;
     readonly planVersion: string;
-  };
-
-  type RunList = {
-    readonly items?: ReadonlyArray<{ readonly runId?: string }>;
   };
 
   type LiveSession = ReturnType<typeof resolveLiveWorkspaceSession>;
@@ -49,26 +46,6 @@ describe('DVT protected StartRun boundaries live', () => {
       expect(planRef?.planId).to.be.a('string').and.not.to.equal('');
       return planRef!;
     });
-  }
-
-  function readAuthorizedRunIds(session: LiveSession): Cypress.Chainable<string[]> {
-    const apiBaseUrl = String(Cypress.env('apiBaseUrl'));
-    const bearer = String(Cypress.env('apiBearerToken'));
-    const url = `${apiBaseUrl}/runs?${new URLSearchParams(session).toString()}`;
-
-    return cy
-      .request({
-        method: 'GET',
-        url,
-        headers: { Authorization: `Bearer ${bearer}` },
-        auth: { bearer },
-      })
-      .then((response) => {
-        expect(response.status).to.equal(200);
-        return ((response.body as RunList).items ?? [])
-          .flatMap(({ runId }) => (runId === undefined ? [] : [runId]))
-          .sort();
-      });
   }
 
   function startRun(
@@ -117,7 +94,7 @@ describe('DVT protected StartRun boundaries live', () => {
         planRef = previewPlanRef;
       }
     );
-    readAuthorizedRunIds(session).then((runIds) => {
+    readLiveRunIds(session).then((runIds) => {
       authorizedRunIds = runIds;
     });
     cy.then(() => startRun(session, planRef, `${session.projectId}-other`)).then((response) => {
@@ -128,7 +105,7 @@ describe('DVT protected StartRun boundaries live', () => {
       expect(JSON.stringify(response.body)).not.to.contain(planRef.sha256);
       expect(JSON.stringify(response.body)).not.to.contain(planRef.planId);
     });
-    readAuthorizedRunIds(session).then((currentRunIds) => {
+    readLiveRunIds(session).then((currentRunIds) => {
       expect(currentRunIds).to.deep.equal(authorizedRunIds);
     });
   });
@@ -146,7 +123,7 @@ describe('DVT protected StartRun boundaries live', () => {
         sha256: `${planRef.sha256[0] === '0' ? '1' : '0'}${planRef.sha256.slice(1)}`,
       };
     });
-    readAuthorizedRunIds(session).then((runIds) => {
+    readLiveRunIds(session).then((runIds) => {
       authorizedRunIds = runIds;
     });
     cy.then(() => startRun(session, corruptedPlanRef, session.projectId)).then((response) => {
@@ -159,7 +136,7 @@ describe('DVT protected StartRun boundaries live', () => {
       expect(responseText).not.to.contain(corruptedPlanRef.sha256);
       expect(responseText).not.to.contain(exactPlanRef.planId);
     });
-    readAuthorizedRunIds(session).then((currentRunIds) => {
+    readLiveRunIds(session).then((currentRunIds) => {
       expect(currentRunIds).to.deep.equal(authorizedRunIds);
     });
   });
@@ -175,7 +152,7 @@ describe('DVT protected StartRun boundaries live', () => {
         planRef = previewPlanRef;
       }
     );
-    readAuthorizedRunIds(session).then((runIds) => {
+    readLiveRunIds(session).then((runIds) => {
       authorizedRunIds = runIds;
     });
     cy.then(() => startRun(session, planRef, session.projectId, restrictedBearerToken)).then(
@@ -188,7 +165,7 @@ describe('DVT protected StartRun boundaries live', () => {
         expect(JSON.stringify(response.body)).not.to.contain(planRef.planId);
       }
     );
-    readAuthorizedRunIds(session).then((currentRunIds) => {
+    readLiveRunIds(session).then((currentRunIds) => {
       expect(currentRunIds).to.deep.equal(authorizedRunIds);
     });
   });

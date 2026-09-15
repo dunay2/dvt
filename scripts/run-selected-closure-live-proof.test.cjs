@@ -17,6 +17,7 @@ const {
   resolveLiveProofCypressRuntime,
   resolveLiveProofCypressHeaded,
   resolveLiveProofSpecPath,
+  resolveLiveProofTemporalWorkerRuntime,
   seedSelectedClosureLocalWarehouseProof,
 } = require('./run-selected-closure-live-proof.cjs');
 const { defaultPgUrl } = require('./run-local-postgres.cjs');
@@ -236,6 +237,23 @@ test('live proof keeps Chrome headless unless headed mode is explicit', () => {
   );
 });
 
+test('live proof omits only the Temporal worker when runtime absence is explicit', () => {
+  assert.equal(resolveLiveProofTemporalWorkerRuntime({}), 'available');
+  assert.equal(
+    resolveLiveProofTemporalWorkerRuntime({
+      DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME: 'unavailable',
+    }),
+    'unavailable'
+  );
+  assert.throws(
+    () =>
+      resolveLiveProofTemporalWorkerRuntime({
+        DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME: 'stubbed',
+      }),
+    /must be available or unavailable/
+  );
+});
+
 test('live proof reuses an explicit database and otherwise keeps local bootstrap behavior', () => {
   assert.deepEqual(resolveLiveProofDatabaseUrl({ DATABASE_URL: 'postgresql://host/proof' }), {
     databaseUrl: 'postgresql://host/proof',
@@ -341,6 +359,7 @@ test('buildLiveProofApiEnv exposes workspace file roots for live warehouse catal
   assert.equal(apiEnv.TEMPORAL_ADDRESS, '127.0.0.1:7233');
   assert.equal(apiEnv.TEMPORAL_NAMESPACE, 'default');
   assert.equal(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL, 'http://127.0.0.1:9468/readyz');
+  assert.equal(apiEnv.DVT_START_RUN_BACKPRESSURE_MODE, 'enforce');
   assert.equal(apiEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
   assert.equal(apiEnv.DVT_TEMPORAL_DBT_ENABLED, 'true');
   assert.equal(apiEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'true');

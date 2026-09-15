@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { act } from 'react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
 import type { PlanViewModel } from '../../types/plans';
@@ -185,6 +185,27 @@ describe('useCanvasExecutionActions run start guards', () => {
       expectedModalState: scenario.expectedModalState,
       expectedBlocker: scenario.expectedBlocker,
     });
+  });
+
+  it('closes Preview so a rejected StartRun remains visible to the author', async () => {
+    const rejectionMessage =
+      'Execution runtime readiness is unavailable. Canvas authoring remains available; try again later.';
+    const runsService = createRunsServiceMock({
+      startRun: vi.fn(async () => {
+        throw new Error(rejectionMessage);
+      }),
+    });
+    const rejectedScenario = await renderRunStartHarness({ runsService });
+    harness = rejectedScenario.harness;
+
+    await harness.openPlanModal();
+    expect(harness.text('plan-modal-state')).toBe('true');
+
+    await harness.clickStartRun();
+
+    expect(runsService.startRun).toHaveBeenCalledTimes(1);
+    expect(harness.text('plan-modal-state')).toBe('false');
+    expect(harness.shellFeedback.error).toHaveBeenCalledWith(rejectionMessage);
   });
 
   it('blocks readiness and run start when a persisted plan exists but the graph is no longer executable', async () => {
