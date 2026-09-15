@@ -28,8 +28,7 @@ const requiredCanonicalFiles = [
   'docs/architecture/system-delivery-status.md',
   'docs/planning/roadmap/index.md',
   'docs/planning/gaps/index.md',
-  'docs/planning/archive/gaps/g6/index.md',
-  'docs/planning/archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md',
+  'docs/contracts/traceability/index.md',
   'docs/concepts/repository-map.md',
   'docs/planning/status/canonical-doc-code-matrix.md',
 ];

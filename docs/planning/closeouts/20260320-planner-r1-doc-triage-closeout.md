@@ -139,7 +139,7 @@ Deliver `R1` as a documentation/governance slice:
 ### Real work performed
 
 - Created branch `docs/planner-r1-status-triage`
-- Created `docs/planning/status/planner-local-doc-triage-20260320.md`
+- Created [planner-local-doc-triage-20260320.md (Git provenance)](https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/status/planner-local-doc-triage-20260320.md)
 - Updated `docs/planning/status/planner-current-state-assessment.md`
   so the governance-surface score reflects the delivered `R1` outputs
 - Updated `docs/planning/proposals/planner-target-state-roadmap-20260320.md`

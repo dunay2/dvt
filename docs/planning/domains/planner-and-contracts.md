@@ -16,7 +16,6 @@ plan-version compatibility.
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
 - [DB-first Component Map](../../architecture/component-map.md)
-- [Planner Local Doc Triage](../status/planner-local-doc-triage-20260320.md)
 - [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
 
 ## Active Planning Inputs
@@ -27,24 +26,8 @@ plan-version compatibility.
 - [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md)
 - [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
 
-## Historical Proposal Inputs
-
-These documents informed the planner and contract hardening path, but they are
-archived planning inputs rather than active proposal authorities.
-
-- [Planner Target State and Hardening Roadmap](../archive/proposals/planner-target-state-roadmap-20260320.md)
-- [Principal Architecture Review Execution Plan](../archive/proposals/principal-architecture-review-execution-plan-20260317.md)
-- [Gap 5 Sequence and Module Design](../archive/proposals/gap-5-sequence-and-module-design-20260319.md)
-- [Repository Governance Proposal Set 2026-03-17](../archive/proposals/repository-governance-proposal-set-20260317.md)
-
-## Stage 1.1 Canonicalization Artifacts
-
-- [Planner Stage 1.1 Canonicalization Manifest](../proposals/disposable/manifests/planner-stage-1-1-canonicalization.manifest.json)
-- [Planner Stage 1.1 Manifest Schema](../proposals/disposable/manifests/planner-stage-1-1-canonicalization.manifest.schema.json)
-
 ## Relevant Reviews And Closeouts
 
-- [20260316 Principal Architecture Review](../archive/reviews/architecture-and-governance/20260316-principal-architecture-review.md)
 - [20260320 Planner Assessment Roadmap Closeout](../closeouts/20260320-planner-assessment-roadmap-closeout.md)
 - [20260320 Planner R1 Doc Triage Closeout](../closeouts/20260320-planner-r1-doc-triage-closeout.md)
 - [20260320 Planner R2 Redefinition Closeout](../closeouts/20260320-planner-r2-redefinition-closeout.md)
