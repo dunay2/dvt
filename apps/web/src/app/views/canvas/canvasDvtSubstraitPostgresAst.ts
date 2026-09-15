@@ -12,6 +12,15 @@ import { pgComparison } from '@dvt/postgres-projection';
 /** Owned concern: construct the bounded PostgreSQL AST vocabulary used by Substrait projection. */
 export type PostgresAstNode = Readonly<Record<string, unknown>>;
 
+export function pgRangeSubselect(subquery: PostgresAstNode, alias: string): PostgresAstNode {
+  return {
+    RangeSubselect: {
+      subquery,
+      alias: { aliasname: alias },
+    },
+  };
+}
+
 export function pgString(value: string): PostgresAstNode {
   return { String: { sval: value } };
 }
