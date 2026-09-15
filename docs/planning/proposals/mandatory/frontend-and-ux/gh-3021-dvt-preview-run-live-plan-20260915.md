@@ -19,27 +19,25 @@ task_id: GH-3021
 
 ## Current state
 
-`main` now executes a protected single-source terminal Transform through
-PostgreSQL, restores its evidence after reload, and rejects a stale Preview
-after the Canvas changes. The existing three-source JOIN browser fixture stops
-at a Preview-only V1 workload and therefore does not prove the required T05
-product journey.
+`main` now proves T05 for both the single-source terminal Transform and the
+three-source JOIN, restores PostgreSQL evidence after reload, and rejects a
+stale Preview after the Canvas changes. Unit coverage rejects an unsupported
+`view` result disposition, but the product journey does not yet prove that the
+user sees that rejection before any Run starts.
 
 ```mermaid
 flowchart LR
-  A[Three persisted Sources] --> B[Terminal JOIN Transform]
-  B --> C[Preview-only workload V1]
-  C --> D[Missing capability]
-  D --> E[Run disabled]
+  A[Transform configured as view] --> B[Preview]
+  B --> C[Unit rejection only]
+  C --> D[Browser behavior unproven]
 ```
 
 ## Product cut
 
-Promote that same fixture to the already governed V2 Run contract by assigning
-one explicit PostgreSQL table target to the terminal Transform. Seed the three
-physical source relations in the local product stack, execute the one admitted
-workload, and compare the published schema and rows through the existing
-bounded warehouse-sample query with an independent expected oracle.
+Complete one T08 boundary through the real product: a user changes the terminal
+Transform result disposition from supported `table` to unsupported `view`,
+requests Preview, sees the precise disposition rejection, cannot start a Run,
+and causes zero `StartRun` calls. This extends no contract and adds no fallback.
 
 ```mermaid
 sequenceDiagram
@@ -47,14 +45,11 @@ sequenceDiagram
   participant C as Canvas
   participant P as PreviewPlan
   participant R as StartRun
-  participant PG as PostgreSQL
-  U->>C: Import and select three-source JOIN
-  C->>P: Preview exact persisted closure
-  P-->>C: One admitted V2 workload and PlanRef
-  U->>R: Start exact PlanRef
-  R->>PG: Execute JOIN and publish stable table
-  PG-->>C: Evidence plus bounded current sample
-  C-->>U: Expected columns and rows
+  U->>C: Change table disposition to view
+  U->>P: Preview persisted closure
+  P-->>C: REJECTED with exact disposition reason
+  C-->>U: Visible rejection; Run unavailable
+  C-xR: No command
 ```
 
 ## Existing rails and boundaries
@@ -73,8 +68,7 @@ identity remains owned by #2582.
 
 ## Verification
 
-The existing three-source live Cypress spec remains the acceptance boundary.
-It must observe one V2 workload, exact PlanRef execution, completed PostgreSQL
-publication evidence, and the expected five-column three-row JOIN result from
-the scoped warehouse query. No Preview, draft, Run, event, evidence, or sample
-response is stubbed.
+The existing terminal-Transform live Cypress spec is the acceptance boundary.
+It must perform the real authoring gesture, persist the changed draft, observe
+the protected Preview rejection and exact reason, and prove zero `StartRun`
+requests. No Preview, draft, Run, or rejection response is stubbed.
