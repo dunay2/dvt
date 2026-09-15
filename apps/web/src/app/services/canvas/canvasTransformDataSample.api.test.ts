@@ -9,10 +9,8 @@ import {
   setWorkspaceScope,
 } from '../workspace/workspaceScope.test.harness';
 
-import {
-  CanvasTransformDataSampleQueryError,
-  createApiCanvasTransformDataSampleQueryPort,
-} from './canvasTransformDataSample.api';
+import { createApiCanvasTransformDataSampleQueryPort } from './canvasTransformDataSample.api';
+import { CanvasTransformDataSampleQueryError } from '../../ports/canvasDataSample';
 
 installWorkspaceScopeHarness();
 
@@ -52,7 +50,9 @@ describe('canvasTransformDataSample.api', () => {
   it('rejects a malformed response with one stable presentation error', async () => {
     setWorkspaceScope(buildWorkspaceScope());
     const record = vi.fn();
-    const { apiClient } = createApiClientHarness({ getJson: async () => ({ rows: [] }) });
+    const { apiClient } = createApiClientHarness({
+      getJson: async <TResponse>() => ({ rows: [] }) as TResponse,
+    });
     const port = createApiCanvasTransformDataSampleQueryPort(apiClient, { record });
 
     await expect(

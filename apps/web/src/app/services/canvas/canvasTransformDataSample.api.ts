@@ -2,20 +2,16 @@
 import { TransformDataSampleResponseSchema } from '@dvt/contracts';
 
 import type { FrontendOperabilitySink } from '../../ports/frontendOperability';
-import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
+import {
+  CanvasTransformDataSampleQueryError,
+  type ICanvasTransformDataSampleQueryPort,
+} from '../../ports/canvasDataSample';
 import type { ApiClient } from '../api/createApiClient';
 import {
   createContractFailureEvent,
   recordFrontendOperabilityEvent,
 } from '../operability/frontendOperabilityRecorder';
 import { readWorkspaceGraphDraftScope } from '../workspace/workspaceGraphDraftHttp';
-
-export class CanvasTransformDataSampleQueryError extends Error {
-  public constructor() {
-    super('The Canvas Transform data sample could not be read.');
-    this.name = 'CanvasTransformDataSampleQueryError';
-  }
-}
 
 export function createApiCanvasTransformDataSampleQueryPort(
   apiClient: ApiClient,

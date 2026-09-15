@@ -91,7 +91,6 @@ describe('ShellTopBar workspace context', () => {
         dataEmptyTemplate: '{nodeName} returned no rows.',
         dataConnectionNotFoundTemplate: 'Connection missing for {nodeName}.',
         dataSourceObjectNotFoundTemplate: 'Object missing for {nodeName}.',
-        dataResultNotPublishedTemplate: 'Run {nodeName} first.',
         dataUnavailableTemplate: 'Sample unavailable for {nodeName}.',
         dataUnknownErrorTemplate: 'Sample failed for {nodeName}.',
         dataTruncatedTemplate: 'Showing {limit} rows.',

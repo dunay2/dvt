@@ -67,8 +67,8 @@ export default function CanvasShell({
   onSourceImportInitialSelectionConsumed,
   onDbtProjectImported,
   warehouseSourceDataSampleQuery,
+  canvasTransformDataSampleQuery,
   runSnapshot,
-  runOutputPreviewAuthority,
   runMaterializationSampleQuery,
 }: CanvasShellProps): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
@@ -77,9 +77,9 @@ export default function CanvasShell({
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
   const { dataSampleTabs, projectNode: projectNodeDataSample } = useCanvasNodeDataSample({
-    graphNodes: panels.inspectorGraphNodes,
+    activeCanvasId: panels.activeCanvasId,
+    canvasTransformDataSampleQuery,
     runMaterializationSampleQuery,
-    runOutputPreviewAuthority,
     runSnapshot,
     warehouseSourceDataSampleQuery,
   });

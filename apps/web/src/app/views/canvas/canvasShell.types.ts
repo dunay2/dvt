@@ -10,6 +10,7 @@ import type {
   IWarehouseSourceDataSampleQueryPort,
   IWarehouseSourceImportPort,
 } from '../../ports/workspace';
+import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
 import type { SourceImportInitialSelection } from '../../components/sourceImportWizard/types';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasSurfaceStrategy } from '../../plugins/canvasSurfaceStrategyContracts';
@@ -33,7 +34,6 @@ import type {
 } from '../../types/canvasExecutionSelectionRecovery';
 import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
 import type { IRunsPort, RunSnapshot } from '../../ports/runs';
-import type { PlanViewModel } from '../../types/plans';
 import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
 
 export type UserPermissions = {
@@ -170,11 +170,6 @@ export type CanvasShellWorkspaceCommands = Readonly<{
   onOpenProjectCode?: () => void;
 }>;
 
-export type CanvasRunOutputPreviewAuthority = Readonly<{
-  currentPlan: PlanViewModel | null;
-  isCurrentPlanStale: boolean;
-}>;
-
 export type CanvasShellProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
@@ -187,8 +182,8 @@ export type CanvasShellProps = Readonly<{
   workspaceCommands?: CanvasShellWorkspaceCommands;
   warehouseSourceImport?: IWarehouseSourceImportPort;
   warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
+  canvasTransformDataSampleQuery?: ICanvasTransformDataSampleQueryPort;
   runSnapshot?: RunSnapshot | null;
-  runOutputPreviewAuthority?: CanvasRunOutputPreviewAuthority;
   runMaterializationSampleQuery?: IRunsPort['getRunMaterializationSample'];
   canvasContextScreenToFlowPosition?: (
     screenPosition: CanvasContextMenuPosition

@@ -2,7 +2,6 @@
 import { useCallback } from 'react';
 
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
-import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasShellProps } from './canvasShell.types';
 import {
   CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
@@ -11,7 +10,6 @@ import {
   type CanvasSinkDataSampleTarget,
   type CanvasSourceDataSampleTarget,
 } from './canvasSourceDataSample';
-import { resolveCanvasTransformOutputSampleTarget } from './canvasTransformOutputSample';
 import { useCanvasDataSample } from './useCanvasDataSample';
 
 type CanvasNodeDataSampleProjection = Readonly<{
@@ -22,17 +20,17 @@ type CanvasNodeDataSampleProjection = Readonly<{
 
 type CanvasNodeDataSampleArgs = Pick<
   CanvasShellProps,
+  | 'canvasTransformDataSampleQuery'
   | 'runMaterializationSampleQuery'
-  | 'runOutputPreviewAuthority'
   | 'runSnapshot'
   | 'warehouseSourceDataSampleQuery'
 > &
-  Readonly<{ graphNodes: readonly CanonicalNode[] }>;
+  Readonly<{ activeCanvasId: string | null }>;
 
 export function useCanvasNodeDataSample({
-  graphNodes,
+  activeCanvasId,
+  canvasTransformDataSampleQuery,
   runMaterializationSampleQuery,
-  runOutputPreviewAuthority,
   runSnapshot,
   warehouseSourceDataSampleQuery,
 }: CanvasNodeDataSampleArgs): Readonly<{
@@ -65,26 +63,28 @@ export function useCanvasNodeDataSample({
     },
     [openDataSample, runMaterializationSampleQuery]
   );
+  const openTransform = useCallback(
+    (nodeId: string, nodeName: string) => {
+      if (activeCanvasId == null || canvasTransformDataSampleQuery == null) return;
+      openDataSample(nodeId, nodeName, () =>
+        canvasTransformDataSampleQuery.previewTransformRows({
+          canvasId: activeCanvasId,
+          transformNodeId: nodeId,
+          limit: CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
+        })
+      );
+    },
+    [activeCanvasId, canvasTransformDataSampleQuery, openDataSample]
+  );
   const projectNode = useCallback(
     (nodeId: string, data: DbtNodeData): CanvasNodeDataSampleProjection => {
       const isNativeTransform = data.pluginKind === 'dvt:transform';
       const sourceTarget = resolveCanvasSourceDataSampleTarget(data);
-      const transform = graphNodes.find((node) => node.id === nodeId);
-      const transformTarget =
-        isNativeTransform && transform != null && runOutputPreviewAuthority != null
-          ? resolveCanvasTransformOutputSampleTarget({
-              transform,
-              graphNodes,
-              currentPlan: runOutputPreviewAuthority.currentPlan,
-              isCurrentPlanStale: runOutputPreviewAuthority.isCurrentPlanStale,
-              runSnapshot,
-            })
-          : null;
       const sinkTarget = resolveCanvasSinkDataSampleTarget(data, runSnapshot);
       const onOpen = isNativeTransform
-        ? transformTarget == null
-          ? () => openDataSample(nodeId, data.name, undefined, 'result_not_published')
-          : () => openSource(nodeId, transformTarget)
+        ? activeCanvasId != null && canvasTransformDataSampleQuery != null
+          ? () => openTransform(nodeId, data.name)
+          : undefined
         : sourceTarget != null && warehouseSourceDataSampleQuery != null
           ? () => openSource(nodeId, sourceTarget)
           : sinkTarget != null && runMaterializationSampleQuery != null
@@ -94,12 +94,12 @@ export function useCanvasNodeDataSample({
       return { canOpen: onOpen != null, onOpen, sinkResult: sinkTarget };
     },
     [
-      graphNodes,
-      openDataSample,
+      activeCanvasId,
+      canvasTransformDataSampleQuery,
       openSink,
       openSource,
+      openTransform,
       runMaterializationSampleQuery,
-      runOutputPreviewAuthority,
       runSnapshot,
       warehouseSourceDataSampleQuery,
     ]
