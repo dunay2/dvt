@@ -18,6 +18,7 @@ import type {
   TemporalWorkerRuntimeResources,
 } from './runtimeTypes.js';
 import { createTemporalWorkerDbtProfile } from './temporalWorkerDbtProfile.js';
+import { createTemporalWorkerDvtPostgresProfile } from './temporalWorkerDvtPostgresProfile.js';
 import { createTemporalWorkerHttpJsonProfile } from './temporalWorkerHttpJsonProfile.js';
 import { createTemporalWorkerObjectFilePostgresProfile } from './temporalWorkerObjectFilePostgresProfile.js';
 import {
@@ -52,16 +53,22 @@ export function createTemporalWorkerRuntimeResources(
     stateStore,
     planArtifactReader
   );
+  const runExecutionContextReaderOptions =
+    resolveTemporalWorkerRunExecutionContextReaderOptions(env);
   const runExecutionContextReader =
     options.runExecutionContextReaderFactory?.(env) ??
-    new ArtifactBackedRunExecutionContextReader(
-      resolveTemporalWorkerRunExecutionContextReaderOptions(env)
-    );
+    new ArtifactBackedRunExecutionContextReader(runExecutionContextReaderOptions);
   const dbtProfile = createTemporalWorkerDbtProfile(env, options, runExecutionContextReader);
+  const dvtPostgresProfile = createTemporalWorkerDvtPostgresProfile(
+    env,
+    runExecutionContextReader,
+    runExecutionContextReaderOptions
+  );
   const objectFilePostgresProfile = createTemporalWorkerObjectFilePostgresProfile(env, options);
   const httpJsonProfile = createTemporalWorkerHttpJsonProfile(env, options);
   const pluginProfiles = [
     ...(dbtProfile.pluginProfile === undefined ? [] : [dbtProfile.pluginProfile]),
+    ...(dvtPostgresProfile.pluginProfile === undefined ? [] : [dvtPostgresProfile.pluginProfile]),
     ...(objectFilePostgresProfile.pluginProfile === undefined
       ? []
       : [objectFilePostgresProfile.pluginProfile]),

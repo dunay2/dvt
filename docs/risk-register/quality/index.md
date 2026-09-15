@@ -204,6 +204,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [SQL-first compiler mapping consumers may drift from the frozen canonical contract](R-20260414-TF-A1-B-COMPILER-MAPPING-DRIFT.yaml)
 - [SQL-first execution could drift from its governed PostgreSQL connection](R-20260813-PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY.yaml)
 - [SQL-first seam hardening can regress into local convenience modules as new profiles land](R-20260414-TF-A1-C-SRP-HARDENING-DRIFT.yaml)
+- [Stable PostgreSQL publication could be bypassed by out-of-band owner writes](R-20260915-DVT-POSTGRES-PUBLICATION.yaml)
 - [Staleness telemetry fires on engine failures after Promise.all parallelization](R-20260330-STALENESS-PARALLEL-TELEMETRY-ON-ENGINE-FAILURE.yaml)
 - [Start failure reporting could confuse run existence with preparation authority](R-20260906-ENG1-START-MUTATION-AUTHORITY.yaml)
 - [Start-run adapter IDs can drift back into concrete runtime construction](R-20260424-START-RUN-ADAPTER-FACTORY-DRIFT.yaml)

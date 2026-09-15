@@ -9,6 +9,7 @@ import {
   RunExecutionContextSchema,
 } from '../contracts/engine/RunExecutionContext.v1.js';
 import { RunExecutionPolicySchema } from '../contracts/engine/RunExecutionPolicy.v1.js';
+import { ConnectionRefSchema } from '../contracts/source-import/ConnectedSourceRef.v1.js';
 import { RUNTIME_PROVIDER_VALUES, type PlanRef } from '../types/contracts.js';
 import {
   isIsoUtcString,
@@ -177,9 +178,59 @@ export const ArtifactAcquisitionEvidenceSchema = z
   })
   .strict();
 
+export const DvtPostgresPublicationEvidenceSchema = z
+  .object({
+    evidenceType: z.literal('dvt-postgres-publication'),
+    environmentId: NonBlankStringSchema,
+    plan: z
+      .object({
+        planId: NonBlankStringSchema,
+        planVersion: NonBlankStringSchema,
+        sha256: Sha256HexStringSchema,
+      })
+      .strict(),
+    workloadSha256: Sha256HexStringSchema,
+    semanticPlanSha256: Sha256HexStringSchema,
+    projection: z
+      .object({
+        profileId: NonBlankStringSchema,
+        toolIdentity: NonBlankStringSchema,
+        schemaDigestSha256: Sha256HexStringSchema,
+        sqlArtifact: z
+          .object({
+            storageUri: NonBlankStringSchema,
+            sha256: Sha256HexStringSchema,
+            sizeBytes: z.number().int().nonnegative(),
+          })
+          .strict(),
+      })
+      .strict(),
+    target: z
+      .object({
+        connectionRef: ConnectionRefSchema.extend({ provider: z.literal('postgres') }).strict(),
+        schema: NonBlankStringSchema,
+        relation: NonBlankStringSchema,
+      })
+      .strict(),
+    publication: z
+      .object({
+        token: Sha256HexStringSchema,
+        predecessorToken: Sha256HexStringSchema.nullable(),
+        outcome: z.enum(['created', 'replaced', 'verified-existing']),
+      })
+      .strict(),
+    rowsWritten: z.number().int().nonnegative(),
+    providerQueryId: NonBlankStringSchema.optional(),
+    startedAt: IsoUtcStringSchema,
+    completedAt: IsoUtcStringSchema,
+    durationMs: z.number().int().nonnegative(),
+  })
+  .strict();
+
 export const StepResultEvidenceSchema = z.union([
   MaterializationEvidenceSchema,
   ArtifactAcquisitionEvidenceSchema,
+  DvtPostgresPublicationEvidenceSchema,
 ]);
 
 export const RunExecutionEvidenceSchema = z

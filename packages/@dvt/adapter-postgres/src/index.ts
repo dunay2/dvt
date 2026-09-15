@@ -100,6 +100,23 @@ export {
   parsePostgresCredentialBindings,
 } from './PostgresCredentialBindingResolver.js';
 export {
+  PostgresDvtPublicationPredecessorReader,
+  type DvtPublicationPredecessorObservation,
+  type PostgresDvtPublicationPredecessorReaderConfig,
+} from './PostgresDvtPublicationPredecessorReader.js';
+export {
+  PostgresDvtPublicationCapability,
+  type PostgresDvtPublicationCapabilityConfig,
+} from './PostgresDvtPublicationCapability.js';
+export { PostgresDvtStableTablePublisher } from './PostgresDvtStableTablePublisher.js';
+export {
+  POSTGRES_DVT_PUBLICATION_ERROR_CODE,
+  PostgresDvtPublicationRejectedError,
+  type PostgresDvtPublicationErrorCode,
+  type PostgresDvtStableTablePublishInput,
+  type PostgresDvtStableTablePublishResult,
+} from './PostgresDvtPublicationTypes.js';
+export {
   PostgresObjectFileLoader,
   resolvePostgresObjectFileScopeSchema,
   type PostgresObjectFileLoadInput,

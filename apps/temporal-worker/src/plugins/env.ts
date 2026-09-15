@@ -55,6 +55,7 @@ const EnvSchema = z
     DVT_TEMPORAL_ADMIN_HOST: z.string().default('0.0.0.0'),
     DVT_TEMPORAL_ADMIN_PORT: z.coerce.number().int().min(1).max(65535).default(9468),
     DVT_TEMPORAL_DBT_ENABLED: envBoolean.default(false),
+    DVT_TEMPORAL_DVT_POSTGRES_ENABLED: envBoolean.default(false),
     DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: envBoolean.default(false),
     DVT_TEMPORAL_HTTP_JSON_ENABLED: envBoolean.default(false),
     DVT_HTTP_JSON_ENDPOINTS: z.string().optional(),
@@ -121,6 +122,17 @@ const EnvSchema = z
         'postgres:',
         ctx
       );
+    }
+
+    if (
+      input.DVT_TEMPORAL_DVT_POSTGRES_ENABLED &&
+      input.DVT_POSTGRES_CREDENTIAL_BINDINGS === undefined
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['DVT_POSTGRES_CREDENTIAL_BINDINGS'],
+        message: 'required when DVT_TEMPORAL_DVT_POSTGRES_ENABLED=true',
+      });
     }
 
     if (input.NODE_ENV === 'production' && input.DVT_DBT_BUNDLE_STORE_BACKEND !== 's3') {

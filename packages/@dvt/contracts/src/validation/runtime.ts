@@ -1,6 +1,8 @@
 import {
   DbtPluginContextSchema,
   type DbtPluginContextSchemaT,
+  DvtPostgresPluginContextSchema,
+  type DvtPostgresPluginContextSchemaT,
 } from '../contracts/engine/RunExecutionContext.v1.js';
 import type { StartRunCommand } from '../contracts/engine/StartRunBoundary.v1.js';
 import {
@@ -61,6 +63,10 @@ export function parseRunExecutionContext(input: unknown): RunExecutionContextSch
 
 export function parseDbtPluginContext(input: unknown): DbtPluginContextSchemaT {
   return parseWithSchema(DbtPluginContextSchema, input);
+}
+
+export function parseDvtPostgresPluginContext(input: unknown): DvtPostgresPluginContextSchemaT {
+  return parseWithSchema(DvtPostgresPluginContextSchema, input);
 }
 
 export function parseRunContext(input: unknown): RunContextSchemaT {
