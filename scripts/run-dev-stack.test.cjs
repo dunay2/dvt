@@ -428,10 +428,19 @@ test('buildLocalPostgresProofSeedSql creates real default source tables for Canv
   assert.match(sql, /CREATE SCHEMA IF NOT EXISTS raw/);
   assert.match(sql, /CREATE TABLE public\.source_1/);
   assert.match(sql, /CREATE TABLE raw\.orders/);
+  assert.match(sql, /CREATE TABLE raw\.orders \(\s+order_id text PRIMARY KEY/);
+  assert.match(sql, /client_id text NOT NULL/);
+  assert.match(sql, /CREATE TABLE raw\.client/);
+  assert.match(sql, /CREATE TABLE raw\.order_details/);
+  assert.match(sql, /CREATE TABLE raw\.order_details \(\s+order_id text NOT NULL/);
   assert.match(sql, /INSERT INTO public\.source_1/);
   assert.match(sql, /INSERT INTO raw\.orders/);
+  assert.match(sql, /INSERT INTO raw\.client/);
+  assert.match(sql, /INSERT INTO raw\.order_details/);
   assert.match(sql, /ANALYZE public\.source_1/);
   assert.match(sql, /ANALYZE raw\.orders/);
+  assert.match(sql, /ANALYZE raw\.client/);
+  assert.match(sql, /ANALYZE raw\.order_details/);
 });
 
 test('buildLocalWarehouseConnectionRequest uses the protected connection command contract', () => {

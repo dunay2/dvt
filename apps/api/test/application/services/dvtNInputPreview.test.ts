@@ -2,6 +2,7 @@ import type { IContentAddressedArtifactStore } from '@dvt/artifacts';
 import {
   DVT_POSTGRES_INNER_JOIN_PROFILE_ID,
   DvtOperationalWorkloadContractV1,
+  DvtOperationalWorkloadContractV2,
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -67,6 +68,57 @@ describe('N-input protected Preview lowering', () => {
       expect(JSON.stringify(input.draft)).toBe(before);
     }
   );
+
+  it('preserves a three-source JOIN as one Run workload', async () => {
+    const { input, publisher } = harness(3);
+    const draft = {
+      ...input.draft,
+      nodes: input.draft.nodes.map((node) =>
+        node.id === 'transform-orders'
+          ? {
+              ...node,
+              metadata: {
+                ...node.metadata,
+                config: {
+                  materialized: 'table',
+                  resultTarget: {
+                    schemaVersion: 'dvt-transform-result-target.v1',
+                    connectionRef: {
+                      schemaVersion: 'connection-ref.v1',
+                      provider: 'postgres',
+                      connectionId: 'local-postgres-proof',
+                    },
+                    schema: 'analytics',
+                    relation: 'joined_orders',
+                  },
+                },
+              },
+            }
+          : node
+      ),
+    };
+    const binding = await publisher.publish({ ...input, draft });
+    const result = new DvtOperationalWorkloadProjector().project({
+      ...input,
+      draft,
+      draftRevision: 'revision-1',
+      canvasId: draft.canvas.id!,
+      targetProjection: binding,
+    });
+
+    if (!result.ok) throw new Error(result.reason);
+    expect(result.graphSource.nodes).toHaveLength(1);
+    const workload = DvtOperationalWorkloadContractV2.schema.parse(
+      result.graphSource.nodes[0]?.stepTypeConfig
+    );
+    expect(workload.executionIntent).toBe('run');
+    expect(workload.graph.selectedNodeIds).toEqual([...draft.nodeIds].sort());
+    expect(workload.output).toMatchObject({
+      disposition: 'table',
+      target: { schema: 'analytics', relation: 'joined_orders' },
+    });
+    expect(workload.publicationBoundaries).toEqual([]);
+  });
 
   it.each([
     'missing input',
