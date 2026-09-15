@@ -20,7 +20,10 @@ export type FrontendOperabilityEvent =
     }>
   | Readonly<{
       type: 'frontend.contract.failed';
-      operation: 'ListWarehouseConnectionSourceObjects' | 'PreviewWarehouseSourceObjectRows';
+      operation:
+        | 'ListWarehouseConnectionSourceObjects'
+        | 'PreviewWarehouseSourceObjectRows'
+        | 'PreviewCanvasTransformRows';
       reasonCode: 'response-contract-rejected';
     }>
   | Readonly<{

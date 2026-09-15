@@ -169,7 +169,6 @@ export function buildCanvasOperationalDrawerContribution({
       dataEmptyTemplate: copy.operationalDrawerDataEmptyTemplate,
       dataConnectionNotFoundTemplate: copy.operationalDrawerDataConnectionNotFoundTemplate,
       dataSourceObjectNotFoundTemplate: copy.operationalDrawerDataSourceObjectNotFoundTemplate,
-      dataResultNotPublishedTemplate: copy.operationalDrawerDataResultNotPublishedTemplate,
       dataUnavailableTemplate: copy.operationalDrawerDataUnavailableTemplate,
       dataUnknownErrorTemplate: copy.operationalDrawerDataUnknownErrorTemplate,
       dataTruncatedTemplate: copy.operationalDrawerDataTruncatedTemplate,

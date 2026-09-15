@@ -31,7 +31,6 @@ function buildCanvasOperationalDrawerContribution(
       dataEmptyTemplate: '{nodeName} returned no rows.',
       dataConnectionNotFoundTemplate: 'Connection missing for {nodeName}.',
       dataSourceObjectNotFoundTemplate: 'Object missing for {nodeName}.',
-      dataResultNotPublishedTemplate: 'Run {nodeName} first.',
       dataUnavailableTemplate: 'Sample unavailable for {nodeName}.',
       dataUnknownErrorTemplate: 'Sample failed for {nodeName}.',
       dataTruncatedTemplate: 'Showing {limit} rows.',
@@ -173,7 +172,7 @@ describe('OperationalDrawerPanels', () => {
       dataSample: {
         status: 'error' as const,
         nodeName: 'customers',
-        reason: 'result_not_published' as const,
+        reason: 'unavailable' as const,
       },
     };
 
@@ -190,7 +189,7 @@ describe('OperationalDrawerPanels', () => {
       );
     });
     expect(container.querySelector('[role="status"]')?.textContent).toBe('Loading orders.');
-    expect(container.textContent).not.toContain('Run customers first.');
+    expect(container.textContent).not.toContain('Could not read customers.');
 
     await act(async () => {
       root.render(
@@ -204,7 +203,9 @@ describe('OperationalDrawerPanels', () => {
         />
       );
     });
-    expect(container.querySelector('[role="alert"]')?.textContent).toBe('Run customers first.');
+    expect(container.querySelector('[role="alert"]')?.textContent).toBe(
+      'Sample unavailable for customers.'
+    );
     expect(container.textContent).not.toContain('Loading orders.');
 
     await act(async () => {
@@ -240,7 +241,7 @@ describe('OperationalDrawerPanels', () => {
       );
     });
     expect(container.textContent).toContain('orders returned no rows.');
-    expect(container.textContent).not.toContain('Run customers first.');
+    expect(container.textContent).not.toContain('Could not read customers.');
   });
 
   it('renders problems, runs, and preview bodies from the route contribution', async () => {

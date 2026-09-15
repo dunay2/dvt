@@ -5,32 +5,19 @@
 import type { IContentAddressedArtifactStore } from '@dvt/artifacts';
 import {
   createDvtPostgresOutputSchemaDigestV1,
-  decodeDvtSubstraitPlanV1,
-  DVT_POSTGRES_INNER_JOIN_PROFILE_ID,
-  type DvtSubstraitSemanticDocumentV1,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 import { sha256Hex } from '@dvt/crypto';
-import {
-  projectDvtPostgresOutputSchemaV1,
-  projectDvtConnectedFieldDraftToPostgresSql,
-  projectDvtInnerJoinDraftToPostgresSql,
-  type ProjectedDvtConnectedFieldSql,
-} from '@dvt/postgres-projection';
+import { projectDvtPostgresOutputSchemaV1 } from '@dvt/postgres-projection';
 
 import type { DvtTerminalTransformProjectionBinding } from './dvtOperationalWorkloadProjector.js';
 import {
-  resolveDvtTerminalTransformClosure,
-  sameConnectedSource,
-  type DvtTerminalTransformClosure,
-} from './resolveDvtTerminalTransformClosure.js';
+  projectDvtPostgresTransform,
+  type ProjectDvtConnectedFieldDocument,
+} from './dvtPostgresTransformProjection.js';
+import { resolveDvtTerminalTransformClosure } from './resolveDvtTerminalTransformClosure.js';
 
 const SQL_MEDIA_TYPE = 'application/sql; charset=utf-8';
-
-type ProjectSemanticDocument = (
-  document: DvtSubstraitSemanticDocumentV1,
-  nodeBinding: { readonly sourceNodeId: string; readonly targetNodeId: string }
-) => Promise<ProjectedDvtConnectedFieldSql>;
 
 export type DvtPostgresTargetProjectionPublishInput = {
   readonly scope: {
@@ -51,7 +38,7 @@ export class DvtPostgresTargetProjectionPublisher {
         readonly tenantId: string;
         readonly sha256: string;
       }) => string;
-      readonly projectSemanticDocument?: ProjectSemanticDocument;
+      readonly projectSemanticDocument?: ProjectDvtConnectedFieldDocument;
     }
   ) {}
 
@@ -60,7 +47,7 @@ export class DvtPostgresTargetProjectionPublisher {
   ): Promise<DvtTerminalTransformProjectionBinding> {
     const closure = resolveDvtTerminalTransformClosure(input);
     const semanticDocument = closure.authority.semanticDocument;
-    const projected = await this.projectClosure(closure);
+    const projected = await projectDvtPostgresTransform(closure, this.deps.projectSemanticDocument);
     const sql = projected.sql;
     const outputSchema = projectDvtPostgresOutputSchemaV1(projected.outputs);
     const bytes = Buffer.from(sql, 'utf8');
@@ -103,61 +90,4 @@ export class DvtPostgresTargetProjectionPublisher {
       },
     };
   }
-
-  private async projectClosure(closure: DvtTerminalTransformClosure): Promise<
-    Readonly<{
-      sql: string;
-      outputs: readonly Readonly<{ name: string; dataType: string; outputOrdinal: number }>[];
-    }>
-  > {
-    const document = closure.authority.semanticDocument;
-    if (closure.profileId === DVT_POSTGRES_INNER_JOIN_PROFILE_ID) {
-      const projected = await projectDvtInnerJoinDraftToPostgresSql({
-        plan: decodeDvtSubstraitPlanV1(document),
-        sidecar: document.sidecar,
-      });
-      if (
-        projected.projection.inputs.length !== closure.sources.length ||
-        projected.projection.inputs.some(
-          (input) =>
-            !closure.sources.some(
-              ({ node, ref }) =>
-                sameConnectedSource(input.sourceRef, ref) &&
-                node.metadata?.['schema'] === input.schema &&
-                node.metadata?.['tableName'] === input.table
-            )
-        )
-      ) {
-        throw new Error('PostgreSQL JOIN inputs do not match the protected terminal closure.');
-      }
-      return { sql: projected.sql, outputs: projected.projection.outputs };
-    }
-    const source = closure.sources[0]!;
-    const project = this.deps.projectSemanticDocument ?? projectCanonicalConnectedFieldDocument;
-    const projected = await project(document, {
-      sourceNodeId: source.node.id,
-      targetNodeId: closure.transform.id,
-    });
-    if (
-      projected.projection.targetNodeId !== closure.transform.id ||
-      projected.projection.source.nodeId !== source.node.id ||
-      !sameConnectedSource(projected.projection.source.sourceRef, source.ref)
-    ) {
-      throw new Error('PostgreSQL projection does not match the protected terminal closure.');
-    }
-    return { sql: projected.sql, outputs: projected.projection.outputs };
-  }
-}
-
-function projectCanonicalConnectedFieldDocument(
-  document: DvtSubstraitSemanticDocumentV1,
-  nodeBinding: { readonly sourceNodeId: string; readonly targetNodeId: string }
-): Promise<ProjectedDvtConnectedFieldSql> {
-  return projectDvtConnectedFieldDraftToPostgresSql(
-    {
-      plan: decodeDvtSubstraitPlanV1(document),
-      sidecar: document.sidecar,
-    },
-    nodeBinding
-  );
 }

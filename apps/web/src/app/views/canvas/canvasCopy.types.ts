@@ -351,7 +351,6 @@ export type CanvasViewCopy = {
   readonly operationalDrawerDataEmptyTemplate: string;
   readonly operationalDrawerDataConnectionNotFoundTemplate: string;
   readonly operationalDrawerDataSourceObjectNotFoundTemplate: string;
-  readonly operationalDrawerDataResultNotPublishedTemplate: string;
   readonly operationalDrawerDataUnavailableTemplate: string;
   readonly operationalDrawerDataUnknownErrorTemplate: string;
   readonly operationalDrawerDataTruncatedTemplate: string;

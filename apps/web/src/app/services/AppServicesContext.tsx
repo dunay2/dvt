@@ -2,6 +2,7 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
 import type { CapabilitiesPort } from '../ports/capabilities';
+import type { ICanvasTransformDataSampleQueryPort } from '../ports/canvasDataSample';
 import type { ICostAttributionSummaryPort } from '../ports/cost';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../ports/graphDbtWorkspaceArtifactPublication';
 import type { IGraphDbtModelCompilationQueryPort } from '../ports/graphDbtModelCompilation';
@@ -61,6 +62,7 @@ export function AppServicesProvider({ children, overrides }: AppServicesProvider
       overrides?.workspaceAdminRead,
       overrides?.warehouseSourceImport,
       overrides?.warehouseSourceDataSampleQuery,
+      overrides?.canvasTransformDataSampleQuery,
       overrides?.workspaceFileContentCommand,
       overrides?.graphDbtWorkspaceArtifactPublicationCommand,
       overrides?.graphDbtModelCompilationQuery,
@@ -117,6 +119,10 @@ export function useWarehouseSourceImportPort(): IWarehouseSourceImportPort {
 
 export function useWarehouseSourceDataSampleQueryPort(): IWarehouseSourceDataSampleQueryPort {
   return useRequiredAppServicesContext().warehouseSourceDataSampleQuery;
+}
+
+export function useCanvasTransformDataSampleQueryPort(): ICanvasTransformDataSampleQueryPort {
+  return useRequiredAppServicesContext().canvasTransformDataSampleQuery;
 }
 
 export function useOptionalWarehouseSourceImportPort(): IWarehouseSourceImportPort | undefined {

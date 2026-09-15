@@ -6,7 +6,10 @@ import {
   type OperationalDrawerDataSampleTab,
   type OperationalDrawerDataTabId,
 } from '../../components/shell/operationalDrawerContributionStore';
-import type { SourceDataSample } from '../../ports/workspace';
+import {
+  CanvasTransformDataSampleQueryError,
+  type CanvasDataSample,
+} from '../../ports/canvasDataSample';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import { resolveCanvasSourceDataSampleError } from './canvasSourceDataSample';
 
@@ -23,7 +26,7 @@ export function useCanvasDataSample() {
     (
       nodeId: string,
       nodeName: string,
-      load?: () => Promise<SourceDataSample>,
+      load?: () => Promise<CanvasDataSample>,
       unavailableReason: Extract<
         OperationalDrawerDataSample,
         { status: 'error' }
@@ -66,7 +69,11 @@ export function useCanvasDataSample() {
         })
         .catch((error: unknown) => {
           if (requestIdsRef.current.get(tabId) === requestId) {
-            replaceTab(resolveCanvasSourceDataSampleError(error, nodeName));
+            replaceTab(
+              error instanceof CanvasTransformDataSampleQueryError
+                ? { status: 'error', nodeName, reason: 'unavailable' }
+                : resolveCanvasSourceDataSampleError(error, nodeName)
+            );
           }
         });
     },

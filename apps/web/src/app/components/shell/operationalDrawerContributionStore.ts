@@ -11,7 +11,7 @@ import type {
   RunControlCommandRequest,
 } from '../../services/runs/runControlCommandModel';
 import type { OperationalDrawerSelectionRecoveryMessages } from './operationalDrawerSelectionRecoveryMessages';
-import type { SourceDataSample } from '../../ports/workspace';
+import type { CanvasDataSample } from '../../ports/canvasDataSample';
 import type { ReactNode } from 'react';
 
 export type OperationalDrawerBuiltInTabId =
@@ -22,16 +22,11 @@ export type OperationalDrawerTabId = OperationalDrawerBuiltInTabId | Operational
 export type OperationalDrawerDataSample =
   | Readonly<{ status: 'idle' }>
   | Readonly<{ status: 'loading'; nodeName: string }>
-  | Readonly<{ status: 'ready'; nodeName: string; sample: SourceDataSample }>
+  | Readonly<{ status: 'ready'; nodeName: string; sample: CanvasDataSample }>
   | Readonly<{
       status: 'error';
       nodeName: string;
-      reason:
-        | 'connection_not_found'
-        | 'source_object_not_found'
-        | 'result_not_published'
-        | 'unavailable'
-        | 'unknown';
+      reason: 'connection_not_found' | 'source_object_not_found' | 'unavailable' | 'unknown';
     }>;
 
 export type OperationalDrawerDataSampleTab = Readonly<{
@@ -88,7 +83,6 @@ export type OperationalDrawerContribution = Readonly<{
     dataEmptyTemplate: string;
     dataConnectionNotFoundTemplate: string;
     dataSourceObjectNotFoundTemplate: string;
-    dataResultNotPublishedTemplate: string;
     dataUnavailableTemplate: string;
     dataUnknownErrorTemplate: string;
     dataTruncatedTemplate: string;

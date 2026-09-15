@@ -570,10 +570,6 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.operationalDrawer.dataSourceObjectNotFoundTemplate',
     fallback: 'The source object for {nodeName} is no longer available.',
   },
-  operationalDrawerDataResultNotPublishedTemplate: {
-    key: 'canvas.operationalDrawer.dataResultNotPublishedTemplate',
-    fallback: 'Run {nodeName} to publish a result before opening its data.',
-  },
   operationalDrawerDataUnavailableTemplate: {
     key: 'canvas.operationalDrawer.dataUnavailableTemplate',
     fallback: 'The data sample for {nodeName} could not be read.',

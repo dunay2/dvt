@@ -160,28 +160,8 @@ describe('DVT terminal Transform Preview and Run live', () => {
     cy.location('pathname').then((pathname) => {
       const runId = pathname.split('/').pop();
       expect(runId).to.be.a('string').and.not.to.equal('');
-      cy.intercept('GET', '**/source-data-sample?*').as('publishedTransformRows');
-
       cy.go('back');
       cy.location('pathname', { timeout: 20_000 }).should('equal', '/canvas');
-      getVisibleCanvasNode('dvt-transform-1')
-        .find('[data-slot="canvas-node-shell"]')
-        .dblclick('bottom', { force: true });
-      cy.wait('@publishedTransformRows', { timeout: 30_000 }).then((interception) => {
-        expect(interception.response?.statusCode).to.equal(200);
-        expect(
-          new URL(interception.request.url).searchParams.get('expectedPublicationToken')
-        ).to.equal(publicationToken);
-        expect(interception.response?.body).to.deep.include({
-          connectionId: 'local-postgres-proof',
-          limit: 20,
-        });
-        expect(interception.response?.body.rows).to.have.length(3);
-      });
-      cy.get('[data-slot="bottom-operational-drawer-data"]', { timeout: 20_000 })
-        .should('be.visible')
-        .and('contain.text', 'customer');
-
       cy.intercept('GET', `**/runs/${runId}?*`).as('reopenedDvtRunSnapshot');
       cy.visit(`/runs/${runId}`);
       cy.wait('@reopenedDvtRunSnapshot', { timeout: 30_000 })

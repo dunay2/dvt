@@ -94,7 +94,9 @@ describe('CanvasShell operational drawer registration', () => {
     const position = { x: 320, y: 140 };
     const onApplyNodeDraft = vi.fn();
     const onInspectNode = vi.fn();
+    const previewTransformRows = vi.fn(() => new Promise<never>(() => undefined));
     await renderShell({
+      canvasTransformDataSampleQuery: { previewTransformRows },
       panels: {
         inspectorGraphNodes: [...fixture.sources, fixture.transform],
         inspectorAuthoring: { canEditNode: true, onApplyNodeDraft },
@@ -141,9 +143,8 @@ describe('CanvasShell operational drawer registration', () => {
           expect.objectContaining({
             id: `data:${fixture.transform.id}`,
             dataSample: {
-              status: 'error',
+              status: 'loading',
               nodeName: fixture.transform.name,
-              reason: 'result_not_published',
             },
           }),
         ]),
@@ -200,9 +201,23 @@ describe('CanvasShell operational drawer registration', () => {
         })
     );
     const runMaterializationSampleQuery = vi.fn();
+    const transformSample = {
+      contractVersion: 1 as const,
+      canvasId: 'canvas-test',
+      transformNodeId: fixture.transform.id,
+      draftRevision: 'revision-7',
+      semanticPlanSha256: 'a'.repeat(64),
+      columns: [{ name: 'id', type: 'integer', nullable: false }],
+      rows: [{ values: ['2'] }],
+      limit: 20,
+      truncated: false,
+      sampledAt: '2026-09-15T10:00:00.000Z',
+    };
+    const previewTransformRows = vi.fn().mockResolvedValue(transformSample);
     const onInspectNode = vi.fn();
     await renderShell({
       warehouseSourceDataSampleQuery: { previewSourceObjectRows },
+      canvasTransformDataSampleQuery: { previewTransformRows },
       runMaterializationSampleQuery,
       panels: { inspectorGraphNodes: [...fixture.sources, fixture.transform] },
       graph: {
@@ -259,6 +274,7 @@ describe('CanvasShell operational drawer registration', () => {
     };
     await act(async () => {
       resolveSample?.(sourceSample);
+      await Promise.resolve();
     });
     expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
       activeTab: `data:${fixture.transform.id}`,
@@ -271,15 +287,16 @@ describe('CanvasShell operational drawer registration', () => {
           expect.objectContaining({
             id: `data:${fixture.transform.id}`,
             dataSample: {
-              status: 'error',
+              status: 'ready',
               nodeName: fixture.transform.name,
-              reason: 'result_not_published',
+              sample: transformSample,
             },
           }),
         ]),
       },
     });
     expect(previewSourceObjectRows).toHaveBeenCalledOnce();
+    expect(previewTransformRows).toHaveBeenCalledOnce();
     expect(runMaterializationSampleQuery).not.toHaveBeenCalled();
     expect(onInspectNode).not.toHaveBeenCalled();
     act(() => {

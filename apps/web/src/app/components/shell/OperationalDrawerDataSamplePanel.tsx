@@ -47,11 +47,9 @@ export function OperationalDrawerDataSamplePanel({
         ? contribution.copy.dataConnectionNotFoundTemplate
         : state.reason === 'source_object_not_found'
           ? contribution.copy.dataSourceObjectNotFoundTemplate
-          : state.reason === 'result_not_published'
-            ? contribution.copy.dataResultNotPublishedTemplate
-            : state.reason === 'unavailable'
-              ? contribution.copy.dataUnavailableTemplate
-              : contribution.copy.dataUnknownErrorTemplate;
+          : state.reason === 'unavailable'
+            ? contribution.copy.dataUnavailableTemplate
+            : contribution.copy.dataUnknownErrorTemplate;
     content = (
       <p role="alert">
         {formatDataSampleTemplate(template, { nodeName: state.nodeName, limit: '' })}
@@ -78,7 +76,7 @@ export function OperationalDrawerDataSamplePanel({
           </OperationalDrawerDataNotice>
         ) : null}
         <OperationalDrawerDataTable
-          key={state.sample.objectId}
+          key={'objectId' in state.sample ? state.sample.objectId : state.sample.transformNodeId}
           caption={formatDataSampleTemplate(contribution.copy.dataCaptionTemplate, {
             nodeName: state.nodeName,
             limit: String(state.sample.limit),
