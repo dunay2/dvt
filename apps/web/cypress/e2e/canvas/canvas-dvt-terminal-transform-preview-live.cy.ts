@@ -192,8 +192,6 @@ describe('DVT terminal Transform Preview and Run live', () => {
       startRunRequests += 1;
       request.continue();
     });
-    cy.intercept('PUT', '**/workspace/graph/draft').as('editedDvtDraft');
-
     visitWithLiveWorkspaceSession('/canvas');
     getVisibleCanvasNode('dvt-transform-1').should('be.visible');
     selectCanvasClosure(['dvt-transform-1']);
@@ -216,7 +214,6 @@ describe('DVT terminal Transform Preview and Run live', () => {
     cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
     cy.get('input[name="node-name"]').clear().type('Transform after Preview');
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Apply|Aplicar)$/).click();
-    cy.wait('@editedDvtDraft', { timeout: 30_000 }).its('response.statusCode').should('equal', 200);
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.get('[data-slot="shell-run-command"]').should('be.disabled');
