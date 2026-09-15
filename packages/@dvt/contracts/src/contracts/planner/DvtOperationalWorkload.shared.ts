@@ -1,4 +1,10 @@
-/** Owns identities and validation shared by Preview v1 and Run v2 workloads. */
+/**
+ * Owns identities and validation shared by Preview v1 and Run v2 workloads.
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Keep protected graph, semantic, projection, and connection identity checks shared across workload versions.
+ * @consequence Preview and Run cannot drift in their authorization-bound identities.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import { StepArtifactRefSchema } from '../../step-registry/DbtStepTypeConfig.js';

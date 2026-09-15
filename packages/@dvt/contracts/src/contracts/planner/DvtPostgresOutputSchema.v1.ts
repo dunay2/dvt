@@ -1,4 +1,10 @@
-/** Owns the canonical schema fingerprint expected from one PostgreSQL result. */
+/**
+ * Owns the canonical schema fingerprint expected from one PostgreSQL result.
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @decision Fingerprint the ordered PostgreSQL output schema before runtime publication.
+ * @consequence Runtime can fail closed when the produced relation shape differs from the planned result.
+ * @version 1.0.0
+ */
 import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 import { z } from 'zod';
 

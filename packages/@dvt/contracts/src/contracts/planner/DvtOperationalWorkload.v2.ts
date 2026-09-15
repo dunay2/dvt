@@ -1,4 +1,10 @@
-/** Owns the minimum durable Run intent for one terminal DVT Transform result. */
+/**
+ * Owns the minimum durable Run intent for one terminal DVT Transform result.
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Version Run separately from the existing Preview workload and bind it to one explicit result target.
+ * @consequence Runtime admission receives immutable semantic provenance without reinterpreting Preview v1.
+ * @version 2.0.0
+ */
 import { z } from 'zod';
 
 import { CommonStepTypeConfigSchema } from '../../step-registry/CommonStepTypeConfig.js';
