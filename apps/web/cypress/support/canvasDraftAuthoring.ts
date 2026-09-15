@@ -883,7 +883,7 @@ export function buildCanvasAuthoringDraft({
               provider: 'postgres',
               connectionId,
             },
-            sourceObjectId: 'raw.orders',
+            sourceObjectId: terminalTransformPreview ? 'relation/dvt/raw/orders' : 'raw.orders',
           },
           fields: [
             ...(terminalTransformPreview
@@ -943,7 +943,7 @@ export function buildCanvasAuthoringDraft({
                 provider: 'postgres',
                 connectionId,
               },
-              sourceObjectId: 'raw.orders',
+              sourceObjectId: terminalTransformPreview ? 'relation/dvt/raw/orders' : 'raw.orders',
             },
             columns: [
               ...(terminalTransformPreview

@@ -13,6 +13,7 @@ describe('SourceDataSample v1', () => {
     const request = SourceDataSampleRequestSchema.parse({
       connectionId: 'postgresql-local',
       objectId: 'relation/dvt/public/orders',
+      expectedPublicationToken: 'a'.repeat(64),
     });
     const response = SourceDataSampleResponseSchema.parse({
       contractVersion: SOURCE_DATA_SAMPLE_CONTRACT_VERSION,
@@ -29,6 +30,7 @@ describe('SourceDataSample v1', () => {
     });
 
     expect(request.limit).toBe(SOURCE_DATA_SAMPLE_DEFAULT_LIMIT);
+    expect(request.expectedPublicationToken).toBe('a'.repeat(64));
     expect(response.rows).toHaveLength(2);
   });
 
@@ -45,6 +47,13 @@ describe('SourceDataSample v1', () => {
         connectionId: 'postgresql-local',
         objectId: 'relation/dvt/public/orders',
         sql: 'select * from orders',
+      })
+    ).toThrow();
+    expect(() =>
+      SourceDataSampleRequestSchema.parse({
+        connectionId: 'postgresql-local',
+        objectId: 'relation/dvt/public/orders',
+        expectedPublicationToken: 'not-a-sha256',
       })
     ).toThrow();
   });

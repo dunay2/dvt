@@ -180,16 +180,21 @@ function buildWarehouseConnectionSourceObjectsEndpoint(
 function buildWarehouseConnectionSourceDataSampleEndpoint(
   connectionId: string,
   objectId: string,
-  limit: number
+  limit: number,
+  expectedPublicationToken?: string
 ): string {
   const scope = readWorkspaceGraphDraftScope();
-  return `/workspace/warehouse/connections/${encodeURIComponent(
-    connectionId
-  )}/source-data-sample?tenantId=${encodeURIComponent(
-    scope.tenantId
-  )}&projectId=${encodeURIComponent(scope.projectId)}&environmentId=${encodeURIComponent(
-    scope.environmentId
-  )}&objectId=${encodeURIComponent(objectId)}&limit=${limit}`;
+  const params = new URLSearchParams({
+    tenantId: scope.tenantId,
+    projectId: scope.projectId,
+    environmentId: scope.environmentId,
+    objectId,
+    limit: String(limit),
+  });
+  if (expectedPublicationToken != null) {
+    params.set('expectedPublicationToken', expectedPublicationToken);
+  }
+  return `/workspace/warehouse/connections/${encodeURIComponent(connectionId)}/source-data-sample?${params}`;
 }
 
 function buildWarehouseConnectionEndpoint(connectionId: string): string {
@@ -344,7 +349,8 @@ export function createApiWarehouseSourceDataSampleQueryPort(
       const endpoint = buildWarehouseConnectionSourceDataSampleEndpoint(
         input.connectionId,
         input.objectId,
-        input.limit
+        input.limit,
+        input.expectedPublicationToken
       );
       try {
         const response = await apiClient.getJson(endpoint);
@@ -368,6 +374,8 @@ export function createApiWarehouseSourceDataSampleQueryPort(
             case 'source_object_not_found':
               throw new WarehouseSourceDataSampleQueryError('source_object_not_found');
             case 'warehouse_source_data_sample_failed':
+              throw new WarehouseSourceDataSampleQueryError('unavailable');
+            case 'warehouse_source_publication_changed':
               throw new WarehouseSourceDataSampleQueryError('unavailable');
           }
         }

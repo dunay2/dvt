@@ -58,6 +58,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   workspaceSourceImportCanvasNotFound: 'workspace_source_import_canvas_not_found',
   workspaceSourceImportProjectionFailed: 'workspace_source_import_projection_failed',
   warehouseSourceDataSampleFailed: 'warehouse_source_data_sample_failed',
+  warehouseSourcePublicationChanged: 'warehouse_source_publication_changed',
   workspaceSourceImportIdempotencyMismatch: 'workspace_source_import_idempotency_mismatch',
   dbtProjectImportRejected: 'dbt_project_import_rejected',
   dbtProjectImportStaleReceipt: 'dbt_project_import_stale_receipt',

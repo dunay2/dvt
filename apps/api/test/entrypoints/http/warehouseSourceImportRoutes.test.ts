@@ -650,12 +650,14 @@ describe('warehouseSourceImportRoutes', () => {
   });
 
   it('returns a bounded source data sample through the protected view query', async () => {
-    const { app, authorize } = buildApp();
+    const { app, authorize, probe } = buildApp();
+    const previewRows = vi.spyOn(probe, 'previewSourceObjectRows');
     const objectId = encodeURIComponent('relation/analytics/erp/orders');
+    const expectedPublicationToken = 'a'.repeat(64);
 
     const response = await app.inject({
       method: 'GET',
-      url: `/workspace/warehouse/connections/warehouse-prod/source-data-sample?${SCOPE_QUERY}&objectId=${objectId}&limit=1`,
+      url: `/workspace/warehouse/connections/warehouse-prod/source-data-sample?${SCOPE_QUERY}&objectId=${objectId}&limit=1&expectedPublicationToken=${expectedPublicationToken}`,
     });
 
     expect(response.statusCode).toBe(200);
@@ -680,6 +682,7 @@ describe('warehouseSourceImportRoutes', () => {
       }),
       expect.any(String)
     );
+    expect(previewRows).toHaveBeenCalledWith(expect.objectContaining({ expectedPublicationToken }));
   });
 
   it('rejects missing object identity and limits above the governed source sample bound', async () => {

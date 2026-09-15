@@ -440,6 +440,17 @@ function resolveLiveProofCypressHeaded(sourceEnv = process.env) {
   return true;
 }
 
+function resolveLiveProofTemporalWorkerRuntime(sourceEnv = process.env) {
+  const runtime =
+    readNonEmptyEnv(sourceEnv.DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME) ?? 'available';
+  if (runtime !== 'available' && runtime !== 'unavailable') {
+    throw new Error(
+      'DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME must be available or unavailable.'
+    );
+  }
+  return runtime;
+}
+
 function resolveLiveProofWorkspaceFilesRoot(liveProofSchema, sourceEnv = process.env) {
   return (
     readNonEmptyEnv(sourceEnv.DVT_WORKSPACE_FILES_ROOT) ??
@@ -533,6 +544,8 @@ function buildLiveProofApiEnv({
   );
   const temporalSourceEnv = {
     ...buildLiveProofTemporalEnvOverrides(sourceEnv, temporalWorkerAdminPort),
+    DVT_START_RUN_BACKPRESSURE_MODE:
+      readNonEmptyEnv(sourceEnv.DVT_START_RUN_BACKPRESSURE_MODE) ?? 'enforce',
     DVT_TEMPORAL_DBT_ENABLED: readNonEmptyEnv(sourceEnv.DVT_TEMPORAL_DBT_ENABLED) ?? 'true',
     DVT_TEMPORAL_DVT_POSTGRES_ENABLED:
       readNonEmptyEnv(sourceEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED) ?? 'true',
@@ -649,6 +662,7 @@ async function main() {
   const dbtExecutable = resolveLiveProofDbtExecutable();
   const cypressRuntime = resolveLiveProofCypressRuntime();
   const cypressHeaded = resolveLiveProofCypressHeaded();
+  const temporalWorkerRuntime = resolveLiveProofTemporalWorkerRuntime();
   if (cypressHeaded && cypressRuntime !== 'native') {
     throw new Error('Headed Chrome requires DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME=native.');
   }
@@ -748,22 +762,26 @@ async function main() {
       throw new Error('Selected-closure live proof requires DVT_TEMPORAL_WORKER_READYZ_URL.');
     }
 
-    console.log('[selected-closure-live] Starting Temporal worker; waiting for worker readiness');
-    const temporalWorkerHandle = spawnProcess(
-      'temporal-worker-live-proof',
-      ['--filter', 'dvt-temporal-worker', 'dev'],
-      buildLiveProofTemporalWorkerEnv(apiEnv)
-    );
-    processHandles.push(temporalWorkerHandle);
+    if (temporalWorkerRuntime === 'available') {
+      console.log('[selected-closure-live] Starting Temporal worker; waiting for worker readiness');
+      const temporalWorkerHandle = spawnProcess(
+        'temporal-worker-live-proof',
+        ['--filter', 'dvt-temporal-worker', 'dev'],
+        buildLiveProofTemporalWorkerEnv(apiEnv)
+      );
+      processHandles.push(temporalWorkerHandle);
 
-    await waitForUrlOrProcessExit(
-      temporalWorkerReadyzUrl,
-      (response) => response.statusCode === 200,
-      DEFAULT_READY_TIMEOUT_MS,
-      DEFAULT_POLL_INTERVAL_MS,
-      'Temporal worker readyz',
-      temporalWorkerHandle
-    );
+      await waitForUrlOrProcessExit(
+        temporalWorkerReadyzUrl,
+        (response) => response.statusCode === 200,
+        DEFAULT_READY_TIMEOUT_MS,
+        DEFAULT_POLL_INTERVAL_MS,
+        'Temporal worker readyz',
+        temporalWorkerHandle
+      );
+    } else {
+      console.log('[selected-closure-live] Temporal worker intentionally unavailable');
+    }
 
     const webHandle = spawnProcess(
       'web-live-proof',
@@ -836,6 +854,7 @@ module.exports = {
   resolveLiveProofCypressRuntime,
   resolveLiveProofCypressHeaded,
   resolveLiveProofSpecPath,
+  resolveLiveProofTemporalWorkerRuntime,
   seedSelectedClosureLocalWarehouseProof,
 };
 

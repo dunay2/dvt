@@ -100,7 +100,7 @@ export async function executeCanvasRunStartAction({
     return {
       ok: false,
       message: error instanceof Error ? error.message : canvasViewCopy.runFailedMessage,
-      shouldOpenPlanModal: true,
+      shouldOpenPlanModal: false,
     };
   }
 }
