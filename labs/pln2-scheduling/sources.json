@@ -1,0 +1,54 @@
+{
+  "provenance": "References retained from C0 issue #3205, not a new license audit. No upstream scheduler source copied.",
+  "references": [
+    {
+      "name": "DVT TopoSort baseline",
+      "revision": "9c60b7126597211704c9dfaf69a6d1845b37fe34",
+      "url": "https://github.com/dunay2/dvt/blob/9c60b7126597211704c9dfaf69a6d1845b37fe34/packages/@dvt/planner/src/domain/graph/TopoSort.ts",
+      "use": "local reproduction, not product invocation"
+    },
+    {
+      "name": "Dask",
+      "release": "2026.7.1",
+      "revision": "154e67760487e9d0aced6125c50db4c119e36e7e",
+      "url": "https://github.com/dask/dask/blob/154e67760487e9d0aced6125c50db4c119e36e7e/dask/order.py",
+      "license": "BSD-3-Clause",
+      "use": "genuine optional probe; UNAVAILABLE in branch verification"
+    },
+    {
+      "name": "Airflow",
+      "revision": "d5c31e94892c3acc998a5537d2edcf7288d1cd5b",
+      "url": "https://github.com/apache/airflow/blob/d5c31e94892c3acc998a5537d2edcf7288d1cd5b/airflow-core/src/airflow/task/priority_strategy.py",
+      "license": "Apache-2.0",
+      "use": "unit-weight formula reference only"
+    },
+    {
+      "name": "HiGHS through SciPy",
+      "scipy": "1.17.0",
+      "highs": "1.8.0",
+      "url": "https://docs.scipy.org/doc/scipy-1.17.0/reference/generated/scipy.optimize.milp.html",
+      "license": "HiGHS MIT; SciPy BSD-3-Clause",
+      "use": "native solver executed; NOT highs-js or WASM"
+    },
+    {
+      "name": "OR-Tools",
+      "release": "v9.15",
+      "pythonPackage": "9.15.6755",
+      "url": "https://github.com/google/or-tools/releases/tag/v9.15",
+      "license": "Apache-2.0",
+      "use": "DEFERRED; no adapter implemented in this branch"
+    },
+    {
+      "name": "highs-js",
+      "url": "https://github.com/lovasoa/highs-js",
+      "license": "MIT",
+      "use": "DEFERRED; exact version and WASM probe pending"
+    },
+    {
+      "name": "Timefold Community",
+      "url": "https://github.com/TimefoldAI/timefold-solver",
+      "license": "Apache-2.0 Community only",
+      "use": "DEFERRED; no selected version"
+    }
+  ]
+}

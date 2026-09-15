@@ -1,0 +1,166 @@
+{
+  "status": "LAB_ONLY_NOT_MERGE_READY",
+  "branchBase": "88b7922f7246386959700da5866e330076f8dd97",
+  "commands": [
+    {
+      "command": "node --test labs/pln2-scheduling/test/lab.test.mjs",
+      "result": "PASS",
+      "tests": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node --check src/model.mjs; node --check src/run.mjs; python -m py_compile src/probe.py",
+      "result": "PASS_SYNTAX_ONLY"
+    },
+    {
+      "command": "node labs/pln2-scheduling/src/run.mjs --out <new-reference-directory>",
+      "result": "PASS",
+      "invariantChecks": 5200
+    },
+    {
+      "command": "python labs/pln2-scheduling/src/probe.py --backend highs --corpus <reference>/corpus.json --out <new-highs.json>",
+      "result": "EXECUTED",
+      "validated": 12,
+      "optimal": 12,
+      "cases": 12,
+      "scipy": "1.17.0",
+      "solver": "1.8.0"
+    },
+    {
+      "command": "python labs/pln2-scheduling/src/probe.py --backend dask --corpus <reference>/corpus.json --out <new-dask.json>",
+      "result": "UNAVAILABLE",
+      "exitCode": 2,
+      "reason": "No package metadata was found for dask"
+    },
+    {
+      "command": "node labs/pln2-scheduling/src/run.mjs --out <new-comparison-directory> --external <highs.json> --external <dask.json>",
+      "result": "PASS_INDEPENDENT_COMMON_VALIDATION"
+    }
+  ],
+  "corpusSha256": "556f9aa2acd44da5c0f1f11bdcb3148e3a1346e2b2c9b452cbc7645462758658",
+  "protocolSha256": "769f00d4edf95ef8612c71b60f60f895d7c7b599cf9cf6b22a818b2f64af353c",
+  "sourceSha256": {
+    "corpus.mjs": "195317dbc66ab3b6bd3bf0a9196d5497b89900a1ae80a989b3f4667b6bffc814",
+    "model.mjs": "513dba33f7d95ea68ed917781d0bbe863c84462845438b9ec21401c884a3671d",
+    "probe.py": "df604b38d3cda2dd3fe587ca3525733647857ced9c2c65e257b03e63df3d8f4b",
+    "run.mjs": "6e829bd79a270b332a58b84a48cbf246d397a6e25cd5701337d97568404724be"
+  },
+  "environment": {
+    "node": "v22.16.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "logicalCpus": 5,
+    "processPeakRssKiB": 81124
+  },
+  "summary": [
+    {
+      "policy": "lexical",
+      "fixtures": 52,
+      "better": 0,
+      "equal": 52,
+      "worse": 0,
+      "sum": 3984,
+      "baselineSum": 3984,
+      "aggregateImprovement": 0,
+      "maxDiagnosticRegression": 0,
+      "p95RankMs1000": 6.030629999999974,
+      "exploratoryQualityGate": false,
+      "rankingBudgetMet": true,
+      "adoptionApproved": false
+    },
+    {
+      "policy": "downstream",
+      "fixtures": 52,
+      "better": 37,
+      "equal": 12,
+      "worse": 3,
+      "sum": 3653,
+      "baselineSum": 3984,
+      "aggregateImprovement": 0.08308232931726911,
+      "maxDiagnosticRegression": 0,
+      "p95RankMs1000": 21.290436,
+      "exploratoryQualityGate": true,
+      "rankingBudgetMet": true,
+      "adoptionApproved": false
+    },
+    {
+      "policy": "bottom-level",
+      "fixtures": 52,
+      "better": 39,
+      "equal": 10,
+      "worse": 3,
+      "sum": 3648,
+      "baselineSum": 3984,
+      "aggregateImprovement": 0.08433734939759041,
+      "maxDiagnosticRegression": 0,
+      "p95RankMs1000": 20.61185800000021,
+      "exploratoryQualityGate": true,
+      "rankingBudgetMet": true,
+      "adoptionApproved": false
+    },
+    {
+      "policy": "duration-level",
+      "fixtures": 52,
+      "better": 43,
+      "equal": 9,
+      "worse": 0,
+      "sum": 3518,
+      "baselineSum": 3984,
+      "aggregateImprovement": 0.11696787148594379,
+      "maxDiagnosticRegression": 0,
+      "p95RankMs1000": 16.73223199999984,
+      "exploratoryQualityGate": true,
+      "rankingBudgetMet": true,
+      "adoptionApproved": false
+    },
+    {
+      "policy": "explicit-priority",
+      "fixtures": 52,
+      "better": 0,
+      "equal": 52,
+      "worse": 0,
+      "sum": 3984,
+      "baselineSum": 3984,
+      "aggregateImprovement": 0,
+      "maxDiagnosticRegression": 0,
+      "p95RankMs1000": 8.147563999999875,
+      "exploratoryQualityGate": null,
+      "rankingBudgetMet": true,
+      "adoptionApproved": false
+    },
+    {
+      "policy": "highs-native",
+      "fixtures": 12,
+      "better": 4,
+      "equal": 8,
+      "worse": 0,
+      "sum": 146,
+      "baselineSum": 160,
+      "aggregateImprovement": 0.08750000000000002,
+      "maxDiagnosticRegression": 0,
+      "p95RankMs1000": null,
+      "exploratoryQualityGate": null,
+      "rankingBudgetMet": null,
+      "adoptionApproved": false
+    }
+  ],
+  "notExecuted": [
+    "DVT package tests",
+    "repository lint/typecheck",
+    "pnpm commit and hooks",
+    "pnpm verify:prepush",
+    "PostgreSQL",
+    "Temporal",
+    "browser",
+    "Dask upstream",
+    "OR-Tools",
+    "highs-js/WASM"
+  ],
+  "blockers": [
+    "pnpm unavailable; git transport cannot resolve github.com in this container",
+    "Planning DB reconciliation remains pending in #3205; no import or rebuild"
+  ],
+  "scope": "Existing laboratory source adapted from the delivered C0 bundle. No upstream scheduler source copied. Native solver reused. No production changes."
+}
