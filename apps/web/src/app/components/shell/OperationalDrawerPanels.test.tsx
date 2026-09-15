@@ -204,7 +204,7 @@ describe('OperationalDrawerPanels', () => {
       );
     });
     expect(container.querySelector('[role="alert"]')?.textContent).toBe(
-      'Could not read customers.'
+      'Sample unavailable for customers.'
     );
     expect(container.textContent).not.toContain('Loading orders.');
 
