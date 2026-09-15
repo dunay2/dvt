@@ -18,7 +18,7 @@ import type {
 } from './transformationGraphValidation.types';
 import { TRANSFORMATION_REQUIRED_NODE_COUNT } from './transformationGraphValidation.types';
 import { resolveEffectiveDvtConnectionRef } from './canvasDvtAuthoringModel';
-import { resolveDvtSubstraitInnerJoinEntry } from './canvasDvtSubstraitJoinComposition';
+import { resolveDvtSubstraitInnerJoinEntry } from './canvasDvtSubstraitJoinSourceResolution';
 import { resolveDvtSubstraitUnionAllEntry } from './canvasDvtSubstraitSetComposition';
 
 export type {
