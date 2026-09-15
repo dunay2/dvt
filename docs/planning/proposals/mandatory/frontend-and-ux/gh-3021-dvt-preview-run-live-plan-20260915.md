@@ -133,12 +133,12 @@ commandQueryRails:
     type: command
     dddOwner: Protected runtime planning
     referenceOnly: true
-    authorityRef: docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md
+    authorityRef: docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
   - name: StartRun
     type: command
     dddOwner: Protected runtime execution
     referenceOnly: true
-    authorityRef: docs/architecture/system/subsystems/semantic-transformation/index.md
+    authorityRef: docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
   - name: ListRuns
     type: query
     dddOwner: Run read model
