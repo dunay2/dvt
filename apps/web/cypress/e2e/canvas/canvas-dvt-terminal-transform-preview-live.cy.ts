@@ -149,7 +149,11 @@ describe('DVT terminal Transform Preview and Run live', () => {
     cy.get('[data-slot="run-dvt-postgres-publication-card"]', { timeout: 30_000 })
       .should('be.visible')
       .and('contain.text', `${targetSchema}.${targetRelation}`);
-    cy.get('[data-slot="run-dvt-publication-plan-sha"]').should('have.text', previewSha);
-    cy.get('[data-slot="run-dvt-publication-token"]').should('have.text', publicationToken);
+    cy.get('[data-slot="run-dvt-publication-plan-sha"]').should(($value) => {
+      expect($value.text()).to.equal(previewSha);
+    });
+    cy.get('[data-slot="run-dvt-publication-token"]').should(($value) => {
+      expect($value.text()).to.equal(publicationToken);
+    });
   });
 });
