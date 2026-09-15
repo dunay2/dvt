@@ -81,6 +81,10 @@ function GraphDraftAuthorityContent({
     warehouseSourceImport,
     warehouseSourceDataSampleQuery,
     runSnapshot: runSnapshotQuery.data ?? null,
+    runOutputPreviewAuthority: {
+      currentPlan: controller.currentPlan,
+      isCurrentPlanStale: controller.isCurrentPlanStale,
+    },
     runMaterializationSampleQuery: runsService.getRunMaterializationSample,
     canvasContextScreenToFlowPosition: (screenPosition) =>
       reactFlow.screenToFlowPosition(screenPosition),

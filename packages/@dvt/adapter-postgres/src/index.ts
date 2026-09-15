@@ -110,6 +110,10 @@ export {
 } from './PostgresDvtPublicationCapability.js';
 export { PostgresDvtStableTablePublisher } from './PostgresDvtStableTablePublisher.js';
 export {
+  parsePostgresDvtPublicationMarker,
+  type PostgresDvtPublicationMarker,
+} from './PostgresDvtPublicationMarker.js';
+export {
   POSTGRES_DVT_PUBLICATION_ERROR_CODE,
   PostgresDvtPublicationRejectedError,
   type PostgresDvtPublicationErrorCode,

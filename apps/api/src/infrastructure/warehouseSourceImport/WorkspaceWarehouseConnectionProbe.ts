@@ -1,7 +1,10 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 /** Owned concern: verify warehouse connection metadata with server-resolved credentials. */
-import type { IPostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
+import {
+  parsePostgresDvtPublicationMarker,
+  type IPostgresCredentialBindingResolver,
+} from '@dvt/adapter-postgres';
 import {
   buildRelationalSourceObjectId,
   SourceObjectConstraintSchema,
@@ -31,6 +34,7 @@ import {
   UnsupportedWarehouseAdapterError,
   WarehouseSourceDataSampleFailedError,
   WarehouseSourceDiscoveryFailedError,
+  WarehouseSourcePublicationChangedError,
 } from '../../application/ports/warehouseSourceImport.js';
 
 import {
@@ -77,6 +81,7 @@ type PostgresSchemaSummaryRow = {
 
 type PostgresRelationAuthorizationRow = {
   readonly relation_kind: 'r' | 'p' | 'v' | 'm' | 'f';
+  readonly relation_comment?: string | null;
 };
 
 type PostgresQueryResult<T> = {
@@ -222,12 +227,13 @@ export class WorkspaceWarehouseConnectionProbe
     let transactionStarted = false;
     try {
       await client.connect();
-      await client.query('begin transaction read only');
+      await client.query('begin transaction isolation level repeatable read read only');
       transactionStarted = true;
       await client.query(`set local statement_timeout = '${SOURCE_DATA_SAMPLE_TIMEOUT_MS}ms'`);
       const authorized = await client.query<PostgresRelationAuthorizationRow>(
         [
           'select relation.relkind as relation_kind',
+          ", obj_description(relation.oid, 'pg_class') as relation_comment",
           'from pg_class relation',
           'join pg_namespace namespace on namespace.oid = relation.relnamespace',
           'where current_database() = $1 and namespace.nspname = $2 and relation.relname = $3',
@@ -239,6 +245,13 @@ export class WorkspaceWarehouseConnectionProbe
       );
       if (authorized.rows.length === 0) {
         throw new SourceObjectNotFoundError(input.objectId);
+      }
+      if (input.expectedPublicationToken !== undefined) {
+        const relation = authorized.rows[0];
+        const marker = parsePostgresDvtPublicationMarker(relation?.relation_comment ?? null);
+        if (relation?.relation_kind !== 'r' || marker?.token !== input.expectedPublicationToken) {
+          throw new WarehouseSourcePublicationChangedError();
+        }
       }
 
       const result = (await client.query(
@@ -271,7 +284,8 @@ export class WorkspaceWarehouseConnectionProbe
       if (
         error instanceof SourceObjectNotFoundError ||
         error instanceof WarehouseSourceDiscoveryFailedError ||
-        error instanceof UnsupportedWarehouseAdapterError
+        error instanceof UnsupportedWarehouseAdapterError ||
+        error instanceof WarehouseSourcePublicationChangedError
       ) {
         throw error;
       }

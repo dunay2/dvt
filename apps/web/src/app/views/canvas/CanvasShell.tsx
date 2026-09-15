@@ -30,15 +30,8 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 import { buildGraphDraftWorkspaceFileCodeContributions } from './graphDraftWorkspaceFileCodeContribution';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
-import { useCanvasDataSample } from './useCanvasDataSample';
-import {
-  CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
-  resolveCanvasSinkDataSampleTarget,
-  resolveCanvasSourceDataSampleTarget,
-  type CanvasSinkDataSampleTarget,
-  type CanvasSourceDataSampleTarget,
-} from './canvasSourceDataSample';
 import { findCanvasGraphNodeElement } from './canvasNodeWorkbenchDomGeometry';
+import { useCanvasNodeDataSample } from './useCanvasNodeDataSample';
 
 type WorkbenchOpener = Readonly<{
   element: HTMLElement | null;
@@ -75,6 +68,7 @@ export default function CanvasShell({
   onDbtProjectImported,
   warehouseSourceDataSampleQuery,
   runSnapshot,
+  runOutputPreviewAuthority,
   runMaterializationSampleQuery,
 }: CanvasShellProps): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
@@ -82,7 +76,13 @@ export default function CanvasShell({
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
-  const { dataSample, openDataSample } = useCanvasDataSample();
+  const { dataSample, projectNode: projectNodeDataSample } = useCanvasNodeDataSample({
+    graphNodes: panels.inspectorGraphNodes,
+    runMaterializationSampleQuery,
+    runOutputPreviewAuthority,
+    runSnapshot,
+    warehouseSourceDataSampleQuery,
+  });
   const [semanticTransformId, setSemanticTransformId] = useState<string | null>(null);
   const showBottomDrawer = useUiLayoutStore((state) => state.showBottomDrawer);
   const selectOperationalDrawerTab = useOperationalDrawerContributionStore(
@@ -264,34 +264,6 @@ export default function CanvasShell({
     captureWorkbenchOpener('[data-slot="shell-workspace-menu-trigger"]');
     (workspaceCommands?.onOpenProjectCode ?? openProjectCodeWorkbench)();
   }, [captureWorkbenchOpener, openProjectCodeWorkbench, workspaceCommands?.onOpenProjectCode]);
-  const openSourceDataSample = useCallback(
-    (target: CanvasSourceDataSampleTarget) => {
-      if (warehouseSourceDataSampleQuery == null) {
-        return;
-      }
-
-      openDataSample(target.nodeName, () =>
-        warehouseSourceDataSampleQuery.previewSourceObjectRows({
-          connectionId: target.connectionId,
-          objectId: target.objectId,
-          limit: CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
-        })
-      );
-    },
-    [openDataSample, warehouseSourceDataSampleQuery]
-  );
-  const openSinkDataSample = useCallback(
-    (target: CanvasSinkDataSampleTarget) => {
-      if (runMaterializationSampleQuery == null) {
-        return;
-      }
-
-      openDataSample(target.nodeName, () =>
-        runMaterializationSampleQuery(target.runId, CANVAS_SOURCE_DATA_SAMPLE_LIMIT)
-      );
-    },
-    [openDataSample, runMaterializationSampleQuery]
-  );
   const graphWithCanonicalCodeCommands = useMemo(
     () => ({
       ...graph,
@@ -308,14 +280,8 @@ export default function CanvasShell({
             codeTruthKind === 'generated' ||
             codeTruthKind === 'canonical');
         const canOpenNodeCode = data.canOpenNodeCode !== false && canInspectNodeCode;
-        const sourceDataSampleTarget = resolveCanvasSourceDataSampleTarget(data);
-        const sinkDataSampleTarget = resolveCanvasSinkDataSampleTarget(data, runSnapshot);
-        const canOpenSourceDataSample =
-          sourceDataSampleTarget != null && warehouseSourceDataSampleQuery != null;
-        const canOpenSinkDataSample =
-          sinkDataSampleTarget != null && runMaterializationSampleQuery != null;
-        const canOpenDataSample =
-          isNativeTransform || canOpenSourceDataSample || canOpenSinkDataSample;
+        const dataSampleProjection = projectNodeDataSample(node.id, data);
+        const sinkDataSampleTarget = dataSampleProjection.sinkResult;
         const participatesInActiveRun = data.runStatusByNodeId?.has(node.id) === true;
         const activeRunAt =
           runSnapshot?.completedAt ?? runSnapshot?.startedAt ?? runSnapshot?.createdAt;
@@ -340,19 +306,13 @@ export default function CanvasShell({
                 lastRunAt: sinkDataSampleTarget.completedAt,
                 runStatusByNodeId,
               }),
-          onOpenSourceDataSample: isNativeTransform
-            ? () => openDataSample(data.name)
-            : canOpenSourceDataSample
-              ? () => openSourceDataSample(sourceDataSampleTarget)
-              : canOpenSinkDataSample
-                ? () => openSinkDataSample(sinkDataSampleTarget)
-                : undefined,
-          sourceDataSampleInteractionLabel: canOpenDataSample
+          onOpenSourceDataSample: dataSampleProjection.onOpen,
+          sourceDataSampleInteractionLabel: dataSampleProjection.canOpen
             ? copy.sourceDataSampleInteractionLabel
             : undefined,
           onSelectNode: canOpenSemantic ? () => openSemanticTransform(node.id) : data.onSelectNode,
           onOpenNode: isNativeTransform
-            ? () => openDataSample(data.name)
+            ? dataSampleProjection.onOpen
             : data.role === 'transform' && typeof data.onInspectNode === 'function'
               ? () => data.onInspectNode?.(node.id, 'general')
               : data.onOpenNode,
@@ -368,14 +328,10 @@ export default function CanvasShell({
     [
       copy.sourceDataSampleInteractionLabel,
       graph,
-      openDataSample,
-      openSinkDataSample,
       openSemanticTransform,
-      openSourceDataSample,
+      projectNodeDataSample,
       semanticTransformIds,
-      runMaterializationSampleQuery,
       runSnapshot,
-      warehouseSourceDataSampleQuery,
     ]
   );
   const graphOwnedPaths = useMemo(

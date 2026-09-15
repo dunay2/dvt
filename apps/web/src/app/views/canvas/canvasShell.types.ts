@@ -33,6 +33,7 @@ import type {
 } from '../../types/canvasExecutionSelectionRecovery';
 import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
 import type { IRunsPort, RunSnapshot } from '../../ports/runs';
+import type { PlanViewModel } from '../../types/plans';
 import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
 
 export type UserPermissions = {
@@ -169,6 +170,11 @@ export type CanvasShellWorkspaceCommands = Readonly<{
   onOpenProjectCode?: () => void;
 }>;
 
+export type CanvasRunOutputPreviewAuthority = Readonly<{
+  currentPlan: PlanViewModel | null;
+  isCurrentPlanStale: boolean;
+}>;
+
 export type CanvasShellProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
@@ -182,6 +188,7 @@ export type CanvasShellProps = Readonly<{
   warehouseSourceImport?: IWarehouseSourceImportPort;
   warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
   runSnapshot?: RunSnapshot | null;
+  runOutputPreviewAuthority?: CanvasRunOutputPreviewAuthority;
   runMaterializationSampleQuery?: IRunsPort['getRunMaterializationSample'];
   canvasContextScreenToFlowPosition?: (
     screenPosition: CanvasContextMenuPosition

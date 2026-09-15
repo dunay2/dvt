@@ -82,6 +82,7 @@ export type CanvasShellPropsOverrides = {
   warehouseSourceImport?: IWarehouseSourceImportPort;
   warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
   runSnapshot?: CanvasShellProps['runSnapshot'];
+  runOutputPreviewAuthority?: CanvasShellProps['runOutputPreviewAuthority'];
   runMaterializationSampleQuery?: CanvasShellProps['runMaterializationSampleQuery'];
   sourceImportInitialSelection?: CanvasShellProps['sourceImportInitialSelection'];
   onSourceImportInitialSelectionConsumed?: CanvasShellProps['onSourceImportInitialSelectionConsumed'];
@@ -242,6 +243,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
     warehouseSourceImport: overrides?.warehouseSourceImport,
     warehouseSourceDataSampleQuery: overrides?.warehouseSourceDataSampleQuery,
     runSnapshot: overrides?.runSnapshot,
+    runOutputPreviewAuthority: overrides?.runOutputPreviewAuthority,
     runMaterializationSampleQuery: overrides?.runMaterializationSampleQuery,
     sourceImportInitialSelection: overrides?.sourceImportInitialSelection,
     onSourceImportInitialSelectionConsumed: overrides?.onSourceImportInitialSelectionConsumed,
