@@ -178,6 +178,11 @@ export interface DbtPluginContext {
   credentialRef: NonBlankString;
 }
 
+export interface DvtPostgresPluginContext {
+  connectionRef: ConnectionRef & { readonly provider: 'postgres' };
+  credentialRef: NonBlankString;
+}
+
 export interface RunExecutionContext {
   schemaVersion: NonBlankString;
   planId: NonBlankString;

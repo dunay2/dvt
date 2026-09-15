@@ -31,6 +31,7 @@ import type { WorkspaceStorageScope } from '../ports/workspaceFiles.js';
 
 import { resolveDbtExecutionConnectionBinding } from './dbtExecutionConnectionBinding.js';
 import { resolveDbtPlanExecutionBinding } from './dbtPlanExecutionBinding.js';
+import { resolveDvtPostgresExecutionContextBinding } from './dvtPostgresExecutionContextBinding.js';
 import { buildRunExecutionContext } from './runExecutionContextFactory.js';
 import type { StoredPlanAdmissionResult } from './StoredPlanAdmissionCoordinator.js';
 
@@ -66,7 +67,19 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
     const { materialized, scopedPlanRef } = admission;
     const { plan } = materialized;
     const bindsDbt = isDbtPlan(plan, this.deps.stepTypeRegistry);
-    if (!bindsDbt) {
+    const dvtBinding = await resolveDvtPostgresExecutionContextBinding({
+      plan,
+      scope: {
+        tenantId: scopedPlanRef.tenantId,
+        projectId: scopedPlanRef.projectId,
+        environmentId: scopedPlanRef.environmentId,
+      },
+      catalog: this.deps.warehouseConnectionCatalog,
+    });
+    if (dvtBinding.kind === 'rejected') {
+      return rejectRunExecutionContext(dvtBinding.reason);
+    }
+    if (!bindsDbt && dvtBinding.kind === 'not-required') {
       return this.deps.delegate.execute(command, context);
     }
     if (command.runExecutionContextRef !== undefined) {
@@ -79,6 +92,10 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
       environmentId: scopedPlanRef.environmentId,
     };
     const pluginContexts: Record<string, Record<string, unknown>> = {};
+
+    if (dvtBinding.kind === 'bound') {
+      pluginContexts[dvtBinding.key] = { ...dvtBinding.context };
+    }
 
     if (bindsDbt) {
       const sourceBinding = resolveDbtPlanExecutionBinding({
