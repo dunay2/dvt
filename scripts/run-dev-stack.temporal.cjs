@@ -77,6 +77,10 @@ function buildTemporalWorkerEnv(options, env = process.env, databaseUrl) {
   }
 
   const posture = resolveTemporalRuntimePosture(options, env);
+  const dvtPostgresCredentialBindings = readNonEmptyEnv(env.DVT_POSTGRES_CREDENTIAL_BINDINGS);
+  const dvtPostgresEnabled =
+    readNonEmptyEnv(env.DVT_TEMPORAL_DVT_POSTGRES_ENABLED) ??
+    (dvtPostgresCredentialBindings === undefined ? undefined : 'true');
   const workerTaskQueue =
     readNonEmptyEnv(env.TEMPORAL_TASK_QUEUE) ??
     toTenantScopedTaskQueue(posture.taskQueue, resolveLocalProtectedRuntimeTenantId(env));
@@ -92,11 +96,14 @@ function buildTemporalWorkerEnv(options, env = process.env, databaseUrl) {
     DVT_TEMPORAL_ADMIN_PORT: String(posture.workerAdminPort),
     DVT_TEMPORAL_WORKER_RUN_MIGRATIONS:
       readNonEmptyEnv(env.DVT_TEMPORAL_WORKER_RUN_MIGRATIONS) ?? 'true',
-    ...(readNonEmptyEnv(env.DVT_POSTGRES_CREDENTIAL_BINDINGS) === undefined
+    ...(dvtPostgresCredentialBindings === undefined
       ? {}
       : {
-          DVT_POSTGRES_CREDENTIAL_BINDINGS: readNonEmptyEnv(env.DVT_POSTGRES_CREDENTIAL_BINDINGS),
+          DVT_POSTGRES_CREDENTIAL_BINDINGS: dvtPostgresCredentialBindings,
         }),
+    ...(dvtPostgresEnabled === undefined
+      ? {}
+      : { DVT_TEMPORAL_DVT_POSTGRES_ENABLED: dvtPostgresEnabled }),
     ...(readNonEmptyEnv(env.DVT_TEMPORAL_DBT_ENABLED) === undefined
       ? {}
       : { DVT_TEMPORAL_DBT_ENABLED: readNonEmptyEnv(env.DVT_TEMPORAL_DBT_ENABLED) }),

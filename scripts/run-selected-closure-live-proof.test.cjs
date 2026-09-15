@@ -435,6 +435,7 @@ test('buildLiveProofTemporalWorkerEnv derives the worker from the selected live 
   assert.equal(workerEnv.DVT_WORKSPACE_FILES_ROOT, apiEnv.DVT_WORKSPACE_FILES_ROOT);
   assert.equal(workerEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
   assert.equal(workerEnv.DVT_TEMPORAL_DBT_ENABLED, 'true');
+  assert.equal(workerEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'true');
   assert.equal(workerEnv.DVT_DBT_BUNDLE_FILE_ROOT, apiEnv.DVT_DBT_BUNDLE_FILE_ROOT);
   assert.equal(workerEnv.DBT_PROFILES_DIR, apiEnv.DBT_PROFILES_DIR);
   assert.equal(workerEnv.DVT_DBT_BIN, apiEnv.DVT_DBT_BIN);

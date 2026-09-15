@@ -213,6 +213,30 @@ test('buildCoordinatedTemporalWorkerEnv derives worker queue from local tenant, 
     workerEnv.DVT_POSTGRES_CREDENTIAL_BINDINGS,
     JSON.stringify({ 'postgres:local-postgres-proof': defaultPgUrl })
   );
+  assert.equal(workerEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'true');
+});
+
+test('buildCoordinatedTemporalWorkerEnv preserves an explicit DVT PostgreSQL opt-out', () => {
+  const apiEnv = buildApiEnv(
+    {
+      host: '127.0.0.1',
+      apiPort: 3000,
+      skipPostgres: false,
+    },
+    { DVT_TEMPORAL_DVT_POSTGRES_ENABLED: 'false' }
+  );
+
+  const workerEnv = buildCoordinatedTemporalWorkerEnv(
+    {
+      host: '127.0.0.1',
+      apiPort: 3000,
+      skipPostgres: false,
+    },
+    apiEnv,
+    {}
+  );
+
+  assert.equal(workerEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'false');
 });
 
 test('buildCoordinatedTemporalWorkerEnv preserves operator-owned worker queue', () => {
