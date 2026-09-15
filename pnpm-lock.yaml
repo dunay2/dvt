@@ -353,6 +353,9 @@ importers:
       '@dvt/temporal-dbt-plugin':
         specifier: workspace:*
         version: link:../../packages/@dvt/temporal-dbt-plugin
+      '@dvt/temporal-dvt-postgres-plugin':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/temporal-dvt-postgres-plugin
       '@dvt/temporal-http-json-plugin':
         specifier: workspace:*
         version: link:../../packages/@dvt/temporal-http-json-plugin

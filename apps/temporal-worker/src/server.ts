@@ -2,6 +2,7 @@ import process from 'node:process';
 
 import {
   DBT_STEP_REQUIRED_CAPABILITY,
+  DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY,
   LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY,
 } from '@dvt/contracts';
 import pino from 'pino';
@@ -23,6 +24,9 @@ async function main(): Promise<void> {
     logger,
     enabledCapabilities: [
       ...(env.DVT_TEMPORAL_DBT_ENABLED ? [DBT_STEP_REQUIRED_CAPABILITY] : []),
+      ...(env.DVT_TEMPORAL_DVT_POSTGRES_ENABLED
+        ? [DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY]
+        : []),
       ...(env.DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED
         ? [LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY]
         : []),

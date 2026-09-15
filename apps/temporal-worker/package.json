@@ -21,6 +21,7 @@
     "@dvt/contracts": "workspace:*",
     "@dvt/engine": "workspace:*",
     "@dvt/temporal-dbt-plugin": "workspace:*",
+    "@dvt/temporal-dvt-postgres-plugin": "workspace:*",
     "@dvt/temporal-http-json-plugin": "workspace:*",
     "@dvt/temporal-object-file-postgres-plugin": "workspace:*",
     "@temporalio/activity": "1.23.0",
