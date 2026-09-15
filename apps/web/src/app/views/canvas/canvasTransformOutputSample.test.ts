@@ -1,110 +1,13 @@
-import {
-  DvtPostgresPublicationEvidenceSchema,
-  PlanRefSchema,
-  type DvtPostgresPublicationEvidence,
-} from '@dvt/contracts';
+import { DvtPostgresPublicationEvidenceSchema } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
 import type { RunSnapshot } from '../../ports/runs';
-import type { PlanViewModel } from '../../types/plans';
-import type { CanonicalNode } from '../../types/canonical';
-import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
 import { resolveCanvasTransformOutputSampleTarget } from './canvasTransformOutputSample';
-
-const PLAN_SHA = 'a'.repeat(64);
-const PUBLICATION_TOKEN = 'f'.repeat(64);
-
-function buildAuthority(): Readonly<{
-  currentPlan: PlanViewModel;
-  publication: DvtPostgresPublicationEvidence;
-  runSnapshot: RunSnapshot;
-  source: CanonicalNode;
-  transform: CanonicalNode;
-}> {
-  const fixture = buildSemanticWorkbenchFixture();
-  const connectionRef = {
-    schemaVersion: 'connection-ref.v1' as const,
-    connectionId: 'postgresql-local',
-    provider: 'postgres' as const,
-  };
-  const transform = {
-    ...fixture.transform,
-    metadata: {
-      ...fixture.transform.metadata,
-      config: {
-        ...((fixture.transform.metadata?.config as Record<string, unknown> | undefined) ?? {}),
-        resultTarget: {
-          schemaVersion: 'dvt-transform-result-target.v1' as const,
-          connectionRef,
-          schema: 'analytics',
-          relation: 'orders_enriched',
-        },
-      },
-    },
-  };
-  const authoring = createDvtNodeAuthoringMetadata(transform);
-  if (authoring?.kind !== 'transform' || authoring.mode !== 'substrait') {
-    throw new Error('Expected a Substrait Transform fixture.');
-  }
-  const source = {
-    ...fixture.sources[0],
-    metadata: {
-      ...fixture.sources[0].metadata,
-      connectedSourceRef: {
-        schemaVersion: 'connected-source-ref.v1' as const,
-        connectionRef,
-        sourceObjectId: 'relation/dvt/raw/orders',
-      },
-    },
-  };
-  const currentPlan: PlanViewModel = {
-    planId: 'plan-1',
-    planVersion: '1.0',
-    planRef: PlanRefSchema.parse({
-      schemaVersion: 'plan-ref.v1',
-      planId: 'plan-1',
-      planVersion: '1.0',
-      uri: 'artifact://plans/plan-1/1.0',
-      sha256: PLAN_SHA,
-    }),
-    generatedAt: '2026-09-15T10:00:00.000Z',
-    adapter: 'postgres',
-    target: 'postgresql-local',
-    steps: [],
-    capabilities: [],
-  };
-  const publication = DvtPostgresPublicationEvidenceSchema.parse({
-    evidenceType: 'dvt-postgres-publication',
-    environmentId: 'dev',
-    plan: { planId: 'plan-1', planVersion: '1.0', sha256: PLAN_SHA },
-    workloadSha256: 'b'.repeat(64),
-    semanticPlanSha256: authoring.sidecar.semanticPlanSha256,
-    projection: {
-      profileId: 'dvt.vtx2.postgres.project-rel.v1',
-      toolIdentity: 'pgsql-deparser@16.1.1',
-      schemaDigestSha256: 'd'.repeat(64),
-      sqlArtifact: {
-        storageUri: `cas://sha256/${'e'.repeat(64)}`,
-        sha256: 'e'.repeat(64),
-        sizeBytes: 128,
-      },
-    },
-    target: { connectionRef, schema: 'analytics', relation: 'orders_enriched' },
-    publication: { token: PUBLICATION_TOKEN, predecessorToken: null, outcome: 'created' },
-    rowsWritten: 3,
-    startedAt: '2026-09-15T10:00:01.000Z',
-    completedAt: '2026-09-15T10:00:02.000Z',
-    durationMs: 1000,
-  });
-  const runSnapshot: RunSnapshot = { runId: 'run-1', status: 'completed', publication };
-
-  return { currentPlan, publication, runSnapshot, source, transform };
-}
+import { buildCanvasTransformOutputSampleAuthority } from './canvasTransformOutputSample.testSupport';
 
 describe('Canvas Transform output sample authority', () => {
   it('resolves the published relation only when execution and authoring identities agree', () => {
-    const authority = buildAuthority();
+    const authority = buildCanvasTransformOutputSampleAuthority();
 
     expect(
       resolveCanvasTransformOutputSampleTarget({
@@ -117,7 +20,7 @@ describe('Canvas Transform output sample authority', () => {
     ).toEqual({
       connectionId: 'postgresql-local',
       objectId: 'relation/dvt/analytics/orders_enriched',
-      expectedPublicationToken: PUBLICATION_TOKEN,
+      expectedPublicationToken: authority.publication.publication.token,
       nodeName: authority.transform.name,
     });
   });
@@ -140,7 +43,7 @@ describe('Canvas Transform output sample authority', () => {
   ];
 
   it.each(refusedAuthorities)('refuses %s', (_name, change) => {
-    const authority = buildAuthority();
+    const authority = buildCanvasTransformOutputSampleAuthority();
     const publication = DvtPostgresPublicationEvidenceSchema.parse({
       ...authority.publication,
       plan: {
