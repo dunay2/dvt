@@ -183,6 +183,15 @@ export function DvtAuthoringFields({
     } else if (draft.dvt.shape === 'projection') {
       semanticFields = (
         <div className="space-y-4">
+          <DvtSubstraitCompositionStart
+            disabled={disabled}
+            node={node}
+            nodes={nodes}
+            edges={edges}
+            predicateSeed={predicateSeed}
+            onClearPredicateSeed={onClearRelationalPredicateSeed}
+            onChange={onChange}
+          />
           <DvtRelationFilterAuthoringSection
             disabled={disabled}
             draft={draft.dvt}
@@ -196,15 +205,6 @@ export function DvtAuthoringFields({
                   : current
               )
             }
-          />
-          <DvtSubstraitCompositionStart
-            disabled={disabled}
-            node={node}
-            nodes={nodes}
-            edges={edges}
-            predicateSeed={predicateSeed}
-            onClearPredicateSeed={onClearRelationalPredicateSeed}
-            onChange={onChange}
           />
         </div>
       );

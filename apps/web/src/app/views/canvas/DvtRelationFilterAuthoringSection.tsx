@@ -18,6 +18,7 @@ import {
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
 import type { DvtSubstraitTextComparisonOperator } from './canvasDvtSubstraitTextComparison';
+import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
 import { canvasViewCopy } from './copy';
 
 const OPERATOR_LABEL: Readonly<Record<DvtSubstraitTextComparisonOperator, string>> = {
@@ -46,6 +47,7 @@ export function DvtRelationFilterAuthoringSection({
 }>): JSX.Element | null {
   const active = inspectDvtSubstraitFilter(draft);
   const base = active == null ? draft : removeDvtSubstraitFilter(draft);
+  const composition = resolveCanvasRelationalCompositionTruth({ node, nodes, edges });
   const inspection = inspectDvtSubstraitProjectionDraft(base);
   const projection = resolveDvtSubstraitProjectionEntry({
     targetNode: node,
@@ -74,7 +76,13 @@ export function DvtRelationFilterAuthoringSection({
     setValue(active?.value ?? '');
   }, [active?.capabilityId, active?.fieldId, active?.value, defaultFieldId]);
 
-  if (!inspection.ok || projection == null || compatibleOutputs.length === 0) return null;
+  if (
+    composition?.state !== 'single-input' ||
+    !inspection.ok ||
+    projection == null ||
+    compatibleOutputs.length === 0
+  )
+    return null;
   const selected = compatibleOutputs.find((output) => output.fieldId === fieldId);
   const capabilities =
     selected == null
