@@ -52,6 +52,7 @@ export function projectCanvasRelationalTreeCatalogue(
   return args.inputs.map((input) => ({
     key: sourceKey(input.sourceRef),
     label: sourceLabel(input.sourceNodeId, input.sourceRef, args.nodes),
+    sourceNodeId: input.sourceNodeId,
     state: input.state,
     treeLocator: locatorBySource.get(sourceKey(input.sourceRef)) ?? null,
   }));
@@ -64,6 +65,7 @@ export function projectPendingCanvasRelationalTreeCatalogue(
   return inputs.map((input) => ({
     key: sourceKey(input.sourceRef),
     label: sourceLabel(input.nodeId, input.sourceRef, nodes),
+    sourceNodeId: input.nodeId,
     state: 'pending',
     treeLocator: null,
   }));

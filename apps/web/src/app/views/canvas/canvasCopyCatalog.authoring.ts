@@ -744,6 +744,22 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.relationalTree.inputIdentityUnavailableMessage',
     fallback: 'A connected Source has no stable identity.',
   },
+  relationalTreeSelectFirstSourceMessage: {
+    key: 'canvas.relationalTree.selectFirstSourceMessage',
+    fallback: 'Select the first Source.',
+  },
+  relationalTreeSelectOperationMessage: {
+    key: 'canvas.relationalTree.selectOperationMessage',
+    fallback: 'Select a relational operation.',
+  },
+  relationalTreeSelectNextSourceMessage: {
+    key: 'canvas.relationalTree.selectNextSourceMessage',
+    fallback: 'Select the next Source.',
+  },
+  relationalTreeSelectedInputsLabel: {
+    key: 'canvas.relationalTree.selectedInputsLabel',
+    fallback: 'Selected inputs',
+  },
   inspectorDvtRelationalApply: {
     key: 'canvas.inspector.authoring.dvtRelationalApply',
     fallback: 'Apply',

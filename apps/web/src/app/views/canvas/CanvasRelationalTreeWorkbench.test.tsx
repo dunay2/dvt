@@ -12,7 +12,12 @@ import {
   encodeDvtSubstraitInnerJoinDocument,
 } from './canvasDvtSubstraitJoinComposition';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import {
+  createDvtSubstraitProjectionDraft,
+  encodeDvtSubstraitProjectionDocument,
+} from './canvasDvtSubstraitProjection';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
+import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 
 const COPY = {
   inspectorDbtOriginLabel: 'Input',
@@ -35,6 +40,25 @@ const COPY = {
   relationalTreeSecondaryInputTemplate: 'Secondary input {ordinal}',
   relationalTreeSourcesLabel: 'Sources',
   relationalTreeUnavailableMessage: 'No canonical relational tree is available.',
+  relationalTreeSelectFirstSourceMessage: 'Select the first Source.',
+  relationalTreeSelectOperationMessage: 'Select a relational operation.',
+  relationalTreeSelectNextSourceMessage: 'Select the next Source.',
+  relationalTreeSelectedInputsLabel: 'Selected inputs',
+  inspectorDvtRelationalOperationTitle: 'Relate / compose',
+  inspectorDvtRelationalAvailable: 'Available',
+  inspectorDvtRelationalNeedsPredicate: 'Needs predicate',
+  inspectorDvtRelationalNeedsSchemaAlignment: 'Needs schema alignment',
+  inspectorDvtRelationalTargetUnavailable: 'Target unavailable',
+  inspectorDvtRelationalUnavailable: 'Unavailable',
+  inspectorDvtRelationalReadOnly: 'Read only',
+  inspectorDvtSubstraitInnerJoinAction: 'INNER JOIN',
+  inspectorDvtSubstraitAppendInputAction: 'Add input',
+  inspectorDvtSubstraitAppendInputTitle: 'Add connected input',
+  inspectorDvtSubstraitConnectedFieldLabel: 'Connected field',
+  inspectorDvtSubstraitExistingFieldLabel: 'Existing field',
+  inspectorDvtSubstraitUnionAllAction: 'UNION ALL',
+  inspectorDvtRelationalApply: 'Apply',
+  inspectorDvtRelationalCancel: 'Cancel',
 };
 
 function sourceRef(table: string): ConnectedSourceRef {
@@ -192,5 +216,125 @@ describe('Canvas relational-tree Workbench', () => {
       container.querySelector('[data-slot="canvas-relational-tree-unavailable"]')?.textContent
     ).toContain('No canonical relational tree is available.');
     expect(container.textContent).toContain('Pending');
+  });
+
+  it('keeps a partial canonical tree visible until guided authoring starts', () => {
+    const customers = sourceNode('customers', 'customers');
+    const orders = sourceNode('orders', 'orders');
+    const transform = applyDvtSubstraitSemanticDocument(
+      transformNode(),
+      encodeDvtSubstraitProjectionDocument(
+        createDvtSubstraitProjectionDraft({
+          source: {
+            nodeId: customers.id,
+            schema: 'public',
+            table: 'customers',
+            sourceRef: sourceRef('customers'),
+            fields: [{ name: 'customers_id', dataType: 'string' }],
+          },
+          targetNodeId: 'transform',
+          outputs: [
+            {
+              fieldId: 'output:customers_id',
+              name: 'customers_id',
+              sourceFieldName: 'customers_id',
+            },
+          ],
+        })
+      )
+    );
+
+    act(() => {
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={transform}
+          nodes={[customers, orders, transform]}
+          edges={[edge(customers.id), edge(orders.id)]}
+          copy={COPY}
+          authoring={{ canEditNode: true, onApplyNodeDraft: () => undefined }}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-slot="canvas-relational-tree"]')?.textContent).toContain(
+      'PROJECT'
+    );
+    const customersButton = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
+    ).find((button) => button.textContent?.includes('customers'));
+    expect(customersButton?.disabled).toBe(false);
+    act(() => customersButton?.click());
+    expect(container.querySelector('[data-slot="canvas-relational-tree-draft"]')).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="dvt-relational-operation-chooser"]')
+    ).not.toBeNull();
+  });
+
+  it('authors a pending JOIN in the global tab and writes only on Apply', () => {
+    const customers = sourceNode('customers', 'customers');
+    const orders = sourceNode('orders', 'orders');
+    const transform = transformNode();
+    const applied: CanvasInspectorNodeDraft[] = [];
+
+    act(() => {
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={transform}
+          nodes={[customers, orders, transform]}
+          edges={[edge(customers.id), edge(orders.id)]}
+          copy={COPY}
+          authoring={{
+            canEditNode: true,
+            onApplyNodeDraft: (_nodeId, draft) => applied.push(draft),
+          }}
+        />
+      );
+    });
+
+    const sourceButtons = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
+    );
+    expect(sourceButtons.every((button) => !button.disabled)).toBe(true);
+    act(() => sourceButtons[0]?.click());
+    expect(
+      container.querySelector('[data-slot="dvt-relational-operation-chooser"]')
+    ).not.toBeNull();
+    act(() =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
+        ?.click()
+    );
+    act(() => sourceButtons[1]?.click());
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-join-predicate-editors"]')
+    ).not.toBeNull();
+
+    act(() =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-cancel"]')
+        ?.click()
+    );
+    expect(applied).toHaveLength(0);
+    expect(container.textContent).toContain('Select the first Source.');
+
+    act(() => sourceButtons[0]?.click());
+    act(() =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
+        ?.click()
+    );
+    act(() => sourceButtons[1]?.click());
+    act(() =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
+        ?.click()
+    );
+
+    expect(applied).toHaveLength(1);
+    expect(applied[0]?.dvt).toMatchObject({
+      kind: 'transform',
+      mode: 'substrait',
+      shape: 'inner_join',
+    });
   });
 });

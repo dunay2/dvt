@@ -421,6 +421,7 @@ export default function CanvasShell({
                 nodes={panels.inspectorGraphNodes}
                 edges={panels.inspectorGraphEdges}
                 copy={copy}
+                authoring={panels.relationalTreeAuthoring}
               />
             )
           }
