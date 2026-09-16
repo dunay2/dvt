@@ -641,15 +641,21 @@ describe('DvtAuthoringFields', () => {
     )?.value;
     expect(leftValue).toBeTruthy();
     expect(rightValue).toBeTruthy();
-    act(() => fireEvent.change(leftField!, { target: { value: leftValue } }));
-    act(() => fireEvent.change(rightField!, { target: { value: rightValue } }));
+    act(() => {
+      fireEvent.change(leftField!, { target: { value: leftValue } });
+    });
+    act(() => {
+      fireEvent.change(rightField!, { target: { value: rightValue } });
+    });
     act(() => {
       const save = Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(
         (button) => button.textContent?.trim() === 'Guardar condición'
       );
       fireEvent.click(save!);
     });
-    act(() => fireEvent.click(startJoin!));
+    act(() => {
+      fireEvent.click(startJoin!);
+    });
 
     expect(draftJson()).toContain('"shape":"inner_join"');
     expect(draftJson()).toMatch(/"fieldId":"dvt_fld_[^"]+"/);
