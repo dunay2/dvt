@@ -539,6 +539,8 @@ export type CanvasViewCopy = {
   readonly inspectorDvtRelationalReadOnly: string;
   readonly inspectorDvtRelationalLeftOperandField: string;
   readonly inspectorDvtRelationalRightOperandField: string;
+  readonly inspectorDvtRelationalLeftInput: string;
+  readonly inspectorDvtRelationalRightInput: string;
   readonly inspectorDvtRelationalApply: string;
   readonly inspectorDvtRelationalCancel: string;
   readonly inspectorDvtSubstraitAggregationTitle: string;

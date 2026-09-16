@@ -12,11 +12,9 @@ import {
   type CanvasRelationalOperation,
 } from './canvasRelationalOperationChoices';
 import { canvasViewCopy } from './copy';
+import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { DvtRelationalOperationChooser } from './DvtRelationalOperationChooser';
-import {
-  DvtSubstraitInnerJoinStartSection,
-  type DvtSubstraitJoinFieldSelection,
-} from './DvtSubstraitInnerJoinStartSection';
+import { DvtSubstraitInnerJoinStartSection } from './DvtSubstraitInnerJoinStartSection';
 import { DvtSubstraitUnionAllStartSection } from './DvtSubstraitUnionAllStartSection';
 
 export function DvtSubstraitCompositionStartSection({
@@ -31,7 +29,7 @@ export function DvtSubstraitCompositionStartSection({
   inputs: readonly CanvasDvtCompositionInput[];
   predicateSeed?: CanvasRelationalPredicateSeed | null;
   onClearPredicateSeed?: () => void;
-  onStartInnerJoin: (selection: DvtSubstraitJoinFieldSelection) => void;
+  onStartInnerJoin: (draft: DvtSubstraitInnerJoinDraft) => void;
   onStartUnionAll?: () => void;
 }>): JSX.Element {
   const [selectedOperation, setSelectedOperation] = useState<CanvasRelationalOperation | null>(

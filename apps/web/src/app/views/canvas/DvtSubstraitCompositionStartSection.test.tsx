@@ -6,6 +6,10 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
+import {
+  inspectDvtSubstraitNInputJoinDraft,
+  type DvtSubstraitInnerJoinDraft,
+} from './canvasDvtSubstraitJoinComposition';
 import { canvasViewCopy } from './copy';
 import { DvtSubstraitCompositionStartSection } from './DvtSubstraitCompositionStartSection';
 
@@ -43,6 +47,14 @@ function inputOnConnection(
   };
 }
 
+function buttonWithText(container: HTMLElement, text: string): HTMLButtonElement {
+  const button = Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(
+    (candidate) => candidate.textContent?.trim() === text
+  );
+  if (button == null) throw new Error(`Expected button '${text}'.`);
+  return button;
+}
+
 describe('DvtSubstraitCompositionStartSection', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -78,7 +90,7 @@ describe('DvtSubstraitCompositionStartSection', () => {
     expect(
       container.querySelector('[data-slot="dvt-relational-operation-chooser"]')
     ).not.toBeNull();
-    expect(container.querySelector('[data-slot="dvt-composition-left-field"]')).toBeNull();
+    expect(container.querySelector('[data-slot="dvt-composition-left-input"]')).toBeNull();
     expect(onStartInnerJoin).not.toHaveBeenCalled();
 
     act(() => {
@@ -87,8 +99,11 @@ describe('DvtSubstraitCompositionStartSection', () => {
       );
     });
 
-    expect(container.querySelector('[data-slot="dvt-composition-left-field"]')).not.toBeNull();
-    expect(container.querySelector('[data-slot="dvt-composition-right-field"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="dvt-composition-left-input"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="dvt-composition-right-input"]')).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="semantic-workbench-join-condition-list"]')
+    ).not.toBeNull();
     expect(onStartInnerJoin).not.toHaveBeenCalled();
 
     act(() => {
@@ -96,7 +111,7 @@ describe('DvtSubstraitCompositionStartSection', () => {
         container.querySelector<HTMLButtonElement>('[data-slot="dvt-cancel-relational-operation"]')!
       );
     });
-    expect(container.querySelector('[data-slot="dvt-composition-left-field"]')).toBeNull();
+    expect(container.querySelector('[data-slot="dvt-composition-left-input"]')).toBeNull();
     expect(onStartInnerJoin).not.toHaveBeenCalled();
     expect(onStartUnionAll).not.toHaveBeenCalled();
   });
@@ -120,7 +135,7 @@ describe('DvtSubstraitCompositionStartSection', () => {
         container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-union-all"]')!
       );
     });
-    expect(container.querySelector('[data-slot="dvt-composition-left-field"]')).toBeNull();
+    expect(container.querySelector('[data-slot="dvt-composition-left-input"]')).toBeNull();
     expect(onStartUnionAll).not.toHaveBeenCalled();
 
     act(() => {
@@ -154,13 +169,13 @@ describe('DvtSubstraitCompositionStartSection', () => {
     });
 
     const left = container.querySelector<HTMLSelectElement>(
-      '[data-slot="dvt-composition-left-field"]'
+      '[data-slot="dvt-composition-left-input"]'
     );
     const right = container.querySelector<HTMLSelectElement>(
-      '[data-slot="dvt-composition-right-field"]'
+      '[data-slot="dvt-composition-right-input"]'
     );
-    expect(left?.value).toContain('orders');
-    expect(right?.value).toContain('customers');
+    expect(left?.value).toBe('orders');
+    expect(right?.value).toBe('customers');
     expect(left?.textContent).not.toContain('external');
   });
 
@@ -228,11 +243,14 @@ describe('DvtSubstraitCompositionStartSection', () => {
     });
 
     expect(
-      container.querySelector<HTMLSelectElement>('[data-slot="dvt-composition-left-field"]')?.value
-    ).toContain('orders\u001fcustomer_id');
+      container.querySelector<HTMLSelectElement>('[data-slot="dvt-composition-left-input"]')?.value
+    ).toBe('orders');
     expect(
-      container.querySelector<HTMLSelectElement>('[data-slot="dvt-composition-right-field"]')?.value
-    ).toContain('customers\u001fcustomer_id');
+      container.querySelector<HTMLSelectElement>('[data-slot="dvt-composition-right-input"]')?.value
+    ).toBe('customers');
+    expect(
+      container.querySelector('[data-slot="semantic-workbench-join-condition-row"]')?.textContent
+    ).toContain('raw.orders.customer_id = raw.customers.customer_id');
 
     act(() => {
       fireEvent.click(
@@ -274,5 +292,130 @@ describe('DvtSubstraitCompositionStartSection', () => {
     expect(
       container.querySelector('[data-slot="dvt-select-operation-inner-join"]')?.textContent
     ).toContain(canvasViewCopy.inspectorDvtRelationalNeedsPredicate);
+  });
+
+  it('edits the first JOIN with the canonical operand, function, comparison, and boolean grammar', () => {
+    const onStartInnerJoin = vi.fn();
+    act(() => {
+      root.render(
+        <DvtSubstraitCompositionStartSection
+          disabled={false}
+          inputs={[input('orders', 'orders'), input('customers', 'customers')]}
+          onStartInnerJoin={onStartInnerJoin}
+        />
+      );
+    });
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')!
+      );
+    });
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[aria-label="Editar condición"]')!
+      );
+    });
+
+    const rightKind = container.querySelector<HTMLSelectElement>(
+      '[aria-label="Tipo del operando derecho"]'
+    )!;
+    const leftFunction = container.querySelector<HTMLSelectElement>(
+      '[data-slot="semantic-workbench-join-izquierdo-operand"] [aria-label="Añadir función exterior al operando"]'
+    )!;
+    const functionId = Array.from(leftFunction.options).find(
+      (option) => option.value !== ''
+    )?.value;
+    expect(functionId).toBeTruthy();
+
+    act(() => {
+      fireEvent.change(rightKind, { target: { value: 'literal' } });
+    });
+    act(() => {
+      fireEvent.input(
+        container.querySelector<HTMLInputElement>(
+          '[aria-label="Valor literal del operando derecho"]'
+        )!,
+        { target: { value: '1' } }
+      );
+      fireEvent.change(leftFunction, { target: { value: functionId } });
+      fireEvent.change(
+        container.querySelector<HTMLSelectElement>('[aria-label="Comparador de la condición"]')!,
+        { target: { value: 'not_equal' } }
+      );
+    });
+    act(() => {
+      fireEvent.click(buttonWithText(container, 'Guardar condición'));
+    });
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[aria-label="Añadir condición"]')!
+      );
+    });
+    act(() => {
+      fireEvent.click(buttonWithText(container, 'Añadir condición'));
+    });
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[aria-label="Añadir condición"]')!
+      );
+    });
+    act(() => {
+      fireEvent.change(
+        container.querySelector<HTMLSelectElement>('[aria-label="Conector de la condición"]')!,
+        { target: { value: 'or' } }
+      );
+    });
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '[data-slot="semantic-workbench-join-condition-editor"] [aria-pressed="false"]'
+        )!
+      );
+    });
+    expect(
+      container.querySelector(
+        '[data-slot="semantic-workbench-join-condition-editor"] [aria-pressed="true"]'
+      )
+    ).not.toBeNull();
+    act(() => {
+      fireEvent.click(buttonWithText(container, 'Añadir condición'));
+    });
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[aria-label="Añadir condición"]')!
+      );
+    });
+    act(() => {
+      fireEvent.change(
+        container.querySelector<HTMLSelectElement>('[aria-label="Comparador de la condición"]')!,
+        { target: { value: 'is_null' } }
+      );
+    });
+    act(() => {
+      fireEvent.click(buttonWithText(container, 'Añadir condición'));
+    });
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-configured-inner-join"]')!
+      );
+    });
+
+    expect(onStartInnerJoin).toHaveBeenCalledOnce();
+    const draft = onStartInnerJoin.mock.calls[0]?.[0] as DvtSubstraitInnerJoinDraft;
+    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    const conditions = inspection.projection.joins[0]?.conditions ?? [];
+    expect(conditions).toHaveLength(3);
+    expect(conditions[0]).toMatchObject({
+      left: { kind: 'function', capabilityId: functionId },
+      right: { kind: 'literal', literal: { dataType: 'string', value: '1' } },
+      operator: 'not_equal',
+    });
+    expect(conditions[1]).toMatchObject({ kind: 'group', conditions: expect.any(Array) });
+    if (conditions[1]?.kind !== 'group') return;
+    expect(conditions[1].conditions).toHaveLength(2);
+    expect(conditions[1].conditions[1]).toMatchObject({ combination: 'or' });
+    expect(conditions[2]).toMatchObject({ operator: 'is_null' });
   });
 });

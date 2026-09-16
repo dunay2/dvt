@@ -204,6 +204,8 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDvtRelationalReadOnly: 'Solo lectura',
   inspectorDvtRelationalLeftOperandField: 'Campo del operando izquierdo',
   inspectorDvtRelationalRightOperandField: 'Campo del operando derecho',
+  inspectorDvtRelationalLeftInput: 'Entrada izquierda',
+  inspectorDvtRelationalRightInput: 'Entrada derecha',
   inspectorDvtRelationalApply: 'Aplicar',
   inspectorDvtRelationalCancel: 'Cancelar',
   inspectorDvtSubstraitAggregationTitle: 'Granularidad y resumen',
