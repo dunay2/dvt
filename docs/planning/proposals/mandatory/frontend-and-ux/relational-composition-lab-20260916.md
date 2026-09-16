@@ -127,6 +127,35 @@ existing state label; only a verified canonical operation receives semantic
 detail. The projection remains read-only under `InspectCanvasNode` and does not
 create a mutation rail, relational registry, copied AST or SQL authority.
 
+### Deterministic badge clearance
+
+The current junction uses one fixed offset from the target handle. A longer
+pending label can therefore reach the target card's node layer even though its
+semantic edge is correct:
+
+```mermaid
+flowchart LR
+    J[Fixed junction offset] --> B[Variable-width badge]
+    B --> O[Badge footprint overlaps target card layer]
+    O --> X[Pointer activation blocked]
+```
+
+The correction derives only presentation geometry from the already projected
+label. It keeps the junction at the larger of the base routing offset and half
+the badge width plus a fixed card clearance:
+
+```mermaid
+flowchart LR
+    L[Projected compact label] --> W[Badge width]
+    W --> C[max base offset, half width + clearance]
+    C --> J[Deterministic junction]
+    J --> H[Pointer and keyboard share existing activation]
+```
+
+This changes no relation, edge identity, operation choice or activation rail.
+The badge remains attached to the one trunk owner; only its target-card
+clearance becomes width-aware and testable for every supported orientation.
+
 ## Initial JOIN Predicate Grammar For #3226
 
 The first `INNER JOIN` currently narrows the admitted predicate grammar to two
