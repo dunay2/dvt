@@ -44,7 +44,6 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
     String(section.remainingColumnCount)
   );
   const compactCollapseLabel = copy.compactCollapseColumnsLabel;
-
   return (
     <div data-slot="graph-node-column-section" className={graphNodeColumnClasses.shell}>
       <button
@@ -82,6 +81,7 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
                 portDirections={portDirections}
                 activeColumnHandleId={activeColumnHandleId}
                 copy={copy}
+                showSourceName={column.sourceNodeName != null}
                 reorder={section.columnReorder}
                 expressionOperandCandidates={section.columnReorder.orderedColumns}
                 unavailableAliases={section.columnReorder.orderedColumns

@@ -276,6 +276,61 @@ describe('GraphNodeColumnSection', () => {
     ]);
   });
 
+  it('shows every inherited field origin and toggles the exact field row', async () => {
+    const onColumnOutputToggle = vi.fn();
+    await act(async () => {
+      root.render(
+        <GraphNodeColumnSection
+          expanded
+          nodeId="transform-orders"
+          columns={[
+            {
+              id: 'clients.client_id',
+              name: 'client_id',
+              type: 'text',
+              output: false,
+              sourceNodeName: 'client',
+              source: { nodeId: 'clients', columnId: 'client_id' },
+            },
+            {
+              id: 'orders.client_id',
+              name: 'client_id',
+              type: 'text',
+              output: false,
+              sourceNodeName: 'orders',
+              source: { nodeId: 'orders', columnId: 'client_id' },
+            },
+            {
+              id: 'clients.country',
+              name: 'country',
+              type: 'text',
+              output: false,
+              sourceNodeName: 'client',
+              source: { nodeId: 'clients', columnId: 'country' },
+            },
+          ]}
+          onColumnOutputToggle={onColumnOutputToggle}
+        />
+      );
+    });
+
+    const fields = container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-piece"]');
+    expect([...fields].map((field) => field.textContent)).toEqual([
+      expect.stringContaining('client.client_id'),
+      expect.stringContaining('orders.client_id'),
+      expect.stringContaining('client.country'),
+    ]);
+    await act(async () => fireEvent.click(fields[0]!));
+
+    expect(onColumnOutputToggle).toHaveBeenCalledWith({
+      nodeId: 'transform-orders',
+      columnId: 'clients.client_id',
+      columnType: 'text',
+      output: true,
+      source: { nodeId: 'clients', columnId: 'client_id' },
+    });
+  });
+
   it('emits the same semantic reorder command for pointer and keyboard movement', async () => {
     const onColumnReorder = vi.fn();
     await act(async () => {

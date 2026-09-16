@@ -32,17 +32,18 @@ export function DvtTransformCodeWorkbenchContent({
     | 'inspectorTransformOutputErrorMessage'
   >;
 }>): JSX.Element {
+  if (relationalComposition?.state === 'pending') {
+    return <>{pendingCompositionAuthoring}</>;
+  }
+
   return (
-    <>
-      {relationalComposition?.state === 'pending' ? pendingCompositionAuthoring : null}
-      <DvtTransformOutputView
-        transformNode={transformNode}
-        nodes={nodes}
-        edges={edges}
-        canonicalContent={canonicalContent}
-        canonicalDescription={canonicalDescription}
-        copy={copy}
-      />
-    </>
+    <DvtTransformOutputView
+      transformNode={transformNode}
+      nodes={nodes}
+      edges={edges}
+      canonicalContent={canonicalContent}
+      canonicalDescription={canonicalDescription}
+      copy={copy}
+    />
   );
 }

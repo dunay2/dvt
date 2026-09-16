@@ -13,7 +13,7 @@ export type ActiveColumnPlacement = Readonly<{
 }>;
 
 function columnOrderKey(column: OrderableColumn): string {
-  return column.name;
+  return column.id ?? column.name;
 }
 
 function columnCommandId(column: OrderableColumn): string {

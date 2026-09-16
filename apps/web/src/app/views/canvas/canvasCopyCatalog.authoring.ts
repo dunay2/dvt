@@ -634,7 +634,7 @@ export const canvasViewAuthoringCopyByKey = {
   },
   inspectorDvtSubstraitUnionAllAction: {
     key: 'canvas.inspector.authoring.dvtSubstraitUnionAllAction',
-    fallback: 'Union all',
+    fallback: 'UNION ALL',
   },
   inspectorDvtSubstraitUnionAllTitle: {
     key: 'canvas.inspector.authoring.dvtSubstraitUnionAllTitle',

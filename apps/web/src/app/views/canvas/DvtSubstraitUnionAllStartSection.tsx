@@ -16,7 +16,7 @@ export function DvtSubstraitUnionAllStartSection({
   onCancel: () => void;
 }>): JSX.Element {
   return (
-    <section className={`${inspectorVisualClasses.inspectorDbtSection} space-y-3`}>
+    <section data-slot="dvt-substrait-union-all-start" className="space-y-3">
       <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
         {canvasViewCopy.inspectorDvtSubstraitUnionAllTitle}
       </h3>

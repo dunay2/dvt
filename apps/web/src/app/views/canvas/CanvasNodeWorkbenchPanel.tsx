@@ -470,17 +470,21 @@ export function CanvasNodeWorkbenchPanel({
           {node.kind === 'dvt:source' ? (
             <SourceNodeWorkbenchHeaderIdentity node={node} />
           ) : (
-            <>
-              <div className="flex items-center gap-2">
-                <div className={cn('size-2 shrink-0 rounded-full', dotClass)} />
-                <h2 className={cn('truncate', inspectorVisualClasses.contextPanelTitle)}>
-                  {node.name}
-                </h2>
-              </div>
-              <p className={cn('font-mono', inspectorVisualClasses.contextPanelSubtitle)}>
+            <div className="flex min-w-0 items-center gap-2">
+              <div
+                data-slot="canvas-node-workbench-status"
+                className={cn('size-2 shrink-0 rounded-full', dotClass)}
+              />
+              <h2 className={cn('truncate', inspectorVisualClasses.contextPanelTitle)}>
+                {node.name}
+              </h2>
+              <span
+                data-slot="canvas-node-workbench-kind"
+                className={cn('shrink-0 font-mono', inspectorVisualClasses.contextPanelSubtitle)}
+              >
                 {resolveNodeKindRegistration(node.kind).label}
-              </p>
-            </>
+              </span>
+            </div>
           )}
         </div>
         <div

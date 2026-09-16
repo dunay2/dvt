@@ -8,14 +8,11 @@ import { getGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry'
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
 import {
-  createCanvasColumnHandleId,
   projectCanvasColumnLineage,
   resolveCanvasColumnPortDirections,
   type CanvasColumnLineageEdgeData,
 } from './canvasColumnLineageProjection';
 import type { InteractiveCanvasColumnLineageEdgeData } from './CanvasColumnLineageEdge';
-import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
-import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContracts';
 import {
   canAuthorCanvasColumnMappings,
   readCanvasColumnMappingInputFields,
@@ -25,84 +22,7 @@ import { projectCanvasColumnFunctionMenus } from './canvasColumnFunctionMenuProj
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import { isDvtSourceOutputProjectionNode } from './canvasDvtSourceSemanticAuthoring';
 import { readCanvasJoinColumnOutputs } from './canvasJoinColumnOutputModel';
-
-function isInteractiveColumn(value: unknown): value is GraphNodeColumn {
-  if (
-    typeof value !== 'object' ||
-    value == null ||
-    typeof (value as { name?: unknown }).name !== 'string' ||
-    typeof (value as { type?: unknown }).type !== 'string'
-  ) {
-    return false;
-  }
-  const children = (value as { children?: unknown }).children;
-  return children == null || (Array.isArray(children) && children.every(isInteractiveColumn));
-}
-
-function readInteractiveColumns(node: Node): GraphNodeColumn[] {
-  return Array.isArray(node.data.columns) ? node.data.columns.filter(isInteractiveColumn) : [];
-}
-
-function projectInteractiveColumns(
-  node: Node,
-  canonicalNodesById: ReadonlyMap<string, CanonicalNode>,
-  functionMenus?: ReadonlyMap<
-    string,
-    Readonly<{
-      columnId: string;
-      dataType: string;
-      menu: NonNullable<GraphNodeColumn['functionMenu']>;
-    }>
-  >,
-  columnOverrides?: GraphNodeColumn[]
-): GraphNodeColumn[] {
-  const columns = columnOverrides ?? readInteractiveColumns(node);
-  const presentationTruth = node.data.presentationTruth as CanvasNodePresentationTruth | undefined;
-  const presentationColumns = presentationTruth?.columns.visible ?? [];
-  const presentationColumnsByReference = new Map(
-    presentationColumns.flatMap((column) =>
-      column.reference == null ? [] : [[column.reference, column] as const]
-    )
-  );
-  const presentationColumnsByName = new Map(
-    presentationColumns.map((column) => [column.name, column] as const)
-  );
-  return columns.map((column) => {
-    const presentationColumn =
-      (column.id == null ? undefined : presentationColumnsByReference.get(column.id)) ??
-      presentationColumnsByName.get(column.name);
-    const sourceNodeId = presentationColumn?.sourceNodeId;
-    const sourceNode = sourceNodeId == null ? undefined : canonicalNodesById.get(sourceNodeId);
-    const id =
-      columnOverrides != null || presentationColumn == null
-        ? (column.id ?? column.name)
-        : presentationColumn.provenance === 'declared' || sourceNode?.kind === 'dvt:transform'
-          ? (presentationColumn.reference ?? column.id ?? column.name)
-          : column.name;
-    const functionProjection = functionMenus?.get(id) ?? functionMenus?.get(column.name);
-    const interactiveId = functionProjection?.columnId ?? id;
-    return {
-      ...column,
-      id: interactiveId,
-      type: functionProjection?.dataType ?? column.type,
-      ...(functionProjection == null ? {} : { functionMenu: functionProjection.menu }),
-      ...(node.data.role === 'input' && column.output === false
-        ? {}
-        : {
-            sourceHandleId: createCanvasColumnHandleId({
-              direction: 'source',
-              nodeId: node.id,
-              columnId: interactiveId,
-            }),
-          }),
-      targetHandleId: createCanvasColumnHandleId({
-        direction: 'target',
-        nodeId: node.id,
-        columnId: interactiveId,
-      }),
-    };
-  });
-}
+import { projectInteractiveCanvasColumns } from './canvasGraphNodeColumnProjection';
 
 type UseCanvasControllerReadModelArgs = {
   graphModel: {
@@ -319,10 +239,23 @@ export function useCanvasControllerReadModel({
               })
             : { hasEditableProjection: false, supportsCalculatedColumns: false };
         const columnFunctionMenus = functionProjection.menus;
+        const interactiveColumns = projectInteractiveCanvasColumns(
+          node,
+          graphModel.canonicalNodesById,
+          columnFunctionMenus,
+          joinOutputs?.fields.map((field) => ({
+            id: field.columnId,
+            name: field.name,
+            type: field.dataType,
+            output: field.selected,
+            reference: field.columnId,
+            sourceReference: field.sourceReference,
+          }))
+        );
         const hasStructuredProjection =
           canonicalNode?.pluginId === 'dvt' &&
           canonicalNode.kind === 'dvt:transform' &&
-          readInteractiveColumns(node).some((column) => column.children?.length);
+          interactiveColumns.some((column) => column.children?.length);
         const hasEditableProjection = functionProjection.hasEditableProjection;
         const hasMaterializableMappingInput =
           canAuthorColumnMappings &&
@@ -384,19 +317,7 @@ export function useCanvasControllerReadModel({
               ? node.data.onReorderCanvasColumnOutput
               : undefined,
           onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
-          columns: projectInteractiveColumns(
-            node,
-            graphModel.canonicalNodesById,
-            columnFunctionMenus,
-            joinOutputs?.fields.map((field) => ({
-              id: field.columnId,
-              name: field.name,
-              type: field.dataType,
-              output: field.selected,
-              reference: field.columnId,
-              sourceReference: field.sourceReference,
-            }))
-          ),
+          columns: interactiveColumns,
           columnPortDirections:
             canonicalNode != null
               ? canonicalNode.role === 'transform' &&

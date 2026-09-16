@@ -106,6 +106,9 @@ describe('DvtSubstraitCompositionStartSection', () => {
 
     expect(container.querySelector('[data-slot="dvt-composition-left-input"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="dvt-composition-right-input"]')).not.toBeNull();
+    const joinEditor = container.querySelector('[data-slot="dvt-substrait-inner-join-start"]');
+    expect(joinEditor).not.toBeNull();
+    expect(joinEditor?.className).not.toContain('border-t');
     expect(
       container.querySelector('[data-slot="semantic-workbench-join-condition-list"]')
     ).not.toBeNull();
@@ -135,10 +138,13 @@ describe('DvtSubstraitCompositionStartSection', () => {
       );
     });
 
+    const unionAllOperation = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-select-operation-union-all"]'
+    )!;
+    expect(unionAllOperation.textContent).toContain('UNION ALL');
+
     act(() => {
-      fireEvent.click(
-        container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-union-all"]')!
-      );
+      fireEvent.click(unionAllOperation);
     });
     expect(container.querySelector('[data-slot="dvt-composition-left-input"]')).toBeNull();
     expect(onStartUnionAll).not.toHaveBeenCalled();
@@ -224,6 +230,76 @@ describe('DvtSubstraitCompositionStartSection', () => {
     expect(left?.value).toBe('orders');
     expect(right?.value).toBe('customers');
     expect(left?.textContent).not.toContain('external');
+  });
+
+  it('requires an explicit source pair when more than two JOIN inputs are compatible', async () => {
+    const onStartInnerJoin = vi.fn();
+    act(() => {
+      root.render(
+        <DvtSubstraitCompositionStartSection
+          disabled={false}
+          inputs={[
+            input('orders', 'orders'),
+            input('customers', 'customers'),
+            input('shipments', 'shipments'),
+          ]}
+          onStartInnerJoin={onStartInnerJoin}
+        />
+      );
+    });
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')!
+      );
+    });
+
+    const left = container.querySelector<HTMLSelectElement>(
+      '[data-slot="dvt-composition-left-input"]'
+    )!;
+    const right = container.querySelector<HTMLSelectElement>(
+      '[data-slot="dvt-composition-right-input"]'
+    )!;
+    const apply = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-start-configured-inner-join"]'
+    )!;
+    expect(left.value).toBe('');
+    expect(right.value).toBe('');
+    expect(right.disabled).toBe(true);
+    expect(apply.disabled).toBe(true);
+    expect(Array.from(left.options).map((option) => option.value)).toEqual([
+      '',
+      'orders',
+      'customers',
+      'shipments',
+    ]);
+
+    await act(() => fireEvent.change(left, { target: { value: 'customers' } }));
+    expect(right.disabled).toBe(false);
+    expect(right.value).toBe('');
+    expect(Array.from(right.options).map((option) => option.value)).toEqual([
+      '',
+      'orders',
+      'shipments',
+    ]);
+    await act(() => fireEvent.change(right, { target: { value: 'shipments' } }));
+
+    expect(
+      container.querySelector('[data-slot="semantic-workbench-join-condition-row"]')?.textContent
+    ).toContain('raw.customers.id = raw.shipments.id');
+    expect(apply.disabled).toBe(false);
+
+    await act(() => fireEvent.click(apply));
+    expect(onStartInnerJoin).toHaveBeenCalledOnce();
+    const inspection = inspectDvtSubstraitNInputJoinDraft(
+      onStartInnerJoin.mock.calls[0]?.[0] as DvtSubstraitInnerJoinDraft
+    );
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.inputs.map((candidate) => candidate.table)).toEqual([
+      'customers',
+      'shipments',
+    ]);
   });
 
   it('keeps the operation explicit while carrying a cross-input field proposal into JOIN', () => {
