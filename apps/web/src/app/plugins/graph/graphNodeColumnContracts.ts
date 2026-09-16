@@ -20,6 +20,7 @@ export type GraphNodeColumn = Readonly<{
   sourceNodeName?: string;
   sourceFieldName?: string;
   sourceReference?: string;
+  source?: Readonly<{ nodeId: string; columnId: string }>;
   reference?: string;
   operations?: readonly string[];
   description?: string;
@@ -57,6 +58,7 @@ export type GraphNodeColumnOutputToggleIdentity = Readonly<{
   columnId: string;
   columnType: string;
   output: boolean;
+  source?: Readonly<{ nodeId: string; columnId: string }>;
   placement?: ActiveColumnPlacement;
 }>;
 export type GraphNodeColumnFunctionApplyIdentity = Readonly<{

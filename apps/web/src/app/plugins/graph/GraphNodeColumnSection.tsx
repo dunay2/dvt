@@ -44,6 +44,14 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
     String(section.remainingColumnCount)
   );
   const compactCollapseLabel = copy.compactCollapseColumnsLabel;
+  const duplicateColumnNames = new Set(
+    columns
+      .filter(
+        (column, index) =>
+          columns.findIndex((candidate) => candidate.name === column.name) !== index
+      )
+      .map((column) => column.name)
+  );
 
   return (
     <div data-slot="graph-node-column-section" className={graphNodeColumnClasses.shell}>
@@ -82,6 +90,7 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
                 portDirections={portDirections}
                 activeColumnHandleId={activeColumnHandleId}
                 copy={copy}
+                showSourceName={duplicateColumnNames.has(column.name)}
                 reorder={section.columnReorder}
                 expressionOperandCandidates={section.columnReorder.orderedColumns}
                 unavailableAliases={section.columnReorder.orderedColumns

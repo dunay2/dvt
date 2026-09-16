@@ -123,6 +123,7 @@ export function setCanvasColumnOutputIncluded(args: {
   columnId: string;
   columnType: string;
   output: boolean;
+  source?: Readonly<{ nodeId: string; columnId: string }>;
   placement?: Readonly<{ targetColumnId: string; placement: 'before' | 'after' }>;
 }): CanvasColumnMappingResult {
   const targetNode = resolveCanvasSessionNode(
@@ -245,7 +246,11 @@ export function setCanvasColumnOutputIncluded(args: {
     const resolveNode = (nodeId: string): CanonicalNode | undefined =>
       resolveCanvasSessionNode(args.draftSession, args.canonicalNodesById, nodeId);
     const matchingInputs = args.draftSession.workingSet.visibleEdges
-      .filter((edge) => edge.targetId === targetNode.id)
+      .filter(
+        (edge) =>
+          edge.targetId === targetNode.id &&
+          (args.source == null || edge.sourceId === args.source.nodeId)
+      )
       .flatMap((edge) => {
         const sourceNode = resolveNode(edge.sourceId);
         if (sourceNode == null) return [];
@@ -253,7 +258,9 @@ export function setCanvasColumnOutputIncluded(args: {
           sourceNode,
           edges: args.draftSession.workingSet.visibleEdges,
           resolveNode,
-        }).flatMap((field) => (field.columnId === args.columnId ? [{ sourceNode, field }] : []));
+        }).flatMap((field) =>
+          field.columnId === (args.source?.columnId ?? args.columnId) ? [{ sourceNode, field }] : []
+        );
       });
     if (matchingInputs.length !== 1) {
       return { outcome: 'rejected', reason: 'mapping_not_found' };

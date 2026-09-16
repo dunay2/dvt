@@ -33,6 +33,7 @@ export function GraphNodeColumnRow(props: {
   portDirections: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
   copy: GraphNodeColumnCopy;
+  showSourceName?: boolean;
   reorder: GraphNodeColumnReorderController;
   unavailableAliases: readonly string[];
   expressionOperandCandidates: readonly GraphNodeColumn[];
@@ -76,6 +77,7 @@ export function GraphNodeColumnRow(props: {
       canReorder={reorder.canReorder(column)}
       outputToggleDisabled={nodeId == null || props.onColumnOutputToggle == null}
       copy={copy}
+      showSourceName={props.showSourceName}
       nodeId={nodeId}
       onNestedColumnReorder={props.onColumnReorder}
       onDragStart={(event) => reorder.startDrag(column, event)}
@@ -87,7 +89,8 @@ export function GraphNodeColumnRow(props: {
           columnId,
           columnType: column.type,
           output: !isOutput,
-          ...(!isOutput ? { placement: reorder.resolveActivationPlacement(column.name) } : {}),
+          ...(column.source == null ? {} : { source: column.source }),
+          ...(!isOutput ? { placement: reorder.resolveActivationPlacement(columnId) } : {}),
         });
       }}
     />
