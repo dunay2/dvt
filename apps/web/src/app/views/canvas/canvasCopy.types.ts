@@ -514,7 +514,6 @@ export type CanvasViewCopy = {
   readonly inspectorDvtFilterTitle: string;
   readonly inspectorDvtFilterFieldLabel: string;
   readonly inspectorDvtFilterOperatorLabel: string;
-  readonly inspectorDvtFilterEqualLabel: string;
   readonly inspectorDvtFilterValueLabel: string;
   readonly inspectorDvtFilterApplyLabel: string;
   readonly inspectorDvtFilterRemoveLabel: string;

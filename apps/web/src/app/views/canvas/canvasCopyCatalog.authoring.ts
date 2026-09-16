@@ -580,10 +580,6 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtFilterOperatorLabel',
     fallback: 'Operator',
   },
-  inspectorDvtFilterEqualLabel: {
-    key: 'canvas.inspector.authoring.dvtFilterEqualLabel',
-    fallback: 'Equals',
-  },
   inspectorDvtFilterValueLabel: {
     key: 'canvas.inspector.authoring.dvtFilterValueLabel',
     fallback: 'Value',

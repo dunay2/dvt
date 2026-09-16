@@ -494,6 +494,26 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     );
   });
 
+  it('renders the selected FilterRel comparison operator', async () => {
+    const capability = resolveDvtSubstraitFilterCapabilities({
+      dataType: 'text',
+      provider: 'postgres',
+    }).find((candidate) => candidate.name === 'not_equal');
+    if (capability == null) throw new Error('Expected the admitted not-equal filter capability.');
+    const draft = applyDvtSubstraitFilter(connectedOrdersProjectionDraft(), {
+      fieldId: 'output:customer',
+      dataType: 'text',
+      capabilityId: capability.capabilityId,
+      value: 'Ada',
+    });
+
+    const sql = await projectDvtSubstraitProjectionToPostgresSql(draft);
+
+    expect(sql.replaceAll(/\s+/g, ' ').trim().toLowerCase()).toMatch(
+      /^select order_id, customer as buyer, amount from raw\.orders where customer <> 'ada';?$/
+    );
+  });
+
   it('derives literals and ordered row numbers from the canonical projection', async () => {
     let draft = connectedOrdersProjectionDraft();
     draft = createProjectionOutput(draft, {

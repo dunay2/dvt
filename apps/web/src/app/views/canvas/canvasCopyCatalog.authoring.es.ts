@@ -177,7 +177,6 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDvtFilterTitle: 'Filtrar filas',
   inspectorDvtFilterFieldLabel: 'Campo',
   inspectorDvtFilterOperatorLabel: 'Operador',
-  inspectorDvtFilterEqualLabel: 'Es igual a',
   inspectorDvtFilterValueLabel: 'Valor',
   inspectorDvtFilterApplyLabel: 'Aplicar filtro',
   inspectorDvtFilterRemoveLabel: 'Quitar filtro',
