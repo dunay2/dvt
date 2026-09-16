@@ -242,4 +242,37 @@ describe('DvtSubstraitCompositionStartSection', () => {
     expect(onClearPredicateSeed).toHaveBeenCalledOnce();
     expect(onStartInnerJoin).not.toHaveBeenCalled();
   });
+
+  it('does not advertise a stale predicate proposal as available', () => {
+    act(() => {
+      root.render(
+        <DvtSubstraitCompositionStartSection
+          disabled={false}
+          inputs={[input('orders', 'orders'), input('customers', 'customers')]}
+          predicateSeed={{
+            targetNodeId: 'model-1',
+            left: {
+              nodeId: 'orders',
+              fieldId: 'orders-id',
+              fieldName: 'id',
+              dataType: 'string',
+            },
+            right: {
+              nodeId: 'customers',
+              fieldId: 'customers-removed',
+              fieldName: 'removed',
+              dataType: 'string',
+            },
+            candidateOperator: 'equal',
+          }}
+          onStartInnerJoin={vi.fn()}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-slot="dvt-relational-predicate-proposal"]')).toBeNull();
+    expect(
+      container.querySelector('[data-slot="dvt-select-operation-inner-join"]')?.textContent
+    ).toContain(canvasViewCopy.inspectorDvtRelationalNeedsPredicate);
+  });
 });
