@@ -217,6 +217,7 @@ describe('CanvasDependencyEdge', () => {
                 composition: {
                   groupId: 'relational-composition:transform',
                   label: 'INNER JOIN',
+                  accessibleLabel: 'INNER JOIN, inputs: 2, predicates: 1',
                   memberCount: 2,
                   role: 'trunk-owner',
                   state: 'canonical',
@@ -240,6 +241,7 @@ describe('CanvasDependencyEdge', () => {
       '[data-slot="canvas-relational-composition-badge"]'
     );
     expect(badge?.textContent).toBe('INNER JOIN');
+    expect(badge?.getAttribute('aria-label')).toBe('INNER JOIN, inputs: 2, predicates: 1');
     expect(badge?.getAttribute('role')).toBe('button');
     expect(badge?.getAttribute('tabindex')).toBe('0');
     act(() => {

@@ -15,6 +15,7 @@ import {
   resolveCanvasRelationalCompositionEdgeMembers,
   type CanvasRelationalCompositionEdgeMember,
 } from './canvasRelationalCompositionEdgeGroup';
+import { resolveCanvasRelationalCompositionBadgeSummary } from './canvasRelationalCompositionBadgeSummary';
 
 function resolveCompositionLabel(
   member: CanvasRelationalCompositionEdgeMember,
@@ -65,6 +66,19 @@ export function projectCanvasViewportEdges(args: {
     .map((edge) => {
       const canonicalEdge = canonicalEdgeBySignature.get(`${edge.sourceId}::${edge.targetId}`);
       const compositionMember = compositionMembers.get(`${edge.sourceId}::${edge.targetId}`);
+      const compositionLabel =
+        compositionMember == null ? null : resolveCompositionLabel(compositionMember, locale);
+      const compositionTarget = canonicalNodesById.get(edge.targetId);
+      const compositionAccessibleLabel =
+        compositionMember?.state === 'canonical' &&
+        compositionMember.operation != null &&
+        compositionTarget != null
+          ? resolveCanvasRelationalCompositionBadgeSummary({
+              node: compositionTarget,
+              operation: compositionMember.operation,
+              locale,
+            })
+          : null;
       const data = buildCanvasDependencyEdgeData({
         sourceId: edge.sourceId,
         targetId: edge.targetId,
@@ -75,7 +89,10 @@ export function projectCanvasViewportEdges(args: {
           : {
               composition: {
                 ...compositionMember,
-                label: resolveCompositionLabel(compositionMember, locale),
+                label: compositionLabel!,
+                ...(compositionAccessibleLabel == null
+                  ? {}
+                  : { accessibleLabel: compositionAccessibleLabel }),
               },
             }),
       });
@@ -83,7 +100,9 @@ export function projectCanvasViewportEdges(args: {
         .replace('{source}', canonicalNodesById.get(edge.sourceId)?.name ?? edge.sourceId)
         .replace('{target}', canonicalNodesById.get(edge.targetId)?.name ?? edge.targetId);
       const compositionAriaLabel =
-        data.composition == null ? baseAriaLabel : `${baseAriaLabel}, ${data.composition.label}`;
+        data.composition == null
+          ? baseAriaLabel
+          : `${baseAriaLabel}, ${data.composition.accessibleLabel ?? data.composition.label}`;
 
       return createCanvasDirectionalEdge({
         id: resolveCanvasAuthoringVisibleEdgeId({ edge, canonicalEdgeIdBySignature }),

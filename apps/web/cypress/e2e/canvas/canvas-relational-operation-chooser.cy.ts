@@ -133,6 +133,10 @@ describe('Canvas relational-operation chooser', () => {
       if (condition == null || condition.kind === 'group') return;
       expect(condition.left.kind).to.equal('function');
     });
+    cy.get('[data-slot="canvas-relational-composition-badge"]')
+      .should('contain.text', 'INNER JOIN')
+      .and('have.attr', 'aria-label')
+      .and('match', /INNER JOIN.*2.*1/);
   });
 
   it('authors the first JOIN from matching bigint fields', () => {

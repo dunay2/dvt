@@ -17,6 +17,7 @@ import type { CanvasRelationalCompositionEdgeMember } from './canvasRelationalCo
 export type CanvasDependencyCompositionPresentation = CanvasRelationalCompositionEdgeMember &
   Readonly<{
     label: string;
+    accessibleLabel?: string;
     onActivate?: () => void;
   }>;
 
@@ -111,6 +112,8 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
     (compositionCandidate != null &&
       typeof compositionCandidate.groupId === 'string' &&
       typeof compositionCandidate.label === 'string' &&
+      (compositionCandidate.accessibleLabel == null ||
+        typeof compositionCandidate.accessibleLabel === 'string') &&
       typeof compositionCandidate.memberCount === 'number' &&
       compositionCandidate.memberCount >= 2 &&
       (compositionCandidate.role === 'branch' || compositionCandidate.role === 'trunk-owner') &&
@@ -158,6 +161,9 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
           composition: {
             groupId: compositionCandidate.groupId as string,
             label: compositionCandidate.label as string,
+            ...(typeof compositionCandidate.accessibleLabel === 'string'
+              ? { accessibleLabel: compositionCandidate.accessibleLabel }
+              : {}),
             memberCount: compositionCandidate.memberCount as number,
             role: compositionCandidate.role as 'branch' | 'trunk-owner',
             state: compositionCandidate.state as CanvasDependencyCompositionPresentation['state'],
