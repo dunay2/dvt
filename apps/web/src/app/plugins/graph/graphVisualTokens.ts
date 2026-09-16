@@ -266,6 +266,7 @@ export const graphFlowPalette = {
   relationalBadgeHeight: 20,
   relationalBadgeCharacterWidth: 6.5,
   relationalBadgeHorizontalPadding: 18,
+  relationalBadgeNodeClearance: 16,
 } as const;
 
 export function resolveGraphNodeKindTone(kind: PluginNodeKind): GraphNodeKindTone {
