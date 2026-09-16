@@ -211,7 +211,9 @@ describe('DvtSubstraitJoinPredicateEditors', () => {
     );
 
     expect(editors).toHaveLength(2);
-    act(() => fireEvent.click(editActions[1]!));
+    act(() => {
+      fireEvent.click(editActions[1]!);
+    });
     act(() => {
       fireEvent.change(
         container.querySelector<HTMLSelectElement>('[aria-label="Comparador de la condición"]')!,
