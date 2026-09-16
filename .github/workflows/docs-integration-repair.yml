@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   reconcile:
-    name: Reconcile and validate planning retirement against current main
+    name: Reconcile current main and obsolete documentation consumers
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -32,15 +32,13 @@ jobs:
           git config user.name 'DVT documentation integration'
           git config user.email '34416258+dunay2@users.noreply.github.com'
           python3 - <<'PY'
-          import os, subprocess, json
+          import os, subprocess
           p = subprocess.run(['git', 'merge', '--no-commit', '--no-ff', os.environ['CURRENT_MAIN']], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
           print(p.stdout)
           open('/tmp/retirement-result/merge.log','w').write(p.stdout)
           conflicts = subprocess.check_output(['git','diff','--name-only','--diff-filter=U','-z']).decode().strip('\0').split('\0')
           conflicts = [x for x in conflicts if x]
-          allowed = {'docs/.manifest.json','docs/evidence/index.md','docs/risk-register/quality/index.md'}
-          print('Actual conflicts:', conflicts)
-          assert set(conflicts) <= allowed, f'Authored conflict requires review: {conflicts}'
+          assert set(conflicts) <= {'docs/.manifest.json','docs/evidence/index.md','docs/risk-register/quality/index.md'}, conflicts
           assert p.returncode == 0 or conflicts, p.stdout
           if conflicts:
               subprocess.run(['git','restore','--source='+os.environ['CURRENT_MAIN'],'--staged','--worktree','--',*conflicts],check=True)
@@ -50,6 +48,83 @@ jobs:
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
+      - name: Reproduce and repair the reviewed historical-reference defect
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, subprocess, json
+          root=Path('.')
+          p=Path('tools/ci/docs-disposition-canon.test.mjs')
+          s=p.read_text().replace("import { existsSync } from 'node:fs';", "import { existsSync, readdirSync } from 'node:fs';")
+          s+=r'''
+
+          test('current records do not point to retired planning files as local evidence', () => {
+            const walk = (directory) =>
+              readdirSync(new URL(`../../${directory}`, import.meta.url), { withFileTypes: true })
+                .flatMap((entry) => {
+                  const path = `${directory}/${entry.name}`;
+                  if (entry.isDirectory()) return walk(path);
+                  return entry.isFile() && entry.name.endsWith('.md') ? [path] : [];
+                });
+
+            for (const path of walk('docs/planning/proposals/mandatory')) {
+              assert.doesNotMatch(readRepoFile(path), /^archived_record:/mu, path);
+            }
+            for (const directory of ['docs/evidence', 'docs/risk-register']) {
+              for (const path of walk(directory)) {
+                assert.doesNotMatch(
+                  readRepoFile(path),
+                  /(?<![\w/])docs\/planning\/archive\/[\w./-]+\.md/u,
+                  path
+                );
+              }
+            }
+          });
+          '''
+          p.write_text(s)
+          cmd=['node','--test','--test-name-pattern=current records do not point','tools/ci/docs-disposition-canon.test.mjs']
+          red=subprocess.run(cmd,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+          assert red.returncode!=0 and 'archived_record' in red.stdout,red.stdout
+          print('RED: existing current contract points to deleted archive')
+          changes=[]
+          for p in sorted(root.glob('docs/planning/proposals/mandatory/**/*.md')):
+              before=p.read_text()
+              if 'archived_record:' not in before: continue
+              after=re.sub(r'^archived_record: docs/planning/archive/[^\n]+\n','',before,flags=re.M)
+              for footer in ['The detailed delivery record is historical and remains at `archived_record`.','The former proposal is preserved only as an explicit historical record at the\n`archived_record` path above.']:
+                  after=after.replace('\n'+footer+'\n','\n')
+              after=after.rstrip()+'\n'
+              assert 'archived_record' not in after,p
+              p.write_text(after); changes.append(str(p))
+          assert len(changes)==24,changes
+          old='bec9a00d48ce1f02ec26199f670fcf1757680ad7'
+          pattern=re.compile(r'(?<![\w/])docs/planning/archive/[\w./-]+\.md')
+          records=[]
+          for directory in ('docs/evidence','docs/risk-register'):
+              for p in sorted((root/directory).rglob('*.md')):
+                  before=p.read_text(); matches=pattern.findall(before)
+                  if not matches: continue
+                  for target in set(matches):
+                      subprocess.run(['git','cat-file','-e',old+':'+target],check=True)
+                      assert not Path(target).exists(),target
+                  after=pattern.sub(lambda m:'https://github.com/dunay2/dvt/blob/'+old+'/'+m.group(),before)
+                  p.write_text(after); records.append(str(p))
+          assert len(records)==5,records
+          subprocess.run(['node','--test','tools/ci/docs-disposition-canon.test.mjs'],check=True)
+          for rel,line in [
+              ('docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md','archived_record: docs/planning/archive/proposals/dead.md\n'),
+              ('docs/evidence/critical/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md','- docs/planning/archive/gaps/GAP_EXECUTION_PLANS.md\n')]:
+              p=Path(rel); original=p.read_text()
+              try:
+                  p.write_text(original+'\n'+line)
+                  negative=subprocess.run(cmd,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+                  assert negative.returncode!=0,rel
+                  print('PASS negative control:',rel)
+              finally: p.write_text(original)
+          subprocess.run(cmd,check=True)
+          Path('/tmp/retirement-result/consumer-edits.json').write_text(json.dumps(changes+records,indent=2))
+          PY
       - name: Prepare existing disposable CI database
         uses: ./.github/actions/prepare-planning-db
       - name: Regenerate current documentation and governance outputs
@@ -59,9 +134,14 @@ jobs:
           git add -A
       - name: Commit through repository helper with hooks enabled
         run: |
-          pnpm commit docs docs "Reconcile planning retirement with current main"
+          pnpm commit docs docs "Reconcile planning retirement and historical consumers"
           echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-          git diff --exit-code "$CURRENT_MAIN" HEAD -- apps packages specs .github pnpm-lock.yaml package.json
+          python3 - <<'PY'
+          import subprocess, os
+          changed=subprocess.check_output(['git','diff','--name-only',os.environ['CURRENT_MAIN'],'HEAD','--','apps','packages','specs','.github','pnpm-lock.yaml','package.json']).decode().splitlines()
+          assert set(changed)=={'apps/web/README.md','packages/@dvt/planner/docs/README.md'},changed
+          print('Product source unchanged; only the two existing README consumer edits remain')
+          PY
       - name: Run affected regression tests
         run: node --test scripts/documentation-publication.test.cjs scripts/planning-db-surface-inventory-check.test.cjs tools/ci/docs-disposition-canon.test.mjs
       - name: Validate canonical documentation and prepush
@@ -71,7 +151,7 @@ jobs:
           pnpm ci:docs
           pnpm verify:prepush
           git diff --exit-code HEAD
-      - name: Export reviewed candidate and Git objects without publishing refs
+      - name: Export candidate and Git objects without publishing refs
         if: always()
         shell: bash
         run: |
@@ -85,28 +165,66 @@ jobs:
           (out/'stats.txt').write_bytes(git('diff','--stat',os.environ['CURRENT_MAIN'],head))
           (out/'candidate.patch').write_bytes(git('diff',os.environ['CURRENT_MAIN'],head))
           subprocess.run(['git','archive','--format=tar.gz','-o',str(out/'source.tar.gz'),head],check=True)
-          info={'head':head,'tree':git('rev-parse','HEAD^{tree}').decode().strip(),'parents':git('show','-s','--format=%P','HEAD').decode().strip().split(),'base':os.environ['CURRENT_MAIN'],'oldHead':os.environ['RETIREMENT_HEAD'],'treeElements':[],'newBlobs':[]}
+          info={'head':head,'tree':git('rev-parse','HEAD^{tree}').decode().strip(),'parents':git('show','-s','--format=%P','HEAD').decode().strip().split(),'base':os.environ['CURRENT_MAIN'],'baseTree':git('rev-parse',os.environ['CURRENT_MAIN']+'^{tree}').decode().strip(),'oldHead':os.environ['RETIREMENT_HEAD'],'treeElements':[],'newBlobs':[]}
           raw=git('diff','--raw','--no-renames','-z',os.environ['CURRENT_MAIN'],head).split(b'\0')
           for i in range(0,len(raw)-1,2):
-              fields=raw[i].decode().split(); p=raw[i+1].decode()
-              deleted=fields[-1]=='D'
+              fields=raw[i].decode().split(); p=raw[i+1].decode(); deleted=fields[-1]=='D'
               sha=None if deleted else git('rev-parse',head+':'+p).decode().strip()
               info['treeElements'].append({'path':p,'mode':fields[0][1:] if deleted else fields[1],'type':'blob','sha':sha})
-          objects=git('rev-list','--objects',head,'^'+os.environ['CURRENT_MAIN'],'^'+os.environ['RETIREMENT_HEAD']).decode().splitlines()
-          for line in objects:
+          for line in git('rev-list','--objects',head,'^'+os.environ['CURRENT_MAIN'],'^'+os.environ['RETIREMENT_HEAD']).decode().splitlines():
               sha=line.split(' ',1)[0]
               if git('cat-file','-t',sha).strip()==b'blob':
                   data=git('cat-file','blob',sha)
                   info['newBlobs'].append({'sha':sha,'encoding':'base64','content':base64.b64encode(data).decode()})
           (out/'objects.json').write_text(json.dumps(info,ensure_ascii=False))
-          (out/'checksums.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in out.iterdir() if p.is_file()},indent=2))
+          (out/'checksums.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in out.iterdir() if p.is_file() and p.name!='checksums.json'},indent=2))
           print(json.dumps({k:v for k,v in info.items() if k not in ('newBlobs','treeElements')},indent=2))
-          print('Changed paths',len(info['treeElements']),'new blobs',[(x['sha'],len(x['content'])) for x in info['newBlobs']])
+          print('Changed paths',len(info['treeElements']),'new blobs',len(info['newBlobs']))
           PY
-      - name: Upload exact source and reconciliation evidence
+      - name: Upload source and validation evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: planning-retirement-reconciliation
           path: /tmp/retirement-result
           retention-days: 3
+
+  objects:
+    name: Transfer validated content-addressed objects only
+    needs: reconcile
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Transfer verified blobs and tree without any commit or ref update
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import subprocess,json,os,zipfile,io,hashlib,base64
+          repo=os.environ['GITHUB_REPOSITORY']; run=os.environ['GITHUB_RUN_ID']
+          def api(path,data=None):
+              args=['gh','api','repos/'+repo+'/'+path]
+              if data is not None: args+=['--method','POST','--input','-']
+              return subprocess.check_output(args,input=None if data is None else json.dumps(data).encode())
+          artifacts=json.loads(api('actions/runs/'+run+'/artifacts'))['artifacts']
+          matches=[x for x in artifacts if x['name']=='planning-retirement-reconciliation']; assert len(matches)==1
+          artifact=matches[0]; raw=api('actions/artifacts/'+str(artifact['id'])+'/zip')
+          assert 'sha256:'+hashlib.sha256(raw).hexdigest()==artifact['digest']
+          z=zipfile.ZipFile(io.BytesIO(raw)); manifest=json.loads(z.read('checksums.json'))
+          for p,sha in manifest.items(): assert hashlib.sha256(z.read(p)).hexdigest()==sha,p
+          obj=json.loads(z.read('objects.json'))
+          assert obj['base']=='d7ef2ccf5f7a51628a26dbca3d7cfb9262bd6313'
+          assert obj['parents']==['fbdb79b8404fdf07b95b0f045e3a3c910581ede0',obj['base']]
+          for blob in obj['newBlobs']:
+              data=base64.b64decode(blob['content']); sha=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+              assert sha==blob['sha']
+              returned=json.loads(api('git/blobs',{'encoding':'base64','content':blob['content']}))
+              assert returned['sha']==sha
+          result=json.loads(api('git/trees',{'base_tree':obj['baseTree'],'tree':obj['treeElements']}))
+          assert result['sha']==obj['tree']
+          print('Verified tree transferred:',result['sha'])
+          print('No commit, branch, pull request, protection or main update performed')
+          PY
