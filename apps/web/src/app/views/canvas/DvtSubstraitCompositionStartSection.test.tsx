@@ -135,10 +135,13 @@ describe('DvtSubstraitCompositionStartSection', () => {
       );
     });
 
+    const unionAllOperation = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-select-operation-union-all"]'
+    )!;
+    expect(unionAllOperation.textContent).toContain('UNION ALL');
+
     act(() => {
-      fireEvent.click(
-        container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-union-all"]')!
-      );
+      fireEvent.click(unionAllOperation);
     });
     expect(container.querySelector('[data-slot="dvt-composition-left-input"]')).toBeNull();
     expect(onStartUnionAll).not.toHaveBeenCalled();

@@ -190,7 +190,7 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDvtSubstraitSelectedFieldsLabel: 'Campos seleccionados',
   inspectorDvtSubstraitMoveFieldUpLabel: 'Subir campo',
   inspectorDvtSubstraitMoveFieldDownLabel: 'Bajar campo',
-  inspectorDvtSubstraitUnionAllAction: 'Unir todo',
+  inspectorDvtSubstraitUnionAllAction: 'UNION ALL',
   inspectorDvtSubstraitUnionAllTitle: 'UNION ALL Substrait',
   inspectorDvtSubstraitUnionAllInputsLabel: 'Entradas',
   inspectorDvtSubstraitUnionAllFieldsLabel: 'Campos compatibles',
