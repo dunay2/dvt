@@ -22,6 +22,7 @@ catalog, relational IR, persisted model, or product route.
 ## Governing Sources
 
 - [ADR-0064](../../../../adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md)
+- [Fowler opportunity planning governance](../../../../architecture/fowler-opportunity-planning-governance.md)
 - [Pinned DVT profile](../../../../../packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts)
 - [Canonical capability catalog](../../../../../packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts)
 - [Standard candidates](../../../../../packages/@dvt/contracts/src/contracts/planner/DvtSubstraitStandardCandidates.v1.ts)

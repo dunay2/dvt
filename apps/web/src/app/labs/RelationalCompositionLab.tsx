@@ -79,22 +79,22 @@ const SCENARIOS: readonly Scenario[] = [
   },
   {
     id: 'complex',
-    label: 'Composición compleja',
+    label: 'Composición admitida',
     summary:
-      'El mismo glyph representa una composición completa sin expandir la tarjeta del Transform.',
+      'El mismo glyph representa una composición admitida sin expandir la tarjeta del Transform.',
     badge: '4 OPS',
-    subtitle: 'join · join · window · union',
+    subtitle: 'inner join · inner join · row_number · union all',
     steps: [
       {
         label: 'INNER JOIN',
         detail: 'orders.client_id = client.id',
       },
       {
-        label: 'LEFT JOIN',
+        label: 'INNER JOIN',
         detail: 'result.product_id = products.id',
       },
       {
-        label: 'WINDOW',
+        label: 'ROW_NUMBER',
         detail: 'PARTITION BY client_id · ORDER BY created_at',
       },
       {
