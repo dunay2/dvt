@@ -8,12 +8,11 @@ import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTr
 import {
   appendCanvasRelationalTreeJoinInput,
   createCanvasRelationalTreeInitialJoinDraft,
-  createCanvasRelationalTreeNodeDraft,
-  createCanvasRelationalTreeUnionAllDraft,
   resolveCanvasRelationalTreeAuthoringCandidates,
   resolveCanvasRelationalTreeAuthoringChoices,
 } from './canvasRelationalTreeAuthoringModel';
 import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { useCanvasRelationalTreeApplyCommand } from './useCanvasRelationalTreeApplyCommand';
 
 type AppendJoinSelection = Readonly<{
   leftSourceFieldId: string;
@@ -31,6 +30,8 @@ export function useCanvasRelationalTreeAuthoringSession(
   }>
 ) {
   const { authoring, edges, enabled, inputs, nodes, transformNode } = args;
+  const editable = authoring?.canEditNode === true;
+  const targetNodeId = transformNode.id;
   const [firstInputId, setFirstInputId] = useState<string | null>(null);
   const [operation, setOperation] = useState<CanvasRelationalOperation | null>(null);
   const [selectedInputIds, setSelectedInputIds] = useState<readonly string[]>([]);
@@ -45,7 +46,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     setAppendInputId(null);
   }, []);
 
-  useEffect(reset, [enabled, reset, transformNode.id]);
+  useEffect(reset, [enabled, reset, targetNodeId]);
 
   const choices = useMemo(
     () =>
@@ -56,10 +57,10 @@ export function useCanvasRelationalTreeAuthoringSession(
             firstInputId,
             inputs,
             nodes,
-            readOnly: authoring?.canEditNode !== true,
-            targetNodeId: transformNode.id,
+            readOnly: !editable,
+            targetNodeId,
           }),
-    [authoring?.canEditNode, edges, enabled, firstInputId, inputs, nodes, transformNode.id]
+    [editable, edges, enabled, firstInputId, inputs, nodes, targetNodeId]
   );
   const candidates = useMemo(
     () =>
@@ -72,14 +73,14 @@ export function useCanvasRelationalTreeAuthoringSession(
             nodes,
             selectedInputIds,
             joinDraft,
-            targetNodeId: transformNode.id,
+            targetNodeId,
           }),
-    [edges, enabled, inputs, joinDraft, nodes, operation, selectedInputIds, transformNode.id]
+    [edges, enabled, inputs, joinDraft, nodes, operation, selectedInputIds, targetNodeId]
   );
 
   const selectInput = useCallback(
     (nodeId: string) => {
-      if (!enabled || authoring?.canEditNode !== true) return;
+      if (!enabled || !editable) return;
       if (firstInputId == null || operation == null) {
         setFirstInputId(nodeId);
         setSelectedInputIds([nodeId]);
@@ -97,7 +98,7 @@ export function useCanvasRelationalTreeAuthoringSession(
       if (joinDraft == null) {
         const draft = createCanvasRelationalTreeInitialJoinDraft({
           inputs,
-          targetNodeId: transformNode.id,
+          targetNodeId,
           leftInputId: firstInputId,
           rightInputId: nodeId,
         });
@@ -108,16 +109,7 @@ export function useCanvasRelationalTreeAuthoringSession(
       }
       setAppendInputId(nodeId);
     },
-    [
-      authoring?.canEditNode,
-      candidates,
-      enabled,
-      firstInputId,
-      inputs,
-      joinDraft,
-      operation,
-      transformNode.id,
-    ]
+    [candidates, editable, enabled, firstInputId, inputs, joinDraft, operation, targetNodeId]
   );
 
   const selectOperation = useCallback(
@@ -145,29 +137,19 @@ export function useCanvasRelationalTreeAuthoringSession(
     [appendInputId, inputs, joinDraft]
   );
 
-  const apply = useCallback(() => {
-    if (authoring?.canEditNode !== true || operation == null) {
-      return;
-    }
-    const semantic =
-      operation === 'inner_join'
-        ? joinDraft
-        : createCanvasRelationalTreeUnionAllDraft({
-            edges,
-            nodes,
-            selectedInputIds,
-            targetNodeId: transformNode.id,
-          });
-    if (semantic == null) return;
-    authoring.onApplyNodeDraft(
-      transformNode.id,
-      createCanvasRelationalTreeNodeDraft(transformNode, operation, semantic)
-    );
-    reset();
-  }, [authoring, edges, joinDraft, nodes, operation, reset, selectedInputIds, transformNode]);
+  const apply = useCanvasRelationalTreeApplyCommand({
+    authoring,
+    editable,
+    edges,
+    joinDraft,
+    nodes,
+    operation,
+    reset,
+    selectedInputIds,
+    transformNode,
+  });
 
   return {
-    active: enabled,
     appendInput: inputs.find((input) => input.nodeId === appendInputId) ?? null,
     apply,
     appendJoinInput,

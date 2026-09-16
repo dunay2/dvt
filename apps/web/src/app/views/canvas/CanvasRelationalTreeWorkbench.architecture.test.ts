@@ -8,6 +8,7 @@ import WorkbenchSource from './CanvasRelationalTreeWorkbench.tsx?raw';
 import EntrySource from './canvasRelationalCompositionEdgeInteraction.ts?raw';
 import CanvasShellSource from './CanvasShell.tsx?raw';
 import CodeWorkbenchSource from './DvtTransformCodeWorkbenchContent.tsx?raw';
+import ApplyCommandSource from './useCanvasRelationalTreeApplyCommand.ts?raw';
 import WorkbenchModelSource from './useCanvasRelationalTreeWorkbenchModel.ts?raw';
 import AuthoringSessionSource from './useCanvasRelationalTreeAuthoringSession.ts?raw';
 import AuthoringModelSource from './canvasRelationalTreeAuthoringModel.ts?raw';
@@ -21,6 +22,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(DetailSource.split('\n').length).toBeLessThan(100);
     expect(WorkbenchModelSource.split('\n').length).toBeLessThan(180);
     expect(AuthoringSessionSource.split('\n').length).toBeLessThan(180);
+    expect(ApplyCommandSource.split('\n').length).toBeLessThan(100);
     expect(AuthoringModelSource.split('\n').length).toBeLessThan(260);
     expect(WorkbenchModelSource).toContain('projectCanvasRelationalTree');
   });
@@ -38,8 +40,9 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(combined).not.toContain('applyDvtSubstraitSemanticDocument');
     expect(combined).not.toContain('encodeDvtSubstrait');
     expect(combined).not.toContain('create(');
-    expect(AuthoringSessionSource).toContain('authoring.onApplyNodeDraft(');
-    expect(AuthoringSessionSource).not.toContain('applyInspectorNodeDraft');
+    expect(AuthoringSessionSource).toContain('useCanvasRelationalTreeApplyCommand');
+    expect(ApplyCommandSource).toContain('authoring?.onApplyNodeDraft(');
+    expect(ApplyCommandSource).not.toContain('applyInspectorNodeDraft');
   });
 
   it('routes pending and canonical badges to the single bottom-drawer Workbench', () => {
