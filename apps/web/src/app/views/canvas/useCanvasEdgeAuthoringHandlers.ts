@@ -22,6 +22,7 @@ import {
 } from './canvasColumnLineageProjection';
 import type { CanvasColumnAuthoringCommandRunner } from './useCanvasColumnAuthoringCommandRunner';
 import { useCanvasColumnConnectionHandlers } from './useCanvasColumnConnectionHandlers';
+import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 import {
   useCanvasEdgeCommandRunner,
   type CanvasEdgeCommandRunner,
@@ -42,6 +43,8 @@ type UseCanvasEdgeAuthoringHandlersResult = {
   handleToggleCanvasColumnOutput: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   handleReorderCanvasColumnOutput: (identity: GraphNodeColumnReorderIdentity) => void;
   handleRemoveColumnMapping: (mapping: CanvasColumnLineageEdgeData) => void;
+  relationalPredicateSeed: CanvasRelationalPredicateSeed | null;
+  clearRelationalPredicateSeed: () => void;
 };
 
 function resolveVisibleDraftPluginPortMap(args: {
@@ -175,5 +178,7 @@ export function useCanvasEdgeAuthoringHandlers(
     handleToggleCanvasColumnOutput: columnMappingHandlers.handleToggleCanvasColumnOutput,
     handleReorderCanvasColumnOutput: columnMappingHandlers.handleReorderCanvasColumnOutput,
     handleRemoveColumnMapping: columnMappingHandlers.handleRemoveColumnMapping,
+    relationalPredicateSeed: columnMappingHandlers.relationalPredicateSeed,
+    clearRelationalPredicateSeed: columnMappingHandlers.clearRelationalPredicateSeed,
   };
 }

@@ -2,6 +2,7 @@ import type { CanvasViewCopy } from './canvasCopy.types';
 
 export const canvasViewAuthoringCopyEs = {
   columnMappingAddedMessage: 'Asignación de columna añadida.',
+  columnRelationProposedMessage: 'Relación entre campos propuesta. Elige qué hacer con ella.',
   columnMappingRemovedMessage: 'Asignación de columna eliminada.',
   columnMappingSourceSelectedTemplate:
     'Se ha seleccionado {column}. Elige una columna de destino en el Modelo.',

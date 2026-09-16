@@ -27,6 +27,10 @@ import type {
 } from './canvasGraphHandlerContracts';
 import { canvasViewCopy } from './copy';
 import type { CanvasColumnAuthoringCommandRunner } from './useCanvasColumnAuthoringCommandRunner';
+import {
+  resolveCanvasRelationalPredicateSeed,
+  type CanvasRelationalPredicateSeed,
+} from './canvasRelationalPredicateSeed';
 
 type PendingConnection = Parameters<NonNullable<ReactFlowProps<Node, Edge>['onConnect']>>[0];
 
@@ -62,8 +66,10 @@ export function useCanvasColumnConnectionHandlers(
   columnAuthoringCommandRunner: CanvasColumnAuthoringCommandRunner
 ) {
   const [pendingSource, setPendingSource] = useState<CanvasColumnHandleIdentity | null>(null);
+  const [relationalPredicateSeed, setRelationalPredicateSeed] =
+    useState<CanvasRelationalPredicateSeed | null>(null);
   const { canonicalNodesById, draftSession } = state;
-  const { setDraftSession } = effects;
+  const { setDraftSession, setInspectorNode } = effects;
   const { canEditEdges } = policy;
 
   const tryColumnConnection = useCallback(
@@ -94,6 +100,19 @@ export function useCanvasColumnConnectionHandlers(
         toast.error(canvasViewCopy.columnMappingUnavailableMessage);
         return true;
       }
+      const relationSeed = resolveCanvasRelationalPredicateSeed({
+        draftSession,
+        canonicalNodesById,
+        source: { nodeId: sourceHandle.nodeId, columnId: sourceHandle.columnId },
+        target,
+      });
+      if (relationSeed != null) {
+        setRelationalPredicateSeed(relationSeed);
+        setPendingSource(null);
+        setInspectorNode(relationSeed.targetNodeId, 'columns');
+        toast.info(canvasViewCopy.columnRelationProposedMessage);
+        return true;
+      }
       const result = applyCanvasColumnMapping({
         draftSession,
         canonicalNodesById,
@@ -106,16 +125,18 @@ export function useCanvasColumnConnectionHandlers(
       }
       setDraftSession(result.draftSession);
       setPendingSource(null);
+      setRelationalPredicateSeed(null);
       toast.success(canvasViewCopy.columnMappingAddedMessage);
       return true;
     },
-    [canEditEdges, canonicalNodesById, draftSession, setDraftSession]
+    [canEditEdges, canonicalNodesById, draftSession, setDraftSession, setInspectorNode]
   );
 
   const handleColumnPortActivate = useCallback(
     (identity: CanvasColumnHandleIdentity) => {
       if (identity.direction === 'source') {
         setPendingSource(identity);
+        setRelationalPredicateSeed(null);
         toast.info(
           canvasViewCopy.columnMappingSourceSelectedTemplate.replace('{column}', identity.columnId)
         );
@@ -229,5 +250,7 @@ export function useCanvasColumnConnectionHandlers(
     handleToggleCanvasColumnOutput,
     handleReorderCanvasColumnOutput,
     handleRemoveColumnMapping,
+    relationalPredicateSeed,
+    clearRelationalPredicateSeed: () => setRelationalPredicateSeed(null),
   };
 }

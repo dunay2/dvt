@@ -56,6 +56,7 @@ export type CanvasViewCopy = {
   readonly reloadLatestDraftLabel: string;
   readonly dependencyAddedMessage: string;
   readonly columnMappingAddedMessage: string;
+  readonly columnRelationProposedMessage: string;
   readonly columnMappingRemovedMessage: string;
   readonly columnMappingSourceSelectedTemplate: string;
   readonly columnMappingAutomapSummaryTemplate: string;
