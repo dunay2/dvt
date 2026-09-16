@@ -40,6 +40,7 @@ function createInitialPair(
   const proposedLeft = inputs.find((input) => input.nodeId === proposal?.left.nodeId);
   const proposedRight = inputs.find((input) => input.nodeId === proposal?.right.nodeId);
   if (
+    proposal != null &&
     proposedLeft != null &&
     proposedRight != null &&
     proposedLeft.nodeId !== proposedRight.nodeId &&
@@ -48,10 +49,10 @@ function createInitialPair(
       proposedRight.sourceRef.connectionRef
     ) &&
     proposedLeft.fields.some(
-      (field) => field.name === proposal?.left.fieldName && field.stringCompatible
+      (field) => field.name === proposal.left.fieldName && field.stringCompatible
     ) &&
     proposedRight.fields.some(
-      (field) => field.name === proposal?.right.fieldName && field.stringCompatible
+      (field) => field.name === proposal.right.fieldName && field.stringCompatible
     )
   ) {
     return {
