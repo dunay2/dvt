@@ -58,7 +58,8 @@ const SCENARIOS: readonly Scenario[] = [
   {
     id: 'pending',
     label: 'Pendiente',
-    summary: 'Tres relaciones están conectadas al Transform, pero todavía no existe operación relacional canónica.',
+    summary:
+      'Tres relaciones están conectadas al Transform, pero todavía no existe operación relacional canónica.',
     badge: 'RELATE',
     subtitle: '3 inputs · operación pendiente',
     steps: [],
@@ -79,7 +80,8 @@ const SCENARIOS: readonly Scenario[] = [
   {
     id: 'complex',
     label: 'Composición compleja',
-    summary: 'El mismo glyph representa una composición completa sin expandir la tarjeta del Transform.',
+    summary:
+      'El mismo glyph representa una composición completa sin expandir la tarjeta del Transform.',
     badge: '4 OPS',
     subtitle: 'join · join · window · union',
     steps: [
@@ -277,11 +279,7 @@ const NODE_TYPES: NodeTypes = {
   compositionLab: CompositionNode,
 };
 
-function buildNodes(
-  scenario: Scenario,
-  active: boolean,
-  onActivate: () => void
-): Node[] {
+function buildNodes(scenario: Scenario, active: boolean, onActivate: () => void): Node[] {
   return [
     {
       id: 'orders',
@@ -364,7 +362,7 @@ const EDGES: readonly Edge[] = [
 function RelationalCompositionLab(): ReactElement {
   const [scenarioId, setScenarioId] = useState<ScenarioId>('join');
   const [compositionOpen, setCompositionOpen] = useState(false);
-  const scenario = SCENARIOS.find((candidate) => candidate.id === scenarioId) ?? SCENARIOS[0];
+  const scenario = SCENARIOS.find((candidate) => candidate.id === scenarioId) ?? SCENARIOS[0]!;
   const nodes = useMemo(
     () => buildNodes(scenario, compositionOpen, () => setCompositionOpen((value) => !value)),
     [compositionOpen, scenario]
@@ -472,8 +470,8 @@ function RelationalCompositionLab(): ReactElement {
               lineHeight: 1.6,
             }}
           >
-            Las ramas solo expresan inputs. El glyph es una proyección visual efímera de la composición
-            canónica; no es un nodo persistido del Workspace Graph.
+            Las ramas solo expresan inputs. El glyph es una proyección visual efímera de la
+            composición canónica; no es un nodo persistido del Workspace Graph.
           </div>
         </aside>
 
@@ -506,7 +504,9 @@ function RelationalCompositionLab(): ReactElement {
               }}
             >
               <div>
-                <div style={{ color: strong, fontSize: 13, fontWeight: 800 }}>Composición relacional</div>
+                <div style={{ color: strong, fontSize: 13, fontWeight: 800 }}>
+                  Composición relacional
+                </div>
                 <div style={{ marginTop: 3, color: muted, fontSize: 10 }}>{scenario.subtitle}</div>
               </div>
               <button
@@ -527,10 +527,12 @@ function RelationalCompositionLab(): ReactElement {
 
             {scenario.steps.length === 0 ? (
               <div style={{ padding: 16 }}>
-                <div style={{ color: strong, fontSize: 12, fontWeight: 700 }}>Operación pendiente</div>
+                <div style={{ color: strong, fontSize: 12, fontWeight: 700 }}>
+                  Operación pendiente
+                </div>
                 <p style={{ margin: '6px 0 0', color: muted, fontSize: 11, lineHeight: 1.5 }}>
-                  Aquí se conectará el futuro selector de operaciones compatibles. Este laboratorio no
-                  persiste semántica ni intenta decidir JOIN, UNION, EXISTS u otra operación.
+                  Aquí se conectará el futuro selector de operaciones compatibles. Este laboratorio
+                  no persiste semántica ni intenta decidir JOIN, UNION, EXISTS u otra operación.
                 </p>
               </div>
             ) : (
@@ -563,7 +565,9 @@ function RelationalCompositionLab(): ReactElement {
                       {index + 1}
                     </div>
                     <div>
-                      <div style={{ color: strong, fontSize: 11, fontWeight: 800 }}>{step.label}</div>
+                      <div style={{ color: strong, fontSize: 11, fontWeight: 800 }}>
+                        {step.label}
+                      </div>
                       <div
                         style={{
                           marginTop: 4,
