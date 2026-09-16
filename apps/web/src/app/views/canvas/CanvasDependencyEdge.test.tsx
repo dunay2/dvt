@@ -280,4 +280,48 @@ describe('CanvasDependencyEdge', () => {
     expect(container.querySelector('[data-slot="canvas-dependency-direction-cue"]')).toBeNull();
     expect(mockedEdge.props.path).toBe('M 0 0 L 100 40');
   });
+
+  it('keeps a closed grouped branch gated without closing the shared trunk', () => {
+    act(() => {
+      root.render(
+        <svg>
+          <g>
+            <CanvasDependencyEdge
+              id="dependency-1"
+              source="orders"
+              target="transform"
+              sourceX={0}
+              sourceY={40}
+              targetX={100}
+              targetY={40}
+              sourcePosition={Position.Right}
+              targetPosition={Position.Left}
+              selected={false}
+              data={buildCanvasDependencyEdgeData({
+                sourceId: 'orders',
+                targetId: 'transform',
+                executionGate: 'closed',
+                composition: {
+                  groupId: 'relational-composition:transform',
+                  label: 'INNER JOIN',
+                  memberCount: 2,
+                  role: 'trunk-owner',
+                  state: 'canonical',
+                  operation: 'inner_join',
+                },
+              })}
+            />
+          </g>
+        </svg>
+      );
+    });
+
+    expect(mockedEdge.props.style?.strokeDasharray).toBeTruthy();
+    expect(container.querySelector('[data-slot="canvas-dependency-closed-gate"]')).not.toBeNull();
+    expect(
+      container
+        .querySelector('[data-slot="canvas-relational-composition-trunk"]')
+        ?.getAttribute('style')
+    ).not.toContain('stroke-dasharray');
+  });
 });
