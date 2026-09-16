@@ -40,7 +40,7 @@ function CanvasNodeWorkbenchOverlaySurface({
   onPointerMove,
   onPointerUp,
   position,
-  sizeClassName,
+  sourceLayout,
   surfaceRef,
 }: Readonly<{
   accessibleLabel: string;
@@ -49,7 +49,7 @@ function CanvasNodeWorkbenchOverlaySurface({
   onPointerMove: HTMLAttributes<HTMLDivElement>['onPointerMove'];
   onPointerUp: HTMLAttributes<HTMLDivElement>['onPointerUp'];
   position: CanvasNodeWorkbenchPosition;
-  sizeClassName: string;
+  sourceLayout: boolean;
   surfaceRef: RefObject<HTMLDivElement>;
 }>): JSX.Element {
   return (
@@ -58,7 +58,12 @@ function CanvasNodeWorkbenchOverlaySurface({
       data-slot="canvas-node-workbench-overlay"
       role="dialog"
       aria-label={accessibleLabel}
-      className={cn(canvasNodeWorkbenchVisualTokens.overlay, sizeClassName)}
+      className={cn(
+        canvasNodeWorkbenchVisualTokens.overlay,
+        sourceLayout
+          ? canvasNodeWorkbenchVisualTokens.sourceOverlaySize
+          : canvasNodeWorkbenchVisualTokens.defaultOverlaySize
+      )}
       style={{
         left: `${position.left}px`,
         top: `${position.top}px`,
@@ -135,18 +140,11 @@ export function CanvasNodeWorkbenchOverlay({
   if (!visible || surfaceStrategy == null || panels.inspectorNode == null) {
     return null;
   }
-  const sizeClassName =
-    panels.inspectorNode.kind === 'dvt:source'
-      ? canvasNodeWorkbenchVisualTokens.sourceOverlaySize
-      : panels.inspectorNode.kind === 'dvt:transform' && panels.inspectorPreferredTabId === 'code'
-        ? canvasNodeWorkbenchVisualTokens.relationalOverlaySize
-        : canvasNodeWorkbenchVisualTokens.defaultOverlaySize;
-
   return (
     <CanvasNodeWorkbenchOverlaySurface
       accessibleLabel={copy.inspectorEditablePropertiesTitle}
       position={positionController.position}
-      sizeClassName={sizeClassName}
+      sourceLayout={panels.inspectorNode.kind === 'dvt:source'}
       surfaceRef={positionController.surfaceRef}
       {...positionController.surfacePointerProps}
     >

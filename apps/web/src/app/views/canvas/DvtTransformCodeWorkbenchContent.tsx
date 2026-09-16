@@ -3,13 +3,15 @@ import type { ReactNode } from 'react';
 
 import type { CanvasRelationalCompositionTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
-import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
+import type { CanvasViewCopy } from './canvasCopy.types';
+import { DvtTransformOutputView } from './DvtTransformOutputView';
 
 export function DvtTransformCodeWorkbenchContent({
   transformNode,
   nodes,
   edges,
+  canonicalContent,
+  canonicalDescription,
   relationalComposition,
   pendingCompositionAuthoring,
   copy,
@@ -17,17 +19,30 @@ export function DvtTransformCodeWorkbenchContent({
   transformNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
+  canonicalContent: string;
+  canonicalDescription?: string;
   relationalComposition?: CanvasRelationalCompositionTruth;
   pendingCompositionAuthoring: ReactNode;
-  copy: CanvasRelationalTreeWorkbenchCopy;
+  copy: Pick<
+    CanvasViewCopy,
+    | 'inspectorTransformOutputViewLabel'
+    | 'inspectorTransformOutputSubstraitLabel'
+    | 'inspectorTransformOutputPostgresSqlLabel'
+    | 'inspectorTransformOutputLoadingMessage'
+    | 'inspectorTransformOutputErrorMessage'
+  >;
 }>): JSX.Element {
+  if (relationalComposition?.state === 'pending') {
+    return <>{pendingCompositionAuthoring}</>;
+  }
+
   return (
-    <CanvasRelationalTreeWorkbench
+    <DvtTransformOutputView
       transformNode={transformNode}
       nodes={nodes}
       edges={edges}
-      relationalComposition={relationalComposition}
-      pendingCompositionAuthoring={pendingCompositionAuthoring}
+      canonicalContent={canonicalContent}
+      canonicalDescription={canonicalDescription}
       copy={copy}
     />
   );
