@@ -232,7 +232,7 @@ describe('DvtSubstraitCompositionStartSection', () => {
     expect(left?.textContent).not.toContain('external');
   });
 
-  it('requires an explicit source pair when more than two JOIN inputs are compatible', () => {
+  it('requires an explicit source pair when more than two JOIN inputs are compatible', async () => {
     const onStartInnerJoin = vi.fn();
     act(() => {
       root.render(
@@ -274,7 +274,7 @@ describe('DvtSubstraitCompositionStartSection', () => {
       'shipments',
     ]);
 
-    act(() => fireEvent.change(left, { target: { value: 'customers' } }));
+    await act(() => fireEvent.change(left, { target: { value: 'customers' } }));
     expect(right.disabled).toBe(false);
     expect(right.value).toBe('');
     expect(Array.from(right.options).map((option) => option.value)).toEqual([
@@ -282,14 +282,14 @@ describe('DvtSubstraitCompositionStartSection', () => {
       'orders',
       'shipments',
     ]);
-    act(() => fireEvent.change(right, { target: { value: 'shipments' } }));
+    await act(() => fireEvent.change(right, { target: { value: 'shipments' } }));
 
     expect(
       container.querySelector('[data-slot="semantic-workbench-join-condition-row"]')?.textContent
     ).toContain('raw.customers.id = raw.shipments.id');
     expect(apply.disabled).toBe(false);
 
-    act(() => fireEvent.click(apply));
+    await act(() => fireEvent.click(apply));
     expect(onStartInnerJoin).toHaveBeenCalledOnce();
     const inspection = inspectDvtSubstraitNInputJoinDraft(
       onStartInnerJoin.mock.calls[0]?.[0] as DvtSubstraitInnerJoinDraft
