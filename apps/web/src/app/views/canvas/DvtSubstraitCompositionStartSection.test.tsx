@@ -106,6 +106,9 @@ describe('DvtSubstraitCompositionStartSection', () => {
 
     expect(container.querySelector('[data-slot="dvt-composition-left-input"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="dvt-composition-right-input"]')).not.toBeNull();
+    const joinEditor = container.querySelector('[data-slot="dvt-substrait-inner-join-start"]');
+    expect(joinEditor).not.toBeNull();
+    expect(joinEditor?.className).not.toContain('border-t');
     expect(
       container.querySelector('[data-slot="semantic-workbench-join-condition-list"]')
     ).not.toBeNull();

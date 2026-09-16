@@ -76,7 +76,7 @@ export function DvtSubstraitInnerJoinStartSection({
   };
 
   return (
-    <section className={`${inspectorVisualClasses.inspectorDbtSection} space-y-3`}>
+    <section data-slot="dvt-substrait-inner-join-start" className="space-y-3">
       <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
         {canvasViewCopy.inspectorDvtSubstraitInnerJoinTitle}
       </h3>

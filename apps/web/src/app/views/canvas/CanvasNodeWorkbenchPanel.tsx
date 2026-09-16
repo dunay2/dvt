@@ -261,6 +261,11 @@ export function CanvasNodeWorkbenchPanel({
     () => projectCanvasNodePresentationTruth({ node, nodes, edges }),
     [edges, node, nodes]
   );
+  const focusedRelationalAuthoring =
+    node.pluginId === 'dvt' &&
+    node.kind === 'dvt:transform' &&
+    !isDbtCompatibleModel(node) &&
+    presentationTruth.relationalComposition?.state === 'pending';
   const dvtTransformAuthoringMode = readDvtTransformAuthoringMode(node);
   const canonicalSubstraitTransformAuthority =
     dvtTransformAuthoringMode === DVT_TRANSFORM_AUTHORING_MODE.substrait;
@@ -472,14 +477,18 @@ export function CanvasNodeWorkbenchPanel({
           ) : (
             <>
               <div className="flex items-center gap-2">
-                <div className={cn('size-2 shrink-0 rounded-full', dotClass)} />
+                {focusedRelationalAuthoring ? null : (
+                  <div className={cn('size-2 shrink-0 rounded-full', dotClass)} />
+                )}
                 <h2 className={cn('truncate', inspectorVisualClasses.contextPanelTitle)}>
                   {node.name}
                 </h2>
               </div>
-              <p className={cn('font-mono', inspectorVisualClasses.contextPanelSubtitle)}>
-                {resolveNodeKindRegistration(node.kind).label}
-              </p>
+              {focusedRelationalAuthoring ? null : (
+                <p className={cn('font-mono', inspectorVisualClasses.contextPanelSubtitle)}>
+                  {resolveNodeKindRegistration(node.kind).label}
+                </p>
+              )}
             </>
           )}
         </div>
@@ -518,7 +527,13 @@ export function CanvasNodeWorkbenchPanel({
         </div>
       </div>
 
-      {containsCanonicalCodeOutput ? (
+      {focusedRelationalAuthoring ? (
+        <ScrollArea className="min-h-0 flex-1">
+          <div data-slot="canvas-node-workbench-focused-relational-authoring" className="p-4">
+            {renderAuthoringSection('code')}
+          </div>
+        </ScrollArea>
+      ) : containsCanonicalCodeOutput ? (
         <div
           data-slot="canvas-node-workbench-contained-body"
           className="min-h-0 flex-1 overflow-hidden p-4"
