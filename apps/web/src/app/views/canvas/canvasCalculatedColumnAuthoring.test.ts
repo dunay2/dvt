@@ -71,7 +71,16 @@ function inspect(node: CanonicalNode): DvtSubstraitProjectionSemantics {
   return inspection.projection;
 }
 
-function projectionTransform(): CanonicalNode {
+function projectionTransform(
+  outputs: readonly Readonly<{
+    fieldId: string;
+    name: string;
+    sourceFieldName: string;
+  }>[] = [
+    { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+    { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
+  ]
+): CanonicalNode {
   const draft = createDvtSubstraitProjectionDraft({
     source: {
       nodeId: source.id,
@@ -84,10 +93,7 @@ function projectionTransform(): CanonicalNode {
       ],
     },
     targetNodeId: 'transform-orders',
-    outputs: [
-      { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
-      { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
-    ],
+    outputs,
   });
   return applyDvtSubstraitSemanticDocument(
     {
@@ -195,6 +201,84 @@ describe('Canvas calculated column authoring', () => {
     expect(created?.fieldId).toMatch(OPAQUE_FIELD_ID);
     expect(created?.fieldId).not.toBe('output:customer');
     expect(result.createdFieldId).toBe(created?.fieldId);
+  });
+
+  it('creates a direct alias from an upstream input that is not already an output', () => {
+    const transform = projectionTransform([
+      { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+    ]);
+    const upstreamCustomerId = inspect(transform).inputFields.find(
+      (field) => field.name === 'customer'
+    )?.fieldId;
+    if (upstreamCustomerId == null) throw new Error('Expected upstream customer FieldId.');
+    const initial = session(source, transform);
+    initial.workingSet.visibleEdges.push({ sourceId: source.id, targetId: transform.id });
+
+    const result = applyCanvasCalculatedColumn({
+      draftSession: initial,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [transform.id, transform],
+      ]),
+      request: {
+        nodeId: transform.id,
+        kind: 'field-ref',
+        alias: 'customer_alias',
+        inputFieldId: upstreamCustomerId,
+      },
+    });
+
+    expect(result.outcome).toBe('applied');
+    if (result.outcome !== 'applied') return;
+    const replacement = result.draftSession.localNodeCatalog?.[transform.id];
+    if (replacement == null) throw new Error('Expected an updated Transform.');
+    expect(inspect(replacement).outputs).toEqual([
+      expect.objectContaining({ name: 'order_id', sourceFieldName: 'order_id' }),
+      expect.objectContaining({ name: 'customer_alias', sourceFieldName: 'customer' }),
+    ]);
+  });
+
+  it('applies an admitted function to an upstream input that is not already an output', () => {
+    const transform = projectionTransform([
+      { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+    ]);
+    const projection = inspect(transform);
+    const upstreamCustomerId = projection.inputFields.find(
+      (field) => field.name === 'customer'
+    )?.fieldId;
+    const upper = resolveDvtSubstraitColumnFunctions({
+      dataType: 'string',
+      provider: 'postgres',
+    }).find((candidate) => candidate.name === 'upper');
+    if (upstreamCustomerId == null || upper == null) {
+      throw new Error('Expected upstream customer and admitted UPPER capability.');
+    }
+    const initial = session(source, transform);
+    initial.workingSet.visibleEdges.push({ sourceId: source.id, targetId: transform.id });
+
+    const result = applyCanvasCalculatedColumn({
+      draftSession: initial,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [transform.id, transform],
+      ]),
+      request: {
+        nodeId: transform.id,
+        kind: 'scalar-function',
+        alias: 'customer_upper',
+        inputFieldId: upstreamCustomerId,
+        capabilityId: upper.capabilityId,
+      },
+    });
+
+    expect(result.outcome).toBe('applied');
+    if (result.outcome !== 'applied') return;
+    const replacement = result.draftSession.localNodeCatalog?.[transform.id];
+    if (replacement == null) throw new Error('Expected an updated Transform.');
+    expect(inspect(replacement).outputs.at(-1)).toMatchObject({
+      name: 'customer_upper',
+      operations: ['upper'],
+    });
   });
 
   it('rejects a direct alias for an unknown FieldId without mutating the Transform', () => {
