@@ -276,7 +276,7 @@ describe('GraphNodeColumnSection', () => {
     ]);
   });
 
-  it('toggles the exact output by clicking its field row', async () => {
+  it('shows every inherited field origin and toggles the exact field row', async () => {
     const onColumnOutputToggle = vi.fn();
     await act(async () => {
       root.render(
@@ -300,6 +300,14 @@ describe('GraphNodeColumnSection', () => {
               sourceNodeName: 'orders',
               source: { nodeId: 'orders', columnId: 'client_id' },
             },
+            {
+              id: 'clients.country',
+              name: 'country',
+              type: 'text',
+              output: false,
+              sourceNodeName: 'client',
+              source: { nodeId: 'clients', columnId: 'country' },
+            },
           ]}
           onColumnOutputToggle={onColumnOutputToggle}
         />
@@ -310,6 +318,7 @@ describe('GraphNodeColumnSection', () => {
     expect([...fields].map((field) => field.textContent)).toEqual([
       expect.stringContaining('client.client_id'),
       expect.stringContaining('orders.client_id'),
+      expect.stringContaining('client.country'),
     ]);
     await act(async () => fireEvent.click(fields[0]!));
 
