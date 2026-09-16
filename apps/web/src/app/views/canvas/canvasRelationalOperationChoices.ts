@@ -1,0 +1,114 @@
+/** Owned concern: project admitted relational-operation choices from current input facts. */
+import {
+  DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
+  buildDvtSubstraitStandardCapabilityId,
+} from '@dvt/contracts';
+import { hasSameConnectionRef } from '@dvt/postgres-projection';
+
+import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
+
+export type CanvasRelationalOperation = 'inner_join' | 'union_all';
+
+export type CanvasRelationalOperationAvailability =
+  | 'available'
+  | 'needs-predicate'
+  | 'needs-schema-alignment'
+  | 'semantically-unavailable'
+  | 'target-unavailable'
+  | 'read-only';
+
+export type CanvasRelationalOperationChoice = Readonly<{
+  operation: CanvasRelationalOperation;
+  availability: CanvasRelationalOperationAvailability;
+  selectable: boolean;
+}>;
+
+function isAdmitted(message: string, selector: string): boolean {
+  const entryId = buildDvtSubstraitStandardCapabilityId('relation', {
+    sourceKind: 'core',
+    message,
+    selector,
+  });
+  return DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.some(
+    (entry) =>
+      entry.kind === 'standard' &&
+      entry.entryId === entryId &&
+      entry.profileStatus === 'supported-profile'
+  );
+}
+
+function hasStringPair(inputs: readonly CanvasDvtCompositionInput[]): boolean {
+  return inputs.filter((input) => input.fields.some((field) => field.stringCompatible)).length >= 2;
+}
+
+function hasCompatibleJoinPair(inputs: readonly CanvasDvtCompositionInput[]): boolean {
+  return inputs.some((left, index) =>
+    inputs
+      .slice(index + 1)
+      .some(
+        (right) =>
+          left.sourceRef.connectionRef.provider === 'postgres' &&
+          right.sourceRef.connectionRef.provider === 'postgres' &&
+          hasSameConnectionRef(left.sourceRef.connectionRef, right.sourceRef.connectionRef) &&
+          left.fields.some((field) => field.stringCompatible) &&
+          right.fields.some((field) => field.stringCompatible)
+      )
+  );
+}
+
+function targetSupports(inputs: readonly CanvasDvtCompositionInput[]): boolean {
+  const first = inputs[0]?.sourceRef.connectionRef;
+  return (
+    first != null &&
+    first.provider === 'postgres' &&
+    inputs.every(
+      (input) =>
+        input.sourceRef.connectionRef.provider === 'postgres' &&
+        hasSameConnectionRef(first, input.sourceRef.connectionRef)
+    )
+  );
+}
+
+export function resolveCanvasRelationalOperationChoices(
+  args: Readonly<{
+    inputs: readonly CanvasDvtCompositionInput[];
+    readOnly: boolean;
+    unionAllAvailable: boolean;
+  }>
+): readonly CanvasRelationalOperationChoice[] {
+  const readOnlyAvailability = args.readOnly ? 'read-only' : null;
+  const unionAllTargetSupported = targetSupports(args.inputs);
+  const innerJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_INNER');
+  const unionAllAdmitted = isAdmitted('substrait.SetRel', 'SetOp.SET_OP_UNION_ALL');
+  const innerJoinAvailability =
+    readOnlyAvailability ??
+    (!innerJoinAdmitted
+      ? 'semantically-unavailable'
+      : !hasStringPair(args.inputs)
+        ? 'semantically-unavailable'
+        : !hasCompatibleJoinPair(args.inputs)
+          ? 'target-unavailable'
+          : 'needs-predicate');
+  const unionAllAvailability =
+    readOnlyAvailability ??
+    (!unionAllAdmitted
+      ? 'semantically-unavailable'
+      : !unionAllTargetSupported
+        ? 'target-unavailable'
+        : args.unionAllAvailable
+          ? 'available'
+          : 'needs-schema-alignment');
+
+  return [
+    {
+      operation: 'inner_join',
+      availability: innerJoinAvailability,
+      selectable: innerJoinAvailability === 'needs-predicate',
+    },
+    {
+      operation: 'union_all',
+      availability: unionAllAvailability,
+      selectable: unionAllAvailability === 'available',
+    },
+  ];
+}

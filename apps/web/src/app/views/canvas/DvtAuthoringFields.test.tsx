@@ -222,6 +222,25 @@ describe('DvtAuthoringFields', () => {
     return container.querySelector('[data-slot="output-name-drafts"]')?.textContent ?? '';
   }
 
+  function selectRelationalOperation(operation: 'inner-join' | 'union-all'): void {
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          `[data-slot="dvt-select-operation-${operation}"]`
+        )!
+      );
+    });
+  }
+
+  function applyInnerJoin(): void {
+    selectRelationalOperation('inner-join');
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-configured-inner-join"]')!
+      );
+    });
+  }
+
   it('renders imported source target metadata and updates the source alias draft', () => {
     renderFields(buildImportedWarehouseSourceNode());
 
@@ -345,12 +364,7 @@ describe('DvtAuthoringFields', () => {
     ];
 
     renderFields(transform, undefined, undefined, nodes, edges, 'code');
-    const entry = container.querySelector<HTMLButtonElement>(
-      '[data-slot="dvt-start-configured-inner-join"]'
-    );
-    act(() => {
-      fireEvent.click(entry!);
-    });
+    applyInnerJoin();
 
     const selector =
       '[data-slot="dvt-substrait-inner-join-output-name"], [data-slot="dvt-substrait-n-input-output-name"]';
@@ -442,11 +456,7 @@ describe('DvtAuthoringFields', () => {
     ];
 
     renderFields(transform, undefined, undefined, nodes, edges, 'code');
-    act(() => {
-      fireEvent.click(
-        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-configured-inner-join"]')!
-      );
-    });
+    applyInnerJoin();
 
     const outputs = [
       ...container.querySelectorAll<HTMLInputElement>(
@@ -521,6 +531,8 @@ describe('DvtAuthoringFields', () => {
     ];
 
     renderFields(transform, undefined, undefined, [orders, audits, transform], edges, 'columns');
+
+    selectRelationalOperation('inner-join');
 
     const leftField = container.querySelector<HTMLSelectElement>(
       '[data-slot="dvt-composition-left-field"]'
@@ -604,11 +616,7 @@ describe('DvtAuthoringFields', () => {
       initialEdges,
       'code'
     );
-    act(() => {
-      fireEvent.click(
-        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-configured-inner-join"]')!
-      );
-    });
+    applyInnerJoin();
 
     const allEdges: readonly CanonicalEdge[] = [
       ...initialEdges,
@@ -841,6 +849,11 @@ describe('DvtAuthoringFields', () => {
     renderFields(transform, undefined, undefined, [customers, orders, transform], edges, 'code');
 
     expect(container.querySelector('[data-slot="dvt-start-configured-inner-join"]')).toBeNull();
+    const choice = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-select-operation-inner-join"]'
+    );
+    expect(choice?.disabled).toBe(true);
+    expect(choice?.textContent).toContain('Target unavailable');
   });
 
   it('starts one typed Substrait UNION ALL from N compatible connected datasets', () => {
@@ -883,11 +896,13 @@ describe('DvtAuthoringFields', () => {
 
     renderFields(transform, undefined, undefined, [north, south, west, transform], edges, 'code');
 
+    selectRelationalOperation('union-all');
+
     const entry = container.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-start-connected-union-all"]'
     );
     expect(entry).not.toBeNull();
-    expect(container.querySelector('[data-slot="dvt-start-configured-inner-join"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="dvt-composition-left-field"]')).toBeNull();
 
     act(() => {
       fireEvent.click(entry!);

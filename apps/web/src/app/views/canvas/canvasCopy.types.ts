@@ -529,6 +529,17 @@ export type CanvasViewCopy = {
   readonly inspectorDvtSubstraitUnionAllTitle: string;
   readonly inspectorDvtSubstraitUnionAllInputsLabel: string;
   readonly inspectorDvtSubstraitUnionAllFieldsLabel: string;
+  readonly inspectorDvtRelationalOperationTitle: string;
+  readonly inspectorDvtRelationalAvailable: string;
+  readonly inspectorDvtRelationalNeedsPredicate: string;
+  readonly inspectorDvtRelationalNeedsSchemaAlignment: string;
+  readonly inspectorDvtRelationalTargetUnavailable: string;
+  readonly inspectorDvtRelationalUnavailable: string;
+  readonly inspectorDvtRelationalReadOnly: string;
+  readonly inspectorDvtRelationalLeftOperandField: string;
+  readonly inspectorDvtRelationalRightOperandField: string;
+  readonly inspectorDvtRelationalApply: string;
+  readonly inspectorDvtRelationalCancel: string;
   readonly inspectorDvtSubstraitAggregationTitle: string;
   readonly inspectorDvtSubstraitGrainFieldLabel: string;
   readonly inspectorDvtSubstraitCountOutputLabel: string;
