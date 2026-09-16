@@ -95,6 +95,42 @@ canonical catalog must not appear in the chooser at all.
 Runtime readiness is not inferred from the `mapped` target status. It remains a
 separate query over the current #2524/#2723 execution corridor.
 
+## Contextual Window Projection For #3230
+
+The selected product surface is the existing single-source Window section in
+Canvas Node Properties. Its current controls expose partition, order, and output
+as adjacent fields without showing that they define one contextual self-relation:
+
+```mermaid
+flowchart LR
+    P[Partition field] ~~~ O[Order field] ~~~ E[Output name]
+```
+
+The bounded projection groups the same admitted authority into one readable
+sequence:
+
+```mermaid
+flowchart LR
+    S[Same input relation] --> P[Partition]
+    P --> O[Order ASC / NULLS LAST]
+    O --> F[Frame unspecified]
+    F --> R[ROW_NUMBER]
+    R --> E[Stable output FieldId]
+```
+
+| Relational grammar dimension | Existing canonical Window authority                        |
+| ---------------------------- | ---------------------------------------------------------- |
+| operands/self-relation       | the inspected input relation; no persisted self-edge       |
+| partition/relation predicate | the admitted partition FieldId                             |
+| order                        | the admitted order FieldId, ascending with nulls last      |
+| frame/neighborhood           | `boundsType = UNSPECIFIED`, with no lower or upper bound   |
+| selection/reduction          | admitted `row_number` relative-position function           |
+| emission                     | the existing result FieldId and user-editable display name |
+
+This is a presentation change over `InspectCanvasNode` and the existing
+`ConfigureCanvasDvtNode` command. It does not change Substrait, invent a Window
+catalog, persist graph geometry, or imply additional provider/runtime support.
+
 ## Laboratory Limits
 
 - synthetic presentation data only;
