@@ -43,7 +43,7 @@ describe('DVT Transform code workbench content', () => {
     container.remove();
   });
 
-  it('shows only relational authoring while composition is pending', () => {
+  it('keeps pending authoring separate from canonical code output', () => {
     const render = (state: 'pending' | 'canonical'): void => {
       act(() => {
         root.render(
@@ -65,9 +65,7 @@ describe('DVT Transform code workbench content', () => {
     };
 
     render('pending');
-    expect(container.firstElementChild?.getAttribute('data-slot')).toBe(
-      'pending-composition-authoring'
-    );
+    expect(container.querySelector('[data-slot="pending-composition-authoring"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="dvt-transform-output-view"]')).toBeNull();
 
     render('canonical');

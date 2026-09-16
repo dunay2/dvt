@@ -692,6 +692,58 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtRelationalRightInput',
     fallback: 'Right input',
   },
+  relationalTreeSourcesLabel: {
+    key: 'canvas.relationalTree.sourcesLabel',
+    fallback: 'Sources',
+  },
+  relationalTreeLabel: {
+    key: 'canvas.relationalTree.label',
+    fallback: 'Relational tree',
+  },
+  relationalTreeDetailLabel: {
+    key: 'canvas.relationalTree.detailLabel',
+    fallback: 'Detail',
+  },
+  relationalTreeParticipatingLabel: {
+    key: 'canvas.relationalTree.participatingLabel',
+    fallback: 'Participating',
+  },
+  relationalTreePendingLabel: {
+    key: 'canvas.relationalTree.pendingLabel',
+    fallback: 'Pending',
+  },
+  relationalTreeMissingLabel: {
+    key: 'canvas.relationalTree.missingLabel',
+    fallback: 'Missing',
+  },
+  relationalTreeOutputLabel: {
+    key: 'canvas.relationalTree.outputLabel',
+    fallback: 'Output',
+  },
+  relationalTreePrimaryInputLabel: {
+    key: 'canvas.relationalTree.primaryInputLabel',
+    fallback: 'Primary input',
+  },
+  relationalTreeSecondaryInputTemplate: {
+    key: 'canvas.relationalTree.secondaryInputTemplate',
+    fallback: 'Secondary input {ordinal}',
+  },
+  relationalTreeReadOnlyMessage: {
+    key: 'canvas.relationalTree.readOnlyMessage',
+    fallback: 'Inspection only. Changes use the existing operation controls.',
+  },
+  relationalTreeUnavailableMessage: {
+    key: 'canvas.relationalTree.unavailableMessage',
+    fallback: 'No canonical relational tree is available.',
+  },
+  relationalTreeInvalidMessage: {
+    key: 'canvas.relationalTree.invalidMessage',
+    fallback: 'The canonical relational tree could not be read.',
+  },
+  relationalTreeInputIdentityUnavailableMessage: {
+    key: 'canvas.relationalTree.inputIdentityUnavailableMessage',
+    fallback: 'A connected Source has no stable identity.',
+  },
   inspectorDvtRelationalApply: {
     key: 'canvas.inspector.authoring.dvtRelationalApply',
     fallback: 'Apply',

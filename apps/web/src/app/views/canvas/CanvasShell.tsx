@@ -7,12 +7,9 @@ import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { CanvasShellMainPanel } from './CanvasShellMainPanel';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
 import {
-  SemanticTransformFocusPanel,
-  canOpenSemanticTransformFocus,
-} from './SemanticTransformFocusPanel';
-import { SemanticTransformTopologyMismatch } from './SemanticTransformTopologyMismatch';
-import { projectCanvasSemanticTransformFocus } from './canvasSemanticTransformFocus';
-import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
+  CanvasRelationalTreeWorkbench,
+  canOpenCanvasRelationalTreeWorkbench,
+} from './CanvasRelationalTreeWorkbench';
 import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
 import { CanvasSettingsDialog } from './CanvasSettingsDialog';
 import { CanvasSourceImportDialogHost } from './CanvasSourceImportDialogHost';
@@ -86,40 +83,31 @@ export default function CanvasShell({
     runSnapshot,
     warehouseSourceDataSampleQuery,
   });
-  const [semanticTransformId, setSemanticTransformId] = useState<string | null>(null);
+  const [relationalTreeTransformId, setRelationalTreeTransformId] = useState<string | null>(null);
   const showBottomDrawer = useUiLayoutStore((state) => state.showBottomDrawer);
   const selectOperationalDrawerTab = useOperationalDrawerContributionStore(
     (state) => state.selectOperationalDrawerTab
   );
-  const semanticTransformIds = useMemo(
+  const relationalTreeTransformIds = useMemo(
     () =>
       new Set(
-        panels.inspectorGraphNodes.filter(canOpenSemanticTransformFocus).map((node) => node.id)
+        panels.inspectorGraphNodes
+          .filter(canOpenCanvasRelationalTreeWorkbench)
+          .map((node) => node.id)
       ),
     [panels.inspectorGraphNodes]
   );
-  const semanticTransform = useMemo(
+  const relationalTreeTransform = useMemo(
     () =>
       panels.inspectorGraphNodes.find(
-        (node) => node.id === semanticTransformId && semanticTransformIds.has(node.id)
+        (node) => node.id === relationalTreeTransformId && relationalTreeTransformIds.has(node.id)
       ) ?? null,
-    [panels.inspectorGraphNodes, semanticTransformId, semanticTransformIds]
+    [panels.inspectorGraphNodes, relationalTreeTransformId, relationalTreeTransformIds]
   );
-  const semanticTransformFocus = useMemo(
-    () =>
-      semanticTransform == null
-        ? null
-        : projectCanvasSemanticTransformFocus({
-            transform: semanticTransform,
-            nodes: panels.inspectorGraphNodes,
-            edges: panels.inspectorGraphEdges,
-          }),
-    [panels.inspectorGraphEdges, panels.inspectorGraphNodes, semanticTransform]
-  );
-  const openSemanticTransform = useCallback(
+  const openRelationalTree = useCallback(
     (nodeId: string) => {
-      if (!semanticTransformIds.has(nodeId)) return;
-      setSemanticTransformId(nodeId);
+      if (!relationalTreeTransformIds.has(nodeId)) return;
+      setRelationalTreeTransformId(nodeId);
       selectOperationalDrawerTab('semantic');
       showBottomDrawer(360);
       window.requestAnimationFrame(() => {
@@ -130,13 +118,7 @@ export default function CanvasShell({
           ?.focus({ preventScroll: true });
       });
     },
-    [selectOperationalDrawerTab, semanticTransformIds, showBottomDrawer]
-  );
-  const applySemanticTransform = useCallback(
-    (transform: (typeof panels.inspectorGraphNodes)[number]) => {
-      panels.inspectorAuthoring.onApplyNodeDraft(createCanvasInspectorNodeDraft(transform));
-    },
-    [panels.inspectorAuthoring]
+    [relationalTreeTransformIds, selectOperationalDrawerTab, showBottomDrawer]
   );
   const workbenchOpenerRef = useRef<WorkbenchOpener | null>(null);
   const contextualWorkbenchId = useCanvasInteractionStore((state) => state.contextualWorkbenchId);
@@ -284,7 +266,7 @@ export default function CanvasShell({
       nodesWithImpact: graph.nodesWithImpact.map((node) => {
         const data = node.data as DbtNodeData;
         const isNativeTransform = data.pluginKind === 'dvt:transform';
-        const canOpenSemantic = semanticTransformIds.has(node.id);
+        const canOpenRelationalTree = relationalTreeTransformIds.has(node.id);
         const workspaceFilePath = resolveWorkspaceFilePath(data);
         const codeTruthKind = data.presentationTruth?.code.kind;
         const canInspectNodeCode =
@@ -324,7 +306,9 @@ export default function CanvasShell({
           sourceDataSampleInteractionLabel: dataSampleProjection.canOpen
             ? copy.sourceDataSampleInteractionLabel
             : undefined,
-          onSelectNode: canOpenSemantic ? () => openSemanticTransform(node.id) : data.onSelectNode,
+          onSelectNode: canOpenRelationalTree
+            ? () => openRelationalTree(node.id)
+            : data.onSelectNode,
           onOpenNode: isNativeTransform
             ? dataSampleProjection.onOpen
             : data.role === 'transform' && typeof data.onInspectNode === 'function'
@@ -340,17 +324,16 @@ export default function CanvasShell({
       }),
       edges: projectCanvasRelationalCompositionEdgeInteractions({
         edges: graph.edges,
-        nodes: graph.nodesWithImpact,
-        canonicalTargetNodeIds: semanticTransformIds,
-        onActivateCanonical: openSemanticTransform,
+        relationalTreeTargetNodeIds: relationalTreeTransformIds,
+        onActivate: openRelationalTree,
       }),
     }),
     [
       copy.sourceDataSampleInteractionLabel,
       graph,
-      openSemanticTransform,
+      openRelationalTree,
       projectNodeDataSample,
-      semanticTransformIds,
+      relationalTreeTransformIds,
       runSnapshot,
     ]
   );
@@ -428,20 +411,16 @@ export default function CanvasShell({
           selectionRecoveryCommands={chromeCommands.executionSelectionRecovery}
           dataSampleTabs={dataSampleTabs}
           semanticBody={
-            semanticTransformFocus == null ? (
+            relationalTreeTransform == null ? (
               <div className="grid h-full place-items-center p-4 text-sm text-muted-foreground">
                 {copy.operationalDrawerSemanticIdleMessage}
               </div>
-            ) : semanticTransformFocus.state === 'topology-mismatch' ? (
-              <SemanticTransformTopologyMismatch
-                transformName={semanticTransformFocus.transform.name}
-                connectedInputCount={semanticTransformFocus.connectedInputCount}
-              />
             ) : (
-              <SemanticTransformFocusPanel
-                transform={semanticTransformFocus.transform}
-                canEdit={panels.inspectorAuthoring.canEditNode}
-                onTransformChange={applySemanticTransform}
+              <CanvasRelationalTreeWorkbench
+                transformNode={relationalTreeTransform}
+                nodes={panels.inspectorGraphNodes}
+                edges={panels.inspectorGraphEdges}
+                copy={copy}
               />
             )
           }

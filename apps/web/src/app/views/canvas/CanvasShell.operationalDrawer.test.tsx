@@ -14,11 +14,7 @@ import type { CanvasShellProps } from './canvasShell.types';
 import { canvasViewCopy } from './copy';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
-import type { SemanticTransformFocusPanelProps } from './SemanticTransformFocusPanel';
-import {
-  SemanticTransformTopologyMismatch,
-  type SemanticTransformTopologyMismatchProps,
-} from './SemanticTransformTopologyMismatch';
+import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import type { SourceDataSample } from '../../ports/workspace';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import {
@@ -74,7 +70,7 @@ describe('CanvasShell operational drawer registration', () => {
         { id: 'problems', label: 'Problems' },
         { id: 'runs', label: 'Runs' },
         { id: 'preview', label: 'Preview' },
-        { id: 'semantic', label: 'Semantics' },
+        { id: 'semantic', label: 'Relational tree' },
       ],
       runs: {
         activeRunId: 'run-42',
@@ -97,7 +93,7 @@ describe('CanvasShell operational drawer registration', () => {
     expect(onRun).toHaveBeenCalledTimes(1);
   });
 
-  it('opens the existing chooser from a pending relational composition badge', async () => {
+  it('opens one relational-tree drawer from the composition badge and Transform selection', async () => {
     const fixture = buildSemanticWorkbenchFixture();
     const position = { x: 320, y: 140 };
     const onApplyNodeDraft = vi.fn();
@@ -159,8 +155,9 @@ describe('CanvasShell operational drawer registration', () => {
       composition?.onActivate?.();
     });
 
-    expect(onInspectNode).toHaveBeenCalledWith(fixture.transform.id, 'code');
-    expect(useOperationalDrawerContributionStore.getState().activeTab).not.toBe('semantic');
+    expect(onInspectNode).not.toHaveBeenCalled();
+    expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('semantic');
+    expect(useUiLayoutStore.getState().bottomDrawerVisible).toBe(true);
     expect(projectedNode?.position).toBe(position);
 
     expect(projectedNode?.data.onSelectNode).toBeTypeOf('function');
@@ -173,7 +170,7 @@ describe('CanvasShell operational drawer registration', () => {
     act(() => {
       (projectedNode?.data.onOpenNode as (() => void) | undefined)?.();
     });
-    expect(onInspectNode).toHaveBeenCalledTimes(1);
+    expect(onInspectNode).not.toHaveBeenCalled();
     expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
       activeTab: `data:${fixture.transform.id}`,
       contribution: {
@@ -194,18 +191,16 @@ describe('CanvasShell operational drawer registration', () => {
     const semanticBody = useOperationalDrawerContributionStore
       .getState()
       .contribution?.tabs.find((tab) => tab.id === 'semantic')?.content;
-    expect(isValidElement<SemanticTransformFocusPanelProps>(semanticBody)).toBe(true);
-    if (!isValidElement<SemanticTransformFocusPanelProps>(semanticBody)) {
-      throw new Error('Expected the shared semantic Transform panel.');
+    expect(isValidElement<{ transformNode: { id: string } }>(semanticBody)).toBe(true);
+    if (!isValidElement<{ transformNode: { id: string } }>(semanticBody)) {
+      throw new Error('Expected the shared relational-tree Workbench.');
     }
-    semanticBody.props.onTransformChange(fixture.transform);
-    expect(onApplyNodeDraft).toHaveBeenCalledOnce();
-    expect(onApplyNodeDraft).toHaveBeenCalledWith(
-      expect.objectContaining({ name: fixture.transform.name, dvt: expect.any(Object) })
-    );
+    expect(semanticBody.type).toBe(CanvasRelationalTreeWorkbench);
+    expect(semanticBody.props.transformNode.id).toBe(fixture.transform.id);
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });
 
-  it('does not present disconnected canonical semantics as the current relational flow', async () => {
+  it('passes disconnected topology to the read-only relational-tree projection', async () => {
     const fixture = buildSemanticWorkbenchFixture();
     const connectedSources = fixture.sources.slice(1);
     await renderShell({
@@ -239,15 +234,17 @@ describe('CanvasShell operational drawer registration', () => {
     const semanticBody = useOperationalDrawerContributionStore
       .getState()
       .contribution?.tabs.find((tab) => tab.id === 'semantic')?.content;
-    expect(isValidElement<SemanticTransformTopologyMismatchProps>(semanticBody)).toBe(true);
-    if (!isValidElement<SemanticTransformTopologyMismatchProps>(semanticBody)) {
-      throw new Error('Expected disconnected semantics to fail closed.');
+    expect(
+      isValidElement<{ transformNode: { id: string }; edges: readonly unknown[] }>(semanticBody)
+    ).toBe(true);
+    if (
+      !isValidElement<{ transformNode: { id: string }; edges: readonly unknown[] }>(semanticBody)
+    ) {
+      throw new Error('Expected the relational-tree Workbench to own projection diagnostics.');
     }
-    expect(semanticBody.type).toBe(SemanticTransformTopologyMismatch);
-    expect(semanticBody.props).toMatchObject({
-      transformName: fixture.transform.name,
-      connectedInputCount: 2,
-    });
+    expect(semanticBody.type).toBe(CanvasRelationalTreeWorkbench);
+    expect(semanticBody.props.transformNode.id).toBe(fixture.transform.id);
+    expect(semanticBody.props.edges).toHaveLength(fixture.edges.slice(1).length);
   });
 
   it('publishes no execution drawer for a surface strategy without execution operations', async () => {

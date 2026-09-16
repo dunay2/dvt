@@ -11,6 +11,14 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
+function openPendingRelationalOperationChooser(): void {
+  cy.get(
+    '.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]'
+  ).rightclick();
+  cy.contains('[data-slot="canvas-node-context-menu-item"]', /^(Properties|Propiedades)$/).click();
+  cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
+}
+
 describe('Canvas relational-operation chooser', () => {
   beforeEach(() => {
     stubShellBootstrapApis({
@@ -46,11 +54,7 @@ describe('Canvas relational-operation chooser', () => {
     });
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
 
-    cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]')
-      .should('contain.text', 'RELATE / COMPOSE')
-      .focus()
-      .should('have.focus')
-      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+    openPendingRelationalOperationChooser();
 
     cy.get('[data-slot="dvt-relational-operation-chooser"]').should('be.visible');
     cy.get('[data-slot="dvt-select-operation-inner-join"]')
@@ -81,9 +85,7 @@ describe('Canvas relational-operation chooser', () => {
     visitWithE2eWorkspaceSession('/canvas');
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
 
-    cy.get('[data-slot="canvas-relational-composition-badge"]')
-      .focus()
-      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+    openPendingRelationalOperationChooser();
     cy.get('[data-slot="dvt-select-operation-inner-join"]').click();
     cy.get('[aria-label="Editar condición"]').click();
     cy.get('[aria-label="Tipo del operando derecho"]').select('literal');
@@ -143,9 +145,7 @@ describe('Canvas relational-operation chooser', () => {
     visitWithE2eWorkspaceSession('/canvas');
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
 
-    cy.get('[data-slot="canvas-relational-composition-badge"]')
-      .focus()
-      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+    openPendingRelationalOperationChooser();
     cy.get('[data-slot="dvt-select-operation-inner-join"]').click();
     cy.get('[aria-label="Editar condición"]').click();
     cy.get('[aria-label="Tipo de dato de la condición"]').should('have.value', 'i64');

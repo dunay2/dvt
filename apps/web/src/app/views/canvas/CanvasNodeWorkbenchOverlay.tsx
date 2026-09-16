@@ -140,7 +140,6 @@ export function CanvasNodeWorkbenchOverlay({
   if (!visible || surfaceStrategy == null || panels.inspectorNode == null) {
     return null;
   }
-
   return (
     <CanvasNodeWorkbenchOverlaySurface
       accessibleLabel={copy.inspectorEditablePropertiesTitle}
