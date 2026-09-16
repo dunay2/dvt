@@ -38,7 +38,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       { id: 'problems', label: 'Problems', count: 2 },
       { id: 'runs', label: 'Runs', count: 1 },
       { id: 'preview', label: 'Preview', count: 2 },
-      { id: 'semantic', label: 'Semantics', count: null },
+      { id: 'semantic', label: 'Relational tree', count: null },
     ]);
     expect(contribution.problems.items).toEqual([
       expect.objectContaining({
@@ -298,7 +298,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
         { id: 'problems', label: 'Problemas', count: 2 },
         { id: 'runs', label: 'Ejecuciones', count: 1 },
         { id: 'preview', label: 'Vista previa', count: 2 },
-        { id: 'semantic', label: 'Semántica', count: null },
+        { id: 'semantic', label: 'Árbol relacional', count: null },
       ],
     });
     expect(contribution.problems.items.map((problem) => problem.detail)).toEqual([

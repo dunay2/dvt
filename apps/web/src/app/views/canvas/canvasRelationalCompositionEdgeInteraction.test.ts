@@ -1,4 +1,4 @@
-import type { Edge, Node } from '@xyflow/react';
+import type { Edge } from '@xyflow/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -28,53 +28,38 @@ function compositionEdge(state: 'pending' | 'canonical' | 'incomplete' | 'unreso
 }
 
 describe('Canvas relational composition edge interaction', () => {
-  it('opens the same Transform code workbench for pending and canonical truth', () => {
-    const inspectTransform = vi.fn();
-    const nodes: Node[] = [
-      {
-        id: 'transform',
-        position: { x: 0, y: 0 },
-        data: { onInspectNode: inspectTransform },
-      },
-    ];
+  it('opens the same relational-tree tab for pending and canonical truth', () => {
+    const openRelationalTree = vi.fn();
 
     const projected = projectCanvasRelationalCompositionEdgeInteractions({
       edges: [compositionEdge('pending'), compositionEdge('canonical')],
-      nodes,
-      canonicalTargetNodeIds: new Set(['transform']),
+      relationalTreeTargetNodeIds: new Set(['transform']),
+      onActivate: openRelationalTree,
     });
 
     readCanvasDependencyEdgeData(projected[0]?.data)?.composition?.onActivate?.();
-    expect(inspectTransform).toHaveBeenCalledWith('transform', 'code');
-
     readCanvasDependencyEdgeData(projected[1]?.data)?.composition?.onActivate?.();
-    expect(inspectTransform).toHaveBeenLastCalledWith('transform', 'code');
-    expect(inspectTransform).toHaveBeenCalledTimes(2);
+    expect(openRelationalTree).toHaveBeenNthCalledWith(1, 'transform');
+    expect(openRelationalTree).toHaveBeenNthCalledWith(2, 'transform');
   });
 
   it.each(['incomplete', 'unresolved'] as const)(
     'leaves %s truth non-interactive instead of presenting a false chooser',
     (state) => {
-      const inspectTransform = vi.fn();
+      const openRelationalTree = vi.fn();
       const edge = compositionEdge(state);
 
       const [projected] = projectCanvasRelationalCompositionEdgeInteractions({
         edges: [edge],
-        nodes: [
-          {
-            id: 'transform',
-            position: { x: 0, y: 0 },
-            data: { onInspectNode: inspectTransform },
-          },
-        ],
-        canonicalTargetNodeIds: new Set(['transform']),
+        relationalTreeTargetNodeIds: new Set(['transform']),
+        onActivate: openRelationalTree,
       });
 
       expect(projected).toBe(edge);
       expect(
         readCanvasDependencyEdgeData(projected?.data)?.composition?.onActivate
       ).toBeUndefined();
-      expect(inspectTransform).not.toHaveBeenCalled();
+      expect(openRelationalTree).not.toHaveBeenCalled();
     }
   );
 });

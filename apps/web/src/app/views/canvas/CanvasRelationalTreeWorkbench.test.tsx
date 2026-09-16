@@ -136,12 +136,6 @@ describe('Canvas relational-tree Workbench', () => {
           transformNode={transform}
           nodes={[clients, orders, transform]}
           edges={[edge(clients.id), edge(orders.id)]}
-          relationalComposition={{
-            state: 'canonical',
-            connectedInputCount: 2,
-            operation: 'inner_join',
-          }}
-          pendingCompositionAuthoring={null}
           copy={COPY}
         />
       );
@@ -175,7 +169,7 @@ describe('Canvas relational-tree Workbench', () => {
     ).toBe(true);
   });
 
-  it('keeps pending authoring inside the same Workbench without fabricating a tree', () => {
+  it('shows pending Sources without fabricating a tree', () => {
     const clients = sourceNode('clients', 'clients');
     const orders = sourceNode('orders', 'orders');
     const transform = transformNode();
@@ -186,8 +180,6 @@ describe('Canvas relational-tree Workbench', () => {
           transformNode={transform}
           nodes={[clients, orders, transform]}
           edges={[edge(clients.id), edge(orders.id)]}
-          relationalComposition={{ state: 'pending', connectedInputCount: 2, pendingInputCount: 2 }}
-          pendingCompositionAuthoring={<div data-slot="pending-composition-authoring" />}
           copy={COPY}
         />
       );
@@ -199,6 +191,6 @@ describe('Canvas relational-tree Workbench', () => {
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-unavailable"]')?.textContent
     ).toContain('No canonical relational tree is available.');
-    expect(container.querySelector('[data-slot="pending-composition-authoring"]')).not.toBeNull();
+    expect(container.textContent).toContain('Pending');
   });
 });

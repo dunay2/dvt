@@ -1,9 +1,9 @@
 /** Owned concern: compose the three-region contextual Workbench for one Transform relational tree. */
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import type { CanvasRelationalCompositionTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
+import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
 import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
 import {
   flattenCanvasRelationalTree,
@@ -15,19 +15,19 @@ import { CanvasRelationalTreeNodeDetail } from './CanvasRelationalTreeNodeDetail
 import { CanvasRelationalTreeSourceCatalogue } from './CanvasRelationalTreeSourceCatalogue';
 import { CanvasRelationalTreeView } from './CanvasRelationalTreeView';
 
+export function canOpenCanvasRelationalTreeWorkbench(node: CanonicalNode): boolean {
+  return node.pluginId === 'dvt' && node.kind === 'dvt:transform' && node.role === 'transform';
+}
+
 export function CanvasRelationalTreeWorkbench({
   transformNode,
   nodes,
   edges,
-  relationalComposition,
-  pendingCompositionAuthoring,
   copy,
 }: Readonly<{
   transformNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
-  relationalComposition?: CanvasRelationalCompositionTruth;
-  pendingCompositionAuthoring: ReactNode;
   copy: CanvasRelationalTreeWorkbenchCopy;
 }>): JSX.Element {
   const result = useMemo(
@@ -35,6 +35,10 @@ export function CanvasRelationalTreeWorkbench({
     [edges, nodes, transformNode]
   );
   const projection = result.ok ? result.projection : null;
+  const relationalComposition = useMemo(
+    () => resolveCanvasRelationalCompositionTruth({ node: transformNode, nodes, edges }),
+    [edges, nodes, transformNode]
+  );
   const [selectedLocator, setSelectedLocator] = useState(projection?.root.locator ?? '');
 
   useEffect(() => {
@@ -94,13 +98,7 @@ export function CanvasRelationalTreeWorkbench({
           onSelect={setSelectedLocator}
         />
       )}
-      <CanvasRelationalTreeNodeDetail
-        node={selectedNode}
-        copy={copy}
-        pendingAuthoring={
-          relationalComposition?.state === 'pending' ? pendingCompositionAuthoring : null
-        }
-      />
+      <CanvasRelationalTreeNodeDetail node={selectedNode} copy={copy} />
     </div>
   );
 }

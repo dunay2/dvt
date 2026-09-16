@@ -1,5 +1,4 @@
 /** Owned concern: present one deterministic, keyboard-selectable relational tree. */
-import { Minus, Plus, Scan } from 'lucide-react';
 import { useState } from 'react';
 
 import type {
@@ -7,6 +6,7 @@ import type {
   CanvasRelationalTreeNode,
 } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
+import { CanvasRelationalTreeZoomControls } from './CanvasRelationalTreeZoomControls';
 
 function childRoleLabel(
   role: CanvasRelationalTreeChildRole,
@@ -102,32 +102,11 @@ export function CanvasRelationalTreeView({
         <h3 className="text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)">
           {copy.relationalTreeLabel}
         </h3>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            aria-label={copy.reactFlowZoomOutLabel}
-            onClick={() => changeZoom(-0.25)}
-            className="rounded p-1 hover:bg-(--surface-subtle)"
-          >
-            <Minus className="size-4" />
-          </button>
-          <button
-            type="button"
-            aria-label={copy.reactFlowFitViewLabel}
-            onClick={() => setZoom(0.75)}
-            className="rounded p-1 hover:bg-(--surface-subtle)"
-          >
-            <Scan className="size-4" />
-          </button>
-          <button
-            type="button"
-            aria-label={copy.reactFlowZoomInLabel}
-            onClick={() => changeZoom(0.25)}
-            className="rounded p-1 hover:bg-(--surface-subtle)"
-          >
-            <Plus className="size-4" />
-          </button>
-        </div>
+        <CanvasRelationalTreeZoomControls
+          copy={copy}
+          onChange={changeZoom}
+          onFit={() => setZoom(0.75)}
+        />
       </header>
       <div data-slot="canvas-relational-tree" className="min-h-64 flex-1 overflow-auto p-4">
         <div

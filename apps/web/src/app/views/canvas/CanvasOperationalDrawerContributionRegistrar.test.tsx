@@ -104,7 +104,7 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
         { id: 'problems', label: 'Problemas' },
         { id: 'runs', label: 'Ejecuciones' },
         { id: 'preview', label: 'Vista previa' },
-        { id: 'semantic', label: 'Semántica' },
+        { id: 'semantic', label: 'Árbol relacional' },
       ],
       copy: {
         previewAction: 'Crear Execution Preview',

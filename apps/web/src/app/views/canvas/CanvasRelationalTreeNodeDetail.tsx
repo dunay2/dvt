@@ -1,17 +1,13 @@
 /** Owned concern: present contextual facts for the selected canonical relation node. */
-import type { ReactNode } from 'react';
-
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 
 export function CanvasRelationalTreeNodeDetail({
   node,
   copy,
-  pendingAuthoring,
 }: Readonly<{
   node: CanvasRelationalTreeNode | null;
   copy: CanvasRelationalTreeWorkbenchCopy;
-  pendingAuthoring: ReactNode;
 }>): JSX.Element {
   return (
     <aside
@@ -51,9 +47,6 @@ export function CanvasRelationalTreeNodeDetail({
       <p className="mt-4 border-t border-(--border-subtle) pt-3 text-[10px] text-(--text-muted)">
         {copy.relationalTreeReadOnlyMessage}
       </p>
-      {pendingAuthoring == null ? null : (
-        <div className="mt-4 border-t border-(--border-subtle) pt-4">{pendingAuthoring}</div>
-      )}
     </aside>
   );
 }

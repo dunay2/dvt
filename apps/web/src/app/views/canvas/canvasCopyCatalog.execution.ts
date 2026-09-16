@@ -492,11 +492,11 @@ export const canvasViewExecutionCopyByKey = {
   },
   operationalDrawerSemanticTab: {
     key: 'canvas.operationalDrawer.semanticTab',
-    fallback: 'Semantics',
+    fallback: 'Relational tree',
   },
   operationalDrawerSemanticIdleMessage: {
     key: 'canvas.operationalDrawer.semanticIdleMessage',
-    fallback: 'Select a Substrait Transform to inspect its relational flow.',
+    fallback: 'Select a Transform to inspect its relational tree.',
   },
   operationalDrawerSemanticTopologyMismatchTitle: {
     key: 'canvas.operationalDrawer.semanticTopologyMismatchTitle',
