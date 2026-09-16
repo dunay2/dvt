@@ -52,6 +52,32 @@ const edges: readonly CanonicalEdge[] = [
   { id: 'orders-model', sourceId: source.id, targetId: transform.id, relation: 'lineage' },
 ];
 
+function connectedSource(id: string, tableName: string, columns: readonly string[]): CanonicalNode {
+  return {
+    id,
+    name: tableName,
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'success',
+    tags: ['source'],
+    metadata: {
+      schema: 'raw',
+      tableName,
+      connectedSourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'postgres-main',
+          provider: 'postgres',
+        },
+        sourceObjectId: `raw.${tableName}`,
+      },
+      columns: columns.map((name) => ({ name, type: 'text' })),
+    },
+  };
+}
+
 describe('DvtRelationFilterAuthoringSection', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -122,5 +148,46 @@ describe('DvtRelationFilterAuthoringSection', () => {
       operator: 'not_equal',
       value: 'Ada',
     });
+  });
+
+  it('does not offer a stale single-source filter while composition is pending', () => {
+    const resolved = resolveDvtSubstraitProjectionSource(source);
+    if (resolved == null) throw new Error('Expected a connected source.');
+    const draft = createDvtSubstraitProjectionDraft({
+      source: resolved,
+      targetNodeId: transform.id,
+      outputs: [{ fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' }],
+    });
+    const clients = connectedSource('clients', 'clients', ['client_id', 'country']);
+    const details = connectedSource('details', 'order_details', ['order_id', 'product']);
+
+    act(() => {
+      root.render(
+        <DvtRelationFilterAuthoringSection
+          disabled={false}
+          draft={draft}
+          node={transform}
+          nodes={[source, clients, details, transform]}
+          edges={[
+            ...edges,
+            {
+              id: 'clients-model',
+              sourceId: clients.id,
+              targetId: transform.id,
+              relation: 'lineage',
+            },
+            {
+              id: 'details-model',
+              sourceId: details.id,
+              targetId: transform.id,
+              relation: 'lineage',
+            },
+          ]}
+          onChange={vi.fn()}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-slot="dvt-filter-authoring"]')).toBeNull();
   });
 });
