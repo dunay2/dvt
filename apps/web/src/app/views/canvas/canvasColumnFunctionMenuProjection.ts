@@ -105,9 +105,10 @@ function projectDvtTransformMenus(args: {
         provider,
       });
     }
+    const expressionMenus: CanvasColumnFunctionMenuMap = new Map();
     for (const field of inspection.projection.inputFields) {
       addMenu({
-        menus,
+        menus: expressionMenus,
         columnId: field.fieldId,
         name: field.name,
         dataType: field.dataType,
@@ -118,7 +119,7 @@ function projectDvtTransformMenus(args: {
     const inputNames = new Set(inspection.projection.inputFields.map((field) => field.name));
     const expressionInputs: GraphNodeColumn[] = [
       ...inspection.projection.inputFields.map((field) => {
-        const menu = menus.get(field.fieldId)?.menu;
+        const menu = expressionMenus.get(field.fieldId)?.menu;
         return {
           id: field.fieldId,
           name: field.name,
