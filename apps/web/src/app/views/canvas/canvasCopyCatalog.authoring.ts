@@ -734,7 +734,11 @@ export const canvasViewAuthoringCopyByKey = {
   },
   inspectorDvtSubstraitWindowTitle: {
     key: 'canvas.inspector.authoring.dvtSubstraitWindowTitle',
-    fallback: 'Partition and order',
+    fallback: 'Contextual relation',
+  },
+  inspectorDvtSubstraitWindowInputLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowInputLabel',
+    fallback: 'Same input',
   },
   inspectorDvtSubstraitWindowPartitionFieldLabel: {
     key: 'canvas.inspector.authoring.dvtSubstraitWindowPartitionFieldLabel',
@@ -743,6 +747,22 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorDvtSubstraitWindowOrderFieldLabel: {
     key: 'canvas.inspector.authoring.dvtSubstraitWindowOrderFieldLabel',
     fallback: 'Order field',
+  },
+  inspectorDvtSubstraitWindowOrderDirectionLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowOrderDirectionLabel',
+    fallback: 'ASC · NULLS LAST',
+  },
+  inspectorDvtSubstraitWindowFrameLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowFrameLabel',
+    fallback: 'Frame',
+  },
+  inspectorDvtSubstraitWindowFrameUnspecifiedLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowFrameUnspecifiedLabel',
+    fallback: 'Unspecified',
+  },
+  inspectorDvtSubstraitWindowOperationLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowOperationLabel',
+    fallback: 'Relative position',
   },
   inspectorDvtSubstraitWindowOutputLabel: {
     key: 'canvas.inspector.authoring.dvtSubstraitWindowOutputLabel',
