@@ -10,6 +10,8 @@ import {
   SemanticTransformFocusPanel,
   canOpenSemanticTransformFocus,
 } from './SemanticTransformFocusPanel';
+import { SemanticTransformTopologyMismatch } from './SemanticTransformTopologyMismatch';
+import { projectCanvasSemanticTransformFocus } from './canvasSemanticTransformFocus';
 import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
 import { CanvasSettingsDialog } from './CanvasSettingsDialog';
@@ -102,6 +104,17 @@ export default function CanvasShell({
         (node) => node.id === semanticTransformId && semanticTransformIds.has(node.id)
       ) ?? null,
     [panels.inspectorGraphNodes, semanticTransformId, semanticTransformIds]
+  );
+  const semanticTransformFocus = useMemo(
+    () =>
+      semanticTransform == null
+        ? null
+        : projectCanvasSemanticTransformFocus({
+            transform: semanticTransform,
+            nodes: panels.inspectorGraphNodes,
+            edges: panels.inspectorGraphEdges,
+          }),
+    [panels.inspectorGraphEdges, panels.inspectorGraphNodes, semanticTransform]
   );
   const openSemanticTransform = useCallback(
     (nodeId: string) => {
@@ -415,13 +428,18 @@ export default function CanvasShell({
           selectionRecoveryCommands={chromeCommands.executionSelectionRecovery}
           dataSampleTabs={dataSampleTabs}
           semanticBody={
-            semanticTransform == null ? (
+            semanticTransformFocus == null ? (
               <div className="grid h-full place-items-center p-4 text-sm text-muted-foreground">
                 {copy.operationalDrawerSemanticIdleMessage}
               </div>
+            ) : semanticTransformFocus.state === 'topology-mismatch' ? (
+              <SemanticTransformTopologyMismatch
+                transformName={semanticTransformFocus.transform.name}
+                connectedInputCount={semanticTransformFocus.connectedInputCount}
+              />
             ) : (
               <SemanticTransformFocusPanel
-                transform={semanticTransform}
+                transform={semanticTransformFocus.transform}
                 canEdit={panels.inspectorAuthoring.canEditNode}
                 onTransformChange={applySemanticTransform}
               />

@@ -15,6 +15,10 @@ import { canvasViewCopy } from './copy';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import type { SemanticTransformFocusPanelProps } from './SemanticTransformFocusPanel';
+import {
+  SemanticTransformTopologyMismatch,
+  type SemanticTransformTopologyMismatchProps,
+} from './SemanticTransformTopologyMismatch';
 import type { SourceDataSample } from '../../ports/workspace';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import {
@@ -103,6 +107,7 @@ describe('CanvasShell operational drawer registration', () => {
       canvasTransformDataSampleQuery: { previewTransformRows },
       panels: {
         inspectorGraphNodes: [...fixture.sources, fixture.transform],
+        inspectorGraphEdges: fixture.edges,
         inspectorAuthoring: { canEditNode: true, onApplyNodeDraft },
       },
       graph: {
@@ -198,6 +203,51 @@ describe('CanvasShell operational drawer registration', () => {
     expect(onApplyNodeDraft).toHaveBeenCalledWith(
       expect.objectContaining({ name: fixture.transform.name, dvt: expect.any(Object) })
     );
+  });
+
+  it('does not present disconnected canonical semantics as the current relational flow', async () => {
+    const fixture = buildSemanticWorkbenchFixture();
+    const connectedSources = fixture.sources.slice(1);
+    await renderShell({
+      panels: {
+        inspectorGraphNodes: [...connectedSources, fixture.transform],
+        inspectorGraphEdges: fixture.edges.slice(1),
+      },
+      graph: {
+        nodesWithImpact: [
+          {
+            id: fixture.transform.id,
+            type: 'dbtNode',
+            position: { x: 320, y: 140 },
+            data: {
+              ...fixture.transform,
+              pluginKind: fixture.transform.kind,
+            },
+          },
+        ],
+      },
+    });
+
+    const projectedNode = (
+      getCanvasShellState().canvasViewportProps?.nodesWithImpact as
+        Array<{ data: Record<string, unknown> }> | undefined
+    )?.[0];
+    act(() => {
+      (projectedNode?.data.onSelectNode as (() => void) | undefined)?.();
+    });
+
+    const semanticBody = useOperationalDrawerContributionStore
+      .getState()
+      .contribution?.tabs.find((tab) => tab.id === 'semantic')?.content;
+    expect(isValidElement<SemanticTransformTopologyMismatchProps>(semanticBody)).toBe(true);
+    if (!isValidElement<SemanticTransformTopologyMismatchProps>(semanticBody)) {
+      throw new Error('Expected disconnected semantics to fail closed.');
+    }
+    expect(semanticBody.type).toBe(SemanticTransformTopologyMismatch);
+    expect(semanticBody.props).toMatchObject({
+      transformName: fixture.transform.name,
+      connectedInputCount: 2,
+    });
   });
 
   it('publishes no execution drawer for a surface strategy without execution operations', async () => {

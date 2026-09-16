@@ -498,6 +498,15 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.operationalDrawer.semanticIdleMessage',
     fallback: 'Select a Substrait Transform to inspect its relational flow.',
   },
+  operationalDrawerSemanticTopologyMismatchTitle: {
+    key: 'canvas.operationalDrawer.semanticTopologyMismatchTitle',
+    fallback: 'Semantic composition pending',
+  },
+  operationalDrawerSemanticTopologyMismatchMessage: {
+    key: 'canvas.operationalDrawer.semanticTopologyMismatchMessage',
+    fallback:
+      '{transformName} has {connectedInputCount} connected inputs that no longer match its saved semantics. Define the new composition to replace it.',
+  },
   operationalDrawerProblemsAriaLabel: {
     key: 'canvas.operationalDrawer.problemsAriaLabel',
     fallback: 'Canvas problems',

@@ -150,6 +150,9 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerSemanticTab: 'Semántica',
   operationalDrawerSemanticIdleMessage:
     'Selecciona un Transform Substrait para analizar su flujo relacional.',
+  operationalDrawerSemanticTopologyMismatchTitle: 'Composición semántica pendiente',
+  operationalDrawerSemanticTopologyMismatchMessage:
+    '{transformName} tiene {connectedInputCount} entradas conectadas que ya no coinciden con su semántica guardada. Define la nueva composición para sustituirla.',
   operationalDrawerProblemsAriaLabel: 'Problemas del Canvas',
   operationalDrawerNoProblemsMessage: 'No hay problemas actuales en el Canvas.',
   operationalDrawerRunsAriaLabel: 'Ejecuciones del Canvas',
