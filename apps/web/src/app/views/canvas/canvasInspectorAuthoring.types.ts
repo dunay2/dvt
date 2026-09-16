@@ -18,6 +18,7 @@ import type {
   HttpJsonArtifactAuthoringErrors,
 } from './httpJsonArtifactAuthoringModel';
 import type { WorkspaceScope } from '../../ports/sessionContext';
+import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 
 export type CanvasInspectorNodeDraft = Readonly<{
   name: string;
@@ -46,5 +47,7 @@ export type CanvasInspectorNodeDraftErrors = Readonly<{
 export type CanvasInspectorAuthoringContract = Readonly<{
   canEditNode: boolean;
   workspaceScope?: WorkspaceScope;
+  relationalPredicateSeed?: CanvasRelationalPredicateSeed;
+  onClearRelationalPredicateSeed?: () => void;
   onApplyNodeDraft: (draft: CanvasInspectorNodeDraft) => void;
 }>;

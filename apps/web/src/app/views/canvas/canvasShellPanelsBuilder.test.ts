@@ -151,6 +151,41 @@ describe('buildCanvasShellPanels', () => {
     });
   });
 
+  it('carries an ephemeral field relation proposal only through inspector authoring', () => {
+    const onClearRelationalPredicateSeed = vi.fn();
+    const relationalPredicateSeed = {
+      targetNodeId: 'node.orders',
+      left: {
+        nodeId: 'source.orders',
+        fieldId: 'orders.customer_id',
+        fieldName: 'customer_id',
+        dataType: 'string',
+      },
+      right: {
+        nodeId: 'source.customers',
+        fieldId: 'customers.customer_id',
+        fieldName: 'customer_id',
+        dataType: 'string',
+      },
+      candidateOperator: 'equal' as const,
+    };
+
+    const panels = buildCanvasShellPanels(
+      buildArgs({
+        panelState: {
+          ...buildArgs().panelState,
+          relationalPredicateSeed,
+          clearRelationalPredicateSeed: onClearRelationalPredicateSeed,
+        },
+      })
+    );
+
+    expect(panels.inspectorAuthoring).toMatchObject({
+      relationalPredicateSeed,
+      onClearRelationalPredicateSeed,
+    });
+  });
+
   it('keeps node workbench tab preference only while an inspector node is active', () => {
     const inspectorNode = buildInspectorNode();
 
