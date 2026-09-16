@@ -8,6 +8,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.columnMapping.addedMessage',
     fallback: 'Column mapping added.',
   },
+  columnRelationProposedMessage: {
+    key: 'canvas.columnMapping.relationProposedMessage',
+    fallback: 'Field relation proposed. Choose what to do with it.',
+  },
   columnMappingRemovedMessage: {
     key: 'canvas.columnMapping.removedMessage',
     fallback: 'Column mapping removed.',

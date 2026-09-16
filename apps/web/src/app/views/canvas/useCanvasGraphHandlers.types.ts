@@ -13,6 +13,7 @@ import type {
   CanvasAlgebraicCompositionIdentity,
   CanvasAlgebraicCompositionOperation,
 } from './canvasAlgebraicComposition';
+import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 
 import type {
   CanvasGraphInteractionEffects,
@@ -70,6 +71,8 @@ export type UseCanvasGraphHandlersResult = {
     columns: readonly Readonly<{ name: string; type: string }>[]
   ) => void;
   handleRemoveColumnMapping: (mapping: CanvasColumnLineageEdgeData) => void;
+  relationalPredicateSeed: CanvasRelationalPredicateSeed | null;
+  clearRelationalPredicateSeed: () => void;
   resolveCanvasAlgebraicCompositionOperations: (
     identity: CanvasAlgebraicCompositionIdentity
   ) => CanvasAlgebraicCompositionOperation[];

@@ -11,18 +11,23 @@ import {
   resolveDvtSubstraitUnionAllEntry,
 } from './canvasDvtSubstraitSetComposition';
 import { DvtSubstraitCompositionStartSection } from './DvtSubstraitCompositionStartSection';
+import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 
 export function DvtSubstraitCompositionStart({
   disabled,
   node,
   nodes,
   edges,
+  predicateSeed,
+  onClearPredicateSeed,
   onChange,
 }: Readonly<{
   disabled: boolean;
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
+  predicateSeed?: CanvasRelationalPredicateSeed;
+  onClearPredicateSeed?: () => void;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element | null {
   const inputs = resolveCanvasDvtCompositionInputs({ targetNodeId: node.id, nodes, edges });
@@ -33,6 +38,8 @@ export function DvtSubstraitCompositionStart({
     <DvtSubstraitCompositionStartSection
       disabled={disabled}
       inputs={inputs}
+      predicateSeed={predicateSeed}
+      onClearPredicateSeed={onClearPredicateSeed}
       onStartInnerJoin={({ left, right }) => {
         const leftInput = inputs.find((input) => input.nodeId === left.nodeId);
         const rightInput = inputs.find((input) => input.nodeId === right.nodeId);

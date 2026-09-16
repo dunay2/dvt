@@ -162,4 +162,80 @@ describe('DvtSubstraitCompositionStartSection', () => {
     expect(right?.value).toContain('customers');
     expect(left?.textContent).not.toContain('external');
   });
+
+  it('keeps the operation explicit while carrying a cross-input field proposal into JOIN', () => {
+    const onStartInnerJoin = vi.fn();
+    const onClearPredicateSeed = vi.fn();
+    const orders = {
+      ...input('orders', 'orders'),
+      fields: [
+        { name: 'id', dataType: 'text', stringCompatible: true },
+        { name: 'customer_id', dataType: 'text', stringCompatible: true },
+      ],
+    };
+    const customers = {
+      ...input('customers', 'customers'),
+      fields: [
+        { name: 'id', dataType: 'text', stringCompatible: true },
+        { name: 'customer_id', dataType: 'text', stringCompatible: true },
+      ],
+    };
+    const shipments = input('shipments', 'shipments');
+
+    act(() => {
+      root.render(
+        <DvtSubstraitCompositionStartSection
+          disabled={false}
+          inputs={[orders, customers, shipments]}
+          predicateSeed={{
+            targetNodeId: 'model-1',
+            left: {
+              nodeId: 'orders',
+              fieldId: 'orders-customer-id',
+              fieldName: 'customer_id',
+              dataType: 'string',
+            },
+            right: {
+              nodeId: 'customers',
+              fieldId: 'customers-customer-id',
+              fieldName: 'customer_id',
+              dataType: 'string',
+            },
+            candidateOperator: 'equal',
+          }}
+          onClearPredicateSeed={onClearPredicateSeed}
+          onStartInnerJoin={onStartInnerJoin}
+        />
+      );
+    });
+
+    expect(
+      container.querySelector('[data-slot="dvt-relational-operation-chooser"]')
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="dvt-relational-predicate-proposal"]')?.textContent
+    ).toContain('orders.customer_id = customers.customer_id');
+    expect(onStartInnerJoin).not.toHaveBeenCalled();
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')!
+      );
+    });
+
+    expect(
+      container.querySelector<HTMLSelectElement>('[data-slot="dvt-composition-left-field"]')?.value
+    ).toContain('orders\u001fcustomer_id');
+    expect(
+      container.querySelector<HTMLSelectElement>('[data-slot="dvt-composition-right-field"]')?.value
+    ).toContain('customers\u001fcustomer_id');
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-cancel-relational-operation"]')!
+      );
+    });
+    expect(onClearPredicateSeed).toHaveBeenCalledOnce();
+    expect(onStartInnerJoin).not.toHaveBeenCalled();
+  });
 });

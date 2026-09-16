@@ -12,18 +12,23 @@ import {
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
 import { DvtSubstraitCompositionStart } from './DvtSubstraitCompositionStart';
 import { canvasViewCopy } from './copy';
+import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 
 export function DvtSubstraitTransformStart({
   disabled,
   node,
   nodes,
   edges,
+  predicateSeed,
+  onClearPredicateSeed,
   onChange,
 }: Readonly<{
   disabled: boolean;
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
+  predicateSeed?: CanvasRelationalPredicateSeed;
+  onClearPredicateSeed?: () => void;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element | null {
   if (resolveCanvasDvtCompositionInputs({ targetNodeId: node.id, nodes, edges }).length > 1) {
@@ -33,6 +38,8 @@ export function DvtSubstraitTransformStart({
         node={node}
         nodes={nodes}
         edges={edges}
+        predicateSeed={predicateSeed}
+        onClearPredicateSeed={onClearPredicateSeed}
         onChange={onChange}
       />
     );
@@ -45,6 +52,8 @@ export function DvtSubstraitTransformStart({
         node={node}
         nodes={nodes}
         edges={edges}
+        predicateSeed={predicateSeed}
+        onClearPredicateSeed={onClearPredicateSeed}
         onChange={onChange}
       />
     );
