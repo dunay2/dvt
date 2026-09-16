@@ -140,21 +140,26 @@ flowchart LR
     O --> X[Pointer activation blocked]
 ```
 
-The correction derives only presentation geometry from the already projected
-label. It keeps the junction at the larger of the base routing offset and half
-the badge width plus a fixed card clearance:
+The correction stays in presentation. For horizontal target approaches it
+keeps the junction at the larger of the base routing offset and half the badge
+width plus a fixed card clearance; vertical approaches retain the base offset
+because badge width is not on their approach axis. The relational path and
+junction remain SVG, while the interactive badge uses the existing edge-label
+layer so the later node layer cannot cover its hit target:
 
 ```mermaid
 flowchart LR
     L[Projected compact label] --> W[Badge width]
     W --> C[max base offset, half width + clearance]
     C --> J[Deterministic junction]
-    J --> H[Pointer and keyboard share existing activation]
+    J --> P[Interactive edge-label layer]
+    P --> H[Pointer and keyboard share existing activation]
 ```
 
 This changes no relation, edge identity, operation choice or activation rail.
-The badge remains attached to the one trunk owner; only its target-card
-clearance becomes width-aware and testable for every supported orientation.
+The badge remains attached to the one trunk owner; its target-card clearance
+and hit target become deterministic and testable while every supported
+orientation retains deterministic routing.
 
 ## Initial JOIN Predicate Grammar For #3226
 
