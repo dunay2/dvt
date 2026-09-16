@@ -222,13 +222,13 @@ describe('canvasDvtSubstraitJoinSourceResolution', () => {
     const args = binaryFixture();
     args.targetNode = persistDraft(args.targetNode, args.draft);
 
-    expect(
-      resolveDvtSubstraitInnerJoinEntry({ ...args, requirePersistedAuthority: true })
-    ).toEqual({
-      left: joinSource(args.nodes[0]!),
-      right: joinSource(args.nodes[1]!),
-      targetNodeId: 'join',
-    });
+    expect(resolveDvtSubstraitInnerJoinEntry({ ...args, requirePersistedAuthority: true })).toEqual(
+      {
+        left: joinSource(args.nodes[0]!),
+        right: joinSource(args.nodes[1]!),
+        targetNodeId: 'join',
+      }
+    );
 
     args.nodes[1] = sourceNode({
       id: 'orders',

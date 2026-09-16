@@ -7,10 +7,7 @@ import {
 
 /** Owned concern: the exact admitted legacy binary INNER JOIN shape. */
 export const DVT_SUBSTRAIT_INNER_JOIN_LEFT_FIELD_NAMES = ['customer_id', 'name'] as const;
-export const DVT_SUBSTRAIT_INNER_JOIN_RIGHT_FIELD_NAMES = [
-  'order_id',
-  'customer_id',
-] as const;
+export const DVT_SUBSTRAIT_INNER_JOIN_RIGHT_FIELD_NAMES = ['order_id', 'customer_id'] as const;
 
 export const DVT_SUBSTRAIT_INNER_JOIN_OUTPUT_FIELDS = [
   {
