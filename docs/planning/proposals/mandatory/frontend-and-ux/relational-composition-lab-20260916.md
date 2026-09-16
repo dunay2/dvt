@@ -95,6 +95,38 @@ canonical catalog must not appear in the chooser at all.
 Runtime readiness is not inferred from the `mapped` target status. It remains a
 separate query over the current #2524/#2723 execution corridor.
 
+## Canonical Composition Badge Detail For #3227
+
+The converged Canvas already groups real dependency edges and labels an
+inspected canonical operation. Its accessible name currently repeats only the
+compact visible label:
+
+```mermaid
+flowchart LR
+    S[Canonical Substrait relation] --> O[Operation identity]
+    O --> B[Compact badge label]
+    B --> A[Accessible name repeats label]
+```
+
+That is truthful but incomplete for inspection. The bounded correction carries
+only operation-family facts already returned by the canonical inspectors:
+
+```mermaid
+flowchart LR
+    S[Canonical Substrait relation] --> I[Inspect canonical operation]
+    I --> J[INNER JOIN: inputs + predicate count]
+    I --> U[UNION ALL: inputs + outputs + bag semantics]
+    J --> A[Concise accessible badge summary]
+    U --> A
+    A --> E[Existing canonical editor on activation]
+```
+
+The visible badge remains the small operation label. No hover card or persisted
+junction is added. Pending, incomplete and unresolved compositions keep their
+existing state label; only a verified canonical operation receives semantic
+detail. The projection remains read-only under `InspectCanvasNode` and does not
+create a mutation rail, relational registry, copied AST or SQL authority.
+
 ## Initial JOIN Predicate Grammar For #3226
 
 The first `INNER JOIN` currently narrows the admitted predicate grammar to two
