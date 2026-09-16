@@ -1,5 +1,5 @@
 /** Owned concern: classify a cross-input column gesture as an ephemeral predicate seed. */
-import { hasSameConnectionRef } from '@dvt/postgres-projection';
+import { hasSameConnectionRef, type DvtSubstraitJoinDataType } from '@dvt/postgres-projection';
 
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
@@ -14,12 +14,13 @@ import {
 import { readDvtSourceOutputProjection } from './canvasDvtSourceSemanticAuthoring';
 import { canonicalizeDvtSubstraitProjectionDataType } from './canvasDvtSubstraitProjection';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
+import { resolveCanvasDvtJoinDataType } from './canvasDvtJoinTypeAdmission';
 
 export type CanvasRelationalOperandSeed = Readonly<{
   nodeId: string;
   fieldId: string;
   fieldName: string;
-  dataType: string;
+  dataType: DvtSubstraitJoinDataType;
 }>;
 
 export type CanvasRelationalPredicateSeed = Readonly<{
@@ -42,12 +43,13 @@ export function isCanvasRelationalPredicateSeedAvailable(
     leftInput.sourceRef.connectionRef.provider === 'postgres' &&
     rightInput.sourceRef.connectionRef.provider === 'postgres' &&
     hasSameConnectionRef(leftInput.sourceRef.connectionRef, rightInput.sourceRef.connectionRef) &&
-    seed.left.dataType === 'string' &&
-    seed.right.dataType === 'string' &&
+    seed.left.dataType === seed.right.dataType &&
     leftInput.fields.some(
-      (field) => field.name === seed.left.fieldName && field.stringCompatible
+      (field) => field.name === seed.left.fieldName && field.joinDataType === seed.left.dataType
     ) &&
-    rightInput.fields.some((field) => field.name === seed.right.fieldName && field.stringCompatible)
+    rightInput.fields.some(
+      (field) => field.name === seed.right.fieldName && field.joinDataType === seed.right.dataType
+    )
   );
 }
 
@@ -66,13 +68,16 @@ function resolveSourceOperand(
     const field = projection?.source.fields.find(
       (candidate) => candidate.name === output?.sourceFieldName
     );
-    return output == null || field == null
+    const dataType = resolveCanvasDvtJoinDataType(
+      canonicalizeDvtSubstraitProjectionDataType(field?.dataType)
+    );
+    return output == null || field == null || dataType == null
       ? null
       : {
           nodeId: node.id,
           fieldId: output.fieldId,
           fieldName: field.name,
-          dataType: canonicalizeDvtSubstraitProjectionDataType(field.dataType),
+          dataType,
         };
   } catch {
     return null;
@@ -130,7 +135,7 @@ export function resolveCanvasRelationalPredicateSeed(args: {
   }
   const left = resolveSourceOperand(leftNode, output.sourceFieldName);
   const right = resolveSourceOperand(sourceNode, args.source.columnId);
-  if (left?.dataType !== 'string' || right?.dataType !== 'string') return null;
+  if (left == null || right == null || left.dataType !== right.dataType) return null;
   return {
     targetNodeId: targetNode.id,
     left,

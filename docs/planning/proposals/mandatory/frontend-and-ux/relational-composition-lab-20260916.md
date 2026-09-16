@@ -98,12 +98,13 @@ separate query over the current #2524/#2723 execution corridor.
 ## Initial JOIN Predicate Grammar For #3226
 
 The first `INNER JOIN` currently narrows the admitted predicate grammar to two
-string-field selectors and commits equality on Apply:
+string-field selectors even though the canonical JOIN model already carries
+typed operands:
 
 ```mermaid
 flowchart LR
     I[Connected relation inputs] --> O[Choose INNER JOIN]
-    O --> F[String field = string field]
+    O --> F[Compatible typed field = compatible typed field]
     F --> A[Apply]
     A --> C[Canonical JoinRel]
 ```
@@ -136,9 +137,24 @@ flowchart LR
 
 The ephemeral draft is not a second IR or persisted proposal. Cancel discards
 it, and only Apply publishes its existing Substrait document and DVT sidecar.
-This slice keeps the current string-compatible input admission boundary; it
-removes the equality-only UI restriction without claiming broader type or
-provider support.
+
+Initial predicate admission is derived once from physical input metadata and
+reuses only types already carried by the canonical JOIN model:
+
+| PostgreSQL input metadata                                | Canonical JOIN type    | Initial pair admitted |
+| -------------------------------------------------------- | ---------------------- | --------------------- |
+| text/string/varchar/character variants                   | `string`               | yes, with same type   |
+| bool/boolean                                             | `bool`                 | yes, with same type   |
+| bigint/int8/i64                                          | `i64`                  | yes, with same type   |
+| double precision/double/float8/fp64                      | `fp64`                 | yes, with same type   |
+| timestamp with time zone/timestamptz/timestamp_tz        | `precisionTimestampTz` | yes, with same type   |
+| integer/smallint/numeric/date/json and unrecognised type | none                   | no                    |
+
+This broadens only the first predicate's admission to existing canonical type
+capabilities. It does not widen provider semantics, coerce unlike types, add a
+new relation capability, or change the explicit Apply boundary. Once seeded,
+the existing editor remains the single authority for comparisons, null tests,
+literals, unary function chains, boolean combinations, and grouping.
 
 ## Contextual Window Projection For #3230
 

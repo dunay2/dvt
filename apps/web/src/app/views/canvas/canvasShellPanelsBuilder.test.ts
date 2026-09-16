@@ -159,13 +159,13 @@ describe('buildCanvasShellPanels', () => {
         nodeId: 'source.orders',
         fieldId: 'orders.customer_id',
         fieldName: 'customer_id',
-        dataType: 'string',
+        dataType: 'string' as const,
       },
       right: {
         nodeId: 'source.customers',
         fieldId: 'customers.customer_id',
         fieldName: 'customer_id',
-        dataType: 'string',
+        dataType: 'string' as const,
       },
       candidateOperator: 'equal' as const,
     };

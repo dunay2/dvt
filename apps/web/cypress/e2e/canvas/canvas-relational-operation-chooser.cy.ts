@@ -27,6 +27,10 @@ describe('Canvas relational-operation chooser', () => {
     });
     stubStatefulCanvasDraftAuthoring({
       substraitPendingComposition: true,
+      substraitCompositionColumnType:
+        Cypress.currentTest.title === 'authors the first JOIN from matching bigint fields'
+          ? 'bigint'
+          : 'string',
       title: 'Relational operation chooser',
     });
   });
@@ -128,6 +132,54 @@ describe('Canvas relational-operation chooser', () => {
       });
       if (condition == null || condition.kind === 'group') return;
       expect(condition.left.kind).to.equal('function');
+    });
+  });
+
+  it('authors the first JOIN from matching bigint fields', () => {
+    visitWithE2eWorkspaceSession('/canvas');
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+
+    cy.get('[data-slot="canvas-relational-composition-badge"]')
+      .focus()
+      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+    cy.get('[data-slot="dvt-select-operation-inner-join"]').click();
+    cy.get('[aria-label="Editar condición"]').click();
+    cy.get('[aria-label="Tipo de dato de la condición"]').should('have.value', 'i64');
+    cy.contains('button', 'Guardar condición').click();
+    cy.get('[data-slot="dvt-start-configured-inner-join"]').click();
+    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Apply|Aplicar)$/).click();
+
+    cy.wrap(null).should(() => {
+      const savedTransform = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+        .map(
+          (call) =>
+            call.body as {
+              draft: { nodes: Array<{ id: string; metadata?: Record<string, unknown> }> };
+            }
+        )
+        .map((body) => body.draft.nodes.find((node) => node.id === 'join-transform'))
+        .filter((node) => node != null)
+        .at(-1);
+      const authority = savedTransform?.metadata?.transformAuthoring as
+        { semanticDocument?: unknown } | undefined;
+      const inspection = inspectDvtSubstraitNInputJoinDraft(
+        decodeDvtSubstraitInnerJoinDocument(authority?.semanticDocument)
+      );
+      expect(inspection.ok).to.equal(true);
+      if (!inspection.ok) return;
+      const condition = inspection.projection.joins[0]?.conditions[0];
+      expect(condition).not.to.equal(undefined);
+      if (condition == null || condition.kind === 'group') return;
+      const fieldTypeById = new Map(
+        inspection.projection.inputs.flatMap((input) =>
+          input.fields.map((field) => [field.fieldId, field.dataType] as const)
+        )
+      );
+      expect(condition.left.kind).to.equal('field');
+      expect(condition.right.kind).to.equal('field');
+      if (condition.left.kind !== 'field' || condition.right.kind !== 'field') return;
+      expect(fieldTypeById.get(condition.left.sourceFieldId)).to.equal('i64');
+      expect(fieldTypeById.get(condition.right.sourceFieldId)).to.equal('i64');
     });
   });
 });
