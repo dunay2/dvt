@@ -327,8 +327,9 @@ export default function CanvasShell({
       }),
       edges: projectCanvasRelationalCompositionEdgeInteractions({
         edges: graph.edges,
-        interactiveTargetNodeIds: semanticTransformIds,
-        onActivate: openSemanticTransform,
+        nodes: graph.nodesWithImpact,
+        canonicalTargetNodeIds: semanticTransformIds,
+        onActivateCanonical: openSemanticTransform,
       }),
     }),
     [
