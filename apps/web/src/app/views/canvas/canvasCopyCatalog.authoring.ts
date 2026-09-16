@@ -688,6 +688,14 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtRelationalRightOperandField',
     fallback: 'Right operand field',
   },
+  inspectorDvtRelationalLeftInput: {
+    key: 'canvas.inspector.authoring.dvtRelationalLeftInput',
+    fallback: 'Left input',
+  },
+  inspectorDvtRelationalRightInput: {
+    key: 'canvas.inspector.authoring.dvtRelationalRightInput',
+    fallback: 'Right input',
+  },
   inspectorDvtRelationalApply: {
     key: 'canvas.inspector.authoring.dvtRelationalApply',
     fallback: 'Apply',

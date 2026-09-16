@@ -615,11 +615,16 @@ describe('DvtAuthoringFields', () => {
 
     selectRelationalOperation('inner-join');
 
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[aria-label="Editar condición"]')!
+      );
+    });
     const leftField = container.querySelector<HTMLSelectElement>(
-      '[data-slot="dvt-composition-left-field"]'
+      '[aria-label="Campo del operando izquierdo"]'
     );
     const rightField = container.querySelector<HTMLSelectElement>(
-      '[data-slot="dvt-composition-right-field"]'
+      '[aria-label="Campo del operando derecho"]'
     );
     const startJoin = container.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-start-configured-inner-join"]'
@@ -628,13 +633,27 @@ describe('DvtAuthoringFields', () => {
     expect(rightField).not.toBeNull();
     expect(startJoin).not.toBeNull();
 
+    const leftValue = Array.from(leftField!.options).find((option) =>
+      option.textContent?.endsWith('.customer')
+    )?.value;
+    const rightValue = Array.from(rightField!.options).find((option) =>
+      option.textContent?.endsWith('.principal_id')
+    )?.value;
+    expect(leftValue).toBeTruthy();
+    expect(rightValue).toBeTruthy();
     act(() => {
-      fireEvent.change(leftField!, {
-        target: { value: `${orders.id}\u001fcustomer` },
-      });
-      fireEvent.change(rightField!, {
-        target: { value: `${audits.id}\u001fprincipal_id` },
-      });
+      fireEvent.change(leftField!, { target: { value: leftValue } });
+    });
+    act(() => {
+      fireEvent.change(rightField!, { target: { value: rightValue } });
+    });
+    act(() => {
+      const save = Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(
+        (button) => button.textContent?.trim() === 'Guardar condición'
+      );
+      fireEvent.click(save!);
+    });
+    act(() => {
       fireEvent.click(startJoin!);
     });
 
@@ -983,7 +1002,7 @@ describe('DvtAuthoringFields', () => {
       '[data-slot="dvt-start-connected-union-all"]'
     );
     expect(entry).not.toBeNull();
-    expect(container.querySelector('[data-slot="dvt-composition-left-field"]')).toBeNull();
+    expect(container.querySelector('[data-slot="dvt-composition-left-input"]')).toBeNull();
 
     act(() => {
       fireEvent.click(entry!);

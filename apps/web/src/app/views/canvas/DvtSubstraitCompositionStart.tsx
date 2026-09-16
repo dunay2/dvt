@@ -5,7 +5,6 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
-import { createDvtSubstraitStringInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import {
   createDvtSubstraitUnionAllDraft,
   resolveDvtSubstraitUnionAllEntry,
@@ -40,27 +39,7 @@ export function DvtSubstraitCompositionStart({
       inputs={inputs}
       predicateSeed={predicateSeed}
       onClearPredicateSeed={onClearPredicateSeed}
-      onStartInnerJoin={({ left, right }) => {
-        const leftInput = inputs.find((input) => input.nodeId === left.nodeId);
-        const rightInput = inputs.find((input) => input.nodeId === right.nodeId);
-        if (leftInput == null || rightInput == null) return;
-        const join = createDvtSubstraitStringInnerJoinDraft({
-          left: {
-            source: leftInput,
-            fields: leftInput.fields
-              .filter((field) => field.stringCompatible)
-              .map((field) => field.name),
-          },
-          right: {
-            source: rightInput,
-            fields: rightInput.fields
-              .filter((field) => field.stringCompatible)
-              .map((field) => field.name),
-          },
-          leftFieldName: left.fieldName,
-          rightFieldName: right.fieldName,
-          targetNodeId: node.id,
-        });
+      onStartInnerJoin={(join) => {
         onChange((currentDraft) => ({
           ...currentDraft,
           dvt: {

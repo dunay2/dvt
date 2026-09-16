@@ -95,6 +95,51 @@ canonical catalog must not appear in the chooser at all.
 Runtime readiness is not inferred from the `mapped` target status. It remains a
 separate query over the current #2524/#2723 execution corridor.
 
+## Initial JOIN Predicate Grammar For #3226
+
+The first `INNER JOIN` currently narrows the admitted predicate grammar to two
+string-field selectors and commits equality on Apply:
+
+```mermaid
+flowchart LR
+    I[Connected relation inputs] --> O[Choose INNER JOIN]
+    O --> F[String field = string field]
+    F --> A[Apply]
+    A --> C[Canonical JoinRel]
+```
+
+That entry surface is inconsistent with the existing canonical JOIN editor,
+which already admits comparisons, null tests, literals, unary function chains,
+boolean combinations, and grouping. The bounded correction reuses that editor
+and its existing mutation functions over an ephemeral canonical draft:
+
+```mermaid
+flowchart LR
+    I[Connected relation inputs] --> O[Choose INNER JOIN]
+    O --> D[Ephemeral canonical JOIN draft]
+    D --> P[Existing predicate editor]
+    P --> A[Explicit Apply]
+    A --> C[ConfigureCanvasDvtNode]
+    C --> S[Canonical JoinRel + DVT sidecar]
+    P --> X[Cancel]
+    X --> N[No semantic revision change]
+```
+
+| Concern                  | Reused authority                                                            |
+| ------------------------ | --------------------------------------------------------------------------- |
+| comparisons and booleans | admitted JOIN condition operators and grouping model                        |
+| fields, literals, nulls  | canonical JOIN operand model                                                |
+| unary function chains    | provider-filtered admitted JOIN operand functions                           |
+| stable identity          | inspected `RelationId` / `FieldId` sidecar projected by the ephemeral draft |
+| semantic commit          | existing `ConfigureCanvasDvtNode` authoring command after explicit Apply    |
+| inspection/presentation  | existing `InspectCanvasNode` projection and JOIN condition editor           |
+
+The ephemeral draft is not a second IR or persisted proposal. Cancel discards
+it, and only Apply publishes its existing Substrait document and DVT sidecar.
+This slice keeps the current string-compatible input admission boundary; it
+removes the equality-only UI restriction without claiming broader type or
+provider support.
+
 ## Contextual Window Projection For #3230
 
 The selected product surface is the existing single-source Window section in
