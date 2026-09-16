@@ -64,9 +64,7 @@ describe('Canvas Substrait UNION ALL', () => {
   it('composes, persists, and reloads two compatible datasets through one canonical revision', () => {
     visitCanvas();
 
-    cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]')
-      .focus()
-      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+    cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').click();
     cy.get('[data-slot="dvt-select-operation-union-all"]').click();
     cy.get('button[data-slot="dvt-start-connected-union-all"]').click();
     cy.get('[data-slot="dvt-substrait-union-all-authoring"]')

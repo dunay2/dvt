@@ -11,6 +11,7 @@ import {
   resolveCanvasRelationalJunction,
 } from './CanvasDependencyEdge';
 import { buildCanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
+import { graphFlowPalette } from '../../plugins/graph/graphVisualTokens';
 
 type MockBaseEdgeProps = {
   path?: string;
@@ -29,6 +30,8 @@ vi.mock('@xyflow/react', async (importOriginal) => {
       mockedEdge.props = props;
       return React.createElement('path', { 'data-slot': 'base-edge' });
     },
+    EdgeLabelRenderer: ({ children }: { children: React.ReactNode }) =>
+      React.createElement('foreignObject', null, children),
     getSmoothStepPath: () => ['M 0 0 L 100 40', 50, 20, 0, 0],
   };
 });
@@ -69,6 +72,17 @@ describe('CanvasDependencyEdge', () => {
   ])('places the relational junction deterministically for a %s target', (position, expected) => {
     expect(resolveCanvasRelationalJunction(100, 50, position)).toEqual(expected);
   });
+
+  it.each([Position.Left, Position.Right])(
+    'keeps a variable-width badge clear of a %s target card',
+    (position) => {
+      const badgeWidth = 142;
+      const junction = resolveCanvasRelationalJunction(100, 50, position, badgeWidth);
+      const targetDistance = Math.hypot(100 - junction.x, 50 - junction.y);
+
+      expect(targetDistance - badgeWidth / 2).toBe(graphFlowPalette.relationalBadgeNodeClearance);
+    }
+  );
 
   it('keeps the semantic edge attached while rendering one non-interactive direction cue', () => {
     act(() => {
