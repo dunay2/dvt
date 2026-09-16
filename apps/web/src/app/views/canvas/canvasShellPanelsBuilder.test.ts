@@ -31,6 +31,7 @@ function buildArgs(
       inspectorGraphNodes: [],
       inspectorGraphEdges: [],
       canEditInspectorNode: true,
+      applyNodeDraft: vi.fn(),
       applyInspectorNodeDraft: vi.fn(),
       activeRunId: null,
       registeredPlugins: new Set(['dvt']),
@@ -134,11 +135,13 @@ describe('buildCanvasShellPanels', () => {
 
   it('projects only the authoring authority consumed by the contextual Workbench', () => {
     const onApplyNodeDraft = vi.fn();
+    const onApplyNodeDraftForNode = vi.fn();
     const panels = buildCanvasShellPanels(
       buildArgs({
         panelState: {
           ...buildArgs().panelState,
           inspectorNode: buildInspectorNode(),
+          applyNodeDraft: onApplyNodeDraftForNode,
           applyInspectorNodeDraft: onApplyNodeDraft,
         },
       })
@@ -148,6 +151,10 @@ describe('buildCanvasShellPanels', () => {
       canEditNode: true,
       workspaceScope: buildArgs().routePresentation.workspaceScope,
       onApplyNodeDraft,
+    });
+    expect(panels.relationalTreeAuthoring).toEqual({
+      canEditNode: true,
+      onApplyNodeDraft: onApplyNodeDraftForNode,
     });
   });
 

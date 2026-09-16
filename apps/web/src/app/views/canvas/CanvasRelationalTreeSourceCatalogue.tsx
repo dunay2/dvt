@@ -17,7 +17,7 @@ export function CanvasRelationalTreeSourceCatalogue({
 }: Readonly<{
   items: readonly CanvasRelationalTreeCatalogueItem[];
   copy: CanvasRelationalTreeWorkbenchCopy;
-  onSelect: (locator: string) => void;
+  onSelect: (item: CanvasRelationalTreeCatalogueItem) => void;
 }>): JSX.Element {
   const stateLabel = {
     participating: copy.relationalTreeParticipatingLabel,
@@ -39,9 +39,18 @@ export function CanvasRelationalTreeSourceCatalogue({
             <button
               type="button"
               data-slot="canvas-relational-tree-source"
-              disabled={item.treeLocator == null}
-              onClick={() => item.treeLocator == null || onSelect(item.treeLocator)}
-              className="w-full rounded border border-(--border-subtle) bg-(--surface-subtle) p-2 text-left disabled:cursor-default"
+              data-node-id={item.sourceNodeId ?? undefined}
+              aria-pressed={item.selected === true}
+              disabled={
+                item.selectable === false || (item.selectable == null && item.treeLocator == null)
+              }
+              onClick={() => onSelect(item)}
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                event.preventDefault();
+                onSelect(item);
+              }}
+              className="w-full rounded border border-(--border-subtle) bg-(--surface-subtle) p-2 text-left aria-pressed:border-(--status-info) aria-pressed:ring-1 aria-pressed:ring-(--status-info) disabled:cursor-default"
             >
               <span className="block truncate font-mono text-[11px] text-(--text-primary)">
                 {item.label}
@@ -51,6 +60,9 @@ export function CanvasRelationalTreeSourceCatalogue({
               >
                 {stateLabel[item.state]}
               </span>
+              {item.reason == null ? null : (
+                <span className="mt-1 block text-[9px] text-(--text-muted)">{item.reason}</span>
+              )}
             </button>
           </li>
         ))}

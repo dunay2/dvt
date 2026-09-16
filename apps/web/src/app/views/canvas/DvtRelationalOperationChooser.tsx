@@ -5,36 +5,57 @@ import type {
   CanvasRelationalOperationChoice,
 } from './canvasRelationalOperationChoices';
 import { canvasViewCopy } from './copy';
+import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 
-function operationLabel(operation: CanvasRelationalOperation): string {
+type RelationalOperationCopy = Pick<
+  CanvasRelationalTreeWorkbenchCopy,
+  | 'inspectorDvtSubstraitInnerJoinAction'
+  | 'inspectorDvtSubstraitUnionAllAction'
+  | 'inspectorDvtRelationalAvailable'
+  | 'inspectorDvtRelationalNeedsPredicate'
+  | 'inspectorDvtRelationalNeedsSchemaAlignment'
+  | 'inspectorDvtRelationalTargetUnavailable'
+  | 'inspectorDvtRelationalUnavailable'
+  | 'inspectorDvtRelationalReadOnly'
+>;
+
+export function canvasRelationalOperationLabel(
+  operation: CanvasRelationalOperation,
+  copy: RelationalOperationCopy = canvasViewCopy
+): string {
   return operation === 'inner_join'
-    ? canvasViewCopy.inspectorDvtSubstraitInnerJoinAction
-    : canvasViewCopy.inspectorDvtSubstraitUnionAllAction;
+    ? copy.inspectorDvtSubstraitInnerJoinAction
+    : copy.inspectorDvtSubstraitUnionAllAction;
 }
 
-function availabilityLabel(choice: CanvasRelationalOperationChoice): string {
-  switch (choice.availability) {
+export function canvasRelationalAvailabilityLabel(
+  availability: CanvasRelationalOperationChoice['availability'],
+  copy: RelationalOperationCopy = canvasViewCopy
+): string {
+  switch (availability) {
     case 'available':
-      return canvasViewCopy.inspectorDvtRelationalAvailable;
+      return copy.inspectorDvtRelationalAvailable;
     case 'needs-predicate':
-      return canvasViewCopy.inspectorDvtRelationalNeedsPredicate;
+      return copy.inspectorDvtRelationalNeedsPredicate;
     case 'needs-schema-alignment':
-      return canvasViewCopy.inspectorDvtRelationalNeedsSchemaAlignment;
+      return copy.inspectorDvtRelationalNeedsSchemaAlignment;
     case 'target-unavailable':
-      return canvasViewCopy.inspectorDvtRelationalTargetUnavailable;
+      return copy.inspectorDvtRelationalTargetUnavailable;
     case 'read-only':
-      return canvasViewCopy.inspectorDvtRelationalReadOnly;
+      return copy.inspectorDvtRelationalReadOnly;
     case 'semantically-unavailable':
-      return canvasViewCopy.inspectorDvtRelationalUnavailable;
+      return copy.inspectorDvtRelationalUnavailable;
   }
 }
 
 export function DvtRelationalOperationChooser({
   choices,
   onSelect,
+  copy = canvasViewCopy,
 }: Readonly<{
   choices: readonly CanvasRelationalOperationChoice[];
   onSelect: (operation: CanvasRelationalOperation) => void;
+  copy?: RelationalOperationCopy;
 }>): JSX.Element {
   return (
     <div data-slot="dvt-relational-operation-chooser" className="grid gap-2">
@@ -47,9 +68,16 @@ export function DvtRelationalOperationChooser({
           className="h-auto justify-between gap-3 py-2"
           data-slot={`dvt-select-operation-${choice.operation.replace('_', '-')}`}
           onClick={() => onSelect(choice.operation)}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            onSelect(choice.operation);
+          }}
         >
-          <span>{operationLabel(choice.operation)}</span>
-          <span className="text-[10px] font-normal opacity-70">{availabilityLabel(choice)}</span>
+          <span>{canvasRelationalOperationLabel(choice.operation, copy)}</span>
+          <span className="text-[10px] font-normal opacity-70">
+            {canvasRelationalAvailabilityLabel(choice.availability, copy)}
+          </span>
         </Button>
       ))}
     </div>

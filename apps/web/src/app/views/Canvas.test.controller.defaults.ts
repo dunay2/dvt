@@ -269,6 +269,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleSelectCanvasDocument'
   | 'handleExportProjectSnapshot'
   | 'handleImportProjectSnapshotFile'
+  | 'applyNodeDraft'
   | 'applyInspectorNodeDraft'
   | 'clearRelationalPredicateSeed'
   | 'handleDuplicateNode'
@@ -311,6 +312,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleSelectCanvasDocument: vi.fn(),
     handleExportProjectSnapshot: vi.fn(),
     handleImportProjectSnapshotFile: vi.fn(),
+    applyNodeDraft: vi.fn(),
     applyInspectorNodeDraft: vi.fn(),
     clearRelationalPredicateSeed: vi.fn(),
     handleDuplicateNode: vi.fn(),

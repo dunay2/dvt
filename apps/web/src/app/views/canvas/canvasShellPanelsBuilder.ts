@@ -64,6 +64,10 @@ export function buildCanvasShellPanels({
             onClearRelationalPredicateSeed: panelState.clearRelationalPredicateSeed,
           }),
     },
+    relationalTreeAuthoring: {
+      canEditNode: panelState.canEditInspectorNode,
+      onApplyNodeDraft: panelState.applyNodeDraft,
+    },
     inspectorWorkbenchContributions: [],
     activeRunId: panelState.activeRunId,
     registeredPlugins: panelState.registeredPlugins,

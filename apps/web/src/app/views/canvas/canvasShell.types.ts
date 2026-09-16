@@ -19,6 +19,7 @@ import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
+import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContribution';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { ProjectCanvasDocument } from './canvasProjectCanvasLifecycle';
@@ -82,6 +83,7 @@ export type CanvasShellPanels = {
   inspectorGraphNodes: readonly CanonicalNode[];
   inspectorGraphEdges: readonly CanonicalEdge[];
   inspectorAuthoring: CanvasInspectorAuthoringContract;
+  relationalTreeAuthoring?: CanvasRelationalTreeAuthoringContract;
   inspectorWorkbenchContributions: readonly CanvasNodeWorkbenchContribution[];
   activeRunId: string | null;
   registeredPlugins: ReadonlySet<string>;

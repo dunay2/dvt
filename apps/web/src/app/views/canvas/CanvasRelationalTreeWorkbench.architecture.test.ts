@@ -8,6 +8,9 @@ import WorkbenchSource from './CanvasRelationalTreeWorkbench.tsx?raw';
 import EntrySource from './canvasRelationalCompositionEdgeInteraction.ts?raw';
 import CanvasShellSource from './CanvasShell.tsx?raw';
 import CodeWorkbenchSource from './DvtTransformCodeWorkbenchContent.tsx?raw';
+import WorkbenchModelSource from './useCanvasRelationalTreeWorkbenchModel.ts?raw';
+import AuthoringSessionSource from './useCanvasRelationalTreeAuthoringSession.ts?raw';
+import AuthoringModelSource from './canvasRelationalTreeAuthoringModel.ts?raw';
 
 describe('Canvas relational-tree Workbench architecture', () => {
   it('keeps query consumption, catalogue, tree and detail in bounded components', () => {
@@ -16,17 +19,27 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(TreeSource.split('\n').length).toBeLessThan(150);
     expect(ZoomSource.split('\n').length).toBeLessThan(80);
     expect(DetailSource.split('\n').length).toBeLessThan(100);
-    expect(WorkbenchSource).toContain('projectCanvasRelationalTree');
+    expect(WorkbenchModelSource.split('\n').length).toBeLessThan(180);
+    expect(AuthoringSessionSource.split('\n').length).toBeLessThan(180);
+    expect(AuthoringModelSource.split('\n').length).toBeLessThan(260);
+    expect(WorkbenchModelSource).toContain('projectCanvasRelationalTree');
   });
 
   it('does not introduce a second Canvas or semantic write authority', () => {
-    const combined = [WorkbenchSource, CatalogueSource, TreeSource, ZoomSource, DetailSource].join(
-      '\n'
-    );
+    const combined = [
+      WorkbenchSource,
+      WorkbenchModelSource,
+      CatalogueSource,
+      TreeSource,
+      ZoomSource,
+      DetailSource,
+    ].join('\n');
     expect(combined).not.toContain('@xyflow/react');
     expect(combined).not.toContain('applyDvtSubstraitSemanticDocument');
     expect(combined).not.toContain('encodeDvtSubstrait');
     expect(combined).not.toContain('create(');
+    expect(AuthoringSessionSource).toContain('authoring.onApplyNodeDraft(');
+    expect(AuthoringSessionSource).not.toContain('applyInspectorNodeDraft');
   });
 
   it('routes pending and canonical badges to the single bottom-drawer Workbench', () => {
