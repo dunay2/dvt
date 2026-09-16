@@ -56,6 +56,7 @@ export type StubCanvasDraftReadOptions = {
   columnMappingTemporal?: boolean;
   sourceInspectorOrdering?: boolean;
   substraitPendingComposition?: boolean;
+  substraitCompositionColumnType?: 'string' | 'bigint';
   substraitInnerJoin?: boolean;
   substraitNInputJoin?: boolean;
   substraitUnionAll?: boolean;
@@ -93,6 +94,7 @@ export function buildCanvasAuthoringDraft({
   columnMappingTemporal = false,
   sourceInspectorOrdering = false,
   substraitPendingComposition = false,
+  substraitCompositionColumnType = 'string',
   substraitInnerJoin = false,
   substraitNInputJoin = false,
   substraitUnionAll = false,
@@ -352,7 +354,7 @@ export function buildCanvasAuthoringDraft({
             schema: 'public',
             tableName: 'customers',
             columns: [
-              { name: 'customer_id', type: 'string' },
+              { name: 'customer_id', type: substraitCompositionColumnType },
               { name: 'name', type: 'string' },
             ],
             connectedSourceRef: {
@@ -375,7 +377,7 @@ export function buildCanvasAuthoringDraft({
             tableName: 'orders',
             columns: [
               { name: 'order_id', type: 'string' },
-              { name: 'customer_id', type: 'string' },
+              { name: 'customer_id', type: substraitCompositionColumnType },
             ],
             connectedSourceRef: {
               schemaVersion: 'connected-source-ref.v1',
