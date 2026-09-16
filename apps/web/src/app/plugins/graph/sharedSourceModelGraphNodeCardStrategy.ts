@@ -225,12 +225,9 @@ function buildSharedSourceModelCard(
     subtitle: authorityLabel ?? resolveGraphNodeRelationPath(metadata, data) ?? node.path ?? null,
     path: node.path ?? resolveGraphNodeRelationPath(metadata, data) ?? null,
     kindLabel:
-      relationalComposition?.state === 'pending'
-        ? copy.relationalCompositionPendingLabel
-        : relationalComposition?.state === 'incomplete' ||
-            relationalComposition?.state === 'unresolved'
-          ? copy.relationalCompositionIncompleteLabel
-          : null,
+      relationalComposition?.state === 'incomplete' || relationalComposition?.state === 'unresolved'
+        ? copy.relationalCompositionIncompleteLabel
+        : null,
     accentTone: resolveNodeCardAccentTone(node),
     health: resolveNodeCardHealth(
       node,

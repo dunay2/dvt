@@ -67,5 +67,6 @@ describe('Canvas viewport edge projection', () => {
     expect(composition.every((member) => member?.state === 'pending')).toBe(true);
     expect(composition.every((member) => member?.label === 'RELACIONAR / COMPONER')).toBe(true);
     expect(composition.filter((member) => member?.role === 'trunk-owner')).toHaveLength(1);
+    expect(projected.every((edge) => edge.ariaLabel?.includes('RELACIONAR / COMPONER'))).toBe(true);
   });
 });

@@ -82,6 +82,8 @@ export function projectCanvasViewportEdges(args: {
       const baseAriaLabel = copy.canvasEdgeAccessibleLabelTemplate
         .replace('{source}', canonicalNodesById.get(edge.sourceId)?.name ?? edge.sourceId)
         .replace('{target}', canonicalNodesById.get(edge.targetId)?.name ?? edge.targetId);
+      const compositionAriaLabel =
+        data.composition == null ? baseAriaLabel : `${baseAriaLabel}, ${data.composition.label}`;
 
       return createCanvasDirectionalEdge({
         id: resolveCanvasAuthoringVisibleEdgeId({ edge, canonicalEdgeIdBySignature }),
@@ -89,8 +91,8 @@ export function projectCanvasViewportEdges(args: {
         target: edge.targetId,
         ariaLabel:
           data.execution.gateState === 'closed'
-            ? `${baseAriaLabel}, ${copy.canvasEdgeExcludedFromExecutionLabel}`
-            : baseAriaLabel,
+            ? `${compositionAriaLabel}, ${copy.canvasEdgeExcludedFromExecutionLabel}`
+            : compositionAriaLabel,
         data,
       });
     });

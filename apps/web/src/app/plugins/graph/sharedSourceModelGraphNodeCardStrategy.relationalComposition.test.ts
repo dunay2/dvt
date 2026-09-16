@@ -25,7 +25,7 @@ const EMPTY_COLUMN_TRUTH = {
 };
 
 describe('shared Source/Model relational-composition presentation', () => {
-  it('shows a neutral composition intent instead of inventing an operation', () => {
+  it('does not duplicate the pending composition label owned by the converged edges', () => {
     const model = buildGraphNodeCardReadModel(
       TRANSFORM,
       {
@@ -42,8 +42,7 @@ describe('shared Source/Model relational-composition presentation', () => {
       [sharedSourceModelGraphNodeCardStrategy]
     );
 
-    expect(model.kindLabel).toBe('RELATE / COMPOSE');
-    expect(model.kindLabel).not.toMatch(/JOIN|UNION|EXISTS/);
+    expect(model.kindLabel).toBeNull();
   });
 
   it('shows the fail-closed reconnect intent', () => {

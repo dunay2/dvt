@@ -261,6 +261,11 @@ export const graphFlowPalette = {
   directionCueTargetClearance: 2,
   directionCueLength: 12,
   directionCueHalfWidth: 5,
+  relationalJunctionOffset: 72,
+  relationalJunctionRadius: 6,
+  relationalBadgeHeight: 20,
+  relationalBadgeCharacterWidth: 6.5,
+  relationalBadgeHorizontalPadding: 18,
 } as const;
 
 export function resolveGraphNodeKindTone(kind: PluginNodeKind): GraphNodeKindTone {
