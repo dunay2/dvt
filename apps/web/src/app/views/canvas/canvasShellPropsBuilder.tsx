@@ -68,6 +68,8 @@ function buildCanvasShellPanelsArgs({
       canEditInspectorNode:
         controller.canEditInspectorNode && routeViewState.effectiveUserPermissions.canEditEdges,
       applyInspectorNodeDraft: controller.applyInspectorNodeDraft,
+      relationalPredicateSeed: controller.relationalPredicateSeed,
+      clearRelationalPredicateSeed: controller.clearRelationalPredicateSeed,
       activeRunId: controller.activeRunId,
       registeredPlugins: controller.registeredPlugins,
       runtimeCapabilities: controller.runtimeCapabilities,

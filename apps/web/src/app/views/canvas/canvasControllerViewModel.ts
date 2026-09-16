@@ -137,6 +137,8 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     frozenNodeIds: store.frozenNodeIds,
     canEditInspectorNode: runtimePolicy.commands.canEditInspectorNode,
     applyInspectorNodeDraft: args.inspectorCommands.applyInspectorNodeDraft,
+    relationalPredicateSeed: args.graphHandlers.relationalPredicateSeed,
+    clearRelationalPredicateSeed: args.graphHandlers.clearRelationalPredicateSeed,
   };
 }
 

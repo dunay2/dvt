@@ -32,6 +32,7 @@ import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import { findCanvasGraphNodeElement } from './canvasNodeWorkbenchDomGeometry';
 import { useCanvasNodeDataSample } from './useCanvasNodeDataSample';
+import { projectCanvasRelationalCompositionEdgeInteractions } from './canvasRelationalCompositionEdgeInteraction';
 
 type WorkbenchOpener = Readonly<{
   element: HTMLElement | null;
@@ -323,6 +324,12 @@ export default function CanvasShell({
           ariaLabel: projectedData.projectAccessibleHealthLabel?.(projectedData) ?? node.ariaLabel,
           data: projectedData,
         };
+      }),
+      edges: projectCanvasRelationalCompositionEdgeInteractions({
+        edges: graph.edges,
+        nodes: graph.nodesWithImpact,
+        canonicalTargetNodeIds: semanticTransformIds,
+        onActivateCanonical: openSemanticTransform,
       }),
     }),
     [

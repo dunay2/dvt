@@ -55,6 +55,8 @@ export type StubCanvasDraftReadOptions = {
   columnMappingNotNullCustomer?: boolean;
   columnMappingTemporal?: boolean;
   sourceInspectorOrdering?: boolean;
+  substraitPendingComposition?: boolean;
+  substraitCompositionColumnType?: 'string' | 'bigint';
   substraitInnerJoin?: boolean;
   substraitNInputJoin?: boolean;
   substraitUnionAll?: boolean;
@@ -91,6 +93,8 @@ export function buildCanvasAuthoringDraft({
   columnMappingNotNullCustomer = false,
   columnMappingTemporal = false,
   sourceInspectorOrdering = false,
+  substraitPendingComposition = false,
+  substraitCompositionColumnType = 'string',
   substraitInnerJoin = false,
   substraitNInputJoin = false,
   substraitUnionAll = false,
@@ -287,7 +291,7 @@ export function buildCanvasAuthoringDraft({
     });
   }
 
-  if (substraitInnerJoin || substraitNInputJoin) {
+  if (substraitPendingComposition || substraitInnerJoin || substraitNInputJoin) {
     const connectionRef = {
       schemaVersion: 'connection-ref.v1' as const,
       connectionId: 'warehouse-a',
@@ -350,7 +354,7 @@ export function buildCanvasAuthoringDraft({
             schema: 'public',
             tableName: 'customers',
             columns: [
-              { name: 'customer_id', type: 'string' },
+              { name: 'customer_id', type: substraitCompositionColumnType },
               { name: 'name', type: 'string' },
             ],
             connectedSourceRef: {
@@ -373,7 +377,7 @@ export function buildCanvasAuthoringDraft({
             tableName: 'orders',
             columns: [
               { name: 'order_id', type: 'string' },
-              { name: 'customer_id', type: 'string' },
+              { name: 'customer_id', type: substraitCompositionColumnType },
             ],
             connectedSourceRef: {
               schemaVersion: 'connected-source-ref.v1',
@@ -438,13 +442,15 @@ export function buildCanvasAuthoringDraft({
           role: 'transform',
           status: 'idle',
           tags: ['authoring'],
-          metadata: {
-            transformAuthoring: {
-              version: 'v1',
-              mode: 'substrait',
-              semanticDocument,
-            },
-          },
+          metadata: substraitPendingComposition
+            ? {}
+            : {
+                transformAuthoring: {
+                  version: 'v1',
+                  mode: 'substrait',
+                  semanticDocument,
+                },
+              },
         },
       ],
       edges: [

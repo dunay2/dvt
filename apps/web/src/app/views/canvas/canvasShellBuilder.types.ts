@@ -54,7 +54,10 @@ export type CanvasShellPanelsBuilderArgs = Readonly<{
     | 'runtimeCapabilities'
     | 'importedNodeFocusIds'
     | 'executionEnvironmentOptions'
-  >;
+  > &
+    Partial<
+      Pick<CanvasRouteController, 'relationalPredicateSeed' | 'clearRelationalPredicateSeed'>
+    >;
   userPermissions: CanvasRouteViewState['effectiveUserPermissions'];
   routePresentation: Pick<
     CanvasRouteViewState,

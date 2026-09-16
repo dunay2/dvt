@@ -42,6 +42,7 @@ import {
   readDvtSourceOutputProjection,
   type DvtSourceOutputProjection,
 } from './canvasDvtSourceSemanticAuthoring';
+import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
 
 export function projectCanvasNodePresentationTruth(
   args: Readonly<{
@@ -327,8 +328,10 @@ function projectCanvasNodePresentationTruthInternal(
           } as const,
         }),
   });
+  const relationalComposition = resolveCanvasRelationalCompositionTruth(args);
   const baseTruth: CanvasNodePresentationTruth = {
     ...projectedTruth,
+    ...(relationalComposition == null ? {} : { relationalComposition }),
     code: invalidCanonicalSubstraitDocument
       ? { kind: 'unavailable', reason: 'invalid-canonical-substrait-document' }
       : (canonicalSubstraitCode ?? projectedTruth.code),

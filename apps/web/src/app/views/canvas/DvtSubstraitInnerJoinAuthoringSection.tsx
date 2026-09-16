@@ -28,8 +28,7 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import { canvasViewCopy } from './copy';
-import { projectSemanticWorkbenchJoinConditionRows } from './SemanticWorkbenchJoinConditionEditor';
-import { resolveDvtSubstraitJoinUnaryFunctions } from './canvasDvtSubstraitJoinOperand';
+import { DvtSubstraitJoinPredicateEditors } from './DvtSubstraitJoinPredicateEditors';
 
 export function DvtSubstraitInnerJoinAuthoringSection({
   disabled,
@@ -153,6 +152,14 @@ export function DvtSubstraitInnerJoinAuthoringSection({
     );
   const nInputInspection = inspectDvtSubstraitNInputJoinDraft(semanticDraft);
   const binaryInspection = inspectDvtSubstraitInnerJoinDraft(semanticDraft);
+  const renderPredicateEditors = (projection: DvtSubstraitNInputJoinProjection): ReactNode => (
+    <DvtSubstraitJoinPredicateEditors
+      disabled={disabled}
+      draft={semanticDraft}
+      projection={projection}
+      onChange={(nextDraft) => mutateDraft(() => nextDraft)}
+    />
+  );
   const renderAppendInput = (projection: DvtSubstraitNInputJoinProjection): ReactNode => {
     if (appendCandidates.length === 0) return null;
     const candidateFieldSeparator = '\u001f';
@@ -521,34 +528,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
         <p className="text-xs text-(--text-muted)">
           {projection.inputs.map((input) => input.table).join(' + ')}
         </p>
-        <ul className="space-y-1 text-xs" data-slot="dvt-substrait-n-input-predicates">
-          {projection.joins.map((join, index) => (
-            <li key={projection.joinRelations[index]!.relationId}>
-              {projectSemanticWorkbenchJoinConditionRows({
-                conditions: join.conditions,
-                fieldLabelById: new Map(
-                  projection.inputs.flatMap((input) =>
-                    input.fields.map(
-                      (field) => [field.fieldId, `${input.table}.${field.name}`] as const
-                    )
-                  )
-                ),
-                functionNameById: new Map(
-                  projection.inputs.flatMap((input) =>
-                    input.fields.flatMap((field) =>
-                      resolveDvtSubstraitJoinUnaryFunctions({
-                        dataType: field.dataType,
-                        provider: 'postgres',
-                      }).map((fn) => [fn.capabilityId, fn.name] as const)
-                    )
-                  )
-                ),
-              })
-                .map((row) => row.label)
-                .join(' ')}
-            </li>
-          ))}
-        </ul>
+        {renderPredicateEditors(projection)}
         <dl className="space-y-2 text-xs">
           <div className="space-y-2">
             <dt className="text-(--text-muted)">
@@ -682,6 +662,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
   return renderShell(
     <>
       {renderJoinSummary(projection)}
+      {nInputInspection.ok ? renderPredicateEditors(nInputInspection.projection) : null}
       <dl className="space-y-2 text-xs">
         <div className="space-y-2">
           <dt className="text-(--text-muted)">

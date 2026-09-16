@@ -27,6 +27,10 @@ type GraphNodeCardCopy = Readonly<{
   testsLabel: string;
   readyStatusLabel: string;
   draftStatusLabel: string;
+  relationalCompositionPendingLabel: string;
+  relationalCompositionIncompleteLabel: string;
+  relationalCompositionJoinSummaryTemplate: string;
+  relationalCompositionUnionAllSummaryTemplate: string;
   filterLabel: string;
   testStatusLabels: Readonly<Record<string, string>>;
   healthTitleTemplate: string;
@@ -127,6 +131,12 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   testsLabel: 'Tests',
   readyStatusLabel: 'Ready',
   draftStatusLabel: 'Draft',
+  relationalCompositionPendingLabel: 'RELATE / COMPOSE',
+  relationalCompositionIncompleteLabel: 'RECONNECT INPUT',
+  relationalCompositionJoinSummaryTemplate:
+    'INNER JOIN, inputs: {inputCount}, predicates: {predicateCount}',
+  relationalCompositionUnionAllSummaryTemplate:
+    'UNION ALL, inputs: {inputCount}, outputs: {outputCount}, bag semantics',
   filterLabel: 'Filter',
   testStatusLabels: {
     pass: 'Passed',
@@ -250,6 +260,12 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   testsLabel: 'Pruebas',
   readyStatusLabel: 'Listo',
   draftStatusLabel: 'Borrador',
+  relationalCompositionPendingLabel: 'RELACIONAR / COMPONER',
+  relationalCompositionIncompleteLabel: 'RECONECTAR ENTRADA',
+  relationalCompositionJoinSummaryTemplate:
+    'INNER JOIN, entradas: {inputCount}, predicados: {predicateCount}',
+  relationalCompositionUnionAllSummaryTemplate:
+    'UNION ALL, entradas: {inputCount}, salidas: {outputCount}, semántica bag',
   filterLabel: 'Filtro',
   testStatusLabels: {
     pass: 'Aprobadas',

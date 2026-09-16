@@ -40,7 +40,7 @@ import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualToke
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { useCanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import { DvtTransformOutputView } from './DvtTransformOutputView';
+import { DvtTransformCodeWorkbenchContent } from './DvtTransformCodeWorkbenchContent';
 import { isDbtCompatibleModel, reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
 import { useCanvasColumnCommentCellRenderer } from './useCanvasColumnCommentCellRenderer';
 import { SourceNodeWorkbenchHeaderIdentity } from './SourceNodeWorkbenchHeaderIdentity';
@@ -353,13 +353,15 @@ export function CanvasNodeWorkbenchPanel({
     sectionAfterChildren.code = (
       <>
         {sectionAfterChildren.code}
-        <DvtTransformOutputView
+        <DvtTransformCodeWorkbenchContent
           key={`${node.id}:${presentationTruth.code.digest}`}
           transformNode={node}
           nodes={nodes}
           edges={edges}
           canonicalContent={presentationTruth.code.content}
           canonicalDescription={codeDescription}
+          relationalComposition={presentationTruth.relationalComposition}
+          pendingCompositionAuthoring={renderAuthoringSection('code')}
           copy={copy}
         />
       </>

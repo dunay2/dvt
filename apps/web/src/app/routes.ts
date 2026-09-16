@@ -30,6 +30,7 @@ import LoginView from './views/LoginView';
 import PluginsView from './views/PluginsView';
 
 const SemanticWorkbenchLab = lazy(() => import('./labs/SemanticWorkbenchLab'));
+const RelationalCompositionLab = lazy(() => import('./labs/RelationalCompositionLab'));
 
 function normalizeChildPath(path: string): string {
   return path.startsWith('/') ? path.slice(1) : path;
@@ -226,6 +227,17 @@ export function createAppRoutes(): RouteObject[] {
           Suspense,
           { fallback: createElement(PluginRouteFallback) },
           createElement(SemanticWorkbenchLab)
+        ),
+      }),
+    },
+    {
+      path: '/lab/relational-composition',
+      errorElement: createElement(AppRouteErrorBoundary),
+      element: createElement(PublicRouteBootstrapBoundary, {
+        children: createElement(
+          Suspense,
+          { fallback: createElement(PluginRouteFallback) },
+          createElement(RelationalCompositionLab)
         ),
       }),
     },

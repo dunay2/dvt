@@ -8,6 +8,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.columnMapping.addedMessage',
     fallback: 'Column mapping added.',
   },
+  columnRelationProposedMessage: {
+    key: 'canvas.columnMapping.relationProposedMessage',
+    fallback: 'Field relation proposed. Choose what to do with it.',
+  },
   columnMappingRemovedMessage: {
     key: 'canvas.columnMapping.removedMessage',
     fallback: 'Column mapping removed.',
@@ -648,6 +652,58 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSubstraitUnionAllFieldsLabel',
     fallback: 'Compatible fields',
   },
+  inspectorDvtRelationalOperationTitle: {
+    key: 'canvas.inspector.authoring.dvtRelationalOperationTitle',
+    fallback: 'Relate / compose',
+  },
+  inspectorDvtRelationalAvailable: {
+    key: 'canvas.inspector.authoring.dvtRelationalAvailable',
+    fallback: 'Available',
+  },
+  inspectorDvtRelationalNeedsPredicate: {
+    key: 'canvas.inspector.authoring.dvtRelationalNeedsPredicate',
+    fallback: 'Needs predicate',
+  },
+  inspectorDvtRelationalNeedsSchemaAlignment: {
+    key: 'canvas.inspector.authoring.dvtRelationalNeedsSchemaAlignment',
+    fallback: 'Needs schema alignment',
+  },
+  inspectorDvtRelationalTargetUnavailable: {
+    key: 'canvas.inspector.authoring.dvtRelationalTargetUnavailable',
+    fallback: 'Target unavailable',
+  },
+  inspectorDvtRelationalUnavailable: {
+    key: 'canvas.inspector.authoring.dvtRelationalUnavailable',
+    fallback: 'Unavailable',
+  },
+  inspectorDvtRelationalReadOnly: {
+    key: 'canvas.inspector.authoring.dvtRelationalReadOnly',
+    fallback: 'Read only',
+  },
+  inspectorDvtRelationalLeftOperandField: {
+    key: 'canvas.inspector.authoring.dvtRelationalLeftOperandField',
+    fallback: 'Left operand field',
+  },
+  inspectorDvtRelationalRightOperandField: {
+    key: 'canvas.inspector.authoring.dvtRelationalRightOperandField',
+    fallback: 'Right operand field',
+  },
+  inspectorDvtRelationalLeftInput: {
+    key: 'canvas.inspector.authoring.dvtRelationalLeftInput',
+    fallback: 'Left input',
+  },
+  inspectorDvtRelationalRightInput: {
+    key: 'canvas.inspector.authoring.dvtRelationalRightInput',
+    fallback: 'Right input',
+  },
+  inspectorDvtRelationalApply: {
+    key: 'canvas.inspector.authoring.dvtRelationalApply',
+    fallback: 'Apply',
+  },
+  inspectorDvtRelationalCancel: {
+    key: 'canvas.inspector.authoring.dvtRelationalCancel',
+    fallback: 'Cancel',
+  },
   inspectorDvtSubstraitAggregationTitle: {
     key: 'canvas.inspector.authoring.dvtSubstraitAggregationTitle',
     fallback: 'Grain and summary',
@@ -686,7 +742,11 @@ export const canvasViewAuthoringCopyByKey = {
   },
   inspectorDvtSubstraitWindowTitle: {
     key: 'canvas.inspector.authoring.dvtSubstraitWindowTitle',
-    fallback: 'Partition and order',
+    fallback: 'Contextual relation',
+  },
+  inspectorDvtSubstraitWindowInputLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowInputLabel',
+    fallback: 'Same input',
   },
   inspectorDvtSubstraitWindowPartitionFieldLabel: {
     key: 'canvas.inspector.authoring.dvtSubstraitWindowPartitionFieldLabel',
@@ -695,6 +755,22 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorDvtSubstraitWindowOrderFieldLabel: {
     key: 'canvas.inspector.authoring.dvtSubstraitWindowOrderFieldLabel',
     fallback: 'Order field',
+  },
+  inspectorDvtSubstraitWindowOrderDirectionLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowOrderDirectionLabel',
+    fallback: 'ASC · NULLS LAST',
+  },
+  inspectorDvtSubstraitWindowFrameLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowFrameLabel',
+    fallback: 'Frame',
+  },
+  inspectorDvtSubstraitWindowFrameUnspecifiedLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowFrameUnspecifiedLabel',
+    fallback: 'Unspecified',
+  },
+  inspectorDvtSubstraitWindowOperationLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowOperationLabel',
+    fallback: 'Relative position',
   },
   inspectorDvtSubstraitWindowOutputLabel: {
     key: 'canvas.inspector.authoring.dvtSubstraitWindowOutputLabel',

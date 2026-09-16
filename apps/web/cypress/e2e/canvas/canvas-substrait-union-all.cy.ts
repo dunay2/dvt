@@ -64,10 +64,8 @@ describe('Canvas Substrait UNION ALL', () => {
   it('composes, persists, and reloads two compatible datasets through one canonical revision', () => {
     visitCanvas();
 
-    cy.get(
-      '.react-flow__node[data-id="union-transform"] [data-slot="graph-node-card-title"]'
-    ).dblclick();
-    cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
+    cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').click();
+    cy.get('[data-slot="dvt-select-operation-union-all"]').click();
     cy.get('button[data-slot="dvt-start-connected-union-all"]').click();
     cy.get('[data-slot="dvt-substrait-union-all-authoring"]')
       .should('be.visible')
@@ -127,13 +125,17 @@ describe('Canvas Substrait UNION ALL', () => {
         3
       );
     });
+    cy.get('[data-slot="canvas-relational-composition-badge"]')
+      .should('contain.text', 'UNION ALL')
+      .and('have.attr', 'aria-label', 'UNION ALL, inputs: 2, outputs: 3, bag semantics');
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     visitCanvas();
     cy.get('.react-flow__node[data-id="union-transform"]')
       .should('contain.text', 'Columns (3)')
-      .find('[data-slot="graph-node-card-title"]')
-      .dblclick();
+      .find('[data-slot="canvas-node-shell"]')
+      .rightclick();
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Properties').click();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="dvt-substrait-union-all-authoring"]').should(
       'contain.text',
