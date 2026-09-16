@@ -317,7 +317,7 @@ export function CanvasNodeWorkbenchPanel({
   const resolvedPrimarySectionIds = sectionModel.primarySectionIds;
   const panelIds = panels.map((panel) => panel.id);
   const resolvedActiveTab = resolveActiveNodeWorkbenchTab({ activeTab, model, panelIds });
-  const containsCanonicalCodeOutput =
+  const containsRelationalWorkbench =
     resolvedActiveTab === 'code' &&
     canonicalSubstraitTransformAuthority &&
     presentationTruth.code.kind === 'canonical';
@@ -347,9 +347,6 @@ export function CanvasNodeWorkbenchPanel({
     node.id
   );
   if (canonicalSubstraitTransformAuthority && presentationTruth.code.kind === 'canonical') {
-    const codeDescription = baseModel.sections.find(
-      (section) => section.id === 'code'
-    )?.description;
     sectionAfterChildren.code = (
       <>
         {sectionAfterChildren.code}
@@ -358,8 +355,6 @@ export function CanvasNodeWorkbenchPanel({
           transformNode={node}
           nodes={nodes}
           edges={edges}
-          canonicalContent={presentationTruth.code.content}
-          canonicalDescription={codeDescription}
           relationalComposition={presentationTruth.relationalComposition}
           pendingCompositionAuthoring={renderAuthoringSection('code')}
           copy={copy}
@@ -441,7 +436,7 @@ export function CanvasNodeWorkbenchPanel({
       persistentSectionIds={contributedSectionIds.has('code') ? ['code'] : undefined}
       sectionBeforeChildren={sectionBeforeChildren}
       sectionAfterChildren={sectionAfterChildren}
-      fillAvailableHeight={containsCanonicalCodeOutput}
+      fillAvailableHeight={containsRelationalWorkbench}
       moreLabel={copy.nodeWorkbenchMoreLabel}
       slotPrefix="canvas-node-workbench"
       surface="workbench"
@@ -522,7 +517,7 @@ export function CanvasNodeWorkbenchPanel({
         </div>
       </div>
 
-      {containsCanonicalCodeOutput ? (
+      {containsRelationalWorkbench ? (
         <div
           data-slot="canvas-node-workbench-contained-body"
           className="min-h-0 flex-1 overflow-hidden p-4"

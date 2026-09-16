@@ -1,0 +1,60 @@
+/** Owned concern: present the source/operand catalogue for one relational tree. */
+import type {
+  CanvasRelationalTreeCatalogueItem,
+  CanvasRelationalTreeWorkbenchCopy,
+} from './canvasRelationalTreeWorkbench.types';
+
+const stateClass = {
+  participating: 'border-emerald-700 text-emerald-300',
+  pending: 'border-amber-700 text-amber-300',
+  missing: 'border-rose-700 text-rose-300',
+} as const;
+
+export function CanvasRelationalTreeSourceCatalogue({
+  items,
+  copy,
+  onSelect,
+}: Readonly<{
+  items: readonly CanvasRelationalTreeCatalogueItem[];
+  copy: CanvasRelationalTreeWorkbenchCopy;
+  onSelect: (locator: string) => void;
+}>): JSX.Element {
+  const stateLabel = {
+    participating: copy.relationalTreeParticipatingLabel,
+    pending: copy.relationalTreePendingLabel,
+    missing: copy.relationalTreeMissingLabel,
+  } as const;
+
+  return (
+    <section
+      aria-label={copy.relationalTreeSourcesLabel}
+      className="min-h-0 overflow-auto border-b border-(--border-subtle) p-3 lg:border-b-0 lg:border-r"
+    >
+      <h3 className="text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)">
+        {copy.relationalTreeSourcesLabel}
+      </h3>
+      <ul className="mt-3 space-y-2">
+        {items.map((item) => (
+          <li key={item.key}>
+            <button
+              type="button"
+              data-slot="canvas-relational-tree-source"
+              disabled={item.treeLocator == null}
+              onClick={() => item.treeLocator == null || onSelect(item.treeLocator)}
+              className="w-full rounded border border-(--border-subtle) bg-(--surface-subtle) p-2 text-left disabled:cursor-default"
+            >
+              <span className="block truncate font-mono text-[11px] text-(--text-primary)">
+                {item.label}
+              </span>
+              <span
+                className={`mt-1 inline-flex rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${stateClass[item.state]}`}
+              >
+                {stateLabel[item.state]}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
