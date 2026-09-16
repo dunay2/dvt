@@ -287,6 +287,64 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
     });
   });
 
+  it('edits a persisted JOIN predicate again after reload without replacing stable identities', () => {
+    let fieldIds: string[] = [];
+    let relationIds: string[] = [];
+    const inspectLatestSave = (): ReturnType<typeof inspectDvtSubstraitNInputJoinDraft> => {
+      const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)
+        ?.body as CanvasDraftSaveRequestBody;
+      const authoring = saved.draft.nodes.find((node) => node.id === 'join-transform')?.metadata
+        ?.transformAuthoring as { semanticDocument?: unknown };
+      return inspectDvtSubstraitNInputJoinDraft(
+        decodeDvtSubstraitInnerJoinDocument(authoring.semanticDocument)
+      );
+    };
+
+    visitCanvas();
+    openJoinWorkbench();
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+    cy.get('[data-slot="semantic-workbench-join-condition-list"]').should('be.visible');
+    cy.get('[aria-label="Editar condición"]').click();
+    cy.get('[aria-label="Comparador de la condición"]').select('gt');
+    cy.contains('button', 'Guardar condición').click();
+    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
+
+    cy.wrap(null).should(() => {
+      const inspected = inspectLatestSave();
+      expect(inspected.ok).to.equal(true);
+      if (!inspected.ok) return;
+      const condition = inspected.projection.joins[0]?.conditions[0];
+      expect(condition != null && condition.kind !== 'group' && condition.operator).to.equal('gt');
+      fieldIds = inspected.projection.inputs.flatMap((input) =>
+        input.fields.map((field) => field.fieldId)
+      );
+      relationIds = inspected.projection.joinRelations.map((relation) => relation.relationId);
+    });
+
+    cy.on('window:before:load', installE2eApiFetchStub);
+    cy.reload();
+    openJoinWorkbench();
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+    cy.get('[aria-label="Editar condición"]').click();
+    cy.get('[aria-label="Comparador de la condición"]').should('have.value', 'gt').select('lt');
+    cy.contains('button', 'Guardar condición').click();
+    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
+
+    cy.wrap(null).should(() => {
+      const inspected = inspectLatestSave();
+      expect(inspected.ok).to.equal(true);
+      if (!inspected.ok) return;
+      const condition = inspected.projection.joins[0]?.conditions[0];
+      expect(condition != null && condition.kind !== 'group' && condition.operator).to.equal('lt');
+      expect(
+        inspected.projection.inputs.flatMap((input) => input.fields.map((field) => field.fieldId))
+      ).to.deep.equal(fieldIds);
+      expect(
+        inspected.projection.joinRelations.map((relation) => relation.relationId)
+      ).to.deep.equal(relationIds);
+    });
+  });
+
   it('selects, groups, ranks, persists, and reloads fields from Substrait authority', () => {
     visitCanvas();
 
