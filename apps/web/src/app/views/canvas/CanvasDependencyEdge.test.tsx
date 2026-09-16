@@ -195,6 +195,7 @@ describe('CanvasDependencyEdge', () => {
   });
 
   it('renders one canonical operation badge and one final direction cue for the group owner', () => {
+    const onActivate = vi.fn();
     act(() => {
       root.render(
         <svg>
@@ -220,6 +221,7 @@ describe('CanvasDependencyEdge', () => {
                   role: 'trunk-owner',
                   state: 'canonical',
                   operation: 'inner_join',
+                  onActivate,
                 },
               })}
             />
@@ -234,9 +236,18 @@ describe('CanvasDependencyEdge', () => {
     expect(
       container.querySelector('[data-slot="canvas-relational-composition-junction"]')
     ).not.toBeNull();
-    expect(
-      container.querySelector('[data-slot="canvas-relational-composition-badge"]')?.textContent
-    ).toBe('INNER JOIN');
+    const badge = container.querySelector<SVGGElement>(
+      '[data-slot="canvas-relational-composition-badge"]'
+    );
+    expect(badge?.textContent).toBe('INNER JOIN');
+    expect(badge?.getAttribute('role')).toBe('button');
+    expect(badge?.getAttribute('tabindex')).toBe('0');
+    act(() => {
+      badge?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      badge?.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' }));
+      badge?.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: ' ' }));
+    });
+    expect(onActivate).toHaveBeenCalledTimes(3);
     expect(
       container.querySelectorAll('[data-slot="canvas-dependency-direction-cue"]')
     ).toHaveLength(1);

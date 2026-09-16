@@ -15,7 +15,10 @@ import type { CanonicalEdge } from '../../types/canonical';
 import type { CanvasRelationalCompositionEdgeMember } from './canvasRelationalCompositionEdgeGroup';
 
 export type CanvasDependencyCompositionPresentation = CanvasRelationalCompositionEdgeMember &
-  Readonly<{ label: string }>;
+  Readonly<{
+    label: string;
+    onActivate?: () => void;
+  }>;
 
 export type CanvasDependencyEdgeData = Readonly<{
   kind: 'dependency';
@@ -115,6 +118,8 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
         compositionCandidate.state === 'canonical' ||
         compositionCandidate.state === 'incomplete' ||
         compositionCandidate.state === 'unresolved') &&
+      (compositionCandidate.onActivate == null ||
+        typeof compositionCandidate.onActivate === 'function') &&
       validCompositionOperation &&
       (compositionCandidate.state !== 'canonical' || compositionCandidate.operation != null));
   const validUnavailableReason =
@@ -159,6 +164,9 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
             ...(compositionCandidate.operation === 'inner_join' ||
             compositionCandidate.operation === 'union_all'
               ? { operation: compositionCandidate.operation }
+              : {}),
+            ...(typeof compositionCandidate.onActivate === 'function'
+              ? { onActivate: compositionCandidate.onActivate as () => void }
               : {}),
           },
         }),
