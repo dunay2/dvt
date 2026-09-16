@@ -137,6 +137,29 @@ describe('CanvasNodeWorkbenchOverlay', () => {
           onApplyNodeDraft: vi.fn(),
         },
         inspectorGraphEdges: [],
+        inspectorGraphNodes: [NODE],
+        inspectorNode: NODE,
+        inspectorPreferredTabId: 'code',
+        inspectorPreferredTabRequestId: 8,
+        inspectorWorkbenchContributions: [],
+        registeredPlugins: new Set(['dvt']),
+      },
+    });
+
+    const relationalOverlay = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-node-workbench-overlay"]'
+    )!;
+    expect(relationalOverlay.className).toContain('w-[min(72rem,calc(100%-2rem))]');
+    expect(relationalOverlay.className).toContain('h-[min(56rem,calc(100%-2rem))]');
+
+    renderOverlay(root, {
+      panels: {
+        activeRunId: 'run-42',
+        inspectorAuthoring: {
+          canEditNode: true,
+          onApplyNodeDraft: vi.fn(),
+        },
+        inspectorGraphEdges: [],
         inspectorGraphNodes: [SOURCE_NODE],
         inspectorNode: SOURCE_NODE,
         inspectorPreferredTabId: 'general',
