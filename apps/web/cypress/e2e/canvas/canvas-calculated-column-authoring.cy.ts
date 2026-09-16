@@ -224,6 +224,47 @@ describe('Canvas calculated-column authoring', () => {
     });
   }
 
+  it('creates an alias from an upstream field that is excluded from Transform output', () => {
+    cy.viewport(1920, 1080);
+    visitCanvas();
+    const model = '.react-flow__node[data-id="model-orders"]';
+
+    cy.get(model).find('button[aria-expanded]').contains('Columns').click();
+    cy.get(model).contains('button', 'Map compatible columns').click();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get(`${model} [data-column-name="status"]`)
+      .find('[data-slot="graph-node-column-output-state"]')
+      .click();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get(`${model} [data-column-name="status"]`)
+      .find('[data-slot="graph-node-column-output-state"]')
+      .should('have.attr', 'aria-pressed', 'false');
+
+    cy.get(model).find('[data-slot="graph-node-calculated-column-trigger"]').focus().click();
+    cy.get('[data-slot="graph-node-calculated-column-form"]').within(() => {
+      cy.get('select[name="inputFieldId"] option').should('contain.text', 'status');
+      cy.get('select[name="inputFieldId"]').select('status');
+      cy.get('input[name="alias"]').type('status_alias');
+      cy.get('button[type="submit"]').click();
+    });
+
+    cy.wrap(null).should(() => {
+      const savedNode = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+        .map((call) => call.body as DraftSave)
+        .map((save) => save.draft.nodes.find((node) => node.id === 'model-orders'))
+        .filter((node) => node != null)
+        .at(-1);
+      const authority = savedNode?.metadata?.transformAuthoring as
+        { semanticDocument?: unknown } | undefined;
+      const inspection = inspectDvtSubstraitProjectionDraft(
+        decodeDvtSubstraitProjectionDocument(authority?.semanticDocument)
+      );
+      const alias = inspection.ok ? inspection.projection.outputs.at(-1) : null;
+      expect(alias).to.deep.include({ name: 'status_alias', sourceFieldName: 'status' });
+    });
+    cy.get(model).should('contain.text', 'status_alias');
+  });
+
   it('keeps one independent data tab per opened card', () => {
     resetE2eApiStubs();
     stubCanvas(true);
