@@ -37,7 +37,7 @@ describe('GraphNodeCalculatedColumnForm', () => {
       root.render(
         <GraphNodeCalculatedColumnForm
           nodeId="orders"
-          columns={[
+          inputColumns={[
             { id: 'output:order_id', name: 'order_id', type: 'integer' },
             { id: 'output:customer', name: 'customer', type: 'text' },
           ]}
@@ -95,7 +95,7 @@ describe('GraphNodeCalculatedColumnForm', () => {
         >
           <GraphNodeCalculatedColumnForm
             nodeId="orders"
-            columns={[
+            inputColumns={[
               {
                 id: 'output:customer',
                 name: 'customer',
@@ -190,7 +190,7 @@ describe('GraphNodeCalculatedColumnForm', () => {
       root.render(
         <GraphNodeCalculatedColumnForm
           nodeId="orders"
-          columns={[{ id: 'output:customer', name: 'customer', type: 'text' }]}
+          inputColumns={[{ id: 'output:customer', name: 'customer', type: 'text' }]}
           onSubmit={onSubmit}
         />
       );
@@ -229,7 +229,7 @@ describe('GraphNodeCalculatedColumnForm', () => {
       root.render(
         <GraphNodeCalculatedColumnForm
           nodeId="orders"
-          columns={[{ id: 'output:customer', name: 'customer', type: 'text' }]}
+          inputColumns={[{ id: 'output:customer', name: 'customer', type: 'text' }]}
           onSubmit={onSubmit}
         />
       );

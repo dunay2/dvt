@@ -106,6 +106,36 @@ describe('GraphNodeColumnSection', () => {
     expect(container.querySelector('[data-slot="graph-node-column-remainder-toggle"]')).toBeNull();
   });
 
+  it('keeps the calculated-column action in its hover-sensitive expanded gap', () => {
+    act(() => {
+      root.render(
+        <GraphNodeColumnSection
+          columns={[{ id: 'output:request_id', name: 'request_id', type: 'text' }]}
+          expressionInputs={[
+            { id: 'input:request_id', name: 'request_id', type: 'text' },
+            { id: 'input:event_id', name: 'event_id', type: 'text' },
+          ]}
+          nodeId="model-1"
+          onCalculatedColumnAdd={() => ({ outcome: 'applied', createdFieldId: 'created' })}
+        />
+      );
+    });
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+
+    const columnList = container.querySelector('[data-slot="graph-node-column-list"]');
+    const addButton = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-calculated-column-trigger"]'
+    );
+    expect(columnList?.parentElement?.contains(addButton)).toBe(true);
+    expect(addButton?.className).toContain('opacity-0');
+    expect(addButton?.className).toContain('group-hover/add:opacity-100');
+  });
+
   afterEach(() => {
     act(() => root.unmount());
     container.remove();

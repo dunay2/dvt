@@ -60,7 +60,7 @@ function resolveCalculatedColumnCommandError(
 
 export function GraphNodeCalculatedColumnForm(props: {
   nodeId: string;
-  columns: readonly GraphNodeColumn[];
+  inputColumns: readonly GraphNodeColumn[];
   initialInputFieldId?: string;
   onClose?: () => void;
   onSubmit: (identity: GraphNodeCalculatedColumnIdentity) => GraphNodeColumnFunctionApplyResult;
@@ -77,18 +77,18 @@ export function GraphNodeCalculatedColumnForm(props: {
   const valueInputRef = useRef<HTMLInputElement>(null);
   const inputFieldRef = useRef<HTMLSelectElement>(null);
   const [inputFieldId, setInputFieldId] = useState(
-    props.initialInputFieldId ?? props.columns[0]?.id ?? props.columns[0]?.name ?? ''
+    props.initialInputFieldId ?? props.inputColumns[0]?.id ?? props.inputColumns[0]?.name ?? ''
   );
   const functions = useMemo(
     () =>
-      props.columns.flatMap((column) =>
+      props.inputColumns.flatMap((column) =>
         (column.functionMenu?.items ?? []).map((item) => ({
           ...item,
           inputFieldId: column.id ?? column.name,
           inputName: column.name,
         }))
       ),
-    [props.columns]
+    [props.inputColumns]
   );
   const compatibleFunctions = functions.filter(
     (item) =>
@@ -280,7 +280,7 @@ export function GraphNodeCalculatedColumnForm(props: {
                 }}
                 className={graphNodeColumnClasses.addControl}
               >
-                {props.columns.map((column) => (
+                {props.inputColumns.map((column) => (
                   <option key={column.id ?? column.name} value={column.id ?? column.name}>
                     {column.name}
                   </option>

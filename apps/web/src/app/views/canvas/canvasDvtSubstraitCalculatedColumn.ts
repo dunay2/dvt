@@ -101,9 +101,27 @@ export function createDvtSubstraitProjectionOutput(
         : expression.kind === 'row-number'
           ? [expression.orderFieldId]
           : [];
-  const operands = operandFieldIds.map((fieldId) =>
-    inspection.projection.outputs.find((output) => output.fieldId === fieldId)
-  );
+  const operands = operandFieldIds.map((fieldId) => {
+    const output = inspection.projection.outputs.find((candidate) => candidate.fieldId === fieldId);
+    if (output != null) {
+      return {
+        dataType: output.dataType,
+        mapping: output.outputOrdinal,
+        sourceFieldName: output.sourceFieldName,
+      };
+    }
+    const inputOrdinal = inspection.projection.inputFields.findIndex(
+      (candidate) => candidate.fieldId === fieldId
+    );
+    const input = inspection.projection.inputFields[inputOrdinal];
+    return input == null
+      ? null
+      : {
+          dataType: input.dataType,
+          mapping: inputOrdinal,
+          sourceFieldName: input.name,
+        };
+  });
   if (
     operands.some((operand) => operand == null) ||
     new Set(operandFieldIds).size !== operandFieldIds.length
@@ -172,7 +190,11 @@ export function createDvtSubstraitProjectionOutput(
   root.value.names.push(alias);
 
   if (expression.kind === 'field-ref') {
-    const inputMapping = emit.value.outputMapping[firstOperand!.outputOrdinal];
+    const inputMapping =
+      inspection.projection.outputs.find((output) => output.fieldId === expression.inputFieldId) ==
+      null
+        ? firstOperand!.mapping
+        : emit.value.outputMapping[firstOperand!.mapping];
     if (inputMapping == null) return { outcome: 'rejected', reason: 'invalid_reference' };
     emit.value.outputMapping.push(inputMapping);
     const appended = { plan, sidecar };
@@ -182,13 +204,25 @@ export function createDvtSubstraitProjectionOutput(
   }
 
   if (expression.kind === 'scalar-function') {
-    const inputMapping = emit.value.outputMapping[firstOperand!.outputOrdinal];
+    const inputMapping =
+      inspection.projection.outputs.find(
+        (output) => output.fieldId === expression.operandFieldIds[0]
+      ) == null
+        ? firstOperand!.mapping
+        : emit.value.outputMapping[firstOperand!.mapping];
     if (inputMapping == null) return { outcome: 'rejected', reason: 'invalid_reference' };
     emit.value.outputMapping.push(inputMapping);
     const appended = { plan, sidecar };
+    const operandFieldIds = expression.operandFieldIds.every((fieldId) =>
+      inspection.projection.outputs.some((output) => output.fieldId === fieldId)
+    )
+      ? expression.operandFieldIds
+      : expression.operandFieldIds.length === 1
+        ? ([fieldId] as const)
+        : expression.operandFieldIds;
     const applied = applyDvtSubstraitProjectionFunction(appended, {
       fieldId,
-      operandFieldIds: expression.operandFieldIds,
+      operandFieldIds,
       capabilityId: expression.capabilityId,
       alias,
       dataTypes: context!.inputDataTypes,
