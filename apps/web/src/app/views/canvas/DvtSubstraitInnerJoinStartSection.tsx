@@ -52,11 +52,13 @@ function firstField(
 export function DvtSubstraitInnerJoinStartSection({
   disabled,
   inputs,
+  initialSelection,
   onApply,
   onCancel,
 }: Readonly<{
   disabled: boolean;
   inputs: readonly CanvasDvtCompositionInput[];
+  initialSelection?: DvtSubstraitJoinFieldSelection;
   onApply: (selection: DvtSubstraitJoinFieldSelection) => void;
   onCancel: () => void;
 }>): JSX.Element | null {
@@ -75,12 +77,48 @@ export function DvtSubstraitInnerJoinStartSection({
       ),
     [inputs]
   );
-  const initialLeft = useMemo(() => firstField(availableInputs), [availableInputs]);
+  const proposedLeft = initialSelection?.left;
+  const proposedRight = initialSelection?.right;
+  const admittedProposal = useMemo(() => {
+    if (
+      proposedLeft == null ||
+      proposedRight == null ||
+      proposedLeft.nodeId === proposedRight.nodeId
+    ) {
+      return null;
+    }
+    const leftInput = availableInputs.find((input) => input.nodeId === proposedLeft.nodeId);
+    const rightInput = availableInputs.find((input) => input.nodeId === proposedRight.nodeId);
+    if (
+      leftInput == null ||
+      rightInput == null ||
+      !leftInput.fields.some(
+        (field) => field.name === proposedLeft.fieldName && field.stringCompatible
+      ) ||
+      !rightInput.fields.some(
+        (field) => field.name === proposedRight.fieldName && field.stringCompatible
+      ) ||
+      !hasSameConnectionRef(leftInput.sourceRef.connectionRef, rightInput.sourceRef.connectionRef)
+    ) {
+      return null;
+    }
+    return { left: proposedLeft, right: proposedRight };
+  }, [availableInputs, proposedLeft, proposedRight]);
+  const initialLeft = useMemo(
+    () => admittedProposal?.left ?? firstField(availableInputs),
+    [admittedProposal, availableInputs]
+  );
   const initialLeftInput = availableInputs.find((input) => input.nodeId === initialLeft?.nodeId);
   const initialRight = useMemo(
     () =>
+      admittedProposal?.right ??
       firstField(availableInputs, initialLeft?.nodeId, initialLeftInput?.sourceRef.connectionRef),
-    [availableInputs, initialLeft?.nodeId, initialLeftInput?.sourceRef.connectionRef]
+    [
+      admittedProposal,
+      availableInputs,
+      initialLeft?.nodeId,
+      initialLeftInput?.sourceRef.connectionRef,
+    ]
   );
   const [left, setLeft] = useState(initialLeft);
   const [right, setRight] = useState(initialRight);

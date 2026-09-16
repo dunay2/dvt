@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
+import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 import {
   resolveCanvasRelationalOperationChoices,
   type CanvasRelationalOperation,
@@ -18,11 +19,15 @@ import { DvtSubstraitUnionAllStartSection } from './DvtSubstraitUnionAllStartSec
 export function DvtSubstraitCompositionStartSection({
   disabled,
   inputs,
+  predicateSeed,
+  onClearPredicateSeed,
   onStartInnerJoin,
   onStartUnionAll,
 }: Readonly<{
   disabled: boolean;
   inputs: readonly CanvasDvtCompositionInput[];
+  predicateSeed?: CanvasRelationalPredicateSeed | null;
+  onClearPredicateSeed?: () => void;
   onStartInnerJoin: (selection: DvtSubstraitJoinFieldSelection) => void;
   onStartUnionAll?: () => void;
 }>): JSX.Element {
@@ -38,10 +43,22 @@ export function DvtSubstraitCompositionStartSection({
   if (selectedOperation === 'inner_join') {
     return (
       <DvtSubstraitInnerJoinStartSection
+        key={
+          predicateSeed == null
+            ? 'manual'
+            : `${predicateSeed.left.nodeId}:${predicateSeed.left.fieldId}:${predicateSeed.right.nodeId}:${predicateSeed.right.fieldId}`
+        }
         disabled={disabled}
         inputs={inputs}
-        onApply={onStartInnerJoin}
-        onCancel={() => setSelectedOperation(null)}
+        initialSelection={predicateSeed ?? undefined}
+        onApply={(selection) => {
+          onStartInnerJoin(selection);
+          onClearPredicateSeed?.();
+        }}
+        onCancel={() => {
+          setSelectedOperation(null);
+          onClearPredicateSeed?.();
+        }}
       />
     );
   }
@@ -50,8 +67,14 @@ export function DvtSubstraitCompositionStartSection({
       <DvtSubstraitUnionAllStartSection
         disabled={disabled}
         inputs={inputs}
-        onApply={onStartUnionAll}
-        onCancel={() => setSelectedOperation(null)}
+        onApply={() => {
+          onStartUnionAll();
+          onClearPredicateSeed?.();
+        }}
+        onCancel={() => {
+          setSelectedOperation(null);
+          onClearPredicateSeed?.();
+        }}
       />
     );
   }
@@ -61,6 +84,15 @@ export function DvtSubstraitCompositionStartSection({
       <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
         {canvasViewCopy.inspectorDvtRelationalOperationTitle}
       </h3>
+      {predicateSeed != null ? (
+        <p
+          data-slot="dvt-relational-predicate-proposal"
+          className="rounded border border-[color:var(--border-default)] px-2 py-1.5 font-mono text-xs text-(--text-default)"
+        >
+          {predicateSeed.left.nodeId}.{predicateSeed.left.fieldName} = {predicateSeed.right.nodeId}.
+          {predicateSeed.right.fieldName}
+        </p>
+      ) : null}
       <DvtRelationalOperationChooser choices={choices} onSelect={setSelectedOperation} />
     </section>
   );
