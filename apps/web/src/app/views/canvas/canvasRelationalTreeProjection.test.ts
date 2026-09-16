@@ -21,6 +21,7 @@ import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoring
 import {
   projectCanvasRelationalTree,
   type CanvasRelationalTreeNode,
+  type CanvasRelationalTreeProjectionResult,
 } from './canvasRelationalTreeProjection';
 
 const TARGET_ID = 'transform-orders';
@@ -81,7 +82,10 @@ function edge(sourceId: string): CanonicalEdge {
   };
 }
 
-function project(node: CanonicalNode, sources: readonly CanonicalNode[]) {
+function project(
+  node: CanonicalNode,
+  sources: readonly CanonicalNode[]
+): CanvasRelationalTreeProjectionResult {
   return projectCanvasRelationalTree({
     node,
     nodes: [...sources, node],
