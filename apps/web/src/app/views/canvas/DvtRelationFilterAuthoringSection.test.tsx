@@ -70,7 +70,7 @@ describe('DvtRelationFilterAuthoringSection', () => {
     container.remove();
   });
 
-  it('lets the author select any admitted binary comparison', () => {
+  it('lets the author select any admitted binary comparison', async () => {
     const resolved = resolveDvtSubstraitProjectionSource(source);
     if (resolved == null) throw new Error('Expected a connected source.');
     const draft = createDvtSubstraitProjectionDraft({
@@ -107,10 +107,10 @@ describe('DvtRelationFilterAuthoringSection', () => {
 
     const notEqual = capabilities.find((capability) => capability.name === 'not_equal');
     if (notEqual == null) throw new Error('Expected the admitted not-equal predicate.');
-    act(() => fireEvent.change(operator!, { target: { value: notEqual.capabilityId } }));
+    await act(() => fireEvent.change(operator!, { target: { value: notEqual.capabilityId } }));
     expect(operator?.value).toBe(notEqual.capabilityId);
 
-    act(() => {
+    await act(() => {
       fireEvent.input(container.querySelector('input[name="dvt-filter-value"]')!, {
         target: { value: 'Ada' },
       });
