@@ -347,6 +347,11 @@ describe('projectCanvasNodePresentationTruth', () => {
         nullable: false,
       }),
     ]);
+    expect(truth.relationalComposition).toMatchObject({
+      state: 'pending',
+      connectedInputCount: 2,
+      pendingInputCount: 1,
+    });
   });
   it('projects only a direct upstream schema and keeps declared outputs authoritative', () => {
     const transform: CanonicalNode = {
