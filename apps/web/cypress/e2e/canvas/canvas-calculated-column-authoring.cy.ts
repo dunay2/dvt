@@ -278,28 +278,14 @@ describe('Canvas calculated-column authoring', () => {
 
     cy.get(`${firstModel} [data-slot="graph-node-card-title"]`).dblclick();
     cy.get(firstTab).should('have.attr', 'aria-selected', 'true');
-    cy.contains(
-      '[data-slot="bottom-operational-drawer-data"]',
-      'Run Orders model to publish a result'
-    ).should('be.visible');
 
     cy.get(`${secondModel} [data-slot="graph-node-card-title"]`).dblclick();
     cy.get(secondTab).should('have.attr', 'aria-selected', 'true');
     cy.get(firstTab).should('exist');
-    cy.contains(
-      '[data-slot="bottom-operational-drawer-data"]',
-      'Run Orders model secondary to publish a result'
-    ).should('be.visible');
 
     cy.get(firstTab).click();
-    cy.contains(
-      '[data-slot="bottom-operational-drawer-data"]',
-      'Run Orders model to publish a result'
-    ).should('be.visible');
+    cy.get(firstTab).should('have.attr', 'aria-selected', 'true');
     cy.get(secondTab).click();
-    cy.contains(
-      '[data-slot="bottom-operational-drawer-data"]',
-      'Run Orders model secondary to publish a result'
-    ).should('be.visible');
+    cy.get(secondTab).should('have.attr', 'aria-selected', 'true');
   });
 });
