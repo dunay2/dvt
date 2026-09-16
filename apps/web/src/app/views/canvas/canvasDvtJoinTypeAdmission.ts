@@ -6,26 +6,23 @@ import {
   type DvtSubstraitJoinDataType,
 } from '@dvt/postgres-projection';
 
-const JOIN_DATA_TYPE_BY_PHYSICAL_TYPE = new Map<string, DvtSubstraitJoinDataType>([
-  ['bool', 'bool'],
-  ['boolean', 'bool'],
-  ['bigint', 'i64'],
-  ['int8', 'i64'],
-  ['i64', 'i64'],
-  ['double precision', 'fp64'],
-  ['double', 'fp64'],
-  ['float8', 'fp64'],
-  ['fp64', 'fp64'],
-  ['precisiontimestamptz', 'precisionTimestampTz'],
-]);
-
 export function resolveCanvasDvtJoinDataType(
   physicalType: string
 ): DvtSubstraitJoinDataType | null {
   const normalized = normalizeProjectionDataType(physicalType);
   if (STRING_DATA_TYPES.has(normalized)) return 'string';
   if (TIMESTAMPTZ_DATA_TYPES.has(normalized)) return 'precisionTimestampTz';
-  return JOIN_DATA_TYPE_BY_PHYSICAL_TYPE.get(normalized) ?? null;
+  if (normalized === 'bool' || normalized === 'boolean') return 'bool';
+  if (normalized === 'bigint' || normalized === 'int8' || normalized === 'i64') return 'i64';
+  if (
+    normalized === 'double precision' ||
+    normalized === 'double' ||
+    normalized === 'float8' ||
+    normalized === 'fp64'
+  ) {
+    return 'fp64';
+  }
+  return normalized === 'precisiontimestamptz' ? 'precisionTimestampTz' : null;
 }
 
 export function hasCompatibleCanvasDvtJoinFields(

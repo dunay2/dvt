@@ -52,14 +52,6 @@ function hasCompatibleJoinPair(inputs: readonly CanvasDvtCompositionInput[]): bo
   );
 }
 
-function hasCompatibleJoinTypePair(inputs: readonly CanvasDvtCompositionInput[]): boolean {
-  return inputs.some((left, index) =>
-    inputs
-      .slice(index + 1)
-      .some((right) => hasCompatibleCanvasDvtJoinFields(left.fields, right.fields))
-  );
-}
-
 function targetSupports(inputs: readonly CanvasDvtCompositionInput[]): boolean {
   const first = inputs[0]?.sourceRef.connectionRef;
   return (
@@ -85,11 +77,16 @@ export function resolveCanvasRelationalOperationChoices(
   const unionAllTargetSupported = targetSupports(args.inputs);
   const innerJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_INNER');
   const unionAllAdmitted = isAdmitted('substrait.SetRel', 'SetOp.SET_OP_UNION_ALL');
+  const hasCompatibleJoinTypePair = args.inputs.some((left, index) =>
+    args.inputs
+      .slice(index + 1)
+      .some((right) => hasCompatibleCanvasDvtJoinFields(left.fields, right.fields))
+  );
   const innerJoinAvailability =
     readOnlyAvailability ??
     (!innerJoinAdmitted
       ? 'semantically-unavailable'
-      : !hasCompatibleJoinTypePair(args.inputs)
+      : !hasCompatibleJoinTypePair
         ? 'semantically-unavailable'
         : !hasCompatibleJoinPair(args.inputs)
           ? 'target-unavailable'
