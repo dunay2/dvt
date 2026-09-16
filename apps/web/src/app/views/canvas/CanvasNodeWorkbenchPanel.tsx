@@ -261,11 +261,6 @@ export function CanvasNodeWorkbenchPanel({
     () => projectCanvasNodePresentationTruth({ node, nodes, edges }),
     [edges, node, nodes]
   );
-  const focusedRelationalAuthoring =
-    node.pluginId === 'dvt' &&
-    node.kind === 'dvt:transform' &&
-    !isDbtCompatibleModel(node) &&
-    presentationTruth.relationalComposition?.state === 'pending';
   const dvtTransformAuthoringMode = readDvtTransformAuthoringMode(node);
   const canonicalSubstraitTransformAuthority =
     dvtTransformAuthoringMode === DVT_TRANSFORM_AUTHORING_MODE.substrait;
@@ -475,21 +470,21 @@ export function CanvasNodeWorkbenchPanel({
           {node.kind === 'dvt:source' ? (
             <SourceNodeWorkbenchHeaderIdentity node={node} />
           ) : (
-            <>
-              <div className="flex items-center gap-2">
-                {focusedRelationalAuthoring ? null : (
-                  <div className={cn('size-2 shrink-0 rounded-full', dotClass)} />
-                )}
-                <h2 className={cn('truncate', inspectorVisualClasses.contextPanelTitle)}>
-                  {node.name}
-                </h2>
-              </div>
-              {focusedRelationalAuthoring ? null : (
-                <p className={cn('font-mono', inspectorVisualClasses.contextPanelSubtitle)}>
-                  {resolveNodeKindRegistration(node.kind).label}
-                </p>
-              )}
-            </>
+            <div className="flex min-w-0 items-center gap-2">
+              <div
+                data-slot="canvas-node-workbench-status"
+                className={cn('size-2 shrink-0 rounded-full', dotClass)}
+              />
+              <h2 className={cn('truncate', inspectorVisualClasses.contextPanelTitle)}>
+                {node.name}
+              </h2>
+              <span
+                data-slot="canvas-node-workbench-kind"
+                className={cn('shrink-0 font-mono', inspectorVisualClasses.contextPanelSubtitle)}
+              >
+                {resolveNodeKindRegistration(node.kind).label}
+              </span>
+            </div>
           )}
         </div>
         <div
@@ -527,13 +522,7 @@ export function CanvasNodeWorkbenchPanel({
         </div>
       </div>
 
-      {focusedRelationalAuthoring ? (
-        <ScrollArea className="min-h-0 flex-1">
-          <div data-slot="canvas-node-workbench-focused-relational-authoring" className="p-4">
-            {renderAuthoringSection('code')}
-          </div>
-        </ScrollArea>
-      ) : containsCanonicalCodeOutput ? (
+      {containsCanonicalCodeOutput ? (
         <div
           data-slot="canvas-node-workbench-contained-body"
           className="min-h-0 flex-1 overflow-hidden p-4"

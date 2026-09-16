@@ -736,7 +736,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(outputSelector?.value).toBe('postgres-sql');
   });
 
-  it('focuses pending relational authoring without generic node tabs or repeated kind', () => {
+  it('keeps pending relational information in a compact workbench', () => {
     const clients: CanonicalNode = {
       ...SOURCE_NODE,
       id: 'source.clients',
@@ -787,11 +787,19 @@ describe('CanvasNodeWorkbenchPanel', () => {
       '[data-slot="canvas-node-workbench-header-actions"]'
     )?.parentElement;
     expect(panel?.querySelector('[data-slot="dvt-relational-operation-chooser"]')).not.toBeNull();
-    expect(panel?.querySelector('[data-slot="canvas-node-workbench-tabs"]')).toBeNull();
-    expect(panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')).toBeNull();
-    expect(
-      panel?.querySelector('[data-slot="canvas-node-workbench-focused-relational-authoring"]')
-    ).not.toBeNull();
+    expect(panel?.querySelector('[data-slot="canvas-node-workbench-tabs"]')).not.toBeNull();
+    expect(panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')).not.toBeNull();
+    expect(panel?.querySelector('[data-slot="canvas-node-workbench-status"]')).not.toBeNull();
+    expect(panel?.querySelector('[data-slot="canvas-node-workbench-kind"]')?.textContent).toBe(
+      'Model'
+    );
+    const tabsList = panel?.querySelector('[data-slot="canvas-node-workbench-tabs-list"]');
+    const tabList = panel?.querySelector('[data-slot="canvas-node-workbench-tabs-list-tablist"]');
+    const moreTrigger = panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]');
+    expect(tabList?.parentElement).toBe(tabsList);
+    expect(moreTrigger?.parentElement).toBe(tabsList);
+    expect(tabList?.className).toContain('flex-1');
+    expect(tabList?.className).not.toContain('w-full');
     expect(header?.textContent).toContain('Clean Orders');
     expect(header?.querySelector('p')).toBeNull();
   });
