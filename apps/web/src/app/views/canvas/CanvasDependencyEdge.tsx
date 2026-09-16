@@ -159,7 +159,11 @@ export function CanvasDependencyEdge({
           <g
             data-slot="canvas-relational-composition-badge"
             aria-hidden={composition.onActivate == null ? 'true' : undefined}
-            aria-label={composition.onActivate == null ? undefined : composition.label}
+            aria-label={
+              composition.onActivate == null
+                ? undefined
+                : (composition.accessibleLabel ?? composition.label)
+            }
             role={composition.onActivate == null ? undefined : 'button'}
             tabIndex={composition.onActivate == null ? undefined : 0}
             pointerEvents={composition.onActivate == null ? 'none' : 'all'}
