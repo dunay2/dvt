@@ -91,13 +91,8 @@ export function resolveCanvasDvtInitialJoinPair(
       return proposedPair;
     }
   }
-  for (const left of inputs) {
-    for (const right of inputs) {
-      const pair = resolveCanvasDvtInitialJoinPairForInputs(left, right);
-      if (pair != null) return pair;
-    }
-  }
-  return null;
+  if (inputs.length !== 2) return null;
+  return resolveCanvasDvtInitialJoinPairForInputs(inputs[0]!, inputs[1]!);
 }
 
 export function resolveCanvasDvtInitialJoinRightInputs(

@@ -37,27 +37,38 @@ export function DvtSubstraitInnerJoinStartSection({
   onCancel: () => void;
 }>): JSX.Element | null {
   const availableInputs = useMemo(() => resolveCanvasDvtInitialJoinInputs(inputs), [inputs]);
-  const [pair, setPair] = useState(() =>
-    resolveCanvasDvtInitialJoinPair(availableInputs, initialSelection)
+  const initialPair = useMemo(
+    () => resolveCanvasDvtInitialJoinPair(availableInputs, initialSelection),
+    [availableInputs, initialSelection]
   );
+  const [selectedInputs, setSelectedInputs] = useState(() => ({
+    leftNodeId: initialPair?.leftNodeId ?? '',
+    rightNodeId: initialPair?.rightNodeId ?? '',
+  }));
   const targetNodeId = initialSelection?.targetNodeId ?? 'pending-inner-join';
   const [draft, setDraft] = useState(() =>
-    pair == null ? null : createCanvasDvtInitialJoinDraft(availableInputs, pair, targetNodeId)
+    initialPair == null
+      ? null
+      : createCanvasDvtInitialJoinDraft(availableInputs, initialPair, targetNodeId)
   );
-  if (availableInputs.length < 2 || pair == null || draft == null) return null;
+  if (availableInputs.length < 2) return null;
 
-  const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
-  if (!inspection.ok) return null;
-  const joinRelation = inspection.projection.joinRelations[0];
-  const predicate = inspection.projection.joins[0];
-  const leftInput = availableInputs.find((input) => input.nodeId === pair.leftNodeId);
-  if (joinRelation == null || predicate == null || leftInput == null) return null;
-  const rightInputs = resolveCanvasDvtInitialJoinRightInputs(availableInputs, leftInput);
+  const inspection = draft == null ? null : inspectDvtSubstraitNInputJoinDraft(draft);
+  const joinRelation = inspection?.ok ? inspection.projection.joinRelations[0] : undefined;
+  const predicate = inspection?.ok ? inspection.projection.joins[0] : undefined;
+  const leftInput = availableInputs.find((input) => input.nodeId === selectedInputs.leftNodeId);
+  const rightInputs =
+    leftInput == null ? [] : resolveCanvasDvtInitialJoinRightInputs(availableInputs, leftInput);
 
-  const replacePair = (nextPair: CanvasDvtInitialJoinPair): void => {
-    const nextDraft = createCanvasDvtInitialJoinDraft(availableInputs, nextPair, targetNodeId);
-    if (nextDraft == null) return;
-    setPair(nextPair);
+  const replacePair = (nextPair: CanvasDvtInitialJoinPair | null): void => {
+    const nextDraft =
+      nextPair == null
+        ? null
+        : createCanvasDvtInitialJoinDraft(availableInputs, nextPair, targetNodeId);
+    setSelectedInputs({
+      leftNodeId: nextPair?.leftNodeId ?? selectedInputs.leftNodeId,
+      rightNodeId: nextPair?.rightNodeId ?? '',
+    });
     setDraft(nextDraft);
   };
 
@@ -70,7 +81,7 @@ export function DvtSubstraitInnerJoinStartSection({
         <span>{canvasViewCopy.inspectorDvtRelationalLeftInput}</span>
         <select
           data-slot="dvt-composition-left-input"
-          value={pair.leftNodeId}
+          value={selectedInputs.leftNodeId}
           disabled={disabled}
           className="h-8 w-full rounded border border-[color:var(--border-default)] bg-transparent px-2 text-xs"
           onChange={(event) => {
@@ -78,23 +89,27 @@ export function DvtSubstraitInnerJoinStartSection({
               (input) => input.nodeId === event.currentTarget.value
             );
             if (nextLeft == null) return;
-            const currentRight = availableInputs.find((input) => input.nodeId === pair.rightNodeId);
+            const currentRight = availableInputs.find(
+              (input) => input.nodeId === selectedInputs.rightNodeId
+            );
             const nextPair =
               currentRight == null
                 ? null
                 : resolveCanvasDvtInitialJoinPairForInputs(nextLeft, currentRight);
-            const fallbackRight = resolveCanvasDvtInitialJoinRightInputs(
-              availableInputs,
-              nextLeft
-            )[0];
-            const fallbackPair =
-              fallbackRight == null
+            setSelectedInputs({
+              leftNodeId: nextLeft.nodeId,
+              rightNodeId: nextPair?.rightNodeId ?? '',
+            });
+            setDraft(
+              nextPair == null
                 ? null
-                : resolveCanvasDvtInitialJoinPairForInputs(nextLeft, fallbackRight);
-            if (nextPair != null) replacePair(nextPair);
-            else if (fallbackPair != null) replacePair(fallbackPair);
+                : createCanvasDvtInitialJoinDraft(availableInputs, nextPair, targetNodeId)
+            );
           }}
         >
+          <option value="" disabled>
+            —
+          </option>
           {availableInputs.map((input) => (
             <option key={input.nodeId} value={input.nodeId}>
               {input.schema}.{input.table}
@@ -106,8 +121,8 @@ export function DvtSubstraitInnerJoinStartSection({
         <span>{canvasViewCopy.inspectorDvtRelationalRightInput}</span>
         <select
           data-slot="dvt-composition-right-input"
-          value={pair.rightNodeId}
-          disabled={disabled}
+          value={selectedInputs.rightNodeId}
+          disabled={disabled || leftInput == null}
           className="h-8 w-full rounded border border-[color:var(--border-default)] bg-transparent px-2 text-xs"
           onChange={(event) => {
             const nextRight = rightInputs.find(
@@ -116,10 +131,15 @@ export function DvtSubstraitInnerJoinStartSection({
             const nextPair =
               nextRight == null
                 ? null
-                : resolveCanvasDvtInitialJoinPairForInputs(leftInput, nextRight);
-            if (nextPair != null) replacePair(nextPair);
+                : leftInput == null
+                  ? null
+                  : resolveCanvasDvtInitialJoinPairForInputs(leftInput, nextRight);
+            replacePair(nextPair);
           }}
         >
+          <option value="" disabled>
+            —
+          </option>
           {rightInputs.map((input) => (
             <option key={input.nodeId} value={input.nodeId}>
               {input.schema}.{input.table}
@@ -127,53 +147,57 @@ export function DvtSubstraitInnerJoinStartSection({
           ))}
         </select>
       </label>
-      <SemanticWorkbenchJoinConditionEditor
-        projection={inspection.projection}
-        rightInputIndex={1}
-        conditions={predicate.conditions}
-        onAdd={(condition, groupWithPrevious) =>
-          setDraft((current) =>
-            current == null
-              ? current
-              : addDvtSubstraitJoinPredicateCondition({
-                  draft: current,
-                  joinRelationId: joinRelation.relationId,
-                  condition,
-                  groupWithPrevious,
-                })
-          )
-        }
-        onUpdate={(conditionKey, condition) =>
-          setDraft((current) =>
-            current == null
-              ? current
-              : updateDvtSubstraitJoinPredicateCondition({
-                  draft: current,
-                  joinRelationId: joinRelation.relationId,
-                  conditionKey,
-                  condition,
-                })
-          )
-        }
-        onRemove={(conditionKey) =>
-          setDraft((current) =>
-            current == null
-              ? current
-              : removeDvtSubstraitJoinPredicateCondition({
-                  draft: current,
-                  joinRelationId: joinRelation.relationId,
-                  conditionKey,
-                })
-          )
-        }
-      />
+      {inspection?.ok && joinRelation != null && predicate != null ? (
+        <SemanticWorkbenchJoinConditionEditor
+          projection={inspection.projection}
+          rightInputIndex={1}
+          conditions={predicate.conditions}
+          onAdd={(condition, groupWithPrevious) =>
+            setDraft((current) =>
+              current == null
+                ? current
+                : addDvtSubstraitJoinPredicateCondition({
+                    draft: current,
+                    joinRelationId: joinRelation.relationId,
+                    condition,
+                    groupWithPrevious,
+                  })
+            )
+          }
+          onUpdate={(conditionKey, condition) =>
+            setDraft((current) =>
+              current == null
+                ? current
+                : updateDvtSubstraitJoinPredicateCondition({
+                    draft: current,
+                    joinRelationId: joinRelation.relationId,
+                    conditionKey,
+                    condition,
+                  })
+            )
+          }
+          onRemove={(conditionKey) =>
+            setDraft((current) =>
+              current == null
+                ? current
+                : removeDvtSubstraitJoinPredicateCondition({
+                    draft: current,
+                    joinRelationId: joinRelation.relationId,
+                    conditionKey,
+                  })
+            )
+          }
+        />
+      ) : null}
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"
           size="sm"
-          disabled={disabled}
+          disabled={disabled || draft == null}
           data-slot="dvt-start-configured-inner-join"
-          onClick={() => onApply(draft)}
+          onClick={() => {
+            if (draft != null) onApply(draft);
+          }}
         >
           {canvasViewCopy.inspectorDvtRelationalApply}
         </Button>
