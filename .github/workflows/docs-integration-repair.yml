@@ -64,7 +64,10 @@ jobs:
               if after!=before: p.write_text(after); edited.append(str(p))
           assert edited==['docs/risk-register/quality/r-20260311-g5-4-operability-and-fencing-residuals.md'],edited
           pathlib.Path('/tmp/retirement-result/consumer-edits.json').write_bytes(z.read('consumer-edits.json'))
-          print('Risk identities and content preserved; two filenames and their one authored backlink corrected')
+          subprocess.run(['git','add','-A'],check=True)
+          tracked=subprocess.check_output(['git','ls-files','-z']).decode().strip('\0').split('\0')
+          assert all(pathlib.Path(p).exists() for p in tracked), 'CI import must see staged physical inventory'
+          print('Risk identities and content preserved; canonical renames are staged before CI import')
           PY
       - name: Setup canonical toolchain and enabled hooks
         uses: ./.github/actions/setup-node-pnpm
