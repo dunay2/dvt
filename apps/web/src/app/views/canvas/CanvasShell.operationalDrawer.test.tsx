@@ -93,7 +93,7 @@ describe('CanvasShell operational drawer registration', () => {
     expect(onRun).toHaveBeenCalledTimes(1);
   });
 
-  it('opens one real Substrait Transform from its card or relational composition badge', async () => {
+  it('opens the existing chooser from a pending relational composition badge', async () => {
     const fixture = buildSemanticWorkbenchFixture();
     const position = { x: 320, y: 140 };
     const onApplyNodeDraft = vi.fn();
@@ -154,20 +154,21 @@ describe('CanvasShell operational drawer registration', () => {
       composition?.onActivate?.();
     });
 
-    expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('semantic');
-    expect(useUiLayoutStore.getState().bottomDrawerVisible).toBe(true);
+    expect(onInspectNode).toHaveBeenCalledWith(fixture.transform.id, 'code');
+    expect(useOperationalDrawerContributionStore.getState().activeTab).not.toBe('semantic');
     expect(projectedNode?.position).toBe(position);
-    expect(onInspectNode).not.toHaveBeenCalled();
 
     expect(projectedNode?.data.onSelectNode).toBeTypeOf('function');
     act(() => {
       (projectedNode?.data.onSelectNode as (() => void) | undefined)?.();
     });
+    expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('semantic');
+    expect(useUiLayoutStore.getState().bottomDrawerVisible).toBe(true);
 
     act(() => {
       (projectedNode?.data.onOpenNode as (() => void) | undefined)?.();
     });
-    expect(onInspectNode).not.toHaveBeenCalled();
+    expect(onInspectNode).toHaveBeenCalledTimes(1);
     expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
       activeTab: `data:${fixture.transform.id}`,
       contribution: {
