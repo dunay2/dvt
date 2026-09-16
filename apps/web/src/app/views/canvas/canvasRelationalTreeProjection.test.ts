@@ -198,9 +198,9 @@ describe('ProjectCanvasRelationalTree', () => {
     const inspection = inspectDvtSubstraitNInputJoinDraft(initial);
     if (!inspection.ok) throw new Error('Expected an admitted JOIN.');
     const groupFieldId = inspection.projection.outputs.find(
-      (output) => output.name === 'country'
+      (output) => output.name === 'name'
     )?.fieldId;
-    if (groupFieldId == null) throw new Error('Expected the country output.');
+    if (groupFieldId == null) throw new Error('Expected the name output.');
     const grouped = applyDvtSubstraitInnerJoinGrouping(initial, {
       groupFieldId,
       countOutputName: 'customer_count',
