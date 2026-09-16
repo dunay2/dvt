@@ -158,9 +158,26 @@ export function CanvasDependencyEdge({
           />
           <g
             data-slot="canvas-relational-composition-badge"
-            aria-hidden="true"
-            pointerEvents="none"
+            aria-hidden={composition.onActivate == null ? 'true' : undefined}
+            aria-label={composition.onActivate == null ? undefined : composition.label}
+            role={composition.onActivate == null ? undefined : 'button'}
+            tabIndex={composition.onActivate == null ? undefined : 0}
+            pointerEvents={composition.onActivate == null ? 'none' : 'all'}
             transform={`translate(${junction.x} ${junction.y - 18})`}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              if (composition.onActivate == null) return;
+              event.stopPropagation();
+              composition.onActivate();
+            }}
+            onKeyDown={(event) => {
+              if (composition.onActivate == null || (event.key !== 'Enter' && event.key !== ' ')) {
+                return;
+              }
+              event.preventDefault();
+              event.stopPropagation();
+              composition.onActivate();
+            }}
           >
             <rect
               x={-badgeWidth / 2}

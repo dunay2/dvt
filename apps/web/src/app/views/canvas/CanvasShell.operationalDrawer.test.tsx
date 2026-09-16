@@ -17,6 +17,10 @@ import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import type { SemanticTransformFocusPanelProps } from './SemanticTransformFocusPanel';
 import type { SourceDataSample } from '../../ports/workspace';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
+import {
+  buildCanvasDependencyEdgeData,
+  readCanvasDependencyEdgeData,
+} from './canvasDependencyEdgeModel';
 
 describe('CanvasShell operational drawer registration', () => {
   let renderShell: (overrides?: CanvasShellPropsOverrides) => Promise<CanvasShellProps>;
@@ -89,7 +93,7 @@ describe('CanvasShell operational drawer registration', () => {
     expect(onRun).toHaveBeenCalledTimes(1);
   });
 
-  it('opens a real Substrait Transform in the semantic drawer on selection without changing geometry', async () => {
+  it('opens one real Substrait Transform from its card or relational composition badge', async () => {
     const fixture = buildSemanticWorkbenchFixture();
     const position = { x: 320, y: 140 };
     const onApplyNodeDraft = vi.fn();
@@ -114,6 +118,24 @@ describe('CanvasShell operational drawer registration', () => {
             },
           },
         ],
+        edges: [
+          {
+            id: 'source-transform',
+            source: fixture.sources[0]!.id,
+            target: fixture.transform.id,
+            data: buildCanvasDependencyEdgeData({
+              sourceId: fixture.sources[0]!.id,
+              targetId: fixture.transform.id,
+              composition: {
+                groupId: `relational-composition:${fixture.transform.id}`,
+                label: 'RELATE / COMPOSE',
+                memberCount: 2,
+                role: 'trunk-owner',
+                state: 'pending',
+              },
+            }),
+          },
+        ],
       },
     });
 
@@ -122,15 +144,25 @@ describe('CanvasShell operational drawer registration', () => {
         Array<{ position: { x: number; y: number }; data: Record<string, unknown> }> | undefined
     )?.[0];
 
-    expect(projectedNode?.data.onSelectNode).toBeTypeOf('function');
+    const projectedEdge = (
+      getCanvasShellState().canvasViewportProps?.edges as
+        Array<{ data?: Record<string, unknown> }> | undefined
+    )?.[0];
+    const composition = readCanvasDependencyEdgeData(projectedEdge?.data)?.composition;
+    expect(composition?.onActivate).toBeTypeOf('function');
     act(() => {
-      (projectedNode?.data.onSelectNode as (() => void) | undefined)?.();
+      composition?.onActivate?.();
     });
 
     expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('semantic');
     expect(useUiLayoutStore.getState().bottomDrawerVisible).toBe(true);
     expect(projectedNode?.position).toBe(position);
     expect(onInspectNode).not.toHaveBeenCalled();
+
+    expect(projectedNode?.data.onSelectNode).toBeTypeOf('function');
+    act(() => {
+      (projectedNode?.data.onSelectNode as (() => void) | undefined)?.();
+    });
 
     act(() => {
       (projectedNode?.data.onOpenNode as (() => void) | undefined)?.();
