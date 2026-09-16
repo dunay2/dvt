@@ -110,7 +110,7 @@ describe('DvtRelationFilterAuthoringSection', () => {
     await act(() => fireEvent.change(operator!, { target: { value: notEqual.capabilityId } }));
     expect(operator?.value).toBe(notEqual.capabilityId);
 
-    await act(() => {
+    act(() => {
       fireEvent.input(container.querySelector('input[name="dvt-filter-value"]')!, {
         target: { value: 'Ada' },
       });
