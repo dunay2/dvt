@@ -55,6 +55,7 @@ export type StubCanvasDraftReadOptions = {
   columnMappingNotNullCustomer?: boolean;
   columnMappingTemporal?: boolean;
   sourceInspectorOrdering?: boolean;
+  substraitPendingComposition?: boolean;
   substraitInnerJoin?: boolean;
   substraitNInputJoin?: boolean;
   substraitUnionAll?: boolean;
@@ -91,6 +92,7 @@ export function buildCanvasAuthoringDraft({
   columnMappingNotNullCustomer = false,
   columnMappingTemporal = false,
   sourceInspectorOrdering = false,
+  substraitPendingComposition = false,
   substraitInnerJoin = false,
   substraitNInputJoin = false,
   substraitUnionAll = false,
@@ -287,7 +289,7 @@ export function buildCanvasAuthoringDraft({
     });
   }
 
-  if (substraitInnerJoin || substraitNInputJoin) {
+  if (substraitPendingComposition || substraitInnerJoin || substraitNInputJoin) {
     const connectionRef = {
       schemaVersion: 'connection-ref.v1' as const,
       connectionId: 'warehouse-a',
@@ -438,13 +440,15 @@ export function buildCanvasAuthoringDraft({
           role: 'transform',
           status: 'idle',
           tags: ['authoring'],
-          metadata: {
-            transformAuthoring: {
-              version: 'v1',
-              mode: 'substrait',
-              semanticDocument,
-            },
-          },
+          metadata: substraitPendingComposition
+            ? {}
+            : {
+                transformAuthoring: {
+                  version: 'v1',
+                  mode: 'substrait',
+                  semanticDocument,
+                },
+              },
         },
       ],
       edges: [
