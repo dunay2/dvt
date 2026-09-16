@@ -25,6 +25,7 @@ import {
   encodeDvtSubstraitProjectionDocument,
 } from './canvasDvtSubstraitProjection';
 import { DvtAuthoringFields } from './DvtAuthoringFields';
+import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 
 function buildDvtNode(
   kind: 'dvt:source' | 'dvt:transform' | 'dvt:sink',
@@ -102,6 +103,8 @@ function DvtAuthoringFieldsHarness({
   section,
   warehouseSourceImport,
   externalConnectionId,
+  relationalPredicateSeed,
+  onClearRelationalPredicateSeed,
 }: Readonly<{
   node: CanonicalNode;
   nodes?: readonly CanonicalNode[];
@@ -109,6 +112,8 @@ function DvtAuthoringFieldsHarness({
   section?: 'all' | 'general' | 'columns' | 'code';
   warehouseSourceImport?: IWarehouseSourceImportPort;
   externalConnectionId?: string;
+  relationalPredicateSeed?: CanvasRelationalPredicateSeed;
+  onClearRelationalPredicateSeed?: () => void;
 }>): JSX.Element {
   const [draft, setDraft] = useState(() => createCanvasInspectorNodeDraft(node));
   const errors = validateCanvasInspectorNodeDraft(draft);
@@ -148,6 +153,8 @@ function DvtAuthoringFieldsHarness({
         draft={draft}
         errors={errors}
         section={section}
+        relationalPredicateSeed={relationalPredicateSeed}
+        onClearRelationalPredicateSeed={onClearRelationalPredicateSeed}
         onChange={setDraft}
       />
       <output data-slot="dvt-draft-json">{JSON.stringify(draft.dvt)}</output>
@@ -198,7 +205,9 @@ describe('DvtAuthoringFields', () => {
     externalConnectionId?: string,
     nodes?: readonly CanonicalNode[],
     edges?: readonly CanonicalEdge[],
-    section?: 'all' | 'general' | 'columns' | 'code'
+    section?: 'all' | 'general' | 'columns' | 'code',
+    relationalPredicateSeed?: CanvasRelationalPredicateSeed,
+    onClearRelationalPredicateSeed?: () => void
   ): void {
     act(() => {
       root.render(
@@ -209,6 +218,8 @@ describe('DvtAuthoringFields', () => {
           section={section}
           warehouseSourceImport={warehouseSourceImport}
           externalConnectionId={externalConnectionId}
+          relationalPredicateSeed={relationalPredicateSeed}
+          onClearRelationalPredicateSeed={onClearRelationalPredicateSeed}
         />
       );
     });
@@ -217,6 +228,76 @@ describe('DvtAuthoringFields', () => {
   function draftJson(): string {
     return container.querySelector('[data-slot="dvt-draft-json"]')?.textContent ?? '';
   }
+
+  it('applies an explicit JOIN from a cross-input field relation proposal', () => {
+    const orders = buildJoinWarehouseSourceNode({
+      id: 'source-orders',
+      table: 'orders',
+      columns: ['id', 'customer_id'],
+    });
+    const customers = buildJoinWarehouseSourceNode({
+      id: 'source-customers',
+      table: 'customers',
+      columns: ['id', 'customer_id'],
+    });
+    const transform = buildDvtNode('dvt:transform');
+    const onClearRelationalPredicateSeed = vi.fn();
+    renderFields(
+      transform,
+      undefined,
+      undefined,
+      [orders, customers, transform],
+      [
+        {
+          id: 'orders-transform',
+          sourceId: orders.id,
+          targetId: transform.id,
+          relation: 'lineage',
+        },
+        {
+          id: 'customers-transform',
+          sourceId: customers.id,
+          targetId: transform.id,
+          relation: 'lineage',
+        },
+      ],
+      'code',
+      {
+        targetNodeId: transform.id,
+        left: {
+          nodeId: orders.id,
+          fieldId: 'orders-customer-id',
+          fieldName: 'customer_id',
+          dataType: 'string',
+        },
+        right: {
+          nodeId: customers.id,
+          fieldId: 'customers-customer-id',
+          fieldName: 'customer_id',
+          dataType: 'string',
+        },
+        candidateOperator: 'equal',
+      },
+      onClearRelationalPredicateSeed
+    );
+
+    expect(
+      container.querySelector('[data-slot="dvt-relational-predicate-proposal"]')
+    ).not.toBeNull();
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')!
+      );
+    });
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-configured-inner-join"]')!
+      );
+    });
+
+    expect(draftJson()).toContain('"shape":"inner_join"');
+    expect(onClearRelationalPredicateSeed).toHaveBeenCalledOnce();
+  });
 
   function outputNameDraftsJson(): string {
     return container.querySelector('[data-slot="output-name-drafts"]')?.textContent ?? '';
