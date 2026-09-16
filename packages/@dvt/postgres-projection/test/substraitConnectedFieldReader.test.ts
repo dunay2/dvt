@@ -189,7 +189,10 @@ function unaryFunctionProjectionDraft(): DvtSubstraitProjectionDraft {
       value: { typeVariationReference: 0, nullability: 1 },
     },
   };
-  const scalar = (functionReference: number, argument: object) => ({
+  const scalar = (
+    functionReference: number,
+    argument: object
+  ): (typeof project.value.expressions)[number] => ({
     rexType: {
       case: 'scalarFunction' as const,
       value: {
