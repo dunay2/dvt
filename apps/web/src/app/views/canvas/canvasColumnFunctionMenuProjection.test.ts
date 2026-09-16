@@ -36,7 +36,10 @@ const source: CanonicalNode = {
       },
       sourceObjectId: 'raw.events',
     },
-    columns: [{ name: 'event_type', type: 'text' }],
+    columns: [
+      { name: 'event_id', type: 'text' },
+      { name: 'event_type', type: 'text' },
+    ],
   },
 };
 
@@ -47,7 +50,10 @@ function projectionTransform(): CanonicalNode {
       schema: 'raw',
       table: 'events',
       sourceRef: source.metadata?.connectedSourceRef as never,
-      fields: [{ name: 'event_type', dataType: 'text' }],
+      fields: [
+        { name: 'event_id', dataType: 'text' },
+        { name: 'event_type', dataType: 'text' },
+      ],
     },
     targetNodeId: 'transform-events',
     outputs: [{ fieldId: 'output:event_type', name: 'event_type', sourceFieldName: 'event_type' }],
@@ -76,7 +82,6 @@ describe('Canvas column function menu projection', () => {
       edges: [{ sourceId: source.id, targetId: transform.id }],
     });
     const items = projection.menus?.get('output:event_type')?.menu.items ?? [];
-
     expect(items.map((item) => item.name)).toEqual(expect.arrayContaining(['concat', 'coalesce']));
     expect(items.find((item) => item.name === 'concat')).toMatchObject({
       minimumArgumentCount: 2,
@@ -84,6 +89,18 @@ describe('Canvas column function menu projection', () => {
     });
     expect(items.find((item) => item.name === 'coalesce')).toMatchObject({
       minimumArgumentCount: 2,
+    });
+    expect(projection.expressionInputs?.map((input) => input.name)).toEqual([
+      'event_id',
+      'event_type',
+    ]);
+    expect(projection.expressionInputs?.[0]).toMatchObject({
+      name: 'event_id',
+      type: 'string',
+      functionMenu: {
+        category: 'text',
+        items: expect.arrayContaining([expect.objectContaining({ name: 'upper' })]),
+      },
     });
   });
 

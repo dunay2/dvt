@@ -366,6 +366,7 @@ export function useCanvasControllerReadModel({
           onAddCanvasCalculatedColumn: functionProjection.supportsCalculatedColumns
             ? node.data.onAddCanvasCalculatedColumn
             : undefined,
+          expressionInputColumns: functionProjection.expressionInputs,
           onToggleCanvasColumnOutput:
             (canAuthorColumnMappings && (hasEditableProjection || hasMaterializableMappingInput)) ||
             hasStructuredProjection ||
