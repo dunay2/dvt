@@ -7,6 +7,8 @@ import {
   createDvtSubstraitStringInnerJoinDraft,
   encodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitNInputJoinDraft,
+  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinInput,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   createDvtSubstraitUnionAllDraft,
@@ -60,7 +62,7 @@ function sourceRef(node: CanonicalNode): ConnectedSourceRef {
   return node.metadata!.connectedSourceRef as ConnectedSourceRef;
 }
 
-function joinInput(node: CanonicalNode) {
+function joinInput(node: CanonicalNode): DvtSubstraitJoinInput {
   return {
     source: {
       nodeId: node.id,
@@ -73,7 +75,7 @@ function joinInput(node: CanonicalNode) {
   };
 }
 
-function initialJoin(left: CanonicalNode, right: CanonicalNode) {
+function initialJoin(left: CanonicalNode, right: CanonicalNode): DvtSubstraitInnerJoinDraft {
   return createDvtSubstraitStringInnerJoinDraft({
     left: joinInput(left),
     right: joinInput(right),

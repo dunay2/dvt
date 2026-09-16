@@ -13,13 +13,6 @@ import {
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import type { CanvasRelationalCompositionOperation } from '../../components/canvas/canvasNodePresentationTruth.contract';
 
-function fill(template: string, values: Readonly<Record<string, number>>): string {
-  return Object.entries(values).reduce(
-    (result, [key, value]) => result.replace(`{${key}}`, String(value)),
-    template
-  );
-}
-
 export function resolveCanvasRelationalCompositionBadgeSummary(args: {
   node: CanonicalNode;
   operation: CanvasRelationalCompositionOperation;
@@ -43,19 +36,17 @@ export function resolveCanvasRelationalCompositionBadgeSummary(args: {
           0
         )
       : 1;
-    return fill(copy.relationalCompositionJoinSummaryTemplate, {
-      inputCount,
-      predicateCount,
-    });
+    return copy.relationalCompositionJoinSummaryTemplate
+      .replace('{inputCount}', String(inputCount))
+      .replace('{predicateCount}', String(predicateCount));
   }
 
   const inspection = inspectDvtSubstraitUnionAllAcceptedDraft(
     decodeDvtSubstraitUnionAllDocument(authority.semanticDocument)
   );
   return inspection.ok
-    ? fill(copy.relationalCompositionUnionAllSummaryTemplate, {
-        inputCount: inspection.projection.inputs.length,
-        outputCount: inspection.projection.outputs.length,
-      })
+    ? copy.relationalCompositionUnionAllSummaryTemplate
+        .replace('{inputCount}', String(inspection.projection.inputs.length))
+        .replace('{outputCount}', String(inspection.projection.outputs.length))
     : null;
 }
