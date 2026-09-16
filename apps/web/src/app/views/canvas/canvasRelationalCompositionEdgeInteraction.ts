@@ -7,7 +7,6 @@ export function projectCanvasRelationalCompositionEdgeInteractions(args: {
   edges: readonly Edge[];
   nodes: readonly Node[];
   canonicalTargetNodeIds: ReadonlySet<string>;
-  onActivateCanonical: (targetNodeId: string) => void;
 }): Edge[] {
   const nodesById = new Map(args.nodes.map((node) => [node.id, node]));
 
@@ -22,14 +21,14 @@ export function projectCanvasRelationalCompositionEdgeInteractions(args: {
         onInspectNode?: (nodeId: string, preferredTabId?: 'code') => void;
       }
     )?.onInspectNode;
+    const canInspect =
+      dependency.composition.state === 'pending' ||
+      (dependency.composition.state === 'canonical' &&
+        args.canonicalTargetNodeIds.has(dependency.targetId));
     const onActivate =
-      dependency.composition.state === 'canonical'
-        ? args.canonicalTargetNodeIds.has(dependency.targetId)
-          ? () => args.onActivateCanonical(dependency.targetId)
-          : undefined
-        : dependency.composition.state === 'pending' && typeof inspectNode === 'function'
-          ? () => inspectNode(dependency.targetId, 'code')
-          : undefined;
+      canInspect && typeof inspectNode === 'function'
+        ? () => inspectNode(dependency.targetId, 'code')
+        : undefined;
     if (onActivate == null) {
       return edge;
     }

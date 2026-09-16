@@ -342,7 +342,6 @@ export default function CanvasShell({
         edges: graph.edges,
         nodes: graph.nodesWithImpact,
         canonicalTargetNodeIds: semanticTransformIds,
-        onActivateCanonical: openSemanticTransform,
       }),
     }),
     [

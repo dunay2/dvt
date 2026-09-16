@@ -28,9 +28,8 @@ function compositionEdge(state: 'pending' | 'canonical' | 'incomplete' | 'unreso
 }
 
 describe('Canvas relational composition edge interaction', () => {
-  it('opens the existing chooser for pending truth and the semantic editor for canonical truth', () => {
+  it('opens the same Transform code workbench for pending and canonical truth', () => {
     const inspectTransform = vi.fn();
-    const openCanonical = vi.fn();
     const nodes: Node[] = [
       {
         id: 'transform',
@@ -43,16 +42,14 @@ describe('Canvas relational composition edge interaction', () => {
       edges: [compositionEdge('pending'), compositionEdge('canonical')],
       nodes,
       canonicalTargetNodeIds: new Set(['transform']),
-      onActivateCanonical: openCanonical,
     });
 
     readCanvasDependencyEdgeData(projected[0]?.data)?.composition?.onActivate?.();
     expect(inspectTransform).toHaveBeenCalledWith('transform', 'code');
-    expect(openCanonical).not.toHaveBeenCalled();
 
     readCanvasDependencyEdgeData(projected[1]?.data)?.composition?.onActivate?.();
-    expect(openCanonical).toHaveBeenCalledWith('transform');
-    expect(inspectTransform).toHaveBeenCalledTimes(1);
+    expect(inspectTransform).toHaveBeenLastCalledWith('transform', 'code');
+    expect(inspectTransform).toHaveBeenCalledTimes(2);
   });
 
   it.each(['incomplete', 'unresolved'] as const)(
@@ -71,7 +68,6 @@ describe('Canvas relational composition edge interaction', () => {
           },
         ],
         canonicalTargetNodeIds: new Set(['transform']),
-        onActivateCanonical: vi.fn(),
       });
 
       expect(projected).toBe(edge);
