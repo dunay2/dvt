@@ -1,5 +1,58 @@
 # Changelog
 
+## 0.18.0 (2026-09-16)
+
+## What's Changed
+* fix(planner): Preserve referenced feature rails by @dunay2 in https://github.com/dunay2/dvt/pull/3132
+* docs(docs): Retire redundant planning dashboards by @dunay2 in https://github.com/dunay2/dvt/pull/3105
+* fix(ci): Restore HET1 MinIO image pull by @dunay2 in https://github.com/dunay2/dvt/pull/3129
+* feat(web): Add catalog-driven expression composer by @dunay2 in https://github.com/dunay2/dvt/pull/3131
+* fix(web): Preserve Canvas authoring outcomes by @dunay2 in https://github.com/dunay2/dvt/pull/3134
+* fix(web): Preserve typed expression rejection reasons by @dunay2 in https://github.com/dunay2/dvt/pull/3138
+* refactor(web): Align column authoring command runner boundary by @dunay2 in https://github.com/dunay2/dvt/pull/3139
+* fix(web): Preserve calculated outputs when excluding a column by @dunay2 in https://github.com/dunay2/dvt/pull/3142
+* feat(web): Unify JOIN predicates and support null checks by @dunay2 in https://github.com/dunay2/dvt/pull/3143
+* fix(web): Restore physical field selection beside calculated outputs by @dunay2 in https://github.com/dunay2/dvt/pull/3145
+* fix(web): Preserve Canvas node measurements during field edits by @dunay2 in https://github.com/dunay2/dvt/pull/3147
+* fix(web): Preserve calculated upstream field selection by @dunay2 in https://github.com/dunay2/dvt/pull/3148
+* feat(api): Enable N-input JOIN Preview through the protected workload rail by @dunay2 in https://github.com/dunay2/dvt/pull/3154
+* refactor(web): Extract INNER JOIN source candidate resolution by @dunay2 in https://github.com/dunay2/dvt/pull/3140
+* chore(ci): Bump CodeQL actions to 4.38.0 by @dependabot[bot] in https://github.com/dunay2/dvt/pull/3153
+* fix(adapters): Preserve rejected plan identity when Preview is repeated by @dunay2 in https://github.com/dunay2/dvt/pull/3166
+* fix(contracts): Enforce native DVT Transform validation by @dunay2 in https://github.com/dunay2/dvt/pull/3169
+* fix(web): Keep calculated-column controls inside the Canvas interaction boundary by @dunay2 in https://github.com/dunay2/dvt/pull/3171
+* fix(web): Restore JOIN card output selection and ordering by @dunay2 in https://github.com/dunay2/dvt/pull/3174
+* fix(web): Restore Transform card and field entry points by @dunay2 in https://github.com/dunay2/dvt/pull/3176
+* fix(web): Allow the operational drawer to expand for semantic editing by @dunay2 in https://github.com/dunay2/dvt/pull/3178
+* fix(web): Allow clearing the final JOIN output by @dunay2 in https://github.com/dunay2/dvt/pull/3183
+* test(web): Synchronize Canvas authoring bootstrap notifications by @dunay2 in https://github.com/dunay2/dvt/pull/3187
+* fix(web): Compact Source column inspector typography by @dunay2 in https://github.com/dunay2/dvt/pull/3188
+* fix(web): Restore Transform double-click data entry by @dunay2 in https://github.com/dunay2/dvt/pull/3189
+* feat(web): Author explicit Transform result destinations by @dunay2 in https://github.com/dunay2/dvt/pull/3190
+* feat(contracts): Add terminal Transform Run workload v2 by @dunay2 in https://github.com/dunay2/dvt/pull/3191
+* feat(temporal): Execute DVT PostgreSQL operational workloads by @dunay2 in https://github.com/dunay2/dvt/pull/3192
+* fix(ci): Keep feature mechanization validation read-only by @dunay2 in https://github.com/dunay2/dvt/pull/3193
+* fix(web): Preserve chained Transform semantics in derived PostgreSQL SQL by @dunay2 in https://github.com/dunay2/dvt/pull/3194
+* fix(temporal): Enable native DVT PostgreSQL execution by @dunay2 in https://github.com/dunay2/dvt/pull/3195
+* feat(web): Show DVT PostgreSQL run evidence by @dunay2 in https://github.com/dunay2/dvt/pull/3196
+* test(web): Prove DVT run evidence survives reload by @dunay2 in https://github.com/dunay2/dvt/pull/3197
+* test(web): Prove stale DVT Preview cannot start a run by @dunay2 in https://github.com/dunay2/dvt/pull/3198
+* test(web): Prove N-input DVT PostgreSQL Run by @dunay2 in https://github.com/dunay2/dvt/pull/3199
+* test(web): Prove unsupported DVT view rejection by @dunay2 in https://github.com/dunay2/dvt/pull/3200
+* test(web): Prove cross-scope StartRun rejection by @dunay2 in https://github.com/dunay2/dvt/pull/3201
+* fix(api): Sanitize corrupt PlanRef rejection by @dunay2 in https://github.com/dunay2/dvt/pull/3202
+* test(web): Prove denied StartRun action by @dunay2 in https://github.com/dunay2/dvt/pull/3203
+* fix(web): Surface unavailable Canvas runtime by @dunay2 in https://github.com/dunay2/dvt/pull/3224
+* feat(web): Show authoritative Transform output rows by @dunay2 in https://github.com/dunay2/dvt/pull/3231
+* docs(docs): Remove historical archives and obsolete documentation tooling by @dunay2 in https://github.com/dunay2/dvt/pull/3223
+* fix(web): Keep a data tab for each Canvas card by @dunay2 in https://github.com/dunay2/dvt/pull/3234
+* fix(web): Align a new Transform card with its effective properties by @dunay2 in https://github.com/dunay2/dvt/pull/3236
+* feat(web): Preview Transform rows without publication by @dunay2 in https://github.com/dunay2/dvt/pull/3238
+* fix(adapters): Project unary Substrait chains from canonical plan by @dunay2 in https://github.com/dunay2/dvt/pull/3239
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.17.0...v0.18.0
+
 ## 0.17.0 (2026-09-11)
 
 ## What's Changed
