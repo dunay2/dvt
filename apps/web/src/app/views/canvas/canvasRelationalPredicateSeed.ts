@@ -13,6 +13,7 @@ import {
 } from './canvasColumnProjectionAuthority';
 import { readDvtSourceOutputProjection } from './canvasDvtSourceSemanticAuthoring';
 import { canonicalizeDvtSubstraitProjectionDataType } from './canvasDvtSubstraitProjection';
+import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 
 export type CanvasRelationalOperandSeed = Readonly<{
   nodeId: string;
@@ -27,6 +28,28 @@ export type CanvasRelationalPredicateSeed = Readonly<{
   right: CanvasRelationalOperandSeed;
   candidateOperator: 'equal';
 }>;
+
+export function isCanvasRelationalPredicateSeedAvailable(
+  inputs: readonly CanvasDvtCompositionInput[],
+  seed: CanvasRelationalPredicateSeed
+): boolean {
+  if (seed.left.nodeId === seed.right.nodeId) return false;
+  const leftInput = inputs.find((input) => input.nodeId === seed.left.nodeId);
+  const rightInput = inputs.find((input) => input.nodeId === seed.right.nodeId);
+  return (
+    leftInput != null &&
+    rightInput != null &&
+    leftInput.sourceRef.connectionRef.provider === 'postgres' &&
+    rightInput.sourceRef.connectionRef.provider === 'postgres' &&
+    hasSameConnectionRef(leftInput.sourceRef.connectionRef, rightInput.sourceRef.connectionRef) &&
+    seed.left.dataType === 'string' &&
+    seed.right.dataType === 'string' &&
+    leftInput.fields.some(
+      (field) => field.name === seed.left.fieldName && field.stringCompatible
+    ) &&
+    rightInput.fields.some((field) => field.name === seed.right.fieldName && field.stringCompatible)
+  );
+}
 
 function resolveSourceOperand(
   node: CanonicalNode,

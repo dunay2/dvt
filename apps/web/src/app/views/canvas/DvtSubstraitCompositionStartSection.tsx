@@ -3,7 +3,10 @@ import { useState } from 'react';
 
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
-import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
+import {
+  isCanvasRelationalPredicateSeedAvailable,
+  type CanvasRelationalPredicateSeed,
+} from './canvasRelationalPredicateSeed';
 import {
   resolveCanvasRelationalOperationChoices,
   type CanvasRelationalOperation,
@@ -34,9 +37,13 @@ export function DvtSubstraitCompositionStartSection({
   const [selectedOperation, setSelectedOperation] = useState<CanvasRelationalOperation | null>(
     null
   );
+  const availablePredicateSeed =
+    predicateSeed != null && isCanvasRelationalPredicateSeedAvailable(inputs, predicateSeed)
+      ? predicateSeed
+      : null;
   const choices = resolveCanvasRelationalOperationChoices({
     inputs,
-    predicateAvailable: predicateSeed != null,
+    predicateAvailable: availablePredicateSeed != null,
     readOnly: disabled,
     unionAllAvailable: onStartUnionAll != null,
   });
@@ -45,13 +52,13 @@ export function DvtSubstraitCompositionStartSection({
     return (
       <DvtSubstraitInnerJoinStartSection
         key={
-          predicateSeed == null
+          availablePredicateSeed == null
             ? 'manual'
-            : `${predicateSeed.left.nodeId}:${predicateSeed.left.fieldId}:${predicateSeed.right.nodeId}:${predicateSeed.right.fieldId}`
+            : `${availablePredicateSeed.left.nodeId}:${availablePredicateSeed.left.fieldId}:${availablePredicateSeed.right.nodeId}:${availablePredicateSeed.right.fieldId}`
         }
         disabled={disabled}
         inputs={inputs}
-        initialSelection={predicateSeed ?? undefined}
+        initialSelection={availablePredicateSeed ?? undefined}
         onApply={(selection) => {
           onStartInnerJoin(selection);
           onClearPredicateSeed?.();
@@ -85,13 +92,13 @@ export function DvtSubstraitCompositionStartSection({
       <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
         {canvasViewCopy.inspectorDvtRelationalOperationTitle}
       </h3>
-      {predicateSeed != null ? (
+      {availablePredicateSeed != null ? (
         <p
           data-slot="dvt-relational-predicate-proposal"
           className="rounded border border-[color:var(--border-default)] px-2 py-1.5 font-mono text-xs text-(--text-default)"
         >
-          {predicateSeed.left.nodeId}.{predicateSeed.left.fieldName} = {predicateSeed.right.nodeId}.
-          {predicateSeed.right.fieldName}
+          {availablePredicateSeed.left.nodeId}.{availablePredicateSeed.left.fieldName} ={' '}
+          {availablePredicateSeed.right.nodeId}.{availablePredicateSeed.right.fieldName}
         </p>
       ) : null}
       <DvtRelationalOperationChooser choices={choices} onSelect={setSelectedOperation} />
