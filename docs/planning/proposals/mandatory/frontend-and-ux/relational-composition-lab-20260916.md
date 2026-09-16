@@ -156,6 +156,40 @@ new relation capability, or change the explicit Apply boundary. Once seeded,
 the existing editor remains the single authority for comparisons, null tests,
 literals, unary function chains, boolean combinations, and grouping.
 
+### Persisted JOIN predicate editing
+
+After the first Apply, the canonical Substrait document and DVT sidecar already
+survive save and reload. The remaining inconsistency is in presentation: Node
+Properties decodes that authority but reduces each persisted predicate to
+read-only text while exposing unrelated output-field controls.
+
+```mermaid
+flowchart LR
+    S[Saved JOIN document] --> I[InspectCanvasNode]
+    I --> T[Read-only predicate text]
+    T --> X[Cannot continue predicate editing]
+```
+
+The bounded correction projects every inspected JOIN relation back through the
+same condition editor used before the first Apply. It uses persisted
+`RelationId` and `FieldId` values; it never reconstructs operands from display
+names, graph geometry, or current field order.
+
+```mermaid
+flowchart LR
+    S[Saved JOIN document] --> I[InspectCanvasNode]
+    I --> E[Canonical predicate editor]
+    E --> D[Inspector draft]
+    D --> A[Explicit Node Properties Apply]
+    A --> C[ConfigureCanvasDvtNode]
+    C --> S
+```
+
+One repeatable projection covers binary and N-input JOIN relations. This slice
+does not change the selected relation operation, append or reconnect inputs,
+admit coercion, or add another expression model. Cancel continues to leave the
+persisted semantic revision unchanged.
+
 ## Contextual Window Projection For #3230
 
 The selected product surface is the existing single-source Window section in
