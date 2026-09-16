@@ -648,6 +648,50 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSubstraitUnionAllFieldsLabel',
     fallback: 'Compatible fields',
   },
+  inspectorDvtRelationalOperationTitle: {
+    key: 'canvas.inspector.authoring.dvtRelationalOperationTitle',
+    fallback: 'Relate / compose',
+  },
+  inspectorDvtRelationalAvailable: {
+    key: 'canvas.inspector.authoring.dvtRelationalAvailable',
+    fallback: 'Available',
+  },
+  inspectorDvtRelationalNeedsPredicate: {
+    key: 'canvas.inspector.authoring.dvtRelationalNeedsPredicate',
+    fallback: 'Needs predicate',
+  },
+  inspectorDvtRelationalNeedsSchemaAlignment: {
+    key: 'canvas.inspector.authoring.dvtRelationalNeedsSchemaAlignment',
+    fallback: 'Needs schema alignment',
+  },
+  inspectorDvtRelationalTargetUnavailable: {
+    key: 'canvas.inspector.authoring.dvtRelationalTargetUnavailable',
+    fallback: 'Target unavailable',
+  },
+  inspectorDvtRelationalUnavailable: {
+    key: 'canvas.inspector.authoring.dvtRelationalUnavailable',
+    fallback: 'Unavailable',
+  },
+  inspectorDvtRelationalReadOnly: {
+    key: 'canvas.inspector.authoring.dvtRelationalReadOnly',
+    fallback: 'Read only',
+  },
+  inspectorDvtRelationalLeftOperandField: {
+    key: 'canvas.inspector.authoring.dvtRelationalLeftOperandField',
+    fallback: 'Left operand field',
+  },
+  inspectorDvtRelationalRightOperandField: {
+    key: 'canvas.inspector.authoring.dvtRelationalRightOperandField',
+    fallback: 'Right operand field',
+  },
+  inspectorDvtRelationalApply: {
+    key: 'canvas.inspector.authoring.dvtRelationalApply',
+    fallback: 'Apply',
+  },
+  inspectorDvtRelationalCancel: {
+    key: 'canvas.inspector.authoring.dvtRelationalCancel',
+    fallback: 'Cancel',
+  },
   inspectorDvtSubstraitAggregationTitle: {
     key: 'canvas.inspector.authoring.dvtSubstraitAggregationTitle',
     fallback: 'Grain and summary',
