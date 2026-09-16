@@ -36,6 +36,7 @@ export function DvtSubstraitCompositionStartSection({
   );
   const choices = resolveCanvasRelationalOperationChoices({
     inputs,
+    predicateAvailable: predicateSeed != null,
     readOnly: disabled,
     unionAllAvailable: onStartUnionAll != null,
   });

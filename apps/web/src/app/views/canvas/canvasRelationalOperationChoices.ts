@@ -72,6 +72,7 @@ function targetSupports(inputs: readonly CanvasDvtCompositionInput[]): boolean {
 export function resolveCanvasRelationalOperationChoices(
   args: Readonly<{
     inputs: readonly CanvasDvtCompositionInput[];
+    predicateAvailable: boolean;
     readOnly: boolean;
     unionAllAvailable: boolean;
   }>
@@ -88,7 +89,9 @@ export function resolveCanvasRelationalOperationChoices(
         ? 'semantically-unavailable'
         : !hasCompatibleJoinPair(args.inputs)
           ? 'target-unavailable'
-          : 'needs-predicate');
+          : args.predicateAvailable
+            ? 'available'
+            : 'needs-predicate');
   const unionAllAvailability =
     readOnlyAvailability ??
     (!unionAllAdmitted
@@ -103,7 +106,8 @@ export function resolveCanvasRelationalOperationChoices(
     {
       operation: 'inner_join',
       availability: innerJoinAvailability,
-      selectable: innerJoinAvailability === 'needs-predicate',
+      selectable:
+        innerJoinAvailability === 'available' || innerJoinAvailability === 'needs-predicate',
     },
     {
       operation: 'union_all',

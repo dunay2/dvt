@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
+import { canvasViewCopy } from './copy';
 import { DvtSubstraitCompositionStartSection } from './DvtSubstraitCompositionStartSection';
 
 function input(nodeId: string, table: string): CanvasDvtCompositionInput {
@@ -215,6 +216,9 @@ describe('DvtSubstraitCompositionStartSection', () => {
     expect(
       container.querySelector('[data-slot="dvt-relational-predicate-proposal"]')?.textContent
     ).toContain('orders.customer_id = customers.customer_id');
+    expect(
+      container.querySelector('[data-slot="dvt-select-operation-inner-join"]')?.textContent
+    ).toContain(canvasViewCopy.inspectorDvtRelationalAvailable);
     expect(onStartInnerJoin).not.toHaveBeenCalled();
 
     act(() => {

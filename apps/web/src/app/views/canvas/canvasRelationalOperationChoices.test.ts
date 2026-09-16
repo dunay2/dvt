@@ -37,12 +37,14 @@ function input(args: {
 
 function availability(args: {
   inputs?: readonly CanvasDvtCompositionInput[];
+  predicateAvailable?: boolean;
   readOnly?: boolean;
   unionAllAvailable?: boolean;
 }): Record<string, CanvasRelationalOperationAvailability> {
   return Object.fromEntries(
     resolveCanvasRelationalOperationChoices({
       inputs: args.inputs ?? [input({ nodeId: 'orders' }), input({ nodeId: 'customers' })],
+      predicateAvailable: args.predicateAvailable ?? false,
       readOnly: args.readOnly ?? false,
       unionAllAvailable: args.unionAllAvailable ?? false,
     }).map((choice) => [choice.operation, choice.availability])
@@ -62,6 +64,10 @@ describe('resolveCanvasRelationalOperationChoices', () => {
       inner_join: 'needs-predicate',
       union_all: 'needs-schema-alignment',
     });
+  });
+
+  it('offers INNER JOIN when a valid predicate proposal is already available', () => {
+    expect(availability({ predicateAvailable: true }).inner_join).toBe('available');
   });
 
   it('keeps target readiness separate from semantic admission', () => {
