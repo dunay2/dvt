@@ -23,6 +23,9 @@ import {
 import { canvasViewCopy } from './copy';
 import { SemanticWorkbenchJoinConditionEditor } from './SemanticWorkbenchJoinConditionEditor';
 
+const sourceSelectClassName =
+  'h-8 w-full rounded border border-[color:var(--border-default)] bg-slate-950 px-2 text-xs text-slate-100 [&>option]:bg-slate-950 [&>option]:text-slate-100';
+
 export function DvtSubstraitInnerJoinStartSection({
   disabled,
   inputs,
@@ -83,7 +86,7 @@ export function DvtSubstraitInnerJoinStartSection({
           data-slot="dvt-composition-left-input"
           value={selectedInputs.leftNodeId}
           disabled={disabled}
-          className="h-8 w-full rounded border border-[color:var(--border-default)] bg-transparent px-2 text-xs"
+          className={sourceSelectClassName}
           onChange={(event) => {
             const nextLeft = availableInputs.find(
               (input) => input.nodeId === event.currentTarget.value
@@ -123,7 +126,7 @@ export function DvtSubstraitInnerJoinStartSection({
           data-slot="dvt-composition-right-input"
           value={selectedInputs.rightNodeId}
           disabled={disabled || leftInput == null}
-          className="h-8 w-full rounded border border-[color:var(--border-default)] bg-transparent px-2 text-xs"
+          className={sourceSelectClassName}
           onChange={(event) => {
             const nextRight = rightInputs.find(
               (input) => input.nodeId === event.currentTarget.value
