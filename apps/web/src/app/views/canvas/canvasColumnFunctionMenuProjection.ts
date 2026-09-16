@@ -29,19 +29,6 @@ export type CanvasColumnFunctionMenuProjection = Readonly<{
   resolveCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
 }>;
 
-function projectMenu(args: {
-  dataType: string;
-  provider: string;
-}): NonNullable<GraphNodeColumn['functionMenu']> | undefined {
-  const items = resolveDvtSubstraitColumnFunctions({
-    dataType: args.dataType,
-    provider: args.provider,
-    resolution: 'proposal',
-  });
-  const category = items[0]?.category;
-  return category == null || items.length === 0 ? undefined : { category, items };
-}
-
 function addMenu(args: {
   menus: CanvasColumnFunctionMenuMap;
   columnId: string;
@@ -49,12 +36,17 @@ function addMenu(args: {
   dataType: string;
   provider: string;
 }): void {
-  const menu = projectMenu(args);
-  if (menu == null) return;
+  const items = resolveDvtSubstraitColumnFunctions({
+    dataType: args.dataType,
+    provider: args.provider,
+    resolution: 'proposal',
+  });
+  const category = items[0]?.category;
+  if (category == null || items.length === 0) return;
   const value = {
     columnId: args.columnId,
     dataType: args.dataType,
-    menu,
+    menu: { category, items },
   };
   args.menus.set(args.columnId, value);
   args.menus.set(args.name, value);
@@ -103,21 +95,30 @@ function projectDvtTransformMenus(args: {
     const inspection = inspectDvtSubstraitProjectionDraft(draft);
     if (!inspection.ok) return { hasEditableProjection: false, supportsCalculatedColumns: false };
     const menus: CanvasColumnFunctionMenuMap = new Map();
+    const provider = projection.source.sourceRef.connectionRef.provider;
     for (const output of projection.outputs) {
       addMenu({
         menus,
         columnId: output.fieldId,
         name: output.name,
         dataType: output.dataType,
-        provider: projection.source.sourceRef.connectionRef.provider,
+        provider,
       });
     }
-    const provider = projection.source.sourceRef.connectionRef.provider;
+    for (const field of inspection.projection.inputFields) {
+      addMenu({
+        menus,
+        columnId: field.fieldId,
+        name: field.name,
+        dataType: field.dataType,
+        provider,
+      });
+    }
     const inputIds = new Set(inspection.projection.inputFields.map((field) => field.fieldId));
     const inputNames = new Set(inspection.projection.inputFields.map((field) => field.name));
     const expressionInputs: GraphNodeColumn[] = [
       ...inspection.projection.inputFields.map((field) => {
-        const menu = projectMenu({ dataType: field.dataType, provider });
+        const menu = menus.get(field.fieldId)?.menu;
         return {
           id: field.fieldId,
           name: field.name,
@@ -132,7 +133,7 @@ function projectDvtTransformMenus(args: {
         ) {
           return [];
         }
-        const menu = projectMenu({ dataType: output.dataType, provider });
+        const menu = menus.get(output.fieldId)?.menu;
         return [
           {
             id: output.fieldId,
