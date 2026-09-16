@@ -6,6 +6,7 @@ import {
 import { hasSameConnectionRef } from '@dvt/postgres-projection';
 
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
+import { hasCompatibleCanvasDvtJoinFields } from './canvasDvtJoinTypeAdmission';
 
 export type CanvasRelationalOperation = 'inner_join' | 'union_all';
 
@@ -37,10 +38,6 @@ function isAdmitted(message: string, selector: string): boolean {
   );
 }
 
-function hasStringPair(inputs: readonly CanvasDvtCompositionInput[]): boolean {
-  return inputs.filter((input) => input.fields.some((field) => field.stringCompatible)).length >= 2;
-}
-
 function hasCompatibleJoinPair(inputs: readonly CanvasDvtCompositionInput[]): boolean {
   return inputs.some((left, index) =>
     inputs
@@ -50,9 +47,16 @@ function hasCompatibleJoinPair(inputs: readonly CanvasDvtCompositionInput[]): bo
           left.sourceRef.connectionRef.provider === 'postgres' &&
           right.sourceRef.connectionRef.provider === 'postgres' &&
           hasSameConnectionRef(left.sourceRef.connectionRef, right.sourceRef.connectionRef) &&
-          left.fields.some((field) => field.stringCompatible) &&
-          right.fields.some((field) => field.stringCompatible)
+          hasCompatibleCanvasDvtJoinFields(left.fields, right.fields)
       )
+  );
+}
+
+function hasCompatibleJoinTypePair(inputs: readonly CanvasDvtCompositionInput[]): boolean {
+  return inputs.some((left, index) =>
+    inputs
+      .slice(index + 1)
+      .some((right) => hasCompatibleCanvasDvtJoinFields(left.fields, right.fields))
   );
 }
 
@@ -85,7 +89,7 @@ export function resolveCanvasRelationalOperationChoices(
     readOnlyAvailability ??
     (!innerJoinAdmitted
       ? 'semantically-unavailable'
-      : !hasStringPair(args.inputs)
+      : !hasCompatibleJoinTypePair(args.inputs)
         ? 'semantically-unavailable'
         : !hasCompatibleJoinPair(args.inputs)
           ? 'target-unavailable'

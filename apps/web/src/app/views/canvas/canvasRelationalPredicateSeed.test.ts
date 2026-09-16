@@ -71,13 +71,14 @@ function session(
 
 function mappedFixture(
   rightType = 'text',
-  includeRightDependency = true
+  includeRightDependency = true,
+  leftType = 'text'
 ): {
   draftSession: CanvasDraftSession;
   canonicalNodesById: Map<string, CanonicalNode>;
   outputId: string;
 } {
-  const orders = source('orders');
+  const orders = source('orders', leftType);
   const clients = source('clients', rightType);
   const model = transform();
   const initial = session([orders, clients, model], includeRightDependency);
@@ -141,6 +142,18 @@ describe('resolveCanvasRelationalPredicateSeed', () => {
         target: { nodeId: 'model', outputId: fixture.outputId, columnName: 'client_id' },
       })
     ).toBeNull();
+  });
+
+  it('carries an existing non-string canonical type into the proposal', () => {
+    const fixture = mappedFixture('bigint', true, 'int8');
+    const seed = resolveCanvasRelationalPredicateSeed({
+      ...fixture,
+      source: { nodeId: 'clients', columnId: 'client_id' },
+      target: { nodeId: 'model', outputId: fixture.outputId, columnName: 'client_id' },
+    });
+
+    expect(seed?.left.dataType).toBe('i64');
+    expect(seed?.right.dataType).toBe('i64');
   });
 
   it('fails closed when the second dependency or admitted operand type is missing', () => {

@@ -13,7 +13,12 @@ import {
 import { canvasViewCopy } from './copy';
 import { DvtSubstraitCompositionStartSection } from './DvtSubstraitCompositionStartSection';
 
-function input(nodeId: string, table: string): CanvasDvtCompositionInput {
+function input(
+  nodeId: string,
+  table: string,
+  dataType = 'text',
+  joinDataType: CanvasDvtCompositionInput['fields'][number]['joinDataType'] = 'string'
+): CanvasDvtCompositionInput {
   return {
     nodeId,
     schema: 'raw',
@@ -27,7 +32,7 @@ function input(nodeId: string, table: string): CanvasDvtCompositionInput {
       },
       sourceObjectId: `raw.${table}`,
     },
-    fields: [{ name: 'id', dataType: 'text', stringCompatible: true }],
+    fields: [{ name: 'id', dataType, joinDataType }],
   };
 }
 
@@ -147,6 +152,48 @@ describe('DvtSubstraitCompositionStartSection', () => {
     expect(onStartInnerJoin).not.toHaveBeenCalled();
   });
 
+  it('seeds the first JOIN with a matching admitted non-string type', () => {
+    const onStartInnerJoin = vi.fn();
+    act(() => {
+      root.render(
+        <DvtSubstraitCompositionStartSection
+          disabled={false}
+          inputs={[
+            input('orders', 'orders', 'bigint', 'i64'),
+            input('customers', 'customers', 'int8', 'i64'),
+          ]}
+          onStartInnerJoin={onStartInnerJoin}
+        />
+      );
+    });
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')!
+      );
+    });
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-configured-inner-join"]')!
+      );
+    });
+
+    expect(onStartInnerJoin).toHaveBeenCalledOnce();
+    const inspection = inspectDvtSubstraitNInputJoinDraft(
+      onStartInnerJoin.mock.calls[0]?.[0] as DvtSubstraitInnerJoinDraft
+    );
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.inputs.map((candidate) => candidate.fields[0]?.dataType)).toEqual([
+      'i64',
+      'i64',
+    ]);
+    expect(inspection.projection.joins[0]?.conditions[0]).toMatchObject({
+      left: { kind: 'field' },
+      right: { kind: 'field' },
+    });
+  });
+
   it('opens a valid PostgreSQL pair when an earlier N-input candidate is target-incompatible', () => {
     act(() => {
       root.render(
@@ -182,18 +229,18 @@ describe('DvtSubstraitCompositionStartSection', () => {
   it('keeps the operation explicit while carrying a cross-input field proposal into JOIN', () => {
     const onStartInnerJoin = vi.fn();
     const onClearPredicateSeed = vi.fn();
-    const orders = {
+    const orders: CanvasDvtCompositionInput = {
       ...input('orders', 'orders'),
       fields: [
-        { name: 'id', dataType: 'text', stringCompatible: true },
-        { name: 'customer_id', dataType: 'text', stringCompatible: true },
+        { name: 'id', dataType: 'text', joinDataType: 'string' },
+        { name: 'customer_id', dataType: 'text', joinDataType: 'string' },
       ],
     };
-    const customers = {
+    const customers: CanvasDvtCompositionInput = {
       ...input('customers', 'customers'),
       fields: [
-        { name: 'id', dataType: 'text', stringCompatible: true },
-        { name: 'customer_id', dataType: 'text', stringCompatible: true },
+        { name: 'id', dataType: 'text', joinDataType: 'string' },
+        { name: 'customer_id', dataType: 'text', joinDataType: 'string' },
       ],
     };
     const shipments = input('shipments', 'shipments');

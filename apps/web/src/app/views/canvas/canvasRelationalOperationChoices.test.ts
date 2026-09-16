@@ -10,7 +10,7 @@ function input(args: {
   nodeId: string;
   connectionId?: string;
   provider?: 'postgres' | 'snowflake';
-  stringCompatible?: boolean;
+  joinDataType?: CanvasDvtCompositionInput['fields'][number]['joinDataType'];
 }): CanvasDvtCompositionInput {
   return {
     nodeId: args.nodeId,
@@ -28,8 +28,8 @@ function input(args: {
     fields: [
       {
         name: 'id',
-        dataType: args.stringCompatible === false ? 'integer' : 'text',
-        stringCompatible: args.stringCompatible !== false,
+        dataType: args.joinDataType == null ? 'text' : args.joinDataType,
+        joinDataType: args.joinDataType === undefined ? 'string' : args.joinDataType,
       },
     ],
   };
@@ -84,12 +84,31 @@ describe('resolveCanvasRelationalOperationChoices', () => {
     });
   });
 
-  it('reports unsupported predicate operands as semantically unavailable', () => {
+  it('admits an existing non-string canonical type on both inputs', () => {
     expect(
       availability({
         inputs: [
-          input({ nodeId: 'orders', stringCompatible: false }),
-          input({ nodeId: 'customers', stringCompatible: false }),
+          input({ nodeId: 'orders', joinDataType: 'i64' }),
+          input({ nodeId: 'customers', joinDataType: 'i64' }),
+        ],
+      }).inner_join
+    ).toBe('needs-predicate');
+  });
+
+  it('reports unbound or unlike predicate operands as semantically unavailable', () => {
+    expect(
+      availability({
+        inputs: [
+          input({ nodeId: 'orders', joinDataType: null }),
+          input({ nodeId: 'customers', joinDataType: null }),
+        ],
+      }).inner_join
+    ).toBe('semantically-unavailable');
+    expect(
+      availability({
+        inputs: [
+          input({ nodeId: 'orders', joinDataType: 'i64' }),
+          input({ nodeId: 'customers', joinDataType: 'bool' }),
         ],
       }).inner_join
     ).toBe('semantically-unavailable');
