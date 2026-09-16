@@ -334,6 +334,8 @@ export type CanvasViewCopy = {
   readonly operationalDrawerDataTab: string;
   readonly operationalDrawerSemanticTab: string;
   readonly operationalDrawerSemanticIdleMessage: string;
+  readonly operationalDrawerSemanticTopologyMismatchTitle: string;
+  readonly operationalDrawerSemanticTopologyMismatchMessage: string;
   readonly operationalDrawerProblemsAriaLabel: string;
   readonly operationalDrawerNoProblemsMessage: string;
   readonly operationalDrawerRunsAriaLabel: string;
