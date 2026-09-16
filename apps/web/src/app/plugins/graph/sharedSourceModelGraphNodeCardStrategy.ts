@@ -1,6 +1,7 @@
 /** Owned concern: project shared Source and Model product cards across authority profiles. */
 import type { CanonicalNode, PluginNodeKind } from '../../types/canonical';
 import { isCanvasNodePresentationCopy } from '../../components/canvas/canvasNodePresentationCopy.contract';
+import { isCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import { buildDvtGraphNodeSemanticMetric } from '../dvt/dvtGraphNodeSemanticMetric';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { buildGraphNodeOperationalSummary } from './graphNodeOperationalSummary';
@@ -165,6 +166,9 @@ function buildSharedSourceModelCard(
     locale: presentationCopy?.locale,
   });
   const copy = resolveGraphNodeCardCopy(presentationCopy?.locale);
+  const relationalComposition = isCanvasNodePresentationTruth(data.presentationTruth)
+    ? data.presentationTruth.relationalComposition
+    : undefined;
   const lastRunMetric = summary.metrics.find((metric) => metric.id === 'last-run');
   const authorityMetrics = buildAuthorityMetrics(
     node,
@@ -220,7 +224,13 @@ function buildSharedSourceModelCard(
     technicalName: titlePresentation.technicalName,
     subtitle: authorityLabel ?? resolveGraphNodeRelationPath(metadata, data) ?? node.path ?? null,
     path: node.path ?? resolveGraphNodeRelationPath(metadata, data) ?? null,
-    kindLabel: null,
+    kindLabel:
+      relationalComposition?.state === 'pending'
+        ? copy.relationalCompositionPendingLabel
+        : relationalComposition?.state === 'incomplete' ||
+            relationalComposition?.state === 'unresolved'
+          ? copy.relationalCompositionIncompleteLabel
+          : null,
     accentTone: resolveNodeCardAccentTone(node),
     health: resolveNodeCardHealth(
       node,

@@ -62,9 +62,37 @@ export type CanvasNodeCodeTruth =
       reason?: CanvasNodeCodeUnavailableReason;
     }>;
 
+export type CanvasRelationalCompositionOperation = 'inner_join' | 'union_all';
+
+export type CanvasRelationalCompositionTruth =
+  | Readonly<{ state: 'single-input'; connectedInputCount: number }>
+  | Readonly<{
+      state: 'pending';
+      connectedInputCount: number;
+      pendingInputCount: number;
+      canonicalOperation?: CanvasRelationalCompositionOperation;
+    }>
+  | Readonly<{
+      state: 'canonical';
+      connectedInputCount: number;
+      operation: CanvasRelationalCompositionOperation;
+    }>
+  | Readonly<{
+      state: 'incomplete';
+      connectedInputCount: number;
+      missingInputCount: number;
+      canonicalOperation?: CanvasRelationalCompositionOperation;
+    }>
+  | Readonly<{
+      state: 'unresolved';
+      connectedInputCount: number;
+      reason: 'input-identity-unavailable' | 'semantic-authority-invalid';
+    }>;
+
 export type CanvasNodePresentationTruth = Readonly<{
   columns: CanvasNodeColumnTruth;
   code: CanvasNodeCodeTruth;
+  relationalComposition?: CanvasRelationalCompositionTruth;
 }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -78,6 +106,17 @@ export function isCanvasNodePresentationTruth(
     return false;
   }
 
+  const relationalComposition = value.relationalComposition;
+  const hasValidRelationalComposition =
+    relationalComposition == null ||
+    (isRecord(relationalComposition) &&
+      typeof relationalComposition.connectedInputCount === 'number' &&
+      (relationalComposition.state === 'single-input' ||
+        relationalComposition.state === 'pending' ||
+        relationalComposition.state === 'canonical' ||
+        relationalComposition.state === 'incomplete' ||
+        relationalComposition.state === 'unresolved'));
+
   return (
     typeof value.columns.visibleCount === 'number' &&
     (value.columns.visibleProvenance === 'declared' ||
@@ -88,6 +127,7 @@ export function isCanvasNodePresentationTruth(
       value.code.kind === 'workspace-file' ||
       value.code.kind === 'generated' ||
       value.code.kind === 'canonical' ||
-      value.code.kind === 'unavailable')
+      value.code.kind === 'unavailable') &&
+    hasValidRelationalComposition
   );
 }
