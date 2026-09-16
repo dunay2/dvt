@@ -69,7 +69,14 @@ function session(
   };
 }
 
-function mappedFixture(rightType = 'text', includeRightDependency = true) {
+function mappedFixture(
+  rightType = 'text',
+  includeRightDependency = true
+): {
+  draftSession: CanvasDraftSession;
+  canonicalNodesById: Map<string, CanonicalNode>;
+  outputId: string;
+} {
   const orders = source('orders');
   const clients = source('clients', rightType);
   const model = transform();
