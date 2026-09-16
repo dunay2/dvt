@@ -49,7 +49,9 @@ describe('Canvas relational-tree Workbench', () => {
     cy.get('[data-slot="canvas-relational-tree-workbench"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-tree-source"]')
       .should('have.length', 2)
-      .each(($source) => cy.wrap($source).should('contain.text', 'Participating'));
+      .each(($source) => {
+        cy.wrap($source).should('contain.text', 'Participating');
+      });
     cy.get('[data-slot="canvas-relational-tree"]')
       .should('contain.text', 'JOIN')
       .and('contain.text', 'Left input')
