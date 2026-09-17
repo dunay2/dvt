@@ -69,4 +69,39 @@ describe('canvas dependency edge execution presentation', () => {
     expect(readCanvasDependencyEdgeData(data)).toEqual(data);
     expect(readCanvasDependencyEdgeData({ execution: data.execution })).toBeUndefined();
   });
+
+  it('carries a canonical composition projection without changing execution truth', () => {
+    const data = buildCanvasDependencyEdgeData({
+      sourceId: 'orders',
+      targetId: 'transform',
+      composition: {
+        groupId: 'relational-composition:transform',
+        label: 'INNER JOIN',
+        memberCount: 2,
+        role: 'trunk-owner',
+        state: 'canonical',
+        operation: 'inner_join',
+      },
+    });
+
+    expect(readCanvasDependencyEdgeData(data)).toEqual(data);
+    expect(data.execution.isEffectivelyExecutable).toBe(true);
+  });
+
+  it('rejects an incomplete canonical composition projection', () => {
+    const data = buildCanvasDependencyEdgeData({ sourceId: 'orders', targetId: 'transform' });
+
+    expect(
+      readCanvasDependencyEdgeData({
+        ...data,
+        composition: {
+          groupId: 'relational-composition:transform',
+          label: 'JOIN',
+          memberCount: 2,
+          role: 'trunk-owner',
+          state: 'canonical',
+        },
+      })
+    ).toBeUndefined();
+  });
 });

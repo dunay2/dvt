@@ -1,19 +1,20 @@
 // @vitest-environment jsdom
 
-/** Owned concern: prove Transform single-click semantics and double-click authoritative rows. */
+/** Owned concern: prove Transform single-click semantics and double-click exploratory rows. */
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
+import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
+import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
+
 import {
   createCanvasShellHarness,
   getCanvasShellState,
   type CanvasShellPropsOverrides,
 } from './CanvasShell.testHarness';
-import { buildCanvasTransformOutputSampleAuthority } from './canvasTransformOutputSample.testSupport';
 
-describe('CanvasShell Transform output sample', () => {
+describe('CanvasShell Transform data sample', () => {
   let renderShell: (overrides?: CanvasShellPropsOverrides) => Promise<unknown>;
   let unmountShell: () => void;
 
@@ -25,13 +26,15 @@ describe('CanvasShell Transform output sample', () => {
 
   afterEach(() => unmountShell());
 
-  it('keeps single-click semantic and loads exact published rows on double-click', async () => {
-    const { currentPlan, publication, source, transform } =
-      buildCanvasTransformOutputSampleAuthority();
-    const previewSourceObjectRows = vi.fn().mockResolvedValue({
+  it('keeps single-click semantic and explores current rows on double-click', async () => {
+    const fixture = buildSemanticWorkbenchFixture();
+    const transform = fixture.transform;
+    const previewTransformRows = vi.fn().mockResolvedValue({
       contractVersion: 1,
-      connectionId: 'postgresql-local',
-      objectId: 'relation/dvt/analytics/orders_enriched',
+      canvasId: 'canvas-test',
+      transformNodeId: transform.id,
+      draftRevision: 'revision-7',
+      semanticPlanSha256: 'a'.repeat(64),
       columns: [{ name: 'order_id', type: 'integer', nullable: false }],
       rows: [{ values: ['1'] }],
       limit: 20,
@@ -40,7 +43,7 @@ describe('CanvasShell Transform output sample', () => {
     });
 
     await renderShell({
-      panels: { inspectorGraphNodes: [source, transform] },
+      panels: { inspectorGraphNodes: [...fixture.sources, transform] },
       graph: {
         nodesWithImpact: [
           {
@@ -51,12 +54,7 @@ describe('CanvasShell Transform output sample', () => {
           },
         ],
       },
-      warehouseSourceDataSampleQuery: { previewSourceObjectRows },
-      runOutputPreviewAuthority: {
-        currentPlan,
-        isCurrentPlanStale: false,
-      },
-      runSnapshot: { runId: 'run-1', status: 'completed', publication },
+      canvasTransformDataSampleQuery: { previewTransformRows },
     });
     const node = (
       getCanvasShellState().canvasViewportProps?.nodesWithImpact as Array<{ data: DbtNodeData }>
@@ -64,23 +62,27 @@ describe('CanvasShell Transform output sample', () => {
 
     act(() => node.onSelectNode?.(transform.id));
     expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('semantic');
-    expect(previewSourceObjectRows).not.toHaveBeenCalled();
+    expect(previewTransformRows).not.toHaveBeenCalled();
 
     await act(async () => {
       node.onOpenNode?.(transform.id);
       await Promise.resolve();
     });
 
-    expect(previewSourceObjectRows).toHaveBeenCalledWith({
-      connectionId: 'postgresql-local',
-      objectId: 'relation/dvt/analytics/orders_enriched',
-      expectedPublicationToken: publication.publication.token,
+    expect(previewTransformRows).toHaveBeenCalledWith({
+      canvasId: 'canvas-test',
+      transformNodeId: transform.id,
       limit: 20,
     });
-    expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
-      activeTab: 'data',
-      contribution: {
-        dataSample: { status: 'ready', nodeName: transform.name },
+    const dataState = useOperationalDrawerContributionStore.getState();
+    expect(dataState.activeTab).toBe(`data:${transform.id}`);
+    expect(
+      dataState.contribution?.tabs.find((tab) => tab.id === `data:${transform.id}`)
+    ).toMatchObject({
+      dataSample: {
+        status: 'ready',
+        nodeName: transform.name,
+        sample: { rows: [{ values: ['1'] }] },
       },
     });
   });

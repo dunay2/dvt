@@ -195,6 +195,8 @@ export function CanvasInspectorAuthoringSection({
             draft={draft}
             errors={errors}
             section={dvtAuthoringSection}
+            relationalPredicateSeed={authoring.relationalPredicateSeed}
+            onClearRelationalPredicateSeed={authoring.onClearRelationalPredicateSeed}
             onChange={setDraft}
           />
         ) : null}

@@ -14,9 +14,13 @@ import type { CanvasShellProps } from './canvasShell.types';
 import { canvasViewCopy } from './copy';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
-import type { SemanticTransformFocusPanelProps } from './SemanticTransformFocusPanel';
+import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import type { SourceDataSample } from '../../ports/workspace';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
+import {
+  buildCanvasDependencyEdgeData,
+  readCanvasDependencyEdgeData,
+} from './canvasDependencyEdgeModel';
 
 describe('CanvasShell operational drawer registration', () => {
   let renderShell: (overrides?: CanvasShellPropsOverrides) => Promise<CanvasShellProps>;
@@ -66,8 +70,7 @@ describe('CanvasShell operational drawer registration', () => {
         { id: 'problems', label: 'Problems' },
         { id: 'runs', label: 'Runs' },
         { id: 'preview', label: 'Preview' },
-        { id: 'data', label: 'Data' },
-        { id: 'semantic', label: 'Semantics' },
+        { id: 'semantic', label: 'Relational tree' },
       ],
       runs: {
         activeRunId: 'run-42',
@@ -90,14 +93,17 @@ describe('CanvasShell operational drawer registration', () => {
     expect(onRun).toHaveBeenCalledTimes(1);
   });
 
-  it('opens a real Substrait Transform in the semantic drawer on selection without changing geometry', async () => {
+  it('opens one relational-tree drawer from the composition badge and Transform selection', async () => {
     const fixture = buildSemanticWorkbenchFixture();
     const position = { x: 320, y: 140 };
     const onApplyNodeDraft = vi.fn();
     const onInspectNode = vi.fn();
+    const previewTransformRows = vi.fn(() => new Promise<never>(() => undefined));
     await renderShell({
+      canvasTransformDataSampleQuery: { previewTransformRows },
       panels: {
         inspectorGraphNodes: [...fixture.sources, fixture.transform],
+        inspectorGraphEdges: fixture.edges,
         inspectorAuthoring: { canEditNode: true, onApplyNodeDraft },
       },
       graph: {
@@ -113,6 +119,24 @@ describe('CanvasShell operational drawer registration', () => {
             },
           },
         ],
+        edges: [
+          {
+            id: 'source-transform',
+            source: fixture.sources[0]!.id,
+            target: fixture.transform.id,
+            data: buildCanvasDependencyEdgeData({
+              sourceId: fixture.sources[0]!.id,
+              targetId: fixture.transform.id,
+              composition: {
+                groupId: `relational-composition:${fixture.transform.id}`,
+                label: 'RELATE / COMPOSE',
+                memberCount: 2,
+                role: 'trunk-owner',
+                state: 'pending',
+              },
+            }),
+          },
+        ],
       },
     });
 
@@ -121,24 +145,44 @@ describe('CanvasShell operational drawer registration', () => {
         Array<{ position: { x: number; y: number }; data: Record<string, unknown> }> | undefined
     )?.[0];
 
+    const projectedEdge = (
+      getCanvasShellState().canvasViewportProps?.edges as
+        Array<{ data?: Record<string, unknown> }> | undefined
+    )?.[0];
+    const composition = readCanvasDependencyEdgeData(projectedEdge?.data)?.composition;
+    expect(composition?.onActivate).toBeTypeOf('function');
+    act(() => {
+      composition?.onActivate?.();
+    });
+
+    expect(onInspectNode).not.toHaveBeenCalled();
+    expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('semantic');
+    expect(useUiLayoutStore.getState().bottomDrawerVisible).toBe(true);
+    expect(projectedNode?.position).toBe(position);
+
     expect(projectedNode?.data.onSelectNode).toBeTypeOf('function');
     act(() => {
       (projectedNode?.data.onSelectNode as (() => void) | undefined)?.();
     });
-
     expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('semantic');
     expect(useUiLayoutStore.getState().bottomDrawerVisible).toBe(true);
-    expect(projectedNode?.position).toBe(position);
-    expect(onInspectNode).not.toHaveBeenCalled();
 
     act(() => {
       (projectedNode?.data.onOpenNode as (() => void) | undefined)?.();
     });
     expect(onInspectNode).not.toHaveBeenCalled();
     expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
-      activeTab: 'data',
+      activeTab: `data:${fixture.transform.id}`,
       contribution: {
-        dataSample: { status: 'error', nodeName: fixture.transform.name, reason: 'unavailable' },
+        tabs: expect.arrayContaining([
+          expect.objectContaining({
+            id: `data:${fixture.transform.id}`,
+            dataSample: {
+              status: 'loading',
+              nodeName: fixture.transform.name,
+            },
+          }),
+        ]),
       },
     });
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
@@ -147,15 +191,60 @@ describe('CanvasShell operational drawer registration', () => {
     const semanticBody = useOperationalDrawerContributionStore
       .getState()
       .contribution?.tabs.find((tab) => tab.id === 'semantic')?.content;
-    expect(isValidElement<SemanticTransformFocusPanelProps>(semanticBody)).toBe(true);
-    if (!isValidElement<SemanticTransformFocusPanelProps>(semanticBody)) {
-      throw new Error('Expected the shared semantic Transform panel.');
+    expect(isValidElement<{ transformNode: { id: string } }>(semanticBody)).toBe(true);
+    if (!isValidElement<{ transformNode: { id: string } }>(semanticBody)) {
+      throw new Error('Expected the shared relational-tree Workbench.');
     }
-    semanticBody.props.onTransformChange(fixture.transform);
-    expect(onApplyNodeDraft).toHaveBeenCalledOnce();
-    expect(onApplyNodeDraft).toHaveBeenCalledWith(
-      expect.objectContaining({ name: fixture.transform.name, dvt: expect.any(Object) })
-    );
+    expect(semanticBody.type).toBe(CanvasRelationalTreeWorkbench);
+    expect(semanticBody.props.transformNode.id).toBe(fixture.transform.id);
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+  });
+
+  it('passes disconnected topology to the read-only relational-tree projection', async () => {
+    const fixture = buildSemanticWorkbenchFixture();
+    const connectedSources = fixture.sources.slice(1);
+    await renderShell({
+      panels: {
+        inspectorGraphNodes: [...connectedSources, fixture.transform],
+        inspectorGraphEdges: fixture.edges.slice(1),
+      },
+      graph: {
+        nodesWithImpact: [
+          {
+            id: fixture.transform.id,
+            type: 'dbtNode',
+            position: { x: 320, y: 140 },
+            data: {
+              ...fixture.transform,
+              pluginKind: fixture.transform.kind,
+            },
+          },
+        ],
+      },
+    });
+
+    const projectedNode = (
+      getCanvasShellState().canvasViewportProps?.nodesWithImpact as
+        Array<{ data: Record<string, unknown> }> | undefined
+    )?.[0];
+    act(() => {
+      (projectedNode?.data.onSelectNode as (() => void) | undefined)?.();
+    });
+
+    const semanticBody = useOperationalDrawerContributionStore
+      .getState()
+      .contribution?.tabs.find((tab) => tab.id === 'semantic')?.content;
+    expect(
+      isValidElement<{ transformNode: { id: string }; edges: readonly unknown[] }>(semanticBody)
+    ).toBe(true);
+    if (
+      !isValidElement<{ transformNode: { id: string }; edges: readonly unknown[] }>(semanticBody)
+    ) {
+      throw new Error('Expected the relational-tree Workbench to own projection diagnostics.');
+    }
+    expect(semanticBody.type).toBe(CanvasRelationalTreeWorkbench);
+    expect(semanticBody.props.transformNode.id).toBe(fixture.transform.id);
+    expect(semanticBody.props.edges).toHaveLength(fixture.edges.slice(1).length);
   });
 
   it('publishes no execution drawer for a surface strategy without execution operations', async () => {
@@ -182,7 +271,7 @@ describe('CanvasShell operational drawer registration', () => {
     expect(useOperationalDrawerContributionStore.getState().contribution).toBeNull();
   });
 
-  it('does not replace Transform data with a late source response or query another node', async () => {
+  it('keeps one isolated data tab per card when a source response arrives late', async () => {
     const fixture = buildSemanticWorkbenchFixture();
     let resolveSample: ((sample: SourceDataSample) => void) | undefined;
     const previewSourceObjectRows = vi.fn(
@@ -192,9 +281,23 @@ describe('CanvasShell operational drawer registration', () => {
         })
     );
     const runMaterializationSampleQuery = vi.fn();
+    const transformSample = {
+      contractVersion: 1 as const,
+      canvasId: 'canvas-test',
+      transformNodeId: fixture.transform.id,
+      draftRevision: 'revision-7',
+      semanticPlanSha256: 'a'.repeat(64),
+      columns: [{ name: 'id', type: 'integer', nullable: false }],
+      rows: [{ values: ['2'] }],
+      limit: 20,
+      truncated: false,
+      sampledAt: '2026-09-15T10:00:00.000Z',
+    };
+    const previewTransformRows = vi.fn().mockResolvedValue(transformSample);
     const onInspectNode = vi.fn();
     await renderShell({
       warehouseSourceDataSampleQuery: { previewSourceObjectRows },
+      canvasTransformDataSampleQuery: { previewTransformRows },
       runMaterializationSampleQuery,
       panels: { inspectorGraphNodes: [...fixture.sources, fixture.transform] },
       graph: {
@@ -251,24 +354,35 @@ describe('CanvasShell operational drawer registration', () => {
     };
     await act(async () => {
       resolveSample?.(sourceSample);
+      await Promise.resolve();
     });
-    expect(useOperationalDrawerContributionStore.getState().contribution?.dataSample).toEqual({
-      status: 'error',
-      nodeName: fixture.transform.name,
-      reason: 'unavailable',
+    expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
+      activeTab: `data:${fixture.transform.id}`,
+      contribution: {
+        tabs: expect.arrayContaining([
+          expect.objectContaining({
+            id: 'data:source',
+            dataSample: { status: 'ready', nodeName: 'Source', sample: sourceSample },
+          }),
+          expect.objectContaining({
+            id: `data:${fixture.transform.id}`,
+            dataSample: {
+              status: 'ready',
+              nodeName: fixture.transform.name,
+              sample: transformSample,
+            },
+          }),
+        ]),
+      },
     });
     expect(previewSourceObjectRows).toHaveBeenCalledOnce();
+    expect(previewTransformRows).toHaveBeenCalledOnce();
     expect(runMaterializationSampleQuery).not.toHaveBeenCalled();
     expect(onInspectNode).not.toHaveBeenCalled();
-    await act(async () => {
-      nodes[0]?.data.onOpenSourceDataSample?.('source');
-      resolveSample?.(sourceSample);
+    act(() => {
+      useOperationalDrawerContributionStore.getState().selectOperationalDrawerTab('data:source');
     });
-    expect(useOperationalDrawerContributionStore.getState().contribution?.dataSample).toEqual({
-      status: 'ready',
-      nodeName: 'Source',
-      sample: sourceSample,
-    });
-    expect(previewSourceObjectRows).toHaveBeenCalledTimes(2);
+    expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('data:source');
+    expect(previewSourceObjectRows).toHaveBeenCalledOnce();
   });
 });

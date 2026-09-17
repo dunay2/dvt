@@ -10,6 +10,7 @@ import type {
   IWarehouseSourceDataSampleQueryPort,
   IWarehouseSourceImportPort,
 } from '../../ports/workspace';
+import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
 import type { SourceImportInitialSelection } from '../../components/sourceImportWizard/types';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasSurfaceStrategy } from '../../plugins/canvasSurfaceStrategyContracts';
@@ -18,6 +19,7 @@ import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
+import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContribution';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { ProjectCanvasDocument } from './canvasProjectCanvasLifecycle';
@@ -33,7 +35,6 @@ import type {
 } from '../../types/canvasExecutionSelectionRecovery';
 import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
 import type { IRunsPort, RunSnapshot } from '../../ports/runs';
-import type { PlanViewModel } from '../../types/plans';
 import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
 
 export type UserPermissions = {
@@ -82,6 +83,7 @@ export type CanvasShellPanels = {
   inspectorGraphNodes: readonly CanonicalNode[];
   inspectorGraphEdges: readonly CanonicalEdge[];
   inspectorAuthoring: CanvasInspectorAuthoringContract;
+  relationalTreeAuthoring?: CanvasRelationalTreeAuthoringContract;
   inspectorWorkbenchContributions: readonly CanvasNodeWorkbenchContribution[];
   activeRunId: string | null;
   registeredPlugins: ReadonlySet<string>;
@@ -170,11 +172,6 @@ export type CanvasShellWorkspaceCommands = Readonly<{
   onOpenProjectCode?: () => void;
 }>;
 
-export type CanvasRunOutputPreviewAuthority = Readonly<{
-  currentPlan: PlanViewModel | null;
-  isCurrentPlanStale: boolean;
-}>;
-
 export type CanvasShellProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
@@ -187,8 +184,8 @@ export type CanvasShellProps = Readonly<{
   workspaceCommands?: CanvasShellWorkspaceCommands;
   warehouseSourceImport?: IWarehouseSourceImportPort;
   warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
+  canvasTransformDataSampleQuery?: ICanvasTransformDataSampleQueryPort;
   runSnapshot?: RunSnapshot | null;
-  runOutputPreviewAuthority?: CanvasRunOutputPreviewAuthority;
   runMaterializationSampleQuery?: IRunsPort['getRunMaterializationSample'];
   canvasContextScreenToFlowPosition?: (
     screenPosition: CanvasContextMenuPosition

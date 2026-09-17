@@ -24,6 +24,7 @@ import {
   resolveCanvasEdgeCreationTransaction,
   resolveCanvasEdgeReconnectTransaction,
 } from './canvasEdgeAdmissionTransaction';
+import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import {
   reorderCanvasColumnOutput,
@@ -421,19 +422,31 @@ describe('canvasEdgeAdmissionTransaction', () => {
       [secondSource.id, secondSource],
       [transform.id, transform],
     ]);
-    const firstEdge: Edge = {
-      id: 'first-source-to-transform',
-      source: firstSource.id,
-      target: transform.id,
-    };
     const draftSession = {
-      ...buildDraftSession([{ sourceId: firstSource.id, targetId: transform.id }]),
+      ...buildDraftSession(),
       workingSet: {
         visibleNodeIds: [firstSource.id, secondSource.id, transform.id],
-        visibleEdges: [{ sourceId: firstSource.id, targetId: transform.id }],
+        visibleEdges: [],
         pendingExplicitNodeIds: [],
       },
     };
+
+    const firstTransaction = resolveCanvasEdgeCreationTransaction({
+      canonicalNodesById,
+      connection: {
+        source: firstSource.id,
+        sourceHandle: null,
+        target: transform.id,
+        targetHandle: null,
+      },
+      draftSession,
+      edges: [],
+      pluginPortMap,
+    });
+    expect(firstTransaction.outcome).toBe('created');
+    if (firstTransaction.outcome !== 'created') {
+      throw new Error('Expected the first edge transaction to be created');
+    }
 
     const transaction = resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
@@ -443,8 +456,8 @@ describe('canvasEdgeAdmissionTransaction', () => {
         target: transform.id,
         targetHandle: null,
       },
-      draftSession,
-      edges: [firstEdge],
+      draftSession: firstTransaction.draftSession,
+      edges: firstTransaction.edges,
       pluginPortMap,
     });
 
@@ -456,7 +469,69 @@ describe('canvasEdgeAdmissionTransaction', () => {
       { sourceId: firstSource.id, targetId: transform.id },
       { sourceId: secondSource.id, targetId: transform.id },
     ]);
-    expect(transaction.draftSession.localNodeCatalog?.[transform.id]).toBeUndefined();
+    const mappedTransform = transaction.draftSession.localNodeCatalog?.[transform.id];
+    if (mappedTransform == null) {
+      throw new Error('Expected the first source projection to remain available');
+    }
+    const authority = readDvtTransformAuthoringAuthority(mappedTransform);
+    if (authority == null) throw new Error('Expected a transform authoring authority');
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.source.sourceRef.sourceObjectId).toBe(`raw.${firstSource.id}`);
+    expect(inspection.projection.outputs.map((output) => output.name)).toEqual([
+      'shared_id',
+      'first_only',
+    ]);
+
+    const presentation = projectCanvasNodePresentationTruth({
+      node: mappedTransform,
+      nodes: [firstSource, secondSource, mappedTransform],
+      edges: transaction.draftSession.workingSet.visibleEdges,
+    });
+
+    expect(presentation.relationalComposition?.state).toBe('pending');
+    const card = mapCanonicalNodeToCanvasNode({
+      canonicalNode: mappedTransform,
+      index: 0,
+      showColumns: true,
+      presentationTruth: presentation,
+    });
+    expect(
+      card.data.columns?.map((column) => ({
+        name: column.name,
+        sourceNodeName: column.sourceNodeName,
+        output: column.output,
+      }))
+    ).toEqual([
+      {
+        name: 'shared_id',
+        sourceNodeName: firstSource.name,
+        output: true,
+      },
+      {
+        name: 'first_only',
+        sourceNodeName: firstSource.name,
+        output: true,
+      },
+      {
+        name: 'shared_id',
+        sourceNodeName: secondSource.name,
+        output: false,
+      },
+      {
+        name: 'second_only',
+        sourceNodeName: secondSource.name,
+        output: false,
+      },
+    ]);
+    const duplicateIds = card.data.columns
+      ?.filter((column) => column.name === 'shared_id')
+      .map((column) => column.id);
+    expect(duplicateIds).toHaveLength(2);
+    expect(new Set(duplicateIds).size).toBe(2);
   });
 
   it('rejects creation when an endpoint is missing from the canonical graph', () => {

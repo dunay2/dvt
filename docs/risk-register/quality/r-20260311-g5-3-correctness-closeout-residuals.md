@@ -73,8 +73,8 @@ the repository still lacks enough evidence to declare `G5.3` formally closed.
 
 ## Evidence
 
-- `docs/planning/archive/gaps/G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md`
-- `docs/planning/archive/gaps/GAP_EXECUTION_PLANS.md`
+- `https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/gaps/G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md`
+- `https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/gaps/GAP_EXECUTION_PLANS.md`
 - `docs/runbooks/outbox-worker-g5.md`
 - `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`
 - `apps/outbox-worker/test/canary/standaloneCanaryAcceptance.test.ts`

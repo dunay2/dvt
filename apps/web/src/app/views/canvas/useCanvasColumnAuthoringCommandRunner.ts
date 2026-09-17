@@ -86,6 +86,7 @@ function applyToggleOutput(
     columnId: identity.columnId,
     columnType: identity.columnType,
     output: identity.output,
+    source: identity.source,
     placement: identity.placement,
   });
 }

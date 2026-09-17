@@ -16,7 +16,7 @@ code_refs:
   - packages/@dvt/planner/src/domain/Planner.ts
   - packages/@dvt/planner/src/ports/IArtifactResolver.ts
   - docs/planning/status/planner-current-state-assessment.md
-  - docs/planning/archive/proposals/planner-target-state-roadmap-20260320.md
+  - https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/proposals/planner-target-state-roadmap-20260320.md
 evidence:
   tests: []
   notes:

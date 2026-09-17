@@ -17,6 +17,7 @@ const SURFACE_STATES = ['stale', 'probe-unavailable', 'partial'] as const;
 const CONTRACT_OPERATIONS = [
   'ListWarehouseConnectionSourceObjects',
   'PreviewWarehouseSourceObjectRows',
+  'PreviewCanvasTransformRows',
 ] as const;
 
 export type FrontendOperabilityTransitionChannel =

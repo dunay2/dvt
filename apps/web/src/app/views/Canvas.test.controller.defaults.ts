@@ -27,6 +27,7 @@ type CanvasWorkbenchDefaultsDto = {
   inspectorGraphNodes: CanvasController['inspectorGraphNodes'];
   inspectorGraphEdges: CanvasController['inspectorGraphEdges'];
   canEditInspectorNode: CanvasController['canEditInspectorNode'];
+  relationalPredicateSeed: CanvasController['relationalPredicateSeed'];
   activeRunId: CanvasController['activeRunId'];
   registeredPlugins: CanvasController['registeredPlugins'];
   runtimeCapabilities: CanvasController['runtimeCapabilities'];
@@ -144,6 +145,7 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     inspectorGraphNodes: [],
     inspectorGraphEdges: [],
     canEditInspectorNode: true,
+    relationalPredicateSeed: null,
     activeRunId: null,
     registeredPlugins: new Set(['dbt']),
     runtimeCapabilities: undefined,
@@ -267,7 +269,9 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleSelectCanvasDocument'
   | 'handleExportProjectSnapshot'
   | 'handleImportProjectSnapshotFile'
+  | 'applyNodeDraft'
   | 'applyInspectorNodeDraft'
+  | 'clearRelationalPredicateSeed'
   | 'handleDuplicateNode'
   | 'handleToggleNodeSelection'
   | 'handleToggleFrozenNode'
@@ -308,7 +312,9 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleSelectCanvasDocument: vi.fn(),
     handleExportProjectSnapshot: vi.fn(),
     handleImportProjectSnapshotFile: vi.fn(),
+    applyNodeDraft: vi.fn(),
     applyInspectorNodeDraft: vi.fn(),
+    clearRelationalPredicateSeed: vi.fn(),
     handleDuplicateNode: vi.fn(),
     handleToggleNodeSelection: vi.fn(),
     handleToggleFrozenNode: vi.fn(),

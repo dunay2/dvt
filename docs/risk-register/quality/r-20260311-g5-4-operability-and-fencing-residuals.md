@@ -101,8 +101,8 @@ If those gaps remain undocumented or are treated as "non-blocking ops details",
 - `apps/outbox-worker/test/canary/standaloneCanaryAcceptance.test.ts`
 - `packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts`
 - `packages/@dvt/adapter-postgres/test/smoke.test.ts`
-- `docs/planning/archive/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md`
-- `docs/risk-register/quality/R-20260311-g5-3-correctness-closeout-residuals.md`
+- `https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md`
+- `docs/risk-register/quality/r-20260311-g5-3-correctness-closeout-residuals.md`
 
 ## Reference-Only Comparative Signals
 

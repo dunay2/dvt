@@ -69,6 +69,7 @@ type ReadModelArgs = Parameters<typeof useCanvasControllerReadModel>[0];
 type ReadModelState = ReturnType<typeof useCanvasControllerReadModel>;
 type ReadModelNodeData = {
   columns?: unknown;
+  expressionInputColumns?: unknown;
   onInspectNode?: unknown;
   onDuplicateNode?: unknown;
   onRemoveNode?: unknown;
@@ -1026,6 +1027,14 @@ describe('useCanvasControllerReadModel', () => {
       expect(transformData.onAddCanvasCalculatedColumn).toBe(
         args.graphHandlers.handleAddCanvasCalculatedColumn
       );
+      expect(
+        (
+          transformData.expressionInputColumns as ReadonlyArray<{
+            id: string;
+            name: string;
+          }>
+        ).map((column) => column.name)
+      ).toEqual(['customer', 'amount']);
       expect(columns.find((column) => column.id === 'output:customer')?.type).toBe('text');
       expect(columns.find((column) => column.id === 'output:customer')?.functionMenu).toEqual({
         category: 'text',

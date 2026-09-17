@@ -41,6 +41,7 @@ export type GraphNodeCardViewProps = Readonly<{
   typeLabel: string;
   tags: readonly Readonly<{ value: string; label: string }>[];
   columns: readonly GraphNodeCardColumn[];
+  expressionInputs?: readonly GraphNodeCardColumn[];
   showColumns: boolean;
   icon?: LucideIcon;
   borderClass?: string;
@@ -137,6 +138,7 @@ export function GraphNodeCardView({
   typeLabel,
   tags,
   columns,
+  expressionInputs,
   showColumns,
   icon: Icon,
   borderClass,
@@ -246,6 +248,7 @@ export function GraphNodeCardView({
         {showColumns && (
           <GraphNodeColumnSection
             columns={columns}
+            expressionInputs={expressionInputs}
             expanded={columnDisclosureExpanded}
             nodeId={nodeId}
             portDirections={columnPortDirections}

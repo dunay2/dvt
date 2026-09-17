@@ -230,6 +230,55 @@ describe('Canvas column mapping authoring', () => {
     expect(inspection.projection.outputs[0]?.sourceFieldId).toMatch(OPAQUE_FIELD_ID);
   });
 
+  it('maps the selected source field when N inputs expose the same field name', () => {
+    const clients = buildNode('clients', 'dvt:source', 'input', [
+      { name: 'client_id', type: 'text' },
+      { name: 'country', type: 'text' },
+    ]);
+    const orders = buildNode('orders', 'dvt:source', 'input', [
+      { name: 'client_id', type: 'text' },
+      { name: 'amount', type: 'numeric' },
+    ]);
+    const model = buildNode('model', 'dvt:transform', 'transform');
+    const initial = buildSession(
+      [clients, orders, model],
+      [
+        { sourceId: clients.id, targetId: model.id },
+        { sourceId: orders.id, targetId: model.id },
+      ]
+    );
+
+    const result = setCanvasColumnOutputIncluded({
+      draftSession: initial,
+      canonicalNodesById: new Map([
+        [clients.id, clients],
+        [orders.id, orders],
+        [model.id, model],
+      ]),
+      targetNodeId: model.id,
+      columnId: 'clients.client_id',
+      columnType: 'text',
+      output: true,
+      source: { nodeId: clients.id, columnId: 'client_id' },
+    });
+
+    expect(result.outcome).toBe('applied');
+    if (result.outcome !== 'applied') return;
+    const updated = result.draftSession.localNodeCatalog?.model;
+    if (updated == null) throw new Error('Expected updated Model.');
+    const authority = readDvtTransformAuthoringAuthority(updated);
+    if (authority?.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      throw new Error('Expected canonical Substrait authority.');
+    }
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.source.table).toBe(clients.id);
+    expect(inspection.projection.outputs.map((output) => output.name)).toEqual(['client_id']);
+  });
+
   it('preserves declared outputs when including one inherited output', () => {
     const sourceColumns = [
       { name: 'order_id', type: 'integer' },

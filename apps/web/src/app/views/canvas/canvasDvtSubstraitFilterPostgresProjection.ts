@@ -2,11 +2,24 @@
 import { inspectDvtSubstraitFilter, removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import {
   pgColumnRef,
-  pgEquals,
+  pgComparison,
   pgStringLiteral,
+  type PostgresComparisonOperator,
   type PostgresAstNode,
 } from './canvasDvtSubstraitPostgresAst';
+import type { DvtSubstraitTextComparisonOperator } from './canvasDvtSubstraitTextComparison';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
+
+const POSTGRES_OPERATOR: Readonly<
+  Record<DvtSubstraitTextComparisonOperator, PostgresComparisonOperator>
+> = {
+  equal: '=',
+  not_equal: '<>',
+  gt: '>',
+  gte: '>=',
+  lt: '<',
+  lte: '<=',
+};
 
 export function resolveDvtSubstraitFilterPostgresProjection(
   draft: DvtSubstraitProjectionDraft
@@ -16,6 +29,10 @@ export function resolveDvtSubstraitFilterPostgresProjection(
     ? { baseDraft: draft }
     : {
         baseDraft: removeDvtSubstraitFilter(draft),
-        whereClause: pgEquals(pgColumnRef(filter.fieldName), pgStringLiteral(filter.value)),
+        whereClause: pgComparison(
+          POSTGRES_OPERATOR[filter.operator],
+          pgColumnRef(filter.fieldName),
+          pgStringLiteral(filter.value)
+        ),
       };
 }

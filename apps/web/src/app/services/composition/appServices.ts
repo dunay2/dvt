@@ -1,5 +1,6 @@
 /** Owned concern: assemble web application ports at the composition root. */
 import type { CapabilitiesPort } from '../../ports/capabilities';
+import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
 import type { ICostAttributionSummaryPort } from '../../ports/cost';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { IGraphDbtModelCompilationQueryPort } from '../../ports/graphDbtModelCompilation';
@@ -44,6 +45,7 @@ import { createApiDbtYamlDescriptionEditPort } from '../dbtProject/dbtYamlDescri
 import { createApiGraphDbtWorkspaceArtifactPublicationCommandPort } from '../dbtProject/graphDbtWorkspaceArtifactPublication.api';
 import { createApiGraphDbtModelCompilationQueryPort } from '../dbtProject/graphDbtModelCompilation.api';
 import { createWorkspacePorts } from '../workspace/workspacePorts';
+import { createApiCanvasTransformDataSampleQueryPort } from '../canvas/canvasTransformDataSample.api';
 
 export interface AppServices {
   readonly apiClient: ApiClient;
@@ -55,6 +57,7 @@ export interface AppServices {
   readonly workspaceAdminRead: IWorkspaceAdminReadPort;
   readonly warehouseSourceImport: IWarehouseSourceImportPort;
   readonly warehouseSourceDataSampleQuery: IWarehouseSourceDataSampleQueryPort;
+  readonly canvasTransformDataSampleQuery: ICanvasTransformDataSampleQueryPort;
   readonly workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   readonly graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   readonly graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
@@ -82,6 +85,7 @@ export interface AppServicesOverrides {
   readonly workspaceAdminRead?: IWorkspaceAdminReadPort;
   readonly warehouseSourceImport?: IWarehouseSourceImportPort;
   readonly warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
+  readonly canvasTransformDataSampleQuery?: ICanvasTransformDataSampleQueryPort;
   readonly workspaceFileContentCommand?: IWorkspaceFileContentCommandPort;
   readonly graphDbtWorkspaceArtifactPublicationCommand?: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   readonly graphDbtModelCompilationQuery?: IGraphDbtModelCompilationQueryPort;
@@ -122,6 +126,9 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     overrides.warehouseSourceImport ?? workspacePorts.warehouseSourceImport;
   const warehouseSourceDataSampleQuery =
     overrides.warehouseSourceDataSampleQuery ?? workspacePorts.warehouseSourceDataSampleQuery;
+  const canvasTransformDataSampleQuery =
+    overrides.canvasTransformDataSampleQuery ??
+    createApiCanvasTransformDataSampleQueryPort(apiClient, frontendOperabilitySink);
   const workspaceFileContentCommand =
     overrides.workspaceFileContentCommand ?? workspacePorts.workspaceFileContentCommand;
   const graphDbtWorkspaceArtifactPublicationCommand =
@@ -150,6 +157,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     workspaceAdminRead,
     warehouseSourceImport,
     warehouseSourceDataSampleQuery,
+    canvasTransformDataSampleQuery,
     workspaceFileContentCommand,
     graphDbtWorkspaceArtifactPublicationCommand,
     graphDbtModelCompilationQuery,

@@ -5,6 +5,7 @@ import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
+import { applyCanvasColumnMapping } from './canvasColumnMappingAuthoring';
 import { canvasViewCopy } from './copy';
 import { createCanvasColumnHandleId } from './canvasColumnLineageProjection';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
@@ -93,7 +94,7 @@ function buildConnectedPostgresSource(
     kind: 'dvt:source',
     metadata: {
       schema: 'raw',
-      tableName: 'orders',
+      tableName: id,
       columns,
       connectedSourceRef: {
         schemaVersion: 'connected-source-ref.v1',
@@ -102,7 +103,7 @@ function buildConnectedPostgresSource(
           connectionId: 'postgres',
           provider: 'postgres',
         },
-        sourceObjectId: 'relation/dvt/raw/orders',
+        sourceObjectId: `relation/dvt/raw/${id}`,
       },
     },
   };
@@ -237,6 +238,105 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     expect(toastState.info).toHaveBeenCalledWith(
       canvasViewCopy.columnMappingSourceSelectedTemplate.replace('{column}', 'order_id')
     );
+    harness.cleanup();
+  });
+
+  it('opens a seeded relation proposal without mutating the draft', async () => {
+    const orders = buildConnectedPostgresSource('orders', [{ name: 'client_id', type: 'text' }]);
+    const clients = buildConnectedPostgresSource('clients', [{ name: 'client_id', type: 'text' }]);
+    const model = {
+      ...buildCanonicalNode('model-node', 'transform'),
+      kind: 'dvt:transform' as const,
+      metadata: { columns: [{ name: 'client_id', type: 'text' }] },
+    };
+    const canonicalNodes = [orders, clients, model];
+    const canonicalNodesById = new Map(canonicalNodes.map((node) => [node.id, node]));
+    const initialSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: canonicalNodes.map((node) => node.id),
+        visibleEdges: [
+          { sourceId: orders.id, targetId: model.id },
+          { sourceId: clients.id, targetId: model.id },
+        ],
+        pendingExplicitNodeIds: [],
+      },
+    };
+    const mapped = applyCanvasColumnMapping({
+      draftSession: initialSession,
+      canonicalNodesById,
+      source: { nodeId: orders.id, columnId: 'client_id' },
+      target: { nodeId: model.id, columnName: 'client_id' },
+    });
+    if (mapped.outcome !== 'applied') throw new Error('Expected initial mapping.');
+    const mappedModel = mapped.draftSession.localNodeCatalog?.[model.id];
+    const authority = mappedModel == null ? null : readDvtTransformAuthoringAuthority(mappedModel);
+    if (authority?.mode !== 'substrait') throw new Error('Expected Substrait projection.');
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    if (!inspection.ok) throw new Error('Expected inspectable projection.');
+    const outputId = inspection.projection.outputs[0]!.fieldId;
+    const setDraftSession = vi.fn();
+    const setInspectorNode = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      canonicalNodes,
+      draftSession: mapped.draftSession,
+      setDraftSession,
+      setInspectorNode,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.onConnect({
+        source: clients.id,
+        sourceHandle: createCanvasColumnHandleId({
+          direction: 'source',
+          nodeId: clients.id,
+          columnId: 'client_id',
+        }),
+        target: model.id,
+        targetHandle: createCanvasColumnHandleId({
+          direction: 'target',
+          nodeId: model.id,
+          columnId: outputId,
+        }),
+      });
+    });
+
+    expect(setDraftSession).not.toHaveBeenCalled();
+    expect(setInspectorNode).toHaveBeenCalledWith(model.id, 'columns');
+    expect(harness.latest()?.relationalPredicateSeed).toMatchObject({
+      targetNodeId: model.id,
+      left: { nodeId: orders.id, fieldName: 'client_id' },
+      right: { nodeId: clients.id, fieldName: 'client_id' },
+      candidateOperator: 'equal',
+    });
+
+    act(() => {
+      harness.latest()?.clearRelationalPredicateSeed();
+      harness.latest()?.handleColumnPortActivate({
+        direction: 'source',
+        nodeId: clients.id,
+        columnId: 'client_id',
+      });
+    });
+    act(() => {
+      harness.latest()?.handleColumnPortActivate({
+        direction: 'target',
+        nodeId: model.id,
+        columnId: outputId,
+      });
+    });
+
+    expect(setDraftSession).not.toHaveBeenCalled();
+    expect(setInspectorNode).toHaveBeenCalledTimes(2);
+    expect(harness.latest()?.relationalPredicateSeed).toMatchObject({
+      targetNodeId: model.id,
+      left: { nodeId: orders.id, fieldName: 'client_id' },
+      right: { nodeId: clients.id, fieldName: 'client_id' },
+    });
     harness.cleanup();
   });
 

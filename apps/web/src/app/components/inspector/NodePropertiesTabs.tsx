@@ -196,10 +196,21 @@ export function NodePropertiesTabs({
       onValueChange={onActiveTabChange}
       className={cn('gap-4', fillAvailableHeight && 'h-full min-h-0')}
     >
-      <div data-slot={slots.list} className={inspectorVisualClasses.contextPanelFlatTabsList}>
+      <div
+        data-slot={slots.list}
+        className={cn(
+          inspectorVisualClasses.contextPanelFlatTabsList,
+          surface === 'workbench' && 'flex-nowrap overflow-hidden'
+        )}
+      >
         <TabsList
           data-slot={`${slots.list}-tablist`}
-          className="flex h-auto w-full shrink-0 flex-wrap justify-start gap-x-3 rounded-none bg-transparent p-0"
+          className={cn(
+            'flex h-auto shrink-0 justify-start gap-x-3 rounded-none bg-transparent p-0',
+            surface === 'workbench'
+              ? 'min-w-0 flex-1 flex-nowrap overflow-x-auto'
+              : 'w-full flex-wrap'
+          )}
         >
           {primarySections.map((section) => (
             <TabsTrigger
@@ -221,6 +232,7 @@ export function NodePropertiesTabs({
                 data-slot={slots.moreTrigger}
                 className={cn(
                   inspectorVisualClasses.contextPanelFlatTabTrigger,
+                  'shrink-0',
                   activeOverflowItem != null && 'border-(--focus-ring) text-slate-50'
                 )}
               >

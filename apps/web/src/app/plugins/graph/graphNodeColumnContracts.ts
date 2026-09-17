@@ -20,6 +20,7 @@ export type GraphNodeColumn = Readonly<{
   sourceNodeName?: string;
   sourceFieldName?: string;
   sourceReference?: string;
+  source?: Readonly<{ nodeId: string; columnId: string }>;
   reference?: string;
   operations?: readonly string[];
   description?: string;
@@ -57,6 +58,7 @@ export type GraphNodeColumnOutputToggleIdentity = Readonly<{
   columnId: string;
   columnType: string;
   output: boolean;
+  source?: Readonly<{ nodeId: string; columnId: string }>;
   placement?: ActiveColumnPlacement;
 }>;
 export type GraphNodeColumnFunctionApplyIdentity = Readonly<{
@@ -95,6 +97,7 @@ export type GraphNodeCalculatedColumnIdentity =
 
 export type GraphNodeColumnSectionProps = Readonly<{
   columns: readonly GraphNodeColumn[];
+  expressionInputs?: readonly GraphNodeColumn[];
   expanded?: boolean;
   nodeId?: string;
   portDirections?: readonly GraphNodeColumnPortDirection[];
@@ -134,6 +137,9 @@ export function resolveGraphNodeColumnInteractionProps(args: {
       typeof data.columnDisclosureExpanded === 'boolean'
         ? data.columnDisclosureExpanded
         : undefined,
+    expressionInputs: Array.isArray(data.expressionInputColumns)
+      ? (data.expressionInputColumns as readonly GraphNodeColumn[])
+      : [],
     onColumnPortActivate:
       typeof data.onColumnPortActivate === 'function'
         ? (data.onColumnPortActivate as (identity: GraphNodeColumnPortIdentity) => void)

@@ -21,6 +21,7 @@ import { useCanvasRoutePresentationSync } from './canvas/useCanvasRoutePresentat
 import { useCanvasController } from './canvas/useCanvasController';
 import {
   useRunsService,
+  useCanvasTransformDataSampleQueryPort,
   useWarehouseSourceDataSampleQueryPort,
   useWarehouseSourceImportPort,
 } from '../services/AppServicesContext';
@@ -59,6 +60,7 @@ function GraphDraftAuthorityContent({
   const reactFlow = useReactFlow<Node, Edge>();
   const warehouseSourceImport = useWarehouseSourceImportPort();
   const warehouseSourceDataSampleQuery = useWarehouseSourceDataSampleQueryPort();
+  const canvasTransformDataSampleQuery = useCanvasTransformDataSampleQueryPort();
   const runsService = useRunsService();
   const controller = useCanvasController();
   const effectiveRunId = referencedRunId ?? controller.activeRunId ?? undefined;
@@ -80,11 +82,8 @@ function GraphDraftAuthorityContent({
     }),
     warehouseSourceImport,
     warehouseSourceDataSampleQuery,
+    canvasTransformDataSampleQuery,
     runSnapshot: runSnapshotQuery.data ?? null,
-    runOutputPreviewAuthority: {
-      currentPlan: controller.currentPlan,
-      isCurrentPlanStale: controller.isCurrentPlanStale,
-    },
     runMaterializationSampleQuery: runsService.getRunMaterializationSample,
     canvasContextScreenToFlowPosition: (screenPosition) =>
       reactFlow.screenToFlowPosition(screenPosition),
