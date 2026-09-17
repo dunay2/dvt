@@ -30,7 +30,7 @@ closed.
 - `docs/planning/state/planning-control-tower.md`
 - `docs/planning/state/agent-lane-d.yaml`
 - `docs/planning/reviews/review-naming-policy.md`
-- `docs/planning/reviews/review-status-board.md`
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)
 - `docs/architecture/reference-architecture.md`
 - `docs/planning/execution-model/dvt-execution-model.md`
 - `docs/adr/ADR-0001-temporal-integration-test-policy.md`

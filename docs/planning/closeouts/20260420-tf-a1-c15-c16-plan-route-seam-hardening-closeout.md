@@ -91,7 +91,7 @@ flowchart LR
   - `apps/api/src/entrypoints/http/compilePlanRouteRequestResolver.ts`
   - focused entrypoint tests for preview and plan-route authorization
   - `docs/planning/state/agent-lane-a.yaml`
-  - `docs/planning/reviews/review-status-board.md`
+  - [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)
   - `docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md`
   - this closeout
 - Expected outcome:
@@ -121,7 +121,7 @@ flowchart LR
   - `pnpm --filter dvt-api test -- test/entrypoints/http/previewPlanRoute.outcomes.test.ts test/entrypoints/http/planRouteRequestResolver.test.ts test/entrypoints/http/previewPlanRoute.auth.test.ts test/entrypoints/http/importPlanRoute.test.ts test/entrypoints/http/compilePlanRoute.test.ts`
   - `pnpm docs:workboard:generate`
   - `pnpm docs:sync`
-  - `pnpm exec markdownlint-cli2 docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md docs/planning/reviews/review-status-board.md docs/planning/closeouts/20260420-tf-a1-c15-c16-plan-route-seam-hardening-closeout.md --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc`
+  - [Recorded validation command](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/closeouts/20260420-tf-a1-c15-c16-plan-route-seam-hardening-closeout.md#L124)
   - `pnpm verify:prepush`
 - Test coverage plan:
   - preview route keeps forwarding scope tags plus transformation provenance and
@@ -164,7 +164,7 @@ flowchart LR
   - Passed.
 - `pnpm docs:sync`
   - Passed.
-- `pnpm exec markdownlint-cli2 docs/architecture/components/api/index.md docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md docs/planning/reviews/review-status-board.md docs/planning/closeouts/20260420-tf-a1-c15-c16-plan-route-seam-hardening-closeout.md docs/planning/closeouts/20260420-tf-a1-c17-plan-route-request-resolution-recipe-closeout.md docs/planning/state/open-task-route.md docs/planning/state/execution-workboard.md docs/planning/state/agent-lane-a.md --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc`
+- [Recorded validation command](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/closeouts/20260420-tf-a1-c15-c16-plan-route-seam-hardening-closeout.md#L167)
   - Passed.
 - `pnpm verify:prepush`
   - Passed.

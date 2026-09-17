@@ -31,20 +31,20 @@ Canonical execution tracking remains in:
 
 - `docs/planning/state/agent-lane-e.yaml`
 - `docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md`
-- `docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md`
+- [Historical closeout](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md)
 
 ## Governing Sources
 
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `AGENTS.md`
 - `docs/guides/ai-work-protocol.md`
-- `docs/planning/reviews/review-status-board.md`
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)
 - `docs/planning/reviews/review-naming-policy.md`
 - `docs/planning/state/planning-control-tower.md`
 - `docs/planning/state/agent-lane-e.yaml`
 - `docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md`
 - `docs/architecture/frontend/appshell/data-source-service-boundary.md`
-- `docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md`
+- [Historical closeout](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md)
 
 ## Findings
 
@@ -143,8 +143,8 @@ Canonical execution tracking remains in:
   - `pnpm --filter @dvt/web build`
   - `pnpm docs:sync`
   - `pnpm docs:workboard:generate`
-  - `pnpm exec prettier --check docs/planning/reviews/20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md docs/planning/reviews/review-status-board.md docs/planning/state/agent-lane-e.yaml`
-  - `pnpm exec markdownlint-cli2 --ignore-path .markdownlintignore docs/planning/reviews/20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md docs/planning/reviews/review-status-board.md docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md`
+  - [Recorded validation command](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md#L146)
+  - [Recorded validation command](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md#L147)
   - `pnpm verify:prepush`
 - What passed:
   - the adapter no longer exposes module-level mutable graph state

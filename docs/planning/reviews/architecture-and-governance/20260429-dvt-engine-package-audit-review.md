@@ -31,7 +31,7 @@ full-system review and it is not a normative contract.
 - `docs/architecture/reference-architecture.md`
 - `docs/planning/status/canonical-doc-code-matrix.md`
 - `docs/planning/reviews/review-naming-policy.md`
-- `docs/planning/reviews/review-status-board.md`
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)
 - ADR-0003: execution model sovereignty
 - ADR-0004: event sourcing strategy
 - ADR-0005: contract formalization tooling

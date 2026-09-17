@@ -34,7 +34,7 @@ Constraints and invariants:
 
 Options considered:
 
-- Patch only `review-status-board.md`; rejected because Lane E would keep a
+- Patch only [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md); rejected because Lane E would keep a
   missing execution entry for `TF-E2-POL`.
 - Change only visual CSS; rejected because accessibility semantics would remain
   passive HTML instead of state-machine-owned behavior.
@@ -58,7 +58,7 @@ Scope:
 Touched paths:
 
 - `docs/planning/state/agent-lane-e.yaml`
-- `docs/planning/reviews/review-status-board.md`
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)
 - `docs/planning/reviews/architecture-and-governance/20260426-canvas-runtime-policy-architecture-review.md`
 - `tools/ci/planning-truth-sync.test.mjs`
 - `apps/web/index.html`

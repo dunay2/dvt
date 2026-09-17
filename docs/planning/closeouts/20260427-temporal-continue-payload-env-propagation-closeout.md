@@ -150,7 +150,7 @@ Green result after implementation:
   - Passed: 2 files, 6 tests.
 - `pnpm --filter dvt-temporal-worker test -- test/plugins/env.test.ts test/runtime/createTemporalWorkerRuntime.test.ts`
   - Passed: 2 files, 13 tests.
-- `pnpm exec prettier --check apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts apps/api/src/plugins/env.ts apps/api/test/plugins/env.test.ts apps/api/test/modules/providerAdapters/createTemporalProviderAdapterFactory.test.ts apps/temporal-worker/src/plugins/env.ts apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts apps/temporal-worker/test/plugins/env.test.ts apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts docs/planning/closeouts/20260427-temporal-continue-payload-env-propagation-closeout.md docs/planning/reviews/architecture-and-governance/20260427-ar-d-plan-pointer-fowler-hard-qa-review.md docs/planning/reviews/review-status-board.md docs/planning/state/agent-lane-d.yaml`
+- [Recorded validation command](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/closeouts/20260427-temporal-continue-payload-env-propagation-closeout.md#L153)
   - Passed.
 - `pnpm lint:md`
   - Passed: 1370 files, 0 errors.

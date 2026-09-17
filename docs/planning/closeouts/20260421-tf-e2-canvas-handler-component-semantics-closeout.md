@@ -160,7 +160,7 @@ Implementation must not:
   `canvas-handler-contracts-component.md`, and the controller/component-map docs
   now reference that component explicitly.
 - planning surfaces now carry the new review and follow-up evidence:
-  `review-status-board.md`, `agent-lane-e.yaml`, and the generated workboard
+  [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md), `agent-lane-e.yaml`, and the generated workboard
   views.
 
 ## Phase 6. Validation And Closeout

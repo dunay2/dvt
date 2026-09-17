@@ -3,6 +3,7 @@
  * canonized through the planning DB queue instead of acting as a parallel docs backlog.
  */
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
 
@@ -115,7 +116,25 @@ test('retired historical packs and generators cannot return', () => {
   const retiredPaths = [
     'docs/archive',
     'docs/planning/archive',
+    'docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md',
+    'docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md',
+    'docs/planning/reviews/sprints',
+    'docs/planning/proposals/tradeoffs',
+    'docs/planning/proposals/mandatory/governance-and-docs/ar-d6-triple-versioning-governance-review-plan-20260513.md',
+    'docs/planning/proposals/mandatory/governance-and-docs/ea-20260429-engine-audit-disposition-plan-20260513.md',
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md',
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md',
+    'docs/planning/proposals/mandatory/governance-and-docs/post-merge-planning-closeout-drift-problem-20260508.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-operational-evidence-drift-reconciliation-plan-20260522.md',
+    'docs/planning/reviews/review-status-board.md',
+    'docs/planning/roadmap/diagrams/review-sprint-capacity-2026-04.md',
+    'docs/planning/roadmap/diagrams/review-sprint-critical-path-2026-04.md',
+    'docs/planning/roadmap/diagrams/review-sprint-dependency-graph-2026-04.md',
+    'docs/planning/roadmap/diagrams/review-sprint-timeline-2026-04.md',
+    'docs/planning/roadmap/review-remediation-roadmap-20260402.md',
     'docs/planning/proposals/superseded/runtime-and-contracts',
+    'docs/planning/proposals/superseded/runtime-and-delivery',
+    'docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md',
     'docs/planning/status/planner-local-doc-triage-20260320.md',
     'docs/planning/status/root-local-doc-triage-20260417.md',
     'docs/adr/_archive',
@@ -178,4 +197,156 @@ test('current records do not point to retired planning files as local evidence',
       );
     }
   }
+});
+
+test('retired efficiency playbook has no live local consumers', () => {
+  const retiredPath =
+    'docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md';
+  const basename = retiredPath.split('/').at(-1);
+  const provenance =
+    'https://github.com/dunay2/dvt/blob/1b07acde33300a19d97914eb719b262b44e79182/' + retiredPath;
+  const files = execFileSync(
+    'git',
+    [
+      'ls-files',
+      '-z',
+      '--',
+      'AGENTS.md',
+      'CLAUDE.md',
+      'docs',
+      'scripts',
+      'tools',
+      '.github',
+      'package.json',
+    ],
+    {
+      encoding: 'utf8',
+    }
+  )
+    .split('\0')
+    .filter(Boolean);
+  for (const path of files) {
+    if (path === 'tools/ci/docs-disposition-canon.test.mjs' || path === retiredPath) continue;
+    if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
+    const content = readRepoFile(path).replaceAll(provenance, '');
+    assert.equal(content.includes(basename), false, `retired efficiency review reference: ${path}`);
+  }
+  assertContains('AGENTS.md', 'docs/guides/pr-preflight-and-ci-triage.md');
+  const guide = readRepoFile('docs/guides/pr-preflight-and-ci-triage.md');
+  for (const marker of [
+    '## Conflict Triage And Cleanup Safety',
+    'conflict markers',
+    'explicit opt-in',
+    'failed job logs first',
+    'pnpm verify:prepush',
+  ]) {
+    assert.ok(guide.includes(marker), `missing retained practice: ${marker}`);
+  }
+});
+
+test('retired runtime delivery plans have no tracked consumers', () => {
+  const retiredNames = [
+    'dvt_production_readiness_corrected_review_and_roadmap.md',
+    'gap4-backpressure-admission-pr4-planb-20260326.md',
+    'superseded/runtime-and-delivery',
+  ];
+  const files = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
+    .split('\0')
+    .filter(Boolean);
+  for (const path of files) {
+    if (path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
+    if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
+    const content = readRepoFile(path);
+    for (const name of retiredNames) {
+      assert.equal(content.includes(name), false, `retired runtime delivery reference: ${path}`);
+    }
+  }
+});
+
+// Pinned Git provenance is not active navigation. The sole raw-command exception
+// below preserves the exact recorded ARC evidence invocation, not a rerun recipe.
+test('retired legacy planning pack has no operational consumers', () => {
+  const retiredMarkers = [
+    'F-04-RISK-A-QA-03-backend-owned-planref-closeout.md',
+    'F-04-RISK-B-mock-workspace-isolation-closeout.md',
+
+    'ar-d6-triple-versioning-governance-review-plan-20260513.md',
+    'ea-20260429-engine-audit-disposition-plan-20260513.md',
+    'planning-review-canon-plan-20260524.md',
+    'planning-state-query-store-plan-20260506.md',
+    'post-merge-planning-closeout-drift-problem-20260508.md',
+    'ar-c2-operational-evidence-drift-reconciliation-plan-20260522.md',
+    'proposal-portfolio-tradeoffs-20260403.md',
+    'review-status-board.md',
+    'board-001-start-run-coordinator-extraction.md',
+    'board-002-event-payload-versioning.md',
+    'board-003-rc-c2-cycle-closure.md',
+    'board-004-lint-staged-script-coverage.md',
+    'board-005-diff-semantics-consistency.md',
+    'board-006-review-link-stability-hardening.md',
+    'board-007-typed-compiled-code-ref-contract.md',
+    'board-008-observability-hash-decoupling.md',
+    'board-009-retry-reservation-contract-mandatory.md',
+    'board-010-step-executor-port-definition.md',
+    'board-011-snapshot-schema-versioning.md',
+    'board-012-input-hash-plan-cache-port.md',
+    'board-013-per-step-kind-policy-vocabulary.md',
+    'board-014-manifest-schema-validation-at-boundary.md',
+    'board-015-intent-reconciler-distributed-lease.md',
+    'board-016-admission-backpressure-temporal-queue-depth.md',
+    'review-sprint-capacity-2026-04.md',
+    'review-sprint-critical-path-2026-04.md',
+    'review-sprint-dependency-graph-2026-04.md',
+    'review-sprint-timeline-2026-04.md',
+    'review-remediation-roadmap-20260402.md',
+    'reviews/sprints',
+    'sprints/index.md',
+    'sprint-2026-04a',
+    'sprint-2026-04b',
+    'sprint-2026-04c',
+    'tradeoffs/',
+  ];
+  const files = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
+    .split('\0')
+    .filter(Boolean);
+  const provenance =
+    /https:\/\/github\.com\/dunay2\/dvt\/blob\/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6\/[^\s)<>\]`]+/gu;
+  let preservedCommand = false;
+  for (const path of files) {
+    if (path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
+    if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
+    let content = readRepoFile(path);
+    if (path === 'docs/evidence/ED-20260419-plan-compile-language-alignment-arc2.md') {
+      const lines = content.split('\n');
+      content = lines
+        .map((line) => {
+          if (!line.includes('review-status-board.md')) return line;
+          const digest = execFileSync('git', ['hash-object', '--stdin'], {
+            input: line.trim(),
+            encoding: 'utf8',
+          }).trim();
+          assert.equal(
+            digest,
+            '291120e04a8583a06a84e4af0c1586b3f0093d86',
+            'historical evidence invocation changed'
+          );
+          preservedCommand = true;
+          return '';
+        })
+        .join('\n');
+    }
+    if (path === 'tools/ci/repository-change-scope.mjs') {
+      // Keep existing validation routing for a reintroduced retired path.
+      content = content.replace(
+        "'docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md'",
+        ''
+      );
+    }
+    content = content.replace(provenance, '');
+    for (const marker of retiredMarkers) {
+      assert.equal(content.includes(marker), false, `legacy planning consumer: ${path}: ${marker}`);
+    }
+  }
+  assert.equal(preservedCommand, true, 'recorded evidence must be preserved');
+  assertContains('docs/planning/state/github-mvp-issue-workflow.md', 'is the only task backlog');
 });

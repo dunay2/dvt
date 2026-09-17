@@ -471,7 +471,7 @@ Progress note on 2026-04-26:
 - Definition of Done:
   - target policy component is named in graph architecture docs;
   - current drift diagram and target diagram are present;
-  - this review is linked from `review-status-board.md`;
+  - this review is linked from [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md);
   - `pnpm docs:sync`, `pnpm lint:md:changed`, `pnpm qa:artifact:check`, and
     `pnpm verify:prepush` pass.
 

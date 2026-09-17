@@ -43,7 +43,7 @@ frontmatter, marker, and task-like-reference signals.
 - `docs/adr/adr-0055-planning-db-canonical-operational-source.md`: the local
   Postgres database is the canonical operational source while Git remains the
   review, bootstrap, and recovery boundary.
-- `docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md`:
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md):
   GOV-S3 W18 owns the docs-disposition query-store slice.
 
 ### Options Considered
@@ -75,7 +75,7 @@ Markdown frontmatter, pending markers, and task-like references during
   - add migration, import, query, and catalog test coverage;
   - close the slice with governed docs and DB validation.
 - Touched files or paths:
-  - `docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md`
+  - [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md)
   - `docs/planning/closeouts/20260510-gov-s3-w18-docs-disposition-queue-closeout.md`
   - `tools/planning-db/migrations/017_docs_disposition_queue.sql`
   - `scripts/planning-db-import.cjs`
@@ -142,7 +142,7 @@ Markdown frontmatter, pending markers, and task-like references during
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/adr/adr-0055-planning-db-canonical-operational-source.md`
-- `docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md`
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md)
 
 ### Real Work Performed
 

@@ -58,7 +58,7 @@ Debt handling for this review:
 - `AGENTS.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
-- `docs/planning/reviews/review-status-board.md`
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)
 - `docs/planning/reviews/review-naming-policy.md`
 - `docs/planning/templates/qa/qa-artifact-example-template.md`
 - `docs/adr/ADR-0004-event-sourcing-strategy.md`

@@ -41,7 +41,7 @@ bulky generated surfaces would be architectural assertion rather than evidence.
 - `docs/architecture/fowler-opportunity-planning-governance.md`: the slice
   addresses hidden query model and generated artifact churn without widening
   runtime product scope.
-- `docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md`:
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md):
   Postgres remains a derived local query store until export parity proves it can
   reproduce current generated files.
 
@@ -77,7 +77,7 @@ drift.
   - add unit and live DB integration coverage;
   - refresh generated governance/status outputs.
 - Touched files or paths:
-  - `docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md`
+  - [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md)
   - `docs/planning/closeouts/20260507-gov-s3-planning-db-export-parity-closeout.md`
   - `package.json`
   - `scripts/planning-db-export.cjs`
@@ -142,7 +142,7 @@ drift.
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md`
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md)
 - `package.json`
 - `scripts/governance-refresh.cjs`
 - `scripts/planning-db-import.cjs`
