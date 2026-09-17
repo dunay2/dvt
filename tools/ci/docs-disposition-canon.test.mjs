@@ -232,6 +232,7 @@ test('retired runtime delivery plans have no tracked consumers', () => {
   const retiredNames = [
     'dvt_production_readiness_corrected_review_and_roadmap.md',
     'gap4-backpressure-admission-pr4-planb-20260326.md',
+    'superseded/runtime-and-delivery',
   ];
   const files = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
     .split('\0')
