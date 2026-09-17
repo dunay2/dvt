@@ -35,14 +35,12 @@ jobs:
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
-      - name: Prepare only the disposable CI database
-        uses: ./.github/actions/prepare-planning-db
       - name: Verify source identities and prove the retirement red
         shell: bash
         run: |
           set -euo pipefail
           python "$RUNNER_TEMP/playbook3004/input.py"
-      - name: Reconcile the curated review index and refresh generated outputs
+      - name: Reconcile the curated review index and synchronize documentation
         shell: bash
         run: |
           set -euo pipefail
@@ -62,7 +60,6 @@ jobs:
           (out/'curated-index-edit.json').write_text(json.dumps({'path':p.as_posix(),'before':sha,'removed':line,'generated':False},indent=2)+'\n')
           PY
           pnpm docs:sync 2>&1 | tee "$out/docs-sync.log"
-          pnpm governance:refresh 2>&1 | tee "$out/governance-refresh.log"
           python - <<'PY'
           import json,os,pathlib,subprocess
           out=pathlib.Path(os.environ['RUNNER_TEMP'])/'playbook3004'
@@ -118,6 +115,15 @@ jobs:
           pnpm commit docs docs "Retire historical efficiency playbook and its consumers" 2>&1 | tee "$out/commit.log"
           git rev-parse HEAD > "$out/head.txt"
           git rev-parse HEAD^{tree} > "$out/tree.txt"
+      - name: Bootstrap the disposable CI database from the actual committed candidate
+        uses: ./.github/actions/prepare-planning-db
+      - name: Refresh governance without rebuilding the disposable database
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm governance:refresh 2>&1 | tee "$RUNNER_TEMP/playbook3004/governance-refresh.log"
+          git diff --exit-code HEAD
+          test -z "$(git status --porcelain)"
       - name: Validate the exact committed candidate
         shell: bash
         run: |
