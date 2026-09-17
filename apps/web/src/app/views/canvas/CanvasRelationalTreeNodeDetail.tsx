@@ -1,6 +1,17 @@
 /** Owned concern: present contextual facts for the selected canonical relation node. */
+import { GitMerge, Layers3, Table2 } from 'lucide-react';
+
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
+
+function childRoleLabel(
+  role: CanvasRelationalTreeNode['children'][number]['role'],
+  copy: CanvasRelationalTreeWorkbenchCopy
+): string {
+  if (role === 'left') return copy.inspectorDvtRelationalLeftInput;
+  if (role === 'right') return copy.inspectorDvtRelationalRightInput;
+  return copy.inspectorDbtOriginLabel;
+}
 
 export function CanvasRelationalTreeNodeDetail({
   node,
@@ -9,44 +20,57 @@ export function CanvasRelationalTreeNodeDetail({
   node: CanvasRelationalTreeNode | null;
   copy: CanvasRelationalTreeWorkbenchCopy;
 }>): JSX.Element {
+  const Icon = node?.operator === 'read' ? Table2 : node?.operator === 'join' ? GitMerge : Layers3;
   return (
-    <section
+    <aside
       data-slot="canvas-relational-tree-detail"
+      data-position="contextual"
       aria-label={copy.relationalTreeDetailLabel}
-      className="max-h-28 min-h-0 shrink-0 overflow-auto border-t border-(--border-subtle) bg-(--surface-panel) p-3"
+      className="min-h-0 overflow-auto border-t border-(--border-subtle) bg-(--surface-panel) p-4 md:border-t-0 md:border-l"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <h3 className="text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)">
-          {copy.relationalTreeDetailLabel}
-        </h3>
-        <p className="text-[10px] text-(--text-muted)">{copy.relationalTreeReadOnlyMessage}</p>
-      </div>
       {node == null ? null : (
-        <dl className="mt-2 grid grid-cols-2 gap-x-6 gap-y-2 text-[11px] md:grid-cols-4">
-          <div>
-            <dt className="text-(--text-muted)">Substrait</dt>
-            <dd className="font-mono font-semibold uppercase text-(--text-primary)">
+        <>
+          <header className="flex items-center gap-2 border-b border-(--border-subtle) pb-3">
+            <Icon aria-hidden="true" className="size-4 text-(--status-info)" />
+            <span className="text-xs font-semibold uppercase tracking-wide text-(--text-primary)">
               {node.operator.toUpperCase()}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-(--text-muted)">{copy.nodePresentationColumnsLabel}</dt>
-            <dd className="font-mono text-(--text-primary)">{node.output.fields.length}</dd>
-          </div>
-          {node.relationId == null ? null : (
+            </span>
+          </header>
+          <dl className="mt-4 space-y-4 text-[11px]">
             <div>
-              <dt className="text-(--text-muted)">relationId</dt>
-              <dd className="break-all font-mono text-(--text-primary)">{node.relationId}</dd>
+              <dt className="text-(--text-muted)">{copy.inspectorDbtOriginLabel}</dt>
+              <dd className="mt-1 break-all font-mono text-(--text-primary)">
+                {node.displayName ?? node.sourceRef?.sourceObjectId ?? node.substraitKind}
+              </dd>
             </div>
-          )}
-          {node.expressionRefs.length === 0 ? null : (
             <div>
-              <dt className="text-(--text-muted)">Expressions</dt>
-              <dd className="font-mono text-(--text-primary)">{node.expressionRefs.length}</dd>
+              <dt className="text-(--text-muted)">{copy.nodePresentationColumnsLabel}</dt>
+              <dd className="mt-1 font-mono text-(--text-primary)">{node.output.fields.length}</dd>
             </div>
-          )}
-        </dl>
+            {node.expressionRefs.length === 0 ? null : (
+              <div>
+                <dt className="text-(--text-muted)">Expressions</dt>
+                <dd className="mt-1 font-mono text-(--text-primary)">
+                  {node.expressionRefs.length}
+                </dd>
+              </div>
+            )}
+            {node.children.map((child) => (
+              <div key={`${child.role}:${child.ordinal}`}>
+                <dt className="text-(--text-muted)">{childRoleLabel(child.role, copy)}</dt>
+                <dd className="mt-1 break-all font-mono text-(--text-primary)">
+                  {child.node.displayName ??
+                    child.node.sourceRef?.sourceObjectId ??
+                    child.node.substraitKind}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-6 border-t border-(--border-subtle) pt-3 text-[10px] leading-relaxed text-(--text-muted)">
+            {copy.relationalTreeReadOnlyMessage}
+          </p>
+        </>
       )}
-    </section>
+    </aside>
   );
 }

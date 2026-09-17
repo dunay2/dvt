@@ -544,6 +544,7 @@ export type CanvasViewCopy = {
   readonly inspectorDvtRelationalRightInput: string;
   readonly relationalTreeSourcesLabel: string;
   readonly relationalTreeLabel: string;
+  readonly relationalTreeValidMessage: string;
   readonly relationalTreeDetailLabel: string;
   readonly relationalTreeCanvasLabel: string;
   readonly relationalTreeComposeAction: string;

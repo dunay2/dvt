@@ -1,4 +1,4 @@
-/** Owned concern: calculate deterministic geometry for one canonical relational tree. */
+/** Owned concern: calculate deterministic left-to-right geometry for one relational tree. */
 import type {
   CanvasRelationalTreeChildRole,
   CanvasRelationalTreeNode,
@@ -6,12 +6,13 @@ import type {
 
 const NODE_WIDTH = 176;
 const NODE_HEIGHT = 58;
-const HORIZONTAL_GAP = 48;
-const VERTICAL_GAP = 104;
-const HORIZONTAL_PADDING = 48;
-const OUTPUT_TOP = 16;
-const ROOT_TOP = 88;
-const BOTTOM_PADDING = 40;
+const HORIZONTAL_GAP = 72;
+const VERTICAL_GAP = 34;
+const HORIZONTAL_PADDING = 36;
+const VERTICAL_PADDING = 36;
+const OUTPUT_GAP = 64;
+const OUTPUT_WIDTH = 132;
+const BOTTOM_PADDING = 36;
 
 export type CanvasRelationalTreePlacedNode = Readonly<{
   node: CanvasRelationalTreeNode;
@@ -29,6 +30,8 @@ export type CanvasRelationalTreePlacedNode = Readonly<{
 export type CanvasRelationalTreePlacedEdge = Readonly<{
   key: string;
   parentLocator: string;
+  role: CanvasRelationalTreeChildRole;
+  ordinal: number;
   fromX: number;
   fromY: number;
   toX: number;
@@ -43,89 +46,99 @@ export type CanvasRelationalTreeLayout = Readonly<{
   edges: readonly CanvasRelationalTreePlacedEdge[];
 }>;
 
-function measureSubtrees(node: CanvasRelationalTreeNode, widths: Map<string, number>): number {
-  const childrenWidth = node.children.reduce(
-    (total, child, index) =>
-      total + measureSubtrees(child.node, widths) + (index === 0 ? 0 : HORIZONTAL_GAP),
-    0
-  );
-  const width = Math.max(NODE_WIDTH, childrenWidth);
-  widths.set(node.locator, width);
-  return width;
+function measureDepth(node: CanvasRelationalTreeNode, depths: Map<string, number>): number {
+  const depth =
+    node.children.length === 0
+      ? 0
+      : Math.max(...node.children.map((child) => measureDepth(child.node, depths))) + 1;
+  depths.set(node.locator, depth);
+  return depth;
+}
+
+function placeRows(root: CanvasRelationalTreeNode): ReadonlyMap<string, number> {
+  const rows = new Map<string, number>();
+  let nextLeaf = 0;
+  const visit = (node: CanvasRelationalTreeNode): number => {
+    if (node.children.length === 0) {
+      const y = VERTICAL_PADDING + nextLeaf * (NODE_HEIGHT + VERTICAL_GAP);
+      nextLeaf += 1;
+      rows.set(node.locator, y);
+      return y;
+    }
+    const childRows = node.children.map((child) => visit(child.node));
+    const y = (childRows[0]! + childRows.at(-1)!) / 2;
+    rows.set(node.locator, y);
+    return y;
+  };
+  visit(root);
+  return rows;
 }
 
 export function layoutCanvasRelationalTree(
   root: CanvasRelationalTreeNode
 ): CanvasRelationalTreeLayout {
-  const widths = new Map<string, number>();
-  const treeWidth = measureSubtrees(root, widths);
+  const depths = new Map<string, number>();
+  const rootDepth = measureDepth(root, depths);
+  const rows = placeRows(root);
   const nodes: CanvasRelationalTreePlacedNode[] = [];
   const edges: CanvasRelationalTreePlacedEdge[] = [];
+  const columnWidth = NODE_WIDTH + HORIZONTAL_GAP;
 
   const place = (
     node: CanvasRelationalTreeNode,
-    originX: number,
-    level: number,
     parentLocator: string | null,
     role: CanvasRelationalTreeChildRole | null,
     ordinal: number,
     siblingCount: number
   ): void => {
-    const subtreeWidth = widths.get(node.locator) ?? NODE_WIDTH;
-    const x = originX + (subtreeWidth - NODE_WIDTH) / 2;
-    const y = ROOT_TOP + (level - 1) * VERTICAL_GAP;
+    const depth = depths.get(node.locator) ?? 0;
+    const x = HORIZONTAL_PADDING + depth * columnWidth;
+    const y = rows.get(node.locator) ?? VERTICAL_PADDING;
     nodes.push({
       node,
       x,
       y,
       width: NODE_WIDTH,
       height: NODE_HEIGHT,
-      level,
+      level: rootDepth - depth + 1,
       parentLocator,
       role,
       ordinal,
       siblingCount,
     });
 
-    let childOriginX = originX;
-    node.children.forEach((child) => {
-      const childWidth = widths.get(child.node.locator) ?? NODE_WIDTH;
-      const childCenterX = childOriginX + childWidth / 2;
-      const childY = ROOT_TOP + level * VERTICAL_GAP;
+    node.children.forEach((child, index) => {
+      const childDepth = depths.get(child.node.locator) ?? 0;
+      const childX = HORIZONTAL_PADDING + childDepth * columnWidth;
+      const childY = rows.get(child.node.locator) ?? VERTICAL_PADDING;
       edges.push({
         key: `${node.locator}:${child.role}:${child.ordinal}`,
         parentLocator: node.locator,
-        fromX: x + NODE_WIDTH / 2,
-        fromY: y + NODE_HEIGHT,
-        toX: childCenterX,
-        toY: childY,
+        role: child.role,
+        ordinal: child.ordinal,
+        fromX: childX + NODE_WIDTH,
+        fromY: childY + NODE_HEIGHT / 2,
+        toX: x,
+        toY: y + ((index + 1) * NODE_HEIGHT) / (node.children.length + 1),
       });
-      place(
-        child.node,
-        childOriginX,
-        level + 1,
-        node.locator,
-        child.role,
-        child.ordinal,
-        node.children.length
-      );
-      childOriginX += childWidth + HORIZONTAL_GAP;
+      place(child.node, node.locator, child.role, child.ordinal, node.children.length);
     });
   };
 
-  place(root, HORIZONTAL_PADDING, 1, null, null, 0, 1);
+  place(root, null, null, 0, 1);
   const rootNode = nodes[0]!;
-  const outputWidth = 72;
-  const maxBottom = Math.max(...nodes.map((node) => node.y + node.height));
+  const output = {
+    x: rootNode.x + NODE_WIDTH + OUTPUT_GAP,
+    y: rootNode.y,
+    width: OUTPUT_WIDTH,
+    height: NODE_HEIGHT,
+  };
   return {
-    width: treeWidth + HORIZONTAL_PADDING * 2,
-    height: maxBottom + BOTTOM_PADDING,
-    output: {
-      x: rootNode.x + (NODE_WIDTH - outputWidth) / 2,
-      y: OUTPUT_TOP,
-      width: outputWidth,
-      height: 32,
-    },
+    width: output.x + OUTPUT_WIDTH + HORIZONTAL_PADDING,
+    height:
+      Math.max(...nodes.map((node) => node.y + node.height), output.y + output.height) +
+      BOTTOM_PADDING,
+    output,
     nodes,
     edges,
   };

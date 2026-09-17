@@ -1,4 +1,6 @@
-/** Owned concern: present one scalable, keyboard-selectable relational tree viewport. */
+/** Owned concern: present one scalable, keyboard-selectable relational graph viewport. */
+import { CheckCircle2 } from 'lucide-react';
+
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import { CanvasRelationalTreeLayout } from './CanvasRelationalTreeLayout';
@@ -6,11 +8,13 @@ import { CanvasRelationalTreeZoomControls } from './CanvasRelationalTreeZoomCont
 import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewport';
 
 export function CanvasRelationalTreeView({
+  outputName,
   root,
   selectedLocator,
   copy,
   onSelect,
 }: Readonly<{
+  outputName: string;
   root: CanvasRelationalTreeNode;
   selectedLocator: string;
   copy: CanvasRelationalTreeWorkbenchCopy;
@@ -20,41 +24,58 @@ export function CanvasRelationalTreeView({
 
   return (
     <section
-      className="flex min-h-0 min-w-0 flex-col overflow-hidden"
+      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
       aria-label={copy.relationalTreeLabel}
     >
-      <header className="flex shrink-0 items-center justify-between gap-2 border-b border-(--border-subtle) bg-(--surface-panel) px-3 py-2">
-        <h3 className="text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)">
-          {copy.relationalTreeLabel}
-        </h3>
-        <CanvasRelationalTreeZoomControls
-          copy={copy}
-          zoom={viewport.zoom}
-          onChange={viewport.changeZoom}
-          onFit={viewport.fit}
-        />
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-(--border-subtle) bg-(--surface-panel) px-4 py-2.5">
+        <div className="min-w-0">
+          <h3 className="truncate text-xs font-semibold text-(--text-primary)">
+            {outputName} · {copy.relationalTreeLabel}
+          </h3>
+          <p className="mt-0.5 flex items-center gap-1 text-[9px] text-emerald-300">
+            <CheckCircle2 aria-hidden="true" className="size-3" />
+            {copy.relationalTreeValidMessage}
+          </p>
+        </div>
       </header>
-      <div
-        ref={viewport.viewportRef}
-        data-slot="canvas-relational-tree-viewport"
-        data-panning={viewport.panning ? 'true' : 'false'}
-        className="min-h-0 flex-1 cursor-grab overflow-auto bg-(--surface-subtle) p-4 active:cursor-grabbing md:p-6"
-        onPointerDown={viewport.onPointerDown}
-        onPointerMove={viewport.onPointerMove}
-        onPointerUp={viewport.onPointerUp}
-        onPointerCancel={viewport.onPointerUp}
-      >
+      <div className="relative min-h-0 flex-1">
         <div
-          ref={viewport.contentRef}
-          data-slot="canvas-relational-tree"
-          className="mx-auto w-max origin-top transition-transform duration-150"
-          style={{ transform: `scale(${viewport.zoom})`, transformOrigin: 'top center' }}
+          ref={viewport.viewportRef}
+          data-slot="canvas-relational-tree-viewport"
+          data-panning={viewport.panning ? 'true' : 'false'}
+          className="absolute inset-0 cursor-grab overflow-auto p-5 active:cursor-grabbing"
+          style={{
+            backgroundColor: 'var(--surface-subtle)',
+            backgroundImage:
+              'radial-gradient(circle, color-mix(in srgb, var(--border-subtle) 72%, transparent) 1px, transparent 1px)',
+            backgroundSize: '18px 18px',
+          }}
+          onPointerDown={viewport.onPointerDown}
+          onPointerMove={viewport.onPointerMove}
+          onPointerUp={viewport.onPointerUp}
+          onPointerCancel={viewport.onPointerUp}
         >
-          <CanvasRelationalTreeLayout
-            root={root}
-            selectedLocator={selectedLocator}
+          <div
+            ref={viewport.contentRef}
+            data-slot="canvas-relational-tree"
+            className="mx-auto w-max origin-center transition-transform duration-150"
+            style={{ transform: `scale(${viewport.zoom})`, transformOrigin: 'center center' }}
+          >
+            <CanvasRelationalTreeLayout
+              outputName={outputName}
+              root={root}
+              selectedLocator={selectedLocator}
+              copy={copy}
+              onSelect={onSelect}
+            />
+          </div>
+        </div>
+        <div className="absolute bottom-3 left-3 z-10 rounded-md border border-(--border-subtle) bg-(--surface-panel) p-1 shadow-md">
+          <CanvasRelationalTreeZoomControls
             copy={copy}
-            onSelect={onSelect}
+            zoom={viewport.zoom}
+            onChange={viewport.changeZoom}
+            onFit={viewport.fit}
           />
         </div>
       </div>

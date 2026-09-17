@@ -1,6 +1,6 @@
 /** Owned concern: calculate bounded zoom for measured relational-tree content. */
 export const CANVAS_RELATIONAL_TREE_MIN_ZOOM = 0.35;
-export const CANVAS_RELATIONAL_TREE_MAX_ZOOM = 1.75;
+export const CANVAS_RELATIONAL_TREE_MAX_ZOOM = 2;
 
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value));

@@ -1,4 +1,6 @@
 /** Owned concern: present the source/operand catalogue for one relational tree. */
+import { Table2 } from 'lucide-react';
+
 import type {
   CanvasRelationalTreeCatalogueItem,
   CanvasRelationalTreeWorkbenchCopy,
@@ -6,9 +8,9 @@ import type {
 import { writeCanvasRelationalSourceDrag } from './canvasRelationalTreeDrag';
 
 const stateClass = {
-  participating: 'border-emerald-700 text-emerald-300',
-  pending: 'border-amber-700 text-amber-300',
-  missing: 'border-rose-700 text-rose-300',
+  participating: 'border-emerald-700/80 bg-emerald-950/30 text-emerald-300',
+  pending: 'border-amber-700/80 bg-amber-950/30 text-amber-300',
+  missing: 'border-rose-700/80 bg-rose-950/30 text-rose-300',
 } as const;
 
 export function CanvasRelationalTreeSourceCatalogue({
@@ -33,21 +35,20 @@ export function CanvasRelationalTreeSourceCatalogue({
   return (
     <section
       aria-label={copy.relationalTreeSourcesLabel}
-      className="max-h-36 min-h-0 overflow-auto border-b border-(--border-subtle) p-3 md:max-h-none md:border-r md:border-b-0"
+      className="max-h-40 min-h-0 overflow-auto border-b border-(--border-subtle) bg-(--surface-panel) p-3 md:max-h-none md:border-r md:border-b-0"
     >
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)">
           {copy.relationalTreeSourcesLabel}
         </h3>
-        <span className="rounded bg-(--surface-subtle) px-1.5 py-0.5 font-mono text-[9px] text-(--text-muted)">
-          {items.length}
-        </span>
+        <span className="font-mono text-[9px] text-(--text-muted)">{items.length}</span>
       </div>
       <ul className="mt-3 flex gap-2 overflow-x-auto pb-1 md:block md:space-y-2 md:overflow-x-visible md:pb-0">
         {items.map((item) => (
           <li key={item.key} className="min-w-44 md:min-w-0">
             <button
               type="button"
+              title={draggable ? copy.relationalTreeSourceActionHint : undefined}
               data-slot="canvas-relational-tree-source"
               data-node-id={item.sourceNodeId ?? undefined}
               aria-pressed={item.selected === true}
@@ -69,22 +70,25 @@ export function CanvasRelationalTreeSourceCatalogue({
                 event.preventDefault();
                 onSelect(item);
               }}
-              className="w-full rounded border border-(--border-subtle) bg-(--surface-subtle) p-2 text-left enabled:cursor-grab enabled:hover:border-(--status-info) enabled:hover:bg-(--surface-panel) enabled:active:cursor-grabbing aria-pressed:border-(--status-info) aria-pressed:ring-1 aria-pressed:ring-(--status-info) disabled:cursor-default"
+              className="w-full rounded-md border border-(--border-subtle) bg-(--surface-subtle) p-2.5 text-left enabled:cursor-grab enabled:hover:border-(--status-info) enabled:active:cursor-grabbing aria-pressed:border-(--status-info) aria-pressed:ring-1 aria-pressed:ring-(--status-info) disabled:cursor-default"
             >
-              <span className="block truncate font-mono text-[11px] text-(--text-primary)">
-                {item.label}
-              </span>
-              <span className="mt-1.5 flex items-center justify-between gap-2">
-                <span
-                  className={`inline-flex rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${stateClass[item.state]}`}
-                >
-                  {stateLabel[item.state]}
-                </span>
-                {!draggable || item.selectable === false ? null : (
-                  <span className="text-right text-[9px] leading-tight text-(--text-muted)">
-                    {copy.relationalTreeSourceActionHint}
+              <span className="flex items-center gap-2">
+                <Table2 aria-hidden="true" className="size-4 shrink-0 text-(--status-info)" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-mono text-[11px] font-semibold text-(--text-primary)">
+                    {item.label}
                   </span>
-                )}
+                  {item.fieldCount == null ? null : (
+                    <span className="block text-[9px] text-(--text-muted)">
+                      {copy.nodePresentationColumnsLabel}: {item.fieldCount}
+                    </span>
+                  )}
+                </span>
+              </span>
+              <span
+                className={`mt-2 inline-flex rounded border px-1.5 py-0.5 text-[8px] font-semibold uppercase ${stateClass[item.state]}`}
+              >
+                {stateLabel[item.state]}
               </span>
               {item.reason == null ? null : (
                 <span className="mt-1 block text-[9px] text-(--text-muted)">{item.reason}</span>

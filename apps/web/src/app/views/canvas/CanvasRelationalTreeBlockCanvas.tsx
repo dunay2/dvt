@@ -1,21 +1,19 @@
-/** Owned concern: present central block composition, operand slots, and its Apply/Cancel boundary. */
-import { Button } from '../../components/ui/button';
+/** Owned concern: present the draft graph surface and its contextual operation editor. */
+import { GitMerge } from 'lucide-react';
+
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type {
   CanvasRelationalOperation,
   CanvasRelationalOperationChoice,
 } from './canvasRelationalOperationChoices';
+import { canvasRelationalOperationLabel } from './DvtRelationalOperationChooser';
 import {
   CanvasRelationalTreeOperandSlot,
   type CanvasRelationalOperandPosition,
 } from './CanvasRelationalTreeOperandSlot';
+import { CanvasRelationalTreeOperationPanel } from './CanvasRelationalTreeOperationPanel';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
-import { CanvasRelationalTreeJoinEditor } from './CanvasRelationalTreeJoinEditor';
-import {
-  canvasRelationalOperationLabel,
-  DvtRelationalOperationChooser,
-} from './DvtRelationalOperationChooser';
 
 export function CanvasRelationalTreeBlockCanvas({
   appendInput,
@@ -53,105 +51,68 @@ export function CanvasRelationalTreeBlockCanvas({
   onSelectOperation: (operation: CanvasRelationalOperation) => void;
 }>): JSX.Element {
   const inputById = new Map(inputs.map((input) => [input.nodeId, input] as const));
-  const ready =
-    (operation === 'projection' && selectedInputIds.length === 1) ||
-    (operation === 'inner_join' && joinDraft != null) ||
-    (operation === 'union_all' && selectedInputIds.length >= 2);
-  const hasOperands = selectedInputIds.length > 0;
+  const operationLabel =
+    operation == null
+      ? copy.inspectorDvtRelationalOperationTitle
+      : canvasRelationalOperationLabel(operation, copy);
 
   return (
     <section
       data-slot="canvas-relational-tree-block-canvas"
       aria-label={copy.relationalTreeCanvasLabel}
-      className="min-h-0 overflow-auto p-3"
+      className="grid min-h-0 grid-cols-1 grid-rows-[minmax(16rem,1fr)_auto] overflow-hidden md:grid-cols-[minmax(0,1fr)_17rem] md:grid-rows-1"
     >
-      <div className="mx-auto w-full max-w-3xl rounded border border-(--border-subtle) bg-(--surface-panel) p-3">
-        <div className="grid grid-cols-2 items-start gap-3">
+      <div
+        className="min-h-0 overflow-auto p-5"
+        style={{
+          backgroundColor: 'var(--surface-subtle)',
+          backgroundImage:
+            'radial-gradient(circle, color-mix(in srgb, var(--border-subtle) 72%, transparent) 1px, transparent 1px)',
+          backgroundSize: '18px 18px',
+        }}
+      >
+        <div className="mx-auto grid min-h-64 w-full max-w-3xl grid-cols-[minmax(0,13rem)_minmax(10rem,1fr)] grid-rows-2 items-center gap-x-20 gap-y-8">
           <CanvasRelationalTreeOperandSlot
             copy={copy}
             input={primaryInputId == null ? null : (inputById.get(primaryInputId) ?? null)}
             position="primary"
             onPlaceInput={onPlaceInput}
           />
-          <div className="mt-4 justify-self-end">
-            <CanvasRelationalTreeOperandSlot
-              copy={copy}
-              input={secondaryInputId == null ? null : (inputById.get(secondaryInputId) ?? null)}
-              position="secondary"
-              onPlaceInput={onPlaceInput}
-            />
+          <div className="row-span-2 flex items-center gap-10">
+            <div
+              data-slot="canvas-relational-tree-operation-block"
+              className="flex min-h-16 min-w-44 items-center gap-2 rounded-md border border-(--status-info) bg-blue-950/30 px-3 shadow-sm"
+            >
+              <GitMerge aria-hidden="true" className="size-4 text-(--status-info)" />
+              <span className="text-[10px] font-semibold uppercase text-(--text-primary)">
+                {operationLabel}
+              </span>
+            </div>
+            <div className="min-w-28 rounded-md border border-emerald-500 bg-emerald-950/30 px-3 py-4 text-[10px] font-semibold text-emerald-300">
+              {copy.relationalTreeOutputLabel}
+            </div>
           </div>
-        </div>
-        <div
-          data-slot="canvas-relational-tree-operation-block"
-          className="mt-3 border-t border-(--border-subtle) pt-3"
-        >
-          <h3 className="text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)">
-            {operation == null
-              ? copy.inspectorDvtRelationalOperationTitle
-              : canvasRelationalOperationLabel(operation, copy)}
-          </h3>
-          {!hasOperands ? (
-            <p className="mt-3 text-xs text-(--text-muted)">
-              {copy.relationalTreeSelectFirstSourceMessage}
-            </p>
-          ) : operation == null ? (
-            <div className="mt-3 space-y-3">
-              <p className="text-xs text-(--text-muted)">
-                {copy.relationalTreeSelectOperationMessage}
-              </p>
-              {selectedInputIds.length !== 1 ? null : (
-                <p className="rounded border border-(--status-info) bg-(--surface-subtle) px-2 py-1.5 text-[10px] text-(--text-muted)">
-                  {copy.relationalTreeSelectNextSourceMessage}
-                </p>
-              )}
-              <DvtRelationalOperationChooser
-                choices={choices}
-                copy={copy}
-                onSelect={onSelectOperation}
-              />
-            </div>
-          ) : operation === 'inner_join' && joinDraft != null ? (
-            <div className="mt-3">
-              <CanvasRelationalTreeJoinEditor
-                key={appendInput?.nodeId ?? 'base'}
-                appendInput={appendInput}
-                copy={copy}
-                draft={joinDraft}
-                onAppend={onAppendJoinInput}
-                onChange={onChangeJoinDraft}
-              />
-            </div>
-          ) : null}
-          {selectedInputIds.length <= 2 ? null : (
-            <p className="mt-3 font-mono text-[10px] text-(--text-muted)">
-              {copy.relationalTreeSelectedInputsLabel}: {selectedInputIds.length}
-            </p>
-          )}
-          {!hasOperands ? null : (
-            <div className="mt-4 flex flex-wrap gap-2 border-t border-(--border-subtle) pt-3">
-              <Button
-                type="button"
-                size="sm"
-                data-slot="canvas-relational-tree-apply"
-                disabled={!ready}
-                onClick={onApply}
-              >
-                {copy.inspectorDvtRelationalApply}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                data-slot="canvas-relational-tree-cancel"
-                onClick={onCancel}
-              >
-                {copy.inspectorDvtRelationalCancel}
-              </Button>
-            </div>
-          )}
+          <CanvasRelationalTreeOperandSlot
+            copy={copy}
+            input={secondaryInputId == null ? null : (inputById.get(secondaryInputId) ?? null)}
+            position="secondary"
+            onPlaceInput={onPlaceInput}
+          />
         </div>
       </div>
+      <CanvasRelationalTreeOperationPanel
+        appendInput={appendInput}
+        choices={choices}
+        copy={copy}
+        joinDraft={joinDraft}
+        operation={operation}
+        selectedInputIds={selectedInputIds}
+        onAppendJoinInput={onAppendJoinInput}
+        onApply={onApply}
+        onCancel={onCancel}
+        onChangeJoinDraft={onChangeJoinDraft}
+        onSelectOperation={onSelectOperation}
+      />
     </section>
   );
 }

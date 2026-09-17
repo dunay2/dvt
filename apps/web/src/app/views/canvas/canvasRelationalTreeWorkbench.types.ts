@@ -39,6 +39,7 @@ export type CanvasRelationalTreeWorkbenchCopy = Pick<
   | 'relationalTreeInputIdentityUnavailableMessage'
   | 'relationalTreeInvalidMessage'
   | 'relationalTreeLabel'
+  | 'relationalTreeValidMessage'
   | 'relationalTreeMissingLabel'
   | 'relationalTreeOutputLabel'
   | 'relationalTreeParticipatingLabel'
@@ -64,6 +65,7 @@ export type CanvasRelationalTreeCatalogueItem = Readonly<{
   sourceNodeId: string | null;
   state: 'participating' | 'pending' | 'missing';
   treeLocator: string | null;
+  fieldCount: number | null;
   selectable?: boolean;
   selected?: boolean;
   reason?: string | null;

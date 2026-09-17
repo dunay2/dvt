@@ -98,12 +98,14 @@ describe('Canvas relational-tree Workbench', () => {
       .and('contain.text', 'Left input')
       .and('contain.text', 'Right input');
     cy.get('[data-slot="canvas-relational-tree-layout"]')
-      .should('have.attr', 'data-layout', 'branching')
+      .should('have.attr', 'data-layout', 'graph')
+      .and('have.attr', 'data-direction', 'left-to-right')
       .find('[data-slot="canvas-relational-tree-children"][data-child-count="2"]')
       .should('exist');
     cy.get('[data-slot="canvas-relational-tree-viewport"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-tree-detail"]')
       .should('be.visible')
+      .and('have.attr', 'data-position', 'contextual')
       .and('contain.text', 'JOIN');
     cy.get('[data-slot="canvas-relational-tree-zoom"]').should('have.text', '100%');
 

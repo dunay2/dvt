@@ -16,6 +16,7 @@ const COPY = {
   reactFlowZoomInLabel: 'Zoom in',
   reactFlowZoomOutLabel: 'Zoom out',
   relationalTreeLabel: 'Relational tree',
+  relationalTreeValidMessage: 'Valid expression',
   relationalTreeOutputLabel: 'Output',
   relationalTreePrimaryInputLabel: 'Primary input',
   relationalTreeSecondaryInputTemplate: 'Secondary input {ordinal}',
@@ -68,6 +69,7 @@ describe('Canvas relational-tree branching view', () => {
     act(() => {
       root.render(
         <CanvasRelationalTreeView
+          outputName="Model 1"
           root={tree}
           selectedLocator="set"
           copy={COPY}
@@ -80,7 +82,12 @@ describe('Canvas relational-tree branching view', () => {
       container
         .querySelector('[data-slot="canvas-relational-tree-layout"]')
         ?.getAttribute('data-layout')
-    ).toBe('branching');
+    ).toBe('graph');
+    expect(
+      container
+        .querySelector('[data-slot="canvas-relational-tree-layout"]')
+        ?.getAttribute('data-direction')
+    ).toBe('left-to-right');
     expect(
       container
         .querySelector('[data-slot="canvas-relational-tree-children"]')
@@ -88,10 +95,20 @@ describe('Canvas relational-tree branching view', () => {
     ).toBe('3');
     expect(container.querySelectorAll('[role="treeitem"]')).toHaveLength(4);
     expect(container.textContent).toContain('Secondary input 3');
+    const rootLeft = Number.parseFloat(
+      container.querySelector<HTMLElement>('[data-locator="set"]')?.closest<HTMLElement>('li')
+        ?.style.left ?? '0'
+    );
     const leafPositions = Array.from(
       container.querySelectorAll<HTMLElement>('li[data-parent-locator="set"]')
-    ).map((item) => item.style.left);
-    expect(new Set(leafPositions).size).toBe(3);
+    ).map((item) => Number.parseFloat(item.style.left));
+    expect(leafPositions.every((left) => left < rootLeft)).toBe(true);
+    const outputLeft = Number.parseFloat(
+      container.querySelector<HTMLElement>('[data-slot="canvas-relational-tree-output"]')?.style
+        .left ?? '0'
+    );
+    expect(outputLeft).toBeGreaterThan(rootLeft);
+    expect(container.textContent).toContain('Model 1');
     expect(container.querySelector('[data-slot="canvas-relational-tree-zoom"]')?.textContent).toBe(
       '100%'
     );

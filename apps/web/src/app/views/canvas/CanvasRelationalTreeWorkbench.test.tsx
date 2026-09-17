@@ -31,6 +31,7 @@ const COPY = {
   relationalTreeInputIdentityUnavailableMessage: 'Input identity unavailable.',
   relationalTreeInvalidMessage: 'The canonical relational tree could not be read.',
   relationalTreeLabel: 'Relational tree',
+  relationalTreeValidMessage: 'Valid expression',
   relationalTreeMissingLabel: 'Missing',
   relationalTreeOutputLabel: 'Output',
   relationalTreeParticipatingLabel: 'Participating',
@@ -154,7 +155,7 @@ describe('Canvas relational-tree Workbench', () => {
     target.dispatchEvent(drop);
   }
 
-  it('presents one catalogue, canonical tree and selected-node detail', () => {
+  it('presents one catalogue, graph and contextual selected-node panel', () => {
     const clients = sourceNode('clients', 'clients');
     const orders = sourceNode('orders', 'orders');
     const draft = createDvtSubstraitInnerJoinDraft({
@@ -201,15 +202,21 @@ describe('Canvas relational-tree Workbench', () => {
       container.querySelector('[data-slot="canvas-relational-tree-inspection"]')
     ).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-relational-tree-viewport"]')).not.toBeNull();
+    const detail = container.querySelector('[data-slot="canvas-relational-tree-detail"]');
+    expect(detail?.tagName).toBe('ASIDE');
+    expect(detail?.getAttribute('data-position')).toBe('contextual');
+    expect(detail?.textContent).toContain('JOIN');
+    expect(container.textContent).toContain('Orders with clients');
     expect(
-      container.querySelector('[data-slot="canvas-relational-tree-detail"]')?.textContent
-    ).toContain('JOIN');
+      container.querySelector('[data-slot="canvas-relational-tree-source"]')?.textContent
+    ).toContain('Columns: 1');
 
     const source = container.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-relational-tree-source"]'
     );
     expect(source?.disabled).toBe(false);
     act(() => source?.click());
+    expect(source?.getAttribute('aria-pressed')).toBe('true');
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-detail"]')?.textContent
     ).toContain('READ');
@@ -384,7 +391,7 @@ describe('Canvas relational-tree Workbench', () => {
     ).toHaveLength(2);
   });
 
-  it('authors in central operand slots with no right rail and writes only on Apply', () => {
+  it('authors in central operand slots with one contextual editor and writes only on Apply', () => {
     const customers = sourceNode('customers', 'customers');
     const orders = sourceNode('orders', 'orders');
     const transform = transformNode();
@@ -413,6 +420,9 @@ describe('Canvas relational-tree Workbench', () => {
     expect(container.querySelector('[data-slot="canvas-relational-tree-authoring"]')).toBeNull();
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="canvas-relational-tree-operation-panel"]')
     ).not.toBeNull();
 
     const primarySlot = container.querySelector<HTMLElement>(

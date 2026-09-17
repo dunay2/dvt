@@ -82,7 +82,12 @@ export function useCanvasRelationalTreeWorkbenchModel(
             nodes: args.nodes,
             root: projection.root,
           });
-    if (!authoringAvailable) return base;
+    if (!authoringAvailable) {
+      return base.map((item) => ({
+        ...item,
+        selected: item.treeLocator != null && item.treeLocator === selectedLocator,
+      }));
+    }
     const candidateById = new Map(session.candidates.map((item) => [item.nodeId, item] as const));
     return base.map((item) => {
       const candidate =
@@ -112,6 +117,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
     session.candidates,
     session.operation,
     session.selectedInputIds,
+    selectedLocator,
   ]);
   const selectedNode =
     projection == null
