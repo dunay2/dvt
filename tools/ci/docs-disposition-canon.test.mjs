@@ -117,6 +117,7 @@ test('retired historical packs and generators cannot return', () => {
     'docs/archive',
     'docs/planning/archive',
     'docs/planning/proposals/superseded/runtime-and-contracts',
+    'docs/planning/proposals/superseded/runtime-and-delivery',
     'docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md',
     'docs/planning/status/planner-local-doc-triage-20260320.md',
     'docs/planning/status/root-local-doc-triage-20260417.md',
@@ -224,5 +225,24 @@ test('retired efficiency playbook has no live local consumers', () => {
     'pnpm verify:prepush',
   ]) {
     assert.ok(guide.includes(marker), `missing retained practice: ${marker}`);
+  }
+});
+
+test('retired runtime delivery plans have no tracked consumers', () => {
+  const retiredNames = [
+    'dvt_production_readiness_corrected_review_and_roadmap.md',
+    'gap4-backpressure-admission-pr4-planb-20260326.md',
+    'superseded/runtime-and-delivery',
+  ];
+  const files = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
+    .split('\0')
+    .filter(Boolean);
+  for (const path of files) {
+    if (path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
+    if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
+    const content = readRepoFile(path);
+    for (const name of retiredNames) {
+      assert.equal(content.includes(name), false, `retired runtime delivery reference: ${path}`);
+    }
   }
 });

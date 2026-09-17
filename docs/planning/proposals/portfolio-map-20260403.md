@@ -12,7 +12,6 @@ planning_type: proposal
 
 - `mandatory/`: proposals required for current governance and delivery closure.
 - `nice-to-have/`: proposals with clear value but not on the critical path.
-- `superseded/`: proposals replaced by newer execution surfaces.
 - `disposable/`: experiments, one-off artifacts, and non-committed exploratory material.
 - `tradeoffs/`: portfolio-level effort, rationale, and opportunity-cost analysis.
 
@@ -104,7 +103,3 @@ planning_type: proposal
 - [DVT UI workbench architecture proposal 2026-04-04](./nice-to-have/frontend-and-ux/dvt-ui-workbench-architecture-proposal-20260404.md)
 - [Canvas Controller Document First Hard Gate](./nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md)
 - [Platform And AI](./nice-to-have/platform-and-ai/dvt-ai-first-cli-proposal.md)
-
-## Superseded
-
-- [Runtime And Delivery](./superseded/runtime-and-delivery/gap4-backpressure-admission-pr4-planb-20260326.md)
