@@ -2,7 +2,7 @@
 title: AI Work Protocol
 status: Active
 owner: docs
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-17
 ---
 
 # AI Work Protocol
@@ -132,6 +132,10 @@ it is not a substitute for GitHub issue lifecycle.
 
 Validate the smallest affected scope first, then the repository gates required by
 the changed surfaces.
+
+Select ARC artifacts through the single [ARC-0 Fast Path](../../AGENTS.md#arc-0-fast-path)
+and [ARC Artifacts When Required](../../AGENTS.md#arc-artifacts-when-required)
+procedure in `AGENTS.md`. Do not duplicate the trigger catalog here.
 
 Minimum closeout expectations for an implementation slice:
 
