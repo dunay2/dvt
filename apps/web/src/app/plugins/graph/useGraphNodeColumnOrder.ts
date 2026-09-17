@@ -80,6 +80,7 @@ export function useGraphNodeColumnOrder<TColumn extends OrderableColumn>(
     setOrderedIds((existing) => {
       const reconciledIds: string[] = [];
       const usedIds = new Set<string>();
+      let unmatchedPreviousCount = 0;
       for (const existingId of existing) {
         if (columnsById.has(existingId)) {
           reconciledIds.push(existingId);
@@ -88,20 +89,33 @@ export function useGraphNodeColumnOrder<TColumn extends OrderableColumn>(
         }
 
         const previousName = previousColumnsById.get(existingId)?.name;
-        if (previousName == null) continue;
+        if (previousName == null) {
+          unmatchedPreviousCount += 1;
+          continue;
+        }
         const previousNameCount = [...previousColumnsById.values()].filter(
           (column) => column.name === previousName
         ).length;
         const currentMatches = currentIds.filter(
           (currentId) => columnsById.get(currentId)?.name === previousName
         );
-        if (previousNameCount !== 1 || currentMatches.length !== 1) continue;
+        if (previousNameCount !== 1 || currentMatches.length !== 1) {
+          unmatchedPreviousCount += 1;
+          continue;
+        }
         const replacementId = currentMatches[0]!;
-        if (usedIds.has(replacementId)) continue;
+        if (usedIds.has(replacementId)) {
+          unmatchedPreviousCount += 1;
+          continue;
+        }
         reconciledIds.push(replacementId);
         usedIds.add(replacementId);
       }
-      return [...reconciledIds, ...currentIds.filter((currentId) => !usedIds.has(currentId))];
+      const unmatchedCurrentIds = currentIds.filter((currentId) => !usedIds.has(currentId));
+      if (unmatchedPreviousCount > 0 && unmatchedCurrentIds.length > 0) {
+        return currentIds;
+      }
+      return [...reconciledIds, ...unmatchedCurrentIds];
     });
     previousColumnsByIdRef.current = columnsById;
   }, [columnsById, currentIdsKey]);
