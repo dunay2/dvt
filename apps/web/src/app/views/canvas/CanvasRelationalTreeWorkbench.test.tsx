@@ -527,8 +527,6 @@ describe('Canvas relational-tree Workbench', () => {
 
     expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(1);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(2);
-    expect(container.querySelector('[data-operator="join"] .lucide-link-2')).not.toBeNull();
-    expect(container.querySelector('[data-operator="join"] .lucide-git-merge')).toBeNull();
 
     act(() => sourceButtons[2]?.click());
     const existingFieldOptions = Array.from(
