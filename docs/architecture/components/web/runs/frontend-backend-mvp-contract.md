@@ -19,9 +19,7 @@ This contract is route-truth only. It does not introduce new backend behavior.
 
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
-- `docs/planning/state/planning-control-tower.md`
 - `docs/planning/state/github-mvp-issue-workflow.md`
-- `docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md`
 - `docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md`
 - `docs/architecture/components/web/runs/start-run-client-identity-boundary.md`
 - `docs/adr/adr-0050-platform-owned-start-run-identity.md`
