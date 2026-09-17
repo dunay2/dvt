@@ -1,0 +1,175 @@
+name: Isolated runtime delivery review correction
+on:
+  push:
+    branches: [automation/3004-retire-runtime-delivery-20260917]
+    paths: [.github/workflows/runtime-delivery-review.yml]
+permissions:
+  contents: write
+jobs:
+  correct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GIT_BASE: 860f9664506edb4fee507e0f41503ad2892e7b7e
+      GIT_HEAD: HEAD
+      PLANNING_DB_INTEGRITY_SCOPE: bootstrap
+    steps:
+      - name: Checkout the reviewed candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: b8bbffcc621c2052b08be1a1e79c64cd96bd2cf8
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+      - name: Reproduce the missed category consumer and correct it
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/runtime3004-review"
+          python - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'runtime3004-review'
+          assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()=='b8bbffcc621c2052b08be1a1e79c64cd96bd2cf8'
+          guard=pathlib.Path('tools/ci/docs-disposition-canon.test.mjs')
+          tradeoff=pathlib.Path('docs/planning/proposals/tradeoffs/proposal-portfolio-tradeoffs-20260403.md')
+          def blob(data): return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+          assert blob(guard.read_bytes())=='b815bdb6227b18c602c9d6bc499272cc1b6a4d90'
+          assert blob(tradeoff.read_bytes())=='fe67ec5f8f70ae709bafb93080c953d8c1f39a9f'
+          (out/'tradeoff-before.md').write_bytes(tradeoff.read_bytes())
+          text=guard.read_text()
+          anchor="    'gap4-backpressure-admission-pr4-planb-20260326.md',\n"
+          assert text.count(anchor)==1
+          guard.write_text(text.replace(anchor,anchor+"    'superseded/runtime-and-delivery',\n"))
+          command=['node','--test',str(guard)]
+          def run(name,code):
+            result=subprocess.run(command,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+            (out/name).write_text(result.stdout);print(result.stdout)
+            assert result.returncode==code,(name,result.returncode)
+            return result.stdout
+          red=run('red.log',1)
+          assert '# pass 5' in red and '# fail 1' in red and 'retired runtime delivery reference: '+str(tradeoff) in red
+          source=tradeoff.read_text()
+          lines=source.splitlines(keepends=True)
+          rows=[line for line in lines if line.startswith('| `superseded/runtime-and-delivery`')]
+          assert len(rows)==2
+          source=''.join(line for line in lines if line not in rows)
+          for line in ['  P --> C[superseded]\n','  C --> G3[Historical context only]\n']:
+            assert source.count(line)==1
+            source=source.replace(line,'')
+          old='- Lower delivery noise by isolating superseded/disposable material.\n'
+          assert source.count(old)==1
+          source=source.replace(old,'- Lower delivery noise by retiring obsolete plans and separating exploratory material.\n')
+          old='4. Keep `superseded/*` and `disposable/*` out of active sprint commitments.\n'
+          assert source.count(old)==1
+          source=source.replace(old,'4. Keep `disposable/*` out of active sprint commitments. Retire obsolete proposals\n   through the [Historical Material Rule](../../status/governance-document-rule-inventory.md#historical-material-rule).\n')
+          assert 'superseded' not in source
+          tradeoff.write_text(source)
+          green=run('green.log',0)
+          assert '# pass 6' in green and '# fail 0' in green
+          agents=pathlib.Path('AGENTS.md');saved=agents.read_bytes()
+          try:
+            agents.write_bytes(saved+b'\n- superseded/runtime-and-delivery\n')
+            negative=run('category-reintroduction.log',1)
+            assert 'retired runtime delivery reference: AGENTS.md' in negative
+          finally:
+            agents.write_bytes(saved)
+          for name in ['dvt_production_readiness_corrected_review_and_roadmap.md','gap4-backpressure-admission-pr4-planb-20260326.md']:
+            path=pathlib.Path('docs/planning/proposals/superseded/runtime-and-delivery')/name
+            original=subprocess.check_output(['git','show',os.environ['GIT_BASE']+':'+str(path)])
+            try:
+              path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(original)
+              negative=run(name+'.reintroduction.log',1)
+              assert 'docs/planning/proposals/superseded/runtime-and-delivery' in negative
+            finally:
+              path.unlink(missing_ok=True);path.parent.rmdir()
+          tracked=subprocess.check_output(['git','ls-files','-z'],text=True).split('\0')
+          markers=['dvt_production_readiness_corrected_review_and_roadmap.md','gap4-backpressure-admission-pr4-planb-20260326.md','superseded/runtime-and-delivery']
+          found={marker:[] for marker in markers}
+          for name in tracked:
+            path=pathlib.Path(name)
+            if not name or name==str(guard) or not path.is_file(): continue
+            content=path.read_bytes().decode('utf-8',errors='replace')
+            for marker in markers:
+              if marker in content: found[marker].append(name)
+          assert all(not paths for paths in found.values()),found
+          (out/'consumers-after.json').write_text(json.dumps(found,indent=2)+'\n')
+          assert set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())=={str(guard),str(tradeoff)}
+          PY
+      - name: Commit the correction with the existing helper and enabled hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/runtime3004-review"
+          git config user.name "DVT documentation maintenance"
+          git config user.email "34416258+dunay2@users.noreply.github.com"
+          git switch -c docs/3004-retire-runtime-delivery-plans
+          git add tools/ci/docs-disposition-canon.test.mjs docs/planning/proposals/tradeoffs/proposal-portfolio-tradeoffs-20260403.md
+          pnpm commit docs docs "Reconcile retired proposal category consumers" 2>&1 | tee "$out/commit.log"
+          git rev-parse HEAD > "$out/head.txt"
+          git rev-parse HEAD^{tree} > "$out/tree.txt"
+      - name: Bootstrap the disposable CI database from this committed candidate
+        uses: ./.github/actions/prepare-planning-db
+      - name: Refresh canonical docs and governance outputs without database rebuilding
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/runtime3004-review"
+          pnpm docs:sync 2>&1 | tee "$out/docs-sync.log"
+          pnpm governance:refresh 2>&1 | tee "$out/governance-refresh.log"
+          git diff --exit-code HEAD
+          test -z "$(git status --porcelain)"
+      - name: Validate the complete corrected candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/runtime3004-review"
+          node --test scripts/ai-preflight.test.cjs scripts/check-ai-efficiency-adoption.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/docs-disposition-canon.test.mjs tools/ci/startup-card-canon.test.mjs tools/ci/arc-policy-state-store.test.mjs 2>&1 | tee "$out/tests.log"
+          node tools/ci/arc-check.mjs > "$out/arc.json"
+          pnpm docs:sync:check 2>&1 | tee "$out/docs-sync-check.log"
+          pnpm docs:gov:manifest:check 2>&1 | tee "$out/manifest-check.log"
+          pnpm ci:docs 2>&1 | tee "$out/ci-docs.log"
+          pnpm verify:prepush 2>&1 | tee "$out/prepush.log"
+          pnpm pr:validate-title "docs(docs): Retire superseded runtime delivery plans" 2>&1 | tee "$out/title.log"
+          git diff --exit-code HEAD
+          test -z "$(git status --porcelain)"
+          git diff --exit-code "$GIT_BASE" HEAD -- .arc-policy.yaml AGENTS.md CLAUDE.md .github apps packages scripts docs/adr docs/evidence docs/risk-register docs/runbooks docs/guides tools/ci/arc-check.mjs tools/ci/doc-check.mjs
+          git rev-parse HEAD > "$out/validated.txt"
+          git diff --binary "$GIT_BASE" HEAD > "$out/candidate.patch"
+          git diff --binary b8bbffcc621c2052b08be1a1e79c64cd96bd2cf8 HEAD > "$out/review-correction.patch"
+          git diff --stat "$GIT_BASE" HEAD > "$out/stats.txt"
+          git diff --name-status "$GIT_BASE" HEAD > "$out/name-status.txt"
+          python - <<'PY'
+          import os,subprocess
+          prefix='docs/planning/proposals/superseded/runtime-and-delivery/'
+          deleted={prefix+'dvt_production_readiness_corrected_review_and_roadmap.md',prefix+'gap4-backpressure-admission-pr4-planb-20260326.md'}
+          expected=deleted|{'docs/planning/proposals/portfolio-map-20260403.md','docs/planning/proposals/tradeoffs/proposal-portfolio-tradeoffs-20260403.md','tools/ci/docs-disposition-canon.test.mjs'}
+          base=os.environ['GIT_BASE']
+          assert set(subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines())==expected
+          assert set(subprocess.check_output(['git','diff','--name-only','--diff-filter=D',base,'HEAD'],text=True).splitlines())==deleted
+          PY
+      - name: Advance only the existing topic branch without force
+        shell: bash
+        run: |
+          set -euo pipefail
+          current=$(git ls-remote origin refs/heads/docs/3004-retire-runtime-delivery-plans | cut -f1)
+          test "$current" = b8bbffcc621c2052b08be1a1e79c64cd96bd2cf8
+          git push origin HEAD:refs/heads/docs/3004-retire-runtime-delivery-plans 2>&1 | tee "$RUNNER_TEMP/runtime3004-review/push.log"
+      - name: Record artifact integrity
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,pathlib
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'runtime3004-review';out.mkdir(exist_ok=True)
+          sums={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(out.iterdir()) if p.is_file() and p.name!='checksums.json'}
+          (out/'checksums.json').write_text(json.dumps(sums,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: runtime-delivery-3004-review-validation
+          path: ${{ runner.temp }}/runtime3004-review
+          if-no-files-found: error
+          retention-days: 7
