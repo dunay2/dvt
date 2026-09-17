@@ -13,7 +13,6 @@ planning_type: proposal
 - `mandatory/`: proposals required for current governance and delivery closure.
 - `nice-to-have/`: proposals with clear value but not on the critical path.
 - `disposable/`: experiments, one-off artifacts, and non-committed exploratory material.
-- `tradeoffs/`: portfolio-level effort, rationale, and opportunity-cost analysis.
 
 ## Mandatory
 
@@ -33,8 +32,6 @@ planning_type: proposal
   2026-05-24](./mandatory/governance-and-docs/documentation-usability-canon-plan-20260524.md)
 - [Governance startup card canon plan
   2026-05-24](./mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md)
-- [Planning review canon plan
-  2026-05-24](./mandatory/governance-and-docs/planning-review-canon-plan-20260524.md)
 - [API package lint CI plan
   2026-05-26](./mandatory/governance-and-docs/api-package-lint-ci-plan-20260526.md)
 - [Planning Knowledge Rail DB-First Plan

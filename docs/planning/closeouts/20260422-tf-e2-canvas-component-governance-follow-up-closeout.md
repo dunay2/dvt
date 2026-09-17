@@ -154,7 +154,7 @@ Focused documentation validation:
   - passed
 - `pnpm docs:status:generate`
   - passed
-- `pnpm exec markdownlint-cli2 docs/planning/reviews/architecture-and-governance/20260422-canvas-component-governance-follow-up-review.md docs/architecture/components/web/graph/canvas-authoring-projection-component.md docs/architecture/components/web/graph/canvas-route-composition-component.md docs/architecture/components/web/graph/index.md docs/architecture/components/web/graph/graph-frontend-architecture.md docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md docs/architecture/components/web/graph/canvas-component-map-and-modernization-review.md docs/planning/reviews/review-status-board.md docs/planning/closeouts/20260422-tf-e2-canvas-component-governance-follow-up-closeout.md --config .markdownlint-cli2.jsonc --ignore-path .markdownlintignore`
+- [Recorded validation command](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/closeouts/20260422-tf-e2-canvas-component-governance-follow-up-closeout.md#L157)
   - passed
 
 Focused `@dvt/web` validation:

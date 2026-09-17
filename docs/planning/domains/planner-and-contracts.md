@@ -36,4 +36,3 @@ plan-version compatibility.
 ## Diagram Sources
 
 - [Planner and Contracts Architecture Delta](../roadmap/diagrams/planner-contracts-architecture-delta.md)
-- [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)

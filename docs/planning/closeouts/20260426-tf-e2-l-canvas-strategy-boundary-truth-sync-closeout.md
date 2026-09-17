@@ -61,7 +61,7 @@ flowchart LR
 ## Files Changed
 
 - `docs/planning/state/agent-lane-e.yaml`
-- `docs/planning/reviews/review-status-board.md`
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)
 - `docs/planning/reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md`
 - `docs/planning/closeouts/20260426-tf-e2-l-canvas-strategy-boundary-truth-sync-closeout.md`
 - `tools/ci/planning-truth-sync.test.mjs`

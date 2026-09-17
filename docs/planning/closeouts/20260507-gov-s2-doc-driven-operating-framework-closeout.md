@@ -44,7 +44,7 @@ authority visible: `GOV-S2` should close as the canonical framework and
 - `docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md`:
   `GOV-S2` owns one doc-driven operating framework, not parallel governance
   systems.
-- `docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md`:
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md):
   Postgres is a derived planning/governance read model; Git remains canonical.
 
 ### Options considered
@@ -97,7 +97,7 @@ The corrected boundary is:
   - add this closeout and refresh generated governance/planning state.
 - Touched files or paths:
   - `docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md`
-  - `docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md`
+  - [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md)
   - `docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md`
   - `docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md`
   - `docs/planning/state/agent-lane-a.yaml`
@@ -167,7 +167,7 @@ The corrected boundary is:
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md`
-- `docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md`
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md)
 - `docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md`
 
 ### Real work performed

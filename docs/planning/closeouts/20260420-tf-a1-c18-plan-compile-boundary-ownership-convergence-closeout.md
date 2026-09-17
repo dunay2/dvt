@@ -97,7 +97,7 @@ flowchart LR
   - `apps/api/test/application/services/CompilePlanUseCase.test.ts`
   - `docs/architecture/components/api/index.md`
   - `docs/planning/state/agent-lane-a.yaml`
-  - `docs/planning/reviews/review-status-board.md`
+  - [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)
   - `docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md`
   - this closeout
 - Expected outcome:
@@ -125,7 +125,7 @@ flowchart LR
   - `pnpm --filter dvt-api test -- test/modules.test.ts test/application/services/CompilePlanUseCase.test.ts`
   - `pnpm docs:workboard:generate`
   - `pnpm docs:sync`
-  - `pnpm exec markdownlint-cli2 docs/architecture/components/api/index.md docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md docs/planning/reviews/review-status-board.md docs/planning/closeouts/20260420-tf-a1-c18-plan-compile-boundary-ownership-convergence-closeout.md --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc`
+  - [Recorded validation command](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/closeouts/20260420-tf-a1-c18-plan-compile-boundary-ownership-convergence-closeout.md#L128)
   - `pnpm verify:prepush`
 - Test coverage plan:
   - compile planner still rejects kinds outside the boundary profile
@@ -172,7 +172,7 @@ flowchart LR
   - Passed.
 - `pnpm docs:sync`
   - Passed.
-- `pnpm exec markdownlint-cli2 docs/architecture/components/api/index.md docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md docs/planning/reviews/review-status-board.md docs/planning/closeouts/20260420-tf-a1-c18-plan-compile-boundary-ownership-convergence-closeout.md docs/planning/state/open-task-route.md docs/planning/state/execution-workboard.md docs/planning/state/agent-lane-a.md docs/planning/status/generated-code-state.md --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc`
+- [Recorded validation command](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/closeouts/20260420-tf-a1-c18-plan-compile-boundary-ownership-convergence-closeout.md#L175)
   - Passed.
 - `pnpm verify:prepush`
   - Passed.

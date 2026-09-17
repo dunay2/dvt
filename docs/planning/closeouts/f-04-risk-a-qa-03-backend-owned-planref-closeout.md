@@ -68,7 +68,7 @@ runtime path.
   - `docs/architecture/frontend/runs/frontend-runtime-contract-technical-manual.md`
   - `docs/architecture/frontend/f04-frontend-data-boundary-technical-manual-20260404.md`
   - `docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md`
-  - `docs/planning/reviews/review-status-board.md`
+  - [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)
   - `docs/planning/state/agent-lane-e.yaml`
   - `apps/web/src/app/services/plans/plansService.test.ts`
 - Expected outcome:
@@ -99,16 +99,16 @@ runtime path.
 
 ## Changes made
 
-| File or path                                                                              | Change                                                                                  | Why                                                                                           |
-| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `apps/web/src/app/services/plans/plansService.test.ts`                                    | Added `importPlan` success and missing-`planRef` regression tests.                      | Makes adapter coverage symmetric for preview and import under backend-owned `planRef`.        |
-| `docs/architecture/frontend/runs/frontend-backend-mvp-contract.md`                        | Added `/plans/preview` and `/plans/import` to the frontend-facing backend contract.     | The web app already relies on these routes for the `PlanRef` handoff and the doc must say so. |
-| `docs/architecture/frontend/runs/frontend-runtime-contract-technical-manual.md`           | Added the `PlanRef` handoff prerequisite section.                                       | Keeps runtime contract docs aligned with preview/import plus start-run sequencing.            |
-| `docs/architecture/frontend/f04-frontend-data-boundary-technical-manual-20260404.md`      | Clarified that API-mode `planRef` is backend-owned and never reconstructed client-side. | Aligns the `F-04` technical manual with current code truth.                                   |
-| `docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md` | Added a 2026-04-07 resolution update and closed the `QA-03` checklist item.             | Keeps the original hard-QA artifact truthful without erasing the historical finding.          |
-| `docs/planning/reviews/review-status-board.md`                                            | Registered the `F04-RISK-A` QA review in the canonical review board.                    | Makes the active review discoverable from the planning entrypoint.                            |
-| `docs/planning/state/agent-lane-e.yaml`                                                   | Updated `F-04`, `F-04-RISK`, `F-04-RISK-A`, and `F-04-RISK-A-QA-03` to current truth.   | Removes the stale claim that `QA-03` is still open.                                           |
-| `docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md`             | Added this closeout artifact.                                                           | Records the rationale, evidence, and scope of the closure.                                    |
+| File or path                                                                                                                                                                   | Change                                                                                  | Why                                                                                           |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `apps/web/src/app/services/plans/plansService.test.ts`                                                                                                                         | Added `importPlan` success and missing-`planRef` regression tests.                      | Makes adapter coverage symmetric for preview and import under backend-owned `planRef`.        |
+| `docs/architecture/frontend/runs/frontend-backend-mvp-contract.md`                                                                                                             | Added `/plans/preview` and `/plans/import` to the frontend-facing backend contract.     | The web app already relies on these routes for the `PlanRef` handoff and the doc must say so. |
+| `docs/architecture/frontend/runs/frontend-runtime-contract-technical-manual.md`                                                                                                | Added the `PlanRef` handoff prerequisite section.                                       | Keeps runtime contract docs aligned with preview/import plus start-run sequencing.            |
+| `docs/architecture/frontend/f04-frontend-data-boundary-technical-manual-20260404.md`                                                                                           | Clarified that API-mode `planRef` is backend-owned and never reconstructed client-side. | Aligns the `F-04` technical manual with current code truth.                                   |
+| `docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md`                                                                                      | Added a 2026-04-07 resolution update and closed the `QA-03` checklist item.             | Keeps the original hard-QA artifact truthful without erasing the historical finding.          |
+| [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)                         | Registered the `F04-RISK-A` QA review in the canonical review board.                    | Makes the active review discoverable from the planning entrypoint.                            |
+| `docs/planning/state/agent-lane-e.yaml`                                                                                                                                        | Updated `F-04`, `F-04-RISK`, `F-04-RISK-A`, and `F-04-RISK-A-QA-03` to current truth.   | Removes the stale claim that `QA-03` is still open.                                           |
+| [Historical closeout](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md) | Added this closeout artifact.                                                           | Records the rationale, evidence, and scope of the closure.                                    |
 
 ## TDD / Test Notes
 

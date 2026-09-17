@@ -117,7 +117,7 @@ No critical findings remain in the reviewed slice.
 - Commands executed:
   - `pnpm --filter @dvt/contracts test -- test/validation.test.ts test/signalSemantics.test.ts`
   - `pnpm --filter @dvt/engine test -- test/idempotency.vectors.test.ts test/core/WorkflowEngineCoreService.test.ts`
-  - `pnpm exec markdownlint-cli2 docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md docs/architecture/engine/contracts/engine/SignalsAndAuth.v1.md docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md docs/architecture/engine/contracts/engine/RunEvents.v1.md docs/adr/ADR-0048-retry-step-as-separate-engine-use-case.md docs/evidence/ED-20260407-retry-step-boundary-narrowing.md docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md docs/planning/reviews/review-status-board.md`
+  - [Recorded validation command](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md#L120)
   - `pnpm verify:prepush`
 - What passed:
   - scoped `@dvt/contracts` tests

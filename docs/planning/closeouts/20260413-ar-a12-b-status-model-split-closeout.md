@@ -105,7 +105,7 @@ flowchart LR
 - Touched files or paths:
   - `docs/planning/closeouts/20260413-ar-a12-b-status-model-split-closeout.md`
   - `docs/planning/state/agent-lane-a.yaml`
-  - `docs/planning/reviews/review-status-board.md`
+  - [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)
   - selected active docs under `docs/architecture/**`, `docs/planning/**`,
     and `apps/web/*.md`
   - `packages/@dvt/contracts/src/types/contracts.ts`

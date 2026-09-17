@@ -559,7 +559,7 @@ None exist. No normative document states the maximum acceptable latency for:
 The `IntentReconcilerWorker` runs reconciliation to detect orphaned intents. If two
 instances of the worker run concurrently (e.g., during a rolling deploy), both may
 reconcile the same intent. ADR-0033 covers outbox worker sharding with fencing. No
-equivalent fencing model exists for the intent reconciler. Board 015 (`board-015-intent-reconciler-distributed-lease.md`) addresses this, but it is still in the sprint
+equivalent fencing model exists for the intent reconciler. Board 015 ([Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/sprints/sprint-2026-04c/board-015-intent-reconciler-distributed-lease.md)) addresses this, but it is still in the sprint
 board state, not closed.
 
 ---

@@ -21,7 +21,7 @@ component guides, and closeouts as the only execution authorities.
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/planning/reviews/review-status-board.md`
+- `docs/planning/state/github-mvp-issue-workflow.md`
 - `docs/planning/status/ai-efficiency-adoption-status.md`
 - `docs/architecture/components/ci-governance/index.md`
 - `docs/planning/domains/event-lifecycle-and-retention.md`
@@ -123,7 +123,7 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/planning/reviews/review-status-board.md
+  - docs/planning/state/github-mvp-issue-workflow.md
   - docs/planning/status/ai-efficiency-adoption-status.md
   - docs/planning/domains/event-lifecycle-and-retention.md
 allowedImplementationSurfaces:
@@ -137,7 +137,6 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/index.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md
   - docs/planning/proposals/portfolio-map-20260403.md
-  - docs/planning/reviews/review-status-board.md
   - docs/planning/state/agent-lane-d.md
   - docs/planning/state/execution-workboard.md
   - docs/planning/state/open-task-route.md
@@ -191,7 +190,6 @@ redGreenCycles:
       - docs/planning/proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md
       - docs/architecture/components/ci-governance/ci-retention-review-canon-component.md
       - docs/architecture/components/ci-governance/ci-retention-review-canon-user-stories.md
-      - docs/planning/reviews/review-status-board.md
       - docs/planning/domains/event-lifecycle-and-retention.md
       - buzon/20260523-codex-fowler-ci-retention-review-canon.md
     greenTest: node --test tools/ci/ci-retention-review-canon.test.mjs
