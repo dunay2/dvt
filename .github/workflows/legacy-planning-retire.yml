@@ -17,15 +17,16 @@ jobs:
       - name: Read the isolated reviewed implementation
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: fc166f32732c566e7016c18c40b6d1dfc384baa8
+          ref: 52bbc01816e3bf100e46bbd111c1cb36c0b0a004
           persist-credentials: false
       - name: Keep preparation outside the product checkout
         shell: bash
         run: |
           set -euo pipefail
           cp .github/maintenance/retire-legacy-planning.py "$RUNNER_TEMP/retire-legacy-planning.py"
+          cp .github/maintenance/reconcile-closeout-names.py "$RUNNER_TEMP/reconcile-closeout-names.py"
           mkdir -p "$RUNNER_TEMP/legacy-planning-result"
-          sha256sum "$RUNNER_TEMP/retire-legacy-planning.py" > "$RUNNER_TEMP/legacy-planning-result/preparation-sha256.txt"
+          sha256sum "$RUNNER_TEMP/retire-legacy-planning.py" "$RUNNER_TEMP/reconcile-closeout-names.py" > "$RUNNER_TEMP/legacy-planning-result/preparation-sha256.txt"
       - name: Checkout the exact product baseline
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -35,12 +36,13 @@ jobs:
       - uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
-      - name: Prove retirement red, reconcile consumers and test all restoration cases
+      - name: Prove retirement red and reconcile consumers and canonical filenames
         shell: bash
         run: |
           set -euo pipefail
           export AUDIT_OUT="$RUNNER_TEMP/legacy-planning-result"
           python "$RUNNER_TEMP/retire-legacy-planning.py" | tee "$AUDIT_OUT/preparation-summary.json"
+          python "$RUNNER_TEMP/reconcile-closeout-names.py" | tee "$AUDIT_OUT/naming-summary.json"
           git diff --check
       - name: Commit only the approved paths with helper and enabled hooks
         shell: bash
@@ -53,10 +55,10 @@ jobs:
           python - <<'PY'
           import json,os,pathlib,subprocess
           scope=json.loads((pathlib.Path(os.environ['AUDIT_OUT'])/'scope.json').read_text())
-          paths=sorted(set(scope['deleted'])|set(scope['modified']))
-          assert len(paths)==83
+          paths=sorted(set(scope['deleted'])|set(scope['modified'])|set(scope['renamed'])|{v['path'] for v in scope['renamed'].values()})
+          assert len(paths)==86
           subprocess.run(['git','add','-A','--',*paths],check=True)
-          assert set(subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines())==set(paths)
+          assert set(subprocess.check_output(['git','diff','--cached','--no-renames','--name-only'],text=True).splitlines())==set(paths)
           PY
           pnpm commit docs docs "Retire legacy sprint boards and task-governance remnants" 2>&1 | tee "$AUDIT_OUT/commit.log"
           git rev-parse HEAD > "$AUDIT_OUT/head.txt"
@@ -90,12 +92,14 @@ jobs:
           python - <<'PY'
           import json,os,pathlib,subprocess
           out=pathlib.Path(os.environ['AUDIT_OUT']);s=json.loads((out/'scope.json').read_text());base=s['baseline']
-          paths=set(s['deleted'])|set(s['modified'])
-          assert set(subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines())==paths
-          assert set(subprocess.check_output(['git','diff','--name-only','--diff-filter=D',base,'HEAD'],text=True).splitlines())==set(s['deleted'])
-          for path,sha in {**s['deleted'],**s['modified']}.items():
+          renamed=s['renamed'];targets={v['path'] for v in renamed.values()}
+          paths=set(s['deleted'])|set(s['modified'])|set(renamed)|targets
+          assert set(subprocess.check_output(['git','diff','--no-renames','--name-only',base,'HEAD'],text=True).splitlines())==paths
+          assert set(subprocess.check_output(['git','diff','--no-renames','--name-only','--diff-filter=D',base,'HEAD'],text=True).splitlines())==set(s['deleted'])|set(renamed)
+          inputs={**s['deleted'],**s['modified'],**{p:v['sha'] for p,v in renamed.items()}}
+          for path,sha in inputs.items():
             assert subprocess.check_output(['git','rev-parse',base+':'+path],text=True).strip()==sha,path
-          final={p:subprocess.check_output(['git','rev-parse','HEAD:'+p],text=True).strip() for p in s['modified']}
+          final={p:subprocess.check_output(['git','rev-parse','HEAD:'+p],text=True).strip() for p in set(s['modified'])|targets}
           (out/'final-blobs.json').write_text(json.dumps(final,indent=2)+'\n')
           PY
           git rev-parse HEAD > "$AUDIT_OUT/validated.txt"
