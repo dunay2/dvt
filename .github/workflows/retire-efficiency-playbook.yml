@@ -40,13 +40,12 @@ jobs:
         run: |
           set -euo pipefail
           python "$RUNNER_TEMP/playbook3004/input.py"
-      - name: Reconcile the curated review index and synchronize documentation
+      - name: Reconcile the curated review index and verify scope
         shell: bash
         run: |
           set -euo pipefail
-          out="$RUNNER_TEMP/playbook3004"
           python - <<'PY'
-          import hashlib,json,os,pathlib
+          import hashlib,json,os,pathlib,subprocess
           p=pathlib.Path('docs/planning/reviews/ci-and-delivery/index.md')
           data=p.read_bytes()
           sha=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
@@ -58,11 +57,6 @@ jobs:
           p.write_text(text.replace(line,''))
           out=pathlib.Path(os.environ['RUNNER_TEMP'])/'playbook3004'
           (out/'curated-index-edit.json').write_text(json.dumps({'path':p.as_posix(),'before':sha,'removed':line,'generated':False},indent=2)+'\n')
-          PY
-          pnpm docs:sync 2>&1 | tee "$out/docs-sync.log"
-          python - <<'PY'
-          import json,os,pathlib,subprocess
-          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'playbook3004'
           changed=set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())
           allowed=set(json.loads((out/'allowed-paths.json').read_text()))
           assert changed <= allowed, sorted(changed-allowed)
@@ -117,13 +111,28 @@ jobs:
           git rev-parse HEAD^{tree} > "$out/tree.txt"
       - name: Bootstrap the disposable CI database from the actual committed candidate
         uses: ./.github/actions/prepare-planning-db
-      - name: Refresh governance without rebuilding the disposable database
+      - name: Synchronize docs and refresh governance without database rebuilding
         shell: bash
         run: |
           set -euo pipefail
-          pnpm governance:refresh 2>&1 | tee "$RUNNER_TEMP/playbook3004/governance-refresh.log"
+          out="$RUNNER_TEMP/playbook3004"
+          pnpm docs:sync 2>&1 | tee "$out/docs-sync.log"
+          pnpm governance:refresh 2>&1 | tee "$out/governance-refresh.log"
+          python - <<'PY'
+          import pathlib,subprocess
+          changed=set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())
+          expected={'docs/planning/index.md','docs/planning/proposals/index.md','docs/planning/reviews/index.md','docs/planning/status/index.md','docs/.manifest.json'}
+          assert changed <= expected,sorted(changed-expected)
+          assert not subprocess.check_output(['git','ls-files','--others','--exclude-standard'],text=True).strip()
+          PY
+          if ! git diff --quiet; then
+            git add -u
+            pnpm commit docs docs "Synchronize generated navigation after playbook retirement" 2>&1 | tee "$out/generated-commit.log"
+          fi
           git diff --exit-code HEAD
           test -z "$(git status --porcelain)"
+          git rev-parse HEAD > "$out/head.txt"
+          git rev-parse HEAD^{tree} > "$out/tree.txt"
       - name: Validate the exact committed candidate
         shell: bash
         run: |
