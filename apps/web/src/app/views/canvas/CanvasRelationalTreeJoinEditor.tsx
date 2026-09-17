@@ -60,6 +60,7 @@ export function CanvasRelationalTreeJoinEditor({
           <label className="block space-y-1 text-[11px] text-(--text-muted)">
             <span>{copy.inspectorDvtSubstraitExistingFieldLabel}</span>
             <select
+              data-slot="canvas-relational-tree-existing-field"
               className={selectClassName}
               value={leftSourceFieldId}
               onChange={(event) => {
@@ -75,7 +76,8 @@ export function CanvasRelationalTreeJoinEditor({
             >
               {outputs.map((output) => (
                 <option key={output.source.fieldId} value={output.source.fieldId}>
-                  {output.name}
+                  {inspection.projection.inputs[output.source.inputIndex]?.table ?? '?'}.
+                  {output.source.name}
                 </option>
               ))}
             </select>
@@ -83,6 +85,7 @@ export function CanvasRelationalTreeJoinEditor({
           <label className="block space-y-1 text-[11px] text-(--text-muted)">
             <span>{copy.inspectorDvtSubstraitConnectedFieldLabel}</span>
             <select
+              data-slot="canvas-relational-tree-connected-field"
               className={selectClassName}
               value={rightFieldName}
               onChange={(event) => setRightFieldName(event.currentTarget.value)}
@@ -94,7 +97,12 @@ export function CanvasRelationalTreeJoinEditor({
               ))}
             </select>
           </label>
-          <Button type="submit" size="sm" disabled={rightFieldName.length === 0}>
+          <Button
+            type="submit"
+            size="sm"
+            data-slot="canvas-relational-tree-append-input"
+            disabled={rightFieldName.length === 0}
+          >
             {copy.inspectorDvtSubstraitAppendInputAction}
           </Button>
         </form>

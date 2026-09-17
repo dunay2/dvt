@@ -1,12 +1,32 @@
-/** Owned concern: transport one Source identity during relational-canvas drag and drop. */
+/** Owned concern: transport Source and operation identities during relational-canvas drag/drop. */
+import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
+
 export const CANVAS_RELATIONAL_SOURCE_DRAG_TYPE = 'application/x-dvt-relational-source';
+export const CANVAS_RELATIONAL_OPERATION_DRAG_TYPE = 'application/x-dvt-relational-operation';
 
 export function writeCanvasRelationalSourceDrag(dataTransfer: DataTransfer, nodeId: string): void {
-  dataTransfer.effectAllowed = 'move';
+  dataTransfer.effectAllowed = 'copyMove';
   dataTransfer.setData(CANVAS_RELATIONAL_SOURCE_DRAG_TYPE, nodeId);
 }
 
 export function readCanvasRelationalSourceDrag(dataTransfer: DataTransfer): string | null {
   const nodeId = dataTransfer.getData(CANVAS_RELATIONAL_SOURCE_DRAG_TYPE).trim();
   return nodeId.length === 0 ? null : nodeId;
+}
+
+export function writeCanvasRelationalOperationDrag(
+  dataTransfer: DataTransfer,
+  operation: CanvasRelationalOperation
+): void {
+  dataTransfer.effectAllowed = 'copyMove';
+  dataTransfer.setData(CANVAS_RELATIONAL_OPERATION_DRAG_TYPE, operation);
+}
+
+export function readCanvasRelationalOperationDrag(
+  dataTransfer: DataTransfer
+): CanvasRelationalOperation | null {
+  const operation = dataTransfer.getData(CANVAS_RELATIONAL_OPERATION_DRAG_TYPE).trim();
+  return operation === 'projection' || operation === 'inner_join' || operation === 'union_all'
+    ? operation
+    : null;
 }
