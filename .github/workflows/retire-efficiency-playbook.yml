@@ -42,11 +42,25 @@ jobs:
         run: |
           set -euo pipefail
           python "$RUNNER_TEMP/playbook3004/input.py"
-      - name: Refresh existing documentation and governance outputs
+      - name: Reconcile the curated review index and refresh generated outputs
         shell: bash
         run: |
           set -euo pipefail
           out="$RUNNER_TEMP/playbook3004"
+          python - <<'PY'
+          import hashlib,json,os,pathlib
+          p=pathlib.Path('docs/planning/reviews/ci-and-delivery/index.md')
+          data=p.read_bytes()
+          sha=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+          assert sha=='a73104619dc532c68213aaf7a71787e72f01402d'
+          policy=json.loads(pathlib.Path('docs/generated-docs-policy.json').read_text())
+          assert all(p.as_posix() not in row['artifacts'] for row in policy['artifactClasses'])
+          line='- [20260328 Lane C AI efficiency and cost review](./20260328-lane-c-ai-efficiency-and-cost-review.md)\n'
+          text=data.decode();assert text.count(line)==1
+          p.write_text(text.replace(line,''))
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'playbook3004'
+          (out/'curated-index-edit.json').write_text(json.dumps({'path':p.as_posix(),'before':sha,'removed':line,'generated':False},indent=2)+'\n')
+          PY
           pnpm docs:sync 2>&1 | tee "$out/docs-sync.log"
           pnpm governance:refresh 2>&1 | tee "$out/governance-refresh.log"
           python - <<'PY'
