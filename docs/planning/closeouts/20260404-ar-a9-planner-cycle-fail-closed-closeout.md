@@ -57,7 +57,7 @@ owner: docs
 ## Implementation
 
 - Added canonical AR-A9 proposal:
-  `docs/planning/proposals/superseded/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md`
+  [Historical proposal](https://github.com/dunay2/dvt/blob/db43c857a8319b356fda98bab78c7dfb55b4606b/docs/planning/proposals/superseded/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md)
 - Added user manual:
   `docs/guides/planner-cycle-detection-user-manual-20260404.md`
 - Added technical manual:
