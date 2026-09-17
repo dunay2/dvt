@@ -11,6 +11,7 @@ type RelationalOperationCopy = Pick<
   CanvasRelationalTreeWorkbenchCopy,
   | 'inspectorDvtSubstraitInnerJoinAction'
   | 'inspectorDvtSubstraitUnionAllAction'
+  | 'relationalTreeProjectOperationLabel'
   | 'inspectorDvtRelationalAvailable'
   | 'inspectorDvtRelationalNeedsPredicate'
   | 'inspectorDvtRelationalNeedsSchemaAlignment'
@@ -23,9 +24,14 @@ export function canvasRelationalOperationLabel(
   operation: CanvasRelationalOperation,
   copy: RelationalOperationCopy = canvasViewCopy
 ): string {
-  return operation === 'inner_join'
-    ? copy.inspectorDvtSubstraitInnerJoinAction
-    : copy.inspectorDvtSubstraitUnionAllAction;
+  switch (operation) {
+    case 'projection':
+      return copy.relationalTreeProjectOperationLabel;
+    case 'inner_join':
+      return copy.inspectorDvtSubstraitInnerJoinAction;
+    case 'union_all':
+      return copy.inspectorDvtSubstraitUnionAllAction;
+  }
 }
 
 export function canvasRelationalAvailabilityLabel(

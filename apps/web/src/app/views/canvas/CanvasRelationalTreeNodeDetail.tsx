@@ -10,10 +10,10 @@ export function CanvasRelationalTreeNodeDetail({
   copy: CanvasRelationalTreeWorkbenchCopy;
 }>): JSX.Element {
   return (
-    <aside
+    <section
       data-slot="canvas-relational-tree-detail"
       aria-label={copy.relationalTreeDetailLabel}
-      className="min-h-0 overflow-auto border-t border-(--border-subtle) p-3 lg:border-l lg:border-t-0"
+      className="min-h-0 overflow-auto border-t border-(--border-subtle) p-3"
     >
       <h3 className="text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)">
         {copy.relationalTreeDetailLabel}
@@ -47,6 +47,6 @@ export function CanvasRelationalTreeNodeDetail({
       <p className="mt-4 border-t border-(--border-subtle) pt-3 text-[10px] text-(--text-muted)">
         {copy.relationalTreeReadOnlyMessage}
       </p>
-    </aside>
+    </section>
   );
 }

@@ -9,7 +9,9 @@ import {
   resolveCanvasRelationalTreeAuthoringCandidates,
   resolveCanvasRelationalTreeAuthoringChoices,
 } from './canvasRelationalTreeAuthoringModel';
+import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
 import { inspectDvtSubstraitNInputJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { inspectDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { inspectDvtSubstraitUnionAllDraft } from './canvasDvtSubstraitSetComposition';
 
 const TARGET_ID = 'transform';
@@ -77,11 +79,26 @@ const edges: CanonicalEdge[] = sources.map((node) => ({
 const inputs = resolveCanvasDvtCompositionInputs({ targetNodeId: TARGET_ID, nodes, edges });
 
 describe('Canvas relational-tree guided authoring model', () => {
-  it('derives the existing operation catalogue from the selected first Source', () => {
+  it('derives unary or multi-input operations from the occupied semantic slots', () => {
     expect(
       resolveCanvasRelationalTreeAuthoringChoices({
         inputs,
-        firstInputId: orders.id,
+        selectedInputIds: [orders.id],
+        readOnly: false,
+        targetNodeId: TARGET_ID,
+        nodes,
+        edges,
+      }).map(({ operation, availability, selectable }) => ({
+        operation,
+        availability,
+        selectable,
+      }))
+    ).toEqual([{ operation: 'projection', availability: 'available', selectable: true }]);
+
+    expect(
+      resolveCanvasRelationalTreeAuthoringChoices({
+        inputs,
+        selectedInputIds: [orders.id, customers.id],
         readOnly: false,
         targetNodeId: TARGET_ID,
         nodes,
@@ -94,6 +111,21 @@ describe('Canvas relational-tree guided authoring model', () => {
     ).toEqual([
       { operation: 'inner_join', availability: 'needs-predicate', selectable: true },
       { operation: 'union_all', availability: 'available', selectable: true },
+    ]);
+  });
+
+  it('builds one canonical PROJECT from a single occupied slot', () => {
+    const draft = createCanvasRelationalTreeProjectionDraft({
+      input: inputs.find((input) => input.nodeId === orders.id)!,
+      targetNodeId: TARGET_ID,
+    });
+    const inspection = inspectDvtSubstraitProjectionDraft(draft);
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.source.table).toBe('orders');
+    expect(inspection.projection.outputs.map((output) => output.name)).toEqual([
+      'customer_id',
+      'value',
     ]);
   });
 

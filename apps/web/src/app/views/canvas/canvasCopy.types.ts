@@ -545,12 +545,17 @@ export type CanvasViewCopy = {
   readonly relationalTreeSourcesLabel: string;
   readonly relationalTreeLabel: string;
   readonly relationalTreeDetailLabel: string;
+  readonly relationalTreeCanvasLabel: string;
+  readonly relationalTreeDropSourceMessage: string;
   readonly relationalTreeParticipatingLabel: string;
   readonly relationalTreePendingLabel: string;
   readonly relationalTreeMissingLabel: string;
   readonly relationalTreeOutputLabel: string;
   readonly relationalTreePrimaryInputLabel: string;
+  readonly relationalTreePrimarySlotLabel: string;
+  readonly relationalTreeProjectOperationLabel: string;
   readonly relationalTreeSecondaryInputTemplate: string;
+  readonly relationalTreeSecondarySlotLabel: string;
   readonly relationalTreeReadOnlyMessage: string;
   readonly relationalTreeUnavailableMessage: string;
   readonly relationalTreeInvalidMessage: string;

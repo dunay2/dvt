@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import DetailSource from './CanvasRelationalTreeNodeDetail.tsx?raw';
+import BlockCanvasSource from './CanvasRelationalTreeBlockCanvas.tsx?raw';
 import CatalogueSource from './CanvasRelationalTreeSourceCatalogue.tsx?raw';
+import OperandSlotSource from './CanvasRelationalTreeOperandSlot.tsx?raw';
 import TreeSource from './CanvasRelationalTreeView.tsx?raw';
 import ZoomSource from './CanvasRelationalTreeZoomControls.tsx?raw';
 import WorkbenchSource from './CanvasRelationalTreeWorkbench.tsx?raw';
@@ -12,6 +14,9 @@ import ApplyCommandSource from './useCanvasRelationalTreeApplyCommand.ts?raw';
 import WorkbenchModelSource from './useCanvasRelationalTreeWorkbenchModel.ts?raw';
 import AuthoringSessionSource from './useCanvasRelationalTreeAuthoringSession.ts?raw';
 import AuthoringModelSource from './canvasRelationalTreeAuthoringModel.ts?raw';
+import AuthoringOptionsSource from './useCanvasRelationalTreeAuthoringOptions.ts?raw';
+import OperandSlotsSource from './useCanvasRelationalOperandSlots.ts?raw';
+import ProjectionAuthoringSource from './canvasRelationalTreeProjectionAuthoring.ts?raw';
 
 describe('Canvas relational-tree Workbench architecture', () => {
   it('keeps query consumption, catalogue, tree and detail in bounded components', () => {
@@ -24,6 +29,11 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(AuthoringSessionSource.split('\n').length).toBeLessThan(180);
     expect(ApplyCommandSource.split('\n').length).toBeLessThan(100);
     expect(AuthoringModelSource.split('\n').length).toBeLessThan(260);
+    expect(BlockCanvasSource.split('\n').length).toBeLessThan(180);
+    expect(OperandSlotSource.split('\n').length).toBeLessThan(80);
+    expect(AuthoringOptionsSource.split('\n').length).toBeLessThan(100);
+    expect(OperandSlotsSource.split('\n').length).toBeLessThan(90);
+    expect(ProjectionAuthoringSource.split('\n').length).toBeLessThan(60);
     expect(WorkbenchModelSource).toContain('projectCanvasRelationalTree');
   });
 
@@ -35,6 +45,8 @@ describe('Canvas relational-tree Workbench architecture', () => {
       TreeSource,
       ZoomSource,
       DetailSource,
+      BlockCanvasSource,
+      OperandSlotSource,
     ].join('\n');
     expect(combined).not.toContain('@xyflow/react');
     expect(combined).not.toContain('applyDvtSubstraitSemanticDocument');
@@ -43,6 +55,10 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(AuthoringSessionSource).toContain('useCanvasRelationalTreeApplyCommand');
     expect(ApplyCommandSource).toContain('authoring?.onApplyNodeDraft(');
     expect(ApplyCommandSource).not.toContain('applyInspectorNodeDraft');
+    expect(WorkbenchSource).not.toContain('CanvasRelationalTreeAuthoringPanel');
+    expect(WorkbenchSource).not.toContain('CanvasRelationalTreeDraftView');
+    expect(WorkbenchSource).not.toContain('minmax(15rem,20rem)');
+    expect(DetailSource).not.toContain('<aside');
   });
 
   it('routes pending and canonical badges to the single bottom-drawer Workbench', () => {

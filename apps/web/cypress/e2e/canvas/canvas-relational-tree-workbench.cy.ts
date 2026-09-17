@@ -8,6 +8,19 @@ import {
 } from '../../support/workspaceSession';
 
 describe('Canvas relational-tree Workbench', () => {
+  function dragSourceTo(sourceLabel: string, position: 'primary' | 'secondary'): void {
+    cy.window().then((window) => {
+      const dataTransfer = new window.DataTransfer();
+      cy.contains('[data-slot="canvas-relational-tree-source"]', sourceLabel).trigger('dragstart', {
+        dataTransfer,
+      });
+      cy.get(`[data-slot="canvas-relational-tree-input-slot"][data-position="${position}"]`)
+        .scrollIntoView()
+        .trigger('dragover', { dataTransfer })
+        .trigger('drop', { dataTransfer });
+    });
+  }
+
   const semanticWrites = (targetNodeId: string): ReturnType<typeof getE2eApiCalls> =>
     getE2eApiCalls('/workspace/graph/draft', 'PUT').filter((call) => {
       const body = call.body as {
@@ -97,15 +110,18 @@ describe('Canvas relational-tree Workbench', () => {
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="semantic"]')
       .should('have.attr', 'aria-selected', 'true')
       .and('contain.text', 'Relational tree');
-    cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers')
-      .should('not.be.disabled')
+    cy.get('[data-slot="canvas-relational-tree-authoring"]').should('not.exist');
+    dragSourceTo('customers', 'primary');
+    cy.get('[data-slot="dvt-select-operation-projection"]').should('exist');
+    dragSourceTo('orders', 'secondary');
+    cy.get('[data-slot="dvt-select-operation-inner-join"]')
+      .scrollIntoView()
+      .should('be.visible')
       .focus()
       .type('{enter}');
-    cy.get('[data-slot="dvt-select-operation-inner-join"]').focus().type('{enter}');
-    cy.contains('[data-slot="canvas-relational-tree-source"]', 'orders').click();
     cy.get('[data-slot="dvt-substrait-join-predicate-editors"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
-    cy.get('[data-slot="canvas-relational-tree-authoring"]').should(
+    cy.get('[data-slot="canvas-relational-tree-block-canvas"]').should(
       'contain.text',
       'Select the first Source.'
     );
@@ -114,8 +130,8 @@ describe('Canvas relational-tree Workbench', () => {
     });
 
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
-    cy.get('[data-slot="dvt-select-operation-inner-join"]').click();
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'orders').click();
+    cy.get('[data-slot="dvt-select-operation-inner-join"]').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.be.disabled').click();
 
     cy.wrap(null).should(() => {
@@ -144,8 +160,8 @@ describe('Canvas relational-tree Workbench', () => {
 
     cy.get('.react-flow__node[data-id="union-transform"] [data-slot="canvas-node-shell"]').click();
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers_north').click();
-    cy.get('[data-slot="dvt-select-operation-union-all"]').click();
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers_south').click();
+    cy.get('[data-slot="dvt-select-operation-union-all"]').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.be.disabled').click();
 
     cy.wrap(null).should(() => {

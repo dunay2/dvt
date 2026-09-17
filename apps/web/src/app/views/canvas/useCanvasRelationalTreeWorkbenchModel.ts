@@ -56,7 +56,9 @@ export function useCanvasRelationalTreeWorkbenchModel(
     [args.edges, args.nodes, args.transformNode.id]
   );
   const pendingAuthoring =
-    args.authoring != null && composition?.state === 'pending' && inputs.length >= 2;
+    args.authoring != null &&
+    (composition?.state === 'pending' || composition?.state === 'single-input') &&
+    inputs.length >= 1;
   const session = useCanvasRelationalTreeAuthoringSession({
     enabled: pendingAuthoring,
     transformNode: args.transformNode,
@@ -71,7 +73,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
   const catalogue = useMemo(() => {
     const base =
       projection == null
-        ? composition?.state === 'pending'
+        ? composition?.state === 'pending' || pendingAuthoring
           ? projectPendingCanvasRelationalTreeCatalogue(inputs, args.nodes)
           : []
         : projectCanvasRelationalTreeCatalogue({
