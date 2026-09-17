@@ -2,13 +2,19 @@
 import { Minus, Plus, Scan } from 'lucide-react';
 
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
+import {
+  CANVAS_RELATIONAL_TREE_MAX_ZOOM,
+  CANVAS_RELATIONAL_TREE_MIN_ZOOM,
+} from './canvasRelationalTreeViewport';
 
 export function CanvasRelationalTreeZoomControls({
   copy,
+  zoom,
   onChange,
   onFit,
 }: Readonly<{
   copy: CanvasRelationalTreeWorkbenchCopy;
+  zoom: number;
   onChange: (delta: number) => void;
   onFit: () => void;
 }>): JSX.Element {
@@ -17,11 +23,19 @@ export function CanvasRelationalTreeZoomControls({
       <button
         type="button"
         aria-label={copy.reactFlowZoomOutLabel}
-        onClick={() => onChange(-0.25)}
-        className="rounded p-1 hover:bg-(--surface-subtle)"
+        disabled={zoom <= CANVAS_RELATIONAL_TREE_MIN_ZOOM}
+        onClick={() => onChange(-0.15)}
+        className="rounded p-1 hover:bg-(--surface-subtle) disabled:opacity-40"
       >
         <Minus className="size-4" />
       </button>
+      <output
+        data-slot="canvas-relational-tree-zoom"
+        aria-live="polite"
+        className="min-w-10 text-center font-mono text-[10px] tabular-nums text-(--text-muted)"
+      >
+        {Math.round(zoom * 100)}%
+      </output>
       <button
         type="button"
         aria-label={copy.reactFlowFitViewLabel}
@@ -33,8 +47,9 @@ export function CanvasRelationalTreeZoomControls({
       <button
         type="button"
         aria-label={copy.reactFlowZoomInLabel}
-        onClick={() => onChange(0.25)}
-        className="rounded p-1 hover:bg-(--surface-subtle)"
+        disabled={zoom >= CANVAS_RELATIONAL_TREE_MAX_ZOOM}
+        onClick={() => onChange(0.15)}
+        className="rounded p-1 hover:bg-(--surface-subtle) disabled:opacity-40"
       >
         <Plus className="size-4" />
       </button>

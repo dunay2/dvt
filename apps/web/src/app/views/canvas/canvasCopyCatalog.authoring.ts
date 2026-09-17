@@ -700,6 +700,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.relationalTree.label',
     fallback: 'Relational tree',
   },
+  relationalTreeValidMessage: {
+    key: 'canvas.relationalTree.validMessage',
+    fallback: 'Valid expression',
+  },
   relationalTreeDetailLabel: {
     key: 'canvas.relationalTree.detailLabel',
     fallback: 'Detail',

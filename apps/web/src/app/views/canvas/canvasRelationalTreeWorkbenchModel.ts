@@ -31,6 +31,14 @@ function sourceLabel(
   return nodes.find((node) => node.id === sourceNodeId)?.name ?? sourceRef.sourceObjectId;
 }
 
+function sourceFieldCount(
+  sourceNodeId: string | null,
+  nodes: readonly CanonicalNode[]
+): number | null {
+  const columns = nodes.find((node) => node.id === sourceNodeId)?.metadata?.columns;
+  return Array.isArray(columns) ? columns.length : null;
+}
+
 function readLocatorBySource(root: CanvasRelationalTreeNode): ReadonlyMap<string, string> {
   return new Map(
     flattenCanvasRelationalTree(root).flatMap((node) =>
@@ -55,6 +63,7 @@ export function projectCanvasRelationalTreeCatalogue(
     sourceNodeId: input.sourceNodeId,
     state: input.state,
     treeLocator: locatorBySource.get(sourceKey(input.sourceRef)) ?? null,
+    fieldCount: sourceFieldCount(input.sourceNodeId, args.nodes),
   }));
 }
 
@@ -68,5 +77,6 @@ export function projectPendingCanvasRelationalTreeCatalogue(
     sourceNodeId: input.nodeId,
     state: 'pending',
     treeLocator: null,
+    fieldCount: input.fields.length,
   }));
 }

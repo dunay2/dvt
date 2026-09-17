@@ -207,6 +207,7 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDvtRelationalRightInput: 'Entrada derecha',
   relationalTreeSourcesLabel: 'Fuentes',
   relationalTreeLabel: 'Árbol relacional',
+  relationalTreeValidMessage: 'Expresión válida',
   relationalTreeDetailLabel: 'Detalle',
   relationalTreeCanvasLabel: 'Lienzo de bloques relacionales',
   relationalTreeComposeAction: 'Componer relación',

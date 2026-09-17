@@ -3,12 +3,14 @@ import type { ReactNode } from 'react';
 
 import type { ShellNavigationDisposition } from '../../shell/shellNavigationDisposition';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../ui/resizable';
+import { resolveBottomDrawerDefaultSize } from './appShellPanelSizing';
 
 type AppShellFrameProps = {
   readonly topBar: ReactNode;
   readonly healthBanner?: ReactNode;
   readonly leftNavigation: ReactNode;
   readonly bottomDrawer: ReactNode;
+  readonly bottomDrawerHeight: number;
   readonly children: ReactNode;
   readonly focusMode: boolean;
   readonly navigationDisposition: ShellNavigationDisposition;
@@ -23,6 +25,7 @@ export function AppShellFrame({
   healthBanner,
   leftNavigation,
   bottomDrawer,
+  bottomDrawerHeight,
   children,
   focusMode,
   navigationDisposition,
@@ -31,6 +34,10 @@ export function AppShellFrame({
 }: AppShellFrameProps) {
   const showLeftNavigation = !focusMode && navigationDisposition.railMode === 'visible';
   const showOperationalDrawer = !focusMode && showBottomDrawer;
+  const bottomDrawerDefaultSize = resolveBottomDrawerDefaultSize(
+    bottomDrawerHeight,
+    typeof window === 'undefined' ? 0 : window.innerHeight
+  );
   const focusMainContent = (): void => {
     document.getElementById(APP_SHELL_MAIN_CONTENT_ID)?.focus({ preventScroll: true });
   };
@@ -73,7 +80,7 @@ export function AppShellFrame({
               <ResizablePanel
                 id="app-shell-route-outlet-panel"
                 order={1}
-                defaultSize={showOperationalDrawer ? 78 : 100}
+                defaultSize={showOperationalDrawer ? 100 - bottomDrawerDefaultSize : 100}
               >
                 <main
                   id={APP_SHELL_MAIN_CONTENT_ID}
@@ -89,9 +96,10 @@ export function AppShellFrame({
                 <>
                   <ResizableHandle id="app-shell-bottom-drawer-resize-handle" withHandle />
                   <ResizablePanel
+                    key={`bottom-drawer-${Math.round(bottomDrawerDefaultSize)}`}
                     id="app-shell-bottom-drawer-panel"
                     order={2}
-                    defaultSize={22}
+                    defaultSize={bottomDrawerDefaultSize}
                     minSize={12}
                     maxSize={90}
                   >
