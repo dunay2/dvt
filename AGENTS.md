@@ -172,27 +172,52 @@ closeout, commit first with the helper so the pre-commit hook can format and
 re-stage files, then run `pnpm verify:prepush` against the committed,
 hook-normalized tree. "Before PR" does not mean "before commit".
 
-## ARC Requirements For Contracts And Adapter Changes
+## ARC-0 Fast Path
 
-`.arc-policy.yaml` mandates **ARC-2** (evidence doc + risk register update) for
-any PR that touches:
+Classify the complete proposed diff with the existing evaluator before selecting
+ARC artifacts:
 
-- `packages/@dvt/contracts/**`
-- `packages/@dvt/adapter-*/**`
-- `packages/@dvt/engine/**`
+```bash
+GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs
+```
 
-Before creating a PR that modifies any of these paths, the agent MUST:
+Use the fast path only when the returned JSON contains all of these values:
 
-1. Run `GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs` to
-   check whether `evidenceDoc` and `riskUpdate` are required.
-2. If required, create:
-   - `docs/evidence/ED-YYYYMMDD-<slug>.md` (see existing files for format)
-   - `docs/risk-register/quality/R-YYYYMMDD-<SLUG>.yaml` (see existing files)
-3. Run `pnpm docs:sync` and commit the updated index files.
-4. Commit the evidence and risk files before pushing.
+```json
+{
+  "effectiveArcLevel": "ARC-0",
+  "requirements": {
+    "evidenceDoc": false,
+    "riskUpdate": false,
+    "rolloutNotes": false,
+    "compatMatrix": false
+  }
+}
+```
 
-Skipping this causes `DOCS-VALIDATION-FAIL: Risk update required but no changes
-under docs/risk-register` in the `ARC docs / evidence validate` CI step.
+ARC-0 omits only ARC-specific artifacts. Do not manufacture an evidence document,
+risk entry, rollout note, or compatibility matrix for that classification. Other
+applicable contract, mechanization, and evidence obligations still apply.
+
+Both paths retain affected tests, lint, typecheck/build as applicable, formatting,
+enabled hooks, and `pnpm verify:prepush` before review and integration. A declared
+ARC level cannot lower the policy result. A small, typing-only, or documentation
+change is not an exemption from a matching path trigger.
+
+These examples illustrate the unchanged policy; `.arc-policy.yaml` and the
+evaluator, not this table, determine each complete diff:
+
+| Example diff                                                   | Required classification                                          |
+| -------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Isolated app typing or test/tool cleanup outside trigger paths | ARC-0 only when the evaluator confirms the values above          |
+| Script or documentation wording outside trigger paths          | ARC-0 only when the evaluator confirms the values above          |
+| Type-only change in contracts, including `specs/contracts`     | ARC-2; no fast path                                              |
+| Engine, planner, state-store, or adapter change                | ARC-2, even without a wire change                                |
+| Change under `security/` or `docs/security/`                   | ARC-3; no fast path                                              |
+| Mixed diff containing a governed path                          | Follow the highest effective level and all returned requirements |
+
+For any other result, follow [ARC Artifacts When Required](#arc-artifacts-when-required).
+Missing or failed evaluation is not ARC-0.
 
 ## No Debt And No Stub Policy
 
@@ -254,52 +279,24 @@ A task is only complete when all of the following are true:
 - no hidden debt or stub was introduced
 - the final report includes concrete evidence, not reassurance
 
-## ARC Policy Rule
+## ARC Artifacts When Required
 
-Any PR that touches the paths below triggers ARC-2 and requires **both** an evidence doc and a risk register entry before CI will pass.
+`.arc-policy.yaml` owns trigger paths, minimum levels, artifact directories, and
+required evidence frontmatter. `tools/ci/arc-check.mjs` evaluates the complete
+diff; `tools/ci/doc-check.mjs` validates its documentation obligations. Do not
+maintain another trigger catalog or use a declared level to downgrade the result.
 
-| Trigger        | Glob                                                 |
-| -------------- | ---------------------------------------------------- |
-| `engine-core`  | `packages/@dvt/engine/**`                            |
-| `contracts`    | `packages/@dvt/contracts/**` or `specs/contracts/**` |
-| `adapters`     | `packages/@dvt/adapter-*/**`                         |
-| `planner-core` | `packages/@dvt/planner/**`                           |
+When required by that result:
 
-**Evidence doc** — create a file under `docs/evidence/` with this frontmatter:
-
-```yaml
----
-title: <short description>
-status: Accepted
-date: YYYY-MM-DD
-owners:
-  - <package name>
-arc_level: ARC-2
-breaking: false
-code_refs:
-  - <file or function changed>
-evidence:
-  tests:
-    - <pnpm command or validation that proves correctness>
----
-```
-
-**Risk register entry** — create a file under `docs/risk-register/quality/` (or the relevant subdirectory) with:
-
-```yaml
----
-id: R-YYYYMMDD-<SHORT-ID>
-title: <one-line description>
-status: Open
-date: YYYY-MM-DD
-owners:
-  - <package>
-severity: Low | Medium | High
-probability: Low | Medium | High
----
-```
-
-If either file is missing, the `ARC docs / evidence validate` step in `PR Quality Checks` will fail.
+1. Add or update evidence under `docs/evidence/ED-YYYYMMDD-<slug>.md` and risk
+   under `docs/risk-register/`, using the governed format of existing artifacts.
+2. Honor `rolloutNotes`, `compatMatrix`, and `requiredChecks` as well. ARC-3 is
+   not satisfied by evidence/risk alone.
+3. Run `pnpm docs:sync` when documentation paths are added, removed, or renamed;
+   include generated changes and follow the governance refresh rule below.
+4. Commit through the helper with hooks enabled, run `pnpm verify:prepush`, and
+   satisfy the required PR gates. Missing required evidence or risk fails the
+   `ARC docs / evidence validate` step; do not skip or relax it.
 
 ## PR Rules
 
