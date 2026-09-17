@@ -1,6 +1,7 @@
 /** Owned concern: manage measured fit, zoom and pointer panning for the tree viewport. */
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type { PointerEventHandler, RefObject } from 'react';
+import { useCanvasRelationalTreeWheelZoom } from './useCanvasRelationalTreeWheelZoom';
 
 import {
   calculateCanvasRelationalTreeFit,
@@ -25,6 +26,7 @@ export function useCanvasRelationalTreeViewport(layoutKey: string): Readonly<{
   const panOrigin = useRef<PanOrigin | null>(null);
   const [zoom, setZoom] = useState(1);
   const [panning, setPanning] = useState(false);
+  useCanvasRelationalTreeWheelZoom(viewportRef, contentRef, zoom, setZoom);
 
   const center = useCallback((nextZoom: number) => {
     const viewport = viewportRef.current;
@@ -51,7 +53,7 @@ export function useCanvasRelationalTreeViewport(layoutKey: string): Readonly<{
   useLayoutEffect(() => {
     const frame = requestAnimationFrame(fit);
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(fit);
-    if (viewportRef.current != null) observer?.observe(viewportRef.current);
+    if (viewportRef.current != null) observer?.observe(viewportRef.current, { box: 'border-box' });
     return () => {
       cancelAnimationFrame(frame);
       observer?.disconnect();
@@ -64,10 +66,12 @@ export function useCanvasRelationalTreeViewport(layoutKey: string): Readonly<{
 
   const onPointerDown: PointerEventHandler<HTMLDivElement> = (event) => {
     if (
-      event.button !== 0 ||
-      (event.target as Element).closest('button, input, select, summary, a') != null
+      (event.button !== 0 && event.button !== 1) ||
+      (event.button === 0 &&
+        (event.target as Element).closest('button, input, select, summary, a') != null)
     )
       return;
+    event.preventDefault();
     panOrigin.current = {
       x: event.clientX,
       y: event.clientY,

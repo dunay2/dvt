@@ -20,6 +20,43 @@ import {
 } from '../../support/workspaceSession';
 
 describe('Canvas relational-tree Workbench', () => {
+  function verifyWheelZoom(viewportSelector: string): void {
+    const zoomSelector = '[data-slot="canvas-relational-tree-zoom"]';
+    cy.get(zoomSelector)
+      .invoke('text')
+      .then((initial) => {
+        cy.get(viewportSelector).then(($viewport) => {
+          const bounds = $viewport[0].getBoundingClientRect();
+          cy.wrap($viewport).trigger('wheel', {
+            eventConstructor: 'WheelEvent',
+            deltaY: -120,
+            cancelable: true,
+            clientX: bounds.left + bounds.width / 2,
+            clientY: bounds.top + bounds.height / 2,
+          });
+        });
+        cy.get(zoomSelector)
+          .should(($zoom) => {
+            expect(Number.parseInt($zoom.text(), 10)).to.be.greaterThan(
+              Number.parseInt(initial, 10)
+            );
+          })
+          .invoke('text')
+          .then((enlarged) => {
+            cy.get(viewportSelector).trigger('wheel', {
+              eventConstructor: 'WheelEvent',
+              deltaY: 120,
+              cancelable: true,
+            });
+            cy.get(zoomSelector).should(($zoom) => {
+              expect(Number.parseInt($zoom.text(), 10)).to.be.lessThan(
+                Number.parseInt(enlarged, 10)
+              );
+            });
+          });
+      });
+  }
+
   function dragSourceTo(sourceLabel: string, position: 'primary' | 'secondary'): void {
     cy.window().then((window) => {
       const dataTransfer = new window.DataTransfer();
@@ -145,6 +182,7 @@ describe('Canvas relational-tree Workbench', () => {
       .find('[data-slot="canvas-relational-tree-children"][data-child-count="2"]')
       .should('exist');
     cy.get('[data-slot="canvas-relational-tree-viewport"]').should('be.visible');
+    verifyWheelZoom('[data-slot="canvas-relational-tree-viewport"]');
     cy.get('[data-slot="canvas-relational-tree-inspection"] details summary').click();
     cy.get('[data-slot="canvas-relational-tree-detail"]')
       .should('be.visible')
@@ -231,6 +269,8 @@ describe('Canvas relational-tree Workbench', () => {
       'have.length',
       2
     );
+    verifyWheelZoom('[data-slot="canvas-relational-tree-draft-viewport"]');
+    cy.then(expectPublishedSemanticUnchanged);
 
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'shipments').click();
     cy.get('[data-slot="canvas-relational-tree-existing-field"]')
