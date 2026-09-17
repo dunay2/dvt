@@ -10,70 +10,64 @@ permissions:
   actions: read
 
 jobs:
-  reconcile:
-    name: Reconcile retirement and validate exact merge candidate
+  retire:
+    name: Validate superseded proposal retirement after merged 3232
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      RETIREMENT_HEAD: fbdb79b8404fdf07b95b0f045e3a3c910581ede0
-      PREVIOUS_BASE: d7ef2ccf5f7a51628a26dbca3d7cfb9262bd6313
-      CURRENT_MAIN: 458eb9f05e52e3c93b8bc97c20664c833fa07928
-      GIT_BASE: 458eb9f05e52e3c93b8bc97c20664c833fa07928
+      BASE: db43c857a8319b356fda98bab78c7dfb55b4606b
+      GIT_BASE: db43c857a8319b356fda98bab78c7dfb55b4606b
       PLANNING_DB_INTEGRITY_SCOPE: bootstrap
       TZ: UTC
     steps:
-      - name: Checkout reviewed baseline without stored credentials
+      - name: Checkout exact merged main without stored credentials
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: d7ef2ccf5f7a51628a26dbca3d7cfb9262bd6313
+          ref: db43c857a8319b356fda98bab78c7dfb55b4606b
           fetch-depth: 0
           persist-credentials: false
-      - name: Restore exact candidate and reconcile with current main
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Apply hash-verified six-file retirement and reviewed consumer edits
         shell: bash
         run: |
           python3 - <<'PY'
-          import pathlib,subprocess,json,hashlib,zipfile,io,os
+          import pathlib,subprocess,json,hashlib,base64,zlib,os,collections
           out=pathlib.Path('/tmp/retirement-result');out.mkdir(exist_ok=True)
-          def git(*args): return subprocess.check_output(['git',*args])
-          raw=subprocess.check_output(['gh','api','repos/'+os.environ['GITHUB_REPOSITORY']+'/actions/artifacts/10456217114/zip'])
-          assert hashlib.sha256(raw).hexdigest()=='15848168d258b2887e5e3b5ae20e1e48bfc922967472e134b21b9e0788b5e47b'
-          z=zipfile.ZipFile(io.BytesIO(raw))
-          for p,sha in json.loads(z.read('checksums.json')).items(): assert hashlib.sha256(z.read(p)).hexdigest()==sha,p
-          obj=json.loads(z.read('objects.json'))
-          assert obj['base']==os.environ['PREVIOUS_BASE']
-          assert obj['oldHead']==os.environ['RETIREMENT_HEAD']
-          assert obj['tree']=='3113b7b8431587af5a23d11b50b00f695c59203b'
-          subprocess.run(['git','apply','--index','-'],input=z.read('candidate.patch'),check=True)
-          assert git('write-tree').decode().strip()==obj['tree']
-          p=pathlib.Path('docs/evidence/critical/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md')
-          text=p.read_text();old='date: 2026-03-08T00:00:00.000Z\n'
-          assert text.count(old)==1
-          p.write_text(text.replace(old,'date: "2026-03-08"\n'))
-          subprocess.run(['git','add','-A'],check=True)
-          patch=git('diff','--cached',os.environ['PREVIOUS_BASE'],'--','.',':(exclude)docs/.manifest.json')
-          changed=set(git('diff','--cached','--name-only',os.environ['PREVIOUS_BASE']).decode().splitlines())
-          upstream=set(git('diff','--name-only',os.environ['PREVIOUS_BASE'],os.environ['CURRENT_MAIN']).decode().splitlines())
-          assert not (changed & upstream),sorted(changed & upstream)
-          subprocess.run(['git','archive','--format=tar.gz','-o',str(out/'main-source.tar.gz'),os.environ['CURRENT_MAIN']],check=True)
-          subprocess.run(['git','reset','--hard',os.environ['RETIREMENT_HEAD']],check=True)
-          git('config','user.name','DVT documentation integration')
+          def git(*args):return subprocess.check_output(['git',*args])
+          assert git('rev-parse','HEAD').decode().strip()==os.environ['BASE']
+          assert git('rev-parse','HEAD^{tree}').decode().strip()=='f368d3fe9a5bbcc7284321791cc88be4b95c66c9'
+          encoded='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'
+          # Compressed JSON is data only; decoded specification is exported for review.
+          raw=zlib.decompress(base64.b64decode(encoded))
+          assert hashlib.sha256(raw).hexdigest()=='a4b28e17d34c17eb79e0bc14d4b65011dfc337836fe3d3fff1e27e560958a7cb'
+          spec=json.loads(raw);assert len(spec['deletions'])==6
+          (out/'reviewed-specification.json').write_bytes(raw)
+          grouped=collections.defaultdict(list)
+          for edit in spec['edits']:grouped[edit['path']].append(edit)
+          assert len(grouped)==15
+          for path,edits in grouped.items():
+              p=pathlib.Path(path);original=p.read_bytes()
+              assert all(hashlib.sha256(original).hexdigest()==e['sha256'] for e in edits),path
+              text=original.decode()
+              for e in edits:
+                  assert text.count(e['before'])==1,(path,e['before'])
+                  text=text.replace(e['before'],e['after'].replace('__PIN__',os.environ['BASE']))
+              p.write_bytes(text.encode())
+          red=subprocess.run(['node','--test','tools/ci/docs-disposition-canon.test.mjs'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+          (out/'retirement-guard-red.log').write_text(red.stdout)
+          assert red.returncode==1 and 'docs/planning/proposals/superseded/runtime-and-contracts' in red.stdout
+          for path,sha in spec['deletions'].items():
+              p=pathlib.Path(path);original=p.read_bytes()
+              assert hashlib.sha256(original).hexdigest()==sha,path
+              assert 'status: Superseded\n' in original.decode(),path
+              p.unlink()
+          pathlib.Path('docs/planning/proposals/superseded/runtime-and-contracts').rmdir()
+          git('add','-A')
+          git('diff','--cached','--check')
+          git('config','user.name','DVT documentation retirement')
           git('config','user.email','34416258+dunay2@users.noreply.github.com')
           git('config','commit.gpgsign','false')
-          merge=subprocess.run(['git','merge','--no-commit','--no-ff',os.environ['CURRENT_MAIN']],capture_output=True,text=True)
-          print(merge.stdout);print(merge.stderr)
-          conflicts=git('diff','--name-only','--diff-filter=U').decode().splitlines()
-          assert merge.returncode==0 or (merge.returncode==1 and set(conflicts)=={'docs/.manifest.json'}),conflicts
-          subprocess.run(['git','restore','--source',os.environ['CURRENT_MAIN'],'--staged','--worktree','--','.'],check=True)
-          subprocess.run(['git','apply','--index','-'],input=patch,check=True)
-          assert git('rev-parse','MERGE_HEAD').decode().strip()==os.environ['CURRENT_MAIN']
-          assert not pathlib.Path('docs/planning/archive').exists()
-          assert len(git('diff','--cached','--name-only','--diff-filter=D',os.environ['CURRENT_MAIN']).decode().splitlines())==112
-          (out/'consumer-edits.json').write_bytes(z.read('consumer-edits.json'))
-          (out/'reconciliation.json').write_text(json.dumps({'previousTree':obj['tree'],'base':os.environ['CURRENT_MAIN'],'upstreamCommits':10,'overlappingPaths':[],'dateCorrection':str(p)},indent=2))
-          subprocess.run(['git','diff','--cached','--check'],check=True)
-          print('Exact candidate restored; date normalized; latest main preserved; pending merge parents verified')
+          assert set(git('diff','--cached','--name-only').decode().splitlines())==set(spec['deletions'])|set(grouped)
+          print('Six explicitly superseded proposals removed; fifteen reviewed consumers/test files edited; negative guard proved')
           PY
       - name: Setup canonical toolchain and enabled hooks
         uses: ./.github/actions/setup-node-pnpm
@@ -87,20 +81,40 @@ jobs:
           pnpm docs:sync
           pnpm governance:refresh
           git add -A
-      - name: Commit merge through canonical helper and hooks
+      - name: Commit through canonical helper and hooks
         shell: bash
         run: |
-          pnpm commit docs docs "Reconcile retired planning history with current main"
+          pnpm commit docs docs "Remove explicitly superseded runtime proposals"
           echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Verify scope and surviving provenance
+        shell: bash
+        run: |
           python3 - <<'PY'
-          import subprocess,os
+          import pathlib,subprocess,json,os,re
+          out=pathlib.Path('/tmp/retirement-result');spec=json.loads((out/'reviewed-specification.json').read_text())
           def git(*args):return subprocess.check_output(['git',*args]).decode().strip()
-          assert git('show','-s','--format=%P','HEAD').split()==[os.environ['RETIREMENT_HEAD'],os.environ['CURRENT_MAIN']]
-          paths=git('diff','--name-only',os.environ['CURRENT_MAIN'],'HEAD','--','apps','packages','specs','.github','pnpm-lock.yaml','package.json').splitlines()
-          assert set(paths)=={'apps/web/README.md','packages/@dvt/planner/docs/README.md'},paths
-          print('Product code, contracts, dependencies and workflows unchanged')
+          assert git('show','-s','--format=%P','HEAD').split()==[os.environ['BASE']]
+          changed=git('diff','--name-only',os.environ['BASE'],'HEAD').splitlines()
+          assert all(p.startswith('docs/') or p=='tools/ci/docs-disposition-canon.test.mjs' for p in changed),changed
+          assert not git('diff','--name-only','--diff-filter=A',os.environ['BASE'],'HEAD')
+          assert set(git('diff','--name-only','--diff-filter=D',os.environ['BASE'],'HEAD').splitlines())==set(spec['deletions'])
+          slugs=[pathlib.Path(p).name for p in spec['deletions']];bad=[];pins=[]
+          for path in git('ls-files').splitlines():
+              p=pathlib.Path(path)
+              try:text=p.read_text()
+              except (UnicodeError,ValueError):continue
+              for url in re.findall(r'https?://[^\s)\]<>"`]+',text):
+                  if any(slug in url for slug in slugs):
+                      assert url.startswith('https://github.com/dunay2/dvt/blob/'+os.environ['BASE']+'/'),(path,url)
+                      pins.append({'path':path,'url':url})
+              local=re.sub(r'https?://[^\s)\]<>"`]+','',text)
+              for slug in slugs:
+                  if slug in local:bad.append({'path':path,'target':slug})
+          assert not bad,bad
+          (out/'backlinks.json').write_text(json.dumps({'remainingLocalReferences':bad,'preservedGitProvenance':pins},indent=2))
+          print('No remaining local references; exact Git provenance preserved; no new documents or product changes')
           PY
-      - name: Run regressions and full canonical validation
+      - name: Run regressions and canonical validation
         shell: bash
         run: |
           python3 - <<'PY'
@@ -112,16 +126,17 @@ jobs:
             ['pnpm','docs:gov:manifest:check'],
             ['pnpm','ci:docs'],
             ['pnpm','verify:prepush'],
+            ['pnpm','pr:validate-title','docs(docs): Remove explicitly superseded runtime proposals'],
             ['git','diff','--exit-code','HEAD'],
           ]
           for i,cmd in enumerate(commands):
-            r=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
-            name=f'validation-{i+1}.log';(out/name).write_text(r.stdout)
-            results.append({'command':cmd,'exitCode':r.returncode,'log':name})
-            (out/'validation.json').write_text(json.dumps(results,indent=2))
-            print('COMMAND',cmd,'EXIT',r.returncode,flush=True)
-            print('\n'.join(r.stdout.splitlines()[-35:]),flush=True)
-            if r.returncode:sys.exit(r.returncode)
+              r=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+              name=f'validation-{i+1}.log';(out/name).write_text(r.stdout)
+              results.append({'command':cmd,'exitCode':r.returncode,'log':name})
+              (out/'validation.json').write_text(json.dumps(results,indent=2))
+              print('COMMAND',cmd,'EXIT',r.returncode,flush=True)
+              print('\n'.join(r.stdout.splitlines()[-25:]),flush=True)
+              if r.returncode:sys.exit(r.returncode)
           (out/'validated.txt').write_text(subprocess.check_output(['git','rev-parse','HEAD']).decode())
           PY
       - name: Export exact commit and source evidence
@@ -132,25 +147,24 @@ jobs:
           import pathlib,subprocess,json,os,hashlib,base64
           out=pathlib.Path('/tmp/retirement-result');out.mkdir(exist_ok=True)
           def git(*args):return subprocess.check_output(['git',*args])
-          head=git('rev-parse','HEAD').decode().strip();base=os.environ['CURRENT_MAIN']
+          head=git('rev-parse','HEAD').decode().strip();base=os.environ['BASE']
           (out/'head.txt').write_text(head+'\n')
           (out/'status.txt').write_bytes(git('status','--short'))
           (out/'stats.txt').write_bytes(git('diff','--stat',base,head))
           (out/'candidate.patch').write_bytes(git('diff',base,head))
           subprocess.run(['git','archive','--format=tar.gz','-o',str(out/'source.tar.gz'),head],check=True)
-          parents=git('show','-s','--format=%P','HEAD').decode().strip().split()
-          tree=git('rev-parse','HEAD^{tree}').decode().strip()
+          parents=git('show','-s','--format=%P','HEAD').decode().strip().split();tree=git('rev-parse','HEAD^{tree}').decode().strip()
           def person(prefix):
-            values=git('show','-s','--format=%'+prefix+'n%x00%'+prefix+'e%x00%'+prefix+'I','HEAD').decode().strip().split('\0')
-            return dict(zip(['name','email','date'],values))
+              values=git('show','-s','--format=%'+prefix+'n%x00%'+prefix+'e%x00%'+prefix+'I','HEAD').decode().strip().split('\0')
+              return dict(zip(['name','email','date'],values))
           commit={'message':git('cat-file','commit',head).decode().split('\n\n',1)[1],'tree':tree,'parents':parents,'author':person('a'),'committer':person('c')}
-          info={'head':head,'tree':tree,'parents':parents,'base':base,'baseTree':git('rev-parse',base+'^{tree}').decode().strip(),'oldHead':os.environ['RETIREMENT_HEAD'],'commitPayload':commit,'treeElements':[],'newBlobs':[]}
+          info={'head':head,'tree':tree,'parents':parents,'base':base,'baseTree':git('rev-parse',base+'^{tree}').decode().strip(),'commitPayload':commit,'treeElements':[],'newBlobs':[]}
           raw=git('diff','--raw','--no-renames','-z',base,head).split(b'\0')
           for i in range(0,len(raw)-1,2):
               f=raw[i].decode().split();p=raw[i+1].decode();deleted=f[-1]=='D'
               sha=None if deleted else git('rev-parse',head+':'+p).decode().strip()
               info['treeElements'].append({'path':p,'mode':f[0][1:] if deleted else f[1],'type':'blob','sha':sha})
-          for line in git('rev-list','--objects',head,'^'+base,'^'+os.environ['RETIREMENT_HEAD']).decode().splitlines():
+          for line in git('rev-list','--objects',head,'^'+base).decode().splitlines():
               sha=line.split(' ',1)[0]
               if git('cat-file','-t',sha).strip()==b'blob':
                   info['newBlobs'].append({'sha':sha,'encoding':'base64','content':base64.b64encode(git('cat-file','blob',sha)).decode()})
@@ -162,13 +176,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: planning-retirement-reconciliation
+          name: superseded-runtime-retirement
           path: /tmp/retirement-result
           retention-days: 7
 
   objects:
-    name: Transfer validated exact Git objects without updating branches
-    needs: reconcile
+    name: Transfer validated exact Git objects without publishing refs
+    needs: retire
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -186,19 +200,17 @@ jobs:
               args=['gh','api','repos/'+repo+'/'+path]
               if data is not None:args+=['--method','POST','--input','-']
               return subprocess.check_output(args,input=None if data is None else json.dumps(data).encode())
-          matches=[x for x in json.loads(api('actions/runs/'+run+'/artifacts'))['artifacts'] if x['name']=='planning-retirement-reconciliation'];assert len(matches)==1
+          matches=[x for x in json.loads(api('actions/runs/'+run+'/artifacts'))['artifacts'] if x['name']=='superseded-runtime-retirement'];assert len(matches)==1
           artifact=matches[0];raw=api('actions/artifacts/'+str(artifact['id'])+'/zip')
           assert 'sha256:'+hashlib.sha256(raw).hexdigest()==artifact['digest']
           z=zipfile.ZipFile(io.BytesIO(raw))
           for p,sha in json.loads(z.read('checksums.json')).items():assert hashlib.sha256(z.read(p)).hexdigest()==sha,p
-          obj=json.loads(z.read('objects.json'))
-          assert obj['base']=='458eb9f05e52e3c93b8bc97c20664c833fa07928'
-          assert obj['oldHead']=='fbdb79b8404fdf07b95b0f045e3a3c910581ede0'
-          assert obj['parents']==[obj['oldHead'],obj['base']]
+          obj=json.loads(z.read('objects.json'));assert obj['base']=='db43c857a8319b356fda98bab78c7dfb55b4606b'
+          assert obj['parents']==[obj['base']]
           assert z.read('validated.txt').decode().strip()==obj['head']
-          assert all(x['exitCode']==0 for x in json.loads(z.read('validation.json')))
-          assert len(json.loads(z.read('validation.json')))==6
+          results=json.loads(z.read('validation.json'));assert len(results)==7 and all(x['exitCode']==0 for x in results)
           assert z.read('status.txt').strip()==b''
+          assert json.loads(z.read('backlinks.json'))['remainingLocalReferences']==[]
           for blob in obj['newBlobs']:
               data=base64.b64decode(blob['content']);sha=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest();assert sha==blob['sha']
               returned=json.loads(api('git/blobs',{'encoding':'base64','content':blob['content']}));assert returned['sha']==sha
