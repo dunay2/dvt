@@ -1,0 +1,150 @@
+name: Isolated efficiency playbook retirement
+on:
+  push:
+    branches: [automation/3004-retire-efficiency-playbook-20260917]
+    paths: [.github/workflows/retire-efficiency-playbook.yml]
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GIT_BASE: 1b07acde33300a19d97914eb719b262b44e79182
+      GIT_HEAD: HEAD
+      PLANNING_DB_INTEGRITY_SCOPE: bootstrap
+    steps:
+      - name: Read the isolated reviewed input
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: c779e8188c15fd7b21b5cc2d7d06bc8c27a6033b
+          persist-credentials: false
+      - name: Keep the input outside the product tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/playbook3004"
+          cp .github/maintenance/retire-efficiency-playbook.py "$RUNNER_TEMP/playbook3004/input.py"
+      - name: Checkout the exact product baseline
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 1b07acde33300a19d97914eb719b262b44e79182
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Setup the declared dependencies
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+      - name: Prepare only the disposable CI database
+        uses: ./.github/actions/prepare-planning-db
+      - name: Verify source identities and prove the retirement red
+        shell: bash
+        run: |
+          set -euo pipefail
+          python "$RUNNER_TEMP/playbook3004/input.py"
+      - name: Refresh existing documentation and governance outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/playbook3004"
+          pnpm docs:sync 2>&1 | tee "$out/docs-sync.log"
+          pnpm governance:refresh 2>&1 | tee "$out/governance-refresh.log"
+          python - <<'PY'
+          import json,os,pathlib,subprocess
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'playbook3004'
+          changed=set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())
+          allowed=set(json.loads((out/'allowed-paths.json').read_text()))
+          assert changed <= allowed, sorted(changed-allowed)
+          deleted=subprocess.check_output(['git','diff','--name-only','--diff-filter=D'],text=True).splitlines()
+          assert deleted==['docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md'],deleted
+          assert not subprocess.check_output(['git','ls-files','--others','--exclude-standard'],text=True).strip()
+          PY
+      - name: Prove consumers green and reject reference reintroduction
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/playbook3004"
+          node --test tools/ci/docs-disposition-canon.test.mjs 2>&1 | tee "$out/green.log"
+          python - <<'PY'
+          import os,pathlib,subprocess
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'playbook3004'
+          agents=pathlib.Path('AGENTS.md');original=agents.read_bytes()
+          try:
+            agents.write_bytes(original+b'\n- docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md\n')
+            result=subprocess.run(['node','--test','tools/ci/docs-disposition-canon.test.mjs'],text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+            (out/'reference-reintroduction.log').write_text(result.stdout)
+            assert result.returncode==1 and 'retired efficiency review reference: AGENTS.md' in result.stdout
+          finally:
+            agents.write_bytes(original)
+          PY
+          node - <<'JS' > "$out/adoption-preservation.json"
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          const yaml=require('js-yaml');
+          const {analyzeAdoptionLog}=require('./scripts/check-ai-efficiency-adoption.cjs');
+          const before=yaml.load(fs.readFileSync(process.env.RUNNER_TEMP+'/playbook3004/original-adoption.yaml','utf8'));
+          const after=yaml.load(fs.readFileSync('docs/planning/status/ai-efficiency-adoption-log.yaml','utf8'));
+          const expected='https://github.com/dunay2/dvt/blob/'+process.env.GIT_BASE+'/'+before.baseline.source_review;
+          assert.equal(after.baseline.source_review,expected);
+          const actualAnalysis=analyzeAdoptionLog(after);
+          assert.deepEqual(actualAnalysis,analyzeAdoptionLog(before));
+          after.baseline.source_review=before.baseline.source_review;
+          assert.deepEqual(after,before);
+          console.log(JSON.stringify({onlyProvenanceChanged:true,adoption:actualAnalysis},null,2));
+          JS
+      - name: Commit only the scoped changes with enabled hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/playbook3004"
+          git config user.name "DVT documentation maintenance"
+          git config user.email "34416258+dunay2@users.noreply.github.com"
+          git switch -c docs/3004-retire-efficiency-playbook
+          git add -u
+          pnpm commit docs docs "Retire historical efficiency playbook and its consumers" 2>&1 | tee "$out/commit.log"
+          git rev-parse HEAD > "$out/head.txt"
+          git rev-parse HEAD^{tree} > "$out/tree.txt"
+      - name: Validate the exact committed candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/playbook3004"
+          node --test scripts/ai-preflight.test.cjs scripts/check-ai-efficiency-adoption.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/docs-disposition-canon.test.mjs tools/ci/startup-card-canon.test.mjs tools/ci/arc-policy-state-store.test.mjs 2>&1 | tee "$out/tests.log"
+          node tools/ci/arc-check.mjs > "$out/arc.json"
+          pnpm docs:sync:check 2>&1 | tee "$out/docs-sync-check.log"
+          pnpm docs:gov:manifest:check 2>&1 | tee "$out/manifest-check.log"
+          pnpm ci:docs 2>&1 | tee "$out/ci-docs.log"
+          pnpm verify:prepush 2>&1 | tee "$out/prepush.log"
+          pnpm pr:validate-title "docs(docs): Retire historical efficiency playbook and its consumers" 2>&1 | tee "$out/title.log"
+          git diff --exit-code HEAD
+          test -z "$(git status --porcelain)"
+          git rev-parse HEAD > "$out/validated.txt"
+          git diff --binary "$GIT_BASE" HEAD > "$out/candidate.patch"
+          git diff --stat "$GIT_BASE" HEAD > "$out/stats.txt"
+          git diff --name-status "$GIT_BASE" HEAD > "$out/name-status.txt"
+          git diff --exit-code "$GIT_BASE" HEAD -- .arc-policy.yaml CLAUDE.md .github packages apps tools/ci/arc-check.mjs tools/ci/doc-check.mjs scripts/hygiene.ps1 scripts/check-ai-efficiency-adoption.cjs
+      - name: Push only the validated branch without force
+        shell: bash
+        run: |
+          set -euo pipefail
+          current=$(git ls-remote origin refs/heads/docs/3004-retire-efficiency-playbook | cut -f1)
+          test "$current" = "$GIT_BASE"
+          git push origin HEAD:refs/heads/docs/3004-retire-efficiency-playbook 2>&1 | tee "$RUNNER_TEMP/playbook3004/push.log"
+      - name: Record integrity and any failure evidence
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,pathlib
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'playbook3004';out.mkdir(exist_ok=True)
+          hashes={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(out.iterdir()) if p.is_file() and p.name!='checksums.json'}
+          (out/'checksums.json').write_text(json.dumps(hashes,indent=2)+'\n')
+          PY
+      - name: Upload bounded validation evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: playbook-3004-validation
+          path: ${{ runner.temp }}/playbook3004
+          if-no-files-found: error
+          retention-days: 7
