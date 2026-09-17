@@ -74,6 +74,7 @@ export function CanvasRelationalTreeView({
           <CanvasRelationalTreeZoomControls
             copy={copy}
             zoom={viewport.zoom}
+            minimumZoom={viewport.minimumZoom}
             onChange={viewport.changeZoom}
             onFit={viewport.fit}
           />

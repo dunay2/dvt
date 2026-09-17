@@ -20,6 +20,24 @@ import {
 } from '../../support/workspaceSession';
 
 describe('Canvas relational-tree Workbench', () => {
+  function verifyCompleteTreeFit(viewportSelector: string): void {
+    cy.get('[data-slot="canvas-relational-tree-fit"]').click();
+    cy.get(viewportSelector).should(($viewport) => {
+      const viewport = $viewport[0].getBoundingClientRect();
+      const cards = $viewport[0].querySelectorAll(
+        '[data-slot="canvas-relational-tree-node"], [data-slot="canvas-relational-tree-output"]'
+      );
+      expect(cards.length).to.be.greaterThan(1);
+      cards.forEach((card) => {
+        const bounds = card.getBoundingClientRect();
+        expect(bounds.left, 'node left within viewport').to.be.at.least(viewport.left);
+        expect(bounds.right, 'node right within viewport').to.be.at.most(viewport.right);
+        expect(bounds.top, 'node top within viewport').to.be.at.least(viewport.top);
+        expect(bounds.bottom, 'node bottom within viewport').to.be.at.most(viewport.bottom);
+      });
+    });
+  }
+
   function verifyWheelZoom(viewportSelector: string): void {
     const zoomSelector = '[data-slot="canvas-relational-tree-zoom"]';
     cy.get(zoomSelector)
@@ -183,6 +201,31 @@ describe('Canvas relational-tree Workbench', () => {
       .should('exist');
     cy.get('[data-slot="canvas-relational-tree-viewport"]').should('be.visible');
     verifyWheelZoom('[data-slot="canvas-relational-tree-viewport"]');
+    cy.get('[data-slot="canvas-relational-tree-sources"] input').type('customers');
+    cy.get('[data-slot="canvas-relational-tree-zoom"]')
+      .invoke('text')
+      .then((zoom) => {
+        cy.get('[data-slot="canvas-relational-tree-viewport"]').then(($viewport) => {
+          const width = $viewport[0].clientWidth;
+          cy.get('[data-slot="canvas-relational-tree-sources-toggle"]')
+            .click()
+            .should('have.attr', 'aria-expanded', 'false');
+          cy.get('[data-slot="canvas-relational-tree-viewport"]').should(($next) => {
+            expect($next[0].clientWidth).to.be.greaterThan(width);
+          });
+        });
+        cy.get('[data-slot="canvas-relational-tree-zoom"]').should('have.text', zoom);
+      });
+    cy.get('[data-slot="canvas-relational-tree-source-list"]').should('not.be.visible');
+    verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
+    cy.screenshot('semantic-editor-sources-collapsed');
+    cy.get('[data-slot="canvas-relational-tree-sources-toggle"]')
+      .focus()
+      .type('{enter}')
+      .should('have.attr', 'aria-expanded', 'true');
+    cy.get('[data-slot="canvas-relational-tree-sources"] input')
+      .should('have.value', 'customers')
+      .clear();
     cy.get('[data-slot="canvas-relational-tree-inspection"] details summary').click();
     cy.get('[data-slot="canvas-relational-tree-detail"]')
       .should('be.visible')
@@ -428,6 +471,20 @@ describe('Canvas relational-tree Workbench', () => {
       expect(bounds.bottom).to.be.at.most(window.innerHeight);
     });
     cy.screenshot('semantic-editor-four-inputs');
+    cy.get('[data-slot="canvas-relational-tree-sources-toggle"]').click();
+    verifyWheelZoom('[data-slot="canvas-relational-tree-draft-viewport"]');
+    verifyCompleteTreeFit('[data-slot="canvas-relational-tree-draft-viewport"]');
+    cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="read"]').should(
+      'have.length',
+      4
+    );
+    cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
+      'have.length',
+      3
+    );
+    cy.screenshot('semantic-editor-complete-tree');
+    cy.get('[data-slot="canvas-relational-tree-sources-toggle"]').click();
+    cy.wrap(null).should(() => expect(semanticWrites('join-transform')).to.have.length(0));
 
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
     cy.wrap(null).should(() => {

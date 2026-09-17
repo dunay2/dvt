@@ -10,6 +10,9 @@ function ViewportHarness(): JSX.Element {
   return (
     <>
       <output>{viewport.zoom}</output>
+      <button data-testid="fit" type="button" onClick={viewport.fit}>
+        Fit
+      </button>
       <div
         data-testid="viewport"
         ref={viewport.viewportRef}
@@ -31,6 +34,8 @@ describe('relational-tree mouse navigation', () => {
   let root: Root;
   let viewport: HTMLDivElement;
   let content: HTMLDivElement;
+  let resize: () => void;
+  let frames: FrameRequestCallback[];
   const zoom = (): number => Number(container.querySelector('output')!.textContent);
   const wheel = (
     deltaY: number,
@@ -52,11 +57,25 @@ describe('relational-tree mouse navigation', () => {
   };
   beforeEach(() => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    frames = [];
     vi.stubGlobal(
       'requestAnimationFrame',
-      vi.fn(() => 1)
+      vi.fn((callback: FrameRequestCallback) => {
+        frames.push(callback);
+        return frames.length;
+      })
     );
     vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: ResizeObserverCallback) {
+          resize = () => callback([], this as unknown as ResizeObserver);
+        }
+        observe(): void {}
+        disconnect(): void {}
+      }
+    );
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -88,6 +107,14 @@ describe('relational-tree mouse navigation', () => {
     expect(viewport.scrollLeft).toBeCloseTo(100 + 280 * (zoom() - 1));
     expect(viewport.scrollTop).toBeCloseTo(50 + 150 * (zoom() - 1));
   });
+  it('does not overwrite a wheel gesture with a queued initial fit', () => {
+    wheel(-120);
+    const manual = zoom();
+    act(() => {
+      frames[0]!(0);
+    });
+    expect(zoom()).toBe(manual);
+  });
   it('normalizes line/page deltas, permits wheel over a card and respects limits', () => {
     wheel(-3, { deltaMode: 1 }, content.querySelector('button')!);
     expect(zoom()).toBeGreaterThan(1);
@@ -105,6 +132,36 @@ describe('relational-tree mouse navigation', () => {
   it('removes its native wheel listener when the viewport unmounts', () => {
     act(() => root.render(null));
     expect(wheel(-120).defaultPrevented).toBe(false);
+  });
+  it('preserves manual zoom on panel resizing and restores complete framing on Fit', () => {
+    Object.defineProperties(viewport, {
+      clientWidth: { value: 800 },
+      clientHeight: { value: 400 },
+    });
+    Object.defineProperties(content, {
+      offsetWidth: { value: 8000 },
+      offsetHeight: { value: 4000 },
+    });
+    const fit = container.querySelector<HTMLButtonElement>('[data-testid="fit"]')!;
+    act(() => {
+      fit.click();
+    });
+    expect(zoom()).toBeCloseTo(0.084);
+    wheel(-120);
+    const enlarged = zoom();
+    expect(enlarged).toBeGreaterThan(0.084);
+    expect(enlarged).toBeLessThan(0.35);
+    act(() => {
+      resize();
+    });
+    expect(zoom()).toBe(enlarged);
+    wheel(120);
+    expect(zoom()).toBeCloseTo(0.084);
+    wheel(-120);
+    act(() => {
+      fit.click();
+    });
+    expect(zoom()).toBeCloseTo(0.084);
   });
   it('pans with the middle button over a card without capturing right-click', () => {
     viewport.setPointerCapture = vi.fn();

@@ -46,6 +46,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
     model.authoringAvailable && (model.projection == null || model.session.active);
   const pendingInputCount = model.catalogue.filter((item) => item.state === 'pending').length;
   const [pendingCondition, setPendingCondition] = useState(false);
+  const [sourcesCollapsed, setSourcesCollapsed] = useState(false);
   useEffect(() => {
     if (!model.session.active) setPendingCondition(false);
   }, [model.session.active]);
@@ -54,10 +55,12 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
   return (
     <div
       data-slot="canvas-relational-tree-workbench"
-      className="grid h-full min-h-0 min-w-0 w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-(--surface-panel) md:grid-cols-[14rem_minmax(0,1fr)] md:grid-rows-1"
+      className={`grid h-full min-h-0 min-w-0 w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-(--surface-panel) md:grid-rows-1 ${sourcesCollapsed ? 'md:grid-cols-[3rem_minmax(0,1fr)]' : 'md:grid-cols-[14rem_minmax(0,1fr)]'}`}
     >
       <CanvasRelationalTreeSourceCatalogue
         items={model.catalogue}
+        collapsed={sourcesCollapsed}
+        onToggle={() => setSourcesCollapsed((current) => !current)}
         copy={copy}
         draggable={model.authoringAvailable}
         onBeginDrag={model.session.start}

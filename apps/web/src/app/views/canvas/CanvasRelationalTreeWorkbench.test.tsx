@@ -202,6 +202,43 @@ describe('Canvas relational-tree Workbench', () => {
       container.querySelector('[data-slot="canvas-relational-tree-inspection"]')
     ).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-relational-tree-viewport"]')).not.toBeNull();
+    const tree = container.querySelector('[data-slot="canvas-relational-tree"]');
+    const toggle = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-relational-tree-sources-toggle"]'
+    );
+    expect(toggle).not.toBeNull();
+    act(() => {
+      toggle!.click();
+    });
+    expect(toggle?.getAttribute('aria-expanded')).toBe('false');
+    expect(
+      container
+        .querySelector('[data-slot="canvas-relational-tree-source-list"]')
+        ?.hasAttribute('hidden')
+    ).toBe(true);
+    expect(container.querySelector('[data-slot="canvas-relational-tree"]')).toBe(tree);
+    act(() => {
+      toggle!.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+      );
+    });
+    expect(toggle?.getAttribute('aria-expanded')).toBe('true');
+    act(() => {
+      toggle!.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Enter',
+          repeat: true,
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+    });
+    expect(toggle?.getAttribute('aria-expanded')).toBe('true');
+    expect(
+      container
+        .querySelector('[data-slot="canvas-relational-tree-source-list"]')
+        ?.hasAttribute('hidden')
+    ).toBe(false);
     const detail = container.querySelector('[data-slot="canvas-relational-tree-detail"]');
     expect(detail?.tagName).toBe('ASIDE');
     expect(detail?.getAttribute('data-position')).toBe('contextual');

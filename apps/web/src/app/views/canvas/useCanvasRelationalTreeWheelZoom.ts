@@ -16,7 +16,8 @@ export function useCanvasRelationalTreeWheelZoom(
   viewportRef: RefObject<HTMLDivElement>,
   contentRef: RefObject<HTMLDivElement>,
   zoom: number,
-  setZoom: (value: number) => void
+  setZoom: (value: number) => void,
+  minimumZoom = CANVAS_RELATIONAL_TREE_MIN_ZOOM
 ): void {
   const anchor = useRef<WheelAnchor | null>(null);
   const pendingZoom = useRef(zoom);
@@ -51,10 +52,7 @@ export function useCanvasRelationalTreeWheelZoom(
         event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? Math.max(1, viewport.clientHeight) : 1;
       const nextZoom = Math.min(
         CANVAS_RELATIONAL_TREE_MAX_ZOOM,
-        Math.max(
-          CANVAS_RELATIONAL_TREE_MIN_ZOOM,
-          pendingZoom.current * Math.exp(-event.deltaY * unit * 0.0015)
-        )
+        Math.max(minimumZoom, pendingZoom.current * Math.exp(-event.deltaY * unit * 0.0015))
       );
       if (nextZoom === pendingZoom.current) return;
       const bounds = content.getBoundingClientRect();
@@ -70,5 +68,5 @@ export function useCanvasRelationalTreeWheelZoom(
     // Zoom owns this gesture, so native page scrolling must remain cancelable.
     viewport.addEventListener('wheel', onWheel, { passive: false });
     return () => viewport.removeEventListener('wheel', onWheel);
-  }, [zoom, setZoom, viewportRef, contentRef]);
+  }, [zoom, setZoom, viewportRef, contentRef, minimumZoom]);
 }

@@ -24,17 +24,13 @@ export function calculateCanvasRelationalTreeFit({
   }
   const availableWidth = Math.max(1, viewportWidth - padding * 2);
   const availableHeight = Math.max(1, viewportHeight - padding * 2);
-  return clamp(
-    Math.min(1, availableWidth / contentWidth, availableHeight / contentHeight),
-    CANVAS_RELATIONAL_TREE_MIN_ZOOM,
-    CANVAS_RELATIONAL_TREE_MAX_ZOOM
-  );
+  return Math.min(1, availableWidth / contentWidth, availableHeight / contentHeight);
 }
 
-export function changeCanvasRelationalTreeZoom(current: number, delta: number): number {
-  return clamp(
-    Math.round((current + delta) * 100) / 100,
-    CANVAS_RELATIONAL_TREE_MIN_ZOOM,
-    CANVAS_RELATIONAL_TREE_MAX_ZOOM
-  );
+export function changeCanvasRelationalTreeZoom(
+  current: number,
+  delta: number,
+  minimum = CANVAS_RELATIONAL_TREE_MIN_ZOOM
+): number {
+  return clamp(Math.round((current + delta) * 100) / 100, minimum, CANVAS_RELATIONAL_TREE_MAX_ZOOM);
 }
