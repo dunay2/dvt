@@ -26,26 +26,62 @@ jobs:
           ref: db43c857a8319b356fda98bab78c7dfb55b4606b
           fetch-depth: 0
           persist-credentials: false
-      - name: Apply hash-verified six-file retirement and reviewed consumer edits
+      - name: Apply reviewed retirement with exact source hashes
         shell: bash
         run: |
           python3 - <<'PY'
-          import pathlib,subprocess,json,hashlib,base64,zlib,os,collections
-          out=pathlib.Path('/tmp/retirement-result');out.mkdir(exist_ok=True)
+          from pathlib import Path
+          import subprocess,json,hashlib,os,collections
+          root=Path('.');out=Path('/tmp/retirement-result');out.mkdir(exist_ok=True)
           def git(*args):return subprocess.check_output(['git',*args])
           assert git('rev-parse','HEAD').decode().strip()==os.environ['BASE']
           assert git('rev-parse','HEAD^{tree}').decode().strip()=='f368d3fe9a5bbcc7284321791cc88be4b95c66c9'
-          encoded='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'
-          # Compressed JSON is data only; decoded specification is exported for review.
-          raw=zlib.decompress(base64.b64decode(encoded))
+          prefix='docs/planning/proposals/superseded/runtime-and-contracts/'
+          slugs=[
+            'ar-a9-planner-cycle-fail-closed-plan-20260404.md',
+            'ar-c6-cancel-lifecycle-ownership-truth-sync-plan-20260410.md',
+            'gap4-backpressure-admission-pr4-plan-20260326.md',
+            'mvp-a1-backend-contractual-inventory-20260329.md',
+            'planner-generic-ingress-compatibility-slice-20260410.md',
+            'rc-c1-http-error-envelope-normalization-plan-20260331.md',
+          ]
+          spec={'deletions':{},'edits':[]}
+          for slug in slugs:
+              p=prefix+slug;text=(root/p).read_text();assert 'status: Superseded\n' in text
+              spec['deletions'][p]=hashlib.sha256((root/p).read_bytes()).hexdigest()
+          def edit(path,before,after):
+              data=(root/path).read_bytes();text=data.decode();assert text.count(before)==1,(path,before,text.count(before))
+              spec['edits'].append({'path':path,'sha256':hashlib.sha256(data).hexdigest(),'before':before,'after':after})
+          def remove_line(path,contains):
+              lines=[l for l in (root/path).read_text().splitlines(True) if contains in l];assert len(lines)==1,(path,lines)
+              edit(path,lines[0],'')
+          def pin(path,slug,oldpath=None):
+              oldpath=oldpath or prefix+slug
+              edit(path,'`'+oldpath+'`','[Historical proposal](https://github.com/dunay2/dvt/blob/__PIN__/'+prefix+slug+')')
+          for p in ['docs/guides/planner-cycle-detection-user-manual-20260404.md','docs/guides/planner-cycle-detection-technical-manual-20260404.md']:
+              remove_line(p,slugs[0])
+          for slug in [slugs[0],slugs[2],slugs[3],slugs[5]]:
+              remove_line('docs/planning/proposals/portfolio-map-20260403.md',slug)
+          pin('docs/planning/closeouts/20260404-ar-a9-planner-cycle-fail-closed-closeout.md',slugs[0])
+          pin('docs/planning/reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md',slugs[1],'docs/planning/proposals/mandatory/runtime-and-contracts/'+slugs[1])
+          remove_line('docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md',slugs[1])
+          remove_line('docs/runbooks/admission-control-runbook.md',slugs[2])
+          remove_line('docs/architecture/components/web/runs/frontend-backend-mvp-contract.md',slugs[3])
+          remove_line('docs/architecture/components/web/runs/frontend-backend-mvp-contract.md','docs/planning/state/planning-control-tower.md')
+          for p in ['docs/planning/closeouts/20260331-mvp-a1-contractual-inventory-closeout.md','docs/planning/reviews/event-contract-and-traceability/20260330-mvp-b1-claim-evidence-traceability-matrix.md','docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md']:
+              pin(p,slugs[3])
+          edit('docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md','  - '+prefix+slugs[3]+'\n','  - https://github.com/dunay2/dvt/blob/__PIN__/'+prefix+slugs[3]+'\n')
+          for p in ['docs/planning/proposals/mandatory/runtime-and-contracts/temporal-workflow-helper-artifact-facts-narrowing-slice-20260410.md','docs/planning/proposals/mandatory/runtime-and-contracts/planner-hard-cut-boundary-remediation-20260410.md']:
+              remove_line(p,slugs[4])
+          edit('tools/ci/docs-disposition-canon.test.mjs',"    'docs/planning/archive',\n","    'docs/planning/archive',\n    'docs/planning/proposals/superseded/runtime-and-contracts',\n")
+          raw=json.dumps(spec,separators=(',',':'),ensure_ascii=False).encode()
           assert hashlib.sha256(raw).hexdigest()=='a4b28e17d34c17eb79e0bc14d4b65011dfc337836fe3d3fff1e27e560958a7cb'
-          spec=json.loads(raw);assert len(spec['deletions'])==6
           (out/'reviewed-specification.json').write_bytes(raw)
           grouped=collections.defaultdict(list)
-          for edit in spec['edits']:grouped[edit['path']].append(edit)
-          assert len(grouped)==15
+          for e in spec['edits']:grouped[e['path']].append(e)
+          assert len(grouped)==15 and len(spec['deletions'])==6
           for path,edits in grouped.items():
-              p=pathlib.Path(path);original=p.read_bytes()
+              p=Path(path);original=p.read_bytes()
               assert all(hashlib.sha256(original).hexdigest()==e['sha256'] for e in edits),path
               text=original.decode()
               for e in edits:
@@ -56,18 +92,14 @@ jobs:
           (out/'retirement-guard-red.log').write_text(red.stdout)
           assert red.returncode==1 and 'docs/planning/proposals/superseded/runtime-and-contracts' in red.stdout
           for path,sha in spec['deletions'].items():
-              p=pathlib.Path(path);original=p.read_bytes()
-              assert hashlib.sha256(original).hexdigest()==sha,path
-              assert 'status: Superseded\n' in original.decode(),path
-              p.unlink()
-          pathlib.Path('docs/planning/proposals/superseded/runtime-and-contracts').rmdir()
-          git('add','-A')
-          git('diff','--cached','--check')
+              p=Path(path);assert hashlib.sha256(p.read_bytes()).hexdigest()==sha,path;p.unlink()
+          Path(prefix).rmdir()
+          git('add','-A');git('diff','--cached','--check')
           git('config','user.name','DVT documentation retirement')
           git('config','user.email','34416258+dunay2@users.noreply.github.com')
           git('config','commit.gpgsign','false')
           assert set(git('diff','--cached','--name-only').decode().splitlines())==set(spec['deletions'])|set(grouped)
-          print('Six explicitly superseded proposals removed; fifteen reviewed consumers/test files edited; negative guard proved')
+          print('Six explicitly superseded proposals removed; fifteen consumer/test files edited; exact specification and negative guard verified')
           PY
       - name: Setup canonical toolchain and enabled hooks
         uses: ./.github/actions/setup-node-pnpm
@@ -76,13 +108,11 @@ jobs:
       - name: Prepare disposable CI bootstrap database only
         uses: ./.github/actions/prepare-planning-db
       - name: Regenerate canonical documentation and governance outputs
-        shell: bash
         run: |
           pnpm docs:sync
           pnpm governance:refresh
           git add -A
       - name: Commit through canonical helper and hooks
-        shell: bash
         run: |
           pnpm commit docs docs "Remove explicitly superseded runtime proposals"
           echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
