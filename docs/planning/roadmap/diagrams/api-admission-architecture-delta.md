@@ -38,4 +38,3 @@ flowchart LR
 ## References
 
 - [Domain - API And Admission](../../domains/api-and-admission.md)
-- [Gap 4 Admission Design](../../archive/proposals/gap4-backpressure-admission-design-20260319.md)

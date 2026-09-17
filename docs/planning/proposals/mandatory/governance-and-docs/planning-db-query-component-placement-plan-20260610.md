@@ -4,7 +4,6 @@ status: Accepted
 owner: Architecture Governance
 last_reviewed: 2026-08-08
 planning_type: mandatory-proposal
-archived_record: docs/planning/archive/proposals/planning-db-query-component-placement-plan-20260610.md
 ---
 
 # Planning DB query component placement
@@ -18,5 +17,3 @@ Query structures live only in `tools/planning-db/schema.sql`; component and
 rail evidence lives in Planning DB and is read through governed queries.
 Validation is `node --test scripts/planning-db-query.test.cjs scripts/planning-db-import.test.cjs`
 and `pnpm verify:prepush`.
-
-The detailed delivery record is historical and remains at `archived_record`.

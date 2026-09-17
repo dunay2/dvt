@@ -3,7 +3,7 @@
  * canonized through the planning DB queue instead of acting as a parallel docs backlog.
  */
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
 
 import {
@@ -114,6 +114,9 @@ test('docs disposition canonization has semantic ownership and DB-first closure'
 test('retired historical packs and generators cannot return', () => {
   const retiredPaths = [
     'docs/archive',
+    'docs/planning/archive',
+    'docs/planning/status/planner-local-doc-triage-20260320.md',
+    'docs/planning/status/root-local-doc-triage-20260417.md',
     'docs/adr/_archive',
     'docs/evidence/archive',
     'docs/planning/proposals/disposable/manifests/planner-stage-1-1-canonicalization.manifest.json',
@@ -149,5 +152,29 @@ test('retired historical packs and generators cannot return', () => {
   for (const path of ['docs/adr/index.md', 'docs/evidence/index.md']) {
     assert.ok(owner.artifacts.includes(path), path);
     assert.ok(scripts['docs:sync:check'].includes(path), path);
+  }
+});
+
+test('current records do not point to retired planning files as local evidence', () => {
+  const walk = (directory) =>
+    readdirSync(new URL(`../../${directory}`, import.meta.url), { withFileTypes: true }).flatMap(
+      (entry) => {
+        const path = `${directory}/${entry.name}`;
+        if (entry.isDirectory()) return walk(path);
+        return entry.isFile() && entry.name.endsWith('.md') ? [path] : [];
+      }
+    );
+
+  for (const path of walk('docs/planning/proposals/mandatory')) {
+    assert.doesNotMatch(readRepoFile(path), /^archived_record:/mu, path);
+  }
+  for (const directory of ['docs/evidence', 'docs/risk-register']) {
+    for (const path of walk(directory)) {
+      assert.doesNotMatch(
+        readRepoFile(path),
+        /(?<![\w/])docs\/planning\/archive\/[\w./-]+\.md/u,
+        path
+      );
+    }
   }
 });

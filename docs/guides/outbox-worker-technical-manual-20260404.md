@@ -76,5 +76,5 @@ flowchart LR
 ## Governing references
 
 - [Outbox Worker Runbook](../runbooks/outbox-worker-g5.md)
-- [R-20260311-G5-4-QA-01](../risk-register/quality/R-20260311-g5-4-operability-and-fencing-residuals.md)
+- [R-20260311-G5-4-QA-01](../risk-register/quality/r-20260311-g5-4-operability-and-fencing-residuals.md)
 - [ADR-0033 outbox worker sharding and fencing model](../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)

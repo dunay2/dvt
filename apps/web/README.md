@@ -17,8 +17,6 @@ Canonical frontend docs:
 - `docs/architecture/components/web/plugin-contributions-developer-guide.md`
 - `docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md`
 
-Historical local notes from `apps/web/*.md` were moved to `docs/planning/archive/`.
-
 ## Features
 
 ### Core UX Principle: State-Driven Architecture

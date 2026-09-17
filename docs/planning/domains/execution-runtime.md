@@ -32,18 +32,6 @@ runtime hardening.
 
 - [Temporal worker DBT runtime runbook 2026-04-14](../../runbooks/temporal-worker-dbt-plugin-runtime-20260414.md)
 
-## Historical Proposal Inputs
-
-These proposals informed the current runtime shape, but they are no longer the
-active source of truth for execution-runtime planning.
-
-- [Gap 5 Sequence and Module Design](../archive/proposals/gap-5-sequence-and-module-design-20260319.md)
-- [Gap 5 PR1 Minimal Usable Archival](../archive/proposals/gap-5-pr1-minimal-usable-archival-20260319.md)
-- [Gap 5 PR2 Deferred Deletion and Restore](../archive/proposals/gap-5-pr2-deferred-deletion-and-restore-20260319.md)
-- [Gap 5 PR3 Delivery Buffer Retention](../archive/proposals/gap-5-pr3-delivery-buffer-retention-20260319.md)
-- [Gap 5 PR4 Redaction ADR and Follow-Up](../archive/proposals/gap-5-pr4-redaction-adr-follow-up-20260319.md)
-- [Gap 5 Executive Delivery Roadmap](../archive/proposals/gap-5-executive-delivery-roadmap-20260319.md)
-
 ## Relevant Reviews And Closeouts
 
 - [20260322 DDD and Hexagonal Port Audit](../reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md)

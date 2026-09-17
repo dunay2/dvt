@@ -82,8 +82,9 @@ If those gaps remain undocumented or are treated as "non-blocking ops details",
   `eventId` and `idempotencyKey`, and prove it with a canary or contract test.
 - Execute reclaim/orphan recovery and backlog sanity against a real PostgreSQL
   lane before claiming operability closure.
-- Track the implementation work through
-  [G5 / US-G5.4 Operability And Ownership Hardening Plan](../../planning/archive/gaps/G5-US-G5.4-OPERABILITY-AND-OWNERSHIP-HARDENING-PLAN.md).
+- Consult the original design context in Git; current work belongs in GitHub
+  Issues, not the retired plan:
+  [G5 / US-G5.4 Operability And Ownership Hardening Plan (Git provenance)](https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/gaps/G5-US-G5.4-OPERABILITY-AND-OWNERSHIP-HARDENING-PLAN.md).
 
 ## Evidence
 
@@ -100,8 +101,8 @@ If those gaps remain undocumented or are treated as "non-blocking ops details",
 - `apps/outbox-worker/test/canary/standaloneCanaryAcceptance.test.ts`
 - `packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts`
 - `packages/@dvt/adapter-postgres/test/smoke.test.ts`
-- `docs/planning/archive/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md`
-- `docs/risk-register/quality/R-20260311-g5-3-correctness-closeout-residuals.md`
+- `https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md`
+- `docs/risk-register/quality/r-20260311-g5-3-correctness-closeout-residuals.md`
 
 ## Reference-Only Comparative Signals
 
