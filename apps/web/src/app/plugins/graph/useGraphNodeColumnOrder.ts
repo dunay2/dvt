@@ -1,5 +1,5 @@
 /** Owned concern: stage the visible order of active and inactive graph-node fields. */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 type OrderableColumn = Readonly<{
   id?: string;
@@ -73,19 +73,37 @@ export function useGraphNodeColumnOrder<TColumn extends OrderableColumn>(
     [columns]
   );
   const [orderedIds, setOrderedIds] = useState(currentIds);
+  const previousColumnsByIdRef = useRef(columnsById);
 
   useEffect(() => {
+    const previousColumnsById = previousColumnsByIdRef.current;
     setOrderedIds((existing) => {
-      const schemaChanged =
-        existing.some((id) => !columnsById.has(id)) &&
-        currentIds.some((id) => !existing.includes(id));
-      return schemaChanged
-        ? currentIds
-        : [
-            ...existing.filter((id) => columnsById.has(id)),
-            ...currentIds.filter((id) => !existing.includes(id)),
-          ];
+      const reconciledIds: string[] = [];
+      const usedIds = new Set<string>();
+      for (const existingId of existing) {
+        if (columnsById.has(existingId)) {
+          reconciledIds.push(existingId);
+          usedIds.add(existingId);
+          continue;
+        }
+
+        const previousName = previousColumnsById.get(existingId)?.name;
+        if (previousName == null) continue;
+        const previousNameCount = [...previousColumnsById.values()].filter(
+          (column) => column.name === previousName
+        ).length;
+        const currentMatches = currentIds.filter(
+          (currentId) => columnsById.get(currentId)?.name === previousName
+        );
+        if (previousNameCount !== 1 || currentMatches.length !== 1) continue;
+        const replacementId = currentMatches[0]!;
+        if (usedIds.has(replacementId)) continue;
+        reconciledIds.push(replacementId);
+        usedIds.add(replacementId);
+      }
+      return [...reconciledIds, ...currentIds.filter((currentId) => !usedIds.has(currentId))];
     });
+    previousColumnsByIdRef.current = columnsById;
   }, [columnsById, currentIdsKey]);
 
   const orderedColumns = orderedIds.flatMap((id) => {
