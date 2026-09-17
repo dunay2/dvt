@@ -559,7 +559,7 @@ describe('useCanvasControllerReadModel', () => {
         .columns as ReadonlyArray<{ id: string; name: string }>;
       expect(columns.map(({ id, name }) => ({ id, name }))).toEqual([
         { id: 'dvt_fld_event_type', name: 'event_type' },
-        { id: 'request_id', name: 'request_id' },
+        { id: 'dvt_fld_source_request_id', name: 'request_id' },
         { id: 'dvt_fld_event_id', name: 'event_id' },
         { id: 'dvt_fld_manual', name: 'manual' },
       ]);
