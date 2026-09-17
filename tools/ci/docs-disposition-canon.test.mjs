@@ -350,3 +350,54 @@ test('retired legacy planning pack has no operational consumers', () => {
   assert.equal(preservedCommand, true, 'recorded evidence must be preserved');
   assertContains('docs/planning/state/github-mvp-issue-workflow.md', 'is the only task backlog');
 });
+
+// Completed editorial journals do not replace current contracts or issue history.
+test('retired documentation-only closeouts have no files or local consumers', () => {
+  const contractCloseouts = new Set([
+    '20260318-stage-1-1-planner-canonicalization-companion-boundary-closeout.md',
+    '20260318-stage-1-1-planner-canonicalization-contract-evolution-protocol-closeout.md',
+    '20260318-stage-1-1-planner-canonicalization-policy-vocabulary-contracts-closeout.md',
+  ]);
+  const editorialCloseouts = new Set([
+    '20260315-architecture-review-docs-closeout.md',
+    '20260315-review-markdown-relocation-closeout.md',
+    '20260316-engine-docs-current-state-closeout.md',
+    '20260317-package-module-build-policy-proposal-closeout.md',
+    '20260317-principal-architecture-review-execution-plan-closeout.md',
+    '20260317-proposal-set-alignment-closeout.md',
+    '20260402-evidence-information-architecture-proposal-closeout.md',
+    '20260514-f13-frontend-architecture-doc-reconciliation-closeout.md',
+    '20260331-zensical-primary-docs-runtime-closeout.md',
+    '20260515-lane-e-p0-review-reconciliation-closeout.md',
+  ]);
+  const isRetired = (name) =>
+    editorialCloseouts.has(name) ||
+    (/^202603(?:17|18)-stage-1-1-planner-canonicalization-[a-z0-9-]+-closeout\.md$/u.test(name) &&
+      !contractCloseouts.has(name));
+
+  const directory = new URL('../../docs/planning/closeouts/', import.meta.url);
+  for (const name of readdirSync(directory)) {
+    assert.equal(isRetired(name), false, `retired editorial closeout: ${name}`);
+  }
+
+  const paths = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
+    .split('\0')
+    .filter(Boolean);
+  for (const path of paths) {
+    if (path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
+    if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
+    // Only exact Git revisions can supply historical provenance, never main.
+    const current = readRepoFile(path).replace(
+      /https:\/\/github\.com\/dunay2\/dvt\/blob\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
+      ''
+    );
+    for (const match of current.matchAll(/\b[0-9]{8}-[a-z0-9.-]+-closeout(?:\.md)?\b/gu)) {
+      const name = match[0].endsWith('.md') ? match[0] : `${match[0]}.md`;
+      assert.equal(
+        isRetired(name),
+        false,
+        `retired editorial closeout reference: ${path}: ${name}`
+      );
+    }
+  }
+});
