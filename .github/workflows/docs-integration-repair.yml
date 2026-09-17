@@ -11,95 +11,120 @@ permissions:
 
 jobs:
   reconcile:
-    name: Validate exact retirement candidate with canonical risk filenames
+    name: Reconcile retirement and validate exact merge candidate
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
       RETIREMENT_HEAD: fbdb79b8404fdf07b95b0f045e3a3c910581ede0
-      CURRENT_MAIN: d7ef2ccf5f7a51628a26dbca3d7cfb9262bd6313
-      GIT_BASE: d7ef2ccf5f7a51628a26dbca3d7cfb9262bd6313
+      PREVIOUS_BASE: d7ef2ccf5f7a51628a26dbca3d7cfb9262bd6313
+      CURRENT_MAIN: 458eb9f05e52e3c93b8bc97c20664c833fa07928
+      GIT_BASE: 458eb9f05e52e3c93b8bc97c20664c833fa07928
       PLANNING_DB_INTEGRITY_SCOPE: bootstrap
+      TZ: UTC
     steps:
-      - name: Checkout exact integration base without stored credentials
+      - name: Checkout reviewed baseline without stored credentials
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: d7ef2ccf5f7a51628a26dbca3d7cfb9262bd6313
           fetch-depth: 0
           persist-credentials: false
-      - name: Restore verified candidate patch and fix the two filename findings
+      - name: Restore exact candidate and reconcile with current main
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          mkdir -p /tmp/retirement-result
-          git config user.name 'DVT documentation integration'
-          git config user.email '34416258+dunay2@users.noreply.github.com'
           python3 - <<'PY'
           import pathlib,subprocess,json,hashlib,zipfile,io,os
-          artifact='10456215588'
-          raw=subprocess.check_output(['gh','api','repos/'+os.environ['GITHUB_REPOSITORY']+'/actions/artifacts/'+artifact+'/zip'])
-          assert hashlib.sha256(raw).hexdigest()=='c44bfc558cd558d1af7641ef7c373bddb5ebad0c26ecca3193934f3913dce9de'
+          out=pathlib.Path('/tmp/retirement-result');out.mkdir(exist_ok=True)
+          def git(*args): return subprocess.check_output(['git',*args])
+          raw=subprocess.check_output(['gh','api','repos/'+os.environ['GITHUB_REPOSITORY']+'/actions/artifacts/10456217114/zip'])
+          assert hashlib.sha256(raw).hexdigest()=='15848168d258b2887e5e3b5ae20e1e48bfc922967472e134b21b9e0788b5e47b'
           z=zipfile.ZipFile(io.BytesIO(raw))
           for p,sha in json.loads(z.read('checksums.json')).items(): assert hashlib.sha256(z.read(p)).hexdigest()==sha,p
           obj=json.loads(z.read('objects.json'))
-          assert obj['base']==os.environ['CURRENT_MAIN']
+          assert obj['base']==os.environ['PREVIOUS_BASE']
           assert obj['oldHead']==os.environ['RETIREMENT_HEAD']
-          assert obj['tree']=='e2c71fd5eba0034e6e1a69c87dd57b5c7eecc65d'
+          assert obj['tree']=='3113b7b8431587af5a23d11b50b00f695c59203b'
           subprocess.run(['git','apply','--index','-'],input=z.read('candidate.patch'),check=True)
-          assert subprocess.check_output(['git','write-tree']).decode().strip()==obj['tree']
-          print('Exact previously reviewed candidate restored:',obj['tree'])
-          mapping={
-            'R-20260307-golden-path-coverage-debt.md':'r-20260307-golden-path-coverage-debt.md',
-            'R-20260311-g5-3-correctness-closeout-residuals.md':'r-20260311-g5-3-correctness-closeout-residuals.md',
-          }
-          root=pathlib.Path('docs/risk-register/quality')
-          for old,new in mapping.items():
-              assert (root/old).is_file() and not (root/new).exists()
-              (root/old).rename(root/new)
-          edited=[]
-          for p in pathlib.Path('docs').rglob('*.md'):
-              if p.name=='index.md': continue
-              before=p.read_text(); after=before
-              for old,new in mapping.items(): after=after.replace(old,new)
-              if after!=before: p.write_text(after); edited.append(str(p))
-          assert edited==['docs/risk-register/quality/r-20260311-g5-4-operability-and-fencing-residuals.md'],edited
-          pathlib.Path('/tmp/retirement-result/consumer-edits.json').write_bytes(z.read('consumer-edits.json'))
+          assert git('write-tree').decode().strip()==obj['tree']
+          p=pathlib.Path('docs/evidence/critical/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md')
+          text=p.read_text();old='date: 2026-03-08T00:00:00.000Z\n'
+          assert text.count(old)==1
+          p.write_text(text.replace(old,'date: "2026-03-08"\n'))
           subprocess.run(['git','add','-A'],check=True)
-          tracked=subprocess.check_output(['git','ls-files','-z']).decode().strip('\0').split('\0')
-          assert all(pathlib.Path(p).exists() for p in tracked), 'CI import must see staged physical inventory'
-          print('Risk identities and content preserved; canonical renames are staged before CI import')
+          patch=git('diff','--cached',os.environ['PREVIOUS_BASE'],'--','.',':(exclude)docs/.manifest.json')
+          changed=set(git('diff','--cached','--name-only',os.environ['PREVIOUS_BASE']).decode().splitlines())
+          upstream=set(git('diff','--name-only',os.environ['PREVIOUS_BASE'],os.environ['CURRENT_MAIN']).decode().splitlines())
+          assert not (changed & upstream),sorted(changed & upstream)
+          subprocess.run(['git','archive','--format=tar.gz','-o',str(out/'main-source.tar.gz'),os.environ['CURRENT_MAIN']],check=True)
+          subprocess.run(['git','reset','--hard',os.environ['RETIREMENT_HEAD']],check=True)
+          git('config','user.name','DVT documentation integration')
+          git('config','user.email','34416258+dunay2@users.noreply.github.com')
+          git('config','commit.gpgsign','false')
+          merge=subprocess.run(['git','merge','--no-commit','--no-ff',os.environ['CURRENT_MAIN']],capture_output=True,text=True)
+          print(merge.stdout);print(merge.stderr)
+          conflicts=git('diff','--name-only','--diff-filter=U').decode().splitlines()
+          assert merge.returncode==0 or (merge.returncode==1 and set(conflicts)=={'docs/.manifest.json'}),conflicts
+          subprocess.run(['git','restore','--source',os.environ['CURRENT_MAIN'],'--staged','--worktree','--','.'],check=True)
+          subprocess.run(['git','apply','--index','-'],input=patch,check=True)
+          assert git('rev-parse','MERGE_HEAD').decode().strip()==os.environ['CURRENT_MAIN']
+          assert not pathlib.Path('docs/planning/archive').exists()
+          assert len(git('diff','--cached','--name-only','--diff-filter=D',os.environ['CURRENT_MAIN']).decode().splitlines())==112
+          (out/'consumer-edits.json').write_bytes(z.read('consumer-edits.json'))
+          (out/'reconciliation.json').write_text(json.dumps({'previousTree':obj['tree'],'base':os.environ['CURRENT_MAIN'],'upstreamCommits':10,'overlappingPaths':[],'dateCorrection':str(p)},indent=2))
+          subprocess.run(['git','diff','--cached','--check'],check=True)
+          print('Exact candidate restored; date normalized; latest main preserved; pending merge parents verified')
           PY
       - name: Setup canonical toolchain and enabled hooks
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
-      - name: Prepare existing disposable CI database
+      - name: Prepare disposable CI bootstrap database only
         uses: ./.github/actions/prepare-planning-db
-      - name: Regenerate documentation and governance outputs
+      - name: Regenerate canonical documentation and governance outputs
+        shell: bash
         run: |
           pnpm docs:sync
           pnpm governance:refresh
           git add -A
-      - name: Commit through canonical helper with hooks enabled
+      - name: Commit merge through canonical helper and hooks
+        shell: bash
         run: |
-          pnpm commit docs docs "Reconcile planning retirement and historical consumers"
+          pnpm commit docs docs "Reconcile retired planning history with current main"
           echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           python3 - <<'PY'
           import subprocess,os
-          paths=subprocess.check_output(['git','diff','--name-only',os.environ['CURRENT_MAIN'],'HEAD','--','apps','packages','specs','.github','pnpm-lock.yaml','package.json']).decode().splitlines()
+          def git(*args):return subprocess.check_output(['git',*args]).decode().strip()
+          assert git('show','-s','--format=%P','HEAD').split()==[os.environ['RETIREMENT_HEAD'],os.environ['CURRENT_MAIN']]
+          paths=git('diff','--name-only',os.environ['CURRENT_MAIN'],'HEAD','--','apps','packages','specs','.github','pnpm-lock.yaml','package.json').splitlines()
           assert set(paths)=={'apps/web/README.md','packages/@dvt/planner/docs/README.md'},paths
-          print('Product code, dependencies and workflows unchanged')
+          print('Product code, contracts, dependencies and workflows unchanged')
           PY
-      - name: Run affected regression tests
-        run: node --test scripts/documentation-publication.test.cjs scripts/planning-db-surface-inventory-check.test.cjs tools/ci/docs-disposition-canon.test.mjs
-      - name: Validate canonical documentation and full selected prepush plan
+      - name: Run regressions and full canonical validation
+        shell: bash
         run: |
-          pnpm docs:sync:check
-          pnpm docs:gov:manifest:check
-          pnpm ci:docs
-          pnpm verify:prepush
-          git diff --exit-code HEAD
-      - name: Export candidate evidence without publishing refs
+          python3 - <<'PY'
+          import subprocess,pathlib,json,sys
+          out=pathlib.Path('/tmp/retirement-result');results=[]
+          commands=[
+            ['node','--test','scripts/documentation-publication.test.cjs','scripts/planning-db-surface-inventory-check.test.cjs','tools/ci/docs-disposition-canon.test.mjs'],
+            ['pnpm','docs:sync:check'],
+            ['pnpm','docs:gov:manifest:check'],
+            ['pnpm','ci:docs'],
+            ['pnpm','verify:prepush'],
+            ['git','diff','--exit-code','HEAD'],
+          ]
+          for i,cmd in enumerate(commands):
+            r=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+            name=f'validation-{i+1}.log';(out/name).write_text(r.stdout)
+            results.append({'command':cmd,'exitCode':r.returncode,'log':name})
+            (out/'validation.json').write_text(json.dumps(results,indent=2))
+            print('COMMAND',cmd,'EXIT',r.returncode,flush=True)
+            print('\n'.join(r.stdout.splitlines()[-35:]),flush=True)
+            if r.returncode:sys.exit(r.returncode)
+          (out/'validated.txt').write_text(subprocess.check_output(['git','rev-parse','HEAD']).decode())
+          PY
+      - name: Export exact commit and source evidence
         if: always()
         shell: bash
         run: |
@@ -107,44 +132,49 @@ jobs:
           import pathlib,subprocess,json,os,hashlib,base64
           out=pathlib.Path('/tmp/retirement-result');out.mkdir(exist_ok=True)
           def git(*args):return subprocess.check_output(['git',*args])
-          head=git('rev-parse','HEAD').decode().strip()
+          head=git('rev-parse','HEAD').decode().strip();base=os.environ['CURRENT_MAIN']
           (out/'head.txt').write_text(head+'\n')
           (out/'status.txt').write_bytes(git('status','--short'))
-          (out/'stats.txt').write_bytes(git('diff','--stat',os.environ['CURRENT_MAIN'],head))
-          (out/'candidate.patch').write_bytes(git('diff',os.environ['CURRENT_MAIN'],head))
+          (out/'stats.txt').write_bytes(git('diff','--stat',base,head))
+          (out/'candidate.patch').write_bytes(git('diff',base,head))
           subprocess.run(['git','archive','--format=tar.gz','-o',str(out/'source.tar.gz'),head],check=True)
-          info={'head':head,'tree':git('rev-parse','HEAD^{tree}').decode().strip(),'parents':git('show','-s','--format=%P','HEAD').decode().strip().split(),'base':os.environ['CURRENT_MAIN'],'baseTree':git('rev-parse',os.environ['CURRENT_MAIN']+'^{tree}').decode().strip(),'oldHead':os.environ['RETIREMENT_HEAD'],'treeElements':[],'newBlobs':[]}
-          raw=git('diff','--raw','--no-renames','-z',os.environ['CURRENT_MAIN'],head).split(b'\0')
+          parents=git('show','-s','--format=%P','HEAD').decode().strip().split()
+          tree=git('rev-parse','HEAD^{tree}').decode().strip()
+          def person(prefix):
+            values=git('show','-s','--format=%'+prefix+'n%x00%'+prefix+'e%x00%'+prefix+'I','HEAD').decode().strip().split('\0')
+            return dict(zip(['name','email','date'],values))
+          commit={'message':git('cat-file','commit',head).decode().split('\n\n',1)[1],'tree':tree,'parents':parents,'author':person('a'),'committer':person('c')}
+          info={'head':head,'tree':tree,'parents':parents,'base':base,'baseTree':git('rev-parse',base+'^{tree}').decode().strip(),'oldHead':os.environ['RETIREMENT_HEAD'],'commitPayload':commit,'treeElements':[],'newBlobs':[]}
+          raw=git('diff','--raw','--no-renames','-z',base,head).split(b'\0')
           for i in range(0,len(raw)-1,2):
-              fields=raw[i].decode().split();p=raw[i+1].decode();deleted=fields[-1]=='D'
+              f=raw[i].decode().split();p=raw[i+1].decode();deleted=f[-1]=='D'
               sha=None if deleted else git('rev-parse',head+':'+p).decode().strip()
-              info['treeElements'].append({'path':p,'mode':fields[0][1:] if deleted else fields[1],'type':'blob','sha':sha})
-          for line in git('rev-list','--objects',head,'^'+os.environ['CURRENT_MAIN'],'^'+os.environ['RETIREMENT_HEAD']).decode().splitlines():
+              info['treeElements'].append({'path':p,'mode':f[0][1:] if deleted else f[1],'type':'blob','sha':sha})
+          for line in git('rev-list','--objects',head,'^'+base,'^'+os.environ['RETIREMENT_HEAD']).decode().splitlines():
               sha=line.split(' ',1)[0]
               if git('cat-file','-t',sha).strip()==b'blob':
                   info['newBlobs'].append({'sha':sha,'encoding':'base64','content':base64.b64encode(git('cat-file','blob',sha)).decode()})
           (out/'objects.json').write_text(json.dumps(info,ensure_ascii=False))
           (out/'checksums.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in out.iterdir() if p.is_file() and p.name!='checksums.json'},indent=2))
-          print(json.dumps({k:v for k,v in info.items() if k not in ('treeElements','newBlobs')},indent=2))
-          print('Changed paths',len(info['treeElements']),'new blobs',len(info['newBlobs']))
+          print(json.dumps({k:v for k,v in info.items() if k not in ('treeElements','newBlobs','commitPayload')},indent=2))
           PY
-      - name: Upload exact source and validation evidence
+      - name: Upload source and validation evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: planning-retirement-reconciliation
           path: /tmp/retirement-result
-          retention-days: 3
+          retention-days: 7
 
   objects:
-    name: Transfer validated content-addressed objects only
+    name: Transfer validated exact Git objects without updating branches
     needs: reconcile
     runs-on: ubuntu-latest
     permissions:
       contents: write
       actions: read
     steps:
-      - name: Transfer verified blobs and tree without commit or ref updates
+      - name: Transfer verified blobs tree and hook-created commit only
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -162,13 +192,18 @@ jobs:
           z=zipfile.ZipFile(io.BytesIO(raw))
           for p,sha in json.loads(z.read('checksums.json')).items():assert hashlib.sha256(z.read(p)).hexdigest()==sha,p
           obj=json.loads(z.read('objects.json'))
-          assert obj['base']=='d7ef2ccf5f7a51628a26dbca3d7cfb9262bd6313'
+          assert obj['base']=='458eb9f05e52e3c93b8bc97c20664c833fa07928'
           assert obj['oldHead']=='fbdb79b8404fdf07b95b0f045e3a3c910581ede0'
-          assert obj['parents']==[obj['base']]
+          assert obj['parents']==[obj['oldHead'],obj['base']]
+          assert z.read('validated.txt').decode().strip()==obj['head']
+          assert all(x['exitCode']==0 for x in json.loads(z.read('validation.json')))
+          assert len(json.loads(z.read('validation.json')))==6
+          assert z.read('status.txt').strip()==b''
           for blob in obj['newBlobs']:
               data=base64.b64decode(blob['content']);sha=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest();assert sha==blob['sha']
               returned=json.loads(api('git/blobs',{'encoding':'base64','content':blob['content']}));assert returned['sha']==sha
           result=json.loads(api('git/trees',{'base_tree':obj['baseTree'],'tree':obj['treeElements']}));assert result['sha']==obj['tree']
-          print('Verified tree transferred:',result['sha'])
-          print('No commit, branch, PR, protection or main update performed')
+          commit=json.loads(api('git/commits',obj['commitPayload']));assert commit['sha']==obj['head'],(commit['sha'],obj['head'])
+          print('Verified exact hook-created commit transferred:',commit['sha'])
+          print('No branch, PR, protection or main update performed')
           PY
