@@ -1,0 +1,230 @@
+name: Isolated runtime delivery plan retirement
+on:
+  push:
+    branches: [automation/3004-retire-runtime-delivery-20260917]
+    paths: [.github/workflows/retire-runtime-delivery-plans.yml]
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GIT_BASE: 860f9664506edb4fee507e0f41503ad2892e7b7e
+      GIT_HEAD: HEAD
+      PLANNING_DB_INTEGRITY_SCOPE: bootstrap
+    steps:
+      - name: Checkout the exact reviewed product baseline
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 860f9664506edb4fee507e0f41503ad2892e7b7e
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Install the declared dependency set
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+      - name: Verify sources, prove the regression, and retire only the approved plans
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/runtime3004"
+          python - <<'PY'
+          import hashlib,json,os,pathlib,subprocess,tarfile
+          root=pathlib.Path.cwd()
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'runtime3004'
+          base=os.environ['GIT_BASE']
+          assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==base
+          folder='docs/planning/proposals/superseded/runtime-and-delivery'
+          targets=[folder+'/dvt_production_readiness_corrected_review_and_roadmap.md',folder+'/gap4-backpressure-admission-pr4-planb-20260326.md']
+          portfolio='docs/planning/proposals/portfolio-map-20260403.md'
+          guard='tools/ci/docs-disposition-canon.test.mjs'
+          expected={targets[0]:'af568222ddd860db3cb989edccbb540e70c9084d',targets[1]:'67278198f8c6928ca2b352b168cce37e45bee275',portfolio:'51b9ab27cbd81916a8268215cc5872538b0fa28b',guard:'35e264dd7ff02cad2157142a679020f93cd82d33'}
+          retained={
+            'apps/web/package.json':'25e85336a2f791c7c2ae26cd82096162ce37e5fa',
+            'apps/api/src/application/ports/AdmissionTelemetry.ts':'26b6059a730ecbdfb6eec994a13f68ad2e894212',
+            'apps/api/src/infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.ts':'cbec60f36176ca02e729f759cb90dc46dc07560b',
+            'apps/api/src/infrastructure/admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.ts':'6e39726d91a79ec320ddb156129867b0a06ed213',
+            'apps/api/src/infrastructure/backpressure/MetricsEmittingBackpressureStore.ts':'2e5ef830f112811645ae19aac50d155a11b94868',
+            'apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts':'1808e57ab9cb0fae14bd1d04dd7b69e01e153d9b',
+            'apps/api/src/modules/protectedRuntime/buildProtectedAdmissionRuntime.ts':'ed38dba4bd2dbb3814155937fbf9b8cce50b385e',
+            'apps/api/test/infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.test.ts':'903f00abeef3a4f177a4ba5156829765e119bad3',
+            'apps/api/test/infrastructure/admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.test.ts':'c1af2add0d9f19dacd99de01a83726e5680cccb2',
+            'apps/api/test/infrastructure/backpressure/MetricsEmittingBackpressureStore.test.ts':'042543863dd16269264af198dd12a0633e4fe445',
+            'docs/runbooks/admission-control-runbook.md':'4407272e5f4390b3ebec742e84c52484b29c4258',
+            'docs/evidence/critical/ED-20260401-admission-telemetry-contract-and-runtime-teardown.md':'7c44bddea90f5f46cf7d5a789cd09f6be7960247',
+            'docs/risk-register/quality/R-20260401-ADMISSION-TELEMETRY-TEARDOWN-RESILIENCE.yaml':'02a99fc7c9c635eeee7cfe8f6c0965a623e87a9c',
+            'docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md':'00b73faaeabe936f5d6357d819b4f274c08591ce',
+            'docs/adr/ADR-0054-plan-store-scoped-record-identity.md':'c7d7c31ba9b50f0cc580718303ccda5525f5fbf9',
+            'packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts':'270149f2d3fc4afde0ab15cd237ce15563f553d1',
+            'packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts':'b5225e311cb8db1d72afc7926f6914c328a292dc',
+            'packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts':'01301ba0cdf73ab6aa5525951f6edaf792622d8d',
+            'packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityRecord.v1.ts':'344b4287db4dd530606855c0f3e86ae27d7162d9',
+            'packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.ts':'c409f0103a3f2d44cee36209da2d4898c23c3224'
+          }
+          def blob(data): return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+          for path,sha in (expected|retained).items():
+            assert blob(pathlib.Path(path).read_bytes())==sha, 'source changed: '+path
+          tracked=subprocess.check_output(['git','ls-files','-z'],text=True).split('\0')
+          tracked=[p for p in tracked if p]
+          assert sorted(p for p in tracked if p.startswith(folder+'/'))==sorted(targets)
+          def consumers():
+            result={pathlib.Path(p).name:[] for p in targets}
+            for path in tracked:
+              if path in targets or path==guard or not pathlib.Path(path).is_file(): continue
+              text=pathlib.Path(path).read_bytes().decode('utf-8',errors='replace')
+              for name in result:
+                if name in text: result[name].append(path)
+            return result
+          before=consumers()
+          assert before=={pathlib.Path(targets[0]).name:[],pathlib.Path(targets[1]).name:[portfolio]},before
+          (out/'consumers-before.json').write_text(json.dumps(before,indent=2)+'\n')
+          (out/'retained-source-hashes.json').write_text(json.dumps(retained,indent=2)+'\n')
+          (out/'input-source-hashes.json').write_text(json.dumps(expected,indent=2)+'\n')
+          with tarfile.open(out/'retained-source-review.tar.gz','w:gz') as archive:
+            for path in retained: archive.add(path,arcname=path)
+          source=pathlib.Path(guard).read_text()
+          anchor="    'docs/planning/proposals/superseded/runtime-and-contracts',\n"
+          assert source.count(anchor)==1
+          source=source.replace(anchor,anchor+"    'docs/planning/proposals/superseded/runtime-and-delivery',\n")
+          source+=r'''
+          test('retired runtime delivery plans have no tracked consumers', () => {
+            const retiredNames = [
+              'dvt_production_readiness_corrected_review_and_roadmap.md',
+              'gap4-backpressure-admission-pr4-planb-20260326.md',
+            ];
+            const files = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
+              .split('\0')
+              .filter(Boolean);
+            for (const path of files) {
+              if (path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
+              if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
+              const content = readRepoFile(path);
+              for (const name of retiredNames) {
+                assert.equal(content.includes(name), false, `retired runtime delivery reference: ${path}`);
+              }
+            }
+          });
+          '''
+          pathlib.Path(guard).write_text(source)
+          cmd=['node','--test',guard]
+          def check(name,code):
+            result=subprocess.run(cmd,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+            (out/name).write_text(result.stdout)
+            print(result.stdout)
+            assert result.returncode==code,(name,result.returncode)
+            return result.stdout
+          red=check('red.log',1)
+          assert '# pass 4' in red and '# fail 2' in red
+          original={p:pathlib.Path(p).read_bytes() for p in targets}
+          for path in targets: pathlib.Path(path).unlink()
+          pathlib.Path(folder).rmdir()
+          text=pathlib.Path(portfolio).read_text()
+          navigation='\n## Superseded\n\n- [Runtime And Delivery](./superseded/runtime-and-delivery/gap4-backpressure-admission-pr4-planb-20260326.md)\n'
+          assert text.count(navigation)==1
+          text=text.replace(navigation,'')
+          category='- `superseded/`: proposals replaced by newer execution surfaces.\n'
+          assert text.count(category)==1
+          assert not any(p.is_file() for p in pathlib.Path('docs/planning/proposals/superseded').rglob('*'))
+          text=text.replace(category,'')
+          pathlib.Path(portfolio).write_text(text.rstrip()+'\n')
+          green=check('green.log',0)
+          assert '# pass 6' in green and '# fail 0' in green
+          for path,data in original.items():
+            try:
+              pathlib.Path(path).parent.mkdir(parents=True,exist_ok=True)
+              pathlib.Path(path).write_bytes(data)
+              result=check(pathlib.Path(path).stem+'-reintroduction.log',1)
+              assert folder in result
+            finally:
+              pathlib.Path(path).unlink(missing_ok=True)
+              pathlib.Path(path).parent.rmdir()
+          agents=pathlib.Path('AGENTS.md');saved=agents.read_bytes()
+          try:
+            agents.write_bytes(saved+b'\n- '+targets[1].encode()+b'\n')
+            result=check('reference-reintroduction.log',1)
+            assert 'retired runtime delivery reference: AGENTS.md' in result
+          finally:
+            agents.write_bytes(saved)
+          after=consumers()
+          assert all(not paths for paths in after.values()),after
+          (out/'consumers-after.json').write_text(json.dumps(after,indent=2)+'\n')
+          allowed=set(targets+[portfolio,guard])
+          changed=set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())
+          assert changed==allowed,changed
+          for path,sha in retained.items(): assert blob(pathlib.Path(path).read_bytes())==sha,path
+          (out/'allowed-paths.json').write_text(json.dumps(sorted(allowed),indent=2)+'\n')
+          PY
+      - name: Commit the scoped retirement with the repository helper and hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/runtime3004"
+          git config user.name "DVT documentation maintenance"
+          git config user.email "34416258+dunay2@users.noreply.github.com"
+          git switch -c docs/3004-retire-runtime-delivery-plans
+          git add -u
+          pnpm commit docs docs "Retire superseded runtime delivery plans" 2>&1 | tee "$out/commit.log"
+          git rev-parse HEAD > "$out/head.txt"
+          git rev-parse HEAD^{tree} > "$out/tree.txt"
+      - name: Bootstrap only the disposable CI database from the committed candidate
+        uses: ./.github/actions/prepare-planning-db
+      - name: Run canonical docs and governance generators without database rebuilding
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/runtime3004"
+          pnpm docs:sync 2>&1 | tee "$out/docs-sync.log"
+          pnpm governance:refresh 2>&1 | tee "$out/governance-refresh.log"
+          git diff --exit-code HEAD
+          test -z "$(git status --porcelain)"
+      - name: Validate the exact committed candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/runtime3004"
+          node --test scripts/ai-preflight.test.cjs scripts/check-ai-efficiency-adoption.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/docs-disposition-canon.test.mjs tools/ci/startup-card-canon.test.mjs tools/ci/arc-policy-state-store.test.mjs 2>&1 | tee "$out/tests.log"
+          node tools/ci/arc-check.mjs > "$out/arc.json"
+          pnpm docs:sync:check 2>&1 | tee "$out/docs-sync-check.log"
+          pnpm docs:gov:manifest:check 2>&1 | tee "$out/manifest-check.log"
+          pnpm ci:docs 2>&1 | tee "$out/ci-docs.log"
+          pnpm verify:prepush 2>&1 | tee "$out/prepush.log"
+          pnpm pr:validate-title "docs(docs): Retire superseded runtime delivery plans" 2>&1 | tee "$out/title.log"
+          git diff --exit-code HEAD
+          test -z "$(git status --porcelain)"
+          git diff --exit-code "$GIT_BASE" HEAD -- .arc-policy.yaml AGENTS.md CLAUDE.md .github apps packages scripts docs/adr docs/evidence docs/risk-register docs/runbooks docs/guides tools/ci/arc-check.mjs tools/ci/doc-check.mjs
+          git rev-parse HEAD > "$out/validated.txt"
+          git diff --binary "$GIT_BASE" HEAD > "$out/candidate.patch"
+          git diff --stat "$GIT_BASE" HEAD > "$out/stats.txt"
+          git diff --name-status "$GIT_BASE" HEAD > "$out/name-status.txt"
+          python - <<'PY'
+          import json,os,pathlib,subprocess
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'runtime3004'
+          changed=set(subprocess.check_output(['git','diff','--name-only',os.environ['GIT_BASE'],'HEAD'],text=True).splitlines())
+          assert changed==set(json.loads((out/'allowed-paths.json').read_text())),changed
+          PY
+      - name: Push only the validated topic branch without force
+        shell: bash
+        run: |
+          set -euo pipefail
+          current=$(git ls-remote origin refs/heads/docs/3004-retire-runtime-delivery-plans | cut -f1)
+          test "$current" = "$GIT_BASE"
+          git push origin HEAD:refs/heads/docs/3004-retire-runtime-delivery-plans 2>&1 | tee "$RUNNER_TEMP/runtime3004/push.log"
+      - name: Record artifact integrity and any failed preparation
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,pathlib
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'runtime3004';out.mkdir(exist_ok=True)
+          sums={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(out.iterdir()) if p.is_file() and p.name!='checksums.json'}
+          (out/'checksums.json').write_text(json.dumps(sums,indent=2)+'\n')
+          PY
+      - name: Upload bounded validation evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: runtime-delivery-3004-validation
+          path: ${{ runner.temp }}/runtime3004
+          if-no-files-found: error
+          retention-days: 7
