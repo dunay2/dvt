@@ -41,7 +41,7 @@ same manual selection cost the query store is meant to reduce.
   behavior needs a named query rail and DDD owner before implementation.
 - `docs/adr/adr-0055-planning-db-canonical-operational-source.md`: local
   Postgres is the operational planning DB while Git remains review/bootstrap.
-- `docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md`:
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md):
   GOV-S3 owns the planning/governance query-store design and mechanization
   manifest.
 
@@ -80,7 +80,7 @@ entrypoint for choosing where to look first.
   - run planning DB migration/import/query validation and governance closeout
     gates.
 - Touched files or paths:
-  - `docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md`
+  - [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md)
   - `docs/planning/closeouts/20260510-gov-s3-w20-planning-work-intake-query-closeout.md`
   - `tools/planning-db/migrations/019_planning_work_intake_query.sql`
   - `scripts/planning-db-migrate.test.cjs`

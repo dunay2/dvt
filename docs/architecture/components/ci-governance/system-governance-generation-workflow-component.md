@@ -31,7 +31,7 @@ from Git and does not import or rebuild Planning DB.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/ci-governance/local-changed-files-gate-component.md`
-- `docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md`
+- `docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md`
 - `docs/adr/ADR-0053-file-state-fingerprint-governance.md`
 
 ## Owned Concern

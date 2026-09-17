@@ -196,7 +196,7 @@ Follow-up fix pass red/green evidence:
 - `packages/@dvt/adapter-temporal/test/smoke.test.ts`
 - `apps/api/test/modules/providerAdapters/createTemporalProviderAdapterFactory.test.ts`
 - `docs/planning/reviews/architecture-and-governance/20260427-ar-d-plan-pointer-fowler-hard-qa-review.md`
-- `docs/planning/reviews/review-status-board.md`
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)
 - `docs/planning/state/agent-lane-d.yaml`
 - `docs/evidence/ed-20260427-temporal-planref-config-hardening.md`
 - `docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml`

@@ -20,8 +20,6 @@ runtime hardening.
 
 ## Active Planning Inputs
 
-- [Review Remediation Roadmap 2026-04-02](../roadmap/review-remediation-roadmap-20260402.md)
-- [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)
 - [20260407 Engine boundary current/target review](../reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md)
 - [WorkflowEngine hexagonal derivation plan 2026-04-03](../proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md)
 - [TF-C3 production plugin host composition plan 2026-04-14](../proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md)
@@ -62,4 +60,3 @@ invariants, transitions, consumers, and semantic fitness-function expectations:
 - [Gap Execution Dependency Graph](../roadmap/diagrams/gap-execution-dependency-graph.md)
 - [Gap Execution Parallel Lanes](../roadmap/diagrams/gap-execution-parallel-lanes.md)
 - [Execution Runtime Architecture Delta](../roadmap/diagrams/execution-runtime-architecture-delta.md)
-- [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)

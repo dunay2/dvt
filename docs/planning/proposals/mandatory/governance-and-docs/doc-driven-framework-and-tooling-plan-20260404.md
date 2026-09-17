@@ -364,13 +364,13 @@ owns the canonical operating model, not an indefinite implementation queue.
 
 The implementation surfaces that satisfy the framework acceptance criteria are:
 
-| Framework concern                            | Canonical closure surface                                                                                                                                                               |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Inventory-first startup and task routing     | `docs/planning/status/governance-document-rule-inventory.md`, `docs/guides/ai-work-protocol.md`, `docs/planning/state/planning-control-tower.md`                                        |
-| Information architecture and lifecycle rules | `docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md`, `docs/guides/documentation-maintenance-guide-20260407.md`                                  |
-| Planning as data                             | `docs/planning/state/agent-lane-*.yaml`, `docs/planning/state/how-to-add-tasks.md`, `docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md` |
-| Traceability and evidence checks             | `pnpm verify:prepush`, `pnpm governance:refresh`, `pnpm test:closeout-changed`, ARC evidence/risk gates, and feature-mechanization gates                                                |
-| Generated-governance read side               | `docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md` plus the derived planning/governance query-store checks                                 |
+| Framework concern                            | Canonical closure surface                                                                                                                                        |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Inventory-first startup and task routing     | `docs/planning/status/governance-document-rule-inventory.md`, `docs/guides/ai-work-protocol.md`, `docs/planning/state/planning-control-tower.md`                 |
+| Information architecture and lifecycle rules | `docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md`, `docs/guides/documentation-maintenance-guide-20260407.md`           |
+| MVP task lifecycle                           | GitHub Issues, under `docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md`; Planning DB retains architecture and mechanization. |
+| Traceability and evidence checks             | `pnpm verify:prepush`, `pnpm governance:refresh`, `pnpm test:closeout-changed`, ARC evidence/risk gates, and feature-mechanization gates                         |
+| Generated-governance read side               | `docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md` plus the derived planning/governance query-store checks          |
 
 Follow-on implementation work must not reopen `GOV-S2` or create another
 governance umbrella for the same intent. It must use concrete task IDs and the
@@ -453,7 +453,6 @@ componentGuides:
   - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
 userStories:
   - docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
-  - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
   - docs/planning/closeouts/20260507-gov-s2-doc-driven-operating-framework-closeout.md
 governingSources:
   - AGENTS.md
@@ -463,10 +462,9 @@ governingSources:
   - docs/planning/state/how-to-add-tasks.md # Task: GOV-PROP-DISP-1
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+  - docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
-  - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
   - docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md
   - docs/planning/state/agent-lane-a.yaml
   - docs/planning/state/domain-status-board.md
@@ -517,7 +515,6 @@ redGreenCycles:
     expectedFailure: GOV-S2 closeout, domain-board, and proposal edits are outside allowedImplementationSurfaces before this manifest declares the governance closeout surfaces.
     patchSurfaces:
       - docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
-      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
       - docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md
       - docs/planning/state/agent-lane-a.yaml
       - docs/planning/state/domain-status-board.md
@@ -543,9 +540,6 @@ symbols:
   - <<: *govS2CloseoutSymbolDefaults
     name: GovS2DocDrivenFrameworkPlan
     path: docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
-  - <<: *govS2CloseoutSymbolDefaults
-    name: GovS2QueryStoreBoundary
-    path: docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
   - <<: *govS2CloseoutSymbolDefaults
     name: GovS2LaneClosure
     path: docs/planning/state/agent-lane-a.yaml

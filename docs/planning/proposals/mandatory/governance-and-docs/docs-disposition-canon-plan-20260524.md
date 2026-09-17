@@ -145,7 +145,6 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/superseded/**
   - docs/planning/proposals/portfolio-map-20260403.md
   - docs/planning/reviews/architecture-and-governance/20260527-docs-engine-component-reconciliation-fowler-review.md
-  - docs/planning/reviews/sprints/**
   - docs/planning/status/**
   - infra/prototypes/api/README.md
   - scripts/docs-quality-check.cjs
