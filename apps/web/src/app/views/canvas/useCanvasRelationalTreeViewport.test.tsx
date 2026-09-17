@@ -45,7 +45,9 @@ describe('relational-tree mouse navigation', () => {
       cancelable: true,
       ...options,
     });
-    act(() => target.dispatchEvent(event));
+    act(() => {
+      target.dispatchEvent(event);
+    });
     return event;
   };
   beforeEach(() => {
@@ -112,14 +114,22 @@ describe('relational-tree mouse navigation', () => {
     const event = (name: string, button: number, x: number, y: number): MouseEvent =>
       new MouseEvent(name, { button, clientX: x, clientY: y, bubbles: true, cancelable: true });
     const start = event('pointerdown', 1, 100, 100);
-    act(() => content.querySelector('button')!.dispatchEvent(start));
+    act(() => {
+      content.querySelector('button')!.dispatchEvent(start);
+    });
     expect(start.defaultPrevented).toBe(true);
-    act(() => viewport.dispatchEvent(event('pointermove', 1, 70, 60)));
+    act(() => {
+      viewport.dispatchEvent(event('pointermove', 1, 70, 60));
+    });
     expect(viewport.scrollLeft).toBe(230);
     expect(viewport.scrollTop).toBe(140);
-    act(() => viewport.dispatchEvent(event('pointerup', 1, 70, 60)));
+    act(() => {
+      viewport.dispatchEvent(event('pointerup', 1, 70, 60));
+    });
     expect(viewport.releasePointerCapture).toHaveBeenCalledOnce();
-    act(() => viewport.dispatchEvent(event('pointerdown', 2, 100, 100)));
+    act(() => {
+      viewport.dispatchEvent(event('pointerdown', 2, 100, 100));
+    });
     expect(viewport.setPointerCapture).toHaveBeenCalledOnce();
   });
 });
