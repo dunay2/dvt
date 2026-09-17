@@ -5,6 +5,7 @@ import type {
   CanvasRelationalTreeAuthoringContract,
   CanvasRelationalTreeWorkbenchCopy,
 } from './canvasRelationalTreeWorkbench.types';
+import { CanvasRelationalTreeAuthoringPrompt } from './CanvasRelationalTreeAuthoringPrompt';
 import { CanvasRelationalTreeNodeDetail } from './CanvasRelationalTreeNodeDetail';
 import { CanvasRelationalTreeBlockCanvas } from './CanvasRelationalTreeBlockCanvas';
 import { CanvasRelationalTreeSourceCatalogue } from './CanvasRelationalTreeSourceCatalogue';
@@ -35,7 +36,9 @@ export function CanvasRelationalTreeWorkbench({
     copy,
     authoring,
   });
-  const authoringStarted = model.session.selectedInputIds.length > 0;
+  const showAuthoring =
+    model.authoringAvailable && (model.projection == null || model.session.active);
+  const pendingInputCount = model.catalogue.filter((item) => item.state === 'pending').length;
 
   return (
     <div
@@ -45,10 +48,11 @@ export function CanvasRelationalTreeWorkbench({
       <CanvasRelationalTreeSourceCatalogue
         items={model.catalogue}
         copy={copy}
-        draggable={model.pendingAuthoring}
+        draggable={model.authoringAvailable}
+        onBeginDrag={model.session.start}
         onSelect={model.selectCatalogueItem}
       />
-      {model.pendingAuthoring && (model.projection == null || authoringStarted) ? (
+      {showAuthoring ? (
         <CanvasRelationalTreeBlockCanvas
           appendInput={model.session.appendInput}
           choices={model.session.choices}
@@ -75,6 +79,13 @@ export function CanvasRelationalTreeWorkbench({
         </section>
       ) : (
         <div className="min-h-0 overflow-auto">
+          {!model.authoringAvailable ? null : (
+            <CanvasRelationalTreeAuthoringPrompt
+              copy={copy}
+              pendingInputCount={pendingInputCount}
+              onStart={model.session.start}
+            />
+          )}
           <CanvasRelationalTreeView
             root={model.projection.root}
             selectedLocator={model.selectedLocator}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import DetailSource from './CanvasRelationalTreeNodeDetail.tsx?raw';
+import AuthoringPromptSource from './CanvasRelationalTreeAuthoringPrompt.tsx?raw';
 import BlockCanvasSource from './CanvasRelationalTreeBlockCanvas.tsx?raw';
 import CatalogueSource from './CanvasRelationalTreeSourceCatalogue.tsx?raw';
 import OperandSlotSource from './CanvasRelationalTreeOperandSlot.tsx?raw';
@@ -34,6 +35,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(AuthoringOptionsSource.split('\n').length).toBeLessThan(100);
     expect(OperandSlotsSource.split('\n').length).toBeLessThan(90);
     expect(ProjectionAuthoringSource.split('\n').length).toBeLessThan(60);
+    expect(AuthoringPromptSource.split('\n').length).toBeLessThan(80);
     expect(WorkbenchModelSource).toContain('projectCanvasRelationalTree');
   });
 
@@ -56,6 +58,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(ApplyCommandSource).toContain('authoring?.onApplyNodeDraft(');
     expect(ApplyCommandSource).not.toContain('applyInspectorNodeDraft');
     expect(WorkbenchSource).not.toContain('CanvasRelationalTreeAuthoringPanel');
+    expect(WorkbenchSource).toContain('CanvasRelationalTreeAuthoringPrompt');
     expect(WorkbenchSource).not.toContain('CanvasRelationalTreeDraftView');
     expect(WorkbenchSource).not.toContain('minmax(15rem,20rem)');
     expect(DetailSource).not.toContain('<aside');

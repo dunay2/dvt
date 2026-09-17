@@ -15,11 +15,13 @@ export function CanvasRelationalTreeSourceCatalogue({
   items,
   copy,
   draggable = false,
+  onBeginDrag,
   onSelect,
 }: Readonly<{
   items: readonly CanvasRelationalTreeCatalogueItem[];
   copy: CanvasRelationalTreeWorkbenchCopy;
   draggable?: boolean;
+  onBeginDrag?: (item: CanvasRelationalTreeCatalogueItem) => void;
   onSelect: (item: CanvasRelationalTreeCatalogueItem) => void;
 }>): JSX.Element {
   const stateLabel = {
@@ -51,6 +53,7 @@ export function CanvasRelationalTreeSourceCatalogue({
                   return;
                 }
                 writeCanvasRelationalSourceDrag(event.dataTransfer, item.sourceNodeId);
+                onBeginDrag?.(item);
               }}
               disabled={
                 item.selectable === false || (item.selectable == null && item.treeLocator == null)
@@ -61,7 +64,7 @@ export function CanvasRelationalTreeSourceCatalogue({
                 event.preventDefault();
                 onSelect(item);
               }}
-              className="w-full rounded border border-(--border-subtle) bg-(--surface-subtle) p-2 text-left aria-pressed:border-(--status-info) aria-pressed:ring-1 aria-pressed:ring-(--status-info) disabled:cursor-default"
+              className="w-full rounded border border-(--border-subtle) bg-(--surface-subtle) p-2 text-left enabled:cursor-grab enabled:hover:border-(--status-info) enabled:hover:bg-(--surface-panel) enabled:active:cursor-grabbing aria-pressed:border-(--status-info) aria-pressed:ring-1 aria-pressed:ring-(--status-info) disabled:cursor-default"
             >
               <span className="block truncate font-mono text-[11px] text-(--text-primary)">
                 {item.label}
@@ -71,6 +74,11 @@ export function CanvasRelationalTreeSourceCatalogue({
               >
                 {stateLabel[item.state]}
               </span>
+              {!draggable || item.selectable === false ? null : (
+                <span className="ml-2 text-[9px] text-(--text-muted)">
+                  {copy.relationalTreeSourceActionHint}
+                </span>
+              )}
               {item.reason == null ? null : (
                 <span className="mt-1 block text-[9px] text-(--text-muted)">{item.reason}</span>
               )}

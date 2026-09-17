@@ -63,18 +63,28 @@ export function CanvasRelationalTreeBlockCanvas({
     <section
       data-slot="canvas-relational-tree-block-canvas"
       aria-label={copy.relationalTreeCanvasLabel}
-      className="min-h-64 overflow-auto p-4"
+      className="min-h-0 overflow-auto p-3"
     >
-      <div className="grid min-h-[22rem] grid-cols-2 grid-rows-[auto_1fr_auto] gap-4">
-        <CanvasRelationalTreeOperandSlot
-          copy={copy}
-          input={primaryInputId == null ? null : (inputById.get(primaryInputId) ?? null)}
-          position="primary"
-          onPlaceInput={onPlaceInput}
-        />
+      <div className="mx-auto w-full max-w-3xl rounded border border-(--border-subtle) bg-(--surface-panel) p-3">
+        <div className="grid grid-cols-2 items-start gap-3">
+          <CanvasRelationalTreeOperandSlot
+            copy={copy}
+            input={primaryInputId == null ? null : (inputById.get(primaryInputId) ?? null)}
+            position="primary"
+            onPlaceInput={onPlaceInput}
+          />
+          <div className="mt-4 justify-self-end">
+            <CanvasRelationalTreeOperandSlot
+              copy={copy}
+              input={secondaryInputId == null ? null : (inputById.get(secondaryInputId) ?? null)}
+              position="secondary"
+              onPlaceInput={onPlaceInput}
+            />
+          </div>
+        </div>
         <div
           data-slot="canvas-relational-tree-operation-block"
-          className="col-span-2 row-start-2 w-full max-w-2xl place-self-center rounded border border-(--border-subtle) bg-(--surface-panel) p-4"
+          className="mt-3 border-t border-(--border-subtle) pt-3"
         >
           <h3 className="text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)">
             {operation == null
@@ -90,6 +100,11 @@ export function CanvasRelationalTreeBlockCanvas({
               <p className="text-xs text-(--text-muted)">
                 {copy.relationalTreeSelectOperationMessage}
               </p>
+              {selectedInputIds.length !== 1 ? null : (
+                <p className="rounded border border-(--status-info) bg-(--surface-subtle) px-2 py-1.5 text-[10px] text-(--text-muted)">
+                  {copy.relationalTreeSelectNextSourceMessage}
+                </p>
+              )}
               <DvtRelationalOperationChooser
                 choices={choices}
                 copy={copy}
@@ -135,14 +150,6 @@ export function CanvasRelationalTreeBlockCanvas({
               </Button>
             </div>
           )}
-        </div>
-        <div className="col-start-2 row-start-3 justify-self-end">
-          <CanvasRelationalTreeOperandSlot
-            copy={copy}
-            input={secondaryInputId == null ? null : (inputById.get(secondaryInputId) ?? null)}
-            position="secondary"
-            onPlaceInput={onPlaceInput}
-          />
         </div>
       </div>
     </section>

@@ -1,5 +1,8 @@
 /** Owned concern: prove canonical relational-tree inspection through the real Canvas Workbench. */
-import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
+import {
+  buildCanvasAuthoringDraft,
+  stubStatefulCanvasDraftAuthoring,
+} from '../../support/canvasDraftAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
   E2E_PROJECT_WORKSPACE,
@@ -15,7 +18,7 @@ describe('Canvas relational-tree Workbench', () => {
         dataTransfer,
       });
       cy.get(`[data-slot="canvas-relational-tree-input-slot"][data-position="${position}"]`)
-        .scrollIntoView()
+        .should('be.visible')
         .trigger('dragover', { dataTransfer })
         .trigger('drop', { dataTransfer });
     });
@@ -30,6 +33,15 @@ describe('Canvas relational-tree Workbench', () => {
         (node) => node.id === targetNodeId && node.metadata?.transformAuthoring != null
       );
     });
+
+  const semanticDocumentFromWrite = (call: ReturnType<typeof getE2eApiCalls>[number]): unknown => {
+    const body = call.body as {
+      draft: { nodes: Array<{ id: string; metadata?: Record<string, unknown> }> };
+    };
+    const transform = body.draft.nodes.find((node) => node.id === 'join-transform');
+    return (transform?.metadata?.transformAuthoring as { semanticDocument?: unknown } | undefined)
+      ?.semanticDocument;
+  };
 
   beforeEach(() => {
     stubShellBootstrapApis({
@@ -46,8 +58,10 @@ describe('Canvas relational-tree Workbench', () => {
     });
     const union = Cypress.currentTest.title.includes('UNION ALL');
     const pending = Cypress.currentTest.title.includes('authors a pending JOIN');
+    const partial = Cypress.currentTest.title.includes('partial canonical tree');
     stubStatefulCanvasDraftAuthoring({
-      substraitInnerJoin: !pending && !union,
+      substraitInnerJoin: !pending && !union && !partial,
+      substraitNInputJoin: partial,
       substraitPendingComposition: pending,
       substraitUnionAll: union,
       title: 'Relational tree Workbench',
@@ -92,6 +106,69 @@ describe('Canvas relational-tree Workbench', () => {
       '[data-slot="canvas-relational-tree-workbench"] button[aria-label="Fit graph to view"]'
     ).click();
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+  });
+
+  it('starts a new JOIN from a partial canonical tree without hiding the entry point', () => {
+    const initialDraft = buildCanvasAuthoringDraft({
+      substraitNInputJoin: true,
+      title: 'Relational tree Workbench',
+    });
+    const initialTransform = initialDraft.nodes.find((node) => node.id === 'join-transform');
+    const initialSemanticDocument = (
+      initialTransform?.metadata?.transformAuthoring as
+        | {
+            semanticDocument?: {
+              semanticPlan: { sha256: string };
+              sidecar: { semanticPlanSha256: string };
+            };
+          }
+        | undefined
+    )?.semanticDocument;
+    const initialSemanticPlanSha256 = initialSemanticDocument?.semanticPlan.sha256;
+    const expectPublishedSemanticUnchanged = (): void => {
+      semanticWrites('join-transform').forEach((call) => {
+        const semanticDocument = semanticDocumentFromWrite(call) as {
+          semanticPlan: { sha256: string };
+          sidecar: { semanticPlanSha256: string };
+        };
+        expect(semanticDocument.semanticPlan.sha256).to.equal(initialSemanticPlanSha256);
+        expect(semanticDocument.sidecar.semanticPlanSha256).to.equal(initialSemanticPlanSha256);
+      });
+    };
+    cy.viewport(1400, 900);
+    visitWithE2eWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        window.localStorage.setItem(
+          'dvt-web-application-language',
+          JSON.stringify({ state: { language: 'en' }, version: 0 })
+        );
+      },
+    });
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+
+    cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]').click();
+    cy.get('[data-slot="canvas-relational-tree"]').should('contain.text', 'JOIN');
+    cy.get('[data-slot="canvas-relational-tree-start-authoring"]')
+      .should('be.visible')
+      .and('contain.text', '2')
+      .and('contain.text', 'Compose relation');
+
+    dragSourceTo('shipments', 'primary');
+    cy.then(expectPublishedSemanticUnchanged);
+    cy.get('[data-slot="canvas-relational-tree-input-slot"][data-position="secondary"]')
+      .should('be.visible')
+      .and('contain.text', 'Drop a Source here.');
+    cy.get('[data-slot="canvas-relational-tree-block-canvas"]').should(
+      'contain.text',
+      'Add a second Source to enable JOIN or UNION ALL.'
+    );
+    dragSourceTo('tickets', 'secondary');
+    cy.then(expectPublishedSemanticUnchanged);
+    cy.get('[data-slot="dvt-select-operation-inner-join"]').scrollIntoView().should('be.visible');
+
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+    cy.get('[data-slot="canvas-relational-tree"]').should('contain.text', 'JOIN');
+    cy.wrap(null).should(expectPublishedSemanticUnchanged);
   });
 
   it('authors a pending JOIN in the global tab with one Apply and zero-write Cancel', () => {

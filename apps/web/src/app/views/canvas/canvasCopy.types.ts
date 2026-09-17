@@ -546,7 +546,9 @@ export type CanvasViewCopy = {
   readonly relationalTreeLabel: string;
   readonly relationalTreeDetailLabel: string;
   readonly relationalTreeCanvasLabel: string;
+  readonly relationalTreeComposeAction: string;
   readonly relationalTreeDropSourceMessage: string;
+  readonly relationalTreePendingInputsMessage: string;
   readonly relationalTreeParticipatingLabel: string;
   readonly relationalTreePendingLabel: string;
   readonly relationalTreeMissingLabel: string;
@@ -562,6 +564,7 @@ export type CanvasViewCopy = {
   readonly relationalTreeInputIdentityUnavailableMessage: string;
   readonly relationalTreeSelectFirstSourceMessage: string;
   readonly relationalTreeSelectOperationMessage: string;
+  readonly relationalTreeSourceActionHint: string;
   readonly relationalTreeSelectNextSourceMessage: string;
   readonly relationalTreeSelectedInputsLabel: string;
   readonly inspectorDvtRelationalApply: string;
