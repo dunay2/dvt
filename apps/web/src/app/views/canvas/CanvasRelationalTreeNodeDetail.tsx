@@ -13,13 +13,16 @@ export function CanvasRelationalTreeNodeDetail({
     <section
       data-slot="canvas-relational-tree-detail"
       aria-label={copy.relationalTreeDetailLabel}
-      className="min-h-0 overflow-auto border-t border-(--border-subtle) p-3"
+      className="max-h-28 min-h-0 shrink-0 overflow-auto border-t border-(--border-subtle) bg-(--surface-panel) p-3"
     >
-      <h3 className="text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)">
-        {copy.relationalTreeDetailLabel}
-      </h3>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h3 className="text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)">
+          {copy.relationalTreeDetailLabel}
+        </h3>
+        <p className="text-[10px] text-(--text-muted)">{copy.relationalTreeReadOnlyMessage}</p>
+      </div>
       {node == null ? null : (
-        <dl className="mt-3 grid gap-3 text-[11px]">
+        <dl className="mt-2 grid grid-cols-2 gap-x-6 gap-y-2 text-[11px] md:grid-cols-4">
           <div>
             <dt className="text-(--text-muted)">Substrait</dt>
             <dd className="font-mono font-semibold uppercase text-(--text-primary)">
@@ -44,9 +47,6 @@ export function CanvasRelationalTreeNodeDetail({
           )}
         </dl>
       )}
-      <p className="mt-4 border-t border-(--border-subtle) pt-3 text-[10px] text-(--text-muted)">
-        {copy.relationalTreeReadOnlyMessage}
-      </p>
     </section>
   );
 }

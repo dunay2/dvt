@@ -33,14 +33,19 @@ export function CanvasRelationalTreeSourceCatalogue({
   return (
     <section
       aria-label={copy.relationalTreeSourcesLabel}
-      className="min-h-0 overflow-auto border-b border-(--border-subtle) p-3 lg:border-b-0 lg:border-r"
+      className="max-h-36 min-h-0 overflow-auto border-b border-(--border-subtle) p-3 md:max-h-none md:border-r md:border-b-0"
     >
-      <h3 className="text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)">
-        {copy.relationalTreeSourcesLabel}
-      </h3>
-      <ul className="mt-3 space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)">
+          {copy.relationalTreeSourcesLabel}
+        </h3>
+        <span className="rounded bg-(--surface-subtle) px-1.5 py-0.5 font-mono text-[9px] text-(--text-muted)">
+          {items.length}
+        </span>
+      </div>
+      <ul className="mt-3 flex gap-2 overflow-x-auto pb-1 md:block md:space-y-2 md:overflow-x-visible md:pb-0">
         {items.map((item) => (
-          <li key={item.key}>
+          <li key={item.key} className="min-w-44 md:min-w-0">
             <button
               type="button"
               data-slot="canvas-relational-tree-source"
@@ -69,16 +74,18 @@ export function CanvasRelationalTreeSourceCatalogue({
               <span className="block truncate font-mono text-[11px] text-(--text-primary)">
                 {item.label}
               </span>
-              <span
-                className={`mt-1 inline-flex rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${stateClass[item.state]}`}
-              >
-                {stateLabel[item.state]}
-              </span>
-              {!draggable || item.selectable === false ? null : (
-                <span className="ml-2 text-[9px] text-(--text-muted)">
-                  {copy.relationalTreeSourceActionHint}
+              <span className="mt-1.5 flex items-center justify-between gap-2">
+                <span
+                  className={`inline-flex rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${stateClass[item.state]}`}
+                >
+                  {stateLabel[item.state]}
                 </span>
-              )}
+                {!draggable || item.selectable === false ? null : (
+                  <span className="text-right text-[9px] leading-tight text-(--text-muted)">
+                    {copy.relationalTreeSourceActionHint}
+                  </span>
+                )}
+              </span>
               {item.reason == null ? null : (
                 <span className="mt-1 block text-[9px] text-(--text-muted)">{item.reason}</span>
               )}

@@ -198,6 +198,10 @@ describe('Canvas relational-tree Workbench', () => {
       'Left input'
     );
     expect(
+      container.querySelector('[data-slot="canvas-relational-tree-inspection"]')
+    ).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-relational-tree-viewport"]')).not.toBeNull();
+    expect(
       container.querySelector('[data-slot="canvas-relational-tree-detail"]')?.textContent
     ).toContain('JOIN');
 

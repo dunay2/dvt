@@ -43,7 +43,7 @@ export function CanvasRelationalTreeWorkbench({
   return (
     <div
       data-slot="canvas-relational-tree-workbench"
-      className="grid min-h-0 grid-cols-1 overflow-auto rounded border border-(--border-subtle) bg-(--surface-panel) lg:h-full lg:grid-cols-[12rem_minmax(18rem,1fr)] lg:overflow-hidden"
+      className="grid h-full min-h-0 grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded border border-(--border-subtle) bg-(--surface-panel) md:grid-cols-[13.5rem_minmax(0,1fr)] md:grid-rows-1"
     >
       <CanvasRelationalTreeSourceCatalogue
         items={model.catalogue}
@@ -78,7 +78,10 @@ export function CanvasRelationalTreeWorkbench({
           {model.unavailableMessage}
         </section>
       ) : (
-        <div className="min-h-0 overflow-auto">
+        <div
+          data-slot="canvas-relational-tree-inspection"
+          className="grid h-full min-h-0 grid-rows-[auto_minmax(8rem,1fr)_auto] overflow-hidden"
+        >
           {!model.authoringAvailable ? null : (
             <CanvasRelationalTreeAuthoringPrompt
               copy={copy}

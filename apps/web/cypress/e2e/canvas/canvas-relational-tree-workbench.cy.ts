@@ -97,7 +97,15 @@ describe('Canvas relational-tree Workbench', () => {
       .should('contain.text', 'JOIN')
       .and('contain.text', 'Left input')
       .and('contain.text', 'Right input');
-    cy.get('[data-slot="canvas-relational-tree-detail"]').should('contain.text', 'JOIN');
+    cy.get('[data-slot="canvas-relational-tree-layout"]')
+      .should('have.attr', 'data-layout', 'branching')
+      .find('[data-slot="canvas-relational-tree-children"][data-child-count="2"]')
+      .should('exist');
+    cy.get('[data-slot="canvas-relational-tree-viewport"]').should('be.visible');
+    cy.get('[data-slot="canvas-relational-tree-detail"]')
+      .should('be.visible')
+      .and('contain.text', 'JOIN');
+    cy.get('[data-slot="canvas-relational-tree-zoom"]').should('have.text', '100%');
 
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
     cy.get('[data-slot="canvas-relational-tree-detail"]').should('contain.text', 'READ');
@@ -105,6 +113,9 @@ describe('Canvas relational-tree Workbench', () => {
     cy.get(
       '[data-slot="canvas-relational-tree-workbench"] button[aria-label="Fit graph to view"]'
     ).click();
+    cy.get('[data-slot="canvas-relational-tree-zoom"]')
+      .invoke('text')
+      .should('match', /^\d+%$/);
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
   });
 
