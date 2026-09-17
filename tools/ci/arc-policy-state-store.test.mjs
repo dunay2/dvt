@@ -100,6 +100,12 @@ for (const [name, changedPaths, expectedLevel] of routingCases) {
 
 test('ARC contributor guidance has one evaluator-backed decision path', () => {
   const agents = readFileSync('AGENTS.md', 'utf8');
+  const followingSection = agents.split('## ARC-0 Fast Path\n')[1]?.split('\n## ')[1];
+  assert.ok(
+    followingSection?.startsWith('ARC Artifacts When Required\n'),
+    'ARC artifacts must immediately follow ARC-0'
+  );
+  assert.ok(agents.includes('A routed skip does not prove that required artifacts are present.'));
   const section = agents.split('## ARC-0 Fast Path\n')[1]?.split('\n## ')[0];
   assert.ok(section, 'expected the single ARC-0 decision section');
   assert.equal(agents.match(/^## ARC-0 Fast Path$/gm)?.length, 1);

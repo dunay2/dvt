@@ -219,6 +219,27 @@ evaluator, not this table, determine each complete diff:
 For any other result, follow [ARC Artifacts When Required](#arc-artifacts-when-required).
 Missing or failed evaluation is not ARC-0.
 
+## ARC Artifacts When Required
+
+`.arc-policy.yaml` owns trigger paths, minimum levels, artifact directories, and
+required evidence frontmatter. `tools/ci/arc-check.mjs` evaluates the complete
+diff; `tools/ci/doc-check.mjs` checks routed evidence/risk obligations. Do not
+maintain another trigger catalog or use a declared level to downgrade the result.
+
+When required by that result:
+
+1. Add or update evidence under `docs/evidence/ED-YYYYMMDD-<slug>.md` and risk
+   under `docs/risk-register/`, using the governed format of existing artifacts.
+2. Honor `rolloutNotes`, `compatMatrix`, and `requiredChecks` as well. ARC-3 is
+   not satisfied by evidence/risk alone.
+3. Run `pnpm docs:sync` when documentation paths are added, removed, or renamed;
+   include generated changes and follow the governance refresh rule below.
+4. Commit through the helper with hooks enabled, run `pnpm verify:prepush`, and
+   satisfy the required PR gates, including `ARC docs / evidence validate` for
+   its routed scope. Do not disable or relax required checks.
+
+A routed skip does not prove that required artifacts are present.
+
 ## No Debt And No Stub Policy
 
 By default, every task is expected to close without creating new debt.
@@ -278,25 +299,6 @@ A task is only complete when all of the following are true:
 - the affected validations were actually run
 - no hidden debt or stub was introduced
 - the final report includes concrete evidence, not reassurance
-
-## ARC Artifacts When Required
-
-`.arc-policy.yaml` owns trigger paths, minimum levels, artifact directories, and
-required evidence frontmatter. `tools/ci/arc-check.mjs` evaluates the complete
-diff; `tools/ci/doc-check.mjs` validates its documentation obligations. Do not
-maintain another trigger catalog or use a declared level to downgrade the result.
-
-When required by that result:
-
-1. Add or update evidence under `docs/evidence/ED-YYYYMMDD-<slug>.md` and risk
-   under `docs/risk-register/`, using the governed format of existing artifacts.
-2. Honor `rolloutNotes`, `compatMatrix`, and `requiredChecks` as well. ARC-3 is
-   not satisfied by evidence/risk alone.
-3. Run `pnpm docs:sync` when documentation paths are added, removed, or renamed;
-   include generated changes and follow the governance refresh rule below.
-4. Commit through the helper with hooks enabled, run `pnpm verify:prepush`, and
-   satisfy the required PR gates. Missing required evidence or risk fails the
-   `ARC docs / evidence validate` step; do not skip or relax it.
 
 ## PR Rules
 
