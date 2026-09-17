@@ -9,33 +9,197 @@ permissions:
   contents: read
 
 jobs:
-  snapshot:
-    name: Read exact cleanup baseline without changing repository or DB
+  retire:
+    name: Retire reviewed editorial closeouts with canonical validation
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    env:
+      BASE: f051f1aea4c0ee16a88ed58bec8ebc410987501a
+      GIT_BASE: f051f1aea4c0ee16a88ed58bec8ebc410987501a
+      PLANNING_DB_INTEGRITY_SCOPE: bootstrap
+      TZ: UTC
     steps:
-      - name: Checkout exact integrated baseline
+      - name: Checkout exact integrated baseline without stored credentials
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: f051f1aea4c0ee16a88ed58bec8ebc410987501a
-          fetch-depth: 1
+          fetch-depth: 0
           persist-credentials: false
-      - name: Export tracked source and Git identity only
+      - name: Apply reviewed source-verified deletion set and regression
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess,hashlib,json,os
+          out=Path('/tmp/editorial-retirement');out.mkdir(exist_ok=True)
+          def git(*args):return subprocess.check_output(['git',*args]).decode().strip()
+          assert git('rev-parse','HEAD')==os.environ['BASE']
+          assert git('rev-parse','HEAD^{tree}')=='541ae03dbd2b662597f84d47f667db301eb90af1'
+          kept=['20260318-stage-1-1-planner-canonicalization-companion-boundary-closeout.md','20260318-stage-1-1-planner-canonicalization-contract-evolution-protocol-closeout.md','20260318-stage-1-1-planner-canonicalization-policy-vocabulary-contracts-closeout.md']
+          extra=['20260315-architecture-review-docs-closeout.md','20260315-review-markdown-relocation-closeout.md','20260316-engine-docs-current-state-closeout.md','20260317-package-module-build-policy-proposal-closeout.md','20260317-principal-architecture-review-execution-plan-closeout.md','20260317-proposal-set-alignment-closeout.md','20260402-evidence-information-architecture-proposal-closeout.md','20260514-f13-frontend-architecture-doc-reconciliation-closeout.md','20260331-zensical-primary-docs-runtime-closeout.md','20260515-lane-e-p0-review-reconciliation-closeout.md']
+          prefix='docs/planning/closeouts/'
+          paths=sorted([str(p) for p in Path(prefix).glob('*stage-1-1-planner-canonicalization*') if p.name not in kept]+[prefix+n for n in extra])
+          assert len(paths)==38
+          originals={p:Path(p).read_bytes() for p in paths}
+          sourceHashes={p:hashlib.sha256(b).hexdigest() for p,b in originals.items()}
+          assert hashlib.sha256(json.dumps(sourceHashes,sort_keys=True,separators=(',',':')).encode()).hexdigest()=='33e0d73eabc5bbec5a06cf20f2925966718ea9a2cbbb1099df86c47eadf1e957'
+          tracked=git('ls-files','-z').split('\0');backlinks=[]
+          for q in tracked:
+              if not q:continue
+              try:text=Path(q).read_text()
+              except (UnicodeError,OSError):continue
+              for p in paths:
+                  if q!=p and (Path(p).name in text or Path(p).stem in text):backlinks.append([q,p])
+          assert not backlinks,backlinks
+          assert not Path('tools/docs/validate-planner-stage-1-1-manifest.ts').exists()
+          tp=Path('tools/ci/docs-disposition-canon.test.mjs');before=tp.read_bytes()
+          assert hashlib.sha256(before).hexdigest()=='afe51a854eb38951fd8b3b40b3adcfe5d13450c1f30ebb97a81fa80aeda62649'
+          q=lambda xs:'\n'.join('    '+repr(x)+',' for x in xs)
+          addition=r'''
+          // Completed editorial journals do not replace current contracts or issue history.
+          test('retired documentation-only closeouts have no files or local consumers', () => {
+            const contractCloseouts = new Set([
+          __KEPT__
+            ]);
+            const editorialCloseouts = new Set([
+          __EXTRA__
+            ]);
+            const isRetired = (name) =>
+              editorialCloseouts.has(name) ||
+              (/^202603(?:17|18)-stage-1-1-planner-canonicalization-[a-z0-9-]+-closeout\.md$/u.test(name) &&
+                !contractCloseouts.has(name));
+
+            const directory = new URL('../../docs/planning/closeouts/', import.meta.url);
+            for (const name of readdirSync(directory)) {
+              assert.equal(isRetired(name), false, `retired editorial closeout: ${name}`);
+            }
+
+            const paths = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
+              .split('\0')
+              .filter(Boolean);
+            for (const path of paths) {
+              if (path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
+              if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
+              // Only exact Git revisions can supply historical provenance, never main.
+              const current = readRepoFile(path).replace(
+                /https:\/\/github\.com\/dunay2\/dvt\/blob\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
+                ''
+              );
+              for (const match of current.matchAll(/\b[0-9]{8}-[a-z0-9.-]+-closeout(?:\.md)?\b/gu)) {
+                const name = match[0].endsWith('.md') ? match[0] : `${match[0]}.md`;
+                assert.equal(isRetired(name), false, `retired editorial closeout reference: ${path}: ${name}`);
+              }
+            }
+          });
+          '''.replace('__KEPT__',q(kept)).replace('__EXTRA__',q(extra))
+          assert hashlib.sha256(addition.encode()).hexdigest()=='635f49798ba04933faf21ee594d5fa0354151b94b658c28367e4aacd8682f994'
+          tp.write_bytes(before+addition.encode())
+          command=['node','--test','--test-name-pattern=retired documentation-only closeouts','tools/ci/docs-disposition-canon.test.mjs']
+          def probe(name,code,marker):
+              r=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+              (out/(name+'.log')).write_text(r.stdout)
+              assert r.returncode==code and marker in r.stdout,(name,r.returncode,r.stdout[-1200:])
+          probe('red',1,'retired editorial closeout:')
+          for p in paths:Path(p).unlink()
+          probe('green',0,'# pass 1')
+          for i,(p,data) in enumerate(originals.items(),1):
+              Path(p).write_bytes(data)
+              try:probe('restore-'+str(i),1,'retired editorial closeout: '+Path(p).name)
+              finally:Path(p).unlink()
+          consumer=Path('docs/guides/ai-work-protocol.md');data=consumer.read_bytes()
+          for label,target,code,marker in [('local',paths[0],1,'retired editorial closeout reference:'),('main','https://github.com/dunay2/dvt/blob/main/'+paths[0],1,'retired editorial closeout reference:'),('git','https://github.com/dunay2/dvt/blob/'+os.environ['BASE']+'/'+paths[0],0,'# pass 1')]:
+              consumer.write_bytes(data+b'\n'+target.encode()+b'\n')
+              try:probe('consumer-'+label,code,marker)
+              finally:consumer.write_bytes(data)
+          probe('final-green',0,'# pass 1')
+          spec={'base':os.environ['BASE'],'deletions':sourceHashes,'backlinks':backlinks,'testAppendSha256':hashlib.sha256(addition.encode()).hexdigest(),'preserved':{prefix+n:hashlib.sha256(Path(prefix+n).read_bytes()).hexdigest() for n in kept}}
+          (out/'selection.json').write_text(json.dumps(spec,indent=2))
+          git('add','-u');git('diff','--cached','--check')
+          assert set(git('diff','--cached','--name-only').splitlines())==set(paths)|{str(tp)}
+          git('config','user.name','DVT documentation retirement')
+          git('config','user.email','34416258+dunay2@users.noreply.github.com')
+          print('38 reviewed historical editorial records removed; red/green, 38 restorations and local/main/Git reference controls verified')
+          PY
+      - name: Setup canonical toolchain with enabled hooks
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+      - name: Prepare disposable CI bootstrap database only
+        uses: ./.github/actions/prepare-planning-db
+      - name: Run canonical documentation and governance generators
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p /tmp/dvt-source-baseline
-          test "$(git rev-parse HEAD)" = f051f1aea4c0ee16a88ed58bec8ebc410987501a
-          test "$(git rev-parse HEAD^{tree})" = 541ae03dbd2b662597f84d47f667db301eb90af1
-          git archive --format=tar.gz -o /tmp/dvt-source-baseline/source.tar.gz HEAD
-          git ls-tree -r HEAD > /tmp/dvt-source-baseline/tree.txt
-          git cat-file commit HEAD > /tmp/dvt-source-baseline/commit.txt
-          git status --porcelain > /tmp/dvt-source-baseline/status.txt
-          cd /tmp/dvt-source-baseline
-          sha256sum source.tar.gz tree.txt commit.txt status.txt > SHA256SUMS
-      - name: Upload exact source baseline
+          pnpm docs:sync 2>&1 | tee /tmp/editorial-retirement/docs-sync.log
+          pnpm governance:refresh 2>&1 | tee /tmp/editorial-retirement/governance-refresh.log
+          git add -u
+      - name: Commit using canonical helper and hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm commit docs docs "Retire historical editorial closeouts" 2>&1 | tee /tmp/editorial-retirement/commit.log
+          echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Validate final scope regressions and repository gates
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import subprocess,pathlib,json,os,hashlib,sys
+          out=pathlib.Path('/tmp/editorial-retirement');spec=json.loads((out/'selection.json').read_text());base=os.environ['BASE']
+          def git(*args):return subprocess.check_output(['git',*args]).decode().strip()
+          assert git('show','-s','--format=%P','HEAD')==base
+          assert set(git('diff','--name-only','--diff-filter=D',base,'HEAD').splitlines())==set(spec['deletions'])
+          assert not git('diff','--name-only','--diff-filter=A',base,'HEAD')
+          changed=set(git('diff','--name-only',base,'HEAD').splitlines())
+          allowed=set(spec['deletions'])|{'tools/ci/docs-disposition-canon.test.mjs','docs/.manifest.json'}
+          assert changed<=allowed,changed-allowed
+          for p,h in spec['preserved'].items():assert hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()==h,p
+          arc=subprocess.run(['node','tools/ci/arc-check.mjs'],capture_output=True,text=True)
+          (out/'arc.json').write_text(arc.stdout);assert arc.returncode==0,arc.stderr
+          classification=json.loads(arc.stdout);assert classification['effectiveArcLevel']=='ARC-0',classification
+          assert all(classification['requirements'][k] is False for k in ['evidenceDoc','riskUpdate','rolloutNotes','compatMatrix']),classification
+          commands=[
+            ['node','--test','scripts/documentation-publication.test.cjs','scripts/planning-db-surface-inventory-check.test.cjs','tools/ci/docs-disposition-canon.test.mjs'],
+            ['pnpm','docs:sync:check'],['pnpm','docs:gov:manifest:check'],['pnpm','ci:docs'],['pnpm','verify:prepush'],
+            ['pnpm','pr:validate-title','docs(docs): Retire historical editorial closeouts'],['git','diff','--exit-code','HEAD']]
+          results=[]
+          for i,cmd in enumerate(commands,1):
+              r=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+              log='validation-'+str(i)+'.log';(out/log).write_text(r.stdout)
+              results.append({'command':cmd,'exitCode':r.returncode,'log':log});(out/'validation.json').write_text(json.dumps(results,indent=2))
+              print('COMMAND',cmd,'EXIT',r.returncode,flush=True);print('\n'.join(r.stdout.splitlines()[-25:]),flush=True)
+              if r.returncode:sys.exit(r.returncode)
+          assert not git('status','--porcelain')
+          (out/'validated.txt').write_text(git('rev-parse','HEAD')+'\n')
+          PY
+      - name: Export exact candidate and validation evidence
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib,subprocess,os,json,hashlib
+          out=pathlib.Path('/tmp/editorial-retirement');out.mkdir(exist_ok=True)
+          def git(*args):return subprocess.check_output(['git',*args])
+          for name,args in {'head.txt':['rev-parse','HEAD'],'tree.txt':['rev-parse','HEAD^{tree}'],'commit.txt':['cat-file','commit','HEAD'],'status.txt':['status','--porcelain'],'candidate.patch':['diff','--binary',os.environ['BASE'],'HEAD'],'stats.txt':['diff','--stat',os.environ['BASE'],'HEAD'],'numstat.txt':['diff','--numstat',os.environ['BASE'],'HEAD'],'name-status.txt':['diff','--name-status',os.environ['BASE'],'HEAD']}.items():
+              (out/name).write_bytes(git(*args))
+          subprocess.run(['git','archive','--format=tar.gz','-o',str(out/'source.tar.gz'),'HEAD'],check=True)
+          (out/'checksums.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in out.iterdir() if p.is_file() and p.name!='checksums.json'},indent=2))
+          PY
+      - name: Publish only the validated cleanup branch without force
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(cat /tmp/editorial-retirement/validated.txt)" = "$(git rev-parse HEAD)"
+          gh auth setup-git
+          git push origin HEAD:refs/heads/docs/3004-retire-editorial-closeouts
+      - name: Upload validation and exact source
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: cleanup-baseline-f051f1a
-          path: /tmp/dvt-source-baseline
+          name: editorial-closeout-retirement
+          path: /tmp/editorial-retirement
           retention-days: 7
