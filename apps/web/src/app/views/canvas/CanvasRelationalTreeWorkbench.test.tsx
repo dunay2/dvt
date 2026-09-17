@@ -368,7 +368,9 @@ describe('Canvas relational-tree Workbench', () => {
     const dragStart = new Event('dragstart', { bubbles: true });
     Object.defineProperty(dragStart, 'dataTransfer', { value: dataTransfer });
 
-    act(() => ordersButton?.dispatchEvent(dragStart));
+    act(() => {
+      ordersButton?.dispatchEvent(dragStart);
+    });
 
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
