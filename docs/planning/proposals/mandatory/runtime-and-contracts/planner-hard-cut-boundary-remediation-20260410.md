@@ -43,7 +43,6 @@ The hard-cut runtime slice is now implemented in `apps/api`; see
 - [ADR-0034](../../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)
 - [ADR-0035](../../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)
 - [Planner kernel DBT boundary extraction follow-up 2026-04-10](./planner-kernel-dbt-boundary-extraction-follow-up-20260410.md)
-- [Planner generic ingress compatibility slice 2026-04-10](./planner-generic-ingress-compatibility-slice-20260410.md)
 - [Temporal workflow helper artifact facts narrowing slice 2026-04-10](./temporal-workflow-helper-artifact-facts-narrowing-slice-20260410.md)
 - [workflowHelpers.ts Architecture Review](../../reviews/execution-runtime/20260315-workflow-helpers-architecture-review.md)
 

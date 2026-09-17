@@ -115,6 +115,7 @@ test('retired historical packs and generators cannot return', () => {
   const retiredPaths = [
     'docs/archive',
     'docs/planning/archive',
+    'docs/planning/proposals/superseded/runtime-and-contracts',
     'docs/planning/status/planner-local-doc-triage-20260320.md',
     'docs/planning/status/root-local-doc-triage-20260417.md',
     'docs/adr/_archive',

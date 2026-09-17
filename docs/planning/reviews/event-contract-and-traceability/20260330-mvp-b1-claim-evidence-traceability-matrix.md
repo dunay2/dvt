@@ -61,7 +61,7 @@ pnpm verify:prepush
 ## Constraints
 
 - `MVP-A1` is now locked by the reviewed proposal
-  `docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md`
+  [Historical proposal](https://github.com/dunay2/dvt/blob/db43c857a8319b356fda98bab78c7dfb55b4606b/docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md)
   plus accepted evidence
   `docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md`.
 - This matrix now inherits the stable `MVP-A1` claim boundary and no longer
