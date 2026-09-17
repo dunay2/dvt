@@ -1,4 +1,4 @@
-/** Owned concern: compose the three-region contextual Workbench for one Transform relational tree. */
+/** Owned concern: compose the source catalogue and central block Workbench for one Transform. */
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type {
@@ -6,8 +6,7 @@ import type {
   CanvasRelationalTreeWorkbenchCopy,
 } from './canvasRelationalTreeWorkbench.types';
 import { CanvasRelationalTreeNodeDetail } from './CanvasRelationalTreeNodeDetail';
-import { CanvasRelationalTreeAuthoringPanel } from './CanvasRelationalTreeAuthoringPanel';
-import { CanvasRelationalTreeDraftView } from './CanvasRelationalTreeDraftView';
+import { CanvasRelationalTreeBlockCanvas } from './CanvasRelationalTreeBlockCanvas';
 import { CanvasRelationalTreeSourceCatalogue } from './CanvasRelationalTreeSourceCatalogue';
 import { CanvasRelationalTreeView } from './CanvasRelationalTreeView';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
@@ -36,23 +35,36 @@ export function CanvasRelationalTreeWorkbench({
     copy,
     authoring,
   });
+  const authoringStarted = model.session.selectedInputIds.length > 0;
 
   return (
     <div
       data-slot="canvas-relational-tree-workbench"
-      className="grid min-h-0 grid-cols-1 overflow-auto rounded border border-(--border-subtle) bg-(--surface-panel) lg:h-full lg:grid-cols-[12rem_minmax(18rem,1fr)_minmax(15rem,20rem)] lg:overflow-hidden"
+      className="grid min-h-0 grid-cols-1 overflow-auto rounded border border-(--border-subtle) bg-(--surface-panel) lg:h-full lg:grid-cols-[12rem_minmax(18rem,1fr)] lg:overflow-hidden"
     >
       <CanvasRelationalTreeSourceCatalogue
         items={model.catalogue}
         copy={copy}
+        draggable={model.pendingAuthoring}
         onSelect={model.selectCatalogueItem}
       />
-      {model.pendingAuthoring && model.session.firstInputId != null ? (
-        <CanvasRelationalTreeDraftView
+      {model.pendingAuthoring && (model.projection == null || authoringStarted) ? (
+        <CanvasRelationalTreeBlockCanvas
+          appendInput={model.session.appendInput}
+          choices={model.session.choices}
           copy={copy}
           inputs={model.inputs}
+          joinDraft={model.session.joinDraft}
           operation={model.session.operation}
+          primaryInputId={model.session.primaryInputId}
+          secondaryInputId={model.session.secondaryInputId}
           selectedInputIds={model.session.selectedInputIds}
+          onAppendJoinInput={model.session.appendJoinInput}
+          onApply={model.session.apply}
+          onCancel={model.session.cancel}
+          onChangeJoinDraft={model.session.setJoinDraft}
+          onPlaceInput={model.session.placeInput}
+          onSelectOperation={model.session.selectOperation}
         />
       ) : model.projection == null ? (
         <section
@@ -62,31 +74,15 @@ export function CanvasRelationalTreeWorkbench({
           {model.unavailableMessage}
         </section>
       ) : (
-        <CanvasRelationalTreeView
-          root={model.projection.root}
-          selectedLocator={model.selectedLocator}
-          copy={copy}
-          onSelect={model.selectTreeNode}
-        />
-      )}
-      {model.pendingAuthoring ? (
-        <CanvasRelationalTreeAuthoringPanel
-          appendInput={model.session.appendInput}
-          choices={model.session.choices}
-          copy={copy}
-          firstInputId={model.session.firstInputId}
-          inputs={model.inputs}
-          joinDraft={model.session.joinDraft}
-          operation={model.session.operation}
-          selectedInputIds={model.session.selectedInputIds}
-          onAppendJoinInput={model.session.appendJoinInput}
-          onApply={model.session.apply}
-          onCancel={model.session.cancel}
-          onChangeJoinDraft={model.session.setJoinDraft}
-          onSelectOperation={model.session.selectOperation}
-        />
-      ) : (
-        <CanvasRelationalTreeNodeDetail node={model.selectedNode} copy={copy} />
+        <div className="min-h-0 overflow-auto">
+          <CanvasRelationalTreeView
+            root={model.projection.root}
+            selectedLocator={model.selectedLocator}
+            copy={copy}
+            onSelect={model.selectTreeNode}
+          />
+          <CanvasRelationalTreeNodeDetail node={model.selectedNode} copy={copy} />
+        </div>
       )}
     </div>
   );

@@ -3,6 +3,7 @@ import type {
   CanvasRelationalTreeCatalogueItem,
   CanvasRelationalTreeWorkbenchCopy,
 } from './canvasRelationalTreeWorkbench.types';
+import { writeCanvasRelationalSourceDrag } from './canvasRelationalTreeDrag';
 
 const stateClass = {
   participating: 'border-emerald-700 text-emerald-300',
@@ -13,10 +14,12 @@ const stateClass = {
 export function CanvasRelationalTreeSourceCatalogue({
   items,
   copy,
+  draggable = false,
   onSelect,
 }: Readonly<{
   items: readonly CanvasRelationalTreeCatalogueItem[];
   copy: CanvasRelationalTreeWorkbenchCopy;
+  draggable?: boolean;
   onSelect: (item: CanvasRelationalTreeCatalogueItem) => void;
 }>): JSX.Element {
   const stateLabel = {
@@ -41,6 +44,14 @@ export function CanvasRelationalTreeSourceCatalogue({
               data-slot="canvas-relational-tree-source"
               data-node-id={item.sourceNodeId ?? undefined}
               aria-pressed={item.selected === true}
+              draggable={draggable && item.sourceNodeId != null && item.selectable !== false}
+              onDragStart={(event) => {
+                if (item.sourceNodeId == null || item.selectable === false) {
+                  event.preventDefault();
+                  return;
+                }
+                writeCanvasRelationalSourceDrag(event.dataTransfer, item.sourceNodeId);
+              }}
               disabled={
                 item.selectable === false || (item.selectable == null && item.treeLocator == null)
               }

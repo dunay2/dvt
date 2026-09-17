@@ -1,5 +1,9 @@
 /** Owned concern: derive guided relational authoring choices and canonical DVT drafts. */
-import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
+import {
+  buildDvtSubstraitStandardCapabilityId,
+  DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
+  DVT_TRANSFORM_AUTHORING_MODE,
+} from '@dvt/contracts';
 import { hasSameConnectionRef } from '@dvt/postgres-projection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -26,6 +30,11 @@ import {
   resolveDvtSubstraitUnionAllEntry,
   type DvtSubstraitUnionAllDraft,
 } from './canvasDvtSubstraitSetComposition';
+
+const PROJECT_CAPABILITY_ID = buildDvtSubstraitStandardCapabilityId('relation', {
+  sourceKind: 'core',
+  message: 'substrait.ProjectRel',
+});
 
 export type CanvasRelationalTreeAuthoringCandidate = Readonly<{
   nodeId: string;
@@ -107,7 +116,7 @@ export function appendCanvasRelationalTreeJoinInput(
 
 export function createCanvasRelationalTreeNodeDraft(
   node: CanonicalNode,
-  shape: 'inner_join' | 'union_all',
+  shape: CanvasRelationalOperation,
   semantic: Pick<DvtSubstraitInnerJoinDraft, 'plan' | 'sidecar'>
 ): CanvasInspectorNodeDraft {
   const draft = createCanvasInspectorNodeDraft(node);
@@ -146,32 +155,37 @@ function operationChoice(
 export function resolveCanvasRelationalTreeAuthoringChoices(
   args: Readonly<{
     inputs: readonly CanvasDvtCompositionInput[];
-    firstInputId: string;
+    selectedInputIds: readonly string[];
     readOnly: boolean;
     targetNodeId: string;
     nodes: readonly CanonicalNode[];
     edges: readonly CanonicalEdge[];
   }>
 ): readonly CanvasRelationalOperationChoice[] {
-  const first = args.inputs.find((input) => input.nodeId === args.firstInputId);
+  const first = args.inputs.find((input) => input.nodeId === args.selectedInputIds[0]);
   if (first == null) return [];
-  const remaining = args.inputs.filter((input) => input.nodeId !== first.nodeId);
-  const joinCandidates = remaining.filter(
-    (candidate) => resolveCanvasDvtInitialJoinPairForInputs(first, candidate) != null
-  );
-  const unionCandidate = remaining.find(
-    (candidate) =>
-      orderedUnionAllEntry({
-        ...args,
-        selectedInputIds: [first.nodeId, candidate.nodeId],
-      }) != null
-  );
-  const joinInputs =
-    joinCandidates.length === 0 ? [first, ...remaining] : [first, ...joinCandidates];
-  const unionInputs = unionCandidate == null ? [first, ...remaining] : [first, unionCandidate];
+  if (args.selectedInputIds.length === 1) {
+    const admitted = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.some(
+      (entry) =>
+        entry.kind === 'standard' &&
+        entry.entryId === PROJECT_CAPABILITY_ID &&
+        entry.profileStatus === 'supported-profile'
+    );
+    const availability: CanvasRelationalOperationAvailability = args.readOnly
+      ? 'read-only'
+      : admitted
+        ? 'available'
+        : 'semantically-unavailable';
+    return [{ operation: 'projection', availability, selectable: availability === 'available' }];
+  }
+  const second = args.inputs.find((input) => input.nodeId === args.selectedInputIds[1]);
+  if (second == null) return [];
+  const selectedInputs = [first, second];
+  const unionAvailable =
+    orderedUnionAllEntry({ ...args, selectedInputIds: [first.nodeId, second.nodeId] }) != null;
   return [
-    operationChoice('inner_join', joinInputs, args.readOnly, false),
-    operationChoice('union_all', unionInputs, args.readOnly, unionCandidate != null),
+    operationChoice('inner_join', selectedInputs, args.readOnly, false),
+    operationChoice('union_all', selectedInputs, args.readOnly, unionAvailable),
   ];
 }
 
@@ -179,6 +193,7 @@ function unavailableReason(
   operation: CanvasRelationalOperation,
   inputs: readonly CanvasDvtCompositionInput[]
 ): CanvasRelationalOperationAvailability {
+  if (operation === 'projection') return 'semantically-unavailable';
   return operationChoice(operation, inputs, false, false).availability;
 }
 
@@ -194,6 +209,7 @@ export function resolveCanvasRelationalTreeAuthoringCandidates(
   }>
 ): readonly CanvasRelationalTreeAuthoringCandidate[] {
   const selected = new Set(args.selectedInputIds);
+  if (args.operation === 'projection') return [];
   const first = args.inputs.find((input) => input.nodeId === args.selectedInputIds[0]);
   const joinInspection =
     args.joinDraft == null ? null : inspectDvtSubstraitNInputJoinDraft(args.joinDraft);

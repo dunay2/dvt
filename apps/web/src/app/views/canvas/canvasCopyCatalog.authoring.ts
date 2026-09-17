@@ -704,6 +704,14 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.relationalTree.detailLabel',
     fallback: 'Detail',
   },
+  relationalTreeCanvasLabel: {
+    key: 'canvas.relationalTree.canvasLabel',
+    fallback: 'Relational block canvas',
+  },
+  relationalTreeDropSourceMessage: {
+    key: 'canvas.relationalTree.dropSourceMessage',
+    fallback: 'Drop a Source here.',
+  },
   relationalTreeParticipatingLabel: {
     key: 'canvas.relationalTree.participatingLabel',
     fallback: 'Participating',
@@ -724,9 +732,21 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.relationalTree.primaryInputLabel',
     fallback: 'Primary input',
   },
+  relationalTreePrimarySlotLabel: {
+    key: 'canvas.relationalTree.primarySlotLabel',
+    fallback: 'Left operand',
+  },
+  relationalTreeProjectOperationLabel: {
+    key: 'canvas.relationalTree.projectOperationLabel',
+    fallback: 'PROJECT',
+  },
   relationalTreeSecondaryInputTemplate: {
     key: 'canvas.relationalTree.secondaryInputTemplate',
     fallback: 'Secondary input {ordinal}',
+  },
+  relationalTreeSecondarySlotLabel: {
+    key: 'canvas.relationalTree.secondarySlotLabel',
+    fallback: 'Right operand',
   },
   relationalTreeReadOnlyMessage: {
     key: 'canvas.relationalTree.readOnlyMessage',

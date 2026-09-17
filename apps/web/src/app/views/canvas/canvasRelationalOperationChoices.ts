@@ -8,7 +8,7 @@ import { hasSameConnectionRef } from '@dvt/postgres-projection';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { hasCompatibleCanvasDvtJoinFields } from './canvasDvtJoinTypeAdmission';
 
-export type CanvasRelationalOperation = 'inner_join' | 'union_all';
+export type CanvasRelationalOperation = 'projection' | 'inner_join' | 'union_all';
 
 export type CanvasRelationalOperationAvailability =
   | 'available'
