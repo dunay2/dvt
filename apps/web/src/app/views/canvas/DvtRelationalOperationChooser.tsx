@@ -6,6 +6,7 @@ import type {
 } from './canvasRelationalOperationChoices';
 import { canvasViewCopy } from './copy';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
+import { writeCanvasRelationalOperationDrag } from './canvasRelationalTreeDrag';
 
 type RelationalOperationCopy = Pick<
   CanvasRelationalTreeWorkbenchCopy,
@@ -58,21 +59,37 @@ export function DvtRelationalOperationChooser({
   choices,
   onSelect,
   copy = canvasViewCopy,
+  layout = 'stack',
+  selectedOperation = null,
 }: Readonly<{
   choices: readonly CanvasRelationalOperationChoice[];
   onSelect: (operation: CanvasRelationalOperation) => void;
   copy?: RelationalOperationCopy;
+  layout?: 'stack' | 'shelf';
+  selectedOperation?: CanvasRelationalOperation | null;
 }>): JSX.Element {
   return (
-    <div data-slot="dvt-relational-operation-chooser" className="grid gap-2">
+    <div
+      data-slot="dvt-relational-operation-chooser"
+      className={layout === 'shelf' ? 'flex flex-wrap gap-2' : 'grid gap-2'}
+    >
       {choices.map((choice) => (
         <Button
           key={choice.operation}
           type="button"
           variant="outline"
           disabled={!choice.selectable}
-          className="h-auto justify-between gap-3 py-2"
+          aria-pressed={selectedOperation === choice.operation}
+          draggable={choice.selectable}
+          className="h-auto min-w-40 justify-between gap-3 py-2 aria-pressed:border-(--status-info) aria-pressed:bg-blue-950/40"
           data-slot={`dvt-select-operation-${choice.operation.replace('_', '-')}`}
+          onDragStart={(event) => {
+            if (!choice.selectable) {
+              event.preventDefault();
+              return;
+            }
+            writeCanvasRelationalOperationDrag(event.dataTransfer, choice.operation);
+          }}
           onClick={() => onSelect(choice.operation)}
           onKeyDown={(event) => {
             if (event.key !== 'Enter' && event.key !== ' ') return;

@@ -1,5 +1,9 @@
 /** Owned concern: prove canonical relational-tree inspection through the real Canvas Workbench. */
 import {
+  decodeDvtSubstraitInnerJoinDocument,
+  inspectDvtSubstraitNInputJoinDraft,
+} from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
+import {
   buildCanvasAuthoringDraft,
   stubStatefulCanvasDraftAuthoring,
 } from '../../support/canvasDraftAuthoring';
@@ -59,10 +63,11 @@ describe('Canvas relational-tree Workbench', () => {
     const union = Cypress.currentTest.title.includes('UNION ALL');
     const pending = Cypress.currentTest.title.includes('authors a pending JOIN');
     const partial = Cypress.currentTest.title.includes('partial canonical tree');
+    const pendingNSource = Cypress.currentTest.title.includes('pending N-source JOIN');
     stubStatefulCanvasDraftAuthoring({
-      substraitInnerJoin: !pending && !union && !partial,
-      substraitNInputJoin: partial,
-      substraitPendingComposition: pending,
+      substraitInnerJoin: !pending && !union && !partial && !pendingNSource,
+      substraitNInputJoin: partial || pendingNSource,
+      substraitPendingComposition: pending || pendingNSource,
       substraitUnionAll: union,
       title: 'Relational tree Workbench',
     });
@@ -121,7 +126,7 @@ describe('Canvas relational-tree Workbench', () => {
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
   });
 
-  it('starts a new JOIN from a partial canonical tree without hiding the entry point', () => {
+  it('opens a partial canonical tree as the structural draft before appending', () => {
     const initialDraft = buildCanvasAuthoringDraft({
       substraitNInputJoin: true,
       title: 'Relational tree Workbench',
@@ -166,18 +171,32 @@ describe('Canvas relational-tree Workbench', () => {
       .and('contain.text', '2')
       .and('contain.text', 'Compose relation');
 
-    dragSourceTo('shipments', 'primary');
+    cy.get('[data-slot="canvas-relational-tree-start-authoring"] button').click();
     cy.then(expectPublishedSemanticUnchanged);
-    cy.get('[data-slot="canvas-relational-tree-input-slot"][data-position="secondary"]')
-      .should('be.visible')
-      .and('contain.text', 'Drop a Source here.');
-    cy.get('[data-slot="canvas-relational-tree-block-canvas"]').should(
-      'contain.text',
-      'Add a second Source to enable JOIN or UNION ALL.'
+    cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
+      'have.length',
+      1
     );
-    dragSourceTo('tickets', 'secondary');
+    cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="read"]').should(
+      'have.length',
+      2
+    );
+
+    cy.contains('[data-slot="canvas-relational-tree-source"]', 'shipments').click();
+    cy.get('[data-slot="canvas-relational-tree-existing-field"]')
+      .should('contain.text', 'customers.customer_id')
+      .select('customers.customer_id');
+    cy.get('[data-slot="canvas-relational-tree-connected-field"]').select('shipments.customer_id');
+    cy.get('[data-slot="canvas-relational-tree-append-input"]').click();
+    cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
+      'have.length',
+      2
+    );
+    cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="read"]').should(
+      'have.length',
+      3
+    );
     cy.then(expectPublishedSemanticUnchanged);
-    cy.get('[data-slot="dvt-select-operation-inner-join"]').scrollIntoView().should('be.visible');
 
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
     cy.get('[data-slot="canvas-relational-tree"]').should('contain.text', 'JOIN');
@@ -234,6 +253,77 @@ describe('Canvas relational-tree Workbench', () => {
       expect(transform?.metadata?.transformAuthoring).to.not.equal(undefined);
     });
     cy.get('[data-slot="canvas-relational-tree"]').should('contain.text', 'JOIN');
+  });
+
+  it('authors a pending N-source JOIN as a repeatable canonical chain', () => {
+    cy.viewport(1600, 1000);
+    visitWithE2eWorkspaceSession('/canvas');
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+
+    cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]').click();
+    cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
+    cy.contains('[data-slot="canvas-relational-tree-source"]', 'orders').click();
+    cy.get('[data-slot="dvt-select-operation-inner-join"]').click();
+    cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
+      'have.length',
+      1
+    );
+
+    cy.contains('[data-slot="canvas-relational-tree-source"]', 'shipments').click();
+    cy.get('[data-slot="canvas-relational-tree-existing-field"]')
+      .should('contain.text', 'customers.customer_id')
+      .and('contain.text', 'orders.customer_id')
+      .select('customers.customer_id');
+    cy.get('[data-slot="canvas-relational-tree-connected-field"]').select('shipments.customer_id');
+    cy.get('[data-slot="canvas-relational-tree-append-input"]').click();
+    cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
+      'have.length',
+      2
+    );
+    cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="read"]').should(
+      'have.length',
+      3
+    );
+
+    cy.contains('[data-slot="canvas-relational-tree-source"]', 'tickets').click();
+    cy.get('[data-slot="canvas-relational-tree-existing-field"]').select('customers.customer_id');
+    cy.get('[data-slot="canvas-relational-tree-connected-field"]').select('tickets.customer_id');
+    cy.get('[data-slot="canvas-relational-tree-append-input"]').click();
+    cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
+      'have.length',
+      3
+    );
+    cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="read"]').should(
+      'have.length',
+      4
+    );
+    cy.wrap(null).should(() => expect(semanticWrites('join-transform')).to.have.length(0));
+
+    cy.get('[data-slot="canvas-relational-tree-apply"]').click();
+    cy.wrap(null).should(() => {
+      const write = semanticWrites('join-transform').at(-1);
+      expect(write).not.to.equal(undefined);
+      if (write == null) return;
+      const inspection = inspectDvtSubstraitNInputJoinDraft(
+        decodeDvtSubstraitInnerJoinDocument(semanticDocumentFromWrite(write))
+      );
+      expect(inspection.ok).to.equal(true);
+      if (!inspection.ok) return;
+      expect(inspection.projection.inputs).to.have.length(4);
+      expect(inspection.projection.joinRelations).to.have.length(3);
+      const customerId = inspection.projection.inputs[0]?.fields.find(
+        (field) => field.name === 'customer_id'
+      )?.fieldId;
+      expect(customerId).not.to.equal(undefined);
+      [1, 2].forEach((joinIndex) => {
+        const condition = inspection.projection.joins[joinIndex]?.conditions[0];
+        if (condition == null || condition.kind === 'group') return;
+        expect(condition.left).to.deep.include({
+          kind: 'field',
+          sourceFieldId: customerId,
+        });
+      });
+    });
   });
 
   it('authors UNION ALL in the global tab and persists one canonical operation', () => {

@@ -57,17 +57,21 @@ export function CanvasRelationalTreeWorkbench({
           appendInput={model.session.appendInput}
           choices={model.session.choices}
           copy={copy}
+          edges={edges}
           inputs={model.inputs}
           joinDraft={model.session.joinDraft}
+          nodes={nodes}
           operation={model.session.operation}
           primaryInputId={model.session.primaryInputId}
           secondaryInputId={model.session.secondaryInputId}
           selectedInputIds={model.session.selectedInputIds}
+          transformNode={transformNode}
           onAppendJoinInput={model.session.appendJoinInput}
           onApply={model.session.apply}
           onCancel={model.session.cancel}
           onChangeJoinDraft={model.session.setJoinDraft}
           onPlaceInput={model.session.placeInput}
+          onSelectInput={model.session.selectInput}
           onSelectOperation={model.session.selectOperation}
         />
       ) : model.projection == null ? (

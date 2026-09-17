@@ -164,6 +164,10 @@ describe('Canvas relational-tree guided authoring model', () => {
     const initialInspection = inspectDvtSubstraitNInputJoinDraft(initial);
     expect(initialInspection.ok).toBe(true);
     if (!initialInspection.ok) return;
+    const initialResultRelationId = initialInspection.projection.joinRelations.at(-1)?.relationId;
+    const initialOutputIds = new Map(
+      initialInspection.projection.outputs.map((output) => [output.name, output.fieldId] as const)
+    );
     const leftField = initialInspection.projection.outputs[0];
     expect(leftField).toBeDefined();
     if (leftField == null) return;
@@ -183,6 +187,21 @@ describe('Canvas relational-tree guided authoring model', () => {
       tickets.id,
     ]);
     expect(inspection.projection.joins).toHaveLength(2);
+    expect(inspection.projection.inputs.slice(0, 2).map((input) => input.relationId)).toEqual(
+      initialInspection.projection.inputs.map((input) => input.relationId)
+    );
+    expect(inspection.projection.joinRelations.at(-1)?.relationId).toBe(initialResultRelationId);
+    initialOutputIds.forEach((fieldId, name) => {
+      expect(inspection.projection.outputs.find((output) => output.name === name)?.fieldId).toBe(
+        fieldId
+      );
+    });
+    const appendedCondition = inspection.projection.joins[1]?.conditions[0];
+    if (appendedCondition == null || appendedCondition.kind === 'group') return;
+    expect(appendedCondition.left).toMatchObject({
+      kind: 'field',
+      sourceFieldId: leftField.source.fieldId,
+    });
   });
 
   it('builds one N-ary UNION ALL in the explicit Source order', () => {

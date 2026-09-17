@@ -7,8 +7,10 @@ import LayoutSource from './CanvasRelationalTreeLayout.tsx?raw';
 import AuthoringPromptSource from './CanvasRelationalTreeAuthoringPrompt.tsx?raw';
 import BlockCanvasSource from './CanvasRelationalTreeBlockCanvas.tsx?raw';
 import CatalogueSource from './CanvasRelationalTreeSourceCatalogue.tsx?raw';
+import DraftViewportSource from './CanvasRelationalTreeDraftViewport.tsx?raw';
+import InlineEditorSource from './CanvasRelationalTreeInlineEditor.tsx?raw';
 import OperandSlotSource from './CanvasRelationalTreeOperandSlot.tsx?raw';
-import OperationPanelSource from './CanvasRelationalTreeOperationPanel.tsx?raw';
+import OperationShelfSource from './CanvasRelationalTreeOperationShelf.tsx?raw';
 import TreeSource from './CanvasRelationalTreeView.tsx?raw';
 import ViewportSource from './canvasRelationalTreeViewport.ts?raw';
 import ZoomSource from './CanvasRelationalTreeZoomControls.tsx?raw';
@@ -20,7 +22,11 @@ import ApplyCommandSource from './useCanvasRelationalTreeApplyCommand.ts?raw';
 import WorkbenchModelSource from './useCanvasRelationalTreeWorkbenchModel.ts?raw';
 import AuthoringSessionSource from './useCanvasRelationalTreeAuthoringSession.ts?raw';
 import AuthoringModelSource from './canvasRelationalTreeAuthoringModel.ts?raw';
+import AuthoringProjectionSource from './canvasRelationalTreeAuthoringProjection.ts?raw';
+import ExistingJoinDraftSource from './canvasRelationalTreeExistingJoinDraft.ts?raw';
 import AuthoringOptionsSource from './useCanvasRelationalTreeAuthoringOptions.ts?raw';
+import ExistingJoinSeedSource from './useCanvasRelationalTreeExistingJoinSeed.ts?raw';
+import JoinDraftActionsSource from './useCanvasRelationalTreeJoinDraftActions.ts?raw';
 import OperandSlotsSource from './useCanvasRelationalOperandSlots.ts?raw';
 import ProjectionAuthoringSource from './canvasRelationalTreeProjectionAuthoring.ts?raw';
 import UseViewportSource from './useCanvasRelationalTreeViewport.ts?raw';
@@ -41,8 +47,14 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(AuthoringSessionSource.split('\n').length).toBeLessThan(180);
     expect(ApplyCommandSource.split('\n').length).toBeLessThan(100);
     expect(AuthoringModelSource.split('\n').length).toBeLessThan(260);
-    expect(BlockCanvasSource.split('\n').length).toBeLessThan(180);
-    expect(OperationPanelSource.split('\n').length).toBeLessThan(160);
+    expect(AuthoringProjectionSource.split('\n').length).toBeLessThan(90);
+    expect(ExistingJoinDraftSource.split('\n').length).toBeLessThan(80);
+    expect(ExistingJoinSeedSource.split('\n').length).toBeLessThan(80);
+    expect(JoinDraftActionsSource.split('\n').length).toBeLessThan(100);
+    expect(BlockCanvasSource.split('\n').length).toBeLessThan(140);
+    expect(DraftViewportSource.split('\n').length).toBeLessThan(170);
+    expect(OperationShelfSource.split('\n').length).toBeLessThan(140);
+    expect(InlineEditorSource.split('\n').length).toBeLessThan(80);
     expect(OperandSlotSource.split('\n').length).toBeLessThan(80);
     expect(AuthoringOptionsSource.split('\n').length).toBeLessThan(100);
     expect(OperandSlotsSource.split('\n').length).toBeLessThan(90);
@@ -65,7 +77,9 @@ describe('Canvas relational-tree Workbench architecture', () => {
       ZoomSource,
       DetailSource,
       BlockCanvasSource,
-      OperationPanelSource,
+      DraftViewportSource,
+      OperationShelfSource,
+      InlineEditorSource,
       OperandSlotSource,
     ].join('\n');
     expect(combined).not.toContain('@xyflow/react');
@@ -73,11 +87,17 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(combined).not.toContain('encodeDvtSubstrait');
     expect(combined).not.toContain('create(');
     expect(AuthoringSessionSource).toContain('useCanvasRelationalTreeApplyCommand');
+    expect(AuthoringSessionSource).toContain('useCanvasRelationalTreeExistingJoinSeed');
+    expect(AuthoringProjectionSource).toContain('projectCanvasRelationalTree');
+    expect(AuthoringProjectionSource).not.toContain('onApplyNodeDraft');
     expect(ApplyCommandSource).toContain('authoring?.onApplyNodeDraft(');
     expect(ApplyCommandSource).not.toContain('applyInspectorNodeDraft');
     expect(WorkbenchSource).not.toContain('CanvasRelationalTreeAuthoringPanel');
     expect(WorkbenchSource).toContain('CanvasRelationalTreeAuthoringPrompt');
     expect(WorkbenchSource).not.toContain('CanvasRelationalTreeDraftView');
+    expect(BlockCanvasSource).not.toContain('CanvasRelationalTreeOperationPanel');
+    expect(BlockCanvasSource).toContain('CanvasRelationalTreeOperationShelf');
+    expect(BlockCanvasSource).toContain('CanvasRelationalTreeDraftViewport');
     expect(WorkbenchSource).not.toContain('minmax(15rem,20rem)');
     expect(DetailSource).toContain('<aside');
     expect(WorkbenchSource).toContain('md:grid-cols-[minmax(0,1fr)_17rem]');

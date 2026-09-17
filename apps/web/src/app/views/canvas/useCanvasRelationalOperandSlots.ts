@@ -43,11 +43,17 @@ export function useCanvasRelationalOperandSlots() {
     (nodeId: string) => setAdditionalInputIds((current) => [...current, nodeId]),
     []
   );
+  const replaceInputs = useCallback((nodeIds: readonly string[]) => {
+    setPrimaryInputId(nodeIds[0] ?? null);
+    setSecondaryInputId(nodeIds[1] ?? null);
+    setAdditionalInputIds(nodeIds.slice(2));
+  }, []);
   return {
     appendInput,
     placeInput,
     primaryInputId,
     resetOperands,
+    replaceInputs,
     secondaryInputId,
     selectedInputIds,
     selectInitialInput,
