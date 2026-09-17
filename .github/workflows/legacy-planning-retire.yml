@@ -1,0 +1,130 @@
+name: Isolated expanded legacy planning retirement
+on:
+  push:
+    branches: [automation/3004-legacy-planning-20260917]
+    paths: [.github/workflows/legacy-planning-retire.yml]
+permissions:
+  contents: write
+jobs:
+  retire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GIT_BASE: d8c3e3b9479139a35d6e269f6a6ef42dde2080f6
+      GIT_HEAD: HEAD
+      PLANNING_DB_INTEGRITY_SCOPE: bootstrap
+    steps:
+      - name: Read the isolated reviewed implementation
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: fc166f32732c566e7016c18c40b6d1dfc384baa8
+          persist-credentials: false
+      - name: Keep preparation outside the product checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp .github/maintenance/retire-legacy-planning.py "$RUNNER_TEMP/retire-legacy-planning.py"
+          mkdir -p "$RUNNER_TEMP/legacy-planning-result"
+          sha256sum "$RUNNER_TEMP/retire-legacy-planning.py" > "$RUNNER_TEMP/legacy-planning-result/preparation-sha256.txt"
+      - name: Checkout the exact product baseline
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: d8c3e3b9479139a35d6e269f6a6ef42dde2080f6
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+      - name: Prove retirement red, reconcile consumers and test all restoration cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AUDIT_OUT="$RUNNER_TEMP/legacy-planning-result"
+          python "$RUNNER_TEMP/retire-legacy-planning.py" | tee "$AUDIT_OUT/preparation-summary.json"
+          git diff --check
+      - name: Commit only the approved paths with helper and enabled hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AUDIT_OUT="$RUNNER_TEMP/legacy-planning-result"
+          git config user.name "DVT documentation maintenance"
+          git config user.email "34416258+dunay2@users.noreply.github.com"
+          git switch -c docs/3004-retire-legacy-planning-pack
+          python - <<'PY'
+          import json,os,pathlib,subprocess
+          scope=json.loads((pathlib.Path(os.environ['AUDIT_OUT'])/'scope.json').read_text())
+          paths=sorted(set(scope['deleted'])|set(scope['modified']))
+          assert len(paths)==83
+          subprocess.run(['git','add','-A','--',*paths],check=True)
+          assert set(subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines())==set(paths)
+          PY
+          pnpm commit docs docs "Retire legacy sprint boards and task-governance remnants" 2>&1 | tee "$AUDIT_OUT/commit.log"
+          git rev-parse HEAD > "$AUDIT_OUT/head.txt"
+          git rev-parse HEAD^{tree} > "$AUDIT_OUT/tree.txt"
+      - name: Bootstrap a disposable CI database from this committed candidate only
+        uses: ./.github/actions/prepare-planning-db
+      - name: Refresh canonical documentation and governance without rebuilding the database
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/legacy-planning-result"
+          pnpm docs:sync 2>&1 | tee "$out/docs-sync.log"
+          pnpm governance:refresh 2>&1 | tee "$out/governance-refresh.log"
+          git diff --exit-code HEAD
+          test -z "$(git status --porcelain)"
+      - name: Validate the complete committed candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AUDIT_OUT="$RUNNER_TEMP/legacy-planning-result"
+          node --test scripts/ai-preflight.test.cjs scripts/check-ai-efficiency-adoption.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/docs-disposition-canon.test.mjs tools/ci/startup-card-canon.test.mjs tools/ci/arc-policy-state-store.test.mjs tools/ci/canvas-fowler-canon.test.mjs tools/ci/ci-retention-review-canon.test.mjs tools/ci/runtime-review-canon.test.mjs tools/ci/planning-review-canon.test.mjs 2>&1 | tee "$AUDIT_OUT/tests.log"
+          node tools/ci/arc-check.mjs > "$AUDIT_OUT/arc.json"
+          pnpm docs:sync:check 2>&1 | tee "$AUDIT_OUT/docs-sync-check.log"
+          pnpm docs:gov:manifest:check 2>&1 | tee "$AUDIT_OUT/manifest-check.log"
+          pnpm ci:docs 2>&1 | tee "$AUDIT_OUT/ci-docs.log"
+          pnpm verify:prepush 2>&1 | tee "$AUDIT_OUT/prepush.log"
+          pnpm pr:validate-title "docs(docs): Retire legacy sprint boards and task-governance remnants" 2>&1 | tee "$AUDIT_OUT/title.log"
+          git diff --exit-code HEAD
+          test -z "$(git status --porcelain)"
+          git diff --exit-code "$GIT_BASE" HEAD -- AGENTS.md CLAUDE.md .arc-policy.yaml .github apps packages scripts docs/adr docs/contracts docs/evidence docs/risk-register docs/runbooks tools/ci/repository-change-scope.mjs tools/ci/arc-check.mjs tools/ci/doc-check.mjs
+          python - <<'PY'
+          import json,os,pathlib,subprocess
+          out=pathlib.Path(os.environ['AUDIT_OUT']);s=json.loads((out/'scope.json').read_text());base=s['baseline']
+          paths=set(s['deleted'])|set(s['modified'])
+          assert set(subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines())==paths
+          assert set(subprocess.check_output(['git','diff','--name-only','--diff-filter=D',base,'HEAD'],text=True).splitlines())==set(s['deleted'])
+          for path,sha in {**s['deleted'],**s['modified']}.items():
+            assert subprocess.check_output(['git','rev-parse',base+':'+path],text=True).strip()==sha,path
+          final={p:subprocess.check_output(['git','rev-parse','HEAD:'+p],text=True).strip() for p in s['modified']}
+          (out/'final-blobs.json').write_text(json.dumps(final,indent=2)+'\n')
+          PY
+          git rev-parse HEAD > "$AUDIT_OUT/validated.txt"
+          git diff --binary "$GIT_BASE" HEAD > "$AUDIT_OUT/candidate.patch"
+          git diff --stat "$GIT_BASE" HEAD > "$AUDIT_OUT/stats.txt"
+          git diff --numstat "$GIT_BASE" HEAD > "$AUDIT_OUT/numstat.txt"
+          git diff --name-status "$GIT_BASE" HEAD > "$AUDIT_OUT/name-status.txt"
+      - name: Push only the validated topic branch without force
+        shell: bash
+        run: |
+          set -euo pipefail
+          current=$(git ls-remote origin refs/heads/docs/3004-retire-legacy-planning-pack | cut -f1)
+          test "$current" = d8c3e3b9479139a35d6e269f6a6ef42dde2080f6
+          git push origin HEAD:refs/heads/docs/3004-retire-legacy-planning-pack 2>&1 | tee "$RUNNER_TEMP/legacy-planning-result/push.log"
+      - name: Preserve integrity and failed-attempt evidence
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'legacy-planning-result';out.mkdir(exist_ok=True)
+          (out/'final-status.txt').write_text(subprocess.run(['git','status','--porcelain'],capture_output=True,text=True).stdout)
+          sums={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(out.iterdir()) if p.is_file() and p.name!='checksums.json'}
+          (out/'checksums.json').write_text(json.dumps(sums,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: legacy-planning-retirement-validation
+          path: ${{ runner.temp }}/legacy-planning-result
+          retention-days: 7
+          if-no-files-found: error
