@@ -8,7 +8,6 @@ planning_type: review
 
 # CI And Delivery Reviews
 
-- [20260328 Lane C AI efficiency and cost review](./20260328-lane-c-ai-efficiency-and-cost-review.md)
 - [20260330 CI performance review and action plan](./20260330-ci-performance-review-and-action-plan.md)
 - [20260330 CI, prepush, and PR process observations](./20260330-ci-prepush-pr-process-observations.md)
 - [20260401 CI process review](./20260401-ci-process-review.md)

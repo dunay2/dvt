@@ -95,9 +95,8 @@ Use these as procedural complements to this file. They do not override rules in
 `AGENTS.md`.
 
 - `docs/guides/ai-work-protocol.md` - AI-assisted work execution procedure.
-- `docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md` -
-  historical efficiency and cost-reduction review; use only the still-valid
-  techniques, not its dated lane state as current authority.
+- `docs/guides/pr-preflight-and-ci-triage.md` - current preflight, branch
+  hygiene, conflict resolution, and failed-check diagnosis.
 - `scripts/hygiene.ps1` - standard diagnostics/cleanup/preflight helper.
 
 ## Git Commit Format Rule

@@ -164,7 +164,8 @@ be treated as a routine Planning DB import/rebuild or task-status projection.
 
 ## Historical Material
 
-Archived proposals, reviews, closeouts, and historical evidence may describe
-retired workflows. Preserve them when they truthfully record their baseline, but
-do not route active work through them and do not treat their obsolete links or
-terminology as current governance.
+Apply the [Historical Material Rule](../planning/status/governance-document-rule-inventory.md#historical-material-rule)
+from the governance inventory. Do not route active work through historical
+reviews. Retire obsolete documents after reconciling their consumers and current
+obligations; retain required provenance through exact Git revisions, not archive
+copies or preservation summaries.

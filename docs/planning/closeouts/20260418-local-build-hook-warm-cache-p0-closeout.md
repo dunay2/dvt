@@ -41,7 +41,7 @@ full project rebuild even on a warm worktree.
   and requires `pnpm verify:prepush` before the slice is presented as ready.
 - `docs/planning/state/planning-control-tower.md` requires the closeout and the
   relevant lane registry to stay aligned for planning-affecting work.
-- `docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md`
+- [Historical efficiency review](https://github.com/dunay2/dvt/blob/1b07acde33300a19d97914eb719b262b44e79182/docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md)
   and `docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md`
   govern the CI-efficiency and operational-friction context for this slice.
 - `docs/planning/closeouts/20260316-workspace-script-graph-dedup-closeout.md`,
