@@ -59,6 +59,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
     args.authoring != null &&
     (composition?.state === 'pending' || composition?.state === 'single-input') &&
     inputs.length >= 1;
+  const authoringAvailable = pendingAuthoring && args.authoring?.canEditNode === true;
   const session = useCanvasRelationalTreeAuthoringSession({
     enabled: pendingAuthoring,
     transformNode: args.transformNode,
@@ -81,7 +82,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
             nodes: args.nodes,
             root: projection.root,
           });
-    if (!pendingAuthoring || args.authoring?.canEditNode !== true) return base;
+    if (!authoringAvailable) return base;
     const candidateById = new Map(session.candidates.map((item) => [item.nodeId, item] as const));
     return base.map((item) => {
       const candidate =
@@ -105,7 +106,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
     args.nodes,
     composition?.state,
     inputs,
-    pendingAuthoring,
+    authoringAvailable,
     projection,
     session.appendInput?.nodeId,
     session.candidates,
@@ -126,11 +127,12 @@ export function useCanvasRelationalTreeWorkbenchModel(
         ? args.copy.relationalTreeInputIdentityUnavailableMessage
         : args.copy.relationalTreeUnavailableMessage;
   const selectCatalogueItem = (item: CanvasRelationalTreeCatalogueItem): void => {
-    if (pendingAuthoring && item.sourceNodeId != null) session.selectInput(item.sourceNodeId);
+    if (authoringAvailable && item.sourceNodeId != null) session.selectInput(item.sourceNodeId);
     else if (projection != null && item.treeLocator != null) setSelectedLocator(item.treeLocator);
   };
 
   return {
+    authoringAvailable,
     catalogue,
     inputs,
     pendingAuthoring,

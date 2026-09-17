@@ -708,9 +708,17 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.relationalTree.canvasLabel',
     fallback: 'Relational block canvas',
   },
+  relationalTreeComposeAction: {
+    key: 'canvas.relationalTree.composeAction',
+    fallback: 'Compose relation',
+  },
   relationalTreeDropSourceMessage: {
     key: 'canvas.relationalTree.dropSourceMessage',
     fallback: 'Drop a Source here.',
+  },
+  relationalTreePendingInputsMessage: {
+    key: 'canvas.relationalTree.pendingInputsMessage',
+    fallback: 'Inputs available',
   },
   relationalTreeParticipatingLabel: {
     key: 'canvas.relationalTree.participatingLabel',
@@ -774,7 +782,11 @@ export const canvasViewAuthoringCopyByKey = {
   },
   relationalTreeSelectNextSourceMessage: {
     key: 'canvas.relationalTree.selectNextSourceMessage',
-    fallback: 'Select the next Source.',
+    fallback: 'Add a second Source to enable JOIN or UNION ALL.',
+  },
+  relationalTreeSourceActionHint: {
+    key: 'canvas.relationalTree.sourceActionHint',
+    fallback: 'Drag or press to add',
   },
   relationalTreeSelectedInputsLabel: {
     key: 'canvas.relationalTree.selectedInputsLabel',
