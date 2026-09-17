@@ -49,16 +49,25 @@ export function useCanvasRelationalTreeViewport(layoutKey: string): Readonly<{
   }, [center]);
 
   useLayoutEffect(() => {
-    const frame = requestAnimationFrame(() => center(1));
-    return () => cancelAnimationFrame(frame);
-  }, [center, layoutKey]);
+    const frame = requestAnimationFrame(fit);
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(fit);
+    if (viewportRef.current != null) observer?.observe(viewportRef.current);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer?.disconnect();
+    };
+  }, [fit, layoutKey]);
 
   const changeZoom = useCallback((delta: number) => {
     setZoom((current) => changeCanvasRelationalTreeZoom(current, delta));
   }, []);
 
   const onPointerDown: PointerEventHandler<HTMLDivElement> = (event) => {
-    if (event.button !== 0 || (event.target as Element).closest('button') != null) return;
+    if (
+      event.button !== 0 ||
+      (event.target as Element).closest('button, input, select, summary, a') != null
+    )
+      return;
     panOrigin.current = {
       x: event.clientX,
       y: event.clientY,

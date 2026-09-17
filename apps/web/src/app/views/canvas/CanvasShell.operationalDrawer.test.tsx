@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 /** Owned concern: prove CanvasShell publishes Canvas operations into the bottom drawer. */
-import { act, isValidElement } from 'react';
+import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
@@ -13,8 +13,6 @@ import {
 import type { CanvasShellProps } from './canvasShell.types';
 import { canvasViewCopy } from './copy';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
-import { useUiLayoutStore } from '../../stores/uiLayoutStore';
-import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import type { SourceDataSample } from '../../ports/workspace';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import {
@@ -70,7 +68,6 @@ describe('CanvasShell operational drawer registration', () => {
         { id: 'problems', label: 'Problems' },
         { id: 'runs', label: 'Runs' },
         { id: 'preview', label: 'Preview' },
-        { id: 'semantic', label: 'Relational tree' },
       ],
       runs: {
         activeRunId: 'run-42',
@@ -93,7 +90,7 @@ describe('CanvasShell operational drawer registration', () => {
     expect(onRun).toHaveBeenCalledTimes(1);
   });
 
-  it('opens one relational-tree drawer from the composition badge and Transform selection', async () => {
+  it('opens the Model editor from the composition badge without querying or writing', async () => {
     const fixture = buildSemanticWorkbenchFixture();
     const position = { x: 320, y: 140 };
     const onApplyNodeDraft = vi.fn();
@@ -156,47 +153,14 @@ describe('CanvasShell operational drawer registration', () => {
     });
 
     expect(onInspectNode).not.toHaveBeenCalled();
-    expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('semantic');
-    expect(useUiLayoutStore.getState().bottomDrawerVisible).toBe(true);
+    expect(document.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
+    expect(
+      useOperationalDrawerContributionStore
+        .getState()
+        .contribution?.tabs.some((tab) => tab.id === 'semantic')
+    ).toBe(false);
     expect(projectedNode?.position).toBe(position);
-
-    expect(projectedNode?.data.onSelectNode).toBeTypeOf('function');
-    act(() => {
-      (projectedNode?.data.onSelectNode as (() => void) | undefined)?.();
-    });
-    expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('semantic');
-    expect(useUiLayoutStore.getState().bottomDrawerVisible).toBe(true);
-
-    act(() => {
-      (projectedNode?.data.onOpenNode as (() => void) | undefined)?.();
-    });
-    expect(onInspectNode).not.toHaveBeenCalled();
-    expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
-      activeTab: `data:${fixture.transform.id}`,
-      contribution: {
-        tabs: expect.arrayContaining([
-          expect.objectContaining({
-            id: `data:${fixture.transform.id}`,
-            dataSample: {
-              status: 'loading',
-              nodeName: fixture.transform.name,
-            },
-          }),
-        ]),
-      },
-    });
-    expect(onApplyNodeDraft).not.toHaveBeenCalled();
-    expect(projectedNode?.position).toBe(position);
-
-    const semanticBody = useOperationalDrawerContributionStore
-      .getState()
-      .contribution?.tabs.find((tab) => tab.id === 'semantic')?.content;
-    expect(isValidElement<{ transformNode: { id: string } }>(semanticBody)).toBe(true);
-    if (!isValidElement<{ transformNode: { id: string } }>(semanticBody)) {
-      throw new Error('Expected the shared relational-tree Workbench.');
-    }
-    expect(semanticBody.type).toBe(CanvasRelationalTreeWorkbench);
-    expect(semanticBody.props.transformNode.id).toBe(fixture.transform.id);
+    expect(previewTransformRows).not.toHaveBeenCalled();
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });
 
@@ -228,23 +192,12 @@ describe('CanvasShell operational drawer registration', () => {
         Array<{ data: Record<string, unknown> }> | undefined
     )?.[0];
     act(() => {
-      (projectedNode?.data.onSelectNode as (() => void) | undefined)?.();
+      (projectedNode?.data.onOpenNode as (() => void) | undefined)?.();
     });
-
-    const semanticBody = useOperationalDrawerContributionStore
-      .getState()
-      .contribution?.tabs.find((tab) => tab.id === 'semantic')?.content;
+    expect(document.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
     expect(
-      isValidElement<{ transformNode: { id: string }; edges: readonly unknown[] }>(semanticBody)
-    ).toBe(true);
-    if (
-      !isValidElement<{ transformNode: { id: string }; edges: readonly unknown[] }>(semanticBody)
-    ) {
-      throw new Error('Expected the relational-tree Workbench to own projection diagnostics.');
-    }
-    expect(semanticBody.type).toBe(CanvasRelationalTreeWorkbench);
-    expect(semanticBody.props.transformNode.id).toBe(fixture.transform.id);
-    expect(semanticBody.props.edges).toHaveLength(fixture.edges.slice(1).length);
+      document.querySelector('[data-slot="canvas-relational-tree-workbench"]')?.textContent
+    ).toContain('Missing');
   });
 
   it('publishes no execution drawer for a surface strategy without execution operations', async () => {
@@ -271,7 +224,7 @@ describe('CanvasShell operational drawer registration', () => {
     expect(useOperationalDrawerContributionStore.getState().contribution).toBeNull();
   });
 
-  it('keeps one isolated data tab per card when a source response arrives late', async () => {
+  it('keeps a late Source response isolated from the open Model editor', async () => {
     const fixture = buildSemanticWorkbenchFixture();
     let resolveSample: ((sample: SourceDataSample) => void) | undefined;
     const previewSourceObjectRows = vi.fn(
@@ -357,26 +310,19 @@ describe('CanvasShell operational drawer registration', () => {
       await Promise.resolve();
     });
     expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
-      activeTab: `data:${fixture.transform.id}`,
+      activeTab: 'data:source',
       contribution: {
         tabs: expect.arrayContaining([
           expect.objectContaining({
             id: 'data:source',
             dataSample: { status: 'ready', nodeName: 'Source', sample: sourceSample },
           }),
-          expect.objectContaining({
-            id: `data:${fixture.transform.id}`,
-            dataSample: {
-              status: 'ready',
-              nodeName: fixture.transform.name,
-              sample: transformSample,
-            },
-          }),
         ]),
       },
     });
     expect(previewSourceObjectRows).toHaveBeenCalledOnce();
-    expect(previewTransformRows).toHaveBeenCalledOnce();
+    expect(previewTransformRows).not.toHaveBeenCalled();
+    expect(document.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
     expect(runMaterializationSampleQuery).not.toHaveBeenCalled();
     expect(onInspectNode).not.toHaveBeenCalled();
     act(() => {

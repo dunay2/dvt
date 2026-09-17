@@ -58,8 +58,8 @@ export function CanvasRelationalTreeView({
           <div
             ref={viewport.contentRef}
             data-slot="canvas-relational-tree"
-            className="mx-auto w-max origin-center transition-transform duration-150"
-            style={{ transform: `scale(${viewport.zoom})`, transformOrigin: 'center center' }}
+            className="w-max"
+            style={{ zoom: viewport.zoom }}
           >
             <CanvasRelationalTreeLayout
               outputName={outputName}

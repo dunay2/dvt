@@ -1,5 +1,5 @@
 import { Braces, Pencil, Plus, Trash2, X } from 'lucide-react';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import type {
@@ -56,7 +56,7 @@ const SELECT_STYLE = {
   padding: '8px 9px',
   color: '#34d399',
   fontFamily: 'IBM Plex Mono, monospace',
-  fontSize: 9,
+  fontSize: 11,
 } as const;
 
 type ConditionFieldOption = SemanticWorkbenchJoinFieldOption & Readonly<{ inputIndex: number }>;
@@ -203,6 +203,7 @@ function IconAction(props: { label: string; children: ReactNode; onClick: () => 
 }
 
 export function SemanticWorkbenchJoinConditionEditor(props: {
+  onEditingChange?: (editing: boolean) => void;
   projection: DvtSubstraitNInputJoinProjection;
   rightInputIndex: number;
   conditions: readonly DvtSubstraitJoinPredicateCondition[];
@@ -217,6 +218,13 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
   onRemove: (conditionKey: string) => void;
 }) {
   const [conditionDraft, setConditionDraft] = useState<ConditionDraft | null>(null);
+  const editingCallback = useRef(props.onEditingChange);
+  editingCallback.current = props.onEditingChange;
+  const editing = conditionDraft != null;
+  useEffect(() => {
+    editingCallback.current?.(editing);
+    return () => editingCallback.current?.(false);
+  }, [editing]);
   const fields = useMemo<readonly ConditionFieldOption[]>(
     () =>
       props.projection.inputs.slice(0, props.rightInputIndex + 1).flatMap((input, inputIndex) =>
@@ -341,13 +349,13 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
   return (
     <div data-slot="semantic-workbench-join-condition-list" style={{ marginTop: 12 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ color: muted, fontSize: 9, fontWeight: 700 }}>CONDICIONES DEL JOIN</span>
+        <span style={{ color: muted, fontSize: 11, fontWeight: 700 }}>CONDICIONES DEL JOIN</span>
         <IconAction label="Añadir condición" onClick={startNewCondition}>
           <Plus aria-hidden="true" size={13} />
         </IconAction>
       </div>
       {rows.length === 0 ? (
-        <div style={{ marginTop: 7, color: muted, fontSize: 9 }}>Sin condiciones.</div>
+        <div style={{ marginTop: 7, color: muted, fontSize: 11 }}>Sin condiciones.</div>
       ) : (
         <div style={{ display: 'grid', gap: 4, marginTop: 8 }}>
           {rows.map((row, index) =>
@@ -373,7 +381,7 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
                     overflowWrap: 'anywhere',
                     color: '#d1fae5',
                     fontFamily: 'IBM Plex Mono, monospace',
-                    fontSize: 8,
+                    fontSize: 11,
                   }}
                 >
                   {row.label}
@@ -402,7 +410,7 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
                   marginLeft: row.depth * 12,
                   color: '#34d399',
                   fontFamily: 'IBM Plex Mono, monospace',
-                  fontSize: 9,
+                  fontSize: 11,
                   fontWeight: 700,
                 }}
               >
@@ -415,6 +423,12 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
       {conditionDraft == null ? null : (
         <div
           data-slot="semantic-workbench-join-condition-editor"
+          onKeyDown={(event) => {
+            if (event.key !== 'Escape' || event.defaultPrevented) return;
+            event.preventDefault();
+            event.stopPropagation();
+            setConditionDraft(null);
+          }}
           style={{
             marginTop: 8,
             border: '1px solid #0f766e',
@@ -424,7 +438,7 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ color: '#34d399', fontSize: 9, fontWeight: 700 }}>
+            <span style={{ color: '#34d399', fontSize: 11, fontWeight: 700 }}>
               {conditionDraft.conditionKey == null ? 'NUEVA CONDICIÓN' : 'EDITAR CONDICIÓN'}
             </span>
             <IconAction label="Cerrar editor" onClick={() => setConditionDraft(null)}>
@@ -454,7 +468,7 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
               </option>
             ))}
           </select>
-          <label style={{ display: 'block', marginTop: 8, color: muted, fontSize: 9 }}>
+          <label style={{ display: 'block', marginTop: 8, color: muted, fontSize: 11 }}>
             TIPO DE DATO
             <select
               aria-label="Tipo de dato de la condición"
@@ -495,7 +509,7 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
             functions={functions}
             onChange={(left) => setConditionDraft({ ...conditionDraft, left })}
           />
-          <label style={{ display: 'block', marginTop: 8, color: muted, fontSize: 9 }}>
+          <label style={{ display: 'block', marginTop: 8, color: muted, fontSize: 11 }}>
             COMPARACIÓN
             <select
               aria-label="Comparador de la condición"
@@ -549,7 +563,7 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
                     padding: '7px 9px',
                     color: conditionDraft.groupWithPrevious ? '#d1fae5' : muted,
                     cursor: 'pointer',
-                    fontSize: 9,
+                    fontSize: 11,
                   }}
                 >
                   <Braces aria-hidden="true" size={12} />
@@ -598,7 +612,7 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
               padding: '8px 9px',
               color: !canApply ? '#64748b' : '#d1fae5',
               cursor: !canApply ? 'not-allowed' : 'pointer',
-              fontSize: 9,
+              fontSize: 11,
               fontWeight: 700,
             }}
           >

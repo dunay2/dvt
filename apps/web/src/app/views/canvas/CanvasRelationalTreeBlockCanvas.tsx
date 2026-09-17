@@ -32,6 +32,8 @@ export function CanvasRelationalTreeBlockCanvas({
   onPlaceInput,
   onSelectInput,
   onSelectOperation,
+  pendingCondition = false,
+  onPendingConditionChange,
 }: Readonly<{
   appendInput: CanvasDvtCompositionInput | null;
   choices: readonly CanvasRelationalOperationChoice[];
@@ -54,9 +56,12 @@ export function CanvasRelationalTreeBlockCanvas({
   onPlaceInput: (nodeId: string, position: CanvasRelationalOperandPosition) => void;
   onSelectInput: (nodeId: string) => void;
   onSelectOperation: (operation: CanvasRelationalOperation) => void;
+  pendingCondition?: boolean;
+  onPendingConditionChange?: (pending: boolean) => void;
 }>): JSX.Element {
   const hasOperands = selectedInputIds.length > 0;
   const ready =
+    !pendingCondition &&
     appendInput == null &&
     ((operation === 'projection' && selectedInputIds.length === 1) ||
       (operation === 'inner_join' && joinDraft != null) ||
@@ -79,29 +84,32 @@ export function CanvasRelationalTreeBlockCanvas({
         onCancel={onCancel}
         onSelectOperation={onSelectOperation}
       />
-      <CanvasRelationalTreeDraftViewport
-        copy={copy}
-        edges={edges}
-        inputs={inputs}
-        joinDraft={joinDraft}
-        nodes={nodes}
-        operation={operation}
-        primaryInputId={primaryInputId}
-        secondaryInputId={secondaryInputId}
-        selectedInputIds={selectedInputIds}
-        transformNode={transformNode}
-        onPlaceInput={onPlaceInput}
-        onSelectInput={onSelectInput}
-        onSelectOperation={onSelectOperation}
-      />
-      <CanvasRelationalTreeInlineEditor
-        appendInput={appendInput}
-        copy={copy}
-        joinDraft={joinDraft}
-        operation={operation}
-        onAppendJoinInput={onAppendJoinInput}
-        onChangeJoinDraft={onChangeJoinDraft}
-      />
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <CanvasRelationalTreeDraftViewport
+          copy={copy}
+          edges={edges}
+          inputs={inputs}
+          joinDraft={joinDraft}
+          nodes={nodes}
+          operation={operation}
+          primaryInputId={primaryInputId}
+          secondaryInputId={secondaryInputId}
+          selectedInputIds={selectedInputIds}
+          transformNode={transformNode}
+          onPlaceInput={onPlaceInput}
+          onSelectInput={onSelectInput}
+          onSelectOperation={onSelectOperation}
+        />
+        <CanvasRelationalTreeInlineEditor
+          appendInput={appendInput}
+          copy={copy}
+          joinDraft={joinDraft}
+          operation={operation}
+          onAppendJoinInput={onAppendJoinInput}
+          onChangeJoinDraft={onChangeJoinDraft}
+          onPendingConditionChange={onPendingConditionChange}
+        />
+      </div>
     </section>
   );
 }

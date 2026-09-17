@@ -60,7 +60,7 @@ export function CanvasRelationalTreeGraphNode({
   onSelect: (locator: string) => void;
 }>): JSX.Element {
   const roleLabel = placed.role == null ? null : childRoleLabel(placed.role, placed.ordinal, copy);
-  const subtitle = placed.node.displayName ?? placed.node.relationId ?? placed.node.substraitKind;
+  const subtitle = placed.node.displayName ?? placed.node.substraitKind;
   return (
     <li
       role="none"
@@ -87,14 +87,20 @@ export function CanvasRelationalTreeGraphNode({
       >
         <span className="flex items-center gap-2">
           <OperatorIcon operator={placed.node.operator} />
-          <span className="truncate text-[10px] font-bold uppercase tracking-wide text-(--text-primary)">
+          <span className="truncate text-xs font-semibold uppercase tracking-wide text-(--text-primary)">
             {placed.node.operator.toUpperCase()}
           </span>
-          <span className="ml-auto rounded bg-(--surface-panel) px-1.5 py-0.5 font-mono text-[9px] text-(--text-muted)">
+          <span
+            title={copy.nodePresentationColumnsLabel}
+            className="ml-auto rounded bg-(--surface-panel) px-1.5 py-0.5 font-mono text-[11px] text-(--text-muted)"
+          >
             {placed.node.output.fields.length}
           </span>
         </span>
-        <span className="mt-1 block truncate font-mono text-[10px] text-(--text-muted)">
+        <span
+          title={subtitle}
+          className="mt-2 block truncate font-mono text-[11px] text-(--text-muted)"
+        >
           {subtitle}
         </span>
         {roleLabel == null ? null : <span className="sr-only">{roleLabel}</span>}

@@ -15,6 +15,8 @@ import {
   type CanvasRelationalOperandPosition,
 } from './CanvasRelationalTreeOperandSlot';
 import { CanvasRelationalTreeLayout } from './CanvasRelationalTreeLayout';
+import { CanvasRelationalTreeZoomControls } from './CanvasRelationalTreeZoomControls';
+import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewport';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
 
@@ -66,6 +68,9 @@ export function CanvasRelationalTreeDraftViewport({
   );
   const [selectedLocator, setSelectedLocator] = useState('');
   const rootLocator = draftProjection?.root.locator ?? '';
+  const viewport = useCanvasRelationalTreeViewport(
+    `${rootLocator}:${selectedInputIds.join(',')}:${operation}`
+  );
   useEffect(() => setSelectedLocator(rootLocator), [rootLocator]);
 
   const placeDroppedSource = (nodeId: string): void => {
@@ -78,8 +83,13 @@ export function CanvasRelationalTreeDraftViewport({
   return (
     <div className="relative min-h-0 flex-1">
       <div
+        ref={viewport.viewportRef}
         data-slot="canvas-relational-tree-draft-viewport"
-        className="absolute inset-0 overflow-auto p-5"
+        className="absolute inset-0 cursor-grab overflow-auto p-5 pb-16 active:cursor-grabbing"
+        onPointerDown={viewport.onPointerDown}
+        onPointerMove={viewport.onPointerMove}
+        onPointerUp={viewport.onPointerUp}
+        onPointerCancel={viewport.onPointerUp}
         style={{
           backgroundColor: 'var(--surface-subtle)',
           backgroundImage:
@@ -125,7 +135,12 @@ export function CanvasRelationalTreeDraftViewport({
             />
           </div>
         ) : (
-          <div data-slot="canvas-relational-tree-draft" className="mx-auto w-max">
+          <div
+            ref={viewport.contentRef}
+            data-slot="canvas-relational-tree-draft"
+            className="w-max"
+            style={{ zoom: viewport.zoom }}
+          >
             <CanvasRelationalTreeLayout
               outputName={transformNode.name}
               root={draftProjection.root}
@@ -136,6 +151,16 @@ export function CanvasRelationalTreeDraftViewport({
           </div>
         )}
       </div>
+      {draftProjection == null ? null : (
+        <div className="absolute bottom-3 left-3 z-10 rounded-md border border-(--border-subtle) bg-(--surface-panel) p-1 shadow-md">
+          <CanvasRelationalTreeZoomControls
+            copy={copy}
+            zoom={viewport.zoom}
+            onChange={viewport.changeZoom}
+            onFit={viewport.fit}
+          />
+        </div>
+      )}
     </div>
   );
 }

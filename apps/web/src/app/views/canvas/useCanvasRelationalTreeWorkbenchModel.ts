@@ -57,7 +57,9 @@ export function useCanvasRelationalTreeWorkbenchModel(
   );
   const pendingAuthoring =
     args.authoring != null &&
-    (composition?.state === 'pending' || composition?.state === 'single-input') &&
+    (composition?.state === 'pending' ||
+      composition?.state === 'single-input' ||
+      (composition?.state === 'canonical' && composition.operation === 'inner_join')) &&
     inputs.length >= 1;
   const authoringAvailable = pendingAuthoring && args.authoring?.canEditNode === true;
   const session = useCanvasRelationalTreeAuthoringSession({
@@ -133,7 +135,10 @@ export function useCanvasRelationalTreeWorkbenchModel(
         ? args.copy.relationalTreeInputIdentityUnavailableMessage
         : args.copy.relationalTreeUnavailableMessage;
   const selectCatalogueItem = (item: CanvasRelationalTreeCatalogueItem): void => {
-    if (authoringAvailable && item.sourceNodeId != null) session.selectInput(item.sourceNodeId);
+    if (!session.active && projection != null && item.treeLocator != null)
+      setSelectedLocator(item.treeLocator);
+    else if (authoringAvailable && item.sourceNodeId != null)
+      session.selectInput(item.sourceNodeId);
     else if (projection != null && item.treeLocator != null) setSelectedLocator(item.treeLocator);
   };
 

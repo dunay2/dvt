@@ -4,14 +4,14 @@ import type {
   CanvasRelationalTreeNode,
 } from './canvasRelationalTreeProjection';
 
-const NODE_WIDTH = 176;
-const NODE_HEIGHT = 58;
+const NODE_WIDTH = 224;
+const NODE_HEIGHT = 76;
 const HORIZONTAL_GAP = 72;
 const VERTICAL_GAP = 34;
 const HORIZONTAL_PADDING = 36;
 const VERTICAL_PADDING = 36;
 const OUTPUT_GAP = 64;
-const OUTPUT_WIDTH = 132;
+const OUTPUT_WIDTH = 156;
 const BOTTOM_PADDING = 36;
 
 export type CanvasRelationalTreePlacedNode = Readonly<{

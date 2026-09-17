@@ -17,6 +17,7 @@ import ZoomSource from './CanvasRelationalTreeZoomControls.tsx?raw';
 import WorkbenchSource from './CanvasRelationalTreeWorkbench.tsx?raw';
 import EntrySource from './canvasRelationalCompositionEdgeInteraction.ts?raw';
 import CanvasShellSource from './CanvasShell.tsx?raw';
+import ModelEditorSource from './CanvasModelEditor.tsx?raw';
 import CodeWorkbenchSource from './DvtTransformCodeWorkbenchContent.tsx?raw';
 import ApplyCommandSource from './useCanvasRelationalTreeApplyCommand.ts?raw';
 import WorkbenchModelSource from './useCanvasRelationalTreeWorkbenchModel.ts?raw';
@@ -100,14 +101,16 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(BlockCanvasSource).toContain('CanvasRelationalTreeDraftViewport');
     expect(WorkbenchSource).not.toContain('minmax(15rem,20rem)');
     expect(DetailSource).toContain('<aside');
-    expect(WorkbenchSource).toContain('md:grid-cols-[minmax(0,1fr)_17rem]');
+    expect(WorkbenchSource).toContain('<details');
   });
 
-  it('routes pending and canonical badges to the single bottom-drawer Workbench', () => {
+  it('routes pending and canonical badges to the single Model editor owner', () => {
     expect(EntrySource).toContain('args.onActivate(dependency.targetId)');
     expect(EntrySource).not.toContain('inspectNode');
-    expect(CanvasShellSource).toContain('<CanvasRelationalTreeWorkbench');
-    expect(CanvasShellSource).toContain("selectOperationalDrawerTab('semantic')");
+    expect(CanvasShellSource).toContain('<CanvasModelEditor');
+    expect(CanvasShellSource).not.toContain('<CanvasRelationalTreeWorkbench');
+    expect(CanvasShellSource).not.toContain("selectOperationalDrawerTab('semantic')");
+    expect(ModelEditorSource).toContain('<CanvasRelationalTreeWorkbench');
     expect(CodeWorkbenchSource).not.toContain('CanvasRelationalTreeWorkbench');
   });
 });

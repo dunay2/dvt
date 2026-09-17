@@ -1,5 +1,6 @@
 /** Owned concern: compose the source catalogue and central block Workbench for one Transform. */
 
+import { forwardRef, useEffect, useState } from 'react';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type {
   CanvasRelationalTreeAuthoringContract,
@@ -11,24 +12,29 @@ import { CanvasRelationalTreeBlockCanvas } from './CanvasRelationalTreeBlockCanv
 import { CanvasRelationalTreeSourceCatalogue } from './CanvasRelationalTreeSourceCatalogue';
 import { CanvasRelationalTreeView } from './CanvasRelationalTreeView';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
+import {
+  useCanvasRelationalTreeWorkbenchHandle,
+  type CanvasRelationalTreeWorkbenchHandle,
+} from './useCanvasRelationalTreeWorkbenchHandle';
+export type { CanvasRelationalTreeWorkbenchHandle } from './useCanvasRelationalTreeWorkbenchHandle';
 
 export function canOpenCanvasRelationalTreeWorkbench(node: CanonicalNode): boolean {
   return node.pluginId === 'dvt' && node.kind === 'dvt:transform' && node.role === 'transform';
 }
 
-export function CanvasRelationalTreeWorkbench({
-  transformNode,
-  nodes,
-  edges,
-  copy,
-  authoring,
-}: Readonly<{
-  transformNode: CanonicalNode;
-  nodes: readonly CanonicalNode[];
-  edges: readonly CanonicalEdge[];
-  copy: CanvasRelationalTreeWorkbenchCopy;
-  authoring?: CanvasRelationalTreeAuthoringContract;
-}>): JSX.Element {
+export const CanvasRelationalTreeWorkbench = forwardRef<
+  CanvasRelationalTreeWorkbenchHandle,
+  Readonly<{
+    transformNode: CanonicalNode;
+    nodes: readonly CanonicalNode[];
+    edges: readonly CanonicalEdge[];
+    copy: CanvasRelationalTreeWorkbenchCopy;
+    authoring?: CanvasRelationalTreeAuthoringContract;
+  }>
+>(function CanvasRelationalTreeWorkbench(
+  { transformNode, nodes, edges, copy, authoring },
+  ref
+): JSX.Element {
   const model = useCanvasRelationalTreeWorkbenchModel({
     transformNode,
     nodes,
@@ -39,11 +45,16 @@ export function CanvasRelationalTreeWorkbench({
   const showAuthoring =
     model.authoringAvailable && (model.projection == null || model.session.active);
   const pendingInputCount = model.catalogue.filter((item) => item.state === 'pending').length;
+  const [pendingCondition, setPendingCondition] = useState(false);
+  useEffect(() => {
+    if (!model.session.active) setPendingCondition(false);
+  }, [model.session.active]);
+  useCanvasRelationalTreeWorkbenchHandle(ref, model, pendingCondition);
 
   return (
     <div
       data-slot="canvas-relational-tree-workbench"
-      className="grid h-full min-h-0 grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded border border-(--border-subtle) bg-(--surface-panel) md:grid-cols-[12rem_minmax(0,1fr)] md:grid-rows-1"
+      className="grid h-full min-h-0 min-w-0 w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-(--surface-panel) md:grid-cols-[14rem_minmax(0,1fr)] md:grid-rows-1"
     >
       <CanvasRelationalTreeSourceCatalogue
         items={model.catalogue}
@@ -54,6 +65,8 @@ export function CanvasRelationalTreeWorkbench({
       />
       {showAuthoring ? (
         <CanvasRelationalTreeBlockCanvas
+          pendingCondition={pendingCondition}
+          onPendingConditionChange={setPendingCondition}
           appendInput={model.session.appendInput}
           choices={model.session.choices}
           copy={copy}
@@ -84,9 +97,9 @@ export function CanvasRelationalTreeWorkbench({
       ) : (
         <div
           data-slot="canvas-relational-tree-inspection"
-          className="grid h-full min-h-0 grid-cols-1 grid-rows-[minmax(16rem,1fr)_auto] overflow-hidden md:grid-cols-[minmax(0,1fr)_17rem] md:grid-rows-1"
+          className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
         >
-          <div className="flex min-h-0 flex-col overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             {!model.authoringAvailable ? null : (
               <CanvasRelationalTreeAuthoringPrompt
                 copy={copy}
@@ -102,9 +115,15 @@ export function CanvasRelationalTreeWorkbench({
               onSelect={model.selectTreeNode}
             />
           </div>
-          <CanvasRelationalTreeNodeDetail node={model.selectedNode} copy={copy} />
+          <details className="max-h-[40%] shrink-0 overflow-auto border-t border-(--border-subtle)">
+            <summary className="cursor-pointer px-4 py-2 text-xs text-(--text-muted)">
+              {copy.relationalTreeDetailLabel} · {model.selectedNode?.operator.toUpperCase()} ·{' '}
+              {model.selectedNode?.output.fields.length} {copy.nodePresentationColumnsLabel}
+            </summary>
+            <CanvasRelationalTreeNodeDetail node={model.selectedNode} copy={copy} />
+          </details>
         </div>
       )}
     </div>
   );
-}
+});

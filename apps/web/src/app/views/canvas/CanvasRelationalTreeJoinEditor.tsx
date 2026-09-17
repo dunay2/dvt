@@ -19,12 +19,14 @@ export function CanvasRelationalTreeJoinEditor({
   draft,
   onAppend,
   onChange,
+  onPendingConditionChange,
 }: Readonly<{
   appendInput: CanvasDvtCompositionInput | null;
   copy: CanvasRelationalTreeWorkbenchCopy;
   draft: DvtSubstraitInnerJoinDraft;
   onAppend: (selection: Readonly<{ leftSourceFieldId: string; rightFieldName: string }>) => void;
   onChange: (draft: DvtSubstraitInnerJoinDraft) => void;
+  onPendingConditionChange?: (pending: boolean) => void;
 }>): JSX.Element | null {
   const inspection = useMemo(() => inspectDvtSubstraitNInputJoinDraft(draft), [draft]);
   const outputs = inspection.ok ? inspection.projection.outputs : [];
@@ -42,6 +44,7 @@ export function CanvasRelationalTreeJoinEditor({
         draft={draft}
         projection={inspection.projection}
         onChange={onChange}
+        onPendingConditionChange={onPendingConditionChange}
       />
       {appendInput == null ? null : (
         <form
