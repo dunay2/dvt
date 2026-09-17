@@ -3,6 +3,7 @@
  * canonized through the planning DB queue instead of acting as a parallel docs backlog.
  */
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
 
@@ -116,6 +117,7 @@ test('retired historical packs and generators cannot return', () => {
     'docs/archive',
     'docs/planning/archive',
     'docs/planning/proposals/superseded/runtime-and-contracts',
+    'docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md',
     'docs/planning/status/planner-local-doc-triage-20260320.md',
     'docs/planning/status/root-local-doc-triage-20260417.md',
     'docs/adr/_archive',
@@ -177,5 +179,50 @@ test('current records do not point to retired planning files as local evidence',
         path
       );
     }
+  }
+});
+
+test('retired efficiency playbook has no live local consumers', () => {
+  const retiredPath =
+    'docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md';
+  const basename = retiredPath.split('/').at(-1);
+  const provenance =
+    'https://github.com/dunay2/dvt/blob/1b07acde33300a19d97914eb719b262b44e79182/' + retiredPath;
+  const files = execFileSync(
+    'git',
+    [
+      'ls-files',
+      '-z',
+      '--',
+      'AGENTS.md',
+      'CLAUDE.md',
+      'docs',
+      'scripts',
+      'tools',
+      '.github',
+      'package.json',
+    ],
+    {
+      encoding: 'utf8',
+    }
+  )
+    .split('\0')
+    .filter(Boolean);
+  for (const path of files) {
+    if (path === 'tools/ci/docs-disposition-canon.test.mjs' || path === retiredPath) continue;
+    if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
+    const content = readRepoFile(path).replaceAll(provenance, '');
+    assert.equal(content.includes(basename), false, `retired efficiency review reference: ${path}`);
+  }
+  assertContains('AGENTS.md', 'docs/guides/pr-preflight-and-ci-triage.md');
+  const guide = readRepoFile('docs/guides/pr-preflight-and-ci-triage.md');
+  for (const marker of [
+    '## Conflict Triage And Cleanup Safety',
+    'conflict markers',
+    'explicit opt-in',
+    'failed job logs first',
+    'pnpm verify:prepush',
+  ]) {
+    assert.ok(guide.includes(marker), `missing retained practice: ${marker}`);
   }
 });

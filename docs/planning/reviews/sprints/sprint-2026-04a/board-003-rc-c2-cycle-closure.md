@@ -16,7 +16,7 @@ linked_task_ids:
 blocked_by:
   - two more qualifying PR cycles
 source_reviews:
-  - ../../../../ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md
+  - https://github.com/dunay2/dvt/blob/1b07acde33300a19d97914eb719b262b44e79182/docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md
   - ../../../../ci-and-delivery/20260401-lane-c-rc-c2-efficiency-institutionalization-review.md
   - ../../../../ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md
 ---
