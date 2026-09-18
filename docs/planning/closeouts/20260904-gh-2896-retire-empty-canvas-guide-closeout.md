@@ -24,7 +24,7 @@ onboarding card.
 - `docs/architecture/components/web/frontend-command-query-rail-inventory.md`
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `docs/architecture/components/web/graph/canvas-empty-authoring-entrypoint-component.md`
-- `docs/planning/proposals/mandatory/frontend-and-ux/canvas-empty-guide-preference-plan-20260602.md`
+- [Original source in Git](https://github.com/dunay2/dvt/blob/c76f0f3c476396b73d37ea0181caa0a8862e658a/docs/planning/proposals/mandatory/frontend-and-ux/canvas-empty-guide-preference-plan-20260602.md)
 
 ## Rail Decision
 
