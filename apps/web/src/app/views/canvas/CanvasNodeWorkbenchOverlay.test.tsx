@@ -103,6 +103,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     });
     container.remove();
     vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('renders the node workbench only for a selected node in contextual overlay posture', () => {
@@ -288,6 +289,72 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     expect(onHide).toHaveBeenCalledTimes(1);
     expect(document.activeElement).toBe(graphNode);
     graphNode.remove();
+  });
+
+  it.each(['authoring input', 'external control'])(
+    'preserves later focus on the %s before the opening animation frame runs',
+    (target) => {
+      let openingFrame: FrameRequestCallback | undefined;
+      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+        openingFrame = callback;
+        return 1;
+      });
+      vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
+      const externalControl = document.createElement('button');
+      renderOverlay(root);
+      container.appendChild(externalControl);
+      const input = container.querySelector<HTMLInputElement>(
+        '[data-testid="node-authoring-input"]'
+      )!;
+      const focusedControl = target === 'authoring input' ? input : externalControl;
+      focusedControl.focus();
+      expect(document.activeElement).toBe(focusedControl);
+
+      act(() => openingFrame!(0));
+
+      expect(document.activeElement).toBe(focusedControl);
+    }
+  );
+
+  it.each(['body', 'opener', 'removed opener'])(
+    'focuses the selected tab from %s when no later interaction supersedes opening',
+    (target) => {
+      let openingFrame: FrameRequestCallback | undefined;
+      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+        openingFrame = callback;
+        return 1;
+      });
+      vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
+      const opener = document.createElement('button');
+      document.body.appendChild(opener);
+      if (target !== 'body') opener.focus();
+      renderOverlay(root);
+      if (target === 'removed opener') opener.remove();
+
+      act(() => openingFrame!(0));
+
+      opener.remove();
+      expect(document.activeElement).toBe(container.querySelector('[role="tab"]'));
+    }
+  );
+
+  it('cancels pending opening focus when the workbench closes', () => {
+    vi.spyOn(window, 'requestAnimationFrame').mockReturnValue(17);
+    const cancelFrame = vi
+      .spyOn(window, 'cancelAnimationFrame')
+      .mockImplementation(() => undefined);
+    renderOverlay(root);
+
+    renderOverlay(root, {
+      layout: {
+        focusMode: false,
+        inspectorPanelVisible: false,
+        surfaceStrategy: dvtCanvasSurfaceStrategy,
+      },
+    });
+
+    expect(cancelFrame).toHaveBeenCalledWith(17);
+    expect(container.querySelector('[data-slot="canvas-node-workbench-overlay"]')).toBeNull();
   });
 
   it('does not steal authoring focus when parent callbacks rerender', async () => {

@@ -199,23 +199,27 @@ function proveEmptyJoinOutput(sourceCount: number): void {
   };
   cy.get(stageEdges).then(($edges) => {
     for (let index = 0; index < $edges.length; index += 1) {
-      cy.get<SVGPathElement>(`${stageEdges} .react-flow__edge-interaction`)
-        .first()
-        .then(($path) => {
-          const path = $path[0]!;
-          const matrix = path.getScreenCTM()!;
-          const rect = path.getBoundingClientRect();
-          const points = Array.from({ length: 19 }, (_, index) =>
-            path
-              .getPointAtLength((path.getTotalLength() * (index + 1)) / 20)
-              .matrixTransform(matrix)
-          );
-          const visible = points.find(
-            (point) => path.ownerDocument.elementFromPoint(point.x, point.y) === path
-          );
-          expect(visible, 'visible connection segment').not.to.equal(undefined);
-          cy.wrap($path).rightclick(visible!.x - rect.left, visible!.y - rect.top);
-        });
+      cy.get<SVGPathElement>(`${stageEdges} .react-flow__edge-interaction`).then(($paths) => {
+        // N-input edges can share a segment: remove an exposed edge, not the first DOM edge.
+        const exposed = [...$paths]
+          .map((path) => {
+            const matrix = path.getScreenCTM()!;
+            const points = Array.from({ length: 19 }, (_, index) =>
+              path
+                .getPointAtLength((path.getTotalLength() * (index + 1)) / 20)
+                .matrixTransform(matrix)
+            );
+            const point = points.find(
+              (point) => path.ownerDocument.elementFromPoint(point.x, point.y) === path
+            );
+            return point == null ? undefined : { path, point };
+          })
+          .find((candidate) => candidate != null);
+        expect(exposed, 'visible connection segment').not.to.equal(undefined);
+        const { path, point } = exposed!;
+        const rect = path.getBoundingClientRect();
+        cy.wrap(path).rightclick(point.x - rect.left, point.y - rect.top);
+      });
       cy.contains('[data-slot="canvas-context-menu-item"]', 'Remove connection').click();
       cy.get(stageEdges).should('have.length', $edges.length - index - 1);
     }
