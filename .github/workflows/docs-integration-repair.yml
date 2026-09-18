@@ -1,0 +1,228 @@
+name: Docs Integration Repair
+
+on:
+  push:
+    branches: [automation/3004-docs-integration-repair]
+    paths: [.github/workflows/docs-integration-repair.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  retire:
+    name: Retire obsolete review snapshots and completed journals
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    env:
+      BASE: 0c26e7cb74c68ae95bdaf46219f49531df2d98cd
+      START: e0e5e182ab8cc1efe674b19ddbc3dfbd32e4b7fd
+      GIT_BASE: 0c26e7cb74c68ae95bdaf46219f49531df2d98cd
+      PLANNING_DB_INTEGRITY_SCOPE: bootstrap
+      TZ: UTC
+    steps:
+      - name: Checkout exact existing PR head without stored credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: e0e5e182ab8cc1efe674b19ddbc3dfbd32e4b7fd
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup canonical toolchain with enabled hooks
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+      - name: Apply exact reviewed retirement and prove red then green
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess,json,hashlib,os
+          out=Path('/tmp/next-retirement');out.mkdir(exist_ok=True)
+          def git(*args):return subprocess.check_output(['git',*args])
+          def sha(data):return hashlib.sha256(data).hexdigest()
+          assert git('rev-parse','HEAD').decode().strip()==os.environ['START']
+          assert git('rev-parse','HEAD^{tree}').decode().strip()=='75165a9e8c0b8e4deef02ddbcc1219c31146ea67'
+          removed=[
+            'docs/planning/closeouts/20260316-principal-architecture-review-closeout.md',
+            'docs/planning/closeouts/20260413-web-config-hardening-closeout.md',
+            'docs/planning/closeouts/20260416-tf-e2-web-typecheck-hardening-closeout.md',
+            'docs/planning/closeouts/20260417-graph-architecture-doc-pack-split-closeout.md',
+            'docs/planning/closeouts/20260417-planning-gaps-governance-refresh-closeout.md',
+            'docs/planning/closeouts/20260417-root-local-doc-canonicalization-closeout.md',
+            'docs/planning/closeouts/20260417-root-local-doc-english-integration-closeout.md',
+            'docs/planning/closeouts/20260420-adapter-temporal-canonical-test-route-cleanup-closeout.md',
+            'docs/planning/closeouts/20260423-docs-frontmatter-bom-governance-fix-closeout.md',
+            'docs/planning/closeouts/20260423-docs-markdown-parser-componentization-closeout.md',
+            'docs/planning/closeouts/20260423-rc-c2-post-merge-ci-measurement.md',
+            'docs/planning/closeouts/20260423-rc-c2-wave-2c-prepush-affected-typecheck-closeout.md',
+            'docs/planning/closeouts/20260423-rc-c2-wave-3a-docs-manifest-determinism-closeout.md',
+            'docs/planning/closeouts/20260423-rc-c2-wave-3b-changed-doc-governance-closeout.md',
+            'docs/planning/closeouts/20260423-rc-c2-wave-3c-generated-doc-single-writer-closeout.md',
+            'docs/planning/closeouts/20260511-doc-gov-file-shards-closeout.md',
+            'docs/planning/closeouts/20260522-f24-parent-visual-token-convergence-closeout.md',
+            'docs/planning/closeouts/20260601-ai-targeted-governance-report-tests-closeout.md',
+            'docs/planning/closeouts/20260601-api-test-ci-lifecycle-bypass-closeout.md',
+            'docs/planning/closeouts/20260601-ci-remote-turbo-cache-closeout.md',
+            'docs/planning/closeouts/20260601-governance-owner-matcher-precompile-closeout.md',
+            'docs/planning/closeouts/20260601-governance-refresh-db-first-import-gate-closeout.md',
+            'docs/planning/closeouts/20260601-local-dbfirst-command-dedupe-closeout.md',
+            'docs/planning/closeouts/20260602-ci-affected-preflight-dedupe-closeout.md',
+            'docs/planning/closeouts/20260603-ci-security-analysis-scope-closeout.md',
+            'docs/planning/reviews/architecture-and-governance/20260513-ar-d6-triple-versioning-governance-review.md',
+            'docs/planning/reviews/architecture-and-governance/20260525-f29-canvas-workbench-proposal-disposition-review.md',
+            'docs/planning/reviews/architecture-and-governance/20260605-buzon-fowler-db-activation-review.md',
+            'docs/planning/reviews/ci-and-delivery/20260401-lane-c-rc-c2-efficiency-institutionalization-review.md',
+            'docs/planning/status/evidence-classification-inventory-20260402.md',
+          ]
+          assert len(removed)==30 and len(set(removed))==30
+          edits=['tools/ci/docs-disposition-canon.test.mjs','docs/planning/closeouts/index.md','docs/planning/reviews/ci-and-delivery/index.md']
+          (out/'removed.json').write_text(json.dumps(removed,indent=2))
+          (out/'original-hashes.json').write_text(json.dumps({p:sha(Path(p).read_bytes()) for p in removed+edits},indent=2))
+          p=Path(edits[0]);before=p.read_bytes()
+          assert sha(before)=='1ce61a7c0ba0b4069628c034b85cd7139d4f8cf9e2939cd6d23a2bd1d6adcc6e'
+          text=before.decode();editorial=sorted(Path(p).name for p in removed if p.endswith('-closeout.md'));other=sorted(p for p in removed if not p.endswith('-closeout.md'))
+          assert len(editorial)==24 and len(other)==6
+          needle='  const editorialCloseouts = new Set([\n';assert text.count(needle)==1
+          text=text.replace(needle,needle+''.join("    '"+p+"',\n" for p in editorial))
+          needle="  const retiredDirectories = ['.gh-comments', '.git.bfg-report'];\n  const retiredFiles = [\n";assert text.count(needle)==1
+          text=text.replace(needle,needle+''.join("    '"+p+"',\n" for p in other))
+          assert sha(text.encode())=='a5940ca1486a312fc7285787f56fe914a5b2c67f3026e1b5a801bcc33c66889e'
+          p.write_text(text)
+          cmd=['node','--test','--test-name-pattern=retired documentation-only closeouts|retired PR drafts','tools/ci/docs-disposition-canon.test.mjs']
+          result=subprocess.run(cmd,capture_output=True,text=True);(out/'red.log').write_text(result.stdout+result.stderr)
+          assert result.returncode==1 and '# fail 2' in result.stdout and 'retired editorial closeout' in result.stdout
+          hashes={
+            edits[1]:('dad5182cdb8c44ec0f8a7cc40832dca5c4f438521a9d44b97a4788c5f91b7200','8d69dc00c4cdfc5025a8cb8fa36948a8bbf86709681df7c33f5ad0cf7f94a4f0',7),
+            edits[2]:('9018c9af9b91234a2d4156c5e5e76d8f43d5b41f9fcda1b8012f25e3aca14423','d23bae57f4dc6c0062e36c3d18ea5426926ad59572044c9c5dd2044f0b8de066',1),
+          }
+          for name,(old,new,count) in hashes.items():
+            p=Path(name);before=p.read_bytes();assert sha(before)==old
+            lines=before.decode().splitlines(keepends=True);targets={Path(p).name for p in removed}
+            dead=[line for line in lines if any(t in line for t in targets)]
+            assert len(dead)==count and all(line.startswith('- [') for line in dead)
+            text=''.join(line for line in lines if line not in dead);assert sha(text.encode())==new;p.write_text(text)
+          for name in removed:Path(name).unlink()
+          result=subprocess.run(['node','--test','tools/ci/docs-disposition-canon.test.mjs'],capture_output=True,text=True)
+          (out/'initial-green.log').write_text(result.stdout+result.stderr);assert result.returncode==0,result.stdout[-5000:]
+          assert set(git('diff','--name-only','--diff-filter=D').decode().splitlines())==set(removed)
+          assert set(git('diff','--name-only','--diff-filter=M').decode().splitlines())==set(edits)
+          assert not git('ls-files','--others','--exclude-standard').strip()
+          git('config','user.name','DVT documentation retirement');git('config','user.email','34416258+dunay2@users.noreply.github.com')
+          git('add','-A');git('diff','--cached','--check')
+          print('30 deletions, 30 guard entries, eight navigation removals: exact source verified')
+          PY
+      - name: Commit source through canonical helper and hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm commit docs docs "Retire obsolete review snapshots and completed journals" 2>&1 | tee /tmp/next-retirement/source-commit.log
+          git rev-parse HEAD > /tmp/next-retirement/source-head.txt
+          echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Prepare disposable CI bootstrap DB not operated authority
+        uses: ./.github/actions/prepare-planning-db
+      - name: Regenerate canonical documentation and governance outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm docs:sync 2>&1 | tee /tmp/next-retirement/docs-sync.log
+          pnpm governance:refresh 2>&1 | tee /tmp/next-retirement/governance-refresh.log
+          python3 - <<'PY'
+          import json,subprocess
+          policy=json.load(open('docs/generated-docs-policy.json'))
+          owner=next(p for p in policy['artifactClasses'] if p['id']=='tracked-docs-sync-indexes')
+          allowed=set(owner['artifacts'])|{'docs/.manifest.json'}
+          changed=set(subprocess.check_output(['git','diff','--name-only']).decode().splitlines())
+          assert changed<=allowed,(changed,allowed)
+          assert not subprocess.check_output(['git','ls-files','--others','--exclude-standard']).strip()
+          print('Generated changes:',sorted(changed))
+          PY
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No generated diff; no empty commit" | tee /tmp/next-retirement/generated-commit.log
+          else
+            pnpm commit docs docs "Regenerate manifest after obsolete review retirement" 2>&1 | tee /tmp/next-retirement/generated-commit.log
+          fi
+          echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Validate final scope negative controls and complete gates
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess,json,os,re
+          out=Path('/tmp/next-retirement');start=os.environ['START'];base=os.environ['BASE'];removed=json.loads((out/'removed.json').read_text());results=[]
+          def git(*a):return subprocess.check_output(['git',*a]).decode().strip()
+          def run(name,cmd,expected=0):
+            result=subprocess.run(cmd,capture_output=True,text=True);text=result.stdout+result.stderr
+            (out/(name+'.log')).write_text(text)
+            results.append({'name':name,'command':cmd,'exitCode':result.returncode,'expectedExitCode':expected});(out/'validation.json').write_text(json.dumps(results,indent=2))
+            print(name,result.returncode,flush=True);print('\n'.join(text.splitlines()[-8:]),flush=True)
+            assert result.returncode==expected,(name,text[-5000:]);return text
+          assert set(git('diff','--name-only','--diff-filter=D',start,'HEAD').splitlines())==set(removed)
+          assert not git('diff','--name-only','--diff-filter=A',start,'HEAD')
+          policy=json.load(open('docs/generated-docs-policy.json'));owner=next(p for p in policy['artifactClasses'] if p['id']=='tracked-docs-sync-indexes')
+          allowed=set(removed)|set(owner['artifacts'])|{'docs/.manifest.json','tools/ci/docs-disposition-canon.test.mjs','docs/planning/closeouts/index.md','docs/planning/reviews/ci-and-delivery/index.md'}
+          assert set(git('diff','--name-only',start,'HEAD').splitlines())<=allowed
+          assert not git('diff','--name-only',start,'HEAD','--','apps','packages','specs','docs/adr','docs/evidence','docs/risk-register','.github','package.json','pnpm-lock.yaml','scripts','docs/architecture','docs/planning/proposals','docs/planning/domains')
+          assert not git('diff','--name-only',start,'HEAD','--','docs/planning/closeouts/20260407-doc-arch-01-documentation-governance-audit-closeout.md')
+          arc=run('arc',['node','tools/ci/arc-check.mjs']);match=re.search(r'^\{',arc,re.M);assert match
+          data=json.loads(arc[match.start():]);assert data['effectiveArcLevel']=='ARC-0'
+          assert all(data['requirements'][key] is False for key in ['evidenceDoc','riskUpdate','rolloutNotes','compatMatrix'])
+          cmd=['node','--test','--test-name-pattern=retired documentation-only closeouts|retired PR drafts','tools/ci/docs-disposition-canon.test.mjs']
+          run('green-selected',cmd)
+          for i,name in enumerate(removed):
+            p=Path(name);assert not p.exists();p.write_bytes(subprocess.check_output(['git','show',start+':'+name]))
+            try:run('restore-'+str(i+1),cmd,1)
+            finally:p.unlink()
+          for i,name in enumerate(['docs/planning/closeouts/index.md','docs/planning/reviews/ci-and-delivery/index.md']):
+            p=Path(name);original=p.read_bytes();p.write_bytes(subprocess.check_output(['git','show',start+':'+name]))
+            try:run('restore-index-'+str(i+1),cmd,1)
+            finally:p.write_bytes(original)
+          p=Path('README.md');original=p.read_bytes();slug='docs/planning/status/evidence-classification-inventory-20260402.md'
+          controls=[('path',slug,1),('relative','[Old](../status/evidence-classification-inventory-20260402.md)',1),('main','https://github.com/dunay2/dvt/blob/main/'+slug,1),('exact-git','https://github.com/dunay2/dvt/blob/'+start+'/'+slug,0),('current','The current evidence and risk records remain required.',0)]
+          for name,text,code in controls:
+            p.write_bytes(original+('\n'+text+'\n').encode())
+            try:run('reference-'+name,cmd,code)
+            finally:p.write_bytes(original)
+          commands=[
+            ['node','--test','scripts/check-feature-mechanization.test.cjs','scripts/documentation-publication.test.cjs','scripts/planning-db-surface-inventory-check.test.cjs','tools/ci/docs-disposition-canon.test.mjs','tools/ci/startup-card-canon.test.mjs','tools/ci/planner-package-governance.test.mjs','tools/ci/architecture-doc-reconciliation-canon.test.mjs','scripts/governance-refresh.test.cjs','tools/ci/emit-test-matrix.test.mjs','tools/ci/turbo-workspace-task-contract.test.mjs'],
+            ['pnpm','docs:sync:check'],['pnpm','docs:gov:manifest:check'],['pnpm','ci:docs'],['pnpm','verify:prepush'],
+            ['pnpm','pr:validate-title','docs(docs): Retire obsolete review snapshots and completed journals'],['git','diff','--exit-code','HEAD']]
+          for i,command in enumerate(commands):run('validation-'+str(i+1),command)
+          assert not git('status','--porcelain')
+          (out/'validated.txt').write_text(git('rev-parse','HEAD')+'\n')
+          PY
+      - name: Export exact candidate and all evidence
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess,json,hashlib,os
+          out=Path('/tmp/next-retirement');out.mkdir(exist_ok=True);start=os.environ['START'];base=os.environ['BASE']
+          def git(*a):return subprocess.check_output(['git',*a])
+          outputs={'head.txt':['rev-parse','HEAD'],'tree.txt':['rev-parse','HEAD^{tree}'],'commit.txt':['cat-file','commit','HEAD'],'status.txt':['status','--porcelain'],'incremental-stat.txt':['diff','--stat',start,'HEAD'],'cumulative-stat.txt':['diff','--stat',base,'HEAD'],'incremental.patch':['diff',start,'HEAD'],'cumulative.patch':['diff',base,'HEAD'],'worktree.patch':['diff','HEAD'],'name-status.txt':['diff','--name-status',start,'HEAD'],'numstat.txt':['diff','--numstat',start,'HEAD'],'cumulative-name-status.txt':['diff','--name-status',base,'HEAD'],'cumulative-numstat.txt':['diff','--numstat',base,'HEAD'],'head-files.txt':['ls-tree','-rz','HEAD']}
+          for name,args in outputs.items():(out/name).write_bytes(git(*args))
+          if (out/'source-head.txt').exists():(out/'source-commit.txt').write_bytes(git('cat-file','commit',(out/'source-head.txt').read_text().strip()))
+          subprocess.run(['git','archive','--format=tar.gz','-o',str(out/'source.tar.gz'),'HEAD'],check=True)
+          (out/'checksums.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in out.iterdir() if p.is_file() and p.name!='checksums.json'},indent=2))
+          print((out/'head.txt').read_text());print((out/'incremental-stat.txt').read_text())
+          PY
+      - name: Update existing PR branch only after all validation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(cat /tmp/next-retirement/validated.txt)" = "$(git rev-parse HEAD)"
+          gh auth setup-git
+          branch=docs/3004-retire-pr-drafts-and-completed-journals
+          test "$(git ls-remote --heads origin "refs/heads/$branch" | cut -f1)" = "$START"
+          git push origin "HEAD:refs/heads/$branch"
+      - name: Upload exact source and validation evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: next-documentation-retirement
+          path: /tmp/next-retirement
+          retention-days: 7
