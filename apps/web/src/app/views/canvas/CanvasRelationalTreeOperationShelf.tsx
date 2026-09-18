@@ -1,5 +1,6 @@
 /** Owned concern: expose admitted operations in one collapsible relational-canvas toolbox. */
-import { ChevronDown, GitMerge } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { CanvasRelationalJoinIcon } from './CanvasRelationalJoinIcon';
 import { useState } from 'react';
 
 import { Button } from '../../components/ui/button';
@@ -46,7 +47,7 @@ export function CanvasRelationalTreeOperationShelf({
           onClick={() => setExpanded((current) => !current)}
           className="flex min-w-0 items-center gap-2 rounded px-1 py-1 text-left text-(--text-primary) hover:bg-(--surface-subtle)"
         >
-          <GitMerge aria-hidden="true" className="size-4 shrink-0 text-(--status-info)" />
+          <CanvasRelationalJoinIcon className="size-4 shrink-0 text-(--status-info)" />
           <span className="truncate text-[11px] font-semibold uppercase tracking-wide">
             {copy.inspectorDvtRelationalOperationTitle}
           </span>

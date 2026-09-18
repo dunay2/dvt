@@ -15,7 +15,7 @@ const selectStyle = {
   padding: '8px 9px',
   color: '#7dd3fc',
   fontFamily: 'IBM Plex Mono, monospace',
-  fontSize: 9,
+  fontSize: 11,
 } as const;
 
 export type SemanticWorkbenchJoinOperandDraft = Readonly<{
@@ -220,11 +220,17 @@ export function SemanticWorkbenchJoinOperandEditor(props: {
           />
         )}
       </div>
-      <JoinOperandFunctionChain
-        functionIds={props.operand.functionIds}
-        functions={props.functions}
-        onChange={(functionIds) => props.onChange({ ...props.operand, functionIds })}
-      />
+      <details className="mt-2" open={props.operand.functionIds.length > 0 ? true : undefined}>
+        <summary className="cursor-pointer text-[10px] text-(--text-muted)">
+          Funciones
+          {props.operand.functionIds.length > 0 ? ` (${props.operand.functionIds.length})` : ''}
+        </summary>
+        <JoinOperandFunctionChain
+          functionIds={props.operand.functionIds}
+          functions={props.functions}
+          onChange={(functionIds) => props.onChange({ ...props.operand, functionIds })}
+        />
+      </details>
     </div>
   );
 }

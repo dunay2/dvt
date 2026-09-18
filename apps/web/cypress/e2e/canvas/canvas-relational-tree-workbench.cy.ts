@@ -226,7 +226,6 @@ describe('Canvas relational-tree Workbench', () => {
     cy.get('[data-slot="canvas-relational-tree-sources"] input')
       .should('have.value', 'customers')
       .clear();
-    cy.get('[data-slot="canvas-relational-tree-inspection"] details summary').click();
     cy.get('[data-slot="canvas-relational-tree-detail"]')
       .should('be.visible')
       .and('have.attr', 'data-position', 'contextual')
@@ -237,7 +236,7 @@ describe('Canvas relational-tree Workbench', () => {
     cy.screenshot('semantic-editor-wide');
 
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
-    cy.get('[data-slot="canvas-relational-tree-detail"]').should('contain.text', 'READ');
+    cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
     cy.get('[data-slot="canvas-relational-tree-workbench"] button[aria-label="Zoom out"]').click();
     cy.get(
       '[data-slot="canvas-relational-tree-workbench"] button[aria-label="Fit graph to view"]'
@@ -247,7 +246,7 @@ describe('Canvas relational-tree Workbench', () => {
       .should('match', /^\d+%$/);
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
     cy.viewport(1024, 720);
-    cy.get('[data-slot="canvas-relational-tree-inspection"] details summary').click();
+    cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
     cy.get('[data-slot="canvas-model-view-tab"]').should('have.length', 3);
     cy.screenshot('semantic-editor-compact');
     cy.get('[data-slot="canvas-model-back"]').click();
@@ -441,12 +440,34 @@ describe('Canvas relational-tree Workbench', () => {
     );
     cy.wrap(null).should(() => expect(semanticWrites('join-transform')).to.have.length(0));
 
+    const cards = '[data-slot="canvas-relational-tree-draft"] [data-operator="join"]';
+    const selectedPredicates =
+      '[data-slot="dvt-substrait-join-predicate-editors"] fieldset:visible';
+    cy.get(cards).last().click();
+    cy.get('[data-slot="canvas-relational-expand"]').click();
+    cy.get(selectedPredicates)
+      .should('have.length', 1)
+      .and('contain.text', 'orders.')
+      .and('not.contain.text', 'tickets.');
+    cy.get(cards).first().click();
+    cy.get(selectedPredicates).should('have.length', 1).and('contain.text', 'tickets.');
+    cy.get(`${selectedPredicates} button[aria-label="Editar condición"]`).click();
+    cy.get(`${selectedPredicates} select[aria-label="Comparador de la condición"]`).select(
+      'not_equal'
+    );
+    cy.get(cards).last().click();
+    cy.get(selectedPredicates).should('not.contain.text', 'tickets.');
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
+    cy.get(cards).first().click();
+    cy.get(`${selectedPredicates} select[aria-label="Comparador de la condición"]`).should(
+      'have.value',
+      'not_equal'
+    );
     cy.get('[data-slot="canvas-relational-focus"]').click();
-    cy.get(
-      '[data-slot="dvt-substrait-join-predicate-editors"] button[aria-label="Añadir condición"]'
-    )
-      .first()
-      .click();
+    cy.screenshot('semantic-editor-contextual-join');
+    cy.contains(`${selectedPredicates} button`, 'Guardar condición').click();
+
+    cy.get(`${selectedPredicates} button[aria-label="Añadir condición"]`).first().click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]')
       .contains('button', 'Añadir condición')
@@ -498,6 +519,14 @@ describe('Canvas relational-tree Workbench', () => {
       if (!inspection.ok) return;
       expect(inspection.projection.inputs).to.have.length(4);
       expect(inspection.projection.joinRelations).to.have.length(3);
+      expect(
+        inspection.projection.joins.map((join) => {
+          const condition = join.conditions[0];
+          return condition == null || condition.kind === 'group'
+            ? null
+            : (condition.operator ?? 'equal');
+        })
+      ).to.deep.equal(['equal', 'equal', 'not_equal']);
       const customerId = inspection.projection.inputs[0]?.fields.find(
         (field) => field.name === 'customer_id'
       )?.fieldId;

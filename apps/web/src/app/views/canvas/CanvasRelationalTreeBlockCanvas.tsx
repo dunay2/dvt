@@ -1,5 +1,6 @@
 /** Owned concern: compose the scalable relational draft viewport, toolbox and inline editor. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { useState } from 'react';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type {
   CanvasRelationalOperation,
@@ -34,6 +35,7 @@ export function CanvasRelationalTreeBlockCanvas({
   onSelectOperation,
   pendingCondition = false,
   onPendingConditionChange,
+  initialRelationId = null,
 }: Readonly<{
   appendInput: CanvasDvtCompositionInput | null;
   choices: readonly CanvasRelationalOperationChoice[];
@@ -58,8 +60,10 @@ export function CanvasRelationalTreeBlockCanvas({
   onSelectOperation: (operation: CanvasRelationalOperation) => void;
   pendingCondition?: boolean;
   onPendingConditionChange?: (pending: boolean) => void;
+  initialRelationId?: string | null;
 }>): JSX.Element {
   const hasOperands = selectedInputIds.length > 0;
+  const [selectedRelationId, setSelectedRelationId] = useState(initialRelationId);
   const ready =
     !pendingCondition &&
     appendInput == null &&
@@ -99,6 +103,8 @@ export function CanvasRelationalTreeBlockCanvas({
           onPlaceInput={onPlaceInput}
           onSelectInput={onSelectInput}
           onSelectOperation={onSelectOperation}
+          selectedRelationId={selectedRelationId}
+          onSelectRelation={setSelectedRelationId}
         />
         <CanvasRelationalTreeInlineEditor
           appendInput={appendInput}
@@ -108,6 +114,7 @@ export function CanvasRelationalTreeBlockCanvas({
           onAppendJoinInput={onAppendJoinInput}
           onChangeJoinDraft={onChangeJoinDraft}
           onPendingConditionChange={onPendingConditionChange}
+          selectedRelationId={selectedRelationId}
         />
       </div>
     </section>

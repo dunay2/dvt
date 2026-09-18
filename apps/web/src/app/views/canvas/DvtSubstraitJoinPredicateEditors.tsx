@@ -15,12 +15,14 @@ export function DvtSubstraitJoinPredicateEditors({
   projection,
   onChange,
   onPendingConditionChange,
+  selectedRelationId,
 }: Readonly<{
   disabled: boolean;
   draft: DvtSubstraitInnerJoinDraft;
   projection: DvtSubstraitNInputJoinProjection;
   onChange: (draft: DvtSubstraitInnerJoinDraft) => void;
   onPendingConditionChange?: (pending: boolean) => void;
+  selectedRelationId?: string | null;
 }>): JSX.Element {
   const [editing, setEditing] = useState<ReadonlySet<string>>(() => new Set());
   const trackEditing = useCallback((relationId: string, pending: boolean) => {
@@ -44,6 +46,9 @@ export function DvtSubstraitJoinPredicateEditors({
           <fieldset
             key={joinRelation.relationId}
             disabled={disabled}
+            hidden={
+              selectedRelationId !== undefined && joinRelation.relationId !== selectedRelationId
+            }
             className="border-0 p-0"
             data-relation-id={joinRelation.relationId}
           >

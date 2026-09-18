@@ -56,11 +56,6 @@ export function CanvasRelationalTreeSourceCard({
           <span className="block truncate text-xs font-semibold text-(--text-primary)">
             {item.label}
           </span>
-          {item.fieldCount == null ? null : (
-            <span className="block text-[11px] text-(--text-muted)">
-              {copy.nodePresentationColumnsLabel}: {item.fieldCount}
-            </span>
-          )}
         </span>
       </span>
       <span

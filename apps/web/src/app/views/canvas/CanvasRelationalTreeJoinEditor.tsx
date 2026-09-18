@@ -20,6 +20,7 @@ export function CanvasRelationalTreeJoinEditor({
   onAppend,
   onChange,
   onPendingConditionChange,
+  selectedRelationId,
 }: Readonly<{
   appendInput: CanvasDvtCompositionInput | null;
   copy: CanvasRelationalTreeWorkbenchCopy;
@@ -27,6 +28,7 @@ export function CanvasRelationalTreeJoinEditor({
   onAppend: (selection: Readonly<{ leftSourceFieldId: string; rightFieldName: string }>) => void;
   onChange: (draft: DvtSubstraitInnerJoinDraft) => void;
   onPendingConditionChange?: (pending: boolean) => void;
+  selectedRelationId: string | null;
 }>): JSX.Element | null {
   const inspection = useMemo(() => inspectDvtSubstraitNInputJoinDraft(draft), [draft]);
   const outputs = inspection.ok ? inspection.projection.outputs : [];
@@ -35,25 +37,31 @@ export function CanvasRelationalTreeJoinEditor({
   const rightFields =
     appendInput?.fields.filter((field) => field.joinDataType === leftOutput?.dataType) ?? [];
   const [rightFieldName, setRightFieldName] = useState(rightFields[0]?.name ?? '');
+  const selectedRightField = rightFields.some((field) => field.name === rightFieldName)
+    ? rightFieldName
+    : (rightFields[0]?.name ?? '');
   if (!inspection.ok) return null;
 
   return (
     <div className="space-y-3">
-      <DvtSubstraitJoinPredicateEditors
-        disabled={false}
-        draft={draft}
-        projection={inspection.projection}
-        onChange={onChange}
-        onPendingConditionChange={onPendingConditionChange}
-      />
+      <div hidden={appendInput != null}>
+        <DvtSubstraitJoinPredicateEditors
+          disabled={false}
+          draft={draft}
+          projection={inspection.projection}
+          onChange={onChange}
+          onPendingConditionChange={onPendingConditionChange}
+          selectedRelationId={selectedRelationId}
+        />
+      </div>
       {appendInput == null ? null : (
         <form
           data-slot="canvas-relational-tree-append-join-input"
           className="space-y-2 border-t border-(--border-subtle) pt-3"
           onSubmit={(event) => {
             event.preventDefault();
-            if (leftSourceFieldId.length > 0 && rightFieldName.length > 0) {
-              onAppend({ leftSourceFieldId, rightFieldName });
+            if (leftSourceFieldId.length > 0 && selectedRightField.length > 0) {
+              onAppend({ leftSourceFieldId, rightFieldName: selectedRightField });
             }
           }}
         >
@@ -90,7 +98,7 @@ export function CanvasRelationalTreeJoinEditor({
             <select
               data-slot="canvas-relational-tree-connected-field"
               className={selectClassName}
-              value={rightFieldName}
+              value={selectedRightField}
               onChange={(event) => setRightFieldName(event.currentTarget.value)}
             >
               {rightFields.map((field) => (
@@ -104,7 +112,7 @@ export function CanvasRelationalTreeJoinEditor({
             type="submit"
             size="sm"
             data-slot="canvas-relational-tree-append-input"
-            disabled={rightFieldName.length === 0}
+            disabled={selectedRightField.length === 0}
           >
             {copy.inspectorDvtSubstraitAppendInputAction}
           </Button>

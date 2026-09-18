@@ -155,7 +155,7 @@ describe('Canvas relational-tree Workbench', () => {
     target.dispatchEvent(drop);
   }
 
-  it('presents one catalogue, graph and contextual selected-node panel', () => {
+  it('presents useful selected-JOIN conditions without a metadata or column-count panel', () => {
     const clients = sourceNode('clients', 'clients');
     const orders = sourceNode('orders', 'orders');
     const draft = createDvtSubstraitInnerJoinDraft({
@@ -240,13 +240,21 @@ describe('Canvas relational-tree Workbench', () => {
         ?.hasAttribute('hidden')
     ).toBe(false);
     const detail = container.querySelector('[data-slot="canvas-relational-tree-detail"]');
-    expect(detail?.tagName).toBe('ASIDE');
+    expect(detail?.tagName).toBe('SECTION');
     expect(detail?.getAttribute('data-position')).toBe('contextual');
     expect(detail?.textContent).toContain('JOIN');
     expect(container.textContent).toContain('Orders with clients');
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-source"]')?.textContent
-    ).toContain('Columns: 1');
+    ).not.toContain('Columns: 1');
+    expect(detail?.textContent).not.toContain('Expressions');
+    expect(detail?.querySelector('dl')).toBeNull();
+    expect(
+      detail?.querySelector('[data-slot="semantic-workbench-join-condition-row"]')
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="canvas-relational-tree"] [title="Columns"]')
+    ).toBeNull();
 
     const source = container.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-relational-tree-source"]'
@@ -256,7 +264,7 @@ describe('Canvas relational-tree Workbench', () => {
     expect(source?.getAttribute('aria-pressed')).toBe('true');
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-detail"]')?.textContent
-    ).toContain('READ');
+    ).toBeUndefined();
     expect(
       Array.from(container.querySelectorAll('[role="treeitem"]')).every(
         (item) => item.tagName === 'BUTTON'
@@ -581,6 +589,47 @@ describe('Canvas relational-tree Workbench', () => {
 
     expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(2);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(3);
+
+    const joinCards = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('[data-operator="join"]')
+    );
+    const visiblePredicates = (): HTMLElement[] =>
+      Array.from(
+        container.querySelectorAll<HTMLElement>(
+          '[data-slot="dvt-substrait-join-predicate-editors"] fieldset'
+        )
+      ).filter((fieldset) => !fieldset.hidden);
+    act(() => joinCards[1]!.click());
+    expect(visiblePredicates()).toHaveLength(1);
+    expect(visiblePredicates()[0]?.textContent).toContain('orders.orders_id');
+    expect(visiblePredicates()[0]?.textContent).not.toContain('countries.countries_id');
+    act(() =>
+      visiblePredicates()[0]!
+        .querySelector<HTMLButtonElement>('[aria-label="Editar condición"]')!
+        .click()
+    );
+    const pendingEditor = visiblePredicates()[0]!.querySelector(
+      '[data-slot="semantic-workbench-join-condition-editor"]'
+    );
+    act(() => joinCards[0]!.click());
+    expect(visiblePredicates()).toHaveLength(1);
+    expect(visiblePredicates()[0]?.textContent).toContain('countries.countries_id');
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
+        ?.disabled
+    ).toBe(true);
+    act(() => joinCards[1]!.click());
+    expect(
+      visiblePredicates()[0]!.querySelector(
+        '[data-slot="semantic-workbench-join-condition-editor"]'
+      )
+    ).toBe(pendingEditor);
+    act(() =>
+      visiblePredicates()[0]!
+        .querySelector<HTMLButtonElement>('[aria-label="Cerrar editor"]')!
+        .click()
+    );
+    expect(applied).toHaveLength(0);
 
     act(() => sourceButtons[3]?.click());
     act(() =>

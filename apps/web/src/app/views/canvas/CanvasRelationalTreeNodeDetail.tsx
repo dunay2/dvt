@@ -1,76 +1,84 @@
-/** Owned concern: present contextual facts for the selected canonical relation node. */
-import { GitMerge, Layers3, Table2 } from 'lucide-react';
-
+/** Owned concern: show only the selected JOIN's predicates and its edit action. */
+import { Pencil } from 'lucide-react';
+import type { CanonicalNode } from '../../types/canonical';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { CanvasRelationalJoinIcon } from './CanvasRelationalJoinIcon';
+import { readCanvasJoinColumnOutputs } from './canvasJoinColumnOutputModel';
+import { resolveDvtSubstraitJoinUnaryFunctions } from './canvasDvtSubstraitJoinOperand';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
-import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-
-function childRoleLabel(
-  role: CanvasRelationalTreeNode['children'][number]['role'],
-  copy: CanvasRelationalTreeWorkbenchCopy
-): string {
-  if (role === 'left') return copy.inspectorDvtRelationalLeftInput;
-  if (role === 'right') return copy.inspectorDvtRelationalRightInput;
-  return copy.inspectorDbtOriginLabel;
-}
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import { projectSemanticWorkbenchJoinConditionRows } from './SemanticWorkbenchJoinConditionEditor';
 
 export function CanvasRelationalTreeNodeDetail({
   node,
-  copy,
+  transformNode,
+  onEdit,
 }: Readonly<{
   node: CanvasRelationalTreeNode | null;
-  copy: CanvasRelationalTreeWorkbenchCopy;
-}>): JSX.Element {
-  const Icon = node?.operator === 'read' ? Table2 : node?.operator === 'join' ? GitMerge : Layers3;
+  transformNode: CanonicalNode;
+  onEdit?: () => void;
+}>): JSX.Element | null {
+  const language = useApplicationLanguageStore((state) => state.language);
+  const copy = resolveCanvasSemanticEditorCopy(language);
+  const entry = readCanvasJoinColumnOutputs(transformNode);
+  if (node?.operator !== 'join' || entry == null) return null;
+  const index = entry.projection.joinRelations.findIndex(
+    (relation) => relation.relationId === node.relationId
+  );
+  const join = entry.projection.joins[index];
+  if (join == null) return null;
+  const fields = entry.projection.inputs.slice(0, index + 2).flatMap((input) =>
+    input.fields.map((field) => ({
+      ...field,
+      label: `${input.table}.${field.name}`,
+    }))
+  );
+  const rows = projectSemanticWorkbenchJoinConditionRows({
+    conditions: join.conditions,
+    fieldLabelById: new Map(fields.map((field) => [field.fieldId, field.label])),
+    functionNameById: new Map(
+      [...new Set(fields.map((field) => field.dataType))].flatMap((dataType) =>
+        resolveDvtSubstraitJoinUnaryFunctions({ dataType, provider: 'postgres' }).map(
+          (fn) => [fn.capabilityId, fn.name] as const
+        )
+      )
+    ),
+  });
   return (
-    <aside
+    <section
       data-slot="canvas-relational-tree-detail"
       data-position="contextual"
-      aria-label={copy.relationalTreeDetailLabel}
-      className="min-h-0 overflow-auto border-t border-(--border-subtle) bg-(--surface-panel) p-4 md:border-t-0 md:border-l"
+      className="max-h-[30%] shrink-0 overflow-auto border-t border-(--border-subtle) px-4 py-2"
     >
-      {node == null ? null : (
-        <>
-          <header className="flex items-center gap-2 border-b border-(--border-subtle) pb-3">
-            <Icon aria-hidden="true" className="size-4 text-(--status-info)" />
-            <span className="text-xs font-semibold uppercase tracking-wide text-(--text-primary)">
-              {node.operator.toUpperCase()}
-            </span>
-          </header>
-          <dl className="mt-4 space-y-4 text-[11px]">
-            <div>
-              <dt className="text-(--text-muted)">{copy.inspectorDbtOriginLabel}</dt>
-              <dd className="mt-1 break-all font-mono text-(--text-primary)">
-                {node.displayName ?? node.sourceRef?.sourceObjectId ?? node.substraitKind}
-              </dd>
+      <div className="max-w-4xl">
+        <header className="flex items-center gap-2 text-xs">
+          <CanvasRelationalJoinIcon className="size-4 text-(--status-info)" />
+          <strong>INNER JOIN</strong>
+          {onEdit == null ? null : (
+            <button
+              type="button"
+              data-slot="canvas-relational-edit-selected"
+              onClick={onEdit}
+              className="ml-auto flex items-center gap-1.5 rounded px-2 py-1 hover:bg-(--surface-selected)"
+            >
+              <Pencil className="size-3" aria-hidden="true" />
+              {copy.editConditions}
+            </button>
+          )}
+        </header>
+        <div className="mt-1 space-y-1">
+          {rows.map((row, ordinal) => (
+            <div
+              key={ordinal}
+              data-slot="semantic-workbench-join-condition-row"
+              className="break-words font-mono text-xs text-(--text-primary)"
+              style={{ paddingLeft: row.depth * 12 }}
+            >
+              {row.label}
             </div>
-            <div>
-              <dt className="text-(--text-muted)">{copy.nodePresentationColumnsLabel}</dt>
-              <dd className="mt-1 font-mono text-(--text-primary)">{node.output.fields.length}</dd>
-            </div>
-            {node.expressionRefs.length === 0 ? null : (
-              <div>
-                <dt className="text-(--text-muted)">Expressions</dt>
-                <dd className="mt-1 font-mono text-(--text-primary)">
-                  {node.expressionRefs.length}
-                </dd>
-              </div>
-            )}
-            {node.children.map((child) => (
-              <div key={`${child.role}:${child.ordinal}`}>
-                <dt className="text-(--text-muted)">{childRoleLabel(child.role, copy)}</dt>
-                <dd className="mt-1 break-all font-mono text-(--text-primary)">
-                  {child.node.displayName ??
-                    child.node.sourceRef?.sourceObjectId ??
-                    child.node.substraitKind}
-                </dd>
-              </div>
-            ))}
-          </dl>
-          <p className="mt-6 border-t border-(--border-subtle) pt-3 text-[10px] leading-relaxed text-(--text-muted)">
-            {copy.relationalTreeReadOnlyMessage}
-          </p>
-        </>
-      )}
-    </aside>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

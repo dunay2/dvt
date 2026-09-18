@@ -76,6 +76,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
           edges={edges}
           inputs={model.inputs}
           joinDraft={model.session.joinDraft}
+          initialRelationId={model.selectedNode?.relationId ?? null}
           nodes={nodes}
           operation={model.session.operation}
           primaryInputId={model.session.primaryInputId}
@@ -118,13 +119,11 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
               onSelect={model.selectTreeNode}
             />
           </div>
-          <details className="max-h-[40%] shrink-0 overflow-auto border-t border-(--border-subtle)">
-            <summary className="cursor-pointer px-4 py-2 text-xs text-(--text-muted)">
-              {copy.relationalTreeDetailLabel} · {model.selectedNode?.operator.toUpperCase()} ·{' '}
-              {model.selectedNode?.output.fields.length} {copy.nodePresentationColumnsLabel}
-            </summary>
-            <CanvasRelationalTreeNodeDetail node={model.selectedNode} copy={copy} />
-          </details>
+          <CanvasRelationalTreeNodeDetail
+            node={model.selectedNode}
+            transformNode={transformNode}
+            onEdit={model.authoringAvailable ? model.session.start : undefined}
+          />
         </div>
       )}
     </div>

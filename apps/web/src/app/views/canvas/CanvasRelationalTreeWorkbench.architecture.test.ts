@@ -10,6 +10,7 @@ import CatalogueSource from './CanvasRelationalTreeSourceCatalogue.tsx?raw';
 import DraftViewportSource from './CanvasRelationalTreeDraftViewport.tsx?raw';
 import InlineEditorSource from './CanvasRelationalTreeInlineEditor.tsx?raw';
 import OperandSlotSource from './CanvasRelationalTreeOperandSlot.tsx?raw';
+import OperandCanvasSource from './CanvasRelationalTreeOperandCanvas.tsx?raw';
 import OperationShelfSource from './CanvasRelationalTreeOperationShelf.tsx?raw';
 import TreeSource from './CanvasRelationalTreeView.tsx?raw';
 import ViewportSource from './canvasRelationalTreeViewport.ts?raw';
@@ -57,6 +58,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(OperationShelfSource.split('\n').length).toBeLessThan(140);
     expect(InlineEditorSource.split('\n').length).toBeLessThan(80);
     expect(OperandSlotSource.split('\n').length).toBeLessThan(80);
+    expect(OperandCanvasSource.split('\n').length).toBeLessThan(80);
     expect(AuthoringOptionsSource.split('\n').length).toBeLessThan(100);
     expect(OperandSlotsSource.split('\n').length).toBeLessThan(90);
     expect(ProjectionAuthoringSource.split('\n').length).toBeLessThan(60);
@@ -82,6 +84,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
       OperationShelfSource,
       InlineEditorSource,
       OperandSlotSource,
+      OperandCanvasSource,
     ].join('\n');
     expect(combined).not.toContain('@xyflow/react');
     expect(combined).not.toContain('applyDvtSubstraitSemanticDocument');
@@ -100,8 +103,11 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(BlockCanvasSource).toContain('CanvasRelationalTreeOperationShelf');
     expect(BlockCanvasSource).toContain('CanvasRelationalTreeDraftViewport');
     expect(WorkbenchSource).not.toContain('minmax(15rem,20rem)');
-    expect(DetailSource).toContain('<aside');
-    expect(WorkbenchSource).toContain('<details');
+    expect(DetailSource).not.toContain('<dl');
+    expect(DetailSource).toContain('projectSemanticWorkbenchJoinConditionRows');
+    expect(DetailSource).not.toContain('GitMerge');
+    expect(BlockCanvasSource).toContain('selectedRelationId');
+    expect(InlineEditorSource).toContain('selectedRelationId');
   });
 
   it('routes pending and canonical badges to the single Model editor owner', () => {

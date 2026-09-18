@@ -1,5 +1,6 @@
 /** Owned concern: explicitly expand or focus operation controls without a permanent inspector. */
-import { ChevronDown, Link2, Maximize2, Minimize2 } from 'lucide-react';
+import { ChevronDown, Maximize2, Minimize2 } from 'lucide-react';
+import { CanvasRelationalJoinIcon } from './CanvasRelationalJoinIcon';
 import { useState, type ReactNode } from 'react';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
@@ -8,10 +9,12 @@ export function CanvasRelationalTreeEditorFrame({
   title,
   children,
   forceExpanded = false,
+  hidden = false,
 }: Readonly<{
   title: string;
   children: ReactNode;
   forceExpanded?: boolean;
+  hidden?: boolean;
 }>): JSX.Element {
   const [expanded, setExpanded] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -21,7 +24,8 @@ export function CanvasRelationalTreeEditorFrame({
   return (
     <section
       data-slot="canvas-relational-tree-inline-editor"
-      className={`${focused ? 'absolute inset-0 z-20' : visible ? 'max-h-[50%] shrink-0' : 'shrink-0'} overflow-auto border-t border-(--border-subtle) bg-(--surface-panel)`}
+      hidden={hidden}
+      className={`${focused ? 'absolute inset-0 z-20' : visible ? 'max-h-[45%] shrink-0' : 'shrink-0'} overflow-auto border-t border-(--border-subtle) bg-(--surface-panel)`}
       onKeyDown={(event) => {
         if (event.key !== 'Escape' || !focused || event.defaultPrevented) return;
         event.preventDefault();
@@ -29,8 +33,8 @@ export function CanvasRelationalTreeEditorFrame({
         setFocused(false);
       }}
     >
-      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-(--border-subtle) bg-(--surface-panel) px-4 py-3">
-        <Link2 aria-hidden="true" className="size-4 text-(--status-info)" />
+      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-(--border-subtle) bg-(--surface-panel) px-4 py-1.5">
+        <CanvasRelationalJoinIcon className="size-4 text-(--status-info)" />
         <h3 className="text-xs font-semibold">{title}</h3>
         <button
           type="button"
@@ -61,7 +65,7 @@ export function CanvasRelationalTreeEditorFrame({
           {focused ? copy.exitFocus : copy.focus}
         </button>
       </header>
-      <div className={visible ? 'px-5 py-4' : 'hidden'}>{children}</div>
+      <div className={visible ? 'max-w-5xl px-4 py-2' : 'hidden'}>{children}</div>
     </section>
   );
 }

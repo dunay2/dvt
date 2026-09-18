@@ -1,5 +1,6 @@
 /** Owned concern: render one accessible relational operator card. */
-import { AlertTriangle, Filter, Layers3, Link2, Sigma, Table2 } from 'lucide-react';
+import { AlertTriangle, Filter, Layers3, Sigma, Table2 } from 'lucide-react';
+import { CanvasRelationalJoinIcon } from './CanvasRelationalJoinIcon';
 
 import type { CanvasRelationalTreePlacedNode } from './canvasRelationalTreeGeometry';
 import type {
@@ -37,7 +38,7 @@ function OperatorIcon({ operator }: Readonly<{ operator: CanvasRelationalTreeOpe
     operator === 'read'
       ? Table2
       : operator === 'join'
-        ? Link2
+        ? CanvasRelationalJoinIcon
         : operator === 'set' || operator === 'project'
           ? Layers3
           : operator === 'filter'
@@ -81,6 +82,7 @@ export function CanvasRelationalTreeGraphNode({
         }
         data-slot="canvas-relational-tree-node"
         data-locator={placed.node.locator}
+        data-relation-id={placed.node.relationId ?? undefined}
         data-operator={placed.node.operator}
         onClick={() => onSelect(placed.node.locator)}
         className={`h-full w-full rounded-md border px-3 py-2 text-left shadow-sm transition-colors hover:border-(--status-info) aria-selected:border-(--status-info) aria-selected:ring-2 aria-selected:ring-(--status-info) ${operatorTone[placed.node.operator]}`}
@@ -89,12 +91,6 @@ export function CanvasRelationalTreeGraphNode({
           <OperatorIcon operator={placed.node.operator} />
           <span className="truncate text-xs font-semibold uppercase tracking-wide text-(--text-primary)">
             {placed.node.operator.toUpperCase()}
-          </span>
-          <span
-            title={copy.nodePresentationColumnsLabel}
-            className="ml-auto rounded bg-(--surface-panel) px-1.5 py-0.5 font-mono text-[11px] text-(--text-muted)"
-          >
-            {placed.node.output.fields.length}
           </span>
         </span>
         <span
