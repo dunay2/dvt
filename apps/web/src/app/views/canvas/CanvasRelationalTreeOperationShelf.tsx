@@ -27,7 +27,6 @@ export function CanvasRelationalTreeOperationShelf({
   operation,
   selectedInputCount,
   onSelectOperation,
-  onOpen,
 }: Readonly<{
   choices: readonly CanvasRelationalOperationChoice[];
   copy: CanvasRelationalTreeWorkbenchCopy;
@@ -35,7 +34,6 @@ export function CanvasRelationalTreeOperationShelf({
   operation: CanvasRelationalOperation | null;
   selectedInputCount: number;
   onSelectOperation: (operation: CanvasRelationalOperation) => void;
-  onOpen?: () => void;
 }>): JSX.Element {
   const [expanded, setExpanded] = useState(true);
   const [replacement, setReplacement] = useState<CanvasRelationalOperation | null>(null);
@@ -51,7 +49,7 @@ export function CanvasRelationalTreeOperationShelf({
           type="button"
           data-slot="canvas-relational-tree-operation-shelf-toggle"
           aria-expanded={expanded}
-          onClick={() => (onOpen ? onOpen() : setExpanded((current) => !current))}
+          onClick={() => setExpanded((current) => !current)}
           className="flex items-center gap-2 rounded px-2 py-1 text-sm font-medium text-(--text-strong) hover:bg-(--surface-selected)"
         >
           <Shapes aria-hidden="true" className="size-4 text-(--status-info)" />
@@ -72,13 +70,11 @@ export function CanvasRelationalTreeOperationShelf({
           />
         ) : (
           <span className="text-xs text-(--text-muted)">
-            {onOpen
-              ? copy.relationalTreeComposeAction
-              : !hasOperands
-                ? copy.relationalTreeSelectFirstSourceMessage
-                : selectedInputCount === 1
-                  ? copy.relationalTreeSelectNextSourceMessage
-                  : copy.relationalTreeSelectOperationMessage}
+            {!hasOperands
+              ? copy.relationalTreeSelectFirstSourceMessage
+              : selectedInputCount === 1
+                ? copy.relationalTreeSelectNextSourceMessage
+                : copy.relationalTreeSelectOperationMessage}
           </span>
         )}
         {expanded && choices.length > 0 && operation == null && selectedInputCount === 1 ? (

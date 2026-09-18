@@ -33,7 +33,6 @@ export function CanvasRelationalTreeInspection({
         operation={model.projection.root.operator === 'join' ? 'inner_join' : null}
         selectedInputCount={model.inputs.length}
         onSelectOperation={model.session.selectOperation}
-        onOpen={model.authoringAvailable ? model.session.start : undefined}
       />
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <CanvasRelationalTreeView
