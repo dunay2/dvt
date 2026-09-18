@@ -85,8 +85,6 @@ const baseActivePlanningEntrypoints = [
   'docs/architecture/reference-architecture.md',
   'docs/architecture/system/index.md',
   'docs/architecture/domain-map.md',
-  'docs/architecture/atlas/index.md',
-  'docs/architecture/atlas/README.md',
   'docs/architecture/components/ci-governance/governance-startup-card-canon-component.md',
   'docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md',
   'docs/architecture/components/engine/roadmap/engine-phases.md',
@@ -419,7 +417,7 @@ test('active domain and roadmap routing expand the retired-surface guard', () =>
   );
   assert.ok(
     linkedActivePlanningPlans.includes(
-      'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md'
+      'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md'
     ),
     'documentation governance active proposal routing must be scanned regardless of destination status'
   );

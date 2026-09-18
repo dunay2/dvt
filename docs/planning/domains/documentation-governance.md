@@ -19,7 +19,6 @@ gates.
 
 ## Active Proposal Set
 
-- [Architecture Documentation Reconciliation Plan 2026-04-02](../proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md)
 - [Architecture Documentation Reconciliation Canon Plan 2026-05-23](../proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md)
 - [Architecture Governance Review Canon Plan 2026-05-24](../proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md)
 - [CI Delivery Governance Consolidated Action Plan](../proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md)

@@ -556,7 +556,7 @@ symbols:
 - [Governance Document And Rule Inventory](../../../status/governance-document-rule-inventory.md)
 - [AI Work Protocol](../../../../guides/ai-work-protocol.md)
 - [Proposal Portfolio Map 2026-04-03](../../portfolio-map-20260403.md)
-- [Architecture Documentation Reconciliation Plan](./architecture-doc-reconciliation-plan-20260402.md)
+- [Architecture Documentation Reconciliation Canon Plan](./architecture-doc-reconciliation-canon-plan-20260523.md)
 - [package.json](../../../../../package.json)
 - [.github/workflows/ci.yml](../../../../../.github/workflows/ci.yml)
 - [.github/workflows/pr-quality-gate.yml](../../../../../.github/workflows/pr-quality-gate.yml)
