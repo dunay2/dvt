@@ -578,6 +578,7 @@ allowedImplementationSurfaces:
   - docs/planning/closeouts/20260514-rc-g1-contract-ownership-closure-closeout.md
   - docs/planning/gaps/runtime-architecture-gap-register-20260331.md
   - docs/planning/proposals/contract-mapper-event-boundary-study-20260409.md
+  - docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a6-snapshot-rebuild-concurrency-contract-plan-20260513.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md

@@ -53,7 +53,7 @@ landed incrementally:
 - `docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md`:
   the docs surface should converge toward a coherent doc-driven operating model
   instead of script-by-script growth.
-- [Original source in Git](https://github.com/dunay2/dvt/blob/c76f0f3c476396b73d37ea0181caa0a8862e658a/docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md):
+- `docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md`:
   final archive consolidation and contributor maintenance guidance are still
   open work.
 
@@ -151,7 +151,7 @@ Execute a targeted documentation-governance pass that:
 - `docs/guides/ai-work-protocol.md`
 - `docs/DOCS_README.md`
 - `docs/planning/status/canonical-doc-code-matrix.md`
-- [Original source in Git](https://github.com/dunay2/dvt/blob/c76f0f3c476396b73d37ea0181caa0a8862e658a/docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md)
+- `docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md`
 - `docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md`
 
 ### Real work performed

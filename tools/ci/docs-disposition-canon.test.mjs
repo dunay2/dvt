@@ -410,7 +410,6 @@ test('retired atlas and superseded Canvas guidance have no live consumers', () =
     'docs/planning/proposals/mandatory/frontend-and-ux/f29c-canvas-insert-palette-plan-20260525.md',
     'docs/planning/closeouts/20260602-canvas-empty-guide-preference-closeout.md',
     'docs/planning/reviews/architecture-and-governance/20260307-architecture-doc-consolidation-matrix-review.md',
-    'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md',
   ];
   for (const path of ['docs/architecture/atlas', ...retiredFiles]) {
     assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, path);

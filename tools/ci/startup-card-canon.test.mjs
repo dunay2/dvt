@@ -417,7 +417,7 @@ test('active domain and roadmap routing expand the retired-surface guard', () =>
   );
   assert.ok(
     linkedActivePlanningPlans.includes(
-      'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md'
+      'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md'
     ),
     'documentation governance active proposal routing must be scanned regardless of destination status'
   );
