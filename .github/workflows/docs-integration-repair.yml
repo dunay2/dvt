@@ -157,7 +157,7 @@ jobs:
             (out/(name+'.log')).write_text(text)
             results.append({'name':name,'command':cmd,'exitCode':result.returncode,'expectedExitCode':expected});(out/'validation.json').write_text(json.dumps(results,indent=2))
             print(name,result.returncode,flush=True);print('\n'.join(text.splitlines()[-8:]),flush=True)
-            assert result.returncode==expected,(name,text[-5000:]);return text
+            assert result.returncode==expected,(name,text[-5000:]);return result.stdout
           assert set(git('diff','--name-only','--diff-filter=D',start,'HEAD').splitlines())==set(removed)
           assert not git('diff','--name-only','--diff-filter=A',start,'HEAD')
           policy=json.load(open('docs/generated-docs-policy.json'));owner=next(p for p in policy['artifactClasses'] if p['id']=='tracked-docs-sync-indexes')
