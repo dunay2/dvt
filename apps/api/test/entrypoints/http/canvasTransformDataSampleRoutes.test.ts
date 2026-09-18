@@ -59,6 +59,42 @@ function buildApp(): Readonly<{
 }
 
 describe('canvasTransformDataSampleRoutes', () => {
+  it('passes selected relation and expected semantic version through the protected query', async () => {
+    const { app, execute, authorize } = buildApp();
+    const sha = 'a'.repeat(64);
+    const response = await app.inject({
+      method: 'GET',
+      url: `/workspace/graph/canvases/canvas-orders/transforms/transform-orders/data-sample?${SCOPE_QUERY}&relationId=join-1&semanticPlanSha256=${sha}`,
+    });
+    expect(response.statusCode).toBe(200);
+    expect(authorize).toHaveBeenCalledOnce();
+    expect(execute).toHaveBeenCalledWith(
+      {
+        canvasId: 'canvas-orders',
+        transformNodeId: 'transform-orders',
+        limit: 20,
+        relationId: 'join-1',
+        semanticPlanSha256: sha,
+      },
+      expect.anything()
+    );
+    await app.close();
+  });
+
+  it.each(['relationId=join-1', 'relationId=join-1&semanticPlanSha256=bad'])(
+    'rejects incomplete selection %s before executing',
+    async (selection) => {
+      const { app, execute } = buildApp();
+      const response = await app.inject({
+        method: 'GET',
+        url: `/workspace/graph/canvases/canvas-orders/transforms/transform-orders/data-sample?${SCOPE_QUERY}&${selection}`,
+      });
+      expect(response.statusCode).toBe(400);
+      expect(execute).not.toHaveBeenCalled();
+      await app.close();
+    }
+  );
+
   it('authorizes and returns one bounded Transform sample', async () => {
     const { app, execute, authorize } = buildApp();
 

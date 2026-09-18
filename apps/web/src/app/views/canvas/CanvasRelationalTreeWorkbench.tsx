@@ -13,14 +13,16 @@ import { CanvasRelationalTreeBlockCanvas } from './CanvasRelationalTreeBlockCanv
 import { CanvasRelationalTreeSourceCatalogue } from './CanvasRelationalTreeSourceCatalogue';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import {
+  CanvasOperationPreviewProvider,
+  type CanvasOperationPreviewPorts,
+} from './CanvasOperationDataPreview';
+import {
   useCanvasRelationalTreeWorkbenchHandle,
   type CanvasRelationalTreeWorkbenchHandle,
 } from './useCanvasRelationalTreeWorkbenchHandle';
 export type { CanvasRelationalTreeWorkbenchHandle } from './useCanvasRelationalTreeWorkbenchHandle';
 
-export function canOpenCanvasRelationalTreeWorkbench(node: CanonicalNode): boolean {
-  return node.pluginId === 'dvt' && node.kind === 'dvt:transform' && node.role === 'transform';
-}
+export { canOpenCanvasRelationalTreeWorkbench } from './useCanvasRelationalTreeWorkbenchModel';
 
 export const CanvasRelationalTreeWorkbench = forwardRef<
   CanvasRelationalTreeWorkbenchHandle,
@@ -31,9 +33,10 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
     copy: CanvasRelationalTreeWorkbenchCopy;
     authoring?: CanvasRelationalTreeAuthoringContract;
     actionsHost?: HTMLElement | null;
+    preview?: CanvasOperationPreviewPorts;
   }>
 >(function CanvasRelationalTreeWorkbench(
-  { transformNode, nodes, edges, copy, authoring, actionsHost },
+  { transformNode, nodes, edges, copy, authoring, actionsHost, preview },
   ref
 ): JSX.Element {
   const model = useCanvasRelationalTreeWorkbenchModel({
@@ -54,70 +57,82 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
   const sessionHandle = useCanvasRelationalTreeWorkbenchHandle(ref, model, pendingCondition);
 
   return (
-    <div
-      data-slot="canvas-relational-tree-workbench"
-      onContextMenu={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-      }}
-      className={`relative grid h-full min-h-0 min-w-0 w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-(--surface-panel) md:grid-rows-1 ${sourcesCollapsed ? 'md:grid-cols-[3rem_minmax(0,1fr)]' : 'md:grid-cols-[14rem_minmax(0,1fr)]'}`}
+    <CanvasOperationPreviewProvider
+      ports={preview}
+      nodeId={transformNode.id}
+      semanticDigest={model.projection?.semanticDigest ?? null}
+      canEditModel={model.authoringAvailable}
+      unapplied={sessionHandle.hasUnappliedChanges}
     >
-      <CanvasRelationalTreeSessionActions session={sessionHandle} copy={copy} host={actionsHost} />
-      <CanvasRelationalRemovalConfirmation
-        operations={model.session.removal.pending?.result.operations ?? null}
-        onConfirm={model.session.removal.confirm}
-        onCancel={model.session.removal.cancel}
-        error={model.session.removal.error}
-        clearError={model.session.removal.clearError}
-      />
-      <CanvasRelationalTreeSourceCatalogue
-        items={model.catalogue}
-        collapsed={sourcesCollapsed}
-        onToggle={() => setSourcesCollapsed((current) => !current)}
-        copy={copy}
-        draggable={model.authoringAvailable}
-        onSelect={model.selectCatalogueItem}
-      />
-      {showAuthoring ? (
-        <CanvasRelationalTreeBlockCanvas
-          onPendingConditionChange={setPendingCondition}
-          initiallyExpanded={expanded}
-          appendInput={model.session.appendInput}
-          choices={model.session.choices}
+      <div
+        data-slot="canvas-relational-tree-workbench"
+        onContextMenu={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+        className={`relative grid h-full min-h-0 min-w-0 w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-(--surface-panel) md:grid-rows-1 ${sourcesCollapsed ? 'md:grid-cols-[3rem_minmax(0,1fr)]' : 'md:grid-cols-[14rem_minmax(0,1fr)]'}`}
+      >
+        <CanvasRelationalTreeSessionActions
+          session={sessionHandle}
           copy={copy}
-          edges={edges}
-          inputs={model.inputs}
-          joinDraft={model.session.joinDraft}
-          initialRelationId={model.selectedNode?.relationId ?? null}
-          nodes={nodes}
-          operation={model.session.operation}
-          primaryInputId={model.session.primaryInputId}
-          secondaryInputId={model.session.secondaryInputId}
-          selectedInputIds={model.session.selectedInputIds}
-          transformNode={transformNode}
-          onAppendJoinInput={model.session.appendJoinInput}
-          onChangeJoinDraft={model.session.setJoinDraft}
-          onRemove={model.session.removal.remove}
-          onPlaceInput={model.session.placeInput}
-          onSelectInput={model.session.selectInput}
-          onSelectOperation={model.session.selectOperation}
+          host={actionsHost}
         />
-      ) : model.projection == null ? (
-        <section
-          data-slot="canvas-relational-tree-unavailable"
-          className="grid min-h-64 place-items-center p-6 text-center text-sm text-(--text-muted)"
-        >
-          {model.unavailableMessage}
-        </section>
-      ) : (
-        <CanvasRelationalTreeInspection
-          model={model}
-          transformNode={transformNode}
+        <CanvasRelationalRemovalConfirmation
+          operations={model.session.removal.pending?.result.operations ?? null}
+          onConfirm={model.session.removal.confirm}
+          onCancel={model.session.removal.cancel}
+          error={model.session.removal.error}
+          clearError={model.session.removal.clearError}
+        />
+        <CanvasRelationalTreeSourceCatalogue
+          items={model.catalogue}
+          collapsed={sourcesCollapsed}
+          onToggle={() => setSourcesCollapsed((current) => !current)}
           copy={copy}
-          expanded={expanded}
-          onExpandedChange={setExpanded}
+          draggable={model.authoringAvailable}
+          onSelect={model.selectCatalogueItem}
         />
-      )}
-    </div>
+        {showAuthoring ? (
+          <CanvasRelationalTreeBlockCanvas
+            onPendingConditionChange={setPendingCondition}
+            initiallyExpanded={expanded}
+            appendInput={model.session.appendInput}
+            choices={model.session.choices}
+            copy={copy}
+            edges={edges}
+            inputs={model.inputs}
+            joinDraft={model.session.joinDraft}
+            initialRelationId={model.selectedNode?.relationId ?? null}
+            nodes={nodes}
+            operation={model.session.operation}
+            primaryInputId={model.session.primaryInputId}
+            secondaryInputId={model.session.secondaryInputId}
+            selectedInputIds={model.session.selectedInputIds}
+            transformNode={transformNode}
+            onAppendJoinInput={model.session.appendJoinInput}
+            onChangeJoinDraft={model.session.setJoinDraft}
+            onRemove={model.session.removal.remove}
+            onPlaceInput={model.session.placeInput}
+            onSelectInput={model.session.selectInput}
+            onSelectOperation={model.session.selectOperation}
+          />
+        ) : model.projection == null ? (
+          <section
+            data-slot="canvas-relational-tree-unavailable"
+            className="grid min-h-64 place-items-center p-6 text-center text-sm text-(--text-muted)"
+          >
+            {model.unavailableMessage}
+          </section>
+        ) : (
+          <CanvasRelationalTreeInspection
+            model={model}
+            transformNode={transformNode}
+            copy={copy}
+            expanded={expanded}
+            onExpandedChange={setExpanded}
+          />
+        )}
+      </div>
+    </CanvasOperationPreviewProvider>
   );
 });

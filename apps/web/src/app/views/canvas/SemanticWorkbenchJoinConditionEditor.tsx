@@ -390,7 +390,7 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
       className={
         props.renderExpression == null
           ? undefined
-          : 'grid h-full min-h-0 min-w-0 gap-4 lg:grid-cols-[minmax(20rem,1fr)_minmax(20rem,1fr)]'
+          : 'canvas-operation-editors grid h-full min-h-0 min-w-0 gap-3'
       }
     >
       {props.renderExpression?.(
@@ -582,7 +582,7 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
                 <X aria-hidden="true" size={11} />
               </IconAction>
             </div>
-            <div className="grid grid-cols-1 gap-3 @min-[30rem]:grid-cols-[minmax(0,1fr)_4rem_minmax(0,1fr)]">
+            <div className="grid grid-cols-1 gap-3 @min-[40rem]:grid-cols-[minmax(0,1fr)_6rem_minmax(0,1fr)]">
               <SemanticWorkbenchJoinOperandEditor
                 side="izquierdo"
                 operand={conditionDraft.left}

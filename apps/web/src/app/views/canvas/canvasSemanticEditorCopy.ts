@@ -13,6 +13,12 @@ const en = {
   refresh: 'Refresh preview',
   previewHint: 'Explore the applied model without publishing a result.',
   previewEmpty: 'Run a preview to explore this model’s rows.',
+  operationPreviewHint: 'Selected operation · up to 20 rows · read-only',
+  operationPreviewEmpty: 'Preview the output of this operation.',
+  operationPreviewUnapplied:
+    'Save the condition and apply the composition to preview this revision.',
+  operationPreviewFailed:
+    'Preview unavailable for this operation. Check its inputs and the supported PostgreSQL profile.',
   empty: 'The query returned no rows.',
   loading: 'Loading preview…',
   unavailable: 'Data preview is not available in this workspace.',
@@ -85,6 +91,12 @@ const es: typeof en = {
   refresh: 'Actualizar vista previa',
   previewHint: 'Explora el modelo aplicado sin publicar un resultado.',
   previewEmpty: 'Ejecuta una vista previa para explorar las filas del modelo.',
+  operationPreviewHint: 'Operación seleccionada · hasta 20 filas · solo lectura',
+  operationPreviewEmpty: 'Previsualiza la salida de esta operación.',
+  operationPreviewUnapplied:
+    'Guarda la condición y aplica la composición para previsualizar esta revisión.',
+  operationPreviewFailed:
+    'Vista previa no disponible para esta operación. Comprueba sus entradas y el perfil PostgreSQL admitido.',
   empty: 'La consulta no ha devuelto filas.',
   loading: 'Cargando vista previa…',
   unavailable: 'La vista previa de datos no está disponible en este espacio.',

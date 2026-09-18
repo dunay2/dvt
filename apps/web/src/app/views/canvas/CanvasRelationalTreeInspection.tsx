@@ -61,6 +61,7 @@ export function CanvasRelationalTreeInspection({
       {expanded && model.selectedNode != null && model.selectedNode.expressionRefs.length > 0 ? (
         <CanvasRelationalTreeEditorFrame
           title={model.selectedNode.operator.toUpperCase()}
+          relationId={model.selectedNode.relationId}
           onClose={() => onExpandedChange(false)}
         >
           <CanvasRelationalJoinExpressionTree

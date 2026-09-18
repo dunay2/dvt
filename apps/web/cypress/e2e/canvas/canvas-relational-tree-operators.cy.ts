@@ -3,7 +3,12 @@ import { inspectDvtSubstraitInnerJoinGroupedWindowDraft } from '../../../src/app
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { inspectDvtSubstraitUnionAllGroupedWindowDraft } from '../../../src/app/views/canvas/canvasDvtSubstraitSetComposition';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
-import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  getE2eApiCalls,
+  stubE2eApi,
+  stubE2eJsonApi,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -79,6 +84,55 @@ function addWrapper(id: string): void {
 }
 
 describe('Relational operator toolbar', () => {
+  it('keeps compact expression, editing and selected-operation rows beside one another', () => {
+    openEditor();
+    addWrapper('aggregate');
+    cy.get('[data-slot="canvas-relational-tree-apply"]').click();
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+    const samplePath = /\/workspace\/graph\/canvases\/[^/]+\/transforms\/[^/]+\/data-sample$/;
+    stubE2eApi('GET', samplePath, ({ url }) => ({
+      body: {
+        contractVersion: 1,
+        canvasId: url.pathname.split('/')[4],
+        transformNodeId: url.pathname.split('/')[6],
+        relationId: url.searchParams.get('relationId'),
+        semanticPlanSha256: url.searchParams.get('semanticPlanSha256'),
+        draftRevision: 'selected-preview-fixture',
+        columns: [{ name: 'selected_order_id', type: 'integer', nullable: false }],
+        rows: [{ values: ['selected-operation-42'] }],
+        limit: 20,
+        truncated: false,
+        sampledAt: '2026-09-19T00:00:00.000Z',
+      },
+    }));
+    cy.get('[data-operator="join"]').first().dblclick();
+    cy.get('[data-slot="canvas-operation-data-preview"]:visible').as('preview');
+    cy.get('@preview').find('[data-slot="canvas-model-preview"]').should('be.enabled').click();
+    cy.get('@preview').find('table').should('contain.text', 'selected-operation-42');
+    cy.get('.canvas-operation-panels.with-preview:visible').then(($panels) => {
+      const controls = $panels[0]!
+        .querySelector('.canvas-operation-controls')!
+        .getBoundingClientRect();
+      const preview = $panels[0]!.querySelector('aside')!.getBoundingClientRect();
+      expect(preview.left).to.be.greaterThan(controls.right);
+      expect(Math.abs(preview.top - controls.top)).to.be.lessThan(2);
+      expect(preview.width).to.be.greaterThan(300);
+    });
+    cy.screenshot('selected-operation-preview-desktop');
+    cy.get('[data-operator="aggregate"]').click();
+    cy.get('[data-slot="canvas-operation-data-preview"]:visible table').should('not.exist');
+    cy.then(() => expect(getE2eApiCalls(samplePath, 'GET')).to.have.length(1));
+    cy.viewport(1000, 800);
+    cy.get('[data-slot="canvas-relational-tree-draft-viewport"]').should('be.visible');
+    cy.get('.canvas-operation-panels.with-preview:visible').then(($panels) => {
+      const controls = $panels[0]!
+        .querySelector('.canvas-operation-controls')!
+        .getBoundingClientRect();
+      const preview = $panels[0]!.querySelector('aside')!.getBoundingClientRect();
+      expect(preview.top).to.be.greaterThan(controls.bottom);
+    });
+  });
+
   for (const applied of [false, true]) {
     it(`stages a dragged source on a ${applied ? 'saved' : 'local'} filtered projection without losing it`, () => {
       openEditor();

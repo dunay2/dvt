@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it, vi } from 'vitest';
+import { TransformDataSampleRequestSchema } from '@dvt/contracts';
 
 import { createApiClientHarness } from '../workspace/workspaceApiClient.test.harness';
 import {
@@ -15,6 +16,27 @@ import { CanvasTransformDataSampleQueryError } from '../../ports/canvasDataSampl
 installWorkspaceScopeHarness();
 
 describe('canvasTransformDataSample.api', () => {
+  it('includes the selected relation and semantic version without accepting client SQL', async () => {
+    setWorkspaceScope(buildWorkspaceScope());
+    const { apiClient, getJson } = createApiClientHarness({
+      getJson: async <TResponse>() => ({}) as TResponse,
+    });
+    const port = createApiCanvasTransformDataSampleQueryPort(apiClient, { record: vi.fn() });
+    const request = TransformDataSampleRequestSchema.parse({
+      canvasId: 'canvas-orders',
+      transformNodeId: 'transform-orders',
+      relationId: 'join-1',
+      semanticPlanSha256: 'a'.repeat(64),
+      limit: 20,
+    });
+    await expect(port.previewTransformRows(request)).rejects.toBeInstanceOf(
+      CanvasTransformDataSampleQueryError
+    );
+    expect(getJson).toHaveBeenCalledWith(
+      expect.stringContaining(`&relationId=join-1&semanticPlanSha256=${'a'.repeat(64)}`)
+    );
+  });
+
   it('loads the card-owned Transform sample through its scoped query rail', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);

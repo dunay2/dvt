@@ -1,7 +1,11 @@
 /** Owned concern: explicitly expand or focus operation controls without a permanent inspector. */
 import { X } from 'lucide-react';
 import { CanvasRelationalJoinIcon } from './CanvasRelationalJoinIcon';
-import { type ReactNode } from 'react';
+import { useContext, type ReactNode } from 'react';
+import {
+  CanvasOperationDataPreview,
+  CanvasOperationPreviewContext,
+} from './CanvasOperationDataPreview';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 
@@ -10,14 +14,18 @@ export function CanvasRelationalTreeEditorFrame({
   children,
   hidden = false,
   onClose,
+  relationId,
 }: Readonly<{
   title: string;
   children: ReactNode;
   hidden?: boolean;
   onClose: () => void;
+  relationId?: string | null;
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
+  const preview = useContext(CanvasOperationPreviewContext);
+  const showPreview = preview != null && relationId != null;
   return (
     <section
       data-slot="canvas-relational-tree-inline-editor"
@@ -38,7 +46,12 @@ export function CanvasRelationalTreeEditorFrame({
           <X aria-hidden="true" className="size-4" />
         </button>
       </header>
-      <div className="min-h-0 flex-1 overflow-auto p-3">{children}</div>
+      <div
+        className={`canvas-operation-panels min-h-0 flex-1 overflow-auto p-3 ${showPreview ? 'with-preview' : ''}`}
+      >
+        <div className="canvas-operation-controls min-h-0 min-w-0">{children}</div>
+        {showPreview ? <CanvasOperationDataPreview relationId={relationId} label={title} /> : null}
+      </div>
     </section>
   );
 }

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Play, RefreshCw, Table2 } from 'lucide-react';
 import {
   TRANSFORM_DATA_SAMPLE_DEFAULT_LIMIT,
+  TransformDataSampleRequestSchema,
   type TransformDataSampleResponse,
 } from '@dvt/contracts';
 import { Button } from '../../components/ui/button';
@@ -25,6 +26,9 @@ export function CanvasModelDataView({
   copy,
   unresolvedInputs = [],
   onReviewInputs,
+  relationId,
+  compact = false,
+  disabledReason,
 }: Readonly<{
   canvasId: string;
   nodeId: string;
@@ -36,6 +40,9 @@ export function CanvasModelDataView({
   copy: CanvasSemanticEditorCopy;
   unresolvedInputs?: readonly Readonly<{ label: string; state: 'pending' | 'missing' }>[];
   onReviewInputs?: () => void;
+  relationId?: string;
+  compact?: boolean;
+  disabledReason?: string;
 }>): JSX.Element {
   const [sample, setSample] = useState<TransformDataSampleResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -51,6 +58,7 @@ export function CanvasModelDataView({
     sample != null && (sample.semanticPlanSha256 !== semanticDigest || unresolvedInputs.length > 0);
   const available =
     query != null &&
+    disabledReason == null &&
     (!canEditModel || preparePreview != null) &&
     semanticDigest != null &&
     unresolvedInputs.length === 0;
@@ -77,15 +85,19 @@ export function CanvasModelDataView({
           return;
         }
       }
-      const next = await query.previewTransformRows({
-        canvasId,
-        transformNodeId: nodeId,
-        limit: TRANSFORM_DATA_SAMPLE_DEFAULT_LIMIT,
-      });
+      const next = await query.previewTransformRows(
+        TransformDataSampleRequestSchema.parse({
+          canvasId,
+          transformNodeId: nodeId,
+          limit: TRANSFORM_DATA_SAMPLE_DEFAULT_LIMIT,
+          ...(relationId == null ? {} : { relationId, semanticPlanSha256: semanticDigest! }),
+        })
+      );
       if (requestId.current !== id) return;
       if (
         next.canvasId !== canvasId ||
         next.transformNodeId !== nodeId ||
+        next.relationId !== relationId ||
         next.semanticPlanSha256 !== semanticDigest
       ) {
         setError(copy.staleHint);
@@ -99,7 +111,10 @@ export function CanvasModelDataView({
     }
   };
   return (
-    <section data-slot="canvas-model-data" className="flex h-full min-h-0 flex-col gap-4 p-4">
+    <section
+      data-slot="canvas-model-data"
+      className={`flex h-full min-h-0 min-w-0 flex-col ${compact ? 'gap-2 p-2' : 'gap-4 p-4'}`}
+    >
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
           <h2 className="text-sm font-semibold">{nodeName}</h2>
@@ -108,6 +123,10 @@ export function CanvasModelDataView({
         <Button
           data-slot="canvas-model-preview"
           size="sm"
+          variant={compact ? 'ghost' : 'default'}
+          title={sample == null ? copy.preview : copy.refresh}
+          aria-label={sample == null ? copy.preview : copy.refresh}
+          className={compact ? 'size-8 shrink-0 p-0' : undefined}
           disabled={!available || loading}
           onClick={() => void load()}
         >
@@ -116,7 +135,7 @@ export function CanvasModelDataView({
           ) : (
             <RefreshCw className="size-4" aria-hidden="true" />
           )}
-          {loading ? copy.loading : sample == null ? copy.preview : copy.refresh}
+          {compact ? null : loading ? copy.loading : sample == null ? copy.preview : copy.refresh}
         </Button>
       </header>
       {unresolvedInputs.length === 0 ? null : (
@@ -172,9 +191,11 @@ export function CanvasModelDataView({
         </p>
       ) : null}
       {sample == null ? (
-        <div className="grid min-h-40 flex-1 place-content-center gap-3 text-center text-sm text-(--text-muted)">
+        <div
+          className={`grid ${compact ? 'min-h-24' : 'min-h-40'} flex-1 place-content-center gap-3 text-center text-sm text-(--text-muted)`}
+        >
           <Table2 aria-hidden="true" className="mx-auto size-8 opacity-60" />
-          <p>{available ? copy.previewEmpty : copy.unavailable}</p>
+          <p>{disabledReason ?? (available ? copy.previewEmpty : copy.unavailable)}</p>
         </div>
       ) : (
         <>
@@ -183,13 +204,15 @@ export function CanvasModelDataView({
               {sample.rows.length}
               {sample.truncated ? '+' : ''} {copy.rows}
             </span>
-            <span>
-              {sample.columns.length} {copy.columns}
-            </span>
+            {compact ? null : (
+              <span>
+                {sample.columns.length} {copy.columns}
+              </span>
+            )}
             <span title={sample.semanticPlanSha256}>
               {copy.revision}: <code>{sample.draftRevision}</code>
             </span>
-            <time dateTime={sample.sampledAt}>{sample.sampledAt}</time>
+            {compact ? null : <time dateTime={sample.sampledAt}>{sample.sampledAt}</time>}
           </div>
           {sample.rows.length === 0 ? (
             <p>{copy.empty}</p>

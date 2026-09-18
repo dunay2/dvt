@@ -26,6 +26,9 @@ export function createApiCanvasTransformDataSampleQueryPort(
         environmentId: scope.environmentId,
         limit: String(input.limit),
       });
+      if (input.relationId !== undefined) params.set('relationId', input.relationId);
+      if (input.semanticPlanSha256 !== undefined)
+        params.set('semanticPlanSha256', input.semanticPlanSha256);
       const endpoint = `/workspace/graph/canvases/${encodeURIComponent(input.canvasId)}/transforms/${encodeURIComponent(input.transformNodeId)}/data-sample?${params}`;
       try {
         const response = await apiClient.getJson(endpoint);

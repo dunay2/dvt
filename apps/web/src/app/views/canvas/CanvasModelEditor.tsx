@@ -269,6 +269,7 @@ export function CanvasModelEditor({
           copy={treeCopy}
           authoring={authoring}
           actionsHost={actionsHost}
+          preview={{ canvasId, query, preparePreview }}
         />
       </div>
       {view === 'sql' ? (

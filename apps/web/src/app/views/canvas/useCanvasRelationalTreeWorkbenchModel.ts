@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
 import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
 import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
@@ -17,6 +18,10 @@ import type {
 } from './canvasRelationalTreeWorkbench.types';
 import { canvasRelationalAvailabilityLabel } from './DvtRelationalOperationChooser';
 import { useCanvasRelationalTreeAuthoringSession } from './useCanvasRelationalTreeAuthoringSession';
+
+export function canOpenCanvasRelationalTreeWorkbench(node: CanonicalNode): boolean {
+  return node.pluginId === 'dvt' && node.kind === 'dvt:transform' && node.role === 'transform';
+}
 
 export function useCanvasRelationalTreeWorkbenchModel(
   args: Readonly<{

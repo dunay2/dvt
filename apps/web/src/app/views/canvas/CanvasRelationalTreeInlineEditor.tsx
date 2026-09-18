@@ -57,6 +57,7 @@ export function CanvasRelationalTreeInlineEditor({
       ) : null}
       <CanvasRelationalTreeEditorFrame
         title={canvasRelationalOperationLabel(operation, copy)}
+        relationId={selectedRelationId}
         hidden={appendInput == null && (!selectedJoin || !expanded)}
         onClose={onClose}
       >

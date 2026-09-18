@@ -9,6 +9,21 @@ import {
 } from '../../src/contracts/canvas/TransformDataSample.v1.js';
 
 describe('TransformDataSample v1', () => {
+  it('requires a pinned semantic revision when selecting an intermediate relation', () => {
+    const input = {
+      canvasId: 'canvas-orders',
+      transformNodeId: 'transform-orders',
+      relationId: 'join-1',
+    };
+    expect(TransformDataSampleRequestSchema.safeParse(input).success).toBe(false);
+    expect(
+      TransformDataSampleRequestSchema.parse({ ...input, semanticPlanSha256: 'a'.repeat(64) })
+    ).toMatchObject({ relationId: 'join-1', semanticPlanSha256: 'a'.repeat(64) });
+    expect(
+      TransformDataSampleRequestSchema.safeParse({ ...input, semanticPlanSha256: 'stale' }).success
+    ).toBe(false);
+  });
+
   it('accepts a bounded sample tied to an exact protected draft and semantic plan', () => {
     const request = TransformDataSampleRequestSchema.parse({
       canvasId: 'canvas-orders',
