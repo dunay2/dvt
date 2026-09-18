@@ -477,14 +477,14 @@ describe('Canvas relational-tree Workbench', () => {
     const drop = new Event('drop', { bubbles: true, cancelable: true });
     Object.defineProperty(drop, 'dataTransfer', { value: dataTransfer });
     values.set('application/x-dvt-relational-source', 'not-connected');
-    act(() =>
-      container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!.dispatchEvent(drop)
-    );
+    act(() => {
+      container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!.dispatchEvent(drop);
+    });
     expect(container.querySelector('[data-slot="canvas-relational-tree"]')).toBe(appliedTree);
     values.set('application/x-dvt-relational-source', orders.id);
-    act(() =>
-      container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!.dispatchEvent(drop)
-    );
+    act(() => {
+      container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!.dispatchEvent(drop);
+    });
     expect(container.querySelector('[data-operator="project"]')).not.toBeNull();
     expect(container.querySelector('[data-operator="read"]')?.textContent).toContain('customers');
     expect(
