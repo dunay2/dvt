@@ -64,6 +64,8 @@ export function CanvasRelationalTreeGraphNode({
 }>): JSX.Element {
   const roleLabel = placed.role == null ? null : childRoleLabel(placed.role, placed.ordinal, copy);
   const subtitle = placed.node.displayName ?? placed.node.substraitKind;
+  const isSource = placed.node.operator === 'read';
+  const title = isSource ? subtitle : placed.node.operator.toUpperCase();
   return (
     <li
       role="none"
@@ -79,9 +81,7 @@ export function CanvasRelationalTreeGraphNode({
         aria-setsize={placed.siblingCount}
         aria-selected={selected}
         aria-expanded={placed.node.children.length === 0 ? undefined : true}
-        aria-label={
-          roleLabel == null ? placed.node.operator : `${roleLabel}: ${placed.node.operator}`
-        }
+        aria-label={roleLabel == null ? title : `${roleLabel}: ${title}`}
         data-slot="canvas-relational-tree-node"
         data-locator={placed.node.locator}
         data-relation-id={placed.node.relationId ?? undefined}
@@ -92,16 +92,22 @@ export function CanvasRelationalTreeGraphNode({
       >
         <span className="flex items-center gap-2">
           <OperatorIcon operator={placed.node.operator} />
-          <span className="truncate text-xs font-semibold uppercase tracking-wide text-(--text-primary)">
-            {placed.node.operator.toUpperCase()}
+          <span
+            data-slot="canvas-relational-node-title"
+            title={title}
+            className="truncate text-xs font-semibold text-(--text-strong)"
+          >
+            {title}
           </span>
         </span>
-        <span
-          title={subtitle}
-          className="mt-2 block truncate font-mono text-[11px] text-(--text-muted)"
-        >
-          {subtitle}
-        </span>
+        {isSource ? null : (
+          <span
+            title={subtitle}
+            className="mt-2 block truncate font-mono text-[11px] text-(--text-muted)"
+          >
+            {subtitle}
+          </span>
+        )}
         {roleLabel == null ? null : <span className="sr-only">{roleLabel}</span>}
       </button>
       {placed.node.operator !== 'join' || onExpand == null ? null : (

@@ -14,8 +14,8 @@ import type {
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 
 function childRoleBadge(role: CanvasRelationalTreeChildRole, ordinal: number): string | null {
-  if (role === 'left') return 'L';
-  if (role === 'right') return 'R';
+  if (role === 'left') return 'Left';
+  if (role === 'right') return 'Right';
   if (role === 'primary') return '1';
   if (role === 'secondary') return String(ordinal + 1);
   return null;
@@ -28,10 +28,28 @@ function edgePath(edge: CanvasRelationalTreePlacedEdge): string {
 
 function EdgeRoleBadge({ edge }: Readonly<{ edge: CanvasRelationalTreePlacedEdge }>) {
   const badge = childRoleBadge(edge.role, edge.ordinal);
+  const width = edge.role === 'left' || edge.role === 'right' ? 50 : 20;
   return badge == null ? null : (
-    <g transform={`translate(${edge.toX - 17} ${edge.toY - 8})`}>
-      <rect width="16" height="16" rx="4" fill="var(--surface-panel)" stroke="var(--status-info)" />
-      <text x="8" y="11" fill="var(--text-primary)" fontSize="8" textAnchor="middle">
+    <g
+      data-slot="canvas-relational-tree-input-label"
+      data-role={edge.role}
+      transform={`translate(${edge.toX - width - 4} ${edge.toY - 10})`}
+    >
+      <rect
+        width={width}
+        height="20"
+        rx="4"
+        fill="var(--surface-panel)"
+        stroke="var(--status-info)"
+      />
+      <text
+        x={width / 2}
+        y="14"
+        fill="var(--text-strong)"
+        fontSize="12"
+        fontWeight="500"
+        textAnchor="middle"
+      >
         {badge}
       </text>
     </g>

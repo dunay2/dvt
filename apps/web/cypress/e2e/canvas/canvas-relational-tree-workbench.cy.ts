@@ -200,6 +200,20 @@ describe('Canvas relational-tree Workbench', () => {
       .find('[data-slot="canvas-relational-tree-children"][data-child-count="2"]')
       .should('exist');
     cy.get('[data-slot="canvas-relational-tree-viewport"]').should('be.visible');
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]')
+      .should('have.length', 2)
+      .each(($card) => {
+        cy.wrap($card).should('not.contain.text', 'READ');
+        cy.wrap($card).find('[data-slot="canvas-relational-node-title"]').should('not.be.empty');
+      });
+    cy.get('[data-slot="canvas-relational-tree-input-label"][data-role="left"] text')
+      .should('be.visible')
+      .and('have.text', 'Left')
+      .and('have.css', 'fill', 'rgb(248, 250, 252)');
+    cy.get('[data-slot="canvas-relational-tree-input-label"][data-role="right"] text')
+      .should('be.visible')
+      .and('have.text', 'Right')
+      .and('have.css', 'fill', 'rgb(248, 250, 252)');
     verifyWheelZoom('[data-slot="canvas-relational-tree-viewport"]');
     cy.get('[data-slot="canvas-relational-tree-sources"] input').type('customers');
     cy.get('[data-slot="canvas-relational-tree-zoom"]')
