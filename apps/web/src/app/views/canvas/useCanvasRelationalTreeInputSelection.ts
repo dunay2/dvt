@@ -27,7 +27,8 @@ export function useCanvasRelationalTreeInputSelection(
 ) {
   const selectInput = useCallback(
     (nodeId: string) => {
-      if (!args.enabled || !args.editable) return;
+      if (!args.enabled || !args.editable || !args.inputs.some((input) => input.nodeId === nodeId))
+        return;
       args.setActive(true);
       if (!args.active && args.hydrateExistingJoin(nodeId)) return;
       if (args.operation == null) {
@@ -37,7 +38,9 @@ export function useCanvasRelationalTreeInputSelection(
         return;
       }
       if (!args.candidates.some((item) => item.nodeId === nodeId && item.selectable)) return;
-      if (args.operation === 'union_all') {
+      if (args.operation === 'projection') {
+        args.placeOperand(nodeId, 'secondary');
+      } else if (args.operation === 'union_all') {
         const input = args.inputs.find((candidate) => candidate.nodeId === nodeId);
         if (input == null || args.joinDraft == null) return;
         const next = appendDvtSubstraitUnionAllInput(args.joinDraft, {

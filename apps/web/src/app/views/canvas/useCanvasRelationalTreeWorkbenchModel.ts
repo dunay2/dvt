@@ -98,7 +98,10 @@ export function useCanvasRelationalTreeWorkbenchModel(
         ...item,
         state:
           session.active && session.operation != null && item.state !== 'missing'
-            ? session.selectedInputIds.includes(item.sourceNodeId ?? '')
+            ? (session.operation === 'projection'
+                ? session.selectedInputIds.slice(0, 1)
+                : session.selectedInputIds
+              ).includes(item.sourceNodeId ?? '')
               ? ('participating' as const)
               : ('pending' as const)
             : item.state,

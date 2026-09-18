@@ -80,7 +80,7 @@ export function CanvasRelationalTreeOperationShelf({
                 : copy.relationalTreeSelectOperationMessage}
           </span>
         )}
-        {expanded && choices.length > 0 && operation == null && selectedInputCount === 1 ? (
+        {expanded && choices.length > 0 && selectedInputCount === 1 ? (
           <span className="text-xs text-(--text-muted)">
             {copy.relationalTreeSelectNextSourceMessage}
           </span>
@@ -96,7 +96,11 @@ export function CanvasRelationalTreeOperationShelf({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{localCopy.replaceOperation}</AlertDialogTitle>
-            <AlertDialogDescription>{localCopy.replaceOperationHint}</AlertDialogDescription>
+            <AlertDialogDescription>
+              {operation === 'projection'
+                ? localCopy.replaceProjectionHint
+                : localCopy.replaceOperationHint}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{copy.inspectorDvtRelationalCancel}</AlertDialogCancel>

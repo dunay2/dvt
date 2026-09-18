@@ -21,6 +21,7 @@ type RelationalOperationCopy = Pick<
   | 'inspectorDvtRelationalTargetUnavailable'
   | 'inspectorDvtRelationalUnavailable'
   | 'inspectorDvtRelationalReadOnly'
+  | 'relationalTreeSelectNextSourceMessage'
 >;
 
 export function canvasRelationalOperationLabel(
@@ -46,6 +47,8 @@ export function canvasRelationalAvailabilityLabel(
       return copy.inspectorDvtRelationalAvailable;
     case 'needs-predicate':
       return copy.inspectorDvtRelationalNeedsPredicate;
+    case 'needs-input':
+      return copy.relationalTreeSelectNextSourceMessage;
     case 'needs-schema-alignment':
       return copy.inspectorDvtRelationalNeedsSchemaAlignment;
     case 'target-unavailable':
@@ -82,7 +85,7 @@ export function DvtRelationalOperationChooser({
           variant="outline"
           disabled={!choice.selectable}
           aria-pressed={selectedOperation === choice.operation}
-          draggable={choice.selectable}
+          draggable={choice.selectable && selectedOperation == null}
           className={
             layout === 'shelf'
               ? 'h-8 gap-2 px-2.5 text-sm font-medium aria-pressed:border-(--status-info) aria-pressed:bg-blue-950/40'
@@ -91,7 +94,7 @@ export function DvtRelationalOperationChooser({
           title={canvasRelationalAvailabilityLabel(choice.availability, copy)}
           data-slot={`dvt-select-operation-${choice.operation.replace('_', '-')}`}
           onDragStart={(event) => {
-            if (!choice.selectable) {
+            if (!choice.selectable || selectedOperation != null) {
               event.preventDefault();
               return;
             }

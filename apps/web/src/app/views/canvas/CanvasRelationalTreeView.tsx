@@ -6,6 +6,10 @@ import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWo
 import { CanvasRelationalTreeLayout } from './CanvasRelationalTreeLayout';
 import { CanvasRelationalTreeZoomControls } from './CanvasRelationalTreeZoomControls';
 import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewport';
+import {
+  CANVAS_RELATIONAL_SOURCE_DRAG_TYPE,
+  readCanvasRelationalSourceDrag,
+} from './canvasRelationalTreeDrag';
 
 export function CanvasRelationalTreeView({
   outputName,
@@ -16,6 +20,7 @@ export function CanvasRelationalTreeView({
   onExpand,
   onRemove,
   transformNode,
+  onDropSource,
 }: Readonly<{
   outputName: string;
   root: CanvasRelationalTreeNode;
@@ -25,6 +30,7 @@ export function CanvasRelationalTreeView({
   onExpand?: (locator: string) => void;
   onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
   transformNode?: CanonicalNode;
+  onDropSource?: (nodeId: string) => void;
 }>): JSX.Element {
   const viewport = useCanvasRelationalTreeViewport(root.locator);
 
@@ -49,6 +55,22 @@ export function CanvasRelationalTreeView({
           onPointerMove={viewport.onPointerMove}
           onPointerUp={viewport.onPointerUp}
           onPointerCancel={viewport.onPointerUp}
+          onDragOver={(event) => {
+            if (
+              onDropSource == null ||
+              !event.dataTransfer.types.includes(CANVAS_RELATIONAL_SOURCE_DRAG_TYPE)
+            )
+              return;
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'copy';
+          }}
+          onDrop={(event) => {
+            if (onDropSource == null) return;
+            const nodeId = readCanvasRelationalSourceDrag(event.dataTransfer);
+            if (nodeId == null) return;
+            event.preventDefault();
+            onDropSource(nodeId);
+          }}
         >
           <div
             ref={viewport.contentRef}

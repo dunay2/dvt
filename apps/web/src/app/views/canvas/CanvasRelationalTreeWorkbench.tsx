@@ -76,7 +76,6 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
         onToggle={() => setSourcesCollapsed((current) => !current)}
         copy={copy}
         draggable={model.authoringAvailable}
-        onBeginDrag={model.session.start}
         onSelect={model.selectCatalogueItem}
       />
       {showAuthoring ? (

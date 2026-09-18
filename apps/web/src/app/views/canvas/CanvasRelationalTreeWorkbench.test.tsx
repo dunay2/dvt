@@ -400,12 +400,12 @@ describe('Canvas relational-tree Workbench', () => {
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
     ).not.toBeNull();
+    expect(container.querySelector('[data-operator="project"]')).not.toBeNull();
+    expect(container.querySelector('[data-operator="read"]')?.textContent).toContain('customers');
     expect(
-      container.querySelector(
-        '[data-slot="canvas-relational-tree-input-slot"][data-position="secondary"]'
-      )?.textContent
-    ).toContain('Drop a Source here.');
-    expect(container.textContent).toContain('Select the next Source.');
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
+        ?.disabled
+    ).toBe(true);
     act(() => detailsButton?.click());
     expect(
       container.querySelector('[data-slot="dvt-relational-operation-chooser"]')
@@ -413,7 +413,7 @@ describe('Canvas relational-tree Workbench', () => {
     expect(container.querySelector('[data-slot="dvt-select-operation-inner-join"]')).not.toBeNull();
   });
 
-  it('reveals the operand slots when the first Source drag starts over a partial tree', () => {
+  it('keeps the applied tree mounted during drag and stages a second input only on drop', () => {
     const customers = sourceNode('customers', 'customers');
     const orders = sourceNode('orders', 'orders');
     const transform = applyDvtSubstraitSemanticDocument(
@@ -451,6 +451,11 @@ describe('Canvas relational-tree Workbench', () => {
       );
     });
 
+    const appliedTree = container.querySelector('[data-slot="canvas-relational-tree"]');
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
+        ?.disabled
+    ).toBe(true);
     const ordersButton = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     ).find((button) => button.textContent?.includes('orders'));
@@ -467,12 +472,36 @@ describe('Canvas relational-tree Workbench', () => {
       ordersButton?.dispatchEvent(dragStart);
     });
 
+    expect(container.querySelector('[data-slot="canvas-relational-tree"]')).toBe(appliedTree);
+    expect(container.querySelector('[data-slot="canvas-relational-tree-apply"]')).toBeNull();
+    const drop = new Event('drop', { bubbles: true, cancelable: true });
+    Object.defineProperty(drop, 'dataTransfer', { value: dataTransfer });
+    values.set('application/x-dvt-relational-source', 'not-connected');
+    act(() =>
+      container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!.dispatchEvent(drop)
+    );
+    expect(container.querySelector('[data-slot="canvas-relational-tree"]')).toBe(appliedTree);
+    values.set('application/x-dvt-relational-source', orders.id);
+    act(() =>
+      container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!.dispatchEvent(drop)
+    );
+    expect(container.querySelector('[data-operator="project"]')).not.toBeNull();
+    expect(container.querySelector('[data-operator="read"]')?.textContent).toContain('customers');
     expect(
-      container.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
-    ).not.toBeNull();
+      container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
+        ?.disabled
+    ).toBe(false);
     expect(
-      container.querySelectorAll('[data-slot="canvas-relational-tree-input-slot"]')
-    ).toHaveLength(2);
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
+        ?.disabled
+    ).toBe(true);
+    act(() =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-cancel"]')!
+        .click()
+    );
+    expect(container.querySelector('[data-operator="project"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-relational-tree-apply"]')).toBeNull();
   });
 
   it('authors in the central canvas with a collapsible operation shelf and writes only on Apply', () => {
@@ -523,7 +552,10 @@ describe('Canvas relational-tree Workbench', () => {
     act(() => dragSourceTo(sourceButtons[0]!, primarySlot!));
     expect(primarySlot?.textContent).toContain('customers');
     expect(container.querySelector('[data-slot="dvt-select-operation-projection"]')).not.toBeNull();
-    expect(container.querySelector('[data-slot="dvt-select-operation-inner-join"]')).toBeNull();
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
+        ?.disabled
+    ).toBe(true);
 
     act(() => dragSourceTo(sourceButtons[1]!, secondarySlot!));
     expect(secondarySlot?.textContent).toContain('orders');

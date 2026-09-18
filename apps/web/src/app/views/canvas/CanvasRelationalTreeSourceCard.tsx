@@ -16,13 +16,11 @@ export function CanvasRelationalTreeSourceCard({
   item,
   copy,
   draggable,
-  onBeginDrag,
   onSelect,
 }: Readonly<{
   item: CanvasRelationalTreeCatalogueItem;
   copy: CanvasRelationalTreeWorkbenchCopy;
   draggable: boolean;
-  onBeginDrag?: (item: CanvasRelationalTreeCatalogueItem) => void;
   onSelect: (item: CanvasRelationalTreeCatalogueItem) => void;
 }>): JSX.Element {
   const stateLabel = {
@@ -44,7 +42,6 @@ export function CanvasRelationalTreeSourceCard({
           return;
         }
         writeCanvasRelationalSourceDrag(event.dataTransfer, item.sourceNodeId);
-        onBeginDrag?.(item);
       }}
       disabled={item.selectable === false || (item.selectable == null && item.treeLocator == null)}
       onClick={() => onSelect(item)}

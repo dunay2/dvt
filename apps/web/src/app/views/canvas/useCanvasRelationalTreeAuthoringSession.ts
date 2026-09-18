@@ -76,9 +76,9 @@ export function useCanvasRelationalTreeAuthoringSession(
     edges,
     enabled,
     inputs,
-    joinDraft,
+    joinDraft: !active && seed != null ? seed.draft : joinDraft,
     nodes,
-    operation,
+    operation: !active && seed != null ? seed.operation : operation,
     selectedInputIds: effectiveInputIds,
     targetNodeId: transformNode.id,
   });
@@ -129,9 +129,9 @@ export function useCanvasRelationalTreeAuthoringSession(
   });
   const start = useCallback(() => {
     if (!enabled || !editable) return false;
-    if (!active && (seed?.operation === 'projection' || !hydrateExistingJoin())) setActive(true);
+    if (!active && !hydrateExistingJoin()) setActive(true);
     return true;
-  }, [active, editable, enabled, hydrateExistingJoin, seed?.operation]);
+  }, [active, editable, enabled, hydrateExistingJoin]);
   const removal = useCanvasRelationalTreeRemoval({
     enabled: enabled && editable,
     active,

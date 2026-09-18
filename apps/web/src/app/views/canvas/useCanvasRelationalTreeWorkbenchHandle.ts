@@ -18,6 +18,7 @@ export function useCanvasRelationalTreeWorkbenchHandle(
   const changed =
     session.operation !== session.seed?.operation ||
     session.joinDraft !== session.baselineDraft ||
+    session.selectedInputIds.join(',') !== session.seed?.inputIds.join(',') ||
     session.appendInput != null;
   const handle = {
     hasUnappliedChanges:

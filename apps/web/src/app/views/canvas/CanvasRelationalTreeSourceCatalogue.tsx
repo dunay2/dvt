@@ -16,7 +16,6 @@ export function CanvasRelationalTreeSourceCatalogue({
   collapsed = false,
   onToggle,
   draggable = false,
-  onBeginDrag,
   onSelect,
 }: Readonly<{
   items: readonly CanvasRelationalTreeCatalogueItem[];
@@ -24,7 +23,6 @@ export function CanvasRelationalTreeSourceCatalogue({
   collapsed?: boolean;
   onToggle?: () => void;
   draggable?: boolean;
-  onBeginDrag?: (item: CanvasRelationalTreeCatalogueItem) => void;
   onSelect: (item: CanvasRelationalTreeCatalogueItem) => void;
 }>): JSX.Element {
   const [search, setSearch] = useState('');
@@ -94,7 +92,6 @@ export function CanvasRelationalTreeSourceCatalogue({
                 item={item}
                 copy={copy}
                 draggable={draggable}
-                onBeginDrag={onBeginDrag}
                 onSelect={onSelect}
               />
             </li>

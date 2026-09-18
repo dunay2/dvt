@@ -66,6 +66,8 @@ const en = {
   removalUnsupportedType:
     'The current single-source projection cannot preserve this input’s field types. The tree has not changed.',
   replaceOperation: 'Replace the current composition?',
+  replaceProjectionHint:
+    'The current profile cannot use a filtered projection as a JOIN or UNION input. Replacing it rebuilds the composition from the selected sources and removes its projection, filters and windows. Cancel keeps the current tree unchanged.',
   replaceOperationHint:
     'Changing the operation replaces this local composition. Cancel restores the applied version.',
 };
@@ -140,6 +142,8 @@ const es: typeof en = {
   removalUnsupportedType:
     'La proyección actual de una sola fuente no puede conservar los tipos de esta entrada. El árbol no se ha modificado.',
   replaceOperation: '¿Reemplazar la composición actual?',
+  replaceProjectionHint:
+    'El perfil actual no admite una proyección filtrada como entrada de JOIN o UNION. Al sustituirla se reconstruye la composición con las fuentes seleccionadas y se retiran su proyección, filtros y ventanas. Cancelar mantiene el árbol actual intacto.',
   replaceOperationHint:
     'Cambiar la operación reemplaza esta composición local. Cancelar recupera la versión aplicada.',
 };

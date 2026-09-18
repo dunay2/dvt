@@ -32,7 +32,7 @@ export function CanvasRelationalTreeInspection({
         copy={copy}
         hasOperands
         operation={model.session.seed?.operation ?? null}
-        selectedInputCount={model.inputs.length}
+        selectedInputCount={model.session.seed?.inputIds.length ?? 0}
         onSelectOperation={model.session.selectOperation}
       >
         <CanvasRelationalTreeOperatorTools
@@ -49,6 +49,7 @@ export function CanvasRelationalTreeInspection({
           selectedLocator={model.selectedLocator}
           copy={copy}
           onSelect={model.selectTreeNode}
+          onDropSource={model.authoringAvailable ? model.session.selectInput : undefined}
           onRemove={model.authoringAvailable ? model.session.removal.remove : undefined}
           onExpand={(locator) => {
             model.selectTreeNode(locator);

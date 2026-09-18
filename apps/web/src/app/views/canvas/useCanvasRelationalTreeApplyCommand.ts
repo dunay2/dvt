@@ -37,7 +37,12 @@ export function useCanvasRelationalTreeApplyCommand(args: {
     transformNode,
   } = args;
   return useCallback(() => {
-    if (!editable || operation == null) return;
+    if (
+      !editable ||
+      operation == null ||
+      (operation === 'projection' && selectedInputIds.length !== 1)
+    )
+      return;
     const semantic =
       operation === 'projection' && joinDraft == null
         ? (() => {
