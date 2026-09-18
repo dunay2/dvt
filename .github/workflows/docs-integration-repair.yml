@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   retire:
-    name: Validate exact reviewed atlas and Canvas retirement
+    name: Validate reviewed atlas retirement and final source freshness
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
@@ -29,7 +29,7 @@ jobs:
           ref: c76f0f3c476396b73d37ea0181caa0a8862e658a
           fetch-depth: 0
           persist-credentials: false
-      - name: Apply the reviewed hash-verified data specification
+      - name: Apply reviewed specification and scoped guard correction
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -37,18 +37,16 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import subprocess,json,hashlib,os,zipfile,io,collections
-          out=Path('/tmp/atlas-retirement');out.mkdir(exist_ok=True)
-          base=os.environ['BASE']
+          out=Path('/tmp/atlas-retirement');out.mkdir(exist_ok=True);base=os.environ['BASE']
           def git(*args):return subprocess.check_output(['git',*args])
           def digest(data):return hashlib.sha256(data).hexdigest()
           assert git('rev-parse','HEAD').decode().strip()==base
           archive=subprocess.check_output(['gh','api','repos/dunay2/dvt/actions/artifacts/10546622246/zip'])
           assert digest(archive)=='3482b8db0a1e341e617227a2ab15d3d1ac9bf9263d98bde5805751b04c98174d'
-          z=zipfile.ZipFile(io.BytesIO(archive));raw=z.read('spec.json')
+          raw=zipfile.ZipFile(io.BytesIO(archive)).read('spec.json')
           assert digest(raw)=='48e1cabe91cc21c4214a53388017b5367627efa75f062b98f0bc4bd1b86ba4d6'
           spec=json.loads(raw);assert spec['base']==base
           assert len(spec['deletions'])==11 and len(spec['originals'])==15
-          # Artifact is data only. Execute no downloaded program.
           for p,sha in {**spec['deletions'],**spec['originals']}.items():
               assert not Path(p).is_absolute() and '..' not in Path(p).parts,p
               assert digest(Path(p).read_bytes())==sha,p
@@ -65,6 +63,18 @@ jobs:
               assert digest(text.encode())==spec['expectedEdits'][p],p
               Path(p).write_bytes(text.encode())
           (out/'spec.json').write_bytes(raw)
+          p=Path('tools/ci/docs-disposition-canon.test.mjs')
+          before="    assert.equal(current.includes('atlas/'), false, `retired atlas reference: ${path}`);"
+          after=r'''    const retiredAtlasPath =
+                /docs\/architecture\/atlas\/|(?:^|[\s("'`])(?:\.\.?\/)*atlas\//u;
+              assert.doesNotMatch(current, retiredAtlasPath, `retired atlas reference: ${path}`);'''
+          # Remove YAML indentation from the two continuation lines only.
+          after=after.replace('\n          ','\n')
+          correction={'path':str(p),'before':before,'after':after}
+          correctionRaw=json.dumps(correction,indent=2).encode()
+          assert digest(correctionRaw)=='dbae1e92a9cb09f434d26e064a71d937f301e55a002aa3b8c23c1ca7f183696f'
+          text=p.read_text();assert text.count(before)==1;p.write_text(text.replace(before,after))
+          (out/'guard-refinement.json').write_bytes(correctionRaw)
           cmd=['node','--test','--test-name-pattern=retired atlas and superseded Canvas','tools/ci/docs-disposition-canon.test.mjs']
           red=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
           (out/'red.log').write_text(red.stdout)
@@ -77,13 +87,19 @@ jobs:
           git('config','user.email','34416258+dunay2@users.noreply.github.com')
           git('add','-A');git('diff','--cached','--check')
           assert set(git('diff','--cached','--name-only').decode().splitlines())==set(spec['deletions'])|set(spec['originals'])
-          print('Same exact reviewed specification applied; RED demonstrated; eleven deletions and fifteen source edits')
           PY
       - name: Setup canonical toolchain with enabled hooks
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
-      - name: Prepare disposable CI bootstrap database only
+      - name: Normalize and commit source changes through canonical hooks first
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm commit docs docs "Retire historical atlas and superseded Canvas guidance" 2>&1 | tee /tmp/atlas-retirement/source-commit.log
+          echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          git rev-parse HEAD > /tmp/atlas-retirement/source-head.txt
+      - name: Bootstrap disposable CI DB from hook-normalized sources once
         uses: ./.github/actions/prepare-planning-db
       - name: Generate documentation and governance through canonical owners
         shell: bash
@@ -92,13 +108,14 @@ jobs:
           pnpm docs:sync 2>&1 | tee /tmp/atlas-retirement/docs-sync.log
           pnpm governance:refresh 2>&1 | tee /tmp/atlas-retirement/governance-refresh.log
           git add -A
-      - name: Commit through canonical helper and enabled hooks
+      - name: Commit generated indexes with canonical helper and enabled hooks
         shell: bash
         run: |
           set -euo pipefail
-          pnpm commit docs docs "Retire historical atlas and superseded Canvas guidance" 2>&1 | tee /tmp/atlas-retirement/commit.log
+          test "$(git diff --cached --name-only | sort)" = "$(printf '%s\n' docs/.manifest.json docs/architecture/index.md | sort)"
+          pnpm commit docs docs "Regenerate indexes after atlas retirement" 2>&1 | tee /tmp/atlas-retirement/generated-commit.log
           echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-      - name: Verify scope, regressions, negative controls and all repository gates
+      - name: Verify scope regressions negative controls and canonical gates
         shell: bash
         run: |
           python3 - <<'PY'
@@ -106,12 +123,14 @@ jobs:
           import subprocess,json,os,shutil,re
           out=Path('/tmp/atlas-retirement');spec=json.loads((out/'spec.json').read_text());base=os.environ['BASE']
           def git(*a):return subprocess.check_output(['git',*a]).decode().strip()
-          assert git('show','-s','--format=%P','HEAD')==base
-          assert git('rev-parse','HEAD^{tree}')=='bb1966f302c7374545475381cad64c272aba96ba'
+          source=(out/'source-head.txt').read_text().strip()
+          assert git('show','-s','--format=%P',source)==base
+          assert git('show','-s','--format=%P','HEAD')==source
+          assert git('rev-list','--count',base+'..HEAD')=='2'
           assert set(git('diff','--name-only','--diff-filter=D',base,'HEAD').splitlines())==set(spec['deletions'])
           assert not git('diff','--name-only','--diff-filter=A',base,'HEAD')
           allowed=set(spec['originals'])|set(spec['deletions'])|{'docs/architecture/index.md','docs/.manifest.json'}
-          assert set(git('diff','--name-only',base,'HEAD').splitlines())<=allowed
+          assert set(git('diff','--name-only',base,'HEAD').splitlines())==allowed
           assert not git('diff','--name-only',base,'HEAD','--','apps','packages','specs','docs/adr','docs/evidence','docs/risk-register','.github','package.json','pnpm-lock.yaml')
           results=[]
           def run(name,cmd,expected=0,marker=None):
@@ -119,15 +138,12 @@ jobs:
               (out/(name+'.log')).write_text(r.stdout)
               results.append({'name':name,'command':cmd,'exitCode':r.returncode,'expectedExitCode':expected})
               (out/'validation.json').write_text(json.dumps(results,indent=2))
-              print(name,r.returncode,flush=True);print('\n'.join(r.stdout.splitlines()[-10:]),flush=True)
+              print(name,r.returncode,flush=True);print('\n'.join(r.stdout.splitlines()[-12:]),flush=True)
               assert r.returncode==expected,(name,r.stdout[-6000:])
               if marker:assert marker in r.stdout,(name,marker,r.stdout[-6000:])
               return r.stdout
           arc=run('arc',['node','tools/ci/arc-check.mjs'])
-          # Evaluator prints an informational [ARC] line before its JSON object.
-          # Preserve the complete log and require exactly one trailing JSON report.
-          start=re.search(r'^\{',arc,re.MULTILINE)
-          assert start is not None,arc
+          start=re.search(r'^\{',arc,re.MULTILINE);assert start is not None,arc
           a=json.loads(arc[start.start():]);assert a['effectiveArcLevel']=='ARC-0'
           assert all(a['requirements'][k] is False for k in ['evidenceDoc','riskUpdate','rolloutNotes','compatMatrix'])
           cmd=['node','--test','--test-name-pattern=retired atlas and superseded Canvas','tools/ci/docs-disposition-canon.test.mjs']
@@ -140,7 +156,7 @@ jobs:
                   target.unlink()
                   if Path('docs/architecture/atlas').exists():shutil.rmtree('docs/architecture/atlas')
           p=Path('README.md');original=p.read_bytes();slug='docs/architecture/atlas/index.md'
-          cases=[('local',slug,1),('main','https://github.com/dunay2/dvt/blob/main/'+slug,1),('git','https://github.com/dunay2/dvt/blob/'+base+'/'+slug,0)]
+          cases=[('local',slug,1),('relative','[Old atlas](../atlas/index.md)',1),('main','https://github.com/dunay2/dvt/blob/main/'+slug,1),('git','https://github.com/dunay2/dvt/blob/'+base+'/'+slug,0),('external','https://example.org/atlas/overview',0),('unrelated','graphics/texture-atlas/coordinates',0)]
           for name,text,expected in cases:
               p.write_bytes(original+('\n'+text+'\n').encode())
               try:run('consumer-'+name,cmd,expected)
@@ -169,6 +185,9 @@ jobs:
           def git(*a):return subprocess.check_output(['git',*a])
           for name,args in {'head.txt':['rev-parse','HEAD'],'tree.txt':['rev-parse','HEAD^{tree}'],'commit.txt':['cat-file','commit','HEAD'],'status.txt':['status','--porcelain'],'stats.txt':['diff','--stat',base,'HEAD'],'candidate.patch':['diff',base,'HEAD'],'worktree.patch':['diff','HEAD'],'name-status.txt':['diff','--name-status',base,'HEAD'],'numstat.txt':['diff','--numstat',base,'HEAD'],'base-files.txt':['ls-tree','-rz',base],'head-files.txt':['ls-tree','-rz','HEAD']}.items():
               (out/name).write_bytes(git(*args))
+          if (out/'source-head.txt').exists():
+              source=(out/'source-head.txt').read_text().strip()
+              (out/'source-commit.txt').write_bytes(git('cat-file','commit',source))
           subprocess.run(['git','archive','--format=tar.gz','-o',str(out/'source.tar.gz'),'HEAD'],check=True)
           checks={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in out.iterdir() if p.is_file() and p.name!='checksums.json'}
           (out/'checksums.json').write_text(json.dumps(checks,indent=2))
