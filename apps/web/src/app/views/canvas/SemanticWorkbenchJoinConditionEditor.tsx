@@ -208,7 +208,8 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
       conditionKey: string | null;
       condition: DvtSubstraitJoinComparisonCondition<DvtSubstraitJoinPredicateOperand> | null;
       groupWithPrevious: boolean;
-    }> | null
+    }> | null,
+    onSelectCondition: (index: number, operand?: 'left' | 'right') => void
   ) => ReactNode;
   onEditingChange?: (editing: boolean) => void;
   projection: DvtSubstraitNInputJoinProjection;
@@ -227,11 +228,8 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
   const [conditionDraft, setConditionDraft] = useState<ConditionDraft | null>(null);
   const editingCallback = useRef(props.onEditingChange);
   editingCallback.current = props.onEditingChange;
-  const editing = conditionDraft != null;
-  useEffect(() => {
-    editingCallback.current?.(editing);
-    return () => editingCallback.current?.(false);
-  }, [editing]);
+  const automaticallyOpened = useRef(false);
+  const editorRef = useRef<HTMLDivElement>(null);
   const fields = useMemo<readonly ConditionFieldOption[]>(
     () =>
       props.projection.inputs.slice(0, props.rightInputIndex + 1).flatMap((input, inputIndex) =>
@@ -310,6 +308,15 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
               operator: conditionDraft.operator,
               combination: conditionDraft.combination,
             };
+  const editing =
+    conditionDraft != null &&
+    (condition == null ||
+      conditionDraft.conditionKey == null ||
+      dvtSubstraitJoinConditionKey(condition, predicateOperandKey) !== conditionDraft.conditionKey);
+  useEffect(() => {
+    editingCallback.current?.(editing);
+    return () => editingCallback.current?.(false);
+  }, [editing]);
 
   const startNewCondition = () => {
     const left = fields[0];
@@ -370,12 +377,20 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
     });
   };
 
+  useEffect(() => {
+    if (props.renderExpression == null || automaticallyOpened.current) return;
+    const row = rows.find((item) => item.kind === 'comparison');
+    if (row?.kind !== 'comparison') return;
+    automaticallyOpened.current = true;
+    editCondition(row);
+  });
+
   return (
     <div
       className={
         props.renderExpression == null
           ? undefined
-          : 'grid items-start gap-4 xl:grid-cols-[minmax(18rem,1fr)_minmax(0,2fr)]'
+          : 'grid h-full min-h-0 min-w-0 gap-4 lg:grid-cols-[minmax(20rem,1fr)_minmax(20rem,1fr)]'
       }
     >
       {props.renderExpression?.(
@@ -385,9 +400,31 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
               conditionKey: conditionDraft.conditionKey,
               condition,
               groupWithPrevious: conditionDraft.groupWithPrevious,
-            }
+            },
+        (index, operand) => {
+          const row = rows.filter((item) => item.kind === 'comparison')[index];
+          if (row?.kind !== 'comparison') return;
+          if (row.conditionKey !== conditionDraft?.conditionKey) {
+            if (editing) return;
+            editCondition(row);
+          }
+          requestAnimationFrame(() => {
+            const selector =
+              operand == null
+                ? '[aria-label="Comparador de la condición"]'
+                : `[data-slot="semantic-workbench-join-${operand === 'left' ? 'izquierdo' : 'derecho'}-operand"] select`;
+            editorRef.current
+              ?.querySelector<HTMLSelectElement>(selector)
+              ?.focus({ preventScroll: true });
+          });
+        }
       )}
-      <div data-slot="semantic-workbench-join-condition-list" style={{ marginTop: 4 }}>
+      <div
+        ref={editorRef}
+        data-slot="semantic-workbench-join-condition-list"
+        className={props.renderExpression == null ? undefined : 'min-h-0 overflow-auto pr-1'}
+        style={{ marginTop: 4 }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ color: muted, fontSize: 11, fontWeight: 700 }}>CONDICIONES DEL JOIN</span>
           <IconAction label="Añadir condición" onClick={startNewCondition}>
@@ -545,7 +582,7 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
                 <X aria-hidden="true" size={11} />
               </IconAction>
             </div>
-            <div className="grid grid-cols-1 gap-3 @min-[40rem]:grid-cols-[minmax(0,1fr)_6rem_minmax(0,1fr)]">
+            <div className="grid grid-cols-1 gap-3 @min-[30rem]:grid-cols-[minmax(0,1fr)_4rem_minmax(0,1fr)]">
               <SemanticWorkbenchJoinOperandEditor
                 side="izquierdo"
                 operand={conditionDraft.left}

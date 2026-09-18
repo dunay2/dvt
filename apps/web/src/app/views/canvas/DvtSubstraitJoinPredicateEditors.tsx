@@ -42,7 +42,10 @@ export function DvtSubstraitJoinPredicateEditors({
     onPendingConditionChange?.(editing.size > 0);
   }, [editing.size, onPendingConditionChange]);
   return (
-    <div className="space-y-3" data-slot="dvt-substrait-join-predicate-editors">
+    <div
+      className={transformNode == null ? 'space-y-3' : 'h-full min-h-0'}
+      data-slot="dvt-substrait-join-predicate-editors"
+    >
       {projection.joins.map((join, index) => {
         const joinRelation = projection.joinRelations[index];
         if (joinRelation == null) return null;
@@ -53,7 +56,7 @@ export function DvtSubstraitJoinPredicateEditors({
             hidden={
               selectedRelationId !== undefined && joinRelation.relationId !== selectedRelationId
             }
-            className="border-0 p-0"
+            className={transformNode == null ? 'border-0 p-0' : 'h-full min-h-0 border-0 p-0'}
             data-relation-id={joinRelation.relationId}
           >
             <SemanticWorkbenchJoinConditionEditor
@@ -61,7 +64,7 @@ export function DvtSubstraitJoinPredicateEditors({
                 transformNode == null ||
                 (selectedRelationId != null && selectedRelationId !== joinRelation.relationId)
                   ? undefined
-                  : (edit) => {
+                  : (edit, onSelectCondition) => {
                       if (edit != null && edit.condition == null)
                         return (
                           <p role="status" className="text-xs text-amber-200">
@@ -89,6 +92,7 @@ export function DvtSubstraitJoinPredicateEditors({
                           transformNode={transformNode}
                           relationId={joinRelation.relationId}
                           draft={previewDraft}
+                          onSelectCondition={onSelectCondition}
                         />
                       );
                     }

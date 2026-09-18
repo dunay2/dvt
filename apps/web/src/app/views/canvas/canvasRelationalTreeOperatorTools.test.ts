@@ -8,6 +8,8 @@ import { inspectDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import {
   createDvtSubstraitInnerJoinDraft,
   inspectDvtSubstraitInnerJoinAcceptedDraft,
+  inspectDvtSubstraitJoinPredicateContext,
+  updateDvtSubstraitJoinPredicateCondition,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   appendDvtSubstraitUnionAllInput,
@@ -22,6 +24,10 @@ import {
 } from './canvasDvtSubstraitSemanticDocument';
 import { resolveCanvasRelationalOperatorTools } from './canvasRelationalTreeOperatorModel';
 import { applyCanvasRelationalOperatorTool } from './canvasRelationalTreeOperatorCommands';
+import { dvtSubstraitJoinConditionKey } from './canvasDvtSubstraitJoinCondition';
+import { dvtSubstraitJoinOperandKey } from './canvasDvtSubstraitJoinOperand';
+import { removeCanvasRelationalTreeNode } from './canvasRelationalTreeRemoval';
+import { projectDvtSubstraitInnerJoinToPostgresSql } from './canvasDvtSubstraitPostgresProjection';
 
 const source = (table: string): DvtSubstraitUnionAllSource => ({
   nodeId: table,
@@ -43,6 +49,101 @@ const source = (table: string): DvtSubstraitUnionAllSource => ({
 });
 
 describe('admitted relational operator tools', () => {
+  it('edits a selected JOIN beneath grouping and window without losing either wrapper', async () => {
+    const original = createDvtSubstraitInnerJoinDraft({
+      left: source('customers'),
+      right: source('orders'),
+      targetNodeId: 'model',
+    });
+    const grouping = resolveCanvasRelationalOperatorTools(original).find(
+      (tool) => tool.id === 'aggregate'
+    )!;
+    const grouped = applyCanvasRelationalOperatorTool(original, {
+      tool: 'aggregate',
+      fieldId: grouping.fields[0]!.fieldId,
+      alias: 'total',
+    });
+    const windowed = applyCanvasRelationalOperatorTool(grouped, {
+      tool: 'window',
+      alias: 'position',
+    });
+    const root = windowed.plan.relations[0]!.relType;
+    if (root.case !== 'root' || root.value.input?.relType.case !== 'project')
+      throw new Error('Expected window');
+    const windowAnchor = root.value.input.relType.value.common!.relAnchor;
+    const windowId = windowed.sidecar.relations.find(
+      (rel) => rel.relAnchor === windowAnchor
+    )!.relationId;
+    const removed = removeCanvasRelationalTreeNode({
+      draft: windowed,
+      relationId: windowId,
+      targetNodeId: 'model',
+    });
+    expect(removed.ok).toBe(true);
+    if (removed.ok)
+      expect(
+        resolveCanvasRelationalOperatorTools(removed.draft).find((tool) => tool.id === 'window')
+          ?.active
+      ).toBe(false);
+    const context = inspectDvtSubstraitJoinPredicateContext(windowed);
+    expect(context?.inspection.ok).toBe(true);
+    if (context == null || !context.inspection.ok) throw new Error('Expected nested JOIN context');
+    const projection = context.inspection.projection;
+    const previous = projection.joins[0]!.conditions[0]!;
+    const conditionKey = dvtSubstraitJoinConditionKey(previous, (operand) =>
+      dvtSubstraitJoinOperandKey(operand, (field) => field.sourceFieldId)
+    );
+    const baseEdited = updateDvtSubstraitJoinPredicateCondition({
+      draft: context.baseDraft,
+      joinRelationId: projection.joinRelations[0]!.relationId,
+      conditionKey,
+      condition: {
+        left: { kind: 'field', sourceFieldId: projection.inputs[0]!.fields[0]!.fieldId },
+        right: { kind: 'field', sourceFieldId: projection.inputs[1]!.fields[0]!.fieldId },
+        operator: 'not_equal',
+      },
+    });
+    expect(baseEdited).not.toBe(context.baseDraft);
+    expect(baseEdited.sidecar.relations).toEqual(context.baseDraft.sidecar.relations);
+    expect(baseEdited.sidecar.fields).toEqual(context.baseDraft.sidecar.fields);
+    const next = updateDvtSubstraitJoinPredicateCondition({
+      draft: windowed,
+      joinRelationId: projection.joinRelations[0]!.relationId,
+      conditionKey,
+      condition: {
+        left: { kind: 'field', sourceFieldId: projection.inputs[0]!.fields[0]!.fieldId },
+        right: { kind: 'field', sourceFieldId: projection.inputs[1]!.fields[0]!.fieldId },
+        operator: 'not_equal',
+      },
+    });
+    expect(next).not.toBe(windowed);
+    expect(next.sidecar.relations).toEqual(windowed.sidecar.relations);
+    expect(next.sidecar.fields).toEqual(windowed.sidecar.fields);
+    expect(inspectDvtSubstraitInnerJoinAcceptedDraft(next).ok).toBe(true);
+    expect(
+      resolveCanvasRelationalOperatorTools(next).find((tool) => tool.id === 'window')?.active
+    ).toBe(true);
+    const sql = await projectDvtSubstraitInnerJoinToPostgresSql(next);
+    expect(sql).toMatch(/<>/);
+    expect(sql).toMatch(/count\(\*\)/i);
+    expect(sql).toMatch(/row_number\(\)/i);
+    const decoded = decodeDvtSubstraitSemanticDocument(encodeDvtSubstraitSemanticDocument(next));
+    const reloaded = inspectDvtSubstraitJoinPredicateContext(decoded);
+    expect(
+      reloaded?.inspection.ok && reloaded.inspection.projection.joins[0]!.conditions[0]
+    ).toMatchObject({ operator: 'not_equal' });
+    expect(
+      updateDvtSubstraitJoinPredicateCondition({
+        draft: windowed,
+        joinRelationId: 'missing',
+        conditionKey,
+        condition: {
+          left: { kind: 'literal', literal: { dataType: 'string', value: 'x' } },
+          operator: 'is_null',
+        },
+      })
+    ).toBe(windowed);
+  });
   it('accounts for every admitted relation and window capability, not candidate operators', () => {
     const supported = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.filter(
       (entry) => entry.kind === 'standard' && entry.profileStatus === 'supported-profile'
@@ -106,6 +207,17 @@ describe('admitted relational operator tools', () => {
       const removed = applyCanvasRelationalOperatorTool(next, { tool: 'filter', remove: true });
       expect(inspectDvtSubstraitProjectionDraft(removed).ok).toBe(true);
       expect(removed.sidecar.fields).toEqual(draft.sidecar.fields);
+      const filterId = next.sidecar.relations.find(
+        (relation) =>
+          !draft.sidecar.relations.some((original) => original.relationId === relation.relationId)
+      )!.relationId;
+      const retired = removeCanvasRelationalTreeNode({
+        draft: next,
+        relationId: filterId,
+        targetNodeId: 'model',
+      });
+      expect(retired.ok).toBe(true);
+      if (retired.ok) expect(inspectDvtSubstraitFilter(retired.draft)).toBeNull();
     }
     const window = applyCanvasRelationalOperatorTool(draft, {
       tool: 'window',
@@ -116,6 +228,15 @@ describe('admitted relational operator tools', () => {
     expect(inspected.ok).toBe(true);
     if (inspected.ok)
       expect(inspected.projection.outputs.at(-1)?.calculation?.kind).toBe('row-number');
+    if (inspected.ok) {
+      const retired = removeCanvasRelationalTreeNode({
+        draft: window,
+        relationId: inspected.projection.targetRelationId,
+        targetNodeId: 'model',
+      });
+      expect(retired.ok).toBe(true);
+      if (retired.ok) expect(retired.draft.sidecar.fields).toEqual(draft.sidecar.fields);
+    }
     expect(encodeDvtSubstraitSemanticDocument(draft)).toEqual(baseline);
     expect(
       applyCanvasRelationalOperatorTool(draft, {

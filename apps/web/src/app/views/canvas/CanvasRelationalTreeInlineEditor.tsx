@@ -3,13 +3,14 @@ import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatal
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import {
-  inspectDvtSubstraitNInputJoinDraft,
+  inspectDvtSubstraitJoinPredicateContext,
   type DvtSubstraitInnerJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import { CanvasRelationalTreeJoinEditor } from './CanvasRelationalTreeJoinEditor';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { canvasRelationalOperationLabel } from './DvtRelationalOperationChooser';
 import type { CanonicalNode } from '../../types/canonical';
+import { CanvasRelationalTreeSelectedOperatorEditor } from './CanvasRelationalTreeSelectedOperatorEditor';
 
 export function CanvasRelationalTreeInlineEditor({
   appendInput,
@@ -38,14 +39,24 @@ export function CanvasRelationalTreeInlineEditor({
   expanded: boolean;
   onClose: () => void;
 }>): JSX.Element | null {
-  if (operation !== 'inner_join' || joinDraft == null) return null;
-  const inspection = inspectDvtSubstraitNInputJoinDraft(joinDraft);
+  if (operation == null || joinDraft == null) return null;
+  const inspection = inspectDvtSubstraitJoinPredicateContext(joinDraft)?.inspection;
   const selectedJoin =
-    inspection.ok &&
+    inspection?.ok &&
     inspection.projection.joinRelations.some(
       (relation) => relation.relationId === selectedRelationId
     );
-
+  if (!selectedJoin && appendInput == null)
+    return expanded ? (
+      <CanvasRelationalTreeSelectedOperatorEditor
+        draft={joinDraft}
+        operation={operation}
+        relationId={selectedRelationId}
+        transformNode={transformNode}
+        onChange={onChangeJoinDraft}
+        onClose={onClose}
+      />
+    ) : null;
   return (
     <CanvasRelationalTreeEditorFrame
       title={canvasRelationalOperationLabel(operation, copy)}

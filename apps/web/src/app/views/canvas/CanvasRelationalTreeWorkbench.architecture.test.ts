@@ -9,6 +9,8 @@ import InspectionSource from './CanvasRelationalTreeInspection.tsx?raw';
 import RemovalSessionSource from './useCanvasRelationalTreeRemoval.ts?raw';
 import SemanticZoomSource from './canvasRelationalTreeSemanticZoom.ts?raw';
 import ScalarTreeSource from './CanvasRelationalScalarTree.tsx?raw';
+import ScalarGraphSource from './CanvasRelationalScalarGraph.tsx?raw';
+import SelectedOperatorSource from './CanvasRelationalTreeSelectedOperatorEditor.tsx?raw';
 import MetricsSource from './canvasRelationalTreeGeometryMetrics.ts?raw';
 import LayoutSource from './CanvasRelationalTreeLayout.tsx?raw';
 import SessionActionsSource from './CanvasRelationalTreeSessionActions.tsx?raw';
@@ -50,6 +52,8 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(GeometrySource.split('\n').length).toBeLessThan(150);
     expect(SemanticZoomSource.split('\n').length).toBeLessThan(100);
     expect(ScalarTreeSource.split('\n').length).toBeLessThan(110);
+    expect(ScalarGraphSource.split('\n').length).toBeLessThan(160);
+    expect(SelectedOperatorSource.split('\n').length).toBeLessThan(100);
     expect(MetricsSource.split('\n').length).toBeLessThan(110);
     expect(ViewportSource.split('\n').length).toBeLessThan(80);
     expect(UseViewportSource.split('\n').length).toBeLessThan(130);
@@ -90,6 +94,8 @@ describe('Canvas relational-tree Workbench architecture', () => {
       GeometrySource,
       SemanticZoomSource,
       ScalarTreeSource,
+      ScalarGraphSource,
+      SelectedOperatorSource,
       MetricsSource,
       ViewportSource,
       UseViewportSource,

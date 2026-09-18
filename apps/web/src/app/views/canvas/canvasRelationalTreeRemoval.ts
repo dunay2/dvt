@@ -1,17 +1,26 @@
 /** Owned concern: retire one relational card through the canonical draft builders. */
 import {
   inspectDvtSubstraitNInputJoinDraft,
+  inspectDvtSubstraitInnerJoinAcceptedDraft,
+  inspectDvtSubstraitJoinPredicateContext,
   retainDvtSubstraitJoinInputs,
   type DvtSubstraitInnerJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
-import { createDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
+import {
+  createDvtSubstraitProjectionDraft,
+  inspectDvtSubstraitProjectionDraft,
+} from './canvasDvtSubstraitProjection';
 import { createProjectionType } from './canvasDvtSubstraitProjectionStructure';
+import { inspectDvtSubstraitUnionAllAcceptedDraft } from './canvasDvtSubstraitSetComposition';
+import { applyCanvasRelationalOperatorTool } from './canvasRelationalTreeOperatorCommands';
+import { removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
+import { removeDvtSubstraitProjectionRoot } from './canvasDvtSubstraitStructuredFieldRemove';
 
 export type CanvasRelationalRemovalResult =
   | Readonly<{
       ok: true;
       draft: DvtSubstraitInnerJoinDraft;
-      operation: 'inner_join' | 'projection';
+      operation: 'inner_join' | 'projection' | 'union_all';
       retained: readonly number[];
     }>
   | Readonly<{
@@ -27,8 +36,59 @@ export function removeCanvasRelationalTreeNode(
     keep?: 'left' | 'right';
   }>
 ): CanvasRelationalRemovalResult {
+  const root = args.draft.plan.relations[0]?.relType;
+  const rel = root?.case === 'root' ? root.value.input?.relType : undefined;
+  if (rel?.case === 'project') {
+    const input = rel.value.input?.relType;
+    if (input?.case === 'filter') {
+      const filterId = args.draft.sidecar.relations.find(
+        (binding) => binding.relAnchor === input.value.common?.relAnchor
+      )?.relationId;
+      if (filterId === args.relationId) {
+        const draft = removeDvtSubstraitFilter(args.draft);
+        if (draft !== args.draft)
+          return { ok: true, draft, operation: 'projection', retained: [0] };
+      }
+    }
+    const projection = inspectDvtSubstraitProjectionDraft(args.draft);
+    if (projection.ok && projection.projection.targetRelationId === args.relationId) {
+      const windows = projection.projection.outputs.filter(
+        (field) => field.calculation?.kind === 'row-number'
+      );
+      const draft = windows.reduce(
+        (current, field) => removeDvtSubstraitProjectionRoot(current, { fieldId: field.fieldId }),
+        args.draft
+      );
+      if (draft !== args.draft) return { ok: true, draft, operation: 'projection', retained: [0] };
+    }
+  }
+  if (rel?.case === 'aggregate' || rel?.case === 'project') {
+    const rootId = args.draft.sidecar.relations.find(
+      (binding) => binding.relAnchor === rel.value.common?.relAnchor
+    )?.relationId;
+    if (rootId === args.relationId) {
+      const join = inspectDvtSubstraitInnerJoinAcceptedDraft(args.draft);
+      const union = inspectDvtSubstraitUnionAllAcceptedDraft(args.draft);
+      const draft = applyCanvasRelationalOperatorTool(args.draft, {
+        tool: rel.case === 'aggregate' ? 'aggregate' : 'window',
+        remove: true,
+      });
+      if (draft !== args.draft && (join.ok || union.ok))
+        return {
+          ok: true,
+          draft,
+          operation: join.ok ? 'inner_join' : 'union_all',
+          retained: (join.ok
+            ? inspectDvtSubstraitJoinPredicateContext(args.draft)!.inspection.projection.inputs
+            : union.ok
+              ? union.projection.inputs
+              : []
+          ).map((_, index) => index),
+        };
+    }
+  }
   const inspection = inspectDvtSubstraitNInputJoinDraft(args.draft);
-  if (!inspection.ok) return { ok: false, reason: 'unavailable' };
+  if (!inspection.ok) return { ok: false, reason: 'dependent-condition' };
   const { projection } = inspection;
   const sourceIndex = projection.inputs.findIndex((input) => input.relationId === args.relationId);
   const joinIndex = projection.joinRelations.findIndex(

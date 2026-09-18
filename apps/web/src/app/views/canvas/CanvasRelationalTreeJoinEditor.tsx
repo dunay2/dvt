@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/button';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import {
-  inspectDvtSubstraitNInputJoinDraft,
+  inspectDvtSubstraitJoinPredicateContext,
   type DvtSubstraitInnerJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import { DvtSubstraitJoinPredicateEditors } from './DvtSubstraitJoinPredicateEditors';
@@ -33,8 +33,11 @@ export function CanvasRelationalTreeJoinEditor({
   selectedRelationId: string | null;
   transformNode: CanonicalNode;
 }>): JSX.Element | null {
-  const inspection = useMemo(() => inspectDvtSubstraitNInputJoinDraft(draft), [draft]);
-  const outputs = inspection.ok ? inspection.projection.outputs : [];
+  const inspection = useMemo(
+    () => inspectDvtSubstraitJoinPredicateContext(draft)?.inspection,
+    [draft]
+  );
+  const outputs = inspection?.ok ? inspection.projection.outputs : [];
   const [leftSourceFieldId, setLeftSourceFieldId] = useState(outputs[0]?.source.fieldId ?? '');
   const leftOutput = outputs.find((output) => output.source.fieldId === leftSourceFieldId);
   const rightFields =
@@ -43,11 +46,11 @@ export function CanvasRelationalTreeJoinEditor({
   const selectedRightField = rightFields.some((field) => field.name === rightFieldName)
     ? rightFieldName
     : (rightFields[0]?.name ?? '');
-  if (!inspection.ok) return null;
+  if (!inspection?.ok) return null;
 
   return (
-    <div className="space-y-3">
-      <div hidden={appendInput != null}>
+    <div className="h-full min-h-0 space-y-3">
+      <div className="h-full min-h-0" hidden={appendInput != null}>
         <DvtSubstraitJoinPredicateEditors
           disabled={false}
           draft={draft}

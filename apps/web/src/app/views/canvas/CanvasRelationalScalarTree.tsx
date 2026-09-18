@@ -1,13 +1,18 @@
 /** Owned concern: render the existing scalar graph as connected, nested expression nodes. */
 import type { SemanticWorkbenchGraph } from './semanticWorkbenchProjection';
+import { CanvasRelationalScalarGraph } from './CanvasRelationalScalarGraph';
 
 export function CanvasRelationalScalarTree({
   graph,
   compact = false,
+  onSelectCondition,
 }: Readonly<{
   graph: SemanticWorkbenchGraph;
   compact?: boolean;
+  onSelectCondition?: (index: number, operand?: 'left' | 'right') => void;
 }>): JSX.Element {
+  if (!compact)
+    return <CanvasRelationalScalarGraph graph={graph} onSelectCondition={onSelectCondition} />;
   const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
   const children = new Map<string, string[]>();
   const operands = new Set<string>();

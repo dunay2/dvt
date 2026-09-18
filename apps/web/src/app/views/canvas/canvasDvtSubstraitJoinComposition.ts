@@ -1446,8 +1446,9 @@ function editDvtSubstraitJoinPredicateConditions(args: {
     conditions: readonly DvtSubstraitJoinPredicateCondition[]
   ) => readonly DvtSubstraitJoinPredicateCondition[] | null;
 }): DvtSubstraitInnerJoinDraft {
-  const inspection = inspectDvtSubstraitNInputJoinDraft(args.draft);
-  if (!inspection.ok) return args.draft;
+  const context = inspectDvtSubstraitJoinPredicateContext(args.draft);
+  if (context == null || !context.inspection.ok) return args.draft;
+  const { inspection, baseDraft } = context;
   const { projection } = inspection;
   const stageIndex = projection.joinRelations.findIndex(
     (relation) => relation.relationId === args.joinRelationId
@@ -1466,12 +1467,56 @@ function editDvtSubstraitJoinPredicateConditions(args: {
       inputs: buildInputsFromProjection(projection),
       predicates,
       outputs: buildOutputsFromProjection(projection),
-      previousDraft: args.draft,
+      previousDraft: baseDraft,
     });
-    return inspectDvtSubstraitNInputJoinDraft(edited).ok ? edited : args.draft;
+    return inspectDvtSubstraitNInputJoinDraft(edited).ok
+      ? restoreDvtSubstraitJoinPredicateContext(args.draft, baseDraft, edited)
+      : args.draft;
   } catch {
     return args.draft;
   }
+}
+
+/** Resolve predicate ownership without making the Model's root its editing identity. */
+export function inspectDvtSubstraitJoinPredicateContext(draft: DvtSubstraitInnerJoinDraft) {
+  const window = inspectValidInnerJoinGroupedWindow(draft);
+  const grouped = window?.baseDraft ?? draft;
+  const baseDraft = inspectValidInnerJoinGrouping(grouped)?.baseDraft ?? grouped;
+  const inspection = inspectDvtSubstraitNInputJoinDraft(baseDraft);
+  return inspection.ok ? { baseDraft, inspection } : null;
+}
+
+function restoreDvtSubstraitJoinPredicateContext(
+  original: DvtSubstraitInnerJoinDraft,
+  baseDraft: DvtSubstraitInnerJoinDraft,
+  edited: DvtSubstraitInnerJoinDraft
+): DvtSubstraitInnerJoinDraft {
+  if (baseDraft === original) return edited;
+  const plan = clonePlan(original.plan);
+  const root = plan.relations[0]?.relType;
+  const editedRoot = edited.plan.relations[0]?.relType;
+  if (root?.case !== 'root' || editedRoot?.case !== 'root' || editedRoot.value.input == null)
+    return original;
+  // The rebuilt predicate owns its extension anchors. Rebind the retained wrappers
+  // to those anchors; never regenerate their relation/field identities.
+  const editedPlan = clonePlan(edited.plan);
+  plan.extensions = editedPlan.extensions;
+  plan.extensionUrns = editedPlan.extensionUrns;
+  let relation = root.value.input;
+  if (relation?.relType.case === 'project') {
+    for (const expression of relation.relType.value.expressions) {
+      if (expression.rexType.case === 'windowFunction')
+        expression.rexType.value.functionReference = ensureDvtSubstraitRowNumberFunction(plan);
+    }
+    relation = relation.relType.value.input;
+  }
+  if (relation?.relType.case !== 'aggregate') return original;
+  const measure = relation.relType.value.measures[0]?.measure;
+  if (measure == null) return original;
+  measure.functionReference = ensureDvtSubstraitCountFunction(plan);
+  relation.relType.value.input = editedRoot.value.input;
+  const next = { plan, sidecar: { ...original.sidecar, semanticPlanSha256: ZERO_SHA256 } };
+  return inspectDvtSubstraitInnerJoinAcceptedDraft(next).ok ? next : original;
 }
 
 const projectedJoinOperandKey = (operand: DvtSubstraitJoinPredicateOperand) =>
@@ -1848,7 +1893,10 @@ function inspectValidInnerJoinGrouping(
   };
   const nInputBase = inspectDvtSubstraitNInputJoinDraft(baseDraft);
   const binaryBase = inspectDvtSubstraitInnerJoinDraft(baseDraft);
-  const base = nInputBase.ok && nInputBase.projection.inputs.length > 2 ? nInputBase : binaryBase;
+  const base =
+    nInputBase.ok && (nInputBase.projection.inputs.length > 2 || !binaryBase.ok)
+      ? nInputBase
+      : binaryBase;
   const baseGroupField = base.ok ? base.projection.outputs[groupInputOrdinal] : null;
   if (
     !base.ok ||

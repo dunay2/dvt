@@ -25,7 +25,7 @@ export function CanvasRelationalTreeGraphNode({
   semanticGraph?: SemanticWorkbenchGraph;
 }>): JSX.Element {
   return (
-    <CanvasRelationalTreeCardMenu node={placed.node} onRemove={onRemove}>
+    <CanvasRelationalTreeCardMenu node={placed.node} onRemove={onRemove} onExpand={onExpand}>
       <li
         role="none"
         className="absolute"
@@ -49,12 +49,12 @@ export function CanvasRelationalTreeGraphNode({
             <CanvasRelationalScalarTree graph={semanticGraph} compact />
           </div>
         )}
-        {placed.node.operator !== 'join' || onExpand == null ? null : (
+        {placed.node.expressionRefs.length === 0 || onExpand == null ? null : (
           <button
             type="button"
             data-slot="canvas-relational-node-expand"
-            aria-label={`${copy.relationalTreeDetailLabel}: JOIN · ${placed.node.displayName ?? ''}`}
-            title={`${copy.relationalTreeDetailLabel}: JOIN`}
+            aria-label={`${copy.relationalTreeDetailLabel}: ${placed.node.operator.toUpperCase()} · ${placed.node.displayName ?? ''}`}
+            title={`${copy.relationalTreeDetailLabel}: ${placed.node.operator.toUpperCase()}`}
             onClick={() => onExpand(placed.node.locator)}
             className="absolute right-1 top-1 grid size-7 place-items-center rounded text-(--text-muted) hover:bg-(--surface-selected) hover:text-(--text-strong)"
           >

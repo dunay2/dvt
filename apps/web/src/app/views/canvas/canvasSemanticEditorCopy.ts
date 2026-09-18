@@ -57,7 +57,7 @@ const en = {
   removeKeepLeft: 'Remove JOIN · keep L',
   removeKeepRight: 'Remove JOIN · keep R',
   removalDependency:
-    'Another JOIN uses fields from this input. Edit its conditions before removing this card.',
+    'Another operation depends on this card. Review its conditions, grouping or window before removing it.',
   removalUnavailable: 'This card cannot be removed from the current composition.',
   removalUnsupportedType:
     'The current single-source projection cannot preserve this input’s field types. The tree has not changed.',
@@ -127,7 +127,7 @@ const es: typeof en = {
   removeKeepLeft: 'Retirar JOIN · conservar L',
   removeKeepRight: 'Retirar JOIN · conservar R',
   removalDependency:
-    'Otro JOIN utiliza campos de esta entrada. Edita sus condiciones antes de retirar la tarjeta.',
+    'Otra operación depende de esta tarjeta. Revisa sus condiciones, agrupación o ventana antes de retirarla.',
   removalUnavailable: 'No se puede retirar esta tarjeta de la composición actual.',
   removalUnsupportedType:
     'La proyección actual de una sola fuente no puede conservar los tipos de esta entrada. El árbol no se ha modificado.',

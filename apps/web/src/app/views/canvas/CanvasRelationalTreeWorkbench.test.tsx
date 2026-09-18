@@ -650,6 +650,13 @@ describe('Canvas relational-tree Workbench', () => {
     const pendingEditor = visiblePredicates()[0]!.querySelector(
       '[data-slot="semantic-workbench-join-condition-editor"]'
     );
+    act(() => {
+      const comparison = pendingEditor!.querySelector<HTMLSelectElement>(
+        '[aria-label="Comparador de la condición"]'
+      )!;
+      comparison.value = 'not_equal';
+      comparison.dispatchEvent(new Event('change', { bubbles: true }));
+    });
     act(() => joinCards[0]!.click());
     expect(visiblePredicates()).toHaveLength(1);
     expect(visiblePredicates()[0]?.textContent).toContain('countries.countries_id');

@@ -104,6 +104,13 @@ describe('Canvas Model editor navigation', () => {
     act(() =>
       harness.container.querySelector<HTMLButtonElement>('[aria-label="Editar condición"]')!.click()
     );
+    act(() => {
+      const comparison = harness.container.querySelector<HTMLSelectElement>(
+        '[aria-label="Comparador de la condición"]'
+      )!;
+      comparison.value = 'not_equal';
+      comparison.dispatchEvent(new Event('change', { bubbles: true }));
+    });
     expect(
       harness.container.querySelector(
         '[data-slot="canvas-model-actions"] [data-slot="canvas-relational-tree-apply"]'

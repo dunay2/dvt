@@ -6,15 +6,20 @@ import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAutho
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 import { CanvasRelationalScalarTree } from './CanvasRelationalScalarTree';
+import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 
 export function CanvasRelationalJoinExpressionTree({
   transformNode,
   draft,
   relationId,
+  onSelectCondition,
+  operation = 'inner_join',
 }: Readonly<{
   transformNode: CanonicalNode;
   draft?: DvtSubstraitInnerJoinDraft;
   relationId: string | null;
+  onSelectCondition?: (index: number, operand?: 'left' | 'right') => void;
+  operation?: CanvasRelationalOperation;
 }>): JSX.Element | null {
   const graph = useMemo(() => {
     if (relationId == null) return null;
@@ -23,13 +28,13 @@ export function CanvasRelationalJoinExpressionTree({
         ? transformNode
         : applyCanvasInspectorNodeDraft(
             transformNode,
-            createCanvasRelationalTreeNodeDraft(transformNode, 'inner_join', draft)
+            createCanvasRelationalTreeNodeDraft(transformNode, operation, draft)
           );
     return projectSemanticWorkbenchGraph(node, {
       view: 'join-expression',
       joinRelationId: relationId,
     });
-  }, [transformNode, draft, relationId]);
+  }, [transformNode, draft, relationId, operation]);
   if (graph == null) return null;
-  return <CanvasRelationalScalarTree graph={graph} />;
+  return <CanvasRelationalScalarTree graph={graph} onSelectCondition={onSelectCondition} />;
 }

@@ -57,8 +57,11 @@ export function CanvasRelationalTreeInspection({
           }}
         />
       </div>
-      {expanded && model.selectedNode?.operator === 'join' ? (
-        <CanvasRelationalTreeEditorFrame title="INNER JOIN" onClose={() => onExpandedChange(false)}>
+      {expanded && model.selectedNode != null && model.selectedNode.expressionRefs.length > 0 ? (
+        <CanvasRelationalTreeEditorFrame
+          title={model.selectedNode.operator.toUpperCase()}
+          onClose={() => onExpandedChange(false)}
+        >
           <CanvasRelationalJoinExpressionTree
             transformNode={transformNode}
             relationId={model.selectedNode.relationId}

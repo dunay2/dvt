@@ -1,6 +1,6 @@
 /** Owned concern: show SQL derived from the applied canonical Model, never the local edit draft. */
 import { useEffect, useState } from 'react';
-import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';
+import { DvtTransformSqlOutputView } from './DvtTransformOutputView';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
 import type { CanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
@@ -42,13 +42,7 @@ export function CanvasModelSqlView({
           {copy.sqlError}
         </p>
       ) : (
-        <MonacoCodeViewer
-          ariaLabel={copy.sql}
-          language="sql"
-          loadingLabel={copy.sql}
-          containerClassName="min-h-0 flex-1"
-          value={result.sql}
-        />
+        <DvtTransformSqlOutputView label={copy.sql} value={result.sql} />
       )}
     </section>
   );

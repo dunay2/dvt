@@ -457,7 +457,8 @@ function buildGroupedInnerJoinPostgresAst(
 
 function buildAcceptedInnerJoinPostgresAst(draft: DvtSubstraitInnerJoinDraft): PostgresAstNode {
   const nInputJoin = inspectDvtSubstraitNInputJoinDraft(draft);
-  return nInputJoin.ok && nInputJoin.projection.inputs.length > 2
+  return nInputJoin.ok &&
+    (nInputJoin.projection.inputs.length > 2 || !inspectDvtSubstraitInnerJoinDraft(draft).ok)
     ? buildNInputJoinPostgresAst(nInputJoin.projection)
     : buildInnerJoinPostgresAst(requireInnerJoinProjection(draft));
 }

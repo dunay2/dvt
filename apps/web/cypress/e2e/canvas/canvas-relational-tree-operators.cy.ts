@@ -47,6 +47,56 @@ function openEditor(union = false, readOnly = false): void {
 }
 
 describe('Relational operator toolbar', () => {
+  it('keeps the selected JOIN editable below grouping and windows, and removes the selected wrapper', () => {
+    openEditor();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    let initialWrites = 0;
+    cy.then(() => {
+      initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get('[data-operator="join"]').dblclick();
+    cy.get('[data-slot="canvas-join-expression-node"]').should('have.length.at.least', 3);
+    cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
+    cy.get(tool('aggregate')).click();
+    cy.get(
+      '[role="dialog"] ' + form + ', [role="dialog"][data-slot="canvas-relational-operator-form"]'
+    )
+      .find('button[type="submit"]')
+      .click();
+    cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
+    cy.get(tool('window')).click();
+    cy.get(
+      '[role="dialog"] ' + form + ', [role="dialog"][data-slot="canvas-relational-operator-form"]'
+    )
+      .find('button[type="submit"]')
+      .click();
+    cy.get('[data-slot="canvas-join-expression-node"][data-kind="field"]').first().click();
+    cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
+    cy.screenshot('selected-join-connected-expression-under-window');
+    cy.get('[data-operator="aggregate"]').rightclick();
+    cy.get('[data-slot="canvas-relational-edit-operation"]').click();
+    cy.get('[data-slot="context-menu-content"][data-state="open"]').should('not.exist');
+    cy.get('[data-slot="canvas-join-expression-tree"]').should('contain.text', 'COUNT');
+    cy.contains(
+      '[data-slot="canvas-relational-tree-inline-editor"]',
+      'downstream dependencies'
+    ).should('be.visible');
+    cy.contains('[data-operator="project"]', 'WINDOW').rightclick();
+    cy.get(
+      '[data-slot="context-menu-content"][data-state="open"] [data-slot="canvas-relational-remove-source"]'
+    ).click();
+    cy.get('[data-slot="canvas-relational-node-title"]').should('not.contain.text', 'WINDOW');
+    cy.get('[data-operator="aggregate"]').rightclick();
+    cy.get(
+      '[data-slot="context-menu-content"][data-state="open"] [data-slot="canvas-relational-remove-source"]'
+    ).click();
+    cy.get('[data-operator="aggregate"]').should('not.exist');
+    cy.get('[data-operator="join"]').should('exist');
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(initialWrites)
+    );
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+  });
   for (const union of [false, true]) {
     it(`${union ? 'UNION ALL' : 'INNER JOIN'} → COUNT → ROW_NUMBER survives save and reopen`, () => {
       openEditor(union);

@@ -2,16 +2,16 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type { PointerEventHandler, RefObject } from 'react';
 import { useCanvasRelationalTreeWheelZoom } from './useCanvasRelationalTreeWheelZoom';
-
 import {
   CANVAS_RELATIONAL_TREE_MIN_ZOOM,
   calculateCanvasRelationalTreeFit,
   changeCanvasRelationalTreeZoom,
 } from './canvasRelationalTreeViewport';
-
 type PanOrigin = Readonly<{ x: number; y: number; left: number; top: number }>;
-
-export function useCanvasRelationalTreeViewport(layoutKey: string): Readonly<{
+export function useCanvasRelationalTreeViewport(
+  layoutKey: string,
+  fitPadding = 32
+): Readonly<{
   viewportRef: RefObject<HTMLDivElement>;
   contentRef: RefObject<HTMLDivElement>;
   zoom: number;
@@ -35,7 +35,6 @@ export function useCanvasRelationalTreeViewport(layoutKey: string): Readonly<{
     setZoom(value);
   }, []);
   useCanvasRelationalTreeWheelZoom(viewportRef, contentRef, zoom, setManualZoom, minimumZoom);
-
   const center = useCallback((nextZoom: number) => {
     const viewport = viewportRef.current;
     const content = contentRef.current;
@@ -54,11 +53,12 @@ export function useCanvasRelationalTreeViewport(layoutKey: string): Readonly<{
       viewportHeight: viewport.clientHeight,
       contentWidth: content.offsetWidth,
       contentHeight: content.offsetHeight,
+      padding: fitPadding,
     });
     setZoom(nextZoom);
     setMinimumZoom(Math.min(CANVAS_RELATIONAL_TREE_MIN_ZOOM, nextZoom));
     requestAnimationFrame(() => center(nextZoom));
-  }, [center]);
+  }, [center, fitPadding]);
 
   useLayoutEffect(() => {
     const refresh = (): void => {
