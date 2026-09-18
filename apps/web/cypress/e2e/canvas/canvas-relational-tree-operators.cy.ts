@@ -100,7 +100,10 @@ describe('Relational operator toolbar', () => {
         { once: true, capture: true }
       );
     });
-    cy.get('[data-slot="canvas-relational-tree-source"]').first().rightclick();
+    cy.get('[data-slot="canvas-relational-tree-source"]')
+      .first()
+      .find('span.block.truncate')
+      .rightclick();
     cy.then(() =>
       expect(catalogueContextEvent?.defaultPrevented, 'no native menu in the editor').to.equal(true)
     );

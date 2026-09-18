@@ -85,6 +85,7 @@ export default function CanvasShell({
   const [relationalTreeTransformId, setRelationalTreeTransformId] = useState<string | null>(null);
   const [modelTabActive, setModelTabActive] = useState(true);
   const [initialModelView, setInitialModelView] = useState<CanvasModelView>('editor');
+  const [modelViewRequestId, setModelViewRequestId] = useState(0);
   const relationalTreeTransformIds = useMemo(
     () =>
       new Set(
@@ -110,6 +111,7 @@ export default function CanvasShell({
       };
       const open = () => {
         setInitialModelView(view);
+        setModelViewRequestId((current) => current + 1);
         setRelationalTreeTransformId(nodeId);
         setModelTabActive(true);
       };
@@ -441,6 +443,7 @@ export default function CanvasShell({
                     edges={panels.inspectorGraphEdges}
                     authoring={panels.relationalTreeAuthoring}
                     initialView={initialModelView}
+                    viewRequestId={modelViewRequestId}
                     draftStatus={chromeState.draftStatusState}
                     query={canvasTransformDataSampleQuery}
                     preparePreview={prepareModelPreview}

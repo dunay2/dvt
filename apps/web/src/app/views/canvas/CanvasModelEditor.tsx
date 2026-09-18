@@ -43,6 +43,7 @@ export function CanvasModelEditor({
   edges,
   authoring,
   initialView,
+  viewRequestId,
   draftStatus,
   query,
   preparePreview,
@@ -58,6 +59,7 @@ export function CanvasModelEditor({
   edges: readonly CanonicalEdge[];
   authoring?: CanvasRelationalTreeAuthoringContract;
   initialView: CanvasModelView;
+  viewRequestId: number;
   draftStatus: CanvasDraftStatusState;
   query?: ICanvasTransformDataSampleQueryPort;
   preparePreview?: CanvasModelPreviewPreparation;
@@ -72,6 +74,7 @@ export function CanvasModelEditor({
   const workbench = useRef<CanvasRelationalTreeWorkbenchHandle>(null);
   const [actionsHost, setActionsHost] = useState<HTMLDivElement | null>(null);
   const [view, setView] = useState(initialView);
+  const handledViewRequest = useRef(viewRequestId);
   const [pendingNavigation, setPendingNavigation] = useState<
     CanvasModelView | 'canvas' | 'route' | null
   >(null);
@@ -145,9 +148,15 @@ export function CanvasModelEditor({
     navigate(pendingNavigation);
   };
   const requestNavigation = (target: CanvasModelView | 'canvas') => {
+    if (target === view) return;
     if (workbench.current?.hasUnappliedChanges) setPendingNavigation(target);
     else navigate(target);
   };
+  useEffect(() => {
+    if (handledViewRequest.current === viewRequestId) return;
+    handledViewRequest.current = viewRequestId;
+    requestNavigation(initialView);
+  });
   useCanvasModelWorkspaceTab({
     canvasId,
     nodeId: transformNode.id,

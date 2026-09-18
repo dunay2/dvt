@@ -141,6 +141,24 @@ describe('Canvas Model editor navigation', () => {
     ).toBe('true');
     expect(previewTransformRows).not.toHaveBeenCalled();
     act(() =>
+      navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-workspace-tab"]')!.click()
+    );
+    act(() => data.onOpenNode?.(fixture.transform.id));
+    expect(
+      harness.container
+        .querySelector('[data-slot="canvas-model-view-tab"][data-view="editor"]')
+        ?.getAttribute('aria-selected')
+    ).toBe('true');
+    act(() =>
+      navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-workspace-tab"]')!.click()
+    );
+    act(() => data.onOpenSourceDataSample?.(fixture.transform.id));
+    expect(
+      harness.container
+        .querySelector('[data-slot="canvas-model-view-tab"][data-view="data"]')
+        ?.getAttribute('aria-selected')
+    ).toBe('true');
+    act(() =>
       navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-model-tab-close"]')!.click()
     );
     expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBeNull();
