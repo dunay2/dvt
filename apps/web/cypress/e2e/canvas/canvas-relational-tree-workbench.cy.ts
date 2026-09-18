@@ -764,6 +764,6 @@ describe('Canvas relational-tree Workbench', () => {
     cy.wrap(null).should(() => {
       expect(semanticWrites('union-transform')).to.have.length(1);
     });
-    cy.get('[data-slot="canvas-relational-tree"]').should('contain.text', 'SET');
+    cy.get('[data-slot="canvas-relational-tree"]').should('contain.text', 'UNION ALL');
   });
 });
