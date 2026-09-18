@@ -50,17 +50,11 @@ navigation. The folder contains additional historical entries.
 - [20260423 TF-A2-C1 Execution Selection Contract Pack Closeout](./20260423-tf-a2-c1-execution-selection-contract-pack-closeout.md)
 - [20260423 TF-A2-C Execution Selection Proposal Closeout](./20260423-tf-a2-c-execution-selection-proposal-closeout.md)
 - [20260423 Workspace Graph Draft Application Component Closeout](./20260423-workspace-graph-draft-application-component-closeout.md)
-- [20260423 Docs Markdown Parser Componentization Closeout](./20260423-docs-markdown-parser-componentization-closeout.md)
 - [20260421 Web XYFlow 12.10.2 Closeout](./20260421-web-xyflow-12-10-2-closeout.md)
 - [20260420 Temporal Fowler Architecture Drift Follow-Up Closeout](./20260420-temporal-fowler-architecture-drift-follow-up-closeout.md)
-- [20260417 Graph Architecture Doc Pack Split Closeout](./20260417-graph-architecture-doc-pack-split-closeout.md)
 - [20260417 TF-E2 Route Bootstrap SRP Refactor Closeout](./20260417-tf-e2-route-bootstrap-srp-refactor-closeout.md)
 - [20260417 TF-E2 Route Bootstrap Contract Generalization Closeout](./20260417-tf-e2-route-bootstrap-contract-generalization-closeout.md)
 - [20260417 TF-E2 Canvas Bootstrap Presentation Handoff Closeout](./20260417-tf-e2-canvas-bootstrap-presentation-handoff-closeout.md)
-- [20260417 Root-Local Doc English Integration Closeout](./20260417-root-local-doc-english-integration-closeout.md)
-- [20260417 Root-Local Doc Canonicalization Closeout](./20260417-root-local-doc-canonicalization-closeout.md)
-- [20260417 Planning Gaps Governance Refresh Closeout](./20260417-planning-gaps-governance-refresh-closeout.md)
-- [20260416 TF-E2 Web Typecheck Hardening Closeout](./20260416-tf-e2-web-typecheck-hardening-closeout.md)
 - [20260414 TF-C3 Dbt Plugin Runtime Projection Slice Closeout](./20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md)
 - [20260414 TF-C3 RunExecutionContext Resolver Slice Closeout](./20260414-tf-c3-run-execution-context-resolver-closeout.md)
 - [20260414 TF-C1 Preview-Persist Convergence Closeout](./20260414-tf-c1-preview-persist-convergence-closeout.md)
@@ -86,7 +80,6 @@ navigation. The folder contains additional historical entries.
 - [20260316 G7 Provider Ref Reconciliation Closeout](./20260316-g7-provider-ref-reconciliation-closeout.md)
 - [20260316 G7 Projector Worker Runtime Closeout](./20260316-g7-projector-worker-runtime-closeout.md)
 - [20260316 Docs Governance Tooling Closeout](./20260316-docs-governance-tooling-closeout.md)
-- [20260316 Principal Architecture Review Closeout](./20260316-principal-architecture-review-closeout.md)
 
 ## Full Portfolio Views
 

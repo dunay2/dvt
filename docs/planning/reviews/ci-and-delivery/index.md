@@ -11,5 +11,4 @@ planning_type: review
 - [20260330 CI performance review and action plan](./20260330-ci-performance-review-and-action-plan.md)
 - [20260330 CI, prepush, and PR process observations](./20260330-ci-prepush-pr-process-observations.md)
 - [20260401 CI process review](./20260401-ci-process-review.md)
-- [20260401 Lane C RC-C2 efficiency institutionalization review](./20260401-lane-c-rc-c2-efficiency-institutionalization-review.md)
 - [20260402 RC-C2 operational friction intake review](./20260402-rc-c2-operational-friction-intake-review.md)
