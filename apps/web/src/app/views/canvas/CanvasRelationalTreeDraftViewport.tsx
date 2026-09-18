@@ -75,6 +75,8 @@ export function CanvasRelationalTreeDraftViewport({
   const selectedLocator =
     treeNodes.find((node) => node.relationId === selectedRelationId)?.locator ?? '';
   const rootRelationId = draftProjection?.root.relationId ?? null;
+  const relationIdFor = (locator: string) =>
+    treeNodes.find((node) => node.locator === locator)?.relationId ?? null;
   const viewport = useCanvasRelationalTreeViewport(
     `${draftProjection?.root.locator ?? ''}:${selectedInputIds.join(',')}:${operation}`
   );
@@ -138,16 +140,10 @@ export function CanvasRelationalTreeDraftViewport({
               root={draftProjection.root}
               selectedLocator={selectedLocator}
               copy={copy}
-              onExpand={(locator) =>
-                onExpandRelation(
-                  treeNodes.find((node) => node.locator === locator)?.relationId ?? null
-                )
-              }
-              onSelect={(locator) =>
-                onSelectRelation(
-                  treeNodes.find((node) => node.locator === locator)?.relationId ?? null
-                )
-              }
+              zoom={viewport.zoom}
+              semanticContext={{ transformNode, draft: joinDraft ?? undefined }}
+              onExpand={(locator) => onExpandRelation(relationIdFor(locator))}
+              onSelect={(locator) => onSelectRelation(relationIdFor(locator))}
             />
           </div>
         )}

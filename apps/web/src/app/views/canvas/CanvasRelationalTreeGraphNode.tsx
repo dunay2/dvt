@@ -1,12 +1,11 @@
 /** Owned concern: render one accessible relational operator card. */
 import { AlertTriangle, Filter, Layers3, Sigma, Table2, ChevronDown } from 'lucide-react';
 import { CanvasRelationalJoinIcon } from './CanvasRelationalJoinIcon';
+import { CanvasRelationalScalarTree } from './CanvasRelationalScalarTree';
+import type { SemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 
 import type { CanvasRelationalTreePlacedNode } from './canvasRelationalTreeGeometry';
-import type {
-  CanvasRelationalTreeChildRole,
-  CanvasRelationalTreeOperator,
-} from './canvasRelationalTreeProjection';
+import type { CanvasRelationalTreeChildRole } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 
 const operatorTone = {
@@ -33,21 +32,15 @@ function childRoleLabel(
   return copy.inspectorDbtOriginLabel;
 }
 
-function OperatorIcon({ operator }: Readonly<{ operator: CanvasRelationalTreeOperator }>) {
-  const Icon =
-    operator === 'read'
-      ? Table2
-      : operator === 'join'
-        ? CanvasRelationalJoinIcon
-        : operator === 'set' || operator === 'project'
-          ? Layers3
-          : operator === 'filter'
-            ? Filter
-            : operator === 'aggregate'
-              ? Sigma
-              : AlertTriangle;
-  return <Icon aria-hidden="true" className="size-4 shrink-0 text-(--status-info)" />;
-}
+const operatorIcons = {
+  read: Table2,
+  join: CanvasRelationalJoinIcon,
+  set: Layers3,
+  project: Layers3,
+  filter: Filter,
+  aggregate: Sigma,
+  unsupported: AlertTriangle,
+};
 
 export function CanvasRelationalTreeGraphNode({
   placed,
@@ -55,17 +48,20 @@ export function CanvasRelationalTreeGraphNode({
   copy,
   onSelect,
   onExpand,
+  semanticGraph,
 }: Readonly<{
   placed: CanvasRelationalTreePlacedNode;
   selected: boolean;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
   onExpand?: (locator: string) => void;
+  semanticGraph?: SemanticWorkbenchGraph;
 }>): JSX.Element {
   const roleLabel = placed.role == null ? null : childRoleLabel(placed.role, placed.ordinal, copy);
   const subtitle = placed.node.displayName ?? placed.node.substraitKind;
   const isSource = placed.node.operator === 'read';
   const title = isSource ? subtitle : placed.node.operator.toUpperCase();
+  const Icon = operatorIcons[placed.node.operator];
   return (
     <li
       role="none"
@@ -88,10 +84,11 @@ export function CanvasRelationalTreeGraphNode({
         data-operator={placed.node.operator}
         onClick={() => onSelect(placed.node.locator)}
         onDoubleClick={() => placed.node.operator === 'join' && onExpand?.(placed.node.locator)}
+        style={{ height: semanticGraph == null ? '100%' : 76 }}
         className={`h-full w-full rounded-md border px-3 py-2 text-left shadow-sm transition-colors hover:border-(--status-info) aria-selected:border-(--status-info) aria-selected:ring-2 aria-selected:ring-(--status-info) ${operatorTone[placed.node.operator]}`}
       >
         <span className="flex items-center gap-2">
-          <OperatorIcon operator={placed.node.operator} />
+          <Icon aria-hidden="true" className="size-4 shrink-0 text-(--status-info)" />
           <span
             data-slot="canvas-relational-node-title"
             title={title}
@@ -110,6 +107,15 @@ export function CanvasRelationalTreeGraphNode({
         )}
         {roleLabel == null ? null : <span className="sr-only">{roleLabel}</span>}
       </button>
+      {semanticGraph == null ? null : (
+        <div
+          data-slot="canvas-relational-semantic-zoom"
+          data-relation-id={placed.node.relationId ?? undefined}
+          className="rounded-b-md border border-t-0 border-blue-500 bg-(--surface-panel)"
+        >
+          <CanvasRelationalScalarTree graph={semanticGraph} compact />
+        </div>
+      )}
       {placed.node.operator !== 'join' || onExpand == null ? null : (
         <button
           type="button"

@@ -88,6 +88,30 @@ describe('Canvas relational-tree Workbench', () => {
     });
   }
 
+  function revealSemanticZoom(viewportSelector: string, joinCount: number): void {
+    cy.get('[data-slot="canvas-relational-tree-fit"]').click();
+    cy.get('[data-slot="canvas-relational-semantic-zoom"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-tree-zoom"]')
+      .invoke('text')
+      .then((label) => {
+        const current = Number.parseFloat(label) / 100;
+        cy.get(viewportSelector).trigger('wheel', {
+          eventConstructor: 'WheelEvent',
+          deltaY: -Math.log(1.3 / current) / 0.0015,
+          cancelable: true,
+        });
+      });
+    cy.get('[data-slot="canvas-relational-semantic-zoom"]').should('have.length', joinCount);
+    cy.get('[data-slot="canvas-relational-semantic-zoom"]').each(($detail) => {
+      cy.wrap($detail)
+        .find('[data-slot="canvas-join-expression-node"]')
+        .should('have.length.greaterThan', 2);
+      expect($detail.attr('data-relation-id')).to.equal(
+        $detail.find('[data-slot="canvas-join-expression-tree"]').attr('data-relation-id')
+      );
+    });
+  }
+
   const semanticWrites = (targetNodeId: string): ReturnType<typeof getE2eApiCalls> =>
     getE2eApiCalls('/workspace/graph/draft', 'PUT').filter((call) => {
       const body = call.body as {
@@ -161,6 +185,7 @@ describe('Canvas relational-tree Workbench', () => {
   });
 
   it('opens the full-width Model editor without a duplicate authoring drawer', () => {
+    let writesBeforeZoom = 0;
     cy.viewport(1280, 720);
     visitWithE2eWorkspaceSession('/canvas', {
       onBeforeLoad(window) {
@@ -215,6 +240,18 @@ describe('Canvas relational-tree Workbench', () => {
       .and('have.text', 'Right')
       .and('have.css', 'fill', 'rgb(248, 250, 252)');
     verifyWheelZoom('[data-slot="canvas-relational-tree-viewport"]');
+    cy.then(() => {
+      writesBeforeZoom = semanticWrites('join-transform').length;
+    });
+    revealSemanticZoom('[data-slot="canvas-relational-tree-viewport"]', 1);
+    cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-semantic-zoom"]')
+      .scrollIntoView()
+      .should('contain.text', 'EQUAL');
+    cy.screenshot('semantic-editor-zoom-expressions');
+    cy.then(() => expect(semanticWrites('join-transform')).to.have.length(writesBeforeZoom));
+    verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
+    cy.get('[data-slot="canvas-relational-semantic-zoom"]').should('not.exist');
     cy.get('[data-slot="canvas-relational-tree-sources"] input').type('customers');
     cy.get('[data-slot="canvas-relational-tree-zoom"]')
       .invoke('text')
@@ -544,6 +581,17 @@ describe('Canvas relational-tree Workbench', () => {
       3
     );
     cy.screenshot('semantic-editor-complete-tree');
+    revealSemanticZoom('[data-slot="canvas-relational-tree-draft-viewport"]', 3);
+    cy.get('[data-slot="canvas-relational-semantic-zoom"]')
+      .filter(':contains("LOWER")')
+      .should('have.length', 1)
+      .closest('li')
+      .scrollIntoView()
+      .should('contain.text', 'customers.customer_id')
+      .and('contain.text', 'tickets.customer_id');
+    cy.screenshot('semantic-editor-zoom-nested-function');
+    cy.get('[data-slot="canvas-relational-tree-detail"]:visible').should('not.exist');
+    verifyCompleteTreeFit('[data-slot="canvas-relational-tree-draft-viewport"]');
     cy.get('[data-slot="canvas-relational-tree-sources-toggle"]').click();
     cy.wrap(null).should(() => expect(semanticWrites('join-transform')).to.have.length(0));
 

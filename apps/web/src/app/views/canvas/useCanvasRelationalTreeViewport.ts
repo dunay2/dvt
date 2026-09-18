@@ -67,6 +67,7 @@ export function useCanvasRelationalTreeViewport(layoutKey: string): Readonly<{
     const frame = requestAnimationFrame(refresh);
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(refresh);
     if (viewportRef.current != null) observer?.observe(viewportRef.current, { box: 'border-box' });
+    if (contentRef.current != null) observer?.observe(contentRef.current, { box: 'border-box' });
     return () => {
       cancelAnimationFrame(frame);
       observer?.disconnect();

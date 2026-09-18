@@ -3,6 +3,9 @@ import { describe, expect, it } from 'vitest';
 import DetailSource from './CanvasRelationalJoinExpressionTree.tsx?raw';
 import GeometrySource from './canvasRelationalTreeGeometry.ts?raw';
 import GraphNodeSource from './CanvasRelationalTreeGraphNode.tsx?raw';
+import SemanticZoomSource from './canvasRelationalTreeSemanticZoom.ts?raw';
+import ScalarTreeSource from './CanvasRelationalScalarTree.tsx?raw';
+import MetricsSource from './canvasRelationalTreeGeometryMetrics.ts?raw';
 import LayoutSource from './CanvasRelationalTreeLayout.tsx?raw';
 import SessionActionsSource from './CanvasRelationalTreeSessionActions.tsx?raw';
 import BlockCanvasSource from './CanvasRelationalTreeBlockCanvas.tsx?raw';
@@ -41,6 +44,9 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(LayoutSource.split('\n').length).toBeLessThan(190);
     expect(GraphNodeSource.split('\n').length).toBeLessThan(140);
     expect(GeometrySource.split('\n').length).toBeLessThan(150);
+    expect(SemanticZoomSource.split('\n').length).toBeLessThan(100);
+    expect(ScalarTreeSource.split('\n').length).toBeLessThan(110);
+    expect(MetricsSource.split('\n').length).toBeLessThan(110);
     expect(ViewportSource.split('\n').length).toBeLessThan(80);
     expect(UseViewportSource.split('\n').length).toBeLessThan(130);
     expect(ZoomSource.split('\n').length).toBeLessThan(80);
@@ -75,6 +81,9 @@ describe('Canvas relational-tree Workbench architecture', () => {
       LayoutSource,
       GraphNodeSource,
       GeometrySource,
+      SemanticZoomSource,
+      ScalarTreeSource,
+      MetricsSource,
       ViewportSource,
       UseViewportSource,
       ZoomSource,
@@ -108,6 +117,10 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(DetailSource).toContain('projectSemanticWorkbenchGraph');
     expect(DetailSource).toContain("view: 'join-expression'");
     expect(DetailSource).not.toContain('GitMerge');
+    expect(SemanticZoomSource).toContain('projectSemanticWorkbenchGraph');
+    expect(GraphNodeSource).toContain('CanvasRelationalScalarTree');
+    expect(DetailSource).toContain('CanvasRelationalScalarTree');
+    expect(SemanticZoomSource).not.toContain('onApplyNodeDraft');
     expect(BlockCanvasSource).toContain('selectedRelationId');
     expect(InlineEditorSource).toContain('selectedRelationId');
   });

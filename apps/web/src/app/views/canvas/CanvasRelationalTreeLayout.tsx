@@ -1,6 +1,11 @@
 /** Owned concern: render deterministic graph geometry without creating a second Canvas authority. */
 import { Table2 } from 'lucide-react';
 import { useMemo } from 'react';
+import {
+  CANVAS_RELATIONAL_SEMANTIC_ZOOM,
+  projectCanvasRelationalTreeSemanticZoom,
+  type CanvasRelationalSemanticContext,
+} from './canvasRelationalTreeSemanticZoom';
 
 import {
   layoutCanvasRelationalTree,
@@ -63,6 +68,8 @@ export function CanvasRelationalTreeLayout({
   copy,
   onSelect,
   onExpand,
+  semanticContext,
+  zoom = 1,
 }: Readonly<{
   outputName: string;
   root: CanvasRelationalTreeNode;
@@ -70,8 +77,15 @@ export function CanvasRelationalTreeLayout({
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
   onExpand?: (locator: string) => void;
+  semanticContext?: CanvasRelationalSemanticContext;
+  zoom?: number;
 }>): JSX.Element {
-  const layout = useMemo(() => layoutCanvasRelationalTree(root), [root]);
+  const detailed = zoom >= CANVAS_RELATIONAL_SEMANTIC_ZOOM;
+  const detail = useMemo(
+    () => projectCanvasRelationalTreeSemanticZoom(root, detailed ? semanticContext : undefined),
+    [root, detailed, semanticContext?.transformNode, semanticContext?.draft]
+  );
+  const layout = useMemo(() => layoutCanvasRelationalTree(root, detail.sizes), [root, detail]);
   const rootNode = layout.nodes[0]!;
 
   return (
@@ -89,7 +103,7 @@ export function CanvasRelationalTreeLayout({
         height={layout.height}
       >
         <path
-          d={`M ${rootNode.x + rootNode.width} ${rootNode.y + rootNode.height / 2} H ${layout.output.x}`}
+          d={`M ${rootNode.x + rootNode.width} ${layout.output.y + layout.output.height / 2} H ${layout.output.x}`}
           fill="none"
           stroke="var(--status-info)"
           strokeWidth="1.5"
@@ -151,6 +165,7 @@ export function CanvasRelationalTreeLayout({
             copy={copy}
             onSelect={onSelect}
             onExpand={onExpand}
+            semanticGraph={detail.graphs.get(placed.node.locator)}
           />
         ))}
       </ul>

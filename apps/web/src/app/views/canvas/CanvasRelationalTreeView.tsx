@@ -1,6 +1,7 @@
 /** Owned concern: present one scalable, keyboard-selectable relational graph viewport. */
 
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
+import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import { CanvasRelationalTreeLayout } from './CanvasRelationalTreeLayout';
 import { CanvasRelationalTreeZoomControls } from './CanvasRelationalTreeZoomControls';
@@ -13,6 +14,7 @@ export function CanvasRelationalTreeView({
   copy,
   onSelect,
   onExpand,
+  transformNode,
 }: Readonly<{
   outputName: string;
   root: CanvasRelationalTreeNode;
@@ -20,6 +22,7 @@ export function CanvasRelationalTreeView({
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
   onExpand?: (locator: string) => void;
+  transformNode?: CanonicalNode;
 }>): JSX.Element {
   const viewport = useCanvasRelationalTreeViewport(root.locator);
 
@@ -58,6 +61,8 @@ export function CanvasRelationalTreeView({
               copy={copy}
               onSelect={onSelect}
               onExpand={onExpand}
+              zoom={viewport.zoom}
+              semanticContext={transformNode == null ? undefined : { transformNode }}
             />
           </div>
         </div>

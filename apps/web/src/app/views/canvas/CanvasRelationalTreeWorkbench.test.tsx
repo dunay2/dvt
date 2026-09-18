@@ -206,6 +206,27 @@ describe('Canvas relational-tree Workbench', () => {
       container.querySelector('[data-slot="canvas-relational-tree-start-authoring"]')
     ).toBeNull();
     expect(container.querySelector('[data-slot="canvas-relational-tree-detail"]')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).toBeNull();
+    const zoomIn = container.querySelector<HTMLButtonElement>('button[aria-label="Zoom in"]')!;
+    act(() => {
+      zoomIn.click();
+      zoomIn.click();
+      zoomIn.click();
+    });
+    expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).not.toBeNull();
+    expect(
+      container.querySelectorAll(
+        '[data-slot="canvas-relational-semantic-zoom"] [data-slot="canvas-join-expression-node"]'
+      ).length
+    ).toBeGreaterThan(1);
+    expect(container.querySelector('[data-slot="canvas-relational-tree-detail"]')).toBeNull();
+    const zoomOut = container.querySelector<HTMLButtonElement>('button[aria-label="Zoom out"]')!;
+    act(() => {
+      zoomOut.click();
+      zoomOut.click();
+      zoomOut.click();
+    });
+    expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).toBeNull();
     const tree = container.querySelector('[data-slot="canvas-relational-tree"]');
     const toggle = container.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-relational-tree-sources-toggle"]'
