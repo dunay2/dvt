@@ -46,7 +46,7 @@ function card(nodeId: string): Cypress.Chainable<JQuery<HTMLElement>> {
 }
 
 function openColumns(nodeId: string): void {
-  card(nodeId).find('[data-slot="canvas-node-shell"]').rightclick();
+  card(nodeId).find('[data-slot="graph-node-card-title"]').rightclick();
   cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Properties').click();
   cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
 }
@@ -83,7 +83,7 @@ describe('Canvas Source filter boundary', () => {
 
     openColumns('model-orders');
     cy.get('[data-slot="dvt-filter-authoring"]').should('be.visible');
-    cy.get('select[name="dvt-filter-field"]').select('output:customer');
+    cy.get('select[name="dvt-filter-field"]').select('customer');
     cy.get('input[name="dvt-filter-value"]').type('Ada');
     cy.get('[data-slot="dvt-filter-apply"]').click();
     cy.contains('button', /^Apply$/).click();

@@ -27,6 +27,7 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import {
   createDvtSubstraitUnionAllDraft,
+  inspectDvtSubstraitUnionAllDraft,
   resolveDvtSubstraitUnionAllEntry,
   type DvtSubstraitUnionAllDraft,
 } from './canvasDvtSubstraitSetComposition';
@@ -220,6 +221,7 @@ export function resolveCanvasRelationalTreeAuthoringCandidates(
     let selectable = false;
     if (args.operation === 'union_all') {
       selectable =
+        (args.joinDraft == null || inspectDvtSubstraitUnionAllDraft(args.joinDraft).ok) &&
         orderedUnionAllEntry({
           ...args,
           selectedInputIds: [...args.selectedInputIds, input.nodeId],

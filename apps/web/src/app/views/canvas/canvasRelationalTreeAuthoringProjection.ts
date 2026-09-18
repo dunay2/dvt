@@ -38,7 +38,7 @@ export function projectCanvasRelationalTreeAuthoringDraft(
                 targetNodeId: args.transformNode.id,
               });
         })()
-      : args.operation === 'inner_join' || args.operation === 'projection'
+      : args.joinDraft != null || args.operation === 'inner_join' || args.operation === 'projection'
         ? args.joinDraft
         : args.operation === 'union_all'
           ? createCanvasRelationalTreeUnionAllDraft({

@@ -49,7 +49,7 @@ export function useCanvasRelationalTreeApplyCommand(args: {
                   targetNodeId: transformNode.id,
                 });
           })()
-        : operation === 'inner_join' || operation === 'projection'
+        : joinDraft != null || operation === 'inner_join' || operation === 'projection'
           ? joinDraft
           : createCanvasRelationalTreeUnionAllDraft({
               edges,

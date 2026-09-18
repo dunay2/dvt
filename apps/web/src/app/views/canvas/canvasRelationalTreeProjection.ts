@@ -1,5 +1,6 @@
 /** Owned concern: project canonical DVT relation structure into one immutable Canvas read model. */
 import type { Expression, Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { SetRel_SetOp } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { ConnectedSourceRef, DvtSubstraitAuthoringSidecarV1 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -33,6 +34,7 @@ export type CanvasRelationalTreeNode = Readonly<{
   locator: string;
   operator: CanvasRelationalTreeOperator;
   substraitKind: string;
+  operationLabel?: string;
   relationId: string | null;
   displayName: string | null;
   sourceRef: ConnectedSourceRef | null;
@@ -223,6 +225,9 @@ function buildTree(
     locator: `rel:${args.semanticDigest}:${args.path}`,
     operator: operator(args.rel),
     substraitKind: args.rel.relType.case ?? 'unknown',
+    ...(args.rel.relType.case === 'set' && args.rel.relType.value.op === SetRel_SetOp.UNION_ALL
+      ? { operationLabel: 'UNION ALL' }
+      : {}),
     relationId,
     displayName: binding?.displayName ?? null,
     sourceRef: binding?.sourceRef ?? null,

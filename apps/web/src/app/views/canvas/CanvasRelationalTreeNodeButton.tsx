@@ -1,5 +1,5 @@
 /** Owned concern: readable card content and accessible semantic input roles. */
-import { AlertTriangle, Filter, Layers3, Sigma, Table2 } from 'lucide-react';
+import { AlertTriangle, Filter, Layers3, Sigma, Table2, ChartNoAxesCombined } from 'lucide-react';
 import { CanvasRelationalJoinIcon } from './CanvasRelationalJoinIcon';
 import type { CanvasRelationalTreePlacedNode } from './canvasRelationalTreeGeometry';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
@@ -56,12 +56,15 @@ export function CanvasRelationalTreeNodeButton({
               : copy.inspectorDbtOriginLabel;
   const subtitle = node.displayName ?? node.substraitKind;
   const isSource = node.operator === 'read';
-  const title = isSource
-    ? subtitle
-    : node.operator === 'join'
-      ? 'INNER JOIN'
-      : node.operator.toUpperCase();
-  const Icon = operatorIcons[node.operator];
+  const window = node.decorations.some((decoration) => decoration.kind === 'window');
+  const title = window
+    ? 'WINDOW · ROW_NUMBER'
+    : isSource
+      ? subtitle
+      : node.operator === 'join'
+        ? 'INNER JOIN'
+        : (node.operationLabel ?? node.operator.toUpperCase());
+  const Icon = window ? ChartNoAxesCombined : operatorIcons[node.operator];
   return (
     <button
       type="button"

@@ -59,7 +59,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
     args.authoring != null &&
     (composition?.state === 'pending' ||
       composition?.state === 'single-input' ||
-      (composition?.state === 'canonical' && composition.operation === 'inner_join')) &&
+      composition?.state === 'canonical') &&
     inputs.length >= 1;
   const authoringAvailable = pendingAuthoring && args.authoring?.canEditNode === true;
   const session = useCanvasRelationalTreeAuthoringSession({

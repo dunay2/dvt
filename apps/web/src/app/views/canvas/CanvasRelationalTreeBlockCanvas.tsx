@@ -12,6 +12,7 @@ import type { CanvasRelationalOperandPosition } from './CanvasRelationalTreeOper
 import { CanvasRelationalTreeOperationShelf } from './CanvasRelationalTreeOperationShelf';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { CanvasRelationalTreeOperatorTools } from './CanvasRelationalTreeOperatorTools';
 
 export function CanvasRelationalTreeBlockCanvas({
   appendInput,
@@ -78,7 +79,13 @@ export function CanvasRelationalTreeBlockCanvas({
           operation={operation}
           selectedInputCount={selectedInputIds.length}
           onSelectOperation={onSelectOperation}
-        />
+        >
+          <CanvasRelationalTreeOperatorTools
+            draft={joinDraft}
+            editable
+            onChange={onChangeJoinDraft}
+          />
+        </CanvasRelationalTreeOperationShelf>
       }
       <div className="relative flex min-h-0 flex-1 flex-col">
         <CanvasRelationalTreeDraftViewport

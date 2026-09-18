@@ -16,7 +16,7 @@ export function useCanvasRelationalTreeWorkbenchHandle(
 ): CanvasRelationalTreeWorkbenchHandle {
   const { session } = model;
   const changed =
-    session.operation !== 'inner_join' ||
+    session.operation !== session.seed?.operation ||
     session.joinDraft !== session.baselineDraft ||
     session.appendInput != null;
   const handle = {

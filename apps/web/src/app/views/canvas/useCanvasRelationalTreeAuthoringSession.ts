@@ -54,7 +54,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     (seed: CanvasRelationalTreeJoinSeedHydration) => {
       setActive(true);
       replaceInputs(seed.inputIds);
-      setOperation('inner_join');
+      setOperation(seed.operation);
       setJoinDraft(seed.draft);
       setAppendInputId(seed.appendInputId);
     },
@@ -127,11 +127,11 @@ export function useCanvasRelationalTreeAuthoringSession(
     selectedInputIds,
     transformNode,
   });
-
   const start = useCallback(() => {
-    if (!enabled || !editable || active) return;
-    if (!hydrateExistingJoin()) setActive(true);
-  }, [active, editable, enabled, hydrateExistingJoin]);
+    if (!enabled || !editable) return false;
+    if (!active && (seed?.operation === 'projection' || !hydrateExistingJoin())) setActive(true);
+    return true;
+  }, [active, editable, enabled, hydrateExistingJoin, seed?.operation]);
   const removal = useCanvasRelationalTreeRemoval({
     enabled: enabled && editable,
     active,
@@ -152,6 +152,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     removal,
     active,
     baselineDraft,
+    seed,
     appendInput: inputs.find((input) => input.nodeId === appendInputId) ?? null,
     apply,
     appendJoinInput,
@@ -166,12 +167,12 @@ export function useCanvasRelationalTreeAuthoringSession(
     selectedInputIds,
     selectInput,
     selectOperation: (next: CanvasRelationalOperation) => {
-      if (!enabled || !editable) return;
-      setActive(true);
-      if (!active) hydrateExistingJoin();
-      chooseOperation(next);
+      if (start()) chooseOperation(next);
     },
-    setJoinDraft,
+    setJoinDraft: (draft: DvtSubstraitInnerJoinDraft) => {
+      if (!active) hydrateExistingJoin();
+      setJoinDraft(draft);
+    },
     start,
   } as const;
 }

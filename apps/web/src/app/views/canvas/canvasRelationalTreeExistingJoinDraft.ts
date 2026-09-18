@@ -1,17 +1,14 @@
 /** Owned concern: resolve an existing canonical JOIN into an editable structural seed. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
-import {
-  decodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitNInputJoinDraft,
-  type DvtSubstraitInnerJoinDraft,
-} from './canvasDvtSubstraitJoinComposition';
-import { hasSameConnectedSourceRef } from './canvasDvtSubstraitJoinSourceResolution';
-import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { createDvtTransformAuthoringMetadata } from './canvasDvtTransformAuthoring';
+import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
+import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 
 export type CanvasRelationalTreeExistingJoinDraft = Readonly<{
   draft: DvtSubstraitInnerJoinDraft;
   inputIds: readonly string[];
+  operation: CanvasRelationalOperation;
 }>;
 
 export function resolveCanvasRelationalTreeExistingJoinDraft(
@@ -22,27 +19,23 @@ export function resolveCanvasRelationalTreeExistingJoinDraft(
   }>
 ): CanvasRelationalTreeExistingJoinDraft | null {
   try {
-    const authority = readDvtTransformAuthoringAuthority(args.transformNode);
-    if (authority == null) return null;
-    const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
-    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
-    if (!inspection.ok) return null;
-    const connected = resolveCanvasDvtCompositionInputs({
-      targetNodeId: args.transformNode.id,
+    const metadata = createDvtTransformAuthoringMetadata(args.transformNode);
+    if (metadata.mode !== 'substrait' || metadata.shape === 'pilot') return null;
+    const tree = projectCanvasRelationalTree({
+      node: args.transformNode,
       nodes: args.nodes,
       edges: args.edges,
     });
-    const inputIds = inspection.projection.inputs.map((semantic) => {
-      const matches = connected.filter(
-        (input) =>
-          input.schema === semantic.schema &&
-          input.table === semantic.table &&
-          hasSameConnectedSourceRef(input.sourceRef, semantic.sourceRef)
-      );
-      return matches.length === 1 ? matches[0]!.nodeId : null;
-    });
+    if (!tree.ok) return null;
+    const inputIds = tree.projection.inputs
+      .filter((input) => input.state === 'participating')
+      .map((input) => input.sourceNodeId);
     if (inputIds.some((nodeId) => nodeId == null)) return null;
-    return { draft, inputIds: inputIds.filter((nodeId): nodeId is string => nodeId != null) };
+    return {
+      draft: { plan: metadata.plan, sidecar: metadata.sidecar },
+      operation: metadata.shape,
+      inputIds: [...new Set(inputIds.filter((nodeId): nodeId is string => nodeId != null))],
+    };
   } catch {
     return null;
   }

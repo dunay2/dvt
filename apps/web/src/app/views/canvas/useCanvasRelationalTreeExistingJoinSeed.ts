@@ -6,11 +6,14 @@ import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatal
 import { resolveCanvasRelationalTreeAuthoringCandidates } from './canvasRelationalTreeAuthoringModel';
 import { resolveCanvasRelationalTreeExistingJoinDraft } from './canvasRelationalTreeExistingJoinDraft';
 import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
+import { appendDvtSubstraitUnionAllInput } from './canvasDvtSubstraitSetComposition';
 
 export type CanvasRelationalTreeJoinSeedHydration = Readonly<{
   draft: DvtSubstraitInnerJoinDraft;
   inputIds: readonly string[];
   appendInputId: string | null;
+  operation: CanvasRelationalOperation;
 }>;
 
 export function useCanvasRelationalTreeExistingJoinSeed(
@@ -37,13 +40,14 @@ export function useCanvasRelationalTreeExistingJoinSeed(
 
   const hydrateExistingJoin = useCallback(
     (requestedInputId?: string): boolean => {
-      if (seed == null) return false;
+      if (seed == null || (requestedInputId != null && seed.operation === 'projection'))
+        return false;
       setBaselineDraft(seed.draft);
       const appendInputId =
         requestedInputId == null
           ? null
           : (resolveCanvasRelationalTreeAuthoringCandidates({
-              operation: 'inner_join',
+              operation: seed.operation,
               inputs,
               selectedInputIds: seed.inputIds,
               joinDraft: seed.draft,
@@ -51,7 +55,19 @@ export function useCanvasRelationalTreeExistingJoinSeed(
               nodes,
               edges,
             }).find((item) => item.nodeId === requestedInputId && item.selectable)?.nodeId ?? null);
-      onHydrate({ ...seed, appendInputId });
+      const input = inputs.find((candidate) => candidate.nodeId === appendInputId);
+      if (seed.operation === 'union_all' && input != null) {
+        const draft = appendDvtSubstraitUnionAllInput(seed.draft, {
+          ...input,
+          fields: input.fields.map((field) => ({ name: field.name, type: 'string' })),
+        });
+        onHydrate({
+          ...seed,
+          draft,
+          inputIds: draft === seed.draft ? seed.inputIds : [...seed.inputIds, input.nodeId],
+          appendInputId: null,
+        });
+      } else onHydrate({ ...seed, appendInputId });
       return true;
     },
     [edges, inputs, nodes, onHydrate, seed, targetNodeId]

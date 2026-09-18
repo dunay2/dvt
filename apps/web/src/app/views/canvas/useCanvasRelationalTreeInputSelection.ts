@@ -3,6 +3,8 @@ import { useCallback } from 'react';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import type { CanvasRelationalTreeAuthoringCandidate } from './canvasRelationalTreeAuthoringModel';
 import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
+import { appendDvtSubstraitUnionAllInput } from './canvasDvtSubstraitSetComposition';
 
 export function useCanvasRelationalTreeInputSelection(
   args: Readonly<{
@@ -18,7 +20,7 @@ export function useCanvasRelationalTreeInputSelection(
     setJoinDraft: (draft: DvtSubstraitInnerJoinDraft | null) => void;
     setAppendInputId: (nodeId: string | null) => void;
     appendOperand: (nodeId: string) => void;
-    inputs: readonly Readonly<{ nodeId: string }>[];
+    inputs: readonly CanvasDvtCompositionInput[];
     placeOperand: (nodeId: string, position: 'primary' | 'secondary') => void;
     setOperation: (operation: CanvasRelationalOperation | null) => void;
   }>
@@ -35,8 +37,17 @@ export function useCanvasRelationalTreeInputSelection(
         return;
       }
       if (!args.candidates.some((item) => item.nodeId === nodeId && item.selectable)) return;
-      if (args.operation === 'union_all') args.appendOperand(nodeId);
-      else if (args.joinDraft != null) args.setAppendInputId(nodeId);
+      if (args.operation === 'union_all') {
+        const input = args.inputs.find((candidate) => candidate.nodeId === nodeId);
+        if (input == null || args.joinDraft == null) return;
+        const next = appendDvtSubstraitUnionAllInput(args.joinDraft, {
+          ...input,
+          fields: input.fields.map((field) => ({ name: field.name, type: 'string' })),
+        });
+        if (next === args.joinDraft) return;
+        args.setJoinDraft(next);
+        args.appendOperand(nodeId);
+      } else if (args.joinDraft != null) args.setAppendInputId(nodeId);
     },
     [args]
   );

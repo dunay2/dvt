@@ -1,6 +1,7 @@
 /** Owned concern: keep admitted operation tools visible without another editing surface. */
 import { ChevronDown, Shapes } from 'lucide-react';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import type {
   CanvasRelationalOperation,
   CanvasRelationalOperationChoice,
@@ -27,6 +28,7 @@ export function CanvasRelationalTreeOperationShelf({
   operation,
   selectedInputCount,
   onSelectOperation,
+  children,
 }: Readonly<{
   choices: readonly CanvasRelationalOperationChoice[];
   copy: CanvasRelationalTreeWorkbenchCopy;
@@ -34,6 +36,7 @@ export function CanvasRelationalTreeOperationShelf({
   operation: CanvasRelationalOperation | null;
   selectedInputCount: number;
   onSelectOperation: (operation: CanvasRelationalOperation) => void;
+  children?: ReactNode;
 }>): JSX.Element {
   const [expanded, setExpanded] = useState(true);
   const [replacement, setReplacement] = useState<CanvasRelationalOperation | null>(null);
@@ -82,6 +85,7 @@ export function CanvasRelationalTreeOperationShelf({
             {copy.relationalTreeSelectNextSourceMessage}
           </span>
         ) : null}
+        {expanded ? children : null}
       </div>
       <AlertDialog
         open={replacement != null}
