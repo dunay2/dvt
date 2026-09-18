@@ -69,7 +69,9 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
         >
           {model.session.removal.error === 'dependent-condition'
             ? localCopy.removalDependency
-            : localCopy.removalUnavailable}
+            : model.session.removal.error === 'unsupported-projection-type'
+              ? localCopy.removalUnsupportedType
+              : localCopy.removalUnavailable}
           <button
             type="button"
             aria-label={copy.inspectorDvtRelationalCancel}

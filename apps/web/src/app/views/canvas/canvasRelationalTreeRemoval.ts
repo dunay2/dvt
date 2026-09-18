@@ -5,6 +5,7 @@ import {
   type DvtSubstraitInnerJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import { createDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
+import { createProjectionType } from './canvasDvtSubstraitProjectionStructure';
 
 export type CanvasRelationalRemovalResult =
   | Readonly<{
@@ -13,7 +14,10 @@ export type CanvasRelationalRemovalResult =
       operation: 'inner_join' | 'projection';
       retained: readonly number[];
     }>
-  | Readonly<{ ok: false; reason: 'unavailable' | 'dependent-condition' }>;
+  | Readonly<{
+      ok: false;
+      reason: 'unavailable' | 'dependent-condition' | 'unsupported-projection-type';
+    }>;
 
 export function removeCanvasRelationalTreeNode(
   args: Readonly<{
@@ -50,6 +54,10 @@ export function removeCanvasRelationalTreeNode(
   const inputIndex = retained[0];
   const input = inputIndex == null ? undefined : projection.inputs[inputIndex];
   if (input == null) return { ok: false, reason: 'unavailable' };
+  if (
+    input.fields.some((field) => createProjectionType(field.dataType).kind.case !== field.dataType)
+  )
+    return { ok: false, reason: 'unsupported-projection-type' };
   const draft = createDvtSubstraitProjectionDraft({
     source: {
       ...input,

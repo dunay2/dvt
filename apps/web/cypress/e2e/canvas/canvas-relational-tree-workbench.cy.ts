@@ -215,6 +215,10 @@ describe('Canvas relational-tree Workbench', () => {
     cy.get('[data-slot="dvt-select-operation-union-all"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').rightclick();
     cy.get('[data-slot="canvas-relational-remove-left"]').should('be.visible');
+    cy.get('[data-slot="canvas-relational-remove-left"]')
+      .should('have.css', 'font-family')
+      .and('contain', 'Segoe UI');
+    cy.get('[data-slot="canvas-relational-remove-left"]').should('have.css', 'font-size', '14px');
     cy.screenshot('semantic-editor-card-context-menu');
     cy.get('[data-slot="canvas-relational-remove-left"]').click();
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should('not.exist');

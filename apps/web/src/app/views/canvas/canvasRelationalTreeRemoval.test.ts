@@ -7,6 +7,7 @@ import {
   type DvtSubstraitInnerJoinDraft,
   type DvtSubstraitNInputJoinProjection,
   type DvtSubstraitJoinSource,
+  type DvtSubstraitJoinDataType,
 } from './canvasDvtSubstraitJoinComposition';
 import { inspectDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { removeCanvasRelationalTreeNode } from './canvasRelationalTreeRemoval';
@@ -24,7 +25,7 @@ function source(table: string): DvtSubstraitJoinSource {
   return { nodeId: table, schema: 'public', table, sourceRef };
 }
 
-function fixture(): {
+function fixture(valueType?: DvtSubstraitJoinDataType): {
   draft: DvtSubstraitInnerJoinDraft;
   projection: DvtSubstraitNInputJoinProjection;
 } {
@@ -37,13 +38,13 @@ function fixture(): {
   if (!inspection.ok) throw new Error('Invalid fixture');
   const draft = appendDvtSubstraitInnerJoinInput(binary, {
     source: source('tickets'),
-    fields: ['customer_id'],
-    fieldTypes: ['string'],
+    fields: valueType == null ? ['customer_id'] : ['customer_id', 'value'],
+    fieldTypes: valueType == null ? ['string'] : ['string', valueType],
     predicate: {
       leftSourceFieldId: inspection.projection.inputs[0]!.fields[0]!.fieldId,
       rightFieldName: 'customer_id',
     },
-    selectedFields: ['customer_id'],
+    selectedFields: valueType == null ? ['customer_id'] : ['customer_id', 'value'],
   });
   const result = inspectDvtSubstraitNInputJoinDraft(draft);
   if (!result.ok) throw new Error('Invalid fixture');
@@ -131,6 +132,41 @@ describe('Contextual relational card removal', () => {
       })
     ).toEqual({ ok: false, reason: 'dependent-condition' });
     expect(JSON.stringify(draft)).toBe(snapshot);
+  });
+
+  it.each(['bool', 'fp64', 'precisionTimestampTz'] as const)(
+    'rejects a single-source projection that would erase its %s type',
+    (valueType) => {
+      const { draft, projection } = fixture(valueType);
+      const snapshot = JSON.stringify(draft);
+      expect(
+        removeCanvasRelationalTreeNode({
+          draft,
+          relationId: projection.joinRelations[1]!.relationId,
+          keep: 'right',
+          targetNodeId: 'model',
+        })
+      ).toEqual({ ok: false, reason: 'unsupported-projection-type' });
+      expect(JSON.stringify(draft)).toBe(snapshot);
+    }
+  );
+
+  it('preserves an admitted i64 field when the retained branch becomes a projection', () => {
+    const { draft, projection } = fixture('i64');
+    const result = removeCanvasRelationalTreeNode({
+      draft,
+      relationId: projection.joinRelations[1]!.relationId,
+      keep: 'right',
+      targetNodeId: 'model',
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const next = inspectDvtSubstraitProjectionDraft(result.draft);
+    expect(next.ok).toBe(true);
+    if (!next.ok) return;
+    expect(next.projection.source.fields.find((field) => field.name === 'value')?.dataType).toBe(
+      'bigint'
+    );
   });
 
   it('rejects stale relation IDs and JOIN removal without a retained branch', () => {
