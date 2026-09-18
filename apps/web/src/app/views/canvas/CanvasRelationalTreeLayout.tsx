@@ -80,7 +80,7 @@ export function CanvasRelationalTreeLayout({
   semanticContext?: CanvasRelationalSemanticContext;
   zoom?: number;
 }>): JSX.Element {
-  const detailed = zoom >= CANVAS_RELATIONAL_SEMANTIC_ZOOM;
+  const detailed = Math.round(zoom * 100) >= CANVAS_RELATIONAL_SEMANTIC_ZOOM * 100;
   const detail = useMemo(
     () => projectCanvasRelationalTreeSemanticZoom(root, detailed ? semanticContext : undefined),
     [root, detailed, semanticContext?.transformNode, semanticContext?.draft]

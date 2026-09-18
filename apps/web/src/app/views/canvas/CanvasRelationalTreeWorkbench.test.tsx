@@ -228,6 +228,22 @@ describe('Canvas relational-tree Workbench', () => {
     });
     expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).toBeNull();
     const tree = container.querySelector('[data-slot="canvas-relational-tree"]');
+    const viewport = container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!;
+    act(() => {
+      viewport.dispatchEvent(
+        new WheelEvent('wheel', { deltaY: -120, bubbles: true, cancelable: true })
+      );
+    });
+    expect(container.querySelector('[data-slot="canvas-relational-tree-zoom"]')?.textContent).toBe(
+      '120%'
+    );
+    expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).not.toBeNull();
+    act(() => {
+      viewport.dispatchEvent(
+        new WheelEvent('wheel', { deltaY: 120, bubbles: true, cancelable: true })
+      );
+    });
+    expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).toBeNull();
     const toggle = container.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-relational-tree-sources-toggle"]'
     );
