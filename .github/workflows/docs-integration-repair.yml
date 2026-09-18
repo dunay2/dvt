@@ -51,8 +51,8 @@ jobs:
           names=sorted(Path(v).name for v in removed if v.startswith('docs/planning/closeouts/'))
           assert len(names)==32
           text=text.replace(needle,needle+''.join("    '"+v+"',\n" for v in names))
-          text+='\n// PR conversations and one-off command logs belong in Git/GitHub, not live files.\ntest(\'retired PR drafts and historical intake have no files or live consumers\', () => {\n  const retiredDirectories = [\'.gh-comments\', \'.git.bfg-report\'];\n  const retiredFiles = [\n    \'.gh-comments/normalize_issues_v2.ps1\',\n    \'.gh-comments/pr-117.md\',\n    \'.gh-comments/pr-221.md\',\n    \'.gh-comments/pr-226-glossary-and-postgres-hardening-2026-02-19.md\',\n    \'.gh-comments/pr-9.md\',\n    \'.gh-comments/pr-closure-notes-14-15.md\',\n    \'.gh-comments/pr-postgres-hardening-p0-p2-2026-02-19.md\',\n    \'.gh-comments/pr-roadmap-status-refresh-2026-02-15.md\',\n    \'.git.bfg-report/2026-02-19/14-48-28/cache-stats.txt\',\n    \'.git.bfg-report/2026-02-19/14-48-28/object-id-map.old-new.txt\',\n    \'buzon/20260524-codex-fowler-planning-review-canon.md\',\n    \'buzon/dvt_front_component_inventory_app_reflection_study_20260604.md\',\n    \'docs/planning/status/20260402-command-logging-pane.md\',\n  ];\n  for (const path of [...retiredDirectories, ...retiredFiles]) {\n    assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, path);\n  }\n  const retiredNames = retiredFiles.map((path) => path.split(\'/\').at(-1));\n  const paths = execFileSync(\'git\', [\'ls-files\', \'-z\'], { encoding: \'utf8\' })\n    .split(\'\\0\')\n    .filter(Boolean);\n  for (const path of paths) {\n    if (path === \'tools/ci/docs-disposition-canon.test.mjs\') continue;\n    if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;\n    const current = readRepoFile(path).replace(\n      /https:\\/\\/github\\.com\\/dunay2\\/dvt\\/(?:blob|tree)\\/[a-f0-9]{40}\\/[^\\s)\\]<>"`]+/gu,\n      \'\'\n    );\n    for (const name of retiredNames) {\n      assert.equal(current.includes(name), false, `retired journal reference: ${path}: ${name}`);\n    }\n    for (const directory of retiredDirectories) {\n      assert.equal(\n        current.includes(`${directory}/`),\n        false,\n        `retired metadata ownership or reference: ${path}: ${directory}`\n      );\n    }\n  }\n  assertFilesExist([\n    \'docs/planning/state/github-mvp-issue-workflow.md\',\n    \'docs/planning/proposals/mandatory/frontend-and-ux/frontend-component-reflection-inventory-plan-20260604.md\',\n    \'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md\',\n  ]);\n});\n'
-          assert sha(text.encode())=='880f77d3169bb1cace581e830626a89186991b1b8aedf8509bdfb458dddfd830'
+          text+='\n// PR conversations and one-off command logs belong in Git/GitHub, not live files.\ntest(\'retired PR drafts and historical intake have no files or live consumers\', () => {\n  const retiredDirectories = [\'.gh-comments\', \'.git.bfg-report\'];\n  const retiredFiles = [\n    \'.gh-comments/normalize_issues_v2.ps1\',\n    \'.gh-comments/pr-117.md\',\n    \'.gh-comments/pr-221.md\',\n    \'.gh-comments/pr-226-glossary-and-postgres-hardening-2026-02-19.md\',\n    \'.gh-comments/pr-9.md\',\n    \'.gh-comments/pr-closure-notes-14-15.md\',\n    \'.gh-comments/pr-postgres-hardening-p0-p2-2026-02-19.md\',\n    \'.gh-comments/pr-roadmap-status-refresh-2026-02-15.md\',\n    \'.git.bfg-report/2026-02-19/14-48-28/cache-stats.txt\',\n    \'.git.bfg-report/2026-02-19/14-48-28/object-id-map.old-new.txt\',\n    \'buzon/20260524-codex-fowler-planning-review-canon.md\',\n    \'buzon/dvt_front_component_inventory_app_reflection_study_20260604.md\',\n    \'docs/planning/status/20260402-command-logging-pane.md\',\n  ];\n  for (const path of [...retiredDirectories, ...retiredFiles]) {\n    assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, path);\n  }\n  const retiredNames = retiredFiles.map((path) => path.split(\'/\').at(-1));\n  const paths = execFileSync(\'git\', [\'ls-files\', \'-z\'], { encoding: \'utf8\' })\n    .split(\'\\0\')\n    .filter(Boolean);\n  for (const path of paths) {\n    if (path === \'tools/ci/docs-disposition-canon.test.mjs\') continue;\n    if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;\n    let current = readRepoFile(path).replace(\n      /https:\\/\\/github\\.com\\/dunay2\\/dvt\\/(?:blob|tree)\\/[a-f0-9]{40}\\/[^\\s)\\]<>"`]+/gu,\n      \'\'\n    );\n    if (path === requiredFiles[0]) {\n      // The existing guard permits removal of fully absent forbidden subtrees.\n      // Exempt only this exact prohibition, never the owning document as a whole.\n      const prohibition =\n        \'forbiddenImplementationSurfaces:\\n  - .gh-comments/**\\n  - .git.bfg-report/**\\n\';\n      assert.equal(current.split(prohibition).length, 2, \'retired roots must remain forbidden\');\n      current = current.replace(prohibition, \'forbiddenImplementationSurfaces:\\n\');\n    }\n    for (const name of retiredNames) {\n      assert.equal(current.includes(name), false, `retired journal reference: ${path}: ${name}`);\n    }\n    for (const directory of retiredDirectories) {\n      assert.equal(\n        current.includes(`${directory}/`),\n        false,\n        `retired metadata ownership or reference: ${path}: ${directory}`\n      );\n    }\n  }\n  assertFilesExist([\n    \'docs/planning/state/github-mvp-issue-workflow.md\',\n    \'docs/planning/proposals/mandatory/frontend-and-ux/frontend-component-reflection-inventory-plan-20260604.md\',\n    \'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md\',\n  ]);\n});\n'
+          assert sha(text.encode())=='1ce61a7c0ba0b4069628c034b85cd7139d4f8cf9e2939cd6d23a2bd1d6adcc6e'
           p.write_text(text)
           p=Path('docs/planning/status/system-governance-unit-index.units.yaml');before=p.read_bytes()
           assert sha(before)=='682375ad1e2c3cf95c5fcac69ae85c10c05d067ee4683ba57e56932a2b341143'
@@ -62,17 +62,23 @@ jobs:
               text=text.replace(line,'')
           assert sha(text.encode())=='098eeaaf7b3947b6fa519282b8026e6ec752ac744c17eeb501fc7fe8d1af2875'
           p.write_text(text)
+          p=Path('docs/planning/proposals/mandatory/governance-and-docs/docs-disposition-canon-plan-20260524.md');before=p.read_bytes()
+          assert sha(before)=='2d061384bf1d32307cc99b8202c008846b52860615cb1ecc3fbcb41b70cccbbf'
+          text=before.decode();assert text.count('forbiddenImplementationSurfaces:\n')==1
+          text=text.replace('forbiddenImplementationSurfaces:\n','forbiddenImplementationSurfaces:\n  - .gh-comments/**\n  - .git.bfg-report/**\n')
+          assert sha(text.encode())=='a86a25bbbe80b2f3490c3b70cd1130de06342347e11feb76352a57f8acdfd499'
+          p.write_text(text)
           for name in removed:
               p=Path(name);p.unlink();parent=p.parent
               while parent!=Path('.') and parent.exists() and not any(parent.iterdir()):
                   parent.rmdir();parent=parent.parent
           assert set(git('diff','--name-only','--diff-filter=D').decode().splitlines())==set(removed)
-          assert set(git('diff','--name-only','--diff-filter=M').decode().splitlines())=={'tools/ci/docs-disposition-canon.test.mjs','docs/planning/status/system-governance-unit-index.units.yaml'}
+          assert set(git('diff','--name-only','--diff-filter=M').decode().splitlines())=={'tools/ci/docs-disposition-canon.test.mjs','docs/planning/status/system-governance-unit-index.units.yaml','docs/planning/proposals/mandatory/governance-and-docs/docs-disposition-canon-plan-20260524.md'}
           assert not git('ls-files','--others','--exclude-standard').strip()
           git('config','user.name','DVT documentation retirement')
           git('config','user.email','34416258+dunay2@users.noreply.github.com')
           git('add','-A');git('diff','--cached','--check')
-          print('Exact 45 deletions and two source edits verified')
+          print('Exact 45 deletions and three source edits verified')
           PY
       - name: Setup canonical toolchain with enabled hooks
         uses: ./.github/actions/setup-node-pnpm
@@ -120,7 +126,7 @@ jobs:
               return r.stdout
           assert set(git('diff','--name-only','--diff-filter=D',base,'HEAD').splitlines())==set(removed)
           assert not git('diff','--name-only','--diff-filter=A',base,'HEAD')
-          allowed=set(removed)|{'tools/ci/docs-disposition-canon.test.mjs','docs/planning/status/system-governance-unit-index.units.yaml','docs/.manifest.json'}
+          allowed=set(removed)|{'tools/ci/docs-disposition-canon.test.mjs','docs/planning/status/system-governance-unit-index.units.yaml','docs/.manifest.json','docs/planning/proposals/mandatory/governance-and-docs/docs-disposition-canon-plan-20260524.md'}
           assert set(git('diff','--name-only',base,'HEAD').splitlines())<=allowed
           assert not git('diff','--name-only',base,'HEAD','--','apps','packages','specs','docs/adr','docs/evidence','docs/risk-register','.github','package.json','pnpm-lock.yaml')
           arc=run('arc',['node','tools/ci/arc-check.mjs']);start=re.search(r'^\{',arc,re.MULTILINE);assert start
@@ -144,8 +150,13 @@ jobs:
               p.write_bytes(original+('\n'+text+'\n').encode())
               try:run('consumer-'+name,cmd,code)
               finally:p.write_bytes(original)
+          p=Path('docs/planning/proposals/mandatory/governance-and-docs/docs-disposition-canon-plan-20260524.md');original=p.read_bytes()
+          for name,mutated in [('missing-prohibition',original.replace(b'  - .gh-comments/**\n',b'')),('live-owner-link',original+b'\n[Stale](../../../../../../.gh-comments/pr-117.md)\n')]:
+              p.write_bytes(mutated)
+              try:run(name,cmd,1)
+              finally:p.write_bytes(original)
           commands=[
-           ['node','--test','scripts/documentation-publication.test.cjs','scripts/planning-db-surface-inventory-check.test.cjs','tools/ci/docs-disposition-canon.test.mjs','tools/ci/startup-card-canon.test.mjs','tools/ci/planner-package-governance.test.mjs','tools/ci/architecture-doc-reconciliation-canon.test.mjs'],
+           ['node','--test','scripts/check-feature-mechanization.test.cjs','scripts/documentation-publication.test.cjs','scripts/planning-db-surface-inventory-check.test.cjs','tools/ci/docs-disposition-canon.test.mjs','tools/ci/startup-card-canon.test.mjs','tools/ci/planner-package-governance.test.mjs','tools/ci/architecture-doc-reconciliation-canon.test.mjs'],
            ['pnpm','docs:sync:check'],['pnpm','docs:gov:manifest:check'],['pnpm','ci:docs'],['pnpm','verify:prepush'],
            ['pnpm','pr:validate-title','docs(docs): Retire copied PR drafts and completed documentation journals'],['git','diff','--exit-code','HEAD']]
           for i,c in enumerate(commands):run('validation-'+str(i+1),c)
