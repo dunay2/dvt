@@ -14,8 +14,10 @@ import {
   type DvtSubstraitTransformAuthoringMetadata,
   type DvtUninitializedTransformAuthoringMetadata,
 } from './canvasDvtAuthoringModel';
-import { resolveDvtSubstraitJoinAppendCandidates } from './canvasDvtSubstraitJoinComposition';
+import { resolveDvtSubstraitJoinAppendCandidates } from './canvasDvtSubstraitJoinSourceResolution';
 import { DvtSinkAuthoringSection } from './DvtSinkAuthoringSection';
+import { DvtTransformResultTargetFields } from './DvtTransformResultTargetFields';
+import { resolveDvtResultTargetConnection } from './canvasDvtResultTargetConnection';
 import { DvtSourceAuthoringSection } from './DvtSourceAuthoringSection';
 import { DvtRelationFilterAuthoringSection } from './DvtRelationFilterAuthoringSection';
 import { DvtSubstraitCompositionStart } from './DvtSubstraitCompositionStart';
@@ -25,6 +27,7 @@ import { DvtSubstraitTransformStart } from './DvtSubstraitTransformStart';
 import { DvtSubstraitUnionAllAuthoringSection } from './DvtSubstraitUnionAllAuthoringSection';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import { canvasViewCopy } from './copy';
+import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 
 type DvtAuthoringFieldsProps = Readonly<{
   node: CanonicalNode;
@@ -34,6 +37,8 @@ type DvtAuthoringFieldsProps = Readonly<{
   draft: ReturnType<typeof createCanvasInspectorNodeDraft>;
   errors: ReturnType<typeof validateCanvasInspectorNodeDraft>;
   section?: 'all' | 'general' | 'columns' | 'code';
+  relationalPredicateSeed?: CanvasRelationalPredicateSeed;
+  onClearRelationalPredicateSeed?: () => void;
   onChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
 }>;
 
@@ -113,6 +118,8 @@ export function DvtAuthoringFields({
   draft,
   errors,
   section = 'all',
+  relationalPredicateSeed,
+  onClearRelationalPredicateSeed,
   onChange,
 }: DvtAuthoringFieldsProps): JSX.Element | null {
   if (!draft.dvt) return null;
@@ -131,13 +138,30 @@ export function DvtAuthoringFields({
   }
 
   if (draft.dvt.kind === 'transform') {
+    const predicateSeed =
+      relationalPredicateSeed?.targetNodeId === node.id ? relationalPredicateSeed : undefined;
     const materializationField = (
-      <DvtTransformMaterializationField
-        disabled={disabled}
-        draft={draft.dvt}
-        errors={errors.dvt}
-        onChange={onChange}
-      />
+      <div className="space-y-4">
+        <DvtTransformMaterializationField
+          disabled={disabled}
+          draft={draft.dvt}
+          errors={errors.dvt}
+          onChange={onChange}
+        />
+        <DvtTransformResultTargetFields
+          target={draft.dvt.resultTarget}
+          connection={resolveDvtResultTargetConnection({ node, nodes, edges })}
+          disabled={disabled}
+          errors={errors.dvt}
+          onChange={(resultTarget) =>
+            onChange((current) =>
+              current.dvt?.kind === 'transform'
+                ? { ...current, dvt: { ...current.dvt, resultTarget } }
+                : current
+            )
+          }
+        />
+      </div>
     );
     if (section === 'general') return materializationField;
 
@@ -149,6 +173,8 @@ export function DvtAuthoringFields({
           node={node}
           nodes={nodes}
           edges={edges}
+          predicateSeed={predicateSeed}
+          onClearPredicateSeed={onClearRelationalPredicateSeed}
           onChange={onChange}
         />
       );
@@ -157,6 +183,15 @@ export function DvtAuthoringFields({
     } else if (draft.dvt.shape === 'projection') {
       semanticFields = (
         <div className="space-y-4">
+          <DvtSubstraitCompositionStart
+            disabled={disabled}
+            node={node}
+            nodes={nodes}
+            edges={edges}
+            predicateSeed={predicateSeed}
+            onClearPredicateSeed={onClearRelationalPredicateSeed}
+            onChange={onChange}
+          />
           <DvtRelationFilterAuthoringSection
             disabled={disabled}
             draft={draft.dvt}
@@ -170,13 +205,6 @@ export function DvtAuthoringFields({
                   : current
               )
             }
-          />
-          <DvtSubstraitCompositionStart
-            disabled={disabled}
-            node={node}
-            nodes={nodes}
-            edges={edges}
-            onChange={onChange}
           />
         </div>
       );

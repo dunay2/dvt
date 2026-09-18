@@ -69,9 +69,10 @@ stateDiagram-v2
 ## Semantic Fitness Function
 
 `tools/ci/docs-disposition-canon.test.mjs` validates that the canon plan,
-component guide, user stories, documentation-governance domain, inventory
-status note, and canonical Fowler mechanization tokens exist together and name
-the same semantic rails.
+component guide, user stories, documentation-governance domain, and canonical
+Fowler mechanization tokens name the same semantic rails. It also rejects the
+retired May status snapshots and their former Git-owned catalog entry, while
+requiring the existing DB-owned resolution overlay and command/query rails.
 
 It validates disposition ownership and DB-first closure rather than only
 checking generated index freshness.
@@ -80,7 +81,7 @@ checking generated index freshness.
 
 ```mermaid
 flowchart TD
-  Inventory["Docs task disposition inventory"]
+  Finding["Documentation disposition finding"]
   Queue["Planning DB docs-disposition queue"]
   Canon["Docs disposition canon"]
   Classifier["Closure classifier"]
@@ -88,7 +89,7 @@ flowchart TD
   FollowUps["Focused follow-up tasks"]
   Guard["Semantic CI guard"]
 
-  Inventory --> Queue
+  Finding --> Queue
   Queue --> Canon
   Canon --> Classifier
   Classifier --> Actions

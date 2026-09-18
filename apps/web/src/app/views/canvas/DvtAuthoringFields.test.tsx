@@ -25,6 +25,7 @@ import {
   encodeDvtSubstraitProjectionDocument,
 } from './canvasDvtSubstraitProjection';
 import { DvtAuthoringFields } from './DvtAuthoringFields';
+import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 
 function buildDvtNode(
   kind: 'dvt:source' | 'dvt:transform' | 'dvt:sink',
@@ -102,6 +103,8 @@ function DvtAuthoringFieldsHarness({
   section,
   warehouseSourceImport,
   externalConnectionId,
+  relationalPredicateSeed,
+  onClearRelationalPredicateSeed,
 }: Readonly<{
   node: CanonicalNode;
   nodes?: readonly CanonicalNode[];
@@ -109,6 +112,8 @@ function DvtAuthoringFieldsHarness({
   section?: 'all' | 'general' | 'columns' | 'code';
   warehouseSourceImport?: IWarehouseSourceImportPort;
   externalConnectionId?: string;
+  relationalPredicateSeed?: CanvasRelationalPredicateSeed;
+  onClearRelationalPredicateSeed?: () => void;
 }>): JSX.Element {
   const [draft, setDraft] = useState(() => createCanvasInspectorNodeDraft(node));
   const errors = validateCanvasInspectorNodeDraft(draft);
@@ -148,6 +153,8 @@ function DvtAuthoringFieldsHarness({
         draft={draft}
         errors={errors}
         section={section}
+        relationalPredicateSeed={relationalPredicateSeed}
+        onClearRelationalPredicateSeed={onClearRelationalPredicateSeed}
         onChange={setDraft}
       />
       <output data-slot="dvt-draft-json">{JSON.stringify(draft.dvt)}</output>
@@ -198,7 +205,9 @@ describe('DvtAuthoringFields', () => {
     externalConnectionId?: string,
     nodes?: readonly CanonicalNode[],
     edges?: readonly CanonicalEdge[],
-    section?: 'all' | 'general' | 'columns' | 'code'
+    section?: 'all' | 'general' | 'columns' | 'code',
+    relationalPredicateSeed?: CanvasRelationalPredicateSeed,
+    onClearRelationalPredicateSeed?: () => void
   ): void {
     act(() => {
       root.render(
@@ -209,6 +218,8 @@ describe('DvtAuthoringFields', () => {
           section={section}
           warehouseSourceImport={warehouseSourceImport}
           externalConnectionId={externalConnectionId}
+          relationalPredicateSeed={relationalPredicateSeed}
+          onClearRelationalPredicateSeed={onClearRelationalPredicateSeed}
         />
       );
     });
@@ -218,8 +229,97 @@ describe('DvtAuthoringFields', () => {
     return container.querySelector('[data-slot="dvt-draft-json"]')?.textContent ?? '';
   }
 
+  it('applies an explicit JOIN from a cross-input field relation proposal', () => {
+    const orders = buildJoinWarehouseSourceNode({
+      id: 'source-orders',
+      table: 'orders',
+      columns: ['id', 'customer_id'],
+    });
+    const customers = buildJoinWarehouseSourceNode({
+      id: 'source-customers',
+      table: 'customers',
+      columns: ['id', 'customer_id'],
+    });
+    const transform = buildDvtNode('dvt:transform');
+    const onClearRelationalPredicateSeed = vi.fn();
+    renderFields(
+      transform,
+      undefined,
+      undefined,
+      [orders, customers, transform],
+      [
+        {
+          id: 'orders-transform',
+          sourceId: orders.id,
+          targetId: transform.id,
+          relation: 'lineage',
+        },
+        {
+          id: 'customers-transform',
+          sourceId: customers.id,
+          targetId: transform.id,
+          relation: 'lineage',
+        },
+      ],
+      'code',
+      {
+        targetNodeId: transform.id,
+        left: {
+          nodeId: orders.id,
+          fieldId: 'orders-customer-id',
+          fieldName: 'customer_id',
+          dataType: 'string',
+        },
+        right: {
+          nodeId: customers.id,
+          fieldId: 'customers-customer-id',
+          fieldName: 'customer_id',
+          dataType: 'string',
+        },
+        candidateOperator: 'equal',
+      },
+      onClearRelationalPredicateSeed
+    );
+
+    expect(
+      container.querySelector('[data-slot="dvt-relational-predicate-proposal"]')
+    ).not.toBeNull();
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')!
+      );
+    });
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-configured-inner-join"]')!
+      );
+    });
+
+    expect(draftJson()).toContain('"shape":"inner_join"');
+    expect(onClearRelationalPredicateSeed).toHaveBeenCalledOnce();
+  });
+
   function outputNameDraftsJson(): string {
     return container.querySelector('[data-slot="output-name-drafts"]')?.textContent ?? '';
+  }
+
+  function selectRelationalOperation(operation: 'inner-join' | 'union-all'): void {
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          `[data-slot="dvt-select-operation-${operation}"]`
+        )!
+      );
+    });
+  }
+
+  function applyInnerJoin(): void {
+    selectRelationalOperation('inner-join');
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-configured-inner-join"]')!
+      );
+    });
   }
 
   it('renders imported source target metadata and updates the source alias draft', () => {
@@ -345,12 +445,7 @@ describe('DvtAuthoringFields', () => {
     ];
 
     renderFields(transform, undefined, undefined, nodes, edges, 'code');
-    const entry = container.querySelector<HTMLButtonElement>(
-      '[data-slot="dvt-start-configured-inner-join"]'
-    );
-    act(() => {
-      fireEvent.click(entry!);
-    });
+    applyInnerJoin();
 
     const selector =
       '[data-slot="dvt-substrait-inner-join-output-name"], [data-slot="dvt-substrait-n-input-output-name"]';
@@ -442,11 +537,7 @@ describe('DvtAuthoringFields', () => {
     ];
 
     renderFields(transform, undefined, undefined, nodes, edges, 'code');
-    act(() => {
-      fireEvent.click(
-        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-configured-inner-join"]')!
-      );
-    });
+    applyInnerJoin();
 
     const outputs = [
       ...container.querySelectorAll<HTMLInputElement>(
@@ -522,11 +613,18 @@ describe('DvtAuthoringFields', () => {
 
     renderFields(transform, undefined, undefined, [orders, audits, transform], edges, 'columns');
 
+    selectRelationalOperation('inner-join');
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[aria-label="Editar condición"]')!
+      );
+    });
     const leftField = container.querySelector<HTMLSelectElement>(
-      '[data-slot="dvt-composition-left-field"]'
+      '[aria-label="Campo del operando izquierdo"]'
     );
     const rightField = container.querySelector<HTMLSelectElement>(
-      '[data-slot="dvt-composition-right-field"]'
+      '[aria-label="Campo del operando derecho"]'
     );
     const startJoin = container.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-start-configured-inner-join"]'
@@ -535,13 +633,27 @@ describe('DvtAuthoringFields', () => {
     expect(rightField).not.toBeNull();
     expect(startJoin).not.toBeNull();
 
+    const leftValue = Array.from(leftField!.options).find((option) =>
+      option.textContent?.endsWith('.customer')
+    )?.value;
+    const rightValue = Array.from(rightField!.options).find((option) =>
+      option.textContent?.endsWith('.principal_id')
+    )?.value;
+    expect(leftValue).toBeTruthy();
+    expect(rightValue).toBeTruthy();
     act(() => {
-      fireEvent.change(leftField!, {
-        target: { value: `${orders.id}\u001fcustomer` },
-      });
-      fireEvent.change(rightField!, {
-        target: { value: `${audits.id}\u001fprincipal_id` },
-      });
+      fireEvent.change(leftField!, { target: { value: leftValue } });
+    });
+    act(() => {
+      fireEvent.change(rightField!, { target: { value: rightValue } });
+    });
+    act(() => {
+      const save = Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(
+        (button) => button.textContent?.trim() === 'Guardar condición'
+      );
+      fireEvent.click(save!);
+    });
+    act(() => {
       fireEvent.click(startJoin!);
     });
 
@@ -604,11 +716,7 @@ describe('DvtAuthoringFields', () => {
       initialEdges,
       'code'
     );
-    act(() => {
-      fireEvent.click(
-        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-configured-inner-join"]')!
-      );
-    });
+    applyInnerJoin();
 
     const allEdges: readonly CanonicalEdge[] = [
       ...initialEdges,
@@ -841,6 +949,11 @@ describe('DvtAuthoringFields', () => {
     renderFields(transform, undefined, undefined, [customers, orders, transform], edges, 'code');
 
     expect(container.querySelector('[data-slot="dvt-start-configured-inner-join"]')).toBeNull();
+    const choice = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-select-operation-inner-join"]'
+    );
+    expect(choice?.disabled).toBe(true);
+    expect(choice?.textContent).toContain('Target unavailable');
   });
 
   it('starts one typed Substrait UNION ALL from N compatible connected datasets', () => {
@@ -883,11 +996,13 @@ describe('DvtAuthoringFields', () => {
 
     renderFields(transform, undefined, undefined, [north, south, west, transform], edges, 'code');
 
+    selectRelationalOperation('union-all');
+
     const entry = container.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-start-connected-union-all"]'
     );
     expect(entry).not.toBeNull();
-    expect(container.querySelector('[data-slot="dvt-start-configured-inner-join"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="dvt-composition-left-input"]')).toBeNull();
 
     act(() => {
       fireEvent.click(entry!);

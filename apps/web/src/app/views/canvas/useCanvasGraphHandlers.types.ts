@@ -8,10 +8,12 @@ import type {
 } from '../../plugins/graph/graphNodeColumnContracts';
 import type { CanvasColumnLineageEdgeData } from './canvasColumnLineageProjection';
 import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
+import type { CanvasDraftSessionCommandRunner } from './useCanvasWorkspaceDraftSession';
 import type {
   CanvasAlgebraicCompositionIdentity,
   CanvasAlgebraicCompositionOperation,
 } from './canvasAlgebraicComposition';
+import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 
 import type {
   CanvasGraphInteractionEffects,
@@ -23,7 +25,8 @@ import type {
 export type UseCanvasGraphHandlersParams = CanvasGraphInteractionState &
   CanvasGraphInteractionEffects &
   Omit<CanvasGraphInteractionPolicy, 'gridSize' | 'canvasSnapToGrid'> &
-  Partial<Pick<CanvasGraphInteractionPolicy, 'gridSize' | 'canvasSnapToGrid'>>;
+  Partial<Pick<CanvasGraphInteractionPolicy, 'gridSize' | 'canvasSnapToGrid'>> &
+  Readonly<{ runDraftSessionCommand: CanvasDraftSessionCommandRunner }>;
 
 export type UseCanvasGraphHandlersResult = {
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
@@ -43,8 +46,12 @@ export type UseCanvasGraphHandlersResult = {
   handleApplyCanvasColumnFunction: (
     identity: GraphNodeColumnFunctionApplyIdentity
   ) => GraphNodeColumnFunctionApplyResult;
-  handleApplyCanvasStructuredField: (identity: GraphNodeStructuredFieldIdentity) => void;
-  handleAddCanvasCalculatedColumn: (identity: GraphNodeCalculatedColumnIdentity) => void;
+  handleApplyCanvasStructuredField: (
+    identity: GraphNodeStructuredFieldIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
+  handleAddCanvasCalculatedColumn: (
+    identity: GraphNodeCalculatedColumnIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
   handleToggleCanvasColumnOutput: (identity: {
     nodeId: string;
     columnId: string;
@@ -64,6 +71,8 @@ export type UseCanvasGraphHandlersResult = {
     columns: readonly Readonly<{ name: string; type: string }>[]
   ) => void;
   handleRemoveColumnMapping: (mapping: CanvasColumnLineageEdgeData) => void;
+  relationalPredicateSeed: CanvasRelationalPredicateSeed | null;
+  clearRelationalPredicateSeed: () => void;
   resolveCanvasAlgebraicCompositionOperations: (
     identity: CanvasAlgebraicCompositionIdentity
   ) => CanvasAlgebraicCompositionOperation[];

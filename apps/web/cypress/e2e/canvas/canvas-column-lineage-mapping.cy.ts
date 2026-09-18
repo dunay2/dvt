@@ -156,6 +156,71 @@ describe('Canvas column lineage mapping', () => {
     cy.contains('button', 'Convertir a SQL').should('not.exist');
   });
 
+  it('allows the last mapped output to be disabled after reducing the Source projection', () => {
+    cy.viewport(1920, 1080);
+    stubColumnMappingCanvas();
+    visitColumnMappingCanvas('en');
+
+    toggleColumns('source-orders');
+    toggleColumns('model-orders');
+    canvasNode('source-orders').contains('button', 'Show remaining columns').click();
+
+    let putCount = 0;
+    cy.then(() => {
+      putCount = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+
+    for (const columnName of ['customer', 'amount', 'status', 'created_at', 'region']) {
+      canvasNode('source-orders')
+        .contains('[data-slot="graph-node-column-row"]', columnName)
+        .find('[data-slot="graph-node-column-output-state"]')
+        .click();
+      waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+      cy.wrap(null)
+        .should(() => {
+          expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(putCount + 1);
+        })
+        .then(() => {
+          putCount += 1;
+        });
+      canvasNode('source-orders')
+        .contains('[data-slot="graph-node-column-row"]', columnName)
+        .find('[data-slot="graph-node-column-output-state"]')
+        .should('have.attr', 'aria-pressed', 'false');
+      cy.contains('This column mapping is not available for the selected nodes.').should(
+        'not.exist'
+      );
+    }
+
+    canvasNode('model-orders').contains('button', 'Map compatible columns').click();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.wrap(null)
+      .should(() => {
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(putCount + 1);
+      })
+      .then(() => {
+        putCount += 1;
+      });
+
+    canvasNode('model-orders')
+      .find('[data-slot="graph-node-column-output-state"][aria-pressed="true"]')
+      .should('have.length', 1);
+    canvasNode('model-orders')
+      .contains('[data-slot="graph-node-column-row"]', 'order_id')
+      .find('[data-slot="graph-node-column-output-state"]')
+      .should('have.attr', 'aria-pressed', 'true')
+      .click();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.wrap(null).should(() => {
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(putCount + 1);
+    });
+    canvasNode('model-orders')
+      .contains('[data-slot="graph-node-column-row"]', 'order_id')
+      .find('[data-slot="graph-node-column-output-state"]')
+      .should('have.attr', 'aria-pressed', 'false');
+    cy.contains('This column mapping is not available for the selected nodes.').should('not.exist');
+  });
+
   it('preserves mappings, NN, output click, and reorder after connecting a second Source', () => {
     cy.viewport(1920, 1080);
     stubColumnMappingCanvas(false, true);

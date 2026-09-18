@@ -1,0 +1,21 @@
+---
+id: R-20260915-TRANSFORM-OUTPUT-SAMPLE
+title: Published Transform rows could change without a new publication token
+status: Open
+date: 2026-09-15
+owners:
+  - '@dvt/adapter-postgres'
+  - dvt-api
+severity: Medium
+probability: Low
+---
+description: >-
+  A direct out-of-band write by the governed PostgreSQL owner could change rows while leaving the
+  DVT publication marker unchanged, so a token-aligned sample would no longer prove row
+  immutability.
+mitigations:
+  - Keep the governed publication owner unavailable to user-authored workloads
+  - Read the marker and rows in one repeatable-read transaction
+  - Reject absent, malformed or mismatched publication markers before selecting rows
+  - Require exact PlanRef, semantic digest, result target and connection authority in Canvas
+  - Cover successful and mismatched publication tokens with probe, API and headed live tests

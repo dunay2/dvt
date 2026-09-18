@@ -15,7 +15,7 @@ import {
 } from './canonization-guard.mjs';
 
 const requiredFiles = [
-  'docs/planning/reviews/review-status-board.md',
+  'docs/planning/state/github-mvp-issue-workflow.md',
   'docs/planning/proposals/mandatory/frontend-and-ux/canvas-fowler-canon-plan-20260523.md',
   'docs/architecture/components/web/graph/canvas-fowler-canon-component.md',
   'docs/architecture/components/web/graph/canvas-fowler-canon-user-stories.md',
@@ -28,14 +28,10 @@ test('Canvas Fowler remediation canonization has semantic ownership', () => {
     'docs/planning/proposals/mandatory/frontend-and-ux/canvas-fowler-canon-plan-20260523.md'
   );
 
+  assertContains('docs/planning/state/github-mvp-issue-workflow.md', 'is the only task backlog');
   assertContains(
-    'docs/planning/reviews/review-status-board.md',
-    '2026-05-23 Canvas Fowler Canonical Disposition'
-  );
-  assertContains('docs/planning/reviews/review-status-board.md', 'F-MAND-CANVAS-FOWLER');
-  assertContains(
-    'docs/planning/reviews/review-status-board.md',
-    'No Canvas Fowler remediation proposal remains an orphan execution queue'
+    'docs/planning/proposals/mandatory/frontend-and-ux/canvas-fowler-canon-plan-20260523.md',
+    'featureId: F-MAND-CANVAS-FOWLER'
   );
 
   const componentGuide = readRepoFile(

@@ -66,7 +66,7 @@ describeIfPg('PostgresPlanStore lifecycle integration (real PostgreSQL)', () => 
       });
     }));
 
-  test('markInvalid stores rejection report and keeps plan non-runnable', () =>
+  test('replays INVALID plans without changing the rejection or admitting execution', () =>
     withStore(schema, async (store) => {
       const planRef = await store.storePlanArtifact({
         buildResult: makeBuildResult(PLAN_ID.r4_3),
@@ -97,6 +97,41 @@ describeIfPg('PostgresPlanStore lifecycle integration (real PostgreSQL)', () => 
         state: 'INVALID',
         rejectionReport: rejection,
       });
+
+      const validationBefore = await store.getStoredPlanValidationRecord({
+        ...PLAN_STORE_SCOPE,
+        planId: PLAN_ID.r4_3,
+      });
+      const planRecordBefore = await store.getPlanRecordByRef({ ...PLAN_STORE_SCOPE, planRef });
+      await expect(
+        store.storePlanArtifact({ buildResult: makeBuildResult(PLAN_ID.r4_3) })
+      ).resolves.toEqual(planRef);
+      await expect(
+        store.getStoredPlanValidationRecord({ ...PLAN_STORE_SCOPE, planId: PLAN_ID.r4_3 })
+      ).resolves.toEqual(validationBefore);
+      await expect(
+        store.getPlanRecordByRef({ ...PLAN_STORE_SCOPE, planRef })
+      ).resolves.toMatchObject({
+        canonicalHash: planRecordBefore?.canonicalHash,
+        canonicalPlanJson: planRecordBefore?.canonicalPlanJson,
+        sourceRef: planRecordBefore?.sourceRef,
+        createdAtIso: planRecordBefore?.createdAtIso,
+        state: 'ACTIVE',
+      });
+      await expect(store.fetchStoredPlanArtifact({ ...PLAN_STORE_SCOPE, planRef })).rejects.toThrow(
+        'PLAN_NOT_VALID'
+      );
+      await expect(
+        store.markStoredPlanArtifactValid({ ...PLAN_STORE_SCOPE, planRef })
+      ).rejects.toThrow('PLAN_VALIDATION_STATE_INVALID_TRANSITION');
+      await expect(
+        store.storePlanArtifact({
+          buildResult: {
+            ...makeBuildResult(PLAN_ID.r4_3),
+            executionPolicy: { requiresCapabilities: ['changed-capability'] },
+          },
+        })
+      ).rejects.toThrow('PLAN_STORE_CONFLICT');
     }));
 
   test('treats identical pending plan store attempt as idempotent', () =>

@@ -59,11 +59,17 @@ import {
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,
 } from './canvasDvtSubstraitProjection';
+import {
+  createDvtSubstraitInnerJoinDraft,
+  encodeDvtSubstraitInnerJoinDocument,
+  type DvtSubstraitJoinSource,
+} from './canvasDvtSubstraitJoinComposition';
 
 type ReadModelArgs = Parameters<typeof useCanvasControllerReadModel>[0];
 type ReadModelState = ReturnType<typeof useCanvasControllerReadModel>;
 type ReadModelNodeData = {
   columns?: unknown;
+  expressionInputColumns?: unknown;
   onInspectNode?: unknown;
   onDuplicateNode?: unknown;
   onRemoveNode?: unknown;
@@ -219,6 +225,71 @@ afterEach(() => {
 });
 
 describe('useCanvasControllerReadModel', () => {
+  it.each([true, false])(
+    'projects JOIN output controls without enabling input remapping (editable=%s)',
+    async (editable) => {
+      const source = (table: string): DvtSubstraitJoinSource => ({
+        nodeId: table,
+        schema: 'raw',
+        table,
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1' as const,
+          sourceObjectId: `raw.${table}`,
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1' as const,
+            connectionId: 'pg',
+            provider: 'postgres' as const,
+          },
+        },
+      });
+      const join = applyDvtSubstraitSemanticDocument(
+        {
+          ...testNode,
+          id: 'joined',
+          kind: 'dvt:transform',
+          role: 'transform',
+        },
+        encodeDvtSubstraitInnerJoinDocument(
+          createDvtSubstraitInnerJoinDraft({
+            left: source('customers'),
+            right: source('orders'),
+            targetNodeId: 'joined',
+          })
+        )
+      );
+      const base = buildReadModelArgs({ canMutateGraph: editable });
+      const mapped = mapCanonicalNodeToCanvasNode({
+        canonicalNode: join,
+        index: 0,
+        showColumns: true,
+      });
+      const args: ReadModelArgs = {
+        ...base,
+        graphModel: {
+          ...base.graphModel,
+          nodes: [mapped],
+          canonicalNodesById: new Map([[join.id, join]]),
+        },
+        visibleScope: { canonicalNodes: [join], canonicalEdges: [] },
+      };
+      const mounted = await renderReadModel(args);
+      try {
+        const data = readProjectedNodeData(mounted.readState())!;
+        expect(data.onToggleCanvasColumnOutput).toBe(
+          editable ? args.graphHandlers.handleToggleCanvasColumnOutput : undefined
+        );
+        expect(data.onReorderCanvasColumnOutput).toBe(
+          editable ? args.graphHandlers.handleReorderCanvasColumnOutput : undefined
+        );
+        expect(data.onColumnPortActivate).toBeUndefined();
+        expect(data.onApplyCanvasColumnFunction).toBeUndefined();
+        expect(data.onAddCanvasCalculatedColumn).toBeUndefined();
+      } finally {
+        await mounted.cleanup();
+      }
+    }
+  );
+
   it('changes only the moved projection during a 30-node geometry frame', async () => {
     const canonicalNodes = Array.from(
       { length: 30 },
@@ -488,7 +559,7 @@ describe('useCanvasControllerReadModel', () => {
         .columns as ReadonlyArray<{ id: string; name: string }>;
       expect(columns.map(({ id, name }) => ({ id, name }))).toEqual([
         { id: 'dvt_fld_event_type', name: 'event_type' },
-        { id: 'request_id', name: 'request_id' },
+        { id: 'dvt_fld_source_request_id', name: 'request_id' },
         { id: 'dvt_fld_event_id', name: 'event_id' },
         { id: 'dvt_fld_manual', name: 'manual' },
       ]);
@@ -942,13 +1013,28 @@ describe('useCanvasControllerReadModel', () => {
             sourceType: string;
           }) => readonly Readonly<{ name: string }>[]
         )({ targetType: 'text', sourceType: 'text' })
-      ).toEqual([expect.objectContaining({ name: 'concat' })]);
+      ).toEqual([
+        expect.objectContaining({ name: 'coalesce', minimumArgumentCount: 2 }),
+        expect.objectContaining({
+          name: 'concat',
+          minimumArgumentCount: 2,
+          maximumArgumentCount: 2,
+        }),
+      ]);
       expect(transformData.onApplyCanvasStructuredField).toBe(
         args.graphHandlers.handleApplyCanvasStructuredField
       );
       expect(transformData.onAddCanvasCalculatedColumn).toBe(
         args.graphHandlers.handleAddCanvasCalculatedColumn
       );
+      expect(
+        (
+          transformData.expressionInputColumns as ReadonlyArray<{
+            id: string;
+            name: string;
+          }>
+        ).map((column) => column.name)
+      ).toEqual(['customer', 'amount']);
       expect(columns.find((column) => column.id === 'output:customer')?.type).toBe('text');
       expect(columns.find((column) => column.id === 'output:customer')?.functionMenu).toEqual({
         category: 'text',

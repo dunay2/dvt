@@ -1,5 +1,5 @@
 /** Owns decoding and persistence of canonical DVT Transform shapes. */
-import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
+import { DVT_TRANSFORM_AUTHORING_MODE, DvtTransformResultTargetV1Schema } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
 import type {
@@ -60,15 +60,21 @@ function readMaterialized(node: CanonicalNode): string {
 }
 
 export function createDvtTransformAuthoringMetadata(node: CanonicalNode): TransformMetadata {
-  const materialized = readMaterialized(node);
+  const config = readDvtNodeConfig(node);
+  const disposition = {
+    materialized: readMaterialized(node),
+    ...(Object.hasOwn(config, 'resultTarget')
+      ? { resultTarget: DvtTransformResultTargetV1Schema.parse(config.resultTarget) }
+      : {}),
+  };
   const authority = readDvtTransformAuthoringAuthority(node);
-  if (authority == null) return { kind: 'transform', mode: 'uninitialized', materialized };
+  if (authority == null) return { kind: 'transform', mode: 'uninitialized', ...disposition };
   const projection = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
   if (
     inspectDvtSubstraitProjectionDraft(projection).ok ||
     inspectDvtSubstraitFilter(projection) != null
   ) {
-    return fromDraft(authority.mode, materialized, 'projection', projection);
+    return fromDraft(authority.mode, disposition, 'projection', projection);
   }
   const pilot = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
   if (
@@ -77,31 +83,51 @@ export function createDvtTransformAuthoringMetadata(node: CanonicalNode): Transf
     inspectDvtSubstraitPilotAggregationDraft(pilot).ok ||
     inspectDvtSubstraitPilotWindowDraft(pilot).ok
   ) {
-    return fromDraft(authority.mode, materialized, 'pilot', pilot);
+    return fromDraft(authority.mode, disposition, 'pilot', pilot);
   }
   const join = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
   if (inspectDvtSubstraitInnerJoinAcceptedDraft(join).ok) {
-    return fromDraft(authority.mode, materialized, 'inner_join', join);
+    return fromDraft(authority.mode, disposition, 'inner_join', join);
   }
   const unionAll = decodeDvtSubstraitUnionAllDocument(authority.semanticDocument);
-  return fromDraft(authority.mode, materialized, 'union_all', unionAll);
+  return fromDraft(authority.mode, disposition, 'union_all', unionAll);
 }
 
 function fromDraft(
   mode: typeof DVT_TRANSFORM_AUTHORING_MODE.substrait,
-  materialized: string,
+  disposition: Pick<TransformMetadata, 'materialized' | 'resultTarget'>,
   shape: DvtSubstraitTransformAuthoringMetadata['shape'],
   draft: Pick<DvtSubstraitTransformAuthoringMetadata, 'plan' | 'sidecar'>
 ): DvtSubstraitTransformAuthoringMetadata {
-  return { kind: 'transform', mode, materialized, shape, plan: draft.plan, sidecar: draft.sidecar };
+  return {
+    kind: 'transform',
+    mode,
+    ...disposition,
+    shape,
+    plan: draft.plan,
+    sidecar: draft.sidecar,
+  };
 }
 
 export function validateDvtTransformAuthoringMetadata(
   metadata: TransformMetadata
 ): DvtNodeAuthoringMetadataErrors {
-  return VALID_MATERIALIZATIONS.has(metadata.materialized.trim())
+  const errors: DvtNodeAuthoringMetadataErrors = VALID_MATERIALIZATIONS.has(
+    metadata.materialized.trim()
+  )
     ? {}
     : { materialization: 'dvt_materialization_invalid' };
+  if (metadata.resultTarget != null) {
+    const target = DvtTransformResultTargetV1Schema.safeParse(metadata.resultTarget);
+    if (!target.success) {
+      for (const issue of target.error.issues) {
+        if (issue.path[0] === 'schema') errors.schema = 'dvt_identifier_invalid';
+        else if (issue.path[0] === 'relation') errors.table = 'dvt_identifier_invalid';
+        else errors.connectionRef = 'dvt_connection_required';
+      }
+    }
+  }
+  return errors;
 }
 
 export function applyDvtTransformAuthoringMetadata(
@@ -109,12 +135,13 @@ export function applyDvtTransformAuthoringMetadata(
   metadata: TransformMetadata
 ): CanonicalNode {
   const materialized = metadata.materialized.trim();
-  if (!VALID_MATERIALIZATIONS.has(materialized)) return node;
-  const withMaterialization = (updatedNode: CanonicalNode): CanonicalNode =>
-    withDvtConfig(updatedNode, {
-      ...readDvtNodeConfig(updatedNode),
-      materialized,
-    });
+  if (Object.keys(validateDvtTransformAuthoringMetadata(metadata)).length > 0) return node;
+  const withMaterialization = (updatedNode: CanonicalNode): CanonicalNode => {
+    const config = { ...readDvtNodeConfig(updatedNode), materialized } as Record<string, unknown>;
+    if (metadata.resultTarget === null) delete config.resultTarget;
+    else if (metadata.resultTarget !== undefined) config.resultTarget = metadata.resultTarget;
+    return withDvtConfig(updatedNode, config);
+  };
   if (metadata.mode === 'uninitialized') return withMaterialization(node);
   const draft = { plan: metadata.plan, sidecar: metadata.sidecar };
   const document =

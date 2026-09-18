@@ -2,7 +2,7 @@
 title: Runtime review canon plan 2026-05-23
 status: Active
 owner: Architecture / API / Runtime
-last_reviewed: 2026-05-23
+last_reviewed: 2026-09-12
 planning_type: mandatory
 ---
 
@@ -12,8 +12,9 @@ planning_type: mandatory
 
 This plan canonizes the active execution-runtime and API integration review
 inputs into governed runtime follow-up work. It closes review-board drift by
-making Planning DB, protected runtime rails, and closeouts the only execution
-surfaces.
+routing executable task lifecycle through GitHub Issues, architecture and
+mechanization through Planning DB, protected runtime behavior through its
+command/query rails, and completed work through closeout evidence.
 
 ## Governing Sources
 
@@ -22,8 +23,7 @@ surfaces.
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/planning/state/planning-control-tower.md`
-- `docs/planning/reviews/review-status-board.md`
+- `docs/planning/state/github-mvp-issue-workflow.md`
 - `docs/planning/domains/execution-runtime.md`
 - `docs/architecture/components/api/protected-runtime-command-query-rail-design.md`
 - `docs/planning/closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md`
@@ -42,7 +42,7 @@ surfaces.
 ### Antipatterns
 
 - Review-board backlog: reviews marked as open or current can look like work
-  queues even when Planning DB is the operational source.
+  queues even when GitHub Issues owns executable task lifecycle.
 - Parallel semantics: API integration reviews can name gaps in a way that
   bypasses protected runtime command/query rails.
 - Documentation drift: runtime domain navigation can omit the canonical
@@ -56,12 +56,14 @@ surfaces.
   API integration review disposition under one runtime review canon component.
 - Keep route-level behavior in API component guides and use review docs only as
   rationale.
-- Keep future runtime/API work as Planning DB tasks with explicit
-  command/query ownership.
+- Keep future runtime/API work as GitHub Issues with explicit acceptance and
+  closure; use Planning DB only when the work changes architecture,
+  capabilities, relations, or command/query rails.
 
 ### Lessons For Future Work
 
-- A review is not an owner; every actionable item needs a rail and a task.
+- A review is not an owner; every actionable item needs a rail and a governing
+  GitHub Issue.
 - A mature system keeps route behavior, component contract, and review intake
   separate but traceable.
 - Architecture tests should validate semantic disposition and ownership, not
@@ -74,21 +76,22 @@ surfaces.
 | `20260321 Planner-backed StartRun QA review`                   | Reference rationale absorbed by planner ingress and start-run rail work       | Protected runtime rail catalog  |
 | `20260326 RunMaintenanceService SRP review`                    | Reference rationale for runtime decomposition                                 | Execution runtime domain        |
 | `20260326 S03 hard QA review`                                  | Superseded as active critique by AR-C10, TF-C2, and RC closeouts              | Runtime review canon            |
-| `20260410 Runtime and shared-kernel risk triage review`        | Reference intake with linked tasks, not direct queue                          | Lane C/A/D Planning DB tasks    |
-| `20260410 Contract pack and read boundary reset Fowler review` | Future/active work remains under AR-A12 task family                           | Lane A task family              |
+| `20260410 Runtime and shared-kernel risk triage review`        | Reference intake with linked tasks, not direct queue                          | Governing GitHub Issues         |
+| `20260410 Contract pack and read boundary reset Fowler review` | Future/active work remains under the governing AR-A12 issue family            | AR-A12 issue family             |
 | `20260409 TF-C2-B runtime read-surface hard QA review`         | Done and evidence-backed                                                      | TF-C2-B closeout                |
 | `20260510 Web API integration gap review`                      | Runtime side must route through protected runtime rails before implementation | API/runtime command-query rails |
 
 No runtime review remains an orphan execution queue after this plan. Any new
 runtime/API finding must be classified by `ClassifyRuntimeReviewDisposition`
-and either attached to an existing closeout or promoted into Planning DB before
-implementation.
+and either attached to existing closeout evidence or promoted to a governing
+GitHub Issue before implementation. Planning DB is used only when the finding
+changes governed architecture or mechanization.
 
 ## Command And Query Rails
 
 - `RecordRuntimeReviewCanon`: command owned by the runtime review canon
-  aggregate. It records the canonical disposition and the task or closeout that
-  owns the finding.
+  aggregate. It records the canonical disposition and the governing issue,
+  architecture rail, or closeout that owns the finding.
 - `ClassifyRuntimeReviewDisposition`: query owned by the runtime review
   disposition read model. It returns `closed`, `reference`, `future-task`, or
   `superseded`.
@@ -97,7 +100,7 @@ implementation.
 
 1. Red: add `runtime-review-canon.test.mjs` before docs exist and verify it
    fails on the missing canon plan/component.
-2. Green: add the component guide, user stories, review-board disposition,
+2. Green: add the component guide, user stories, review disposition,
    execution-runtime domain pointer, and buzón analysis.
 3. Refactor: keep the slice docs-only so no ARC runtime package evidence is
    required.
@@ -105,8 +108,9 @@ implementation.
 ## ADR Decision
 
 No new ADR is required. This slice applies existing ADR and governance rules:
-Planning DB is the operational source, command/query rails own behavior, and
-reviews are rationale/evidence.
+GitHub Issues own executable task lifecycle, Planning DB owns governed
+architecture/mechanization, command/query rails own behavior, and reviews are
+rationale/evidence.
 
 ## Feature Mechanization Manifest
 
@@ -126,8 +130,7 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/planning/state/planning-control-tower.md
-  - docs/planning/reviews/review-status-board.md
+  - docs/planning/state/github-mvp-issue-workflow.md
   - docs/planning/domains/execution-runtime.md
 allowedImplementationSurfaces:
   - buzon/20260523-codex-fowler-runtime-review-canon.md
@@ -140,10 +143,7 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/index.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md
   - docs/planning/proposals/portfolio-map-20260403.md
-  - docs/planning/reviews/review-status-board.md
-  - docs/planning/state/agent-lane-c.md
-  - docs/planning/state/execution-workboard.md
-  - docs/planning/state/open-task-route.md
+  - docs/planning/state/github-mvp-issue-workflow.md
   - docs/planning/status/**
   - tools/ci/runtime-review-canon.test.mjs
 forbiddenImplementationSurfaces:
@@ -194,7 +194,6 @@ redGreenCycles:
       - docs/planning/proposals/mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md
       - docs/architecture/components/api/runtime-review-canon-component.md
       - docs/architecture/components/api/runtime-review-canon-user-stories.md
-      - docs/planning/reviews/review-status-board.md
       - docs/planning/domains/execution-runtime.md
       - buzon/20260523-codex-fowler-runtime-review-canon.md
     greenTest: node --test tools/ci/runtime-review-canon.test.mjs

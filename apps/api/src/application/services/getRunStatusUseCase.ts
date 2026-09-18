@@ -186,6 +186,9 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       ...(evidenceModel.materialization === undefined
         ? {}
         : { materialization: evidenceModel.materialization }),
+      ...(evidenceModel.publication === undefined
+        ? {}
+        : { publication: evidenceModel.publication }),
       ...(evidenceModel.diagnostics === undefined
         ? {}
         : { diagnostics: evidenceModel.diagnostics }),
@@ -229,6 +232,10 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     if (status === 'FAILED') {
       const failure = execution?.failure;
       return !failure?.stepId || (!failure.reason && !failure.message);
+    }
+
+    if (status === 'COMPLETED') {
+      return execution?.materialization === undefined;
     }
 
     return false;

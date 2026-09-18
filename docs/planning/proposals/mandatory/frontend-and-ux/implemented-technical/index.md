@@ -34,5 +34,4 @@ route them as pending feature work.
 - [Frontend command/query rail inventory](../frontend-command-query-rail-inventory-plan-20260602.md)
 - [Frontend component reflection inventory](../frontend-component-reflection-inventory-plan-20260604.md)
 - [Frontend mechanical truth inventory](../frontend-mechanical-truth-inventory-plan-20260602.md)
-- [Web architecture docs current runtime substantiation](../web-architecture-docs-current-runtime-substantiation-plan-20260508.md)
 - [Web Vitest suite partition](../web-vitest-suite-partition-plan-20260517.md)

@@ -5,17 +5,15 @@ import { useEffect, useMemo, useRef } from 'react';
 import { getPluginPortMap } from '../../plugins/registry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { buildCanvasConnectionCompatibilityByNodeId } from './canvasConnectionCompatibilityPresenter';
-import { createCanvasDirectionalEdge, mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
-import { resolveCanvasAuthoringVisibleEdgeId } from './canvasAuthoringGraphProjection';
+import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
 import type { CanvasDraftEdge } from './canvasDraftSession';
 import {
-  buildCanvasDependencyEdgeData,
-  readCanvasDependencyEdgeData,
-} from './canvasDependencyEdgeModel';
+  canvasViewportEdgesEqual,
+  projectCanvasViewportEdges,
+} from './canvasViewportEdgeProjection';
 
 type UseCanvasViewportGraphModelArgs = {
   visibleNodeIds: string[];
@@ -103,61 +101,13 @@ function projectViewportNodes(args: {
     });
     return {
       ...projectedNode,
+      ...(fallbackNode?.measured == null ? {} : { measured: fallbackNode.measured }),
       data: {
         ...projectedNode.data,
         columnDisclosureExpanded: fallbackNode?.data.columnDisclosureExpanded === true,
       },
     };
   });
-}
-
-function projectViewportEdges(args: {
-  visibleEdges: readonly VisibleViewportEdge[];
-  allowedNodeIds: ReadonlySet<string>;
-  canonicalEdgeIdBySignature: ReadonlyMap<string, string>;
-  canonicalEdgeBySignature: ReadonlyMap<string, CanonicalEdge>;
-  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
-  locale: string;
-}): Edge[] {
-  const {
-    visibleEdges,
-    allowedNodeIds,
-    canonicalEdgeIdBySignature,
-    canonicalEdgeBySignature,
-    canonicalNodesById,
-    locale,
-  } = args;
-  const copy = resolveCanvasViewCopy(locale);
-
-  return visibleEdges
-    .filter((edge) => allowedNodeIds.has(edge.sourceId) && allowedNodeIds.has(edge.targetId))
-    .map((edge) => {
-      const canonicalEdge = canonicalEdgeBySignature.get(`${edge.sourceId}::${edge.targetId}`);
-      const data = buildCanvasDependencyEdgeData({
-        sourceId: edge.sourceId,
-        targetId: edge.targetId,
-        executionGate: edge.executionGate,
-        canonicalMetadata: canonicalEdge?.metadata,
-      });
-      const baseAriaLabel = copy.canvasEdgeAccessibleLabelTemplate
-        .replace('{source}', canonicalNodesById.get(edge.sourceId)?.name ?? edge.sourceId)
-        .replace('{target}', canonicalNodesById.get(edge.targetId)?.name ?? edge.targetId);
-
-      return createCanvasDirectionalEdge({
-        id: resolveCanvasAuthoringVisibleEdgeId({ edge, canonicalEdgeIdBySignature }),
-        source: edge.sourceId,
-        target: edge.targetId,
-        ariaLabel:
-          data.execution.gateState === 'closed'
-            ? `${baseAriaLabel}, ${copy.canvasEdgeExcludedFromExecutionLabel}`
-            : baseAriaLabel,
-        data,
-      });
-    });
-}
-
-function viewportEdgesEqual(left: Edge[], right: Edge[]): boolean {
-  return orderedArraysEqual(left, right, viewportEdgeEqual);
 }
 
 function viewportNodesEqual(left: Node[], right: Node[]): boolean {
@@ -182,17 +132,6 @@ function getOrderedArrayItem<T>(items: readonly T[], index: number): T {
     throw new Error(`Expected ordered array item at index ${index}`);
   }
   return item;
-}
-
-function viewportEdgeEqual(left: Edge, right: Edge): boolean {
-  return (
-    left.id === right.id &&
-    left.source === right.source &&
-    left.target === right.target &&
-    left.ariaLabel === right.ariaLabel &&
-    JSON.stringify(readCanvasDependencyEdgeData(left.data)) ===
-      JSON.stringify(readCanvasDependencyEdgeData(right.data))
-  );
 }
 
 function viewportNodeEqual(left: Node, right: Node): boolean {
@@ -321,7 +260,7 @@ export function useCanvasViewportGraphModel({
 
   const initialEdges: Edge[] = useMemo(
     () =>
-      projectViewportEdges({
+      projectCanvasViewportEdges({
         visibleEdges,
         allowedNodeIds: new Set(visibleNodeIds.filter((nodeId) => canonicalNodesById.has(nodeId))),
         canonicalEdgeIdBySignature,
@@ -376,7 +315,7 @@ export function useCanvasViewportGraphModel({
 
   useEffect(() => {
     setEdges((currentEdges) => {
-      const nextEdges = projectViewportEdges({
+      const nextEdges = projectCanvasViewportEdges({
         visibleEdges,
         allowedNodeIds: new Set(visibleNodeIds.filter((nodeId) => canonicalNodesById.has(nodeId))),
         canonicalEdgeIdBySignature,
@@ -385,7 +324,7 @@ export function useCanvasViewportGraphModel({
         locale: applicationLanguage,
       });
 
-      return viewportEdgesEqual(currentEdges, nextEdges) ? currentEdges : nextEdges;
+      return canvasViewportEdgesEqual(currentEdges, nextEdges) ? currentEdges : nextEdges;
     });
   }, [
     applicationLanguage,

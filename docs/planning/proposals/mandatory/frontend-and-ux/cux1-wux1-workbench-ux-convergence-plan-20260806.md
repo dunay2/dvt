@@ -840,6 +840,14 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test:architecture
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkspaceDraftSession.test.ts]
+  - name: CanvasDraftSessionCommandRunner
+    path: apps/web/src/app/views/canvas/useCanvasWorkspaceDraftSession.ts
+    dddOwner: CanvasDraftSession
+    cqRails: [ConfigureCanvasDvtNode]
+    fowlerSignals: [Hidden authority, Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts
+    unitTests: [pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasWorkspaceDraftSession.test.tsx]
   - name: resolveStateUpdate
     path: apps/web/src/app/views/canvas/useCanvasWorkspaceDraftSession.ts
     dddOwner: WorkspaceScopeSelection

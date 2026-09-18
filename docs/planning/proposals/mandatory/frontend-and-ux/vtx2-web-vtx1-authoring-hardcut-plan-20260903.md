@@ -107,7 +107,157 @@ flowchart LR
 - **Validation:** focused Contracts/Web tests, Web lint/typecheck, ARC check, governance
   refresh, and `pnpm verify:prepush`.
 
+## Output exclusion correction (#3136)
+
+This cut changes only hiding an existing Transform output with a physical input,
+through `ConfigureCanvasDvtNode`. It must preserve the input, surviving FieldIds,
+descriptions and calculated Substrait expressions, including calculations using
+the hidden output. Optional operand-selection metadata naming a removed output
+must not override or invalidate those expressions.
+
+```text
+Before: output:false -> reconstruct simple mappings -> lose calculated outputs
+After:  output:false -> existing root removal -> retain expressions and input
+```
+
+Reuse root removal; retain shared expression slots until their last exposed alias
+is removed and retire only unused function declarations. Invalid flat documents
+and missing identities reject without mutation. Source policy, reinclusion,
+reorder, chained Transform inputs and downstream cascade approval are unchanged.
+
+Microcommits: root removal plus focused tests; command wiring plus handler proof.
+Test CONCAT both with and without a literal, serialization/reopen, derived SQL,
+shared slots and malformed documents. Run Web tests, lint, typecheck and pre-push.
+
+## Empty JOIN output selection (#3180)
+
+A binary or N-input JOIN may retain no selected final outputs while being edited,
+including after its Canvas input edges are removed. The canonical final emit and
+root names are both empty; input identities, intermediate outputs, predicates and
+relation identities remain intact. Reopening reconstructs unchecked, available
+fields from that same document, and selecting one creates a real output again.
+
+```text
+Checkbox -> ConfigureCanvasDvtNode -> empty final emit -> save/read -> unchecked fields
+Empty final emit -> PostgreSQL AST projection -> explicit unsupported-shape rejection
+```
+
+This distinguishes authoring state from target readiness; it does not remove
+input/predicate/identity checks or admit empty intermediate JOIN outputs. Reuse
+the existing JOIN field editor, shared reader and SQL projection boundary. Do not
+add a visual-only selection flag, fabricated output or execution fallback. Source
+last-output policy, downstream removal approval and connection composition are
+unchanged. Prove clearing and restoring binary/N-input outputs, detached edges,
+save/reload, preserved identities and SQL rejection with focused unit and browser
+regressions. Issue #3180 owns the implementation journal and evidence.
+
+## Physical field reinclusion correction (#3144)
+
+A validated projection from a physical Source distinguishes a selected input
+from a calculation that depends on it. Hiding `customer` beside
+`UPPER(customer)` and `CONCAT(customer, customer_upper)` retains the calculations
+and presents `customer` as an inactive, available input. Renamed passthroughs
+remain selected inputs; expression lineage is not selection state.
+
+```text
+Before: hide output -> calculation lineage suppresses inactive physical input
+        reinclude -> reconstruct simple mappings -> reject scalar expression
+After:  valid physical projection -> existing stable-order inactive inputs
+        reinclude -> existing root append -> ConfigureCanvasDvtNode
+```
+
+Reuse existing presentation/order helpers and structural root append. Admit only
+fields still exposed by the connected physical Source identified by the
+projection. Preserve surviving FieldIds, descriptions, expression AST, ordering
+and extension declarations. Recreated outputs receive new FieldIds with the
+original source identity; the admitted no-literal route retains its existing
+already-selected no-op. The pre-existing literal fallback rejects a repeated
+inclusion of an already-selected output; correcting that is outside this slice.
+Unknown,
+unavailable, disconnected or wrong-source inputs, invalid placement and malformed
+documents reject without mutation. No parallel selection state or mapping rail.
+
+Validate CONCAT with and without a literal, unary-derived dependencies,
+serialization/reopen and the real checkbox gesture. JOIN/aggregate presentation,
+upstream Transform reinclusion and the sample query route are unchanged. Run the
+affected Web tests, lint, typecheck and pre-push before declaring readiness.
+
+## Calculated upstream input selection (#3144)
+
+An upstream Transform's exposed outputs are inputs, not editable mappings in
+the consuming Transform. Reading them must validate the canonical projection
+and connected RelationId/FieldIds without requiring every upstream expression
+to support the simple mapping editor. Keep that editor's existing restrictions.
+
+```text
+Before: upstream outputs -> simple-mapping eligibility -> literal blocks inputs
+After:  upstream outputs -> canonical projection read -> existing FieldId mapping
+```
+
+Reuse the projection reader in `canvasColumnProjectionAuthority.ts`; do not port
+the old structural-append changes for UPPER/CONCAT cases already working on main.
+Verify removal/reinclusion, placement, surviving identities and upstream AST with
+and without a literal; unknown, stale, disconnected and malformed inputs reject
+without mutation. Prove the real checkbox and persisted derived SQL. Changes to
+an upstream schema after a downstream draft exists remain outside this slice.
+
+## JOIN Source resolution ownership (#3086 A1)
+
+`DvtAuthoringFields` consumes `canvasDvtSubstraitJoinSourceResolution.ts`
+directly. That module owns connected-source admission and identity matching;
+composition reuses its helpers instead of retaining copies. Semantic inspection
+and connection comparison reuse the current `@dvt/postgres-projection` owner.
+The existing draft/input contracts and literal `column.type === 'string'` policy
+are unchanged, including empty column lists and duplicate names admitted by that policy.
+There is no new rail, semantic mutation, compatibility export or input catalog.
+
+```text
+Before: DvtAuthoringFields -> JoinComposition -> shared semantic reader
+After:  DvtAuthoringFields -> JoinSourceResolution -> shared semantic reader
+        JoinComposition -> same Source admission/identity helpers
+```
+
+Keep `resolveDvtSubstraitInnerJoinEntry`, binary shape constants and persisted
+authority inspection in composition for A2. Verify candidate connection/target,
+source identity exclusion, column admission, deterministic order and unchanged
+graph/plan/sidecar, plus the direct consumer and JOIN composition regressions.
+
+## Chained PostgreSQL projection correction (#3149)
+
+The existing `InspectCanvasNode` query must render the connected canonical
+ProjectRel chain, not treat derived output aliases as physical table columns.
+Keep the already validated upstream projection in the read model and reuse
+`pgRangeSubselect` recursively. This is derived, transient data, not another
+semantic authority, persisted document or execution rail.
+
+```text
+Before: Source -> A(UPPER/CONCAT/literal) -> B -> SELECT A_alias FROM source
+After:  Source -> A(UPPER/CONCAT/literal) -> B -> SELECT A_alias FROM (SELECT ...) A
+```
+
+The functional correction is followed by responsibility-only extractions, as
+requested in review. Move connected Project SQL construction out of the mixed
+renderer; reuse the AST subquery helper and preserve its error contract. Move
+chained inspection out of the authoring module, sharing structural predicates
+and type conversion rather than copying them. The chain inspector receives the
+existing recursive inspection function; it cannot own a second admission policy.
+Keep existing public entry points and avoid runtime import cycles. No JOIN/UNION,
+new authoring capability or validation-policy changes. Preserve aliases,
+output order, calculations, identity checks and unsupported-shape rejection.
+Verify Source -> A -> B -> C, serialization, malformed/disconnected/stale inputs,
+the real SQL viewer and read-only execution against test PostgreSQL. Existing
+filter admission is unchanged; unsupported nested relations still fail closed.
+Schema evolution (#3150) and Canvas runtime execution (#2723) are excluded.
+
 ## Feature mechanization
+
+Viewport correction (#3146): `ConfigureCanvasDvtNode` updates must preserve the
+existing React Flow `measured` dimensions when reprojecting a node. Currently,
+semantic edit -> discarded measurements -> all cards hidden -> measurement;
+instead, semantic edit -> retain viewport measurements -> normal resize updates.
+Measurements remain transient viewport state, never semantic authority or fixed
+CSS sizes. New nodes start unmeasured. Validate existing and new nodes, subsequent
+dimension updates, and real checkbox gestures without hiding measured cards.
 
 ```feature-mechanization
 version: 1
@@ -157,6 +307,11 @@ forbiddenImplementationSurfaces:
   - packages/@dvt/planner/**
   - packages/@dvt/adapter-*/**
 commandQueryRails:
+  - name: InspectCanvasNode
+    type: query
+    referenceOnly: true
+    authorityRef: docs/planning/proposals/mandatory/frontend-and-ux/source-inspector-alias-deduplication-plan-20260904.md
+    dddOwner: CanvasNodeInspector
   - name: ConfigureCanvasDvtNode
     type: command
     status: implemented
@@ -194,6 +349,41 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts
     greenTest: apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx
 symbols:
+  - &projectionSqlSymbol
+    name: buildDvtSubstraitProjectionPostgresAst
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitProjectPostgresAst.ts
+    dddOwner: CanvasNodeInspector
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Separate connected projection from unrelated renderers]
+    architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts
+    unitTests: [apps/web/src/app/views/canvas/canvasDvtSubstraitOutputProjection.test.ts, apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts]
+  - { <<: *projectionSqlSymbol, name: requireConnectedFieldProjection }
+  - { <<: *projectionSqlSymbol, name: buildScalarExpressionPostgresAst }
+  - { <<: *projectionSqlSymbol, name: buildConnectedFieldPostgresAst }
+  - { <<: *projectionSqlSymbol, name: calculatedExpression }
+  - { <<: *projectionSqlSymbol, name: outputExpression }
+  - { <<: *projectionSqlSymbol, name: pgRangeSubselect, path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts }
+  - &projectionChainSymbol
+    <<: *projectionSqlSymbol
+    name: inspectChainedDvtSubstraitProjectionDraft
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitProjectionChainInspection.ts
+    fowlerSignals: [Separate chain inspection from authoring]
+    unitTests: [apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.identity.test.ts, apps/web/src/app/views/canvas/canvasDvtSubstraitOutputProjection.test.ts]
+  - { <<: *projectionChainSymbol, name: collectExpressionFunctionAnchors }
+  - { <<: *projectionChainSymbol, name: collectRelationFunctionAnchors }
+  - &projectionStructureSymbol
+    <<: *projectionChainSymbol
+    name: createProjectionType
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitProjectionStructure.ts
+    fowlerSignals: [Share existing structural admission rules without duplication]
+  - { <<: *projectionStructureSymbol, name: inspectProjectionDataType }
+  - { <<: *projectionStructureSymbol, name: canonicalizeDvtSubstraitProjectionDataType }
+  - { <<: *projectionStructureSymbol, name: commonHasNoHiddenSemantics }
+  - { <<: *projectionStructureSymbol, name: readHasOnlyProjectionSemantics }
+  - { <<: *projectionStructureSymbol, name: projectHasOnlyFieldSelection }
+  - { <<: *projectionStructureSymbol, name: sortedRelationFields }
+  - { <<: *projectionStructureSymbol, name: I64_DATA_TYPES }
   - &vtx2Symbol
     name: readDvtTransformAuthoringAuthority
     path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts
@@ -226,6 +416,7 @@ symbols:
   - { <<: *vtx2Symbol, name: copyOutputDescriptions, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
   - { <<: *vtx2Symbol, name: isSimpleCanvasPassthrough, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
   - { <<: *vtx2Symbol, name: persistCanvasProjectionOutputs, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
+  - { <<: *vtx2Symbol, name: readCanvasProjectionEntry, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
   - { <<: *vtx2Symbol, name: readEditableCanvasProjection, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
   - { <<: *vtx2Symbol, name: resolveCanvasColumnMappingTarget, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
   - { <<: *vtx2Symbol, name: DvtNodeAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtAuthoringTypes.ts }
@@ -276,4 +467,17 @@ symbols:
   - { <<: *vtx2Symbol, name: DVT_TRANSFORM_AUTHORING_MODE, path: packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts }
   - { <<: *vtx2Symbol, name: DvtTransformAuthoringAuthorityV1, path: packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts }
   - { <<: *vtx2Symbol, name: DvtTransformAuthoringAuthorityV1Schema, path: packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts }
+  - &joinSourceResolutionSymbol
+    <<: *vtx2Symbol
+    name: resolveDvtSubstraitJoinAppendCandidates
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinSourceResolution.ts
+    fowlerSignals: [Divergent change, Duplicate semantics]
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasDvtSubstraitJoinSourceResolution.test.ts
+      - apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx
+      - apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.test.ts
+  - { <<: *joinSourceResolutionSymbol, name: resolveJoinInput }
+  - { <<: *joinSourceResolutionSymbol, name: readMetadataText }
+  - { <<: *joinSourceResolutionSymbol, name: readSourceColumnNames }
+  - { <<: *joinSourceResolutionSymbol, name: hasSameConnectedSourceRef }
 ```

@@ -1,6 +1,7 @@
 import {
   MaterializationEvidenceSchema,
   type CanonicalRunStatus,
+  type DvtPostgresPublicationEvidence,
   parseExecutionPlan,
   TransformationExecutorSchema,
   type EventEnvelope,
@@ -8,6 +9,8 @@ import {
   type PlanRecord,
   type WorkflowSnapshot,
 } from '@dvt/contracts';
+
+import { deriveDvtPostgresPublicationEvidence } from './runDvtPostgresPublicationEvidence.js';
 
 type TransformationExecutor = 'postgres' | 'dbt';
 
@@ -45,6 +48,7 @@ export interface RunReadEvidenceModel {
     completedAt: MaterializationEvidence['completedAt'];
     durationMs: number;
   };
+  readonly publication?: DvtPostgresPublicationEvidence;
   readonly diagnostics?: {
     readonly runId: string;
     readonly planId?: string;
@@ -98,6 +102,10 @@ export function deriveRunReadEvidenceModel(args: {
     currentAttemptEvents,
     args.snapshot.execution
   );
+  const publication = deriveDvtPostgresPublicationEvidence(
+    args.snapshot.status,
+    currentAttemptEvents
+  );
   const diagnostics = deriveDiagnostics({
     snapshot: args.snapshot,
     currentAttemptEvents,
@@ -118,6 +126,7 @@ export function deriveRunReadEvidenceModel(args: {
     ...(errorReason === undefined ? {} : { errorReason }),
     ...(provenance === undefined ? {} : { provenance }),
     ...(materialization === undefined ? {} : { materialization }),
+    ...(publication === undefined ? {} : { publication }),
     ...(diagnostics === undefined ? {} : { diagnostics }),
   };
 }

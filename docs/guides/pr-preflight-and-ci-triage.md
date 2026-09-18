@@ -2,7 +2,7 @@
 title: PR Preflight And CI Triage
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-08-07
+last_reviewed: 2026-09-17
 ---
 
 # PR Preflight And CI Triage
@@ -17,8 +17,7 @@ Use this guide for implementation slices and PR-green recovery work.
 
 - `AGENTS.md`
 - `docs/guides/ai-work-protocol.md`
-- `docs/planning/state/planning-control-tower.md`
-- `docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md`
+- `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/planning/reviews/ci-and-delivery/20260330-ci-prepush-pr-process-observations.md`
 
 ## Standard Flow
@@ -37,6 +36,18 @@ Use this guide for implementation slices and PR-green recovery work.
    - extract failed job logs first
    - patch root cause
    - rerun only required checks
+
+## Conflict Triage And Cleanup Safety
+
+Classify each conflicted file by its current owner and intended change before
+choosing either side or resolving it manually. Do not apply a bulk side selection
+without checking what it discards. After resolution, scan for conflict markers,
+run the affected tests, and follow the commit and validation sequence in
+`AGENTS.md` before push.
+
+Branch diagnostics do not authorize deletion. Destructive cleanup remains an
+explicit opt-in operation with the confirmation supported by `scripts/hygiene.ps1`;
+never infer permission from a branch being reported as superseded.
 
 ## First-Red Triage Rule
 

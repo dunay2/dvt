@@ -1,5 +1,25 @@
+export {
+  type PostgresComparisonOperator,
+  pgAnd,
+  pgOr,
+  pgComparison,
+  pgNullTest,
+  pgBooleanLiteral,
+  pgI64Literal,
+  pgFp64Literal,
+} from '@dvt/postgres-projection';
+import { pgComparison } from '@dvt/postgres-projection';
 /** Owned concern: construct the bounded PostgreSQL AST vocabulary used by Substrait projection. */
 export type PostgresAstNode = Readonly<Record<string, unknown>>;
+
+export function pgRangeSubselect(subquery: PostgresAstNode, alias: string): PostgresAstNode {
+  return {
+    RangeSubselect: {
+      subquery,
+      alias: { aliasname: alias },
+    },
+  };
+}
 
 export function pgString(value: string): PostgresAstNode {
   return { String: { sval: value } };
@@ -39,6 +59,19 @@ export function pgFunction(name: string, argument: PostgresAstNode): PostgresAst
   };
 }
 
+export function pgCoalesce(arguments_: readonly PostgresAstNode[]): PostgresAstNode {
+  if (arguments_.length < 2) {
+    throw new Error('PostgreSQL COALESCE requires at least two expressions.');
+  }
+  return {
+    FuncCall: {
+      funcname: [pgString('coalesce')],
+      args: [...arguments_],
+      funcformat: 'COERCE_EXPLICIT_CALL',
+    },
+  };
+}
+
 export function pgConcatAcceptNulls(
   left: PostgresAstNode,
   right: PostgresAstNode
@@ -62,48 +95,8 @@ export function pgStringLiteral(value: string): PostgresAstNode {
   return { A_Const: { sval: { sval: value } } };
 }
 
-export function pgBooleanLiteral(value: boolean): PostgresAstNode {
-  return { A_Const: { boolval: { boolval: value } } };
-}
-
-export function pgI64Literal(value: bigint): PostgresAstNode {
-  return { A_Const: { ival: { ival: value } } };
-}
-
-export function pgFp64Literal(value: number): PostgresAstNode {
-  return { A_Const: { fval: { fval: String(value) } } };
-}
-
-export type PostgresComparisonOperator = '=' | '<>' | '>' | '>=' | '<' | '<=';
-
-export function pgComparison(
-  operator: PostgresComparisonOperator,
-  left: PostgresAstNode,
-  right: PostgresAstNode
-): PostgresAstNode {
-  return {
-    A_Expr: {
-      kind: 'AEXPR_OP',
-      name: [pgString(operator)],
-      lexpr: left,
-      rexpr: right,
-      location: -1,
-    },
-  };
-}
-
 export function pgEquals(left: PostgresAstNode, right: PostgresAstNode): PostgresAstNode {
   return pgComparison('=', left, right);
-}
-
-export function pgAnd(expressions: readonly PostgresAstNode[]): PostgresAstNode {
-  if (expressions.length < 2) throw new Error('PostgreSQL AND requires at least two expressions.');
-  return { BoolExpr: { boolop: 'AND_EXPR', args: [...expressions], location: -1 } };
-}
-
-export function pgOr(expressions: readonly PostgresAstNode[]): PostgresAstNode {
-  if (expressions.length < 2) throw new Error('PostgreSQL OR requires at least two expressions.');
-  return { BoolExpr: { boolop: 'OR_EXPR', args: [...expressions], location: -1 } };
 }
 
 export function pgTimestampTzLiteral(value: string): PostgresAstNode {

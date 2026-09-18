@@ -8,6 +8,7 @@ import {
   decodeDvtSubstraitProjectionDocument,
   resolveDvtSubstraitProjectionEntry,
   resolveDvtSubstraitProjectionSource,
+  type DvtSubstraitProjectionAuthoringRejection,
 } from './canvasDvtSubstraitProjection';
 import {
   encodeDvtSubstraitStructuredFieldDocument,
@@ -29,7 +30,14 @@ export type CanvasStructuredFieldRequest = Readonly<{
 }>;
 export type CanvasStructuredFieldResult =
   | Readonly<{ outcome: 'applied'; draftSession: CanvasDraftSession }>
-  | Readonly<{ outcome: 'rejected' }>;
+  | Readonly<{ outcome: 'rejected'; reason: DvtSubstraitProjectionAuthoringRejection }>;
+export type CanvasStructuredFieldCompositionResult =
+  | Readonly<{
+      outcome: 'applied';
+      draftSession: CanvasDraftSession;
+      createdFieldId: string;
+    }>
+  | Extract<CanvasStructuredFieldResult, { outcome: 'rejected' }>;
 export type CanvasStructuredFieldReorderRequest = Readonly<{
   nodeId: string;
   parentFieldId: string;
@@ -96,24 +104,37 @@ export function applyCanvasStructuredField(args: {
   draftSession: CanvasDraftSession;
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   request: CanvasStructuredFieldRequest;
-}): CanvasStructuredFieldResult {
+}): CanvasStructuredFieldCompositionResult {
   try {
     const parentName = args.request.parentName;
     if (!PostgresIdentifierV1Schema.safeParse(parentName).success) {
-      return { outcome: 'rejected' };
+      return { outcome: 'rejected', reason: 'invalid_alias' };
+    }
+    const nodes = nodeCatalog(args.draftSession, args.canonicalNodesById);
+    const target = nodes.get(args.request.nodeId);
+    if (target?.pluginId !== 'dvt' || target.kind !== 'dvt:transform') {
+      return { outcome: 'rejected', reason: 'invalid_target' };
     }
     const resolved = resolveStructuredFieldDraft({
       ...args,
       nodeId: args.request.nodeId,
     });
-    if (resolved == null) return { outcome: 'rejected' };
+    if (resolved == null) return { outcome: 'rejected', reason: 'invalid_reference' };
+    const inspection = inspectDvtSubstraitStructuredFieldDraft(resolved.draft);
+    if (!inspection.ok) return { outcome: 'rejected', reason: 'invalid_document' };
+    const existingParent = inspection.fields.find(
+      (field) => field.fieldId === args.request.targetFieldId && field.children != null
+    );
+    const createdFieldId = existingParent?.fieldId ?? allocateDvtFieldId();
     const composed = composeDvtSubstraitProjectionFields(resolved.draft, {
       draggedFieldId: args.request.draggedFieldId,
       targetFieldId: args.request.targetFieldId,
-      parentFieldId: allocateDvtFieldId(),
+      parentFieldId: createdFieldId,
       parentName,
     });
-    if (composed === resolved.draft) return { outcome: 'rejected' };
+    if (composed === resolved.draft) {
+      return { outcome: 'rejected', reason: 'invalid_reference' };
+    }
     const node = applyDvtSubstraitSemanticDocument(
       resolved.target,
       encodeDvtSubstraitStructuredFieldDocument(composed)
@@ -121,9 +142,10 @@ export function applyCanvasStructuredField(args: {
     return {
       outcome: 'applied',
       draftSession: canvasDraftSession.workingSet.upsertNode(args.draftSession, node),
+      createdFieldId,
     };
   } catch {
-    return { outcome: 'rejected' };
+    return { outcome: 'rejected', reason: 'invalid_document' };
   }
 }
 
@@ -134,14 +156,14 @@ export function reorderCanvasStructuredFieldChildren(args: {
 }): CanvasStructuredFieldResult {
   try {
     const resolved = resolveStructuredFieldDraft({ ...args, nodeId: args.request.nodeId });
-    if (resolved == null) return { outcome: 'rejected' };
+    if (resolved == null) return { outcome: 'rejected', reason: 'invalid_reference' };
     const reordered = reorderDvtSubstraitStructuredFieldChildren(resolved.draft, {
       parentFieldId: args.request.parentFieldId,
       fieldId: args.request.fieldId,
       targetFieldId: args.request.targetFieldId,
       placement: args.request.placement,
     });
-    if (reordered === resolved.draft) return { outcome: 'rejected' };
+    if (reordered === resolved.draft) return { outcome: 'rejected', reason: 'invalid_reference' };
     const node = applyDvtSubstraitSemanticDocument(
       resolved.target,
       encodeDvtSubstraitStructuredFieldDocument(reordered)
@@ -151,6 +173,6 @@ export function reorderCanvasStructuredFieldChildren(args: {
       draftSession: canvasDraftSession.workingSet.upsertNode(args.draftSession, node),
     };
   } catch {
-    return { outcome: 'rejected' };
+    return { outcome: 'rejected', reason: 'invalid_document' };
   }
 }

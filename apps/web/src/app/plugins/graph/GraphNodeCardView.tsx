@@ -41,6 +41,7 @@ export type GraphNodeCardViewProps = Readonly<{
   typeLabel: string;
   tags: readonly Readonly<{ value: string; label: string }>[];
   columns: readonly GraphNodeCardColumn[];
+  expressionInputs?: readonly GraphNodeCardColumn[];
   showColumns: boolean;
   icon?: LucideIcon;
   borderClass?: string;
@@ -66,8 +67,12 @@ export type GraphNodeCardViewProps = Readonly<{
     identity: GraphNodeColumnFunctionApplyIdentity
   ) => GraphNodeColumnFunctionApplyResult;
   resolveColumnCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
-  onStructuredFieldApply?: (identity: GraphNodeStructuredFieldIdentity) => void;
-  onCalculatedColumnAdd?: (identity: GraphNodeCalculatedColumnIdentity) => void;
+  onStructuredFieldApply?: (
+    identity: GraphNodeStructuredFieldIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
+  onCalculatedColumnAdd?: (
+    identity: GraphNodeCalculatedColumnIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
   onColumnOutputToggle?: (identity: {
     nodeId: string;
     columnId: string;
@@ -133,6 +138,7 @@ export function GraphNodeCardView({
   typeLabel,
   tags,
   columns,
+  expressionInputs,
   showColumns,
   icon: Icon,
   borderClass,
@@ -242,6 +248,7 @@ export function GraphNodeCardView({
         {showColumns && (
           <GraphNodeColumnSection
             columns={columns}
+            expressionInputs={expressionInputs}
             expanded={columnDisclosureExpanded}
             nodeId={nodeId}
             portDirections={columnPortDirections}

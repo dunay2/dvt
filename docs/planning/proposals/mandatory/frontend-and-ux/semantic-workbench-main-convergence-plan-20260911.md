@@ -2,7 +2,7 @@
 title: Semantic Workbench main convergence plan
 status: Approved
 owner: Web / Canvas / VTX2
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-13
 planning_type: implementation-plan
 ---
 
@@ -27,6 +27,16 @@ No new command or query rail is added. Read models use `ProjectGraphNodeCardRead
 `ConfigureCanvasDvtNode`. The full semantic AST remains in the model and is expanded only for the
 selected join.
 
+Issue #3135 admits unary null predicates through the same rail. The editor
+omits the right operand; SQL and the contextual tree preserve unary arity.
+Nullable JSON samples prove the result. Every condition, including the first,
+uses the same recursive list and FIELD/VALUE/function editor. No mandatory
+field-pair anchor remains; the existing Substrait relation inputs own topology.
+Condition inspection moves into its
+own module. The inventory below records the new and relocated symbols and
+removes the helpers retired by that extraction. Admission and validation:
+`docs/evidence/ED-20260913-join-null-predicates.md`.
+
 ```feature-mechanization
 version: 1
 featureId: SEMANTIC-WORKBENCH-MAIN-CONVERGENCE-20260911
@@ -43,6 +53,7 @@ userStories:
   - https://github.com/dunay2/dvt/issues/3074
   - https://github.com/dunay2/dvt/issues/3087
   - https://github.com/dunay2/dvt/issues/3109
+  - https://github.com/dunay2/dvt/issues/3135
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -142,13 +153,7 @@ symbols:
     name: OperationalDrawerTabId
     path: apps/web/src/app/components/shell/operationalDrawerContributionStore.ts
   - <<: *semanticSymbol
-    name: COMPARISON_LABEL
-    path: apps/web/src/app/views/canvas/SemanticTransformFocusPanel.tsx
-  - <<: *semanticSymbol
     name: EditableJoinCondition
-    path: apps/web/src/app/views/canvas/SemanticTransformFocusPanel.tsx
-  - <<: *semanticSymbol
-    name: PendingJoinPredicate
     path: apps/web/src/app/views/canvas/SemanticTransformFocusPanel.tsx
   - <<: *semanticSymbol
     name: SemanticTransformFocusPanel
@@ -415,50 +420,59 @@ symbols:
     name: addDvtSubstraitJoinPredicateCondition
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
   - <<: *semanticSymbol
-    name: AND_FUNCTION_IDENTITY
+    name: booleanType
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
   - <<: *semanticSymbol
-    name: AND_FUNCTION_NAME
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
+    name: DVT_SUBSTRAIT_JOIN_NULL_OPERATORS
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinCondition.ts
   - <<: *semanticSymbol
-    name: BOOLEAN_FUNCTION_URN
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
+    name: DVT_SUBSTRAIT_JOIN_PREDICATE_OPERATORS
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinCondition.ts
+  - <<: *semanticSymbol
+    name: DvtSubstraitJoinPredicateOperator
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinCondition.ts
+  - <<: *semanticSymbol
+    name: dvtSubstraitJoinConditionOperands
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinCondition.ts
+  - <<: *semanticSymbol
+    name: isDvtSubstraitJoinNullCondition
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinCondition.ts
+  - <<: *semanticSymbol
+    name: isDvtSubstraitJoinNullOperator
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinCondition.ts
+  - <<: *semanticSymbol
+    name: pgNullTest
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts
   - <<: *semanticSymbol
     name: booleanFunctionIdentity
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinConditionInspection.ts
   - <<: *semanticSymbol
     name: buildOperandKey
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
   - <<: *semanticSymbol
     name: comparisonFunctionIdentity
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinConditionInspection.ts
   - <<: *semanticSymbol
     name: DvtSubstraitJoinDataType
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
   - <<: *semanticSymbol
-    name: InspectedJoinComparison
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
-  - <<: *semanticSymbol
     name: InspectedJoinCondition
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinConditionInspection.ts
   - <<: *semanticSymbol
     name: InspectedJoinPredicateOperand
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
   - <<: *semanticSymbol
     name: inspectJoinComparison
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinConditionInspection.ts
   - <<: *semanticSymbol
     name: inspectJoinConditionChain
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinConditionInspection.ts
   - <<: *semanticSymbol
     name: inspectJoinConditionList
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinConditionInspection.ts
   - <<: *semanticSymbol
     name: inspectJoinConditionTerm
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
-  - <<: *semanticSymbol
-    name: inspectJoinPredicateOperand
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinConditionInspection.ts
   - <<: *semanticSymbol
     name: JOIN_DATA_TYPE_CAPABILITY_SELECTOR
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
@@ -470,12 +484,6 @@ symbols:
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
   - <<: *semanticSymbol
     name: joinFieldType
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
-  - <<: *semanticSymbol
-    name: OR_FUNCTION_IDENTITY
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
-  - <<: *semanticSymbol
-    name: OR_FUNCTION_NAME
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
   - <<: *semanticSymbol
     name: projectedJoinOperandKey
@@ -491,9 +499,6 @@ symbols:
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
   - <<: *semanticSymbol
     name: setDvtSubstraitJoinConnectionFieldSelected
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
-  - <<: *semanticSymbol
-    name: setDvtSubstraitJoinPredicateFields
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
   - <<: *semanticSymbol
     name: updateDvtSubstraitJoinPredicateCondition

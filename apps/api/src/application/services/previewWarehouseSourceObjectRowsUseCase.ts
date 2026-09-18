@@ -35,6 +35,9 @@ export class PreviewWarehouseSourceObjectRowsUseCase {
       credentialRef: connection.credentialRef,
       objectId: input.objectId,
       limit: input.limit,
+      ...(input.expectedPublicationToken === undefined
+        ? {}
+        : { expectedPublicationToken: input.expectedPublicationToken }),
     });
     return SourceDataSampleResponseSchema.parse({
       contractVersion: SOURCE_DATA_SAMPLE_CONTRACT_VERSION,

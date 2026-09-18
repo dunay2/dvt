@@ -98,7 +98,7 @@ so `@dvt/web` becomes a fully canonical docs surface again.
   - `docs/concepts/repository-map.md`
   - `docs/planning/status/canonical-doc-code-matrix.md`
   - `docs/planning/archive/**`
-  - `docs/planning/status/root-local-doc-triage-20260417.md`
+  - [root-local-doc-triage-20260417.md (Git provenance)](https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/status/root-local-doc-triage-20260417.md)
 - Expected outcome:
   - `apps/web` root keeps only package-local files
   - canonical frontend reader routes start in `docs/`
@@ -142,7 +142,7 @@ so `@dvt/web` becomes a fully canonical docs surface again.
 
 ### Real work performed
 
-- created `docs/planning/status/root-local-doc-triage-20260417.md` as the
+- created [root-local-doc-triage-20260417.md (Git provenance)](https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/status/root-local-doc-triage-20260417.md) as the
   canonical classification record for root-local frontend and prototype docs
 - created `docs/architecture/components/web/plugin-contributions-developer-guide.md`
   as the active plugin-authoring guide

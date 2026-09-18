@@ -144,11 +144,6 @@ export class PostgresPlanStore
         executablePlanJson: executable.text,
       });
 
-      if (persisted.validation_state === 'INVALID') {
-        throw new Error(
-          `PLAN_VALIDATION_STATE_REUSE_UNSUPPORTED: ${planId}:${persisted.validation_state}`
-        );
-      }
       const persistedPlanRef = buildPlanRefFromStoredRow(persisted);
       const planRecordOptions =
         persisted.canonical_plan_json === undefined

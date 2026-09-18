@@ -12,6 +12,14 @@ import {
 } from '@dvt/contracts';
 
 import type { CanonicalEdge } from '../../types/canonical';
+import type { CanvasRelationalCompositionEdgeMember } from './canvasRelationalCompositionEdgeGroup';
+
+export type CanvasDependencyCompositionPresentation = CanvasRelationalCompositionEdgeMember &
+  Readonly<{
+    label: string;
+    accessibleLabel?: string;
+    onActivate?: () => void;
+  }>;
 
 export type CanvasDependencyEdgeData = Readonly<{
   kind: 'dependency';
@@ -23,6 +31,7 @@ export type CanvasDependencyEdgeData = Readonly<{
     isEffectivelyExecutable: boolean;
     unavailableReason?: 'structural-execution-disabled' | 'invalid-gate';
   }>;
+  composition?: CanvasDependencyCompositionPresentation;
 }>;
 
 export function buildCanvasDependencyEdgeData({
@@ -30,11 +39,13 @@ export function buildCanvasDependencyEdgeData({
   targetId,
   executionGate,
   canonicalMetadata,
+  composition,
 }: Readonly<{
   sourceId: string;
   targetId: string;
   executionGate?: WorkspaceGraphAuthoringEdgeExecutionGate;
   canonicalMetadata?: CanonicalEdge['metadata'];
+  composition?: CanvasDependencyCompositionPresentation;
 }>): CanvasDependencyEdgeData {
   const persistedGateState = readWorkspaceGraphAuthoringEdgeExecutionGate({
     metadata: canonicalMetadata,
@@ -70,6 +81,7 @@ export function buildCanvasDependencyEdgeData({
         isWorkspaceGraphAuthoringEdgeEffectivelyExecutable({ metadata: effectiveMetadata }),
       ...(unavailableReason == null ? {} : { unavailableReason }),
     },
+    ...(composition == null ? {} : { composition }),
   };
 }
 
@@ -86,6 +98,33 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
 
   const executionCandidate = execution as { [key: string]: unknown };
   const unavailableReason = executionCandidate.unavailableReason;
+  const composition = candidate.composition;
+  const compositionCandidate =
+    composition != null && typeof composition === 'object'
+      ? (composition as { [key: string]: unknown })
+      : null;
+  const validCompositionOperation =
+    compositionCandidate?.operation == null ||
+    compositionCandidate.operation === 'inner_join' ||
+    compositionCandidate.operation === 'union_all';
+  const validComposition =
+    composition == null ||
+    (compositionCandidate != null &&
+      typeof compositionCandidate.groupId === 'string' &&
+      typeof compositionCandidate.label === 'string' &&
+      (compositionCandidate.accessibleLabel == null ||
+        typeof compositionCandidate.accessibleLabel === 'string') &&
+      typeof compositionCandidate.memberCount === 'number' &&
+      compositionCandidate.memberCount >= 2 &&
+      (compositionCandidate.role === 'branch' || compositionCandidate.role === 'trunk-owner') &&
+      (compositionCandidate.state === 'pending' ||
+        compositionCandidate.state === 'canonical' ||
+        compositionCandidate.state === 'incomplete' ||
+        compositionCandidate.state === 'unresolved') &&
+      (compositionCandidate.onActivate == null ||
+        typeof compositionCandidate.onActivate === 'function') &&
+      validCompositionOperation &&
+      (compositionCandidate.state !== 'canonical' || compositionCandidate.operation != null));
   const validUnavailableReason =
     unavailableReason == null ||
     unavailableReason === 'structural-execution-disabled' ||
@@ -97,7 +136,8 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
     (executionCandidate.gateState !== 'open' && executionCandidate.gateState !== 'closed') ||
     typeof executionCandidate.isGateable !== 'boolean' ||
     typeof executionCandidate.isEffectivelyExecutable !== 'boolean' ||
-    !validUnavailableReason
+    !validUnavailableReason ||
+    !validComposition
   ) {
     return undefined;
   }
@@ -115,5 +155,26 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
         ? { unavailableReason }
         : {}),
     },
+    ...(compositionCandidate == null
+      ? {}
+      : {
+          composition: {
+            groupId: compositionCandidate.groupId as string,
+            label: compositionCandidate.label as string,
+            ...(typeof compositionCandidate.accessibleLabel === 'string'
+              ? { accessibleLabel: compositionCandidate.accessibleLabel }
+              : {}),
+            memberCount: compositionCandidate.memberCount as number,
+            role: compositionCandidate.role as 'branch' | 'trunk-owner',
+            state: compositionCandidate.state as CanvasDependencyCompositionPresentation['state'],
+            ...(compositionCandidate.operation === 'inner_join' ||
+            compositionCandidate.operation === 'union_all'
+              ? { operation: compositionCandidate.operation }
+              : {}),
+            ...(typeof compositionCandidate.onActivate === 'function'
+              ? { onActivate: compositionCandidate.onActivate as () => void }
+              : {}),
+          },
+        }),
   };
 }

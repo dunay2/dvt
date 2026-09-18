@@ -1,5 +1,6 @@
 import {
   DvtOperationalWorkloadContractV1,
+  DvtOperationalWorkloadContractV2,
   KNOWN_STEP_KINDS,
   type ConnectionRef,
   type ConnectedSourceRef,
@@ -114,8 +115,10 @@ function input(
     selectedNodeIds: ['source-a', 'transform-a'],
     selectedEdgeIds: ['source-transform'],
     targetProjection: {
+      profileId: 'dvt.vtx2.postgres.project-rel.v1',
       outputNodeId: 'transform-a',
       semanticPlanSha256: semantic.semanticPlan.sha256,
+      schemaDigestSha256: 'd'.repeat(64),
       connectionRef: CONNECTION,
       artifact: {
         artifactKind: 'compiled-sql',
@@ -126,6 +129,26 @@ function input(
       },
     },
     ...overrides,
+  };
+}
+
+function runDraft(
+  config: Readonly<Record<string, unknown>> = {
+    materialized: 'table',
+    resultTarget: {
+      schemaVersion: 'dvt-transform-result-target.v1',
+      connectionRef: CONNECTION,
+      schema: 'analytics',
+      relation: 'orders_result',
+    },
+  }
+): WorkspaceGraphAuthoringDraft {
+  const base = draft();
+  return {
+    ...base,
+    nodes: base.nodes.map((node) =>
+      node.id === 'transform-a' ? { ...node, metadata: { ...node.metadata, config } } : node
+    ),
   };
 }
 
@@ -150,6 +173,54 @@ describe('DvtOperationalWorkloadProjector', () => {
       selectedEdgeIds: ['source-transform'],
     });
     expect(workload.output).toEqual({ kind: 'ephemeral-preview', nodeId: 'transform-a' });
+  });
+
+  it('lowers one configured table result to the Run workload contract', () => {
+    const result = new DvtOperationalWorkloadProjector().project(input({ draft: runDraft() }));
+
+    if (!result.ok) throw new Error(result.reason);
+    const workload = DvtOperationalWorkloadContractV2.schema.parse(
+      result.graphSource.nodes[0]?.stepTypeConfig
+    );
+    expect(workload.executionIntent).toBe('run');
+    expect(workload.targetProjection.schemaDigestSha256).toBe('d'.repeat(64));
+    expect(workload.output).toMatchObject({
+      kind: 'transform-result',
+      disposition: 'table',
+      target: { schema: 'analytics', relation: 'orders_result' },
+    });
+    expect(workload.publicationBoundaries).toEqual([]);
+  });
+
+  it.each([
+    ['view disposition', () => input({ draft: runDraft({ materialized: 'view' }) })],
+    ['missing target', () => input({ draft: runDraft({ materialized: 'table' }) })],
+    [
+      'missing output schema digest',
+      () => {
+        const candidate = input({ draft: runDraft() });
+        const { schemaDigestSha256: _schemaDigestSha256, ...targetProjection } =
+          candidate.targetProjection;
+        return { ...candidate, targetProjection };
+      },
+    ],
+    [
+      'target on another connection',
+      () =>
+        input({
+          draft: runDraft({
+            materialized: 'table',
+            resultTarget: {
+              schemaVersion: 'dvt-transform-result-target.v1',
+              connectionRef: { ...CONNECTION, connectionId: 'warehouse-other' },
+              schema: 'analytics',
+              relation: 'orders_result',
+            },
+          }),
+        }),
+    ],
+  ])('fails closed for configured Run with %s', (_label, candidate) => {
+    expect(new DvtOperationalWorkloadProjector().project(candidate()).ok).toBe(false);
   });
 
   it.each([

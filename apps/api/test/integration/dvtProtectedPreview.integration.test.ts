@@ -10,6 +10,8 @@ import {
 } from '@dvt/artifacts';
 import {
   DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY,
+  DvtOperationalWorkloadContractV1,
+  DvtOperationalWorkloadContractV2,
   KNOWN_STEP_KINDS,
   createDefaultStepTypeRegistry,
   parseExecutionSelection,
@@ -33,6 +35,7 @@ import { StoredExecutablePlanResolver } from '../../src/application/services/Sto
 import { StoredPlanExecutabilityValidator } from '../../src/application/services/StoredPlanExecutabilityValidator.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../src/domain/auth/types.js';
 import { makeAdapter } from '../application/services/storedPlanExecutabilityValidator/harness.js';
+import { buildDvtJoinPreviewDraft } from '../fixtures/dvtJoinPreviewFixture.js';
 import { buildDvtTerminalTransformPreviewDraft } from '../fixtures/workspaceGraphDraftFixture.js';
 
 const databaseUrl = process.env['DVT_PG_URL'] ?? process.env['DATABASE_URL'];
@@ -73,137 +76,201 @@ describeIfPostgres('protected DVT Preview integration', () => {
     await rm(artifactRoot, { recursive: true, force: true });
   });
 
-  it('persists one Planner-built step without accepting graphSource from the client', async () => {
-    const draft = buildDvtTerminalTransformPreviewDraft();
-    const planner = new PlannerFacade();
-    const graphDraftResolver = new ResolveAuthorizedExecutableSubgraphService({
-      planner,
-      workspaceGraphDraftStore: {
-        migrate: async () => undefined,
-        close: async () => undefined,
-        read: async () => ({
-          scope,
-          schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-          revision: 'revision-dvt-preview-1',
-          draftPayload: draft,
-          updatedAt: '2026-09-11T00:00:00.000Z',
-        }),
-        save: async () => {
-          throw new Error('Draft writes are outside this Preview integration');
+  it.each([
+    [1, 'preview'],
+    [2, 'preview'],
+    [3, 'preview'],
+    [2, 'run'],
+  ] as const)(
+    'persists and replays %i protected inputs as one %s plan without client graphSource',
+    async (inputCount, intent) => {
+      const baseDraft =
+        inputCount === 1
+          ? buildDvtTerminalTransformPreviewDraft()
+          : buildDvtJoinPreviewDraft(inputCount);
+      const draft =
+        intent === 'preview'
+          ? baseDraft
+          : {
+              ...baseDraft,
+              nodes: baseDraft.nodes.map((node) =>
+                node.id === 'transform-orders'
+                  ? {
+                      ...node,
+                      metadata: {
+                        ...node.metadata,
+                        config: {
+                          materialized: 'table',
+                          resultTarget: {
+                            schemaVersion: 'dvt-transform-result-target.v1',
+                            connectionRef: {
+                              schemaVersion: 'connection-ref.v1',
+                              connectionId: 'local-postgres-proof',
+                              provider: 'postgres',
+                            },
+                            schema: 'analytics',
+                            relation: 'orders_result',
+                          },
+                        },
+                      },
+                    }
+                  : node
+              ),
+            };
+      const planner = new PlannerFacade();
+      const graphDraftResolver = new ResolveAuthorizedExecutableSubgraphService({
+        planner,
+        workspaceGraphDraftStore: {
+          migrate: async () => undefined,
+          close: async () => undefined,
+          read: async () => ({
+            scope,
+            schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+            revision: 'revision-dvt-preview-1',
+            draftPayload: draft,
+            updatedAt: '2026-09-11T00:00:00.000Z',
+          }),
+          save: async () => {
+            throw new Error('Draft writes are outside this Preview integration');
+          },
         },
-      },
-    });
-    const targetProjectionPublisher = new DvtPostgresTargetProjectionPublisher({
-      artifactStore: new FileContentAddressedArtifactStore({ rootPath: artifactRoot }),
-      locateArtifact: ({ tenantId, sha256 }) =>
-        locateFileContentAddressedArtifact({
-          rootPath: artifactRoot,
-          tenantId,
-          sha256,
-        }),
-    });
-    const dvtPreviewSelectionResolver = new ResolveAuthorizedDvtPreviewSelectionService({
-      graphDraftResolver,
-      targetProjectionPublisher,
-      workloadProjector: new DvtOperationalWorkloadProjector(),
-    });
-    const previewSelectionResolver = new ResolveAuthorizedPreviewSelectionService({
-      graphDraftResolver,
-      dvtPreviewSelectionResolver,
-      projectGraph: {
-        execute: async () => {
-          throw new Error('dbt projection is outside this DVT Preview');
+      });
+      const targetProjectionPublisher = new DvtPostgresTargetProjectionPublisher({
+        artifactStore: new FileContentAddressedArtifactStore({ rootPath: artifactRoot }),
+        locateArtifact: ({ tenantId, sha256 }) =>
+          locateFileContentAddressedArtifact({
+            rootPath: artifactRoot,
+            tenantId,
+            sha256,
+          }),
+      });
+      const dvtPreviewSelectionResolver = new ResolveAuthorizedDvtPreviewSelectionService({
+        graphDraftResolver,
+        targetProjectionPublisher,
+        workloadProjector: new DvtOperationalWorkloadProjector(),
+      });
+      const previewSelectionResolver = new ResolveAuthorizedPreviewSelectionService({
+        graphDraftResolver,
+        dvtPreviewSelectionResolver,
+        projectGraph: {
+          execute: async () => {
+            throw new Error('dbt projection is outside this DVT Preview');
+          },
         },
-      },
-    });
-    const stepTypeRegistry = createDefaultStepTypeRegistry();
-    const planValidator = new StoredPlanExecutabilityValidator({
-      materializer: new StoredExecutablePlanResolver({
-        fetcher: planStore,
+      });
+      const stepTypeRegistry = createDefaultStepTypeRegistry();
+      const planValidator = new StoredPlanExecutabilityValidator({
+        materializer: new StoredExecutablePlanResolver({
+          fetcher: planStore,
+          stepTypeRegistry,
+        }),
+        adapters: new Map([['temporal', makeAdapter([])]]),
         stepTypeRegistry,
-      }),
-      adapters: new Map([['temporal', makeAdapter([])]]),
-      stepTypeRegistry,
-    });
-    const useCase = new PreviewPlanUseCase({
-      planner,
-      planStore,
-      planValidator,
-      previewSelectionResolver,
-    });
-    const command = {
-      targetAdapter: 'temporal',
-      selection: parseExecutionSelection({
-        mode: 'upstream',
-        nodeIds: ['transform-orders'],
-      }),
-      provenance: {
-        kind: 'dvt-protected-workspace-graph' as const,
-        canvasId: 'dvt-terminal-preview-canvas',
-      },
-    };
-    const context = {
-      principal: {
-        principalId: 'principal-dvt-preview-it',
-        subjectId: 'principal-dvt-preview-it',
-        issuer: 'issuer',
-        audience: 'audience',
-        principalType: 'user' as const,
-        expiresAt: new Date('2030-01-01T00:00:00.000Z'),
-        rawScopes: [],
-        assertedTenantIds: [scope.tenantId],
-        assertedProjectIds: [scope.projectId],
-      },
-      scope: buildEnvironmentAccessScope(
-        TenantId.unsafe(scope.tenantId),
-        ProjectId.unsafe(scope.projectId),
-        EnvironmentId.unsafe(scope.environmentId)
-      ),
-      action: AUTHORIZATION_ACTION.runStart,
-      requestId: 'request-dvt-preview-it',
-      authorizedAt: new Date('2026-09-11T00:00:00.000Z'),
-    };
+      });
+      const useCase = new PreviewPlanUseCase({
+        planner,
+        planStore,
+        planValidator,
+        previewSelectionResolver,
+      });
+      const command = {
+        targetAdapter: 'temporal',
+        selection: parseExecutionSelection({
+          mode: 'upstream',
+          nodeIds: ['transform-orders'],
+        }),
+        provenance: {
+          kind: 'dvt-protected-workspace-graph' as const,
+          canvasId: 'dvt-terminal-preview-canvas',
+        },
+      };
+      const context = {
+        principal: {
+          principalId: 'principal-dvt-preview-it',
+          subjectId: 'principal-dvt-preview-it',
+          issuer: 'issuer',
+          audience: 'audience',
+          principalType: 'user' as const,
+          expiresAt: new Date('2030-01-01T00:00:00.000Z'),
+          rawScopes: [],
+          assertedTenantIds: [scope.tenantId],
+          assertedProjectIds: [scope.projectId],
+        },
+        scope: buildEnvironmentAccessScope(
+          TenantId.unsafe(scope.tenantId),
+          ProjectId.unsafe(scope.projectId),
+          EnvironmentId.unsafe(scope.environmentId)
+        ),
+        action: AUTHORIZATION_ACTION.runStart,
+        requestId: 'request-dvt-preview-it',
+        authorizedAt: new Date('2026-09-11T00:00:00.000Z'),
+      };
 
-    expect(command).not.toHaveProperty('graphSource');
-    const result = await useCase.execute(command, context);
-    if (result.kind === 'selection-rejected') {
-      throw new Error(JSON.stringify(result.rejection));
-    }
+      expect(command).not.toHaveProperty('graphSource');
+      const result = await useCase.execute(command, context);
+      if (result.kind === 'selection-rejected') {
+        throw new Error(JSON.stringify(result.rejection));
+      }
 
-    expect(result).toMatchObject({
-      kind: 'plan-invalid',
-      validation: {
-        status: 'ERROR',
-        code: 'MISSING_CAPABILITY',
-        cause: DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY,
-      },
-    });
-    if (result.kind !== 'plan-invalid') {
-      throw new Error('Expected persisted plan with the real missing executor capability');
-    }
-    expect(result.plan.steps).toEqual([
-      expect.objectContaining({
-        stepId: 'transform-orders',
-        kind: KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD,
-        dependsOn: [],
-      }),
-    ]);
-    await expect(
-      planStore.getPlanRecordByRef({
-        ...scope,
-        planRef: result.planRef,
-      })
-    ).resolves.toMatchObject({
-      planId: result.plan.metadata.planId,
-      sourceRef: result.planRef.uri,
-    });
-    await expect(
-      planStore.getStoredPlanValidationRecord({
-        ...scope,
+      expect(result).toMatchObject({
+        kind: 'plan-invalid',
+        validation: {
+          status: 'ERROR',
+          code: 'MISSING_CAPABILITY',
+          cause: DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY,
+        },
+      });
+      if (result.kind !== 'plan-invalid') {
+        throw new Error('Expected persisted plan with the real missing executor capability');
+      }
+      expect(result.plan.steps).toEqual([
+        expect.objectContaining({
+          stepId: 'transform-orders',
+          kind: KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD,
+          dependsOn: [],
+        }),
+      ]);
+      const workload =
+        intent === 'preview'
+          ? DvtOperationalWorkloadContractV1.schema.parse(result.plan.steps[0]?.stepTypeConfig)
+          : DvtOperationalWorkloadContractV2.schema.parse(result.plan.steps[0]?.stepTypeConfig);
+      expect(workload.graph.selectedNodeIds).toEqual([...draft.nodeIds].sort());
+      expect(workload.graph.selectedEdgeIds).toEqual(draft.edges.map((edge) => edge.id).sort());
+      expect(workload.semantics).toHaveLength(1);
+      expect(workload.output.kind).toBe(
+        intent === 'preview' ? 'ephemeral-preview' : 'transform-result'
+      );
+      await expect(
+        planStore.getPlanRecordByRef({
+          ...scope,
+          planRef: result.planRef,
+        })
+      ).resolves.toMatchObject({
         planId: result.plan.metadata.planId,
-      })
-    ).resolves.toMatchObject({
-      state: 'INVALID',
-    });
-  });
+        sourceRef: result.planRef.uri,
+      });
+      await expect(
+        planStore.getStoredPlanValidationRecord({
+          ...scope,
+          planId: result.plan.metadata.planId,
+        })
+      ).resolves.toMatchObject({
+        state: 'INVALID',
+      });
+
+      const repeated = await useCase.execute(command, context);
+      expect(repeated).toMatchObject({
+        kind: 'plan-invalid',
+        planRef: result.planRef,
+        planRecord: {
+          planId: result.planRecord.planId,
+          canonicalHash: result.planRecord.canonicalHash,
+          canonicalPlanJson: result.planRecord.canonicalPlanJson,
+          sourceRef: result.planRecord.sourceRef,
+          createdAtIso: result.planRecord.createdAtIso,
+        },
+        validation: result.validation,
+      });
+    }
+  );
 });

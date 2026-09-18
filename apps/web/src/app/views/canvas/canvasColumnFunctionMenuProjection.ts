@@ -7,6 +7,7 @@ import type {
 import type { CanonicalNode } from '../../types/canonical';
 import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
 import {
+  inspectDvtSubstraitProjectionDraft,
   resolveDvtSubstraitColumnFunctions,
   resolveDvtSubstraitProjectionEntry,
 } from './canvasDvtSubstraitProjection';
@@ -24,6 +25,7 @@ export type CanvasColumnFunctionMenuProjection = Readonly<{
   hasEditableProjection: boolean;
   supportsCalculatedColumns: boolean;
   menus?: CanvasColumnFunctionMenuMap;
+  expressionInputs?: readonly GraphNodeColumn[];
   resolveCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
 }>;
 
@@ -37,7 +39,8 @@ function addMenu(args: {
   const items = resolveDvtSubstraitColumnFunctions({
     dataType: args.dataType,
     provider: args.provider,
-  }).filter((item) => item.argumentCount === 1);
+    resolution: 'proposal',
+  });
   const category = items[0]?.category;
   if (category == null || items.length === 0) return;
   const value = {
@@ -57,7 +60,12 @@ export function resolveCanvasColumnCompositionFunctions(args: {
   return resolveDvtSubstraitColumnFunctions({
     dataTypes: [args.targetType, args.sourceType],
     provider: args.provider,
-  }).filter((item) => item.argumentCount === 2);
+    resolution: 'complete',
+  }).filter(
+    (item) =>
+      item.minimumArgumentCount <= 2 &&
+      (item.maximumArgumentCount == null || item.maximumArgumentCount >= 2)
+  );
 }
 
 function projectDvtTransformMenus(args: {
@@ -67,33 +75,80 @@ function projectDvtTransformMenus(args: {
 }): CanvasColumnFunctionMenuProjection {
   try {
     const metadata = createDvtNodeAuthoringMetadata(args.node);
-    const projection =
+    const draft =
       metadata?.kind === 'transform' &&
       metadata.mode === 'substrait' &&
       metadata.shape === 'projection'
-        ? resolveDvtSubstraitProjectionEntry({
+        ? { plan: metadata.plan, sidecar: metadata.sidecar }
+        : null;
+    const projection =
+      draft == null
+        ? null
+        : resolveDvtSubstraitProjectionEntry({
             targetNode: args.node,
             nodes: args.nodes,
             edges: args.edges,
-            draft: { plan: metadata.plan, sidecar: metadata.sidecar },
-          })
-        : null;
-    if (projection == null)
+            draft,
+          });
+    if (draft == null || projection == null)
       return { hasEditableProjection: false, supportsCalculatedColumns: false };
+    const inspection = inspectDvtSubstraitProjectionDraft(draft);
+    if (!inspection.ok) return { hasEditableProjection: false, supportsCalculatedColumns: false };
     const menus: CanvasColumnFunctionMenuMap = new Map();
+    const provider = projection.source.sourceRef.connectionRef.provider;
     for (const output of projection.outputs) {
       addMenu({
         menus,
         columnId: output.fieldId,
         name: output.name,
         dataType: output.dataType,
-        provider: projection.source.sourceRef.connectionRef.provider,
+        provider,
       });
     }
-    const provider = projection.source.sourceRef.connectionRef.provider;
+    const expressionMenus: CanvasColumnFunctionMenuMap = new Map();
+    for (const field of inspection.projection.inputFields) {
+      addMenu({
+        menus: expressionMenus,
+        columnId: field.fieldId,
+        name: field.name,
+        dataType: field.dataType,
+        provider,
+      });
+    }
+    const inputIds = new Set(inspection.projection.inputFields.map((field) => field.fieldId));
+    const inputNames = new Set(inspection.projection.inputFields.map((field) => field.name));
+    const expressionInputs: GraphNodeColumn[] = [
+      ...inspection.projection.inputFields.map((field) => {
+        const menu = expressionMenus.get(field.fieldId)?.menu;
+        return {
+          id: field.fieldId,
+          name: field.name,
+          type: field.dataType,
+          ...(menu == null ? {} : { functionMenu: menu }),
+        };
+      }),
+      ...projection.outputs.flatMap((output) => {
+        if (
+          (output.sourceFieldId != null && inputIds.has(output.sourceFieldId)) ||
+          (output.sourceFieldName != null && inputNames.has(output.sourceFieldName))
+        ) {
+          return [];
+        }
+        const menu = menus.get(output.fieldId)?.menu;
+        return [
+          {
+            id: output.fieldId,
+            name: output.name,
+            type: output.dataType,
+            ...(menu == null ? {} : { functionMenu: menu }),
+          },
+        ];
+      }),
+    ];
     return {
       hasEditableProjection: true,
       supportsCalculatedColumns: true,
+      expressionInputs,
       ...(menus.size === 0 ? {} : { menus }),
       resolveCompositionFunctions: ({ targetType, sourceType }) =>
         resolveCanvasColumnCompositionFunctions({ provider, targetType, sourceType }),

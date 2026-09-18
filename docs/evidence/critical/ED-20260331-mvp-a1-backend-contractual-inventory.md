@@ -9,7 +9,7 @@ arc_level: ARC-1
 breaking: false
 evidence_class: critical
 code_refs:
-  - docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md
+  - https://github.com/dunay2/dvt/blob/db43c857a8319b356fda98bab78c7dfb55b4606b/docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md
   - docs/planning/reviews/execution-runtime/20260331-mvp-a1-backend-contractual-inventory-review.md
   - apps/api/src/app.ts
   - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts

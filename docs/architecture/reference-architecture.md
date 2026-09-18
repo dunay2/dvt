@@ -262,7 +262,7 @@ open PR discussion.
 - API component: [`docs/architecture/components/api/`](./components/api/index.md)
 - Engine component: [`docs/architecture/components/engine/`](./components/engine/index.md)
 - Web graph architecture: [`docs/architecture/components/web/graph/graph-frontend-architecture.md`](./components/web/graph/graph-frontend-architecture.md)
-- Task lifecycle: GitHub Issues, with [Planning Dashboard](../planning/state/planning-dashboard.md) for human navigation
+- Task lifecycle: [GitHub Issues](https://github.com/dunay2/dvt/issues)
 - Architecture/mechanization authority: Planning DB, bounded by [ADR-0061](../adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md)
 - ADRs: [`docs/adr/`](../adr/index.md)
 

@@ -115,7 +115,7 @@ status: Completed
 - `packages/@dvt/adapter-postgres/test/migratePostgresRuntimeStores.test.ts`
 - `docs/adr/ADR-0004-event-sourcing-strategy.md`
 - `docs/planning/reviews/architecture-and-governance/20260426-api-tenant-review.md`
-- `docs/planning/reviews/review-status-board.md`
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)
 - `docs/evidence/ed-20260426-api-tenant-qa-hardening.md`
 - `docs/risk-register/quality/r-20260426-start-run-intent-rollback-asymmetry.md`
 - `docs/planning/closeouts/20260426-api-tenant-qa-hardening-closeout.md`

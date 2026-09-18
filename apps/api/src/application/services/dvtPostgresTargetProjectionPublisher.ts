@@ -4,28 +4,20 @@
  */
 import type { IContentAddressedArtifactStore } from '@dvt/artifacts';
 import {
-  decodeDvtSubstraitPlanV1,
-  type DvtSubstraitSemanticDocumentV1,
+  createDvtPostgresOutputSchemaDigestV1,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 import { sha256Hex } from '@dvt/crypto';
-import {
-  projectDvtConnectedFieldDraftToPostgresSql,
-  type ProjectedDvtConnectedFieldSql,
-} from '@dvt/postgres-projection';
+import { projectDvtPostgresOutputSchemaV1 } from '@dvt/postgres-projection';
 
 import type { DvtTerminalTransformProjectionBinding } from './dvtOperationalWorkloadProjector.js';
 import {
-  resolveDvtTerminalTransformClosure,
-  sameConnection,
-} from './resolveDvtTerminalTransformClosure.js';
+  projectDvtPostgresTransform,
+  type ProjectDvtConnectedFieldDocument,
+} from './dvtPostgresTransformProjection.js';
+import { resolveDvtTerminalTransformClosure } from './resolveDvtTerminalTransformClosure.js';
 
 const SQL_MEDIA_TYPE = 'application/sql; charset=utf-8';
-
-type ProjectSemanticDocument = (
-  document: DvtSubstraitSemanticDocumentV1,
-  nodeBinding: { readonly sourceNodeId: string; readonly targetNodeId: string }
-) => Promise<ProjectedDvtConnectedFieldSql>;
 
 export type DvtPostgresTargetProjectionPublishInput = {
   readonly scope: {
@@ -46,7 +38,7 @@ export class DvtPostgresTargetProjectionPublisher {
         readonly tenantId: string;
         readonly sha256: string;
       }) => string;
-      readonly projectSemanticDocument?: ProjectSemanticDocument;
+      readonly projectSemanticDocument?: ProjectDvtConnectedFieldDocument;
     }
   ) {}
 
@@ -55,25 +47,10 @@ export class DvtPostgresTargetProjectionPublisher {
   ): Promise<DvtTerminalTransformProjectionBinding> {
     const closure = resolveDvtTerminalTransformClosure(input);
     const semanticDocument = closure.authority.semanticDocument;
-    const project = this.deps.projectSemanticDocument ?? projectCanonicalConnectedFieldDocument;
-    const projected = await project(semanticDocument, {
-      sourceNodeId: closure.source.id,
-      targetNodeId: closure.transform.id,
-    });
-    if (
-      projected.projection.targetNodeId !== closure.transform.id ||
-      projected.projection.source.nodeId !== closure.source.id ||
-      !sameConnection(
-        projected.projection.source.sourceRef.connectionRef,
-        closure.connectedSource.connectionRef
-      ) ||
-      projected.projection.source.sourceRef.sourceObjectId !==
-        closure.connectedSource.sourceObjectId
-    ) {
-      throw new Error('PostgreSQL projection does not match the protected terminal closure.');
-    }
-
-    const bytes = Buffer.from(projected.sql, 'utf8');
+    const projected = await projectDvtPostgresTransform(closure, this.deps.projectSemanticDocument);
+    const sql = projected.sql;
+    const outputSchema = projectDvtPostgresOutputSchemaV1(projected.outputs);
+    const bytes = Buffer.from(sql, 'utf8');
     const sha256 = sha256Hex(bytes);
     const storageUri = this.deps.locateArtifact({
       tenantId: input.scope.tenantId,
@@ -99,7 +76,11 @@ export class DvtPostgresTargetProjectionPublisher {
     return {
       outputNodeId: closure.transform.id,
       semanticPlanSha256: semanticDocument.semanticPlan.sha256,
-      connectionRef: closure.connectedSource.connectionRef,
+      ...(outputSchema == null
+        ? {}
+        : { schemaDigestSha256: createDvtPostgresOutputSchemaDigestV1(outputSchema) }),
+      connectionRef: closure.connectionRef,
+      profileId: closure.profileId,
       artifact: {
         artifactKind: 'compiled-sql',
         sha256: published.sha256,
@@ -109,17 +90,4 @@ export class DvtPostgresTargetProjectionPublisher {
       },
     };
   }
-}
-
-function projectCanonicalConnectedFieldDocument(
-  document: DvtSubstraitSemanticDocumentV1,
-  nodeBinding: { readonly sourceNodeId: string; readonly targetNodeId: string }
-): Promise<ProjectedDvtConnectedFieldSql> {
-  return projectDvtConnectedFieldDraftToPostgresSql(
-    {
-      plan: decodeDvtSubstraitPlanV1(document),
-      sidecar: document.sidecar,
-    },
-    nodeBinding
-  );
 }

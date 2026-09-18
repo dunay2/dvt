@@ -14,11 +14,11 @@
 import { z } from 'zod';
 
 import {
-  addDvtNodeFieldPolicyIssues,
   WorkspaceGraphAuthoringEdgeSchema,
   WorkspaceGraphAuthoringNodePositionSchema,
   WorkspaceGraphAuthoringNodeSchema,
 } from './WorkspaceGraphAuthoringDraft.v1.js';
+import { addDvtNodeFieldPolicyIssues } from './WorkspaceGraphDvtNodeFieldPolicy.v1.js';
 
 export const WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE = {
   addNode: 'add_node',

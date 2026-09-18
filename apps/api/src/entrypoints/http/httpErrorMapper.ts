@@ -70,6 +70,12 @@ export function mapStartRunResult(result: StartRunResult): HttpResponseModel {
           : { headers: { [HTTP_HEADER.retryAfter]: String(result.retryAfterSeconds) } }),
       });
     case START_RUN_RESULT_KIND.planRejected: {
+      if (result.cause === 'integrity') {
+        return createHttpErrorResponse({
+          type: HTTP_ERROR_TYPE.unprocessable,
+          reason: HTTP_ERROR_REASON.planRejected,
+        });
+      }
       const planRejectedDetails = compactHttpErrorDetails({
         message: result.reason,
         ...(result.cause === undefined ? {} : { cause: result.cause }),

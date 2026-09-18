@@ -2,7 +2,7 @@
 title: DVT artifacts review
 status: Active
 owner: Architecture / Artifacts / Frontend / Docs
-last_reviewed: 2026-04-18
+last_reviewed: 2026-09-12
 planning_type: review
 ---
 
@@ -16,7 +16,7 @@ document is not a second roadmap.
 
 - [AGENTS.md](../../../AGENTS.md)
 - [Governance document and rule inventory](../../status/governance-document-rule-inventory.md)
-- [Planning control tower](../../state/planning-control-tower.md)
+- [GitHub MVP issue workflow](../../state/github-mvp-issue-workflow.md)
 - [ADR-0034: bounded context boundaries and communication rules](../../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)
 - [ADR-0043: plan record, plan store, and artifacts ownership](../../../adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md)
 - [Contracts domain ownership migration plan](../../proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md)

@@ -40,7 +40,7 @@ import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualToke
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { useCanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import { DvtTransformOutputView } from './DvtTransformOutputView';
+import { DvtTransformCodeWorkbenchContent } from './DvtTransformCodeWorkbenchContent';
 import { isDbtCompatibleModel, reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
 import { useCanvasColumnCommentCellRenderer } from './useCanvasColumnCommentCellRenderer';
 import { SourceNodeWorkbenchHeaderIdentity } from './SourceNodeWorkbenchHeaderIdentity';
@@ -353,13 +353,15 @@ export function CanvasNodeWorkbenchPanel({
     sectionAfterChildren.code = (
       <>
         {sectionAfterChildren.code}
-        <DvtTransformOutputView
+        <DvtTransformCodeWorkbenchContent
           key={`${node.id}:${presentationTruth.code.digest}`}
           transformNode={node}
           nodes={nodes}
           edges={edges}
           canonicalContent={presentationTruth.code.content}
           canonicalDescription={codeDescription}
+          relationalComposition={presentationTruth.relationalComposition}
+          pendingCompositionAuthoring={renderAuthoringSection('code')}
           copy={copy}
         />
       </>
@@ -468,17 +470,21 @@ export function CanvasNodeWorkbenchPanel({
           {node.kind === 'dvt:source' ? (
             <SourceNodeWorkbenchHeaderIdentity node={node} />
           ) : (
-            <>
-              <div className="flex items-center gap-2">
-                <div className={cn('size-2 shrink-0 rounded-full', dotClass)} />
-                <h2 className={cn('truncate', inspectorVisualClasses.contextPanelTitle)}>
-                  {node.name}
-                </h2>
-              </div>
-              <p className={cn('font-mono', inspectorVisualClasses.contextPanelSubtitle)}>
+            <div className="flex min-w-0 items-center gap-2">
+              <div
+                data-slot="canvas-node-workbench-status"
+                className={cn('size-2 shrink-0 rounded-full', dotClass)}
+              />
+              <h2 className={cn('truncate', inspectorVisualClasses.contextPanelTitle)}>
+                {node.name}
+              </h2>
+              <span
+                data-slot="canvas-node-workbench-kind"
+                className={cn('shrink-0 font-mono', inspectorVisualClasses.contextPanelSubtitle)}
+              >
                 {resolveNodeKindRegistration(node.kind).label}
-              </p>
-            </>
+              </span>
+            </div>
           )}
         </div>
         <div

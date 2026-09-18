@@ -2,7 +2,7 @@
 title: VTX2 Terminal Transform Preview Workload Projection Plan
 status: Approved
 owner: API / Contracts / PostgreSQL Projection / Web
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-14
 planning_type: implementation-plan
 task_id: GH-2784
 ---
@@ -73,7 +73,8 @@ dbt artifact and generic Planner path. This is one Canvas with two compatible
 authorities, not separate Canvas types.
 
 This slice does not execute SQL or return rows; runtime support belongs to #2723.
-It does not yet lower sinks, publication fan-out, joins, sets or aggregates.
+The first slice excludes sinks, publication fan-out, joins, sets and aggregates;
+the bounded #2524 extension below admits canonical N-input INNER JOIN Preview.
 GitHub issue #2784 remains open until its existing Sink and fan-out acceptance is preserved
 through the same rail. Parent #2524 retains broader workload lowering.
 
@@ -151,7 +152,7 @@ closure; and the artifact identity is verified through CAS.
 - package manifests, lockfile and governed ARC-2 evidence
 
 Forbidden: Engine, Temporal adapters, runtime worker, dbt artifact semantics,
-stable publication and aggregate/join/set lowering.
+stable publication and aggregate/set lowering.
 
 ## Behavior-first validation
 
@@ -171,3 +172,32 @@ The feature-mechanization manifest is exported after its symbols and tests exist
 it must not claim `implemented` during the RED phase. Final evidence includes
 focused package tests, lint and type checks, ARC-2 evidence and risk, visible
 Cypress, `pnpm governance:refresh` and `pnpm verify:prepush` with hooks enabled.
+
+## GH-2524: N-input INNER JOIN Preview extension
+
+Current rejection is structural: closure, workload schema and shared projection
+admit only one Source. The existing Web JOIN reader/renderer is reusable logic,
+not server authority. Extract its read-only responsibilities into the existing
+`@dvt/postgres-projection` package; Web and API consume that implementation.
+
+```mermaid
+flowchart LR
+  Sources[N protected PostgreSQL Sources] --> Join[One terminal Transform / canonical INNER JOIN tree]
+  Join --> Projection[Shared admitted reader and PostgreSQL renderer]
+  Projection --> Artifact[Existing CAS] --> Workload[One ephemeral Preview workload]
+  Workload --> Planner[Existing PreviewPlan / Planner]
+```
+
+Keep the current ProjectRel profile strict. Add the bounded target profile
+`dvt.vtx2.postgres.inner-join.v1` to the existing workload contract: N >= 2 unique
+Sources, one terminal Transform, N effective lineage edges, one exact semantic
+revision and one SQL artifact. Every semantic source must match a protected Source
+and the same governed connection. Missing/extra bindings, closed required inputs,
+unknown shapes and stale identities reject before CAS/Planner; never truncate.
+The existing Fowler matrix applies to extraction, typed identity and single-read
+authority. Allowed extensions are JOIN reader/renderer extraction in Web/package,
+the existing terminal closure, publisher, workload schema/projector and their tests.
+RED fixtures cover two/three Sources, predicates, output selection, stale/mixed
+bindings, closed gates and no silent drops; regression covers Web rendering and
+real CAS/Planner/PostgreSQL persistence. No new rail, operator step or private IR.
+Preview leaves Transform disposition unchanged; Run/publication stays #3115/#2723.

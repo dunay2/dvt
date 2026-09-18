@@ -64,24 +64,23 @@ describe('SemanticWorkbenchLab architecture', () => {
     expect(PANEL).toContain('data-slot="semantic-workbench-inspector"');
     expect(PANEL).toContain('setSelectedSemanticId');
     expect(PANEL).toContain('Tooltip');
-    expect(PANEL).toContain('setDvtSubstraitJoinPredicateFields');
+    expect(PANEL).not.toContain('setDvtSubstraitJoinPredicateFields');
     expect(PANEL).toContain('addDvtSubstraitJoinPredicateCondition');
     expect(PANEL).toContain('updateDvtSubstraitJoinPredicateCondition');
     expect(PANEL).toContain('removeDvtSubstraitJoinPredicateCondition');
-    expect(PANEL).toContain('data-slot="semantic-workbench-left-field-select"');
-    expect(PANEL).toContain('data-slot="semantic-workbench-right-field-select"');
-    expect(PANEL).toContain('Aplicar condición');
+    expect(PANEL).toContain('conditions={selectedJoinPredicate.conditions}');
+    expect(PANEL).not.toContain('PendingJoinPredicate');
     expect(JOIN_CONDITION_EDITOR).toContain('label="Añadir condición"');
     expect(PANEL).toContain("details.join(' · ')");
     expect(PANEL).toContain('selectedSemantic?.data.joinOperand');
-    expect(JOIN_CONDITION_EDITOR).toContain('Conector de la condición adicional');
-    expect(JOIN_CONDITION_EDITOR).toContain('Comparador de la condición adicional');
-    expect(PANEL).toContain('DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS');
+    expect(JOIN_CONDITION_EDITOR).toContain('Conector de la condición');
+    expect(JOIN_CONDITION_EDITOR).toContain('Comparador de la condición');
+    expect(JOIN_CONDITION_EDITOR).toContain('DVT_SUBSTRAIT_JOIN_PREDICATE_OPERATORS');
     expect(PANEL).not.toContain('Impacto estimado');
     expect(PANEL).not.toContain('Editar nodo');
   });
 
-  it('uses one symmetric operand editor for both sides of an additional JOIN condition', () => {
+  it('uses one symmetric operand editor for both sides of every JOIN condition', () => {
     expect(PANEL).toContain('<SemanticWorkbenchJoinConditionEditor');
     expect(PANEL).not.toContain('<SemanticWorkbenchJoinOperandEditor');
     expect(JOIN_CONDITION_EDITOR.match(/<SemanticWorkbenchJoinOperandEditor/g)).toHaveLength(2);

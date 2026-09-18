@@ -173,6 +173,9 @@ function ExecutionActionsHookView({
       >
         start-run
       </button>
+      <button type="button" onClick={() => hook.setPlanModalOpen(true)}>
+        open-plan-modal
+      </button>
     </div>
   );
 }
@@ -501,6 +504,7 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
   rerender: (nextArgs: Partial<RenderExecutionActionsHarnessArgs>) => Promise<void>;
   clickPlan: () => Promise<void>;
   clickStartRun: () => Promise<void>;
+  openPlanModal: () => Promise<void>;
   text: (testId: string) => string | null;
   cleanup: () => void;
   container: HTMLDivElement;
@@ -560,6 +564,11 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
     clickStartRun: async () => {
       await act(async () => {
         queryButton(1)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      });
+    },
+    openPlanModal: async () => {
+      await act(async () => {
+        queryButton(2)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
       });
     },
     text: (testId) => container.querySelector(`[data-testid="${testId}"]`)?.textContent ?? null,

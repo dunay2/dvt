@@ -22,7 +22,7 @@ the implementation truth in [System Delivery Status](./system-delivery-status.md
 3. [System Architecture](./system/index.md)
 4. [Subsystem Architecture](./system/subsystems/index.md)
 5. [DVT Component Map](./component-map.md)
-6. [Planning Dashboard](../planning/state/planning-dashboard.md)
+6. [GitHub Issues](https://github.com/dunay2/dvt/issues)
 
 ## Current Domain Relationships
 
@@ -74,4 +74,4 @@ flowchart LR
 - [Subsystem Architecture](./system/subsystems/index.md)
 - [Architecture Component Surfaces](./components/index.md)
 - [DVT System Architecture](./system-overview.md)
-- [Planning Dashboard](../planning/state/planning-dashboard.md)
+- [GitHub Issues](https://github.com/dunay2/dvt/issues)

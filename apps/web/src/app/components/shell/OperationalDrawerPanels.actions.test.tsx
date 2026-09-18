@@ -81,7 +81,6 @@ function buildContribution(
       onPreviewExecutionPlan: vi.fn(),
       selectionRecovery: null,
     },
-    dataSample: { status: 'idle' },
     ...overrides,
   };
 }

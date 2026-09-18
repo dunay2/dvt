@@ -6,6 +6,21 @@ import { loadSemanticWorkbenchDataset } from './semanticWorkbenchDataset';
 import { buildSemanticWorkbenchFixture } from './semanticWorkbenchFixture';
 
 describe('semanticWorkbenchDataset', () => {
+  it('accepts explicit nullable cells but rejects missing values and null keys', () => {
+    expect(loadSemanticWorkbenchDataset(ordersFixture).rows.at(-1)?.discount).toBeNull();
+    const missing = structuredClone(ordersFixture);
+    delete (missing.rows[0] as Record<string, unknown>).discount;
+    expect(() => loadSemanticWorkbenchDataset(missing)).toThrow('must be numeric');
+    const nullKey = {
+      ...ordersFixture,
+      columns: ordersFixture.columns.map((column) => ({ ...column, nullable: true })),
+      rows: ordersFixture.rows.map((row, index) =>
+        index === 0 ? { ...row, order_id: null } : row
+      ),
+    };
+    expect(() => loadSemanticWorkbenchDataset(nullKey)).toThrow('must be text');
+  });
+
   it('loads coherent reusable Orders and Client fixtures', () => {
     const orders = loadSemanticWorkbenchDataset(ordersFixture);
     const clients = loadSemanticWorkbenchDataset(clientFixture);

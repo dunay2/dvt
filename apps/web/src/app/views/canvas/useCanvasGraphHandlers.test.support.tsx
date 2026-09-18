@@ -153,6 +153,20 @@ export function renderGraphHandlersHook({
 } {
   const canonicalNodesById = new Map(canonicalNodes.map((node) => [node.id, node]));
   let currentNodes = nodes;
+  let currentDraftSession = draftSession;
+  const runDraftSessionCommand = ((
+    command: (session: CanvasDraftSession) => {
+      outcome: string;
+      draftSession?: CanvasDraftSession;
+    }
+  ) => {
+    const result = command(currentDraftSession);
+    if (result.outcome === 'applied' && result.draftSession != null) {
+      currentDraftSession = result.draftSession;
+      setDraftSession(() => currentDraftSession);
+    }
+    return result;
+  }) as import('./useCanvasWorkspaceDraftSession').CanvasDraftSessionCommandRunner;
   let latest: LatestHook = null;
   const container = document.createElement('div');
   document.body.appendChild(container);
@@ -183,6 +197,7 @@ export function renderGraphHandlersHook({
       setNodes,
       setEdges,
       setDraftSession,
+      runDraftSessionCommand,
       setSelectedNodes,
       reconcileSelectionAfterNodeRemoval,
       setInspectorNode,

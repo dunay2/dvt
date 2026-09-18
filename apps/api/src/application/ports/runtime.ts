@@ -4,6 +4,7 @@
  */
 import type {
   CanonicalRunStatus,
+  DvtPostgresPublicationEvidence,
   EventEnvelope,
   Provider,
   MaterializationEvidence,
@@ -138,6 +139,7 @@ export type GetRunStatusResult = RunOperationalTruthDto & {
   readonly snapshotStaleness: RunSnapshotStaleness;
   readonly executor?: TransformationExecutor;
   readonly materialization?: MaterializationEvidence;
+  readonly publication?: DvtPostgresPublicationEvidence;
   readonly provenance?: RunProvenanceChain;
   readonly diagnostics?: RunDiagnostics;
 };

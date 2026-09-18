@@ -12,7 +12,9 @@ const { sha256HexUtf8 } = require('@dvt/crypto');
 const {
   extractFeatureMechanizationManifests,
 } = require('./lib/feature-mechanization-manifest.cjs');
-const { defaultPgUrl } = require('./planning-db-run.cjs');
+const {
+  readFeatureMechanizationManifestRowsFromDb,
+} = require('./lib/feature-mechanization-db-reader.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const defaultScanRoot = path.join(repoRoot, 'docs', 'planning', 'proposals', 'mandatory');
@@ -945,102 +947,19 @@ function normalizeDbFeatureMechanizationManifestRows(rows) {
 }
 
 async function readFeatureMechanizationManifestsFromDb(options = {}) {
-  const deps = {
-    Client: require('pg').Client,
-    runPlanningImport: require('./planning-db-import.cjs').runPlanningImport,
-    ...options.deps,
-  };
-  const connectionString =
-    options.databaseUrl ||
-    process.env.DVT_PLANNING_DB_URL ||
-    process.env.PLANNING_DATABASE_URL ||
-    process.env.DATABASE_URL ||
-    defaultPgUrl;
-
-  const client = options.client || new deps.Client({ connectionString });
-  const ownsClient = !options.client;
-
-  if (ownsClient) {
-    await client.connect();
-  }
-
-  try {
-    if (options.refresh !== false) {
-      const changedFeatureDocs =
-        options.changedFeatureMechanizationSourcePaths ||
-        readChangedFeatureMechanizationSourcePaths({
-          baseRef: options.baseRef,
-          changedFiles: options.changedFiles,
-        });
-      const currentSourceHashes =
-        options.currentSourceHashes || readCurrentSourceHashes(changedFeatureDocs);
-
-      if (await shouldRefreshFeatureMechanizationManifestDb(client, currentSourceHashes)) {
-        await deps.runPlanningImport(
-          {
-            databaseUrl: connectionString,
-            ifStale: false,
-            silent: true,
-          },
-          {
-            logger: {
-              log() {},
-            },
-          }
-        );
-      }
-    }
-
-    const result = await client.query(`
-      with db_feature_manifest_rows as (
-        select
-          rail_id,
-          source_path,
-          raw_manifest,
-          rail_source,
-          imported_at,
-          1 as projection_priority
-        from planning_query_store.command_query_rail_manifest_query
-        where raw_manifest ? 'featureId'
-          and rail_id not like 'current#rail-decision#%'
-        union all
-        select
-          rail_id,
-          source_path,
-          raw_manifest,
-          'local'::text as rail_source,
-          updated_at as imported_at,
-          0 as projection_priority
-        from planning_query_store.feature_mechanization_local_rails
-        where raw_manifest ? 'featureId'
-          and rail_id not like 'current#rail-decision#%'
-      ),
-      ranked_manifest_rows as (
-        select
-          source_path,
-          raw_manifest,
-          rail_source,
-          imported_at,
-          rail_id,
-          row_number() over (
-            partition by rail_id
-            order by projection_priority, imported_at desc
-          ) as projection_rank
-        from db_feature_manifest_rows
-      )
-      select
-        source_path,
-        raw_manifest
-      from ranked_manifest_rows
-      where projection_rank = 1
-      order by source_path, raw_manifest->>'featureId', rail_source, imported_at, rail_id
-    `);
-    return normalizeDbFeatureMechanizationManifestRows(result.rows);
-  } finally {
-    if (ownsClient) {
-      await client.end();
-    }
-  }
+  const changedFeatureDocs =
+    options.changedFeatureMechanizationSourcePaths ||
+    readChangedFeatureMechanizationSourcePaths({
+      baseRef: options.baseRef,
+      changedFiles: options.changedFiles,
+    });
+  const currentSourceHashes =
+    options.currentSourceHashes || readCurrentSourceHashes(changedFeatureDocs);
+  const rows = await readFeatureMechanizationManifestRowsFromDb({
+    ...options,
+    currentSourceHashes,
+  });
+  return normalizeDbFeatureMechanizationManifestRows(rows);
 }
 
 function isFeatureMechanizationSourcePath(sourcePath) {
@@ -1084,40 +1003,6 @@ function readCurrentSourceHashes(sourcePaths) {
   }
 
   return sourceHashes;
-}
-
-async function shouldRefreshFeatureMechanizationManifestDb(client, currentSourceHashes) {
-  if (currentSourceHashes.size === 0) {
-    const result = await client.query(`
-      select count(*)::int as manifest_count
-      from planning_query_store.command_query_rails
-      where raw_manifest ? 'featureId'
-    `);
-    return Number(result.rows[0]?.manifest_count || 0) === 0;
-  }
-
-  const sourcePaths = [...currentSourceHashes.keys()];
-  const result = await client.query(
-    `
-      select distinct
-        source_path,
-        source_content_sha256
-      from planning_query_store.command_query_rails
-      where raw_manifest ? 'featureId'
-        and source_path = any($1::text[])
-    `,
-    [sourcePaths]
-  );
-  const dbHashes = new Map(
-    result.rows.map((row) => [
-      toPosix(row.source_path || row.sourcePath),
-      row.source_content_sha256 || row.sourceContentSha256,
-    ])
-  );
-
-  return sourcePaths.some(
-    (sourcePath) => dbHashes.get(sourcePath) !== currentSourceHashes.get(sourcePath)
-  );
 }
 
 function parseArgs(argv) {
@@ -1271,7 +1156,6 @@ module.exports = {
   readChangedFeatureMechanizationSourcePaths,
   readFeatureMechanizationDocs,
   readFeatureMechanizationManifestsFromDb,
-  shouldRefreshFeatureMechanizationManifestDb,
   validateFeatureImplementationManifests,
   validateFeatureMechanizationDocs,
   validateFeatureMechanizationManifestEntries,

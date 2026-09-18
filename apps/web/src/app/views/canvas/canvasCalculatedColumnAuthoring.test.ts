@@ -71,7 +71,16 @@ function inspect(node: CanonicalNode): DvtSubstraitProjectionSemantics {
   return inspection.projection;
 }
 
-function projectionTransform(): CanonicalNode {
+function projectionTransform(
+  outputs: readonly Readonly<{
+    fieldId: string;
+    name: string;
+    sourceFieldName: string;
+  }>[] = [
+    { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+    { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
+  ]
+): CanonicalNode {
   const draft = createDvtSubstraitProjectionDraft({
     source: {
       nodeId: source.id,
@@ -84,10 +93,7 @@ function projectionTransform(): CanonicalNode {
       ],
     },
     targetNodeId: 'transform-orders',
-    outputs: [
-      { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
-      { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
-    ],
+    outputs,
   });
   return applyDvtSubstraitSemanticDocument(
     {
@@ -113,7 +119,7 @@ describe('Canvas calculated column authoring', () => {
       request: { nodeId: source.id, kind: 'string-literal', alias: 'channel', value: 'web' },
     });
 
-    expect(result).toEqual({ outcome: 'rejected' });
+    expect(result).toEqual({ outcome: 'rejected', reason: 'invalid_target' });
     expect(initial.localNodeCatalog?.[source.id]).toBe(source);
     expect(source.metadata).not.toHaveProperty('transformAuthoring');
   });
@@ -197,6 +203,84 @@ describe('Canvas calculated column authoring', () => {
     expect(result.createdFieldId).toBe(created?.fieldId);
   });
 
+  it('creates a direct alias from an upstream input that is not already an output', () => {
+    const transform = projectionTransform([
+      { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+    ]);
+    const upstreamCustomerId = inspect(transform).inputFields.find(
+      (field) => field.name === 'customer'
+    )?.fieldId;
+    if (upstreamCustomerId == null) throw new Error('Expected upstream customer FieldId.');
+    const initial = session(source, transform);
+    initial.workingSet.visibleEdges.push({ sourceId: source.id, targetId: transform.id });
+
+    const result = applyCanvasCalculatedColumn({
+      draftSession: initial,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [transform.id, transform],
+      ]),
+      request: {
+        nodeId: transform.id,
+        kind: 'field-ref',
+        alias: 'customer_alias',
+        inputFieldId: upstreamCustomerId,
+      },
+    });
+
+    expect(result.outcome).toBe('applied');
+    if (result.outcome !== 'applied') return;
+    const replacement = result.draftSession.localNodeCatalog?.[transform.id];
+    if (replacement == null) throw new Error('Expected an updated Transform.');
+    expect(inspect(replacement).outputs).toEqual([
+      expect.objectContaining({ name: 'order_id', sourceFieldName: 'order_id' }),
+      expect.objectContaining({ name: 'customer_alias', sourceFieldName: 'customer' }),
+    ]);
+  });
+
+  it('applies an admitted function to an upstream input that is not already an output', () => {
+    const transform = projectionTransform([
+      { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+    ]);
+    const projection = inspect(transform);
+    const upstreamCustomerId = projection.inputFields.find(
+      (field) => field.name === 'customer'
+    )?.fieldId;
+    const upper = resolveDvtSubstraitColumnFunctions({
+      dataType: 'string',
+      provider: 'postgres',
+    }).find((candidate) => candidate.name === 'upper');
+    if (upstreamCustomerId == null || upper == null) {
+      throw new Error('Expected upstream customer and admitted UPPER capability.');
+    }
+    const initial = session(source, transform);
+    initial.workingSet.visibleEdges.push({ sourceId: source.id, targetId: transform.id });
+
+    const result = applyCanvasCalculatedColumn({
+      draftSession: initial,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [transform.id, transform],
+      ]),
+      request: {
+        nodeId: transform.id,
+        kind: 'scalar-function',
+        alias: 'customer_upper',
+        inputFieldId: upstreamCustomerId,
+        capabilityId: upper.capabilityId,
+      },
+    });
+
+    expect(result.outcome).toBe('applied');
+    if (result.outcome !== 'applied') return;
+    const replacement = result.draftSession.localNodeCatalog?.[transform.id];
+    if (replacement == null) throw new Error('Expected an updated Transform.');
+    expect(inspect(replacement).outputs.at(-1)).toMatchObject({
+      name: 'customer_upper',
+      operations: ['upper'],
+    });
+  });
+
   it('rejects a direct alias for an unknown FieldId without mutating the Transform', () => {
     const transform = projectionTransform();
     const initial = session(source, transform);
@@ -214,7 +298,7 @@ describe('Canvas calculated column authoring', () => {
       },
     });
 
-    expect(result).toEqual({ outcome: 'rejected' });
+    expect(result).toEqual({ outcome: 'rejected', reason: 'invalid_reference' });
     expect(initial.localNodeCatalog?.[transform.id]).toBe(transform);
     expect(inspect(transform).outputs).toHaveLength(2);
   });
@@ -261,7 +345,7 @@ describe('Canvas calculated column authoring', () => {
           capabilityId: upper.capabilityId,
         },
       })
-    ).toEqual({ outcome: 'rejected' });
+    ).toEqual({ outcome: 'rejected', reason: 'invalid_reference' });
 
     const second = applyCanvasCalculatedColumn({
       draftSession: first.draftSession,
@@ -390,7 +474,7 @@ describe('Canvas calculated column authoring', () => {
       request: { nodeId: transform.id, kind: 'string-literal', alias: 'customer', value: 'x' },
     });
 
-    expect(result).toEqual({ outcome: 'rejected' });
+    expect(result).toEqual({ outcome: 'rejected', reason: 'duplicate_alias' });
     expect(initial.localNodeCatalog?.[transform.id]).toBe(transform);
   });
 
@@ -417,8 +501,8 @@ describe('Canvas calculated column authoring', () => {
       },
     });
 
-    expect(timestamp).toEqual({ outcome: 'rejected' });
-    expect(rowNumber).toEqual({ outcome: 'rejected' });
+    expect(timestamp).toEqual({ outcome: 'rejected', reason: 'invalid_target' });
+    expect(rowNumber).toEqual({ outcome: 'rejected', reason: 'invalid_target' });
     expect(initial.localNodeCatalog?.[source.id]).toBe(source);
   });
 
@@ -431,27 +515,33 @@ describe('Canvas calculated column authoring', () => {
       [transform.id, transform],
     ]);
 
-    for (const request of [
-      {
-        nodeId: transform.id,
-        kind: 'field-ref' as const,
-        alias: 'x'.repeat(64),
-        inputFieldId: 'output:customer',
-      },
-      {
-        nodeId: transform.id,
-        kind: 'string-literal' as const,
-        alias: 'channel',
-        value: '😀'.repeat(1025),
-      },
-    ]) {
+    for (const [request, reason] of [
+      [
+        {
+          nodeId: transform.id,
+          kind: 'field-ref' as const,
+          alias: 'x'.repeat(64),
+          inputFieldId: 'output:customer',
+        },
+        'invalid_alias',
+      ],
+      [
+        {
+          nodeId: transform.id,
+          kind: 'string-literal' as const,
+          alias: 'channel',
+          value: '😀'.repeat(1025),
+        },
+        'invalid_literal',
+      ],
+    ] as const) {
       expect(
         applyCanvasCalculatedColumn({
           draftSession: initial,
           canonicalNodesById: context,
           request,
         })
-      ).toEqual({ outcome: 'rejected' });
+      ).toEqual({ outcome: 'rejected', reason });
       expect(initial.localNodeCatalog?.[transform.id]).toBe(transform);
     }
   });

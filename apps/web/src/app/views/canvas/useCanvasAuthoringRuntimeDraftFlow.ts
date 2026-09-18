@@ -18,7 +18,8 @@ export function useCanvasAuthoringRuntimeDraftFlow({
   previewProvenanceConfig,
   setCanvasNodePositions,
 }: UseCanvasAuthoringRuntimeDraftFlowArgs) {
-  const [draftSession, setDraftSession] = useCanvasWorkspaceDraftSession(workspaceLayoutKey);
+  const [draftSession, setDraftSession, runDraftSessionCommand] =
+    useCanvasWorkspaceDraftSession(workspaceLayoutKey);
   const { draftQueryCache, draftRepository, graphDraftQuery } = useCanvasDraftBaseline({
     workspaceGraphDraftAuthoringPort,
     workspaceLayoutKey,
@@ -76,6 +77,7 @@ export function useCanvasAuthoringRuntimeDraftFlow({
     draftReadModel: graphDraftQuery.data,
     draftSession,
     setDraftSession,
+    runDraftSessionCommand,
     ...lifecycle,
   };
 }

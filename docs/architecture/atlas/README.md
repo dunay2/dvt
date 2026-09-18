@@ -31,7 +31,5 @@ reference set, not the canonical home for ADRs or active execution tracking.
 ## Canonical Sources
 
 - ADRs: [`docs/adr/`](../../adr/index.md)
-- Active task lifecycle: GitHub Issues, with
-  [Planning Dashboard](../../planning/state/planning-dashboard.md) as a human
-  navigation surface
+- Active task lifecycle: [GitHub Issues](https://github.com/dunay2/dvt/issues)
 - Normative architecture docs: [`docs/architecture/`](../index.md)

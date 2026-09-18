@@ -296,7 +296,7 @@ export function SourceColumnsPanel({
           placeholder={copy.search}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          className="max-w-[22rem]"
+          className="max-w-[22rem] text-xs md:text-xs"
         />
         <span
           data-slot="source-columns-visible-count"
@@ -359,7 +359,7 @@ export function SourceColumnsPanel({
                           }
                         }}
                         className={cn(
-                          'relative flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-(--focus-ring)',
+                          'relative flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-(--focus-ring)',
                           selected
                             ? 'border-(--focus-ring) bg-(--surface-selected) text-(--text-strong)'
                             : 'border-transparent bg-(--surface-elevated) text-(--text-primary) hover:bg-(--surface-selected)'
@@ -408,13 +408,13 @@ export function SourceColumnsPanel({
             <div className="space-y-6">
               <div className="flex items-start gap-3">
                 <TypeFamilyCue type={selectedFacts.column.type} labels={copy} />
-                <h3 className="min-w-0 flex-1 truncate text-lg font-semibold text-(--text-strong)">
+                <h3 className="min-w-0 flex-1 truncate text-sm font-semibold text-(--text-strong)">
                   {selectedFacts.column.name}
                 </h3>
                 <ConstraintBadges facts={selectedFacts} />
               </div>
 
-              <dl className="grid grid-cols-[minmax(7rem,0.34fr)_minmax(0,1fr)] gap-x-4 gap-y-4 text-sm">
+              <dl className="grid grid-cols-[minmax(7rem,0.34fr)_minmax(0,1fr)] gap-x-4 gap-y-4 text-xs">
                 <DetailFact label={copy.exactType} value={selectedFacts.column.type} />
                 <DetailFact
                   label={copy.nullability}

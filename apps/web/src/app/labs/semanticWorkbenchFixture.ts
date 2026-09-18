@@ -10,7 +10,10 @@ import {
   type DvtSubstraitJoinPredicateOperand,
   type DvtSubstraitJoinSource,
 } from '../views/canvas/canvasDvtSubstraitJoinComposition';
-import { reduceDvtSubstraitJoinConditions } from '../views/canvas/canvasDvtSubstraitJoinCondition';
+import {
+  isDvtSubstraitJoinNullCondition,
+  reduceDvtSubstraitJoinConditions,
+} from '../views/canvas/canvasDvtSubstraitJoinCondition';
 import { resolveDvtSubstraitJoinUnaryFunction } from '../views/canvas/canvasDvtSubstraitJoinOperand';
 import {
   applyDvtSubstraitSemanticDocument,
@@ -211,18 +214,8 @@ export function buildSemanticWorkbenchFixture(
 
       for (const [predicateIndex, predicate] of inspection.projection.joins.entries()) {
         const rightInputIndex = predicateIndex + 1;
-        const left = fieldById.get(predicate.leftSourceFieldId);
-        const right = fieldById.get(predicate.rightSourceFieldId);
         const rightRows = inputRows[rightInputIndex];
-        if (
-          left == null ||
-          right == null ||
-          right.inputIndex !== rightInputIndex ||
-          left.inputIndex >= rightInputIndex ||
-          rightRows == null
-        ) {
-          return null;
-        }
+        if (rightRows == null) return null;
         joinedRows = joinedRows.flatMap((joined) =>
           rightRows.flatMap((rightRow) => {
             const candidate = new Map(joined).set(rightInputIndex, rightRow);
@@ -238,6 +231,7 @@ export function buildSemanticWorkbenchFixture(
                   inputDataType: input.dataType,
                 });
                 if (capability == null) return null;
+                if (input.value === null) return input;
                 const value = String(input.value);
                 if (capability.name === 'trim') {
                   return { dataType: 'string' as const, value: value.trim() };
@@ -265,6 +259,8 @@ export function buildSemanticWorkbenchFixture(
               if (
                 leftValue == null ||
                 rightValue == null ||
+                leftValue.value === null ||
+                rightValue.value === null ||
                 leftValue.dataType !== rightValue.dataType
               ) {
                 return false;
@@ -300,14 +296,23 @@ export function buildSemanticWorkbenchFixture(
               return comparison <= 0;
             };
             const matches = reduceDvtSubstraitJoinConditions({
-              initial: compareOperands(
-                { kind: 'field', sourceFieldId: predicate.leftSourceFieldId },
-                { kind: 'field', sourceFieldId: predicate.rightSourceFieldId },
-                predicate.operator ?? 'equal'
-              ),
-              conditions: predicate.additionalConditions ?? [],
-              comparison: (condition) =>
-                compareOperands(condition.left, condition.right, condition.operator ?? 'equal'),
+              conditions: predicate.conditions,
+              comparison: (condition) => {
+                if (isDvtSubstraitJoinNullCondition(condition)) {
+                  const operand = operandValue(condition.left);
+                  return (
+                    operand != null &&
+                    (condition.operator === 'is_null'
+                      ? operand.value === null
+                      : operand.value !== null)
+                  );
+                }
+                return compareOperands(
+                  condition.left,
+                  condition.right,
+                  condition.operator ?? 'equal'
+                );
+              },
               combine: (combination, left, right) =>
                 combination === 'and' ? left && right : left || right,
             });

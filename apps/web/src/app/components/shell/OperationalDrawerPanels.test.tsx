@@ -44,7 +44,6 @@ function buildCanvasOperationalDrawerContribution(
       { id: 'problems', label: 'Problems', count: 1 },
       { id: 'runs', label: 'Runs', count: 1 },
       { id: 'preview', label: 'Preview', count: 1 },
-      { id: 'data', label: 'Data', count: null },
     ],
     problems: {
       items: [
@@ -72,7 +71,6 @@ function buildCanvasOperationalDrawerContribution(
       onPreviewExecutionPlan: vi.fn(),
       selectionRecovery: null,
     },
-    dataSample: { status: 'idle' },
     ...overrides,
   };
 }
@@ -105,30 +103,38 @@ describe('OperationalDrawerPanels', () => {
         { id: 'problems', label: 'Problems', count: 0 },
         { id: 'runs', label: 'Runs', count: null },
         { id: 'preview', label: 'Preview', count: null },
-        { id: 'data', label: 'Data', count: 2 },
-      ],
-      dataSample: {
-        status: 'ready',
-        nodeName: 'orders',
-        sample: {
-          contractVersion: 1,
-          connectionId: 'postgresql-local',
-          objectId: 'relation/dvt/public/orders',
-          columns: [
-            { name: 'order_id', type: 'integer', nullable: false },
-            { name: 'customer', type: 'text', nullable: true },
-          ],
-          rows: [{ values: ['1', longPayload] }, { values: ['2', null] }],
-          limit: 20,
-          truncated: true,
-          sampledAt: '2026-08-17T10:00:00.000Z',
+        {
+          id: 'data:orders',
+          label: 'orders',
+          count: null,
+          dataSample: {
+            status: 'ready',
+            nodeName: 'orders',
+            sample: {
+              contractVersion: 1,
+              connectionId: 'postgresql-local',
+              objectId: 'relation/dvt/public/orders',
+              columns: [
+                { name: 'order_id', type: 'integer', nullable: false },
+                { name: 'customer', type: 'text', nullable: true },
+              ],
+              rows: [{ values: ['1', longPayload] }, { values: ['2', null] }],
+              limit: 20,
+              truncated: true,
+              sampledAt: '2026-08-17T10:00:00.000Z',
+            },
+          },
         },
-      },
+      ],
     });
 
     await act(async () => {
       root.render(
-        <BottomOperationalDrawerBody activeTab="data" contribution={contribution} logBody={null} />
+        <BottomOperationalDrawerBody
+          activeTab="data:orders"
+          contribution={contribution}
+          logBody={null}
+        />
       );
     });
 
@@ -151,69 +157,91 @@ describe('OperationalDrawerPanels', () => {
     expect(container.textContent).toContain('Showing 20 rows.');
   });
 
-  it('announces loading, empty, and governed failure states in the data panel', async () => {
+  it('keeps loading, ready, and failure states isolated per card tab', async () => {
     const baseContribution = buildCanvasOperationalDrawerContribution();
+    const ordersTab = {
+      id: 'data:orders' as const,
+      label: 'orders',
+      count: null,
+      dataSample: { status: 'loading' as const, nodeName: 'orders' },
+    };
+    const customersTab = {
+      id: 'data:customers' as const,
+      label: 'customers',
+      count: null,
+      dataSample: {
+        status: 'error' as const,
+        nodeName: 'customers',
+        reason: 'unavailable' as const,
+      },
+    };
 
     await act(async () => {
       root.render(
         <BottomOperationalDrawerBody
-          activeTab="data"
+          activeTab="data:orders"
           contribution={{
             ...baseContribution,
-            dataSample: { status: 'loading', nodeName: 'orders' },
+            tabs: [...baseContribution.tabs, ordersTab, customersTab],
           }}
           logBody={null}
         />
       );
     });
     expect(container.querySelector('[role="status"]')?.textContent).toBe('Loading orders.');
+    expect(container.textContent).not.toContain('Could not read customers.');
 
     await act(async () => {
       root.render(
         <BottomOperationalDrawerBody
-          activeTab="data"
+          activeTab="data:customers"
           contribution={{
             ...baseContribution,
-            dataSample: {
-              status: 'ready',
-              nodeName: 'orders',
-              sample: {
-                contractVersion: 1,
-                connectionId: 'postgresql-local',
-                objectId: 'relation/dvt/public/orders',
-                columns: [{ name: 'order_id', type: 'integer', nullable: false }],
-                rows: [],
-                limit: 20,
-                truncated: false,
-                sampledAt: '2026-08-17T10:00:00.000Z',
-              },
-            },
-          }}
-          logBody={null}
-        />
-      );
-    });
-    expect(container.textContent).toContain('orders returned no rows.');
-
-    await act(async () => {
-      root.render(
-        <BottomOperationalDrawerBody
-          activeTab="data"
-          contribution={{
-            ...baseContribution,
-            dataSample: {
-              status: 'error',
-              nodeName: 'orders',
-              reason: 'source_object_not_found',
-            },
+            tabs: [...baseContribution.tabs, ordersTab, customersTab],
           }}
           logBody={null}
         />
       );
     });
     expect(container.querySelector('[role="alert"]')?.textContent).toBe(
-      'Object missing for orders.'
+      'Sample unavailable for customers.'
     );
+    expect(container.textContent).not.toContain('Loading orders.');
+
+    await act(async () => {
+      root.render(
+        <BottomOperationalDrawerBody
+          activeTab="data:orders"
+          contribution={{
+            ...baseContribution,
+            tabs: [
+              ...baseContribution.tabs,
+              {
+                ...ordersTab,
+                dataSample: {
+                  status: 'ready',
+                  nodeName: 'orders',
+                  sample: {
+                    contractVersion: 1,
+                    connectionId: 'postgresql-local',
+                    objectId: 'relation/dvt/public/orders',
+                    columns: [{ name: 'order_id', type: 'integer', nullable: false }],
+                    rows: [],
+                    limit: 20,
+                    truncated: false,
+                    sampledAt: '2026-08-17T10:00:00.000Z',
+                  },
+                },
+              },
+              customersTab,
+            ],
+          }}
+          logBody={null}
+        />
+      );
+    });
+    expect(container.textContent).toContain('orders returned no rows.');
+    expect(container.textContent).not.toContain('Could not read customers.');
   });
 
   it('renders problems, runs, and preview bodies from the route contribution', async () => {

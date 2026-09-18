@@ -736,6 +736,74 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(outputSelector?.value).toBe('postgres-sql');
   });
 
+  it('keeps pending relational information in a compact workbench', () => {
+    const clients: CanonicalNode = {
+      ...SOURCE_NODE,
+      id: 'source.clients',
+      name: 'Clients Source',
+      metadata: {
+        ...SOURCE_NODE.metadata,
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-prod',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'relation/dvt/raw/clients',
+        },
+        tableName: 'clients',
+        columns: [{ name: 'client_id', type: 'integer', nullable: false }],
+      },
+    };
+    renderNodePanel(
+      root,
+      DVT_SUBSTRAIT_TRANSFORM_NODE,
+      'code',
+      { canEditNode: true, onApplyNodeDraft: vi.fn() },
+      1,
+      undefined,
+      {
+        nodes: [SOURCE_NODE, clients, DVT_SUBSTRAIT_TRANSFORM_NODE],
+        edges: [
+          {
+            id: 'edge-orders-transform',
+            sourceId: SOURCE_NODE.id,
+            targetId: DVT_SUBSTRAIT_TRANSFORM_NODE.id,
+            relation: 'lineage',
+          },
+          {
+            id: 'edge-clients-transform',
+            sourceId: clients.id,
+            targetId: DVT_SUBSTRAIT_TRANSFORM_NODE.id,
+            relation: 'lineage',
+          },
+        ],
+      }
+    );
+
+    const panel = container.querySelector('[data-slot="canvas-node-workbench-panel"]');
+    const header = container.querySelector(
+      '[data-slot="canvas-node-workbench-header-actions"]'
+    )?.parentElement;
+    expect(panel?.querySelector('[data-slot="dvt-relational-operation-chooser"]')).not.toBeNull();
+    expect(panel?.querySelector('[data-slot="canvas-node-workbench-tabs"]')).not.toBeNull();
+    expect(panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')).not.toBeNull();
+    expect(panel?.querySelector('[data-slot="canvas-node-workbench-status"]')).not.toBeNull();
+    expect(panel?.querySelector('[data-slot="canvas-node-workbench-kind"]')?.textContent).toBe(
+      'Model'
+    );
+    const tabsList = panel?.querySelector('[data-slot="canvas-node-workbench-tabs-list"]');
+    const tabList = panel?.querySelector('[data-slot="canvas-node-workbench-tabs-list-tablist"]');
+    const moreTrigger = panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]');
+    expect(tabList?.parentElement).toBe(tabsList);
+    expect(moreTrigger?.parentElement).toBe(tabsList);
+    expect(tabList?.className).toContain('flex-1');
+    expect(tabList?.className).not.toContain('w-full');
+    expect(header?.textContent).toContain('Clean Orders');
+    expect(header?.querySelector('p')).toBeNull();
+  });
+
   it('keeps canonical code scrolling inside Monaco without a nested workbench scrollbar', () => {
     renderNodePanel(root, DVT_SUBSTRAIT_TRANSFORM_NODE, 'code');
 

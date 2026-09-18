@@ -4,6 +4,24 @@ import type { DvtSubstraitJoinPredicateCondition } from '../views/canvas/canvasD
 import { projectSemanticWorkbenchJoinConditionRows } from '../views/canvas/SemanticWorkbenchJoinConditionEditor';
 
 describe('SemanticWorkbenchJoinConditionEditor', () => {
+  it('labels null predicates without a right operand', () => {
+    const rows = projectSemanticWorkbenchJoinConditionRows({
+      conditions: [
+        { left: { kind: 'field', sourceFieldId: 'country' }, operator: 'is_null' },
+        {
+          left: { kind: 'field', sourceFieldId: 'country' },
+          operator: 'is_not_null',
+          combination: 'or',
+        },
+      ],
+      fieldLabelById: new Map([['country', 'raw.client.country']]),
+    });
+    expect(rows.map((row) => row.label)).toEqual([
+      'raw.client.country IS NULL',
+      'OR raw.client.country IS NOT NULL',
+    ]);
+  });
+
   it('projects grouped conditions in deterministic semantic order with explicit parentheses', () => {
     const conditions: readonly DvtSubstraitJoinPredicateCondition[] = [
       {
@@ -32,7 +50,7 @@ describe('SemanticWorkbenchJoinConditionEditor', () => {
     });
 
     expect(rows.map(({ kind, depth, label }) => ({ kind, depth, label }))).toEqual([
-      { kind: 'group-open', depth: 0, label: 'AND (' },
+      { kind: 'group-open', depth: 0, label: '(' },
       { kind: 'comparison', depth: 1, label: "raw.client.country = 'ES'" },
       { kind: 'comparison', depth: 1, label: 'OR raw.client.active = false' },
       { kind: 'group-close', depth: 0, label: ')' },

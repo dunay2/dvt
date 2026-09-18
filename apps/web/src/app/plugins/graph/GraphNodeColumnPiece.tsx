@@ -23,6 +23,7 @@ type GraphNodeColumnPieceProps = Readonly<
     isOutput: boolean;
     canReorder: boolean;
     outputToggleDisabled: boolean;
+    showSourceName?: boolean;
     copy: GraphNodeColumnCopy;
     onDragStart: DragEventHandler<HTMLDivElement>;
     onDragEnd: () => void;
@@ -40,6 +41,7 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
       copy,
       canReorder,
       outputToggleDisabled,
+      showSourceName,
       onDragStart,
       onDragEnd,
       onOutputToggle,
@@ -47,9 +49,13 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
       onNestedColumnReorder,
       ...elementProps
     } = props;
+    const displayedName =
+      showSourceName === true && column.sourceNodeName != null
+        ? `${column.sourceNodeName}.${column.name}`
+        : column.name;
     const accessibleLabel = (
       isOutput ? copy.columnOutputAriaLabelTemplate : copy.columnAvailableInputAriaLabelTemplate
-    ).replace('{column}', column.name);
+    ).replace('{column}', displayedName);
 
     return (
       <div
@@ -64,11 +70,16 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
         draggable={canReorder}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
+        onClick={outputToggleDisabled ? undefined : onOutputToggle}
         className={graphNodeColumnClasses.piece}
       >
         {column.sourceFieldName != null && column.sourceFieldName !== column.name ? (
           <span data-slot="graph-node-column-alias" className="flex min-w-0 items-center gap-1.5">
-            <span className={graphNodeColumnClasses.sourceName}>{column.sourceFieldName}</span>
+            <span className={graphNodeColumnClasses.sourceName}>
+              {showSourceName === true && column.sourceNodeName != null
+                ? `${column.sourceNodeName}.${column.sourceFieldName}`
+                : column.sourceFieldName}
+            </span>
             <ArrowRight
               aria-hidden="true"
               className={graphNodeColumnClasses.aliasArrow}
@@ -77,7 +88,7 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
             <span className={graphNodeColumnClasses.name}>{column.name}</span>
           </span>
         ) : (
-          <span className={graphNodeColumnClasses.name}>{column.name}</span>
+          <span className={graphNodeColumnClasses.name}>{displayedName}</span>
         )}
         <span className={graphNodeColumnClasses.metadata}>
           <span className={graphNodeColumnClasses.type}>{column.type}</span>

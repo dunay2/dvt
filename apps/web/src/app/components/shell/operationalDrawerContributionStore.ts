@@ -11,26 +11,35 @@ import type {
   RunControlCommandRequest,
 } from '../../services/runs/runControlCommandModel';
 import type { OperationalDrawerSelectionRecoveryMessages } from './operationalDrawerSelectionRecoveryMessages';
-import type { SourceDataSample } from '../../ports/workspace';
+import type { CanvasDataSample } from '../../ports/canvasDataSample';
 import type { ReactNode } from 'react';
 
-export type OperationalDrawerTabId = 'log' | 'problems' | 'runs' | 'preview' | 'data' | 'semantic';
+export type OperationalDrawerBuiltInTabId =
+  'log' | 'problems' | 'runs' | 'preview' | 'data' | 'semantic';
+export type OperationalDrawerDataTabId = `data:${string}`;
+export type OperationalDrawerTabId = OperationalDrawerBuiltInTabId | OperationalDrawerDataTabId;
 
 export type OperationalDrawerDataSample =
   | Readonly<{ status: 'idle' }>
   | Readonly<{ status: 'loading'; nodeName: string }>
-  | Readonly<{ status: 'ready'; nodeName: string; sample: SourceDataSample }>
+  | Readonly<{ status: 'ready'; nodeName: string; sample: CanvasDataSample }>
   | Readonly<{
       status: 'error';
       nodeName: string;
       reason: 'connection_not_found' | 'source_object_not_found' | 'unavailable' | 'unknown';
     }>;
 
+export type OperationalDrawerDataSampleTab = Readonly<{
+  id: OperationalDrawerDataTabId;
+  dataSample: OperationalDrawerDataSample;
+}>;
+
 export type OperationalDrawerTab = Readonly<{
   id: OperationalDrawerTabId;
   label: string;
   count: number | null;
   content?: ReactNode;
+  dataSample?: OperationalDrawerDataSample;
 }>;
 
 export type OperationalDrawerProblem = Readonly<{
@@ -106,7 +115,6 @@ export type OperationalDrawerContribution = Readonly<{
       messages: OperationalDrawerSelectionRecoveryMessages;
     }> | null;
   }>;
-  dataSample: OperationalDrawerDataSample;
 }>;
 
 type OperationalDrawerContributionState = {
@@ -176,14 +184,10 @@ export const useOperationalDrawerContributionStore = create<OperationalDrawerCon
     clearOperationalDrawerContribution: (contribution) =>
       set((state) => (state.contribution === contribution ? { contribution: null } : state)),
     selectOperationalDrawerTab: (tab) =>
-      set((state) =>
-        state.contribution?.tabs.some((candidate) => candidate.id === tab)
-          ? {
-              activeTab: tab,
-              hiddenTabs: state.hiddenTabs.filter((hiddenTab) => hiddenTab !== tab),
-            }
-          : state
-      ),
+      set((state) => ({
+        activeTab: tab,
+        hiddenTabs: state.hiddenTabs.filter((hiddenTab) => hiddenTab !== tab),
+      })),
     setOperationalDrawerTabVisibility: (command) =>
       set((state) => setOperationalDrawerTabVisibility(state, command)),
   })

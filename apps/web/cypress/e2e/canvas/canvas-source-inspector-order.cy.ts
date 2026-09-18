@@ -83,6 +83,10 @@ describe('Canvas Source Inspector ordering', () => {
     visitCanvas();
 
     openSourceSection('columns');
+    cy.get('[data-slot="source-columns-search"]').should('have.css', 'font-size', '12px');
+    cy.get('[data-slot="source-column-row"]').should('have.css', 'font-size', '12px');
+    cy.get('[data-slot="source-column-detail"] h3').should('have.css', 'font-size', '14px');
+    cy.get('[data-slot="source-column-detail"] dl').should('have.css', 'font-size', '12px');
     dragBefore('[data-column-name="amount"]', '[data-column-name="order_id"]');
     expectOrder('[data-slot="source-column-row"]', 'columnName', [
       'amount',

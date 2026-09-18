@@ -17,6 +17,7 @@ const {
   resolveLiveProofCypressRuntime,
   resolveLiveProofCypressHeaded,
   resolveLiveProofSpecPath,
+  resolveLiveProofTemporalWorkerRuntime,
   seedSelectedClosureLocalWarehouseProof,
 } = require('./run-selected-closure-live-proof.cjs');
 const { defaultPgUrl } = require('./run-local-postgres.cjs');
@@ -61,12 +62,14 @@ test('buildLiveProofCypressDockerInvocation isolates the one governed spec in Cy
         apiPort: 3300,
         webPort: 4174,
         apiBearerToken: 'proof-token',
+        restrictedApiBearerToken: 'restricted-proof-token',
         specPath: '/repo/apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
         workspaceScope: {
           tenantId: 'tenant',
           projectId: 'project',
           environmentId: 'dev',
         },
+        postgresTargetSchema: 'proof_schema',
       },
       'C:/repo',
       { platform: 'linux' }
@@ -86,11 +89,15 @@ test('buildLiveProofCypressDockerInvocation isolates the one governed spec in Cy
       '-e',
       'CYPRESS_apiBearerToken=proof-token',
       '-e',
+      'CYPRESS_restrictedApiBearerToken=restricted-proof-token',
+      '-e',
       'CYPRESS_workspaceTenantId=tenant',
       '-e',
       'CYPRESS_workspaceProjectId=project',
       '-e',
       'CYPRESS_workspaceEnvironmentId=dev',
+      '-e',
+      'CYPRESS_postgresTargetSchema=proof_schema',
       'cypress/included:15.18.1',
       '--project',
       '/repo/apps/web',
@@ -110,12 +117,14 @@ test('buildLiveProofCypressDockerInvocation mirrors Windows junction targets rea
       apiPort: 3300,
       webPort: 4174,
       apiBearerToken: 'proof-token',
+      restrictedApiBearerToken: 'restricted-proof-token',
       specPath: '/repo/apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts',
       workspaceScope: {
         tenantId: 'tenant',
         projectId: 'project',
         environmentId: 'dev',
       },
+      postgresTargetSchema: 'proof_schema',
     },
     'C:/repo',
     {
@@ -139,12 +148,14 @@ test('buildLiveProofCypressNativeInvocation targets the already running host sta
       apiPort: 3300,
       webPort: 4174,
       apiBearerToken: 'proof-token',
+      restrictedApiBearerToken: 'restricted-proof-token',
       specPath: '/repo/apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
       workspaceScope: {
         tenantId: 'tenant',
         projectId: 'project',
         environmentId: 'dev',
       },
+      postgresTargetSchema: 'proof_schema',
     }),
     {
       command: process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm',
@@ -165,9 +176,11 @@ test('buildLiveProofCypressNativeInvocation targets the already running host sta
         CYPRESS_baseUrl: 'http://127.0.0.1:4174',
         CYPRESS_apiBaseUrl: 'http://127.0.0.1:3300',
         CYPRESS_apiBearerToken: 'proof-token',
+        CYPRESS_restrictedApiBearerToken: 'restricted-proof-token',
         CYPRESS_workspaceTenantId: 'tenant',
         CYPRESS_workspaceProjectId: 'project',
         CYPRESS_workspaceEnvironmentId: 'dev',
+        CYPRESS_postgresTargetSchema: 'proof_schema',
       },
     }
   );
@@ -221,6 +234,23 @@ test('live proof keeps Chrome headless unless headed mode is explicit', () => {
   assert.throws(
     () => resolveLiveProofCypressHeaded({ DVT_SELECTED_CLOSURE_CYPRESS_HEADED: 'yes' }),
     /must be true or false/
+  );
+});
+
+test('live proof omits only the Temporal worker when runtime absence is explicit', () => {
+  assert.equal(resolveLiveProofTemporalWorkerRuntime({}), 'available');
+  assert.equal(
+    resolveLiveProofTemporalWorkerRuntime({
+      DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME: 'unavailable',
+    }),
+    'unavailable'
+  );
+  assert.throws(
+    () =>
+      resolveLiveProofTemporalWorkerRuntime({
+        DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME: 'stubbed',
+      }),
+    /must be available or unavailable/
   );
 });
 
@@ -329,13 +359,16 @@ test('buildLiveProofApiEnv exposes workspace file roots for live warehouse catal
   assert.equal(apiEnv.TEMPORAL_ADDRESS, '127.0.0.1:7233');
   assert.equal(apiEnv.TEMPORAL_NAMESPACE, 'default');
   assert.equal(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL, 'http://127.0.0.1:9468/readyz');
+  assert.equal(apiEnv.DVT_START_RUN_BACKPRESSURE_MODE, 'enforce');
   assert.equal(apiEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
   assert.equal(apiEnv.DVT_TEMPORAL_DBT_ENABLED, 'true');
+  assert.equal(apiEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'true');
   assert.match(apiEnv.DVT_DBT_BUNDLE_FILE_ROOT, /[\\/]\.dvt[\\/]dev-stack[\\/]dbt-bundles$/);
   assert.match(
     apiEnv.DVT_WORKSPACE_FILES_ROOT,
     /[\\/]\.dvt[\\/]live-proofs[\\/]selected-closure[\\/]dvt_live_selected_closure_test[\\/]workspace-files$/
   );
+  assert.equal(apiEnv.DVT_CAS_FILE_ROOT, undefined);
   assert.match(
     apiEnv.DVT_DBT_ANALYZER_PROFILES_DIR,
     /[\\/]\.dvt[\\/]live-proofs[\\/]selected-closure[\\/]dvt_live_selected_closure_test[\\/]server-dbt-profiles$/
@@ -419,6 +452,7 @@ test('buildLiveProofTemporalWorkerEnv derives the worker from the selected live 
     oidcEnv: { OIDC_ISSUER: 'https://issuer.local.dvt/' },
     sourceEnv: {
       VITE_DEFAULT_TENANT_ID: 'tenant-live',
+      DVT_CAS_FILE_ROOT: 'C:\\live-proof\\cas',
     },
   });
 
@@ -433,8 +467,10 @@ test('buildLiveProofTemporalWorkerEnv derives the worker from the selected live 
   assert.equal(workerEnv.DVT_TEMPORAL_ADMIN_PORT, '19568');
   assert.equal(workerEnv.DVT_TEMPORAL_WORKER_RUN_MIGRATIONS, 'true');
   assert.equal(workerEnv.DVT_WORKSPACE_FILES_ROOT, apiEnv.DVT_WORKSPACE_FILES_ROOT);
+  assert.equal(workerEnv.DVT_CAS_FILE_ROOT, 'C:\\live-proof\\cas');
   assert.equal(workerEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
   assert.equal(workerEnv.DVT_TEMPORAL_DBT_ENABLED, 'true');
+  assert.equal(workerEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'true');
   assert.equal(workerEnv.DVT_DBT_BUNDLE_FILE_ROOT, apiEnv.DVT_DBT_BUNDLE_FILE_ROOT);
   assert.equal(workerEnv.DBT_PROFILES_DIR, apiEnv.DBT_PROFILES_DIR);
   assert.equal(workerEnv.DVT_DBT_BIN, apiEnv.DVT_DBT_BIN);

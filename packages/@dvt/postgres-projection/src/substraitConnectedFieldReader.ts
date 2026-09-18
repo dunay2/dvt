@@ -168,7 +168,9 @@ export function inspectDvtConnectedFieldProjection(
       target == null ||
       (calculation == null && source == null) ||
       (source != null && source.displayName == null) ||
-      (calculation == null && target.sourceFieldId !== source?.fieldId) ||
+      (calculation == null &&
+        target.sourceFieldId !== undefined &&
+        target.sourceFieldId !== source?.fieldId) ||
       (calculation != null && target.sourceFieldId !== undefined) ||
       (calculation?.kind === 'row-number' && calculation.orderSourceOrdinal >= sourceFields.length)
     ) {
@@ -182,7 +184,7 @@ export function inspectDvtConnectedFieldProjection(
         : { calculation }),
       dataType:
         calculation == null
-          ? 'unknown'
+          ? inspectSourceType(sourceTypes[source!.outputOrdinal]!)!
           : calculation.kind === 'string-literal'
             ? 'string'
             : calculation.kind === 'timestamp-literal'

@@ -2,7 +2,7 @@
 title: MW-C1 To TF-C2 Runtime Vertical Sequence Analysis 2026-04-09
 status: Proposed
 owner: Product / Architecture / Delivery / Runtime
-last_reviewed: 2026-04-10
+last_reviewed: 2026-09-10
 planning_type: proposal
 lane: C
 task_id: TF-C2
@@ -22,11 +22,9 @@ delivery plan, and the current open task route.
 ## Governing sources
 
 - [Governance Document And Rule Inventory](../../../status/governance-document-rule-inventory.md)
-- [Planning Control Tower](../../../state/planning-control-tower.md)
-- [Planning Dashboard](../../../state/planning-dashboard.md)
+- [GitHub Issues](https://github.com/dunay2/dvt/issues)
 - [Roadmap Of Record](../../../roadmap/index.md)
 - [Roadmap By Domain](../../../roadmap/roadmap-by-domain.md)
-- [GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md)
 - [GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md)
 - [Engine Roadmap](../../../../architecture/components/engine/roadmap/engine-phases.md)
 - [Transformation Flow Proposal Set 2026-04-05](./plan-creation-interface-route-proposal-20260405.md)

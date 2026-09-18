@@ -2,7 +2,7 @@
 title: Governance Startup Card Canon User Stories
 status: Active
 owner: Docs / Architecture / Delivery
-last_reviewed: 2026-05-24
+last_reviewed: 2026-09-10
 component_type: governance
 ---
 
@@ -40,14 +40,19 @@ Acceptance:
 
 ## Planning operator
 
-As a planning operator, I want planning work to route through Planning DB and
-generated workboard checks so that task lifecycle changes do not drift into
-generated markdown edits or PR-only notes.
+As a planning operator, I want task lifecycle to route through GitHub Issues and
+architecture/mechanization work to route through Planning DB so that status,
+ownership and evidence do not drift into generated markdown or parallel local
+workboards.
 
 Acceptance:
 
-- Planning route points to the Planning Control Tower and AI work protocol.
-- Task claim/status/evidence changes happen through `pnpm planning:db:operate`.
+- The planning route points to the governing GitHub Issue, the GitHub MVP issue
+  workflow, the governance inventory, and the AI work protocol as applicable.
+- Task claim, priority, status, blockers, evidence and closure are recorded in
+  GitHub Issues; Planning DB is not used as a task tracker.
+- Architecture, capability, relation and command/query-rail changes use the
+  existing Planning DB rails when governance requires them.
 - Generated planning views are refreshed through generators, not hand edits.
 
 ## PR reviewer

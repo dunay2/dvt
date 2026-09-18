@@ -7,6 +7,7 @@ import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types'
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type { CanonicalNode } from '../../types/canonical';
 import type { WorkspaceScope } from '../../ports/sessionContext';
+import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 
 type UseCanvasInspectorCommandsArgs = {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
@@ -21,26 +22,34 @@ export function useCanvasInspectorCommands({
   setDraftSession,
   workspaceScope,
 }: UseCanvasInspectorCommandsArgs) {
+  const applyNodeDraft = useCallback(
+    (nodeId: string, draft: CanvasInspectorNodeDraft) => {
+      setDraftSession((currentSession) => {
+        const node = resolveCanvasDraftNodes(currentSession, canonicalNodesById).find(
+          (candidate) => candidate.id === nodeId
+        );
+        return node == null
+          ? currentSession
+          : applyCanvasInspectorNodeDraftToSession({
+              canonicalNodesById,
+              draftSession: currentSession,
+              node,
+              draft,
+              workspaceScope,
+            });
+      });
+    },
+    [canonicalNodesById, setDraftSession, workspaceScope]
+  );
   const applyInspectorNodeDraft = useCallback(
     (draft: CanvasInspectorNodeDraft) => {
-      if (inspectorNode == null) {
-        return;
-      }
-
-      setDraftSession((currentSession) =>
-        applyCanvasInspectorNodeDraftToSession({
-          canonicalNodesById,
-          draftSession: currentSession,
-          node: inspectorNode,
-          draft,
-          workspaceScope,
-        })
-      );
+      if (inspectorNode != null) applyNodeDraft(inspectorNode.id, draft);
     },
-    [canonicalNodesById, inspectorNode, setDraftSession, workspaceScope]
+    [applyNodeDraft, inspectorNode]
   );
 
   return {
+    applyNodeDraft,
     applyInspectorNodeDraft,
   };
 }

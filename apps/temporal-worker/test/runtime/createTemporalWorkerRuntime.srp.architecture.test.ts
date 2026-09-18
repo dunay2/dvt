@@ -54,6 +54,10 @@ describe('createTemporalWorkerRuntime SRP boundary', () => {
         '@ownedConcern Build the optional DBT worker profile and step activity registry.',
       ],
       [
+        'temporalWorkerDvtPostgresProfile.ts',
+        '@ownedConcern Build the optional DVT PostgreSQL worker profile and activity registry.',
+      ],
+      [
         'temporalWorkerHost.ts',
         '@ownedConcern Build Temporal worker host configuration and host instance.',
       ],
@@ -78,6 +82,7 @@ describe('createTemporalWorkerRuntime SRP boundary', () => {
       'temporalWorkerRuntimeResources.ts',
       'temporalWorkerStores.ts',
       'temporalWorkerDbtProfile.ts',
+      'temporalWorkerDvtPostgresProfile.ts',
       'temporalWorkerHost.ts',
       'temporalWorkerRuntimeHandle.ts',
       'temporalWorkerLifecycle.ts',

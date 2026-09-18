@@ -43,6 +43,7 @@ describe('AppShellFrame', () => {
       root.render(
         <AppShellFrame
           bottomDrawer={<div data-testid="bottom-operational-drawer">Operations drawer</div>}
+          bottomDrawerHeight={360}
           focusMode={false}
           healthBanner={<div data-testid="shell-banner">Shell banner</div>}
           leftNavigation={<div data-testid="left-nav">Left nav</div>}
@@ -88,6 +89,7 @@ describe('AppShellFrame', () => {
     expect(panels.map((panel) => panel.getAttribute('id'))).toContain(
       'app-shell-bottom-drawer-panel'
     );
+    expect(container.querySelector('#app-shell-bottom-drawer-resize-handle svg')).not.toBeNull();
     expect(skipLinks).toHaveLength(1);
     expect(skipLinks[0]?.textContent).toBe('Skip to main content');
     expect(skipLinks[0]?.getAttribute('href')).toBe('#app-shell-main-content');
@@ -108,6 +110,7 @@ describe('AppShellFrame', () => {
       root.render(
         <AppShellFrame
           bottomDrawer={<div>Operations drawer</div>}
+          bottomDrawerHeight={360}
           focusMode
           healthBanner={<div>Shell banner</div>}
           leftNavigation={<div>Left nav</div>}
@@ -137,6 +140,7 @@ describe('AppShellFrame', () => {
       root.render(
         <AppShellFrame
           bottomDrawer={<div>Operations drawer</div>}
+          bottomDrawerHeight={0}
           focusMode={false}
           healthBanner={<div>Shell banner</div>}
           leftNavigation={<div>Left nav</div>}
