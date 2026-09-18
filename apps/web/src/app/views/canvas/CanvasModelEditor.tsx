@@ -1,4 +1,5 @@
 /** Owned concern: compose the full-width Model workspace from existing semantic, SQL and data owners. */
+import './canvasSemanticEditor.css';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { ArrowLeft, Braces, GitBranch, Table2 } from 'lucide-react';

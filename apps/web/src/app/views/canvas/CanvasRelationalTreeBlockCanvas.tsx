@@ -34,6 +34,7 @@ export function CanvasRelationalTreeBlockCanvas({
   initiallyExpanded = false,
   onPendingConditionChange,
   initialRelationId = null,
+  onRemove,
 }: Readonly<{
   appendInput: CanvasDvtCompositionInput | null;
   choices: readonly CanvasRelationalOperationChoice[];
@@ -57,6 +58,7 @@ export function CanvasRelationalTreeBlockCanvas({
   initiallyExpanded?: boolean;
   onPendingConditionChange?: (pending: boolean) => void;
   initialRelationId?: string | null;
+  onRemove: (relationId: string, keep?: 'left' | 'right') => void;
 }>): JSX.Element {
   const hasOperands = selectedInputIds.length > 0;
   const [selectedRelationId, setSelectedRelationId] = useState(initialRelationId);
@@ -68,7 +70,7 @@ export function CanvasRelationalTreeBlockCanvas({
       aria-label={copy.relationalTreeCanvasLabel}
       className="flex min-h-0 min-w-0 flex-col overflow-hidden"
     >
-      {operation != null ? null : (
+      {
         <CanvasRelationalTreeOperationShelf
           choices={choices}
           copy={copy}
@@ -77,7 +79,7 @@ export function CanvasRelationalTreeBlockCanvas({
           selectedInputCount={selectedInputIds.length}
           onSelectOperation={onSelectOperation}
         />
-      )}
+      }
       <div className="relative flex min-h-0 flex-1 flex-col">
         <CanvasRelationalTreeDraftViewport
           copy={copy}
@@ -95,6 +97,7 @@ export function CanvasRelationalTreeBlockCanvas({
           onSelectOperation={onSelectOperation}
           selectedRelationId={selectedRelationId}
           onSelectRelation={setSelectedRelationId}
+          onRemove={onRemove}
           onExpandRelation={(relationId) => {
             setSelectedRelationId(relationId);
             setExpanded(true);

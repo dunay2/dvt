@@ -53,7 +53,10 @@ export function CanvasRelationalTreeSourceCard({
       <span className="flex items-center gap-2">
         <Table2 aria-hidden="true" className="size-4 shrink-0 text-(--status-info)" />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-xs font-semibold text-(--text-primary)">
+          <span
+            style={{ fontFamily: '"Segoe UI", system-ui, sans-serif' }}
+            className="block truncate text-sm font-medium text-(--text-strong)"
+          >
             {item.label}
           </span>
         </span>

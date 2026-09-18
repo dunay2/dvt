@@ -52,6 +52,18 @@ const en = {
   missingPreview: 'The relational tree references disconnected sources:',
   missingPreviewHint: 'Reconnect these sources or update the composition before requesting data.',
   reviewInputs: 'Review inputs',
+  operations: 'Operations',
+  removeCard: 'Remove from tree',
+  removeKeepLeft: 'Remove JOIN · keep L',
+  removeKeepRight: 'Remove JOIN · keep R',
+  removalDependency:
+    'Another JOIN uses fields from this input. Edit its conditions before removing this card.',
+  removalUnavailable: 'This card cannot be removed from the current composition.',
+  joinTypeUnavailable:
+    'LEFT / RIGHT JOIN require admission in the Substrait profile and PostgreSQL projection.',
+  replaceOperation: 'Replace the current composition?',
+  replaceOperationHint:
+    'Changing the operation replaces this local composition. Cancel restores the applied version.',
 };
 const es: typeof en = {
   back: 'Volver al Canvas',
@@ -110,6 +122,18 @@ const es: typeof en = {
   missingPreviewHint:
     'Reconecta estas fuentes o actualiza la composición antes de consultar datos.',
   reviewInputs: 'Revisar entradas',
+  operations: 'Operaciones',
+  removeCard: 'Retirar del árbol',
+  removeKeepLeft: 'Retirar JOIN · conservar L',
+  removeKeepRight: 'Retirar JOIN · conservar R',
+  removalDependency:
+    'Otro JOIN utiliza campos de esta entrada. Edita sus condiciones antes de retirar la tarjeta.',
+  removalUnavailable: 'No se puede retirar esta tarjeta de la composición actual.',
+  joinTypeUnavailable:
+    'LEFT / RIGHT JOIN requieren admisión en el perfil Substrait y la proyección PostgreSQL.',
+  replaceOperation: '¿Reemplazar la composición actual?',
+  replaceOperationHint:
+    'Cambiar la operación reemplaza esta composición local. Cancelar recupera la versión aplicada.',
 };
 export type CanvasSemanticEditorCopy = typeof en;
 export function resolveCanvasSemanticEditorCopy(language: string): CanvasSemanticEditorCopy {

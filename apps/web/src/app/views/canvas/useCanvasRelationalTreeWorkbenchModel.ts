@@ -96,6 +96,12 @@ export function useCanvasRelationalTreeWorkbenchModel(
         item.sourceNodeId == null ? undefined : candidateById.get(item.sourceNodeId);
       return {
         ...item,
+        state:
+          session.active && session.operation != null && item.state !== 'missing'
+            ? session.selectedInputIds.includes(item.sourceNodeId ?? '')
+              ? ('participating' as const)
+              : ('pending' as const)
+            : item.state,
         selectable: session.operation == null || candidate?.selectable === true,
         selected:
           item.sourceNodeId != null &&
@@ -116,6 +122,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
     authoringAvailable,
     projection,
     session.appendInput?.nodeId,
+    session.active,
     session.candidates,
     session.operation,
     session.selectedInputIds,

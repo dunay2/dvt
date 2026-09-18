@@ -1,0 +1,11 @@
+/* Editor-scoped interface type; monospaced text is reserved for expressions. */
+[data-slot='canvas-model-editor'],
+.canvas-relational-card-menu {
+  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+[data-slot='canvas-model-editor'] :where(button, input, select, textarea) {
+  font-family: var(--font-sans);
+}

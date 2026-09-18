@@ -56,5 +56,5 @@ export function useCanvasRelationalTreeExistingJoinSeed(
     },
     [edges, inputs, nodes, onHydrate, seed, targetNodeId]
   );
-  return { hydrateExistingJoin, baselineDraft };
+  return { hydrateExistingJoin, baselineDraft, seed };
 }

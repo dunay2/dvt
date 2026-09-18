@@ -30,7 +30,7 @@ export function CanvasRelationalScalarTree({
             data-kind={node.data.semanticKind}
             data-semantic-node-id={id}
             title={node.data.detail}
-            className={`inline-flex max-w-full items-baseline gap-2 rounded border border-(--border-subtle) bg-(--surface-panel) px-2 py-1 font-mono text-xs ${compact ? 'whitespace-nowrap' : 'flex-wrap'}`}
+            className={`inline-flex max-w-full items-baseline gap-2 rounded border border-(--border-subtle) bg-(--surface-panel) px-2 py-1 font-mono text-[13px] leading-5 ${compact ? 'whitespace-nowrap' : 'flex-wrap'}`}
           >
             <span className="shrink-0 font-semibold text-cyan-300">{kind}</span>
             {detail.length === 0 || detail.join(' ').toUpperCase() === kind ? null : (

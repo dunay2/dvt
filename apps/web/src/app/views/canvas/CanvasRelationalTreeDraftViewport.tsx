@@ -35,6 +35,7 @@ export function CanvasRelationalTreeDraftViewport({
   selectedRelationId,
   onSelectRelation,
   onExpandRelation,
+  onRemove,
 }: Readonly<{
   copy: CanvasRelationalTreeWorkbenchCopy;
   edges: readonly CanonicalEdge[];
@@ -52,6 +53,7 @@ export function CanvasRelationalTreeDraftViewport({
   selectedRelationId: string | null;
   onSelectRelation: (relationId: string | null) => void;
   onExpandRelation: (relationId: string | null) => void;
+  onRemove: (relationId: string, keep?: 'left' | 'right') => void;
 }>): JSX.Element {
   const inputById = useMemo(
     () => new Map(inputs.map((input) => [input.nodeId, input] as const)),
@@ -143,6 +145,7 @@ export function CanvasRelationalTreeDraftViewport({
               zoom={viewport.zoom}
               semanticContext={{ transformNode, draft: joinDraft ?? undefined }}
               onExpand={(locator) => onExpandRelation(relationIdFor(locator))}
+              onRemove={onRemove}
               onSelect={(locator) => onSelectRelation(relationIdFor(locator))}
             />
           </div>

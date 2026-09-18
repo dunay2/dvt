@@ -68,6 +68,7 @@ export function CanvasRelationalTreeLayout({
   copy,
   onSelect,
   onExpand,
+  onRemove,
   semanticContext,
   zoom = 1,
 }: Readonly<{
@@ -77,6 +78,7 @@ export function CanvasRelationalTreeLayout({
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
   onExpand?: (locator: string) => void;
+  onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
   semanticContext?: CanvasRelationalSemanticContext;
   zoom?: number;
 }>): JSX.Element {
@@ -165,6 +167,7 @@ export function CanvasRelationalTreeLayout({
             copy={copy}
             onSelect={onSelect}
             onExpand={onExpand}
+            onRemove={onRemove}
             semanticGraph={detail.graphs.get(placed.node.locator)}
           />
         ))}

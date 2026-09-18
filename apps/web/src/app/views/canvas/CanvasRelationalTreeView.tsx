@@ -14,6 +14,7 @@ export function CanvasRelationalTreeView({
   copy,
   onSelect,
   onExpand,
+  onRemove,
   transformNode,
 }: Readonly<{
   outputName: string;
@@ -22,6 +23,7 @@ export function CanvasRelationalTreeView({
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
   onExpand?: (locator: string) => void;
+  onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
   transformNode?: CanonicalNode;
 }>): JSX.Element {
   const viewport = useCanvasRelationalTreeViewport(root.locator);
@@ -61,6 +63,7 @@ export function CanvasRelationalTreeView({
               copy={copy}
               onSelect={onSelect}
               onExpand={onExpand}
+              onRemove={onRemove}
               zoom={viewport.zoom}
               semanticContext={transformNode == null ? undefined : { transformNode }}
             />

@@ -3,6 +3,7 @@ import {
   decodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitNInputJoinDraft,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
+import { inspectDvtSubstraitProjectionDraft } from '../../../src/app/views/canvas/canvasDvtSubstraitProjection';
 import {
   buildCanvasAuthoringDraft,
   stubStatefulCanvasDraftAuthoring,
@@ -182,6 +183,89 @@ describe('Canvas relational-tree Workbench', () => {
         };
       }
     );
+  });
+
+  it('removes cards through their context menu, cancels without writes and persists canonical Substrait on Apply', () => {
+    let baseline = 0;
+    cy.viewport(1280, 800);
+    visitWithE2eWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        window.localStorage.setItem(
+          'dvt-web-application-language',
+          JSON.stringify({ state: { language: 'en' }, version: 0 })
+        );
+      },
+    });
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+    cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').click();
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should('be.visible');
+    cy.get('[data-slot="canvas-relational-node-title"]')
+      .first()
+      .should('have.css', 'font-size', '14px');
+    cy.get('[data-slot="canvas-relational-tree-node"]')
+      .first()
+      .should('have.css', 'font-family')
+      .and('contain', 'Segoe UI');
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.then(() => {
+      baseline = semanticWrites('join-transform').length;
+    });
+    cy.get('[data-slot="canvas-relational-tree-operation-shelf-toggle"]').click();
+    cy.get('[data-slot="dvt-select-operation-inner-join"]').should('be.visible');
+    cy.get('[data-slot="dvt-select-operation-union-all"]').should('be.visible');
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').rightclick();
+    cy.get('[data-slot="canvas-relational-remove-left"]').should('be.visible');
+    cy.screenshot('semantic-editor-card-context-menu');
+    cy.get('[data-slot="canvas-relational-remove-left"]').click();
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]').should(
+      'have.length',
+      1
+    );
+    cy.then(() => expect(semanticWrites('join-transform').length).to.equal(baseline));
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]').should(
+      'have.length',
+      2
+    );
+    cy.then(() => expect(semanticWrites('join-transform').length).to.equal(baseline));
+    cy.contains(
+      '[data-slot="canvas-relational-tree-node"][data-operator="read"]',
+      'orders'
+    ).rightclick();
+    cy.get('[data-slot="canvas-relational-remove-source"]').click();
+    cy.get('[data-slot="canvas-relational-tree-apply"]').click();
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]').should(
+      'have.length',
+      1
+    );
+    cy.wrap(null).should(() =>
+      expect(semanticWrites('join-transform').length).to.be.greaterThan(baseline)
+    );
+    cy.then(() => {
+      const document = semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!);
+      const draft = decodeDvtSubstraitInnerJoinDocument(document);
+      const inspection = inspectDvtSubstraitProjectionDraft(draft);
+      expect(inspection.ok, 'saved canonical projection').to.equal(true);
+      if (inspection.ok) expect(inspection.projection.source.table).to.equal('customers');
+    });
+    cy.get('[data-slot="canvas-model-view-tab"][data-view="sql"]').click();
+    cy.get('[data-slot="canvas-model-sql"]')
+      .should('contain.text', 'SELECT')
+      .and('contain.text', 'customers')
+      .and('not.contain.text', 'INNER JOIN');
+    cy.get('[data-slot="canvas-model-back"]').click();
+    visitWithE2eWorkspaceSession('/canvas');
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+    cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]').dblclick(
+      40,
+      18
+    );
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]').should(
+      'have.length',
+      1
+    );
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should('not.exist');
   });
 
   it('opens the full-width Model editor without a duplicate authoring drawer', () => {

@@ -3,6 +3,10 @@ import { describe, expect, it } from 'vitest';
 import DetailSource from './CanvasRelationalJoinExpressionTree.tsx?raw';
 import GeometrySource from './canvasRelationalTreeGeometry.ts?raw';
 import GraphNodeSource from './CanvasRelationalTreeGraphNode.tsx?raw';
+import NodeButtonSource from './CanvasRelationalTreeNodeButton.tsx?raw';
+import CardMenuSource from './CanvasRelationalTreeCardMenu.tsx?raw';
+import InspectionSource from './CanvasRelationalTreeInspection.tsx?raw';
+import RemovalSessionSource from './useCanvasRelationalTreeRemoval.ts?raw';
 import SemanticZoomSource from './canvasRelationalTreeSemanticZoom.ts?raw';
 import ScalarTreeSource from './CanvasRelationalScalarTree.tsx?raw';
 import MetricsSource from './canvasRelationalTreeGeometryMetrics.ts?raw';
@@ -80,6 +84,9 @@ describe('Canvas relational-tree Workbench architecture', () => {
       TreeSource,
       LayoutSource,
       GraphNodeSource,
+      NodeButtonSource,
+      CardMenuSource,
+      InspectionSource,
       GeometrySource,
       SemanticZoomSource,
       ScalarTreeSource,
@@ -101,6 +108,10 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(combined).not.toContain('create(');
     expect(AuthoringSessionSource).toContain('useCanvasRelationalTreeApplyCommand');
     expect(AuthoringSessionSource).toContain('useCanvasRelationalTreeExistingJoinSeed');
+    expect(AuthoringSessionSource).toContain('useCanvasRelationalTreeRemoval');
+    expect(RemovalSessionSource).toContain('removeCanvasRelationalTreeNode');
+    expect(RemovalSessionSource).not.toContain('onApplyNodeDraft');
+    expect(CardMenuSource).not.toContain('onApplyNodeDraft');
     expect(AuthoringProjectionSource).toContain('projectCanvasRelationalTree');
     expect(AuthoringProjectionSource).not.toContain('onApplyNodeDraft');
     expect(ApplyCommandSource).toContain('authoring?.onApplyNodeDraft(');

@@ -40,6 +40,7 @@ export function useCanvasRelationalTreeJoinDraftActions(
   } = args;
   const selectOperation = useCallback(
     (nextOperation: CanvasRelationalOperation) => {
+      if (nextOperation === 'inner_join' && joinDraft != null) return;
       if (!choices.some((choice) => choice.operation === nextOperation && choice.selectable))
         return;
       if (nextOperation === 'inner_join') {
@@ -59,7 +60,16 @@ export function useCanvasRelationalTreeJoinDraftActions(
       setOperation(nextOperation);
       setAppendInputId(null);
     },
-    [choices, inputs, selectedInputIds, setAppendInputId, setJoinDraft, setOperation, targetNodeId]
+    [
+      choices,
+      inputs,
+      joinDraft,
+      selectedInputIds,
+      setAppendInputId,
+      setJoinDraft,
+      setOperation,
+      targetNodeId,
+    ]
   );
 
   const appendJoinInput = useCallback(
