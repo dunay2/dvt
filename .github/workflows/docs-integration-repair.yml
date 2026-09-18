@@ -10,117 +10,142 @@ permissions:
 
 jobs:
   retire:
-    name: Retire reviewed editorial closeouts with canonical validation
+    name: Validate atlas and superseded Canvas documentation retirement
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
       contents: write
     env:
-      BASE: f051f1aea4c0ee16a88ed58bec8ebc410987501a
-      GIT_BASE: f051f1aea4c0ee16a88ed58bec8ebc410987501a
+      BASE: c76f0f3c476396b73d37ea0181caa0a8862e658a
+      GIT_BASE: c76f0f3c476396b73d37ea0181caa0a8862e658a
       PLANNING_DB_INTEGRITY_SCOPE: bootstrap
       TZ: UTC
     steps:
-      - name: Checkout exact integrated baseline without stored credentials
+      - name: Checkout exact current main without stored credentials
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: f051f1aea4c0ee16a88ed58bec8ebc410987501a
+          ref: c76f0f3c476396b73d37ea0181caa0a8862e658a
           fetch-depth: 0
           persist-credentials: false
-      - name: Apply reviewed source-verified deletion set and regression
+      - name: Apply exact reviewed specification and prove initial rejection
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import subprocess,hashlib,json,os
-          out=Path('/tmp/editorial-retirement');out.mkdir(exist_ok=True)
-          def git(*args):return subprocess.check_output(['git',*args]).decode().strip()
-          assert git('rev-parse','HEAD')==os.environ['BASE']
-          assert git('rev-parse','HEAD^{tree}')=='541ae03dbd2b662597f84d47f667db301eb90af1'
-          kept=['20260318-stage-1-1-planner-canonicalization-companion-boundary-closeout.md','20260318-stage-1-1-planner-canonicalization-contract-evolution-protocol-closeout.md','20260318-stage-1-1-planner-canonicalization-policy-vocabulary-contracts-closeout.md']
-          extra=['20260315-architecture-review-docs-closeout.md','20260315-review-markdown-relocation-closeout.md','20260316-engine-docs-current-state-closeout.md','20260317-package-module-build-policy-proposal-closeout.md','20260317-principal-architecture-review-execution-plan-closeout.md','20260317-proposal-set-alignment-closeout.md','20260402-evidence-information-architecture-proposal-closeout.md','20260514-f13-frontend-architecture-doc-reconciliation-closeout.md','20260331-zensical-primary-docs-runtime-closeout.md','20260515-lane-e-p0-review-reconciliation-closeout.md']
-          prefix='docs/planning/closeouts/'
-          paths=sorted([str(p) for p in Path(prefix).glob('*stage-1-1-planner-canonicalization*') if p.name not in kept]+[prefix+n for n in extra])
-          assert len(paths)==38
-          originals={p:Path(p).read_bytes() for p in paths}
-          sourceHashes={p:hashlib.sha256(b).hexdigest() for p,b in originals.items()}
-          assert hashlib.sha256(json.dumps(sourceHashes,sort_keys=True,separators=(',',':')).encode()).hexdigest()=='33e0d73eabc5bbec5a06cf20f2925966718ea9a2cbbb1099df86c47eadf1e957'
-          tracked=git('ls-files','-z').split('\0');backlinks=[]
-          for q in tracked:
-              if not q:continue
-              try:text=Path(q).read_text()
-              except (UnicodeError,OSError):continue
-              for p in paths:
-                  if q!=p and (Path(p).name in text or Path(p).stem in text):backlinks.append([q,p])
-          assert not backlinks,backlinks
-          assert not Path('tools/docs/validate-planner-stage-1-1-manifest.ts').exists()
-          tp=Path('tools/ci/docs-disposition-canon.test.mjs');before=tp.read_bytes()
-          assert hashlib.sha256(before).hexdigest()=='afe51a854eb38951fd8b3b40b3adcfe5d13450c1f30ebb97a81fa80aeda62649'
-          q=lambda xs:'\n'.join('    '+repr(x)+',' for x in xs)
+          import subprocess,json,hashlib,os
+          R=Path('.');OUT=Path('/tmp/atlas-retirement');OUT.mkdir(exist_ok=True)
+          BASE=os.environ['BASE']
+          assert subprocess.check_output(['git','rev-parse','HEAD']).decode().strip()==BASE
+          def read(p):return (R/p).read_text()
+          def digest(b):return hashlib.sha256(b).hexdigest()
+          oldplan='docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md'
+          canon='docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md'
+          review='docs/planning/reviews/architecture-and-governance/20260307-architecture-doc-consolidation-matrix-review.md'
+          empty='docs/planning/proposals/mandatory/frontend-and-ux/canvas-empty-guide-preference-plan-20260602.md'
+          palette='docs/planning/proposals/mandatory/frontend-and-ux/f29c-canvas-insert-palette-plan-20260525.md'
+          other=['docs/architecture/components/web/astproposal.md',empty,palette,'docs/planning/closeouts/20260602-canvas-empty-guide-preference-closeout.md',review,oldplan]
+          paths=sorted([str(p.relative_to(R)) for p in (R/'docs/architecture/atlas').rglob('*.md')]+other)
+          assert len(paths)==11
+          spec={'base':BASE,'deletions':{p:digest((R/p).read_bytes()) for p in paths},'edits':[]}
+          originals={};current={}
+          def edit(p,b,a,count=1):
+              if p not in originals:originals[p]=(R/p).read_bytes();current[p]=originals[p].decode()
+              assert current[p].count(b)==count,(p,b,current[p].count(b))
+              spec['edits'].append({'path':p,'before':b,'after':a,'count':count})
+              current[p]=current[p].replace(b,a)
+          def rmline(p,term):
+              s=current.get(p,read(p));ls=[l for l in s.splitlines(True) if term in l]
+              assert len(ls)==1,(p,term,len(ls));edit(p,ls[0],'')
+          rmline('scripts/sync-docs.cjs',"    'atlas/index.md',")
+          edit('scripts/sync-docs.cjs','- Use [Atlas](atlas/index.md) and [Reference Architecture](reference-architecture.md)','- Use [Reference Architecture](reference-architecture.md)')
+          rmline('docs/architecture/architecture-surface-inventory-20260402.md','atlas/architecture/architecture-atlas.md')
+          rmline('docs/planning/reviews/review-naming-policy.md',Path(review).name)
+          rmline('docs/planning/reviews/architecture-and-governance/index.md',Path(review).name)
+          rmline('docs/planning/domains/documentation-governance.md',Path(oldplan).name)
+          rmline('docs/planning/proposals/mandatory/frontend-and-ux/implemented-capabilities/index.md',Path(empty).name)
+          rmline('docs/planning/proposals/mandatory/frontend-and-ux/implemented-capabilities/index.md',Path(palette).name)
+          p='docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md'
+          for d in paths:
+              if d in read(p):rmline(p,d)
+          p='docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md'
+          edit(p,'[Architecture Documentation Reconciliation Plan](./architecture-doc-reconciliation-plan-20260402.md)','[Architecture Documentation Reconciliation Canon Plan](./architecture-doc-reconciliation-canon-plan-20260523.md)')
+          for p,d,n in [('docs/planning/closeouts/20260407-doc-arch-01-documentation-governance-audit-closeout.md',oldplan,2),('docs/planning/closeouts/20260904-gh-2896-retire-empty-canvas-guide-closeout.md',empty,1)]:
+              edit(p,'`'+d+'`','[Original source in Git](https://github.com/dunay2/dvt/blob/'+BASE+'/'+d+')',n)
+          edit(canon,'- `'+oldplan+'`\n','')
+          edit(canon,'  - '+oldplan+'\n','')
+          rmline(canon,'| `architecture-doc-reconciliation-plan-20260402.md`')
+          edit(canon,'''This plan canonizes the 2026-04-02 architecture documentation reconciliation
+          proposal into governed documentation work. It defines the classification rail
+          for architecture documentation truth, links the proposal to
+          `GD-MAND-ARCH-DOC-RECON`, and keeps executable child remediation lifecycle in
+          GitHub Issues while Planning DB remains responsible for architecture and
+          mechanization governance.''','''This plan governs architecture documentation reconciliation through
+          `GD-MAND-ARCH-DOC-RECON`. It defines the classification rail for documentation
+          truth and keeps executable child remediation lifecycle in GitHub Issues while
+          Planning DB remains responsible for architecture and mechanization governance.''')
+          rmline('tools/ci/planner-package-governance.test.mjs','docs/architecture/atlas/engineering/engineering-playbook.md')
+          for term in ['docs/architecture/atlas/index.md','docs/architecture/atlas/README.md']:rmline('tools/ci/startup-card-canon.test.mjs',term)
+          edit('tools/ci/startup-card-canon.test.mjs',oldplan,canon)
+          p='docs/planning/proposals/mandatory/runtime-and-contracts/red1-1-planner-contracts-retirement-plan-20260821.md'
+          edit(p, '      - docs/architecture/atlas/engineering/engineering-playbook.md\n', '')
+          edit(p, '  - docs/architecture/atlas/engineering/engineering-playbook.md\n', '')
+          p='tools/ci/docs-disposition-canon.test.mjs'
           addition=r'''
-          // Completed editorial journals do not replace current contracts or issue history.
-          test('retired documentation-only closeouts have no files or local consumers', () => {
-            const contractCloseouts = new Set([
-          __KEPT__
-            ]);
-            const editorialCloseouts = new Set([
-          __EXTRA__
-            ]);
-            const isRetired = (name) =>
-              editorialCloseouts.has(name) ||
-              (/^202603(?:17|18)-stage-1-1-planner-canonicalization-[a-z0-9-]+-closeout\.md$/u.test(name) &&
-                !contractCloseouts.has(name));
-
-            const directory = new URL('../../docs/planning/closeouts/', import.meta.url);
-            for (const name of readdirSync(directory)) {
-              assert.equal(isRetired(name), false, `retired editorial closeout: ${name}`);
+          // Git holds the obsolete snapshots; current authorities and product tests remain.
+          test('retired atlas and superseded Canvas guidance have no live consumers', () => {
+            const retiredFiles = [
+          __PATHS__
+            ];
+            for (const path of ['docs/architecture/atlas', ...retiredFiles]) {
+              assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, path);
             }
-
+            const retiredNames = retiredFiles.map((path) => path.split('/').at(-1).replace(/\.md$/u, ''));
             const paths = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
               .split('\0')
               .filter(Boolean);
             for (const path of paths) {
               if (path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
               if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
-              // Only exact Git revisions can supply historical provenance, never main.
               const current = readRepoFile(path).replace(
-                /https:\/\/github\.com\/dunay2\/dvt\/blob\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
+                /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
                 ''
               );
-              for (const match of current.matchAll(/\b[0-9]{8}-[a-z0-9.-]+-closeout(?:\.md)?\b/gu)) {
-                const name = match[0].endsWith('.md') ? match[0] : `${match[0]}.md`;
-                assert.equal(isRetired(name), false, `retired editorial closeout reference: ${path}: ${name}`);
+              assert.equal(current.includes('atlas/'), false, `retired atlas reference: ${path}`);
+              for (const name of retiredNames) {
+                assert.equal(current.includes(name), false, `retired guidance reference: ${path}: ${name}`);
               }
             }
+            assertFilesExist([
+              'docs/architecture/reference-architecture.md',
+              'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md',
+              'docs/planning/state/github-mvp-issue-workflow.md',
+              'apps/web/src/app/views/canvas/CanvasEmptyAuthoringEntrypoint.architecture.test.ts',
+            ]);
           });
-          '''.replace('__KEPT__',q(kept)).replace('__EXTRA__',q(extra))
-          assert hashlib.sha256(addition.encode()).hexdigest()=='635f49798ba04933faf21ee594d5fa0354151b94b658c28367e4aacd8682f994'
-          tp.write_bytes(before+addition.encode())
-          command=['node','--test','--test-name-pattern=retired documentation-only closeouts','tools/ci/docs-disposition-canon.test.mjs']
-          def probe(name,code,marker):
-              r=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
-              (out/(name+'.log')).write_text(r.stdout)
-              assert r.returncode==code and marker in r.stdout,(name,r.returncode,r.stdout[-1200:])
-          probe('red',1,'retired editorial closeout:')
-          for p in paths:Path(p).unlink()
-          probe('green',0,'# pass 1')
-          for i,(p,data) in enumerate(originals.items(),1):
-              Path(p).write_bytes(data)
-              try:probe('restore-'+str(i),1,'retired editorial closeout: '+Path(p).name)
-              finally:Path(p).unlink()
-          consumer=Path('docs/guides/ai-work-protocol.md');data=consumer.read_bytes()
-          for label,target,code,marker in [('local',paths[0],1,'retired editorial closeout reference:'),('main','https://github.com/dunay2/dvt/blob/main/'+paths[0],1,'retired editorial closeout reference:'),('git','https://github.com/dunay2/dvt/blob/'+os.environ['BASE']+'/'+paths[0],0,'# pass 1')]:
-              consumer.write_bytes(data+b'\n'+target.encode()+b'\n')
-              try:probe('consumer-'+label,code,marker)
-              finally:consumer.write_bytes(data)
-          probe('final-green',0,'# pass 1')
-          spec={'base':os.environ['BASE'],'deletions':sourceHashes,'backlinks':backlinks,'testAppendSha256':hashlib.sha256(addition.encode()).hexdigest(),'preserved':{prefix+n:hashlib.sha256(Path(prefix+n).read_bytes()).hexdigest() for n in kept}}
-          (out/'selection.json').write_text(json.dumps(spec,indent=2))
-          git('add','-u');git('diff','--cached','--check')
-          assert set(git('diff','--cached','--name-only').splitlines())==set(paths)|{str(tp)}
-          git('config','user.name','DVT documentation retirement')
-          git('config','user.email','34416258+dunay2@users.noreply.github.com')
-          print('38 reviewed historical editorial records removed; red/green, 38 restorations and local/main/Git reference controls verified')
+          '''.replace('__PATHS__','\n'.join('    '+repr(x)+',' for x in other))
+          originals[p]=(R/p).read_bytes();current[p]=originals[p].decode()+addition
+          spec['edits'].append({'path':p,'before':'','after':addition,'append':True})
+          spec['originals']={p:digest(b) for p,b in originals.items()}
+          spec['expectedEdits']={p:digest(t.encode()) for p,t in current.items()}
+          raw=json.dumps(spec,indent=2).encode()
+          assert digest(raw)=='48e1cabe91cc21c4214a53388017b5367627efa75f062b98f0bc4bd1b86ba4d6'
+          (OUT/'spec.json').write_bytes(raw)
+          for p,t in current.items():(R/p).write_bytes(t.encode())
+          cmd=['node','--test','--test-name-pattern=retired atlas and superseded Canvas','tools/ci/docs-disposition-canon.test.mjs']
+          red=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+          (OUT/'red.log').write_text(red.stdout)
+          assert red.returncode==1 and 'docs/architecture/atlas' in red.stdout,red.stdout
+          for p in paths:(R/p).unlink()
+          for p in sorted((R/'docs/architecture/atlas').rglob('*'),reverse=True):
+              if p.is_dir():p.rmdir()
+          (R/'docs/architecture/atlas').rmdir()
+          subprocess.run(['git','config','user.name','DVT documentation retirement'],check=True)
+          subprocess.run(['git','config','user.email','34416258+dunay2@users.noreply.github.com'],check=True)
+          subprocess.run(['git','add','-A'],check=True)
+          subprocess.run(['git','diff','--cached','--check'],check=True)
+          changed=subprocess.check_output(['git','diff','--cached','--name-only']).decode().splitlines()
+          assert set(changed)==set(spec['deletions'])|set(spec['originals'])
+          print('Exact reviewed specification verified; eleven deletions; fifteen edited consumers; RED demonstrated')
           PY
       - name: Setup canonical toolchain with enabled hooks
         uses: ./.github/actions/setup-node-pnpm
@@ -128,78 +153,106 @@ jobs:
           node-version: 22.x
       - name: Prepare disposable CI bootstrap database only
         uses: ./.github/actions/prepare-planning-db
-      - name: Run canonical documentation and governance generators
+      - name: Generate documentation and governance through canonical owners
         shell: bash
         run: |
           set -euo pipefail
-          pnpm docs:sync 2>&1 | tee /tmp/editorial-retirement/docs-sync.log
-          pnpm governance:refresh 2>&1 | tee /tmp/editorial-retirement/governance-refresh.log
-          git add -u
-      - name: Commit using canonical helper and hooks
+          pnpm docs:sync 2>&1 | tee /tmp/atlas-retirement/docs-sync.log
+          pnpm governance:refresh 2>&1 | tee /tmp/atlas-retirement/governance-refresh.log
+          git add -A
+      - name: Commit through canonical helper and enabled hooks
         shell: bash
         run: |
           set -euo pipefail
-          pnpm commit docs docs "Retire historical editorial closeouts" 2>&1 | tee /tmp/editorial-retirement/commit.log
+          pnpm commit docs docs "Retire historical atlas and superseded Canvas guidance" 2>&1 | tee /tmp/atlas-retirement/commit.log
           echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-      - name: Validate final scope regressions and repository gates
+      - name: Verify final scope, full selected regressions and negative controls
         shell: bash
         run: |
           python3 - <<'PY'
-          import subprocess,pathlib,json,os,hashlib,sys
-          out=pathlib.Path('/tmp/editorial-retirement');spec=json.loads((out/'selection.json').read_text());base=os.environ['BASE']
-          def git(*args):return subprocess.check_output(['git',*args]).decode().strip()
+          from pathlib import Path
+          import subprocess,json,os,shutil,sys
+          out=Path('/tmp/atlas-retirement');spec=json.loads((out/'spec.json').read_text());base=os.environ['BASE']
+          def git(*a):return subprocess.check_output(['git',*a]).decode().strip()
           assert git('show','-s','--format=%P','HEAD')==base
           assert set(git('diff','--name-only','--diff-filter=D',base,'HEAD').splitlines())==set(spec['deletions'])
           assert not git('diff','--name-only','--diff-filter=A',base,'HEAD')
-          changed=set(git('diff','--name-only',base,'HEAD').splitlines())
-          allowed=set(spec['deletions'])|{'tools/ci/docs-disposition-canon.test.mjs','docs/.manifest.json'}
-          assert changed<=allowed,changed-allowed
-          for p,h in spec['preserved'].items():assert hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()==h,p
-          arc=subprocess.run(['node','tools/ci/arc-check.mjs'],capture_output=True,text=True)
-          (out/'arc.json').write_text(arc.stdout);assert arc.returncode==0,arc.stderr
-          classification=json.loads(arc.stdout);assert classification['effectiveArcLevel']=='ARC-0',classification
-          assert all(classification['requirements'][k] is False for k in ['evidenceDoc','riskUpdate','rolloutNotes','compatMatrix']),classification
-          commands=[
-            ['node','--test','scripts/documentation-publication.test.cjs','scripts/planning-db-surface-inventory-check.test.cjs','tools/ci/docs-disposition-canon.test.mjs'],
-            ['pnpm','docs:sync:check'],['pnpm','docs:gov:manifest:check'],['pnpm','ci:docs'],['pnpm','verify:prepush'],
-            ['pnpm','pr:validate-title','docs(docs): Retire historical editorial closeouts'],['git','diff','--exit-code','HEAD']]
+          allowed=set(spec['originals'])|set(spec['deletions'])|{'docs/architecture/index.md','docs/.manifest.json'}
+          assert set(git('diff','--name-only',base,'HEAD').splitlines())<=allowed
+          assert not git('diff','--name-only',base,'HEAD','--','apps','packages','specs','docs/adr','docs/evidence','docs/risk-register','.github','package.json','pnpm-lock.yaml')
           results=[]
-          for i,cmd in enumerate(commands,1):
+          def run(name,cmd,expected=0,marker=None):
               r=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
-              log='validation-'+str(i)+'.log';(out/log).write_text(r.stdout)
-              results.append({'command':cmd,'exitCode':r.returncode,'log':log});(out/'validation.json').write_text(json.dumps(results,indent=2))
-              print('COMMAND',cmd,'EXIT',r.returncode,flush=True);print('\n'.join(r.stdout.splitlines()[-25:]),flush=True)
-              if r.returncode:sys.exit(r.returncode)
+              (out/(name+'.log')).write_text(r.stdout)
+              results.append({'name':name,'command':cmd,'exitCode':r.returncode,'expectedExitCode':expected})
+              (out/'validation.json').write_text(json.dumps(results,indent=2))
+              print(name,r.returncode,flush=True);print('\n'.join(r.stdout.splitlines()[-8:]),flush=True)
+              assert r.returncode==expected,(name,r.stdout[-6000:])
+              if marker:assert marker in r.stdout,(name,marker,r.stdout[-6000:])
+              return r.stdout
+          arc=run('arc',['node','tools/ci/arc-check.mjs'])
+          a=json.loads(arc);assert a['effectiveArcLevel']=='ARC-0'
+          assert all(a['requirements'][k] is False for k in ['evidenceDoc','riskUpdate','rolloutNotes','compatMatrix'])
+          cmd=['node','--test','--test-name-pattern=retired atlas and superseded Canvas','tools/ci/docs-disposition-canon.test.mjs']
+          run('green',cmd)
+          for i,p in enumerate(spec['deletions']):
+              target=Path(p);target.parent.mkdir(parents=True,exist_ok=True)
+              target.write_bytes(subprocess.check_output(['git','show',base+':'+p]))
+              try:run('restore-'+str(i+1),cmd,1,p if '/atlas/' not in p else 'docs/architecture/atlas')
+              finally:
+                  target.unlink()
+                  if Path('docs/architecture/atlas').exists():shutil.rmtree('docs/architecture/atlas')
+          p=Path('README.md');original=p.read_bytes()
+          slug='docs/architecture/atlas/index.md'
+          cases=[('local',slug,1),('main','https://github.com/dunay2/dvt/blob/main/'+slug,1),('git','https://github.com/dunay2/dvt/blob/'+base+'/'+slug,0)]
+          for name,text,expected in cases:
+              p.write_bytes(original+('\n'+text+'\n').encode())
+              try:run('consumer-'+name,cmd,expected)
+              finally:p.write_bytes(original)
+          p=Path('scripts/sync-docs.cjs');original=p.read_bytes()
+          p.write_bytes(subprocess.check_output(['git','show',base+':scripts/sync-docs.cjs']))
+          try:run('restore-generator',cmd,1,'scripts/sync-docs.cjs')
+          finally:p.write_bytes(original)
+          commands=[
+              ['node','--test','scripts/documentation-publication.test.cjs','scripts/planning-db-surface-inventory-check.test.cjs','tools/ci/docs-disposition-canon.test.mjs','tools/ci/startup-card-canon.test.mjs','tools/ci/planner-package-governance.test.mjs','tools/ci/architecture-doc-reconciliation-canon.test.mjs'],
+              ['pnpm','docs:sync:check'],['pnpm','docs:gov:manifest:check'],['pnpm','ci:docs'],['pnpm','verify:prepush'],
+              ['pnpm','pr:validate-title','docs(docs): Retire historical atlas and superseded Canvas guidance'],['git','diff','--exit-code','HEAD'],
+          ]
+          for i,c in enumerate(commands):run('validation-'+str(i+1),c)
           assert not git('status','--porcelain')
           (out/'validated.txt').write_text(git('rev-parse','HEAD')+'\n')
           PY
-      - name: Export exact candidate and validation evidence
+      - name: Export exact candidate and source evidence
         if: always()
         shell: bash
         run: |
           python3 - <<'PY'
-          import pathlib,subprocess,os,json,hashlib
-          out=pathlib.Path('/tmp/editorial-retirement');out.mkdir(exist_ok=True)
-          def git(*args):return subprocess.check_output(['git',*args])
-          for name,args in {'head.txt':['rev-parse','HEAD'],'tree.txt':['rev-parse','HEAD^{tree}'],'commit.txt':['cat-file','commit','HEAD'],'status.txt':['status','--porcelain'],'candidate.patch':['diff','--binary',os.environ['BASE'],'HEAD'],'stats.txt':['diff','--stat',os.environ['BASE'],'HEAD'],'numstat.txt':['diff','--numstat',os.environ['BASE'],'HEAD'],'name-status.txt':['diff','--name-status',os.environ['BASE'],'HEAD']}.items():
+          from pathlib import Path
+          import subprocess,json,hashlib,os
+          out=Path('/tmp/atlas-retirement');out.mkdir(exist_ok=True);base=os.environ['BASE']
+          def git(*a):return subprocess.check_output(['git',*a])
+          for name,args in {'head.txt':['rev-parse','HEAD'],'tree.txt':['rev-parse','HEAD^{tree}'],'commit.txt':['cat-file','commit','HEAD'],'status.txt':['status','--porcelain'],'stats.txt':['diff','--stat',base,'HEAD'],'candidate.patch':['diff',base,'HEAD'],'worktree.patch':['diff','HEAD'],'name-status.txt':['diff','--name-status',base,'HEAD'],'numstat.txt':['diff','--numstat',base,'HEAD'],'base-files.txt':['ls-tree','-rz',base],'head-files.txt':['ls-tree','-rz','HEAD']}.items():
               (out/name).write_bytes(git(*args))
           subprocess.run(['git','archive','--format=tar.gz','-o',str(out/'source.tar.gz'),'HEAD'],check=True)
-          (out/'checksums.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in out.iterdir() if p.is_file() and p.name!='checksums.json'},indent=2))
+          checks={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in out.iterdir() if p.is_file() and p.name!='checksums.json'}
+          (out/'checksums.json').write_text(json.dumps(checks,indent=2))
+          print((out/'head.txt').read_text());print((out/'stats.txt').read_text())
           PY
-      - name: Publish only the validated cleanup branch without force
-        if: success()
+      - name: Publish only validated branch with normal push
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          test "$(cat /tmp/editorial-retirement/validated.txt)" = "$(git rev-parse HEAD)"
+          test "$(cat /tmp/atlas-retirement/validated.txt)" = "$(git rev-parse HEAD)"
           gh auth setup-git
-          git push origin HEAD:refs/heads/docs/3004-retire-editorial-closeouts
-      - name: Upload validation and exact source
+          branch=docs/3004-retire-atlas-and-canvas-history
+          test -z "$(git ls-remote --heads origin "refs/heads/$branch")"
+          git push origin "HEAD:refs/heads/$branch"
+      - name: Upload candidate and validation artifact
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: editorial-closeout-retirement
-          path: /tmp/editorial-retirement
+          name: atlas-canvas-retirement
+          path: /tmp/atlas-retirement
           retention-days: 7
