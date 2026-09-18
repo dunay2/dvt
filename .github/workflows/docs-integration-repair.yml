@@ -7,14 +7,16 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   retire:
-    name: Validate atlas and superseded Canvas documentation retirement
+    name: Validate exact reviewed atlas and Canvas retirement
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
       contents: write
+      actions: read
     env:
       BASE: c76f0f3c476396b73d37ea0181caa0a8862e658a
       GIT_BASE: c76f0f3c476396b73d37ea0181caa0a8862e658a
@@ -27,125 +29,55 @@ jobs:
           ref: c76f0f3c476396b73d37ea0181caa0a8862e658a
           fetch-depth: 0
           persist-credentials: false
-      - name: Apply exact reviewed specification and prove initial rejection
+      - name: Apply the reviewed hash-verified data specification
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import subprocess,json,hashlib,os
-          R=Path('.');OUT=Path('/tmp/atlas-retirement');OUT.mkdir(exist_ok=True)
-          BASE=os.environ['BASE']
-          assert subprocess.check_output(['git','rev-parse','HEAD']).decode().strip()==BASE
-          def read(p):return (R/p).read_text()
-          def digest(b):return hashlib.sha256(b).hexdigest()
-          oldplan='docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md'
-          canon='docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md'
-          review='docs/planning/reviews/architecture-and-governance/20260307-architecture-doc-consolidation-matrix-review.md'
-          empty='docs/planning/proposals/mandatory/frontend-and-ux/canvas-empty-guide-preference-plan-20260602.md'
-          palette='docs/planning/proposals/mandatory/frontend-and-ux/f29c-canvas-insert-palette-plan-20260525.md'
-          other=['docs/architecture/components/web/astproposal.md',empty,palette,'docs/planning/closeouts/20260602-canvas-empty-guide-preference-closeout.md',review,oldplan]
-          paths=sorted([str(p.relative_to(R)) for p in (R/'docs/architecture/atlas').rglob('*.md')]+other)
-          assert len(paths)==11
-          spec={'base':BASE,'deletions':{p:digest((R/p).read_bytes()) for p in paths},'edits':[]}
-          originals={};current={}
-          def edit(p,b,a,count=1):
-              if p not in originals:originals[p]=(R/p).read_bytes();current[p]=originals[p].decode()
-              assert current[p].count(b)==count,(p,b,current[p].count(b))
-              spec['edits'].append({'path':p,'before':b,'after':a,'count':count})
-              current[p]=current[p].replace(b,a)
-          def rmline(p,term):
-              s=current.get(p,read(p));ls=[l for l in s.splitlines(True) if term in l]
-              assert len(ls)==1,(p,term,len(ls));edit(p,ls[0],'')
-          rmline('scripts/sync-docs.cjs',"    'atlas/index.md',")
-          edit('scripts/sync-docs.cjs','- Use [Atlas](atlas/index.md) and [Reference Architecture](reference-architecture.md)','- Use [Reference Architecture](reference-architecture.md)')
-          rmline('docs/architecture/architecture-surface-inventory-20260402.md','atlas/architecture/architecture-atlas.md')
-          rmline('docs/planning/reviews/review-naming-policy.md',Path(review).name)
-          rmline('docs/planning/reviews/architecture-and-governance/index.md',Path(review).name)
-          rmline('docs/planning/domains/documentation-governance.md',Path(oldplan).name)
-          rmline('docs/planning/proposals/mandatory/frontend-and-ux/implemented-capabilities/index.md',Path(empty).name)
-          rmline('docs/planning/proposals/mandatory/frontend-and-ux/implemented-capabilities/index.md',Path(palette).name)
-          p='docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md'
-          for d in paths:
-              if d in read(p):rmline(p,d)
-          p='docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md'
-          edit(p,'[Architecture Documentation Reconciliation Plan](./architecture-doc-reconciliation-plan-20260402.md)','[Architecture Documentation Reconciliation Canon Plan](./architecture-doc-reconciliation-canon-plan-20260523.md)')
-          for p,d,n in [('docs/planning/closeouts/20260407-doc-arch-01-documentation-governance-audit-closeout.md',oldplan,2),('docs/planning/closeouts/20260904-gh-2896-retire-empty-canvas-guide-closeout.md',empty,1)]:
-              edit(p,'`'+d+'`','[Original source in Git](https://github.com/dunay2/dvt/blob/'+BASE+'/'+d+')',n)
-          edit(canon,'- `'+oldplan+'`\n','')
-          edit(canon,'  - '+oldplan+'\n','')
-          rmline(canon,'| `architecture-doc-reconciliation-plan-20260402.md`')
-          edit(canon,'''This plan canonizes the 2026-04-02 architecture documentation reconciliation
-          proposal into governed documentation work. It defines the classification rail
-          for architecture documentation truth, links the proposal to
-          `GD-MAND-ARCH-DOC-RECON`, and keeps executable child remediation lifecycle in
-          GitHub Issues while Planning DB remains responsible for architecture and
-          mechanization governance.''','''This plan governs architecture documentation reconciliation through
-          `GD-MAND-ARCH-DOC-RECON`. It defines the classification rail for documentation
-          truth and keeps executable child remediation lifecycle in GitHub Issues while
-          Planning DB remains responsible for architecture and mechanization governance.''')
-          rmline('tools/ci/planner-package-governance.test.mjs','docs/architecture/atlas/engineering/engineering-playbook.md')
-          for term in ['docs/architecture/atlas/index.md','docs/architecture/atlas/README.md']:rmline('tools/ci/startup-card-canon.test.mjs',term)
-          edit('tools/ci/startup-card-canon.test.mjs',oldplan,canon)
-          p='docs/planning/proposals/mandatory/runtime-and-contracts/red1-1-planner-contracts-retirement-plan-20260821.md'
-          edit(p, '      - docs/architecture/atlas/engineering/engineering-playbook.md\n', '')
-          edit(p, '  - docs/architecture/atlas/engineering/engineering-playbook.md\n', '')
-          p='tools/ci/docs-disposition-canon.test.mjs'
-          addition=r'''
-          // Git holds the obsolete snapshots; current authorities and product tests remain.
-          test('retired atlas and superseded Canvas guidance have no live consumers', () => {
-            const retiredFiles = [
-          __PATHS__
-            ];
-            for (const path of ['docs/architecture/atlas', ...retiredFiles]) {
-              assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, path);
-            }
-            const retiredNames = retiredFiles.map((path) => path.split('/').at(-1).replace(/\.md$/u, ''));
-            const paths = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
-              .split('\0')
-              .filter(Boolean);
-            for (const path of paths) {
-              if (path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
-              if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
-              const current = readRepoFile(path).replace(
-                /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
-                ''
-              );
-              assert.equal(current.includes('atlas/'), false, `retired atlas reference: ${path}`);
-              for (const name of retiredNames) {
-                assert.equal(current.includes(name), false, `retired guidance reference: ${path}: ${name}`);
-              }
-            }
-            assertFilesExist([
-              'docs/architecture/reference-architecture.md',
-              'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md',
-              'docs/planning/state/github-mvp-issue-workflow.md',
-              'apps/web/src/app/views/canvas/CanvasEmptyAuthoringEntrypoint.architecture.test.ts',
-            ]);
-          });
-          '''.replace('__PATHS__','\n'.join('    '+repr(x)+',' for x in other))
-          originals[p]=(R/p).read_bytes();current[p]=originals[p].decode()+addition
-          spec['edits'].append({'path':p,'before':'','after':addition,'append':True})
-          spec['originals']={p:digest(b) for p,b in originals.items()}
-          spec['expectedEdits']={p:digest(t.encode()) for p,t in current.items()}
-          raw=json.dumps(spec,indent=2).encode()
+          import subprocess,json,hashlib,os,zipfile,io,collections
+          out=Path('/tmp/atlas-retirement');out.mkdir(exist_ok=True)
+          base=os.environ['BASE']
+          def git(*args):return subprocess.check_output(['git',*args])
+          def digest(data):return hashlib.sha256(data).hexdigest()
+          assert git('rev-parse','HEAD').decode().strip()==base
+          archive=subprocess.check_output(['gh','api','repos/dunay2/dvt/actions/artifacts/10546622246/zip'])
+          assert digest(archive)=='3482b8db0a1e341e617227a2ab15d3d1ac9bf9263d98bde5805751b04c98174d'
+          z=zipfile.ZipFile(io.BytesIO(archive));raw=z.read('spec.json')
           assert digest(raw)=='48e1cabe91cc21c4214a53388017b5367627efa75f062b98f0bc4bd1b86ba4d6'
-          (OUT/'spec.json').write_bytes(raw)
-          for p,t in current.items():(R/p).write_bytes(t.encode())
+          spec=json.loads(raw);assert spec['base']==base
+          assert len(spec['deletions'])==11 and len(spec['originals'])==15
+          # Artifact is data only. Execute no downloaded program.
+          for p,sha in {**spec['deletions'],**spec['originals']}.items():
+              assert not Path(p).is_absolute() and '..' not in Path(p).parts,p
+              assert digest(Path(p).read_bytes())==sha,p
+          grouped=collections.defaultdict(list)
+          for edit in spec['edits']:grouped[edit['path']].append(edit)
+          assert set(grouped)==set(spec['originals'])
+          for p,edits in grouped.items():
+              text=Path(p).read_text()
+              for e in edits:
+                  if e.get('append'):text+=e['after']
+                  else:
+                      assert text.count(e['before'])==e['count'],p
+                      text=text.replace(e['before'],e['after'])
+              assert digest(text.encode())==spec['expectedEdits'][p],p
+              Path(p).write_bytes(text.encode())
+          (out/'spec.json').write_bytes(raw)
           cmd=['node','--test','--test-name-pattern=retired atlas and superseded Canvas','tools/ci/docs-disposition-canon.test.mjs']
           red=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
-          (OUT/'red.log').write_text(red.stdout)
+          (out/'red.log').write_text(red.stdout)
           assert red.returncode==1 and 'docs/architecture/atlas' in red.stdout,red.stdout
-          for p in paths:(R/p).unlink()
-          for p in sorted((R/'docs/architecture/atlas').rglob('*'),reverse=True):
+          for p in spec['deletions']:Path(p).unlink()
+          for p in sorted(Path('docs/architecture/atlas').rglob('*'),reverse=True):
               if p.is_dir():p.rmdir()
-          (R/'docs/architecture/atlas').rmdir()
-          subprocess.run(['git','config','user.name','DVT documentation retirement'],check=True)
-          subprocess.run(['git','config','user.email','34416258+dunay2@users.noreply.github.com'],check=True)
-          subprocess.run(['git','add','-A'],check=True)
-          subprocess.run(['git','diff','--cached','--check'],check=True)
-          changed=subprocess.check_output(['git','diff','--cached','--name-only']).decode().splitlines()
-          assert set(changed)==set(spec['deletions'])|set(spec['originals'])
-          print('Exact reviewed specification verified; eleven deletions; fifteen edited consumers; RED demonstrated')
+          Path('docs/architecture/atlas').rmdir()
+          git('config','user.name','DVT documentation retirement')
+          git('config','user.email','34416258+dunay2@users.noreply.github.com')
+          git('add','-A');git('diff','--cached','--check')
+          assert set(git('diff','--cached','--name-only').decode().splitlines())==set(spec['deletions'])|set(spec['originals'])
+          print('Same exact reviewed specification applied; RED demonstrated; eleven deletions and fifteen source edits')
           PY
       - name: Setup canonical toolchain with enabled hooks
         uses: ./.github/actions/setup-node-pnpm
@@ -166,15 +98,16 @@ jobs:
           set -euo pipefail
           pnpm commit docs docs "Retire historical atlas and superseded Canvas guidance" 2>&1 | tee /tmp/atlas-retirement/commit.log
           echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-      - name: Verify final scope, full selected regressions and negative controls
+      - name: Verify scope, regressions, negative controls and all repository gates
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import subprocess,json,os,shutil,sys
+          import subprocess,json,os,shutil,re
           out=Path('/tmp/atlas-retirement');spec=json.loads((out/'spec.json').read_text());base=os.environ['BASE']
           def git(*a):return subprocess.check_output(['git',*a]).decode().strip()
           assert git('show','-s','--format=%P','HEAD')==base
+          assert git('rev-parse','HEAD^{tree}')=='bb1966f302c7374545475381cad64c272aba96ba'
           assert set(git('diff','--name-only','--diff-filter=D',base,'HEAD').splitlines())==set(spec['deletions'])
           assert not git('diff','--name-only','--diff-filter=A',base,'HEAD')
           allowed=set(spec['originals'])|set(spec['deletions'])|{'docs/architecture/index.md','docs/.manifest.json'}
@@ -186,12 +119,16 @@ jobs:
               (out/(name+'.log')).write_text(r.stdout)
               results.append({'name':name,'command':cmd,'exitCode':r.returncode,'expectedExitCode':expected})
               (out/'validation.json').write_text(json.dumps(results,indent=2))
-              print(name,r.returncode,flush=True);print('\n'.join(r.stdout.splitlines()[-8:]),flush=True)
+              print(name,r.returncode,flush=True);print('\n'.join(r.stdout.splitlines()[-10:]),flush=True)
               assert r.returncode==expected,(name,r.stdout[-6000:])
               if marker:assert marker in r.stdout,(name,marker,r.stdout[-6000:])
               return r.stdout
           arc=run('arc',['node','tools/ci/arc-check.mjs'])
-          a=json.loads(arc);assert a['effectiveArcLevel']=='ARC-0'
+          # Evaluator prints an informational [ARC] line before its JSON object.
+          # Preserve the complete log and require exactly one trailing JSON report.
+          start=re.search(r'^\{',arc,re.MULTILINE)
+          assert start is not None,arc
+          a=json.loads(arc[start.start():]);assert a['effectiveArcLevel']=='ARC-0'
           assert all(a['requirements'][k] is False for k in ['evidenceDoc','riskUpdate','rolloutNotes','compatMatrix'])
           cmd=['node','--test','--test-name-pattern=retired atlas and superseded Canvas','tools/ci/docs-disposition-canon.test.mjs']
           run('green',cmd)
@@ -202,8 +139,7 @@ jobs:
               finally:
                   target.unlink()
                   if Path('docs/architecture/atlas').exists():shutil.rmtree('docs/architecture/atlas')
-          p=Path('README.md');original=p.read_bytes()
-          slug='docs/architecture/atlas/index.md'
+          p=Path('README.md');original=p.read_bytes();slug='docs/architecture/atlas/index.md'
           cases=[('local',slug,1),('main','https://github.com/dunay2/dvt/blob/main/'+slug,1),('git','https://github.com/dunay2/dvt/blob/'+base+'/'+slug,0)]
           for name,text,expected in cases:
               p.write_bytes(original+('\n'+text+'\n').encode())
