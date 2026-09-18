@@ -1,3 +1,9 @@
+import {
+  dvtSubstraitExpressionReader,
+  resolvedFunction,
+  type DvtSubstraitLiteralValue,
+} from '@dvt/postgres-projection';
+export type { DvtSubstraitLiteralValue } from '@dvt/postgres-projection';
 /** Owned concern: create and inspect shared primitives from the admitted Substrait profile. */
 import { create } from '@bufbuild/protobuf';
 import {
@@ -21,13 +27,6 @@ import {
 } from '@buf/substrait_substrait.bufbuild_es/substrait/extensions/extensions_pb.js';
 import type { Type } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 
-export type DvtSubstraitLiteralValue =
-  | Readonly<{ dataType: 'string'; value: string }>
-  | Readonly<{ dataType: 'bool'; value: boolean }>
-  | Readonly<{ dataType: 'i64'; value: bigint }>
-  | Readonly<{ dataType: 'fp64'; value: number }>
-  | Readonly<{ dataType: 'precisionTimestampTz'; value: string }>;
-
 type ScalarFunctionIdentity = Readonly<{ urn: string; name: string }>;
 
 function nextUrnAnchor(plan: Plan): number {
@@ -45,21 +44,6 @@ function nextFunctionAnchor(plan: Plan): number {
       )
     ) + 1
   );
-}
-
-function resolvedFunction(
-  plan: Plan,
-  functionAnchor: number
-): Readonly<{ urnAnchor: number; urn: string; name: string }> | null {
-  const declaration = plan.extensions.find(
-    (entry) =>
-      entry.mappingType.case === 'extensionFunction' &&
-      entry.mappingType.value.functionAnchor === functionAnchor
-  );
-  if (declaration?.mappingType.case !== 'extensionFunction') return null;
-  const urnAnchor = declaration.mappingType.value.extensionUrnReference;
-  const urn = plan.extensionUrns.find((entry) => entry.extensionUrnAnchor === urnAnchor)?.urn;
-  return urn == null ? null : { urnAnchor, urn, name: declaration.mappingType.value.name };
 }
 
 export const dvtSubstraitExpression = {
@@ -88,20 +72,7 @@ export const dvtSubstraitExpression = {
       },
     });
   },
-
-  fieldOrdinal(expression: Expression | undefined): number | null {
-    if (expression?.rexType.case !== 'selection') return null;
-    const reference = expression.rexType.value;
-    const segment =
-      reference.referenceType.case === 'directReference'
-        ? reference.referenceType.value.referenceType
-        : undefined;
-    return reference.rootType.case === 'rootReference' &&
-      segment?.case === 'structField' &&
-      segment.value.child == null
-      ? segment.value.field
-      : null;
-  },
+  fieldOrdinal: dvtSubstraitExpressionReader.fieldOrdinal,
 
   literal(literal: DvtSubstraitLiteralValue): Expression {
     if (literal.dataType === 'fp64' && !Number.isFinite(literal.value)) {
@@ -142,24 +113,7 @@ export const dvtSubstraitExpression = {
       },
     });
   },
-
-  literalValue(expression: Expression | undefined): DvtSubstraitLiteralValue | null {
-    if (expression?.rexType.case !== 'literal') return null;
-    const literal = expression.rexType.value.literalType;
-    if (literal.case === 'string') return { dataType: 'string', value: literal.value };
-    if (literal.case === 'boolean') return { dataType: 'bool', value: literal.value };
-    if (literal.case === 'i64') return { dataType: 'i64', value: literal.value };
-    if (literal.case === 'fp64' && Number.isFinite(literal.value)) {
-      return { dataType: 'fp64', value: literal.value };
-    }
-    if (literal.case === 'precisionTimestampTz' && literal.value.precision === 3) {
-      return {
-        dataType: 'precisionTimestampTz',
-        value: new Date(Number(literal.value.value)).toISOString(),
-      };
-    }
-    return null;
-  },
+  literalValue: dvtSubstraitExpressionReader.literalValue,
 
   ensureScalarFunction(
     plan: Plan,
@@ -240,37 +194,7 @@ export const dvtSubstraitExpression = {
       },
     });
   },
-
-  inspectScalarFunction(
-    plan: Plan,
-    expression: Expression | undefined,
-    identity: ScalarFunctionIdentity
-  ): Readonly<{
-    functionAnchor: number;
-    urnAnchor: number;
-    arguments: readonly Expression[];
-    outputType: Type | undefined;
-  }> | null {
-    if (expression?.rexType.case !== 'scalarFunction') return null;
-    const scalar = expression.rexType.value;
-    const resolved = resolvedFunction(plan, scalar.functionReference);
-    if (
-      resolved?.urn !== identity.urn ||
-      resolved.name !== identity.name ||
-      scalar.options.length !== 0 ||
-      scalar.arguments.some((argument) => argument.argType.case !== 'value')
-    ) {
-      return null;
-    }
-    return {
-      functionAnchor: scalar.functionReference,
-      urnAnchor: resolved.urnAnchor,
-      arguments: scalar.arguments.flatMap((argument) =>
-        argument.argType.case === 'value' ? [argument.argType.value] : []
-      ),
-      outputType: scalar.outputType,
-    };
-  },
+  inspectScalarFunction: dvtSubstraitExpressionReader.inspectScalarFunction,
 
   removeScalarFunctionDeclaration(
     plan: Plan,

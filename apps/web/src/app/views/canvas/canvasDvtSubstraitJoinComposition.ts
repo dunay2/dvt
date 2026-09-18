@@ -1,3 +1,26 @@
+import {
+  ZERO_SHA256,
+  type DvtSubstraitJoinDataType,
+  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitNInputJoinProjection,
+  type DvtSubstraitJoinPredicate,
+  type JoinOriginField,
+  type InspectedJoinStructure,
+  hasSameConnectionRef,
+  hasPinnedPlanVersion,
+  hasUniqueInnerJoinSidecarIdentity,
+  hasCurrentInnerJoinSemanticHash,
+  inspectNInputJoinStructure,
+  inspectDvtSubstraitNInputJoinDraft,
+} from '@dvt/postgres-projection';
+export {
+  type DvtSubstraitJoinDataType,
+  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitNInputJoinProjection,
+  type DvtSubstraitNInputJoinInspection,
+  type DvtSubstraitJoinPredicate,
+  inspectDvtSubstraitNInputJoinDraft,
+} from '@dvt/postgres-projection';
 /** Owned concern: build and inspect the admitted DVT INNER JOIN semantic shapes. */
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import {
@@ -70,23 +93,33 @@ import {
   removeDvtSubstraitCountExtension,
 } from './canvasDvtSubstraitAggregation';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import {
+  hasSameConnectedSourceRef,
+  resolveJoinInput,
+} from './canvasDvtSubstraitJoinSourceResolution';
+import {
+  DVT_SUBSTRAIT_INNER_JOIN_LEFT_FIELD_NAMES as LEFT_FIELD_NAMES,
+  DVT_SUBSTRAIT_INNER_JOIN_OUTPUT_FIELDS as INNER_JOIN_OUTPUT_FIELDS,
+  DVT_SUBSTRAIT_INNER_JOIN_RIGHT_FIELD_NAMES as RIGHT_FIELD_NAMES,
+  hasDvtSubstraitLegacyBinaryInnerJoinShape,
+} from './canvasDvtSubstraitInnerJoinShape';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import {
-  DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS,
-  DVT_SUBSTRAIT_JOIN_CONDITION_COMBINATIONS,
   appendDvtSubstraitJoinComparison,
+  dvtSubstraitJoinConditionOperands,
+  isDvtSubstraitJoinNullCondition,
   collectDvtSubstraitJoinConditionCombinations,
   collectDvtSubstraitJoinConditionComparisons,
   compactDvtSubstraitJoinConditionDefaults,
   dvtSubstraitJoinConditionKey,
   hasValidDvtSubstraitJoinConditionGroups,
-  isDvtSubstraitJoinConditionGroup,
   mapDvtSubstraitJoinConditionOperands,
   reduceDvtSubstraitJoinConditions,
   removeDvtSubstraitJoinComparison,
   updateDvtSubstraitJoinComparison,
   type DvtSubstraitJoinComparisonCondition,
   type DvtSubstraitJoinComparisonOperator,
+  type DvtSubstraitJoinPredicateOperator,
   type DvtSubstraitJoinCondition,
   type DvtSubstraitJoinConditionCombination,
   type DvtSubstraitJoinPredicateCondition,
@@ -97,7 +130,6 @@ import {
   dvtSubstraitJoinOperandCapabilityIds,
   dvtSubstraitJoinOperandContainsLiteral,
   dvtSubstraitJoinOperandKey,
-  inspectDvtSubstraitJoinOperandExpression,
   mapDvtSubstraitJoinOperandFields,
   resolveDvtSubstraitJoinOperandDataType,
   type DvtSubstraitInspectedJoinOperand,
@@ -105,26 +137,18 @@ import {
   type DvtSubstraitJoinPredicateOperand,
 } from './canvasDvtSubstraitJoinOperand';
 import {
+  comparisonFunctionIdentity,
+  booleanFunctionIdentity,
+  inspectJoinConditionChain,
+  type InspectedJoinCondition,
+} from './canvasDvtSubstraitJoinConditionInspection';
+import {
   createDvtSubstraitNullableI64Type,
   DVT_SUBSTRAIT_ROW_NUMBER_CAPABILITY_ID,
   ensureDvtSubstraitRowNumberFunction,
   isDvtSubstraitRowNumberFunction,
   removeDvtSubstraitRowNumberExtension,
 } from './canvasDvtSubstraitWindow';
-
-const ZERO_SHA256 = '0'.repeat(64);
-const COMPARISON_FUNCTION_URN = 'extension:io.substrait:functions_comparison';
-const BOOLEAN_FUNCTION_URN = 'extension:io.substrait:functions_boolean';
-const AND_FUNCTION_NAME = 'and';
-const AND_FUNCTION_IDENTITY = {
-  urn: BOOLEAN_FUNCTION_URN,
-  name: AND_FUNCTION_NAME,
-} as const;
-const OR_FUNCTION_NAME = 'or';
-const OR_FUNCTION_IDENTITY = {
-  urn: BOOLEAN_FUNCTION_URN,
-  name: OR_FUNCTION_NAME,
-} as const;
 export {
   DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS,
   DVT_SUBSTRAIT_JOIN_CONDITION_COMBINATIONS,
@@ -132,31 +156,6 @@ export {
   type DvtSubstraitJoinConditionCombination,
   type DvtSubstraitJoinPredicateCondition,
 } from './canvasDvtSubstraitJoinCondition';
-const LEFT_FIELD_NAMES = ['customer_id', 'name'] as const;
-const RIGHT_FIELD_NAMES = ['order_id', 'customer_id'] as const;
-const INNER_JOIN_OUTPUT_FIELDS = [
-  {
-    fieldKey: 'left.customer_id',
-    outputMapping: 0,
-    defaultName: 'customer_id',
-    source: { relation: 'left', name: 'customer_id' },
-    locator: { inputIndex: 0, fieldName: 'customer_id' },
-  },
-  {
-    fieldKey: 'left.name',
-    outputMapping: 1,
-    defaultName: 'name',
-    source: { relation: 'left', name: 'name' },
-    locator: { inputIndex: 0, fieldName: 'name' },
-  },
-  {
-    fieldKey: 'right.order_id',
-    outputMapping: 2,
-    defaultName: 'order_id',
-    source: { relation: 'right', name: 'order_id' },
-    locator: { inputIndex: 1, fieldName: 'order_id' },
-  },
-] as const;
 const OUTPUT_FIELD_NAMES = INNER_JOIN_OUTPUT_FIELDS.map((field) => field.defaultName);
 
 export type DvtSubstraitInnerJoinFieldKey = (typeof INNER_JOIN_OUTPUT_FIELDS)[number]['fieldKey'];
@@ -194,13 +193,6 @@ export type DvtSubstraitJoinSource = Readonly<{
   sourceRef: ConnectedSourceRef;
 }>;
 
-export type DvtSubstraitJoinDataType = 'string' | 'bool' | 'i64' | 'fp64' | 'precisionTimestampTz';
-
-export type DvtSubstraitInnerJoinDraft = Readonly<{
-  plan: Plan;
-  sidecar: DvtSubstraitAuthoringSidecarV1;
-}>;
-
 export type DvtSubstraitInnerJoinProjection = Readonly<{
   left: Readonly<{ schema: string; table: string; sourceRef: ConnectedSourceRef }>;
   right: Readonly<{ schema: string; table: string; sourceRef: ConnectedSourceRef }>;
@@ -218,32 +210,6 @@ export type DvtSubstraitInnerJoinProjection = Readonly<{
 
 export type DvtSubstraitInnerJoinInspection =
   Readonly<{ ok: true; projection: DvtSubstraitInnerJoinProjection }> | Readonly<{ ok: false }>;
-
-export type DvtSubstraitNInputJoinProjection = Readonly<{
-  inputs: readonly Readonly<{
-    relationId: string;
-    schema: string;
-    table: string;
-    sourceRef: ConnectedSourceRef;
-    fields: readonly Readonly<{
-      name: string;
-      fieldId: string;
-      dataType: DvtSubstraitJoinDataType;
-    }>[];
-  }>[];
-  joinRelations: readonly Readonly<{ relationId: string; relAnchor: number }>[];
-  joins: readonly DvtSubstraitJoinPredicate[];
-  outputs: readonly Readonly<{
-    name: string;
-    fieldId: string;
-    dataType: DvtSubstraitJoinDataType;
-    outputOrdinal: number;
-    source: Readonly<{ inputIndex: number; name: string; fieldId: string }>;
-  }>[];
-}>;
-
-export type DvtSubstraitNInputJoinInspection =
-  Readonly<{ ok: true; projection: DvtSubstraitNInputJoinProjection }> | Readonly<{ ok: false }>;
 
 type DvtSubstraitInnerJoinGroupingCommon = Readonly<{
   measure: Readonly<{ name: string; fieldId: string; capabilityId: string }>;
@@ -352,13 +318,6 @@ export type DvtSubstraitJoinInput = Readonly<{
 /** These values are references to persisted input FieldIds, not graph node/name locators. */
 export type { DvtSubstraitJoinPredicateOperand } from './canvasDvtSubstraitJoinOperand';
 
-export type DvtSubstraitJoinPredicate = Readonly<{
-  leftSourceFieldId: string;
-  rightSourceFieldId: string;
-  operator?: DvtSubstraitJoinComparisonOperator;
-  additionalConditions?: readonly DvtSubstraitJoinPredicateCondition[];
-}>;
-
 export type DvtSubstraitJoinOutputSelection = Readonly<{
   name: string;
   sourceFieldId: string;
@@ -409,101 +368,8 @@ type JoinBuildPredicateOperand = DvtSubstraitJoinOperand<
   Readonly<{ kind: 'field'; locator: JoinFieldLocator }>
 >;
 type JoinBuildPredicate = Readonly<{
-  left: JoinFieldLocator;
-  right: JoinFieldLocator;
-  operator?: DvtSubstraitJoinComparisonOperator;
-  additionalConditions?: readonly DvtSubstraitJoinCondition<JoinBuildPredicateOperand>[];
+  conditions: readonly DvtSubstraitJoinCondition<JoinBuildPredicateOperand>[];
 }>;
-type JoinOriginField = Readonly<{
-  inputIndex: number;
-  name: string;
-  fieldId: string;
-  dataType: DvtSubstraitJoinDataType;
-}>;
-type InspectedJoinStage = Readonly<{
-  relationId: string;
-  relAnchor: number;
-  fields: readonly Readonly<{
-    fieldId: string;
-    displayName: string;
-    sourceFieldId: string;
-  }>[];
-}>;
-type InspectedJoinStructure = Readonly<{
-  inputs: DvtSubstraitNInputJoinProjection['inputs'];
-  stages: readonly InspectedJoinStage[];
-  joins: readonly DvtSubstraitJoinPredicate[];
-  outputs: DvtSubstraitNInputJoinProjection['outputs'];
-}>;
-
-function readMetadataText(node: CanonicalNode, key: string): string | null {
-  const value = node.metadata?.[key];
-  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
-}
-
-function readSourceColumnNames(node: CanonicalNode): readonly string[] | null {
-  const columns = node.metadata?.columns;
-  if (!Array.isArray(columns)) return null;
-  const names = columns.map((column) => {
-    if (column == null || typeof column !== 'object' || Array.isArray(column)) return null;
-    const name = (column as Record<string, unknown>).name;
-    const type = (column as Record<string, unknown>).type;
-    return typeof name === 'string' && name.trim().length > 0 && type === 'string'
-      ? name.trim()
-      : null;
-  });
-  return names.some((name) => name == null) ? null : names.filter((name) => name != null);
-}
-
-function resolveJoinSource(
-  node: CanonicalNode,
-  expectedColumns: readonly string[]
-): DvtSubstraitJoinSource | null {
-  const input = resolveJoinInput(node);
-  return input == null || input.fields.join('\u0000') !== expectedColumns.join('\u0000')
-    ? null
-    : input.source;
-}
-
-function resolveJoinInput(node: CanonicalNode): DvtSubstraitJoinInput | null {
-  if (node.kind !== 'dvt:source' || node.role !== 'input') return null;
-  const connectedSourceRef = ConnectedSourceRefSchema.safeParse(node.metadata?.connectedSourceRef);
-  const schema = readMetadataText(node, 'schema');
-  const table = readMetadataText(node, 'tableName');
-  const columns = readSourceColumnNames(node);
-  if (
-    !connectedSourceRef.success ||
-    connectedSourceRef.data.connectionRef.provider !== 'postgres' ||
-    schema == null ||
-    table == null ||
-    columns == null
-  ) {
-    return null;
-  }
-  return {
-    source: { nodeId: node.id, schema, table, sourceRef: connectedSourceRef.data },
-    fields: columns,
-  };
-}
-
-function hasSameConnectionRef(
-  first: ConnectedSourceRef['connectionRef'],
-  second: ConnectedSourceRef['connectionRef']
-): boolean {
-  return (
-    first.schemaVersion === second.schemaVersion &&
-    first.provider === second.provider &&
-    first.connectionId === second.connectionId
-  );
-}
-
-function hasSameConnectedSourceRef(first: ConnectedSourceRef, second: ConnectedSourceRef): boolean {
-  return (
-    first.schemaVersion === second.schemaVersion &&
-    first.sourceObjectId === second.sourceObjectId &&
-    hasSameConnectionRef(first.connectionRef, second.connectionRef)
-  );
-}
 
 function sameInputShape(
   left: Readonly<{
@@ -566,106 +432,6 @@ function resolveGraphInputs(args: {
     resolved.push(match);
   }
   return resolved;
-}
-
-export function resolveDvtSubstraitJoinAppendCandidates(args: {
-  targetNode: CanonicalNode;
-  nodes: readonly CanonicalNode[];
-  edges: readonly CanonicalEdge[];
-  draft: DvtSubstraitInnerJoinDraft;
-}): readonly DvtSubstraitJoinInput[] {
-  if (
-    args.targetNode.pluginId !== 'dvt' ||
-    args.targetNode.kind !== 'dvt:transform' ||
-    args.targetNode.role !== 'transform'
-  ) {
-    return [];
-  }
-  const inspection = inspectDvtSubstraitNInputJoinDraft(args.draft);
-  if (!inspection.ok) return [];
-  const firstInput = inspection.projection.inputs[0];
-  if (firstInput == null) return [];
-  const connectedIds = new Set(
-    args.edges.filter((edge) => edge.targetId === args.targetNode.id).map((edge) => edge.sourceId)
-  );
-  return args.nodes
-    .filter((node) => connectedIds.has(node.id))
-    .map(resolveJoinInput)
-    .filter(
-      (input): input is DvtSubstraitJoinInput =>
-        input != null &&
-        hasSameConnectionRef(
-          firstInput.sourceRef.connectionRef,
-          input.source.sourceRef.connectionRef
-        ) &&
-        !inspection.projection.inputs.some((existing) =>
-          hasSameConnectedSourceRef(existing.sourceRef, input.source.sourceRef)
-        )
-    )
-    .sort((left, right) =>
-      `${left.source.table}:${left.source.nodeId}`.localeCompare(
-        `${right.source.table}:${right.source.nodeId}`
-      )
-    );
-}
-
-export function resolveDvtSubstraitInnerJoinEntry(args: {
-  targetNode: CanonicalNode;
-  nodes: readonly CanonicalNode[];
-  edges: readonly CanonicalEdge[];
-  requirePersistedAuthority?: boolean;
-}): DvtSubstraitInnerJoinEntry | null {
-  if (
-    args.targetNode.pluginId !== 'dvt' ||
-    args.targetNode.kind !== 'dvt:transform' ||
-    args.targetNode.role !== 'transform'
-  ) {
-    return null;
-  }
-  const sourceIds = [
-    ...new Set(
-      args.edges.filter((edge) => edge.targetId === args.targetNode.id).map((edge) => edge.sourceId)
-    ),
-  ];
-  if (sourceIds.length !== 2) return null;
-  const sources = sourceIds
-    .map((sourceId) => args.nodes.find((node) => node.id === sourceId))
-    .filter((node): node is CanonicalNode => node != null);
-  if (sources.length !== 2) return null;
-
-  const left = sources
-    .map((candidate) => resolveJoinSource(candidate, LEFT_FIELD_NAMES))
-    .find(Boolean);
-  const right = sources
-    .map((candidate) => resolveJoinSource(candidate, RIGHT_FIELD_NAMES))
-    .find(Boolean);
-  if (left == null || right == null || left.nodeId === right.nodeId) return null;
-  if (!hasSameConnectionRef(left.sourceRef.connectionRef, right.sourceRef.connectionRef))
-    return null;
-
-  if (args.requirePersistedAuthority) {
-    try {
-      const authority = readDvtTransformAuthoringAuthority(args.targetNode);
-      if (authority == null) return null;
-      const inspection = inspectDvtSubstraitInnerJoinDraft(
-        decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
-      );
-      if (!inspection.ok) return null;
-      if (
-        inspection.projection.left.schema !== left.schema ||
-        inspection.projection.left.table !== left.table ||
-        !hasSameConnectedSourceRef(inspection.projection.left.sourceRef, left.sourceRef) ||
-        inspection.projection.right.schema !== right.schema ||
-        inspection.projection.right.table !== right.table ||
-        !hasSameConnectedSourceRef(inspection.projection.right.sourceRef, right.sourceRef)
-      ) {
-        return null;
-      }
-    } catch {
-      return null;
-    }
-  }
-  return { left, right, targetNodeId: args.targetNode.id };
 }
 
 export function resolveDvtSubstraitNInputJoinEntry(args: {
@@ -740,16 +506,6 @@ function resolveJoinFieldTypes(input: JoinBuildInput): readonly DvtSubstraitJoin
   return fieldTypes;
 }
 
-function joinDataType(type: Type): DvtSubstraitJoinDataType | null {
-  return type.kind.case === 'string' ||
-    type.kind.case === 'bool' ||
-    type.kind.case === 'i64' ||
-    type.kind.case === 'fp64' ||
-    type.kind.case === 'precisionTimestampTz'
-    ? type.kind.case
-    : null;
-}
-
 function stringType() {
   return create(TypeSchema, {
     kind: {
@@ -759,11 +515,11 @@ function stringType() {
   });
 }
 
-function booleanType() {
+function booleanType(nullability = Type_Nullability.NULLABLE) {
   return create(TypeSchema, {
     kind: {
       case: 'bool',
-      value: create(Type_BooleanSchema, { nullability: Type_Nullability.NULLABLE }),
+      value: create(Type_BooleanSchema, { nullability }),
     },
   });
 }
@@ -829,14 +585,6 @@ function requireSupportedCapability(entryId: string): void {
   if (capability == null) throw new Error(`Substrait capability ${entryId} is not supported.`);
 }
 
-function comparisonFunctionIdentity(operator: DvtSubstraitJoinComparisonOperator) {
-  return { urn: COMPARISON_FUNCTION_URN, name: operator } as const;
-}
-
-function booleanFunctionIdentity(combination: DvtSubstraitJoinConditionCombination) {
-  return combination === 'and' ? AND_FUNCTION_IDENTITY : OR_FUNCTION_IDENTITY;
-}
-
 function requireInnerJoinCapabilities(predicates: readonly JoinBuildPredicate[]): void {
   requireSupportedCapability(
     buildDvtSubstraitStandardCapabilityId('relation', {
@@ -852,19 +600,11 @@ function requireInnerJoinCapabilities(predicates: readonly JoinBuildPredicate[])
       selector: 'kind.bool',
     })
   );
-  const conditions = predicates.flatMap((predicate) => predicate.additionalConditions ?? []);
+  const conditions = predicates.flatMap((predicate) => predicate.conditions);
   const conditionComparisons = conditions.flatMap(collectDvtSubstraitJoinConditionComparisons);
-  const conditionOperands = conditionComparisons.flatMap((condition) => [
-    condition.left,
-    condition.right,
-  ]);
-  const comparisons = new Set<DvtSubstraitJoinComparisonOperator>(
-    predicates.flatMap((predicate) => [
-      predicate.operator ?? 'equal',
-      ...(predicate.additionalConditions ?? [])
-        .flatMap(collectDvtSubstraitJoinConditionComparisons)
-        .map((condition) => condition.operator ?? 'equal'),
-    ])
+  const conditionOperands = conditionComparisons.flatMap(dvtSubstraitJoinConditionOperands);
+  const comparisons = new Set<DvtSubstraitJoinPredicateOperator>(
+    conditionComparisons.map((condition) => condition.operator ?? 'equal')
   );
   for (const comparison of comparisons) {
     requireSupportedCapability(
@@ -1015,7 +755,6 @@ function createDvtSubstraitNInputJoinDraft(args: {
     throw new Error('VTX2 INNER JOIN requires distinct source identities.');
   }
   if (
-    args.outputs.length === 0 ||
     args.outputs.some(
       (output) =>
         output.name.length === 0 ||
@@ -1065,24 +804,16 @@ function createDvtSubstraitNInputJoinDraft(args: {
 
   args.predicates.forEach((predicate, predicateIndex) => {
     const rightInputIndex = predicateIndex + 1;
-    if (
-      predicate.left.inputIndex >= rightInputIndex ||
-      predicate.right.inputIndex !== rightInputIndex
-    ) {
-      throw new Error('VTX2 INNER JOIN predicate does not match the left-deep input order.');
-    }
-    const leftOrigin = requireOrigin(predicate.left);
-    const rightOrigin = requireOrigin(predicate.right);
-    if (leftOrigin.dataType !== rightOrigin.dataType) {
-      throw new Error('VTX2 INNER JOIN predicate operands must have the same data type.');
+    if (predicate.conditions.length === 0) {
+      throw new Error('VTX2 INNER JOIN requires at least one condition.');
     }
     const conditionKeys = new Set<string>();
-    for (const condition of predicate.additionalConditions ?? []) {
+    for (const condition of predicate.conditions) {
       if (!hasValidDvtSubstraitJoinConditionGroups(condition)) {
         throw new Error('VTX2 INNER JOIN condition groups require at least two conditions.');
       }
       for (const comparison of collectDvtSubstraitJoinConditionComparisons(condition)) {
-        const operands = [comparison.left, comparison.right] as const;
+        const operands = dvtSubstraitJoinConditionOperands(comparison);
         const operandTypes = operands.map((operand) =>
           resolveDvtSubstraitJoinOperandDataType(operand, (field) => {
             const origin = requireOrigin(field.locator);
@@ -1095,7 +826,7 @@ function createDvtSubstraitNInputJoinDraft(args: {
         if (operandTypes.some((dataType) => dataType == null)) {
           throw new Error('VTX2 INNER JOIN operand function is incompatible with its input.');
         }
-        if (operandTypes[0] !== operandTypes[1]) {
+        if (operandTypes.length === 2 && operandTypes[0] !== operandTypes[1]) {
           throw new Error('VTX2 INNER JOIN condition operands must have the same data type.');
         }
       }
@@ -1126,13 +857,12 @@ function createDvtSubstraitNInputJoinDraft(args: {
         args.inputs.length === 2 ? 'dvt-vtx2-inner-join-card' : 'dvt-vtx2-n-input-inner-join-card',
     },
   });
-  const comparisonOperators = new Set<DvtSubstraitJoinComparisonOperator>(
-    args.predicates.flatMap((predicate) => [
-      predicate.operator ?? 'equal',
-      ...(predicate.additionalConditions ?? [])
+  const comparisonOperators = new Set<DvtSubstraitJoinPredicateOperator>(
+    args.predicates.flatMap((predicate) =>
+      predicate.conditions
         .flatMap(collectDvtSubstraitJoinConditionComparisons)
-        .map((condition) => condition.operator ?? 'equal'),
-    ])
+        .map((condition) => condition.operator ?? 'equal')
+    )
   );
   const comparisonFunctionAnchors = new Map(
     Array.from(
@@ -1147,7 +877,7 @@ function createDvtSubstraitNInputJoinDraft(args: {
   );
   const conditionCombinations = new Set<DvtSubstraitJoinConditionCombination>(
     args.predicates.flatMap((predicate) =>
-      (predicate.additionalConditions ?? []).flatMap(collectDvtSubstraitJoinConditionCombinations)
+      predicate.conditions.flatMap(collectDvtSubstraitJoinConditionCombinations)
     )
   );
   const booleanFunctionAnchors = new Map(
@@ -1177,13 +907,6 @@ function createDvtSubstraitNInputJoinDraft(args: {
       fieldId: field.fieldId,
       dataType: field.dataType,
     }));
-    const leftOrigin = requireOrigin(predicate.left);
-    const rightOrigin = requireOrigin(predicate.right);
-    const leftKeyOrdinal = currentFields.findIndex((field) => field.fieldId === leftOrigin.fieldId);
-    const rightFieldIndex = rightFields.findIndex((field) => field.fieldId === rightOrigin.fieldId);
-    if (leftKeyOrdinal < 0 || rightFieldIndex < 0) {
-      throw new Error('VTX2 INNER JOIN predicate references an unavailable source field.');
-    }
     const available = [...currentFields, ...rightFields];
     const selectedOutputs = args.outputs
       .filter((output) => output.source.inputIndex <= rightInputIndex)
@@ -1193,16 +916,15 @@ function createDvtSubstraitNInputJoinDraft(args: {
       });
     const futurePredicateFields = args.predicates
       .slice(predicateIndex + 1)
-      .flatMap((future) => [
-        future.left,
-        ...(future.additionalConditions ?? []).flatMap((condition) =>
+      .flatMap((future) =>
+        future.conditions.flatMap((condition) =>
           collectDvtSubstraitJoinConditionComparisons(condition).flatMap((comparison) =>
-            [comparison.left, comparison.right].flatMap((operand) =>
+            dvtSubstraitJoinConditionOperands(comparison).flatMap((operand) =>
               collectDvtSubstraitJoinOperandFields(operand).map((field) => field.locator)
             )
           )
-        ),
-      ])
+        )
+      )
       .map((locator) => {
         const origin = requireOrigin(locator);
         return available.find((field) => field.fieldId === origin.fieldId);
@@ -1213,7 +935,10 @@ function createDvtSubstraitNInputJoinDraft(args: {
         field != null &&
         fields.findIndex((candidate) => candidate?.fieldId === field.fieldId) === index
     );
-    if (selected.length === 0 || selectedOutputs.some((field) => field == null)) {
+    if (
+      (selected.length === 0 && predicateIndex !== args.predicates.length - 1) ||
+      selectedOutputs.some((field) => field == null)
+    ) {
       throw new Error('VTX2 INNER JOIN output is unavailable at its join stage.');
     }
     const nextFields = selected.filter((field) => field != null);
@@ -1235,29 +960,25 @@ function createDvtSubstraitNInputJoinDraft(args: {
       });
     };
     const comparisonExpression = (
-      left: JoinBuildPredicateOperand,
-      right: JoinBuildPredicateOperand,
-      operator: DvtSubstraitJoinComparisonOperator
+      condition: DvtSubstraitJoinComparisonCondition<JoinBuildPredicateOperand>
     ): Expression => {
-      const functionReference = comparisonFunctionAnchors.get(operator);
+      const functionReference = comparisonFunctionAnchors.get(condition.operator ?? 'equal');
       if (functionReference == null) {
         throw new Error('VTX2 INNER JOIN comparison capability is unavailable.');
       }
       return dvtSubstraitExpression.scalarFunction({
         functionReference,
-        arguments: [operandExpression(left), operandExpression(right)],
-        outputType: booleanType(),
+        arguments: dvtSubstraitJoinConditionOperands(condition).map(operandExpression),
+        outputType: booleanType(
+          isDvtSubstraitJoinNullCondition(condition)
+            ? Type_Nullability.REQUIRED
+            : Type_Nullability.NULLABLE
+        ),
       });
     };
     const expression = reduceDvtSubstraitJoinConditions({
-      initial: comparisonExpression(
-        { kind: 'field', locator: predicate.left },
-        { kind: 'field', locator: predicate.right },
-        predicate.operator ?? 'equal'
-      ),
-      conditions: predicate.additionalConditions ?? [],
-      comparison: (condition) =>
-        comparisonExpression(condition.left, condition.right, condition.operator ?? 'equal'),
+      conditions: predicate.conditions,
+      comparison: comparisonExpression,
       combine: (combination, left, right) => {
         const functionReference = booleanFunctionAnchors.get(combination);
         if (functionReference == null) {
@@ -1415,8 +1136,15 @@ export function createDvtSubstraitStringInnerJoinDraft(
     inputs,
     predicates: [
       {
-        left: { inputIndex: 0, fieldName: selection.leftFieldName },
-        right: { inputIndex: 1, fieldName: selection.rightFieldName },
+        conditions: [
+          {
+            left: { kind: 'field', locator: { inputIndex: 0, fieldName: selection.leftFieldName } },
+            right: {
+              kind: 'field',
+              locator: { inputIndex: 1, fieldName: selection.rightFieldName },
+            },
+          },
+        ],
       },
     ],
     outputs,
@@ -1439,8 +1167,12 @@ export function createDvtSubstraitInnerJoinDraft(args: {
     inputs,
     predicates: [
       {
-        left: { inputIndex: 0, fieldName: 'customer_id' },
-        right: { inputIndex: 1, fieldName: 'customer_id' },
+        conditions: [
+          {
+            left: { kind: 'field', locator: { inputIndex: 0, fieldName: 'customer_id' } },
+            right: { kind: 'field', locator: { inputIndex: 1, fieldName: 'customer_id' } },
+          },
+        ],
       },
     ],
     outputs: INNER_JOIN_OUTPUT_FIELDS.map((field) => ({
@@ -1450,440 +1182,8 @@ export function createDvtSubstraitInnerJoinDraft(args: {
   });
 }
 
-function namedTableIdentity(rel: Rel): { schema: string; table: string } | null {
-  if (rel.relType.case !== 'read') return null;
-  const read = rel.relType.value;
-  if (read.common?.emitKind.case !== undefined || read.common?.hint != null) return null;
-  if (read.common?.advancedExtension != null || read.advancedExtension != null) return null;
-  if (read.filter != null || read.bestEffortFilter != null || read.projection != null) return null;
-  if (read.readType.case !== 'namedTable' || read.readType.value.advancedExtension != null)
-    return null;
-  const names = read.readType.value.names;
-  if (names.some((name) => name.trim().length === 0 || name !== name.trim())) return null;
-  return names.length === 2 && names[0] != null && names[1] != null
-    ? { schema: names[0], table: names[1] }
-    : null;
-}
-
-function hasPinnedPlanVersion(plan: Plan): boolean {
-  return (
-    plan.version?.majorNumber === 0 &&
-    plan.version.minorNumber === 101 &&
-    plan.version.patchNumber === 0
-  );
-}
-
 function clonePlan(plan: Plan): Plan {
   return fromBinary(PlanSchema, toBinary(PlanSchema, plan));
-}
-
-function hasUniqueInnerJoinSidecarIdentity(draft: DvtSubstraitInnerJoinDraft): boolean {
-  return (
-    new Set(draft.sidecar.relations.map((relation) => relation.relationId)).size ===
-      draft.sidecar.relations.length &&
-    new Set(draft.sidecar.relations.map((relation) => relation.relAnchor)).size ===
-      draft.sidecar.relations.length &&
-    new Set(draft.sidecar.fields.map((field) => field.fieldId)).size === draft.sidecar.fields.length
-  );
-}
-
-function hasCurrentInnerJoinSemanticHash(draft: DvtSubstraitInnerJoinDraft): boolean {
-  const planSha256 = sha256Hex(toBinary(PlanSchema, draft.plan));
-  return (
-    draft.sidecar.semanticPlanSha256 === ZERO_SHA256 ||
-    draft.sidecar.semanticPlanSha256 === planSha256
-  );
-}
-
-type InspectedJoinPredicateOperand = DvtSubstraitInspectedJoinOperand;
-
-function inspectJoinPredicateOperand(
-  plan: Plan,
-  expression: Expression
-): InspectedJoinPredicateOperand | null {
-  return inspectDvtSubstraitJoinOperandExpression(plan, expression);
-}
-
-type InspectedJoinComparison = Readonly<{
-  left: InspectedJoinPredicateOperand;
-  right: InspectedJoinPredicateOperand;
-  operator: DvtSubstraitJoinComparisonOperator;
-}>;
-type InspectedJoinCondition = DvtSubstraitJoinCondition<InspectedJoinPredicateOperand>;
-
-function inspectJoinComparison(
-  plan: Plan,
-  expression: Expression | undefined
-): InspectedJoinComparison | null {
-  for (const operator of DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS) {
-    const comparison = dvtSubstraitExpression.inspectScalarFunction(
-      plan,
-      expression,
-      comparisonFunctionIdentity(operator)
-    );
-    if (comparison == null) continue;
-    if (comparison.arguments.length !== 2 || comparison.outputType?.kind.case !== 'bool') {
-      return null;
-    }
-    const left = inspectJoinPredicateOperand(plan, comparison.arguments[0]!);
-    const right = inspectJoinPredicateOperand(plan, comparison.arguments[1]!);
-    return left == null || right == null ? null : { left, right, operator };
-  }
-  return null;
-}
-
-function inspectJoinConditionTerm(
-  plan: Plan,
-  expression: Expression | undefined
-): InspectedJoinCondition | null {
-  const comparison = inspectJoinComparison(plan, expression);
-  if (comparison != null) return comparison;
-  const conditions = inspectJoinConditionList(plan, expression);
-  return conditions == null ? null : { kind: 'group', conditions };
-}
-
-function inspectJoinConditionList(
-  plan: Plan,
-  expression: Expression | undefined
-): readonly InspectedJoinCondition[] | null {
-  const comparison = inspectJoinComparison(plan, expression);
-  if (comparison != null) return [comparison];
-  for (const combination of DVT_SUBSTRAIT_JOIN_CONDITION_COMBINATIONS) {
-    const booleanExpression = dvtSubstraitExpression.inspectScalarFunction(
-      plan,
-      expression,
-      booleanFunctionIdentity(combination)
-    );
-    if (
-      booleanExpression == null ||
-      booleanExpression.arguments.length !== 2 ||
-      booleanExpression.outputType?.kind.case !== 'bool'
-    ) {
-      continue;
-    }
-    const left = inspectJoinConditionList(plan, booleanExpression.arguments[0]);
-    const right = inspectJoinConditionTerm(plan, booleanExpression.arguments[1]);
-    return left == null || right == null ? null : [...left, { ...right, combination }];
-  }
-  return null;
-}
-
-function inspectJoinConditionChain(
-  plan: Plan,
-  expression: Expression | undefined
-): Readonly<{
-  base: InspectedJoinComparison;
-  additionalConditions: readonly InspectedJoinCondition[];
-}> | null {
-  const conditions = inspectJoinConditionList(plan, expression);
-  const [base, ...additionalConditions] = conditions ?? [];
-  return base == null || isDvtSubstraitJoinConditionGroup(base)
-    ? null
-    : { base: { ...base, operator: base.operator ?? 'equal' }, additionalConditions };
-}
-
-function inspectNInputJoinNode(
-  plan: Plan,
-  rel: Rel,
-  relAnchor: number
-): Readonly<{
-  leftKeyOrdinal: number;
-  rightKeyOrdinal: number;
-  operator: DvtSubstraitJoinComparisonOperator;
-  additionalConditions: readonly InspectedJoinCondition[];
-  outputMapping: readonly number[];
-}> | null {
-  if (rel.relType.case !== 'join') return null;
-  const join = rel.relType.value;
-  if (
-    join.type !== JoinRel_JoinType.INNER ||
-    join.postJoinFilter != null ||
-    join.advancedExtension != null ||
-    join.common?.hint != null ||
-    join.common?.advancedExtension != null ||
-    join.common?.relAnchor !== relAnchor ||
-    join.common.emitKind.case !== 'emit' ||
-    join.left == null ||
-    join.right == null
-  ) {
-    return null;
-  }
-  const conditionChain = inspectJoinConditionChain(plan, join.expression);
-  if (conditionChain == null) return null;
-  const { base } = conditionChain;
-  if (base?.left.kind !== 'field' || base.right.kind !== 'field') return null;
-  return {
-    leftKeyOrdinal: base.left.ordinal,
-    rightKeyOrdinal: base.right.ordinal,
-    operator: base.operator,
-    additionalConditions: conditionChain.additionalConditions,
-    outputMapping: join.common.emitKind.value.outputMapping,
-  };
-}
-
-function flattenNInputJoinTree(
-  rel: Rel
-): Readonly<{ reads: readonly Rel[]; joins: readonly Rel[] }> | null {
-  if (rel.relType.case === 'read') return { reads: [rel], joins: [] };
-  if (rel.relType.case !== 'join') return null;
-  const join = rel.relType.value;
-  if (join.left == null || join.right == null || join.right.relType.case !== 'read') return null;
-  const left = flattenNInputJoinTree(join.left);
-  return left == null ? null : { reads: [...left.reads, join.right], joins: [...left.joins, rel] };
-}
-
-function inspectNInputJoinStructure(
-  draft: DvtSubstraitInnerJoinDraft
-): InspectedJoinStructure | null {
-  const { plan, sidecar } = draft;
-  if (
-    !hasPinnedPlanVersion(plan) ||
-    plan.relations.length !== 1 ||
-    sidecar.schemaVersion !== DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION ||
-    !hasUniqueInnerJoinSidecarIdentity(draft) ||
-    !hasCurrentInnerJoinSemanticHash(draft)
-  ) {
-    return null;
-  }
-  const root = plan.relations[0]?.relType;
-  if (
-    root?.case !== 'root' ||
-    root.value.input == null ||
-    root.value.names.length === 0 ||
-    root.value.names.some((name) => name.length === 0) ||
-    new Set(root.value.names).size !== root.value.names.length
-  ) {
-    return null;
-  }
-  const tree = flattenNInputJoinTree(root.value.input);
-  if (
-    tree == null ||
-    tree.reads.length < 2 ||
-    tree.joins.length !== tree.reads.length - 1 ||
-    sidecar.relations.length !== tree.reads.length + tree.joins.length
-  ) {
-    return null;
-  }
-
-  const inputs: DvtSubstraitNInputJoinProjection['inputs'][number][] = [];
-  for (const [index, readRel] of tree.reads.entries()) {
-    if (readRel.relType.case !== 'read' || readRel.relType.value.common?.relAnchor !== index + 1) {
-      return null;
-    }
-    const table = namedTableIdentity(readRel);
-    const fieldNames = readRel.relType.value.baseSchema?.names;
-    const fieldTypes = readRel.relType.value.baseSchema?.struct?.types;
-    const dataTypes = fieldTypes?.map(joinDataType);
-    const binding = sidecar.relations.find((relation) => relation.relAnchor === index + 1);
-    if (
-      table == null ||
-      fieldNames == null ||
-      fieldNames.length === 0 ||
-      fieldNames.some((name) => name.length === 0 || name !== name.trim()) ||
-      new Set(fieldNames).size !== fieldNames.length ||
-      fieldTypes == null ||
-      fieldTypes.length !== fieldNames.length ||
-      dataTypes == null ||
-      dataTypes.some((dataType) => dataType == null) ||
-      binding == null ||
-      binding.sourceRef == null ||
-      binding.displayName !== table.table
-    ) {
-      return null;
-    }
-    const fields = sidecar.fields
-      .filter((field) => field.relationId === binding.relationId)
-      .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
-    if (
-      fields.length !== fieldNames.length ||
-      fields.some(
-        (field, fieldIndex) =>
-          field.outputOrdinal !== fieldIndex || field.displayName !== fieldNames[fieldIndex]
-      )
-    ) {
-      return null;
-    }
-    inputs.push({
-      relationId: binding.relationId,
-      ...table,
-      sourceRef: binding.sourceRef,
-      fields: fields.map((field, fieldIndex) => ({
-        name: fieldNames[fieldIndex]!,
-        fieldId: field.fieldId,
-        dataType: dataTypes[fieldIndex]!,
-      })),
-    });
-  }
-  if (
-    new Set(
-      inputs.map(
-        (input) => `${input.sourceRef.connectionRef.connectionId}:${input.sourceRef.sourceObjectId}`
-      )
-    ).size !== inputs.length ||
-    inputs.some(
-      (input) =>
-        input.sourceRef.connectionRef.provider !== 'postgres' ||
-        !hasSameConnectionRef(inputs[0]!.sourceRef.connectionRef, input.sourceRef.connectionRef)
-    )
-  ) {
-    return null;
-  }
-
-  let workingFields = inputs[0]!.fields.map<JoinOriginField>((field) => ({
-    inputIndex: 0,
-    name: field.name,
-    fieldId: field.fieldId,
-    dataType: field.dataType,
-  }));
-  const joins: DvtSubstraitJoinPredicate[] = [];
-  const stages: InspectedJoinStage[] = [];
-  let outputs: DvtSubstraitNInputJoinProjection['outputs'][number][] = [];
-  for (const [joinIndex, joinRel] of tree.joins.entries()) {
-    const relAnchor = inputs.length + joinIndex + 1;
-    const inspectedJoin = inspectNInputJoinNode(plan, joinRel, relAnchor);
-    const rightInput = inputs[joinIndex + 1]!;
-    const rightFields = rightInput.fields.map<JoinOriginField>((field) => ({
-      inputIndex: joinIndex + 1,
-      name: field.name,
-      fieldId: field.fieldId,
-      dataType: field.dataType,
-    }));
-    const available = [...workingFields, ...rightFields];
-    const relationBinding = sidecar.relations.find((relation) => relation.relAnchor === relAnchor);
-    if (
-      inspectedJoin == null ||
-      relationBinding == null ||
-      relationBinding.sourceRef != null ||
-      relationBinding.displayName !==
-        inputs
-          .slice(0, joinIndex + 2)
-          .map((input) => input.table)
-          .join('+') ||
-      inspectedJoin.leftKeyOrdinal < 0 ||
-      inspectedJoin.leftKeyOrdinal >= workingFields.length ||
-      inspectedJoin.rightKeyOrdinal < workingFields.length ||
-      inspectedJoin.rightKeyOrdinal >= available.length ||
-      available[inspectedJoin.leftKeyOrdinal]?.dataType !==
-        available[inspectedJoin.rightKeyOrdinal]?.dataType ||
-      inspectedJoin.outputMapping.length === 0 ||
-      new Set(inspectedJoin.outputMapping).size !== inspectedJoin.outputMapping.length ||
-      inspectedJoin.outputMapping.some((ordinal) => ordinal < 0 || ordinal >= available.length)
-    ) {
-      return null;
-    }
-    const additionalConditions: DvtSubstraitJoinPredicateCondition[] = [];
-    const convertOperand = (
-      operand: InspectedJoinPredicateOperand
-    ): DvtSubstraitJoinPredicateOperand | null => {
-      return mapDvtSubstraitJoinOperandFields(operand, (field) => {
-        const origin = available[field.ordinal];
-        return origin == null ? null : { kind: 'field', sourceFieldId: origin.fieldId };
-      });
-    };
-    for (const condition of inspectedJoin.additionalConditions) {
-      const converted = mapDvtSubstraitJoinConditionOperands(condition, convertOperand);
-      if (converted == null) return null;
-      const operandType = (operand: DvtSubstraitJoinPredicateOperand) =>
-        resolveDvtSubstraitJoinOperandDataType(
-          operand,
-          (field) =>
-            available.find((candidate) => candidate.fieldId === field.sourceFieldId)?.dataType ??
-            null
-        );
-      for (const comparison of collectDvtSubstraitJoinConditionComparisons(converted)) {
-        if (
-          operandType(comparison.left) == null ||
-          operandType(comparison.left) !== operandType(comparison.right)
-        ) {
-          return null;
-        }
-      }
-      additionalConditions.push(compactDvtSubstraitJoinConditionDefaults(converted));
-    }
-    const nextFields = inspectedJoin.outputMapping.map((ordinal) => available[ordinal]!);
-    const stageFields = sidecar.fields
-      .filter((field) => field.relationId === relationBinding.relationId)
-      .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
-    const finalStage = joinIndex === tree.joins.length - 1;
-    const names = finalStage ? root.value.names : stageFields.map((field) => field.displayName);
-    if (
-      names.length !== nextFields.length ||
-      stageFields.length !== nextFields.length ||
-      stageFields.some((field, outputOrdinal) => {
-        const name = names[outputOrdinal];
-        const expectedOrigin = nextFields[outputOrdinal];
-        return (
-          name == null ||
-          field.outputOrdinal !== outputOrdinal ||
-          field.displayName !== name ||
-          expectedOrigin == null ||
-          (field.sourceFieldId != null && field.sourceFieldId !== expectedOrigin.fieldId)
-        );
-      })
-    ) {
-      return null;
-    }
-    stages.push({
-      relationId: relationBinding.relationId,
-      relAnchor,
-      fields: stageFields.map((field, outputOrdinal) => ({
-        fieldId: field.fieldId,
-        displayName: names[outputOrdinal]!,
-        sourceFieldId: nextFields[outputOrdinal]!.fieldId,
-      })),
-    });
-    joins.push({
-      leftSourceFieldId: workingFields[inspectedJoin.leftKeyOrdinal]!.fieldId,
-      rightSourceFieldId: available[inspectedJoin.rightKeyOrdinal]!.fieldId,
-      ...(inspectedJoin.operator === 'equal' ? {} : { operator: inspectedJoin.operator }),
-      ...(additionalConditions.length === 0 ? {} : { additionalConditions }),
-    });
-    workingFields = nextFields;
-    if (finalStage) {
-      outputs = nextFields.map((origin, outputOrdinal) => ({
-        name: names[outputOrdinal]!,
-        fieldId: stageFields[outputOrdinal]!.fieldId,
-        dataType: origin.dataType,
-        outputOrdinal,
-        source: {
-          inputIndex: origin.inputIndex,
-          name: origin.name,
-          fieldId: origin.fieldId,
-        },
-      }));
-    }
-  }
-  return { inputs, stages, joins, outputs };
-}
-
-export function inspectDvtSubstraitNInputJoinDraft(
-  draft: DvtSubstraitInnerJoinDraft
-): DvtSubstraitNInputJoinInspection {
-  const structure = inspectNInputJoinStructure(draft);
-  return structure == null
-    ? { ok: false }
-    : {
-        ok: true,
-        projection: {
-          inputs: structure.inputs,
-          joinRelations: structure.stages.map((stage) => ({
-            relationId: stage.relationId,
-            relAnchor: stage.relAnchor,
-          })),
-          joins: structure.joins,
-          outputs: structure.outputs,
-        },
-      };
-}
-
-function fieldIdForLocator(
-  projection: DvtSubstraitNInputJoinProjection,
-  locator: JoinFieldLocator
-): string | null {
-  return (
-    projection.inputs[locator.inputIndex]?.fields.find((field) => field.name === locator.fieldName)
-      ?.fieldId ?? null
-  );
 }
 
 function locatorForFieldId(
@@ -1914,11 +1214,7 @@ function buildPredicatesFromProjection(
 ): JoinBuildPredicate[] | null {
   const result: JoinBuildPredicate[] = [];
   for (const predicate of projection.joins) {
-    const left = locatorForFieldId(projection, predicate.leftSourceFieldId);
-    const right = locatorForFieldId(projection, predicate.rightSourceFieldId);
-    if (left == null || right == null) return null;
-    const additionalConditions: NonNullable<JoinBuildPredicate['additionalConditions']>[number][] =
-      [];
+    const conditions: DvtSubstraitJoinCondition<JoinBuildPredicateOperand>[] = [];
     const convertOperand = (
       operand: DvtSubstraitJoinPredicateOperand
     ): JoinBuildPredicateOperand | null => {
@@ -1927,17 +1223,12 @@ function buildPredicatesFromProjection(
         return locator == null ? null : { kind: 'field', locator };
       });
     };
-    for (const condition of predicate.additionalConditions ?? []) {
+    for (const condition of predicate.conditions) {
       const converted = mapDvtSubstraitJoinConditionOperands(condition, convertOperand);
       if (converted == null) return null;
-      additionalConditions.push(converted);
+      conditions.push(converted);
     }
-    result.push({
-      left,
-      right,
-      ...(predicate.operator == null ? {} : { operator: predicate.operator }),
-      ...(additionalConditions.length === 0 ? {} : { additionalConditions }),
-    });
+    result.push({ conditions });
   }
   return result;
 }
@@ -1960,29 +1251,10 @@ export function inspectDvtSubstraitInnerJoinDraft(
   draft: DvtSubstraitInnerJoinDraft
 ): DvtSubstraitInnerJoinInspection {
   const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
-  if (!inspection.ok) return { ok: false };
+  if (!inspection.ok || !hasDvtSubstraitLegacyBinaryInnerJoinShape(inspection.projection)) {
+    return { ok: false };
+  }
   const { projection } = inspection;
-  if (
-    projection.inputs.length !== 2 ||
-    projection.inputs[0]?.fields.map((field) => field.name).join(',') !==
-      LEFT_FIELD_NAMES.join(',') ||
-    projection.inputs[1]?.fields.map((field) => field.name).join(',') !==
-      RIGHT_FIELD_NAMES.join(',') ||
-    projection.joins.length !== 1
-  ) {
-    return { ok: false };
-  }
-  const leftKeyId = fieldIdForLocator(projection, { inputIndex: 0, fieldName: 'customer_id' });
-  const rightKeyId = fieldIdForLocator(projection, { inputIndex: 1, fieldName: 'customer_id' });
-  const predicate = projection.joins[0];
-  if (
-    leftKeyId == null ||
-    rightKeyId == null ||
-    predicate?.leftSourceFieldId !== leftKeyId ||
-    predicate.rightSourceFieldId !== rightKeyId
-  ) {
-    return { ok: false };
-  }
   const outputs = projection.outputs.map((output) => {
     const field = binaryFieldForLocator({
       inputIndex: output.source.inputIndex,
@@ -2078,8 +1350,15 @@ export function appendDvtSubstraitInnerJoinInput(
       predicates: [
         ...existingPredicates,
         {
-          left,
-          right: { inputIndex: newInputIndex, fieldName: input.predicate.rightFieldName },
+          conditions: [
+            {
+              left: { kind: 'field', locator: left },
+              right: {
+                kind: 'field',
+                locator: { inputIndex: newInputIndex, fieldName: input.predicate.rightFieldName },
+              },
+            },
+          ],
         },
       ],
       outputs,
@@ -2087,64 +1366,6 @@ export function appendDvtSubstraitInnerJoinInput(
     });
   } catch {
     return draft;
-  }
-}
-
-export function setDvtSubstraitJoinPredicateFields(args: {
-  draft: DvtSubstraitInnerJoinDraft;
-  joinRelationId: string;
-  leftSourceFieldId: string;
-  rightSourceFieldId: string;
-  operator?: DvtSubstraitJoinComparisonOperator;
-}): DvtSubstraitInnerJoinDraft {
-  const inspection = inspectDvtSubstraitNInputJoinDraft(args.draft);
-  if (!inspection.ok) return args.draft;
-  const { projection } = inspection;
-  const stageIndex = projection.joinRelations.findIndex(
-    (relation) => relation.relationId === args.joinRelationId
-  );
-  const current = projection.joins[stageIndex];
-  const left = locatorForFieldId(projection, args.leftSourceFieldId);
-  const right = locatorForFieldId(projection, args.rightSourceFieldId);
-  if (stageIndex < 0 || current == null || left == null || right == null) return args.draft;
-
-  const rightInputIndex = stageIndex + 1;
-  if (left.inputIndex >= rightInputIndex || right.inputIndex !== rightInputIndex) {
-    return args.draft;
-  }
-  const operator = args.operator ?? current.operator ?? 'equal';
-  if (
-    current.leftSourceFieldId === args.leftSourceFieldId &&
-    current.rightSourceFieldId === args.rightSourceFieldId &&
-    (current.operator ?? 'equal') === operator
-  ) {
-    return args.draft;
-  }
-  const fieldById = new Map(
-    projection.inputs.flatMap((input) =>
-      input.fields.map((field) => [field.fieldId, field] as const)
-    )
-  );
-  if (
-    fieldById.get(args.leftSourceFieldId)?.dataType !==
-    fieldById.get(args.rightSourceFieldId)?.dataType
-  ) {
-    return args.draft;
-  }
-
-  const predicates = buildPredicatesFromProjection(projection);
-  if (predicates == null || predicates[stageIndex] == null) return args.draft;
-  predicates[stageIndex] = { ...predicates[stageIndex]!, left, right, operator };
-  try {
-    const edited = createDvtSubstraitNInputJoinDraft({
-      inputs: buildInputsFromProjection(projection),
-      predicates,
-      outputs: buildOutputsFromProjection(projection),
-      previousDraft: args.draft,
-    });
-    return inspectDvtSubstraitNInputJoinDraft(edited).ok ? edited : args.draft;
-  } catch {
-    return args.draft;
   }
 }
 
@@ -2181,16 +1402,10 @@ function editDvtSubstraitJoinPredicateConditions(args: {
   );
   const predicate = projection.joins[stageIndex];
   if (stageIndex < 0 || predicate == null) return args.draft;
-  const additionalConditions = args.edit(predicate.additionalConditions ?? []);
-  if (additionalConditions == null) return args.draft;
-  const { additionalConditions: _current, ...predicateWithoutConditions } = predicate;
+  const conditions = args.edit(predicate.conditions);
+  if (conditions == null || conditions.length === 0) return args.draft;
   const joins = projection.joins.map((current, index) =>
-    index === stageIndex
-      ? {
-          ...predicateWithoutConditions,
-          ...(additionalConditions.length === 0 ? {} : { additionalConditions }),
-        }
-      : current
+    index === stageIndex ? { conditions } : current
   );
   const predicates = buildPredicatesFromProjection({ ...projection, joins });
   if (predicates == null) return args.draft;
@@ -2265,7 +1480,6 @@ export function applyDvtSubstraitInnerJoinFieldEdit(
     if (edit.kind === 'set-selected') {
       if (edit.selected === currentIndex >= 0) return draft;
       if (!edit.selected) {
-        if (outputs.length === 1) return draft;
         outputs = outputs.filter((output) => !sameLocator(output.source, locator));
       } else {
         const input = projection.inputs[locator.inputIndex];
@@ -2338,7 +1552,6 @@ export function applyDvtSubstraitInnerJoinFieldEdit(
   if (edit.kind === 'set-selected') {
     if (edit.selected === currentIndex >= 0) return draft;
     if (!edit.selected) {
-      if (outputs.length === 1) return draft;
       outputs = outputs.filter((output) => !sameLocator(output.source, field.locator));
     } else {
       outputs.push({ name: field.defaultName, source: field.locator });

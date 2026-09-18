@@ -353,6 +353,9 @@ importers:
       '@dvt/temporal-dbt-plugin':
         specifier: workspace:*
         version: link:../../packages/@dvt/temporal-dbt-plugin
+      '@dvt/temporal-dvt-postgres-plugin':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/temporal-dvt-postgres-plugin
       '@dvt/temporal-http-json-plugin':
         specifier: workspace:*
         version: link:../../packages/@dvt/temporal-http-json-plugin
@@ -414,6 +417,9 @@ importers:
       '@dvt/crypto':
         specifier: workspace:*
         version: link:../../packages/@dvt/crypto
+      '@dvt/postgres-projection':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/postgres-projection
       '@emotion/react':
         specifier: 11.14.0
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -967,9 +973,15 @@ importers:
       '@buf/substrait_substrait.bufbuild_es':
         specifier: 2.14.0-20260816025439-ce0808dab3ac.1
         version: 2.14.0-20260816025439-ce0808dab3ac.1(@bufbuild/protobuf@2.14.0)
+      '@bufbuild/protobuf':
+        specifier: 2.14.0
+        version: 2.14.0
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../crypto
       pgsql-deparser:
         specifier: 16.1.1
         version: 16.1.1
@@ -1033,6 +1045,31 @@ importers:
       tar:
         specifier: ^7.5.2
         version: 7.5.13
+    devDependencies:
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/@dvt/temporal-dvt-postgres-plugin:
+    dependencies:
+      '@dvt/adapter-postgres':
+        specifier: workspace:*
+        version: link:../adapter-postgres
+      '@dvt/adapter-temporal':
+        specifier: workspace:*
+        version: link:../adapter-temporal
+      '@dvt/artifacts':
+        specifier: workspace:*
+        version: link:../artifacts
+      '@dvt/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../crypto
     devDependencies:
       typescript:
         specifier: 5.9.3
@@ -16428,8 +16465,8 @@ snapshots:
 
   tinyglobby@0.2.15:
     dependencies:
-      fdir: 6.5.0(picomatch@4.0.4)
-      picomatch: 4.0.4
+      fdir: 6.5.0(picomatch@4.0.5)
+      picomatch: 4.0.5
 
   tinyglobby@0.2.16:
     dependencies:

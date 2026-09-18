@@ -155,7 +155,8 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.test.ts
       - apps/web/src/app/plugins/graph/GraphNodeCalculatedColumnForm.test.tsx
-  - name: GraphNodeCalculatedColumnForm
+  - &calculatedColumnFormSymbol
+    name: GraphNodeCalculatedColumnForm
     path: apps/web/src/app/plugins/graph/GraphNodeCalculatedColumnForm.tsx
     dddOwner: Calculated-column presentation form
     cqRails: [ConfigureCanvasDvtNode]
@@ -163,6 +164,10 @@ symbols:
     architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-CALCULATED-COLUMN-AUTHORING-2833
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts
     unitTests: [apps/web/src/app/plugins/graph/GraphNodeCalculatedColumnForm.test.tsx]
+  - <<: *calculatedColumnFormSymbol
+    name: CalculatedColumnCommandError
+  - <<: *calculatedColumnFormSymbol
+    name: resolveCalculatedColumnCommandError
   - name: appendDvtSubstraitCalculatedColumn
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedColumn.ts
     dddOwner: DVT calculated projection aggregate
@@ -198,6 +203,17 @@ symbols:
   - <<: *calculatedColumnSymbol
     name: CanvasCalculatedColumnResult
     path: apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts
+  - <<: *calculatedColumnSymbol
+    name: CanvasCalculatedColumnTransformResult
+    path: apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts
+  - name: DvtSubstraitProjectionAuthoringRejection
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts
+    dddOwner: DvtSubstraitProjectionDraft
+    cqRails: [ConfigureCanvasDvtNode]
+    fowlerSignals: [Introduce Value Object]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-CALCULATED-COLUMN-AUTHORING-2833
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts
+    unitTests: [apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.test.ts]
   - <<: *calculatedColumnSymbol
     name: append
     path: apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts

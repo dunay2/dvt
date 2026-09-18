@@ -2,7 +2,7 @@
 title: Planning Domains
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-10
 planning_type: reference
 ---
 
@@ -29,8 +29,8 @@ DB for architecture/components/rails.
 
 ## Canonical Anchors
 
+- [GitHub Issues](https://github.com/dunay2/dvt/issues)
 - [Roadmap Of Record](../roadmap/index.md)
-- [Planning Dashboard](../state/planning-dashboard.md)
 - [GitHub MVP Issue Workflow](../state/github-mvp-issue-workflow.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)

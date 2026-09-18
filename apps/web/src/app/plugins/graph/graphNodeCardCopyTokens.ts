@@ -27,6 +27,10 @@ type GraphNodeCardCopy = Readonly<{
   testsLabel: string;
   readyStatusLabel: string;
   draftStatusLabel: string;
+  relationalCompositionPendingLabel: string;
+  relationalCompositionIncompleteLabel: string;
+  relationalCompositionJoinSummaryTemplate: string;
+  relationalCompositionUnionAllSummaryTemplate: string;
   filterLabel: string;
   testStatusLabels: Readonly<Record<string, string>>;
   healthTitleTemplate: string;
@@ -63,6 +67,16 @@ type GraphNodeCardCopy = Readonly<{
   columnFunctionAliasCancelLabel: string;
   columnFunctionAliasConflictLabel: string;
   columnFunctionAliasPolicyErrorLabel: string;
+  expressionComposerTitle: string;
+  expressionComposerFunctionLabel: string;
+  expressionComposerOperandsLabel: string;
+  expressionComposerOperandLabelTemplate: string;
+  expressionComposerAddOperandLabel: string;
+  expressionComposerRemoveOperandLabelTemplate: string;
+  expressionComposerMoveOperandUpLabelTemplate: string;
+  expressionComposerMoveOperandDownLabelTemplate: string;
+  expressionComposerPreviewLabel: string;
+  expressionComposerRejectedLabel: string;
   addCalculatedColumnLabel: string;
   calculatedColumnKindLabel: string;
   calculatedColumnAliasLabel: string;
@@ -75,6 +89,7 @@ type GraphNodeCardCopy = Readonly<{
   calculatedColumnIdentifierPolicyError: string;
   calculatedColumnLiteralPolicyError: string;
   calculatedColumnTimestampPolicyError: string;
+  columnAuthoringInvalidReferenceLabel: string;
   calculatedColumnKindLabels: Readonly<
     Record<
       'field-ref' | 'string-literal' | 'timestamp-literal' | 'scalar-function' | 'row-number',
@@ -116,6 +131,12 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   testsLabel: 'Tests',
   readyStatusLabel: 'Ready',
   draftStatusLabel: 'Draft',
+  relationalCompositionPendingLabel: 'RELATE / COMPOSE',
+  relationalCompositionIncompleteLabel: 'RECONNECT INPUT',
+  relationalCompositionJoinSummaryTemplate:
+    'INNER JOIN, inputs: {inputCount}, predicates: {predicateCount}',
+  relationalCompositionUnionAllSummaryTemplate:
+    'UNION ALL, inputs: {inputCount}, outputs: {outputCount}, bag semantics',
   filterLabel: 'Filter',
   testStatusLabels: {
     pass: 'Passed',
@@ -171,6 +192,16 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnFunctionAliasConflictLabel: 'Another column already uses this output name.',
   columnFunctionAliasPolicyErrorLabel:
     'Use a valid PostgreSQL identifier without outer whitespace and with at most 63 UTF-8 bytes.',
+  expressionComposerTitle: 'Create derived output',
+  expressionComposerFunctionLabel: 'Function',
+  expressionComposerOperandsLabel: 'Ordered operands',
+  expressionComposerOperandLabelTemplate: 'Operand {index}',
+  expressionComposerAddOperandLabel: 'Add operand',
+  expressionComposerRemoveOperandLabelTemplate: 'Remove operand {index}',
+  expressionComposerMoveOperandUpLabelTemplate: 'Move operand {index} up',
+  expressionComposerMoveOperandDownLabelTemplate: 'Move operand {index} down',
+  expressionComposerPreviewLabel: 'Preview',
+  expressionComposerRejectedLabel: 'The output could not be created. Review the expression.',
   addCalculatedColumnLabel: 'Add calculated column',
   calculatedColumnKindLabel: 'Value source',
   calculatedColumnAliasLabel: 'Output name',
@@ -185,6 +216,8 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   calculatedColumnLiteralPolicyError: 'Text values may contain at most 4096 UTF-8 bytes.',
   calculatedColumnTimestampPolicyError:
     'Use a canonical UTC timestamp such as 2026-09-08T12:00:00.000Z.',
+  columnAuthoringInvalidReferenceLabel:
+    'The selected fields are no longer available. Review the proposal.',
   calculatedColumnKindLabels: {
     'field-ref': 'Alias column',
     'string-literal': 'Text value',
@@ -227,6 +260,12 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   testsLabel: 'Pruebas',
   readyStatusLabel: 'Listo',
   draftStatusLabel: 'Borrador',
+  relationalCompositionPendingLabel: 'RELACIONAR / COMPONER',
+  relationalCompositionIncompleteLabel: 'RECONECTAR ENTRADA',
+  relationalCompositionJoinSummaryTemplate:
+    'INNER JOIN, entradas: {inputCount}, predicados: {predicateCount}',
+  relationalCompositionUnionAllSummaryTemplate:
+    'UNION ALL, entradas: {inputCount}, salidas: {outputCount}, semántica bag',
   filterLabel: 'Filtro',
   testStatusLabels: {
     pass: 'Aprobadas',
@@ -282,6 +321,16 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnFunctionAliasConflictLabel: 'Otra columna ya utiliza este nombre de salida.',
   columnFunctionAliasPolicyErrorLabel:
     'Usa un identificador PostgreSQL válido, sin espacios exteriores y con 63 bytes UTF-8 como máximo.',
+  expressionComposerTitle: 'Crear salida derivada',
+  expressionComposerFunctionLabel: 'Función',
+  expressionComposerOperandsLabel: 'Operandos ordenados',
+  expressionComposerOperandLabelTemplate: 'Operando {index}',
+  expressionComposerAddOperandLabel: 'Añadir operando',
+  expressionComposerRemoveOperandLabelTemplate: 'Quitar operando {index}',
+  expressionComposerMoveOperandUpLabelTemplate: 'Subir operando {index}',
+  expressionComposerMoveOperandDownLabelTemplate: 'Bajar operando {index}',
+  expressionComposerPreviewLabel: 'Vista previa',
+  expressionComposerRejectedLabel: 'No se pudo crear la salida. Revisa la expresión.',
   addCalculatedColumnLabel: 'Añadir columna calculada',
   calculatedColumnKindLabel: 'Origen del valor',
   calculatedColumnAliasLabel: 'Nombre de salida',
@@ -294,7 +343,9 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   calculatedColumnIdentifierPolicyError:
     'Usa un identificador PostgreSQL válido, sin espacios exteriores y con 63 bytes UTF-8 como máximo.',
   calculatedColumnLiteralPolicyError: 'Los valores de texto admiten 4096 bytes UTF-8 como máximo.',
-  calculatedColumnTimestampPolicyError: 'Usa una fecha UTC canonica como 2026-09-08T12:00:00.000Z.',
+  calculatedColumnTimestampPolicyError: 'Usa una fecha UTC canónica como 2026-09-08T12:00:00.000Z.',
+  columnAuthoringInvalidReferenceLabel:
+    'Los campos seleccionados ya no están disponibles. Revisa la propuesta.',
   calculatedColumnKindLabels: {
     'field-ref': 'Alias de columna',
     'string-literal': 'Valor de texto',

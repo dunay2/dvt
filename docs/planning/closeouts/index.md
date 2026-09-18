@@ -91,4 +91,3 @@ navigation. The folder contains additional historical entries.
 ## Full Portfolio Views
 
 - [Planning State](../state/index.md)
-- [Planning Inventory and Coverage](../state/inventory-and-coverage.md)

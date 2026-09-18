@@ -72,6 +72,14 @@ function filterRelationId(draft: DvtSubstraitProjectionDraft): string | null {
 }
 
 describe('DVT Substrait filter', () => {
+  it('offers every admitted binary text comparison', () => {
+    expect(
+      resolveDvtSubstraitFilterCapabilities({ dataType: 'text', provider: 'postgres' }).map(
+        (capability) => capability.name
+      )
+    ).toEqual(['equal', 'not_equal', 'gt', 'gte', 'lt', 'lte']);
+  });
+
   it('allocates one opaque relation identity, preserves it on edit, and replaces it after delete', () => {
     const draft = projection();
     const capability = resolveDvtSubstraitFilterCapabilities({
@@ -94,6 +102,7 @@ describe('DVT Substrait filter', () => {
       fieldId: 'output:customer',
       fieldName: 'customer',
       capabilityId: capability.capabilityId,
+      operator: 'equal',
       value: 'Ada',
     });
 
@@ -128,6 +137,33 @@ describe('DVT Substrait filter', () => {
     const recreatedRelationId = filterRelationId(recreated);
     expect(recreatedRelationId).toMatch(OPAQUE_RELATION_ID);
     expect(recreatedRelationId).not.toBe(firstRelationId);
+  });
+
+  it('round-trips the selected comparison identity', () => {
+    const draft = projection();
+    const capability = resolveDvtSubstraitFilterCapabilities({
+      dataType: 'text',
+      provider: 'postgres',
+    }).find((candidate) => candidate.name === 'not_equal');
+    if (capability == null) throw new Error('Expected the admitted not-equal predicate.');
+
+    const filtered = applyDvtSubstraitFilter(draft, {
+      fieldId: 'output:customer',
+      dataType: 'text',
+      capabilityId: capability.capabilityId,
+      value: 'Ada',
+    });
+
+    expect(inspectDvtSubstraitFilter(filtered)).toMatchObject({
+      capabilityId: capability.capabilityId,
+      operator: 'not_equal',
+      value: 'Ada',
+    });
+    expect(
+      inspectDvtSubstraitFilter(
+        decodeDvtSubstraitProjectionDocument(encodeDvtSubstraitFilterDocument(filtered))
+      )
+    ).toMatchObject({ operator: 'not_equal' });
   });
 
   it('preserves an existing legacy-format filter ID as opaque identity when editing', () => {

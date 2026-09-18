@@ -18,7 +18,10 @@ import {
   inspectDvtSubstraitProjectionDraft,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
-import { dvtSubstraitTextEquality } from './canvasDvtSubstraitTextEquality';
+import {
+  dvtSubstraitTextComparison,
+  type DvtSubstraitTextComparisonOperator,
+} from './canvasDvtSubstraitTextComparison';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 const FILTER_ID = buildDvtSubstraitStandardCapabilityId('relation', {
@@ -31,13 +34,17 @@ export type DvtSubstraitFilter = Readonly<{
   fieldId: string;
   fieldName: string;
   capabilityId: string;
+  operator: DvtSubstraitTextComparisonOperator;
   value: string;
 }>;
 
 export function resolveDvtSubstraitFilterCapabilities(args: {
   dataType: string;
   provider: string;
-}): readonly Readonly<{ capabilityId: string; name: string }>[] {
+}): readonly Readonly<{
+  capabilityId: string;
+  name: DvtSubstraitTextComparisonOperator;
+}>[] {
   const supported = new Set(
     DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.flatMap((entry) =>
       entry.kind === 'standard' && entry.profileStatus === 'supported-profile'
@@ -47,9 +54,13 @@ export function resolveDvtSubstraitFilterCapabilities(args: {
   );
   return args.provider === 'postgres' &&
     STRING_TYPES.has(args.dataType.trim().toLowerCase()) &&
-    supported.has(FILTER_ID) &&
-    supported.has(dvtSubstraitTextEquality.capabilityId)
-    ? [{ capabilityId: dvtSubstraitTextEquality.capabilityId, name: 'equal' }]
+    supported.has(FILTER_ID)
+    ? dvtSubstraitTextComparison.capabilities
+        .filter((capability) => supported.has(capability.capabilityId))
+        .map((capability) => ({
+          capabilityId: capability.capabilityId,
+          name: capability.operator,
+        }))
     : [];
 }
 
@@ -77,6 +88,8 @@ function filterRelationId(draft: DvtSubstraitProjectionDraft): string | null {
 function stripFilter(draft: DvtSubstraitProjectionDraft): Readonly<{
   draft: DvtSubstraitProjectionDraft;
   sourceOrdinal: number;
+  operator: DvtSubstraitTextComparisonOperator;
+  capabilityId: string;
   value: string;
 }> | null {
   const plan = clonePlan(draft.plan);
@@ -84,10 +97,10 @@ function stripFilter(draft: DvtSubstraitProjectionDraft): Readonly<{
   const filter = project?.input?.relType;
   if (project == null || filter?.case !== 'filter') return null;
   const anchor = filter.value.common?.relAnchor;
-  const equality = dvtSubstraitTextEquality.inspect(plan, filter.value.condition);
+  const comparison = dvtSubstraitTextComparison.inspect(plan, filter.value.condition);
   if (
     anchor == null ||
-    equality == null ||
+    comparison == null ||
     filter.value.input == null ||
     filter.value.common?.emitKind.case !== undefined ||
     filter.value.common?.hint != null ||
@@ -95,10 +108,12 @@ function stripFilter(draft: DvtSubstraitProjectionDraft): Readonly<{
   )
     return null;
   project.input = filter.value.input;
-  dvtSubstraitTextEquality.removeDeclaration(plan, equality);
+  dvtSubstraitTextComparison.removeDeclaration(plan, comparison);
   return {
-    sourceOrdinal: equality.sourceOrdinal,
-    value: equality.value,
+    sourceOrdinal: comparison.sourceOrdinal,
+    operator: comparison.operator,
+    capabilityId: comparison.capabilityId,
+    value: comparison.value,
     draft: {
       plan,
       sidecar: {
@@ -124,7 +139,8 @@ export function inspectDvtSubstraitFilter(
     : {
         fieldId: output.fieldId,
         fieldName,
-        capabilityId: dvtSubstraitTextEquality.capabilityId,
+        capabilityId: stripped.capabilityId,
+        operator: stripped.operator,
         value: stripped.value,
       };
 }
@@ -160,16 +176,11 @@ export function applyDvtSubstraitFilter(
     (field) => field.name === output?.sourceFieldName
   );
   const sourceField = inspection.projection.inputFields[sourceOrdinal];
-  if (
-    output == null ||
-    sourceField == null ||
-    request.capabilityId !== dvtSubstraitTextEquality.capabilityId ||
-    resolveDvtSubstraitFilterCapabilities({
-      dataType: request.dataType,
-      provider: inspection.projection.source.sourceRef.connectionRef.provider,
-    }).length === 0
-  )
-    return draft;
+  const capability = resolveDvtSubstraitFilterCapabilities({
+    dataType: request.dataType,
+    provider: inspection.projection.source.sourceRef.connectionRef.provider,
+  }).find((candidate) => candidate.capabilityId === request.capabilityId);
+  if (output == null || sourceField == null || capability == null) return draft;
   const plan = clonePlan(base.plan);
   const project = rootProject(plan);
   if (project?.input == null) return draft;
@@ -180,7 +191,12 @@ export function applyDvtSubstraitFilter(
       value: create(FilterRelSchema, {
         common: create(RelCommonSchema, { relAnchor: anchor }),
         input: project.input,
-        condition: dvtSubstraitTextEquality.create(plan, sourceOrdinal, request.value),
+        condition: dvtSubstraitTextComparison.create(
+          plan,
+          capability.name,
+          sourceOrdinal,
+          request.value
+        ),
       }),
     },
   });

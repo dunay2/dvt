@@ -4,7 +4,6 @@ status: Accepted
 owner: Web / Planner / Runtime
 last_reviewed: 2026-08-08
 planning_type: mandatory-proposal
-archived_record: docs/planning/archive/proposals/dbt-authoring-code-run-vertical-plan-20260526.md
 ---
 
 # DBT authoring code-run vertical
@@ -21,5 +20,3 @@ through governed queries; it does not own runtime data.
 Validation is `pnpm --filter @dvt/web test`, the affected API/package tests,
 `node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs`,
 and `pnpm verify:prepush`.
-
-The detailed delivery record is historical and remains at `archived_record`.

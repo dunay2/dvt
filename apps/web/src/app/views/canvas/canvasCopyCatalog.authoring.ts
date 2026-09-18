@@ -8,6 +8,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.columnMapping.addedMessage',
     fallback: 'Column mapping added.',
   },
+  columnRelationProposedMessage: {
+    key: 'canvas.columnMapping.relationProposedMessage',
+    fallback: 'Field relation proposed. Choose what to do with it.',
+  },
   columnMappingRemovedMessage: {
     key: 'canvas.columnMapping.removedMessage',
     fallback: 'Column mapping removed.',
@@ -576,10 +580,6 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtFilterOperatorLabel',
     fallback: 'Operator',
   },
-  inspectorDvtFilterEqualLabel: {
-    key: 'canvas.inspector.authoring.dvtFilterEqualLabel',
-    fallback: 'Equals',
-  },
   inspectorDvtFilterValueLabel: {
     key: 'canvas.inspector.authoring.dvtFilterValueLabel',
     fallback: 'Value',
@@ -634,7 +634,7 @@ export const canvasViewAuthoringCopyByKey = {
   },
   inspectorDvtSubstraitUnionAllAction: {
     key: 'canvas.inspector.authoring.dvtSubstraitUnionAllAction',
-    fallback: 'Union all',
+    fallback: 'UNION ALL',
   },
   inspectorDvtSubstraitUnionAllTitle: {
     key: 'canvas.inspector.authoring.dvtSubstraitUnionAllTitle',
@@ -647,6 +647,162 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorDvtSubstraitUnionAllFieldsLabel: {
     key: 'canvas.inspector.authoring.dvtSubstraitUnionAllFieldsLabel',
     fallback: 'Compatible fields',
+  },
+  inspectorDvtRelationalOperationTitle: {
+    key: 'canvas.inspector.authoring.dvtRelationalOperationTitle',
+    fallback: 'Relate / compose',
+  },
+  inspectorDvtRelationalAvailable: {
+    key: 'canvas.inspector.authoring.dvtRelationalAvailable',
+    fallback: 'Available',
+  },
+  inspectorDvtRelationalNeedsPredicate: {
+    key: 'canvas.inspector.authoring.dvtRelationalNeedsPredicate',
+    fallback: 'Needs predicate',
+  },
+  inspectorDvtRelationalNeedsSchemaAlignment: {
+    key: 'canvas.inspector.authoring.dvtRelationalNeedsSchemaAlignment',
+    fallback: 'Needs schema alignment',
+  },
+  inspectorDvtRelationalTargetUnavailable: {
+    key: 'canvas.inspector.authoring.dvtRelationalTargetUnavailable',
+    fallback: 'Target unavailable',
+  },
+  inspectorDvtRelationalUnavailable: {
+    key: 'canvas.inspector.authoring.dvtRelationalUnavailable',
+    fallback: 'Unavailable',
+  },
+  inspectorDvtRelationalReadOnly: {
+    key: 'canvas.inspector.authoring.dvtRelationalReadOnly',
+    fallback: 'Read only',
+  },
+  inspectorDvtRelationalLeftOperandField: {
+    key: 'canvas.inspector.authoring.dvtRelationalLeftOperandField',
+    fallback: 'Left operand field',
+  },
+  inspectorDvtRelationalRightOperandField: {
+    key: 'canvas.inspector.authoring.dvtRelationalRightOperandField',
+    fallback: 'Right operand field',
+  },
+  inspectorDvtRelationalLeftInput: {
+    key: 'canvas.inspector.authoring.dvtRelationalLeftInput',
+    fallback: 'Left input',
+  },
+  inspectorDvtRelationalRightInput: {
+    key: 'canvas.inspector.authoring.dvtRelationalRightInput',
+    fallback: 'Right input',
+  },
+  relationalTreeSourcesLabel: {
+    key: 'canvas.relationalTree.sourcesLabel',
+    fallback: 'Sources',
+  },
+  relationalTreeLabel: {
+    key: 'canvas.relationalTree.label',
+    fallback: 'Relational tree',
+  },
+  relationalTreeValidMessage: {
+    key: 'canvas.relationalTree.validMessage',
+    fallback: 'Valid expression',
+  },
+  relationalTreeDetailLabel: {
+    key: 'canvas.relationalTree.detailLabel',
+    fallback: 'Detail',
+  },
+  relationalTreeCanvasLabel: {
+    key: 'canvas.relationalTree.canvasLabel',
+    fallback: 'Relational block canvas',
+  },
+  relationalTreeComposeAction: {
+    key: 'canvas.relationalTree.composeAction',
+    fallback: 'Compose relation',
+  },
+  relationalTreeDropSourceMessage: {
+    key: 'canvas.relationalTree.dropSourceMessage',
+    fallback: 'Drop a Source here.',
+  },
+  relationalTreePendingInputsMessage: {
+    key: 'canvas.relationalTree.pendingInputsMessage',
+    fallback: 'Inputs available',
+  },
+  relationalTreeParticipatingLabel: {
+    key: 'canvas.relationalTree.participatingLabel',
+    fallback: 'Participating',
+  },
+  relationalTreePendingLabel: {
+    key: 'canvas.relationalTree.pendingLabel',
+    fallback: 'Pending',
+  },
+  relationalTreeMissingLabel: {
+    key: 'canvas.relationalTree.missingLabel',
+    fallback: 'Missing',
+  },
+  relationalTreeOutputLabel: {
+    key: 'canvas.relationalTree.outputLabel',
+    fallback: 'Output',
+  },
+  relationalTreePrimaryInputLabel: {
+    key: 'canvas.relationalTree.primaryInputLabel',
+    fallback: 'Primary input',
+  },
+  relationalTreePrimarySlotLabel: {
+    key: 'canvas.relationalTree.primarySlotLabel',
+    fallback: 'Left operand',
+  },
+  relationalTreeProjectOperationLabel: {
+    key: 'canvas.relationalTree.projectOperationLabel',
+    fallback: 'PROJECT',
+  },
+  relationalTreeSecondaryInputTemplate: {
+    key: 'canvas.relationalTree.secondaryInputTemplate',
+    fallback: 'Secondary input {ordinal}',
+  },
+  relationalTreeSecondarySlotLabel: {
+    key: 'canvas.relationalTree.secondarySlotLabel',
+    fallback: 'Right operand',
+  },
+  relationalTreeReadOnlyMessage: {
+    key: 'canvas.relationalTree.readOnlyMessage',
+    fallback: 'Inspection only. Changes use the existing operation controls.',
+  },
+  relationalTreeUnavailableMessage: {
+    key: 'canvas.relationalTree.unavailableMessage',
+    fallback: 'No canonical relational tree is available.',
+  },
+  relationalTreeInvalidMessage: {
+    key: 'canvas.relationalTree.invalidMessage',
+    fallback: 'The canonical relational tree could not be read.',
+  },
+  relationalTreeInputIdentityUnavailableMessage: {
+    key: 'canvas.relationalTree.inputIdentityUnavailableMessage',
+    fallback: 'A connected Source has no stable identity.',
+  },
+  relationalTreeSelectFirstSourceMessage: {
+    key: 'canvas.relationalTree.selectFirstSourceMessage',
+    fallback: 'Select the first Source.',
+  },
+  relationalTreeSelectOperationMessage: {
+    key: 'canvas.relationalTree.selectOperationMessage',
+    fallback: 'Select a relational operation.',
+  },
+  relationalTreeSelectNextSourceMessage: {
+    key: 'canvas.relationalTree.selectNextSourceMessage',
+    fallback: 'Add a second Source to enable JOIN or UNION ALL.',
+  },
+  relationalTreeSourceActionHint: {
+    key: 'canvas.relationalTree.sourceActionHint',
+    fallback: 'Drag or press to add',
+  },
+  relationalTreeSelectedInputsLabel: {
+    key: 'canvas.relationalTree.selectedInputsLabel',
+    fallback: 'Selected inputs',
+  },
+  inspectorDvtRelationalApply: {
+    key: 'canvas.inspector.authoring.dvtRelationalApply',
+    fallback: 'Apply',
+  },
+  inspectorDvtRelationalCancel: {
+    key: 'canvas.inspector.authoring.dvtRelationalCancel',
+    fallback: 'Cancel',
   },
   inspectorDvtSubstraitAggregationTitle: {
     key: 'canvas.inspector.authoring.dvtSubstraitAggregationTitle',
@@ -686,7 +842,11 @@ export const canvasViewAuthoringCopyByKey = {
   },
   inspectorDvtSubstraitWindowTitle: {
     key: 'canvas.inspector.authoring.dvtSubstraitWindowTitle',
-    fallback: 'Partition and order',
+    fallback: 'Contextual relation',
+  },
+  inspectorDvtSubstraitWindowInputLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowInputLabel',
+    fallback: 'Same input',
   },
   inspectorDvtSubstraitWindowPartitionFieldLabel: {
     key: 'canvas.inspector.authoring.dvtSubstraitWindowPartitionFieldLabel',
@@ -695,6 +855,22 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorDvtSubstraitWindowOrderFieldLabel: {
     key: 'canvas.inspector.authoring.dvtSubstraitWindowOrderFieldLabel',
     fallback: 'Order field',
+  },
+  inspectorDvtSubstraitWindowOrderDirectionLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowOrderDirectionLabel',
+    fallback: 'ASC · NULLS LAST',
+  },
+  inspectorDvtSubstraitWindowFrameLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowFrameLabel',
+    fallback: 'Frame',
+  },
+  inspectorDvtSubstraitWindowFrameUnspecifiedLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowFrameUnspecifiedLabel',
+    fallback: 'Unspecified',
+  },
+  inspectorDvtSubstraitWindowOperationLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowOperationLabel',
+    fallback: 'Relative position',
   },
   inspectorDvtSubstraitWindowOutputLabel: {
     key: 'canvas.inspector.authoring.dvtSubstraitWindowOutputLabel',

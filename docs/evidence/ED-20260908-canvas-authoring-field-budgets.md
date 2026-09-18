@@ -40,3 +40,43 @@ The cut removes the UTF-16 tag truncation helper. It adds no parallel profile,
 compatibility parser, fallback enum, stub or fake persistence path. Existing
 stored rows that violate the new policy fail closed at the v1 read boundary
 until an explicit operator cleanup; they are never silently rewritten.
+
+## Native Transform discriminator regression — 2026-09-14
+
+Issue #3167 extends the existing materialization predicate to the native
+`pluginId: dvt, kind: transform` identity used by protected Preview. The namespaced
+identity keeps its existing policy; other plugins are not constrained by DVT enums.
+No new enum, default, property, runtime descriptor or persistence owner is added.
+
+RED reproduced twelve contract failures and a real PostgreSQL write accepting
+unsupported `incremental`. GREEN covers 52 field-policy cases, protected HTTP
+rejection before persistence, and real PostgreSQL refusal of invalid direct writes
+including nested Canvas nodes. Valid `table` configuration reloads unchanged;
+rejected writes preserve the prior draft and revision. The existing 1/2/3-input
+Preview persistence/replay suite remains green.
+
+The full semantic-persistence suite also exposed a separate native-kind mismatch
+in semantic authority validation and its test helpers. That finding is not hidden
+by the focused materialization evidence and needs its own correction before full
+suite closeout. No native Run or publication is claimed here.
+
+## Native semantic authority follow-up — 2026-09-14
+
+Issue #3168 corrects that separate discriminator mismatch. Native DVT Transforms
+now reuse canonical semantic validation/canonicalization on save and reload, and
+the existing PostgreSQL sidecar budget predicate. The persistence test helpers
+inspect and mutate the actual native fixture instead of missing it by kind name.
+The original namespaced behavior and foreign-plugin ownership remain unchanged.
+
+RED: three native semantic contract cases failed (canonicalized label, corrupt
+bytes, retired authority). GREEN: all 581 contract tests pass, including both node
+kinds and schema synchronization. The complete affected PostgreSQL suites pass
+all nine cases, including exact semantic save/reload, corrupted-payload rejection,
+direct invalid writes and the 1/2/3-input protected Preview replay regression.
+
+Live browser proof uses the existing protected API client in project
+`preview-replay-3165-33bdb67b`: unsupported materialization and invalid semantic
+authority both return HTTP 400, with unchanged stored draft and revision.
+Ordinary Canvas selection still opens the semantic tree; Preview displays
+`MISSING_CAPABILITY executor.dvt-postgres-operational-workload` with Run disabled.
+This proves validation/persistence, not native provider execution or publication.

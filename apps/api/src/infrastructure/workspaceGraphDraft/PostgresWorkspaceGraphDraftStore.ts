@@ -241,7 +241,7 @@ export class PostgresWorkspaceGraphDraftStore implements IWorkspaceGraphDraftSto
           END IF;
 
           IF node_item ->> 'pluginId' = 'dvt'
-            AND node_item ->> 'kind' = 'dvt:transform'
+            AND node_item ->> 'kind' IN ('transform', 'dvt:transform')
           THEN
             config_item := node_item #> '{metadata,config}';
             IF config_item IS NOT NULL AND jsonb_typeof(config_item) <> 'object'
@@ -271,7 +271,9 @@ export class PostgresWorkspaceGraphDraftStore implements IWorkspaceGraphDraftSto
             END LOOP;
           END IF;
 
-          IF node_item ->> 'kind' = 'dvt:transform' THEN
+          IF node_item ->> 'kind' = 'dvt:transform'
+            OR (node_item ->> 'pluginId' = 'dvt' AND node_item ->> 'kind' = 'transform')
+          THEN
             sidecar_item := node_item #> '{metadata,transformAuthoring,semanticDocument,sidecar}';
             IF jsonb_typeof(sidecar_item) = 'object' THEN
             FOR binding_item IN SELECT value FROM jsonb_array_elements(

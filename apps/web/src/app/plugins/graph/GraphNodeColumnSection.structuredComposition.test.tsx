@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import type { GraphNodeColumnSectionProps } from './graphNodeColumnContracts';
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
 
 const columns = [
@@ -16,8 +17,14 @@ const columns = [
 describe('GraphNodeColumnSection structured composition', () => {
   let container: HTMLDivElement;
   let root: Root;
+  let onApply: ReturnType<
+    typeof vi.fn<NonNullable<GraphNodeColumnSectionProps['onStructuredFieldApply']>>
+  >;
 
   beforeEach(() => {
+    onApply = vi
+      .fn<NonNullable<GraphNodeColumnSectionProps['onStructuredFieldApply']>>()
+      .mockReturnValue({ outcome: 'applied', createdFieldId: 'output:identity' });
     (
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -40,7 +47,7 @@ describe('GraphNodeColumnSection structured composition', () => {
       .forEach((node) => node.remove());
   });
 
-  async function render(onApply: ReturnType<typeof vi.fn>): Promise<HTMLElement[]> {
+  async function render(): Promise<HTMLElement[]> {
     await act(async () => {
       root.render(
         <GraphNodeColumnSection
@@ -57,25 +64,33 @@ describe('GraphNodeColumnSection structured composition', () => {
     return [...container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-row"]')];
   }
 
-  async function chooseAndApply(name: string): Promise<void> {
+  async function openStructuredField(): Promise<HTMLInputElement> {
     await act(async () => {
       fireEvent.click(
         document.body.querySelector('[data-slot="graph-node-column-composition-structured-field"]')!
       );
     });
-    const input = document.body.querySelector<HTMLInputElement>(
+    await act(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+    return document.body.querySelector<HTMLInputElement>(
       '[data-slot="graph-node-structured-field-name"]'
     )!;
+  }
+
+  async function chooseAndApply(name: string): Promise<void> {
+    const input = await openStructuredField();
+    expect(onApply).not.toHaveBeenCalled();
     await act(async () => {
       fireEvent.change(input, { target: { value: name } });
       fireEvent.submit(input.closest('form')!);
       await Promise.resolve();
     });
+    expect(
+      document.body.querySelector('[data-slot="graph-node-structured-field-form"]')
+    ).toBeNull();
   }
 
   it('opens an explicit proposal after a centre drop and applies the ordered children', async () => {
-    const onApply = vi.fn();
-    const rows = await render(onApply);
+    const rows = await render();
     const pieces = container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-piece"]');
     rows[0]!.getBoundingClientRect = () =>
       ({ top: 0, bottom: 90, height: 90, left: 0, right: 300, width: 300, x: 0, y: 0 }) as DOMRect;
@@ -106,8 +121,7 @@ describe('GraphNodeColumnSection structured composition', () => {
   });
 
   it('opens the same proposal from the keyboard without mutating before Apply', async () => {
-    const onApply = vi.fn();
-    const rows = await render(onApply);
+    const rows = await render();
 
     await act(async () => {
       fireEvent.keyDown(rows[1]!, { key: 'ArrowLeft', altKey: true });
@@ -124,7 +138,6 @@ describe('GraphNodeColumnSection structured composition', () => {
   });
 
   it('proposes appending a scalar to an existing structured parent', async () => {
-    const onApply = vi.fn();
     await act(async () => {
       root.render(
         <GraphNodeColumnSection
@@ -154,16 +167,9 @@ describe('GraphNodeColumnSection structured composition', () => {
       fireEvent.keyDown(rows[1]!, { key: 'ArrowLeft', altKey: true });
       await Promise.resolve();
     });
-    await act(async () => {
-      fireEvent.click(
-        document.body.querySelector('[data-slot="graph-node-column-composition-structured-field"]')!
-      );
-      await Promise.resolve();
-    });
-    const input = document.body.querySelector<HTMLInputElement>(
-      '[data-slot="graph-node-structured-field-name"]'
-    )!;
+    const input = await openStructuredField();
     expect(input.value).toBe('identity');
+    expect(onApply).not.toHaveBeenCalled();
     await act(async () => {
       fireEvent.submit(input.closest('form')!);
     });
@@ -174,22 +180,17 @@ describe('GraphNodeColumnSection structured composition', () => {
       targetFieldId: 'output:identity',
       parentName: 'identity',
     });
+    expect(
+      document.body.querySelector('[data-slot="graph-node-structured-field-form"]')
+    ).toBeNull();
   });
 
   it('keeps an oversized structured-field name visible and blocks Apply', async () => {
-    const onApply = vi.fn();
-    const rows = await render(onApply);
+    const rows = await render();
     await act(async () => {
       fireEvent.keyDown(rows[1]!, { key: 'ArrowLeft', altKey: true });
     });
-    await act(async () => {
-      fireEvent.click(
-        document.body.querySelector('[data-slot="graph-node-column-composition-structured-field"]')!
-      );
-    });
-    const input = document.body.querySelector<HTMLInputElement>(
-      '[data-slot="graph-node-structured-field-name"]'
-    )!;
+    const input = await openStructuredField();
     await act(async () => {
       fireEvent.change(input, { target: { value: '   ' } });
     });

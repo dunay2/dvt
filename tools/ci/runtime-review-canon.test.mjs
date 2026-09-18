@@ -14,7 +14,7 @@ import {
 } from './canonization-guard.mjs';
 
 const requiredFiles = [
-  'docs/planning/reviews/review-status-board.md',
+  'docs/planning/state/github-mvp-issue-workflow.md',
   'docs/planning/domains/execution-runtime.md',
   'docs/planning/proposals/mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md',
   'docs/architecture/components/api/runtime-review-canon-component.md',
@@ -27,14 +27,10 @@ test('runtime review canonization has a semantic disposition and component contr
     'docs/planning/proposals/mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md'
   );
 
+  assertContains('docs/planning/state/github-mvp-issue-workflow.md', 'is the only task backlog');
   assertContains(
-    'docs/planning/reviews/review-status-board.md',
-    '2026-05-23 Runtime Review Canonical Disposition'
-  );
-  assertContains('docs/planning/reviews/review-status-board.md', 'C-REV-RUNTIME-CANON');
-  assertContains(
-    'docs/planning/reviews/review-status-board.md',
-    'No runtime review remains an orphan execution queue'
+    'docs/planning/proposals/mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md',
+    'featureId: C-REV-RUNTIME-CANON'
   );
 
   const componentGuide = readRepoFile(

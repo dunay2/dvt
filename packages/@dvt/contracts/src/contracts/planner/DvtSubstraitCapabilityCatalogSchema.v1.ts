@@ -51,7 +51,8 @@ export const DvtSubstraitFunctionInvocationV1Schema = z
   .object({
     signature: NonBlankStringSchema,
     argumentTypes: z.array(NonBlankStringSchema),
-    argumentCount: z.number().int().positive(),
+    minimumArgumentCount: z.number().int().positive(),
+    maximumArgumentCount: z.number().int().positive().optional(),
     outputType: NonBlankStringSchema,
     options: z.array(DvtSubstraitFunctionInvocationOptionV1Schema),
   })
@@ -66,11 +67,21 @@ export const DvtSubstraitFunctionInvocationV1Schema = z
         path: ['signature'],
       });
     }
-    if (invocation.argumentCount < invocation.argumentTypes.length) {
+    if (invocation.minimumArgumentCount < invocation.argumentTypes.length) {
       context.addIssue({
         code: 'custom',
-        message: 'Invocation argumentCount cannot be smaller than its signature arity.',
-        path: ['argumentCount'],
+        message: 'Invocation minimumArgumentCount cannot be smaller than its signature arity.',
+        path: ['minimumArgumentCount'],
+      });
+    }
+    if (
+      invocation.maximumArgumentCount !== undefined &&
+      invocation.maximumArgumentCount < invocation.minimumArgumentCount
+    ) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Invocation maximumArgumentCount cannot be smaller than its minimum.',
+        path: ['maximumArgumentCount'],
       });
     }
     const optionNames = invocation.options.map((option) => option.name);
@@ -171,7 +182,8 @@ export const DvtSubstraitStandardCapabilityV1Schema = z
         invocation.signature !== 'concat:str' ||
         invocation.argumentTypes.length !== 1 ||
         invocation.argumentTypes[0] !== 'str' ||
-        invocation.argumentCount !== 2 ||
+        invocation.minimumArgumentCount !== 2 ||
+        invocation.maximumArgumentCount !== 2 ||
         invocation.outputType !== 'str' ||
         invocation.options.length !== 1 ||
         invocation.options[0]?.name !== 'null_handling' ||
@@ -182,6 +194,32 @@ export const DvtSubstraitStandardCapabilityV1Schema = z
           code: 'custom',
           message:
             'Supported CONCAT requires the official variadic signature and bounded DVT arity.',
+          path: ['invocation'],
+        });
+      }
+    }
+    const isSupportedCoalesce =
+      entry.profileStatus === 'supported-profile' &&
+      entry.category === 'scalar-function' &&
+      entry.identity.sourceKind === 'simple-extension' &&
+      entry.identity.urn === 'extension:io.substrait:functions_comparison' &&
+      entry.identity.name === 'coalesce';
+    if (isSupportedCoalesce) {
+      const invocation = entry.invocation;
+      if (
+        invocation == null ||
+        invocation.signature !== 'coalesce:any1' ||
+        invocation.argumentTypes.length !== 1 ||
+        invocation.argumentTypes[0] !== 'any1' ||
+        invocation.minimumArgumentCount !== 2 ||
+        invocation.maximumArgumentCount !== undefined ||
+        invocation.outputType !== 'any1' ||
+        invocation.options.length !== 0
+      ) {
+        context.addIssue({
+          code: 'custom',
+          message:
+            'Supported COALESCE requires the official unbounded variadic signature with minimum arity two.',
           path: ['invocation'],
         });
       }

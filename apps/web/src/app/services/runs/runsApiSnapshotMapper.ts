@@ -19,6 +19,7 @@ import {
   parseRunProvenance,
   parseSnapshotStaleness,
 } from './runsApiDecoders';
+import { parseDvtPostgresPublicationEvidence } from './dvtPostgresPublicationDecoder';
 
 export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null {
   if (!record || typeof record !== 'object') {
@@ -37,6 +38,7 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
   const failedStepId = asString(candidate.failedStepId);
   const errorReason = asString(candidate.errorReason);
   const materialization = parseMaterializationEvidence(candidate.materialization);
+  const publication = parseDvtPostgresPublicationEvidence(candidate.publication);
   const durationMs = asFiniteNumber(candidate.durationMs);
   const logicalAttemptId = asFiniteInteger(candidate.logicalAttemptId);
   const tenantId = asString(candidate.tenantId);
@@ -71,6 +73,7 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
     ...(failedStepId ? { failedStepId } : {}),
     ...(errorReason ? { errorReason } : {}),
     ...(materialization ? { materialization } : {}),
+    ...(publication ? { publication } : {}),
     provenance: parseRunProvenance(candidate.provenance),
     execution: parseExecutionEvidence(candidate.execution),
     planSummary: parsePlanExecutionSummary(candidate.planSummary),

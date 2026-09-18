@@ -7,10 +7,9 @@ import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { CanvasShellMainPanel } from './CanvasShellMainPanel';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
 import {
-  SemanticTransformFocusPanel,
-  canOpenSemanticTransformFocus,
-} from './SemanticTransformFocusPanel';
-import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
+  CanvasRelationalTreeWorkbench,
+  canOpenCanvasRelationalTreeWorkbench,
+} from './CanvasRelationalTreeWorkbench';
 import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
 import { CanvasSettingsDialog } from './CanvasSettingsDialog';
 import { CanvasSourceImportDialogHost } from './CanvasSourceImportDialogHost';
@@ -30,17 +29,9 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 import { buildGraphDraftWorkspaceFileCodeContributions } from './graphDraftWorkspaceFileCodeContribution';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
-import type { OperationalDrawerDataSample } from '../../components/shell/operationalDrawerContributionStore';
-import type { SourceDataSample } from '../../ports/workspace';
-import {
-  CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
-  resolveCanvasSinkDataSampleTarget,
-  resolveCanvasSourceDataSampleError,
-  resolveCanvasSourceDataSampleTarget,
-  type CanvasSinkDataSampleTarget,
-  type CanvasSourceDataSampleTarget,
-} from './canvasSourceDataSample';
 import { findCanvasGraphNodeElement } from './canvasNodeWorkbenchDomGeometry';
+import { useCanvasNodeDataSample } from './useCanvasNodeDataSample';
+import { projectCanvasRelationalCompositionEdgeInteractions } from './canvasRelationalCompositionEdgeInteraction';
 
 type WorkbenchOpener = Readonly<{
   element: HTMLElement | null;
@@ -76,6 +67,7 @@ export default function CanvasShell({
   onSourceImportInitialSelectionConsumed,
   onDbtProjectImported,
   warehouseSourceDataSampleQuery,
+  canvasTransformDataSampleQuery,
   runSnapshot,
   runMaterializationSampleQuery,
 }: CanvasShellProps): JSX.Element {
@@ -84,31 +76,38 @@ export default function CanvasShell({
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
-  const [dataSample, setDataSample] = useState<OperationalDrawerDataSample>({ status: 'idle' });
-  const [semanticTransformId, setSemanticTransformId] = useState<string | null>(null);
-  const dataSampleRequestIdRef = useRef(0);
+  const { dataSampleTabs, projectNode: projectNodeDataSample } = useCanvasNodeDataSample({
+    activeCanvasId: panels.activeCanvasId,
+    canvasTransformDataSampleQuery,
+    runMaterializationSampleQuery,
+    runSnapshot,
+    warehouseSourceDataSampleQuery,
+  });
+  const [relationalTreeTransformId, setRelationalTreeTransformId] = useState<string | null>(null);
   const showBottomDrawer = useUiLayoutStore((state) => state.showBottomDrawer);
   const selectOperationalDrawerTab = useOperationalDrawerContributionStore(
     (state) => state.selectOperationalDrawerTab
   );
-  const semanticTransformIds = useMemo(
+  const relationalTreeTransformIds = useMemo(
     () =>
       new Set(
-        panels.inspectorGraphNodes.filter(canOpenSemanticTransformFocus).map((node) => node.id)
+        panels.inspectorGraphNodes
+          .filter(canOpenCanvasRelationalTreeWorkbench)
+          .map((node) => node.id)
       ),
     [panels.inspectorGraphNodes]
   );
-  const semanticTransform = useMemo(
+  const relationalTreeTransform = useMemo(
     () =>
       panels.inspectorGraphNodes.find(
-        (node) => node.id === semanticTransformId && semanticTransformIds.has(node.id)
+        (node) => node.id === relationalTreeTransformId && relationalTreeTransformIds.has(node.id)
       ) ?? null,
-    [panels.inspectorGraphNodes, semanticTransformId, semanticTransformIds]
+    [panels.inspectorGraphNodes, relationalTreeTransformId, relationalTreeTransformIds]
   );
-  const openSemanticTransform = useCallback(
+  const openRelationalTree = useCallback(
     (nodeId: string) => {
-      if (!semanticTransformIds.has(nodeId)) return;
-      setSemanticTransformId(nodeId);
+      if (!relationalTreeTransformIds.has(nodeId)) return;
+      setRelationalTreeTransformId(nodeId);
       selectOperationalDrawerTab('semantic');
       showBottomDrawer(360);
       window.requestAnimationFrame(() => {
@@ -119,13 +118,7 @@ export default function CanvasShell({
           ?.focus({ preventScroll: true });
       });
     },
-    [selectOperationalDrawerTab, semanticTransformIds, showBottomDrawer]
-  );
-  const applySemanticTransform = useCallback(
-    (transform: (typeof panels.inspectorGraphNodes)[number]) => {
-      panels.inspectorAuthoring.onApplyNodeDraft(createCanvasInspectorNodeDraft(transform));
-    },
-    [panels.inspectorAuthoring]
+    [relationalTreeTransformIds, selectOperationalDrawerTab, showBottomDrawer]
   );
   const workbenchOpenerRef = useRef<WorkbenchOpener | null>(null);
   const contextualWorkbenchId = useCanvasInteractionStore((state) => state.contextualWorkbenchId);
@@ -267,74 +260,13 @@ export default function CanvasShell({
     captureWorkbenchOpener('[data-slot="shell-workspace-menu-trigger"]');
     (workspaceCommands?.onOpenProjectCode ?? openProjectCodeWorkbench)();
   }, [captureWorkbenchOpener, openProjectCodeWorkbench, workspaceCommands?.onOpenProjectCode]);
-  const openDataSample = useCallback(
-    (nodeName: string, load: () => Promise<SourceDataSample>) => {
-      const requestId = ++dataSampleRequestIdRef.current;
-      setDataSample({ status: 'loading', nodeName });
-      selectOperationalDrawerTab('data');
-      showBottomDrawer(300);
-      window.requestAnimationFrame(() => {
-        document
-          .querySelector<HTMLButtonElement>(
-            '[data-slot="bottom-operational-drawer-tab"][data-tab="data"]'
-          )
-          ?.focus({ preventScroll: true });
-      });
-
-      void load()
-        .then((sample) => {
-          if (dataSampleRequestIdRef.current === requestId) {
-            setDataSample({ status: 'ready', nodeName, sample });
-          }
-        })
-        .catch((error: unknown) => {
-          if (dataSampleRequestIdRef.current === requestId) {
-            setDataSample(resolveCanvasSourceDataSampleError(error, nodeName));
-          }
-        });
-    },
-    [selectOperationalDrawerTab, showBottomDrawer]
-  );
-  const openSourceDataSample = useCallback(
-    (target: CanvasSourceDataSampleTarget) => {
-      if (warehouseSourceDataSampleQuery == null) {
-        return;
-      }
-
-      openDataSample(target.nodeName, () =>
-        warehouseSourceDataSampleQuery.previewSourceObjectRows({
-          connectionId: target.connectionId,
-          objectId: target.objectId,
-          limit: CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
-        })
-      );
-    },
-    [openDataSample, warehouseSourceDataSampleQuery]
-  );
-  const openSinkDataSample = useCallback(
-    (target: CanvasSinkDataSampleTarget) => {
-      if (runMaterializationSampleQuery == null) {
-        return;
-      }
-
-      openDataSample(target.nodeName, () =>
-        runMaterializationSampleQuery(target.runId, CANVAS_SOURCE_DATA_SAMPLE_LIMIT)
-      );
-    },
-    [openDataSample, runMaterializationSampleQuery]
-  );
-  useEffect(
-    () => () => {
-      dataSampleRequestIdRef.current += 1;
-    },
-    []
-  );
   const graphWithCanonicalCodeCommands = useMemo(
     () => ({
       ...graph,
       nodesWithImpact: graph.nodesWithImpact.map((node) => {
         const data = node.data as DbtNodeData;
-        const canOpenSemantic = semanticTransformIds.has(node.id);
+        const isNativeTransform = data.pluginKind === 'dvt:transform';
+        const canOpenRelationalTree = relationalTreeTransformIds.has(node.id);
         const workspaceFilePath = resolveWorkspaceFilePath(data);
         const codeTruthKind = data.presentationTruth?.code.kind;
         const canInspectNodeCode =
@@ -344,13 +276,8 @@ export default function CanvasShell({
             codeTruthKind === 'generated' ||
             codeTruthKind === 'canonical');
         const canOpenNodeCode = data.canOpenNodeCode !== false && canInspectNodeCode;
-        const sourceDataSampleTarget = resolveCanvasSourceDataSampleTarget(data);
-        const sinkDataSampleTarget = resolveCanvasSinkDataSampleTarget(data, runSnapshot);
-        const canOpenSourceDataSample =
-          sourceDataSampleTarget != null && warehouseSourceDataSampleQuery != null;
-        const canOpenSinkDataSample =
-          sinkDataSampleTarget != null && runMaterializationSampleQuery != null;
-        const canOpenDataSample = canOpenSourceDataSample || canOpenSinkDataSample;
+        const dataSampleProjection = projectNodeDataSample(node.id, data);
+        const sinkDataSampleTarget = dataSampleProjection.sinkResult;
         const participatesInActiveRun = data.runStatusByNodeId?.has(node.id) === true;
         const activeRunAt =
           runSnapshot?.completedAt ?? runSnapshot?.startedAt ?? runSnapshot?.createdAt;
@@ -375,16 +302,18 @@ export default function CanvasShell({
                 lastRunAt: sinkDataSampleTarget.completedAt,
                 runStatusByNodeId,
               }),
-          onOpenSourceDataSample: canOpenSourceDataSample
-            ? () => openSourceDataSample(sourceDataSampleTarget)
-            : canOpenSinkDataSample
-              ? () => openSinkDataSample(sinkDataSampleTarget)
-              : undefined,
-          sourceDataSampleInteractionLabel: canOpenDataSample
+          onOpenSourceDataSample: dataSampleProjection.onOpen,
+          sourceDataSampleInteractionLabel: dataSampleProjection.canOpen
             ? copy.sourceDataSampleInteractionLabel
             : undefined,
-          onSelectNode: canOpenSemantic ? () => openSemanticTransform(node.id) : data.onSelectNode,
-          onOpenNode: canOpenSemantic ? () => openSemanticTransform(node.id) : data.onOpenNode,
+          onSelectNode: canOpenRelationalTree
+            ? () => openRelationalTree(node.id)
+            : data.onSelectNode,
+          onOpenNode: isNativeTransform
+            ? dataSampleProjection.onOpen
+            : data.role === 'transform' && typeof data.onInspectNode === 'function'
+              ? () => data.onInspectNode?.(node.id, 'general')
+              : data.onOpenNode,
         };
 
         return {
@@ -393,17 +322,19 @@ export default function CanvasShell({
           data: projectedData,
         };
       }),
+      edges: projectCanvasRelationalCompositionEdgeInteractions({
+        edges: graph.edges,
+        relationalTreeTargetNodeIds: relationalTreeTransformIds,
+        onActivate: openRelationalTree,
+      }),
     }),
     [
       copy.sourceDataSampleInteractionLabel,
       graph,
-      openSinkDataSample,
-      openSemanticTransform,
-      openSourceDataSample,
-      semanticTransformIds,
-      runMaterializationSampleQuery,
+      openRelationalTree,
+      projectNodeDataSample,
+      relationalTreeTransformIds,
       runSnapshot,
-      warehouseSourceDataSampleQuery,
     ]
   );
   const graphOwnedPaths = useMemo(
@@ -478,17 +409,19 @@ export default function CanvasShell({
           onPreviewExecutionPlan={chromeCommands.onPreviewExecutionPlan}
           onStartRun={chromeCommands.onRun}
           selectionRecoveryCommands={chromeCommands.executionSelectionRecovery}
-          dataSample={dataSample}
+          dataSampleTabs={dataSampleTabs}
           semanticBody={
-            semanticTransform == null ? (
+            relationalTreeTransform == null ? (
               <div className="grid h-full place-items-center p-4 text-sm text-muted-foreground">
                 {copy.operationalDrawerSemanticIdleMessage}
               </div>
             ) : (
-              <SemanticTransformFocusPanel
-                transform={semanticTransform}
-                canEdit={panels.inspectorAuthoring.canEditNode}
-                onTransformChange={applySemanticTransform}
+              <CanvasRelationalTreeWorkbench
+                transformNode={relationalTreeTransform}
+                nodes={panels.inspectorGraphNodes}
+                edges={panels.inspectorGraphEdges}
+                copy={copy}
+                authoring={panels.relationalTreeAuthoring}
               />
             )
           }

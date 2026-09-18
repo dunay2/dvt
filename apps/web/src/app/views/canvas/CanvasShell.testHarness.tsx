@@ -21,6 +21,7 @@ import type {
 } from './canvasShell.types';
 import { canvasViewCopy } from './copy';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
+import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
 import type {
   IWarehouseSourceDataSampleQueryPort,
   IWarehouseSourceImportPort,
@@ -81,6 +82,7 @@ export type CanvasShellPropsOverrides = {
   workspaceCommands?: CanvasShellWorkspaceCommands;
   warehouseSourceImport?: IWarehouseSourceImportPort;
   warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
+  canvasTransformDataSampleQuery?: ICanvasTransformDataSampleQueryPort;
   runSnapshot?: CanvasShellProps['runSnapshot'];
   runMaterializationSampleQuery?: CanvasShellProps['runMaterializationSampleQuery'];
   sourceImportInitialSelection?: CanvasShellProps['sourceImportInitialSelection'];
@@ -241,6 +243,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
     workspaceCommands: overrides?.workspaceCommands,
     warehouseSourceImport: overrides?.warehouseSourceImport,
     warehouseSourceDataSampleQuery: overrides?.warehouseSourceDataSampleQuery,
+    canvasTransformDataSampleQuery: overrides?.canvasTransformDataSampleQuery,
     runSnapshot: overrides?.runSnapshot,
     runMaterializationSampleQuery: overrides?.runMaterializationSampleQuery,
     sourceImportInitialSelection: overrides?.sourceImportInitialSelection,

@@ -1,4 +1,4 @@
-import type { SourceDataSampleResponse } from '@dvt/contracts';
+import { asSha256HexString, type SourceDataSampleResponse } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import type {
@@ -35,6 +35,7 @@ function catalog(entry: WarehouseConnectionCatalogEntry = connection): IWarehous
 
 describe('PreviewWarehouseSourceObjectRowsUseCase', () => {
   it('projects a bounded sample without exposing the credential reference', async () => {
+    const expectedPublicationToken = asSha256HexString('a'.repeat(64));
     const probe: IWarehouseSourceDataSampleProbe = {
       previewSourceObjectRows: vi.fn(async () => ({
         columns: [
@@ -53,6 +54,7 @@ describe('PreviewWarehouseSourceObjectRowsUseCase', () => {
       connectionId: connection.id,
       objectId: 'relation/dvt/public/orders',
       limit: 20,
+      expectedPublicationToken,
     });
 
     expect(probe.previewSourceObjectRows).toHaveBeenCalledWith({
@@ -61,6 +63,7 @@ describe('PreviewWarehouseSourceObjectRowsUseCase', () => {
       credentialRef: 'postgres:local-postgres-proof',
       objectId: 'relation/dvt/public/orders',
       limit: 20,
+      expectedPublicationToken,
     });
     expect(result).toEqual({
       contractVersion: 1,

@@ -15,21 +15,17 @@ import type {
   GraphNodeStructuredFieldIdentity,
 } from './graphNodeColumnContracts';
 import { GraphNodeColumnDropCompositionFlow } from './GraphNodeColumnDropCompositionFlow';
-import { GraphNodeColumnFunctionAliasForm } from './GraphNodeColumnFunctionAliasForm';
 import { GraphNodeColumnFunctionMenu } from './GraphNodeColumnFunctionMenu';
 import {
   GraphNodeColumnPiece,
   GraphNodeColumnTooltip,
   type GraphNodeColumnCopy,
 } from './GraphNodeColumnPiece';
+import { GraphNodeExpressionComposer } from './GraphNodeExpressionComposer';
 import { graphNodeColumnClasses } from './graphVisualTokens';
 import type { GraphNodeColumnReorderController } from './useGraphNodeColumnReorder';
 
-type PendingFunctionRequest = Readonly<{
-  capabilityId: string;
-  functionName: string;
-  expressionLabel: string;
-}>;
+type PendingFunctionRequest = Readonly<{ capabilityId: string }>;
 
 export function GraphNodeColumnRow(props: {
   column: GraphNodeColumn;
@@ -37,8 +33,10 @@ export function GraphNodeColumnRow(props: {
   portDirections: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
   copy: GraphNodeColumnCopy;
+  showSourceName?: boolean;
   reorder: GraphNodeColumnReorderController;
   unavailableAliases: readonly string[];
+  expressionOperandCandidates: readonly GraphNodeColumn[];
   structuredAppendCandidates: readonly GraphNodeColumn[];
   compositionRequest?: Readonly<{
     sourceColumn: GraphNodeColumn;
@@ -48,12 +46,15 @@ export function GraphNodeColumnRow(props: {
   focusRequested?: boolean;
   onFocusFulfilled?: () => void;
   onFunctionApplied?: (createdFieldId: string) => void;
+  onCreateAlias?: () => void;
   resolveColumnCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   onColumnFunctionApply?: (
     identity: GraphNodeColumnFunctionApplyIdentity
   ) => GraphNodeColumnFunctionApplyResult;
-  onStructuredFieldApply?: (identity: GraphNodeStructuredFieldIdentity) => void;
+  onStructuredFieldApply?: (
+    identity: GraphNodeStructuredFieldIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
 }): ReactElement {
@@ -76,6 +77,7 @@ export function GraphNodeColumnRow(props: {
       canReorder={reorder.canReorder(column)}
       outputToggleDisabled={nodeId == null || props.onColumnOutputToggle == null}
       copy={copy}
+      showSourceName={props.showSourceName}
       nodeId={nodeId}
       onNestedColumnReorder={props.onColumnReorder}
       onDragStart={(event) => reorder.startDrag(column, event)}
@@ -87,7 +89,8 @@ export function GraphNodeColumnRow(props: {
           columnId,
           columnType: column.type,
           output: !isOutput,
-          ...(!isOutput ? { placement: reorder.resolveActivationPlacement(column.name) } : {}),
+          ...(column.source == null ? {} : { source: column.source }),
+          ...(!isOutput ? { placement: reorder.resolveActivationPlacement(columnId) } : {}),
         });
       }}
     />
@@ -104,21 +107,16 @@ export function GraphNodeColumnRow(props: {
         copy={copy}
         keyboardOpen={keyboardFunctionMenuOpen}
         onKeyboardOpenChange={setKeyboardFunctionMenuOpen}
+        onCreateAlias={props.onCreateAlias}
         onRequest={
           props.onColumnFunctionApply == null
             ? undefined
             : (capabilityId) => {
                 const selectedFunction = column.functionMenu?.items.find(
-                  (item) => item.capabilityId === capabilityId && item.argumentCount === 1
+                  (item) => item.capabilityId === capabilityId
                 );
                 if (selectedFunction != null) {
-                  setPendingFunction({
-                    capabilityId,
-                    functionName: selectedFunction.name,
-                    expressionLabel:
-                      selectedFunction.expressionTemplate?.replace('{column}', column.name) ??
-                      [selectedFunction.name.toUpperCase(), '(', column.name, ')'].join(''),
-                  });
+                  setPendingFunction({ capabilityId });
                 }
               }
         }
@@ -194,6 +192,7 @@ export function GraphNodeColumnRow(props: {
           nodeId={nodeId}
           targetColumn={column}
           request={props.compositionRequest}
+          operandCandidates={props.expressionOperandCandidates}
           unavailableNames={props.unavailableAliases}
           copy={copy}
           onDismiss={() => props.onCompositionDismiss?.()}
@@ -204,25 +203,20 @@ export function GraphNodeColumnRow(props: {
         />
       )}
       {nodeId != null && pendingFunction != null && props.onColumnFunctionApply != null ? (
-        <GraphNodeColumnFunctionAliasForm
-          functionName={pendingFunction.functionName}
-          expressionLabel={pendingFunction.expressionLabel}
+        <GraphNodeExpressionComposer
+          key={`${columnId}:${pendingFunction.capabilityId}`}
+          nodeId={nodeId}
+          columnId={columnId}
+          functions={column.functionMenu?.items ?? []}
+          initialCapabilityId={pendingFunction.capabilityId}
+          initialOperandFieldIds={[columnId]}
+          operandCandidates={props.expressionOperandCandidates}
+          resolveCompositionFunctions={props.resolveColumnCompositionFunctions}
           unavailableAliases={props.unavailableAliases}
           copy={copy}
           onCancel={() => setPendingFunction(null)}
-          onSubmit={(alias) => {
-            const result = props.onColumnFunctionApply?.({
-              nodeId,
-              columnId,
-              operandFieldIds: [columnId],
-              capabilityId: pendingFunction.capabilityId,
-              alias,
-            });
-            if (result?.outcome === 'applied') {
-              props.onFunctionApplied?.(result.createdFieldId);
-              setPendingFunction(null);
-            }
-          }}
+          onApply={props.onColumnFunctionApply}
+          onApplied={props.onFunctionApplied}
         />
       ) : null}
       {nodeId != null &&

@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import type { GraphNodeColumnSectionProps } from './graphNodeColumnContracts';
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
 
 describe('GraphNodeColumnSection functional composition', () => {
@@ -51,12 +52,21 @@ describe('GraphNodeColumnSection functional composition', () => {
     onColumnReorder: ReturnType<typeof vi.fn>;
     resolveColumnCompositionFunctions: ReturnType<typeof vi.fn>;
   }> {
-    const onColumnFunctionApply = vi.fn();
+    const onColumnFunctionApply = vi
+      .fn<NonNullable<GraphNodeColumnSectionProps['onColumnFunctionApply']>>()
+      .mockReturnValue({ outcome: 'applied', createdFieldId: 'output:buyer_clean' });
     const onColumnReorder = vi.fn();
     const resolveColumnCompositionFunctions = vi.fn(
       ({ targetType, sourceType }: { targetType: string; sourceType: string }) =>
         targetType === 'buyer-id' && sourceType === 'text'
-          ? [{ capabilityId: 'capability:concat', name: 'concat', argumentCount: 2 }]
+          ? [
+              {
+                capabilityId: 'capability:concat',
+                name: 'concat',
+                minimumArgumentCount: 2,
+                maximumArgumentCount: 2,
+              },
+            ]
           : []
     );
     await act(async () => {
@@ -70,13 +80,25 @@ describe('GraphNodeColumnSection functional composition', () => {
               type: 'text',
               functionMenu: {
                 category: 'text',
-                items: [{ capabilityId: 'capability:upper', name: 'upper', argumentCount: 1 }],
+                items: [
+                  {
+                    capabilityId: 'capability:upper',
+                    name: 'upper',
+                    minimumArgumentCount: 1,
+                    maximumArgumentCount: 1,
+                  },
+                ],
               },
             },
             {
               id: 'output:buyer',
               name: 'buyer',
               type: 'buyer-id',
+            },
+            {
+              id: 'output:amount',
+              name: 'amount',
+              type: 'integer',
             },
           ]}
           resolveColumnCompositionFunctions={resolveColumnCompositionFunctions}
@@ -156,13 +178,18 @@ describe('GraphNodeColumnSection functional composition', () => {
     expect(functionChoice.dataset.capabilityId).toBe('capability:concat');
     await act(async () => {
       fireEvent.click(functionChoice!);
+      await vi.advanceTimersByTimeAsync(16);
     });
 
     expect(
       document.body.querySelector('[data-slot="graph-node-column-composition-menu"]')
     ).toBeNull();
     expect(onColumnFunctionApply).not.toHaveBeenCalled();
-    const aliasInput = document.body.querySelector<HTMLInputElement>(
+    const composer = document.body.querySelector<HTMLElement>(
+      '[data-slot="graph-node-expression-composer"]'
+    );
+    expect(composer?.querySelector('option[value="output:amount"]')).toBeNull();
+    const aliasInput = composer?.querySelector<HTMLInputElement>(
       '[data-slot="graph-node-column-function-alias-input"]'
     );
     await act(async () => {
@@ -176,6 +203,7 @@ describe('GraphNodeColumnSection functional composition', () => {
       capabilityId: 'capability:concat',
       alias: 'buyer_clean',
     });
+    expect(document.body.querySelector('[data-slot="graph-node-expression-composer"]')).toBeNull();
   });
 
   it('dismisses the composition decision on Escape', async () => {
@@ -218,7 +246,14 @@ describe('GraphNodeColumnSection functional composition', () => {
               type: 'text',
               functionMenu: {
                 category: 'text',
-                items: [{ capabilityId: 'capability:upper', name: 'upper', argumentCount: 1 }],
+                items: [
+                  {
+                    capabilityId: 'capability:upper',
+                    name: 'upper',
+                    minimumArgumentCount: 1,
+                    maximumArgumentCount: 1,
+                  },
+                ],
               },
             },
           ]}

@@ -137,6 +137,9 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     frozenNodeIds: store.frozenNodeIds,
     canEditInspectorNode: runtimePolicy.commands.canEditInspectorNode,
     applyInspectorNodeDraft: args.inspectorCommands.applyInspectorNodeDraft,
+    applyNodeDraft: args.inspectorCommands.applyNodeDraft,
+    relationalPredicateSeed: args.graphHandlers.relationalPredicateSeed,
+    clearRelationalPredicateSeed: args.graphHandlers.clearRelationalPredicateSeed,
   };
 }
 
@@ -210,6 +213,7 @@ function buildCanvasExecutionViewModel(args: CanvasControllerViewModelArgs) {
     planStatusSummary: executionActions.planStatusSummary,
     planRunReadiness: executionActions.planRunReadiness,
     latestPreviewOutcome: executionActions.latestPreviewOutcome,
+    isCurrentPlanStale: executionActions.isCurrentPlanStale,
     transformationValidation,
     planModalOpen: executionActions.planModalOpen,
     setPlanModalOpen: executionActions.setPlanModalOpen,

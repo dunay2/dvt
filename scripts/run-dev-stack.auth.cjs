@@ -199,16 +199,17 @@ async function startLocalProtectedRuntimeAuth(options = {}) {
     ],
   });
 
-  async function issueBearerToken() {
+  async function issueBearerToken(tokenOptions = {}) {
     const nowSeconds = Math.floor(Date.now() / 1000);
     const expiresAtSeconds = nowSeconds + bearerTokenTtlSeconds;
+    const tokenPrincipalId = readNonEmptyEnv(tokenOptions.principalId) ?? principalId;
     const bearerToken = await new SignJWT({
       scope: tokenScopes,
       tenant_ids: [scope.tenantId],
       project_ids: assertedProjectIds,
     })
       .setProtectedHeader({ alg: 'RS256', kid: DEFAULT_JWK_KID })
-      .setSubject(principalId)
+      .setSubject(tokenPrincipalId)
       .setIssuer(issuer)
       .setAudience(audience)
       .setIssuedAt(nowSeconds)
@@ -248,6 +249,7 @@ async function startLocalProtectedRuntimeAuth(options = {}) {
 
   return {
     principalId,
+    issueBearerToken,
     workspaceScope: scope,
     oidcEnv: {
       OIDC_JWKS_URI: `http://${host}:${address.port}/.well-known/jwks.json`,

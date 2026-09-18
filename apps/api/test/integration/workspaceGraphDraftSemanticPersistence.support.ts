@@ -99,7 +99,9 @@ export function writableSemanticDecision(): WorkspaceGraphDraftDecisionContext {
 export function readTransformAuthority(
   draft: WorkspaceGraphAuthoringDraft
 ): DvtTransformAuthoringAuthorityV1 {
-  const transform = draft.nodes.find(({ kind }) => kind === 'dvt:transform');
+  const transform = draft.nodes.find(
+    ({ role, pluginId }) => role === 'transform' && pluginId === 'dvt'
+  );
   return DvtTransformAuthoringAuthorityV1Schema.parse(transform?.metadata?.transformAuthoring);
 }
 
@@ -110,7 +112,7 @@ export function withSemanticDocument(
   return {
     ...draft,
     nodes: draft.nodes.map((node) =>
-      node.kind === 'dvt:transform'
+      node.role === 'transform' && node.pluginId === 'dvt'
         ? {
             ...node,
             metadata: {

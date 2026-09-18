@@ -3,10 +3,11 @@ import type { ReactNode } from 'react';
 
 import type {
   OperationalDrawerContribution,
-  OperationalDrawerDataSample,
+  OperationalDrawerBuiltInTabId,
+  OperationalDrawerDataSampleTab,
   OperationalDrawerProblem,
   OperationalDrawerRunControls,
-  OperationalDrawerTabId,
+  OperationalDrawerTab,
 } from '../../components/shell/operationalDrawerContributionStore';
 import type { CanvasOperationalDrawerSurfacePolicy } from '../../plugins/canvasSurfaceStrategyContracts';
 import type {
@@ -32,7 +33,7 @@ type BuildCanvasOperationalDrawerContributionArgs = Readonly<{
   copy?: CanvasViewCopy;
   onPreviewExecutionPlan: () => void;
   onStartRun: () => void;
-  dataSample?: OperationalDrawerDataSample;
+  dataSampleTabs?: readonly OperationalDrawerDataSampleTab[];
   semanticBody?: ReactNode;
 }>;
 
@@ -87,7 +88,7 @@ export function buildCanvasOperationalDrawerContribution({
   selectionRecovery = null,
   selectionRecoveryCommands = null,
   selectionRecoveryMessages = canvasViewCopy,
-  dataSample = { status: 'idle' },
+  dataSampleTabs = [],
   semanticBody,
 }: BuildCanvasOperationalDrawerContributionArgs): OperationalDrawerContribution {
   const selectionRecoveryBlocked = selectionRecovery?.status === 'blocked';
@@ -111,9 +112,9 @@ export function buildCanvasOperationalDrawerContribution({
     problems: copy.operationalDrawerProblemsTab,
     runs: copy.operationalDrawerRunsTab,
     preview: copy.operationalDrawerPreviewTab,
-    data: dataSample.status === 'idle' ? copy.operationalDrawerDataTab : dataSample.nodeName,
+    data: copy.operationalDrawerDataTab,
     semantic: copy.operationalDrawerSemanticTab,
-  } satisfies Record<OperationalDrawerTabId, string>;
+  } satisfies Record<OperationalDrawerBuiltInTabId, string>;
   const readinessBlockers: readonly PlanRunReadinessBlocker[] =
     planRunReadiness.status === 'ready'
       ? []
@@ -180,19 +181,30 @@ export function buildCanvasOperationalDrawerContribution({
         error: copy.operationalDrawerErrorSeverity,
       },
     },
-    tabs: policy.tabs.map((id) => ({
-      id,
-      label: tabLabels[id],
-      ...(id === 'semantic' && semanticBody !== undefined ? { content: semanticBody } : {}),
-      count:
-        id === 'problems'
-          ? problems.length
-          : id === 'runs' && (activeRunId != null || !canStartRun)
-            ? 1
-            : id === 'preview' && previewStatus === 'blocked'
-              ? Math.max(1, previewBlockers.length)
-              : null,
-    })),
+    tabs: policy.tabs.flatMap<OperationalDrawerTab>((id) =>
+      id === 'data'
+        ? dataSampleTabs.map((tab) => ({
+            id: tab.id,
+            label: tab.dataSample.status === 'idle' ? tab.id : tab.dataSample.nodeName,
+            count: null,
+            dataSample: tab.dataSample,
+          }))
+        : [
+            {
+              id,
+              label: tabLabels[id],
+              ...(id === 'semantic' && semanticBody !== undefined ? { content: semanticBody } : {}),
+              count:
+                id === 'problems'
+                  ? problems.length
+                  : id === 'runs' && (activeRunId != null || !canStartRun)
+                    ? 1
+                    : id === 'preview' && previewStatus === 'blocked'
+                      ? Math.max(1, previewBlockers.length)
+                      : null,
+            },
+          ]
+    ),
     problems: {
       items: problems,
     },
@@ -226,6 +238,5 @@ export function buildCanvasOperationalDrawerContribution({
               messages: selectionRecoveryMessages,
             },
     },
-    dataSample,
   };
 }

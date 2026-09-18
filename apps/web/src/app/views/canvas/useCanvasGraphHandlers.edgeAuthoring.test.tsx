@@ -5,6 +5,7 @@ import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
+import { applyCanvasColumnMapping } from './canvasColumnMappingAuthoring';
 import { canvasViewCopy } from './copy';
 import { createCanvasColumnHandleId } from './canvasColumnLineageProjection';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
@@ -93,7 +94,7 @@ function buildConnectedPostgresSource(
     kind: 'dvt:source',
     metadata: {
       schema: 'raw',
-      tableName: 'orders',
+      tableName: id,
       columns,
       connectedSourceRef: {
         schemaVersion: 'connected-source-ref.v1',
@@ -102,7 +103,7 @@ function buildConnectedPostgresSource(
           connectionId: 'postgres',
           provider: 'postgres',
         },
-        sourceObjectId: 'relation/dvt/raw/orders',
+        sourceObjectId: `relation/dvt/raw/${id}`,
       },
     },
   };
@@ -237,6 +238,105 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     expect(toastState.info).toHaveBeenCalledWith(
       canvasViewCopy.columnMappingSourceSelectedTemplate.replace('{column}', 'order_id')
     );
+    harness.cleanup();
+  });
+
+  it('opens a seeded relation proposal without mutating the draft', async () => {
+    const orders = buildConnectedPostgresSource('orders', [{ name: 'client_id', type: 'text' }]);
+    const clients = buildConnectedPostgresSource('clients', [{ name: 'client_id', type: 'text' }]);
+    const model = {
+      ...buildCanonicalNode('model-node', 'transform'),
+      kind: 'dvt:transform' as const,
+      metadata: { columns: [{ name: 'client_id', type: 'text' }] },
+    };
+    const canonicalNodes = [orders, clients, model];
+    const canonicalNodesById = new Map(canonicalNodes.map((node) => [node.id, node]));
+    const initialSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: canonicalNodes.map((node) => node.id),
+        visibleEdges: [
+          { sourceId: orders.id, targetId: model.id },
+          { sourceId: clients.id, targetId: model.id },
+        ],
+        pendingExplicitNodeIds: [],
+      },
+    };
+    const mapped = applyCanvasColumnMapping({
+      draftSession: initialSession,
+      canonicalNodesById,
+      source: { nodeId: orders.id, columnId: 'client_id' },
+      target: { nodeId: model.id, columnName: 'client_id' },
+    });
+    if (mapped.outcome !== 'applied') throw new Error('Expected initial mapping.');
+    const mappedModel = mapped.draftSession.localNodeCatalog?.[model.id];
+    const authority = mappedModel == null ? null : readDvtTransformAuthoringAuthority(mappedModel);
+    if (authority?.mode !== 'substrait') throw new Error('Expected Substrait projection.');
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    if (!inspection.ok) throw new Error('Expected inspectable projection.');
+    const outputId = inspection.projection.outputs[0]!.fieldId;
+    const setDraftSession = vi.fn();
+    const setInspectorNode = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      canonicalNodes,
+      draftSession: mapped.draftSession,
+      setDraftSession,
+      setInspectorNode,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.onConnect({
+        source: clients.id,
+        sourceHandle: createCanvasColumnHandleId({
+          direction: 'source',
+          nodeId: clients.id,
+          columnId: 'client_id',
+        }),
+        target: model.id,
+        targetHandle: createCanvasColumnHandleId({
+          direction: 'target',
+          nodeId: model.id,
+          columnId: outputId,
+        }),
+      });
+    });
+
+    expect(setDraftSession).not.toHaveBeenCalled();
+    expect(setInspectorNode).toHaveBeenCalledWith(model.id, 'columns');
+    expect(harness.latest()?.relationalPredicateSeed).toMatchObject({
+      targetNodeId: model.id,
+      left: { nodeId: orders.id, fieldName: 'client_id' },
+      right: { nodeId: clients.id, fieldName: 'client_id' },
+      candidateOperator: 'equal',
+    });
+
+    act(() => {
+      harness.latest()?.clearRelationalPredicateSeed();
+      harness.latest()?.handleColumnPortActivate({
+        direction: 'source',
+        nodeId: clients.id,
+        columnId: 'client_id',
+      });
+    });
+    act(() => {
+      harness.latest()?.handleColumnPortActivate({
+        direction: 'target',
+        nodeId: model.id,
+        columnId: outputId,
+      });
+    });
+
+    expect(setDraftSession).not.toHaveBeenCalled();
+    expect(setInspectorNode).toHaveBeenCalledTimes(2);
+    expect(harness.latest()?.relationalPredicateSeed).toMatchObject({
+      targetNodeId: model.id,
+      left: { nodeId: orders.id, fieldName: 'client_id' },
+      right: { nodeId: clients.id, fieldName: 'client_id' },
+    });
     harness.cleanup();
   });
 
@@ -698,7 +798,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     harness.cleanup();
   });
 
-  it('applies card column commands through ConfigureCanvasDvtNode into the draft session', async () => {
+  it.each([false, true])('preserves calculations on exclusion (%s)', async (withLiteral) => {
     const { applyDvtSubstraitSemanticDocument } = await vi.importActual<
       typeof import('./canvasDvtTransformAuthoringAuthority')
     >('./canvasDvtTransformAuthoringAuthority');
@@ -800,7 +900,10 @@ describe('useCanvasGraphHandlers edge authoring', () => {
 
     expect(functionResult).toMatchObject({ outcome: 'applied' });
     expect(setDraftSession).toHaveBeenCalledOnce();
-    const nextSession = setDraftSession.mock.calls[0]?.[0] as typeof draftSession;
+    const applyFunction = setDraftSession.mock.calls[0]?.[0] as (
+      current: typeof draftSession
+    ) => typeof draftSession;
+    const nextSession = applyFunction(draftSession);
     const nextNode = nextSession.localNodeCatalog?.[transform.id];
     if (nextNode == null) throw new Error('Expected updated transform.');
     const authority = readDvtTransformAuthoringAuthority(nextNode)!;
@@ -828,33 +931,49 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       },
     });
 
-    setDraftSession.mockClear();
-    act(() => {
-      harness.latest()?.handleAddCanvasCalculatedColumn({
-        nodeId: transform.id,
-        kind: 'string-literal',
-        alias: 'channel',
-        value: 'web',
+    let calculatedSession = nextSession;
+    if (withLiteral) {
+      setDraftSession.mockClear();
+      act(() => {
+        harness.latest()?.handleAddCanvasCalculatedColumn({
+          nodeId: transform.id,
+          kind: 'string-literal',
+          alias: 'channel',
+          value: 'web',
+        });
       });
-    });
-    expect(setDraftSession).toHaveBeenCalledOnce();
-    const addCalculated = setDraftSession.mock.calls[0]?.[0] as (
-      current: typeof draftSession
-    ) => typeof draftSession;
-    const calculatedNode = addCalculated(draftSession).localNodeCatalog?.[transform.id];
+      expect(setDraftSession).toHaveBeenCalledOnce();
+      const addCalculated = setDraftSession.mock.calls[0]?.[0] as (
+        current: typeof draftSession
+      ) => typeof draftSession;
+      calculatedSession = addCalculated(nextSession);
+    }
+    const calculatedNode = calculatedSession.localNodeCatalog?.[transform.id];
     if (calculatedNode == null) throw new Error('Expected calculated output.');
     const calculatedAuthority = readDvtTransformAuthoringAuthority(calculatedNode)!;
     if (calculatedAuthority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
     const calculatedInspection = inspectDvtSubstraitProjectionDraft(
       decodeDvtSubstraitProjectionDocument(calculatedAuthority.semanticDocument)
     );
-    expect(
-      calculatedInspection.ok ? calculatedInspection.projection.outputs.at(-1) : null
-    ).toMatchObject({
-      name: 'channel',
-      calculation: { kind: 'string-literal', value: 'web' },
-    });
-
+    const calculatedOutputs = calculatedInspection.ok
+      ? calculatedInspection.projection.outputs
+      : [];
+    expect(calculatedOutputs.map((output) => output.name)).toEqual([
+      'order_id',
+      'customer',
+      'amount',
+      'order_customer',
+      ...(withLiteral ? ['channel'] : []),
+    ]);
+    const derivedFieldIds = calculatedOutputs.slice(3).map((output) => output.fieldId);
+    if (withLiteral) {
+      expect(
+        calculatedInspection.ok ? calculatedInspection.projection.outputs.at(-1) : null
+      ).toMatchObject({
+        name: 'channel',
+        calculation: { kind: 'string-literal', value: 'web' },
+      });
+    }
     setDraftSession.mockClear();
     act(() => {
       harness.latest()?.handleToggleCanvasColumnOutput({
@@ -868,7 +987,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     const toggleUpdate = setDraftSession.mock.calls[0]?.[0] as
       ((currentSession: typeof draftSession) => typeof draftSession) | undefined;
     if (toggleUpdate == null) throw new Error('Expected serialized output toggle.');
-    const toggledSession = toggleUpdate(draftSession);
+    const toggledSession = toggleUpdate(calculatedSession);
     const toggledNode = toggledSession.localNodeCatalog?.[transform.id];
     if (toggledNode == null) throw new Error('Expected updated transform output selection.');
     const toggledAuthority = readDvtTransformAuthoringAuthority(toggledNode)!;
@@ -880,7 +999,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       toggledInspection.ok
         ? toggledInspection.projection.outputs.map((output) => output.fieldId)
         : []
-    ).toEqual(['output:order_id', 'output:amount']);
+    ).toEqual(['output:order_id', 'output:amount', ...derivedFieldIds]);
 
     setDraftSession.mockClear();
     act(() => {
@@ -891,6 +1010,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         placement: 'before',
       });
     });
+    expect(setDraftSession).toHaveBeenCalledOnce();
     const reorderUpdate = setDraftSession.mock.calls[0]?.[0] as
       ((currentSession: typeof draftSession) => typeof draftSession) | undefined;
     if (reorderUpdate == null) throw new Error('Expected serialized output reorder.');
@@ -906,7 +1026,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       reorderedInspection.ok
         ? reorderedInspection.projection.outputs.map((output) => output.fieldId)
         : []
-    ).toEqual(['output:amount', 'output:order_id']);
+    ).toEqual(['output:amount', 'output:order_id', ...derivedFieldIds]);
 
     harness.cleanup();
   });

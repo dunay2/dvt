@@ -2,7 +2,7 @@
 title: Planning Gaps
 status: Review
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-11
 planning_type: reference
 ---
 
@@ -10,9 +10,9 @@ planning_type: reference
 
 This section is only for currently open tactical gap registers.
 
-It is a planning reference surface, not a task board. Use it to understand
-explicitly scoped open deltas and validated gap snapshots. Use GitHub Issues for
-current task identity, ownership, blockers, acceptance, and closure.
+It is a planning reference surface, not a task board. Use GitHub Issues for
+current task identity, ownership, blockers, acceptance, and closure. Obsolete gap
+snapshots are deleted; their history remains in Git, not in local work queues.
 
 The legacy `G1` through `G10` execution-gap program is retired and is not part
 of the active planning route. Closed legacy material should not be used as a
@@ -20,14 +20,18 @@ current authority reference.
 
 ## Active Tactical Gap Registers
 
-- [Runtime Architecture Gap Register 2026-03-31](./runtime-architecture-gap-register-20260331.md)
+There are currently no canonical tactical gap registers in this directory.
+Create or update the governing GitHub Issue for executable work; only add a new
+gap register when it represents a distinct, source-verified delta that is not
+already owned by the issue lifecycle.
 
 ## Live Planning Anchors
 
-- [Planning Dashboard](../state/planning-dashboard.md)
+- [Glossary](../../concepts/glossary.md)
+- [Domain Language](../../concepts/domain-language.md)
+- [GitHub Issues](https://github.com/dunay2/dvt/issues)
 - [GitHub MVP Issue Workflow](../state/github-mvp-issue-workflow.md)
 - [Roadmap Of Record](../roadmap/index.md)
-- [Domain Status Board](../state/domain-status-board.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
 
@@ -39,4 +43,5 @@ current authority reference.
   evidence paths.
 - Route current implementation truth through code, contracts, tests, CI, and
   System Delivery Status.
+- Consult Git for historical provenance, not for a parallel backlog.
 - Do not create a parallel planning hub from gap documents.

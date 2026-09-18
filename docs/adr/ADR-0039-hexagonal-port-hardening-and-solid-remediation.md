@@ -271,5 +271,5 @@ Recommended order: F1 → S02 → S03.
 - [20260322 DDD and Hexagonal Port Audit](../planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md)
 - [ADR-0034 — Bounded Context Boundaries](./ADR-0034-bounded-context-boundaries-and-communication-rules.md)
 - [ADR-0018 — Shared Kernel Ownership Governance](./ADR-0018_Shared_Kernel_Ownership_Governance.md)
-- [Phase 2 Roadmap — S02 and S03](../planning/archive/proposals/phase2-arch-debt-roadmap-20260315.md)
+- [Phase 2 Roadmap — S02 and S03 (Git provenance)](https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/proposals/phase2-arch-debt-roadmap-20260315.md)
 - [2026-03-14 Domain Cohesion Review](../planning/reviews/architecture-and-governance/20260314-domain-cohesion-review.md)

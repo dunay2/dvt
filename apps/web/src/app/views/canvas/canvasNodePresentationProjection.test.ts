@@ -147,13 +147,14 @@ describe('projectCanvasNodePresentationTruth', () => {
 
     expect(truth.code).toMatchObject({ kind: 'canonical', language: 'json' });
     expect(truth.columns.visible).toEqual([
-      expect.objectContaining({ name: 'order_id', provenance: 'inherited' }),
       expect.objectContaining({
         name: 'customer_clean',
         provenance: 'declared',
         sourceFieldName: 'customer',
         operations: ['trim'],
       }),
+      expect.objectContaining({ name: 'order_id', provenance: 'inherited' }),
+      expect.objectContaining({ name: 'customer', provenance: 'inherited' }),
       expect.objectContaining({ name: 'amount', provenance: 'inherited' }),
     ]);
   });
@@ -346,6 +347,11 @@ describe('projectCanvasNodePresentationTruth', () => {
         nullable: false,
       }),
     ]);
+    expect(truth.relationalComposition).toMatchObject({
+      state: 'pending',
+      connectedInputCount: 2,
+      pendingInputCount: 1,
+    });
   });
   it('projects only a direct upstream schema and keeps declared outputs authoritative', () => {
     const transform: CanonicalNode = {

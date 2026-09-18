@@ -55,7 +55,7 @@ Current architecture and planning:
 - `docs/architecture/system/subsystems/read/index.md`
 - `docs/architecture/system/subsystems/canonical-run-lifecycle/index.md`
 - `docs/architecture/system-delivery-status.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-cancel-lifecycle-ownership-truth-sync-plan-20260410.md`
+- [Historical proposal](https://github.com/dunay2/dvt/blob/db43c857a8319b356fda98bab78c7dfb55b4606b/docs/planning/proposals/superseded/runtime-and-contracts/ar-c6-cancel-lifecycle-ownership-truth-sync-plan-20260410.md)
 - `docs/planning/state/agent-lane-a.yaml`
 
 Primary code paths:

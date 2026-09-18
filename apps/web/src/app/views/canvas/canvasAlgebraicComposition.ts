@@ -12,10 +12,8 @@ import {
   createDvtNodeAuthoringMetadata,
 } from './canvasDvtAuthoringModel';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import {
-  createDvtSubstraitInnerJoinDraft,
-  resolveDvtSubstraitInnerJoinEntry,
-} from './canvasDvtSubstraitJoinComposition';
+import { createDvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { resolveDvtSubstraitInnerJoinEntry } from './canvasDvtSubstraitJoinSourceResolution';
 import {
   createDvtSubstraitUnionAllDraft,
   resolveDvtSubstraitUnionAllEntry,

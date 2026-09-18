@@ -19,7 +19,7 @@ Canonical execution tracking remains in:
 
 - `docs/planning/state/agent-lane-e.yaml` (`F04-RISK-A`)
 - `docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md`
-- `docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md`
+- [Historical closeout](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md)
 
 ## Resolution Update 2026-04-07
 

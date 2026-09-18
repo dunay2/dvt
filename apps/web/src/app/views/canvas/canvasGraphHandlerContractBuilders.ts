@@ -18,6 +18,7 @@ function edgeAuthoring(contracts: CanvasGraphInteractionContracts): CanvasEdgeAu
     effects: {
       setEdges: contracts.effects.setEdges,
       setDraftSession: contracts.effects.setDraftSession,
+      setInspectorNode: contracts.effects.setInspectorNode,
     },
     policy: {
       canEditEdges: contracts.policy.canEditEdges,

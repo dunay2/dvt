@@ -1,13 +1,12 @@
 /** Owns output inclusion and ordering for canonical Transform projections. */
 import type { CanonicalNode } from '../../types/canonical';
-import { inspectDvtSubstraitFilter, removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import { automapCanvasColumns } from './canvasColumnAutomap';
-import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import {
   applyCanvasColumnMapping,
   removeCanvasColumnMapping,
 } from './canvasColumnMappingAuthoring';
 import {
+  readCanvasNodeColumns,
   resolveCanvasSessionNode,
   type CanvasColumnMappingResult,
 } from './canvasColumnMappingModel';
@@ -22,119 +21,23 @@ import {
 import {
   decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
   reorderDvtSubstraitProjectionOutputs,
-  type DvtSubstraitProjectionOutput,
-  type DvtSubstraitScalarExpression,
 } from './canvasDvtSubstraitProjection';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import {
   isDvtSourceOutputProjectionNode,
-  readDvtSourceOutputProjection,
   reorderDvtSourceOutputs,
   setDvtSourceOutputIncluded,
 } from './canvasDvtSourceSemanticAuthoring';
-import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+import { sourceOutputIsRequired } from './canvasSourceOutputDependencyPolicy';
+import {
+  reorderCanvasJoinColumnOutput,
+  setCanvasJoinColumnOutputIncluded,
+} from './canvasJoinColumnOutputAuthoring';
 import {
   reorderCanvasStructuredFieldRoots,
   setCanvasStructuredRootOutputIncluded,
 } from './canvasStructuredFieldRootAuthoring';
-
-function scalarExpressionUsesSourceField(
-  expression: DvtSubstraitScalarExpression | undefined,
-  columnName: string
-): boolean {
-  if (expression == null) return false;
-  if (expression.kind === 'field-reference') return expression.sourceFieldName === columnName;
-  if (expression.kind !== 'scalar-function') return false;
-  return expression.arguments.some((argument) =>
-    scalarExpressionUsesSourceField(argument, columnName)
-  );
-}
-
-function projectionOutputUsesSourceField(
-  output: DvtSubstraitProjectionOutput,
-  inputFields: readonly Readonly<{ fieldId: string; name: string }>[],
-  columnName: string
-): boolean {
-  if (output.sourceFieldName === columnName) return true;
-  if (scalarExpressionUsesSourceField(output.scalarExpression, columnName)) return true;
-  if (
-    output.calculation?.kind === 'row-number' &&
-    inputFields[output.calculation.orderSourceOrdinal]?.name === columnName
-  ) {
-    return true;
-  }
-  const inputNameById = new Map(inputFields.map((field) => [field.fieldId, field.name] as const));
-  return (output.operandFieldIds ?? []).some(
-    (fieldId) => inputNameById.get(fieldId) === columnName
-  );
-}
-
-function sourceOutputIsRequired(args: {
-  draftSession: CanvasDraftSession;
-  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
-  sourceNode: CanonicalNode;
-  columnName: string;
-}): boolean {
-  let sourceProjection;
-  try {
-    sourceProjection = readDvtSourceOutputProjection(args.sourceNode);
-  } catch {
-    return true;
-  }
-  if (sourceProjection == null) return true;
-  const nodes = resolveCanvasDraftNodes(args.draftSession, args.canonicalNodesById);
-  const targetIds = new Set(
-    args.draftSession.workingSet.visibleEdges
-      .filter((edge) => edge.sourceId === args.sourceNode.id)
-      .map((edge) => edge.targetId)
-  );
-
-  for (const targetId of targetIds) {
-    const targetNode = nodes.find((node) => node.id === targetId);
-    if (
-      targetNode == null ||
-      targetNode.pluginId !== 'dvt' ||
-      targetNode.kind !== 'dvt:transform'
-    ) {
-      return true;
-    }
-    try {
-      const authority = readDvtTransformAuthoringAuthority(targetNode);
-      if (authority == null) continue;
-      const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
-      const projectionDraft =
-        inspectDvtSubstraitFilter(draft) == null ? draft : removeDvtSubstraitFilter(draft);
-      const inspection = inspectDvtSubstraitProjectionDraft(projectionDraft);
-      if (!inspection.ok) return true;
-      const source = inspection.projection.source;
-      if (
-        source.schema !== sourceProjection.source.schema ||
-        source.table !== sourceProjection.source.table ||
-        source.sourceRef.sourceObjectId !== sourceProjection.source.sourceRef.sourceObjectId ||
-        source.sourceRef.connectionRef.connectionId !==
-          sourceProjection.source.sourceRef.connectionRef.connectionId
-      ) {
-        return true;
-      }
-      if (
-        inspection.projection.outputs.some((output) =>
-          projectionOutputUsesSourceField(
-            output,
-            inspection.projection.inputFields,
-            args.columnName
-          )
-        )
-      ) {
-        return true;
-      }
-    } catch {
-      return true;
-    }
-  }
-  return false;
-}
 
 export function reorderCanvasColumnOutput(args: {
   draftSession: CanvasDraftSession;
@@ -150,6 +53,8 @@ export function reorderCanvasColumnOutput(args: {
     args.targetNodeId
   );
   if (targetNode == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
+  const joinResult = reorderCanvasJoinColumnOutput({ ...args, targetNode });
+  if (joinResult != null) return joinResult;
   if (isDvtSourceOutputProjectionNode(targetNode)) {
     const result = reorderDvtSourceOutputs(
       targetNode,
@@ -218,6 +123,7 @@ export function setCanvasColumnOutputIncluded(args: {
   columnId: string;
   columnType: string;
   output: boolean;
+  source?: Readonly<{ nodeId: string; columnId: string }>;
   placement?: Readonly<{ targetColumnId: string; placement: 'before' | 'after' }>;
 }): CanvasColumnMappingResult {
   const targetNode = resolveCanvasSessionNode(
@@ -226,6 +132,8 @@ export function setCanvasColumnOutputIncluded(args: {
     args.targetNodeId
   );
   if (targetNode == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
+  const joinResult = setCanvasJoinColumnOutputIncluded({ ...args, targetNode });
+  if (joinResult != null) return joinResult;
   if (isDvtSourceOutputProjectionNode(targetNode)) {
     if (
       !args.output &&
@@ -264,7 +172,16 @@ export function setCanvasColumnOutputIncluded(args: {
     resolveNode: (nodeId) =>
       resolveCanvasSessionNode(args.draftSession, args.canonicalNodesById, nodeId),
   });
-  if (projectionResult.outcome === 'rejected') {
+  if (
+    projectionResult.outcome === 'rejected' ||
+    (!args.output &&
+      projectionResult.projection != null &&
+      resolveCanvasSessionNode(
+        args.draftSession,
+        args.canonicalNodesById,
+        projectionResult.projection.source.nodeId
+      )?.kind !== 'dvt:transform')
+  ) {
     const structuredResult = setCanvasStructuredRootOutputIncluded({
       draftSession: args.draftSession,
       canonicalNodesById: args.canonicalNodesById,
@@ -278,18 +195,13 @@ export function setCanvasColumnOutputIncluded(args: {
       : { outcome: 'rejected', reason: 'mapping_not_found' };
   }
   if (projectionResult.projection == null) {
-    const nodes = resolveCanvasDraftNodes(args.draftSession, args.canonicalNodesById);
-    const declaredColumns = projectCanvasNodePresentationTruth({
-      node: targetNode,
-      nodes,
-      edges: args.draftSession.workingSet.visibleEdges,
-    }).columns.visible.filter((column) => column.provenance === 'declared');
+    const declaredColumns = readCanvasNodeColumns(targetNode);
     if (declaredColumns.length > 0) {
       const materialized = automapCanvasColumns({
         draftSession: args.draftSession,
         canonicalNodesById: args.canonicalNodesById,
         targetNodeId: args.targetNodeId,
-        targetColumns: declaredColumns.map((column) => ({ name: column.name, type: column.type })),
+        targetColumns: declaredColumns,
       });
       if (materialized.outcome === 'rejected') return materialized;
       if (materialized.appliedCount !== declaredColumns.length) {
@@ -334,7 +246,11 @@ export function setCanvasColumnOutputIncluded(args: {
     const resolveNode = (nodeId: string): CanonicalNode | undefined =>
       resolveCanvasSessionNode(args.draftSession, args.canonicalNodesById, nodeId);
     const matchingInputs = args.draftSession.workingSet.visibleEdges
-      .filter((edge) => edge.targetId === targetNode.id)
+      .filter(
+        (edge) =>
+          edge.targetId === targetNode.id &&
+          (args.source == null || edge.sourceId === args.source.nodeId)
+      )
       .flatMap((edge) => {
         const sourceNode = resolveNode(edge.sourceId);
         if (sourceNode == null) return [];
@@ -342,12 +258,31 @@ export function setCanvasColumnOutputIncluded(args: {
           sourceNode,
           edges: args.draftSession.workingSet.visibleEdges,
           resolveNode,
-        }).flatMap((field) => (field.columnId === args.columnId ? [{ sourceNode, field }] : []));
+        }).flatMap((field) =>
+          field.columnId === (args.source?.columnId ?? args.columnId) ? [{ sourceNode, field }] : []
+        );
       });
     if (matchingInputs.length !== 1) {
       return { outcome: 'rejected', reason: 'mapping_not_found' };
     }
     const selectedInput = matchingInputs[0]!;
+    if (
+      projectionResult.projection != null &&
+      selectedInput.sourceNode.kind !== 'dvt:transform' &&
+      selectedInput.sourceNode.id === projectionResult.projection.source.nodeId
+    ) {
+      const restored = setCanvasStructuredRootOutputIncluded({
+        draftSession: args.draftSession,
+        canonicalNodesById: args.canonicalNodesById,
+        nodeId: targetNode.id,
+        columnId: selectedInput.field.name,
+        output: true,
+        ...(args.placement == null ? {} : { placement: args.placement }),
+      });
+      return restored.outcome === 'applied'
+        ? restored
+        : { outcome: 'rejected', reason: 'mapping_not_found' };
+    }
     const mapped = applyCanvasColumnMapping({
       draftSession: args.draftSession,
       canonicalNodesById: args.canonicalNodesById,
@@ -401,14 +336,7 @@ export function setCanvasColumnOutputIncluded(args: {
     outputId: existingOutput.fieldId,
     source: {
       nodeId: projectionResult.projection.source.nodeId,
-      columnId:
-        resolveCanvasSessionNode(
-          args.draftSession,
-          args.canonicalNodesById,
-          projectionResult.projection.source.nodeId
-        )?.kind === 'dvt:transform'
-          ? (existingOutput.sourceFieldId ?? existingOutput.sourceFieldName)
-          : existingOutput.sourceFieldName,
+      columnId: existingOutput.sourceFieldId ?? existingOutput.sourceFieldName,
     },
   });
 }

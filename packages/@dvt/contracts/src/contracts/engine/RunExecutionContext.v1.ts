@@ -72,6 +72,16 @@ export const DbtPluginContextSchema = z
   })
   .strict();
 export type DbtPluginContextSchemaT = z.infer<typeof DbtPluginContextSchema>;
+export const DVT_POSTGRES_PLUGIN_CONTEXT_KEY = 'dvt-postgres' as const;
+export const DvtPostgresPluginContextSchema = z
+  .object({
+    connectionRef: ConnectionRefSchema.extend({ provider: z.literal('postgres') }).strict(),
+    credentialRef: CredentialReferenceSchema,
+    publicationToken: Sha256HexStringSchema,
+    expectedPredecessorToken: z.union([Sha256HexStringSchema, z.literal('absent')]),
+  })
+  .strict();
+export type DvtPostgresPluginContextSchemaT = z.infer<typeof DvtPostgresPluginContextSchema>;
 export const RunExecutionContextRefSchema = z
   .object({
     uri: NonBlankStringSchema,
@@ -102,6 +112,14 @@ export const RunExecutionContextSchema = z
     const dbtContext = input.pluginContexts['dbt'];
     if (dbtContext !== undefined) {
       addPluginContextIssues('dbt', DbtPluginContextSchema.safeParse(dbtContext), ctx);
+    }
+    const dvtPostgresContext = input.pluginContexts[DVT_POSTGRES_PLUGIN_CONTEXT_KEY];
+    if (dvtPostgresContext !== undefined) {
+      addPluginContextIssues(
+        DVT_POSTGRES_PLUGIN_CONTEXT_KEY,
+        DvtPostgresPluginContextSchema.safeParse(dvtPostgresContext),
+        ctx
+      );
     }
   })
   .strict();

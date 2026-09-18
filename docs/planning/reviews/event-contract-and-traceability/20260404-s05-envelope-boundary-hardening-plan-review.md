@@ -270,7 +270,7 @@ Target:
 - Progress update 2026-04-04:
   - Synced status surfaces:
     - `docs/planning/state/agent-lane-b.yaml` marks `S05` as `done` with accepted evidence refs.
-    - `docs/planning/reviews/review-status-board.md` marks both S05 review artifacts as `done` at `100%`.
+    - [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md) marks both S05 review artifacts as `done` at `100%`.
   - Rationale: closure condition is satisfied with accepted adapter-postgres integration evidence.
 
 ## Mermaid Diagram

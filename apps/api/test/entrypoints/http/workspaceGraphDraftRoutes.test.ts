@@ -146,6 +146,44 @@ function createApp(options?: {
 }
 
 describe('workspaceGraphDraftRoutes', () => {
+  it.each(['transform', 'dvt:transform'])(
+    'rejects unsupported %s disposition before authorization or persistence',
+    async (kind) => {
+      const context = createApp();
+      const payload = buildWorkspaceGraphDraftSaveRequest();
+      try {
+        const response = await context.app.inject({
+          method: 'PUT',
+          url: '/workspace/graph/draft',
+          payload: {
+            ...payload,
+            draft: {
+              ...payload.draft,
+              nodes: payload.draft.nodes.map((node) =>
+                node.role === 'transform'
+                  ? {
+                      ...node,
+                      pluginId: 'dvt',
+                      kind,
+                      metadata: { config: { materialized: 'incremental' } },
+                    }
+                  : node
+              ),
+            },
+          },
+        });
+        expect(response.statusCode).toBe(400);
+        expect(response.json()).toEqual({
+          error: { type: 'bad_request', reason: 'invalid_body', target: 'body' },
+        });
+        expect(context.capabilityService.authorize).not.toHaveBeenCalled();
+        expect(context.saveUseCase.execute).not.toHaveBeenCalled();
+      } finally {
+        await context.app.close();
+      }
+    }
+  );
+
   it('rejects an oversized draft field before authorization or persistence', async () => {
     const context = createApp();
     const payload = buildWorkspaceGraphDraftSaveRequest();

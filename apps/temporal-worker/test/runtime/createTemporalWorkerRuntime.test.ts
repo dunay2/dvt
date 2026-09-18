@@ -185,6 +185,35 @@ describe('createTemporalWorkerRuntime', () => {
     expect(closePostgresCapability).toHaveBeenCalledTimes(1);
   });
 
+  it('registers the DVT PostgreSQL workload only when its governed profile is enabled', async () => {
+    const fixture = createRuntimeFixture();
+    let capturedConfig: TemporalWorkerHostConfig | undefined;
+    const runtime = await createTemporalWorkerRuntime(
+      createEnv({
+        DVT_TEMPORAL_DVT_POSTGRES_ENABLED: true,
+        DVT_POSTGRES_CREDENTIAL_BINDINGS:
+          '{"postgres:warehouse-a":"postgresql://dvt:dvt@localhost:5432/dvt"}',
+      }),
+      { info() {}, error() {} },
+      {
+        stateStoreFactory: () => fixture.stateStore,
+        runExecutionContextReaderFactory: () => ({ resolve: vi.fn() }),
+        connectionFactory: async () => fixture.connection,
+        hostFactory: (config) => {
+          capturedConfig = config;
+          return fixture.host;
+        },
+      }
+    );
+
+    await runtime.start();
+    await runtime.stop();
+
+    expect(
+      capturedConfig?.stepActivitiesByKind?.get('DVT_POSTGRES_OPERATIONAL_WORKLOAD')
+    ).toBeDefined();
+  });
+
   it('binds production run-context reads to the same configured file store', () => {
     expect(
       resolveTemporalWorkerRunExecutionContextReaderOptions(
@@ -320,6 +349,7 @@ function buildBaseEnv(): {
   DVT_PG_SCHEMA: string;
   DVT_PG_STATEMENT_TIMEOUT_MS: number;
   DVT_PG_QUERY_TIMEOUT_MS: number;
+  DVT_POSTGRES_CREDENTIAL_BINDINGS: string | undefined;
   DVT_RUNSTATE_CIRCUIT_BREAKER_FAILURE_THRESHOLD: number;
   DVT_RUNSTATE_CIRCUIT_BREAKER_OPEN_DURATION_MS: number;
   DVT_RUNSTATE_CIRCUIT_BREAKER_OPERATION_TIMEOUT_MS: number;
@@ -336,6 +366,7 @@ function buildBaseEnv(): {
   DVT_TEMPORAL_ADMIN_HOST: string;
   DVT_TEMPORAL_ADMIN_PORT: number;
   DVT_TEMPORAL_DBT_ENABLED: boolean;
+  DVT_TEMPORAL_DVT_POSTGRES_ENABLED: boolean;
   DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: boolean;
   DVT_TEMPORAL_HTTP_JSON_ENABLED: boolean;
   DVT_HTTP_JSON_ALLOW_LOOPBACK_FIXTURE: boolean;
@@ -349,6 +380,7 @@ function buildBaseEnv(): {
   DVT_DBT_BUNDLE_STORE_BACKEND: 'file' | 's3' | undefined;
   DVT_DBT_BUNDLE_S3_BUCKET: string | undefined;
   DVT_DBT_BUNDLE_FILE_ROOT: string | undefined;
+  DVT_CAS_FILE_ROOT: string | undefined;
   DVT_WORKSPACE_FILES_ROOT: string | undefined;
 } {
   return {
@@ -359,6 +391,7 @@ function buildBaseEnv(): {
     DVT_PG_SCHEMA: 'dvt',
     DVT_PG_STATEMENT_TIMEOUT_MS: 0,
     DVT_PG_QUERY_TIMEOUT_MS: 0,
+    DVT_POSTGRES_CREDENTIAL_BINDINGS: undefined,
     DVT_RUNSTATE_CIRCUIT_BREAKER_FAILURE_THRESHOLD: 3,
     DVT_RUNSTATE_CIRCUIT_BREAKER_OPEN_DURATION_MS: 10000,
     DVT_RUNSTATE_CIRCUIT_BREAKER_OPERATION_TIMEOUT_MS: 2000,
@@ -375,6 +408,7 @@ function buildBaseEnv(): {
     DVT_TEMPORAL_ADMIN_HOST: '127.0.0.1',
     DVT_TEMPORAL_ADMIN_PORT: 9468,
     DVT_TEMPORAL_DBT_ENABLED: false,
+    DVT_TEMPORAL_DVT_POSTGRES_ENABLED: false,
     DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: false,
     DVT_TEMPORAL_HTTP_JSON_ENABLED: false,
     DVT_HTTP_JSON_ALLOW_LOOPBACK_FIXTURE: false,
@@ -388,6 +422,7 @@ function buildBaseEnv(): {
     DVT_DBT_BUNDLE_STORE_BACKEND: undefined,
     DVT_DBT_BUNDLE_S3_BUCKET: undefined,
     DVT_DBT_BUNDLE_FILE_ROOT: undefined,
+    DVT_CAS_FILE_ROOT: undefined,
     DVT_WORKSPACE_FILES_ROOT: undefined,
   };
 }

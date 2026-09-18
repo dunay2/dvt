@@ -16,7 +16,13 @@ export type CanvasColumnFunctionResult =
       draftSession: CanvasDraftSession;
       createdFieldId: string;
     }>
-  | Readonly<{ outcome: 'rejected' }>;
+  | Readonly<{
+      outcome: 'rejected';
+      reason: Extract<
+        ReturnType<typeof applyCanvasCalculatedColumn>,
+        { outcome: 'rejected' }
+      >['reason'];
+    }>;
 
 export function applyCanvasColumnFunction(args: {
   draftSession: CanvasDraftSession;
@@ -40,5 +46,5 @@ export function applyCanvasColumnFunction(args: {
         draftSession: result.draftSession,
         createdFieldId: result.createdFieldId,
       }
-    : { outcome: 'rejected' };
+    : result;
 }

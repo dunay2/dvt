@@ -52,6 +52,7 @@ export {
 export {
   parseCanonicalRunStatus,
   parseDbtPluginContext,
+  parseDvtPostgresPluginContext,
   parseEngineRunRef,
   parseProviderRunStatusView,
   parseRecoverRunCommand,

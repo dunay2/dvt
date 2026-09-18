@@ -10,7 +10,7 @@ import {
 
 import { buildDvtSubstraitSemanticDocumentFixture } from './fixtures/dvtSubstraitSemanticDocument.js';
 
-function buildDraft(transformAuthoring: unknown): WorkspaceGraphAuthoringDraft {
+function buildDraft(transformAuthoring: unknown, kind: string): WorkspaceGraphAuthoringDraft {
   return {
     canvas: { id: 'canvas-1', kind: 'transformation', title: 'Transform canvas' },
     nodeIds: ['transform-node'],
@@ -20,7 +20,7 @@ function buildDraft(transformAuthoring: unknown): WorkspaceGraphAuthoringDraft {
         id: 'transform-node',
         name: 'Transform',
         pluginId: 'dvt',
-        kind: 'dvt:transform',
+        kind,
         role: 'transform',
         status: 'idle',
         tags: [],
@@ -31,67 +31,81 @@ function buildDraft(transformAuthoring: unknown): WorkspaceGraphAuthoringDraft {
   };
 }
 
-describe('Workspace graph semantic document admission', () => {
-  it('accepts the current canonical Transform authority', () => {
-    const semanticDocument = buildDvtSubstraitSemanticDocumentFixture();
+describe.each(['transform', 'dvt:transform'])(
+  'Workspace graph %s semantic document admission',
+  (kind) => {
+    it('accepts the current canonical Transform authority', () => {
+      const semanticDocument = buildDvtSubstraitSemanticDocumentFixture();
 
-    expect(
-      WorkspaceGraphAuthoringDraftSchema.safeParse(
-        buildDraft({ version: 'v1', mode: 'substrait', semanticDocument })
-      ).success
-    ).toBe(true);
-  });
+      expect(
+        WorkspaceGraphAuthoringDraftSchema.safeParse(
+          buildDraft({ version: 'v1', mode: 'substrait', semanticDocument }, kind)
+        ).success
+      ).toBe(true);
+    });
 
-  it('preserves the canonicalized Transform authority in the parsed draft', () => {
-    const semanticDocument = buildDvtSubstraitSemanticDocumentFixture();
-    const relations = semanticDocument.sidecar.relations.map((relation, index) =>
-      index === 0 ? { ...relation, displayName: '  customers  ' } : relation
-    );
+    it('preserves the canonicalized Transform authority in the parsed draft', () => {
+      const semanticDocument = buildDvtSubstraitSemanticDocumentFixture();
+      const relations = semanticDocument.sidecar.relations.map((relation, index) =>
+        index === 0 ? { ...relation, displayName: '  customers  ' } : relation
+      );
 
-    const parsed = WorkspaceGraphAuthoringDraftSchema.parse(
-      buildDraft({
-        version: 'v1',
-        mode: 'substrait',
-        semanticDocument: {
-          ...semanticDocument,
-          sidecar: { ...semanticDocument.sidecar, relations },
+      const parsed = WorkspaceGraphAuthoringDraftSchema.parse(
+        buildDraft(
+          {
+            version: 'v1',
+            mode: 'substrait',
+            semanticDocument: {
+              ...semanticDocument,
+              sidecar: { ...semanticDocument.sidecar, relations },
+            },
+          },
+          kind
+        )
+      );
+
+      const transformAuthoring = parsed.nodes[0]?.metadata?.['transformAuthoring'] as {
+        semanticDocument: { sidecar: { relations: Array<{ displayName?: string }> } };
+      };
+      expect(transformAuthoring.semanticDocument.sidecar.relations[0]?.displayName).toBe(
+        'customers'
+      );
+    });
+
+    it('rejects a corrupted Transform authority before persistence', () => {
+      const semanticDocument = buildDvtSubstraitSemanticDocumentFixture();
+      const corruptBytes = base64Bytes(semanticDocument.semanticPlan.bytesBase64);
+      corruptBytes[0] = 0xff;
+      const corruptSha = sha256Hex(corruptBytes);
+      const corruptDocument = {
+        ...semanticDocument,
+        semanticPlan: {
+          ...semanticDocument.semanticPlan,
+          bytesBase64: Buffer.from(corruptBytes).toString('base64'),
+          sha256: corruptSha,
         },
-      })
-    );
+        sidecar: { ...semanticDocument.sidecar, semanticPlanSha256: corruptSha },
+      };
 
-    const transformAuthoring = parsed.nodes[0]?.metadata?.['transformAuthoring'] as {
-      semanticDocument: { sidecar: { relations: Array<{ displayName?: string }> } };
-    };
-    expect(transformAuthoring.semanticDocument.sidecar.relations[0]?.displayName).toBe('customers');
-  });
+      expect(
+        WorkspaceGraphAuthoringDraftSchema.safeParse(
+          buildDraft({ version: 'v1', mode: 'substrait', semanticDocument: corruptDocument }, kind)
+        ).success
+      ).toBe(false);
+    });
 
-  it('rejects a corrupted Transform authority before persistence', () => {
-    const semanticDocument = buildDvtSubstraitSemanticDocumentFixture();
-    const corruptBytes = base64Bytes(semanticDocument.semanticPlan.bytesBase64);
-    corruptBytes[0] = 0xff;
-    const corruptSha = sha256Hex(corruptBytes);
-    const corruptDocument = {
-      ...semanticDocument,
-      semanticPlan: {
-        ...semanticDocument.semanticPlan,
-        bytesBase64: Buffer.from(corruptBytes).toString('base64'),
-        sha256: corruptSha,
-      },
-      sidecar: { ...semanticDocument.sidecar, semanticPlanSha256: corruptSha },
-    };
+    it('rejects legacy Transform semantic authority instead of falling back', () => {
+      expect(
+        WorkspaceGraphAuthoringDraftSchema.safeParse(
+          buildDraft({ version: 'v1', mode: 'visual', recipe: { outputs: [] } }, kind)
+        ).success
+      ).toBe(false);
+    });
+  }
+);
 
-    expect(
-      WorkspaceGraphAuthoringDraftSchema.safeParse(
-        buildDraft({ version: 'v1', mode: 'substrait', semanticDocument: corruptDocument })
-      ).success
-    ).toBe(false);
-  });
-
-  it('rejects legacy Transform semantic authority instead of falling back', () => {
-    expect(
-      WorkspaceGraphAuthoringDraftSchema.safeParse(
-        buildDraft({ version: 'v1', mode: 'visual', recipe: { outputs: [] } })
-      ).success
-    ).toBe(false);
-  });
+it('keeps foreign plugin transform metadata outside DVT semantic authority', () => {
+  const draft = buildDraft({ opaque: 'foreign-authority' }, 'transform');
+  draft.nodes[0]!.pluginId = 'foreign-plugin';
+  expect(WorkspaceGraphAuthoringDraftSchema.parse(draft)).toEqual(draft);
 });

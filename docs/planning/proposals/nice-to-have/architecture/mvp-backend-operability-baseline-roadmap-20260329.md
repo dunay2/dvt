@@ -78,7 +78,7 @@ Not included in MVP definition:
 
 - `MVP-A1` (Lane A): contractual inventory of backend runtime surface and
   invariants. Artifact:
-  `docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md`.
+  [Historical proposal](https://github.com/dunay2/dvt/blob/db43c857a8319b356fda98bab78c7dfb55b4606b/docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md).
 - `MVP-B1` (Lane B): traceability matrix linking each MVP claim to evidence and
   tests.
 - `MVP-C1` (Lane C): minimal operational runbook (start, diagnose, operate).

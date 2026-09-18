@@ -360,12 +360,18 @@ function buildLiveProofCypressDockerInvocation(
     `CYPRESS_apiBaseUrl=http://host.docker.internal:${args.apiPort}`,
     '-e',
     `CYPRESS_apiBearerToken=${args.apiBearerToken}`,
+    ...(args.restrictedApiBearerToken === undefined
+      ? []
+      : ['-e', `CYPRESS_restrictedApiBearerToken=${args.restrictedApiBearerToken}`]),
     '-e',
     `CYPRESS_workspaceTenantId=${args.workspaceScope.tenantId}`,
     '-e',
     `CYPRESS_workspaceProjectId=${args.workspaceScope.projectId}`,
     '-e',
     `CYPRESS_workspaceEnvironmentId=${args.workspaceScope.environmentId}`,
+    ...(args.postgresTargetSchema === undefined
+      ? []
+      : ['-e', `CYPRESS_postgresTargetSchema=${args.postgresTargetSchema}`]),
     CYPRESS_IMAGE,
     '--project',
     '/repo/apps/web',
@@ -404,9 +410,15 @@ function buildLiveProofCypressNativeInvocation(args) {
       CYPRESS_baseUrl: `http://127.0.0.1:${args.webPort}`,
       CYPRESS_apiBaseUrl: `http://127.0.0.1:${args.apiPort}`,
       CYPRESS_apiBearerToken: args.apiBearerToken,
+      ...(args.restrictedApiBearerToken === undefined
+        ? {}
+        : { CYPRESS_restrictedApiBearerToken: args.restrictedApiBearerToken }),
       CYPRESS_workspaceTenantId: args.workspaceScope.tenantId,
       CYPRESS_workspaceProjectId: args.workspaceScope.projectId,
       CYPRESS_workspaceEnvironmentId: args.workspaceScope.environmentId,
+      ...(args.postgresTargetSchema === undefined
+        ? {}
+        : { CYPRESS_postgresTargetSchema: args.postgresTargetSchema }),
     },
   };
 }
@@ -426,6 +438,17 @@ function resolveLiveProofCypressHeaded(sourceEnv = process.env) {
     throw new Error('DVT_SELECTED_CLOSURE_CYPRESS_HEADED must be true or false.');
   }
   return true;
+}
+
+function resolveLiveProofTemporalWorkerRuntime(sourceEnv = process.env) {
+  const runtime =
+    readNonEmptyEnv(sourceEnv.DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME) ?? 'available';
+  if (runtime !== 'available' && runtime !== 'unavailable') {
+    throw new Error(
+      'DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME must be available or unavailable.'
+    );
+  }
+  return runtime;
 }
 
 function resolveLiveProofWorkspaceFilesRoot(liveProofSchema, sourceEnv = process.env) {
@@ -521,7 +544,11 @@ function buildLiveProofApiEnv({
   );
   const temporalSourceEnv = {
     ...buildLiveProofTemporalEnvOverrides(sourceEnv, temporalWorkerAdminPort),
+    DVT_START_RUN_BACKPRESSURE_MODE:
+      readNonEmptyEnv(sourceEnv.DVT_START_RUN_BACKPRESSURE_MODE) ?? 'enforce',
     DVT_TEMPORAL_DBT_ENABLED: readNonEmptyEnv(sourceEnv.DVT_TEMPORAL_DBT_ENABLED) ?? 'true',
+    DVT_TEMPORAL_DVT_POSTGRES_ENABLED:
+      readNonEmptyEnv(sourceEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED) ?? 'true',
     DVT_DBT_ANALYZER_BIN: dbtExecutable,
     DVT_DBT_BIN: dbtExecutable,
     DVT_DBT_EXECUTION_ADAPTER: 'postgres',
@@ -635,6 +662,7 @@ async function main() {
   const dbtExecutable = resolveLiveProofDbtExecutable();
   const cypressRuntime = resolveLiveProofCypressRuntime();
   const cypressHeaded = resolveLiveProofCypressHeaded();
+  const temporalWorkerRuntime = resolveLiveProofTemporalWorkerRuntime();
   if (cypressHeaded && cypressRuntime !== 'native') {
     throw new Error('Headed Chrome requires DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME=native.');
   }
@@ -649,6 +677,10 @@ async function main() {
   const localProtectedRuntimeAuth = await startLocalProtectedRuntimeAuth({
     env: process.env,
     host: LOCAL_AUTH_HOST,
+  });
+  const restrictedPrincipalId = `${localProtectedRuntimeAuth.principalId}-without-run-start`;
+  const restrictedPrincipalToken = await localProtectedRuntimeAuth.issueBearerToken({
+    principalId: restrictedPrincipalId,
   });
   const liveProofSchema = allocateLiveProofSchema();
   const processHandles = [];
@@ -708,6 +740,15 @@ async function main() {
       tenantActions: LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
       workspaceScope: localProtectedRuntimeAuth.workspaceScope,
     });
+    await seedLocalProtectedRuntimeGrant({
+      databaseUrl,
+      schema: liveProofSchema,
+      principalId: restrictedPrincipalId,
+      tenantActions: LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.filter(
+        (action) => action !== 'run:start'
+      ),
+      workspaceScope: localProtectedRuntimeAuth.workspaceScope,
+    });
 
     await ensureLocalWarehouseConnectionViaApi({
       apiBaseUrl: `http://127.0.0.1:${DEFAULT_API_PORT}`,
@@ -721,22 +762,26 @@ async function main() {
       throw new Error('Selected-closure live proof requires DVT_TEMPORAL_WORKER_READYZ_URL.');
     }
 
-    console.log('[selected-closure-live] Starting Temporal worker; waiting for worker readiness');
-    const temporalWorkerHandle = spawnProcess(
-      'temporal-worker-live-proof',
-      ['--filter', 'dvt-temporal-worker', 'dev'],
-      buildLiveProofTemporalWorkerEnv(apiEnv)
-    );
-    processHandles.push(temporalWorkerHandle);
+    if (temporalWorkerRuntime === 'available') {
+      console.log('[selected-closure-live] Starting Temporal worker; waiting for worker readiness');
+      const temporalWorkerHandle = spawnProcess(
+        'temporal-worker-live-proof',
+        ['--filter', 'dvt-temporal-worker', 'dev'],
+        buildLiveProofTemporalWorkerEnv(apiEnv)
+      );
+      processHandles.push(temporalWorkerHandle);
 
-    await waitForUrlOrProcessExit(
-      temporalWorkerReadyzUrl,
-      (response) => response.statusCode === 200,
-      DEFAULT_READY_TIMEOUT_MS,
-      DEFAULT_POLL_INTERVAL_MS,
-      'Temporal worker readyz',
-      temporalWorkerHandle
-    );
+      await waitForUrlOrProcessExit(
+        temporalWorkerReadyzUrl,
+        (response) => response.statusCode === 200,
+        DEFAULT_READY_TIMEOUT_MS,
+        DEFAULT_POLL_INTERVAL_MS,
+        'Temporal worker readyz',
+        temporalWorkerHandle
+      );
+    } else {
+      console.log('[selected-closure-live] Temporal worker intentionally unavailable');
+    }
 
     const webHandle = spawnProcess(
       'web-live-proof',
@@ -779,7 +824,9 @@ async function main() {
         apiPort: DEFAULT_API_PORT,
         webPort: DEFAULT_WEB_PORT,
         apiBearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
+        restrictedApiBearerToken: restrictedPrincipalToken.bearerToken,
         workspaceScope: localProtectedRuntimeAuth.workspaceScope,
+        postgresTargetSchema: liveProofSchema,
         specPath,
         headed: cypressHeaded,
       },
@@ -807,6 +854,7 @@ module.exports = {
   resolveLiveProofCypressRuntime,
   resolveLiveProofCypressHeaded,
   resolveLiveProofSpecPath,
+  resolveLiveProofTemporalWorkerRuntime,
   seedSelectedClosureLocalWarehouseProof,
 };
 

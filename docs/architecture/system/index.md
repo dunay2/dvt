@@ -23,12 +23,11 @@ DB architecture queries outrank this page when they conflict.
 ## Read This With
 
 1. [Reference Architecture](../reference-architecture.md)
-2. [Planning Dashboard](../../planning/state/planning-dashboard.md)
-3. [Governance Inventory](../../planning/status/governance-document-rule-inventory.md)
-4. [Subsystem Architecture](./subsystems/index.md)
-5. [DVT Component Map](../component-map.md)
-6. [DVT Domain Map](../domain-map.md)
-7. [Semantic Transformation Subsystem - VTX2 Target](./subsystems/semantic-transformation/index.md)
+2. [Governance Inventory](../../planning/status/governance-document-rule-inventory.md)
+3. [Subsystem Architecture](./subsystems/index.md)
+4. [DVT Component Map](../component-map.md)
+5. [DVT Domain Map](../domain-map.md)
+6. [Semantic Transformation Subsystem - VTX2 Target](./subsystems/semantic-transformation/index.md)
 
 The former `docs/architecture/system-delivery-status.md` route is not present on current
 `main`; do not recreate it as another manual status snapshot. Current task/delivery state is

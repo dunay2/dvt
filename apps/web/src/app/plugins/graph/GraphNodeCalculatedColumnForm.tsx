@@ -5,7 +5,7 @@ import {
   PostgresIdentifierV1Schema,
 } from '@dvt/contracts';
 import { Plus } from 'lucide-react';
-import { useId, useMemo, useState, type FormEvent, type ReactElement } from 'react';
+import { useId, useMemo, useRef, useState, type FormEvent, type ReactElement } from 'react';
 
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
@@ -13,6 +13,7 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 import type {
   GraphNodeCalculatedColumnIdentity,
   GraphNodeColumn,
+  GraphNodeColumnFunctionApplyResult,
 } from './graphNodeColumnContracts';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { graphNodeColumnClasses } from './graphVisualTokens';
@@ -26,32 +27,75 @@ const KINDS: readonly CalculationKind[] = [
   'row-number',
 ];
 
+type CalculatedColumnCommandError = Readonly<{
+  field: 'alias' | 'value' | 'input';
+  message: string;
+}>;
+
+function resolveCalculatedColumnCommandError(
+  copy: ReturnType<typeof resolveGraphNodeCardCopy>,
+  reason: Extract<GraphNodeColumnFunctionApplyResult, { outcome: 'rejected' }>['reason'],
+  kind: CalculationKind
+): CalculatedColumnCommandError {
+  if (reason === 'duplicate_alias') {
+    return { field: 'alias', message: copy.columnFunctionAliasConflictLabel };
+  }
+  if (reason === 'invalid_alias') {
+    return { field: 'alias', message: copy.calculatedColumnIdentifierPolicyError };
+  }
+  if (reason === 'invalid_literal') {
+    return {
+      field: 'value',
+      message:
+        kind === 'timestamp-literal'
+          ? copy.calculatedColumnTimestampPolicyError
+          : copy.calculatedColumnLiteralPolicyError,
+    };
+  }
+  if (reason === 'invalid_reference') {
+    return { field: 'input', message: copy.columnAuthoringInvalidReferenceLabel };
+  }
+  return { field: 'alias', message: copy.expressionComposerRejectedLabel };
+}
+
 export function GraphNodeCalculatedColumnForm(props: {
   nodeId: string;
-  columns: readonly GraphNodeColumn[];
-  onSubmit: (identity: GraphNodeCalculatedColumnIdentity) => void;
+  inputColumns: readonly GraphNodeColumn[];
+  initialInputFieldId?: string;
+  onClose?: () => void;
+  onSubmit: (identity: GraphNodeCalculatedColumnIdentity) => GraphNodeColumnFunctionApplyResult;
+  onApplied?: (createdFieldId: string) => void;
 }): ReactElement {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveGraphNodeCardCopy(language);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(props.initialInputFieldId != null);
   const [kind, setKind] = useState<CalculationKind>('field-ref');
   const [alias, setAlias] = useState('');
   const [value, setValue] = useState('');
+  const [commandError, setCommandError] = useState<CalculatedColumnCommandError | null>(null);
+  const aliasInputRef = useRef<HTMLInputElement>(null);
+  const valueInputRef = useRef<HTMLInputElement>(null);
+  const inputFieldRef = useRef<HTMLSelectElement>(null);
   const [inputFieldId, setInputFieldId] = useState(
-    props.columns[0]?.id ?? props.columns[0]?.name ?? ''
+    props.initialInputFieldId ?? props.inputColumns[0]?.id ?? props.inputColumns[0]?.name ?? ''
   );
   const functions = useMemo(
     () =>
-      props.columns.flatMap((column) =>
+      props.inputColumns.flatMap((column) =>
         (column.functionMenu?.items ?? []).map((item) => ({
           ...item,
           inputFieldId: column.id ?? column.name,
           inputName: column.name,
         }))
       ),
-    [props.columns]
+    [props.inputColumns]
   );
-  const compatibleFunctions = functions.filter((item) => item.inputFieldId === inputFieldId);
+  const compatibleFunctions = functions.filter(
+    (item) =>
+      item.inputFieldId === inputFieldId &&
+      item.minimumArgumentCount === 1 &&
+      item.maximumArgumentCount === 1
+  );
   const [capabilityId, setCapabilityId] = useState('');
   const policyErrorId = useId();
   const selectedCapabilityId = compatibleFunctions.some(
@@ -82,6 +126,7 @@ export function GraphNodeCalculatedColumnForm(props: {
         ? inputFieldId.length > 0 && selectedCapabilityId.length > 0
         : true;
   const canSubmit = alias.trim().length > 0 && aliasValid && valueValid && requiredSelectionPresent;
+  const visibleError = policyError ?? commandError;
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -116,14 +161,35 @@ export function GraphNodeCalculatedColumnForm(props: {
       };
     }
     if (identity == null) return;
-    props.onSubmit(identity);
+    const result = props.onSubmit(identity);
+    if (result.outcome === 'rejected') {
+      const rejection = resolveCalculatedColumnCommandError(copy, result.reason, kind);
+      setCommandError(rejection);
+      if (rejection.field === 'alias') aliasInputRef.current?.focus();
+      if (rejection.field === 'value') valueInputRef.current?.focus();
+      if (rejection.field === 'input') inputFieldRef.current?.focus();
+      return;
+    }
+    props.onApplied?.(result.createdFieldId);
     setOpen(false);
     setAlias('');
     setValue('');
+    setCommandError(null);
+    props.onClose?.();
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      modal
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        if (!nextOpen) {
+          setCommandError(null);
+          props.onClose?.();
+        }
+      }}
+    >
       <div data-slot="graph-node-calculated-column-gap" className={graphNodeColumnClasses.addGap}>
         <PopoverTrigger asChild>
           <button
@@ -140,6 +206,7 @@ export function GraphNodeCalculatedColumnForm(props: {
       </div>
       <PopoverContent
         data-slot="graph-node-calculated-column-form"
+        {...canvasNodeEmbeddedControlProps}
         side="right"
         align="end"
         className={graphNodeColumnClasses.addForm}
@@ -152,6 +219,7 @@ export function GraphNodeCalculatedColumnForm(props: {
               value={kind}
               onChange={(event) => {
                 setKind(event.target.value as CalculationKind);
+                setCommandError(null);
               }}
               className={graphNodeColumnClasses.addControl}
             >
@@ -165,12 +233,16 @@ export function GraphNodeCalculatedColumnForm(props: {
           <label className={graphNodeColumnClasses.addLabel}>
             {copy.calculatedColumnAliasLabel}
             <input
+              ref={aliasInputRef}
               name="alias"
               required
               value={alias}
-              aria-invalid={policyError?.field === 'alias' ? 'true' : undefined}
-              aria-describedby={policyError?.field === 'alias' ? policyErrorId : undefined}
-              onChange={(event) => setAlias(event.target.value)}
+              aria-invalid={visibleError?.field === 'alias' ? 'true' : undefined}
+              aria-describedby={visibleError?.field === 'alias' ? policyErrorId : undefined}
+              onChange={(event) => {
+                setAlias(event.target.value);
+                setCommandError(null);
+              }}
               className={graphNodeColumnClasses.addControl}
             />
           </label>
@@ -178,12 +250,16 @@ export function GraphNodeCalculatedColumnForm(props: {
             <label className={graphNodeColumnClasses.addLabel}>
               {copy.calculatedColumnValueLabel}
               <input
+                ref={valueInputRef}
                 name="value"
                 required={kind === 'timestamp-literal'}
                 value={value}
-                aria-invalid={policyError?.field === 'value' ? 'true' : undefined}
-                aria-describedby={policyError?.field === 'value' ? policyErrorId : undefined}
-                onChange={(event) => setValue(event.target.value)}
+                aria-invalid={visibleError?.field === 'value' ? 'true' : undefined}
+                aria-describedby={visibleError?.field === 'value' ? policyErrorId : undefined}
+                onChange={(event) => {
+                  setValue(event.target.value);
+                  setCommandError(null);
+                }}
                 className={graphNodeColumnClasses.addControl}
               />
             </label>
@@ -193,12 +269,18 @@ export function GraphNodeCalculatedColumnForm(props: {
                 ? copy.calculatedColumnOrderLabel
                 : copy.calculatedColumnInputLabel}
               <select
+                ref={inputFieldRef}
                 name="inputFieldId"
                 value={inputFieldId}
-                onChange={(event) => setInputFieldId(event.target.value)}
+                aria-invalid={visibleError?.field === 'input' ? 'true' : undefined}
+                aria-describedby={visibleError?.field === 'input' ? policyErrorId : undefined}
+                onChange={(event) => {
+                  setInputFieldId(event.target.value);
+                  setCommandError(null);
+                }}
                 className={graphNodeColumnClasses.addControl}
               >
-                {props.columns.map((column) => (
+                {props.inputColumns.map((column) => (
                   <option key={column.id ?? column.name} value={column.id ?? column.name}>
                     {column.name}
                   </option>
@@ -212,7 +294,10 @@ export function GraphNodeCalculatedColumnForm(props: {
               <select
                 name="capabilityId"
                 value={selectedCapabilityId}
-                onChange={(event) => setCapabilityId(event.target.value)}
+                onChange={(event) => {
+                  setCapabilityId(event.target.value);
+                  setCommandError(null);
+                }}
                 className={graphNodeColumnClasses.addControl}
               >
                 {compatibleFunctions.map((item) => (
@@ -223,15 +308,18 @@ export function GraphNodeCalculatedColumnForm(props: {
               </select>
             </label>
           ) : null}
-          {policyError ? (
+          {visibleError ? (
             <p id={policyErrorId} role="alert" className="text-xs text-red-300">
-              {policyError.message}
+              {visibleError.message}
             </p>
           ) : null}
           <div className={graphNodeColumnClasses.addActions}>
             <button
               type="button"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+                props.onClose?.();
+              }}
               className={graphNodeColumnClasses.addCancel}
             >
               {copy.calculatedColumnCancelLabel}

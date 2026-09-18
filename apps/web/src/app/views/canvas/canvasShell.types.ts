@@ -10,6 +10,7 @@ import type {
   IWarehouseSourceDataSampleQueryPort,
   IWarehouseSourceImportPort,
 } from '../../ports/workspace';
+import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
 import type { SourceImportInitialSelection } from '../../components/sourceImportWizard/types';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasSurfaceStrategy } from '../../plugins/canvasSurfaceStrategyContracts';
@@ -18,6 +19,7 @@ import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
+import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContribution';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { ProjectCanvasDocument } from './canvasProjectCanvasLifecycle';
@@ -81,6 +83,7 @@ export type CanvasShellPanels = {
   inspectorGraphNodes: readonly CanonicalNode[];
   inspectorGraphEdges: readonly CanonicalEdge[];
   inspectorAuthoring: CanvasInspectorAuthoringContract;
+  relationalTreeAuthoring?: CanvasRelationalTreeAuthoringContract;
   inspectorWorkbenchContributions: readonly CanvasNodeWorkbenchContribution[];
   activeRunId: string | null;
   registeredPlugins: ReadonlySet<string>;
@@ -181,6 +184,7 @@ export type CanvasShellProps = Readonly<{
   workspaceCommands?: CanvasShellWorkspaceCommands;
   warehouseSourceImport?: IWarehouseSourceImportPort;
   warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
+  canvasTransformDataSampleQuery?: ICanvasTransformDataSampleQueryPort;
   runSnapshot?: RunSnapshot | null;
   runMaterializationSampleQuery?: IRunsPort['getRunMaterializationSample'];
   canvasContextScreenToFlowPosition?: (

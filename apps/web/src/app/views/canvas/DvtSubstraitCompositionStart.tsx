@@ -5,24 +5,28 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
-import { createDvtSubstraitStringInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import {
   createDvtSubstraitUnionAllDraft,
   resolveDvtSubstraitUnionAllEntry,
 } from './canvasDvtSubstraitSetComposition';
 import { DvtSubstraitCompositionStartSection } from './DvtSubstraitCompositionStartSection';
+import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 
 export function DvtSubstraitCompositionStart({
   disabled,
   node,
   nodes,
   edges,
+  predicateSeed,
+  onClearPredicateSeed,
   onChange,
 }: Readonly<{
   disabled: boolean;
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
+  predicateSeed?: CanvasRelationalPredicateSeed;
+  onClearPredicateSeed?: () => void;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element | null {
   const inputs = resolveCanvasDvtCompositionInputs({ targetNodeId: node.id, nodes, edges });
@@ -33,27 +37,9 @@ export function DvtSubstraitCompositionStart({
     <DvtSubstraitCompositionStartSection
       disabled={disabled}
       inputs={inputs}
-      onStartInnerJoin={({ left, right }) => {
-        const leftInput = inputs.find((input) => input.nodeId === left.nodeId);
-        const rightInput = inputs.find((input) => input.nodeId === right.nodeId);
-        if (leftInput == null || rightInput == null) return;
-        const join = createDvtSubstraitStringInnerJoinDraft({
-          left: {
-            source: leftInput,
-            fields: leftInput.fields
-              .filter((field) => field.stringCompatible)
-              .map((field) => field.name),
-          },
-          right: {
-            source: rightInput,
-            fields: rightInput.fields
-              .filter((field) => field.stringCompatible)
-              .map((field) => field.name),
-          },
-          leftFieldName: left.fieldName,
-          rightFieldName: right.fieldName,
-          targetNodeId: node.id,
-        });
+      predicateSeed={predicateSeed}
+      onClearPredicateSeed={onClearPredicateSeed}
+      onStartInnerJoin={(join) => {
         onChange((currentDraft) => ({
           ...currentDraft,
           dvt: {

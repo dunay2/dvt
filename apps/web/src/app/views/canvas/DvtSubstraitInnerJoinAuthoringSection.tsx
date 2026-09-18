@@ -28,6 +28,7 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import { canvasViewCopy } from './copy';
+import { DvtSubstraitJoinPredicateEditors } from './DvtSubstraitJoinPredicateEditors';
 
 export function DvtSubstraitInnerJoinAuthoringSection({
   disabled,
@@ -151,6 +152,14 @@ export function DvtSubstraitInnerJoinAuthoringSection({
     );
   const nInputInspection = inspectDvtSubstraitNInputJoinDraft(semanticDraft);
   const binaryInspection = inspectDvtSubstraitInnerJoinDraft(semanticDraft);
+  const renderPredicateEditors = (projection: DvtSubstraitNInputJoinProjection): ReactNode => (
+    <DvtSubstraitJoinPredicateEditors
+      disabled={disabled}
+      draft={semanticDraft}
+      projection={projection}
+      onChange={(nextDraft) => mutateDraft(() => nextDraft)}
+    />
+  );
   const renderAppendInput = (projection: DvtSubstraitNInputJoinProjection): ReactNode => {
     if (appendCandidates.length === 0) return null;
     const candidateFieldSeparator = '\u001f';
@@ -519,27 +528,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
         <p className="text-xs text-(--text-muted)">
           {projection.inputs.map((input) => input.table).join(' + ')}
         </p>
-        <ul className="space-y-1 text-xs" data-slot="dvt-substrait-n-input-predicates">
-          {projection.joins.map((join) => {
-            const leftInput = projection.inputs.find((input) =>
-              input.fields.some((field) => field.fieldId === join.leftSourceFieldId)
-            );
-            const rightInput = projection.inputs.find((input) =>
-              input.fields.some((field) => field.fieldId === join.rightSourceFieldId)
-            );
-            const leftField = leftInput?.fields.find(
-              (field) => field.fieldId === join.leftSourceFieldId
-            );
-            const rightField = rightInput?.fields.find(
-              (field) => field.fieldId === join.rightSourceFieldId
-            );
-            return (
-              <li key={`${join.leftSourceFieldId}:${join.rightSourceFieldId}`}>
-                {leftInput?.table}.{leftField?.name} = {rightInput?.table}.{rightField?.name}
-              </li>
-            );
-          })}
-        </ul>
+        {renderPredicateEditors(projection)}
         <dl className="space-y-2 text-xs">
           <div className="space-y-2">
             <dt className="text-(--text-muted)">
@@ -673,6 +662,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
   return renderShell(
     <>
       {renderJoinSummary(projection)}
+      {nInputInspection.ok ? renderPredicateEditors(nInputInspection.projection) : null}
       <dl className="space-y-2 text-xs">
         <div className="space-y-2">
           <dt className="text-(--text-muted)">

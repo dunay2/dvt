@@ -1,3 +1,21 @@
+import {
+  STRING_DATA_TYPES,
+  TIMESTAMPTZ_DATA_TYPES,
+  normalizeProjectionDataType,
+  invocationArgumentRange,
+  admitsCompleteArgumentCount,
+  resolveDvtSubstraitColumnFunctions,
+} from '@dvt/postgres-projection';
+export {
+  STRING_DATA_TYPES,
+  TIMESTAMPTZ_DATA_TYPES,
+  normalizeProjectionDataType,
+  type DvtSubstraitColumnFunction,
+  invocationArgumentRange,
+  admitsProposedArgumentCount,
+  admitsCompleteArgumentCount,
+  resolveDvtSubstraitColumnFunctions,
+} from '@dvt/postgres-projection';
 /** Owned concern: author and inspect one connected-source field projection as canonical Substrait. */
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import {
@@ -10,10 +28,6 @@ import {
   RelRootSchema,
   RelSchema,
   type Expression,
-  type ProjectRel,
-  type ReadRel,
-  type Rel,
-  type RelCommon,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import {
   PlanRelSchema,
@@ -25,11 +39,8 @@ import {
   TypeSchema,
   Type_I64Schema,
   Type_Nullability,
-  Type_PrecisionTimestampTZSchema,
   Type_StringSchema,
   Type_StructSchema,
-  Type_UnboundSchema,
-  type Type,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import {
   ConnectedSourceRefSchema,
@@ -41,7 +52,6 @@ import {
   allocateDvtRelationId,
   type ConnectedSourceRef,
   type DvtSubstraitAuthoringSidecarV1,
-  type DvtSubstraitFieldBindingV1,
   type DvtSubstraitSemanticDocumentV1,
 } from '@dvt/contracts';
 
@@ -57,88 +67,26 @@ import {
   encodeDvtSubstraitSemanticDocument,
 } from './canvasDvtSubstraitSemanticDocument';
 
+import {
+  createProjectionType,
+  inspectProjectionDataType,
+  readHasOnlyProjectionSemantics,
+  projectHasOnlyFieldSelection,
+  sortedRelationFields,
+} from './canvasDvtSubstraitProjectionStructure';
+import { inspectChainedDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjectionChainInspection';
+export { canonicalizeDvtSubstraitProjectionDataType } from './canvasDvtSubstraitProjectionStructure';
+
 const ZERO_SHA256 = '0'.repeat(64);
-const STRING_DATA_TYPES = new Set([
-  'text',
-  'string',
-  'varchar',
-  'character varying',
-  'char',
-  'character',
-  'bpchar',
-]);
-const TIMESTAMPTZ_DATA_TYPES = new Set(['timestamp with time zone', 'timestamptz', 'timestamp_tz']);
-const I64_DATA_TYPES = new Set(['bigint', 'int8', 'i64']);
+export type DvtSubstraitProjectionAuthoringRejection =
+  | 'invalid_alias'
+  | 'duplicate_alias'
+  | 'invalid_literal'
+  | 'unsupported_capability'
+  | 'invalid_reference'
+  | 'invalid_target'
+  | 'invalid_document';
 
-function normalizeProjectionDataType(dataType: unknown): string {
-  return typeof dataType === 'string' ? dataType.trim().toLowerCase().replaceAll(/\s+/g, ' ') : '';
-}
-
-function createProjectionType(dataType: string): Type {
-  const normalized = normalizeProjectionDataType(dataType);
-  if (STRING_DATA_TYPES.has(normalized)) {
-    return create(TypeSchema, {
-      kind: {
-        case: 'string',
-        value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
-      },
-    });
-  }
-  if (TIMESTAMPTZ_DATA_TYPES.has(normalized)) {
-    return create(TypeSchema, {
-      kind: {
-        case: 'precisionTimestampTz',
-        value: create(Type_PrecisionTimestampTZSchema, {
-          precision: 6,
-          nullability: Type_Nullability.NULLABLE,
-        }),
-      },
-    });
-  }
-  if (I64_DATA_TYPES.has(normalized)) {
-    return create(TypeSchema, {
-      kind: {
-        case: 'i64',
-        value: create(Type_I64Schema, { nullability: Type_Nullability.NULLABLE }),
-      },
-    });
-  }
-  return create(TypeSchema, { kind: { case: 'unbound', value: create(Type_UnboundSchema) } });
-}
-
-function inspectProjectionDataType(type: Type): string | null {
-  if (type.kind.case === 'unbound') return 'unknown';
-  if (
-    type.kind.case === 'string' &&
-    type.kind.value.typeVariationReference === 0 &&
-    type.kind.value.nullability === Type_Nullability.NULLABLE
-  ) {
-    return 'string';
-  }
-  if (
-    type.kind.case === 'precisionTimestampTz' &&
-    type.kind.value.precision === 6 &&
-    type.kind.value.typeVariationReference === 0 &&
-    type.kind.value.nullability === Type_Nullability.NULLABLE
-  ) {
-    return 'timestamp with time zone';
-  }
-  if (
-    type.kind.case === 'i64' &&
-    type.kind.value.typeVariationReference === 0 &&
-    type.kind.value.nullability === Type_Nullability.NULLABLE
-  ) {
-    return 'bigint';
-  }
-  return null;
-}
-
-export function canonicalizeDvtSubstraitProjectionDataType(dataType: unknown): string {
-  return (
-    inspectProjectionDataType(createProjectionType(normalizeProjectionDataType(dataType))) ??
-    'unknown'
-  );
-}
 export type DvtSubstraitProjectionField = Readonly<{
   name: string;
   dataType: string;
@@ -175,6 +123,15 @@ export type DvtSubstraitScalarExpression =
     }>
   | Readonly<{
       kind: 'scalar-function';
+      functionName: 'coalesce';
+      arguments: readonly [
+        DvtSubstraitScalarExpression,
+        DvtSubstraitScalarExpression,
+        ...DvtSubstraitScalarExpression[],
+      ];
+    }>
+  | Readonly<{
+      kind: 'scalar-function';
       functionName: 'extract';
       arguments: readonly [DvtSubstraitScalarExpression];
       component: 'YEAR';
@@ -195,14 +152,6 @@ export type DvtSubstraitProjectionOutput = Readonly<{
   operandFieldIds?: readonly string[];
 }>;
 
-export type DvtSubstraitColumnFunction = Readonly<{
-  capabilityId: string;
-  name: string;
-  category: 'text' | 'date-time';
-  argumentCount: number;
-  expressionTemplate?: string;
-}>;
-
 export type DvtSubstraitProjectionDraft = Readonly<{
   plan: Plan;
   sidecar: DvtSubstraitAuthoringSidecarV1;
@@ -216,6 +165,7 @@ export type DvtSubstraitProjection = Readonly<{
 
 export type DvtSubstraitProjectionSemantics = Readonly<{
   source: DvtSubstraitProjectionSemanticSource;
+  inputProjection?: DvtSubstraitProjectionSemantics;
   inputRelationId: string;
   inputFields: readonly Readonly<{
     fieldId: string;
@@ -228,67 +178,6 @@ export type DvtSubstraitProjectionSemantics = Readonly<{
 
 export type DvtSubstraitProjectionInspection =
   Readonly<{ ok: true; projection: DvtSubstraitProjectionSemantics }> | Readonly<{ ok: false }>;
-
-export function resolveDvtSubstraitColumnFunctions(args: {
-  dataType?: string;
-  dataTypes?: readonly string[];
-  provider: string;
-}): readonly DvtSubstraitColumnFunction[] {
-  const normalizedTypes = (args.dataTypes ?? (args.dataType == null ? [] : [args.dataType])).map(
-    normalizeProjectionDataType
-  );
-  if (args.provider !== 'postgres' || normalizedTypes.length === 0) return [];
-  const stringOperands = normalizedTypes.every((dataType) => STRING_DATA_TYPES.has(dataType));
-  const timestampOperand =
-    normalizedTypes.length === 1 && TIMESTAMPTZ_DATA_TYPES.has(normalizedTypes[0]!);
-
-  return DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.flatMap<DvtSubstraitColumnFunction>(
-    (entry) => {
-      if (
-        entry.kind !== 'standard' ||
-        entry.category !== 'scalar-function' ||
-        entry.profileStatus !== 'supported-profile' ||
-        entry.identity.sourceKind !== 'simple-extension'
-      ) {
-        return [];
-      }
-      if (stringOperands && entry.identity.urn === 'extension:io.substrait:functions_string') {
-        const argumentCount = entry.invocation?.argumentCount ?? 1;
-        return argumentCount === normalizedTypes.length
-          ? [
-              {
-                capabilityId: entry.entryId,
-                name: entry.identity.name,
-                category: 'text' as const,
-                argumentCount,
-              },
-            ]
-          : [];
-      }
-      if (
-        timestampOperand &&
-        entry.identity.urn === 'extension:io.substrait:functions_datetime' &&
-        entry.identity.name === 'extract' &&
-        entry.invocation?.signature === 'extract:req_ptstz_str' &&
-        entry.invocation.argumentTypes.join('_') === 'req_ptstz_str' &&
-        entry.invocation.argumentCount === 3 &&
-        entry.invocation.outputType === 'i64' &&
-        entry.invocation.options.length === 0
-      ) {
-        return [
-          {
-            capabilityId: entry.entryId,
-            name: 'extract year (UTC)',
-            category: 'date-time' as const,
-            argumentCount: 1,
-            expressionTemplate: "EXTRACT(YEAR FROM {column} AT TIME ZONE 'UTC')",
-          },
-        ];
-      }
-      return [];
-    }
-  );
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -350,41 +239,6 @@ function hasPinnedPlanVersion(plan: Plan): boolean {
     plan.version.minorNumber === 101 &&
     plan.version.patchNumber === 0
   );
-}
-
-function commonHasNoHiddenSemantics(common: RelCommon | undefined): boolean {
-  return common != null && common.hint == null && common.advancedExtension == null;
-}
-
-function readHasOnlyProjectionSemantics(read: ReadRel): boolean {
-  return (
-    commonHasNoHiddenSemantics(read.common) &&
-    read.common?.emitKind.case === undefined &&
-    read.baseSchema != null &&
-    read.filter == null &&
-    read.bestEffortFilter == null &&
-    read.projection == null &&
-    read.advancedExtension == null &&
-    read.readType.case === 'namedTable' &&
-    read.readType.value.advancedExtension == null
-  );
-}
-
-function projectHasOnlyFieldSelection(project: ProjectRel): boolean {
-  return (
-    commonHasNoHiddenSemantics(project.common) &&
-    project.common?.emitKind.case === 'emit' &&
-    project.advancedExtension == null
-  );
-}
-
-function sortedRelationFields(
-  sidecar: DvtSubstraitAuthoringSidecarV1,
-  relationId: string
-): DvtSubstraitFieldBindingV1[] {
-  return [...sidecar.fields]
-    .filter((field) => field.relationId === relationId)
-    .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
 }
 
 export function createDvtSubstraitProjectionDraft(args: {
@@ -668,244 +522,6 @@ export function reorderDvtSubstraitProjectionOutputs(
   };
 }
 
-function inspectChainedDvtSubstraitProjectionDraft(
-  draft: DvtSubstraitProjectionDraft,
-  root: Extract<Plan['relations'][number]['relType'], { case: 'root' }>['value'],
-  project: ProjectRel
-): DvtSubstraitProjectionInspection {
-  const inputProject = project.input?.relType;
-  const inputAnchor =
-    inputProject?.case === 'project' ? inputProject.value.common?.relAnchor : undefined;
-  const targetAnchor = project.common?.relAnchor;
-  if (
-    inputProject?.case !== 'project' ||
-    inputAnchor == null ||
-    targetAnchor == null ||
-    inputAnchor === targetAnchor ||
-    !projectHasOnlyFieldSelection(project)
-  ) {
-    return { ok: false };
-  }
-  const inputBindings = draft.sidecar.relations.filter(
-    (relation) => relation.relAnchor === inputAnchor
-  );
-  const targetBindings = draft.sidecar.relations.filter(
-    (relation) => relation.relAnchor === targetAnchor
-  );
-  const inputBinding = inputBindings.length === 1 ? inputBindings[0] : null;
-  const targetBinding = targetBindings.length === 1 ? targetBindings[0] : null;
-  if (
-    inputBinding == null ||
-    inputBinding.sourceRef != null ||
-    targetBinding == null ||
-    targetBinding.sourceRef != null ||
-    inputBinding.relationId === targetBinding.relationId ||
-    new Set(draft.sidecar.relations.map((relation) => relation.relationId)).size !==
-      draft.sidecar.relations.length ||
-    new Set(draft.sidecar.fields.map((field) => field.fieldId)).size !== draft.sidecar.fields.length
-  ) {
-    return { ok: false };
-  }
-  const inputFields = sortedRelationFields(draft.sidecar, inputBinding.relationId);
-  const targetFields = sortedRelationFields(draft.sidecar, targetBinding.relationId);
-  const mappings = project.common?.emitKind;
-  if (
-    mappings?.case !== 'emit' ||
-    inputFields.length === 0 ||
-    targetFields.length !== root.names.length ||
-    mappings.value.outputMapping.length !== targetFields.length ||
-    inputFields.some(
-      (field, ordinal) =>
-        field.outputOrdinal !== ordinal || field.displayName == null || field.parentFieldId != null
-    ) ||
-    targetFields.some(
-      (field, ordinal) =>
-        field.outputOrdinal !== ordinal || field.displayName !== root.names[ordinal]
-    )
-  ) {
-    return { ok: false };
-  }
-
-  const upstreamPlan = fromBinary(PlanSchema, toBinary(PlanSchema, draft.plan));
-  const upstreamRoot = upstreamPlan.relations[0]?.relType;
-  if (upstreamRoot?.case !== 'root') return { ok: false };
-  upstreamRoot.value.input = project.input;
-  upstreamRoot.value.names = inputFields.map((field) => field.displayName!);
-  const upstreamFunctionAnchors = new Set<number>();
-  const collectExpressionFunctionAnchors = (expression: Expression): void => {
-    if (expression.rexType.case !== 'scalarFunction') return;
-    upstreamFunctionAnchors.add(expression.rexType.value.functionReference);
-    expression.rexType.value.arguments.forEach((argument) => {
-      if (argument.argType.case === 'value')
-        collectExpressionFunctionAnchors(argument.argType.value);
-    });
-  };
-  const collectRelationFunctionAnchors = (relation: Rel | undefined): void => {
-    if (relation?.relType.case !== 'project') return;
-    relation.relType.value.expressions.forEach(collectExpressionFunctionAnchors);
-    collectRelationFunctionAnchors(relation.relType.value.input);
-  };
-  collectRelationFunctionAnchors(upstreamRoot.value.input);
-  upstreamPlan.extensions = upstreamPlan.extensions.filter(
-    (entry) =>
-      entry.mappingType.case !== 'extensionFunction' ||
-      upstreamFunctionAnchors.has(entry.mappingType.value.functionAnchor)
-  );
-  const upstreamUrnAnchors = new Set(
-    upstreamPlan.extensions.flatMap((entry) =>
-      entry.mappingType.case === 'extensionFunction'
-        ? [entry.mappingType.value.extensionUrnReference]
-        : []
-    )
-  );
-  upstreamPlan.extensionUrns = upstreamPlan.extensionUrns.filter((entry) =>
-    upstreamUrnAnchors.has(entry.extensionUrnAnchor)
-  );
-  const upstreamDraft: DvtSubstraitProjectionDraft = {
-    plan: upstreamPlan,
-    sidecar: {
-      ...draft.sidecar,
-      relations: draft.sidecar.relations.filter(
-        (relation) => relation.relationId !== targetBinding.relationId
-      ),
-      fields: draft.sidecar.fields.filter((field) => field.relationId !== targetBinding.relationId),
-    },
-  };
-  const upstreamInspection = inspectDvtSubstraitProjectionDraft(upstreamDraft);
-  if (
-    !upstreamInspection.ok ||
-    upstreamInspection.projection.targetRelationId !== inputBinding.relationId ||
-    upstreamInspection.projection.outputs.length !== inputFields.length ||
-    upstreamInspection.projection.outputs.some((output, ordinal) => {
-      const field = inputFields[ordinal];
-      return (
-        field == null ||
-        output.fieldId !== field.fieldId ||
-        output.name !== field.displayName ||
-        output.outputOrdinal !== field.outputOrdinal
-      );
-    })
-  ) {
-    return { ok: false };
-  }
-
-  if (project.expressions.length > 0) {
-    const validationPlan = fromBinary(PlanSchema, toBinary(PlanSchema, draft.plan));
-    const validationRoot = validationPlan.relations[0]?.relType;
-    const validationProject =
-      validationRoot?.case === 'root' ? validationRoot.value.input?.relType : undefined;
-    if (validationRoot?.case !== 'root' || validationProject?.case !== 'project') {
-      return { ok: false };
-    }
-    validationProject.value.input = create(RelSchema, {
-      relType: {
-        case: 'read',
-        value: create(ReadRelSchema, {
-          common: create(RelCommonSchema, { relAnchor: inputAnchor }),
-          baseSchema: create(NamedStructSchema, {
-            names: inputFields.map((field) => field.displayName!),
-            struct: create(Type_StructSchema, {
-              types: upstreamInspection.projection.outputs.map((output) =>
-                createProjectionType(output.dataType)
-              ),
-              nullability: Type_Nullability.REQUIRED,
-            }),
-          }),
-          readType: {
-            case: 'namedTable',
-            value: create(ReadRel_NamedTableSchema, {
-              names: [
-                upstreamInspection.projection.source.schema,
-                upstreamInspection.projection.source.table,
-              ],
-            }),
-          },
-        }),
-      },
-    });
-    const validationInspection = inspectDvtSubstraitProjectionDraft({
-      plan: validationPlan,
-      sidecar: {
-        ...draft.sidecar,
-        relations: [
-          { ...inputBinding, sourceRef: upstreamInspection.projection.source.sourceRef },
-          targetBinding,
-        ],
-        fields: draft.sidecar.fields.filter(
-          (field) =>
-            field.relationId === inputBinding.relationId ||
-            field.relationId === targetBinding.relationId
-        ),
-      },
-    });
-    if (!validationInspection.ok) return { ok: false };
-    const actualTypeByFieldId = new Map(
-      upstreamInspection.projection.outputs.map(
-        (output) => [output.fieldId, output.dataType] as const
-      )
-    );
-    return {
-      ok: true,
-      projection: {
-        ...validationInspection.projection,
-        source: upstreamInspection.projection.source,
-        inputRelationId: inputBinding.relationId,
-        inputFields: inputFields.map((field, ordinal) => ({
-          fieldId: field.fieldId,
-          name: field.displayName!,
-          dataType: upstreamInspection.projection.outputs[ordinal]!.dataType,
-        })),
-        targetRelationId: targetBinding.relationId,
-        outputs: validationInspection.projection.outputs.map((output) => ({
-          ...output,
-          ...(output.sourceFieldId == null ||
-          output.calculation != null ||
-          output.scalarExpression != null
-            ? {}
-            : { dataType: actualTypeByFieldId.get(output.sourceFieldId) ?? output.dataType }),
-        })),
-      },
-    };
-  }
-  const outputs = mappings.value.outputMapping.map((sourceOrdinal, outputOrdinal) => {
-    const sourceField = inputFields[sourceOrdinal];
-    const sourceOutput = upstreamInspection.projection.outputs[sourceOrdinal];
-    const targetField = targetFields[outputOrdinal];
-    if (
-      sourceField == null ||
-      sourceOutput == null ||
-      targetField == null ||
-      targetField.sourceFieldId !== sourceField.fieldId
-    ) {
-      return null;
-    }
-    return {
-      fieldId: targetField.fieldId,
-      name: targetField.displayName!,
-      sourceFieldId: sourceField.fieldId,
-      sourceFieldName: sourceField.displayName!,
-      dataType: sourceOutput.dataType,
-      outputOrdinal,
-      ...(targetField.description == null ? {} : { description: targetField.description }),
-    };
-  });
-  if (outputs.some((output) => output == null)) return { ok: false };
-
-  return {
-    ok: true,
-    projection: {
-      source: upstreamInspection.projection.source,
-      inputRelationId: inputBinding.relationId,
-      inputFields: inputFields.map((field, ordinal) => ({
-        fieldId: field.fieldId,
-        name: field.displayName!,
-        dataType: upstreamInspection.projection.outputs[ordinal]!.dataType,
-      })),
-      targetRelationId: targetBinding.relationId,
-      outputs: outputs.filter((output) => output != null),
-    },
-  };
-}
 export function inspectDvtSubstraitProjectionDraft(
   draft: DvtSubstraitProjectionDraft
 ): DvtSubstraitProjectionInspection {
@@ -919,7 +535,12 @@ export function inspectDvtSubstraitProjectionDraft(
   const project = projectRelation.value;
   if (!projectHasOnlyFieldSelection(project)) return { ok: false };
   if (project.input?.relType.case === 'project') {
-    return inspectChainedDvtSubstraitProjectionDraft(draft, rootRelation.value, project);
+    return inspectChainedDvtSubstraitProjectionDraft(
+      draft,
+      rootRelation.value,
+      project,
+      inspectDvtSubstraitProjectionDraft
+    );
   }
   const readRelation = project.input?.relType;
   if (readRelation?.case !== 'read' || !readHasOnlyProjectionSemantics(readRelation.value)) {
@@ -1005,11 +626,23 @@ export function inspectDvtSubstraitProjectionDraft(
       }>
     | Readonly<{
         kind: 'scalar-function';
+        functionName: 'coalesce';
+        arguments: readonly [InspectedScalar, InspectedScalar, ...InspectedScalar[]];
+      }>
+    | Readonly<{
+        kind: 'scalar-function';
         functionName: 'extract';
         arguments: readonly [InspectedScalar];
         component: 'YEAR';
         timezone: 'UTC';
       }>;
+  const inspectedScalarDataType = (expression: InspectedScalar): string => {
+    if (expression.kind === 'field-reference') {
+      return inspectProjectionDataType(sourceTypes[expression.sourceOrdinal]!) ?? 'unknown';
+    }
+    if (expression.kind === 'timestamp-literal') return 'timestamp with time zone';
+    return expression.functionName === 'extract' ? 'bigint' : 'string';
+  };
   const inspectScalar = (expression: Expression): InspectedScalar | null => {
     if (expression.rexType.case === 'selection') {
       const fieldReference = expression.rexType.value;
@@ -1076,8 +709,9 @@ export function inspectDvtSubstraitProjectionDraft(
       return null;
     }
     const expectedOptions = entry.invocation?.options ?? [];
+    const invocationRange = invocationArgumentRange(entry.invocation);
     if (
-      scalarFunction.arguments.length !== (entry.invocation?.argumentCount ?? 1) ||
+      !admitsCompleteArgumentCount(invocationRange, scalarFunction.arguments.length) ||
       scalarFunction.options.length !== expectedOptions.length ||
       !expectedOptions.every((expected, index) => {
         const actual = scalarFunction.options[index];
@@ -1102,6 +736,7 @@ export function inspectDvtSubstraitProjectionDraft(
         component?.case !== 'enum' ||
         component.value !== 'YEAR' ||
         inspectedInput == null ||
+        !TIMESTAMPTZ_DATA_TYPES.has(inspectedScalarDataType(inspectedInput)) ||
         timezoneLiteral?.case !== 'literal' ||
         timezoneLiteral.value.literalType.case !== 'string' ||
         timezoneLiteral.value.literalType.value !== 'UTC'
@@ -1121,7 +756,30 @@ export function inspectDvtSubstraitProjectionDraft(
       argument.argType.case === 'value' ? inspectScalar(argument.argType.value) : null
     );
     if (arguments_.some((argument) => argument == null)) return null;
+    const textFunction =
+      entry.identity.urn === 'extension:io.substrait:functions_string' ||
+      (entry.identity.urn === 'extension:io.substrait:functions_comparison' &&
+        entry.identity.name === 'coalesce');
+    if (
+      textFunction &&
+      arguments_.some(
+        (argument) => argument == null || inspectedScalarDataType(argument) !== 'string'
+      )
+    ) {
+      return null;
+    }
     usedFunctionAnchors.add(scalarFunction.functionReference);
+    if (entry.identity.name === 'coalesce' && arguments_.length >= 2) {
+      return {
+        kind: 'scalar-function',
+        functionName: 'coalesce',
+        arguments: [arguments_[0]!, arguments_[1]!, ...arguments_.slice(2)] as [
+          InspectedScalar,
+          InspectedScalar,
+          ...InspectedScalar[],
+        ],
+      };
+    }
     if (entry.identity.name === 'concat' && arguments_.length === 2) {
       return {
         kind: 'scalar-function',
@@ -1152,29 +810,39 @@ export function inspectDvtSubstraitProjectionDraft(
         }
       : expression.kind === 'timestamp-literal'
         ? { kind: 'timestamp-literal', value: expression.value }
-        : expression.functionName === 'concat'
+        : expression.functionName === 'coalesce'
           ? {
               kind: 'scalar-function',
-              functionName: 'concat',
-              arguments: [
-                publicScalar(expression.arguments[0]),
-                publicScalar(expression.arguments[1]),
+              functionName: 'coalesce',
+              arguments: expression.arguments.map(publicScalar) as [
+                DvtSubstraitScalarExpression,
+                DvtSubstraitScalarExpression,
+                ...DvtSubstraitScalarExpression[],
               ],
-              nullHandling: expression.nullHandling,
             }
-          : expression.functionName === 'extract'
+          : expression.functionName === 'concat'
             ? {
                 kind: 'scalar-function',
-                functionName: 'extract',
-                arguments: [publicScalar(expression.arguments[0])],
-                component: expression.component,
-                timezone: expression.timezone,
+                functionName: 'concat',
+                arguments: [
+                  publicScalar(expression.arguments[0]),
+                  publicScalar(expression.arguments[1]),
+                ],
+                nullHandling: expression.nullHandling,
               }
-            : {
-                kind: 'scalar-function',
-                functionName: expression.functionName,
-                arguments: [publicScalar(expression.arguments[0])],
-              };
+            : expression.functionName === 'extract'
+              ? {
+                  kind: 'scalar-function',
+                  functionName: 'extract',
+                  arguments: [publicScalar(expression.arguments[0])],
+                  component: expression.component,
+                  timezone: expression.timezone,
+                }
+              : {
+                  kind: 'scalar-function',
+                  functionName: expression.functionName,
+                  arguments: [publicScalar(expression.arguments[0])],
+                };
   const scalarOperations = (expression: DvtSubstraitScalarExpression): readonly string[] =>
     expression.kind !== 'scalar-function'
       ? []
@@ -1189,7 +857,13 @@ export function inspectDvtSubstraitProjectionDraft(
       return { sourceOrdinal: expression.sourceOrdinal, operations: [] };
     }
     if (expression.kind === 'timestamp-literal') return null;
-    if (expression.functionName === 'concat' || expression.functionName === 'extract') return null;
+    if (
+      expression.functionName === 'concat' ||
+      expression.functionName === 'coalesce' ||
+      expression.functionName === 'extract'
+    ) {
+      return null;
+    }
     const input = legacyLineage(expression.arguments[0]);
     return input == null
       ? null
@@ -1215,6 +889,21 @@ export function inspectDvtSubstraitProjectionDraft(
     const legacy = legacyLineage(scalar);
     return legacy ?? { scalarExpression: publicScalar(scalar) };
   };
+  const mappedExpression = (outputOrdinal: number): Expression | null => {
+    const mapping = mappings.value.outputMapping[outputOrdinal];
+    if (mapping == null) return null;
+    if (mapping < sourceFields.length) return dvtSubstraitExpression.field(mapping);
+    return project.expressions[mapping - sourceFields.length] ?? null;
+  };
+  const expressionsMatch = (left: Expression, right: Expression): boolean => {
+    const leftScalar = inspectScalar(left);
+    const rightScalar = inspectScalar(right);
+    return (
+      leftScalar != null &&
+      rightScalar != null &&
+      JSON.stringify(publicScalar(leftScalar)) === JSON.stringify(publicScalar(rightScalar))
+    );
+  };
   const outputs = mappings.value.outputMapping.map((mapping, outputOrdinal) => {
     const expressionOrdinal = mapping - sourceFields.length;
     const resolvedExpression =
@@ -1239,6 +928,27 @@ export function inspectDvtSubstraitProjectionDraft(
         ? resolvedExpression.scalarExpression
         : undefined;
     const targetField = targetFields[outputOrdinal];
+    const persistedOperandFieldIds = targetField?.operandFieldIds;
+    const rawExpression = mappedExpression(outputOrdinal);
+    const rawScalarArguments =
+      rawExpression?.rexType.case === 'scalarFunction'
+        ? rawExpression.rexType.value.arguments.flatMap((argument) =>
+            argument.argType.case === 'value' ? [argument.argType.value] : []
+          )
+        : [];
+    const persistedOperandsMatch =
+      persistedOperandFieldIds != null &&
+      persistedOperandFieldIds.length === rawScalarArguments.length &&
+      persistedOperandFieldIds.every((fieldId, index) => {
+        const operandField = targetFields.find((field) => field.fieldId === fieldId);
+        const operandExpression =
+          operandField == null ? null : mappedExpression(operandField.outputOrdinal);
+        return (
+          fieldId !== targetField?.fieldId &&
+          operandExpression != null &&
+          expressionsMatch(operandExpression, rawScalarArguments[index]!)
+        );
+      });
     if (
       resolvedExpression == null ||
       ('sourceOrdinal' in resolvedExpression && sourceField == null) ||
@@ -1247,6 +957,7 @@ export function inspectDvtSubstraitProjectionDraft(
       (sourceField != null &&
         targetField.sourceFieldId != null &&
         targetField.sourceFieldId !== sourceField.fieldId) ||
+      (persistedOperandFieldIds != null && !persistedOperandsMatch) ||
       (calculation?.kind === 'row-number' && calculation.orderSourceOrdinal >= sourceFields.length)
     ) {
       return null;
@@ -1318,6 +1029,7 @@ export function inspectDvtSubstraitProjectionDraft(
         !declaredUrnAnchors.has(entry.extensionUrnAnchor) ||
         (entry.urn !== 'extension:io.substrait:functions_string' &&
           entry.urn !== 'extension:io.substrait:functions_arithmetic' &&
+          entry.urn !== 'extension:io.substrait:functions_comparison' &&
           entry.urn !== 'extension:io.substrait:functions_datetime')
     )
   ) {
@@ -1380,12 +1092,14 @@ export function applyDvtSubstraitProjectionFunction(
       ? resolveDvtSubstraitColumnFunctions({
           dataTypes: operands.map((operand) => operand!.dataType),
           provider: inspection.projection.source.sourceRef.connectionRef.provider,
+          resolution: 'complete',
         }).find((entry) => entry.capabilityId === args.capabilityId)
       : undefined;
   if (
     !inspection.ok ||
     args.provider !== inspection.projection.source.sourceRef.connectionRef.provider ||
     capability == null ||
+    !admitsCompleteArgumentCount(capability, operandFieldIds.length) ||
     !PostgresIdentifierV1Schema.safeParse(alias).success ||
     output == null ||
     operands.some((operand) => operand == null) ||
@@ -1514,7 +1228,11 @@ export function applyDvtSubstraitProjectionFunction(
       ...draft.sidecar,
       fields: draft.sidecar.fields.map((field) => {
         if (field.fieldId !== output.fieldId) return field;
-        const { sourceFieldId: _sourceFieldId, ...preserved } = field;
+        const {
+          sourceFieldId: _sourceFieldId,
+          operandFieldIds: _operandFieldIds,
+          ...preserved
+        } = field;
         return {
           ...preserved,
           displayName: alias,

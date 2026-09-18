@@ -2,7 +2,7 @@
 title: Domain - API And Admission
 status: Review
 owner: API / Product / Docs
-last_reviewed: 2026-04-14
+last_reviewed: 2026-09-10
 planning_type: reference
 ---
 
@@ -16,26 +16,12 @@ and auth-runtime integration.
 - [Architecture Surface Inventory](../../architecture/architecture-surface-inventory-20260402.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
-- [Planning Control Tower](../state/planning-control-tower.md)
+- [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
 
 ## Active Planning Inputs
 
-- [Review Remediation Roadmap 2026-04-02](../roadmap/review-remediation-roadmap-20260402.md)
-- [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)
 - [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md)
 - [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
-
-## Historical Proposal Inputs
-
-These proposals informed the admission and API hardening path, but they are now
-archived planning inputs rather than active proposal authorities.
-
-- [Gap 4 Backpressure Admission Design](../archive/proposals/gap4-backpressure-admission-design-20260319.md)
-- [Gap 4 PR1 Admission Foundation](../archive/proposals/gap4-backpressure-admission-pr1-foundation-20260319.md)
-- [Gap 4 PR2 Raw Snapshot Store](../archive/proposals/gap4-backpressure-admission-pr2-raw-store-20260319.md)
-- [Gap 4 PR3 Resilience Envelope](../archive/proposals/gap4-backpressure-admission-pr3-resilience-20260319.md)
-- [Gap 4 PR4 Operability and Rollout](../archive/proposals/gap4-backpressure-admission-pr4-operability-20260319.md)
-- [Gap 4 PR5 Projected Read Model](../archive/proposals/gap4-backpressure-admission-pr5-projected-read-model-20260319.md)
 
 ## Relevant Reviews And Closeouts
 
@@ -55,4 +41,3 @@ archived planning inputs rather than active proposal authorities.
 ## Diagram Sources
 
 - [API and Admission Architecture Delta](../roadmap/diagrams/api-admission-architecture-delta.md)
-- [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)

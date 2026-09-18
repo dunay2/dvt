@@ -62,6 +62,34 @@ function buildWorkload(): DvtOperationalWorkloadV1 {
 }
 
 describe('DVT terminal Transform operational workload contract', () => {
+  it.each([2, 3])('admits %i JOIN inputs as one Preview workload', (sourceCount) => {
+    const workload = buildWorkload();
+    const sources = Array.from({ length: sourceCount }, (_, index) => `source-${index}`);
+    const joined = {
+      ...workload,
+      graph: {
+        ...workload.graph,
+        selectedNodeIds: [...sources, 'transform-a'],
+        selectedEdgeIds: sources.map((source) => `${source}-transform`),
+      },
+      targetProjection: {
+        ...workload.targetProjection,
+        profileId: 'dvt.vtx2.postgres.inner-join.v1',
+      },
+    };
+
+    const parsed = DvtOperationalWorkloadContractV1.schema.parse(joined);
+    expect(parsed.graph).toEqual(joined.graph);
+    expect(parsed.semantics).toHaveLength(1);
+    expect(parsed.output).toEqual(workload.output);
+    expect(
+      DvtOperationalWorkloadContractV1.schema.safeParse({
+        ...joined,
+        graph: { ...joined.graph, selectedEdgeIds: joined.graph.selectedEdgeIds.slice(1) },
+      }).success
+    ).toBe(false);
+  });
+
   it('accepts one ephemeral ProjectRel workload bound to exact protected identities', () => {
     const parsed = DvtOperationalWorkloadContractV1.schema.parse(buildWorkload());
 

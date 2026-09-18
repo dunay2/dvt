@@ -1,0 +1,23 @@
+---
+id: R-20260911-SUBSTRAIT-VARIADIC-ARITY-DRIFT
+title: Function consumers could misread open Substrait invocation arity
+status: Open
+date: 2026-09-11
+owners:
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    The canonical capability catalog now expresses a positive minimum and an optional maximum. Fixed
+    invocations use equal bounds; official coalesce:any1 requires at least two operands and omits
+    the maximum. The schema rejects the retired argumentCount field, inverted ranges, and malformed
+    admitted CONCAT or COALESCE identities. PostgreSQL text exposure must consume this catalog range
+    directly and must not introduce a Web-side capability registry.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/evidence/ED-20260911-substrait-coalesce-variadic-admission.md
+    - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
+  follow_up:
+    - Migrate every capability consumer to the range contract in the same integration before merge.

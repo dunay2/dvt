@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.17.0 (2026-09-11)
+
+## What's Changed
+* fix(web): Enforce Canvas authoring field budgets without input loss by @dunay2 in https://github.com/dunay2/dvt/pull/3088
+* fix(web): Restore Canvas menu and output controls by @dunay2 in https://github.com/dunay2/dvt/pull/3099
+* fix(web): Preserve Model output identity after column reorder by @dunay2 in https://github.com/dunay2/dvt/pull/3100
+* fix(web): Restore timestamp options in the Canvas column menu by @dunay2 in https://github.com/dunay2/dvt/pull/3102
+* docs(docs): Hard-cut obsolete AI planning authorities by @dunay2 in https://github.com/dunay2/dvt/pull/3085
+* fix(web): Make Source output state consistent by @dunay2 in https://github.com/dunay2/dvt/pull/3107
+* feat(web): Add semantic join workbench by @dunay2 in https://github.com/dunay2/dvt/pull/3111
+* fix(web): Preserve Source columns after semantic rejection by @dunay2 in https://github.com/dunay2/dvt/pull/3113
+* feat(api): Preview protected terminal Transforms by @dunay2 in https://github.com/dunay2/dvt/pull/3114
+* fix(web): Restore deterministic Canvas presentation baseline by @dunay2 in https://github.com/dunay2/dvt/pull/3121
+* feat(web): Integrate semantic Transform Focus into Canvas drawer by @dunay2 in https://github.com/dunay2/dvt/pull/3122
+* fix(web): Standardize project creation dialog hierarchy by @dunay2 in https://github.com/dunay2/dvt/pull/3090
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.16.0...v0.17.0
+
 ## 0.16.0 (2026-09-09)
 
 ## What's Changed

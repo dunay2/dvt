@@ -71,7 +71,7 @@ not only from the generic task-like regex.
   - harden docs task-reference extraction for registered short task IDs;
   - add migration, import, and query coverage.
 - Touched files or paths:
-  - `docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md`
+  - [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md)
   - `docs/planning/closeouts/20260510-gov-s3-w19-task-provenance-ledger-closeout.md`
   - `tools/planning-db/migrations/018_task_provenance_ledger.sql`
   - `scripts/planning-db-import.cjs`
