@@ -87,8 +87,19 @@ describe('Relational operator toolbar', () => {
   it('keeps compact expression, editing and selected-operation rows beside one another', () => {
     openEditor();
     addWrapper('aggregate');
+    cy.get('[data-operator="aggregate"]').invoke('attr', 'data-relation-id').as('aggregateId');
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+    cy.get<string>('@aggregateId').then((relationId) => {
+      cy.wrap(null).should(() => {
+        expect(
+          JSON.stringify(getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body)
+        ).to.contain(relationId);
+      });
+    });
+    visitWithE2eWorkspaceSession('/canvas');
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+    cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').first().click();
     const samplePath = /\/workspace\/graph\/canvases\/[^/]+\/transforms\/[^/]+\/data-sample$/;
     stubE2eApi('GET', samplePath, ({ url }) => ({
       body: {
