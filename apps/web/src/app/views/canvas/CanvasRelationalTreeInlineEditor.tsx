@@ -11,7 +11,6 @@ import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFra
 import { canvasRelationalOperationLabel } from './DvtRelationalOperationChooser';
 import type { CanonicalNode } from '../../types/canonical';
 import { CanvasRelationalTreeSelectedOperatorEditor } from './CanvasRelationalTreeSelectedOperatorEditor';
-
 export function CanvasRelationalTreeInlineEditor({
   appendInput,
   copy,
@@ -41,38 +40,37 @@ export function CanvasRelationalTreeInlineEditor({
 }>): JSX.Element | null {
   if (operation == null || joinDraft == null) return null;
   const inspection = inspectDvtSubstraitJoinPredicateContext(joinDraft)?.inspection;
-  const selectedJoin =
-    inspection?.ok &&
-    inspection.projection.joinRelations.some(
-      (relation) => relation.relationId === selectedRelationId
-    );
-  if (!selectedJoin && appendInput == null)
-    return expanded ? (
-      <CanvasRelationalTreeSelectedOperatorEditor
-        draft={joinDraft}
-        operation={operation}
-        relationId={selectedRelationId}
-        transformNode={transformNode}
-        onChange={onChangeJoinDraft}
-        onClose={onClose}
-      />
-    ) : null;
+  const selectedJoin = inspection?.projection.joinRelations.some(
+    ({ relationId }) => relationId === selectedRelationId
+  );
   return (
-    <CanvasRelationalTreeEditorFrame
-      title={canvasRelationalOperationLabel(operation, copy)}
-      hidden={appendInput == null && (!selectedJoin || !expanded)}
-      onClose={onClose}
-    >
-      <CanvasRelationalTreeJoinEditor
-        appendInput={appendInput}
-        copy={copy}
-        draft={joinDraft}
-        onAppend={onAppendJoinInput}
-        onChange={onChangeJoinDraft}
-        onPendingConditionChange={onPendingConditionChange}
-        selectedRelationId={selectedRelationId}
-        transformNode={transformNode}
-      />
-    </CanvasRelationalTreeEditorFrame>
+    <>
+      {!selectedJoin && appendInput == null && expanded ? (
+        <CanvasRelationalTreeSelectedOperatorEditor
+          draft={joinDraft}
+          operation={operation}
+          relationId={selectedRelationId}
+          transformNode={transformNode}
+          onChange={onChangeJoinDraft}
+          onClose={onClose}
+        />
+      ) : null}
+      <CanvasRelationalTreeEditorFrame
+        title={canvasRelationalOperationLabel(operation, copy)}
+        hidden={appendInput == null && (!selectedJoin || !expanded)}
+        onClose={onClose}
+      >
+        <CanvasRelationalTreeJoinEditor
+          appendInput={appendInput}
+          copy={copy}
+          draft={joinDraft}
+          onAppend={onAppendJoinInput}
+          onChange={onChangeJoinDraft}
+          onPendingConditionChange={onPendingConditionChange}
+          selectedRelationId={selectedRelationId}
+          transformNode={transformNode}
+        />
+      </CanvasRelationalTreeEditorFrame>
+    </>
   );
 }

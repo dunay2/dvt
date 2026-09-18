@@ -73,6 +73,8 @@ describe('Relational operator toolbar', () => {
     cy.get('[data-slot="canvas-join-expression-node"][data-kind="field"]').first().click();
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
     cy.screenshot('selected-join-connected-expression-under-window');
+    cy.get('[aria-label="Comparador de la condición"]').select('not_equal');
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
     cy.get('[data-operator="aggregate"]').rightclick();
     cy.get('[data-slot="canvas-relational-edit-operation"]').click();
     cy.get('[data-slot="context-menu-content"][data-state="open"]').should('not.exist');
@@ -81,6 +83,10 @@ describe('Relational operator toolbar', () => {
       '[data-slot="canvas-relational-tree-inline-editor"]',
       'downstream dependencies'
     ).should('be.visible');
+    cy.get('[data-operator="join"]').dblclick();
+    cy.get('[aria-label="Comparador de la condición"]').should('have.value', 'not_equal');
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
+    cy.contains('button', 'Guardar condición').click();
     cy.contains('[data-operator="project"]', 'WINDOW').rightclick();
     cy.get(
       '[data-slot="context-menu-content"][data-state="open"] [data-slot="canvas-relational-remove-source"]'
