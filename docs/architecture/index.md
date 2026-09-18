@@ -29,14 +29,13 @@ operations surface.
   semantics.
 - Use [Engine](engine/index.md) when changing execution invariants, adapters,
   determinism, or engine contracts.
-- Use [Atlas](atlas/index.md) and [Reference Architecture](reference-architecture.md)
+- Use [Reference Architecture](reference-architecture.md)
   when the question is repository-wide structure rather than one package.
 
 ## Guided Index
 
 - [Shared](shared/index.md)
 - [Infra](infra/index.md)
-- [Atlas](atlas/index.md)
 - [Reference Architecture](reference-architecture.md)
 - [Components](components/index.md)
 - [Diagrams](diagrams/index.md)
