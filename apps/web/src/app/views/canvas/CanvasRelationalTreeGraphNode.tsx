@@ -1,5 +1,5 @@
 /** Owned concern: render one accessible relational operator card. */
-import { AlertTriangle, Filter, Layers3, Sigma, Table2 } from 'lucide-react';
+import { AlertTriangle, Filter, Layers3, Sigma, Table2, ChevronDown } from 'lucide-react';
 import { CanvasRelationalJoinIcon } from './CanvasRelationalJoinIcon';
 
 import type { CanvasRelationalTreePlacedNode } from './canvasRelationalTreeGeometry';
@@ -54,11 +54,13 @@ export function CanvasRelationalTreeGraphNode({
   selected,
   copy,
   onSelect,
+  onExpand,
 }: Readonly<{
   placed: CanvasRelationalTreePlacedNode;
   selected: boolean;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
+  onExpand?: (locator: string) => void;
 }>): JSX.Element {
   const roleLabel = placed.role == null ? null : childRoleLabel(placed.role, placed.ordinal, copy);
   const subtitle = placed.node.displayName ?? placed.node.substraitKind;
@@ -85,6 +87,7 @@ export function CanvasRelationalTreeGraphNode({
         data-relation-id={placed.node.relationId ?? undefined}
         data-operator={placed.node.operator}
         onClick={() => onSelect(placed.node.locator)}
+        onDoubleClick={() => placed.node.operator === 'join' && onExpand?.(placed.node.locator)}
         className={`h-full w-full rounded-md border px-3 py-2 text-left shadow-sm transition-colors hover:border-(--status-info) aria-selected:border-(--status-info) aria-selected:ring-2 aria-selected:ring-(--status-info) ${operatorTone[placed.node.operator]}`}
       >
         <span className="flex items-center gap-2">
@@ -101,6 +104,18 @@ export function CanvasRelationalTreeGraphNode({
         </span>
         {roleLabel == null ? null : <span className="sr-only">{roleLabel}</span>}
       </button>
+      {placed.node.operator !== 'join' || onExpand == null ? null : (
+        <button
+          type="button"
+          data-slot="canvas-relational-node-expand"
+          aria-label={`${copy.relationalTreeDetailLabel}: JOIN · ${subtitle}`}
+          title={`${copy.relationalTreeDetailLabel}: JOIN`}
+          onClick={() => onExpand(placed.node.locator)}
+          className="absolute right-1 top-1 grid size-7 place-items-center rounded text-(--text-muted) hover:bg-(--surface-selected) hover:text-(--text-primary)"
+        >
+          <ChevronDown aria-hidden="true" className="size-4" />
+        </button>
+      )}
     </li>
   );
 }

@@ -1,5 +1,5 @@
 /** Owned concern: hydrate a discardable authoring session from one existing canonical JOIN. */
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
@@ -24,6 +24,7 @@ export function useCanvasRelationalTreeExistingJoinSeed(
   }>
 ) {
   const { edges, inputs, nodes, onHydrate, targetNodeId, transformNode } = args;
+  const [baselineDraft, setBaselineDraft] = useState<DvtSubstraitInnerJoinDraft | null>(null);
   const seed = useMemo(
     () =>
       resolveCanvasRelationalTreeExistingJoinDraft({
@@ -34,9 +35,10 @@ export function useCanvasRelationalTreeExistingJoinSeed(
     [edges, nodes, transformNode]
   );
 
-  return useCallback(
+  const hydrateExistingJoin = useCallback(
     (requestedInputId?: string): boolean => {
       if (seed == null) return false;
+      setBaselineDraft(seed.draft);
       const appendInputId =
         requestedInputId == null
           ? null
@@ -54,4 +56,5 @@ export function useCanvasRelationalTreeExistingJoinSeed(
     },
     [edges, inputs, nodes, onHydrate, seed, targetNodeId]
   );
+  return { hydrateExistingJoin, baselineDraft };
 }

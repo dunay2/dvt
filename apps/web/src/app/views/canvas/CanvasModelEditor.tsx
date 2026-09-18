@@ -63,6 +63,7 @@ export function CanvasModelEditor({
   const copy = resolveCanvasSemanticEditorCopy(language);
   const treeCopy = resolveCanvasViewCopy(language);
   const workbench = useRef<CanvasRelationalTreeWorkbenchHandle>(null);
+  const [actionsHost, setActionsHost] = useState<HTMLDivElement | null>(null);
   const [view, setView] = useState(initialView);
   const [pendingNavigation, setPendingNavigation] = useState<
     CanvasModelView | 'canvas' | 'route' | null
@@ -155,73 +156,81 @@ export function CanvasModelEditor({
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-(--surface-app) text-(--text-default)"
     >
       <CanvasModelNavigationGuard workbench={workbench} onBlocked={onRouteBlocked} />
-      <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-(--border-subtle) bg-(--surface-shell) px-4 py-3">
+      <header
+        data-slot="canvas-model-toolbar"
+        className="flex shrink-0 flex-wrap items-center gap-x-3 border-b border-(--border-subtle) bg-(--surface-shell) px-3 [&:has([data-slot=canvas-relational-tree-apply])_[data-slot=canvas-model-save-status]]:hidden"
+      >
         <Button
           data-slot="canvas-model-back"
           variant="ghost"
           size="sm"
+          title={`${copy.back} · ${canvasName}`}
+          aria-label={copy.back}
+          className="size-8 p-0"
           onClick={() => requestNavigation('canvas')}
         >
           <ArrowLeft aria-hidden="true" className="size-4" />
-          {copy.back}
         </Button>
-        <span className="hidden text-(--border-default) sm:inline" aria-hidden="true">
-          /
-        </span>
-        <span className="min-w-0 truncate text-xs text-(--text-muted)" title={canvasName}>
-          {canvasName}
-        </span>
         <Table2 className="size-4 shrink-0 text-(--primary)" aria-hidden="true" />
-        <h1 className="min-w-0 truncate text-sm font-semibold" title={transformNode.name}>
+        <h1
+          className="max-w-48 truncate text-sm font-semibold"
+          title={`${canvasName} / ${transformNode.name}`}
+        >
           {transformNode.name}
         </h1>
+        <div
+          role="tablist"
+          aria-label={transformNode.name}
+          className="flex min-w-0 overflow-x-auto self-stretch"
+        >
+          {tabs.map(({ id, label, icon: Icon }, index) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              id={`model-tab-${id}`}
+              aria-controls={`model-panel-${id}`}
+              aria-selected={view === id}
+              tabIndex={view === id ? 0 : -1}
+              data-slot="canvas-model-view-tab"
+              data-view={id}
+              className="flex h-11 shrink-0 items-center gap-2 border-b-2 border-transparent px-3 text-xs font-medium text-(--text-muted) hover:text-(--text-strong) aria-selected:border-(--primary) aria-selected:text-(--text-strong) focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
+              onClick={() => requestNavigation(id)}
+              onKeyDown={(event) => {
+                const next =
+                  event.key === 'ArrowRight'
+                    ? (index + 1) % tabs.length
+                    : event.key === 'ArrowLeft'
+                      ? (index + tabs.length - 1) % tabs.length
+                      : event.key === 'Home'
+                        ? 0
+                        : event.key === 'End'
+                          ? tabs.length - 1
+                          : null;
+                if (next == null) return;
+                event.preventDefault();
+                requestNavigation(tabs[next]!.id);
+                document.getElementById(`model-tab-${tabs[next]!.id}`)?.focus();
+              }}
+            >
+              <Icon aria-hidden="true" className="size-4" />
+              {label}
+            </button>
+          ))}
+        </div>
         <span
           role="status"
-          className={`ml-auto text-xs ${draftStatus.tone === 'danger' ? 'text-rose-300' : draftStatus.tone === 'warning' ? 'text-amber-200' : 'text-(--text-muted)'}`}
+          data-slot="canvas-model-save-status"
+          className={`ml-auto py-1 text-[11px] ${draftStatus.tone === 'danger' ? 'text-rose-300' : draftStatus.tone === 'warning' ? 'text-amber-200' : 'text-(--text-muted)'}`}
         >
           {draftStatus.label}
         </span>
+        <div
+          ref={setActionsHost}
+          data-slot="canvas-model-actions"
+          className="ml-auto flex items-center empty:hidden"
+        />
       </header>
-      <div
-        role="tablist"
-        aria-label={transformNode.name}
-        className="flex shrink-0 overflow-x-auto border-b border-(--border-subtle) bg-(--surface-shell) px-3"
-      >
-        {tabs.map(({ id, label, icon: Icon }, index) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            id={`model-tab-${id}`}
-            aria-controls={`model-panel-${id}`}
-            aria-selected={view === id}
-            tabIndex={view === id ? 0 : -1}
-            data-slot="canvas-model-view-tab"
-            data-view={id}
-            className="flex shrink-0 items-center gap-2 border-b-2 border-transparent px-4 py-3 text-xs font-medium text-(--text-muted) hover:text-(--text-strong) aria-selected:border-(--primary) aria-selected:text-(--text-strong) focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
-            onClick={() => requestNavigation(id)}
-            onKeyDown={(event) => {
-              const next =
-                event.key === 'ArrowRight'
-                  ? (index + 1) % tabs.length
-                  : event.key === 'ArrowLeft'
-                    ? (index + tabs.length - 1) % tabs.length
-                    : event.key === 'Home'
-                      ? 0
-                      : event.key === 'End'
-                        ? tabs.length - 1
-                        : null;
-              if (next == null) return;
-              event.preventDefault();
-              requestNavigation(tabs[next]!.id);
-              document.getElementById(`model-tab-${tabs[next]!.id}`)?.focus();
-            }}
-          >
-            <Icon aria-hidden="true" className="size-4" />
-            {label}
-          </button>
-        ))}
-      </div>
       <div
         id="model-panel-editor"
         role="tabpanel"
@@ -235,6 +244,7 @@ export function CanvasModelEditor({
           edges={edges}
           copy={treeCopy}
           authoring={authoring}
+          actionsHost={actionsHost}
         />
       </div>
       {view === 'sql' ? (

@@ -61,6 +61,12 @@ describe('Canvas Model editor navigation', () => {
       3
     );
     expect(previewTransformRows).not.toHaveBeenCalled();
+    const toolbar = harness.container.querySelector('[data-slot="canvas-model-toolbar"]');
+    expect(toolbar?.querySelectorAll('[role="tab"]')).toHaveLength(3);
+    expect(toolbar?.querySelector('[data-slot="canvas-model-back"]')).not.toBeNull();
+    expect(
+      harness.container.querySelector('[data-slot="canvas-relational-tree-start-authoring"]')
+    ).toBeNull();
   });
 
   it('opens data independently and returns to the same Canvas viewport', async () => {
@@ -88,11 +94,21 @@ describe('Canvas Model editor navigation', () => {
     act(() => data.onOpenNode?.(fixture.transform.id));
     act(() =>
       harness.container
-        .querySelector<HTMLButtonElement>(
-          '[data-slot="canvas-relational-tree-start-authoring"] button'
-        )!
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-node-expand"]')!
         .click()
     );
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+    expect(
+      harness.container.querySelector('[data-slot="canvas-relational-tree-apply"]')
+    ).toBeNull();
+    act(() =>
+      harness.container.querySelector<HTMLButtonElement>('[aria-label="Editar condición"]')!.click()
+    );
+    expect(
+      harness.container.querySelector(
+        '[data-slot="canvas-model-actions"] [data-slot="canvas-relational-tree-apply"]'
+      )
+    ).not.toBeNull();
     act(() =>
       harness.container.querySelector<HTMLButtonElement>('[data-slot="canvas-model-back"]')!.click()
     );

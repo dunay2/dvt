@@ -6,8 +6,9 @@ import type {
   CanvasRelationalTreeAuthoringContract,
   CanvasRelationalTreeWorkbenchCopy,
 } from './canvasRelationalTreeWorkbench.types';
-import { CanvasRelationalTreeAuthoringPrompt } from './CanvasRelationalTreeAuthoringPrompt';
-import { CanvasRelationalTreeNodeDetail } from './CanvasRelationalTreeNodeDetail';
+import { CanvasRelationalTreeSessionActions } from './CanvasRelationalTreeSessionActions';
+import { CanvasRelationalJoinExpressionTree } from './CanvasRelationalJoinExpressionTree';
+import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { CanvasRelationalTreeBlockCanvas } from './CanvasRelationalTreeBlockCanvas';
 import { CanvasRelationalTreeSourceCatalogue } from './CanvasRelationalTreeSourceCatalogue';
 import { CanvasRelationalTreeView } from './CanvasRelationalTreeView';
@@ -30,9 +31,10 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
     edges: readonly CanonicalEdge[];
     copy: CanvasRelationalTreeWorkbenchCopy;
     authoring?: CanvasRelationalTreeAuthoringContract;
+    actionsHost?: HTMLElement | null;
   }>
 >(function CanvasRelationalTreeWorkbench(
-  { transformNode, nodes, edges, copy, authoring },
+  { transformNode, nodes, edges, copy, authoring, actionsHost },
   ref
 ): JSX.Element {
   const model = useCanvasRelationalTreeWorkbenchModel({
@@ -44,19 +46,20 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
   });
   const showAuthoring =
     model.authoringAvailable && (model.projection == null || model.session.active);
-  const pendingInputCount = model.catalogue.filter((item) => item.state === 'pending').length;
   const [pendingCondition, setPendingCondition] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [sourcesCollapsed, setSourcesCollapsed] = useState(false);
   useEffect(() => {
     if (!model.session.active) setPendingCondition(false);
   }, [model.session.active]);
-  useCanvasRelationalTreeWorkbenchHandle(ref, model, pendingCondition);
+  const sessionHandle = useCanvasRelationalTreeWorkbenchHandle(ref, model, pendingCondition);
 
   return (
     <div
       data-slot="canvas-relational-tree-workbench"
-      className={`grid h-full min-h-0 min-w-0 w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-(--surface-panel) md:grid-rows-1 ${sourcesCollapsed ? 'md:grid-cols-[3rem_minmax(0,1fr)]' : 'md:grid-cols-[14rem_minmax(0,1fr)]'}`}
+      className={`relative grid h-full min-h-0 min-w-0 w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-(--surface-panel) md:grid-rows-1 ${sourcesCollapsed ? 'md:grid-cols-[3rem_minmax(0,1fr)]' : 'md:grid-cols-[14rem_minmax(0,1fr)]'}`}
     >
+      <CanvasRelationalTreeSessionActions session={sessionHandle} copy={copy} host={actionsHost} />
       <CanvasRelationalTreeSourceCatalogue
         items={model.catalogue}
         collapsed={sourcesCollapsed}
@@ -68,8 +71,8 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
       />
       {showAuthoring ? (
         <CanvasRelationalTreeBlockCanvas
-          pendingCondition={pendingCondition}
           onPendingConditionChange={setPendingCondition}
+          initiallyExpanded={expanded}
           appendInput={model.session.appendInput}
           choices={model.session.choices}
           copy={copy}
@@ -84,8 +87,6 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
           selectedInputIds={model.session.selectedInputIds}
           transformNode={transformNode}
           onAppendJoinInput={model.session.appendJoinInput}
-          onApply={model.session.apply}
-          onCancel={model.session.cancel}
           onChangeJoinDraft={model.session.setJoinDraft}
           onPlaceInput={model.session.placeInput}
           onSelectInput={model.session.selectInput}
@@ -104,26 +105,27 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
           className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
         >
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            {!model.authoringAvailable ? null : (
-              <CanvasRelationalTreeAuthoringPrompt
-                copy={copy}
-                pendingInputCount={pendingInputCount}
-                onStart={model.session.start}
-              />
-            )}
             <CanvasRelationalTreeView
               outputName={transformNode.name}
               root={model.projection.root}
               selectedLocator={model.selectedLocator}
               copy={copy}
               onSelect={model.selectTreeNode}
+              onExpand={(locator) => {
+                model.selectTreeNode(locator);
+                setExpanded(true);
+                if (model.authoringAvailable) model.session.start();
+              }}
             />
           </div>
-          <CanvasRelationalTreeNodeDetail
-            node={model.selectedNode}
-            transformNode={transformNode}
-            onEdit={model.authoringAvailable ? model.session.start : undefined}
-          />
+          {expanded && model.selectedNode?.operator === 'join' ? (
+            <CanvasRelationalTreeEditorFrame title="INNER JOIN" onClose={() => setExpanded(false)}>
+              <CanvasRelationalJoinExpressionTree
+                transformNode={transformNode}
+                relationId={model.selectedNode.relationId}
+              />
+            </CanvasRelationalTreeEditorFrame>
+          ) : null}
         </div>
       )}
     </div>

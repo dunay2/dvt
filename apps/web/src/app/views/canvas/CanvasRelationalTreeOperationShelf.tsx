@@ -3,7 +3,6 @@ import { ChevronDown } from 'lucide-react';
 import { CanvasRelationalJoinIcon } from './CanvasRelationalJoinIcon';
 import { useState } from 'react';
 
-import { Button } from '../../components/ui/button';
 import type {
   CanvasRelationalOperation,
   CanvasRelationalOperationChoice,
@@ -16,20 +15,14 @@ export function CanvasRelationalTreeOperationShelf({
   copy,
   hasOperands,
   operation,
-  ready,
   selectedInputCount,
-  onApply,
-  onCancel,
   onSelectOperation,
 }: Readonly<{
   choices: readonly CanvasRelationalOperationChoice[];
   copy: CanvasRelationalTreeWorkbenchCopy;
   hasOperands: boolean;
   operation: CanvasRelationalOperation | null;
-  ready: boolean;
   selectedInputCount: number;
-  onApply: () => void;
-  onCancel: () => void;
   onSelectOperation: (operation: CanvasRelationalOperation) => void;
 }>): JSX.Element {
   const [expanded, setExpanded] = useState(true);
@@ -65,30 +58,6 @@ export function CanvasRelationalTreeOperationShelf({
             {copy.relationalTreeSelectNextSourceMessage}
           </span>
         ) : null}
-        <div className="ml-auto flex shrink-0 gap-2">
-          {!hasOperands ? null : (
-            <>
-              <Button
-                type="button"
-                size="sm"
-                data-slot="canvas-relational-tree-apply"
-                disabled={!ready}
-                onClick={onApply}
-              >
-                {copy.inspectorDvtRelationalApply}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                data-slot="canvas-relational-tree-cancel"
-                onClick={onCancel}
-              >
-                {copy.inspectorDvtRelationalCancel}
-              </Button>
-            </>
-          )}
-        </div>
       </div>
       {!expanded ? null : (
         <div className="border-t border-(--border-subtle) px-3 py-2">

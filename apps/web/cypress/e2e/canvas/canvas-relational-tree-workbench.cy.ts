@@ -226,10 +226,11 @@ describe('Canvas relational-tree Workbench', () => {
     cy.get('[data-slot="canvas-relational-tree-sources"] input')
       .should('have.value', 'customers')
       .clear();
-    cy.get('[data-slot="canvas-relational-tree-detail"]')
-      .should('be.visible')
-      .and('have.attr', 'data-position', 'contextual')
-      .and('contain.text', 'JOIN');
+    cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
+    cy.get('[data-slot="canvas-model-toolbar"]').should(($toolbar) => {
+      expect($toolbar[0]!.getBoundingClientRect().height).to.be.at.most(48);
+      expect($toolbar.find('[role="tab"]')).to.have.length(3);
+    });
     cy.get('[data-slot="canvas-relational-tree-zoom"]')
       .invoke('text')
       .should('match', /^\d+%$/);
@@ -296,12 +297,10 @@ describe('Canvas relational-tree Workbench', () => {
       18
     );
     cy.get('[data-slot="canvas-relational-tree"]').should('contain.text', 'JOIN');
-    cy.get('[data-slot="canvas-relational-tree-start-authoring"]')
-      .should('be.visible')
-      .and('contain.text', '2')
-      .and('contain.text', 'Compose relation');
-
-    cy.get('[data-slot="canvas-relational-tree-start-authoring"] button').click();
+    cy.get('[data-slot="canvas-relational-tree-start-authoring"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-node-expand"]').click();
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+    cy.get('[data-slot="canvas-join-expression-tree"]:visible').should('have.length', 1);
     cy.then(expectPublishedSemanticUnchanged);
     cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
       'have.length',
@@ -365,7 +364,7 @@ describe('Canvas relational-tree Workbench', () => {
       .should('be.visible')
       .focus()
       .type('{enter}');
-    cy.get('[data-slot="canvas-relational-expand"]').click();
+    cy.get('[data-slot="canvas-relational-node-expand"]').click();
     cy.get('[data-slot="dvt-substrait-join-predicate-editors"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
     cy.get('[data-slot="canvas-relational-tree-block-canvas"]').should(
@@ -443,8 +442,7 @@ describe('Canvas relational-tree Workbench', () => {
     const cards = '[data-slot="canvas-relational-tree-draft"] [data-operator="join"]';
     const selectedPredicates =
       '[data-slot="dvt-substrait-join-predicate-editors"] fieldset:visible';
-    cy.get(cards).last().click();
-    cy.get('[data-slot="canvas-relational-expand"]').click();
+    cy.get(cards).last().parent().find('[data-slot="canvas-relational-node-expand"]').click();
     cy.get(selectedPredicates)
       .should('have.length', 1)
       .and('contain.text', 'orders.')
@@ -463,7 +461,36 @@ describe('Canvas relational-tree Workbench', () => {
       'have.value',
       'not_equal'
     );
-    cy.get('[data-slot="canvas-relational-focus"]').click();
+    cy.get('[data-slot="canvas-relational-tree-draft-viewport"]').should('be.visible');
+    cy.get(`${selectedPredicates} details`).first().find('summary').click();
+    cy.get(
+      `${selectedPredicates} select[aria-label="Añadir función exterior al operando izquierdo"]`
+    ).select('LOWER');
+    cy.get(`${selectedPredicates} [data-slot="semantic-operand-function-tree"]`)
+      .first()
+      .should('contain.text', 'LOWER(')
+      .and('contain.text', 'customers.customer_id');
+    cy.get(
+      `${selectedPredicates} select[aria-label="Añadir función exterior al operando izquierdo"]`
+    ).select('UPPER');
+    cy.get(`${selectedPredicates} [data-slot="semantic-operand-function-tree"]`)
+      .first()
+      .should(($tree) => {
+        const text = $tree.text();
+        expect(text.indexOf('UPPER(')).to.be.lessThan(text.indexOf('LOWER('));
+        expect(text.indexOf('LOWER(')).to.be.lessThan(text.indexOf('customers.customer_id'));
+      });
+    cy.get(`${selectedPredicates} button[aria-label="Retirar función 2"]`).click();
+    cy.get(`${selectedPredicates} [data-slot="semantic-operand-function-tree"]`)
+      .first()
+      .should('not.contain.text', 'UPPER(')
+      .and('contain.text', 'LOWER(')
+      .and('contain.text', 'customers.customer_id');
+    cy.get('[data-slot="canvas-join-expression-tree"]:visible')
+      .should('contain.text', 'NOT_EQUAL')
+      .and('contain.text', 'LOWER')
+      .and('contain.text', 'customers.customer_id')
+      .and('contain.text', 'tickets.customer_id');
     cy.screenshot('semantic-editor-contextual-join');
     cy.contains(`${selectedPredicates} button`, 'Guardar condición').click();
 
@@ -472,7 +499,8 @@ describe('Canvas relational-tree Workbench', () => {
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]')
       .contains('button', 'Añadir condición')
       .click();
-    cy.get('[data-slot="canvas-relational-focus"]').click();
+    cy.get('[data-slot="canvas-join-expression-tree"]:visible').should('contain.text', 'LOWER');
+    cy.get('[data-slot="canvas-relational-collapse"]').click();
     cy.get('[data-slot="canvas-relational-tree-draft-viewport"]').should(($viewport) => {
       const bounds = $viewport[0]!.getBoundingClientRect();
       const output = $viewport[0]!
@@ -483,9 +511,7 @@ describe('Canvas relational-tree Workbench', () => {
       expect(output.right).to.be.at.most(bounds.right);
       expect(output.bottom).to.be.at.most(bounds.bottom);
     });
-    cy.get(
-      '[data-slot="canvas-relational-tree-apply"], [data-slot="canvas-relational-focus"]'
-    ).each(($button) => {
+    cy.get('[data-slot="canvas-relational-tree-apply"]').each(($button) => {
       const bounds = $button[0]!.getBoundingClientRect();
       const window = $button[0]!.ownerDocument.defaultView!;
       expect(bounds.right).to.be.at.most(window.innerWidth);
@@ -534,7 +560,10 @@ describe('Canvas relational-tree Workbench', () => {
       [1, 2].forEach((joinIndex) => {
         const condition = inspection.projection.joins[joinIndex]?.conditions[0];
         if (condition == null || condition.kind === 'group') return;
-        expect(condition.left).to.deep.include({
+        const operand = condition.left;
+        if (joinIndex === 2) expect(operand.kind).to.equal('function');
+        else expect(operand.kind).to.equal('field');
+        expect(operand.kind === 'function' ? operand.input : operand).to.deep.include({
           kind: 'field',
           sourceFieldId: customerId,
         });

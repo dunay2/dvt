@@ -202,6 +202,10 @@ describe('Canvas relational-tree Workbench', () => {
       container.querySelector('[data-slot="canvas-relational-tree-inspection"]')
     ).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-relational-tree-viewport"]')).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="canvas-relational-tree-start-authoring"]')
+    ).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-relational-tree-detail"]')).toBeNull();
     const tree = container.querySelector('[data-slot="canvas-relational-tree"]');
     const toggle = container.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-relational-tree-sources-toggle"]'
@@ -239,19 +243,20 @@ describe('Canvas relational-tree Workbench', () => {
         .querySelector('[data-slot="canvas-relational-tree-source-list"]')
         ?.hasAttribute('hidden')
     ).toBe(false);
-    const detail = container.querySelector('[data-slot="canvas-relational-tree-detail"]');
-    expect(detail?.tagName).toBe('SECTION');
-    expect(detail?.getAttribute('data-position')).toBe('contextual');
-    expect(detail?.textContent).toContain('JOIN');
+    expect(container.querySelector('[data-slot="canvas-relational-tree-detail"]')).toBeNull();
     expect(container.textContent).toContain('Orders with clients');
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-source"]')?.textContent
     ).not.toContain('Columns: 1');
-    expect(detail?.textContent).not.toContain('Expressions');
-    expect(detail?.querySelector('dl')).toBeNull();
+    act(() =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-node-expand"]')!
+        .click()
+    );
     expect(
-      detail?.querySelector('[data-slot="semantic-workbench-join-condition-row"]')
-    ).not.toBeNull();
+      container.querySelector('[data-slot="canvas-join-expression-tree"]')?.textContent
+    ).toContain('clients.customer_id');
+    expect(container.querySelector('[data-slot="canvas-relational-tree"]')).toBe(tree);
     expect(
       container.querySelector('[data-slot="canvas-relational-tree"] [title="Columns"]')
     ).toBeNull();
@@ -340,11 +345,8 @@ describe('Canvas relational-tree Workbench', () => {
       'PROJECT'
     );
     expect(
-      container.querySelector('[data-slot="canvas-relational-tree-start-authoring"]')?.textContent
-    ).toContain('Compose relation');
-    expect(
-      container.querySelector('[data-slot="canvas-relational-tree-start-authoring"]')?.textContent
-    ).toContain('2');
+      container.querySelector('[data-slot="canvas-relational-tree-start-authoring"]')
+    ).toBeNull();
     const sourceButtons = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     );
@@ -721,7 +723,7 @@ describe('Canvas relational-tree Workbench', () => {
     });
 
     const start = container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-relational-tree-start-authoring"] button'
+      '[data-slot="canvas-relational-node-expand"]'
     );
     expect(start).not.toBeNull();
     act(() => start?.click());

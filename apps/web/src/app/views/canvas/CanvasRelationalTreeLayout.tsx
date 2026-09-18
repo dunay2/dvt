@@ -44,12 +44,14 @@ export function CanvasRelationalTreeLayout({
   selectedLocator,
   copy,
   onSelect,
+  onExpand,
 }: Readonly<{
   outputName: string;
   root: CanvasRelationalTreeNode;
   selectedLocator: string;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
+  onExpand?: (locator: string) => void;
 }>): JSX.Element {
   const layout = useMemo(() => layoutCanvasRelationalTree(root), [root]);
   const rootNode = layout.nodes[0]!;
@@ -130,6 +132,7 @@ export function CanvasRelationalTreeLayout({
             selected={placed.node.locator === selectedLocator}
             copy={copy}
             onSelect={onSelect}
+            onExpand={onExpand}
           />
         ))}
       </ul>

@@ -27,7 +27,6 @@ export function useCanvasRelationalTreeAuthoringSession(
 ) {
   const { authoring, edges, enabled, inputs, nodes, transformNode } = args;
   const editable = authoring?.canEditNode === true;
-  const targetNodeId = transformNode.id;
   const [operation, setOperation] = useState<CanvasRelationalOperation | null>(null);
   const [active, setActive] = useState(false);
   const [joinDraft, setJoinDraft] = useState<DvtSubstraitInnerJoinDraft | null>(null);
@@ -59,16 +58,16 @@ export function useCanvasRelationalTreeAuthoringSession(
     },
     [replaceInputs]
   );
-  const hydrateExistingJoin = useCanvasRelationalTreeExistingJoinSeed({
+  const { hydrateExistingJoin, baselineDraft } = useCanvasRelationalTreeExistingJoinSeed({
     edges,
     inputs,
     nodes,
-    targetNodeId,
+    targetNodeId: transformNode.id,
     transformNode,
     onHydrate: hydrateExistingJoinState,
   });
 
-  useEffect(reset, [enabled, reset, targetNodeId]);
+  useEffect(reset, [enabled, reset, transformNode.id]);
   const { candidates, choices } = useCanvasRelationalTreeAuthoringOptions({
     editable,
     edges,
@@ -78,7 +77,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     nodes,
     operation,
     selectedInputIds,
-    targetNodeId,
+    targetNodeId: transformNode.id,
   });
 
   const selectInput = useCallback(
@@ -131,7 +130,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     inputs,
     joinDraft,
     selectedInputIds,
-    targetNodeId,
+    targetNodeId: transformNode.id,
     appendOperand,
     setAppendInputId,
     setJoinDraft,
@@ -152,12 +151,13 @@ export function useCanvasRelationalTreeAuthoringSession(
   });
 
   const start = useCallback(() => {
-    if (!enabled || !editable) return;
+    if (!enabled || !editable || active) return;
     if (!hydrateExistingJoin()) setActive(true);
-  }, [editable, enabled, hydrateExistingJoin]);
+  }, [active, editable, enabled, hydrateExistingJoin]);
 
   return {
     active,
+    baselineDraft,
     appendInput: inputs.find((input) => input.nodeId === appendInputId) ?? null,
     apply,
     appendJoinInput,

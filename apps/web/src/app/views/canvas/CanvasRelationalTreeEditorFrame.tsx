@@ -1,71 +1,44 @@
 /** Owned concern: explicitly expand or focus operation controls without a permanent inspector. */
-import { ChevronDown, Maximize2, Minimize2 } from 'lucide-react';
+import { X } from 'lucide-react';
 import { CanvasRelationalJoinIcon } from './CanvasRelationalJoinIcon';
-import { useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 
 export function CanvasRelationalTreeEditorFrame({
   title,
   children,
-  forceExpanded = false,
   hidden = false,
+  onClose,
 }: Readonly<{
   title: string;
   children: ReactNode;
-  forceExpanded?: boolean;
   hidden?: boolean;
+  onClose: () => void;
 }>): JSX.Element {
-  const [expanded, setExpanded] = useState(false);
-  const [focused, setFocused] = useState(false);
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
-  const visible = expanded || focused || forceExpanded;
   return (
     <section
       data-slot="canvas-relational-tree-inline-editor"
       hidden={hidden}
-      className={`${focused ? 'absolute inset-0 z-20' : visible ? 'max-h-[45%] shrink-0' : 'shrink-0'} overflow-auto border-t border-(--border-subtle) bg-(--surface-panel)`}
-      onKeyDown={(event) => {
-        if (event.key !== 'Escape' || !focused || event.defaultPrevented) return;
-        event.preventDefault();
-        event.stopPropagation();
-        setFocused(false);
-      }}
+      className={`${hidden ? 'hidden' : 'flex'} max-h-[48%] shrink-0 flex-col overflow-hidden border-t border-(--border-subtle) bg-(--surface-panel)`}
     >
-      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-(--border-subtle) bg-(--surface-panel) px-4 py-1.5">
+      <header className="flex h-9 shrink-0 items-center gap-2 border-b border-(--border-subtle) bg-(--surface-panel) px-3">
         <CanvasRelationalJoinIcon className="size-4 text-(--status-info)" />
         <h3 className="text-xs font-semibold">{title}</h3>
         <button
           type="button"
-          data-slot="canvas-relational-expand"
-          aria-expanded={visible}
-          disabled={forceExpanded}
-          onClick={() => {
-            setFocused(false);
-            setExpanded(!visible);
-          }}
-          className="ml-auto flex items-center gap-2 rounded border border-(--border-subtle) px-3 py-1.5 text-xs hover:bg-(--surface-selected)"
+          data-slot="canvas-relational-collapse"
+          aria-label={copy.collapse}
+          title={copy.collapse}
+          onClick={onClose}
+          className="ml-auto grid size-7 place-items-center rounded hover:bg-(--surface-selected)"
         >
-          {visible ? copy.collapse : copy.conditions}
-          <ChevronDown aria-hidden="true" className={`size-3.5 ${visible ? 'rotate-180' : ''}`} />
-        </button>
-        <button
-          type="button"
-          data-slot="canvas-relational-focus"
-          aria-pressed={focused}
-          onClick={() => setFocused((current) => !current)}
-          className="flex items-center gap-2 rounded border border-(--border-subtle) px-3 py-1.5 text-xs hover:bg-(--surface-selected)"
-        >
-          {focused ? (
-            <Minimize2 aria-hidden="true" className="size-3.5" />
-          ) : (
-            <Maximize2 aria-hidden="true" className="size-3.5" />
-          )}
-          {focused ? copy.exitFocus : copy.focus}
+          <X aria-hidden="true" className="size-4" />
         </button>
       </header>
-      <div className={visible ? 'max-w-5xl px-4 py-2' : 'hidden'}>{children}</div>
+      <div className="min-h-0 overflow-auto p-3">{children}</div>
     </section>
   );
 }

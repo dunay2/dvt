@@ -34,6 +34,7 @@ export function CanvasRelationalTreeDraftViewport({
   onSelectOperation,
   selectedRelationId,
   onSelectRelation,
+  onExpandRelation,
 }: Readonly<{
   copy: CanvasRelationalTreeWorkbenchCopy;
   edges: readonly CanonicalEdge[];
@@ -50,6 +51,7 @@ export function CanvasRelationalTreeDraftViewport({
   onSelectOperation: (operation: CanvasRelationalOperation) => void;
   selectedRelationId: string | null;
   onSelectRelation: (relationId: string | null) => void;
+  onExpandRelation: (relationId: string | null) => void;
 }>): JSX.Element {
   const inputById = useMemo(
     () => new Map(inputs.map((input) => [input.nodeId, input] as const)),
@@ -72,10 +74,9 @@ export function CanvasRelationalTreeDraftViewport({
     draftProjection == null ? [] : flattenCanvasRelationalTree(draftProjection.root);
   const selectedLocator =
     treeNodes.find((node) => node.relationId === selectedRelationId)?.locator ?? '';
-  const rootLocator = draftProjection?.root.locator ?? '';
   const rootRelationId = draftProjection?.root.relationId ?? null;
   const viewport = useCanvasRelationalTreeViewport(
-    `${rootLocator}:${selectedInputIds.join(',')}:${operation}`
+    `${draftProjection?.root.locator ?? ''}:${selectedInputIds.join(',')}:${operation}`
   );
   useEffect(() => {
     if (selectedRelationId == null && rootRelationId != null) onSelectRelation(rootRelationId);
@@ -137,6 +138,11 @@ export function CanvasRelationalTreeDraftViewport({
               root={draftProjection.root}
               selectedLocator={selectedLocator}
               copy={copy}
+              onExpand={(locator) =>
+                onExpandRelation(
+                  treeNodes.find((node) => node.locator === locator)?.relationId ?? null
+                )
+              }
               onSelect={(locator) =>
                 onSelectRelation(
                   treeNodes.find((node) => node.locator === locator)?.relationId ?? null

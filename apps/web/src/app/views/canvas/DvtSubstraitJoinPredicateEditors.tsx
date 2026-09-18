@@ -8,6 +8,8 @@ import {
   type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
 import { SemanticWorkbenchJoinConditionEditor } from './SemanticWorkbenchJoinConditionEditor';
+import type { CanonicalNode } from '../../types/canonical';
+import { CanvasRelationalJoinExpressionTree } from './CanvasRelationalJoinExpressionTree';
 
 export function DvtSubstraitJoinPredicateEditors({
   disabled,
@@ -16,6 +18,7 @@ export function DvtSubstraitJoinPredicateEditors({
   onChange,
   onPendingConditionChange,
   selectedRelationId,
+  transformNode,
 }: Readonly<{
   disabled: boolean;
   draft: DvtSubstraitInnerJoinDraft;
@@ -23,6 +26,7 @@ export function DvtSubstraitJoinPredicateEditors({
   onChange: (draft: DvtSubstraitInnerJoinDraft) => void;
   onPendingConditionChange?: (pending: boolean) => void;
   selectedRelationId?: string | null;
+  transformNode?: CanonicalNode;
 }>): JSX.Element {
   const [editing, setEditing] = useState<ReadonlySet<string>>(() => new Set());
   const trackEditing = useCallback((relationId: string, pending: boolean) => {
@@ -53,6 +57,42 @@ export function DvtSubstraitJoinPredicateEditors({
             data-relation-id={joinRelation.relationId}
           >
             <SemanticWorkbenchJoinConditionEditor
+              renderExpression={
+                transformNode == null ||
+                (selectedRelationId != null && selectedRelationId !== joinRelation.relationId)
+                  ? undefined
+                  : (edit) => {
+                      if (edit != null && edit.condition == null)
+                        return (
+                          <p role="status" className="text-xs text-amber-200">
+                            Completa los operandos para representar la condición.
+                          </p>
+                        );
+                      const previewDraft =
+                        edit?.condition == null
+                          ? draft
+                          : edit.conditionKey == null
+                            ? addDvtSubstraitJoinPredicateCondition({
+                                draft,
+                                joinRelationId: joinRelation.relationId,
+                                condition: edit.condition,
+                                groupWithPrevious: edit.groupWithPrevious,
+                              })
+                            : updateDvtSubstraitJoinPredicateCondition({
+                                draft,
+                                joinRelationId: joinRelation.relationId,
+                                conditionKey: edit.conditionKey,
+                                condition: edit.condition,
+                              });
+                      return (
+                        <CanvasRelationalJoinExpressionTree
+                          transformNode={transformNode}
+                          relationId={joinRelation.relationId}
+                          draft={previewDraft}
+                        />
+                      );
+                    }
+              }
               onEditingChange={(pending) => trackEditing(joinRelation.relationId, pending)}
               projection={projection}
               rightInputIndex={index + 1}

@@ -9,6 +9,7 @@ import {
   type DvtSubstraitInnerJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import { DvtSubstraitJoinPredicateEditors } from './DvtSubstraitJoinPredicateEditors';
+import type { CanonicalNode } from '../../types/canonical';
 
 const selectClassName =
   'h-8 w-full rounded border border-(--border-subtle) bg-(--surface-subtle) px-2 text-xs text-(--text-primary)';
@@ -21,6 +22,7 @@ export function CanvasRelationalTreeJoinEditor({
   onChange,
   onPendingConditionChange,
   selectedRelationId,
+  transformNode,
 }: Readonly<{
   appendInput: CanvasDvtCompositionInput | null;
   copy: CanvasRelationalTreeWorkbenchCopy;
@@ -29,6 +31,7 @@ export function CanvasRelationalTreeJoinEditor({
   onChange: (draft: DvtSubstraitInnerJoinDraft) => void;
   onPendingConditionChange?: (pending: boolean) => void;
   selectedRelationId: string | null;
+  transformNode: CanonicalNode;
 }>): JSX.Element | null {
   const inspection = useMemo(() => inspectDvtSubstraitNInputJoinDraft(draft), [draft]);
   const outputs = inspection.ok ? inspection.projection.outputs : [];
@@ -52,6 +55,7 @@ export function CanvasRelationalTreeJoinEditor({
           onChange={onChange}
           onPendingConditionChange={onPendingConditionChange}
           selectedRelationId={selectedRelationId}
+          transformNode={transformNode}
         />
       </div>
       {appendInput == null ? null : (

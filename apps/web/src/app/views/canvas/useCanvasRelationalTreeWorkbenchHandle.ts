@@ -13,9 +13,15 @@ export function useCanvasRelationalTreeWorkbenchHandle(
   ref: ForwardedRef<CanvasRelationalTreeWorkbenchHandle>,
   model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>,
   pendingCondition: boolean
-): void {
-  useImperativeHandle(ref, () => ({
-    hasUnappliedChanges: model.session.active && model.session.selectedInputIds.length > 0,
+): CanvasRelationalTreeWorkbenchHandle {
+  const { session } = model;
+  const changed =
+    session.operation !== 'inner_join' ||
+    session.joinDraft !== session.baselineDraft ||
+    session.appendInput != null;
+  const handle = {
+    hasUnappliedChanges:
+      session.active && (changed || pendingCondition) && session.selectedInputIds.length > 0,
     canApply:
       !pendingCondition &&
       model.authoringAvailable &&
@@ -25,5 +31,7 @@ export function useCanvasRelationalTreeWorkbenchHandle(
         (model.session.operation === 'union_all' && model.session.selectedInputIds.length >= 2)),
     apply: model.session.apply,
     cancel: model.session.cancel,
-  }));
+  };
+  useImperativeHandle(ref, () => handle);
+  return handle;
 }

@@ -9,6 +9,7 @@ import {
 import { CanvasRelationalTreeJoinEditor } from './CanvasRelationalTreeJoinEditor';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { canvasRelationalOperationLabel } from './DvtRelationalOperationChooser';
+import type { CanonicalNode } from '../../types/canonical';
 
 export function CanvasRelationalTreeInlineEditor({
   appendInput,
@@ -19,6 +20,9 @@ export function CanvasRelationalTreeInlineEditor({
   onChangeJoinDraft,
   onPendingConditionChange,
   selectedRelationId,
+  transformNode,
+  expanded,
+  onClose,
 }: Readonly<{
   appendInput: CanvasDvtCompositionInput | null;
   copy: CanvasRelationalTreeWorkbenchCopy;
@@ -30,6 +34,9 @@ export function CanvasRelationalTreeInlineEditor({
   onChangeJoinDraft: (draft: DvtSubstraitInnerJoinDraft) => void;
   onPendingConditionChange?: (pending: boolean) => void;
   selectedRelationId: string | null;
+  transformNode: CanonicalNode;
+  expanded: boolean;
+  onClose: () => void;
 }>): JSX.Element | null {
   if (operation !== 'inner_join' || joinDraft == null) return null;
   const inspection = inspectDvtSubstraitNInputJoinDraft(joinDraft);
@@ -42,8 +49,8 @@ export function CanvasRelationalTreeInlineEditor({
   return (
     <CanvasRelationalTreeEditorFrame
       title={canvasRelationalOperationLabel(operation, copy)}
-      forceExpanded={appendInput != null}
-      hidden={!selectedJoin && appendInput == null}
+      hidden={appendInput == null && (!selectedJoin || !expanded)}
+      onClose={onClose}
     >
       <CanvasRelationalTreeJoinEditor
         appendInput={appendInput}
@@ -53,6 +60,7 @@ export function CanvasRelationalTreeInlineEditor({
         onChange={onChangeJoinDraft}
         onPendingConditionChange={onPendingConditionChange}
         selectedRelationId={selectedRelationId}
+        transformNode={transformNode}
       />
     </CanvasRelationalTreeEditorFrame>
   );

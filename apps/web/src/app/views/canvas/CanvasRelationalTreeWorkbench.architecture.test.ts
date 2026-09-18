@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import DetailSource from './CanvasRelationalTreeNodeDetail.tsx?raw';
+import DetailSource from './CanvasRelationalJoinExpressionTree.tsx?raw';
 import GeometrySource from './canvasRelationalTreeGeometry.ts?raw';
 import GraphNodeSource from './CanvasRelationalTreeGraphNode.tsx?raw';
 import LayoutSource from './CanvasRelationalTreeLayout.tsx?raw';
-import AuthoringPromptSource from './CanvasRelationalTreeAuthoringPrompt.tsx?raw';
+import SessionActionsSource from './CanvasRelationalTreeSessionActions.tsx?raw';
 import BlockCanvasSource from './CanvasRelationalTreeBlockCanvas.tsx?raw';
 import CatalogueSource from './CanvasRelationalTreeSourceCatalogue.tsx?raw';
 import DraftViewportSource from './CanvasRelationalTreeDraftViewport.tsx?raw';
@@ -62,7 +62,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(AuthoringOptionsSource.split('\n').length).toBeLessThan(100);
     expect(OperandSlotsSource.split('\n').length).toBeLessThan(90);
     expect(ProjectionAuthoringSource.split('\n').length).toBeLessThan(60);
-    expect(AuthoringPromptSource.split('\n').length).toBeLessThan(80);
+    expect(SessionActionsSource.split('\n').length).toBeLessThan(80);
     expect(WorkbenchModelSource).toContain('projectCanvasRelationalTree');
   });
 
@@ -97,14 +97,16 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(ApplyCommandSource).toContain('authoring?.onApplyNodeDraft(');
     expect(ApplyCommandSource).not.toContain('applyInspectorNodeDraft');
     expect(WorkbenchSource).not.toContain('CanvasRelationalTreeAuthoringPanel');
-    expect(WorkbenchSource).toContain('CanvasRelationalTreeAuthoringPrompt');
+    expect(WorkbenchSource).toContain('CanvasRelationalTreeSessionActions');
+    expect(WorkbenchSource).not.toContain('CanvasRelationalTreeAuthoringPrompt');
     expect(WorkbenchSource).not.toContain('CanvasRelationalTreeDraftView');
     expect(BlockCanvasSource).not.toContain('CanvasRelationalTreeOperationPanel');
     expect(BlockCanvasSource).toContain('CanvasRelationalTreeOperationShelf');
     expect(BlockCanvasSource).toContain('CanvasRelationalTreeDraftViewport');
     expect(WorkbenchSource).not.toContain('minmax(15rem,20rem)');
     expect(DetailSource).not.toContain('<dl');
-    expect(DetailSource).toContain('projectSemanticWorkbenchJoinConditionRows');
+    expect(DetailSource).toContain('projectSemanticWorkbenchGraph');
+    expect(DetailSource).toContain("view: 'join-expression'");
     expect(DetailSource).not.toContain('GitMerge');
     expect(BlockCanvasSource).toContain('selectedRelationId');
     expect(InlineEditorSource).toContain('selectedRelationId');
