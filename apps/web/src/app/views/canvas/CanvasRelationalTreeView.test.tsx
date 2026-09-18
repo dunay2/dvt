@@ -151,8 +151,8 @@ describe('Canvas relational-tree branching view', () => {
     }
     for (const parent of ['outer', 'inner']) {
       const edges = container.querySelector(`svg [data-parent-locator="${parent}"]`)!;
-      expect(edges.querySelector('[data-role="left"] text')?.textContent).toBe('Left');
-      expect(edges.querySelector('[data-role="right"] text')?.textContent).toBe('Right');
+      expect(edges.querySelector('[data-role="left"] text')?.textContent).toBe('L');
+      expect(edges.querySelector('[data-role="right"] text')?.textContent).toBe('R');
     }
   });
 });

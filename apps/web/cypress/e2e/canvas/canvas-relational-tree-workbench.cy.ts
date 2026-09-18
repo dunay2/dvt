@@ -233,11 +233,11 @@ describe('Canvas relational-tree Workbench', () => {
       });
     cy.get('[data-slot="canvas-relational-tree-input-label"][data-role="left"] text')
       .should('be.visible')
-      .and('have.text', 'Left')
+      .and('have.text', 'L')
       .and('have.css', 'fill', 'rgb(248, 250, 252)');
     cy.get('[data-slot="canvas-relational-tree-input-label"][data-role="right"] text')
       .should('be.visible')
-      .and('have.text', 'Right')
+      .and('have.text', 'R')
       .and('have.css', 'fill', 'rgb(248, 250, 252)');
     verifyWheelZoom('[data-slot="canvas-relational-tree-viewport"]');
     cy.then(() => {

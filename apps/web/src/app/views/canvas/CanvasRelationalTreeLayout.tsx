@@ -19,8 +19,8 @@ import type {
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 
 function childRoleBadge(role: CanvasRelationalTreeChildRole, ordinal: number): string | null {
-  if (role === 'left') return 'Left';
-  if (role === 'right') return 'Right';
+  if (role === 'left') return 'L';
+  if (role === 'right') return 'R';
   if (role === 'primary') return '1';
   if (role === 'secondary') return String(ordinal + 1);
   return null;
@@ -33,7 +33,7 @@ function edgePath(edge: CanvasRelationalTreePlacedEdge): string {
 
 function EdgeRoleBadge({ edge }: Readonly<{ edge: CanvasRelationalTreePlacedEdge }>) {
   const badge = childRoleBadge(edge.role, edge.ordinal);
-  const width = edge.role === 'left' || edge.role === 'right' ? 50 : 20;
+  const width = 20;
   return badge == null ? null : (
     <g
       data-slot="canvas-relational-tree-input-label"
