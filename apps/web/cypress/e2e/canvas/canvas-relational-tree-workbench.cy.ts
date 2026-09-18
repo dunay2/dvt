@@ -262,7 +262,7 @@ describe('Canvas relational-tree Workbench', () => {
       .should('contain.text', 'SELECT')
       .and('contain.text', 'customers')
       .and('not.contain.text', 'INNER JOIN');
-    cy.get('[data-slot="canvas-model-back"]').click();
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
     visitWithE2eWorkspaceSession('/canvas');
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
     cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]').dblclick(
@@ -393,7 +393,7 @@ describe('Canvas relational-tree Workbench', () => {
     cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
     cy.get('[data-slot="canvas-model-view-tab"]').should('have.length', 3);
     cy.screenshot('semantic-editor-compact');
-    cy.get('[data-slot="canvas-model-back"]').click();
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
     cy.get('.react-flow__node[data-id="join-transform"]').should('exist');
   });
 
@@ -730,7 +730,7 @@ describe('Canvas relational-tree Workbench', () => {
     cy.get('[data-slot="canvas-model-preview"]').click();
     cy.get('[data-slot="canvas-model-data"] table').should('contain.text', 'C-001');
     cy.screenshot('semantic-editor-data-preview');
-    cy.get('[data-slot="canvas-model-back"]').click();
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
     visitWithE2eWorkspaceSession('/canvas');
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
     cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]').dblclick(

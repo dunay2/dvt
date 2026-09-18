@@ -59,6 +59,7 @@ export type CanvasShellLayout = {
   surfaceStrategy: CanvasSurfaceStrategy | null;
   contextualWorkbench?: CanvasShellContextualWorkbench;
   centerSurface?: React.ReactNode;
+  centerSurfaceVisible?: boolean;
   readOnlyBanner?: React.ReactNode;
 };
 

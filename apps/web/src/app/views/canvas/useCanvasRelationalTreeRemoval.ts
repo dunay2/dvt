@@ -23,6 +23,21 @@ export function useCanvasRelationalTreeRemoval(
   }>
 ) {
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState<Readonly<{
+    draft: DvtSubstraitInnerJoinDraft;
+    result: Extract<CanvasRelationalRemovalResult, { reason: 'dependent-operations' }>;
+    ids: readonly string[];
+  }> | null>(null);
+  const accept = (
+    result: Extract<CanvasRelationalRemovalResult, { ok: true }>,
+    ids: readonly string[]
+  ) => {
+    if (!args.active) args.hydrate();
+    args.accept(
+      result,
+      result.retained.map((index) => ids[index]!)
+    );
+  };
   const remove = (relationId: string, keep?: 'left' | 'right'): void => {
     if (!args.enabled) return;
     const draft = args.active ? args.draft : args.seed?.draft;
@@ -34,13 +49,29 @@ export function useCanvasRelationalTreeRemoval(
       keep,
       targetNodeId: args.targetNodeId,
     });
+    setPending(null);
+    if (!result.ok && result.reason === 'dependent-operations') {
+      setError(null);
+      setPending({ draft, result, ids });
+      return;
+    }
     setError(result.ok ? null : result.reason);
     if (!result.ok) return;
-    if (!args.active) args.hydrate();
-    args.accept(
-      result,
-      result.retained.map((index) => ids[index]!)
-    );
+    accept(result, ids);
   };
-  return { remove, error, clearError: () => setError(null) };
+  const confirm = () => {
+    if (pending == null) return;
+    const current = args.active ? args.draft : args.seed?.draft;
+    if (args.enabled && current === pending.draft) accept(pending.result.proposal, pending.ids);
+    else setError('unavailable');
+    setPending(null);
+  };
+  return {
+    remove,
+    error,
+    clearError: () => setError(null),
+    pending,
+    confirm,
+    cancel: () => setPending(null),
+  };
 }

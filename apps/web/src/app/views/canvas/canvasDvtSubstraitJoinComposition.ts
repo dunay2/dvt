@@ -1470,7 +1470,7 @@ function editDvtSubstraitJoinPredicateConditions(args: {
       previousDraft: baseDraft,
     });
     return inspectDvtSubstraitNInputJoinDraft(edited).ok
-      ? restoreDvtSubstraitJoinPredicateContext(args.draft, baseDraft, edited)
+      ? restoreDvtSubstraitJoinContext(args.draft, baseDraft, edited)
       : args.draft;
   } catch {
     return args.draft;
@@ -1486,12 +1486,21 @@ export function inspectDvtSubstraitJoinPredicateContext(draft: DvtSubstraitInner
   return inspection.ok ? { baseDraft, inspection } : null;
 }
 
-function restoreDvtSubstraitJoinPredicateContext(
+export function restoreDvtSubstraitJoinContext(
   original: DvtSubstraitInnerJoinDraft,
   baseDraft: DvtSubstraitInnerJoinDraft,
   edited: DvtSubstraitInnerJoinDraft
 ): DvtSubstraitInnerJoinDraft {
   if (baseDraft === original) return edited;
+  const window = inspectValidInnerJoinGroupedWindow(original);
+  const grouping = inspectValidInnerJoinGrouping(window?.baseDraft ?? original);
+  const inspection = inspectDvtSubstraitNInputJoinDraft(edited);
+  if (grouping == null || !inspection.ok) return original;
+  const groupField = inspection.projection.outputs.find(
+    (field) => field.fieldId === grouping.projection.groupField.fieldId
+  );
+  const joinBinding = innerJoinResultBinding(edited);
+  if (groupField == null || joinBinding == null) return original;
   const plan = clonePlan(original.plan);
   const root = plan.relations[0]?.relType;
   const editedRoot = edited.plan.relations[0]?.relType;
@@ -1514,8 +1523,36 @@ function restoreDvtSubstraitJoinPredicateContext(
   const measure = relation.relType.value.measures[0]?.measure;
   if (measure == null) return original;
   measure.functionReference = ensureDvtSubstraitCountFunction(plan);
+  relation.relType.value.groupingExpressions = [
+    createDvtSubstraitFieldReference(groupField.outputOrdinal),
+  ];
   relation.relType.value.input = editedRoot.value.input;
-  const next = { plan, sidecar: { ...original.sidecar, semanticPlanSha256: ZERO_SHA256 } };
+  const baseIds = new Set(baseDraft.sidecar.relations.map((binding) => binding.relationId));
+  const wrappers = original.sidecar.relations.filter((binding) => !baseIds.has(binding.relationId));
+  const wrapperIds = new Set(wrappers.map((binding) => binding.relationId));
+  const wrapperFields = original.sidecar.fields.filter((field) => wrapperIds.has(field.relationId));
+  const wrapperFieldIds = new Set(wrapperFields.map((field) => field.fieldId));
+  const fields = new Map(
+    [
+      ...edited.sidecar.fields.filter((field) => !wrapperFieldIds.has(field.fieldId)),
+      ...wrapperFields,
+    ].map((field) => [field.fieldId, field])
+  );
+  const next = {
+    plan,
+    sidecar: {
+      ...original.sidecar,
+      semanticPlanSha256: ZERO_SHA256,
+      relations: [
+        ...edited.sidecar.relations,
+        ...wrappers.map((binding) => ({ ...binding, displayName: joinBinding.displayName })),
+      ],
+      fields: original.sidecar.fields.flatMap((field) => {
+        const retained = fields.get(field.fieldId);
+        return retained == null ? [] : [retained];
+      }),
+    },
+  };
   return inspectDvtSubstraitInnerJoinAcceptedDraft(next).ok ? next : original;
 }
 

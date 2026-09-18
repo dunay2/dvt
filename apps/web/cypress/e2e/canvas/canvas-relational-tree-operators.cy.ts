@@ -12,7 +12,7 @@ import {
 
 const form = '[data-slot="canvas-relational-operator-form"]';
 const tool = (id: string): string => `[data-operator-tool="${id}"]`;
-function openEditor(union = false, readOnly = false): void {
+function openEditor(union = false, readOnly = false, nInput = false): void {
   stubShellBootstrapApis({
     scopes: readOnly
       ? ['workspace:graph-draft:view']
@@ -30,6 +30,7 @@ function openEditor(union = false, readOnly = false): void {
   stubStatefulCanvasDraftAuthoring({
     substraitUnionAll: union,
     substraitInnerJoin: !union,
+    substraitNInputJoin: nInput,
     readOnly,
   });
   cy.viewport(1440, 900);
@@ -42,11 +43,93 @@ function openEditor(union = false, readOnly = false): void {
     },
   });
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
-  cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').click();
+  cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').first().click();
   cy.get('[data-slot="canvas-relational-tree-workbench"]').should('be.visible');
 }
 
+function activateMenu(slot: string): void {
+  const selector = `[data-slot="context-menu-content"][data-state="open"] [data-slot="${slot}"]`;
+  cy.get(selector).then(($item) => {
+    const document = $item[0]!.ownerDocument;
+    const event = new document.defaultView!.MouseEvent('pointerdown', {
+      button: 0,
+      bubbles: true,
+      cancelable: true,
+    });
+    $item[0]!.dispatchEvent(event);
+    expect(event.defaultPrevented, 'viewport must not cancel a portalled menu activation').to.equal(
+      false
+    );
+    expect(
+      document.querySelector('[data-panning="true"]'),
+      'viewport must not capture menu activation'
+    ).to.equal(null);
+  });
+  cy.get(selector).click();
+  cy.get('[data-slot="context-menu-content"][data-state="open"]').should('not.exist');
+}
+
+function addWrapper(id: string): void {
+  cy.get(tool(id)).click();
+  cy.get(
+    '[role="dialog"] ' + form + ', [role="dialog"][data-slot="canvas-relational-operator-form"]'
+  )
+    .find('button[type="submit"]')
+    .click();
+}
+
 describe('Relational operator toolbar', () => {
+  it('activates context menus below wrappers and preserves the draft between main workspace tabs', () => {
+    openEditor(false, false, true);
+    cy.contains('[data-slot="canvas-relational-tree-source"]', 'shipments').click();
+    cy.get('[data-slot="canvas-relational-tree-existing-field"]').select('customers.customer_id');
+    cy.get('[data-slot="canvas-relational-tree-connected-field"]').select('shipments.customer_id');
+    cy.get('[data-slot="canvas-relational-tree-append-input"]').click();
+    addWrapper('aggregate');
+    addWrapper('window');
+    cy.get('[data-operator="join"]').should('have.length', 2).first().rightclick();
+    activateMenu('canvas-relational-edit-operation');
+    cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
+    let catalogueContextEvent: Event | null = null;
+    cy.document().then((document) => {
+      document.addEventListener(
+        'contextmenu',
+        (event) => {
+          catalogueContextEvent = event;
+        },
+        { once: true, capture: true }
+      );
+    });
+    cy.get('[data-slot="canvas-relational-tree-source"]').first().rightclick();
+    cy.then(() =>
+      expect(catalogueContextEvent?.defaultPrevented, 'no native menu in the editor').to.equal(true)
+    );
+    cy.get('[data-slot="shell-top-bar"] [data-slot="canvas-workspace-tab"]').click();
+    cy.get('[data-slot="canvas-model-editor"]').should('not.be.visible');
+    cy.get('[data-slot="canvas-model-main-tab"]').click();
+    cy.get('[data-operator="join"]').should('have.length', 2);
+    cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
+    cy.get('[data-operator="join"]').first().rightclick();
+    activateMenu('canvas-relational-remove-left');
+    cy.get('[data-operator="join"]').should('have.length', 1);
+    cy.get('[data-operator="aggregate"]').should('have.length', 1);
+    cy.contains('[data-operator="project"]', 'WINDOW').should('be.visible');
+    cy.get('[data-operator="join"]').rightclick();
+    activateMenu('canvas-relational-remove-right');
+    cy.get('[role="alertdialog"]')
+      .should('contain.text', 'AGGREGATE')
+      .and('contain.text', 'WINDOW');
+    cy.contains('[role="alertdialog"] button', 'Keep editing').click();
+    cy.get('[data-operator="join"]').should('have.length', 1).rightclick();
+    activateMenu('canvas-relational-remove-right');
+    cy.get('[data-slot="canvas-relational-removal-confirm"]').click();
+    cy.get('[data-operator="join"], [data-operator="aggregate"]').should('not.exist');
+    cy.get('[data-operator="read"]').should('have.length', 1);
+    cy.get('[data-slot="canvas-relational-node-title"]').should('not.contain.text', 'WINDOW');
+    cy.screenshot('workspace-tabs-contextual-removal');
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+    cy.get('[data-operator="join"]').should('have.length', 1);
+  });
   it('keeps the selected JOIN editable below grouping and windows, and removes the selected wrapper', () => {
     openEditor();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');

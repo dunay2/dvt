@@ -2,8 +2,8 @@
 import './canvasSemanticEditor.css';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { ArrowLeft, Braces, GitBranch, Table2 } from 'lucide-react';
-import { Button } from '../../components/ui/button';
+import { Braces, GitBranch, Table2 } from 'lucide-react';
+import { useCanvasModelWorkspaceTab } from './useCanvasModelWorkspaceTab';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -47,6 +47,9 @@ export function CanvasModelEditor({
   query,
   preparePreview,
   onClose,
+  active = true,
+  onSelect,
+  onShowCanvas,
 }: Readonly<{
   canvasId: string;
   canvasName: string;
@@ -59,6 +62,9 @@ export function CanvasModelEditor({
   query?: ICanvasTransformDataSampleQueryPort;
   preparePreview?: CanvasModelPreviewPreparation;
   onClose: () => void;
+  active?: boolean;
+  onSelect: () => void;
+  onShowCanvas: () => void;
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
@@ -70,6 +76,7 @@ export function CanvasModelEditor({
     CanvasModelView | 'canvas' | 'route' | null
   >(null);
   const routeNavigation = useRef<CanvasModelBlockedNavigation | null>(null);
+  const afterClose = useRef<(() => void) | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [appliedForNavigation, setAppliedForNavigation] = useState(false);
   const [navigationError, setNavigationError] = useState<string | null>(null);
@@ -91,13 +98,18 @@ export function CanvasModelEditor({
     if (target === 'route') {
       routeNavigation.current?.proceed();
       routeNavigation.current = null;
-    } else if (target === 'canvas') onClose();
-    else setView(target);
+    } else if (target === 'canvas') {
+      const continuation = afterClose.current;
+      afterClose.current = undefined;
+      if (continuation != null) continuation();
+      else onClose();
+    } else setView(target);
     setPendingNavigation(null);
     setNavigationError(null);
     setAppliedForNavigation(false);
   };
   const stay = () => {
+    afterClose.current = undefined;
     routeNavigation.current?.reset();
     routeNavigation.current = null;
     setPendingNavigation(null);
@@ -136,6 +148,19 @@ export function CanvasModelEditor({
     if (workbench.current?.hasUnappliedChanges) setPendingNavigation(target);
     else navigate(target);
   };
+  useCanvasModelWorkspaceTab({
+    canvasId,
+    nodeId: transformNode.id,
+    label: transformNode.name,
+    active,
+    onSelect,
+    onCanvas: onShowCanvas,
+    onClose: (continuation) => {
+      afterClose.current = continuation;
+      onSelect();
+      requestNavigation('canvas');
+    },
+  });
   useEffect(() => {
     const preventLostDraft = (event: BeforeUnloadEvent) => {
       if (!saving && !workbench.current?.hasUnappliedChanges) return;
@@ -161,17 +186,6 @@ export function CanvasModelEditor({
         data-slot="canvas-model-toolbar"
         className="flex shrink-0 flex-wrap items-center gap-x-3 border-b border-(--border-subtle) bg-(--surface-shell) px-3 [&:has([data-slot=canvas-relational-tree-apply])_[data-slot=canvas-model-save-status]]:hidden"
       >
-        <Button
-          data-slot="canvas-model-back"
-          variant="ghost"
-          size="sm"
-          title={`${copy.back} · ${canvasName}`}
-          aria-label={copy.back}
-          className="size-8 p-0"
-          onClick={() => requestNavigation('canvas')}
-        >
-          <ArrowLeft aria-hidden="true" className="size-4" />
-        </Button>
         <Table2 className="size-4 shrink-0 text-(--primary)" aria-hidden="true" />
         <h1
           className="max-w-48 truncate text-sm font-semibold"

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 /** Owned concern: prove local mouse navigation without relational editing side effects. */
 import { act } from 'react';
+import { createPortal } from 'react-dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewport';
@@ -24,6 +25,7 @@ function ViewportHarness(): JSX.Element {
           <button type="button">JOIN</button>
           <input aria-label="Value" />
         </div>
+        {createPortal(<div role="menuitem">Open operation</div>, document.body)}
       </div>
     </>
   );
@@ -188,5 +190,14 @@ describe('relational-tree mouse navigation', () => {
       viewport.dispatchEvent(event('pointerdown', 2, 100, 100));
     });
     expect(viewport.setPointerCapture).toHaveBeenCalledOnce();
+  });
+  it('does not cancel or capture pointer activation from a portalled application menu', () => {
+    viewport.setPointerCapture = vi.fn();
+    const event = new MouseEvent('pointerdown', { button: 0, bubbles: true, cancelable: true });
+    act(() => {
+      document.querySelector('[role="menuitem"]')!.dispatchEvent(event);
+    });
+    expect(event.defaultPrevented).toBe(false);
+    expect(viewport.setPointerCapture).not.toHaveBeenCalled();
   });
 });

@@ -84,6 +84,7 @@ export function useCanvasRelationalTreeViewport(
 
   const onPointerDown: PointerEventHandler<HTMLDivElement> = (event) => {
     if (
+      !event.currentTarget.contains(event.target as Node) ||
       (event.button !== 0 && event.button !== 1) ||
       (event.button === 0 &&
         (event.target as Element).closest('button, input, select, summary, a') != null)

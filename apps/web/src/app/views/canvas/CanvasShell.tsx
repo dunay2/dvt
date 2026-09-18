@@ -28,6 +28,7 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 import { buildGraphDraftWorkspaceFileCodeContributions } from './graphDraftWorkspaceFileCodeContribution';
 import { findCanvasGraphNodeElement } from './canvasNodeWorkbenchDomGeometry';
 import { useCanvasNodeDataSample } from './useCanvasNodeDataSample';
+import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
 import { projectCanvasRelationalCompositionEdgeInteractions } from './canvasRelationalCompositionEdgeInteraction';
 
 type WorkbenchOpener = Readonly<{
@@ -82,6 +83,7 @@ export default function CanvasShell({
     warehouseSourceDataSampleQuery,
   });
   const [relationalTreeTransformId, setRelationalTreeTransformId] = useState<string | null>(null);
+  const [modelTabActive, setModelTabActive] = useState(true);
   const [initialModelView, setInitialModelView] = useState<CanvasModelView>('editor');
   const relationalTreeTransformIds = useMemo(
     () =>
@@ -106,10 +108,17 @@ export default function CanvasShell({
         element: document.activeElement instanceof HTMLElement ? document.activeElement : null,
         fallbackNodeId: nodeId,
       };
-      setInitialModelView(view);
-      setRelationalTreeTransformId(nodeId);
+      const open = () => {
+        setInitialModelView(view);
+        setRelationalTreeTransformId(nodeId);
+        setModelTabActive(true);
+      };
+      const current = useCanvasWorkspaceMenuContributionStore.getState().modelTab;
+      if (current?.canvasId === panels.activeCanvasId && current.nodeId !== nodeId)
+        current.onClose(open);
+      else open();
     },
-    [relationalTreeTransformIds]
+    [relationalTreeTransformIds, panels.activeCanvasId]
   );
   const workbenchOpenerRef = useRef<WorkbenchOpener | null>(null);
   const contextualWorkbenchId = useCanvasInteractionStore((state) => state.contextualWorkbenchId);
@@ -419,8 +428,9 @@ export default function CanvasShell({
             ? shellLayout
             : {
                 ...shellLayout,
-                inspectorPanelVisible: false,
+                inspectorPanelVisible: modelTabActive ? false : shellLayout.inspectorPanelVisible,
                 contextualWorkbench: undefined,
+                centerSurfaceVisible: modelTabActive,
                 centerSurface: (
                   <CanvasModelEditor
                     key={`${panels.activeCanvasId}:${relationalTreeTransform.id}`}
@@ -434,6 +444,9 @@ export default function CanvasShell({
                     draftStatus={chromeState.draftStatusState}
                     query={canvasTransformDataSampleQuery}
                     preparePreview={prepareModelPreview}
+                    active={modelTabActive}
+                    onSelect={() => setModelTabActive(true)}
+                    onShowCanvas={() => setModelTabActive(false)}
                     onClose={() => {
                       setRelationalTreeTransformId(null);
                       restoreWorkbenchFocus();

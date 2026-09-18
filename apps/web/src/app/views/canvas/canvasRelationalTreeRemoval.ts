@@ -4,6 +4,7 @@ import {
   inspectDvtSubstraitInnerJoinAcceptedDraft,
   inspectDvtSubstraitJoinPredicateContext,
   retainDvtSubstraitJoinInputs,
+  restoreDvtSubstraitJoinContext,
   type DvtSubstraitInnerJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
@@ -26,6 +27,12 @@ export type CanvasRelationalRemovalResult =
   | Readonly<{
       ok: false;
       reason: 'unavailable' | 'dependent-condition' | 'unsupported-projection-type';
+    }>
+  | Readonly<{
+      ok: false;
+      reason: 'dependent-operations';
+      operations: readonly string[];
+      proposal: Extract<CanvasRelationalRemovalResult, { ok: true }>;
     }>;
 
 export function removeCanvasRelationalTreeNode(
@@ -86,6 +93,38 @@ export function removeCanvasRelationalTreeNode(
           ).map((_, index) => index),
         };
     }
+  }
+  const context = inspectDvtSubstraitJoinPredicateContext(args.draft);
+  if (context != null && context.baseDraft !== args.draft) {
+    const baseIds = new Set(
+      context.baseDraft.sidecar.relations.map((binding) => binding.relationId)
+    );
+    const wrappers = args.draft.sidecar.relations.filter(
+      (binding) => !baseIds.has(binding.relationId)
+    );
+    const wrapperIndex = wrappers.findIndex((binding) => binding.relationId === args.relationId);
+    const result =
+      wrapperIndex >= 0
+        ? {
+            ok: true as const,
+            draft: context.baseDraft,
+            operation: 'inner_join' as const,
+            retained: context.inspection.projection.inputs.map((_, index) => index),
+          }
+        : removeCanvasRelationalTreeNode({ ...args, draft: context.baseDraft });
+    if (!result.ok) return result;
+    if (wrapperIndex < 0) {
+      const restored = restoreDvtSubstraitJoinContext(args.draft, context.baseDraft, result.draft);
+      if (restored !== args.draft) return { ...result, draft: restored };
+    }
+    return {
+      ok: false,
+      reason: 'dependent-operations',
+      operations: wrappers
+        .map((_, index) => (index === 0 ? 'AGGREGATE' : 'WINDOW'))
+        .slice(wrapperIndex >= 0 ? wrapperIndex + 1 : 0),
+      proposal: result,
+    };
   }
   const inspection = inspectDvtSubstraitNInputJoinDraft(args.draft);
   if (!inspection.ok) return { ok: false, reason: 'dependent-condition' };

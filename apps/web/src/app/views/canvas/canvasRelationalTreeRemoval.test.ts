@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 import {
   appendDvtSubstraitInnerJoinInput,
+  applyDvtSubstraitInnerJoinGrouping,
+  applyDvtSubstraitInnerJoinGroupedRowNumber,
+  inspectDvtSubstraitInnerJoinGroupedWindowDraft,
+  inspectDvtSubstraitJoinPredicateContext,
   createDvtSubstraitInnerJoinDraft,
   inspectDvtSubstraitNInputJoinDraft,
   type DvtSubstraitInnerJoinDraft,
@@ -52,6 +56,69 @@ function fixture(valueType?: DvtSubstraitJoinDataType): {
 }
 
 describe('Contextual relational card removal', () => {
+  it.each(['right', 'aggregate'] as const)(
+    'proposes explicit dependent retirement for %s without altering the original',
+    (target) => {
+      const { draft, projection } = fixture();
+      const grouped = applyDvtSubstraitInnerJoinGrouping(draft, {
+        groupFieldId: projection.outputs[0]!.fieldId,
+        countOutputName: 'total',
+      });
+      const wrapped = applyDvtSubstraitInnerJoinGroupedRowNumber(grouped, { outputName: 'rn' });
+      const snapshot = JSON.stringify(wrapped);
+      const result = removeCanvasRelationalTreeNode({
+        draft: wrapped,
+        relationId:
+          target === 'right'
+            ? projection.joinRelations[1]!.relationId
+            : grouped.sidecar.relations.at(-1)!.relationId,
+        keep: target === 'right' ? 'right' : undefined,
+        targetNodeId: 'model',
+      });
+      expect(result.ok).toBe(false);
+      if (result.ok || result.reason !== 'dependent-operations')
+        throw new Error('Expected explicit confirmation');
+      expect(result.operations).toEqual(target === 'right' ? ['AGGREGATE', 'WINDOW'] : ['WINDOW']);
+      expect(result.proposal.operation).toBe(target === 'right' ? 'projection' : 'inner_join');
+      expect(JSON.stringify(wrapped)).toBe(snapshot);
+    }
+  );
+  it('removes a source below AGGREGATE and WINDOW without replacing surviving identities', () => {
+    const { draft, projection } = fixture();
+    const grouped = applyDvtSubstraitInnerJoinGrouping(draft, {
+      groupFieldId: projection.outputs.at(-1)!.fieldId,
+      countOutputName: 'total',
+    });
+    const wrapped = applyDvtSubstraitInnerJoinGroupedRowNumber(grouped, { outputName: 'rn' });
+    const before = inspectDvtSubstraitInnerJoinGroupedWindowDraft(wrapped);
+    expect(before.ok).toBe(true);
+    const result = removeCanvasRelationalTreeNode({
+      draft: wrapped,
+      relationId: projection.inputs[1]!.relationId,
+      targetNodeId: 'model',
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok || !before.ok) return;
+    const after = inspectDvtSubstraitInnerJoinGroupedWindowDraft(result.draft);
+    expect(after.ok).toBe(true);
+    if (!after.ok) return;
+    expect(after.projection.outputs).toEqual(before.projection.outputs);
+    expect(
+      inspectDvtSubstraitJoinPredicateContext(result.draft)?.inspection.projection.inputs.map(
+        (input) => input.table
+      )
+    ).toEqual(['customers', 'tickets']);
+    const baseIds = new Set(draft.sidecar.relations.map((rel) => rel.relationId));
+    expect(
+      result.draft.sidecar.relations
+        .filter((rel) => !baseIds.has(rel.relationId))
+        .map((rel) => rel.relationId)
+    ).toEqual(
+      wrapped.sidecar.relations
+        .filter((rel) => !baseIds.has(rel.relationId))
+        .map((rel) => rel.relationId)
+    );
+  });
   it('removes an input and its JOIN while preserving surviving semantics and stable identities', () => {
     const { draft, projection } = fixture();
     const snapshot = JSON.stringify(draft);

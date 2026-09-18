@@ -54,6 +54,10 @@ const en = {
   reviewInputs: 'Review inputs',
   operations: 'Operations',
   removeCard: 'Remove from tree',
+  removeDependents: 'Also remove dependent operations?',
+  removeDependentsHint: 'These operations cannot remain valid after this removal:',
+  closeEditor: 'Close semantic editor',
+  workspaceTabs: 'Workspace navigation',
   removeKeepLeft: 'Remove JOIN · keep L',
   removeKeepRight: 'Remove JOIN · keep R',
   removalDependency:
@@ -124,6 +128,10 @@ const es: typeof en = {
   reviewInputs: 'Revisar entradas',
   operations: 'Operaciones',
   removeCard: 'Retirar del árbol',
+  removeDependents: '¿Retirar también las operaciones dependientes?',
+  removeDependentsHint: 'Estas operaciones no pueden seguir siendo válidas tras la retirada:',
+  closeEditor: 'Cerrar editor semántico',
+  workspaceTabs: 'Navegación del espacio de trabajo',
   removeKeepLeft: 'Retirar JOIN · conservar L',
   removeKeepRight: 'Retirar JOIN · conservar R',
   removalDependency:

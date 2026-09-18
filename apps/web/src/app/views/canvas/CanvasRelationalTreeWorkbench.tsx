@@ -8,8 +8,7 @@ import type {
 } from './canvasRelationalTreeWorkbench.types';
 import { CanvasRelationalTreeSessionActions } from './CanvasRelationalTreeSessionActions';
 import { CanvasRelationalTreeInspection } from './CanvasRelationalTreeInspection';
-import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import { CanvasRelationalRemovalConfirmation } from './CanvasRelationalRemovalConfirmation';
 import { CanvasRelationalTreeBlockCanvas } from './CanvasRelationalTreeBlockCanvas';
 import { CanvasRelationalTreeSourceCatalogue } from './CanvasRelationalTreeSourceCatalogue';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
@@ -53,35 +52,24 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
     if (!model.session.active) setPendingCondition(false);
   }, [model.session.active]);
   const sessionHandle = useCanvasRelationalTreeWorkbenchHandle(ref, model, pendingCondition);
-  const language = useApplicationLanguageStore((state) => state.language);
-  const localCopy = resolveCanvasSemanticEditorCopy(language);
 
   return (
     <div
       data-slot="canvas-relational-tree-workbench"
+      onContextMenu={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      }}
       className={`relative grid h-full min-h-0 min-w-0 w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-(--surface-panel) md:grid-rows-1 ${sourcesCollapsed ? 'md:grid-cols-[3rem_minmax(0,1fr)]' : 'md:grid-cols-[14rem_minmax(0,1fr)]'}`}
     >
       <CanvasRelationalTreeSessionActions session={sessionHandle} copy={copy} host={actionsHost} />
-      {model.session.removal.error == null ? null : (
-        <div
-          role="alert"
-          className="absolute bottom-3 left-1/4 z-30 max-w-lg rounded border border-amber-600 bg-(--surface-panel) p-3 text-sm"
-        >
-          {model.session.removal.error === 'dependent-condition'
-            ? localCopy.removalDependency
-            : model.session.removal.error === 'unsupported-projection-type'
-              ? localCopy.removalUnsupportedType
-              : localCopy.removalUnavailable}
-          <button
-            type="button"
-            aria-label={copy.inspectorDvtRelationalCancel}
-            className="ml-2 px-2"
-            onClick={model.session.removal.clearError}
-          >
-            ×
-          </button>
-        </div>
-      )}
+      <CanvasRelationalRemovalConfirmation
+        operations={model.session.removal.pending?.result.operations ?? null}
+        onConfirm={model.session.removal.confirm}
+        onCancel={model.session.removal.cancel}
+        error={model.session.removal.error}
+        clearError={model.session.removal.clearError}
+      />
       <CanvasRelationalTreeSourceCatalogue
         items={model.catalogue}
         collapsed={sourcesCollapsed}

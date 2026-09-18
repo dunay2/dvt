@@ -59,7 +59,7 @@ describe('Canvas live data exploration', () => {
     cy.get('[data-slot="canvas-model-data"]')
       .should('contain.text', 'customer')
       .and('contain.text', 'Ada');
-    cy.get('[data-slot="canvas-model-back"]').click();
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
 
     getVisibleCanvasNode('source-1')
       .find('[data-slot="canvas-node-shell"]')
