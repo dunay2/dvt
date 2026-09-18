@@ -86,12 +86,16 @@ jobs:
           pnpm docs:sync 2>&1 | tee /tmp/atlas-retirement/docs-sync.log
           pnpm governance:refresh 2>&1 | tee /tmp/atlas-retirement/governance-refresh.log
           git add -A
-      - name: Commit generated manifest with canonical hooks
+      - name: Commit generated output only when the canonical generator changed it
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git diff --cached --name-only)" = docs/.manifest.json
-          pnpm commit docs docs "Regenerate manifest after authority deferral" 2>&1 | tee /tmp/atlas-retirement/generated-commit.log
+          if git diff --cached --quiet; then
+            echo "Canonical generation required no tracked changes; no empty commit" | tee /tmp/atlas-retirement/generated-commit.log
+          else
+            test "$(git diff --cached --name-only)" = docs/.manifest.json
+            pnpm commit docs docs "Regenerate manifest after authority deferral" 2>&1 | tee /tmp/atlas-retirement/generated-commit.log
+          fi
           echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - name: Validate preserved obligations retirement and complete gates
         shell: bash
@@ -109,9 +113,12 @@ jobs:
           assert not git('diff','--name-only','--diff-filter=A',base,'HEAD')
           assert set(git('diff','--name-only',base,'HEAD').splitlines())<=set(git('diff','--name-only',base,old).splitlines())
           assert not git('diff','--name-only',base,'HEAD','--','apps','packages','specs','docs/adr','docs/evidence','docs/risk-register','.github','package.json','pnpm-lock.yaml')
-          assert git('show','-s','--format=%P',(out/'source-head.txt').read_text().strip())==old
-          assert git('show','-s','--format=%P','HEAD')==(out/'source-head.txt').read_text().strip()
-          # Verify full restoration modulo the mandated formatter, with only four provenance links in the Active plan.
+          source=(out/'source-head.txt').read_text().strip()
+          assert git('show','-s','--format=%P',source)==old
+          if git('rev-parse','HEAD')!=source:
+              assert git('show','-s','--format=%P','HEAD')==source
+              assert git('diff','--name-only',source,'HEAD')=='docs/.manifest.json'
+          # Only four provenance links change in the Active plan; the other restored documents match the original after mandatory formatting.
           restored=[]
           for p in spec['restores']:
               original=subprocess.check_output(['git','show',base+':'+p]).decode()
