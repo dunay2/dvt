@@ -1,5 +1,5 @@
 /** Owned concern: render one accessible relational operator card. */
-import { AlertTriangle, Filter, GitMerge, Layers3, Sigma, Table2 } from 'lucide-react';
+import { AlertTriangle, Filter, Layers3, Link2, Sigma, Table2 } from 'lucide-react';
 
 import type { CanvasRelationalTreePlacedNode } from './canvasRelationalTreeGeometry';
 import type {
@@ -37,7 +37,7 @@ function OperatorIcon({ operator }: Readonly<{ operator: CanvasRelationalTreeOpe
     operator === 'read'
       ? Table2
       : operator === 'join'
-        ? GitMerge
+        ? Link2
         : operator === 'set' || operator === 'project'
           ? Layers3
           : operator === 'filter'
