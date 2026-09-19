@@ -44,6 +44,7 @@ allowedImplementationSurfaces:
   - docs/evidence/index.md
   - docs/planning/proposals/index.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/semi-anti-join-end-to-end-plan-20260919.md
+  - docs/risk-register/quality/R-20260911-SEMANTIC-WORKBENCH-JOIN-DRIFT.yaml
   - docs/risk-register/quality/index.md
   - packages/@dvt/contracts/src/contracts/planner/**
   - packages/@dvt/contracts/test/**
