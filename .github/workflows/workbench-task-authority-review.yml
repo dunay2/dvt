@@ -1,0 +1,164 @@
+name: Isolated Workbench task authority review
+on:
+  push:
+    branches: [automation/3309-task-authority-review-20260919]
+    paths: [.github/workflows/workbench-task-authority-review.yml]
+permissions:
+  contents: write
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GIT_BASE: b1778255afcc6392e54b887c79660005ed8754ad
+      GIT_HEAD: HEAD
+      REVIEWED_HEAD: 2ba24bee5ee0da713051a2816d003210149983d3
+      PLANNING_DB_INTEGRITY_SCOPE: bootstrap
+    steps:
+      - name: Checkout the exact existing PR candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 2ba24bee5ee0da713051a2816d003210149983d3
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+      - name: Reproduce the residual task instruction and correct it
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AUDIT_OUT="$RUNNER_TEMP/workbench-review"
+          mkdir -p "$AUDIT_OUT"
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess,hashlib,json,os
+          root=Path.cwd();out=Path(os.environ['AUDIT_OUT'])
+          assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['REVIEWED_HEAD']
+          test=root/'tools/ci/workbench-ux-canon.test.mjs'
+          plan=root/'docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md'
+          expected={str(test.relative_to(root)):'11a7e74b6ffa5dc25439fca7e48eddd3619fda07f785c6a3d27fe6f2478dcb98',str(plan.relative_to(root)):'26f18a0964ede1dc51eca5ac3955ec06b149e69a749733b0fb243546d0744dc8'}
+          for name,digest in expected.items(): assert hashlib.sha256(Path(name).read_bytes()).hexdigest()==digest,name
+          t=test.read_text();s=plan.read_text()
+          assert t.count('  assertCanonPlan(\n')==1
+          t=t.replace('  assertCanonPlan(\n','  const canonPlan = assertCanonPlan(\n',1)
+          anchor="  assertContains('docs/planning/state/github-mvp-issue-workflow.md', 'is the only task backlog');\n"
+          addition="""  assert.doesNotMatch(
+              canonPlan,
+              /\\bPlanning\\s+DB\\s+tasks?\\b/u,
+              'Executable UX work belongs to GitHub Issues, not Planning DB tasks'
+            );
+            assert.match(
+              canonPlan,
+              /cypressFlows:\\s*\\n\\s+- N\\/A[^\\n]*\\bGitHub issue\\b/u,
+              'Canon-only Cypress disposition must route future execution to its governing GitHub issue'
+            );
+          """
+          # Normalize the embedded literal to the existing two-space source indent.
+          addition='\n'.join(line[2:] if line.startswith('    ') else line for line in addition.split('\n'))
+          assert t.count(anchor)==1
+          test.write_text(t.replace(anchor,anchor+addition))
+          cmd=['node','--test','tools/ci/workbench-ux-canon.test.mjs','tools/ci/docs-disposition-canon.test.mjs']
+          def run(name,code):
+            p=subprocess.run(cmd,text=True,capture_output=True)
+            text=p.stdout+p.stderr;(out/name).write_text(text)
+            assert p.returncode==code,(name,p.returncode,text[-3000:])
+            print(name,':','\n'.join(text.splitlines()[-9:]))
+            return text
+          red=run('task-authority-red.log',1)
+          assert 'Executable UX work belongs to GitHub Issues' in red and '# fail 1' in red
+          old='runtime UX changes require separate Planning DB tasks.'
+          new='runtime UX changes require their governing GitHub issue.'
+          assert s.count(old)==1
+          plan.write_text(s.replace(old,new))
+          run('task-authority-green.log',0)
+          try:
+            plan.write_text(s)
+            negative=run('task-authority-restoration-negative.log',1)
+            assert 'Executable UX work belongs to GitHub Issues' in negative
+          finally:
+            plan.write_text(s.replace(old,new))
+          run('task-authority-restored-green.log',0)
+          (out/'review-input-sha256.json').write_text(json.dumps(expected,indent=2)+'\n')
+          assert set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())==set(expected)
+          PY
+          git diff --check
+      - name: Commit the correction through the normal helper and hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "DVT documentation maintenance"
+          git config user.email "34416258+dunay2@users.noreply.github.com"
+          git switch -c docs/3004-workbench-peer-route-retirement
+          git add tools/ci/workbench-ux-canon.test.mjs docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md
+          pnpm commit docs web "Reconcile Workbench task authority in Cypress disposition" 2>&1 | tee "$RUNNER_TEMP/workbench-review/commit.log"
+      - name: Prepare only the existing disposable CI bootstrap
+        uses: ./.github/actions/prepare-planning-db
+      - name: Run canonical documentation and governance refresh
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/workbench-review"
+          pnpm docs:sync 2>&1 | tee "$out/docs-sync.log"
+          pnpm governance:refresh 2>&1 | tee "$out/governance-refresh.log"
+          git diff --exit-code HEAD
+          test -z "$(git status --porcelain)"
+      - name: Validate affected Web and governance on the committed candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/workbench-review"
+          pnpm --filter @dvt/web test:deps 2>&1 | tee "$out/web-deps.log"
+          pnpm --filter @dvt/web test:architecture:run src/app/components/TopAppBar.architecture.test.ts src/testing/vitestSuites.catalog.architecture.test.ts src/testing/vitestSuites.changedRouting.architecture.test.ts 2>&1 | tee "$out/web-architecture.log"
+          pnpm --filter @dvt/web test:presentation:run src/app/components/TopAppBar.test.tsx 2>&1 | tee "$out/web-presentation.log"
+          pnpm --filter @dvt/web test:changed -- --files apps/web/src/app/components/TopAppBar.architecture.test.ts 2>&1 | tee "$out/exact-changed-shell-test.log"
+          pnpm --filter @dvt/web typecheck 2>&1 | tee "$out/web-typecheck.log"
+          node --test scripts/ai-preflight.test.cjs scripts/check-ai-efficiency-adoption.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/docs-disposition-canon.test.mjs tools/ci/startup-card-canon.test.mjs tools/ci/arc-policy-state-store.test.mjs tools/ci/planning-review-canon.test.mjs tools/ci/workbench-ux-canon.test.mjs 2>&1 | tee "$out/governance-tests.log"
+          node tools/ci/arc-check.mjs > "$out/arc.json"
+          pnpm docs:sync:check 2>&1 | tee "$out/docs-sync-check.log"
+          pnpm docs:gov:manifest:check 2>&1 | tee "$out/manifest-check.log"
+          pnpm ci:docs 2>&1 | tee "$out/ci-docs.log"
+          pnpm verify:prepush 2>&1 | tee "$out/prepush.log"
+          pnpm pr:validate-title "docs(web): Retire superseded peer-route Workbench documents" 2>&1 | tee "$out/title.log"
+          git diff --exit-code HEAD
+          test -z "$(git status --porcelain)"
+          python - <<'PY'
+          import os,subprocess,pathlib
+          expected={'tools/ci/workbench-ux-canon.test.mjs','docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md'}
+          changed=set(subprocess.check_output(['git','diff','--name-only',os.environ['REVIEWED_HEAD'],'HEAD'],text=True).splitlines())
+          assert changed==expected,changed
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'workbench-review'
+          for name in sorted(expected):
+            (out/pathlib.Path(name).name).write_bytes(pathlib.Path(name).read_bytes())
+          PY
+          git rev-parse HEAD > "$out/validated.txt"
+          git rev-parse HEAD^{tree} > "$out/tree.txt"
+          git diff --binary "$REVIEWED_HEAD" HEAD > "$out/review-correction.patch"
+          git diff --stat "$GIT_BASE" HEAD > "$out/stats.txt"
+          git diff --name-status "$GIT_BASE" HEAD > "$out/name-status.txt"
+      - name: Advance only the existing PR branch without force or merge
+        shell: bash
+        run: |
+          set -euo pipefail
+          current=$(git ls-remote origin refs/heads/docs/3004-workbench-peer-route-retirement | cut -f1)
+          test "$current" = "$REVIEWED_HEAD"
+          git push origin HEAD:refs/heads/docs/3004-workbench-peer-route-retirement 2>&1 | tee "$RUNNER_TEMP/workbench-review/push.log"
+      - name: Record integrity and any failed-attempt status
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'workbench-review';out.mkdir(exist_ok=True)
+          (out/'head.txt').write_text(subprocess.check_output(['git','rev-parse','HEAD'],text=True))
+          (out/'status.txt').write_text(subprocess.check_output(['git','status','--porcelain'],text=True))
+          checks={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(out.iterdir()) if p.is_file() and p.name!='checksums.json'}
+          (out/'checksums.json').write_text(json.dumps(checks,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: workbench-task-authority-review
+          path: ${{ runner.temp }}/workbench-review
+          retention-days: 7
+          if-no-files-found: error
