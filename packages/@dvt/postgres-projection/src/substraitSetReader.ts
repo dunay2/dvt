@@ -20,6 +20,7 @@ import type {
 } from './substraitSetReadModel.js';
 
 type RelationBinding = DvtSubstraitSetDraft['sidecar']['relations'][number];
+type FieldBinding = DvtSubstraitSetDraft['sidecar']['fields'][number];
 
 function operationFor(op: SetRel_SetOp): DvtSubstraitSetOperation | null {
   if (op === SetRel_SetOp.UNION_ALL) return 'union_all';
@@ -61,7 +62,10 @@ function tableFields(rel: Rel): Readonly<{
       };
 }
 
-function sortedFields(sidecar: DvtSubstraitSetDraft['sidecar'], relationId: string) {
+function sortedFields(
+  sidecar: DvtSubstraitSetDraft['sidecar'],
+  relationId: string
+): FieldBinding[] {
   return sidecar.fields
     .filter((field) => field.relationId === relationId)
     .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
