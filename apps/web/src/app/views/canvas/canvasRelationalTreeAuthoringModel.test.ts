@@ -8,7 +8,10 @@ import {
   resolveCanvasRelationalTreeAuthoringCandidates,
   resolveCanvasRelationalTreeAuthoringChoices,
 } from './canvasRelationalTreeAuthoringModel';
-import { createCanvasRelationalTreeUnionAllDraft } from './canvasRelationalTreeUnionAuthoring';
+import {
+  createCanvasRelationalTreeSetDraft,
+  createCanvasRelationalTreeUnionAllDraft,
+} from './canvasRelationalTreeUnionAuthoring';
 import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
 import { inspectDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { inspectDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
@@ -100,6 +103,7 @@ describe('Canvas relational-tree guided authoring model', () => {
       { operation: 'right_join', availability: 'needs-input', selectable: false },
       { operation: 'full_outer_join', availability: 'needs-input', selectable: false },
       { operation: 'union_all', availability: 'needs-input', selectable: false },
+      { operation: 'union_distinct', availability: 'needs-input', selectable: false },
     ]);
 
     expect(
@@ -121,6 +125,7 @@ describe('Canvas relational-tree guided authoring model', () => {
       { operation: 'right_join', availability: 'needs-predicate', selectable: true },
       { operation: 'full_outer_join', availability: 'needs-predicate', selectable: true },
       { operation: 'union_all', availability: 'available', selectable: true },
+      { operation: 'union_distinct', availability: 'available', selectable: true },
     ]);
   });
 
@@ -174,7 +179,7 @@ describe('Canvas relational-tree guided authoring model', () => {
       nodes,
       edges,
     });
-    expect(choices).toHaveLength(6);
+    expect(choices).toHaveLength(7);
     expect(
       choices.every((choice) => !choice.selectable && choice.availability === 'read-only')
     ).toBe(true);
@@ -249,5 +254,27 @@ describe('Canvas relational-tree guided authoring model', () => {
       customers.id,
       orders.id,
     ]);
+  });
+
+  it('builds UNION DISTINCT through the same ordered N-ary Set path', () => {
+    const draft = createCanvasRelationalTreeSetDraft(
+      {
+        selectedInputIds: [tickets.id, customers.id, orders.id],
+        targetNodeId: TARGET_ID,
+        nodes,
+        edges,
+      },
+      'union_distinct'
+    );
+    expect(draft).not.toBeNull();
+    if (draft == null) return;
+    const inspection = inspectDvtSubstraitUnionAllDraft(draft);
+    expect(inspection).toMatchObject({
+      ok: true,
+      projection: {
+        operation: 'union_distinct',
+        inputs: [{ table: tickets.id }, { table: customers.id }, { table: orders.id }],
+      },
+    });
   });
 });

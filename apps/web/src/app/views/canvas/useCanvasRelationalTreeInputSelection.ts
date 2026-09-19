@@ -1,6 +1,9 @@
 /** Owned concern: select or append connected inputs within the local authoring session. */
 import { useCallback } from 'react';
-import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
+import {
+  isCanvasSetOperation,
+  type CanvasRelationalOperation,
+} from './canvasRelationalOperationChoices';
 import type { CanvasRelationalTreeAuthoringCandidate } from './canvasRelationalTreeAuthoringModel';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
@@ -40,7 +43,7 @@ export function useCanvasRelationalTreeInputSelection(
       if (!args.candidates.some((item) => item.nodeId === nodeId && item.selectable)) return;
       if (args.operation === 'projection') {
         args.placeOperand(nodeId, 'secondary');
-      } else if (args.operation === 'union_all') {
+      } else if (isCanvasSetOperation(args.operation)) {
         const input = args.inputs.find((candidate) => candidate.nodeId === nodeId);
         if (input == null || args.joinDraft == null) return;
         const next = appendDvtSubstraitUnionAllInput(args.joinDraft, {

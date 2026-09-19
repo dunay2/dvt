@@ -159,6 +159,37 @@ describe('DvtSubstraitCompositionStartSection', () => {
     expect(onStartInnerJoin).not.toHaveBeenCalled();
   });
 
+  it('applies UNION DISTINCT through its exact SetRel choice', () => {
+    const onStartUnionDistinct = vi.fn();
+    act(() => {
+      root.render(
+        <DvtSubstraitCompositionStartSection
+          disabled={false}
+          inputs={[input('north', 'customers_north'), input('south', 'customers_south')]}
+          onStartInnerJoin={vi.fn()}
+          onStartUnionDistinct={onStartUnionDistinct}
+        />
+      );
+    });
+
+    const operation = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-select-operation-union-distinct"]'
+    )!;
+    expect(operation.textContent).toContain('UNION');
+    expect(operation.textContent).not.toContain('ALL');
+
+    act(() => fireEvent.click(operation));
+    expect(container.textContent).toContain(canvasViewCopy.inspectorDvtSubstraitUnionDistinctTitle);
+    expect(onStartUnionDistinct).not.toHaveBeenCalled();
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-connected-union-all"]')!
+      );
+    });
+    expect(onStartUnionDistinct).toHaveBeenCalledOnce();
+  });
+
   it.each([
     ['left_join', JoinRel_JoinType.LEFT, [1]],
     ['right_join', JoinRel_JoinType.RIGHT, [0]],

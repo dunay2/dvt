@@ -2,11 +2,13 @@
 import {
   decodeDvtSubstraitPlanV1,
   DVT_POSTGRES_JOIN_PROFILE_ID,
+  DVT_POSTGRES_SET_PROFILE_ID,
   type DvtSubstraitSemanticDocumentV1,
 } from '@dvt/contracts';
 import {
   projectDvtConnectedFieldDraftToPostgresSql,
   projectDvtJoinDraftToPostgresSql,
+  projectDvtSetDraftToPostgresSql,
   selectDvtSubstraitRelation,
   type ProjectedDvtConnectedFieldSql,
 } from '@dvt/postgres-projection';
@@ -52,7 +54,8 @@ export async function projectDvtPostgresTransform(
     selectedRoot != null &&
     (selectedRoot.case !== 'root' ||
       (selectedRoot.value.input?.relType.case !== 'join' &&
-        selectedRoot.value.input?.relType.case !== 'project'))
+        selectedRoot.value.input?.relType.case !== 'project' &&
+        selectedRoot.value.input?.relType.case !== 'set'))
   ) {
     throw new Error('Selected operation is not admitted by the PostgreSQL preview profile.');
   }
@@ -80,6 +83,34 @@ export async function projectDvtPostgresTransform(
       )
     ) {
       throw new Error('PostgreSQL JOIN inputs do not match the protected terminal closure.');
+    }
+    return { sql: projected.sql, outputs: projected.projection.outputs };
+  }
+
+  if (
+    selectedRoot?.case === 'root'
+      ? selectedRoot.value.input?.relType.case === 'set'
+      : closure.profileId === DVT_POSTGRES_SET_PROFILE_ID
+  ) {
+    const projected = await projectDvtSetDraftToPostgresSql(
+      selected ?? {
+        plan: decodeDvtSubstraitPlanV1(document),
+        sidecar: document.sidecar,
+      }
+    );
+    if (
+      (selected == null && projected.projection.inputs.length !== closure.sources.length) ||
+      projected.projection.inputs.some(
+        (input) =>
+          !closure.sources.some(
+            ({ node, ref }) =>
+              sameConnectedSource(input.sourceRef, ref) &&
+              node.metadata?.['schema'] === input.schema &&
+              node.metadata?.['tableName'] === input.table
+          )
+      )
+    ) {
+      throw new Error('PostgreSQL Set inputs do not match the protected terminal closure.');
     }
     return { sql: projected.sql, outputs: projected.projection.outputs };
   }

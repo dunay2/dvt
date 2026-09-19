@@ -535,7 +535,9 @@ export type CanvasViewCopy = {
   readonly inspectorDvtSubstraitMoveFieldUpLabel: string;
   readonly inspectorDvtSubstraitMoveFieldDownLabel: string;
   readonly inspectorDvtSubstraitUnionAllAction: string;
+  readonly inspectorDvtSubstraitUnionDistinctAction: string;
   readonly inspectorDvtSubstraitUnionAllTitle: string;
+  readonly inspectorDvtSubstraitUnionDistinctTitle: string;
   readonly inspectorDvtSubstraitUnionAllInputsLabel: string;
   readonly inspectorDvtSubstraitUnionAllFieldsLabel: string;
   readonly inspectorDvtRelationalOperationTitle: string;

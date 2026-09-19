@@ -1,9 +1,12 @@
 /** Owned concern: materialize an admitted composition once at the explicit user command. */
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
-import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
+import {
+  isCanvasSetOperation,
+  type CanvasRelationalOperation,
+} from './canvasRelationalOperationChoices';
 import { createCanvasRelationalTreeInitialJoinDraft } from './canvasRelationalTreeAuthoringModel';
 import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
-import { createDvtSubstraitUnionAllDraft } from './canvasDvtSubstraitSetComposition';
+import { createDvtSubstraitSetDraft } from './canvasDvtSubstraitSetComposition';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 
@@ -28,6 +31,7 @@ export function createCanvasRelationalTreeOperationDraft(
       rightInputId,
       operation: args.operation,
     });
+  if (!isCanvasSetOperation(args.operation)) return null;
   const inputs = args.selectedInputIds.map((id) =>
     args.inputs.find((candidate) => candidate.nodeId === id)
   );
@@ -37,8 +41,9 @@ export function createCanvasRelationalTreeOperationDraft(
     )
   )
     return null;
-  return createDvtSubstraitUnionAllDraft({
+  return createDvtSubstraitSetDraft({
     targetNodeId: args.targetNodeId,
+    operation: args.operation,
     inputs: inputs.map((source) => ({
       ...source!,
       fields: source!.fields.map((field) => ({ name: field.name, type: 'string' })),

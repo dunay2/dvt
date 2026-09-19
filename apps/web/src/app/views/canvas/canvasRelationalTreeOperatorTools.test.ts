@@ -164,6 +164,7 @@ describe('admitted relational operator tools', () => {
       'substrait.ReadRel/read_type.named_table',
       'substrait.RelCommon/emit_kind.emit',
       'substrait.SetRel/SetOp.SET_OP_UNION_ALL',
+      'substrait.SetRel/SetOp.SET_OP_UNION_DISTINCT',
     ]);
     expect(
       supported

@@ -193,7 +193,7 @@ function readSubstraitMultiInputLineage(node: CanonicalNode): DvtSubstraitMultiI
       outputs: projection.outputs.flatMap((output) =>
         projection.inputs.map((input, inputIndex) => {
           const field = input.fields.find((candidate) => candidate.name === output.fieldKey);
-          if (field == null) throw new Error('UNION ALL input field is not admitted.');
+          if (field == null) throw new Error('SetRel input field is not admitted.');
           return {
             name: output.name,
             fieldId: output.fieldId,

@@ -204,6 +204,11 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     proofRef: 'docs/evidence/ED-20260831-vtx2-substrait-union-all.md',
   },
   {
+    entryIds: [standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_UNION_DISTINCT')],
+    useCaseRefs: ['dvt:#3317'],
+    proofRef: 'docs/evidence/ED-20260919-union-distinct-end-to-end.md',
+  },
+  {
     entryIds: [
       standardId('type', 'substrait.Type', 'kind.struct'),
       standardId('expression-form', 'substrait.Expression', 'rex_type.nested'),

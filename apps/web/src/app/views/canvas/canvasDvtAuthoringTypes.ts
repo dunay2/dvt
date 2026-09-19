@@ -33,7 +33,8 @@ export type DvtSubstraitTransformAuthoringMetadata = Readonly<{
     | 'left_join'
     | 'right_join'
     | 'full_outer_join'
-    | 'union_all';
+    | 'union_all'
+    | 'union_distinct';
   plan: Plan;
   sidecar: DvtSubstraitAuthoringSidecarV1;
 }>;

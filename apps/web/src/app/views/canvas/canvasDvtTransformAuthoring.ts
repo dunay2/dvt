@@ -28,6 +28,7 @@ import {
 import {
   decodeDvtSubstraitUnionAllDocument,
   encodeDvtSubstraitUnionAllDocument,
+  resolveDvtSubstraitSetOperation,
 } from './canvasDvtSubstraitSetComposition';
 import {
   normalizeDvtIdentifier,
@@ -100,8 +101,10 @@ export function createDvtTransformAuthoringMetadata(node: CanonicalNode): Transf
       join
     );
   }
-  const unionAll = decodeDvtSubstraitUnionAllDocument(authority.semanticDocument);
-  return fromDraft(authority.mode, disposition, 'union_all', unionAll);
+  const setDraft = decodeDvtSubstraitUnionAllDocument(authority.semanticDocument);
+  const setOperation = resolveDvtSubstraitSetOperation(setDraft);
+  if (setOperation == null) throw new Error('Unsupported canonical SetRel shape.');
+  return fromDraft(authority.mode, disposition, setOperation, setDraft);
 }
 
 function fromDraft(
@@ -162,7 +165,7 @@ export function applyDvtTransformAuthoringMetadata(
         : encodeDvtSubstraitFilterDocument(draft)
       : isCanvasJoinOperation(metadata.shape)
         ? encodeDvtSubstraitJoinDocument(draft)
-        : metadata.shape === 'union_all'
+        : metadata.shape === 'union_all' || metadata.shape === 'union_distinct'
           ? encodeDvtSubstraitUnionAllDocument(draft)
           : encodeDvtSubstraitPilotDocument(draft);
   return withMaterialization(applyDvtSubstraitSemanticDocument(node, document));

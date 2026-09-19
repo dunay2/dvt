@@ -7,6 +7,7 @@ import {
   decodeDvtSubstraitPlanV1,
   DVT_POSTGRES_JOIN_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
+  DVT_POSTGRES_SET_PROFILE_ID,
   DvtTransformAuthoringAuthorityV1Schema,
   WorkspaceGraphAuthoringDraftSchema,
   isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
@@ -32,7 +33,9 @@ export type DvtTerminalTransformClosure = {
   readonly edges: readonly WorkspaceGraphAuthoringEdge[];
   readonly connectionRef: ConnectionRef;
   readonly profileId:
-    typeof DVT_POSTGRES_PROJECT_REL_PROFILE_ID | typeof DVT_POSTGRES_JOIN_PROFILE_ID;
+    | typeof DVT_POSTGRES_PROJECT_REL_PROFILE_ID
+    | typeof DVT_POSTGRES_JOIN_PROFILE_ID
+    | typeof DVT_POSTGRES_SET_PROFILE_ID;
   readonly authority: DvtTransformAuthoringAuthorityV1;
 };
 
@@ -127,7 +130,12 @@ export function resolveDvtTerminalTransformClosure(input: {
   const root = decodeDvtSubstraitPlanV1(authority.semanticDocument).relations[0]?.relType;
   const semanticRoot = root?.case === 'root' ? root.value.input : undefined;
   const hasJoin = semanticRoot == null ? false : containsJoinRelation(semanticRoot);
-  if ((hasJoin && sources.length < 2) || (!hasJoin && sources.length !== 1)) {
+  const hasSet = semanticRoot == null ? false : containsSetRelation(semanticRoot);
+  if (
+    (hasJoin && hasSet) ||
+    ((hasJoin || hasSet) && sources.length < 2) ||
+    (!hasJoin && !hasSet && sources.length !== 1)
+  ) {
     throw new Error(
       'Transform operational profile must match its canonical semantic relation family.'
     );
@@ -140,8 +148,34 @@ export function resolveDvtTerminalTransformClosure(input: {
     edges: selectedEdges,
     connectionRef,
     authority,
-    profileId: hasJoin ? DVT_POSTGRES_JOIN_PROFILE_ID : DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
+    profileId: hasJoin
+      ? DVT_POSTGRES_JOIN_PROFILE_ID
+      : hasSet
+        ? DVT_POSTGRES_SET_PROFILE_ID
+        : DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
   };
+}
+
+function containsSetRelation(relation: CanonicalSemanticRelation): boolean {
+  switch (relation.relType.case) {
+    case 'set':
+      return true;
+    case 'project':
+    case 'filter':
+    case 'aggregate':
+    case 'sort':
+    case 'fetch':
+      return relation.relType.value.input == null
+        ? false
+        : containsSetRelation(relation.relType.value.input);
+    case 'join':
+      return (
+        (relation.relType.value.left != null && containsSetRelation(relation.relType.value.left)) ||
+        (relation.relType.value.right != null && containsSetRelation(relation.relType.value.right))
+      );
+    default:
+      return false;
+  }
 }
 
 function containsJoinRelation(relation: CanonicalSemanticRelation): boolean {

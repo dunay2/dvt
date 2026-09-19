@@ -1,8 +1,10 @@
-/** Owned concern: order selected Canvas inputs and create one canonical UNION ALL draft. */
+/** Owned concern: order selected Canvas inputs and create one canonical SetRel draft. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
+  createDvtSubstraitSetDraft,
   createDvtSubstraitUnionAllDraft,
   resolveDvtSubstraitUnionAllEntry,
+  type DvtSubstraitSetOperation,
   type DvtSubstraitUnionAllDraft,
 } from './canvasDvtSubstraitSetComposition';
 
@@ -37,4 +39,12 @@ export function createCanvasRelationalTreeUnionAllDraft(
 ): DvtSubstraitUnionAllDraft | null {
   const entry = orderedCanvasRelationalTreeUnionAllEntry(args);
   return entry == null ? null : createDvtSubstraitUnionAllDraft(entry);
+}
+
+export function createCanvasRelationalTreeSetDraft(
+  args: CanvasRelationalTreeUnionContext,
+  operation: DvtSubstraitSetOperation
+): DvtSubstraitUnionAllDraft | null {
+  const entry = orderedCanvasRelationalTreeUnionAllEntry(args);
+  return entry == null ? null : createDvtSubstraitSetDraft({ ...entry, operation });
 }
