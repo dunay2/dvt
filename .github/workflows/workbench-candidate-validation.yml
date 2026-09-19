@@ -1,0 +1,177 @@
+name: Isolated Workbench retirement candidate validation
+on:
+  push:
+    branches: [automation/3004-workbench-validation-20260919]
+    paths: [.github/workflows/workbench-candidate-validation.yml]
+permissions:
+  contents: write
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GIT_BASE: b1778255afcc6392e54b887c79660005ed8754ad
+      GIT_HEAD: HEAD
+      PLANNING_DB_INTEGRITY_SCOPE: bootstrap
+    steps:
+      - name: Checkout only the exact product baseline
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: b1778255afcc6392e54b887c79660005ed8754ad
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+      - name: Verify preparation identity and demonstrate regression controls
+        shell: bash
+        env:
+          GH_READ_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import base64,gzip,hashlib,json,os,pathlib,subprocess,urllib.request
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'workbench-candidate-result';out.mkdir(exist_ok=True)
+          def git(*args): return subprocess.check_output(['git',*args],text=True).strip()
+          def blob(data): return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+          assert git('rev-parse','HEAD')==os.environ['GIT_BASE']
+          assert git('rev-parse','HEAD^{tree}')=='95a2e262354e6d5582b67eeed27dd5f4d4e03c0d'
+          req=urllib.request.Request('https://api.github.com/repos/dunay2/dvt/git/blobs/6a1aab6ab5566585b58a783342fb8419763435e2',headers={'Authorization':'Bearer '+os.environ['GH_READ_TOKEN'],'Accept':'application/vnd.github+json','User-Agent':'DVT-candidate-validation'})
+          with urllib.request.urlopen(req,timeout=30) as response: envelope=json.load(response)
+          compressed=base64.b64decode(envelope['content']);assert hashlib.sha256(compressed).hexdigest()=='121fb5432eaf6bbfa081c4d354b949f1c83e4a39a65d7565ddf33efeca8e5a5f'
+          raw=gzip.decompress(compressed);assert hashlib.sha256(raw).hexdigest()=='8a0fb5dd4a6ae45d1c701e0f4ac9800a3d11c59225c8bb465e8b398bfa995002'
+          recipe=json.loads(raw);(out/'recipe.json').write_bytes(raw)
+          assert recipe['baseline']==os.environ['GIT_BASE'] and len(recipe['delete'])==4 and len(recipe['edits'])==49
+          def check_path(name):
+            p=pathlib.PurePosixPath(name);assert not p.is_absolute() and '..' not in p.parts
+          for name,sha in recipe['delete'].items():
+            check_path(name);assert blob(pathlib.Path(name).read_bytes())==sha
+          for edit in recipe['edits']:
+            check_path(edit['path']);assert blob(pathlib.Path(edit['path']).read_bytes())==edit['before']
+          pair=['node','--test','tools/ci/workbench-ux-canon.test.mjs','tools/ci/docs-disposition-canon.test.mjs']
+          guard=['node','--test','tools/ci/docs-disposition-canon.test.mjs']
+          def run(name,command,expected):
+            result=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+            (out/name).write_text(result.stdout);print(name, 'exit='+str(result.returncode))
+            assert result.returncode==expected,(name,result.stdout[-4000:])
+            return result.stdout
+          before=run('baseline-tests.log',pair,0);assert '# pass 11' in before and '# skipped 0' in before
+          def apply(edit):
+            path=pathlib.Path(edit['path']);text=path.read_text()
+            for start,end,replacement in reversed(edit['changes']): text=text[:start]+replacement+text[end:]
+            data=text.encode();assert blob(data)==edit['after'],edit['path'];path.write_bytes(data)
+          guard_edit=next(e for e in recipe['edits'] if e['path']=='tools/ci/docs-disposition-canon.test.mjs')
+          apply(guard_edit)
+          red=run('retirement-red.log',guard,1);assert 'retired Workbench peer-route' in red
+          for edit in recipe['edits']:
+            if edit is not guard_edit: apply(edit)
+          for name in recipe['delete']: pathlib.Path(name).unlink()
+          green=run('retirement-green.log',pair,0);assert '# pass 12' in green and '# skipped 0' in green
+          negatives=[]
+          for i,name in enumerate(recipe['delete']):
+            path=pathlib.Path(name);original=subprocess.check_output(['git','show',os.environ['GIT_BASE']+':'+name])
+            try:
+              path.write_bytes(original);run('restore-'+str(i)+'.log',guard,1);negatives.append(name)
+            finally: path.unlink(missing_ok=True)
+          agents=pathlib.Path('AGENTS.md');saved=agents.read_bytes()
+          target=next(iter(recipe['delete']))
+          mutations=[('relative-reference',f'\n[old](./{target})\n',1),('current-branch-url',f'\nhttps://github.com/dunay2/dvt/blob/main/{target}\n',1),('exact-git-provenance',f'\nhttps://github.com/dunay2/dvt/blob/{os.environ["GIT_BASE"]}/{target}\n',0)]
+          for name,text,code in mutations:
+            try: agents.write_bytes(saved+text.encode());run(name+'.log',guard,code)
+            finally: agents.write_bytes(saved)
+          intake=pathlib.Path('buzon/20260516-codex-fowler-f15-canvas-view-menu-architecture-analysis.md');saved=intake.read_bytes()
+          try:
+            intake.write_bytes(saved+b'\nchanged\n');run('intake-identity-negative.log',guard,1)
+          finally: intake.write_bytes(saved)
+          run('controls-restored.log',pair,0)
+          (out/'negative-controls.json').write_text(json.dumps({'individualRestorations':negatives,'additionalNegativeControls':['relative-reference','current-branch-url','intake-identity'],'positiveControl':'exact-git-provenance'},indent=2)+'\n')
+          expected=set(recipe['delete'])|{e['path'] for e in recipe['edits']}
+          assert set(git('diff','--name-only').splitlines())==expected
+          assert not git('diff','--check')
+          PY
+      - name: Commit through the existing helper with hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/workbench-candidate-result"
+          git config user.name "DVT documentation maintenance"
+          git config user.email "34416258+dunay2@users.noreply.github.com"
+          git switch -c docs/3004-workbench-peer-route-retirement
+          python - <<'PY'
+          import json,os,pathlib,subprocess
+          recipe=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'workbench-candidate-result/recipe.json').read_text())
+          paths=sorted(set(recipe['delete'])|{e['path'] for e in recipe['edits']})
+          subprocess.run(['git','add','-A','--',*paths],check=True)
+          assert set(subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines())==set(paths)
+          PY
+          pnpm commit docs web "Retire superseded peer-route Workbench documents" 2>&1 | tee "$out/commit.log"
+          git rev-parse HEAD > "$out/head.txt"
+          git rev-parse HEAD^{tree} > "$out/tree.txt"
+      - name: Run affected Web and governance tests on the committed tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/workbench-candidate-result"
+          pnpm --filter @dvt/web test:deps 2>&1 | tee "$out/web-deps.log"
+          pnpm --filter @dvt/web test:architecture:run src/app/components/TopAppBar.architecture.test.ts 2>&1 | tee "$out/web-architecture.log"
+          pnpm --filter @dvt/web test:presentation:run src/app/components/TopAppBar.test.tsx 2>&1 | tee "$out/web-presentation.log"
+          pnpm --filter @dvt/web typecheck 2>&1 | tee "$out/web-typecheck.log"
+          node --test scripts/ai-preflight.test.cjs scripts/check-ai-efficiency-adoption.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/docs-disposition-canon.test.mjs tools/ci/startup-card-canon.test.mjs tools/ci/arc-policy-state-store.test.mjs tools/ci/workbench-ux-canon.test.mjs tools/ci/canvas-fowler-canon.test.mjs tools/ci/planning-review-canon.test.mjs 2>&1 | tee "$out/governance-tests.log"
+          node tools/ci/arc-check.mjs > "$out/arc.json"
+      - name: Prepare only the disposable CI database, not operational authority
+        uses: ./.github/actions/prepare-planning-db
+      - name: Regenerate and validate the complete candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/workbench-candidate-result"
+          pnpm docs:sync 2>&1 | tee "$out/docs-sync.log"
+          pnpm governance:refresh 2>&1 | tee "$out/governance-refresh.log"
+          git diff --exit-code HEAD
+          pnpm docs:sync:check 2>&1 | tee "$out/docs-sync-check.log"
+          pnpm docs:gov:manifest:check 2>&1 | tee "$out/manifest-check.log"
+          pnpm ci:docs 2>&1 | tee "$out/ci-docs.log"
+          pnpm verify:prepush 2>&1 | tee "$out/prepush.log"
+          pnpm pr:validate-title "docs(web): Retire superseded peer-route Workbench documents" 2>&1 | tee "$out/title.log"
+          git diff --exit-code HEAD
+          test -z "$(git status --porcelain)"
+          git diff --exit-code "$GIT_BASE" HEAD -- packages specs scripts .arc-policy.yaml AGENTS.md CLAUDE.md .github docs/adr docs/contracts docs/evidence docs/risk-register docs/runbooks buzon
+          python - <<'PY'
+          import json,os,pathlib,subprocess
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'workbench-candidate-result';r=json.loads((out/'recipe.json').read_text())
+          actual=set(subprocess.check_output(['git','diff','--name-only',r['baseline'],'HEAD'],text=True).splitlines())
+          assert actual==set(r['delete'])|{e['path'] for e in r['edits']}
+          assert [p for p in actual if p.startswith('apps/')]==['apps/web/src/app/components/TopAppBar.architecture.test.ts']
+          (out/'validated.txt').write_text(subprocess.check_output(['git','rev-parse','HEAD'],text=True))
+          PY
+          git diff --binary "$GIT_BASE" HEAD > "$out/candidate.patch"
+          git diff --stat "$GIT_BASE" HEAD > "$out/stats.txt"
+          git diff --name-status "$GIT_BASE" HEAD > "$out/name-status.txt"
+          git ls-tree -rz HEAD > "$out/final-tree.txt"
+          git archive HEAD | gzip -n > "$out/candidate-source.tar.gz"
+      - name: Push validated candidate for draft review only, never merge
+        shell: bash
+        run: |
+          set -euo pipefail
+          current=$(git ls-remote origin refs/heads/docs/3004-workbench-peer-route-retirement | cut -f1)
+          test "$current" = "$GIT_BASE"
+          git push origin HEAD:refs/heads/docs/3004-workbench-peer-route-retirement 2>&1 | tee "$RUNNER_TEMP/workbench-candidate-result/push.log"
+      - name: Preserve results and incomplete-run evidence
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'workbench-candidate-result';out.mkdir(exist_ok=True)
+          (out/'final-status.txt').write_text(subprocess.run(['git','status','--porcelain'],capture_output=True,text=True).stdout)
+          (out/'candidate-working.patch').write_bytes(subprocess.run(['git','diff','--binary',os.environ['GIT_BASE']],capture_output=True).stdout)
+          sums={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(out.iterdir()) if p.is_file() and p.name!='checksums.json'}
+          (out/'checksums.json').write_text(json.dumps(sums,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: workbench-retirement-candidate-validation
+          path: ${{ runner.temp }}/workbench-candidate-result
+          retention-days: 7
+          if-no-files-found: error
