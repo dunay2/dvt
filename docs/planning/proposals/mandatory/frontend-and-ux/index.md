@@ -2,7 +2,7 @@
 title: Frontend And UX Mandatory Proposal Classification
 status: Active
 owner: Web / Product / Architecture
-last_reviewed: 2026-09-10
+last_reviewed: 2026-09-19
 planning_type: status
 lane: E
 task_id: E-PROP-DISP-1
@@ -16,11 +16,10 @@ This page is the human navigation surface for the mandatory frontend proposal
 pile. It classifies proposal files by current operational state so implemented
 plans do not compete with real pending work.
 
-The original proposal files remain in this directory for now. Many active
-feature-mechanization manifests, closeouts, component docs, and tests reference
-their exact paths. The state folders below are classification views; physical
-movement into archive or superseded paths must be done as a separate
-link-migration slice.
+The original proposal files remain at their current paths while active consumers
+and architectural obligations still refer to them. These folders are navigation
+views, not a reason to retain obsolete files. Reconcile owners and consumers
+before physical retirement. History stays in Git.
 
 ## Governing Sources
 
@@ -38,8 +37,6 @@ link-migration slice.
 | [Implemented capabilities](./implemented-capabilities/index.md) | Product-facing capabilities, features, route surfaces, visual-system work, and workflow affordances that have implementation evidence.          |    50 |
 | [Implemented technical](./implemented-technical/index.md)       | Boundary, test-governance, port, API-mode, query, documentation, and mechanical-truth implementation work that is already complete or accepted. |    17 |
 | [Pending work](./pending-work/index.md)                         | Frontend work not yet delivered; executable lifecycle and priority live in GitHub Issues.                                                       |    13 |
-| [Superseded](./superseded/index.md)                             | Plans closed, replaced, or reduced to rationale by later accepted work.                                                                         |    20 |
-| [Archive candidates](./archive-candidates/index.md)             | Drafts or historical story packs that should move to archive only after active references are migrated.                                         |     9 |
 
 ## Classification Rule
 
@@ -47,13 +44,15 @@ Use this order when classifying a proposal:
 
 1. If it has `mechanizationStatus: implemented` or `status: Implemented`, put
    it in implemented capability or implemented technical.
-2. If it has `mechanizationStatus: closed`, a closeout, or a successor plan
-   that owns the behavior, put it in superseded.
+2. If it has `mechanizationStatus: closed`, a closeout, or a successor plan,
+   check current owners, consumers, and obligations before physical retirement.
+   Those signals alone do not prove obsolescence.
 3. If it describes missing product behavior that is still not implemented,
    create or update the governing GitHub issue and list it in pending work.
 4. If it is a draft story pack or historical design input with active
-   references, keep it as an archive candidate until those references move to
-   canonical component, feature, closeout, or issue-backed docs.
+   references, keep it as a retirement candidate until obligations and references
+   are reconciled with canonical component, feature, or issue-backed sources.
+   Do not move it into a history folder.
 5. Do not infer implementation from a proposal title. Use status, feature
    mechanization, closeout evidence, code/test references, GitHub Issues for task
    lifecycle, and Planning DB for architecture/mechanization evidence.
@@ -75,14 +74,16 @@ frontend sequence is:
 10. `E-MS-GAP-008-LINEAGE-SEMANTICS-1`: define authoritative lineage and column semantics.
 11. `E-MS-GAP-009-RUN-EVIDENCE-EXPORT-1`: expose retention and evidence export.
 12. `E-DBT-PROJECT-ROUNDTRIP-DISP-1`: decompose dbt project roundtrip into concrete rails.
-13. `E-MAND-FRONTEND-PROPOSAL-LINK-MIGRATION-1`: physically move or archive proposals after exact references are updated.
+13. `E-MAND-FRONTEND-PROPOSAL-LINK-MIGRATION-1`: physically retire obsolete proposals after obligations and exact references are reconciled.
 
-## Movement Policy
+## Retirement Policy
 
-Do not move original proposal files just because this index classifies them.
-Move files only when:
+Do not delete original proposal files just because this index classifies them.
+Retire obsolete files only when:
+
+- current owners and architectural obligations have been checked;
 
 - all exact links have been migrated;
 - feature-mechanization manifests no longer name the old path;
 - tests do not read the old path as canonical proof;
-- `docs:sync`, `governance:refresh`, and `verify:prepush` pass after the move.
+- `docs:sync`, `governance:refresh`, and `verify:prepush` pass after the retirement.
