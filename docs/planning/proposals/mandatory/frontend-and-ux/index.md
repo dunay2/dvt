@@ -37,7 +37,6 @@ before physical retirement. History stays in Git.
 | [Implemented capabilities](./implemented-capabilities/index.md) | Product-facing capabilities, features, route surfaces, visual-system work, and workflow affordances that have implementation evidence.          |    50 |
 | [Implemented technical](./implemented-technical/index.md)       | Boundary, test-governance, port, API-mode, query, documentation, and mechanical-truth implementation work that is already complete or accepted. |    17 |
 | [Pending work](./pending-work/index.md)                         | Frontend work not yet delivered; executable lifecycle and priority live in GitHub Issues.                                                       |    13 |
-| [Retirement candidates](./archive-candidates/index.md)          | Drafts or historical story packs awaiting retirement after active obligations and references are reconciled.                                    |     9 |
 
 ## Classification Rule
 

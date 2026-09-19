@@ -115,6 +115,7 @@ test('docs disposition canonization has semantic ownership and DB-first closure'
 test('retired historical packs and generators cannot return', () => {
   const retiredPaths = [
     'docs/planning/proposals/mandatory/frontend-and-ux/superseded',
+    'docs/planning/proposals/mandatory/frontend-and-ux/archive-candidates',
     'docs/archive',
     'docs/planning/archive',
     'docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md',
@@ -153,6 +154,7 @@ test('retired historical packs and generators cannot return', () => {
     'docs/planning/proposals/mandatory/frontend-and-ux/index.md'
   );
   assert.doesNotMatch(frontendClassification, /\.\/superseded\//u);
+  assert.doesNotMatch(frontendClassification, /archive-candidates\//u);
   assert.doesNotMatch(frontendClassification, /move to archive|put it in superseded/u);
   assert.ok(frontendClassification.includes('History stays in Git.'));
 
