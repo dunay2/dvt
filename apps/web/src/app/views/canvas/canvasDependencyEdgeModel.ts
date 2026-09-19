@@ -109,6 +109,10 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
     compositionCandidate.operation === 'left_join' ||
     compositionCandidate.operation === 'right_join' ||
     compositionCandidate.operation === 'full_outer_join' ||
+    compositionCandidate.operation === 'left_semi_join' ||
+    compositionCandidate.operation === 'left_anti_join' ||
+    compositionCandidate.operation === 'right_semi_join' ||
+    compositionCandidate.operation === 'right_anti_join' ||
     compositionCandidate.operation === 'union_all' ||
     compositionCandidate.operation === 'union_distinct';
   const validComposition =
@@ -175,6 +179,10 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
             compositionCandidate.operation === 'left_join' ||
             compositionCandidate.operation === 'right_join' ||
             compositionCandidate.operation === 'full_outer_join' ||
+            compositionCandidate.operation === 'left_semi_join' ||
+            compositionCandidate.operation === 'left_anti_join' ||
+            compositionCandidate.operation === 'right_semi_join' ||
+            compositionCandidate.operation === 'right_anti_join' ||
             compositionCandidate.operation === 'union_all' ||
             compositionCandidate.operation === 'union_distinct'
               ? { operation: compositionCandidate.operation }

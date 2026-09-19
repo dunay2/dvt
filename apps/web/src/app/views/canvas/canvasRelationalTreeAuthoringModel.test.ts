@@ -102,6 +102,10 @@ describe('Canvas relational-tree guided authoring model', () => {
       { operation: 'left_join', availability: 'needs-input', selectable: false },
       { operation: 'right_join', availability: 'needs-input', selectable: false },
       { operation: 'full_outer_join', availability: 'needs-input', selectable: false },
+      { operation: 'left_semi_join', availability: 'needs-input', selectable: false },
+      { operation: 'left_anti_join', availability: 'needs-input', selectable: false },
+      { operation: 'right_semi_join', availability: 'needs-input', selectable: false },
+      { operation: 'right_anti_join', availability: 'needs-input', selectable: false },
       { operation: 'union_all', availability: 'needs-input', selectable: false },
       { operation: 'union_distinct', availability: 'needs-input', selectable: false },
     ]);
@@ -124,6 +128,10 @@ describe('Canvas relational-tree guided authoring model', () => {
       { operation: 'left_join', availability: 'needs-predicate', selectable: true },
       { operation: 'right_join', availability: 'needs-predicate', selectable: true },
       { operation: 'full_outer_join', availability: 'needs-predicate', selectable: true },
+      { operation: 'left_semi_join', availability: 'needs-predicate', selectable: true },
+      { operation: 'left_anti_join', availability: 'needs-predicate', selectable: true },
+      { operation: 'right_semi_join', availability: 'needs-predicate', selectable: true },
+      { operation: 'right_anti_join', availability: 'needs-predicate', selectable: true },
       { operation: 'union_all', availability: 'available', selectable: true },
       { operation: 'union_distinct', availability: 'available', selectable: true },
     ]);
@@ -179,7 +187,7 @@ describe('Canvas relational-tree guided authoring model', () => {
       nodes,
       edges,
     });
-    expect(choices).toHaveLength(7);
+    expect(choices).toHaveLength(11);
     expect(
       choices.every((choice) => !choice.selectable && choice.availability === 'read-only')
     ).toBe(true);

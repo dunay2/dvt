@@ -608,9 +608,29 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSubstraitFullOuterJoinAction',
     fallback: 'FULL OUTER JOIN',
   },
+  inspectorDvtSubstraitLeftSemiJoinAction: {
+    key: 'canvas.inspector.authoring.dvtSubstraitLeftSemiJoinAction',
+    fallback: 'LEFT SEMI JOIN',
+  },
+  inspectorDvtSubstraitLeftAntiJoinAction: {
+    key: 'canvas.inspector.authoring.dvtSubstraitLeftAntiJoinAction',
+    fallback: 'LEFT ANTI JOIN',
+  },
+  inspectorDvtSubstraitRightSemiJoinAction: {
+    key: 'canvas.inspector.authoring.dvtSubstraitRightSemiJoinAction',
+    fallback: 'RIGHT SEMI JOIN',
+  },
+  inspectorDvtSubstraitRightAntiJoinAction: {
+    key: 'canvas.inspector.authoring.dvtSubstraitRightAntiJoinAction',
+    fallback: 'RIGHT ANTI JOIN',
+  },
   inspectorDvtSubstraitJoinTypeLabel: {
     key: 'canvas.inspector.authoring.dvtSubstraitJoinTypeLabel',
     fallback: 'Join type',
+  },
+  inspectorDvtSubstraitJoinTypeImpactHint: {
+    key: 'canvas.inspector.authoring.dvtSubstraitJoinTypeImpactHint',
+    fallback: 'Types that would remove selected columns are unavailable.',
   },
   inspectorDvtSubstraitLeftJoinRolesHint: {
     key: 'canvas.inspector.authoring.dvtSubstraitLeftJoinRolesHint',
@@ -623,6 +643,14 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorDvtSubstraitFullOuterJoinRolesHint: {
     key: 'canvas.inspector.authoring.dvtSubstraitFullOuterJoinRolesHint',
     fallback: 'L nullable · R nullable',
+  },
+  inspectorDvtSubstraitLeftFilteringJoinRolesHint: {
+    key: 'canvas.inspector.authoring.dvtSubstraitLeftFilteringJoinRolesHint',
+    fallback: 'L retained · R queried',
+  },
+  inspectorDvtSubstraitRightFilteringJoinRolesHint: {
+    key: 'canvas.inspector.authoring.dvtSubstraitRightFilteringJoinRolesHint',
+    fallback: 'L queried · R retained',
   },
   inspectorDvtSubstraitInnerJoinTitle: {
     key: 'canvas.inspector.authoring.dvtSubstraitInnerJoinTitle',

@@ -58,6 +58,10 @@ describe('resolveCanvasRelationalOperationChoices', () => {
       left_join: 'needs-predicate',
       right_join: 'needs-predicate',
       full_outer_join: 'needs-predicate',
+      left_semi_join: 'needs-predicate',
+      left_anti_join: 'needs-predicate',
+      right_semi_join: 'needs-predicate',
+      right_anti_join: 'needs-predicate',
       union_all: 'available',
       union_distinct: 'available',
     });
@@ -69,6 +73,10 @@ describe('resolveCanvasRelationalOperationChoices', () => {
       left_join: 'needs-predicate',
       right_join: 'needs-predicate',
       full_outer_join: 'needs-predicate',
+      left_semi_join: 'needs-predicate',
+      left_anti_join: 'needs-predicate',
+      right_semi_join: 'needs-predicate',
+      right_anti_join: 'needs-predicate',
       union_all: 'needs-schema-alignment',
       union_distinct: 'needs-schema-alignment',
     });
@@ -79,6 +87,10 @@ describe('resolveCanvasRelationalOperationChoices', () => {
     expect(availability({ predicateAvailable: true }).left_join).toBe('available');
     expect(availability({ predicateAvailable: true }).right_join).toBe('available');
     expect(availability({ predicateAvailable: true }).full_outer_join).toBe('available');
+    expect(availability({ predicateAvailable: true }).left_semi_join).toBe('available');
+    expect(availability({ predicateAvailable: true }).left_anti_join).toBe('available');
+    expect(availability({ predicateAvailable: true }).right_semi_join).toBe('available');
+    expect(availability({ predicateAvailable: true }).right_anti_join).toBe('available');
   });
 
   it('keeps target readiness separate from semantic admission', () => {
@@ -94,6 +106,10 @@ describe('resolveCanvasRelationalOperationChoices', () => {
       left_join: 'target-unavailable',
       right_join: 'target-unavailable',
       full_outer_join: 'target-unavailable',
+      left_semi_join: 'target-unavailable',
+      left_anti_join: 'target-unavailable',
+      right_semi_join: 'target-unavailable',
+      right_anti_join: 'target-unavailable',
       union_all: 'target-unavailable',
       union_distinct: 'target-unavailable',
     });
@@ -135,6 +151,10 @@ describe('resolveCanvasRelationalOperationChoices', () => {
       left_join: 'read-only',
       right_join: 'read-only',
       full_outer_join: 'read-only',
+      left_semi_join: 'read-only',
+      left_anti_join: 'read-only',
+      right_semi_join: 'read-only',
+      right_anti_join: 'read-only',
       union_all: 'read-only',
       union_distinct: 'read-only',
     });

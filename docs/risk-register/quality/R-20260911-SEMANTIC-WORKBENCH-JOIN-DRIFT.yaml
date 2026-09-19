@@ -5,7 +5,9 @@ status: Open
 date: 2026-09-11
 owners:
   - web
+  - api
   - packages/@dvt/contracts
+  - packages/@dvt/postgres-projection
 severity: Medium
 probability: Low
 ---
@@ -15,18 +17,24 @@ mitigation:
     layout, sample rows, and PostgreSQL rendering. Each JOIN stage retains its exact admitted type;
     LEFT, RIGHT and FULL OUTER output nullability follows stable field provenance through Canvas,
     PostgreSQL schema and protected Preview/Run projection. RIGHT remains exact and never swaps its
-    operands to mimic LEFT. Unsupported operands, selectors, capability identities, condition
-    groups, source fields, and data types fail closed.
+    operands to mimic LEFT. SEMI and ANTI selectors keep both inputs in predicate scope while only
+    the retained input enters emitted-field scope; EXISTS/NOT EXISTS lowering preserves retained
+    multiplicity and NULL behavior without DISTINCT, IN, or NOT IN rewrites. Unsupported operands,
+    selectors, capability identities, condition groups, source fields, and data types fail closed.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ED-20260911-semantic-workbench-join-composition.md
     - docs/evidence/ED-20260919-left-join-end-to-end.md
     - docs/evidence/ED-20260919-right-full-join-end-to-end.md
+    - docs/evidence/ED-20260919-semi-anti-join-end-to-end.md
     - apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.test.ts
     - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts
+    - apps/api/test/integration/dvtSemiAntiJoinPostgres.integration.test.ts
     - packages/@dvt/postgres-projection/test/joinPostgresProjection.test.ts
   follow_up:
     - Each newly admitted operator or function needs contract, inspection, mutation, and
       target-rendering proof.
     - Future JOIN-family admission must prove cumulative nullability across mixed trees without
       introducing another JOIN model or workload profile.
+    - Retained-side selectors must continue to prove duplicate preservation, empty-input behavior,
+      NULL predicate behavior, ordinal rebasing, and both physical dependencies end to end.

@@ -12,7 +12,14 @@ import {
 
 export type CanvasJoinOperation = Extract<
   CanvasRelationalOperation,
-  'inner_join' | 'left_join' | 'right_join' | 'full_outer_join'
+  | 'inner_join'
+  | 'left_join'
+  | 'right_join'
+  | 'full_outer_join'
+  | 'left_semi_join'
+  | 'left_anti_join'
+  | 'right_semi_join'
+  | 'right_anti_join'
 >;
 
 export function isCanvasJoinOperation(operation: unknown): operation is CanvasJoinOperation {
@@ -20,7 +27,11 @@ export function isCanvasJoinOperation(operation: unknown): operation is CanvasJo
     operation === 'inner_join' ||
     operation === 'left_join' ||
     operation === 'right_join' ||
-    operation === 'full_outer_join'
+    operation === 'full_outer_join' ||
+    operation === 'left_semi_join' ||
+    operation === 'left_anti_join' ||
+    operation === 'right_semi_join' ||
+    operation === 'right_anti_join'
   );
 }
 
@@ -32,6 +43,14 @@ export function toSubstraitJoinType(operation?: CanvasJoinOperation): DvtSubstra
       return JoinRel_JoinType.RIGHT;
     case 'full_outer_join':
       return JoinRel_JoinType.OUTER;
+    case 'left_semi_join':
+      return JoinRel_JoinType.LEFT_SEMI;
+    case 'left_anti_join':
+      return JoinRel_JoinType.LEFT_ANTI;
+    case 'right_semi_join':
+      return JoinRel_JoinType.RIGHT_SEMI;
+    case 'right_anti_join':
+      return JoinRel_JoinType.RIGHT_ANTI;
     default:
       return JoinRel_JoinType.INNER;
   }
@@ -45,6 +64,14 @@ export function canvasJoinOperationForType(joinType: DvtSubstraitJoinType): Canv
       return 'right_join';
     case JoinRel_JoinType.OUTER:
       return 'full_outer_join';
+    case JoinRel_JoinType.LEFT_SEMI:
+      return 'left_semi_join';
+    case JoinRel_JoinType.LEFT_ANTI:
+      return 'left_anti_join';
+    case JoinRel_JoinType.RIGHT_SEMI:
+      return 'right_semi_join';
+    case JoinRel_JoinType.RIGHT_ANTI:
+      return 'right_anti_join';
     default:
       return 'inner_join';
   }

@@ -29,6 +29,10 @@ export function pgRangeVar(args: {
   };
 }
 
+export function pgRangeSubselect(subquery: PostgresAstNode, alias: string): PostgresAstNode {
+  return { RangeSubselect: { subquery, alias: { aliasname: alias } } };
+}
+
 export function pgFunction(name: string, argument: PostgresAstNode): PostgresAstNode {
   return {
     FuncCall: {

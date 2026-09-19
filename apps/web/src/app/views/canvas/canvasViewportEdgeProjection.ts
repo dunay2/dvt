@@ -34,11 +34,19 @@ function resolveCompositionLabel(
           ? 'RIGHT JOIN'
           : member.operation === 'full_outer_join'
             ? 'FULL OUTER JOIN'
-            : member.operation === 'union_all'
-              ? 'UNION ALL'
-              : member.operation === 'union_distinct'
-                ? 'UNION DISTINCT'
-                : null;
+            : member.operation === 'left_semi_join'
+              ? 'LEFT SEMI JOIN'
+              : member.operation === 'left_anti_join'
+                ? 'LEFT ANTI JOIN'
+                : member.operation === 'right_semi_join'
+                  ? 'RIGHT SEMI JOIN'
+                  : member.operation === 'right_anti_join'
+                    ? 'RIGHT ANTI JOIN'
+                    : member.operation === 'union_all'
+                      ? 'UNION ALL'
+                      : member.operation === 'union_distinct'
+                        ? 'UNION DISTINCT'
+                        : null;
   if (member.state === 'canonical') {
     return operationLabel ?? cardCopy.relationalCompositionIncompleteLabel;
   }

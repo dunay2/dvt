@@ -137,6 +137,10 @@ describe('resolveCanvasRelationalCompositionTruth', () => {
     [JoinRel_JoinType.LEFT, 'left_join'],
     [JoinRel_JoinType.RIGHT, 'right_join'],
     [JoinRel_JoinType.OUTER, 'full_outer_join'],
+    [JoinRel_JoinType.LEFT_SEMI, 'left_semi_join'],
+    [JoinRel_JoinType.LEFT_ANTI, 'left_anti_join'],
+    [JoinRel_JoinType.RIGHT_SEMI, 'right_semi_join'],
+    [JoinRel_JoinType.RIGHT_ANTI, 'right_anti_join'],
   ] as const)('projects exact JOIN type %s from canonical truth', (joinType, operation) => {
     const join = canonicalJoin(orders, clients, joinType);
     expect(

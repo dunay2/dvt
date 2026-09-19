@@ -31,6 +31,10 @@ export function readCanvasRelationalOperationDrag(
     operation === 'left_join' ||
     operation === 'right_join' ||
     operation === 'full_outer_join' ||
+    operation === 'left_semi_join' ||
+    operation === 'left_anti_join' ||
+    operation === 'right_semi_join' ||
+    operation === 'right_anti_join' ||
     operation === 'union_all' ||
     operation === 'union_distinct'
     ? operation

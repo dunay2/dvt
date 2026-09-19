@@ -54,8 +54,18 @@ export function resolveCanvasAlgebraicDropHover(
   const operations = data.resolveAlgebraicCompositionOperations(identity);
   if (operations.length === 0) return null;
   const targetWidth = dimension(target, 'width');
-  const activeIndex =
-    operations.length === 1 || center.x < target.position.x + targetWidth / 2 ? 0 : 1;
+  const targetHeight = dimension(target, 'height');
+  const columns = operations.length === 1 ? 1 : 2;
+  const rows = Math.ceil(operations.length / columns);
+  const column = Math.min(
+    columns - 1,
+    Math.floor(((center.x - target.position.x) / targetWidth) * columns)
+  );
+  const row = Math.min(
+    rows - 1,
+    Math.floor(((center.y - target.position.y) / targetHeight) * rows)
+  );
+  const activeIndex = Math.min(operations.length - 1, row * columns + column);
   return {
     targetNodeId: target.id,
     operations,

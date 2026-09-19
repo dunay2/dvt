@@ -15,6 +15,7 @@ import {
   inspectDvtSubstraitJoinDraft as inspectDvtSubstraitJoinProjection,
   dvtSubstraitJoinNullExtendsLeft,
   dvtSubstraitJoinNullExtendsRight,
+  dvtSubstraitJoinRetainedSide,
 } from '@dvt/postgres-projection';
 export {
   type DvtSubstraitJoinDataType,
@@ -634,7 +635,15 @@ function requireJoinCapabilities(
             ? 'JoinType.JOIN_TYPE_RIGHT'
             : joinType === JoinRel_JoinType.OUTER
               ? 'JoinType.JOIN_TYPE_OUTER'
-              : null;
+              : joinType === JoinRel_JoinType.LEFT_SEMI
+                ? 'JoinType.JOIN_TYPE_LEFT_SEMI'
+                : joinType === JoinRel_JoinType.LEFT_ANTI
+                  ? 'JoinType.JOIN_TYPE_LEFT_ANTI'
+                  : joinType === JoinRel_JoinType.RIGHT_SEMI
+                    ? 'JoinType.JOIN_TYPE_RIGHT_SEMI'
+                    : joinType === JoinRel_JoinType.RIGHT_ANTI
+                      ? 'JoinType.JOIN_TYPE_RIGHT_ANTI'
+                      : null;
     if (selector == null) throw new Error('The requested JOIN type is not admitted.');
     requireSupportedCapability(
       buildDvtSubstraitStandardCapabilityId('relation', {
@@ -981,11 +990,14 @@ function createDvtSubstraitNInputJoinDraft(args: {
       nullable: dvtSubstraitJoinNullExtendsRight(joinType) ? true : field.nullable,
     }));
     const available = [...leftFields, ...rightFields];
+    const retainedSide = dvtSubstraitJoinRetainedSide(joinType);
+    const emittedFields =
+      retainedSide === 'left' ? leftFields : retainedSide === 'right' ? rightFields : available;
     const selectedOutputs = args.outputs
       .filter((output) => output.source.inputIndex <= rightInputIndex)
       .map((output) => {
         const origin = requireOrigin(output.source);
-        return available.find((field) => field.fieldId === origin.fieldId);
+        return emittedFields.find((field) => field.fieldId === origin.fieldId);
       });
     const futurePredicateFields = args.predicates
       .slice(predicateIndex + 1)
@@ -1000,7 +1012,7 @@ function createDvtSubstraitNInputJoinDraft(args: {
       )
       .map((locator) => {
         const origin = requireOrigin(locator);
-        return available.find((field) => field.fieldId === origin.fieldId);
+        return emittedFields.find((field) => field.fieldId === origin.fieldId);
       })
       .filter((field) => field != null);
     const selected = [...selectedOutputs, ...futurePredicateFields].filter(
@@ -1016,7 +1028,7 @@ function createDvtSubstraitNInputJoinDraft(args: {
     }
     const nextFields = selected.filter((field) => field != null);
     const outputMapping = nextFields.map((field) =>
-      available.findIndex((candidate) => candidate.fieldId === field.fieldId)
+      emittedFields.findIndex((candidate) => candidate.fieldId === field.fieldId)
     );
     const operandExpression = (operand: JoinBuildPredicateOperand): Expression => {
       return buildDvtSubstraitJoinOperandExpression({
@@ -1190,7 +1202,14 @@ export function createDvtSubstraitStringJoinDraft(
   const inputs: JoinBuildInput[] = [selection.left, selection.right];
   const outputs: JoinBuildOutput[] = [];
   const usedNames = new Set<string>();
+  const retainedSide = dvtSubstraitJoinRetainedSide(selection.joinType ?? JoinRel_JoinType.INNER);
   inputs.forEach((input, inputIndex) => {
+    if (
+      (retainedSide === 'left' && inputIndex !== 0) ||
+      (retainedSide === 'right' && inputIndex !== 1)
+    ) {
+      return;
+    }
     input.fields.forEach((field) => {
       const name = createCollisionSafeOutputName({
         input: input.source,
@@ -1248,7 +1267,14 @@ export function createDvtSubstraitJoinDraft(args: {
         ],
       },
     ],
-    outputs: INNER_JOIN_OUTPUT_FIELDS.map((field) => ({
+    outputs: INNER_JOIN_OUTPUT_FIELDS.filter((field) => {
+      const retainedSide = dvtSubstraitJoinRetainedSide(args.joinType ?? JoinRel_JoinType.INNER);
+      return (
+        retainedSide === 'both' ||
+        (retainedSide === 'left' && field.locator.inputIndex === 0) ||
+        (retainedSide === 'right' && field.locator.inputIndex === 1)
+      );
+    }).map((field) => ({
       name: field.defaultName,
       source: field.locator,
     })),
@@ -1463,9 +1489,11 @@ export function appendDvtSubstraitJoinInput(
       },
     ];
     const newInputIndex = inputs.length - 1;
-    const outputs = buildOutputsFromProjection(projection);
+    const appendJoinType = input.joinType ?? JoinRel_JoinType.INNER;
+    const retainedSide = dvtSubstraitJoinRetainedSide(appendJoinType);
+    const outputs = retainedSide === 'right' ? [] : buildOutputsFromProjection(projection);
     const usedNames = new Set(outputs.map((output) => output.name));
-    for (const field of input.selectedFields) {
+    for (const field of retainedSide === 'left' ? [] : input.selectedFields) {
       const name = createCollisionSafeOutputName({
         input: input.source,
         sourceName: field,
@@ -1477,10 +1505,7 @@ export function appendDvtSubstraitJoinInput(
     }
     return createDvtSubstraitNInputJoinDraft({
       inputs,
-      joinTypes: [
-        ...projection.joinRelations.map((relation) => relation.joinType),
-        input.joinType ?? JoinRel_JoinType.INNER,
-      ],
+      joinTypes: [...projection.joinRelations.map((relation) => relation.joinType), appendJoinType],
       predicates: [
         ...existingPredicates,
         {
