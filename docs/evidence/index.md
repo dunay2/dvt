@@ -33,6 +33,7 @@ Evidence documents that justify or validate relevant changes.
 - [Compact selected-operation data preview](ED-20260919-selected-operation-preview.md)
 - [Context](ED-20260404-mw-a2-graph-source-cardinality-and-boundary-hardening.md)
 - [Context](ED-20260405-mwa2-policy-unbounded-precedence.md)
+- [CROSS JOIN end to end](ED-20260919-cross-join-end-to-end.md)
 - [DBT Authoring Run Vertical And Plan-Store Replay Reuse](ed-20260526-dbt-authoring-run-plan-store-reuse.md)
 - [DBT CLI Plugin Runner SRP Hardening](ed-20260429-dbt-cli-plugin-runner-srp.md)
 - [DBT step capability admission](ed-20260603-dbt-step-capability-admission.md)

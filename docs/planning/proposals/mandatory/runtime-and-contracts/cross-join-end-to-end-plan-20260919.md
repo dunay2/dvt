@@ -117,7 +117,7 @@ commandQueryRails:
     type: query
     dddOwner: CanvasRelationalTreeProjection
     referenceOnly: true
-    authorityRef: https://github.com/dunay2/dvt/issues/3266#issuecomment-5703815399
+    authorityRef: docs/planning/proposals/mandatory/runtime-and-contracts/semi-anti-join-end-to-end-plan-20260919.md
     applicationPort: ProjectCanvasRelationalTree query port
     adapterSurface: apps/web/src/app/views/canvas/canvasRelationalTreeProjection.ts#projectCanvasRelationalTree
     authorizationScope: authorized project and Canvas draft read scope
@@ -128,7 +128,7 @@ commandQueryRails:
     type: query
     dddOwner: CanvasTransformDataSample
     referenceOnly: true
-    authorityRef: https://github.com/dunay2/dvt/issues/3237
+    authorityRef: docs/planning/proposals/mandatory/runtime-and-contracts/semi-anti-join-end-to-end-plan-20260919.md
     applicationPort: PreviewCanvasTransformRows query port
     adapterSurface: apps/api/src/application/services/previewCanvasTransformRowsUseCase.ts#PreviewCanvasTransformRowsUseCase
     authorizationScope: authorized selected relation and all physical input scopes
@@ -139,7 +139,7 @@ commandQueryRails:
     type: command
     dddOwner: Planner preview boundary
     referenceOnly: true
-    authorityRef: docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-generic-execution-workload-projection-plan-20260903.md
+    authorityRef: docs/planning/proposals/mandatory/runtime-and-contracts/semi-anti-join-end-to-end-plan-20260919.md
     applicationPort: PreviewPlan application command
     adapterSurface: apps/api/src/application/services/dvtPostgresTransformProjection.ts#projectDvtPostgresTransform
     authorizationScope: authorized project, environment, selected graph, and all physical input scopes
@@ -150,7 +150,7 @@ commandQueryRails:
     type: command
     dddOwner: Run command application service
     referenceOnly: true
-    authorityRef: docs/architecture/system/subsystems/semantic-transformation/index.md
+    authorityRef: docs/planning/proposals/mandatory/runtime-and-contracts/semi-anti-join-end-to-end-plan-20260919.md
     applicationPort: StartRun application command
     adapterSurface: apps/api/src/application/services/dvtOperationalWorkloadProjector.ts#DvtOperationalWorkloadProjector
     authorizationScope: authorized project, environment, executable plan, and all physical input scopes
