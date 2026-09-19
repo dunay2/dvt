@@ -9,7 +9,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { DvtOperationalWorkloadProjector } from '../../../src/application/services/dvtOperationalWorkloadProjector.js';
 import { DvtPostgresTargetProjectionPublisher } from '../../../src/application/services/dvtPostgresTargetProjectionPublisher.js';
-import { buildDvtJoinPreviewDraft } from '../../fixtures/dvtJoinPreviewFixture.js';
+import {
+  buildDvtCrossPreviewDraft,
+  buildDvtJoinPreviewDraft,
+} from '../../fixtures/dvtJoinPreviewFixture.js';
 
 function harness(inputCount: 2 | 3 = 3): {
   input: import('../../../src/application/services/dvtPostgresTargetProjectionPublisher.js').DvtPostgresTargetProjectionPublishInput;
@@ -65,6 +68,27 @@ function semiAntiHarness(finalJoinType: SemiAntiJoinFixtureType): ReturnType<typ
 }
 
 describe('N-input protected Preview lowering', () => {
+  it.each([2, 3] as const)(
+    'projects an explicit %i-input CrossRel through Preview without a predicate',
+    async (count) => {
+      const result = harness(count);
+      const draft = buildDvtCrossPreviewDraft(count);
+      const input = {
+        ...result.input,
+        draft,
+        selectedNodeIds: draft.nodeIds,
+        selectedEdgeIds: draft.edges.map((edge) => edge.id),
+      };
+
+      const binding = await result.publisher.publish(input);
+      const sql = Buffer.from(result.publish.mock.calls[0]![0].bytes).toString('utf8');
+
+      expect(binding.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
+      expect(sql.match(/CROSS JOIN/g)).toHaveLength(count - 1);
+      expect(sql).not.toContain(' ON ');
+    }
+  );
+
   it.each([
     ['left_semi', 'EXISTS', ['order_id', 'client_id']],
     ['left_anti', 'NOT (EXISTS', ['order_id', 'client_id']],

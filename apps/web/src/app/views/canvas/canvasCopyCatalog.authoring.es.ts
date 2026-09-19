@@ -188,6 +188,7 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDvtSubstraitLeftAntiJoinAction: 'LEFT ANTI JOIN',
   inspectorDvtSubstraitRightSemiJoinAction: 'RIGHT SEMI JOIN',
   inspectorDvtSubstraitRightAntiJoinAction: 'RIGHT ANTI JOIN',
+  inspectorDvtSubstraitCrossJoinAction: 'CROSS JOIN',
   inspectorDvtSubstraitJoinTypeLabel: 'Tipo de JOIN',
   inspectorDvtSubstraitJoinTypeImpactHint:
     'Los tipos que retirarían columnas seleccionadas no están disponibles.',

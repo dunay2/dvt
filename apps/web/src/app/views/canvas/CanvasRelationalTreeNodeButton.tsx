@@ -7,6 +7,7 @@ import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWo
 const operatorIcons = {
   read: Table2,
   join: CanvasRelationalJoinIcon,
+  cross: CanvasRelationalJoinIcon,
   set: Layers3,
   project: Layers3,
   filter: Filter,
@@ -18,6 +19,7 @@ const operatorTone = {
   project: 'border-blue-700/90 bg-blue-950/25',
   filter: 'border-violet-700/90 bg-violet-950/25',
   join: 'border-blue-500 bg-blue-950/35',
+  cross: 'border-cyan-500 bg-cyan-950/30',
   set: 'border-indigo-600/90 bg-indigo-950/30',
   aggregate: 'border-amber-700/90 bg-amber-950/25',
   unsupported: 'border-rose-700/90 bg-rose-950/25',

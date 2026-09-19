@@ -7,6 +7,7 @@ import {
 } from '@dvt/contracts';
 import {
   projectDvtConnectedFieldDraftToPostgresSql,
+  projectDvtCrossDraftToPostgresSql,
   projectDvtJoinDraftToPostgresSql,
   projectDvtSetDraftToPostgresSql,
   selectDvtSubstraitRelation,
@@ -39,12 +40,13 @@ export async function projectDvtPostgresTransform(
   relationId?: string
 ): Promise<DvtPostgresTransformProjection> {
   const document = closure.authority.semanticDocument;
+  const canonicalPlan = decodeDvtSubstraitPlanV1(document);
   const selected =
     relationId === undefined
       ? null
       : selectDvtSubstraitRelation(
           {
-            plan: decodeDvtSubstraitPlanV1(document),
+            plan: canonicalPlan,
             sidecar: document.sidecar,
           },
           relationId
@@ -55,9 +57,37 @@ export async function projectDvtPostgresTransform(
     (selectedRoot.case !== 'root' ||
       (selectedRoot.value.input?.relType.case !== 'join' &&
         selectedRoot.value.input?.relType.case !== 'project' &&
-        selectedRoot.value.input?.relType.case !== 'set'))
+        selectedRoot.value.input?.relType.case !== 'set' &&
+        selectedRoot.value.input?.relType.case !== 'cross'))
   ) {
     throw new Error('Selected operation is not admitted by the PostgreSQL preview profile.');
+  }
+  const canonicalRoot = canonicalPlan.relations[0]?.relType;
+  const effectiveRelationCase =
+    selectedRoot?.case === 'root'
+      ? selectedRoot.value.input?.relType.case
+      : canonicalRoot?.case === 'root'
+        ? canonicalRoot.value.input?.relType.case
+        : undefined;
+  if (effectiveRelationCase === 'cross') {
+    const projected = await projectDvtCrossDraftToPostgresSql(
+      selected ?? { plan: canonicalPlan, sidecar: document.sidecar }
+    );
+    if (
+      (selected == null && projected.projection.inputs.length !== closure.sources.length) ||
+      projected.projection.inputs.some(
+        (input) =>
+          !closure.sources.some(
+            ({ node, ref }) =>
+              sameConnectedSource(input.sourceRef, ref) &&
+              node.metadata?.['schema'] === input.schema &&
+              node.metadata?.['tableName'] === input.table
+          )
+      )
+    ) {
+      throw new Error('PostgreSQL CROSS inputs do not match the protected terminal closure.');
+    }
+    return { sql: projected.sql, outputs: projected.projection.outputs };
   }
   if (
     selectedRoot?.case === 'root'
@@ -66,7 +96,7 @@ export async function projectDvtPostgresTransform(
   ) {
     const projected = await projectDvtJoinDraftToPostgresSql(
       selected ?? {
-        plan: decodeDvtSubstraitPlanV1(document),
+        plan: canonicalPlan,
         sidecar: document.sidecar,
       }
     );
@@ -94,7 +124,7 @@ export async function projectDvtPostgresTransform(
   ) {
     const projected = await projectDvtSetDraftToPostgresSql(
       selected ?? {
-        plan: decodeDvtSubstraitPlanV1(document),
+        plan: canonicalPlan,
         sidecar: document.sidecar,
       }
     );

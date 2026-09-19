@@ -1,9 +1,6 @@
 /** Owned concern: project canonical DVT relation structure into one immutable Canvas read model. */
 import type { Expression, Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import {
-  JoinRel_JoinType,
-  SetRel_SetOp,
-} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { SetRel_SetOp } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { ConnectedSourceRef, DvtSubstraitAuthoringSidecarV1 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -14,9 +11,10 @@ import {
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { hasSameConnectedSourceRef } from './canvasDvtSubstraitJoinSourceResolution';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { canvasJoinLabelForType } from './canvasRelationalTreeJoinType';
 
 export type CanvasRelationalTreeOperator =
-  'read' | 'project' | 'filter' | 'join' | 'set' | 'aggregate' | 'unsupported';
+  'read' | 'project' | 'filter' | 'join' | 'cross' | 'set' | 'aggregate' | 'unsupported';
 
 export type CanvasRelationalTreeChildRole = 'input' | 'left' | 'right' | 'primary' | 'secondary';
 
@@ -92,6 +90,7 @@ function relationAnchor(rel: Rel): number | null {
     case 'project':
     case 'filter':
     case 'join':
+    case 'cross':
     case 'set':
     case 'aggregate':
       return rel.relType.value.common?.relAnchor ?? null;
@@ -128,6 +127,11 @@ function childInputs(rel: Rel): readonly ChildInput[] {
         { role: 'left', ordinal: 0, rel: requireRelation(rel.relType.value.left, 'JOIN left') },
         { role: 'right', ordinal: 1, rel: requireRelation(rel.relType.value.right, 'JOIN right') },
       ];
+    case 'cross':
+      return [
+        { role: 'left', ordinal: 0, rel: requireRelation(rel.relType.value.left, 'CROSS left') },
+        { role: 'right', ordinal: 1, rel: requireRelation(rel.relType.value.right, 'CROSS right') },
+      ];
     case 'set':
       if (rel.relType.value.inputs.length === 0) {
         throw new Error('Canonical SetRel has no inputs.');
@@ -148,6 +152,7 @@ function operator(rel: Rel): CanvasRelationalTreeOperator {
     case 'project':
     case 'filter':
     case 'join':
+    case 'cross':
     case 'set':
     case 'aggregate':
       return rel.relType.case;
@@ -224,39 +229,23 @@ function buildTree(
   const relationId = binding?.relationId ?? null;
   const inputs = childInputs(args.rel);
   const windows = relationWindowCount(args.rel);
-  const joinLabel =
-    args.rel.relType.case !== 'join'
-      ? null
-      : args.rel.relType.value.type === JoinRel_JoinType.INNER
-        ? 'INNER JOIN'
-        : args.rel.relType.value.type === JoinRel_JoinType.LEFT
-          ? 'LEFT JOIN'
-          : args.rel.relType.value.type === JoinRel_JoinType.RIGHT
-            ? 'RIGHT JOIN'
-            : args.rel.relType.value.type === JoinRel_JoinType.OUTER
-              ? 'FULL OUTER JOIN'
-              : args.rel.relType.value.type === JoinRel_JoinType.LEFT_SEMI
-                ? 'LEFT SEMI JOIN'
-                : args.rel.relType.value.type === JoinRel_JoinType.LEFT_ANTI
-                  ? 'LEFT ANTI JOIN'
-                  : args.rel.relType.value.type === JoinRel_JoinType.RIGHT_SEMI
-                    ? 'RIGHT SEMI JOIN'
-                    : args.rel.relType.value.type === JoinRel_JoinType.RIGHT_ANTI
-                      ? 'RIGHT ANTI JOIN'
-                      : 'UNSUPPORTED JOIN';
+  const operationLabel =
+    args.rel.relType.case === 'join'
+      ? canvasJoinLabelForType(args.rel.relType.value.type)
+      : args.rel.relType.case === 'cross'
+        ? 'CROSS JOIN'
+        : args.rel.relType.case === 'set'
+          ? args.rel.relType.value.op === SetRel_SetOp.UNION_ALL
+            ? 'UNION ALL'
+            : args.rel.relType.value.op === SetRel_SetOp.UNION_DISTINCT
+              ? 'UNION DISTINCT'
+              : 'UNSUPPORTED SET'
+          : null;
   return {
     locator: `rel:${args.semanticDigest}:${args.path}`,
     operator: operator(args.rel),
     substraitKind: args.rel.relType.case ?? 'unknown',
-    ...(joinLabel != null
-      ? { operationLabel: joinLabel }
-      : args.rel.relType.case === 'set'
-        ? args.rel.relType.value.op === SetRel_SetOp.UNION_ALL
-          ? { operationLabel: 'UNION ALL' }
-          : args.rel.relType.value.op === SetRel_SetOp.UNION_DISTINCT
-            ? { operationLabel: 'UNION DISTINCT' }
-            : { operationLabel: 'UNSUPPORTED SET' }
-        : {}),
+    ...(operationLabel == null ? {} : { operationLabel }),
     relationId,
     displayName: binding?.displayName ?? null,
     sourceRef: binding?.sourceRef ?? null,

@@ -9,6 +9,7 @@ import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTre
 import { createDvtSubstraitSetDraft } from './canvasDvtSubstraitSetComposition';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
+import { createDvtSubstraitCrossDraft } from './canvasDvtSubstraitCrossComposition';
 
 export function createCanvasRelationalTreeOperationDraft(
   args: Readonly<{
@@ -31,6 +32,17 @@ export function createCanvasRelationalTreeOperationDraft(
       rightInputId,
       operation: args.operation,
     });
+  if (args.operation === 'cross_join') {
+    const inputs = args.selectedInputIds.map((id) =>
+      args.inputs.find((candidate) => candidate.nodeId === id)
+    );
+    if (inputs.some((source) => source == null)) return null;
+    try {
+      return createDvtSubstraitCrossDraft({ inputs: inputs.filter((source) => source != null) });
+    } catch {
+      return null;
+    }
+  }
   if (!isCanvasSetOperation(args.operation)) return null;
   const inputs = args.selectedInputIds.map((id) =>
     args.inputs.find((candidate) => candidate.nodeId === id)

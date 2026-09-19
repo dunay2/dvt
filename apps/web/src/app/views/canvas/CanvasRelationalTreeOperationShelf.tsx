@@ -20,6 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../../components/ui/alert-dialog';
+import { CanvasRelationalCrossNotice } from './CanvasRelationalCrossNotice';
 
 export function CanvasRelationalTreeOperationShelf({
   choices,
@@ -86,6 +87,7 @@ export function CanvasRelationalTreeOperationShelf({
           </span>
         ) : null}
         {expanded ? children : null}
+        {operation === 'cross_join' ? <CanvasRelationalCrossNotice /> : null}
       </div>
       <AlertDialog
         open={replacement != null}

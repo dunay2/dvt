@@ -60,6 +60,8 @@ const en = {
   missingPreviewHint: 'Reconnect these sources or update the composition before requesting data.',
   reviewInputs: 'Review inputs',
   operations: 'Operations',
+  crossJoinWarning:
+    'CROSS combines every row on L with every row on R. Cardinality remains unknown until preview.',
   removeCard: 'Remove from tree',
   removeDependents: 'Also remove dependent operations?',
   removeDependentsHint: 'These operations cannot remain valid after this removal:',
@@ -143,6 +145,8 @@ const es: typeof en = {
     'Reconecta estas fuentes o actualiza la composición antes de consultar datos.',
   reviewInputs: 'Revisar entradas',
   operations: 'Operaciones',
+  crossJoinWarning:
+    'CROSS combina cada fila de L con cada fila de R. La cardinalidad no se conoce hasta previsualizar.',
   removeCard: 'Retirar del árbol',
   removeDependents: '¿Retirar también las operaciones dependientes?',
   removeDependentsHint: 'Estas operaciones no pueden seguir siendo válidas tras la retirada:',

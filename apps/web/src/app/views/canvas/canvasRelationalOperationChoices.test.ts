@@ -62,6 +62,7 @@ describe('resolveCanvasRelationalOperationChoices', () => {
       left_anti_join: 'needs-predicate',
       right_semi_join: 'needs-predicate',
       right_anti_join: 'needs-predicate',
+      cross_join: 'available',
       union_all: 'available',
       union_distinct: 'available',
     });
@@ -77,6 +78,7 @@ describe('resolveCanvasRelationalOperationChoices', () => {
       left_anti_join: 'needs-predicate',
       right_semi_join: 'needs-predicate',
       right_anti_join: 'needs-predicate',
+      cross_join: 'available',
       union_all: 'needs-schema-alignment',
       union_distinct: 'needs-schema-alignment',
     });
@@ -110,6 +112,7 @@ describe('resolveCanvasRelationalOperationChoices', () => {
       left_anti_join: 'target-unavailable',
       right_semi_join: 'target-unavailable',
       right_anti_join: 'target-unavailable',
+      cross_join: 'target-unavailable',
       union_all: 'target-unavailable',
       union_distinct: 'target-unavailable',
     });
@@ -138,6 +141,14 @@ describe('resolveCanvasRelationalOperationChoices', () => {
     expect(
       availability({
         inputs: [
+          input({ nodeId: 'orders', joinDataType: null }),
+          input({ nodeId: 'customers', joinDataType: null }),
+        ],
+      }).cross_join
+    ).toBe('semantically-unavailable');
+    expect(
+      availability({
+        inputs: [
           input({ nodeId: 'orders', joinDataType: 'i64' }),
           input({ nodeId: 'customers', joinDataType: 'bool' }),
         ],
@@ -155,6 +166,7 @@ describe('resolveCanvasRelationalOperationChoices', () => {
       left_anti_join: 'read-only',
       right_semi_join: 'read-only',
       right_anti_join: 'read-only',
+      cross_join: 'read-only',
       union_all: 'read-only',
       union_distinct: 'read-only',
     });

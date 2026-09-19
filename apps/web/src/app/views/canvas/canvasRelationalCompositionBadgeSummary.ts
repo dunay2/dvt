@@ -13,6 +13,7 @@ import {
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import type { CanvasRelationalCompositionOperation } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
+import { inspectDvtSubstraitAcceptedCrossDraft } from '@dvt/postgres-projection';
 
 export function resolveCanvasRelationalCompositionBadgeSummary(args: {
   node: CanonicalNode;
@@ -57,6 +58,15 @@ export function resolveCanvasRelationalCompositionBadgeSummary(args: {
                     ? 'RIGHT ANTI JOIN'
                     : 'INNER JOIN';
     return summary.replace(/^INNER JOIN/, label);
+  }
+
+  if (args.operation === 'cross_join') {
+    const inspection = inspectDvtSubstraitAcceptedCrossDraft(
+      decodeDvtSubstraitJoinDocument(authority.semanticDocument)
+    );
+    return inspection.ok
+      ? `CROSS JOIN · ${inspection.projection.inputs.length} inputs · ${inspection.projection.outputs.length} outputs`
+      : null;
   }
 
   const inspection = inspectDvtSubstraitUnionAllAcceptedDraft(

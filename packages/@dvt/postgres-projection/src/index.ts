@@ -146,3 +146,22 @@ export {
   buildDvtSetPostgresAst,
   projectDvtSetDraftToPostgresSql,
 } from './setPostgresProjection.js';
+export type {
+  DvtSubstraitCrossDraft,
+  DvtSubstraitCrossInspection,
+  DvtSubstraitMixedCrossInspection,
+  DvtSubstraitMixedCrossProjection,
+  DvtSubstraitCrossProjection,
+} from './substraitCrossReadModel.js';
+export {
+  flattenDvtSubstraitCrossTree,
+  inspectDvtSubstraitCrossDraft,
+} from './substraitCrossReader.js';
+export {
+  inspectDvtSubstraitAcceptedCrossDraft,
+  inspectDvtSubstraitMixedCrossDraft,
+} from './substraitMixedCrossReader.js';
+export {
+  buildDvtCrossPostgresAst,
+  projectDvtCrossDraftToPostgresSql,
+} from './crossPostgresProjection.js';

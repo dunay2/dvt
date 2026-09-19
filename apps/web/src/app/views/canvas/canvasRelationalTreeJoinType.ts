@@ -77,6 +77,29 @@ export function canvasJoinOperationForType(joinType: DvtSubstraitJoinType): Canv
   }
 }
 
+export function canvasJoinLabelForType(joinType: JoinRel_JoinType): string {
+  switch (joinType) {
+    case JoinRel_JoinType.INNER:
+      return 'INNER JOIN';
+    case JoinRel_JoinType.LEFT:
+      return 'LEFT JOIN';
+    case JoinRel_JoinType.RIGHT:
+      return 'RIGHT JOIN';
+    case JoinRel_JoinType.OUTER:
+      return 'FULL OUTER JOIN';
+    case JoinRel_JoinType.LEFT_SEMI:
+      return 'LEFT SEMI JOIN';
+    case JoinRel_JoinType.LEFT_ANTI:
+      return 'LEFT ANTI JOIN';
+    case JoinRel_JoinType.RIGHT_SEMI:
+      return 'RIGHT SEMI JOIN';
+    case JoinRel_JoinType.RIGHT_ANTI:
+      return 'RIGHT ANTI JOIN';
+    default:
+      return 'UNSUPPORTED JOIN';
+  }
+}
+
 export function setFinalCanvasJoinType(
   draft: DvtSubstraitJoinDraft,
   operation: CanvasJoinOperation

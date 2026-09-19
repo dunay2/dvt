@@ -19,6 +19,7 @@ import {
 } from './canvasDvtSubstraitSetComposition';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
+import { inspectDvtSubstraitAcceptedCrossDraft } from '@dvt/postgres-projection';
 
 function uniqueSourceRefs(
   sourceRefs: readonly ConnectedSourceRef[]
@@ -42,6 +43,7 @@ function resolveCanonicalOperation(
         : undefined;
       return joinType == null ? 'inner_join' : canvasJoinOperationForType(joinType);
     }
+    if (inspectDvtSubstraitAcceptedCrossDraft(draft).ok) return 'cross_join';
   } catch {
     // The same canonical document may represent another admitted relation shape.
   }

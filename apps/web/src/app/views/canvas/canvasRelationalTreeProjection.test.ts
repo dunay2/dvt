@@ -25,6 +25,10 @@ import {
   type CanvasRelationalTreeNode,
   type CanvasRelationalTreeProjectionResult,
 } from './canvasRelationalTreeProjection';
+import {
+  createDvtSubstraitCrossDraft,
+  encodeDvtSubstraitCrossDocument,
+} from './canvasDvtSubstraitCrossComposition';
 
 const TARGET_ID = 'transform-orders';
 
@@ -119,6 +123,45 @@ function threeInputJoin(): DvtSubstraitJoinDraft {
 }
 
 describe('ProjectCanvasRelationalTree', () => {
+  it('projects a left-associated CrossRel with explicit L/R child roles', () => {
+    const sources = [
+      sourceNode('sizes', 'sizes', ['size']),
+      sourceNode('colours', 'colours', ['colour']),
+      sourceNode('stores', 'stores', ['store']),
+    ];
+    const draft = createDvtSubstraitCrossDraft({
+      inputs: sources.map((source) => ({
+        nodeId: source.id,
+        schema: 'public',
+        table: source.name,
+        sourceRef: sourceRef(source.name),
+        fields: (source.metadata?.columns as { name: string }[]).map(({ name }) => ({
+          name,
+          dataType: 'string',
+          joinDataType: 'string' as const,
+        })),
+      })),
+    });
+    const result = project(
+      applyDvtSubstraitSemanticDocument(targetNode(), encodeDvtSubstraitCrossDocument(draft)),
+      sources
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.projection.root).toMatchObject({
+      operator: 'cross',
+      operationLabel: 'CROSS JOIN',
+      children: [{ role: 'left' }, { role: 'right' }],
+    });
+    expect(result.projection.root.children[0]?.node.operator).toBe('cross');
+    expect(result.projection.inputs.map((input) => input.state)).toEqual([
+      'participating',
+      'participating',
+      'participating',
+    ]);
+  });
+
   it('projects a recursive N-input JOIN with canonical child order and stable identity', () => {
     const draft = threeInputJoin();
     const transform = applyDvtSubstraitSemanticDocument(

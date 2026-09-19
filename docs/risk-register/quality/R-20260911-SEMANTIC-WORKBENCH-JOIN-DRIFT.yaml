@@ -21,15 +21,21 @@ mitigation:
     the retained input enters emitted-field scope; EXISTS/NOT EXISTS lowering preserves retained
     multiplicity and NULL behavior without DISTINCT, IN, or NOT IN rewrites. Unsupported operands,
     selectors, capability identities, condition groups, source fields, and data types fail closed.
+    CROSS uses the exact predicate-free CrossRel identity and preserves both sides in SQL even when
+    one contributes no output fields. Left-associated chains and the admitted outer-JOIN subtree are
+    rendered without reassociation; cardinality remains unknown until execution and no hidden COUNT
+    or per-input LIMIT is introduced.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ED-20260911-semantic-workbench-join-composition.md
     - docs/evidence/ED-20260919-left-join-end-to-end.md
     - docs/evidence/ED-20260919-right-full-join-end-to-end.md
     - docs/evidence/ED-20260919-semi-anti-join-end-to-end.md
+    - docs/evidence/ED-20260919-cross-join-end-to-end.md
     - apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.test.ts
     - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts
     - apps/api/test/integration/dvtSemiAntiJoinPostgres.integration.test.ts
+    - apps/api/test/integration/dvtCrossJoinPostgres.integration.test.ts
     - packages/@dvt/postgres-projection/test/joinPostgresProjection.test.ts
   follow_up:
     - Each newly admitted operator or function needs contract, inspection, mutation, and
@@ -38,3 +44,5 @@ mitigation:
       introducing another JOIN model or workload profile.
     - Retained-side selectors must continue to prove duplicate preservation, empty-input behavior,
       NULL predicate behavior, ordinal rebasing, and both physical dependencies end to end.
+    - Future CrossRel nesting must prove association boundaries, emitted-field multiplicity, and
+      closure authorization before entering the supported profile.

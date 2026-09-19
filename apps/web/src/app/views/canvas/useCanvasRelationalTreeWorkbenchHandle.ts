@@ -30,6 +30,7 @@ export function useCanvasRelationalTreeWorkbenchHandle(
       model.authoringAvailable &&
       model.session.appendInput == null &&
       ((isCanvasJoinOperation(model.session.operation) && model.session.joinDraft != null) ||
+        (model.session.operation === 'cross_join' && model.session.joinDraft != null) ||
         (model.session.operation === 'projection' && model.session.selectedInputIds.length === 1) ||
         (isCanvasSetOperation(model.session.operation) &&
           model.session.selectedInputIds.length >= 2)),

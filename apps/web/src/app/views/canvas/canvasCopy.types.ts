@@ -525,6 +525,7 @@ export type CanvasViewCopy = {
   readonly inspectorDvtSubstraitLeftAntiJoinAction: string;
   readonly inspectorDvtSubstraitRightSemiJoinAction: string;
   readonly inspectorDvtSubstraitRightAntiJoinAction: string;
+  readonly inspectorDvtSubstraitCrossJoinAction: string;
   readonly inspectorDvtSubstraitJoinTypeLabel: string;
   readonly inspectorDvtSubstraitJoinTypeImpactHint: string;
   readonly inspectorDvtSubstraitLeftJoinRolesHint: string;

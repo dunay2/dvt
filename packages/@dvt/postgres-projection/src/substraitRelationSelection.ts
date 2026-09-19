@@ -6,6 +6,7 @@ import { DvtSubstraitAuthoringSidecarV1Schema } from '@dvt/contracts';
 import { sha256Hex } from '@dvt/crypto';
 
 import { DvtSubstraitPostgresProjectionError } from './dvtProjection.js';
+import { flattenDvtSubstraitCrossTree } from './substraitCrossReader.js';
 import {
   flattenNInputJoinTree,
   hasCurrentJoinSemanticHash,
@@ -34,6 +35,10 @@ function children(rel: Rel): readonly Rel[] {
       const { left, right } = rel.relType.value;
       return left == null || right == null ? reject() : [left, right];
     }
+    case 'cross': {
+      const { left, right } = rel.relType.value;
+      return left == null || right == null ? reject() : [left, right];
+    }
     case 'set':
       return rel.relType.value.inputs;
     default:
@@ -51,6 +56,7 @@ function common(rel: Rel): RelCommon {
     case 'fetch':
     case 'join':
     case 'set':
+    case 'cross':
       return rel.relType.value.common ?? reject();
     default:
       return reject();
@@ -90,7 +96,13 @@ export function selectDvtSubstraitRelation(
   // Existing JOIN admission uses read-first anchors. Rebase only the transient copy;
   // stable RelationIds/FieldIds and the persisted plan remain unchanged.
   const tree = flattenNInputJoinTree(selected);
-  const ordered = tree == null ? included : [...tree.reads, ...tree.joins];
+  const crossTree = tree == null ? flattenDvtSubstraitCrossTree(selected) : null;
+  const ordered =
+    tree != null
+      ? [...tree.reads, ...tree.joins]
+      : crossTree != null
+        ? [...crossTree.reads, ...crossTree.crosses]
+        : included;
   const remap = new Map(ordered.map((rel, index) => [common(rel).relAnchor, index + 1]));
   for (const rel of ordered) common(rel).relAnchor = remap.get(common(rel).relAnchor)!;
   return {

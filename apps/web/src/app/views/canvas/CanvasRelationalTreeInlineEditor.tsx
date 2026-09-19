@@ -1,48 +1,44 @@
 /** Owned concern: edit the operation selected in the central relational draft canvas. */
-import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
-import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import {
   inspectDvtSubstraitJoinPredicateContext,
   type DvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
-import { CanvasRelationalTreeJoinEditor } from './CanvasRelationalTreeJoinEditor';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { canvasRelationalOperationLabel } from './DvtRelationalOperationChooser';
-import type { CanonicalNode } from '../../types/canonical';
 import { CanvasRelationalTreeSelectedOperatorEditor } from './CanvasRelationalTreeSelectedOperatorEditor';
-export function CanvasRelationalTreeInlineEditor({
-  appendInput,
-  copy,
-  joinDraft,
-  operation,
-  onAppendJoinInput,
-  onChangeJoinDraft,
-  onPendingConditionChange,
-  selectedRelationId,
-  transformNode,
-  expanded,
-  onClose,
-}: Readonly<{
-  appendInput: CanvasDvtCompositionInput | null;
-  copy: CanvasRelationalTreeWorkbenchCopy;
+import {
+  CanvasRelationalTreeOperationEditor,
+  type CanvasRelationalTreeOperationEditorProps,
+} from './CanvasRelationalTreeOperationEditor';
+
+type InlineEditorProps = Omit<CanvasRelationalTreeOperationEditorProps, 'cross' | 'draft'> & {
   joinDraft: DvtSubstraitJoinDraft | null;
   operation: CanvasRelationalOperation | null;
-  onAppendJoinInput: (
-    selection: Readonly<{ leftSourceFieldId: string; rightFieldName: string }>
-  ) => void;
-  onChangeJoinDraft: (draft: DvtSubstraitJoinDraft) => void;
-  onPendingConditionChange?: (pending: boolean) => void;
-  selectedRelationId: string | null;
-  transformNode: CanonicalNode;
   expanded: boolean;
   onClose: () => void;
-}>): JSX.Element | null {
+};
+
+export function CanvasRelationalTreeInlineEditor(
+  props: Readonly<InlineEditorProps>
+): JSX.Element | null {
+  const {
+    appendInput,
+    copy,
+    joinDraft,
+    operation,
+    selectedRelationId,
+    transformNode,
+    onChangeJoinDraft,
+    expanded,
+    onClose,
+  } = props;
   if (operation == null || joinDraft == null) return null;
   const inspection = inspectDvtSubstraitJoinPredicateContext(joinDraft)?.inspection;
   const selectedJoin = inspection?.projection.joinRelations.some(
     ({ relationId }) => relationId === selectedRelationId
   );
+  const selectedCross = operation === 'cross_join' && selectedRelationId != null;
   return (
     <>
       {!selectedJoin && appendInput == null && expanded ? (
@@ -58,19 +54,10 @@ export function CanvasRelationalTreeInlineEditor({
       <CanvasRelationalTreeEditorFrame
         title={canvasRelationalOperationLabel(operation, copy)}
         relationId={selectedRelationId}
-        hidden={appendInput == null && (!selectedJoin || !expanded)}
+        hidden={appendInput == null && ((!selectedJoin && !selectedCross) || !expanded)}
         onClose={onClose}
       >
-        <CanvasRelationalTreeJoinEditor
-          appendInput={appendInput}
-          copy={copy}
-          draft={joinDraft}
-          onAppend={onAppendJoinInput}
-          onChange={onChangeJoinDraft}
-          onPendingConditionChange={onPendingConditionChange}
-          selectedRelationId={selectedRelationId}
-          transformNode={transformNode}
-        />
+        <CanvasRelationalTreeOperationEditor {...props} cross={selectedCross} draft={joinDraft} />
       </CanvasRelationalTreeEditorFrame>
     </>
   );

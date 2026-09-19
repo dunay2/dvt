@@ -179,6 +179,11 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     proofRef: 'docs/evidence/ED-20260919-semi-anti-join-end-to-end.md',
   },
   {
+    entryIds: [standardId('relation', 'substrait.CrossRel')],
+    useCaseRefs: ['dvt:#3322'],
+    proofRef: 'docs/evidence/ED-20260919-cross-join-end-to-end.md',
+  },
+  {
     entryIds: [
       standardId('relation', 'substrait.AggregateRel'),
       functionId('aggregate-function', 'functions_aggregate_generic', 'count'),

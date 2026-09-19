@@ -16,6 +16,8 @@ import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTre
 import { inspectDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { inspectDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { inspectDvtSubstraitUnionAllDraft } from './canvasDvtSubstraitSetComposition';
+import { createDvtSubstraitCrossDraft } from './canvasDvtSubstraitCrossComposition';
+import { inspectDvtSubstraitCrossDraft } from '@dvt/postgres-projection';
 
 const TARGET_ID = 'transform';
 
@@ -106,6 +108,7 @@ describe('Canvas relational-tree guided authoring model', () => {
       { operation: 'left_anti_join', availability: 'needs-input', selectable: false },
       { operation: 'right_semi_join', availability: 'needs-input', selectable: false },
       { operation: 'right_anti_join', availability: 'needs-input', selectable: false },
+      { operation: 'cross_join', availability: 'needs-input', selectable: false },
       { operation: 'union_all', availability: 'needs-input', selectable: false },
       { operation: 'union_distinct', availability: 'needs-input', selectable: false },
     ]);
@@ -132,6 +135,7 @@ describe('Canvas relational-tree guided authoring model', () => {
       { operation: 'left_anti_join', availability: 'needs-predicate', selectable: true },
       { operation: 'right_semi_join', availability: 'needs-predicate', selectable: true },
       { operation: 'right_anti_join', availability: 'needs-predicate', selectable: true },
+      { operation: 'cross_join', availability: 'available', selectable: true },
       { operation: 'union_all', availability: 'available', selectable: true },
       { operation: 'union_distinct', availability: 'available', selectable: true },
     ]);
@@ -187,7 +191,7 @@ describe('Canvas relational-tree guided authoring model', () => {
       nodes,
       edges,
     });
-    expect(choices).toHaveLength(11);
+    expect(choices).toHaveLength(12);
     expect(
       choices.every((choice) => !choice.selectable && choice.availability === 'read-only')
     ).toBe(true);
@@ -262,6 +266,24 @@ describe('Canvas relational-tree guided authoring model', () => {
       customers.id,
       orders.id,
     ]);
+  });
+
+  it('builds an explicit left-associated CrossRel without predicates or field matching', () => {
+    const draft = createDvtSubstraitCrossDraft({
+      inputs: [orders, customers, tickets].map((source) =>
+        inputs.find((input) => input.nodeId === source.id)!
+      ),
+    });
+    const inspection = inspectDvtSubstraitCrossDraft(draft);
+    expect(inspection).toMatchObject({
+      ok: true,
+      projection: {
+        inputs: [{ table: 'orders' }, { table: 'customers' }, { table: 'tickets' }],
+        crossRelations: [{}, {}],
+      },
+    });
+    const root = draft.plan.relations[0]?.relType;
+    expect(root?.case === 'root' ? root.value.input?.relType.case : null).toBe('cross');
   });
 
   it('builds UNION DISTINCT through the same ordered N-ary Set path', () => {

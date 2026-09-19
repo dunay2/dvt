@@ -71,6 +71,7 @@ export type CanvasRelationalCompositionOperation =
   | 'left_anti_join'
   | 'right_semi_join'
   | 'right_anti_join'
+  | 'cross_join'
   | 'union_all'
   | 'union_distinct';
 
