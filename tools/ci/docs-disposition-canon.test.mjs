@@ -369,6 +369,15 @@ test('retired documentation-only closeouts have no files or local consumers', ()
     '20260318-stage-1-1-planner-canonicalization-policy-vocabulary-contracts-closeout.md',
   ]);
   const editorialCloseouts = new Set([
+    '20260316-docs-governance-tooling-closeout.md',
+    '20260320-planning-archive-sweep-closeout.md',
+    '20260320-planner-r1-doc-triage-closeout.md',
+    '20260320-planner-assessment-roadmap-closeout.md',
+    '20260324-s18-follow-up-proposal-capture-closeout.md',
+    '20260407-doc-arch-01-documentation-governance-audit-closeout.md',
+    '20260423-selected-closure-ux-proof-story-capture-closeout.md',
+    '20260423-tf-e2-project-playground-host-proposal-capture-closeout.md',
+    '20260424-tf-e2-k-cycle-story-capture-closeout.md',
     '20260315-g10-lineage-runtime-closeout.md',
     '20260315-run-domain-projection-closeout.md',
     '20260320-gap4-pr3-resilience-envelope-closeout.md',
