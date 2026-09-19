@@ -3,6 +3,7 @@ import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait
 import type { DvtTransformResultTargetV1 } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
+import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import {
   applyDvtTransformAuthoringMetadata,
   createDvtTransformAuthoringMetadata,
@@ -18,6 +19,10 @@ import {
   encodeDvtSubstraitJoinDocument,
   type DvtSubstraitJoinSource,
 } from './canvasDvtSubstraitJoinComposition';
+import {
+  createDvtSubstraitCrossDraft,
+  encodeDvtSubstraitCrossDocument,
+} from './canvasDvtSubstraitCrossComposition';
 
 const target: DvtTransformResultTargetV1 = {
   schemaVersion: 'dvt-transform-result-target.v1',
@@ -41,6 +46,31 @@ const node: CanonicalNode = {
 };
 
 describe('Transform result destination metadata', () => {
+  it('restores and persists CROSS JOIN as the canonical CrossRel authoring shape', () => {
+    const input = (nodeId: string): CanvasDvtCompositionInput => ({
+      nodeId,
+      schema: 'raw',
+      table: nodeId,
+      sourceRef: {
+        schemaVersion: 'connected-source-ref.v1' as const,
+        connectionRef: target.connectionRef,
+        sourceObjectId: `raw.${nodeId}`,
+      },
+      fields: [{ name: 'id', dataType: 'string', joinDataType: 'string' as const, nullable: true }],
+    });
+    const semanticNode = applyDvtSubstraitSemanticDocument(
+      node,
+      encodeDvtSubstraitCrossDocument(
+        createDvtSubstraitCrossDraft({ inputs: [input('sizes'), input('colours')] })
+      )
+    );
+
+    const metadata = createDvtTransformAuthoringMetadata(semanticNode);
+
+    expect(metadata).toMatchObject({ mode: 'substrait', shape: 'cross_join' });
+    expect(applyDvtTransformAuthoringMetadata(semanticNode, metadata)).toEqual(semanticNode);
+  });
+
   it.each([
     [JoinRel_JoinType.LEFT, 'left_join'],
     [JoinRel_JoinType.RIGHT, 'right_join'],

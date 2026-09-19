@@ -1,5 +1,6 @@
 /** Owns decoding and persistence of canonical DVT Transform shapes. */
 import { DVT_TRANSFORM_AUTHORING_MODE, DvtTransformResultTargetV1Schema } from '@dvt/contracts';
+import { inspectDvtSubstraitAcceptedCrossDraft } from '@dvt/postgres-projection';
 
 import type { CanonicalNode } from '../../types/canonical';
 import type {
@@ -46,6 +47,7 @@ import {
   inspectDvtSubstraitFilter,
 } from './canvasDvtSubstraitFilter';
 import { canvasJoinOperationForType, isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
+import { encodeDvtSubstraitCrossDocument } from './canvasDvtSubstraitCrossComposition';
 
 type TransformMetadata =
   DvtUninitializedTransformAuthoringMetadata | DvtSubstraitTransformAuthoringMetadata;
@@ -100,6 +102,9 @@ export function createDvtTransformAuthoringMetadata(node: CanonicalNode): Transf
       finalJoinType == null ? 'inner_join' : canvasJoinOperationForType(finalJoinType),
       join
     );
+  }
+  if (inspectDvtSubstraitAcceptedCrossDraft(join).ok) {
+    return fromDraft(authority.mode, disposition, 'cross_join', join);
   }
   const setDraft = decodeDvtSubstraitUnionAllDocument(authority.semanticDocument);
   const setOperation = resolveDvtSubstraitSetOperation(setDraft);
@@ -165,8 +170,10 @@ export function applyDvtTransformAuthoringMetadata(
         : encodeDvtSubstraitFilterDocument(draft)
       : isCanvasJoinOperation(metadata.shape)
         ? encodeDvtSubstraitJoinDocument(draft)
-        : metadata.shape === 'union_all' || metadata.shape === 'union_distinct'
-          ? encodeDvtSubstraitUnionAllDocument(draft)
-          : encodeDvtSubstraitPilotDocument(draft);
+        : metadata.shape === 'cross_join'
+          ? encodeDvtSubstraitCrossDocument(draft)
+          : metadata.shape === 'union_all' || metadata.shape === 'union_distinct'
+            ? encodeDvtSubstraitUnionAllDocument(draft)
+            : encodeDvtSubstraitPilotDocument(draft);
   return withMaterialization(applyDvtSubstraitSemanticDocument(node, document));
 }

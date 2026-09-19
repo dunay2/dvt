@@ -8,6 +8,7 @@ import type { CanvasRelationalTreeAuthoringCandidate } from './canvasRelationalT
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { appendDvtSubstraitUnionAllInput } from './canvasDvtSubstraitSetComposition';
+import { appendDvtSubstraitCrossInput } from './canvasDvtSubstraitCrossComposition';
 
 export function useCanvasRelationalTreeInputSelection(
   args: Readonly<{
@@ -53,6 +54,20 @@ export function useCanvasRelationalTreeInputSelection(
         if (next === args.joinDraft) return;
         args.setJoinDraft(next);
         args.appendOperand(nodeId);
+      } else if (args.operation === 'cross_join') {
+        const selected = [...args.candidates]
+          .filter((candidate) => candidate.selected)
+          .map((candidate) => args.inputs.find((input) => input.nodeId === candidate.nodeId))
+          .filter((input): input is CanvasDvtCompositionInput => input != null);
+        const input = args.inputs.find((candidate) => candidate.nodeId === nodeId);
+        if (input == null || args.joinDraft == null) return;
+        try {
+          const next = appendDvtSubstraitCrossInput(args.joinDraft, [...selected, input]);
+          args.setJoinDraft(next);
+          args.appendOperand(nodeId);
+        } catch {
+          return;
+        }
       } else if (args.joinDraft != null) args.setAppendInputId(nodeId);
     },
     [args]

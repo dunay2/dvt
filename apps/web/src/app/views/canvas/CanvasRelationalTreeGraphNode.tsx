@@ -24,6 +24,7 @@ export function CanvasRelationalTreeGraphNode({
   onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
   semanticGraph?: SemanticWorkbenchGraph;
 }>): JSX.Element {
+  const canExpand = placed.node.expressionRefs.length > 0 || placed.node.operator === 'cross';
   return (
     <CanvasRelationalTreeCardMenu node={placed.node} onRemove={onRemove} onExpand={onExpand}>
       <li
@@ -49,7 +50,7 @@ export function CanvasRelationalTreeGraphNode({
             <CanvasRelationalScalarTree graph={semanticGraph} compact />
           </div>
         )}
-        {placed.node.expressionRefs.length === 0 || onExpand == null ? null : (
+        {!canExpand || onExpand == null ? null : (
           <button
             type="button"
             data-slot="canvas-relational-node-expand"

@@ -176,6 +176,29 @@ describe('DVT Substrait capability catalog V1', () => {
     });
   });
 
+  it('admits CROSS JOIN as the exact canonical CrossRel identity without a selector', () => {
+    const cross = findCapability(
+      buildDvtSubstraitStandardCapabilityId('relation', {
+        sourceKind: 'core',
+        message: 'substrait.CrossRel',
+      })
+    );
+
+    expect(cross).toMatchObject({
+      profileStatus: 'supported-profile',
+      identity: {
+        sourceKind: 'core',
+        message: 'substrait.CrossRel',
+      },
+      admission: {
+        productUseCaseRef: 'dvt:#3322',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+    expect(cross?.identity).not.toHaveProperty('selector');
+  });
+
   it('admits UNION DISTINCT as its exact canonical SetRel selector', () => {
     const unionDistinct = findCapability(
       buildDvtSubstraitStandardCapabilityId('relation', {

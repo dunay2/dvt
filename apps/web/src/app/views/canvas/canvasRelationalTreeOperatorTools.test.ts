@@ -155,6 +155,7 @@ describe('admitted relational operator tools', () => {
         .sort()
     ).toEqual([
       'substrait.AggregateRel',
+      'substrait.CrossRel',
       'substrait.FilterRel',
       'substrait.JoinRel/JoinType.JOIN_TYPE_INNER',
       'substrait.JoinRel/JoinType.JOIN_TYPE_LEFT',

@@ -7,6 +7,7 @@ import { CanvasRelationalTreeView } from './CanvasRelationalTreeView';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { CanvasRelationalJoinExpressionTree } from './CanvasRelationalJoinExpressionTree';
 import { CanvasRelationalTreeOperatorTools } from './CanvasRelationalTreeOperatorTools';
+import { CanvasRelationalCrossNotice } from './CanvasRelationalCrossNotice';
 
 export function CanvasRelationalTreeInspection({
   model,
@@ -58,16 +59,22 @@ export function CanvasRelationalTreeInspection({
           }}
         />
       </div>
-      {expanded && model.selectedNode != null && model.selectedNode.expressionRefs.length > 0 ? (
+      {expanded &&
+      model.selectedNode != null &&
+      (model.selectedNode.expressionRefs.length > 0 || model.selectedNode.operator === 'cross') ? (
         <CanvasRelationalTreeEditorFrame
           title={model.selectedNode.operator.toUpperCase()}
           relationId={model.selectedNode.relationId}
           onClose={() => onExpandedChange(false)}
         >
-          <CanvasRelationalJoinExpressionTree
-            transformNode={transformNode}
-            relationId={model.selectedNode.relationId}
-          />
+          {model.selectedNode.operator === 'cross' ? (
+            <CanvasRelationalCrossNotice />
+          ) : (
+            <CanvasRelationalJoinExpressionTree
+              transformNode={transformNode}
+              relationId={model.selectedNode.relationId}
+            />
+          )}
         </CanvasRelationalTreeEditorFrame>
       ) : null}
     </div>

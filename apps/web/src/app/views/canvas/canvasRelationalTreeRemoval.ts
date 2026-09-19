@@ -21,6 +21,8 @@ import { removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import { removeDvtSubstraitProjectionRoot } from './canvasDvtSubstraitStructuredFieldRemove';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
+import { inspectDvtSubstraitCrossDraft } from '@dvt/postgres-projection';
+import { createDvtSubstraitCrossDraft } from './canvasDvtSubstraitCrossComposition';
 
 export type CanvasRelationalRemovalResult =
   | Readonly<{
@@ -143,6 +145,79 @@ export function removeCanvasRelationalTreeNode(
         .slice(wrapperIndex >= 0 ? wrapperIndex + 1 : 0),
       proposal: result,
     };
+  }
+  const cross = inspectDvtSubstraitCrossDraft(args.draft);
+  if (cross.ok) {
+    const { projection } = cross;
+    const sourceIndex = projection.inputs.findIndex(
+      (input) => input.relationId === args.relationId
+    );
+    const crossIndex = projection.crossRelations.findIndex(
+      (relation) => relation.relationId === args.relationId
+    );
+    if (sourceIndex < 0 && (crossIndex < 0 || args.keep == null)) {
+      return { ok: false, reason: 'unavailable' };
+    }
+    const retained = projection.inputs
+      .map((_, index) => index)
+      .filter((index) =>
+        sourceIndex >= 0
+          ? index !== sourceIndex
+          : args.keep === 'left'
+            ? index !== crossIndex + 1
+            : index > crossIndex
+      );
+    if (retained.length > 1) {
+      try {
+        const draft = createDvtSubstraitCrossDraft({
+          previousDraft: args.draft,
+          inputs: retained.map((index) => {
+            const input = projection.inputs[index]!;
+            return {
+              nodeId: input.relationId,
+              schema: input.schema,
+              table: input.table,
+              sourceRef: input.sourceRef,
+              fields: input.fields.map((field) => ({
+                name: field.name,
+                dataType: field.dataType,
+                joinDataType: field.dataType,
+                nullable: field.nullable,
+              })),
+            };
+          }),
+        });
+        return { ok: true, draft, operation: 'cross_join', retained };
+      } catch {
+        return { ok: false, reason: 'unavailable' };
+      }
+    }
+    const inputIndex = retained[0];
+    const input = inputIndex == null ? undefined : projection.inputs[inputIndex];
+    if (input == null) return { ok: false, reason: 'unavailable' };
+    if (
+      input.fields.some(
+        (field) => createProjectionType(field.dataType).kind.case !== field.dataType
+      )
+    ) {
+      return { ok: false, reason: 'unsupported-projection-type' };
+    }
+    const draft = createDvtSubstraitProjectionDraft({
+      source: {
+        ...input,
+        nodeId: input.relationId,
+        fields: input.fields.map((field) => ({ name: field.name, dataType: field.dataType })),
+      },
+      targetNodeId: args.targetNodeId,
+      outputs: projection.outputs
+        .filter((field) => field.source.inputIndex === inputIndex)
+        .map((field) => ({
+          fieldId: field.fieldId,
+          name: field.name,
+          sourceFieldName: field.source.name,
+        })),
+    });
+    return { ok: true, draft, operation: 'projection', retained };
   }
   const inspection = inspectDvtSubstraitJoinDraft(args.draft);
   if (!inspection.ok) return { ok: false, reason: 'dependent-condition' };

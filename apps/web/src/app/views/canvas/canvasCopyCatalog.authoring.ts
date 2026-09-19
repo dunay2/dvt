@@ -624,6 +624,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSubstraitRightAntiJoinAction',
     fallback: 'RIGHT ANTI JOIN',
   },
+  inspectorDvtSubstraitCrossJoinAction: {
+    key: 'canvas.inspector.authoring.dvtSubstraitCrossJoinAction',
+    fallback: 'CROSS JOIN',
+  },
   inspectorDvtSubstraitJoinTypeLabel: {
     key: 'canvas.inspector.authoring.dvtSubstraitJoinTypeLabel',
     fallback: 'Join type',

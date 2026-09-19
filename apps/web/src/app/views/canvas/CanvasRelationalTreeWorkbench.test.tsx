@@ -68,6 +68,7 @@ const COPY = {
   inspectorDvtSubstraitLeftAntiJoinAction: 'LEFT ANTI JOIN',
   inspectorDvtSubstraitRightSemiJoinAction: 'RIGHT SEMI JOIN',
   inspectorDvtSubstraitRightAntiJoinAction: 'RIGHT ANTI JOIN',
+  inspectorDvtSubstraitCrossJoinAction: 'CROSS JOIN',
   inspectorDvtSubstraitJoinTypeLabel: 'Join type',
   inspectorDvtSubstraitJoinTypeImpactHint:
     'Types that would remove selected columns are unavailable.',
@@ -620,6 +621,72 @@ describe('Canvas relational-tree Workbench', () => {
       kind: 'transform',
       mode: 'substrait',
       shape: 'inner_join',
+    });
+  });
+
+  it('authors and appends an explicit CrossRel without opening a predicate editor', () => {
+    const sizes = sourceNode('sizes', 'sizes');
+    const colours = sourceNode('colours', 'colours');
+    const stores = sourceNode('stores', 'stores');
+    const transform = transformNode();
+    const applied: CanvasInspectorNodeDraft[] = [];
+
+    act(() => {
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={transform}
+          nodes={[sizes, colours, stores, transform]}
+          edges={[edge(sizes.id), edge(colours.id), edge(stores.id)]}
+          copy={COPY}
+          authoring={{
+            canEditNode: true,
+            onApplyNodeDraft: (_nodeId, draft) => applied.push(draft),
+          }}
+        />
+      );
+    });
+
+    const sources = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
+    );
+    act(() => sources[0]!.click());
+    act(() => sources[1]!.click());
+    const cross = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-select-operation-cross-join"]'
+    );
+    expect(cross?.disabled).toBe(false);
+    expect(cross?.draggable).toBe(true);
+    act(() =>
+      dragSourceTo(
+        cross!,
+        container.querySelector<HTMLElement>('[data-slot="canvas-relational-tree-draft-viewport"]')!
+      )
+    );
+
+    expect(container.querySelectorAll('[data-operator="cross"]')).toHaveLength(1);
+    expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(2);
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-join-predicate-editors"]')
+    ).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-relational-cross-warning"]')).not.toBeNull();
+
+    act(() => sources[2]!.click());
+    expect(container.querySelectorAll('[data-operator="cross"]')).toHaveLength(2);
+    expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(3);
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-join-predicate-editors"]')
+    ).toBeNull();
+
+    act(() =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')!
+        .click()
+    );
+    expect(applied).toHaveLength(1);
+    expect(applied[0]?.dvt).toMatchObject({
+      kind: 'transform',
+      mode: 'substrait',
+      shape: 'cross_join',
     });
   });
 

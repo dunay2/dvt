@@ -315,3 +315,123 @@ export function buildDvtJoinPreviewDraft(
     })),
   };
 }
+
+type SemanticRel = NonNullable<
+  Extract<
+    ReturnType<typeof decodeDvtSubstraitPlanV1>['relations'][number]['relType'],
+    { case: 'root' }
+  >['value']['input']
+>;
+
+function replaceJoinsWithCross(rel: SemanticRel): SemanticRel {
+  if (rel.relType.case === 'read') return rel;
+  if (rel.relType.case !== 'join') throw new Error('CROSS fixture expects ReadRel/JoinRel only.');
+  const join = rel.relType.value;
+  if (join.left == null || join.right == null)
+    throw new Error('CROSS fixture expects binary JOIN.');
+  return {
+    $typeName: 'substrait.Rel',
+    relType: {
+      case: 'cross',
+      value: {
+        $typeName: 'substrait.CrossRel',
+        common: join.common,
+        left: replaceJoinsWithCross(join.left),
+        right: replaceJoinsWithCross(join.right),
+      },
+    },
+  };
+}
+
+export function buildDvtCrossPreviewDraft(inputCount: 2 | 3): WorkspaceGraphAuthoringDraft {
+  const draft = buildDvtJoinPreviewDraft(inputCount);
+  return {
+    ...draft,
+    nodes: draft.nodes.map((node) => {
+      if (node.id !== 'transform-orders') return node;
+      const authority = node.metadata?.['transformAuthoring'];
+      const parsed = DvtSubstraitSemanticDocumentV1Schema.parse(
+        typeof authority === 'object' && authority != null && 'semanticDocument' in authority
+          ? authority.semanticDocument
+          : undefined
+      );
+      const plan = decodeDvtSubstraitPlanV1(parsed);
+      const root = plan.relations[0]?.relType;
+      if (root?.case !== 'root' || root.value.input == null) {
+        throw new Error('CROSS fixture expects a RootRel input.');
+      }
+      root.value.input = replaceJoinsWithCross(root.value.input);
+      const semanticPlan = encodeDvtSubstraitPlanV1(plan);
+      return {
+        ...node,
+        metadata: {
+          ...node.metadata,
+          transformAuthoring: {
+            version: 'v1',
+            mode: 'substrait',
+            semanticDocument: {
+              ...parsed,
+              semanticPlan,
+              sidecar: { ...parsed.sidecar, semanticPlanSha256: semanticPlan.sha256 },
+            },
+          },
+        },
+      };
+    }),
+  };
+}
+
+export function buildDvtOuterJoinCrossPreviewDraft(): WorkspaceGraphAuthoringDraft {
+  const draft = buildDvtJoinPreviewDraft(3);
+  return {
+    ...draft,
+    nodes: draft.nodes.map((node) => {
+      if (node.id !== 'transform-orders') return node;
+      const authority = node.metadata?.['transformAuthoring'];
+      const parsed = DvtSubstraitSemanticDocumentV1Schema.parse(
+        typeof authority === 'object' && authority != null && 'semanticDocument' in authority
+          ? authority.semanticDocument
+          : undefined
+      );
+      const plan = decodeDvtSubstraitPlanV1(parsed);
+      const root = plan.relations[0]?.relType;
+      if (root?.case !== 'root' || root.value.input?.relType.case !== 'join') {
+        throw new Error('Mixed CROSS fixture expects a final JoinRel.');
+      }
+      const finalJoin = root.value.input.relType.value;
+      if (finalJoin.left?.relType.case !== 'join' || finalJoin.right == null) {
+        throw new Error('Mixed CROSS fixture expects a left-associated JoinRel.');
+      }
+      // Substrait v0.101.0 JoinType.JOIN_TYPE_LEFT.
+      finalJoin.left.relType.value.type = 3;
+      root.value.input = {
+        $typeName: 'substrait.Rel',
+        relType: {
+          case: 'cross',
+          value: {
+            $typeName: 'substrait.CrossRel',
+            common: finalJoin.common,
+            left: finalJoin.left,
+            right: finalJoin.right,
+          },
+        },
+      };
+      const semanticPlan = encodeDvtSubstraitPlanV1(plan);
+      return {
+        ...node,
+        metadata: {
+          ...node.metadata,
+          transformAuthoring: {
+            version: 'v1',
+            mode: 'substrait',
+            semanticDocument: {
+              ...parsed,
+              semanticPlan,
+              sidecar: { ...parsed.sidecar, semanticPlanSha256: semanticPlan.sha256 },
+            },
+          },
+        },
+      };
+    }),
+  };
+}

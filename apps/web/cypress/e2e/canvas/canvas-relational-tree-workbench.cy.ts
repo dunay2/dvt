@@ -1,4 +1,6 @@
 /** Owned concern: prove canonical relational-tree inspection through the real Canvas Workbench. */
+import { inspectDvtSubstraitAcceptedCrossDraft } from '@dvt/postgres-projection';
+
 import {
   decodeDvtSubstraitJoinDocument,
   inspectDvtSubstraitJoinDraft,
@@ -146,9 +148,10 @@ describe('Canvas relational-tree Workbench', () => {
       plugins: { dvt: { available: true } },
     });
     const union = Cypress.currentTest.title.includes('UNION ALL');
-    const pending = Cypress.currentTest.title.includes('authors a pending JOIN');
+    const cross = Cypress.currentTest.title.includes('CROSS JOIN');
+    const pending = Cypress.currentTest.title.includes('authors a pending JOIN') || cross;
     const partial = Cypress.currentTest.title.includes('partial canonical tree');
-    const pendingNSource = Cypress.currentTest.title.includes('pending N-source JOIN');
+    const pendingNSource = Cypress.currentTest.title.includes('pending N-source JOIN') || cross;
     stubStatefulCanvasDraftAuthoring({
       substraitInnerJoin: !pending && !union && !partial && !pendingNSource,
       substraitNInputJoin: partial || pendingNSource,
@@ -174,6 +177,9 @@ describe('Canvas relational-tree Workbench', () => {
             transformNodeId: 'join-transform',
             draftRevision: 'preview-e2e-revision',
             semanticPlanSha256: semanticDocument.semanticPlan.sha256,
+            ...(url.searchParams.get('relationId') == null
+              ? {}
+              : { relationId: url.searchParams.get('relationId')! }),
             columns: [{ name: 'customer_id', type: 'string', nullable: false }],
             rows: [{ values: ['C-001'] }],
             limit: Number(url.searchParams.get('limit')),
@@ -752,6 +758,78 @@ describe('Canvas relational-tree Workbench', () => {
       18
     );
     cy.get('[data-slot="canvas-relational-tree"] [data-operator="join"]').should('have.length', 3);
+  });
+
+  it('authors CROSS JOIN explicitly, previews a selected stage and survives reload', () => {
+    cy.viewport(1400, 900);
+    visitWithE2eWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        window.localStorage.setItem(
+          'dvt-web-application-language',
+          JSON.stringify({ state: { language: 'en' }, version: 0 })
+        );
+      },
+    });
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+
+    cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]').dblclick(
+      40,
+      18
+    );
+    cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
+    cy.contains('[data-slot="canvas-relational-tree-source"]', 'orders').click();
+    cy.get('[data-slot="dvt-select-operation-cross-join"]').should('be.enabled').click();
+    cy.get('[data-slot="canvas-relational-cross-warning"]').should('be.visible');
+    cy.get('[data-slot="dvt-substrait-join-predicate-editors"]').should('not.exist');
+    cy.contains('[data-slot="canvas-relational-tree-source"]', 'shipments').click();
+    cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="cross"]').should(
+      'have.length',
+      2
+    );
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+
+    cy.wrap(null).should(() => {
+      const write = semanticWrites('join-transform').at(-1);
+      expect(write).not.to.equal(undefined);
+      if (write == null) return;
+      const inspection = inspectDvtSubstraitAcceptedCrossDraft(
+        decodeDvtSubstraitJoinDocument(semanticDocumentFromWrite(write))
+      );
+      expect(inspection.ok).to.equal(true);
+      if (!inspection.ok) return;
+      expect(inspection.projection.inputs).to.have.length(3);
+      expect(inspection.projection.crossRelations).to.have.length(2);
+    });
+
+    cy.get('[data-slot="canvas-relational-node-expand"]').first().click();
+    cy.get('[data-slot="canvas-operation-data-preview"]').should('be.visible');
+    cy.get('[data-slot="canvas-operation-data-preview"]')
+      .find('[data-slot="canvas-model-preview"]')
+      .click();
+    cy.get('[data-slot="canvas-operation-data-preview"] table').should('contain.text', 'C-001');
+    cy.then(() => {
+      const call = getE2eApiCalls(/\/data-sample/, 'GET').at(-1);
+      expect(call?.url.searchParams.get('relationId')).to.not.equal(null);
+    });
+    cy.get('[data-slot="canvas-relational-collapse"]').click();
+
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="cross"]').last().rightclick();
+    cy.get('[data-slot="canvas-relational-remove-left"]').should('be.visible').click();
+    cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="cross"]').should(
+      'have.length',
+      1
+    );
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+    cy.get('[data-slot="canvas-relational-tree"] [data-operator="cross"]').should('have.length', 2);
+
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
+    visitWithE2eWorkspaceSession('/canvas');
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+    cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]').dblclick(
+      40,
+      18
+    );
+    cy.get('[data-slot="canvas-relational-tree"] [data-operator="cross"]').should('have.length', 2);
   });
 
   it('authors UNION ALL in the global tab and persists one canonical operation', () => {

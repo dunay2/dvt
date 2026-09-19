@@ -29,6 +29,7 @@ export type CanvasRelationalTreeWorkbenchCopy = Pick<
   | 'inspectorDvtSubstraitLeftAntiJoinAction'
   | 'inspectorDvtSubstraitRightSemiJoinAction'
   | 'inspectorDvtSubstraitRightAntiJoinAction'
+  | 'inspectorDvtSubstraitCrossJoinAction'
   | 'inspectorDvtSubstraitJoinTypeLabel'
   | 'inspectorDvtSubstraitJoinTypeImpactHint'
   | 'inspectorDvtSubstraitLeftJoinRolesHint'

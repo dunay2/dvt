@@ -18,6 +18,7 @@ export type CanvasRelationalOperation =
   | 'left_anti_join'
   | 'right_semi_join'
   | 'right_anti_join'
+  | 'cross_join'
   | 'union_all'
   | 'union_distinct';
 
@@ -42,11 +43,11 @@ export type CanvasRelationalOperationChoice = Readonly<{
   selectable: boolean;
 }>;
 
-function isAdmitted(message: string, selector: string): boolean {
+function isAdmitted(message: string, selector?: string): boolean {
   const entryId = buildDvtSubstraitStandardCapabilityId('relation', {
     sourceKind: 'core',
     message,
-    selector,
+    ...(selector == null ? {} : { selector }),
   });
   return DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.some(
     (entry) =>
@@ -119,6 +120,7 @@ export function resolveCanvasRelationalOperationChoices(
   const leftAntiJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT_ANTI');
   const rightSemiJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT_SEMI');
   const rightAntiJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT_ANTI');
+  const crossJoinAdmitted = isAdmitted('substrait.CrossRel');
   const unionAllAdmitted = isAdmitted('substrait.SetRel', 'SetOp.SET_OP_UNION_ALL');
   const unionDistinctAdmitted = isAdmitted('substrait.SetRel', 'SetOp.SET_OP_UNION_DISTINCT');
   const hasCompatibleJoinTypePair = args.inputs.some((left, index) =>
@@ -145,6 +147,17 @@ export function resolveCanvasRelationalOperationChoices(
   const leftAntiJoinAvailability = joinAvailability(leftAntiJoinAdmitted);
   const rightSemiJoinAvailability = joinAvailability(rightSemiJoinAdmitted);
   const rightAntiJoinAvailability = joinAvailability(rightAntiJoinAdmitted);
+  const crossJoinAvailability =
+    readOnlyAvailability ??
+    (!crossJoinAdmitted
+      ? 'semantically-unavailable'
+      : !args.inputs.every((input) => input.fields.every((field) => field.joinDataType != null))
+        ? 'semantically-unavailable'
+        : !targetSupports(args.inputs)
+          ? 'target-unavailable'
+          : args.inputs.length < 2
+            ? 'needs-input'
+            : 'available');
   const unionAllAvailability =
     readOnlyAvailability ??
     (!unionAllAdmitted
@@ -216,6 +229,11 @@ export function resolveCanvasRelationalOperationChoices(
       selectable:
         rightAntiJoinAvailability === 'available' ||
         rightAntiJoinAvailability === 'needs-predicate',
+    },
+    {
+      operation: 'cross_join',
+      availability: crossJoinAvailability,
+      selectable: crossJoinAvailability === 'available',
     },
     {
       operation: 'union_all',

@@ -19,7 +19,10 @@ import type {
 } from '../../../src/application/ports/warehouseSourceImport.js';
 import { PreviewCanvasTransformRowsUseCase } from '../../../src/application/services/previewCanvasTransformRowsUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
-import { buildDvtJoinPreviewDraft } from '../../fixtures/dvtJoinPreviewFixture.js';
+import {
+  buildDvtCrossPreviewDraft,
+  buildDvtJoinPreviewDraft,
+} from '../../fixtures/dvtJoinPreviewFixture.js';
 
 const request: TransformDataSampleRequest = {
   canvasId: 'canvas-joins',
@@ -75,7 +78,8 @@ function catalog(): IWarehouseConnectionCatalog {
 
 function harness(
   canvasId = request.canvasId,
-  inputCount: 2 | 3 = 2
+  inputCount: 2 | 3 = 2,
+  operation: 'join' | 'cross' = 'join'
 ): Readonly<{
   semanticPlanSha256: string;
   relationId: string;
@@ -84,7 +88,9 @@ function harness(
   useCase: PreviewCanvasTransformRowsUseCase;
 }> {
   const draft = {
-    ...buildDvtJoinPreviewDraft(inputCount),
+    ...(operation === 'cross'
+      ? buildDvtCrossPreviewDraft(inputCount)
+      : buildDvtJoinPreviewDraft(inputCount)),
     canvas: { id: canvasId, kind: 'transformation' as const, title: 'Joins' },
   };
   const executeWithAuthorizedDraft = vi.fn(async () => ({
@@ -139,6 +145,26 @@ describe('PreviewCanvasTransformRowsUseCase', () => {
     const result = await useCase.execute(selection, context());
     expect(result).toMatchObject({ relationId, semanticPlanSha256 });
     expect(previewTransformRows.mock.calls[0]?.[0].sql.match(/\bJOIN\b/g)).toHaveLength(1);
+  });
+
+  it('samples the selected first CROSS operation without widening to the final product', async () => {
+    const { useCase, previewTransformRows, relationId, semanticPlanSha256 } = harness(
+      request.canvasId,
+      3,
+      'cross'
+    );
+
+    const result = await useCase.execute(
+      TransformDataSampleRequestSchema.parse({
+        ...request,
+        relationId,
+        semanticPlanSha256,
+      }),
+      context()
+    );
+
+    expect(result).toMatchObject({ relationId, semanticPlanSha256 });
+    expect(previewTransformRows.mock.calls[0]?.[0].sql.match(/CROSS JOIN/g)).toHaveLength(1);
   });
 
   it.each(['unknown', 'stale'])(

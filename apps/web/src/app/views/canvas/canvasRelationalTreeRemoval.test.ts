@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ConnectedSourceRef } from '@dvt/contracts';
+import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import {
   appendDvtSubstraitJoinInput,
   applyDvtSubstraitInnerJoinGrouping,
@@ -15,6 +16,8 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import { inspectDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { removeCanvasRelationalTreeNode } from './canvasRelationalTreeRemoval';
+import { createDvtSubstraitCrossDraft } from './canvasDvtSubstraitCrossComposition';
+import { inspectDvtSubstraitCrossDraft } from '@dvt/postgres-projection';
 
 function source(table: string): DvtSubstraitJoinSource {
   const sourceRef: ConnectedSourceRef = {
@@ -27,6 +30,14 @@ function source(table: string): DvtSubstraitJoinSource {
     sourceObjectId: `public.${table}`,
   };
   return { nodeId: table, schema: 'public', table, sourceRef };
+}
+
+function crossInput(table: string): CanvasDvtCompositionInput {
+  const base = source(table);
+  return {
+    ...base,
+    fields: [{ name: 'id', dataType: 'string', joinDataType: 'string' as const, nullable: true }],
+  };
 }
 
 function fixture(valueType?: DvtSubstraitJoinDataType): {
@@ -56,6 +67,57 @@ function fixture(valueType?: DvtSubstraitJoinDataType): {
 }
 
 describe('Contextual relational card removal', () => {
+  it('removes a CROSS source while preserving the surviving product and source identities', () => {
+    const draft = createDvtSubstraitCrossDraft({
+      inputs: [crossInput('customers'), crossInput('orders'), crossInput('tickets')],
+    });
+    const before = inspectDvtSubstraitCrossDraft(draft);
+    expect(before.ok).toBe(true);
+    if (!before.ok) return;
+
+    const result = removeCanvasRelationalTreeNode({
+      draft,
+      relationId: before.projection.inputs[1]!.relationId,
+      targetNodeId: 'model',
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.operation).toBe('cross_join');
+    const after = inspectDvtSubstraitCrossDraft(result.draft);
+    expect(after.ok).toBe(true);
+    if (!after.ok) return;
+    expect(after.projection.inputs.map((input) => input.table)).toEqual(['customers', 'tickets']);
+    expect(after.projection.inputs.map((input) => input.relationId)).toEqual([
+      before.projection.inputs[0]!.relationId,
+      before.projection.inputs[2]!.relationId,
+    ]);
+  });
+
+  it('retires a CROSS card with an explicit retained branch', () => {
+    const draft = createDvtSubstraitCrossDraft({
+      inputs: [crossInput('customers'), crossInput('orders'), crossInput('tickets')],
+    });
+    const before = inspectDvtSubstraitCrossDraft(draft);
+    expect(before.ok).toBe(true);
+    if (!before.ok) return;
+
+    const result = removeCanvasRelationalTreeNode({
+      draft,
+      relationId: before.projection.crossRelations[1]!.relationId,
+      keep: 'left',
+      targetNodeId: 'model',
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const after = inspectDvtSubstraitCrossDraft(result.draft);
+    expect(after.ok && after.projection.inputs.map((input) => input.table)).toEqual([
+      'customers',
+      'orders',
+    ]);
+  });
+
   it.each(['right', 'aggregate'] as const)(
     'proposes explicit dependent retirement for %s without altering the original',
     (target) => {

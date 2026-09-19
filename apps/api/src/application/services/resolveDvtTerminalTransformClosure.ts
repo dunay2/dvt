@@ -169,6 +169,7 @@ function containsSetRelation(relation: CanonicalSemanticRelation): boolean {
         ? false
         : containsSetRelation(relation.relType.value.input);
     case 'join':
+    case 'cross':
       return (
         (relation.relType.value.left != null && containsSetRelation(relation.relType.value.left)) ||
         (relation.relType.value.right != null && containsSetRelation(relation.relType.value.right))
@@ -181,6 +182,7 @@ function containsSetRelation(relation: CanonicalSemanticRelation): boolean {
 function containsJoinRelation(relation: CanonicalSemanticRelation): boolean {
   switch (relation.relType.case) {
     case 'join':
+    case 'cross':
       return true;
     case 'project':
     case 'filter':
