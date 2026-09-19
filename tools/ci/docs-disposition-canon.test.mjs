@@ -114,6 +114,7 @@ test('docs disposition canonization has semantic ownership and DB-first closure'
 // This is a retirement guard, not a substitute for DB-backed docs generation.
 test('retired historical packs and generators cannot return', () => {
   const retiredPaths = [
+    'docs/planning/proposals/mandatory/frontend-and-ux/superseded',
     'docs/archive',
     'docs/planning/archive',
     'docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md',
@@ -147,6 +148,13 @@ test('retired historical packs and generators cannot return', () => {
   for (const path of retiredPaths) {
     assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, path);
   }
+
+  const frontendClassification = readRepoFile(
+    'docs/planning/proposals/mandatory/frontend-and-ux/index.md'
+  );
+  assert.doesNotMatch(frontendClassification, /\.\/superseded\//u);
+  assert.doesNotMatch(frontendClassification, /move to archive|put it in superseded/u);
+  assert.ok(frontendClassification.includes('History stays in Git.'));
 
   const { scripts } = JSON.parse(readRepoFile('package.json'));
   assert.equal(Object.hasOwn(scripts, 'docs:gov:planner-stage-1-1'), false);
@@ -359,6 +367,32 @@ test('retired documentation-only closeouts have no files or local consumers', ()
     '20260318-stage-1-1-planner-canonicalization-policy-vocabulary-contracts-closeout.md',
   ]);
   const editorialCloseouts = new Set([
+    '20260315-adapter-postgres-phase1-extraction-closeout.md',
+    '20260316-monorepo-peer-runtime-policy-closeout.md',
+    '20260316-platform-baseline-lock-closeout.md',
+    '20260321-s01-contract-dead-code-cleanup-closeout.md',
+    '20260406-mw-a2-b-contract-cleanup-closeout.md',
+    '20260406-mw-a2-c-planner-boundary-evolution-closeout.md',
+    '20260406-mw-a2-d-api-ref-resolution-alignment-closeout.md',
+    '20260406-mw-a2-e-determinism-and-integration-hardening-closeout.md',
+    '20260407-ar-c1-t1-admin-route-test-harness-closeout.md',
+    '20260407-ar-c1-t2-admin-rebuild-snapshot-contract-schema-closeout.md',
+    '20260407-ar-c1-t3-protected-runtime-admin-route-composition-closeout.md',
+    '20260418-protected-runtime-integration-seam-split-closeout.md',
+    '20260419-lane-e-remediation-backlog-alignment-closeout.md',
+    '20260420-adapter-temporal-workflowhelpers-decomposition-closeout.md',
+    '20260420-temporal-worker-runtime-config-shape-closeout.md',
+    '20260422-rc-c2-wave-1-node-precommit-turbo-cache-closeout.md',
+    '20260422-web-canvas-sonar-maintenance-closeout.md',
+    '20260423-rc-c2-wave-2b-turbo-affected-task-routing-closeout.md',
+    '20260423-rc-c2-wave-4a-ci-tools-merge-gate-closeout.md',
+    '20260426-rc-g1-c-truth-sync-closeout.md',
+    '20260426-tf-e2-l-canvas-strategy-boundary-truth-sync-closeout.md',
+    '20260429-bootstrap-presentation-separation-closeout.md',
+    '20260515-f06-frontend-query-boundary-standardization-closeout.md',
+    '20260518-dhm-ws3-admission-seam-closeout.md',
+    '20260522-ar-c1-t4-api-snapshot-fixture-closeout.md',
+    '20260522-dhm-modularization-parent-closeout.md',
     '20260417-tf-e2-canvas-draft-scope-fowler-refactor-closeout.md',
     '20260417-tf-e2-canvas-draft-session-refactor-closeout.md',
     '20260418-tf-e2-canvas-draft-repository-seam-closeout.md',
