@@ -1,0 +1,110 @@
+name: Docs Integration Repair
+on:
+  push:
+    branches: [automation/3004-docs-integration-repair]
+    paths: [.github/workflows/docs-integration-repair.yml]
+permissions:
+  contents: read
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    env:
+      BASE: 8c8f8cf31b141591da311664b4c1f3067ebfdd87
+      SOURCE: 8eec0a7503493e82275b28fe74971d3efd132afd
+      GIT_BASE: 8c8f8cf31b141591da311664b4c1f3067ebfdd87
+      PLANNING_DB_INTEGRITY_SCOPE: bootstrap
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 8eec0a7503493e82275b28fe74971d3efd132afd
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+      - name: Merge current main without widening the cleanup diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/docs-integration
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          test "$(git rev-parse HEAD)" = "$SOURCE"
+          git merge --no-commit --no-ff "$BASE" 2>&1 | tee /tmp/docs-integration/merge.log
+          test -z "$(git diff --name-only --diff-filter=U)"
+          test -z "$(git diff --cached --name-only "$BASE" -- apps packages specs docs/adr docs/contracts docs/evidence docs/risk-register .github package.json pnpm-lock.yaml)"
+          pnpm commit docs docs "Reconcile cleanup with LEFT JOIN integration" 2>&1 | tee /tmp/docs-integration/commit.log
+          echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Prepare isolated CI bootstrap only
+        uses: ./.github/actions/prepare-planning-db
+      - name: Canonical regeneration
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm docs:sync 2>&1 | tee /tmp/docs-integration/docs-sync.log
+          pnpm governance:refresh 2>&1 | tee /tmp/docs-integration/governance-refresh.log
+          git diff --exit-code HEAD
+      - name: Validate final integration candidate
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import subprocess,json,os,re
+          from pathlib import Path
+          out=Path('/tmp/docs-integration');results=[];base=os.environ['BASE']
+          def git(*a): return subprocess.check_output(['git',*a]).decode().strip()
+          def run(name,cmd):
+              r=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+              (out/(name+'.log')).write_text(r.stdout)
+              results.append({'name':name,'command':cmd,'exitCode':r.returncode})
+              (out/'validation.json').write_text(json.dumps(results,indent=2))
+              print(name,r.returncode,flush=True)
+              assert r.returncode==0,(name,r.stdout[-6000:])
+              return r.stdout
+          removed=git('diff','--name-only','--diff-filter=D',base,'HEAD').splitlines()
+          assert len(removed)==25 and all(p.startswith('docs/planning/closeouts/') for p in removed)
+          assert git('diff','--name-only','--diff-filter=M',base,'HEAD')=='tools/ci/docs-disposition-canon.test.mjs'
+          assert not git('diff','--name-only','--diff-filter=A',base,'HEAD')
+          text=run('arc',['node','tools/ci/arc-check.mjs']);m=re.search(r'^\{',text,re.M);assert m
+          arc=json.loads(text[m.start():]);assert arc['effectiveArcLevel']=='ARC-0'
+          assert all(not arc['requirements'][k] for k in ['evidenceDoc','riskUpdate','rolloutNotes','compatMatrix'])
+          run('governance-tests',['node','--test','scripts/check-feature-mechanization.test.cjs','scripts/documentation-publication.test.cjs','scripts/planning-db-surface-inventory-check.test.cjs','tools/ci/docs-disposition-canon.test.mjs','tools/ci/startup-card-canon.test.mjs','tools/ci/planner-package-governance.test.mjs','tools/ci/architecture-doc-reconciliation-canon.test.mjs','scripts/governance-refresh.test.cjs','tools/ci/emit-test-matrix.test.mjs','tools/ci/turbo-workspace-task-contract.test.mjs'])
+          for name,cmd in [('sync',['pnpm','docs:sync:check']),('manifest',['pnpm','docs:gov:manifest:check']),('docs',['pnpm','ci:docs']),('prepush',['pnpm','verify:prepush']),('title',['pnpm','pr:validate-title','docs(docs): Retire obsolete HTTP Canvas and planning journals']),('clean',['git','diff','--exit-code','HEAD'])]:run(name,cmd)
+          assert not git('status','--porcelain')
+          (out/'validated.txt').write_text(git('rev-parse','HEAD')+'\n')
+          PY
+      - name: Export exact source and validation logs
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import subprocess,json,hashlib,os
+          from pathlib import Path
+          out=Path('/tmp/docs-integration');out.mkdir(exist_ok=True);base=os.environ['BASE']
+          for name,args in {'head.txt':['rev-parse','HEAD'],'tree.txt':['rev-parse','HEAD^{tree}'],'commit.txt':['cat-file','commit','HEAD'],'head-files.txt':['ls-tree','-rz','HEAD'],'status.txt':['status','--porcelain'],'candidate.patch':['diff',base,'HEAD'],'stats.txt':['diff','--stat',base,'HEAD'],'numstat.txt':['diff','--numstat',base,'HEAD']}.items():
+              (out/name).write_bytes(subprocess.check_output(['git',*args]))
+          subprocess.run(['git','archive','--format=tar.gz','-o',str(out/'source.tar.gz'),'HEAD'],check=True)
+          (out/'checksums.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in out.iterdir() if p.is_file() and p.name!='checksums.json'},indent=2))
+          print((out/'head.txt').read_text())
+          PY
+      - name: Publish validated candidate without merging the PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(cat /tmp/docs-integration/validated.txt)" = "$(git rev-parse HEAD)"
+          gh auth setup-git
+          branch=automation/3004-validated-3306-left-join
+          test -z "$(git ls-remote --heads origin refs/heads/$branch)"
+          git push origin HEAD:refs/heads/$branch
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: docs-3306-integration
+          path: /tmp/docs-integration
+          retention-days: 7
