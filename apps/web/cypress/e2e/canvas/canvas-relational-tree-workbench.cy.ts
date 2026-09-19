@@ -459,9 +459,13 @@ describe('Canvas relational-tree Workbench', () => {
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'shipments').click();
     cy.get('[data-slot="canvas-relational-tree-existing-field"]')
       .should('contain.text', 'customers.customer_id')
-      .select('customers.customer_id');
-    cy.get('[data-slot="canvas-relational-tree-connected-field"]').select('shipments.customer_id');
-    cy.get('[data-slot="canvas-relational-tree-append-input"]').click();
+      .find('option:selected')
+      .should('have.text', 'customers.customer_id');
+    cy.get('[data-slot="canvas-relational-tree-connected-field"]')
+      .should('have.value', 'customer_id')
+      .find('option:selected')
+      .should('have.text', 'shipments.customer_id');
+    cy.get('[data-slot="canvas-relational-tree-append-input"]').should('be.enabled').click();
     cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
       'have.length',
       2
@@ -556,9 +560,13 @@ describe('Canvas relational-tree Workbench', () => {
     cy.get('[data-slot="canvas-relational-tree-existing-field"]')
       .should('contain.text', 'customers.customer_id')
       .and('contain.text', 'orders.customer_id')
-      .select('customers.customer_id');
-    cy.get('[data-slot="canvas-relational-tree-connected-field"]').select('shipments.customer_id');
-    cy.get('[data-slot="canvas-relational-tree-append-input"]').click();
+      .find('option:selected')
+      .should('have.text', 'customers.customer_id');
+    cy.get('[data-slot="canvas-relational-tree-connected-field"]').should(
+      'have.value',
+      'customer_id'
+    );
+    cy.get('[data-slot="canvas-relational-tree-append-input"]').should('be.enabled').click();
     cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
       'have.length',
       2
@@ -569,8 +577,14 @@ describe('Canvas relational-tree Workbench', () => {
     );
 
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'tickets').click();
-    cy.get('[data-slot="canvas-relational-tree-existing-field"]').select('customers.customer_id');
-    cy.get('[data-slot="canvas-relational-tree-connected-field"]').select('tickets.customer_id');
+    cy.get('[data-slot="canvas-relational-tree-existing-field"] option:selected').should(
+      'have.text',
+      'customers.customer_id'
+    );
+    cy.get('[data-slot="canvas-relational-tree-connected-field"]').should(
+      'have.value',
+      'customer_id'
+    );
     cy.get('[data-slot="canvas-relational-tree-append-input"]').click();
     cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
       'have.length',

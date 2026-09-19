@@ -10,6 +10,9 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import { DvtSubstraitJoinPredicateEditors } from './DvtSubstraitJoinPredicateEditors';
 import type { CanonicalNode } from '../../types/canonical';
+import { resolveCanvasDvtJoinFieldPair } from './canvasDvtJoinTypeAdmission';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 
 const selectClassName =
   'h-8 w-full rounded border border-(--border-subtle) bg-(--surface-subtle) px-2 text-xs text-(--text-primary)';
@@ -33,19 +36,43 @@ export function CanvasRelationalTreeJoinEditor({
   selectedRelationId: string | null;
   transformNode: CanonicalNode;
 }>): JSX.Element | null {
+  const language = useApplicationLanguageStore((state) => state.language);
+  const editorCopy = resolveCanvasSemanticEditorCopy(language);
   const inspection = useMemo(
     () => inspectDvtSubstraitJoinPredicateContext(draft)?.inspection,
     [draft]
   );
   const outputs = inspection?.ok ? inspection.projection.outputs : [];
-  const [leftSourceFieldId, setLeftSourceFieldId] = useState(outputs[0]?.source.fieldId ?? '');
-  const leftOutput = outputs.find((output) => output.source.fieldId === leftSourceFieldId);
+  const inputId = appendInput?.nodeId ?? null;
+  const [selection, setSelection] = useState({
+    inputId,
+    leftSourceFieldId: '',
+    rightFieldName: '',
+  });
+  if (selection.inputId !== inputId) {
+    setSelection({ inputId, leftSourceFieldId: '', rightFieldName: '' });
+  }
+  const existingFields = outputs.map((output) => ({
+    name: output.source.name,
+    joinDataType: output.dataType,
+    fieldId: output.source.fieldId,
+  }));
+  const suggestion = resolveCanvasDvtJoinFieldPair(existingFields, appendInput?.fields ?? []);
+  const manualLeft =
+    selection.inputId === inputId
+      ? existingFields.find((field) => field.fieldId === selection.leftSourceFieldId)
+      : undefined;
+  const leftField = manualLeft ?? suggestion?.left;
+  const leftSourceFieldId = leftField?.fieldId ?? '';
   const rightFields =
-    appendInput?.fields.filter((field) => field.joinDataType === leftOutput?.dataType) ?? [];
-  const [rightFieldName, setRightFieldName] = useState(rightFields[0]?.name ?? '');
-  const selectedRightField = rightFields.some((field) => field.name === rightFieldName)
-    ? rightFieldName
-    : (rightFields[0]?.name ?? '');
+    appendInput?.fields.filter(
+      (field) => field.joinDataType != null && field.joinDataType === leftField?.joinDataType
+    ) ?? [];
+  const selectedRightField =
+    manualLeft != null && rightFields.some((field) => field.name === selection.rightFieldName)
+      ? selection.rightFieldName
+      : (resolveCanvasDvtJoinFieldPair(leftField == null ? [] : [leftField], rightFields)?.right
+          .name ?? '');
   if (!inspection?.ok) return null;
 
   return (
@@ -82,16 +109,18 @@ export function CanvasRelationalTreeJoinEditor({
               className={selectClassName}
               value={leftSourceFieldId}
               onChange={(event) => {
-                const next = outputs.find(
-                  (output) => output.source.fieldId === event.currentTarget.value
-                );
-                setLeftSourceFieldId(event.currentTarget.value);
-                setRightFieldName(
-                  appendInput.fields.find((field) => field.joinDataType === next?.dataType)?.name ??
-                    ''
-                );
+                setSelection({
+                  inputId,
+                  leftSourceFieldId: event.currentTarget.value,
+                  rightFieldName: '',
+                });
               }}
             >
+              {leftSourceFieldId.length === 0 ? (
+                <option value="" disabled>
+                  {editorCopy.noCompatibleJoinFields}
+                </option>
+              ) : null}
               {outputs.map((output) => (
                 <option key={output.source.fieldId} value={output.source.fieldId}>
                   {inspection.projection.inputs[output.source.inputIndex]?.table ?? '?'}.
@@ -106,8 +135,20 @@ export function CanvasRelationalTreeJoinEditor({
               data-slot="canvas-relational-tree-connected-field"
               className={selectClassName}
               value={selectedRightField}
-              onChange={(event) => setRightFieldName(event.currentTarget.value)}
+              disabled={rightFields.length === 0}
+              onChange={(event) =>
+                setSelection({
+                  inputId,
+                  leftSourceFieldId,
+                  rightFieldName: event.currentTarget.value,
+                })
+              }
             >
+              {rightFields.length === 0 ? (
+                <option value="" disabled>
+                  {editorCopy.noCompatibleJoinFields}
+                </option>
+              ) : null}
               {rightFields.map((field) => (
                 <option key={field.name} value={field.name}>
                   {appendInput.table}.{field.name}
@@ -119,7 +160,7 @@ export function CanvasRelationalTreeJoinEditor({
             type="submit"
             size="sm"
             data-slot="canvas-relational-tree-append-input"
-            disabled={selectedRightField.length === 0}
+            disabled={leftSourceFieldId.length === 0 || selectedRightField.length === 0}
           >
             {copy.inspectorDvtSubstraitAppendInputAction}
           </Button>
