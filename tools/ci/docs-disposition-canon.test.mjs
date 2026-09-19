@@ -156,6 +156,16 @@ test('retired historical packs and generators cannot return', () => {
   assert.doesNotMatch(frontendClassification, /move to archive|put it in superseded/u);
   assert.ok(frontendClassification.includes('History stays in Git.'));
 
+  const retirementCandidates = readRepoFile(
+    'docs/planning/proposals/mandatory/frontend-and-ux/archive-candidates/index.md'
+  );
+  assert.doesNotMatch(
+    retirementCandidates,
+    /should move to archive|archive after|## Archive Rule|Planning\s+DB tasks/iu
+  );
+  assert.ok(retirementCandidates.includes('GitHub Issues'));
+  assert.ok(retirementCandidates.includes('History stays in Git.'));
+
   const { scripts } = JSON.parse(readRepoFile('package.json'));
   assert.equal(Object.hasOwn(scripts, 'docs:gov:planner-stage-1-1'), false);
   for (const command of Object.values(scripts)) {
