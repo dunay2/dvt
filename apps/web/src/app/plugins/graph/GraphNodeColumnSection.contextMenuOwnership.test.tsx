@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, waitFor } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -100,6 +100,10 @@ describe('GraphNodeColumnSection context menu ownership', () => {
       );
     });
 
+    await waitFor(() => {
+      expect(document.querySelector('[data-slot="graph-node-column-function-menu"]')).toBeNull();
+    });
+
     expect(onStructuredFieldApply).toHaveBeenCalledWith({
       nodeId: 'transform-orders',
       draggedFieldId: 'output:amount',
@@ -109,12 +113,16 @@ describe('GraphNodeColumnSection context menu ownership', () => {
 
     await act(async () => {
       fireEvent.contextMenu(structuredColumn);
-      await Promise.resolve();
+    });
+    const removeStructuredField = await waitFor(() => {
+      const action = document.querySelector<HTMLElement>(
+        '[data-slot="graph-node-structured-field-remove"]'
+      );
+      expect(action).not.toBeNull();
+      return action!;
     });
     await act(async () => {
-      fireEvent.click(
-        document.querySelector<HTMLElement>('[data-slot="graph-node-structured-field-remove"]')!
-      );
+      fireEvent.click(removeStructuredField);
     });
     expect(onColumnOutputToggle).toHaveBeenCalledWith({
       nodeId: 'transform-orders',
