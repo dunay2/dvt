@@ -70,23 +70,43 @@ commandQueryRails:
   - name: ProjectCanvasRelationalTree
     type: query
     dddOwner: CanvasRelationalTreeProjection
-    referenceOnly: true
-    authorityRef: https://github.com/dunay2/dvt/issues/3266#issuecomment-5703815399
+    status: implemented
+    applicationPort: ProjectCanvasRelationalTree query port
+    adapterSurface: apps/web/src/app/views/canvas/canvasRelationalTreeProjection.ts#projectCanvasRelationalTree
+    authorizationScope: authorized project and Canvas draft read scope
+    negativeTests:
+      - reject non-admitted JOIN selectors and stale sidecars
+      - reject missing topology, invalid authority, and ambiguous display identities
   - name: PreviewCanvasTransformRows
     type: query
     dddOwner: CanvasTransformDataSample
-    referenceOnly: true
-    authorityRef: https://github.com/dunay2/dvt/issues/3237
+    status: implemented
+    applicationPort: PreviewCanvasTransformRows query port
+    adapterSurface: apps/api/src/application/services/previewCanvasTransformRowsUseCase.ts#PreviewCanvasTransformRowsUseCase
+    authorizationScope: authorized selected relation and both physical input scopes
+    negativeTests:
+      - reject invalid retained-side schemas before warehouse execution
+      - reject unauthorized relation, unsupported plan shape, and stale semantic identity
   - name: PreviewPlan
     type: command
     dddOwner: Planner preview boundary
-    referenceOnly: true
-    authorityRef: docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-generic-execution-workload-projection-plan-20260903.md
+    status: implemented
+    applicationPort: PreviewPlan application command
+    adapterSurface: apps/api/src/application/services/dvtPostgresTransformProjection.ts#projectDvtPostgresTransform
+    authorizationScope: authorized project, environment, selected graph, and both physical input scopes
+    negativeTests:
+      - reject unsupported JOIN shapes before SQL projection
+      - reject stale semantic identity, unresolved physical inputs, and unauthorized preview scope
   - name: StartRun
     type: command
     dddOwner: Run command application service
-    referenceOnly: true
-    authorityRef: docs/architecture/system/subsystems/semantic-transformation/index.md
+    status: implemented
+    applicationPort: StartRun application command
+    adapterSurface: apps/api/src/application/services/dvtOperationalWorkloadProjector.ts#DvtOperationalWorkloadProjector
+    authorizationScope: authorized project, environment, executable plan, and both physical input scopes
+    negativeTests:
+      - reject unsupported JOIN workload before execution
+      - reject stale plan identity, missing physical bindings, and unauthorized run scope
 domainObjects:
   - name: DvtSubstraitSemanticDocumentV1
     type: aggregate
