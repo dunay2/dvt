@@ -19,19 +19,19 @@ the canonical frontend architecture set.
 Canonical truth for shipped behavior remains in:
 
 - [Frontend Architecture](../../../../architecture/components/web/index.md)
-- [Main Workspace Views And UX](../../../../architecture/components/web/main-workspace-views-and-ux.md)
-- [Workbench UI Contract And Component Inventory](../../../../architecture/components/web/workbench-ui-contract-and-component-inventory.md)
-- [Screen Layout And Cross-Surface Behavior Rules](../../../../architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md)
+- [Former workspace inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/main-workspace-views-and-ux.md)
+- [Former component inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md)
+- [Former layout rules (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md)
 - [UX Implementation Guide](../../../../architecture/components/web/ux-implementation-guide.md)
 
 ## Governing Sources
 
 - [Reference Architecture](../../../../architecture/reference-architecture.md)
-- [System Delivery Status](../../../../architecture/system-delivery-status.md)
+- System Delivery Status (historical reference, not a current source of status).
 - [Frontend Architecture](../../../../architecture/components/web/index.md)
-- [Main Workspace Views And UX](../../../../architecture/components/web/main-workspace-views-and-ux.md)
-- [Workbench UI Contract And Component Inventory](../../../../architecture/components/web/workbench-ui-contract-and-component-inventory.md)
-- [Screen Layout And Cross-Surface Behavior Rules](../../../../architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md)
+- [Former workspace inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/main-workspace-views-and-ux.md)
+- [Former component inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md)
+- [Former layout rules (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md)
 - [Frontend Roadmap - Prototype To Operational UI](./frontend-roadmap-20260219.md)
 
 ## Proposal Position
@@ -314,7 +314,7 @@ This proposal is satisfied when:
 
 - [Frontend Architecture](../../../../architecture/components/web/index.md)
 - [App Shell](../../../../architecture/components/web/appshell/app-shell.md)
-- [Main Workspace Views And UX](../../../../architecture/components/web/main-workspace-views-and-ux.md)
-- [Workbench UI Contract And Component Inventory](../../../../architecture/components/web/workbench-ui-contract-and-component-inventory.md)
-- [Screen Layout And Cross-Surface Behavior Rules](../../../../architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md)
+- [Former workspace inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/main-workspace-views-and-ux.md)
+- [Former component inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md)
+- [Former layout rules (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md)
 - [Iconography And Design Tokens Contract](../../../../architecture/components/web/iconography-and-design-tokens-contract.md)

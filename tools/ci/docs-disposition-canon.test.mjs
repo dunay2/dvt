@@ -580,3 +580,53 @@ test('retired PR drafts and historical intake have no files or live consumers', 
     'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md',
   ]);
 });
+
+// Input records retain their exact provenance; they are not live workbench contracts.
+test('retired Workbench peer-route documents have no live consumers', () => {
+  const retiredFiles = [
+    'docs/architecture/components/web/main-workspace-views-and-ux.md',
+    'docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md',
+    'docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md',
+  ];
+  const preservedIntake = {
+    'buzon/20260506-codex-fowler-canvas-workbench-shell-context-review-and-risk.md':
+      'f48ab6cd777fb60ac7cb2156db16a255a626bd7f',
+    'buzon/20260516-codex-fowler-canvas-screen-problems-architecture-analysis.md':
+      '0412e6631aec6e4883b8d4f94f5ece8d187bf5ec',
+    'buzon/20260516-codex-fowler-f15-canvas-view-menu-architecture-analysis.md':
+      'aff43167c065b348173cb3640230e2d781922231',
+  };
+  for (const path of retiredFiles) {
+    assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, path);
+  }
+  const retiredNames = retiredFiles.map((path) => path.split('/').at(-1).replace(/\.md$/u, ''));
+  const paths = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
+    .split('\0')
+    .filter(Boolean);
+  for (const path of paths) {
+    if (path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
+    if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
+    let content = readRepoFile(path);
+    if (Object.hasOwn(preservedIntake, path)) {
+      const digest = execFileSync('git', ['hash-object', '--stdin'], {
+        input: content,
+        encoding: 'utf8',
+      }).trim();
+      assert.equal(digest, preservedIntake[path], `historical input changed: ${path}`);
+      continue;
+    }
+    content = content.replace(
+      /https:\/\/github\.com\/dunay2\/dvt\/blob\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
+      ''
+    );
+    for (const name of retiredNames) {
+      assert.equal(content.includes(name), false, `retired Workbench reference: ${path}: ${name}`);
+    }
+  }
+  assertFilesExist([
+    'docs/architecture/components/web/screen-manuals-and-user-stories.md',
+    'docs/architecture/components/web/appshell/shell-workspace-context-component.md',
+    'docs/architecture/components/web/appshell/shell-workspace-context-user-stories.md',
+  ]);
+});

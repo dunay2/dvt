@@ -243,7 +243,7 @@ the design direction, not the OpenLineage backend product.
 
 That direction is now documented in:
 
-- [Main Workspace Views And UX](../../../../architecture/components/web/main-workspace-views-and-ux.md)
+- [Former workspace inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/main-workspace-views-and-ux.md)
 - [Screen Manuals And User Stories](../../../../architecture/components/web/screen-manuals-and-user-stories.md)
 - [UX Implementation Guide](../../../../architecture/components/web/ux-implementation-guide.md)
 - [Library And Open-Source Reference Stack](../../../../architecture/components/web/library-and-open-source-reference-stack.md)

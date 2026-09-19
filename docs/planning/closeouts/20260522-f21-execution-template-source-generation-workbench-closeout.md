@@ -27,7 +27,7 @@ contracts, Monaco preview ownership, or a generic template engine.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/screen-manuals-and-user-stories.md`
-- `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`
+- [Former component inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md)
 - `docs/planning/proposals/mandatory/frontend-and-ux/f21-execution-template-source-generation-workbench-plan-20260522.md`
 
 ## Work Performed

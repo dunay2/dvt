@@ -37,7 +37,7 @@ slices so the work can be prioritized without losing the user feedback.
 - `docs/architecture/reference-architecture.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`
+- `docs/architecture/components/web/screen-manuals-and-user-stories.md`
 - `docs/architecture/components/web/iconography-and-design-tokens-contract.md`
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md`

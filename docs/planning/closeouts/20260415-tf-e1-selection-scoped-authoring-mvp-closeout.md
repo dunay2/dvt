@@ -42,10 +42,10 @@ That coupling shows up in three places:
   before code; finish with package validation plus `pnpm verify:prepush`.
 - `docs/planning/state/planning-control-tower.md`: Lane E planning posture must
   stay aligned with the implementation change.
-- `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`:
+- [Former component inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md):
   `Canvas` is the authoring workbench, the explorer is the add-entry surface,
   and route-local commands stay in the route toolbar.
-- `docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md`:
+- [Former layout rules (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md):
   `Canvas` stays graph-first; review and execution contracts must not overload
   the entire route.
 - `docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md`:

@@ -40,8 +40,8 @@ It is not a Markdown-only backlog.
 - `docs/planning/state/planning-control-tower.md`
 - `docs/planning/reviews/review-naming-policy.md`
 - `docs/architecture/components/web/ux-implementation-guide.md`
-- `docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md`
-- `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`
+- [Former layout rules (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md)
+- [Former component inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md)
 - `docs/architecture/components/web/iconography-and-design-tokens-contract.md`
 
 ## Skill And Evidence Notes
@@ -510,7 +510,7 @@ state. It complements, rather than replaces:
 - [Canvas Workspace Explorer Fowler Review](./20260527-canvas-workspace-explorer-fowler-review.md)
 - [Docs And Engine Component Reconciliation Fowler Review](./20260527-docs-engine-component-reconciliation-fowler-review.md)
 - [Web UX Implementation Guide](../../../architecture/components/web/ux-implementation-guide.md)
-- [Screen Layout And Cross-Surface Behavior Rules](../../../architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md)
+- [Former layout rules (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md)
 
 Executable follow-up remains owned by the Planning DB tasks named in the
 frontmatter.

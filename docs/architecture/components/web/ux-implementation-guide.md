@@ -44,7 +44,7 @@ For public-data surfaces, the visual direction may diverge from the operator
 workbench. The named design direction for that slice is the Marquez visual
 system: editorial, curated, and explanatory rather than IDE-like. In frontend
 architecture docs, `Marquez` here is a design reference, not the OpenLineage
-backend product. It must not be applied to operator workbench routes such as
+backend product. It must not be applied to operator surfaces such as
 Canvas, Runs, Code, Diff, Artifacts, Templates, Plugins, Admin, or Cost.
 
 ## Reuse Strategy
@@ -66,8 +66,10 @@ Use the current stack and deepen it:
 
 Monaco is embedded infrastructure, not the owner of the shell:
 
-- first-class Monaco routes are `Diff`, `Artifacts`, and `Templates`;
-- Monaco v1 is read-only plus diff;
+- Code opens contextually in the Process Map; retired Diff/Artifacts URLs
+  preserve redirect intent only, not permanent peer workspaces;
+- Templates retains its declared route and generation-preview owner;
+- editability follows the owning capability, not Monaco or an old UI version;
 - Canvas and Runs remain non-Monaco-centric.
 
 ## Workbench Contract
@@ -315,7 +317,6 @@ Done when:
 
 ## Reference Documents
 
-- [Main Workspace Views And UX](./main-workspace-views-and-ux.md)
 - [Screen Manuals And User Stories](./screen-manuals-and-user-stories.md)
 - [DVT Style Guide v0.2](./style-guide.md)
 - [Frontend Component Inventory](./frontend-component-inventory.md)

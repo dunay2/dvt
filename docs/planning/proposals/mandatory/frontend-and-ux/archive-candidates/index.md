@@ -17,7 +17,6 @@ DB tasks.
 
 | Source                                                                                                                          | Current handling                                                                                                     |
 | ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| [DVT+ workbench UX specification v0.4 draft](../dvt-workbench-ux-specification-v0-4-20260505-draft.md)                          | Historical UX input. Keep until references move to DVT workbench UX canon and implemented capability docs.           |
 | [F-04 frontend data boundary hexagonal convergence draft](../f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md) | Historical draft for implemented F-04 work. Keep until hard-QA review references move to implemented technical docs. |
 | [No left rail menu visual direction v2](../no-left-rail-menu-visual-direction-20260531-v2.md)                                   | Visual direction draft. Archive after shell/navigation references are checked.                                       |
 | [TF-E2 Canvas empty authoring entrypoint design](../tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md)                 | Historical story input still referenced by architecture/status docs.                                                 |

@@ -394,9 +394,8 @@ state must be placed in the smallest named slice that owns the concern.
 
 ## Related Pages
 
-- [Main Workspace Views And UX](../main-workspace-views-and-ux.md)
+- [Screen Manuals And User Stories](../screen-manuals-and-user-stories.md)
 - [UX Implementation Guide](../ux-implementation-guide.md)
-- [Workbench UI Contract And Component Inventory](../workbench-ui-contract-and-component-inventory.md)
 - [Data Source Service Boundary](./data-source-service-boundary.md)
 - [Library And Open-Source Reference Stack](../library-and-open-source-reference-stack.md)
 - [Canvas Workbench Tabs Component](../graph/canvas-workbench-tabs-component.md)
