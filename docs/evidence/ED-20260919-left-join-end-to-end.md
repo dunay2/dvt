@@ -16,12 +16,15 @@ code_refs:
   - packages/@dvt/postgres-projection/src/substraitJoinReader.ts
   - packages/@dvt/postgres-projection/src/joinPostgresProjection.ts
   - apps/api/src/application/services/resolveDvtTerminalTransformClosure.ts
+  - apps/api/test/integration/dvtWrappedLeftJoinPostgres.integration.test.ts
   - apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
   - apps/web/src/app/views/canvas/CanvasRelationalTreeJoinEditor.tsx
 evidence:
   tests:
     - pnpm --filter '@dvt/contracts' test
     - pnpm --filter '@dvt/postgres-projection' test
+    - pnpm --filter dvt-api test:unit
+    - pnpm --filter dvt-api exec vitest run --config vitest.integration.config.ts test/integration/dvtWrappedLeftJoinPostgres.integration.test.ts
     - pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/dvtNInputPreview.test.ts
     - pnpm --filter '@dvt/web' test:canvas-unit:run
     - pnpm --filter '@dvt/web' test:canvas-presentation:run
@@ -76,39 +79,44 @@ source count do not choose JOIN orientation or type.
   JOIN family. The closure resolver derives it from canonical relation semantics,
   and the same resolver feeds protected Preview, selected-operation preview and
   Run workload construction.
+- Preview v1 and Run v2 workloads persisted with the superseded
+  `dvt.vtx2.postgres.inner-join.v1` identity are normalized at their bounded
+  contract read seam to `dvt.vtx2.postgres.join.v1`. Current producers still
+  emit only the JOIN-family identity; the historical value is not exported as a
+  second capability authority.
+- Grouping and grouped-window wrappers lower their input through the same
+  JOIN-family projector as the unwrapped relation. A binary LEFT therefore
+  remains `LEFT JOIN` under both wrappers instead of entering the retired
+  INNER-only builder.
 - The chooser, initial authoring flow, drag model, existing-tree editor,
   per-stage type selector, L/R preservation hint, node label, Canvas badge,
   save/reload restoration and keyboard activation all derive LEFT from admitted
   or canonical truth. Read-only operation choices remain unavailable for writes.
 
-## Validation evidence and observed failures
+## Corrective validation evidence
 
-- Contract suite: 64 files and 628 tests passed. Its first run exposed two stale
-  fixture uses of the retired `inner-join` workload identity; those producers now
-  use the exported JOIN-family constant and the full rerun passed.
-- PostgreSQL projection: 6 files and 27 tests passed, including exact INNER/LEFT
-  stage mapping, unsupported selector rejection and output nullability.
-- Canvas unit: 173 files and 1,091 tests passed. Canvas architecture: 63 files
-  and 124 tests passed without increasing any module-size boundary.
-- Native Cypress: 4 of 4 tests passed. The LEFT scenario selects and applies by
-  keyboard, verifies canonical right-side null extension, displays `LEFT JOIN`,
-  reloads, and proves the label remains canonical after persistence.
-- API focused Preview/Run coverage passes for `LEFT(INNER(A,B),C)`. The complete
-  API unit run passed 1,165 tests and skipped 27 conditional integration tests,
-  but two unrelated dbt filesystem tests exceeded their five-second timeout
-  while API and Web suites ran concurrently; both passed immediately in an
-  isolated rerun (5 of 5). This is recorded as validation context, not hidden.
-- Contracts, shared projection, API and Web typechecks pass. API and Web lint
-  pass with no relaxed rule.
+- Contract suite: 64 files and 641 tests passed, including Preview v1 and Run v2
+  historical-profile normalization through the registered workload contract.
+- PostgreSQL projection: 8 files and 51 tests passed. The Web projection's 39
+  focused tests prove exact LEFT rendering under grouping and grouped Window.
+- PostgreSQL 15 integration: 2 of 2 real queries passed. Both wrappers retained
+  the unmatched left row produced by the canonical binary LEFT plan.
+- API unit: 210 files and 1,188 tests passed, with 27 conditional tests skipped
+  by their existing environment gates. The focused Run binding test proves a
+  historical workload reaches governed dispatch instead of `plan_rejected`.
+- Web unit: 313 files and 1,936 tests; presentation: 242 files and 1,148 tests;
+  architecture: 108 files and 307 tests. All passed. Existing React `act(...)`
+  and zero-sized chart warnings remained non-failing and were not hidden.
+- Contracts, API and Web typechecks pass. API and Web lint pass with no relaxed
+  rule. `pnpm verify:prepush` is the final hook-normalized integration gate.
 
 ## Compatibility, rollout and no-debt posture
 
 Deploy contracts/shared projection and API before Web. Persisted canonical
-INNER documents remain valid. The operational profile rename is an intentional
-hard cut inside the unreleased VTX2 corridor; old `inner-join` producers are not
-accepted through a compatibility alias. Exact JOIN semantics remain in the
-canonical Substrait document, so extending the family does not require another
-workload profile.
+INNER documents remain valid. Historical workload input is migrated once at
+the contract read seam, while all output remains on the current JOIN-family
+profile. Exact JOIN semantics remain in the canonical Substrait document, so
+extending the family does not require another workload profile.
 
 No new debt item, placeholder, fake adapter, raw-SQL authority, second JOIN AST,
 rule relaxation, hook bypass or hidden skipped check was introduced. The next

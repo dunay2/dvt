@@ -35,14 +35,12 @@ import {
 import {
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
   inspectDvtSubstraitInnerJoinGroupingDraft,
-  inspectDvtSubstraitBinaryJoinDraft,
   inspectDvtSubstraitJoinDraft,
   removeDvtSubstraitInnerJoinGroupedRowNumber,
   removeDvtSubstraitInnerJoinGrouping,
   type DvtSubstraitJoinDraft,
   type DvtSubstraitInnerJoinGroupedWindowProjection,
   type DvtSubstraitInnerJoinGroupingProjection,
-  type DvtSubstraitInnerJoinProjection,
   type DvtSubstraitJoinPredicateOperand,
   type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
@@ -71,12 +69,10 @@ import {
   pgFunction,
   pgI64Literal,
   pgOr,
-  pgQualifiedColumnRef,
   pgRangeVar,
   pgRangeSubselect,
   pgRowNumber,
   pgRowNumberOverCount,
-  pgString,
   pgStringLiteral,
   pgTimestampTzLiteral,
   type PostgresAstNode,
@@ -365,61 +361,15 @@ function buildWindowPostgresAst(
   };
 }
 
-function requireInnerJoinProjection(draft: DvtSubstraitJoinDraft): DvtSubstraitInnerJoinProjection {
-  const inspection = inspectDvtSubstraitBinaryJoinDraft(draft);
+function buildAcceptedJoinPostgresAst(draft: DvtSubstraitJoinDraft): PostgresAstNode {
+  const inspection = inspectDvtSubstraitJoinDraft(draft);
   if (!inspection.ok) {
     throw new DvtSubstraitPostgresProjectionError(
       'unsupported_shape',
-      'PostgreSQL projection supports only the admitted VTX2 two-source INNER JOIN.'
+      'PostgreSQL projection supports only admitted VTX2 JOIN-family shapes.'
     );
   }
-  return inspection.projection;
-}
-
-function buildInnerJoinPostgresAst(projection: DvtSubstraitInnerJoinProjection): PostgresAstNode {
-  const leftAlias = 'left_source';
-  const rightAlias = 'right_source';
-
-  return {
-    SelectStmt: {
-      targetList: projection.outputs.map((output) => ({
-        ResTarget: {
-          name: output.name,
-          val: pgQualifiedColumnRef(
-            output.source.relation === 'left' ? leftAlias : rightAlias,
-            output.source.name
-          ),
-        },
-      })),
-      fromClause: [
-        {
-          JoinExpr: {
-            jointype: 'JOIN_INNER',
-            larg: pgRangeVar({
-              schema: projection.left.schema,
-              table: projection.left.table,
-              alias: leftAlias,
-            }),
-            rarg: pgRangeVar({
-              schema: projection.right.schema,
-              table: projection.right.table,
-              alias: rightAlias,
-            }),
-            quals: {
-              A_Expr: {
-                kind: 'AEXPR_OP',
-                name: [pgString('=')],
-                lexpr: pgQualifiedColumnRef(leftAlias, projection.leftKey),
-                rexpr: pgQualifiedColumnRef(rightAlias, projection.rightKey),
-              },
-            },
-          },
-        },
-      ],
-      limitOption: 'LIMIT_OPTION_DEFAULT',
-      op: 'SETOP_NONE',
-    },
-  };
+  return buildNInputJoinPostgresAst(inspection.projection);
 }
 
 function buildGroupedInnerJoinPostgresAst(
@@ -451,14 +401,6 @@ function buildGroupedInnerJoinPostgresAst(
       op: 'SETOP_NONE',
     },
   };
-}
-
-function buildAcceptedInnerJoinPostgresAst(draft: DvtSubstraitJoinDraft): PostgresAstNode {
-  const nInputJoin = inspectDvtSubstraitJoinDraft(draft);
-  return nInputJoin.ok &&
-    (nInputJoin.projection.inputs.length > 2 || !inspectDvtSubstraitBinaryJoinDraft(draft).ok)
-    ? buildNInputJoinPostgresAst(nInputJoin.projection)
-    : buildInnerJoinPostgresAst(requireInnerJoinProjection(draft));
 }
 
 function buildAcceptedSetPostgresAst(draft: DvtSubstraitUnionAllDraft): PostgresAstNode {
@@ -571,7 +513,7 @@ export async function projectDvtSubstraitJoinToPostgresSql(
   const groupedWindow = inspectDvtSubstraitInnerJoinGroupedWindowDraft(draft);
   if (groupedWindow.ok) {
     const groupingDraft = removeDvtSubstraitInnerJoinGroupedRowNumber(draft);
-    const innerJoin = buildAcceptedInnerJoinPostgresAst(
+    const innerJoin = buildAcceptedJoinPostgresAst(
       removeDvtSubstraitInnerJoinGrouping(groupingDraft)
     );
     return deparseBoundedPostgresAst(
@@ -580,17 +522,12 @@ export async function projectDvtSubstraitJoinToPostgresSql(
   }
   const grouping = inspectDvtSubstraitInnerJoinGroupingDraft(draft);
   if (grouping.ok) {
-    const innerJoin = buildAcceptedInnerJoinPostgresAst(removeDvtSubstraitInnerJoinGrouping(draft));
+    const innerJoin = buildAcceptedJoinPostgresAst(removeDvtSubstraitInnerJoinGrouping(draft));
     return deparseBoundedPostgresAst(
       buildGroupedInnerJoinPostgresAst(grouping.projection, innerJoin)
     );
   }
-  const nInputJoin = inspectDvtSubstraitJoinDraft(draft);
-  return deparseBoundedPostgresAst(
-    nInputJoin.ok
-      ? buildNInputJoinPostgresAst(nInputJoin.projection)
-      : buildInnerJoinPostgresAst(requireInnerJoinProjection(draft))
-  );
+  return deparseBoundedPostgresAst(buildAcceptedJoinPostgresAst(draft));
 }
 
 export async function projectDvtSubstraitUnionAllToPostgresSql(
