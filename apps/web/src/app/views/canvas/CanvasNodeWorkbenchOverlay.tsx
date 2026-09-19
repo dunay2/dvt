@@ -95,11 +95,23 @@ export function CanvasNodeWorkbenchOverlay({
   const positionController = useCanvasNodeWorkbenchPosition(visible, inspectorNodeId);
 
   const hideAndRestoreNodeFocus = useCallback((): void => {
+    const closingFocus = document.activeElement;
+    const closingSurface = positionController.surfaceRef.current;
     onHide();
     window.requestAnimationFrame(() => {
+      const activeElement = document.activeElement;
+      if (
+        activeElement instanceof HTMLElement &&
+        activeElement !== document.body &&
+        activeElement !== closingFocus &&
+        activeElement.isConnected &&
+        !closingSurface?.contains(activeElement)
+      ) {
+        return;
+      }
       findCanvasGraphNodeElement(inspectorNodeId)?.focus({ preventScroll: true });
     });
-  }, [inspectorNodeId, onHide]);
+  }, [inspectorNodeId, onHide, positionController.surfaceRef]);
 
   useEffect(() => {
     if (!visible) {

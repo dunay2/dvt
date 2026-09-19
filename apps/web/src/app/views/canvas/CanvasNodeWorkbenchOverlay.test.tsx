@@ -291,6 +291,35 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     graphNode.remove();
   });
 
+  it('preserves a newer canvas interaction before closing focus restoration runs', async () => {
+    const graphNode = document.createElement('div');
+    graphNode.className = 'react-flow__node';
+    graphNode.dataset.id = NODE.id;
+    graphNode.tabIndex = 0;
+    document.body.appendChild(graphNode);
+    const canvasControl = document.createElement('button');
+    document.body.appendChild(canvasControl);
+    renderOverlay(root, { onHide: vi.fn() });
+    await act(async () => {
+      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+    });
+    let closingFrame: FrameRequestCallback | undefined;
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      closingFrame = callback;
+      return 18;
+    });
+
+    act(() => {
+      (workbenchState.props?.onClose as (() => void) | undefined)?.();
+      canvasControl.focus();
+      closingFrame!(0);
+    });
+
+    expect(document.activeElement).toBe(canvasControl);
+    canvasControl.remove();
+    graphNode.remove();
+  });
+
   it.each(['authoring input', 'external control'])(
     'preserves later focus on the %s before the opening animation frame runs',
     (target) => {

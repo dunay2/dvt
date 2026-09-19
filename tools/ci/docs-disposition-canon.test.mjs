@@ -401,3 +401,40 @@ test('retired documentation-only closeouts have no files or local consumers', ()
     }
   }
 });
+
+// Git holds the obsolete snapshots; current authorities and product tests remain.
+test('retired atlas and superseded Canvas guidance have no live consumers', () => {
+  const retiredFiles = [
+    'docs/architecture/components/web/astproposal.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/canvas-empty-guide-preference-plan-20260602.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/f29c-canvas-insert-palette-plan-20260525.md',
+    'docs/planning/closeouts/20260602-canvas-empty-guide-preference-closeout.md',
+    'docs/planning/reviews/architecture-and-governance/20260307-architecture-doc-consolidation-matrix-review.md',
+  ];
+  for (const path of ['docs/architecture/atlas', ...retiredFiles]) {
+    assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, path);
+  }
+  const retiredNames = retiredFiles.map((path) => path.split('/').at(-1).replace(/\.md$/u, ''));
+  const paths = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
+    .split('\0')
+    .filter(Boolean);
+  for (const path of paths) {
+    if (path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
+    if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
+    const current = readRepoFile(path).replace(
+      /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
+      ''
+    );
+    const retiredAtlasPath = /docs\/architecture\/atlas\/|(?:^|[\s("'`])(?:\.\.?\/)*atlas\//u;
+    assert.doesNotMatch(current, retiredAtlasPath, `retired atlas reference: ${path}`);
+    for (const name of retiredNames) {
+      assert.equal(current.includes(name), false, `retired guidance reference: ${path}: ${name}`);
+    }
+  }
+  assertFilesExist([
+    'docs/architecture/reference-architecture.md',
+    'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md',
+    'docs/planning/state/github-mvp-issue-workflow.md',
+    'apps/web/src/app/views/canvas/CanvasEmptyAuthoringEntrypoint.architecture.test.ts',
+  ]);
+});

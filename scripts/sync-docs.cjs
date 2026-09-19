@@ -1102,7 +1102,6 @@ function renderArchitectureIndex(meta, rows) {
     'frontend/index.md',
     'infra/index.md',
     'engine/index.md',
-    'atlas/index.md',
     'reference-architecture.md',
     'system-delivery-status.md',
   ]);
@@ -1133,7 +1132,7 @@ function renderArchitectureIndex(meta, rows) {
     '  semantics.',
     '- Use [Engine](engine/index.md) when changing execution invariants, adapters,',
     '  determinism, or engine contracts.',
-    '- Use [Atlas](atlas/index.md) and [Reference Architecture](reference-architecture.md)',
+    '- Use [Reference Architecture](reference-architecture.md)',
     '  when the question is repository-wide structure rather than one package.',
     '',
     '## Guided Index',

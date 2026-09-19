@@ -41,7 +41,6 @@ Examples:
 
 - `20260322-ddd-hexagonal-port-audit-review.md`
 - `20260315-workflow-helpers-architecture-review.md`
-- `20260307-architecture-doc-consolidation-matrix-review.md`
 
 ## Migration Rule
 
