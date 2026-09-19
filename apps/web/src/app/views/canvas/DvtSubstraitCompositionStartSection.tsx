@@ -29,6 +29,7 @@ export function DvtSubstraitCompositionStartSection({
   onClearPredicateSeed,
   onStartInnerJoin,
   onStartUnionAll,
+  onStartUnionDistinct,
 }: Readonly<{
   disabled: boolean;
   inputs: readonly CanvasDvtCompositionInput[];
@@ -36,6 +37,7 @@ export function DvtSubstraitCompositionStartSection({
   onClearPredicateSeed?: () => void;
   onStartInnerJoin: (draft: DvtSubstraitJoinDraft, operation: CanvasJoinOperation) => void;
   onStartUnionAll?: () => void;
+  onStartUnionDistinct?: () => void;
 }>): JSX.Element {
   const [selectedOperation, setSelectedOperation] = useState<CanvasRelationalOperation | null>(
     null
@@ -49,6 +51,7 @@ export function DvtSubstraitCompositionStartSection({
     predicateAvailable: availablePredicateSeed != null,
     readOnly: disabled,
     unionAllAvailable: onStartUnionAll != null,
+    unionDistinctAvailable: onStartUnionDistinct != null,
   });
 
   if (isCanvasJoinOperation(selectedOperation)) {
@@ -81,6 +84,23 @@ export function DvtSubstraitCompositionStartSection({
         inputs={inputs}
         onApply={() => {
           onStartUnionAll();
+          onClearPredicateSeed?.();
+        }}
+        onCancel={() => {
+          setSelectedOperation(null);
+          onClearPredicateSeed?.();
+        }}
+      />
+    );
+  }
+  if (selectedOperation === 'union_distinct' && onStartUnionDistinct != null) {
+    return (
+      <DvtSubstraitUnionAllStartSection
+        disabled={disabled}
+        inputs={inputs}
+        operation="union_distinct"
+        onApply={() => {
+          onStartUnionDistinct();
           onClearPredicateSeed?.();
         }}
         onCancel={() => {

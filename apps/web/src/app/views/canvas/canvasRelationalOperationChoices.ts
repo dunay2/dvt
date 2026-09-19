@@ -9,7 +9,19 @@ import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatal
 import { hasCompatibleCanvasDvtJoinFields } from './canvasDvtJoinTypeAdmission';
 
 export type CanvasRelationalOperation =
-  'projection' | 'inner_join' | 'left_join' | 'right_join' | 'full_outer_join' | 'union_all';
+  | 'projection'
+  | 'inner_join'
+  | 'left_join'
+  | 'right_join'
+  | 'full_outer_join'
+  | 'union_all'
+  | 'union_distinct';
+
+export function isCanvasSetOperation(
+  operation: CanvasRelationalOperation | null
+): operation is 'union_all' | 'union_distinct' {
+  return operation === 'union_all' || operation === 'union_distinct';
+}
 
 export type CanvasRelationalOperationAvailability =
   | 'available'
@@ -90,6 +102,7 @@ export function resolveCanvasRelationalOperationChoices(
     predicateAvailable: boolean;
     readOnly: boolean;
     unionAllAvailable: boolean;
+    unionDistinctAvailable?: boolean;
   }>
 ): readonly CanvasRelationalOperationChoice[] {
   const readOnlyAvailability = args.readOnly ? 'read-only' : null;
@@ -99,6 +112,7 @@ export function resolveCanvasRelationalOperationChoices(
   const rightJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT');
   const fullOuterJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_OUTER');
   const unionAllAdmitted = isAdmitted('substrait.SetRel', 'SetOp.SET_OP_UNION_ALL');
+  const unionDistinctAdmitted = isAdmitted('substrait.SetRel', 'SetOp.SET_OP_UNION_DISTINCT');
   const hasCompatibleJoinTypePair = args.inputs.some((left, index) =>
     args.inputs
       .slice(index + 1)
@@ -126,6 +140,16 @@ export function resolveCanvasRelationalOperationChoices(
       : !unionAllTargetSupported
         ? 'target-unavailable'
         : args.unionAllAvailable
+          ? 'available'
+          : 'needs-schema-alignment');
+  const unionDistinctAvailable = args.unionDistinctAvailable ?? args.unionAllAvailable;
+  const unionDistinctAvailability =
+    readOnlyAvailability ??
+    (!unionDistinctAdmitted
+      ? 'semantically-unavailable'
+      : !unionAllTargetSupported
+        ? 'target-unavailable'
+        : unionDistinctAvailable
           ? 'available'
           : 'needs-schema-alignment');
 
@@ -159,6 +183,11 @@ export function resolveCanvasRelationalOperationChoices(
       operation: 'union_all',
       availability: unionAllAvailability,
       selectable: unionAllAvailability === 'available',
+    },
+    {
+      operation: 'union_distinct',
+      availability: unionDistinctAvailability,
+      selectable: unionDistinctAvailability === 'available',
     },
   ];
 }

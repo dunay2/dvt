@@ -7,6 +7,7 @@ import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types'
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
 import {
   createDvtSubstraitUnionAllDraft,
+  createDvtSubstraitUnionDistinctDraft,
   resolveDvtSubstraitUnionAllEntry,
 } from './canvasDvtSubstraitSetComposition';
 import { DvtSubstraitCompositionStartSection } from './DvtSubstraitCompositionStartSection';
@@ -68,6 +69,25 @@ export function DvtSubstraitCompositionStart({
                   shape: 'union_all',
                   plan: unionAll.plan,
                   sidecar: unionAll.sidecar,
+                },
+              }));
+            }
+      }
+      onStartUnionDistinct={
+        unionAllEntry == null
+          ? undefined
+          : () => {
+              const unionDistinct = createDvtSubstraitUnionDistinctDraft(unionAllEntry);
+              onChange((currentDraft) => ({
+                ...currentDraft,
+                dvt: {
+                  kind: 'transform',
+                  materialized:
+                    currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
+                  mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
+                  shape: 'union_distinct',
+                  plan: unionDistinct.plan,
+                  sidecar: unionDistinct.sidecar,
                 },
               }));
             }

@@ -109,7 +109,8 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
     compositionCandidate.operation === 'left_join' ||
     compositionCandidate.operation === 'right_join' ||
     compositionCandidate.operation === 'full_outer_join' ||
-    compositionCandidate.operation === 'union_all';
+    compositionCandidate.operation === 'union_all' ||
+    compositionCandidate.operation === 'union_distinct';
   const validComposition =
     composition == null ||
     (compositionCandidate != null &&
@@ -174,7 +175,8 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
             compositionCandidate.operation === 'left_join' ||
             compositionCandidate.operation === 'right_join' ||
             compositionCandidate.operation === 'full_outer_join' ||
-            compositionCandidate.operation === 'union_all'
+            compositionCandidate.operation === 'union_all' ||
+            compositionCandidate.operation === 'union_distinct'
               ? { operation: compositionCandidate.operation }
               : {}),
             ...(typeof compositionCandidate.onActivate === 'function'

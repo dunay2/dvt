@@ -1,4 +1,4 @@
-/** Owned concern: edit the admitted N-source Substrait UNION ALL in Node Properties. */
+/** Owned concern: edit the admitted N-source Substrait SetRel in Node Properties. */
 import { useId, type Dispatch, type ReactNode, type SetStateAction } from 'react';
 
 import { Button } from '../../components/ui/button';
@@ -36,6 +36,7 @@ export function DvtSubstraitUnionAllAuthoringSection({
   outputNameDrafts: Readonly<Record<string, string>>;
 }>): JSX.Element | null {
   const semanticDraft = { plan: draft.plan, sidecar: draft.sidecar };
+  const unionOperator = draft.shape === 'union_distinct' ? ' UNION ' : ' UNION ALL ';
   const countOutputDraftKey = 'union-all:new-count-output';
   const windowOutputDraftKey = 'union-all:new-window-output';
   const outputPolicyErrorId = useId();
@@ -72,7 +73,7 @@ export function DvtSubstraitUnionAllAuthoringSection({
       if (
         currentDraft.dvt?.kind !== 'transform' ||
         currentDraft.dvt.mode !== 'substrait' ||
-        currentDraft.dvt.shape !== 'union_all'
+        (currentDraft.dvt.shape !== 'union_all' && currentDraft.dvt.shape !== 'union_distinct')
       ) {
         return currentDraft;
       }
@@ -102,7 +103,9 @@ export function DvtSubstraitUnionAllAuthoringSection({
       data-slot="dvt-substrait-union-all-authoring"
     >
       <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
-        {canvasViewCopy.inspectorDvtSubstraitUnionAllTitle}
+        {draft.shape === 'union_distinct'
+          ? canvasViewCopy.inspectorDvtSubstraitUnionDistinctTitle
+          : canvasViewCopy.inspectorDvtSubstraitUnionAllTitle}
       </h3>
       {Object.keys(outputNameDrafts).map((key) => {
         const error = outputNameErrorFor(key);
@@ -124,7 +127,7 @@ export function DvtSubstraitUnionAllAuthoringSection({
     inputs: readonly Readonly<{ schema: string; table: string }>[]
   ): JSX.Element => (
     <p className="font-mono text-xs text-(--text-muted)">
-      {inputs.map((input) => `${input.schema}.${input.table}`).join(' UNION ALL ')}
+      {inputs.map((input) => `${input.schema}.${input.table}`).join(unionOperator)}
     </p>
   );
 
@@ -364,7 +367,7 @@ export function DvtSubstraitUnionAllAuthoringSection({
           <dd className="font-mono">
             {inspection.projection.inputs
               .map((input) => `${input.schema}.${input.table}`)
-              .join(' UNION ALL ')}
+              .join(unionOperator)}
           </dd>
         </div>
         <div>

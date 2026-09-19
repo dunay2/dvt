@@ -13,6 +13,7 @@ const OPERATION_LABEL: Record<CanvasAlgebraicCompositionOperation, string> = {
   right_join: '⋊ RIGHT JOIN',
   full_outer_join: '⟗ FULL OUTER JOIN',
   union_all: '∪ ALL',
+  union_distinct: '∪',
 };
 
 export function resolveGraphNodeAlgebraicDrop(value: unknown): GraphNodeAlgebraicDrop | undefined {
@@ -25,7 +26,8 @@ export function resolveGraphNodeAlgebraicDrop(value: unknown): GraphNodeAlgebrai
       candidate.activeOperation !== 'left_join' &&
       candidate.activeOperation !== 'right_join' &&
       candidate.activeOperation !== 'full_outer_join' &&
-      candidate.activeOperation !== 'union_all')
+      candidate.activeOperation !== 'union_all' &&
+      candidate.activeOperation !== 'union_distinct')
   ) {
     return undefined;
   }

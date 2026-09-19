@@ -664,9 +664,17 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSubstraitUnionAllAction',
     fallback: 'UNION ALL',
   },
+  inspectorDvtSubstraitUnionDistinctAction: {
+    key: 'canvas.inspector.authoring.dvtSubstraitUnionDistinctAction',
+    fallback: 'UNION DISTINCT',
+  },
   inspectorDvtSubstraitUnionAllTitle: {
     key: 'canvas.inspector.authoring.dvtSubstraitUnionAllTitle',
     fallback: 'Substrait UNION ALL',
+  },
+  inspectorDvtSubstraitUnionDistinctTitle: {
+    key: 'canvas.inspector.authoring.dvtSubstraitUnionDistinctTitle',
+    fallback: 'Substrait UNION DISTINCT',
   },
   inspectorDvtSubstraitUnionAllInputsLabel: {
     key: 'canvas.inspector.authoring.dvtSubstraitUnionAllInputsLabel',
@@ -814,7 +822,7 @@ export const canvasViewAuthoringCopyByKey = {
   },
   relationalTreeSelectNextSourceMessage: {
     key: 'canvas.relationalTree.selectNextSourceMessage',
-    fallback: 'Add a second Source to enable JOIN or UNION ALL.',
+    fallback: 'Add a second Source to enable JOIN or UNION.',
   },
   relationalTreeSourceActionHint: {
     key: 'canvas.relationalTree.sourceActionHint',

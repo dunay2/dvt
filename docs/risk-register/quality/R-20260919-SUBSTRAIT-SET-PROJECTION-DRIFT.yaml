@@ -1,0 +1,32 @@
+---
+id: R-20260919-SUBSTRAIT-SET-PROJECTION-DRIFT
+title: Set semantics could drift between Canvas, Substrait, and PostgreSQL
+status: Open
+date: 2026-09-19
+owners:
+  - web
+  - api
+  - packages/@dvt/contracts
+  - packages/@dvt/postgres-projection
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    One exact Substrait SetRel selector remains authoritative for Canvas presentation, persistence,
+    output lineage, PostgreSQL rendering, Preview, and Run. UNION ALL and UNION DISTINCT share
+    N-input identity and schema validation while retaining different target AST flags. Unsupported
+    selectors, stale semantic hashes, mismatched ordered schemas, repeated sources, mixed
+    connections, and physical-binding drift fail closed.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/evidence/ED-20260831-vtx2-substrait-union-all.md
+    - docs/evidence/ED-20260919-union-distinct-end-to-end.md
+    - packages/@dvt/postgres-projection/test/setPostgresProjection.test.ts
+    - apps/api/test/application/services/dvtSetPreview.test.ts
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitSetComposition.test.ts
+  follow_up:
+    - Each newly admitted Set selector needs contract, construction, inspection, persistence,
+      PostgreSQL, Preview, Run, and browser proof.
+    - Schema coercion or name-based alignment must remain a separately governed capability and
+      cannot be introduced as an implicit Set fallback.

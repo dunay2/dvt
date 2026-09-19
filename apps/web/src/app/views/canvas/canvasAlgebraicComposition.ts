@@ -15,6 +15,7 @@ import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthorin
 import { createDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { resolveDvtSubstraitJoinEntry } from './canvasDvtSubstraitJoinSourceResolution';
 import {
+  createDvtSubstraitSetDraft,
   createDvtSubstraitUnionAllDraft,
   resolveDvtSubstraitUnionAllEntry,
 } from './canvasDvtSubstraitSetComposition';
@@ -28,7 +29,8 @@ import {
   type CanvasJoinOperation,
 } from './canvasRelationalTreeJoinType';
 
-export type CanvasAlgebraicCompositionOperation = CanvasJoinOperation | 'union_all';
+export type CanvasAlgebraicCompositionOperation =
+  CanvasJoinOperation | 'union_all' | 'union_distinct';
 
 type CompositionState = {
   canonicalNodesById: Map<string, CanonicalNode>;
@@ -76,6 +78,7 @@ function admittedOperations(args: {
     resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'right_join',
     resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'full_outer_join',
     resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'union_all',
+    resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'union_distinct',
   ].filter((operation): operation is CanvasAlgebraicCompositionOperation => operation != null);
 }
 
@@ -126,7 +129,11 @@ function createSemanticDraft(args: {
         });
   }
   const entry = resolveDvtSubstraitUnionAllEntry({ ...args, edges });
-  return entry == null ? null : createDvtSubstraitUnionAllDraft(entry);
+  return entry == null
+    ? null
+    : args.operation === 'union_all'
+      ? createDvtSubstraitUnionAllDraft(entry)
+      : createDvtSubstraitSetDraft({ ...entry, operation: 'union_distinct' });
 }
 
 export function resolveCanvasAlgebraicCompositionTransaction(

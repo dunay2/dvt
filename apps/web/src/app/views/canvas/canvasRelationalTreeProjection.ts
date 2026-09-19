@@ -242,8 +242,12 @@ function buildTree(
     substraitKind: args.rel.relType.case ?? 'unknown',
     ...(joinLabel != null
       ? { operationLabel: joinLabel }
-      : args.rel.relType.case === 'set' && args.rel.relType.value.op === SetRel_SetOp.UNION_ALL
-        ? { operationLabel: 'UNION ALL' }
+      : args.rel.relType.case === 'set'
+        ? args.rel.relType.value.op === SetRel_SetOp.UNION_ALL
+          ? { operationLabel: 'UNION ALL' }
+          : args.rel.relType.value.op === SetRel_SetOp.UNION_DISTINCT
+            ? { operationLabel: 'UNION DISTINCT' }
+            : { operationLabel: 'UNSUPPORTED SET' }
         : {}),
     relationId,
     displayName: binding?.displayName ?? null,

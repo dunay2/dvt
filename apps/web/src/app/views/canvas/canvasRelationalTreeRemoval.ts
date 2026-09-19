@@ -12,7 +12,10 @@ import {
   inspectDvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
 import { createProjectionType } from './canvasDvtSubstraitProjectionStructure';
-import { inspectDvtSubstraitUnionAllAcceptedDraft } from './canvasDvtSubstraitSetComposition';
+import {
+  inspectDvtSubstraitUnionAllAcceptedDraft,
+  inspectDvtSubstraitUnionAllDraft,
+} from './canvasDvtSubstraitSetComposition';
 import { applyCanvasRelationalOperatorTool } from './canvasRelationalTreeOperatorCommands';
 import { removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import { removeDvtSubstraitProjectionRoot } from './canvasDvtSubstraitStructuredFieldRemove';
@@ -89,11 +92,16 @@ export function removeCanvasRelationalTreeNode(
         tool: rel.case === 'aggregate' ? 'aggregate' : 'window',
         remove: true,
       });
-      if (draft !== args.draft && (join.ok || union.ok))
+      if (draft !== args.draft && (join.ok || union.ok)) {
+        const set = inspectDvtSubstraitUnionAllDraft(draft);
         return {
           ok: true,
           draft,
-          operation: join.ok ? (operationForJoinDraft(draft) ?? 'inner_join') : 'union_all',
+          operation: join.ok
+            ? (operationForJoinDraft(draft) ?? 'inner_join')
+            : set.ok
+              ? set.projection.operation
+              : 'union_all',
           retained: (join.ok
             ? inspectDvtSubstraitJoinPredicateContext(args.draft)!.inspection.projection.inputs
             : union.ok
@@ -101,6 +109,7 @@ export function removeCanvasRelationalTreeNode(
               : []
           ).map((_, index) => index),
         };
+      }
     }
   }
   const context = inspectDvtSubstraitJoinPredicateContext(args.draft);

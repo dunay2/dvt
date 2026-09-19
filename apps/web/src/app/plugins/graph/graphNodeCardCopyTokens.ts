@@ -31,6 +31,7 @@ type GraphNodeCardCopy = Readonly<{
   relationalCompositionIncompleteLabel: string;
   relationalCompositionJoinSummaryTemplate: string;
   relationalCompositionUnionAllSummaryTemplate: string;
+  relationalCompositionUnionDistinctSummaryTemplate: string;
   filterLabel: string;
   testStatusLabels: Readonly<Record<string, string>>;
   healthTitleTemplate: string;
@@ -127,6 +128,8 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
     'INNER JOIN, inputs: {inputCount}, predicates: {predicateCount}',
   relationalCompositionUnionAllSummaryTemplate:
     'UNION ALL, inputs: {inputCount}, outputs: {outputCount}, bag semantics',
+  relationalCompositionUnionDistinctSummaryTemplate:
+    'UNION DISTINCT, inputs: {inputCount}, outputs: {outputCount}, set semantics',
   filterLabel: 'Filter',
   testStatusLabels: {
     pass: 'Passed',
@@ -246,6 +249,8 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
     'INNER JOIN, entradas: {inputCount}, predicados: {predicateCount}',
   relationalCompositionUnionAllSummaryTemplate:
     'UNION ALL, entradas: {inputCount}, salidas: {outputCount}, semántica bag',
+  relationalCompositionUnionDistinctSummaryTemplate:
+    'UNION DISTINCT, entradas: {inputCount}, salidas: {outputCount}, semántica de conjunto',
   filterLabel: 'Filtro',
   testStatusLabels: {
     pass: 'Aprobadas',

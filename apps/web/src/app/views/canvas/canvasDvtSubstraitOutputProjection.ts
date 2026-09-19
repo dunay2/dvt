@@ -138,7 +138,7 @@ export async function projectDvtSubstraitTransformOutputToPostgresSql(
     requirePersistedAuthority: true,
   });
   if (unionEntry == null) {
-    throw new Error('Substrait UNION ALL source identities do not match the connected graph.');
+    throw new Error('Substrait SetRel source identities do not match the connected graph.');
   }
   return projectDvtSubstraitUnionAllToPostgresSql(unionAllDraft);
 }

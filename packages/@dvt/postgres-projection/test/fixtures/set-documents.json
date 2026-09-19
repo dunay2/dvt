@@ -1,0 +1,119 @@
+{
+  "unionDistinct": {
+    "schemaVersion": "dvt-substrait-semantic-document.v1",
+    "profile": {
+      "schemaVersion": "dvt-substrait-profile.v1",
+      "profileId": "dvt.vtx2.substrait.v1",
+      "specVersion": "0.101.0",
+      "specCommitSha": "2653e55516c8c07529cde9bc81c64e4ae3537515"
+    },
+    "semanticPlan": {
+      "encoding": "substrait-plan-protobuf-base64",
+      "bytesBase64": "GoICEv8BCuYBQuMBCggSBAoCAAEoBBJGCkQKAigBEiYKC2N1c3RvbWVyX2lkCgdjb3VudHJ5Eg4KBGICEAEKBGICEAEYAjoWCgNyYXcKD2N1c3RvbWVyc19ub3J0aBJGCkQKAigCEiYKC2N1c3RvbWVyX2lkCgdjb3VudHJ5Eg4KBGICEAEKBGICEAEYAjoWCgNyYXcKD2N1c3RvbWVyc19zb3V0aBJFCkMKAigDEiYKC2N1c3RvbWVyX2lkCgdjb3VudHJ5Eg4KBGICEAEKBGICEAEYAjoVCgNyYXcKDmN1c3RvbWVyc193ZXN0GAUSC2N1c3RvbWVyX2lkEgdjb3VudHJ5MiAQZSocZHZ0LXZ0eDItdW5pb24tZGlzdGluY3QtY2FyZA==",
+      "sha256": "23c0a43b7239f04ef5bee7be9feb0744eb91739b0c9fa131dd4ae678c9cded0c"
+    },
+    "sidecar": {
+      "schemaVersion": "dvt-substrait-authoring-sidecar.v1",
+      "semanticPlanSha256": "23c0a43b7239f04ef5bee7be9feb0744eb91739b0c9fa131dd4ae678c9cded0c",
+      "relations": [
+        {
+          "relationId": "dvt_rel_01a0ba77-367f-7126-8567-d7a049f9544b",
+          "relAnchor": 1,
+          "sourceRef": {
+            "schemaVersion": "connected-source-ref.v1",
+            "connectionRef": {
+              "schemaVersion": "connection-ref.v1",
+              "connectionId": "warehouse-main",
+              "provider": "postgres"
+            },
+            "sourceObjectId": "raw.customers_north"
+          },
+          "displayName": "customers_north"
+        },
+        {
+          "relationId": "dvt_rel_01a0ba77-367f-7f67-b775-9eeeef060aaa",
+          "relAnchor": 2,
+          "sourceRef": {
+            "schemaVersion": "connected-source-ref.v1",
+            "connectionRef": {
+              "schemaVersion": "connection-ref.v1",
+              "connectionId": "warehouse-main",
+              "provider": "postgres"
+            },
+            "sourceObjectId": "raw.customers_south"
+          },
+          "displayName": "customers_south"
+        },
+        {
+          "relationId": "dvt_rel_01a0ba77-367f-7246-8d72-569beac4ea39",
+          "relAnchor": 3,
+          "sourceRef": {
+            "schemaVersion": "connected-source-ref.v1",
+            "connectionRef": {
+              "schemaVersion": "connection-ref.v1",
+              "connectionId": "warehouse-main",
+              "provider": "postgres"
+            },
+            "sourceObjectId": "raw.customers_west"
+          },
+          "displayName": "customers_west"
+        },
+        {
+          "relationId": "dvt_rel_01a0ba77-367f-761a-9fac-9b9731f58e01",
+          "relAnchor": 4,
+          "displayName": "customers_north+customers_south+customers_west"
+        }
+      ],
+      "fields": [
+        {
+          "fieldId": "dvt_fld_01a0ba77-367f-76ad-8549-95fb919ef665",
+          "relationId": "dvt_rel_01a0ba77-367f-7126-8567-d7a049f9544b",
+          "outputOrdinal": 0,
+          "displayName": "customer_id"
+        },
+        {
+          "fieldId": "dvt_fld_01a0ba77-367f-7e2d-93ac-33dd7f108265",
+          "relationId": "dvt_rel_01a0ba77-367f-7126-8567-d7a049f9544b",
+          "outputOrdinal": 1,
+          "displayName": "country"
+        },
+        {
+          "fieldId": "dvt_fld_01a0ba77-367f-77cc-8c8d-7cd4393ae9ee",
+          "relationId": "dvt_rel_01a0ba77-367f-7f67-b775-9eeeef060aaa",
+          "outputOrdinal": 0,
+          "displayName": "customer_id"
+        },
+        {
+          "fieldId": "dvt_fld_01a0ba77-367f-74e9-a649-9ae76fe18a54",
+          "relationId": "dvt_rel_01a0ba77-367f-7f67-b775-9eeeef060aaa",
+          "outputOrdinal": 1,
+          "displayName": "country"
+        },
+        {
+          "fieldId": "dvt_fld_01a0ba77-367f-7209-ab05-fdca51dc76ce",
+          "relationId": "dvt_rel_01a0ba77-367f-7246-8d72-569beac4ea39",
+          "outputOrdinal": 0,
+          "displayName": "customer_id"
+        },
+        {
+          "fieldId": "dvt_fld_01a0ba77-367f-7a2c-92e6-c2e7196233a2",
+          "relationId": "dvt_rel_01a0ba77-367f-7246-8d72-569beac4ea39",
+          "outputOrdinal": 1,
+          "displayName": "country"
+        },
+        {
+          "fieldId": "dvt_fld_01a0ba77-367f-7305-a16a-c45a752602d5",
+          "relationId": "dvt_rel_01a0ba77-367f-761a-9fac-9b9731f58e01",
+          "outputOrdinal": 0,
+          "displayName": "customer_id"
+        },
+        {
+          "fieldId": "dvt_fld_01a0ba77-367f-7f5c-92af-c9654f4f9973",
+          "relationId": "dvt_rel_01a0ba77-367f-761a-9fac-9b9731f58e01",
+          "outputOrdinal": 1,
+          "displayName": "country"
+        }
+      ]
+    }
+  }
+}

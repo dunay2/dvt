@@ -152,6 +152,25 @@ describe('DVT Substrait capability catalog V1', () => {
     });
   });
 
+  it('admits UNION DISTINCT as its exact canonical SetRel selector', () => {
+    const unionDistinct = findCapability(
+      buildDvtSubstraitStandardCapabilityId('relation', {
+        sourceKind: 'core',
+        message: 'substrait.SetRel',
+        selector: 'SetOp.SET_OP_UNION_DISTINCT',
+      })
+    );
+
+    expect(unionDistinct).toMatchObject({
+      profileStatus: 'supported-profile',
+      admission: {
+        productUseCaseRef: 'dvt:#3317',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+  });
+
   it.each([
     ['functions_boolean', 'and', 'dvt:#3087'],
     ['functions_boolean', 'or', 'dvt:#3087'],

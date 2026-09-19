@@ -5,6 +5,10 @@ import documents from '../../../../../../packages/@dvt/postgres-projection/test/
 import type { CanonicalNode } from '../../types/canonical';
 import { buildProtectedDvtPreviewProjection } from './canvasDvtPreviewProjection';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import {
+  createDvtSubstraitUnionDistinctDraft,
+  encodeDvtSubstraitUnionAllDocument,
+} from './canvasDvtSubstraitSetComposition';
 
 function fixture(count: 2 | 3): Parameters<typeof buildProtectedDvtPreviewProjection>[0] {
   const document = DvtSubstraitSemanticDocumentV1Schema.parse(
@@ -86,5 +90,75 @@ describe('N-input protected Preview intent', () => {
         canonicalEdges: input.canonicalEdges.slice(1),
       }).ok
     ).toBe(false);
+  });
+
+  it('admits persisted UNION DISTINCT through the same protected Preview rail', () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    const sourceSpecs = ['north', 'south', 'west'].map((table) => ({
+      nodeId: `source-${table}`,
+      schema: 'raw',
+      table,
+      fields: [{ name: 'customer_id', type: 'string' as const }],
+      sourceRef: {
+        schemaVersion: 'connected-source-ref.v1' as const,
+        connectionRef,
+        sourceObjectId: `raw.${table}`,
+      },
+    }));
+    const document = encodeDvtSubstraitUnionAllDocument(
+      createDvtSubstraitUnionDistinctDraft({
+        inputs: sourceSpecs,
+        targetNodeId: 'transform-customers',
+      })
+    );
+    const sources: CanonicalNode[] = sourceSpecs.map((source) => ({
+      id: source.nodeId,
+      name: source.table,
+      pluginId: 'dvt.warehouse-source',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        connectedSourceRef: source.sourceRef,
+        schema: source.schema,
+        tableName: source.table,
+      },
+    }));
+    const transform = applyDvtSubstraitSemanticDocument(
+      {
+        id: 'transform-customers',
+        name: 'Distinct customers',
+        pluginId: 'dvt',
+        kind: 'dvt:transform',
+        role: 'transform',
+        status: 'idle',
+        tags: [],
+      },
+      document
+    );
+    const nodes = [...sources, transform];
+    const result = buildProtectedDvtPreviewProjection({
+      canvasId: 'canvas-main',
+      canonicalNodes: nodes,
+      workspaceNodeIds: nodes.map((node) => node.id),
+      selectionIntent: { mode: 'explicit', nodeIds: [transform.id] },
+      canonicalEdges: sources.map((source) => ({
+        id: `${source.id}-transform`,
+        sourceId: source.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      })),
+    });
+
+    expect(result).toMatchObject({
+      ok: true,
+      selection: { mode: 'upstream', nodeIds: ['transform-customers'] },
+      derivedDependencyNodeIds: ['source-north', 'source-south', 'source-west'],
+    });
   });
 });

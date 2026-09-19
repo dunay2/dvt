@@ -50,7 +50,7 @@ function resolveCanonicalOperation(
     const unionAll = inspectDvtSubstraitUnionAllAcceptedDraft(
       decodeDvtSubstraitUnionAllDocument(semanticDocument)
     );
-    if (unionAll.ok) return 'union_all';
+    if (unionAll.ok) return unionAll.projection.operation;
   } catch {
     // A valid single-input document has no relational-composition operation.
   }

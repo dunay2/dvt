@@ -1,6 +1,7 @@
 /** Owned concern: expose the existing edit session to the Model navigation guard. */
 import { useImperativeHandle, type ForwardedRef } from 'react';
 import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
+import { isCanvasSetOperation } from './canvasRelationalOperationChoices';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 
 export type CanvasRelationalTreeWorkbenchHandle = Readonly<{
@@ -30,7 +31,8 @@ export function useCanvasRelationalTreeWorkbenchHandle(
       model.session.appendInput == null &&
       ((isCanvasJoinOperation(model.session.operation) && model.session.joinDraft != null) ||
         (model.session.operation === 'projection' && model.session.selectedInputIds.length === 1) ||
-        (model.session.operation === 'union_all' && model.session.selectedInputIds.length >= 2)),
+        (isCanvasSetOperation(model.session.operation) &&
+          model.session.selectedInputIds.length >= 2)),
     apply: model.session.apply,
     cancel: model.session.cancel,
   };

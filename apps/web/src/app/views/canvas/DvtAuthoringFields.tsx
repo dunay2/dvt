@@ -223,7 +223,7 @@ export function DvtAuthoringFields({
           outputNameDrafts={draft.outputNameDrafts ?? {}}
         />
       );
-    } else if (draft.dvt.shape === 'union_all') {
+    } else if (draft.dvt.shape === 'union_all' || draft.dvt.shape === 'union_distinct') {
       semanticFields = (
         <DvtSubstraitUnionAllAuthoringSection
           disabled={disabled}

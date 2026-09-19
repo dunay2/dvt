@@ -1,12 +1,14 @@
 /** Owned concern: hydrate a discardable authoring session from one existing canonical JOIN. */
 import { useCallback, useMemo, useState } from 'react';
-
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { resolveCanvasRelationalTreeAuthoringCandidates } from './canvasRelationalTreeAuthoringModel';
 import { resolveCanvasRelationalTreeExistingJoinDraft } from './canvasRelationalTreeExistingJoinDraft';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
-import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
+import {
+  isCanvasSetOperation,
+  type CanvasRelationalOperation,
+} from './canvasRelationalOperationChoices';
 import { appendDvtSubstraitUnionAllInput } from './canvasDvtSubstraitSetComposition';
 
 export type CanvasRelationalTreeJoinSeedHydration = Readonly<{
@@ -56,7 +58,7 @@ export function useCanvasRelationalTreeExistingJoinSeed(
           appendInputId: null,
           inputIds: input == null ? seed.inputIds : [...seed.inputIds, input.nodeId],
         });
-      } else if (seed.operation === 'union_all' && input != null) {
+      } else if (isCanvasSetOperation(seed.operation) && input != null) {
         const draft = appendDvtSubstraitUnionAllInput(seed.draft, {
           ...input,
           fields: input.fields.map((field) => ({ name: field.name, type: 'string' })),

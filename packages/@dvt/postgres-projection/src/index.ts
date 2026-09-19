@@ -132,3 +132,14 @@ export type {
 } from './substraitProjectionReadModel.js';
 export { projectDvtPostgresOutputSchemaV1 } from './dvtPostgresOutputSchema.js';
 export { selectDvtSubstraitRelation } from './substraitRelationSelection.js';
+export type {
+  DvtSubstraitSetDraft,
+  DvtSubstraitSetInspection,
+  DvtSubstraitSetOperation,
+  DvtSubstraitSetProjection,
+} from './substraitSetReadModel.js';
+export { inspectDvtSubstraitSetDraft } from './substraitSetReader.js';
+export {
+  buildDvtSetPostgresAst,
+  projectDvtSetDraftToPostgresSql,
+} from './setPostgresProjection.js';

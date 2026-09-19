@@ -15,6 +15,7 @@ import {
 import {
   resolveCanvasRelationalOperationChoices,
   resolveCanvasRelationalProjectionChoice,
+  isCanvasSetOperation,
   type CanvasRelationalOperation,
   type CanvasRelationalOperationAvailability,
   type CanvasRelationalOperationChoice,
@@ -159,6 +160,7 @@ export function resolveCanvasRelationalTreeAuthoringChoices(
     operationChoice('right_join', selectedInputs, args.readOnly, false),
     operationChoice('full_outer_join', selectedInputs, args.readOnly, false),
     operationChoice('union_all', selectedInputs, args.readOnly, unionAvailable),
+    operationChoice('union_distinct', selectedInputs, args.readOnly, unionAvailable),
   ];
 }
 
@@ -198,7 +200,7 @@ export function resolveCanvasRelationalTreeAuthoringCandidates(
             ...args,
             selectedInputIds: [first.nodeId, input.nodeId],
           }) != null);
-    } else if (args.operation === 'union_all') {
+    } else if (isCanvasSetOperation(args.operation)) {
       selectable =
         (args.joinDraft == null || inspectDvtSubstraitUnionAllDraft(args.joinDraft).ok) &&
         orderedCanvasRelationalTreeUnionAllEntry({
