@@ -1,10 +1,12 @@
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
-  createDvtSubstraitStringInnerJoinDraft,
-  encodeDvtSubstraitInnerJoinDocument,
+  createDvtSubstraitStringJoinDraft,
+  encodeDvtSubstraitJoinDocument,
+  type DvtSubstraitJoinType,
 } from './canvasDvtSubstraitJoinComposition';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
@@ -57,11 +59,15 @@ function edge(node: CanonicalNode): Pick<CanonicalEdge, 'sourceId' | 'targetId'>
   return { sourceId: node.id, targetId: 'transform-composition' };
 }
 
-function canonicalJoin(left: CanonicalNode, right: CanonicalNode): CanonicalNode {
+function canonicalJoin(
+  left: CanonicalNode,
+  right: CanonicalNode,
+  joinType: DvtSubstraitJoinType = JoinRel_JoinType.INNER
+): CanonicalNode {
   return applyDvtSubstraitSemanticDocument(
     transform(),
-    encodeDvtSubstraitInnerJoinDocument(
-      createDvtSubstraitStringInnerJoinDraft({
+    encodeDvtSubstraitJoinDocument(
+      createDvtSubstraitStringJoinDraft({
         left: {
           source: {
             nodeId: left.id,
@@ -85,6 +91,7 @@ function canonicalJoin(left: CanonicalNode, right: CanonicalNode): CanonicalNode
         leftFieldName: 'id',
         rightFieldName: 'id',
         targetNodeId: 'transform-composition',
+        joinType,
       })
     )
   );
@@ -124,6 +131,17 @@ describe('resolveCanvasRelationalCompositionTruth', () => {
         edges: [edge(orders), edge(clients)],
       })
     ).toEqual({ state: 'canonical', connectedInputCount: 2, operation: 'inner_join' });
+  });
+
+  it('projects LEFT JOIN from the canonical final JoinRel type', () => {
+    const join = canonicalJoin(orders, clients, JoinRel_JoinType.LEFT);
+    expect(
+      resolveCanvasRelationalCompositionTruth({
+        node: join,
+        nodes: [orders, clients, join],
+        edges: [edge(orders), edge(clients)],
+      })
+    ).toEqual({ state: 'canonical', connectedInputCount: 2, operation: 'left_join' });
   });
 
   it('keeps the canonical JOIN while exposing a third input as pending', () => {

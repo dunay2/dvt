@@ -15,8 +15,8 @@ import {
 } from '../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import type { CanonicalNode } from '../../src/app/types/canonical';
 import {
-  createDvtSubstraitInnerJoinDraft,
-  encodeDvtSubstraitInnerJoinDocument,
+  createDvtSubstraitJoinDraft,
+  encodeDvtSubstraitJoinDocument,
 } from '../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
 import {
   createDvtSubstraitPilotDraft,
@@ -297,8 +297,8 @@ export function buildCanvasAuthoringDraft({
       connectionId: 'warehouse-a',
       provider: 'postgres' as const,
     };
-    const semanticDocument = encodeDvtSubstraitInnerJoinDocument(
-      createDvtSubstraitInnerJoinDraft({
+    const semanticDocument = encodeDvtSubstraitJoinDocument(
+      createDvtSubstraitJoinDraft({
         left: {
           nodeId: 'source-customers',
           schema: 'public',

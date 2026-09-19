@@ -1,12 +1,15 @@
 /** Owned concern: present JOIN predicates and one explicit next-input binding. */
-import { useMemo, useState } from 'react';
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '../../components/ui/button';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import {
   inspectDvtSubstraitJoinPredicateContext,
-  type DvtSubstraitInnerJoinDraft,
+  setDvtSubstraitJoinType,
+  type DvtSubstraitJoinType,
+  type DvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import { DvtSubstraitJoinPredicateEditors } from './DvtSubstraitJoinPredicateEditors';
 import type { CanonicalNode } from '../../types/canonical';
@@ -29,9 +32,9 @@ export function CanvasRelationalTreeJoinEditor({
 }: Readonly<{
   appendInput: CanvasDvtCompositionInput | null;
   copy: CanvasRelationalTreeWorkbenchCopy;
-  draft: DvtSubstraitInnerJoinDraft;
+  draft: DvtSubstraitJoinDraft;
   onAppend: (selection: Readonly<{ leftSourceFieldId: string; rightFieldName: string }>) => void;
-  onChange: (draft: DvtSubstraitInnerJoinDraft) => void;
+  onChange: (draft: DvtSubstraitJoinDraft) => void;
   onPendingConditionChange?: (pending: boolean) => void;
   selectedRelationId: string | null;
   transformNode: CanonicalNode;
@@ -49,19 +52,22 @@ export function CanvasRelationalTreeJoinEditor({
     leftSourceFieldId: '',
     rightFieldName: '',
   });
-  if (selection.inputId !== inputId) {
+  useEffect(() => {
     setSelection({ inputId, leftSourceFieldId: '', rightFieldName: '' });
-  }
+  }, [inputId]);
+  const activeSelection =
+    selection.inputId === inputId
+      ? selection
+      : { inputId, leftSourceFieldId: '', rightFieldName: '' };
   const existingFields = outputs.map((output) => ({
     name: output.source.name,
     joinDataType: output.dataType,
     fieldId: output.source.fieldId,
   }));
   const suggestion = resolveCanvasDvtJoinFieldPair(existingFields, appendInput?.fields ?? []);
-  const manualLeft =
-    selection.inputId === inputId
-      ? existingFields.find((field) => field.fieldId === selection.leftSourceFieldId)
-      : undefined;
+  const manualLeft = existingFields.find(
+    (field) => field.fieldId === activeSelection.leftSourceFieldId
+  );
   const leftField = manualLeft ?? suggestion?.left;
   const leftSourceFieldId = leftField?.fieldId ?? '';
   const rightFields =
@@ -69,15 +75,55 @@ export function CanvasRelationalTreeJoinEditor({
       (field) => field.joinDataType != null && field.joinDataType === leftField?.joinDataType
     ) ?? [];
   const selectedRightField =
-    manualLeft != null && rightFields.some((field) => field.name === selection.rightFieldName)
-      ? selection.rightFieldName
+    manualLeft != null && rightFields.some((field) => field.name === activeSelection.rightFieldName)
+      ? activeSelection.rightFieldName
       : (resolveCanvasDvtJoinFieldPair(leftField == null ? [] : [leftField], rightFields)?.right
           .name ?? '');
   if (!inspection?.ok) return null;
+  const selectedStage = inspection.projection.joinRelations.find(
+    ({ relationId }) => relationId === selectedRelationId
+  );
 
   return (
     <div className="h-full min-h-0 space-y-3">
       <div className="h-full min-h-0" hidden={appendInput != null}>
+        {selectedStage == null ? null : (
+          <div className="mb-3 flex items-end gap-3 border-b border-(--border-subtle) pb-3">
+            <label className="block min-w-48 space-y-1 text-[11px] text-(--text-muted)">
+              <span>{copy.inspectorDvtSubstraitJoinTypeLabel}</span>
+              <select
+                data-slot="canvas-relational-tree-join-type"
+                className={selectClassName}
+                value={selectedStage.joinType}
+                onChange={(event) => {
+                  const next = Number(event.currentTarget.value) as DvtSubstraitJoinType;
+                  onChange(
+                    setDvtSubstraitJoinType({
+                      draft,
+                      joinRelationId: selectedStage.relationId,
+                      joinType: next,
+                    })
+                  );
+                }}
+              >
+                <option value={JoinRel_JoinType.INNER}>
+                  {copy.inspectorDvtSubstraitInnerJoinAction}
+                </option>
+                <option value={JoinRel_JoinType.LEFT}>
+                  {copy.inspectorDvtSubstraitLeftJoinAction}
+                </option>
+              </select>
+            </label>
+            {selectedStage.joinType === JoinRel_JoinType.LEFT ? (
+              <p
+                data-slot="canvas-relational-tree-left-join-roles"
+                className="pb-1 text-[11px] text-(--text-secondary)"
+              >
+                {copy.inspectorDvtSubstraitLeftJoinRolesHint}
+              </p>
+            ) : null}
+          </div>
+        )}
         <DvtSubstraitJoinPredicateEditors
           disabled={false}
           draft={draft}

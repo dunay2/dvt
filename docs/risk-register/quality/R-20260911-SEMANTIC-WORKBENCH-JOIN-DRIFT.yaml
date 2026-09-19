@@ -12,13 +12,19 @@ probability: Low
 mitigation:
   summary: >
     One typed Substrait expression remains authoritative for editor projection, deterministic graph
-    layout, sample rows, and PostgreSQL rendering. Unsupported operands, capability identities,
+    layout, sample rows, and PostgreSQL rendering. Each JOIN stage retains its exact admitted type;
+    LEFT output nullability follows stable field provenance through Canvas, PostgreSQL schema and
+    protected Preview/Run projection. Unsupported operands, selectors, capability identities,
     condition groups, source fields, and data types fail closed.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ED-20260911-semantic-workbench-join-composition.md
+    - docs/evidence/ED-20260919-left-join-end-to-end.md
     - apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.test.ts
     - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts
+    - packages/@dvt/postgres-projection/test/joinPostgresProjection.test.ts
   follow_up:
     - Each newly admitted operator or function needs contract, inspection, mutation, and
       target-rendering proof.
+    - RIGHT and FULL OUTER admission in issue 3308 must prove cumulative nullability across mixed
+      trees without introducing another JOIN model or workload profile.

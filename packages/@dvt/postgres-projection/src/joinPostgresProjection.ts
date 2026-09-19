@@ -1,4 +1,6 @@
 /** Owns PostgreSQL AST construction for the admitted N-input JOIN read model. */
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+
 import { DvtSubstraitPostgresProjectionError } from './dvtProjection.js';
 import {
   pgFunction,
@@ -28,8 +30,8 @@ import {
   resolveDvtSubstraitJoinUnaryFunction,
   type DvtSubstraitJoinPredicateOperand,
 } from './substraitJoinOperandReader.js';
-import { inspectDvtSubstraitNInputJoinDraft } from './substraitJoinReader.js';
-import type { DvtSubstraitInnerJoinDraft } from './substraitJoinReadModel.js';
+import { inspectDvtSubstraitJoinDraft } from './substraitJoinReader.js';
+import type { DvtSubstraitJoinDraft } from './substraitJoinReadModel.js';
 import type { DvtSubstraitNInputJoinProjection } from './substraitJoinReadModel.js';
 
 export function nInputJoinAlias(inputIndex: number): string {
@@ -38,14 +40,14 @@ export function nInputJoinAlias(inputIndex: number): string {
   return `join_source_${inputIndex + 1}`;
 }
 
-export async function projectDvtInnerJoinDraftToPostgresSql(
-  draft: DvtSubstraitInnerJoinDraft
+export async function projectDvtJoinDraftToPostgresSql(
+  draft: DvtSubstraitJoinDraft
 ): Promise<Readonly<{ sql: string; projection: DvtSubstraitNInputJoinProjection }>> {
-  const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+  const inspection = inspectDvtSubstraitJoinDraft(draft);
   if (!inspection.ok) {
     throw new DvtSubstraitPostgresProjectionError(
       'unsupported_shape',
-      'PostgreSQL projection requires an admitted N-input INNER JOIN shape.'
+      'PostgreSQL projection requires an admitted N-input JOIN shape.'
     );
   }
   return {
@@ -64,6 +66,15 @@ export const POSTGRES_JOIN_COMPARISON: Readonly<
   lt: '<',
   lte: '<=',
 };
+
+function postgresJoinType(joinType: number): 'JOIN_INNER' | 'JOIN_LEFT' {
+  if (joinType === JoinRel_JoinType.INNER) return 'JOIN_INNER';
+  if (joinType === JoinRel_JoinType.LEFT) return 'JOIN_LEFT';
+  throw new DvtSubstraitPostgresProjectionError(
+    'unsupported_shape',
+    'The recursive JOIN contains an unsupported JOIN type.'
+  );
+}
 
 export function buildNInputJoinPostgresAst(
   projection: DvtSubstraitNInputJoinProjection
@@ -84,7 +95,7 @@ export function buildNInputJoinPostgresAst(
     if (binding == null) {
       throw new DvtSubstraitPostgresProjectionError(
         'unsupported_shape',
-        'The recursive INNER JOIN references a field outside its admitted inputs.'
+        'The recursive JOIN references a field outside its admitted inputs.'
       );
     }
     return binding;
@@ -102,7 +113,7 @@ export function buildNInputJoinPostgresAst(
       if (capability == null) {
         throw new DvtSubstraitPostgresProjectionError(
           'unsupported_shape',
-          'The recursive INNER JOIN contains an unsupported operand function.'
+          'The recursive JOIN contains an unsupported operand function.'
         );
       }
       return pgFunction(capability.name, predicateOperand(operand.input));
@@ -116,10 +127,14 @@ export function buildNInputJoinPostgresAst(
   };
 
   const firstInput = projection.inputs[0];
-  if (firstInput == null || projection.joins.length !== projection.inputs.length - 1) {
+  if (
+    firstInput == null ||
+    projection.joins.length !== projection.inputs.length - 1 ||
+    projection.joinRelations.length !== projection.joins.length
+  ) {
     throw new DvtSubstraitPostgresProjectionError(
       'unsupported_shape',
-      'The recursive INNER JOIN tree does not have one predicate per appended input.'
+      'The recursive JOIN tree does not have one typed predicate per appended input.'
     );
   }
   let joinedInputs = pgRangeVar({
@@ -130,6 +145,7 @@ export function buildNInputJoinPostgresAst(
   for (let inputIndex = 1; inputIndex < projection.inputs.length; inputIndex += 1) {
     const input = projection.inputs[inputIndex]!;
     const predicate = projection.joins[inputIndex - 1]!;
+    const joinRelation = projection.joinRelations[inputIndex - 1]!;
     const conditionExpression = reduceDvtSubstraitJoinConditions({
       conditions: predicate.conditions,
       comparison: (condition) =>
@@ -147,7 +163,7 @@ export function buildNInputJoinPostgresAst(
     });
     joinedInputs = {
       JoinExpr: {
-        jointype: 'JOIN_INNER',
+        jointype: postgresJoinType(joinRelation.joinType),
         larg: joinedInputs,
         rarg: pgRangeVar({
           schema: input.schema,

@@ -1,4 +1,5 @@
 /** Owns decoding and persistence of canonical DVT Transform shapes. */
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { DVT_TRANSFORM_AUTHORING_MODE, DvtTransformResultTargetV1Schema } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
@@ -10,9 +11,10 @@ import type {
 import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
 import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstraitAggregateWindow';
 import {
-  decodeDvtSubstraitInnerJoinDocument,
-  encodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitInnerJoinAcceptedDraft,
+  decodeDvtSubstraitJoinDocument,
+  encodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinAcceptedDraft,
+  inspectDvtSubstraitJoinPredicateContext,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   decodeDvtSubstraitPilotDocument,
@@ -85,9 +87,18 @@ export function createDvtTransformAuthoringMetadata(node: CanonicalNode): Transf
   ) {
     return fromDraft(authority.mode, disposition, 'pilot', pilot);
   }
-  const join = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
-  if (inspectDvtSubstraitInnerJoinAcceptedDraft(join).ok) {
-    return fromDraft(authority.mode, disposition, 'inner_join', join);
+  const join = decodeDvtSubstraitJoinDocument(authority.semanticDocument);
+  if (inspectDvtSubstraitJoinAcceptedDraft(join).ok) {
+    const finalJoinType =
+      inspectDvtSubstraitJoinPredicateContext(join)?.inspection.projection.joinRelations.at(
+        -1
+      )?.joinType;
+    return fromDraft(
+      authority.mode,
+      disposition,
+      finalJoinType === JoinRel_JoinType.LEFT ? 'left_join' : 'inner_join',
+      join
+    );
   }
   const unionAll = decodeDvtSubstraitUnionAllDocument(authority.semanticDocument);
   return fromDraft(authority.mode, disposition, 'union_all', unionAll);
@@ -149,8 +160,8 @@ export function applyDvtTransformAuthoringMetadata(
       ? inspectDvtSubstraitFilter(draft) == null
         ? encodeDvtSubstraitProjectionDocument(draft)
         : encodeDvtSubstraitFilterDocument(draft)
-      : metadata.shape === 'inner_join'
-        ? encodeDvtSubstraitInnerJoinDocument(draft)
+      : metadata.shape === 'inner_join' || metadata.shape === 'left_join'
+        ? encodeDvtSubstraitJoinDocument(draft)
         : metadata.shape === 'union_all'
           ? encodeDvtSubstraitUnionAllDocument(draft)
           : encodeDvtSubstraitPilotDocument(draft);

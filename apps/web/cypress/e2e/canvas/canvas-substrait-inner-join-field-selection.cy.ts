@@ -1,8 +1,8 @@
 /** Owned concern: prove Substrait INNER JOIN field authoring through the governed Canvas draft rail. */
 import {
-  decodeDvtSubstraitInnerJoinDocument,
+  decodeDvtSubstraitJoinDocument,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
-  inspectDvtSubstraitNInputJoinDraft,
+  inspectDvtSubstraitJoinDraft,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { dragCanvasNodeByViewportDelta } from '../../support/canvasGraphAuthoring';
@@ -90,16 +90,16 @@ function proveCardOutputControls(sourceCount: number): void {
   let position: string;
   let originalRows: HTMLElement[];
   let originalToggle: HTMLElement;
-  let baseline: ReturnType<typeof inspectDvtSubstraitNInputJoinDraft>;
-  const inspectSave = (): ReturnType<typeof inspectDvtSubstraitNInputJoinDraft> => {
+  let baseline: ReturnType<typeof inspectDvtSubstraitJoinDraft>;
+  const inspectSave = (): ReturnType<typeof inspectDvtSubstraitJoinDraft> => {
     expect(getE2eApiCalls('/workspace/graph/draft').at(-1)?.method).to.equal('GET');
     const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
       CanvasDraftSaveRequestBody | undefined;
     const node = saved?.draft.nodes.find((candidate) => candidate.id === 'join-transform');
     const authoring = node?.metadata?.transformAuthoring as
       { semanticDocument?: unknown } | undefined;
-    return inspectDvtSubstraitNInputJoinDraft(
-      decodeDvtSubstraitInnerJoinDocument(authoring?.semanticDocument)
+    return inspectDvtSubstraitJoinDraft(
+      decodeDvtSubstraitJoinDocument(authoring?.semanticDocument)
     );
   };
   const expectSavedOrder = (names: string[]): void => {
@@ -191,7 +191,7 @@ function proveEmptyJoinOutput(sourceCount: number): void {
   const card = '.react-flow__node[data-id="join-transform"]';
   const controls = `${card} [data-slot="graph-node-column-output-state"]`;
   const stageEdges = '.react-flow__edge:not(.react-flow__edge-columnLineage)';
-  let baseline: ReturnType<typeof inspectDvtSubstraitNInputJoinDraft>;
+  let baseline: ReturnType<typeof inspectDvtSubstraitJoinDraft>;
   const assertSaved = (outputCount?: number): void => {
     cy.wrap(null).should(() => {
       expect(getE2eApiCalls('/workspace/graph/draft').at(-1)?.method).to.equal('GET');
@@ -202,8 +202,8 @@ function proveEmptyJoinOutput(sourceCount: number): void {
       );
       const authoring = saved.draft.nodes.find((node) => node.id === 'join-transform')?.metadata
         ?.transformAuthoring as { semanticDocument?: unknown };
-      const inspected = inspectDvtSubstraitNInputJoinDraft(
-        decodeDvtSubstraitInnerJoinDocument(authoring.semanticDocument)
+      const inspected = inspectDvtSubstraitJoinDraft(
+        decodeDvtSubstraitJoinDocument(authoring.semanticDocument)
       );
       expect(inspected.ok).to.equal(true);
       if (!inspected.ok) return;
@@ -324,13 +324,13 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
   it('edits a persisted JOIN predicate again after reload without replacing stable identities', () => {
     let fieldIds: string[] = [];
     let relationIds: string[] = [];
-    const inspectLatestSave = (): ReturnType<typeof inspectDvtSubstraitNInputJoinDraft> => {
+    const inspectLatestSave = (): ReturnType<typeof inspectDvtSubstraitJoinDraft> => {
       const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)
         ?.body as CanvasDraftSaveRequestBody;
       const authoring = saved.draft.nodes.find((node) => node.id === 'join-transform')?.metadata
         ?.transformAuthoring as { semanticDocument?: unknown };
-      return inspectDvtSubstraitNInputJoinDraft(
-        decodeDvtSubstraitInnerJoinDocument(authoring.semanticDocument)
+      return inspectDvtSubstraitJoinDraft(
+        decodeDvtSubstraitJoinDocument(authoring.semanticDocument)
       );
     };
 
@@ -419,7 +419,7 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
       const transformAuthoring = savedTransform?.metadata?.transformAuthoring as
         { semanticDocument?: unknown } | undefined;
       const inspection = inspectDvtSubstraitInnerJoinGroupedWindowDraft(
-        decodeDvtSubstraitInnerJoinDocument(transformAuthoring?.semanticDocument)
+        decodeDvtSubstraitJoinDocument(transformAuthoring?.semanticDocument)
       );
 
       expect(
@@ -556,7 +556,7 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
       const transformAuthoring = savedTransform?.metadata?.transformAuthoring as
         { semanticDocument?: unknown } | undefined;
       const inspection = inspectDvtSubstraitInnerJoinGroupedWindowDraft(
-        decodeDvtSubstraitInnerJoinDocument(transformAuthoring?.semanticDocument)
+        decodeDvtSubstraitJoinDocument(transformAuthoring?.semanticDocument)
       );
 
       expect(

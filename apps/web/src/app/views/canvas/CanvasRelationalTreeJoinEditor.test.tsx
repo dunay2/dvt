@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -13,7 +14,7 @@ import {
 } from './canvasDvtInitialJoinModel';
 import {
   inspectDvtSubstraitJoinPredicateContext,
-  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import type { CanonicalNode } from '../../types/canonical';
 
@@ -69,7 +70,7 @@ const transform: CanonicalNode = {
   metadata: {},
 };
 
-function makeDraft(left = client, right = orders): DvtSubstraitInnerJoinDraft {
+function makeDraft(left = client, right = orders): DvtSubstraitJoinDraft {
   const pair = resolveCanvasDvtInitialJoinPairForInputs(left, right);
   expect(pair).not.toBeNull();
   const draft = createCanvasDvtInitialJoinDraft([left, right], pair!, transform.id);
@@ -101,7 +102,8 @@ describe('JOIN append field defaults', () => {
 
   function renderEditor(
     appendInput: CanvasDvtCompositionInput | null,
-    draft = baselineDraft
+    draft = baselineDraft,
+    selectedRelationId: string | null = null
   ): void {
     act(() =>
       root.render(
@@ -111,12 +113,35 @@ describe('JOIN append field defaults', () => {
           copy={resolveCanvasViewCopy('en')}
           onAppend={onAppend}
           onChange={onChange}
-          selectedRelationId={null}
+          selectedRelationId={selectedRelationId}
           transformNode={transform}
         />
       )
     );
   }
+
+  it('changes the selected stage to LEFT and makes L/R null-extension roles explicit', () => {
+    const inspection = inspectDvtSubstraitJoinPredicateContext(baselineDraft)!.inspection;
+    const relationId = inspection.projection.joinRelations[0]!.relationId;
+    renderEditor(null, baselineDraft, relationId);
+    const select = container.querySelector<HTMLSelectElement>(
+      '[data-slot="canvas-relational-tree-join-type"]'
+    )!;
+
+    act(() => {
+      select.value = String(JoinRel_JoinType.LEFT);
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    expect(onChange).toHaveBeenCalledOnce();
+    const changed = onChange.mock.calls[0]![0];
+    const changedInspection = inspectDvtSubstraitJoinPredicateContext(changed)!.inspection;
+    expect(changedInspection.projection.joinRelations[0]?.joinType).toBe(JoinRel_JoinType.LEFT);
+    renderEditor(null, changed, relationId);
+    expect(
+      container.querySelector('[data-slot="canvas-relational-tree-left-join-roles"]')?.textContent
+    ).toBe('L preserved · R nullable');
+  });
 
   function changeField(slot: 'existing' | 'connected', text: string): void {
     const select = container.querySelector<HTMLSelectElement>(

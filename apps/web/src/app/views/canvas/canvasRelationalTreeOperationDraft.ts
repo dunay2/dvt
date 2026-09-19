@@ -20,11 +20,12 @@ export function createCanvasRelationalTreeOperationDraft(
   if (args.operation === 'projection')
     return createCanvasRelationalTreeProjectionDraft({ input, targetNodeId: args.targetNodeId });
   if (rightInputId == null) return null;
-  if (args.operation === 'inner_join')
+  if (args.operation === 'inner_join' || args.operation === 'left_join')
     return createCanvasRelationalTreeInitialJoinDraft({
       ...args,
       leftInputId: input.nodeId,
       rightInputId,
+      operation: args.operation,
     });
   const inputs = args.selectedInputIds.map((id) =>
     args.inputs.find((candidate) => candidate.nodeId === id)

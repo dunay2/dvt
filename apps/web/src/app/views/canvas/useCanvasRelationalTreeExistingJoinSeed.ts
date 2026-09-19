@@ -5,12 +5,12 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { resolveCanvasRelationalTreeAuthoringCandidates } from './canvasRelationalTreeAuthoringModel';
 import { resolveCanvasRelationalTreeExistingJoinDraft } from './canvasRelationalTreeExistingJoinDraft';
-import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import { appendDvtSubstraitUnionAllInput } from './canvasDvtSubstraitSetComposition';
 
 export type CanvasRelationalTreeJoinSeedHydration = Readonly<{
-  draft: DvtSubstraitInnerJoinDraft;
+  draft: DvtSubstraitJoinDraft;
   inputIds: readonly string[];
   appendInputId: string | null;
   operation: CanvasRelationalOperation;
@@ -27,7 +27,7 @@ export function useCanvasRelationalTreeExistingJoinSeed(
   }>
 ) {
   const { edges, inputs, nodes, onHydrate, targetNodeId, transformNode } = args;
-  const [baselineDraft, setBaselineDraft] = useState<DvtSubstraitInnerJoinDraft | null>(null);
+  const [baselineDraft, setBaselineDraft] = useState<DvtSubstraitJoinDraft | null>(null);
   const seed = useMemo(
     () => resolveCanvasRelationalTreeExistingJoinDraft({ transformNode, nodes, edges }),
     [edges, nodes, transformNode]

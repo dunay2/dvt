@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY,
+  DVT_POSTGRES_JOIN_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
@@ -74,7 +75,7 @@ describe('DVT terminal Transform operational workload contract', () => {
       },
       targetProjection: {
         ...workload.targetProjection,
-        profileId: 'dvt.vtx2.postgres.inner-join.v1',
+        profileId: DVT_POSTGRES_JOIN_PROFILE_ID,
       },
     };
 

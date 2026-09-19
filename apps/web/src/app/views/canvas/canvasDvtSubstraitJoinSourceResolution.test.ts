@@ -4,12 +4,12 @@ import { describe, expect, it } from 'vitest';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { applyDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
 import {
-  appendDvtSubstraitInnerJoinInput,
-  createDvtSubstraitInnerJoinDraft,
-  inspectDvtSubstraitNInputJoinDraft,
+  appendDvtSubstraitJoinInput,
+  createDvtSubstraitJoinDraft,
+  inspectDvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
-  resolveDvtSubstraitInnerJoinEntry,
+  resolveDvtSubstraitJoinEntry,
   resolveDvtSubstraitJoinAppendCandidates,
 } from './canvasDvtSubstraitJoinSourceResolution';
 
@@ -46,7 +46,7 @@ function sourceNode(args: {
 
 function joinSource(
   node: CanonicalNode
-): Parameters<typeof createDvtSubstraitInnerJoinDraft>[0]['left'] {
+): Parameters<typeof createDvtSubstraitJoinDraft>[0]['left'] {
   const metadata = node.metadata!;
   return {
     nodeId: node.id,
@@ -61,7 +61,7 @@ describe('canvasDvtSubstraitJoinSourceResolution', () => {
     targetNode: CanonicalNode;
     nodes: CanonicalNode[];
     edges: CanonicalEdge[];
-    draft: ReturnType<typeof createDvtSubstraitInnerJoinDraft>;
+    draft: ReturnType<typeof createDvtSubstraitJoinDraft>;
   } {
     const customers = sourceNode({
       id: 'customers',
@@ -93,7 +93,7 @@ describe('canvasDvtSubstraitJoinSourceResolution', () => {
       status: 'idle',
       tags: [],
     };
-    const draft = createDvtSubstraitInnerJoinDraft({
+    const draft = createDvtSubstraitJoinDraft({
       left: joinSource(customers),
       right: joinSource(orders),
       targetNodeId: target.id,
@@ -122,7 +122,7 @@ describe('canvasDvtSubstraitJoinSourceResolution', () => {
 
   function persistDraft(
     targetNode: CanonicalNode,
-    draft: ReturnType<typeof createDvtSubstraitInnerJoinDraft>
+    draft: ReturnType<typeof createDvtSubstraitJoinDraft>
   ): CanonicalNode {
     return applyDvtNodeAuthoringMetadata(targetNode, {
       kind: 'transform',
@@ -192,9 +192,9 @@ describe('canvasDvtSubstraitJoinSourceResolution', () => {
     };
     const before = structuredClone(args);
 
-    expect(resolveDvtSubstraitInnerJoinEntry(args)).toEqual(expected);
+    expect(resolveDvtSubstraitJoinEntry(args)).toEqual(expected);
     expect(
-      resolveDvtSubstraitInnerJoinEntry({
+      resolveDvtSubstraitJoinEntry({
         ...args,
         nodes: [...args.nodes].reverse(),
         edges: [...args.edges].reverse(),
@@ -206,7 +206,7 @@ describe('canvasDvtSubstraitJoinSourceResolution', () => {
   it('rejects binary JOIN graph ambiguity and incompatible source connections', () => {
     const ambiguous = fixture();
     ambiguous.edges = ambiguous.edges.filter((edge) => edge.sourceId !== 'shipments');
-    expect(resolveDvtSubstraitInnerJoinEntry(ambiguous)).toBeNull();
+    expect(resolveDvtSubstraitJoinEntry(ambiguous)).toBeNull();
 
     const incompatible = binaryFixture();
     incompatible.nodes[1] = sourceNode({
@@ -215,52 +215,46 @@ describe('canvasDvtSubstraitJoinSourceResolution', () => {
       connectionId: 'warehouse-other',
       columns: ['order_id', 'customer_id'],
     });
-    expect(resolveDvtSubstraitInnerJoinEntry(incompatible)).toBeNull();
+    expect(resolveDvtSubstraitJoinEntry(incompatible)).toBeNull();
   });
 
   it('requires persisted binary authority to match the connected graph identities', () => {
     const args = binaryFixture();
     args.targetNode = persistDraft(args.targetNode, args.draft);
 
-    expect(resolveDvtSubstraitInnerJoinEntry({ ...args, requirePersistedAuthority: true })).toEqual(
-      {
-        left: joinSource(args.nodes[0]!),
-        right: joinSource(args.nodes[1]!),
-        targetNodeId: 'join',
-      }
-    );
+    expect(resolveDvtSubstraitJoinEntry({ ...args, requirePersistedAuthority: true })).toEqual({
+      left: joinSource(args.nodes[0]!),
+      right: joinSource(args.nodes[1]!),
+      targetNodeId: 'join',
+    });
 
     args.nodes[1] = sourceNode({
       id: 'orders',
       table: 'orders_v2',
       columns: ['order_id', 'customer_id'],
     });
-    expect(
-      resolveDvtSubstraitInnerJoinEntry({ ...args, requirePersistedAuthority: true })
-    ).toBeNull();
+    expect(resolveDvtSubstraitJoinEntry({ ...args, requirePersistedAuthority: true })).toBeNull();
   });
 
   it('does not admit valid N-input JOIN authority as the historical binary entry', () => {
     const args = binaryFixture();
-    const inspection = inspectDvtSubstraitNInputJoinDraft(args.draft);
+    const inspection = inspectDvtSubstraitJoinDraft(args.draft);
     if (!inspection.ok) throw new Error('Expected valid binary JOIN fixture.');
     const leftCustomerId = inspection.projection.outputs.find(
       (output) => output.source.inputIndex === 0 && output.source.name === 'customer_id'
     )?.source.fieldId;
     if (leftCustomerId == null) throw new Error('Expected customer_id source identity.');
     const payment = args.nodes[2]!;
-    const nInputDraft = appendDvtSubstraitInnerJoinInput(args.draft, {
+    const nInputDraft = appendDvtSubstraitJoinInput(args.draft, {
       source: joinSource(payment),
       fields: ['payment_id', 'customer_id'],
       predicate: { leftSourceFieldId: leftCustomerId, rightFieldName: 'customer_id' },
       selectedFields: ['payment_id'],
     });
-    expect(inspectDvtSubstraitNInputJoinDraft(nInputDraft).ok).toBe(true);
+    expect(inspectDvtSubstraitJoinDraft(nInputDraft).ok).toBe(true);
     args.targetNode = persistDraft(args.targetNode, nInputDraft);
 
-    expect(
-      resolveDvtSubstraitInnerJoinEntry({ ...args, requirePersistedAuthority: true })
-    ).toBeNull();
+    expect(resolveDvtSubstraitJoinEntry({ ...args, requirePersistedAuthority: true })).toBeNull();
   });
 
   it.each([

@@ -8,10 +8,10 @@ import { sha256Hex } from '@dvt/crypto';
 import { DvtSubstraitPostgresProjectionError } from './dvtProjection.js';
 import {
   flattenNInputJoinTree,
-  hasCurrentInnerJoinSemanticHash,
-  hasUniqueInnerJoinSidecarIdentity,
+  hasCurrentJoinSemanticHash,
+  hasUniqueJoinSidecarIdentity,
 } from './substraitJoinInspectionGuards.js';
-import type { DvtSubstraitInnerJoinDraft } from './substraitJoinReadModel.js';
+import type { DvtSubstraitJoinDraft } from './substraitJoinReadModel.js';
 
 function reject(): never {
   throw new DvtSubstraitPostgresProjectionError(
@@ -62,11 +62,10 @@ function descendants(rel: Rel): Rel[] {
 }
 
 export function selectDvtSubstraitRelation(
-  draft: DvtSubstraitInnerJoinDraft,
+  draft: DvtSubstraitJoinDraft,
   relationId: string
-): DvtSubstraitInnerJoinDraft {
-  if (!hasUniqueInnerJoinSidecarIdentity(draft) || !hasCurrentInnerJoinSemanticHash(draft))
-    reject();
+): DvtSubstraitJoinDraft {
+  if (!hasUniqueJoinSidecarIdentity(draft) || !hasCurrentJoinSemanticHash(draft)) reject();
   const binding = draft.sidecar.relations.find((relation) => relation.relationId === relationId);
   if (binding == null || draft.plan.relations.length !== 1) reject();
   const plan = clone(PlanSchema, draft.plan);

@@ -1,4 +1,5 @@
 /** Owned concern: derive relational-composition state from graph topology and canonical semantics. */
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 
 import type {
@@ -8,8 +9,9 @@ import type {
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
 import {
-  decodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitInnerJoinAcceptedDraft,
+  decodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinAcceptedDraft,
+  inspectDvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import { hasSameConnectedSourceRef } from './canvasDvtSubstraitJoinSourceResolution';
 import {
@@ -31,10 +33,15 @@ function resolveCanonicalOperation(
   semanticDocument: unknown
 ): CanvasRelationalCompositionOperation | null {
   try {
-    const join = inspectDvtSubstraitInnerJoinAcceptedDraft(
-      decodeDvtSubstraitInnerJoinDocument(semanticDocument)
-    );
-    if (join.ok) return 'inner_join';
+    const draft = decodeDvtSubstraitJoinDocument(semanticDocument);
+    const join = inspectDvtSubstraitJoinAcceptedDraft(draft);
+    if (join.ok) {
+      const structure = inspectDvtSubstraitJoinDraft(draft);
+      return structure.ok &&
+        structure.projection.joinRelations.at(-1)?.joinType === JoinRel_JoinType.LEFT
+        ? 'left_join'
+        : 'inner_join';
+    }
   } catch {
     // The same canonical document may represent another admitted relation shape.
   }

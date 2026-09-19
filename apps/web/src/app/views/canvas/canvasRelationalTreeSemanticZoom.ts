@@ -1,6 +1,6 @@
 /** Owned concern: reuse canonical scalar projections for read-only relational semantic zoom. */
 import type { CanonicalNode } from '../../types/canonical';
-import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
@@ -13,7 +13,7 @@ import type { CanvasRelationalTreeNodeSize } from './canvasRelationalTreeGeometr
 export const CANVAS_RELATIONAL_SEMANTIC_ZOOM = 1.2;
 export type CanvasRelationalSemanticContext = Readonly<{
   transformNode: CanonicalNode;
-  draft?: DvtSubstraitInnerJoinDraft;
+  draft?: DvtSubstraitJoinDraft;
 }>;
 
 export function projectCanvasRelationalTreeSemanticZoom(

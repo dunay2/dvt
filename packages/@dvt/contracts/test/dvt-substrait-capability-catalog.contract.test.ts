@@ -111,6 +111,25 @@ describe('DVT Substrait capability catalog V1', () => {
     });
   });
 
+  it('admits LEFT JOIN through the canonical capability catalog', () => {
+    const leftJoin = findCapability(
+      buildDvtSubstraitStandardCapabilityId('relation', {
+        sourceKind: 'core',
+        message: 'substrait.JoinRel',
+        selector: 'JoinType.JOIN_TYPE_LEFT',
+      })
+    );
+
+    expect(leftJoin).toMatchObject({
+      profileStatus: 'supported-profile',
+      admission: {
+        productUseCaseRef: 'dvt:#3307',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+  });
+
   it.each([
     ['functions_boolean', 'and', 'dvt:#3087'],
     ['functions_boolean', 'or', 'dvt:#3087'],

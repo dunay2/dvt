@@ -23,8 +23,8 @@ import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAg
 import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstraitAggregateWindow';
 import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
 import {
-  decodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitInnerJoinAcceptedDraft,
+  decodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinAcceptedDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   decodeDvtSubstraitUnionAllDocument,
@@ -268,8 +268,8 @@ function projectCanvasNodePresentationTruthInternal(
                     if (windowInspection.ok) {
                       substraitOutputs = windowInspection.projection.outputs;
                     } else {
-                      const joinInspection = inspectDvtSubstraitInnerJoinAcceptedDraft(
-                        decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+                      const joinInspection = inspectDvtSubstraitJoinAcceptedDraft(
+                        decodeDvtSubstraitJoinDocument(authority.semanticDocument)
                       );
                       if (joinInspection.ok) {
                         const targetNodeId =

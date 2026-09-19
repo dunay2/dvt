@@ -3,22 +3,20 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
-import {
-  createCanvasRelationalTreeNodeDraft,
-  createCanvasRelationalTreeUnionAllDraft,
-} from './canvasRelationalTreeAuthoringModel';
+import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
+import { createCanvasRelationalTreeUnionAllDraft } from './canvasRelationalTreeUnionAuthoring';
 import {
   projectCanvasRelationalTree,
   type CanvasRelationalTreeProjection,
 } from './canvasRelationalTreeProjection';
 import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
-import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 
 export function projectCanvasRelationalTreeAuthoringDraft(
   args: Readonly<{
     edges: readonly CanonicalEdge[];
     inputs: readonly CanvasDvtCompositionInput[];
-    joinDraft: DvtSubstraitInnerJoinDraft | null;
+    joinDraft: DvtSubstraitJoinDraft | null;
     nodes: readonly CanonicalNode[];
     operation: CanvasRelationalOperation | null;
     selectedInputIds: readonly string[];
@@ -38,7 +36,10 @@ export function projectCanvasRelationalTreeAuthoringDraft(
                 targetNodeId: args.transformNode.id,
               });
         })()
-      : args.joinDraft != null || args.operation === 'inner_join' || args.operation === 'projection'
+      : args.joinDraft != null ||
+          args.operation === 'inner_join' ||
+          args.operation === 'left_join' ||
+          args.operation === 'projection'
         ? args.joinDraft
         : args.operation === 'union_all'
           ? createCanvasRelationalTreeUnionAllDraft({

@@ -15,7 +15,7 @@ import { DvtSubstraitProfileRefV1Schema } from './DvtSubstraitProfile.v1.js';
 export const DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY =
   'executor.dvt-postgres-operational-workload' as const;
 export const DVT_POSTGRES_PROJECT_REL_PROFILE_ID = 'dvt.vtx2.postgres.project-rel.v1' as const;
-export const DVT_POSTGRES_INNER_JOIN_PROFILE_ID = 'dvt.vtx2.postgres.inner-join.v1' as const;
+export const DVT_POSTGRES_JOIN_PROFILE_ID = 'dvt.vtx2.postgres.join.v1' as const;
 export const DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY = 'pgsql-deparser@16.1.1' as const;
 
 const NonBlankStringSchema = z
@@ -47,7 +47,7 @@ export const DvtOperationalWorkloadSemanticRefSchema = z
   .strict();
 export const DvtOperationalTargetProjectionRefSchema = z
   .object({
-    profileId: z.enum([DVT_POSTGRES_PROJECT_REL_PROFILE_ID, DVT_POSTGRES_INNER_JOIN_PROFILE_ID]),
+    profileId: z.enum([DVT_POSTGRES_PROJECT_REL_PROFILE_ID, DVT_POSTGRES_JOIN_PROFILE_ID]),
     toolIdentity: z.literal(DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY),
     semanticPlanSha256: DvtOperationalWorkloadSha256Schema,
     artifact: StepArtifactRefSchema.extend({ artifactKind: z.literal('compiled-sql') }).strict(),

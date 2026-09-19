@@ -55,6 +55,7 @@ describe('resolveCanvasRelationalOperationChoices', () => {
   it('separates a pending JOIN predicate from an available schema-compatible UNION ALL', () => {
     expect(availability({ unionAllAvailable: true })).toEqual({
       inner_join: 'needs-predicate',
+      left_join: 'needs-predicate',
       union_all: 'available',
     });
   });
@@ -62,12 +63,14 @@ describe('resolveCanvasRelationalOperationChoices', () => {
   it('reports schema alignment instead of offering an incompatible UNION ALL', () => {
     expect(availability({})).toEqual({
       inner_join: 'needs-predicate',
+      left_join: 'needs-predicate',
       union_all: 'needs-schema-alignment',
     });
   });
 
   it('offers INNER JOIN when a valid predicate proposal is already available', () => {
     expect(availability({ predicateAvailable: true }).inner_join).toBe('available');
+    expect(availability({ predicateAvailable: true }).left_join).toBe('available');
   });
 
   it('keeps target readiness separate from semantic admission', () => {
@@ -80,6 +83,7 @@ describe('resolveCanvasRelationalOperationChoices', () => {
       })
     ).toEqual({
       inner_join: 'target-unavailable',
+      left_join: 'target-unavailable',
       union_all: 'target-unavailable',
     });
   });
@@ -117,6 +121,7 @@ describe('resolveCanvasRelationalOperationChoices', () => {
   it('projects read-only state over otherwise available operations', () => {
     expect(availability({ readOnly: true, unionAllAvailable: true })).toEqual({
       inner_join: 'read-only',
+      left_join: 'read-only',
       union_all: 'read-only',
     });
   });

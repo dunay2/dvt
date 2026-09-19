@@ -4,19 +4,17 @@ import { useCallback } from 'react';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
-import {
-  createCanvasRelationalTreeNodeDraft,
-  createCanvasRelationalTreeUnionAllDraft,
-} from './canvasRelationalTreeAuthoringModel';
+import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
+import { createCanvasRelationalTreeUnionAllDraft } from './canvasRelationalTreeUnionAuthoring';
 import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
-import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 
 export function useCanvasRelationalTreeApplyCommand(args: {
   authoring?: CanvasRelationalTreeAuthoringContract;
   editable: boolean;
   edges: readonly CanonicalEdge[];
-  joinDraft: DvtSubstraitInnerJoinDraft | null;
+  joinDraft: DvtSubstraitJoinDraft | null;
   inputs: readonly CanvasDvtCompositionInput[];
   nodes: readonly CanonicalNode[];
   operation: CanvasRelationalOperation | null;
@@ -54,7 +52,10 @@ export function useCanvasRelationalTreeApplyCommand(args: {
                   targetNodeId: transformNode.id,
                 });
           })()
-        : joinDraft != null || operation === 'inner_join' || operation === 'projection'
+        : joinDraft != null ||
+            operation === 'inner_join' ||
+            operation === 'left_join' ||
+            operation === 'projection'
           ? joinDraft
           : createCanvasRelationalTreeUnionAllDraft({
               edges,

@@ -8,7 +8,7 @@ import {
   resolveCanvasRelationalTreeAuthoringCandidates,
   resolveCanvasRelationalTreeAuthoringChoices,
 } from './canvasRelationalTreeAuthoringModel';
-import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 
 export function useCanvasRelationalTreeAuthoringOptions(
   args: Readonly<{
@@ -16,7 +16,7 @@ export function useCanvasRelationalTreeAuthoringOptions(
     edges: readonly CanonicalEdge[];
     enabled: boolean;
     inputs: readonly CanvasDvtCompositionInput[];
-    joinDraft: DvtSubstraitInnerJoinDraft | null;
+    joinDraft: DvtSubstraitJoinDraft | null;
     nodes: readonly CanonicalNode[];
     operation: CanvasRelationalOperation | null;
     selectedInputIds: readonly string[];

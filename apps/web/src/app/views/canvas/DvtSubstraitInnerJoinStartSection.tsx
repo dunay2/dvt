@@ -1,4 +1,5 @@
-/** Owned concern: author one canonical initial INNER JOIN before explicit Apply. */
+/** Owned concern: author one canonical initial JOIN before explicit Apply. */
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { useMemo, useState } from 'react';
 
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
@@ -15,10 +16,11 @@ import {
 } from './canvasDvtInitialJoinModel';
 import {
   addDvtSubstraitJoinPredicateCondition,
-  inspectDvtSubstraitNInputJoinDraft,
+  inspectDvtSubstraitJoinDraft,
   removeDvtSubstraitJoinPredicateCondition,
   updateDvtSubstraitJoinPredicateCondition,
-  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinType,
+  type DvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import { canvasViewCopy } from './copy';
 import { SemanticWorkbenchJoinConditionEditor } from './SemanticWorkbenchJoinConditionEditor';
@@ -30,13 +32,15 @@ export function DvtSubstraitInnerJoinStartSection({
   disabled,
   inputs,
   initialSelection,
+  joinType = JoinRel_JoinType.INNER,
   onApply,
   onCancel,
 }: Readonly<{
   disabled: boolean;
   inputs: readonly CanvasDvtCompositionInput[];
   initialSelection?: CanvasDvtInitialJoinSelection;
-  onApply: (draft: DvtSubstraitInnerJoinDraft) => void;
+  joinType?: DvtSubstraitJoinType;
+  onApply: (draft: DvtSubstraitJoinDraft) => void;
   onCancel: () => void;
 }>): JSX.Element | null {
   const availableInputs = useMemo(() => resolveCanvasDvtInitialJoinInputs(inputs), [inputs]);
@@ -48,15 +52,17 @@ export function DvtSubstraitInnerJoinStartSection({
     leftNodeId: initialPair?.leftNodeId ?? '',
     rightNodeId: initialPair?.rightNodeId ?? '',
   }));
-  const targetNodeId = initialSelection?.targetNodeId ?? 'pending-inner-join';
+  const targetNodeId =
+    initialSelection?.targetNodeId ??
+    (joinType === JoinRel_JoinType.LEFT ? 'pending-left-join' : 'pending-inner-join');
   const [draft, setDraft] = useState(() =>
     initialPair == null
       ? null
-      : createCanvasDvtInitialJoinDraft(availableInputs, initialPair, targetNodeId)
+      : createCanvasDvtInitialJoinDraft(availableInputs, initialPair, targetNodeId, joinType)
   );
   if (availableInputs.length < 2) return null;
 
-  const inspection = draft == null ? null : inspectDvtSubstraitNInputJoinDraft(draft);
+  const inspection = draft == null ? null : inspectDvtSubstraitJoinDraft(draft);
   const joinRelation = inspection?.ok ? inspection.projection.joinRelations[0] : undefined;
   const predicate = inspection?.ok ? inspection.projection.joins[0] : undefined;
   const leftInput = availableInputs.find((input) => input.nodeId === selectedInputs.leftNodeId);
@@ -67,7 +73,7 @@ export function DvtSubstraitInnerJoinStartSection({
     const nextDraft =
       nextPair == null
         ? null
-        : createCanvasDvtInitialJoinDraft(availableInputs, nextPair, targetNodeId);
+        : createCanvasDvtInitialJoinDraft(availableInputs, nextPair, targetNodeId, joinType);
     setSelectedInputs({
       leftNodeId: nextPair?.leftNodeId ?? selectedInputs.leftNodeId,
       rightNodeId: nextPair?.rightNodeId ?? '',
@@ -78,7 +84,9 @@ export function DvtSubstraitInnerJoinStartSection({
   return (
     <section data-slot="dvt-substrait-inner-join-start" className="space-y-3">
       <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
-        {canvasViewCopy.inspectorDvtSubstraitInnerJoinTitle}
+        {joinType === JoinRel_JoinType.LEFT
+          ? canvasViewCopy.inspectorDvtSubstraitLeftJoinAction
+          : canvasViewCopy.inspectorDvtSubstraitInnerJoinTitle}
       </h3>
       <label className="block space-y-1 text-xs text-(--text-muted)">
         <span>{canvasViewCopy.inspectorDvtRelationalLeftInput}</span>
@@ -106,7 +114,7 @@ export function DvtSubstraitInnerJoinStartSection({
             setDraft(
               nextPair == null
                 ? null
-                : createCanvasDvtInitialJoinDraft(availableInputs, nextPair, targetNodeId)
+                : createCanvasDvtInitialJoinDraft(availableInputs, nextPair, targetNodeId, joinType)
             );
           }}
         >
@@ -197,7 +205,11 @@ export function DvtSubstraitInnerJoinStartSection({
           type="button"
           size="sm"
           disabled={disabled || draft == null}
-          data-slot="dvt-start-configured-inner-join"
+          data-slot={
+            joinType === JoinRel_JoinType.LEFT
+              ? 'dvt-start-configured-left-join'
+              : 'dvt-start-configured-inner-join'
+          }
           onClick={() => {
             if (draft != null) onApply(draft);
           }}

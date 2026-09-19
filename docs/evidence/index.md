@@ -151,6 +151,7 @@ Evidence documents that justify or validate relevant changes.
 - [GH-2173 bounded lazy source catalog evidence](ED-20260907-gh-2173-lazy-source-catalog.md)
 - [GH-2904 stable logical identity and physical binding evidence](ED-20260905-gh-2904-stable-logical-physical-binding.md)
 - [JOIN unary null predicate admission](ED-20260913-join-null-predicates.md)
+- [LEFT JOIN end to end](ED-20260919-left-join-end-to-end.md)
 - [MW-D2 Temporal Worker Routing By Capability](ed-20260513-mw-d2-temporal-worker-routing.md)
 - [Opaque DVT authoring identity evidence](ED-20260906-opaque-dvt-authoring-identity.md)
 - [Planner environment input removal evidence](ED-20260902-planner-environment-contract-truth.md)

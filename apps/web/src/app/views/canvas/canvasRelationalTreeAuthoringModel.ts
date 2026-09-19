@@ -6,6 +6,8 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
+import { toSubstraitJoinType } from './canvasRelationalTreeJoinType';
+import { orderedCanvasRelationalTreeUnionAllEntry } from './canvasRelationalTreeUnionAuthoring';
 import {
   createCanvasDvtInitialJoinDraft,
   resolveCanvasDvtInitialJoinPairForInputs,
@@ -18,16 +20,11 @@ import {
   type CanvasRelationalOperationChoice,
 } from './canvasRelationalOperationChoices';
 import {
-  appendDvtSubstraitInnerJoinInput,
-  inspectDvtSubstraitNInputJoinDraft,
-  type DvtSubstraitInnerJoinDraft,
+  appendDvtSubstraitJoinInput,
+  inspectDvtSubstraitJoinDraft,
+  type DvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
-import {
-  createDvtSubstraitUnionAllDraft,
-  inspectDvtSubstraitUnionAllDraft,
-  resolveDvtSubstraitUnionAllEntry,
-  type DvtSubstraitUnionAllDraft,
-} from './canvasDvtSubstraitSetComposition';
+import { inspectDvtSubstraitUnionAllDraft } from './canvasDvtSubstraitSetComposition';
 
 export type CanvasRelationalTreeAuthoringCandidate = Readonly<{
   nodeId: string;
@@ -36,81 +33,57 @@ export type CanvasRelationalTreeAuthoringCandidate = Readonly<{
   reason: CanvasRelationalOperationAvailability | null;
 }>;
 
-type UnionContext = Readonly<{
-  selectedInputIds: readonly string[];
-  targetNodeId: string;
-  nodes: readonly CanonicalNode[];
-  edges: readonly CanonicalEdge[];
-}>;
-
-function orderedUnionAllEntry(args: UnionContext) {
-  const selectedIds = new Set(args.selectedInputIds);
-  const targetNode = args.nodes.find((node) => node.id === args.targetNodeId);
-  if (targetNode == null) return null;
-  const entry = resolveDvtSubstraitUnionAllEntry({
-    targetNode,
-    nodes: args.nodes,
-    edges: args.edges.filter(
-      (edge) => edge.targetId === args.targetNodeId && selectedIds.has(edge.sourceId)
-    ),
-  });
-  if (entry == null) return null;
-  const byNodeId = new Map(entry.inputs.map((input) => [input.nodeId, input] as const));
-  const ordered = args.selectedInputIds.map((nodeId) => byNodeId.get(nodeId));
-  return ordered.some((input) => input == null)
-    ? null
-    : { ...entry, inputs: ordered.filter((input) => input != null) };
-}
-
-export function createCanvasRelationalTreeUnionAllDraft(
-  args: UnionContext
-): DvtSubstraitUnionAllDraft | null {
-  const entry = orderedUnionAllEntry(args);
-  return entry == null ? null : createDvtSubstraitUnionAllDraft(entry);
-}
-
 export function createCanvasRelationalTreeInitialJoinDraft(
   args: Readonly<{
     inputs: readonly CanvasDvtCompositionInput[];
     targetNodeId: string;
     leftInputId: string;
     rightInputId: string;
+    operation?: 'inner_join' | 'left_join';
   }>
-): DvtSubstraitInnerJoinDraft | null {
+): DvtSubstraitJoinDraft | null {
   const left = args.inputs.find((input) => input.nodeId === args.leftInputId);
   const right = args.inputs.find((input) => input.nodeId === args.rightInputId);
   if (left == null || right == null) return null;
   const pair = resolveCanvasDvtInitialJoinPairForInputs(left, right);
   return pair == null
     ? null
-    : createCanvasDvtInitialJoinDraft(args.inputs, pair, args.targetNodeId);
+    : createCanvasDvtInitialJoinDraft(
+        args.inputs,
+        pair,
+        args.targetNodeId,
+        toSubstraitJoinType(args.operation)
+      );
 }
 
 export function appendCanvasRelationalTreeJoinInput(
   args: Readonly<{
-    draft: DvtSubstraitInnerJoinDraft;
+    draft: DvtSubstraitJoinDraft;
     input: CanvasDvtCompositionInput;
     leftSourceFieldId: string;
     rightFieldName: string;
+    operation?: 'inner_join' | 'left_join';
   }>
-): DvtSubstraitInnerJoinDraft {
+): DvtSubstraitJoinDraft {
   const fields = args.input.fields.filter((field) => field.joinDataType != null);
-  return appendDvtSubstraitInnerJoinInput(args.draft, {
+  return appendDvtSubstraitJoinInput(args.draft, {
     source: args.input,
     fields: fields.map((field) => field.name),
     fieldTypes: fields.map((field) => field.joinDataType!),
+    fieldNullabilities: fields.map((field) => field.nullable ?? true),
     predicate: {
       leftSourceFieldId: args.leftSourceFieldId,
       rightFieldName: args.rightFieldName,
     },
     selectedFields: fields.map((field) => field.name),
+    joinType: toSubstraitJoinType(args.operation),
   });
 }
 
 export function createCanvasRelationalTreeNodeDraft(
   node: CanonicalNode,
   shape: CanvasRelationalOperation,
-  semantic: Pick<DvtSubstraitInnerJoinDraft, 'plan' | 'sidecar'>
+  semantic: Pick<DvtSubstraitJoinDraft, 'plan' | 'sidecar'>
 ): CanvasInspectorNodeDraft {
   const draft = createCanvasInspectorNodeDraft(node);
   const disposition =
@@ -176,9 +149,13 @@ export function resolveCanvasRelationalTreeAuthoringChoices(
   if (second == null) return [];
   const selectedInputs = [first, second];
   const unionAvailable =
-    orderedUnionAllEntry({ ...args, selectedInputIds: [first.nodeId, second.nodeId] }) != null;
+    orderedCanvasRelationalTreeUnionAllEntry({
+      ...args,
+      selectedInputIds: [first.nodeId, second.nodeId],
+    }) != null;
   return [
     operationChoice('inner_join', selectedInputs, args.readOnly, false),
+    operationChoice('left_join', selectedInputs, args.readOnly, false),
     operationChoice('union_all', selectedInputs, args.readOnly, unionAvailable),
   ];
 }
@@ -196,7 +173,7 @@ export function resolveCanvasRelationalTreeAuthoringCandidates(
     operation: CanvasRelationalOperation;
     inputs: readonly CanvasDvtCompositionInput[];
     selectedInputIds: readonly string[];
-    joinDraft: DvtSubstraitInnerJoinDraft | null;
+    joinDraft: DvtSubstraitJoinDraft | null;
     targetNodeId: string;
     nodes: readonly CanonicalNode[];
     edges: readonly CanonicalEdge[];
@@ -205,7 +182,7 @@ export function resolveCanvasRelationalTreeAuthoringCandidates(
   const selected = new Set(args.selectedInputIds);
   const first = args.inputs.find((input) => input.nodeId === args.selectedInputIds[0]);
   const joinInspection =
-    args.joinDraft == null ? null : inspectDvtSubstraitNInputJoinDraft(args.joinDraft);
+    args.joinDraft == null ? null : inspectDvtSubstraitJoinDraft(args.joinDraft);
   return args.inputs.map((input) => {
     if (selected.has(input.nodeId)) {
       return { nodeId: input.nodeId, selectable: false, selected: true, reason: null };
@@ -215,12 +192,14 @@ export function resolveCanvasRelationalTreeAuthoringCandidates(
       selectable =
         first != null &&
         (resolveCanvasDvtInitialJoinPairForInputs(first, input) != null ||
-          orderedUnionAllEntry({ ...args, selectedInputIds: [first.nodeId, input.nodeId] }) !=
-            null);
+          orderedCanvasRelationalTreeUnionAllEntry({
+            ...args,
+            selectedInputIds: [first.nodeId, input.nodeId],
+          }) != null);
     } else if (args.operation === 'union_all') {
       selectable =
         (args.joinDraft == null || inspectDvtSubstraitUnionAllDraft(args.joinDraft).ok) &&
-        orderedUnionAllEntry({
+        orderedCanvasRelationalTreeUnionAllEntry({
           ...args,
           selectedInputIds: [...args.selectedInputIds, input.nodeId],
         }) != null;

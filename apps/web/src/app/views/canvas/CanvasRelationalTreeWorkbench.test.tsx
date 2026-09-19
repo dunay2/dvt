@@ -8,8 +8,8 @@ import type { ConnectedSourceRef } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
-  createDvtSubstraitInnerJoinDraft,
-  encodeDvtSubstraitInnerJoinDocument,
+  createDvtSubstraitJoinDraft,
+  encodeDvtSubstraitJoinDocument,
 } from './canvasDvtSubstraitJoinComposition';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import {
@@ -61,6 +61,9 @@ const COPY = {
   inspectorDvtRelationalUnavailable: 'Unavailable',
   inspectorDvtRelationalReadOnly: 'Read only',
   inspectorDvtSubstraitInnerJoinAction: 'INNER JOIN',
+  inspectorDvtSubstraitLeftJoinAction: 'LEFT JOIN',
+  inspectorDvtSubstraitJoinTypeLabel: 'Join type',
+  inspectorDvtSubstraitLeftJoinRolesHint: 'L preserved · R nullable',
   inspectorDvtSubstraitAppendInputAction: 'Add input',
   inspectorDvtSubstraitAppendInputTitle: 'Add connected input',
   inspectorDvtSubstraitConnectedFieldLabel: 'Connected field',
@@ -158,7 +161,7 @@ describe('Canvas relational-tree Workbench', () => {
   it('presents useful selected-JOIN conditions without a metadata or column-count panel', () => {
     const clients = sourceNode('clients', 'clients');
     const orders = sourceNode('orders', 'orders');
-    const draft = createDvtSubstraitInnerJoinDraft({
+    const draft = createDvtSubstraitJoinDraft({
       left: {
         nodeId: clients.id,
         schema: 'public',
@@ -175,7 +178,7 @@ describe('Canvas relational-tree Workbench', () => {
     });
     const transform = applyDvtSubstraitSemanticDocument(
       transformNode(),
-      encodeDvtSubstraitInnerJoinDocument(draft)
+      encodeDvtSubstraitJoinDocument(draft)
     );
 
     act(() => {
@@ -762,7 +765,7 @@ describe('Canvas relational-tree Workbench', () => {
         ],
       },
     };
-    const baseDraft = createDvtSubstraitInnerJoinDraft({
+    const baseDraft = createDvtSubstraitJoinDraft({
       left: {
         nodeId: customers.id,
         schema: 'public',
@@ -779,7 +782,7 @@ describe('Canvas relational-tree Workbench', () => {
     });
     const transform = applyDvtSubstraitSemanticDocument(
       transformNode(),
-      encodeDvtSubstraitInnerJoinDocument(baseDraft)
+      encodeDvtSubstraitJoinDocument(baseDraft)
     );
     const applied: CanvasInspectorNodeDraft[] = [];
 

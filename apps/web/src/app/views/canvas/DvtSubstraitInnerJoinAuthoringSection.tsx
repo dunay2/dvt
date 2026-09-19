@@ -12,16 +12,16 @@ import {
   applyDvtSubstraitInnerJoinFieldEdit,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
   applyDvtSubstraitInnerJoinGrouping,
-  appendDvtSubstraitInnerJoinInput,
-  inspectDvtSubstraitInnerJoinDraft,
+  appendDvtSubstraitJoinInput,
+  inspectDvtSubstraitBinaryJoinDraft,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
   inspectDvtSubstraitInnerJoinGroupingDraft,
-  inspectDvtSubstraitNInputJoinDraft,
+  inspectDvtSubstraitJoinDraft,
   removeDvtSubstraitInnerJoinGroupedRowNumber,
   removeDvtSubstraitInnerJoinGrouping,
   renameDvtSubstraitInnerJoinCountOutput,
   renameDvtSubstraitInnerJoinGroupedRowNumberOutput,
-  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinDraft,
   type DvtSubstraitInnerJoinFieldEdit,
   type DvtSubstraitJoinInput,
   type DvtSubstraitNInputJoinProjection,
@@ -73,7 +73,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
     clearOutputNameDraft(key);
   };
   const mutateDraft = (
-    transform: (current: DvtSubstraitInnerJoinDraft) => DvtSubstraitInnerJoinDraft,
+    transform: (current: DvtSubstraitJoinDraft) => DvtSubstraitJoinDraft,
     discardedOutputNameDraftKeys: readonly string[] = []
   ): void => {
     onChange((currentDraft) => {
@@ -150,8 +150,8 @@ export function DvtSubstraitInnerJoinAuthoringSection({
         </p>
       </div>
     );
-  const nInputInspection = inspectDvtSubstraitNInputJoinDraft(semanticDraft);
-  const binaryInspection = inspectDvtSubstraitInnerJoinDraft(semanticDraft);
+  const nInputInspection = inspectDvtSubstraitJoinDraft(semanticDraft);
+  const binaryInspection = inspectDvtSubstraitBinaryJoinDraft(semanticDraft);
   const renderPredicateEditors = (projection: DvtSubstraitNInputJoinProjection): ReactNode => (
     <DvtSubstraitJoinPredicateEditors
       disabled={disabled}
@@ -179,7 +179,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
       const selectedFields = candidate.fields.filter((field) => field !== rightFieldName);
       if (selectedFields.length === 0) return;
       mutateDraft((current) =>
-        appendDvtSubstraitInnerJoinInput(current, {
+        appendDvtSubstraitJoinInput(current, {
           source: candidate.source,
           fields: candidate.fields,
           predicate: { leftSourceFieldId, rightFieldName },

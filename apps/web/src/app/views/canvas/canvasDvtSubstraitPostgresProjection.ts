@@ -33,11 +33,11 @@ import {
 import {
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
   inspectDvtSubstraitInnerJoinGroupingDraft,
-  inspectDvtSubstraitInnerJoinDraft,
-  inspectDvtSubstraitNInputJoinDraft,
+  inspectDvtSubstraitBinaryJoinDraft,
+  inspectDvtSubstraitJoinDraft,
   removeDvtSubstraitInnerJoinGroupedRowNumber,
   removeDvtSubstraitInnerJoinGrouping,
-  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinDraft,
   type DvtSubstraitInnerJoinGroupedWindowProjection,
   type DvtSubstraitInnerJoinGroupingProjection,
   type DvtSubstraitInnerJoinProjection,
@@ -365,10 +365,8 @@ function buildWindowPostgresAst(
   };
 }
 
-function requireInnerJoinProjection(
-  draft: DvtSubstraitInnerJoinDraft
-): DvtSubstraitInnerJoinProjection {
-  const inspection = inspectDvtSubstraitInnerJoinDraft(draft);
+function requireInnerJoinProjection(draft: DvtSubstraitJoinDraft): DvtSubstraitInnerJoinProjection {
+  const inspection = inspectDvtSubstraitBinaryJoinDraft(draft);
   if (!inspection.ok) {
     throw new DvtSubstraitPostgresProjectionError(
       'unsupported_shape',
@@ -455,10 +453,10 @@ function buildGroupedInnerJoinPostgresAst(
   };
 }
 
-function buildAcceptedInnerJoinPostgresAst(draft: DvtSubstraitInnerJoinDraft): PostgresAstNode {
-  const nInputJoin = inspectDvtSubstraitNInputJoinDraft(draft);
+function buildAcceptedInnerJoinPostgresAst(draft: DvtSubstraitJoinDraft): PostgresAstNode {
+  const nInputJoin = inspectDvtSubstraitJoinDraft(draft);
   return nInputJoin.ok &&
-    (nInputJoin.projection.inputs.length > 2 || !inspectDvtSubstraitInnerJoinDraft(draft).ok)
+    (nInputJoin.projection.inputs.length > 2 || !inspectDvtSubstraitBinaryJoinDraft(draft).ok)
     ? buildNInputJoinPostgresAst(nInputJoin.projection)
     : buildInnerJoinPostgresAst(requireInnerJoinProjection(draft));
 }
@@ -607,8 +605,8 @@ export async function projectDvtSubstraitPilotWindowToPostgresSql(
   );
 }
 
-export async function projectDvtSubstraitInnerJoinToPostgresSql(
-  draft: DvtSubstraitInnerJoinDraft
+export async function projectDvtSubstraitJoinToPostgresSql(
+  draft: DvtSubstraitJoinDraft
 ): Promise<string> {
   const groupedWindow = inspectDvtSubstraitInnerJoinGroupedWindowDraft(draft);
   if (groupedWindow.ok) {
@@ -627,7 +625,7 @@ export async function projectDvtSubstraitInnerJoinToPostgresSql(
       buildGroupedInnerJoinPostgresAst(grouping.projection, innerJoin)
     );
   }
-  const nInputJoin = inspectDvtSubstraitNInputJoinDraft(draft);
+  const nInputJoin = inspectDvtSubstraitJoinDraft(draft);
   return deparseBoundedPostgresAst(
     nInputJoin.ok
       ? buildNInputJoinPostgresAst(nInputJoin.projection)

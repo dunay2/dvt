@@ -1,7 +1,7 @@
 /** Owned concern: show the existing scalar projection of the selected JOIN, not another AST. */
 import { useMemo } from 'react';
 import type { CanonicalNode } from '../../types/canonical';
-import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
@@ -16,7 +16,7 @@ export function CanvasRelationalJoinExpressionTree({
   operation = 'inner_join',
 }: Readonly<{
   transformNode: CanonicalNode;
-  draft?: DvtSubstraitInnerJoinDraft;
+  draft?: DvtSubstraitJoinDraft;
   relationId: string | null;
   onSelectCondition?: (index: number, operand?: 'left' | 'right') => void;
   operation?: CanvasRelationalOperation;
