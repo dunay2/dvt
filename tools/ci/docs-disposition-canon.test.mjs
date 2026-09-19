@@ -575,6 +575,11 @@ test('retired documentation-only closeouts have no files or local consumers', ()
   for (const path of paths) {
     if (path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
     if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
+    assert.equal(
+      isRetired(path.split('/').at(-1)),
+      false,
+      `retired editorial closeout path: ${path}`
+    );
     // Only exact Git revisions can supply historical provenance, never main.
     const current = readRepoFile(path).replace(
       /https:\/\/github\.com\/dunay2\/dvt\/blob\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
