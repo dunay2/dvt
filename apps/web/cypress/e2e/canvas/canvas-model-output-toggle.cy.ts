@@ -124,8 +124,12 @@ describe('Canvas Model output toggle lifecycle', () => {
     visitCanvas();
 
     openModelColumns();
-    modelColumnRow('customer').find('[data-slot="graph-node-column-piece"]').focus();
-    cy.get('[role="tooltip"]').should('have.text', 'string');
+    modelColumnRow('customer')
+      .find('[data-slot="graph-node-column-piece"]')
+      .trigger('pointerover', { eventConstructor: 'PointerEvent', pointerType: 'mouse' })
+      .trigger('pointermove', 'center', { eventConstructor: 'PointerEvent', pointerType: 'mouse' })
+      .should('have.attr', 'aria-describedby');
+    cy.get('[role="tooltip"]').should('have.text', 'text');
     cy.get('[data-slot="tooltip-content"]')
       .should('be.visible')
       .invoke('outerWidth')
@@ -146,8 +150,13 @@ describe('Canvas Model output toggle lifecycle', () => {
     expectOutput('customer', true);
     expectOutput('order_id', false);
     expectOutput('amount', false);
-    modelColumnRow('customer').find('[data-slot="graph-node-column-piece"]').focus();
-    cy.get('[role="tooltip"]').should('have.text', 'string');
+    modelColumnRow('customer')
+      .find('[data-slot="graph-node-column-piece"]')
+      .trigger('pointerleave', { eventConstructor: 'PointerEvent', pointerType: 'mouse' })
+      .trigger('pointerover', { eventConstructor: 'PointerEvent', pointerType: 'mouse' })
+      .trigger('pointermove', 'center', { eventConstructor: 'PointerEvent', pointerType: 'mouse' })
+      .should('have.attr', 'aria-describedby');
+    cy.get('[role="tooltip"]').should('have.text', 'text');
 
     visitCanvas();
     openModelColumns();

@@ -52,6 +52,7 @@ describe('GraphNodeColumnSection compact type tooltip', () => {
     await act(async () => {
       root.render(
         <GraphNodeColumnSection
+          nodeId="model-orders"
           columns={[
             {
               name: 'order_id',
