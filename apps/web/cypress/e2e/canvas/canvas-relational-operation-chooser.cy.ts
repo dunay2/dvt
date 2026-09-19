@@ -161,12 +161,8 @@ describe('Canvas relational-operation chooser', () => {
       .and('not.be.disabled')
       .focus()
       .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
-    cy.get('[data-slot="dvt-start-configured-left-join"]')
-      .focus()
-      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
-    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Apply|Aplicar)$/)
-      .focus()
-      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+    cy.get('[data-slot="dvt-start-configured-left-join"]').click();
+    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Apply|Aplicar)$/).click();
 
     cy.wrap(null).should(() => {
       const savedTransform = getE2eApiCalls('/workspace/graph/draft', 'PUT')
