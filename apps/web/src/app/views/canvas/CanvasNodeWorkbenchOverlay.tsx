@@ -95,20 +95,43 @@ export function CanvasNodeWorkbenchOverlay({
   const positionController = useCanvasNodeWorkbenchPosition(visible, inspectorNodeId);
 
   const hideAndRestoreNodeFocus = useCallback((): void => {
+    const closingFocus = document.activeElement;
+    const closingSurface = positionController.surfaceRef.current;
     onHide();
     window.requestAnimationFrame(() => {
+      const activeElement = document.activeElement;
+      if (
+        activeElement instanceof HTMLElement &&
+        activeElement !== document.body &&
+        activeElement !== closingFocus &&
+        activeElement.isConnected &&
+        !closingSurface?.contains(activeElement)
+      ) {
+        return;
+      }
       findCanvasGraphNodeElement(inspectorNodeId)?.focus({ preventScroll: true });
     });
-  }, [inspectorNodeId, onHide]);
+  }, [inspectorNodeId, onHide, positionController.surfaceRef]);
 
   useEffect(() => {
     if (!visible) {
       return;
     }
 
+    const surface = positionController.surfaceRef.current;
+    const openingFocus = surface?.ownerDocument.activeElement;
     const focusFrame = window.requestAnimationFrame(() => {
-      positionController.surfaceRef.current
-        ?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
+      if (surface == null) return;
+      const activeElement = surface.ownerDocument.activeElement;
+      // Opening focus must not override a newer interaction before this frame.
+      if (
+        surface.contains(activeElement) ||
+        (activeElement !== openingFocus && activeElement !== surface.ownerDocument.body)
+      ) {
+        return;
+      }
+      surface
+        .querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
         ?.focus({ preventScroll: true });
     });
 

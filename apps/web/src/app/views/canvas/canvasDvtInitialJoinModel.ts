@@ -6,7 +6,10 @@ import {
   createDvtSubstraitStringInnerJoinDraft,
   type DvtSubstraitInnerJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
-import { hasCompatibleCanvasDvtJoinFields } from './canvasDvtJoinTypeAdmission';
+import {
+  hasCompatibleCanvasDvtJoinFields,
+  resolveCanvasDvtJoinFieldPair,
+} from './canvasDvtJoinTypeAdmission';
 
 export type CanvasDvtInitialJoinSelection = Readonly<{
   targetNodeId: string;
@@ -48,21 +51,15 @@ export function resolveCanvasDvtInitialJoinPairForInputs(
       rightFieldName: preferredRight.name,
     };
   }
-  for (const leftField of left.fields) {
-    if (leftField.joinDataType == null) continue;
-    const rightField = right.fields.find(
-      (candidate) => candidate.joinDataType === leftField.joinDataType
-    );
-    if (rightField != null) {
-      return {
+  const pair = resolveCanvasDvtJoinFieldPair(left.fields, right.fields);
+  return pair == null
+    ? null
+    : {
         leftNodeId: left.nodeId,
         rightNodeId: right.nodeId,
-        leftFieldName: leftField.name,
-        rightFieldName: rightField.name,
+        leftFieldName: pair.left.name,
+        rightFieldName: pair.right.name,
       };
-    }
-  }
-  return null;
 }
 
 export function resolveCanvasDvtInitialJoinInputs(

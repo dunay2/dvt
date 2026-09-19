@@ -13,6 +13,7 @@ export type CanvasRelationalOperation = 'projection' | 'inner_join' | 'union_all
 export type CanvasRelationalOperationAvailability =
   | 'available'
   | 'needs-predicate'
+  | 'needs-input'
   | 'needs-schema-alignment'
   | 'semantically-unavailable'
   | 'target-unavailable'
@@ -36,6 +37,23 @@ function isAdmitted(message: string, selector: string): boolean {
       entry.entryId === entryId &&
       entry.profileStatus === 'supported-profile'
   );
+}
+
+export function resolveCanvasRelationalProjectionChoice(
+  readOnly: boolean
+): CanvasRelationalOperationChoice {
+  const entryId = buildDvtSubstraitStandardCapabilityId('relation', {
+    sourceKind: 'core',
+    message: 'substrait.ProjectRel',
+  });
+  const admitted = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.some(
+    (entry) =>
+      entry.kind === 'standard' &&
+      entry.entryId === entryId &&
+      entry.profileStatus === 'supported-profile'
+  );
+  const availability = readOnly ? 'read-only' : admitted ? 'available' : 'semantically-unavailable';
+  return { operation: 'projection', availability, selectable: availability === 'available' };
 }
 
 function hasCompatibleJoinPair(inputs: readonly CanvasDvtCompositionInput[]): boolean {

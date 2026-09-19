@@ -93,7 +93,11 @@ describe('Canvas relational-tree guided authoring model', () => {
         availability,
         selectable,
       }))
-    ).toEqual([{ operation: 'projection', availability: 'available', selectable: true }]);
+    ).toEqual([
+      { operation: 'projection', availability: 'available', selectable: true },
+      { operation: 'inner_join', availability: 'needs-input', selectable: false },
+      { operation: 'union_all', availability: 'needs-input', selectable: false },
+    ]);
 
     expect(
       resolveCanvasRelationalTreeAuthoringChoices({
@@ -129,27 +133,45 @@ describe('Canvas relational-tree guided authoring model', () => {
     ]);
   });
 
-  it('keeps incompatible Sources visible with a reason', () => {
+  it.each(['projection', 'inner_join'] as const)(
+    'keeps incompatible Sources unavailable in %s',
+    (operation) => {
+      expect(
+        resolveCanvasRelationalTreeAuthoringCandidates({
+          operation,
+          inputs,
+          selectedInputIds: [orders.id],
+          joinDraft: null,
+          targetNodeId: TARGET_ID,
+          nodes,
+          edges,
+        })
+      ).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ nodeId: customers.id, selectable: true, reason: null }),
+          expect.objectContaining({
+            nodeId: incompatible.id,
+            selectable: false,
+            reason: 'semantically-unavailable',
+          }),
+        ])
+      );
+    }
+  );
+
+  it('keeps every unary and binary choice disabled for read-only authoring', () => {
+    const choices = resolveCanvasRelationalTreeAuthoringChoices({
+      inputs,
+      selectedInputIds: [orders.id],
+      readOnly: true,
+      targetNodeId: TARGET_ID,
+      nodes,
+      edges,
+    });
+    expect(choices).toHaveLength(3);
     expect(
-      resolveCanvasRelationalTreeAuthoringCandidates({
-        operation: 'inner_join',
-        inputs,
-        selectedInputIds: [orders.id],
-        joinDraft: null,
-        targetNodeId: TARGET_ID,
-        nodes,
-        edges,
-      })
-    ).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ nodeId: customers.id, selectable: true, reason: null }),
-        expect.objectContaining({
-          nodeId: incompatible.id,
-          selectable: false,
-          reason: 'semantically-unavailable',
-        }),
-      ])
-    );
+      choices.every((choice) => !choice.selectable && choice.availability === 'read-only')
+    ).toBe(true);
   });
 
   it('builds an explicit left-deep N-input JOIN in selection order', () => {

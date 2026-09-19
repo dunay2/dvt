@@ -37,9 +37,14 @@ export function useCanvasRelationalTreeApplyCommand(args: {
     transformNode,
   } = args;
   return useCallback(() => {
-    if (!editable || operation == null) return;
+    if (
+      !editable ||
+      operation == null ||
+      (operation === 'projection' && selectedInputIds.length !== 1)
+    )
+      return;
     const semantic =
-      operation === 'projection'
+      operation === 'projection' && joinDraft == null
         ? (() => {
             const input = inputs.find((candidate) => candidate.nodeId === selectedInputIds[0]);
             return input == null
@@ -49,7 +54,7 @@ export function useCanvasRelationalTreeApplyCommand(args: {
                   targetNodeId: transformNode.id,
                 });
           })()
-        : operation === 'inner_join'
+        : joinDraft != null || operation === 'inner_join' || operation === 'projection'
           ? joinDraft
           : createCanvasRelationalTreeUnionAllDraft({
               edges,

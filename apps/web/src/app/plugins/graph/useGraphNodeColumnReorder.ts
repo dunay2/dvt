@@ -35,6 +35,7 @@ export function useGraphNodeColumnReorder(args: {
 
   return {
     orderedColumns: columnOrder.orderedColumns,
+    rowKey: columnOrder.rowKey,
     resolveActivationPlacement: columnOrder.resolveActivationPlacement,
     canReorder,
     dropPlacement(column: GraphNodeColumn): DropTarget['placement'] | undefined {

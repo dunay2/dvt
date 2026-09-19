@@ -247,6 +247,7 @@ function buildCanvasDraftViewModel(args: CanvasControllerViewModelArgs) {
 
   return {
     draftSaveStatus,
+    flushDraftForExecution: args.authoringRuntime.flushDraftForExecution,
     draftAuthTransportPosture,
     draftAccessPosture,
     draftAccessMode,

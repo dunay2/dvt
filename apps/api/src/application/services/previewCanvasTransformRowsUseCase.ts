@@ -62,8 +62,18 @@ export class PreviewCanvasTransformRowsUseCase {
       if (closure.transform.id !== input.transformNodeId) {
         throw new Error('Resolved closure does not target the requested Transform.');
       }
-      projection = await projectDvtPostgresTransform(closure);
-    } catch {
+      if (
+        input.semanticPlanSha256 !== undefined &&
+        input.semanticPlanSha256 !== closure.authority.semanticDocument.semanticPlan.sha256
+      ) {
+        throw new CanvasTransformDataSampleUnavailableError('canvas_changed');
+      }
+      if (input.relationId !== undefined && input.semanticPlanSha256 === undefined) {
+        throw new CanvasTransformDataSampleUnavailableError('selection_unavailable');
+      }
+      projection = await projectDvtPostgresTransform(closure, undefined, input.relationId);
+    } catch (error) {
+      if (error instanceof CanvasTransformDataSampleUnavailableError) throw error;
       throw new CanvasTransformDataSampleUnavailableError('projection_unsupported');
     }
 
@@ -100,6 +110,7 @@ export class PreviewCanvasTransformRowsUseCase {
       contractVersion: TRANSFORM_DATA_SAMPLE_CONTRACT_VERSION,
       canvasId: input.canvasId,
       transformNodeId: input.transformNodeId,
+      ...(input.relationId === undefined ? {} : { relationId: input.relationId }),
       draftRevision: authorizedDraft.revision,
       semanticPlanSha256: closure.authority.semanticDocument.semanticPlan.sha256,
       ...sample,

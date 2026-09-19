@@ -75,7 +75,7 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
           >
             {section.visibleColumns.map((column) => (
               <GraphNodeColumnRow
-                key={column.id ?? column.name}
+                key={section.columnReorder.rowKey(column)}
                 column={column}
                 nodeId={nodeId}
                 portDirections={portDirections}

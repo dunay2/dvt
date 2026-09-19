@@ -30,6 +30,8 @@ type TransformDataSampleQuery = Readonly<{
   projectId?: string;
   environmentId?: string;
   limit?: string;
+  relationId?: string;
+  semanticPlanSha256?: string;
 }>;
 
 export function registerCanvasTransformDataSampleRoutes(
@@ -49,6 +51,10 @@ export function registerCanvasTransformDataSampleRoutes(
       const input = TransformDataSampleRequestSchema.safeParse({
         canvasId: request.params.canvasId,
         transformNodeId: request.params.transformNodeId,
+        ...(request.query.relationId === undefined ? {} : { relationId: request.query.relationId }),
+        ...(request.query.semanticPlanSha256 === undefined
+          ? {}
+          : { semanticPlanSha256: request.query.semanticPlanSha256 }),
         ...(request.query.limit === undefined ? {} : { limit: Number(request.query.limit) }),
       });
       if (scope === null || !input.success) {

@@ -36,6 +36,7 @@ import type {
 import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
 import type { IRunsPort, RunSnapshot } from '../../ports/runs';
 import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
+import type { CanvasModelPreviewPreparation } from './CanvasModelDataView';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -58,6 +59,7 @@ export type CanvasShellLayout = {
   surfaceStrategy: CanvasSurfaceStrategy | null;
   contextualWorkbench?: CanvasShellContextualWorkbench;
   centerSurface?: React.ReactNode;
+  centerSurfaceVisible?: boolean;
   readOnlyBanner?: React.ReactNode;
 };
 
@@ -185,6 +187,7 @@ export type CanvasShellProps = Readonly<{
   warehouseSourceImport?: IWarehouseSourceImportPort;
   warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
   canvasTransformDataSampleQuery?: ICanvasTransformDataSampleQueryPort;
+  prepareModelPreview?: CanvasModelPreviewPreparation;
   runSnapshot?: RunSnapshot | null;
   runMaterializationSampleQuery?: IRunsPort['getRunMaterializationSample'];
   canvasContextScreenToFlowPosition?: (

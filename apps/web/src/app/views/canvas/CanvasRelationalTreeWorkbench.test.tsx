@@ -155,7 +155,7 @@ describe('Canvas relational-tree Workbench', () => {
     target.dispatchEvent(drop);
   }
 
-  it('presents one catalogue, graph and contextual selected-node panel', () => {
+  it('presents useful selected-JOIN conditions without a metadata or column-count panel', () => {
     const clients = sourceNode('clients', 'clients');
     const orders = sourceNode('orders', 'orders');
     const draft = createDvtSubstraitInnerJoinDraft({
@@ -202,14 +202,101 @@ describe('Canvas relational-tree Workbench', () => {
       container.querySelector('[data-slot="canvas-relational-tree-inspection"]')
     ).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-relational-tree-viewport"]')).not.toBeNull();
-    const detail = container.querySelector('[data-slot="canvas-relational-tree-detail"]');
-    expect(detail?.tagName).toBe('ASIDE');
-    expect(detail?.getAttribute('data-position')).toBe('contextual');
-    expect(detail?.textContent).toContain('JOIN');
+    expect(
+      container.querySelector('[data-slot="canvas-relational-tree-start-authoring"]')
+    ).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-relational-tree-detail"]')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).toBeNull();
+    const zoomIn = container.querySelector<HTMLButtonElement>('button[aria-label="Zoom in"]')!;
+    act(() => {
+      zoomIn.click();
+      zoomIn.click();
+      zoomIn.click();
+    });
+    expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).not.toBeNull();
+    expect(
+      container.querySelectorAll(
+        '[data-slot="canvas-relational-semantic-zoom"] [data-slot="canvas-join-expression-node"]'
+      ).length
+    ).toBeGreaterThan(1);
+    expect(container.querySelector('[data-slot="canvas-relational-tree-detail"]')).toBeNull();
+    const zoomOut = container.querySelector<HTMLButtonElement>('button[aria-label="Zoom out"]')!;
+    act(() => {
+      zoomOut.click();
+      zoomOut.click();
+      zoomOut.click();
+    });
+    expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).toBeNull();
+    const tree = container.querySelector('[data-slot="canvas-relational-tree"]');
+    const viewport = container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!;
+    act(() => {
+      viewport.dispatchEvent(
+        new WheelEvent('wheel', { deltaY: -120, bubbles: true, cancelable: true })
+      );
+    });
+    expect(container.querySelector('[data-slot="canvas-relational-tree-zoom"]')?.textContent).toBe(
+      '120%'
+    );
+    expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).not.toBeNull();
+    act(() => {
+      viewport.dispatchEvent(
+        new WheelEvent('wheel', { deltaY: 120, bubbles: true, cancelable: true })
+      );
+    });
+    expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).toBeNull();
+    const toggle = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-relational-tree-sources-toggle"]'
+    );
+    expect(toggle).not.toBeNull();
+    act(() => {
+      toggle!.click();
+    });
+    expect(toggle?.getAttribute('aria-expanded')).toBe('false');
+    expect(
+      container
+        .querySelector('[data-slot="canvas-relational-tree-source-list"]')
+        ?.hasAttribute('hidden')
+    ).toBe(true);
+    expect(container.querySelector('[data-slot="canvas-relational-tree"]')).toBe(tree);
+    act(() => {
+      toggle!.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+      );
+    });
+    expect(toggle?.getAttribute('aria-expanded')).toBe('true');
+    act(() => {
+      toggle!.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Enter',
+          repeat: true,
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+    });
+    expect(toggle?.getAttribute('aria-expanded')).toBe('true');
+    expect(
+      container
+        .querySelector('[data-slot="canvas-relational-tree-source-list"]')
+        ?.hasAttribute('hidden')
+    ).toBe(false);
+    expect(container.querySelector('[data-slot="canvas-relational-tree-detail"]')).toBeNull();
     expect(container.textContent).toContain('Orders with clients');
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-source"]')?.textContent
-    ).toContain('Columns: 1');
+    ).not.toContain('Columns: 1');
+    act(() =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-node-expand"]')!
+        .click()
+    );
+    expect(
+      container.querySelector('[data-slot="canvas-join-expression-tree"]')?.textContent
+    ).toContain('clients.customer_id');
+    expect(container.querySelector('[data-slot="canvas-relational-tree"]')).toBe(tree);
+    expect(
+      container.querySelector('[data-slot="canvas-relational-tree"] [title="Columns"]')
+    ).toBeNull();
 
     const source = container.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-relational-tree-source"]'
@@ -219,7 +306,7 @@ describe('Canvas relational-tree Workbench', () => {
     expect(source?.getAttribute('aria-pressed')).toBe('true');
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-detail"]')?.textContent
-    ).toContain('READ');
+    ).toBeUndefined();
     expect(
       Array.from(container.querySelectorAll('[role="treeitem"]')).every(
         (item) => item.tagName === 'BUTTON'
@@ -295,11 +382,8 @@ describe('Canvas relational-tree Workbench', () => {
       'PROJECT'
     );
     expect(
-      container.querySelector('[data-slot="canvas-relational-tree-start-authoring"]')?.textContent
-    ).toContain('Compose relation');
-    expect(
-      container.querySelector('[data-slot="canvas-relational-tree-start-authoring"]')?.textContent
-    ).toContain('2');
+      container.querySelector('[data-slot="canvas-relational-tree-start-authoring"]')
+    ).toBeNull();
     const sourceButtons = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     );
@@ -316,12 +400,12 @@ describe('Canvas relational-tree Workbench', () => {
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
     ).not.toBeNull();
+    expect(container.querySelector('[data-operator="project"]')).not.toBeNull();
+    expect(container.querySelector('[data-operator="read"]')?.textContent).toContain('customers');
     expect(
-      container.querySelector(
-        '[data-slot="canvas-relational-tree-input-slot"][data-position="secondary"]'
-      )?.textContent
-    ).toContain('Drop a Source here.');
-    expect(container.textContent).toContain('Select the next Source.');
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
+        ?.disabled
+    ).toBe(true);
     act(() => detailsButton?.click());
     expect(
       container.querySelector('[data-slot="dvt-relational-operation-chooser"]')
@@ -329,7 +413,7 @@ describe('Canvas relational-tree Workbench', () => {
     expect(container.querySelector('[data-slot="dvt-select-operation-inner-join"]')).not.toBeNull();
   });
 
-  it('reveals the operand slots when the first Source drag starts over a partial tree', () => {
+  it('keeps the applied tree mounted during drag and stages a second input only on drop', () => {
     const customers = sourceNode('customers', 'customers');
     const orders = sourceNode('orders', 'orders');
     const transform = applyDvtSubstraitSemanticDocument(
@@ -367,6 +451,11 @@ describe('Canvas relational-tree Workbench', () => {
       );
     });
 
+    const appliedTree = container.querySelector('[data-slot="canvas-relational-tree"]');
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
+        ?.disabled
+    ).toBe(true);
     const ordersButton = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     ).find((button) => button.textContent?.includes('orders'));
@@ -383,12 +472,36 @@ describe('Canvas relational-tree Workbench', () => {
       ordersButton?.dispatchEvent(dragStart);
     });
 
+    expect(container.querySelector('[data-slot="canvas-relational-tree"]')).toBe(appliedTree);
+    expect(container.querySelector('[data-slot="canvas-relational-tree-apply"]')).toBeNull();
+    const drop = new Event('drop', { bubbles: true, cancelable: true });
+    Object.defineProperty(drop, 'dataTransfer', { value: dataTransfer });
+    values.set('application/x-dvt-relational-source', 'not-connected');
+    act(() => {
+      container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!.dispatchEvent(drop);
+    });
+    expect(container.querySelector('[data-slot="canvas-relational-tree"]')).toBe(appliedTree);
+    values.set('application/x-dvt-relational-source', orders.id);
+    act(() => {
+      container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!.dispatchEvent(drop);
+    });
+    expect(container.querySelector('[data-operator="project"]')).not.toBeNull();
+    expect(container.querySelector('[data-operator="read"]')?.textContent).toContain('customers');
     expect(
-      container.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
-    ).not.toBeNull();
+      container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
+        ?.disabled
+    ).toBe(false);
     expect(
-      container.querySelectorAll('[data-slot="canvas-relational-tree-input-slot"]')
-    ).toHaveLength(2);
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
+        ?.disabled
+    ).toBe(true);
+    act(() =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-cancel"]')!
+        .click()
+    );
+    expect(container.querySelector('[data-operator="project"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-relational-tree-apply"]')).toBeNull();
   });
 
   it('authors in the central canvas with a collapsible operation shelf and writes only on Apply', () => {
@@ -439,7 +552,10 @@ describe('Canvas relational-tree Workbench', () => {
     act(() => dragSourceTo(sourceButtons[0]!, primarySlot!));
     expect(primarySlot?.textContent).toContain('customers');
     expect(container.querySelector('[data-slot="dvt-select-operation-projection"]')).not.toBeNull();
-    expect(container.querySelector('[data-slot="dvt-select-operation-inner-join"]')).toBeNull();
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
+        ?.disabled
+    ).toBe(true);
 
     act(() => dragSourceTo(sourceButtons[1]!, secondarySlot!));
     expect(secondarySlot?.textContent).toContain('orders');
@@ -545,6 +661,54 @@ describe('Canvas relational-tree Workbench', () => {
     expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(2);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(3);
 
+    const joinCards = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('[data-operator="join"]')
+    );
+    const visiblePredicates = (): HTMLElement[] =>
+      Array.from(
+        container.querySelectorAll<HTMLElement>(
+          '[data-slot="dvt-substrait-join-predicate-editors"] fieldset'
+        )
+      ).filter((fieldset) => !fieldset.hidden);
+    act(() => joinCards[1]!.click());
+    expect(visiblePredicates()).toHaveLength(1);
+    expect(visiblePredicates()[0]?.textContent).toContain('orders.orders_id');
+    expect(visiblePredicates()[0]?.textContent).not.toContain('countries.countries_id');
+    act(() =>
+      visiblePredicates()[0]!
+        .querySelector<HTMLButtonElement>('[aria-label="Editar condición"]')!
+        .click()
+    );
+    const pendingEditor = visiblePredicates()[0]!.querySelector(
+      '[data-slot="semantic-workbench-join-condition-editor"]'
+    );
+    act(() => {
+      const comparison = pendingEditor!.querySelector<HTMLSelectElement>(
+        '[aria-label="Comparador de la condición"]'
+      )!;
+      comparison.value = 'not_equal';
+      comparison.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    act(() => joinCards[0]!.click());
+    expect(visiblePredicates()).toHaveLength(1);
+    expect(visiblePredicates()[0]?.textContent).toContain('countries.countries_id');
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
+        ?.disabled
+    ).toBe(true);
+    act(() => joinCards[1]!.click());
+    expect(
+      visiblePredicates()[0]!.querySelector(
+        '[data-slot="semantic-workbench-join-condition-editor"]'
+      )
+    ).toBe(pendingEditor);
+    act(() =>
+      visiblePredicates()[0]!
+        .querySelector<HTMLButtonElement>('[aria-label="Cerrar editor"]')!
+        .click()
+    );
+    expect(applied).toHaveLength(0);
+
     act(() => sourceButtons[3]?.click());
     act(() =>
       container
@@ -635,7 +799,7 @@ describe('Canvas relational-tree Workbench', () => {
     });
 
     const start = container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-relational-tree-start-authoring"] button'
+      '[data-slot="canvas-relational-node-expand"]'
     );
     expect(start).not.toBeNull();
     act(() => start?.click());

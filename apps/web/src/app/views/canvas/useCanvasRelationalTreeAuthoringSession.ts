@@ -14,6 +14,8 @@ import {
   type CanvasRelationalTreeJoinSeedHydration,
 } from './useCanvasRelationalTreeExistingJoinSeed';
 import { useCanvasRelationalTreeJoinDraftActions } from './useCanvasRelationalTreeJoinDraftActions';
+import { useCanvasRelationalTreeRemoval } from './useCanvasRelationalTreeRemoval';
+import { useCanvasRelationalTreeInputSelection } from './useCanvasRelationalTreeInputSelection';
 
 export function useCanvasRelationalTreeAuthoringSession(
   args: Readonly<{
@@ -27,7 +29,6 @@ export function useCanvasRelationalTreeAuthoringSession(
 ) {
   const { authoring, edges, enabled, inputs, nodes, transformNode } = args;
   const editable = authoring?.canEditNode === true;
-  const targetNodeId = transformNode.id;
   const [operation, setOperation] = useState<CanvasRelationalOperation | null>(null);
   const [active, setActive] = useState(false);
   const [joinDraft, setJoinDraft] = useState<DvtSubstraitInnerJoinDraft | null>(null);
@@ -53,90 +54,66 @@ export function useCanvasRelationalTreeAuthoringSession(
     (seed: CanvasRelationalTreeJoinSeedHydration) => {
       setActive(true);
       replaceInputs(seed.inputIds);
-      setOperation('inner_join');
+      setOperation(seed.operation);
       setJoinDraft(seed.draft);
       setAppendInputId(seed.appendInputId);
     },
     [replaceInputs]
   );
-  const hydrateExistingJoin = useCanvasRelationalTreeExistingJoinSeed({
+  const { hydrateExistingJoin, baselineDraft, seed } = useCanvasRelationalTreeExistingJoinSeed({
     edges,
     inputs,
     nodes,
-    targetNodeId,
+    targetNodeId: transformNode.id,
     transformNode,
     onHydrate: hydrateExistingJoinState,
   });
 
-  useEffect(reset, [enabled, reset, targetNodeId]);
+  useEffect(reset, [enabled, reset, transformNode.id]);
+  const effectiveInputIds = !active && seed != null ? seed.inputIds : selectedInputIds;
   const { candidates, choices } = useCanvasRelationalTreeAuthoringOptions({
     editable,
     edges,
     enabled,
     inputs,
-    joinDraft,
+    joinDraft: !active && seed != null ? seed.draft : joinDraft,
     nodes,
-    operation,
-    selectedInputIds,
-    targetNodeId,
+    operation: !active && seed != null ? seed.operation : operation,
+    selectedInputIds: effectiveInputIds,
+    targetNodeId: transformNode.id,
   });
 
-  const selectInput = useCallback(
-    (nodeId: string) => {
-      if (!enabled || !editable) return;
-      setActive(true);
-      if (!active && hydrateExistingJoin(nodeId)) return;
-      if (operation == null) {
-        selectInitialInput(nodeId);
-        setJoinDraft(null);
-        setAppendInputId(null);
-        return;
-      }
-      const candidate = candidates.find((item) => item.nodeId === nodeId);
-      if (candidate?.selectable !== true) return;
-      if (operation === 'union_all') {
-        appendOperand(nodeId);
-        return;
-      }
-      if (joinDraft != null) setAppendInputId(nodeId);
-    },
-    [
-      active,
-      appendOperand,
-      candidates,
-      editable,
-      enabled,
-      hydrateExistingJoin,
-      joinDraft,
-      operation,
-      selectInitialInput,
-    ]
-  );
-
-  const placeInput = useCallback(
-    (nodeId: string, position: 'primary' | 'secondary') => {
-      if (!enabled || !editable || !inputs.some((input) => input.nodeId === nodeId)) return;
-      setActive(true);
-      placeOperand(nodeId, position);
-      setOperation(null);
-      setJoinDraft(null);
-      setAppendInputId(null);
-    },
-    [editable, enabled, inputs, placeOperand]
-  );
-
-  const { appendJoinInput, selectOperation } = useCanvasRelationalTreeJoinDraftActions({
-    appendInputId,
-    choices,
-    inputs,
+  const { selectInput, placeInput } = useCanvasRelationalTreeInputSelection({
+    enabled,
+    editable,
+    active,
+    operation,
+    candidates,
     joinDraft,
-    selectedInputIds,
-    targetNodeId,
-    appendOperand,
-    setAppendInputId,
+    setActive,
+    hydrateExistingJoin,
+    selectInitialInput,
     setJoinDraft,
+    setAppendInputId,
+    appendOperand,
+    inputs,
+    placeOperand,
     setOperation,
   });
+
+  const { appendJoinInput, selectOperation: chooseOperation } =
+    useCanvasRelationalTreeJoinDraftActions({
+      appendInputId,
+      choices,
+      inputs,
+      joinDraft: !active && seed != null ? seed.draft : joinDraft,
+      selectedInputIds: effectiveInputIds,
+      targetNodeId: transformNode.id,
+      appendOperand,
+      setAppendInputId,
+      setJoinDraft,
+      setOperation,
+    });
 
   const apply = useCanvasRelationalTreeApplyCommand({
     authoring,
@@ -150,14 +127,32 @@ export function useCanvasRelationalTreeAuthoringSession(
     selectedInputIds,
     transformNode,
   });
-
   const start = useCallback(() => {
-    if (!enabled || !editable) return;
-    if (!hydrateExistingJoin()) setActive(true);
-  }, [editable, enabled, hydrateExistingJoin]);
-
-  return {
+    if (!enabled || !editable) return false;
+    if (!active && !hydrateExistingJoin()) setActive(true);
+    return true;
+  }, [active, editable, enabled, hydrateExistingJoin]);
+  const removal = useCanvasRelationalTreeRemoval({
+    enabled: enabled && editable,
     active,
+    draft: joinDraft,
+    selectedInputIds,
+    seed,
+    targetNodeId: transformNode.id,
+    hydrate: hydrateExistingJoin,
+    accept: (result, ids) => {
+      setActive(true);
+      setJoinDraft(result.draft);
+      setOperation(result.operation);
+      replaceInputs(ids);
+      setAppendInputId(null);
+    },
+  });
+  return {
+    removal,
+    active,
+    baselineDraft,
+    seed,
     appendInput: inputs.find((input) => input.nodeId === appendInputId) ?? null,
     apply,
     appendJoinInput,
@@ -171,8 +166,13 @@ export function useCanvasRelationalTreeAuthoringSession(
     secondaryInputId,
     selectedInputIds,
     selectInput,
-    selectOperation,
-    setJoinDraft,
+    selectOperation: (next: CanvasRelationalOperation) => {
+      if (start()) chooseOperation(next);
+    },
+    setJoinDraft: (draft: DvtSubstraitInnerJoinDraft) => {
+      if (!active) hydrateExistingJoin();
+      setJoinDraft(draft);
+    },
     start,
   } as const;
 }

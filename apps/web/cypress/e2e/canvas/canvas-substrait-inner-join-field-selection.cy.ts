@@ -5,6 +5,7 @@ import {
   inspectDvtSubstraitNInputJoinDraft,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
+import { dragCanvasNodeByViewportDelta } from '../../support/canvasGraphAuthoring';
 import {
   getE2eApiCalls,
   installE2eApiFetchStub,
@@ -87,6 +88,8 @@ function proveCardOutputControls(sourceCount: number): void {
     `${card} [data-slot="graph-node-column-piece"][data-column-name="${name}"]`;
   const toggle = `${field('order_id')} [data-slot="graph-node-column-output-state"]`;
   let position: string;
+  let originalRows: HTMLElement[];
+  let originalToggle: HTMLElement;
   let baseline: ReturnType<typeof inspectDvtSubstraitNInputJoinDraft>;
   const inspectSave = (): ReturnType<typeof inspectDvtSubstraitNInputJoinDraft> => {
     expect(getE2eApiCalls('/workspace/graph/draft').at(-1)?.method).to.equal('GET');
@@ -116,9 +119,21 @@ function proveCardOutputControls(sourceCount: number): void {
   toggleColumns('join-transform');
   cy.get(card).then(($card) => {
     position = $card[0]!.style.transform;
+    originalRows = [
+      ...$card[0]!.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-row"]'),
+    ];
+    originalToggle = $card[0]!.querySelector<HTMLElement>(
+      '[data-column-name="order_id"] [data-slot="graph-node-column-output-state"]'
+    )!;
   });
   cy.get(toggle).should('not.be.disabled').and('have.attr', 'aria-pressed', 'true').click();
   cy.get(toggle).should('have.attr', 'aria-pressed', 'false');
+  cy.get(toggle).should(($toggle) => {
+    expect($toggle[0], 'same checkbox after exclusion').to.equal(originalToggle);
+    expect($toggle[0]!.ownerDocument.activeElement, 'checkbox focus retained').to.equal(
+      originalToggle
+    );
+  });
   cy.wrap(null).should(() => {
     const result = inspectSave();
     expect(
@@ -127,8 +142,17 @@ function proveCardOutputControls(sourceCount: number): void {
     baseline = result;
   });
   cy.get(card).should(($card) => expect($card[0]!.style.transform).to.equal(position));
+  cy.get(`${card} [data-slot="graph-node-column-row"]`).should(($rows) => {
+    expect($rows.length).to.equal(originalRows.length);
+    [...$rows].forEach((row, index) =>
+      expect(row, 'unchanged row after save').to.equal(originalRows[index])
+    );
+  });
   cy.get(toggle).click();
   cy.get(toggle).should('have.attr', 'aria-pressed', 'true');
+  cy.get(toggle).should(($toggle) =>
+    expect($toggle[0], 'same checkbox after inclusion').to.equal(originalToggle)
+  );
   expectSavedOrder(['customer_id', 'name', 'order_id']);
 
   cy.window().then((window) => {
@@ -197,39 +221,49 @@ function proveEmptyJoinOutput(sourceCount: number): void {
       }
     });
   };
+  // Leave exposed connection segments: compact cards can cover a remaining edge
+  // after its neighbouring connection is removed and the ports are measured again.
+  dragCanvasNodeByViewportDelta('Customer Orders', { x: 160, y: 0 }, { nodeId: 'join-transform' });
   cy.get(stageEdges).then(($edges) => {
     for (let index = 0; index < $edges.length; index += 1) {
-      cy.get<SVGPathElement>(`${stageEdges} .react-flow__edge-interaction`)
-        .first()
-        .then(($path) => {
-          const path = $path[0]!;
-          const matrix = path.getScreenCTM()!;
-          const rect = path.getBoundingClientRect();
-          const points = Array.from({ length: 19 }, (_, index) =>
-            path
-              .getPointAtLength((path.getTotalLength() * (index + 1)) / 20)
-              .matrixTransform(matrix)
-          );
-          const visible = points.find(
-            (point) => path.ownerDocument.elementFromPoint(point.x, point.y) === path
-          );
-          expect(visible, 'visible connection segment').not.to.equal(undefined);
-          cy.wrap($path).rightclick(visible!.x - rect.left, visible!.y - rect.top);
-        });
+      cy.get<SVGPathElement>(`${stageEdges} .react-flow__edge-interaction`).then(($paths) => {
+        // N-input edges can share a segment: remove an exposed edge, not the first DOM edge.
+        const exposed = [...$paths]
+          .map((path) => {
+            const matrix = path.getScreenCTM()!;
+            const points = Array.from({ length: 19 }, (_, index) =>
+              path
+                .getPointAtLength((path.getTotalLength() * (index + 1)) / 20)
+                .matrixTransform(matrix)
+            );
+            const point = points.find(
+              (point) => path.ownerDocument.elementFromPoint(point.x, point.y) === path
+            );
+            return point == null ? undefined : { path, point };
+          })
+          .find((candidate) => candidate != null);
+        expect(exposed, 'visible connection segment').not.to.equal(undefined);
+        const { path, point } = exposed!;
+        const rect = path.getBoundingClientRect();
+        cy.wrap(path).rightclick(point.x - rect.left, point.y - rect.top);
+      });
       cy.contains('[data-slot="canvas-context-menu-item"]', 'Remove connection').click();
       cy.get(stageEdges).should('have.length', $edges.length - index - 1);
     }
   });
   assertSaved();
   toggleColumns('join-transform');
+  cy.get(`${controls}[aria-pressed="true"]`).should(($selected) => {
+    expect(baseline?.ok && baseline.projection.outputs.length).to.equal($selected.length);
+  });
   cy.get(`${controls}[aria-pressed="true"]`).then(($selected) => {
     const names = [...$selected].map(
       (element) => element.closest<HTMLElement>('[data-column-name]')!.dataset.columnName!
     );
     names.forEach((name, index) => {
-      cy.get(
-        `${card} [data-column-name="${name}"] [data-slot="graph-node-column-output-state"]`
-      ).click();
+      const selector = `${card} [data-column-name="${name}"] [data-slot="graph-node-column-output-state"]`;
+      cy.get(selector).should('have.attr', 'aria-pressed', 'true').click();
+      cy.get(selector).should('have.attr', 'aria-pressed', 'false');
       assertSaved(names.length - index - 1);
     });
   });

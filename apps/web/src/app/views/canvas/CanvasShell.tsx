@@ -6,10 +6,9 @@ import { getSourceImportContributions, getSourceImportOptions } from '../../plug
 import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { CanvasShellMainPanel } from './CanvasShellMainPanel';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
-import {
-  CanvasRelationalTreeWorkbench,
-  canOpenCanvasRelationalTreeWorkbench,
-} from './CanvasRelationalTreeWorkbench';
+import { canOpenCanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
+import { CanvasModelEditor, type CanvasModelView } from './CanvasModelEditor';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
 import { CanvasSettingsDialog } from './CanvasSettingsDialog';
 import { CanvasSourceImportDialogHost } from './CanvasSourceImportDialogHost';
@@ -27,10 +26,9 @@ import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { buildGraphDraftWorkspaceFileCodeContributions } from './graphDraftWorkspaceFileCodeContribution';
-import { useUiLayoutStore } from '../../stores/uiLayoutStore';
-import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import { findCanvasGraphNodeElement } from './canvasNodeWorkbenchDomGeometry';
 import { useCanvasNodeDataSample } from './useCanvasNodeDataSample';
+import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
 import { projectCanvasRelationalCompositionEdgeInteractions } from './canvasRelationalCompositionEdgeInteraction';
 
 type WorkbenchOpener = Readonly<{
@@ -68,6 +66,7 @@ export default function CanvasShell({
   onDbtProjectImported,
   warehouseSourceDataSampleQuery,
   canvasTransformDataSampleQuery,
+  prepareModelPreview,
   runSnapshot,
   runMaterializationSampleQuery,
 }: CanvasShellProps): JSX.Element {
@@ -84,10 +83,9 @@ export default function CanvasShell({
     warehouseSourceDataSampleQuery,
   });
   const [relationalTreeTransformId, setRelationalTreeTransformId] = useState<string | null>(null);
-  const showBottomDrawer = useUiLayoutStore((state) => state.showBottomDrawer);
-  const selectOperationalDrawerTab = useOperationalDrawerContributionStore(
-    (state) => state.selectOperationalDrawerTab
-  );
+  const [modelTabActive, setModelTabActive] = useState(true);
+  const [initialModelView, setInitialModelView] = useState<CanvasModelView>('editor');
+  const [modelViewRequestId, setModelViewRequestId] = useState(0);
   const relationalTreeTransformIds = useMemo(
     () =>
       new Set(
@@ -105,20 +103,24 @@ export default function CanvasShell({
     [panels.inspectorGraphNodes, relationalTreeTransformId, relationalTreeTransformIds]
   );
   const openRelationalTree = useCallback(
-    (nodeId: string) => {
+    (nodeId: string, view: CanvasModelView = 'editor') => {
       if (!relationalTreeTransformIds.has(nodeId)) return;
-      setRelationalTreeTransformId(nodeId);
-      selectOperationalDrawerTab('semantic');
-      showBottomDrawer(360);
-      window.requestAnimationFrame(() => {
-        document
-          .querySelector<HTMLButtonElement>(
-            '[data-slot="bottom-operational-drawer-tab"][data-tab="semantic"]'
-          )
-          ?.focus({ preventScroll: true });
-      });
+      workbenchOpenerRef.current = {
+        element: document.activeElement instanceof HTMLElement ? document.activeElement : null,
+        fallbackNodeId: nodeId,
+      };
+      const open = () => {
+        setInitialModelView(view);
+        setModelViewRequestId((current) => current + 1);
+        setRelationalTreeTransformId(nodeId);
+        setModelTabActive(true);
+      };
+      const current = useCanvasWorkspaceMenuContributionStore.getState().modelTab;
+      if (current?.canvasId === panels.activeCanvasId && current.nodeId !== nodeId)
+        current.onClose(open);
+      else open();
     },
-    [relationalTreeTransformIds, selectOperationalDrawerTab, showBottomDrawer]
+    [relationalTreeTransformIds, panels.activeCanvasId]
   );
   const workbenchOpenerRef = useRef<WorkbenchOpener | null>(null);
   const contextualWorkbenchId = useCanvasInteractionStore((state) => state.contextualWorkbenchId);
@@ -287,6 +289,9 @@ export default function CanvasShell({
             : new Map(data.runStatusByNodeId).set(node.id, sinkDataSampleTarget.status);
         const projectedData: DbtNodeData = {
           ...data,
+          modelDataActionLabel: canOpenRelationalTree
+            ? resolveCanvasSemanticEditorCopy(applicationLanguage).viewData
+            : undefined,
           canOpenNodeCode,
           ...(participatesInActiveRun
             ? {
@@ -302,18 +307,21 @@ export default function CanvasShell({
                 lastRunAt: sinkDataSampleTarget.completedAt,
                 runStatusByNodeId,
               }),
-          onOpenSourceDataSample: dataSampleProjection.onOpen,
-          sourceDataSampleInteractionLabel: dataSampleProjection.canOpen
-            ? copy.sourceDataSampleInteractionLabel
-            : undefined,
-          onSelectNode: canOpenRelationalTree
-            ? () => openRelationalTree(node.id)
-            : data.onSelectNode,
-          onOpenNode: isNativeTransform
-            ? dataSampleProjection.onOpen
-            : data.role === 'transform' && typeof data.onInspectNode === 'function'
-              ? () => data.onInspectNode?.(node.id, 'general')
-              : data.onOpenNode,
+          onOpenSourceDataSample: canOpenRelationalTree
+            ? () => openRelationalTree(node.id, 'data')
+            : dataSampleProjection.onOpen,
+          sourceDataSampleInteractionLabel: canOpenRelationalTree
+            ? resolveCanvasSemanticEditorCopy(applicationLanguage).openEditor
+            : dataSampleProjection.canOpen
+              ? copy.sourceDataSampleInteractionLabel
+              : undefined,
+          onSelectNode: data.onSelectNode,
+          onOpenNode:
+            isNativeTransform && canOpenRelationalTree
+              ? () => openRelationalTree(node.id)
+              : data.role === 'transform' && typeof data.onInspectNode === 'function'
+                ? () => data.onInspectNode?.(node.id, 'general')
+                : data.onOpenNode,
         };
 
         return {
@@ -329,6 +337,7 @@ export default function CanvasShell({
       }),
     }),
     [
+      applicationLanguage,
       copy.sourceDataSampleInteractionLabel,
       graph,
       openRelationalTree,
@@ -402,7 +411,10 @@ export default function CanvasShell({
     >
       {layout.surfaceStrategy?.operationalDrawer == null ? null : (
         <CanvasOperationalDrawerContributionRegistrar
-          policy={layout.surfaceStrategy.operationalDrawer}
+          policy={{
+            ...layout.surfaceStrategy.operationalDrawer,
+            tabs: layout.surfaceStrategy.operationalDrawer.tabs.filter((tab) => tab !== 'semantic'),
+          }}
           panels={panels}
           chromeState={chromeState}
           runControls={runControls}
@@ -410,25 +422,42 @@ export default function CanvasShell({
           onStartRun={chromeCommands.onRun}
           selectionRecoveryCommands={chromeCommands.executionSelectionRecovery}
           dataSampleTabs={dataSampleTabs}
-          semanticBody={
-            relationalTreeTransform == null ? (
-              <div className="grid h-full place-items-center p-4 text-sm text-muted-foreground">
-                {copy.operationalDrawerSemanticIdleMessage}
-              </div>
-            ) : (
-              <CanvasRelationalTreeWorkbench
-                transformNode={relationalTreeTransform}
-                nodes={panels.inspectorGraphNodes}
-                edges={panels.inspectorGraphEdges}
-                copy={copy}
-                authoring={panels.relationalTreeAuthoring}
-              />
-            )
-          }
         />
       )}
       <CanvasShellMainPanel
-        layout={shellLayout}
+        layout={
+          relationalTreeTransform == null || panels.activeCanvasId == null
+            ? shellLayout
+            : {
+                ...shellLayout,
+                inspectorPanelVisible: modelTabActive ? false : shellLayout.inspectorPanelVisible,
+                contextualWorkbench: undefined,
+                centerSurfaceVisible: modelTabActive,
+                centerSurface: (
+                  <CanvasModelEditor
+                    key={`${panels.activeCanvasId}:${relationalTreeTransform.id}`}
+                    canvasId={panels.activeCanvasId}
+                    canvasName={panels.activeCanvas?.title ?? ''}
+                    transformNode={relationalTreeTransform}
+                    nodes={panels.inspectorGraphNodes}
+                    edges={panels.inspectorGraphEdges}
+                    authoring={panels.relationalTreeAuthoring}
+                    initialView={initialModelView}
+                    viewRequestId={modelViewRequestId}
+                    draftStatus={chromeState.draftStatusState}
+                    query={canvasTransformDataSampleQuery}
+                    preparePreview={prepareModelPreview}
+                    active={modelTabActive}
+                    onSelect={() => setModelTabActive(true)}
+                    onShowCanvas={() => setModelTabActive(false)}
+                    onClose={() => {
+                      setRelationalTreeTransformId(null);
+                      restoreWorkbenchFocus();
+                    }}
+                  />
+                ),
+              }
+        }
         panels={panelsWithCanonicalCodeContribution}
         graph={graphWithCanonicalCodeCommands}
         chromeState={chromeState}

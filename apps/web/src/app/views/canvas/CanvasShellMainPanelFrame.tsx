@@ -8,11 +8,41 @@ import { useCanvasNodeWorkbenchPosition } from './useCanvasNodeWorkbenchPosition
 const canvasShellMainPanelFrameClassNames = {
   root: 'relative h-full flex flex-col bg-(--surface-panel)',
   readOnlyBanner: 'shrink-0',
+  workspaceSurface: 'flex min-h-0 min-w-0 flex-1 flex-col [&[hidden]]:hidden',
   workbenchSplit: 'relative flex min-h-0 flex-1',
   workbenchBaseSurface: 'flex min-h-0 min-w-0 flex-1',
   workbenchOverlay:
     'absolute z-20 flex h-[min(42rem,calc(100%-2rem))] w-[min(48rem,calc(100%-2rem))] overflow-hidden rounded-md border border-(--border-default) bg-(--surface-panel) shadow-xl',
 } as const;
+
+export function CanvasShellWorkspaceSurfaces({
+  viewport,
+  editor,
+  editorVisible,
+}: Readonly<{
+  viewport: ReactNode;
+  editor: ReactNode;
+  editorVisible: boolean;
+}>): JSX.Element {
+  return (
+    <>
+      <div
+        hidden={editorVisible}
+        data-slot="canvas-workspace-surface"
+        className={canvasShellMainPanelFrameClassNames.workspaceSurface}
+      >
+        {viewport}
+      </div>
+      <div
+        hidden={!editorVisible}
+        data-slot="canvas-model-workspace-surface"
+        className={canvasShellMainPanelFrameClassNames.workspaceSurface}
+      >
+        {editor}
+      </div>
+    </>
+  );
+}
 
 export function CanvasShellMainPanelFrame({
   children,

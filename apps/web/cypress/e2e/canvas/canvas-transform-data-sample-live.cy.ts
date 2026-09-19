@@ -13,7 +13,7 @@ describe('Canvas live data exploration', () => {
     resetE2eApiStubs();
   });
 
-  it('opens independent Source and Transform data tabs without Preview or Run', () => {
+  it('explores Source and Model rows without a plan preview or published Run', () => {
     let previewRequests = 0;
     let runRequests = 0;
 
@@ -39,16 +39,13 @@ describe('Canvas live data exploration', () => {
     );
 
     visitWithLiveWorkspaceSession('/canvas');
-    getVisibleCanvasNode('dvt-transform-1').find('[data-slot="canvas-node-shell"]').click();
-    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="semantic"]').should(
+    getVisibleCanvasNode('dvt-transform-1').find('[data-slot="canvas-model-view-data"]').click();
+    cy.get('[data-slot="canvas-model-view-tab"][data-view="data"]').should(
       'have.attr',
       'aria-selected',
       'true'
     );
-
-    getVisibleCanvasNode('dvt-transform-1')
-      .find('[data-slot="canvas-node-shell"]')
-      .dblclick('bottom', { force: true });
+    cy.get('[data-slot="canvas-model-preview"]').click();
     cy.wait('@transformRows', { timeout: 30_000 }).then((interception) => {
       expect(interception.response?.statusCode).to.equal(200);
       expect(interception.response?.body).to.deep.include({
@@ -59,14 +56,10 @@ describe('Canvas live data exploration', () => {
       });
       expect(interception.response?.body.rows).to.have.length(3);
     });
-    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data:dvt-transform-1"]').should(
-      'have.attr',
-      'aria-selected',
-      'true'
-    );
-    cy.get('[data-slot="bottom-operational-drawer-data"]')
+    cy.get('[data-slot="canvas-model-data"]')
       .should('contain.text', 'customer')
       .and('contain.text', 'Ada');
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
 
     getVisibleCanvasNode('source-1')
       .find('[data-slot="canvas-node-shell"]')
@@ -77,9 +70,6 @@ describe('Canvas live data exploration', () => {
       'aria-selected',
       'true'
     );
-    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data:dvt-transform-1"]')
-      .should('be.visible')
-      .click();
     cy.get('[data-slot="bottom-operational-drawer-data"]')
       .should('contain.text', 'customer')
       .and('contain.text', 'Ada');

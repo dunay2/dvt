@@ -727,6 +727,7 @@ function createDvtSubstraitNInputJoinDraft(args: {
   predicates: readonly JoinBuildPredicate[];
   outputs: readonly JoinBuildOutput[];
   previousDraft?: DvtSubstraitInnerJoinDraft;
+  relationIds?: readonly string[];
 }): DvtSubstraitInnerJoinDraft {
   requireInnerJoinCapabilities(args.predicates);
   if (args.inputs.length < 2 || args.predicates.length !== args.inputs.length - 1) {
@@ -1021,6 +1022,7 @@ function createDvtSubstraitNInputJoinDraft(args: {
     previous.inputs.length <= args.inputs.length &&
     samePrefix(previous, args.inputs, previous.inputs.length);
   const joinRelationIds = args.predicates.map((_, stageIndex) => {
+    if (args.relationIds?.[stageIndex] != null) return args.relationIds[stageIndex]!;
     const finalStage = stageIndex === args.predicates.length - 1;
     if (finalStage && canCarryFinal && previousFinal != null) return previousFinal.relationId;
     const priorStage = previousIntermediate[stageIndex];
@@ -1243,6 +1245,56 @@ function buildOutputsFromProjection(
   }));
 }
 
+/** Retain canonical inputs without inventing predicates or changing surviving identities. */
+export function retainDvtSubstraitJoinInputs(
+  draft: DvtSubstraitInnerJoinDraft,
+  retained: readonly number[]
+): DvtSubstraitInnerJoinDraft | null {
+  const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+  if (!inspection.ok || retained.length < 2 || new Set(retained).size !== retained.length)
+    return null;
+  const { projection } = inspection;
+  if (
+    retained.some(
+      (index, offset) =>
+        projection.inputs[index] == null || (offset > 0 && index <= retained[offset - 1]!)
+    )
+  )
+    return null;
+  const original = buildPredicatesFromProjection(projection);
+  if (original == null) return null;
+  const predicates: JoinBuildPredicate[] = [];
+  for (const index of retained.slice(1)) {
+    const predicate = original[index - 1];
+    if (predicate == null) return null;
+    const conditions = predicate.conditions.map((condition) =>
+      mapDvtSubstraitJoinConditionOperands(condition, (operand) =>
+        mapDvtSubstraitJoinOperandFields(operand, (field) => {
+          const inputIndex = retained.indexOf(field.locator.inputIndex);
+          return inputIndex < 0
+            ? null
+            : { kind: 'field' as const, locator: { ...field.locator, inputIndex } };
+        })
+      )
+    );
+    if (conditions.some((condition) => condition == null)) return null;
+    predicates.push({ conditions: conditions.filter((condition) => condition != null) });
+  }
+  const inputs = buildInputsFromProjection(projection);
+  return createDvtSubstraitNInputJoinDraft({
+    inputs: retained.map((index) => inputs[index]!),
+    predicates,
+    outputs: buildOutputsFromProjection(projection)
+      .filter((output) => retained.includes(output.source.inputIndex))
+      .map((output) => ({
+        ...output,
+        source: { ...output.source, inputIndex: retained.indexOf(output.source.inputIndex) },
+      })),
+    previousDraft: draft,
+    relationIds: retained.slice(1).map((index) => projection.joinRelations[index - 1]!.relationId),
+  });
+}
+
 function binaryFieldForLocator(locator: JoinFieldLocator) {
   return INNER_JOIN_OUTPUT_FIELDS.find((field) => sameLocator(field.locator, locator));
 }
@@ -1394,8 +1446,9 @@ function editDvtSubstraitJoinPredicateConditions(args: {
     conditions: readonly DvtSubstraitJoinPredicateCondition[]
   ) => readonly DvtSubstraitJoinPredicateCondition[] | null;
 }): DvtSubstraitInnerJoinDraft {
-  const inspection = inspectDvtSubstraitNInputJoinDraft(args.draft);
-  if (!inspection.ok) return args.draft;
+  const context = inspectDvtSubstraitJoinPredicateContext(args.draft);
+  if (context == null || !context.inspection.ok) return args.draft;
+  const { inspection, baseDraft } = context;
   const { projection } = inspection;
   const stageIndex = projection.joinRelations.findIndex(
     (relation) => relation.relationId === args.joinRelationId
@@ -1414,12 +1467,93 @@ function editDvtSubstraitJoinPredicateConditions(args: {
       inputs: buildInputsFromProjection(projection),
       predicates,
       outputs: buildOutputsFromProjection(projection),
-      previousDraft: args.draft,
+      previousDraft: baseDraft,
     });
-    return inspectDvtSubstraitNInputJoinDraft(edited).ok ? edited : args.draft;
+    return inspectDvtSubstraitNInputJoinDraft(edited).ok
+      ? restoreDvtSubstraitJoinContext(args.draft, baseDraft, edited)
+      : args.draft;
   } catch {
     return args.draft;
   }
+}
+
+/** Resolve predicate ownership without making the Model's root its editing identity. */
+export function inspectDvtSubstraitJoinPredicateContext(draft: DvtSubstraitInnerJoinDraft) {
+  const window = inspectValidInnerJoinGroupedWindow(draft);
+  const grouped = window?.baseDraft ?? draft;
+  const baseDraft = inspectValidInnerJoinGrouping(grouped)?.baseDraft ?? grouped;
+  const inspection = inspectDvtSubstraitNInputJoinDraft(baseDraft);
+  return inspection.ok ? { baseDraft, inspection } : null;
+}
+
+export function restoreDvtSubstraitJoinContext(
+  original: DvtSubstraitInnerJoinDraft,
+  baseDraft: DvtSubstraitInnerJoinDraft,
+  edited: DvtSubstraitInnerJoinDraft
+): DvtSubstraitInnerJoinDraft {
+  if (baseDraft === original) return edited;
+  const window = inspectValidInnerJoinGroupedWindow(original);
+  const grouping = inspectValidInnerJoinGrouping(window?.baseDraft ?? original);
+  const inspection = inspectDvtSubstraitNInputJoinDraft(edited);
+  if (grouping == null || !inspection.ok) return original;
+  const groupField = inspection.projection.outputs.find(
+    (field) => field.fieldId === grouping.projection.groupField.fieldId
+  );
+  const joinBinding = innerJoinResultBinding(edited);
+  if (groupField == null || joinBinding == null) return original;
+  const plan = clonePlan(original.plan);
+  const root = plan.relations[0]?.relType;
+  const editedRoot = edited.plan.relations[0]?.relType;
+  if (root?.case !== 'root' || editedRoot?.case !== 'root' || editedRoot.value.input == null)
+    return original;
+  // The rebuilt predicate owns its extension anchors. Rebind the retained wrappers
+  // to those anchors; never regenerate their relation/field identities.
+  const editedPlan = clonePlan(edited.plan);
+  plan.extensions = editedPlan.extensions;
+  plan.extensionUrns = editedPlan.extensionUrns;
+  let relation = root.value.input;
+  if (relation?.relType.case === 'project') {
+    for (const expression of relation.relType.value.expressions) {
+      if (expression.rexType.case === 'windowFunction')
+        expression.rexType.value.functionReference = ensureDvtSubstraitRowNumberFunction(plan);
+    }
+    relation = relation.relType.value.input;
+  }
+  if (relation?.relType.case !== 'aggregate') return original;
+  const measure = relation.relType.value.measures[0]?.measure;
+  if (measure == null) return original;
+  measure.functionReference = ensureDvtSubstraitCountFunction(plan);
+  relation.relType.value.groupingExpressions = [
+    createDvtSubstraitFieldReference(groupField.outputOrdinal),
+  ];
+  relation.relType.value.input = editedRoot.value.input;
+  const baseIds = new Set(baseDraft.sidecar.relations.map((binding) => binding.relationId));
+  const wrappers = original.sidecar.relations.filter((binding) => !baseIds.has(binding.relationId));
+  const wrapperIds = new Set(wrappers.map((binding) => binding.relationId));
+  const wrapperFields = original.sidecar.fields.filter((field) => wrapperIds.has(field.relationId));
+  const wrapperFieldIds = new Set(wrapperFields.map((field) => field.fieldId));
+  const fields = new Map(
+    [
+      ...edited.sidecar.fields.filter((field) => !wrapperFieldIds.has(field.fieldId)),
+      ...wrapperFields,
+    ].map((field) => [field.fieldId, field])
+  );
+  const next = {
+    plan,
+    sidecar: {
+      ...original.sidecar,
+      semanticPlanSha256: ZERO_SHA256,
+      relations: [
+        ...edited.sidecar.relations,
+        ...wrappers.map((binding) => ({ ...binding, displayName: joinBinding.displayName })),
+      ],
+      fields: original.sidecar.fields.flatMap((field) => {
+        const retained = fields.get(field.fieldId);
+        return retained == null ? [] : [retained];
+      }),
+    },
+  };
+  return inspectDvtSubstraitInnerJoinAcceptedDraft(next).ok ? next : original;
 }
 
 const projectedJoinOperandKey = (operand: DvtSubstraitJoinPredicateOperand) =>
@@ -1796,7 +1930,10 @@ function inspectValidInnerJoinGrouping(
   };
   const nInputBase = inspectDvtSubstraitNInputJoinDraft(baseDraft);
   const binaryBase = inspectDvtSubstraitInnerJoinDraft(baseDraft);
-  const base = nInputBase.ok && nInputBase.projection.inputs.length > 2 ? nInputBase : binaryBase;
+  const base =
+    nInputBase.ok && (nInputBase.projection.inputs.length > 2 || !binaryBase.ok)
+      ? nInputBase
+      : binaryBase;
   const baseGroupField = base.ok ? base.projection.outputs[groupInputOrdinal] : null;
   if (
     !base.ok ||

@@ -27,6 +27,8 @@ export const TransformDataSampleRequestSchema = z
   .object({
     canvasId: NonBlankStringSchema,
     transformNodeId: NonBlankStringSchema,
+    relationId: NonBlankStringSchema.optional(),
+    semanticPlanSha256: NonBlankStringSchema.refine(isSha256HexString).optional(),
     limit: z
       .number()
       .int()
@@ -34,7 +36,11 @@ export const TransformDataSampleRequestSchema = z
       .max(TRANSFORM_DATA_SAMPLE_MAX_LIMIT)
       .default(TRANSFORM_DATA_SAMPLE_DEFAULT_LIMIT),
   })
-  .strict();
+  .strict()
+  .refine((input) => input.relationId === undefined || input.semanticPlanSha256 !== undefined, {
+    message: 'Selected relation preview requires the expected semantic plan SHA-256.',
+    path: ['semanticPlanSha256'],
+  });
 
 export const TransformDataSampleRowSchema = z
   .object({
@@ -47,6 +53,7 @@ export const TransformDataSampleResponseSchema = z
     contractVersion: z.literal(TRANSFORM_DATA_SAMPLE_CONTRACT_VERSION),
     canvasId: NonBlankStringSchema,
     transformNodeId: NonBlankStringSchema,
+    relationId: NonBlankStringSchema.optional(),
     draftRevision: NonBlankStringSchema,
     semanticPlanSha256: NonBlankStringSchema.refine(isSha256HexString, {
       message: 'Expected a lowercase SHA-256 semantic plan digest.',

@@ -26,14 +26,15 @@ describe('relational-tree viewport fit', () => {
     ).toBeCloseTo(0.42, 2);
   });
 
-  it('keeps very large trees inspectable at the supported minimum zoom', () => {
-    expect(
-      calculateCanvasRelationalTreeFit({
-        viewportWidth: 800,
-        viewportHeight: 400,
-        contentWidth: 8_000,
-        contentHeight: 4_000,
-      })
-    ).toBe(0.35);
+  it('frames every node of a large tree even below the manual zoom minimum', () => {
+    const zoom = calculateCanvasRelationalTreeFit({
+      viewportWidth: 800,
+      viewportHeight: 400,
+      contentWidth: 8_000,
+      contentHeight: 4_000,
+    });
+    expect(8_000 * zoom).toBeLessThanOrEqual(800 - 64);
+    expect(4_000 * zoom).toBeLessThanOrEqual(400 - 64);
+    expect(zoom).toBeGreaterThan(0);
   });
 });

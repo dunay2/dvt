@@ -11,6 +11,7 @@ import type { CanvasWorkspaceMenuContribution } from './canvasWorkspaceMenuContr
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
 import { canvasViewCopy } from './copy';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { CanvasWorkspaceModelTabs } from './CanvasWorkspaceModelTabs';
 
 type CanvasWorkspaceMenuContributionRegistrarProps = CanvasWorkspaceMenuContribution;
 
@@ -187,6 +188,7 @@ export function CanvasWorkspaceMenuControls({
 }
 
 export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
+  const modelTab = useCanvasWorkspaceMenuContributionStore((state) => state.modelTab);
   const activeCanvas = useCanvasWorkspaceMenuContributionStore(
     (state) => state.contribution?.activeCanvas ?? null
   );
@@ -194,6 +196,10 @@ export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
 
   if (activeCanvas == null) {
     return null;
+  }
+
+  if (modelTab?.canvasId === activeCanvas.id) {
+    return <CanvasWorkspaceModelTabs canvasTitle={activeCanvas.title} tab={modelTab} />;
   }
 
   return (

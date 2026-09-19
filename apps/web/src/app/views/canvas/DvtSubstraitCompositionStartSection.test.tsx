@@ -443,7 +443,7 @@ describe('DvtSubstraitCompositionStartSection', () => {
       '[aria-label="Tipo del operando derecho"]'
     )!;
     const leftFunction = container.querySelector<HTMLSelectElement>(
-      '[data-slot="semantic-workbench-join-izquierdo-operand"] [aria-label="Añadir función exterior al operando"]'
+      '[data-slot="semantic-workbench-join-izquierdo-operand"] [aria-label="Añadir función exterior al operando izquierdo"]'
     )!;
     const functionId = Array.from(leftFunction.options).find(
       (option) => option.value !== ''

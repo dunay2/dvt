@@ -1,0 +1,48 @@
+/* Editor-scoped interface type; monospaced text is reserved for expressions. */
+[data-slot='canvas-model-editor'],
+.canvas-relational-card-menu {
+  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+[data-slot='canvas-model-editor'] :where(button, input, select, textarea) {
+  font-family: var(--font-sans);
+}
+
+[data-slot='canvas-relational-tree-inline-editor'] {
+  container-type: inline-size;
+}
+
+.canvas-operation-panels {
+  display: grid;
+  gap: 12px;
+}
+
+.canvas-operation-editors {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+}
+
+.canvas-operation-editors > * {
+  min-width: 0;
+}
+
+@container (min-width: 960px) {
+  .canvas-operation-panels.with-preview {
+    grid-template-columns: minmax(0, 1.9fr) minmax(320px, 1fr);
+    overflow: hidden;
+  }
+}
+
+@container (max-width: 959px) {
+  .canvas-operation-panels.with-preview {
+    grid-template-rows: minmax(240px, auto) minmax(200px, auto);
+  }
+}
+
+@container (max-width: 640px) {
+  .canvas-operation-editors {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(200px, auto) auto;
+  }
+}

@@ -1,6 +1,11 @@
 /** Owned concern: render deterministic graph geometry without creating a second Canvas authority. */
 import { Table2 } from 'lucide-react';
 import { useMemo } from 'react';
+import {
+  CANVAS_RELATIONAL_SEMANTIC_ZOOM,
+  projectCanvasRelationalTreeSemanticZoom,
+  type CanvasRelationalSemanticContext,
+} from './canvasRelationalTreeSemanticZoom';
 
 import {
   layoutCanvasRelationalTree,
@@ -28,10 +33,28 @@ function edgePath(edge: CanvasRelationalTreePlacedEdge): string {
 
 function EdgeRoleBadge({ edge }: Readonly<{ edge: CanvasRelationalTreePlacedEdge }>) {
   const badge = childRoleBadge(edge.role, edge.ordinal);
+  const width = 20;
   return badge == null ? null : (
-    <g transform={`translate(${edge.toX - 17} ${edge.toY - 8})`}>
-      <rect width="16" height="16" rx="4" fill="var(--surface-panel)" stroke="var(--status-info)" />
-      <text x="8" y="11" fill="var(--text-primary)" fontSize="8" textAnchor="middle">
+    <g
+      data-slot="canvas-relational-tree-input-label"
+      data-role={edge.role}
+      transform={`translate(${edge.toX - width - 4} ${edge.toY - 10})`}
+    >
+      <rect
+        width={width}
+        height="20"
+        rx="4"
+        fill="var(--surface-panel)"
+        stroke="var(--status-info)"
+      />
+      <text
+        x={width / 2}
+        y="14"
+        fill="var(--text-strong)"
+        fontSize="12"
+        fontWeight="500"
+        textAnchor="middle"
+      >
         {badge}
       </text>
     </g>
@@ -44,14 +67,27 @@ export function CanvasRelationalTreeLayout({
   selectedLocator,
   copy,
   onSelect,
+  onExpand,
+  onRemove,
+  semanticContext,
+  zoom = 1,
 }: Readonly<{
   outputName: string;
   root: CanvasRelationalTreeNode;
   selectedLocator: string;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
+  onExpand?: (locator: string) => void;
+  onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
+  semanticContext?: CanvasRelationalSemanticContext;
+  zoom?: number;
 }>): JSX.Element {
-  const layout = useMemo(() => layoutCanvasRelationalTree(root), [root]);
+  const detailed = Math.round(zoom * 100) >= CANVAS_RELATIONAL_SEMANTIC_ZOOM * 100;
+  const detail = useMemo(
+    () => projectCanvasRelationalTreeSemanticZoom(root, detailed ? semanticContext : undefined),
+    [root, detailed, semanticContext?.transformNode, semanticContext?.draft]
+  );
+  const layout = useMemo(() => layoutCanvasRelationalTree(root, detail.sizes), [root, detail]);
   const rootNode = layout.nodes[0]!;
 
   return (
@@ -69,7 +105,7 @@ export function CanvasRelationalTreeLayout({
         height={layout.height}
       >
         <path
-          d={`M ${rootNode.x + rootNode.width} ${rootNode.y + rootNode.height / 2} H ${layout.output.x}`}
+          d={`M ${rootNode.x + rootNode.width} ${layout.output.y + layout.output.height / 2} H ${layout.output.x}`}
           fill="none"
           stroke="var(--status-info)"
           strokeWidth="1.5"
@@ -130,6 +166,9 @@ export function CanvasRelationalTreeLayout({
             selected={placed.node.locator === selectedLocator}
             copy={copy}
             onSelect={onSelect}
+            onExpand={onExpand}
+            onRemove={onRemove}
+            semanticGraph={detail.graphs.get(placed.node.locator)}
           />
         ))}
       </ul>

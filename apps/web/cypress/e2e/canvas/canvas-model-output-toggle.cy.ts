@@ -102,6 +102,28 @@ function openModelColumns(): void {
   modelCard().contains('button[aria-expanded]:visible', 'Columns').should('be.visible').click();
 }
 
+function showCustomerType(): void {
+  modelColumnRow('customer')
+    .find('[data-slot="graph-node-column-piece"]')
+    .should('be.visible')
+    .then(($piece) => {
+      const piece = $piece[0]!;
+      const bounds = piece.getBoundingClientRect();
+      cy.window().then((window) => {
+        const pointer = {
+          bubbles: true,
+          pointerType: 'mouse',
+          clientX: bounds.x + bounds.width / 2,
+          clientY: bounds.y + bounds.height / 2,
+        };
+        piece.dispatchEvent(new window.PointerEvent('pointerleave', pointer));
+        piece.dispatchEvent(new window.PointerEvent('pointerover', pointer));
+        piece.dispatchEvent(new window.PointerEvent('pointermove', pointer));
+      });
+    });
+  cy.get('[role="tooltip"]').should('have.text', 'text');
+}
+
 function assertColumnMenuStaysOpenAndReopens(): void {
   modelCard()
     .find('[data-slot="graph-node-column-piece"][data-column-name="customer"]')
@@ -124,6 +146,12 @@ describe('Canvas Model output toggle lifecycle', () => {
     visitCanvas();
 
     openModelColumns();
+    showCustomerType();
+    cy.get('[data-slot="tooltip-content"]')
+      .should('be.visible')
+      .invoke('outerWidth')
+      .should('be.lessThan', 160);
+    cy.screenshot('column-type-only', { capture: 'viewport' });
     modelColumnRow('customer')
       .should('contain.text', 'NN')
       .find('[data-slot="graph-node-column-output-state"]')
@@ -139,6 +167,7 @@ describe('Canvas Model output toggle lifecycle', () => {
     expectOutput('customer', true);
     expectOutput('order_id', false);
     expectOutput('amount', false);
+    showCustomerType();
 
     visitCanvas();
     openModelColumns();

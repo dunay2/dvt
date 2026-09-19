@@ -31,6 +31,7 @@ export function CanvasRelationalTreeOperandSlot({
       }}
       onDrop={(event) => {
         event.preventDefault();
+        event.stopPropagation();
         const nodeId = readCanvasRelationalSourceDrag(event.dataTransfer);
         if (nodeId != null) onPlaceInput(nodeId, position);
       }}
