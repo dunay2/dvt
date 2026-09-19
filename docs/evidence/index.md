@@ -230,6 +230,7 @@ Evidence documents that justify or validate relevant changes.
 - [Timestamp column function evidence](ED-20260910-timestamp-column-function.md)
 - [Transform column comment authoring evidence](ED-20260902-transform-column-comments.md)
 - [Transform function alias authoring evidence](ED-20260902-transform-function-alias-authoring.md)
+- [UNION DISTINCT end to end](ED-20260919-union-distinct-end-to-end.md)
 - [VTX1 authoring authority hard cut](ED-20260903-vtx1-authoring-hardcut.md)
 - [VTX2 durable semantic document evidence](ED-20260903-vtx2-durable-semantic-document.md)
 - [VTX2 preview contract hard cut evidence](ED-20260903-vtx2-preview-contract-hardcut.md)
