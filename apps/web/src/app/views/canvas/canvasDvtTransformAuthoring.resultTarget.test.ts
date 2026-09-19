@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { DvtTransformResultTargetV1 } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
@@ -12,6 +13,11 @@ import {
   encodeDvtSubstraitProjectionDocument,
 } from './canvasDvtSubstraitProjection';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import {
+  createDvtSubstraitJoinDraft,
+  encodeDvtSubstraitJoinDocument,
+  type DvtSubstraitJoinSource,
+} from './canvasDvtSubstraitJoinComposition';
 
 const target: DvtTransformResultTargetV1 = {
   schemaVersion: 'dvt-transform-result-target.v1',
@@ -35,6 +41,35 @@ const node: CanonicalNode = {
 };
 
 describe('Transform result destination metadata', () => {
+  it('restores and persists LEFT JOIN as the canonical authoring shape', () => {
+    const source = (id: string, table: string): DvtSubstraitJoinSource => ({
+      nodeId: id,
+      schema: 'raw',
+      table,
+      sourceRef: {
+        schemaVersion: 'connected-source-ref.v1' as const,
+        connectionRef: target.connectionRef,
+        sourceObjectId: `raw.${table}`,
+      },
+    });
+    const semanticNode = applyDvtSubstraitSemanticDocument(
+      node,
+      encodeDvtSubstraitJoinDocument(
+        createDvtSubstraitJoinDraft({
+          left: source('orders', 'orders'),
+          right: source('clients', 'clients'),
+          targetNodeId: node.id,
+          joinType: JoinRel_JoinType.LEFT,
+        })
+      )
+    );
+
+    const metadata = createDvtTransformAuthoringMetadata(semanticNode);
+
+    expect(metadata).toMatchObject({ mode: 'substrait', shape: 'left_join' });
+    expect(applyDvtTransformAuthoringMetadata(semanticNode, metadata)).toEqual(semanticNode);
+  });
+
   it('keeps canonical semantics and output identities when configuring a result target', () => {
     const projection = createDvtSubstraitProjectionDraft({
       targetNodeId: node.id,

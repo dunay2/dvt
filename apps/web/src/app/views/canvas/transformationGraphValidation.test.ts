@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import {
-  createDvtSubstraitInnerJoinDraft,
-  encodeDvtSubstraitInnerJoinDocument,
+  createDvtSubstraitJoinDraft,
+  encodeDvtSubstraitJoinDocument,
 } from './canvasDvtSubstraitJoinComposition';
 import { validateTransformationGraph } from './transformationGraphValidation';
 
@@ -84,7 +84,7 @@ function buildValidSubstraitInnerJoinGraph(): {
       connectedSourceRef: connectedSourceRef(table),
     },
   });
-  const draft = createDvtSubstraitInnerJoinDraft({
+  const draft = createDvtSubstraitJoinDraft({
     left: {
       nodeId: 'customers',
       schema: 'public',
@@ -111,7 +111,7 @@ function buildValidSubstraitInnerJoinGraph(): {
       path: 'models/customer-orders.sql',
       metadata: { config: { dialect: 'postgres' } },
     },
-    encodeDvtSubstraitInnerJoinDocument(draft)
+    encodeDvtSubstraitJoinDocument(draft)
   );
   const nodes = [
     source('customers', 'customers', ['customer_id', 'name']),

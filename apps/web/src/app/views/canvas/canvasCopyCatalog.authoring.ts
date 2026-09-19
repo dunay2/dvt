@@ -596,6 +596,18 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSubstraitInnerJoinAction',
     fallback: 'INNER JOIN',
   },
+  inspectorDvtSubstraitLeftJoinAction: {
+    key: 'canvas.inspector.authoring.dvtSubstraitLeftJoinAction',
+    fallback: 'LEFT JOIN',
+  },
+  inspectorDvtSubstraitJoinTypeLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitJoinTypeLabel',
+    fallback: 'Join type',
+  },
+  inspectorDvtSubstraitLeftJoinRolesHint: {
+    key: 'canvas.inspector.authoring.dvtSubstraitLeftJoinRolesHint',
+    fallback: 'L preserved · R nullable',
+  },
   inspectorDvtSubstraitInnerJoinTitle: {
     key: 'canvas.inspector.authoring.dvtSubstraitInnerJoinTitle',
     fallback: 'Substrait INNER JOIN',

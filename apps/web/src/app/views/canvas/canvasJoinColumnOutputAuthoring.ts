@@ -4,8 +4,8 @@ import type { CanvasColumnMappingResult } from './canvasColumnMappingModel';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import {
   applyDvtSubstraitInnerJoinFieldEdit,
-  encodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitNInputJoinDraft,
+  encodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { readCanvasJoinColumnOutputs } from './canvasJoinColumnOutputModel';
@@ -18,7 +18,7 @@ function placeOutput(
   field: JoinEntry['fields'][number],
   placement: Placement
 ): JoinEntry['draft'] | null {
-  const inspected = inspectDvtSubstraitNInputJoinDraft(draft);
+  const inspected = inspectDvtSubstraitJoinDraft(draft);
   if (!inspected.ok) return null;
   const outputs = inspected.projection.outputs;
   const currentIndex = outputs.findIndex((output) => output.source.fieldId === field.sourceFieldId);
@@ -46,7 +46,7 @@ function applyOutputDraft(
   if (draft == null) return { outcome: 'rejected', reason: 'mapping_not_found' };
   const node = applyDvtSubstraitSemanticDocument(
     args.targetNode,
-    encodeDvtSubstraitInnerJoinDocument(draft)
+    encodeDvtSubstraitJoinDocument(draft)
   );
   return {
     outcome: 'applied',

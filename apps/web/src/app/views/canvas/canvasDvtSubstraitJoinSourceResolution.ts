@@ -1,15 +1,15 @@
-/** Owned concern: resolve connected Canvas Sources that can participate in DVT INNER JOIN authoring. */
+/** Owned concern: resolve connected Canvas Sources that can participate in DVT JOIN authoring. */
 import { ConnectedSourceRefSchema, type ConnectedSourceRef } from '@dvt/contracts';
 import {
   hasSameConnectionRef,
-  inspectDvtSubstraitNInputJoinDraft,
-  type DvtSubstraitInnerJoinDraft,
+  inspectDvtSubstraitJoinDraft,
+  type DvtSubstraitJoinDraft,
 } from '@dvt/postgres-projection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import type {
-  DvtSubstraitInnerJoinEntry,
+  DvtSubstraitJoinEntry,
   DvtSubstraitJoinInput,
   DvtSubstraitJoinSource,
 } from './canvasDvtSubstraitJoinComposition';
@@ -85,7 +85,7 @@ export function resolveDvtSubstraitJoinAppendCandidates(args: {
   targetNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
-  draft: DvtSubstraitInnerJoinDraft;
+  draft: DvtSubstraitJoinDraft;
 }): readonly DvtSubstraitJoinInput[] {
   if (
     args.targetNode.pluginId !== 'dvt' ||
@@ -94,7 +94,7 @@ export function resolveDvtSubstraitJoinAppendCandidates(args: {
   ) {
     return [];
   }
-  const inspection = inspectDvtSubstraitNInputJoinDraft(args.draft);
+  const inspection = inspectDvtSubstraitJoinDraft(args.draft);
   if (!inspection.ok) return [];
   const firstInput = inspection.projection.inputs[0];
   if (firstInput == null) return [];
@@ -122,12 +122,12 @@ export function resolveDvtSubstraitJoinAppendCandidates(args: {
     );
 }
 
-export function resolveDvtSubstraitInnerJoinEntry(args: {
+export function resolveDvtSubstraitJoinEntry(args: {
   targetNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
   requirePersistedAuthority?: boolean;
-}): DvtSubstraitInnerJoinEntry | null {
+}): DvtSubstraitJoinEntry | null {
   if (
     args.targetNode.pluginId !== 'dvt' ||
     args.targetNode.kind !== 'dvt:transform' ||
@@ -162,7 +162,7 @@ export function resolveDvtSubstraitInnerJoinEntry(args: {
       const authority = readDvtTransformAuthoringAuthority(args.targetNode);
       if (authority == null) return null;
       const semanticDraft = decodeDvtSubstraitSemanticDocument(authority.semanticDocument);
-      const inspection = inspectDvtSubstraitNInputJoinDraft(semanticDraft);
+      const inspection = inspectDvtSubstraitJoinDraft(semanticDraft);
       if (!inspection.ok || !hasDvtSubstraitLegacyBinaryInnerJoinShape(inspection.projection)) {
         return null;
       }

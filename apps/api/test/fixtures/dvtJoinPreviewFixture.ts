@@ -19,11 +19,31 @@ const documents = JSON.parse(
   )
 ) as Record<string, unknown>;
 
-export function buildDvtJoinPreviewDraft(inputCount: 2 | 3): WorkspaceGraphAuthoringDraft {
+const THREE_INPUT_FINAL_LEFT_PLAN = {
+  bytesBase64:
+    'Eg0aCxABGgVlcXVhbCABEgsaCRACGgNhbmQgAhrxAhLuAgqyAjKvAgoLEgcKBQABAgMFKAUStAEysQEKChIGCgQAAQIDKAQSPAo6CgIoARIlCghvcmRlcl9pZAoJY2xpZW50X2lkEg4KBGICEAEKBGICEAEYAjoNCgNyYXcKBm9yZGVycxo7CjkKAigCEiQKCWNsaWVudF9pZAoHY291bnRyeRIOCgRiAhABCgRiAhABGAI6DQoDcmF3CgZjbGllbnQiJhokCAEaBAoCEAEiDBoKEggKBBICCAEiACIMGgoSCAoEEgIIAiIAMAEaQQo/CgIoAxIjCghvcmRlcl9pZAoHcHJvZHVjdBIOCgRiAhABCgRiAhABGAI6FAoDcmF3Cg1vcmRlcl9kZXRhaWxzIiQaIggBGgQKAhABIgoaCBIGCgISACIAIgwaChIICgQSAggEIgAwAxIIb3JkZXJfaWQSCWNsaWVudF9pZBIQY2xpZW50X2NsaWVudF9pZBIHY291bnRyeRIHcHJvZHVjdDIkEGUqIGR2dC12dHgyLW4taW5wdXQtaW5uZXItam9pbi1jYXJkQi8IARIrZXh0ZW5zaW9uOmlvLnN1YnN0cmFpdDpmdW5jdGlvbnNfY29tcGFyaXNvbkIsCAISKGV4dGVuc2lvbjppby5zdWJzdHJhaXQ6ZnVuY3Rpb25zX2Jvb2xlYW4=',
+  sha256: '6ed7f3731ee600313e3c2705a57d24c78a6908fa8550f57de1b06292b0e0e4b7',
+} as const;
+
+export function buildDvtJoinPreviewDraft(
+  inputCount: 2 | 3,
+  finalJoinType: 'inner' | 'left' = 'inner'
+): WorkspaceGraphAuthoringDraft {
   const base = buildDvtTerminalTransformPreviewDraft();
-  const semanticDocument = DvtSubstraitSemanticDocumentV1Schema.parse(
+  const fixture = DvtSubstraitSemanticDocumentV1Schema.parse(
     documents[inputCount === 2 ? 'two' : 'three']
   );
+  const semanticDocument =
+    inputCount === 3 && finalJoinType === 'left'
+      ? DvtSubstraitSemanticDocumentV1Schema.parse({
+          ...fixture,
+          semanticPlan: { ...fixture.semanticPlan, ...THREE_INPUT_FINAL_LEFT_PLAN },
+          sidecar: {
+            ...fixture.sidecar,
+            semanticPlanSha256: THREE_INPUT_FINAL_LEFT_PLAN.sha256,
+          },
+        })
+      : fixture;
   const sources = semanticDocument.sidecar.relations.flatMap((relation) => {
     if (relation.sourceRef === undefined) return [];
     return [

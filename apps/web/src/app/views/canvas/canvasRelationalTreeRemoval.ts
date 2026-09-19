@@ -1,11 +1,12 @@
 /** Owned concern: retire one relational card through the canonical draft builders. */
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import {
-  inspectDvtSubstraitNInputJoinDraft,
-  inspectDvtSubstraitInnerJoinAcceptedDraft,
+  inspectDvtSubstraitJoinDraft,
+  inspectDvtSubstraitJoinAcceptedDraft,
   inspectDvtSubstraitJoinPredicateContext,
   retainDvtSubstraitJoinInputs,
   restoreDvtSubstraitJoinContext,
-  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   createDvtSubstraitProjectionDraft,
@@ -20,8 +21,8 @@ import { removeDvtSubstraitProjectionRoot } from './canvasDvtSubstraitStructured
 export type CanvasRelationalRemovalResult =
   | Readonly<{
       ok: true;
-      draft: DvtSubstraitInnerJoinDraft;
-      operation: 'inner_join' | 'projection' | 'union_all';
+      draft: DvtSubstraitJoinDraft;
+      operation: 'inner_join' | 'left_join' | 'projection' | 'union_all';
       retained: readonly number[];
     }>
   | Readonly<{
@@ -35,9 +36,17 @@ export type CanvasRelationalRemovalResult =
       proposal: Extract<CanvasRelationalRemovalResult, { ok: true }>;
     }>;
 
+function operationForJoinDraft(draft: DvtSubstraitJoinDraft): 'inner_join' | 'left_join' | null {
+  const context = inspectDvtSubstraitJoinPredicateContext(draft);
+  if (context == null || !context.inspection.ok) return null;
+  return context.inspection.projection.joinRelations.at(-1)?.joinType === JoinRel_JoinType.LEFT
+    ? 'left_join'
+    : 'inner_join';
+}
+
 export function removeCanvasRelationalTreeNode(
   args: Readonly<{
-    draft: DvtSubstraitInnerJoinDraft;
+    draft: DvtSubstraitJoinDraft;
     relationId: string;
     targetNodeId: string;
     keep?: 'left' | 'right';
@@ -74,7 +83,7 @@ export function removeCanvasRelationalTreeNode(
       (binding) => binding.relAnchor === rel.value.common?.relAnchor
     )?.relationId;
     if (rootId === args.relationId) {
-      const join = inspectDvtSubstraitInnerJoinAcceptedDraft(args.draft);
+      const join = inspectDvtSubstraitJoinAcceptedDraft(args.draft);
       const union = inspectDvtSubstraitUnionAllAcceptedDraft(args.draft);
       const draft = applyCanvasRelationalOperatorTool(args.draft, {
         tool: rel.case === 'aggregate' ? 'aggregate' : 'window',
@@ -84,7 +93,7 @@ export function removeCanvasRelationalTreeNode(
         return {
           ok: true,
           draft,
-          operation: join.ok ? 'inner_join' : 'union_all',
+          operation: join.ok ? (operationForJoinDraft(draft) ?? 'inner_join') : 'union_all',
           retained: (join.ok
             ? inspectDvtSubstraitJoinPredicateContext(args.draft)!.inspection.projection.inputs
             : union.ok
@@ -108,7 +117,7 @@ export function removeCanvasRelationalTreeNode(
         ? {
             ok: true as const,
             draft: context.baseDraft,
-            operation: 'inner_join' as const,
+            operation: operationForJoinDraft(context.baseDraft) ?? 'inner_join',
             retained: context.inspection.projection.inputs.map((_, index) => index),
           }
         : removeCanvasRelationalTreeNode({ ...args, draft: context.baseDraft });
@@ -126,7 +135,7 @@ export function removeCanvasRelationalTreeNode(
       proposal: result,
     };
   }
-  const inspection = inspectDvtSubstraitNInputJoinDraft(args.draft);
+  const inspection = inspectDvtSubstraitJoinDraft(args.draft);
   if (!inspection.ok) return { ok: false, reason: 'dependent-condition' };
   const { projection } = inspection;
   const sourceIndex = projection.inputs.findIndex((input) => input.relationId === args.relationId);
@@ -148,7 +157,7 @@ export function removeCanvasRelationalTreeNode(
     const draft = retainDvtSubstraitJoinInputs(args.draft, retained);
     return draft == null
       ? { ok: false, reason: 'dependent-condition' }
-      : { ok: true, draft, operation: 'inner_join', retained };
+      : { ok: true, draft, operation: operationForJoinDraft(draft) ?? 'inner_join', retained };
   }
   const inputIndex = retained[0];
   const input = inputIndex == null ? undefined : projection.inputs[inputIndex];

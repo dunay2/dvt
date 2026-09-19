@@ -156,6 +156,11 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     proofRef: 'docs/evidence/ED-20260826-vtx2-substrait-card-pilot.md',
   },
   {
+    entryIds: [standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT')],
+    useCaseRefs: ['dvt:#3307'],
+    proofRef: 'docs/evidence/ED-20260919-left-join-end-to-end.md',
+  },
+  {
     entryIds: [
       standardId('relation', 'substrait.AggregateRel'),
       functionId('aggregate-function', 'functions_aggregate_generic', 'count'),

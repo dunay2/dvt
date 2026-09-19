@@ -9,11 +9,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import {
-  appendDvtSubstraitInnerJoinInput,
-  createDvtSubstraitStringInnerJoinDraft,
-  encodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitNInputJoinDraft,
-  type DvtSubstraitInnerJoinDraft,
+  appendDvtSubstraitJoinInput,
+  createDvtSubstraitStringJoinDraft,
+  encodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinDraft,
+  type DvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { DvtSubstraitInnerJoinAuthoringSection } from './DvtSubstraitInnerJoinAuthoringSection';
@@ -31,8 +31,8 @@ function sourceRef(table: string): ConnectedSourceRef {
   };
 }
 
-function initialJoinDraft(): DvtSubstraitInnerJoinDraft {
-  return createDvtSubstraitStringInnerJoinDraft({
+function initialJoinDraft(): DvtSubstraitJoinDraft {
+  return createDvtSubstraitStringJoinDraft({
     left: {
       source: {
         nodeId: 'source-orders',
@@ -59,13 +59,13 @@ function initialJoinDraft(): DvtSubstraitInnerJoinDraft {
   });
 }
 
-function nInputJoinDraft(): DvtSubstraitInnerJoinDraft {
+function nInputJoinDraft(): DvtSubstraitJoinDraft {
   const initial = initialJoinDraft();
-  const inspection = inspectDvtSubstraitNInputJoinDraft(initial);
+  const inspection = inspectDvtSubstraitJoinDraft(initial);
   if (!inspection.ok) throw new Error('Expected an inspectable initial JOIN.');
   const leftSourceFieldId = inspection.projection.inputs[0]?.fields[0]?.fieldId;
   if (leftSourceFieldId == null) throw new Error('Expected a stable left operand.');
-  return appendDvtSubstraitInnerJoinInput(initial, {
+  return appendDvtSubstraitJoinInput(initial, {
     source: {
       nodeId: 'source-shipments',
       schema: 'raw',
@@ -80,7 +80,7 @@ function nInputJoinDraft(): DvtSubstraitInnerJoinDraft {
 }
 
 function persistedJoinNode(draft = initialJoinDraft()): CanonicalNode {
-  const semanticDocument = encodeDvtSubstraitInnerJoinDocument(draft);
+  const semanticDocument = encodeDvtSubstraitJoinDocument(draft);
   return applyDvtSubstraitSemanticDocument(
     {
       id: 'transform-orders',
@@ -106,7 +106,7 @@ function PersistedJoinHarness({
   ) {
     throw new Error('Expected a reloaded INNER JOIN draft.');
   }
-  const inspection = inspectDvtSubstraitNInputJoinDraft({
+  const inspection = inspectDvtSubstraitJoinDraft({
     plan: draft.dvt.plan,
     sidecar: draft.dvt.sidecar,
   });

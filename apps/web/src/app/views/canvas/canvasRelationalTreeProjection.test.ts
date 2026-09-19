@@ -1,15 +1,16 @@
 import { describe, expect, it } from 'vitest';
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 
 import type { ConnectedSourceRef } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
-  appendDvtSubstraitInnerJoinInput,
+  appendDvtSubstraitJoinInput,
   applyDvtSubstraitInnerJoinGrouping,
-  createDvtSubstraitInnerJoinDraft,
-  encodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitNInputJoinDraft,
-  type DvtSubstraitInnerJoinDraft,
+  createDvtSubstraitJoinDraft,
+  encodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinDraft,
+  type DvtSubstraitJoinDraft,
   type DvtSubstraitJoinSource,
 } from './canvasDvtSubstraitJoinComposition';
 import {
@@ -97,18 +98,18 @@ function flatten(root: CanvasRelationalTreeNode): readonly CanvasRelationalTreeN
   return [root, ...root.children.flatMap((child) => flatten(child.node))];
 }
 
-function threeInputJoin(): DvtSubstraitInnerJoinDraft {
-  const initial = createDvtSubstraitInnerJoinDraft({
+function threeInputJoin(): DvtSubstraitJoinDraft {
+  const initial = createDvtSubstraitJoinDraft({
     left: joinSource('customers', 'customers'),
     right: joinSource('orders', 'orders'),
     targetNodeId: TARGET_ID,
   });
-  const inspection = inspectDvtSubstraitNInputJoinDraft(initial);
+  const inspection = inspectDvtSubstraitJoinDraft(initial);
   if (!inspection.ok) throw new Error('Expected an admitted base JOIN.');
   const customerId = inspection.projection.outputs.find((output) => output.name === 'customer_id')
     ?.source.fieldId;
   if (customerId == null) throw new Error('Expected the customer_id output.');
-  return appendDvtSubstraitInnerJoinInput(initial, {
+  return appendDvtSubstraitJoinInput(initial, {
     source: joinSource('shipments', 'shipments'),
     fields: ['shipment_id', 'customer_id'],
     predicate: { leftSourceFieldId: customerId, rightFieldName: 'customer_id' },
@@ -121,7 +122,7 @@ describe('ProjectCanvasRelationalTree', () => {
     const draft = threeInputJoin();
     const transform = applyDvtSubstraitSemanticDocument(
       targetNode(),
-      encodeDvtSubstraitInnerJoinDocument(draft)
+      encodeDvtSubstraitJoinDocument(draft)
     );
     const sources = [
       sourceNode('customers', 'customers', ['customer_id', 'name', 'country']),
@@ -148,6 +149,40 @@ describe('ProjectCanvasRelationalTree', () => {
       expect(relation.locator).toContain(first.projection.semanticDigest);
       expect(relation.relationId == null || relationIds.has(relation.relationId)).toBe(true);
     }
+  });
+
+  it('projects the exact type of every mixed JOIN stage', () => {
+    const initial = createDvtSubstraitJoinDraft({
+      left: joinSource('customers', 'customers'),
+      right: joinSource('orders', 'orders'),
+      targetNodeId: TARGET_ID,
+    });
+    const inspection = inspectDvtSubstraitJoinDraft(initial);
+    if (!inspection.ok) throw new Error('Expected an admitted base JOIN.');
+    const customerId = inspection.projection.outputs.find((output) => output.name === 'customer_id')
+      ?.source.fieldId;
+    if (customerId == null) throw new Error('Expected the customer_id output.');
+    const draft = appendDvtSubstraitJoinInput(initial, {
+      source: joinSource('shipments', 'shipments'),
+      fields: ['shipment_id', 'customer_id'],
+      predicate: { leftSourceFieldId: customerId, rightFieldName: 'customer_id' },
+      selectedFields: ['shipment_id'],
+      joinType: JoinRel_JoinType.LEFT,
+    });
+    const transform = applyDvtSubstraitSemanticDocument(
+      targetNode(),
+      encodeDvtSubstraitJoinDocument(draft)
+    );
+    const result = project(transform, [
+      sourceNode('customers', 'customers', ['customer_id', 'name', 'country']),
+      sourceNode('orders', 'orders', ['order_id', 'customer_id', 'amount']),
+      sourceNode('shipments', 'shipments', ['shipment_id', 'customer_id']),
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.projection.root.operationLabel).toBe('LEFT JOIN');
+    expect(result.projection.root.children[0]?.node.operationLabel).toBe('INNER JOIN');
   });
 
   it('projects every ordered child of an N-ary SetRel', () => {
@@ -194,12 +229,12 @@ describe('ProjectCanvasRelationalTree', () => {
   });
 
   it('keeps an AggregateRel as a unary operator over a binary JOIN', () => {
-    const initial = createDvtSubstraitInnerJoinDraft({
+    const initial = createDvtSubstraitJoinDraft({
       left: joinSource('customers', 'customers'),
       right: joinSource('orders', 'orders'),
       targetNodeId: TARGET_ID,
     });
-    const inspection = inspectDvtSubstraitNInputJoinDraft(initial);
+    const inspection = inspectDvtSubstraitJoinDraft(initial);
     if (!inspection.ok) throw new Error('Expected an admitted JOIN.');
     const groupFieldId = inspection.projection.outputs.find(
       (output) => output.name === 'name'
@@ -211,7 +246,7 @@ describe('ProjectCanvasRelationalTree', () => {
     });
     const transform = applyDvtSubstraitSemanticDocument(
       targetNode(),
-      encodeDvtSubstraitInnerJoinDocument(grouped)
+      encodeDvtSubstraitJoinDocument(grouped)
     );
     const result = project(transform, [
       sourceNode('customers', 'customers', ['customer_id', 'name', 'country']),
@@ -231,14 +266,14 @@ describe('ProjectCanvasRelationalTree', () => {
   });
 
   it('classifies topology-only and canonical-only sources without fabricating children', () => {
-    const draft = createDvtSubstraitInnerJoinDraft({
+    const draft = createDvtSubstraitJoinDraft({
       left: joinSource('customers', 'customers'),
       right: joinSource('orders', 'orders'),
       targetNodeId: TARGET_ID,
     });
     const transform = applyDvtSubstraitSemanticDocument(
       targetNode(),
-      encodeDvtSubstraitInnerJoinDocument(draft)
+      encodeDvtSubstraitJoinDocument(draft)
     );
     const result = project(transform, [
       sourceNode('customers', 'customers', ['customer_id', 'name', 'country']),

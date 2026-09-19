@@ -53,7 +53,8 @@ export {
 } from './substraitJoinConditionInspection.js';
 export {
   type DvtSubstraitJoinDataType,
-  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinType,
+  type DvtSubstraitJoinDraft,
   type DvtSubstraitNInputJoinProjection,
   type DvtSubstraitNInputJoinInspection,
   type DvtSubstraitJoinPredicate,
@@ -66,17 +67,15 @@ export {
   ZERO_SHA256,
   hasSameConnectionRef,
   joinDataType,
+  joinFieldType,
   namedTableIdentity,
   hasPinnedPlanVersion,
-  hasUniqueInnerJoinSidecarIdentity,
-  hasCurrentInnerJoinSemanticHash,
+  hasUniqueJoinSidecarIdentity,
+  hasCurrentJoinSemanticHash,
   inspectNInputJoinNode,
   flattenNInputJoinTree,
 } from './substraitJoinInspectionGuards.js';
-export {
-  inspectNInputJoinStructure,
-  inspectDvtSubstraitNInputJoinDraft,
-} from './substraitJoinReader.js';
+export { inspectNInputJoinStructure, inspectDvtSubstraitJoinDraft } from './substraitJoinReader.js';
 export {
   type PostgresComparisonOperator,
   pgAnd,
@@ -91,7 +90,7 @@ export {
   nInputJoinAlias,
   POSTGRES_JOIN_COMPARISON,
   buildNInputJoinPostgresAst,
-  projectDvtInnerJoinDraftToPostgresSql,
+  projectDvtJoinDraftToPostgresSql,
 } from './joinPostgresProjection.js';
 export {
   buildConnectedFieldPostgresAst,

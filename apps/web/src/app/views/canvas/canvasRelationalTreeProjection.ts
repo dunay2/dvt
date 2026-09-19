@@ -1,6 +1,9 @@
 /** Owned concern: project canonical DVT relation structure into one immutable Canvas read model. */
 import type { Expression, Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { SetRel_SetOp } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import {
+  JoinRel_JoinType,
+  SetRel_SetOp,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { ConnectedSourceRef, DvtSubstraitAuthoringSidecarV1 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -221,13 +224,23 @@ function buildTree(
   const relationId = binding?.relationId ?? null;
   const inputs = childInputs(args.rel);
   const windows = relationWindowCount(args.rel);
+  const joinLabel =
+    args.rel.relType.case !== 'join'
+      ? null
+      : args.rel.relType.value.type === JoinRel_JoinType.INNER
+        ? 'INNER JOIN'
+        : args.rel.relType.value.type === JoinRel_JoinType.LEFT
+          ? 'LEFT JOIN'
+          : 'UNSUPPORTED JOIN';
   return {
     locator: `rel:${args.semanticDigest}:${args.path}`,
     operator: operator(args.rel),
     substraitKind: args.rel.relType.case ?? 'unknown',
-    ...(args.rel.relType.case === 'set' && args.rel.relType.value.op === SetRel_SetOp.UNION_ALL
-      ? { operationLabel: 'UNION ALL' }
-      : {}),
+    ...(joinLabel != null
+      ? { operationLabel: joinLabel }
+      : args.rel.relType.case === 'set' && args.rel.relType.value.op === SetRel_SetOp.UNION_ALL
+        ? { operationLabel: 'UNION ALL' }
+        : {}),
     relationId,
     displayName: binding?.displayName ?? null,
     sourceRef: binding?.sourceRef ?? null,

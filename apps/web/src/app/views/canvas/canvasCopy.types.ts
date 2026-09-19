@@ -518,6 +518,9 @@ export type CanvasViewCopy = {
   readonly inspectorDvtFilterApplyLabel: string;
   readonly inspectorDvtFilterRemoveLabel: string;
   readonly inspectorDvtSubstraitInnerJoinAction: string;
+  readonly inspectorDvtSubstraitLeftJoinAction: string;
+  readonly inspectorDvtSubstraitJoinTypeLabel: string;
+  readonly inspectorDvtSubstraitLeftJoinRolesHint: string;
   readonly inspectorDvtSubstraitInnerJoinTitle: string;
   readonly inspectorDvtSubstraitJoinConditionLabel: string;
   readonly inspectorDvtSubstraitAppendInputTitle: string;

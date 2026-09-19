@@ -5,7 +5,7 @@ import {
   type ExecutionSelection,
   ConnectedSourceRefSchema,
 } from '@dvt/contracts';
-import { inspectDvtSubstraitNInputJoinDraft, hasSameConnectionRef } from '@dvt/postgres-projection';
+import { inspectDvtSubstraitJoinDraft, hasSameConnectionRef } from '@dvt/postgres-projection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
@@ -77,7 +77,7 @@ function resolveTerminalProjectionClosure(
     if (authority === null) return null;
     const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
     if (sources.length > 1) {
-      const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+      const inspection = inspectDvtSubstraitJoinDraft(draft);
       if (!inspection.ok || inspection.projection.inputs.length !== sources.length) return null;
       const refs = sources.map((source) =>
         ConnectedSourceRefSchema.parse(source.metadata?.connectedSourceRef)

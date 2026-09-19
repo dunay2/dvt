@@ -16,7 +16,7 @@ import { CanvasRelationalTreeLayout } from './CanvasRelationalTreeLayout';
 import { CanvasRelationalTreeZoomControls } from './CanvasRelationalTreeZoomControls';
 import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewport';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 
 export function CanvasRelationalTreeDraftViewport({
   copy,
@@ -40,7 +40,7 @@ export function CanvasRelationalTreeDraftViewport({
   copy: CanvasRelationalTreeWorkbenchCopy;
   edges: readonly CanonicalEdge[];
   inputs: readonly CanvasDvtCompositionInput[];
-  joinDraft: DvtSubstraitInnerJoinDraft | null;
+  joinDraft: DvtSubstraitJoinDraft | null;
   nodes: readonly CanonicalNode[];
   operation: CanvasRelationalOperation | null;
   primaryInputId: string | null;

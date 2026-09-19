@@ -7,22 +7,22 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildNInputJoinPostgresAst,
-  inspectDvtSubstraitNInputJoinDraft,
-  projectDvtInnerJoinDraftToPostgresSql,
+  inspectDvtSubstraitJoinDraft,
+  projectDvtJoinDraftToPostgresSql,
   ZERO_SHA256,
-  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinDraft,
 } from '../src/index.js';
 
 const documents = JSON.parse(
   readFileSync(new URL('./fixtures/inner-join-documents.json', import.meta.url), 'utf8')
 ) as Record<string, unknown>;
 
-function draft(): DvtSubstraitInnerJoinDraft {
+function draft(): DvtSubstraitJoinDraft {
   const document = DvtSubstraitSemanticDocumentV1Schema.parse(documents['three']);
   return { plan: decodeDvtSubstraitPlanV1(document), sidecar: document.sidecar };
 }
 
-describe('shared PostgreSQL INNER JOIN admission', () => {
+describe('shared PostgreSQL JOIN admission', () => {
   it('reads an empty final selection as a draft but never renders it as executable SQL', async () => {
     const candidate = draft();
     const root = candidate.plan.relations[0]!.relType;
@@ -39,13 +39,13 @@ describe('shared PostgreSQL INNER JOIN admission', () => {
       (field) => field.relationId !== relationId
     );
     candidate.sidecar.semanticPlanSha256 = ZERO_SHA256;
-    const inspected = inspectDvtSubstraitNInputJoinDraft(candidate);
+    const inspected = inspectDvtSubstraitJoinDraft(candidate);
     expect(inspected.ok).toBe(true);
     if (!inspected.ok) return;
     expect(inspected.projection.outputs).toEqual([]);
     expect(inspected.projection.inputs).toHaveLength(3);
     expect(() => buildNInputJoinPostgresAst(inspected.projection)).toThrow(/output/i);
-    await expect(projectDvtInnerJoinDraftToPostgresSql(candidate)).rejects.toMatchObject({
+    await expect(projectDvtJoinDraftToPostgresSql(candidate)).rejects.toMatchObject({
       code: 'unsupported_shape',
     });
   });
@@ -65,12 +65,12 @@ describe('shared PostgreSQL INNER JOIN admission', () => {
         left.value.common.emitKind.value.outputMapping = [];
       }
       candidate.sidecar.semanticPlanSha256 = ZERO_SHA256;
-      expect(inspectDvtSubstraitNInputJoinDraft(candidate).ok).toBe(false);
+      expect(inspectDvtSubstraitJoinDraft(candidate).ok).toBe(false);
     }
   );
 
   it('renders every predicate and only the selected output fields', async () => {
-    const result = await projectDvtInnerJoinDraftToPostgresSql(draft());
+    const result = await projectDvtJoinDraftToPostgresSql(draft());
     expect(result.projection.inputs).toHaveLength(3);
     expect(result.projection.outputs.map((field) => field.name)).toEqual([
       'order_id',
@@ -84,7 +84,32 @@ describe('shared PostgreSQL INNER JOIN admission', () => {
     );
   });
 
-  it.each(['outer join', 'post-join filter', 'stale hash'])(
+  it('preserves mixed INNER then LEFT stage types and renders LEFT JOIN', async () => {
+    const candidate = draft();
+    const root = candidate.plan.relations[0]!.relType;
+    if (root.case !== 'root' || root.value.input?.relType.case !== 'join') {
+      throw new Error('Fixture must contain a JOIN root');
+    }
+    root.value.input.relType.value.type = JoinRel_JoinType.LEFT;
+    candidate.sidecar.semanticPlanSha256 = ZERO_SHA256;
+
+    const result = await projectDvtJoinDraftToPostgresSql(candidate);
+
+    expect(result.projection.joinRelations.map((stage) => stage.joinType)).toEqual([
+      JoinRel_JoinType.INNER,
+      JoinRel_JoinType.LEFT,
+    ]);
+    expect(result.sql).toContain(
+      'LEFT JOIN raw.order_details AS join_source_3 ON left_source.order_id = join_source_3.order_id'
+    );
+    expect(
+      result.projection.outputs
+        .filter((output) => output.source.inputIndex === 2)
+        .every((output) => output.nullable)
+    ).toBe(true);
+  });
+
+  it.each(['right join', 'post-join filter', 'stale hash'])(
     'rejects %s instead of dropping unsupported semantics',
     async (scenario) => {
       const candidate = draft();
@@ -93,10 +118,10 @@ describe('shared PostgreSQL INNER JOIN admission', () => {
         throw new Error('Fixture must contain a JOIN root');
       const join = root.value.input.relType.value;
       candidate.sidecar.semanticPlanSha256 = ZERO_SHA256;
-      if (scenario === 'outer join') join.type = JoinRel_JoinType.LEFT;
+      if (scenario === 'right join') join.type = JoinRel_JoinType.RIGHT;
       if (scenario === 'post-join filter') join.postJoinFilter = join.expression;
       if (scenario === 'stale hash') candidate.sidecar.semanticPlanSha256 = 'a'.repeat(64);
-      await expect(projectDvtInnerJoinDraftToPostgresSql(candidate)).rejects.toMatchObject({
+      await expect(projectDvtJoinDraftToPostgresSql(candidate)).rejects.toMatchObject({
         code: 'unsupported_shape',
       });
     }

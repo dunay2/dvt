@@ -8,7 +8,7 @@ import { hasSameConnectionRef } from '@dvt/postgres-projection';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { hasCompatibleCanvasDvtJoinFields } from './canvasDvtJoinTypeAdmission';
 
-export type CanvasRelationalOperation = 'projection' | 'inner_join' | 'union_all';
+export type CanvasRelationalOperation = 'projection' | 'inner_join' | 'left_join' | 'union_all';
 
 export type CanvasRelationalOperationAvailability =
   | 'available'
@@ -94,6 +94,7 @@ export function resolveCanvasRelationalOperationChoices(
   const readOnlyAvailability = args.readOnly ? 'read-only' : null;
   const unionAllTargetSupported = targetSupports(args.inputs);
   const innerJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_INNER');
+  const leftJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT');
   const unionAllAdmitted = isAdmitted('substrait.SetRel', 'SetOp.SET_OP_UNION_ALL');
   const hasCompatibleJoinTypePair = args.inputs.some((left, index) =>
     args.inputs
@@ -103,6 +104,17 @@ export function resolveCanvasRelationalOperationChoices(
   const innerJoinAvailability =
     readOnlyAvailability ??
     (!innerJoinAdmitted
+      ? 'semantically-unavailable'
+      : !hasCompatibleJoinTypePair
+        ? 'semantically-unavailable'
+        : !hasCompatibleJoinPair(args.inputs)
+          ? 'target-unavailable'
+          : args.predicateAvailable
+            ? 'available'
+            : 'needs-predicate');
+  const leftJoinAvailability =
+    readOnlyAvailability ??
+    (!leftJoinAdmitted
       ? 'semantically-unavailable'
       : !hasCompatibleJoinTypePair
         ? 'semantically-unavailable'
@@ -127,6 +139,12 @@ export function resolveCanvasRelationalOperationChoices(
       availability: innerJoinAvailability,
       selectable:
         innerJoinAvailability === 'available' || innerJoinAvailability === 'needs-predicate',
+    },
+    {
+      operation: 'left_join',
+      availability: leftJoinAvailability,
+      selectable:
+        leftJoinAvailability === 'available' || leftJoinAvailability === 'needs-predicate',
     },
     {
       operation: 'union_all',

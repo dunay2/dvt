@@ -28,9 +28,11 @@ function resolveCompositionLabel(
   const operationLabel =
     member.operation === 'inner_join'
       ? 'INNER JOIN'
-      : member.operation === 'union_all'
-        ? 'UNION ALL'
-        : null;
+      : member.operation === 'left_join'
+        ? 'LEFT JOIN'
+        : member.operation === 'union_all'
+          ? 'UNION ALL'
+          : null;
   if (member.state === 'canonical') {
     return operationLabel ?? cardCopy.relationalCompositionIncompleteLabel;
   }

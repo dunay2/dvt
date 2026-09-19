@@ -5,15 +5,15 @@ import { decodeDvtSubstraitPlanV1, DvtSubstraitSemanticDocumentV1Schema } from '
 import { describe, expect, it } from 'vitest';
 
 import {
-  projectDvtInnerJoinDraftToPostgresSql,
+  projectDvtJoinDraftToPostgresSql,
   selectDvtSubstraitRelation,
-  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinDraft,
 } from '../src/index.js';
 
 const fixtures = JSON.parse(
   readFileSync(new URL('./fixtures/inner-join-documents.json', import.meta.url), 'utf8')
 );
-function fixture(): DvtSubstraitInnerJoinDraft {
+function fixture(): DvtSubstraitJoinDraft {
   const document = DvtSubstraitSemanticDocumentV1Schema.parse(fixtures.three);
   return { plan: decodeDvtSubstraitPlanV1(document), sidecar: document.sidecar };
 }
@@ -24,7 +24,7 @@ describe('selected relation query projection', () => {
     const before = globalThis.structuredClone(original);
     const joins = original.sidecar.relations.filter((relation) => relation.sourceRef == null);
     const selected = selectDvtSubstraitRelation(original, joins[0]!.relationId);
-    const result = await projectDvtInnerJoinDraftToPostgresSql(selected);
+    const result = await projectDvtJoinDraftToPostgresSql(selected);
     expect(result.projection.inputs).toHaveLength(2);
     expect(result.sql.match(/\bJOIN\b/g)).toHaveLength(1);
     expect(result.sql).not.toContain('raw.order_details');
@@ -38,7 +38,7 @@ describe('selected relation query projection', () => {
       joins[0]!.relationId
     );
     expect(original).toEqual(before);
-    const final = await projectDvtInnerJoinDraftToPostgresSql(
+    const final = await projectDvtJoinDraftToPostgresSql(
       selectDvtSubstraitRelation(original, joins[1]!.relationId)
     );
     expect(final.projection.inputs).toHaveLength(3);

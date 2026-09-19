@@ -11,7 +11,7 @@ import { CanvasRelationalTreeInlineEditor } from './CanvasRelationalTreeInlineEd
 import type { CanvasRelationalOperandPosition } from './CanvasRelationalTreeOperandSlot';
 import { CanvasRelationalTreeOperationShelf } from './CanvasRelationalTreeOperationShelf';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { CanvasRelationalTreeOperatorTools } from './CanvasRelationalTreeOperatorTools';
 
 export function CanvasRelationalTreeBlockCanvas({
@@ -42,7 +42,7 @@ export function CanvasRelationalTreeBlockCanvas({
   copy: CanvasRelationalTreeWorkbenchCopy;
   edges: readonly CanonicalEdge[];
   inputs: readonly CanvasDvtCompositionInput[];
-  joinDraft: DvtSubstraitInnerJoinDraft | null;
+  joinDraft: DvtSubstraitJoinDraft | null;
   nodes: readonly CanonicalNode[];
   operation: CanvasRelationalOperation | null;
   primaryInputId: string | null;
@@ -52,7 +52,7 @@ export function CanvasRelationalTreeBlockCanvas({
   onAppendJoinInput: (
     selection: Readonly<{ leftSourceFieldId: string; rightFieldName: string }>
   ) => void;
-  onChangeJoinDraft: (draft: DvtSubstraitInnerJoinDraft) => void;
+  onChangeJoinDraft: (draft: DvtSubstraitJoinDraft) => void;
   onPlaceInput: (nodeId: string, position: CanvasRelationalOperandPosition) => void;
   onSelectInput: (nodeId: string) => void;
   onSelectOperation: (operation: CanvasRelationalOperation) => void;

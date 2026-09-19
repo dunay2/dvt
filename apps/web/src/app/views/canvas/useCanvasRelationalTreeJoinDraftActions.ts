@@ -7,10 +7,8 @@ import type {
   CanvasRelationalOperationChoice,
 } from './canvasRelationalOperationChoices';
 import { appendCanvasRelationalTreeJoinInput } from './canvasRelationalTreeAuthoringModel';
-import {
-  inspectDvtSubstraitInnerJoinAcceptedDraft,
-  type DvtSubstraitInnerJoinDraft,
-} from './canvasDvtSubstraitJoinComposition';
+import { setFinalCanvasJoinType } from './canvasRelationalTreeJoinType';
+import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { createCanvasRelationalTreeOperationDraft } from './canvasRelationalTreeOperationDraft';
 
 export function useCanvasRelationalTreeJoinDraftActions(
@@ -18,12 +16,13 @@ export function useCanvasRelationalTreeJoinDraftActions(
     appendInputId: string | null;
     choices: readonly CanvasRelationalOperationChoice[];
     inputs: readonly CanvasDvtCompositionInput[];
-    joinDraft: DvtSubstraitInnerJoinDraft | null;
+    joinDraft: DvtSubstraitJoinDraft | null;
+    operation: CanvasRelationalOperation | null;
     selectedInputIds: readonly string[];
     targetNodeId: string;
     appendOperand: (nodeId: string) => void;
     setAppendInputId: (nodeId: string | null) => void;
-    setJoinDraft: (draft: DvtSubstraitInnerJoinDraft | null) => void;
+    setJoinDraft: (draft: DvtSubstraitJoinDraft | null) => void;
     setOperation: (operation: CanvasRelationalOperation | null) => void;
   }>
 ) {
@@ -33,6 +32,7 @@ export function useCanvasRelationalTreeJoinDraftActions(
     choices,
     inputs,
     joinDraft,
+    operation,
     selectedInputIds,
     setAppendInputId,
     setJoinDraft,
@@ -41,14 +41,16 @@ export function useCanvasRelationalTreeJoinDraftActions(
   } = args;
   const selectOperation = useCallback(
     (nextOperation: CanvasRelationalOperation) => {
-      if (
-        nextOperation === 'inner_join' &&
-        joinDraft != null &&
-        inspectDvtSubstraitInnerJoinAcceptedDraft(joinDraft).ok
-      )
-        return;
       if (!choices.some((choice) => choice.operation === nextOperation && choice.selectable))
         return;
+      if ((nextOperation === 'inner_join' || nextOperation === 'left_join') && joinDraft != null) {
+        const next = setFinalCanvasJoinType(joinDraft, nextOperation);
+        if (next == null) return;
+        setJoinDraft(next);
+        setOperation(nextOperation);
+        setAppendInputId(null);
+        return;
+      }
       const draft = createCanvasRelationalTreeOperationDraft({
         operation: nextOperation,
         inputs,
@@ -64,6 +66,7 @@ export function useCanvasRelationalTreeJoinDraftActions(
       choices,
       inputs,
       joinDraft,
+      operation,
       selectedInputIds,
       setAppendInputId,
       setJoinDraft,
@@ -71,7 +74,6 @@ export function useCanvasRelationalTreeJoinDraftActions(
       targetNodeId,
     ]
   );
-
   const appendJoinInput = useCallback(
     (selection: Readonly<{ leftSourceFieldId: string; rightFieldName: string }>) => {
       const input = inputs.find((candidate) => candidate.nodeId === appendInputId);
@@ -79,6 +81,7 @@ export function useCanvasRelationalTreeJoinDraftActions(
       const next = appendCanvasRelationalTreeJoinInput({
         draft: joinDraft,
         input,
+        operation: operation === 'left_join' || operation === 'inner_join' ? operation : undefined,
         ...selection,
       });
       if (next === joinDraft) return;
@@ -86,8 +89,7 @@ export function useCanvasRelationalTreeJoinDraftActions(
       appendOperand(input.nodeId);
       setAppendInputId(null);
     },
-    [appendInputId, appendOperand, inputs, joinDraft, setAppendInputId, setJoinDraft]
+    [appendInputId, appendOperand, inputs, joinDraft, operation, setAppendInputId, setJoinDraft]
   );
-
   return { appendJoinInput, selectOperation } as const;
 }

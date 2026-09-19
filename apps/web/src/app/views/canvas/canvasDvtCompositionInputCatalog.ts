@@ -9,6 +9,7 @@ export type CanvasDvtCompositionField = Readonly<{
   name: string;
   dataType: string;
   joinDataType: DvtSubstraitJoinDataType | null;
+  nullable?: boolean;
 }>;
 
 export type CanvasDvtCompositionInput = Readonly<{
@@ -32,7 +33,12 @@ function readFields(node: CanonicalNode): readonly CanvasDvtCompositionField[] |
     const dataType = readText(record.type ?? record.dataType);
     return name == null || dataType == null
       ? null
-      : { name, dataType, joinDataType: resolveCanvasDvtJoinDataType(dataType) };
+      : {
+          name,
+          dataType,
+          joinDataType: resolveCanvasDvtJoinDataType(dataType),
+          nullable: typeof record.nullable === 'boolean' ? record.nullable : true,
+        };
   });
   if (fields.some((field) => field == null)) return null;
   const resolved = fields.filter((field) => field != null);

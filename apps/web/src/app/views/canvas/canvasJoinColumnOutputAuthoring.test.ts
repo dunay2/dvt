@@ -7,11 +7,11 @@ import {
 } from './canvasColumnOutputAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
-  appendDvtSubstraitInnerJoinInput,
-  createDvtSubstraitInnerJoinDraft,
-  decodeDvtSubstraitInnerJoinDocument,
-  encodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitNInputJoinDraft,
+  appendDvtSubstraitJoinInput,
+  createDvtSubstraitJoinDraft,
+  decodeDvtSubstraitJoinDocument,
+  encodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinDraft,
   type DvtSubstraitJoinSource,
   type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
@@ -43,15 +43,15 @@ function fixture(sourceCount: number): {
   session: CanvasDraftSession;
   nodes: Map<string, CanonicalNode>;
 } {
-  let draft = createDvtSubstraitInnerJoinDraft({
+  let draft = createDvtSubstraitJoinDraft({
     left: source('customers'),
     right: source('orders'),
     targetNodeId: 'joined',
   });
   if (sourceCount === 3) {
-    const inspected = inspectDvtSubstraitNInputJoinDraft(draft);
+    const inspected = inspectDvtSubstraitJoinDraft(draft);
     if (!inspected.ok) throw new Error('Expected JOIN fixture.');
-    draft = appendDvtSubstraitInnerJoinInput(draft, {
+    draft = appendDvtSubstraitJoinInput(draft, {
       source: source('details'),
       fields: ['order_id', 'product'],
       selectedFields: ['product'],
@@ -72,7 +72,7 @@ function fixture(sourceCount: number): {
       status: 'idle',
       tags: [],
     },
-    encodeDvtSubstraitInnerJoinDocument(draft)
+    encodeDvtSubstraitJoinDocument(draft)
   );
   const session: CanvasDraftSession = {
     syncState: 'editing',
@@ -87,8 +87,8 @@ function fixture(sourceCount: number): {
 function inspect(node: CanonicalNode): DvtSubstraitNInputJoinProjection {
   const authority = readDvtTransformAuthoringAuthority(node);
   if (authority == null) throw new Error('Expected semantic authority.');
-  const result = inspectDvtSubstraitNInputJoinDraft(
-    decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+  const result = inspectDvtSubstraitJoinDraft(
+    decodeDvtSubstraitJoinDocument(authority.semanticDocument)
   );
   if (!result.ok) throw new Error('Expected preserved JOIN.');
   return result.projection;

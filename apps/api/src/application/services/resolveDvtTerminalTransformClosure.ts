@@ -4,7 +4,8 @@
  */
 import {
   ConnectedSourceRefSchema,
-  DVT_POSTGRES_INNER_JOIN_PROFILE_ID,
+  decodeDvtSubstraitPlanV1,
+  DVT_POSTGRES_JOIN_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
   DvtTransformAuthoringAuthorityV1Schema,
   WorkspaceGraphAuthoringDraftSchema,
@@ -17,6 +18,13 @@ import {
   type WorkspaceGraphAuthoringNode,
 } from '@dvt/contracts';
 
+type CanonicalSemanticRelation = NonNullable<
+  Extract<
+    ReturnType<typeof decodeDvtSubstraitPlanV1>['relations'][number]['relType'],
+    { case: 'root' }
+  >['value']['input']
+>;
+
 export type DvtTerminalTransformClosure = {
   readonly draft: WorkspaceGraphAuthoringDraft;
   readonly sources: readonly { node: WorkspaceGraphAuthoringNode; ref: ConnectedSourceRef }[];
@@ -24,7 +32,7 @@ export type DvtTerminalTransformClosure = {
   readonly edges: readonly WorkspaceGraphAuthoringEdge[];
   readonly connectionRef: ConnectionRef;
   readonly profileId:
-    typeof DVT_POSTGRES_PROJECT_REL_PROFILE_ID | typeof DVT_POSTGRES_INNER_JOIN_PROFILE_ID;
+    typeof DVT_POSTGRES_PROJECT_REL_PROFILE_ID | typeof DVT_POSTGRES_JOIN_PROFILE_ID;
   readonly authority: DvtTransformAuthoringAuthorityV1;
 };
 
@@ -116,6 +124,14 @@ export function resolveDvtTerminalTransformClosure(input: {
       'Transform semantic sources must exactly match the selected connected Sources on one PostgreSQL connection.'
     );
   }
+  const root = decodeDvtSubstraitPlanV1(authority.semanticDocument).relations[0]?.relType;
+  const semanticRoot = root?.case === 'root' ? root.value.input : undefined;
+  const hasJoin = semanticRoot == null ? false : containsJoinRelation(semanticRoot);
+  if ((hasJoin && sources.length < 2) || (!hasJoin && sources.length !== 1)) {
+    throw new Error(
+      'Transform operational profile must match its canonical semantic relation family.'
+    );
+  }
 
   return {
     draft,
@@ -124,11 +140,27 @@ export function resolveDvtTerminalTransformClosure(input: {
     edges: selectedEdges,
     connectionRef,
     authority,
-    profileId:
-      sources.length === 1
-        ? DVT_POSTGRES_PROJECT_REL_PROFILE_ID
-        : DVT_POSTGRES_INNER_JOIN_PROFILE_ID,
+    profileId: hasJoin ? DVT_POSTGRES_JOIN_PROFILE_ID : DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
   };
+}
+
+function containsJoinRelation(relation: CanonicalSemanticRelation): boolean {
+  switch (relation.relType.case) {
+    case 'join':
+      return true;
+    case 'project':
+    case 'filter':
+    case 'aggregate':
+    case 'sort':
+    case 'fetch':
+      return relation.relType.value.input == null
+        ? false
+        : containsJoinRelation(relation.relType.value.input);
+    case 'set':
+      return relation.relType.value.inputs.some(containsJoinRelation);
+    default:
+      return false;
+  }
 }
 
 function selectExact<T extends { readonly id: string }>(

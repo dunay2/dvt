@@ -106,6 +106,7 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
   const validCompositionOperation =
     compositionCandidate?.operation == null ||
     compositionCandidate.operation === 'inner_join' ||
+    compositionCandidate.operation === 'left_join' ||
     compositionCandidate.operation === 'union_all';
   const validComposition =
     composition == null ||
@@ -168,6 +169,7 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
             role: compositionCandidate.role as 'branch' | 'trunk-owner',
             state: compositionCandidate.state as CanvasDependencyCompositionPresentation['state'],
             ...(compositionCandidate.operation === 'inner_join' ||
+            compositionCandidate.operation === 'left_join' ||
             compositionCandidate.operation === 'union_all'
               ? { operation: compositionCandidate.operation }
               : {}),

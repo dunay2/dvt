@@ -2,8 +2,8 @@
 import type { CanonicalNode } from '../../types/canonical';
 import { resolveGraphNodeCardCopy } from '../../plugins/graph/graphNodeCardCopyTokens';
 import {
-  decodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitInnerJoinAcceptedDraft,
+  decodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinAcceptedDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import { countDvtSubstraitJoinConditionComparisons } from './canvasDvtSubstraitJoinCondition';
 import {
@@ -22,9 +22,9 @@ export function resolveCanvasRelationalCompositionBadgeSummary(args: {
   if (authority?.mode !== 'substrait') return null;
   const copy = resolveGraphNodeCardCopy(args.locale);
 
-  if (args.operation === 'inner_join') {
-    const inspection = inspectDvtSubstraitInnerJoinAcceptedDraft(
-      decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+  if (args.operation === 'inner_join' || args.operation === 'left_join') {
+    const inspection = inspectDvtSubstraitJoinAcceptedDraft(
+      decodeDvtSubstraitJoinDocument(authority.semanticDocument)
     );
     if (!inspection.ok) return null;
     const projection = inspection.projection;
@@ -36,9 +36,10 @@ export function resolveCanvasRelationalCompositionBadgeSummary(args: {
           0
         )
       : 1;
-    return copy.relationalCompositionJoinSummaryTemplate
+    const summary = copy.relationalCompositionJoinSummaryTemplate
       .replace('{inputCount}', String(inputCount))
       .replace('{predicateCount}', String(predicateCount));
+    return args.operation === 'left_join' ? summary.replace(/^INNER JOIN/, 'LEFT JOIN') : summary;
   }
 
   const inspection = inspectDvtSubstraitUnionAllAcceptedDraft(

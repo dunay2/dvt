@@ -6,8 +6,8 @@ import {
 } from './canvasDvtSubstraitProjection';
 import { inspectDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import {
-  createDvtSubstraitInnerJoinDraft,
-  inspectDvtSubstraitInnerJoinAcceptedDraft,
+  createDvtSubstraitJoinDraft,
+  inspectDvtSubstraitJoinAcceptedDraft,
   inspectDvtSubstraitJoinPredicateContext,
   updateDvtSubstraitJoinPredicateCondition,
 } from './canvasDvtSubstraitJoinComposition';
@@ -27,7 +27,7 @@ import { applyCanvasRelationalOperatorTool } from './canvasRelationalTreeOperato
 import { dvtSubstraitJoinConditionKey } from './canvasDvtSubstraitJoinCondition';
 import { dvtSubstraitJoinOperandKey } from './canvasDvtSubstraitJoinOperand';
 import { removeCanvasRelationalTreeNode } from './canvasRelationalTreeRemoval';
-import { projectDvtSubstraitInnerJoinToPostgresSql } from './canvasDvtSubstraitPostgresProjection';
+import { projectDvtSubstraitJoinToPostgresSql } from './canvasDvtSubstraitPostgresProjection';
 
 const source = (table: string): DvtSubstraitUnionAllSource => ({
   nodeId: table,
@@ -50,7 +50,7 @@ const source = (table: string): DvtSubstraitUnionAllSource => ({
 
 describe('admitted relational operator tools', () => {
   it('edits a selected JOIN beneath grouping and window without losing either wrapper', async () => {
-    const original = createDvtSubstraitInnerJoinDraft({
+    const original = createDvtSubstraitJoinDraft({
       left: source('customers'),
       right: source('orders'),
       targetNodeId: 'model',
@@ -119,11 +119,11 @@ describe('admitted relational operator tools', () => {
     expect(next).not.toBe(windowed);
     expect(next.sidecar.relations).toEqual(windowed.sidecar.relations);
     expect(next.sidecar.fields).toEqual(windowed.sidecar.fields);
-    expect(inspectDvtSubstraitInnerJoinAcceptedDraft(next).ok).toBe(true);
+    expect(inspectDvtSubstraitJoinAcceptedDraft(next).ok).toBe(true);
     expect(
       resolveCanvasRelationalOperatorTools(next).find((tool) => tool.id === 'window')?.active
     ).toBe(true);
-    const sql = await projectDvtSubstraitInnerJoinToPostgresSql(next);
+    const sql = await projectDvtSubstraitJoinToPostgresSql(next);
     expect(sql).toMatch(/<>/);
     expect(sql).toMatch(/count\(\*\)/i);
     expect(sql).toMatch(/row_number\(\)/i);
@@ -157,6 +157,7 @@ describe('admitted relational operator tools', () => {
       'substrait.AggregateRel',
       'substrait.FilterRel',
       'substrait.JoinRel/JoinType.JOIN_TYPE_INNER',
+      'substrait.JoinRel/JoinType.JOIN_TYPE_LEFT',
       'substrait.ProjectRel',
       'substrait.ReadRel/read_type.named_table',
       'substrait.RelCommon/emit_kind.emit',
@@ -271,7 +272,7 @@ describe('admitted relational operator tools', () => {
   for (const shape of ['inner_join', 'union_all'] as const) {
     const fixture = (): DvtSubstraitUnionAllDraft =>
       shape === 'inner_join'
-        ? createDvtSubstraitInnerJoinDraft({
+        ? createDvtSubstraitJoinDraft({
             left: source('customers'),
             right: source('orders'),
             targetNodeId: 'model',
@@ -305,7 +306,7 @@ describe('admitted relational operator tools', () => {
       );
       const inspect =
         shape === 'inner_join'
-          ? inspectDvtSubstraitInnerJoinAcceptedDraft
+          ? inspectDvtSubstraitJoinAcceptedDraft
           : inspectDvtSubstraitUnionAllAcceptedDraft;
       expect(inspect(reloaded).ok).toBe(true);
       expect(reloaded.sidecar.relations).toEqual(windowed.sidecar.relations);

@@ -1,5 +1,5 @@
 /** Proves one N-input JOIN through the protected DVT PostgreSQL Run path. */
-import { DVT_POSTGRES_INNER_JOIN_PROFILE_ID, KNOWN_STEP_KINDS } from '@dvt/contracts';
+import { DVT_POSTGRES_JOIN_PROFILE_ID, KNOWN_STEP_KINDS } from '@dvt/contracts';
 
 import documents from '../../../../../packages/@dvt/postgres-projection/test/fixtures/inner-join-documents.json';
 import { exportProjectSnapshot } from '../../../src/app/views/canvas/canvasProjectSnapshot';
@@ -166,7 +166,7 @@ describe('N-input DVT Run live', () => {
       );
       const workload = preview.plan?.steps?.[0]?.stepTypeConfig;
       expect(workload?.schemaVersion).to.equal('dvt-operational-workload.v2');
-      expect(workload?.targetProjection?.profileId).to.equal(DVT_POSTGRES_INNER_JOIN_PROFILE_ID);
+      expect(workload?.targetProjection?.profileId).to.equal(DVT_POSTGRES_JOIN_PROFILE_ID);
       expect(workload?.graph?.selectedNodeIds).to.deep.equal([...draft.nodeIds].sort());
       expect(workload?.graph?.selectedEdgeIds).to.deep.equal(
         draft.edges.map((edge) => edge.id).sort()
