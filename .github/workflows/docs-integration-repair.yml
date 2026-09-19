@@ -1,0 +1,159 @@
+name: Docs Integration Repair
+on:
+  push:
+    branches: [automation/3004-docs-integration-repair]
+    paths: [.github/workflows/docs-integration-repair.yml]
+permissions:
+  contents: read
+jobs:
+  retire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    env:
+      BASE: 44d3e0d77a1a072a9bceb6c5d231f06256cdc4a3
+      SOURCE: 05b09c5c15e8defc9634db6a52be8e2f7f0f7052
+      GIT_BASE: 44d3e0d77a1a072a9bceb6c5d231f06256cdc4a3
+      PLANNING_DB_INTEGRITY_SCOPE: bootstrap
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 05b09c5c15e8defc9634db6a52be8e2f7f0f7052
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+      - name: Apply reviewed retirement with red test first
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess,json,hashlib,os
+          out=Path('/tmp/expanded-retirement');out.mkdir(exist_ok=True)
+          def git(*a):return subprocess.check_output(['git',*a])
+          def sha(b):return hashlib.sha256(b).hexdigest()
+          assert git('rev-parse','HEAD').decode().strip()==os.environ['SOURCE']
+          assert git('rev-parse','HEAD^{tree}').decode().strip()=='95a2e262354e6d5582b67eeed27dd5f4d4e03c0d'
+          names=['20260421-api-http-error-translation-ast-seam-guard-closeout.md','20260421-api-http-error-translation-facade-writer-refinement-closeout.md','20260421-api-http-error-translation-public-api-facade-closeout.md','20260421-api-http-error-translation-response-writer-unification-closeout.md','20260421-api-http-error-translation-route-static-error-convergence-closeout.md','20260421-api-http-runtime-error-translation-component-hardening-closeout.md','20260417-tf-e2-canvas-draft-scope-fowler-refactor-closeout.md','20260417-tf-e2-canvas-draft-session-refactor-closeout.md','20260418-tf-e2-canvas-draft-repository-seam-closeout.md','20260418-tf-e2-canvas-srp-seams-closeout.md','20260421-tf-e2-canvas-handler-component-semantics-closeout.md','20260421-tf-e2-canvas-route-composer-and-shell-subbuilders-closeout.md','20260421-tf-e2-canvas-route-composition-semantic-component-closeout.md','20260421-tf-e2-canvas-route-presentation-hard-cut-closeout.md','20260421-tf-e2-canvas-shell-composition-slimming-closeout.md','20260421-tf-e2-canvas-shell-semantic-prop-contract-closeout.md','20260421-tf-e2-handler-contracts-hardening-closeout.md','20260422-tf-e2-canvas-authoring-runtime-contract-closeout.md','20260507-gov-s3-planning-db-export-parity-closeout.md','20260510-gov-s3-w18-docs-disposition-queue-closeout.md','20260510-gov-s3-w19-task-provenance-ledger-closeout.md','20260510-gov-s3-w20-planning-work-intake-query-closeout.md','20260515-remaining-review-reconciliation-closeout.md','20260604-knowledge-intake-dbfirst-retirement-closeout.md','20260604-knowledge-intake-generated-literature-closeout.md']
+          removed=['docs/planning/closeouts/'+n for n in sorted(names)]
+          assert len(removed)==len(set(removed))==25
+          (out/'removed-increment.json').write_text(json.dumps(removed,indent=2))
+          (out/'original-hashes.json').write_text(json.dumps({p:sha(Path(p).read_bytes()) for p in removed},indent=2))
+          p=Path('tools/ci/docs-disposition-canon.test.mjs');before=p.read_bytes()
+          assert sha(before)=='8efd525acf0e7889f02660c02b010166d23dcd41ccedbf0de558008cba75800b'
+          s=before.decode();needle='  const editorialCloseouts = new Set([\n';assert s.count(needle)==1
+          assert all(n not in s for n in names)
+          s=s.replace(needle,needle+''.join("    '"+n+"',\n" for n in sorted(names)))
+          assert sha(s.encode())=='9d2a641d305caaf46b7c1d96f15bc549b1858dfd40833b4bc3618bfc94a06052'
+          p.write_text(s)
+          cmd=['node','--test','--test-name-pattern=retired documentation-only closeouts','tools/ci/docs-disposition-canon.test.mjs']
+          red=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+          (out/'red-before-removal.log').write_text(red.stdout);assert red.returncode==1
+          for name in removed:Path(name).unlink()
+          assert set(git('diff','--name-only','--diff-filter=D').decode().splitlines())==set(removed)
+          assert git('diff','--name-only','--diff-filter=M').decode().strip()=='tools/ci/docs-disposition-canon.test.mjs'
+          git('config','user.name','github-actions[bot]')
+          git('config','user.email','41898282+github-actions[bot]@users.noreply.github.com')
+          git('add','-A');git('diff','--cached','--check')
+          print('Verified 25 additional deletions and 25 additions to the existing retirement set')
+          PY
+      - name: Commit through canonical helper and enabled hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm commit docs docs "Retire superseded HTTP Canvas and planning journals" 2>&1 | tee /tmp/expanded-retirement/source-commit.log
+          git rev-parse HEAD > /tmp/expanded-retirement/source-head.txt
+          echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Prepare canonical disposable CI database only
+        uses: ./.github/actions/prepare-planning-db
+      - name: Regenerate indexes through their owners
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm docs:sync 2>&1 | tee /tmp/expanded-retirement/docs-sync.log
+          pnpm governance:refresh 2>&1 | tee /tmp/expanded-retirement/governance-refresh.log
+          git add -A
+          if ! git diff --cached --quiet; then
+            test "$(git diff --cached --name-only)" = docs/.manifest.json
+            pnpm commit docs docs "Regenerate inventory after expanded retirement" 2>&1 | tee /tmp/expanded-retirement/generated-commit.log
+          fi
+          echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Validate entire PR including individual restoration controls
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess,json,os,re
+          out=Path('/tmp/expanded-retirement');base=os.environ['BASE'];source=os.environ['SOURCE'];results=[]
+          def git(*a):return subprocess.check_output(['git',*a]).decode().strip()
+          def run(name,cmd,expected=0):
+              r=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+              (out/(name+'.log')).write_text(r.stdout+'\nSTDERR\n'+r.stderr)
+              results.append({'name':name,'command':cmd,'exitCode':r.returncode,'expectedExitCode':expected})
+              (out/'validation.json').write_text(json.dumps(results,indent=2))
+              print(name,r.returncode,flush=True)
+              assert r.returncode==expected,(name,r.stdout[-4000:],r.stderr[-4000:])
+              return r.stdout
+          increment=json.loads((out/'removed-increment.json').read_text())
+          assert set(git('diff','--name-only','--diff-filter=D',source,'HEAD').splitlines())==set(increment)
+          removed=git('diff','--name-only','--diff-filter=D',base,'HEAD').splitlines();assert len(removed)==47
+          (out/'removed-total.json').write_text(json.dumps(removed,indent=2))
+          assert not git('diff','--name-only','--diff-filter=A',base,'HEAD')
+          allowed=set(removed)|{'docs/.manifest.json','tools/ci/docs-disposition-canon.test.mjs'}
+          assert set(git('diff','--name-only',base,'HEAD').splitlines())<=allowed
+          assert not git('diff','--name-only',base,'HEAD','--','apps','packages','specs','docs/adr','docs/contracts','docs/evidence','docs/risk-register','docs/planning/proposals','buzon','.github','package.json','pnpm-lock.yaml')
+          arcText=run('arc',['node','tools/ci/arc-check.mjs']);m=re.search(r'^\{',arcText,re.MULTILINE);assert m
+          arc=json.loads(arcText[m.start():]);assert arc['effectiveArcLevel']=='ARC-0'
+          assert all(arc['requirements'][k] is False for k in ['evidenceDoc','riskUpdate','rolloutNotes','compatMatrix'])
+          cmd=['node','--test','--test-name-pattern=retired documentation-only closeouts','tools/ci/docs-disposition-canon.test.mjs']
+          run('green-selected',cmd)
+          for i,name in enumerate(removed):
+              p=Path(name);p.write_bytes(subprocess.check_output(['git','show',base+':'+name]))
+              try:run('restore-'+str(i+1),cmd,1)
+              finally:p.unlink()
+          p=Path('README.md');original=p.read_bytes();slug=increment[0]
+          for name,text,code in [('relative','[Old]('+slug+')',1),('main','https://github.com/dunay2/dvt/blob/main/'+slug,1),('git','https://github.com/dunay2/dvt/blob/'+base+'/'+slug,0),('unrelated','Current Canvas draft and HTTP error contracts remain unchanged.',0)]:
+              p.write_bytes(original+('\n'+text+'\n').encode())
+              try:run('consumer-'+name,cmd,code)
+              finally:p.write_bytes(original)
+          run('governance-tests',['node','--test','scripts/check-feature-mechanization.test.cjs','scripts/documentation-publication.test.cjs','scripts/planning-db-surface-inventory-check.test.cjs','tools/ci/docs-disposition-canon.test.mjs','tools/ci/startup-card-canon.test.mjs','tools/ci/planner-package-governance.test.mjs','tools/ci/architecture-doc-reconciliation-canon.test.mjs','scripts/governance-refresh.test.cjs','tools/ci/emit-test-matrix.test.mjs','tools/ci/turbo-workspace-task-contract.test.mjs'])
+          for name,cmd in [('sync',['pnpm','docs:sync:check']),('manifest',['pnpm','docs:gov:manifest:check']),('docs',['pnpm','ci:docs']),('prepush',['pnpm','verify:prepush']),('title',['pnpm','pr:validate-title','docs(docs): Retire obsolete refactor and planning journals']),('clean',['git','diff','--exit-code','HEAD'])]:run(name,cmd)
+          assert not git('status','--porcelain')
+          (out/'validated.txt').write_text(git('rev-parse','HEAD')+'\n')
+          PY
+      - name: Export exact candidate and execution evidence
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess,json,hashlib,os
+          out=Path('/tmp/expanded-retirement');out.mkdir(exist_ok=True);base=os.environ['BASE'];source=os.environ['SOURCE']
+          for name,args in {'head.txt':['rev-parse','HEAD'],'tree.txt':['rev-parse','HEAD^{tree}'],'commit.txt':['cat-file','commit','HEAD'],'head-files.txt':['ls-tree','-rz','HEAD'],'status.txt':['status','--porcelain'],'candidate.patch':['diff',base,'HEAD'],'increment.patch':['diff',source,'HEAD'],'numstat.txt':['diff','--numstat',base,'HEAD'],'name-status.txt':['diff','--name-status',base,'HEAD'],'stats.txt':['diff','--stat',base,'HEAD']}.items():
+              (out/name).write_bytes(subprocess.check_output(['git',*args]))
+          if (out/'source-head.txt').exists():(out/'source-commit.txt').write_bytes(subprocess.check_output(['git','cat-file','commit',(out/'source-head.txt').read_text().strip()]))
+          subprocess.run(['git','archive','--format=tar.gz','-o',str(out/'source.tar.gz'),'HEAD'],check=True)
+          (out/'checksums.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in out.iterdir() if p.is_file() and p.name!='checksums.json'},indent=2))
+          print((out/'head.txt').read_text());print((out/'stats.txt').read_text())
+          PY
+      - name: Publish isolated candidate only after validation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(cat /tmp/expanded-retirement/validated.txt)" = "$(git rev-parse HEAD)"
+          gh auth setup-git
+          branch=automation/3004-validated-expanded-3305
+          test -z "$(git ls-remote --heads origin refs/heads/$branch)"
+          git push origin HEAD:refs/heads/$branch
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: docs-3305-expanded-retirement
+          path: /tmp/expanded-retirement
+          retention-days: 7
