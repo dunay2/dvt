@@ -3,7 +3,10 @@ import { readFileSync } from 'node:fs';
 import { URL } from 'node:url';
 
 import {
+  decodeDvtSubstraitPlanV1,
+  encodeDvtSubstraitPlanV1,
   DvtSubstraitSemanticDocumentV1Schema,
+  type DvtSubstraitSemanticDocumentV1,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 
@@ -19,10 +22,206 @@ const documents = JSON.parse(
   )
 ) as Record<string, unknown>;
 
-type JoinFixtureType = 'inner' | 'left' | 'right' | 'outer';
+type JoinFixtureType =
+  'inner' | 'left' | 'right' | 'outer' | 'left_semi' | 'left_anti' | 'right_semi' | 'right_anti';
+export type SemiAntiPredicateScenario = 'equal' | 'composite' | 'nulls_equal' | 'less_than';
+
+const SEMI_ANTI_TYPE: Readonly<
+  Record<Exclude<JoinFixtureType, 'inner' | 'left' | 'right' | 'outer'>, number>
+> = {
+  left_semi: 5,
+  left_anti: 6,
+  right_semi: 8,
+  right_anti: 9,
+};
+
+function semiAntiDocument(
+  fixture: DvtSubstraitSemanticDocumentV1,
+  joinType: number,
+  predicateScenario: SemiAntiPredicateScenario
+): DvtSubstraitSemanticDocumentV1 {
+  const plan = decodeDvtSubstraitPlanV1(fixture);
+  const root = plan.relations[0]?.relType;
+  if (root?.case !== 'root' || root.value.input?.relType.case !== 'join') {
+    throw new Error('JOIN preview fixture must contain a JOIN root.');
+  }
+  const join = root.value.input.relType.value;
+  if (join.common?.emitKind.case !== 'emit' || join.expression?.rexType.case !== 'scalarFunction') {
+    throw new Error('JOIN preview fixture must use explicit emit.');
+  }
+  const retainRight = joinType === 8 || joinType === 9;
+  const retainedRelation = fixture.sidecar.relations.find(
+    (relation) => relation.relAnchor === (retainRight ? 2 : 1)
+  )!;
+  const stage = fixture.sidecar.relations.find(
+    (relation) => relation.relAnchor === join.common!.relAnchor
+  )!;
+  const retainedFields = fixture.sidecar.fields
+    .filter((field) => field.relationId === retainedRelation.relationId)
+    .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
+  const existingStageFieldId = new Map(
+    fixture.sidecar.fields
+      .filter((field) => field.relationId === stage.relationId)
+      .map((field) => [field.sourceFieldId, field.fieldId] as const)
+  );
+  join.type = joinType;
+  if (predicateScenario !== 'equal') {
+    const equalExpression = globalThis.structuredClone(join.expression);
+    const equalFunction = equalExpression.rexType;
+    if (equalFunction.case !== 'scalarFunction') {
+      throw new Error('JOIN preview fixture must use a scalar equality predicate.');
+    }
+    const selections = equalFunction.value.arguments.map((argument) => {
+      if (argument.argType.case !== 'value') {
+        throw new Error('JOIN preview fixture must use value arguments.');
+      }
+      return globalThis.structuredClone(argument.argType.value);
+    });
+    if (selections.length !== 2) {
+      throw new Error('JOIN preview fixture must use a binary equality predicate.');
+    }
+    const selectionAt = (
+      template: (typeof selections)[number],
+      ordinal: number
+    ): (typeof selections)[number] => {
+      const selection = globalThis.structuredClone(template);
+      const reference = selection.rexType;
+      if (
+        reference.case !== 'selection' ||
+        reference.value.referenceType.case !== 'directReference' ||
+        reference.value.referenceType.value.referenceType.case !== 'structField'
+      ) {
+        throw new Error('JOIN preview fixture must use direct field references.');
+      }
+      reference.value.referenceType.value.referenceType.value.field = ordinal;
+      return selection;
+    };
+    const addFunction = (name: string, extensionUrnReference: number): number => {
+      const template = plan.extensions.find((extension) => {
+        const mapping = extension.mappingType;
+        return (
+          mapping.case === 'extensionFunction' &&
+          mapping.value.extensionUrnReference === extensionUrnReference
+        );
+      });
+      if (template?.mappingType.case !== 'extensionFunction') {
+        throw new Error('JOIN preview fixture must declare comparison and boolean functions.');
+      }
+      const declaration = globalThis.structuredClone(template);
+      const mapping = declaration.mappingType;
+      if (mapping.case !== 'extensionFunction') {
+        throw new Error('JOIN preview function declaration changed shape while cloning.');
+      }
+      const anchor =
+        Math.max(
+          ...plan.extensions.flatMap((extension) => {
+            const mapping = extension.mappingType;
+            return mapping.case === 'extensionFunction' ? [mapping.value.functionAnchor] : [];
+          })
+        ) + 1;
+      mapping.value.functionAnchor = anchor;
+      mapping.value.name = name;
+      plan.extensions.push(declaration);
+      return anchor;
+    };
+    const scalarExpression = (
+      functionReference: number,
+      operands: readonly (typeof selections)[number][],
+      requiredOutput = false
+    ): typeof equalExpression => {
+      const expression = globalThis.structuredClone(equalExpression);
+      const scalar = expression.rexType;
+      if (scalar.case !== 'scalarFunction') {
+        throw new Error('JOIN preview fixture must use scalar predicates.');
+      }
+      scalar.value.functionReference = functionReference;
+      scalar.value.arguments = operands.map((operand, index) => {
+        const argument = globalThis.structuredClone(
+          equalFunction.value.arguments[Math.min(index, 1)]!
+        );
+        if (argument.argType.case !== 'value') {
+          throw new Error('JOIN preview fixture must use value arguments.');
+        }
+        argument.argType.value = globalThis.structuredClone(operand);
+        return argument;
+      });
+      if (requiredOutput && scalar.value.outputType?.kind.case === 'bool') {
+        scalar.value.outputType.kind.value.nullability = 2;
+      }
+      return expression;
+    };
+
+    if (predicateScenario === 'less_than') {
+      const equalDeclaration = plan.extensions.find(
+        (extension) =>
+          extension.mappingType.case === 'extensionFunction' &&
+          extension.mappingType.value.functionAnchor === equalFunction.value.functionReference
+      );
+      if (equalDeclaration?.mappingType.case !== 'extensionFunction') {
+        throw new Error('JOIN preview fixture must declare equality.');
+      }
+      equalDeclaration.mappingType.value.name = 'lt';
+      if (join.left?.relType.case !== 'read' || join.right?.relType.case !== 'read') {
+        throw new Error('JOIN preview fixture must contain two reads.');
+      }
+      const leftType = join.left.relType.value.baseSchema?.struct?.types[1];
+      const rightType = join.right.relType.value.baseSchema?.struct?.types[0];
+      if (leftType == null || rightType == null) {
+        throw new Error('JOIN preview fixture must contain comparable key types.');
+      }
+      leftType.kind = {
+        case: 'i64',
+        value: {
+          $typeName: 'substrait.Type.I64',
+          typeVariationReference: 0,
+          nullability: 1,
+        },
+      };
+      rightType.kind = globalThis.structuredClone(leftType.kind);
+    } else if (predicateScenario === 'composite') {
+      const notEqual = addFunction('not_equal', 1);
+      const second = scalarExpression(notEqual, [
+        selectionAt(selections[0]!, 0),
+        selectionAt(selections[1]!, 3),
+      ]);
+      join.expression = scalarExpression(2, [equalExpression, second]);
+    } else {
+      const isNull = addFunction('is_null', 1);
+      const or = addFunction('or', 2);
+      const leftNull = scalarExpression(isNull, [selections[0]!], true);
+      const rightNull = scalarExpression(isNull, [selections[1]!], true);
+      const bothNull = scalarExpression(2, [leftNull, rightNull]);
+      join.expression = scalarExpression(or, [equalExpression, bothNull]);
+    }
+  }
+  join.common.emitKind.value.outputMapping = retainedFields.map((_, ordinal) => ordinal);
+  root.value.names = retainedFields.map((field) => field.displayName!);
+  const semanticPlan = encodeDvtSubstraitPlanV1(plan);
+  return DvtSubstraitSemanticDocumentV1Schema.parse({
+    ...fixture,
+    semanticPlan,
+    sidecar: {
+      ...fixture.sidecar,
+      semanticPlanSha256: semanticPlan.sha256,
+      fields: [
+        ...fixture.sidecar.fields.filter((field) => field.relationId !== stage.relationId),
+        ...retainedFields.map((field, outputOrdinal) => ({
+          fieldId: existingStageFieldId.get(field.fieldId),
+          relationId: stage.relationId,
+          sourceFieldId: field.fieldId,
+          outputOrdinal,
+          displayName: field.displayName,
+        })),
+      ],
+    },
+  });
+}
 
 const THREE_INPUT_FINAL_JOIN_PLANS: Readonly<
-  Record<Exclude<JoinFixtureType, 'inner'>, Readonly<{ bytesBase64: string; sha256: string }>>
+  Record<
+    Extract<JoinFixtureType, 'left' | 'right' | 'outer'>,
+    Readonly<{ bytesBase64: string; sha256: string }>
+  >
 > = {
   left: {
     bytesBase64:
@@ -43,25 +242,40 @@ const THREE_INPUT_FINAL_JOIN_PLANS: Readonly<
 
 export function buildDvtJoinPreviewDraft(
   inputCount: 2 | 3,
-  finalJoinType: JoinFixtureType = 'inner'
+  finalJoinType: JoinFixtureType = 'inner',
+  predicateScenario: SemiAntiPredicateScenario = 'equal'
 ): WorkspaceGraphAuthoringDraft {
   const base = buildDvtTerminalTransformPreviewDraft();
   const fixture = DvtSubstraitSemanticDocumentV1Schema.parse(
     documents[inputCount === 2 ? 'two' : 'three']
   );
+  const semiAntiType =
+    finalJoinType === 'left_semi' ||
+    finalJoinType === 'left_anti' ||
+    finalJoinType === 'right_semi' ||
+    finalJoinType === 'right_anti'
+      ? SEMI_ANTI_TYPE[finalJoinType]
+      : null;
+  if (semiAntiType != null && inputCount !== 2) {
+    throw new Error('The semi/anti preview fixture is a two-input retained-side proof.');
+  }
   const override =
-    finalJoinType === 'inner' ? undefined : THREE_INPUT_FINAL_JOIN_PLANS[finalJoinType];
+    finalJoinType === 'left' || finalJoinType === 'right' || finalJoinType === 'outer'
+      ? THREE_INPUT_FINAL_JOIN_PLANS[finalJoinType]
+      : undefined;
   const semanticDocument =
-    inputCount === 3 && override != null
-      ? DvtSubstraitSemanticDocumentV1Schema.parse({
-          ...fixture,
-          semanticPlan: { ...fixture.semanticPlan, ...override },
-          sidecar: {
-            ...fixture.sidecar,
-            semanticPlanSha256: override.sha256,
-          },
-        })
-      : fixture;
+    semiAntiType != null
+      ? semiAntiDocument(fixture, semiAntiType, predicateScenario)
+      : inputCount === 3 && override != null
+        ? DvtSubstraitSemanticDocumentV1Schema.parse({
+            ...fixture,
+            semanticPlan: { ...fixture.semanticPlan, ...override },
+            sidecar: {
+              ...fixture.sidecar,
+              semanticPlanSha256: override.sha256,
+            },
+          })
+        : fixture;
   const sources = semanticDocument.sidecar.relations.flatMap((relation) => {
     if (relation.sourceRef === undefined) return [];
     return [

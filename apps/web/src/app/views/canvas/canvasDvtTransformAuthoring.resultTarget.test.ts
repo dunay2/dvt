@@ -45,6 +45,10 @@ describe('Transform result destination metadata', () => {
     [JoinRel_JoinType.LEFT, 'left_join'],
     [JoinRel_JoinType.RIGHT, 'right_join'],
     [JoinRel_JoinType.OUTER, 'full_outer_join'],
+    [JoinRel_JoinType.LEFT_SEMI, 'left_semi_join'],
+    [JoinRel_JoinType.LEFT_ANTI, 'left_anti_join'],
+    [JoinRel_JoinType.RIGHT_SEMI, 'right_semi_join'],
+    [JoinRel_JoinType.RIGHT_ANTI, 'right_anti_join'],
   ] as const)('restores and persists %s as the canonical %s authoring shape', (joinType, shape) => {
     const source = (id: string, table: string): DvtSubstraitJoinSource => ({
       nodeId: id,

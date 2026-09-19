@@ -83,6 +83,28 @@ export function CanvasRelationalTreeJoinEditor({
   const selectedStage = inspection.projection.joinRelations.find(
     ({ relationId }) => relationId === selectedRelationId
   );
+  const canChangeJoinType = (joinType: DvtSubstraitJoinType): boolean =>
+    selectedStage == null ||
+    selectedStage.joinType === joinType ||
+    setDvtSubstraitJoinType({
+      draft,
+      joinRelationId: selectedStage.relationId,
+      joinType,
+    }) !== draft;
+  const hasUnavailableJoinTypes =
+    selectedStage != null &&
+    (
+      [
+        JoinRel_JoinType.INNER,
+        JoinRel_JoinType.LEFT,
+        JoinRel_JoinType.RIGHT,
+        JoinRel_JoinType.OUTER,
+        JoinRel_JoinType.LEFT_SEMI,
+        JoinRel_JoinType.LEFT_ANTI,
+        JoinRel_JoinType.RIGHT_SEMI,
+        JoinRel_JoinType.RIGHT_ANTI,
+      ] as readonly DvtSubstraitJoinType[]
+    ).some((joinType) => !canChangeJoinType(joinType));
 
   return (
     <div className="h-full min-h-0 space-y-3">
@@ -95,6 +117,9 @@ export function CanvasRelationalTreeJoinEditor({
                 data-slot="canvas-relational-tree-join-type"
                 className={selectClassName}
                 value={selectedStage.joinType}
+                aria-describedby={
+                  hasUnavailableJoinTypes ? 'canvas-relational-tree-join-type-impact' : undefined
+                }
                 onChange={(event) => {
                   const next = Number(event.currentTarget.value) as DvtSubstraitJoinType;
                   onChange(
@@ -106,19 +131,64 @@ export function CanvasRelationalTreeJoinEditor({
                   );
                 }}
               >
-                <option value={JoinRel_JoinType.INNER}>
+                <option
+                  value={JoinRel_JoinType.INNER}
+                  disabled={!canChangeJoinType(JoinRel_JoinType.INNER)}
+                >
                   {copy.inspectorDvtSubstraitInnerJoinAction}
                 </option>
-                <option value={JoinRel_JoinType.LEFT}>
+                <option
+                  value={JoinRel_JoinType.LEFT}
+                  disabled={!canChangeJoinType(JoinRel_JoinType.LEFT)}
+                >
                   {copy.inspectorDvtSubstraitLeftJoinAction}
                 </option>
-                <option value={JoinRel_JoinType.RIGHT}>
+                <option
+                  value={JoinRel_JoinType.RIGHT}
+                  disabled={!canChangeJoinType(JoinRel_JoinType.RIGHT)}
+                >
                   {copy.inspectorDvtSubstraitRightJoinAction}
                 </option>
-                <option value={JoinRel_JoinType.OUTER}>
+                <option
+                  value={JoinRel_JoinType.OUTER}
+                  disabled={!canChangeJoinType(JoinRel_JoinType.OUTER)}
+                >
                   {copy.inspectorDvtSubstraitFullOuterJoinAction}
                 </option>
+                <option
+                  value={JoinRel_JoinType.LEFT_SEMI}
+                  disabled={!canChangeJoinType(JoinRel_JoinType.LEFT_SEMI)}
+                >
+                  {copy.inspectorDvtSubstraitLeftSemiJoinAction}
+                </option>
+                <option
+                  value={JoinRel_JoinType.LEFT_ANTI}
+                  disabled={!canChangeJoinType(JoinRel_JoinType.LEFT_ANTI)}
+                >
+                  {copy.inspectorDvtSubstraitLeftAntiJoinAction}
+                </option>
+                <option
+                  value={JoinRel_JoinType.RIGHT_SEMI}
+                  disabled={!canChangeJoinType(JoinRel_JoinType.RIGHT_SEMI)}
+                >
+                  {copy.inspectorDvtSubstraitRightSemiJoinAction}
+                </option>
+                <option
+                  value={JoinRel_JoinType.RIGHT_ANTI}
+                  disabled={!canChangeJoinType(JoinRel_JoinType.RIGHT_ANTI)}
+                >
+                  {copy.inspectorDvtSubstraitRightAntiJoinAction}
+                </option>
               </select>
+              {hasUnavailableJoinTypes ? (
+                <span
+                  id="canvas-relational-tree-join-type-impact"
+                  data-slot="canvas-relational-tree-join-type-impact"
+                  className="block text-[10px] leading-4 text-(--text-muted)"
+                >
+                  {copy.inspectorDvtSubstraitJoinTypeImpactHint}
+                </span>
+              ) : null}
             </label>
             {selectedStage.joinType === JoinRel_JoinType.INNER ? null : (
               <p
@@ -129,7 +199,12 @@ export function CanvasRelationalTreeJoinEditor({
                   ? copy.inspectorDvtSubstraitLeftJoinRolesHint
                   : selectedStage.joinType === JoinRel_JoinType.RIGHT
                     ? copy.inspectorDvtSubstraitRightJoinRolesHint
-                    : copy.inspectorDvtSubstraitFullOuterJoinRolesHint}
+                    : selectedStage.joinType === JoinRel_JoinType.OUTER
+                      ? copy.inspectorDvtSubstraitFullOuterJoinRolesHint
+                      : selectedStage.joinType === JoinRel_JoinType.LEFT_SEMI ||
+                          selectedStage.joinType === JoinRel_JoinType.LEFT_ANTI
+                        ? copy.inspectorDvtSubstraitLeftFilteringJoinRolesHint
+                        : copy.inspectorDvtSubstraitRightFilteringJoinRolesHint}
               </p>
             )}
           </div>

@@ -64,6 +64,8 @@ export {
   type InspectedJoinPredicateOperand,
   dvtSubstraitJoinNullExtendsLeft,
   dvtSubstraitJoinNullExtendsRight,
+  dvtSubstraitJoinRetainedSide,
+  isDvtSubstraitSemiAntiJoin,
 } from './substraitJoinReadModel.js';
 export {
   ZERO_SHA256,
@@ -110,6 +112,7 @@ export {
   pgOrderedRowNumber,
   pgQualifiedColumnRef,
   pgRangeVar,
+  pgRangeSubselect,
   pgRowNumber,
   pgRowNumberOverCount,
   pgString,

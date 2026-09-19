@@ -12,6 +12,10 @@ const OPERATION_LABEL: Record<CanvasAlgebraicCompositionOperation, string> = {
   left_join: '⋉ LEFT JOIN',
   right_join: '⋊ RIGHT JOIN',
   full_outer_join: '⟗ FULL OUTER JOIN',
+  left_semi_join: '⋉ LEFT SEMI',
+  left_anti_join: '▷ LEFT ANTI',
+  right_semi_join: '⋊ RIGHT SEMI',
+  right_anti_join: '◁ RIGHT ANTI',
   union_all: '∪ ALL',
   union_distinct: '∪',
 };
@@ -26,6 +30,10 @@ export function resolveGraphNodeAlgebraicDrop(value: unknown): GraphNodeAlgebrai
       candidate.activeOperation !== 'left_join' &&
       candidate.activeOperation !== 'right_join' &&
       candidate.activeOperation !== 'full_outer_join' &&
+      candidate.activeOperation !== 'left_semi_join' &&
+      candidate.activeOperation !== 'left_anti_join' &&
+      candidate.activeOperation !== 'right_semi_join' &&
+      candidate.activeOperation !== 'right_anti_join' &&
       candidate.activeOperation !== 'union_all' &&
       candidate.activeOperation !== 'union_distinct')
   ) {
@@ -40,7 +48,7 @@ export function GraphNodeAlgebraicDropZone({
   return (
     <div
       data-slot="graph-node-algebraic-drop"
-      className="pointer-events-none absolute inset-2 z-20 grid grid-cols-[repeat(auto-fit,minmax(0,1fr))] gap-2 rounded-md bg-slate-950/80 p-2 backdrop-blur-sm"
+      className="pointer-events-none absolute inset-2 z-20 grid grid-cols-2 gap-1 rounded-md bg-slate-950/80 p-2 backdrop-blur-sm"
     >
       {drop.operations.map((operation) => {
         const active = operation === drop.activeOperation;
@@ -50,7 +58,7 @@ export function GraphNodeAlgebraicDropZone({
             data-operation={operation}
             data-active={active}
             className={cn(
-              'flex min-h-20 items-center justify-center rounded-md border-2 border-dashed text-sm font-semibold transition',
+              'flex min-h-8 items-center justify-center rounded-md border-2 border-dashed px-1 text-center text-[10px] font-semibold leading-tight transition',
               active
                 ? 'border-emerald-400 bg-emerald-500/20 text-emerald-100'
                 : 'border-slate-600 bg-slate-900/70 text-slate-300'

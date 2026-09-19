@@ -26,6 +26,7 @@ import {
 import {
   dvtSubstraitJoinNullExtendsLeft,
   dvtSubstraitJoinNullExtendsRight,
+  dvtSubstraitJoinRetainedSide,
   type DvtSubstraitJoinDataType,
   type DvtSubstraitJoinDraft,
   type DvtSubstraitNInputJoinProjection,
@@ -165,7 +166,15 @@ export function inspectNInputJoinStructure(
           ? true
           : field.nullable,
     }));
-    const available = [...leftFields, ...rightFields];
+    const predicateFields = [...leftFields, ...rightFields];
+    const retainedSide =
+      inspectedJoin == null ? 'both' : dvtSubstraitJoinRetainedSide(inspectedJoin.joinType);
+    const emittedFields =
+      retainedSide === 'left'
+        ? leftFields
+        : retainedSide === 'right'
+          ? rightFields
+          : predicateFields;
     const relationBinding = sidecar.relations.find((relation) => relation.relAnchor === relAnchor);
     if (
       inspectedJoin == null ||
@@ -178,7 +187,7 @@ export function inspectNInputJoinStructure(
           .join('+') ||
       (inspectedJoin.outputMapping.length === 0 && joinIndex !== tree.joins.length - 1) ||
       new Set(inspectedJoin.outputMapping).size !== inspectedJoin.outputMapping.length ||
-      inspectedJoin.outputMapping.some((ordinal) => ordinal < 0 || ordinal >= available.length)
+      inspectedJoin.outputMapping.some((ordinal) => ordinal < 0 || ordinal >= emittedFields.length)
     ) {
       return null;
     }
@@ -187,7 +196,7 @@ export function inspectNInputJoinStructure(
       operand: InspectedJoinPredicateOperand
     ): DvtSubstraitJoinPredicateOperand | null => {
       return mapDvtSubstraitJoinOperandFields(operand, (field) => {
-        const origin = available[field.ordinal];
+        const origin = predicateFields[field.ordinal];
         return origin == null ? null : { kind: 'field', sourceFieldId: origin.fieldId };
       });
     };
@@ -200,8 +209,8 @@ export function inspectNInputJoinStructure(
         resolveDvtSubstraitJoinOperandDataType(
           operand,
           (field) =>
-            available.find((candidate) => candidate.fieldId === field.sourceFieldId)?.dataType ??
-            null
+            predicateFields.find((candidate) => candidate.fieldId === field.sourceFieldId)
+              ?.dataType ?? null
         );
       for (const comparison of collectDvtSubstraitJoinConditionComparisons(converted)) {
         if (
@@ -214,7 +223,7 @@ export function inspectNInputJoinStructure(
       }
       conditions.push(compactDvtSubstraitJoinConditionDefaults(converted));
     }
-    const nextFields = inspectedJoin.outputMapping.map((ordinal) => available[ordinal]!);
+    const nextFields = inspectedJoin.outputMapping.map((ordinal) => emittedFields[ordinal]!);
     const stageFields = sidecar.fields
       .filter((field) => field.relationId === relationBinding.relationId)
       .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
@@ -282,6 +291,9 @@ export function inspectDvtSubstraitJoinDraft(
             relAnchor: stage.relAnchor,
             joinType: stage.joinType,
           })),
+          stageOutputs: structure.stages.map((stage) =>
+            stage.fields.map(({ sourceFieldId }) => ({ sourceFieldId }))
+          ),
           joins: structure.joins,
           outputs: structure.outputs,
         },

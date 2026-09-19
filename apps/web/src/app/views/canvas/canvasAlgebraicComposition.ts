@@ -77,6 +77,10 @@ function admittedOperations(args: {
     resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'left_join',
     resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'right_join',
     resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'full_outer_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'left_semi_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'left_anti_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'right_semi_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'right_anti_join',
     resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'union_all',
     resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'union_distinct',
   ].filter((operation): operation is CanvasAlgebraicCompositionOperation => operation != null);

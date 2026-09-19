@@ -8,6 +8,7 @@ import {
   DvtSubstraitSemanticDocumentV1Schema,
   canonicalizeDvtSubstraitSemanticDocumentV1,
   decodeDvtSubstraitPlanV1,
+  encodeDvtSubstraitPlanV1,
   serializeDvtSubstraitSemanticDocumentV1,
 } from '../src/substrait.js';
 
@@ -19,6 +20,13 @@ describe('DVT Substrait semantic document decoding', () => {
 
     expect(plan.version).toMatchObject({ majorNumber: 0, minorNumber: 101, patchNumber: 0 });
     expect(plan.relations).toHaveLength(1);
+  });
+
+  it('encodes a pinned Plan through the canonical binary boundary', () => {
+    const document = buildDvtSubstraitSemanticDocumentFixture();
+    const plan = decodeDvtSubstraitPlanV1(document);
+
+    expect(encodeDvtSubstraitPlanV1(plan)).toEqual(document.semanticPlan);
   });
 
   it('rejects corrupted protobuf even when its digest is recomputed', () => {

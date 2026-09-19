@@ -221,6 +221,104 @@ function legacyBinaryDraft(draft: DvtSubstraitJoinDraft): DvtSubstraitJoinDraft 
 }
 
 describe('DVT Substrait INNER JOIN identity', () => {
+  it.each([
+    [JoinRel_JoinType.LEFT_SEMI, 0, 'exists'],
+    [JoinRel_JoinType.LEFT_ANTI, 0, 'not (exists'],
+    [JoinRel_JoinType.RIGHT_SEMI, 1, 'exists'],
+    [JoinRel_JoinType.RIGHT_ANTI, 1, 'not (exists'],
+  ] as const)(
+    'round-trips exact retained-side semantics for JOIN type %s',
+    async (joinType, retainedInputIndex, sqlQuantifier) => {
+      const original = createDvtSubstraitJoinDraft({
+        left: source('source-left', 'public', 'customers'),
+        right: source('source-right', 'public', 'orders'),
+        targetNodeId: 'transform',
+        joinType,
+      });
+      const reloaded = decodeDvtSubstraitJoinDocument(encodeDvtSubstraitJoinDocument(original));
+      const projection = inspectNInput(reloaded);
+
+      expect(projection.joinRelations[0]?.joinType).toBe(joinType);
+      expect(projection.outputs.length).toBeGreaterThan(0);
+      expect(
+        projection.outputs.every((output) => output.source.inputIndex === retainedInputIndex)
+      ).toBe(true);
+      const sql = (await projectDvtSubstraitJoinToPostgresSql(reloaded))
+        .replaceAll(/\s+/g, ' ')
+        .toLowerCase();
+      expect(sql).toContain(sqlQuantifier);
+      expect(sql).not.toContain('distinct');
+      expect(sql).not.toContain(' not in ');
+    }
+  );
+
+  it('chains N=3 only from the prior effective output and rebases a RIGHT ANTI stage', async () => {
+    const leftSemi = createDvtSubstraitJoinDraft({
+      left: source('source-left', 'public', 'customers'),
+      right: source('source-right', 'public', 'orders'),
+      targetNodeId: 'transform',
+      joinType: JoinRel_JoinType.LEFT_SEMI,
+    });
+    const beforeAppend = inspectNInput(leftSemi);
+    const customerId = outputByName(beforeAppend, 'customer_id').source.fieldId;
+    const chained = appendDvtSubstraitJoinInput(leftSemi, {
+      source: source('source-shipments', 'public', 'shipments'),
+      fields: ['shipment_id', 'customer_id'],
+      predicate: { leftSourceFieldId: customerId, rightFieldName: 'customer_id' },
+      selectedFields: ['shipment_id', 'customer_id'],
+      joinType: JoinRel_JoinType.RIGHT_ANTI,
+    });
+    const projection = inspectNInput(chained);
+
+    expect(projection.joinRelations.map((stage) => stage.joinType)).toEqual([
+      JoinRel_JoinType.LEFT_SEMI,
+      JoinRel_JoinType.RIGHT_ANTI,
+    ]);
+    expect(projection.outputs.map((output) => output.source.inputIndex)).toEqual([2, 2]);
+    expect(projection.stageOutputs[1]?.map((field) => field.sourceFieldId)).toEqual(
+      projection.inputs[2]?.fields.map((field) => field.fieldId)
+    );
+    const sql = (await projectDvtSubstraitJoinToPostgresSql(chained))
+      .replaceAll(/\s+/g, ' ')
+      .toLowerCase();
+    expect(sql).toContain('exists');
+    expect(sql).toContain('not (exists');
+  });
+
+  it('rejects a later predicate that tries to recover a queried-side field', () => {
+    const leftSemi = createDvtSubstraitJoinDraft({
+      left: source('source-left', 'public', 'customers'),
+      right: source('source-right', 'public', 'orders'),
+      targetNodeId: 'transform',
+      joinType: JoinRel_JoinType.LEFT_SEMI,
+    });
+    const projection = inspectNInput(leftSemi);
+    const queriedFieldId = projection.inputs[1]!.fields[0]!.fieldId;
+
+    const rejected = appendDvtSubstraitJoinInput(leftSemi, {
+      source: source('source-shipments', 'public', 'shipments'),
+      fields: ['shipment_id', 'customer_id'],
+      predicate: { leftSourceFieldId: queriedFieldId, rightFieldName: 'customer_id' },
+      selectedFields: ['shipment_id'],
+    });
+
+    expect(rejected).toBe(leftSemi);
+  });
+
+  it('rejects a type switch that would silently remove selected downstream outputs', () => {
+    const original = fixture();
+    const projection = inspectNInput(original);
+    const switched = setDvtSubstraitJoinType({
+      draft: original,
+      joinRelationId: projection.joinRelations[0]!.relationId,
+      joinType: JoinRel_JoinType.LEFT_SEMI,
+    });
+
+    expect(encodeDvtSubstraitJoinDocument(switched)).toEqual(
+      encodeDvtSubstraitJoinDocument(original)
+    );
+  });
+
   it('changes one JOIN stage to LEFT and restores identical INNER bytes without identity churn', () => {
     const original = createDvtSubstraitJoinDraft({
       left: source('source-left', 'public', 'customers'),

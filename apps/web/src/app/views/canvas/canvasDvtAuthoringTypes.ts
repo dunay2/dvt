@@ -33,6 +33,10 @@ export type DvtSubstraitTransformAuthoringMetadata = Readonly<{
     | 'left_join'
     | 'right_join'
     | 'full_outer_join'
+    | 'left_semi_join'
+    | 'left_anti_join'
+    | 'right_semi_join'
+    | 'right_anti_join'
     | 'union_all'
     | 'union_distinct';
   plan: Plan;

@@ -159,6 +159,10 @@ export function resolveCanvasRelationalTreeAuthoringChoices(
     operationChoice('left_join', selectedInputs, args.readOnly, false),
     operationChoice('right_join', selectedInputs, args.readOnly, false),
     operationChoice('full_outer_join', selectedInputs, args.readOnly, false),
+    operationChoice('left_semi_join', selectedInputs, args.readOnly, false),
+    operationChoice('left_anti_join', selectedInputs, args.readOnly, false),
+    operationChoice('right_semi_join', selectedInputs, args.readOnly, false),
+    operationChoice('right_anti_join', selectedInputs, args.readOnly, false),
     operationChoice('union_all', selectedInputs, args.readOnly, unionAvailable),
     operationChoice('union_distinct', selectedInputs, args.readOnly, unionAvailable),
   ];

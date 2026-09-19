@@ -22,6 +22,54 @@ function draft(): DvtSubstraitJoinDraft {
   return { plan: decodeDvtSubstraitPlanV1(document), sidecar: document.sidecar };
 }
 
+function twoInputSemiAntiDraft(
+  joinType:
+    | JoinRel_JoinType.LEFT_SEMI
+    | JoinRel_JoinType.LEFT_ANTI
+    | JoinRel_JoinType.RIGHT_SEMI
+    | JoinRel_JoinType.RIGHT_ANTI
+): DvtSubstraitJoinDraft {
+  const document = DvtSubstraitSemanticDocumentV1Schema.parse(documents['two']);
+  const candidate = { plan: decodeDvtSubstraitPlanV1(document), sidecar: document.sidecar };
+  const root = candidate.plan.relations[0]?.relType;
+  if (root?.case !== 'root' || root.value.input?.relType.case !== 'join') {
+    throw new Error('Fixture must contain a two-input JOIN root');
+  }
+  const join = root.value.input.relType.value;
+  if (join.common?.emitKind.case !== 'emit') throw new Error('Fixture must use explicit emit');
+  const retainRight =
+    joinType === JoinRel_JoinType.RIGHT_SEMI || joinType === JoinRel_JoinType.RIGHT_ANTI;
+  const retainedRelation = candidate.sidecar.relations.find(
+    (relation) => relation.relAnchor === (retainRight ? 2 : 1)
+  )!;
+  const stage = candidate.sidecar.relations.find(
+    (relation) => relation.relAnchor === join.common!.relAnchor
+  )!;
+  const retainedFields = candidate.sidecar.fields
+    .filter((field) => field.relationId === retainedRelation.relationId)
+    .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
+  const existingStageFields = new Map(
+    candidate.sidecar.fields
+      .filter((field) => field.relationId === stage.relationId)
+      .map((field) => [field.sourceFieldId, field.fieldId] as const)
+  );
+  join.type = joinType;
+  join.common.emitKind.value.outputMapping = retainedFields.map((_, ordinal) => ordinal);
+  root.value.names = retainedFields.map((field) => field.displayName);
+  candidate.sidecar.fields = [
+    ...candidate.sidecar.fields.filter((field) => field.relationId !== stage.relationId),
+    ...retainedFields.map((field, outputOrdinal) => ({
+      fieldId: existingStageFields.get(field.fieldId)!,
+      relationId: stage.relationId,
+      sourceFieldId: field.fieldId,
+      outputOrdinal,
+      displayName: field.displayName,
+    })),
+  ];
+  candidate.sidecar.semanticPlanSha256 = ZERO_SHA256;
+  return candidate;
+}
+
 describe('shared PostgreSQL JOIN admission', () => {
   it('reads an empty final selection as a draft but never renders it as executable SQL', async () => {
     const candidate = draft();
@@ -143,7 +191,7 @@ describe('shared PostgreSQL JOIN admission', () => {
     }
   );
 
-  it.each(['semi join', 'post-join filter', 'stale hash'])(
+  it.each(['single join', 'post-join filter', 'stale hash'])(
     'rejects %s instead of dropping unsupported semantics',
     async (scenario) => {
       const candidate = draft();
@@ -152,9 +200,78 @@ describe('shared PostgreSQL JOIN admission', () => {
         throw new Error('Fixture must contain a JOIN root');
       const join = root.value.input.relType.value;
       candidate.sidecar.semanticPlanSha256 = ZERO_SHA256;
-      if (scenario === 'semi join') join.type = JoinRel_JoinType.LEFT_SEMI;
+      if (scenario === 'single join') join.type = JoinRel_JoinType.LEFT_SINGLE;
       if (scenario === 'post-join filter') join.postJoinFilter = join.expression;
       if (scenario === 'stale hash') candidate.sidecar.semanticPlanSha256 = 'a'.repeat(64);
+      await expect(projectDvtJoinDraftToPostgresSql(candidate)).rejects.toMatchObject({
+        code: 'unsupported_shape',
+      });
+    }
+  );
+
+  it.each([
+    [
+      JoinRel_JoinType.LEFT_SEMI,
+      'EXISTS',
+      'raw.orders AS left_source',
+      'raw.client AS right_source',
+    ],
+    [
+      JoinRel_JoinType.LEFT_ANTI,
+      'NOT EXISTS',
+      'raw.orders AS left_source',
+      'raw.client AS right_source',
+    ],
+    [
+      JoinRel_JoinType.RIGHT_SEMI,
+      'EXISTS',
+      'raw.client AS right_source',
+      'raw.orders AS left_source',
+    ],
+    [
+      JoinRel_JoinType.RIGHT_ANTI,
+      'NOT EXISTS',
+      'raw.client AS right_source',
+      'raw.orders AS left_source',
+    ],
+  ] as const)(
+    'renders exact retained-side semantics for %s with %s',
+    async (joinType, quantifier, retainedSource, queriedSource) => {
+      const result = await projectDvtJoinDraftToPostgresSql(twoInputSemiAntiDraft(joinType));
+
+      expect(result.projection.joinRelations[0]?.joinType).toBe(joinType);
+      expect(result.projection.outputs).toHaveLength(2);
+      expect(result.sql).toContain(`FROM ${retainedSource}`);
+      const compactSql = result.sql.replaceAll(/\s+/g, ' ');
+      expect(compactSql).toMatch(
+        quantifier === 'EXISTS'
+          ? new RegExp(`EXISTS \\(SELECT 1 FROM ${queriedSource}`)
+          : new RegExp(`NOT \\(EXISTS \\(SELECT 1 FROM ${queriedSource}`)
+      );
+      expect(result.sql).not.toContain('DISTINCT');
+      expect(result.sql).not.toContain(' NOT IN ');
+    }
+  );
+
+  it.each([
+    [JoinRel_JoinType.LEFT_SEMI, [2]],
+    [JoinRel_JoinType.RIGHT_SEMI, [2, 3]],
+  ] as const)(
+    'rejects queried-side/global output ordinals for retained-side JOIN type %s',
+    async (joinType, outputMapping) => {
+      const candidate = twoInputSemiAntiDraft(joinType);
+      const root = candidate.plan.relations[0]?.relType;
+      if (
+        root?.case !== 'root' ||
+        root.value.input?.relType.case !== 'join' ||
+        root.value.input.relType.value.common?.emitKind.case !== 'emit'
+      ) {
+        throw new Error('Fixture must contain an emitted JOIN root');
+      }
+      root.value.input.relType.value.common.emitKind.value.outputMapping = [...outputMapping];
+      candidate.sidecar.semanticPlanSha256 = ZERO_SHA256;
+
+      expect(inspectDvtSubstraitJoinDraft(candidate).ok).toBe(false);
       await expect(projectDvtJoinDraftToPostgresSql(candidate)).rejects.toMatchObject({
         code: 'unsupported_shape',
       });

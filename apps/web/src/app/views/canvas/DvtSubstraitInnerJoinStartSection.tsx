@@ -91,7 +91,15 @@ export function DvtSubstraitInnerJoinStartSection({
             ? canvasViewCopy.inspectorDvtSubstraitRightJoinAction
             : joinType === JoinRel_JoinType.OUTER
               ? canvasViewCopy.inspectorDvtSubstraitFullOuterJoinAction
-              : canvasViewCopy.inspectorDvtSubstraitInnerJoinTitle}
+              : joinType === JoinRel_JoinType.LEFT_SEMI
+                ? canvasViewCopy.inspectorDvtSubstraitLeftSemiJoinAction
+                : joinType === JoinRel_JoinType.LEFT_ANTI
+                  ? canvasViewCopy.inspectorDvtSubstraitLeftAntiJoinAction
+                  : joinType === JoinRel_JoinType.RIGHT_SEMI
+                    ? canvasViewCopy.inspectorDvtSubstraitRightSemiJoinAction
+                    : joinType === JoinRel_JoinType.RIGHT_ANTI
+                      ? canvasViewCopy.inspectorDvtSubstraitRightAntiJoinAction
+                      : canvasViewCopy.inspectorDvtSubstraitInnerJoinTitle}
       </h3>
       <label className="block space-y-1 text-xs text-(--text-muted)">
         <span>{canvasViewCopy.inspectorDvtRelationalLeftInput}</span>

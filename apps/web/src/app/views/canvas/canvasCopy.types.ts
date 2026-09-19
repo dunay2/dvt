@@ -521,10 +521,17 @@ export type CanvasViewCopy = {
   readonly inspectorDvtSubstraitLeftJoinAction: string;
   readonly inspectorDvtSubstraitRightJoinAction: string;
   readonly inspectorDvtSubstraitFullOuterJoinAction: string;
+  readonly inspectorDvtSubstraitLeftSemiJoinAction: string;
+  readonly inspectorDvtSubstraitLeftAntiJoinAction: string;
+  readonly inspectorDvtSubstraitRightSemiJoinAction: string;
+  readonly inspectorDvtSubstraitRightAntiJoinAction: string;
   readonly inspectorDvtSubstraitJoinTypeLabel: string;
+  readonly inspectorDvtSubstraitJoinTypeImpactHint: string;
   readonly inspectorDvtSubstraitLeftJoinRolesHint: string;
   readonly inspectorDvtSubstraitRightJoinRolesHint: string;
   readonly inspectorDvtSubstraitFullOuterJoinRolesHint: string;
+  readonly inspectorDvtSubstraitLeftFilteringJoinRolesHint: string;
+  readonly inspectorDvtSubstraitRightFilteringJoinRolesHint: string;
   readonly inspectorDvtSubstraitInnerJoinTitle: string;
   readonly inspectorDvtSubstraitJoinConditionLabel: string;
   readonly inspectorDvtSubstraitAppendInputTitle: string;

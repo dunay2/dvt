@@ -170,6 +170,16 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
   },
   {
     entryIds: [
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT_SEMI'),
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT_ANTI'),
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT_SEMI'),
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT_ANTI'),
+    ],
+    useCaseRefs: ['dvt:#3320'],
+    proofRef: 'docs/evidence/ED-20260919-semi-anti-join-end-to-end.md',
+  },
+  {
+    entryIds: [
       standardId('relation', 'substrait.AggregateRel'),
       functionId('aggregate-function', 'functions_aggregate_generic', 'count'),
       standardId('type', 'substrait.Type', 'kind.i64'),

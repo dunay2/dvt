@@ -7,7 +7,19 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { resolveCanvasAlgebraicDropHover, useCanvasAlgebraicDrop } from './useCanvasAlgebraicDrop';
 
-function node(id: string, x: number, operations: readonly ('inner_join' | 'union_all')[]): Node {
+function node(
+  id: string,
+  x: number,
+  operations: readonly (
+    | 'inner_join'
+    | 'left_join'
+    | 'left_semi_join'
+    | 'left_anti_join'
+    | 'right_semi_join'
+    | 'right_anti_join'
+    | 'union_all'
+  )[]
+): Node {
   return {
     id,
     position: { x, y: 0 },
@@ -36,6 +48,27 @@ describe('Canvas algebraic drop', () => {
     expect(
       resolveCanvasAlgebraicDropHover(node('source', 100, []), [node('transform', 100, [])])
     ).toBeNull();
+  });
+
+  it('maps every admitted JOIN-family landing cell instead of blocking after two choices', () => {
+    const operations = [
+      'inner_join',
+      'left_join',
+      'left_semi_join',
+      'left_anti_join',
+      'right_semi_join',
+      'right_anti_join',
+    ] as const;
+    const target = node('transform', 100, operations);
+    const dragged = {
+      ...node('source', 130, []),
+      position: { x: 130, y: 33 },
+    };
+
+    expect(resolveCanvasAlgebraicDropHover(dragged, [target])).toMatchObject({
+      targetNodeId: target.id,
+      activeOperation: 'right_anti_join',
+    });
   });
 
   it('uses live drag geometry and emits the admitted command exactly once', () => {

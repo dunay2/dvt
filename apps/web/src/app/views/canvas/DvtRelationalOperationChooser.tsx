@@ -16,6 +16,10 @@ type RelationalOperationCopy = Pick<
   | 'inspectorDvtSubstraitLeftJoinAction'
   | 'inspectorDvtSubstraitRightJoinAction'
   | 'inspectorDvtSubstraitFullOuterJoinAction'
+  | 'inspectorDvtSubstraitLeftSemiJoinAction'
+  | 'inspectorDvtSubstraitLeftAntiJoinAction'
+  | 'inspectorDvtSubstraitRightSemiJoinAction'
+  | 'inspectorDvtSubstraitRightAntiJoinAction'
   | 'inspectorDvtSubstraitUnionAllAction'
   | 'inspectorDvtSubstraitUnionDistinctAction'
   | 'relationalTreeProjectOperationLabel'
@@ -43,6 +47,14 @@ export function canvasRelationalOperationLabel(
       return copy.inspectorDvtSubstraitRightJoinAction;
     case 'full_outer_join':
       return copy.inspectorDvtSubstraitFullOuterJoinAction;
+    case 'left_semi_join':
+      return copy.inspectorDvtSubstraitLeftSemiJoinAction;
+    case 'left_anti_join':
+      return copy.inspectorDvtSubstraitLeftAntiJoinAction;
+    case 'right_semi_join':
+      return copy.inspectorDvtSubstraitRightSemiJoinAction;
+    case 'right_anti_join':
+      return copy.inspectorDvtSubstraitRightAntiJoinAction;
     case 'union_all':
       return copy.inspectorDvtSubstraitUnionAllAction;
     case 'union_distinct':
@@ -122,7 +134,11 @@ export function DvtRelationalOperationChooser({
           {layout !== 'shelf' ? null : choice.operation === 'inner_join' ||
             choice.operation === 'left_join' ||
             choice.operation === 'right_join' ||
-            choice.operation === 'full_outer_join' ? (
+            choice.operation === 'full_outer_join' ||
+            choice.operation === 'left_semi_join' ||
+            choice.operation === 'left_anti_join' ||
+            choice.operation === 'right_semi_join' ||
+            choice.operation === 'right_anti_join' ? (
             <CanvasRelationalJoinIcon aria-hidden="true" className="size-4" />
           ) : choice.operation === 'union_all' || choice.operation === 'union_distinct' ? (
             <Layers3 aria-hidden="true" className="size-4" />

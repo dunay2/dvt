@@ -1,5 +1,6 @@
 import type { IContentAddressedArtifactStore } from '@dvt/artifacts';
 import {
+  createDvtPostgresOutputSchemaDigestV1,
   DVT_POSTGRES_JOIN_PROFILE_ID,
   DvtOperationalWorkloadContractV1,
   DvtOperationalWorkloadContractV2,
@@ -33,6 +34,7 @@ function harness(inputCount: 2 | 3 = 3): {
 }
 
 type ExtendedJoinFixtureType = 'left' | 'right' | 'outer';
+type SemiAntiJoinFixtureType = 'left_semi' | 'left_anti' | 'right_semi' | 'right_anti';
 
 function joinHarness(finalJoinType: ExtendedJoinFixtureType): ReturnType<typeof harness> {
   const result = harness(3);
@@ -48,7 +50,59 @@ function joinHarness(finalJoinType: ExtendedJoinFixtureType): ReturnType<typeof 
   };
 }
 
+function semiAntiHarness(finalJoinType: SemiAntiJoinFixtureType): ReturnType<typeof harness> {
+  const result = harness(2);
+  const draft = buildDvtJoinPreviewDraft(2, finalJoinType);
+  return {
+    ...result,
+    input: {
+      ...result.input,
+      draft,
+      selectedNodeIds: draft.nodeIds,
+      selectedEdgeIds: draft.edges.map((edge) => edge.id),
+    },
+  };
+}
+
 describe('N-input protected Preview lowering', () => {
+  it.each([
+    ['left_semi', 'EXISTS', ['order_id', 'client_id']],
+    ['left_anti', 'NOT (EXISTS', ['order_id', 'client_id']],
+    ['right_semi', 'EXISTS', ['client_id', 'country']],
+    ['right_anti', 'NOT (EXISTS', ['client_id', 'country']],
+  ] as const)(
+    'projects %s through Preview with retained-side output and correlated %s',
+    async (finalJoinType, quantifier, outputNames) => {
+      const { input, publisher, publish } = semiAntiHarness(finalJoinType);
+
+      const binding = await publisher.publish(input);
+      const sql = Buffer.from(publish.mock.calls[0]![0].bytes)
+        .toString('utf8')
+        .replaceAll(/\s+/g, ' ');
+
+      expect(binding.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
+      expect(binding.schemaDigestSha256).toBe(
+        createDvtPostgresOutputSchemaDigestV1({
+          schemaVersion: 'dvt-postgres-output-schema.v1',
+          columns: outputNames.map((name, ordinal) => ({
+            ordinal,
+            name,
+            postgresType: 'text',
+            nullable: true,
+            defaultExpression: null,
+            generatedExpression: null,
+            collation: null,
+          })),
+          constraints: [],
+          indexes: [],
+        })
+      );
+      expect(sql).toContain(quantifier);
+      expect(sql).not.toContain('DISTINCT');
+      expect(sql).not.toContain(' NOT IN ');
+    }
+  );
+
   it.each([
     ['left', 'LEFT JOIN'],
     ['right', 'RIGHT JOIN'],
@@ -67,6 +121,56 @@ describe('N-input protected Preview lowering', () => {
       expect(sql).toContain(
         `${sqlJoin} raw.order_details AS join_source_3 ON left_source.order_id = join_source_3.order_id`
       );
+    }
+  );
+
+  it.each(['left_semi', 'left_anti', 'right_semi', 'right_anti'] as const)(
+    'preserves %s as one Run workload with both lineage dependencies',
+    async (finalJoinType) => {
+      const { input, publisher, publish } = semiAntiHarness(finalJoinType);
+      const draft = {
+        ...input.draft,
+        nodes: input.draft.nodes.map((node) =>
+          node.id === 'transform-orders'
+            ? {
+                ...node,
+                metadata: {
+                  ...node.metadata,
+                  config: {
+                    materialized: 'table',
+                    resultTarget: {
+                      schemaVersion: 'dvt-transform-result-target.v1',
+                      connectionRef: {
+                        schemaVersion: 'connection-ref.v1',
+                        provider: 'postgres',
+                        connectionId: 'local-postgres-proof',
+                      },
+                      schema: 'analytics',
+                      relation: 'matched_orders',
+                    },
+                  },
+                },
+              }
+            : node
+        ),
+      };
+      const binding = await publisher.publish({ ...input, draft });
+      const result = new DvtOperationalWorkloadProjector().project({
+        ...input,
+        draft,
+        draftRevision: 'revision-1',
+        canvasId: draft.canvas.id!,
+        targetProjection: binding,
+      });
+
+      if (!result.ok) throw new Error(result.reason);
+      const workload = DvtOperationalWorkloadContractV2.schema.parse(
+        result.graphSource.nodes[0]?.stepTypeConfig
+      );
+      expect(workload.executionIntent).toBe('run');
+      expect(workload.graph.selectedNodeIds).toEqual([...draft.nodeIds].sort());
+      expect(workload.targetProjection.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
+      expect(Buffer.from(publish.mock.calls[0]![0].bytes).toString('utf8')).toContain('EXISTS');
     }
   );
 

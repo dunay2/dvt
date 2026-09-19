@@ -193,12 +193,16 @@ describe('DvtSubstraitCompositionStartSection', () => {
   });
 
   it.each([
-    ['left_join', JoinRel_JoinType.LEFT, [1]],
-    ['right_join', JoinRel_JoinType.RIGHT, [0]],
-    ['full_outer_join', JoinRel_JoinType.OUTER, [0, 1]],
+    ['left_join', JoinRel_JoinType.LEFT, [1], null],
+    ['right_join', JoinRel_JoinType.RIGHT, [0], null],
+    ['full_outer_join', JoinRel_JoinType.OUTER, [0, 1], null],
+    ['left_semi_join', JoinRel_JoinType.LEFT_SEMI, [], 0],
+    ['left_anti_join', JoinRel_JoinType.LEFT_ANTI, [], 0],
+    ['right_semi_join', JoinRel_JoinType.RIGHT_SEMI, [], 1],
+    ['right_anti_join', JoinRel_JoinType.RIGHT_ANTI, [], 1],
   ] as const)(
     'authors %s through the same canonical predicate flow',
-    (operation, joinType, nullExtendedInputs) => {
+    (operation, joinType, nullExtendedInputs, retainedInputIndex) => {
       const onStartInnerJoin = vi.fn();
       const required = (nodeId: string, table: string): CanvasDvtCompositionInput => {
         const candidate = input(nodeId, table);
@@ -243,6 +247,9 @@ describe('DvtSubstraitCompositionStartSection', () => {
       const nullExtendedInputSet = new Set<number>(nullExtendedInputs);
       inspection.projection.outputs.forEach((output) => {
         expect(output.nullable).toBe(nullExtendedInputSet.has(output.source.inputIndex));
+        if (retainedInputIndex != null) {
+          expect(output.source.inputIndex).toBe(retainedInputIndex);
+        }
       });
     }
   );

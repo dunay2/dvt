@@ -9,7 +9,30 @@ import type { DvtSubstraitInspectedJoinOperand } from './substraitJoinOperandRea
 export type DvtSubstraitJoinDataType = 'string' | 'bool' | 'i64' | 'fp64' | 'precisionTimestampTz';
 
 export type DvtSubstraitJoinType =
-  JoinRel_JoinType.INNER | JoinRel_JoinType.LEFT | JoinRel_JoinType.RIGHT | JoinRel_JoinType.OUTER;
+  | JoinRel_JoinType.INNER
+  | JoinRel_JoinType.LEFT
+  | JoinRel_JoinType.RIGHT
+  | JoinRel_JoinType.OUTER
+  | JoinRel_JoinType.LEFT_SEMI
+  | JoinRel_JoinType.LEFT_ANTI
+  | JoinRel_JoinType.RIGHT_SEMI
+  | JoinRel_JoinType.RIGHT_ANTI;
+
+export function dvtSubstraitJoinRetainedSide(
+  joinType: DvtSubstraitJoinType
+): 'both' | 'left' | 'right' {
+  if (joinType === JoinRel_JoinType.LEFT_SEMI || joinType === JoinRel_JoinType.LEFT_ANTI) {
+    return 'left';
+  }
+  if (joinType === JoinRel_JoinType.RIGHT_SEMI || joinType === JoinRel_JoinType.RIGHT_ANTI) {
+    return 'right';
+  }
+  return 'both';
+}
+
+export function isDvtSubstraitSemiAntiJoin(joinType: DvtSubstraitJoinType): boolean {
+  return dvtSubstraitJoinRetainedSide(joinType) !== 'both';
+}
 
 export function dvtSubstraitJoinNullExtendsLeft(joinType: DvtSubstraitJoinType): boolean {
   return joinType === JoinRel_JoinType.RIGHT || joinType === JoinRel_JoinType.OUTER;
@@ -42,6 +65,7 @@ export type DvtSubstraitNInputJoinProjection = Readonly<{
     relAnchor: number;
     joinType: DvtSubstraitJoinType;
   }>[];
+  stageOutputs: readonly (readonly Readonly<{ sourceFieldId: string }>[])[];
   joins: readonly DvtSubstraitJoinPredicate[];
   outputs: readonly Readonly<{
     name: string;

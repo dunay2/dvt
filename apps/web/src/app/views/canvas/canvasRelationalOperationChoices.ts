@@ -14,6 +14,10 @@ export type CanvasRelationalOperation =
   | 'left_join'
   | 'right_join'
   | 'full_outer_join'
+  | 'left_semi_join'
+  | 'left_anti_join'
+  | 'right_semi_join'
+  | 'right_anti_join'
   | 'union_all'
   | 'union_distinct';
 
@@ -111,6 +115,10 @@ export function resolveCanvasRelationalOperationChoices(
   const leftJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT');
   const rightJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT');
   const fullOuterJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_OUTER');
+  const leftSemiJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT_SEMI');
+  const leftAntiJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT_ANTI');
+  const rightSemiJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT_SEMI');
+  const rightAntiJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT_ANTI');
   const unionAllAdmitted = isAdmitted('substrait.SetRel', 'SetOp.SET_OP_UNION_ALL');
   const unionDistinctAdmitted = isAdmitted('substrait.SetRel', 'SetOp.SET_OP_UNION_DISTINCT');
   const hasCompatibleJoinTypePair = args.inputs.some((left, index) =>
@@ -133,6 +141,10 @@ export function resolveCanvasRelationalOperationChoices(
   const leftJoinAvailability = joinAvailability(leftJoinAdmitted);
   const rightJoinAvailability = joinAvailability(rightJoinAdmitted);
   const fullOuterJoinAvailability = joinAvailability(fullOuterJoinAdmitted);
+  const leftSemiJoinAvailability = joinAvailability(leftSemiJoinAdmitted);
+  const leftAntiJoinAvailability = joinAvailability(leftAntiJoinAdmitted);
+  const rightSemiJoinAvailability = joinAvailability(rightSemiJoinAdmitted);
+  const rightAntiJoinAvailability = joinAvailability(rightAntiJoinAdmitted);
   const unionAllAvailability =
     readOnlyAvailability ??
     (!unionAllAdmitted
@@ -178,6 +190,32 @@ export function resolveCanvasRelationalOperationChoices(
       selectable:
         fullOuterJoinAvailability === 'available' ||
         fullOuterJoinAvailability === 'needs-predicate',
+    },
+    {
+      operation: 'left_semi_join',
+      availability: leftSemiJoinAvailability,
+      selectable:
+        leftSemiJoinAvailability === 'available' || leftSemiJoinAvailability === 'needs-predicate',
+    },
+    {
+      operation: 'left_anti_join',
+      availability: leftAntiJoinAvailability,
+      selectable:
+        leftAntiJoinAvailability === 'available' || leftAntiJoinAvailability === 'needs-predicate',
+    },
+    {
+      operation: 'right_semi_join',
+      availability: rightSemiJoinAvailability,
+      selectable:
+        rightSemiJoinAvailability === 'available' ||
+        rightSemiJoinAvailability === 'needs-predicate',
+    },
+    {
+      operation: 'right_anti_join',
+      availability: rightAntiJoinAvailability,
+      selectable:
+        rightAntiJoinAvailability === 'available' ||
+        rightAntiJoinAvailability === 'needs-predicate',
     },
     {
       operation: 'union_all',

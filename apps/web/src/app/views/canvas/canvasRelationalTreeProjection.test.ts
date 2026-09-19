@@ -156,6 +156,10 @@ describe('ProjectCanvasRelationalTree', () => {
     [JoinRel_JoinType.LEFT, 'LEFT JOIN'],
     [JoinRel_JoinType.RIGHT, 'RIGHT JOIN'],
     [JoinRel_JoinType.OUTER, 'FULL OUTER JOIN'],
+    [JoinRel_JoinType.LEFT_SEMI, 'LEFT SEMI JOIN'],
+    [JoinRel_JoinType.LEFT_ANTI, 'LEFT ANTI JOIN'],
+    [JoinRel_JoinType.RIGHT_SEMI, 'RIGHT SEMI JOIN'],
+    [JoinRel_JoinType.RIGHT_ANTI, 'RIGHT ANTI JOIN'],
   ] as const)('projects the exact %s type in a mixed JOIN tree', (joinType, label) => {
     const initial = createDvtSubstraitJoinDraft({
       left: joinSource('customers', 'customers'),

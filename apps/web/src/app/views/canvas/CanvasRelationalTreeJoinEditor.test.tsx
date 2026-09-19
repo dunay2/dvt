@@ -15,6 +15,7 @@ import {
 import {
   inspectDvtSubstraitJoinPredicateContext,
   type DvtSubstraitJoinDraft,
+  type DvtSubstraitJoinType,
 } from './canvasDvtSubstraitJoinComposition';
 import type { CanonicalNode } from '../../types/canonical';
 
@@ -70,10 +71,14 @@ const transform: CanonicalNode = {
   metadata: {},
 };
 
-function makeDraft(left = client, right = orders): DvtSubstraitJoinDraft {
+function makeDraft(
+  left = client,
+  right = orders,
+  joinType: DvtSubstraitJoinType = JoinRel_JoinType.INNER
+): DvtSubstraitJoinDraft {
   const pair = resolveCanvasDvtInitialJoinPairForInputs(left, right);
   expect(pair).not.toBeNull();
-  const draft = createCanvasDvtInitialJoinDraft([left, right], pair!, transform.id);
+  const draft = createCanvasDvtInitialJoinDraft([left, right], pair!, transform.id, joinType);
   expect(draft).not.toBeNull();
   return draft!;
 }
@@ -149,6 +154,46 @@ describe('JOIN append field defaults', () => {
       ).toBe(hint);
     }
   );
+
+  it.each([
+    [JoinRel_JoinType.LEFT_SEMI, 'LEFT SEMI JOIN', 'L retained · R queried'],
+    [JoinRel_JoinType.LEFT_ANTI, 'LEFT ANTI JOIN', 'L retained · R queried'],
+    [JoinRel_JoinType.RIGHT_SEMI, 'RIGHT SEMI JOIN', 'L queried · R retained'],
+    [JoinRel_JoinType.RIGHT_ANTI, 'RIGHT ANTI JOIN', 'L queried · R retained'],
+  ] as const)('renders exact type and roles for %s', (joinType, label, hint) => {
+    const draft = makeDraft(client, orders, joinType);
+    const inspection = inspectDvtSubstraitJoinPredicateContext(draft)!.inspection;
+    const relationId = inspection.projection.joinRelations[0]!.relationId;
+    renderEditor(null, draft, relationId);
+
+    const select = container.querySelector<HTMLSelectElement>(
+      '[data-slot="canvas-relational-tree-join-type"]'
+    )!;
+    expect(select.selectedOptions[0]?.textContent).toBe(label);
+    expect(
+      container.querySelector('[data-slot="canvas-relational-tree-join-roles"]')?.textContent
+    ).toBe(hint);
+  });
+
+  it('disables destructive type changes and explains the retained draft', () => {
+    const inspection = inspectDvtSubstraitJoinPredicateContext(baselineDraft)!.inspection;
+    const relationId = inspection.projection.joinRelations[0]!.relationId;
+    renderEditor(null, baselineDraft, relationId);
+
+    const select = container.querySelector<HTMLSelectElement>(
+      '[data-slot="canvas-relational-tree-join-type"]'
+    )!;
+    const leftSemi = Array.from(select.options).find(
+      (option) => option.value === String(JoinRel_JoinType.LEFT_SEMI)
+    );
+
+    expect(leftSemi?.disabled).toBe(true);
+    expect(select.getAttribute('aria-describedby')).toBe('canvas-relational-tree-join-type-impact');
+    expect(
+      container.querySelector('[data-slot="canvas-relational-tree-join-type-impact"]')?.textContent
+    ).toBe('Types that would remove selected columns are unavailable.');
+    expect(onChange).not.toHaveBeenCalled();
+  });
 
   function changeField(slot: 'existing' | 'connected', text: string): void {
     const select = container.querySelector<HTMLSelectElement>(

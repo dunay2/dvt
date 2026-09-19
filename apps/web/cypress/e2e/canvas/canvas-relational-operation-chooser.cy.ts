@@ -231,6 +231,90 @@ describe('Canvas relational-operation chooser', () => {
     });
   }
 
+  for (const scenario of [
+    {
+      operation: 'left-semi-join',
+      label: 'LEFT SEMI JOIN',
+      joinType: JoinRel_JoinType.LEFT_SEMI,
+      retainedInputIndex: 0,
+    },
+    {
+      operation: 'left-anti-join',
+      label: 'LEFT ANTI JOIN',
+      joinType: JoinRel_JoinType.LEFT_ANTI,
+      retainedInputIndex: 0,
+    },
+    {
+      operation: 'right-semi-join',
+      label: 'RIGHT SEMI JOIN',
+      joinType: JoinRel_JoinType.RIGHT_SEMI,
+      retainedInputIndex: 1,
+    },
+    {
+      operation: 'right-anti-join',
+      label: 'RIGHT ANTI JOIN',
+      joinType: JoinRel_JoinType.RIGHT_ANTI,
+      retainedInputIndex: 1,
+    },
+  ] as const) {
+    it(`authors, applies, and reloads ${scenario.label} with retained-side output`, () => {
+      visitWithE2eWorkspaceSession('/canvas');
+      waitForE2eApiCall('/workspace/graph/draft', 'GET');
+
+      openPendingRelationalOperationChooser();
+      cy.get(`[data-slot="dvt-select-operation-${scenario.operation}"]`)
+        .should('contain.text', scenario.label)
+        .and('not.be.disabled')
+        .click();
+      cy.get(`[data-slot="dvt-start-configured-${scenario.operation}"]`).click();
+      cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Apply|Aplicar)$/).click();
+
+      cy.wrap(null).should(() => {
+        const savedTransform = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+          .map(
+            (call) =>
+              call.body as {
+                draft: { nodes: Array<{ id: string; metadata?: Record<string, unknown> }> };
+              }
+          )
+          .map((body) => body.draft.nodes.find((node) => node.id === 'join-transform'))
+          .filter((node) => node != null)
+          .at(-1);
+        const authority = savedTransform?.metadata?.transformAuthoring as
+          { semanticDocument?: unknown } | undefined;
+        const inspection = inspectDvtSubstraitJoinDraft(
+          decodeDvtSubstraitJoinDocument(authority?.semanticDocument)
+        );
+        expect(inspection.ok).to.equal(true);
+        if (!inspection.ok) return;
+        expect(inspection.projection.joinRelations[0]?.joinType).to.equal(scenario.joinType);
+        expect(inspection.projection.outputs).not.to.have.length(0);
+        expect(
+          inspection.projection.outputs.every(
+            (output) => output.source.inputIndex === scenario.retainedInputIndex
+          )
+        ).to.equal(true);
+      });
+      cy.get('[data-slot="canvas-relational-composition-badge"]', { timeout: 20_000 }).should(
+        'contain.text',
+        scenario.label
+      );
+
+      cy.then(() => {
+        const getCount = getE2eApiCalls('/workspace/graph/draft', 'GET').length;
+        cy.on('window:before:load', installE2eApiFetchStub);
+        cy.reload();
+        cy.wrap(null, { timeout: 20_000 }).should(() => {
+          expect(getE2eApiCalls('/workspace/graph/draft', 'GET')).to.have.length(getCount + 1);
+        });
+      });
+      cy.get('[data-slot="canvas-relational-composition-badge"]', { timeout: 20_000 }).should(
+        'contain.text',
+        scenario.label
+      );
+    });
+  }
+
   it('authors the first JOIN from matching bigint fields', () => {
     visitWithE2eWorkspaceSession('/canvas');
     waitForE2eApiCall('/workspace/graph/draft', 'GET');

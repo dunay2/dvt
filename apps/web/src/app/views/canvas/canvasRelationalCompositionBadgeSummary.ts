@@ -47,7 +47,15 @@ export function resolveCanvasRelationalCompositionBadgeSummary(args: {
           ? 'RIGHT JOIN'
           : args.operation === 'full_outer_join'
             ? 'FULL OUTER JOIN'
-            : 'INNER JOIN';
+            : args.operation === 'left_semi_join'
+              ? 'LEFT SEMI JOIN'
+              : args.operation === 'left_anti_join'
+                ? 'LEFT ANTI JOIN'
+                : args.operation === 'right_semi_join'
+                  ? 'RIGHT SEMI JOIN'
+                  : args.operation === 'right_anti_join'
+                    ? 'RIGHT ANTI JOIN'
+                    : 'INNER JOIN';
     return summary.replace(/^INNER JOIN/, label);
   }
 

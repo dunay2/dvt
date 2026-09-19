@@ -235,7 +235,15 @@ function buildTree(
             ? 'RIGHT JOIN'
             : args.rel.relType.value.type === JoinRel_JoinType.OUTER
               ? 'FULL OUTER JOIN'
-              : 'UNSUPPORTED JOIN';
+              : args.rel.relType.value.type === JoinRel_JoinType.LEFT_SEMI
+                ? 'LEFT SEMI JOIN'
+                : args.rel.relType.value.type === JoinRel_JoinType.LEFT_ANTI
+                  ? 'LEFT ANTI JOIN'
+                  : args.rel.relType.value.type === JoinRel_JoinType.RIGHT_SEMI
+                    ? 'RIGHT SEMI JOIN'
+                    : args.rel.relType.value.type === JoinRel_JoinType.RIGHT_ANTI
+                      ? 'RIGHT ANTI JOIN'
+                      : 'UNSUPPORTED JOIN';
   return {
     locator: `rel:${args.semanticDigest}:${args.path}`,
     operator: operator(args.rel),
