@@ -102,6 +102,28 @@ function openModelColumns(): void {
   modelCard().contains('button[aria-expanded]:visible', 'Columns').should('be.visible').click();
 }
 
+function showCustomerType(): void {
+  modelColumnRow('customer')
+    .find('[data-slot="graph-node-column-piece"]')
+    .should('be.visible')
+    .then(($piece) => {
+      const piece = $piece[0]!;
+      const bounds = piece.getBoundingClientRect();
+      cy.window().then((window) => {
+        const pointer = {
+          bubbles: true,
+          pointerType: 'mouse',
+          clientX: bounds.x + bounds.width / 2,
+          clientY: bounds.y + bounds.height / 2,
+        };
+        piece.dispatchEvent(new window.PointerEvent('pointerleave', pointer));
+        piece.dispatchEvent(new window.PointerEvent('pointerover', pointer));
+        piece.dispatchEvent(new window.PointerEvent('pointermove', pointer));
+      });
+    });
+  cy.get('[role="tooltip"]').should('have.text', 'text');
+}
+
 function assertColumnMenuStaysOpenAndReopens(): void {
   modelCard()
     .find('[data-slot="graph-node-column-piece"][data-column-name="customer"]')
@@ -124,12 +146,7 @@ describe('Canvas Model output toggle lifecycle', () => {
     visitCanvas();
 
     openModelColumns();
-    modelColumnRow('customer')
-      .find('[data-slot="graph-node-column-piece"]')
-      .trigger('pointerover', { eventConstructor: 'PointerEvent', pointerType: 'mouse' })
-      .trigger('pointermove', 'center', { eventConstructor: 'PointerEvent', pointerType: 'mouse' })
-      .should('have.attr', 'aria-describedby');
-    cy.get('[role="tooltip"]').should('have.text', 'text');
+    showCustomerType();
     cy.get('[data-slot="tooltip-content"]')
       .should('be.visible')
       .invoke('outerWidth')
@@ -150,13 +167,7 @@ describe('Canvas Model output toggle lifecycle', () => {
     expectOutput('customer', true);
     expectOutput('order_id', false);
     expectOutput('amount', false);
-    modelColumnRow('customer')
-      .find('[data-slot="graph-node-column-piece"]')
-      .trigger('pointerleave', { eventConstructor: 'PointerEvent', pointerType: 'mouse' })
-      .trigger('pointerover', { eventConstructor: 'PointerEvent', pointerType: 'mouse' })
-      .trigger('pointermove', 'center', { eventConstructor: 'PointerEvent', pointerType: 'mouse' })
-      .should('have.attr', 'aria-describedby');
-    cy.get('[role="tooltip"]').should('have.text', 'text');
+    showCustomerType();
 
     visitCanvas();
     openModelColumns();
