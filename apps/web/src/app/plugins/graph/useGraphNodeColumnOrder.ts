@@ -1,5 +1,5 @@
 /** Owned concern: stage the visible order of active and inactive graph-node fields. */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 type OrderableColumn = Readonly<{
   id?: string;
@@ -67,24 +67,32 @@ export function useGraphNodeColumnOrder<TColumn extends OrderableColumn>(
   columns: readonly TColumn[]
 ) {
   const currentIds = columns.map(columnOrderKey);
-  const currentIdsKey = currentIds.join('\u0000');
   const columnsById = useMemo(
     () => new Map(columns.map((column) => [columnOrderKey(column), column] as const)),
     [columns]
   );
-  const [orderedIds, setOrderedIds] = useState(currentIds);
-  const previousColumnsByIdRef = useRef(columnsById);
+  const [order, setOrder] = useState(() => ({
+    columnsById,
+    orderedIds: currentIds,
+    rowKeys: new Map(currentIds.map((id, index) => [id, index])),
+    nextRowKey: currentIds.length,
+  }));
 
-  useEffect(() => {
-    const previousColumnsById = previousColumnsByIdRef.current;
-    setOrderedIds((existing) => {
+  // Reconcile before children commit: a passive effect would briefly omit fields
+  // whose input/output command identity changed, then remount their controls.
+  if (order.columnsById !== columnsById) {
+    const previousColumnsById = order.columnsById;
+    const rowKeys = new Map<string, number>();
+    let nextRowKey = order.nextRowKey;
+    const reconciled = (() => {
       const reconciledIds: string[] = [];
       const usedIds = new Set<string>();
       let unmatchedPreviousCount = 0;
-      for (const existingId of existing) {
+      for (const existingId of order.orderedIds) {
         if (columnsById.has(existingId)) {
           reconciledIds.push(existingId);
           usedIds.add(existingId);
+          rowKeys.set(existingId, order.rowKeys.get(existingId)!);
           continue;
         }
 
@@ -97,7 +105,8 @@ export function useGraphNodeColumnOrder<TColumn extends OrderableColumn>(
           (column) => column.name === previousName
         ).length;
         const currentMatches = currentIds.filter(
-          (currentId) => columnsById.get(currentId)?.name === previousName
+          (currentId) =>
+            !previousColumnsById.has(currentId) && columnsById.get(currentId)?.name === previousName
         );
         if (previousNameCount !== 1 || currentMatches.length !== 1) {
           unmatchedPreviousCount += 1;
@@ -110,15 +119,19 @@ export function useGraphNodeColumnOrder<TColumn extends OrderableColumn>(
         }
         reconciledIds.push(replacementId);
         usedIds.add(replacementId);
+        rowKeys.set(replacementId, order.rowKeys.get(existingId)!);
       }
       const unmatchedCurrentIds = currentIds.filter((currentId) => !usedIds.has(currentId));
+      for (const id of unmatchedCurrentIds) rowKeys.set(id, nextRowKey++);
       if (unmatchedPreviousCount > 0 && unmatchedCurrentIds.length > 0) {
         return currentIds;
       }
       return [...reconciledIds, ...unmatchedCurrentIds];
-    });
-    previousColumnsByIdRef.current = columnsById;
-  }, [columnsById, currentIdsKey]);
+    })();
+    setOrder({ columnsById, orderedIds: reconciled, rowKeys, nextRowKey });
+  }
+
+  const { orderedIds, rowKeys } = order;
 
   const orderedColumns = orderedIds.flatMap((id) => {
     const column = columnsById.get(id);
@@ -128,13 +141,14 @@ export function useGraphNodeColumnOrder<TColumn extends OrderableColumn>(
   return {
     orderedColumns,
     orderedColumnIds: orderedIds,
+    rowKey: (column: TColumn): number => rowKeys.get(columnOrderKey(column))!,
     moveColumn(
       movedId: string,
       targetId: string,
       placement: ActiveColumnPlacement['placement']
     ): ActiveColumnPlacement | undefined {
       const next = reorderIds(orderedIds, movedId, targetId, placement);
-      setOrderedIds(next);
+      setOrder((current) => ({ ...current, orderedIds: next }));
       if (columnsById.get(movedId)?.output === false) return undefined;
       return columnsById.get(targetId)?.output === false
         ? resolveActivePlacement(next, movedId, columnsById)
