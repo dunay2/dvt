@@ -369,6 +369,7 @@ test('retired documentation-only closeouts have no files or local consumers', ()
     '20260318-stage-1-1-planner-canonicalization-policy-vocabulary-contracts-closeout.md',
   ]);
   const editorialCloseouts = new Set([
+    '20260315-task8-intent-reconciliation-and-api-flags-thinkfirst.md',
     '20260315-adapter-postgres-schema-timeout-fixes-closeout.md',
     '20260315-intent-store-bug-fixes-closeout.md',
     '20260315-provider-adapter-contract-versioning-closeout.md',
@@ -585,7 +586,9 @@ test('retired documentation-only closeouts have no files or local consumers', ()
       /https:\/\/github\.com\/dunay2\/dvt\/blob\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
       ''
     );
-    for (const match of current.matchAll(/\b[0-9]{8}-[a-z0-9.-]+-closeout(?:\.md)?\b/gu)) {
+    for (const match of current.matchAll(
+      /\b[0-9]{8}-[a-z0-9.-]+-(?:closeout|thinkfirst)(?:\.md)?\b/gu
+    )) {
       const name = match[0].endsWith('.md') ? match[0] : `${match[0]}.md`;
       assert.equal(
         isRetired(name),
