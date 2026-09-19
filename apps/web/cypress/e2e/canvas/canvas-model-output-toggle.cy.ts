@@ -151,7 +151,7 @@ describe('Canvas Model output toggle lifecycle', () => {
       .should('be.visible')
       .invoke('outerWidth')
       .should('be.lessThan', 160);
-    cy.screenshot('column-type-only');
+    cy.screenshot('column-type-only', { capture: 'viewport' });
     modelColumnRow('customer')
       .should('contain.text', 'NN')
       .find('[data-slot="graph-node-column-output-state"]')
