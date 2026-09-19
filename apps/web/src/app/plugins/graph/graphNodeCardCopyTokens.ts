@@ -42,16 +42,6 @@ type GraphNodeCardCopy = Readonly<{
   automapColumnsLabel: string;
   sourceColumnPortLabelTemplate: string;
   targetColumnPortLabelTemplate: string;
-  columnTypeLabel: string;
-  columnNullabilityLabel: string;
-  columnNotNullValue: string;
-  columnNullableValue: string;
-  columnOriginLabel: string;
-  columnReferenceLabel: string;
-  columnLineageLabel: string;
-  columnCommentLabel: string;
-  columnOutputValue: string;
-  columnAvailableInputValue: string;
   columnOutputAriaLabelTemplate: string;
   columnAvailableInputAriaLabelTemplate: string;
   columnFunctionCategoryLabels: Readonly<
@@ -161,16 +151,6 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   automapColumnsLabel: 'Map compatible columns',
   sourceColumnPortLabelTemplate: 'Connect {column} output',
   targetColumnPortLabelTemplate: 'Map into {column}',
-  columnTypeLabel: 'Type',
-  columnNullabilityLabel: 'Nullability',
-  columnNotNullValue: 'Not null',
-  columnNullableValue: 'Nullable',
-  columnOriginLabel: 'Origin',
-  columnReferenceLabel: 'Reference',
-  columnLineageLabel: 'Transformation lineage',
-  columnCommentLabel: 'Comment',
-  columnOutputValue: 'Included in output',
-  columnAvailableInputValue: 'Available input',
   columnOutputAriaLabelTemplate: '{column}, included in output',
   columnAvailableInputAriaLabelTemplate: '{column}, available input',
   columnFunctionCategoryLabels: {
@@ -290,16 +270,6 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   automapColumnsLabel: 'Asignar columnas compatibles',
   sourceColumnPortLabelTemplate: 'Conectar salida de {column}',
   targetColumnPortLabelTemplate: 'Asignar a {column}',
-  columnTypeLabel: 'Tipo',
-  columnNullabilityLabel: 'Nulabilidad',
-  columnNotNullValue: 'No nulo',
-  columnNullableValue: 'Admite nulos',
-  columnOriginLabel: 'Origen',
-  columnReferenceLabel: 'Referencia',
-  columnLineageLabel: 'Linaje de transformación',
-  columnCommentLabel: 'Comentario',
-  columnOutputValue: 'Incluida en salida',
-  columnAvailableInputValue: 'Entrada disponible',
   columnOutputAriaLabelTemplate: '{column}, incluida en salida',
   columnAvailableInputAriaLabelTemplate: '{column}, entrada disponible',
   columnFunctionCategoryLabels: {

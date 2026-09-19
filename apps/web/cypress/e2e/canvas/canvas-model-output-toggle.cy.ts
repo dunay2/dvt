@@ -124,6 +124,13 @@ describe('Canvas Model output toggle lifecycle', () => {
     visitCanvas();
 
     openModelColumns();
+    modelColumnRow('customer').find('[data-slot="graph-node-column-piece"]').focus();
+    cy.get('[role="tooltip"]').should('have.text', 'string');
+    cy.get('[data-slot="tooltip-content"]')
+      .should('be.visible')
+      .invoke('outerWidth')
+      .should('be.lessThan', 160);
+    cy.screenshot('column-type-only');
     modelColumnRow('customer')
       .should('contain.text', 'NN')
       .find('[data-slot="graph-node-column-output-state"]')
@@ -139,6 +146,8 @@ describe('Canvas Model output toggle lifecycle', () => {
     expectOutput('customer', true);
     expectOutput('order_id', false);
     expectOutput('amount', false);
+    modelColumnRow('customer').find('[data-slot="graph-node-column-piece"]').focus();
+    cy.get('[role="tooltip"]').should('have.text', 'string');
 
     visitCanvas();
     openModelColumns();

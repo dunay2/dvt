@@ -155,7 +155,7 @@ describe('GraphNodeColumnSection', () => {
     }
   });
 
-  it('presents stacked output pieces with truthful inline and focused metadata', async () => {
+  it('keeps inline field controls but limits the focused tooltip to its type', async () => {
     await act(async () => {
       root.render(
         <GraphNodeColumnSection
@@ -213,14 +213,7 @@ describe('GraphNodeColumnSection', () => {
     });
 
     const tooltip = document.body.querySelector('[role="tooltip"]');
-    expect(tooltip?.textContent).toContain('Tipo');
-    expect(tooltip?.textContent).toContain('text');
-    expect(tooltip?.textContent).toContain('No nulo');
-    expect(tooltip?.textContent).toContain('auth_audit_events');
-    expect(tooltip?.textContent).toContain('field:model:event_id');
-    expect(tooltip?.textContent).toContain(
-      'event_id → TRIM(event_id) → UPPER(TRIM(event_id)) → event_id_clean'
-    );
+    expect(tooltip?.textContent).toBe('text');
   });
 
   it('toggles canonical output inclusion from the check control', async () => {

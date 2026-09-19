@@ -1,4 +1,4 @@
-/** Owned concern: render one graph-node column piece and its factual metadata tooltip. */
+/** Owned concern: render one graph-node column piece and its compact type tooltip. */
 import { ArrowRight, Check } from 'lucide-react';
 import {
   forwardRef,
@@ -133,64 +133,10 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
   }
 );
 
-export function GraphNodeColumnTooltip(props: {
-  column: GraphNodeColumn;
-  isOutput: boolean;
-  copy: GraphNodeColumnCopy;
-}): ReactElement {
-  const { column, copy } = props;
-  const lineage = resolveColumnLineage(column);
-  const rows = [
-    { label: copy.columnTypeLabel, value: column.type },
-    ...(column.nullable == null
-      ? []
-      : [
-          {
-            label: copy.columnNullabilityLabel,
-            value: column.nullable ? copy.columnNullableValue : copy.columnNotNullValue,
-          },
-        ]),
-    ...(column.sourceNodeName == null
-      ? []
-      : [{ label: copy.columnOriginLabel, value: column.sourceNodeName }]),
-    ...(column.reference == null
-      ? []
-      : [{ label: copy.columnReferenceLabel, value: column.reference }]),
-    ...(lineage == null ? [] : [{ label: copy.columnLineageLabel, value: lineage }]),
-    ...(column.description == null
-      ? []
-      : [{ label: copy.columnCommentLabel, value: column.description }]),
-    {
-      label: copy.columnsLabel,
-      value: props.isOutput ? copy.columnOutputValue : copy.columnAvailableInputValue,
-    },
-  ];
-
+export function GraphNodeColumnTooltip(props: { type: GraphNodeColumn['type'] }): ReactElement {
   return (
     <TooltipContent side="right" sideOffset={8} className={graphNodeColumnClasses.tooltip}>
-      <dl className={graphNodeColumnClasses.tooltipRows}>
-        {rows.map((row) => (
-          <div key={row.label} className={graphNodeColumnClasses.tooltipRow}>
-            <dt className={graphNodeColumnClasses.tooltipLabel}>{row.label}</dt>
-            <dd className={graphNodeColumnClasses.tooltipValue}>{row.value}</dd>
-          </div>
-        ))}
-      </dl>
+      {props.type}
     </TooltipContent>
   );
-}
-
-function resolveColumnLineage(column: GraphNodeColumn): string | null {
-  if (column.sourceFieldName == null) return null;
-  const operations = column.operations ?? [];
-  if (operations.length === 0 && column.sourceFieldName === column.name) return null;
-
-  let expression = column.sourceFieldName;
-  const lineage = [expression];
-  operations.forEach((operation) => {
-    expression = `${operation.toUpperCase()}(${expression})`;
-    lineage.push(expression);
-  });
-  lineage.push(column.name);
-  return lineage.join(' → ');
 }
