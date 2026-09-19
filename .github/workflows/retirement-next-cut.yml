@@ -12,61 +12,69 @@ jobs:
     permissions:
       contents: write
     env:
-      BASE: f9ecdfbccf031a9db2bd0dca8660cad75d4c5bc0
-      SOURCE: 05368b59b10407789b13ef4fa4676cd86bf47bc8
-      GIT_BASE: f9ecdfbccf031a9db2bd0dca8660cad75d4c5bc0
+      BASE: 2ee59cc9eec69692e6a92a9e3e649b72976e687d
+      GIT_BASE: 2ee59cc9eec69692e6a92a9e3e649b72976e687d
       PLANNING_DB_INTEGRITY_SCOPE: bootstrap
       TZ: UTC
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 05368b59b10407789b13ef4fa4676cd86bf47bc8
+          ref: 2ee59cc9eec69692e6a92a9e3e649b72976e687d
           fetch-depth: 0
           persist-credentials: false
       - uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
-      - name: Apply reviewed correction with RED before deletion
+      - name: Apply reviewed retirement with RED first
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import subprocess,hashlib,os
+          import subprocess,hashlib,json,os,re
           out=Path('/tmp/retirement');out.mkdir(exist_ok=True)
-          def sha(b): return hashlib.sha256(b).hexdigest()
-          assert subprocess.check_output(['git','rev-parse','HEAD']).decode().strip()==os.environ['SOURCE']
+          def sha(b):return hashlib.sha256(b).hexdigest()
+          def git(*a):return subprocess.check_output(['git',*a]).decode().strip()
+          assert git('rev-parse','HEAD')==os.environ['BASE']
+          assert git('rev-parse','HEAD^{tree}')=='bf57e44c1ce2be615a282e264276c9f8d22d82cc'
+          names=['20260411-s05-truth-sync-closeout.md','20260414-tf-a1-d-web-plan-anti-corruption-closeout.md','20260416-shell-session-context-persistence-closeout.md','20260416-shell-session-context-rehydration-guard-closeout.md','20260416-tf-e2-canvas-draft-cas-hardening-closeout.md','20260417-tf-e2-canvas-draft-followup-qa-hardening-closeout.md','20260417-tf-e2-canvas-draft-race-and-import-edge-hardening-closeout.md','20260417-tf-e2-canvas-draft-reload-recovery-hardening-closeout.md','20260418-tf-e2-canvas-interaction-command-seam-closeout.md','20260420-tf-e2-canvas-typed-authoring-port-hard-cut-closeout.md','20260421-tf-e2-graph-lifecycle-hard-cut-closeout.md','20260422-tf-e2-canvas-component-governance-follow-up-closeout.md','20260422-tf-e2-canvas-route-composition-and-projection-refactor-closeout.md','20260422-tf-e2-canvas-source-import-capability-hardening-closeout.md','20260422-tf-e2-semantic-protected-draft-projection-cut-closeout.md','20260423-tf-a2-c3-c4-api-web-adoption-closeout.md','20260424-tf-e2-k-supporting-cycle-story-expansion-closeout.md','20260425-canvas-graph-strategy-policy-qa-closeout.md','20260425-tf-e2-d-inspector-authoring-closeout.md','F-04-D-E-composition-root-foundation-closeout.md','F-04-RESIDUAL-B-provider-override-test-seams-closeout.md','gh-2845-delete-selected-canvas-edge-closeout.md','gh-2847-source-import-explore-navigation-closeout.md','gh-2882-data-tab-card-name-closeout.md','gh-2889-preview-terminal-result-copy-closeout.md']
+          assert len(names)==len(set(names))==25
+          removed=['docs/planning/closeouts/'+n for n in names]
+          (out/'removed.json').write_text(json.dumps(removed,indent=2))
+          (out/'original-hashes.json').write_text(json.dumps({p:sha(Path(p).read_bytes()) for p in removed},indent=2))
+          assert all('```feature-mechanization' not in Path(p).read_text() for p in removed)
+          references={n:[] for n in names}
+          for path in subprocess.check_output(['git','ls-files','-z']).decode().split('\0'):
+              if not path:continue
+              try:text=Path(path).read_text()
+              except UnicodeError:continue
+              text=re.sub(r'https://github\.com/dunay2/dvt/(?:blob|tree)/[a-f0-9]{40}/[^\s)\]<>"`]+','',text)
+              for n in names:
+                  if path!='docs/planning/closeouts/'+n and n.removesuffix('.md') in text:references[n].append(path)
+          (out/'reference-scan.json').write_text(json.dumps(references,indent=2))
+          assert all(not v for v in references.values()),references
           p=Path('tools/ci/docs-disposition-canon.test.mjs');s=p.read_text()
-          assert sha(p.read_bytes())=='faa03a96c2564292114ddc06f6419dcaef3af0c7b7f616ac1ae98ced6b0c4802'
-          needle="    'docs/planning/proposals/mandatory/frontend-and-ux/superseded',"
-          assert s.count(needle)==1
-          s=s.replace(needle,needle+"\n    'docs/planning/proposals/mandatory/frontend-and-ux/archive-candidates',")
-          needle=r'  assert.doesNotMatch(frontendClassification, /\.\/superseded\//u);'
-          assert s.count(needle)==1
-          s=s.replace(needle,needle+'\n'+r'  assert.doesNotMatch(frontendClassification, /archive-candidates\//u);')
-          assert sha(s.encode())=='12417de62857cd4dfa1ba1cc5cbc7b2ef952b1efc99401ba6e8b2fe014a6e1b0'
+          assert sha(p.read_bytes())=='12417de62857cd4dfa1ba1cc5cbc7b2ef952b1efc99401ba6e8b2fe014a6e1b0'
+          needle='  const editorialCloseouts = new Set([\n';assert s.count(needle)==1
+          assert all(n not in s for n in names)
+          s=s.replace(needle,needle+''.join("    '"+n+"',\n" for n in sorted(names)))
+          assert sha(s.encode())=='9468b55e7cf740e89c3ba1ff16ebad95c39f4b602648756871cddb77305508fa'
           p.write_text(s)
-          cmd=['node','--test','--test-name-pattern=retired historical packs','tools/ci/docs-disposition-canon.test.mjs']
+          cmd=['node','--test','--test-name-pattern=retired documentation-only closeouts','tools/ci/docs-disposition-canon.test.mjs']
           red=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
           (out/'red.log').write_text(red.stdout);assert red.returncode==1
-          p=Path('docs/planning/proposals/mandatory/frontend-and-ux/index.md')
-          assert sha(p.read_bytes())=='40d05216a10f20e509ba8c300b25ec38612b38e8abc09f00290a6397b9d698ac'
-          s=p.read_text();assert s.count('./archive-candidates/index.md')==1
-          s=''.join(line for line in s.splitlines(keepends=True) if './archive-candidates/index.md' not in line)
-          assert sha(s.encode())=='3215558d0c536d495b8e71bb670fdb3391fdceaa0e7f0cb7b0ec10dd38be2dc7'
-          p.write_text(s)
-          p=Path('docs/planning/proposals/mandatory/frontend-and-ux/archive-candidates/index.md')
-          assert sha(p.read_bytes())=='7e646881677260390b2d988753120dfff8ba0361ea9ba1168c4c84432b819de0'
-          p.unlink();p.parent.rmdir()
-          subprocess.run(['git','config','user.name','github-actions[bot]'],check=True)
-          subprocess.run(['git','config','user.email','41898282+github-actions[bot]@users.noreply.github.com'],check=True)
-          subprocess.run(['git','add','-A'],check=True)
-          subprocess.run(['git','diff','--cached','--check'],check=True)
+          for path in removed:Path(path).unlink()
+          assert set(git('diff','--name-only','--diff-filter=D').splitlines())==set(removed)
+          assert git('diff','--name-only','--diff-filter=M')=='tools/ci/docs-disposition-canon.test.mjs'
+          assert not git('ls-files','--others','--exclude-standard')
+          git('config','user.name','github-actions[bot]')
+          git('config','user.email','41898282+github-actions[bot]@users.noreply.github.com')
+          git('add','-A');git('diff','--cached','--check')
           PY
       - name: Commit with canonical helper and enabled hooks
         shell: bash
         run: |
           set -euo pipefail
-          pnpm commit docs docs "Retire stale archive-candidate navigation" 2>&1 | tee /tmp/retirement/commit.log
+          pnpm commit docs docs "Retire obsolete Canvas session journals" 2>&1 | tee /tmp/retirement/commit.log
           echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - name: Prepare disposable CI database only
         uses: ./.github/actions/prepare-planning-db
@@ -79,16 +87,16 @@ jobs:
           git add -A
           if ! git diff --cached --quiet; then
             test "$(git diff --cached --name-only)" = docs/.manifest.json
-            pnpm commit docs docs "Regenerate inventory after candidate navigation retirement"
+            pnpm commit docs docs "Regenerate inventory after Canvas journal retirement"
           fi
           echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-      - name: Validate correction and complete final candidate
+      - name: Validate complete candidate and individual restoration controls
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import subprocess,json,os,re
-          out=Path('/tmp/retirement');results=[];base=os.environ['BASE'];source=os.environ['SOURCE']
+          out=Path('/tmp/retirement');results=[];base=os.environ['BASE']
           def git(*a):return subprocess.check_output(['git',*a]).decode().strip()
           def run(name,cmd,expected=0):
               r=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
@@ -98,23 +106,27 @@ jobs:
               print(name,r.returncode,flush=True)
               assert r.returncode==expected,(name,r.stdout[-4000:],r.stderr[-4000:])
               return r.stdout
-          assert len(git('diff','--name-only','--diff-filter=D',base,'HEAD').splitlines())==28
+          removed=json.loads((out/'removed.json').read_text())
+          assert set(git('diff','--name-only','--diff-filter=D',base,'HEAD').splitlines())==set(removed)
           assert not git('diff','--name-only','--diff-filter=A',base,'HEAD')
-          assert not git('diff','--name-only',base,'HEAD','--','apps','packages','specs','docs/architecture','docs/adr','docs/evidence','docs/risk-register','buzon','.github','package.json','pnpm-lock.yaml')
-          cmd=['node','--test','--test-name-pattern=retired historical packs','tools/ci/docs-disposition-canon.test.mjs']
+          assert set(git('diff','--name-only',base,'HEAD').splitlines())<=set(removed)|{'tools/ci/docs-disposition-canon.test.mjs','docs/.manifest.json'}
+          assert not git('diff','--name-only',base,'HEAD','--','apps','packages','specs','docs/architecture','docs/adr','docs/contracts','docs/evidence','docs/risk-register','docs/planning/proposals','buzon','.github','package.json','pnpm-lock.yaml')
+          cmd=['node','--test','--test-name-pattern=retired documentation-only closeouts','tools/ci/docs-disposition-canon.test.mjs']
           run('green',cmd)
-          for name,path in [('restored-target','docs/planning/proposals/mandatory/frontend-and-ux/archive-candidates/index.md'),('restored-parent','docs/planning/proposals/mandatory/frontend-and-ux/index.md')]:
-              p=Path(path);old=p.read_bytes() if p.exists() else None;p.parent.mkdir(parents=True,exist_ok=True)
-              p.write_bytes(subprocess.check_output(['git','show',source+':'+path]))
-              try:run(name,cmd,1)
-              finally:
-                  if old is None:p.unlink();p.parent.rmdir()
-                  else:p.write_bytes(old)
+          for i,path in enumerate(removed):
+              p=Path(path);p.write_bytes(subprocess.check_output(['git','show',base+':'+path]))
+              try:run('restore-'+str(i+1),cmd,1)
+              finally:p.unlink()
+          p=Path('README.md');original=p.read_bytes();slug=removed[0]
+          for name,text,code in [('relative','[Old]('+slug+')',1),('main','https://github.com/dunay2/dvt/blob/main/'+slug,1),('git','https://github.com/dunay2/dvt/blob/'+base+'/'+slug,0),('unrelated','Current Canvas session contracts remain unchanged.',0)]:
+              p.write_bytes(original+('\n'+text+'\n').encode())
+              try:run('consumer-'+name,cmd,code)
+              finally:p.write_bytes(original)
           text=run('arc',['node','tools/ci/arc-check.mjs']);m=re.search(r'^\{',text,re.MULTILINE);assert m
           arc=json.loads(text[m.start():]);assert arc['effectiveArcLevel']=='ARC-0'
           assert all(arc['requirements'][k] is False for k in ['evidenceDoc','riskUpdate','rolloutNotes','compatMatrix'])
           run('tests',['node','--test','scripts/check-feature-mechanization.test.cjs','scripts/documentation-publication.test.cjs','scripts/planning-db-surface-inventory-check.test.cjs','tools/ci/docs-disposition-canon.test.mjs','tools/ci/startup-card-canon.test.mjs','tools/ci/planner-package-governance.test.mjs','tools/ci/architecture-doc-reconciliation-canon.test.mjs','scripts/governance-refresh.test.cjs','tools/ci/emit-test-matrix.test.mjs','tools/ci/turbo-workspace-task-contract.test.mjs'])
-          for name,cmd in [('sync-check',['pnpm','docs:sync:check']),('manifest',['pnpm','docs:gov:manifest:check']),('ci-docs',['pnpm','ci:docs']),('prepush',['pnpm','verify:prepush']),('title',['pnpm','pr:validate-title','docs(docs): Retire obsolete contract and CI journals']),('clean',['git','diff','--exit-code','HEAD'])]:run(name,cmd)
+          for name,cmd in [('sync-check',['pnpm','docs:sync:check']),('manifest',['pnpm','docs:gov:manifest:check']),('ci-docs',['pnpm','ci:docs']),('prepush',['pnpm','verify:prepush']),('title',['pnpm','pr:validate-title','docs(docs): Retire obsolete Canvas session journals']),('clean',['git','diff','--exit-code','HEAD'])]:run(name,cmd)
           assert not git('status','--porcelain')
           (out/'validated.txt').write_text(git('rev-parse','HEAD')+'\n')
           PY
@@ -130,8 +142,9 @@ jobs:
               (out/name).write_bytes(subprocess.check_output(['git',*args]))
           subprocess.run(['git','archive','--format=tar.gz','-o',str(out/'source.tar.gz'),'HEAD'],check=True)
           (out/'checksums.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in out.iterdir() if p.is_file() and p.name!='checksums.json'},indent=2))
+          print((out/'stats.txt').read_text())
           PY
-      - name: Publish isolated validated candidate
+      - name: Publish next-cut branch after successful validation
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -139,12 +152,12 @@ jobs:
           set -euo pipefail
           test "$(cat /tmp/retirement/validated.txt)" = "$(git rev-parse HEAD)"
           gh auth setup-git
-          branch=automation/3004-3314-p2-validated
+          branch=docs/3004-retire-canvas-session-journals
           test -z "$(git ls-remote --heads origin refs/heads/$branch)"
           git push origin HEAD:refs/heads/$branch
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
-          name: docs-3314-p2-retirement
+          name: docs-canvas-session-retirement
           path: /tmp/retirement
           retention-days: 7
