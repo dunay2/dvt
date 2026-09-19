@@ -1,5 +1,4 @@
 /** Owns decoding and persistence of canonical DVT Transform shapes. */
-import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { DVT_TRANSFORM_AUTHORING_MODE, DvtTransformResultTargetV1Schema } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
@@ -45,6 +44,7 @@ import {
   encodeDvtSubstraitFilterDocument,
   inspectDvtSubstraitFilter,
 } from './canvasDvtSubstraitFilter';
+import { canvasJoinOperationForType, isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 
 type TransformMetadata =
   DvtUninitializedTransformAuthoringMetadata | DvtSubstraitTransformAuthoringMetadata;
@@ -96,7 +96,7 @@ export function createDvtTransformAuthoringMetadata(node: CanonicalNode): Transf
     return fromDraft(
       authority.mode,
       disposition,
-      finalJoinType === JoinRel_JoinType.LEFT ? 'left_join' : 'inner_join',
+      finalJoinType == null ? 'inner_join' : canvasJoinOperationForType(finalJoinType),
       join
     );
   }
@@ -160,7 +160,7 @@ export function applyDvtTransformAuthoringMetadata(
       ? inspectDvtSubstraitFilter(draft) == null
         ? encodeDvtSubstraitProjectionDocument(draft)
         : encodeDvtSubstraitFilterDocument(draft)
-      : metadata.shape === 'inner_join' || metadata.shape === 'left_join'
+      : isCanvasJoinOperation(metadata.shape)
         ? encodeDvtSubstraitJoinDocument(draft)
         : metadata.shape === 'union_all'
           ? encodeDvtSubstraitUnionAllDocument(draft)

@@ -151,62 +151,85 @@ describe('Canvas relational-operation chooser', () => {
       .and('match', /INNER JOIN.*2.*1/);
   });
 
-  it('authors, saves, and reloads LEFT JOIN with exact right-side null extension', () => {
-    visitWithE2eWorkspaceSession('/canvas');
-    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+  for (const scenario of [
+    {
+      operation: 'left-join',
+      label: 'LEFT JOIN',
+      joinType: JoinRel_JoinType.LEFT,
+      nullExtendedInputs: [1],
+    },
+    {
+      operation: 'right-join',
+      label: 'RIGHT JOIN',
+      joinType: JoinRel_JoinType.RIGHT,
+      nullExtendedInputs: [0],
+    },
+    {
+      operation: 'full-outer-join',
+      label: 'FULL OUTER JOIN',
+      joinType: JoinRel_JoinType.OUTER,
+      nullExtendedInputs: [0, 1],
+    },
+  ] as const) {
+    it(`authors, saves, and reloads ${scenario.label} with exact null extension`, () => {
+      visitWithE2eWorkspaceSession('/canvas');
+      waitForE2eApiCall('/workspace/graph/draft', 'GET');
 
-    openPendingRelationalOperationChooser();
-    cy.get('[data-slot="dvt-select-operation-left-join"]')
-      .should('contain.text', 'LEFT JOIN')
-      .and('not.be.disabled')
-      .focus()
-      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
-    cy.get('[data-slot="dvt-start-configured-left-join"]').click();
-    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Apply|Aplicar)$/).click();
+      openPendingRelationalOperationChooser();
+      cy.get(`[data-slot="dvt-select-operation-${scenario.operation}"]`)
+        .should('contain.text', scenario.label)
+        .and('not.be.disabled')
+        .focus()
+        .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+      cy.get(`[data-slot="dvt-start-configured-${scenario.operation}"]`).click();
+      cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Apply|Aplicar)$/).click();
 
-    cy.wrap(null).should(() => {
-      const savedTransform = getE2eApiCalls('/workspace/graph/draft', 'PUT')
-        .map(
-          (call) =>
-            call.body as {
-              draft: { nodes: Array<{ id: string; metadata?: Record<string, unknown> }> };
-            }
-        )
-        .map((body) => body.draft.nodes.find((node) => node.id === 'join-transform'))
-        .filter((node) => node != null)
-        .at(-1);
-      const authority = savedTransform?.metadata?.transformAuthoring as
-        { semanticDocument?: unknown } | undefined;
-      const inspection = inspectDvtSubstraitJoinDraft(
-        decodeDvtSubstraitJoinDocument(authority?.semanticDocument)
-      );
-      expect(inspection.ok).to.equal(true);
-      if (!inspection.ok) return;
-      expect(inspection.projection.joinRelations[0]?.joinType).to.equal(JoinRel_JoinType.LEFT);
-      expect(
-        inspection.projection.outputs
-          .filter((output) => output.source.inputIndex === 1)
-          .every((output) => output.nullable)
-      ).to.equal(true);
-    });
-    cy.get('[data-slot="canvas-relational-composition-badge"]', { timeout: 20_000 }).should(
-      'contain.text',
-      'LEFT JOIN'
-    );
-
-    cy.then(() => {
-      const getCount = getE2eApiCalls('/workspace/graph/draft', 'GET').length;
-      cy.on('window:before:load', installE2eApiFetchStub);
-      cy.reload();
-      cy.wrap(null, { timeout: 20_000 }).should(() => {
-        expect(getE2eApiCalls('/workspace/graph/draft', 'GET')).to.have.length(getCount + 1);
+      cy.wrap(null).should(() => {
+        const savedTransform = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+          .map(
+            (call) =>
+              call.body as {
+                draft: { nodes: Array<{ id: string; metadata?: Record<string, unknown> }> };
+              }
+          )
+          .map((body) => body.draft.nodes.find((node) => node.id === 'join-transform'))
+          .filter((node) => node != null)
+          .at(-1);
+        const authority = savedTransform?.metadata?.transformAuthoring as
+          { semanticDocument?: unknown } | undefined;
+        const inspection = inspectDvtSubstraitJoinDraft(
+          decodeDvtSubstraitJoinDocument(authority?.semanticDocument)
+        );
+        expect(inspection.ok).to.equal(true);
+        if (!inspection.ok) return;
+        expect(inspection.projection.joinRelations[0]?.joinType).to.equal(scenario.joinType);
+        for (const inputIndex of scenario.nullExtendedInputs) {
+          expect(
+            inspection.projection.outputs
+              .filter((output) => output.source.inputIndex === inputIndex)
+              .every((output) => output.nullable)
+          ).to.equal(true);
+        }
       });
+      cy.get('[data-slot="canvas-relational-composition-badge"]', { timeout: 20_000 }).should(
+        'contain.text',
+        scenario.label
+      );
+
+      cy.then(() => {
+        const getCount = getE2eApiCalls('/workspace/graph/draft', 'GET').length;
+        cy.on('window:before:load', installE2eApiFetchStub);
+        cy.reload();
+        cy.wrap(null, { timeout: 20_000 }).should(() => {
+          expect(getE2eApiCalls('/workspace/graph/draft', 'GET')).to.have.length(getCount + 1);
+        });
+      });
+      cy.get('[data-slot="canvas-relational-composition-badge"]', { timeout: 20_000 }).should(
+        'contain.text',
+        scenario.label
+      );
     });
-    cy.get('[data-slot="canvas-relational-composition-badge"]', { timeout: 20_000 }).should(
-      'contain.text',
-      'LEFT JOIN'
-    );
-  });
+  }
 
   it('authors the first JOIN from matching bigint fields', () => {
     visitWithE2eWorkspaceSession('/canvas');

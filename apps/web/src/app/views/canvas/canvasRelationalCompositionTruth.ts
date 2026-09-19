@@ -1,5 +1,4 @@
 /** Owned concern: derive relational-composition state from graph topology and canonical semantics. */
-import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 
 import type {
@@ -19,6 +18,7 @@ import {
   inspectDvtSubstraitUnionAllAcceptedDraft,
 } from './canvasDvtSubstraitSetComposition';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
 
 function uniqueSourceRefs(
   sourceRefs: readonly ConnectedSourceRef[]
@@ -37,10 +37,10 @@ function resolveCanonicalOperation(
     const join = inspectDvtSubstraitJoinAcceptedDraft(draft);
     if (join.ok) {
       const structure = inspectDvtSubstraitJoinDraft(draft);
-      return structure.ok &&
-        structure.projection.joinRelations.at(-1)?.joinType === JoinRel_JoinType.LEFT
-        ? 'left_join'
-        : 'inner_join';
+      const joinType = structure.ok
+        ? structure.projection.joinRelations.at(-1)?.joinType
+        : undefined;
+      return joinType == null ? 'inner_join' : canvasJoinOperationForType(joinType);
     }
   } catch {
     // The same canonical document may represent another admitted relation shape.

@@ -133,15 +133,19 @@ describe('resolveCanvasRelationalCompositionTruth', () => {
     ).toEqual({ state: 'canonical', connectedInputCount: 2, operation: 'inner_join' });
   });
 
-  it('projects LEFT JOIN from the canonical final JoinRel type', () => {
-    const join = canonicalJoin(orders, clients, JoinRel_JoinType.LEFT);
+  it.each([
+    [JoinRel_JoinType.LEFT, 'left_join'],
+    [JoinRel_JoinType.RIGHT, 'right_join'],
+    [JoinRel_JoinType.OUTER, 'full_outer_join'],
+  ] as const)('projects exact JOIN type %s from canonical truth', (joinType, operation) => {
+    const join = canonicalJoin(orders, clients, joinType);
     expect(
       resolveCanvasRelationalCompositionTruth({
         node: join,
         nodes: [orders, clients, join],
         edges: [edge(orders), edge(clients)],
       })
-    ).toEqual({ state: 'canonical', connectedInputCount: 2, operation: 'left_join' });
+    ).toEqual({ state: 'canonical', connectedInputCount: 2, operation });
   });
 
   it('keeps the canonical JOIN while exposing a third input as pending', () => {

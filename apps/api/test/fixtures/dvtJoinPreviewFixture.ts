@@ -19,28 +19,46 @@ const documents = JSON.parse(
   )
 ) as Record<string, unknown>;
 
-const THREE_INPUT_FINAL_LEFT_PLAN = {
-  bytesBase64:
-    'Eg0aCxABGgVlcXVhbCABEgsaCRACGgNhbmQgAhrxAhLuAgqyAjKvAgoLEgcKBQABAgMFKAUStAEysQEKChIGCgQAAQIDKAQSPAo6CgIoARIlCghvcmRlcl9pZAoJY2xpZW50X2lkEg4KBGICEAEKBGICEAEYAjoNCgNyYXcKBm9yZGVycxo7CjkKAigCEiQKCWNsaWVudF9pZAoHY291bnRyeRIOCgRiAhABCgRiAhABGAI6DQoDcmF3CgZjbGllbnQiJhokCAEaBAoCEAEiDBoKEggKBBICCAEiACIMGgoSCAoEEgIIAiIAMAEaQQo/CgIoAxIjCghvcmRlcl9pZAoHcHJvZHVjdBIOCgRiAhABCgRiAhABGAI6FAoDcmF3Cg1vcmRlcl9kZXRhaWxzIiQaIggBGgQKAhABIgoaCBIGCgISACIAIgwaChIICgQSAggEIgAwAxIIb3JkZXJfaWQSCWNsaWVudF9pZBIQY2xpZW50X2NsaWVudF9pZBIHY291bnRyeRIHcHJvZHVjdDIkEGUqIGR2dC12dHgyLW4taW5wdXQtaW5uZXItam9pbi1jYXJkQi8IARIrZXh0ZW5zaW9uOmlvLnN1YnN0cmFpdDpmdW5jdGlvbnNfY29tcGFyaXNvbkIsCAISKGV4dGVuc2lvbjppby5zdWJzdHJhaXQ6ZnVuY3Rpb25zX2Jvb2xlYW4=',
-  sha256: '6ed7f3731ee600313e3c2705a57d24c78a6908fa8550f57de1b06292b0e0e4b7',
-} as const;
+type JoinFixtureType = 'inner' | 'left' | 'right' | 'outer';
+
+const THREE_INPUT_FINAL_JOIN_PLANS: Readonly<
+  Record<Exclude<JoinFixtureType, 'inner'>, Readonly<{ bytesBase64: string; sha256: string }>>
+> = {
+  left: {
+    bytesBase64:
+      'Eg0aCxABGgVlcXVhbCABEgsaCRACGgNhbmQgAhrxAhLuAgqyAjKvAgoLEgcKBQABAgMFKAUStAEysQEKChIGCgQAAQIDKAQSPAo6CgIoARIlCghvcmRlcl9pZAoJY2xpZW50X2lkEg4KBGICEAEKBGICEAEYAjoNCgNyYXcKBm9yZGVycxo7CjkKAigCEiQKCWNsaWVudF9pZAoHY291bnRyeRIOCgRiAhABCgRiAhABGAI6DQoDcmF3CgZjbGllbnQiJhokCAEaBAoCEAEiDBoKEggKBBICCAEiACIMGgoSCAoEEgIIAiIAMAEaQQo/CgIoAxIjCghvcmRlcl9pZAoHcHJvZHVjdBIOCgRiAhABCgRiAhABGAI6FAoDcmF3Cg1vcmRlcl9kZXRhaWxzIiQaIggBGgQKAhABIgoaCBIGCgISACIAIgwaChIICgQSAggEIgAwAxIIb3JkZXJfaWQSCWNsaWVudF9pZBIQY2xpZW50X2NsaWVudF9pZBIHY291bnRyeRIHcHJvZHVjdDIkEGUqIGR2dC12dHgyLW4taW5wdXQtaW5uZXItam9pbi1jYXJkQi8IARIrZXh0ZW5zaW9uOmlvLnN1YnN0cmFpdDpmdW5jdGlvbnNfY29tcGFyaXNvbkIsCAISKGV4dGVuc2lvbjppby5zdWJzdHJhaXQ6ZnVuY3Rpb25zX2Jvb2xlYW4=',
+    sha256: '6ed7f3731ee600313e3c2705a57d24c78a6908fa8550f57de1b06292b0e0e4b7',
+  },
+  right: {
+    bytesBase64:
+      'Eg0aCxABGgVlcXVhbCABEgsaCRACGgNhbmQgAhrxAhLuAgqyAjKvAgoLEgcKBQABAgMFKAUStAEysQEKChIGCgQAAQIDKAQSPAo6CgIoARIlCghvcmRlcl9pZAoJY2xpZW50X2lkEg4KBGICEAEKBGICEAEYAjoNCgNyYXcKBm9yZGVycxo7CjkKAigCEiQKCWNsaWVudF9pZAoHY291bnRyeRIOCgRiAhABCgRiAhABGAI6DQoDcmF3CgZjbGllbnQiJhokCAEaBAoCEAEiDBoKEggKBBICCAEiACIMGgoSCAoEEgIIAiIAMAEaQQo/CgIoAxIjCghvcmRlcl9pZAoHcHJvZHVjdBIOCgRiAhABCgRiAhABGAI6FAoDcmF3Cg1vcmRlcl9kZXRhaWxzIiQaIggBGgQKAhABIgoaCBIGCgISACIAIgwaChIICgQSAggEIgAwBBIIb3JkZXJfaWQSCWNsaWVudF9pZBIQY2xpZW50X2NsaWVudF9pZBIHY291bnRyeRIHcHJvZHVjdDIkEGUqIGR2dC12dHgyLW4taW5wdXQtaW5uZXItam9pbi1jYXJkQi8IARIrZXh0ZW5zaW9uOmlvLnN1YnN0cmFpdDpmdW5jdGlvbnNfY29tcGFyaXNvbkIsCAISKGV4dGVuc2lvbjppby5zdWJzdHJhaXQ6ZnVuY3Rpb25zX2Jvb2xlYW4=',
+    sha256: '256d3af82909a2fa6ac504c4aaaf06fbe5912f745f17176d44e6dbc52a97db39',
+  },
+  outer: {
+    bytesBase64:
+      'Eg0aCxABGgVlcXVhbCABEgsaCRACGgNhbmQgAhrxAhLuAgqyAjKvAgoLEgcKBQABAgMFKAUStAEysQEKChIGCgQAAQIDKAQSPAo6CgIoARIlCghvcmRlcl9pZAoJY2xpZW50X2lkEg4KBGICEAEKBGICEAEYAjoNCgNyYXcKBm9yZGVycxo7CjkKAigCEiQKCWNsaWVudF9pZAoHY291bnRyeRIOCgRiAhABCgRiAhABGAI6DQoDcmF3CgZjbGllbnQiJhokCAEaBAoCEAEiDBoKEggKBBICCAEiACIMGgoSCAoEEgIIAiIAMAEaQQo/CgIoAxIjCghvcmRlcl9pZAoHcHJvZHVjdBIOCgRiAhABCgRiAhABGAI6FAoDcmF3Cg1vcmRlcl9kZXRhaWxzIiQaIggBGgQKAhABIgoaCBIGCgISACIAIgwaChIICgQSAggEIgAwAhIIb3JkZXJfaWQSCWNsaWVudF9pZBIQY2xpZW50X2NsaWVudF9pZBIHY291bnRyeRIHcHJvZHVjdDIkEGUqIGR2dC12dHgyLW4taW5wdXQtaW5uZXItam9pbi1jYXJkQi8IARIrZXh0ZW5zaW9uOmlvLnN1YnN0cmFpdDpmdW5jdGlvbnNfY29tcGFyaXNvbkIsCAISKGV4dGVuc2lvbjppby5zdWJzdHJhaXQ6ZnVuY3Rpb25zX2Jvb2xlYW4=',
+    sha256: '64240ca6cf37ebf0fdce40b6760c8c6ca6de83779081ced1d63a2fd4592d54f4',
+  },
+};
 
 export function buildDvtJoinPreviewDraft(
   inputCount: 2 | 3,
-  finalJoinType: 'inner' | 'left' = 'inner'
+  finalJoinType: JoinFixtureType = 'inner'
 ): WorkspaceGraphAuthoringDraft {
   const base = buildDvtTerminalTransformPreviewDraft();
   const fixture = DvtSubstraitSemanticDocumentV1Schema.parse(
     documents[inputCount === 2 ? 'two' : 'three']
   );
+  const override =
+    finalJoinType === 'inner' ? undefined : THREE_INPUT_FINAL_JOIN_PLANS[finalJoinType];
   const semanticDocument =
-    inputCount === 3 && finalJoinType === 'left'
+    inputCount === 3 && override != null
       ? DvtSubstraitSemanticDocumentV1Schema.parse({
           ...fixture,
-          semanticPlan: { ...fixture.semanticPlan, ...THREE_INPUT_FINAL_LEFT_PLAN },
+          semanticPlan: { ...fixture.semanticPlan, ...override },
           sidecar: {
             ...fixture.sidecar,
-            semanticPlanSha256: THREE_INPUT_FINAL_LEFT_PLAN.sha256,
+            semanticPlanSha256: override.sha256,
           },
         })
       : fixture;

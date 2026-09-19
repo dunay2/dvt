@@ -32,9 +32,11 @@ function harness(inputCount: 2 | 3 = 3): {
   return { input, publisher, publish };
 }
 
-function leftHarness(): ReturnType<typeof harness> {
+type ExtendedJoinFixtureType = 'left' | 'right' | 'outer';
+
+function joinHarness(finalJoinType: ExtendedJoinFixtureType): ReturnType<typeof harness> {
   const result = harness(3);
-  const draft = buildDvtJoinPreviewDraft(3, 'left');
+  const draft = buildDvtJoinPreviewDraft(3, finalJoinType);
   return {
     ...result,
     input: {
@@ -47,19 +49,26 @@ function leftHarness(): ReturnType<typeof harness> {
 }
 
 describe('N-input protected Preview lowering', () => {
-  it('projects a mixed INNER to LEFT tree through Preview with the JOIN-family profile', async () => {
-    const { input, publisher, publish } = leftHarness();
+  it.each([
+    ['left', 'LEFT JOIN'],
+    ['right', 'RIGHT JOIN'],
+    ['outer', 'FULL JOIN'],
+  ] as const)(
+    'projects a mixed INNER to %s tree through Preview with the JOIN-family profile',
+    async (finalJoinType, sqlJoin) => {
+      const { input, publisher, publish } = joinHarness(finalJoinType);
 
-    const binding = await publisher.publish(input);
-    const sql = Buffer.from(publish.mock.calls[0]![0].bytes).toString('utf8');
+      const binding = await publisher.publish(input);
+      const sql = Buffer.from(publish.mock.calls[0]![0].bytes).toString('utf8');
 
-    expect(binding.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
-    expect(binding.schemaDigestSha256).toMatch(/^[a-f0-9]{64}$/);
-    expect(sql.match(/JOIN/g)).toHaveLength(2);
-    expect(sql).toContain(
-      'LEFT JOIN raw.order_details AS join_source_3 ON left_source.order_id = join_source_3.order_id'
-    );
-  });
+      expect(binding.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
+      expect(binding.schemaDigestSha256).toMatch(/^[a-f0-9]{64}$/);
+      expect(sql.match(/JOIN/g)).toHaveLength(2);
+      expect(sql).toContain(
+        `${sqlJoin} raw.order_details AS join_source_3 ON left_source.order_id = join_source_3.order_id`
+      );
+    }
+  );
 
   it.each([2, 3] as const)(
     'preserves all %i sources in one SQL artifact and one workload',
@@ -97,57 +106,67 @@ describe('N-input protected Preview lowering', () => {
     }
   );
 
-  it('preserves a mixed INNER to LEFT tree as one Run workload', async () => {
-    const { input, publisher } = leftHarness();
-    const draft = {
-      ...input.draft,
-      nodes: input.draft.nodes.map((node) =>
-        node.id === 'transform-orders'
-          ? {
-              ...node,
-              metadata: {
-                ...node.metadata,
-                config: {
-                  materialized: 'table',
-                  resultTarget: {
-                    schemaVersion: 'dvt-transform-result-target.v1',
-                    connectionRef: {
-                      schemaVersion: 'connection-ref.v1',
-                      provider: 'postgres',
-                      connectionId: 'local-postgres-proof',
+  it.each([
+    ['left', 'LEFT JOIN'],
+    ['right', 'RIGHT JOIN'],
+    ['outer', 'FULL JOIN'],
+  ] as const)(
+    'preserves a mixed INNER to %s tree as one Run workload',
+    async (finalJoinType, sqlJoin) => {
+      const { input, publisher, publish } = joinHarness(finalJoinType);
+      const draft = {
+        ...input.draft,
+        nodes: input.draft.nodes.map((node) =>
+          node.id === 'transform-orders'
+            ? {
+                ...node,
+                metadata: {
+                  ...node.metadata,
+                  config: {
+                    materialized: 'table',
+                    resultTarget: {
+                      schemaVersion: 'dvt-transform-result-target.v1',
+                      connectionRef: {
+                        schemaVersion: 'connection-ref.v1',
+                        provider: 'postgres',
+                        connectionId: 'local-postgres-proof',
+                      },
+                      schema: 'analytics',
+                      relation: 'joined_orders',
                     },
-                    schema: 'analytics',
-                    relation: 'joined_orders',
                   },
                 },
-              },
-            }
-          : node
-      ),
-    };
-    const binding = await publisher.publish({ ...input, draft });
-    const result = new DvtOperationalWorkloadProjector().project({
-      ...input,
-      draft,
-      draftRevision: 'revision-1',
-      canvasId: draft.canvas.id!,
-      targetProjection: binding,
-    });
+              }
+            : node
+        ),
+      };
+      const binding = await publisher.publish({ ...input, draft });
+      const result = new DvtOperationalWorkloadProjector().project({
+        ...input,
+        draft,
+        draftRevision: 'revision-1',
+        canvasId: draft.canvas.id!,
+        targetProjection: binding,
+      });
 
-    if (!result.ok) throw new Error(result.reason);
-    expect(result.graphSource.nodes).toHaveLength(1);
-    const workload = DvtOperationalWorkloadContractV2.schema.parse(
-      result.graphSource.nodes[0]?.stepTypeConfig
-    );
-    expect(workload.executionIntent).toBe('run');
-    expect(workload.targetProjection.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
-    expect(workload.graph.selectedNodeIds).toEqual([...draft.nodeIds].sort());
-    expect(workload.output).toMatchObject({
-      disposition: 'table',
-      target: { schema: 'analytics', relation: 'joined_orders' },
-    });
-    expect(workload.publicationBoundaries).toEqual([]);
-  });
+      if (!result.ok) throw new Error(result.reason);
+      expect(result.graphSource.nodes).toHaveLength(1);
+      const workload = DvtOperationalWorkloadContractV2.schema.parse(
+        result.graphSource.nodes[0]?.stepTypeConfig
+      );
+      expect(workload.executionIntent).toBe('run');
+      expect(workload.targetProjection.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
+      expect(workload.graph.selectedNodeIds).toEqual([...draft.nodeIds].sort());
+      expect(workload.output).toMatchObject({
+        disposition: 'table',
+        target: { schema: 'analytics', relation: 'joined_orders' },
+      });
+      expect(workload.publicationBoundaries).toEqual([]);
+      expect(Buffer.from(publish.mock.calls[0]![0].bytes).toString('utf8')).toContain(
+        `${sqlJoin} raw.order_details AS join_source_3 ON left_source.order_id = join_source_3.order_id`
+      );
+    }
+  );
 
   it.each([
     'missing input',

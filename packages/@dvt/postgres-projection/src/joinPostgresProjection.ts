@@ -67,9 +67,13 @@ export const POSTGRES_JOIN_COMPARISON: Readonly<
   lte: '<=',
 };
 
-function postgresJoinType(joinType: number): 'JOIN_INNER' | 'JOIN_LEFT' {
+function postgresJoinType(
+  joinType: number
+): 'JOIN_INNER' | 'JOIN_LEFT' | 'JOIN_RIGHT' | 'JOIN_FULL' {
   if (joinType === JoinRel_JoinType.INNER) return 'JOIN_INNER';
   if (joinType === JoinRel_JoinType.LEFT) return 'JOIN_LEFT';
+  if (joinType === JoinRel_JoinType.RIGHT) return 'JOIN_RIGHT';
+  if (joinType === JoinRel_JoinType.OUTER) return 'JOIN_FULL';
   throw new DvtSubstraitPostgresProjectionError(
     'unsupported_shape',
     'The recursive JOIN contains an unsupported JOIN type.'

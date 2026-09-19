@@ -56,6 +56,8 @@ describe('resolveCanvasRelationalOperationChoices', () => {
     expect(availability({ unionAllAvailable: true })).toEqual({
       inner_join: 'needs-predicate',
       left_join: 'needs-predicate',
+      right_join: 'needs-predicate',
+      full_outer_join: 'needs-predicate',
       union_all: 'available',
     });
   });
@@ -64,6 +66,8 @@ describe('resolveCanvasRelationalOperationChoices', () => {
     expect(availability({})).toEqual({
       inner_join: 'needs-predicate',
       left_join: 'needs-predicate',
+      right_join: 'needs-predicate',
+      full_outer_join: 'needs-predicate',
       union_all: 'needs-schema-alignment',
     });
   });
@@ -71,6 +75,8 @@ describe('resolveCanvasRelationalOperationChoices', () => {
   it('offers INNER JOIN when a valid predicate proposal is already available', () => {
     expect(availability({ predicateAvailable: true }).inner_join).toBe('available');
     expect(availability({ predicateAvailable: true }).left_join).toBe('available');
+    expect(availability({ predicateAvailable: true }).right_join).toBe('available');
+    expect(availability({ predicateAvailable: true }).full_outer_join).toBe('available');
   });
 
   it('keeps target readiness separate from semantic admission', () => {
@@ -84,6 +90,8 @@ describe('resolveCanvasRelationalOperationChoices', () => {
     ).toEqual({
       inner_join: 'target-unavailable',
       left_join: 'target-unavailable',
+      right_join: 'target-unavailable',
+      full_outer_join: 'target-unavailable',
       union_all: 'target-unavailable',
     });
   });
@@ -122,6 +130,8 @@ describe('resolveCanvasRelationalOperationChoices', () => {
     expect(availability({ readOnly: true, unionAllAvailable: true })).toEqual({
       inner_join: 'read-only',
       left_join: 'read-only',
+      right_join: 'read-only',
+      full_outer_join: 'read-only',
       union_all: 'read-only',
     });
   });

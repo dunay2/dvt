@@ -159,55 +159,60 @@ describe('DvtSubstraitCompositionStartSection', () => {
     expect(onStartInnerJoin).not.toHaveBeenCalled();
   });
 
-  it('authors LEFT JOIN through the same canonical predicate flow', () => {
-    const onStartInnerJoin = vi.fn();
-    const required = (nodeId: string, table: string): CanvasDvtCompositionInput => {
-      const candidate = input(nodeId, table);
-      return {
-        ...candidate,
-        fields: candidate.fields.map((field) => ({ ...field, nullable: false })),
+  it.each([
+    ['left_join', JoinRel_JoinType.LEFT, [1]],
+    ['right_join', JoinRel_JoinType.RIGHT, [0]],
+    ['full_outer_join', JoinRel_JoinType.OUTER, [0, 1]],
+  ] as const)(
+    'authors %s through the same canonical predicate flow',
+    (operation, joinType, nullExtendedInputs) => {
+      const onStartInnerJoin = vi.fn();
+      const required = (nodeId: string, table: string): CanvasDvtCompositionInput => {
+        const candidate = input(nodeId, table);
+        return {
+          ...candidate,
+          fields: candidate.fields.map((field) => ({ ...field, nullable: false })),
+        };
       };
-    };
-    act(() => {
-      root.render(
-        <DvtSubstraitCompositionStartSection
-          disabled={false}
-          inputs={[required('orders', 'orders'), required('customers', 'customers')]}
-          onStartInnerJoin={onStartInnerJoin}
-        />
-      );
-    });
+      act(() => {
+        root.render(
+          <DvtSubstraitCompositionStartSection
+            disabled={false}
+            inputs={[required('orders', 'orders'), required('customers', 'customers')]}
+            onStartInnerJoin={onStartInnerJoin}
+          />
+        );
+      });
 
-    act(() => {
-      fireEvent.click(
-        container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-left-join"]')!
-      );
-    });
-    act(() => {
-      fireEvent.click(
-        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-configured-left-join"]')!
-      );
-    });
+      act(() => {
+        fireEvent.click(
+          container.querySelector<HTMLButtonElement>(
+            `[data-slot="dvt-select-operation-${operation.replaceAll('_', '-')}"]`
+          )!
+        );
+      });
+      act(() => {
+        fireEvent.click(
+          container.querySelector<HTMLButtonElement>(
+            `[data-slot="dvt-start-configured-${operation.replaceAll('_', '-')}"]`
+          )!
+        );
+      });
 
-    expect(onStartInnerJoin).toHaveBeenCalledOnce();
-    expect(onStartInnerJoin.mock.calls[0]?.[1]).toBe('left_join');
-    const inspection = inspectDvtSubstraitJoinDraft(
-      onStartInnerJoin.mock.calls[0]?.[0] as DvtSubstraitJoinDraft
-    );
-    expect(inspection.ok).toBe(true);
-    if (!inspection.ok) return;
-    expect(inspection.projection.joinRelations[0]?.joinType).toBe(JoinRel_JoinType.LEFT);
-    expect(
-      inspection.projection.outputs
-        .filter((output) => output.source.inputIndex === 0)
-        .every((output) => !output.nullable)
-    ).toBe(true);
-    expect(
-      inspection.projection.outputs
-        .filter((output) => output.source.inputIndex === 1)
-        .every((output) => output.nullable)
-    ).toBe(true);
-  });
+      expect(onStartInnerJoin).toHaveBeenCalledOnce();
+      expect(onStartInnerJoin.mock.calls[0]?.[1]).toBe(operation);
+      const inspection = inspectDvtSubstraitJoinDraft(
+        onStartInnerJoin.mock.calls[0]?.[0] as DvtSubstraitJoinDraft
+      );
+      expect(inspection.ok).toBe(true);
+      if (!inspection.ok) return;
+      expect(inspection.projection.joinRelations[0]?.joinType).toBe(joinType);
+      const nullExtendedInputSet = new Set<number>(nullExtendedInputs);
+      inspection.projection.outputs.forEach((output) => {
+        expect(output.nullable).toBe(nullExtendedInputSet.has(output.source.inputIndex));
+      });
+    }
+  );
 
   it('seeds the first JOIN with a matching admitted non-string type', () => {
     const onStartInnerJoin = vi.fn();

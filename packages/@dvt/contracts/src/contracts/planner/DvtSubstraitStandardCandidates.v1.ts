@@ -62,6 +62,8 @@ const CORE_RELATIONS: readonly [string, string?][] = [
   ['substrait.FilterRel'],
   ['substrait.JoinRel', 'JoinType.JOIN_TYPE_INNER'],
   ['substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT'],
+  ['substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT'],
+  ['substrait.JoinRel', 'JoinType.JOIN_TYPE_OUTER'],
   ['substrait.AggregateRel'],
   ['substrait.SetRel', 'SetOp.SET_OP_UNION_DISTINCT'],
   ['substrait.SetRel', 'SetOp.SET_OP_UNION_ALL'],

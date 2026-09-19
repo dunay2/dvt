@@ -12,6 +12,7 @@ import {
 } from './canvasDvtSubstraitSetComposition';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import type { CanvasRelationalCompositionOperation } from '../../components/canvas/canvasNodePresentationTruth.contract';
+import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 
 export function resolveCanvasRelationalCompositionBadgeSummary(args: {
   node: CanonicalNode;
@@ -22,7 +23,7 @@ export function resolveCanvasRelationalCompositionBadgeSummary(args: {
   if (authority?.mode !== 'substrait') return null;
   const copy = resolveGraphNodeCardCopy(args.locale);
 
-  if (args.operation === 'inner_join' || args.operation === 'left_join') {
+  if (isCanvasJoinOperation(args.operation)) {
     const inspection = inspectDvtSubstraitJoinAcceptedDraft(
       decodeDvtSubstraitJoinDocument(authority.semanticDocument)
     );
@@ -39,7 +40,15 @@ export function resolveCanvasRelationalCompositionBadgeSummary(args: {
     const summary = copy.relationalCompositionJoinSummaryTemplate
       .replace('{inputCount}', String(inputCount))
       .replace('{predicateCount}', String(predicateCount));
-    return args.operation === 'left_join' ? summary.replace(/^INNER JOIN/, 'LEFT JOIN') : summary;
+    const label =
+      args.operation === 'left_join'
+        ? 'LEFT JOIN'
+        : args.operation === 'right_join'
+          ? 'RIGHT JOIN'
+          : args.operation === 'full_outer_join'
+            ? 'FULL OUTER JOIN'
+            : 'INNER JOIN';
+    return summary.replace(/^INNER JOIN/, label);
   }
 
   const inspection = inspectDvtSubstraitUnionAllAcceptedDraft(

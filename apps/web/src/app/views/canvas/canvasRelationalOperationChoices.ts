@@ -8,7 +8,8 @@ import { hasSameConnectionRef } from '@dvt/postgres-projection';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { hasCompatibleCanvasDvtJoinFields } from './canvasDvtJoinTypeAdmission';
 
-export type CanvasRelationalOperation = 'projection' | 'inner_join' | 'left_join' | 'union_all';
+export type CanvasRelationalOperation =
+  'projection' | 'inner_join' | 'left_join' | 'right_join' | 'full_outer_join' | 'union_all';
 
 export type CanvasRelationalOperationAvailability =
   | 'available'
@@ -95,15 +96,17 @@ export function resolveCanvasRelationalOperationChoices(
   const unionAllTargetSupported = targetSupports(args.inputs);
   const innerJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_INNER');
   const leftJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT');
+  const rightJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT');
+  const fullOuterJoinAdmitted = isAdmitted('substrait.JoinRel', 'JoinType.JOIN_TYPE_OUTER');
   const unionAllAdmitted = isAdmitted('substrait.SetRel', 'SetOp.SET_OP_UNION_ALL');
   const hasCompatibleJoinTypePair = args.inputs.some((left, index) =>
     args.inputs
       .slice(index + 1)
       .some((right) => hasCompatibleCanvasDvtJoinFields(left.fields, right.fields))
   );
-  const innerJoinAvailability =
+  const joinAvailability = (admitted: boolean): CanvasRelationalOperationAvailability =>
     readOnlyAvailability ??
-    (!innerJoinAdmitted
+    (!admitted
       ? 'semantically-unavailable'
       : !hasCompatibleJoinTypePair
         ? 'semantically-unavailable'
@@ -112,17 +115,10 @@ export function resolveCanvasRelationalOperationChoices(
           : args.predicateAvailable
             ? 'available'
             : 'needs-predicate');
-  const leftJoinAvailability =
-    readOnlyAvailability ??
-    (!leftJoinAdmitted
-      ? 'semantically-unavailable'
-      : !hasCompatibleJoinTypePair
-        ? 'semantically-unavailable'
-        : !hasCompatibleJoinPair(args.inputs)
-          ? 'target-unavailable'
-          : args.predicateAvailable
-            ? 'available'
-            : 'needs-predicate');
+  const innerJoinAvailability = joinAvailability(innerJoinAdmitted);
+  const leftJoinAvailability = joinAvailability(leftJoinAdmitted);
+  const rightJoinAvailability = joinAvailability(rightJoinAdmitted);
+  const fullOuterJoinAvailability = joinAvailability(fullOuterJoinAdmitted);
   const unionAllAvailability =
     readOnlyAvailability ??
     (!unionAllAdmitted
@@ -145,6 +141,19 @@ export function resolveCanvasRelationalOperationChoices(
       availability: leftJoinAvailability,
       selectable:
         leftJoinAvailability === 'available' || leftJoinAvailability === 'needs-predicate',
+    },
+    {
+      operation: 'right_join',
+      availability: rightJoinAvailability,
+      selectable:
+        rightJoinAvailability === 'available' || rightJoinAvailability === 'needs-predicate',
+    },
+    {
+      operation: 'full_outer_join',
+      availability: fullOuterJoinAvailability,
+      selectable:
+        fullOuterJoinAvailability === 'available' ||
+        fullOuterJoinAvailability === 'needs-predicate',
     },
     {
       operation: 'union_all',

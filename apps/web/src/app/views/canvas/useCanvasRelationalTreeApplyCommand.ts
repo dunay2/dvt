@@ -9,6 +9,7 @@ import { createCanvasRelationalTreeUnionAllDraft } from './canvasRelationalTreeU
 import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 
 export function useCanvasRelationalTreeApplyCommand(args: {
   authoring?: CanvasRelationalTreeAuthoringContract;
@@ -52,10 +53,7 @@ export function useCanvasRelationalTreeApplyCommand(args: {
                   targetNodeId: transformNode.id,
                 });
           })()
-        : joinDraft != null ||
-            operation === 'inner_join' ||
-            operation === 'left_join' ||
-            operation === 'projection'
+        : joinDraft != null || isCanvasJoinOperation(operation) || operation === 'projection'
           ? joinDraft
           : createCanvasRelationalTreeUnionAllDraft({
               edges,

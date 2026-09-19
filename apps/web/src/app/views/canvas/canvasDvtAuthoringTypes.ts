@@ -26,7 +26,14 @@ export type DvtSubstraitTransformAuthoringMetadata = Readonly<{
   mode: typeof DVT_TRANSFORM_AUTHORING_MODE.substrait;
   materialized: string;
   resultTarget?: DvtTransformResultTargetV1 | null;
-  shape: 'projection' | 'pilot' | 'inner_join' | 'left_join' | 'union_all';
+  shape:
+    | 'projection'
+    | 'pilot'
+    | 'inner_join'
+    | 'left_join'
+    | 'right_join'
+    | 'full_outer_join'
+    | 'union_all';
   plan: Plan;
   sidecar: DvtSubstraitAuthoringSidecarV1;
 }>;

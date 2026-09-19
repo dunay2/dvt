@@ -6,7 +6,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
-import { toSubstraitJoinType } from './canvasRelationalTreeJoinType';
+import { toSubstraitJoinType, type CanvasJoinOperation } from './canvasRelationalTreeJoinType';
 import { orderedCanvasRelationalTreeUnionAllEntry } from './canvasRelationalTreeUnionAuthoring';
 import {
   createCanvasDvtInitialJoinDraft,
@@ -39,7 +39,7 @@ export function createCanvasRelationalTreeInitialJoinDraft(
     targetNodeId: string;
     leftInputId: string;
     rightInputId: string;
-    operation?: 'inner_join' | 'left_join';
+    operation?: CanvasJoinOperation;
   }>
 ): DvtSubstraitJoinDraft | null {
   const left = args.inputs.find((input) => input.nodeId === args.leftInputId);
@@ -62,7 +62,7 @@ export function appendCanvasRelationalTreeJoinInput(
     input: CanvasDvtCompositionInput;
     leftSourceFieldId: string;
     rightFieldName: string;
-    operation?: 'inner_join' | 'left_join';
+    operation?: CanvasJoinOperation;
   }>
 ): DvtSubstraitJoinDraft {
   const fields = args.input.fields.filter((field) => field.joinDataType != null);
@@ -156,6 +156,8 @@ export function resolveCanvasRelationalTreeAuthoringChoices(
   return [
     operationChoice('inner_join', selectedInputs, args.readOnly, false),
     operationChoice('left_join', selectedInputs, args.readOnly, false),
+    operationChoice('right_join', selectedInputs, args.readOnly, false),
+    operationChoice('full_outer_join', selectedInputs, args.readOnly, false),
     operationChoice('union_all', selectedInputs, args.readOnly, unionAvailable),
   ];
 }

@@ -257,6 +257,57 @@ describe('DVT Substrait INNER JOIN identity', () => {
       originalDocument.semanticPlan.bytesBase64
     );
   });
+
+  it.each([
+    {
+      name: 'RIGHT(LEFT(A,B),C)',
+      stageTypes: [JoinRel_JoinType.LEFT, JoinRel_JoinType.RIGHT],
+      nullExtendedInputs: [0, 1],
+    },
+    {
+      name: 'OUTER(INNER(A,B),C)',
+      stageTypes: [JoinRel_JoinType.INNER, JoinRel_JoinType.OUTER],
+      nullExtendedInputs: [0, 1, 2],
+    },
+    {
+      name: 'LEFT(RIGHT(A,B),C)',
+      stageTypes: [JoinRel_JoinType.RIGHT, JoinRel_JoinType.LEFT],
+      nullExtendedInputs: [0, 2],
+    },
+  ] as const)(
+    'round-trips $name with exact stage types and cumulative nullability',
+    ({ stageTypes, nullExtendedInputs }) => {
+      const original = appendShipmentInput(fixture());
+      const originalProjection = inspectNInput(original);
+      const [firstStage, secondStage] = originalProjection.joinRelations;
+      if (firstStage == null || secondStage == null) throw new Error('Expected two JOIN stages.');
+      const withFirstType = setDvtSubstraitJoinType({
+        draft: original,
+        joinRelationId: firstStage.relationId,
+        joinType: stageTypes[0],
+      });
+      const mixed = setDvtSubstraitJoinType({
+        draft: withFirstType,
+        joinRelationId: secondStage.relationId,
+        joinType: stageTypes[1],
+      });
+      const reloaded = decodeDvtSubstraitJoinDocument(encodeDvtSubstraitJoinDocument(mixed));
+      const projection = inspectNInput(reloaded);
+
+      expect(projection.joinRelations.map((stage) => stage.joinType)).toEqual(stageTypes);
+      projection.outputs.forEach((output) => {
+        const source = projection.inputs[output.source.inputIndex]!.fields.find(
+          (field) => field.fieldId === output.source.fieldId
+        )!;
+        expect(output.nullable).toBe(
+          new Set<number>(nullExtendedInputs).has(output.source.inputIndex) ? true : source.nullable
+        );
+      });
+      expect(projection.outputs.map((output) => output.fieldId)).toEqual(
+        originalProjection.outputs.map((output) => output.fieldId)
+      );
+    }
+  );
   it.each(['is_null', 'is_not_null'] as const)(
     'round-trips unary %s without a right operand and renders PostgreSQL',
     async (operator) => {

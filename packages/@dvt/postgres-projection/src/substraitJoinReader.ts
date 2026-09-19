@@ -1,5 +1,4 @@
 /** Owns projection of a canonical N-input JOIN tree to its verified read model. */
-import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION } from '@dvt/contracts';
 
 import type { DvtSubstraitJoinPredicateCondition } from './substraitJoinCondition.js';
@@ -24,16 +23,18 @@ import {
   mapDvtSubstraitJoinOperandFields,
   resolveDvtSubstraitJoinOperandDataType,
 } from './substraitJoinOperandReader.js';
-import type {
-  DvtSubstraitJoinDataType,
-  DvtSubstraitJoinDraft,
-  DvtSubstraitNInputJoinProjection,
-  DvtSubstraitNInputJoinInspection,
-  DvtSubstraitJoinPredicate,
-  JoinOriginField,
-  InspectedJoinStage,
-  InspectedJoinStructure,
-  InspectedJoinPredicateOperand,
+import {
+  dvtSubstraitJoinNullExtendsLeft,
+  dvtSubstraitJoinNullExtendsRight,
+  type DvtSubstraitJoinDataType,
+  type DvtSubstraitJoinDraft,
+  type DvtSubstraitNInputJoinProjection,
+  type DvtSubstraitNInputJoinInspection,
+  type DvtSubstraitJoinPredicate,
+  type JoinOriginField,
+  type InspectedJoinStage,
+  type InspectedJoinStructure,
+  type InspectedJoinPredicateOperand,
 } from './substraitJoinReadModel.js';
 
 export function inspectNInputJoinStructure(
@@ -147,14 +148,24 @@ export function inspectNInputJoinStructure(
     const relAnchor = inputs.length + joinIndex + 1;
     const inspectedJoin = inspectNInputJoinNode(plan, joinRel, relAnchor);
     const rightInput = inputs[joinIndex + 1]!;
+    const leftFields = workingFields.map<JoinOriginField>((field) => ({
+      ...field,
+      nullable:
+        inspectedJoin != null && dvtSubstraitJoinNullExtendsLeft(inspectedJoin.joinType)
+          ? true
+          : field.nullable,
+    }));
     const rightFields = rightInput.fields.map<JoinOriginField>((field) => ({
       inputIndex: joinIndex + 1,
       name: field.name,
       fieldId: field.fieldId,
       dataType: field.dataType,
-      nullable: inspectedJoin?.joinType === JoinRel_JoinType.LEFT ? true : field.nullable,
+      nullable:
+        inspectedJoin != null && dvtSubstraitJoinNullExtendsRight(inspectedJoin.joinType)
+          ? true
+          : field.nullable,
     }));
-    const available = [...workingFields, ...rightFields];
+    const available = [...leftFields, ...rightFields];
     const relationBinding = sidecar.relations.find((relation) => relation.relAnchor === relAnchor);
     if (
       inspectedJoin == null ||

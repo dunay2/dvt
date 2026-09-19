@@ -24,6 +24,7 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import { canvasViewCopy } from './copy';
 import { SemanticWorkbenchJoinConditionEditor } from './SemanticWorkbenchJoinConditionEditor';
+import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
 
 const sourceSelectClassName =
   'h-8 w-full rounded border border-[color:var(--border-default)] bg-slate-950 px-2 text-xs text-slate-100 [&>option]:bg-slate-950 [&>option]:text-slate-100';
@@ -52,9 +53,9 @@ export function DvtSubstraitInnerJoinStartSection({
     leftNodeId: initialPair?.leftNodeId ?? '',
     rightNodeId: initialPair?.rightNodeId ?? '',
   }));
+  const joinOperation = canvasJoinOperationForType(joinType);
   const targetNodeId =
-    initialSelection?.targetNodeId ??
-    (joinType === JoinRel_JoinType.LEFT ? 'pending-left-join' : 'pending-inner-join');
+    initialSelection?.targetNodeId ?? `pending-${joinOperation.replaceAll('_', '-')}`;
   const [draft, setDraft] = useState(() =>
     initialPair == null
       ? null
@@ -86,7 +87,11 @@ export function DvtSubstraitInnerJoinStartSection({
       <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
         {joinType === JoinRel_JoinType.LEFT
           ? canvasViewCopy.inspectorDvtSubstraitLeftJoinAction
-          : canvasViewCopy.inspectorDvtSubstraitInnerJoinTitle}
+          : joinType === JoinRel_JoinType.RIGHT
+            ? canvasViewCopy.inspectorDvtSubstraitRightJoinAction
+            : joinType === JoinRel_JoinType.OUTER
+              ? canvasViewCopy.inspectorDvtSubstraitFullOuterJoinAction
+              : canvasViewCopy.inspectorDvtSubstraitInnerJoinTitle}
       </h3>
       <label className="block space-y-1 text-xs text-(--text-muted)">
         <span>{canvasViewCopy.inspectorDvtRelationalLeftInput}</span>
@@ -205,11 +210,7 @@ export function DvtSubstraitInnerJoinStartSection({
           type="button"
           size="sm"
           disabled={disabled || draft == null}
-          data-slot={
-            joinType === JoinRel_JoinType.LEFT
-              ? 'dvt-start-configured-left-join'
-              : 'dvt-start-configured-inner-join'
-          }
+          data-slot={`dvt-start-configured-${joinOperation.replaceAll('_', '-')}`}
           onClick={() => {
             if (draft != null) onApply(draft);
           }}

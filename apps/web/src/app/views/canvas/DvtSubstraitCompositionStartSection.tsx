@@ -1,5 +1,4 @@
 /** Owned concern: orchestrate operation selection before canonical relational composition. */
-import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { useState } from 'react';
 
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
@@ -17,6 +16,11 @@ import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition'
 import { DvtRelationalOperationChooser } from './DvtRelationalOperationChooser';
 import { DvtSubstraitInnerJoinStartSection } from './DvtSubstraitInnerJoinStartSection';
 import { DvtSubstraitUnionAllStartSection } from './DvtSubstraitUnionAllStartSection';
+import {
+  isCanvasJoinOperation,
+  toSubstraitJoinType,
+  type CanvasJoinOperation,
+} from './canvasRelationalTreeJoinType';
 
 export function DvtSubstraitCompositionStartSection({
   disabled,
@@ -30,7 +34,7 @@ export function DvtSubstraitCompositionStartSection({
   inputs: readonly CanvasDvtCompositionInput[];
   predicateSeed?: CanvasRelationalPredicateSeed | null;
   onClearPredicateSeed?: () => void;
-  onStartInnerJoin: (draft: DvtSubstraitJoinDraft, operation: 'inner_join' | 'left_join') => void;
+  onStartInnerJoin: (draft: DvtSubstraitJoinDraft, operation: CanvasJoinOperation) => void;
   onStartUnionAll?: () => void;
 }>): JSX.Element {
   const [selectedOperation, setSelectedOperation] = useState<CanvasRelationalOperation | null>(
@@ -47,7 +51,7 @@ export function DvtSubstraitCompositionStartSection({
     unionAllAvailable: onStartUnionAll != null,
   });
 
-  if (selectedOperation === 'inner_join' || selectedOperation === 'left_join') {
+  if (isCanvasJoinOperation(selectedOperation)) {
     return (
       <DvtSubstraitInnerJoinStartSection
         key={
@@ -57,9 +61,7 @@ export function DvtSubstraitCompositionStartSection({
         }
         disabled={disabled}
         inputs={inputs}
-        joinType={
-          selectedOperation === 'left_join' ? JoinRel_JoinType.LEFT : JoinRel_JoinType.INNER
-        }
+        joinType={toSubstraitJoinType(selectedOperation)}
         initialSelection={availablePredicateSeed ?? undefined}
         onApply={(selection) => {
           onStartInnerJoin(selection, selectedOperation);
