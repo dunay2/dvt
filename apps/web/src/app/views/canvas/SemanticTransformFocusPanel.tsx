@@ -14,12 +14,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/too
 import type { CanonicalNode } from '../../types/canonical';
 import {
   addDvtSubstraitJoinPredicateCondition,
-  decodeDvtSubstraitInnerJoinDocument,
-  encodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitNInputJoinDraft,
+  decodeDvtSubstraitJoinDocument,
+  encodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinDraft,
   removeDvtSubstraitJoinPredicateCondition,
   updateDvtSubstraitJoinPredicateCondition,
-  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   applyDvtSubstraitSemanticDocument,
@@ -139,8 +139,8 @@ export function SemanticTransformFocusPanel({
     try {
       const authority = readDvtTransformAuthoringAuthority(transform);
       if (authority == null) return null;
-      const inspection = inspectDvtSubstraitNInputJoinDraft(
-        decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+      const inspection = inspectDvtSubstraitJoinDraft(
+        decodeDvtSubstraitJoinDocument(authority.semanticDocument)
       );
       return inspection.ok ? inspection.projection : null;
     } catch {
@@ -172,15 +172,15 @@ export function SemanticTransformFocusPanel({
   }, [joinProjection, selectedSemantic]);
 
   const editJoinDraft = useCallback(
-    (edit: (draft: DvtSubstraitInnerJoinDraft) => DvtSubstraitInnerJoinDraft) => {
+    (edit: (draft: DvtSubstraitJoinDraft) => DvtSubstraitJoinDraft) => {
       if (!canEdit) return;
       const authority = readDvtTransformAuthoringAuthority(transform);
       if (authority == null) return;
-      const current = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+      const current = decodeDvtSubstraitJoinDocument(authority.semanticDocument);
       const next = edit(current);
       if (next === current) return;
       onTransformChange(
-        applyDvtSubstraitSemanticDocument(transform, encodeDvtSubstraitInnerJoinDocument(next))
+        applyDvtSubstraitSemanticDocument(transform, encodeDvtSubstraitJoinDocument(next))
       );
     },
     [canEdit, onTransformChange, transform]

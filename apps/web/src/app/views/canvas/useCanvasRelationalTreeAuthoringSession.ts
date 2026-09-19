@@ -5,7 +5,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
-import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { useCanvasRelationalTreeApplyCommand } from './useCanvasRelationalTreeApplyCommand';
 import { useCanvasRelationalOperandSlots } from './useCanvasRelationalOperandSlots';
 import { useCanvasRelationalTreeAuthoringOptions } from './useCanvasRelationalTreeAuthoringOptions';
@@ -31,7 +31,7 @@ export function useCanvasRelationalTreeAuthoringSession(
   const editable = authoring?.canEditNode === true;
   const [operation, setOperation] = useState<CanvasRelationalOperation | null>(null);
   const [active, setActive] = useState(false);
-  const [joinDraft, setJoinDraft] = useState<DvtSubstraitInnerJoinDraft | null>(null);
+  const [joinDraft, setJoinDraft] = useState<DvtSubstraitJoinDraft | null>(null);
   const [appendInputId, setAppendInputId] = useState<string | null>(null);
   const {
     appendInput: appendOperand,
@@ -43,6 +43,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     selectedInputIds,
     selectInitialInput,
   } = useCanvasRelationalOperandSlots();
+
   const reset = useCallback(() => {
     setActive(false);
     setOperation(null);
@@ -68,7 +69,6 @@ export function useCanvasRelationalTreeAuthoringSession(
     transformNode,
     onHydrate: hydrateExistingJoinState,
   });
-
   useEffect(reset, [enabled, reset, transformNode.id]);
   const effectiveInputIds = !active && seed != null ? seed.inputIds : selectedInputIds;
   const { candidates, choices } = useCanvasRelationalTreeAuthoringOptions({
@@ -82,7 +82,6 @@ export function useCanvasRelationalTreeAuthoringSession(
     selectedInputIds: effectiveInputIds,
     targetNodeId: transformNode.id,
   });
-
   const { selectInput, placeInput } = useCanvasRelationalTreeInputSelection({
     enabled,
     editable,
@@ -107,6 +106,7 @@ export function useCanvasRelationalTreeAuthoringSession(
       choices,
       inputs,
       joinDraft: !active && seed != null ? seed.draft : joinDraft,
+      operation: !active && seed != null ? seed.operation : operation,
       selectedInputIds: effectiveInputIds,
       targetNodeId: transformNode.id,
       appendOperand,
@@ -169,7 +169,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     selectOperation: (next: CanvasRelationalOperation) => {
       if (start()) chooseOperation(next);
     },
-    setJoinDraft: (draft: DvtSubstraitInnerJoinDraft) => {
+    setJoinDraft: (draft: DvtSubstraitJoinDraft) => {
       if (!active) hydrateExistingJoin();
       setJoinDraft(draft);
     },

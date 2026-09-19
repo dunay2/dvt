@@ -39,7 +39,7 @@ export function DvtSubstraitCompositionStart({
       inputs={inputs}
       predicateSeed={predicateSeed}
       onClearPredicateSeed={onClearPredicateSeed}
-      onStartInnerJoin={(join) => {
+      onStartInnerJoin={(join, operation) => {
         onChange((currentDraft) => ({
           ...currentDraft,
           dvt: {
@@ -47,7 +47,7 @@ export function DvtSubstraitCompositionStart({
             materialized:
               currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
             mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
-            shape: 'inner_join',
+            shape: operation,
             plan: join.plan,
             sidecar: join.sidecar,
           },

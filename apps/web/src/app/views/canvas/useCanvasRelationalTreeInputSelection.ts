@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import type { CanvasRelationalTreeAuthoringCandidate } from './canvasRelationalTreeAuthoringModel';
-import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { appendDvtSubstraitUnionAllInput } from './canvasDvtSubstraitSetComposition';
 
@@ -13,11 +13,11 @@ export function useCanvasRelationalTreeInputSelection(
     active: boolean;
     operation: CanvasRelationalOperation | null;
     candidates: readonly CanvasRelationalTreeAuthoringCandidate[];
-    joinDraft: DvtSubstraitInnerJoinDraft | null;
+    joinDraft: DvtSubstraitJoinDraft | null;
     setActive: (active: boolean) => void;
     hydrateExistingJoin: (nodeId: string) => boolean;
     selectInitialInput: (nodeId: string) => void;
-    setJoinDraft: (draft: DvtSubstraitInnerJoinDraft | null) => void;
+    setJoinDraft: (draft: DvtSubstraitJoinDraft | null) => void;
     setAppendInputId: (nodeId: string | null) => void;
     appendOperand: (nodeId: string) => void;
     inputs: readonly CanvasDvtCompositionInput[];

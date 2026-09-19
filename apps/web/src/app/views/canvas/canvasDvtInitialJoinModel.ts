@@ -1,10 +1,11 @@
-/** Owned concern: select and build one typed initial INNER JOIN draft. */
-import { hasSameConnectionRef } from '@dvt/postgres-projection';
+/** Owned concern: select and build one typed initial JOIN draft. */
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { hasSameConnectionRef, type DvtSubstraitJoinType } from '@dvt/postgres-projection';
 
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import {
-  createDvtSubstraitStringInnerJoinDraft,
-  type DvtSubstraitInnerJoinDraft,
+  createDvtSubstraitStringJoinDraft,
+  type DvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   hasCompatibleCanvasDvtJoinFields,
@@ -102,8 +103,9 @@ export function resolveCanvasDvtInitialJoinRightInputs(
 export function createCanvasDvtInitialJoinDraft(
   inputs: readonly CanvasDvtCompositionInput[],
   pair: CanvasDvtInitialJoinPair,
-  targetNodeId: string
-): DvtSubstraitInnerJoinDraft | null {
+  targetNodeId: string,
+  joinType: DvtSubstraitJoinType = JoinRel_JoinType.INNER
+): DvtSubstraitJoinDraft | null {
   const left = inputs.find((input) => input.nodeId === pair.leftNodeId);
   const right = inputs.find((input) => input.nodeId === pair.rightNodeId);
   if (left == null || right == null) return null;
@@ -113,19 +115,26 @@ export function createCanvasDvtInitialJoinDraft(
   const rightFields = right.fields.flatMap((field) =>
     field.joinDataType == null ? [] : [{ name: field.name, dataType: field.joinDataType }]
   );
-  return createDvtSubstraitStringInnerJoinDraft({
+  return createDvtSubstraitStringJoinDraft({
     left: {
       source: left,
       fields: leftFields.map((field) => field.name),
       fieldTypes: leftFields.map((field) => field.dataType),
+      fieldNullabilities: left.fields
+        .filter((field) => field.joinDataType != null)
+        .map((field) => field.nullable ?? true),
     },
     right: {
       source: right,
       fields: rightFields.map((field) => field.name),
       fieldTypes: rightFields.map((field) => field.dataType),
+      fieldNullabilities: right.fields
+        .filter((field) => field.joinDataType != null)
+        .map((field) => field.nullable ?? true),
     },
     leftFieldName: pair.leftFieldName,
     rightFieldName: pair.rightFieldName,
     targetNodeId,
+    joinType,
   });
 }

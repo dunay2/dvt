@@ -62,7 +62,7 @@ export type CanvasNodeCodeTruth =
       reason?: CanvasNodeCodeUnavailableReason;
     }>;
 
-export type CanvasRelationalCompositionOperation = 'inner_join' | 'union_all';
+export type CanvasRelationalCompositionOperation = 'inner_join' | 'left_join' | 'union_all';
 
 export type CanvasRelationalCompositionTruth =
   | Readonly<{ state: 'single-input'; connectedInputCount: number }>

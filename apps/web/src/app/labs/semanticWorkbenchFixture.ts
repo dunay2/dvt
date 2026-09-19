@@ -1,10 +1,10 @@
 import type { CanonicalEdge, CanonicalNode } from '../types/canonical';
 import {
-  appendDvtSubstraitInnerJoinInput,
-  createDvtSubstraitStringInnerJoinDraft,
-  decodeDvtSubstraitInnerJoinDocument,
-  encodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitNInputJoinDraft,
+  appendDvtSubstraitJoinInput,
+  createDvtSubstraitStringJoinDraft,
+  decodeDvtSubstraitJoinDocument,
+  encodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinDraft,
   type DvtSubstraitJoinComparisonOperator,
   type DvtSubstraitJoinDataType,
   type DvtSubstraitJoinPredicateOperand,
@@ -138,7 +138,7 @@ export function buildSemanticWorkbenchFixture(
     buildSourceNode(clients),
     buildSourceNode(orderDetails),
   ] as const;
-  const join = createDvtSubstraitStringInnerJoinDraft({
+  const join = createDvtSubstraitStringJoinDraft({
     left: {
       source: buildJoinSource(sources[0], orders),
       fields: orders.columns.map((column) => column.name),
@@ -153,13 +153,13 @@ export function buildSemanticWorkbenchFixture(
     rightFieldName: 'client_id',
     targetNodeId: BASE_TRANSFORM.id,
   });
-  const initialInspection = inspectDvtSubstraitNInputJoinDraft(join);
+  const initialInspection = inspectDvtSubstraitJoinDraft(join);
   if (!initialInspection.ok) throw new Error('Expected the admitted Orders and Client join.');
   const orderIdFieldId = initialInspection.projection.outputs.find(
     (output) => output.source.inputIndex === 0 && output.source.name === 'order_id'
   )?.source.fieldId;
   if (orderIdFieldId == null) throw new Error('Expected orders.order_id in the join outputs.');
-  const joinedWithDetails = appendDvtSubstraitInnerJoinInput(join, {
+  const joinedWithDetails = appendDvtSubstraitJoinInput(join, {
     source: buildJoinSource(sources[2], orderDetails),
     fields: orderDetails.columns.map((column) => column.name),
     fieldTypes: orderDetails.columns.map((column) => SUBSTRAIT_TYPE_BY_DATASET_TYPE[column.type]),
@@ -173,15 +173,15 @@ export function buildSemanticWorkbenchFixture(
     throw new Error('Expected Order Details to join through N-source.');
   const transform = applyDvtSubstraitSemanticDocument(
     BASE_TRANSFORM,
-    encodeDvtSubstraitInnerJoinDocument(joinedWithDetails)
+    encodeDvtSubstraitJoinDocument(joinedWithDetails)
   );
   const datasets = [orders, clients, orderDetails] as const;
   const projectTransformSample = (currentTransform: CanonicalNode) => {
     try {
       const authority = readDvtTransformAuthoringAuthority(currentTransform);
       if (authority == null) return null;
-      const inspection = inspectDvtSubstraitNInputJoinDraft(
-        decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+      const inspection = inspectDvtSubstraitJoinDraft(
+        decodeDvtSubstraitJoinDocument(authority.semanticDocument)
       );
       if (!inspection.ok) return null;
 

@@ -1,12 +1,12 @@
 /** Owned concern: render one protected terminal Transform as canonical PostgreSQL SQL. */
 import {
   decodeDvtSubstraitPlanV1,
-  DVT_POSTGRES_INNER_JOIN_PROFILE_ID,
+  DVT_POSTGRES_JOIN_PROFILE_ID,
   type DvtSubstraitSemanticDocumentV1,
 } from '@dvt/contracts';
 import {
   projectDvtConnectedFieldDraftToPostgresSql,
-  projectDvtInnerJoinDraftToPostgresSql,
+  projectDvtJoinDraftToPostgresSql,
   selectDvtSubstraitRelation,
   type ProjectedDvtConnectedFieldSql,
 } from '@dvt/postgres-projection';
@@ -23,7 +23,12 @@ export type ProjectDvtConnectedFieldDocument = (
 
 export type DvtPostgresTransformProjection = Readonly<{
   sql: string;
-  outputs: readonly Readonly<{ name: string; dataType: string; outputOrdinal: number }>[];
+  outputs: readonly Readonly<{
+    name: string;
+    dataType: string;
+    outputOrdinal: number;
+    nullable?: boolean;
+  }>[];
 }>;
 
 export async function projectDvtPostgresTransform(
@@ -54,9 +59,9 @@ export async function projectDvtPostgresTransform(
   if (
     selectedRoot?.case === 'root'
       ? selectedRoot.value.input?.relType.case === 'join'
-      : closure.profileId === DVT_POSTGRES_INNER_JOIN_PROFILE_ID
+      : closure.profileId === DVT_POSTGRES_JOIN_PROFILE_ID
   ) {
-    const projected = await projectDvtInnerJoinDraftToPostgresSql(
+    const projected = await projectDvtJoinDraftToPostgresSql(
       selected ?? {
         plan: decodeDvtSubstraitPlanV1(document),
         sidecar: document.sidecar,

@@ -1,4 +1,5 @@
 /** Owns projection of a canonical N-input JOIN tree to its verified read model. */
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION } from '@dvt/contracts';
 
 import type { DvtSubstraitJoinPredicateCondition } from './substraitJoinCondition.js';
@@ -10,11 +11,11 @@ import {
 } from './substraitJoinCondition.js';
 import {
   hasSameConnectionRef,
-  joinDataType,
+  joinFieldType,
   namedTableIdentity,
   hasPinnedPlanVersion,
-  hasUniqueInnerJoinSidecarIdentity,
-  hasCurrentInnerJoinSemanticHash,
+  hasUniqueJoinSidecarIdentity,
+  hasCurrentJoinSemanticHash,
   inspectNInputJoinNode,
   flattenNInputJoinTree,
 } from './substraitJoinInspectionGuards.js';
@@ -25,7 +26,7 @@ import {
 } from './substraitJoinOperandReader.js';
 import type {
   DvtSubstraitJoinDataType,
-  DvtSubstraitInnerJoinDraft,
+  DvtSubstraitJoinDraft,
   DvtSubstraitNInputJoinProjection,
   DvtSubstraitNInputJoinInspection,
   DvtSubstraitJoinPredicate,
@@ -36,15 +37,15 @@ import type {
 } from './substraitJoinReadModel.js';
 
 export function inspectNInputJoinStructure(
-  draft: DvtSubstraitInnerJoinDraft
+  draft: DvtSubstraitJoinDraft
 ): InspectedJoinStructure | null {
   const { plan, sidecar } = draft;
   if (
     !hasPinnedPlanVersion(plan) ||
     plan.relations.length !== 1 ||
     sidecar.schemaVersion !== DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION ||
-    !hasUniqueInnerJoinSidecarIdentity(draft) ||
-    !hasCurrentInnerJoinSemanticHash(draft)
+    !hasUniqueJoinSidecarIdentity(draft) ||
+    !hasCurrentJoinSemanticHash(draft)
   ) {
     return null;
   }
@@ -75,7 +76,7 @@ export function inspectNInputJoinStructure(
     const table = namedTableIdentity(readRel);
     const fieldNames = readRel.relType.value.baseSchema?.names;
     const fieldTypes = readRel.relType.value.baseSchema?.struct?.types;
-    const dataTypes = fieldTypes?.map(joinDataType);
+    const inspectedFieldTypes = fieldTypes?.map(joinFieldType);
     const binding = sidecar.relations.find((relation) => relation.relAnchor === index + 1);
     if (
       table == null ||
@@ -85,8 +86,8 @@ export function inspectNInputJoinStructure(
       new Set(fieldNames).size !== fieldNames.length ||
       fieldTypes == null ||
       fieldTypes.length !== fieldNames.length ||
-      dataTypes == null ||
-      dataTypes.some((dataType) => dataType == null) ||
+      inspectedFieldTypes == null ||
+      inspectedFieldTypes.some((dataType) => dataType == null) ||
       binding == null ||
       binding.sourceRef == null ||
       binding.displayName !== table.table
@@ -112,7 +113,8 @@ export function inspectNInputJoinStructure(
       fields: fields.map((field, fieldIndex) => ({
         name: fieldNames[fieldIndex]!,
         fieldId: field.fieldId,
-        dataType: dataTypes[fieldIndex]!,
+        dataType: inspectedFieldTypes[fieldIndex]!.dataType,
+        nullable: inspectedFieldTypes[fieldIndex]!.nullable,
       })),
     });
   }
@@ -136,6 +138,7 @@ export function inspectNInputJoinStructure(
     name: field.name,
     fieldId: field.fieldId,
     dataType: field.dataType,
+    nullable: field.nullable,
   }));
   const joins: DvtSubstraitJoinPredicate[] = [];
   const stages: InspectedJoinStage[] = [];
@@ -149,6 +152,7 @@ export function inspectNInputJoinStructure(
       name: field.name,
       fieldId: field.fieldId,
       dataType: field.dataType,
+      nullable: inspectedJoin?.joinType === JoinRel_JoinType.LEFT ? true : field.nullable,
     }));
     const available = [...workingFields, ...rightFields];
     const relationBinding = sidecar.relations.find((relation) => relation.relAnchor === relAnchor);
@@ -225,6 +229,7 @@ export function inspectNInputJoinStructure(
     stages.push({
       relationId: relationBinding.relationId,
       relAnchor,
+      joinType: inspectedJoin.joinType,
       fields: stageFields.map((field, outputOrdinal) => ({
         fieldId: field.fieldId,
         displayName: names[outputOrdinal]!,
@@ -238,6 +243,7 @@ export function inspectNInputJoinStructure(
         name: names[outputOrdinal]!,
         fieldId: stageFields[outputOrdinal]!.fieldId,
         dataType: origin.dataType,
+        nullable: origin.nullable,
         outputOrdinal,
         source: {
           inputIndex: origin.inputIndex,
@@ -250,8 +256,8 @@ export function inspectNInputJoinStructure(
   return { inputs, stages, joins, outputs };
 }
 
-export function inspectDvtSubstraitNInputJoinDraft(
-  draft: DvtSubstraitInnerJoinDraft
+export function inspectDvtSubstraitJoinDraft(
+  draft: DvtSubstraitJoinDraft
 ): DvtSubstraitNInputJoinInspection {
   const structure = inspectNInputJoinStructure(draft);
   return structure == null
@@ -263,6 +269,7 @@ export function inspectDvtSubstraitNInputJoinDraft(
           joinRelations: structure.stages.map((stage) => ({
             relationId: stage.relationId,
             relAnchor: stage.relAnchor,
+            joinType: stage.joinType,
           })),
           joins: structure.joins,
           outputs: structure.outputs,

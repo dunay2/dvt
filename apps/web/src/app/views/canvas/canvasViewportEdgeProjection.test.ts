@@ -1,14 +1,16 @@
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import {
-  appendDvtSubstraitInnerJoinInput,
-  createDvtSubstraitStringInnerJoinDraft,
-  encodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitNInputJoinDraft,
-  type DvtSubstraitInnerJoinDraft,
+  appendDvtSubstraitJoinInput,
+  createDvtSubstraitStringJoinDraft,
+  encodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinDraft,
+  type DvtSubstraitJoinDraft,
   type DvtSubstraitJoinInput,
+  type DvtSubstraitJoinType,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   createDvtSubstraitUnionAllDraft,
@@ -75,20 +77,32 @@ function joinInput(node: CanonicalNode): DvtSubstraitJoinInput {
   };
 }
 
-function initialJoin(left: CanonicalNode, right: CanonicalNode): DvtSubstraitInnerJoinDraft {
-  return createDvtSubstraitStringInnerJoinDraft({
+function initialJoin(
+  left: CanonicalNode,
+  right: CanonicalNode,
+  joinType: DvtSubstraitJoinType = JoinRel_JoinType.INNER
+): DvtSubstraitJoinDraft {
+  return createDvtSubstraitStringJoinDraft({
     left: joinInput(left),
     right: joinInput(right),
     leftFieldName: 'id',
     rightFieldName: 'id',
     targetNodeId: 'model',
+    joinType,
   });
 }
 
 function canonicalJoin(left: CanonicalNode, right: CanonicalNode): CanonicalNode {
   return applyDvtSubstraitSemanticDocument(
     transform(),
-    encodeDvtSubstraitInnerJoinDocument(initialJoin(left, right))
+    encodeDvtSubstraitJoinDocument(initialJoin(left, right))
+  );
+}
+
+function canonicalLeftJoin(left: CanonicalNode, right: CanonicalNode): CanonicalNode {
+  return applyDvtSubstraitSemanticDocument(
+    transform(),
+    encodeDvtSubstraitJoinDocument(initialJoin(left, right, JoinRel_JoinType.LEFT))
   );
 }
 
@@ -116,11 +130,11 @@ function canonicalThreeInputJoin(
   third: CanonicalNode
 ): CanonicalNode {
   const initial = initialJoin(left, right);
-  const inspection = inspectDvtSubstraitNInputJoinDraft(initial);
+  const inspection = inspectDvtSubstraitJoinDraft(initial);
   if (!inspection.ok) throw new Error('Expected initial JOIN inspection.');
   const leftSourceFieldId = inspection.projection.outputs[0]?.source.fieldId;
   if (leftSourceFieldId == null) throw new Error('Expected initial JOIN output.');
-  const appended = appendDvtSubstraitInnerJoinInput(initial, {
+  const appended = appendDvtSubstraitJoinInput(initial, {
     source: {
       nodeId: third.id,
       schema: 'raw',
@@ -131,10 +145,7 @@ function canonicalThreeInputJoin(
     predicate: { leftSourceFieldId, rightFieldName: 'id' },
     selectedFields: ['detail'],
   });
-  return applyDvtSubstraitSemanticDocument(
-    transform(),
-    encodeDvtSubstraitInnerJoinDocument(appended)
-  );
+  return applyDvtSubstraitSemanticDocument(transform(), encodeDvtSubstraitJoinDocument(appended));
 }
 
 function canonicalAccessibleLabel(
@@ -193,6 +204,9 @@ describe('Canvas viewport edge projection', () => {
     expect(canonicalAccessibleLabel(canonicalJoin(orders, clients), [orders, clients], 'es')).toBe(
       'INNER JOIN, entradas: 2, predicados: 1'
     );
+    expect(
+      canonicalAccessibleLabel(canonicalLeftJoin(orders, clients), [orders, clients], 'es')
+    ).toBe('LEFT JOIN, entradas: 2, predicados: 1');
     expect(
       canonicalAccessibleLabel(canonicalUnionAll(orders, clients), [orders, clients], 'en')
     ).toBe('UNION ALL, inputs: 2, outputs: 1, bag semantics');

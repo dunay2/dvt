@@ -3,7 +3,7 @@ import { PostgresIdentifierV1Schema } from '@dvt/contracts';
 import {
   applyDvtSubstraitInnerJoinGrouping,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
-  inspectDvtSubstraitInnerJoinAcceptedDraft,
+  inspectDvtSubstraitJoinAcceptedDraft,
   removeDvtSubstraitInnerJoinGrouping,
   removeDvtSubstraitInnerJoinGroupedRowNumber,
   renameDvtSubstraitInnerJoinCountOutput,
@@ -39,7 +39,7 @@ export function applyCanvasRelationalOperatorTool(
 ): DvtSubstraitProjectionDraft {
   const tool = resolveCanvasRelationalOperatorTools(draft).find((item) => item.id === request.tool);
   if (tool?.enabled !== true) return draft;
-  const join = inspectDvtSubstraitInnerJoinAcceptedDraft(draft).ok;
+  const join = inspectDvtSubstraitJoinAcceptedDraft(draft).ok;
   const union = inspectDvtSubstraitUnionAllAcceptedDraft(draft).ok;
   if (request.remove) {
     if (!tool.active) return draft;

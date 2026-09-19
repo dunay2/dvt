@@ -4,7 +4,7 @@ import type { CanvasRelationalOperation } from './canvasRelationalOperationChoic
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import {
   inspectDvtSubstraitJoinPredicateContext,
-  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import { CanvasRelationalTreeJoinEditor } from './CanvasRelationalTreeJoinEditor';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
@@ -26,12 +26,12 @@ export function CanvasRelationalTreeInlineEditor({
 }: Readonly<{
   appendInput: CanvasDvtCompositionInput | null;
   copy: CanvasRelationalTreeWorkbenchCopy;
-  joinDraft: DvtSubstraitInnerJoinDraft | null;
+  joinDraft: DvtSubstraitJoinDraft | null;
   operation: CanvasRelationalOperation | null;
   onAppendJoinInput: (
     selection: Readonly<{ leftSourceFieldId: string; rightFieldName: string }>
   ) => void;
-  onChangeJoinDraft: (draft: DvtSubstraitInnerJoinDraft) => void;
+  onChangeJoinDraft: (draft: DvtSubstraitJoinDraft) => void;
   onPendingConditionChange?: (pending: boolean) => void;
   selectedRelationId: string | null;
   transformNode: CanonicalNode;

@@ -4,7 +4,7 @@ import {
   addDvtSubstraitJoinPredicateCondition,
   removeDvtSubstraitJoinPredicateCondition,
   updateDvtSubstraitJoinPredicateCondition,
-  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinDraft,
   type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
 import { SemanticWorkbenchJoinConditionEditor } from './SemanticWorkbenchJoinConditionEditor';
@@ -21,9 +21,9 @@ export function DvtSubstraitJoinPredicateEditors({
   transformNode,
 }: Readonly<{
   disabled: boolean;
-  draft: DvtSubstraitInnerJoinDraft;
+  draft: DvtSubstraitJoinDraft;
   projection: DvtSubstraitNInputJoinProjection;
-  onChange: (draft: DvtSubstraitInnerJoinDraft) => void;
+  onChange: (draft: DvtSubstraitJoinDraft) => void;
   onPendingConditionChange?: (pending: boolean) => void;
   selectedRelationId?: string | null;
   transformNode?: CanonicalNode;

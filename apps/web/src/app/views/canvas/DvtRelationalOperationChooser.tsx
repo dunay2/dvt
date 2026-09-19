@@ -13,6 +13,7 @@ import { writeCanvasRelationalOperationDrag } from './canvasRelationalTreeDrag';
 type RelationalOperationCopy = Pick<
   CanvasRelationalTreeWorkbenchCopy,
   | 'inspectorDvtSubstraitInnerJoinAction'
+  | 'inspectorDvtSubstraitLeftJoinAction'
   | 'inspectorDvtSubstraitUnionAllAction'
   | 'relationalTreeProjectOperationLabel'
   | 'inspectorDvtRelationalAvailable'
@@ -33,6 +34,8 @@ export function canvasRelationalOperationLabel(
       return copy.relationalTreeProjectOperationLabel;
     case 'inner_join':
       return copy.inspectorDvtSubstraitInnerJoinAction;
+    case 'left_join':
+      return copy.inspectorDvtSubstraitLeftJoinAction;
     case 'union_all':
       return copy.inspectorDvtSubstraitUnionAllAction;
   }
@@ -107,7 +110,8 @@ export function DvtRelationalOperationChooser({
             onSelect(choice.operation);
           }}
         >
-          {layout !== 'shelf' ? null : choice.operation === 'inner_join' ? (
+          {layout !== 'shelf' ? null : choice.operation === 'inner_join' ||
+            choice.operation === 'left_join' ? (
             <CanvasRelationalJoinIcon aria-hidden="true" className="size-4" />
           ) : choice.operation === 'union_all' ? (
             <Layers3 aria-hidden="true" className="size-4" />

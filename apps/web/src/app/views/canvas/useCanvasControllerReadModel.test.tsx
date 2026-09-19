@@ -60,8 +60,8 @@ import {
   encodeDvtSubstraitProjectionDocument,
 } from './canvasDvtSubstraitProjection';
 import {
-  createDvtSubstraitInnerJoinDraft,
-  encodeDvtSubstraitInnerJoinDocument,
+  createDvtSubstraitJoinDraft,
+  encodeDvtSubstraitJoinDocument,
   type DvtSubstraitJoinSource,
 } from './canvasDvtSubstraitJoinComposition';
 
@@ -249,8 +249,8 @@ describe('useCanvasControllerReadModel', () => {
           kind: 'dvt:transform',
           role: 'transform',
         },
-        encodeDvtSubstraitInnerJoinDocument(
-          createDvtSubstraitInnerJoinDraft({
+        encodeDvtSubstraitJoinDocument(
+          createDvtSubstraitJoinDraft({
             left: source('customers'),
             right: source('orders'),
             targetNodeId: 'joined',

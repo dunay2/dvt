@@ -6,7 +6,7 @@ import type { CoreNodeRole, CanonicalNode } from '../../types/canonical';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import {
-  inspectDvtSubstraitNInputJoinDraft,
+  inspectDvtSubstraitJoinDraft,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
   inspectDvtSubstraitInnerJoinGroupingDraft,
 } from './canvasDvtSubstraitJoinComposition';
@@ -153,7 +153,7 @@ function readSubstraitMultiInputLineage(node: CanonicalNode): DvtSubstraitMultiI
     const authority = readDvtTransformAuthoringAuthority(node);
     if (authority == null) return null;
     const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
-    const nInput = inspectDvtSubstraitNInputJoinDraft(draft);
+    const nInput = inspectDvtSubstraitJoinDraft(draft);
     if (nInput.ok) {
       return {
         inputs: nInput.projection.inputs,

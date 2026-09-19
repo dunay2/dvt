@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -7,8 +8,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import {
-  inspectDvtSubstraitNInputJoinDraft,
-  type DvtSubstraitInnerJoinDraft,
+  inspectDvtSubstraitJoinDraft,
+  type DvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import { canvasViewCopy } from './copy';
 import { DvtSubstraitCompositionStartSection } from './DvtSubstraitCompositionStartSection';
@@ -158,6 +159,56 @@ describe('DvtSubstraitCompositionStartSection', () => {
     expect(onStartInnerJoin).not.toHaveBeenCalled();
   });
 
+  it('authors LEFT JOIN through the same canonical predicate flow', () => {
+    const onStartInnerJoin = vi.fn();
+    const required = (nodeId: string, table: string): CanvasDvtCompositionInput => {
+      const candidate = input(nodeId, table);
+      return {
+        ...candidate,
+        fields: candidate.fields.map((field) => ({ ...field, nullable: false })),
+      };
+    };
+    act(() => {
+      root.render(
+        <DvtSubstraitCompositionStartSection
+          disabled={false}
+          inputs={[required('orders', 'orders'), required('customers', 'customers')]}
+          onStartInnerJoin={onStartInnerJoin}
+        />
+      );
+    });
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-left-join"]')!
+      );
+    });
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-configured-left-join"]')!
+      );
+    });
+
+    expect(onStartInnerJoin).toHaveBeenCalledOnce();
+    expect(onStartInnerJoin.mock.calls[0]?.[1]).toBe('left_join');
+    const inspection = inspectDvtSubstraitJoinDraft(
+      onStartInnerJoin.mock.calls[0]?.[0] as DvtSubstraitJoinDraft
+    );
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.joinRelations[0]?.joinType).toBe(JoinRel_JoinType.LEFT);
+    expect(
+      inspection.projection.outputs
+        .filter((output) => output.source.inputIndex === 0)
+        .every((output) => !output.nullable)
+    ).toBe(true);
+    expect(
+      inspection.projection.outputs
+        .filter((output) => output.source.inputIndex === 1)
+        .every((output) => output.nullable)
+    ).toBe(true);
+  });
+
   it('seeds the first JOIN with a matching admitted non-string type', () => {
     const onStartInnerJoin = vi.fn();
     act(() => {
@@ -185,8 +236,8 @@ describe('DvtSubstraitCompositionStartSection', () => {
     });
 
     expect(onStartInnerJoin).toHaveBeenCalledOnce();
-    const inspection = inspectDvtSubstraitNInputJoinDraft(
-      onStartInnerJoin.mock.calls[0]?.[0] as DvtSubstraitInnerJoinDraft
+    const inspection = inspectDvtSubstraitJoinDraft(
+      onStartInnerJoin.mock.calls[0]?.[0] as DvtSubstraitJoinDraft
     );
     expect(inspection.ok).toBe(true);
     if (!inspection.ok) return;
@@ -291,8 +342,8 @@ describe('DvtSubstraitCompositionStartSection', () => {
 
     await act(() => fireEvent.click(apply));
     expect(onStartInnerJoin).toHaveBeenCalledOnce();
-    const inspection = inspectDvtSubstraitNInputJoinDraft(
-      onStartInnerJoin.mock.calls[0]?.[0] as DvtSubstraitInnerJoinDraft
+    const inspection = inspectDvtSubstraitJoinDraft(
+      onStartInnerJoin.mock.calls[0]?.[0] as DvtSubstraitJoinDraft
     );
     expect(inspection.ok).toBe(true);
     if (!inspection.ok) return;
@@ -524,8 +575,8 @@ describe('DvtSubstraitCompositionStartSection', () => {
     });
 
     expect(onStartInnerJoin).toHaveBeenCalledOnce();
-    const draft = onStartInnerJoin.mock.calls[0]?.[0] as DvtSubstraitInnerJoinDraft;
-    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    const draft = onStartInnerJoin.mock.calls[0]?.[0] as DvtSubstraitJoinDraft;
+    const inspection = inspectDvtSubstraitJoinDraft(draft);
     expect(inspection.ok).toBe(true);
     if (!inspection.ok) return;
     const conditions = inspection.projection.joins[0]?.conditions ?? [];

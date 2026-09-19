@@ -5,12 +5,12 @@ import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCa
 import {
   appendCanvasRelationalTreeJoinInput,
   createCanvasRelationalTreeInitialJoinDraft,
-  createCanvasRelationalTreeUnionAllDraft,
   resolveCanvasRelationalTreeAuthoringCandidates,
   resolveCanvasRelationalTreeAuthoringChoices,
 } from './canvasRelationalTreeAuthoringModel';
+import { createCanvasRelationalTreeUnionAllDraft } from './canvasRelationalTreeUnionAuthoring';
 import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
-import { inspectDvtSubstraitNInputJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { inspectDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { inspectDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { inspectDvtSubstraitUnionAllDraft } from './canvasDvtSubstraitSetComposition';
 
@@ -96,6 +96,7 @@ describe('Canvas relational-tree guided authoring model', () => {
     ).toEqual([
       { operation: 'projection', availability: 'available', selectable: true },
       { operation: 'inner_join', availability: 'needs-input', selectable: false },
+      { operation: 'left_join', availability: 'needs-input', selectable: false },
       { operation: 'union_all', availability: 'needs-input', selectable: false },
     ]);
 
@@ -114,6 +115,7 @@ describe('Canvas relational-tree guided authoring model', () => {
       }))
     ).toEqual([
       { operation: 'inner_join', availability: 'needs-predicate', selectable: true },
+      { operation: 'left_join', availability: 'needs-predicate', selectable: true },
       { operation: 'union_all', availability: 'available', selectable: true },
     ]);
   });
@@ -168,7 +170,7 @@ describe('Canvas relational-tree guided authoring model', () => {
       nodes,
       edges,
     });
-    expect(choices).toHaveLength(3);
+    expect(choices).toHaveLength(4);
     expect(
       choices.every((choice) => !choice.selectable && choice.availability === 'read-only')
     ).toBe(true);
@@ -183,7 +185,7 @@ describe('Canvas relational-tree guided authoring model', () => {
     });
     expect(initial).not.toBeNull();
     if (initial == null) return;
-    const initialInspection = inspectDvtSubstraitNInputJoinDraft(initial);
+    const initialInspection = inspectDvtSubstraitJoinDraft(initial);
     expect(initialInspection.ok).toBe(true);
     if (!initialInspection.ok) return;
     const initialResultRelationId = initialInspection.projection.joinRelations.at(-1)?.relationId;
@@ -200,7 +202,7 @@ describe('Canvas relational-tree guided authoring model', () => {
       leftSourceFieldId: leftField.source.fieldId,
       rightFieldName: 'customer_id',
     });
-    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    const inspection = inspectDvtSubstraitJoinDraft(draft);
     expect(inspection.ok).toBe(true);
     if (!inspection.ok) return;
     expect(inspection.projection.inputs.map((input) => input.table)).toEqual([

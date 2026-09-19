@@ -26,7 +26,10 @@ export function readCanvasRelationalOperationDrag(
   dataTransfer: DataTransfer
 ): CanvasRelationalOperation | null {
   const operation = dataTransfer.getData(CANVAS_RELATIONAL_OPERATION_DRAG_TYPE).trim();
-  return operation === 'projection' || operation === 'inner_join' || operation === 'union_all'
+  return operation === 'projection' ||
+    operation === 'inner_join' ||
+    operation === 'left_join' ||
+    operation === 'union_all'
     ? operation
     : null;
 }

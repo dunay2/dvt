@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 import {
-  appendDvtSubstraitInnerJoinInput,
+  appendDvtSubstraitJoinInput,
   applyDvtSubstraitInnerJoinGrouping,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
   inspectDvtSubstraitJoinPredicateContext,
-  createDvtSubstraitInnerJoinDraft,
-  inspectDvtSubstraitNInputJoinDraft,
-  type DvtSubstraitInnerJoinDraft,
+  createDvtSubstraitJoinDraft,
+  inspectDvtSubstraitJoinDraft,
+  type DvtSubstraitJoinDraft,
   type DvtSubstraitNInputJoinProjection,
   type DvtSubstraitJoinSource,
   type DvtSubstraitJoinDataType,
@@ -30,17 +30,17 @@ function source(table: string): DvtSubstraitJoinSource {
 }
 
 function fixture(valueType?: DvtSubstraitJoinDataType): {
-  draft: DvtSubstraitInnerJoinDraft;
+  draft: DvtSubstraitJoinDraft;
   projection: DvtSubstraitNInputJoinProjection;
 } {
-  const binary = createDvtSubstraitInnerJoinDraft({
+  const binary = createDvtSubstraitJoinDraft({
     left: source('customers'),
     right: source('orders'),
     targetNodeId: 'model',
   });
-  const inspection = inspectDvtSubstraitNInputJoinDraft(binary);
+  const inspection = inspectDvtSubstraitJoinDraft(binary);
   if (!inspection.ok) throw new Error('Invalid fixture');
-  const draft = appendDvtSubstraitInnerJoinInput(binary, {
+  const draft = appendDvtSubstraitJoinInput(binary, {
     source: source('tickets'),
     fields: valueType == null ? ['customer_id'] : ['customer_id', 'value'],
     fieldTypes: valueType == null ? ['string'] : ['string', valueType],
@@ -50,7 +50,7 @@ function fixture(valueType?: DvtSubstraitJoinDataType): {
     },
     selectedFields: valueType == null ? ['customer_id'] : ['customer_id', 'value'],
   });
-  const result = inspectDvtSubstraitNInputJoinDraft(draft);
+  const result = inspectDvtSubstraitJoinDraft(draft);
   if (!result.ok) throw new Error('Invalid fixture');
   return { draft, projection: result.projection };
 }
@@ -129,7 +129,7 @@ describe('Contextual relational card removal', () => {
     });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    const next = inspectDvtSubstraitNInputJoinDraft(result.draft);
+    const next = inspectDvtSubstraitJoinDraft(result.draft);
     expect(next.ok).toBe(true);
     if (!next.ok) return;
     expect(next.projection.inputs.map((input) => input.table)).toEqual(['customers', 'tickets']);
@@ -156,7 +156,7 @@ describe('Contextual relational card removal', () => {
     });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    const next = inspectDvtSubstraitNInputJoinDraft(result.draft);
+    const next = inspectDvtSubstraitJoinDraft(result.draft);
     expect(next.ok && next.projection.joins).toEqual([projection.joins[0]]);
     expect(next.ok && next.projection.joinRelations[0]?.relationId).toBe(
       projection.joinRelations[0]?.relationId

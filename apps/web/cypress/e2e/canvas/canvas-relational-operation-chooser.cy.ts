@@ -1,10 +1,17 @@
 /** Owned concern: prove the pending relational-operation chooser through the real Canvas route. */
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+
 import {
-  decodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitNInputJoinDraft,
+  decodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinDraft,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
-import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  getE2eApiCalls,
+  installE2eApiFetchStub,
+  stubE2eJsonApi,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -90,15 +97,18 @@ describe('Canvas relational-operation chooser', () => {
     cy.get('[aria-label="Editar condición"]').click();
     cy.get('[aria-label="Tipo del operando derecho"]').select('literal');
     cy.get('[aria-label="Valor literal del operando derecho"]').type('1');
+    cy.get('[data-slot="semantic-workbench-join-izquierdo-operand"]')
+      .contains('summary', 'Funciones')
+      .click();
     cy.get(
-      '[data-slot="semantic-workbench-join-izquierdo-operand"] [aria-label="Añadir función exterior al operando"]'
+      '[data-slot="semantic-workbench-join-izquierdo-operand"] [aria-label="Añadir función exterior al operando izquierdo"]'
     )
       .find('option')
       .eq(1)
       .invoke('val')
       .then((capabilityId) => {
         cy.get(
-          '[data-slot="semantic-workbench-join-izquierdo-operand"] [aria-label="Añadir función exterior al operando"]'
+          '[data-slot="semantic-workbench-join-izquierdo-operand"] [aria-label="Añadir función exterior al operando izquierdo"]'
         ).select(String(capabilityId));
       });
     cy.get('[aria-label="Comparador de la condición"]').select('not_equal');
@@ -122,8 +132,8 @@ describe('Canvas relational-operation chooser', () => {
         .at(-1);
       const authority = savedTransform?.metadata?.transformAuthoring as
         { semanticDocument?: unknown } | undefined;
-      const inspection = inspectDvtSubstraitNInputJoinDraft(
-        decodeDvtSubstraitInnerJoinDocument(authority?.semanticDocument)
+      const inspection = inspectDvtSubstraitJoinDraft(
+        decodeDvtSubstraitJoinDocument(authority?.semanticDocument)
       );
       expect(inspection.ok).to.equal(true);
       if (!inspection.ok) return;
@@ -139,6 +149,67 @@ describe('Canvas relational-operation chooser', () => {
       .should('contain.text', 'INNER JOIN')
       .and('have.attr', 'aria-label')
       .and('match', /INNER JOIN.*2.*1/);
+  });
+
+  it('authors, saves, and reloads LEFT JOIN with exact right-side null extension', () => {
+    visitWithE2eWorkspaceSession('/canvas');
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+
+    openPendingRelationalOperationChooser();
+    cy.get('[data-slot="dvt-select-operation-left-join"]')
+      .should('contain.text', 'LEFT JOIN')
+      .and('not.be.disabled')
+      .focus()
+      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+    cy.get('[data-slot="dvt-start-configured-left-join"]')
+      .focus()
+      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Apply|Aplicar)$/)
+      .focus()
+      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+
+    cy.wrap(null).should(() => {
+      const savedTransform = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+        .map(
+          (call) =>
+            call.body as {
+              draft: { nodes: Array<{ id: string; metadata?: Record<string, unknown> }> };
+            }
+        )
+        .map((body) => body.draft.nodes.find((node) => node.id === 'join-transform'))
+        .filter((node) => node != null)
+        .at(-1);
+      const authority = savedTransform?.metadata?.transformAuthoring as
+        { semanticDocument?: unknown } | undefined;
+      const inspection = inspectDvtSubstraitJoinDraft(
+        decodeDvtSubstraitJoinDocument(authority?.semanticDocument)
+      );
+      expect(inspection.ok).to.equal(true);
+      if (!inspection.ok) return;
+      expect(inspection.projection.joinRelations[0]?.joinType).to.equal(JoinRel_JoinType.LEFT);
+      expect(
+        inspection.projection.outputs
+          .filter((output) => output.source.inputIndex === 1)
+          .every((output) => output.nullable)
+      ).to.equal(true);
+    });
+    cy.get('[data-slot="canvas-relational-composition-badge"]', { timeout: 20_000 }).should(
+      'contain.text',
+      'LEFT JOIN'
+    );
+
+    cy.then(() => {
+      const getCount = getE2eApiCalls('/workspace/graph/draft', 'GET').length;
+      cy.on('window:before:load', installE2eApiFetchStub);
+      cy.reload();
+      cy.wrap(null, { timeout: 20_000 }).should(() => {
+        expect(getE2eApiCalls('/workspace/graph/draft', 'GET')).to.have.length(getCount + 1);
+      });
+    });
+    cy.get('[data-slot="canvas-relational-composition-badge"]', { timeout: 20_000 }).should(
+      'contain.text',
+      'LEFT JOIN'
+    );
   });
 
   it('authors the first JOIN from matching bigint fields', () => {
@@ -166,8 +237,8 @@ describe('Canvas relational-operation chooser', () => {
         .at(-1);
       const authority = savedTransform?.metadata?.transformAuthoring as
         { semanticDocument?: unknown } | undefined;
-      const inspection = inspectDvtSubstraitNInputJoinDraft(
-        decodeDvtSubstraitInnerJoinDocument(authority?.semanticDocument)
+      const inspection = inspectDvtSubstraitJoinDraft(
+        decodeDvtSubstraitJoinDocument(authority?.semanticDocument)
       );
       expect(inspection.ok).to.equal(true);
       if (!inspection.ok) return;

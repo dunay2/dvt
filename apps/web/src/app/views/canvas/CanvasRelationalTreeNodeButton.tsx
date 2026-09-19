@@ -62,7 +62,7 @@ export function CanvasRelationalTreeNodeButton({
     : isSource
       ? subtitle
       : node.operator === 'join'
-        ? 'INNER JOIN'
+        ? (node.operationLabel ?? 'JOIN')
         : (node.operationLabel ?? node.operator.toUpperCase());
   const Icon = window ? ChartNoAxesCombined : operatorIcons[node.operator];
   return (

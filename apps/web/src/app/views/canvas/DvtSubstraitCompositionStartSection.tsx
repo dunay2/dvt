@@ -1,4 +1,5 @@
 /** Owned concern: orchestrate operation selection before canonical relational composition. */
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { useState } from 'react';
 
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
@@ -12,7 +13,7 @@ import {
   type CanvasRelationalOperation,
 } from './canvasRelationalOperationChoices';
 import { canvasViewCopy } from './copy';
-import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { DvtRelationalOperationChooser } from './DvtRelationalOperationChooser';
 import { DvtSubstraitInnerJoinStartSection } from './DvtSubstraitInnerJoinStartSection';
 import { DvtSubstraitUnionAllStartSection } from './DvtSubstraitUnionAllStartSection';
@@ -29,7 +30,7 @@ export function DvtSubstraitCompositionStartSection({
   inputs: readonly CanvasDvtCompositionInput[];
   predicateSeed?: CanvasRelationalPredicateSeed | null;
   onClearPredicateSeed?: () => void;
-  onStartInnerJoin: (draft: DvtSubstraitInnerJoinDraft) => void;
+  onStartInnerJoin: (draft: DvtSubstraitJoinDraft, operation: 'inner_join' | 'left_join') => void;
   onStartUnionAll?: () => void;
 }>): JSX.Element {
   const [selectedOperation, setSelectedOperation] = useState<CanvasRelationalOperation | null>(
@@ -46,7 +47,7 @@ export function DvtSubstraitCompositionStartSection({
     unionAllAvailable: onStartUnionAll != null,
   });
 
-  if (selectedOperation === 'inner_join') {
+  if (selectedOperation === 'inner_join' || selectedOperation === 'left_join') {
     return (
       <DvtSubstraitInnerJoinStartSection
         key={
@@ -56,9 +57,12 @@ export function DvtSubstraitCompositionStartSection({
         }
         disabled={disabled}
         inputs={inputs}
+        joinType={
+          selectedOperation === 'left_join' ? JoinRel_JoinType.LEFT : JoinRel_JoinType.INNER
+        }
         initialSelection={availablePredicateSeed ?? undefined}
         onApply={(selection) => {
-          onStartInnerJoin(selection);
+          onStartInnerJoin(selection, selectedOperation);
           onClearPredicateSeed?.();
         }}
         onCancel={() => {

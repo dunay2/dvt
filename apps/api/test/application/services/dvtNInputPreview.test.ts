@@ -1,6 +1,6 @@
 import type { IContentAddressedArtifactStore } from '@dvt/artifacts';
 import {
-  DVT_POSTGRES_INNER_JOIN_PROFILE_ID,
+  DVT_POSTGRES_JOIN_PROFILE_ID,
   DvtOperationalWorkloadContractV1,
   DvtOperationalWorkloadContractV2,
 } from '@dvt/contracts';
@@ -32,7 +32,35 @@ function harness(inputCount: 2 | 3 = 3): {
   return { input, publisher, publish };
 }
 
+function leftHarness(): ReturnType<typeof harness> {
+  const result = harness(3);
+  const draft = buildDvtJoinPreviewDraft(3, 'left');
+  return {
+    ...result,
+    input: {
+      ...result.input,
+      draft,
+      selectedNodeIds: draft.nodeIds,
+      selectedEdgeIds: draft.edges.map((edge) => edge.id),
+    },
+  };
+}
+
 describe('N-input protected Preview lowering', () => {
+  it('projects a mixed INNER to LEFT tree through Preview with the JOIN-family profile', async () => {
+    const { input, publisher, publish } = leftHarness();
+
+    const binding = await publisher.publish(input);
+    const sql = Buffer.from(publish.mock.calls[0]![0].bytes).toString('utf8');
+
+    expect(binding.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
+    expect(binding.schemaDigestSha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(sql.match(/JOIN/g)).toHaveLength(2);
+    expect(sql).toContain(
+      'LEFT JOIN raw.order_details AS join_source_3 ON left_source.order_id = join_source_3.order_id'
+    );
+  });
+
   it.each([2, 3] as const)(
     'preserves all %i sources in one SQL artifact and one workload',
     async (count) => {
@@ -53,7 +81,7 @@ describe('N-input protected Preview lowering', () => {
       );
       expect(workload.graph.selectedNodeIds).toEqual([...input.selectedNodeIds].sort());
       expect(workload.graph.selectedEdgeIds).toEqual([...input.selectedEdgeIds].sort());
-      expect(workload.targetProjection.profileId).toBe(DVT_POSTGRES_INNER_JOIN_PROFILE_ID);
+      expect(workload.targetProjection.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
       expect(workload.semantics).toHaveLength(1);
       expect(workload.output).toEqual({ kind: 'ephemeral-preview', nodeId: 'transform-orders' });
       expect(publish).toHaveBeenCalledOnce();
@@ -69,8 +97,8 @@ describe('N-input protected Preview lowering', () => {
     }
   );
 
-  it('preserves a three-source JOIN as one Run workload', async () => {
-    const { input, publisher } = harness(3);
+  it('preserves a mixed INNER to LEFT tree as one Run workload', async () => {
+    const { input, publisher } = leftHarness();
     const draft = {
       ...input.draft,
       nodes: input.draft.nodes.map((node) =>
@@ -112,6 +140,7 @@ describe('N-input protected Preview lowering', () => {
       result.graphSource.nodes[0]?.stepTypeConfig
     );
     expect(workload.executionIntent).toBe('run');
+    expect(workload.targetProjection.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
     expect(workload.graph.selectedNodeIds).toEqual([...draft.nodeIds].sort());
     expect(workload.output).toMatchObject({
       disposition: 'table',

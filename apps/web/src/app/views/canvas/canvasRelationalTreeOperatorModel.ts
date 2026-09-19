@@ -1,7 +1,7 @@
 /** Owned concern: project admitted operator controls from canonical draft inspections. */
 import { DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1 } from '@dvt/contracts';
 import {
-  inspectDvtSubstraitInnerJoinAcceptedDraft,
+  inspectDvtSubstraitJoinAcceptedDraft,
   inspectDvtSubstraitInnerJoinGroupingDraft,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
 } from './canvasDvtSubstraitJoinComposition';
@@ -42,7 +42,7 @@ export function resolveCanvasRelationalOperatorTools(
   );
   const admitted = (fragment: string) =>
     supported.some((entry) => entry.entryId.endsWith(fragment));
-  const join = inspectDvtSubstraitInnerJoinAcceptedDraft(draft);
+  const join = inspectDvtSubstraitJoinAcceptedDraft(draft);
   const union = inspectDvtSubstraitUnionAllAcceptedDraft(draft);
   const window = join.ok
     ? inspectDvtSubstraitInnerJoinGroupedWindowDraft(draft)

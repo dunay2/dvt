@@ -1,7 +1,7 @@
 /** Owned concern: prove canonical relational-tree inspection through the real Canvas Workbench. */
 import {
-  decodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitNInputJoinDraft,
+  decodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinDraft,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
 import { inspectDvtSubstraitProjectionDraft } from '../../../src/app/views/canvas/canvasDvtSubstraitProjection';
 import {
@@ -252,7 +252,7 @@ describe('Canvas relational-tree Workbench', () => {
     );
     cy.then(() => {
       const document = semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!);
-      const draft = decodeDvtSubstraitInnerJoinDocument(document);
+      const draft = decodeDvtSubstraitJoinDocument(document);
       const inspection = inspectDvtSubstraitProjectionDraft(draft);
       expect(inspection.ok, 'saved canonical projection').to.equal(true);
       if (inspection.ok) expect(inspection.projection.source.table).to.equal('customers');
@@ -706,8 +706,8 @@ describe('Canvas relational-tree Workbench', () => {
       const write = semanticWrites('join-transform').at(-1);
       expect(write).not.to.equal(undefined);
       if (write == null) return;
-      const inspection = inspectDvtSubstraitNInputJoinDraft(
-        decodeDvtSubstraitInnerJoinDocument(semanticDocumentFromWrite(write))
+      const inspection = inspectDvtSubstraitJoinDraft(
+        decodeDvtSubstraitJoinDocument(semanticDocumentFromWrite(write))
       );
       expect(inspection.ok).to.equal(true);
       if (!inspection.ok) return;

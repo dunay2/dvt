@@ -1,10 +1,10 @@
 /** Owns the canonical JOIN output identities available to column authoring. */
 import type { CanonicalNode } from '../../types/canonical';
 import {
-  decodeDvtSubstraitInnerJoinDocument,
+  decodeDvtSubstraitJoinDocument,
   DVT_SUBSTRAIT_INNER_JOIN_FIELD_KEYS,
-  inspectDvtSubstraitInnerJoinDraft,
-  inspectDvtSubstraitNInputJoinDraft,
+  inspectDvtSubstraitBinaryJoinDraft,
+  inspectDvtSubstraitJoinDraft,
   type DvtSubstraitInnerJoinFieldKey,
 } from './canvasDvtSubstraitJoinComposition';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
@@ -15,11 +15,11 @@ export function readCanvasJoinColumnOutputs(node: CanonicalNode) {
   try {
     const authority = readDvtTransformAuthoringAuthority(node);
     if (authority == null) return null;
-    const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
-    const inspected = inspectDvtSubstraitNInputJoinDraft(draft);
+    const draft = decodeDvtSubstraitJoinDocument(authority.semanticDocument);
+    const inspected = inspectDvtSubstraitJoinDraft(draft);
     if (!inspected.ok) return null;
     const { projection } = inspected;
-    const binary = inspectDvtSubstraitInnerJoinDraft(draft).ok;
+    const binary = inspectDvtSubstraitBinaryJoinDraft(draft).ok;
     const usedNames = new Set(projection.outputs.map((output) => output.name));
     const fields = projection.inputs.flatMap((input, inputIndex) =>
       input.fields.flatMap((field) => {

@@ -1,30 +1,32 @@
 import { describe, expect, it } from 'vitest';
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 
 import type { ConnectedSourceRef } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   addDvtSubstraitJoinPredicateCondition,
-  appendDvtSubstraitInnerJoinInput,
+  appendDvtSubstraitJoinInput,
   applyDvtSubstraitInnerJoinFieldEdit,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
   applyDvtSubstraitInnerJoinGrouping,
-  createDvtSubstraitInnerJoinDraft,
-  createDvtSubstraitStringInnerJoinDraft,
-  decodeDvtSubstraitInnerJoinDocument,
-  encodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitInnerJoinDraft,
+  createDvtSubstraitJoinDraft,
+  createDvtSubstraitStringJoinDraft,
+  decodeDvtSubstraitJoinDocument,
+  encodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitBinaryJoinDraft,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
   inspectDvtSubstraitInnerJoinGroupingDraft,
-  inspectDvtSubstraitNInputJoinDraft,
+  inspectDvtSubstraitJoinDraft,
   removeDvtSubstraitInnerJoinGroupedRowNumber,
   removeDvtSubstraitInnerJoinGrouping,
   removeDvtSubstraitJoinPredicateCondition,
   renameDvtSubstraitInnerJoinCountOutput,
   renameDvtSubstraitInnerJoinGroupedRowNumberOutput,
   resolveDvtSubstraitNInputJoinEntry,
+  setDvtSubstraitJoinType,
   updateDvtSubstraitJoinPredicateCondition,
-  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinDraft,
   type DvtSubstraitJoinInput,
   type DvtSubstraitJoinSource,
   type DvtSubstraitNInputJoinProjection,
@@ -40,7 +42,7 @@ import {
 } from './canvasDvtSubstraitJoinOperand';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { resolveDvtSubstraitColumnFunctions } from './canvasDvtSubstraitProjection';
-import { projectDvtSubstraitInnerJoinToPostgresSql } from './canvasDvtSubstraitPostgresProjection';
+import { projectDvtSubstraitJoinToPostgresSql } from './canvasDvtSubstraitPostgresProjection';
 
 const OPAQUE_RELATION_ID =
   /^dvt_rel_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -73,16 +75,16 @@ function source(
   };
 }
 
-function fixture(): DvtSubstraitInnerJoinDraft {
-  return createDvtSubstraitInnerJoinDraft({
+function fixture(): DvtSubstraitJoinDraft {
+  return createDvtSubstraitJoinDraft({
     left: source('source-customers', 'public', 'customers'),
     right: source('source-orders', 'public', 'orders'),
     targetNodeId: 'transform-customer-orders',
   });
 }
 
-function inspectNInput(draft: DvtSubstraitInnerJoinDraft): DvtSubstraitNInputJoinProjection {
-  const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+function inspectNInput(draft: DvtSubstraitJoinDraft): DvtSubstraitNInputJoinProjection {
+  const inspection = inspectDvtSubstraitJoinDraft(draft);
   if (!inspection.ok) throw new Error('Expected inspectable N-input JOIN.');
   return inspection.projection;
 }
@@ -108,7 +110,7 @@ function inputFieldId(
   return fieldId;
 }
 
-function firstConditionKey(draft: DvtSubstraitInnerJoinDraft, joinRelationId: string): string {
+function firstConditionKey(draft: DvtSubstraitJoinDraft, joinRelationId: string): string {
   const projection = inspectNInput(draft);
   const index = projection.joinRelations.findIndex((join) => join.relationId === joinRelationId);
   const condition = projection.joins[index]!.conditions[0]!;
@@ -117,7 +119,7 @@ function firstConditionKey(draft: DvtSubstraitInnerJoinDraft, joinRelationId: st
   );
 }
 
-function expectOpaqueNewIdentity(draft: DvtSubstraitInnerJoinDraft): void {
+function expectOpaqueNewIdentity(draft: DvtSubstraitJoinDraft): void {
   draft.sidecar.relations.forEach((relation) =>
     expect(relation.relationId).toMatch(OPAQUE_RELATION_ID)
   );
@@ -130,10 +132,10 @@ function expectOpaqueNewIdentity(draft: DvtSubstraitInnerJoinDraft): void {
   );
 }
 
-function appendShipmentInput(draft: DvtSubstraitInnerJoinDraft): DvtSubstraitInnerJoinDraft {
+function appendShipmentInput(draft: DvtSubstraitJoinDraft): DvtSubstraitJoinDraft {
   const projection = inspectNInput(draft);
   const leftSourceFieldId = outputByName(projection, 'customer_id').source.fieldId;
-  return appendDvtSubstraitInnerJoinInput(draft, {
+  return appendDvtSubstraitJoinInput(draft, {
     source: source('source-shipments', 'public', 'shipments'),
     fields: ['shipment_id', 'customer_id'],
     predicate: {
@@ -144,10 +146,10 @@ function appendShipmentInput(draft: DvtSubstraitInnerJoinDraft): DvtSubstraitInn
   });
 }
 
-function appendPaymentInput(draft: DvtSubstraitInnerJoinDraft): DvtSubstraitInnerJoinDraft {
+function appendPaymentInput(draft: DvtSubstraitJoinDraft): DvtSubstraitJoinDraft {
   const projection = inspectNInput(draft);
   const leftSourceFieldId = outputByName(projection, 'order_id').source.fieldId;
-  return appendDvtSubstraitInnerJoinInput(draft, {
+  return appendDvtSubstraitJoinInput(draft, {
     source: source('source-payments', 'public', 'payments'),
     fields: ['payment_id', 'order_id'],
     predicate: {
@@ -176,7 +178,7 @@ function canonicalSource(id: string, table: string, fields: readonly string[]): 
   };
 }
 
-function legacyBinaryDraft(draft: DvtSubstraitInnerJoinDraft): DvtSubstraitInnerJoinDraft {
+function legacyBinaryDraft(draft: DvtSubstraitJoinDraft): DvtSubstraitJoinDraft {
   const relationByAnchor = new Map<number, string>([
     [1, 'relation:source-customers'],
     [2, 'relation:source-orders'],
@@ -219,6 +221,42 @@ function legacyBinaryDraft(draft: DvtSubstraitInnerJoinDraft): DvtSubstraitInner
 }
 
 describe('DVT Substrait INNER JOIN identity', () => {
+  it('changes one JOIN stage to LEFT and restores identical INNER bytes without identity churn', () => {
+    const original = createDvtSubstraitJoinDraft({
+      left: source('source-left', 'public', 'customers'),
+      right: source('source-right', 'public', 'orders'),
+      targetNodeId: 'transform',
+    });
+    const inspection = inspectDvtSubstraitJoinDraft(original);
+    if (!inspection.ok) throw new Error('Expected an admitted JOIN.');
+    const relationId = inspection.projection.joinRelations[0]!.relationId;
+    const originalDocument = encodeDvtSubstraitJoinDocument(original);
+    const left = setDvtSubstraitJoinType({
+      draft: original,
+      joinRelationId: relationId,
+      joinType: JoinRel_JoinType.LEFT,
+    });
+    const leftInspection = inspectDvtSubstraitJoinDraft(left);
+
+    expect(leftInspection.ok).toBe(true);
+    if (!leftInspection.ok) return;
+    expect(leftInspection.projection.joinRelations[0]).toMatchObject({
+      relationId,
+      joinType: JoinRel_JoinType.LEFT,
+    });
+    expect(leftInspection.projection.outputs.map((output) => output.fieldId)).toEqual(
+      inspection.projection.outputs.map((output) => output.fieldId)
+    );
+
+    const restored = setDvtSubstraitJoinType({
+      draft: left,
+      joinRelationId: relationId,
+      joinType: JoinRel_JoinType.INNER,
+    });
+    expect(encodeDvtSubstraitJoinDocument(restored).semanticPlan.bytesBase64).toBe(
+      originalDocument.semanticPlan.bytesBase64
+    );
+  });
   it.each(['is_null', 'is_not_null'] as const)(
     'round-trips unary %s without a right operand and renders PostgreSQL',
     async (operator) => {
@@ -234,12 +272,10 @@ describe('DVT Substrait INNER JOIN identity', () => {
         condition,
       });
       expect(edited).not.toBe(draft);
-      const reloaded = decodeDvtSubstraitInnerJoinDocument(
-        encodeDvtSubstraitInnerJoinDocument(edited)
-      );
+      const reloaded = decodeDvtSubstraitJoinDocument(encodeDvtSubstraitJoinDocument(edited));
       expect(inspectNInput(reloaded).joins[0]?.conditions.slice(1)).toEqual([condition]);
       expect(inspectNInput(reloaded).outputs).toEqual(before.outputs);
-      const sql = (await projectDvtSubstraitInnerJoinToPostgresSql(reloaded))
+      const sql = (await projectDvtSubstraitJoinToPostgresSql(reloaded))
         .replaceAll(/\s+/g, ' ')
         .toLowerCase();
       expect(sql).toContain(`and left_source.name ${operator.replaceAll('_', ' ')}`);
@@ -257,7 +293,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
       expect(unary.arguments).toHaveLength(1);
       unary.arguments.push(unary.arguments[0]!);
       expect(
-        inspectDvtSubstraitNInputJoinDraft({
+        inspectDvtSubstraitJoinDraft({
           ...reloaded,
           sidecar: { ...reloaded.sidecar, semanticPlanSha256: '0'.repeat(64) },
         }).ok
@@ -305,14 +341,12 @@ describe('DVT Substrait INNER JOIN identity', () => {
         condition,
       });
       expect(edited).not.toBe(draft);
-      const reloaded = decodeDvtSubstraitInnerJoinDocument(
-        encodeDvtSubstraitInnerJoinDocument(edited)
-      );
+      const reloaded = decodeDvtSubstraitJoinDocument(encodeDvtSubstraitJoinDocument(edited));
       const projection = inspectNInput(reloaded);
       expect(projection.joins[0]!.conditions).toEqual([condition]);
       expect(projection.joinRelations).toEqual(before.joinRelations);
       expect(projection.outputs).toEqual(before.outputs);
-      expect(await projectDvtSubstraitInnerJoinToPostgresSql(reloaded)).toMatch(sql);
+      expect(await projectDvtSubstraitJoinToPostgresSql(reloaded)).toMatch(sql);
     }
   });
 
@@ -362,7 +396,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
   it('allocates opaque persisted identities while keeping predicates structural', () => {
     const draft = fixture();
     const projection = inspectNInput(draft);
-    const binary = inspectDvtSubstraitInnerJoinDraft(draft);
+    const binary = inspectDvtSubstraitBinaryJoinDraft(draft);
 
     expect(binary.ok).toBe(true);
     expectOpaqueNewIdentity(draft);
@@ -475,7 +509,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
   });
 
   it('allows an atomic type transition and rejects invalid predicate pairs', () => {
-    const draft = createDvtSubstraitStringInnerJoinDraft({
+    const draft = createDvtSubstraitStringJoinDraft({
       left: {
         source: source('source-left', 'public', 'left_table'),
         fields: ['id', 'amount'],
@@ -570,7 +604,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
   );
 
   it('adds a typed literal comparison with an OR connector to the retained predicate', () => {
-    const draft = createDvtSubstraitStringInnerJoinDraft({
+    const draft = createDvtSubstraitStringJoinDraft({
       left: {
         source: source('source-left', 'public', 'orders'),
         fields: ['id', 'priority'],
@@ -600,9 +634,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
         combination: 'or',
       },
     });
-    const reloaded = decodeDvtSubstraitInnerJoinDocument(
-      encodeDvtSubstraitInnerJoinDocument(withLiteral)
-    );
+    const reloaded = decodeDvtSubstraitJoinDocument(encodeDvtSubstraitJoinDocument(withLiteral));
     const after = inspectNInput(reloaded);
 
     expect(after.joins[0]).toEqual({
@@ -649,9 +681,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
         right: { kind: 'literal', literal: { dataType: 'i64', value: 1n } },
       },
     });
-    const reloaded = decodeDvtSubstraitInnerJoinDocument(
-      encodeDvtSubstraitInnerJoinDocument(edited)
-    );
+    const reloaded = decodeDvtSubstraitJoinDocument(encodeDvtSubstraitJoinDocument(edited));
 
     expect(inspectNInput(reloaded).joins[0]?.conditions.slice(1)).toEqual([
       {
@@ -662,7 +692,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
   });
 
   it('round-trips a left literal against N unary functions around a field', () => {
-    const draft = createDvtSubstraitStringInnerJoinDraft({
+    const draft = createDvtSubstraitStringJoinDraft({
       left: {
         source: source('source-left', 'public', 'orders'),
         fields: ['id'],
@@ -706,7 +736,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
       },
     });
     const after = inspectNInput(
-      decodeDvtSubstraitInnerJoinDocument(encodeDvtSubstraitInnerJoinDocument(edited))
+      decodeDvtSubstraitJoinDocument(encodeDvtSubstraitJoinDocument(edited))
     );
     const addedCondition = after.joins[0]?.conditions[1];
     if (addedCondition == null || addedCondition.kind === 'group') {
@@ -729,7 +759,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
   });
 
   it('round-trips A AND (B OR C) as a grouped JOIN condition', () => {
-    const draft = createDvtSubstraitStringInnerJoinDraft({
+    const draft = createDvtSubstraitStringJoinDraft({
       left: {
         source: source('source-left', 'public', 'orders'),
         fields: ['id', 'country'],
@@ -768,7 +798,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
     });
 
     const after = inspectNInput(
-      decodeDvtSubstraitInnerJoinDocument(encodeDvtSubstraitInnerJoinDocument(grouped))
+      decodeDvtSubstraitJoinDocument(encodeDvtSubstraitJoinDocument(grouped))
     );
 
     expect(after.joins[0]?.conditions.slice(1)).toEqual([
@@ -791,7 +821,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
   });
 
   it('updates and removes one grouped JOIN comparison without changing relation or output identity', () => {
-    const draft = createDvtSubstraitStringInnerJoinDraft({
+    const draft = createDvtSubstraitStringJoinDraft({
       left: {
         source: source('source-left', 'public', 'orders'),
         fields: ['id', 'country'],
@@ -874,7 +904,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
       conditionKey: conditionKey(updatedActiveCondition),
     });
     const after = inspectNInput(
-      decodeDvtSubstraitInnerJoinDocument(encodeDvtSubstraitInnerJoinDocument(removed))
+      decodeDvtSubstraitJoinDocument(encodeDvtSubstraitJoinDocument(removed))
     );
 
     expect(after.joins[0]?.conditions.slice(1)).toEqual([
@@ -927,7 +957,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
 
   it('allocates a fresh FieldId when an output is deleted and recreated', () => {
     const draft = fixture();
-    const before = inspectDvtSubstraitInnerJoinDraft(draft);
+    const before = inspectDvtSubstraitBinaryJoinDraft(draft);
     if (!before.ok) throw new Error('Expected binary JOIN.');
     const original = before.projection.outputs.find(
       (output) => output.fieldKey === 'right.order_id'
@@ -944,7 +974,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
       fieldKey: 'right.order_id',
       selected: true,
     });
-    const after = inspectDvtSubstraitInnerJoinDraft(recreated);
+    const after = inspectDvtSubstraitBinaryJoinDraft(recreated);
     if (!after.ok) throw new Error('Expected recreated binary JOIN.');
     const replacement = after.projection.outputs.find(
       (output) => output.fieldKey === 'right.order_id'
@@ -963,7 +993,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
       source: source('source-right', 'public', 'right_table'),
       fields: ['id', 'value'],
     };
-    const draft = createDvtSubstraitStringInnerJoinDraft({
+    const draft = createDvtSubstraitStringJoinDraft({
       left,
       right,
       leftFieldName: 'id',
@@ -1021,13 +1051,13 @@ describe('DVT Substrait INNER JOIN identity', () => {
       inspectDvtSubstraitInnerJoinGroupingDraft(removeDvtSubstraitInnerJoinGroupedRowNumber(ranked))
         .ok
     ).toBe(true);
-    expect(
-      inspectDvtSubstraitNInputJoinDraft(removeDvtSubstraitInnerJoinGrouping(grouped)).ok
-    ).toBe(true);
+    expect(inspectDvtSubstraitJoinDraft(removeDvtSubstraitInnerJoinGrouping(grouped)).ok).toBe(
+      true
+    );
   });
 
   it('does not reserve join-count names as semantic identities', () => {
-    const draft = createDvtSubstraitStringInnerJoinDraft({
+    const draft = createDvtSubstraitStringJoinDraft({
       left: {
         source: source('source-a', 'public', 'a'),
         fields: ['customer_id', 'join-count'],
@@ -1049,8 +1079,8 @@ describe('DVT Substrait INNER JOIN identity', () => {
   });
 
   it('keeps semantic plan determinism separate from fresh sidecar identity allocation', () => {
-    const first = encodeDvtSubstraitInnerJoinDocument(fixture());
-    const second = encodeDvtSubstraitInnerJoinDocument(fixture());
+    const first = encodeDvtSubstraitJoinDocument(fixture());
+    const second = encodeDvtSubstraitJoinDocument(fixture());
 
     expect(first.semanticPlan.sha256).toBe(second.semanticPlan.sha256);
     expect(first.sidecar.relations.map((relation) => relation.relationId)).not.toEqual(
@@ -1063,17 +1093,17 @@ describe('DVT Substrait INNER JOIN identity', () => {
 
   it('preserves one persisted draft identity across encode and reload', () => {
     const draft = fixture();
-    const document = encodeDvtSubstraitInnerJoinDocument(draft);
-    const reloaded = decodeDvtSubstraitInnerJoinDocument(document);
+    const document = encodeDvtSubstraitJoinDocument(draft);
+    const reloaded = decodeDvtSubstraitJoinDocument(document);
 
     expect(reloaded.sidecar.relations).toEqual(document.sidecar.relations);
     expect(reloaded.sidecar.fields).toEqual(document.sidecar.fields);
-    expect(inspectDvtSubstraitInnerJoinDraft(reloaded).ok).toBe(true);
+    expect(inspectDvtSubstraitBinaryJoinDraft(reloaded).ok).toBe(true);
   });
 
   it('accepts old-format persisted IDs as opaque values and preserves them through edit/reload', () => {
     const legacy = legacyBinaryDraft(fixture());
-    const inspection = inspectDvtSubstraitInnerJoinDraft(legacy);
+    const inspection = inspectDvtSubstraitBinaryJoinDraft(legacy);
     expect(inspection.ok).toBe(true);
     if (!inspection.ok) return;
     const nameField = inspection.projection.outputs.find(
@@ -1086,17 +1116,15 @@ describe('DVT Substrait INNER JOIN identity', () => {
       fieldKey: 'left.name',
       outputName: 'customer_name',
     });
-    const renamedInspection = inspectDvtSubstraitInnerJoinDraft(renamed);
+    const renamedInspection = inspectDvtSubstraitBinaryJoinDraft(renamed);
     if (!renamedInspection.ok) throw new Error('Expected renamed legacy JOIN.');
     expect(
       renamedInspection.projection.outputs.find((output) => output.fieldKey === 'left.name')
         ?.fieldId
     ).toBe(nameField.fieldId);
 
-    const reloaded = decodeDvtSubstraitInnerJoinDocument(
-      encodeDvtSubstraitInnerJoinDocument(renamed)
-    );
-    const reloadedInspection = inspectDvtSubstraitInnerJoinDraft(reloaded);
+    const reloaded = decodeDvtSubstraitJoinDocument(encodeDvtSubstraitJoinDocument(renamed));
+    const reloadedInspection = inspectDvtSubstraitBinaryJoinDraft(reloaded);
     if (!reloadedInspection.ok) throw new Error('Expected reloaded legacy JOIN.');
     expect(
       reloadedInspection.projection.outputs.find((output) => output.fieldKey === 'left.name')
@@ -1119,7 +1147,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
         tags: [],
         metadata: {},
       },
-      encodeDvtSubstraitInnerJoinDocument(draft)
+      encodeDvtSubstraitJoinDocument(draft)
     );
     const edges: CanonicalEdge[] = [
       {
@@ -1150,7 +1178,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
 
   it('fails closed on incompatible sources, duplicate identity and stale hash', () => {
     expect(() =>
-      createDvtSubstraitInnerJoinDraft({
+      createDvtSubstraitJoinDraft({
         left: source('source-customers', 'public', 'customers', 'warehouse-a'),
         right: source('source-orders', 'public', 'orders', 'warehouse-b'),
         targetNodeId: 'transform-customer-orders',
@@ -1167,11 +1195,11 @@ describe('DVT Substrait INNER JOIN identity', () => {
         ),
       },
     };
-    expect(inspectDvtSubstraitNInputJoinDraft(duplicateField).ok).toBe(false);
+    expect(inspectDvtSubstraitJoinDraft(duplicateField).ok).toBe(false);
 
-    const encoded = encodeDvtSubstraitInnerJoinDocument(draft);
+    const encoded = encodeDvtSubstraitJoinDocument(draft);
     expect(() =>
-      decodeDvtSubstraitInnerJoinDocument({
+      decodeDvtSubstraitJoinDocument({
         ...encoded,
         sidecar: { ...encoded.sidecar, semanticPlanSha256: 'f'.repeat(64) },
       })

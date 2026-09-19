@@ -1,12 +1,12 @@
 /** Owned concern: resolve an existing canonical JOIN into an editable structural seed. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { createDvtTransformAuthoringMetadata } from './canvasDvtTransformAuthoring';
 import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 
 export type CanvasRelationalTreeExistingJoinDraft = Readonly<{
-  draft: DvtSubstraitInnerJoinDraft;
+  draft: DvtSubstraitJoinDraft;
   inputIds: readonly string[];
   operation: CanvasRelationalOperation;
 }>;

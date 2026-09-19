@@ -1,5 +1,6 @@
 /** Owned concern: admit and persist a supported algebraic operation over two Canvas inputs. */
 import type { Connection, Edge } from '@xyflow/react';
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
 
 import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
@@ -12,8 +13,8 @@ import {
   createDvtNodeAuthoringMetadata,
 } from './canvasDvtAuthoringModel';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import { createDvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
-import { resolveDvtSubstraitInnerJoinEntry } from './canvasDvtSubstraitJoinSourceResolution';
+import { createDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { resolveDvtSubstraitJoinEntry } from './canvasDvtSubstraitJoinSourceResolution';
 import {
   createDvtSubstraitUnionAllDraft,
   resolveDvtSubstraitUnionAllEntry,
@@ -23,7 +24,7 @@ import {
   type CanvasEdgeAdmissionTransaction,
 } from './canvasEdgeAdmissionTransaction';
 
-export type CanvasAlgebraicCompositionOperation = 'inner_join' | 'union_all';
+export type CanvasAlgebraicCompositionOperation = 'inner_join' | 'left_join' | 'union_all';
 
 type CompositionState = {
   canonicalNodesById: Map<string, CanonicalNode>;
@@ -66,7 +67,8 @@ function admittedOperations(args: {
 }): CanvasAlgebraicCompositionOperation[] {
   const edges = canonicalEdges(args.draftSession);
   return [
-    resolveDvtSubstraitInnerJoinEntry({ ...args, edges }) == null ? null : 'inner_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'inner_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'left_join',
     resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'union_all',
   ].filter((operation): operation is CanvasAlgebraicCompositionOperation => operation != null);
 }
@@ -108,9 +110,14 @@ function createSemanticDraft(args: {
   draftSession: CanvasDraftSession;
 }) {
   const edges = canonicalEdges(args.draftSession);
-  if (args.operation === 'inner_join') {
-    const entry = resolveDvtSubstraitInnerJoinEntry({ ...args, edges });
-    return entry == null ? null : createDvtSubstraitInnerJoinDraft(entry);
+  if (args.operation === 'inner_join' || args.operation === 'left_join') {
+    const entry = resolveDvtSubstraitJoinEntry({ ...args, edges });
+    return entry == null
+      ? null
+      : createDvtSubstraitJoinDraft({
+          ...entry,
+          joinType: args.operation === 'left_join' ? JoinRel_JoinType.LEFT : JoinRel_JoinType.INNER,
+        });
   }
   const entry = resolveDvtSubstraitUnionAllEntry({ ...args, edges });
   return entry == null ? null : createDvtSubstraitUnionAllDraft(entry);

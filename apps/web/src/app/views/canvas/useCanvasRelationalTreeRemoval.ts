@@ -1,6 +1,6 @@
 /** Owned concern: keep contextual removal local until the existing Apply command. */
 import { useState } from 'react';
-import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import type { CanvasRelationalTreeExistingJoinDraft } from './canvasRelationalTreeExistingJoinDraft';
 import {
   removeCanvasRelationalTreeNode,
@@ -11,7 +11,7 @@ export function useCanvasRelationalTreeRemoval(
   args: Readonly<{
     enabled: boolean;
     active: boolean;
-    draft: DvtSubstraitInnerJoinDraft | null;
+    draft: DvtSubstraitJoinDraft | null;
     selectedInputIds: readonly string[];
     seed: CanvasRelationalTreeExistingJoinDraft | null;
     targetNodeId: string;
@@ -24,7 +24,7 @@ export function useCanvasRelationalTreeRemoval(
 ) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<Readonly<{
-    draft: DvtSubstraitInnerJoinDraft;
+    draft: DvtSubstraitJoinDraft;
     result: Extract<CanvasRelationalRemovalResult, { reason: 'dependent-operations' }>;
     ids: readonly string[];
   }> | null>(null);
