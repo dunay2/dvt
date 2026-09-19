@@ -1,0 +1,35 @@
+name: Isolated documentation source audit
+on:
+  push:
+    branches: [automation/3004-source-audit-pass-20260919]
+    paths: [.github/workflows/retirement-next-audit.yml]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 21a7b3b45334c9d9d14d62d256c4e559b77b1a30
+          persist-credentials: false
+      - name: Export tracked sources only
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/retirement-source"
+          mkdir -p "$out"
+          git rev-parse HEAD > "$out/head.txt"
+          git rev-parse HEAD^{tree} > "$out/tree.txt"
+          git ls-tree -rz HEAD > "$out/files.txt"
+          git cat-file commit HEAD > "$out/commit.txt"
+          git archive --format=tar HEAD | gzip -n > "$out/source.tar.gz"
+          cd "$out"
+          sha256sum head.txt tree.txt files.txt commit.txt source.tar.gz > SHA256SUMS
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: retirement-next-source
+          path: ${{ runner.temp }}/retirement-source
+          retention-days: 7
+          if-no-files-found: error
