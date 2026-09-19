@@ -11,8 +11,9 @@ planning_type: mandatory
 ## Owned Concern
 
 This plan canonizes the DVT workbench UX specification draft into governed
-frontend delivery work. It keeps the draft as design input, affirms the active
-workbench contract, and prevents a second UX backlog from competing with F-15,
+frontend delivery work. Historical inputs remain in Git; the current Process Map
+and contextual-surface contract is the existing screen manual. This prevents a
+second UX backlog from competing with F-15,
 F-24, F-25, F-28, and route-level component guides.
 
 ## Governing Sources
@@ -23,9 +24,10 @@ F-24, F-25, F-28, and route-level component guides.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/ux-implementation-guide.md`
-- `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`
+- `docs/architecture/components/web/screen-manuals-and-user-stories.md`
 - `docs/architecture/components/web/route-workbench-frame-component.md`
-- `docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md`
+
+Historical input, not a governing contract: [UX v0.4 design input (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md)
 
 ## Fowler Analysis
 
@@ -54,13 +56,13 @@ F-24, F-25, F-28, and route-level component guides.
 
 ### Grouping Opportunities
 
-- Keep the active cross-route contract in
-  `workbench-ui-contract-and-component-inventory.md`.
+- Keep Process Map and contextual-surface placement in
+  `screen-manuals-and-user-stories.md`; keep component ownership in Planning DB.
 - Keep Canvas-specific tab and view-strip behavior under the Canvas graph
   component family.
 - Keep shell context identity under the app-shell component family.
 - Promote future command palette, menu, or route-toolbar implementation into
-  Planning DB tasks when behavior changes are ready.
+  GitHub Issues when behavior changes are ready; architecture stays in Planning DB.
 
 ### Lessons For Future Work
 
@@ -86,12 +88,12 @@ context, commands, and domain surfaces. DVT follows that pattern when:
 
 Accepted now:
 
-- the v0.4 draft is retained as historical design input;
-- `workbench-ui-contract-and-component-inventory.md` remains the active
-  cross-route component contract;
+- historical v0.4 input is consulted from Git, not retained as an active file;
+- `screen-manuals-and-user-stories.md` owns current Process Map and
+  contextual-surface placement; component ownership remains in Planning DB;
 - `ux-implementation-guide.md` remains the implementation direction guide;
-- future executable UX changes must name their command/query rail and Planning
-  DB task before code changes.
+- future executable UX changes must name their command/query rail and governing
+  GitHub issue before code changes; architecture changes use Planning DB.
 
 Not accepted as direct implementation from this canon task:
 
@@ -114,12 +116,12 @@ Not accepted as direct implementation from this canon task:
 
 ## TDD Plan
 
-1. Red: add `workbench-ux-canon.test.mjs` and observe failure on missing plan,
-   component guide, user stories, buzon analysis, and draft disposition.
-2. Green: add this plan, local component guide, user stories, buzon analysis,
-   portfolio link, web index link, and draft frontmatter disposition.
-3. Refactor: keep runtime UI changes out of this canon task. Promote behavior
-   changes to Planning DB tasks with their own rails.
+1. Red: restore a retired workbench document or point a live consumer at it;
+   the disposition guard must reject the regression.
+2. Green: validate the existing canon identity, component guide, user stories,
+   screen manual, and GitHub task authority without requiring historical files.
+3. Refactor: preserve the shell context assertions and runtime boundaries;
+   behavior changes remain in their owning GitHub issue and architecture rail.
 
 ## ADR Decision
 
@@ -146,7 +148,7 @@ governingSources:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/architecture/components/web/ux-implementation-guide.md
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
 allowedImplementationSurfaces:
   - buzon/20260524-codex-fowler-workbench-ux-canon.md
   - buzon/20260531-dvt-workbench-ux-v04-analysis.md
@@ -158,11 +160,8 @@ allowedImplementationSurfaces:
   - docs/planning/reviews/architecture-and-governance/20260527-frontend-ux-maturity-audit-review.md
   - docs/planning/proposals/index.md
   - docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md
-  - docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
   - docs/planning/proposals/portfolio-map-20260403.md
-  - docs/planning/state/agent-lane-e.md
-  - docs/planning/state/execution-workboard.md
-  - docs/planning/state/open-task-route.md
   - docs/planning/status/**
   - tools/ci/workbench-ux-canon.test.mjs
 forbiddenImplementationSurfaces:
@@ -213,7 +212,7 @@ redGreenCycles:
       - docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md
       - docs/architecture/components/web/workbench-ux-canon-component.md
       - docs/architecture/components/web/workbench-ux-canon-user-stories.md
-      - docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md
+      - docs/architecture/components/web/screen-manuals-and-user-stories.md
       - docs/architecture/components/web/index.md
       - docs/planning/proposals/portfolio-map-20260403.md
       - buzon/20260524-codex-fowler-workbench-ux-canon.md

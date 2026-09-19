@@ -38,10 +38,10 @@ workbench grammar was fully locked. As a result:
   and needs written rationale before implementation.
 - `docs/planning/state/agent-lane-e.yaml`: `F-01` and `F-03` govern shell
   cleanup and real platform-health presentation.
-- `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`:
+- [Former component inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md):
   the top bar owns global context, the route toolbar owns route-local commands,
   and the bottom drawer is supporting context only.
-- `docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md`:
+- [Former layout rules (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md):
   `Canvas` stays graph-first and must not sacrifice workspace area to shell
   chrome or review-style copy.
 - `docs/architecture/components/web/iconography-and-design-tokens-contract.md`:

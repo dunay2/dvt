@@ -27,7 +27,7 @@ projection rails that future visible surfaces must consume.
 - `apps/web/src/app/plugins/registry.test.ts`
 - `apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts`
 - `docs/architecture/components/web/plugins/plugin-ux-integration-contract.md`
-- `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`
+- [Former component inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md)
 - `docs/planning/proposals/mandatory/frontend-and-ux/f25-plugin-ux-contract-docks-plan-20260522.md`
 
 ## Architecture Result

@@ -32,7 +32,7 @@ and tests before implementation.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/reference-architecture.md`
 - `docs/concepts/domain-language.md`
-- `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`
+- `docs/architecture/components/web/screen-manuals-and-user-stories.md`
 - `docs/architecture/components/web/appshell/shell-workspace-context-component.md`
 - `docs/architecture/components/web/templates/execution-template-source-generation-component.md`
 - `docs/architecture/components/web/templates/execution-template-source-generation-user-stories.md`

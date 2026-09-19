@@ -139,7 +139,7 @@ stateDiagram-v2
 - Add `buzon/20260519-codex-fowler-f15f-canvas-workbench-screen-consolidation.md`.
 - Add `docs/architecture/components/web/appshell/canvas-workbench-screen-composition-component.md`.
 - Add `docs/architecture/components/web/appshell/canvas-workbench-screen-composition-user-stories.md`.
-- Update `main-workspace-views-and-ux.md` and `ux-implementation-guide.md` if implementation changes the current shell contract wording.
+- Update `screen-manuals-and-user-stories.md` and `ux-implementation-guide.md` if implementation changes the current shell contract wording.
 
 ## Validation Plan
 
@@ -185,7 +185,7 @@ governingSources:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/architecture/components/web/appshell/shell-baseline-target-guide.md
-  - docs/architecture/components/web/main-workspace-views-and-ux.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
   - docs/architecture/components/web/ux-implementation-guide.md
   - docs/planning/proposals/mandatory/frontend-and-ux/f15d-workbench-navigation-disposition-plan-20260518.md
   - docs/planning/proposals/mandatory/frontend-and-ux/f15e-canvas-startup-template-selection-plan-20260518.md
@@ -231,7 +231,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/graph/canvas-playground-host-component.md
   - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
   - docs/architecture/components/web/graph/canvas-startup-template-selection-component.md
-  - docs/architecture/components/web/main-workspace-views-and-ux.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
   - docs/architecture/components/web/ux-implementation-guide.md
   - docs/planning/proposals/mandatory/frontend-and-ux/f15f-canvas-workbench-screen-consolidation-plan-20260519.md
 forbiddenImplementationSurfaces:

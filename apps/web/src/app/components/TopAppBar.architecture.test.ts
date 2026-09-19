@@ -86,8 +86,8 @@ describe('ShellTopBar workspace context architecture', () => {
 
   it('documents API, invariants, transitions, consumers, and recorded risks', () => {
     const appShellGuide = readRepoSource('docs/architecture/components/web/appshell/app-shell.md');
-    const workbenchInventory = readRepoSource(
-      'docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md'
+    const workbenchManual = readRepoSource(
+      'docs/architecture/components/web/screen-manuals-and-user-stories.md'
     );
     const stage1Plan = readRepoSource(
       'docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md'
@@ -116,14 +116,14 @@ describe('ShellTopBar workspace context architecture', () => {
       expect(appShellGuide).toContain(requiredGuideSection);
     }
 
-    for (const requiredInventorySignal of [
+    for (const requiredManualSignal of [
       'Global context lives in compact top-bar labels',
       'Shell workspace context',
       'read-only presentation model',
       'shell-workspace-context-component.md',
       'shell-workspace-context-user-stories.md',
     ]) {
-      expect(workbenchInventory).toContain(requiredInventorySignal);
+      expect(workbenchManual).toContain(requiredManualSignal);
     }
 
     for (const requiredPlanSignal of [

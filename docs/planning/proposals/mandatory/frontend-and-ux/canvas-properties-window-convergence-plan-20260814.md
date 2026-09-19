@@ -166,7 +166,7 @@ mechanizationStatus: implemented
 noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/canvas-properties-window-convergence-plan-20260814.md
 componentGuides:
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
   - docs/architecture/components/web/iconography-and-design-tokens-contract.md
   - docs/architecture/components/web/graph/canvas-view-menu-component.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
@@ -182,7 +182,7 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
   - docs/architecture/components/web/iconography-and-design-tokens-contract.md
   - docs/architecture/components/web/graph/canvas-view-menu-component.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md

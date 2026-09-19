@@ -15,7 +15,7 @@ execution queues.
 ## Public API
 
 - `RecordWorkbenchUxCanon`: records a UX draft disposition, the accepted active
-  contract, and whether remaining behavior must become a new Planning DB task.
+  contract, and whether remaining behavior needs a governing GitHub issue.
 - `ClassifyWorkbenchUxDisposition`: returns `active-contract`,
   `historical-input`, `superseded`, or `future-task-material` for a workbench UX
   document.
@@ -25,10 +25,10 @@ execution queues.
 
 ## Invariants
 
-- `workbench-ui-contract-and-component-inventory.md` is the active cross-route
-  workbench contract.
-- The v0.4 UX draft is historical input after `F-MAND-WORKBENCH-UX`; it is not
-  a second backlog.
+- `screen-manuals-and-user-stories.md` owns Process Map and contextual-surface
+  placement; Planning DB owns component identities and relations.
+- The v0.4 UX draft remains historical input in Git after `F-MAND-WORKBENCH-UX`;
+  it is neither a live document nor a second backlog.
 - Canvas must not regain a permanent left navigation rail.
 - Product-facing labels must be resolved by route/tab read models before they
   become UI changes.
@@ -42,7 +42,7 @@ stateDiagram-v2
   DraftInput --> CanonizedInput: RecordWorkbenchUxCanon
   CanonizedInput --> ActiveContract: accepted subset
   CanonizedInput --> FutureTask: behavior not yet owned
-  CanonizedInput --> HistoricalInput: retained rationale
+  CanonizedInput --> HistoricalInput: Git provenance
   ActiveContract --> [*]
   FutureTask --> [*]
   HistoricalInput --> [*]
@@ -55,7 +55,7 @@ stateDiagram-v2
 - Canvas maintainers use it to keep Canvas-specific affordances in the graph
   component family.
 - Route workbench owners use it to decide whether a draft UX rule belongs in a
-  route component guide or a new Planning DB task.
+  route component guide or a governing GitHub issue.
 - Planning stewards use it to prevent UX drafts from becoming untracked queues.
 
 ## Command And Query Rail
@@ -68,8 +68,8 @@ stateDiagram-v2
 
 ## Semantic Fitness Function
 
-`tools/ci/workbench-ux-canon.test.mjs` validates that the canon plan, draft
-frontmatter disposition, component guide, user stories, portfolio map, web
+`tools/ci/workbench-ux-canon.test.mjs` validates that the canon plan, historical-input
+disposition, component guide, user stories, screen manual, portfolio map, web
 component index, and canonical Fowler mechanization tokens agree on the same
 semantic rails.
 
@@ -80,9 +80,9 @@ link presence.
 
 ```mermaid
 flowchart TD
-  Draft["v0.4 UX draft"]
+  Draft["Historical UX input in Git"]
   Canon["Workbench UX canon"]
-  Contract["Workbench UI contract inventory"]
+  Contract["Process Map and contextual screen manual"]
   Guide["UX implementation guide"]
   Shell["Route workbench frame"]
   Canvas["Canvas graph component family"]
@@ -101,7 +101,7 @@ flowchart TD
 ## Related Docs
 
 - [Workbench UX Canon User Stories](./workbench-ux-canon-user-stories.md)
-- [DVT Workbench UX Canon Plan 2026-05-24](../../planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md)
-- [Workbench UI Contract And Component Inventory](./workbench-ui-contract-and-component-inventory.md)
+- [DVT Workbench UX Canon Plan 2026-05-24](../../../planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md)
+- [Screen Manuals And User Stories](./screen-manuals-and-user-stories.md)
 - [UX Implementation Guide](./ux-implementation-guide.md)
 - [Workbench UX Canon Mailbox Analysis](../../../../buzon/20260524-codex-fowler-workbench-ux-canon.md)

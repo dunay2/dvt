@@ -23,7 +23,7 @@ shell model.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/git/git-mode-architecture.md`
-- `docs/architecture/components/web/main-workspace-views-and-ux.md`
+- `docs/architecture/components/web/screen-manuals-and-user-stories.md`
 - `docs/planning/proposals/nice-to-have/frontend-and-ux/f-23-git-file-history-review-plan-20260407.md`
 
 ## Current State
@@ -105,7 +105,7 @@ owner: Frontend / API / Architecture
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/f23-git-file-history-review-plan-20260522.md
 componentGuides:
   - docs/architecture/components/web/git/git-mode-architecture.md
-  - docs/architecture/components/web/main-workspace-views-and-ux.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
 userStories:
   - docs/architecture/components/web/git/git-file-history-review-user-stories.md
 governingSources:

@@ -23,7 +23,7 @@ out of the active tree.
 ## Component Decomposition
 
 - shell and bootstrap:
-  [Main workspace views and UX](./main-workspace-views-and-ux.md),
+  [Screen Manuals And User Stories](./screen-manuals-and-user-stories.md),
   [App bootstrap screen component](./app-bootstrap-screen-component.md),
   [Admin route position component](./admin-route-position-component.md),
   [API client auth component](./api-client-auth-component.md),
@@ -72,9 +72,7 @@ out of the active tree.
   [RunWorkspaceStateView.tsx](../../../../apps/web/src/app/views/runs/RunWorkspaceStateView.tsx)
 - service factories and facades:
   [plansService.ts](../../../../apps/web/src/app/services/plans/plansService.ts),
-  [runsService.ts](../../../../apps/web/src/app/services/runs/runsService.ts),
-  [workspaceService.ts](../../../../apps/web/src/app/services/workspace/workspaceService.ts),
-  [runWorkspaceFacade.ts](../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)
+  [runsService.ts](../../../../apps/web/src/app/services/runs/runsService.ts)
 - plugin and contribution boundary:
   [Plugin Contributions Developer Guide](./plugin-contributions-developer-guide.md),
   [registry.ts](../../../../apps/web/src/app/plugins/registry.ts)
@@ -146,5 +144,3 @@ longer an active path.
 
 - [Read subsystem](../../system/subsystems/read/index.md)
 - [Canonical run lifecycle subsystem](../../system/subsystems/canonical-run-lifecycle/index.md)
-- [DVT Component Map](../../component-map.md)
-- [System Delivery Status](../../system-delivery-status.md)

@@ -36,9 +36,7 @@ or protected draft API changes.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/appshell/app-shell.md`
-- `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`
-- `docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md`
-- `docs/architecture/components/web/main-workspace-views-and-ux.md`
+- `docs/architecture/components/web/screen-manuals-and-user-stories.md`
 - `docs/architecture/components/web/ux-implementation-guide.md`
 - `docs/architecture/components/web/graph/canvas-workbench-tabs-component.md`
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
@@ -46,7 +44,7 @@ or protected draft API changes.
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md`
-- `docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md`
+- [UX v0.4 design input (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md)
   as design input only; the accepted Stage 1 scope is this plan plus the
   `F-28` sequence plan.
 
@@ -315,7 +313,7 @@ Add palette pinning is allowed only as a user presentation preference:
 Files:
 
 - `docs/architecture/components/web/appshell/app-shell.md`
-- `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`
+- `docs/architecture/components/web/screen-manuals-and-user-stories.md`
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `docs/architecture/components/web/graph/canvas-workbench-tabs-component.md`
 - this plan
@@ -539,9 +537,7 @@ implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/canvas-wor
 componentGuides:
   - docs/architecture/components/web/appshell/app-shell.md
   - docs/architecture/components/web/appshell/shell-workspace-context-component.md
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
-  - docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md
-  - docs/architecture/components/web/main-workspace-views-and-ux.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
   - docs/architecture/components/web/ux-implementation-guide.md
   - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
   - docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md
@@ -562,7 +558,7 @@ governingSources:
   - docs/architecture/components/web/appshell/app-shell.md
   - docs/architecture/components/web/appshell/shell-workspace-context-component.md
   - docs/architecture/components/web/appshell/shell-workspace-context-user-stories.md
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/api/protected-runtime-command-query-rail-design.md
 allowedImplementationSurfaces:
@@ -571,9 +567,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/appshell/app-shell.md
   - docs/architecture/components/web/appshell/shell-workspace-context-component.md
   - docs/architecture/components/web/appshell/shell-workspace-context-user-stories.md
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
-  - docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md
-  - docs/architecture/components/web/main-workspace-views-and-ux.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
   - docs/architecture/components/web/ux-implementation-guide.md
   - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
   - docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md
@@ -733,7 +727,7 @@ redGreenCycles:
       - apps/web/src/app/shell/**
       - apps/web/src/app/stores/sessionStore.ts
       - docs/architecture/components/web/appshell/app-shell.md
-      - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+      - docs/architecture/components/web/screen-manuals-and-user-stories.md
     greenTest: pnpm --filter @dvt/web test -- TopAppBar
   - id: workspace-context-read-only-main-screen
     redTest: pnpm --filter @dvt/web test -- TopAppBar
@@ -747,7 +741,7 @@ redGreenCycles:
       - docs/architecture/components/web/appshell/app-shell.md
       - docs/architecture/components/web/appshell/shell-workspace-context-component.md
       - docs/architecture/components/web/appshell/shell-workspace-context-user-stories.md
-      - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+      - docs/architecture/components/web/screen-manuals-and-user-stories.md
       - buzon/20260506-codex-fowler-canvas-workbench-shell-context-hardening-review.md
     greenTest: pnpm --filter @dvt/web test -- TopAppBar
   - id: no-fixed-canvas-left-rail

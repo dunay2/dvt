@@ -56,6 +56,6 @@ Open-source product references:
 - [Frontend Runtime Modes User Manual](./components/web/frontend-runtime-modes-user-manual.md)
 - [Frontend Runtime Contract Technical Manual](./components/web/runs/frontend-runtime-contract-technical-manual.md)
 - [Frontend Runtime Contract User Manual](./components/web/runs/frontend-runtime-contract-user-manual.md)
-- [Main Workspace Views And UX](./components/web/main-workspace-views-and-ux.md)
+- [Screen Manuals And User Stories](./components/web/screen-manuals-and-user-stories.md)
 - [UX Implementation Guide](./components/web/ux-implementation-guide.md)
 - [Library And Open-Source Reference Stack](./components/web/library-and-open-source-reference-stack.md)

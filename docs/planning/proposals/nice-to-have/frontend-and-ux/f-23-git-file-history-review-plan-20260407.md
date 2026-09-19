@@ -34,11 +34,11 @@ implementation work starts.
 - `docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md`
 - `docs/planning/proposals/nice-to-have/frontend-and-ux/dvt-ui-workbench-implementation-roadmap-20260404.md`
 - `docs/architecture/components/web/index.md`
-- `docs/architecture/components/web/main-workspace-views-and-ux.md`
+- [Former workspace inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/main-workspace-views-and-ux.md)
 - `docs/architecture/components/web/screen-manuals-and-user-stories.md`
 - `docs/architecture/components/web/ux-implementation-guide.md`
-- `docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md`
-- `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`
+- [Former layout rules (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md)
+- [Former component inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md)
 - `docs/architecture/components/web/git/git-mode-architecture.md`
 - `docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md`
 - `apps/web/src/app/views/CodeView.tsx`

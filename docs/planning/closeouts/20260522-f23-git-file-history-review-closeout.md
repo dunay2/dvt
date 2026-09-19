@@ -16,7 +16,7 @@ planning_type: closeout
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/git/git-mode-architecture.md`
-- `docs/architecture/components/web/main-workspace-views-and-ux.md`
+- [Former workspace inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/main-workspace-views-and-ux.md)
 - `docs/planning/proposals/mandatory/frontend-and-ux/f23-git-file-history-review-plan-20260522.md`
 - `docs/architecture/components/web/git/git-file-history-review-user-stories.md`
 

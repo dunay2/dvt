@@ -50,10 +50,10 @@ at different times without one governing state machine.
   and regenerate planning-derived views.
 - `docs/architecture/components/web/appshell/shell-baseline-target-guide.md`: shell evolution must stay explicit
   about current state, target state, rationale, and diagrams.
-- `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`: the shell
+- [Former component inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md): the shell
   stays persistent, stateful, and explicit about `loading`, `empty`, `error`, `degraded`, and
   `read-only` states.
-- `docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md`: shell
+- [Former layout rules (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md): shell
   health belongs to the shell, route-local blocked states must not pretend the route is operable,
   and no route should overload the operator with mixed ownership.
 - `docs/architecture/components/web/frontend-runtime-modes-user-manual.md`: in `api` mode, route

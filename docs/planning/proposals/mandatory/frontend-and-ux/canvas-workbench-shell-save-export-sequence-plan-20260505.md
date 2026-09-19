@@ -35,8 +35,7 @@ verification.
 - `docs/architecture/reference-architecture.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`
-- `docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md`
+- `docs/architecture/components/web/screen-manuals-and-user-stories.md`
 - `docs/architecture/components/web/graph/canvas-workbench-tabs-component.md`
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md`
@@ -44,7 +43,7 @@ verification.
 - `docs/architecture/components/api/protected-runtime-command-query-rail-design.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md`
-- `docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md`
+- [UX v0.4 design input (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md)
 - `docs/planning/proposals/mandatory/frontend-and-ux/assets/canvas-workbench-stage-1-mockup-20260505.png`
 
 ## Product Direction
@@ -371,10 +370,8 @@ componentGuides:
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/web/appshell/app-shell.md
   - docs/architecture/components/web/iconography-and-design-tokens-contract.md
-  - docs/architecture/components/web/main-workspace-views-and-ux.md
-  - docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
   - docs/architecture/components/web/ux-implementation-guide.md
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
 userStories:
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
   - docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
@@ -390,14 +387,11 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
   - docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
   - docs/architecture/components/web/iconography-and-design-tokens-contract.md
-  - docs/architecture/components/web/main-workspace-views-and-ux.md
-  - docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
   - docs/architecture/components/web/ux-implementation-guide.md
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md
-  - docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md
   - docs/planning/proposals/nice-to-have/frontend-and-ux/dvt-ui-workbench-architecture-proposal-20260404.md
   - docs/planning/proposals/mandatory/frontend-and-ux/assets/canvas-workbench-stage-1-mockup-20260505.png
   - docs/planning/closeouts/20260514-f28-canvas-workbench-sequence-closeout.md
