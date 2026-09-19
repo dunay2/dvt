@@ -120,28 +120,35 @@ describe('JOIN append field defaults', () => {
     );
   }
 
-  it('changes the selected stage to LEFT and makes L/R null-extension roles explicit', () => {
-    const inspection = inspectDvtSubstraitJoinPredicateContext(baselineDraft)!.inspection;
-    const relationId = inspection.projection.joinRelations[0]!.relationId;
-    renderEditor(null, baselineDraft, relationId);
-    const select = container.querySelector<HTMLSelectElement>(
-      '[data-slot="canvas-relational-tree-join-type"]'
-    )!;
+  it.each([
+    [JoinRel_JoinType.LEFT, 'L preserved · R nullable'],
+    [JoinRel_JoinType.RIGHT, 'L nullable · R preserved'],
+    [JoinRel_JoinType.OUTER, 'L nullable · R nullable'],
+  ] as const)(
+    'changes the selected stage to %s and exposes its operand policy',
+    (joinType, hint) => {
+      const inspection = inspectDvtSubstraitJoinPredicateContext(baselineDraft)!.inspection;
+      const relationId = inspection.projection.joinRelations[0]!.relationId;
+      renderEditor(null, baselineDraft, relationId);
+      const select = container.querySelector<HTMLSelectElement>(
+        '[data-slot="canvas-relational-tree-join-type"]'
+      )!;
 
-    act(() => {
-      select.value = String(JoinRel_JoinType.LEFT);
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+      act(() => {
+        select.value = String(joinType);
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      });
 
-    expect(onChange).toHaveBeenCalledOnce();
-    const changed = onChange.mock.calls[0]![0];
-    const changedInspection = inspectDvtSubstraitJoinPredicateContext(changed)!.inspection;
-    expect(changedInspection.projection.joinRelations[0]?.joinType).toBe(JoinRel_JoinType.LEFT);
-    renderEditor(null, changed, relationId);
-    expect(
-      container.querySelector('[data-slot="canvas-relational-tree-left-join-roles"]')?.textContent
-    ).toBe('L preserved · R nullable');
-  });
+      expect(onChange).toHaveBeenCalledOnce();
+      const changed = onChange.mock.calls[0]![0];
+      const changedInspection = inspectDvtSubstraitJoinPredicateContext(changed)!.inspection;
+      expect(changedInspection.projection.joinRelations[0]?.joinType).toBe(joinType);
+      renderEditor(null, changed, relationId);
+      expect(
+        container.querySelector('[data-slot="canvas-relational-tree-join-roles"]')?.textContent
+      ).toBe(hint);
+    }
+  );
 
   function changeField(slot: 'existing' | 'connected', text: string): void {
     const select = container.querySelector<HTMLSelectElement>(

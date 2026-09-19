@@ -10,6 +10,8 @@ export type GraphNodeAlgebraicDrop = {
 const OPERATION_LABEL: Record<CanvasAlgebraicCompositionOperation, string> = {
   inner_join: '⋈ JOIN',
   left_join: '⋉ LEFT JOIN',
+  right_join: '⋊ RIGHT JOIN',
+  full_outer_join: '⟗ FULL OUTER JOIN',
   union_all: '∪ ALL',
 };
 
@@ -21,6 +23,8 @@ export function resolveGraphNodeAlgebraicDrop(value: unknown): GraphNodeAlgebrai
     candidate.operations.length === 0 ||
     (candidate.activeOperation !== 'inner_join' &&
       candidate.activeOperation !== 'left_join' &&
+      candidate.activeOperation !== 'right_join' &&
+      candidate.activeOperation !== 'full_outer_join' &&
       candidate.activeOperation !== 'union_all')
   ) {
     return undefined;

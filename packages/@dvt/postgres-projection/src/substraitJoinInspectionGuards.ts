@@ -118,7 +118,10 @@ export function inspectNInputJoinNode(
   if (rel.relType.case !== 'join') return null;
   const join = rel.relType.value;
   if (
-    (join.type !== JoinRel_JoinType.INNER && join.type !== JoinRel_JoinType.LEFT) ||
+    (join.type !== JoinRel_JoinType.INNER &&
+      join.type !== JoinRel_JoinType.LEFT &&
+      join.type !== JoinRel_JoinType.RIGHT &&
+      join.type !== JoinRel_JoinType.OUTER) ||
     join.postJoinFilter != null ||
     join.advancedExtension != null ||
     join.common?.hint != null ||

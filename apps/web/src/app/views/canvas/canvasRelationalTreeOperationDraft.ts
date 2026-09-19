@@ -5,6 +5,7 @@ import { createCanvasRelationalTreeInitialJoinDraft } from './canvasRelationalTr
 import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
 import { createDvtSubstraitUnionAllDraft } from './canvasDvtSubstraitSetComposition';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
+import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 
 export function createCanvasRelationalTreeOperationDraft(
   args: Readonly<{
@@ -20,7 +21,7 @@ export function createCanvasRelationalTreeOperationDraft(
   if (args.operation === 'projection')
     return createCanvasRelationalTreeProjectionDraft({ input, targetNodeId: args.targetNodeId });
   if (rightInputId == null) return null;
-  if (args.operation === 'inner_join' || args.operation === 'left_join')
+  if (isCanvasJoinOperation(args.operation))
     return createCanvasRelationalTreeInitialJoinDraft({
       ...args,
       leftInputId: input.nodeId,

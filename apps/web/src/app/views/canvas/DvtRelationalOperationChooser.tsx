@@ -14,6 +14,8 @@ type RelationalOperationCopy = Pick<
   CanvasRelationalTreeWorkbenchCopy,
   | 'inspectorDvtSubstraitInnerJoinAction'
   | 'inspectorDvtSubstraitLeftJoinAction'
+  | 'inspectorDvtSubstraitRightJoinAction'
+  | 'inspectorDvtSubstraitFullOuterJoinAction'
   | 'inspectorDvtSubstraitUnionAllAction'
   | 'relationalTreeProjectOperationLabel'
   | 'inspectorDvtRelationalAvailable'
@@ -36,6 +38,10 @@ export function canvasRelationalOperationLabel(
       return copy.inspectorDvtSubstraitInnerJoinAction;
     case 'left_join':
       return copy.inspectorDvtSubstraitLeftJoinAction;
+    case 'right_join':
+      return copy.inspectorDvtSubstraitRightJoinAction;
+    case 'full_outer_join':
+      return copy.inspectorDvtSubstraitFullOuterJoinAction;
     case 'union_all':
       return copy.inspectorDvtSubstraitUnionAllAction;
   }
@@ -95,7 +101,7 @@ export function DvtRelationalOperationChooser({
               : 'h-auto min-w-40 justify-between gap-3 py-2 aria-pressed:border-(--status-info) aria-pressed:bg-blue-950/40'
           }
           title={canvasRelationalAvailabilityLabel(choice.availability, copy)}
-          data-slot={`dvt-select-operation-${choice.operation.replace('_', '-')}`}
+          data-slot={`dvt-select-operation-${choice.operation.replaceAll('_', '-')}`}
           onDragStart={(event) => {
             if (!choice.selectable || selectedOperation != null) {
               event.preventDefault();
@@ -111,7 +117,9 @@ export function DvtRelationalOperationChooser({
           }}
         >
           {layout !== 'shelf' ? null : choice.operation === 'inner_join' ||
-            choice.operation === 'left_join' ? (
+            choice.operation === 'left_join' ||
+            choice.operation === 'right_join' ||
+            choice.operation === 'full_outer_join' ? (
             <CanvasRelationalJoinIcon aria-hidden="true" className="size-4" />
           ) : choice.operation === 'union_all' ? (
             <Layers3 aria-hidden="true" className="size-4" />

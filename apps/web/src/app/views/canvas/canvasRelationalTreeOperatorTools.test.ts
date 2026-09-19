@@ -158,6 +158,8 @@ describe('admitted relational operator tools', () => {
       'substrait.FilterRel',
       'substrait.JoinRel/JoinType.JOIN_TYPE_INNER',
       'substrait.JoinRel/JoinType.JOIN_TYPE_LEFT',
+      'substrait.JoinRel/JoinType.JOIN_TYPE_OUTER',
+      'substrait.JoinRel/JoinType.JOIN_TYPE_RIGHT',
       'substrait.ProjectRel',
       'substrait.ReadRel/read_type.named_table',
       'substrait.RelCommon/emit_kind.emit',

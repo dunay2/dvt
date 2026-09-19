@@ -112,16 +112,26 @@ export function CanvasRelationalTreeJoinEditor({
                 <option value={JoinRel_JoinType.LEFT}>
                   {copy.inspectorDvtSubstraitLeftJoinAction}
                 </option>
+                <option value={JoinRel_JoinType.RIGHT}>
+                  {copy.inspectorDvtSubstraitRightJoinAction}
+                </option>
+                <option value={JoinRel_JoinType.OUTER}>
+                  {copy.inspectorDvtSubstraitFullOuterJoinAction}
+                </option>
               </select>
             </label>
-            {selectedStage.joinType === JoinRel_JoinType.LEFT ? (
+            {selectedStage.joinType === JoinRel_JoinType.INNER ? null : (
               <p
-                data-slot="canvas-relational-tree-left-join-roles"
+                data-slot="canvas-relational-tree-join-roles"
                 className="pb-1 text-[11px] text-(--text-secondary)"
               >
-                {copy.inspectorDvtSubstraitLeftJoinRolesHint}
+                {selectedStage.joinType === JoinRel_JoinType.LEFT
+                  ? copy.inspectorDvtSubstraitLeftJoinRolesHint
+                  : selectedStage.joinType === JoinRel_JoinType.RIGHT
+                    ? copy.inspectorDvtSubstraitRightJoinRolesHint
+                    : copy.inspectorDvtSubstraitFullOuterJoinRolesHint}
               </p>
-            ) : null}
+            )}
           </div>
         )}
         <DvtSubstraitJoinPredicateEditors

@@ -97,6 +97,8 @@ describe('Canvas relational-tree guided authoring model', () => {
       { operation: 'projection', availability: 'available', selectable: true },
       { operation: 'inner_join', availability: 'needs-input', selectable: false },
       { operation: 'left_join', availability: 'needs-input', selectable: false },
+      { operation: 'right_join', availability: 'needs-input', selectable: false },
+      { operation: 'full_outer_join', availability: 'needs-input', selectable: false },
       { operation: 'union_all', availability: 'needs-input', selectable: false },
     ]);
 
@@ -116,6 +118,8 @@ describe('Canvas relational-tree guided authoring model', () => {
     ).toEqual([
       { operation: 'inner_join', availability: 'needs-predicate', selectable: true },
       { operation: 'left_join', availability: 'needs-predicate', selectable: true },
+      { operation: 'right_join', availability: 'needs-predicate', selectable: true },
+      { operation: 'full_outer_join', availability: 'needs-predicate', selectable: true },
       { operation: 'union_all', availability: 'available', selectable: true },
     ]);
   });
@@ -170,7 +174,7 @@ describe('Canvas relational-tree guided authoring model', () => {
       nodes,
       edges,
     });
-    expect(choices).toHaveLength(4);
+    expect(choices).toHaveLength(6);
     expect(
       choices.every((choice) => !choice.selectable && choice.availability === 'read-only')
     ).toBe(true);

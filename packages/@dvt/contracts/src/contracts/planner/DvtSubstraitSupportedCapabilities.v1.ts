@@ -162,6 +162,14 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
   },
   {
     entryIds: [
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT'),
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_OUTER'),
+    ],
+    useCaseRefs: ['dvt:#3308'],
+    proofRef: 'docs/evidence/ED-20260919-right-full-join-end-to-end.md',
+  },
+  {
+    entryIds: [
       standardId('relation', 'substrait.AggregateRel'),
       functionId('aggregate-function', 'functions_aggregate_generic', 'count'),
       standardId('type', 'substrait.Type', 'kind.i64'),

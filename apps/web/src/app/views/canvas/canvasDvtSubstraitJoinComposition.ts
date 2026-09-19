@@ -13,6 +13,8 @@ import {
   hasCurrentJoinSemanticHash,
   inspectNInputJoinStructure,
   inspectDvtSubstraitJoinDraft as inspectDvtSubstraitJoinProjection,
+  dvtSubstraitJoinNullExtendsLeft,
+  dvtSubstraitJoinNullExtendsRight,
 } from '@dvt/postgres-projection';
 export {
   type DvtSubstraitJoinDataType,
@@ -628,7 +630,11 @@ function requireJoinCapabilities(
         ? 'JoinType.JOIN_TYPE_INNER'
         : joinType === JoinRel_JoinType.LEFT
           ? 'JoinType.JOIN_TYPE_LEFT'
-          : null;
+          : joinType === JoinRel_JoinType.RIGHT
+            ? 'JoinType.JOIN_TYPE_RIGHT'
+            : joinType === JoinRel_JoinType.OUTER
+              ? 'JoinType.JOIN_TYPE_OUTER'
+              : null;
     if (selector == null) throw new Error('The requested JOIN type is not admitted.');
     requireSupportedCapability(
       buildDvtSubstraitStandardCapabilityId('relation', {
@@ -962,14 +968,19 @@ function createDvtSubstraitNInputJoinDraft(args: {
   const stageOutputs: JoinOriginField[][] = [];
   for (const [predicateIndex, predicate] of args.predicates.entries()) {
     const rightInputIndex = predicateIndex + 1;
+    const joinType = joinTypes[predicateIndex]!;
+    const leftFields = currentFields.map<JoinOriginField>((field) => ({
+      ...field,
+      nullable: dvtSubstraitJoinNullExtendsLeft(joinType) ? true : field.nullable,
+    }));
     const rightFields = inputIdentities[rightInputIndex]!.fields.map<JoinOriginField>((field) => ({
       inputIndex: rightInputIndex,
       name: field.name,
       fieldId: field.fieldId,
       dataType: field.dataType,
-      nullable: joinTypes[predicateIndex] === JoinRel_JoinType.LEFT ? true : field.nullable,
+      nullable: dvtSubstraitJoinNullExtendsRight(joinType) ? true : field.nullable,
     }));
-    const available = [...currentFields, ...rightFields];
+    const available = [...leftFields, ...rightFields];
     const selectedOutputs = args.outputs
       .filter((output) => output.source.inputIndex <= rightInputIndex)
       .map((output) => {

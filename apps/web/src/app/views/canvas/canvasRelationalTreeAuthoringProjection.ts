@@ -11,6 +11,7 @@ import {
 } from './canvasRelationalTreeProjection';
 import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 
 export function projectCanvasRelationalTreeAuthoringDraft(
   args: Readonly<{
@@ -37,8 +38,7 @@ export function projectCanvasRelationalTreeAuthoringDraft(
               });
         })()
       : args.joinDraft != null ||
-          args.operation === 'inner_join' ||
-          args.operation === 'left_join' ||
+          isCanvasJoinOperation(args.operation) ||
           args.operation === 'projection'
         ? args.joinDraft
         : args.operation === 'union_all'

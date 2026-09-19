@@ -8,7 +8,16 @@ import type { DvtSubstraitInspectedJoinOperand } from './substraitJoinOperandRea
 
 export type DvtSubstraitJoinDataType = 'string' | 'bool' | 'i64' | 'fp64' | 'precisionTimestampTz';
 
-export type DvtSubstraitJoinType = JoinRel_JoinType.INNER | JoinRel_JoinType.LEFT;
+export type DvtSubstraitJoinType =
+  JoinRel_JoinType.INNER | JoinRel_JoinType.LEFT | JoinRel_JoinType.RIGHT | JoinRel_JoinType.OUTER;
+
+export function dvtSubstraitJoinNullExtendsLeft(joinType: DvtSubstraitJoinType): boolean {
+  return joinType === JoinRel_JoinType.RIGHT || joinType === JoinRel_JoinType.OUTER;
+}
+
+export function dvtSubstraitJoinNullExtendsRight(joinType: DvtSubstraitJoinType): boolean {
+  return joinType === JoinRel_JoinType.LEFT || joinType === JoinRel_JoinType.OUTER;
+}
 
 export type DvtSubstraitJoinDraft = Readonly<{
   plan: Plan;

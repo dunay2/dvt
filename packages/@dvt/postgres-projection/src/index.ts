@@ -62,6 +62,8 @@ export {
   type InspectedJoinStage,
   type InspectedJoinStructure,
   type InspectedJoinPredicateOperand,
+  dvtSubstraitJoinNullExtendsLeft,
+  dvtSubstraitJoinNullExtendsRight,
 } from './substraitJoinReadModel.js';
 export {
   ZERO_SHA256,

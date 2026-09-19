@@ -41,7 +41,11 @@ const node: CanonicalNode = {
 };
 
 describe('Transform result destination metadata', () => {
-  it('restores and persists LEFT JOIN as the canonical authoring shape', () => {
+  it.each([
+    [JoinRel_JoinType.LEFT, 'left_join'],
+    [JoinRel_JoinType.RIGHT, 'right_join'],
+    [JoinRel_JoinType.OUTER, 'full_outer_join'],
+  ] as const)('restores and persists %s as the canonical %s authoring shape', (joinType, shape) => {
     const source = (id: string, table: string): DvtSubstraitJoinSource => ({
       nodeId: id,
       schema: 'raw',
@@ -59,14 +63,14 @@ describe('Transform result destination metadata', () => {
           left: source('orders', 'orders'),
           right: source('clients', 'clients'),
           targetNodeId: node.id,
-          joinType: JoinRel_JoinType.LEFT,
+          joinType,
         })
       )
     );
 
     const metadata = createDvtTransformAuthoringMetadata(semanticNode);
 
-    expect(metadata).toMatchObject({ mode: 'substrait', shape: 'left_join' });
+    expect(metadata).toMatchObject({ mode: 'substrait', shape });
     expect(applyDvtTransformAuthoringMetadata(semanticNode, metadata)).toEqual(semanticNode);
   });
 

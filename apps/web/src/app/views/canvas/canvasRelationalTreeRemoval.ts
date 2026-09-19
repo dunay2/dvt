@@ -1,5 +1,4 @@
 /** Owned concern: retire one relational card through the canonical draft builders. */
-import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import {
   inspectDvtSubstraitJoinDraft,
   inspectDvtSubstraitJoinAcceptedDraft,
@@ -17,12 +16,14 @@ import { inspectDvtSubstraitUnionAllAcceptedDraft } from './canvasDvtSubstraitSe
 import { applyCanvasRelationalOperatorTool } from './canvasRelationalTreeOperatorCommands';
 import { removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import { removeDvtSubstraitProjectionRoot } from './canvasDvtSubstraitStructuredFieldRemove';
+import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
+import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
 
 export type CanvasRelationalRemovalResult =
   | Readonly<{
       ok: true;
       draft: DvtSubstraitJoinDraft;
-      operation: 'inner_join' | 'left_join' | 'projection' | 'union_all';
+      operation: CanvasRelationalOperation;
       retained: readonly number[];
     }>
   | Readonly<{
@@ -36,12 +37,11 @@ export type CanvasRelationalRemovalResult =
       proposal: Extract<CanvasRelationalRemovalResult, { ok: true }>;
     }>;
 
-function operationForJoinDraft(draft: DvtSubstraitJoinDraft): 'inner_join' | 'left_join' | null {
+function operationForJoinDraft(draft: DvtSubstraitJoinDraft): CanvasRelationalOperation | null {
   const context = inspectDvtSubstraitJoinPredicateContext(draft);
   if (context == null || !context.inspection.ok) return null;
-  return context.inspection.projection.joinRelations.at(-1)?.joinType === JoinRel_JoinType.LEFT
-    ? 'left_join'
-    : 'inner_join';
+  const joinType = context.inspection.projection.joinRelations.at(-1)?.joinType;
+  return joinType == null ? null : canvasJoinOperationForType(joinType);
 }
 
 export function removeCanvasRelationalTreeNode(

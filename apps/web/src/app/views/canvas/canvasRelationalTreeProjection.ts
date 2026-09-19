@@ -231,7 +231,11 @@ function buildTree(
         ? 'INNER JOIN'
         : args.rel.relType.value.type === JoinRel_JoinType.LEFT
           ? 'LEFT JOIN'
-          : 'UNSUPPORTED JOIN';
+          : args.rel.relType.value.type === JoinRel_JoinType.RIGHT
+            ? 'RIGHT JOIN'
+            : args.rel.relType.value.type === JoinRel_JoinType.OUTER
+              ? 'FULL OUTER JOIN'
+              : 'UNSUPPORTED JOIN';
   return {
     locator: `rel:${args.semanticDigest}:${args.path}`,
     operator: operator(args.rel),

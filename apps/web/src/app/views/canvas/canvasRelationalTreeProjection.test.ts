@@ -151,7 +151,11 @@ describe('ProjectCanvasRelationalTree', () => {
     }
   });
 
-  it('projects the exact type of every mixed JOIN stage', () => {
+  it.each([
+    [JoinRel_JoinType.LEFT, 'LEFT JOIN'],
+    [JoinRel_JoinType.RIGHT, 'RIGHT JOIN'],
+    [JoinRel_JoinType.OUTER, 'FULL OUTER JOIN'],
+  ] as const)('projects the exact %s type in a mixed JOIN tree', (joinType, label) => {
     const initial = createDvtSubstraitJoinDraft({
       left: joinSource('customers', 'customers'),
       right: joinSource('orders', 'orders'),
@@ -167,7 +171,7 @@ describe('ProjectCanvasRelationalTree', () => {
       fields: ['shipment_id', 'customer_id'],
       predicate: { leftSourceFieldId: customerId, rightFieldName: 'customer_id' },
       selectedFields: ['shipment_id'],
-      joinType: JoinRel_JoinType.LEFT,
+      joinType,
     });
     const transform = applyDvtSubstraitSemanticDocument(
       targetNode(),
@@ -181,7 +185,7 @@ describe('ProjectCanvasRelationalTree', () => {
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.projection.root.operationLabel).toBe('LEFT JOIN');
+    expect(result.projection.root.operationLabel).toBe(label);
     expect(result.projection.root.children[0]?.node.operationLabel).toBe('INNER JOIN');
   });
 

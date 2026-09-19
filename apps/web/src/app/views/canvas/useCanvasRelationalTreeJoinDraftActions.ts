@@ -7,7 +7,7 @@ import type {
   CanvasRelationalOperationChoice,
 } from './canvasRelationalOperationChoices';
 import { appendCanvasRelationalTreeJoinInput } from './canvasRelationalTreeAuthoringModel';
-import { setFinalCanvasJoinType } from './canvasRelationalTreeJoinType';
+import { isCanvasJoinOperation, setFinalCanvasJoinType } from './canvasRelationalTreeJoinType';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { createCanvasRelationalTreeOperationDraft } from './canvasRelationalTreeOperationDraft';
 
@@ -43,7 +43,7 @@ export function useCanvasRelationalTreeJoinDraftActions(
     (nextOperation: CanvasRelationalOperation) => {
       if (!choices.some((choice) => choice.operation === nextOperation && choice.selectable))
         return;
-      if ((nextOperation === 'inner_join' || nextOperation === 'left_join') && joinDraft != null) {
+      if (isCanvasJoinOperation(nextOperation) && joinDraft != null) {
         const next = setFinalCanvasJoinType(joinDraft, nextOperation);
         if (next == null) return;
         setJoinDraft(next);
@@ -81,7 +81,7 @@ export function useCanvasRelationalTreeJoinDraftActions(
       const next = appendCanvasRelationalTreeJoinInput({
         draft: joinDraft,
         input,
-        operation: operation === 'left_join' || operation === 'inner_join' ? operation : undefined,
+        operation: isCanvasJoinOperation(operation) ? operation : undefined,
         ...selection,
       });
       if (next === joinDraft) return;
