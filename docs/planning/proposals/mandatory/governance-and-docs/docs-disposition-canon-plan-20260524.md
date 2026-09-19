@@ -153,6 +153,8 @@ allowedImplementationSurfaces:
   - tools/docs/validate-planner-stage-1-1-manifest.ts
   - tools/planning-db/state/db-governance-surfaces.json
 forbiddenImplementationSurfaces:
+  - .gh-comments/**
+  - .git.bfg-report/**
   - apps/**
   - packages/**
   - specs/**

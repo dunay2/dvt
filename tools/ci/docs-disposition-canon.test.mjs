@@ -359,6 +359,62 @@ test('retired documentation-only closeouts have no files or local consumers', ()
     '20260318-stage-1-1-planner-canonicalization-policy-vocabulary-contracts-closeout.md',
   ]);
   const editorialCloseouts = new Set([
+    '20260316-principal-architecture-review-closeout.md',
+    '20260413-web-config-hardening-closeout.md',
+    '20260416-tf-e2-web-typecheck-hardening-closeout.md',
+    '20260417-graph-architecture-doc-pack-split-closeout.md',
+    '20260417-planning-gaps-governance-refresh-closeout.md',
+    '20260417-root-local-doc-canonicalization-closeout.md',
+    '20260417-root-local-doc-english-integration-closeout.md',
+    '20260420-adapter-temporal-canonical-test-route-cleanup-closeout.md',
+    '20260423-docs-frontmatter-bom-governance-fix-closeout.md',
+    '20260423-docs-markdown-parser-componentization-closeout.md',
+    '20260423-rc-c2-wave-2c-prepush-affected-typecheck-closeout.md',
+    '20260423-rc-c2-wave-3a-docs-manifest-determinism-closeout.md',
+    '20260423-rc-c2-wave-3b-changed-doc-governance-closeout.md',
+    '20260423-rc-c2-wave-3c-generated-doc-single-writer-closeout.md',
+    '20260511-doc-gov-file-shards-closeout.md',
+    '20260522-f24-parent-visual-token-convergence-closeout.md',
+    '20260601-ai-targeted-governance-report-tests-closeout.md',
+    '20260601-api-test-ci-lifecycle-bypass-closeout.md',
+    '20260601-ci-remote-turbo-cache-closeout.md',
+    '20260601-governance-owner-matcher-precompile-closeout.md',
+    '20260601-governance-refresh-db-first-import-gate-closeout.md',
+    '20260601-local-dbfirst-command-dedupe-closeout.md',
+    '20260602-ci-affected-preflight-dedupe-closeout.md',
+    '20260603-ci-security-analysis-scope-closeout.md',
+    '20260315-architecture-components-map-closeout.md',
+    '20260315-docs-governance-hardening-closeout.md',
+    '20260315-markdown-location-governance-closeout.md',
+    '20260316-phase2-arch-roadmap-closeout.md',
+    '20260317-adapter-temporal-pretest-split-closeout.md',
+    '20260317-outbox-worker-script-dedup-closeout.md',
+    '20260317-repo-rule-git-commit-escalation-closeout.md',
+    '20260317-tsconfig-app-base-closeout.md',
+    '20260318-contracts-generated-artifact-cleanup-closeout.md',
+    '20260331-zensical-single-config-migration-closeout.md',
+    '20260402-evidence-information-architecture-classification-closeout.md',
+    '20260402-evidence-information-architecture-phase3-migration-closeout.md',
+    '20260402-rc-g1-governance-startup-reconciliation-closeout.md',
+    '20260406-mw-a4-step-kind-extension-guide-closeout.md',
+    '20260407-f23-git-file-history-docs-first-closeout.md',
+    '20260411-pr911-merge-conflict-resolution-closeout.md',
+    '20260413-pr-895-release-branch-reconciliation-closeout.md',
+    '20260413-pr-926-web-toolchain-compatibility-closeout.md',
+    '20260514-ci-audit-adr0-owner-closeout.md',
+    '20260515-ci-audit-contracts-scope-closeout.md',
+    '20260515-ci-audit-release-flow-closeout.md',
+    '20260522-cfg-ts-t1-baseurl-deprecation-plan-closeout.md',
+    '20260522-f24-canvas-route-chrome-token-convergence-closeout.md',
+    '20260522-f24-context-panel-token-convergence-closeout.md',
+    '20260522-f24-dbt-node-renderer-token-convergence-closeout.md',
+    '20260522-f24-lineage-panel-token-convergence-closeout.md',
+    '20260522-f24-monaco-visual-token-convergence-closeout.md',
+    '20260522-f24-react-flow-token-convergence-closeout.md',
+    '20260522-f25-plugin-capability-table-closeout.md',
+    '20260525-f29-canvas-workbench-proposal-disposition-closeout.md',
+    '20260601-ci-workflow-policy-fanout-trim-closeout.md',
+    '20260603-ci-draft-ready-workflow-gates-closeout.md',
     '20260315-architecture-review-docs-closeout.md',
     '20260315-review-markdown-relocation-closeout.md',
     '20260316-engine-docs-current-state-closeout.md',
@@ -436,5 +492,69 @@ test('retired atlas and superseded Canvas guidance have no live consumers', () =
     'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md',
     'docs/planning/state/github-mvp-issue-workflow.md',
     'apps/web/src/app/views/canvas/CanvasEmptyAuthoringEntrypoint.architecture.test.ts',
+  ]);
+});
+
+// PR conversations and one-off command logs belong in Git/GitHub, not live files.
+test('retired PR drafts and historical intake have no files or live consumers', () => {
+  const retiredDirectories = ['.gh-comments', '.git.bfg-report'];
+  const retiredFiles = [
+    'docs/planning/closeouts/20260423-rc-c2-post-merge-ci-measurement.md',
+    'docs/planning/reviews/architecture-and-governance/20260513-ar-d6-triple-versioning-governance-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260525-f29-canvas-workbench-proposal-disposition-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260605-buzon-fowler-db-activation-review.md',
+    'docs/planning/reviews/ci-and-delivery/20260401-lane-c-rc-c2-efficiency-institutionalization-review.md',
+    'docs/planning/status/evidence-classification-inventory-20260402.md',
+    '.gh-comments/normalize_issues_v2.ps1',
+    '.gh-comments/pr-117.md',
+    '.gh-comments/pr-221.md',
+    '.gh-comments/pr-226-glossary-and-postgres-hardening-2026-02-19.md',
+    '.gh-comments/pr-9.md',
+    '.gh-comments/pr-closure-notes-14-15.md',
+    '.gh-comments/pr-postgres-hardening-p0-p2-2026-02-19.md',
+    '.gh-comments/pr-roadmap-status-refresh-2026-02-15.md',
+    '.git.bfg-report/2026-02-19/14-48-28/cache-stats.txt',
+    '.git.bfg-report/2026-02-19/14-48-28/object-id-map.old-new.txt',
+    'buzon/20260524-codex-fowler-planning-review-canon.md',
+    'buzon/dvt_front_component_inventory_app_reflection_study_20260604.md',
+    'docs/planning/status/20260402-command-logging-pane.md',
+  ];
+  for (const path of [...retiredDirectories, ...retiredFiles]) {
+    assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, path);
+  }
+  const retiredNames = retiredFiles.map((path) => path.split('/').at(-1));
+  const paths = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
+    .split('\0')
+    .filter(Boolean);
+  for (const path of paths) {
+    if (path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
+    if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
+    let current = readRepoFile(path).replace(
+      /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
+      ''
+    );
+    if (path === requiredFiles[0]) {
+      // The existing guard permits removal of fully absent forbidden subtrees.
+      // Exempt only this exact prohibition, never the owning document as a whole.
+      const prohibition =
+        'forbiddenImplementationSurfaces:\n  - .gh-comments/**\n  - .git.bfg-report/**\n';
+      assert.equal(current.split(prohibition).length, 2, 'retired roots must remain forbidden');
+      current = current.replace(prohibition, 'forbiddenImplementationSurfaces:\n');
+    }
+    for (const name of retiredNames) {
+      assert.equal(current.includes(name), false, `retired journal reference: ${path}: ${name}`);
+    }
+    for (const directory of retiredDirectories) {
+      assert.equal(
+        current.includes(`${directory}/`),
+        false,
+        `retired metadata ownership or reference: ${path}: ${directory}`
+      );
+    }
+  }
+  assertFilesExist([
+    'docs/planning/state/github-mvp-issue-workflow.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/frontend-component-reflection-inventory-plan-20260604.md',
+    'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md',
   ]);
 });

@@ -850,8 +850,6 @@ units:
       - repository metadata reviewed through governance checks
     owns:
       - .claude/**
-      - .gh-comments/**
-      - .git.bfg-report/**
       - .golden/**
       - .vscode/**
       - .arc-policy.yaml
