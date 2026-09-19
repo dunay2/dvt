@@ -1,35 +1,130 @@
-name: Isolated documentation source audit
+name: Isolated runtime journal retirement
 on:
   push:
     branches: [automation/3004-source-audit-pass-20260919]
     paths: [.github/workflows/retirement-next-audit.yml]
 permissions:
-  contents: read
+  contents: write
 jobs:
-  audit:
+  retire:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 20
+    env:
+      GIT_BASE: 21a7b3b45334c9d9d14d62d256c4e559b77b1a30
+      GIT_HEAD: HEAD
+      PLANNING_DB_INTEGRITY_SCOPE: bootstrap
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Read pinned audited preparation
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 21a7b3b45334c9d9d14d62d256c4e559b77b1a30
+          ref: e47dd94f71e366a1fd4c557d095b79acc624a65b
           persist-credentials: false
-      - name: Export tracked sources only
+      - name: Keep helpers outside the product tree
         shell: bash
         run: |
           set -euo pipefail
-          out="$RUNNER_TEMP/retirement-source"
-          mkdir -p "$out"
-          git rev-parse HEAD > "$out/head.txt"
-          git rev-parse HEAD^{tree} > "$out/tree.txt"
-          git ls-tree -rz HEAD > "$out/files.txt"
-          git cat-file commit HEAD > "$out/commit.txt"
-          git archive --format=tar HEAD | gzip -n > "$out/source.tar.gz"
-          cd "$out"
-          sha256sum head.txt tree.txt files.txt commit.txt source.tar.gz > SHA256SUMS
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+          mkdir -p "$RUNNER_TEMP/runtime-retirement"
+          cp .github/maintenance/runtime-journal-retirement.py "$RUNNER_TEMP/runtime-journal-retirement.py"
+          sha256sum "$RUNNER_TEMP/runtime-journal-retirement.py" > "$RUNNER_TEMP/runtime-retirement/preparation-sha256.txt"
+      - name: Checkout the exact product baseline
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          name: retirement-next-source
-          path: ${{ runner.temp }}/retirement-source
+          ref: 21a7b3b45334c9d9d14d62d256c4e559b77b1a30
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+      - name: Reproduce retirement and verify every restoration and reference
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AUDIT_OUT="$RUNNER_TEMP/runtime-retirement"
+          python "$RUNNER_TEMP/runtime-journal-retirement.py" | tee "$AUDIT_OUT/preparation.log"
+          git diff --check
+      - name: Commit the exact scope using the helper and enabled hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AUDIT_OUT="$RUNNER_TEMP/runtime-retirement"
+          git config user.name "DVT documentation maintenance"
+          git config user.email "34416258+dunay2@users.noreply.github.com"
+          git switch -c docs/3004-retire-runtime-maintenance-journals
+          python - <<'PY'
+          import json,os,pathlib,subprocess
+          s=json.loads((pathlib.Path(os.environ['AUDIT_OUT'])/'scope.json').read_text())
+          paths=sorted(set(s['deleted'])|set(s['modified']))
+          assert len(paths)==26
+          subprocess.run(['git','add','-A','--',*paths],check=True)
+          assert set(subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines())==set(paths)
+          PY
+          pnpm commit docs docs "Retire obsolete runtime maintenance journals" 2>&1 | tee "$AUDIT_OUT/commit.log"
+          git rev-parse HEAD > "$AUDIT_OUT/head.txt"
+          git rev-parse HEAD^{tree} > "$AUDIT_OUT/tree.txt"
+      - name: Prepare only the disposable CI database from the committed candidate
+        uses: ./.github/actions/prepare-planning-db
+      - name: Refresh existing generators and validate the actual candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/runtime-retirement"
+          pnpm docs:sync 2>&1 | tee "$out/docs-sync.log"
+          pnpm governance:refresh 2>&1 | tee "$out/governance-refresh.log"
+          git diff --exit-code HEAD
+          test -z "$(git status --porcelain)"
+          node --test scripts/check-feature-mechanization.test.cjs scripts/documentation-publication.test.cjs scripts/planning-db-surface-inventory-check.test.cjs tools/ci/docs-disposition-canon.test.mjs tools/ci/startup-card-canon.test.mjs tools/ci/planner-package-governance.test.mjs tools/ci/architecture-doc-reconciliation-canon.test.mjs scripts/governance-refresh.test.cjs tools/ci/emit-test-matrix.test.mjs tools/ci/turbo-workspace-task-contract.test.mjs 2>&1 | tee "$out/tests.log"
+          node tools/ci/arc-check.mjs > "$out/arc.json"
+          pnpm docs:sync:check 2>&1 | tee "$out/sync-check.log"
+          pnpm docs:gov:manifest:check 2>&1 | tee "$out/manifest-check.log"
+          pnpm ci:docs 2>&1 | tee "$out/ci-docs.log"
+          pnpm verify:prepush 2>&1 | tee "$out/prepush.log"
+          pnpm pr:validate-title "docs(docs): Retire obsolete runtime maintenance journals" 2>&1 | tee "$out/title.log"
+          git diff --exit-code HEAD
+          test -z "$(git status --porcelain)"
+          git diff --exit-code "$GIT_BASE" HEAD -- apps packages specs scripts .github .arc-policy.yaml AGENTS.md CLAUDE.md docs/architecture docs/contracts docs/adr docs/evidence docs/risk-register docs/runbooks docs/planning/proposals buzon
+          python - <<'PY'
+          import json,os,pathlib,subprocess
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'runtime-retirement'
+          s=json.loads((out/'scope.json').read_text());base=s['baseline']
+          def git(*args):return subprocess.check_output(['git',*args])
+          paths=set(s['deleted'])|set(s['modified'])
+          assert set(git('diff','--name-only',base,'HEAD').decode().splitlines())==paths
+          assert set(git('diff','--name-only','--diff-filter=D',base,'HEAD').decode().splitlines())==set(s['deleted'])
+          assert not git('diff','--name-only','--diff-filter=A',base,'HEAD').strip()
+          for p,h in s['deleted'].items():assert git('rev-parse',base+':'+p).decode().strip()==h,p
+          guard=s['modified'][0]
+          original=git('show',base+':'+guard).decode();final=git('show','HEAD:'+guard).decode()
+          for p in s['deleted']:
+            line="    '"+pathlib.Path(p).name+"',\n"
+            assert final.count(line)==1
+            final=final.replace(line,'')
+          assert final==original,'prior guard assertions changed'
+          for name,args in {'candidate.patch':['diff','--binary',base,'HEAD'],'stats.txt':['diff','--stat',base,'HEAD'],'numstat.txt':['diff','--numstat',base,'HEAD'],'name-status.txt':['diff','--name-status',base,'HEAD'],'head-files.txt':['ls-tree','-rz','HEAD'],'base-files.txt':['ls-tree','-rz',base],'commit.txt':['cat-file','commit','HEAD'],'validated.txt':['rev-parse','HEAD']}.items():(out/name).write_bytes(git(*args))
+          PY
+          git archive --format=tar HEAD | gzip -n > "$out/source.tar.gz"
+      - name: Push only the validated topic branch without force
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch=refs/heads/docs/3004-retire-runtime-maintenance-journals
+          previous=$(git ls-remote origin "$branch" | cut -f1)
+          test "$previous" = "$GIT_BASE"
+          git push origin "HEAD:$branch" 2>&1 | tee "$RUNNER_TEMP/runtime-retirement/push.log"
+      - name: Preserve integrity and failure evidence
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'runtime-retirement';out.mkdir(exist_ok=True)
+          (out/'final-status.txt').write_text(subprocess.run(['git','status','--porcelain'],capture_output=True,text=True).stdout)
+          checksums={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(out.iterdir()) if p.is_file() and p.name!='checksums.json'}
+          (out/'checksums.json').write_text(json.dumps(checksums,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: runtime-journal-retirement-validation
+          path: ${{ runner.temp }}/runtime-retirement
           retention-days: 7
           if-no-files-found: error
