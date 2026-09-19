@@ -178,7 +178,9 @@ describe('DvtSubstraitCompositionStartSection', () => {
     expect(operation.textContent).toContain('UNION');
     expect(operation.textContent).not.toContain('ALL');
 
-    act(() => fireEvent.click(operation));
+    act(() => {
+      fireEvent.click(operation);
+    });
     expect(container.textContent).toContain(canvasViewCopy.inspectorDvtSubstraitUnionDistinctTitle);
     expect(onStartUnionDistinct).not.toHaveBeenCalled();
 
