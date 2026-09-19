@@ -45,17 +45,28 @@ jobs:
       - uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
-      - name: Regenerate manifest and commit merge with normal hooks
+      - name: Commit merged sources through helper with normal hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm commit docs docs "Reconcile cleanup with current main" 2>&1 | tee /tmp/integration/commit.log
+          git rev-parse HEAD > /tmp/integration/source-head.txt
+          echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Bootstrap isolated CI database only
+        uses: ./.github/actions/prepare-planning-db
+      - name: Canonical regeneration and generated commit
         shell: bash
         run: |
           set -euo pipefail
           pnpm docs:sync 2>&1 | tee /tmp/integration/docs-sync.log
+          pnpm governance:refresh 2>&1 | tee /tmp/integration/governance-refresh.log
           git add -A
-          pnpm commit docs docs "Reconcile cleanup with current main" 2>&1 | tee /tmp/integration/commit.log
+          if ! git diff --cached --quiet; then
+            test "$(git diff --cached --name-only)" = docs/.manifest.json
+            pnpm commit docs docs "Regenerate integrated documentation manifest" 2>&1 | tee /tmp/integration/generated-commit.log
+          fi
           echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-      - name: Bootstrap isolated CI database only
-        uses: ./.github/actions/prepare-planning-db
-      - name: Refresh and validate final integration candidate
+      - name: Validate final integration candidate
         shell: bash
         run: |
           python3 - <<'PY'
@@ -70,8 +81,6 @@ jobs:
               print(name,r.returncode,flush=True)
               assert r.returncode==0,(name,r.stdout[-4000:],r.stderr[-4000:])
               return r.stdout
-          run('governance-refresh',['pnpm','governance:refresh'])
-          run('generated-clean',['git','diff','--exit-code','HEAD'])
           arc=json.loads(run('arc',['node','tools/ci/arc-check.mjs']))
           assert arc['effectiveArcLevel']=='ARC-0'
           assert all(arc['requirements'][k] is False for k in ['evidenceDoc','riskUpdate','rolloutNotes','compatMatrix'])
@@ -92,6 +101,7 @@ jobs:
           out=Path('/tmp/integration');out.mkdir(exist_ok=True);base=os.environ['BASE']
           for name,args in {'head.txt':['rev-parse','HEAD'],'tree.txt':['rev-parse','HEAD^{tree}'],'commit.txt':['cat-file','commit','HEAD'],'head-files.txt':['ls-tree','-rz','HEAD'],'status.txt':['status','--porcelain'],'candidate.patch':['diff',base,'HEAD'],'numstat.txt':['diff','--numstat',base,'HEAD'],'name-status.txt':['diff','--name-status',base,'HEAD'],'stats.txt':['diff','--stat',base,'HEAD']}.items():
               (out/name).write_bytes(subprocess.check_output(['git',*args]))
+          if (out/'source-head.txt').exists():(out/'source-commit.txt').write_bytes(subprocess.check_output(['git','cat-file','commit',(out/'source-head.txt').read_text().strip()]))
           subprocess.run(['git','archive','--format=tar.gz','-o',str(out/'source.tar.gz'),'HEAD'],check=True)
           (out/'checksums.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in out.iterdir() if p.is_file() and p.name!='checksums.json'},indent=2))
           print((out/'head.txt').read_text())
