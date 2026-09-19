@@ -14,7 +14,7 @@ jobs:
       GIT_HEAD: HEAD
       PLANNING_DB_INTEGRITY_SCOPE: bootstrap
     steps:
-      - name: Checkout only the exact product baseline
+      - name: Checkout the exact product baseline
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: b1778255afcc6392e54b887c79660005ed8754ad
@@ -23,7 +23,7 @@ jobs:
       - uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
-      - name: Verify preparation and reproduce retirement controls
+      - name: Prepare exact changes and reproduce retirement and routing regressions
         shell: bash
         env:
           GH_READ_TOKEN: ${{ github.token }}
@@ -45,7 +45,8 @@ jobs:
           raw=gzip.decompress(compressed);assert hashlib.sha256(raw).hexdigest()=='8a0fb5dd4a6ae45d1c701e0f4ac9800a3d11c59225c8bb465e8b398bfa995002'
           recipe=json.loads(raw);(out/'recipe.json').write_bytes(raw)
           corrections=fetch('864dd3249b9de379cba1c3c01b109091f3e1dfee');(out/'consumer-corrections.json').write_bytes(corrections)
-          assert recipe['baseline']==os.environ['GIT_BASE'] and len(recipe['delete'])==4 and len(recipe['edits'])==49
+          routing_raw=fetch('4d21af375bd9c4602535744c98aa239d97de2e36');(out/'routing-fix.json').write_bytes(routing_raw);routing=json.loads(routing_raw)
+          assert recipe['baseline']==os.environ['GIT_BASE'] and len(recipe['delete'])==4 and len(recipe['edits'])==49 and len(routing)==2
           for name,sha in recipe['delete'].items(): assert blob(pathlib.Path(name).read_bytes())==sha
           for edit in recipe['edits']: assert blob(pathlib.Path(edit['path']).read_bytes())==edit['before']
           pair=['node','--test','tools/ci/workbench-ux-canon.test.mjs','tools/ci/docs-disposition-canon.test.mjs']
@@ -58,16 +59,17 @@ jobs:
             path=pathlib.Path(edit['path']);text=path.read_text()
             for start,end,replacement in reversed(edit['changes']): text=text[:start]+replacement+text[end:]
             data=text.encode();assert blob(data)==edit['after'],edit['path'];path.write_bytes(data)
+          def correct(c):
+            path=pathlib.Path(c['path']);assert blob(path.read_bytes())==c['before'];text=path.read_text()
+            for old,new in c['replacements']:
+              assert text.count(old)==1,(str(path),old);text=text.replace(old,new)
+            path.write_text(text)
           ge=next(e for e in recipe['edits'] if e['path']=='tools/ci/docs-disposition-canon.test.mjs');apply(ge)
           assert 'retired Workbench peer-route' in run('retirement-red.log',guard,1)
           for edit in recipe['edits']:
             if edit is not ge: apply(edit)
           for name in recipe['delete']: pathlib.Path(name).unlink()
-          for correction in json.loads(corrections):
-            path=pathlib.Path(correction['path']);assert blob(path.read_bytes())==correction['before'];text=path.read_text()
-            for old,new in correction['replacements']:
-              assert text.count(old)==1,(str(path),old);text=text.replace(old,new)
-            path.write_text(text)
+          for correction in json.loads(corrections): correct(correction)
           green=run('retirement-green.log',pair,0);assert '# pass 12' in green and '# skipped 0' in green
           negatives=[]
           for i,name in enumerate(recipe['delete']):
@@ -84,8 +86,13 @@ jobs:
           try: intake.write_bytes(saved+b'\nchanged\n');run('intake-identity-negative.log',guard,1)
           finally: intake.write_bytes(saved)
           run('controls-restored.log',pair,0)
-          (out/'negative-controls.json').write_text(json.dumps({'individualRestorations':negatives,'additionalNegativeControls':['relative-reference','current-branch-url','intake-identity'],'positiveControl':'exact-git-provenance'},indent=2)+'\n')
-          expected=set(recipe['delete'])|{e['path'] for e in recipe['edits']};assert set(git('diff','--name-only').splitlines())==expected
+          correct(routing[0])
+          command=['pnpm','--filter','@dvt/web','test:architecture:run','src/testing/vitestSuites.changedRouting.architecture.test.ts']
+          red=run('routing-red.log',command,1);assert 'shell-session must include src/app/components/TopAppBar.architecture.test.ts' in red
+          correct(routing[1]);run('routing-green.log',command,0)
+          (out/'negative-controls.json').write_text(json.dumps({'individualRestorations':negatives,'additionalNegativeControls':['relative-reference','current-branch-url','intake-identity'],'positiveControl':'exact-git-provenance','routingRegression':'one exact include entry, existing assertion extended'},indent=2)+'\n')
+          expected=set(recipe['delete'])|{e['path'] for e in recipe['edits']}|{e['path'] for e in routing}
+          assert set(git('diff','--name-only').splitlines())==expected
           assert not git('diff','--check')
           PY
       - name: Commit reviewed sources through helper and hooks
@@ -98,7 +105,8 @@ jobs:
           git switch -c docs/3004-workbench-peer-route-retirement
           python - <<'PY'
           import json,os,pathlib,subprocess
-          r=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'workbench-candidate-result/recipe.json').read_text());paths=sorted(set(r['delete'])|{e['path'] for e in r['edits']})
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'workbench-candidate-result';r=json.loads((out/'recipe.json').read_text());fix=json.loads((out/'routing-fix.json').read_text())
+          paths=sorted(set(r['delete'])|{e['path'] for e in r['edits']}|{e['path'] for e in fix})
           subprocess.run(['git','add','-A','--',*paths],check=True)
           assert set(subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines())==set(paths)
           PY
@@ -130,8 +138,9 @@ jobs:
           set -euo pipefail
           out="$RUNNER_TEMP/workbench-candidate-result"
           pnpm --filter @dvt/web test:deps 2>&1 | tee "$out/web-deps.log"
-          pnpm --filter @dvt/web test:architecture:run src/app/components/TopAppBar.architecture.test.ts 2>&1 | tee "$out/web-architecture.log"
+          pnpm --filter @dvt/web test:architecture:run src/app/components/TopAppBar.architecture.test.ts src/testing/vitestSuites.catalog.architecture.test.ts src/testing/vitestSuites.changedRouting.architecture.test.ts 2>&1 | tee "$out/web-architecture.log"
           pnpm --filter @dvt/web test:presentation:run src/app/components/TopAppBar.test.tsx 2>&1 | tee "$out/web-presentation.log"
+          pnpm --filter @dvt/web test:changed -- --files apps/web/src/app/components/TopAppBar.architecture.test.ts 2>&1 | tee "$out/exact-changed-shell-test.log"
           pnpm --filter @dvt/web typecheck 2>&1 | tee "$out/web-typecheck.log"
           node --test scripts/ai-preflight.test.cjs scripts/check-ai-efficiency-adoption.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/docs-disposition-canon.test.mjs tools/ci/startup-card-canon.test.mjs tools/ci/arc-policy-state-store.test.mjs tools/ci/workbench-ux-canon.test.mjs tools/ci/canvas-fowler-canon.test.mjs tools/ci/planning-review-canon.test.mjs 2>&1 | tee "$out/governance-tests.log"
           node tools/ci/arc-check.mjs > "$out/arc.json"
@@ -150,10 +159,11 @@ jobs:
           git diff --exit-code "$GIT_BASE" HEAD -- packages specs scripts .arc-policy.yaml AGENTS.md CLAUDE.md .github docs/adr docs/contracts docs/evidence docs/risk-register docs/runbooks buzon
           python - <<'PY'
           import json,os,pathlib,subprocess
-          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'workbench-candidate-result';r=json.loads((out/'recipe.json').read_text())
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'workbench-candidate-result';r=json.loads((out/'recipe.json').read_text());fix=json.loads((out/'routing-fix.json').read_text())
           actual=set(subprocess.check_output(['git','diff','--name-only',r['baseline'],'HEAD'],text=True).splitlines())
-          assert actual==set(r['delete'])|{e['path'] for e in r['edits']}|{'docs/.manifest.json'}
-          assert [p for p in actual if p.startswith('apps/')]==['apps/web/src/app/components/TopAppBar.architecture.test.ts']
+          expected=set(r['delete'])|{e['path'] for e in r['edits']}|{e['path'] for e in fix}|{'docs/.manifest.json'}
+          assert actual==expected
+          assert {p for p in actual if p.startswith('apps/')}=={'apps/web/src/app/components/TopAppBar.architecture.test.ts','apps/web/vitest.suites.ts','apps/web/src/testing/vitestSuites.changedRouting.architecture.test.ts'}
           (out/'validated.txt').write_text(subprocess.check_output(['git','rev-parse','HEAD'],text=True))
           PY
           git diff --binary "$GIT_BASE" HEAD > "$out/candidate.patch"
