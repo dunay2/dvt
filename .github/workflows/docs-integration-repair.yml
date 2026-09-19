@@ -6,105 +6,192 @@ on:
 permissions:
   contents: read
 jobs:
-  integrate:
+  retire:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
       contents: write
     env:
-      BASE: 8c8f8cf31b141591da311664b4c1f3067ebfdd87
-      SOURCE: 8eec0a7503493e82275b28fe74971d3efd132afd
-      GIT_BASE: 8c8f8cf31b141591da311664b4c1f3067ebfdd87
+      BASE: f9ecdfbccf031a9db2bd0dca8660cad75d4c5bc0
+      GIT_BASE: f9ecdfbccf031a9db2bd0dca8660cad75d4c5bc0
       PLANNING_DB_INTEGRITY_SCOPE: bootstrap
       TZ: UTC
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 8eec0a7503493e82275b28fe74971d3efd132afd
+          ref: f9ecdfbccf031a9db2bd0dca8660cad75d4c5bc0
           fetch-depth: 0
           persist-credentials: false
       - uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
-      - name: Merge current main without widening the cleanup diff
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/docs-integration
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          test "$(git rev-parse HEAD)" = "$SOURCE"
-          git merge --no-commit --no-ff "$BASE" 2>&1 | tee /tmp/docs-integration/merge.log
-          test -z "$(git diff --name-only --diff-filter=U)"
-          test -z "$(git diff --cached --name-only "$BASE" -- apps packages specs docs/adr docs/contracts docs/evidence docs/risk-register .github package.json pnpm-lock.yaml)"
-          pnpm commit docs docs "Reconcile cleanup with LEFT JOIN integration" 2>&1 | tee /tmp/docs-integration/commit.log
-          echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-      - name: Prepare isolated CI bootstrap only
-        uses: ./.github/actions/prepare-planning-db
-      - name: Canonical regeneration
-        shell: bash
-        run: |
-          set -euo pipefail
-          pnpm docs:sync 2>&1 | tee /tmp/docs-integration/docs-sync.log
-          pnpm governance:refresh 2>&1 | tee /tmp/docs-integration/governance-refresh.log
-          git diff --exit-code HEAD
-      - name: Validate final integration candidate
+      - name: Apply reviewed source changes with a failing retirement test first
         shell: bash
         run: |
           python3 - <<'PY'
-          import subprocess,json,os,re
           from pathlib import Path
-          out=Path('/tmp/docs-integration');results=[];base=os.environ['BASE']
-          def git(*a): return subprocess.check_output(['git',*a]).decode().strip()
-          def run(name,cmd):
-              r=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+          import subprocess,json,hashlib,os
+          out=Path('/tmp/contract-ci-retirement');out.mkdir(exist_ok=True)
+          def git(*a):return subprocess.check_output(['git',*a]).decode().strip()
+          def sha(b):return hashlib.sha256(b).hexdigest()
+          assert git('rev-parse','HEAD')==os.environ['BASE']
+          assert git('rev-parse','HEAD^{tree}')=='4a6fed5eababa291bcf84a5053838435a5436b4d'
+          names=['20260315-adapter-postgres-phase1-extraction-closeout.md','20260316-monorepo-peer-runtime-policy-closeout.md','20260316-platform-baseline-lock-closeout.md','20260321-s01-contract-dead-code-cleanup-closeout.md','20260406-mw-a2-b-contract-cleanup-closeout.md','20260406-mw-a2-c-planner-boundary-evolution-closeout.md','20260406-mw-a2-d-api-ref-resolution-alignment-closeout.md','20260406-mw-a2-e-determinism-and-integration-hardening-closeout.md','20260407-ar-c1-t1-admin-route-test-harness-closeout.md','20260407-ar-c1-t2-admin-rebuild-snapshot-contract-schema-closeout.md','20260407-ar-c1-t3-protected-runtime-admin-route-composition-closeout.md','20260418-protected-runtime-integration-seam-split-closeout.md','20260419-lane-e-remediation-backlog-alignment-closeout.md','20260420-adapter-temporal-workflowhelpers-decomposition-closeout.md','20260420-temporal-worker-runtime-config-shape-closeout.md','20260422-rc-c2-wave-1-node-precommit-turbo-cache-closeout.md','20260422-web-canvas-sonar-maintenance-closeout.md','20260423-rc-c2-wave-2b-turbo-affected-task-routing-closeout.md','20260423-rc-c2-wave-4a-ci-tools-merge-gate-closeout.md','20260426-rc-g1-c-truth-sync-closeout.md','20260426-tf-e2-l-canvas-strategy-boundary-truth-sync-closeout.md','20260429-bootstrap-presentation-separation-closeout.md','20260515-f06-frontend-query-boundary-standardization-closeout.md','20260518-dhm-ws3-admission-seam-closeout.md','20260522-ar-c1-t4-api-snapshot-fixture-closeout.md','20260522-dhm-modularization-parent-closeout.md']
+          index='docs/planning/proposals/mandatory/frontend-and-ux/superseded/index.md'
+          parent='docs/planning/proposals/mandatory/frontend-and-ux/index.md'
+          test='tools/ci/docs-disposition-canon.test.mjs'
+          removed=['docs/planning/closeouts/'+n for n in names]+[index]
+          assert len(removed)==len(set(removed))==27
+          originals={p:Path(p).read_bytes() for p in removed+[parent,test]}
+          (out/'removed.json').write_text(json.dumps(removed,indent=2))
+          (out/'original-hashes.json').write_text(json.dumps({p:sha(b) for p,b in originals.items()},indent=2))
+          assert sha(originals[test])=='9d2a641d305caaf46b7c1d96f15bc549b1858dfd40833b4bc3618bfc94a06052'
+          assert sha(originals[parent])=='3b73247ab3108ce74c09ae71e12c85d51eb862a3715490da00e93934a2c0740b'
+          text=originals[test].decode();needle='  const editorialCloseouts = new Set([\n';assert text.count(needle)==1
+          text=text.replace(needle,needle+''.join("    '"+n+"',\n" for n in sorted(names)))
+          needle='  const retiredPaths = [\n';assert text.count(needle)==1
+          text=text.replace(needle,needle+"    'docs/planning/proposals/mandatory/frontend-and-ux/superseded',\n")
+          needle="  const { scripts } = JSON.parse(readRepoFile('package.json'));\n";assert text.count(needle)==1
+          addition="  const frontendClassification = readRepoFile(\n    'docs/planning/proposals/mandatory/frontend-and-ux/index.md'\n  );\n  assert.doesNotMatch(frontendClassification, /\\.\\/superseded\\//u);\n  assert.doesNotMatch(frontendClassification, /move to archive|put it in superseded/u);\n  assert.ok(frontendClassification.includes('History stays in Git.'));\n\n"
+          text=text.replace(needle,addition+needle)
+          assert sha(text.encode())=='faa03a96c2564292114ddc06f6419dcaef3af0c7b7f616ac1ae98ced6b0c4802'
+          Path(test).write_text(text)
+          cmd=['node','--test','--test-name-pattern=retired documentation-only closeouts|retired historical packs',test]
+          red=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+          (out/'red-before-removal.log').write_text(red.stdout);assert red.returncode==1
+          replacements=[
+            ('last_reviewed: 2026-09-10','last_reviewed: 2026-09-19'),
+            ('The original proposal files remain in this directory for now. Many active\nfeature-mechanization manifests, closeouts, component docs, and tests reference\ntheir exact paths. The state folders below are classification views; physical\nmovement into archive or superseded paths must be done as a separate\nlink-migration slice.','The original proposal files remain at their current paths while active consumers\nand architectural obligations still refer to them. These folders are navigation\nviews, not a reason to retain obsolete files. Reconcile owners and consumers\nbefore physical retirement. History stays in Git.'),
+            ('| [Superseded](./superseded/index.md)                             | Plans closed, replaced, or reduced to rationale by later accepted work.                                                                         |    20 |\n',''),
+            ('[Archive candidates](./archive-candidates/index.md)','[Retirement candidates](./archive-candidates/index.md)'),
+            ('Drafts or historical story packs that should move to archive only after active references are migrated.','Drafts or historical story packs awaiting retirement after active obligations and references are reconciled.'),
+            ('2. If it has `mechanizationStatus: closed`, a closeout, or a successor plan\n   that owns the behavior, put it in superseded.','2. If it has `mechanizationStatus: closed`, a closeout, or a successor plan,\n   check current owners, consumers, and obligations before physical retirement.\n   Those signals alone do not prove obsolescence.'),
+            ('4. If it is a draft story pack or historical design input with active\n   references, keep it as an archive candidate until those references move to\n   canonical component, feature, closeout, or issue-backed docs.','4. If it is a draft story pack or historical design input with active\n   references, keep it as a retirement candidate until obligations and references\n   are reconciled with canonical component, feature, or issue-backed sources.\n   Do not move it into a history folder.'),
+            ('physically move or archive proposals after exact references are updated.','physically retire obsolete proposals after obligations and exact references are reconciled.'),
+            ('## Movement Policy\n\nDo not move original proposal files just because this index classifies them.\nMove files only when:','## Retirement Policy\n\nDo not delete original proposal files just because this index classifies them.\nRetire obsolete files only when:\n\n- current owners and architectural obligations have been checked;'),
+            ('pass after the move.','pass after the retirement.')]
+          text=originals[parent].decode()
+          for before,after in replacements:
+              assert text.count(before)==1,before
+              text=text.replace(before,after)
+          assert sha(text.encode())=='b78f08c29f16cab6525eb8ec50efb97d6b74d4dd4ad79af5a131237015b5a8a3'
+          Path(parent).write_text(text)
+          for p in removed:Path(p).unlink()
+          Path(index).parent.rmdir()
+          assert set(git('diff','--name-only','--diff-filter=D').splitlines())==set(removed)
+          assert set(git('diff','--name-only','--diff-filter=M').splitlines())=={test,parent}
+          assert not git('ls-files','--others','--exclude-standard')
+          git('config','user.name','github-actions[bot]')
+          git('config','user.email','41898282+github-actions[bot]@users.noreply.github.com')
+          PY
+      - name: Format changed owners and commit through normal helper and hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm exec prettier --write docs/planning/proposals/mandatory/frontend-and-ux/index.md tools/ci/docs-disposition-canon.test.mjs 2>&1 | tee /tmp/contract-ci-retirement/format.log
+          git add -A
+          git diff --cached --check
+          pnpm commit docs docs "Retire obsolete contract and CI journals" 2>&1 | tee /tmp/contract-ci-retirement/source-commit.log
+          git rev-parse HEAD > /tmp/contract-ci-retirement/source-head.txt
+          echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Prepare disposable CI bootstrap not operated architecture authority
+        uses: ./.github/actions/prepare-planning-db
+      - name: Regenerate canonical indexes and governance projections
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm docs:sync 2>&1 | tee /tmp/contract-ci-retirement/docs-sync.log
+          pnpm governance:refresh 2>&1 | tee /tmp/contract-ci-retirement/governance-refresh.log
+          git add -A
+          if ! git diff --cached --quiet; then
+            test "$(git diff --cached --name-only)" = docs/.manifest.json
+            pnpm commit docs docs "Regenerate documentation inventory after retirement" 2>&1 | tee /tmp/contract-ci-retirement/generated-commit.log
+          fi
+          echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Validate actual final candidate and preservation controls
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess,json,os,re
+          out=Path('/tmp/contract-ci-retirement');base=os.environ['BASE'];results=[]
+          test='tools/ci/docs-disposition-canon.test.mjs'
+          parent='docs/planning/proposals/mandatory/frontend-and-ux/index.md'
+          index='docs/planning/proposals/mandatory/frontend-and-ux/superseded/index.md'
+          removed=json.loads((out/'removed.json').read_text())
+          def git(*a):return subprocess.check_output(['git',*a]).decode().strip()
+          def run(name,cmd,expected=0):
+              r=subprocess.run(cmd,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
               (out/(name+'.log')).write_text(r.stdout)
-              results.append({'name':name,'command':cmd,'exitCode':r.returncode})
+              results.append({'name':name,'command':cmd,'exitCode':r.returncode,'expectedExitCode':expected})
               (out/'validation.json').write_text(json.dumps(results,indent=2))
               print(name,r.returncode,flush=True)
-              assert r.returncode==0,(name,r.stdout[-6000:])
+              assert r.returncode==expected,(name,r.stdout[-6000:])
               return r.stdout
-          removed=git('diff','--name-only','--diff-filter=D',base,'HEAD').splitlines()
-          assert len(removed)==25 and all(p.startswith('docs/planning/closeouts/') for p in removed)
-          assert git('diff','--name-only','--diff-filter=M',base,'HEAD')=='tools/ci/docs-disposition-canon.test.mjs'
+          assert set(git('diff','--name-only','--diff-filter=D',base,'HEAD').splitlines())==set(removed)
           assert not git('diff','--name-only','--diff-filter=A',base,'HEAD')
+          allowed=set(removed)|{test,parent,'docs/.manifest.json'}
+          assert set(git('diff','--name-only',base,'HEAD').splitlines())<=allowed
+          assert not git('diff','--name-only',base,'HEAD','--','apps','packages','specs','docs/adr','docs/contracts','docs/evidence','docs/risk-register','docs/architecture','buzon','.github','package.json','pnpm-lock.yaml')
           text=run('arc',['node','tools/ci/arc-check.mjs']);m=re.search(r'^\{',text,re.M);assert m
           arc=json.loads(text[m.start():]);assert arc['effectiveArcLevel']=='ARC-0'
           assert all(not arc['requirements'][k] for k in ['evidenceDoc','riskUpdate','rolloutNotes','compatMatrix'])
-          run('governance-tests',['node','--test','scripts/check-feature-mechanization.test.cjs','scripts/documentation-publication.test.cjs','scripts/planning-db-surface-inventory-check.test.cjs','tools/ci/docs-disposition-canon.test.mjs','tools/ci/startup-card-canon.test.mjs','tools/ci/planner-package-governance.test.mjs','tools/ci/architecture-doc-reconciliation-canon.test.mjs','scripts/governance-refresh.test.cjs','tools/ci/emit-test-matrix.test.mjs','tools/ci/turbo-workspace-task-contract.test.mjs'])
-          for name,cmd in [('sync',['pnpm','docs:sync:check']),('manifest',['pnpm','docs:gov:manifest:check']),('docs',['pnpm','ci:docs']),('prepush',['pnpm','verify:prepush']),('title',['pnpm','pr:validate-title','docs(docs): Retire obsolete HTTP Canvas and planning journals']),('clean',['git','diff','--exit-code','HEAD'])]:run(name,cmd)
+          cmd=['node','--test','--test-name-pattern=retired documentation-only closeouts|retired historical packs',test]
+          run('green-selected',cmd)
+          for i,name in enumerate(removed):
+              p=Path(name);p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(subprocess.check_output(['git','show',base+':'+name]))
+              try:run('restore-'+str(i+1),cmd,1)
+              finally:
+                  p.unlink()
+                  if name==index:p.parent.rmdir()
+          p=Path(parent);current=p.read_bytes()
+          p.write_bytes(subprocess.check_output(['git','show',base+':'+parent]))
+          try:run('restore-parent-navigation',cmd,1)
+          finally:p.write_bytes(current)
+          for name,content in [('retired-index-link',current+b'\n[Old](./superseded/index.md)\n'),('archive-instruction',current+b'\nDrafts should move to archive.\n')]:
+              p.write_bytes(content)
+              try:run(name,cmd,1)
+              finally:p.write_bytes(current)
+          p=Path('README.md');current=p.read_bytes();slug=removed[0]
+          for name,text,expected in [('relative','[Old]('+slug+')',1),('main','https://github.com/dunay2/dvt/blob/main/'+slug,1),('git','https://github.com/dunay2/dvt/blob/'+base+'/'+slug,0),('unrelated','Current contract and runtime obligations remain in their owners.',0)]:
+              p.write_bytes(current+('\n'+text+'\n').encode())
+              try:run('consumer-'+name,cmd,expected)
+              finally:p.write_bytes(current)
+          run('governance-tests',['node','--test','scripts/check-feature-mechanization.test.cjs','scripts/documentation-publication.test.cjs','scripts/planning-db-surface-inventory-check.test.cjs',test,'tools/ci/startup-card-canon.test.mjs','tools/ci/planner-package-governance.test.mjs','tools/ci/architecture-doc-reconciliation-canon.test.mjs','scripts/governance-refresh.test.cjs','tools/ci/emit-test-matrix.test.mjs','tools/ci/turbo-workspace-task-contract.test.mjs'])
+          for name,cmd in [('sync',['pnpm','docs:sync:check']),('manifest',['pnpm','docs:gov:manifest:check']),('docs',['pnpm','ci:docs']),('prepush',['pnpm','verify:prepush']),('title',['pnpm','pr:validate-title','docs(docs): Retire obsolete contract and CI journals']),('clean',['git','diff','--exit-code','HEAD'])]:run(name,cmd)
           assert not git('status','--porcelain')
           (out/'validated.txt').write_text(git('rev-parse','HEAD')+'\n')
           PY
-      - name: Export exact source and validation logs
+      - name: Export final source and execution evidence
         if: always()
         shell: bash
         run: |
           python3 - <<'PY'
-          import subprocess,json,hashlib,os
           from pathlib import Path
-          out=Path('/tmp/docs-integration');out.mkdir(exist_ok=True);base=os.environ['BASE']
-          for name,args in {'head.txt':['rev-parse','HEAD'],'tree.txt':['rev-parse','HEAD^{tree}'],'commit.txt':['cat-file','commit','HEAD'],'head-files.txt':['ls-tree','-rz','HEAD'],'status.txt':['status','--porcelain'],'candidate.patch':['diff',base,'HEAD'],'stats.txt':['diff','--stat',base,'HEAD'],'numstat.txt':['diff','--numstat',base,'HEAD']}.items():
+          import subprocess,json,hashlib,os
+          out=Path('/tmp/contract-ci-retirement');out.mkdir(exist_ok=True);base=os.environ['BASE']
+          for name,args in {'head.txt':['rev-parse','HEAD'],'tree.txt':['rev-parse','HEAD^{tree}'],'commit.txt':['cat-file','commit','HEAD'],'head-files.txt':['ls-tree','-rz','HEAD'],'status.txt':['status','--porcelain'],'candidate.patch':['diff',base,'HEAD'],'numstat.txt':['diff','--numstat',base,'HEAD'],'name-status.txt':['diff','--name-status',base,'HEAD'],'stats.txt':['diff','--stat',base,'HEAD'],'worktree.patch':['diff','HEAD']}.items():
               (out/name).write_bytes(subprocess.check_output(['git',*args]))
+          if (out/'source-head.txt').exists():(out/'source-commit.txt').write_bytes(subprocess.check_output(['git','cat-file','commit',(out/'source-head.txt').read_text().strip()]))
           subprocess.run(['git','archive','--format=tar.gz','-o',str(out/'source.tar.gz'),'HEAD'],check=True)
           (out/'checksums.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in out.iterdir() if p.is_file() and p.name!='checksums.json'},indent=2))
-          print((out/'head.txt').read_text())
+          print((out/'head.txt').read_text());print((out/'stats.txt').read_text())
           PY
-      - name: Publish validated candidate without merging the PR
+      - name: Publish branch only after successful validation
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          test "$(cat /tmp/docs-integration/validated.txt)" = "$(git rev-parse HEAD)"
+          test "$(cat /tmp/contract-ci-retirement/validated.txt)" = "$(git rev-parse HEAD)"
           gh auth setup-git
-          branch=automation/3004-validated-3306-left-join
+          branch=docs/3004-retire-contract-ci-journals
           test -z "$(git ls-remote --heads origin refs/heads/$branch)"
           git push origin HEAD:refs/heads/$branch
       - name: Upload evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: docs-3306-integration
-          path: /tmp/docs-integration
+          name: docs-contract-ci-journal-retirement
+          path: /tmp/contract-ci-retirement
           retention-days: 7
