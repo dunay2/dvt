@@ -1,0 +1,116 @@
+name: Docs Integration Repair
+on:
+  push:
+    branches: [automation/3004-docs-integration-repair]
+    paths: [.github/workflows/docs-integration-repair.yml]
+permissions:
+  contents: read
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    env:
+      BASE: b379e2c462715e841976443c196cb943758e9c75
+      OLD_HEAD: 1f19b6c4e38b9b2cce63852b5ea91db360f253b5
+      GIT_BASE: b379e2c462715e841976443c196cb943758e9c75
+      PLANNING_DB_INTEGRITY_SCOPE: bootstrap
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 1f19b6c4e38b9b2cce63852b5ea91db360f253b5
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Resolve only generated manifest conflict
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/integration
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          test "$(git rev-parse HEAD)" = "$OLD_HEAD"
+          set +e
+          git merge --no-commit --no-ff "$BASE" > /tmp/integration/merge.log 2>&1
+          result=$?
+          set -e
+          cat /tmp/integration/merge.log
+          test "$result" = 1
+          test "$(git diff --name-only --diff-filter=U)" = docs/.manifest.json
+          git show "$BASE:docs/.manifest.json" > docs/.manifest.json
+          git add docs/.manifest.json
+          test -z "$(git diff --name-only --diff-filter=U)"
+          test -z "$(git diff --cached --name-only "$BASE" -- apps packages specs docs/adr docs/evidence docs/risk-register .github package.json pnpm-lock.yaml)"
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+      - name: Regenerate manifest and commit merge with normal hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm docs:sync 2>&1 | tee /tmp/integration/docs-sync.log
+          git add -A
+          pnpm commit docs docs "Reconcile cleanup with current main" 2>&1 | tee /tmp/integration/commit.log
+          echo "GIT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Bootstrap isolated CI database only
+        uses: ./.github/actions/prepare-planning-db
+      - name: Refresh and validate final integration candidate
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess,os,json
+          out=Path('/tmp/integration');results=[]
+          def run(name,cmd):
+              r=subprocess.run(cmd,text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+              (out/(name+'.log')).write_text(r.stdout+'\nSTDERR\n'+r.stderr)
+              results.append({'name':name,'command':cmd,'exitCode':r.returncode})
+              (out/'validation.json').write_text(json.dumps(results,indent=2))
+              print(name,r.returncode,flush=True)
+              assert r.returncode==0,(name,r.stdout[-4000:],r.stderr[-4000:])
+              return r.stdout
+          run('governance-refresh',['pnpm','governance:refresh'])
+          run('generated-clean',['git','diff','--exit-code','HEAD'])
+          arc=json.loads(run('arc',['node','tools/ci/arc-check.mjs']))
+          assert arc['effectiveArcLevel']=='ARC-0'
+          assert all(arc['requirements'][k] is False for k in ['evidenceDoc','riskUpdate','rolloutNotes','compatMatrix'])
+          run('governance-tests',['node','--test','scripts/check-feature-mechanization.test.cjs','scripts/documentation-publication.test.cjs','scripts/planning-db-surface-inventory-check.test.cjs','tools/ci/docs-disposition-canon.test.mjs','tools/ci/startup-card-canon.test.mjs','tools/ci/planner-package-governance.test.mjs','tools/ci/architecture-doc-reconciliation-canon.test.mjs','scripts/governance-refresh.test.cjs','tools/ci/emit-test-matrix.test.mjs','tools/ci/turbo-workspace-task-contract.test.mjs'])
+          for name,cmd in [('sync',['pnpm','docs:sync:check']),('manifest',['pnpm','docs:gov:manifest:check']),('docs',['pnpm','ci:docs']),('prepush',['pnpm','verify:prepush']),('title',['pnpm','pr:validate-title','docs(docs): Retire obsolete review snapshots and completed journals']),('clean',['git','diff','--exit-code','HEAD'])]:run(name,cmd)
+          assert not subprocess.check_output(['git','status','--porcelain']).strip()
+          base=os.environ['BASE']
+          assert not subprocess.check_output(['git','diff','--name-only',base,'HEAD','--','apps','packages','specs','docs/adr','docs/evidence','docs/risk-register','.github','package.json','pnpm-lock.yaml']).strip()
+          (out/'validated.txt').write_bytes(subprocess.check_output(['git','rev-parse','HEAD']))
+          PY
+      - name: Export exact candidate and evidence
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess,json,hashlib,os
+          out=Path('/tmp/integration');out.mkdir(exist_ok=True);base=os.environ['BASE']
+          for name,args in {'head.txt':['rev-parse','HEAD'],'tree.txt':['rev-parse','HEAD^{tree}'],'commit.txt':['cat-file','commit','HEAD'],'head-files.txt':['ls-tree','-rz','HEAD'],'status.txt':['status','--porcelain'],'candidate.patch':['diff',base,'HEAD'],'numstat.txt':['diff','--numstat',base,'HEAD'],'name-status.txt':['diff','--name-status',base,'HEAD'],'stats.txt':['diff','--stat',base,'HEAD']}.items():
+              (out/name).write_bytes(subprocess.check_output(['git',*args]))
+          subprocess.run(['git','archive','--format=tar.gz','-o',str(out/'source.tar.gz'),'HEAD'],check=True)
+          (out/'checksums.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in out.iterdir() if p.is_file() and p.name!='checksums.json'},indent=2))
+          print((out/'head.txt').read_text())
+          PY
+      - name: Publish validated candidate without merging or changing PR head
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(cat /tmp/integration/validated.txt)" = "$(git rev-parse HEAD)"
+          gh auth setup-git
+          branch=automation/3004-validated-integration-20260919
+          test -z "$(git ls-remote --heads origin refs/heads/$branch)"
+          git push origin HEAD:refs/heads/$branch
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: docs-3304-integration
+          path: /tmp/integration
+          retention-days: 7
