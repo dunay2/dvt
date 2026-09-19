@@ -369,6 +369,32 @@ test('retired documentation-only closeouts have no files or local consumers', ()
     '20260318-stage-1-1-planner-canonicalization-policy-vocabulary-contracts-closeout.md',
   ]);
   const editorialCloseouts = new Set([
+    '20260315-task8-intent-reconciliation-and-api-flags-thinkfirst.md',
+    '20260315-adapter-postgres-schema-timeout-fixes-closeout.md',
+    '20260315-intent-store-bug-fixes-closeout.md',
+    '20260315-provider-adapter-contract-versioning-closeout.md',
+    '20260315-task8-intent-reconciliation-and-api-flags-closeout.md',
+    '20260316-outbox-cleanup-serialization-closeout.md',
+    '20260321-s06-migration-version-table-closeout.md',
+    '20260324-rc-a1-simulate-error-production-hardening-closeout.md',
+    '20260324-rc-a2-deterministic-start-run-intent-id-closeout.md',
+    '20260324-s14-gateway-context-across-continue-as-new-closeout.md',
+    '20260324-s15-run-snapshot-cas-guard-closeout.md',
+    '20260324-s15f1-stale-snapshot-discard-closeout.md',
+    '20260331-rc-c1-http-error-envelope-normalization-closeout.md',
+    '20260331-s1-manifestref-production-path-closeout.md',
+    '20260401-dhm-ws1-start-run-boundary-residual-hardening-closeout.md',
+    '20260406-mw-a1-step-kind-registry-governance-closeout.md',
+    '20260406-s08-4c-fail-closed-admission-coverage-closeout.md',
+    '20260406-s08-5c-plugin-compatibility-fingerprint-closeout.md',
+    '20260407-engine-entrypoint-plan-integrity-closeout.md',
+    '20260407-snapshot-prewarm-active-runs-closeout.md',
+    '20260409-provider-ref-contract-hardening-closeout.md',
+    '20260410-mw-a5-temporal-helper-artifact-facts-narrowing-closeout.md',
+    '20260423-ar-c3-b-temporal-readyz-capacity-binding-closeout.md',
+    '20260423-ar-c3-c-execution-capacity-operational-closure-closeout.md',
+    '20260423-engine-capability-validation-fail-closed-closeout.md',
+    '20260424-ar-c3-admission-observability-semantic-hardening-closeout.md',
     '20260411-s05-truth-sync-closeout.md',
     '20260414-tf-a1-d-web-plan-anti-corruption-closeout.md',
     '20260416-shell-session-context-persistence-closeout.md',
@@ -550,12 +576,19 @@ test('retired documentation-only closeouts have no files or local consumers', ()
   for (const path of paths) {
     if (path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
     if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
+    assert.equal(
+      isRetired(path.split('/').at(-1)),
+      false,
+      `retired editorial closeout path: ${path}`
+    );
     // Only exact Git revisions can supply historical provenance, never main.
     const current = readRepoFile(path).replace(
       /https:\/\/github\.com\/dunay2\/dvt\/blob\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
       ''
     );
-    for (const match of current.matchAll(/\b[0-9]{8}-[a-z0-9.-]+-closeout(?:\.md)?\b/gu)) {
+    for (const match of current.matchAll(
+      /\b[0-9]{8}-[a-z0-9.-]+-(?:closeout|thinkfirst)(?:\.md)?\b/gu
+    )) {
       const name = match[0].endsWith('.md') ? match[0] : `${match[0]}.md`;
       assert.equal(
         isRetired(name),
