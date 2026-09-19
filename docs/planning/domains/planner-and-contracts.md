@@ -28,8 +28,6 @@ plan-version compatibility.
 
 ## Relevant Reviews And Closeouts
 
-- [20260320 Planner Assessment Roadmap Closeout](../closeouts/20260320-planner-assessment-roadmap-closeout.md)
-- [20260320 Planner R1 Doc Triage Closeout](../closeouts/20260320-planner-r1-doc-triage-closeout.md)
 - [20260320 Planner R2 Redefinition Closeout](../closeouts/20260320-planner-r2-redefinition-closeout.md)
 - [20260320 Planner R2 Typed Graph Source Boundary Closeout](../closeouts/20260320-planner-r2-typed-graph-source-boundary-closeout.md)
 
