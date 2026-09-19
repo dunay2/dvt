@@ -253,14 +253,17 @@ function proveEmptyJoinOutput(sourceCount: number): void {
   });
   assertSaved();
   toggleColumns('join-transform');
+  cy.get(`${controls}[aria-pressed="true"]`).should(($selected) => {
+    expect(baseline?.ok && baseline.projection.outputs.length).to.equal($selected.length);
+  });
   cy.get(`${controls}[aria-pressed="true"]`).then(($selected) => {
     const names = [...$selected].map(
       (element) => element.closest<HTMLElement>('[data-column-name]')!.dataset.columnName!
     );
     names.forEach((name, index) => {
-      cy.get(
-        `${card} [data-column-name="${name}"] [data-slot="graph-node-column-output-state"]`
-      ).click();
+      const selector = `${card} [data-column-name="${name}"] [data-slot="graph-node-column-output-state"]`;
+      cy.get(selector).should('have.attr', 'aria-pressed', 'true').click();
+      cy.get(selector).should('have.attr', 'aria-pressed', 'false');
       assertSaved(names.length - index - 1);
     });
   });
