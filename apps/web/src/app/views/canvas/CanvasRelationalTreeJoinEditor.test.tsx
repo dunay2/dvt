@@ -232,11 +232,11 @@ describe('JOIN append field defaults', () => {
         '[data-slot="canvas-relational-tree-append-input"]'
       )!.disabled
     ).toBe(true);
-    act(() =>
+    act(() => {
       container
         .querySelector('form')!
-        .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
-    );
+        .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
     expect(onAppend).not.toHaveBeenCalled();
   });
 
@@ -251,11 +251,11 @@ describe('JOIN append field defaults', () => {
         '[data-slot="canvas-relational-tree-append-input"]'
       )!.disabled
     ).toBe(true);
-    act(() =>
+    act(() => {
       container
         .querySelector('form')!
-        .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
-    );
+        .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
     expect(onAppend).not.toHaveBeenCalled();
   });
 
