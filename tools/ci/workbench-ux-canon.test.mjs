@@ -24,7 +24,7 @@ const requiredFiles = [
 
 test('DVT workbench UX canonization preserves current authority and semantic ownership', () => {
   assertFilesExist(requiredFiles);
-  assertCanonPlan(
+  const canonPlan = assertCanonPlan(
     'docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md'
   );
 
@@ -37,6 +37,16 @@ test('DVT workbench UX canonization preserves current authority and semantic own
     'screen-manuals-and-user-stories.md'
   );
   assertContains('docs/planning/state/github-mvp-issue-workflow.md', 'is the only task backlog');
+  assert.doesNotMatch(
+    canonPlan,
+    /\bPlanning\s+DB\s+tasks?\b/u,
+    'Executable UX work belongs to GitHub Issues, not Planning DB tasks'
+  );
+  assert.match(
+    canonPlan,
+    /cypressFlows:\s*\n\s+- N\/A[^\n]*\bGitHub issue\b/u,
+    'Canon-only Cypress disposition must route future execution to its governing GitHub issue'
+  );
   const screenManual = readRepoFile(
     'docs/architecture/components/web/screen-manuals-and-user-stories.md'
   );

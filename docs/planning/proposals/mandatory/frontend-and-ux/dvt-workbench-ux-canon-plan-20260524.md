@@ -193,7 +193,7 @@ fowlerSignals:
 architectureGuards:
   - node --test tools/ci/workbench-ux-canon.test.mjs
 cypressFlows:
-  - N/A - canonization only; runtime UX changes require separate Planning DB tasks.
+  - N/A - canonization only; runtime UX changes require their governing GitHub issue.
 completionGate:
   - node --test tools/ci/workbench-ux-canon.test.mjs
   - pnpm test:ci-tools
