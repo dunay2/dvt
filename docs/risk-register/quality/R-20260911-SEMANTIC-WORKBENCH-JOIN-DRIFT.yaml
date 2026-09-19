@@ -23,8 +23,11 @@ mitigation:
     selectors, capability identities, condition groups, source fields, and data types fail closed.
     CROSS uses the exact predicate-free CrossRel identity and preserves both sides in SQL even when
     one contributes no output fields. Left-associated chains and the admitted outer-JOIN subtree are
-    rendered without reassociation; cardinality remains unknown until execution and no hidden COUNT
-    or per-input LIMIT is introduced.
+    rendered without reassociation. Grouping and grouped-window wrappers delegate to that same
+    JOIN-family projector, so they cannot downgrade a LEFT stage to INNER. Historical INNER workload
+    identities are normalized only at the v1/v2 contract read seam and current producers emit only
+    the JOIN-family profile. Cardinality remains unknown until execution and no hidden COUNT or
+    per-input LIMIT is introduced.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ED-20260911-semantic-workbench-join-composition.md
@@ -36,6 +39,7 @@ mitigation:
     - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts
     - apps/api/test/integration/dvtSemiAntiJoinPostgres.integration.test.ts
     - apps/api/test/integration/dvtCrossJoinPostgres.integration.test.ts
+    - apps/api/test/integration/dvtWrappedLeftJoinPostgres.integration.test.ts
     - packages/@dvt/postgres-projection/test/joinPostgresProjection.test.ts
   follow_up:
     - Each newly admitted operator or function needs contract, inspection, mutation, and

@@ -240,6 +240,24 @@ const THREE_INPUT_FINAL_JOIN_PLANS: Readonly<
   },
 };
 
+function withBinaryOuterJoinType(
+  fixture: DvtSubstraitSemanticDocumentV1,
+  joinType: Extract<JoinFixtureType, 'left' | 'right' | 'outer'>
+): DvtSubstraitSemanticDocumentV1 {
+  const plan = decodeDvtSubstraitPlanV1(fixture);
+  const root = plan.relations[0]?.relType;
+  if (root?.case !== 'root' || root.value.input?.relType.case !== 'join') {
+    throw new Error('Binary outer JOIN fixture must contain one JoinRel root.');
+  }
+  root.value.input.relType.value.type = { outer: 2, left: 3, right: 4 }[joinType];
+  const semanticPlan = encodeDvtSubstraitPlanV1(plan);
+  return DvtSubstraitSemanticDocumentV1Schema.parse({
+    ...fixture,
+    semanticPlan,
+    sidecar: { ...fixture.sidecar, semanticPlanSha256: semanticPlan.sha256 },
+  });
+}
+
 export function buildDvtJoinPreviewDraft(
   inputCount: 2 | 3,
   finalJoinType: JoinFixtureType = 'inner',
@@ -266,16 +284,19 @@ export function buildDvtJoinPreviewDraft(
   const semanticDocument =
     semiAntiType != null
       ? semiAntiDocument(fixture, semiAntiType, predicateScenario)
-      : inputCount === 3 && override != null
-        ? DvtSubstraitSemanticDocumentV1Schema.parse({
-            ...fixture,
-            semanticPlan: { ...fixture.semanticPlan, ...override },
-            sidecar: {
-              ...fixture.sidecar,
-              semanticPlanSha256: override.sha256,
-            },
-          })
-        : fixture;
+      : inputCount === 2 &&
+          (finalJoinType === 'left' || finalJoinType === 'right' || finalJoinType === 'outer')
+        ? withBinaryOuterJoinType(fixture, finalJoinType)
+        : inputCount === 3 && override != null
+          ? DvtSubstraitSemanticDocumentV1Schema.parse({
+              ...fixture,
+              semanticPlan: { ...fixture.semanticPlan, ...override },
+              sidecar: {
+                ...fixture.sidecar,
+                semanticPlanSha256: override.sha256,
+              },
+            })
+          : fixture;
   const sources = semanticDocument.sidecar.relations.flatMap((relation) => {
     if (relation.sourceRef === undefined) return [];
     return [

@@ -1,6 +1,7 @@
 import { create } from '@bufbuild/protobuf';
 import {
   FunctionOptionSchema,
+  JoinRel_JoinType,
   type Expression_ScalarFunction,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { describe, expect, it } from 'vitest';
@@ -49,6 +50,7 @@ import {
   createDvtSubstraitJoinDraft,
   createDvtSubstraitStringJoinDraft,
   inspectDvtSubstraitJoinDraft,
+  setDvtSubstraitJoinType,
   type DvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
@@ -917,6 +919,71 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
 
     expect(normalized).toMatch(
       /^select left_source\.customer_id as customer_id, left_source\.name as name, right_source\.order_id as order_id from "tenant-data"\."customer-ledger" as left_source join "tenant-data"\."order-ledger" as right_source on left_source\.customer_id = right_source\.customer_id;?$/
+    );
+  });
+
+  it.each([
+    ['grouping', false],
+    ['grouped window', true],
+  ] as const)('preserves binary LEFT JOIN under %s', async (_label, includeWindow) => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    let draft = createDvtSubstraitJoinDraft({
+      left: {
+        nodeId: 'source-customers',
+        schema: 'public',
+        table: 'customers',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef,
+          sourceObjectId: 'public.customers',
+        },
+      },
+      right: {
+        nodeId: 'source-orders',
+        schema: 'public',
+        table: 'orders',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef,
+          sourceObjectId: 'public.orders',
+        },
+      },
+      targetNodeId: 'transform-customer-orders',
+    });
+    const inspection = inspectDvtSubstraitJoinDraft(draft);
+    const joinRelationId = inspection.ok
+      ? inspection.projection.joinRelations[0]?.relationId
+      : undefined;
+    if (joinRelationId == null) throw new Error('Expected one canonical JOIN relation.');
+    draft = setDvtSubstraitJoinType({
+      draft,
+      joinRelationId,
+      joinType: JoinRel_JoinType.LEFT,
+    });
+    draft = applyDvtSubstraitInnerJoinGrouping(draft, {
+      groupFieldId: requireJoinOutputFieldId(draft, 'customer_id'),
+      countOutputName: 'order_count',
+    });
+    if (includeWindow) {
+      draft = applyDvtSubstraitInnerJoinGroupedRowNumber(draft, {
+        outputName: 'count_rank',
+      });
+    }
+
+    const normalized = (await projectDvtSubstraitJoinToPostgresSql(draft))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    expect(normalized).toContain(
+      'from public.customers as left_source left join public.orders as right_source'
+    );
+    expect(normalized).not.toContain(
+      'from public.customers as left_source join public.orders as right_source'
     );
   });
 

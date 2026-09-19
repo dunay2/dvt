@@ -92,6 +92,38 @@ describe('DVT terminal Transform operational workload contract', () => {
     ).toBe(false);
   });
 
+  it('normalizes the historical INNER profile while reading a Preview workload', () => {
+    const workload = buildWorkload();
+    const historical = {
+      ...workload,
+      graph: {
+        ...workload.graph,
+        selectedNodeIds: ['source-customers', 'source-orders', 'transform-a'],
+        selectedEdgeIds: ['customers-transform', 'orders-transform'],
+      },
+      targetProjection: {
+        ...workload.targetProjection,
+        profileId: 'dvt.vtx2.postgres.inner-join.v1',
+      },
+    };
+    const parsed = DvtOperationalWorkloadContractV1.schema.parse(historical);
+
+    expect(parsed.targetProjection.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
+    expect(
+      createDefaultStepTypeRegistry().validate(
+        KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD,
+        historical,
+        {
+          planOwnership: {
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'env-a',
+          },
+        }
+      ).success
+    ).toBe(true);
+  });
+
   it.each([2, 3])('admits %i Set inputs as one Preview workload', (sourceCount) => {
     const workload = buildWorkload();
     const sources = Array.from({ length: sourceCount }, (_, index) => `source-${index}`);

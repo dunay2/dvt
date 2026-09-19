@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  DVT_POSTGRES_JOIN_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
@@ -94,6 +95,25 @@ describe('DVT operational Run workload v2', () => {
     expect(parsed.output).toEqual(workload.output);
     expect(parsed.publicationBoundaries).toEqual([]);
     expect(DvtOperationalWorkloadContract.schema.parse(workload)).toEqual(parsed);
+  });
+
+  it('normalizes the historical INNER profile while reading a Run workload', () => {
+    const workload = buildWorkload();
+    const parsed = DvtOperationalWorkloadContractV2.schema.parse({
+      ...workload,
+      graph: {
+        ...workload.graph,
+        selectedNodeIds: ['source-customers', 'source-orders', 'transform-a'],
+        selectedEdgeIds: ['customers-transform', 'orders-transform'],
+      },
+      targetProjection: {
+        ...workload.targetProjection,
+        profileId: 'dvt.vtx2.postgres.inner-join.v1',
+      },
+    });
+
+    expect(parsed.targetProjection.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
+    expect(DvtOperationalWorkloadContract.schema.parse(parsed)).toEqual(parsed);
   });
 
   it('keeps the output-schema digest deterministic and order-sensitive', () => {

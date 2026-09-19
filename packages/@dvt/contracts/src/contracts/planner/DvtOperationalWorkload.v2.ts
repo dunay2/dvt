@@ -11,11 +11,10 @@ import { CommonStepTypeConfigSchema } from '../../step-registry/CommonStepTypeCo
 
 import {
   DvtOperationalPostgresConnectionRefSchema,
-  DvtOperationalTargetProjectionRefSchema,
+  DvtOperationalRunTargetProjectionRefSchema,
   DvtOperationalWorkloadGraphRefSchema,
   DvtOperationalWorkloadScopeSchema,
   DvtOperationalWorkloadSemanticRefSchema,
-  DvtOperationalWorkloadSha256Schema,
   addDvtOperationalWorkloadIdentityIssues,
 } from './DvtOperationalWorkload.shared.js';
 import {
@@ -45,9 +44,7 @@ export const DvtOperationalWorkloadV2Schema = CommonStepTypeConfigSchema.pick({
     scope: DvtOperationalWorkloadScopeSchema,
     graph: DvtOperationalWorkloadGraphRefSchema,
     semantics: z.array(DvtOperationalWorkloadSemanticRefSchema).length(1),
-    targetProjection: DvtOperationalTargetProjectionRefSchema.extend({
-      schemaDigestSha256: DvtOperationalWorkloadSha256Schema,
-    }).strict(),
+    targetProjection: DvtOperationalRunTargetProjectionRefSchema,
     connectionRef: DvtOperationalPostgresConnectionRefSchema,
     output: DvtOperationalRunOutputSchema,
     publicationBoundaries: z.tuple([]),

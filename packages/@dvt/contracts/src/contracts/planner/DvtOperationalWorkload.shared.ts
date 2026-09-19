@@ -18,6 +18,7 @@ export const DVT_POSTGRES_PROJECT_REL_PROFILE_ID = 'dvt.vtx2.postgres.project-re
 export const DVT_POSTGRES_JOIN_PROFILE_ID = 'dvt.vtx2.postgres.join.v1' as const;
 export const DVT_POSTGRES_SET_PROFILE_ID = 'dvt.vtx2.postgres.set.v1' as const;
 export const DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY = 'pgsql-deparser@16.1.1' as const;
+const DVT_POSTGRES_HISTORICAL_INNER_JOIN_PROFILE_ID = 'dvt.vtx2.postgres.inner-join.v1' as const;
 
 const NonBlankStringSchema = z
   .string()
@@ -46,7 +47,7 @@ export const DvtOperationalWorkloadSemanticRefSchema = z
     profile: DvtSubstraitProfileRefV1Schema,
   })
   .strict();
-export const DvtOperationalTargetProjectionRefSchema = z
+const DvtOperationalTargetProjectionRefObjectSchema = z
   .object({
     profileId: z.enum([
       DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
@@ -58,6 +59,31 @@ export const DvtOperationalTargetProjectionRefSchema = z
     artifact: StepArtifactRefSchema.extend({ artifactKind: z.literal('compiled-sql') }).strict(),
   })
   .strict();
+
+function normalizeHistoricalInnerJoinProjection(value: unknown): unknown {
+  if (
+    typeof value !== 'object' ||
+    value == null ||
+    Array.isArray(value) ||
+    !('profileId' in value) ||
+    value.profileId !== DVT_POSTGRES_HISTORICAL_INNER_JOIN_PROFILE_ID
+  ) {
+    return value;
+  }
+  return { ...value, profileId: DVT_POSTGRES_JOIN_PROFILE_ID };
+}
+
+export const DvtOperationalTargetProjectionRefSchema = z.preprocess(
+  normalizeHistoricalInnerJoinProjection,
+  DvtOperationalTargetProjectionRefObjectSchema
+);
+
+export const DvtOperationalRunTargetProjectionRefSchema = z.preprocess(
+  normalizeHistoricalInnerJoinProjection,
+  DvtOperationalTargetProjectionRefObjectSchema.extend({
+    schemaDigestSha256: DvtOperationalWorkloadSha256Schema,
+  }).strict()
+);
 export const DvtOperationalPostgresConnectionRefSchema = ConnectionRefSchema.extend({
   provider: z.literal('postgres'),
 }).strict();
