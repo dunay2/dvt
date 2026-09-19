@@ -26,7 +26,7 @@ export function projectCanvasRelationalTreeAuthoringDraft(
   }>
 ): CanvasRelationalTreeProjection | null {
   const semantic =
-    args.operation === 'projection'
+    args.operation === 'projection' && args.joinDraft == null
       ? (() => {
           const input = args.inputs.find(
             (candidate) => candidate.nodeId === args.selectedInputIds[0]
@@ -38,7 +38,7 @@ export function projectCanvasRelationalTreeAuthoringDraft(
                 targetNodeId: args.transformNode.id,
               });
         })()
-      : args.operation === 'inner_join'
+      : args.joinDraft != null || args.operation === 'inner_join' || args.operation === 'projection'
         ? args.joinDraft
         : args.operation === 'union_all'
           ? createCanvasRelationalTreeUnionAllDraft({

@@ -1,13 +1,16 @@
 /** Owned concern: edit the operation selected in the central relational draft canvas. */
-import { GitMerge } from 'lucide-react';
-
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import {
+  inspectDvtSubstraitJoinPredicateContext,
+  type DvtSubstraitInnerJoinDraft,
+} from './canvasDvtSubstraitJoinComposition';
 import { CanvasRelationalTreeJoinEditor } from './CanvasRelationalTreeJoinEditor';
+import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { canvasRelationalOperationLabel } from './DvtRelationalOperationChooser';
-
+import type { CanonicalNode } from '../../types/canonical';
+import { CanvasRelationalTreeSelectedOperatorEditor } from './CanvasRelationalTreeSelectedOperatorEditor';
 export function CanvasRelationalTreeInlineEditor({
   appendInput,
   copy,
@@ -15,6 +18,11 @@ export function CanvasRelationalTreeInlineEditor({
   operation,
   onAppendJoinInput,
   onChangeJoinDraft,
+  onPendingConditionChange,
+  selectedRelationId,
+  transformNode,
+  expanded,
+  onClose,
 }: Readonly<{
   appendInput: CanvasDvtCompositionInput | null;
   copy: CanvasRelationalTreeWorkbenchCopy;
@@ -24,28 +32,46 @@ export function CanvasRelationalTreeInlineEditor({
     selection: Readonly<{ leftSourceFieldId: string; rightFieldName: string }>
   ) => void;
   onChangeJoinDraft: (draft: DvtSubstraitInnerJoinDraft) => void;
+  onPendingConditionChange?: (pending: boolean) => void;
+  selectedRelationId: string | null;
+  transformNode: CanonicalNode;
+  expanded: boolean;
+  onClose: () => void;
 }>): JSX.Element | null {
-  if (operation !== 'inner_join' || joinDraft == null) return null;
-
+  if (operation == null || joinDraft == null) return null;
+  const inspection = inspectDvtSubstraitJoinPredicateContext(joinDraft)?.inspection;
+  const selectedJoin = inspection?.projection.joinRelations.some(
+    ({ relationId }) => relationId === selectedRelationId
+  );
   return (
-    <section
-      data-slot="canvas-relational-tree-inline-editor"
-      className="max-h-64 shrink-0 overflow-auto border-t border-(--border-subtle) bg-(--surface-panel) px-4 py-3"
-    >
-      <header className="mb-3 flex items-center gap-2">
-        <GitMerge aria-hidden="true" className="size-4 text-(--status-info)" />
-        <h3 className="text-[11px] font-semibold uppercase tracking-wide text-(--text-primary)">
-          {canvasRelationalOperationLabel(operation, copy)}
-        </h3>
-      </header>
-      <CanvasRelationalTreeJoinEditor
-        key={appendInput?.nodeId ?? 'base'}
-        appendInput={appendInput}
-        copy={copy}
-        draft={joinDraft}
-        onAppend={onAppendJoinInput}
-        onChange={onChangeJoinDraft}
-      />
-    </section>
+    <>
+      {!selectedJoin && appendInput == null && expanded ? (
+        <CanvasRelationalTreeSelectedOperatorEditor
+          draft={joinDraft}
+          operation={operation}
+          relationId={selectedRelationId}
+          transformNode={transformNode}
+          onChange={onChangeJoinDraft}
+          onClose={onClose}
+        />
+      ) : null}
+      <CanvasRelationalTreeEditorFrame
+        title={canvasRelationalOperationLabel(operation, copy)}
+        relationId={selectedRelationId}
+        hidden={appendInput == null && (!selectedJoin || !expanded)}
+        onClose={onClose}
+      >
+        <CanvasRelationalTreeJoinEditor
+          appendInput={appendInput}
+          copy={copy}
+          draft={joinDraft}
+          onAppend={onAppendJoinInput}
+          onChange={onChangeJoinDraft}
+          onPendingConditionChange={onPendingConditionChange}
+          selectedRelationId={selectedRelationId}
+          transformNode={transformNode}
+        />
+      </CanvasRelationalTreeEditorFrame>
+    </>
   );
 }

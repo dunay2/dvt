@@ -15,7 +15,7 @@ const selectStyle = {
   padding: '8px 9px',
   color: '#7dd3fc',
   fontFamily: 'IBM Plex Mono, monospace',
-  fontSize: 9,
+  fontSize: 11,
 } as const;
 
 export type SemanticWorkbenchJoinOperandDraft = Readonly<{
@@ -92,46 +92,71 @@ function JoinOperandFunctionChain(props: {
   functionIds: readonly string[];
   functions: readonly DvtSubstraitJoinUnaryFunction[];
   onChange: (functionIds: readonly string[]) => void;
+  baseLabel: string;
+  side: 'izquierdo' | 'derecho';
 }) {
   const nameById = new Map(
     props.functions.map((capability) => [capability.capabilityId, capability.name] as const)
   );
   return (
     <div style={{ marginTop: 7 }}>
-      <div style={{ color: '#94a3b8', fontSize: 8 }}>FUNCIONES · INTERIOR → EXTERIOR</div>
-      {props.functionIds.map((capabilityId, index) => (
+      <div className="text-[10px] text-(--text-muted)">Resultado del operando {props.side}</div>
+      <div data-slot="semantic-operand-function-tree" className="my-2 border-l border-cyan-800">
+        {[...props.functionIds].reverse().map((capabilityId, outerIndex) => {
+          const index = props.functionIds.length - outerIndex - 1;
+          return (
+            <div
+              key={`${capabilityId}-${index}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginTop: 4,
+                marginLeft: outerIndex * 16 + 8,
+                border: '1px solid #155e75',
+                borderRadius: 5,
+                background: '#082f49',
+                padding: '5px 7px',
+                color: '#67e8f9',
+                fontFamily: 'IBM Plex Mono, monospace',
+                fontSize: 11,
+              }}
+            >
+              <span>{(nameById.get(capabilityId) ?? capabilityId).toUpperCase()}(</span>
+              <button
+                type="button"
+                title="Retirar esta función"
+                aria-label={`Retirar función ${index + 1}`}
+                onClick={() =>
+                  props.onChange(props.functionIds.filter((_, item) => item !== index))
+                }
+                style={{ border: 0, background: 'transparent', padding: 0, color: '#67e8f9' }}
+              >
+                <X aria-hidden="true" size={11} />
+              </button>
+            </div>
+          );
+        })}
         <div
-          key={`${capabilityId}-${index}`}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginTop: 4,
-            border: '1px solid #155e75',
-            borderRadius: 5,
-            background: '#082f49',
-            padding: '5px 7px',
-            color: '#67e8f9',
-            fontFamily: 'IBM Plex Mono, monospace',
-            fontSize: 8,
-          }}
+          data-slot="semantic-operand-function-leaf"
+          className="border-l border-cyan-800 px-2 py-1 font-mono text-[11px] text-sky-200"
+          style={{ marginLeft: props.functionIds.length * 16 + 8 }}
         >
-          <span>
-            {index + 1}. {(nameById.get(capabilityId) ?? capabilityId).toUpperCase()}
-          </span>
-          <button
-            type="button"
-            title="Retirar esta función"
-            aria-label={`Retirar función ${index + 1}`}
-            onClick={() => props.onChange(props.functionIds.filter((_, item) => item !== index))}
-            style={{ border: 0, background: 'transparent', padding: 0, color: '#67e8f9' }}
-          >
-            <X aria-hidden="true" size={11} />
-          </button>
+          {props.baseLabel}
         </div>
-      ))}
+        {[...props.functionIds].reverse().map((capabilityId, index) => (
+          <div
+            key={`${capabilityId}-${index}`}
+            aria-hidden="true"
+            className="font-mono text-[11px] text-cyan-300"
+            style={{ marginLeft: (props.functionIds.length - index - 1) * 16 + 8 }}
+          >
+            )
+          </div>
+        ))}
+      </div>
       <select
-        aria-label="Añadir función exterior al operando"
+        aria-label={`Añadir función exterior al operando ${props.side}`}
         value=""
         disabled={props.functions.length === 0}
         onChange={(event) => {
@@ -141,7 +166,9 @@ function JoinOperandFunctionChain(props: {
         style={{ ...selectStyle, marginTop: 5, color: '#34d399' }}
       >
         <option value="">
-          {props.functions.length === 0 ? 'Sin funciones compatibles' : '+ Añadir función exterior'}
+          {props.functions.length === 0
+            ? 'Sin funciones compatibles'
+            : `Envolver operando ${props.side} con…`}
         </option>
         {props.functions.map((capability) => (
           <option key={capability.capabilityId} value={capability.capabilityId}>
@@ -220,11 +247,24 @@ export function SemanticWorkbenchJoinOperandEditor(props: {
           />
         )}
       </div>
-      <JoinOperandFunctionChain
-        functionIds={props.operand.functionIds}
-        functions={props.functions}
-        onChange={(functionIds) => props.onChange({ ...props.operand, functionIds })}
-      />
+      <details className="mt-2" open={props.operand.functionIds.length > 0 ? true : undefined}>
+        <summary className="cursor-pointer text-[10px] text-(--text-muted)">
+          Funciones
+          {props.operand.functionIds.length > 0 ? ` (${props.operand.functionIds.length})` : ''}
+        </summary>
+        <JoinOperandFunctionChain
+          side={props.side}
+          baseLabel={
+            props.operand.kind === 'field'
+              ? (props.fields.find((field) => field.fieldId === props.operand.fieldId)?.label ??
+                props.operand.fieldId)
+              : `${props.dataType} ${JSON.stringify(props.operand.rawValue)}`
+          }
+          functionIds={props.operand.functionIds}
+          functions={props.functions}
+          onChange={(functionIds) => props.onChange({ ...props.operand, functionIds })}
+        />
+      </details>
     </div>
   );
 }

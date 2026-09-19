@@ -1,11 +1,15 @@
 /** Owned concern: present one scalable, keyboard-selectable relational graph viewport. */
-import { CheckCircle2 } from 'lucide-react';
 
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
+import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import { CanvasRelationalTreeLayout } from './CanvasRelationalTreeLayout';
 import { CanvasRelationalTreeZoomControls } from './CanvasRelationalTreeZoomControls';
 import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewport';
+import {
+  CANVAS_RELATIONAL_SOURCE_DRAG_TYPE,
+  readCanvasRelationalSourceDrag,
+} from './canvasRelationalTreeDrag';
 
 export function CanvasRelationalTreeView({
   outputName,
@@ -13,12 +17,20 @@ export function CanvasRelationalTreeView({
   selectedLocator,
   copy,
   onSelect,
+  onExpand,
+  onRemove,
+  transformNode,
+  onDropSource,
 }: Readonly<{
   outputName: string;
   root: CanvasRelationalTreeNode;
   selectedLocator: string;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
+  onExpand?: (locator: string) => void;
+  onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
+  transformNode?: CanonicalNode;
+  onDropSource?: (nodeId: string) => void;
 }>): JSX.Element {
   const viewport = useCanvasRelationalTreeViewport(root.locator);
 
@@ -27,17 +39,6 @@ export function CanvasRelationalTreeView({
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
       aria-label={copy.relationalTreeLabel}
     >
-      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-(--border-subtle) bg-(--surface-panel) px-4 py-2.5">
-        <div className="min-w-0">
-          <h3 className="truncate text-xs font-semibold text-(--text-primary)">
-            {outputName} · {copy.relationalTreeLabel}
-          </h3>
-          <p className="mt-0.5 flex items-center gap-1 text-[9px] text-emerald-300">
-            <CheckCircle2 aria-hidden="true" className="size-3" />
-            {copy.relationalTreeValidMessage}
-          </p>
-        </div>
-      </header>
       <div className="relative min-h-0 flex-1">
         <div
           ref={viewport.viewportRef}
@@ -54,12 +55,28 @@ export function CanvasRelationalTreeView({
           onPointerMove={viewport.onPointerMove}
           onPointerUp={viewport.onPointerUp}
           onPointerCancel={viewport.onPointerUp}
+          onDragOver={(event) => {
+            if (
+              onDropSource == null ||
+              !event.dataTransfer.types.includes(CANVAS_RELATIONAL_SOURCE_DRAG_TYPE)
+            )
+              return;
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'copy';
+          }}
+          onDrop={(event) => {
+            if (onDropSource == null) return;
+            const nodeId = readCanvasRelationalSourceDrag(event.dataTransfer);
+            if (nodeId == null) return;
+            event.preventDefault();
+            onDropSource(nodeId);
+          }}
         >
           <div
             ref={viewport.contentRef}
             data-slot="canvas-relational-tree"
-            className="mx-auto w-max origin-center transition-transform duration-150"
-            style={{ transform: `scale(${viewport.zoom})`, transformOrigin: 'center center' }}
+            className="w-max"
+            style={{ zoom: viewport.zoom }}
           >
             <CanvasRelationalTreeLayout
               outputName={outputName}
@@ -67,6 +84,10 @@ export function CanvasRelationalTreeView({
               selectedLocator={selectedLocator}
               copy={copy}
               onSelect={onSelect}
+              onExpand={onExpand}
+              onRemove={onRemove}
+              zoom={viewport.zoom}
+              semanticContext={transformNode == null ? undefined : { transformNode }}
             />
           </div>
         </div>
@@ -74,6 +95,7 @@ export function CanvasRelationalTreeView({
           <CanvasRelationalTreeZoomControls
             copy={copy}
             zoom={viewport.zoom}
+            minimumZoom={viewport.minimumZoom}
             onChange={viewport.changeZoom}
             onFit={viewport.fit}
           />

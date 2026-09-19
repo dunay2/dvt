@@ -25,6 +25,7 @@ export type SemanticWorkbenchNodeData = Readonly<{
     joinRelationId: string;
     operand: 'left' | 'right';
   }>;
+  joinConditionIndex?: number;
 }>;
 
 type SemanticWorkbenchEdgeData = Readonly<{
@@ -154,12 +155,18 @@ function expressionsOwnedByRelation(rel: Rel): readonly Expression[] {
       return rel.relType.value.expression == null ? [] : [rel.relType.value.expression];
     case 'project':
       return rel.relType.value.expressions;
+    case 'aggregate':
+      return rel.relType.value.groupingExpressions;
     default:
       return [];
   }
 }
 
-function relationFieldNames(rel: Rel, qualifyReadFields = false): readonly string[] {
+function relationFieldNames(
+  rel: Rel,
+  qualifyReadFields = false,
+  bindingNames?: ReadonlyMap<number, readonly string[]>
+): readonly string[] {
   if (rel.relType.case === 'read') {
     const names = rel.relType.value.baseSchema?.names ?? [];
     const readType = rel.relType.value.readType;
@@ -169,11 +176,14 @@ function relationFieldNames(rel: Rel, qualifyReadFields = false): readonly strin
       : names;
   }
 
+  const boundNames = bindingNames?.get(relationAnchor(rel) ?? -1);
+  if (!qualifyReadFields && boundNames != null && boundNames.length > 0) return boundNames;
+
   const inputs = relationInputs(rel);
   const inputNames =
     rel.relType.case === 'join'
-      ? inputs.flatMap((input) => relationFieldNames(input, qualifyReadFields))
-      : inputs.flatMap((input) => relationFieldNames(input, false));
+      ? inputs.flatMap((input) => relationFieldNames(input, qualifyReadFields, bindingNames))
+      : inputs.flatMap((input) => relationFieldNames(input, false, bindingNames));
   const common =
     rel.relType.case === 'filter' ||
     rel.relType.case === 'project' ||
@@ -380,6 +390,18 @@ export function projectSemanticWorkbenchGraph(
   }
 
   const namesByFunctionAnchor = functionNames(draft.plan);
+  const bindingNames = new Map(
+    draft.sidecar.relations.map(
+      (binding) =>
+        [
+          binding.relAnchor,
+          draft.sidecar.fields
+            .filter((field) => field.relationId === binding.relationId)
+            .sort((left, right) => left.outputOrdinal - right.outputOrdinal)
+            .map((field) => field.displayName ?? field.fieldId),
+        ] as const
+    )
+  );
   const relationIdByAnchor = new Map(
     draft.sidecar.relations.map((binding) => [binding.relAnchor, binding.relationId] as const)
   );
@@ -388,6 +410,7 @@ export function projectSemanticWorkbenchGraph(
   let sequence = 0;
   let relationCount = 0;
   let expressionCount = 0;
+  const conditionIndexes = new Map<string, number>();
 
   function nextId(prefix: string): string {
     sequence += 1;
@@ -431,6 +454,7 @@ export function projectSemanticWorkbenchGraph(
     joinContext?: Readonly<{
       joinRelationId: string;
       operand?: 'left' | 'right';
+      conditionIndex?: number;
     }>
   ): string {
     expressionCount += 1;
@@ -448,6 +472,7 @@ export function projectSemanticWorkbenchGraph(
           semanticKind: 'field',
           semanticGroup: 'condition',
           detail: `Campo de entrada: ${label}`,
+          joinConditionIndex: joinContext?.conditionIndex,
           ...(joinContext?.operand == null
             ? {}
             : {
@@ -473,6 +498,15 @@ export function projectSemanticWorkbenchGraph(
           semanticKind: 'literal',
           semanticGroup: 'condition',
           detail: `Valor literal: ${literalLabel(expression)}`,
+          joinConditionIndex: joinContext?.conditionIndex,
+          ...(joinContext?.operand == null
+            ? {}
+            : {
+                joinOperand: {
+                  joinRelationId: joinContext.joinRelationId,
+                  operand: joinContext.operand,
+                },
+              }),
         },
         style: LITERAL_STYLE,
       });
@@ -484,6 +518,15 @@ export function projectSemanticWorkbenchGraph(
         namesByFunctionAnchor.get(scalar.functionReference) ?? `fn#${scalar.functionReference}`;
       const id = nextId('function');
       const expressionDetail = describeExpression(expression, fieldNames);
+      const isJoinComparison =
+        DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS.some((operator) => operator === functionName) ||
+        functionName === 'is_null' ||
+        functionName === 'is_not_null';
+      if (joinContext != null && isJoinComparison) {
+        const conditionIndex = conditionIndexes.get(joinContext.joinRelationId) ?? 0;
+        conditionIndexes.set(joinContext.joinRelationId, conditionIndex + 1);
+        joinContext = { ...joinContext, conditionIndex };
+      }
       nodes.push({
         id,
         position: { x: 0, y: 0 },
@@ -495,12 +538,18 @@ export function projectSemanticWorkbenchGraph(
           semanticGroup: 'condition',
           detail: expressionDetail,
           expression: expressionDetail,
+          joinConditionIndex: joinContext?.conditionIndex,
+          ...(joinContext?.operand == null
+            ? {}
+            : {
+                joinOperand: {
+                  joinRelationId: joinContext.joinRelationId,
+                  operand: joinContext.operand,
+                },
+              }),
         },
         style: EXPRESSION_STYLE,
       });
-      const isJoinComparison = DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS.some(
-        (operator) => operator === functionName
-      );
       for (const [argumentIndex, argument] of scalar.arguments.entries()) {
         if (argument.argType.case !== 'value') continue;
         const argumentId = addExpression(
@@ -603,11 +652,11 @@ export function projectSemanticWorkbenchGraph(
     const relationId = anchor == null ? null : relationIdByAnchor.get(anchor);
     const id = relationId ?? nextId('relation');
     const inputs = relationInputs(rel);
-    const outputFields = relationFieldNames(rel);
+    const outputFields = relationFieldNames(rel, false, bindingNames);
     const expressionFields =
       rel.relType.case === 'join'
-        ? inputs.flatMap((input) => relationFieldNames(input, true))
-        : inputs.flatMap((input) => relationFieldNames(input));
+        ? inputs.flatMap((input) => relationFieldNames(input, true, bindingNames))
+        : inputs.flatMap((input) => relationFieldNames(input, false, bindingNames));
     const ownedExpressions = expressionsOwnedByRelation(rel);
     const expression =
       ownedExpressions[0] == null
@@ -684,6 +733,42 @@ export function projectSemanticWorkbenchGraph(
         style: { stroke: '#10b981', strokeWidth: 1.4 },
       });
     }
+    if (rel.relType.case === 'aggregate') {
+      for (const { measure } of rel.relType.value.measures) {
+        if (measure == null) continue;
+        const measureId = nextId('aggregate-expression');
+        expressionCount += 1;
+        const name = namesByFunctionAnchor.get(measure.functionReference) ?? 'aggregate';
+        nodes.push({
+          id: measureId,
+          type: 'default',
+          position: { x: 0, y: 0 },
+          data: {
+            label: `${name.toUpperCase()}\n${measure.arguments.length === 0 ? '(*)' : name}`,
+            semanticKind: 'expression',
+            semanticGroup: 'condition',
+            detail: name,
+          },
+          style: EXPRESSION_STYLE,
+        });
+        edges.push({
+          id: nextId('edge'),
+          source: measureId,
+          target: id,
+          data: { semanticEdgeKind: 'expression' },
+        });
+        for (const argument of measure.arguments) {
+          if (argument.argType.case !== 'value') continue;
+          const argumentId = addExpression(argument.argType.value, expressionFields);
+          edges.push({
+            id: nextId('edge'),
+            source: argumentId,
+            target: measureId,
+            data: { semanticEdgeKind: 'expression' },
+          });
+        }
+      }
+    }
     return id;
   }
 
@@ -753,11 +838,11 @@ export function projectSemanticWorkbenchGraph(
     return {
       nodes: getLayoutedElements(expressionNodes, expressionEdges, {
         rankdir: 'BT',
-        ranksep: 64,
+        ranksep: 28,
         nodesep: 28,
-        marginx: 24,
-        marginy: 24,
-        nodeSize: { width: 206, height: 56 },
+        marginx: 8,
+        marginy: 8,
+        nodeSize: { width: 206, height: 60 },
       }).nodes,
       edges: expressionEdges,
       relationCount: 0,

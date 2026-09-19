@@ -1,5 +1,7 @@
 /** Owned concern: present admitted relational-operation choices without changing semantic state. */
 import { Button } from '../../components/ui/button';
+import { Layers3, Columns3 } from 'lucide-react';
+import { CanvasRelationalJoinIcon } from './CanvasRelationalJoinIcon';
 import type {
   CanvasRelationalOperation,
   CanvasRelationalOperationChoice,
@@ -19,6 +21,7 @@ type RelationalOperationCopy = Pick<
   | 'inspectorDvtRelationalTargetUnavailable'
   | 'inspectorDvtRelationalUnavailable'
   | 'inspectorDvtRelationalReadOnly'
+  | 'relationalTreeSelectNextSourceMessage'
 >;
 
 export function canvasRelationalOperationLabel(
@@ -44,6 +47,8 @@ export function canvasRelationalAvailabilityLabel(
       return copy.inspectorDvtRelationalAvailable;
     case 'needs-predicate':
       return copy.inspectorDvtRelationalNeedsPredicate;
+    case 'needs-input':
+      return copy.relationalTreeSelectNextSourceMessage;
     case 'needs-schema-alignment':
       return copy.inspectorDvtRelationalNeedsSchemaAlignment;
     case 'target-unavailable':
@@ -80,11 +85,16 @@ export function DvtRelationalOperationChooser({
           variant="outline"
           disabled={!choice.selectable}
           aria-pressed={selectedOperation === choice.operation}
-          draggable={choice.selectable}
-          className="h-auto min-w-40 justify-between gap-3 py-2 aria-pressed:border-(--status-info) aria-pressed:bg-blue-950/40"
+          draggable={choice.selectable && selectedOperation == null}
+          className={
+            layout === 'shelf'
+              ? 'h-8 gap-2 px-2.5 text-sm font-medium aria-pressed:border-(--status-info) aria-pressed:bg-blue-950/40'
+              : 'h-auto min-w-40 justify-between gap-3 py-2 aria-pressed:border-(--status-info) aria-pressed:bg-blue-950/40'
+          }
+          title={canvasRelationalAvailabilityLabel(choice.availability, copy)}
           data-slot={`dvt-select-operation-${choice.operation.replace('_', '-')}`}
           onDragStart={(event) => {
-            if (!choice.selectable) {
+            if (!choice.selectable || selectedOperation != null) {
               event.preventDefault();
               return;
             }
@@ -97,8 +107,15 @@ export function DvtRelationalOperationChooser({
             onSelect(choice.operation);
           }}
         >
+          {layout !== 'shelf' ? null : choice.operation === 'inner_join' ? (
+            <CanvasRelationalJoinIcon aria-hidden="true" className="size-4" />
+          ) : choice.operation === 'union_all' ? (
+            <Layers3 aria-hidden="true" className="size-4" />
+          ) : (
+            <Columns3 aria-hidden="true" className="size-4" />
+          )}
           <span>{canvasRelationalOperationLabel(choice.operation, copy)}</span>
-          <span className="text-[10px] font-normal opacity-70">
+          <span className={layout === 'shelf' ? 'sr-only' : 'text-xs font-normal opacity-70'}>
             {canvasRelationalAvailabilityLabel(choice.availability, copy)}
           </span>
         </Button>

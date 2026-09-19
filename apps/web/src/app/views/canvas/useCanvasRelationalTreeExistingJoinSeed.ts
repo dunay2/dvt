@@ -1,16 +1,19 @@
 /** Owned concern: hydrate a discardable authoring session from one existing canonical JOIN. */
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { resolveCanvasRelationalTreeAuthoringCandidates } from './canvasRelationalTreeAuthoringModel';
 import { resolveCanvasRelationalTreeExistingJoinDraft } from './canvasRelationalTreeExistingJoinDraft';
 import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
+import { appendDvtSubstraitUnionAllInput } from './canvasDvtSubstraitSetComposition';
 
 export type CanvasRelationalTreeJoinSeedHydration = Readonly<{
   draft: DvtSubstraitInnerJoinDraft;
   inputIds: readonly string[];
   appendInputId: string | null;
+  operation: CanvasRelationalOperation;
 }>;
 
 export function useCanvasRelationalTreeExistingJoinSeed(
@@ -24,24 +27,21 @@ export function useCanvasRelationalTreeExistingJoinSeed(
   }>
 ) {
   const { edges, inputs, nodes, onHydrate, targetNodeId, transformNode } = args;
+  const [baselineDraft, setBaselineDraft] = useState<DvtSubstraitInnerJoinDraft | null>(null);
   const seed = useMemo(
-    () =>
-      resolveCanvasRelationalTreeExistingJoinDraft({
-        transformNode,
-        nodes,
-        edges,
-      }),
+    () => resolveCanvasRelationalTreeExistingJoinDraft({ transformNode, nodes, edges }),
     [edges, nodes, transformNode]
   );
 
-  return useCallback(
+  const hydrateExistingJoin = useCallback(
     (requestedInputId?: string): boolean => {
       if (seed == null) return false;
+      setBaselineDraft(seed.draft);
       const appendInputId =
         requestedInputId == null
           ? null
           : (resolveCanvasRelationalTreeAuthoringCandidates({
-              operation: 'inner_join',
+              operation: seed.operation,
               inputs,
               selectedInputIds: seed.inputIds,
               joinDraft: seed.draft,
@@ -49,9 +49,28 @@ export function useCanvasRelationalTreeExistingJoinSeed(
               nodes,
               edges,
             }).find((item) => item.nodeId === requestedInputId && item.selectable)?.nodeId ?? null);
-      onHydrate({ ...seed, appendInputId });
+      const input = inputs.find((candidate) => candidate.nodeId === appendInputId);
+      if (seed.operation === 'projection') {
+        onHydrate({
+          ...seed,
+          appendInputId: null,
+          inputIds: input == null ? seed.inputIds : [...seed.inputIds, input.nodeId],
+        });
+      } else if (seed.operation === 'union_all' && input != null) {
+        const draft = appendDvtSubstraitUnionAllInput(seed.draft, {
+          ...input,
+          fields: input.fields.map((field) => ({ name: field.name, type: 'string' })),
+        });
+        onHydrate({
+          ...seed,
+          draft,
+          inputIds: draft === seed.draft ? seed.inputIds : [...seed.inputIds, input.nodeId],
+          appendInputId: null,
+        });
+      } else onHydrate({ ...seed, appendInputId });
       return true;
     },
     [edges, inputs, nodes, onHydrate, seed, targetNodeId]
   );
+  return { hydrateExistingJoin, baselineDraft, seed };
 }

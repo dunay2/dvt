@@ -1,18 +1,21 @@
 /** Owned concern: manage measured fit, zoom and pointer panning for the tree viewport. */
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type { PointerEventHandler, RefObject } from 'react';
-
+import { useCanvasRelationalTreeWheelZoom } from './useCanvasRelationalTreeWheelZoom';
 import {
+  CANVAS_RELATIONAL_TREE_MIN_ZOOM,
   calculateCanvasRelationalTreeFit,
   changeCanvasRelationalTreeZoom,
 } from './canvasRelationalTreeViewport';
-
 type PanOrigin = Readonly<{ x: number; y: number; left: number; top: number }>;
-
-export function useCanvasRelationalTreeViewport(layoutKey: string): Readonly<{
+export function useCanvasRelationalTreeViewport(
+  layoutKey: string,
+  fitPadding = 32
+): Readonly<{
   viewportRef: RefObject<HTMLDivElement>;
   contentRef: RefObject<HTMLDivElement>;
   zoom: number;
+  minimumZoom: number;
   panning: boolean;
   changeZoom: (delta: number) => void;
   fit: () => void;
@@ -23,9 +26,15 @@ export function useCanvasRelationalTreeViewport(layoutKey: string): Readonly<{
   const viewportRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const panOrigin = useRef<PanOrigin | null>(null);
+  const autoFit = useRef(true);
   const [zoom, setZoom] = useState(1);
+  const [minimumZoom, setMinimumZoom] = useState(CANVAS_RELATIONAL_TREE_MIN_ZOOM);
   const [panning, setPanning] = useState(false);
-
+  const setManualZoom = useCallback((value: number) => {
+    autoFit.current = false;
+    setZoom(value);
+  }, []);
+  useCanvasRelationalTreeWheelZoom(viewportRef, contentRef, zoom, setManualZoom, minimumZoom);
   const center = useCallback((nextZoom: number) => {
     const viewport = viewportRef.current;
     const content = contentRef.current;
@@ -35,6 +44,7 @@ export function useCanvasRelationalTreeViewport(layoutKey: string): Readonly<{
   }, []);
 
   const fit = useCallback(() => {
+    autoFit.current = true;
     const viewport = viewportRef.current;
     const content = contentRef.current;
     if (viewport == null || content == null) return;
@@ -43,22 +53,44 @@ export function useCanvasRelationalTreeViewport(layoutKey: string): Readonly<{
       viewportHeight: viewport.clientHeight,
       contentWidth: content.offsetWidth,
       contentHeight: content.offsetHeight,
+      padding: fitPadding,
     });
     setZoom(nextZoom);
+    setMinimumZoom(Math.min(CANVAS_RELATIONAL_TREE_MIN_ZOOM, nextZoom));
     requestAnimationFrame(() => center(nextZoom));
-  }, [center]);
+  }, [center, fitPadding]);
 
   useLayoutEffect(() => {
-    const frame = requestAnimationFrame(() => center(1));
-    return () => cancelAnimationFrame(frame);
-  }, [center, layoutKey]);
+    const refresh = (): void => {
+      if (autoFit.current) fit();
+    };
+    const frame = requestAnimationFrame(refresh);
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(refresh);
+    if (viewportRef.current != null) observer?.observe(viewportRef.current, { box: 'border-box' });
+    if (contentRef.current != null) observer?.observe(contentRef.current, { box: 'border-box' });
+    return () => {
+      cancelAnimationFrame(frame);
+      observer?.disconnect();
+    };
+  }, [fit, layoutKey]);
 
-  const changeZoom = useCallback((delta: number) => {
-    setZoom((current) => changeCanvasRelationalTreeZoom(current, delta));
-  }, []);
+  const changeZoom = useCallback(
+    (delta: number) => {
+      autoFit.current = false;
+      setZoom((current) => changeCanvasRelationalTreeZoom(current, delta, minimumZoom));
+    },
+    [minimumZoom]
+  );
 
   const onPointerDown: PointerEventHandler<HTMLDivElement> = (event) => {
-    if (event.button !== 0 || (event.target as Element).closest('button') != null) return;
+    if (
+      !event.currentTarget.contains(event.target as Node) ||
+      (event.button !== 0 && event.button !== 1) ||
+      (event.button === 0 &&
+        (event.target as Element).closest('button, input, select, summary, a') != null)
+    )
+      return;
+    event.preventDefault();
     panOrigin.current = {
       x: event.clientX,
       y: event.clientY,
@@ -85,6 +117,7 @@ export function useCanvasRelationalTreeViewport(layoutKey: string): Readonly<{
     viewportRef,
     contentRef,
     zoom,
+    minimumZoom,
     panning,
     changeZoom,
     fit,

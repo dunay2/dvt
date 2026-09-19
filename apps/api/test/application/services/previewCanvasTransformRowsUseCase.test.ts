@@ -1,4 +1,9 @@
-import type { TransformDataSampleRequest, WarehouseConnection } from '@dvt/contracts';
+import {
+  DvtTransformAuthoringAuthorityV1Schema,
+  TransformDataSampleRequestSchema,
+  type TransformDataSampleRequest,
+  type WarehouseConnection,
+} from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -68,13 +73,18 @@ function catalog(): IWarehouseConnectionCatalog {
   };
 }
 
-function harness(canvasId = request.canvasId): Readonly<{
+function harness(
+  canvasId = request.canvasId,
+  inputCount: 2 | 3 = 2
+): Readonly<{
+  semanticPlanSha256: string;
+  relationId: string;
   executeWithAuthorizedDraft: ReturnType<typeof vi.fn>;
   previewTransformRows: ReturnType<typeof vi.fn>;
   useCase: PreviewCanvasTransformRowsUseCase;
 }> {
   const draft = {
-    ...buildDvtJoinPreviewDraft(2),
+    ...buildDvtJoinPreviewDraft(inputCount),
     canvas: { id: canvasId, kind: 'transformation' as const, title: 'Joins' },
   };
   const executeWithAuthorizedDraft = vi.fn(async () => ({
@@ -89,14 +99,22 @@ function harness(canvasId = request.canvasId): Readonly<{
       authorizedDraft: { revision: 'revision-7', draft },
     },
   }));
-  const previewTransformRows = vi.fn(async () => ({
-    columns: [{ name: 'order_id', type: 'integer', nullable: true }],
-    rows: [{ values: ['1'] }],
-    truncated: false,
-    sampledAt: '2026-09-15T10:00:00.000Z',
-  }));
+  const previewTransformRows = vi.fn<ICanvasTransformDataSampleProbe['previewTransformRows']>(
+    async () => ({
+      columns: [{ name: 'order_id', type: 'integer', nullable: true }],
+      rows: [{ values: ['1'] }],
+      truncated: false,
+      sampledAt: '2026-09-15T10:00:00.000Z',
+    })
+  );
   const probe: ICanvasTransformDataSampleProbe = { previewTransformRows };
+  const document = DvtTransformAuthoringAuthorityV1Schema.parse(
+    draft.nodes.find((node) => node.id === request.transformNodeId)?.metadata?.transformAuthoring
+  ).semanticDocument;
   return {
+    semanticPlanSha256: document.semanticPlan.sha256,
+    relationId: document.sidecar.relations.find((relation) => relation.sourceRef == null)!
+      .relationId,
     executeWithAuthorizedDraft,
     previewTransformRows,
     useCase: new PreviewCanvasTransformRowsUseCase({
@@ -108,6 +126,40 @@ function harness(canvasId = request.canvasId): Readonly<{
 }
 
 describe('PreviewCanvasTransformRowsUseCase', () => {
+  it('samples the selected first JOIN rather than the final three-source Model', async () => {
+    const { useCase, previewTransformRows, relationId, semanticPlanSha256 } = harness(
+      request.canvasId,
+      3
+    );
+    const selection = TransformDataSampleRequestSchema.parse({
+      ...request,
+      relationId,
+      semanticPlanSha256,
+    });
+    const result = await useCase.execute(selection, context());
+    expect(result).toMatchObject({ relationId, semanticPlanSha256 });
+    expect(previewTransformRows.mock.calls[0]?.[0].sql.match(/\bJOIN\b/g)).toHaveLength(1);
+  });
+
+  it.each(['unknown', 'stale'])(
+    'rejects %s relation selection before issuing a data query',
+    async (reason) => {
+      const { useCase, previewTransformRows, relationId, semanticPlanSha256 } = harness(
+        request.canvasId,
+        3
+      );
+      const selection = {
+        ...request,
+        relationId: reason === 'unknown' ? 'foreign-relation' : relationId,
+        semanticPlanSha256: reason === 'stale' ? 'f'.repeat(64) : semanticPlanSha256,
+      };
+      await expect(
+        useCase.execute(TransformDataSampleRequestSchema.parse(selection), context())
+      ).rejects.toBeInstanceOf(CanvasTransformDataSampleUnavailableError);
+      expect(previewTransformRows).not.toHaveBeenCalled();
+    }
+  );
+
   it('projects and samples the current protected Transform without publishing a result', async () => {
     const { useCase, previewTransformRows } = harness();
 

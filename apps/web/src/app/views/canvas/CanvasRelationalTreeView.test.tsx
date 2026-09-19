@@ -95,6 +95,9 @@ describe('Canvas relational-tree branching view', () => {
     ).toBe('3');
     expect(container.querySelectorAll('[role="treeitem"]')).toHaveLength(4);
     expect(container.textContent).toContain('Secondary input 3');
+    expect(
+      Array.from(container.querySelectorAll('svg text'), (label) => label.textContent)
+    ).toEqual(['1', '2', '3']);
     const rootLeft = Number.parseFloat(
       container.querySelector<HTMLElement>('[data-locator="set"]')?.closest<HTMLElement>('li')
         ?.style.left ?? '0'
@@ -112,5 +115,44 @@ describe('Canvas relational-tree branching view', () => {
     expect(container.querySelector('[data-slot="canvas-relational-tree-zoom"]')?.textContent).toBe(
       '100%'
     );
+  });
+
+  it('names sources directly and labels each nested JOIN input by its canonical role', () => {
+    const tree = relation('outer', 'join', [
+      {
+        role: 'left',
+        ordinal: 0,
+        node: relation('inner', 'join', [
+          { role: 'left', ordinal: 0, node: relation('order_details', 'read') },
+          { role: 'right', ordinal: 1, node: relation('client', 'read') },
+        ]),
+      },
+      { role: 'right', ordinal: 1, node: relation('orders', 'read') },
+    ]);
+    act(() =>
+      root.render(
+        <CanvasRelationalTreeView
+          outputName="Model 1"
+          root={tree}
+          selectedLocator="outer"
+          copy={COPY}
+          onSelect={() => undefined}
+        />
+      )
+    );
+    for (const name of ['order_details', 'client', 'orders']) {
+      const card = container.querySelector(`[data-locator="${name}"]`)!;
+      expect(card.querySelector('[data-slot="canvas-relational-node-title"]')?.textContent).toBe(
+        name
+      );
+      expect(card.textContent).not.toContain('READ');
+      expect(card.getAttribute('aria-label')).toContain(name);
+      expect(card.getAttribute('data-operator')).toBe('read');
+    }
+    for (const parent of ['outer', 'inner']) {
+      const edges = container.querySelector(`svg [data-parent-locator="${parent}"]`)!;
+      expect(edges.querySelector('[data-role="left"] text')?.textContent).toBe('L');
+      expect(edges.querySelector('[data-role="right"] text')?.textContent).toBe('R');
+    }
   });
 });

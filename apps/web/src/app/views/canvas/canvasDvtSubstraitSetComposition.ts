@@ -529,6 +529,72 @@ function hasPinnedPlanVersion(plan: Plan): boolean {
   );
 }
 
+/** Append a compatible source while preserving all existing RelationIds and FieldIds. */
+export function appendDvtSubstraitUnionAllInput(
+  draft: DvtSubstraitUnionAllDraft,
+  source: DvtSubstraitUnionAllSource
+): DvtSubstraitUnionAllDraft {
+  const inspection = inspectDvtSubstraitUnionAllDraft(draft);
+  if (!inspection.ok) return draft;
+  try {
+    assertCompatibleSources([
+      ...inspection.projection.inputs.map((input) => ({
+        ...input,
+        nodeId: input.relationId,
+        fields: input.fields.map((field) => ({ name: field.name, type: 'string' as const })),
+      })),
+      source,
+    ]);
+  } catch {
+    return draft;
+  }
+  const plan = clonePlan(draft.plan);
+  const root = plan.relations[0]?.relType;
+  const set = root?.case === 'root' ? root.value.input?.relType : undefined;
+  if (set?.case !== 'set' || set.value.common == null) return draft;
+  const sourceAnchor = set.value.inputs.length + 1;
+  set.value.common.relAnchor = sourceAnchor + 1;
+  set.value.inputs.push(readRelation({ relAnchor: sourceAnchor, source }));
+  const relationId = allocateDvtRelationId();
+  const next: DvtSubstraitUnionAllDraft = {
+    plan,
+    sidecar: {
+      ...draft.sidecar,
+      semanticPlanSha256: ZERO_SHA256,
+      relations: [
+        ...draft.sidecar.relations.map((relation) =>
+          relation.relationId === inspection.projection.resultRelationId
+            ? {
+                ...relation,
+                relAnchor: sourceAnchor + 1,
+                displayName: [
+                  ...inspection.projection.inputs.map((input) => input.table),
+                  source.table,
+                ].join('+'),
+              }
+            : relation
+        ),
+        {
+          relationId,
+          relAnchor: sourceAnchor,
+          sourceRef: source.sourceRef,
+          displayName: source.table,
+        },
+      ],
+      fields: [
+        ...draft.sidecar.fields,
+        ...source.fields.map((field, outputOrdinal) => ({
+          fieldId: allocateDvtFieldId(),
+          relationId,
+          outputOrdinal,
+          displayName: field.name,
+        })),
+      ],
+    },
+  };
+  return inspectDvtSubstraitUnionAllDraft(next).ok ? next : draft;
+}
+
 function clonePlan(plan: Plan): Plan {
   return fromBinary(PlanSchema, toBinary(PlanSchema, plan));
 }

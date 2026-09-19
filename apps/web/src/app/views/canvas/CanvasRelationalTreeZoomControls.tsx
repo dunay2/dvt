@@ -10,11 +10,13 @@ import {
 export function CanvasRelationalTreeZoomControls({
   copy,
   zoom,
+  minimumZoom = CANVAS_RELATIONAL_TREE_MIN_ZOOM,
   onChange,
   onFit,
 }: Readonly<{
   copy: CanvasRelationalTreeWorkbenchCopy;
   zoom: number;
+  minimumZoom?: number;
   onChange: (delta: number) => void;
   onFit: () => void;
 }>): JSX.Element {
@@ -23,7 +25,7 @@ export function CanvasRelationalTreeZoomControls({
       <button
         type="button"
         aria-label={copy.reactFlowZoomOutLabel}
-        disabled={zoom <= CANVAS_RELATIONAL_TREE_MIN_ZOOM}
+        disabled={zoom <= minimumZoom}
         onClick={() => onChange(-0.15)}
         className="rounded p-1 hover:bg-(--surface-subtle) disabled:opacity-40"
       >
@@ -39,6 +41,7 @@ export function CanvasRelationalTreeZoomControls({
       <button
         type="button"
         aria-label={copy.reactFlowFitViewLabel}
+        data-slot="canvas-relational-tree-fit"
         onClick={onFit}
         className="rounded p-1 hover:bg-(--surface-subtle)"
       >

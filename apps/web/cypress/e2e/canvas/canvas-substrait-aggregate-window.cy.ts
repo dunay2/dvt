@@ -64,7 +64,8 @@ describe('Canvas Substrait aggregate and window composition', () => {
 
     cy.get(
       '.react-flow__node[data-id="transform-customers"] [data-slot="graph-node-card-title"]'
-    ).dblclick();
+    ).rightclick();
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Properties').click();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('select[data-slot="dvt-substrait-grain-field"]')
       .select('country')
@@ -124,7 +125,8 @@ describe('Canvas Substrait aggregate and window composition', () => {
     cy.get('.react-flow__node[data-id="transform-customers"]')
       .should('contain.text', 'Columns (3)')
       .find('[data-slot="graph-node-card-title"]')
-      .dblclick();
+      .rightclick();
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Properties').click();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="dvt-substrait-grain-field-readonly"]').should('contain.text', 'country');
     cy.get('[data-slot="dvt-substrait-count-output-readonly"]').should(

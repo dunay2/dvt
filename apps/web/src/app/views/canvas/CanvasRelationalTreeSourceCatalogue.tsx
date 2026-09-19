@@ -1,102 +1,106 @@
 /** Owned concern: present the source/operand catalogue for one relational tree. */
-import { Table2 } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, Search } from 'lucide-react';
+import { useId, useState } from 'react';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 
 import type {
   CanvasRelationalTreeCatalogueItem,
   CanvasRelationalTreeWorkbenchCopy,
 } from './canvasRelationalTreeWorkbench.types';
-import { writeCanvasRelationalSourceDrag } from './canvasRelationalTreeDrag';
-
-const stateClass = {
-  participating: 'border-emerald-700/80 bg-emerald-950/30 text-emerald-300',
-  pending: 'border-amber-700/80 bg-amber-950/30 text-amber-300',
-  missing: 'border-rose-700/80 bg-rose-950/30 text-rose-300',
-} as const;
+import { CanvasRelationalTreeSourceCard } from './CanvasRelationalTreeSourceCard';
 
 export function CanvasRelationalTreeSourceCatalogue({
   items,
   copy,
+  collapsed = false,
+  onToggle,
   draggable = false,
-  onBeginDrag,
   onSelect,
 }: Readonly<{
   items: readonly CanvasRelationalTreeCatalogueItem[];
   copy: CanvasRelationalTreeWorkbenchCopy;
+  collapsed?: boolean;
+  onToggle?: () => void;
   draggable?: boolean;
-  onBeginDrag?: (item: CanvasRelationalTreeCatalogueItem) => void;
   onSelect: (item: CanvasRelationalTreeCatalogueItem) => void;
 }>): JSX.Element {
-  const stateLabel = {
-    participating: copy.relationalTreeParticipatingLabel,
-    pending: copy.relationalTreePendingLabel,
-    missing: copy.relationalTreeMissingLabel,
-  } as const;
+  const [search, setSearch] = useState('');
+  const contentId = useId();
+  const language = useApplicationLanguageStore((state) => state.language);
+  const editorCopy = resolveCanvasSemanticEditorCopy(language);
+  const visibleItems = items.filter((item) =>
+    item.label.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
+  );
 
   return (
     <section
       aria-label={copy.relationalTreeSourcesLabel}
-      className="max-h-40 min-h-0 overflow-auto border-b border-(--border-subtle) bg-(--surface-panel) p-3 md:max-h-none md:border-r md:border-b-0"
+      data-slot="canvas-relational-tree-sources"
+      className={`max-h-40 min-h-0 overflow-auto border-b border-(--border-subtle) bg-(--surface-panel) md:max-h-none md:border-r md:border-b-0 ${collapsed ? 'p-2' : 'p-3'}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)">
+        <h3
+          hidden={collapsed}
+          className="text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)"
+        >
           {copy.relationalTreeSourcesLabel}
         </h3>
-        <span className="font-mono text-[9px] text-(--text-muted)">{items.length}</span>
+        <span hidden={collapsed} className="ml-auto font-mono text-[9px] text-(--text-muted)">
+          {items.length}
+        </span>
+        {onToggle == null ? null : (
+          <button
+            type="button"
+            data-slot="canvas-relational-tree-sources-toggle"
+            aria-expanded={!collapsed}
+            aria-controls={contentId}
+            aria-label={collapsed ? editorCopy.showSources : editorCopy.hideSources}
+            title={collapsed ? editorCopy.showSources : editorCopy.hideSources}
+            onClick={onToggle}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter' && event.key !== ' ') return;
+              event.preventDefault();
+              if (!event.repeat) onToggle();
+            }}
+            className="grid size-7 shrink-0 place-items-center rounded hover:bg-(--surface-subtle) focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
+          >
+            {collapsed ? (
+              <PanelLeftOpen aria-hidden="true" className="size-4" />
+            ) : (
+              <PanelLeftClose aria-hidden="true" className="size-4" />
+            )}
+          </button>
+        )}
       </div>
-      <ul className="mt-3 flex gap-2 overflow-x-auto pb-1 md:block md:space-y-2 md:overflow-x-visible md:pb-0">
-        {items.map((item) => (
-          <li key={item.key} className="min-w-44 md:min-w-0">
-            <button
-              type="button"
-              title={draggable ? copy.relationalTreeSourceActionHint : undefined}
-              data-slot="canvas-relational-tree-source"
-              data-node-id={item.sourceNodeId ?? undefined}
-              aria-pressed={item.selected === true}
-              draggable={draggable && item.sourceNodeId != null && item.selectable !== false}
-              onDragStart={(event) => {
-                if (item.sourceNodeId == null || item.selectable === false) {
-                  event.preventDefault();
-                  return;
-                }
-                writeCanvasRelationalSourceDrag(event.dataTransfer, item.sourceNodeId);
-                onBeginDrag?.(item);
-              }}
-              disabled={
-                item.selectable === false || (item.selectable == null && item.treeLocator == null)
-              }
-              onClick={() => onSelect(item)}
-              onKeyDown={(event) => {
-                if (event.key !== 'Enter' && event.key !== ' ') return;
-                event.preventDefault();
-                onSelect(item);
-              }}
-              className="w-full rounded-md border border-(--border-subtle) bg-(--surface-subtle) p-2.5 text-left enabled:cursor-grab enabled:hover:border-(--status-info) enabled:active:cursor-grabbing aria-pressed:border-(--status-info) aria-pressed:ring-1 aria-pressed:ring-(--status-info) disabled:cursor-default"
-            >
-              <span className="flex items-center gap-2">
-                <Table2 aria-hidden="true" className="size-4 shrink-0 text-(--status-info)" />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-mono text-[11px] font-semibold text-(--text-primary)">
-                    {item.label}
-                  </span>
-                  {item.fieldCount == null ? null : (
-                    <span className="block text-[9px] text-(--text-muted)">
-                      {copy.nodePresentationColumnsLabel}: {item.fieldCount}
-                    </span>
-                  )}
-                </span>
-              </span>
-              <span
-                className={`mt-2 inline-flex rounded border px-1.5 py-0.5 text-[8px] font-semibold uppercase ${stateClass[item.state]}`}
-              >
-                {stateLabel[item.state]}
-              </span>
-              {item.reason == null ? null : (
-                <span className="mt-1 block text-[9px] text-(--text-muted)">{item.reason}</span>
-              )}
-            </button>
-          </li>
-        ))}
-      </ul>
+      <div id={contentId} hidden={collapsed} data-slot="canvas-relational-tree-source-list">
+        <label className="mt-3 flex items-center gap-2 rounded-md border border-(--border-subtle) bg-(--surface-subtle) px-2 py-1.5 focus-within:border-(--focus-ring)">
+          <Search aria-hidden="true" className="size-3.5 shrink-0 text-(--text-muted)" />
+          <input
+            type="search"
+            aria-label={editorCopy.search}
+            placeholder={editorCopy.search}
+            value={search}
+            onChange={(event) => setSearch(event.currentTarget.value)}
+            className="min-w-0 flex-1 bg-transparent text-xs text-(--text-default) outline-none"
+          />
+        </label>
+        <ul className="mt-3 flex gap-2 overflow-x-auto pb-1 md:block md:space-y-2 md:overflow-x-visible md:pb-0">
+          {visibleItems.map((item) => (
+            <li key={item.key} className="min-w-44 md:min-w-0">
+              <CanvasRelationalTreeSourceCard
+                item={item}
+                copy={copy}
+                draggable={draggable}
+                onSelect={onSelect}
+              />
+            </li>
+          ))}
+        </ul>
+        {visibleItems.length === 0 ? (
+          <p className="mt-3 text-xs text-(--text-muted)">{editorCopy.noMatches}</p>
+        ) : null}
+      </div>
     </section>
   );
 }

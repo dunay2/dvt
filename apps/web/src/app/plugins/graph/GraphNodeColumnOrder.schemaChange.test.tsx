@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import React, { act } from 'react';
+import React, { act, Profiler } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -67,5 +67,75 @@ describe('GraphNodeColumnSection schema replacement', () => {
         (row) => row.firstElementChild?.textContent
       )
     ).toEqual(['identity', 'amount']);
+  });
+
+  it.each([
+    {
+      label: 'renames a surviving field without assigning it the removed row identity',
+      before: [
+        { id: 'a', name: 'first' },
+        { id: 'b', name: 'second' },
+      ],
+      after: [
+        { id: 'b', name: 'first' },
+        { id: 'c', name: 'third' },
+      ],
+      retained: [[0, 1]],
+    },
+    {
+      label: 'does not guess continuity between ambiguous duplicate names',
+      before: [
+        { id: 'a', name: 'duplicate' },
+        { id: 'b', name: 'duplicate' },
+      ],
+      after: [
+        { id: 'c', name: 'duplicate' },
+        { id: 'd', name: 'duplicate' },
+      ],
+      retained: [],
+    },
+    {
+      label: 'keeps every row through a complete input to output identity transition',
+      before: [
+        { id: 'a', name: 'first' },
+        { id: 'b', name: 'second' },
+      ],
+      after: [
+        { id: 'out:a', name: 'first' },
+        { id: 'out:b', name: 'second' },
+      ],
+      retained: [
+        [0, 0],
+        [1, 1],
+      ],
+    },
+  ])('$label', async ({ before, after, retained }) => {
+    const commits: string[][] = [];
+    const rows = (): HTMLElement[] => [
+      ...container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-piece"]'),
+    ];
+    const render = (columns: typeof before): void =>
+      root.render(
+        <Profiler
+          id="columns"
+          onRender={() => commits.push(rows().map((row) => row.dataset.columnName!))}
+        >
+          <GraphNodeColumnSection
+            expanded
+            columns={columns.map((column) => ({ ...column, type: 'text' }))}
+          />
+        </Profiler>
+      );
+    await act(async () => render(before));
+    const previousRows = rows();
+    commits.length = 0;
+    await act(async () => render(after));
+    expect(commits.length).toBeGreaterThan(0);
+    commits.forEach((names) => expect(names).toEqual(after.map((column) => column.name)));
+    rows().forEach((row, index) => {
+      const previousIndex = retained.find(([current]) => current === index)?.[1];
+      if (previousIndex == null) expect(previousRows).not.toContain(row);
+      else expect(row).toBe(previousRows[previousIndex]);
+    });
   });
 });

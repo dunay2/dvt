@@ -7,6 +7,7 @@ import {
 import {
   projectDvtConnectedFieldDraftToPostgresSql,
   projectDvtInnerJoinDraftToPostgresSql,
+  selectDvtSubstraitRelation,
   type ProjectedDvtConnectedFieldSql,
 } from '@dvt/postgres-projection';
 
@@ -27,16 +28,42 @@ export type DvtPostgresTransformProjection = Readonly<{
 
 export async function projectDvtPostgresTransform(
   closure: DvtTerminalTransformClosure,
-  projectSemanticDocument: ProjectDvtConnectedFieldDocument = projectCanonicalConnectedFieldDocument
+  projectSemanticDocument: ProjectDvtConnectedFieldDocument = projectCanonicalConnectedFieldDocument,
+  relationId?: string
 ): Promise<DvtPostgresTransformProjection> {
   const document = closure.authority.semanticDocument;
-  if (closure.profileId === DVT_POSTGRES_INNER_JOIN_PROFILE_ID) {
-    const projected = await projectDvtInnerJoinDraftToPostgresSql({
-      plan: decodeDvtSubstraitPlanV1(document),
-      sidecar: document.sidecar,
-    });
+  const selected =
+    relationId === undefined
+      ? null
+      : selectDvtSubstraitRelation(
+          {
+            plan: decodeDvtSubstraitPlanV1(document),
+            sidecar: document.sidecar,
+          },
+          relationId
+        );
+  const selectedRoot = selected?.plan.relations[0]?.relType;
+  if (
+    selectedRoot != null &&
+    (selectedRoot.case !== 'root' ||
+      (selectedRoot.value.input?.relType.case !== 'join' &&
+        selectedRoot.value.input?.relType.case !== 'project'))
+  ) {
+    throw new Error('Selected operation is not admitted by the PostgreSQL preview profile.');
+  }
+  if (
+    selectedRoot?.case === 'root'
+      ? selectedRoot.value.input?.relType.case === 'join'
+      : closure.profileId === DVT_POSTGRES_INNER_JOIN_PROFILE_ID
+  ) {
+    const projected = await projectDvtInnerJoinDraftToPostgresSql(
+      selected ?? {
+        plan: decodeDvtSubstraitPlanV1(document),
+        sidecar: document.sidecar,
+      }
+    );
     if (
-      projected.projection.inputs.length !== closure.sources.length ||
+      (selected == null && projected.projection.inputs.length !== closure.sources.length) ||
       projected.projection.inputs.some(
         (input) =>
           !closure.sources.some(
@@ -52,11 +79,23 @@ export async function projectDvtPostgresTransform(
     return { sql: projected.sql, outputs: projected.projection.outputs };
   }
 
-  const source = closure.sources[0]!;
-  const projected = await projectSemanticDocument(document, {
+  const selectedSource = selected?.sidecar.relations.find(
+    (relation) => relation.sourceRef != null
+  )?.sourceRef;
+  const source =
+    selectedSource == null
+      ? closure.sources[0]!
+      : closure.sources.find(({ ref }) => sameConnectedSource(ref, selectedSource));
+  if (source == null)
+    throw new Error('Selected projection source is outside the protected closure.');
+  const nodeBinding = {
     sourceNodeId: source.node.id,
     targetNodeId: closure.transform.id,
-  });
+  };
+  const projected =
+    selected == null
+      ? await projectSemanticDocument(document, nodeBinding)
+      : await projectDvtConnectedFieldDraftToPostgresSql(selected, nodeBinding);
   if (
     projected.projection.targetNodeId !== closure.transform.id ||
     projected.projection.source.nodeId !== source.node.id ||

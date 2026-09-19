@@ -62,7 +62,9 @@ describe('Canvas Substrait row-number window', () => {
   it('partitions, orders, persists, and reloads through keyboard and pointer controls', () => {
     visitCanvas();
 
-    cy.get('.react-flow__node[data-id="transform-customers"]').rightclick();
+    cy.get(
+      '.react-flow__node[data-id="transform-customers"] [data-slot="graph-node-card-title"]'
+    ).rightclick();
     cy.contains('[role="menuitem"]', /^Properties$/).click();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('select[data-slot="dvt-substrait-window-partition-field"]')
@@ -123,7 +125,9 @@ describe('Canvas Substrait row-number window', () => {
     cy.get('.react-flow__node[data-id="transform-customers"]')
       .contains('[data-slot="graph-node-column-row"]', 'country_row_number')
       .should('contain.text', 'NN');
-    cy.get('.react-flow__node[data-id="transform-customers"]').rightclick();
+    cy.get(
+      '.react-flow__node[data-id="transform-customers"] [data-slot="graph-node-card-title"]'
+    ).rightclick();
     cy.contains('[role="menuitem"]', /^Properties$/).click();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="dvt-substrait-window-partition-readonly"]').should(

@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
 import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
 import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
@@ -17,6 +18,10 @@ import type {
 } from './canvasRelationalTreeWorkbench.types';
 import { canvasRelationalAvailabilityLabel } from './DvtRelationalOperationChooser';
 import { useCanvasRelationalTreeAuthoringSession } from './useCanvasRelationalTreeAuthoringSession';
+
+export function canOpenCanvasRelationalTreeWorkbench(node: CanonicalNode): boolean {
+  return node.pluginId === 'dvt' && node.kind === 'dvt:transform' && node.role === 'transform';
+}
 
 export function useCanvasRelationalTreeWorkbenchModel(
   args: Readonly<{
@@ -57,7 +62,9 @@ export function useCanvasRelationalTreeWorkbenchModel(
   );
   const pendingAuthoring =
     args.authoring != null &&
-    (composition?.state === 'pending' || composition?.state === 'single-input') &&
+    (composition?.state === 'pending' ||
+      composition?.state === 'single-input' ||
+      composition?.state === 'canonical') &&
     inputs.length >= 1;
   const authoringAvailable = pendingAuthoring && args.authoring?.canEditNode === true;
   const session = useCanvasRelationalTreeAuthoringSession({
@@ -94,6 +101,15 @@ export function useCanvasRelationalTreeWorkbenchModel(
         item.sourceNodeId == null ? undefined : candidateById.get(item.sourceNodeId);
       return {
         ...item,
+        state:
+          session.active && session.operation != null && item.state !== 'missing'
+            ? (session.operation === 'projection'
+                ? session.selectedInputIds.slice(0, 1)
+                : session.selectedInputIds
+              ).includes(item.sourceNodeId ?? '')
+              ? ('participating' as const)
+              : ('pending' as const)
+            : item.state,
         selectable: session.operation == null || candidate?.selectable === true,
         selected:
           item.sourceNodeId != null &&
@@ -114,6 +130,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
     authoringAvailable,
     projection,
     session.appendInput?.nodeId,
+    session.active,
     session.candidates,
     session.operation,
     session.selectedInputIds,
@@ -133,7 +150,10 @@ export function useCanvasRelationalTreeWorkbenchModel(
         ? args.copy.relationalTreeInputIdentityUnavailableMessage
         : args.copy.relationalTreeUnavailableMessage;
   const selectCatalogueItem = (item: CanvasRelationalTreeCatalogueItem): void => {
-    if (authoringAvailable && item.sourceNodeId != null) session.selectInput(item.sourceNodeId);
+    if (!session.active && projection != null && item.treeLocator != null)
+      setSelectedLocator(item.treeLocator);
+    else if (authoringAvailable && item.sourceNodeId != null)
+      session.selectInput(item.sourceNodeId);
     else if (projection != null && item.treeLocator != null) setSelectedLocator(item.treeLocator);
   };
 

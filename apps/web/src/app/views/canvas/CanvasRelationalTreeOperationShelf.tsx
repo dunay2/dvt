@@ -1,113 +1,120 @@
-/** Owned concern: expose admitted operations in one collapsible relational-canvas toolbox. */
-import { ChevronDown, GitMerge } from 'lucide-react';
+/** Owned concern: keep admitted operation tools visible without another editing surface. */
+import { ChevronDown, Shapes } from 'lucide-react';
 import { useState } from 'react';
-
-import { Button } from '../../components/ui/button';
+import type { ReactNode } from 'react';
 import type {
   CanvasRelationalOperation,
   CanvasRelationalOperationChoice,
 } from './canvasRelationalOperationChoices';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import { DvtRelationalOperationChooser } from './DvtRelationalOperationChooser';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../../components/ui/alert-dialog';
 
 export function CanvasRelationalTreeOperationShelf({
   choices,
   copy,
   hasOperands,
   operation,
-  ready,
   selectedInputCount,
-  onApply,
-  onCancel,
   onSelectOperation,
+  children,
 }: Readonly<{
   choices: readonly CanvasRelationalOperationChoice[];
   copy: CanvasRelationalTreeWorkbenchCopy;
   hasOperands: boolean;
   operation: CanvasRelationalOperation | null;
-  ready: boolean;
   selectedInputCount: number;
-  onApply: () => void;
-  onCancel: () => void;
   onSelectOperation: (operation: CanvasRelationalOperation) => void;
+  children?: ReactNode;
 }>): JSX.Element {
   const [expanded, setExpanded] = useState(true);
-
+  const [replacement, setReplacement] = useState<CanvasRelationalOperation | null>(null);
+  const language = useApplicationLanguageStore((state) => state.language);
+  const localCopy = resolveCanvasSemanticEditorCopy(language);
   return (
     <section
       data-slot="canvas-relational-tree-operation-shelf"
       className="shrink-0 border-b border-(--border-subtle) bg-(--surface-panel)"
     >
-      <div className="flex min-h-11 items-center gap-3 px-3 py-2">
+      <div className="flex min-h-11 flex-wrap items-center gap-2 px-3 py-1.5">
         <button
           type="button"
           data-slot="canvas-relational-tree-operation-shelf-toggle"
           aria-expanded={expanded}
           onClick={() => setExpanded((current) => !current)}
-          className="flex min-w-0 items-center gap-2 rounded px-1 py-1 text-left text-(--text-primary) hover:bg-(--surface-subtle)"
+          className="flex items-center gap-2 rounded px-2 py-1 text-sm font-medium text-(--text-strong) hover:bg-(--surface-selected)"
         >
-          <GitMerge aria-hidden="true" className="size-4 shrink-0 text-(--status-info)" />
-          <span className="truncate text-[11px] font-semibold uppercase tracking-wide">
-            {copy.inspectorDvtRelationalOperationTitle}
-          </span>
-          <ChevronDown
-            aria-hidden="true"
-            className={`size-4 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
-          />
+          <Shapes aria-hidden="true" className="size-4 text-(--status-info)" />
+          {localCopy.operations}
+          <ChevronDown aria-hidden="true" className={`size-4 ${expanded ? 'rotate-180' : ''}`} />
         </button>
-        {!hasOperands ? (
-          <span className="text-[10px] text-(--text-muted)">
-            {copy.relationalTreeSelectFirstSourceMessage}
+        {!expanded ? null : choices.length > 0 ? (
+          <DvtRelationalOperationChooser
+            choices={choices}
+            copy={copy}
+            layout="shelf"
+            selectedOperation={operation}
+            onSelect={(next) => {
+              if (next === operation) return;
+              if (operation != null) setReplacement(next);
+              else onSelectOperation(next);
+            }}
+          />
+        ) : (
+          <span className="text-xs text-(--text-muted)">
+            {!hasOperands
+              ? copy.relationalTreeSelectFirstSourceMessage
+              : selectedInputCount === 1
+                ? copy.relationalTreeSelectNextSourceMessage
+                : copy.relationalTreeSelectOperationMessage}
           </span>
-        ) : operation == null && selectedInputCount === 1 ? (
-          <span className="text-[10px] text-(--text-muted)">
+        )}
+        {expanded && choices.length > 0 && selectedInputCount === 1 ? (
+          <span className="text-xs text-(--text-muted)">
             {copy.relationalTreeSelectNextSourceMessage}
           </span>
         ) : null}
-        <div className="ml-auto flex shrink-0 gap-2">
-          {!hasOperands ? null : (
-            <>
-              <Button
-                type="button"
-                size="sm"
-                data-slot="canvas-relational-tree-apply"
-                disabled={!ready}
-                onClick={onApply}
-              >
-                {copy.inspectorDvtRelationalApply}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                data-slot="canvas-relational-tree-cancel"
-                onClick={onCancel}
-              >
-                {copy.inspectorDvtRelationalCancel}
-              </Button>
-            </>
-          )}
-        </div>
+        {expanded ? children : null}
       </div>
-      {!expanded ? null : (
-        <div className="border-t border-(--border-subtle) px-3 py-2">
-          {choices.length === 0 ? (
-            <p className="text-[10px] text-(--text-muted)">
-              {hasOperands
-                ? copy.relationalTreeSelectNextSourceMessage
-                : copy.relationalTreeSelectFirstSourceMessage}
-            </p>
-          ) : (
-            <DvtRelationalOperationChooser
-              choices={choices}
-              copy={copy}
-              layout="shelf"
-              selectedOperation={operation}
-              onSelect={onSelectOperation}
-            />
-          )}
-        </div>
-      )}
+      <AlertDialog
+        open={replacement != null}
+        onOpenChange={(open) => {
+          if (!open) setReplacement(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{localCopy.replaceOperation}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {operation === 'projection'
+                ? localCopy.replaceProjectionHint
+                : localCopy.replaceOperationHint}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{copy.inspectorDvtRelationalCancel}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (replacement != null) onSelectOperation(replacement);
+                setReplacement(null);
+              }}
+            >
+              {copy.inspectorDvtRelationalApply}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }

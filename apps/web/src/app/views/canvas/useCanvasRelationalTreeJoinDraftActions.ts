@@ -6,11 +6,12 @@ import type {
   CanvasRelationalOperation,
   CanvasRelationalOperationChoice,
 } from './canvasRelationalOperationChoices';
+import { appendCanvasRelationalTreeJoinInput } from './canvasRelationalTreeAuthoringModel';
 import {
-  appendCanvasRelationalTreeJoinInput,
-  createCanvasRelationalTreeInitialJoinDraft,
-} from './canvasRelationalTreeAuthoringModel';
-import type { DvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+  inspectDvtSubstraitInnerJoinAcceptedDraft,
+  type DvtSubstraitInnerJoinDraft,
+} from './canvasDvtSubstraitJoinComposition';
+import { createCanvasRelationalTreeOperationDraft } from './canvasRelationalTreeOperationDraft';
 
 export function useCanvasRelationalTreeJoinDraftActions(
   args: Readonly<{
@@ -40,26 +41,35 @@ export function useCanvasRelationalTreeJoinDraftActions(
   } = args;
   const selectOperation = useCallback(
     (nextOperation: CanvasRelationalOperation) => {
+      if (
+        nextOperation === 'inner_join' &&
+        joinDraft != null &&
+        inspectDvtSubstraitInnerJoinAcceptedDraft(joinDraft).ok
+      )
+        return;
       if (!choices.some((choice) => choice.operation === nextOperation && choice.selectable))
         return;
-      if (nextOperation === 'inner_join') {
-        const [leftInputId, rightInputId] = selectedInputIds;
-        if (leftInputId == null || rightInputId == null) return;
-        const draft = createCanvasRelationalTreeInitialJoinDraft({
-          inputs,
-          targetNodeId,
-          leftInputId,
-          rightInputId,
-        });
-        if (draft == null) return;
-        setJoinDraft(draft);
-      } else {
-        setJoinDraft(null);
-      }
+      const draft = createCanvasRelationalTreeOperationDraft({
+        operation: nextOperation,
+        inputs,
+        targetNodeId,
+        selectedInputIds,
+      });
+      if (draft == null) return;
+      setJoinDraft(draft);
       setOperation(nextOperation);
       setAppendInputId(null);
     },
-    [choices, inputs, selectedInputIds, setAppendInputId, setJoinDraft, setOperation, targetNodeId]
+    [
+      choices,
+      inputs,
+      joinDraft,
+      selectedInputIds,
+      setAppendInputId,
+      setJoinDraft,
+      setOperation,
+      targetNodeId,
+    ]
   );
 
   const appendJoinInput = useCallback(

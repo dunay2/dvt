@@ -4,6 +4,7 @@ import {
   CanvasShellContextualWorkbenchSplit,
   CanvasShellMainPanelFrame,
   CanvasShellReadOnlyBannerSlot,
+  CanvasShellWorkspaceSurfaces,
 } from './CanvasShellMainPanelFrame';
 import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
 import { isCanvasNodeWorkbenchVisible } from './canvasNodeWorkbenchVisibility';
@@ -179,7 +180,20 @@ function CanvasShellMainSurface({
     />
   );
 
-  const baseSurface = layout.centerSurface == null ? viewport : <>{layout.centerSurface}</>;
+  const baseSurface =
+    layout.centerSurfaceVisible == null ? (
+      layout.centerSurface == null ? (
+        viewport
+      ) : (
+        <>{layout.centerSurface}</>
+      )
+    ) : (
+      <CanvasShellWorkspaceSurfaces
+        viewport={viewport}
+        editor={layout.centerSurface}
+        editorVisible={layout.centerSurfaceVisible}
+      />
+    );
 
   if (layout.contextualWorkbench == null) {
     return baseSurface;
@@ -227,7 +241,8 @@ export function CanvasShellMainPanel({
   onOpenCanvasSettings,
   contextMenuPresenter,
 }: CanvasShellMainPanelProps): JSX.Element {
-  const shouldShowGraphStatusOverlay = layout.centerSurface == null;
+  const shouldShowGraphStatusOverlay =
+    layout.centerSurface == null || layout.centerSurfaceVisible === false;
 
   return (
     <CanvasShellMainPanelFrame defaultSize={resolveCanvasShellMainPanelDefaultSize()}>

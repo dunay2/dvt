@@ -95,7 +95,7 @@ export function GraphNodeColumnRow(props: {
       }}
     />
   );
-  const tooltip = <GraphNodeColumnTooltip column={column} isOutput={isOutput} copy={copy} />;
+  const tooltip = <GraphNodeColumnTooltip type={column.type} />;
   const content =
     nodeId != null ? (
       <GraphNodeColumnFunctionMenu
