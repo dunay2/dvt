@@ -2,9 +2,12 @@
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
-import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
+import {
+  isCanvasSetOperation,
+  type CanvasRelationalOperation,
+} from './canvasRelationalOperationChoices';
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
-import { createCanvasRelationalTreeUnionAllDraft } from './canvasRelationalTreeUnionAuthoring';
+import { createCanvasRelationalTreeSetDraft } from './canvasRelationalTreeUnionAuthoring';
 import {
   projectCanvasRelationalTree,
   type CanvasRelationalTreeProjection,
@@ -41,13 +44,16 @@ export function projectCanvasRelationalTreeAuthoringDraft(
           isCanvasJoinOperation(args.operation) ||
           args.operation === 'projection'
         ? args.joinDraft
-        : args.operation === 'union_all'
-          ? createCanvasRelationalTreeUnionAllDraft({
-              edges: args.edges,
-              nodes: args.nodes,
-              selectedInputIds: args.selectedInputIds,
-              targetNodeId: args.transformNode.id,
-            })
+        : isCanvasSetOperation(args.operation)
+          ? createCanvasRelationalTreeSetDraft(
+              {
+                edges: args.edges,
+                nodes: args.nodes,
+                selectedInputIds: args.selectedInputIds,
+                targetNodeId: args.transformNode.id,
+              },
+              args.operation
+            )
           : null;
   if (semantic == null || args.operation == null) return null;
 

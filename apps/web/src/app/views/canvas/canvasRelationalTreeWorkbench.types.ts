@@ -34,6 +34,7 @@ export type CanvasRelationalTreeWorkbenchCopy = Pick<
   | 'inspectorDvtSubstraitConnectedFieldLabel'
   | 'inspectorDvtSubstraitExistingFieldLabel'
   | 'inspectorDvtSubstraitUnionAllAction'
+  | 'inspectorDvtSubstraitUnionDistinctAction'
   | 'nodePresentationColumnsLabel'
   | 'reactFlowFitViewLabel'
   | 'reactFlowZoomInLabel'

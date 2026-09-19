@@ -3,9 +3,12 @@ import { useCallback } from 'react';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
-import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
+import {
+  isCanvasSetOperation,
+  type CanvasRelationalOperation,
+} from './canvasRelationalOperationChoices';
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
-import { createCanvasRelationalTreeUnionAllDraft } from './canvasRelationalTreeUnionAuthoring';
+import { createCanvasRelationalTreeSetDraft } from './canvasRelationalTreeUnionAuthoring';
 import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
@@ -55,12 +58,12 @@ export function useCanvasRelationalTreeApplyCommand(args: {
           })()
         : joinDraft != null || isCanvasJoinOperation(operation) || operation === 'projection'
           ? joinDraft
-          : createCanvasRelationalTreeUnionAllDraft({
-              edges,
-              nodes,
-              selectedInputIds,
-              targetNodeId: transformNode.id,
-            });
+          : isCanvasSetOperation(operation)
+            ? createCanvasRelationalTreeSetDraft(
+                { edges, nodes, selectedInputIds, targetNodeId: transformNode.id },
+                operation
+              )
+            : null;
     if (semantic == null) return;
     authoring?.onApplyNodeDraft(
       transformNode.id,

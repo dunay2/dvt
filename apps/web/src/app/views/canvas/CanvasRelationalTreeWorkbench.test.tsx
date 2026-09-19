@@ -73,6 +73,7 @@ const COPY = {
   inspectorDvtSubstraitConnectedFieldLabel: 'Connected field',
   inspectorDvtSubstraitExistingFieldLabel: 'Existing field',
   inspectorDvtSubstraitUnionAllAction: 'UNION ALL',
+  inspectorDvtSubstraitUnionDistinctAction: 'UNION DISTINCT',
   inspectorDvtRelationalApply: 'Apply',
   inspectorDvtRelationalCancel: 'Cancel',
 };

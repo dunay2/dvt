@@ -36,7 +36,9 @@ function resolveCompositionLabel(
             ? 'FULL OUTER JOIN'
             : member.operation === 'union_all'
               ? 'UNION ALL'
-              : null;
+              : member.operation === 'union_distinct'
+                ? 'UNION DISTINCT'
+                : null;
   if (member.state === 'canonical') {
     return operationLabel ?? cardCopy.relationalCompositionIncompleteLabel;
   }

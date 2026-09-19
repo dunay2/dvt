@@ -63,7 +63,7 @@ export type CanvasNodeCodeTruth =
     }>;
 
 export type CanvasRelationalCompositionOperation =
-  'inner_join' | 'left_join' | 'right_join' | 'full_outer_join' | 'union_all';
+  'inner_join' | 'left_join' | 'right_join' | 'full_outer_join' | 'union_all' | 'union_distinct';
 
 export type CanvasRelationalCompositionTruth =
   | Readonly<{ state: 'single-input'; connectedInputCount: number }>

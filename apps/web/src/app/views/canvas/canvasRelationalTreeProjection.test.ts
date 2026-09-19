@@ -15,6 +15,7 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import {
   createDvtSubstraitUnionAllDraft,
+  createDvtSubstraitUnionDistinctDraft,
   encodeDvtSubstraitUnionAllDocument,
   type DvtSubstraitUnionAllSource,
 } from './canvasDvtSubstraitSetComposition';
@@ -230,6 +231,32 @@ describe('ProjectCanvasRelationalTree', () => {
         { role: 'secondary', ordinal: 2 },
       ]
     );
+  });
+
+  it('projects UNION DISTINCT as the exact SetRel operation label', () => {
+    const inputs: readonly DvtSubstraitUnionAllSource[] = ['north', 'south'].map((table) => ({
+      nodeId: table,
+      schema: 'public',
+      table,
+      fields: [{ name: 'customer_id', type: 'string' as const }],
+      sourceRef: sourceRef(table),
+    }));
+    const draft = createDvtSubstraitUnionDistinctDraft({ inputs, targetNodeId: TARGET_ID });
+    const transform = applyDvtSubstraitSemanticDocument(
+      targetNode(),
+      encodeDvtSubstraitUnionAllDocument(draft)
+    );
+    const result = project(
+      transform,
+      inputs.map((input) => sourceNode(input.nodeId, input.table, ['customer_id']))
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.projection.root).toMatchObject({
+      operator: 'set',
+      operationLabel: 'UNION DISTINCT',
+    });
   });
 
   it('keeps an AggregateRel as a unary operator over a binary JOIN', () => {

@@ -12,6 +12,7 @@ import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecution
 import { toCanvasAuthoringSerializableValue } from './canvasAuthoringMetadata';
 import { resolveEffectiveDvtConnectionRef } from './canvasDvtAuthoringModel';
 import { decodeDvtSubstraitProjectionDocument } from './canvasDvtSubstraitProjection';
+import { inspectDvtSubstraitUnionAllAcceptedDraft } from './canvasDvtSubstraitSetComposition';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { canvasViewCopy } from './copy';
 
@@ -77,13 +78,19 @@ function resolveTerminalProjectionClosure(
     if (authority === null) return null;
     const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
     if (sources.length > 1) {
-      const inspection = inspectDvtSubstraitJoinDraft(draft);
-      if (!inspection.ok || inspection.projection.inputs.length !== sources.length) return null;
+      const joinInspection = inspectDvtSubstraitJoinDraft(draft);
+      const setInspection = inspectDvtSubstraitUnionAllAcceptedDraft(draft);
+      const semanticInputs = joinInspection.ok
+        ? joinInspection.projection.inputs
+        : setInspection.ok
+          ? setInspection.projection.inputs
+          : null;
+      if (semanticInputs == null || semanticInputs.length !== sources.length) return null;
       const refs = sources.map((source) =>
         ConnectedSourceRefSchema.parse(source.metadata?.connectedSourceRef)
       );
       if (
-        inspection.projection.inputs.some(
+        semanticInputs.some(
           (input) =>
             refs.filter(
               (ref) =>

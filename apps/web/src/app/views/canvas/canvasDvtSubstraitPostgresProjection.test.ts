@@ -56,6 +56,7 @@ import {
   applyDvtSubstraitUnionAllGrouping,
   applyDvtSubstraitUnionAllFieldEdit,
   createDvtSubstraitUnionAllDraft,
+  createDvtSubstraitUnionDistinctDraft,
   inspectDvtSubstraitUnionAllDraft,
   type DvtSubstraitUnionAllDraft,
 } from './canvasDvtSubstraitSetComposition';
@@ -1505,6 +1506,42 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     expect(normalized).toMatch(
       /^\(select customer_id, name, country from "tenant-data"\."customers-north" union all select customer_id, name, country from "tenant-data"\."customers-south"\) union all select customer_id, name, country from "tenant-data"\."customers-west";?$/
     );
+  });
+
+  it('projects the exact typed SetRel revision as ordered PostgreSQL UNION DISTINCT', async () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    const fields = ['customer_id', 'name', 'country'].map((name) => ({
+      name,
+      type: 'string' as const,
+    }));
+    const draft = createDvtSubstraitUnionDistinctDraft({
+      inputs: ['north', 'south', 'west'].map((region) => ({
+        nodeId: `source-${region}`,
+        schema: 'public',
+        table: `customers_${region}`,
+        fields,
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1' as const,
+          connectionRef,
+          sourceObjectId: `public.customers_${region}`,
+        },
+      })),
+      targetNodeId: 'transform-distinct-customers',
+    });
+
+    const normalized = (await projectDvtSubstraitUnionAllToPostgresSql(draft))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    expect(normalized).toMatch(
+      /^\(select customer_id, name, country from public\.customers_north union select customer_id, name, country from public\.customers_south\) union select customer_id, name, country from public\.customers_west;?$/
+    );
+    expect(normalized).not.toContain('union all');
   });
 
   it('projects selected, renamed, and reordered fields from the same SetRel revision', async () => {
