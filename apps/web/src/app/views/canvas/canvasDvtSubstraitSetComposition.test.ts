@@ -187,6 +187,8 @@ describe('VTX2 Substrait UNION ALL identity', () => {
   it.each([
     ['intersect_distinct', SetRel_SetOp.INTERSECTION_MULTISET],
     ['except_distinct', SetRel_SetOp.MINUS_PRIMARY],
+    ['intersect_all', SetRel_SetOp.INTERSECTION_MULTISET_ALL],
+    ['except_all', SetRel_SetOp.MINUS_PRIMARY_ALL],
   ] as const)(
     'round-trips %s with its exact canonical selector and operand order',
     (operation, selector) => {

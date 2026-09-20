@@ -32,6 +32,8 @@ export function DvtSubstraitCompositionStartSection({
   onStartUnionDistinct,
   onStartIntersectDistinct,
   onStartExceptDistinct,
+  onStartIntersectAll,
+  onStartExceptAll,
 }: Readonly<{
   disabled: boolean;
   inputs: readonly CanvasDvtCompositionInput[];
@@ -42,6 +44,8 @@ export function DvtSubstraitCompositionStartSection({
   onStartUnionDistinct?: () => void;
   onStartIntersectDistinct?: () => void;
   onStartExceptDistinct?: () => void;
+  onStartIntersectAll?: () => void;
+  onStartExceptAll?: () => void;
 }>): JSX.Element {
   const [selectedOperation, setSelectedOperation] = useState<CanvasRelationalOperation | null>(
     null
@@ -58,6 +62,8 @@ export function DvtSubstraitCompositionStartSection({
     unionDistinctAvailable: onStartUnionDistinct != null,
     intersectDistinctAvailable: onStartIntersectDistinct != null,
     exceptDistinctAvailable: onStartExceptDistinct != null,
+    intersectAllAvailable: onStartIntersectAll != null,
+    exceptAllAvailable: onStartExceptAll != null,
   });
 
   if (isCanvasJoinOperation(selectedOperation)) {
@@ -141,6 +147,40 @@ export function DvtSubstraitCompositionStartSection({
         operation="except_distinct"
         onApply={() => {
           onStartExceptDistinct();
+          onClearPredicateSeed?.();
+        }}
+        onCancel={() => {
+          setSelectedOperation(null);
+          onClearPredicateSeed?.();
+        }}
+      />
+    );
+  }
+  if (selectedOperation === 'intersect_all' && onStartIntersectAll != null) {
+    return (
+      <DvtSubstraitUnionAllStartSection
+        disabled={disabled}
+        inputs={inputs}
+        operation="intersect_all"
+        onApply={() => {
+          onStartIntersectAll();
+          onClearPredicateSeed?.();
+        }}
+        onCancel={() => {
+          setSelectedOperation(null);
+          onClearPredicateSeed?.();
+        }}
+      />
+    );
+  }
+  if (selectedOperation === 'except_all' && onStartExceptAll != null) {
+    return (
+      <DvtSubstraitUnionAllStartSection
+        disabled={disabled}
+        inputs={inputs}
+        operation="except_all"
+        onApply={() => {
+          onStartExceptAll();
           onClearPredicateSeed?.();
         }}
         onCancel={() => {

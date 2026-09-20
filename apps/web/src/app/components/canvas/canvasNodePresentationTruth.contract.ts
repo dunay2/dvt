@@ -75,7 +75,9 @@ export type CanvasRelationalCompositionOperation =
   | 'union_all'
   | 'union_distinct'
   | 'intersect_distinct'
-  | 'except_distinct';
+  | 'except_distinct'
+  | 'intersect_all'
+  | 'except_all';
 
 export type CanvasRelationalCompositionTruth =
   | Readonly<{ state: 'single-input'; connectedInputCount: number }>

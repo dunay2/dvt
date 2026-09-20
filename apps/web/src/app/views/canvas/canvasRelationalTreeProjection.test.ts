@@ -285,6 +285,8 @@ describe('ProjectCanvasRelationalTree', () => {
     ['union_distinct', 'UNION DISTINCT'],
     ['intersect_distinct', 'INTERSECT'],
     ['except_distinct', 'EXCEPT'],
+    ['intersect_all', 'INTERSECT ALL'],
+    ['except_all', 'EXCEPT ALL'],
   ] as const)('projects %s as the exact SetRel operation label', (operation, label) => {
     const inputs: readonly DvtSubstraitUnionAllSource[] = ['north', 'south'].map((table) => ({
       nodeId: table,

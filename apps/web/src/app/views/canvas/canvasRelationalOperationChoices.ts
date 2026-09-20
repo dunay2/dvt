@@ -22,16 +22,26 @@ export type CanvasRelationalOperation =
   | 'union_all'
   | 'union_distinct'
   | 'intersect_distinct'
-  | 'except_distinct';
+  | 'except_distinct'
+  | 'intersect_all'
+  | 'except_all';
 
 export function isCanvasSetOperation(
   operation: string | null | undefined
-): operation is 'union_all' | 'union_distinct' | 'intersect_distinct' | 'except_distinct' {
+): operation is
+  | 'union_all'
+  | 'union_distinct'
+  | 'intersect_distinct'
+  | 'except_distinct'
+  | 'intersect_all'
+  | 'except_all' {
   return (
     operation === 'union_all' ||
     operation === 'union_distinct' ||
     operation === 'intersect_distinct' ||
-    operation === 'except_distinct'
+    operation === 'except_distinct' ||
+    operation === 'intersect_all' ||
+    operation === 'except_all'
   );
 }
 
@@ -117,6 +127,8 @@ export function resolveCanvasRelationalOperationChoices(
     unionDistinctAvailable?: boolean;
     intersectDistinctAvailable?: boolean;
     exceptDistinctAvailable?: boolean;
+    intersectAllAvailable?: boolean;
+    exceptAllAvailable?: boolean;
   }>
 ): readonly CanvasRelationalOperationChoice[] {
   const readOnlyAvailability = args.readOnly ? 'read-only' : null;
@@ -137,6 +149,11 @@ export function resolveCanvasRelationalOperationChoices(
     'SetOp.SET_OP_INTERSECTION_MULTISET'
   );
   const exceptDistinctAdmitted = isAdmitted('substrait.SetRel', 'SetOp.SET_OP_MINUS_PRIMARY');
+  const intersectAllAdmitted = isAdmitted(
+    'substrait.SetRel',
+    'SetOp.SET_OP_INTERSECTION_MULTISET_ALL'
+  );
+  const exceptAllAdmitted = isAdmitted('substrait.SetRel', 'SetOp.SET_OP_MINUS_PRIMARY_ALL');
   const hasCompatibleJoinTypePair = args.inputs.some((left, index) =>
     args.inputs
       .slice(index + 1)
@@ -211,6 +228,11 @@ export function resolveCanvasRelationalOperationChoices(
     exceptDistinctAdmitted,
     args.exceptDistinctAvailable
   );
+  const intersectAllAvailability = setDistinctAvailability(
+    intersectAllAdmitted,
+    args.intersectAllAvailable
+  );
+  const exceptAllAvailability = setDistinctAvailability(exceptAllAdmitted, args.exceptAllAvailable);
 
   return [
     {
@@ -288,6 +310,16 @@ export function resolveCanvasRelationalOperationChoices(
       operation: 'except_distinct',
       availability: exceptDistinctAvailability,
       selectable: exceptDistinctAvailability === 'available',
+    },
+    {
+      operation: 'intersect_all',
+      availability: intersectAllAvailability,
+      selectable: intersectAllAvailability === 'available',
+    },
+    {
+      operation: 'except_all',
+      availability: exceptAllAvailability,
+      selectable: exceptAllAvailability === 'available',
     },
   ];
 }

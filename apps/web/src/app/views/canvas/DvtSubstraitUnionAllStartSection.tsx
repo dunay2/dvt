@@ -15,6 +15,10 @@ function titleFor(operation: DvtSubstraitSetOperation): string {
       return canvasViewCopy.inspectorDvtSubstraitIntersectDistinctTitle;
     case 'except_distinct':
       return canvasViewCopy.inspectorDvtSubstraitExceptDistinctTitle;
+    case 'intersect_all':
+      return canvasViewCopy.inspectorDvtSubstraitIntersectAllTitle;
+    case 'except_all':
+      return canvasViewCopy.inspectorDvtSubstraitExceptAllTitle;
   }
 }
 

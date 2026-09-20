@@ -71,6 +71,8 @@ describe('selected relation query projection', () => {
     ['union_distinct', SetRel_SetOp.UNION_DISTINCT],
     ['intersect_distinct', SetRel_SetOp.INTERSECTION_MULTISET],
     ['except_distinct', SetRel_SetOp.MINUS_PRIMARY],
+    ['intersect_all', SetRel_SetOp.INTERSECTION_MULTISET_ALL],
+    ['except_all', SetRel_SetOp.MINUS_PRIMARY_ALL],
   ] as const)(
     'rebases selected %s in read-first anchor order for exact preview',
     async (name, op) => {

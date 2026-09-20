@@ -35,6 +35,8 @@ type GraphNodeCardCopy = Readonly<{
   relationalCompositionUnionDistinctSummaryTemplate: string;
   relationalCompositionIntersectDistinctSummaryTemplate: string;
   relationalCompositionExceptDistinctSummaryTemplate: string;
+  relationalCompositionIntersectAllSummaryTemplate: string;
+  relationalCompositionExceptAllSummaryTemplate: string;
   filterLabel: string;
   testStatusLabels: Readonly<Record<string, string>>;
   healthTitleTemplate: string;
@@ -139,6 +141,10 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
     'INTERSECT, inputs: {inputCount}, outputs: {outputCount}, set semantics',
   relationalCompositionExceptDistinctSummaryTemplate:
     'EXCEPT, inputs: {inputCount}, outputs: {outputCount}, primary-input difference',
+  relationalCompositionIntersectAllSummaryTemplate:
+    'INTERSECT ALL, inputs: {inputCount}, outputs: {outputCount}, bag multiplicity',
+  relationalCompositionExceptAllSummaryTemplate:
+    'EXCEPT ALL, inputs: {inputCount}, outputs: {outputCount}, primary-input bag difference',
   filterLabel: 'Filter',
   testStatusLabels: {
     pass: 'Passed',
@@ -266,6 +272,10 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
     'INTERSECT, entradas: {inputCount}, salidas: {outputCount}, semántica de conjunto',
   relationalCompositionExceptDistinctSummaryTemplate:
     'EXCEPT, entradas: {inputCount}, salidas: {outputCount}, diferencia desde la entrada primaria',
+  relationalCompositionIntersectAllSummaryTemplate:
+    'INTERSECT ALL, entradas: {inputCount}, salidas: {outputCount}, multiplicidad de bolsa',
+  relationalCompositionExceptAllSummaryTemplate:
+    'EXCEPT ALL, entradas: {inputCount}, salidas: {outputCount}, diferencia de bolsa desde la entrada primaria',
   filterLabel: 'Filtro',
   testStatusLabels: {
     pass: 'Aprobadas',

@@ -113,6 +113,8 @@ describe('Canvas relational-tree guided authoring model', () => {
       { operation: 'union_distinct', availability: 'needs-input', selectable: false },
       { operation: 'intersect_distinct', availability: 'needs-input', selectable: false },
       { operation: 'except_distinct', availability: 'needs-input', selectable: false },
+      { operation: 'intersect_all', availability: 'needs-input', selectable: false },
+      { operation: 'except_all', availability: 'needs-input', selectable: false },
     ]);
 
     expect(
@@ -142,6 +144,8 @@ describe('Canvas relational-tree guided authoring model', () => {
       { operation: 'union_distinct', availability: 'available', selectable: true },
       { operation: 'intersect_distinct', availability: 'available', selectable: true },
       { operation: 'except_distinct', availability: 'available', selectable: true },
+      { operation: 'intersect_all', availability: 'available', selectable: true },
+      { operation: 'except_all', availability: 'available', selectable: true },
     ]);
   });
 
@@ -195,7 +199,7 @@ describe('Canvas relational-tree guided authoring model', () => {
       nodes,
       edges,
     });
-    expect(choices).toHaveLength(14);
+    expect(choices).toHaveLength(16);
     expect(
       choices.every((choice) => !choice.selectable && choice.availability === 'read-only')
     ).toBe(true);
@@ -290,28 +294,31 @@ describe('Canvas relational-tree guided authoring model', () => {
     expect(root?.case === 'root' ? root.value.input?.relType.case : null).toBe('cross');
   });
 
-  it.each(['union_distinct', 'intersect_distinct', 'except_distinct'] as const)(
-    'builds %s through the same ordered N-ary Set path',
-    (operation) => {
-      const draft = createCanvasRelationalTreeSetDraft(
-        {
-          selectedInputIds: [tickets.id, customers.id, orders.id],
-          targetNodeId: TARGET_ID,
-          nodes,
-          edges,
-        },
-        operation
-      );
-      expect(draft).not.toBeNull();
-      if (draft == null) return;
-      const inspection = inspectDvtSubstraitUnionAllDraft(draft);
-      expect(inspection).toMatchObject({
-        ok: true,
-        projection: {
-          operation,
-          inputs: [{ table: tickets.id }, { table: customers.id }, { table: orders.id }],
-        },
-      });
-    }
-  );
+  it.each([
+    'union_distinct',
+    'intersect_distinct',
+    'except_distinct',
+    'intersect_all',
+    'except_all',
+  ] as const)('builds %s through the same ordered N-ary Set path', (operation) => {
+    const draft = createCanvasRelationalTreeSetDraft(
+      {
+        selectedInputIds: [tickets.id, customers.id, orders.id],
+        targetNodeId: TARGET_ID,
+        nodes,
+        edges,
+      },
+      operation
+    );
+    expect(draft).not.toBeNull();
+    if (draft == null) return;
+    const inspection = inspectDvtSubstraitUnionAllDraft(draft);
+    expect(inspection).toMatchObject({
+      ok: true,
+      projection: {
+        operation,
+        inputs: [{ table: tickets.id }, { table: customers.id }, { table: orders.id }],
+      },
+    });
+  });
 });

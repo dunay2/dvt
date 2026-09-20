@@ -243,7 +243,11 @@ function buildTree(
                 ? 'INTERSECT'
                 : args.rel.relType.value.op === SetRel_SetOp.MINUS_PRIMARY
                   ? 'EXCEPT'
-                  : 'UNSUPPORTED SET'
+                  : args.rel.relType.value.op === SetRel_SetOp.INTERSECTION_MULTISET_ALL
+                    ? 'INTERSECT ALL'
+                    : args.rel.relType.value.op === SetRel_SetOp.MINUS_PRIMARY_ALL
+                      ? 'EXCEPT ALL'
+                      : 'UNSUPPORTED SET'
           : null;
   return {
     locator: `rel:${args.semanticDigest}:${args.path}`,

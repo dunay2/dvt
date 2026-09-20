@@ -84,6 +84,8 @@ function admittedOperations(args: {
     resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'union_distinct',
     resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'intersect_distinct',
     resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'except_distinct',
+    resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'intersect_all',
+    resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'except_all',
   ].filter((operation): operation is CanvasAlgebraicCompositionOperation => operation != null);
 }
 

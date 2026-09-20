@@ -24,7 +24,12 @@ const documents = JSON.parse(
 
 export function buildDvtSetPreviewDraft(
   wrapper?: 'aggregate' | 'window',
-  operation: 'union_distinct' | 'intersect_distinct' | 'except_distinct' = 'union_distinct',
+  operation:
+    | 'union_distinct'
+    | 'intersect_distinct'
+    | 'except_distinct'
+    | 'intersect_all'
+    | 'except_all' = 'union_distinct',
   projectFirstColumn = false
 ): WorkspaceGraphAuthoringDraft {
   const base = buildDvtTerminalTransformPreviewDraft();
@@ -51,6 +56,8 @@ export function buildDvtSetPreviewDraft(
     union_distinct: SetRel_SetOp.UNION_DISTINCT,
     intersect_distinct: SetRel_SetOp.INTERSECTION_MULTISET,
     except_distinct: SetRel_SetOp.MINUS_PRIMARY,
+    intersect_all: SetRel_SetOp.INTERSECTION_MULTISET_ALL,
+    except_all: SetRel_SetOp.MINUS_PRIMARY_ALL,
   }[operation];
   let sidecar = baseDocument.sidecar;
   if (projectFirstColumn) {

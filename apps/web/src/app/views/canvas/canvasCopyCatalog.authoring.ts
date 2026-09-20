@@ -708,6 +708,14 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSubstraitExceptDistinctAction',
     fallback: 'EXCEPT',
   },
+  inspectorDvtSubstraitIntersectAllAction: {
+    key: 'canvas.inspector.authoring.dvtSubstraitIntersectAllAction',
+    fallback: 'INTERSECT ALL',
+  },
+  inspectorDvtSubstraitExceptAllAction: {
+    key: 'canvas.inspector.authoring.dvtSubstraitExceptAllAction',
+    fallback: 'EXCEPT ALL',
+  },
   inspectorDvtSubstraitUnionAllTitle: {
     key: 'canvas.inspector.authoring.dvtSubstraitUnionAllTitle',
     fallback: 'Substrait UNION ALL',
@@ -723,6 +731,14 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorDvtSubstraitExceptDistinctTitle: {
     key: 'canvas.inspector.authoring.dvtSubstraitExceptDistinctTitle',
     fallback: 'Substrait EXCEPT',
+  },
+  inspectorDvtSubstraitIntersectAllTitle: {
+    key: 'canvas.inspector.authoring.dvtSubstraitIntersectAllTitle',
+    fallback: 'Substrait INTERSECT ALL',
+  },
+  inspectorDvtSubstraitExceptAllTitle: {
+    key: 'canvas.inspector.authoring.dvtSubstraitExceptAllTitle',
+    fallback: 'Substrait EXCEPT ALL',
   },
   inspectorDvtSubstraitUnionAllInputsLabel: {
     key: 'canvas.inspector.authoring.dvtSubstraitUnionAllInputsLabel',

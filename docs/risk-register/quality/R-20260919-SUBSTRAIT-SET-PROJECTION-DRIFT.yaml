@@ -15,15 +15,17 @@ mitigation:
   summary: >
     One exact Substrait SetRel selector remains authoritative for Canvas presentation, persistence,
     output lineage, PostgreSQL rendering, Preview, and Run. UNION ALL, UNION DISTINCT, INTERSECT
-    DISTINCT, and EXCEPT DISTINCT share N-input identity and schema validation while retaining exact
-    target AST operators and primary-input orientation. Output projection stays outside Set tuple
-    comparison. Unsupported selectors, stale semantic hashes, mismatched ordered schemas, repeated
-    sources, mixed connections, and physical-binding drift fail closed.
+    DISTINCT, EXCEPT DISTINCT, INTERSECT ALL, and EXCEPT ALL share N-input identity and schema
+    validation while retaining exact target AST operators, duplicate multiplicity, and primary-input
+    orientation. Output projection stays outside Set tuple comparison. Unsupported selectors, stale
+    semantic hashes, mismatched ordered schemas, repeated sources, mixed connections, and
+    physical-binding drift fail closed.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ED-20260831-vtx2-substrait-union-all.md
     - docs/evidence/ED-20260919-union-distinct-end-to-end.md
     - docs/evidence/ED-20260920-intersect-except-distinct-end-to-end.md
+    - docs/evidence/ED-20260920-intersect-except-all-end-to-end.md
     - packages/@dvt/postgres-projection/test/setPostgresProjection.test.ts
     - apps/api/test/application/services/dvtSetPreview.test.ts
     - apps/api/test/integration/dvtSetDistinctPostgres.integration.test.ts

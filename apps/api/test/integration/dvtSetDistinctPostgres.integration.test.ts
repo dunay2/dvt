@@ -11,7 +11,7 @@ import { buildDvtSetPreviewDraft } from '../fixtures/dvtSetPreviewFixture.js';
 const databaseUrl = process.env['DVT_PG_URL'] ?? process.env['DATABASE_URL'];
 const describeIfPostgres = databaseUrl === undefined ? describe.skip : describe;
 
-type DistinctSetOperation = 'intersect_distinct' | 'except_distinct';
+type SetOperation = 'intersect_distinct' | 'except_distinct' | 'intersect_all' | 'except_all';
 
 function asMultiset(rows: readonly Record<string, unknown>[]): readonly string[] {
   return rows.map((row) => JSON.stringify(row)).sort();
@@ -23,7 +23,7 @@ describeIfPostgres('DVT INTERSECT/EXCEPT DISTINCT PostgreSQL semantics', () => {
   let client: Client;
 
   async function generatedSql(
-    operation: DistinctSetOperation,
+    operation: SetOperation,
     projectFirstColumn = false
   ): Promise<string> {
     const draft = buildDvtSetPreviewDraft(undefined, operation, projectFirstColumn);
@@ -132,5 +132,82 @@ describeIfPostgres('DVT INTERSECT/EXCEPT DISTINCT PostgreSQL semantics', () => {
     expect(await client.query(await generatedSql('except_distinct', true))).toMatchObject({
       rows: [{ customer_id: 'x' }],
     });
+  });
+
+  it('executes three-input INTERSECT ALL with exact duplicate and NULL multiplicity', async () => {
+    await client.query('TRUNCATE raw.customers_west');
+    await client.query(
+      `INSERT INTO raw.customers_west VALUES
+        ('a', 'x'), ('a', 'x'), ('a', 'x'), ('b', 'y'), (NULL, 'n')`
+    );
+
+    const sql = await generatedSql('intersect_all');
+    const result = await client.query(sql);
+
+    expect(sql.match(/INTERSECT\s+ALL/g)).toHaveLength(2);
+    expect(asMultiset(result.rows)).toEqual(
+      asMultiset([
+        { customer_id: 'a', country: 'x' },
+        { customer_id: 'a', country: 'x' },
+        { customer_id: 'b', country: 'y' },
+        { customer_id: null, country: 'n' },
+      ])
+    );
+  });
+
+  it('executes left-associated EXCEPT ALL by subtracting every secondary multiplicity', async () => {
+    const sql = await generatedSql('except_all');
+    const result = await client.query(sql);
+
+    expect(sql.match(/EXCEPT\s+ALL/g)).toHaveLength(2);
+    expect(asMultiset(result.rows)).toEqual(
+      asMultiset([
+        { customer_id: 'a', country: 'x' },
+        { customer_id: 'c', country: 'z' },
+        { customer_id: 'c', country: 'z' },
+      ])
+    );
+  });
+
+  it('does not replace left-associated EXCEPT ALL with subtraction by a grouped secondary', async () => {
+    await client.query('TRUNCATE raw.customers_north, raw.customers_south, raw.customers_west');
+    await client.query(
+      "INSERT INTO raw.customers_north SELECT 'q', 'v' FROM generate_series(1, 5)"
+    );
+    await client.query(
+      "INSERT INTO raw.customers_south SELECT 'q', 'v' FROM generate_series(1, 2)"
+    );
+    await client.query("INSERT INTO raw.customers_west SELECT 'q', 'v' FROM generate_series(1, 2)");
+
+    expect((await client.query(await generatedSql('except_all'))).rows).toEqual([
+      { customer_id: 'q', country: 'v' },
+    ]);
+  });
+
+  it.each(['intersect_all', 'except_all'] as const)(
+    'returns no rows for %s when the primary input is empty',
+    async (operation) => {
+      await client.query('TRUNCATE raw.customers_north');
+      expect((await client.query(await generatedSql(operation))).rows).toEqual([]);
+    }
+  );
+
+  it('projects after INTERSECT ALL so equal keys with different tuples keep zero multiplicity', async () => {
+    await client.query('TRUNCATE raw.customers_north, raw.customers_south, raw.customers_west');
+    await client.query("INSERT INTO raw.customers_north VALUES ('x', 'a'), ('x', 'a')");
+    await client.query("INSERT INTO raw.customers_south VALUES ('x', 'b'), ('x', 'b')");
+    await client.query("INSERT INTO raw.customers_west VALUES ('x', 'c'), ('x', 'c')");
+
+    expect((await client.query(await generatedSql('intersect_all', true))).rows).toEqual([]);
+  });
+
+  it('projects after EXCEPT ALL so tuple multiplicity is preserved before key projection', async () => {
+    await client.query('TRUNCATE raw.customers_north, raw.customers_south, raw.customers_west');
+    await client.query("INSERT INTO raw.customers_north VALUES ('x', 'a'), ('x', 'a'), ('x', 'b')");
+    await client.query("INSERT INTO raw.customers_south VALUES ('x', 'b'), ('x', 'b')");
+
+    expect(asMultiset((await client.query(await generatedSql('except_all', true))).rows)).toEqual(
+      asMultiset([{ customer_id: 'x' }, { customer_id: 'x' }])
+    );
   });
 });

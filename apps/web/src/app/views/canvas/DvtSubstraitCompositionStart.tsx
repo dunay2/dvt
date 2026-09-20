@@ -137,6 +137,50 @@ export function DvtSubstraitCompositionStart({
               }));
             }
       }
+      onStartIntersectAll={
+        unionAllEntry == null
+          ? undefined
+          : () => {
+              const set = createDvtSubstraitSetDraft({
+                ...unionAllEntry,
+                operation: 'intersect_all',
+              });
+              onChange((currentDraft) => ({
+                ...currentDraft,
+                dvt: {
+                  kind: 'transform',
+                  materialized:
+                    currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
+                  mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
+                  shape: 'intersect_all',
+                  plan: set.plan,
+                  sidecar: set.sidecar,
+                },
+              }));
+            }
+      }
+      onStartExceptAll={
+        unionAllEntry == null
+          ? undefined
+          : () => {
+              const set = createDvtSubstraitSetDraft({
+                ...unionAllEntry,
+                operation: 'except_all',
+              });
+              onChange((currentDraft) => ({
+                ...currentDraft,
+                dvt: {
+                  kind: 'transform',
+                  materialized:
+                    currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
+                  mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
+                  shape: 'except_all',
+                  plan: set.plan,
+                  sidecar: set.sidecar,
+                },
+              }));
+            }
+      }
     />
   );
 }

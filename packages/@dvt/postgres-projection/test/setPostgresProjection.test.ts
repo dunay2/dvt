@@ -29,7 +29,13 @@ function draft(): DvtSubstraitSetDraft {
 
 function wrappedDraft(
   wrapper: 'aggregate' | 'window',
-  operation: 'union_all' | 'union_distinct' | 'intersect_distinct' | 'except_distinct'
+  operation:
+    | 'union_all'
+    | 'union_distinct'
+    | 'intersect_distinct'
+    | 'except_distinct'
+    | 'intersect_all'
+    | 'except_all'
 ): DvtSubstraitSetDraft {
   const suffix = wrapper === 'aggregate' ? 'Aggregate' : 'Window';
   const document = DvtSubstraitSemanticDocumentV1Schema.parse(documents[`unionDistinct${suffix}`]);
@@ -47,6 +53,8 @@ function wrappedDraft(
     union_distinct: SetRel_SetOp.UNION_DISTINCT,
     intersect_distinct: SetRel_SetOp.INTERSECTION_MULTISET,
     except_distinct: SetRel_SetOp.MINUS_PRIMARY,
+    intersect_all: SetRel_SetOp.INTERSECTION_MULTISET_ALL,
+    except_all: SetRel_SetOp.MINUS_PRIMARY_ALL,
   }[operation];
   draft.sidecar.semanticPlanSha256 = encodeDvtSubstraitPlanV1(draft.plan).sha256;
   return draft;
@@ -131,6 +139,27 @@ describe('shared PostgreSQL SetRel admission', () => {
     }
   );
 
+  it.each([
+    ['intersect_all', SetRel_SetOp.INTERSECTION_MULTISET_ALL, /INTERSECT\s+ALL/g],
+    ['except_all', SetRel_SetOp.MINUS_PRIMARY_ALL, /EXCEPT\s+ALL/g],
+  ] as const)(
+    'projects the exact admitted %s selector with bag multiplicity over all ordered inputs',
+    async (operation, selector, sqlOperator) => {
+      const candidate = draft();
+      setOperation(candidate, selector);
+
+      const result = await projectDvtSetDraftToPostgresSql(candidate);
+
+      expect(result.projection.operation).toBe(operation);
+      expect(result.projection.inputs.map(({ table }) => table)).toEqual([
+        'customers_north',
+        'customers_south',
+        'customers_west',
+      ]);
+      expect(result.sql.match(sqlOperator)).toHaveLength(2);
+    }
+  );
+
   it('applies output projection after tuple comparison for DISTINCT Set operations', async () => {
     const candidate = draft();
     setOperation(candidate, SetRel_SetOp.INTERSECTION_MULTISET);
@@ -173,6 +202,22 @@ describe('shared PostgreSQL SetRel admission', () => {
     setInputNullability(reversed, 1, Type_Nullability.REQUIRED);
     const reversedInspection = inspectDvtSubstraitSetDraft(reversed);
     expect(reversedInspection.ok && reversedInspection.projection.outputs[0]?.nullable).toBe(true);
+
+    const intersectAll = draft();
+    setOperation(intersectAll, SetRel_SetOp.INTERSECTION_MULTISET_ALL);
+    setInputNullability(intersectAll, 2, Type_Nullability.REQUIRED);
+    const intersectAllInspection = inspectDvtSubstraitSetDraft(intersectAll);
+    expect(
+      intersectAllInspection.ok && intersectAllInspection.projection.outputs[0]?.nullable
+    ).toBe(false);
+
+    const exceptAll = draft();
+    setOperation(exceptAll, SetRel_SetOp.MINUS_PRIMARY_ALL);
+    setInputNullability(exceptAll, 0, Type_Nullability.REQUIRED);
+    const exceptAllInspection = inspectDvtSubstraitSetDraft(exceptAll);
+    expect(exceptAllInspection.ok && exceptAllInspection.projection.outputs[0]?.nullable).toBe(
+      false
+    );
   });
 
   it.each([
@@ -202,6 +247,13 @@ describe('shared PostgreSQL SetRel admission', () => {
       ['customer_id', 'customer_count', 'customer_rank'],
       /row_number\(\) OVER/,
     ],
+    ['intersect_all', 'aggregate', ['customer_id', 'customer_count'], /GROUP BY\s+customer_id/],
+    [
+      'except_all',
+      'window',
+      ['customer_id', 'customer_count', 'customer_rank'],
+      /row_number\(\) OVER/,
+    ],
   ] as const)(
     'projects %s with an admitted %s wrapper',
     async (operation, wrapper, outputNames, sqlPattern) => {
@@ -211,13 +263,17 @@ describe('shared PostgreSQL SetRel admission', () => {
       expect(result.projection.outputs.map(({ name }) => name)).toEqual(outputNames);
       expect(result.sql).toMatch(sqlPattern);
       const operator =
-        operation === 'intersect_distinct'
+        operation === 'intersect_distinct' || operation === 'intersect_all'
           ? /INTERSECT/g
-          : operation === 'except_distinct'
+          : operation === 'except_distinct' || operation === 'except_all'
             ? /EXCEPT/g
             : /UNION/g;
       expect(result.sql.match(operator)).toHaveLength(2);
-      expect(result.sql.match(/UNION\s+ALL/g)?.length ?? 0).toBe(operation === 'union_all' ? 2 : 0);
+      expect(result.sql.match(/\sALL/g)?.length ?? 0).toBe(
+        operation === 'union_all' || operation === 'intersect_all' || operation === 'except_all'
+          ? 2
+          : 0
+      );
     }
   );
 
@@ -226,8 +282,8 @@ describe('shared PostgreSQL SetRel admission', () => {
     'duplicate source',
     'stale hash',
     'unsupported selector',
-    'unsupported INTERSECT ALL selector',
-    'unsupported EXCEPT ALL selector',
+    'unsupported INTERSECTION PRIMARY selector',
+    'unsupported MINUS MULTISET selector',
   ])('rejects %s rather than degrading Set semantics', async (scenario) => {
     const candidate = draft();
     if (scenario === 'mismatched schema') {
@@ -246,9 +302,9 @@ describe('shared PostgreSQL SetRel admission', () => {
     if (scenario === 'stale hash') candidate.sidecar.semanticPlanSha256 = 'a'.repeat(64);
     if (scenario === 'unsupported selector')
       setOperation(candidate, SetRel_SetOp.INTERSECTION_PRIMARY);
-    if (scenario === 'unsupported INTERSECT ALL selector')
+    if (scenario === 'unsupported INTERSECTION PRIMARY selector')
       setOperation(candidate, SetRel_SetOp.INTERSECTION_PRIMARY);
-    if (scenario === 'unsupported EXCEPT ALL selector')
+    if (scenario === 'unsupported MINUS MULTISET selector')
       setOperation(candidate, SetRel_SetOp.MINUS_MULTISET);
 
     expect(inspectDvtSubstraitSetDraft(candidate).ok).toBe(false);

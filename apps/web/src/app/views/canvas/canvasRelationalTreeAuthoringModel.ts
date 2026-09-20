@@ -171,6 +171,8 @@ export function resolveCanvasRelationalTreeAuthoringChoices(
     operationChoice('union_distinct', selectedInputs, args.readOnly, unionAvailable),
     operationChoice('intersect_distinct', selectedInputs, args.readOnly, unionAvailable),
     operationChoice('except_distinct', selectedInputs, args.readOnly, unionAvailable),
+    operationChoice('intersect_all', selectedInputs, args.readOnly, unionAvailable),
+    operationChoice('except_all', selectedInputs, args.readOnly, unionAvailable),
   ];
 }
 

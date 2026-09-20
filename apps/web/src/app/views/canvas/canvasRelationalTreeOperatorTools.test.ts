@@ -169,7 +169,9 @@ describe('admitted relational operator tools', () => {
       'substrait.ReadRel/read_type.named_table',
       'substrait.RelCommon/emit_kind.emit',
       'substrait.SetRel/SetOp.SET_OP_INTERSECTION_MULTISET',
+      'substrait.SetRel/SetOp.SET_OP_INTERSECTION_MULTISET_ALL',
       'substrait.SetRel/SetOp.SET_OP_MINUS_PRIMARY',
+      'substrait.SetRel/SetOp.SET_OP_MINUS_PRIMARY_ALL',
       'substrait.SetRel/SetOp.SET_OP_UNION_ALL',
       'substrait.SetRel/SetOp.SET_OP_UNION_DISTINCT',
     ]);
@@ -257,7 +259,13 @@ describe('admitted relational operator tools', () => {
       })
     ).toBe(draft);
   });
-  it.each(['union_all', 'intersect_distinct', 'except_distinct'] as const)(
+  it.each([
+    'union_all',
+    'intersect_distinct',
+    'except_distinct',
+    'intersect_all',
+    'except_all',
+  ] as const)(
     'appends a third %s source without replacing semantics, relations, or fields',
     (operation) => {
       const draft = createDvtSubstraitSetDraft({
@@ -291,6 +299,8 @@ describe('admitted relational operator tools', () => {
     'union_all',
     'intersect_distinct',
     'except_distinct',
+    'intersect_all',
+    'except_all',
   ] as const) {
     const fixture = (): DvtSubstraitUnionAllDraft =>
       shape === 'inner_join'
