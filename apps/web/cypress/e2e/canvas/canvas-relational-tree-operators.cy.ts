@@ -125,7 +125,10 @@ describe('Relational operator toolbar', () => {
       },
     }));
     cy.get('[data-operator="join"]').first().dblclick();
-    cy.get('[data-slot="canvas-operation-data-preview"]:visible').as('preview');
+    cy.get('[data-slot="canvas-operation-data-preview"]')
+      .scrollIntoView()
+      .should('be.visible')
+      .as('preview');
     cy.get('@preview').find('[data-slot="canvas-model-preview"]').should('be.enabled').click();
     cy.get('@preview').find('table').should('contain.text', 'selected-operation-42');
     cy.get('.canvas-operation-panels.with-preview:visible').then(($panels) => {
