@@ -1,30 +1,8 @@
 /** Owned concern: readable card content and accessible semantic input roles. */
-import {
-  AlertTriangle,
-  ArrowDownUp,
-  ChartNoAxesCombined,
-  Filter,
-  Layers3,
-  ListFilter,
-  Sigma,
-  Table2,
-} from 'lucide-react';
-import { CanvasRelationalJoinIcon } from './CanvasRelationalJoinIcon';
+import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 import type { CanvasRelationalTreePlacedNode } from './canvasRelationalTreeGeometry';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 
-const operatorIcons = {
-  read: Table2,
-  join: CanvasRelationalJoinIcon,
-  cross: CanvasRelationalJoinIcon,
-  set: Layers3,
-  project: Layers3,
-  filter: Filter,
-  aggregate: Sigma,
-  sort: ArrowDownUp,
-  fetch: ListFilter,
-  unsupported: AlertTriangle,
-};
 const operatorTone = {
   read: 'border-sky-800/90 bg-sky-950/25',
   project: 'border-blue-700/90 bg-blue-950/25',
@@ -35,6 +13,7 @@ const operatorTone = {
   aggregate: 'border-amber-700/90 bg-amber-950/25',
   sort: 'border-cyan-600/90 bg-cyan-950/25',
   fetch: 'border-teal-600/90 bg-teal-950/25',
+  window: 'border-blue-700/90 bg-blue-950/25',
   unsupported: 'border-rose-700/90 bg-rose-950/25',
 };
 
@@ -72,14 +51,13 @@ export function CanvasRelationalTreeNodeButton({
   const subtitle = node.displayName ?? node.substraitKind;
   const isSource = node.operator === 'read';
   const window = node.decorations.some((decoration) => decoration.kind === 'window');
-  const title = window
-    ? 'WINDOW · ROW_NUMBER'
-    : isSource
-      ? subtitle
-      : node.operator === 'join'
-        ? (node.operationLabel ?? 'JOIN')
-        : (node.operationLabel ?? node.operator.toUpperCase());
-  const Icon = window ? ChartNoAxesCombined : operatorIcons[node.operator];
+  const presentation = resolveCanvasRelationalOperationPresentation(
+    window
+      ? 'window'
+      : (node.operation ?? (node.operator === 'project' ? 'projection' : node.operator))
+  );
+  const title = isSource ? subtitle : copy[presentation.labelKey];
+  const Icon = presentation.icon;
   return (
     <button
       type="button"
@@ -97,7 +75,7 @@ export function CanvasRelationalTreeNodeButton({
       onClick={() => onSelect(node.locator)}
       onDoubleClick={() => node.operator !== 'read' && onExpand?.(node.locator)}
       style={{ height: detailed ? 76 : '100%', fontFamily: '"Segoe UI", system-ui, sans-serif' }}
-      className={`w-full rounded-md border px-3 py-2 text-left shadow-sm transition-colors hover:border-(--status-info) aria-selected:border-(--status-info) aria-selected:ring-2 aria-selected:ring-(--status-info) ${operatorTone[node.operator]}`}
+      className={`w-full rounded-md border px-3 py-2 text-left shadow-sm transition-colors hover:border-(--status-info) aria-selected:border-(--status-info) aria-selected:ring-2 aria-selected:ring-(--status-info) ${operatorTone[presentation.category]}`}
     >
       <span className="flex items-center gap-2 pr-5">
         <Icon aria-hidden="true" className="size-4 shrink-0 text-(--status-info)" />

@@ -1,6 +1,13 @@
 import type { CanvasViewCopy } from './canvasCopy.types';
 
 export const canvasViewAuthoringCopyEs = {
+  operationReadLabel: 'Fuente',
+  operationFilterLabel: 'Filtrar',
+  operationAggregateLabel: 'Agrupar',
+  operationWindowLabel: 'Ventana',
+  operationSortLabel: 'Ordenar',
+  operationFetchLabel: 'Límite / desplazamiento',
+  operationUnsupportedLabel: 'Operación no soportada',
   columnMappingAddedMessage: 'Asignación de columna añadida.',
   columnRelationProposedMessage: 'Relación entre campos propuesta. Elige qué hacer con ella.',
   columnMappingRemovedMessage: 'Asignación de columna eliminada.',

@@ -14,6 +14,7 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import {
   createDvtSubstraitUnionAllDraft,
+  createDvtSubstraitSetDraft,
   encodeDvtSubstraitUnionAllDocument,
 } from './canvasDvtSubstraitSetComposition';
 import {
@@ -25,6 +26,11 @@ import { readCanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
 import { projectCanvasViewportEdges } from './canvasViewportEdgeProjection';
 import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
 import { resolveCanvasRelationalCompositionBadgeSummary } from './canvasRelationalCompositionBadgeSummary';
+import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
+import { applyCanvasRelationalOperatorTool } from './canvasRelationalTreeOperatorCommands';
+import { resolveCanvasRelationalOperatorTools } from './canvasRelationalTreeOperatorModel';
 
 function source(id: string): CanonicalNode {
   const sourceRef: ConnectedSourceRef = {
@@ -189,10 +195,96 @@ function canonicalAccessibleLabel(
   });
   const composition = readCanvasDependencyEdgeData(projected[0]?.data)?.composition as
     { accessibleLabel?: string } | undefined;
+  const tree = projectCanvasRelationalTree({
+    node: model,
+    nodes: [...sources, model],
+    edges: visibleEdges,
+  });
+  expect(tree.ok).toBe(true);
+  if (tree.ok) {
+    let relation = tree.projection.root;
+    while (relation.children.length === 1) relation = relation.children[0]!.node;
+    const label =
+      resolveCanvasViewCopy(locale)[
+        resolveCanvasRelationalOperationPresentation(relation.operation).labelKey
+      ];
+    expect(readCanvasDependencyEdgeData(projected[0]?.data)?.composition?.label).toBe(label);
+  }
   return composition?.accessibleLabel;
 }
 
 describe('Canvas viewport edge projection', () => {
+  it.each([
+    [JoinRel_JoinType.INNER, 'INNER JOIN'],
+    [JoinRel_JoinType.LEFT, 'LEFT JOIN'],
+    [JoinRel_JoinType.RIGHT, 'RIGHT JOIN'],
+    [JoinRel_JoinType.OUTER, 'FULL OUTER JOIN'],
+    [JoinRel_JoinType.LEFT_SEMI, 'LEFT SEMI JOIN'],
+    [JoinRel_JoinType.LEFT_ANTI, 'LEFT ANTI JOIN'],
+    [JoinRel_JoinType.RIGHT_SEMI, 'RIGHT SEMI JOIN'],
+    [JoinRel_JoinType.RIGHT_ANTI, 'RIGHT ANTI JOIN'],
+  ] as const)('agrees with the tree for JOIN selector %s in both locales', (type, label) => {
+    const left = source('left');
+    const right = source('right');
+    const joined = initialJoin(left, right, type);
+    const field = resolveCanvasRelationalOperatorTools(joined).find(
+      (tool) => tool.id === 'aggregate'
+    )!.fields[0]!;
+    const grouped = applyCanvasRelationalOperatorTool(joined, {
+      tool: 'aggregate',
+      fieldId: field.fieldId,
+      alias: 'total',
+    });
+    const windowed = applyCanvasRelationalOperatorTool(grouped, {
+      tool: 'window',
+      alias: 'position',
+    });
+    expect(grouped).not.toBe(joined);
+    expect(windowed).not.toBe(grouped);
+    for (const draft of [joined, grouped, windowed]) {
+      const model = applyDvtSubstraitSemanticDocument(
+        transform(),
+        encodeDvtSubstraitJoinDocument(draft)
+      );
+      const before = JSON.stringify(model);
+      for (const locale of ['en', 'es']) {
+        expect(canonicalAccessibleLabel(model, [left, right], locale)).toBe(
+          `${label}, ${locale === 'en' ? 'inputs: 2, predicates: 1' : 'entradas: 2, predicados: 1'}`
+        );
+      }
+      expect(JSON.stringify(model)).toBe(before);
+    }
+  });
+
+  it.each([
+    ['union_all', 'UNION ALL'],
+    ['union_distinct', 'UNION DISTINCT'],
+    ['intersect_distinct', 'INTERSECT'],
+    ['except_distinct', 'EXCEPT'],
+    ['intersect_all', 'INTERSECT ALL'],
+    ['except_all', 'EXCEPT ALL'],
+  ] as const)('agrees with the tree for %s in both locales', (operation, label) => {
+    const sources = [source('left'), source('right')];
+    const model = applyDvtSubstraitSemanticDocument(
+      transform(),
+      encodeDvtSubstraitUnionAllDocument(
+        createDvtSubstraitSetDraft({
+          inputs: sources.map((node) => ({
+            nodeId: node.id,
+            schema: 'raw',
+            table: node.name,
+            fields: [{ name: 'id', type: 'string' as const }],
+            sourceRef: sourceRef(node),
+          })),
+          targetNodeId: 'model',
+          operation,
+        })
+      )
+    );
+    for (const locale of ['en', 'es']) {
+      expect(canonicalAccessibleLabel(model, sources, locale)).toMatch(new RegExp(`^${label}, `));
+    }
+  });
   it('correlates two pending inputs while preserving two real dependency edges', () => {
     const orders = source('orders');
     const clients = source('clients');

@@ -56,7 +56,7 @@ export function createCanvasRelationalTreeInitialJoinDraft(
         args.inputs,
         pair,
         args.targetNodeId,
-        toSubstraitJoinType(args.operation)
+        toSubstraitJoinType(args.operation ?? 'inner_join')
       );
 }
 
@@ -80,7 +80,7 @@ export function appendCanvasRelationalTreeJoinInput(
       rightFieldName: args.rightFieldName,
     },
     selectedFields: fields.map((field) => field.name),
-    joinType: toSubstraitJoinType(args.operation),
+    joinType: toSubstraitJoinType(args.operation ?? 'inner_join'),
   });
 }
 

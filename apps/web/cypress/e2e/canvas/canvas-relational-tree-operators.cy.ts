@@ -241,7 +241,7 @@ describe('Relational operator toolbar', () => {
     activateMenu('canvas-relational-remove-left');
     cy.get('[data-operator="join"]').should('have.length', 1);
     cy.get('[data-operator="aggregate"]').should('have.length', 1);
-    cy.contains('[data-operator="project"]', 'WINDOW').should('be.visible');
+    cy.contains('[data-operator="project"]', 'Window').should('be.visible');
     cy.get('[data-operator="join"]').rightclick();
     activateMenu('canvas-relational-remove-right');
     cy.get('[role="alertdialog"]')
@@ -254,7 +254,7 @@ describe('Relational operator toolbar', () => {
     cy.get('[data-slot="canvas-relational-removal-confirm"]').click();
     cy.get('[data-operator="join"], [data-operator="aggregate"]').should('not.exist');
     cy.get('[data-operator="read"]').should('have.length', 1);
-    cy.get('[data-slot="canvas-relational-node-title"]').should('not.contain.text', 'WINDOW');
+    cy.get('[data-slot="canvas-relational-node-title"]').should('not.contain.text', 'Window');
     cy.screenshot('workspace-tabs-contextual-removal');
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
     cy.get('[data-operator="join"]').should('have.length', 1);
@@ -342,11 +342,11 @@ describe('Relational operator toolbar', () => {
     cy.get('[aria-label="Comparador de la condición"]').should('have.value', 'not_equal');
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
     cy.contains('button', 'Guardar condición').click();
-    cy.contains('[data-operator="project"]', 'WINDOW').rightclick();
+    cy.contains('[data-operator="project"]', 'Window').rightclick();
     cy.get(
       '[data-slot="context-menu-content"][data-state="open"] [data-slot="canvas-relational-remove-source"]'
     ).click();
-    cy.get('[data-slot="canvas-relational-node-title"]').should('not.contain.text', 'WINDOW');
+    cy.get('[data-slot="canvas-relational-node-title"]').should('not.contain.text', 'Window');
     cy.get('[data-operator="aggregate"]').rightclick();
     cy.get(
       '[data-slot="context-menu-content"][data-state="open"] [data-slot="canvas-relational-remove-source"]'
@@ -375,10 +375,7 @@ describe('Relational operator toolbar', () => {
       cy.get(form).should('not.contain.text', 'PARTITION BY');
       cy.get(form).find('input').clear().type('ranked_customer');
       cy.get(form).find('button[type="submit"]').click();
-      cy.get('[data-slot="canvas-relational-node-title"]').should(
-        'contain.text',
-        'WINDOW · ROW_NUMBER'
-      );
+      cy.get('[data-slot="canvas-relational-node-title"]').should('contain.text', 'Window');
       cy.get('[data-slot="canvas-relational-tree-apply"]').click();
       cy.wrap(null).should(() => {
         const saves = getE2eApiCalls('/workspace/graph/draft', 'PUT');
@@ -408,19 +405,14 @@ describe('Relational operator toolbar', () => {
       cy.get(tool('window')).click();
       cy.get(form).find('input').should('have.value', 'ranked_customer');
       cy.contains(form + ' button', 'Remove operation').click();
-      cy.get('[data-slot="canvas-relational-node-title"]').should('not.contain.text', 'WINDOW');
+      cy.get('[data-slot="canvas-relational-node-title"]').should('not.contain.text', 'Window');
       cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
-      cy.get('[data-slot="canvas-relational-node-title"]').should(
-        'contain.text',
-        'WINDOW · ROW_NUMBER'
-      );
+      cy.get('[data-slot="canvas-relational-node-title"]').should('contain.text', 'Window');
       visitWithE2eWorkspaceSession('/canvas');
       waitForE2eApiCall('/workspace/graph/draft', 'GET');
       cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').click();
-      cy.get('[data-slot="canvas-relational-node-title"]').should(
-        'contain.text',
-        'WINDOW · ROW_NUMBER'
-      );
+      // The workspace-session fixture restores the default Spanish locale on reload.
+      cy.get('[data-slot="canvas-relational-node-title"]').should('contain.text', 'Ventana');
     });
   }
   it('edits FILTER and a source ROW_NUMBER through the same canonical projection', () => {
@@ -439,10 +431,7 @@ describe('Relational operator toolbar', () => {
     cy.get(form).find('select').should('exist');
     cy.get(form).find('input').clear().type('source_row');
     cy.get(form).find('button[type="submit"]').click();
-    cy.get('[data-slot="canvas-relational-node-title"]').should(
-      'contain.text',
-      'WINDOW · ROW_NUMBER'
-    );
+    cy.get('[data-slot="canvas-relational-node-title"]').should('contain.text', 'Window');
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
   });

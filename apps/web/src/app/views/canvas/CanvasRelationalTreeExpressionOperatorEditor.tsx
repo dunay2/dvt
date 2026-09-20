@@ -7,6 +7,8 @@ import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
 import { resolveCanvasRelationalOperatorTools } from './canvasRelationalTreeOperatorModel';
 import { CanvasRelationalJoinExpressionTree } from './CanvasRelationalJoinExpressionTree';
+import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { CanvasRelationalTreeOperatorForm } from './CanvasRelationalTreeOperatorForm';
 import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
@@ -26,7 +28,8 @@ export function CanvasRelationalTreeExpressionOperatorEditor({
   onChange: (draft: DvtSubstraitProjectionDraft) => void;
   onClose: () => void;
 }>): JSX.Element | null {
-  const es = useApplicationLanguageStore((state) => state.language) === 'es';
+  const language = useApplicationLanguageStore((state) => state.language);
+  const es = language === 'es';
   const node = applyCanvasInspectorNodeDraft(
     transformNode,
     createCanvasRelationalTreeNodeDraft(transformNode, operation, draft)
@@ -42,13 +45,11 @@ export function CanvasRelationalTreeExpressionOperatorEditor({
     )
   )
     return null;
+  const title =
+    resolveCanvasViewCopy(language)[resolveCanvasRelationalOperationPresentation(toolId).labelKey];
   const tool = resolveCanvasRelationalOperatorTools(draft).find((item) => item.id === toolId);
   return (
-    <CanvasRelationalTreeEditorFrame
-      title={toolId.toUpperCase()}
-      relationId={relationId}
-      onClose={onClose}
-    >
+    <CanvasRelationalTreeEditorFrame operation={toolId} relationId={relationId} onClose={onClose}>
       <div className="canvas-operation-editors grid h-full min-h-0 gap-3">
         <CanvasRelationalJoinExpressionTree
           transformNode={transformNode}
@@ -63,7 +64,7 @@ export function CanvasRelationalTreeExpressionOperatorEditor({
               inline
               tool={tool}
               draft={draft}
-              title={toolId.toUpperCase()}
+              title={title}
               onChange={onChange}
               onClose={onClose}
             />

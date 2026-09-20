@@ -2,6 +2,13 @@
 export type CanvasDisabledCapability = 'plan_preview' | 'run_start' | 'graph_edits';
 
 export type CanvasViewCopy = {
+  readonly operationReadLabel: string;
+  readonly operationFilterLabel: string;
+  readonly operationAggregateLabel: string;
+  readonly operationWindowLabel: string;
+  readonly operationSortLabel: string;
+  readonly operationFetchLabel: string;
+  readonly operationUnsupportedLabel: string;
   readonly routeLoadingTitle: string;
   readonly routeLoadingMessage: string;
   readonly backendLoadingTitle: string;

@@ -130,21 +130,21 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   relationalCompositionPendingLabel: 'RELATE / COMPOSE',
   relationalCompositionIncompleteLabel: 'RECONNECT INPUT',
   relationalCompositionJoinSummaryTemplate:
-    'INNER JOIN, inputs: {inputCount}, predicates: {predicateCount}',
+    '{operation}, inputs: {inputCount}, predicates: {predicateCount}',
   relationalCompositionCrossSummaryTemplate:
-    'CROSS JOIN, inputs: {inputCount}, outputs: {outputCount}, cartesian product',
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, cartesian product',
   relationalCompositionUnionAllSummaryTemplate:
-    'UNION ALL, inputs: {inputCount}, outputs: {outputCount}, bag semantics',
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, bag semantics',
   relationalCompositionUnionDistinctSummaryTemplate:
-    'UNION DISTINCT, inputs: {inputCount}, outputs: {outputCount}, set semantics',
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, set semantics',
   relationalCompositionIntersectDistinctSummaryTemplate:
-    'INTERSECT, inputs: {inputCount}, outputs: {outputCount}, set semantics',
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, set semantics',
   relationalCompositionExceptDistinctSummaryTemplate:
-    'EXCEPT, inputs: {inputCount}, outputs: {outputCount}, primary-input difference',
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, primary-input difference',
   relationalCompositionIntersectAllSummaryTemplate:
-    'INTERSECT ALL, inputs: {inputCount}, outputs: {outputCount}, bag multiplicity',
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, bag multiplicity',
   relationalCompositionExceptAllSummaryTemplate:
-    'EXCEPT ALL, inputs: {inputCount}, outputs: {outputCount}, primary-input bag difference',
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, primary-input bag difference',
   filterLabel: 'Filter',
   testStatusLabels: {
     pass: 'Passed',
@@ -261,21 +261,21 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   relationalCompositionPendingLabel: 'RELACIONAR / COMPONER',
   relationalCompositionIncompleteLabel: 'RECONECTAR ENTRADA',
   relationalCompositionJoinSummaryTemplate:
-    'INNER JOIN, entradas: {inputCount}, predicados: {predicateCount}',
+    '{operation}, entradas: {inputCount}, predicados: {predicateCount}',
   relationalCompositionCrossSummaryTemplate:
-    'CROSS JOIN, entradas: {inputCount}, salidas: {outputCount}, producto cartesiano',
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, producto cartesiano',
   relationalCompositionUnionAllSummaryTemplate:
-    'UNION ALL, entradas: {inputCount}, salidas: {outputCount}, semántica bag',
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, semántica bag',
   relationalCompositionUnionDistinctSummaryTemplate:
-    'UNION DISTINCT, entradas: {inputCount}, salidas: {outputCount}, semántica de conjunto',
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, semántica de conjunto',
   relationalCompositionIntersectDistinctSummaryTemplate:
-    'INTERSECT, entradas: {inputCount}, salidas: {outputCount}, semántica de conjunto',
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, semántica de conjunto',
   relationalCompositionExceptDistinctSummaryTemplate:
-    'EXCEPT, entradas: {inputCount}, salidas: {outputCount}, diferencia desde la entrada primaria',
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, diferencia desde la entrada primaria',
   relationalCompositionIntersectAllSummaryTemplate:
-    'INTERSECT ALL, entradas: {inputCount}, salidas: {outputCount}, multiplicidad de bolsa',
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, multiplicidad de bolsa',
   relationalCompositionExceptAllSummaryTemplate:
-    'EXCEPT ALL, entradas: {inputCount}, salidas: {outputCount}, diferencia de bolsa desde la entrada primaria',
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, diferencia de bolsa desde la entrada primaria',
   filterLabel: 'Filtro',
   testStatusLabels: {
     pass: 'Aprobadas',

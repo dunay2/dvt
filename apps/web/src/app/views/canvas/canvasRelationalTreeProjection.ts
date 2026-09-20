@@ -10,6 +10,7 @@ import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemantic
 import { hasSameConnectedSourceRef } from './canvasDvtSubstraitJoinSourceResolution';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { buildCanvasRelationalTreeRelation } from './canvasRelationalTreeRelationProjection';
+import type { CanvasPresentationOperation } from './canvasRelationalOperationPresentation';
 
 export type CanvasRelationalTreeOperator =
   | 'read'
@@ -47,7 +48,7 @@ export type CanvasRelationalTreeNode = Readonly<{
   locator: string;
   operator: CanvasRelationalTreeOperator;
   substraitKind: string;
-  operationLabel?: string;
+  operation?: CanvasPresentationOperation;
   relationId: string | null;
   displayName: string | null;
   sourceRef: ConnectedSourceRef | null;

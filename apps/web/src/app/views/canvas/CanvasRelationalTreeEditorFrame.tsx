@@ -1,6 +1,10 @@
 /** Owned concern: explicitly expand or focus operation controls without a permanent inspector. */
 import { X } from 'lucide-react';
-import { CanvasRelationalJoinIcon } from './CanvasRelationalJoinIcon';
+import {
+  resolveCanvasRelationalOperationPresentation,
+  type CanvasPresentationOperation,
+} from './canvasRelationalOperationPresentation';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { useContext, type ReactNode } from 'react';
 import {
   CanvasOperationDataPreview,
@@ -10,13 +14,13 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 
 export function CanvasRelationalTreeEditorFrame({
-  title,
+  operation,
   children,
   hidden = false,
   onClose,
   relationId,
 }: Readonly<{
-  title: string;
+  operation: CanvasPresentationOperation;
   children: ReactNode;
   hidden?: boolean;
   onClose: () => void;
@@ -24,6 +28,9 @@ export function CanvasRelationalTreeEditorFrame({
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
+  const presentation = resolveCanvasRelationalOperationPresentation(operation);
+  const title = resolveCanvasViewCopy(language)[presentation.labelKey];
+  const Icon = presentation.icon;
   const preview = useContext(CanvasOperationPreviewContext);
   const showPreview = preview != null && relationId != null;
   return (
@@ -33,7 +40,7 @@ export function CanvasRelationalTreeEditorFrame({
       className={`${hidden ? 'hidden' : 'flex'} h-[45%] min-h-56 max-h-[32rem] shrink-0 flex-col overflow-hidden border-t border-(--border-subtle) bg-(--surface-panel)`}
     >
       <header className="flex h-9 shrink-0 items-center gap-2 border-b border-(--border-subtle) bg-(--surface-panel) px-3">
-        <CanvasRelationalJoinIcon className="size-4 text-(--status-info)" />
+        <Icon className="size-4 text-(--status-info)" />
         <h3 className="text-xs font-semibold">{title}</h3>
         <button
           type="button"

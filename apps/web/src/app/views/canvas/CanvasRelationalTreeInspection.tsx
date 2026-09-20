@@ -65,7 +65,7 @@ export function CanvasRelationalTreeInspection({
         model.selectedNode.operator === 'cross' ||
         (model.authoringAvailable && model.selectedNode.operator === 'fetch')) ? (
         <CanvasRelationalTreeEditorFrame
-          title={model.selectedNode.operator.toUpperCase()}
+          operation={model.selectedNode.operation ?? 'unsupported'}
           relationId={model.selectedNode.relationId}
           onClose={() => onExpandedChange(false)}
         >

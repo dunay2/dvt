@@ -1,13 +1,10 @@
 /** Owned concern: project one canonical Substrait relation subtree into the Canvas tree read model. */
 import type { Expression, Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import {
-  SetRel_SetOp,
-  SortField_SortDirection,
-} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { DvtSubstraitAuthoringSidecarV1 } from '@dvt/contracts';
 import { dvtSubstraitExpressionReader } from '@dvt/postgres-projection';
 
-import { canvasJoinLabelForType } from './canvasRelationalTreeJoinType';
+import { canvasPresentationOperationForRel } from './canvasRelationalOperationPresentation';
 import type {
   CanvasRelationalTreeChildRole,
   CanvasRelationalTreeExpressionRef,
@@ -237,30 +234,6 @@ function sortFetchSummary(
     .join(' · ');
 }
 
-function operationLabel(rel: Rel): string | null {
-  if (rel.relType.case === 'join') return canvasJoinLabelForType(rel.relType.value.type);
-  if (rel.relType.case === 'cross') return 'CROSS JOIN';
-  if (rel.relType.case === 'sort') return 'ORDER BY';
-  if (rel.relType.case === 'fetch') return 'LIMIT / OFFSET';
-  if (rel.relType.case !== 'set') return null;
-  switch (rel.relType.value.op) {
-    case SetRel_SetOp.UNION_ALL:
-      return 'UNION ALL';
-    case SetRel_SetOp.UNION_DISTINCT:
-      return 'UNION DISTINCT';
-    case SetRel_SetOp.INTERSECTION_MULTISET:
-      return 'INTERSECT';
-    case SetRel_SetOp.MINUS_PRIMARY:
-      return 'EXCEPT';
-    case SetRel_SetOp.INTERSECTION_MULTISET_ALL:
-      return 'INTERSECT ALL';
-    case SetRel_SetOp.MINUS_PRIMARY_ALL:
-      return 'EXCEPT ALL';
-    default:
-      return 'UNSUPPORTED SET';
-  }
-}
-
 export function buildCanvasRelationalTreeRelation(
   args: Readonly<{
     rel: Rel;
@@ -276,12 +249,11 @@ export function buildCanvasRelationalTreeRelation(
   const inputs = childInputs(args.rel);
   const windows =
     args.rel.relType.case === 'project' ? windowCount(args.rel.relType.value.expressions) : 0;
-  const label = operationLabel(args.rel);
   return {
     locator: `rel:${args.semanticDigest}:${args.path}`,
     operator: operator(args.rel),
     substraitKind: args.rel.relType.case ?? 'unknown',
-    ...(label == null ? {} : { operationLabel: label }),
+    operation: canvasPresentationOperationForRel(args.rel),
     relationId,
     displayName:
       sortFetchSummary(args.rel, args.sidecar, args.relationByAnchor) ??

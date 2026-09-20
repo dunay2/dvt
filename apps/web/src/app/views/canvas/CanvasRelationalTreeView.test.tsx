@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 
 import React, { act } from 'react';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import {
+  canvasRelationalOperationPresentation,
+  type CanvasPresentationOperation,
+} from './canvasRelationalOperationPresentation';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -9,6 +14,7 @@ import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWo
 import { CanvasRelationalTreeView } from './CanvasRelationalTreeView';
 
 const COPY = {
+  ...resolveCanvasViewCopy('en'),
   inspectorDbtOriginLabel: 'Input',
   inspectorDvtRelationalLeftInput: 'Left input',
   inspectorDvtRelationalRightInput: 'Right input',
@@ -57,6 +63,51 @@ describe('Canvas relational-tree branching view', () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+  });
+
+  it.each(Object.entries(canvasRelationalOperationPresentation))(
+    'renders %s using catalog copy and icon',
+    (operation, presentation) => {
+      for (const locale of ['en', 'es']) {
+        const copy = resolveCanvasViewCopy(locale);
+        const node: CanvasRelationalTreeNode = {
+          ...relation('operation', 'join'),
+          operation: operation as CanvasPresentationOperation,
+        };
+        act(() =>
+          root.render(
+            <CanvasRelationalTreeView
+              outputName="Model"
+              root={node}
+              selectedLocator="operation"
+              copy={copy}
+              onSelect={() => undefined}
+            />
+          )
+        );
+        expect(
+          container.querySelector('[data-slot="canvas-relational-node-title"]')?.textContent
+        ).toBe(copy[presentation.labelKey]);
+        expect(container.querySelector('[role="treeitem"] svg')).not.toBeNull();
+      }
+    }
+  );
+
+  it('renders an unsupported selector explicitly, never as INNER', () => {
+    act(() =>
+      root.render(
+        <CanvasRelationalTreeView
+          outputName="Model"
+          root={{ ...relation('unknown', 'join'), operation: 'unsupported' }}
+          selectedLocator="unknown"
+          copy={resolveCanvasViewCopy('es')}
+          onSelect={() => undefined}
+        />
+      )
+    );
+    expect(container.querySelector('[data-slot="canvas-relational-node-title"]')?.textContent).toBe(
+      'Operación no soportada'
+    );
   });
 
   it('lays out every N-ary branch horizontally with explicit roles', () => {

@@ -12,7 +12,7 @@ const node: CanvasRelationalTreeNode = {
   locator: 'rel:digest:sort',
   operator: 'sort',
   substraitKind: 'sort',
-  operationLabel: 'ORDER BY',
+  operation: 'sort',
   relationId: 'relation:sort',
   displayName: 'amount DESC NULLS LAST',
   sourceRef: null,

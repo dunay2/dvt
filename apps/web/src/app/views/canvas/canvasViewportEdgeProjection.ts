@@ -1,4 +1,5 @@
 /** Owned concern: project canonical dependency edges into React Flow viewport state. */
+import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 import type { Edge } from '@xyflow/react';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -26,37 +27,11 @@ function resolveCompositionLabel(
     return cardCopy.relationalCompositionIncompleteLabel;
   }
   const operationLabel =
-    member.operation === 'inner_join'
-      ? 'INNER JOIN'
-      : member.operation === 'left_join'
-        ? 'LEFT JOIN'
-        : member.operation === 'right_join'
-          ? 'RIGHT JOIN'
-          : member.operation === 'full_outer_join'
-            ? 'FULL OUTER JOIN'
-            : member.operation === 'left_semi_join'
-              ? 'LEFT SEMI JOIN'
-              : member.operation === 'left_anti_join'
-                ? 'LEFT ANTI JOIN'
-                : member.operation === 'right_semi_join'
-                  ? 'RIGHT SEMI JOIN'
-                  : member.operation === 'right_anti_join'
-                    ? 'RIGHT ANTI JOIN'
-                    : member.operation === 'cross_join'
-                      ? 'CROSS JOIN'
-                      : member.operation === 'union_all'
-                        ? 'UNION ALL'
-                        : member.operation === 'union_distinct'
-                          ? 'UNION DISTINCT'
-                          : member.operation === 'intersect_distinct'
-                            ? 'INTERSECT'
-                            : member.operation === 'except_distinct'
-                              ? 'EXCEPT'
-                              : member.operation === 'intersect_all'
-                                ? 'INTERSECT ALL'
-                                : member.operation === 'except_all'
-                                  ? 'EXCEPT ALL'
-                                  : null;
+    member.operation == null
+      ? null
+      : resolveCanvasViewCopy(locale)[
+          resolveCanvasRelationalOperationPresentation(member.operation).labelKey
+        ];
   if (member.state === 'canonical') {
     return operationLabel ?? cardCopy.relationalCompositionIncompleteLabel;
   }

@@ -122,14 +122,12 @@ export function resolveDvtTransformAuthoringMetadata(
       inspectDvtSubstraitJoinPredicateContext(join)?.inspection.projection.joinRelations.at(
         -1
       )?.joinType;
+    const operation = finalJoinType == null ? null : canvasJoinOperationForType(finalJoinType);
+    if (!isCanvasJoinOperation(operation))
+      return { outcome: 'rejected', reason: 'unsupported_shape' };
     return {
       outcome: 'resolved',
-      metadata: fromDraft(
-        authority.mode,
-        disposition,
-        finalJoinType == null ? 'inner_join' : canvasJoinOperationForType(finalJoinType),
-        projection
-      ),
+      metadata: fromDraft(authority.mode, disposition, operation, projection),
     };
   }
   if (inspectDvtSubstraitAcceptedCrossDraft(join).ok) {

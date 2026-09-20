@@ -1,5 +1,6 @@
 /** Owned concern: contextual toolbar entry points for admitted Substrait operators. */
-import { ArrowDownUp, ChartNoAxesCombined, Filter, ListFilter, Sigma } from 'lucide-react';
+import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { useState } from 'react';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import {
@@ -9,13 +10,6 @@ import {
 import { CanvasRelationalTreeOperatorForm } from './CanvasRelationalTreeOperatorForm';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
-const icons = {
-  filter: Filter,
-  aggregate: Sigma,
-  window: ChartNoAxesCombined,
-  sort: ArrowDownUp,
-  fetch: ListFilter,
-};
 export function CanvasRelationalTreeOperatorTools({
   draft,
   editable,
@@ -29,30 +23,26 @@ export function CanvasRelationalTreeOperatorTools({
   const es = language === 'es';
   const [selected, setSelected] = useState<CanvasRelationalOperatorTool | null>(null);
   if (draft == null) return null;
-  const titles = {
-    filter: es ? 'Filtrar' : 'Filter',
-    aggregate: es ? 'Agrupar · COUNT' : 'Group · COUNT',
-    window: es ? 'Ventana · ROW_NUMBER' : 'Window · ROW_NUMBER',
-    sort: 'ORDER BY',
-    fetch: 'LIMIT / OFFSET',
-  };
+  const copy = resolveCanvasViewCopy(language);
   return (
     <div
       className="flex items-center gap-1 border-l border-(--border-subtle) pl-2"
       data-slot="canvas-relational-operator-tools"
     >
       {resolveCanvasRelationalOperatorTools(draft).map((tool) => {
-        const Icon = icons[tool.id];
+        const presentation = resolveCanvasRelationalOperationPresentation(tool.id);
+        const Icon = presentation.icon;
+        const title = copy[presentation.labelKey];
         return (
           <button
             key={tool.id}
             type="button"
             data-operator-tool={tool.id}
             disabled={!editable || !tool.enabled}
-            aria-label={titles[tool.id]}
+            aria-label={title}
             title={
               tool.enabled
-                ? titles[tool.id]
+                ? title
                 : es
                   ? 'No disponible para esta salida. Las ventanas sobre conjuntos requieren agrupar primero.'
                   : 'Unavailable for this output. Windows on sets require grouping first.'
@@ -61,7 +51,7 @@ export function CanvasRelationalTreeOperatorTools({
             className="flex h-8 items-center gap-2 rounded px-2 text-sm font-medium text-(--text-strong) hover:bg-(--surface-selected) disabled:opacity-40"
           >
             <Icon className="size-4 text-(--status-info)" aria-hidden="true" />
-            {titles[tool.id]}
+            {title}
             {tool.active ? (
               <span className="size-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
             ) : null}
@@ -72,7 +62,7 @@ export function CanvasRelationalTreeOperatorTools({
         <CanvasRelationalTreeOperatorForm
           tool={selected}
           draft={draft}
-          title={titles[selected.id]}
+          title={copy[resolveCanvasRelationalOperationPresentation(selected.id).labelKey]}
           onClose={() => setSelected(null)}
           onChange={onChange}
         />
