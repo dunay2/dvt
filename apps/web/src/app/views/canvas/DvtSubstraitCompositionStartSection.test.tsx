@@ -222,7 +222,9 @@ describe('DvtSubstraitCompositionStartSection', () => {
       `[data-slot="dvt-select-operation-${slot}"]`
     )!;
     expect(operation.textContent).toContain(label);
-    act(() => fireEvent.click(operation));
+    act(() => {
+      fireEvent.click(operation);
+    });
     expect(container.textContent).toContain(title);
     expect(callback).not.toHaveBeenCalled();
     act(() => {

@@ -22,7 +22,10 @@ describeIfPostgres('DVT INTERSECT/EXCEPT DISTINCT PostgreSQL semantics', () => {
   let admin: Client;
   let client: Client;
 
-  async function generatedSql(operation: DistinctSetOperation, projectFirstColumn = false) {
+  async function generatedSql(
+    operation: DistinctSetOperation,
+    projectFirstColumn = false
+  ): Promise<string> {
     const draft = buildDvtSetPreviewDraft(undefined, operation, projectFirstColumn);
     let sql = '';
     const publish: Pick<IContentAddressedArtifactStore, 'publish'>['publish'] = async (request) => {
