@@ -1,6 +1,4 @@
 /** Owned concern: commit one complete relational-tree authoring draft through the canonical command. */
-import { useCallback } from 'react';
-
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import {
@@ -10,7 +8,11 @@ import {
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
 import { createCanvasRelationalTreeSetDraft } from './canvasRelationalTreeUnionAuthoring';
 import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
-import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
+import type {
+  CanvasRelationalTreeApplyResult,
+  CanvasRelationalTreeAuthoringContract,
+  RelationalApplyRejection,
+} from './canvasRelationalTreeWorkbench.types';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 
@@ -22,6 +24,7 @@ export function useCanvasRelationalTreeApplyCommand(args: {
   inputs: readonly CanvasDvtCompositionInput[];
   nodes: readonly CanonicalNode[];
   operation: CanvasRelationalOperation | null;
+  reject: (rejection: RelationalApplyRejection) => void;
   reset: () => void;
   selectedInputIds: readonly string[];
   transformNode: CanonicalNode;
@@ -34,17 +37,21 @@ export function useCanvasRelationalTreeApplyCommand(args: {
     inputs,
     nodes,
     operation,
+    reject,
     reset,
     selectedInputIds,
     transformNode,
   } = args;
-  return useCallback(() => {
+  return (): CanvasRelationalTreeApplyResult => {
     if (
       !editable ||
       operation == null ||
       (operation === 'projection' && selectedInputIds.length !== 1)
-    )
-      return;
+    ) {
+      const rejection = { outcome: 'rejected', reason: 'command_unavailable' } as const;
+      reject(rejection);
+      return rejection;
+    }
     const semantic =
       operation === 'projection' && joinDraft == null
         ? (() => {
@@ -64,22 +71,17 @@ export function useCanvasRelationalTreeApplyCommand(args: {
                 operation
               )
             : null;
-    if (semantic == null) return;
-    authoring?.onApplyNodeDraft(
+    if (semantic == null || authoring == null) {
+      const rejection = { outcome: 'rejected', reason: 'command_unavailable' } as const;
+      reject(rejection);
+      return rejection;
+    }
+    const result = authoring.onApplyNodeDraft(
       transformNode.id,
       createCanvasRelationalTreeNodeDraft(transformNode, operation, semantic)
     );
-    reset();
-  }, [
-    authoring,
-    editable,
-    edges,
-    joinDraft,
-    inputs,
-    nodes,
-    operation,
-    reset,
-    selectedInputIds,
-    transformNode,
-  ]);
+    if (result.outcome === 'rejected') reject(result);
+    else reset();
+    return result;
+  };
 }

@@ -36,7 +36,7 @@ describe('Canvas Model editor navigation', () => {
     const fixture = buildSemanticWorkbenchFixture();
     const previewTransformRows = vi.fn();
     const onSelectNode = vi.fn();
-    const onApplyNodeDraft = vi.fn();
+    const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' }) as const);
     const models = [
       fixture.transform,
       ...(withSecondModel

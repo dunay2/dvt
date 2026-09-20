@@ -1,10 +1,25 @@
 /** Owned concern: define the presentation contract for the relational-tree Workbench. */
 import type { CanvasViewCopy } from './canvasCopy.types';
-import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
+import type {
+  CanvasInspectorNodeDraft,
+  CanvasInspectorNodeDraftApplyResult,
+} from './canvasInspectorAuthoring.types';
+
+export type CanvasRelationalTreeApplyResult =
+  | CanvasInspectorNodeDraftApplyResult
+  | Readonly<{ outcome: 'rejected'; reason: 'command_unavailable' }>;
+
+export type RelationalApplyRejection = Extract<
+  CanvasRelationalTreeApplyResult,
+  { outcome: 'rejected' }
+>;
 
 export type CanvasRelationalTreeAuthoringContract = Readonly<{
   canEditNode: boolean;
-  onApplyNodeDraft: (nodeId: string, draft: CanvasInspectorNodeDraft) => void;
+  onApplyNodeDraft: (
+    nodeId: string,
+    draft: CanvasInspectorNodeDraft
+  ) => CanvasInspectorNodeDraftApplyResult;
 }>;
 
 export type CanvasRelationalTreeWorkbenchCopy = Pick<

@@ -120,7 +120,8 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(CardMenuSource).not.toContain('onApplyNodeDraft');
     expect(AuthoringProjectionSource).toContain('projectCanvasRelationalTree');
     expect(AuthoringProjectionSource).not.toContain('onApplyNodeDraft');
-    expect(ApplyCommandSource).toContain('authoring?.onApplyNodeDraft(');
+    expect(ApplyCommandSource).toContain('const result = authoring.onApplyNodeDraft(');
+    expect(ApplyCommandSource).toContain("result.outcome === 'rejected'");
     expect(ApplyCommandSource).not.toContain('applyInspectorNodeDraft');
     expect(WorkbenchSource).not.toContain('CanvasRelationalTreeAuthoringPanel');
     expect(WorkbenchSource).toContain('CanvasRelationalTreeSessionActions');
@@ -149,6 +150,11 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(CanvasShellSource).not.toContain('<CanvasRelationalTreeWorkbench');
     expect(CanvasShellSource).not.toContain("selectOperationalDrawerTab('semantic')");
     expect(ModelEditorSource).toContain('<CanvasRelationalTreeWorkbench');
+    expect(ModelEditorSource).not.toContain("from 'react-dom'");
+    expect(ModelEditorSource).toContain("draftStatus.persistence !== 'durable'");
+    expect(ModelEditorSource).not.toContain(
+      '[&:has([data-slot=canvas-relational-tree-apply])_[data-slot=canvas-model-save-status]]:hidden'
+    );
     expect(CodeWorkbenchSource).not.toContain('CanvasRelationalTreeWorkbench');
   });
 });

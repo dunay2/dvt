@@ -1,50 +1,51 @@
 /** Owned concern: expose route-owned Inspector mutation commands over the Canvas draft aggregate. */
 import { useCallback } from 'react';
-import type { Dispatch, SetStateAction } from 'react';
 
 import { applyCanvasInspectorNodeDraftToSession } from './canvasInspectorAuthoringCommand';
-import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
-import type { CanvasDraftSession } from './canvasDraftSession';
+import type {
+  CanvasInspectorNodeDraft,
+  CanvasInspectorNodeDraftApplyResult,
+} from './canvasInspectorAuthoring.types';
 import type { CanonicalNode } from '../../types/canonical';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
+import type { CanvasDraftSessionCommandRunner } from './useCanvasWorkspaceDraftSession';
 
 type UseCanvasInspectorCommandsArgs = {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   inspectorNode: CanonicalNode | null;
-  setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
+  runDraftSessionCommand: CanvasDraftSessionCommandRunner;
   workspaceScope: WorkspaceScope;
 };
 
 export function useCanvasInspectorCommands({
   canonicalNodesById,
   inspectorNode,
-  setDraftSession,
+  runDraftSessionCommand,
   workspaceScope,
 }: UseCanvasInspectorCommandsArgs) {
   const applyNodeDraft = useCallback(
-    (nodeId: string, draft: CanvasInspectorNodeDraft) => {
-      setDraftSession((currentSession) => {
+    (nodeId: string, draft: CanvasInspectorNodeDraft): CanvasInspectorNodeDraftApplyResult =>
+      runDraftSessionCommand((currentSession) => {
         const node = resolveCanvasDraftNodes(currentSession, canonicalNodesById).find(
           (candidate) => candidate.id === nodeId
         );
-        return node == null
-          ? currentSession
-          : applyCanvasInspectorNodeDraftToSession({
-              canonicalNodesById,
-              draftSession: currentSession,
-              node,
-              draft,
-              workspaceScope,
-            });
-      });
-    },
-    [canonicalNodesById, setDraftSession, workspaceScope]
+        if (node == null) return { outcome: 'rejected', reason: 'node_unavailable' } as const;
+        return applyCanvasInspectorNodeDraftToSession({
+          canonicalNodesById,
+          draftSession: currentSession,
+          node,
+          draft,
+          workspaceScope,
+        });
+      }),
+    [canonicalNodesById, runDraftSessionCommand, workspaceScope]
   );
   const applyInspectorNodeDraft = useCallback(
-    (draft: CanvasInspectorNodeDraft) => {
-      if (inspectorNode != null) applyNodeDraft(inspectorNode.id, draft);
-    },
+    (draft: CanvasInspectorNodeDraft): CanvasInspectorNodeDraftApplyResult =>
+      inspectorNode == null
+        ? { outcome: 'rejected', reason: 'node_unavailable' }
+        : applyNodeDraft(inspectorNode.id, draft),
     [applyNodeDraft, inspectorNode]
   );
 

@@ -36,6 +36,7 @@ describe('Canvas route draft recovery', () => {
         label: 'Draft missing',
         tone: 'warning',
         showReloadAction: true,
+        persistence: 'blocked',
       },
       reloadLatestDraft,
     });
@@ -67,6 +68,7 @@ describe('Canvas route draft recovery', () => {
         label: 'Stale version',
         tone: 'danger',
         showReloadAction: true,
+        persistence: 'blocked',
       },
       reloadLatestDraft,
     });
@@ -94,6 +96,7 @@ describe('Canvas route draft recovery', () => {
         label: 'Projection gap',
         tone: 'warning',
         showReloadAction: true,
+        persistence: 'blocked',
       },
       reloadLatestDraft,
     });
@@ -126,6 +129,7 @@ describe('Canvas route draft recovery', () => {
         label: 'Stale version',
         tone: 'danger',
         showReloadAction: true,
+        persistence: 'blocked',
       },
     });
 

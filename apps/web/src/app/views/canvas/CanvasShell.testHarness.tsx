@@ -112,6 +112,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
     label: canvasViewCopy.draftSyncedLabel,
     tone: 'neutral',
     showReloadAction: false,
+    persistence: 'durable',
   };
 
   return {

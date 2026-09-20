@@ -24,6 +24,8 @@ const en = {
   unavailable: 'Data preview is not available in this workspace.',
   failed: 'The preview could not be loaded. Check the model inputs and try again.',
   saveFailed: 'The applied changes could not be saved. Preview has not run.',
+  applyRejected: 'The model rejected these changes. Review the operation and try again.',
+  applyNodeUnavailable: 'This model is no longer available. Your local changes were preserved.',
   stale: 'Out of date',
   staleHint: 'The model has changed. Refresh to see the applied version.',
   revision: 'Revision',
@@ -107,6 +109,8 @@ const es: typeof en = {
     'No se ha podido cargar la vista previa. Comprueba las entradas del modelo y vuelve a intentarlo.',
   saveFailed:
     'No se han podido guardar los cambios aplicados. No se ha consultado la vista previa.',
+  applyRejected: 'El modelo ha rechazado estos cambios. Revisa la operación e inténtalo de nuevo.',
+  applyNodeUnavailable: 'Este modelo ya no está disponible. Se han conservado tus cambios locales.',
   stale: 'Obsoleto',
   staleHint: 'El modelo ha cambiado. Actualiza para ver la versión aplicada.',
   revision: 'Revisión',

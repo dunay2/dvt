@@ -44,6 +44,7 @@ describe('CanvasGraphStatusOverlay', () => {
             label: canvasViewCopy.draftSyncedLabel,
             tone: 'neutral',
             showReloadAction: false,
+            persistence: 'durable',
           }}
           onReloadLatestDraft={vi.fn()}
         />
@@ -62,6 +63,7 @@ describe('CanvasGraphStatusOverlay', () => {
             label: canvasViewCopy.savingDraftLabel,
             tone: 'neutral',
             showReloadAction: false,
+            persistence: 'pending',
           }}
           onReloadLatestDraft={vi.fn()}
         />
@@ -85,6 +87,7 @@ describe('CanvasGraphStatusOverlay', () => {
             label: canvasViewCopy.draftSaveFailedLabel,
             tone: 'danger',
             showReloadAction: true,
+            persistence: 'failed',
           }}
           onReloadLatestDraft={onReloadLatestDraft}
         />

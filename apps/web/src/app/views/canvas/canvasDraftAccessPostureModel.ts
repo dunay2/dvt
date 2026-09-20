@@ -308,10 +308,21 @@ export function isCanvasDraftPostureMutationBlocked(posture: CanvasDraftAccessPo
 export function toCanvasDraftStatusState(
   posture: CanvasDraftAccessPosture
 ): CanvasDraftStatusState {
+  const persistence =
+    posture.kind === 'saving'
+      ? 'pending'
+      : posture.kind === 'save_failed'
+        ? 'failed'
+        : posture.kind === 'stale_conflict' ||
+            posture.kind === 'missing_remote' ||
+            posture.kind === 'projection_gap'
+          ? 'blocked'
+          : 'durable';
   return {
     label: posture.statusLabel,
     tone: posture.statusTone,
     showReloadAction: posture.showReloadAction,
+    persistence,
   };
 }
 

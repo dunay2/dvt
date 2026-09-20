@@ -259,6 +259,49 @@ describe('Relational operator toolbar', () => {
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
     cy.get('[data-operator="join"]').should('have.length', 1);
   });
+  it('keeps editing or applies local composition changes before closing the Model', () => {
+    openEditor();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    let initialWrites = 0;
+    cy.then(() => {
+      initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    addWrapper('aggregate');
+    cy.get('[data-operator="aggregate"]').should('have.length', 1);
+
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
+    cy.get('[role="alertdialog"]').should('be.visible');
+    cy.contains('[role="alertdialog"] button', 'Keep editing').click();
+    cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
+    cy.get('[data-operator="aggregate"]').should('have.length', 1);
+
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
+    cy.contains('[role="alertdialog"] button', 'Apply and continue').click();
+    cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
+    cy.get('[data-slot="canvas-model-main-tab"]').should('not.exist');
+    cy.wrap(null).should(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(initialWrites + 1)
+    );
+  });
+  it('discards local composition changes before closing the Model', () => {
+    openEditor();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    let initialWrites = 0;
+    cy.then(() => {
+      initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    addWrapper('aggregate');
+    cy.get('[data-operator="aggregate"]').should('have.length', 1);
+
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
+    cy.get('[role="alertdialog"]').should('be.visible');
+    cy.contains('[role="alertdialog"] button', 'Discard changes').click();
+    cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
+    cy.get('[data-slot="canvas-model-main-tab"]').should('not.exist');
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(initialWrites)
+    );
+  });
   it('keeps the selected JOIN editable below grouping and windows, and removes the selected wrapper', () => {
     openEditor();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');

@@ -3,11 +3,16 @@ import { useImperativeHandle, type ForwardedRef } from 'react';
 import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 import { isCanvasSetOperation } from './canvasRelationalOperationChoices';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
+import type {
+  CanvasRelationalTreeApplyResult,
+  RelationalApplyRejection,
+} from './canvasRelationalTreeWorkbench.types';
 
 export type CanvasRelationalTreeWorkbenchHandle = Readonly<{
   hasUnappliedChanges: boolean;
   canApply: boolean;
-  apply: () => void;
+  applyRejection: RelationalApplyRejection | null;
+  apply: () => CanvasRelationalTreeApplyResult;
   cancel: () => void;
 }>;
 
@@ -34,6 +39,7 @@ export function useCanvasRelationalTreeWorkbenchHandle(
         (model.session.operation === 'projection' && model.session.selectedInputIds.length === 1) ||
         (isCanvasSetOperation(model.session.operation) &&
           model.session.selectedInputIds.length >= 2)),
+    applyRejection: model.session.applyRejection,
     apply: model.session.apply,
     cancel: model.session.cancel,
   };
