@@ -13,6 +13,9 @@ import ScalarGraphSource from './CanvasRelationalScalarGraph.tsx?raw';
 import SelectedOperatorSource from './CanvasRelationalTreeSelectedOperatorEditor.tsx?raw';
 import MetricsSource from './canvasRelationalTreeGeometryMetrics.ts?raw';
 import LayoutSource from './CanvasRelationalTreeLayout.tsx?raw';
+import EdgesSource from './relational-layout/RelationalTreeEdges.tsx?raw';
+import ContentSource from './CanvasRelationalTreeContent.tsx?raw';
+import MovementSource from './relational-layout/useRelationalCardMovement.ts?raw';
 import SessionActionsSource from './CanvasRelationalTreeSessionActions.tsx?raw';
 import BlockCanvasSource from './CanvasRelationalTreeBlockCanvas.tsx?raw';
 import CatalogueSource from './CanvasRelationalTreeSourceCatalogue.tsx?raw';
@@ -48,6 +51,9 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(CatalogueSource.split('\n').length).toBeLessThan(120);
     expect(TreeSource.split('\n').length).toBeLessThan(150);
     expect(LayoutSource.split('\n').length).toBeLessThan(190);
+    expect(EdgesSource.split('\n').length).toBeLessThan(150);
+    expect(ContentSource.split('\n').length).toBeLessThan(100);
+    expect(MovementSource.split('\n').length).toBeLessThan(200);
     expect(GraphNodeSource.split('\n').length).toBeLessThan(140);
     expect(GeometrySource.split('\n').length).toBeLessThan(150);
     expect(SemanticZoomSource.split('\n').length).toBeLessThan(100);
@@ -87,6 +93,9 @@ describe('Canvas relational-tree Workbench architecture', () => {
       CatalogueSource,
       TreeSource,
       LayoutSource,
+      EdgesSource,
+      ContentSource,
+      MovementSource,
       GraphNodeSource,
       NodeButtonSource,
       CardMenuSource,
