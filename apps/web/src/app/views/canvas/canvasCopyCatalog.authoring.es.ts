@@ -123,6 +123,11 @@ export const canvasViewAuthoringCopyEs = {
   inspectorColumnCommentPlaceholder: 'Añadir un comentario de columna',
   inspectorNodeReadOnlyMessage:
     'Los detalles del nodo son de solo lectura para este estado del workspace.',
+  inspectorSemanticAuthoringUnavailableTitle: 'Operación semántica no disponible',
+  inspectorSemanticAuthoringInvalidMessage:
+    'Este modelo canónico no es válido y no puede editarse aquí. Su semántica almacenada no se ha modificado.',
+  inspectorSemanticAuthoringUnsupportedMessage:
+    'Esta operación canónica no se puede editar en esta versión. Su semántica almacenada no se ha modificado.',
   inspectorCancelLabel: 'Cancelar',
   inspectorApplyLabel: 'Aplicar',
   inspectorVisualTransformConvertToSqlLabel: 'Convertir a SQL',

@@ -28,6 +28,7 @@ export type CanvasInspectorNodeDraft = Readonly<{
   dbt?: DbtNodeAuthoringMetadata;
   dbtTest?: DbtTestAuthoringMetadata;
   dvt?: DvtNodeAuthoringMetadata;
+  semanticAuthoringIssue?: 'invalid_document' | 'unsupported_shape';
   outputNameDrafts?: Readonly<Record<string, string>>;
   objectFilePostgres?: ObjectFilePostgresAuthoringDraft;
   httpJsonArtifact?: HttpJsonArtifactAuthoringDraft;

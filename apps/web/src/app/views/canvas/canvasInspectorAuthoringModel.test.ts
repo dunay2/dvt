@@ -1,3 +1,9 @@
+import {
+  ExtensionLeafRelSchema,
+  RelCommonSchema,
+  RelSchema,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { create } from '@bufbuild/protobuf';
 import { CANVAS_AUTHORING_FIELD_LIMITS_V1 } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
@@ -27,6 +33,8 @@ import {
   inspectDvtSubstraitProjectionDraft,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { createDvtTransformAuthoringMetadata } from './canvasDvtTransformAuthoring';
 
 function buildNode(): CanonicalNode {
   return {
@@ -77,6 +85,41 @@ function buildImportedWarehouseSourceNode(metadata?: Record<string, unknown>): C
       ...(metadata ?? {}),
     },
   };
+}
+
+function buildUnsupportedSemanticTransform(): CanonicalNode {
+  const source = buildImportedWarehouseSourceNode({
+    connectedSourceRef: {
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: 'warehouse-main',
+        provider: 'postgres',
+      },
+      sourceObjectId: 'erp.orders',
+    },
+  });
+  const projectionSource = resolveDvtSubstraitProjectionSource(source);
+  if (projectionSource == null) throw new Error('Expected a connected source fixture.');
+  const semanticDraft = createDvtSubstraitProjectionDraft({
+    source: projectionSource,
+    targetNodeId: 'node_transform',
+    outputs: [{ fieldId: 'output:id', name: 'id', sourceFieldName: 'id' }],
+  });
+  const root = semanticDraft.plan.relations[0]?.relType;
+  if (root?.case !== 'root') throw new Error('Expected a canonical relation root.');
+  root.value.input = create(RelSchema, {
+    relType: {
+      case: 'extensionLeaf',
+      value: create(ExtensionLeafRelSchema, {
+        common: create(RelCommonSchema, { relAnchor: 1 }),
+      }),
+    },
+  });
+  return applyDvtSubstraitSemanticDocument(
+    buildDvtNode('dvt:transform'),
+    encodeDvtSubstraitSemanticDocument(semanticDraft)
+  );
 }
 
 describe('canvasInspectorAuthoringModel', () => {
@@ -831,6 +874,66 @@ describe('canvasInspectorAuthoringModel', () => {
     expect(applied.metadata).toMatchObject({ config: { materialized: 'view' } });
   });
 
+  it('keeps unsupported canonical semantics intact while recovering Inspector authoring locally', () => {
+    const node = buildUnsupportedSemanticTransform();
+
+    expect(() => createDvtTransformAuthoringMetadata(node)).toThrow(
+      'Unsupported canonical Substrait relation shape.'
+    );
+
+    const draft = createCanvasInspectorNodeDraft(node);
+    expect(draft).toMatchObject({
+      name: 'Clean orders',
+      semanticAuthoringIssue: 'unsupported_shape',
+    });
+    expect(draft).not.toHaveProperty('dvt');
+    expect(hasCanvasInspectorNodeDraftChanges(node, draft)).toBe(false);
+
+    const applied = applyCanvasInspectorNodeDraft(node, {
+      ...draft,
+      name: 'Recovered orders',
+    });
+    expect(applied.name).toBe('Recovered orders');
+    expect(applied.metadata?.transformAuthoring).toEqual(node.metadata?.transformAuthoring);
+  });
+
+  it('reports an invalid canonical document locally without mutating its stored authority', () => {
+    const node = buildUnsupportedSemanticTransform();
+    const authority = node.metadata?.transformAuthoring;
+    if (authority == null || typeof authority !== 'object' || Array.isArray(authority)) {
+      throw new Error('Expected persisted transform authority.');
+    }
+    const semanticDocument = (authority as Record<string, unknown>).semanticDocument;
+    if (
+      semanticDocument == null ||
+      typeof semanticDocument !== 'object' ||
+      Array.isArray(semanticDocument)
+    ) {
+      throw new Error('Expected persisted semantic document.');
+    }
+    const semanticPlan = (semanticDocument as Record<string, unknown>).semanticPlan;
+    if (semanticPlan == null || typeof semanticPlan !== 'object' || Array.isArray(semanticPlan)) {
+      throw new Error('Expected persisted semantic plan.');
+    }
+    const invalidAuthority = {
+      ...authority,
+      semanticDocument: {
+        ...semanticDocument,
+        semanticPlan: { ...semanticPlan, sha256: '0'.repeat(64) },
+      },
+    };
+    const invalidNode: CanonicalNode = {
+      ...node,
+      metadata: { ...node.metadata, transformAuthoring: invalidAuthority },
+    };
+
+    expect(createCanvasInspectorNodeDraft(invalidNode)).toMatchObject({
+      name: 'Clean orders',
+      semanticAuthoringIssue: 'invalid_document',
+    });
+    expect(invalidNode.metadata?.transformAuthoring).toEqual(invalidAuthority);
+  });
+
   it('blocks Apply when an output alias duplicates another root output', () => {
     const source = buildImportedWarehouseSourceNode({
       connectedSourceRef: {
@@ -911,9 +1014,10 @@ describe('canvasInspectorAuthoringModel', () => {
       encodeDvtSubstraitFilterDocument(filtered)
     );
 
-    expect(() => createCanvasInspectorNodeDraft(legacySource)).toThrow(
-      'DVT Source semantic authority is not an admitted projection shape.'
-    );
+    expect(createCanvasInspectorNodeDraft(legacySource)).toMatchObject({
+      name: source.name,
+      semanticAuthoringIssue: 'invalid_document',
+    });
     expect(legacySource.metadata?.connectedSourceRef).toEqual(source.metadata?.connectedSourceRef);
   });
 

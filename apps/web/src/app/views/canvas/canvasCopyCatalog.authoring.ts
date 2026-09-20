@@ -379,6 +379,20 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.nodeReadOnlyMessage',
     fallback: 'Node details are read-only for this workspace state.',
   },
+  inspectorSemanticAuthoringUnavailableTitle: {
+    key: 'canvas.inspector.authoring.semanticAuthoringUnavailableTitle',
+    fallback: 'Semantic operation unavailable',
+  },
+  inspectorSemanticAuthoringInvalidMessage: {
+    key: 'canvas.inspector.authoring.semanticAuthoringInvalidMessage',
+    fallback:
+      'This canonical model is invalid and cannot be edited here. Its stored semantics were left unchanged.',
+  },
+  inspectorSemanticAuthoringUnsupportedMessage: {
+    key: 'canvas.inspector.authoring.semanticAuthoringUnsupportedMessage',
+    fallback:
+      'This canonical operation is not editable in this version. Its stored semantics were left unchanged.',
+  },
   inspectorCancelLabel: {
     key: 'canvas.inspector.authoring.cancelLabel',
     fallback: 'Cancel',

@@ -1,4 +1,10 @@
 import {
+  ExtensionLeafRelSchema,
+  RelCommonSchema,
+  RelSchema,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { create } from '@bufbuild/protobuf';
+import {
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
   type SourceObjectMetricEvidence,
@@ -26,6 +32,7 @@ import {
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,
 } from '../../src/app/views/canvas/canvasDvtSubstraitProjection';
+import { encodeDvtSubstraitSemanticDocument } from '../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { normalizeProjectCanvasDraft } from '../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 
 import { stubE2eApi } from './e2eApiStub';
@@ -61,6 +68,7 @@ export type StubCanvasDraftReadOptions = {
   substraitNInputJoin?: boolean;
   substraitUnionAll?: boolean;
   substraitPilot?: boolean;
+  substraitUnsupported?: boolean;
   title?: string;
   readOnly?: boolean;
   largeGraph?: boolean;
@@ -99,6 +107,7 @@ export function buildCanvasAuthoringDraft({
   substraitNInputJoin = false,
   substraitUnionAll = false,
   substraitPilot = false,
+  substraitUnsupported = false,
   title,
   largeGraph = false,
   performanceGraphNodeCount,
@@ -486,13 +495,26 @@ export function buildCanvasAuthoringDraft({
     });
   }
 
-  if (substraitPilot) {
-    const semanticDocument = encodeDvtSubstraitPilotDocument(
-      createDvtSubstraitPilotDraft({
-        sourceNodeId: 'source-customers',
-        targetNodeId: 'transform-customers',
-      })
-    );
+  if (substraitPilot || substraitUnsupported) {
+    const semanticDraft = createDvtSubstraitPilotDraft({
+      sourceNodeId: 'source-customers',
+      targetNodeId: 'transform-customers',
+    });
+    if (substraitUnsupported) {
+      const root = semanticDraft.plan.relations[0]?.relType;
+      if (root?.case !== 'root') throw new Error('Expected a canonical relation root fixture.');
+      root.value.input = create(RelSchema, {
+        relType: {
+          case: 'extensionLeaf',
+          value: create(ExtensionLeafRelSchema, {
+            common: create(RelCommonSchema, { relAnchor: 1 }),
+          }),
+        },
+      });
+    }
+    const semanticDocument = substraitUnsupported
+      ? encodeDvtSubstraitSemanticDocument(semanticDraft)
+      : encodeDvtSubstraitPilotDocument(semanticDraft);
     return buildWorkspaceGraphAuthoringDraft({
       canvas,
       nodeIds: ['source-customers', 'transform-customers'],
@@ -1280,7 +1302,7 @@ export function stubFailingCanvasDraftSave(
 export function stubStatefulCanvasDraftAuthoring(
   options: StubCanvasDraftReadOptions = {},
   scope: CanvasDraftSessionScope = E2E_WORKSPACE_SESSION
-): void {
+): CanvasAuthoringDraft {
   let revision = 'rev-e2e-graph-ready';
   let draft = buildCanvasAuthoringDraft(options);
 
@@ -1320,4 +1342,6 @@ export function stubStatefulCanvasDraftAuthoring(
       }),
     };
   });
+
+  return draft;
 }

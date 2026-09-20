@@ -23,7 +23,7 @@ import {
 } from './canvasDbtTestAuthoringModel';
 import {
   applyDvtNodeAuthoringMetadata,
-  createDvtNodeAuthoringMetadata,
+  resolveDvtNodeAuthoringMetadata,
   validateDvtNodeAuthoringMetadata,
 } from './canvasDvtAuthoringModel';
 import type { DvtNodeAuthoringMetadata } from './canvasDvtAuthoringTypes';
@@ -102,7 +102,9 @@ export function resolveCanvasDvtOutputNameDraftError(
 
 export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspectorNodeDraft {
   const hasDbtCompatibility = hasDbtCompatibilityMetadata(node);
-  const dvtMetadata = hasDbtCompatibility ? null : createDvtNodeAuthoringMetadata(node);
+  const dvtResolution = hasDbtCompatibility
+    ? ({ outcome: 'resolved', metadata: undefined } as const)
+    : resolveDvtNodeAuthoringMetadata(node);
   const objectFilePostgresDraft = createObjectFilePostgresAuthoringDraft(node);
   const httpJsonArtifactDraft = createHttpJsonArtifactAuthoringDraft(node);
   const tags = normalizeNodeTags(node.tags);
@@ -117,7 +119,12 @@ export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspe
     ...(node.pluginId === 'dbt' && node.kind === 'dbt:test'
       ? { dbtTest: createDbtTestAuthoringMetadata(node) }
       : {}),
-    ...(dvtMetadata ? { dvt: dvtMetadata } : {}),
+    ...(dvtResolution.outcome === 'resolved' && dvtResolution.metadata
+      ? { dvt: dvtResolution.metadata }
+      : {}),
+    ...(dvtResolution.outcome === 'rejected'
+      ? { semanticAuthoringIssue: dvtResolution.reason }
+      : {}),
     ...(objectFilePostgresDraft == null ? {} : { objectFilePostgres: objectFilePostgresDraft }),
     ...(httpJsonArtifactDraft == null ? {} : { httpJsonArtifact: httpJsonArtifactDraft }),
   };

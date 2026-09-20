@@ -464,6 +464,9 @@ export type CanvasViewCopy = {
   readonly inspectorColumnCommentLabel: string;
   readonly inspectorColumnCommentPlaceholder: string;
   readonly inspectorNodeReadOnlyMessage: string;
+  readonly inspectorSemanticAuthoringUnavailableTitle: string;
+  readonly inspectorSemanticAuthoringInvalidMessage: string;
+  readonly inspectorSemanticAuthoringUnsupportedMessage: string;
   readonly inspectorCancelLabel: string;
   readonly inspectorApplyLabel: string;
   readonly inspectorVisualTransformConvertToSqlLabel: string;
