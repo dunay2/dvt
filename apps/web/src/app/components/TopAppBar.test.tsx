@@ -270,6 +270,10 @@ describe('ShellTopBar workspace context', () => {
     expect(activeCanvasIdentity).not.toBeNull();
     expect(topBar?.tagName).toBe('HEADER');
     expect(activeCanvasIdentity?.textContent).toContain('Transformation canvas');
+    const canvasTab = activeCanvasIdentity?.querySelector('[role="tab"]');
+    expect(canvasTab?.textContent).toBe('Transformation canvas');
+    expect(canvasTab?.getAttribute('aria-selected')).toBe('true');
+    expect(canvasTab?.classList.contains('workspace-navigation-tab')).toBe(true);
     expect(activeCanvasIdentity?.getAttribute('data-kind')).toBe('transformation');
     expect(activeCanvasIdentity?.getAttribute('data-canvas-id')).toBe('transformation-canvas');
     expect(topBar?.querySelector('[data-slot="shell-top-bar-canvas-controls"]')).toBeNull();
@@ -570,6 +574,10 @@ describe('ShellTopBar workspace context', () => {
     await act(async () => {
       root.render(renderShellTopBar('/canvas'));
     });
+
+    const appMenu = container.querySelector('[data-slot="shell-app-menu-trigger"]');
+    expect(appMenu?.textContent).toBe('');
+    expect(appMenu?.getAttribute('aria-label')).toBe('Raven');
 
     await act(async () => {
       fireEvent.pointerDown(container.querySelector('[data-slot="shell-app-menu-trigger"]')!);

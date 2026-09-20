@@ -53,6 +53,9 @@ function openEditor(union = false, readOnly = false, nInput = false): void {
     },
   });
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
+  cy.get('[data-slot="canvas-workspace-tab"]')
+    .should('have.attr', 'role', 'tab')
+    .and('have.attr', 'aria-selected', 'true');
   cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').first().click();
   cy.get('[data-slot="canvas-relational-tree-workbench"]').should('be.visible');
 }
@@ -91,6 +94,16 @@ function addWrapper(id: string): void {
 describe('Relational operator toolbar', () => {
   it('separates right inspection tabs from selected-operation data below and keeps sources compact', () => {
     openEditor();
+    cy.get('[data-slot="shell-app-menu-trigger"]').should('have.text', '');
+    cy.get('[data-slot="canvas-model-main-tab"]').should('have.text', 'Semantic editor');
+    cy.get('[data-slot="canvas-model-toolbar"] h1')
+      .invoke('text')
+      .then((name) => {
+        cy.get('[data-slot="canvas-model-view-tab"][data-view="editor"]')
+          .should('have.text', name)
+          .and('have.attr', 'aria-selected', 'true');
+      });
+    cy.get('[data-slot="canvas-model-view-tab"]').should('have.length', 3);
     cy.get('[data-slot="canvas-relational-tree-source"]').each(($source) => {
       expect($source[0]!.getBoundingClientRect().height).to.be.at.most(40);
     });
@@ -138,6 +151,17 @@ describe('Relational operator toolbar', () => {
       'true'
     );
     cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
+    cy.get(
+      '[data-slot="canvas-model-main-tab"], [data-slot="canvas-model-view-tab"][data-view="editor"], [data-slot="canvas-operation-tree-tab"]:visible'
+    ).each(($tab) => {
+      const style = $tab[0]!.ownerDocument.defaultView!.getComputedStyle($tab[0]!);
+      expect(style.borderRadius, 'flat navigation tabs').to.equal('0px');
+      expect(style.backgroundColor, 'no filled tab buttons').to.equal('rgba(0, 0, 0, 0)');
+      expect(style.borderBottomWidth, 'active underline').to.equal('2px');
+      expect(style.borderBottomColor, 'visible underline').not.to.equal('rgba(0, 0, 0, 0)');
+      expect(style.fontSize).to.equal('14px');
+      expect($tab[0]!.getBoundingClientRect().height).to.equal(36);
+    });
     cy.get('[data-slot="canvas-join-expression-tree"]:visible').should('have.length', 1);
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('not.be.visible');
     cy.get('[data-slot="canvas-operation-properties-tab"]:visible').click();
@@ -204,6 +228,9 @@ describe('Relational operator toolbar', () => {
     cy.get(viewport).should('be.visible');
     cy.viewport(1440, 900);
     cy.get('[data-slot="canvas-model-tab-close"]').click();
+    cy.get('[data-slot="canvas-workspace-tab"]')
+      .should('have.attr', 'aria-selected', 'true')
+      .and('have.css', 'border-radius', '0px');
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data:operation"]').should(
       'not.exist'
     );

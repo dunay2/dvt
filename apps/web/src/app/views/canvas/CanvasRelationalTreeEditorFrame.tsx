@@ -84,13 +84,24 @@ export function CanvasRelationalTreeEditorFrame({
           onValueChange={setTab}
           className="min-h-0 flex-1 gap-0"
         >
-          <TabsList aria-label={title} className="m-2 shrink-0">
+          <TabsList
+            aria-label={title}
+            className="workspace-navigation-tabs border-b border-(--border-subtle)"
+          >
             {hasExpression ? (
-              <TabsTrigger value="tree" data-slot="canvas-operation-tree-tab">
+              <TabsTrigger
+                value="tree"
+                data-slot="canvas-operation-tree-tab"
+                className="workspace-navigation-tab"
+              >
                 {copy.expressionTree}
               </TabsTrigger>
             ) : null}
-            <TabsTrigger value="properties" data-slot="canvas-operation-properties-tab">
+            <TabsTrigger
+              value="properties"
+              data-slot="canvas-operation-properties-tab"
+              className="workspace-navigation-tab"
+            >
               {copy.properties}
             </TabsTrigger>
           </TabsList>

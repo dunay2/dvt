@@ -124,6 +124,14 @@ describe('Canvas Model editor navigation', () => {
     expect(previewTransformRows).not.toHaveBeenCalled();
     const toolbar = harness.container.querySelector('[data-slot="canvas-model-toolbar"]');
     expect(toolbar?.querySelectorAll('[role="tab"]')).toHaveLength(3);
+    const modelTab = toolbar?.querySelector('[data-view="editor"]');
+    expect(modelTab?.textContent).toBe(fixture.transform.name);
+    expect(modelTab?.getAttribute('aria-selected')).toBe('true');
+    expect(modelTab?.classList.contains('workspace-navigation-tab')).toBe(true);
+    expect(toolbar?.textContent).not.toContain('Semantic editor');
+    expect(navigation.querySelector('[data-slot="canvas-model-main-tab"]')?.textContent).toBe(
+      'Semantic editor'
+    );
     expect(toolbar?.querySelector('[data-slot="canvas-model-back"]')).toBeNull();
     expect(navigation.querySelector('[data-slot="canvas-model-main-tab"]')).not.toBeNull();
     expect(

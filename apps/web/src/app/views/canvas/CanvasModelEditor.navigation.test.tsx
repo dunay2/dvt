@@ -161,7 +161,9 @@ describe('CanvasModelEditor navigation', () => {
     expect(onApplyNodeDraft).toHaveBeenCalledOnce();
     expect(document.activeElement).toBe(applyAndContinue);
     expect(document.querySelector('[role="alert"]')?.textContent).toContain('no longer available');
-    expect(findButton('Semantic editor').getAttribute('aria-selected')).toBe('true');
+    expect(container.querySelector('[data-view="editor"]')?.getAttribute('aria-selected')).toBe(
+      'true'
+    );
     expect(container.querySelector('[data-slot="canvas-relational-tree-apply"]')).not.toBeNull();
   });
 
