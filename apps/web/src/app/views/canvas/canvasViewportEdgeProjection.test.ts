@@ -29,6 +29,8 @@ import { resolveCanvasRelationalCompositionBadgeSummary } from './canvasRelation
 import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
+import { applyCanvasRelationalOperatorTool } from './canvasRelationalTreeOperatorCommands';
+import { resolveCanvasRelationalOperatorTools } from './canvasRelationalTreeOperatorModel';
 
 function source(id: string): CanonicalNode {
   const sourceRef: ConnectedSourceRef = {
@@ -200,9 +202,11 @@ function canonicalAccessibleLabel(
   });
   expect(tree.ok).toBe(true);
   if (tree.ok) {
+    let relation = tree.projection.root;
+    while (relation.children.length === 1) relation = relation.children[0]!.node;
     const label =
       resolveCanvasViewCopy(locale)[
-        resolveCanvasRelationalOperationPresentation(tree.projection.root.operation).labelKey
+        resolveCanvasRelationalOperationPresentation(relation.operation).labelKey
       ];
     expect(readCanvasDependencyEdgeData(projected[0]?.data)?.composition?.label).toBe(label);
   }
@@ -222,14 +226,33 @@ describe('Canvas viewport edge projection', () => {
   ] as const)('agrees with the tree for JOIN selector %s in both locales', (type, label) => {
     const left = source('left');
     const right = source('right');
-    const model = applyDvtSubstraitSemanticDocument(
-      transform(),
-      encodeDvtSubstraitJoinDocument(initialJoin(left, right, type))
-    );
-    for (const locale of ['en', 'es']) {
-      expect(canonicalAccessibleLabel(model, [left, right], locale)).toBe(
-        `${label}, ${locale === 'en' ? 'inputs: 2, predicates: 1' : 'entradas: 2, predicados: 1'}`
+    const joined = initialJoin(left, right, type);
+    const field = resolveCanvasRelationalOperatorTools(joined).find(
+      (tool) => tool.id === 'aggregate'
+    )!.fields[0]!;
+    const grouped = applyCanvasRelationalOperatorTool(joined, {
+      tool: 'aggregate',
+      fieldId: field.fieldId,
+      alias: 'total',
+    });
+    const windowed = applyCanvasRelationalOperatorTool(grouped, {
+      tool: 'window',
+      alias: 'position',
+    });
+    expect(grouped).not.toBe(joined);
+    expect(windowed).not.toBe(grouped);
+    for (const draft of [joined, grouped, windowed]) {
+      const model = applyDvtSubstraitSemanticDocument(
+        transform(),
+        encodeDvtSubstraitJoinDocument(draft)
       );
+      const before = JSON.stringify(model);
+      for (const locale of ['en', 'es']) {
+        expect(canonicalAccessibleLabel(model, [left, right], locale)).toBe(
+          `${label}, ${locale === 'en' ? 'inputs: 2, predicates: 1' : 'entradas: 2, predicados: 1'}`
+        );
+      }
+      expect(JSON.stringify(model)).toBe(before);
     }
   });
 

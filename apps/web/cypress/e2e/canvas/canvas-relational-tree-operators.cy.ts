@@ -411,7 +411,8 @@ describe('Relational operator toolbar', () => {
       visitWithE2eWorkspaceSession('/canvas');
       waitForE2eApiCall('/workspace/graph/draft', 'GET');
       cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').click();
-      cy.get('[data-slot="canvas-relational-node-title"]').should('contain.text', 'Window');
+      // The workspace-session fixture restores the default Spanish locale on reload.
+      cy.get('[data-slot="canvas-relational-node-title"]').should('contain.text', 'Ventana');
     });
   }
   it('edits FILTER and a source ROW_NUMBER through the same canonical projection', () => {

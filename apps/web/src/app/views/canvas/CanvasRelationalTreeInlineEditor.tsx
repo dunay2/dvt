@@ -5,7 +5,7 @@ import {
   type DvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
-import { canvasRelationalOperationLabel } from './DvtRelationalOperationChooser';
+import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
 import { CanvasRelationalTreeSelectedOperatorEditor } from './CanvasRelationalTreeSelectedOperatorEditor';
 import {
   CanvasRelationalTreeOperationEditor,
@@ -24,7 +24,6 @@ export function CanvasRelationalTreeInlineEditor(
 ): JSX.Element | null {
   const {
     appendInput,
-    copy,
     joinDraft,
     operation,
     selectedRelationId,
@@ -35,7 +34,7 @@ export function CanvasRelationalTreeInlineEditor(
   } = props;
   if (operation == null || joinDraft == null) return null;
   const inspection = inspectDvtSubstraitJoinPredicateContext(joinDraft)?.inspection;
-  const selectedJoin = inspection?.projection.joinRelations.some(
+  const selectedJoin = inspection?.projection.joinRelations.find(
     ({ relationId }) => relationId === selectedRelationId
   );
   const selectedCross = operation === 'cross_join' && selectedRelationId != null;
@@ -52,7 +51,9 @@ export function CanvasRelationalTreeInlineEditor(
         />
       ) : null}
       <CanvasRelationalTreeEditorFrame
-        title={canvasRelationalOperationLabel(operation, copy)}
+        operation={
+          selectedJoin == null ? operation : canvasJoinOperationForType(selectedJoin.joinType)
+        }
         relationId={selectedRelationId}
         hidden={appendInput == null && ((!selectedJoin && !selectedCross) || !expanded)}
         onClose={onClose}
