@@ -78,7 +78,7 @@ export function useRelationalCardMovement(
       if (drag.current?.pointerId === event.pointerId) finish(true);
     },
     onClickCapture: (event: MouseEvent<HTMLDivElement>) => {
-      if (!suppressClick.current) return;
+      if (!suppressClick.current || locate(event.target) == null) return;
       suppressClick.current = false;
       event.preventDefault();
       event.stopPropagation();
