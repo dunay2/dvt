@@ -1674,7 +1674,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       .trim()
       .toLowerCase();
     expect(normalized).toMatch(
-      /^select country as region, customer_id from public\.customers_north union all select country as region, customer_id from public\.customers_south;?$/
+      /^select country as region, customer_id from \( select customer_id, name, country from public\.customers_north union all select customer_id, name, country from public\.customers_south \) as set_input;?$/
     );
   });
 
@@ -1733,7 +1733,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       .trim()
       .toLowerCase();
     expect(normalized).toMatch(
-      /^select region, count\(\*\) as customer_count, row_number\(\) over \(order by count\(\*\) desc nulls last, region asc nulls last\) as count_rank from \(\s*select customer_id, name, country as region from public\.customers_north union all select customer_id, name, country as region from public\.customers_south\s*\) as union_all_input group by region;?$/
+      /^select region, count\(\*\) as customer_count, row_number\(\) over \(order by count\(\*\) desc nulls last, region asc nulls last\) as count_rank from \( select customer_id, name, country as region from \( select customer_id, name, country from public\.customers_north union all select customer_id, name, country from public\.customers_south \) as set_input \) as set_input group by region;?$/
     );
   });
 });

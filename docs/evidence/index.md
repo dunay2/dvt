@@ -151,6 +151,7 @@ Evidence documents that justify or validate relevant changes.
 - [Explicit Transform result destination authoring](ED-20260914-transform-result-target.md)
 - [GH-2173 bounded lazy source catalog evidence](ED-20260907-gh-2173-lazy-source-catalog.md)
 - [GH-2904 stable logical identity and physical binding evidence](ED-20260905-gh-2904-stable-logical-physical-binding.md)
+- [INTERSECT and EXCEPT DISTINCT end to end](ED-20260920-intersect-except-distinct-end-to-end.md)
 - [JOIN unary null predicate admission](ED-20260913-join-null-predicates.md)
 - [LEFT JOIN end to end](ED-20260919-left-join-end-to-end.md)
 - [MW-D2 Temporal Worker Routing By Capability](ed-20260513-mw-d2-temporal-worker-routing.md)

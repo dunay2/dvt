@@ -23,6 +23,8 @@ type RelationalOperationCopy = Pick<
   | 'inspectorDvtSubstraitCrossJoinAction'
   | 'inspectorDvtSubstraitUnionAllAction'
   | 'inspectorDvtSubstraitUnionDistinctAction'
+  | 'inspectorDvtSubstraitIntersectDistinctAction'
+  | 'inspectorDvtSubstraitExceptDistinctAction'
   | 'relationalTreeProjectOperationLabel'
   | 'inspectorDvtRelationalAvailable'
   | 'inspectorDvtRelationalNeedsPredicate'
@@ -62,6 +64,10 @@ export function canvasRelationalOperationLabel(
       return copy.inspectorDvtSubstraitUnionAllAction;
     case 'union_distinct':
       return copy.inspectorDvtSubstraitUnionDistinctAction;
+    case 'intersect_distinct':
+      return copy.inspectorDvtSubstraitIntersectDistinctAction;
+    case 'except_distinct':
+      return copy.inspectorDvtSubstraitExceptDistinctAction;
   }
 }
 
@@ -144,7 +150,10 @@ export function DvtRelationalOperationChooser({
             choice.operation === 'right_anti_join' ||
             choice.operation === 'cross_join' ? (
             <CanvasRelationalJoinIcon aria-hidden="true" className="size-4" />
-          ) : choice.operation === 'union_all' || choice.operation === 'union_distinct' ? (
+          ) : choice.operation === 'union_all' ||
+            choice.operation === 'union_distinct' ||
+            choice.operation === 'intersect_distinct' ||
+            choice.operation === 'except_distinct' ? (
             <Layers3 aria-hidden="true" className="size-4" />
           ) : (
             <Columns3 aria-hidden="true" className="size-4" />

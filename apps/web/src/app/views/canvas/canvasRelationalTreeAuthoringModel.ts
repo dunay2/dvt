@@ -169,6 +169,8 @@ export function resolveCanvasRelationalTreeAuthoringChoices(
     operationChoice('cross_join', selectedInputs, args.readOnly, false),
     operationChoice('union_all', selectedInputs, args.readOnly, unionAvailable),
     operationChoice('union_distinct', selectedInputs, args.readOnly, unionAvailable),
+    operationChoice('intersect_distinct', selectedInputs, args.readOnly, unionAvailable),
+    operationChoice('except_distinct', selectedInputs, args.readOnly, unionAvailable),
   ];
 }
 

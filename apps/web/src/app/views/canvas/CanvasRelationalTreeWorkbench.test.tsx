@@ -90,6 +90,8 @@ const COPY = {
   inspectorDvtSubstraitExistingFieldLabel: 'Existing field',
   inspectorDvtSubstraitUnionAllAction: 'UNION ALL',
   inspectorDvtSubstraitUnionDistinctAction: 'UNION DISTINCT',
+  inspectorDvtSubstraitIntersectDistinctAction: 'INTERSECT',
+  inspectorDvtSubstraitExceptDistinctAction: 'EXCEPT',
   inspectorDvtRelationalApply: 'Apply',
   inspectorDvtRelationalCancel: 'Cancel',
 };

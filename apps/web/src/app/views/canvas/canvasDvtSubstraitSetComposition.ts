@@ -74,8 +74,11 @@ import {
 const ZERO_SHA256 = '0'.repeat(64);
 const UNION_ALL_PRODUCER = 'dvt-vtx2-union-all-card';
 const UNION_DISTINCT_PRODUCER = 'dvt-vtx2-union-distinct-card';
+const INTERSECT_DISTINCT_PRODUCER = 'dvt-vtx2-intersect-distinct-card';
+const EXCEPT_DISTINCT_PRODUCER = 'dvt-vtx2-except-distinct-card';
 
-export type DvtSubstraitSetOperation = 'union_all' | 'union_distinct';
+export type DvtSubstraitSetOperation =
+  'union_all' | 'union_distinct' | 'intersect_distinct' | 'except_distinct';
 
 export type DvtSubstraitUnionAllField = Readonly<{
   name: string;
@@ -373,17 +376,50 @@ function readRelation(args: { relAnchor: number; source: DvtSubstraitUnionAllSou
 }
 
 function setOperationSelector(operation: DvtSubstraitSetOperation): string {
-  return operation === 'union_all' ? 'SetOp.SET_OP_UNION_ALL' : 'SetOp.SET_OP_UNION_DISTINCT';
+  switch (operation) {
+    case 'union_all':
+      return 'SetOp.SET_OP_UNION_ALL';
+    case 'union_distinct':
+      return 'SetOp.SET_OP_UNION_DISTINCT';
+    case 'intersect_distinct':
+      return 'SetOp.SET_OP_INTERSECTION_MULTISET';
+    case 'except_distinct':
+      return 'SetOp.SET_OP_MINUS_PRIMARY';
+  }
 }
 
 function setOperationEnum(operation: DvtSubstraitSetOperation): SetRel_SetOp {
-  return operation === 'union_all' ? SetRel_SetOp.UNION_ALL : SetRel_SetOp.UNION_DISTINCT;
+  switch (operation) {
+    case 'union_all':
+      return SetRel_SetOp.UNION_ALL;
+    case 'union_distinct':
+      return SetRel_SetOp.UNION_DISTINCT;
+    case 'intersect_distinct':
+      return SetRel_SetOp.INTERSECTION_MULTISET;
+    case 'except_distinct':
+      return SetRel_SetOp.MINUS_PRIMARY;
+  }
 }
 
 function setOperationForEnum(operation: SetRel_SetOp): DvtSubstraitSetOperation | null {
   if (operation === SetRel_SetOp.UNION_ALL) return 'union_all';
   if (operation === SetRel_SetOp.UNION_DISTINCT) return 'union_distinct';
+  if (operation === SetRel_SetOp.INTERSECTION_MULTISET) return 'intersect_distinct';
+  if (operation === SetRel_SetOp.MINUS_PRIMARY) return 'except_distinct';
   return null;
+}
+
+function setOperationProducer(operation: DvtSubstraitSetOperation): string {
+  switch (operation) {
+    case 'union_all':
+      return UNION_ALL_PRODUCER;
+    case 'union_distinct':
+      return UNION_DISTINCT_PRODUCER;
+    case 'intersect_distinct':
+      return INTERSECT_DISTINCT_PRODUCER;
+    case 'except_distinct':
+      return EXCEPT_DISTINCT_PRODUCER;
+  }
 }
 
 function setOperationInRelation(rel: Rel | undefined): DvtSubstraitSetOperation | null {
@@ -505,7 +541,7 @@ export function createDvtSubstraitSetDraft(
       majorNumber: 0,
       minorNumber: 101,
       patchNumber: 0,
-      producer: args.operation === 'union_all' ? UNION_ALL_PRODUCER : UNION_DISTINCT_PRODUCER,
+      producer: setOperationProducer(args.operation),
     },
     relations: [
       create(PlanRelSchema, {
@@ -577,7 +613,9 @@ function hasPinnedPlanVersion(plan: Plan): boolean {
     plan.version.minorNumber === 101 &&
     plan.version.patchNumber === 0 &&
     (plan.version.producer === UNION_ALL_PRODUCER ||
-      plan.version.producer === UNION_DISTINCT_PRODUCER)
+      plan.version.producer === UNION_DISTINCT_PRODUCER ||
+      plan.version.producer === INTERSECT_DISTINCT_PRODUCER ||
+      plan.version.producer === EXCEPT_DISTINCT_PRODUCER)
   );
 }
 

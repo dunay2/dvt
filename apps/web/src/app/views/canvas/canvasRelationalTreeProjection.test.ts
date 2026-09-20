@@ -14,6 +14,7 @@ import {
   type DvtSubstraitJoinSource,
 } from './canvasDvtSubstraitJoinComposition';
 import {
+  createDvtSubstraitSetDraft,
   createDvtSubstraitUnionAllDraft,
   createDvtSubstraitUnionDistinctDraft,
   encodeDvtSubstraitUnionAllDocument,
@@ -280,7 +281,11 @@ describe('ProjectCanvasRelationalTree', () => {
     );
   });
 
-  it('projects UNION DISTINCT as the exact SetRel operation label', () => {
+  it.each([
+    ['union_distinct', 'UNION DISTINCT'],
+    ['intersect_distinct', 'INTERSECT'],
+    ['except_distinct', 'EXCEPT'],
+  ] as const)('projects %s as the exact SetRel operation label', (operation, label) => {
     const inputs: readonly DvtSubstraitUnionAllSource[] = ['north', 'south'].map((table) => ({
       nodeId: table,
       schema: 'public',
@@ -288,7 +293,10 @@ describe('ProjectCanvasRelationalTree', () => {
       fields: [{ name: 'customer_id', type: 'string' as const }],
       sourceRef: sourceRef(table),
     }));
-    const draft = createDvtSubstraitUnionDistinctDraft({ inputs, targetNodeId: TARGET_ID });
+    const draft =
+      operation === 'union_distinct'
+        ? createDvtSubstraitUnionDistinctDraft({ inputs, targetNodeId: TARGET_ID })
+        : createDvtSubstraitSetDraft({ inputs, targetNodeId: TARGET_ID, operation });
     const transform = applyDvtSubstraitSemanticDocument(
       targetNode(),
       encodeDvtSubstraitUnionAllDocument(draft)
@@ -302,7 +310,7 @@ describe('ProjectCanvasRelationalTree', () => {
     if (!result.ok) return;
     expect(result.projection.root).toMatchObject({
       operator: 'set',
-      operationLabel: 'UNION DISTINCT',
+      operationLabel: label,
     });
   });
 

@@ -77,10 +77,12 @@ export function resolveCanvasRelationalCompositionBadgeSummary(args: {
     decodeDvtSubstraitUnionAllDocument(authority.semanticDocument)
   );
   return inspection.ok
-    ? (inspection.projection.operation === 'union_all'
-        ? copy.relationalCompositionUnionAllSummaryTemplate
-        : copy.relationalCompositionUnionDistinctSummaryTemplate
-      )
+    ? {
+        union_all: copy.relationalCompositionUnionAllSummaryTemplate,
+        union_distinct: copy.relationalCompositionUnionDistinctSummaryTemplate,
+        intersect_distinct: copy.relationalCompositionIntersectDistinctSummaryTemplate,
+        except_distinct: copy.relationalCompositionExceptDistinctSummaryTemplate,
+      }[inspection.projection.operation]
         .replace('{inputCount}', String(inspection.projection.inputs.length))
         .replace('{outputCount}', String(inspection.projection.outputs.length))
     : null;

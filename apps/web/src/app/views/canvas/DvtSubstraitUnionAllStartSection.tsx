@@ -2,7 +2,21 @@
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import { Button } from '../../components/ui/button';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
+import type { DvtSubstraitSetOperation } from './canvasDvtSubstraitSetComposition';
 import { canvasViewCopy } from './copy';
+
+function titleFor(operation: DvtSubstraitSetOperation): string {
+  switch (operation) {
+    case 'union_all':
+      return canvasViewCopy.inspectorDvtSubstraitUnionAllTitle;
+    case 'union_distinct':
+      return canvasViewCopy.inspectorDvtSubstraitUnionDistinctTitle;
+    case 'intersect_distinct':
+      return canvasViewCopy.inspectorDvtSubstraitIntersectDistinctTitle;
+    case 'except_distinct':
+      return canvasViewCopy.inspectorDvtSubstraitExceptDistinctTitle;
+  }
+}
 
 export function DvtSubstraitUnionAllStartSection({
   disabled,
@@ -13,17 +27,13 @@ export function DvtSubstraitUnionAllStartSection({
 }: Readonly<{
   disabled: boolean;
   inputs: readonly CanvasDvtCompositionInput[];
-  operation?: 'union_all' | 'union_distinct';
+  operation?: DvtSubstraitSetOperation;
   onApply: () => void;
   onCancel: () => void;
 }>): JSX.Element {
   return (
     <section data-slot="dvt-substrait-union-all-start" className="space-y-3">
-      <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
-        {operation === 'union_distinct'
-          ? canvasViewCopy.inspectorDvtSubstraitUnionDistinctTitle
-          : canvasViewCopy.inspectorDvtSubstraitUnionAllTitle}
-      </h3>
+      <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>{titleFor(operation)}</h3>
       <p className="text-xs text-(--text-muted)">
         {inputs.map((input) => `${input.schema}.${input.table}`).join(' + ')}
       </p>

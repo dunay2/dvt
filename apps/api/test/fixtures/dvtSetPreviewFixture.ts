@@ -1,9 +1,12 @@
-/** Canonical UNION DISTINCT document exported by the Canvas SetRel authoring path. */
+/** Canonical SetRel documents exported by the Canvas authoring path. */
 import { readFileSync } from 'node:fs';
 import { URL } from 'node:url';
 
+import { SetRel_SetOp } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import {
   DvtSubstraitSemanticDocumentV1Schema,
+  decodeDvtSubstraitPlanV1,
+  encodeDvtSubstraitPlanV1,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 
@@ -20,7 +23,9 @@ const documents = JSON.parse(
 ) as Record<string, unknown>;
 
 export function buildDvtSetPreviewDraft(
-  wrapper?: 'aggregate' | 'window'
+  wrapper?: 'aggregate' | 'window',
+  operation: 'union_distinct' | 'intersect_distinct' | 'except_distinct' = 'union_distinct',
+  projectFirstColumn = false
 ): WorkspaceGraphAuthoringDraft {
   const base = buildDvtTerminalTransformPreviewDraft();
   const fixtureName =
@@ -29,7 +34,48 @@ export function buildDvtSetPreviewDraft(
       : wrapper === 'window'
         ? 'unionDistinctWindow'
         : 'unionDistinct';
-  const semanticDocument = DvtSubstraitSemanticDocumentV1Schema.parse(documents[fixtureName]);
+  const baseDocument = DvtSubstraitSemanticDocumentV1Schema.parse(documents[fixtureName]);
+  const plan = decodeDvtSubstraitPlanV1(baseDocument);
+  const root = plan.relations[0]?.relType;
+  const relation = root?.case === 'root' ? root.value.input?.relType : undefined;
+  const set =
+    relation?.case === 'set'
+      ? relation
+      : relation?.case === 'aggregate'
+        ? relation.value.input?.relType
+        : relation?.case === 'project' && relation.value.input?.relType.case === 'aggregate'
+          ? relation.value.input.relType.value.input?.relType
+          : undefined;
+  if (set?.case !== 'set') throw new Error('Set preview fixture must contain one SetRel.');
+  set.value.op = {
+    union_distinct: SetRel_SetOp.UNION_DISTINCT,
+    intersect_distinct: SetRel_SetOp.INTERSECTION_MULTISET,
+    except_distinct: SetRel_SetOp.MINUS_PRIMARY,
+  }[operation];
+  let sidecar = baseDocument.sidecar;
+  if (projectFirstColumn) {
+    if (wrapper != null || root?.case !== 'root' || set.value.common?.emitKind.case !== 'emit') {
+      throw new Error('Projected Set fixture requires one unwrapped SetRel root.');
+    }
+    set.value.common.emitKind.value.outputMapping = [0];
+    root.value.names = [root.value.names[0]!];
+    const resultBinding = sidecar.relations.find(
+      (relation) => relation.relAnchor === set.value.common?.relAnchor
+    );
+    if (resultBinding == null) throw new Error('Set preview fixture requires a result binding.');
+    sidecar = {
+      ...sidecar,
+      fields: sidecar.fields.filter(
+        (field) => field.relationId !== resultBinding.relationId || field.outputOrdinal === 0
+      ),
+    };
+  }
+  const semanticPlan = encodeDvtSubstraitPlanV1(plan);
+  const semanticDocument = DvtSubstraitSemanticDocumentV1Schema.parse({
+    ...baseDocument,
+    semanticPlan,
+    sidecar: { ...sidecar, semanticPlanSha256: semanticPlan.sha256 },
+  });
   const sources = semanticDocument.sidecar.relations.flatMap((relation) => {
     if (relation.sourceRef === undefined) return [];
     return [

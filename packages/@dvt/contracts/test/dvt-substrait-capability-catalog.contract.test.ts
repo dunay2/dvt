@@ -219,6 +219,42 @@ describe('DVT Substrait capability catalog V1', () => {
   });
 
   it.each([
+    ['SetOp.SET_OP_INTERSECTION_MULTISET', 'INTERSECT DISTINCT'],
+    ['SetOp.SET_OP_MINUS_PRIMARY', 'EXCEPT DISTINCT'],
+  ])('admits %s as the exact canonical selector for %s', (selector) => {
+    const operation = findCapability(
+      buildDvtSubstraitStandardCapabilityId('relation', {
+        sourceKind: 'core',
+        message: 'substrait.SetRel',
+        selector,
+      })
+    );
+
+    expect(operation).toMatchObject({
+      profileStatus: 'supported-profile',
+      admission: {
+        productUseCaseRef: 'dvt:#3318',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+  });
+
+  it.each(['SetOp.SET_OP_INTERSECTION_PRIMARY', 'SetOp.SET_OP_MINUS_MULTISET'])(
+    'keeps %s outside the supported profile',
+    (selector) => {
+      const capability = findCapability(
+        buildDvtSubstraitStandardCapabilityId('relation', {
+          sourceKind: 'core',
+          message: 'substrait.SetRel',
+          selector,
+        })
+      );
+      expect(capability == null || capability.profileStatus !== 'supported-profile').toBe(true);
+    }
+  );
+
+  it.each([
     ['functions_boolean', 'and', 'dvt:#3087'],
     ['functions_boolean', 'or', 'dvt:#3087'],
     ['functions_comparison', 'equal', 'dvt:#2634'],

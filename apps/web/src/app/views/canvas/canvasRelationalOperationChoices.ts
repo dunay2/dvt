@@ -20,12 +20,19 @@ export type CanvasRelationalOperation =
   | 'right_anti_join'
   | 'cross_join'
   | 'union_all'
-  | 'union_distinct';
+  | 'union_distinct'
+  | 'intersect_distinct'
+  | 'except_distinct';
 
 export function isCanvasSetOperation(
-  operation: CanvasRelationalOperation | null
-): operation is 'union_all' | 'union_distinct' {
-  return operation === 'union_all' || operation === 'union_distinct';
+  operation: string | null | undefined
+): operation is 'union_all' | 'union_distinct' | 'intersect_distinct' | 'except_distinct' {
+  return (
+    operation === 'union_all' ||
+    operation === 'union_distinct' ||
+    operation === 'intersect_distinct' ||
+    operation === 'except_distinct'
+  );
 }
 
 export type CanvasRelationalOperationAvailability =
@@ -108,6 +115,8 @@ export function resolveCanvasRelationalOperationChoices(
     readOnly: boolean;
     unionAllAvailable: boolean;
     unionDistinctAvailable?: boolean;
+    intersectDistinctAvailable?: boolean;
+    exceptDistinctAvailable?: boolean;
   }>
 ): readonly CanvasRelationalOperationChoice[] {
   const readOnlyAvailability = args.readOnly ? 'read-only' : null;
@@ -123,6 +132,11 @@ export function resolveCanvasRelationalOperationChoices(
   const crossJoinAdmitted = isAdmitted('substrait.CrossRel');
   const unionAllAdmitted = isAdmitted('substrait.SetRel', 'SetOp.SET_OP_UNION_ALL');
   const unionDistinctAdmitted = isAdmitted('substrait.SetRel', 'SetOp.SET_OP_UNION_DISTINCT');
+  const intersectDistinctAdmitted = isAdmitted(
+    'substrait.SetRel',
+    'SetOp.SET_OP_INTERSECTION_MULTISET'
+  );
+  const exceptDistinctAdmitted = isAdmitted('substrait.SetRel', 'SetOp.SET_OP_MINUS_PRIMARY');
   const hasCompatibleJoinTypePair = args.inputs.some((left, index) =>
     args.inputs
       .slice(index + 1)
@@ -177,6 +191,26 @@ export function resolveCanvasRelationalOperationChoices(
         : unionDistinctAvailable
           ? 'available'
           : 'needs-schema-alignment');
+  const setDistinctAvailability = (
+    admitted: boolean,
+    available: boolean | undefined
+  ): CanvasRelationalOperationAvailability =>
+    readOnlyAvailability ??
+    (!admitted
+      ? 'semantically-unavailable'
+      : !unionAllTargetSupported
+        ? 'target-unavailable'
+        : (available ?? args.unionAllAvailable)
+          ? 'available'
+          : 'needs-schema-alignment');
+  const intersectDistinctAvailability = setDistinctAvailability(
+    intersectDistinctAdmitted,
+    args.intersectDistinctAvailable
+  );
+  const exceptDistinctAvailability = setDistinctAvailability(
+    exceptDistinctAdmitted,
+    args.exceptDistinctAvailable
+  );
 
   return [
     {
@@ -244,6 +278,16 @@ export function resolveCanvasRelationalOperationChoices(
       operation: 'union_distinct',
       availability: unionDistinctAvailability,
       selectable: unionDistinctAvailability === 'available',
+    },
+    {
+      operation: 'intersect_distinct',
+      availability: intersectDistinctAvailability,
+      selectable: intersectDistinctAvailability === 'available',
+    },
+    {
+      operation: 'except_distinct',
+      availability: exceptDistinctAvailability,
+      selectable: exceptDistinctAvailability === 'available',
     },
   ];
 }

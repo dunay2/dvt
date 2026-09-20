@@ -115,7 +115,9 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
     compositionCandidate.operation === 'right_anti_join' ||
     compositionCandidate.operation === 'cross_join' ||
     compositionCandidate.operation === 'union_all' ||
-    compositionCandidate.operation === 'union_distinct';
+    compositionCandidate.operation === 'union_distinct' ||
+    compositionCandidate.operation === 'intersect_distinct' ||
+    compositionCandidate.operation === 'except_distinct';
   const validComposition =
     composition == null ||
     (compositionCandidate != null &&
@@ -186,7 +188,9 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
             compositionCandidate.operation === 'right_anti_join' ||
             compositionCandidate.operation === 'cross_join' ||
             compositionCandidate.operation === 'union_all' ||
-            compositionCandidate.operation === 'union_distinct'
+            compositionCandidate.operation === 'union_distinct' ||
+            compositionCandidate.operation === 'intersect_distinct' ||
+            compositionCandidate.operation === 'except_distinct'
               ? { operation: compositionCandidate.operation }
               : {}),
             ...(typeof compositionCandidate.onActivate === 'function'

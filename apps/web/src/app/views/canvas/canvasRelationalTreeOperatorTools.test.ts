@@ -13,7 +13,7 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import {
   appendDvtSubstraitUnionAllInput,
-  createDvtSubstraitUnionAllDraft,
+  createDvtSubstraitSetDraft,
   inspectDvtSubstraitUnionAllAcceptedDraft,
   type DvtSubstraitUnionAllSource,
   type DvtSubstraitUnionAllDraft,
@@ -168,6 +168,8 @@ describe('admitted relational operator tools', () => {
       'substrait.ProjectRel',
       'substrait.ReadRel/read_type.named_table',
       'substrait.RelCommon/emit_kind.emit',
+      'substrait.SetRel/SetOp.SET_OP_INTERSECTION_MULTISET',
+      'substrait.SetRel/SetOp.SET_OP_MINUS_PRIMARY',
       'substrait.SetRel/SetOp.SET_OP_UNION_ALL',
       'substrait.SetRel/SetOp.SET_OP_UNION_DISTINCT',
     ]);
@@ -255,29 +257,41 @@ describe('admitted relational operator tools', () => {
       })
     ).toBe(draft);
   });
-  it('appends a third UNION source without replacing any existing relation or field', () => {
-    const draft = createDvtSubstraitUnionAllDraft({
-      inputs: [source('north'), source('south')],
-      targetNodeId: 'model',
-    });
-    const next = appendDvtSubstraitUnionAllInput(draft, source('west'));
-    const inspection = inspectDvtSubstraitUnionAllAcceptedDraft(next);
-    expect(inspection.ok).toBe(true);
-    if (inspection.ok) expect(inspection.projection.inputs).toHaveLength(3);
-    for (const field of draft.sidecar.fields) expect(next.sidecar.fields).toContainEqual(field);
-    for (const relation of draft.sidecar.relations)
-      expect(next.sidecar.relations).toContainEqual(
-        expect.objectContaining({ relationId: relation.relationId })
-      );
-    expect(appendDvtSubstraitUnionAllInput(next, source('west'))).toBe(next);
-    expect(
-      appendDvtSubstraitUnionAllInput(next, {
-        ...source('bad'),
-        fields: [{ name: 'wrong', type: 'string' }],
-      })
-    ).toBe(next);
-  });
-  for (const shape of ['inner_join', 'union_all'] as const) {
+  it.each(['union_all', 'intersect_distinct', 'except_distinct'] as const)(
+    'appends a third %s source without replacing semantics, relations, or fields',
+    (operation) => {
+      const draft = createDvtSubstraitSetDraft({
+        inputs: [source('north'), source('south')],
+        targetNodeId: 'model',
+        operation,
+      });
+      const next = appendDvtSubstraitUnionAllInput(draft, source('west'));
+      const inspection = inspectDvtSubstraitUnionAllAcceptedDraft(next);
+      expect(inspection.ok).toBe(true);
+      if (inspection.ok) {
+        expect(inspection.projection.inputs).toHaveLength(3);
+        expect(inspection.projection.operation).toBe(operation);
+      }
+      for (const field of draft.sidecar.fields) expect(next.sidecar.fields).toContainEqual(field);
+      for (const relation of draft.sidecar.relations)
+        expect(next.sidecar.relations).toContainEqual(
+          expect.objectContaining({ relationId: relation.relationId })
+        );
+      expect(appendDvtSubstraitUnionAllInput(next, source('west'))).toBe(next);
+      expect(
+        appendDvtSubstraitUnionAllInput(next, {
+          ...source('bad'),
+          fields: [{ name: 'wrong', type: 'string' }],
+        })
+      ).toBe(next);
+    }
+  );
+  for (const shape of [
+    'inner_join',
+    'union_all',
+    'intersect_distinct',
+    'except_distinct',
+  ] as const) {
     const fixture = (): DvtSubstraitUnionAllDraft =>
       shape === 'inner_join'
         ? createDvtSubstraitJoinDraft({
@@ -285,9 +299,10 @@ describe('admitted relational operator tools', () => {
             right: source('orders'),
             targetNodeId: 'model',
           })
-        : createDvtSubstraitUnionAllDraft({
+        : createDvtSubstraitSetDraft({
             inputs: [source('north'), source('south'), source('west')],
             targetNodeId: 'model',
+            operation: shape,
           });
     it(`${shape}: groups, windows, persists and removes without replacing source identities`, () => {
       const original = fixture();
