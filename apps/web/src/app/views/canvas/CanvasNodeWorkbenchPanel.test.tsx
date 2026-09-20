@@ -2,6 +2,12 @@
 
 /** Owned concern: prove CanvasNodeWorkbenchPanel presents governed node metadata directly. */
 import React, { act } from 'react';
+import {
+  ExtensionLeafRelSchema,
+  RelCommonSchema,
+  RelSchema,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { create } from '@bufbuild/protobuf';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -17,6 +23,7 @@ import {
   encodeDvtSubstraitProjectionDocument,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import {
@@ -188,6 +195,30 @@ const DVT_SUBSTRAIT_TRANSFORM_NODE: CanonicalNode = (() => {
         outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' }],
       })
     )
+  );
+})();
+
+const DVT_UNSUPPORTED_SUBSTRAIT_TRANSFORM_NODE: CanonicalNode = (() => {
+  const source = resolveDvtSubstraitProjectionSource(SOURCE_NODE);
+  if (source == null) throw new Error('Expected a connected PostgreSQL source fixture.');
+  const semanticDraft = createDvtSubstraitProjectionDraft({
+    source,
+    targetNodeId: DVT_TRANSFORM_NODE.id,
+    outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' }],
+  });
+  const root = semanticDraft.plan.relations[0]?.relType;
+  if (root?.case !== 'root') throw new Error('Expected a canonical relation root.');
+  root.value.input = create(RelSchema, {
+    relType: {
+      case: 'extensionLeaf',
+      value: create(ExtensionLeafRelSchema, {
+        common: create(RelCommonSchema, { relAnchor: 1 }),
+      }),
+    },
+  });
+  return applyDvtSubstraitSemanticDocument(
+    DVT_TRANSFORM_NODE,
+    encodeDvtSubstraitSemanticDocument(semanticDraft)
   );
 })();
 
@@ -610,6 +641,52 @@ describe('CanvasNodeWorkbenchPanel', () => {
       { value: 'finance', label: 'finance' },
       { value: 'critical', label: 'critical' },
     ]);
+  });
+
+  it('keeps unsupported canonical semantics local while common Inspector fields remain editable', () => {
+    const onApplyNodeDraft = vi.fn();
+    renderNodePanel(
+      root,
+      DVT_UNSUPPORTED_SUBSTRAIT_TRANSFORM_NODE,
+      'general',
+      { canEditNode: true, onApplyNodeDraft },
+      1,
+      undefined,
+      { nodes: [SOURCE_NODE, DVT_UNSUPPORTED_SUBSTRAIT_TRANSFORM_NODE], edges: [] }
+    );
+
+    const issue = container.querySelector(
+      '[data-slot="canvas-inspector-semantic-authoring-issue"]'
+    );
+    expect(issue?.getAttribute('role')).toBe('status');
+    expect(issue?.textContent).toContain('Semantic operation unavailable');
+    expect(issue?.textContent).toContain('stored semantics were left unchanged');
+    expect(container.querySelector('[data-slot="canvas-node-workbench-panel"]')).not.toBeNull();
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+
+    const nameInput = container.querySelector<HTMLInputElement>('input[name="node-name"]');
+    expect(nameInput).not.toBeNull();
+    act(() => {
+      fireEvent.input(nameInput!, { target: { value: 'Recovered orders' } });
+    });
+    const applyButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Apply'
+    );
+    expect(applyButton?.disabled).toBe(false);
+    act(() => {
+      fireEvent.click(applyButton!);
+    });
+
+    const submittedDraft = onApplyNodeDraft.mock.calls[0]?.[0];
+    expect(submittedDraft).toMatchObject({
+      name: 'Recovered orders',
+      semanticAuthoringIssue: 'unsupported_shape',
+    });
+    expect(submittedDraft).not.toHaveProperty('dvt');
+    expect(
+      applyCanvasInspectorNodeDraft(DVT_UNSUPPORTED_SUBSTRAIT_TRANSFORM_NODE, submittedDraft)
+        .metadata?.transformAuthoring
+    ).toEqual(DVT_UNSUPPORTED_SUBSTRAIT_TRANSFORM_NODE.metadata?.transformAuthoring);
   });
 
   it('keeps an invalid business tag visible and blocks Apply with an accessible error', () => {

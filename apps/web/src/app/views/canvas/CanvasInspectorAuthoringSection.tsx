@@ -72,6 +72,9 @@ export function CanvasInspectorAuthoringSection({
     draft.objectFilePostgres != null && (section === 'all' || section === 'general');
   const showHttpJsonArtifactAuthoring =
     draft.httpJsonArtifact != null && (section === 'all' || section === 'general');
+  const showSemanticAuthoringIssue =
+    draft.semanticAuthoringIssue != null &&
+    (section === 'all' || section === 'general' || section === 'columns' || section === 'code');
   const dvtAuthoringSection =
     section === 'code'
       ? 'code'
@@ -101,7 +104,8 @@ export function CanvasInspectorAuthoringSection({
     !showDvtAuthoring &&
     !showDbtAuthoring &&
     !showObjectFilePostgresAuthoring &&
-    !showHttpJsonArtifactAuthoring
+    !showHttpJsonArtifactAuthoring &&
+    !showSemanticAuthoringIssue
   ) {
     return null;
   }
@@ -199,6 +203,23 @@ export function CanvasInspectorAuthoringSection({
             onClearRelationalPredicateSeed={authoring.onClearRelationalPredicateSeed}
             onChange={setDraft}
           />
+        ) : null}
+
+        {showSemanticAuthoringIssue ? (
+          <div
+            data-slot="canvas-inspector-semantic-authoring-issue"
+            className={inspectorVisualClasses.contextPanelDetailsSection}
+            role="status"
+          >
+            <p className={inspectorVisualClasses.inspectorTitle}>
+              {canvasViewCopy.inspectorSemanticAuthoringUnavailableTitle}
+            </p>
+            <p className={inspectorVisualClasses.inspectorBody}>
+              {draft.semanticAuthoringIssue === 'invalid_document'
+                ? canvasViewCopy.inspectorSemanticAuthoringInvalidMessage
+                : canvasViewCopy.inspectorSemanticAuthoringUnsupportedMessage}
+            </p>
+          </div>
         ) : null}
 
         {showObjectFilePostgresAuthoring && draft.objectFilePostgres ? (

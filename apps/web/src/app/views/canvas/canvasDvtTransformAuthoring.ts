@@ -68,7 +68,11 @@ function readMaterialized(node: CanonicalNode): string {
   return normalizeMaterialized(readDvtString(readDvtNodeConfig(node).materialized));
 }
 
-export function createDvtTransformAuthoringMetadata(node: CanonicalNode): TransformMetadata {
+export function resolveDvtTransformAuthoringMetadata(
+  node: CanonicalNode
+):
+  | Readonly<{ outcome: 'resolved'; metadata: TransformMetadata }>
+  | Readonly<{ outcome: 'rejected'; reason: 'invalid_document' | 'unsupported_shape' }> {
   const config = readDvtNodeConfig(node);
   const disposition = {
     materialized: readMaterialized(node),
@@ -76,9 +80,24 @@ export function createDvtTransformAuthoringMetadata(node: CanonicalNode): Transf
       ? { resultTarget: DvtTransformResultTargetV1Schema.parse(config.resultTarget) }
       : {}),
   };
-  const authority = readDvtTransformAuthoringAuthority(node);
-  if (authority == null) return { kind: 'transform', mode: 'uninitialized', ...disposition };
-  const projection = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+  let authority: ReturnType<typeof readDvtTransformAuthoringAuthority>;
+  try {
+    authority = readDvtTransformAuthoringAuthority(node);
+  } catch {
+    return { outcome: 'rejected', reason: 'invalid_document' };
+  }
+  if (authority == null) {
+    return {
+      outcome: 'resolved',
+      metadata: { kind: 'transform', mode: 'uninitialized', ...disposition },
+    };
+  }
+  let projection: ReturnType<typeof decodeDvtSubstraitProjectionDocument>;
+  try {
+    projection = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+  } catch {
+    return { outcome: 'rejected', reason: 'invalid_document' };
+  }
   let classified = projection;
   while (true) {
     const wrapper = inspectDvtSubstraitSortFetchRoot(classified);
@@ -89,7 +108,10 @@ export function createDvtTransformAuthoringMetadata(node: CanonicalNode): Transf
     inspectDvtSubstraitProjectionDraft(classified).ok ||
     inspectDvtSubstraitFilter(classified) != null
   ) {
-    return fromDraft(authority.mode, disposition, 'projection', projection);
+    return {
+      outcome: 'resolved',
+      metadata: fromDraft(authority.mode, disposition, 'projection', projection),
+    };
   }
   const pilot = classified;
   if (
@@ -98,7 +120,10 @@ export function createDvtTransformAuthoringMetadata(node: CanonicalNode): Transf
     inspectDvtSubstraitPilotAggregationDraft(pilot).ok ||
     inspectDvtSubstraitPilotWindowDraft(pilot).ok
   ) {
-    return fromDraft(authority.mode, disposition, 'pilot', projection);
+    return {
+      outcome: 'resolved',
+      metadata: fromDraft(authority.mode, disposition, 'pilot', projection),
+    };
   }
   const join = classified;
   if (inspectDvtSubstraitJoinAcceptedDraft(join).ok) {
@@ -106,20 +131,39 @@ export function createDvtTransformAuthoringMetadata(node: CanonicalNode): Transf
       inspectDvtSubstraitJoinPredicateContext(join)?.inspection.projection.joinRelations.at(
         -1
       )?.joinType;
-    return fromDraft(
-      authority.mode,
-      disposition,
-      finalJoinType == null ? 'inner_join' : canvasJoinOperationForType(finalJoinType),
-      projection
-    );
+    return {
+      outcome: 'resolved',
+      metadata: fromDraft(
+        authority.mode,
+        disposition,
+        finalJoinType == null ? 'inner_join' : canvasJoinOperationForType(finalJoinType),
+        projection
+      ),
+    };
   }
   if (inspectDvtSubstraitAcceptedCrossDraft(join).ok) {
-    return fromDraft(authority.mode, disposition, 'cross_join', projection);
+    return {
+      outcome: 'resolved',
+      metadata: fromDraft(authority.mode, disposition, 'cross_join', projection),
+    };
   }
   const setDraft = classified;
   const setOperation = resolveDvtSubstraitSetOperation(setDraft);
-  if (setOperation == null) throw new Error('Unsupported canonical SetRel shape.');
-  return fromDraft(authority.mode, disposition, setOperation, projection);
+  if (setOperation == null) return { outcome: 'rejected', reason: 'unsupported_shape' };
+  return {
+    outcome: 'resolved',
+    metadata: fromDraft(authority.mode, disposition, setOperation, projection),
+  };
+}
+
+export function createDvtTransformAuthoringMetadata(node: CanonicalNode): TransformMetadata {
+  const resolution = resolveDvtTransformAuthoringMetadata(node);
+  if (resolution.outcome === 'resolved') return resolution.metadata;
+  throw new Error(
+    resolution.reason === 'invalid_document'
+      ? 'Invalid canonical Substrait document.'
+      : 'Unsupported canonical Substrait relation shape.'
+  );
 }
 
 function fromDraft(
