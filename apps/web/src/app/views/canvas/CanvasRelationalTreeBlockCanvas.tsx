@@ -87,7 +87,7 @@ export function CanvasRelationalTreeBlockCanvas({
           />
         </CanvasRelationalTreeOperationShelf>
       }
-      <div className="relative flex min-h-0 flex-1 flex-col">
+      <div className="canvas-operation-workspace relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
         <CanvasRelationalTreeDraftViewport
           copy={copy}
           edges={edges}

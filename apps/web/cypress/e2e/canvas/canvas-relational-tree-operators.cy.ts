@@ -89,8 +89,11 @@ function addWrapper(id: string): void {
 }
 
 describe('Relational operator toolbar', () => {
-  it('keeps compact expression, editing and selected-operation rows beside one another', () => {
+  it('docks selected-operation properties on the right and keeps sources compact', () => {
     openEditor();
+    cy.get('[data-slot="canvas-relational-tree-source"]').each(($source) => {
+      expect($source[0]!.getBoundingClientRect().height).to.be.at.most(40);
+    });
     addWrapper('aggregate');
     cy.get('[data-operator="aggregate"]').invoke('attr', 'data-relation-id').as('aggregateId');
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
@@ -130,10 +133,27 @@ describe('Relational operator toolbar', () => {
         .querySelector('.canvas-operation-controls')!
         .getBoundingClientRect();
       const preview = $panels[0]!.querySelector('aside')!.getBoundingClientRect();
-      expect(preview.left).to.be.greaterThan(controls.right);
-      expect(Math.abs(preview.top - controls.top)).to.be.lessThan(2);
+      expect(preview.top).to.be.greaterThan(controls.bottom);
       expect(preview.width).to.be.greaterThan(300);
+      const condition = $panels[0]!
+        .querySelector('[data-slot="semantic-workbench-join-condition-list"]')!
+        .getBoundingClientRect();
+      expect(preview.top, 'data must not overlap the editable condition').to.be.greaterThan(
+        condition.bottom
+      );
     });
+    const editor = '[data-slot="canvas-relational-tree-inline-editor"]:visible';
+    const viewport = '[data-slot="canvas-relational-tree-draft-viewport"]';
+    cy.get(editor).then(($editor) => {
+      const properties = $editor[0]!.getBoundingClientRect();
+      cy.get(viewport).should(($viewport) => {
+        const tree = $viewport[0]!.getBoundingClientRect();
+        expect(properties.left).to.be.at.least(tree.right - 1);
+        expect(Math.abs(properties.top - tree.top)).to.be.lessThan(2);
+        expect(Math.abs(properties.bottom - tree.bottom)).to.be.lessThan(2);
+      });
+    });
+    cy.get('.canvas-operation-panels.with-preview:visible').scrollTo('top');
     cy.screenshot('selected-operation-preview-desktop');
     cy.get('[data-operator="aggregate"]').click();
     cy.get('[data-slot="canvas-operation-data-preview"]:visible table').should('not.exist');
@@ -147,6 +167,29 @@ describe('Relational operator toolbar', () => {
       const preview = $panels[0]!.querySelector('aside')!.getBoundingClientRect();
       expect(preview.top).to.be.greaterThan(controls.bottom);
     });
+    cy.get(editor).then(($editor) => {
+      const properties = $editor[0]!.getBoundingClientRect();
+      expect(properties.right).to.be.at.most(1000);
+      cy.get(viewport).then(($viewport) => {
+        const tree = $viewport[0]!.getBoundingClientRect();
+        cy.get('[data-slot="canvas-relational-collapse"]:visible').click();
+        cy.get(viewport).should(($expanded) => {
+          const expanded = $expanded[0]!.getBoundingClientRect();
+          expect(expanded.height).to.equal(tree.height);
+          expect(expanded.width).to.be.greaterThan(tree.width);
+        });
+      });
+    });
+    cy.get('[data-operator="aggregate"]').dblclick();
+    cy.viewport(600, 800);
+    cy.get(editor).should(($editor) => {
+      const properties = $editor[0]!.getBoundingClientRect();
+      expect(properties.left).to.be.at.least(0);
+      expect(properties.right).to.be.at.most(600);
+    });
+    cy.screenshot('selected-operation-properties-narrow');
+    cy.get('[data-slot="canvas-relational-collapse"]:visible').click();
+    cy.get(viewport).should('be.visible');
   });
 
   for (const applied of [false, true]) {
@@ -516,5 +559,15 @@ describe('Relational operator toolbar', () => {
     cy.get(tool('aggregate')).should('be.disabled');
     cy.get(tool('window')).should('be.disabled');
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+    cy.get('[data-operator="join"]').dblclick();
+    cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').then(($editor) => {
+      const properties = $editor[0]!.getBoundingClientRect();
+      cy.get('[data-slot="canvas-relational-tree-viewport"]').should(($viewport) => {
+        const tree = $viewport[0]!.getBoundingClientRect();
+        expect(properties.left).to.be.at.least(tree.right - 1);
+        expect(Math.abs(properties.top - tree.top)).to.be.lessThan(2);
+      });
+    });
+    cy.get('[data-slot="canvas-relational-tree-source"]').should('have.attr', 'draggable', 'false');
   });
 });

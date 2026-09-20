@@ -70,7 +70,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
           event.preventDefault();
           event.stopPropagation();
         }}
-        className={`relative grid h-full min-h-0 min-w-0 w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-(--surface-panel) md:grid-rows-1 ${sourcesCollapsed ? 'md:grid-cols-[3rem_minmax(0,1fr)]' : 'md:grid-cols-[14rem_minmax(0,1fr)]'}`}
+        className={`relative grid h-full min-h-0 min-w-0 w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-(--surface-panel) md:grid-rows-1 ${sourcesCollapsed ? 'md:grid-cols-[3rem_minmax(0,1fr)]' : 'md:grid-cols-[12rem_minmax(0,1fr)]'}`}
       >
         <CanvasRelationalTreeSessionActions
           session={sessionHandle}

@@ -50,7 +50,7 @@ export function CanvasRelationalTreeExpressionOperatorEditor({
   const tool = resolveCanvasRelationalOperatorTools(draft).find((item) => item.id === toolId);
   return (
     <CanvasRelationalTreeEditorFrame operation={toolId} relationId={relationId} onClose={onClose}>
-      <div className="canvas-operation-editors grid h-full min-h-0 gap-3">
+      <div className="canvas-operation-editors grid min-h-0 gap-3">
         <CanvasRelationalJoinExpressionTree
           transformNode={transformNode}
           draft={draft}

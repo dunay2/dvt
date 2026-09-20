@@ -42,7 +42,7 @@ export function CanvasRelationalTreeInspection({
           onChange={model.session.setJoinDraft}
         />
       </CanvasRelationalTreeOperationShelf>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="canvas-operation-workspace relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
         <CanvasRelationalTreeView
           transformNode={transformNode}
           outputName={transformNode.name}
@@ -58,27 +58,27 @@ export function CanvasRelationalTreeInspection({
             if (model.authoringAvailable) model.session.start();
           }}
         />
+        {expanded &&
+        model.selectedNode != null &&
+        (model.selectedNode.expressionRefs.length > 0 ||
+          model.selectedNode.operator === 'cross' ||
+          (model.authoringAvailable && model.selectedNode.operator === 'fetch')) ? (
+          <CanvasRelationalTreeEditorFrame
+            operation={model.selectedNode.operation ?? 'unsupported'}
+            relationId={model.selectedNode.relationId}
+            onClose={() => onExpandedChange(false)}
+          >
+            {model.selectedNode.operator === 'cross' ? (
+              <CanvasRelationalCrossNotice />
+            ) : (
+              <CanvasRelationalJoinExpressionTree
+                transformNode={transformNode}
+                relationId={model.selectedNode.relationId}
+              />
+            )}
+          </CanvasRelationalTreeEditorFrame>
+        ) : null}
       </div>
-      {expanded &&
-      model.selectedNode != null &&
-      (model.selectedNode.expressionRefs.length > 0 ||
-        model.selectedNode.operator === 'cross' ||
-        (model.authoringAvailable && model.selectedNode.operator === 'fetch')) ? (
-        <CanvasRelationalTreeEditorFrame
-          operation={model.selectedNode.operation ?? 'unsupported'}
-          relationId={model.selectedNode.relationId}
-          onClose={() => onExpandedChange(false)}
-        >
-          {model.selectedNode.operator === 'cross' ? (
-            <CanvasRelationalCrossNotice />
-          ) : (
-            <CanvasRelationalJoinExpressionTree
-              transformNode={transformNode}
-              relationId={model.selectedNode.relationId}
-            />
-          )}
-        </CanvasRelationalTreeEditorFrame>
-      ) : null}
     </div>
   );
 }

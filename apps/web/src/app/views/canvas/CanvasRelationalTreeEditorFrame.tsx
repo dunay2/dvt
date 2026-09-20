@@ -1,4 +1,4 @@
-/** Owned concern: explicitly expand or focus operation controls without a permanent inspector. */
+/** Owned concern: dock the selected operation controls and preview in one right properties panel. */
 import { X } from 'lucide-react';
 import {
   resolveCanvasRelationalOperationPresentation,
@@ -36,8 +36,9 @@ export function CanvasRelationalTreeEditorFrame({
   return (
     <section
       data-slot="canvas-relational-tree-inline-editor"
+      aria-label={title}
       hidden={hidden}
-      className={`${hidden ? 'hidden' : 'flex'} h-[45%] min-h-56 max-h-[32rem] shrink-0 flex-col overflow-hidden border-t border-(--border-subtle) bg-(--surface-panel)`}
+      className={`canvas-operation-properties ${hidden ? 'hidden' : 'flex'} min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-l border-(--border-subtle) bg-(--surface-panel)`}
     >
       <header className="flex h-9 shrink-0 items-center gap-2 border-b border-(--border-subtle) bg-(--surface-panel) px-3">
         <Icon className="size-4 text-(--status-info)" />
