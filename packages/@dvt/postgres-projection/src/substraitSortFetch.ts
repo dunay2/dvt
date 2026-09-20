@@ -70,7 +70,6 @@ const ADMITTED_DIRECTIONS = new Set<number>([
 ]);
 
 const I64_MAX = 9_223_372_036_854_775_807n;
-type RelationBinding = DvtSubstraitJoinDraft['sidecar']['relations'][number];
 
 function rootInput(draft: DvtSubstraitJoinDraft): Rel {
   const root = draft.plan.relations[0]?.relType;
@@ -91,7 +90,7 @@ function fieldsForAnchor(
   draft: DvtSubstraitJoinDraft,
   anchor: number
 ): Readonly<{
-  relation: RelationBinding;
+  relation: DvtSubstraitJoinDraft['sidecar']['relations'][number];
   fields: readonly DvtSubstraitFieldBindingV1[];
 }> {
   const relation = draft.sidecar.relations.find((candidate) => candidate.relAnchor === anchor);
@@ -314,8 +313,8 @@ function inspectWrapperIdentity(
   rel: Rel,
   input: Rel
 ): Readonly<{
-  relation: RelationBinding;
-  inputRelation: RelationBinding;
+  relation: DvtSubstraitJoinDraft['sidecar']['relations'][number];
+  inputRelation: DvtSubstraitJoinDraft['sidecar']['relations'][number];
   inputFields: readonly DvtSubstraitFieldBindingV1[];
   outputFields: readonly DvtSubstraitFieldBindingV1[];
 }> | null {
