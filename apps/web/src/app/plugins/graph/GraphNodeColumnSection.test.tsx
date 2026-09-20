@@ -269,6 +269,94 @@ describe('GraphNodeColumnSection', () => {
     ]);
   });
 
+  it('keeps focus on the initiating output control when its semantic state commits', async () => {
+    const renderSection = (output: boolean): void =>
+      root.render(
+        <GraphNodeColumnSection
+          expanded
+          nodeId="transform-orders"
+          columns={[{ id: 'output:order_id', name: 'order_id', type: 'integer', output }]}
+          onColumnOutputToggle={vi.fn()}
+        />
+      );
+
+    await act(async () => renderSection(true));
+    const outputControl = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-output-state"]'
+    )!;
+    const disclosureControl = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-toggle"]'
+    )!;
+    let focusFrame: FrameRequestCallback | undefined;
+    const requestFrame = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation((callback) => {
+        focusFrame = callback;
+        return 29;
+      });
+
+    await act(async () => {
+      disclosureControl.focus();
+      fireEvent.pointerDown(outputControl);
+      fireEvent.click(outputControl);
+    });
+    expect(document.activeElement).toBe(outputControl);
+
+    await act(async () => {
+      disclosureControl.focus();
+      renderSection(false);
+    });
+    act(() => focusFrame!(0));
+
+    expect(container.querySelector('[data-slot="graph-node-column-output-state"]')).toBe(
+      outputControl
+    );
+    expect(document.activeElement).toBe(outputControl);
+    requestFrame.mockRestore();
+  });
+
+  it('does not reclaim output focus from a newer independent interaction', async () => {
+    const externalControl = document.createElement('button');
+    document.body.appendChild(externalControl);
+    const renderSection = (output: boolean): void =>
+      root.render(
+        <GraphNodeColumnSection
+          expanded
+          nodeId="transform-orders"
+          columns={[{ id: 'output:order_id', name: 'order_id', type: 'integer', output }]}
+          onColumnOutputToggle={vi.fn()}
+        />
+      );
+
+    await act(async () => renderSection(true));
+    const outputControl = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-output-state"]'
+    )!;
+    const disclosureControl = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-toggle"]'
+    )!;
+    let focusFrame: FrameRequestCallback | undefined;
+    const requestFrame = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation((callback) => {
+        focusFrame = callback;
+        return 30;
+      });
+
+    await act(async () => {
+      disclosureControl.focus();
+      fireEvent.pointerDown(outputControl);
+      fireEvent.click(outputControl);
+      externalControl.focus();
+      renderSection(false);
+    });
+    act(() => focusFrame!(0));
+
+    expect(document.activeElement).toBe(externalControl);
+    requestFrame.mockRestore();
+    externalControl.remove();
+  });
+
   it('shows every inherited field origin and toggles the exact field row', async () => {
     const onColumnOutputToggle = vi.fn();
     await act(async () => {
