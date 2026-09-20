@@ -296,7 +296,7 @@ export function useCanvasController() {
   const inspectorCommands = useCanvasInspectorCommands({
     canonicalNodesById: graphModel.canonicalNodesById,
     inspectorNode,
-    setDraftSession,
+    runDraftSessionCommand,
     workspaceScope,
   });
 

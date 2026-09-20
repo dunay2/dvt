@@ -18,8 +18,19 @@ export function CanvasRelationalTreeSessionActions({
   const language = useApplicationLanguageStore((state) => state.language);
   const localCopy = resolveCanvasSemanticEditorCopy(language);
   if (!session.hasUnappliedChanges) return null;
+  const rejectionMessage =
+    session.applyRejection?.reason === 'node_unavailable'
+      ? localCopy.applyNodeUnavailable
+      : session.applyRejection == null
+        ? null
+        : localCopy.applyRejected;
   const actions = (
     <div className="flex items-center gap-1 rounded border border-(--border-subtle) bg-(--surface-panel) p-0.5">
+      {rejectionMessage == null ? null : (
+        <span role="alert" className="max-w-72 px-2 text-[11px] text-rose-300">
+          {rejectionMessage}
+        </span>
+      )}
       <span role="status" className="px-2 text-[11px] text-amber-200">
         {localCopy.draft}
       </span>

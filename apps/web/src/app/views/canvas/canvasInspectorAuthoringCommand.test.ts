@@ -50,6 +50,77 @@ describe('applyCanvasInspectorNodeDraftToSession', () => {
     });
 
     expect(session.localNodeCatalog).toBeUndefined();
-    expect(result.localNodeCatalog?.[model.id]?.name).toBe('Orders model renamed');
+    expect(result.outcome).toBe('applied');
+    if (result.outcome !== 'applied') throw new Error('Expected the draft command to apply');
+    expect(result.draftSession.localNodeCatalog?.[model.id]?.name).toBe('Orders model renamed');
+  });
+
+  it('reports no_changes without manufacturing a new draft revision', () => {
+    const model: CanonicalNode = {
+      id: 'model-orders',
+      name: 'Orders model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+    };
+    const session = canvasDraftSession.machine.bootstrap({
+      remoteDraft: null,
+      canonicalNodeIds: [model.id],
+      canonicalEdges: [],
+    });
+
+    const result = applyCanvasInspectorNodeDraftToSession({
+      canonicalNodesById: new Map([[model.id, model]]),
+      draftSession: session,
+      node: model,
+      draft: createCanvasInspectorNodeDraft(model),
+      workspaceScope: {
+        tenantId: 'tenant-1',
+        projectId: 'project-1',
+        environmentId: 'environment-1',
+        targetAdapter: 'temporal',
+      },
+    });
+
+    expect(result).toEqual({ outcome: 'no_changes' });
+  });
+
+  it('rejects invalid semantic drafts with the validation errors and leaves the session untouched', () => {
+    const model: CanonicalNode = {
+      id: 'model-orders',
+      name: 'Orders model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+    };
+    const session = canvasDraftSession.machine.bootstrap({
+      remoteDraft: null,
+      canonicalNodeIds: [model.id],
+      canonicalEdges: [],
+    });
+
+    const result = applyCanvasInspectorNodeDraftToSession({
+      canonicalNodesById: new Map([[model.id, model]]),
+      draftSession: session,
+      node: model,
+      draft: { ...createCanvasInspectorNodeDraft(model), name: '   ' },
+      workspaceScope: {
+        tenantId: 'tenant-1',
+        projectId: 'project-1',
+        environmentId: 'environment-1',
+        targetAdapter: 'temporal',
+      },
+    });
+
+    expect(result).toEqual({
+      outcome: 'rejected',
+      reason: 'invalid_draft',
+      errors: { name: 'node_name_required' },
+    });
+    expect(session.localNodeCatalog).toBeUndefined();
   });
 });

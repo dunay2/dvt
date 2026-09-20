@@ -97,6 +97,7 @@ export function buildDefaultCanvasDraftStatusState(): CanvasDraftStatusState {
     label: 'Draft synced',
     tone: 'neutral',
     showReloadAction: false,
+    persistence: 'durable',
   };
 }
 

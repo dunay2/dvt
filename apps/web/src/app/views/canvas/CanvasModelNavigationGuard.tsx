@@ -6,11 +6,14 @@ import type { CanvasRelationalTreeWorkbenchHandle } from './CanvasRelationalTree
 export type CanvasModelBlockedNavigation = Readonly<{ proceed: () => void; reset: () => void }>;
 type GuardProps = Readonly<{
   workbench: RefObject<CanvasRelationalTreeWorkbenchHandle>;
+  hasUnpersistedChanges: boolean;
   onBlocked: (navigation: CanvasModelBlockedNavigation) => void;
 }>;
 
-function RouterGuard({ workbench, onBlocked }: GuardProps): null {
-  const blocker = useBlocker(() => workbench.current?.hasUnappliedChanges === true);
+function RouterGuard({ workbench, hasUnpersistedChanges, onBlocked }: GuardProps): null {
+  const blocker = useBlocker(
+    () => workbench.current?.hasUnappliedChanges === true || hasUnpersistedChanges
+  );
   useEffect(() => {
     if (blocker.state === 'blocked') onBlocked({ proceed: blocker.proceed, reset: blocker.reset });
   }, [blocker, onBlocked]);

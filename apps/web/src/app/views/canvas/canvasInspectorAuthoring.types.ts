@@ -19,6 +19,7 @@ import type {
 } from './httpJsonArtifactAuthoringModel';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
+import type { CanvasDraftSession } from './canvasDraftSession';
 
 export type CanvasInspectorNodeDraft = Readonly<{
   name: string;
@@ -43,6 +44,15 @@ export type CanvasInspectorNodeDraftErrors = Readonly<{
   objectFilePostgres?: ObjectFilePostgresAuthoringErrors;
   httpJsonArtifact?: HttpJsonArtifactAuthoringErrors;
 }>;
+
+export type CanvasInspectorNodeDraftApplyResult =
+  | Readonly<{ outcome: 'applied'; draftSession: CanvasDraftSession }>
+  | Readonly<{ outcome: 'no_changes' }>
+  | Readonly<{
+      outcome: 'rejected';
+      reason: 'node_unavailable' | 'invalid_draft';
+      errors?: CanvasInspectorNodeDraftErrors;
+    }>;
 
 export type CanvasInspectorAuthoringContract = Readonly<{
   canEditNode: boolean;

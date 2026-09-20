@@ -61,6 +61,7 @@ describe('canvasDraftStatusState', () => {
       label: 'Draft save failed',
       tone: 'danger',
       showReloadAction: false,
+      persistence: 'failed',
     });
   });
 
@@ -74,6 +75,7 @@ describe('canvasDraftStatusState', () => {
       label: canvasViewCopy.staleVersionLabel,
       tone: 'danger',
       showReloadAction: true,
+      persistence: 'blocked',
     });
 
     expect(
@@ -85,6 +87,7 @@ describe('canvasDraftStatusState', () => {
       label: canvasViewCopy.draftMissingLabel,
       tone: 'warning',
       showReloadAction: true,
+      persistence: 'blocked',
     });
   });
 });
