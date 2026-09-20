@@ -159,6 +159,33 @@ presentation from #3227. It does not change persisted graph topology or the
 execution snapshot. `canvasViewportEdgeProjection.ts` must not decode internal
 Model composition to render an external dependency.
 
+## Operator Form Boundary
+
+The semantic editor's operator form is a local component, not another mutation
+authority. `CanvasRelationalTreeOperatorForm` composes a controller with an inline
+or modal view. Its `relational-operator-form/` members own:
+
+- `useOperatorForm`: discardable input state, exact integer conversion and
+  dispatch to the existing `applyCanvasRelationalOperatorTool` command owner.
+- `OperatorFormView`: form submission, error presentation and explicit actions.
+- `OperatorFormFields` and `SortKeyFields`: controlled input presentation.
+- `operatorFormCopy`: shared English/Spanish presentation copy.
+
+Views receive values and actions; they do not receive persistence ports or call
+semantic mutations. Cancelling discards local input. Accepted edits update only
+the editor draft; persistence still belongs to explicit Apply through the
+existing authoring rail. Selecting a card opens its properties without fetching
+rows, running the model or applying a semantic revision.
+
+```mermaid
+flowchart LR
+  Container[Operator form] --> Controller[Local form controller]
+  Container --> View[Form view]
+  View --> Fields[Controlled fields]
+  Controller --> Command[Existing draft command owner]
+  Command --> Draft[Local canonical draft]
+```
+
 ## Consumers
 
 Direct consumers:
