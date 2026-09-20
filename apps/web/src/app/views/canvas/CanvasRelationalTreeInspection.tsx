@@ -66,6 +66,8 @@ export function CanvasRelationalTreeInspection({
           <CanvasRelationalTreeEditorFrame
             operation={model.selectedNode.operation ?? 'unsupported'}
             relationId={model.selectedNode.relationId}
+            hasExpression={model.selectedNode.expressionRefs.length > 0}
+            readOnly
             onClose={() => onExpandedChange(false)}
           >
             {model.selectedNode.operator === 'cross' ? (

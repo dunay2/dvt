@@ -1,5 +1,7 @@
 /** Owned concern: show the existing scalar projection of the selected JOIN, not another AST. */
-import { useMemo } from 'react';
+import { useContext, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import { CanvasOperationExpressionHost } from './CanvasRelationalTreeEditorFrame';
 import type { CanonicalNode } from '../../types/canonical';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
@@ -21,6 +23,7 @@ export function CanvasRelationalJoinExpressionTree({
   onSelectCondition?: (index: number, operand?: 'left' | 'right') => void;
   operation?: CanvasRelationalOperation;
 }>): JSX.Element | null {
+  const dock = useContext(CanvasOperationExpressionHost);
   const graph = useMemo(() => {
     if (relationId == null) return null;
     const node =
@@ -36,5 +39,18 @@ export function CanvasRelationalJoinExpressionTree({
     });
   }, [transformNode, draft, relationId, operation]);
   if (graph == null) return null;
-  return <CanvasRelationalScalarTree graph={graph} onSelectCondition={onSelectCondition} />;
+  const tree = (
+    <CanvasRelationalScalarTree
+      graph={graph}
+      onSelectCondition={
+        onSelectCondition == null
+          ? undefined
+          : (index, operand) => {
+              dock?.openProperties();
+              onSelectCondition(index, operand);
+            }
+      }
+    />
+  );
+  return dock == null ? tree : dock.host == null ? null : createPortal(tree, dock.host);
 }

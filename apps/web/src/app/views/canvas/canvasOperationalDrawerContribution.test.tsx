@@ -7,6 +7,36 @@ import { buildCanvasOperationalDrawerContribution } from './canvasOperationalDra
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 
 describe('buildCanvasOperationalDrawerContribution', () => {
+  it.each([true, false])(
+    'admits the operation data dock only when the surface permits data: %s',
+    (allowData) => {
+      const props = buildCanvasShellProps();
+      const operationDataTab = {
+        id: 'data:operation' as const,
+        label: 'Data · operation',
+        count: null,
+        content: <div>Operation preview host</div>,
+      };
+      const contribution = buildCanvasOperationalDrawerContribution({
+        policy: {
+          ...props.layout.surfaceStrategy!.operationalDrawer!,
+          tabs: allowData ? ['log', 'data'] : ['log'],
+        },
+        canPlan: false,
+        activeRunId: null,
+        canPlanGraph: false,
+        canStartRun: false,
+        planRunReadiness: props.chromeState.planRunReadiness,
+        planStatusSummary: props.chromeState.planStatusSummary,
+        onPreviewExecutionPlan: vi.fn(),
+        onStartRun: vi.fn(),
+        operationDataTab,
+      });
+      expect(contribution.tabs.find((tab) => tab.id === operationDataTab.id)).toBe(
+        allowData ? operationDataTab : undefined
+      );
+    }
+  );
   it('projects readiness blockers into actionable Problems and Preview counters', () => {
     const props = buildCanvasShellProps({
       chromeState: {

@@ -55,6 +55,7 @@ export function CanvasRelationalTreeInlineEditor(
           selectedJoin == null ? operation : canvasJoinOperationForType(selectedJoin.joinType)
         }
         relationId={selectedRelationId}
+        hasExpression={selectedJoin != null && appendInput == null}
         hidden={appendInput == null && ((!selectedJoin && !selectedCross) || !expanded)}
         onClose={onClose}
       >

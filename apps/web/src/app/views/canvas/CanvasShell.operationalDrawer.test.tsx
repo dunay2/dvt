@@ -160,6 +160,11 @@ describe('CanvasShell operational drawer registration', () => {
         .contribution?.tabs.some((tab) => tab.id === 'semantic')
     ).toBe(false);
     expect(projectedNode?.position).toBe(position);
+    expect(useOperationalDrawerContributionStore.getState().contribution?.tabs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'data:operation', label: 'Data · operation' }),
+      ])
+    );
     expect(previewTransformRows).not.toHaveBeenCalled();
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });

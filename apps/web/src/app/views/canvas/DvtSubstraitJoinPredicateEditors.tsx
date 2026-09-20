@@ -92,7 +92,7 @@ export function DvtSubstraitJoinPredicateEditors({
                           transformNode={transformNode}
                           relationId={joinRelation.relationId}
                           draft={previewDraft}
-                          onSelectCondition={onSelectCondition}
+                          onSelectCondition={disabled ? undefined : onSelectCondition}
                         />
                       );
                     }

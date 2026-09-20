@@ -89,7 +89,7 @@ function addWrapper(id: string): void {
 }
 
 describe('Relational operator toolbar', () => {
-  it('docks selected-operation properties on the right and keeps sources compact', () => {
+  it('separates right inspection tabs from selected-operation data below and keeps sources compact', () => {
     openEditor();
     cy.get('[data-slot="canvas-relational-tree-source"]').each(($source) => {
       expect($source[0]!.getBoundingClientRect().height).to.be.at.most(40);
@@ -131,24 +131,28 @@ describe('Relational operator toolbar', () => {
       .as('preview');
     cy.get('@preview').find('[data-slot="canvas-model-preview"]').should('be.enabled').click();
     cy.get('@preview').find('table').should('contain.text', 'selected-operation-42');
-    cy.get('.canvas-operation-panels.with-preview:visible').then(($panels) => {
-      const controls = $panels[0]!
-        .querySelector('.canvas-operation-controls')!
-        .getBoundingClientRect();
-      const preview = $panels[0]!.querySelector('aside')!.getBoundingClientRect();
-      expect(preview.top).to.be.greaterThan(controls.bottom);
-      expect(preview.width).to.be.greaterThan(300);
-      const condition = $panels[0]!
-        .querySelector('[data-slot="semantic-workbench-join-condition-list"]')!
-        .getBoundingClientRect();
-      expect(preview.top, 'data must not overlap the editable condition').to.be.greaterThan(
-        condition.bottom
-      );
-    });
+    cy.get('@preview').closest('[data-slot="bottom-operational-drawer"]').should('be.visible');
+    cy.get('[data-slot="canvas-operation-properties-tab"]:visible').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
+    cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
+    cy.get('[data-slot="canvas-join-expression-tree"]:visible').should('have.length', 1);
+    cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('not.be.visible');
+    cy.get('[data-slot="canvas-operation-properties-tab"]:visible').click();
+    cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
+    cy.get('@preview').find('table').should('contain.text', 'selected-operation-42');
     const editor = '[data-slot="canvas-relational-tree-inline-editor"]:visible';
     const viewport = '[data-slot="canvas-relational-tree-draft-viewport"]';
     cy.get(editor).then(($editor) => {
       const properties = $editor[0]!.getBoundingClientRect();
+      expect($editor.find('[data-slot="canvas-operation-data-preview"]')).to.have.length(0);
+      cy.get('@preview').should(($preview) => {
+        const data = $preview[0]!.getBoundingClientRect();
+        expect(data.top).to.be.at.least(properties.bottom);
+        expect(data.width).to.be.greaterThan(properties.width);
+      });
       cy.get(viewport).should(($viewport) => {
         const tree = $viewport[0]!.getBoundingClientRect();
         expect(properties.left).to.be.at.least(tree.right - 1);
@@ -156,26 +160,31 @@ describe('Relational operator toolbar', () => {
         expect(Math.abs(properties.bottom - tree.bottom)).to.be.lessThan(2);
       });
     });
-    cy.get('.canvas-operation-panels.with-preview:visible').scrollTo('top');
+    cy.get('.canvas-operation-panels:visible').scrollTo('top', { ensureScrollable: false });
     cy.screenshot('selected-operation-preview-desktop');
+    const comparison =
+      '[data-slot="semantic-workbench-join-condition-editor"] select[aria-label="Comparador de la condición"]';
+    cy.get(comparison).select('not_equal').as('comparison');
+    cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
+    cy.get('[data-slot="canvas-join-expression-tree"]:visible').should('contain.text', 'NOT_EQUAL');
+    cy.get('[data-slot="canvas-operation-properties-tab"]:visible').click();
+    cy.get('@comparison').should('have.value', 'not_equal');
+    cy.get('@comparison').trigger('keydown', { key: 'Escape' });
     cy.get('[data-operator="aggregate"]').click();
     cy.get('[data-slot="canvas-operation-data-preview"]:visible table').should('not.exist');
     cy.then(() => expect(getE2eApiCalls(samplePath, 'GET')).to.have.length(1));
     cy.viewport(1000, 800);
     cy.get('[data-slot="canvas-relational-tree-draft-viewport"]').should('be.visible');
-    cy.get('.canvas-operation-panels.with-preview:visible').then(($panels) => {
-      const controls = $panels[0]!
-        .querySelector('.canvas-operation-controls')!
-        .getBoundingClientRect();
-      const preview = $panels[0]!.querySelector('aside')!.getBoundingClientRect();
-      expect(preview.top).to.be.greaterThan(controls.bottom);
-    });
+    cy.get(
+      '[data-slot="bottom-operational-drawer"] [data-slot="canvas-operation-data-preview"]'
+    ).should('be.visible');
     cy.get(editor).then(($editor) => {
       const properties = $editor[0]!.getBoundingClientRect();
       expect(properties.right).to.be.at.most(1000);
       cy.get(viewport).then(($viewport) => {
         const tree = $viewport[0]!.getBoundingClientRect();
         cy.get('[data-slot="canvas-relational-collapse"]:visible').click();
+        cy.get('[data-slot="canvas-operation-data-preview"]').should('not.exist');
         cy.get(viewport).should(($expanded) => {
           const expanded = $expanded[0]!.getBoundingClientRect();
           expect(expanded.height).to.equal(tree.height);
@@ -193,6 +202,11 @@ describe('Relational operator toolbar', () => {
     cy.screenshot('selected-operation-properties-narrow');
     cy.get('[data-slot="canvas-relational-collapse"]:visible').click();
     cy.get(viewport).should('be.visible');
+    cy.viewport(1440, 900);
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
+    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data:operation"]').should(
+      'not.exist'
+    );
   });
 
   for (const applied of [false, true]) {
@@ -371,7 +385,8 @@ describe('Relational operator toolbar', () => {
     )
       .find('button[type="submit"]')
       .click();
-    cy.get('[data-slot="canvas-join-expression-node"][data-kind="field"]').first().click();
+    cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
+    cy.get('[data-slot="canvas-join-expression-node"][data-kind="field"]:visible').first().click();
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
     cy.screenshot('selected-join-connected-expression-under-window');
     cy.get('[aria-label="Comparador de la condición"]').select('not_equal');

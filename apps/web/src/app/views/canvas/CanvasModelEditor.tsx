@@ -46,6 +46,8 @@ export function CanvasModelEditor({
   draftStatus,
   query,
   preparePreview,
+  operationDataHost,
+  onOpenOperationData,
   onClose,
   active = true,
   onSelect,
@@ -62,6 +64,8 @@ export function CanvasModelEditor({
   draftStatus: CanvasDraftStatusState;
   query?: ICanvasTransformDataSampleQueryPort;
   preparePreview?: CanvasModelPreviewPreparation;
+  operationDataHost?: HTMLDivElement | null;
+  onOpenOperationData?: () => void;
   onClose: () => void;
   active?: boolean;
   onSelect: () => void;
@@ -323,7 +327,13 @@ export function CanvasModelEditor({
           copy={treeCopy}
           authoring={authoring}
           actionsHost={actionsHost}
-          preview={{ canvasId, query, preparePreview }}
+          preview={{
+            canvasId,
+            query,
+            preparePreview,
+            dataHost: active && view === 'editor' ? operationDataHost : null,
+            onOpenData: active && view === 'editor' ? onOpenOperationData : undefined,
+          }}
         />
       </div>
       {view === 'sql' ? (

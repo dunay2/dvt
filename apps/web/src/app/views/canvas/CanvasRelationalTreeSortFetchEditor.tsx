@@ -36,6 +36,7 @@ export function CanvasRelationalTreeSortFetchEditor({
     ];
   return (
     <CanvasRelationalTreeEditorFrame
+      hasExpression={false}
       operation={operation}
       relationId={relationId}
       onClose={onClose}

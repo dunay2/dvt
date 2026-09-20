@@ -10,10 +10,12 @@ import {
   CanvasOperationDataPreview,
   CanvasOperationPreviewProvider,
 } from './CanvasOperationDataPreview';
+import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 
 describe('selected operation data preview', () => {
   let container: HTMLDivElement;
   let root: Root;
+  let dataHost: HTMLDivElement;
   const digest = 'a'.repeat(64);
   const query = { previewTransformRows: vi.fn() };
   const sample = (relationId: string): TransformDataSampleResponse =>
@@ -37,11 +39,14 @@ describe('selected operation data preview', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
+    dataHost = document.createElement('div');
+    document.body.appendChild(dataHost);
     query.previewTransformRows.mockReset();
   });
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    dataHost.remove();
   });
   function render(relationId: string, unapplied = false): void {
     act(() =>
@@ -63,6 +68,62 @@ describe('selected operation data preview', () => {
       container.querySelector<HTMLButtonElement>('[data-slot="canvas-model-preview"]')!.click();
     });
   }
+  it('portals one preview to the bottom host, retains it across inspector tabs and removes hidden frames', async () => {
+    const onOpenData = vi.fn();
+    const renderDock = (hidden = false): void => {
+      act(() =>
+        root.render(
+          <CanvasOperationPreviewProvider
+            ports={{ canvasId: 'canvas-test', query, dataHost, onOpenData }}
+            nodeId="model"
+            semanticDigest={digest}
+            canEditModel={false}
+            unapplied={false}
+          >
+            <CanvasRelationalTreeEditorFrame
+              operation="inner_join"
+              relationId="join-1"
+              hidden={hidden}
+              onClose={() => undefined}
+            >
+              <input aria-label="Property" defaultValue="draft" />
+            </CanvasRelationalTreeEditorFrame>
+            <CanvasRelationalTreeEditorFrame
+              operation="inner_join"
+              relationId="join-2"
+              hidden
+              onClose={() => undefined}
+            >
+              <span>Inactive editor</span>
+            </CanvasRelationalTreeEditorFrame>
+          </CanvasOperationPreviewProvider>
+        )
+      );
+    };
+    query.previewTransformRows.mockResolvedValue(sample('join-1'));
+    renderDock();
+    expect(onOpenData).toHaveBeenCalledOnce();
+    expect(query.previewTransformRows).not.toHaveBeenCalled();
+    expect(container.querySelector('[data-slot="canvas-operation-data-preview"]')).toBeNull();
+    expect(dataHost.querySelectorAll('[data-slot="canvas-operation-data-preview"]')).toHaveLength(
+      1
+    );
+    await act(async () =>
+      dataHost.querySelector<HTMLButtonElement>('[data-slot="canvas-model-preview"]')!.click()
+    );
+    const table = dataHost.querySelector('table');
+    expect(table?.textContent).toContain('intermediate-result');
+    act(() =>
+      container
+        .querySelector('[data-slot="canvas-operation-tree-tab"]')!
+        .dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    );
+    expect(dataHost.querySelector('table')).toBe(table);
+    expect(query.previewTransformRows).toHaveBeenCalledOnce();
+    renderDock(true);
+    expect(dataHost.childElementCount).toBe(0);
+    expect(onOpenData).toHaveBeenCalledOnce();
+  });
   it('requests a bounded selected relation, then clears its sample on selection change', async () => {
     query.previewTransformRows.mockResolvedValue(sample('join-1'));
     render('join-1');

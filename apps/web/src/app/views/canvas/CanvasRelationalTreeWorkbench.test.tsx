@@ -21,6 +21,7 @@ import {
   encodeDvtSubstraitProjectionDocument,
 } from './canvasDvtSubstraitProjection';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
+import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import {
   createDvtSubstraitCrossDraft,
@@ -185,6 +186,31 @@ describe('Canvas relational-tree Workbench', () => {
     target.dispatchEvent(drop);
   }
 
+  it('keeps the same properties controls mounted while activating inspection tabs by keyboard', () => {
+    act(() =>
+      root.render(
+        <CanvasRelationalTreeEditorFrame operation="inner_join" onClose={() => undefined}>
+          <input aria-label="Pending property" defaultValue="draft" />
+        </CanvasRelationalTreeEditorFrame>
+      )
+    );
+    const input = container.querySelector('input')!;
+    input.value = 'pending edit';
+    const activate = (slot: string): void => {
+      act(() => {
+        container
+          .querySelector(`[data-slot="${slot}"]`)!
+          .dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      });
+    };
+    activate('canvas-operation-tree-tab');
+    expect(input.closest('[role="tabpanel"]')?.getAttribute('data-state')).toBe('inactive');
+    activate('canvas-operation-properties-tab');
+    expect(input.closest('[role="tabpanel"]')?.getAttribute('data-state')).toBe('active');
+    expect(container.querySelector('input')).toBe(input);
+    expect(input.value).toBe('pending edit');
+  });
+
   it('presents useful selected-JOIN conditions without a metadata or column-count panel', () => {
     const clients = sourceNode('clients', 'clients');
     const orders = sourceNode('orders', 'orders');
@@ -323,6 +349,10 @@ describe('Canvas relational-tree Workbench', () => {
     expect(
       container.querySelector('[data-slot="canvas-join-expression-tree"]')?.textContent
     ).toContain('clients.customer_id');
+    const expression = container.querySelector('[data-slot="canvas-join-expression-tree"]')!;
+    expect(expression.closest('[role="tabpanel"]')?.getAttribute('data-state')).toBe('active');
+    expect(expression.closest('[role="tabpanel"]')?.getAttribute('data-value')).toBe('tree');
+    expect(container.querySelector('[data-slot="canvas-operation-properties-tab"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-relational-tree"]')).toBe(tree);
     expect(
       container.querySelector('[data-slot="canvas-relational-tree"] [title="Columns"]')

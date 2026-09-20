@@ -9,6 +9,8 @@ export type CanvasOperationPreviewPorts = Readonly<{
   canvasId: string;
   query?: ICanvasTransformDataSampleQueryPort;
   preparePreview?: CanvasModelPreviewPreparation;
+  dataHost?: HTMLDivElement | null;
+  onOpenData?: () => void;
 }>;
 
 export const CanvasOperationPreviewContext = createContext<
@@ -56,7 +58,7 @@ export function CanvasOperationDataPreview({
     <aside
       data-slot="canvas-operation-data-preview"
       data-relation-id={relationId}
-      className="min-h-0 min-w-0 overflow-hidden rounded-lg border border-(--border-subtle)"
+      className="h-full min-h-0 min-w-0 overflow-hidden"
     >
       <CanvasModelDataView
         key={`${relationId}:${context.semanticDigest}:${context.unapplied}`}

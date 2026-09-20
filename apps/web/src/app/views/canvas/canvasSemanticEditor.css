@@ -20,27 +20,23 @@
   height: 100%;
 }
 
-.canvas-operation-panels {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.canvas-operation-controls {
-  flex: 0 0 auto;
-}
-
-.canvas-operation-panels > [data-slot='canvas-operation-data-preview'] {
-  flex: 0 0 240px;
-}
-
 .canvas-operation-editors {
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: 200px auto;
+}
+
+[data-slot='canvas-operation-data-host']:has([data-slot='canvas-operation-data-preview']) > p {
+  display: none;
 }
 
 .canvas-operation-editors > * {
   min-width: 0;
+}
+
+@media (max-width: 767px) {
+  [data-slot='canvas-relational-tree-operation-shelf'] {
+    max-height: 112px;
+    overflow: auto;
+  }
 }
 
 @container (max-width: 600px) {
