@@ -299,8 +299,10 @@ describe('Canvas relational-tree Workbench', () => {
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
 
     cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]')
+      .should('have.attr', 'aria-keyshortcuts', 'Enter')
       .focus()
-      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+      .should('be.focused')
+      .type('{enter}');
 
     cy.get('[data-slot="canvas-model-view-tab"][data-view="editor"]').should(
       'have.attr',
@@ -451,7 +453,9 @@ describe('Canvas relational-tree Workbench', () => {
     cy.get('[data-slot="canvas-relational-tree-start-authoring"]').should('not.exist');
     cy.get('[data-slot="canvas-relational-node-expand"]').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+    cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
     cy.get('[data-slot="canvas-join-expression-tree"]:visible').should('have.length', 1);
+    cy.get('[data-slot="canvas-operation-properties-tab"]:visible').click();
     cy.then(expectPublishedSemanticUnchanged);
     cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
       'have.length',
@@ -651,12 +655,14 @@ describe('Canvas relational-tree Workbench', () => {
       .should('not.contain.text', 'UPPER(')
       .and('contain.text', 'LOWER(')
       .and('contain.text', 'customers.customer_id');
+    cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
     cy.get('[data-slot="canvas-join-expression-tree"]:visible')
       .should('contain.text', 'NOT_EQUAL')
       .and('contain.text', 'LOWER')
       .and('contain.text', 'customers.customer_id')
       .and('contain.text', 'tickets.customer_id');
     cy.screenshot('semantic-editor-contextual-join');
+    cy.get('[data-slot="canvas-operation-properties-tab"]:visible').click();
     cy.contains(`${selectedPredicates} button`, 'Guardar condición').click();
 
     cy.get(`${selectedPredicates} button[aria-label="Añadir condición"]`).first().click();
@@ -664,6 +670,7 @@ describe('Canvas relational-tree Workbench', () => {
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]')
       .contains('button', 'Añadir condición')
       .click();
+    cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
     cy.get('[data-slot="canvas-join-expression-tree"]:visible').should('contain.text', 'LOWER');
     cy.get('[data-slot="canvas-relational-collapse"]').click();
     cy.get('[data-slot="canvas-relational-tree-draft-viewport"]').should(($viewport) => {
