@@ -13,6 +13,7 @@ import {
   SortFieldSchema,
   SortField_SortDirection,
   SortRelSchema,
+  type Expression,
   type Rel,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
@@ -69,6 +70,7 @@ const ADMITTED_DIRECTIONS = new Set<number>([
 ]);
 
 const I64_MAX = 9_223_372_036_854_775_807n;
+type RelationBinding = DvtSubstraitJoinDraft['sidecar']['relations'][number];
 
 function rootInput(draft: DvtSubstraitJoinDraft): Rel {
   const root = draft.plan.relations[0]?.relType;
@@ -85,7 +87,13 @@ function relationAnchor(rel: Rel): number | null {
   return common?.relAnchor ?? null;
 }
 
-function fieldsForAnchor(draft: DvtSubstraitJoinDraft, anchor: number) {
+function fieldsForAnchor(
+  draft: DvtSubstraitJoinDraft,
+  anchor: number
+): Readonly<{
+  relation: RelationBinding;
+  fields: readonly DvtSubstraitFieldBindingV1[];
+}> {
   const relation = draft.sidecar.relations.find((candidate) => candidate.relAnchor === anchor);
   if (relation == null) throw new Error('Sort/Fetch input relation identity is unavailable.');
   const fields = draft.sidecar.fields
@@ -244,7 +252,7 @@ export function createDvtSubstraitFetchDraft(
   });
 }
 
-function createDirectFieldExpression(ordinal: number) {
+function createDirectFieldExpression(ordinal: number): Expression {
   return create(ExpressionSchema, {
     rexType: {
       case: 'selection',
@@ -267,7 +275,7 @@ function createDirectFieldExpression(ordinal: number) {
   });
 }
 
-function createI64Literal(value: bigint) {
+function createI64Literal(value: bigint): Expression {
   return create(ExpressionSchema, {
     rexType: {
       case: 'literal',
@@ -301,7 +309,16 @@ function directCommon(rel: Rel): Readonly<{ anchor: number }> | null {
   return { anchor: common.relAnchor };
 }
 
-function inspectWrapperIdentity(draft: DvtSubstraitJoinDraft, rel: Rel, input: Rel) {
+function inspectWrapperIdentity(
+  draft: DvtSubstraitJoinDraft,
+  rel: Rel,
+  input: Rel
+): Readonly<{
+  relation: RelationBinding;
+  inputRelation: RelationBinding;
+  inputFields: readonly DvtSubstraitFieldBindingV1[];
+  outputFields: readonly DvtSubstraitFieldBindingV1[];
+}> | null {
   const wrapperCommon = directCommon(rel);
   const inputAnchor = relationAnchor(input);
   if (wrapperCommon == null || inputAnchor == null) return null;
@@ -332,7 +349,7 @@ function inspectWrapperIdentity(draft: DvtSubstraitJoinDraft, rel: Rel, input: R
 
 function inspectFetchValue(
   expression: Parameters<typeof dvtSubstraitExpressionReader.literalValue>[0]
-) {
+): bigint | null | undefined {
   if (expression == null) return null;
   const literal = dvtSubstraitExpressionReader.literalValue(expression);
   if (literal?.dataType === 'i64' && literal.value >= 0n && literal.value <= I64_MAX) {

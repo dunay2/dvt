@@ -36,7 +36,7 @@ export function postgresSortDirection(
   );
 }
 
-function selectColumns(columns: readonly Readonly<{ name: string }>[]) {
+function selectColumns(columns: readonly Readonly<{ name: string }>[]): readonly PostgresAstNode[] {
   return columns.map((column) => ({ ResTarget: { val: pgColumnRef(column.name) } }));
 }
 
