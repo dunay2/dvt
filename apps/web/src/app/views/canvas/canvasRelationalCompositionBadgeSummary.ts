@@ -1,5 +1,6 @@
 /** Owned concern: describe one verified canonical composition for accessible badge inspection. */
 import type { CanonicalNode } from '../../types/canonical';
+import { decodeDvtSubstraitPlanV1 } from '@dvt/contracts';
 import { resolveGraphNodeCardCopy } from '../../plugins/graph/graphNodeCardCopyTokens';
 import {
   decodeDvtSubstraitJoinDocument,
@@ -61,11 +62,14 @@ export function resolveCanvasRelationalCompositionBadgeSummary(args: {
   }
 
   if (args.operation === 'cross_join') {
-    const inspection = inspectDvtSubstraitAcceptedCrossDraft(
-      decodeDvtSubstraitJoinDocument(authority.semanticDocument)
-    );
+    const inspection = inspectDvtSubstraitAcceptedCrossDraft({
+      plan: decodeDvtSubstraitPlanV1(authority.semanticDocument),
+      sidecar: authority.semanticDocument.sidecar,
+    });
     return inspection.ok
-      ? `CROSS JOIN · ${inspection.projection.inputs.length} inputs · ${inspection.projection.outputs.length} outputs`
+      ? copy.relationalCompositionCrossSummaryTemplate
+          .replace('{inputCount}', String(inspection.projection.inputs.length))
+          .replace('{outputCount}', String(inspection.projection.outputs.length))
       : null;
   }
 

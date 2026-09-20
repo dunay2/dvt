@@ -16,9 +16,15 @@ import {
   createDvtSubstraitUnionAllDraft,
   encodeDvtSubstraitUnionAllDocument,
 } from './canvasDvtSubstraitSetComposition';
+import {
+  createDvtSubstraitCrossDraft,
+  encodeDvtSubstraitCrossDocument,
+} from './canvasDvtSubstraitCrossComposition';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { readCanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
 import { projectCanvasViewportEdges } from './canvasViewportEdgeProjection';
+import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
+import { resolveCanvasRelationalCompositionBadgeSummary } from './canvasRelationalCompositionBadgeSummary';
 
 function source(id: string): CanonicalNode {
   const sourceRef: ConnectedSourceRef = {
@@ -124,6 +130,25 @@ function canonicalUnionAll(left: CanonicalNode, right: CanonicalNode): Canonical
   );
 }
 
+function canonicalCross(left: CanonicalNode, right: CanonicalNode): CanonicalNode {
+  return applyDvtSubstraitSemanticDocument(
+    transform(),
+    encodeDvtSubstraitCrossDocument(
+      createDvtSubstraitCrossDraft({
+        inputs: [left, right].map((node) => ({
+          nodeId: node.id,
+          schema: 'raw',
+          table: node.name,
+          fields: [
+            { name: 'id', dataType: 'string', joinDataType: 'string' as const, nullable: true },
+          ],
+          sourceRef: sourceRef(node),
+        })),
+      })
+    )
+  );
+}
+
 function canonicalThreeInputJoin(
   left: CanonicalNode,
   right: CanonicalNode,
@@ -210,6 +235,28 @@ describe('Canvas viewport edge projection', () => {
     expect(
       canonicalAccessibleLabel(canonicalUnionAll(orders, clients), [orders, clients], 'en')
     ).toBe('UNION ALL, inputs: 2, outputs: 1, bag semantics');
+    const cross = canonicalCross(orders, clients);
+    const crossEdges = [orders, clients].map((input) => ({
+      sourceId: input.id,
+      targetId: cross.id,
+    }));
+    expect(
+      resolveCanvasRelationalCompositionTruth({
+        node: cross,
+        nodes: [orders, clients, cross],
+        edges: crossEdges,
+      })
+    ).toMatchObject({ state: 'canonical', operation: 'cross_join' });
+    expect(
+      resolveCanvasRelationalCompositionBadgeSummary({
+        node: cross,
+        operation: 'cross_join',
+        locale: 'es',
+      })
+    ).toBe('CROSS JOIN, entradas: 2, salidas: 2, producto cartesiano');
+    expect(canonicalAccessibleLabel(cross, [orders, clients], 'es')).toBe(
+      'CROSS JOIN, entradas: 2, salidas: 2, producto cartesiano'
+    );
     expect(
       canonicalAccessibleLabel(
         canonicalThreeInputJoin(orders, clients, details),

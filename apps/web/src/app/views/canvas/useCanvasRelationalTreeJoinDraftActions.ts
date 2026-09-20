@@ -7,9 +7,9 @@ import type {
   CanvasRelationalOperationChoice,
 } from './canvasRelationalOperationChoices';
 import { appendCanvasRelationalTreeJoinInput } from './canvasRelationalTreeAuthoringModel';
-import { isCanvasJoinOperation, setFinalCanvasJoinType } from './canvasRelationalTreeJoinType';
+import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
-import { createCanvasRelationalTreeOperationDraft } from './canvasRelationalTreeOperationDraft';
+import { resolveCanvasRelationalTreeOperationTransition } from './canvasRelationalTreeOperationTransition';
 
 export function useCanvasRelationalTreeJoinDraftActions(
   args: Readonly<{
@@ -43,27 +43,24 @@ export function useCanvasRelationalTreeJoinDraftActions(
     (nextOperation: CanvasRelationalOperation) => {
       if (!choices.some((choice) => choice.operation === nextOperation && choice.selectable))
         return;
-      if (isCanvasJoinOperation(nextOperation) && joinDraft != null) {
-        const next = setFinalCanvasJoinType(joinDraft, nextOperation);
-        if (next == null) return;
-        setJoinDraft(next);
-        setOperation(nextOperation);
-        setAppendInputId(null);
-        return;
-      }
-      const draft = createCanvasRelationalTreeOperationDraft({
+      const transition = resolveCanvasRelationalTreeOperationTransition({
         operation: nextOperation,
         inputs,
         targetNodeId,
         selectedInputIds,
+        draft: joinDraft,
+        appendInputId,
       });
-      if (draft == null) return;
-      setJoinDraft(draft);
+      if (transition == null) return;
+      setJoinDraft(transition.draft);
+      if (transition.appendedInputId != null) appendOperand(transition.appendedInputId);
       setOperation(nextOperation);
       setAppendInputId(null);
     },
     [
       choices,
+      appendInputId,
+      appendOperand,
       inputs,
       joinDraft,
       operation,

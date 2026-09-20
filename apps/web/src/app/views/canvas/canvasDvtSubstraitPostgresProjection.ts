@@ -1,8 +1,7 @@
 import {
-  buildDvtSetPostgresAst,
   buildNInputJoinPostgresAst,
   DvtSubstraitPostgresProjectionError,
-  inspectDvtSubstraitSetDraft,
+  projectDvtSetDraftToPostgresSql,
 } from '@dvt/postgres-projection';
 export {
   DvtSubstraitPostgresProjectionError,
@@ -49,15 +48,7 @@ import {
   reduceDvtSubstraitJoinConditions,
 } from './canvasDvtSubstraitJoinCondition';
 import { resolveDvtSubstraitJoinUnaryFunction } from './canvasDvtSubstraitJoinOperand';
-import {
-  inspectDvtSubstraitUnionAllGroupedWindowDraft,
-  inspectDvtSubstraitUnionAllGroupingDraft,
-  removeDvtSubstraitUnionAllGroupedRowNumber,
-  removeDvtSubstraitUnionAllGrouping,
-  type DvtSubstraitUnionAllDraft,
-  type DvtSubstraitUnionAllGroupedWindowProjection,
-  type DvtSubstraitUnionAllGroupingProjection,
-} from './canvasDvtSubstraitSetComposition';
+import { type DvtSubstraitUnionAllDraft } from './canvasDvtSubstraitSetComposition';
 import {
   pgAnd,
   pgBooleanLiteral,
@@ -403,52 +394,6 @@ function buildGroupedInnerJoinPostgresAst(
   };
 }
 
-function buildAcceptedSetPostgresAst(draft: DvtSubstraitUnionAllDraft): PostgresAstNode {
-  const inspection = inspectDvtSubstraitSetDraft(draft);
-  if (!inspection.ok) {
-    throw new DvtSubstraitPostgresProjectionError(
-      'unsupported_shape',
-      'PostgreSQL projection supports only admitted VTX2 N-source SetRel operations.'
-    );
-  }
-  return buildDvtSetPostgresAst(inspection.projection);
-}
-
-function buildGroupedUnionAllPostgresAst(
-  composition: DvtSubstraitUnionAllGroupingProjection | DvtSubstraitUnionAllGroupedWindowProjection,
-  setAst: PostgresAstNode
-): PostgresAstNode {
-  const groupExpression = pgColumnRef(composition.groupField.name);
-  const groupedWindow = 'result' in composition ? composition : null;
-  return {
-    SelectStmt: {
-      targetList: [
-        { ResTarget: { val: groupExpression } },
-        {
-          ResTarget: {
-            name: composition.measure.name,
-            val: pgCountRows(),
-          },
-        },
-        ...(groupedWindow == null
-          ? []
-          : [
-              {
-                ResTarget: {
-                  name: groupedWindow.result.name,
-                  val: pgRowNumberOverCount(groupExpression),
-                },
-              },
-            ]),
-      ],
-      fromClause: [pgRangeSubselect(setAst, 'union_all_input')],
-      groupClause: [groupExpression],
-      limitOption: 'LIMIT_OPTION_DEFAULT',
-      op: 'SETOP_NONE',
-    },
-  };
-}
-
 async function deparseBoundedPostgresAst(postgresAst: PostgresAstNode): Promise<string> {
   try {
     return await deparse(postgresAst as Parameters<typeof deparse>[0]);
@@ -533,18 +478,5 @@ export async function projectDvtSubstraitJoinToPostgresSql(
 export async function projectDvtSubstraitUnionAllToPostgresSql(
   draft: DvtSubstraitUnionAllDraft
 ): Promise<string> {
-  const groupedWindow = inspectDvtSubstraitUnionAllGroupedWindowDraft(draft);
-  if (groupedWindow.ok) {
-    const groupingDraft = removeDvtSubstraitUnionAllGroupedRowNumber(draft);
-    const setAst = buildAcceptedSetPostgresAst(removeDvtSubstraitUnionAllGrouping(groupingDraft));
-    return deparseBoundedPostgresAst(
-      buildGroupedUnionAllPostgresAst(groupedWindow.projection, setAst)
-    );
-  }
-  const grouping = inspectDvtSubstraitUnionAllGroupingDraft(draft);
-  if (grouping.ok) {
-    const setAst = buildAcceptedSetPostgresAst(removeDvtSubstraitUnionAllGrouping(draft));
-    return deparseBoundedPostgresAst(buildGroupedUnionAllPostgresAst(grouping.projection, setAst));
-  }
-  return deparseBoundedPostgresAst(buildAcceptedSetPostgresAst(draft));
+  return (await projectDvtSetDraftToPostgresSql(draft)).sql;
 }

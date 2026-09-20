@@ -1,8 +1,18 @@
 /** Owns PostgreSQL AST projection for admitted UNION ALL and UNION DISTINCT SetRel. */
 import { DvtSubstraitPostgresProjectionError } from './dvtProjection.js';
-import { pgColumnRef, pgRangeVar, type PostgresAstNode } from './postgresAst.js';
+import {
+  pgColumnRef,
+  pgCountRows,
+  pgRangeSubselect,
+  pgRangeVar,
+  pgRowNumberOverCount,
+  type PostgresAstNode,
+} from './postgresAst.js';
 import { renderPostgresAst } from './renderPostgresAst.js';
-import { inspectDvtSubstraitSetDraft } from './substraitSetReader.js';
+import {
+  inspectDvtSubstraitSetComposition,
+  type DvtSubstraitSetComposition,
+} from './substraitSetCompositionReader.js';
 import type { DvtSubstraitSetDraft, DvtSubstraitSetProjection } from './substraitSetReadModel.js';
 
 function inputAst(
@@ -43,18 +53,54 @@ export function buildDvtSetPostgresAst(projection: DvtSubstraitSetProjection): P
   return { SelectStmt: union };
 }
 
+function buildSetCompositionPostgresAst(composition: DvtSubstraitSetComposition): PostgresAstNode {
+  const setAst = buildDvtSetPostgresAst(composition.baseProjection);
+  if (composition.kind === 'set') return setAst;
+  const groupFieldName = composition.groupFieldName;
+  const measureName = composition.measureName;
+  if (groupFieldName == null || measureName == null) {
+    throw new DvtSubstraitPostgresProjectionError(
+      'unsupported_shape',
+      'PostgreSQL Set wrapper projection requires canonical grouping metadata.'
+    );
+  }
+  const groupExpression = pgColumnRef(groupFieldName);
+  return {
+    SelectStmt: {
+      targetList: [
+        { ResTarget: { val: groupExpression } },
+        { ResTarget: { name: measureName, val: pgCountRows() } },
+        ...(composition.kind === 'window'
+          ? [
+              {
+                ResTarget: {
+                  name: composition.windowName,
+                  val: pgRowNumberOverCount(groupExpression),
+                },
+              },
+            ]
+          : []),
+      ],
+      fromClause: [pgRangeSubselect(setAst, 'union_all_input')],
+      groupClause: [groupExpression],
+      limitOption: 'LIMIT_OPTION_DEFAULT',
+      op: 'SETOP_NONE',
+    },
+  };
+}
+
 export async function projectDvtSetDraftToPostgresSql(
   draft: DvtSubstraitSetDraft
 ): Promise<Readonly<{ sql: string; projection: DvtSubstraitSetProjection }>> {
-  const inspection = inspectDvtSubstraitSetDraft(draft);
-  if (!inspection.ok) {
+  const composition = inspectDvtSubstraitSetComposition(draft);
+  if (composition == null) {
     throw new DvtSubstraitPostgresProjectionError(
       'unsupported_shape',
       'PostgreSQL projection requires an admitted N-input SetRel shape.'
     );
   }
   return {
-    projection: inspection.projection,
-    sql: await renderPostgresAst(buildDvtSetPostgresAst(inspection.projection)),
+    projection: composition.projection,
+    sql: await renderPostgresAst(buildSetCompositionPostgresAst(composition)),
   };
 }

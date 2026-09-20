@@ -18,6 +18,12 @@ import { inspectDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjecti
 import { removeCanvasRelationalTreeNode } from './canvasRelationalTreeRemoval';
 import { createDvtSubstraitCrossDraft } from './canvasDvtSubstraitCrossComposition';
 import { inspectDvtSubstraitCrossDraft } from '@dvt/postgres-projection';
+import {
+  applyDvtSubstraitUnionAllGroupedRowNumber,
+  applyDvtSubstraitUnionAllGrouping,
+  createDvtSubstraitSetDraft,
+  type DvtSubstraitUnionAllSource,
+} from './canvasDvtSubstraitSetComposition';
 
 function source(table: string): DvtSubstraitJoinSource {
   const sourceRef: ConnectedSourceRef = {
@@ -67,6 +73,38 @@ function fixture(valueType?: DvtSubstraitJoinDataType): {
 }
 
 describe('Contextual relational card removal', () => {
+  it('keeps UNION DISTINCT metadata when removing its outer window wrapper', () => {
+    const setInput = (table: string): DvtSubstraitUnionAllSource => ({
+      ...source(table),
+      fields: [{ name: 'id', type: 'string' as const }],
+    });
+    const distinct = createDvtSubstraitSetDraft({
+      targetNodeId: 'model',
+      operation: 'union_distinct',
+      inputs: [setInput('customers'), setInput('orders')],
+    });
+    const resultBinding = distinct.sidecar.relations.at(-1)!;
+    const groupField = distinct.sidecar.fields.find(
+      (field) => field.relationId === resultBinding.relationId
+    )!;
+    const grouped = applyDvtSubstraitUnionAllGrouping(distinct, {
+      groupFieldId: groupField.fieldId,
+      countOutputName: 'total',
+    });
+    const windowed = applyDvtSubstraitUnionAllGroupedRowNumber(grouped, {
+      outputName: 'rank',
+    });
+    const result = removeCanvasRelationalTreeNode({
+      draft: windowed,
+      relationId: windowed.sidecar.relations.at(-1)!.relationId,
+      targetNodeId: 'model',
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.operation).toBe('union_distinct');
+  });
+
   it('removes a CROSS source while preserving the surviving product and source identities', () => {
     const draft = createDvtSubstraitCrossDraft({
       inputs: [crossInput('customers'), crossInput('orders'), crossInput('tickets')],

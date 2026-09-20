@@ -6,17 +6,10 @@ import { resolveCanvasRelationalTreeAuthoringCandidates } from './canvasRelation
 import { resolveCanvasRelationalTreeExistingJoinDraft } from './canvasRelationalTreeExistingJoinDraft';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import {
-  isCanvasSetOperation,
-  type CanvasRelationalOperation,
-} from './canvasRelationalOperationChoices';
-import { appendDvtSubstraitUnionAllInput } from './canvasDvtSubstraitSetComposition';
-
-export type CanvasRelationalTreeJoinSeedHydration = Readonly<{
-  draft: DvtSubstraitJoinDraft;
-  inputIds: readonly string[];
-  appendInputId: string | null;
-  operation: CanvasRelationalOperation;
-}>;
+  resolveCanvasRelationalTreeSeedHydration,
+  type CanvasRelationalTreeJoinSeedHydration,
+} from './canvasRelationalTreeSeedHydration';
+export type { CanvasRelationalTreeJoinSeedHydration } from './canvasRelationalTreeSeedHydration';
 
 export function useCanvasRelationalTreeExistingJoinSeed(
   args: Readonly<{
@@ -51,25 +44,13 @@ export function useCanvasRelationalTreeExistingJoinSeed(
               nodes,
               edges,
             }).find((item) => item.nodeId === requestedInputId && item.selectable)?.nodeId ?? null);
-      const input = inputs.find((candidate) => candidate.nodeId === appendInputId);
-      if (seed.operation === 'projection') {
-        onHydrate({
-          ...seed,
-          appendInputId: null,
-          inputIds: input == null ? seed.inputIds : [...seed.inputIds, input.nodeId],
-        });
-      } else if (isCanvasSetOperation(seed.operation) && input != null) {
-        const draft = appendDvtSubstraitUnionAllInput(seed.draft, {
-          ...input,
-          fields: input.fields.map((field) => ({ name: field.name, type: 'string' })),
-        });
-        onHydrate({
-          ...seed,
-          draft,
-          inputIds: draft === seed.draft ? seed.inputIds : [...seed.inputIds, input.nodeId],
-          appendInputId: null,
-        });
-      } else onHydrate({ ...seed, appendInputId });
+      onHydrate(
+        resolveCanvasRelationalTreeSeedHydration({
+          seed: { ...seed, appendInputId: null },
+          appendInputId,
+          inputs,
+        })
+      );
       return true;
     },
     [edges, inputs, nodes, onHydrate, seed, targetNodeId]

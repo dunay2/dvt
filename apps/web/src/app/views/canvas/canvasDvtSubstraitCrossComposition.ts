@@ -1,5 +1,5 @@
 /** Owns canonical Canvas authoring for explicit Substrait CrossRel chains. */
-import { create } from '@bufbuild/protobuf';
+import { clone, create } from '@bufbuild/protobuf';
 import {
   CrossRelSchema,
   ReadRelSchema,
@@ -44,6 +44,10 @@ import {
 } from '@dvt/postgres-projection';
 
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
+import {
+  inspectDvtSubstraitJoinDraft,
+  type DvtSubstraitJoinDraft,
+} from './canvasDvtSubstraitJoinComposition';
 import { hasSameConnectedSourceRef } from './canvasDvtSubstraitJoinSourceResolution';
 import { encodeDvtSubstraitSemanticDraft } from './canvasDvtSubstraitSemanticCodec';
 
@@ -355,7 +359,159 @@ export function appendDvtSubstraitCrossInput(
   draft: DvtSubstraitCrossDraft,
   inputs: readonly CanvasDvtCompositionInput[]
 ): DvtSubstraitCrossDraft {
-  return createDvtSubstraitCrossDraft({ inputs, previousDraft: draft });
+  const cross = inspectDvtSubstraitCrossDraft(draft);
+  if (cross.ok) return createDvtSubstraitCrossDraft({ inputs, previousDraft: draft });
+
+  const join = inspectDvtSubstraitJoinDraft(draft);
+  if (!join.ok) throw new Error('CROSS append requires an admitted CrossRel or JoinRel draft.');
+  const appended = inputs.filter(
+    (input) =>
+      !join.projection.inputs.some((existing) =>
+        hasSameConnectedSourceRef(existing.sourceRef, input.sourceRef)
+      )
+  );
+  if (appended.length !== 1) {
+    throw new Error('Mixed CROSS append requires exactly one new connected input.');
+  }
+  return createDvtSubstraitMixedCrossDraft(draft, appended[0]!);
+}
+
+export function createDvtSubstraitMixedCrossDraft(
+  joinDraft: DvtSubstraitJoinDraft,
+  rightInput: CanvasDvtCompositionInput
+): DvtSubstraitCrossDraft {
+  requireCapability('substrait.CrossRel');
+  const join = inspectDvtSubstraitJoinDraft(joinDraft);
+  const connection = join.ok ? join.projection.inputs[0]?.sourceRef.connectionRef : null;
+  if (
+    !join.ok ||
+    connection == null ||
+    rightInput.sourceRef.connectionRef.provider !== 'postgres' ||
+    !hasSameConnectionRef(connection, rightInput.sourceRef.connectionRef) ||
+    join.projection.inputs.some((input) =>
+      hasSameConnectedSourceRef(input.sourceRef, rightInput.sourceRef)
+    ) ||
+    rightInput.fields.length === 0 ||
+    rightInput.fields.some((field) => field.joinDataType == null)
+  ) {
+    throw new Error('Mixed CROSS requires one admitted JOIN and one distinct PostgreSQL input.');
+  }
+  new Set(rightInput.fields.map((field) => field.joinDataType!)).forEach(requireType);
+
+  const plan = clone(PlanSchema, joinDraft.plan);
+  const root = plan.relations[0]?.relType;
+  if (root?.case !== 'root' || root.value.input?.relType.case !== 'join') {
+    throw new Error('Mixed CROSS requires a JoinRel root.');
+  }
+  const leftAnchor = root.value.input.relType.value.common?.relAnchor;
+  const left = root.value.input;
+  const leftBinding = joinDraft.sidecar.relations.find(
+    (relation) => relation.relAnchor === leftAnchor
+  );
+  if (leftBinding == null) throw new Error('Mixed CROSS JOIN binding is missing.');
+
+  const rightAnchor =
+    Math.max(...joinDraft.sidecar.relations.map(({ relAnchor }) => relAnchor)) + 1;
+  const crossAnchor = rightAnchor + 1;
+  const rightRelationId = allocateDvtRelationId();
+  const crossRelationId = allocateDvtRelationId();
+  const rightFields = rightInput.fields.map((field) => ({
+    ...field,
+    fieldId: allocateDvtFieldId(),
+    dataType: field.joinDataType!,
+    nullable: field.nullable ?? true,
+  }));
+  const right = create(RelSchema, {
+    relType: {
+      case: 'read',
+      value: create(ReadRelSchema, {
+        common: create(RelCommonSchema, { relAnchor: rightAnchor }),
+        baseSchema: create(NamedStructSchema, {
+          names: rightFields.map(({ name }) => name),
+          struct: create(Type_StructSchema, {
+            types: rightFields.map((field) => crossFieldType(field.dataType, field.nullable)),
+            nullability: Type_Nullability.REQUIRED,
+          }),
+        }),
+        readType: {
+          case: 'namedTable',
+          value: create(ReadRel_NamedTableSchema, {
+            names: [rightInput.schema, rightInput.table],
+          }),
+        },
+      }),
+    },
+  });
+  const usedNames = new Set(join.projection.outputs.map(({ name }) => name));
+  const rightOutputNames = rightFields.map((field) => {
+    const name = uniqueOutputName(rightInput, field.name, usedNames);
+    usedNames.add(name);
+    return name;
+  });
+  const origins = [
+    ...join.projection.outputs.map((output) => output.source.fieldId),
+    ...rightFields.map((field) => field.fieldId),
+  ];
+  root.value.input = create(RelSchema, {
+    relType: {
+      case: 'cross',
+      value: create(CrossRelSchema, {
+        common: create(RelCommonSchema, {
+          relAnchor: crossAnchor,
+          emitKind: {
+            case: 'emit',
+            value: create(RelCommon_EmitSchema, {
+              outputMapping: origins.map((_, ordinal) => ordinal),
+            }),
+          },
+        }),
+        left,
+        right,
+      }),
+    },
+  });
+  root.value.names = [...join.projection.outputs.map(({ name }) => name), ...rightOutputNames];
+  const draft: DvtSubstraitCrossDraft = {
+    plan,
+    sidecar: {
+      ...globalThis.structuredClone(joinDraft.sidecar),
+      semanticPlanSha256: ZERO_SHA256,
+      relations: [
+        ...globalThis.structuredClone(joinDraft.sidecar.relations),
+        {
+          relationId: rightRelationId,
+          relAnchor: rightAnchor,
+          sourceRef: rightInput.sourceRef,
+          displayName: rightInput.table,
+        },
+        {
+          relationId: crossRelationId,
+          relAnchor: crossAnchor,
+          displayName: `${leftBinding.displayName}+${rightInput.table}`,
+        },
+      ],
+      fields: [
+        ...globalThis.structuredClone(joinDraft.sidecar.fields),
+        ...rightFields.map((field, outputOrdinal) => ({
+          fieldId: field.fieldId,
+          relationId: rightRelationId,
+          outputOrdinal,
+          displayName: field.name,
+        })),
+        ...origins.map((sourceFieldId, outputOrdinal) => ({
+          fieldId: allocateDvtFieldId(),
+          relationId: crossRelationId,
+          sourceFieldId,
+          outputOrdinal,
+          displayName: root.value.names[outputOrdinal]!,
+        })),
+      ],
+    },
+  };
+  if (!inspectDvtSubstraitAcceptedCrossDraft(draft).ok) {
+    throw new Error('Mixed CROSS authoring produced a non-admitted semantic document.');
+  }
+  return draft;
 }
 
 export function encodeDvtSubstraitCrossDocument(draft: DvtSubstraitCrossDraft) {
