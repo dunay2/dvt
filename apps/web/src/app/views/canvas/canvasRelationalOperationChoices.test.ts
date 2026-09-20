@@ -67,6 +67,8 @@ describe('resolveCanvasRelationalOperationChoices', () => {
       union_distinct: 'available',
       intersect_distinct: 'available',
       except_distinct: 'available',
+      intersect_all: 'available',
+      except_all: 'available',
     });
   });
 
@@ -85,6 +87,8 @@ describe('resolveCanvasRelationalOperationChoices', () => {
       union_distinct: 'needs-schema-alignment',
       intersect_distinct: 'needs-schema-alignment',
       except_distinct: 'needs-schema-alignment',
+      intersect_all: 'needs-schema-alignment',
+      except_all: 'needs-schema-alignment',
     });
   });
 
@@ -121,6 +125,8 @@ describe('resolveCanvasRelationalOperationChoices', () => {
       union_distinct: 'target-unavailable',
       intersect_distinct: 'target-unavailable',
       except_distinct: 'target-unavailable',
+      intersect_all: 'target-unavailable',
+      except_all: 'target-unavailable',
     });
   });
 
@@ -177,6 +183,8 @@ describe('resolveCanvasRelationalOperationChoices', () => {
       union_distinct: 'read-only',
       intersect_distinct: 'read-only',
       except_distinct: 'read-only',
+      intersect_all: 'read-only',
+      except_all: 'read-only',
     });
   });
 });

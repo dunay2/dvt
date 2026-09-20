@@ -90,6 +90,8 @@ describe('Canvas algebraic composition', () => {
       'union_distinct',
       'intersect_distinct',
       'except_distinct',
+      'intersect_all',
+      'except_all',
     ]);
     const transaction = resolveCanvasAlgebraicCompositionTransaction({
       ...state,

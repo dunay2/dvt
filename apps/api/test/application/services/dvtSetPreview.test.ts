@@ -15,7 +15,12 @@ import { buildDvtSetPreviewDraft } from '../../fixtures/dvtSetPreviewFixture.js'
 
 function harness(
   wrapper?: 'aggregate' | 'window',
-  operation: 'union_distinct' | 'intersect_distinct' | 'except_distinct' = 'union_distinct'
+  operation:
+    | 'union_distinct'
+    | 'intersect_distinct'
+    | 'except_distinct'
+    | 'intersect_all'
+    | 'except_all' = 'union_distinct'
 ): Readonly<{
   input: DvtPostgresTargetProjectionPublishInput;
   publisher: DvtPostgresTargetProjectionPublisher;
@@ -42,6 +47,8 @@ describe('protected UNION DISTINCT lowering', () => {
   it.each([
     ['intersect_distinct', /INTERSECT/g],
     ['except_distinct', /EXCEPT/g],
+    ['intersect_all', /INTERSECT\s+ALL/g],
+    ['except_all', /EXCEPT\s+ALL/g],
   ] as const)(
     'publishes the exact ordered %s artifact for Preview and Run',
     async (operation, sqlOperator) => {
@@ -56,7 +63,7 @@ describe('protected UNION DISTINCT lowering', () => {
       if (!previewResult.ok) throw new Error(previewResult.reason);
       const previewSql = Buffer.from(preview.publish.mock.calls[0]![0].bytes).toString('utf8');
       expect(previewSql.match(sqlOperator)).toHaveLength(2);
-      expect(previewSql).not.toContain(' ALL');
+      expect(/\bALL\b/.test(previewSql)).toBe(operation.endsWith('_all'));
 
       const run = harness(undefined, operation);
       const runDraft = {
@@ -128,6 +135,32 @@ describe('protected UNION DISTINCT lowering', () => {
       expect(sql).toMatch(/^SELECT customer_id\s+FROM\s+\(/);
       expect(sql.match(/customer_id,\s+country/g)).toHaveLength(3);
       expect(sql).toContain(operation === 'intersect_distinct' ? 'INTERSECT' : 'EXCEPT');
+    }
+  );
+
+  it.each(['intersect_all', 'except_all'] as const)(
+    'keeps the %s complete-tuple bag comparison inside an outer selected-column projection',
+    async (operation) => {
+      const draft = buildDvtSetPreviewDraft(undefined, operation, true);
+      const publish = vi.fn<Pick<IContentAddressedArtifactStore, 'publish'>['publish']>(
+        async (request) => ({ ...request, disposition: 'created' })
+      );
+      const publisher = new DvtPostgresTargetProjectionPublisher({
+        artifactStore: { publish },
+        locateArtifact: ({ sha256 }) => `s3://artifacts/tenants/tenant-a/${sha256}`,
+      });
+
+      await publisher.publish({
+        scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
+        draft,
+        selectedNodeIds: draft.nodeIds,
+        selectedEdgeIds: draft.edges.map((edge) => edge.id),
+      });
+      const sql = Buffer.from(publish.mock.calls[0]![0].bytes).toString('utf8');
+
+      expect(sql).toMatch(/^SELECT customer_id\s+FROM\s+\(/);
+      expect(sql.match(/customer_id,\s+country/g)).toHaveLength(3);
+      expect(sql).toMatch(operation === 'intersect_all' ? /INTERSECT\s+ALL/ : /EXCEPT\s+ALL/);
     }
   );
 

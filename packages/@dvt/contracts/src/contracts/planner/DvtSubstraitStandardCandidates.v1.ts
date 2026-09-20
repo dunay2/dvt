@@ -74,6 +74,8 @@ const CORE_RELATIONS: readonly [string, string?][] = [
   ['substrait.SetRel', 'SetOp.SET_OP_UNION_ALL'],
   ['substrait.SetRel', 'SetOp.SET_OP_INTERSECTION_MULTISET'],
   ['substrait.SetRel', 'SetOp.SET_OP_MINUS_PRIMARY'],
+  ['substrait.SetRel', 'SetOp.SET_OP_INTERSECTION_MULTISET_ALL'],
+  ['substrait.SetRel', 'SetOp.SET_OP_MINUS_PRIMARY_ALL'],
   ['substrait.SortRel'],
   ['substrait.FetchRel'],
 ];

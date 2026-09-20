@@ -29,6 +29,16 @@ const cases = [
     selectorSlot: 'dvt-select-operation-except-distinct',
     label: 'EXCEPT',
   },
+  {
+    operation: 'intersect_all',
+    selectorSlot: 'dvt-select-operation-intersect-all',
+    label: 'INTERSECT ALL',
+  },
+  {
+    operation: 'except_all',
+    selectorSlot: 'dvt-select-operation-except-all',
+    label: 'EXCEPT ALL',
+  },
 ] as const satisfies ReadonlyArray<{
   operation: DvtSubstraitSetOperation;
   selectorSlot: string;
@@ -72,7 +82,7 @@ function openComposition(tab: 'code' | 'columns'): void {
   cy.get(`[data-slot="canvas-node-workbench-tab-${tab}"]`).click();
 }
 
-describe('Canvas Substrait Set DISTINCT operations', () => {
+describe('Canvas Substrait Set operations', () => {
   for (const testCase of cases) {
     it(`authors, persists, and reloads exact ${testCase.label} semantics`, () => {
       stubRuntimeCapabilities();

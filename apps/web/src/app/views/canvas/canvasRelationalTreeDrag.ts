@@ -39,7 +39,9 @@ export function readCanvasRelationalOperationDrag(
     operation === 'union_all' ||
     operation === 'union_distinct' ||
     operation === 'intersect_distinct' ||
-    operation === 'except_distinct'
+    operation === 'except_distinct' ||
+    operation === 'intersect_all' ||
+    operation === 'except_all'
     ? operation
     : null;
 }

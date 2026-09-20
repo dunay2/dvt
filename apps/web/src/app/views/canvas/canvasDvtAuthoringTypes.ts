@@ -41,7 +41,9 @@ export type DvtSubstraitTransformAuthoringMetadata = Readonly<{
     | 'union_all'
     | 'union_distinct'
     | 'intersect_distinct'
-    | 'except_distinct';
+    | 'except_distinct'
+    | 'intersect_all'
+    | 'except_all';
   plan: Plan;
   sidecar: DvtSubstraitAuthoringSidecarV1;
 }>;

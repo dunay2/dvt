@@ -52,7 +52,11 @@ function resolveCompositionLabel(
                             ? 'INTERSECT'
                             : member.operation === 'except_distinct'
                               ? 'EXCEPT'
-                              : null;
+                              : member.operation === 'intersect_all'
+                                ? 'INTERSECT ALL'
+                                : member.operation === 'except_all'
+                                  ? 'EXCEPT ALL'
+                                  : null;
   if (member.state === 'canonical') {
     return operationLabel ?? cardCopy.relationalCompositionIncompleteLabel;
   }

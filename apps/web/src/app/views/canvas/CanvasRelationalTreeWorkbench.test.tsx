@@ -92,6 +92,8 @@ const COPY = {
   inspectorDvtSubstraitUnionDistinctAction: 'UNION DISTINCT',
   inspectorDvtSubstraitIntersectDistinctAction: 'INTERSECT',
   inspectorDvtSubstraitExceptDistinctAction: 'EXCEPT',
+  inspectorDvtSubstraitIntersectAllAction: 'INTERSECT ALL',
+  inspectorDvtSubstraitExceptAllAction: 'EXCEPT ALL',
   inspectorDvtRelationalApply: 'Apply',
   inspectorDvtRelationalCancel: 'Cancel',
 };

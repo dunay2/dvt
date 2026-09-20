@@ -205,6 +205,18 @@ describe('DvtSubstraitCompositionStartSection', () => {
       'onStartExceptDistinct',
       canvasViewCopy.inspectorDvtSubstraitExceptDistinctTitle,
     ],
+    [
+      'intersect-all',
+      'INTERSECT ALL',
+      'onStartIntersectAll',
+      canvasViewCopy.inspectorDvtSubstraitIntersectAllTitle,
+    ],
+    [
+      'except-all',
+      'EXCEPT ALL',
+      'onStartExceptAll',
+      canvasViewCopy.inspectorDvtSubstraitExceptAllTitle,
+    ],
   ] as const)('applies %s through its exact SetRel choice', (slot, label, callbackName, title) => {
     const callback = vi.fn();
     act(() => {

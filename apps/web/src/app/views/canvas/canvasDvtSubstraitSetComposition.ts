@@ -76,9 +76,16 @@ const UNION_ALL_PRODUCER = 'dvt-vtx2-union-all-card';
 const UNION_DISTINCT_PRODUCER = 'dvt-vtx2-union-distinct-card';
 const INTERSECT_DISTINCT_PRODUCER = 'dvt-vtx2-intersect-distinct-card';
 const EXCEPT_DISTINCT_PRODUCER = 'dvt-vtx2-except-distinct-card';
+const INTERSECT_ALL_PRODUCER = 'dvt-vtx2-intersect-all-card';
+const EXCEPT_ALL_PRODUCER = 'dvt-vtx2-except-all-card';
 
 export type DvtSubstraitSetOperation =
-  'union_all' | 'union_distinct' | 'intersect_distinct' | 'except_distinct';
+  | 'union_all'
+  | 'union_distinct'
+  | 'intersect_distinct'
+  | 'except_distinct'
+  | 'intersect_all'
+  | 'except_all';
 
 export type DvtSubstraitUnionAllField = Readonly<{
   name: string;
@@ -385,6 +392,10 @@ function setOperationSelector(operation: DvtSubstraitSetOperation): string {
       return 'SetOp.SET_OP_INTERSECTION_MULTISET';
     case 'except_distinct':
       return 'SetOp.SET_OP_MINUS_PRIMARY';
+    case 'intersect_all':
+      return 'SetOp.SET_OP_INTERSECTION_MULTISET_ALL';
+    case 'except_all':
+      return 'SetOp.SET_OP_MINUS_PRIMARY_ALL';
   }
 }
 
@@ -398,6 +409,10 @@ function setOperationEnum(operation: DvtSubstraitSetOperation): SetRel_SetOp {
       return SetRel_SetOp.INTERSECTION_MULTISET;
     case 'except_distinct':
       return SetRel_SetOp.MINUS_PRIMARY;
+    case 'intersect_all':
+      return SetRel_SetOp.INTERSECTION_MULTISET_ALL;
+    case 'except_all':
+      return SetRel_SetOp.MINUS_PRIMARY_ALL;
   }
 }
 
@@ -406,6 +421,8 @@ function setOperationForEnum(operation: SetRel_SetOp): DvtSubstraitSetOperation 
   if (operation === SetRel_SetOp.UNION_DISTINCT) return 'union_distinct';
   if (operation === SetRel_SetOp.INTERSECTION_MULTISET) return 'intersect_distinct';
   if (operation === SetRel_SetOp.MINUS_PRIMARY) return 'except_distinct';
+  if (operation === SetRel_SetOp.INTERSECTION_MULTISET_ALL) return 'intersect_all';
+  if (operation === SetRel_SetOp.MINUS_PRIMARY_ALL) return 'except_all';
   return null;
 }
 
@@ -419,6 +436,10 @@ function setOperationProducer(operation: DvtSubstraitSetOperation): string {
       return INTERSECT_DISTINCT_PRODUCER;
     case 'except_distinct':
       return EXCEPT_DISTINCT_PRODUCER;
+    case 'intersect_all':
+      return INTERSECT_ALL_PRODUCER;
+    case 'except_all':
+      return EXCEPT_ALL_PRODUCER;
   }
 }
 
@@ -615,7 +636,9 @@ function hasPinnedPlanVersion(plan: Plan): boolean {
     (plan.version.producer === UNION_ALL_PRODUCER ||
       plan.version.producer === UNION_DISTINCT_PRODUCER ||
       plan.version.producer === INTERSECT_DISTINCT_PRODUCER ||
-      plan.version.producer === EXCEPT_DISTINCT_PRODUCER)
+      plan.version.producer === EXCEPT_DISTINCT_PRODUCER ||
+      plan.version.producer === INTERSECT_ALL_PRODUCER ||
+      plan.version.producer === EXCEPT_ALL_PRODUCER)
   );
 }
 

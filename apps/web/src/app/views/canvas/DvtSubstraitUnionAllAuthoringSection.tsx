@@ -46,7 +46,11 @@ export function DvtSubstraitUnionAllAuthoringSection({
         ? ' UNION '
         : setOperation === 'intersect_distinct'
           ? ' INTERSECT '
-          : ' EXCEPT ';
+          : setOperation === 'except_distinct'
+            ? ' EXCEPT '
+            : setOperation === 'intersect_all'
+              ? ' INTERSECT ALL '
+              : ' EXCEPT ALL ';
   const setTitle =
     setOperation === 'union_all'
       ? canvasViewCopy.inspectorDvtSubstraitUnionAllTitle
@@ -54,7 +58,11 @@ export function DvtSubstraitUnionAllAuthoringSection({
         ? canvasViewCopy.inspectorDvtSubstraitUnionDistinctTitle
         : setOperation === 'intersect_distinct'
           ? canvasViewCopy.inspectorDvtSubstraitIntersectDistinctTitle
-          : canvasViewCopy.inspectorDvtSubstraitExceptDistinctTitle;
+          : setOperation === 'except_distinct'
+            ? canvasViewCopy.inspectorDvtSubstraitExceptDistinctTitle
+            : setOperation === 'intersect_all'
+              ? canvasViewCopy.inspectorDvtSubstraitIntersectAllTitle
+              : canvasViewCopy.inspectorDvtSubstraitExceptAllTitle;
   const countOutputDraftKey = 'union-all:new-count-output';
   const windowOutputDraftKey = 'union-all:new-window-output';
   const outputPolicyErrorId = useId();

@@ -82,6 +82,8 @@ export function resolveCanvasRelationalCompositionBadgeSummary(args: {
         union_distinct: copy.relationalCompositionUnionDistinctSummaryTemplate,
         intersect_distinct: copy.relationalCompositionIntersectDistinctSummaryTemplate,
         except_distinct: copy.relationalCompositionExceptDistinctSummaryTemplate,
+        intersect_all: copy.relationalCompositionIntersectAllSummaryTemplate,
+        except_all: copy.relationalCompositionExceptAllSummaryTemplate,
       }[inspection.projection.operation]
         .replace('{inputCount}', String(inspection.projection.inputs.length))
         .replace('{outputCount}', String(inspection.projection.outputs.length))

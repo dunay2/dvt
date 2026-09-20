@@ -2,7 +2,12 @@ import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_p
 import type { ConnectedSourceRef, DvtSubstraitAuthoringSidecarV1 } from '@dvt/contracts';
 
 export type DvtSubstraitSetOperation =
-  'union_all' | 'union_distinct' | 'intersect_distinct' | 'except_distinct';
+  | 'union_all'
+  | 'union_distinct'
+  | 'intersect_distinct'
+  | 'except_distinct'
+  | 'intersect_all'
+  | 'except_all';
 
 export type DvtSubstraitSetDraft = Readonly<{
   plan: Plan;

@@ -227,7 +227,9 @@ export function DvtAuthoringFields({
       draft.dvt.shape === 'union_all' ||
       draft.dvt.shape === 'union_distinct' ||
       draft.dvt.shape === 'intersect_distinct' ||
-      draft.dvt.shape === 'except_distinct'
+      draft.dvt.shape === 'except_distinct' ||
+      draft.dvt.shape === 'intersect_all' ||
+      draft.dvt.shape === 'except_all'
     ) {
       semanticFields = (
         <DvtSubstraitUnionAllAuthoringSection

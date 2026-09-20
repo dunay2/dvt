@@ -546,10 +546,14 @@ export type CanvasViewCopy = {
   readonly inspectorDvtSubstraitUnionDistinctAction: string;
   readonly inspectorDvtSubstraitIntersectDistinctAction: string;
   readonly inspectorDvtSubstraitExceptDistinctAction: string;
+  readonly inspectorDvtSubstraitIntersectAllAction: string;
+  readonly inspectorDvtSubstraitExceptAllAction: string;
   readonly inspectorDvtSubstraitUnionAllTitle: string;
   readonly inspectorDvtSubstraitUnionDistinctTitle: string;
   readonly inspectorDvtSubstraitIntersectDistinctTitle: string;
   readonly inspectorDvtSubstraitExceptDistinctTitle: string;
+  readonly inspectorDvtSubstraitIntersectAllTitle: string;
+  readonly inspectorDvtSubstraitExceptAllTitle: string;
   readonly inspectorDvtSubstraitUnionAllInputsLabel: string;
   readonly inspectorDvtSubstraitUnionAllFieldsLabel: string;
   readonly inspectorDvtRelationalOperationTitle: string;

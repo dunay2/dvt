@@ -47,6 +47,10 @@ function setOperationAst(operation: DvtSubstraitSetProjection['operation']): Rea
       return { op: 'SETOP_INTERSECT', all: false };
     case 'except_distinct':
       return { op: 'SETOP_EXCEPT', all: false };
+    case 'intersect_all':
+      return { op: 'SETOP_INTERSECT', all: true };
+    case 'except_all':
+      return { op: 'SETOP_EXCEPT', all: true };
   }
 }
 

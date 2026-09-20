@@ -27,6 +27,8 @@ function operationFor(op: SetRel_SetOp): DvtSubstraitSetOperation | null {
   if (op === SetRel_SetOp.UNION_DISTINCT) return 'union_distinct';
   if (op === SetRel_SetOp.INTERSECTION_MULTISET) return 'intersect_distinct';
   if (op === SetRel_SetOp.MINUS_PRIMARY) return 'except_distinct';
+  if (op === SetRel_SetOp.INTERSECTION_MULTISET_ALL) return 'intersect_all';
+  if (op === SetRel_SetOp.MINUS_PRIMARY_ALL) return 'except_all';
   return null;
 }
 
@@ -241,9 +243,9 @@ export function inspectDvtSubstraitSetDraft(
           outputOrdinal,
           dataType: inputField.dataType,
           nullable:
-            operation === 'except_distinct'
+            operation === 'except_distinct' || operation === 'except_all'
               ? (inputs[0]?.fields[inputOrdinal]?.nullable ?? true)
-              : operation === 'intersect_distinct'
+              : operation === 'intersect_distinct' || operation === 'intersect_all'
                 ? inputs.every((input) => input.fields[inputOrdinal]?.nullable ?? true)
                 : inputs.some((input) => input.fields[inputOrdinal]?.nullable ?? true),
         };
