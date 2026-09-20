@@ -13,6 +13,20 @@ import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection
 
 export type CanvasDvtSortFetchField = Readonly<{ fieldId: string; name: string }>;
 
+type SortFetchInspection = Extract<
+  ReturnType<typeof inspectDvtSubstraitSortFetchRoot>,
+  { ok: true }
+>;
+
+function unwrapSortFetchRoot(
+  draft: DvtSubstraitProjectionDraft,
+  inspection: SortFetchInspection
+): DvtSubstraitProjectionDraft {
+  // Generic subtree selection rebases anchors for transient queries. Wrapper editing must retain
+  // the persisted inner ordering because JOIN admission treats those anchors as structural identity.
+  return removeDvtSubstraitSortFetchRelation(draft, inspection.relationId);
+}
+
 function rootRelationId(draft: DvtSubstraitProjectionDraft): string | null {
   const root = draft.plan.relations[0]?.relType;
   if (root?.case !== 'root' || root.value.input == null) return null;
@@ -61,7 +75,7 @@ function wrapperIdentity(
   const inspection = inspectDvtSubstraitSortFetchRoot(draft);
   if (inspection.ok && inspection.operation === operation) {
     return {
-      base: selectDvtSubstraitRelation(draft, inspection.inputRelationId),
+      base: unwrapSortFetchRoot(draft, inspection),
       relationId: inspection.relationId,
       outputFieldIds: inspection.outputFields.map((field) => field.fieldId),
     };
@@ -120,7 +134,7 @@ function replaceSortFetchWrapper(
   const chain: Array<
     Readonly<{
       draft: DvtSubstraitProjectionDraft;
-      inspection: Extract<ReturnType<typeof inspectDvtSubstraitSortFetchRoot>, { ok: true }>;
+      inspection: SortFetchInspection;
     }>
   > = [];
   let current = draft;
@@ -128,12 +142,14 @@ function replaceSortFetchWrapper(
     const inspection = inspectDvtSubstraitSortFetchRoot(current);
     if (!inspection.ok) break;
     chain.push({ draft: current, inspection });
-    current = selectDvtSubstraitRelation(current, inspection.inputRelationId);
+    const unwrapped = unwrapSortFetchRoot(current, inspection);
+    if (unwrapped === current) break;
+    current = unwrapped;
   }
   const targetIndex = chain.findIndex((entry) => entry.inspection.relationId === relationId);
   if (targetIndex < 0) return draft;
   const target = chain[targetIndex]!;
-  let rebuilt = selectDvtSubstraitRelation(target.draft, target.inspection.inputRelationId);
+  let rebuilt = unwrapSortFetchRoot(target.draft, target.inspection);
   const identity = {
     relationId: target.inspection.relationId,
     outputFieldIds: target.inspection.outputFields.map((field) => field.fieldId),
@@ -175,21 +191,21 @@ export function selectCanvasDvtSubstraitSortFetch(
 
 export type CanvasDvtSortFetchChain = Readonly<{
   base: DvtSubstraitProjectionDraft;
-  wrappers: readonly Extract<ReturnType<typeof inspectDvtSubstraitSortFetchRoot>, { ok: true }>[];
+  wrappers: readonly SortFetchInspection[];
 }>;
 
 export function peelCanvasDvtSubstraitSortFetch(
   draft: DvtSubstraitProjectionDraft
 ): CanvasDvtSortFetchChain {
-  const wrappers: Array<
-    Extract<ReturnType<typeof inspectDvtSubstraitSortFetchRoot>, { ok: true }>
-  > = [];
+  const wrappers: SortFetchInspection[] = [];
   let base = draft;
   while (true) {
     const inspection = inspectDvtSubstraitSortFetchRoot(base);
     if (!inspection.ok) break;
     wrappers.push(inspection);
-    base = selectDvtSubstraitRelation(base, inspection.inputRelationId);
+    const unwrapped = unwrapSortFetchRoot(base, inspection);
+    if (unwrapped === base) break;
+    base = unwrapped;
   }
   return { base, wrappers };
 }

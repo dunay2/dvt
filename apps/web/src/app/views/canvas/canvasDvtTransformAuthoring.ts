@@ -1,10 +1,6 @@
 /** Owns decoding and persistence of canonical DVT Transform shapes. */
 import { DVT_TRANSFORM_AUTHORING_MODE, DvtTransformResultTargetV1Schema } from '@dvt/contracts';
-import {
-  inspectDvtSubstraitAcceptedCrossDraft,
-  inspectDvtSubstraitSortFetchRoot,
-  selectDvtSubstraitRelation,
-} from '@dvt/postgres-projection';
+import { inspectDvtSubstraitAcceptedCrossDraft } from '@dvt/postgres-projection';
 
 import type { CanonicalNode } from '../../types/canonical';
 import type {
@@ -98,12 +94,7 @@ export function resolveDvtTransformAuthoringMetadata(
   } catch {
     return { outcome: 'rejected', reason: 'invalid_document' };
   }
-  let classified = projection;
-  while (true) {
-    const wrapper = inspectDvtSubstraitSortFetchRoot(classified);
-    if (!wrapper.ok) break;
-    classified = selectDvtSubstraitRelation(classified, wrapper.inputRelationId);
-  }
+  const classified = peelCanvasDvtSubstraitSortFetch(projection).base;
   if (
     inspectDvtSubstraitProjectionDraft(classified).ok ||
     inspectDvtSubstraitFilter(classified) != null
