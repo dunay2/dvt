@@ -115,10 +115,27 @@ export function CanvasModelDataView({
       data-slot="canvas-model-data"
       className={`flex h-full min-h-0 min-w-0 flex-col ${compact ? 'gap-2 p-2' : 'gap-4 p-4'}`}
     >
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="text-sm font-semibold">{nodeName}</h2>
-          <p className="text-xs text-(--text-muted)">{copy.previewHint}</p>
+      <header
+        className={`flex shrink-0 items-center justify-between gap-3 ${compact ? '' : 'flex-wrap'}`}
+      >
+        <div className={compact ? 'flex min-w-0 items-center gap-3' : 'space-y-1'}>
+          <h2 className={`text-sm font-semibold ${compact ? 'truncate' : ''}`} title={nodeName}>
+            {nodeName}
+          </h2>
+          {compact ? (
+            sample == null ? null : (
+              <span
+                data-slot="canvas-operation-record-count"
+                className="shrink-0 text-xs text-(--text-muted)"
+              >
+                {copy.operationPreviewRecords
+                  .replace('{count}', String(sample.rows.length))
+                  .replace('{limit}', String(sample.limit))}
+              </span>
+            )
+          ) : (
+            <p className="text-xs text-(--text-muted)">{copy.previewHint}</p>
+          )}
         </div>
         <Button
           data-slot="canvas-model-preview"
@@ -199,21 +216,21 @@ export function CanvasModelDataView({
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap items-center gap-4 text-xs text-(--text-muted)">
-            <span>
-              {sample.rows.length}
-              {sample.truncated ? '+' : ''} {copy.rows}
-            </span>
-            {compact ? null : (
+          {compact ? null : (
+            <div className="flex flex-wrap items-center gap-4 text-xs text-(--text-muted)">
+              <span>
+                {sample.rows.length}
+                {sample.truncated ? '+' : ''} {copy.rows}
+              </span>
               <span>
                 {sample.columns.length} {copy.columns}
               </span>
-            )}
-            <span title={sample.semanticPlanSha256}>
-              {copy.revision}: <code>{sample.draftRevision}</code>
-            </span>
-            {compact ? null : <time dateTime={sample.sampledAt}>{sample.sampledAt}</time>}
-          </div>
+              <span title={sample.semanticPlanSha256}>
+                {copy.revision}: <code>{sample.draftRevision}</code>
+              </span>
+              <time dateTime={sample.sampledAt}>{sample.sampledAt}</time>
+            </div>
+          )}
           {sample.rows.length === 0 ? (
             <p>{copy.empty}</p>
           ) : (

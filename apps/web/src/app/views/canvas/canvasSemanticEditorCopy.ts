@@ -19,7 +19,7 @@ const en = {
   refresh: 'Refresh preview',
   previewHint: 'Explore the applied model without publishing a result.',
   previewEmpty: 'Run a preview to explore this model’s rows.',
-  operationPreviewHint: 'Selected operation · up to 20 rows · read-only',
+  operationPreviewRecords: '{count}/{limit} records',
   operationPreviewEmpty: 'Preview the output of this operation.',
   operationPreviewUnapplied:
     'Save the condition and apply the composition to preview this revision.',
@@ -108,7 +108,7 @@ const es: typeof en = {
   refresh: 'Actualizar vista previa',
   previewHint: 'Explora el modelo aplicado sin publicar un resultado.',
   previewEmpty: 'Ejecuta una vista previa para explorar las filas del modelo.',
-  operationPreviewHint: 'Operación seleccionada · hasta 20 filas · solo lectura',
+  operationPreviewRecords: '{count}/{limit} registros',
   operationPreviewEmpty: 'Previsualiza la salida de esta operación.',
   operationPreviewUnapplied:
     'Guarda la condición y aplica la composición para previsualizar esta revisión.',

@@ -65,11 +65,10 @@ export function CanvasOperationDataPreview({
         {...context}
         relationId={relationId}
         compact
-        nodeName={`${copy.data} · ${label}`}
+        nodeName={label}
         disabledReason={context.unapplied ? copy.operationPreviewUnapplied : undefined}
         copy={{
           ...copy,
-          previewHint: copy.operationPreviewHint,
           previewEmpty: copy.operationPreviewEmpty,
           failed: copy.operationPreviewFailed,
         }}

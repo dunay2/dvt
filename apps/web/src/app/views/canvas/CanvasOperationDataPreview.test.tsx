@@ -11,6 +11,7 @@ import {
   CanvasOperationPreviewProvider,
 } from './CanvasOperationDataPreview';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 describe('selected operation data preview', () => {
   let container: HTMLDivElement;
@@ -42,11 +43,13 @@ describe('selected operation data preview', () => {
     dataHost = document.createElement('div');
     document.body.appendChild(dataHost);
     query.previewTransformRows.mockReset();
+    useApplicationLanguageStore.setState({ language: 'en' });
   });
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
     dataHost.remove();
+    useApplicationLanguageStore.setState({ language: 'en' });
   });
   function render(relationId: string, unapplied = false): void {
     act(() =>
@@ -68,6 +71,38 @@ describe('selected operation data preview', () => {
       container.querySelector<HTMLButtonElement>('[data-slot="canvas-model-preview"]')!.click();
     });
   }
+  it.each([
+    { language: 'es' as const, count: 3, limit: 20, truncated: false, expected: '3/20 registros' },
+    { language: 'es' as const, count: 0, limit: 20, truncated: false, expected: '0/20 registros' },
+    { language: 'en' as const, count: 20, limit: 20, truncated: true, expected: '20/20 records' },
+    { language: 'en' as const, count: 1, limit: 10, truncated: false, expected: '1/10 records' },
+  ])(
+    'shows only the operation label and $expected in the compact header',
+    async ({ language, count, limit, truncated, expected }) => {
+      useApplicationLanguageStore.setState({ language });
+      query.previewTransformRows.mockResolvedValue({
+        ...sample('join-1'),
+        rows: Array.from({ length: count }, () => ({ values: ['result'] })),
+        limit,
+        truncated,
+      });
+      render('join-1');
+      expect(container.querySelector('h2')?.textContent).toBe('INNER JOIN');
+      expect(container.querySelector('[data-slot="canvas-operation-record-count"]')).toBeNull();
+      await preview();
+      const header = container.querySelector('header');
+      expect(header?.textContent).toBe(`INNER JOIN${expected}`);
+      expect(header?.querySelector('p')).toBeNull();
+      expect(container.querySelector('code')).toBeNull();
+      expect(container.querySelector('time')).toBeNull();
+      expect(container.textContent).not.toContain('r7');
+      expect(
+        container.querySelector('header')?.querySelector('[data-slot="canvas-model-preview"]')
+      ).not.toBeNull();
+      render('join-2');
+      expect(container.querySelector('[data-slot="canvas-operation-record-count"]')).toBeNull();
+    }
+  );
   it('portals one preview to the bottom host, retains it across inspector tabs and removes hidden frames', async () => {
     const onOpenData = vi.fn();
     const renderDock = (hidden = false): void => {

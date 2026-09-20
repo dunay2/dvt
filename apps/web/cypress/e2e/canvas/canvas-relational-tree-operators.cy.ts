@@ -144,6 +144,22 @@ describe('Relational operator toolbar', () => {
       .as('preview');
     cy.get('@preview').find('[data-slot="canvas-model-preview"]').should('be.enabled').click();
     cy.get('@preview').find('table').should('contain.text', 'selected-operation-42');
+    cy.get('@preview')
+      .find('header')
+      .should(($header) => {
+        expect($header.find('h2').text()).to.equal('INNER JOIN');
+        expect($header.find('[data-slot="canvas-operation-record-count"]').text()).to.equal(
+          '1/20 registros'
+        );
+        expect($header.find('p')).to.have.length(0);
+        expect($header[0]!.getBoundingClientRect().height).to.be.at.most(32);
+      });
+    cy.get('@preview').find('code, time').should('not.exist');
+    cy.get('@preview').should(($preview) => {
+      const header = $preview.find('header')[0]!.getBoundingClientRect();
+      const table = $preview.find('table')[0]!.getBoundingClientRect();
+      expect(table.top - header.bottom, 'table follows the single header line').to.be.at.most(9);
+    });
     cy.get('@preview').closest('[data-slot="bottom-operational-drawer"]').should('be.visible');
     cy.get('[data-slot="canvas-operation-properties-tab"]:visible').should(
       'have.attr',
