@@ -13,12 +13,15 @@ import {
 } from '../../../src/application/services/dvtPostgresTargetProjectionPublisher.js';
 import { buildDvtSetPreviewDraft } from '../../fixtures/dvtSetPreviewFixture.js';
 
-function harness(wrapper?: 'aggregate' | 'window'): Readonly<{
+function harness(
+  wrapper?: 'aggregate' | 'window',
+  operation: 'union_distinct' | 'intersect_distinct' | 'except_distinct' = 'union_distinct'
+): Readonly<{
   input: DvtPostgresTargetProjectionPublishInput;
   publisher: DvtPostgresTargetProjectionPublisher;
   publish: Mock<Pick<IContentAddressedArtifactStore, 'publish'>['publish']>;
 }> {
-  const draft = buildDvtSetPreviewDraft(wrapper);
+  const draft = buildDvtSetPreviewDraft(wrapper, operation);
   const publish = vi.fn<Pick<IContentAddressedArtifactStore, 'publish'>['publish']>(
     async (request) => ({ ...request, disposition: 'created' })
   );
@@ -36,6 +39,98 @@ function harness(wrapper?: 'aggregate' | 'window'): Readonly<{
 }
 
 describe('protected UNION DISTINCT lowering', () => {
+  it.each([
+    ['intersect_distinct', /INTERSECT/g],
+    ['except_distinct', /EXCEPT/g],
+  ] as const)(
+    'publishes the exact ordered %s artifact for Preview and Run',
+    async (operation, sqlOperator) => {
+      const preview = harness(undefined, operation);
+      const previewBinding = await preview.publisher.publish(preview.input);
+      const previewResult = new DvtOperationalWorkloadProjector().project({
+        ...preview.input,
+        draftRevision: `revision-${operation}-preview`,
+        canvasId: preview.input.draft.canvas.id!,
+        targetProjection: previewBinding,
+      });
+      if (!previewResult.ok) throw new Error(previewResult.reason);
+      const previewSql = Buffer.from(preview.publish.mock.calls[0]![0].bytes).toString('utf8');
+      expect(previewSql.match(sqlOperator)).toHaveLength(2);
+      expect(previewSql).not.toContain(' ALL');
+
+      const run = harness(undefined, operation);
+      const runDraft = {
+        ...run.input.draft,
+        nodes: run.input.draft.nodes.map((node) =>
+          node.id === 'transform-customers'
+            ? {
+                ...node,
+                metadata: {
+                  ...node.metadata,
+                  config: {
+                    materialized: 'table',
+                    resultTarget: {
+                      schemaVersion: 'dvt-transform-result-target.v1',
+                      connectionRef: {
+                        schemaVersion: 'connection-ref.v1',
+                        provider: 'postgres',
+                        connectionId: 'warehouse-main',
+                      },
+                      schema: 'analytics',
+                      relation: `${operation}_customers`,
+                    },
+                  },
+                },
+              }
+            : node
+        ),
+      };
+      const runBinding = await run.publisher.publish({ ...run.input, draft: runDraft });
+      const runResult = new DvtOperationalWorkloadProjector().project({
+        ...run.input,
+        draft: runDraft,
+        draftRevision: `revision-${operation}-run`,
+        canvasId: runDraft.canvas.id!,
+        targetProjection: runBinding,
+      });
+      if (!runResult.ok) throw new Error(runResult.reason);
+      expect(
+        Buffer.from(run.publish.mock.calls.at(-1)![0].bytes).toString('utf8').match(sqlOperator)
+      ).toHaveLength(2);
+      expect(
+        DvtOperationalWorkloadContractV2.schema.parse(
+          runResult.graphSource.nodes[0]?.stepTypeConfig
+        ).executionIntent
+      ).toBe('run');
+    }
+  );
+
+  it.each(['intersect_distinct', 'except_distinct'] as const)(
+    'keeps the %s tuple comparison inside an outer selected-column projection',
+    async (operation) => {
+      const draft = buildDvtSetPreviewDraft(undefined, operation, true);
+      const publish = vi.fn<Pick<IContentAddressedArtifactStore, 'publish'>['publish']>(
+        async (request) => ({ ...request, disposition: 'created' })
+      );
+      const publisher = new DvtPostgresTargetProjectionPublisher({
+        artifactStore: { publish },
+        locateArtifact: ({ sha256 }) => `s3://artifacts/tenants/tenant-a/${sha256}`,
+      });
+
+      await publisher.publish({
+        scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
+        draft,
+        selectedNodeIds: draft.nodeIds,
+        selectedEdgeIds: draft.edges.map((edge) => edge.id),
+      });
+      const sql = Buffer.from(publish.mock.calls[0]![0].bytes).toString('utf8');
+
+      expect(sql).toMatch(/^SELECT customer_id\s+FROM\s+\(/);
+      expect(sql.match(/customer_id,\s+country/g)).toHaveLength(3);
+      expect(sql).toContain(operation === 'intersect_distinct' ? 'INTERSECT' : 'EXCEPT');
+    }
+  );
+
   it('publishes one ordered PostgreSQL UNION artifact and one Preview workload', async () => {
     const { input, publisher, publish } = harness();
     const binding = await publisher.publish(input);

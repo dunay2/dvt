@@ -225,6 +225,14 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
   },
   {
     entryIds: [
+      standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_INTERSECTION_MULTISET'),
+      standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_MINUS_PRIMARY'),
+    ],
+    useCaseRefs: ['dvt:#3318'],
+    proofRef: 'docs/evidence/ED-20260920-intersect-except-distinct-end-to-end.md',
+  },
+  {
+    entryIds: [
       standardId('type', 'substrait.Type', 'kind.struct'),
       standardId('expression-form', 'substrait.Expression', 'rex_type.nested'),
     ],

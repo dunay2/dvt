@@ -30,6 +30,8 @@ export function DvtSubstraitCompositionStartSection({
   onStartInnerJoin,
   onStartUnionAll,
   onStartUnionDistinct,
+  onStartIntersectDistinct,
+  onStartExceptDistinct,
 }: Readonly<{
   disabled: boolean;
   inputs: readonly CanvasDvtCompositionInput[];
@@ -38,6 +40,8 @@ export function DvtSubstraitCompositionStartSection({
   onStartInnerJoin: (draft: DvtSubstraitJoinDraft, operation: CanvasJoinOperation) => void;
   onStartUnionAll?: () => void;
   onStartUnionDistinct?: () => void;
+  onStartIntersectDistinct?: () => void;
+  onStartExceptDistinct?: () => void;
 }>): JSX.Element {
   const [selectedOperation, setSelectedOperation] = useState<CanvasRelationalOperation | null>(
     null
@@ -52,6 +56,8 @@ export function DvtSubstraitCompositionStartSection({
     readOnly: disabled,
     unionAllAvailable: onStartUnionAll != null,
     unionDistinctAvailable: onStartUnionDistinct != null,
+    intersectDistinctAvailable: onStartIntersectDistinct != null,
+    exceptDistinctAvailable: onStartExceptDistinct != null,
   });
 
   if (isCanvasJoinOperation(selectedOperation)) {
@@ -101,6 +107,40 @@ export function DvtSubstraitCompositionStartSection({
         operation="union_distinct"
         onApply={() => {
           onStartUnionDistinct();
+          onClearPredicateSeed?.();
+        }}
+        onCancel={() => {
+          setSelectedOperation(null);
+          onClearPredicateSeed?.();
+        }}
+      />
+    );
+  }
+  if (selectedOperation === 'intersect_distinct' && onStartIntersectDistinct != null) {
+    return (
+      <DvtSubstraitUnionAllStartSection
+        disabled={disabled}
+        inputs={inputs}
+        operation="intersect_distinct"
+        onApply={() => {
+          onStartIntersectDistinct();
+          onClearPredicateSeed?.();
+        }}
+        onCancel={() => {
+          setSelectedOperation(null);
+          onClearPredicateSeed?.();
+        }}
+      />
+    );
+  }
+  if (selectedOperation === 'except_distinct' && onStartExceptDistinct != null) {
+    return (
+      <DvtSubstraitUnionAllStartSection
+        disabled={disabled}
+        inputs={inputs}
+        operation="except_distinct"
+        onApply={() => {
+          onStartExceptDistinct();
           onClearPredicateSeed?.();
         }}
         onCancel={() => {

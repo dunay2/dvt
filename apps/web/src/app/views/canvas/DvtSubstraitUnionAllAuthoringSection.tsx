@@ -20,9 +20,11 @@ import {
   renameDvtSubstraitUnionAllGroupedRowNumberOutput,
   type DvtSubstraitUnionAllDraft,
   type DvtSubstraitUnionAllFieldEdit,
+  type DvtSubstraitSetOperation,
 } from './canvasDvtSubstraitSetComposition';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import { canvasViewCopy } from './copy';
+import { isCanvasSetOperation } from './canvasRelationalOperationChoices';
 
 export function DvtSubstraitUnionAllAuthoringSection({
   disabled,
@@ -36,7 +38,23 @@ export function DvtSubstraitUnionAllAuthoringSection({
   outputNameDrafts: Readonly<Record<string, string>>;
 }>): JSX.Element | null {
   const semanticDraft = { plan: draft.plan, sidecar: draft.sidecar };
-  const unionOperator = draft.shape === 'union_distinct' ? ' UNION ' : ' UNION ALL ';
+  const setOperation = draft.shape as DvtSubstraitSetOperation;
+  const setOperator =
+    setOperation === 'union_all'
+      ? ' UNION ALL '
+      : setOperation === 'union_distinct'
+        ? ' UNION '
+        : setOperation === 'intersect_distinct'
+          ? ' INTERSECT '
+          : ' EXCEPT ';
+  const setTitle =
+    setOperation === 'union_all'
+      ? canvasViewCopy.inspectorDvtSubstraitUnionAllTitle
+      : setOperation === 'union_distinct'
+        ? canvasViewCopy.inspectorDvtSubstraitUnionDistinctTitle
+        : setOperation === 'intersect_distinct'
+          ? canvasViewCopy.inspectorDvtSubstraitIntersectDistinctTitle
+          : canvasViewCopy.inspectorDvtSubstraitExceptDistinctTitle;
   const countOutputDraftKey = 'union-all:new-count-output';
   const windowOutputDraftKey = 'union-all:new-window-output';
   const outputPolicyErrorId = useId();
@@ -73,7 +91,7 @@ export function DvtSubstraitUnionAllAuthoringSection({
       if (
         currentDraft.dvt?.kind !== 'transform' ||
         currentDraft.dvt.mode !== 'substrait' ||
-        (currentDraft.dvt.shape !== 'union_all' && currentDraft.dvt.shape !== 'union_distinct')
+        !isCanvasSetOperation(currentDraft.dvt.shape)
       ) {
         return currentDraft;
       }
@@ -102,11 +120,7 @@ export function DvtSubstraitUnionAllAuthoringSection({
       className={`${inspectorVisualClasses.inspectorDbtSection} space-y-3`}
       data-slot="dvt-substrait-union-all-authoring"
     >
-      <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
-        {draft.shape === 'union_distinct'
-          ? canvasViewCopy.inspectorDvtSubstraitUnionDistinctTitle
-          : canvasViewCopy.inspectorDvtSubstraitUnionAllTitle}
-      </h3>
+      <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>{setTitle}</h3>
       {Object.keys(outputNameDrafts).map((key) => {
         const error = outputNameErrorFor(key);
         return error == null ? null : (
@@ -127,7 +141,7 @@ export function DvtSubstraitUnionAllAuthoringSection({
     inputs: readonly Readonly<{ schema: string; table: string }>[]
   ): JSX.Element => (
     <p className="font-mono text-xs text-(--text-muted)">
-      {inputs.map((input) => `${input.schema}.${input.table}`).join(unionOperator)}
+      {inputs.map((input) => `${input.schema}.${input.table}`).join(setOperator)}
     </p>
   );
 
@@ -367,7 +381,7 @@ export function DvtSubstraitUnionAllAuthoringSection({
           <dd className="font-mono">
             {inspection.projection.inputs
               .map((input) => `${input.schema}.${input.table}`)
-              .join(unionOperator)}
+              .join(setOperator)}
           </dd>
         </div>
         <div>

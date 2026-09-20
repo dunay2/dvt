@@ -48,7 +48,11 @@ function resolveCompositionLabel(
                         ? 'UNION ALL'
                         : member.operation === 'union_distinct'
                           ? 'UNION DISTINCT'
-                          : null;
+                          : member.operation === 'intersect_distinct'
+                            ? 'INTERSECT'
+                            : member.operation === 'except_distinct'
+                              ? 'EXCEPT'
+                              : null;
   if (member.state === 'canonical') {
     return operationLabel ?? cardCopy.relationalCompositionIncompleteLabel;
   }

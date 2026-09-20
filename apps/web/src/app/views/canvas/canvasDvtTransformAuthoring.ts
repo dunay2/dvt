@@ -47,6 +47,7 @@ import {
   inspectDvtSubstraitFilter,
 } from './canvasDvtSubstraitFilter';
 import { canvasJoinOperationForType, isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
+import { isCanvasSetOperation } from './canvasRelationalOperationChoices';
 import { encodeDvtSubstraitCrossDocument } from './canvasDvtSubstraitCrossComposition';
 
 type TransformMetadata =
@@ -172,7 +173,7 @@ export function applyDvtTransformAuthoringMetadata(
         ? encodeDvtSubstraitJoinDocument(draft)
         : metadata.shape === 'cross_join'
           ? encodeDvtSubstraitCrossDocument(draft)
-          : metadata.shape === 'union_all' || metadata.shape === 'union_distinct'
+          : isCanvasSetOperation(metadata.shape)
             ? encodeDvtSubstraitUnionAllDocument(draft)
             : encodeDvtSubstraitPilotDocument(draft);
   return withMaterialization(applyDvtSubstraitSemanticDocument(node, document));

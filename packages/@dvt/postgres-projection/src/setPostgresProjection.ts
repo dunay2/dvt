@@ -1,4 +1,4 @@
-/** Owns PostgreSQL AST projection for admitted UNION ALL and UNION DISTINCT SetRel. */
+/** Owns PostgreSQL AST projection for the admitted SetRel family. */
 import { DvtSubstraitPostgresProjectionError } from './dvtProjection.js';
 import {
   pgColumnRef,
@@ -17,19 +17,49 @@ import type { DvtSubstraitSetDraft, DvtSubstraitSetProjection } from './substrai
 
 function inputAst(
   input: DvtSubstraitSetProjection['inputs'][number],
-  outputs: DvtSubstraitSetProjection['outputs']
+  canonicalFields: DvtSubstraitSetProjection['inputs'][number]['fields']
 ): PostgresAstNode {
   return {
-    targetList: outputs.map((output) => ({
+    targetList: input.fields.map((field, ordinal) => ({
       ResTarget: {
-        ...(output.name === output.fieldKey ? {} : { name: output.name }),
-        val: pgColumnRef(output.fieldKey),
+        ...(canonicalFields[ordinal]?.name === field.name
+          ? {}
+          : { name: canonicalFields[ordinal]?.name }),
+        val: pgColumnRef(field.name),
       },
     })),
     fromClause: [pgRangeVar({ schema: input.schema, table: input.table })],
     limitOption: 'LIMIT_OPTION_DEFAULT',
     op: 'SETOP_NONE',
   };
+}
+
+function setOperationAst(operation: DvtSubstraitSetProjection['operation']): Readonly<{
+  op: 'SETOP_UNION' | 'SETOP_INTERSECT' | 'SETOP_EXCEPT';
+  all: boolean;
+}> {
+  switch (operation) {
+    case 'union_all':
+      return { op: 'SETOP_UNION', all: true };
+    case 'union_distinct':
+      return { op: 'SETOP_UNION', all: false };
+    case 'intersect_distinct':
+      return { op: 'SETOP_INTERSECT', all: false };
+    case 'except_distinct':
+      return { op: 'SETOP_EXCEPT', all: false };
+  }
+}
+
+function isIdentityOutputProjection(projection: DvtSubstraitSetProjection): boolean {
+  const first = projection.inputs[0];
+  return (
+    first != null &&
+    projection.outputs.length === first.fields.length &&
+    projection.outputs.every(
+      (output, ordinal) =>
+        output.fieldKey === first.fields[ordinal]?.name && output.name === output.fieldKey
+    )
+  );
 }
 
 export function buildDvtSetPostgresAst(projection: DvtSubstraitSetProjection): PostgresAstNode {
@@ -40,17 +70,31 @@ export function buildDvtSetPostgresAst(projection: DvtSubstraitSetProjection): P
       'PostgreSQL Set projection requires at least two inputs and one output.'
     );
   }
-  let union = inputAst(first, projection.outputs);
+  const operation = setOperationAst(projection.operation);
+  let set = inputAst(first, first.fields);
   for (const input of projection.inputs.slice(1)) {
-    union = {
-      op: 'SETOP_UNION',
-      all: projection.operation === 'union_all',
-      larg: union,
-      rarg: inputAst(input, projection.outputs),
+    set = {
+      ...operation,
+      larg: set,
+      rarg: inputAst(input, first.fields),
       limitOption: 'LIMIT_OPTION_DEFAULT',
     };
   }
-  return { SelectStmt: union };
+  const setAst = { SelectStmt: set };
+  if (isIdentityOutputProjection(projection)) return setAst;
+  return {
+    SelectStmt: {
+      targetList: projection.outputs.map((output) => ({
+        ResTarget: {
+          ...(output.name === output.fieldKey ? {} : { name: output.name }),
+          val: pgColumnRef(output.fieldKey),
+        },
+      })),
+      fromClause: [pgRangeSubselect(setAst, 'set_input')],
+      limitOption: 'LIMIT_OPTION_DEFAULT',
+      op: 'SETOP_NONE',
+    },
+  };
 }
 
 function buildSetCompositionPostgresAst(composition: DvtSubstraitSetComposition): PostgresAstNode {
@@ -81,7 +125,7 @@ function buildSetCompositionPostgresAst(composition: DvtSubstraitSetComposition)
             ]
           : []),
       ],
-      fromClause: [pgRangeSubselect(setAst, 'union_all_input')],
+      fromClause: [pgRangeSubselect(setAst, 'set_input')],
       groupClause: [groupExpression],
       limitOption: 'LIMIT_OPTION_DEFAULT',
       op: 'SETOP_NONE',

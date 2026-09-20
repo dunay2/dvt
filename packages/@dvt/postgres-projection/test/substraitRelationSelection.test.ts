@@ -1,7 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { URL } from 'node:url';
 
-import { decodeDvtSubstraitPlanV1, DvtSubstraitSemanticDocumentV1Schema } from '@dvt/contracts';
+import { SetRel_SetOp } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import {
+  decodeDvtSubstraitPlanV1,
+  DvtSubstraitSemanticDocumentV1Schema,
+  encodeDvtSubstraitPlanV1,
+} from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -22,9 +27,17 @@ function joinFixture(): DvtSubstraitJoinDraft {
   return { plan: decodeDvtSubstraitPlanV1(document), sidecar: document.sidecar };
 }
 
-function setFixture(): DvtSubstraitJoinDraft {
+function setFixture(operation: SetRel_SetOp): DvtSubstraitJoinDraft {
   const document = DvtSubstraitSemanticDocumentV1Schema.parse(setFixtures.unionDistinct);
-  return { plan: decodeDvtSubstraitPlanV1(document), sidecar: document.sidecar };
+  const plan = decodeDvtSubstraitPlanV1(document);
+  const root = plan.relations[0]?.relType;
+  const set = root?.case === 'root' ? root.value.input?.relType : undefined;
+  if (set?.case !== 'set') throw new Error('Fixture must contain one SetRel.');
+  set.value.op = operation;
+  return {
+    plan,
+    sidecar: { ...document.sidecar, semanticPlanSha256: encodeDvtSubstraitPlanV1(plan).sha256 },
+  };
 }
 
 describe('selected relation query projection', () => {
@@ -54,25 +67,34 @@ describe('selected relation query projection', () => {
     expect(final.sql.match(/\bJOIN\b/g)).toHaveLength(2);
   });
 
-  it('rebases a selected SetRel in read-first anchor order for exact UNION DISTINCT preview', async () => {
-    const original = setFixture();
-    const before = globalThis.structuredClone(original);
-    const relationId = original.sidecar.relations.find(
-      (relation) => relation.sourceRef == null
-    )!.relationId;
+  it.each([
+    ['union_distinct', SetRel_SetOp.UNION_DISTINCT],
+    ['intersect_distinct', SetRel_SetOp.INTERSECTION_MULTISET],
+    ['except_distinct', SetRel_SetOp.MINUS_PRIMARY],
+  ] as const)(
+    'rebases selected %s in read-first anchor order for exact preview',
+    async (name, op) => {
+      const original = setFixture(op);
+      const before = globalThis.structuredClone(original);
+      const relationId = original.sidecar.relations.find(
+        (relation) => relation.sourceRef == null
+      )!.relationId;
 
-    const selected = selectDvtSubstraitRelation(original, relationId);
-    const result = await projectDvtSetDraftToPostgresSql(selected);
+      const selected = selectDvtSubstraitRelation(original, relationId);
+      const result = await projectDvtSetDraftToPostgresSql(selected);
 
-    expect(result.projection.operation).toBe('union_distinct');
-    expect(result.projection.inputs.map((input) => input.table)).toEqual([
-      'customers_north',
-      'customers_south',
-      'customers_west',
-    ]);
-    expect(selected.sidecar.relations.map((relation) => relation.relAnchor)).toEqual([1, 2, 3, 4]);
-    expect(original).toEqual(before);
-  });
+      expect(result.projection.operation).toBe(name);
+      expect(result.projection.inputs.map((input) => input.table)).toEqual([
+        'customers_north',
+        'customers_south',
+        'customers_west',
+      ]);
+      expect(selected.sidecar.relations.map((relation) => relation.relAnchor)).toEqual([
+        1, 2, 3, 4,
+      ]);
+      expect(original).toEqual(before);
+    }
+  );
 
   it.each(['foreign relation', 'stale plan', 'duplicate anchor'])(
     'fails closed for %s',

@@ -239,7 +239,11 @@ function buildTree(
             ? 'UNION ALL'
             : args.rel.relType.value.op === SetRel_SetOp.UNION_DISTINCT
               ? 'UNION DISTINCT'
-              : 'UNSUPPORTED SET'
+              : args.rel.relType.value.op === SetRel_SetOp.INTERSECTION_MULTISET
+                ? 'INTERSECT'
+                : args.rel.relType.value.op === SetRel_SetOp.MINUS_PRIMARY
+                  ? 'EXCEPT'
+                  : 'UNSUPPORTED SET'
           : null;
   return {
     locator: `rel:${args.semanticDigest}:${args.path}`,

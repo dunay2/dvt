@@ -25,6 +25,8 @@ type FieldBinding = DvtSubstraitSetDraft['sidecar']['fields'][number];
 function operationFor(op: SetRel_SetOp): DvtSubstraitSetOperation | null {
   if (op === SetRel_SetOp.UNION_ALL) return 'union_all';
   if (op === SetRel_SetOp.UNION_DISTINCT) return 'union_distinct';
+  if (op === SetRel_SetOp.INTERSECTION_MULTISET) return 'intersect_distinct';
+  if (op === SetRel_SetOp.MINUS_PRIMARY) return 'except_distinct';
   return null;
 }
 
@@ -81,6 +83,19 @@ function sameSource(first: RelationBinding, second: RelationBinding): boolean {
   );
 }
 
+function sameOrderedFieldShape(
+  first: readonly Readonly<{ name: string; dataType: string }>[],
+  second: readonly Readonly<{ name: string; dataType: string }>[]
+): boolean {
+  return (
+    first.length === second.length &&
+    first.every(
+      (field, ordinal) =>
+        field.name === second[ordinal]?.name && field.dataType === second[ordinal]?.dataType
+    )
+  );
+}
+
 export function inspectDvtSubstraitSetDraft(
   draft: DvtSubstraitSetDraft
 ): DvtSubstraitSetInspection {
@@ -125,7 +140,7 @@ export function inspectDvtSubstraitSetDraft(
       (table, index) =>
         table == null ||
         table.relAnchor !== index + 1 ||
-        JSON.stringify(table.fields) !== JSON.stringify(firstTable.fields)
+        !sameOrderedFieldShape(table.fields, firstTable.fields)
     )
   ) {
     return { ok: false };
@@ -225,7 +240,12 @@ export function inspectDvtSubstraitSetDraft(
           fieldId: field.fieldId,
           outputOrdinal,
           dataType: inputField.dataType,
-          nullable: inputs.some((input) => input.fields[inputOrdinal]?.nullable ?? true),
+          nullable:
+            operation === 'except_distinct'
+              ? (inputs[0]?.fields[inputOrdinal]?.nullable ?? true)
+              : operation === 'intersect_distinct'
+                ? inputs.every((input) => input.fields[inputOrdinal]?.nullable ?? true)
+                : inputs.some((input) => input.fields[inputOrdinal]?.nullable ?? true),
         };
   });
   if (outputs.some((output) => output == null)) return { ok: false };

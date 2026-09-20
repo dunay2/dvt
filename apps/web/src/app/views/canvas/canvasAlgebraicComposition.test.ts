@@ -88,6 +88,8 @@ describe('Canvas algebraic composition', () => {
     expect(resolveCanvasAlgebraicCompositionOperations(state)).toEqual([
       'union_all',
       'union_distinct',
+      'intersect_distinct',
+      'except_distinct',
     ]);
     const transaction = resolveCanvasAlgebraicCompositionTransaction({
       ...state,

@@ -33,6 +33,8 @@ type GraphNodeCardCopy = Readonly<{
   relationalCompositionCrossSummaryTemplate: string;
   relationalCompositionUnionAllSummaryTemplate: string;
   relationalCompositionUnionDistinctSummaryTemplate: string;
+  relationalCompositionIntersectDistinctSummaryTemplate: string;
+  relationalCompositionExceptDistinctSummaryTemplate: string;
   filterLabel: string;
   testStatusLabels: Readonly<Record<string, string>>;
   healthTitleTemplate: string;
@@ -133,6 +135,10 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
     'UNION ALL, inputs: {inputCount}, outputs: {outputCount}, bag semantics',
   relationalCompositionUnionDistinctSummaryTemplate:
     'UNION DISTINCT, inputs: {inputCount}, outputs: {outputCount}, set semantics',
+  relationalCompositionIntersectDistinctSummaryTemplate:
+    'INTERSECT, inputs: {inputCount}, outputs: {outputCount}, set semantics',
+  relationalCompositionExceptDistinctSummaryTemplate:
+    'EXCEPT, inputs: {inputCount}, outputs: {outputCount}, primary-input difference',
   filterLabel: 'Filter',
   testStatusLabels: {
     pass: 'Passed',
@@ -256,6 +262,10 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
     'UNION ALL, entradas: {inputCount}, salidas: {outputCount}, semántica bag',
   relationalCompositionUnionDistinctSummaryTemplate:
     'UNION DISTINCT, entradas: {inputCount}, salidas: {outputCount}, semántica de conjunto',
+  relationalCompositionIntersectDistinctSummaryTemplate:
+    'INTERSECT, entradas: {inputCount}, salidas: {outputCount}, semántica de conjunto',
+  relationalCompositionExceptDistinctSummaryTemplate:
+    'EXCEPT, entradas: {inputCount}, salidas: {outputCount}, diferencia desde la entrada primaria',
   filterLabel: 'Filtro',
   testStatusLabels: {
     pass: 'Aprobadas',

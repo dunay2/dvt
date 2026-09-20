@@ -6,6 +6,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
 import {
+  createDvtSubstraitSetDraft,
   createDvtSubstraitUnionAllDraft,
   createDvtSubstraitUnionDistinctDraft,
   resolveDvtSubstraitUnionAllEntry,
@@ -88,6 +89,50 @@ export function DvtSubstraitCompositionStart({
                   shape: 'union_distinct',
                   plan: unionDistinct.plan,
                   sidecar: unionDistinct.sidecar,
+                },
+              }));
+            }
+      }
+      onStartIntersectDistinct={
+        unionAllEntry == null
+          ? undefined
+          : () => {
+              const set = createDvtSubstraitSetDraft({
+                ...unionAllEntry,
+                operation: 'intersect_distinct',
+              });
+              onChange((currentDraft) => ({
+                ...currentDraft,
+                dvt: {
+                  kind: 'transform',
+                  materialized:
+                    currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
+                  mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
+                  shape: 'intersect_distinct',
+                  plan: set.plan,
+                  sidecar: set.sidecar,
+                },
+              }));
+            }
+      }
+      onStartExceptDistinct={
+        unionAllEntry == null
+          ? undefined
+          : () => {
+              const set = createDvtSubstraitSetDraft({
+                ...unionAllEntry,
+                operation: 'except_distinct',
+              });
+              onChange((currentDraft) => ({
+                ...currentDraft,
+                dvt: {
+                  kind: 'transform',
+                  materialized:
+                    currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
+                  mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
+                  shape: 'except_distinct',
+                  plan: set.plan,
+                  sidecar: set.sidecar,
                 },
               }));
             }

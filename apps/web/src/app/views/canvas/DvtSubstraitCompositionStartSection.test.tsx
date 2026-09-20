@@ -193,6 +193,47 @@ describe('DvtSubstraitCompositionStartSection', () => {
   });
 
   it.each([
+    [
+      'intersect-distinct',
+      'INTERSECT',
+      'onStartIntersectDistinct',
+      canvasViewCopy.inspectorDvtSubstraitIntersectDistinctTitle,
+    ],
+    [
+      'except-distinct',
+      'EXCEPT',
+      'onStartExceptDistinct',
+      canvasViewCopy.inspectorDvtSubstraitExceptDistinctTitle,
+    ],
+  ] as const)('applies %s through its exact SetRel choice', (slot, label, callbackName, title) => {
+    const callback = vi.fn();
+    act(() => {
+      root.render(
+        <DvtSubstraitCompositionStartSection
+          disabled={false}
+          inputs={[input('north', 'customers_north'), input('south', 'customers_south')]}
+          onStartInnerJoin={vi.fn()}
+          {...{ [callbackName]: callback }}
+        />
+      );
+    });
+
+    const operation = container.querySelector<HTMLButtonElement>(
+      `[data-slot="dvt-select-operation-${slot}"]`
+    )!;
+    expect(operation.textContent).toContain(label);
+    act(() => fireEvent.click(operation));
+    expect(container.textContent).toContain(title);
+    expect(callback).not.toHaveBeenCalled();
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-connected-union-all"]')!
+      );
+    });
+    expect(callback).toHaveBeenCalledOnce();
+  });
+
+  it.each([
     ['left_join', JoinRel_JoinType.LEFT, [1], null],
     ['right_join', JoinRel_JoinType.RIGHT, [0], null],
     ['full_outer_join', JoinRel_JoinType.OUTER, [0, 1], null],
