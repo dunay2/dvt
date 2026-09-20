@@ -1,16 +1,19 @@
 /** Owned concern: enforce the operator form's presentation/command boundary. */
-import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
+import containerSource from '../CanvasRelationalTreeOperatorForm.tsx?raw';
+import viewSource from './OperatorFormView.tsx?raw';
+import fieldsSource from './OperatorFormFields.tsx?raw';
+import sortSource from './SortKeyFields.tsx?raw';
+import controllerSource from './useOperatorForm.ts?raw';
 
 describe('operator form component boundary', () => {
   it.each([
-    '../CanvasRelationalTreeOperatorForm.tsx',
-    'OperatorFormView.tsx',
-    'OperatorFormFields.tsx',
-    'SortKeyFields.tsx',
-  ])('%s is a bounded view without semantic commands or data access', (file) => {
-    const text = readFileSync(new URL(file, import.meta.url), 'utf8');
+    ['CanvasRelationalTreeOperatorForm.tsx', containerSource],
+    ['OperatorFormView.tsx', viewSource],
+    ['OperatorFormFields.tsx', fieldsSource],
+    ['SortKeyFields.tsx', sortSource],
+  ])('%s is a bounded view without semantic commands or data access', (file, text) => {
     const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
     const runtimeImports = source.statements
       .filter(ts.isImportDeclaration)
@@ -25,7 +28,7 @@ describe('operator form component boundary', () => {
   });
 
   it('keeps command dispatch behind the local form controller', () => {
-    const text = readFileSync(new URL('useOperatorForm.ts', import.meta.url), 'utf8');
+    const text = controllerSource;
     const source = ts.createSourceFile('controller.ts', text, ts.ScriptTarget.Latest, true);
     const commandImports = source.statements
       .filter(ts.isImportDeclaration)
