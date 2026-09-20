@@ -2,7 +2,7 @@
 
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { DvtTransformCodeWorkbenchContent } from './DvtTransformCodeWorkbenchContent';
@@ -43,33 +43,30 @@ describe('DVT Transform code workbench content', () => {
     container.remove();
   });
 
-  it('keeps pending authoring separate from canonical code output', () => {
-    const render = (state: 'pending' | 'canonical'): void => {
-      act(() => {
-        root.render(
-          <DvtTransformCodeWorkbenchContent
-            transformNode={TRANSFORM}
-            nodes={[TRANSFORM]}
-            edges={[]}
-            canonicalContent="{}"
-            relationalComposition={
-              state === 'pending'
-                ? { state, connectedInputCount: 2, pendingInputCount: 1 }
-                : { state, connectedInputCount: 2, operation: 'inner_join' }
-            }
-            pendingCompositionAuthoring={<div data-slot="pending-composition-authoring" />}
-            copy={COPY}
-          />
-        );
-      });
-    };
+  it('keeps the inspector read-only and enters relational authoring through the Model editor', () => {
+    const onOpenSemanticEditor = vi.fn();
+    act(() => {
+      root.render(
+        <DvtTransformCodeWorkbenchContent
+          transformNode={TRANSFORM}
+          nodes={[TRANSFORM]}
+          edges={[]}
+          canonicalContent="{}"
+          openSemanticEditorLabel="Open semantic editor"
+          onOpenSemanticEditor={onOpenSemanticEditor}
+          copy={COPY}
+        />
+      );
+    });
 
-    render('pending');
-    expect(container.querySelector('[data-slot="pending-composition-authoring"]')).not.toBeNull();
-    expect(container.querySelector('[data-slot="dvt-transform-output-view"]')).toBeNull();
-
-    render('canonical');
-    expect(container.querySelector('[data-slot="pending-composition-authoring"]')).toBeNull();
     expect(container.querySelector('[data-slot="dvt-transform-output-view"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot^="dvt-select-operation-"]')).toBeNull();
+
+    act(() => {
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-open-semantic-editor"]')!
+        .click();
+    });
+    expect(onOpenSemanticEditor).toHaveBeenCalledOnce();
   });
 });

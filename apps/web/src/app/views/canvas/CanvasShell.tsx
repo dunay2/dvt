@@ -468,6 +468,7 @@ export default function CanvasShell({
         onOpenProjectCode={onOpenProjectCode}
         onImportDbtProject={onDbtProjectImported == null ? undefined : openDbtProjectImport}
         onOpenCanvasSettings={openCanvasSettings}
+        onOpenModelEditor={openRelationalTree}
         contextMenuPresenter={contextMenuPresenter}
       />
       {panels.activeCanvasId != null ? (

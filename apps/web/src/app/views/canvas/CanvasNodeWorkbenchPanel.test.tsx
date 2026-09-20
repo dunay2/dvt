@@ -268,6 +268,7 @@ function renderNodePanel(
   graph?: Readonly<{
     nodes?: readonly CanonicalNode[];
     edges?: readonly CanonicalEdge[];
+    onOpenSemanticEditor?: () => void;
   }>
 ): void {
   act(() => {
@@ -307,6 +308,9 @@ function renderNodePanel(
         primarySectionIds={primarySectionIds}
         authoring={authoring}
         onClose={vi.fn()}
+        {...(graph?.onOpenSemanticEditor == null
+          ? {}
+          : { onOpenSemanticEditor: graph.onOpenSemanticEditor })}
       />
     );
   });
@@ -813,7 +817,15 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(outputSelector?.value).toBe('postgres-sql');
   });
 
-  it('keeps pending relational information in a compact workbench', () => {
+  it('keeps pending relational information out of the contextual inspector', () => {
+    const onOpenSemanticEditor = vi.fn();
+    const pendingTransform: CanonicalNode = {
+      ...DVT_SUBSTRAIT_TRANSFORM_NODE,
+      metadata: {
+        ...DVT_SUBSTRAIT_TRANSFORM_NODE.metadata,
+        transformAuthoring: undefined,
+      },
+    };
     const clients: CanonicalNode = {
       ...SOURCE_NODE,
       id: 'source.clients',
@@ -835,27 +847,28 @@ describe('CanvasNodeWorkbenchPanel', () => {
     };
     renderNodePanel(
       root,
-      DVT_SUBSTRAIT_TRANSFORM_NODE,
+      pendingTransform,
       'code',
       { canEditNode: true, onApplyNodeDraft: vi.fn() },
       1,
       undefined,
       {
-        nodes: [SOURCE_NODE, clients, DVT_SUBSTRAIT_TRANSFORM_NODE],
+        nodes: [SOURCE_NODE, clients, pendingTransform],
         edges: [
           {
             id: 'edge-orders-transform',
             sourceId: SOURCE_NODE.id,
-            targetId: DVT_SUBSTRAIT_TRANSFORM_NODE.id,
+            targetId: pendingTransform.id,
             relation: 'lineage',
           },
           {
             id: 'edge-clients-transform',
             sourceId: clients.id,
-            targetId: DVT_SUBSTRAIT_TRANSFORM_NODE.id,
+            targetId: pendingTransform.id,
             relation: 'lineage',
           },
         ],
+        onOpenSemanticEditor,
       }
     );
 
@@ -863,7 +876,13 @@ describe('CanvasNodeWorkbenchPanel', () => {
     const header = container.querySelector(
       '[data-slot="canvas-node-workbench-header-actions"]'
     )?.parentElement;
-    expect(panel?.querySelector('[data-slot="dvt-relational-operation-chooser"]')).not.toBeNull();
+    expect(panel?.querySelector('[data-slot="dvt-relational-operation-chooser"]')).toBeNull();
+    const openEditor = panel?.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-open-semantic-editor"]'
+    );
+    expect(openEditor).not.toBeNull();
+    act(() => openEditor!.click());
+    expect(onOpenSemanticEditor).toHaveBeenCalledOnce();
     expect(panel?.querySelector('[data-slot="canvas-node-workbench-tabs"]')).not.toBeNull();
     expect(panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')).not.toBeNull();
     expect(panel?.querySelector('[data-slot="canvas-node-workbench-status"]')).not.toBeNull();

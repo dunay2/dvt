@@ -1,7 +1,6 @@
-/** Owned concern: compose canonical Transform output with pending relational authoring. */
-import type { ReactNode } from 'react';
+/** Owned concern: present canonical Transform output and route semantic edits to the Model editor. */
 
-import type { CanvasRelationalCompositionTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
+import { Button } from '../../components/ui/button';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasViewCopy } from './canvasCopy.types';
 import { DvtTransformOutputView } from './DvtTransformOutputView';
@@ -12,17 +11,17 @@ export function DvtTransformCodeWorkbenchContent({
   edges,
   canonicalContent,
   canonicalDescription,
-  relationalComposition,
-  pendingCompositionAuthoring,
+  openSemanticEditorLabel,
+  onOpenSemanticEditor,
   copy,
 }: Readonly<{
   transformNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
-  canonicalContent: string;
+  canonicalContent?: string;
   canonicalDescription?: string;
-  relationalComposition?: CanvasRelationalCompositionTruth;
-  pendingCompositionAuthoring: ReactNode;
+  openSemanticEditorLabel: string;
+  onOpenSemanticEditor?: () => void;
   copy: Pick<
     CanvasViewCopy,
     | 'inspectorTransformOutputViewLabel'
@@ -32,18 +31,33 @@ export function DvtTransformCodeWorkbenchContent({
     | 'inspectorTransformOutputErrorMessage'
   >;
 }>): JSX.Element {
-  if (relationalComposition?.state === 'pending') {
-    return <>{pendingCompositionAuthoring}</>;
-  }
-
   return (
-    <DvtTransformOutputView
-      transformNode={transformNode}
-      nodes={nodes}
-      edges={edges}
-      canonicalContent={canonicalContent}
-      canonicalDescription={canonicalDescription}
-      copy={copy}
-    />
+    <div className="flex h-full min-h-0 flex-col gap-2">
+      {onOpenSemanticEditor == null ? null : (
+        <div className="flex shrink-0 justify-end">
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            data-slot="canvas-open-semantic-editor"
+            onClick={onOpenSemanticEditor}
+          >
+            {openSemanticEditorLabel}
+          </Button>
+        </div>
+      )}
+      {canonicalContent == null ? null : (
+        <div className="min-h-0 flex-1">
+          <DvtTransformOutputView
+            transformNode={transformNode}
+            nodes={nodes}
+            edges={edges}
+            canonicalContent={canonicalContent}
+            canonicalDescription={canonicalDescription}
+            copy={copy}
+          />
+        </div>
+      )}
+    </div>
   );
 }

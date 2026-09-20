@@ -37,6 +37,7 @@ type CanvasShellMainPanelProps = Readonly<{
   onOpenProjectCode?: () => void;
   onImportDbtProject?: () => void;
   onOpenCanvasSettings?: () => void;
+  onOpenModelEditor?: (nodeId: string) => void;
   contextMenuPresenter: CanvasContextMenuPresenter;
 }>;
 
@@ -217,12 +218,17 @@ function CanvasShellNodeWorkbenchOverlay({
   layout,
   panels,
   chromeCommands,
-}: Pick<CanvasShellMainPanelProps, 'layout' | 'panels' | 'chromeCommands'>): JSX.Element | null {
+  onOpenModelEditor,
+}: Pick<
+  CanvasShellMainPanelProps,
+  'layout' | 'panels' | 'chromeCommands' | 'onOpenModelEditor'
+>): JSX.Element | null {
   return (
     <CanvasNodeWorkbenchOverlay
       layout={layout}
       panels={panels}
       onHide={chromeCommands.onHideInspector}
+      {...(onOpenModelEditor == null ? {} : { onOpenModelEditor })}
     />
   );
 }
@@ -239,6 +245,7 @@ export function CanvasShellMainPanel({
   onOpenProjectCode,
   onImportDbtProject,
   onOpenCanvasSettings,
+  onOpenModelEditor,
   contextMenuPresenter,
 }: CanvasShellMainPanelProps): JSX.Element {
   const shouldShowGraphStatusOverlay =
@@ -278,6 +285,7 @@ export function CanvasShellMainPanel({
           layout={layout}
           panels={panels}
           chromeCommands={chromeCommands}
+          onOpenModelEditor={onOpenModelEditor}
         />
       ) : null}
     </CanvasShellMainPanelFrame>
