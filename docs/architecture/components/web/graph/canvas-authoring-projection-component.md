@@ -2,7 +2,7 @@
 title: Canvas Authoring Projection Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-22
+last_reviewed: 2026-09-21
 ---
 
 # Canvas Authoring Projection Component

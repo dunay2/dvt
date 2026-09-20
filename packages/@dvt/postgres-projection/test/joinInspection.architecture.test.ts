@@ -12,6 +12,19 @@ const readerModules = [
 ];
 
 describe('shared JOIN inspection component boundaries', () => {
+  it.each([
+    'joinInspectionAdmission.test.ts',
+    'joinInspectionShape.test.ts',
+    'joinOutputSelection.test.ts',
+    'joinPostgresProjection.test.ts',
+    'semiAntiJoinPostgresProjection.test.ts',
+    'fixtures/joinDraft.ts',
+    'fixtures/semiAntiJoinDraft.ts',
+  ])('keeps the focused scenario or fixture %s within 200 lines', (path) => {
+    const source = readFileSync(new URL(`./${path}`, import.meta.url), 'utf8');
+    expect(source.trimEnd().split('\n').length).toBeLessThanOrEqual(200);
+  });
+
   it.each(readerModules)('%s stays small and independent of UI, SQL and IO', (path) => {
     const source = readFileSync(new URL(`../src/${path}`, import.meta.url), 'utf8');
     expect(source.trimEnd().split('\n').length).toBeLessThanOrEqual(200);
