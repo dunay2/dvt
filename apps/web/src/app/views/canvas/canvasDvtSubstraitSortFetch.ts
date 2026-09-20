@@ -61,7 +61,7 @@ function wrapperIdentity(
   const inspection = inspectDvtSubstraitSortFetchRoot(draft);
   if (inspection.ok && inspection.operation === operation) {
     return {
-      base: selectDvtSubstraitRelation(draft, inspection.inputRelationId),
+      base: removeDvtSubstraitSortFetchRelation(draft, inspection.relationId),
       relationId: inspection.relationId,
       outputFieldIds: inspection.outputFields.map((field) => field.fieldId),
     };
@@ -128,12 +128,14 @@ function replaceSortFetchWrapper(
     const inspection = inspectDvtSubstraitSortFetchRoot(current);
     if (!inspection.ok) break;
     chain.push({ draft: current, inspection });
-    current = selectDvtSubstraitRelation(current, inspection.inputRelationId);
+    const unwrapped = removeDvtSubstraitSortFetchRelation(current, inspection.relationId);
+    if (unwrapped === current) break;
+    current = unwrapped;
   }
   const targetIndex = chain.findIndex((entry) => entry.inspection.relationId === relationId);
   if (targetIndex < 0) return draft;
   const target = chain[targetIndex]!;
-  let rebuilt = selectDvtSubstraitRelation(target.draft, target.inspection.inputRelationId);
+  let rebuilt = removeDvtSubstraitSortFetchRelation(target.draft, target.inspection.relationId);
   const identity = {
     relationId: target.inspection.relationId,
     outputFieldIds: target.inspection.outputFields.map((field) => field.fieldId),
@@ -189,7 +191,11 @@ export function peelCanvasDvtSubstraitSortFetch(
     const inspection = inspectDvtSubstraitSortFetchRoot(base);
     if (!inspection.ok) break;
     wrappers.push(inspection);
-    base = selectDvtSubstraitRelation(base, inspection.inputRelationId);
+    // Generic subtree selection rebases anchors for transient queries. Removing only the wrapper
+    // retains persisted inner ordering, which JOIN admission treats as structural identity.
+    const unwrapped = removeDvtSubstraitSortFetchRelation(base, inspection.relationId);
+    if (unwrapped === base) break;
+    base = unwrapped;
   }
   return { base, wrappers };
 }
