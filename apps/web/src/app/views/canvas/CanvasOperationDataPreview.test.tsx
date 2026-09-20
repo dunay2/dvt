@@ -113,11 +113,11 @@ describe('selected operation data preview', () => {
     );
     const table = dataHost.querySelector('table');
     expect(table?.textContent).toContain('intermediate-result');
-    act(() =>
+    await act(async () => {
       container
         .querySelector('[data-slot="canvas-operation-tree-tab"]')!
-        .dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
-    );
+        .dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    });
     expect(dataHost.querySelector('table')).toBe(table);
     expect(query.previewTransformRows).toHaveBeenCalledOnce();
     renderDock(true);
