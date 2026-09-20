@@ -2,14 +2,11 @@
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
-import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
-import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
-import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
-import { resolveCanvasRelationalOperatorTools } from './canvasRelationalTreeOperatorModel';
-import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
-import { CanvasRelationalJoinExpressionTree } from './CanvasRelationalJoinExpressionTree';
-import { CanvasRelationalTreeOperatorForm } from './CanvasRelationalTreeOperatorForm';
-import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { CanvasRelationalTreeExpressionOperatorEditor } from './CanvasRelationalTreeExpressionOperatorEditor';
+import {
+  CanvasRelationalTreeSortFetchEditor,
+  selectedCanvasDvtSortFetchOperation,
+} from './CanvasRelationalTreeSortFetchEditor';
 
 export function CanvasRelationalTreeSelectedOperatorEditor({
   draft,
@@ -26,57 +23,26 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
   onChange: (draft: DvtSubstraitProjectionDraft) => void;
   onClose: () => void;
 }>): JSX.Element | null {
-  const es = useApplicationLanguageStore((state) => state.language) === 'es';
-  const node = applyCanvasInspectorNodeDraft(
-    transformNode,
-    createCanvasRelationalTreeNodeDraft(transformNode, operation, draft)
-  );
-  const graph = projectSemanticWorkbenchGraph(node);
-  const selected = graph.nodes.find((item) => item.id === relationId);
-  const kind = selected?.data.relationKind;
-  const toolId =
-    kind === 'aggregate' || kind === 'filter' ? kind : kind === 'project' ? 'window' : null;
-  if (
-    toolId == null ||
-    !graph.edges.some(
-      (edge) => edge.target === relationId && edge.data?.semanticEdgeKind === 'expression'
-    )
-  )
-    return null;
-  const tool = resolveCanvasRelationalOperatorTools(draft).find((item) => item.id === toolId);
+  const sortFetchOperation = selectedCanvasDvtSortFetchOperation(draft, relationId);
+  if (sortFetchOperation != null && relationId != null) {
+    return (
+      <CanvasRelationalTreeSortFetchEditor
+        draft={draft}
+        operation={sortFetchOperation}
+        relationId={relationId}
+        onChange={onChange}
+        onClose={onClose}
+      />
+    );
+  }
   return (
-    <CanvasRelationalTreeEditorFrame
-      title={toolId.toUpperCase()}
+    <CanvasRelationalTreeExpressionOperatorEditor
+      draft={draft}
+      operation={operation}
       relationId={relationId}
+      transformNode={transformNode}
+      onChange={onChange}
       onClose={onClose}
-    >
-      <div className="canvas-operation-editors grid h-full min-h-0 gap-3">
-        <CanvasRelationalJoinExpressionTree
-          transformNode={transformNode}
-          draft={draft}
-          operation={operation}
-          relationId={relationId}
-        />
-        {tool?.enabled && tool.active ? (
-          <div className="min-h-0 overflow-auto">
-            <CanvasRelationalTreeOperatorForm
-              key={`${relationId}:${tool.alias ?? ''}`}
-              inline
-              tool={tool}
-              draft={draft}
-              title={toolId.toUpperCase()}
-              onChange={onChange}
-              onClose={onClose}
-            />
-          </div>
-        ) : toolId === 'aggregate' ? (
-          <p className="text-sm text-(--text-muted)">
-            {es
-              ? 'Esta operación tiene dependencias posteriores. Retira primero la ventana para modificar la agrupación.'
-              : 'This operation has downstream dependencies. Remove the window before changing the grouping.'}
-          </p>
-        ) : null}
-      </div>
-    </CanvasRelationalTreeEditorFrame>
+    />
   );
 }

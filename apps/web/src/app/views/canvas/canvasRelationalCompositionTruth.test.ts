@@ -1,4 +1,7 @@
-import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import {
+  JoinRel_JoinType,
+  SortField_SortDirection,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
@@ -6,10 +9,17 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   createDvtSubstraitStringJoinDraft,
   encodeDvtSubstraitJoinDocument,
+  type DvtSubstraitJoinDraft,
   type DvtSubstraitJoinType,
 } from './canvasDvtSubstraitJoinComposition';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
+import {
+  applyDvtSubstraitFetch,
+  applyDvtSubstraitSort,
+  resolveDvtSubstraitSortFetchInputFields,
+} from './canvasDvtSubstraitSortFetch';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 function source(name: string): CanonicalNode {
   const sourceRef: ConnectedSourceRef = {
@@ -59,6 +69,39 @@ function edge(node: CanonicalNode): Pick<CanonicalEdge, 'sourceId' | 'targetId'>
   return { sourceId: node.id, targetId: 'transform-composition' };
 }
 
+function canonicalJoinDraft(
+  left: CanonicalNode,
+  right: CanonicalNode,
+  joinType: DvtSubstraitJoinType = JoinRel_JoinType.INNER
+): DvtSubstraitJoinDraft {
+  return createDvtSubstraitStringJoinDraft({
+    left: {
+      source: {
+        nodeId: left.id,
+        schema: 'raw',
+        table: left.name,
+        sourceRef: sourceRef(left),
+      },
+      fields: ['id'],
+      fieldTypes: ['string'],
+    },
+    right: {
+      source: {
+        nodeId: right.id,
+        schema: 'raw',
+        table: right.name,
+        sourceRef: sourceRef(right),
+      },
+      fields: ['id'],
+      fieldTypes: ['string'],
+    },
+    leftFieldName: 'id',
+    rightFieldName: 'id',
+    targetNodeId: 'transform-composition',
+    joinType,
+  });
+}
+
 function canonicalJoin(
   left: CanonicalNode,
   right: CanonicalNode,
@@ -66,34 +109,7 @@ function canonicalJoin(
 ): CanonicalNode {
   return applyDvtSubstraitSemanticDocument(
     transform(),
-    encodeDvtSubstraitJoinDocument(
-      createDvtSubstraitStringJoinDraft({
-        left: {
-          source: {
-            nodeId: left.id,
-            schema: 'raw',
-            table: left.name,
-            sourceRef: sourceRef(left),
-          },
-          fields: ['id'],
-          fieldTypes: ['string'],
-        },
-        right: {
-          source: {
-            nodeId: right.id,
-            schema: 'raw',
-            table: right.name,
-            sourceRef: sourceRef(right),
-          },
-          fields: ['id'],
-          fieldTypes: ['string'],
-        },
-        leftFieldName: 'id',
-        rightFieldName: 'id',
-        targetNodeId: 'transform-composition',
-        joinType,
-      })
-    )
+    encodeDvtSubstraitJoinDocument(canonicalJoinDraft(left, right, joinType))
   );
 }
 
@@ -128,6 +144,27 @@ describe('resolveCanvasRelationalCompositionTruth', () => {
       resolveCanvasRelationalCompositionTruth({
         node: join,
         nodes: [orders, clients, join],
+        edges: [edge(orders), edge(clients)],
+      })
+    ).toEqual({ state: 'canonical', connectedInputCount: 2, operation: 'inner_join' });
+  });
+
+  it('recognizes the canonical JOIN below ORDER BY and LIMIT wrappers', () => {
+    const joined = canonicalJoinDraft(orders, clients);
+    const field = resolveDvtSubstraitSortFetchInputFields(joined, 'sort')[0]!;
+    const sorted = applyDvtSubstraitSort(joined, [
+      { fieldId: field.fieldId, direction: SortField_SortDirection.ASC_NULLS_LAST },
+    ]);
+    const fetched = applyDvtSubstraitFetch(sorted, { offset: 2n, count: 3n });
+    const node = applyDvtSubstraitSemanticDocument(
+      transform(),
+      encodeDvtSubstraitSemanticDocument(fetched)
+    );
+
+    expect(
+      resolveCanvasRelationalCompositionTruth({
+        node,
+        nodes: [orders, clients, node],
         edges: [edge(orders), edge(clients)],
       })
     ).toEqual({ state: 'canonical', connectedInputCount: 2, operation: 'inner_join' });

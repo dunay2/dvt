@@ -1,5 +1,14 @@
 /** Owned concern: readable card content and accessible semantic input roles. */
-import { AlertTriangle, Filter, Layers3, Sigma, Table2, ChartNoAxesCombined } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowDownUp,
+  ChartNoAxesCombined,
+  Filter,
+  Layers3,
+  ListFilter,
+  Sigma,
+  Table2,
+} from 'lucide-react';
 import { CanvasRelationalJoinIcon } from './CanvasRelationalJoinIcon';
 import type { CanvasRelationalTreePlacedNode } from './canvasRelationalTreeGeometry';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
@@ -12,6 +21,8 @@ const operatorIcons = {
   project: Layers3,
   filter: Filter,
   aggregate: Sigma,
+  sort: ArrowDownUp,
+  fetch: ListFilter,
   unsupported: AlertTriangle,
 };
 const operatorTone = {
@@ -22,6 +33,8 @@ const operatorTone = {
   cross: 'border-cyan-500 bg-cyan-950/30',
   set: 'border-indigo-600/90 bg-indigo-950/30',
   aggregate: 'border-amber-700/90 bg-amber-950/25',
+  sort: 'border-cyan-600/90 bg-cyan-950/25',
+  fetch: 'border-teal-600/90 bg-teal-950/25',
   unsupported: 'border-rose-700/90 bg-rose-950/25',
 };
 

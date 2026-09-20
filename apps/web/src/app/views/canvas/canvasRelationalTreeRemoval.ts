@@ -22,8 +22,17 @@ import { removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import { removeDvtSubstraitProjectionRoot } from './canvasDvtSubstraitStructuredFieldRemove';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
-import { inspectDvtSubstraitCrossDraft } from '@dvt/postgres-projection';
+import {
+  inspectDvtSubstraitCrossDraft,
+  selectDvtSubstraitRelation,
+} from '@dvt/postgres-projection';
 import { createDvtSubstraitCrossDraft } from './canvasDvtSubstraitCrossComposition';
+import {
+  inspectCanvasDvtSubstraitSortFetch,
+  peelCanvasDvtSubstraitSortFetch,
+  removeDvtSubstraitSortFetch,
+  restoreCanvasDvtSubstraitSortFetch,
+} from './canvasDvtSubstraitSortFetch';
 
 export type CanvasRelationalRemovalResult =
   | Readonly<{
@@ -44,7 +53,9 @@ export type CanvasRelationalRemovalResult =
     }>;
 
 function operationForJoinDraft(draft: DvtSubstraitJoinDraft): CanvasRelationalOperation | null {
-  const context = inspectDvtSubstraitJoinPredicateContext(draft);
+  const context = inspectDvtSubstraitJoinPredicateContext(
+    peelCanvasDvtSubstraitSortFetch(draft).base
+  );
   if (context == null || !context.inspection.ok) return null;
   const joinType = context.inspection.projection.joinRelations.at(-1)?.joinType;
   return joinType == null ? null : canvasJoinOperationForType(joinType);
@@ -58,6 +69,46 @@ export function removeCanvasRelationalTreeNode(
     keep?: 'left' | 'right';
   }>
 ): CanvasRelationalRemovalResult {
+  try {
+    const selected = selectDvtSubstraitRelation(args.draft, args.relationId);
+    const wrapper = inspectCanvasDvtSubstraitSortFetch(selected);
+    if (wrapper.ok && wrapper.relationId === args.relationId) {
+      const draft = removeDvtSubstraitSortFetch(args.draft, wrapper.operation, args.relationId);
+      if (draft !== args.draft) {
+        const sourceCount = draft.sidecar.relations.filter(
+          (relation) => relation.sourceRef != null
+        ).length;
+        const setOperation = resolveDvtSubstraitSetOperation(draft);
+        return {
+          ok: true,
+          draft,
+          operation:
+            operationForJoinDraft(draft) ??
+            (inspectDvtSubstraitCrossDraft(draft).ok ? 'cross_join' : null) ??
+            setOperation ??
+            'projection',
+          retained: Array.from({ length: sourceCount }, (_, index) => index),
+        };
+      }
+    }
+  } catch {
+    // Continue through the existing fail-closed family-specific removers.
+  }
+  const sortFetchChain = peelCanvasDvtSubstraitSortFetch(args.draft);
+  if (sortFetchChain.wrappers.length > 0) {
+    const result = removeCanvasRelationalTreeNode({ ...args, draft: sortFetchChain.base });
+    if (!result.ok) return result;
+    const restored = restoreCanvasDvtSubstraitSortFetch(sortFetchChain, result.draft);
+    if (restored != null) return { ...result, draft: restored };
+    return {
+      ok: false,
+      reason: 'dependent-operations',
+      operations: sortFetchChain.wrappers.map((wrapper) =>
+        wrapper.operation === 'sort' ? 'ORDER BY' : 'LIMIT / OFFSET'
+      ),
+      proposal: result,
+    };
+  }
   const root = args.draft.plan.relations[0]?.relType;
   const rel = root?.case === 'root' ? root.value.input?.relType : undefined;
   if (rel?.case === 'project') {

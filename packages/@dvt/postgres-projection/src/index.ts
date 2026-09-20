@@ -4,6 +4,20 @@ export {
   resolvedFunction,
 } from './substraitExpressionReader.js';
 export {
+  createDvtSubstraitFetchDraft,
+  createDvtSubstraitSortDraft,
+  inspectDvtSubstraitSortFetchRoot,
+  removeDvtSubstraitSortFetchRelation,
+  type DvtSubstraitSortDirection,
+  type DvtSubstraitSortFetchRootInspection,
+  type DvtSubstraitSortKey,
+} from './substraitSortFetch.js';
+export {
+  buildDvtSortFetchPostgresAst,
+  postgresSortDirection,
+  type DvtPostgresOrderKey,
+} from './sortFetchPostgresProjection.js';
+export {
   STRING_DATA_TYPES,
   TIMESTAMPTZ_DATA_TYPES,
   normalizeProjectionDataType,

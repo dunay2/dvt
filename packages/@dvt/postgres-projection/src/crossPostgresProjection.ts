@@ -77,13 +77,13 @@ export function buildDvtCrossPostgresAst(projection: DvtSubstraitCrossProjection
 
 export async function projectDvtCrossDraftToPostgresSql(
   draft: DvtSubstraitCrossDraft
-): Promise<Readonly<{ sql: string; projection: DvtSubstraitCrossProjection }>> {
+): Promise<
+  Readonly<{ sql: string; projection: DvtSubstraitCrossProjection; ast: PostgresAstNode }>
+> {
   const inspection = inspectDvtSubstraitCrossDraft(draft);
   if (inspection.ok) {
-    return {
-      projection: inspection.projection,
-      sql: await renderPostgresAst(buildDvtCrossPostgresAst(inspection.projection)),
-    };
+    const ast = buildDvtCrossPostgresAst(inspection.projection);
+    return { projection: inspection.projection, ast, sql: await renderPostgresAst(ast) };
   }
   const mixed = inspectDvtSubstraitMixedCrossDraft(draft);
   if (!mixed.ok) {
@@ -138,6 +138,7 @@ export async function projectDvtCrossDraftToPostgresSql(
   };
   return {
     projection,
+    ast,
     sql: await renderPostgresAst(ast),
   };
 }

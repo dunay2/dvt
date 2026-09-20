@@ -61,7 +61,9 @@ export function CanvasRelationalTreeInspection({
       </div>
       {expanded &&
       model.selectedNode != null &&
-      (model.selectedNode.expressionRefs.length > 0 || model.selectedNode.operator === 'cross') ? (
+      (model.selectedNode.expressionRefs.length > 0 ||
+        model.selectedNode.operator === 'cross' ||
+        (model.authoringAvailable && model.selectedNode.operator === 'fetch')) ? (
         <CanvasRelationalTreeEditorFrame
           title={model.selectedNode.operator.toUpperCase()}
           relationId={model.selectedNode.relationId}

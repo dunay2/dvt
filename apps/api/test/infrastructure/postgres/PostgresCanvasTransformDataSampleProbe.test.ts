@@ -54,6 +54,25 @@ describe('PostgresCanvasTransformDataSampleProbe', () => {
     ]);
   });
 
+  it('repeats the admitted final order outside the sample subquery', async () => {
+    const { probe, query } = harness();
+    await probe.previewTransformRows({
+      type: 'postgres',
+      credentialRef: 'postgres:local',
+      sql: 'select id, amount from raw.orders order by amount desc nulls last, id asc',
+      limit: 20,
+      orderBy: [
+        { name: 'amount', direction: 'DESC', nulls: 'LAST' },
+        { name: 'id', direction: 'ASC', nulls: 'FIRST' },
+      ],
+    });
+    expect(query.mock.calls[2]?.[0]).toBe(
+      'select * from (\n' +
+        'select id, amount from raw.orders order by amount desc nulls last, id asc\n' +
+        ') as dvt_transform_preview order by "amount" DESC NULLS LAST, "id" ASC NULLS FIRST limit 21'
+    );
+  });
+
   it('rolls back and returns a stable failure without leaking the database error', async () => {
     const { probe, query, end } = harness();
     query.mockImplementation(async (sql: string) => {

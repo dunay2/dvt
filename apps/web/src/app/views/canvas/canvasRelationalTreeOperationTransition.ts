@@ -5,6 +5,7 @@ import type { CanvasRelationalOperation } from './canvasRelationalOperationChoic
 import { createCanvasRelationalTreeOperationDraft } from './canvasRelationalTreeOperationDraft';
 import { isCanvasJoinOperation, setFinalCanvasJoinType } from './canvasRelationalTreeJoinType';
 import { appendCanvasRelationalCrossInputById } from './canvasRelationalTreeSeedHydration';
+import { inspectDvtSubstraitJoinAcceptedDraft } from './canvasDvtSubstraitJoinComposition';
 
 export function resolveCanvasRelationalTreeOperationTransition(
   args: Readonly<{
@@ -16,7 +17,11 @@ export function resolveCanvasRelationalTreeOperationTransition(
     appendInputId: string | null;
   }>
 ): Readonly<{ draft: DvtSubstraitJoinDraft; appendedInputId?: string }> | null {
-  if (isCanvasJoinOperation(args.operation) && args.draft != null) {
+  if (
+    isCanvasJoinOperation(args.operation) &&
+    args.draft != null &&
+    inspectDvtSubstraitJoinAcceptedDraft(args.draft).ok
+  ) {
     const draft = setFinalCanvasJoinType(args.draft, args.operation);
     return draft == null ? null : { draft };
   }

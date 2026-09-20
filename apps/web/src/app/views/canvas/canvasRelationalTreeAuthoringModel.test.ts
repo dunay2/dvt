@@ -18,6 +18,7 @@ import { inspectDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjecti
 import { inspectDvtSubstraitUnionAllDraft } from './canvasDvtSubstraitSetComposition';
 import { createDvtSubstraitCrossDraft } from './canvasDvtSubstraitCrossComposition';
 import { inspectDvtSubstraitCrossDraft } from '@dvt/postgres-projection';
+import { resolveCanvasRelationalTreeOperationTransition } from './canvasRelationalTreeOperationTransition';
 
 const TARGET_ID = 'transform';
 
@@ -84,6 +85,25 @@ const edges: CanonicalEdge[] = sources.map((node) => ({
 const inputs = resolveCanvasDvtCompositionInputs({ targetNodeId: TARGET_ID, nodes, edges });
 
 describe('Canvas relational-tree guided authoring model', () => {
+  it('rebuilds a projection as a JOIN instead of trying to mutate the projection as a JOIN', () => {
+    const projection = createCanvasRelationalTreeProjectionDraft({
+      input: inputs.find((input) => input.nodeId === orders.id)!,
+      targetNodeId: TARGET_ID,
+    });
+
+    const transition = resolveCanvasRelationalTreeOperationTransition({
+      operation: 'inner_join',
+      inputs,
+      selectedInputIds: [orders.id, customers.id],
+      targetNodeId: TARGET_ID,
+      draft: projection,
+      appendInputId: null,
+    });
+
+    expect(transition).not.toBeNull();
+    expect(inspectDvtSubstraitJoinDraft(transition!.draft).ok).toBe(true);
+  });
+
   it('derives unary or multi-input operations from the occupied semantic slots', () => {
     expect(
       resolveCanvasRelationalTreeAuthoringChoices({

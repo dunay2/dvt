@@ -25,7 +25,11 @@ export function CanvasRelationalTreeCardMenu({
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
-  const canExpand = node.expressionRefs.length > 0 || node.operator === 'cross';
+  const canExpand =
+    node.expressionRefs.length > 0 ||
+    node.operator === 'cross' ||
+    node.operator === 'sort' ||
+    node.operator === 'fetch';
   if (node.relationId == null || (onRemove == null && onExpand == null)) return children;
   return (
     <ContextMenu modal={false}>

@@ -185,6 +185,14 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
   },
   {
     entryIds: [
+      standardId('relation', 'substrait.SortRel'),
+      standardId('relation', 'substrait.FetchRel'),
+    ],
+    useCaseRefs: ['dvt:#3324'],
+    proofRef: 'docs/evidence/ED-20260920-sort-fetch-end-to-end.md',
+  },
+  {
+    entryIds: [
       standardId('relation', 'substrait.AggregateRel'),
       functionId('aggregate-function', 'functions_aggregate_generic', 'count'),
       standardId('type', 'substrait.Type', 'kind.i64'),

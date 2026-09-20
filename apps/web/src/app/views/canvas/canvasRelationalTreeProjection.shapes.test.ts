@@ -25,6 +25,8 @@ import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { applyDvtSubstraitPilotRowNumber } from './canvasDvtSubstraitWindow';
+import { applyDvtSubstraitFetch, applyDvtSubstraitSort } from './canvasDvtSubstraitSortFetch';
+import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 
 const TARGET_ID = 'transform-orders';
 
@@ -182,5 +184,52 @@ describe('ProjectCanvasRelationalTree admitted shapes', () => {
       relationId,
       children: [],
     });
+  });
+
+  it('projects a valid Fetch(Sort(Project(Read))) as visible semantic cards', () => {
+    const pilot = createDvtSubstraitPilotDraft({
+      sourceNodeId: 'customers',
+      targetNodeId: TARGET_ID,
+    });
+    const inspection = inspectDvtSubstraitPilotDraft(pilot);
+    if (!inspection.ok) throw new Error('Expected the admitted pilot.');
+    const sorted = applyDvtSubstraitSort(pilot, [
+      {
+        fieldId: inspection.projection.outputs[1]!.fieldId,
+        direction: SortField_SortDirection.DESC_NULLS_LAST,
+      },
+      {
+        fieldId: inspection.projection.outputs[0]!.fieldId,
+        direction: SortField_SortDirection.ASC_NULLS_FIRST,
+      },
+    ]);
+    const fetched = applyDvtSubstraitFetch(sorted, { offset: 2n, count: 3n });
+    const transform = applyDvtSubstraitSemanticDocument(
+      targetNode(),
+      encodeDvtSubstraitPilotDocument(fetched)
+    );
+
+    const result = projectCanvasRelationalTree({ node: transform, nodes: [transform], edges: [] });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.projection.root).toMatchObject({
+      operator: 'fetch',
+      displayName: 'LIMIT 3 · OFFSET 2',
+      children: [
+        {
+          role: 'input',
+          node: {
+            operator: 'sort',
+            displayName: 'email DESC NULLS LAST · name ASC NULLS FIRST',
+            expressionRefs: [
+              { slot: 'sort-key', ordinal: 0 },
+              { slot: 'sort-key', ordinal: 1 },
+            ],
+          },
+        },
+      ],
+    });
+    expect(result.projection.root.children[0]?.node.children[0]?.node.operator).toBe('project');
   });
 });

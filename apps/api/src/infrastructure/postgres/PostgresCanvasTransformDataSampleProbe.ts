@@ -55,8 +55,14 @@ export class PostgresCanvasTransformDataSampleProbe implements ICanvasTransformD
       await client.query('begin transaction isolation level repeatable read read only');
       transactionStarted = true;
       await client.query(`set local statement_timeout = '${TRANSFORM_DATA_SAMPLE_TIMEOUT_MS}ms'`);
+      const outerOrder =
+        input.orderBy == null || input.orderBy.length === 0
+          ? ''
+          : ` order by ${input.orderBy
+              .map((key) => `${quoteIdentifier(key.name)} ${key.direction} NULLS ${key.nulls}`)
+              .join(', ')}`;
       const result = await client.query<Readonly<Record<string, unknown>>>(
-        `select * from (\n${withoutTrailingSemicolon(input.sql)}\n) as dvt_transform_preview limit ${input.limit + 1}`
+        `select * from (\n${withoutTrailingSemicolon(input.sql)}\n) as dvt_transform_preview${outerOrder} limit ${input.limit + 1}`
       );
       const fields = result.fields ?? [];
       const truncated = result.rows.length > input.limit;
@@ -89,4 +95,11 @@ export class PostgresCanvasTransformDataSampleProbe implements ICanvasTransformD
 
 function withoutTrailingSemicolon(sql: string): string {
   return sql.trim().replace(/;\s*$/, '');
+}
+
+function quoteIdentifier(value: string): string {
+  if (value.length === 0 || value !== value.trim()) {
+    throw new CanvasTransformDataSampleUnavailableError('query_failed');
+  }
+  return `"${value.replaceAll('"', '""')}"`;
 }

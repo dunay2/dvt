@@ -105,6 +105,7 @@ export class PreviewCanvasTransformRowsUseCase {
       credentialRef: connection.credentialRef,
       sql: projection.sql,
       limit: input.limit,
+      ...(projection.orderBy == null ? {} : { orderBy: projection.orderBy }),
     });
     return TransformDataSampleResponseSchema.parse({
       contractVersion: TRANSFORM_DATA_SAMPLE_CONTRACT_VERSION,

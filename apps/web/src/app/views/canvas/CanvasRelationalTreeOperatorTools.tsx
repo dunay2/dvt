@@ -1,5 +1,5 @@
 /** Owned concern: contextual toolbar entry points for admitted Substrait operators. */
-import { Filter, Sigma, ChartNoAxesCombined } from 'lucide-react';
+import { ArrowDownUp, ChartNoAxesCombined, Filter, ListFilter, Sigma } from 'lucide-react';
 import { useState } from 'react';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import {
@@ -9,7 +9,13 @@ import {
 import { CanvasRelationalTreeOperatorForm } from './CanvasRelationalTreeOperatorForm';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
-const icons = { filter: Filter, aggregate: Sigma, window: ChartNoAxesCombined };
+const icons = {
+  filter: Filter,
+  aggregate: Sigma,
+  window: ChartNoAxesCombined,
+  sort: ArrowDownUp,
+  fetch: ListFilter,
+};
 export function CanvasRelationalTreeOperatorTools({
   draft,
   editable,
@@ -27,6 +33,8 @@ export function CanvasRelationalTreeOperatorTools({
     filter: es ? 'Filtrar' : 'Filter',
     aggregate: es ? 'Agrupar · COUNT' : 'Group · COUNT',
     window: es ? 'Ventana · ROW_NUMBER' : 'Window · ROW_NUMBER',
+    sort: 'ORDER BY',
+    fetch: 'LIMIT / OFFSET',
   };
   return (
     <div

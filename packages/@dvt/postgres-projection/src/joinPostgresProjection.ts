@@ -44,9 +44,13 @@ export function nInputJoinAlias(inputIndex: number): string {
   return `join_source_${inputIndex + 1}`;
 }
 
-export async function projectDvtJoinDraftToPostgresSql(
-  draft: DvtSubstraitJoinDraft
-): Promise<Readonly<{ sql: string; projection: DvtSubstraitNInputJoinProjection }>> {
+export async function projectDvtJoinDraftToPostgresSql(draft: DvtSubstraitJoinDraft): Promise<
+  Readonly<{
+    sql: string;
+    projection: DvtSubstraitNInputJoinProjection;
+    ast: PostgresAstNode;
+  }>
+> {
   const inspection = inspectDvtSubstraitJoinDraft(draft);
   if (!inspection.ok) {
     throw new DvtSubstraitPostgresProjectionError(
@@ -54,10 +58,8 @@ export async function projectDvtJoinDraftToPostgresSql(
       'PostgreSQL projection requires an admitted N-input JOIN shape.'
     );
   }
-  return {
-    projection: inspection.projection,
-    sql: await renderPostgresAst(buildNInputJoinPostgresAst(inspection.projection)),
-  };
+  const ast = buildNInputJoinPostgresAst(inspection.projection);
+  return { projection: inspection.projection, ast, sql: await renderPostgresAst(ast) };
 }
 
 export const POSTGRES_JOIN_COMPARISON: Readonly<

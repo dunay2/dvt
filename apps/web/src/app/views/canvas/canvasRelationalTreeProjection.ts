@@ -1,6 +1,4 @@
 /** Owned concern: project canonical DVT relation structure into one immutable Canvas read model. */
-import type { Expression, Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { SetRel_SetOp } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { ConnectedSourceRef, DvtSubstraitAuthoringSidecarV1 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -11,10 +9,19 @@ import {
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { hasSameConnectedSourceRef } from './canvasDvtSubstraitJoinSourceResolution';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import { canvasJoinLabelForType } from './canvasRelationalTreeJoinType';
+import { buildCanvasRelationalTreeRelation } from './canvasRelationalTreeRelationProjection';
 
 export type CanvasRelationalTreeOperator =
-  'read' | 'project' | 'filter' | 'join' | 'cross' | 'set' | 'aggregate' | 'unsupported';
+  | 'read'
+  | 'project'
+  | 'filter'
+  | 'join'
+  | 'cross'
+  | 'set'
+  | 'aggregate'
+  | 'sort'
+  | 'fetch'
+  | 'unsupported';
 
 export type CanvasRelationalTreeChildRole = 'input' | 'left' | 'right' | 'primary' | 'secondary';
 
@@ -27,7 +34,12 @@ export type CanvasRelationalTreeField = Readonly<{
 }>;
 
 export type CanvasRelationalTreeExpressionRef = Readonly<{
-  slot: 'filter-condition' | 'join-condition' | 'project-expression' | 'aggregate-expression';
+  slot:
+    | 'filter-condition'
+    | 'join-condition'
+    | 'project-expression'
+    | 'aggregate-expression'
+    | 'sort-key';
   ordinal: number;
 }>;
 
@@ -77,200 +89,6 @@ export type CanvasRelationalTreeProjectionResult =
     }>;
 
 type RelationBinding = DvtSubstraitAuthoringSidecarV1['relations'][number];
-
-type ChildInput = Readonly<{
-  role: CanvasRelationalTreeChildRole;
-  ordinal: number;
-  rel: Rel;
-}>;
-
-function relationAnchor(rel: Rel): number | null {
-  switch (rel.relType.case) {
-    case 'read':
-    case 'project':
-    case 'filter':
-    case 'join':
-    case 'cross':
-    case 'set':
-    case 'aggregate':
-      return rel.relType.value.common?.relAnchor ?? null;
-    default: {
-      const value: unknown = rel.relType.value;
-      if (value == null || typeof value !== 'object') return null;
-      const common: unknown = (value as { common?: unknown }).common;
-      if (common == null || typeof common !== 'object') return null;
-      const anchor: unknown = (common as { relAnchor?: unknown }).relAnchor;
-      return typeof anchor === 'number' ? anchor : null;
-    }
-  }
-}
-
-function requireRelation(value: Rel | undefined, label: string): Rel {
-  if (value == null) throw new Error(`Canonical ${label} relation input is absent.`);
-  return value;
-}
-
-function childInputs(rel: Rel): readonly ChildInput[] {
-  switch (rel.relType.case) {
-    case 'project':
-    case 'filter':
-    case 'aggregate':
-      return [
-        {
-          role: 'input',
-          ordinal: 0,
-          rel: requireRelation(rel.relType.value.input, rel.relType.case),
-        },
-      ];
-    case 'join':
-      return [
-        { role: 'left', ordinal: 0, rel: requireRelation(rel.relType.value.left, 'JOIN left') },
-        { role: 'right', ordinal: 1, rel: requireRelation(rel.relType.value.right, 'JOIN right') },
-      ];
-    case 'cross':
-      return [
-        { role: 'left', ordinal: 0, rel: requireRelation(rel.relType.value.left, 'CROSS left') },
-        { role: 'right', ordinal: 1, rel: requireRelation(rel.relType.value.right, 'CROSS right') },
-      ];
-    case 'set':
-      if (rel.relType.value.inputs.length === 0) {
-        throw new Error('Canonical SetRel has no inputs.');
-      }
-      return rel.relType.value.inputs.map((input, ordinal) => ({
-        role: ordinal === 0 ? 'primary' : 'secondary',
-        ordinal,
-        rel: input,
-      }));
-    default:
-      return [];
-  }
-}
-
-function operator(rel: Rel): CanvasRelationalTreeOperator {
-  switch (rel.relType.case) {
-    case 'read':
-    case 'project':
-    case 'filter':
-    case 'join':
-    case 'cross':
-    case 'set':
-    case 'aggregate':
-      return rel.relType.case;
-    default:
-      return 'unsupported';
-  }
-}
-
-function expressionRefs(rel: Rel): readonly CanvasRelationalTreeExpressionRef[] {
-  switch (rel.relType.case) {
-    case 'filter':
-      return rel.relType.value.condition == null ? [] : [{ slot: 'filter-condition', ordinal: 0 }];
-    case 'join':
-      return rel.relType.value.expression == null ? [] : [{ slot: 'join-condition', ordinal: 0 }];
-    case 'project':
-      return rel.relType.value.expressions.map((_, ordinal) => ({
-        slot: 'project-expression',
-        ordinal,
-      }));
-    case 'aggregate': {
-      const aggregate = rel.relType.value;
-      return [
-        ...aggregate.groupingExpressions.map((_, ordinal) => ({
-          slot: 'aggregate-expression' as const,
-          ordinal,
-        })),
-        ...aggregate.measures.map((_, ordinal) => ({
-          slot: 'aggregate-expression' as const,
-          ordinal: aggregate.groupingExpressions.length + ordinal,
-        })),
-      ];
-    }
-    default:
-      return [];
-  }
-}
-
-function windowCount(expressions: readonly Expression[]): number {
-  return expressions.filter((expression) => expression.rexType.case === 'windowFunction').length;
-}
-
-function relationWindowCount(rel: Rel): number {
-  return rel.relType.case === 'project' ? windowCount(rel.relType.value.expressions) : 0;
-}
-
-function fieldsForRelation(
-  sidecar: DvtSubstraitAuthoringSidecarV1,
-  relationId: string | null
-): readonly CanvasRelationalTreeField[] {
-  if (relationId == null) return [];
-  return sidecar.fields
-    .filter((field) => field.relationId === relationId)
-    .sort((left, right) => left.outputOrdinal - right.outputOrdinal)
-    .map((field) => ({
-      fieldId: field.fieldId,
-      outputOrdinal: field.outputOrdinal,
-      displayName: field.displayName ?? null,
-      sourceFieldId: field.sourceFieldId ?? null,
-      operandFieldIds: field.operandFieldIds ?? [],
-    }));
-}
-
-function buildTree(
-  args: Readonly<{
-    rel: Rel;
-    path: string;
-    semanticDigest: string;
-    sidecar: DvtSubstraitAuthoringSidecarV1;
-    relationByAnchor: ReadonlyMap<number, RelationBinding>;
-  }>
-): CanvasRelationalTreeNode {
-  const anchor = relationAnchor(args.rel);
-  const binding = anchor == null ? undefined : args.relationByAnchor.get(anchor);
-  const relationId = binding?.relationId ?? null;
-  const inputs = childInputs(args.rel);
-  const windows = relationWindowCount(args.rel);
-  const operationLabel =
-    args.rel.relType.case === 'join'
-      ? canvasJoinLabelForType(args.rel.relType.value.type)
-      : args.rel.relType.case === 'cross'
-        ? 'CROSS JOIN'
-        : args.rel.relType.case === 'set'
-          ? args.rel.relType.value.op === SetRel_SetOp.UNION_ALL
-            ? 'UNION ALL'
-            : args.rel.relType.value.op === SetRel_SetOp.UNION_DISTINCT
-              ? 'UNION DISTINCT'
-              : args.rel.relType.value.op === SetRel_SetOp.INTERSECTION_MULTISET
-                ? 'INTERSECT'
-                : args.rel.relType.value.op === SetRel_SetOp.MINUS_PRIMARY
-                  ? 'EXCEPT'
-                  : args.rel.relType.value.op === SetRel_SetOp.INTERSECTION_MULTISET_ALL
-                    ? 'INTERSECT ALL'
-                    : args.rel.relType.value.op === SetRel_SetOp.MINUS_PRIMARY_ALL
-                      ? 'EXCEPT ALL'
-                      : 'UNSUPPORTED SET'
-          : null;
-  return {
-    locator: `rel:${args.semanticDigest}:${args.path}`,
-    operator: operator(args.rel),
-    substraitKind: args.rel.relType.case ?? 'unknown',
-    ...(operationLabel == null ? {} : { operationLabel }),
-    relationId,
-    displayName: binding?.displayName ?? null,
-    sourceRef: binding?.sourceRef ?? null,
-    output: { fields: fieldsForRelation(args.sidecar, relationId) },
-    expressionRefs: expressionRefs(args.rel),
-    decorations: windows === 0 ? [] : [{ kind: 'window', count: windows }],
-    children: inputs.map((input) => ({
-      role: input.role,
-      ordinal: input.ordinal,
-      node: buildTree({
-        ...args,
-        rel: input.rel,
-        path: `${args.path}/${input.role}:${input.ordinal}`,
-      }),
-    })),
-  };
-}
 
 function sourceRefKey(sourceRef: ConnectedSourceRef): string {
   return [
@@ -366,7 +184,7 @@ export function projectCanvasRelationalTree(
     const relationByAnchor = new Map(
       draft.sidecar.relations.map((relation) => [relation.relAnchor, relation] as const)
     );
-    const projectedRoot = buildTree({
+    const projectedRoot = buildCanvasRelationalTreeRelation({
       rel: root.value.input,
       path: 'root',
       semanticDigest: authority.semanticDocument.semanticPlan.sha256,

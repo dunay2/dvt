@@ -518,6 +518,45 @@ describe('canvasInspectorAuthoringModel', () => {
     });
   });
 
+  it('compares exact Substrait i64 values without JSON bigint serialization', () => {
+    const draft = createCanvasInspectorNodeDraft(
+      buildDvtNode('dvt:transform', { config: { materialized: 'view' } })
+    );
+    const withFetch = {
+      ...draft,
+      dvt: {
+        kind: 'transform' as const,
+        mode: 'substrait' as const,
+        shape: 'projection' as const,
+        materialized: 'view',
+        plan: { fetch: { offset: 9_007_199_254_740_993n } },
+        sidecar: {},
+      },
+    } as unknown as typeof draft;
+    const changedFetch = {
+      ...withFetch,
+      dvt: {
+        ...withFetch.dvt!,
+        plan: { fetch: { offset: 9_007_199_254_740_994n } },
+      },
+    } as unknown as typeof draft;
+
+    expect(areCanvasInspectorNodeDraftsEqual(withFetch, withFetch)).toBe(true);
+    expect(areCanvasInspectorNodeDraftsEqual(withFetch, changedFetch)).toBe(false);
+    expect(() =>
+      hasCanvasInspectorNodeDraftChanges(
+        buildDvtNode('dvt:transform', { config: { materialized: 'view' } }),
+        withFetch
+      )
+    ).not.toThrow();
+    expect(
+      hasCanvasInspectorNodeDraftChanges(
+        buildDvtNode('dvt:transform', { config: { materialized: 'view' } }),
+        withFetch
+      )
+    ).toBe(true);
+  });
+
   it('creates DVT source authoring metadata from existing node config', () => {
     expect(
       createCanvasInspectorNodeDraft(

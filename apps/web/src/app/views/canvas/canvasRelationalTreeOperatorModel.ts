@@ -19,9 +19,14 @@ import {
   removeDvtSubstraitFilter,
   resolveDvtSubstraitFilterCapabilities,
 } from './canvasDvtSubstraitFilter';
+import {
+  inspectCanvasDvtSubstraitSortFetch,
+  resolveDvtSubstraitSortFetchInputFields,
+} from './canvasDvtSubstraitSortFetch';
+import type { DvtSubstraitSortKey } from '@dvt/postgres-projection';
 
 export type CanvasRelationalOperatorTool = Readonly<{
-  id: 'filter' | 'aggregate' | 'window';
+  id: 'filter' | 'aggregate' | 'window' | 'sort' | 'fetch';
   enabled: boolean;
   active: boolean;
   fields: readonly Readonly<{ fieldId: string; name: string; dataType?: string }>[];
@@ -32,6 +37,9 @@ export type CanvasRelationalOperatorTool = Readonly<{
   comparisons?: ReturnType<typeof resolveDvtSubstraitFilterCapabilities>;
   tieBreaker?: string;
   order?: string;
+  sortKeys?: readonly DvtSubstraitSortKey[];
+  offset?: bigint | null;
+  count?: bigint | null;
 }>;
 
 export function resolveCanvasRelationalOperatorTools(
@@ -69,6 +77,9 @@ export function resolveCanvasRelationalOperatorTools(
       })
     : [];
   const grouping = group.ok ? group.projection : window.ok ? window.projection : null;
+  const sortFetch = inspectCanvasDvtSubstraitSortFetch(draft);
+  const sortFields = resolveDvtSubstraitSortFetchInputFields(draft, 'sort');
+  const fetchFields = resolveDvtSubstraitSortFetchInputFields(draft, 'fetch');
   return [
     {
       id: 'filter',
@@ -105,6 +116,21 @@ export function resolveCanvasRelationalOperatorTools(
       alias: window.ok ? window.projection.result.name : undefined,
       tieBreaker: grouping?.groupField.name,
       order: grouping?.measure.name,
+    },
+    {
+      id: 'sort',
+      enabled: admitted('/substrait.SortRel') && sortFields.length > 0,
+      active: sortFetch.ok && sortFetch.operation === 'sort',
+      fields: sortFields,
+      sortKeys: sortFetch.ok && sortFetch.operation === 'sort' ? sortFetch.keys : undefined,
+    },
+    {
+      id: 'fetch',
+      enabled: admitted('/substrait.FetchRel') && fetchFields.length > 0,
+      active: sortFetch.ok && sortFetch.operation === 'fetch',
+      fields: fetchFields,
+      offset: sortFetch.ok && sortFetch.operation === 'fetch' ? sortFetch.offset : undefined,
+      count: sortFetch.ok && sortFetch.operation === 'fetch' ? sortFetch.count : undefined,
     },
   ];
 }
