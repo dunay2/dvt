@@ -225,6 +225,19 @@ contracts, hierarchy-cycle validation and recursive operations are outside this
 slice. A self-JOIN condition is not a data-quality constraint: invalid source
 rows must not be silently hidden by an injected inequality.
 
+The shared PostgreSQL JOIN inspector separates document admission, physical Read
+bindings, stage propagation and predicate binding. Its internal
+`join-inspection/` modules consume the same Plan and identity sidecar; the public
+`inspectDvtSubstraitJoinDraft` and `inspectNInputJoinStructure` entry points remain
+the only inspection API. This decomposition does not admit repeated sources or
+transformed branches. Those admission changes require their own vertical proof.
+
+```text
+Canonical document -> document admission -> Read bindings -> JOIN stages
+                                                           -> predicate bindings
+                   <- verified input/stage/output read model
+```
+
 ## Consumers
 
 Direct consumers:
