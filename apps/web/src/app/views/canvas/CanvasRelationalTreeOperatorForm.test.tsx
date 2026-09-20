@@ -108,16 +108,16 @@ describe('CanvasRelationalTreeOperatorForm Sort/Fetch editing', () => {
     const onChange = vi.fn();
     const onClose = vi.fn();
     const props = { inline: true, tool, draft, title: 'LIMIT', onChange, onClose };
-    await act(() => root.render(<CanvasRelationalTreeOperatorForm {...props} />));
+    act(() => root.render(<CanvasRelationalTreeOperatorForm {...props} />));
     const limit = container.querySelectorAll<HTMLInputElement>('input')[1]!;
     await act(() => fireEvent.change(limit, { target: { value: '42' } }));
-    await act(() =>
+    act(() =>
       root.render(<CanvasRelationalTreeOperatorForm {...props} title="Selected operation" />)
     );
     expect(container.querySelectorAll('input')[1]).toBe(limit);
     expect(limit.value).toBe('42');
     expect(onChange).not.toHaveBeenCalled();
-    await act(() => getByRole(container, 'button', { name: /Cancel/ }).click());
+    act(() => getByRole(container, 'button', { name: /Cancel/ }).click());
     expect(onClose).toHaveBeenCalledOnce();
     expect(onChange).not.toHaveBeenCalled();
     expect(JSON.stringify(draft)).toBe(before);
@@ -130,7 +130,7 @@ describe('CanvasRelationalTreeOperatorForm Sort/Fetch editing', () => {
     expect(tool.fields.length).toBeGreaterThan(1);
     const onChange = vi.fn();
     const onClose = vi.fn();
-    await act(() =>
+    act(() =>
       root.render(
         <CanvasRelationalTreeOperatorForm
           inline
@@ -142,14 +142,14 @@ describe('CanvasRelationalTreeOperatorForm Sort/Fetch editing', () => {
         />
       )
     );
-    await act(() => getByRole(container, 'button', { name: /Add key|Añadir clave/ }).click());
+    act(() => getByRole(container, 'button', { name: /Add key|Añadir clave/ }).click());
     const controls = container.querySelectorAll('select');
     await act(() => fireEvent.change(controls[2]!, { target: { value: tool.fields[0]!.fieldId } }));
     await act(() => fireEvent.submit(container.querySelector('form')!));
     expect(container.querySelector('[role="alert"]')).not.toBeNull();
     expect(onChange).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
-    await act(() => {
+    act(() => {
       fireEvent.change(controls[2]!, { target: { value: tool.fields[1]!.fieldId } });
       fireEvent.change(controls[1]!, {
         target: { value: SortField_SortDirection.DESC_NULLS_FIRST },
