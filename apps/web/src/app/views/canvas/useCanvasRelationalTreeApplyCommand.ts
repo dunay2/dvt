@@ -48,7 +48,7 @@ export function useCanvasRelationalTreeApplyCommand(args: {
       operation == null ||
       (operation === 'projection' && selectedInputIds.length !== 1)
     ) {
-      const rejection = rejectCommand();
+      const rejection = { outcome: 'rejected', reason: 'command_unavailable' } as const;
       reject(rejection);
       return rejection;
     }
@@ -72,7 +72,7 @@ export function useCanvasRelationalTreeApplyCommand(args: {
               )
             : null;
     if (semantic == null || authoring == null) {
-      const rejection = rejectCommand();
+      const rejection = { outcome: 'rejected', reason: 'command_unavailable' } as const;
       reject(rejection);
       return rejection;
     }
@@ -84,8 +84,4 @@ export function useCanvasRelationalTreeApplyCommand(args: {
     else reset();
     return result;
   };
-}
-
-function rejectCommand(): RelationalApplyRejection {
-  return { outcome: 'rejected', reason: 'command_unavailable' };
 }

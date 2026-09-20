@@ -15,7 +15,6 @@ import {
 import { useCanvasRelationalTreeJoinDraftActions } from './useCanvasRelationalTreeJoinDraftActions';
 import { useCanvasRelationalTreeRemoval } from './useCanvasRelationalTreeRemoval';
 import { useCanvasRelationalTreeInputSelection } from './useCanvasRelationalTreeInputSelection';
-type ApplyRejection = Workbench.RelationalApplyRejection;
 export function useCanvasRelationalTreeAuthoringSession(
   args: Readonly<{
     enabled: boolean;
@@ -32,7 +31,9 @@ export function useCanvasRelationalTreeAuthoringSession(
   const [active, setActive] = useState(false);
   const [joinDraft, setJoinDraft] = useState<DvtSubstraitJoinDraft | null>(null);
   const [appendInputId, setAppendInputId] = useState<string | null>(null);
-  const [applyRejection, setApplyRejection] = useState<ApplyRejection | null>(null);
+  const [applyRejection, setApplyRejection] = useState<Workbench.RelationalApplyRejection | null>(
+    null
+  );
   const {
     appendInput: appendOperand,
     placeInput: placeOperand,
