@@ -186,6 +186,45 @@ flowchart LR
   Command --> Draft[Local canonical draft]
 ```
 
+## Relational Card Movement And Reusable Inputs
+
+The #3342 product need distinguishes a connected source or transformed result,
+each use of that input in a branch, and its disposable screen position. Reuse
+must support inputs as-is and independently transformed branches, not just
+self-JOINs of raw Reads. Countries separated by filters and employee/manager
+roles are examples, not product-specific types or rules. Occurrence identity
+must not be collapsed to the physical source identity during editing or reload.
+
+```mermaid
+flowchart LR
+  Input[Source or admitted transformed result] --> BranchA[Use as-is]
+  Input --> BranchB[Independent branch transformations]
+  BranchA --> Composition[Canonical Substrait composition]
+  BranchB --> Composition
+  Composition --> Tree[Relational projection]
+  Tree --> Layout[Automatic geometry and local card positions]
+```
+
+Card movement belongs to the presentation model. It must not mutate the plan,
+reorder operands, save a semantic revision, fetch rows or invalidate data.
+Positions live only in the open Model editor session, including transitions
+between inspection and local editing; they are not persisted in the sidecar.
+Pointer movement accounts for zoom; cancellation restores the starting position.
+Keyboard movement uses Alt plus arrow keys. Port endpoints follow the card.
+
+The movement microcut does not admit new relation shapes. General reusable-input
+authoring remains an open design/delivery criterion in #3342: it must establish
+the standard Substrait representation, stable RelationId/FieldId bindings,
+shared-upstream versus branch-local edit behavior, reload and PostgreSQL
+projection before exposure. A display alias is not a new physical table or a
+substitute for this identity boundary.
+
+Occurrence creation and edits must reuse ConfigureCanvasDvtNode and the protected
+authoring save rail; preview must reuse PreviewCanvasTransformRows. Business-entity
+contracts, hierarchy-cycle validation and recursive operations are outside this
+slice. A self-JOIN condition is not a data-quality constraint: invalid source
+rows must not be silently hidden by an injected inequality.
+
 ## Consumers
 
 Direct consumers:
