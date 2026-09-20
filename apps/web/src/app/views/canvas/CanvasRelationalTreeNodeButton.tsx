@@ -72,8 +72,10 @@ export function CanvasRelationalTreeNodeButton({
       data-locator={node.locator}
       data-relation-id={node.relationId ?? undefined}
       data-operator={node.operator}
-      onClick={() => onSelect(node.locator)}
-      onDoubleClick={() => node.operator !== 'read' && onExpand?.(node.locator)}
+      onClick={() => {
+        onSelect(node.locator);
+        if (node.operator !== 'read') onExpand?.(node.locator);
+      }}
       style={{ height: detailed ? 76 : '100%', fontFamily: '"Segoe UI", system-ui, sans-serif' }}
       className={`w-full rounded-md border px-3 py-2 text-left shadow-sm transition-colors hover:border-(--status-info) aria-selected:border-(--status-info) aria-selected:ring-2 aria-selected:ring-(--status-info) ${operatorTone[presentation.category]}`}
     >

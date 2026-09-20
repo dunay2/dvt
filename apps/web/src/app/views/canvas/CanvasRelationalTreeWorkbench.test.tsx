@@ -343,7 +343,9 @@ describe('Canvas relational-tree Workbench', () => {
     ).not.toContain('Columns: 1');
     act(() =>
       container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-node-expand"]')!
+        .querySelector<HTMLButtonElement>(
+          '[data-slot="canvas-relational-tree-node"][data-operator="join"]'
+        )!
         .click()
     );
     expect(

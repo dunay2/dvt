@@ -141,7 +141,7 @@ describe('Relational operator toolbar', () => {
         sampledAt: '2026-09-19T00:00:00.000Z',
       },
     }));
-    cy.get('[data-operator="join"]').first().dblclick();
+    cy.get('[data-operator="join"]').first().click();
     cy.get('[data-slot="canvas-operation-data-preview"]')
       .scrollIntoView()
       .should('be.visible')
@@ -236,7 +236,7 @@ describe('Relational operator toolbar', () => {
         });
       });
     });
-    cy.get('[data-operator="aggregate"]').dblclick();
+    cy.get('[data-operator="aggregate"]').click();
     cy.viewport(600, 800);
     cy.get(editor).should(($editor) => {
       const properties = $editor[0]!.getBoundingClientRect();
@@ -425,7 +425,7 @@ describe('Relational operator toolbar', () => {
     cy.then(() => {
       initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
-    cy.get('[data-operator="join"]').dblclick();
+    cy.get('[data-operator="join"]').click();
     cy.get('[data-slot="canvas-join-expression-node"]').should('have.length.at.least', 3);
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
     cy.get(tool('aggregate')).click();
@@ -455,7 +455,7 @@ describe('Relational operator toolbar', () => {
       '[data-slot="canvas-relational-tree-inline-editor"]',
       'downstream dependencies'
     ).should('be.visible');
-    cy.get('[data-operator="join"]').dblclick();
+    cy.get('[data-operator="join"]').click();
     cy.get('[aria-label="Comparador de la condición"]').should('have.value', 'not_equal');
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
     cy.contains('button', 'Guardar condición').click();
@@ -637,7 +637,7 @@ describe('Relational operator toolbar', () => {
     cy.get(tool('aggregate')).should('be.disabled');
     cy.get(tool('window')).should('be.disabled');
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
-    cy.get('[data-operator="join"]').dblclick();
+    cy.get('[data-operator="join"]').click();
     cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').then(($editor) => {
       const properties = $editor[0]!.getBoundingClientRect();
       cy.get('[data-slot="canvas-relational-tree-viewport"]').should(($viewport) => {
