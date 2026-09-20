@@ -139,24 +139,54 @@ describe('Canvas Model editor navigation', () => {
         .querySelector('[data-slot="canvas-model-view-tab"][data-view="data"]')
         ?.getAttribute('aria-selected')
     ).toBe('true');
+    expect(harness.container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
+    expect(
+      harness.container
+        .querySelector('[data-slot="canvas-workspace-surface"]')
+        ?.getAttribute('aria-hidden')
+    ).toBe('true');
     expect(previewTransformRows).not.toHaveBeenCalled();
     act(() =>
       navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-workspace-tab"]')!.click()
     );
+    expect(harness.container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
+    expect(
+      harness.container
+        .querySelector('[data-slot="canvas-workspace-surface"]')
+        ?.getAttribute('aria-hidden')
+    ).toBe('false');
     act(() => data.onOpenNode?.(fixture.transform.id));
     expect(
       harness.container
         .querySelector('[data-slot="canvas-model-view-tab"][data-view="editor"]')
         ?.getAttribute('aria-selected')
     ).toBe('true');
+    expect(harness.container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
+    expect(
+      harness.container
+        .querySelector('[data-slot="canvas-workspace-surface"]')
+        ?.getAttribute('aria-hidden')
+    ).toBe('true');
     act(() =>
       navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-workspace-tab"]')!.click()
     );
+    expect(harness.container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
+    expect(
+      harness.container
+        .querySelector('[data-slot="canvas-workspace-surface"]')
+        ?.getAttribute('aria-hidden')
+    ).toBe('false');
     act(() => data.onOpenSourceDataSample?.(fixture.transform.id));
     expect(
       harness.container
         .querySelector('[data-slot="canvas-model-view-tab"][data-view="data"]')
         ?.getAttribute('aria-selected')
+    ).toBe('true');
+    expect(harness.container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
+    expect(
+      harness.container
+        .querySelector('[data-slot="canvas-workspace-surface"]')
+        ?.getAttribute('aria-hidden')
     ).toBe('true');
     act(() =>
       navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-model-tab-close"]')!.click()
@@ -206,13 +236,13 @@ describe('Canvas Model editor navigation', () => {
     expect(
       harness.container
         .querySelector('[data-slot="canvas-model-workspace-surface"]')
-        ?.hasAttribute('hidden')
-    ).toBe(true);
+        ?.getAttribute('aria-hidden')
+    ).toBe('true');
     expect(
       harness.container
         .querySelector('[data-slot="canvas-workspace-surface"]')
-        ?.hasAttribute('hidden')
-    ).toBe(false);
+        ?.getAttribute('aria-hidden')
+    ).toBe('false');
     expect(document.querySelector('[role="alertdialog"]')).toBeNull();
     act(() =>
       navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-model-main-tab"]')!.click()

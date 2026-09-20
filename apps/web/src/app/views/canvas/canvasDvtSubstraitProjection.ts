@@ -1315,8 +1315,7 @@ function resolveDvtSubstraitProjectionEntryInternal(
       const sourceInspection = inspectDvtSubstraitProjectionDraft(sourceDraft);
       if (
         !sourceInspection.ok ||
-        sourceInspection.projection.targetRelationId !== inspection.projection.inputRelationId ||
-        sourceInspection.projection.outputs.length !== inspection.projection.inputFields.length
+        sourceInspection.projection.targetRelationId !== inspection.projection.inputRelationId
       ) {
         return [];
       }
@@ -1324,22 +1323,33 @@ function resolveDvtSubstraitProjectionEntryInternal(
         { ...args, targetNode: sourceNode, draft: sourceDraft },
         nextVisitedNodeIds
       );
+      if (resolvedUpstream == null) {
+        return [];
+      }
+      const sourceOutputByFieldId = new Map(
+        sourceInspection.projection.outputs.map((output) => [output.fieldId, output] as const)
+      );
+      const resolvedOutputByFieldId = new Map(
+        resolvedUpstream.outputs.map((output) => [output.fieldId, output] as const)
+      );
+      const resolvedInputFields = inspection.projection.inputFields.map((input) => ({
+        sourceOutput: sourceOutputByFieldId.get(input.fieldId),
+        resolvedOutput: resolvedOutputByFieldId.get(input.fieldId),
+      }));
       if (
-        resolvedUpstream == null ||
-        sourceInspection.projection.outputs.some((output, ordinal) => {
-          const input = inspection.projection.inputFields[ordinal];
-          const resolvedInput = resolvedUpstream.outputs[ordinal];
-          return (
-            input == null ||
-            resolvedInput == null ||
-            output.fieldId !== input.fieldId ||
-            resolvedInput.fieldId !== input.fieldId
-          );
-        })
+        resolvedInputFields.some(
+          ({ sourceOutput, resolvedOutput }) => sourceOutput == null || resolvedOutput == null
+        )
       ) {
         return [];
       }
-      return [{ sourceNode, sourceInspection, resolvedUpstream }] as const;
+      return [
+        {
+          sourceNode,
+          resolvedUpstream,
+          resolvedInputFields: resolvedInputFields.map(({ resolvedOutput }) => resolvedOutput!),
+        },
+      ] as const;
     } catch {
       return [];
     }
@@ -1354,7 +1364,7 @@ function resolveDvtSubstraitProjectionEntryInternal(
     schema: match.resolvedUpstream.source.schema,
     table: match.resolvedUpstream.source.table,
     sourceRef: match.resolvedUpstream.source.sourceRef,
-    fields: match.resolvedUpstream.outputs.map((output) => ({
+    fields: match.resolvedInputFields.map((output) => ({
       name: output.name,
       dataType: output.dataType,
     })),
