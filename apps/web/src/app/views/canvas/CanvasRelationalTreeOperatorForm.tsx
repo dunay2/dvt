@@ -1,5 +1,7 @@
 /** Owned concern: a focused, discardable operator form over the canonical draft. */
 import { useState } from 'react';
+import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import type { DvtSubstraitSortDirection } from '@dvt/postgres-projection';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +23,7 @@ export function CanvasRelationalTreeOperatorForm({
   onClose,
   onChange,
   inline = false,
+  targetRelationId,
 }: Readonly<{
   tool: CanvasRelationalOperatorTool;
   draft: DvtSubstraitProjectionDraft;
@@ -28,6 +31,7 @@ export function CanvasRelationalTreeOperatorForm({
   onClose: () => void;
   onChange: (draft: DvtSubstraitProjectionDraft) => void;
   inline?: boolean;
+  targetRelationId?: string;
 }>): JSX.Element {
   const es = useApplicationLanguageStore((state) => state.language) === 'es';
   const [fieldId, setFieldId] = useState(tool.fieldId ?? tool.fields[0]?.fieldId ?? '');
@@ -36,14 +40,41 @@ export function CanvasRelationalTreeOperatorForm({
   const [capabilityId, setCapabilityId] = useState(
     tool.capabilityId ?? tool.comparisons?.[0]?.capabilityId ?? ''
   );
+  const [sortKeys, setSortKeys] = useState(
+    tool.sortKeys?.length
+      ? [...tool.sortKeys]
+      : tool.fields[0] == null
+        ? []
+        : [
+            {
+              fieldId: tool.fields[0].fieldId,
+              direction: SortField_SortDirection.ASC_NULLS_LAST as DvtSubstraitSortDirection,
+            },
+          ]
+  );
+  const [offset, setOffset] = useState(tool.offset == null ? '' : String(tool.offset));
+  const [count, setCount] = useState(tool.count == null ? '' : String(tool.count));
   const [error, setError] = useState(false);
   const commit = (remove = false) => {
+    let parsedOffset: bigint | undefined;
+    let parsedCount: bigint | undefined;
+    try {
+      parsedOffset = offset.trim() === '' ? undefined : BigInt(offset);
+      parsedCount = count.trim() === '' ? undefined : BigInt(count);
+    } catch {
+      setError(true);
+      return;
+    }
     const next = applyCanvasRelationalOperatorTool(draft, {
       tool: tool.id,
       fieldId,
       alias,
       value,
       capabilityId,
+      sortKeys,
+      offset: parsedOffset,
+      count: parsedCount,
+      targetRelationId,
       remove,
     });
     if (next === draft) {
@@ -62,7 +93,114 @@ export function CanvasRelationalTreeOperatorForm({
         commit();
       }}
     >
-      {tool.id === 'window' && tool.order != null ? (
+      {tool.id === 'sort' ? (
+        <fieldset className="space-y-2">
+          <legend className="font-medium">
+            {es ? 'Claves en orden de prioridad' : 'Keys in priority order'}
+          </legend>
+          {sortKeys.map((key, index) => (
+            <div
+              key={index}
+              className="grid grid-cols-[minmax(0,1fr)_minmax(10rem,auto)_auto] gap-2"
+            >
+              <select
+                aria-label={`${es ? 'Campo' : 'Field'} ${index + 1}`}
+                className={control}
+                value={key.fieldId}
+                onChange={(event) =>
+                  setSortKeys((current) =>
+                    current.map((item, itemIndex) =>
+                      itemIndex === index ? { ...item, fieldId: event.target.value } : item
+                    )
+                  )
+                }
+              >
+                {tool.fields.map((field) => (
+                  <option key={field.fieldId} value={field.fieldId}>
+                    {field.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label={`${es ? 'Dirección y nulos' : 'Direction and nulls'} ${index + 1}`}
+                className={control}
+                value={key.direction}
+                onChange={(event) =>
+                  setSortKeys((current) =>
+                    current.map((item, itemIndex) =>
+                      itemIndex === index
+                        ? {
+                            ...item,
+                            direction: Number(event.target.value) as DvtSubstraitSortDirection,
+                          }
+                        : item
+                    )
+                  )
+                }
+              >
+                <option value={SortField_SortDirection.ASC_NULLS_FIRST}>ASC · NULLS FIRST</option>
+                <option value={SortField_SortDirection.ASC_NULLS_LAST}>ASC · NULLS LAST</option>
+                <option value={SortField_SortDirection.DESC_NULLS_FIRST}>DESC · NULLS FIRST</option>
+                <option value={SortField_SortDirection.DESC_NULLS_LAST}>DESC · NULLS LAST</option>
+              </select>
+              <button
+                type="button"
+                className="mt-1 rounded border border-(--border-subtle) px-2"
+                disabled={sortKeys.length === 1}
+                aria-label={es ? 'Quitar clave' : 'Remove key'}
+                onClick={() =>
+                  setSortKeys((current) => current.filter((_, itemIndex) => itemIndex !== index))
+                }
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            className="rounded border border-(--border-subtle) px-3 py-2"
+            disabled={sortKeys.length >= tool.fields.length}
+            onClick={() => {
+              const field = tool.fields.find(
+                (candidate) => !sortKeys.some((key) => key.fieldId === candidate.fieldId)
+              );
+              if (field == null) return;
+              setSortKeys((current) => [
+                ...current,
+                {
+                  fieldId: field.fieldId,
+                  direction: SortField_SortDirection.ASC_NULLS_LAST,
+                },
+              ]);
+            }}
+          >
+            {es ? 'Añadir clave' : 'Add key'}
+          </button>
+        </fieldset>
+      ) : tool.id === 'fetch' ? (
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            OFFSET
+            <input
+              className={control}
+              inputMode="numeric"
+              value={offset}
+              placeholder="0"
+              onChange={(event) => setOffset(event.target.value)}
+            />
+          </label>
+          <label className="block">
+            LIMIT
+            <input
+              className={control}
+              inputMode="numeric"
+              value={count}
+              placeholder={es ? 'Sin límite' : 'Unlimited'}
+              onChange={(event) => setCount(event.target.value)}
+            />
+          </label>
+        </div>
+      ) : tool.id === 'window' && tool.order != null ? (
         <div className="rounded border border-(--border-subtle) p-3 font-mono text-[13px]">
           ROW_NUMBER()
           <br />
@@ -119,7 +257,7 @@ export function CanvasRelationalTreeOperatorForm({
             />
           </label>
         </>
-      ) : (
+      ) : tool.id === 'sort' || tool.id === 'fetch' ? null : (
         <label className="block">
           {es ? 'Nombre del resultado' : 'Result name'}
           <input
@@ -134,8 +272,8 @@ export function CanvasRelationalTreeOperatorForm({
       {error ? (
         <p role="alert" className="text-amber-400">
           {es
-            ? 'Revisa el campo y el nombre: debe ser válido y no estar repetido.'
-            : 'Check the field and result name: it must be valid and unique.'}
+            ? 'Revisa los campos y valores. No se admiten claves repetidas, negativos, fracciones ni overflow i64.'
+            : 'Check fields and values. Duplicate keys, negatives, fractions, and i64 overflow are not admitted.'}
         </p>
       ) : null}
       <div className="flex items-center justify-end gap-2">

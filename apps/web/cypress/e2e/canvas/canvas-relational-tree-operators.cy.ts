@@ -1,4 +1,9 @@
 /** Owned concern: verify admitted operator tools, draft isolation and canonical persistence. */
+import {
+  inspectDvtSubstraitSortFetchRoot,
+  selectDvtSubstraitRelation,
+} from '@dvt/postgres-projection';
+
 import { inspectDvtSubstraitInnerJoinGroupedWindowDraft } from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { inspectDvtSubstraitUnionAllGroupedWindowDraft } from '../../../src/app/views/canvas/canvasDvtSubstraitSetComposition';
@@ -397,6 +402,82 @@ describe('Relational operator toolbar', () => {
     );
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+  });
+  it('authors, reopens, edits and contextually removes ORDER BY below LIMIT', () => {
+    openEditor();
+    cy.get(tool('sort')).should('be.enabled').click();
+    cy.get(form).find('button').contains('Add key').click();
+    cy.get(form).find('select[aria-label^="Field"]').should('have.length', 2);
+    cy.get(form).find('select[aria-label="Field 2"]').select(1);
+    cy.get(form).find('select[aria-label="Direction and nulls 1"]').select('DESC · NULLS LAST');
+    cy.get(form).find('button[type="submit"]').click();
+    cy.get('[data-operator="sort"]')
+      .should('have.length', 1)
+      .and('contain.text', 'DESC NULLS LAST');
+
+    cy.get(tool('fetch')).should('be.enabled').click();
+    cy.get(form).find('input').eq(0).clear().type('2');
+    cy.get(form).find('input').eq(1).clear().type('3');
+    cy.get(form).find('button[type="submit"]').click();
+    cy.get('[data-operator="fetch"]')
+      .should('have.length', 1)
+      .and('contain.text', 'LIMIT 3 · OFFSET 2');
+    cy.get('[data-operator="sort"]')
+      .invoke('attr', 'data-relation-id')
+      .should('be.a', 'string')
+      .as('sortRelationId', { type: 'static' });
+    cy.get('[data-operator="fetch"]')
+      .invoke('attr', 'data-relation-id')
+      .should('be.a', 'string')
+      .as('fetchRelationId', { type: 'static' });
+
+    cy.get('[data-operator="sort"]').rightclick();
+    activateMenu('canvas-relational-edit-operation');
+    cy.get('[data-slot="canvas-relational-tree-inline-editor"]')
+      .find('select[aria-label="Direction and nulls 1"]')
+      .select('ASC · NULLS FIRST');
+    cy.get('[data-slot="canvas-relational-tree-inline-editor"] button[type="submit"]').click();
+    cy.get('[data-operator="sort"]').should('contain.text', 'ASC NULLS FIRST');
+    cy.get('[data-operator="fetch"]').should('exist');
+
+    cy.get('[data-slot="canvas-relational-tree-apply"]').click();
+    cy.wrap(null).should(() => {
+      const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+        | {
+            draft: {
+              nodes: {
+                id: string;
+                metadata?: { transformAuthoring?: { semanticDocument: unknown } };
+              }[];
+            };
+          }
+        | undefined;
+      const document = saved?.draft.nodes.find((node) => node.id === 'join-transform')?.metadata
+        ?.transformAuthoring?.semanticDocument;
+      expect(document).to.not.equal(undefined);
+      const draft = decodeDvtSubstraitSemanticDocument(document);
+      const fetch = inspectDvtSubstraitSortFetchRoot(draft);
+      expect(fetch.ok && fetch.operation).to.equal('fetch');
+      if (!fetch.ok) return;
+      const sorted = selectDvtSubstraitRelation(draft, fetch.inputRelationId);
+      const sort = inspectDvtSubstraitSortFetchRoot(sorted);
+      expect(sort.ok && sort.operation).to.equal('sort');
+      if (sort.ok && sort.operation === 'sort') expect(sort.keys).to.have.length(2);
+    });
+
+    visitWithE2eWorkspaceSession('/canvas');
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+    cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').first().click();
+    cy.get<string>('@sortRelationId').then((relationId) => {
+      cy.get(`[data-operator="sort"][data-relation-id="${relationId}"]`).rightclick();
+    });
+    activateMenu('canvas-relational-remove-source');
+    cy.get('[data-operator="sort"]').should('not.exist');
+    cy.get<string>('@fetchRelationId').then((relationId) => {
+      cy.get(`[data-operator="fetch"][data-relation-id="${relationId}"]`).should('exist');
+    });
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+    cy.get('[data-operator="sort"], [data-operator="fetch"]').should('have.length', 2);
   });
   it('does not enable mutations for a read-only model', () => {
     openEditor(false, true);

@@ -101,7 +101,9 @@ export function buildDvtSetPostgresAst(projection: DvtSubstraitSetProjection): P
   };
 }
 
-function buildSetCompositionPostgresAst(composition: DvtSubstraitSetComposition): PostgresAstNode {
+export function buildSetCompositionPostgresAst(
+  composition: DvtSubstraitSetComposition
+): PostgresAstNode {
   const setAst = buildDvtSetPostgresAst(composition.baseProjection);
   if (composition.kind === 'set') return setAst;
   const groupFieldName = composition.groupFieldName;
@@ -139,7 +141,7 @@ function buildSetCompositionPostgresAst(composition: DvtSubstraitSetComposition)
 
 export async function projectDvtSetDraftToPostgresSql(
   draft: DvtSubstraitSetDraft
-): Promise<Readonly<{ sql: string; projection: DvtSubstraitSetProjection }>> {
+): Promise<Readonly<{ sql: string; projection: DvtSubstraitSetProjection; ast: PostgresAstNode }>> {
   const composition = inspectDvtSubstraitSetComposition(draft);
   if (composition == null) {
     throw new DvtSubstraitPostgresProjectionError(
@@ -147,8 +149,6 @@ export async function projectDvtSetDraftToPostgresSql(
       'PostgreSQL projection requires an admitted N-input SetRel shape.'
     );
   }
-  return {
-    projection: composition.projection,
-    sql: await renderPostgresAst(buildSetCompositionPostgresAst(composition)),
-  };
+  const ast = buildSetCompositionPostgresAst(composition);
+  return { projection: composition.projection, ast, sql: await renderPostgresAst(ast) };
 }

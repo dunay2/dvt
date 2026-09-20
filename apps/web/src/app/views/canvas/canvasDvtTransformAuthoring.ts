@@ -1,6 +1,10 @@
 /** Owns decoding and persistence of canonical DVT Transform shapes. */
 import { DVT_TRANSFORM_AUTHORING_MODE, DvtTransformResultTargetV1Schema } from '@dvt/contracts';
-import { inspectDvtSubstraitAcceptedCrossDraft } from '@dvt/postgres-projection';
+import {
+  inspectDvtSubstraitAcceptedCrossDraft,
+  inspectDvtSubstraitSortFetchRoot,
+  selectDvtSubstraitRelation,
+} from '@dvt/postgres-projection';
 
 import type { CanonicalNode } from '../../types/canonical';
 import type {
@@ -11,13 +15,11 @@ import type {
 import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
 import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstraitAggregateWindow';
 import {
-  decodeDvtSubstraitJoinDocument,
   encodeDvtSubstraitJoinDocument,
   inspectDvtSubstraitJoinAcceptedDraft,
   inspectDvtSubstraitJoinPredicateContext,
 } from './canvasDvtSubstraitJoinComposition';
 import {
-  decodeDvtSubstraitPilotDocument,
   encodeDvtSubstraitPilotDocument,
   inspectDvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
@@ -27,7 +29,6 @@ import {
   inspectDvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
 import {
-  decodeDvtSubstraitUnionAllDocument,
   encodeDvtSubstraitUnionAllDocument,
   resolveDvtSubstraitSetOperation,
 } from './canvasDvtSubstraitSetComposition';
@@ -41,6 +42,8 @@ import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { peelCanvasDvtSubstraitSortFetch } from './canvasDvtSubstraitSortFetch';
 import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
 import {
   encodeDvtSubstraitFilterDocument,
@@ -76,22 +79,28 @@ export function createDvtTransformAuthoringMetadata(node: CanonicalNode): Transf
   const authority = readDvtTransformAuthoringAuthority(node);
   if (authority == null) return { kind: 'transform', mode: 'uninitialized', ...disposition };
   const projection = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+  let classified = projection;
+  while (true) {
+    const wrapper = inspectDvtSubstraitSortFetchRoot(classified);
+    if (!wrapper.ok) break;
+    classified = selectDvtSubstraitRelation(classified, wrapper.inputRelationId);
+  }
   if (
-    inspectDvtSubstraitProjectionDraft(projection).ok ||
-    inspectDvtSubstraitFilter(projection) != null
+    inspectDvtSubstraitProjectionDraft(classified).ok ||
+    inspectDvtSubstraitFilter(classified) != null
   ) {
     return fromDraft(authority.mode, disposition, 'projection', projection);
   }
-  const pilot = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
+  const pilot = classified;
   if (
     inspectDvtSubstraitPilotDraft(pilot).ok ||
     inspectDvtSubstraitPilotAggregateWindowDraft(pilot).ok ||
     inspectDvtSubstraitPilotAggregationDraft(pilot).ok ||
     inspectDvtSubstraitPilotWindowDraft(pilot).ok
   ) {
-    return fromDraft(authority.mode, disposition, 'pilot', pilot);
+    return fromDraft(authority.mode, disposition, 'pilot', projection);
   }
-  const join = decodeDvtSubstraitJoinDocument(authority.semanticDocument);
+  const join = classified;
   if (inspectDvtSubstraitJoinAcceptedDraft(join).ok) {
     const finalJoinType =
       inspectDvtSubstraitJoinPredicateContext(join)?.inspection.projection.joinRelations.at(
@@ -101,16 +110,16 @@ export function createDvtTransformAuthoringMetadata(node: CanonicalNode): Transf
       authority.mode,
       disposition,
       finalJoinType == null ? 'inner_join' : canvasJoinOperationForType(finalJoinType),
-      join
+      projection
     );
   }
   if (inspectDvtSubstraitAcceptedCrossDraft(join).ok) {
-    return fromDraft(authority.mode, disposition, 'cross_join', join);
+    return fromDraft(authority.mode, disposition, 'cross_join', projection);
   }
-  const setDraft = decodeDvtSubstraitUnionAllDocument(authority.semanticDocument);
+  const setDraft = classified;
   const setOperation = resolveDvtSubstraitSetOperation(setDraft);
   if (setOperation == null) throw new Error('Unsupported canonical SetRel shape.');
-  return fromDraft(authority.mode, disposition, setOperation, setDraft);
+  return fromDraft(authority.mode, disposition, setOperation, projection);
 }
 
 function fromDraft(
@@ -164,17 +173,21 @@ export function applyDvtTransformAuthoringMetadata(
   };
   if (metadata.mode === 'uninitialized') return withMaterialization(node);
   const draft = { plan: metadata.plan, sidecar: metadata.sidecar };
-  const document =
+  const sortFetchChain = peelCanvasDvtSubstraitSortFetch(draft);
+  const baseDraft = sortFetchChain.base;
+  const baseDocument =
     metadata.shape === 'projection'
-      ? inspectDvtSubstraitFilter(draft) == null
-        ? encodeDvtSubstraitProjectionDocument(draft)
-        : encodeDvtSubstraitFilterDocument(draft)
+      ? inspectDvtSubstraitFilter(baseDraft) == null
+        ? encodeDvtSubstraitProjectionDocument(baseDraft)
+        : encodeDvtSubstraitFilterDocument(baseDraft)
       : isCanvasJoinOperation(metadata.shape)
-        ? encodeDvtSubstraitJoinDocument(draft)
+        ? encodeDvtSubstraitJoinDocument(baseDraft)
         : metadata.shape === 'cross_join'
-          ? encodeDvtSubstraitCrossDocument(draft)
+          ? encodeDvtSubstraitCrossDocument(baseDraft)
           : isCanvasSetOperation(metadata.shape)
-            ? encodeDvtSubstraitUnionAllDocument(draft)
-            : encodeDvtSubstraitPilotDocument(draft);
+            ? encodeDvtSubstraitUnionAllDocument(baseDraft)
+            : encodeDvtSubstraitPilotDocument(baseDraft);
+  const document =
+    sortFetchChain.wrappers.length === 0 ? baseDocument : encodeDvtSubstraitSemanticDocument(draft);
   return withMaterialization(applyDvtSubstraitSemanticDocument(node, document));
 }

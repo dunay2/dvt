@@ -156,6 +156,7 @@ describe('admitted relational operator tools', () => {
     ).toEqual([
       'substrait.AggregateRel',
       'substrait.CrossRel',
+      'substrait.FetchRel',
       'substrait.FilterRel',
       'substrait.JoinRel/JoinType.JOIN_TYPE_INNER',
       'substrait.JoinRel/JoinType.JOIN_TYPE_LEFT',
@@ -174,6 +175,7 @@ describe('admitted relational operator tools', () => {
       'substrait.SetRel/SetOp.SET_OP_MINUS_PRIMARY_ALL',
       'substrait.SetRel/SetOp.SET_OP_UNION_ALL',
       'substrait.SetRel/SetOp.SET_OP_UNION_DISTINCT',
+      'substrait.SortRel',
     ]);
     expect(
       supported

@@ -12,18 +12,15 @@ import type {
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
 import {
-  decodeDvtSubstraitJoinDocument,
   inspectDvtSubstraitJoinAcceptedDraft,
   inspectDvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import { hasSameConnectedSourceRef } from './canvasDvtSubstraitJoinSourceResolution';
-import {
-  decodeDvtSubstraitUnionAllDocument,
-  inspectDvtSubstraitUnionAllAcceptedDraft,
-} from './canvasDvtSubstraitSetComposition';
+import { inspectDvtSubstraitUnionAllAcceptedDraft } from './canvasDvtSubstraitSetComposition';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
 import { inspectDvtSubstraitAcceptedCrossDraft } from '@dvt/postgres-projection';
+import { peelCanvasDvtSubstraitSortFetch } from './canvasDvtSubstraitSortFetch';
 
 function uniqueSourceRefs(
   sourceRefs: readonly ConnectedSourceRef[]
@@ -38,7 +35,12 @@ function resolveCanonicalOperation(
   semanticDocument: unknown
 ): CanvasRelationalCompositionOperation | null {
   try {
-    const draft = decodeDvtSubstraitJoinDocument(semanticDocument);
+    const document = DvtSubstraitSemanticDocumentV1Schema.parse(semanticDocument);
+    const wrapped = {
+      plan: decodeDvtSubstraitPlanV1(document),
+      sidecar: document.sidecar,
+    };
+    const draft = peelCanvasDvtSubstraitSortFetch(wrapped).base;
     const join = inspectDvtSubstraitJoinAcceptedDraft(draft);
     if (join.ok) {
       const structure = inspectDvtSubstraitJoinDraft(draft);
@@ -47,31 +49,11 @@ function resolveCanonicalOperation(
         : undefined;
       return joinType == null ? 'inner_join' : canvasJoinOperationForType(joinType);
     }
-  } catch {
-    // The same canonical document may represent another admitted relation shape.
-  }
-
-  try {
-    const document = DvtSubstraitSemanticDocumentV1Schema.parse(semanticDocument);
-    if (
-      inspectDvtSubstraitAcceptedCrossDraft({
-        plan: decodeDvtSubstraitPlanV1(document),
-        sidecar: document.sidecar,
-      }).ok
-    ) {
-      return 'cross_join';
-    }
-  } catch {
-    // The same canonical document may represent another admitted relation shape.
-  }
-
-  try {
-    const unionAll = inspectDvtSubstraitUnionAllAcceptedDraft(
-      decodeDvtSubstraitUnionAllDocument(semanticDocument)
-    );
+    if (inspectDvtSubstraitAcceptedCrossDraft(draft).ok) return 'cross_join';
+    const unionAll = inspectDvtSubstraitUnionAllAcceptedDraft(draft);
     if (unionAll.ok) return unionAll.projection.operation;
   } catch {
-    // A valid single-input document has no relational-composition operation.
+    // Invalid or unsupported semantic documents remain unresolved.
   }
 
   return null;

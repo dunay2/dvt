@@ -358,6 +358,23 @@ describe('DVT Substrait capability catalog V1', () => {
     });
     expect(findCapability(coalesceId)?.invocation).not.toHaveProperty('maximumArgumentCount');
   });
+
+  it('admits SortRel and FetchRel only through the governed C8a vertical', () => {
+    for (const message of ['substrait.SortRel', 'substrait.FetchRel']) {
+      const entry = findCapability(
+        buildDvtSubstraitStandardCapabilityId('relation', { sourceKind: 'core', message })
+      );
+      expect(entry).toMatchObject({
+        profileStatus: 'supported-profile',
+        admission: {
+          productUseCaseRef: 'dvt:#3324',
+          canonicalFixtureRef: 'docs/evidence/ED-20260920-sort-fetch-end-to-end.md',
+          targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+          visualExposure: { status: 'exposed' },
+        },
+      });
+    }
+  });
   it('admits the exact UTC year extraction invocation for timestamptz columns', () => {
     const extractId = buildDvtSubstraitStandardCapabilityId('scalar-function', {
       sourceKind: 'simple-extension',

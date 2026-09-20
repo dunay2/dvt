@@ -6,6 +6,11 @@ export type CanvasTransformDataSampleProbeInput = Readonly<{
   credentialRef: string;
   sql: string;
   limit: number;
+  orderBy?: readonly Readonly<{
+    name: string;
+    direction: 'ASC' | 'DESC';
+    nulls: 'FIRST' | 'LAST';
+  }>[];
 }>;
 
 export type CanvasTransformDataSampleProbeResult = Pick<

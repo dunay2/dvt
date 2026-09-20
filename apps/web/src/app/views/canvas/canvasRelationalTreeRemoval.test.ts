@@ -24,6 +24,13 @@ import {
   createDvtSubstraitSetDraft,
   type DvtSubstraitUnionAllSource,
 } from './canvasDvtSubstraitSetComposition';
+import {
+  applyDvtSubstraitFetch,
+  applyDvtSubstraitSort,
+  inspectCanvasDvtSubstraitSortFetch,
+  selectCanvasDvtSubstraitSortFetch,
+} from './canvasDvtSubstraitSortFetch';
+import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 
 function source(table: string): DvtSubstraitJoinSource {
   const sourceRef: ConnectedSourceRef = {
@@ -334,6 +341,66 @@ describe('Contextual relational card removal', () => {
     expect(next.projection.source.fields.find((field) => field.name === 'value')?.dataType).toBe(
       'bigint'
     );
+  });
+
+  it('removes a source below ORDER BY and LIMIT while preserving valid wrappers', () => {
+    const { draft, projection } = fixture();
+    const sorted = applyDvtSubstraitSort(draft, [
+      {
+        fieldId: projection.outputs[0]!.fieldId,
+        direction: SortField_SortDirection.ASC_NULLS_LAST,
+      },
+    ]);
+    const sort = inspectCanvasDvtSubstraitSortFetch(sorted);
+    if (!sort.ok) throw new Error('Expected SortRel.');
+    const fetched = applyDvtSubstraitFetch(sorted, { count: 20n });
+
+    const result = removeCanvasRelationalTreeNode({
+      draft: fetched,
+      relationId: projection.inputs[1]!.relationId,
+      targetNodeId: 'model',
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const fetch = inspectCanvasDvtSubstraitSortFetch(result.draft);
+    expect(fetch).toMatchObject({ ok: true, operation: 'fetch', count: 20n });
+    const reopenedSort = selectCanvasDvtSubstraitSortFetch(result.draft, sort.relationId);
+    expect(reopenedSort).not.toBeNull();
+    expect(reopenedSort && inspectCanvasDvtSubstraitSortFetch(reopenedSort)).toMatchObject({
+      ok: true,
+      operation: 'sort',
+      keys: [{ fieldId: projection.outputs[0]!.fieldId }],
+    });
+  });
+
+  it('removes ORDER BY below LIMIT without reclassifying the underlying JOIN as a projection', () => {
+    const { draft, projection } = fixture();
+    const sorted = applyDvtSubstraitSort(draft, [
+      {
+        fieldId: projection.outputs[0]!.fieldId,
+        direction: SortField_SortDirection.ASC_NULLS_LAST,
+      },
+    ]);
+    const sort = inspectCanvasDvtSubstraitSortFetch(sorted);
+    if (!sort.ok) throw new Error('Expected SortRel.');
+    const fetched = applyDvtSubstraitFetch(sorted, { offset: 2n, count: 3n });
+
+    const result = removeCanvasRelationalTreeNode({
+      draft: fetched,
+      relationId: sort.relationId,
+      targetNodeId: 'model',
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.operation).toBe('inner_join');
+    expect(inspectCanvasDvtSubstraitSortFetch(result.draft)).toMatchObject({
+      ok: true,
+      operation: 'fetch',
+      offset: 2n,
+      count: 3n,
+    });
   });
 
   it('rejects stale relation IDs and JOIN removal without a retained branch', () => {

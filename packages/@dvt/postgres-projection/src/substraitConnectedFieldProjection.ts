@@ -13,6 +13,7 @@ import type {
 export type ProjectedDvtConnectedFieldSql = Readonly<{
   sql: string;
   projection: DvtConnectedFieldProjection;
+  ast?: ReturnType<typeof buildConnectedFieldPostgresAst>;
 }>;
 
 export async function projectDvtConnectedFieldDraftToPostgresSql(
@@ -26,8 +27,6 @@ export async function projectDvtConnectedFieldDraftToPostgresSql(
       'PostgreSQL projection supports only an admitted connected-field Substrait shape.'
     );
   }
-  return {
-    projection: inspection.projection,
-    sql: await renderPostgresAst(buildConnectedFieldPostgresAst(inspection.projection)),
-  };
+  const ast = buildConnectedFieldPostgresAst(inspection.projection);
+  return { projection: inspection.projection, ast, sql: await renderPostgresAst(ast) };
 }
