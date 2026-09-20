@@ -2,8 +2,10 @@
 import {
   decodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
+  type DvtSubstraitProjectionSemantics,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitProjection';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
+import { connectCanvasNodes } from '../../support/canvasGraphAuthoring';
 import {
   getE2eApiCalls,
   resetE2eApiStubs,
@@ -76,12 +78,20 @@ describe('Canvas calculated-column authoring', () => {
   it('keeps Transform data entry separate from semantics, Properties and column controls', () => {
     cy.viewport(1920, 1080);
     visitCanvas();
-    const node = '.react-flow__node[data-id="model-orders"]';
-    const title = `${node} [data-slot="graph-node-card-title"]`;
-    const dataTab = '[data-slot="bottom-operational-drawer-tab"][data-tab="data:model-orders"]';
-    const semanticTab = '[data-slot="bottom-operational-drawer-tab"][data-tab="semantic"]';
-    cy.get(node).contains('button', 'Columns').click();
-    cy.get(node).contains('button', 'Map compatible columns').click();
+    const visibleNode = (): Cypress.Chainable<JQuery<HTMLElement>> =>
+      cy
+        .get('.react-flow__node[data-id="model-orders"]')
+        .filter(':visible')
+        .should('have.length', 1)
+        .first();
+    const visibleTitle = (): Cypress.Chainable<JQuery<HTMLElement>> =>
+      visibleNode().find('[data-slot="graph-node-card-title"]');
+    const canvasTab = '[data-slot="canvas-workspace-tab"]';
+    const modelTab = '[data-slot="canvas-model-main-tab"]';
+    const editorTab = '[data-slot="canvas-model-view-tab"][data-view="editor"]';
+    const dataTab = '[data-slot="canvas-model-view-tab"][data-view="data"]';
+    visibleNode().contains('button', 'Columns').click();
+    visibleNode().contains('button', 'Map compatible columns').click();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
     cy.wrap(null).should(() => {
       const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as DraftSave;
@@ -94,16 +104,22 @@ describe('Canvas calculated-column authoring', () => {
         'mapped projection was saved before testing navigation'
       ).to.equal(true);
     });
-    cy.get(node).then(($node) => {
+    visibleNode().then(($node) => {
       const position = $node[0]?.style.transform;
       const saves = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
       for (const entry of ['title', 'metrics', 'keyboard']) {
-        cy.get(title).click();
-        cy.get(semanticTab).should('have.attr', 'aria-selected', 'true');
-        if (entry === 'title') cy.get(title).dblclick();
+        visibleTitle().click();
+        if (entry === 'title') visibleTitle().dblclick();
         else if (entry === 'metrics')
-          cy.get(`${node} [data-slot="graph-node-operational-rail"]`).dblclick();
-        else cy.get(node).focus().type('{enter}');
+          visibleNode().find('[data-slot="graph-node-operational-rail"]').dblclick();
+        else visibleNode().focus().type('{enter}');
+        cy.get(modelTab).should('have.attr', 'aria-selected', 'true');
+        cy.get(entry === 'metrics' ? dataTab : editorTab).should(
+          'have.attr',
+          'aria-selected',
+          'true'
+        );
+        if (entry !== 'metrics') cy.get(dataTab).click();
         cy.get(dataTab).should('have.attr', 'aria-selected', 'true');
         cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
         cy.wrap(null).should(() => {
@@ -112,13 +128,14 @@ describe('Canvas calculated-column authoring', () => {
             `${entry} is navigation only`
           ).to.have.length(saves);
         });
+        cy.get(canvasTab).click().should('have.attr', 'aria-selected', 'true');
       }
-      cy.get(node).contains('button', 'Columns').click();
+      visibleNode().contains('button', 'Columns').click();
       cy.get(dataTab).should('have.attr', 'aria-selected', 'true');
-      cy.get(title).rightclick();
+      visibleTitle().rightclick();
       cy.get('[role="menuitem"]').contains('Properties').click();
       cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
-      cy.get(node).should(($current) => {
+      visibleNode().should(($current) => {
         expect($current[0]?.style.transform).to.equal(position);
         expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(saves);
       });
@@ -129,6 +146,12 @@ describe('Canvas calculated-column authoring', () => {
     it(`creates, persists, and restores a direct alias through ${entry}`, () => {
       cy.viewport(1920, 1080);
       visitCanvas();
+      const visibleNode = (): Cypress.Chainable<JQuery<HTMLElement>> =>
+        cy
+          .get('.react-flow__node[data-id="model-orders"]')
+          .filter(':visible')
+          .should('have.length', 1)
+          .first();
       cy.get('.react-flow__node[data-id="model-orders"]')
         .find('button[aria-expanded]')
         .contains('Columns')
@@ -139,26 +162,16 @@ describe('Canvas calculated-column authoring', () => {
       waitForE2eApiCall('/workspace/graph/draft', 'PUT');
 
       if (entry === 'field-context-menu') {
-        cy.get(
-          '.react-flow__node[data-id="model-orders"] [data-slot="graph-node-card-title"]'
-        ).click();
-        cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="semantic"]').should(
-          'have.attr',
-          'aria-selected',
-          'true'
-        );
-        cy.get(
-          '.react-flow__node[data-id="model-orders"] [data-slot="graph-node-card-title"]'
-        ).dblclick();
-        cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data:model-orders"]').should(
+        visibleNode().find('[data-slot="graph-node-card-title"]').click();
+        visibleNode().find('[data-slot="graph-node-card-title"]').dblclick();
+        cy.get('[data-slot="canvas-model-view-tab"][data-view="editor"]').should(
           'have.attr',
           'aria-selected',
           'true'
         );
         cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
-        cy.get(
-          '.react-flow__node[data-id="model-orders"] [data-slot="graph-node-card-title"]'
-        ).rightclick();
+        cy.get('[data-slot="canvas-workspace-tab"]').click();
+        visibleNode().find('[data-slot="graph-node-card-title"]').rightclick();
         cy.get('[role="menuitem"]').contains('Properties').click();
         cy.get('[data-slot="canvas-node-workbench-overlay"]').within(() => {
           cy.contains('[role="tab"]', 'General').should('have.attr', 'aria-selected', 'true');
@@ -265,27 +278,128 @@ describe('Canvas calculated-column authoring', () => {
     cy.get(model).should('contain.text', 'status_alias');
   });
 
-  it('keeps one independent data tab per opened card', () => {
+  it('preserves a downstream Transform selection when its upstream adds a field and reloads', () => {
+    resetE2eApiStubs();
+    stubShellBootstrapApis({
+      scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
+    });
+    stubE2eJsonApi('GET', '/workspace/context', {
+      defaultWorkspace: E2E_PROJECT_WORKSPACE,
+      availableWorkspaces: [E2E_PROJECT_WORKSPACE],
+    });
+    stubE2eJsonApi('GET', '/capabilities', {
+      apiVersion: '1.0.0',
+      minFrontendVersion: '0.0.1',
+      plugins: { dvt: { available: true } },
+    });
+    stubStatefulCanvasDraftAuthoring({ authoringGenerated: true, includeLooseNode: true });
+    cy.viewport(1920, 1080);
+    visitCanvas();
+
+    const upstreamNode = '.react-flow__node[data-id="dvt-transform-1"]';
+    const downstreamNode = '.react-flow__node[data-id="orphan-transform-1"]';
+    const latestProjection = (nodeId: string): DvtSubstraitProjectionSemantics | null => {
+      const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+        DraftSave | undefined;
+      const authority = saved?.draft.nodes.find((node) => node.id === nodeId)?.metadata
+        ?.transformAuthoring as { semanticDocument?: unknown } | undefined;
+      if (authority?.semanticDocument == null) return null;
+      const inspection = inspectDvtSubstraitProjectionDraft(
+        decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+      );
+      return inspection.ok ? inspection.projection : null;
+    };
+
+    connectCanvasNodes('Transform 1', 'Orphan Transform');
+    cy.get('.react-flow__edge[data-id="draft_edge_dvt-transform-1_orphan-transform-1"]').should(
+      'be.visible'
+    );
+
+    let downstreamFieldIds: string[] = [];
+    cy.wrap(null).should(() => {
+      const projection = latestProjection('orphan-transform-1');
+      expect(projection?.outputs.map((output) => output.name)).to.deep.equal(['order_id', 'total']);
+      downstreamFieldIds = projection?.outputs.map((output) => output.fieldId) ?? [];
+    });
+
+    cy.get(upstreamNode).contains('button', 'Columns (2)').click();
+    cy.get(upstreamNode).find('[data-slot="graph-node-calculated-column-trigger"]').click();
+    cy.get('[data-slot="graph-node-calculated-column-form"]').within(() => {
+      cy.get('select[name="kind"]').select('string-literal');
+      cy.get('input[name="alias"]').type('channel');
+      cy.get('input[name="value"]').type('web');
+      cy.get('button[type="submit"]').click();
+    });
+
+    cy.wrap(null).should(() => {
+      expect(
+        latestProjection('dvt-transform-1')?.outputs.map((output) => output.name)
+      ).to.deep.equal(['order_id', 'total', 'channel']);
+      const downstream = latestProjection('orphan-transform-1');
+      expect(downstream?.outputs.map((output) => output.name)).to.deep.equal(['order_id', 'total']);
+      expect(downstream?.outputs.map((output) => output.fieldId)).to.deep.equal(downstreamFieldIds);
+      expect(downstream?.inputFields.map((field) => field.name)).not.to.include('channel');
+    });
+
+    cy.get(downstreamNode).find('button[aria-expanded]').contains('Columns').click();
+    cy.get(downstreamNode).find('[data-slot="graph-node-column-piece"]').should('have.length', 3);
+    cy.get(`${downstreamNode} [data-column-name="channel"]`)
+      .find('[data-slot="graph-node-column-output-state"]')
+      .should('have.attr', 'aria-pressed', 'false');
+
+    visitCanvas();
+    cy.get(downstreamNode).find('button[aria-expanded]').contains('Columns').click();
+    cy.get(downstreamNode)
+      .find('[data-slot="graph-node-column-piece"]')
+      .then(($pieces) => {
+        expect([...$pieces].map((piece) => piece.getAttribute('data-column-name'))).to.deep.equal([
+          'order_id',
+          'total',
+          'channel',
+        ]);
+      });
+    cy.get(`${downstreamNode} [data-column-name="channel"]`)
+      .find('[data-slot="graph-node-column-output-state"]')
+      .should('have.attr', 'aria-pressed', 'false');
+    cy.wrap(null).should(() => {
+      expect(
+        latestProjection('orphan-transform-1')?.outputs.map((output) => output.fieldId)
+      ).to.deep.equal(downstreamFieldIds);
+    });
+  });
+
+  it('keeps one model workspace while switching between opened cards', () => {
     resetE2eApiStubs();
     stubCanvas(true);
     cy.viewport(1920, 1080);
     visitCanvas();
-    const firstModel = '.react-flow__node[data-id="model-orders"]';
-    const secondModel = '.react-flow__node[data-id="model-orders-secondary"]';
-    const firstTab = '[data-slot="bottom-operational-drawer-tab"][data-tab="data:model-orders"]';
-    const secondTab =
-      '[data-slot="bottom-operational-drawer-tab"][data-tab="data:model-orders-secondary"]';
+    const canvasTab = '[data-slot="canvas-workspace-tab"]';
+    const modelTab = '[data-slot="canvas-model-main-tab"]';
+    const editorTab = '[data-slot="canvas-model-view-tab"][data-view="editor"]';
+    const dataTab = '[data-slot="canvas-model-view-tab"][data-view="data"]';
+    const visibleNode = (nodeId: string): Cypress.Chainable<JQuery<HTMLElement>> =>
+      cy
+        .get(`.react-flow__node[data-id="${nodeId}"]`)
+        .filter(':visible')
+        .should('have.length', 1)
+        .first();
 
-    cy.get(`${firstModel} [data-slot="graph-node-card-title"]`).dblclick();
-    cy.get(firstTab).should('have.attr', 'aria-selected', 'true');
+    visibleNode('model-orders').find('[data-slot="graph-node-card-title"]').dblclick();
+    cy.get(modelTab)
+      .should('have.attr', 'aria-selected', 'true')
+      .and('contain.text', 'Orders model');
+    cy.get(editorTab).should('have.attr', 'aria-selected', 'true');
+    cy.get(dataTab).click().should('have.attr', 'aria-selected', 'true');
 
-    cy.get(`${secondModel} [data-slot="graph-node-card-title"]`).dblclick();
-    cy.get(secondTab).should('have.attr', 'aria-selected', 'true');
-    cy.get(firstTab).should('exist');
+    cy.get(canvasTab).click();
+    visibleNode('model-orders-secondary').find('[data-slot="graph-node-card-title"]').dblclick();
+    cy.get(modelTab)
+      .should('have.attr', 'aria-selected', 'true')
+      .and('contain.text', 'Orders model secondary');
+    cy.get(editorTab).should('have.attr', 'aria-selected', 'true');
 
-    cy.get(firstTab).click();
-    cy.get(firstTab).should('have.attr', 'aria-selected', 'true');
-    cy.get(secondTab).click();
-    cy.get(secondTab).should('have.attr', 'aria-selected', 'true');
+    cy.get(canvasTab).click().should('have.attr', 'aria-selected', 'true');
+    cy.get(modelTab).click().should('have.attr', 'aria-selected', 'true');
+    cy.get(editorTab).should('have.attr', 'aria-selected', 'true');
   });
 });

@@ -8,7 +8,9 @@ import { useCanvasNodeWorkbenchPosition } from './useCanvasNodeWorkbenchPosition
 const canvasShellMainPanelFrameClassNames = {
   root: 'relative h-full flex flex-col bg-(--surface-panel)',
   readOnlyBanner: 'shrink-0',
-  workspaceSurface: 'flex min-h-0 min-w-0 flex-1 flex-col [&[hidden]]:hidden',
+  workspaceSurfaces: 'relative flex min-h-0 min-w-0 flex-1',
+  workspaceSurface: 'absolute inset-0 flex min-h-0 min-w-0 flex-col',
+  workspaceSurfaceInactive: 'invisible pointer-events-none',
   workbenchSplit: 'relative flex min-h-0 flex-1',
   workbenchBaseSurface: 'flex min-h-0 min-w-0 flex-1',
   workbenchOverlay:
@@ -25,22 +27,31 @@ export function CanvasShellWorkspaceSurfaces({
   editorVisible: boolean;
 }>): JSX.Element {
   return (
-    <>
+    <div
+      data-slot="canvas-workspace-surfaces"
+      className={canvasShellMainPanelFrameClassNames.workspaceSurfaces}
+    >
       <div
-        hidden={editorVisible}
+        aria-hidden={editorVisible}
+        {...(editorVisible ? { inert: '' } : {})}
         data-slot="canvas-workspace-surface"
-        className={canvasShellMainPanelFrameClassNames.workspaceSurface}
+        className={`${canvasShellMainPanelFrameClassNames.workspaceSurface} ${
+          editorVisible ? canvasShellMainPanelFrameClassNames.workspaceSurfaceInactive : ''
+        }`}
       >
         {viewport}
       </div>
       <div
-        hidden={!editorVisible}
+        aria-hidden={!editorVisible}
+        {...(editorVisible ? {} : { inert: '' })}
         data-slot="canvas-model-workspace-surface"
-        className={canvasShellMainPanelFrameClassNames.workspaceSurface}
+        className={`${canvasShellMainPanelFrameClassNames.workspaceSurface} ${
+          editorVisible ? '' : canvasShellMainPanelFrameClassNames.workspaceSurfaceInactive
+        }`}
       >
         {editor}
       </div>
-    </>
+    </div>
   );
 }
 
