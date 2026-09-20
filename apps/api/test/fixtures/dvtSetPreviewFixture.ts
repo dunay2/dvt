@@ -19,9 +19,17 @@ const documents = JSON.parse(
   )
 ) as Record<string, unknown>;
 
-export function buildDvtSetPreviewDraft(): WorkspaceGraphAuthoringDraft {
+export function buildDvtSetPreviewDraft(
+  wrapper?: 'aggregate' | 'window'
+): WorkspaceGraphAuthoringDraft {
   const base = buildDvtTerminalTransformPreviewDraft();
-  const semanticDocument = DvtSubstraitSemanticDocumentV1Schema.parse(documents['unionDistinct']);
+  const fixtureName =
+    wrapper === 'aggregate'
+      ? 'unionDistinctAggregate'
+      : wrapper === 'window'
+        ? 'unionDistinctWindow'
+        : 'unionDistinct';
+  const semanticDocument = DvtSubstraitSemanticDocumentV1Schema.parse(documents[fixtureName]);
   const sources = semanticDocument.sidecar.relations.flatMap((relation) => {
     if (relation.sourceRef === undefined) return [];
     return [

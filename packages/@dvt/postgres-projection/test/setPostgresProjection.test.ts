@@ -2,7 +2,11 @@ import { readFileSync } from 'node:fs';
 import { URL } from 'node:url';
 
 import { SetRel_SetOp } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { decodeDvtSubstraitPlanV1, DvtSubstraitSemanticDocumentV1Schema } from '@dvt/contracts';
+import {
+  decodeDvtSubstraitPlanV1,
+  DvtSubstraitSemanticDocumentV1Schema,
+  encodeDvtSubstraitPlanV1,
+} from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -20,6 +24,26 @@ const documents = JSON.parse(
 function draft(): DvtSubstraitSetDraft {
   const document = DvtSubstraitSemanticDocumentV1Schema.parse(documents['unionDistinct']);
   return { plan: decodeDvtSubstraitPlanV1(document), sidecar: document.sidecar };
+}
+
+function wrappedDraft(
+  wrapper: 'aggregate' | 'window',
+  operation: 'union_all' | 'union_distinct'
+): DvtSubstraitSetDraft {
+  const suffix = wrapper === 'aggregate' ? 'Aggregate' : 'Window';
+  const document = DvtSubstraitSemanticDocumentV1Schema.parse(documents[`unionDistinct${suffix}`]);
+  const draft = { plan: decodeDvtSubstraitPlanV1(document), sidecar: document.sidecar };
+  const root = draft.plan.relations[0]?.relType;
+  const set =
+    root?.case === 'root' && root.value.input?.relType.case === 'aggregate'
+      ? root.value.input.relType.value.input?.relType
+      : root?.case === 'root' && root.value.input?.relType.case === 'project'
+        ? root.value.input.relType.value.input?.relType.value.input?.relType
+        : undefined;
+  if (set?.case !== 'set') throw new Error('Wrapped fixture must contain one SetRel.');
+  set.value.op = operation === 'union_all' ? SetRel_SetOp.UNION_ALL : SetRel_SetOp.UNION_DISTINCT;
+  draft.sidecar.semanticPlanSha256 = encodeDvtSubstraitPlanV1(draft.plan).sha256;
+  return draft;
 }
 
 function setOperation(candidate: DvtSubstraitSetDraft, operation: SetRel_SetOp): void {
@@ -63,6 +87,34 @@ describe('shared PostgreSQL SetRel admission', () => {
     expect(result.projection.operation).toBe('union_all');
     expect(result.sql.match(/UNION\s+ALL/g)).toHaveLength(2);
   });
+
+  it.each([
+    ['union_distinct', 'aggregate', ['customer_id', 'customer_count'], /GROUP BY\s+customer_id/],
+    [
+      'union_distinct',
+      'window',
+      ['customer_id', 'customer_count', 'customer_rank'],
+      /row_number\(\) OVER/,
+    ],
+    ['union_all', 'aggregate', ['customer_id', 'customer_count'], /GROUP BY\s+customer_id/],
+    [
+      'union_all',
+      'window',
+      ['customer_id', 'customer_count', 'customer_rank'],
+      /row_number\(\) OVER/,
+    ],
+  ] as const)(
+    'projects %s with an admitted %s wrapper',
+    async (operation, wrapper, outputNames, sqlPattern) => {
+      const result = await projectDvtSetDraftToPostgresSql(wrappedDraft(wrapper, operation));
+
+      expect(result.projection.operation).toBe(operation);
+      expect(result.projection.outputs.map(({ name }) => name)).toEqual(outputNames);
+      expect(result.sql).toMatch(sqlPattern);
+      expect(result.sql.match(/UNION/g)).toHaveLength(2);
+      expect(result.sql.match(/UNION\s+ALL/g)?.length ?? 0).toBe(operation === 'union_all' ? 2 : 0);
+    }
+  );
 
   it.each(['mismatched schema', 'duplicate source', 'stale hash', 'unsupported selector'])(
     'rejects %s rather than degrading Set semantics',

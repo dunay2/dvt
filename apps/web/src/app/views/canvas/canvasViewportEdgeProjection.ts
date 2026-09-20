@@ -42,11 +42,13 @@ function resolveCompositionLabel(
                   ? 'RIGHT SEMI JOIN'
                   : member.operation === 'right_anti_join'
                     ? 'RIGHT ANTI JOIN'
-                    : member.operation === 'union_all'
-                      ? 'UNION ALL'
-                      : member.operation === 'union_distinct'
-                        ? 'UNION DISTINCT'
-                        : null;
+                    : member.operation === 'cross_join'
+                      ? 'CROSS JOIN'
+                      : member.operation === 'union_all'
+                        ? 'UNION ALL'
+                        : member.operation === 'union_distinct'
+                          ? 'UNION DISTINCT'
+                          : null;
   if (member.state === 'canonical') {
     return operationLabel ?? cardCopy.relationalCompositionIncompleteLabel;
   }

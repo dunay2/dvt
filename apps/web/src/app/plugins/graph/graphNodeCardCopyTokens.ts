@@ -30,6 +30,7 @@ type GraphNodeCardCopy = Readonly<{
   relationalCompositionPendingLabel: string;
   relationalCompositionIncompleteLabel: string;
   relationalCompositionJoinSummaryTemplate: string;
+  relationalCompositionCrossSummaryTemplate: string;
   relationalCompositionUnionAllSummaryTemplate: string;
   relationalCompositionUnionDistinctSummaryTemplate: string;
   filterLabel: string;
@@ -126,6 +127,8 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   relationalCompositionIncompleteLabel: 'RECONNECT INPUT',
   relationalCompositionJoinSummaryTemplate:
     'INNER JOIN, inputs: {inputCount}, predicates: {predicateCount}',
+  relationalCompositionCrossSummaryTemplate:
+    'CROSS JOIN, inputs: {inputCount}, outputs: {outputCount}, cartesian product',
   relationalCompositionUnionAllSummaryTemplate:
     'UNION ALL, inputs: {inputCount}, outputs: {outputCount}, bag semantics',
   relationalCompositionUnionDistinctSummaryTemplate:
@@ -247,6 +250,8 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   relationalCompositionIncompleteLabel: 'RECONECTAR ENTRADA',
   relationalCompositionJoinSummaryTemplate:
     'INNER JOIN, entradas: {inputCount}, predicados: {predicateCount}',
+  relationalCompositionCrossSummaryTemplate:
+    'CROSS JOIN, entradas: {inputCount}, salidas: {outputCount}, producto cartesiano',
   relationalCompositionUnionAllSummaryTemplate:
     'UNION ALL, entradas: {inputCount}, salidas: {outputCount}, semántica bag',
   relationalCompositionUnionDistinctSummaryTemplate:

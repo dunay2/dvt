@@ -67,6 +67,20 @@ function descendants(rel: Rel): Rel[] {
   return [rel, ...children(rel).flatMap(descendants)];
 }
 
+function orderedSelectionRelations(rel: Rel, included: readonly Rel[]): readonly Rel[] {
+  const joinTree = flattenNInputJoinTree(rel);
+  if (joinTree != null) return [...joinTree.reads, ...joinTree.joins];
+
+  const crossTree = flattenDvtSubstraitCrossTree(rel);
+  if (crossTree != null) return [...crossTree.reads, ...crossTree.crosses];
+
+  if (rel.relType.case === 'set') {
+    return [...rel.relType.value.inputs.flatMap(descendants), rel];
+  }
+
+  return included;
+}
+
 export function selectDvtSubstraitRelation(
   draft: DvtSubstraitJoinDraft,
   relationId: string
@@ -95,14 +109,7 @@ export function selectDvtSubstraitRelation(
 
   // Existing JOIN admission uses read-first anchors. Rebase only the transient copy;
   // stable RelationIds/FieldIds and the persisted plan remain unchanged.
-  const tree = flattenNInputJoinTree(selected);
-  const crossTree = tree == null ? flattenDvtSubstraitCrossTree(selected) : null;
-  const ordered =
-    tree != null
-      ? [...tree.reads, ...tree.joins]
-      : crossTree != null
-        ? [...crossTree.reads, ...crossTree.crosses]
-        : included;
+  const ordered = orderedSelectionRelations(selected, included);
   const remap = new Map(ordered.map((rel, index) => [common(rel).relAnchor, index + 1]));
   for (const rel of ordered) common(rel).relAnchor = remap.get(common(rel).relAnchor)!;
   return {

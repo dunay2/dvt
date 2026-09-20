@@ -143,6 +143,10 @@ export type {
 } from './substraitSetReadModel.js';
 export { inspectDvtSubstraitSetDraft } from './substraitSetReader.js';
 export {
+  inspectDvtSubstraitSetComposition,
+  type DvtSubstraitSetComposition,
+} from './substraitSetCompositionReader.js';
+export {
   buildDvtSetPostgresAst,
   projectDvtSetDraftToPostgresSql,
 } from './setPostgresProjection.js';

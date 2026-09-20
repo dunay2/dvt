@@ -13,12 +13,12 @@ import {
 } from '../../../src/application/services/dvtPostgresTargetProjectionPublisher.js';
 import { buildDvtSetPreviewDraft } from '../../fixtures/dvtSetPreviewFixture.js';
 
-function harness(): Readonly<{
+function harness(wrapper?: 'aggregate' | 'window'): Readonly<{
   input: DvtPostgresTargetProjectionPublishInput;
   publisher: DvtPostgresTargetProjectionPublisher;
   publish: Mock<Pick<IContentAddressedArtifactStore, 'publish'>['publish']>;
 }> {
-  const draft = buildDvtSetPreviewDraft();
+  const draft = buildDvtSetPreviewDraft(wrapper);
   const publish = vi.fn<Pick<IContentAddressedArtifactStore, 'publish'>['publish']>(
     async (request) => ({ ...request, disposition: 'created' })
   );
@@ -112,6 +112,80 @@ describe('protected UNION DISTINCT lowering', () => {
       /UNION\s+ALL/
     );
   });
+
+  it.each([
+    ['aggregate', /GROUP BY\s+customer_id/],
+    ['window', /row_number\(\) OVER/],
+  ] as const)(
+    'publishes a Preview workload for the admitted %s wrapper',
+    async (wrapper, sqlPattern) => {
+      const { input, publisher, publish } = harness(wrapper);
+
+      const binding = await publisher.publish(input);
+      const result = new DvtOperationalWorkloadProjector().project({
+        ...input,
+        draftRevision: `revision-set-${wrapper}-preview`,
+        canvasId: input.draft.canvas.id!,
+        targetProjection: binding,
+      });
+
+      if (!result.ok) throw new Error(result.reason);
+      expect(binding.profileId).toBe(DVT_POSTGRES_SET_PROFILE_ID);
+      expect(Buffer.from(publish.mock.calls[0]![0].bytes).toString('utf8')).toMatch(sqlPattern);
+    }
+  );
+
+  it.each(['aggregate', 'window'] as const)(
+    'publishes a Run workload for the admitted %s wrapper',
+    async (wrapper) => {
+      const { input, publisher, publish } = harness(wrapper);
+      const draft = {
+        ...input.draft,
+        nodes: input.draft.nodes.map((node) =>
+          node.id === 'transform-customers'
+            ? {
+                ...node,
+                metadata: {
+                  ...node.metadata,
+                  config: {
+                    materialized: 'table',
+                    resultTarget: {
+                      schemaVersion: 'dvt-transform-result-target.v1',
+                      connectionRef: {
+                        schemaVersion: 'connection-ref.v1',
+                        provider: 'postgres',
+                        connectionId: 'warehouse-main',
+                      },
+                      schema: 'analytics',
+                      relation: `${wrapper}_customers`,
+                    },
+                  },
+                },
+              }
+            : node
+        ),
+      };
+
+      const binding = await publisher.publish({ ...input, draft });
+      const result = new DvtOperationalWorkloadProjector().project({
+        ...input,
+        draft,
+        draftRevision: `revision-set-${wrapper}-run`,
+        canvasId: draft.canvas.id!,
+        targetProjection: binding,
+      });
+
+      if (!result.ok) throw new Error(result.reason);
+      const workload = DvtOperationalWorkloadContractV2.schema.parse(
+        result.graphSource.nodes[0]?.stepTypeConfig
+      );
+      expect(workload.executionIntent).toBe('run');
+      expect(workload.targetProjection.profileId).toBe(DVT_POSTGRES_SET_PROFILE_ID);
+      expect(Buffer.from(publish.mock.calls[0]![0].bytes).toString('utf8')).toMatch(
+        wrapper === 'aggregate' ? /GROUP BY\s+customer_id/ : /row_number\(\) OVER/
+      );
+    }
+  );
 
   it.each(['missing input', 'mismatched physical table', 'stale semantic hash'])(
     'rejects %s before publishing SQL',

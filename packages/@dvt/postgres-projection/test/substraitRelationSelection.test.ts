@@ -6,21 +6,30 @@ import { describe, expect, it } from 'vitest';
 
 import {
   projectDvtJoinDraftToPostgresSql,
+  projectDvtSetDraftToPostgresSql,
   selectDvtSubstraitRelation,
   type DvtSubstraitJoinDraft,
 } from '../src/index.js';
 
-const fixtures = JSON.parse(
+const joinFixtures = JSON.parse(
   readFileSync(new URL('./fixtures/inner-join-documents.json', import.meta.url), 'utf8')
 );
-function fixture(): DvtSubstraitJoinDraft {
-  const document = DvtSubstraitSemanticDocumentV1Schema.parse(fixtures.three);
+const setFixtures = JSON.parse(
+  readFileSync(new URL('./fixtures/set-documents.json', import.meta.url), 'utf8')
+);
+function joinFixture(): DvtSubstraitJoinDraft {
+  const document = DvtSubstraitSemanticDocumentV1Schema.parse(joinFixtures.three);
+  return { plan: decodeDvtSubstraitPlanV1(document), sidecar: document.sidecar };
+}
+
+function setFixture(): DvtSubstraitJoinDraft {
+  const document = DvtSubstraitSemanticDocumentV1Schema.parse(setFixtures.unionDistinct);
   return { plan: decodeDvtSubstraitPlanV1(document), sidecar: document.sidecar };
 }
 
 describe('selected relation query projection', () => {
   it('projects the intermediate JOIN with only its own inputs and outputs without mutating authoring', async () => {
-    const original = fixture();
+    const original = joinFixture();
     const before = globalThis.structuredClone(original);
     const joins = original.sidecar.relations.filter((relation) => relation.sourceRef == null);
     const selected = selectDvtSubstraitRelation(original, joins[0]!.relationId);
@@ -45,10 +54,30 @@ describe('selected relation query projection', () => {
     expect(final.sql.match(/\bJOIN\b/g)).toHaveLength(2);
   });
 
+  it('rebases a selected SetRel in read-first anchor order for exact UNION DISTINCT preview', async () => {
+    const original = setFixture();
+    const before = globalThis.structuredClone(original);
+    const relationId = original.sidecar.relations.find(
+      (relation) => relation.sourceRef == null
+    )!.relationId;
+
+    const selected = selectDvtSubstraitRelation(original, relationId);
+    const result = await projectDvtSetDraftToPostgresSql(selected);
+
+    expect(result.projection.operation).toBe('union_distinct');
+    expect(result.projection.inputs.map((input) => input.table)).toEqual([
+      'customers_north',
+      'customers_south',
+      'customers_west',
+    ]);
+    expect(selected.sidecar.relations.map((relation) => relation.relAnchor)).toEqual([1, 2, 3, 4]);
+    expect(original).toEqual(before);
+  });
+
   it.each(['foreign relation', 'stale plan', 'duplicate anchor'])(
     'fails closed for %s',
     (reason) => {
-      const candidate = fixture();
+      const candidate = joinFixture();
       const id = candidate.sidecar.relations.find(
         (relation) => relation.sourceRef == null
       )!.relationId;

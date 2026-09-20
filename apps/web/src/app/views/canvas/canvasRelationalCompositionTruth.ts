@@ -1,5 +1,9 @@
 /** Owned concern: derive relational-composition state from graph topology and canonical semantics. */
-import type { ConnectedSourceRef } from '@dvt/contracts';
+import {
+  DvtSubstraitSemanticDocumentV1Schema,
+  decodeDvtSubstraitPlanV1,
+  type ConnectedSourceRef,
+} from '@dvt/contracts';
 
 import type {
   CanvasRelationalCompositionOperation,
@@ -43,7 +47,20 @@ function resolveCanonicalOperation(
         : undefined;
       return joinType == null ? 'inner_join' : canvasJoinOperationForType(joinType);
     }
-    if (inspectDvtSubstraitAcceptedCrossDraft(draft).ok) return 'cross_join';
+  } catch {
+    // The same canonical document may represent another admitted relation shape.
+  }
+
+  try {
+    const document = DvtSubstraitSemanticDocumentV1Schema.parse(semanticDocument);
+    if (
+      inspectDvtSubstraitAcceptedCrossDraft({
+        plan: decodeDvtSubstraitPlanV1(document),
+        sidecar: document.sidecar,
+      }).ok
+    ) {
+      return 'cross_join';
+    }
   } catch {
     // The same canonical document may represent another admitted relation shape.
   }
