@@ -44,6 +44,19 @@ DB design `GH-3296-SEMANTIC-EDITOR-PRODUCT-V1` govern this slice. It reuses
 `PreviewCanvasTransformRows`, `PreviewPlan`, and `StartRun`. Substrait remains
 the semantic authority; SQL and the Canvas tree are projections.
 
+The slice also follows
+[Fowler Opportunity Planning Governance](../architecture/fowler-opportunity-planning-governance.md):
+it removes responsibility overload from the tree projection, keeps authority
+out of UI state and SQL strings, and proves the visible flow beyond isolated
+operator tests.
+
+| Scenario                                                  | Opportunity             | Fowler pattern                 | DDD owner                        | Command/query rail                    | Implementation surfaces                      | Unit or package test       | Architecture test                    | User-flow test                 | Out of scope                            |
+| --------------------------------------------------------- | ----------------------- | ------------------------------ | -------------------------------- | ------------------------------------- | -------------------------------------------- | -------------------------- | ------------------------------------ | ------------------------------ | --------------------------------------- |
+| Author, reopen, edit, and remove ordered/bounded wrappers | Hidden authority        | Value object and Service Layer | `DvtSubstraitSemanticDocumentV1` | `ConfigureCanvasDvtNode` command      | Web semantic authoring and contextual editor | Sort/Fetch authoring tests | Canvas workbench boundaries          | Cypress relational operators   | TopN and WITH TIES                      |
+| Render SortRel and FetchRel in the canonical tree         | Responsibility overload | Read Model and Extract Class   | `CanvasRelationalTreeProjection` | `ProjectCanvasRelationalTree` query   | Web relation-tree projection                 | Projection shape tests     | Projection and workbench size guards | Cypress save/reopen flow       | Alternate visual AST                    |
+| Preview a selected operation and the complete Model       | Duplicate semantics     | Mapper and Gateway             | `CanvasTransformDataSample`      | `PreviewCanvasTransformRows` query    | API dispatcher, PostgreSQL AST, sample probe | API and projection tests   | Existing rail guards                 | Cypress selected preview       | Browser-side ordering                   |
+| Execute the persisted document with identical semantics   | Test-only confidence    | Service Layer                  | DVT operational workload         | `PreviewPlan` and `StartRun` commands | Existing API workload projection             | Preview/Run parity tests   | Existing execution boundaries        | PostgreSQL integration fixture | New endpoint, workload, or result store |
+
 ```text
 Canvas contextual editor
   -> SortRel(field references, explicit direction and NULL placement)
