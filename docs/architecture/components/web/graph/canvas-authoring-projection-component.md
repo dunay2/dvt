@@ -217,6 +217,26 @@ Those tests must keep proving:
 - viewport code does not re-import protected boundary semantics
 - canonical snapshot stays derived from semantic truth
 
+### Browser Scenario Boundaries
+
+`canvas-relational-tree-workbench.cy.ts` owns keyboard entry and workspace
+navigation only. The sibling `canvas-relational-workbench-*.cy.ts` specs isolate
+viewport behavior, contextual removal, pending JOIN creation, source append,
+predicate editing, chain persistence, CROSS preview and UNION creation.
+Each spec selects its scenario explicitly from
+`cypress/support/relationalWorkbench/scenario.ts`; test titles never select
+fixtures. Shared support owns navigation, geometry assertions, chain setup and
+saved-document inspection, not a parallel semantic implementation.
+
+These browser tests exercise the real Web against controlled API responses.
+They assert canonical persisted documents and revision-bound query parameters;
+they do not replace PostgreSQL integration tests or prove database results.
+The focused suite is run with:
+
+```sh
+pnpm --filter @dvt/web test:e2e:native --spec 'cypress/e2e/canvas/canvas-relational-tree-workbench.cy.ts,cypress/e2e/canvas/canvas-relational-workbench-*.cy.ts'
+```
+
 ## Drift To Watch
 
 - if `canvasDraftReadModel.ts` drops `semanticGraph`, the route becomes lossy
