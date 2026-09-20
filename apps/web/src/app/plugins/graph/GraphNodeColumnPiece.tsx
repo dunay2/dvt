@@ -5,6 +5,8 @@ import {
   type ComponentPropsWithoutRef,
   type DragEventHandler,
   type ReactElement,
+  useEffect,
+  useRef,
 } from 'react';
 
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
@@ -56,6 +58,18 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
     const accessibleLabel = (
       isOutput ? copy.columnOutputAriaLabelTemplate : copy.columnAvailableInputAriaLabelTemplate
     ).replace('{column}', displayedName);
+    const outputPointerPreviousFocusRef = useRef<Element | null>(null);
+    const outputFocusFrameRef = useRef<Readonly<{ id: number; ownerWindow: Window }> | null>(null);
+
+    useEffect(
+      () => () => {
+        const pendingFrame = outputFocusFrameRef.current;
+        if (pendingFrame != null) {
+          pendingFrame.ownerWindow.cancelAnimationFrame(pendingFrame.id);
+        }
+      },
+      []
+    );
 
     return (
       <div
@@ -106,10 +120,36 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
             aria-pressed={isOutput}
             disabled={outputToggleDisabled}
             className={graphNodeColumnClasses.outputState}
-            onPointerDown={(event) => event.stopPropagation()}
+            onPointerDown={(event) => {
+              outputPointerPreviousFocusRef.current =
+                event.currentTarget.ownerDocument.activeElement;
+              event.stopPropagation();
+            }}
             onClick={(event) => {
               event.stopPropagation();
               onOutputToggle();
+              const outputControl = event.currentTarget;
+              const ownerDocument = outputControl.ownerDocument;
+              const ownerWindow = ownerDocument.defaultView;
+              const previousFocus = outputPointerPreviousFocusRef.current;
+              outputPointerPreviousFocusRef.current = null;
+              outputControl.focus({ preventScroll: true });
+              if (ownerWindow == null) return;
+              const pendingFrame = outputFocusFrameRef.current;
+              if (pendingFrame != null) {
+                pendingFrame.ownerWindow.cancelAnimationFrame(pendingFrame.id);
+              }
+              const id = ownerWindow.requestAnimationFrame(() => {
+                outputFocusFrameRef.current = null;
+                const activeElement = ownerDocument.activeElement;
+                if (
+                  outputControl.isConnected &&
+                  (activeElement === outputControl || activeElement === previousFocus)
+                ) {
+                  outputControl.focus({ preventScroll: true });
+                }
+              });
+              outputFocusFrameRef.current = { id, ownerWindow };
             }}
           >
             {isOutput ? (
