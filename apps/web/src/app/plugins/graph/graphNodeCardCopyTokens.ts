@@ -27,7 +27,6 @@ type GraphNodeCardCopy = Readonly<{
   testsLabel: string;
   readyStatusLabel: string;
   draftStatusLabel: string;
-  relationalCompositionPendingLabel: string;
   relationalCompositionIncompleteLabel: string;
   relationalCompositionJoinSummaryTemplate: string;
   relationalCompositionCrossSummaryTemplate: string;
@@ -127,7 +126,6 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   testsLabel: 'Tests',
   readyStatusLabel: 'Ready',
   draftStatusLabel: 'Draft',
-  relationalCompositionPendingLabel: 'RELATE / COMPOSE',
   relationalCompositionIncompleteLabel: 'RECONNECT INPUT',
   relationalCompositionJoinSummaryTemplate:
     '{operation}, inputs: {inputCount}, predicates: {predicateCount}',
@@ -258,7 +256,6 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   testsLabel: 'Pruebas',
   readyStatusLabel: 'Listo',
   draftStatusLabel: 'Borrador',
-  relationalCompositionPendingLabel: 'RELACIONAR / COMPONER',
   relationalCompositionIncompleteLabel: 'RECONECTAR ENTRADA',
   relationalCompositionJoinSummaryTemplate:
     '{operation}, entradas: {inputCount}, predicados: {predicateCount}',

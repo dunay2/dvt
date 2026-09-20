@@ -56,7 +56,9 @@ function openEditor(union = false, readOnly = false, nInput = false): void {
   cy.get('[data-slot="canvas-workspace-tab"]')
     .should('have.attr', 'role', 'tab')
     .and('have.attr', 'aria-selected', 'true');
-  cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').first().click();
+  cy.get('.react-flow__node[data-id$="-transform"] [data-slot="canvas-node-shell"]')
+    .first()
+    .dblclick(40, 18);
   cy.get('[data-slot="canvas-relational-tree-workbench"]').should('be.visible');
 }
 
@@ -120,7 +122,9 @@ describe('Relational operator toolbar', () => {
     });
     visitWithE2eWorkspaceSession('/canvas');
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
-    cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').first().click();
+    cy.get('.react-flow__node[data-id$="-transform"] [data-slot="canvas-node-shell"]')
+      .first()
+      .dblclick(40, 18);
     const samplePath = /\/workspace\/graph\/canvases\/[^/]+\/transforms\/[^/]+\/data-sample$/;
     stubE2eApi('GET', samplePath, ({ url }) => ({
       body: {
@@ -309,7 +313,9 @@ describe('Relational operator toolbar', () => {
       cy.get('[data-slot="canvas-model-sql"]').should('contain.text', 'JOIN');
       visitWithE2eWorkspaceSession('/canvas');
       waitForE2eApiCall('/workspace/graph/draft', 'GET');
-      cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').first().click();
+      cy.get('.react-flow__node[data-id$="-transform"] [data-slot="canvas-node-shell"]')
+        .first()
+        .dblclick(40, 18);
       cy.get('[data-operator="join"]').should('have.length', 1);
       cy.screenshot(`projection-source-drop-${applied ? 'saved' : 'local'}`);
     });
@@ -521,7 +527,9 @@ describe('Relational operator toolbar', () => {
       cy.get('[data-slot="canvas-relational-node-title"]').should('contain.text', 'Window');
       visitWithE2eWorkspaceSession('/canvas');
       waitForE2eApiCall('/workspace/graph/draft', 'GET');
-      cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').click();
+      cy.get('.react-flow__node[data-id$="-transform"] [data-slot="canvas-node-shell"]')
+        .first()
+        .dblclick(40, 18);
       // The workspace-session fixture restores the default Spanish locale on reload.
       cy.get('[data-slot="canvas-relational-node-title"]').should('contain.text', 'Ventana');
     });
@@ -610,7 +618,9 @@ describe('Relational operator toolbar', () => {
 
     visitWithE2eWorkspaceSession('/canvas');
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
-    cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').first().click();
+    cy.get('.react-flow__node[data-id$="-transform"] [data-slot="canvas-node-shell"]')
+      .first()
+      .dblclick(40, 18);
     cy.get<string>('@sortRelationId').then((relationId) => {
       cy.get(`[data-operator="sort"][data-relation-id="${relationId}"]`).rightclick();
     });

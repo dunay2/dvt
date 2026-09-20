@@ -29,7 +29,6 @@ import { buildGraphDraftWorkspaceFileCodeContributions } from './graphDraftWorks
 import { findCanvasGraphNodeElement } from './canvasNodeWorkbenchDomGeometry';
 import { useCanvasNodeDataSample } from './useCanvasNodeDataSample';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
-import { projectCanvasRelationalCompositionEdgeInteractions } from './canvasRelationalCompositionEdgeInteraction';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import {
   useOperationalDrawerContributionStore,
@@ -366,11 +365,7 @@ export default function CanvasShell({
           data: projectedData,
         };
       }),
-      edges: projectCanvasRelationalCompositionEdgeInteractions({
-        edges: graph.edges,
-        relationalTreeTargetNodeIds: relationalTreeTransformIds,
-        onActivate: openRelationalTree,
-      }),
+      edges: graph.edges,
     }),
     [
       applicationLanguage,

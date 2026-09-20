@@ -203,7 +203,10 @@ describe('Canvas relational-tree Workbench', () => {
       },
     });
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
-    cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').click();
+    cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]').dblclick(
+      40,
+      18
+    );
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-node-title"]')
       .first()
@@ -295,8 +298,7 @@ describe('Canvas relational-tree Workbench', () => {
     });
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
 
-    cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]')
-      .should('contain.text', 'INNER JOIN')
+    cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]')
       .focus()
       .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
 

@@ -145,6 +145,20 @@ Rule:
   and edges, not from viewport state
 - lossy record projection must not replace semantic graph truth
 
+## Outer Canvas And Model Boundary
+
+The main Canvas projects real Source-to-Model dependencies directly between
+their ports. Each dependency retains its own identity, selection, removal and
+execution gate. It does not project the Model's internal JOIN/Set operation as
+an edge badge, shared relational junction, synthetic node or shared trunk.
+Substrait remains the semantic authority inside the Model; internal operations
+are inspected and edited in the semantic editor reached from the Model.
+
+This presentation follows #3293/#3296 and supersedes the grouped edge badge
+presentation from #3227. It does not change persisted graph topology or the
+execution snapshot. `canvasViewportEdgeProjection.ts` must not decode internal
+Model composition to render an external dependency.
+
 ## Consumers
 
 Direct consumers:

@@ -5,13 +5,8 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  CanvasDependencyEdge,
-  resolveCanvasDependencyArrowPoints,
-  resolveCanvasRelationalJunction,
-} from './CanvasDependencyEdge';
+import { CanvasDependencyEdge, resolveCanvasDependencyArrowPoints } from './CanvasDependencyEdge';
 import { buildCanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
-import { graphFlowPalette } from '../../plugins/graph/graphVisualTokens';
 
 type MockBaseEdgeProps = {
   path?: string;
@@ -63,26 +58,6 @@ describe('CanvasDependencyEdge', () => {
   ])('keeps the direction cue clear of a %s target handle', (targetPosition, expected) => {
     expect(resolveCanvasDependencyArrowPoints(100, 50, targetPosition)).toBe(expected);
   });
-
-  it.each([
-    [Position.Left, { x: 28, y: 50, trunkSourcePosition: Position.Right }],
-    [Position.Right, { x: 172, y: 50, trunkSourcePosition: Position.Left }],
-    [Position.Top, { x: 100, y: -22, trunkSourcePosition: Position.Bottom }],
-    [Position.Bottom, { x: 100, y: 122, trunkSourcePosition: Position.Top }],
-  ])('places the relational junction deterministically for a %s target', (position, expected) => {
-    expect(resolveCanvasRelationalJunction(100, 50, position)).toEqual(expected);
-  });
-
-  it.each([Position.Left, Position.Right])(
-    'keeps a variable-width badge clear of a %s target card',
-    (position) => {
-      const badgeWidth = 142;
-      const junction = resolveCanvasRelationalJunction(100, 50, position, badgeWidth);
-      const targetDistance = Math.hypot(100 - junction.x, 50 - junction.y);
-
-      expect(targetDistance - badgeWidth / 2).toBe(graphFlowPalette.relationalBadgeNodeClearance);
-    }
-  );
 
   it('keeps the semantic edge attached while rendering one non-interactive direction cue', () => {
     act(() => {
@@ -208,16 +183,16 @@ describe('CanvasDependencyEdge', () => {
     expect(container.querySelector('[data-slot="canvas-dependency-direction-cue"]')).not.toBeNull();
   });
 
-  it('renders one canonical operation badge and one final direction cue for the group owner', () => {
-    const onActivate = vi.fn();
-    act(() => {
-      root.render(
-        <svg>
-          <g>
+  it.each(['open', 'closed'] as const)(
+    'never renders internal operation controls on a %s dependency',
+    (gate) => {
+      act(() => {
+        root.render(
+          <svg>
             <CanvasDependencyEdge
-              id="dependency-1"
+              id="source-model"
               source="orders"
-              target="transform"
+              target="model"
               sourceX={0}
               sourceY={40}
               targetX={100}
@@ -227,128 +202,24 @@ describe('CanvasDependencyEdge', () => {
               selected={false}
               data={buildCanvasDependencyEdgeData({
                 sourceId: 'orders',
-                targetId: 'transform',
-                composition: {
-                  groupId: 'relational-composition:transform',
-                  label: 'INNER JOIN',
-                  accessibleLabel: 'INNER JOIN, inputs: 2, predicates: 1',
-                  memberCount: 2,
-                  role: 'trunk-owner',
-                  state: 'canonical',
-                  operation: 'inner_join',
-                  onActivate,
-                },
+                targetId: 'model',
+                executionGate: gate === 'closed' ? 'closed' : undefined,
               })}
             />
-          </g>
-        </svg>
+          </svg>
+        );
+      });
+      expect(container.querySelectorAll('[data-slot="base-edge"]')).toHaveLength(1);
+      expect(container.querySelector('[data-slot="canvas-relational-composition"]')).toBeNull();
+      expect(
+        container.querySelector('[data-slot="canvas-relational-composition-badge"]')
+      ).toBeNull();
+      expect(
+        container.querySelectorAll('[data-slot="canvas-dependency-direction-cue"]')
+      ).toHaveLength(1);
+      expect(container.querySelector('[data-slot="canvas-dependency-closed-gate"]') != null).toBe(
+        gate === 'closed'
       );
-    });
-
-    expect(
-      container.querySelector('[data-slot="canvas-relational-composition-trunk"]')
-    ).not.toBeNull();
-    expect(
-      container.querySelector('[data-slot="canvas-relational-composition-junction"]')
-    ).not.toBeNull();
-    const badge = container.querySelector<SVGGElement>(
-      '[data-slot="canvas-relational-composition-badge"]'
-    );
-    expect(badge?.textContent).toBe('INNER JOIN');
-    expect(badge?.getAttribute('aria-label')).toBe('INNER JOIN, inputs: 2, predicates: 1');
-    expect(badge?.getAttribute('role')).toBe('button');
-    expect(badge?.getAttribute('tabindex')).toBe('0');
-    act(() => {
-      badge?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      badge?.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' }));
-      badge?.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: ' ' }));
-    });
-    expect(onActivate).toHaveBeenCalledTimes(3);
-    expect(
-      container.querySelectorAll('[data-slot="canvas-dependency-direction-cue"]')
-    ).toHaveLength(1);
-  });
-
-  it('routes a grouped branch to the shared junction without duplicating the badge or arrow', () => {
-    act(() => {
-      root.render(
-        <svg>
-          <g>
-            <CanvasDependencyEdge
-              id="dependency-2"
-              source="clients"
-              target="transform"
-              sourceX={0}
-              sourceY={80}
-              targetX={100}
-              targetY={40}
-              sourcePosition={Position.Right}
-              targetPosition={Position.Left}
-              selected={false}
-              data={buildCanvasDependencyEdgeData({
-                sourceId: 'clients',
-                targetId: 'transform',
-                composition: {
-                  groupId: 'relational-composition:transform',
-                  label: 'INNER JOIN',
-                  memberCount: 2,
-                  role: 'branch',
-                  state: 'canonical',
-                  operation: 'inner_join',
-                },
-              })}
-            />
-          </g>
-        </svg>
-      );
-    });
-
-    expect(container.querySelector('[data-slot="canvas-relational-composition"]')).toBeNull();
-    expect(container.querySelector('[data-slot="canvas-dependency-direction-cue"]')).toBeNull();
-    expect(mockedEdge.props.path).toBe('M 0 0 L 100 40');
-  });
-
-  it('keeps a closed grouped branch gated without closing the shared trunk', () => {
-    act(() => {
-      root.render(
-        <svg>
-          <g>
-            <CanvasDependencyEdge
-              id="dependency-1"
-              source="orders"
-              target="transform"
-              sourceX={0}
-              sourceY={40}
-              targetX={100}
-              targetY={40}
-              sourcePosition={Position.Right}
-              targetPosition={Position.Left}
-              selected={false}
-              data={buildCanvasDependencyEdgeData({
-                sourceId: 'orders',
-                targetId: 'transform',
-                executionGate: 'closed',
-                composition: {
-                  groupId: 'relational-composition:transform',
-                  label: 'INNER JOIN',
-                  memberCount: 2,
-                  role: 'trunk-owner',
-                  state: 'canonical',
-                  operation: 'inner_join',
-                },
-              })}
-            />
-          </g>
-        </svg>
-      );
-    });
-
-    expect(mockedEdge.props.style?.strokeDasharray).toBeTruthy();
-    expect(container.querySelector('[data-slot="canvas-dependency-closed-gate"]')).not.toBeNull();
-    expect(
-      container
-        .querySelector('[data-slot="canvas-relational-composition-trunk"]')
-        ?.getAttribute('style')
-    ).not.toContain('stroke-dasharray');
-  });
+    }
+  );
 });

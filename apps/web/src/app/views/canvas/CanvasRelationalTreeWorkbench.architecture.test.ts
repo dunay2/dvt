@@ -25,7 +25,7 @@ import TreeSource from './CanvasRelationalTreeView.tsx?raw';
 import ViewportSource from './canvasRelationalTreeViewport.ts?raw';
 import ZoomSource from './CanvasRelationalTreeZoomControls.tsx?raw';
 import WorkbenchSource from './CanvasRelationalTreeWorkbench.tsx?raw';
-import EntrySource from './canvasRelationalCompositionEdgeInteraction.ts?raw';
+import EdgeProjectionSource from './canvasViewportEdgeProjection.ts?raw';
 import CanvasShellSource from './CanvasShell.tsx?raw';
 import ModelEditorSource from './CanvasModelEditor.tsx?raw';
 import CodeWorkbenchSource from './DvtTransformCodeWorkbenchContent.tsx?raw';
@@ -143,9 +143,8 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(InlineEditorSource).toContain('selectedRelationId');
   });
 
-  it('routes pending and canonical badges to the single Model editor owner', () => {
-    expect(EntrySource).toContain('args.onActivate(dependency.targetId)');
-    expect(EntrySource).not.toContain('inspectNode');
+  it('keeps internal semantics out of edges and routes Models to one editor owner', () => {
+    expect(EdgeProjectionSource).not.toMatch(/Substrait|[Cc]omposition|onActivate/);
     expect(CanvasShellSource).toContain('<CanvasModelEditor');
     expect(CanvasShellSource).not.toContain('<CanvasRelationalTreeWorkbench');
     expect(CanvasShellSource).not.toContain("selectOperationalDrawerTab('semantic')");
