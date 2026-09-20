@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
-import type * as Workbench from './canvasRelationalTreeWorkbench.types';
+import type * as W from './canvasRelationalTreeWorkbench.types';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { useCanvasRelationalTreeApplyCommand } from './useCanvasRelationalTreeApplyCommand';
 import { useCanvasRelationalOperandSlots } from './useCanvasRelationalOperandSlots';
@@ -22,7 +22,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     nodes: readonly CanonicalNode[];
     edges: readonly CanonicalEdge[];
     inputs: readonly CanvasDvtCompositionInput[];
-    authoring?: Workbench.CanvasRelationalTreeAuthoringContract;
+    authoring?: W.CanvasRelationalTreeAuthoringContract;
   }>
 ) {
   const { authoring, edges, enabled, inputs, nodes, transformNode } = args;
@@ -31,9 +31,7 @@ export function useCanvasRelationalTreeAuthoringSession(
   const [active, setActive] = useState(false);
   const [joinDraft, setJoinDraft] = useState<DvtSubstraitJoinDraft | null>(null);
   const [appendInputId, setAppendInputId] = useState<string | null>(null);
-  const [applyRejection, setApplyRejection] = useState<Workbench.RelationalApplyRejection | null>(
-    null
-  );
+  const [applyRejection, setApplyRejection] = useState<W.RelationalApplyRejection | null>(null);
   const {
     appendInput: appendOperand,
     placeInput: placeOperand,
