@@ -131,6 +131,47 @@ describe('Canvas Model editor navigation', () => {
     ).toBeNull();
   });
 
+  it('routes the contextual inspector to the single semantic-editor tab', async () => {
+    const fixture = buildSemanticWorkbenchFixture();
+    await harness.render({
+      layout: { inspectorPanelVisible: true },
+      panels: {
+        inspectorNode: fixture.transform,
+        inspectorPreferredTabId: 'code',
+        inspectorGraphNodes: [...fixture.sources, fixture.transform],
+        inspectorGraphEdges: fixture.edges,
+        relationalTreeAuthoring: {
+          canEditNode: true,
+          onApplyNodeDraft: vi.fn(() => ({ outcome: 'no_changes' }) as const),
+        },
+      },
+      graph: {
+        nodesWithImpact: [
+          {
+            id: fixture.transform.id,
+            position: { x: 200, y: 140 },
+            type: 'dbtNode',
+            data: { ...fixture.transform, pluginKind: fixture.transform.kind },
+          },
+        ],
+      },
+    });
+
+    expect(harness.container.querySelector('[data-slot^="dvt-select-operation-"]')).toBeNull();
+    const openEditor = harness.container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-open-semantic-editor"]'
+    );
+    expect(openEditor).not.toBeNull();
+
+    act(() => openEditor!.click());
+
+    expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
+    expect(navigation.querySelector('[data-slot="canvas-model-main-tab"]')).not.toBeNull();
+    expect(
+      harness.container.querySelector('[data-slot="canvas-node-workbench-overlay"]')
+    ).toBeNull();
+  });
+
   it('opens data independently and returns to the same Canvas viewport', async () => {
     const { data, fixture, previewTransformRows } = await mountModel();
     act(() => data.onOpenSourceDataSample?.(fixture.transform.id));

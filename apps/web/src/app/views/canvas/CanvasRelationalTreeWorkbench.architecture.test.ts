@@ -156,5 +156,8 @@ describe('Canvas relational-tree Workbench architecture', () => {
       '[&:has([data-slot=canvas-relational-tree-apply])_[data-slot=canvas-model-save-status]]:hidden'
     );
     expect(CodeWorkbenchSource).not.toContain('CanvasRelationalTreeWorkbench');
+    expect(CodeWorkbenchSource).not.toContain('pendingCompositionAuthoring');
+    expect(CodeWorkbenchSource).not.toContain('CanvasRelationalCompositionTruth');
+    expect(CodeWorkbenchSource).toContain('canvas-open-semantic-editor');
   });
 });

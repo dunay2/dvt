@@ -45,6 +45,7 @@ import { isDbtCompatibleModel, reconcileDbtModelConnectedOrigin } from './canvas
 import { useCanvasColumnCommentCellRenderer } from './useCanvasColumnCommentCellRenderer';
 import { SourceNodeWorkbenchHeaderIdentity } from './SourceNodeWorkbenchHeaderIdentity';
 import { SourceOverviewPanel } from './SourceOverviewPanel';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -58,6 +59,7 @@ export type CanvasNodeWorkbenchPanelProps = Readonly<{
   authoring: CanvasInspectorAuthoringContract;
   contributions?: readonly CanvasNodeWorkbenchContribution[];
   dragHandleProps?: CanvasNodeWorkbenchDragHandleProps;
+  onOpenSemanticEditor?: () => void;
   onClose: () => void;
 }>;
 
@@ -173,7 +175,7 @@ function buildNodeWorkbenchReadModel({
             (canEditNode && isDbtCompatibleModel(node)) ||
             (node.pluginId === 'dvt' &&
               node.kind === 'dvt:transform' &&
-              readDvtTransformAuthoringMode(node) === DVT_TRANSFORM_AUTHORING_MODE.substrait))
+              !isDbtCompatibleModel(node)))
             ? (() => {
                 const {
                   code: _passiveCode,
@@ -241,10 +243,12 @@ export function CanvasNodeWorkbenchPanel({
   authoring,
   contributions = [],
   dragHandleProps,
+  onOpenSemanticEditor,
   onClose,
 }: CanvasNodeWorkbenchPanelProps): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasViewCopy(applicationLanguage);
+  const semanticEditorCopy = resolveCanvasSemanticEditorCopy(applicationLanguage);
   const workspaceLayoutKey =
     authoring.workspaceScope == null
       ? null
@@ -262,6 +266,8 @@ export function CanvasNodeWorkbenchPanel({
     [edges, node, nodes]
   );
   const dvtTransformAuthoringMode = readDvtTransformAuthoringMode(node);
+  const semanticDvtTransform =
+    node.pluginId === 'dvt' && node.kind === 'dvt:transform' && !isDbtCompatibleModel(node);
   const canonicalSubstraitTransformAuthority =
     dvtTransformAuthoringMode === DVT_TRANSFORM_AUTHORING_MODE.substrait;
   const canonicalDvtRelationColumnAuthority =
@@ -346,7 +352,7 @@ export function CanvasNodeWorkbenchPanel({
     contributionModel.afterBodyBySection,
     node.id
   );
-  if (canonicalSubstraitTransformAuthority && presentationTruth.code.kind === 'canonical') {
+  if (semanticDvtTransform) {
     const codeDescription = baseModel.sections.find(
       (section) => section.id === 'code'
     )?.description;
@@ -354,14 +360,16 @@ export function CanvasNodeWorkbenchPanel({
       <>
         {sectionAfterChildren.code}
         <DvtTransformCodeWorkbenchContent
-          key={`${node.id}:${presentationTruth.code.digest}`}
+          key={`${node.id}:${presentationTruth.code.kind === 'canonical' ? presentationTruth.code.digest : presentationTruth.code.kind}`}
           transformNode={node}
           nodes={nodes}
           edges={edges}
-          canonicalContent={presentationTruth.code.content}
+          {...(presentationTruth.code.kind === 'canonical'
+            ? { canonicalContent: presentationTruth.code.content }
+            : {})}
           canonicalDescription={codeDescription}
-          relationalComposition={presentationTruth.relationalComposition}
-          pendingCompositionAuthoring={renderAuthoringSection('code')}
+          openSemanticEditorLabel={semanticEditorCopy.openEditorAction}
+          {...(onOpenSemanticEditor == null ? {} : { onOpenSemanticEditor })}
           copy={copy}
         />
       </>
@@ -397,7 +405,7 @@ export function CanvasNodeWorkbenchPanel({
       );
     }
     for (const sectionId of ['code', 'sink'] as const) {
-      if (sectionId === 'code' && canonicalSubstraitTransformAuthority) continue;
+      if (sectionId === 'code' && semanticDvtTransform) continue;
       sectionAfterChildren[sectionId] = (
         <>
           {sectionAfterChildren[sectionId]}

@@ -24,10 +24,25 @@ function openPendingRelationalOperationChooser(): void {
   ).rightclick();
   cy.contains('[data-slot="canvas-node-context-menu-item"]', /^(Properties|Propiedades)$/).click();
   cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
+  cy.get('[data-slot="canvas-node-workbench-overlay"]')
+    .should('be.visible')
+    .and('not.contain.text', 'Needs predicate');
+  cy.get('[data-slot="dvt-relational-operation-chooser"]').should('not.exist');
+  cy.get('[data-slot="canvas-open-semantic-editor"]')
+    .invoke('text')
+    .should('match', /^(Open semantic editor|Abrir editor semántico)$/);
+  cy.get('[data-slot="canvas-open-semantic-editor"]').click();
+  cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+  cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
+  cy.get('[data-slot="canvas-relational-tree-workbench"]').should('be.visible');
+  cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
+  cy.contains('[data-slot="canvas-relational-tree-source"]', 'orders').click();
+  cy.get('[data-slot="dvt-relational-operation-chooser"]').should('be.visible');
 }
 
 describe('Canvas relational-operation chooser', () => {
   beforeEach(() => {
+    cy.viewport(1400, 900);
     stubShellBootstrapApis({
       scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
     });
@@ -67,13 +82,16 @@ describe('Canvas relational-operation chooser', () => {
     cy.get('[data-slot="dvt-select-operation-inner-join"]')
       .should('contain.text', 'Needs predicate')
       .and('not.be.disabled')
-      .click();
-    cy.get('[data-slot="dvt-composition-left-input"]').should('be.visible');
-    cy.get('[data-slot="dvt-composition-right-input"]').should('be.visible');
-    cy.get('[data-slot="semantic-workbench-join-condition-list"]').should('be.visible');
-    cy.get('[data-slot="dvt-cancel-relational-operation"]').click();
+      .focus()
+      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+    cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
+      'have.length',
+      1
+    );
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
 
-    cy.get('[data-slot="dvt-relational-operation-chooser"]').should('be.visible');
+    cy.get('[data-slot="canvas-relational-tree-block-canvas"]').should('be.visible');
+    cy.get('[data-slot="dvt-relational-operation-chooser"]').should('not.exist');
     cy.wrap(null).should(() => {
       const savedTransforms = getE2eApiCalls('/workspace/graph/draft', 'PUT').map((call) => {
         const body = call.body as {
@@ -94,7 +112,7 @@ describe('Canvas relational-operation chooser', () => {
 
     openPendingRelationalOperationChooser();
     cy.get('[data-slot="dvt-select-operation-inner-join"]').click();
-    cy.get('[aria-label="Editar condición"]').click();
+    cy.get('[data-slot="canvas-relational-node-expand"]').click();
     cy.get('[aria-label="Tipo del operando derecho"]').select('literal');
     cy.get('[aria-label="Valor literal del operando derecho"]').type('1');
     cy.get('[data-slot="semantic-workbench-join-izquierdo-operand"]')
@@ -113,11 +131,10 @@ describe('Canvas relational-operation chooser', () => {
       });
     cy.get('[aria-label="Comparador de la condición"]').select('not_equal');
     cy.contains('button', 'Guardar condición').click();
-    cy.get('[data-slot="semantic-workbench-join-condition-row"]')
+    cy.get('[data-slot="semantic-workbench-join-condition-row"]:visible')
       .should('contain.text', '!=')
       .and('contain.text', "'1'");
-    cy.get('[data-slot="dvt-start-configured-inner-join"]').click();
-    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Apply|Aplicar)$/).click();
+    cy.get('[data-slot="canvas-relational-tree-apply"]').click();
 
     cy.wrap(null).should(() => {
       const savedTransform = getE2eApiCalls('/workspace/graph/draft', 'PUT')
@@ -181,8 +198,7 @@ describe('Canvas relational-operation chooser', () => {
         .and('not.be.disabled')
         .focus()
         .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
-      cy.get(`[data-slot="dvt-start-configured-${scenario.operation}"]`).click();
-      cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Apply|Aplicar)$/).click();
+      cy.get('[data-slot="canvas-relational-tree-apply"]').click();
 
       cy.wrap(null).should(() => {
         const savedTransform = getE2eApiCalls('/workspace/graph/draft', 'PUT')
@@ -266,8 +282,7 @@ describe('Canvas relational-operation chooser', () => {
         .should('contain.text', scenario.label)
         .and('not.be.disabled')
         .click();
-      cy.get(`[data-slot="dvt-start-configured-${scenario.operation}"]`).click();
-      cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Apply|Aplicar)$/).click();
+      cy.get('[data-slot="canvas-relational-tree-apply"]').click();
 
       cy.wrap(null).should(() => {
         const savedTransform = getE2eApiCalls('/workspace/graph/draft', 'PUT')
@@ -321,11 +336,10 @@ describe('Canvas relational-operation chooser', () => {
 
     openPendingRelationalOperationChooser();
     cy.get('[data-slot="dvt-select-operation-inner-join"]').click();
-    cy.get('[aria-label="Editar condición"]').click();
+    cy.get('[data-slot="canvas-relational-node-expand"]').click();
     cy.get('[aria-label="Tipo de dato de la condición"]').should('have.value', 'i64');
     cy.contains('button', 'Guardar condición').click();
-    cy.get('[data-slot="dvt-start-configured-inner-join"]').click();
-    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Apply|Aplicar)$/).click();
+    cy.get('[data-slot="canvas-relational-tree-apply"]').click();
 
     cy.wrap(null).should(() => {
       const savedTransform = getE2eApiCalls('/workspace/graph/draft', 'PUT')
