@@ -224,6 +224,13 @@ describe('Relational operator toolbar', () => {
       expect(properties.right).to.be.at.most(600);
     });
     cy.screenshot('selected-operation-properties-narrow');
+    cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible [role="tablist"]').should(
+      ($list) => {
+        expect($list[0]!.scrollHeight, 'inspector navigation needs no vertical scrollbar').to.equal(
+          $list[0]!.clientHeight
+        );
+      }
+    );
     cy.get('[data-slot="canvas-relational-collapse"]:visible').click();
     cy.get(viewport).should('be.visible');
     cy.viewport(1440, 900);
