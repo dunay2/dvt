@@ -101,36 +101,36 @@ describe('CanvasRelationalTreeOperatorForm Sort/Fetch editing', () => {
     }
   );
 
-  it('retains unsaved input across parent renders and cancels without mutation', () => {
+  it('retains unsaved input across parent renders and cancels without mutation', async () => {
     const draft = createDvtSubstraitPilotDraft({ sourceNodeId: 'orders', targetNodeId: 'model' });
     const before = JSON.stringify(draft);
     const tool = resolveCanvasRelationalOperatorTools(draft).find((item) => item.id === 'fetch')!;
     const onChange = vi.fn();
     const onClose = vi.fn();
     const props = { inline: true, tool, draft, title: 'LIMIT', onChange, onClose };
-    act(() => root.render(<CanvasRelationalTreeOperatorForm {...props} />));
+    await act(() => root.render(<CanvasRelationalTreeOperatorForm {...props} />));
     const limit = container.querySelectorAll<HTMLInputElement>('input')[1]!;
-    act(() => fireEvent.change(limit, { target: { value: '42' } }));
-    act(() =>
+    await act(() => fireEvent.change(limit, { target: { value: '42' } }));
+    await act(() =>
       root.render(<CanvasRelationalTreeOperatorForm {...props} title="Selected operation" />)
     );
     expect(container.querySelectorAll('input')[1]).toBe(limit);
     expect(limit.value).toBe('42');
     expect(onChange).not.toHaveBeenCalled();
-    act(() => getByRole(container, 'button', { name: /Cancel/ }).click());
+    await act(() => getByRole(container, 'button', { name: /Cancel/ }).click());
     expect(onClose).toHaveBeenCalledOnce();
     expect(onChange).not.toHaveBeenCalled();
     expect(JSON.stringify(draft)).toBe(before);
   });
 
-  it('submits ordered multi-key sorting and rejects duplicate keys before recovery', () => {
+  it('submits ordered multi-key sorting and rejects duplicate keys before recovery', async () => {
     const draft = createDvtSubstraitPilotDraft({ sourceNodeId: 'orders', targetNodeId: 'model' });
     const before = JSON.stringify(draft);
     const tool = resolveCanvasRelationalOperatorTools(draft).find((item) => item.id === 'sort')!;
     expect(tool.fields.length).toBeGreaterThan(1);
     const onChange = vi.fn();
     const onClose = vi.fn();
-    act(() =>
+    await act(() =>
       root.render(
         <CanvasRelationalTreeOperatorForm
           inline
@@ -142,20 +142,20 @@ describe('CanvasRelationalTreeOperatorForm Sort/Fetch editing', () => {
         />
       )
     );
-    act(() => getByRole(container, 'button', { name: /Add key|Añadir clave/ }).click());
+    await act(() => getByRole(container, 'button', { name: /Add key|Añadir clave/ }).click());
     const controls = container.querySelectorAll('select');
-    act(() => fireEvent.change(controls[2]!, { target: { value: tool.fields[0]!.fieldId } }));
-    act(() => fireEvent.submit(container.querySelector('form')!));
+    await act(() => fireEvent.change(controls[2]!, { target: { value: tool.fields[0]!.fieldId } }));
+    await act(() => fireEvent.submit(container.querySelector('form')!));
     expect(container.querySelector('[role="alert"]')).not.toBeNull();
     expect(onChange).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
-    act(() => {
+    await act(() => {
       fireEvent.change(controls[2]!, { target: { value: tool.fields[1]!.fieldId } });
       fireEvent.change(controls[1]!, {
         target: { value: SortField_SortDirection.DESC_NULLS_FIRST },
       });
     });
-    act(() => fireEvent.submit(container.querySelector('form')!));
+    await act(() => fireEvent.submit(container.querySelector('form')!));
     expect(onChange).toHaveBeenCalledOnce();
     expect(onClose).toHaveBeenCalledOnce();
     expect(inspectCanvasDvtSubstraitSortFetch(onChange.mock.calls[0]![0])).toMatchObject({
