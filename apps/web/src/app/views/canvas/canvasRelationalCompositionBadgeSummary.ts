@@ -1,4 +1,6 @@
 /** Owned concern: describe one verified canonical composition for accessible badge inspection. */
+import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { CanonicalNode } from '../../types/canonical';
 import { decodeDvtSubstraitPlanV1 } from '@dvt/contracts';
 import { resolveGraphNodeCardCopy } from '../../plugins/graph/graphNodeCardCopyTokens';
@@ -24,6 +26,9 @@ export function resolveCanvasRelationalCompositionBadgeSummary(args: {
   const authority = readDvtTransformAuthoringAuthority(args.node);
   if (authority?.mode !== 'substrait') return null;
   const copy = resolveGraphNodeCardCopy(args.locale);
+  const label = resolveCanvasViewCopy(args.locale)[
+    resolveCanvasRelationalOperationPresentation(args.operation).labelKey
+  ];
 
   if (isCanvasJoinOperation(args.operation)) {
     const inspection = inspectDvtSubstraitJoinAcceptedDraft(
@@ -42,23 +47,7 @@ export function resolveCanvasRelationalCompositionBadgeSummary(args: {
     const summary = copy.relationalCompositionJoinSummaryTemplate
       .replace('{inputCount}', String(inputCount))
       .replace('{predicateCount}', String(predicateCount));
-    const label =
-      args.operation === 'left_join'
-        ? 'LEFT JOIN'
-        : args.operation === 'right_join'
-          ? 'RIGHT JOIN'
-          : args.operation === 'full_outer_join'
-            ? 'FULL OUTER JOIN'
-            : args.operation === 'left_semi_join'
-              ? 'LEFT SEMI JOIN'
-              : args.operation === 'left_anti_join'
-                ? 'LEFT ANTI JOIN'
-                : args.operation === 'right_semi_join'
-                  ? 'RIGHT SEMI JOIN'
-                  : args.operation === 'right_anti_join'
-                    ? 'RIGHT ANTI JOIN'
-                    : 'INNER JOIN';
-    return summary.replace(/^INNER JOIN/, label);
+    return summary.replace('{operation}', label);
   }
 
   if (args.operation === 'cross_join') {
@@ -68,6 +57,7 @@ export function resolveCanvasRelationalCompositionBadgeSummary(args: {
     });
     return inspection.ok
       ? copy.relationalCompositionCrossSummaryTemplate
+          .replace('{operation}', label)
           .replace('{inputCount}', String(inspection.projection.inputs.length))
           .replace('{outputCount}', String(inspection.projection.outputs.length))
       : null;
@@ -85,6 +75,7 @@ export function resolveCanvasRelationalCompositionBadgeSummary(args: {
         intersect_all: copy.relationalCompositionIntersectAllSummaryTemplate,
         except_all: copy.relationalCompositionExceptAllSummaryTemplate,
       }[inspection.projection.operation]
+        .replace('{operation}', label)
         .replace('{inputCount}', String(inspection.projection.inputs.length))
         .replace('{outputCount}', String(inspection.projection.outputs.length))
     : null;

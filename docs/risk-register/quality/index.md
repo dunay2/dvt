@@ -126,6 +126,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Native Temporal cancellation can lose canonical terminal events](R-20260817-TEMPORAL-NATIVE-CANCEL-EVENT-LOSS.yaml)
 - [Object-file load admission could cross scope or imply unavailable execution](R-20260804-OBJECT-FILE-POSTGRES-ADMISSION.yaml)
 - [Online rollback classification could mislabel a future destructive schema step](R-20260513-AR-D4-ZERO-DOWNTIME-SCHEMA-ROLLBACK.yaml)
+- [Ordered relation semantics could drift across Canvas, Preview, Run, and PostgreSQL](R-20260920-SUBSTRAIT-ORDER-FETCH-DRIFT.yaml)
 - [Packaged compatibility schema can drift from canonical root compatibility matrix](R-20260612-CONTRACTS-COMPAT-SCHEMA-PARITY.yaml)
 - [Partial source catalog pages may hide or misidentify warehouse objects](R-20260907-GH-2173-LAZY-SOURCE-CATALOG.yaml)
 - [Persisted plan decisions could diverge from the authorized executable graph](R-20260801-PLAN-EXECUTION-DECISIONS.yaml)

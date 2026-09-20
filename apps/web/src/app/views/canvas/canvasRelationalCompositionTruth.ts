@@ -18,7 +18,7 @@ import {
 import { hasSameConnectedSourceRef } from './canvasDvtSubstraitJoinSourceResolution';
 import { inspectDvtSubstraitUnionAllAcceptedDraft } from './canvasDvtSubstraitSetComposition';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
+import { canvasJoinOperationForType, isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 import { inspectDvtSubstraitAcceptedCrossDraft } from '@dvt/postgres-projection';
 import { peelCanvasDvtSubstraitSortFetch } from './canvasDvtSubstraitSortFetch';
 
@@ -47,7 +47,8 @@ function resolveCanonicalOperation(
       const joinType = structure.ok
         ? structure.projection.joinRelations.at(-1)?.joinType
         : undefined;
-      return joinType == null ? 'inner_join' : canvasJoinOperationForType(joinType);
+      const operation = joinType == null ? null : canvasJoinOperationForType(joinType);
+      return isCanvasJoinOperation(operation) ? operation : null;
     }
     if (inspectDvtSubstraitAcceptedCrossDraft(draft).ok) return 'cross_join';
     const unionAll = inspectDvtSubstraitUnionAllAcceptedDraft(draft);

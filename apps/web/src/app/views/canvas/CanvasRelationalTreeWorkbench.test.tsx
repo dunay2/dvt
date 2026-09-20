@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import React, { act } from 'react';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -27,6 +28,7 @@ import {
 } from './canvasDvtSubstraitCrossComposition';
 
 const COPY = {
+  ...resolveCanvasViewCopy('en'),
   inspectorDbtOriginLabel: 'Input',
   inspectorDvtRelationalLeftInput: 'Left input',
   inspectorDvtRelationalRightInput: 'Right input',

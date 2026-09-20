@@ -24,6 +24,7 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import { canvasViewCopy } from './copy';
 import { SemanticWorkbenchJoinConditionEditor } from './SemanticWorkbenchJoinConditionEditor';
+import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
 
 const sourceSelectClassName =
@@ -85,21 +86,7 @@ export function DvtSubstraitInnerJoinStartSection({
   return (
     <section data-slot="dvt-substrait-inner-join-start" className="space-y-3">
       <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
-        {joinType === JoinRel_JoinType.LEFT
-          ? canvasViewCopy.inspectorDvtSubstraitLeftJoinAction
-          : joinType === JoinRel_JoinType.RIGHT
-            ? canvasViewCopy.inspectorDvtSubstraitRightJoinAction
-            : joinType === JoinRel_JoinType.OUTER
-              ? canvasViewCopy.inspectorDvtSubstraitFullOuterJoinAction
-              : joinType === JoinRel_JoinType.LEFT_SEMI
-                ? canvasViewCopy.inspectorDvtSubstraitLeftSemiJoinAction
-                : joinType === JoinRel_JoinType.LEFT_ANTI
-                  ? canvasViewCopy.inspectorDvtSubstraitLeftAntiJoinAction
-                  : joinType === JoinRel_JoinType.RIGHT_SEMI
-                    ? canvasViewCopy.inspectorDvtSubstraitRightSemiJoinAction
-                    : joinType === JoinRel_JoinType.RIGHT_ANTI
-                      ? canvasViewCopy.inspectorDvtSubstraitRightAntiJoinAction
-                      : canvasViewCopy.inspectorDvtSubstraitInnerJoinTitle}
+        {canvasViewCopy[resolveCanvasRelationalOperationPresentation(joinOperation).labelKey]}
       </h3>
       <label className="block space-y-1 text-xs text-(--text-muted)">
         <span>{canvasViewCopy.inspectorDvtRelationalLeftInput}</span>

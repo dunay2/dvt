@@ -24,6 +24,13 @@ export type CanvasRelationalTreeAuthoringContract = Readonly<{
 
 export type CanvasRelationalTreeWorkbenchCopy = Pick<
   CanvasViewCopy,
+  | 'operationReadLabel'
+  | 'operationFilterLabel'
+  | 'operationAggregateLabel'
+  | 'operationWindowLabel'
+  | 'operationSortLabel'
+  | 'operationFetchLabel'
+  | 'operationUnsupportedLabel'
   | 'inspectorDbtOriginLabel'
   | 'inspectorDvtRelationalApply'
   | 'inspectorDvtRelationalAvailable'

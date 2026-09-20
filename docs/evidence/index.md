@@ -171,6 +171,7 @@ Evidence documents that justify or validate relevant changes.
 - [Scope and authority](ED-20260914-n-input-join-preview.md)
 - [Semantic Workbench join composition evidence](ED-20260911-semantic-workbench-join-composition.md)
 - [SEMI and ANTI JOIN end to end](ED-20260919-semi-anti-join-end-to-end.md)
+- [SortRel and FetchRel end to end](ED-20260920-sort-fetch-end-to-end.md)
 - [Start Failure Preparation Authority](ed-20260906-eng1-start-mutation-authority.md)
 - [StartRunApplicationService QA Closeout](ED-20260405-start-run-application-service-qa.md)
 - [State-store Archive Redaction Baseline Hardening](ED-20260607-state-store-archive-redaction-baseline.md)

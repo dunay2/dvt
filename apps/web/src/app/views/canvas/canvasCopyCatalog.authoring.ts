@@ -4,6 +4,16 @@ import type { CanvasViewCopy } from './canvasCopy.types';
 type CanvasCopySection = Partial<Record<keyof CanvasViewCopy, LocalizableString>>;
 
 export const canvasViewAuthoringCopyByKey = {
+  operationReadLabel: { key: 'canvas.operation.read', fallback: 'Source' },
+  operationFilterLabel: { key: 'canvas.operation.filter', fallback: 'Filter' },
+  operationAggregateLabel: { key: 'canvas.operation.aggregate', fallback: 'Aggregate' },
+  operationWindowLabel: { key: 'canvas.operation.window', fallback: 'Window' },
+  operationSortLabel: { key: 'canvas.operation.sort', fallback: 'Order by' },
+  operationFetchLabel: { key: 'canvas.operation.fetch', fallback: 'Limit / offset' },
+  operationUnsupportedLabel: {
+    key: 'canvas.operation.unsupported',
+    fallback: 'Unsupported operation',
+  },
   columnMappingAddedMessage: {
     key: 'canvas.columnMapping.addedMessage',
     fallback: 'Column mapping added.',

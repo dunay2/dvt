@@ -35,8 +35,10 @@ export function isCanvasJoinOperation(operation: unknown): operation is CanvasJo
   );
 }
 
-export function toSubstraitJoinType(operation?: CanvasJoinOperation): DvtSubstraitJoinType {
+export function toSubstraitJoinType(operation: CanvasJoinOperation): DvtSubstraitJoinType {
   switch (operation) {
+    case 'inner_join':
+      return JoinRel_JoinType.INNER;
     case 'left_join':
       return JoinRel_JoinType.LEFT;
     case 'right_join':
@@ -52,12 +54,16 @@ export function toSubstraitJoinType(operation?: CanvasJoinOperation): DvtSubstra
     case 'right_anti_join':
       return JoinRel_JoinType.RIGHT_ANTI;
     default:
-      return JoinRel_JoinType.INNER;
+      throw new Error(`Unsupported Canvas JOIN operation: ${String(operation)}`);
   }
 }
 
-export function canvasJoinOperationForType(joinType: DvtSubstraitJoinType): CanvasJoinOperation {
+export function canvasJoinOperationForType(
+  joinType: JoinRel_JoinType
+): CanvasJoinOperation | 'unsupported' {
   switch (joinType) {
+    case JoinRel_JoinType.INNER:
+      return 'inner_join';
     case JoinRel_JoinType.LEFT:
       return 'left_join';
     case JoinRel_JoinType.RIGHT:
@@ -73,30 +79,7 @@ export function canvasJoinOperationForType(joinType: DvtSubstraitJoinType): Canv
     case JoinRel_JoinType.RIGHT_ANTI:
       return 'right_anti_join';
     default:
-      return 'inner_join';
-  }
-}
-
-export function canvasJoinLabelForType(joinType: JoinRel_JoinType): string {
-  switch (joinType) {
-    case JoinRel_JoinType.INNER:
-      return 'INNER JOIN';
-    case JoinRel_JoinType.LEFT:
-      return 'LEFT JOIN';
-    case JoinRel_JoinType.RIGHT:
-      return 'RIGHT JOIN';
-    case JoinRel_JoinType.OUTER:
-      return 'FULL OUTER JOIN';
-    case JoinRel_JoinType.LEFT_SEMI:
-      return 'LEFT SEMI JOIN';
-    case JoinRel_JoinType.LEFT_ANTI:
-      return 'LEFT ANTI JOIN';
-    case JoinRel_JoinType.RIGHT_SEMI:
-      return 'RIGHT SEMI JOIN';
-    case JoinRel_JoinType.RIGHT_ANTI:
-      return 'RIGHT ANTI JOIN';
-    default:
-      return 'UNSUPPORTED JOIN';
+      return 'unsupported';
   }
 }
 

@@ -1,3 +1,5 @@
+import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { describe, expect, it } from 'vitest';
 import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 
@@ -152,7 +154,7 @@ describe('ProjectCanvasRelationalTree', () => {
     if (!result.ok) return;
     expect(result.projection.root).toMatchObject({
       operator: 'cross',
-      operationLabel: 'CROSS JOIN',
+      operation: 'cross_join',
       children: [{ role: 'left' }, { role: 'right' }],
     });
     expect(result.projection.root.children[0]?.node.operator).toBe('cross');
@@ -234,8 +236,12 @@ describe('ProjectCanvasRelationalTree', () => {
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.projection.root.operationLabel).toBe(label);
-    expect(result.projection.root.children[0]?.node.operationLabel).toBe('INNER JOIN');
+    expect(
+      resolveCanvasViewCopy('en')[
+        resolveCanvasRelationalOperationPresentation(result.projection.root.operation).labelKey
+      ]
+    ).toBe(label);
+    expect(result.projection.root.children[0]?.node.operation).toBe('inner_join');
   });
 
   it('projects every ordered child of an N-ary SetRel', () => {
@@ -310,9 +316,14 @@ describe('ProjectCanvasRelationalTree', () => {
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
+    expect(
+      resolveCanvasViewCopy('en')[
+        resolveCanvasRelationalOperationPresentation(result.projection.root.operation).labelKey
+      ]
+    ).toBe(label);
     expect(result.projection.root).toMatchObject({
       operator: 'set',
-      operationLabel: label,
+      operation,
     });
   });
 

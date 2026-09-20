@@ -21,7 +21,7 @@ import { applyCanvasRelationalOperatorTool } from './canvasRelationalTreeOperato
 import { removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import { removeDvtSubstraitProjectionRoot } from './canvasDvtSubstraitStructuredFieldRemove';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
-import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
+import { canvasJoinOperationForType, isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 import {
   inspectDvtSubstraitCrossDraft,
   selectDvtSubstraitRelation,
@@ -58,7 +58,8 @@ function operationForJoinDraft(draft: DvtSubstraitJoinDraft): CanvasRelationalOp
   );
   if (context == null || !context.inspection.ok) return null;
   const joinType = context.inspection.projection.joinRelations.at(-1)?.joinType;
-  return joinType == null ? null : canvasJoinOperationForType(joinType);
+  const operation = joinType == null ? null : canvasJoinOperationForType(joinType);
+  return isCanvasJoinOperation(operation) ? operation : null;
 }
 
 export function removeCanvasRelationalTreeNode(
