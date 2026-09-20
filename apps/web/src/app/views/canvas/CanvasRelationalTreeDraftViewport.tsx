@@ -143,6 +143,7 @@ export function CanvasRelationalTreeDraftViewport({
               selectedLocator={selectedLocator}
               copy={copy}
               zoom={viewport.zoom}
+              onManualLayout={viewport.stopAutoFit}
               semanticContext={{ transformNode, draft: joinDraft ?? undefined }}
               onExpand={(locator) => onExpandRelation(relationIdFor(locator))}
               onRemove={onRemove}

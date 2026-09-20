@@ -7,7 +7,7 @@ import {
   calculateCanvasRelationalTreeFit,
   changeCanvasRelationalTreeZoom,
 } from './canvasRelationalTreeViewport';
-type PanOrigin = Readonly<{ x: number; y: number; left: number; top: number }>;
+import { useRelationalViewportPan } from './relational-layout/useRelationalViewportPan';
 export function useCanvasRelationalTreeViewport(
   layoutKey: string,
   fitPadding = 32
@@ -19,17 +19,17 @@ export function useCanvasRelationalTreeViewport(
   panning: boolean;
   changeZoom: (delta: number) => void;
   fit: () => void;
+  stopAutoFit: () => void;
   onPointerDown: PointerEventHandler<HTMLDivElement>;
   onPointerMove: PointerEventHandler<HTMLDivElement>;
   onPointerUp: PointerEventHandler<HTMLDivElement>;
 }> {
   const viewportRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const panOrigin = useRef<PanOrigin | null>(null);
   const autoFit = useRef(true);
   const [zoom, setZoom] = useState(1);
   const [minimumZoom, setMinimumZoom] = useState(CANVAS_RELATIONAL_TREE_MIN_ZOOM);
-  const [panning, setPanning] = useState(false);
+  const pan = useRelationalViewportPan();
   const setManualZoom = useCallback((value: number) => {
     autoFit.current = false;
     setZoom(value);
@@ -82,47 +82,16 @@ export function useCanvasRelationalTreeViewport(
     [minimumZoom]
   );
 
-  const onPointerDown: PointerEventHandler<HTMLDivElement> = (event) => {
-    if (
-      !event.currentTarget.contains(event.target as Node) ||
-      (event.button !== 0 && event.button !== 1) ||
-      (event.button === 0 &&
-        (event.target as Element).closest('button, input, select, summary, a') != null)
-    )
-      return;
-    event.preventDefault();
-    panOrigin.current = {
-      x: event.clientX,
-      y: event.clientY,
-      left: event.currentTarget.scrollLeft,
-      top: event.currentTarget.scrollTop,
-    };
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setPanning(true);
-  };
-  const onPointerMove: PointerEventHandler<HTMLDivElement> = (event) => {
-    const origin = panOrigin.current;
-    if (origin == null) return;
-    event.currentTarget.scrollLeft = origin.left - (event.clientX - origin.x);
-    event.currentTarget.scrollTop = origin.top - (event.clientY - origin.y);
-  };
-  const onPointerUp: PointerEventHandler<HTMLDivElement> = (event) => {
-    if (panOrigin.current == null) return;
-    panOrigin.current = null;
-    event.currentTarget.releasePointerCapture(event.pointerId);
-    setPanning(false);
-  };
-
   return {
     viewportRef,
     contentRef,
     zoom,
     minimumZoom,
-    panning,
     changeZoom,
     fit,
-    onPointerDown,
-    onPointerMove,
-    onPointerUp,
+    stopAutoFit: () => {
+      autoFit.current = false;
+    },
+    ...pan,
   };
 }
