@@ -1,5 +1,6 @@
 /** Proves Preview admission follows canonical wrappers without mutating or disguising them. */
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import type { DvtSubstraitSortDirection } from '@dvt/postgres-projection';
 import { describe, expect, it } from 'vitest';
 
 import documents from '../../../../../../packages/@dvt/postgres-projection/test/fixtures/inner-join-documents.json';
@@ -68,7 +69,7 @@ function intent(
 
 function orderedDraft(
   order: readonly ('sort' | 'fetch')[],
-  direction: SortField_SortDirection
+  direction: DvtSubstraitSortDirection
 ): DvtSubstraitSemanticDraft {
   let draft = decodeDvtSubstraitSemanticDocument(documents.two);
   for (const operation of order) {
