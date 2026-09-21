@@ -1,6 +1,6 @@
 ---
 title: Repeated Read occurrence identity and protected PostgreSQL projection
-status: Active
+status: final
 date: 2026-09-21
 owners:
   - contracts
