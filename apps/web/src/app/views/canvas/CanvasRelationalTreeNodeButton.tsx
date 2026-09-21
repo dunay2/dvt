@@ -52,9 +52,11 @@ export function CanvasRelationalTreeNodeButton({
   const isSource = node.operator === 'read';
   const window = node.decorations.some((decoration) => decoration.kind === 'window');
   const presentation = resolveCanvasRelationalOperationPresentation(
-    window
-      ? 'window'
-      : (node.operation ?? (node.operator === 'project' ? 'projection' : node.operator))
+    node.operator === 'unsupported'
+      ? 'unsupported'
+      : window
+        ? 'window'
+        : (node.operation ?? (node.operator === 'project' ? 'projection' : node.operator))
   );
   const title = isSource ? subtitle : copy[presentation.labelKey];
   const Icon = presentation.icon;

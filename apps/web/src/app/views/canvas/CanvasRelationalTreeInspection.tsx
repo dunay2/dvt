@@ -22,9 +22,11 @@ export function CanvasRelationalTreeInspection({
   onExpandedChange: (expanded: boolean) => void;
 }>): JSX.Element | null {
   if (model.projection == null) return null;
+  const unsupported = model.selectedNode?.operator === 'unsupported';
   const selectedSortFetch =
-    model.selectedNode?.operator === 'sort' || model.selectedNode?.operator === 'fetch';
-  const hasExpression = !selectedSortFetch && (model.selectedNode?.expressionRefs.length ?? 0) > 0;
+    model.selectedNode?.substraitKind === 'sort' || model.selectedNode?.substraitKind === 'fetch';
+  const hasExpression =
+    !unsupported && !selectedSortFetch && (model.selectedNode?.expressionRefs.length ?? 0) > 0;
   return (
     <div
       data-slot="canvas-relational-tree-inspection"
@@ -59,15 +61,18 @@ export function CanvasRelationalTreeInspection({
         />
         {expanded &&
         model.selectedNode != null &&
-        (hasExpression ||
+        (unsupported ||
+          hasExpression ||
           model.selectedNode.operator === 'read' ||
           model.selectedNode.operator === 'cross' ||
           selectedSortFetch) ? (
           <CanvasRelationalTreeEditorFrame
             operation={
-              model.selectedNode.operator === 'read'
-                ? 'read'
-                : (model.selectedNode.operation ?? 'unsupported')
+              unsupported
+                ? 'unsupported'
+                : model.selectedNode.operator === 'read'
+                  ? 'read'
+                  : (model.selectedNode.operation ?? 'unsupported')
             }
             label={
               model.selectedNode.operator === 'read'
@@ -79,7 +84,9 @@ export function CanvasRelationalTreeInspection({
             readOnly
             onClose={() => onExpandedChange(false)}
           >
-            {selectedSortFetch ? (
+            {unsupported ? (
+              <p className="text-xs text-(--text-muted)">{copy.operationUnsupportedLabel}</p>
+            ) : selectedSortFetch ? (
               <p className="text-xs text-(--text-primary)">{model.selectedNode.displayName}</p>
             ) : model.selectedNode.operator === 'read' ? null : model.selectedNode.operator ===
               'cross' ? (

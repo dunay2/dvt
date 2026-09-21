@@ -186,6 +186,13 @@ same rule. JOIN and other expression-owning operations retain their existing
 expression tree. This boundary must hold while navigation waits for Apply; it
 must not reset selection, swallow projection errors or change the saved plan.
 
+Admission and relation kind are separate facts. A rejected Sort or Fetch remains
+visibly unsupported and must never enter the JOIN expression viewer, even when
+its canonical relation contains expression references. Selection follows the
+stable RelationId within the same Model across Apply, not a digest-bearing tree
+locator; a removed relation or a different Model falls back to its current root.
+Switching selected relations resets the local operator form, not the saved plan.
+
 ```mermaid
 flowchart LR
   Container[Operator form] --> Controller[Local form controller]
