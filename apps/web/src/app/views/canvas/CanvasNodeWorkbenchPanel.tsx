@@ -18,13 +18,9 @@ import type { CanvasNodeWorkbenchSectionPolicyId } from '../../plugins/canvasSur
 import { NodePropertiesTabs } from '../../components/inspector/NodePropertiesTabs';
 import type {
   NodePropertiesReadModel,
-  NodePropertyRowId,
   NodePropertySectionId,
 } from '../../components/inspector/nodePropertiesReadModel';
-import {
-  buildNodePropertiesReadModel,
-  NODE_PROPERTY_ROW_ID,
-} from '../../components/inspector/nodePropertiesReadModel';
+import { buildNodePropertiesReadModel } from '../../components/inspector/nodePropertiesReadModel';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { CanvasInspectorAuthoringSection } from './CanvasInspectorAuthoringSection';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
@@ -46,6 +42,7 @@ import { useCanvasColumnCommentCellRenderer } from './useCanvasColumnCommentCell
 import { SourceNodeWorkbenchHeaderIdentity } from './SourceNodeWorkbenchHeaderIdentity';
 import { SourceOverviewPanel } from './SourceOverviewPanel';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import { buildNodeWorkbenchReadModel } from './canvasNodeWorkbenchReadModel';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -68,22 +65,6 @@ export type CanvasNodeWorkbenchDragHandleProps = HTMLAttributes<HTMLDivElement> 
     'data-slot'?: string;
   }>;
 
-const GENERAL_WORKBENCH_ALWAYS_EDITED_ROW_IDS = new Set<NodePropertyRowId>([
-  NODE_PROPERTY_ROW_ID.name,
-]);
-const DVT_SOURCE_TARGET_ROW_IDS = new Set<NodePropertyRowId>([
-  NODE_PROPERTY_ROW_ID.database,
-  NODE_PROPERTY_ROW_ID.schema,
-  NODE_PROPERTY_ROW_ID.table,
-  NODE_PROPERTY_ROW_ID.source,
-]);
-const DVT_SINK_TARGET_ROW_IDS = new Set<NodePropertyRowId>([
-  NODE_PROPERTY_ROW_ID.database,
-  NODE_PROPERTY_ROW_ID.schema,
-  NODE_PROPERTY_ROW_ID.table,
-  NODE_PROPERTY_ROW_ID.materialization,
-]);
-
 function resolveActiveNodeWorkbenchTab({
   activeTab,
   model,
@@ -103,31 +84,6 @@ function resolveActiveNodeWorkbenchTab({
   return model.sections[0]?.id ?? 'general';
 }
 
-function resolveNodeWorkbenchHiddenGeneralRowIds(
-  node: CanonicalNode,
-  canEditNode: boolean
-): ReadonlySet<NodePropertyRowId> {
-  const rowIds = new Set(GENERAL_WORKBENCH_ALWAYS_EDITED_ROW_IDS);
-
-  if (node.id === node.name) {
-    rowIds.add(NODE_PROPERTY_ROW_ID.nodeId);
-  }
-
-  if (canEditNode && node.kind === 'dvt:source') {
-    for (const rowId of DVT_SOURCE_TARGET_ROW_IDS) {
-      rowIds.add(rowId);
-    }
-  }
-
-  if (canEditNode && node.kind === 'dvt:sink') {
-    for (const rowId of DVT_SINK_TARGET_ROW_IDS) {
-      rowIds.add(rowId);
-    }
-  }
-
-  return rowIds;
-}
-
 function readDvtTransformAuthoringMode(
   node: CanonicalNode
 ): (typeof DVT_TRANSFORM_AUTHORING_MODE)[keyof typeof DVT_TRANSFORM_AUTHORING_MODE] | null {
@@ -137,64 +93,6 @@ function readDvtTransformAuthoringMode(
   } catch {
     return null;
   }
-}
-
-function buildNodeWorkbenchReadModel({
-  model,
-  node,
-  canEditNode,
-  supersededRowIdsBySection,
-  supersededSectionIds,
-  contributedSectionIds,
-}: Readonly<{
-  model: NodePropertiesReadModel;
-  node: CanonicalNode;
-  canEditNode: boolean;
-  supersededRowIdsBySection: ReadonlyMap<NodePropertySectionId, ReadonlySet<NodePropertyRowId>>;
-  supersededSectionIds: ReadonlySet<NodePropertySectionId>;
-  contributedSectionIds: ReadonlySet<NodePropertySectionId>;
-}>): NodePropertiesReadModel {
-  const hiddenGeneralRowIds = resolveNodeWorkbenchHiddenGeneralRowIds(node, canEditNode);
-  const hiddenRowIdsBySection = new Map(supersededRowIdsBySection);
-  hiddenRowIdsBySection.set(
-    'general',
-    new Set([
-      ...hiddenGeneralRowIds,
-      ...(supersededRowIdsBySection.get('general') ?? new Set<NodePropertyRowId>()),
-    ])
-  );
-
-  return {
-    ...model,
-    sections: model.sections
-      .filter((section) => !supersededSectionIds.has(section.id))
-      .map((section) => {
-        const resolvedSection =
-          section.id === 'code' &&
-          (contributedSectionIds.has(section.id) ||
-            (canEditNode && isDbtCompatibleModel(node)) ||
-            (node.pluginId === 'dvt' &&
-              node.kind === 'dvt:transform' &&
-              !isDbtCompatibleModel(node)))
-            ? (() => {
-                const {
-                  code: _passiveCode,
-                  description: _passiveDescription,
-                  emptyState: _passiveEmptyState,
-                  ...editableCodeSection
-                } = section;
-                return editableCodeSection;
-              })()
-            : section;
-        const hiddenRowIds = hiddenRowIdsBySection.get(section.id);
-        return hiddenRowIds == null || hiddenRowIds.size === 0
-          ? resolvedSection
-          : {
-              ...resolvedSection,
-              rows: resolvedSection.rows.filter((row) => !hiddenRowIds.has(row.id)),
-            };
-      }),
-  };
 }
 
 function renderWorkbenchContributions(
@@ -290,6 +188,7 @@ export function CanvasNodeWorkbenchPanel({
     ...contributionModel.afterBodyBySection.keys(),
   ]);
   const unfilteredModel = buildNodeWorkbenchReadModel({
+    codeTruth: presentationTruth.code,
     model: baseModel,
     node,
     canEditNode: authoring.canEditNode,
