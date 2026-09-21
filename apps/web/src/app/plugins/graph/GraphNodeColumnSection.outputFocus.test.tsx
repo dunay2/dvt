@@ -14,9 +14,9 @@ describe('column output focus ownership', () => {
     vi.stubGlobal(
       'ResizeObserver',
       class {
-        observe() {}
-        unobserve() {}
-        disconnect() {}
+        observe(): void {}
+        unobserve(): void {}
+        disconnect(): void {}
       }
     );
     container = document.createElement('div');
@@ -33,7 +33,7 @@ describe('column output focus ownership', () => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
-  function render(output: boolean) {
+  function render(output: boolean): void {
     act(() =>
       root.render(
         <GraphNodeColumnSection

@@ -37,7 +37,7 @@ describe('applied relation selection', () => {
       };
       const sorted = applyDvtSubstraitSort(pilot, [key]);
       const fetched = applyDvtSubstraitFetch(sorted, { count: 20n });
-      const render = (draft: typeof fetched, id = 'transform') => {
+      const render = (draft: typeof fetched, id = 'transform'): void => {
         const node = applyDvtSubstraitSemanticDocument(
           { ...transformNode(), id },
           encodeDvtSubstraitSemanticDocument(draft)

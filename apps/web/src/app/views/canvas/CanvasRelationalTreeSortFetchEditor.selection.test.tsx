@@ -36,7 +36,7 @@ describe('Sort/Fetch editor selection', () => {
     const outerInspection = inspectCanvasDvtSubstraitSortFetch(outer);
     if (!outerInspection.ok) throw new Error('Expected outer Fetch');
     const onChange = vi.fn();
-    const render = (relationId: string) =>
+    const render = (relationId: string): void => {
       act(() =>
         root.render(
           <CanvasRelationalTreeSortFetchEditor
@@ -48,14 +48,19 @@ describe('Sort/Fetch editor selection', () => {
           />
         )
       );
+    };
     render(outerInspection.relationId);
     expect((getByLabelText(container, 'LIMIT') as HTMLInputElement).value).toBe('8');
-    act(() => fireEvent.change(getByLabelText(container, 'LIMIT'), { target: { value: '7' } }));
+    act(() => {
+      fireEvent.change(getByLabelText(container, 'LIMIT'), { target: { value: '7' } });
+    });
     render(innerInspection.relationId);
     expect((getByLabelText(container, 'LIMIT') as HTMLInputElement).value).toBe('2');
     expect((getByLabelText(container, 'OFFSET') as HTMLInputElement).value).toBe('1');
     expect(onChange).not.toHaveBeenCalled();
-    act(() => fireEvent.submit(container.querySelector('form')!));
+    act(() => {
+      fireEvent.submit(container.querySelector('form')!);
+    });
     const saved = onChange.mock.calls[0]![0];
     expect(
       inspectCanvasDvtSubstraitSortFetch(
