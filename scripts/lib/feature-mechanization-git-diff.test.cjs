@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { pathToFileURL } = require('node:url');
 const { FeatureMechanizationGitDiffReader } = require('../check-feature-mechanization.cjs');
 
 function repository(t) {
@@ -138,4 +139,29 @@ test('explicit head does not drift when checkout has advanced', (t) => {
   const diff = repo.reader({ headRef: candidate }).read();
   assert.deepEqual(diff.changedFiles, ['model.ts']);
   assert.equal(diff.currentFiles.includes('later.ts'), false);
+});
+
+test('the real depth-two PR merge checkout contains enough comparison ancestry', (t) => {
+  const repo = repository(t);
+  repo.write('model.ts', 'export const model = 2;\n');
+  const candidate = repo.commit(repo.base);
+  const merge = repo.git(
+    'commit-tree',
+    repo.git('write-tree'),
+    '-p',
+    repo.base,
+    '-p',
+    candidate,
+    '-m',
+    'Merge fixture'
+  );
+  repo.git('update-ref', 'HEAD', merge);
+  const checkout = path.join(repo.root, 'shallow');
+  repo.git('clone', '--quiet', '--depth=2', pathToFileURL(repo.root).href, checkout);
+  const reader = new FeatureMechanizationGitDiffReader({
+    repoRootPath: checkout,
+    baseRef: repo.base,
+    headRef: merge,
+  });
+  assert.deepEqual(reader.read().changedFiles, ['model.ts']);
 });

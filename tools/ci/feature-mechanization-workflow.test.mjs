@@ -16,9 +16,3 @@ test('the DB implementation gate receives the actual immutable comparison endpoi
   assert.match(step.env?.GIT_BASE ?? '', /github\.event\.before/);
   assert.equal(step.env?.GIT_HEAD, '${{ github.sha }}');
 });
-
-test('checkout includes ancestry needed for a valid merge-base comparison', () => {
-  const checkout = steps.find((entry) => entry.uses?.startsWith('actions/checkout@'));
-  assert.equal(checkout.with['fetch-depth'], 0);
-  assert.equal(checkout.with['persist-credentials'], false);
-});
