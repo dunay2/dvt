@@ -354,6 +354,28 @@ canonical selectors. Wrapper removal preserves relation and field identities;
 generated aggregate outputs do not claim source-field lineage. SQL remains a
 projection, never an additional authoring authority.
 
+Function reference integrity and bounded-profile admission are separate concerns.
+The shared `substrait-profile/` inspection component resolves the referenced
+function anchor and its URN anchor unambiguously. Other functions declared in the
+same extension module do not change that identity. Missing or duplicate referenced
+anchors reject explicitly. COUNT and ROW_NUMBER validators own their invocation
+constraints; the calculated-expression and grouped-wrapper readers share them.
+Their executable registrations refer to the existing capability catalogue and
+do not create another semantic catalogue or import PostgreSQL rendering code.
+
+```text
+Plan + functionReference -> reference integrity -> registered invocation validator
+Root relType -> registered wrapper inspector -> admitted read model / unsupported reason
+Admitted read model -> existing PostgreSQL AST projection
+```
+
+Wrapper dispatch selects exactly one inspector by the canonical relation kind.
+Failure does not try a different operation. Consumers require the precise
+capability they can project: registering another aggregate must not cause a
+COUNT-only wrapper to render it as COUNT. Unsupported profile shapes are not
+reported as universally invalid Substrait. This boundary does not widen the
+existing aggregate, window ordering/frame, or base-document admission profiles.
+
 Canonical correctness is the first acceptance gate: tests assert Substrait
 relation selectors, input order, expressions, stable identities and lossless
 encode/decode across selection and editing. SQL text or database rows are not an
