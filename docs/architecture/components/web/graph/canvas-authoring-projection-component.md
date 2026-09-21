@@ -229,8 +229,17 @@ The shared PostgreSQL JOIN inspector separates document admission, physical Read
 bindings, stage propagation and predicate binding. Its internal
 `join-inspection/` modules consume the same Plan and identity sidecar; the public
 `inspectDvtSubstraitJoinDraft` and `inspectNInputJoinStructure` entry points remain
-the only inspection API. This decomposition does not admit repeated sources or
-transformed branches. Those admission changes require their own vertical proof.
+the only inspection API. Repeated named-table Reads may share a physical source
+while retaining distinct RelationIds and FieldIds. Their schema, table and field
+schema must agree; repeated provenance is not permission to change the queried
+table. The protected API checks exact physical dependency coverage, not equality
+between the number of Read occurrences and graph Sources. Every occurrence
+resolves to one authorized source and every selected dependency is used.
+Selected-operation preview may use a subset of that already validated closure.
+
+This shared-reader/API admission does not expose repeated-input creation in the
+Web editor. Generic transformed branches, aliases and occurrence-aware editing
+remain open in #3342 and require their own authoring/reopen/provider proof.
 
 ```text
 Canonical document -> document admission -> Read bindings -> JOIN stages
