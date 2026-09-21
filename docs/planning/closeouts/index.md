@@ -49,7 +49,6 @@ before retaining or retiring a record.
 - [20260423 TF-A2-C1 Execution Selection Contract Pack Closeout](./20260423-tf-a2-c1-execution-selection-contract-pack-closeout.md)
 - [20260423 TF-A2-C Execution Selection Proposal Closeout](./20260423-tf-a2-c-execution-selection-proposal-closeout.md)
 - [20260423 Workspace Graph Draft Application Component Closeout](./20260423-workspace-graph-draft-application-component-closeout.md)
-- [20260421 Web XYFlow 12.10.2 Closeout](./20260421-web-xyflow-12-10-2-closeout.md)
 - [20260420 Temporal Fowler Architecture Drift Follow-Up Closeout](./20260420-temporal-fowler-architecture-drift-follow-up-closeout.md)
 - [20260417 TF-E2 Route Bootstrap SRP Refactor Closeout](./20260417-tf-e2-route-bootstrap-srp-refactor-closeout.md)
 - [20260417 TF-E2 Route Bootstrap Contract Generalization Closeout](./20260417-tf-e2-route-bootstrap-contract-generalization-closeout.md)

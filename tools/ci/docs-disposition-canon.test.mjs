@@ -369,6 +369,17 @@ test('retired documentation-only closeouts have no files or local consumers', ()
     '20260318-stage-1-1-planner-canonicalization-policy-vocabulary-contracts-closeout.md',
   ]);
   const editorialCloseouts = new Set([
+    '20260316-workspace-build-baseline-closeout.md',
+    '20260316-workspace-script-graph-dedup-closeout.md',
+    '20260317-adapter-dependency-graph-alignment-closeout.md',
+    '20260317-app-workspace-script-dedup-closeout.md',
+    '20260317-package-tsconfig-base-closeout.md',
+    '20260318-ts-esm-monorepo-m02-closeout.md',
+    '20260318-typescript-package-classification-closeout.md',
+    '20260418-local-build-hook-warm-cache-p0-closeout.md',
+    '20260418-rc-c2-turbo-build-orchestrator-closeout.md',
+    '20260421-web-xyflow-12-10-2-closeout.md',
+    '20260422-rc-c2-wave-2a-typecheck-contract-closeout.md',
     '20260316-docs-governance-tooling-closeout.md',
     '20260320-planning-archive-sweep-closeout.md',
     '20260320-planner-r1-doc-triage-closeout.md',

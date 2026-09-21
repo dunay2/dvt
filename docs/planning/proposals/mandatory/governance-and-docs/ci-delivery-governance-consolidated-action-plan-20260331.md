@@ -722,9 +722,6 @@ execution route for the verified residual items.
   - ADR-0061 and the GitHub MVP issue workflow require executable task lifecycle
     to stay in GitHub Issues; Planning DB remains the authority for architecture
     and mechanization records
-  - [20260418 RC-C2 turbo build orchestrator closeout](../../../closeouts/20260418-rc-c2-turbo-build-orchestrator-closeout.md)
-    explicitly kept Turbo `test`, Turbo `typecheck`, remote cache, and
-    TypeScript project references out of scope of that shipped slice
   - [Determinism Tooling](../../../../architecture/components/engine/dev/determinism-tooling.md)
     keeps deterministic-runtime guards as a mandatory engineering baseline, so
     pre-commit savings must come from scoping, not from removing the guard
