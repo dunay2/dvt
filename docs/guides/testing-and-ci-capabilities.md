@@ -177,6 +177,8 @@ Substrait, queries selected and model rows, then starts the accepted Preview pla
 and verifies its PostgreSQL publication. An unmatched row distinguishes LEFT
 from INNER; exact query order and row membership distinguish ordering and limit
 errors. Published tables are compared without assuming physical row order.
+The selected intermediate Sort must return three rows while the final Fetch
+returns two, so ignoring the selected relation cannot pass as model data.
 
 The negative story preserves a canonical but unsupported Sort selector, requires
 explicit query rejection, and verifies that no Run was created. Generic Cypress

@@ -16,6 +16,7 @@ import { executePersistedModel } from '../../support/semanticLive/execution';
 import {
   expectedColumns,
   expectedRows,
+  expectedSortedRows,
   importSemanticModel,
   leftJoinDocument,
   modelId,
@@ -102,21 +103,22 @@ describe('Persisted semantic editing through protected Preview and Run', () => {
     readPersistedDocument().then((document) => {
       expect(document).to.deep.equal(persisted);
     });
+    cy.get('[data-operator="fetch"]').should('contain.text', 'LIMIT 2');
     cy.get('[data-operator="sort"]').should('contain.text', 'DESC NULLS LAST').click();
-    cy.get('[data-operator="fetch"]').should('contain.text', 'LIMIT 2').click();
     cy.get(
       '[data-slot="canvas-operation-data-preview"] [data-slot="canvas-model-preview"]'
     ).click();
     cy.wait('@liveRows', { timeout: 30_000 }).then(({ request, response }) => {
       const query = new URL(request.url).searchParams;
-      expect(query.get('relationId')).to.equal(fetchId);
+      expect(query.get('relationId')).to.equal(sortId);
       expect(query.get('semanticPlanSha256')).to.equal(persisted.semanticPlan.sha256);
       expect(response?.statusCode).to.equal(200);
+      expect(response!.body.semanticPlanSha256).to.equal(persisted.semanticPlan.sha256);
       expect(response!.body.columns.map((column: { name: string }) => column.name)).to.deep.equal(
         expectedColumns
       );
       expect(response!.body.rows.map((row: { values: unknown[] }) => row.values)).to.deep.equal(
-        expectedRows
+        expectedSortedRows
       );
     });
     cy.get('[data-slot="canvas-operation-data-preview"] table').should('contain.text', 'C-014');

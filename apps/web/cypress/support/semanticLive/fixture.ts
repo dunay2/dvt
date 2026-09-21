@@ -22,10 +22,12 @@ import {
 export const modelId = 'semantic-live-model';
 export const resultRelation = 'semantic_live_result';
 export const expectedColumns = ['order_id', 'client_id', 'client_client_id', 'country'];
-export const expectedRows = [
+export const expectedSortedRows = [
   ['3', 'C-001', 'C-001', 'ES'],
   ['2', 'C-014', null, null],
+  ['1', 'C-001', 'C-001', 'ES'],
 ];
+export const expectedRows = expectedSortedRows.slice(0, 2);
 
 export function leftJoinDocument(): DvtSubstraitSemanticDocumentV1 {
   const draft = decodeDvtSubstraitSemanticDocument(documents.two);
