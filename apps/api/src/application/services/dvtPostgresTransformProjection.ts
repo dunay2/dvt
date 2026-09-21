@@ -113,37 +113,16 @@ export async function projectDvtPostgresTransform(
       };
     }
 
-    if (relationCase === 'cross') {
-      const projected = await projectDvtCrossDraftToPostgresSql(draft);
-      requireDvtProjectedSourceCoverage(
-        projected.projection.inputs,
-        closure.sources,
-        !selectedSubtree
-      );
-      return {
-        ast: projected.ast,
-        sql: projected.sql,
-        orderBy: null,
-        outputs: projected.projection.outputs,
-      };
-    }
-    if (relationCase === 'join' || closure.profileId === DVT_POSTGRES_JOIN_PROFILE_ID) {
-      const projected = await projectDvtJoinDraftToPostgresSql(draft);
-      requireDvtProjectedSourceCoverage(
-        projected.projection.inputs,
-        closure.sources,
-        !selectedSubtree
-      );
-      return {
-        ast: projected.ast,
-        sql: projected.sql,
-        orderBy: null,
-        outputs: projected.projection.outputs,
-      };
-    }
-
-    if (relationCase === 'set' || closure.profileId === DVT_POSTGRES_SET_PROFILE_ID) {
-      const projected = await projectDvtSetDraftToPostgresSql(draft);
+    const projectRelation =
+      relationCase === 'cross'
+        ? projectDvtCrossDraftToPostgresSql
+        : relationCase === 'join' || closure.profileId === DVT_POSTGRES_JOIN_PROFILE_ID
+          ? projectDvtJoinDraftToPostgresSql
+          : relationCase === 'set' || closure.profileId === DVT_POSTGRES_SET_PROFILE_ID
+            ? projectDvtSetDraftToPostgresSql
+            : null;
+    if (projectRelation != null) {
+      const projected = await projectRelation(draft);
       requireDvtProjectedSourceCoverage(
         projected.projection.inputs,
         closure.sources,
