@@ -36,6 +36,7 @@ describe('PostgreSQL SEMI and ANTI JOIN rendering', () => {
     'renders exact retained-side semantics for %s with %s',
     async (joinType, quantifier, retainedSource, queriedSource) => {
       const result = await projectDvtJoinDraftToPostgresSql(semiAntiJoinDraft(joinType));
+      if (result.kind !== 'join') throw new Error('Expected the raw JOIN projection.');
 
       expect(result.projection.joinRelations[0]?.joinType).toBe(joinType);
       expect(result.projection.outputs).toHaveLength(2);

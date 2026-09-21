@@ -108,8 +108,8 @@ export {
   nInputJoinAlias,
   POSTGRES_JOIN_COMPARISON,
   buildNInputJoinPostgresAst,
-  projectDvtJoinDraftToPostgresSql,
 } from './joinPostgresProjection.js';
+export { projectDvtJoinDraftToPostgresSql } from './projectJoinDraft.js';
 export {
   buildConnectedFieldPostgresAst,
   buildPilotOutputExpression,

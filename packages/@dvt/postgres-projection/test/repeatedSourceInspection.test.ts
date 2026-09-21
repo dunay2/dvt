@@ -60,6 +60,7 @@ describe('repeated physical Read occurrences', () => {
       };
       const selected = selectDvtSubstraitRelation(draft, draft.sidecar.relations[2]!.relationId);
       const result = await projectDvtJoinDraftToPostgresSql(selected);
+      if (result.kind !== 'join') throw new Error('Expected the raw JOIN projection.');
       const [left, right] = result.projection.inputs;
       expect(left!.sourceRef).toEqual(right!.sourceRef);
       expect(left!.relationId).not.toBe(right!.relationId);
