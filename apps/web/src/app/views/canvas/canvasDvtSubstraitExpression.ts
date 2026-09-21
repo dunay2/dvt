@@ -8,21 +8,11 @@ export type { DvtSubstraitLiteralValue } from '@dvt/postgres-projection';
 import { create } from '@bufbuild/protobuf';
 import {
   ExpressionSchema,
-  Expression_FieldReferenceSchema,
-  Expression_FieldReference_RootReferenceSchema,
-  Expression_LiteralSchema,
-  Expression_Literal_PrecisionTimestampSchema,
-  Expression_ReferenceSegmentSchema,
-  Expression_ReferenceSegment_StructFieldSchema,
-  Expression_ScalarFunctionSchema,
-  FunctionArgumentSchema,
-  FunctionOptionSchema,
   type Expression,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {
   SimpleExtensionDeclarationSchema,
-  SimpleExtensionDeclaration_ExtensionFunctionSchema,
   SimpleExtensionURNSchema,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/extensions/extensions_pb.js';
 import type { Type } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
@@ -54,21 +44,21 @@ export const dvtSubstraitExpression = {
     return create(ExpressionSchema, {
       rexType: {
         case: 'selection',
-        value: create(Expression_FieldReferenceSchema, {
+        value: {
           referenceType: {
             case: 'directReference',
-            value: create(Expression_ReferenceSegmentSchema, {
+            value: {
               referenceType: {
                 case: 'structField',
-                value: create(Expression_ReferenceSegment_StructFieldSchema, { field: ordinal }),
+                value: { field: ordinal },
               },
-            }),
+            },
           },
           rootType: {
             case: 'rootReference',
-            value: create(Expression_FieldReference_RootReferenceSchema, {}),
+            value: {},
           },
-        }),
+        },
       },
     });
   },
@@ -86,15 +76,15 @@ export const dvtSubstraitExpression = {
       return create(ExpressionSchema, {
         rexType: {
           case: 'literal',
-          value: create(Expression_LiteralSchema, {
+          value: {
             literalType: {
               case: 'precisionTimestampTz',
-              value: create(Expression_Literal_PrecisionTimestampSchema, {
+              value: {
                 precision: 3,
                 value: BigInt(milliseconds),
-              }),
+              },
             },
-          }),
+          },
         },
       });
     }
@@ -109,7 +99,7 @@ export const dvtSubstraitExpression = {
     return create(ExpressionSchema, {
       rexType: {
         case: 'literal',
-        value: create(Expression_LiteralSchema, { literalType }),
+        value: { literalType },
       },
     });
   },
@@ -130,9 +120,9 @@ export const dvtSubstraitExpression = {
     const existing = plan.extensions.find((entry) => {
       if (entry.mappingType.case !== 'extensionFunction') return false;
       const resolved = resolveFunctionReference(plan, entry.mappingType.value.functionAnchor);
-      return (
-        resolved.ok && resolved.value.urn === identity.urn && resolved.value.name === identity.name
-      );
+      if (!resolved.ok)
+        throw new Error(`Cannot author an ambiguous or dangling function: ${resolved.reason}`);
+      return resolved.value.urn === identity.urn && resolved.value.name === identity.name;
     });
     if (existing?.mappingType.case === 'extensionFunction') {
       return {
@@ -154,11 +144,11 @@ export const dvtSubstraitExpression = {
       create(SimpleExtensionDeclarationSchema, {
         mappingType: {
           case: 'extensionFunction',
-          value: create(SimpleExtensionDeclaration_ExtensionFunctionSchema, {
+          value: {
             extensionUrnReference: urn.extensionUrnAnchor,
             functionAnchor,
             name: identity.name,
-          }),
+          },
         },
       })
     );
@@ -175,24 +165,20 @@ export const dvtSubstraitExpression = {
     return create(ExpressionSchema, {
       rexType: {
         case: 'scalarFunction',
-        value: create(Expression_ScalarFunctionSchema, {
+        value: {
           functionReference: args.functionReference,
           arguments: [
-            ...(args.leadingEnumArguments ?? []).map((value) =>
-              create(FunctionArgumentSchema, { argType: { case: 'enum', value } })
-            ),
-            ...args.arguments.map((expression) =>
-              create(FunctionArgumentSchema, { argType: { case: 'value', value: expression } })
-            ),
+            ...(args.leadingEnumArguments ?? []).map((value) => ({
+              argType: { case: 'enum' as const, value },
+            })),
+            ...args.arguments.map((value) => ({ argType: { case: 'value' as const, value } })),
           ],
-          options: (args.options ?? []).map((option) =>
-            create(FunctionOptionSchema, {
-              name: option.name,
-              preference: [...option.preference],
-            })
-          ),
+          options: (args.options ?? []).map((option) => ({
+            ...option,
+            preference: [...option.preference],
+          })),
           outputType: args.outputType,
-        }),
+        },
       },
     });
   },
