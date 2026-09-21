@@ -24,6 +24,7 @@ import InlineEditorSource from './CanvasRelationalTreeInlineEditor.tsx?raw';
 import OperandSlotSource from './CanvasRelationalTreeOperandSlot.tsx?raw';
 import OperandCanvasSource from './CanvasRelationalTreeOperandCanvas.tsx?raw';
 import OperationShelfSource from './CanvasRelationalTreeOperationShelf.tsx?raw';
+import ReplacementDialogSource from './operation-menu/CanvasOperationReplacementDialog.tsx?raw';
 import TreeSource from './CanvasRelationalTreeView.tsx?raw';
 import ViewportSource from './canvasRelationalTreeViewport.ts?raw';
 import ZoomSource from './CanvasRelationalTreeZoomControls.tsx?raw';
@@ -76,6 +77,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(BlockCanvasSource.split('\n').length).toBeLessThan(140);
     expect(DraftViewportSource.split('\n').length).toBeLessThan(170);
     expect(OperationShelfSource.split('\n').length).toBeLessThan(140);
+    expect(ReplacementDialogSource.split('\n').length).toBeLessThan(80);
     expect(InlineEditorSource.split('\n').length).toBeLessThan(80);
     expect(OperandSlotSource.split('\n').length).toBeLessThan(80);
     expect(OperandCanvasSource.split('\n').length).toBeLessThan(80);

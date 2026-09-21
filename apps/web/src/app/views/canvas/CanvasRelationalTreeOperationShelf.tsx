@@ -6,6 +6,7 @@ import type {
 } from './canvasRelationalOperationChoices';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import { CanvasOperationMenu } from './operation-menu/CanvasOperationMenu';
+import { CanvasOperationReplacementDialog } from './operation-menu/CanvasOperationReplacementDialog';
 import { buildCanvasOperationMenuItems } from './operation-menu/canvasOperationMenuModel';
 import { resolveCanvasOperationMenuCopy } from './operation-menu/canvasOperationMenuCopy';
 import {
@@ -17,16 +18,6 @@ import { resolveCanvasRelationalOperationPresentation } from './canvasRelational
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '../../components/ui/alert-dialog';
 import { CanvasRelationalCrossNotice } from './CanvasRelationalCrossNotice';
 
 export function CanvasRelationalTreeOperationShelf({
@@ -106,34 +97,24 @@ export function CanvasRelationalTreeOperationShelf({
           onChange={onChangeDraft}
         />
       )}
-      <AlertDialog
+      <CanvasOperationReplacementDialog
         open={replacement != null}
+        title={localCopy.replaceOperation}
+        description={
+          operation === 'projection'
+            ? localCopy.replaceProjectionHint
+            : localCopy.replaceOperationHint
+        }
+        cancelLabel={copy.inspectorDvtRelationalCancel}
+        confirmLabel={copy.inspectorDvtRelationalApply}
         onOpenChange={(open) => {
           if (!open) setReplacement(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{localCopy.replaceOperation}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {operation === 'projection'
-                ? localCopy.replaceProjectionHint
-                : localCopy.replaceOperationHint}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{copy.inspectorDvtRelationalCancel}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (replacement != null) onSelectOperation(replacement);
-                setReplacement(null);
-              }}
-            >
-              {copy.inspectorDvtRelationalApply}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={() => {
+          if (replacement != null) onSelectOperation(replacement);
+          setReplacement(null);
+        }}
+      />
     </section>
   );
 }
