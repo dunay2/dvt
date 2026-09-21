@@ -9,6 +9,7 @@ const readerModules = [
   'join-inspection/inputs.ts',
   'join-inspection/stages.ts',
   'join-inspection/predicates.ts',
+  'join-inspection/physicalSources.ts',
 ];
 
 describe('shared JOIN inspection component boundaries', () => {
@@ -20,6 +21,8 @@ describe('shared JOIN inspection component boundaries', () => {
     'semiAntiJoinPostgresProjection.test.ts',
     'fixtures/joinDraft.ts',
     'fixtures/semiAntiJoinDraft.ts',
+    'repeatedSourceInspection.test.ts',
+    'fixtures/repeatedSourceDraft.ts',
   ])('keeps the focused scenario or fixture %s within 200 lines', (path) => {
     const source = readFileSync(new URL(`./${path}`, import.meta.url), 'utf8');
     expect(source.trimEnd().split('\n').length).toBeLessThanOrEqual(200);

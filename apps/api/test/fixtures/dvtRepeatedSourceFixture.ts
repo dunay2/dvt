@@ -7,6 +7,7 @@ import {
   decodeDvtSubstraitPlanV1,
   DvtSubstraitSemanticDocumentV1Schema,
   encodeDvtSubstraitPlanV1,
+  type DvtSubstraitSemanticDocumentV1,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 
@@ -14,7 +15,7 @@ import type { DvtPostgresTargetProjectionPublishInput } from '../../src/applicat
 
 import { buildDvtTerminalTransformPreviewDraft } from './workspaceGraphDraftFixture.js';
 
-function repeatedDocument(joinType: JoinRel_JoinType) {
+function repeatedDocument(joinType: JoinRel_JoinType): DvtSubstraitSemanticDocumentV1 {
   const document = DvtSubstraitSemanticDocumentV1Schema.parse(
     JSON.parse(
       readFileSync(

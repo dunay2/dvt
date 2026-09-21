@@ -1,9 +1,12 @@
 import type { IContentAddressedArtifactStore } from '@dvt/artifacts';
-import { vi } from 'vitest';
+import { vi, type Mock } from 'vitest';
 
 import { DvtPostgresTargetProjectionPublisher } from '../../src/application/services/dvtPostgresTargetProjectionPublisher.js';
 
-export function publisherHarness() {
+export function publisherHarness(): {
+  publish: Mock<IContentAddressedArtifactStore['publish']>;
+  publisher: DvtPostgresTargetProjectionPublisher;
+} {
   const publish = vi.fn<Pick<IContentAddressedArtifactStore, 'publish'>['publish']>(
     async (request) => ({ ...request, disposition: 'created' })
   );

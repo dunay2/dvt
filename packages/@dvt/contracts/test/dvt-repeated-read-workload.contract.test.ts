@@ -5,22 +5,25 @@ import {
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
   DvtOperationalWorkloadContract,
+  type DvtOperationalWorkloadV1,
+  type DvtOperationalWorkloadV2,
 } from '../src/index.js';
 
-function buildRepeatedReadWorkload(version: 'v1' | 'v2') {
+function buildRepeatedReadWorkload(
+  version: 'v1' | 'v2'
+): DvtOperationalWorkloadV1 | DvtOperationalWorkloadV2 {
   const connectionRef = {
     schemaVersion: 'connection-ref.v1',
     provider: 'postgres',
     connectionId: 'warehouse',
-  };
+  } as const;
   const target = {
     schemaVersion: 'dvt-transform-result-target.v1',
     connectionRef,
     schema: 'analytics',
     relation: 'records',
   };
-  return {
-    schemaVersion: `dvt-operational-workload.${version}`,
+  const shared: Omit<DvtOperationalWorkloadV1, 'schemaVersion' | 'output'> = {
     scope: { tenantId: 'tenant', projectId: 'project', environmentId: 'environment' },
     graph: {
       draftRevision: 'revision',
@@ -39,7 +42,6 @@ function buildRepeatedReadWorkload(version: 'v1' | 'v2') {
       profileId: DVT_POSTGRES_JOIN_PROFILE_ID,
       toolIdentity: DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
       semanticPlanSha256: 'a'.repeat(64),
-      ...(version === 'v2' ? { schemaDigestSha256: 'c'.repeat(64) } : {}),
       artifact: {
         artifactKind: 'compiled-sql',
         sha256: 'b'.repeat(64),
@@ -49,20 +51,27 @@ function buildRepeatedReadWorkload(version: 'v1' | 'v2') {
       },
     },
     connectionRef,
-    ...(version === 'v2'
-      ? {
-          executionIntent: 'run',
-          publicationBoundaries: [],
-          output: {
-            kind: 'transform-result',
-            nodeId: 'model',
-            disposition: 'table',
-            target,
-            publicationPolicy: 'postgres-stable-table-publication.v1',
-          },
-        }
-      : { output: { kind: 'ephemeral-preview', nodeId: 'model' } }),
   };
+  return version === 'v2'
+    ? {
+        ...shared,
+        schemaVersion: 'dvt-operational-workload.v2',
+        targetProjection: { ...shared.targetProjection, schemaDigestSha256: 'c'.repeat(64) },
+        executionIntent: 'run',
+        publicationBoundaries: [],
+        output: {
+          kind: 'transform-result',
+          nodeId: 'model',
+          disposition: 'table',
+          target: { ...target, schemaVersion: 'dvt-transform-result-target.v1' },
+          publicationPolicy: 'postgres-stable-table-publication.v1',
+        },
+      }
+    : {
+        ...shared,
+        schemaVersion: 'dvt-operational-workload.v1',
+        output: { kind: 'ephemeral-preview', nodeId: 'model' },
+      };
 }
 
 describe.each(['v1', 'v2'] as const)('repeated Read workload %s', (version) => {

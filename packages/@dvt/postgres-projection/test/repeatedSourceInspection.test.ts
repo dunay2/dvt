@@ -1,6 +1,10 @@
+import { readFileSync } from 'node:fs';
+import { URL } from 'node:url';
+
 import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { fromBinary, toBinary } from '@bufbuild/protobuf';
+import { decodeDvtSubstraitPlanV1, DvtSubstraitSemanticDocumentV1Schema } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -13,6 +17,16 @@ import {
 import { repeatedSourceDraft } from './fixtures/repeatedSourceDraft.js';
 
 describe('repeated physical Read occurrences', () => {
+  it('shares the exact canonical serialization fixture with protected API tests', () => {
+    const document = DvtSubstraitSemanticDocumentV1Schema.parse(
+      JSON.parse(
+        readFileSync(new URL('./fixtures/repeated-source-document.json', import.meta.url), 'utf8')
+      )
+    );
+    expect({ plan: decodeDvtSubstraitPlanV1(document), sidecar: document.sidecar }).toEqual(
+      repeatedSourceDraft()
+    );
+  });
   it.each([JoinRel_JoinType.INNER, JoinRel_JoinType.LEFT, JoinRel_JoinType.OUTER])(
     'preserves distinct identities, lineage and selector %i after protobuf roundtrip',
     async (type) => {
