@@ -1,12 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { URL } from 'node:url';
-
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import {
-  decodeDvtSubstraitPlanV1,
-  DvtSubstraitSemanticDocumentV1Schema,
-  encodeDvtSubstraitPlanV1,
-} from '@dvt/contracts';
+import { encodeDvtSubstraitPlanV1 } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -15,21 +8,7 @@ import {
   type DvtSubstraitJoinDraft,
 } from '../src/index.js';
 
-function fixture(base: 'join' | 'set', wrapper: 'aggregate' | 'window'): DvtSubstraitJoinDraft {
-  const file =
-    base === 'set'
-      ? 'set-documents'
-      : `${wrapper === 'aggregate' ? 'grouped' : 'windowed'}-left-join-document`;
-  const json = JSON.parse(
-    readFileSync(new URL(`./fixtures/${file}.json`, import.meta.url), 'utf8')
-  );
-  const document = DvtSubstraitSemanticDocumentV1Schema.parse(
-    base === 'set'
-      ? json[wrapper === 'aggregate' ? 'unionDistinctAggregate' : 'unionDistinctWindow']
-      : json
-  );
-  return { plan: decodeDvtSubstraitPlanV1(document), sidecar: document.sidecar };
-}
+import { wrapperFixture } from './relationalWrapperFixtures.js';
 
 function invalidateGrouping(draft: DvtSubstraitJoinDraft): void {
   const root = draft.plan.relations[0]?.relType;
@@ -48,7 +27,7 @@ describe.each(['join', 'set'] as const)('shared %s wrapper admission', (base) =>
   it.each(['aggregate', 'window'] as const)(
     'projects %s without mutating canonical identity',
     async (wrapper) => {
-      const draft = fixture(base, wrapper);
+      const draft = wrapperFixture(base, wrapper);
       const before = globalThis.structuredClone(draft);
       const result = await project(draft);
       expect(result.sql).toContain('count(*)');
@@ -60,14 +39,14 @@ describe.each(['join', 'set'] as const)('shared %s wrapper admission', (base) =>
   it.each(['aggregate', 'window'] as const)(
     'rejects invalid %s grouping with a current hash',
     async (wrapper) => {
-      const draft = fixture(base, wrapper);
+      const draft = wrapperFixture(base, wrapper);
       invalidateGrouping(draft);
       await expect(project(draft)).rejects.toMatchObject({ code: 'unsupported_shape' });
     }
   );
 
   it('rejects a window ordering outside the bounded profile', async () => {
-    const draft = fixture(base, 'window');
+    const draft = wrapperFixture(base, 'window');
     const root = draft.plan.relations[0]?.relType;
     const relation = root?.case === 'root' ? root.value.input?.relType : undefined;
     const expression =

@@ -9,6 +9,7 @@ import type {
 } from './relationalGroupedComposition.js';
 import { removeFunction, sortedFields, withCurrentHash } from './relationalWrapperDraft.js';
 import { inspectFunctionProfile } from './substrait-profile/functions.js';
+import { unsupportedProfile, type ProfileInspection } from './substrait-profile/inspection.js';
 import { rowNumberProfile } from './substrait-profile/rowNumber.js';
 import { inspectAggregateWrapper } from './substraitAggregateWrapper.js';
 import { dvtSubstraitExpressionReader } from './substraitExpressionReader.js';
@@ -16,7 +17,7 @@ import type { DvtSubstraitJoinDraft } from './substraitJoinReadModel.js';
 export function inspectWindowWrapper(
   draft: DvtSubstraitJoinDraft,
   inspectBase: InspectCompositionBase
-): RelationalGroupedComposition | null {
+): ProfileInspection<RelationalGroupedComposition> {
   const root = draft.plan.relations[0]?.relType;
   if (
     root?.case !== 'root' ||
@@ -25,7 +26,7 @@ export function inspectWindowWrapper(
     new Set(root.value.names).size !== 3 ||
     root.value.input?.relType.case !== 'project'
   ) {
-    return null;
+    return unsupportedProfile('unsupported-window-root');
   }
   const project = root.value.input.relType.value;
   const projectAnchor = project.common?.relAnchor;
@@ -45,14 +46,14 @@ export function inspectWindowWrapper(
     project.expressions.length !== 1 ||
     expression?.case !== 'windowFunction'
   ) {
-    return null;
+    return unsupportedProfile('unsupported-window-shape');
   }
   const window = expression.value;
   const profile = inspectFunctionProfile(draft.plan, window);
+  if (!profile.ok) return profile;
+  if (profile.value !== rowNumberProfile) return unsupportedProfile('unsupported-row-number');
   const { fieldOrdinal } = dvtSubstraitExpressionReader;
   if (
-    !profile.ok ||
-    profile.value !== rowNumberProfile ||
     window.partitions.length !== 0 ||
     window.sorts.length !== 2 ||
     fieldOrdinal(window.sorts[0]?.expr) !== 1 ||
@@ -62,7 +63,7 @@ export function inspectWindowWrapper(
     window.sorts[1]?.sortKind.case !== 'direction' ||
     window.sorts[1].sortKind.value !== SortField_SortDirection.ASC_NULLS_LAST
   ) {
-    return null;
+    return unsupportedProfile('unsupported-window-ordering');
   }
   const projectBinding = draft.sidecar.relations.find(
     (relation) => relation.relAnchor === projectAnchor
@@ -76,7 +77,7 @@ export function inspectWindowWrapper(
     projectBinding.sourceRef != null ||
     projectBinding.displayName !== aggregateBinding.displayName
   ) {
-    return null;
+    return unsupportedProfile('unsupported-window-binding');
   }
   const wrapperFields = sortedFields(draft, projectBinding.relationId);
   const rowNumberField = wrapperFields[2];
@@ -90,16 +91,17 @@ export function inspectWindowWrapper(
     rowNumberField == null ||
     typeof rowNumberField.displayName !== 'string'
   ) {
-    return null;
+    return unsupportedProfile('unsupported-window-fields');
   }
 
   const plan = clone(PlanSchema, draft.plan);
   const aggregateRoot = plan.relations[0]?.relType;
   if (aggregateRoot?.case !== 'root' || aggregateRoot.value.input?.relType.case !== 'project') {
-    return null;
+    return unsupportedProfile('unsupported-window-root');
   }
   const aggregateInput = aggregateRoot.value.input.relType.value.input;
-  if (aggregateInput?.relType.case !== 'aggregate') return null;
+  if (aggregateInput?.relType.case !== 'aggregate')
+    return unsupportedProfile('unsupported-window-input');
   aggregateRoot.value.input = aggregateInput;
   aggregateRoot.value.names = aggregateRoot.value.names.slice(0, 2);
   removeFunction(plan, window.functionReference);
@@ -118,30 +120,34 @@ export function inspectWindowWrapper(
       }),
     },
   });
-  const aggregate = inspectAggregateWrapper(aggregateDraft, inspectBase);
+  const inspection = inspectAggregateWrapper(aggregateDraft, inspectBase);
+  if (!inspection.ok) return inspection;
+  const aggregate = inspection.value;
   if (
-    aggregate == null ||
     wrapperFields[0]?.fieldId !== aggregate.outputs[0]?.fieldId ||
     wrapperFields[1]?.fieldId !== aggregate.outputs[1]?.fieldId ||
     draft.sidecar.relations.length !== aggregateDraft.sidecar.relations.length + 1 ||
     draft.sidecar.fields.length !== aggregateDraft.sidecar.fields.length + 1
   ) {
-    return null;
+    return unsupportedProfile('unsupported-window-base');
   }
   return {
-    ...aggregate,
-    kind: 'window',
-    windowName: rowNumberField.displayName,
-    resultRelationId: projectBinding.relationId,
-    outputs: [
-      ...aggregate.outputs,
-      {
-        name: rowNumberField.displayName,
-        fieldId: rowNumberField.fieldId,
-        outputOrdinal: 2,
-        dataType: 'i64',
-        nullable: false,
-      },
-    ],
+    ok: true,
+    value: {
+      ...aggregate,
+      kind: 'window',
+      windowName: rowNumberField.displayName,
+      resultRelationId: projectBinding.relationId,
+      outputs: [
+        ...aggregate.outputs,
+        {
+          name: rowNumberField.displayName,
+          fieldId: rowNumberField.fieldId,
+          outputOrdinal: 2,
+          dataType: 'i64',
+          nullable: false,
+        },
+      ],
+    },
   };
 }

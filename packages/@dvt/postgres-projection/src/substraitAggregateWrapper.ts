@@ -9,12 +9,13 @@ import type {
 import { removeFunction, sortedFields, withCurrentHash } from './relationalWrapperDraft.js';
 import { countProfile } from './substrait-profile/count.js';
 import { inspectFunctionProfile } from './substrait-profile/functions.js';
+import { unsupportedProfile, type ProfileInspection } from './substrait-profile/inspection.js';
 import { dvtSubstraitExpressionReader } from './substraitExpressionReader.js';
 import type { DvtSubstraitJoinDraft } from './substraitJoinReadModel.js';
 export function inspectAggregateWrapper(
   draft: DvtSubstraitJoinDraft,
   inspectBase: InspectCompositionBase
-): RelationalGroupedComposition | null {
+): ProfileInspection<RelationalGroupedComposition> {
   const root = draft.plan.relations[0]?.relType;
   if (
     root?.case !== 'root' ||
@@ -23,7 +24,7 @@ export function inspectAggregateWrapper(
     new Set(root.value.names).size !== 2 ||
     root.value.input?.relType.case !== 'aggregate'
   ) {
-    return null;
+    return unsupportedProfile('unsupported-aggregate-root');
   }
   const aggregate = root.value.input.relType.value;
   const measure = aggregate.measures[0];
@@ -47,10 +48,11 @@ export function inspectAggregateWrapper(
     measure?.measure == null ||
     measure.filter != null
   ) {
-    return null;
+    return unsupportedProfile('unsupported-aggregate-shape');
   }
   const profile = inspectFunctionProfile(draft.plan, measure.measure);
-  if (!profile.ok || profile.value !== countProfile) return null;
+  if (!profile.ok) return profile;
+  if (profile.value !== countProfile) return unsupportedProfile('unsupported-count-measure');
   const groupOrdinal = dvtSubstraitExpressionReader.fieldOrdinal(aggregate.groupingExpressions[0]);
   const aggregateBinding = draft.sidecar.relations.find(
     (relation) => relation.relAnchor === aggregateAnchor
@@ -66,7 +68,7 @@ export function inspectAggregateWrapper(
     aggregateBinding.sourceRef != null ||
     aggregateBinding.displayName !== inputBinding.displayName
   ) {
-    return null;
+    return unsupportedProfile('unsupported-aggregate-binding');
   }
   const wrapperFields = sortedFields(draft, aggregateBinding.relationId);
   const groupField = wrapperFields[0];
@@ -80,14 +82,16 @@ export function inspectAggregateWrapper(
     typeof countField.displayName !== 'string' ||
     countField.displayName !== root.value.names[1]
   ) {
-    return null;
+    return unsupportedProfile('unsupported-aggregate-fields');
   }
 
   const plan = clone(PlanSchema, draft.plan);
   const baseRoot = plan.relations[0]?.relType;
-  if (baseRoot?.case !== 'root' || baseRoot.value.input?.relType.case !== 'aggregate') return null;
+  if (baseRoot?.case !== 'root' || baseRoot.value.input?.relType.case !== 'aggregate')
+    return unsupportedProfile('unsupported-aggregate-root');
   const baseInput = baseRoot.value.input.relType.value.input;
-  if (baseInput?.relType.case !== 'set' && baseInput?.relType.case !== 'join') return null;
+  if (baseInput?.relType.case !== 'set' && baseInput?.relType.case !== 'join')
+    return unsupportedProfile('unsupported-aggregate-input');
   baseRoot.value.input = baseInput;
   removeFunction(plan, measure.measure.functionReference);
   const fields = draft.sidecar.fields.flatMap((field) => {
@@ -105,7 +109,7 @@ export function inspectAggregateWrapper(
       (field, outputOrdinal) => field.outputOrdinal !== outputOrdinal || field.displayName == null
     )
   ) {
-    return null;
+    return unsupportedProfile('unsupported-aggregate-input-fields');
   }
   baseRoot.value.names = baseResultFields.map((field) => field.displayName!);
   const baseDraft = withCurrentHash({
@@ -127,23 +131,26 @@ export function inspectAggregateWrapper(
     draft.sidecar.relations.length !== baseDraft.sidecar.relations.length + 1 ||
     draft.sidecar.fields.length !== baseDraft.sidecar.fields.length + 1
   ) {
-    return null;
+    return unsupportedProfile('unsupported-aggregate-base');
   }
   return {
-    kind: 'aggregate',
-    baseDraft,
-    groupFieldName: baseGroupField.name,
-    measureName: countField.displayName,
-    resultRelationId: aggregateBinding.relationId,
-    outputs: [
-      { ...baseGroupField, name: groupField.displayName, outputOrdinal: 0 },
-      {
-        name: countField.displayName,
-        fieldId: countField.fieldId,
-        outputOrdinal: 1,
-        dataType: 'i64',
-        nullable: false,
-      },
-    ],
+    ok: true,
+    value: {
+      kind: 'aggregate',
+      baseDraft,
+      groupFieldName: baseGroupField.name,
+      measureName: countField.displayName,
+      resultRelationId: aggregateBinding.relationId,
+      outputs: [
+        { ...baseGroupField, name: groupField.displayName, outputOrdinal: 0 },
+        {
+          name: countField.displayName,
+          fieldId: countField.fieldId,
+          outputOrdinal: 1,
+          dataType: 'i64',
+          nullable: false,
+        },
+      ],
+    },
   };
 }

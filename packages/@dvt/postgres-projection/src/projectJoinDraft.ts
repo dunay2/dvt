@@ -32,7 +32,8 @@ export async function projectDvtJoinDraftToPostgresSql(draft: DvtSubstraitJoinDr
 > {
   const inspection = inspectDvtSubstraitJoinDraft(draft);
   if (!inspection.ok) {
-    const wrapper = inspectRelationalGroupedComposition(draft, inspectDvtSubstraitJoinDraft);
+    const grouped = inspectRelationalGroupedComposition(draft, inspectDvtSubstraitJoinDraft);
+    const wrapper = grouped.ok ? grouped.value : null;
     const base = wrapper == null ? null : inspectDvtSubstraitJoinDraft(wrapper.baseDraft);
     if (wrapper != null && base?.ok) {
       const ast = buildGroupedRelationalPostgresAst(
@@ -53,7 +54,7 @@ export async function projectDvtJoinDraftToPostgresSql(draft: DvtSubstraitJoinDr
     }
     throw new DvtSubstraitPostgresProjectionError(
       'unsupported_shape',
-      'PostgreSQL projection requires an admitted N-input JOIN shape.'
+      `PostgreSQL projection requires an admitted N-input JOIN shape: ${grouped.ok ? 'unsupported-join-base' : grouped.reason}.`
     );
   }
   const ast = buildNInputJoinPostgresAst(inspection.projection);

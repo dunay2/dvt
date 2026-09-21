@@ -1,4 +1,7 @@
 /** A disposable read model of admitted wrappers, never an authoring authority. */
+import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+
+import { unsupportedProfile, type ProfileInspection } from './substrait-profile/inspection.js';
 import { inspectAggregateWrapper } from './substraitAggregateWrapper.js';
 import {
   hasCurrentJoinSemanticHash,
@@ -29,10 +32,29 @@ export type RelationalGroupedComposition = Readonly<{
   windowName?: string;
 }>;
 
+type WrapperInspector = (
+  draft: DvtSubstraitJoinDraft,
+  inspectBase: InspectCompositionBase
+) => ProfileInspection<RelationalGroupedComposition>;
+
+const registrations = {
+  aggregate: inspectAggregateWrapper,
+  project: inspectWindowWrapper,
+} satisfies Partial<Record<NonNullable<Rel['relType']['case']>, WrapperInspector>>;
+const inspectors: ReadonlyMap<string, WrapperInspector> = new Map(Object.entries(registrations));
+
 export function inspectRelationalGroupedComposition(
   draft: DvtSubstraitJoinDraft,
   inspectBase: InspectCompositionBase
-): RelationalGroupedComposition | null {
-  if (!hasUniqueJoinSidecarIdentity(draft) || !hasCurrentJoinSemanticHash(draft)) return null;
-  return inspectWindowWrapper(draft, inspectBase) ?? inspectAggregateWrapper(draft, inspectBase);
+): ProfileInspection<RelationalGroupedComposition> {
+  if (!hasUniqueJoinSidecarIdentity(draft)) return unsupportedProfile('ambiguous-sidecar-identity');
+  if (!hasCurrentJoinSemanticHash(draft)) return unsupportedProfile('stale-semantic-hash');
+  const root = draft.plan.relations[0]?.relType;
+  if (draft.plan.relations.length !== 1 || root?.case !== 'root')
+    return unsupportedProfile('unsupported-plan-root');
+  const kind = root.value.input?.relType.case;
+  const inspect = kind == null ? undefined : inspectors.get(kind);
+  return inspect == null
+    ? unsupportedProfile('unsupported-wrapper-kind')
+    : inspect(draft, inspectBase);
 }

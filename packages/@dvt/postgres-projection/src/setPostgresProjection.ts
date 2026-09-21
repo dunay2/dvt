@@ -107,13 +107,14 @@ export function buildSetCompositionPostgresAst(
 export async function projectDvtSetDraftToPostgresSql(
   draft: DvtSubstraitSetDraft
 ): Promise<Readonly<{ sql: string; projection: DvtSubstraitSetProjection; ast: PostgresAstNode }>> {
-  const composition = inspectDvtSubstraitSetComposition(draft);
-  if (composition == null) {
+  const inspection = inspectDvtSubstraitSetComposition(draft);
+  if (!inspection.ok) {
     throw new DvtSubstraitPostgresProjectionError(
       'unsupported_shape',
-      'PostgreSQL projection requires an admitted N-input SetRel shape.'
+      `PostgreSQL projection requires an admitted N-input SetRel shape: ${inspection.reason}.`
     );
   }
+  const composition = inspection.value;
   const ast = buildSetCompositionPostgresAst(composition);
   return { projection: composition.projection, ast, sql: await renderPostgresAst(ast) };
 }
