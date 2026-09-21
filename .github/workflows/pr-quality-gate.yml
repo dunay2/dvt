@@ -58,7 +58,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 2
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Validate workflow scope policy JSON
@@ -234,6 +234,9 @@ jobs:
           steps.scope.outputs.feature_mechanization_relevant == 'true') || (github.event_name ==
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:feature-mechanization:implementation
+        env:
+          GIT_BASE: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
+          GIT_HEAD: ${{ github.sha }}
 
       - name: ADR-0000 traceability gate
         if:
