@@ -22,6 +22,9 @@ export function CanvasRelationalTreeInspection({
   onExpandedChange: (expanded: boolean) => void;
 }>): JSX.Element | null {
   if (model.projection == null) return null;
+  const selectedSortFetch =
+    model.selectedNode?.operator === 'sort' || model.selectedNode?.operator === 'fetch';
+  const hasExpression = !selectedSortFetch && (model.selectedNode?.expressionRefs.length ?? 0) > 0;
   return (
     <div
       data-slot="canvas-relational-tree-inspection"
@@ -56,10 +59,10 @@ export function CanvasRelationalTreeInspection({
         />
         {expanded &&
         model.selectedNode != null &&
-        (model.selectedNode.expressionRefs.length > 0 ||
+        (hasExpression ||
           model.selectedNode.operator === 'read' ||
           model.selectedNode.operator === 'cross' ||
-          (model.authoringAvailable && model.selectedNode.operator === 'fetch')) ? (
+          selectedSortFetch) ? (
           <CanvasRelationalTreeEditorFrame
             operation={
               model.selectedNode.operator === 'read'
@@ -72,11 +75,13 @@ export function CanvasRelationalTreeInspection({
                 : undefined
             }
             relationId={model.selectedNode.relationId}
-            hasExpression={model.selectedNode.expressionRefs.length > 0}
+            hasExpression={hasExpression}
             readOnly
             onClose={() => onExpandedChange(false)}
           >
-            {model.selectedNode.operator === 'read' ? null : model.selectedNode.operator ===
+            {selectedSortFetch ? (
+              <p className="text-xs text-(--text-primary)">{model.selectedNode.displayName}</p>
+            ) : model.selectedNode.operator === 'read' ? null : model.selectedNode.operator ===
               'cross' ? (
               <CanvasRelationalCrossNotice />
             ) : (

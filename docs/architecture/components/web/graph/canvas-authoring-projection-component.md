@@ -177,6 +177,15 @@ the editor draft; persistence still belongs to explicit Apply through the
 existing authoring rail. Selecting a card opens its properties without fetching
 rows, running the model or applying a semantic revision.
 
+Applied inspection dispatches by the selected canonical operation, including the
+transition immediately after Apply. Sort and Fetch show their projected key/order
+or limit/offset summary in Properties and retain the selected data dock. They do
+not mount the scalar predicate viewer: a sort-key reference is not a JOIN
+condition, and Fetch has no scalar predicate. Read-only inspection follows the
+same rule. JOIN and other expression-owning operations retain their existing
+expression tree. This boundary must hold while navigation waits for Apply; it
+must not reset selection, swallow projection errors or change the saved plan.
+
 ```mermaid
 flowchart LR
   Container[Operator form] --> Controller[Local form controller]
