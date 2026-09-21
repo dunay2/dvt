@@ -77,6 +77,25 @@ describe('explicit instance append admission', () => {
   it('admits an already participating physical source without cloning it', () => {
     expect(sourceOccurrenceAppendRejection(setup())).toBeNull();
   });
+  it.each(['integer', 'numeric', 'date', 'jsonb'])(
+    'admits a compatible key alongside an unsupported %s field',
+    (type) => {
+      const args = setup();
+      const input = {
+        ...args.input,
+        fields: [
+          ...args.input.fields,
+          {
+            ...args.input.fields[0]!,
+            name: 'additional',
+            type,
+            joinDataType: null,
+          },
+        ],
+      };
+      expect(sourceOccurrenceAppendRejection({ ...args, input })).toBeNull();
+    }
+  );
   it('rejects read-only, absent input and unsupported composition explicitly', () => {
     const args = setup();
     expect(sourceOccurrenceAppendRejection({ ...args, editable: false })).toBe('read_only');
