@@ -1,5 +1,6 @@
 /** Owns physical Read bindings and source compatibility for the admitted JOIN profile. */
 import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { DvtSubstraitRelationBindingV1Schema } from '@dvt/contracts';
 
 import {
   hasSameConnectionRef,
@@ -40,7 +41,7 @@ export function inspectJoinInputs(
       inspectedFieldTypes.some((dataType) => dataType == null) ||
       binding == null ||
       binding.sourceRef == null ||
-      binding.displayName !== table.table
+      !DvtSubstraitRelationBindingV1Schema.safeParse(binding).success
     ) {
       return null;
     }
