@@ -52,7 +52,7 @@ export function CanvasOperationMenu({
       <PopoverContent
         align="start"
         aria-label={copy.add}
-        className="w-80 max-w-[calc(100vw-1rem)] border-(--border-subtle) bg-(--surface-panel) p-0 text-(--text-strong)"
+        className="w-80 max-w-[calc(100vw-1rem)] border-(--border-subtle) bg-(--surface-panel) p-0 font-sans text-(--text-strong)"
       >
         <Command label={copy.add} className="bg-transparent text-inherit" loop>
           <CommandInput aria-label={copy.search} placeholder={copy.search} />

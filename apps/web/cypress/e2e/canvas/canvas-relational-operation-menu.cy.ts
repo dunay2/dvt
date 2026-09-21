@@ -43,6 +43,9 @@ describe('Compact semantic operation menu', () => {
     }
     cy.screenshot('operation-menu-groups');
     cy.get(search).type('LEFT JOIN');
+    cy.get('[data-operation="left_join"]')
+      .should('have.css', 'font-family')
+      .and('contain', 'sans-serif');
     cy.get('[role="option"][data-selected="true"]').should('contain.text', 'LEFT JOIN');
     cy.get(search).type('{enter}');
     cy.get('[role="listbox"]').should('not.exist');
