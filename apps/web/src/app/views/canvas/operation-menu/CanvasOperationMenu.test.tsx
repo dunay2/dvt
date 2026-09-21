@@ -97,6 +97,18 @@ describe('Canvas operation menu', () => {
     act(() => item.click());
     expect(onSelect).not.toHaveBeenCalled();
   });
+  it.each(['Enter', ' ', 'ArrowDown'])(
+    'opens on %s without relying on a synthesized click',
+    (key) => {
+      act(() =>
+        host
+          .querySelector('button')!
+          .dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }))
+      );
+      expect(document.querySelector('[role="listbox"]')).not.toBeNull();
+      expect(onSelect).not.toHaveBeenCalled();
+    }
+  );
   it('dispatches one exact admitted selector and dismisses the menu', () => {
     open();
     act(() => document.querySelector<HTMLElement>('[data-operation="left_join"]')!.click());

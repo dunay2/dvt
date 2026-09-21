@@ -33,9 +33,15 @@ export function CanvasOperationMenu({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           data-slot="canvas-operation-menu-trigger"
+          onKeyDown={(event) => {
+            if (!['Enter', ' ', 'ArrowDown'].includes(event.key) || event.repeat) return;
+            event.preventDefault();
+            setOpen(true);
+          }}
           className="gap-2 text-(--text-strong)"
         >
           <Plus aria-hidden="true" className="size-4 text-(--status-info)" />
