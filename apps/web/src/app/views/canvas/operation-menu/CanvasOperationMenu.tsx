@@ -58,71 +58,73 @@ export function CanvasOperationMenu({
           <CommandInput aria-label={copy.search} placeholder={copy.search} />
           <CommandList className="max-h-[min(24rem,var(--radix-popover-content-available-height))]">
             <CommandEmpty>{copy.empty}</CommandEmpty>
-            {(['combine', 'transform', 'order'] as const).map((group) => (
-              <CommandGroup
-                key={group}
-                heading={copy[group]}
-                className="text-inherit [&_[cmdk-group-heading]]:text-(--text-muted)"
-              >
-                {items
-                  .filter((item) => item.group === group)
-                  .map((item) => {
-                    const Icon = resolveCanvasRelationalOperationPresentation(item.id).icon;
-                    const reasonId = `${descriptionId}-${item.id}`;
-                    return (
-                      <CommandItem
-                        key={item.id}
-                        value={item.id}
-                        keywords={[item.label, copy[group]]}
-                        disabled={!item.selectable}
-                        aria-describedby={item.reason == null ? undefined : reasonId}
-                        data-operation={item.id}
-                        data-slot={`dvt-select-operation-${item.id.replaceAll('_', '-')}`}
-                        data-operator-tool={
-                          Object.hasOwn(canvasRelationalOperationPresentation, item.id)
-                            ? undefined
-                            : item.id
-                        }
-                        draggable={item.draggable}
-                        onDragStart={(event) => {
-                          if (
-                            !item.selectable ||
-                            !item.draggable ||
-                            !Object.hasOwn(canvasRelationalOperationPresentation, item.id)
-                          ) {
-                            event.preventDefault();
-                            return;
+            {(['combine', 'transform', 'order'] as const)
+              .filter((group) => items.some((item) => item.group === group))
+              .map((group) => (
+                <CommandGroup
+                  key={group}
+                  heading={copy[group]}
+                  className="text-inherit [&_[cmdk-group-heading]]:text-(--text-muted)"
+                >
+                  {items
+                    .filter((item) => item.group === group)
+                    .map((item) => {
+                      const Icon = resolveCanvasRelationalOperationPresentation(item.id).icon;
+                      const reasonId = `${descriptionId}-${item.id}`;
+                      return (
+                        <CommandItem
+                          key={item.id}
+                          value={item.id}
+                          keywords={[item.label, copy[group]]}
+                          disabled={!item.selectable}
+                          aria-describedby={item.reason == null ? undefined : reasonId}
+                          data-operation={item.id}
+                          data-slot={`dvt-select-operation-${item.id.replaceAll('_', '-')}`}
+                          data-operator-tool={
+                            Object.hasOwn(canvasRelationalOperationPresentation, item.id)
+                              ? undefined
+                              : item.id
                           }
-                          writeCanvasRelationalOperationDrag(
-                            event.dataTransfer,
-                            item.id as CanvasRelationalOperation
-                          );
-                        }}
-                        onDragEnd={() => setOpen(false)}
-                        onSelect={() => {
-                          if (!item.selectable) return;
-                          setOpen(false);
-                          onSelect(item.id);
-                        }}
-                        className="items-start data-[selected=true]:bg-(--surface-selected) data-[selected=true]:text-(--text-strong)"
-                      >
-                        <Icon aria-hidden="true" className="mt-0.5 size-4 text-(--status-info)" />
-                        <span className="min-w-0 flex-1">
-                          <span className="block">{item.label}</span>
-                          {item.reason == null ? null : (
-                            <span id={reasonId} className="block text-xs text-(--text-muted)">
-                              {item.reason}
-                            </span>
-                          )}
-                        </span>
-                        {item.active ? (
-                          <Check className="mt-0.5 size-4" aria-label={copy.current} />
-                        ) : null}
-                      </CommandItem>
-                    );
-                  })}
-              </CommandGroup>
-            ))}
+                          draggable={item.draggable}
+                          onDragStart={(event) => {
+                            if (
+                              !item.selectable ||
+                              !item.draggable ||
+                              !Object.hasOwn(canvasRelationalOperationPresentation, item.id)
+                            ) {
+                              event.preventDefault();
+                              return;
+                            }
+                            writeCanvasRelationalOperationDrag(
+                              event.dataTransfer,
+                              item.id as CanvasRelationalOperation
+                            );
+                          }}
+                          onDragEnd={() => setOpen(false)}
+                          onSelect={() => {
+                            if (!item.selectable) return;
+                            setOpen(false);
+                            onSelect(item.id);
+                          }}
+                          className="items-start data-[selected=true]:bg-(--surface-selected) data-[selected=true]:text-(--text-strong)"
+                        >
+                          <Icon aria-hidden="true" className="mt-0.5 size-4 text-(--status-info)" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block">{item.label}</span>
+                            {item.reason == null ? null : (
+                              <span id={reasonId} className="block text-xs text-(--text-muted)">
+                                {item.reason}
+                              </span>
+                            )}
+                          </span>
+                          {item.active ? (
+                            <Check className="mt-0.5 size-4" aria-label={copy.current} />
+                          ) : null}
+                        </CommandItem>
+                      );
+                    })}
+                </CommandGroup>
+              ))}
           </CommandList>
         </Command>
       </PopoverContent>

@@ -97,6 +97,24 @@ describe('Canvas operation menu', () => {
     act(() => item.click());
     expect(onSelect).not.toHaveBeenCalled();
   });
+  it('omits empty groups before relational operands are available', () => {
+    act(() =>
+      root.render(
+        <CanvasOperationMenu
+          items={items.slice(1)}
+          copy={resolveCanvasOperationMenuCopy('en')}
+          onSelect={onSelect}
+        />
+      )
+    );
+    open();
+    const headings = Array.from(
+      document.querySelectorAll('[cmdk-group-heading]'),
+      (heading) => heading.textContent
+    );
+    expect(headings).toEqual(['Transform', 'Order and limit']);
+    expect(onSelect).not.toHaveBeenCalled();
+  });
   it.each(['Enter', ' ', 'ArrowDown'])(
     'opens on %s without relying on a synthesized click',
     (key) => {
