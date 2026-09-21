@@ -76,7 +76,7 @@ export function CanvasRelationalTreeNodeButton({
       data-operator={node.operator}
       onClick={() => {
         onSelect(node.locator);
-        if (node.operator !== 'read') onExpand?.(node.locator);
+        onExpand?.(node.locator);
       }}
       style={{
         touchAction: 'none',

@@ -7,6 +7,7 @@ import {
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
 import { CanvasRelationalTreeSelectedOperatorEditor } from './CanvasRelationalTreeSelectedOperatorEditor';
+import { SourceOccurrenceProperties } from './relational-source-occurrence/SourceOccurrenceProperties';
 import {
   CanvasRelationalTreeOperationEditor,
   type CanvasRelationalTreeOperationEditorProps,
@@ -33,6 +34,20 @@ export function CanvasRelationalTreeInlineEditor(
     onClose,
   } = props;
   if (operation == null || joinDraft == null) return null;
+  const read = joinDraft.sidecar.relations.find(
+    (binding) => binding.relationId === selectedRelationId && binding.sourceRef != null
+  );
+  if (read != null && appendInput == null && expanded)
+    return (
+      <SourceOccurrenceProperties
+        key={read.relationId}
+        draft={joinDraft}
+        relationId={read.relationId}
+        onChange={onChangeJoinDraft}
+        onClose={onClose}
+        onPendingChange={props.onPendingConditionChange}
+      />
+    );
   const inspection = inspectDvtSubstraitJoinPredicateContext(joinDraft)?.inspection;
   const selectedJoin = inspection?.projection.joinRelations.find(
     ({ relationId }) => relationId === selectedRelationId

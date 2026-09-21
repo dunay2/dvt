@@ -57,16 +57,27 @@ export function CanvasRelationalTreeInspection({
         {expanded &&
         model.selectedNode != null &&
         (model.selectedNode.expressionRefs.length > 0 ||
+          model.selectedNode.operator === 'read' ||
           model.selectedNode.operator === 'cross' ||
           (model.authoringAvailable && model.selectedNode.operator === 'fetch')) ? (
           <CanvasRelationalTreeEditorFrame
-            operation={model.selectedNode.operation ?? 'unsupported'}
+            operation={
+              model.selectedNode.operator === 'read'
+                ? 'read'
+                : (model.selectedNode.operation ?? 'unsupported')
+            }
+            label={
+              model.selectedNode.operator === 'read'
+                ? (model.selectedNode.displayName ?? undefined)
+                : undefined
+            }
             relationId={model.selectedNode.relationId}
             hasExpression={model.selectedNode.expressionRefs.length > 0}
             readOnly
             onClose={() => onExpandedChange(false)}
           >
-            {model.selectedNode.operator === 'cross' ? (
+            {model.selectedNode.operator === 'read' ? null : model.selectedNode.operator ===
+              'cross' ? (
               <CanvasRelationalCrossNotice />
             ) : (
               <CanvasRelationalJoinExpressionTree
