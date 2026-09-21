@@ -45,9 +45,9 @@ describe('Canvas operation menu', () => {
     vi.stubGlobal(
       'ResizeObserver',
       class {
-        observe() {}
-        unobserve() {}
-        disconnect() {}
+        observe(): void {}
+        unobserve(): void {}
+        disconnect(): void {}
       }
     );
     Object.defineProperty(Element.prototype, 'scrollIntoView', {

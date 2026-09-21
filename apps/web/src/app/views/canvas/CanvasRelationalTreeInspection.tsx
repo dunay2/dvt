@@ -6,7 +6,6 @@ import { CanvasRelationalTreeOperationShelf } from './CanvasRelationalTreeOperat
 import { CanvasRelationalTreeView } from './CanvasRelationalTreeView';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { CanvasRelationalJoinExpressionTree } from './CanvasRelationalJoinExpressionTree';
-import { CanvasRelationalTreeOperatorTools } from './CanvasRelationalTreeOperatorTools';
 import { CanvasRelationalCrossNotice } from './CanvasRelationalCrossNotice';
 
 export function CanvasRelationalTreeInspection({
@@ -35,13 +34,10 @@ export function CanvasRelationalTreeInspection({
         operation={model.session.seed?.operation ?? null}
         selectedInputCount={model.session.seed?.inputIds.length ?? 0}
         onSelectOperation={model.session.selectOperation}
-      >
-        <CanvasRelationalTreeOperatorTools
-          draft={model.session.seed?.draft ?? null}
-          editable={model.authoringAvailable}
-          onChange={model.session.setJoinDraft}
-        />
-      </CanvasRelationalTreeOperationShelf>
+        draft={model.session.seed?.draft ?? null}
+        editable={model.authoringAvailable}
+        onChangeDraft={model.session.setJoinDraft}
+      />
       <div className="canvas-operation-workspace relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
         <CanvasRelationalTreeView
           transformNode={transformNode}

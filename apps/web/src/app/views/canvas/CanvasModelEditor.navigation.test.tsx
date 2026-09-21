@@ -13,6 +13,12 @@ import { CanvasModelEditor } from './CanvasModelEditor';
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
+import {
+  openOperationMenu,
+  setupOperationMenuDom,
+} from './operation-menu/operationMenu.test-support';
+
+setupOperationMenuDom();
 
 const NativeRequest = globalThis.Request;
 class MemoryRouterRequest extends NativeRequest {
@@ -96,10 +102,9 @@ function beginProjection(container: HTMLElement): void {
       .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')!
       .click();
   });
+  openOperationMenu(container);
   act(() => {
-    container
-      .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-projection"]')!
-      .click();
+    document.querySelector<HTMLElement>('[data-slot="dvt-select-operation-projection"]')!.click();
   });
 }
 

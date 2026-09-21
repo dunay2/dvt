@@ -69,22 +69,16 @@ export function DvtRelationalOperationChooser({
   choices,
   onSelect,
   copy = canvasViewCopy,
-  layout = 'stack',
   selectedOperation = null,
 }: Readonly<{
   choices: readonly CanvasRelationalOperationChoice[];
   onSelect: (operation: CanvasRelationalOperation) => void;
   copy?: RelationalOperationCopy;
-  layout?: 'stack' | 'shelf';
   selectedOperation?: CanvasRelationalOperation | null;
 }>): JSX.Element {
   return (
-    <div
-      data-slot="dvt-relational-operation-chooser"
-      className={layout === 'shelf' ? 'flex flex-wrap gap-2' : 'grid gap-2'}
-    >
+    <div data-slot="dvt-relational-operation-chooser" className="grid gap-2">
       {choices.map((choice) => {
-        const Icon = canvasRelationalOperationPresentation[choice.operation].icon;
         return (
           <Button
             key={choice.operation}
@@ -93,11 +87,7 @@ export function DvtRelationalOperationChooser({
             disabled={!choice.selectable}
             aria-pressed={selectedOperation === choice.operation}
             draggable={choice.selectable && selectedOperation == null}
-            className={
-              layout === 'shelf'
-                ? 'h-8 gap-2 px-2.5 text-sm font-medium aria-pressed:border-(--status-info) aria-pressed:bg-blue-950/40'
-                : 'h-auto min-w-40 justify-between gap-3 py-2 aria-pressed:border-(--status-info) aria-pressed:bg-blue-950/40'
-            }
+            className="h-auto min-w-40 justify-between gap-3 py-2 aria-pressed:border-(--status-info) aria-pressed:bg-blue-950/40"
             title={canvasRelationalAvailabilityLabel(choice.availability, copy)}
             data-slot={`dvt-select-operation-${choice.operation.replaceAll('_', '-')}`}
             onDragStart={(event) => {
@@ -114,9 +104,8 @@ export function DvtRelationalOperationChooser({
               onSelect(choice.operation);
             }}
           >
-            {layout === 'shelf' ? <Icon aria-hidden="true" className="size-4" /> : null}
             <span>{canvasRelationalOperationLabel(choice.operation, copy)}</span>
-            <span className={layout === 'shelf' ? 'sr-only' : 'text-xs font-normal opacity-70'}>
+            <span className="text-xs font-normal opacity-70">
               {canvasRelationalAvailabilityLabel(choice.availability, copy)}
             </span>
           </Button>

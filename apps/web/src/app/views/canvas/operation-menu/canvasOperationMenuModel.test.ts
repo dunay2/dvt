@@ -17,7 +17,10 @@ const choices: CanvasRelationalOperationChoice[] = operations.map((operation) =>
   availability: 'available',
   selectable: true,
 }));
-const build = (editable = true, language = 'en') =>
+const build = (
+  editable = true,
+  language = 'en'
+): ReturnType<typeof buildCanvasOperationMenuItems> =>
   buildCanvasOperationMenuItems({
     choices,
     tools: [{ id: 'sort', enabled: true, active: true, fields: [] }],

@@ -1,13 +1,20 @@
-/** Owned concern: keep admitted operation tools visible without another editing surface. */
-import { ChevronDown, Shapes } from 'lucide-react';
+/** Owned concern: connect operation discovery to existing draft forms and replacement confirmation. */
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import type {
   CanvasRelationalOperation,
   CanvasRelationalOperationChoice,
 } from './canvasRelationalOperationChoices';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-import { DvtRelationalOperationChooser } from './DvtRelationalOperationChooser';
+import { CanvasOperationMenu } from './operation-menu/CanvasOperationMenu';
+import { buildCanvasOperationMenuItems } from './operation-menu/canvasOperationMenuModel';
+import { resolveCanvasOperationMenuCopy } from './operation-menu/canvasOperationMenuCopy';
+import {
+  resolveCanvasRelationalOperatorTools,
+  type CanvasRelationalOperatorTool,
+} from './canvasRelationalTreeOperatorModel';
+import { CanvasRelationalTreeOperatorForm } from './CanvasRelationalTreeOperatorForm';
+import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
+import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import {
@@ -29,7 +36,9 @@ export function CanvasRelationalTreeOperationShelf({
   operation,
   selectedInputCount,
   onSelectOperation,
-  children,
+  draft,
+  editable,
+  onChangeDraft,
 }: Readonly<{
   choices: readonly CanvasRelationalOperationChoice[];
   copy: CanvasRelationalTreeWorkbenchCopy;
@@ -37,42 +46,47 @@ export function CanvasRelationalTreeOperationShelf({
   operation: CanvasRelationalOperation | null;
   selectedInputCount: number;
   onSelectOperation: (operation: CanvasRelationalOperation) => void;
-  children?: ReactNode;
+  draft: DvtSubstraitProjectionDraft | null;
+  editable: boolean;
+  onChangeDraft: (draft: DvtSubstraitProjectionDraft) => void;
 }>): JSX.Element {
-  const [expanded, setExpanded] = useState(true);
   const [replacement, setReplacement] = useState<CanvasRelationalOperation | null>(null);
+  const [selectedTool, setSelectedTool] = useState<CanvasRelationalOperatorTool | null>(null);
   const language = useApplicationLanguageStore((state) => state.language);
   const localCopy = resolveCanvasSemanticEditorCopy(language);
+  const menuCopy = resolveCanvasOperationMenuCopy(language);
+  const tools = draft == null ? [] : resolveCanvasRelationalOperatorTools(draft);
+  const items = buildCanvasOperationMenuItems({
+    choices,
+    tools,
+    operation,
+    editable,
+    copy,
+    menuCopy,
+  });
   return (
     <section
       data-slot="canvas-relational-tree-operation-shelf"
       className="shrink-0 border-b border-(--border-subtle) bg-(--surface-panel)"
     >
-      <div className="flex min-h-11 flex-wrap items-center gap-2 px-3 py-1.5">
-        <button
-          type="button"
-          data-slot="canvas-relational-tree-operation-shelf-toggle"
-          aria-expanded={expanded}
-          onClick={() => setExpanded((current) => !current)}
-          className="flex items-center gap-2 rounded px-2 py-1 text-sm font-medium text-(--text-strong) hover:bg-(--surface-selected)"
-        >
-          <Shapes aria-hidden="true" className="size-4 text-(--status-info)" />
-          {localCopy.operations}
-          <ChevronDown aria-hidden="true" className={`size-4 ${expanded ? 'rotate-180' : ''}`} />
-        </button>
-        {!expanded ? null : choices.length > 0 ? (
-          <DvtRelationalOperationChooser
-            choices={choices}
-            copy={copy}
-            layout="shelf"
-            selectedOperation={operation}
-            onSelect={(next) => {
-              if (next === operation) return;
-              if (operation != null) setReplacement(next);
-              else onSelectOperation(next);
-            }}
-          />
-        ) : (
+      <div className="flex min-h-10 items-center gap-2 px-3 py-1">
+        <CanvasOperationMenu
+          items={items}
+          copy={menuCopy}
+          onSelect={(next) => {
+            if (!items.some((item) => item.id === next && item.selectable)) return;
+            const tool = tools.find((item) => item.id === next);
+            if (tool != null) {
+              setSelectedTool(tool);
+              return;
+            }
+            const choice = choices.find((item) => item.operation === next);
+            if (choice == null || choice.operation === operation) return;
+            if (operation != null) setReplacement(choice.operation);
+            else onSelectOperation(choice.operation);
+          }}
+        />
+        {choices.length === 0 ? (
           <span className="text-xs text-(--text-muted)">
             {!hasOperands
               ? copy.relationalTreeSelectFirstSourceMessage
@@ -80,15 +94,18 @@ export function CanvasRelationalTreeOperationShelf({
                 ? copy.relationalTreeSelectNextSourceMessage
                 : copy.relationalTreeSelectOperationMessage}
           </span>
-        )}
-        {expanded && choices.length > 0 && selectedInputCount === 1 ? (
-          <span className="text-xs text-(--text-muted)">
-            {copy.relationalTreeSelectNextSourceMessage}
-          </span>
         ) : null}
-        {expanded ? children : null}
         {operation === 'cross_join' ? <CanvasRelationalCrossNotice /> : null}
       </div>
+      {selectedTool == null || draft == null ? null : (
+        <CanvasRelationalTreeOperatorForm
+          tool={selectedTool}
+          draft={draft}
+          title={copy[resolveCanvasRelationalOperationPresentation(selectedTool.id).labelKey]}
+          onClose={() => setSelectedTool(null)}
+          onChange={onChangeDraft}
+        />
+      )}
       <AlertDialog
         open={replacement != null}
         onOpenChange={(open) => {
