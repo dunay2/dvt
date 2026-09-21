@@ -14,14 +14,20 @@ import { readLiveGraphDraft } from '../liveProtectedRuntime';
 
 import { modelId } from './fixture';
 
-export function readPersistedDocument(): Cypress.Chainable<DvtSubstraitSemanticDocumentV1> {
+export function readPersistedDocument(
+  previousSha?: string,
+  attempt = 0
+): Cypress.Chainable<DvtSubstraitSemanticDocumentV1> {
   return readLiveGraphDraft().then((response) => {
     expect(response.status).to.equal(200);
     const record = WorkspaceGraphDraftReadSuccessSchema.parse(response.body).record;
     const model = record.draft.nodes.find((node) => node.id === modelId);
     const authoring = model?.metadata?.transformAuthoring as
       { semanticDocument?: unknown } | undefined;
-    return canonicalizeDvtSubstraitSemanticDocumentV1(authoring?.semanticDocument);
+    const document = canonicalizeDvtSubstraitSemanticDocumentV1(authoring?.semanticDocument);
+    if (document.semanticPlan.sha256 !== previousSha) return document;
+    if (attempt >= 60) throw new Error('The edited semantic revision was not persisted');
+    return cy.wait(250).then(() => readPersistedDocument(previousSha, attempt + 1));
   });
 }
 

@@ -52,18 +52,17 @@ describe('Persisted semantic editing through protected Preview and Run', () => {
       runRequests += 1;
       request.continue();
     });
-    importSemanticModel(leftJoinDocument());
+    const initialDocument = leftJoinDocument();
+    importSemanticModel(initialDocument);
     openWorkbenchModel(modelId);
     workbenchOperation('sort').click();
     cy.get('[role="dialog"] button[type="submit"]').click();
     workbenchOperation('fetch').click();
     cy.contains('[role="dialog"] label', 'LIMIT').find('input').clear().type('2');
     cy.get('[role="dialog"] button[type="submit"]').click();
-    cy.intercept('PUT', '**/workspace/graph/draft').as('wrappedDraft');
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
-    cy.wait('@wrappedDraft').its('response.statusCode').should('equal', 200);
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
-    readPersistedDocument().then((document) => {
+    readPersistedDocument(initialDocument.semanticPlan.sha256).then((document) => {
       beforeEdit = document;
     });
     cy.get('[data-operator="fetch"]').then(($card) => {
@@ -81,11 +80,9 @@ describe('Persisted semantic editing through protected Preview and Run', () => {
       '[data-slot="canvas-relational-tree-inline-editor"]:visible button[type="submit"]'
     ).click();
     cy.get('[data-slot="canvas-model-view-tab"][data-view="data"]').click();
-    cy.intercept('PUT', '**/workspace/graph/draft').as('editedDraft');
     cy.contains('[role="alertdialog"] button', 'Apply and continue').click();
-    cy.wait('@editedDraft').its('response.statusCode').should('equal', 200);
     cy.get('[role="alertdialog"]').should('not.exist');
-    readPersistedDocument().then((document) => {
+    cy.then(() => readPersistedDocument(beforeEdit.semanticPlan.sha256)).then((document) => {
       persisted = document;
       expectCanonicalOrdering(document, sortId, fetchId);
       expect(document.semanticPlan.sha256).not.to.equal(beforeEdit.semanticPlan.sha256);
