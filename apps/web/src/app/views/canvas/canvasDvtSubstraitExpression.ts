@@ -41,23 +41,16 @@ export const dvtSubstraitExpression = {
     if (!Number.isSafeInteger(ordinal) || ordinal < 0) {
       throw new Error('Substrait direct field ordinal must be a non-negative safe integer.');
     }
+    const segment = { referenceType: { case: 'structField' as const, value: { field: ordinal } } };
     return create(ExpressionSchema, {
       rexType: {
         case: 'selection',
         value: {
           referenceType: {
             case: 'directReference',
-            value: {
-              referenceType: {
-                case: 'structField',
-                value: { field: ordinal },
-              },
-            },
+            value: segment,
           },
-          rootType: {
-            case: 'rootReference',
-            value: {},
-          },
+          rootType: { case: 'rootReference', value: {} },
         },
       },
     });
