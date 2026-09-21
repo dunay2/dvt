@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import DetailSource from './CanvasRelationalJoinExpressionTree.tsx?raw';
+import DetailSource from './CanvasRelationalExpressionTree.tsx?raw';
 import GeometrySource from './canvasRelationalTreeGeometry.ts?raw';
 import GraphNodeSource from './CanvasRelationalTreeGraphNode.tsx?raw';
 import NodeButtonSource from './CanvasRelationalTreeNodeButton.tsx?raw';
 import CardMenuSource from './CanvasRelationalTreeCardMenu.tsx?raw';
 import InspectionSource from './CanvasRelationalTreeInspection.tsx?raw';
+import InspectionModelSource from './relational-inspection/inspectionModel.ts?raw';
+import InspectionPanelSource from './relational-inspection/RelationalInspectionPanel.tsx?raw';
+import NodePresentationSource from './canvasRelationalNodePresentation.ts?raw';
 import RemovalSessionSource from './useCanvasRelationalTreeRemoval.ts?raw';
 import SemanticZoomSource from './canvasRelationalTreeSemanticZoom.ts?raw';
 import ScalarTreeSource from './CanvasRelationalScalarTree.tsx?raw';
@@ -37,6 +40,7 @@ import ApplyCommandSource from './useCanvasRelationalTreeApplyCommand.ts?raw';
 import WorkbenchModelSource from './useCanvasRelationalTreeWorkbenchModel.ts?raw';
 import AuthoringSessionSource from './useCanvasRelationalTreeAuthoringSession.ts?raw';
 import AuthoringModelSource from './canvasRelationalTreeAuthoringModel.ts?raw';
+import AuthoringCandidatesSource from './canvasRelationalTreeAuthoringCandidates.ts?raw';
 import AuthoringProjectionSource from './canvasRelationalTreeAuthoringProjection.ts?raw';
 import ExistingJoinDraftSource from './canvasRelationalTreeExistingJoinDraft.ts?raw';
 import AuthoringOptionsSource from './useCanvasRelationalTreeAuthoringOptions.ts?raw';
@@ -48,6 +52,9 @@ import UseViewportSource from './useCanvasRelationalTreeViewport.ts?raw';
 
 describe('Canvas relational-tree Workbench architecture', () => {
   it('keeps query consumption, catalogue, graph and contextual detail in bounded components', () => {
+    expect(InspectionSource.split('\n').length).toBeLessThan(80);
+    expect(InspectionModelSource.split('\n').length).toBeLessThan(120);
+    expect(InspectionPanelSource.split('\n').length).toBeLessThan(100);
     expect(WorkbenchSource.split('\n').length).toBeLessThan(140);
     expect(CatalogueSource.split('\n').length).toBeLessThan(120);
     expect(TreeSource.split('\n').length).toBeLessThan(150);
@@ -69,7 +76,8 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(WorkbenchModelSource.split('\n').length).toBeLessThan(180);
     expect(AuthoringSessionSource.split('\n').length).toBeLessThan(180);
     expect(ApplyCommandSource.split('\n').length).toBeLessThan(100);
-    expect(AuthoringModelSource.split('\n').length).toBeLessThan(260);
+    expect(AuthoringModelSource.split('\n').length).toBeLessThan(200);
+    expect(AuthoringCandidatesSource.split('\n').length).toBeLessThan(150);
     expect(AuthoringProjectionSource.split('\n').length).toBeLessThan(90);
     expect(ExistingJoinDraftSource.split('\n').length).toBeLessThan(80);
     expect(ExistingJoinSeedSource.split('\n').length).toBeLessThan(80);
@@ -102,6 +110,9 @@ describe('Canvas relational-tree Workbench architecture', () => {
       NodeButtonSource,
       CardMenuSource,
       InspectionSource,
+      InspectionModelSource,
+      InspectionPanelSource,
+      NodePresentationSource,
       GeometrySource,
       SemanticZoomSource,
       ScalarTreeSource,
@@ -144,7 +155,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(WorkbenchSource).not.toContain('minmax(15rem,20rem)');
     expect(DetailSource).not.toContain('<dl');
     expect(DetailSource).toContain('projectSemanticWorkbenchGraph');
-    expect(DetailSource).toContain("view: 'join-expression'");
+    expect(DetailSource).toContain("view: 'relation-expressions'");
     expect(DetailSource).not.toContain('GitMerge');
     expect(SemanticZoomSource).toContain('projectSemanticWorkbenchGraph');
     expect(GraphNodeSource).toContain('CanvasRelationalScalarTree');

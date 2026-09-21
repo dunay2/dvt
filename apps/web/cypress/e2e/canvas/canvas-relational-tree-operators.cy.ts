@@ -186,7 +186,7 @@ describe('Relational operator toolbar', () => {
       expect(style.fontSize).to.equal('14px');
       expect($tab[0]!.getBoundingClientRect().height).to.equal(36);
     });
-    cy.get('[data-slot="canvas-join-expression-tree"]:visible').should('have.length', 1);
+    cy.get('[data-slot="canvas-relational-expression-tree"]:visible').should('have.length', 1);
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('not.be.visible');
     cy.get('[data-slot="canvas-operation-properties-tab"]:visible').click();
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
@@ -214,7 +214,10 @@ describe('Relational operator toolbar', () => {
       '[data-slot="semantic-workbench-join-condition-editor"] select[aria-label="Comparador de la condición"]';
     cy.get(comparison).select('not_equal').as('comparison');
     cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
-    cy.get('[data-slot="canvas-join-expression-tree"]:visible').should('contain.text', 'NOT_EQUAL');
+    cy.get('[data-slot="canvas-relational-expression-tree"]:visible').should(
+      'contain.text',
+      'NOT_EQUAL'
+    );
     cy.get('[data-slot="canvas-operation-properties-tab"]:visible').click();
     cy.get('@comparison').should('have.value', 'not_equal');
     cy.get('@comparison').trigger('keydown', { key: 'Escape' });
@@ -436,7 +439,7 @@ describe('Relational operator toolbar', () => {
       initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
     cy.get('[data-operator="join"]').click();
-    cy.get('[data-slot="canvas-join-expression-node"]').should('have.length.at.least', 3);
+    cy.get('[data-slot="canvas-relational-expression-node"]').should('have.length.at.least', 3);
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
     workbenchOperation('aggregate').click();
     cy.get(
@@ -452,7 +455,9 @@ describe('Relational operator toolbar', () => {
       .find('button[type="submit"]')
       .click();
     cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
-    cy.get('[data-slot="canvas-join-expression-node"][data-kind="field"]:visible').first().click();
+    cy.get('[data-slot="canvas-relational-expression-node"][data-kind="field"]:visible')
+      .first()
+      .click();
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
     cy.screenshot('selected-join-connected-expression-under-window');
     cy.get('[aria-label="Comparador de la condición"]').select('not_equal');
@@ -460,7 +465,7 @@ describe('Relational operator toolbar', () => {
     cy.get('[data-operator="aggregate"]').rightclick();
     cy.get('[data-slot="canvas-relational-edit-operation"]').click();
     cy.get('[data-slot="context-menu-content"][data-state="open"]').should('not.exist');
-    cy.get('[data-slot="canvas-join-expression-tree"]').should('contain.text', 'COUNT');
+    cy.get('[data-slot="canvas-relational-expression-tree"]').should('contain.text', 'COUNT');
     cy.contains(
       '[data-slot="canvas-relational-tree-inline-editor"]',
       'downstream dependencies'

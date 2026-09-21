@@ -126,7 +126,7 @@ export function SemanticTransformFocusPanel({
         transform,
         expandedJoinRelationId == null
           ? { view: 'relations' }
-          : { view: 'join-expression', joinRelationId: expandedJoinRelationId }
+          : { view: 'relation-expressions', expressionRelationId: expandedJoinRelationId }
       ),
     [expandedJoinRelationId, transform]
   );

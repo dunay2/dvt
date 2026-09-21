@@ -9,7 +9,7 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import { SemanticWorkbenchJoinConditionEditor } from './SemanticWorkbenchJoinConditionEditor';
 import type { CanonicalNode } from '../../types/canonical';
-import { CanvasRelationalJoinExpressionTree } from './CanvasRelationalJoinExpressionTree';
+import { CanvasRelationalExpressionTree } from './CanvasRelationalExpressionTree';
 
 export function DvtSubstraitJoinPredicateEditors({
   disabled,
@@ -88,7 +88,7 @@ export function DvtSubstraitJoinPredicateEditors({
                                 condition: edit.condition,
                               });
                       return (
-                        <CanvasRelationalJoinExpressionTree
+                        <CanvasRelationalExpressionTree
                           transformNode={transformNode}
                           relationId={joinRelation.relationId}
                           draft={previewDraft}

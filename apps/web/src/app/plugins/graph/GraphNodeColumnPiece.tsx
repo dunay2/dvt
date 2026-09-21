@@ -5,8 +5,6 @@ import {
   type ComponentPropsWithoutRef,
   type DragEventHandler,
   type ReactElement,
-  useEffect,
-  useRef,
 } from 'react';
 
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
@@ -16,6 +14,7 @@ import type { GraphNodeColumnReorderIdentity } from './graphNodeColumnContracts'
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { graphNodeColumnClasses } from './graphVisualTokens';
 import { GraphNodeColumnChildren } from './GraphNodeColumnChildren';
+import { useGraphColumnOutputFocus } from './useGraphColumnOutputFocus';
 
 export type GraphNodeColumnCopy = ReturnType<typeof resolveGraphNodeCardCopy>;
 
@@ -58,18 +57,7 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
     const accessibleLabel = (
       isOutput ? copy.columnOutputAriaLabelTemplate : copy.columnAvailableInputAriaLabelTemplate
     ).replace('{column}', displayedName);
-    const outputPointerPreviousFocusRef = useRef<Element | null>(null);
-    const outputFocusFrameRef = useRef<Readonly<{ id: number; ownerWindow: Window }> | null>(null);
-
-    useEffect(
-      () => () => {
-        const pendingFrame = outputFocusFrameRef.current;
-        if (pendingFrame != null) {
-          pendingFrame.ownerWindow.cancelAnimationFrame(pendingFrame.id);
-        }
-      },
-      []
-    );
+    const outputFocus = useGraphColumnOutputFocus();
 
     return (
       <div
@@ -121,35 +109,13 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
             disabled={outputToggleDisabled}
             className={graphNodeColumnClasses.outputState}
             onPointerDown={(event) => {
-              outputPointerPreviousFocusRef.current =
-                event.currentTarget.ownerDocument.activeElement;
+              outputFocus.capturePointerFocus(event.currentTarget);
               event.stopPropagation();
             }}
             onClick={(event) => {
               event.stopPropagation();
               onOutputToggle();
-              const outputControl = event.currentTarget;
-              const ownerDocument = outputControl.ownerDocument;
-              const ownerWindow = ownerDocument.defaultView;
-              const previousFocus = outputPointerPreviousFocusRef.current;
-              outputPointerPreviousFocusRef.current = null;
-              outputControl.focus({ preventScroll: true });
-              if (ownerWindow == null) return;
-              const pendingFrame = outputFocusFrameRef.current;
-              if (pendingFrame != null) {
-                pendingFrame.ownerWindow.cancelAnimationFrame(pendingFrame.id);
-              }
-              const id = ownerWindow.requestAnimationFrame(() => {
-                outputFocusFrameRef.current = null;
-                const activeElement = ownerDocument.activeElement;
-                if (
-                  outputControl.isConnected &&
-                  (activeElement === outputControl || activeElement === previousFocus)
-                ) {
-                  outputControl.focus({ preventScroll: true });
-                }
-              });
-              outputFocusFrameRef.current = { id, ownerWindow };
+              outputFocus.retainFocus(event.currentTarget);
             }}
           >
             {isOutput ? (

@@ -69,7 +69,7 @@ describe('Workbench predicates', () => {
       .and('contain.text', 'LOWER(')
       .and('contain.text', 'customers.customer_id');
     cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
-    cy.get('[data-slot="canvas-join-expression-tree"]:visible')
+    cy.get('[data-slot="canvas-relational-expression-tree"]:visible')
       .should('contain.text', 'NOT_EQUAL')
       .and('contain.text', 'LOWER')
       .and('contain.text', 'customers.customer_id')
@@ -84,7 +84,10 @@ describe('Workbench predicates', () => {
       .contains('button', 'Añadir condición')
       .click();
     cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
-    cy.get('[data-slot="canvas-join-expression-tree"]:visible').should('contain.text', 'LOWER');
+    cy.get('[data-slot="canvas-relational-expression-tree"]:visible').should(
+      'contain.text',
+      'LOWER'
+    );
     cy.get('[data-slot="canvas-relational-collapse"]').click();
     cy.get('[data-slot="canvas-relational-tree-sources-toggle"]').click();
     verifyWheelZoom('[data-slot="canvas-relational-tree-draft-viewport"]');

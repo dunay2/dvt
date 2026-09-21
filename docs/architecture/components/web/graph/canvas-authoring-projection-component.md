@@ -186,6 +186,21 @@ same rule. JOIN and other expression-owning operations retain their existing
 expression tree. This boundary must hold while navigation waits for Apply; it
 must not reset selection, swallow projection errors or change the saved plan.
 
+Admission and relation kind are separate facts. A rejected Sort or Fetch remains
+visibly unsupported and must never enter the JOIN expression viewer, even when
+its canonical relation contains expression references. Selection follows the
+stable RelationId within the same Model across Apply, not a digest-bearing tree
+locator; a removed relation or a different Model falls back to its current root.
+Switching selected relations resets the local operator form, not the saved plan.
+
+The `relational-inspection/` component owns the applied inspector presentation
+model and panel. An exhaustive operator policy selects source, CROSS, summary,
+scalar expressions or unsupported content. Scalar inspection requires the
+operator's declared expression slot and a stable relation identity; an arbitrary
+nonempty expression list is not admission to that viewer. The parent workbench
+only composes its operation shelf, graph and inspector panel. This disposable
+view model does not re-decode Substrait or define operation semantics.
+
 ```mermaid
 flowchart LR
   Container[Operator form] --> Controller[Local form controller]
@@ -319,6 +334,58 @@ Indirect consumers:
 - `CanvasViewport.tsx`
 
 ## Fitness Functions
+
+### Compositional regression boundaries (#3352)
+
+Source-append admission is a pure read model, separate from draft construction
+and operation-choice presentation. Consumers import that policy directly; there
+is no compatibility facade. The operation catalogue remains the single owner of
+the supported choice list and its order.
+
+```text
+Canonical Substrait -> wrapper admission -> existing JOIN / Set base reader
+                                        -> shared bounded Aggregate / Window AST
+Protected selected query -> identity-preserving Sort / Fetch removal -> same reader
+```
+
+Aggregate and Window inspection share one bounded wrapper policy in
+`@dvt/postgres-projection`. JOIN and Set retain their existing base readers and
+canonical selectors. Wrapper removal preserves relation and field identities;
+generated aggregate outputs do not claim source-field lineage. SQL remains a
+projection, never an additional authoring authority.
+
+Function reference integrity and bounded-profile admission are separate concerns.
+The shared `substrait-profile/` inspection component resolves the referenced
+function anchor and its URN anchor unambiguously. Other functions declared in the
+same extension module do not change that identity. Missing or duplicate referenced
+anchors reject explicitly. COUNT and ROW_NUMBER validators own their invocation
+constraints; the calculated-expression and grouped-wrapper readers share them.
+Their executable registrations refer to the existing capability catalogue and
+do not create another semantic catalogue or import PostgreSQL rendering code.
+
+```text
+Plan + functionReference -> reference integrity -> registered invocation validator
+Root relType -> registered wrapper inspector -> admitted read model / unsupported reason
+Admitted read model -> existing PostgreSQL AST projection
+```
+
+Wrapper dispatch selects exactly one inspector by the canonical relation kind.
+Failure does not try a different operation. Consumers require the precise
+capability they can project: registering another aggregate must not cause a
+COUNT-only wrapper to render it as COUNT. Unsupported profile shapes are not
+reported as universally invalid Substrait. This boundary does not widen the
+existing aggregate, window ordering/frame, or base-document admission profiles.
+
+Canonical correctness is the first acceptance gate: tests assert Substrait
+relation selectors, input order, expressions, stable identities and lossless
+encode/decode across selection and editing. SQL text or database rows are not an
+oracle for the canonical document. PostgreSQL is only the downstream fidelity
+gate.
+
+PostgreSQL regression tests must project canonical documents through the API
+before executing SQL. Handwritten SQL wrappers around a base projection do not
+prove that canonical composition is supported. Browser tests separately prove
+Apply, selected-relation identity and data navigation.
 
 The canonical fitness checks for this component are:
 

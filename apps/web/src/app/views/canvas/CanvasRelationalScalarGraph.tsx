@@ -20,7 +20,7 @@ export function CanvasRelationalScalarGraph({
   return (
     <div
       className="relative h-full min-h-40 min-w-0 rounded-lg border border-(--border-subtle) bg-(--surface-subtle)"
-      data-slot="canvas-join-expression-tree"
+      data-slot="canvas-relational-expression-tree"
       data-relation-id={graph.relationId}
     >
       <div
@@ -80,7 +80,7 @@ export function CanvasRelationalScalarGraph({
               <button
                 key={node.id}
                 type="button"
-                data-slot="canvas-join-expression-node"
+                data-slot="canvas-relational-expression-node"
                 data-kind={node.data.semanticKind}
                 data-semantic-node-id={node.id}
                 title={node.data.detail}

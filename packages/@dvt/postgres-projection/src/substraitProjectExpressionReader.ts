@@ -3,6 +3,7 @@ import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_p
 import { Type_Nullability } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1 } from '@dvt/contracts';
 
+import { resolveFunctionReference } from './substrait-profile/functionReference.js';
 import { readCalculatedExpression } from './substraitCalculatedExpressionReader.js';
 import type { DvtCalculatedExpression } from './substraitProjectionReadModel.js';
 
@@ -27,16 +28,10 @@ export function readProjectExpression(
   let current = expression;
   while (current.rexType.case === 'scalarFunction') {
     const fn = current.rexType.value;
-    const declaration = plan.extensions.find(
-      (entry) =>
-        entry.mappingType.case === 'extensionFunction' &&
-        entry.mappingType.value.functionAnchor === fn.functionReference
-    );
-    if (declaration?.mappingType.case !== 'extensionFunction') return null;
-    const value = declaration.mappingType.value;
-    const urn = plan.extensionUrns.find(
-      (entry) => entry.extensionUrnAnchor === value.extensionUrnReference
-    )?.urn;
+    const reference = resolveFunctionReference(plan, fn.functionReference);
+    if (!reference.ok) return null;
+    const value = reference.value;
+    const urn = value.urn;
     const name = value.name.endsWith(':str') ? value.name.slice(0, -4) : null;
     const supported = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.some(
       (entry) =>

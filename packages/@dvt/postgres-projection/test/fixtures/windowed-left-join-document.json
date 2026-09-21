@@ -1,0 +1,122 @@
+{
+  "schemaVersion": "dvt-substrait-semantic-document.v1",
+  "profile": {
+    "schemaVersion": "dvt-substrait-profile.v1",
+    "profileId": "dvt.vtx2.substrait.v1",
+    "specVersion": "0.101.0",
+    "specCommitSha": "2653e55516c8c07529cde9bc81c64e4ae3537515"
+  },
+  "semanticPlan": {
+    "encoding": "substrait-plan-protobuf-base64",
+    "bytesBase64": "Eg0aCxABGgVlcXVhbCABEgsaCRACGgNhbmQgAhINGgsQAxoFY291bnQgAxISGhAQBBoKcm93X251bWJlciAEGsUCEsICCqICOp8CCgkSBQoDAAECKAUS4wEi4AEKAigEErgBMrUBCgkSBQoDAAECKAMSPQo7CgIoARIjCgtjdXN0b21lcl9pZAoEbmFtZRIOCgRiAhABCgRiAhABGAI6EAoGcHVibGljCgZvcmRlcnMaQQo/CgIoAhInCghvcmRlcl9pZAoLY3VzdG9tZXJfaWQSDgoEYgIQAQoEYgIQARgCOhAKBnB1YmxpYwoGY2xpZW50IiQaIggBGgQKAhABIgoaCBIGCgISACIAIgwaChIICgQSAggDIgAwAxoDEgEAIg4KDAgDIAMqBDoCEAIwASoKEggKBBICCAEiABosKioIBBoOCgoSCAoEEgIIASIAEAQaDAoIEgYKAhIAIgAQAjADOgQ6AhABUAESBG5hbWUSCXJvd19jb3VudBIKY291bnRfcmFuazIWEGUqEmR2dC12dHgyLWpvaW4tY2FyZEIvCAESK2V4dGVuc2lvbjppby5zdWJzdHJhaXQ6ZnVuY3Rpb25zX2NvbXBhcmlzb25CLAgCEihleHRlbnNpb246aW8uc3Vic3RyYWl0OmZ1bmN0aW9uc19ib29sZWFuQjYIAxIyZXh0ZW5zaW9uOmlvLnN1YnN0cmFpdDpmdW5jdGlvbnNfYWdncmVnYXRlX2dlbmVyaWNCLwgEEitleHRlbnNpb246aW8uc3Vic3RyYWl0OmZ1bmN0aW9uc19hcml0aG1ldGlj",
+    "sha256": "f7de2d2646f34d417b98b5e7f027e4ddb4d1b291af44343a3ecbf917a7b51fca"
+  },
+  "sidecar": {
+    "schemaVersion": "dvt-substrait-authoring-sidecar.v1",
+    "semanticPlanSha256": "f7de2d2646f34d417b98b5e7f027e4ddb4d1b291af44343a3ecbf917a7b51fca",
+    "relations": [
+      {
+        "relationId": "dvt_rel_01a0c557-f4f6-72b0-b62e-c18e96828057",
+        "relAnchor": 1,
+        "sourceRef": {
+          "schemaVersion": "connected-source-ref.v1",
+          "connectionRef": {
+            "schemaVersion": "connection-ref.v1",
+            "connectionId": "warehouse-main",
+            "provider": "postgres"
+          },
+          "sourceObjectId": "public.orders"
+        },
+        "displayName": "orders"
+      },
+      {
+        "relationId": "dvt_rel_01a0c557-f4f6-714a-b39b-fc91769d8419",
+        "relAnchor": 2,
+        "sourceRef": {
+          "schemaVersion": "connected-source-ref.v1",
+          "connectionRef": {
+            "schemaVersion": "connection-ref.v1",
+            "connectionId": "warehouse-main",
+            "provider": "postgres"
+          },
+          "sourceObjectId": "public.client"
+        },
+        "displayName": "client"
+      },
+      {
+        "relationId": "dvt_rel_01a0c557-f4fc-7046-be78-733d3709073a",
+        "relAnchor": 3,
+        "displayName": "orders+client"
+      },
+      {
+        "relationId": "dvt_rel_01a0c557-f511-7cfe-9951-59661ee03772",
+        "relAnchor": 4,
+        "displayName": "orders+client"
+      },
+      {
+        "relationId": "dvt_rel_01a0c559-e598-7b8c-a620-aa63c64baf73",
+        "relAnchor": 5,
+        "displayName": "orders+client"
+      }
+    ],
+    "fields": [
+      {
+        "fieldId": "dvt_fld_01a0c557-f4f6-79af-a2b8-9f036a8fe296",
+        "relationId": "dvt_rel_01a0c557-f4f6-72b0-b62e-c18e96828057",
+        "outputOrdinal": 0,
+        "displayName": "customer_id"
+      },
+      {
+        "fieldId": "dvt_fld_01a0c557-f4f6-79c7-9745-ccf574b8753e",
+        "relationId": "dvt_rel_01a0c557-f4f6-72b0-b62e-c18e96828057",
+        "outputOrdinal": 1,
+        "displayName": "name"
+      },
+      {
+        "fieldId": "dvt_fld_01a0c557-f4f6-77b7-a5f7-810cc810ef22",
+        "relationId": "dvt_rel_01a0c557-f4f6-714a-b39b-fc91769d8419",
+        "outputOrdinal": 0,
+        "displayName": "order_id"
+      },
+      {
+        "fieldId": "dvt_fld_01a0c557-f4f6-71f4-ba45-8ddb377f567b",
+        "relationId": "dvt_rel_01a0c557-f4f6-714a-b39b-fc91769d8419",
+        "outputOrdinal": 1,
+        "displayName": "customer_id"
+      },
+      {
+        "fieldId": "dvt_fld_01a0c557-f4fd-72a6-9d17-27eec4e20d6e",
+        "relationId": "dvt_rel_01a0c557-f4fc-7046-be78-733d3709073a",
+        "sourceFieldId": "dvt_fld_01a0c557-f4f6-79af-a2b8-9f036a8fe296",
+        "outputOrdinal": 0,
+        "displayName": "customer_id"
+      },
+      {
+        "fieldId": "dvt_fld_01a0c557-f4fd-730f-beb8-ea45682884af",
+        "relationId": "dvt_rel_01a0c559-e598-7b8c-a620-aa63c64baf73",
+        "sourceFieldId": "dvt_fld_01a0c557-f4f6-79c7-9745-ccf574b8753e",
+        "outputOrdinal": 0,
+        "displayName": "name"
+      },
+      {
+        "fieldId": "dvt_fld_01a0c557-f4fd-7012-ab4d-7f1c0a361797",
+        "relationId": "dvt_rel_01a0c557-f4fc-7046-be78-733d3709073a",
+        "sourceFieldId": "dvt_fld_01a0c557-f4f6-77b7-a5f7-810cc810ef22",
+        "outputOrdinal": 2,
+        "displayName": "order_id"
+      },
+      {
+        "fieldId": "dvt_fld_01a0c557-f511-745e-a2e2-d17ddb25b389",
+        "relationId": "dvt_rel_01a0c559-e598-7b8c-a620-aa63c64baf73",
+        "outputOrdinal": 1,
+        "displayName": "row_count"
+      },
+      {
+        "fieldId": "dvt_fld_01a0c559-e599-78f6-9113-24e1f6082e56",
+        "relationId": "dvt_rel_01a0c559-e598-7b8c-a620-aa63c64baf73",
+        "outputOrdinal": 2,
+        "displayName": "count_rank"
+      }
+    ]
+  }
+}

@@ -8,6 +8,7 @@ import { joinDraft } from './fixtures/joinDraft.js';
 describe('PostgreSQL INNER and outer JOIN rendering', () => {
   it('renders every predicate and only the selected output fields', async () => {
     const result = await projectDvtJoinDraftToPostgresSql(joinDraft());
+    if (result.kind !== 'join') throw new Error('Expected the raw JOIN projection.');
     expect(result.projection.inputs).toHaveLength(3);
     expect(result.projection.outputs.map((field) => field.name)).toEqual([
       'order_id',
@@ -31,6 +32,7 @@ describe('PostgreSQL INNER and outer JOIN rendering', () => {
     candidate.sidecar.semanticPlanSha256 = ZERO_SHA256;
 
     const result = await projectDvtJoinDraftToPostgresSql(candidate);
+    if (result.kind !== 'join') throw new Error('Expected the raw JOIN projection.');
 
     expect(result.projection.joinRelations.map((stage) => stage.joinType)).toEqual([
       JoinRel_JoinType.INNER,
@@ -61,6 +63,7 @@ describe('PostgreSQL INNER and outer JOIN rendering', () => {
       candidate.sidecar.semanticPlanSha256 = ZERO_SHA256;
 
       const result = await projectDvtJoinDraftToPostgresSql(candidate);
+      if (result.kind !== 'join') throw new Error('Expected the raw JOIN projection.');
 
       expect(result.projection.joinRelations.map((stage) => stage.joinType)).toEqual([
         JoinRel_JoinType.INNER,

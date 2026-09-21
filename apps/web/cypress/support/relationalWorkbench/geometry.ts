@@ -66,10 +66,10 @@ export function revealSemanticZoom(viewportSelector: string, joinCount: number):
   cy.get('[data-slot="canvas-relational-semantic-zoom"]').should('have.length', joinCount);
   cy.get('[data-slot="canvas-relational-semantic-zoom"]').each(($detail) => {
     cy.wrap($detail)
-      .find('[data-slot="canvas-join-expression-node"]')
+      .find('[data-slot="canvas-relational-expression-node"]')
       .should('have.length.greaterThan', 2);
     expect($detail.attr('data-relation-id')).to.equal(
-      $detail.find('[data-slot="canvas-join-expression-tree"]').attr('data-relation-id')
+      $detail.find('[data-slot="canvas-relational-expression-tree"]').attr('data-relation-id')
     );
   });
 }

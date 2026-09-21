@@ -304,8 +304,8 @@ describe('semanticWorkbenchFixture', () => {
     if (selectedJoin == null) throw new Error('Expected the second JOIN relation.');
 
     const expressionGraph = projectSemanticWorkbenchGraph(SEMANTIC_WORKBENCH_TRANSFORM, {
-      view: 'join-expression',
-      joinRelationId: selectedJoin.id,
+      view: 'relation-expressions',
+      expressionRelationId: selectedJoin.id,
     });
 
     expect(expressionGraph.nodes.map((node) => node.data.label)).toEqual(
@@ -328,8 +328,8 @@ describe('semanticWorkbenchFixture', () => {
     ).toBe(true);
     expect(
       projectSemanticWorkbenchGraph(SEMANTIC_WORKBENCH_TRANSFORM, {
-        view: 'join-expression',
-        joinRelationId: selectedJoin.id,
+        view: 'relation-expressions',
+        expressionRelationId: selectedJoin.id,
       }).nodes.map((node) => ({ id: node.id, position: node.position }))
     ).toEqual(expressionGraph.nodes.map((node) => ({ id: node.id, position: node.position })));
   });
@@ -570,8 +570,8 @@ describe('semanticWorkbenchFixture', () => {
     expect(graph.nodes.map((node) => node.data.label)).not.toContain('VALUE\nboolean: true');
 
     const expressionGraph = projectSemanticWorkbenchGraph(transform, {
-      view: 'join-expression',
-      joinRelationId,
+      view: 'relation-expressions',
+      expressionRelationId: joinRelationId,
     });
     const rootNode = expressionGraph.nodes.find((node) => node.data.label === 'OR\nOR');
     const comparisons = expressionGraph.nodes.filter((node) => node.data.label === 'EQUAL\n=');
@@ -631,8 +631,8 @@ describe('semanticWorkbenchFixture', () => {
     );
     const sample = fixture.projectTransformSample(transform);
     const expressionGraph = projectSemanticWorkbenchGraph(transform, {
-      view: 'join-expression',
-      joinRelationId,
+      view: 'relation-expressions',
+      expressionRelationId: joinRelationId,
     });
     const relationGraph = projectSemanticWorkbenchGraph(transform, { view: 'relations' });
     const root = expressionGraph.nodes.find((node) => node.data.label === 'AND\nAND');
@@ -694,8 +694,8 @@ describe('semanticWorkbenchFixture', () => {
     );
     const sample = fixture.projectTransformSample(transform);
     const expressionGraph = projectSemanticWorkbenchGraph(transform, {
-      view: 'join-expression',
-      joinRelationId,
+      view: 'relation-expressions',
+      expressionRelationId: joinRelationId,
     });
 
     expect(sample?.rows).toHaveLength(6);

@@ -82,7 +82,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
     expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).not.toBeNull();
     expect(
       container.querySelectorAll(
-        '[data-slot="canvas-relational-semantic-zoom"] [data-slot="canvas-join-expression-node"]'
+        '[data-slot="canvas-relational-semantic-zoom"] [data-slot="canvas-relational-expression-node"]'
       ).length
     ).toBeGreaterThan(1);
     expect(container.querySelector('[data-slot="canvas-relational-tree-detail"]')).toBeNull();
@@ -159,9 +159,9 @@ describe('Canvas relational-tree Workbench inspection', () => {
         .click()
     );
     expect(
-      container.querySelector('[data-slot="canvas-join-expression-tree"]')?.textContent
+      container.querySelector('[data-slot="canvas-relational-expression-tree"]')?.textContent
     ).toContain('clients.customer_id');
-    const expression = container.querySelector('[data-slot="canvas-join-expression-tree"]')!;
+    const expression = container.querySelector('[data-slot="canvas-relational-expression-tree"]')!;
     expect(expression.closest('[role="tabpanel"]')?.getAttribute('data-state')).toBe('active');
     expect(expression.closest('[role="tabpanel"]')?.getAttribute('data-value')).toBe('tree');
     expect(container.querySelector('[data-slot="canvas-operation-properties-tab"]')).not.toBeNull();
