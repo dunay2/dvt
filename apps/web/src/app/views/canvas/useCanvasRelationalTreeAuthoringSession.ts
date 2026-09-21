@@ -12,6 +12,7 @@ import { useCanvasRelationalTreeExistingJoinSeed } from './useCanvasRelationalTr
 import { useCanvasRelationalTreeJoinDraftActions } from './useCanvasRelationalTreeJoinDraftActions';
 import { useCanvasRelationalTreeRemoval } from './useCanvasRelationalTreeRemoval';
 import { useCanvasRelationalTreeInputSelection } from './useCanvasRelationalTreeInputSelection';
+import { createSourceOccurrenceActions } from './relational-source-occurrence/sourceOccurrenceActions';
 export function useCanvasRelationalTreeAuthoringSession(
   args: Readonly<{
     enabled: boolean;
@@ -135,6 +136,13 @@ export function useCanvasRelationalTreeAuthoringSession(
     },
   });
   return {
+    occurrences: createSourceOccurrenceActions({
+      editable: enabled && editable,
+      draft: !active && seed != null ? seed.draft : joinDraft,
+      inputs,
+      start,
+      setAppendInputId,
+    }),
     removal,
     applyRejection,
     active,

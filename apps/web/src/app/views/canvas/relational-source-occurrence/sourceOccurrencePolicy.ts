@@ -32,7 +32,9 @@ export function sourceOccurrenceAppendRejection(
     })),
     args.input.fields
   );
-  return pair == null ? 'incompatible' : null;
+  return pair == null || args.input.fields.some((field) => field.joinDataType == null)
+    ? 'incompatible'
+    : null;
 }
 
 export function renameSourceOccurrence(
