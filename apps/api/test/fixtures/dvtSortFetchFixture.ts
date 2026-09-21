@@ -38,12 +38,14 @@ import {
 
 import { buildDvtSetPreviewDraft } from './dvtSetPreviewFixture.js';
 
-export function buildDvtSortFetchPreviewDraft(run = false): Readonly<{
+export function buildDvtSortFetchPreviewDraft(
+  run = false,
+  base = buildDvtSetPreviewDraft()
+): Readonly<{
   draft: WorkspaceGraphAuthoringDraft;
   sortRelationId: string;
   fetchRelationId: string;
 }> {
-  const base = buildDvtSetPreviewDraft();
   const transform = base.nodes.find((node) => node.id === 'transform-customers')!;
   const authority = transform.metadata?.['transformAuthoring'] as {
     semanticDocument: unknown;
