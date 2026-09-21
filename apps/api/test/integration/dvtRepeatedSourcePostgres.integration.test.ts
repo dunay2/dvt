@@ -140,4 +140,42 @@ describeIfPostgres('protected repeated-source PostgreSQL result semantics', () =
       );
     }
   );
+
+  it('keeps real PostgreSQL results unchanged when the two Read occurrences have independent aliases', async () => {
+    const input = repeatedSourceInput();
+    const before = resolveDvtTerminalTransformClosure(input);
+    const semanticDocument = globalThis.structuredClone(before.authority.semanticDocument);
+    const reads = semanticDocument.sidecar.relations.filter(
+      (relation) => relation.sourceRef != null
+    );
+    reads[0]!.displayName = 'Records in this role';
+    reads[1]!.displayName = 'Related records in another role';
+    const aliased = repeatedSourceInput({
+      ...input.draft,
+      nodes: input.draft.nodes.map((node) =>
+        node.role !== 'transform'
+          ? node
+          : {
+              ...node,
+              metadata: {
+                ...node.metadata,
+                transformAuthoring: { version: 'v1', mode: 'substrait', semanticDocument },
+              },
+            }
+      ),
+    });
+    const original = await projectDvtPostgresTransform(before);
+    const after = resolveDvtTerminalTransformClosure(aliased);
+    expect(
+      after.authority.semanticDocument.sidecar.relations
+        .filter((relation) => relation.sourceRef != null)
+        .map((relation) => relation.displayName)
+    ).toEqual(['Records in this role', 'Related records in another role']);
+    const changed = await projectDvtPostgresTransform(after);
+    expect(changed.sql).toBe(original.sql);
+    const actual = await client.query(changed.sql);
+    const expected = await client.query(original.sql);
+    expect(actual.rows).toEqual(expected.rows);
+    expect(actual.rows).toHaveLength(innerPairs.length + leftOnlyPairs.length);
+  });
 });
