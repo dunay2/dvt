@@ -19,12 +19,8 @@ import {
   type WorkspaceGraphAuthoringNode,
 } from '@dvt/contracts';
 
-type CanonicalSemanticRelation = NonNullable<
-  Extract<
-    ReturnType<typeof decodeDvtSubstraitPlanV1>['relations'][number]['relType'],
-    { case: 'root' }
-  >['value']['input']
->;
+import { containsJoinRelation, containsSetRelation } from './dvtRelationFamily.js';
+import { hasExactDvtSourceCoverage, sameConnection } from './dvtSourceCoverage.js';
 
 export type DvtTerminalTransformClosure = {
   readonly draft: WorkspaceGraphAuthoringDraft;
@@ -114,13 +110,9 @@ export function resolveDvtTerminalTransformClosure(input: {
   if (
     connectionRef.provider !== 'postgres' ||
     sources.some(({ ref }) => !sameConnection(ref.connectionRef, connectionRef)) ||
-    semanticSources.length !== sources.length ||
-    sources.some(
-      ({ ref }) =>
-        semanticSources.filter((semantic) => sameConnectedSource(semantic, ref)).length !== 1
-    ) ||
-    semanticSources.some(
-      (semantic) => sources.filter(({ ref }) => sameConnectedSource(semantic, ref)).length !== 1
+    !hasExactDvtSourceCoverage(
+      semanticSources,
+      sources.map(({ ref }) => ref)
     )
   ) {
     throw new Error(
@@ -133,7 +125,7 @@ export function resolveDvtTerminalTransformClosure(input: {
   const hasSet = semanticRoot == null ? false : containsSetRelation(semanticRoot);
   if (
     (hasJoin && hasSet) ||
-    ((hasJoin || hasSet) && sources.length < 2) ||
+    ((hasJoin || hasSet) && semanticSources.length < 2) ||
     (!hasJoin && !hasSet && sources.length !== 1)
   ) {
     throw new Error(
@@ -156,49 +148,6 @@ export function resolveDvtTerminalTransformClosure(input: {
   };
 }
 
-function containsSetRelation(relation: CanonicalSemanticRelation): boolean {
-  switch (relation.relType.case) {
-    case 'set':
-      return true;
-    case 'project':
-    case 'filter':
-    case 'aggregate':
-    case 'sort':
-    case 'fetch':
-      return relation.relType.value.input == null
-        ? false
-        : containsSetRelation(relation.relType.value.input);
-    case 'join':
-    case 'cross':
-      return (
-        (relation.relType.value.left != null && containsSetRelation(relation.relType.value.left)) ||
-        (relation.relType.value.right != null && containsSetRelation(relation.relType.value.right))
-      );
-    default:
-      return false;
-  }
-}
-
-function containsJoinRelation(relation: CanonicalSemanticRelation): boolean {
-  switch (relation.relType.case) {
-    case 'join':
-    case 'cross':
-      return true;
-    case 'project':
-    case 'filter':
-    case 'aggregate':
-    case 'sort':
-    case 'fetch':
-      return relation.relType.value.input == null
-        ? false
-        : containsJoinRelation(relation.relType.value.input);
-    case 'set':
-      return relation.relType.value.inputs.some(containsJoinRelation);
-    default:
-      return false;
-  }
-}
-
 function selectExact<T extends { readonly id: string }>(
   items: readonly T[],
   ids: readonly string[],
@@ -216,20 +165,4 @@ function requireUniqueIdentities(ids: readonly string[], label: string): void {
   if (ids.length === 0 || new Set(ids).size !== ids.length) {
     throw new Error(`Expected unique ${label} identities.`);
   }
-}
-
-export function sameConnection(left: ConnectionRef, right: ConnectionRef): boolean {
-  return (
-    left.schemaVersion === right.schemaVersion &&
-    left.connectionId === right.connectionId &&
-    left.provider === right.provider
-  );
-}
-
-export function sameConnectedSource(left: ConnectedSourceRef, right: ConnectedSourceRef): boolean {
-  return (
-    left.schemaVersion === right.schemaVersion &&
-    left.sourceObjectId === right.sourceObjectId &&
-    sameConnection(left.connectionRef, right.connectionRef)
-  );
 }

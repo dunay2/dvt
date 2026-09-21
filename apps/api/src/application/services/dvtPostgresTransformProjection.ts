@@ -21,10 +21,8 @@ import {
   type ProjectedDvtConnectedFieldSql,
 } from '@dvt/postgres-projection';
 
-import {
-  sameConnectedSource,
-  type DvtTerminalTransformClosure,
-} from './resolveDvtTerminalTransformClosure.js';
+import { sameConnectedSource, requireDvtProjectedSourceCoverage } from './dvtSourceCoverage.js';
+import type { DvtTerminalTransformClosure } from './resolveDvtTerminalTransformClosure.js';
 
 export type ProjectDvtConnectedFieldDocument = (
   document: DvtSubstraitSemanticDocumentV1,
@@ -117,20 +115,11 @@ export async function projectDvtPostgresTransform(
 
     if (relationCase === 'cross') {
       const projected = await projectDvtCrossDraftToPostgresSql(draft);
-      if (
-        (!selectedSubtree && projected.projection.inputs.length !== closure.sources.length) ||
-        projected.projection.inputs.some(
-          (input) =>
-            !closure.sources.some(
-              ({ node, ref }) =>
-                sameConnectedSource(input.sourceRef, ref) &&
-                node.metadata?.['schema'] === input.schema &&
-                node.metadata?.['tableName'] === input.table
-            )
-        )
-      ) {
-        throw new Error('PostgreSQL CROSS inputs do not match the protected terminal closure.');
-      }
+      requireDvtProjectedSourceCoverage(
+        projected.projection.inputs,
+        closure.sources,
+        !selectedSubtree
+      );
       return {
         ast: projected.ast,
         sql: projected.sql,
@@ -140,20 +129,11 @@ export async function projectDvtPostgresTransform(
     }
     if (relationCase === 'join' || closure.profileId === DVT_POSTGRES_JOIN_PROFILE_ID) {
       const projected = await projectDvtJoinDraftToPostgresSql(draft);
-      if (
-        (!selectedSubtree && projected.projection.inputs.length !== closure.sources.length) ||
-        projected.projection.inputs.some(
-          (input) =>
-            !closure.sources.some(
-              ({ node, ref }) =>
-                sameConnectedSource(input.sourceRef, ref) &&
-                node.metadata?.['schema'] === input.schema &&
-                node.metadata?.['tableName'] === input.table
-            )
-        )
-      ) {
-        throw new Error('PostgreSQL JOIN inputs do not match the protected terminal closure.');
-      }
+      requireDvtProjectedSourceCoverage(
+        projected.projection.inputs,
+        closure.sources,
+        !selectedSubtree
+      );
       return {
         ast: projected.ast,
         sql: projected.sql,
@@ -164,20 +144,11 @@ export async function projectDvtPostgresTransform(
 
     if (relationCase === 'set' || closure.profileId === DVT_POSTGRES_SET_PROFILE_ID) {
       const projected = await projectDvtSetDraftToPostgresSql(draft);
-      if (
-        (!selectedSubtree && projected.projection.inputs.length !== closure.sources.length) ||
-        projected.projection.inputs.some(
-          (input) =>
-            !closure.sources.some(
-              ({ node, ref }) =>
-                sameConnectedSource(input.sourceRef, ref) &&
-                node.metadata?.['schema'] === input.schema &&
-                node.metadata?.['tableName'] === input.table
-            )
-        )
-      ) {
-        throw new Error('PostgreSQL Set inputs do not match the protected terminal closure.');
-      }
+      requireDvtProjectedSourceCoverage(
+        projected.projection.inputs,
+        closure.sources,
+        !selectedSubtree
+      );
       return {
         ast: projected.ast,
         sql: projected.sql,
