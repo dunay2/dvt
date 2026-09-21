@@ -119,6 +119,27 @@ projection owner and checks real result rows, not just rendered SQL text.
 
 The issue journal records exact validation outcomes for each microcut separately.
 
+### Bounded occurrence controls
+
+The [pre-implementation UI cut](https://github.com/dunay2/dvt/issues/3342#issuecomment-5763838796)
+exposes Add instance for the admitted existing JOIN profile and Read aliases in
+Properties. It preserves the original physical catalogue and dependency edges.
+The predicate confirmation, Apply/cancel transaction, graph save and selected
+data query reuse their current owners. No new transport, semantic representation
+or implicit execution is introduced.
+
+`sourceOccurrencePolicy.test.ts` checks alias-only edits, unchanged identities and
+provenance, malformed-name rejection and explicit admission failures. Separate
+Workbench tests cover instance creation/cancel, read-only posture and alias
+Apply/reopen. The focused Cypress scenario authors through the actual UI,
+inspects the serialized saved document, reopens it, and queries the selected Read.
+Its API responses are controlled; it does not claim a browser-to-live-database
+proof. Existing real PostgreSQL evidence remains a separate backend layer.
+
+This cut does not close #3342. Initial repeated-source construction from a single
+projection, reuse of arbitrary transformed branches and the combined live-provider
+acceptance remain open. Unsupported shapes are explained and left untouched.
+
 ### Deployment
 
 No wire member, schema version, profile selector or runtime step changes.
