@@ -14,7 +14,7 @@ import {
 } from '../CanvasRelationalTreeWorkbench.test-support';
 import { occurrenceGraph } from './occurrence.test.fixtures';
 
-function changeAlias(value: string) {
+function changeAlias(value: string): void {
   const input = container.querySelector<HTMLInputElement>('[data-slot="source-occurrence-alias"]')!;
   expect(input).not.toBeNull();
   act(() => {
@@ -22,7 +22,7 @@ function changeAlias(value: string) {
     input.dispatchEvent(new Event('input', { bubbles: true }));
   });
 }
-function click(slot: string) {
+function click(slot: string): void {
   act(() => container.querySelector<HTMLButtonElement>(`[data-slot="${slot}"]`)!.click());
 }
 
@@ -43,7 +43,7 @@ describe('Read properties alias', () => {
         draftSession: canvasDraftSession.workingSet.upsertNode(session, target),
       };
     });
-    const render = () =>
+    const render = (): void =>
       act(() =>
         root.render(
           <CanvasRelationalTreeWorkbench

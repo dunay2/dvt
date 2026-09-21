@@ -2,7 +2,10 @@
 import { describe, expect, it } from 'vitest';
 import { inspectDvtSubstraitJoinDraft } from '@dvt/postgres-projection';
 import { occurrenceGraph, repeatedOccurrenceDraft } from './occurrence.test.fixtures';
-import { resolveCanvasDvtCompositionInputs } from '../canvasDvtCompositionInputCatalog';
+import {
+  resolveCanvasDvtCompositionInputs,
+  type CanvasDvtCompositionInput,
+} from '../canvasDvtCompositionInputCatalog';
 import { renameSourceOccurrence, sourceOccurrenceAppendRejection } from './sourceOccurrencePolicy';
 
 describe('Read occurrence alias', () => {
@@ -58,7 +61,11 @@ describe('Read occurrence alias', () => {
 });
 
 describe('explicit instance append admission', () => {
-  function setup() {
+  function setup(): {
+    draft: ReturnType<typeof repeatedOccurrenceDraft>;
+    input: CanvasDvtCompositionInput;
+    editable: boolean;
+  } {
     const graph = occurrenceGraph();
     const [input] = resolveCanvasDvtCompositionInputs({
       nodes: graph.nodes,
