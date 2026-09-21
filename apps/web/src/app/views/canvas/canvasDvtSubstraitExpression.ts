@@ -46,10 +46,7 @@ export const dvtSubstraitExpression = {
       rexType: {
         case: 'selection',
         value: {
-          referenceType: {
-            case: 'directReference',
-            value: segment,
-          },
+          referenceType: { case: 'directReference', value: segment },
           rootType: { case: 'rootReference', value: {} },
         },
       },

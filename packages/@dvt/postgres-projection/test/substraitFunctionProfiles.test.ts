@@ -1,6 +1,7 @@
 import {
   FunctionArgumentSchema,
   FunctionOptionSchema,
+  SortFieldSchema,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { clone, create } from '@bufbuild/protobuf';
@@ -12,6 +13,15 @@ import type { ProfileFunction } from '../src/substrait-profile/invocation.js';
 import { rowNumberProfile } from '../src/substrait-profile/rowNumber.js';
 
 import { functionFixture } from './substraitFunctionFixtures.js';
+
+it('does not discard ordering from a COUNT invocation', () => {
+  const { plan, count } = functionFixture();
+  count.sorts.push(create(SortFieldSchema));
+  expect(inspectFunctionProfile(plan, count)).toEqual({
+    ok: false,
+    reason: 'unsupported-count-ordering',
+  });
+});
 
 it('recognizes COUNT when another function is declared in the same extension module', () => {
   const { plan, count } = functionFixture();
