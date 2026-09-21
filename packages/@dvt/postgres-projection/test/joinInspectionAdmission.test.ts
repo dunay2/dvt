@@ -67,7 +67,7 @@ const invalidIdentity: readonly [string, (draft: DvtSubstraitJoinDraft) => void]
     },
   ],
   [
-    'duplicate physical source',
+    'one physical source bound to inconsistent tables',
     (d) => {
       d.sidecar.relations[1]!.sourceRef = d.sidecar.relations[0]!.sourceRef;
     },

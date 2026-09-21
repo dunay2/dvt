@@ -11,6 +11,8 @@ import type {
   DvtSubstraitNInputJoinProjection,
 } from '../substraitJoinReadModel.js';
 
+import { hasConsistentJoinPhysicalSources } from './physicalSources.js';
+
 export function inspectJoinInputs(
   draft: DvtSubstraitJoinDraft,
   reads: readonly Rel[]
@@ -67,16 +69,12 @@ export function inspectJoinInputs(
     });
   }
   if (
-    new Set(
-      inputs.map(
-        (input) => `${input.sourceRef.connectionRef.connectionId}:${input.sourceRef.sourceObjectId}`
-      )
-    ).size !== inputs.length ||
     inputs.some(
       (input) =>
         input.sourceRef.connectionRef.provider !== 'postgres' ||
         !hasSameConnectionRef(inputs[0]!.sourceRef.connectionRef, input.sourceRef.connectionRef)
-    )
+    ) ||
+    !hasConsistentJoinPhysicalSources(inputs)
   ) {
     return null;
   }
