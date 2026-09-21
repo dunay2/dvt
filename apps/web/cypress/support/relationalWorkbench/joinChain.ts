@@ -1,5 +1,6 @@
 /** Owned concern: author a four-source JOIN chain through UI with explicit field defaults. */
 import { visitWorkbenchCanvas, openWorkbenchModel } from './navigation';
+import { workbenchOperation } from './operationMenu';
 import { semanticWrites } from './persistence';
 
 export function authorFourSourceChain(): void {
@@ -9,7 +10,7 @@ export function authorFourSourceChain(): void {
   openWorkbenchModel('join-transform');
   cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
   cy.contains('[data-slot="canvas-relational-tree-source"]', 'orders').click();
-  cy.get('[data-slot="dvt-select-operation-inner-join"]').click();
+  workbenchOperation('inner_join').should('have.attr', 'aria-disabled', 'false').click();
   cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
     'have.length',
     1
