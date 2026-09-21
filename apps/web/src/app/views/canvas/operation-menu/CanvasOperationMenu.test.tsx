@@ -117,8 +117,8 @@ describe('Canvas operation menu', () => {
   });
   it.each(['Enter', ' ', 'ArrowDown'])(
     'opens on %s without relying on a synthesized click',
-    async (key) => {
-      await act(() => {
+    (key) => {
+      act(() => {
         host
           .querySelector('button')!
           .dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
