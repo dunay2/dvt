@@ -34,6 +34,13 @@ describe('explicit source occurrence controls', () => {
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-append-join-input"]')
     ).not.toBeNull();
+    const labels = Array.from(
+      container.querySelectorAll('[data-slot="canvas-relational-tree-existing-field"] option'),
+      (option) => option.textContent
+    );
+    expect(new Set(labels).size).toBe(labels.length);
+    expect(labels.some((label) => label?.startsWith('places · 1.'))).toBe(true);
+    expect(labels.some((label) => label?.startsWith('places · 2.'))).toBe(true);
     expect(
       container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
         ?.disabled
