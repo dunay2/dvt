@@ -15,13 +15,17 @@ import {
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
 import {
+  workbenchOperation,
+  openWorkbenchOperations,
+  closeWorkbenchOperations,
+} from '../../support/relationalWorkbench/operationMenu';
+import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
 const form = '[data-slot="canvas-relational-operator-form"]';
-const tool = (id: string): string => `[data-operator-tool="${id}"]`;
 function openEditor(union = false, readOnly = false, nInput = false): void {
   stubShellBootstrapApis({
     scopes: readOnly
@@ -85,7 +89,7 @@ function activateMenu(slot: string): void {
 }
 
 function addWrapper(id: string): void {
-  cy.get(tool(id)).click();
+  workbenchOperation(id).click();
   cy.get(
     '[role="dialog"] ' + form + ', [role="dialog"][data-slot="canvas-relational-operator-form"]'
   )
@@ -268,7 +272,7 @@ describe('Relational operator toolbar', () => {
       openEditor();
       cy.get('[data-operator="join"]').rightclick();
       activateMenu('canvas-relational-remove-left');
-      cy.get(tool('filter')).click();
+      workbenchOperation('filter').click();
       cy.get(form).find('input').type('C-001');
       cy.get(form).find('button[type="submit"]').click();
       if (applied) {
@@ -279,8 +283,12 @@ describe('Relational operator toolbar', () => {
         ? '[data-slot="canvas-relational-tree-viewport"]'
         : '[data-slot="canvas-relational-tree-draft-viewport"]';
       const join = '[data-slot="dvt-select-operation-inner-join"]';
-      cy.get(join).should('be.visible').and('be.disabled');
+      openWorkbenchOperations();
+      cy.get('[role="combobox"]').type('INNER JOIN');
+      cy.get(join).should('be.visible').and('have.attr', 'aria-disabled', 'true');
+      cy.get('[role="combobox"]').clear().type('UNION ALL');
       cy.get('[data-slot="dvt-select-operation-union-all"]').should('be.visible');
+      closeWorkbenchOperations();
       cy.get('[data-operator="filter"]').then(($filter) => {
         const identity = $filter.attr('data-relation-id');
         cy.window().then((window) => {
@@ -295,13 +303,15 @@ describe('Relational operator toolbar', () => {
         });
         cy.get('[data-operator="filter"]').should('have.attr', 'data-relation-id', identity);
         cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
-        cy.get(join).should('be.enabled').click();
+        openWorkbenchOperations();
+        cy.get(join).should('have.attr', 'aria-disabled', 'false').click();
         cy.get('[role="alertdialog"]').should('contain.text', 'filters and windows');
         cy.contains('[role="alertdialog"] button', 'Cancel').click();
         cy.get('[data-operator="filter"]').should('have.attr', 'data-relation-id', identity);
-        cy.get(tool('filter')).click();
+        workbenchOperation('filter').click();
         cy.get(form).find('input').should('have.value', 'C-001');
         cy.get(form).find('button[type="submit"]').click();
+        openWorkbenchOperations();
         cy.get(join).click();
         cy.contains('[role="alertdialog"] button', 'Apply').click();
       });
@@ -428,14 +438,14 @@ describe('Relational operator toolbar', () => {
     cy.get('[data-operator="join"]').click();
     cy.get('[data-slot="canvas-join-expression-node"]').should('have.length.at.least', 3);
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
-    cy.get(tool('aggregate')).click();
+    workbenchOperation('aggregate').click();
     cy.get(
       '[role="dialog"] ' + form + ', [role="dialog"][data-slot="canvas-relational-operator-form"]'
     )
       .find('button[type="submit"]')
       .click();
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
-    cy.get(tool('window')).click();
+    workbenchOperation('window').click();
     cy.get(
       '[role="dialog"] ' + form + ', [role="dialog"][data-slot="canvas-relational-operator-form"]'
     )
@@ -481,13 +491,13 @@ describe('Relational operator toolbar', () => {
       if (union) {
         cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers_north').click();
         cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers_south').click();
-        cy.get('[data-slot="dvt-select-operation-union-all"]').click();
+        workbenchOperation('union_all').click();
       }
-      cy.get(tool('aggregate')).should('be.enabled').click();
+      workbenchOperation('aggregate').should('have.attr', 'aria-disabled', 'false').click();
       cy.get(form).find('input').clear().type('customer_count');
       cy.get(form).find('button[type="submit"]').click();
       cy.get('[data-operator="aggregate"]').should('have.length', 1);
-      cy.get(tool('window')).click();
+      workbenchOperation('window').click();
       cy.get(form).should('contain.text', 'customer_count DESC NULLS LAST');
       cy.get(form).should('not.contain.text', 'PARTITION BY');
       cy.get(form).find('input').clear().type('ranked_customer');
@@ -519,7 +529,7 @@ describe('Relational operator toolbar', () => {
       });
       cy.get('[data-slot="canvas-relational-tree-fit"]').click();
       cy.screenshot(`operators-${union ? 'union' : 'join'}-count-window`);
-      cy.get(tool('window')).click();
+      workbenchOperation('window').click();
       cy.get(form).find('input').should('have.value', 'ranked_customer');
       cy.contains(form + ' button', 'Remove operation').click();
       cy.get('[data-slot="canvas-relational-node-title"]').should('not.contain.text', 'Window');
@@ -538,15 +548,15 @@ describe('Relational operator toolbar', () => {
     openEditor();
     cy.get('[data-operator="join"]').rightclick();
     cy.get('[data-slot="canvas-relational-remove-left"]').click();
-    cy.get(tool('filter')).click();
+    workbenchOperation('filter').click();
     cy.get(form).find('input').type('C-001');
     cy.get(form).find('button[type="submit"]').click();
     cy.get('[data-operator="filter"]').should('have.length', 1);
-    cy.get(tool('filter')).click();
+    workbenchOperation('filter').click();
     cy.get(form).find('input').should('have.value', 'C-001');
     cy.contains(form + ' button', 'Remove operation').click();
     cy.get('[data-operator="filter"]').should('not.exist');
-    cy.get(tool('window')).click();
+    workbenchOperation('window').click();
     cy.get(form).find('select').should('exist');
     cy.get(form).find('input').clear().type('source_row');
     cy.get(form).find('button[type="submit"]').click();
@@ -556,7 +566,7 @@ describe('Relational operator toolbar', () => {
   });
   it('authors, reopens, edits and contextually removes ORDER BY below LIMIT', () => {
     openEditor();
-    cy.get(tool('sort')).should('be.enabled').click();
+    workbenchOperation('sort').should('have.attr', 'aria-disabled', 'false').click();
     cy.get(form).find('button').contains('Add key').click();
     cy.get(form).find('select[aria-label^="Field"]').should('have.length', 2);
     cy.get(form).find('select[aria-label="Field 2"]').select(1);
@@ -566,7 +576,7 @@ describe('Relational operator toolbar', () => {
       .should('have.length', 1)
       .and('contain.text', 'DESC NULLS LAST');
 
-    cy.get(tool('fetch')).should('be.enabled').click();
+    workbenchOperation('fetch').should('have.attr', 'aria-disabled', 'false').click();
     cy.get(form).find('input').eq(0).clear().type('2');
     cy.get(form).find('input').eq(1).clear().type('3');
     cy.get(form).find('button[type="submit"]').click();
@@ -634,8 +644,10 @@ describe('Relational operator toolbar', () => {
   });
   it('does not enable mutations for a read-only model', () => {
     openEditor(false, true);
-    cy.get(tool('aggregate')).should('be.disabled');
-    cy.get(tool('window')).should('be.disabled');
+    workbenchOperation('aggregate').should('have.attr', 'aria-disabled', 'true');
+    closeWorkbenchOperations();
+    workbenchOperation('window').should('have.attr', 'aria-disabled', 'true');
+    closeWorkbenchOperations();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
     cy.get('[data-operator="join"]').click();
     cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').then(($editor) => {

@@ -15,6 +15,7 @@ describe('Workbench UNION ALL', () => {
     openWorkbenchModel('union-transform');
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers_north').click();
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers_south').click();
+    cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
     cy.get('[data-slot="dvt-select-operation-union-all"]').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.be.disabled').click();
 

@@ -23,13 +23,12 @@ describe('Workbench pending-join', () => {
     );
     cy.get('[data-slot="canvas-relational-tree-authoring"]').should('not.exist');
     dragWorkbenchSource('customers', 'primary');
+    cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
     cy.get('[data-slot="dvt-select-operation-projection"]').should('exist');
+    cy.get('[role="combobox"]').type('{esc}');
     dragWorkbenchSource('orders', 'secondary');
-    cy.get('[data-slot="dvt-select-operation-inner-join"]')
-      .scrollIntoView()
-      .should('be.visible')
-      .focus()
-      .type('{enter}');
+    cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
+    cy.get('[role="combobox"]').type('INNER JOIN{enter}');
     cy.get('[data-slot="canvas-relational-node-expand"]').click();
     cy.get('[data-slot="dvt-substrait-join-predicate-editors"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
@@ -43,6 +42,7 @@ describe('Workbench pending-join', () => {
 
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'orders').click();
+    cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
     cy.get('[data-slot="dvt-select-operation-inner-join"]').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.be.disabled').click();
 

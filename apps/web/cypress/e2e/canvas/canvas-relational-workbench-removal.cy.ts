@@ -33,13 +33,16 @@ describe('Workbench removal', () => {
     cy.then(() => {
       baseline = semanticWrites('join-transform').length;
     });
+    cy.get('[data-slot="dvt-select-operation-inner-join"]').should('not.exist');
+    cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
     cy.get('[data-slot="dvt-select-operation-inner-join"]').should('be.visible');
     cy.get('[data-slot="dvt-select-operation-union-all"]').should('be.visible');
-    cy.get('[data-slot="canvas-relational-tree-operation-shelf-toggle"]').click();
+    cy.get('[role="combobox"]').type('{esc}');
     cy.get('[data-slot="dvt-select-operation-inner-join"]').should('not.exist');
-    cy.get('[data-slot="canvas-relational-tree-operation-shelf-toggle"]').click();
+    cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
     cy.get('[data-slot="dvt-select-operation-inner-join"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+    cy.get('[role="combobox"]').type('{esc}');
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').rightclick();
     cy.get('[data-slot="canvas-relational-remove-left"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-remove-left"]')

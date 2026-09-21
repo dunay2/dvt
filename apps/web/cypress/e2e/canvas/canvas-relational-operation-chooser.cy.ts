@@ -37,7 +37,8 @@ function openPendingRelationalOperationChooser(): void {
   cy.get('[data-slot="canvas-relational-tree-workbench"]').should('be.visible');
   cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
   cy.contains('[data-slot="canvas-relational-tree-source"]', 'orders').click();
-  cy.get('[data-slot="dvt-relational-operation-chooser"]').should('be.visible');
+  cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
+  cy.get('[role="listbox"]').should('be.visible');
 }
 
 describe('Canvas relational-operation chooser', () => {
@@ -78,12 +79,11 @@ describe('Canvas relational-operation chooser', () => {
 
     openPendingRelationalOperationChooser();
 
-    cy.get('[data-slot="dvt-relational-operation-chooser"]').should('be.visible');
+    cy.get('[role="listbox"]').should('be.visible');
     cy.get('[data-slot="dvt-select-operation-inner-join"]')
       .should('contain.text', 'Needs predicate')
-      .and('not.be.disabled')
-      .focus()
-      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+      .and('have.attr', 'aria-disabled', 'false');
+    cy.get('[role="combobox"]').type('INNER JOIN{enter}');
     cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
       'have.length',
       1
@@ -193,9 +193,8 @@ describe('Canvas relational-operation chooser', () => {
       openPendingRelationalOperationChooser();
       cy.get(`[data-slot="dvt-select-operation-${scenario.operation}"]`)
         .should('contain.text', scenario.label)
-        .and('not.be.disabled')
-        .focus()
-        .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+        .and('have.attr', 'aria-disabled', 'false');
+      cy.get('[role="combobox"]').type(`${scenario.label}{enter}`);
       cy.get('[data-slot="canvas-relational-tree-apply"]').click();
 
       cy.wrap(null).should(() => {

@@ -26,7 +26,10 @@ describe('Workbench cross', () => {
     openWorkbenchModel('join-transform');
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'orders').click();
-    cy.get('[data-slot="dvt-select-operation-cross-join"]').should('be.enabled').click();
+    cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
+    cy.get('[data-slot="dvt-select-operation-cross-join"]')
+      .should('have.attr', 'aria-disabled', 'false')
+      .click();
     cy.get('[data-slot="canvas-relational-cross-warning"]').should('be.visible');
     cy.get('[data-slot="dvt-substrait-join-predicate-editors"]').should('not.exist');
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'shipments').click();
