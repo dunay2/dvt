@@ -7,7 +7,6 @@ import {
   createDvtSubstraitFetchDraft,
   removeDvtSubstraitSortFetchRelation,
   selectDvtSubstraitRelation,
-  projectDvtJoinDraftToPostgresSql,
 } from '@dvt/postgres-projection';
 import { describe, expect, it } from 'vitest';
 import {
@@ -18,11 +17,15 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import { sourceRef } from './CanvasRelationalTreeWorkbench.test-support';
 import type { DvtSubstraitJoinSource } from './canvasDvtSubstraitJoinComposition';
+import {
+  encodeDvtSubstraitSemanticDocument,
+  decodeDvtSubstraitSemanticDocument,
+} from './canvasDvtSubstraitSemanticDocument';
 
 describe('selected wrappers preserve LEFT JOIN identity', () => {
   it.each(['aggregate', 'window'] as const)(
-    'projects selected Sort/Fetch over %s without changing LEFT to INNER',
-    async (wrapper) => {
+    'preserves Substrait through %s, selection, removal and serialization',
+    (wrapper) => {
       const source = (table: string): DvtSubstraitJoinSource => ({
         nodeId: table,
         table,
@@ -62,15 +65,30 @@ describe('selected wrappers preserve LEFT JOIN identity', () => {
         count: 20n,
         offset: 0n,
       });
-      const expected = await projectDvtJoinDraftToPostgresSql(wrapped);
-      expect(expected.sql).toContain('LEFT JOIN');
+      const root = wrapped.plan.relations[0]?.relType;
+      const outer = root?.case === 'root' ? root.value.input?.relType : undefined;
+      const aggregate = outer?.case === 'project' ? outer.value.input?.relType : outer;
+      if (aggregate?.case !== 'aggregate') throw new Error('Expected canonical AggregateRel');
+      const canonicalJoin = aggregate.value.input?.relType;
+      expect(canonicalJoin?.case).toBe('join');
+      if (canonicalJoin?.case !== 'join') throw new Error('Expected canonical JoinRel');
+      expect(canonicalJoin.value.type).toBe(JoinRel_JoinType.LEFT);
+      const before = encodeDvtSubstraitSemanticDocument(fetched);
       for (const id of [relation.relationId, 'sort', 'fetch']) {
         let selected = selectDvtSubstraitRelation(fetched, id);
         if (id === 'fetch') selected = removeDvtSubstraitSortFetchRelation(selected, 'fetch');
         if (id !== relation.relationId)
           selected = removeDvtSubstraitSortFetchRelation(selected, 'sort');
-        expect((await projectDvtJoinDraftToPostgresSql(selected)).sql).toBe(expected.sql);
+        expect(selected.plan).toEqual(wrapped.plan);
+        expect(selected.sidecar.relations).toEqual(wrapped.sidecar.relations);
+        expect(selected.sidecar.fields).toEqual(wrapped.sidecar.fields);
+        const reopened = decodeDvtSubstraitSemanticDocument(
+          encodeDvtSubstraitSemanticDocument(selected)
+        );
+        expect(reopened.plan).toEqual(wrapped.plan);
+        expect(reopened.sidecar.fields).toEqual(wrapped.sidecar.fields);
       }
+      expect(encodeDvtSubstraitSemanticDocument(fetched)).toEqual(before);
     }
   );
 });

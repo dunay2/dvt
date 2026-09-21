@@ -2,12 +2,15 @@ import { readFileSync } from 'node:fs';
 import { URL } from 'node:url';
 
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { decodeDvtSubstraitPlanV1, DvtSubstraitSemanticDocumentV1Schema } from '@dvt/contracts';
+import {
+  decodeDvtSubstraitPlanV1,
+  encodeDvtSubstraitPlanV1,
+  DvtSubstraitSemanticDocumentV1Schema,
+} from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import {
   createDvtSubstraitSortDraft,
-  projectDvtSetDraftToPostgresSql,
   removeDvtSubstraitSortFetchRelation,
   selectDvtSubstraitRelation,
 } from '../src/index.js';
@@ -16,10 +19,10 @@ const documents = JSON.parse(
   readFileSync(new URL('./fixtures/set-documents.json', import.meta.url), 'utf8')
 );
 
-describe('selected wrapped Set projection', () => {
+describe('canonical selected wrapped Set document', () => {
   it.each(['unionDistinctAggregate', 'unionDistinctWindow'])(
-    'preserves admitted anchors, fields and SQL for %s',
-    async (name) => {
+    'preserves complete Substrait and field identity for %s',
+    (name) => {
       const document = DvtSubstraitSemanticDocumentV1Schema.parse(documents[name]);
       const original = { plan: decodeDvtSubstraitPlanV1(document), sidecar: document.sidecar };
       const before = globalThis.structuredClone(original);
@@ -34,13 +37,18 @@ describe('selected wrapped Set projection', () => {
         outputFieldIds: fields.map((_, index) => `sort:field:${index}`),
         keys: [{ fieldId: fields[0]!.fieldId, direction: SortField_SortDirection.ASC_NULLS_LAST }],
       });
-      const expected = await projectDvtSetDraftToPostgresSql(original);
       const selected = selectDvtSubstraitRelation(sorted, root.relationId);
-      expect((await projectDvtSetDraftToPostgresSql(selected)).sql).toBe(expected.sql);
+      expect(selected.plan).toEqual(original.plan);
       const selectedSort = selectDvtSubstraitRelation(sorted, 'sort:selected');
       const unwrapped = removeDvtSubstraitSortFetchRelation(selectedSort, 'sort:selected');
-      expect((await projectDvtSetDraftToPostgresSql(unwrapped)).sql).toBe(expected.sql);
-      expect(selected.sidecar.fields).toEqual(original.sidecar.fields);
+      expect(unwrapped.plan).toEqual(original.plan);
+      for (const candidate of [selected, unwrapped]) {
+        expect(candidate.sidecar.relations).toEqual(original.sidecar.relations);
+        expect(candidate.sidecar.fields).toEqual(original.sidecar.fields);
+        const semanticPlan = encodeDvtSubstraitPlanV1(candidate.plan);
+        expect(semanticPlan.bytesBase64).toBe(document.semanticPlan.bytesBase64);
+        expect(decodeDvtSubstraitPlanV1({ ...document, semanticPlan })).toEqual(candidate.plan);
+      }
       expect(original).toEqual(before);
     }
   );

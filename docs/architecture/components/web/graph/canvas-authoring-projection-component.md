@@ -354,6 +354,12 @@ canonical selectors. Wrapper removal preserves relation and field identities;
 generated aggregate outputs do not claim source-field lineage. SQL remains a
 projection, never an additional authoring authority.
 
+Canonical correctness is the first acceptance gate: tests assert Substrait
+relation selectors, input order, expressions, stable identities and lossless
+encode/decode across selection and editing. SQL text or database rows are not an
+oracle for the canonical document. PostgreSQL is only the downstream fidelity
+gate.
+
 PostgreSQL regression tests must project canonical documents through the API
 before executing SQL. Handwritten SQL wrappers around a base projection do not
 prove that canonical composition is supported. Browser tests separately prove
