@@ -1,0 +1,111 @@
+/** Owned concern: compose controlled inputs for each admitted operator. */
+import type { CanvasRelationalOperatorTool } from '../canvasRelationalTreeOperatorModel';
+import type { OperatorFormModel } from './useOperatorForm';
+import { SortKeyFields } from './SortKeyFields';
+
+export function OperatorFormFields({
+  tool,
+  form,
+}: Readonly<{
+  tool: CanvasRelationalOperatorTool;
+  form: Pick<OperatorFormModel, 'values' | 'change' | 'copy'>;
+}>): JSX.Element {
+  const { values, change, copy } = form;
+  return (
+    <>
+      {tool.id === 'sort' ? (
+        <SortKeyFields
+          fields={tool.fields}
+          keys={values.sortKeys}
+          copy={copy}
+          onChange={(sortKeys) => change({ sortKeys })}
+        />
+      ) : tool.id === 'fetch' ? (
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            OFFSET
+            <input
+              inputMode="numeric"
+              value={values.offset}
+              placeholder="0"
+              onChange={(event) => change({ offset: event.target.value })}
+            />
+          </label>
+          <label className="block">
+            LIMIT
+            <input
+              inputMode="numeric"
+              value={values.count}
+              placeholder={copy.unlimited}
+              onChange={(event) => change({ count: event.target.value })}
+            />
+          </label>
+        </div>
+      ) : tool.id === 'window' && tool.order != null ? (
+        <div className="rounded border border-(--border-subtle) p-3 font-mono text-[13px]">
+          ROW_NUMBER()
+          <br />
+          ORDER BY {tool.order} DESC NULLS LAST,
+          <br />
+          {tool.tieBreaker} ASC NULLS LAST
+        </div>
+      ) : (
+        <label className="block">
+          {tool.id === 'window'
+            ? 'ORDER BY · ASC NULLS LAST'
+            : tool.id === 'aggregate'
+              ? 'GROUP BY'
+              : copy.field}
+          <select
+            value={values.fieldId}
+            disabled={tool.id === 'aggregate' && tool.active}
+            required
+            onChange={(event) => change({ fieldId: event.target.value })}
+          >
+            {tool.fields.map((field) => (
+              <option key={field.fieldId} value={field.fieldId}>
+                {field.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {tool.id === 'filter' ? (
+        <>
+          <label className="block">
+            {copy.comparison}
+            <select
+              value={values.capabilityId}
+              onChange={(event) => change({ capabilityId: event.target.value })}
+            >
+              {tool.comparisons?.map((comparison) => (
+                <option key={comparison.capabilityId} value={comparison.capabilityId}>
+                  {comparison.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            {copy.value}
+            <input
+              value={values.value}
+              onChange={(event) => change({ value: event.target.value })}
+            />
+          </label>
+        </>
+      ) : tool.id === 'sort' || tool.id === 'fetch' ? null : (
+        <label className="block">
+          {copy.result}
+          <input
+            value={values.alias}
+            required
+            onChange={(event) => change({ alias: event.target.value })}
+          />
+        </label>
+      )}
+      {tool.id === 'aggregate' ? (
+        <p className="text-(--text-muted)">COUNT(*) → {values.alias}</p>
+      ) : null}
+    </>
+  );
+}

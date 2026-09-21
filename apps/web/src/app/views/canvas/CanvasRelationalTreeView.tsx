@@ -87,6 +87,7 @@ export function CanvasRelationalTreeView({
               onExpand={onExpand}
               onRemove={onRemove}
               zoom={viewport.zoom}
+              onManualLayout={viewport.stopAutoFit}
               semanticContext={transformNode == null ? undefined : { transformNode }}
             />
           </div>

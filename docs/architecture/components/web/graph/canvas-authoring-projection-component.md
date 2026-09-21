@@ -2,7 +2,7 @@
 title: Canvas Authoring Projection Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-22
+last_reviewed: 2026-09-21
 ---
 
 # Canvas Authoring Projection Component
@@ -145,6 +145,108 @@ Rule:
   and edges, not from viewport state
 - lossy record projection must not replace semantic graph truth
 
+## Outer Canvas And Model Boundary
+
+The main Canvas projects real Source-to-Model dependencies directly between
+their ports. Each dependency retains its own identity, selection, removal and
+execution gate. It does not project the Model's internal JOIN/Set operation as
+an edge badge, shared relational junction, synthetic node or shared trunk.
+Substrait remains the semantic authority inside the Model; internal operations
+are inspected and edited in the semantic editor reached from the Model.
+
+This presentation follows #3293/#3296 and supersedes the grouped edge badge
+presentation from #3227. It does not change persisted graph topology or the
+execution snapshot. `canvasViewportEdgeProjection.ts` must not decode internal
+Model composition to render an external dependency.
+
+## Operator Form Boundary
+
+The semantic editor's operator form is a local component, not another mutation
+authority. `CanvasRelationalTreeOperatorForm` composes a controller with an inline
+or modal view. Its `relational-operator-form/` members own:
+
+- `useOperatorForm`: discardable input state, exact integer conversion and
+  dispatch to the existing `applyCanvasRelationalOperatorTool` command owner.
+- `OperatorFormView`: form submission, error presentation and explicit actions.
+- `OperatorFormFields` and `SortKeyFields`: controlled input presentation.
+- `operatorFormCopy`: shared English/Spanish presentation copy.
+
+Views receive values and actions; they do not receive persistence ports or call
+semantic mutations. Cancelling discards local input. Accepted edits update only
+the editor draft; persistence still belongs to explicit Apply through the
+existing authoring rail. Selecting a card opens its properties without fetching
+rows, running the model or applying a semantic revision.
+
+```mermaid
+flowchart LR
+  Container[Operator form] --> Controller[Local form controller]
+  Container --> View[Form view]
+  View --> Fields[Controlled fields]
+  Controller --> Command[Existing draft command owner]
+  Command --> Draft[Local canonical draft]
+```
+
+## Relational Card Movement And Reusable Inputs
+
+The #3342 product need distinguishes a connected source or transformed result,
+each use of that input in a branch, and its disposable screen position. Reuse
+must support inputs as-is and independently transformed branches, not just
+self-JOINs of raw Reads. Countries separated by filters and employee/manager
+roles are examples, not product-specific types or rules. Occurrence identity
+must not be collapsed to the physical source identity during editing or reload.
+
+```mermaid
+flowchart LR
+  Input[Source or admitted transformed result] --> BranchA[Use as-is]
+  Input --> BranchB[Independent branch transformations]
+  BranchA --> Composition[Canonical Substrait composition]
+  BranchB --> Composition
+  Composition --> Tree[Relational projection]
+  Tree --> Layout[Automatic geometry and local card positions]
+```
+
+Card movement belongs to the presentation model. It must not mutate the plan,
+reorder operands, save a semantic revision, fetch rows or invalidate data.
+Positions live only in the open Model editor session, including transitions
+between inspection and local editing; they are not persisted in the sidecar.
+Pointer movement accounts for zoom; cancellation restores the starting position.
+Keyboard movement uses Alt plus arrow keys. Port endpoints follow the card.
+
+The movement microcut does not admit new relation shapes. General reusable-input
+authoring remains an open design/delivery criterion in #3342: it must establish
+the standard Substrait representation, stable RelationId/FieldId bindings,
+shared-upstream versus branch-local edit behavior, reload and PostgreSQL
+projection before exposure. A display alias is not a new physical table or a
+substitute for this identity boundary.
+
+Occurrence creation and edits must reuse ConfigureCanvasDvtNode and the protected
+authoring save rail; preview must reuse PreviewCanvasTransformRows. Business-entity
+contracts, hierarchy-cycle validation and recursive operations are outside this
+slice. A self-JOIN condition is not a data-quality constraint: invalid source
+rows must not be silently hidden by an injected inequality.
+
+The shared PostgreSQL JOIN inspector separates document admission, physical Read
+bindings, stage propagation and predicate binding. Its internal
+`join-inspection/` modules consume the same Plan and identity sidecar; the public
+`inspectDvtSubstraitJoinDraft` and `inspectNInputJoinStructure` entry points remain
+the only inspection API. Repeated named-table Reads may share a physical source
+while retaining distinct RelationIds and FieldIds. Their schema, table and field
+schema must agree; repeated provenance is not permission to change the queried
+table. The protected API checks exact physical dependency coverage, not equality
+between the number of Read occurrences and graph Sources. Every occurrence
+resolves to one authorized source and every selected dependency is used.
+Selected-operation preview may use a subset of that already validated closure.
+
+This shared-reader/API admission does not expose repeated-input creation in the
+Web editor. Generic transformed branches, aliases and occurrence-aware editing
+remain open in #3342 and require their own authoring/reopen/provider proof.
+
+```text
+Canonical document -> document admission -> Read bindings -> JOIN stages
+                                                           -> predicate bindings
+                   <- verified input/stage/output read model
+```
+
 ## Consumers
 
 Direct consumers:
@@ -175,6 +277,26 @@ Those tests must keep proving:
 - semantic merge stays outside React Flow state ownership
 - viewport code does not re-import protected boundary semantics
 - canonical snapshot stays derived from semantic truth
+
+### Browser Scenario Boundaries
+
+`canvas-relational-tree-workbench.cy.ts` owns keyboard entry and workspace
+navigation only. The sibling `canvas-relational-workbench-*.cy.ts` specs isolate
+viewport behavior, contextual removal, pending JOIN creation, source append,
+predicate editing, chain persistence, CROSS preview and UNION creation.
+Each spec selects its scenario explicitly from
+`cypress/support/relationalWorkbench/scenario.ts`; test titles never select
+fixtures. Shared support owns navigation, geometry assertions, chain setup and
+saved-document inspection, not a parallel semantic implementation.
+
+These browser tests exercise the real Web against controlled API responses.
+They assert canonical persisted documents and revision-bound query parameters;
+they do not replace PostgreSQL integration tests or prove database results.
+The focused suite is run with:
+
+```sh
+pnpm --filter @dvt/web test:e2e:native --spec 'cypress/e2e/canvas/canvas-relational-tree-workbench.cy.ts,cypress/e2e/canvas/canvas-relational-workbench-*.cy.ts'
+```
 
 ## Drift To Watch
 

@@ -10,7 +10,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { topAppBarClasses } from './chrome';
 import type { ShellTopBarCopy } from './copy';
 import { resolveCompiledApplicationMetadata } from './appBuildMetadata';
 
@@ -34,7 +33,6 @@ export function ShellAppMenu({ copy }: ShellAppMenuProps): JSX.Element {
             className="flex h-8 shrink-0 items-center gap-2 rounded-md px-1.5 text-[var(--text-default)] hover:bg-[var(--surface-selected)] hover:text-[var(--text-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] sm:mr-1"
           >
             <AppBrandMark className="size-6 shrink-0" />
-            <span className={`${topAppBarClasses.brand} hidden sm:inline`}>Raven</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">

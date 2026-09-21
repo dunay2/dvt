@@ -102,10 +102,12 @@ export function addDvtOperationalWorkloadIdentityIssues(
 
   const nodeCount = workload.graph.selectedNodeIds.length;
   const edgeCount = workload.graph.selectedEdgeIds.length;
+  // JOIN operands may be distinct occurrences of one physical source.
+  const minimumNodes = workload.targetProjection.profileId === DVT_POSTGRES_JOIN_PROFILE_ID ? 2 : 3;
   const cardinalityMatches =
     workload.targetProjection.profileId === DVT_POSTGRES_PROJECT_REL_PROFILE_ID
       ? nodeCount === 2 && edgeCount === 1
-      : nodeCount >= 3 && edgeCount === nodeCount - 1;
+      : nodeCount >= minimumNodes && edgeCount === nodeCount - 1;
   if (!cardinalityMatches) {
     context.addIssue({
       code: 'custom',

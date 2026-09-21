@@ -24,11 +24,7 @@ import {
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { readCanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
 import { projectCanvasViewportEdges } from './canvasViewportEdgeProjection';
-import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
-import { resolveCanvasRelationalCompositionBadgeSummary } from './canvasRelationalCompositionBadgeSummary';
-import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
-import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 import { applyCanvasRelationalOperatorTool } from './canvasRelationalTreeOperatorCommands';
 import { resolveCanvasRelationalOperatorTools } from './canvasRelationalTreeOperatorModel';
 
@@ -179,51 +175,57 @@ function canonicalThreeInputJoin(
   return applyDvtSubstraitSemanticDocument(transform(), encodeDvtSubstraitJoinDocument(appended));
 }
 
-function canonicalAccessibleLabel(
+function assertDependencies(
   model: CanonicalNode,
   sources: readonly CanonicalNode[],
   locale: string
-): string | undefined {
-  const visibleEdges = sources.map((input) => ({ sourceId: input.id, targetId: model.id }));
+): void {
+  const visibleEdges = sources.map((input, index) => ({
+    sourceId: input.id,
+    targetId: model.id,
+    executionGate: index === 0 ? ('closed' as const) : undefined,
+  }));
+  const signature = JSON.stringify({ model, sources, visibleEdges });
   const projected = projectCanvasViewportEdges({
     visibleEdges,
     allowedNodeIds: new Set([...sources.map((input) => input.id), model.id]),
-    canonicalEdgeIdBySignature: new Map(),
+    canonicalEdgeIdBySignature: new Map(
+      sources.map((input) => [`${input.id}::${model.id}`, `edge-${input.id}`])
+    ),
     canonicalEdgeBySignature: new Map(),
     canonicalNodesById: new Map([...sources, model].map((node) => [node.id, node])),
     locale,
   });
-  const composition = readCanvasDependencyEdgeData(projected[0]?.data)?.composition as
-    { accessibleLabel?: string } | undefined;
-  const tree = projectCanvasRelationalTree({
-    node: model,
-    nodes: [...sources, model],
-    edges: visibleEdges,
+  expect(projected).toHaveLength(sources.length);
+  projected.forEach((edge, index) => {
+    const input = sources[index]!;
+    expect(edge).toMatchObject({ id: `edge-${input.id}`, source: input.id, target: model.id });
+    const dependency = readCanvasDependencyEdgeData(edge.data);
+    expect(dependency?.execution.gateState).toBe(index === 0 ? 'closed' : 'open');
+    expect(dependency).not.toHaveProperty('composition');
+    expect(edge.data).not.toHaveProperty('composition');
+    const copy = resolveCanvasViewCopy(locale);
+    const label = copy.canvasEdgeAccessibleLabelTemplate
+      .replace('{source}', input.name)
+      .replace('{target}', model.name);
+    expect(edge.ariaLabel).toBe(
+      index === 0 ? `${label}, ${copy.canvasEdgeExcludedFromExecutionLabel}` : label
+    );
   });
-  expect(tree.ok).toBe(true);
-  if (tree.ok) {
-    let relation = tree.projection.root;
-    while (relation.children.length === 1) relation = relation.children[0]!.node;
-    const label =
-      resolveCanvasViewCopy(locale)[
-        resolveCanvasRelationalOperationPresentation(relation.operation).labelKey
-      ];
-    expect(readCanvasDependencyEdgeData(projected[0]?.data)?.composition?.label).toBe(label);
-  }
-  return composition?.accessibleLabel;
+  expect(JSON.stringify({ model, sources, visibleEdges })).toBe(signature);
 }
 
-describe('Canvas viewport edge projection', () => {
+describe('Canvas viewport dependency projection', () => {
   it.each([
-    [JoinRel_JoinType.INNER, 'INNER JOIN'],
-    [JoinRel_JoinType.LEFT, 'LEFT JOIN'],
-    [JoinRel_JoinType.RIGHT, 'RIGHT JOIN'],
-    [JoinRel_JoinType.OUTER, 'FULL OUTER JOIN'],
-    [JoinRel_JoinType.LEFT_SEMI, 'LEFT SEMI JOIN'],
-    [JoinRel_JoinType.LEFT_ANTI, 'LEFT ANTI JOIN'],
-    [JoinRel_JoinType.RIGHT_SEMI, 'RIGHT SEMI JOIN'],
-    [JoinRel_JoinType.RIGHT_ANTI, 'RIGHT ANTI JOIN'],
-  ] as const)('agrees with the tree for JOIN selector %s in both locales', (type, label) => {
+    JoinRel_JoinType.INNER,
+    JoinRel_JoinType.LEFT,
+    JoinRel_JoinType.RIGHT,
+    JoinRel_JoinType.OUTER,
+    JoinRel_JoinType.LEFT_SEMI,
+    JoinRel_JoinType.LEFT_ANTI,
+    JoinRel_JoinType.RIGHT_SEMI,
+    JoinRel_JoinType.RIGHT_ANTI,
+  ] as const)('keeps internal JOIN %s and its wrappers out of the outer graph', (type) => {
     const left = source('left');
     const right = source('right');
     const joined = initialJoin(left, right, type);
@@ -246,24 +248,18 @@ describe('Canvas viewport edge projection', () => {
         transform(),
         encodeDvtSubstraitJoinDocument(draft)
       );
-      const before = JSON.stringify(model);
-      for (const locale of ['en', 'es']) {
-        expect(canonicalAccessibleLabel(model, [left, right], locale)).toBe(
-          `${label}, ${locale === 'en' ? 'inputs: 2, predicates: 1' : 'entradas: 2, predicados: 1'}`
-        );
-      }
-      expect(JSON.stringify(model)).toBe(before);
+      for (const locale of ['en', 'es']) assertDependencies(model, [left, right], locale);
     }
   });
 
   it.each([
-    ['union_all', 'UNION ALL'],
-    ['union_distinct', 'UNION DISTINCT'],
-    ['intersect_distinct', 'INTERSECT'],
-    ['except_distinct', 'EXCEPT'],
-    ['intersect_all', 'INTERSECT ALL'],
-    ['except_all', 'EXCEPT ALL'],
-  ] as const)('agrees with the tree for %s in both locales', (operation, label) => {
+    'union_all',
+    'union_distinct',
+    'intersect_distinct',
+    'except_distinct',
+    'intersect_all',
+    'except_all',
+  ] as const)('keeps internal %s out of the outer graph', (operation) => {
     const sources = [source('left'), source('right')];
     const model = applyDvtSubstraitSemanticDocument(
       transform(),
@@ -281,80 +277,56 @@ describe('Canvas viewport edge projection', () => {
         })
       )
     );
-    for (const locale of ['en', 'es']) {
-      expect(canonicalAccessibleLabel(model, sources, locale)).toMatch(new RegExp(`^${label}, `));
-    }
-  });
-  it('correlates two pending inputs while preserving two real dependency edges', () => {
-    const orders = source('orders');
-    const clients = source('clients');
-    const model = transform();
-    const visibleEdges = [
-      { sourceId: orders.id, targetId: model.id },
-      { sourceId: clients.id, targetId: model.id },
-    ];
-
-    const projected = projectCanvasViewportEdges({
-      visibleEdges,
-      allowedNodeIds: new Set([orders.id, clients.id, model.id]),
-      canonicalEdgeIdBySignature: new Map(),
-      canonicalEdgeBySignature: new Map(),
-      canonicalNodesById: new Map([orders, clients, model].map((node) => [node.id, node])),
-      locale: 'es',
-    });
-    const composition = projected.map(
-      (edge) => readCanvasDependencyEdgeData(edge.data)?.composition
-    );
-
-    expect(projected).toHaveLength(2);
-    expect(composition.every((member) => member?.state === 'pending')).toBe(true);
-    expect(composition.every((member) => member?.label === 'RELACIONAR / COMPONER')).toBe(true);
-    expect(composition.filter((member) => member?.role === 'trunk-owner')).toHaveLength(1);
-    expect(projected.every((edge) => edge.ariaLabel?.includes('RELACIONAR / COMPONER'))).toBe(true);
+    for (const locale of ['en', 'es']) assertDependencies(model, sources, locale);
   });
 
-  it('projects concise canonical JOIN and UNION ALL facts into the accessible badge name', () => {
+  it('retains every real dependency for pending, canonical, extra and missing inputs', () => {
     const orders = source('orders');
     const clients = source('clients');
     const details = source('details');
-
-    expect(canonicalAccessibleLabel(canonicalJoin(orders, clients), [orders, clients], 'es')).toBe(
-      'INNER JOIN, entradas: 2, predicados: 1'
-    );
-    expect(
-      canonicalAccessibleLabel(canonicalLeftJoin(orders, clients), [orders, clients], 'es')
-    ).toBe('LEFT JOIN, entradas: 2, predicados: 1');
-    expect(
-      canonicalAccessibleLabel(canonicalUnionAll(orders, clients), [orders, clients], 'en')
-    ).toBe('UNION ALL, inputs: 2, outputs: 1, bag semantics');
-    const cross = canonicalCross(orders, clients);
-    const crossEdges = [orders, clients].map((input) => ({
-      sourceId: input.id,
-      targetId: cross.id,
-    }));
-    expect(
-      resolveCanvasRelationalCompositionTruth({
-        node: cross,
-        nodes: [orders, clients, cross],
-        edges: crossEdges,
-      })
-    ).toMatchObject({ state: 'canonical', operation: 'cross_join' });
-    expect(
-      resolveCanvasRelationalCompositionBadgeSummary({
-        node: cross,
-        operation: 'cross_join',
-        locale: 'es',
-      })
-    ).toBe('CROSS JOIN, entradas: 2, salidas: 2, producto cartesiano');
-    expect(canonicalAccessibleLabel(cross, [orders, clients], 'es')).toBe(
-      'CROSS JOIN, entradas: 2, salidas: 2, producto cartesiano'
-    );
-    expect(
-      canonicalAccessibleLabel(
+    for (const locale of ['en', 'es']) {
+      assertDependencies(transform(), [orders, clients], locale);
+      assertDependencies(canonicalJoin(orders, clients), [orders, clients], locale);
+      assertDependencies(canonicalLeftJoin(orders, clients), [orders, clients, details], locale);
+      assertDependencies(canonicalUnionAll(orders, clients), [orders], locale);
+      assertDependencies(canonicalCross(orders, clients), [orders, clients], locale);
+      assertDependencies(
         canonicalThreeInputJoin(orders, clients, details),
         [orders, clients, details],
-        'en'
-      )
-    ).toBe('INNER JOIN, inputs: 3, predicates: 2');
+        locale
+      );
+    }
+  });
+
+  it('filters only out-of-scope dependencies and preserves canonical structural gates', () => {
+    const projected = projectCanvasViewportEdges({
+      visibleEdges: [
+        { sourceId: 'orders', targetId: 'model' },
+        { sourceId: 'outside', targetId: 'model' },
+      ],
+      allowedNodeIds: new Set(['orders', 'model']),
+      canonicalEdgeIdBySignature: new Map([['orders::model', 'canonical-edge']]),
+      canonicalEdgeBySignature: new Map([
+        [
+          'orders::model',
+          {
+            id: 'canonical-edge',
+            sourceId: 'orders',
+            targetId: 'model',
+            relation: 'lineage',
+            metadata: { executionDependency: false },
+          },
+        ],
+      ]),
+      canonicalNodesById: new Map(),
+      locale: 'en',
+    });
+    expect(projected).toHaveLength(1);
+    expect(projected[0]?.id).toBe('canonical-edge');
+    expect(readCanvasDependencyEdgeData(projected[0]?.data)?.execution).toMatchObject({
+      isGateable: false,
+      isEffectivelyExecutable: false,
+      unavailableReason: 'structural-execution-disabled',
+    });
   });
 });

@@ -37,7 +37,7 @@ export function CanvasRelationalTreeSourceCatalogue({
     <section
       aria-label={copy.relationalTreeSourcesLabel}
       data-slot="canvas-relational-tree-sources"
-      className={`max-h-40 min-h-0 overflow-auto border-b border-(--border-subtle) bg-(--surface-panel) md:max-h-none md:border-r md:border-b-0 ${collapsed ? 'p-2' : 'p-3'}`}
+      className="max-h-32 min-h-0 overflow-auto border-b border-(--border-subtle) bg-(--surface-panel) p-2 md:max-h-none md:border-r md:border-b-0"
     >
       <div className="flex items-center justify-between gap-2">
         <h3
@@ -74,7 +74,7 @@ export function CanvasRelationalTreeSourceCatalogue({
         )}
       </div>
       <div id={contentId} hidden={collapsed} data-slot="canvas-relational-tree-source-list">
-        <label className="mt-3 flex items-center gap-2 rounded-md border border-(--border-subtle) bg-(--surface-subtle) px-2 py-1.5 focus-within:border-(--focus-ring)">
+        <label className="mt-1 flex items-center gap-2 rounded-md border border-(--border-subtle) bg-(--surface-subtle) px-2 py-1.5 focus-within:border-(--focus-ring)">
           <Search aria-hidden="true" className="size-3.5 shrink-0 text-(--text-muted)" />
           <input
             type="search"
@@ -85,7 +85,7 @@ export function CanvasRelationalTreeSourceCatalogue({
             className="min-w-0 flex-1 bg-transparent text-xs text-(--text-default) outline-none"
           />
         </label>
-        <ul className="mt-3 flex gap-2 overflow-x-auto pb-1 md:block md:space-y-2 md:overflow-x-visible md:pb-0">
+        <ul className="mt-2 flex gap-1 overflow-x-auto pb-1 md:block md:space-y-1 md:overflow-x-visible md:pb-0">
           {visibleItems.map((item) => (
             <li key={item.key} className="min-w-44 md:min-w-0">
               <CanvasRelationalTreeSourceCard

@@ -16,10 +16,8 @@ import {
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 
-import {
-  resolveDvtTerminalTransformClosure,
-  sameConnection,
-} from './resolveDvtTerminalTransformClosure.js';
+import { sameConnection } from './dvtSourceCoverage.js';
+import { resolveDvtTerminalTransformClosure } from './resolveDvtTerminalTransformClosure.js';
 
 export type DvtTerminalTransformProjectionBinding = {
   readonly outputNodeId: string;

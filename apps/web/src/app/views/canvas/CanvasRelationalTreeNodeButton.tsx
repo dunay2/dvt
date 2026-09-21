@@ -61,21 +61,29 @@ export function CanvasRelationalTreeNodeButton({
   return (
     <button
       type="button"
+      draggable={false}
       role="treeitem"
       aria-level={placed.level}
       aria-posinset={placed.ordinal + 1}
       aria-setsize={placed.siblingCount}
       aria-selected={selected}
+      aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown Alt+ArrowLeft Alt+ArrowRight"
       aria-expanded={node.children.length === 0 ? undefined : true}
       aria-label={roleLabel == null ? title : `${roleLabel}: ${title}`}
       data-slot="canvas-relational-tree-node"
       data-locator={node.locator}
       data-relation-id={node.relationId ?? undefined}
       data-operator={node.operator}
-      onClick={() => onSelect(node.locator)}
-      onDoubleClick={() => node.operator !== 'read' && onExpand?.(node.locator)}
-      style={{ height: detailed ? 76 : '100%', fontFamily: '"Segoe UI", system-ui, sans-serif' }}
-      className={`w-full rounded-md border px-3 py-2 text-left shadow-sm transition-colors hover:border-(--status-info) aria-selected:border-(--status-info) aria-selected:ring-2 aria-selected:ring-(--status-info) ${operatorTone[presentation.category]}`}
+      onClick={() => {
+        onSelect(node.locator);
+        if (node.operator !== 'read') onExpand?.(node.locator);
+      }}
+      style={{
+        touchAction: 'none',
+        height: detailed ? 76 : '100%',
+        fontFamily: '"Segoe UI", system-ui, sans-serif',
+      }}
+      className={`w-full select-none rounded-md border px-3 py-2 text-left shadow-sm transition-colors hover:border-(--status-info) aria-selected:border-(--status-info) aria-selected:ring-2 aria-selected:ring-(--status-info) ${operatorTone[presentation.category]}`}
     >
       <span className="flex items-center gap-2 pr-5">
         <Icon aria-hidden="true" className="size-4 shrink-0 text-(--status-info)" />

@@ -107,10 +107,10 @@ export function CanvasRelationalTreeJoinEditor({
     ).some((joinType) => !canChangeJoinType(joinType));
 
   return (
-    <div className="h-full min-h-0 space-y-3">
-      <div className="h-full min-h-0" hidden={appendInput != null}>
+    <div className="min-h-0 space-y-3">
+      <div className="min-h-0" hidden={appendInput != null}>
         {selectedStage == null ? null : (
-          <div className="mb-3 flex items-end gap-3 border-b border-(--border-subtle) pb-3">
+          <div className="mb-3 flex flex-wrap items-end gap-2 border-b border-(--border-subtle) pb-2">
             <label className="block min-w-48 space-y-1 text-[11px] text-(--text-muted)">
               <span>{copy.inspectorDvtSubstraitJoinTypeLabel}</span>
               <select
