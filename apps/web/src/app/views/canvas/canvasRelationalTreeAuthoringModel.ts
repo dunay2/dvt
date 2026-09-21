@@ -1,9 +1,6 @@
 /** Owned concern: derive guided relational authoring choices and canonical DVT drafts. */
 import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
-import {
-  hasSameConnectionRef,
-  inspectDvtSubstraitAcceptedCrossDraft,
-} from '@dvt/postgres-projection';
+import { hasSameConnectionRef, inspectDvtSubstraitCrossDraft } from '@dvt/postgres-projection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
@@ -200,7 +197,7 @@ export function resolveCanvasRelationalTreeAuthoringCandidates(
   const joinInspection =
     args.joinDraft == null ? null : inspectDvtSubstraitJoinDraft(args.joinDraft);
   const crossInspection =
-    args.joinDraft == null ? null : inspectDvtSubstraitAcceptedCrossDraft(args.joinDraft);
+    args.joinDraft == null ? null : inspectDvtSubstraitCrossDraft(args.joinDraft);
   return args.inputs.map((input) => {
     if (selected.has(input.nodeId)) {
       return { nodeId: input.nodeId, selectable: false, selected: true, reason: null };
@@ -222,6 +219,14 @@ export function resolveCanvasRelationalTreeAuthoringCandidates(
           selectedInputIds: [...args.selectedInputIds, input.nodeId],
         }) != null;
     } else if (args.operation === 'cross_join') {
+      if (args.joinDraft != null && !crossInspection?.ok && !joinInspection?.ok) {
+        return {
+          nodeId: input.nodeId,
+          selectable: false,
+          selected: false,
+          reason: 'semantically-unavailable',
+        };
+      }
       const connection =
         crossInspection?.ok === true
           ? crossInspection.projection.inputs[0]?.sourceRef.connectionRef
@@ -230,6 +235,7 @@ export function resolveCanvasRelationalTreeAuthoringCandidates(
         connection != null &&
         input.sourceRef.connectionRef.provider === 'postgres' &&
         hasSameConnectionRef(connection, input.sourceRef.connectionRef) &&
+        input.fields.length > 0 &&
         input.fields.every((field) => field.joinDataType != null);
     } else if (args.joinDraft == null) {
       selectable = first != null && resolveCanvasDvtInitialJoinPairForInputs(first, input) != null;
