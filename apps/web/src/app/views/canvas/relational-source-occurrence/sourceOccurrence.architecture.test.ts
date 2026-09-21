@@ -6,6 +6,8 @@ import physical from './joinPhysicalBindings.ts?raw';
 import identitiesTest from './joinOccurrenceIdentity.test.ts?raw';
 import reopenTest from './occurrenceReopen.test.ts?raw';
 import fixture from './occurrence.test.fixtures.ts?raw';
+import retained from './retainedReadProjection.ts?raw';
+import removalTest from './occurrenceRemoval.test.ts?raw';
 
 describe('source occurrence component boundaries', () => {
   it.each([
@@ -14,6 +16,8 @@ describe('source occurrence component boundaries', () => {
     ['identity scenarios', identitiesTest],
     ['reopen scenarios', reopenTest],
     ['fixture', fixture],
+    ['retained projection', retained],
+    ['removal scenarios', removalTest],
   ])('%s remains a concern-owned module within 200 lines', (_, text) => {
     expect(text.trimEnd().split('\n').length).toBeLessThanOrEqual(200);
   });

@@ -10,19 +10,20 @@ import {
   retainDvtSubstraitJoinInputs,
   setDvtSubstraitJoinType,
   type DvtSubstraitJoinDraft,
+  type DvtSubstraitNInputJoinProjection,
 } from '../canvasDvtSubstraitJoinComposition';
 import {
   occurrenceInput as input,
   repeatedOccurrenceDraft as repeated,
 } from './occurrence.test.fixtures';
 
-function inspect(draft: DvtSubstraitJoinDraft) {
+function inspect(draft: DvtSubstraitJoinDraft): DvtSubstraitNInputJoinProjection {
   const result = inspectDvtSubstraitJoinDraft(draft);
   if (!result.ok) throw new Error('Expected an admitted canonical JOIN');
   return result.projection;
 }
 
-function append(draft: DvtSubstraitJoinDraft) {
+function append(draft: DvtSubstraitJoinDraft): DvtSubstraitJoinDraft {
   return appendDvtSubstraitJoinInput(draft, {
     ...input,
     predicate: {

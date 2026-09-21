@@ -12,6 +12,7 @@ import {
   inspectDvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
 import { createProjectionType } from './canvasDvtSubstraitProjectionStructure';
+import { retainCanvasJoinReadProjection } from './relational-source-occurrence/retainedReadProjection';
 import {
   inspectDvtSubstraitUnionAllAcceptedDraft,
   inspectDvtSubstraitUnionAllDraft,
@@ -303,54 +304,13 @@ export function removeCanvasRelationalTreeNode(
   const inputIndex = retained[0];
   const input = inputIndex == null ? undefined : projection.inputs[inputIndex];
   if (input == null) return { ok: false, reason: 'unavailable' };
-  if (
-    input.fields.some((field) => createProjectionType(field.dataType).kind.case !== field.dataType)
-  )
-    return { ok: false, reason: 'unsupported-projection-type' };
-  const draft = createDvtSubstraitProjectionDraft({
-    source: {
-      ...input,
-      nodeId: input.relationId,
-      fields: input.fields.map((field) => ({ name: field.name, dataType: field.dataType })),
-    },
+  const draft = retainCanvasJoinReadProjection({
+    original: args.draft,
+    input,
     targetNodeId: args.targetNodeId,
-    outputs: projection.outputs
-      .filter((field) => field.source.inputIndex === inputIndex)
-      .map((field) => ({
-        fieldId: field.fieldId,
-        name: field.name,
-        sourceFieldName: field.source.name,
-      })),
+    outputs: projection.outputs.filter((field) => field.source.inputIndex === inputIndex),
   });
-  const allocatedSourceId = draft.sidecar.relations[0]!.relationId;
-  const fieldIds = new Map(
-    draft.sidecar.fields
-      .filter((field) => field.relationId === allocatedSourceId)
-      .map((field) => [
-        field.fieldId,
-        input.fields.find((prior) => prior.name === field.displayName)!.fieldId,
-      ])
-  );
-  return {
-    ok: true,
-    operation: 'projection',
-    retained,
-    draft: {
-      ...draft,
-      sidecar: {
-        ...draft.sidecar,
-        relations: draft.sidecar.relations.map((rel) =>
-          rel.relationId === allocatedSourceId ? { ...rel, relationId: input.relationId } : rel
-        ),
-        fields: draft.sidecar.fields.map((field) => ({
-          ...field,
-          fieldId: fieldIds.get(field.fieldId) ?? field.fieldId,
-          relationId: field.relationId === allocatedSourceId ? input.relationId : field.relationId,
-          ...(field.sourceFieldId == null
-            ? {}
-            : { sourceFieldId: fieldIds.get(field.sourceFieldId) ?? field.sourceFieldId }),
-        })),
-      },
-    },
-  };
+  return draft == null
+    ? { ok: false, reason: 'unsupported-projection-type' }
+    : { ok: true, operation: 'projection', retained, draft };
 }
