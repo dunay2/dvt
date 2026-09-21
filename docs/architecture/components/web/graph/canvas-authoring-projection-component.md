@@ -241,6 +241,22 @@ This shared-reader/API admission does not expose repeated-input creation in the
 Web editor. Generic transformed branches, aliases and occurrence-aware editing
 remain open in #3342 and require their own authoring/reopen/provider proof.
 
+The `relational-source-occurrence/` component separates canonical JOIN Read
+identity allocation from physical graph binding. Existing Reads are preserved
+only by their RelationId, never by matching a table name or physical source.
+Each physical binding verifies field names, types and nullability. Repeated
+Reads retain separate entries in the relational projection and its reopen seed;
+the left source catalogue remains one entry per physical source. A physical
+entry with several occurrences cannot arbitrarily select or edit the first one.
+
+Read relation display names follow the existing human-name contract, not the
+physical table name. Aliases do not change plan bytes, SQL or protected source
+coverage. JOIN edits preserve these labels. This foundation does not yet expose
+an Add instance or alias-editing control, or admit transformed-result reuse.
+Retaining a single Read also preserves its label and identities. If its types or
+required-field nullability cannot be expressed by the current projection profile,
+removal rejects without changing the draft; it must not silently widen the schema.
+
 ```text
 Canonical document -> document admission -> Read bindings -> JOIN stages
                                                            -> predicate bindings
