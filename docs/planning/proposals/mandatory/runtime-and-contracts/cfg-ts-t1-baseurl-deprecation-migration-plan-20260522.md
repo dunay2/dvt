@@ -23,8 +23,6 @@ used for package-boundary declaration files and web-local aliases.
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/typescript-package-classification.md`
-- `docs/planning/closeouts/20260318-typescript-package-classification-closeout.md`
-- `docs/planning/closeouts/20260318-ts-esm-monorepo-m02-closeout.md`
 
 ## Inventory
 
