@@ -1,6 +1,6 @@
 import {
   dvtSubstraitExpressionReader,
-  resolvedFunction,
+  resolveFunctionReference,
   type DvtSubstraitLiteralValue,
 } from '@dvt/postgres-projection';
 export type { DvtSubstraitLiteralValue } from '@dvt/postgres-projection';
@@ -129,8 +129,10 @@ export const dvtSubstraitExpression = {
     }
     const existing = plan.extensions.find((entry) => {
       if (entry.mappingType.case !== 'extensionFunction') return false;
-      const resolved = resolvedFunction(plan, entry.mappingType.value.functionAnchor);
-      return resolved?.urn === identity.urn && resolved.name === identity.name;
+      const resolved = resolveFunctionReference(plan, entry.mappingType.value.functionAnchor);
+      return (
+        resolved.ok && resolved.value.urn === identity.urn && resolved.value.name === identity.name
+      );
     });
     if (existing?.mappingType.case === 'extensionFunction') {
       return {

@@ -7,15 +7,11 @@ import type {
   InspectCompositionBase,
   RelationalGroupedComposition,
 } from './relationalGroupedComposition.js';
-import {
-  ROW_NUMBER_URN,
-  fieldOrdinal,
-  isRowNumber,
-  removeFunction,
-  sortedFields,
-  withCurrentHash,
-} from './relationalWrapperGuards.js';
+import { removeFunction, sortedFields, withCurrentHash } from './relationalWrapperDraft.js';
+import { inspectFunctionProfile } from './substrait-profile/functions.js';
+import { rowNumberProfile } from './substrait-profile/rowNumber.js';
 import { inspectAggregateWrapper } from './substraitAggregateWrapper.js';
+import { dvtSubstraitExpressionReader } from './substraitExpressionReader.js';
 import type { DvtSubstraitJoinDraft } from './substraitJoinReadModel.js';
 export function inspectWindowWrapper(
   draft: DvtSubstraitJoinDraft,
@@ -52,8 +48,11 @@ export function inspectWindowWrapper(
     return null;
   }
   const window = expression.value;
+  const profile = inspectFunctionProfile(draft.plan, window);
+  const { fieldOrdinal } = dvtSubstraitExpressionReader;
   if (
-    !isRowNumber(draft.plan, window) ||
+    !profile.ok ||
+    profile.value !== rowNumberProfile ||
     window.partitions.length !== 0 ||
     window.sorts.length !== 2 ||
     fieldOrdinal(window.sorts[0]?.expr) !== 1 ||
@@ -103,7 +102,7 @@ export function inspectWindowWrapper(
   if (aggregateInput?.relType.case !== 'aggregate') return null;
   aggregateRoot.value.input = aggregateInput;
   aggregateRoot.value.names = aggregateRoot.value.names.slice(0, 2);
-  removeFunction(plan, ROW_NUMBER_URN, 'row_number');
+  removeFunction(plan, window.functionReference);
   const aggregateDraft = withCurrentHash({
     plan,
     sidecar: {

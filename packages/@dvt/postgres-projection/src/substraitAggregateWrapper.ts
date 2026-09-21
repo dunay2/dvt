@@ -6,14 +6,10 @@ import type {
   InspectCompositionBase,
   RelationalGroupedComposition,
 } from './relationalGroupedComposition.js';
-import {
-  COUNT_URN,
-  fieldOrdinal,
-  isCount,
-  removeFunction,
-  sortedFields,
-  withCurrentHash,
-} from './relationalWrapperGuards.js';
+import { removeFunction, sortedFields, withCurrentHash } from './relationalWrapperDraft.js';
+import { countProfile } from './substrait-profile/count.js';
+import { inspectFunctionProfile } from './substrait-profile/functions.js';
+import { dvtSubstraitExpressionReader } from './substraitExpressionReader.js';
 import type { DvtSubstraitJoinDraft } from './substraitJoinReadModel.js';
 export function inspectAggregateWrapper(
   draft: DvtSubstraitJoinDraft,
@@ -30,6 +26,7 @@ export function inspectAggregateWrapper(
     return null;
   }
   const aggregate = root.value.input.relType.value;
+  const measure = aggregate.measures[0];
   const aggregateAnchor = aggregate.common?.relAnchor;
   const inputAnchor =
     aggregate.input?.relType.case === 'set' || aggregate.input?.relType.case === 'join'
@@ -47,11 +44,14 @@ export function inspectAggregateWrapper(
     aggregate.groupings[0]?.expressionReferences.join(',') !== '0' ||
     aggregate.groupingExpressions.length !== 1 ||
     aggregate.measures.length !== 1 ||
-    !isCount(draft.plan, aggregate)
+    measure?.measure == null ||
+    measure.filter != null
   ) {
     return null;
   }
-  const groupOrdinal = fieldOrdinal(aggregate.groupingExpressions[0]);
+  const profile = inspectFunctionProfile(draft.plan, measure.measure);
+  if (!profile.ok || profile.value !== countProfile) return null;
+  const groupOrdinal = dvtSubstraitExpressionReader.fieldOrdinal(aggregate.groupingExpressions[0]);
   const aggregateBinding = draft.sidecar.relations.find(
     (relation) => relation.relAnchor === aggregateAnchor
   );
@@ -89,7 +89,7 @@ export function inspectAggregateWrapper(
   const baseInput = baseRoot.value.input.relType.value.input;
   if (baseInput?.relType.case !== 'set' && baseInput?.relType.case !== 'join') return null;
   baseRoot.value.input = baseInput;
-  removeFunction(plan, COUNT_URN, 'count');
+  removeFunction(plan, measure.measure.functionReference);
   const fields = draft.sidecar.fields.flatMap((field) => {
     if (field.fieldId === countField.fieldId) return [];
     return field.fieldId === groupField.fieldId

@@ -1,8 +1,8 @@
 export {
   type DvtSubstraitLiteralValue,
   dvtSubstraitExpressionReader,
-  resolvedFunction,
 } from './substraitExpressionReader.js';
+export { resolveFunctionReference } from './substrait-profile/functionReference.js';
 export {
   createDvtSubstraitFetchDraft,
   createDvtSubstraitSortDraft,
