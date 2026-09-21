@@ -4,9 +4,8 @@ import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWo
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import { CanvasRelationalTreeOperationShelf } from './CanvasRelationalTreeOperationShelf';
 import { CanvasRelationalTreeView } from './CanvasRelationalTreeView';
-import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
-import { CanvasRelationalJoinExpressionTree } from './CanvasRelationalJoinExpressionTree';
-import { CanvasRelationalCrossNotice } from './CanvasRelationalCrossNotice';
+import { RelationalInspectionPanel } from './relational-inspection/RelationalInspectionPanel';
+import { resolveRelationalInspection } from './relational-inspection/inspectionModel';
 
 export function CanvasRelationalTreeInspection({
   model,
@@ -22,11 +21,6 @@ export function CanvasRelationalTreeInspection({
   onExpandedChange: (expanded: boolean) => void;
 }>): JSX.Element | null {
   if (model.projection == null) return null;
-  const unsupported = model.selectedNode?.operator === 'unsupported';
-  const selectedSortFetch =
-    model.selectedNode?.substraitKind === 'sort' || model.selectedNode?.substraitKind === 'fetch';
-  const hasExpression =
-    !unsupported && !selectedSortFetch && (model.selectedNode?.expressionRefs.length ?? 0) > 0;
   return (
     <div
       data-slot="canvas-relational-tree-inspection"
@@ -59,45 +53,13 @@ export function CanvasRelationalTreeInspection({
             if (model.authoringAvailable) model.session.start();
           }}
         />
-        {expanded &&
-        model.selectedNode != null &&
-        (unsupported ||
-          hasExpression ||
-          model.selectedNode.operator === 'read' ||
-          model.selectedNode.operator === 'cross' ||
-          selectedSortFetch) ? (
-          <CanvasRelationalTreeEditorFrame
-            operation={
-              unsupported
-                ? 'unsupported'
-                : model.selectedNode.operator === 'read'
-                  ? 'read'
-                  : (model.selectedNode.operation ?? 'unsupported')
-            }
-            label={
-              model.selectedNode.operator === 'read'
-                ? (model.selectedNode.displayName ?? undefined)
-                : undefined
-            }
-            relationId={model.selectedNode.relationId}
-            hasExpression={hasExpression}
-            readOnly
+        {expanded ? (
+          <RelationalInspectionPanel
+            inspection={resolveRelationalInspection(model.selectedNode)}
+            transformNode={transformNode}
+            copy={copy}
             onClose={() => onExpandedChange(false)}
-          >
-            {unsupported ? (
-              <p className="text-xs text-(--text-muted)">{copy.operationUnsupportedLabel}</p>
-            ) : selectedSortFetch ? (
-              <p className="text-xs text-(--text-primary)">{model.selectedNode.displayName}</p>
-            ) : model.selectedNode.operator === 'read' ? null : model.selectedNode.operator ===
-              'cross' ? (
-              <CanvasRelationalCrossNotice />
-            ) : (
-              <CanvasRelationalJoinExpressionTree
-                transformNode={transformNode}
-                relationId={model.selectedNode.relationId}
-              />
-            )}
-          </CanvasRelationalTreeEditorFrame>
+          />
         ) : null}
       </div>
     </div>

@@ -193,6 +193,14 @@ stable RelationId within the same Model across Apply, not a digest-bearing tree
 locator; a removed relation or a different Model falls back to its current root.
 Switching selected relations resets the local operator form, not the saved plan.
 
+The `relational-inspection/` component owns the applied inspector presentation
+model and panel. An exhaustive operator policy selects source, CROSS, summary,
+scalar expressions or unsupported content. Scalar inspection requires the
+operator's declared expression slot and a stable relation identity; an arbitrary
+nonempty expression list is not admission to that viewer. The parent workbench
+only composes its operation shelf, graph and inspector panel. This disposable
+view model does not re-decode Substrait or define operation semantics.
+
 ```mermaid
 flowchart LR
   Container[Operator form] --> Controller[Local form controller]

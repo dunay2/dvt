@@ -6,7 +6,7 @@ import type { CanvasRelationalOperation } from './canvasRelationalOperationChoic
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
 import { resolveCanvasRelationalOperatorTools } from './canvasRelationalTreeOperatorModel';
-import { CanvasRelationalJoinExpressionTree } from './CanvasRelationalJoinExpressionTree';
+import { CanvasRelationalExpressionTree } from './CanvasRelationalExpressionTree';
 import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
@@ -51,7 +51,7 @@ export function CanvasRelationalTreeExpressionOperatorEditor({
   return (
     <CanvasRelationalTreeEditorFrame operation={toolId} relationId={relationId} onClose={onClose}>
       <div className="canvas-operation-editors grid min-h-0 gap-3">
-        <CanvasRelationalJoinExpressionTree
+        <CanvasRelationalExpressionTree
           transformNode={transformNode}
           draft={draft}
           operation={operation}

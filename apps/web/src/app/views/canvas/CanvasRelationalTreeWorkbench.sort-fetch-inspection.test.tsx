@@ -103,7 +103,9 @@ describe('applied Sort/Fetch inspection', () => {
           ?.getAttribute('data-state')
       ).toBe('active');
       expect(properties!.querySelector('[data-slot="canvas-operation-tree-tab"]')).toBeNull();
-      expect(properties!.querySelector('[data-slot="canvas-join-expression-tree"]')).toBeNull();
+      expect(
+        properties!.querySelector('[data-slot="canvas-relational-expression-tree"]')
+      ).toBeNull();
       expect(properties!.querySelector('form')).toBeNull();
     }
   );

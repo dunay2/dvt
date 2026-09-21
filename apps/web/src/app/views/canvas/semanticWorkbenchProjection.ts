@@ -377,8 +377,8 @@ function layoutGraph(
 export function projectSemanticWorkbenchGraph(
   transformNode: CanonicalNode,
   options: Readonly<{
-    view?: 'complete' | 'relations' | 'join-expression';
-    joinRelationId?: string;
+    view?: 'complete' | 'relations' | 'relation-expressions';
+    expressionRelationId?: string;
   }> = {}
 ): SemanticWorkbenchGraph {
   const authority = readDvtTransformAuthoringAuthority(transformNode);
@@ -792,13 +792,13 @@ export function projectSemanticWorkbenchGraph(
     };
   }
 
-  if (options.view === 'join-expression') {
-    if (options.joinRelationId == null) {
-      throw new Error('JOIN expression view requires a selected relation identity.');
+  if (options.view === 'relation-expressions') {
+    if (options.expressionRelationId == null) {
+      throw new Error('Expression view requires a selected relation identity.');
     }
     const includedNodeIds = new Set<string>();
     const pendingNodeIds = edges.flatMap((edge) =>
-      edge.data?.semanticEdgeKind === 'expression' && edge.target === options.joinRelationId
+      edge.data?.semanticEdgeKind === 'expression' && edge.target === options.expressionRelationId
         ? [edge.source]
         : []
     );
@@ -815,7 +815,7 @@ export function projectSemanticWorkbenchGraph(
       );
     }
     if (includedNodeIds.size === 0) {
-      throw new Error('Selected relation does not own a projected JOIN expression.');
+      throw new Error('Selected relation does not own a projected scalar expression.');
     }
     const expressionNodes = nodes
       .filter((node) => includedNodeIds.has(node.id))
@@ -847,7 +847,7 @@ export function projectSemanticWorkbenchGraph(
       edges: expressionEdges,
       relationCount: 0,
       expressionCount: expressionNodes.length,
-      relationId: options.joinRelationId,
+      relationId: options.expressionRelationId,
     };
   }
 

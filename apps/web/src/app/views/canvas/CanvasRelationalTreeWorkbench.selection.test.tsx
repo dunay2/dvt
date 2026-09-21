@@ -33,7 +33,7 @@ describe('applied relation selection', () => {
       if (!inspection.ok) throw new Error('Expected pilot');
       const key = {
         fieldId: inspection.projection.outputs[0]!.fieldId,
-        direction: SortField_SortDirection.ASC_NULLS_LAST,
+        direction: SortField_SortDirection.ASC_NULLS_LAST as const,
       };
       const sorted = applyDvtSubstraitSort(pilot, [key]);
       const fetched = applyDvtSubstraitFetch(sorted, { count: 20n });

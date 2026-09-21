@@ -51,7 +51,7 @@ describe('Workbench append', () => {
     cy.get('[data-slot="canvas-relational-node-expand"]').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
     cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
-    cy.get('[data-slot="canvas-join-expression-tree"]:visible').should('have.length', 1);
+    cy.get('[data-slot="canvas-relational-expression-tree"]:visible').should('have.length', 1);
     cy.get('[data-slot="canvas-operation-properties-tab"]:visible').click();
     cy.then(expectPublishedSemanticUnchanged);
     cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
