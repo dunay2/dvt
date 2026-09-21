@@ -237,9 +237,9 @@ between the number of Read occurrences and graph Sources. Every occurrence
 resolves to one authorized source and every selected dependency is used.
 Selected-operation preview may use a subset of that already validated closure.
 
-This shared-reader/API admission does not expose repeated-input creation in the
-Web editor. Generic transformed branches, aliases and occurrence-aware editing
-remain open in #3342 and require their own authoring/reopen/provider proof.
+Shared-reader/API admission alone does not complete repeated-input authoring.
+Generic transformed branches and end-to-end browser/provider acceptance remain
+open in #3342; the bounded occurrence controls below expose only admitted shapes.
 
 The `relational-source-occurrence/` component separates canonical JOIN Read
 identity allocation from physical graph binding. Existing Reads are preserved
@@ -251,11 +251,43 @@ entry with several occurrences cannot arbitrarily select or edit the first one.
 
 Read relation display names follow the existing human-name contract, not the
 physical table name. Aliases do not change plan bytes, SQL or protected source
-coverage. JOIN edits preserve these labels. This foundation does not yet expose
-an Add instance or alias-editing control, or admit transformed-result reuse.
+coverage. JOIN edits preserve these labels. The identity foundation does not
+admit transformed-result reuse.
 Retaining a single Read also preserves its label and identities. If its types or
 required-field nullability cannot be expressed by the current projection profile,
 removal rejects without changing the draft; it must not silently widen the schema.
+
+### Explicit Source occurrence controls
+
+The [bounded UI plan](https://github.com/dunay2/dvt/issues/3342#issuecomment-5763838796)
+reuses ConfigureCanvasDvtNode. `sourceOccurrencePolicy` owns admission and the
+immutable Read-label edit; `sourceOccurrenceActions` prepares the discardable
+append intent. Catalogue action, alias properties and append form are separate
+presentation components. `useCanvasRelationalTreeDraftState` owns local reset and
+hydration; it does not save, query or run the model.
+
+```text
+Physical catalogue -> Add instance -> admission -> existing predicate form
+                                             -> new canonical Read identity
+Read click -> Properties -> alias by RelationId -> local draft
+Local draft -> Apply -> existing graph save / CAS -> reopen
+Read selection -> existing bottom data dock -> explicit protected data query
+```
+
+Add instance admits an existing JOIN accepted by the shared JOIN reader and
+compatible connected fields. It does not replace a Project, CROSS, Set or wrapped
+composition to manufacture support. The unavailable action explains its reason
+and performs no write. Confirmation allocates a Read, not a physical Source or
+graph edge. Repeated field options use aliases and, where labels repeat, ordinal
+disambiguation; their values remain canonical FieldIds.
+
+A single Read click opens Properties and the existing selected data dock. Alias
+edits use the canonical human-name contract, preserve Plan bytes and source
+bindings, and remain cancelable until Apply. Read-only inspection exposes no
+mutation controls. Non-JOIN alias editing is explicitly unavailable where the
+current reader does not admit it. These boundaries do not close #3342: initial
+repeated-source construction from a single projection, general transformed reuse
+and browser-through-live-PostgreSQL acceptance remain separate pending work.
 
 ```text
 Canonical document -> document admission -> Read bindings -> JOIN stages
@@ -300,6 +332,9 @@ Those tests must keep proving:
 navigation only. The sibling `canvas-relational-workbench-*.cy.ts` specs isolate
 viewport behavior, contextual removal, pending JOIN creation, source append,
 predicate editing, chain persistence, CROSS preview and UNION creation.
+`canvas-relational-source-occurrence.cy.ts` owns explicit repeated-Read append,
+alias Apply/save/reopen and the selected data query. Its controlled sample checks
+query identity and explicit execution, not PostgreSQL result correctness.
 Each spec selects its scenario explicitly from
 `cypress/support/relationalWorkbench/scenario.ts`; test titles never select
 fixtures. Shared support owns navigation, geometry assertions, chain setup and
