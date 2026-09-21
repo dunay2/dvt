@@ -117,12 +117,12 @@ describe('Canvas operation menu', () => {
   });
   it.each(['Enter', ' ', 'ArrowDown'])(
     'opens on %s without relying on a synthesized click',
-    (key) => {
-      act(() =>
+    async (key) => {
+      await act(() => {
         host
           .querySelector('button')!
-          .dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }))
-      );
+          .dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+      });
       expect(document.querySelector('[role="listbox"]')).not.toBeNull();
       expect(onSelect).not.toHaveBeenCalled();
     }
