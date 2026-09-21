@@ -15,7 +15,9 @@ mitigation:
     Distinct RelationIds and FieldIds bind logical occurrences. Repeated physical references must
     agree on table and field schema. One shared API policy checks exact authorized dependency
     coverage and every rendered physical table. V1 and V2 workload validators count physical
-    dependencies, not JOIN operands.
+    dependencies, not JOIN operands. Web JOIN rebuilds preserve Reads by explicit occurrence
+    identity, not by matching source shape. Human-readable Read aliases never select a physical
+    table or a field occurrence.
   evidence:
     - docs/evidence/ED-20260921-repeated-read-occurrence-projection.md
     - packages/@dvt/contracts/test/dvt-repeated-read-workload.contract.test.ts
@@ -23,6 +25,8 @@ mitigation:
     - apps/api/test/application/services/dvtRepeatedSourceProjection.test.ts
     - apps/api/test/application/services/dvtRepeatedSourceRun.test.ts
     - apps/api/test/integration/dvtRepeatedSourcePostgres.integration.test.ts
+    - apps/web/src/app/views/canvas/relational-source-occurrence/joinOccurrenceIdentity.test.ts
+    - apps/web/src/app/views/canvas/relational-source-occurrence/occurrenceReopen.test.ts
   follow_up:
     - Deploy API and worker validators together before exposing occurrence authoring.
     - Complete generic transformed-result reuse and occurrence-aware editing under GH-3342.

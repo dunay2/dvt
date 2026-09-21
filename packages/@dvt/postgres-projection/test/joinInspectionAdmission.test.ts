@@ -43,9 +43,9 @@ const invalidIdentity: readonly [string, (draft: DvtSubstraitJoinDraft) => void]
     },
   ],
   [
-    'wrong input display name',
+    'invalid input display name',
     (d) => {
-      d.sidecar.relations[0]!.displayName = 'another_table';
+      d.sidecar.relations[0]!.displayName = '   ';
     },
   ],
   [
