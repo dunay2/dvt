@@ -27,26 +27,32 @@ export function buildDvtGroupedLeftJoinDraft(
   const base = buildDvtJoinPreviewDraft(2, 'left');
   return {
     ...base,
-    nodes: base.nodes.map((node) =>
-      node.role === 'transform'
-        ? {
-            ...node,
-            metadata: {
-              ...node.metadata,
-              transformAuthoring: { version: 'v1', mode: 'substrait', semanticDocument },
-            },
-          }
-        : {
-            ...node,
-            metadata: {
-              ...node.metadata,
-              schema: 'public',
-              connectedSourceRef: semanticDocument.sidecar.relations.find(
-                (relation) =>
-                  relation.sourceRef?.sourceObjectId === `public.${node.metadata?.['tableName']}`
-              )?.sourceRef,
-            },
-          }
-    ),
+    nodes: base.nodes.map((node) => {
+      if (node.role === 'transform') {
+        return {
+          ...node,
+          metadata: {
+            ...node.metadata,
+            transformAuthoring: { version: 'v1', mode: 'substrait', semanticDocument },
+          },
+        };
+      }
+      const relation = semanticDocument.sidecar.relations.find(
+        (binding) => binding.sourceRef?.sourceObjectId === `public.${node.metadata?.['tableName']}`
+      );
+      if (relation?.sourceRef == null) throw new Error(`Missing canonical source: ${node.id}`);
+      return {
+        ...node,
+        metadata: {
+          ...node.metadata,
+          schema: 'public',
+          connectedSourceRef: relation.sourceRef,
+          columns: semanticDocument.sidecar.fields
+            .filter((field) => field.relationId === relation.relationId)
+            .sort((left, right) => left.outputOrdinal - right.outputOrdinal)
+            .map((field) => ({ name: field.displayName!, type: 'text' })),
+        },
+      };
+    }),
   };
 }
