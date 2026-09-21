@@ -6,7 +6,7 @@ import {
   createDvtSubstraitCrossDraft,
   createDvtSubstraitMixedCrossDraft,
 } from './canvasDvtSubstraitCrossComposition';
-import { resolveCanvasRelationalTreeAuthoringCandidates } from './canvasRelationalTreeAuthoringModel';
+import { resolveCanvasRelationalTreeAuthoringCandidates } from './canvasRelationalTreeAuthoringCandidates';
 import { sourceNode, transformNode, edge } from './CanvasRelationalTreeWorkbench.test-support';
 
 describe('CROSS append admission', () => {

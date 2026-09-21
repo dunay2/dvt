@@ -335,6 +335,30 @@ Indirect consumers:
 
 ## Fitness Functions
 
+### Compositional regression boundaries (#3352)
+
+Source-append admission is a pure read model, separate from draft construction
+and operation-choice presentation. Consumers import that policy directly; there
+is no compatibility facade. The operation catalogue remains the single owner of
+the supported choice list and its order.
+
+```text
+Canonical Substrait -> wrapper admission -> existing JOIN / Set base reader
+                                        -> shared bounded Aggregate / Window AST
+Protected selected query -> identity-preserving Sort / Fetch removal -> same reader
+```
+
+Aggregate and Window inspection share one bounded wrapper policy in
+`@dvt/postgres-projection`. JOIN and Set retain their existing base readers and
+canonical selectors. Wrapper removal preserves relation and field identities;
+generated aggregate outputs do not claim source-field lineage. SQL remains a
+projection, never an additional authoring authority.
+
+PostgreSQL regression tests must project canonical documents through the API
+before executing SQL. Handwritten SQL wrappers around a base projection do not
+prove that canonical composition is supported. Browser tests separately prove
+Apply, selected-relation identity and data navigation.
+
 The canonical fitness checks for this component are:
 
 - `workspaceGraphDraftProjection.test.ts`

@@ -40,6 +40,7 @@ import ApplyCommandSource from './useCanvasRelationalTreeApplyCommand.ts?raw';
 import WorkbenchModelSource from './useCanvasRelationalTreeWorkbenchModel.ts?raw';
 import AuthoringSessionSource from './useCanvasRelationalTreeAuthoringSession.ts?raw';
 import AuthoringModelSource from './canvasRelationalTreeAuthoringModel.ts?raw';
+import AuthoringCandidatesSource from './canvasRelationalTreeAuthoringCandidates.ts?raw';
 import AuthoringProjectionSource from './canvasRelationalTreeAuthoringProjection.ts?raw';
 import ExistingJoinDraftSource from './canvasRelationalTreeExistingJoinDraft.ts?raw';
 import AuthoringOptionsSource from './useCanvasRelationalTreeAuthoringOptions.ts?raw';
@@ -75,7 +76,8 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(WorkbenchModelSource.split('\n').length).toBeLessThan(180);
     expect(AuthoringSessionSource.split('\n').length).toBeLessThan(180);
     expect(ApplyCommandSource.split('\n').length).toBeLessThan(100);
-    expect(AuthoringModelSource.split('\n').length).toBeLessThan(260);
+    expect(AuthoringModelSource.split('\n').length).toBeLessThan(200);
+    expect(AuthoringCandidatesSource.split('\n').length).toBeLessThan(150);
     expect(AuthoringProjectionSource.split('\n').length).toBeLessThan(90);
     expect(ExistingJoinDraftSource.split('\n').length).toBeLessThan(80);
     expect(ExistingJoinSeedSource.split('\n').length).toBeLessThan(80);

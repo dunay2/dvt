@@ -4,10 +4,8 @@ import { useMemo } from 'react';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
-import {
-  resolveCanvasRelationalTreeAuthoringCandidates,
-  resolveCanvasRelationalTreeAuthoringChoices,
-} from './canvasRelationalTreeAuthoringModel';
+import { resolveCanvasRelationalTreeAuthoringCandidates } from './canvasRelationalTreeAuthoringCandidates';
+import { resolveCanvasRelationalTreeAuthoringChoices } from './canvasRelationalTreeAuthoringModel';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 
 export function useCanvasRelationalTreeAuthoringOptions(
