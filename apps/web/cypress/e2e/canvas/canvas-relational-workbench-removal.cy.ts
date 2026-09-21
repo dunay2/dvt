@@ -36,6 +36,7 @@ describe('Workbench removal', () => {
     cy.get('[data-slot="dvt-select-operation-inner-join"]').should('not.exist');
     cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
     cy.get('[data-slot="dvt-select-operation-inner-join"]').should('be.visible');
+    cy.get('[role="combobox"]').type('UNION ALL');
     cy.get('[data-slot="dvt-select-operation-union-all"]').should('be.visible');
     cy.get('[role="combobox"]').type('{esc}');
     cy.get('[data-slot="dvt-select-operation-inner-join"]').should('not.exist');
