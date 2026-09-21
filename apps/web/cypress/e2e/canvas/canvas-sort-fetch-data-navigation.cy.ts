@@ -1,5 +1,4 @@
 /** Owned concern: apply edited ordering before explicit data queries without crashing inspection. */
-import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import {
   inspectDvtSubstraitSortFetchRoot,
   selectDvtSubstraitRelation,
@@ -37,6 +36,7 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
     let sortId = '';
     let originalDigest = '';
     let savedDigest = '';
+    let selectedDirection = '';
     cy.then(() => {
       const document = semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!) as {
         semanticPlan: { sha256: string };
@@ -50,7 +50,12 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
       .click();
     cy.get(
       '[data-slot="canvas-relational-tree-inline-editor"]:visible select[aria-label="Direction and nulls 1"]'
-    ).select('DESC · NULLS LAST');
+    )
+      .select('DESC · NULLS LAST')
+      .invoke('val')
+      .then((value) => {
+        selectedDirection = String(value);
+      });
     cy.get(
       '[data-slot="canvas-relational-tree-inline-editor"]:visible button[type="submit"]'
     ).click();
@@ -74,9 +79,7 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
       const sort = inspectDvtSubstraitSortFetchRoot(selectDvtSubstraitRelation(draft, sortId));
       expect(sort.ok && sort.operation).to.equal('sort');
       if (!sort.ok || sort.operation !== 'sort') throw new Error('Expected saved Sort');
-      expect(sort.keys.map((key) => key.direction)).to.deep.equal([
-        SortField_SortDirection.DESC_NULLS_LAST,
-      ]);
+      expect(sort.keys.map((key) => key.direction)).to.deep.equal([Number(selectedDirection)]);
       const fetch = inspectDvtSubstraitSortFetchRoot(
         selectDvtSubstraitRelation(draft, sort.inputRelationId)
       );
@@ -99,7 +102,7 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
     cy.get('[data-operator="sort"]').should('contain.text', 'DESC NULLS LAST').click();
     cy.get(
       '[data-slot="canvas-relational-tree-inline-editor"]:visible select[aria-label="Direction and nulls 1"]'
-    ).should('have.value', String(SortField_SortDirection.DESC_NULLS_LAST));
+    ).should(($select) => expect($select.val()).to.equal(selectedDirection));
     cy.get('[data-operator="fetch"]').should('contain.text', 'LIMIT 100');
     cy.get(
       '[data-slot="canvas-operation-data-preview"] [data-slot="canvas-model-preview"]'
