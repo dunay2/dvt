@@ -88,27 +88,30 @@ describe('protected Preview ordering admission', () => {
     SortField_SortDirection.ASC_NULLS_LAST,
     SortField_SortDirection.DESC_NULLS_FIRST,
     SortField_SortDirection.DESC_NULLS_LAST,
-  ])('admits direction %i in either wrapper order without changing the document', (direction) => {
-    for (const order of [
-      ['sort', 'fetch'],
-      ['fetch', 'sort'],
-    ] as const) {
-      const args = intent(orderedDraft(order, direction));
-      const before = structuredClone(args);
-      expect(buildProtectedDvtPreviewProjection(args)).toMatchObject({
-        ok: true,
-        selection: { mode: 'upstream', nodeIds: ['model'] },
-        scopedNodeIds: [...args.workspaceNodeIds].sort(),
-      });
-      expect(args).toEqual(before);
-      expect(
-        buildProtectedDvtPreviewProjection({
-          ...args,
-          canonicalEdges: args.canonicalEdges.slice(1),
-        }).ok
-      ).toBe(false);
+  ] as const)(
+    'admits direction %i in either wrapper order without changing the document',
+    (direction) => {
+      for (const order of [
+        ['sort', 'fetch'],
+        ['fetch', 'sort'],
+      ] as const) {
+        const args = intent(orderedDraft(order, direction));
+        const before = structuredClone(args);
+        expect(buildProtectedDvtPreviewProjection(args)).toMatchObject({
+          ok: true,
+          selection: { mode: 'upstream', nodeIds: ['model'] },
+          scopedNodeIds: [...args.workspaceNodeIds].sort(),
+        });
+        expect(args).toEqual(before);
+        expect(
+          buildProtectedDvtPreviewProjection({
+            ...args,
+            canonicalEdges: args.canonicalEdges.slice(1),
+          }).ok
+        ).toBe(false);
+      }
     }
-  });
+  );
 
   it.each([SortField_SortDirection.UNSPECIFIED, SortField_SortDirection.CLUSTERED])(
     'rejects unsupported Sort selector %i without dropping it',
