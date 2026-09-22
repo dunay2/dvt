@@ -158,6 +158,34 @@ retains all primary files, assertions, isolated workers and existing commands.
 | Temporal time-skipping integration | `pnpm test:adapter-temporal:integration`                                   | Temporal worker/workflow integration                 | [`package.json`](../../package.json)                                                                   |
 | Coverage run                       | `pnpm test:coverage`                                                       | Recursive workspace coverage                         | [`package.json`](../../package.json)                                                                   |
 
+## Persisted Semantic Editing Live Proof
+
+Use the existing protected-runtime runner with an isolated PostgreSQL database
+named `dvt`, supplied through `DATABASE_URL`. The runner recreates its source
+fixtures in `raw` and `public`; never point this proof at an application or
+Planning DB database. It owns a separate publication schema and starts real auth,
+API, Temporal worker and Web processes. Windows can select native Chrome with
+`DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME=native`.
+
+```bash
+pnpm --filter @dvt/web test:e2e:selected-closure:live --spec apps/web/cypress/e2e/canvas/canvas-semantic-persistence-run-live.cy.ts
+pnpm --filter @dvt/web test:e2e:selected-closure:live --spec apps/web/cypress/e2e/canvas/canvas-semantic-unsupported-live.cy.ts
+```
+
+The positive story edits Sort/Fetch over LEFT JOIN, applies and reopens the saved
+Substrait, queries selected and model rows, then starts the accepted Preview plan
+and verifies its PostgreSQL publication. An unmatched row distinguishes LEFT
+from INNER; exact query order and row membership distinguish ordering and limit
+errors. Published tables are compared without assuming physical row order.
+The selected intermediate Sort must return three rows while the final Fetch
+returns two, so ignoring the selected relation cannot pass as model data.
+
+The negative story preserves a canonical but unsupported Sort selector, requires
+explicit query rejection, and verifies that no Run was created. Generic Cypress
+discovery follows the existing live-only skip convention when no runtime is
+configured. Such skips are not proof: closeout requires both explicit live runs
+with zero pending or skipped tests. Partial runtime configuration fails.
+
 ## Determinism and Replay
 
 | Capability                           | Command                 | Source                                                                                                         |

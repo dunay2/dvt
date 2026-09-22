@@ -354,6 +354,12 @@ canonical selectors. Wrapper removal preserves relation and field identities;
 generated aggregate outputs do not claim source-field lineage. SQL remains a
 projection, never an additional authoring authority.
 
+Protected Preview intent must inspect the base composition through the existing
+`peelCanvasDvtSubstraitSortFetch` policy. An admitted ordering or limit wrapper
+does not change its physical source closure. Rejected wrappers are not peeled
+and must not become executable through a fallback. This inspection is read-only:
+the saved canonical document, identities and signature retain every wrapper.
+
 Function reference integrity and bounded-profile admission are separate concerns.
 The shared `substrait-profile/` inspection component resolves the referenced
 function anchor and its URN anchor unambiguously. Other functions declared in the
