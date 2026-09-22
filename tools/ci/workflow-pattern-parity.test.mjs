@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 
 import yaml from 'js-yaml';
+import { EXECUTABLE_CI_TOOL_TESTS } from './ci-tool-test-suite.mjs';
 
 import {
   ADAPTER_POSTGRES_RELEVANT_PATTERNS,
@@ -286,8 +287,10 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     generated_capability_relevant: workflowScopePolicy.generated_capability_relevant,
     changed_file_validation_relevant: workflowScopePolicy.changed_file_validation_relevant,
     security_analysis_relevant: workflowScopePolicy.security_analysis_relevant,
-    ci_tool_executable_contracts_relevant:
-      workflowScopePolicy.ci_tool_executable_contracts_relevant,
+    ci_tool_executable_contracts_relevant: [
+      ...workflowScopePolicy.ci_tool_executable_contracts_relevant,
+      ...EXECUTABLE_CI_TOOL_TESTS,
+    ],
   });
 });
 
