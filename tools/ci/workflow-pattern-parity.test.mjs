@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 
 import yaml from 'js-yaml';
+import { EXECUTABLE_CI_TOOL_TESTS } from './ci-tool-test-suite.mjs';
 
 import {
   ADAPTER_POSTGRES_RELEVANT_PATTERNS,
@@ -27,7 +28,6 @@ const PR_QUALITY_GOVERNANCE_COMMANDS = [
   'pnpm docs:governance:unit-coverage',
   'pnpm traceability:adr0',
   'pnpm docs:feature-mechanization',
-  'pnpm docs:feature-mechanization:implementation',
   'pnpm qa:artifact:check',
   'pnpm arch:deps',
 ];
@@ -286,8 +286,10 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     generated_capability_relevant: workflowScopePolicy.generated_capability_relevant,
     changed_file_validation_relevant: workflowScopePolicy.changed_file_validation_relevant,
     security_analysis_relevant: workflowScopePolicy.security_analysis_relevant,
-    ci_tool_executable_contracts_relevant:
-      workflowScopePolicy.ci_tool_executable_contracts_relevant,
+    ci_tool_executable_contracts_relevant: [
+      ...workflowScopePolicy.ci_tool_executable_contracts_relevant,
+      ...EXECUTABLE_CI_TOOL_TESTS,
+    ],
   });
 });
 
@@ -461,7 +463,7 @@ test('PR quality gate consumes prepush-equivalent scope outputs for expensive ga
   assertWorkflowContains(prQualityGate, 'steps.scope.outputs.code_validation_relevant');
 });
 
-test('PR quality gate prepares planning DB before DB-first feature implementation checks', () => {
+test('PR quality gate prepares planning DB for its remaining DB-backed consumers', () => {
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
   const preparePlanningDbAction = readFileSync(
     '.github/actions/prepare-planning-db/action.yml',
@@ -473,20 +475,20 @@ test('PR quality gate prepares planning DB before DB-first feature implementatio
   );
   const prepareDbIndex = prQualityGate.indexOf('Prepare planning DB for DB-backed validation');
   const prepareDbActionIndex = prQualityGate.indexOf('uses: ./.github/actions/prepare-planning-db');
-  const implementationGateIndex = prQualityGate.indexOf(
-    'pnpm docs:feature-mechanization:implementation'
-  );
+  const inventoryGateIndex = prQualityGate.indexOf('pnpm planning:db:inventory:check');
 
   assert.notEqual(prepareDbIndex, -1);
   assert.notEqual(prepareDbActionIndex, -1);
-  assert.notEqual(implementationGateIndex, -1);
+  assert.notEqual(inventoryGateIndex, -1);
   assert.ok(prepareDbIndex < prepareDbActionIndex);
-  assert.ok(prepareDbActionIndex < implementationGateIndex);
+  assert.ok(prepareDbActionIndex < inventoryGateIndex);
   assertWorkflowContains(prQualityGate, "github.event_name == 'push'");
+  assertWorkflowExcludes(prepareDbStep, 'feature_mechanization_relevant');
   assertWorkflowContains(
-    prQualityGate,
-    "steps.scope.outputs.feature_mechanization_relevant == 'true'"
+    prepareDbStep,
+    "steps.scope.outputs.planning_db_inventory_relevant == 'true'"
   );
+  assertWorkflowContains(prepareDbStep, "steps.scope.outputs.docs_structure_changed == 'true'");
   assertWorkflowContains(prepareDbStep, "steps.scope.outputs.governance_global_relevant == 'true'");
   assertWorkflowExcludes(prQualityGate, 'pnpm docs:dbt-roundtrip-capabilities:check');
   assertWorkflowExcludes(prQualityGate, 'DVT_GIT_EVIDENCE_REPO');
@@ -537,18 +539,6 @@ test('main full CI prepares Planning DB before the full validation baseline', ()
   assertWorkflowContains(preparePlanningDbAction, 'pnpm planning:db:import');
   assert.doesNotMatch(preparePlanningDbAction, /planning:db:migrate/u);
   assertWorkflowContains(ciWorkflow, 'PLANNING_DB_INTEGRITY_SCOPE: bootstrap');
-});
-
-test('PR quality traceability runs after implementation mechanization to avoid dirty generated diffs', () => {
-  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
-  const implementationGateIndex = prQualityGate.indexOf(
-    'pnpm docs:feature-mechanization:implementation'
-  );
-  const traceabilityIndex = prQualityGate.indexOf('pnpm traceability:adr0');
-
-  assert.notEqual(implementationGateIndex, -1);
-  assert.notEqual(traceabilityIndex, -1);
-  assert.ok(implementationGateIndex < traceabilityIndex);
 });
 
 test('scope diff consumers use shallow checkout instead of full PR history', () => {

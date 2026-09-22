@@ -199,7 +199,7 @@ test('classifies executable CI tool contracts separately from static CI policy t
     WORKFLOW_SCOPE_PATTERNS
   );
   const staticScope = computeBooleanScope(
-    ['tools/ci/workflow-pattern-parity.test.mjs'],
+    ['tools/ci/emit-scope.test.mjs'],
     WORKFLOW_SCOPE_PATTERNS
   );
 

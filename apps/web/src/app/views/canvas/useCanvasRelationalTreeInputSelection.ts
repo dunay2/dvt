@@ -4,7 +4,7 @@ import {
   isCanvasSetOperation,
   type CanvasRelationalOperation,
 } from './canvasRelationalOperationChoices';
-import type { CanvasRelationalTreeAuthoringCandidate } from './canvasRelationalTreeAuthoringModel';
+import type { CanvasRelationalTreeAuthoringCandidate } from './canvasRelationalTreeAuthoringCandidates';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { appendDvtSubstraitUnionAllInput } from './canvasDvtSubstraitSetComposition';

@@ -4,10 +4,8 @@ import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWo
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import { CanvasRelationalTreeOperationShelf } from './CanvasRelationalTreeOperationShelf';
 import { CanvasRelationalTreeView } from './CanvasRelationalTreeView';
-import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
-import { CanvasRelationalJoinExpressionTree } from './CanvasRelationalJoinExpressionTree';
-import { CanvasRelationalTreeOperatorTools } from './CanvasRelationalTreeOperatorTools';
-import { CanvasRelationalCrossNotice } from './CanvasRelationalCrossNotice';
+import { RelationalInspectionPanel } from './relational-inspection/RelationalInspectionPanel';
+import { resolveRelationalInspection } from './relational-inspection/inspectionModel';
 
 export function CanvasRelationalTreeInspection({
   model,
@@ -35,14 +33,11 @@ export function CanvasRelationalTreeInspection({
         operation={model.session.seed?.operation ?? null}
         selectedInputCount={model.session.seed?.inputIds.length ?? 0}
         onSelectOperation={model.session.selectOperation}
-      >
-        <CanvasRelationalTreeOperatorTools
-          draft={model.session.seed?.draft ?? null}
-          editable={model.authoringAvailable}
-          onChange={model.session.setJoinDraft}
-        />
-      </CanvasRelationalTreeOperationShelf>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        draft={model.session.seed?.draft ?? null}
+        editable={model.authoringAvailable}
+        onChangeDraft={model.session.setJoinDraft}
+      />
+      <div className="canvas-operation-workspace relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
         <CanvasRelationalTreeView
           transformNode={transformNode}
           outputName={transformNode.name}
@@ -58,27 +53,15 @@ export function CanvasRelationalTreeInspection({
             if (model.authoringAvailable) model.session.start();
           }}
         />
+        {expanded ? (
+          <RelationalInspectionPanel
+            inspection={resolveRelationalInspection(model.selectedNode)}
+            transformNode={transformNode}
+            copy={copy}
+            onClose={() => onExpandedChange(false)}
+          />
+        ) : null}
       </div>
-      {expanded &&
-      model.selectedNode != null &&
-      (model.selectedNode.expressionRefs.length > 0 ||
-        model.selectedNode.operator === 'cross' ||
-        (model.authoringAvailable && model.selectedNode.operator === 'fetch')) ? (
-        <CanvasRelationalTreeEditorFrame
-          operation={model.selectedNode.operation ?? 'unsupported'}
-          relationId={model.selectedNode.relationId}
-          onClose={() => onExpandedChange(false)}
-        >
-          {model.selectedNode.operator === 'cross' ? (
-            <CanvasRelationalCrossNotice />
-          ) : (
-            <CanvasRelationalJoinExpressionTree
-              transformNode={transformNode}
-              relationId={model.selectedNode.relationId}
-            />
-          )}
-        </CanvasRelationalTreeEditorFrame>
-      ) : null}
     </div>
   );
 }

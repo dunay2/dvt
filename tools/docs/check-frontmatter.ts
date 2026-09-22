@@ -63,14 +63,13 @@ const EVIDENCE_REQUIRED_KEYS: readonly string[] = [
   'evidence',
 ];
 
-// ── ADR check ─────────────────────────────────────────────────────────────────
+// ── ADR frontmatter ───────────────────────────────────────────────────────────
 
 function checkAdrFrontmatter(filePath: string, report: Report): void {
   const content = readIfExists(filePath);
   if (!content) return;
 
   const fields = extractAdrFields(content);
-  const _name = basename(filePath);
 
   // H1 heading
   if (!/^#\s+/m.test(content)) {
@@ -103,9 +102,6 @@ function checkAdrFrontmatter(filePath: string, report: Report): void {
   if (!fields['Owners']) {
     warnOrError(report, filePath, 'ADR missing recommended field: Owners');
   }
-
-  // Unused variable placeholder (keeps lint happy)
-  // _name intentionally unused
 }
 
 // ── Evidence check ────────────────────────────────────────────────────────────

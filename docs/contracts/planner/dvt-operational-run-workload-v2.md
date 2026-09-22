@@ -2,7 +2,7 @@
 title: DVT Operational Run Workload v2
 status: Approved
 owner: API / Contracts / PostgreSQL Projection / Runtime
-last_reviewed: 2026-09-14
+last_reviewed: 2026-09-21
 ---
 
 # DVT Operational Run Workload v2
@@ -56,6 +56,21 @@ identities reject before Planner admission.
 The empty publication list is deliberate: it proves that a terminal Transform
 can Run without a Sink. Sink fan-out remains a later contract version rather
 than an implicit side effect of result disposition.
+
+## Physical dependencies and logical occurrences
+
+Both workload versions bind physical graph dependencies, not a count of
+Substrait operands. A JOIN may read one connected Source more than once, with
+distinct RelationIds and FieldIds; it still has one physical Source-to-Transform
+edge and one runtime workload. The JOIN profile therefore admits two or more
+selected graph nodes, with exactly one fewer selected edges. Identity uniqueness,
+exact semantic/projection hashes, output identity and protected source coverage
+remain mandatory. Project and Set admission are unchanged.
+
+This is an additive admission correction under #3342, without wire-shape or
+version changes. Existing workloads remain valid. Older validators reject the
+new one-physical-source JOIN shape, so API and worker validators must be deployed
+together before exposing its authoring UI. No compatibility fallback is added.
 
 ## Output-schema fingerprint
 

@@ -1,5 +1,5 @@
 /** Owned concern: render one keyboard-accessible, draggable relational source reference. */
-import { Table2 } from 'lucide-react';
+import { Check, Circle, Table2, TriangleAlert } from 'lucide-react';
 import type {
   CanvasRelationalTreeCatalogueItem,
   CanvasRelationalTreeWorkbenchCopy,
@@ -28,10 +28,11 @@ export function CanvasRelationalTreeSourceCard({
     pending: copy.relationalTreePendingLabel,
     missing: copy.relationalTreeMissingLabel,
   } as const;
+  const StatusIcon = { participating: Check, pending: Circle, missing: TriangleAlert }[item.state];
   return (
     <button
       type="button"
-      title={draggable ? copy.relationalTreeSourceActionHint : undefined}
+      title={`${item.label} · ${stateLabel[item.state]}${item.reason == null ? '' : ` · ${item.reason}`}${draggable ? ` · ${copy.relationalTreeSourceActionHint}` : ''}`}
       data-slot="canvas-relational-tree-source"
       data-node-id={item.sourceNodeId ?? undefined}
       aria-pressed={item.selected === true}
@@ -45,9 +46,9 @@ export function CanvasRelationalTreeSourceCard({
       }}
       disabled={item.selectable === false || (item.selectable == null && item.treeLocator == null)}
       onClick={() => onSelect(item)}
-      className="w-full rounded-md border border-(--border-subtle) bg-(--surface-subtle) p-2.5 text-left enabled:cursor-grab enabled:hover:border-(--status-info) enabled:active:cursor-grabbing aria-pressed:border-(--status-info) aria-pressed:ring-1 aria-pressed:ring-(--status-info) disabled:cursor-default"
+      className="flex h-9 w-full items-center gap-2 rounded border border-(--border-subtle) bg-(--surface-subtle) px-2 text-left enabled:cursor-grab enabled:hover:border-(--status-info) enabled:active:cursor-grabbing aria-pressed:border-(--status-info) aria-pressed:ring-1 aria-pressed:ring-(--status-info) disabled:cursor-default"
     >
-      <span className="flex items-center gap-2">
+      <span className="flex min-w-0 flex-1 items-center gap-2">
         <Table2 aria-hidden="true" className="size-4 shrink-0 text-(--status-info)" />
         <span className="min-w-0 flex-1">
           <span
@@ -59,13 +60,13 @@ export function CanvasRelationalTreeSourceCard({
         </span>
       </span>
       <span
-        className={`mt-2 inline-flex rounded border px-1.5 py-0.5 text-[10px] font-semibold ${stateClass[item.state]}`}
+        title={stateLabel[item.state]}
+        className={`inline-flex size-4 shrink-0 items-center justify-center rounded ${stateClass[item.state]}`}
       >
-        {stateLabel[item.state]}
+        <StatusIcon aria-hidden="true" className="size-3" />
+        <span className="sr-only">{stateLabel[item.state]}</span>
       </span>
-      {item.reason == null ? null : (
-        <span className="mt-1 block text-[11px] text-(--text-muted)">{item.reason}</span>
-      )}
+      {item.reason == null ? null : <span className="sr-only">{item.reason}</span>}
     </button>
   );
 }

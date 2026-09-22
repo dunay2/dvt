@@ -7,6 +7,7 @@ import type {
 import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 import type { CanvasDraftAccessMode } from './canvasDraftReadModel';
 import type { CanvasDraftRecoveryReason, CanvasDraftStatusState } from './canvasDraftStatusState';
+import { deriveCanvasDraftStatusState } from './canvasDraftStatusState';
 import { canvasViewCopy } from './copy';
 
 import type { CanvasDraftAuthTransportPosture } from './canvasDraftAuthTransportPosture';
@@ -35,6 +36,7 @@ export type CanvasDraftAccessPostureKind =
   | 'unknown_pending';
 
 export type CanvasDraftAccessPosture = Readonly<{
+  persistence: CanvasDraftStatusState['persistence'];
   kind: CanvasDraftAccessPostureKind;
   title: string;
   message: string;
@@ -104,7 +106,7 @@ function createCanvasDraftAccessPosture({
   mutationBlocked,
   showReloadAction = false,
   isCenterSurfaceBlocking = false,
-}: CanvasDraftPostureFactoryArgs): CanvasDraftAccessPosture {
+}: CanvasDraftPostureFactoryArgs): Omit<CanvasDraftAccessPosture, 'persistence'> {
   return {
     kind,
     title,
@@ -169,7 +171,7 @@ function resolveDraftFormatPostureContent(
 
 function deriveRecoveryDraftAccessPosture(
   recoveryReason: Exclude<CanvasDraftRecoveryReason, null>
-): CanvasDraftAccessPosture {
+): Omit<CanvasDraftAccessPosture, 'persistence'> {
   switch (recoveryReason) {
     case 'stale_conflict':
       return createCanvasDraftAccessPosture({
@@ -211,14 +213,14 @@ function isForbiddenScopeReason(reason: WorkspaceGraphDraftCapabilityReason | nu
   return reason === 'workspace_scope_denied' || reason === 'tenant_mismatch';
 }
 
-export function deriveCanvasDraftAccessPosture({
+function deriveCanvasDraftAccessPresentation({
   draftAccessMode,
   draftCapabilityReason,
   draftFormatError,
   authTransportPosture,
   recoveryReason,
   draftSaveStatus,
-}: DeriveCanvasDraftAccessPostureArgs): CanvasDraftAccessPosture {
+}: DeriveCanvasDraftAccessPostureArgs): Omit<CanvasDraftAccessPosture, 'persistence'> {
   if (
     authTransportPosture === 'unauthorized_final' ||
     draftCapabilityReason === 'unauthenticated'
@@ -305,24 +307,26 @@ export function isCanvasDraftPostureMutationBlocked(posture: CanvasDraftAccessPo
   return posture.mutationBlocked;
 }
 
+export function deriveCanvasDraftAccessPosture(
+  args: DeriveCanvasDraftAccessPostureArgs
+): CanvasDraftAccessPosture {
+  const presentation = deriveCanvasDraftAccessPresentation(args);
+  const { persistence } = deriveCanvasDraftStatusState(args);
+  return {
+    ...presentation,
+    persistence:
+      presentation.mutationBlocked && persistence === 'pending' ? 'blocked' : persistence,
+  };
+}
+
 export function toCanvasDraftStatusState(
   posture: CanvasDraftAccessPosture
 ): CanvasDraftStatusState {
-  const persistence =
-    posture.kind === 'saving'
-      ? 'pending'
-      : posture.kind === 'save_failed'
-        ? 'failed'
-        : posture.kind === 'stale_conflict' ||
-            posture.kind === 'missing_remote' ||
-            posture.kind === 'projection_gap'
-          ? 'blocked'
-          : 'durable';
   return {
     label: posture.statusLabel,
     tone: posture.statusTone,
     showReloadAction: posture.showReloadAction,
-    persistence,
+    persistence: posture.persistence,
   };
 }
 

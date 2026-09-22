@@ -1,20 +1,18 @@
 /** Owned concern: coordinate one discardable guided relation-authoring session. */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import type * as W from './canvasRelationalTreeWorkbench.types';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { useCanvasRelationalTreeApplyCommand } from './useCanvasRelationalTreeApplyCommand';
-import { useCanvasRelationalOperandSlots } from './useCanvasRelationalOperandSlots';
+import { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 import { useCanvasRelationalTreeAuthoringOptions } from './useCanvasRelationalTreeAuthoringOptions';
-import {
-  useCanvasRelationalTreeExistingJoinSeed,
-  type CanvasRelationalTreeJoinSeedHydration,
-} from './useCanvasRelationalTreeExistingJoinSeed';
+import { useCanvasRelationalTreeExistingJoinSeed } from './useCanvasRelationalTreeExistingJoinSeed';
 import { useCanvasRelationalTreeJoinDraftActions } from './useCanvasRelationalTreeJoinDraftActions';
 import { useCanvasRelationalTreeRemoval } from './useCanvasRelationalTreeRemoval';
 import { useCanvasRelationalTreeInputSelection } from './useCanvasRelationalTreeInputSelection';
+import { createSourceOccurrenceActions } from './relational-source-occurrence/sourceOccurrenceActions';
 export function useCanvasRelationalTreeAuthoringSession(
   args: Readonly<{
     enabled: boolean;
@@ -27,39 +25,30 @@ export function useCanvasRelationalTreeAuthoringSession(
 ) {
   const { authoring, edges, enabled, inputs, nodes, transformNode } = args;
   const editable = authoring?.canEditNode === true;
-  const [operation, setOperation] = useState<CanvasRelationalOperation | null>(null);
-  const [active, setActive] = useState(false);
-  const [joinDraft, setJoinDraft] = useState<DvtSubstraitJoinDraft | null>(null);
-  const [appendInputId, setAppendInputId] = useState<string | null>(null);
-  const [applyRejection, setApplyRejection] = useState<W.RelationalApplyRejection | null>(null);
+  const {
+    slots,
+    operation,
+    setOperation,
+    active,
+    setActive,
+    joinDraft,
+    setJoinDraft,
+    appendInputId,
+    setAppendInputId,
+    applyRejection,
+    setApplyRejection,
+    reset,
+    hydrate: hydrateExistingJoinState,
+  } = useCanvasRelationalTreeDraftState();
   const {
     appendInput: appendOperand,
     placeInput: placeOperand,
     primaryInputId,
     replaceInputs,
-    resetOperands,
     secondaryInputId,
     selectedInputIds,
     selectInitialInput,
-  } = useCanvasRelationalOperandSlots();
-  const reset = useCallback(() => {
-    setActive(false);
-    setOperation(null);
-    resetOperands();
-    setJoinDraft(null);
-    setAppendInputId(null);
-    setApplyRejection(null);
-  }, [resetOperands]);
-  const hydrateExistingJoinState = useCallback(
-    (seed: CanvasRelationalTreeJoinSeedHydration) => {
-      setActive(true);
-      replaceInputs(seed.inputIds);
-      setOperation(seed.operation);
-      setJoinDraft(seed.draft);
-      setAppendInputId(seed.appendInputId);
-    },
-    [replaceInputs]
-  );
+  } = slots;
   const { hydrateExistingJoin, baselineDraft, seed } = useCanvasRelationalTreeExistingJoinSeed({
     edges,
     inputs,
@@ -147,6 +136,13 @@ export function useCanvasRelationalTreeAuthoringSession(
     },
   });
   return {
+    occurrences: createSourceOccurrenceActions({
+      editable: enabled && editable,
+      draft: !active && seed != null ? seed.draft : joinDraft,
+      inputs,
+      start,
+      setAppendInputId,
+    }),
     removal,
     applyRejection,
     active,

@@ -25,7 +25,7 @@
     "dev:api": "pnpm --filter dvt-api dev",
     "dev:app": "node scripts/run-dev-stack.cjs",
     "dev:app:test": "node scripts/run-dev-stack.cjs --test-only",
-    "ci:docs": "pnpm planning:db:inventory:check && pnpm planning:db:integrity:check && pnpm docs:quality:check && pnpm docs:doctor && pnpm docs:gov:locations && pnpm docs:canonical:check && pnpm docs:gov:manifest:check && pnpm docs:gov:generated-policy && pnpm docs:governance:unit-coverage && pnpm docs:governance:changed-files:check && pnpm docs:feature-mechanization && pnpm docs:feature-mechanization:implementation",
+    "ci:docs": "pnpm planning:db:inventory:check && pnpm planning:db:integrity:check && pnpm docs:quality:check && pnpm docs:doctor && pnpm docs:gov:locations && pnpm docs:canonical:check && pnpm docs:gov:manifest:check && pnpm docs:gov:generated-policy && pnpm docs:governance:unit-coverage && pnpm docs:governance:changed-files:check && pnpm docs:feature-mechanization",
     "ci:code": "pnpm arch:deps && pnpm type-check && turbo run test && pnpm lint:determinism",
     "ci:full": "pnpm ci:docs && pnpm ci:code && pnpm test:coverage:engine",
     "preflight:affected": "pnpm ci:affected:build && pnpm ci:affected:lint && pnpm ci:affected:typecheck && pnpm ci:affected:test",
@@ -168,7 +168,7 @@
     "docs:feature-mechanization:tf-e2-m-c": "node scripts/check-feature-mechanization.cjs --feature TF-E2-M-C --implementation",
     "docs:feature-mechanization:tf-e2-m-d": "node scripts/check-feature-mechanization.cjs --feature TF-E2-M-D",
     "docs:feature-mechanization:implementation": "node scripts/check-feature-mechanization.cjs --implementation",
-    "test:docs:feature-mechanization": "node --test scripts/check-feature-mechanization.test.cjs scripts/lib/feature-mechanization-db-reader.test.cjs",
+    "test:docs:feature-mechanization": "node --test scripts/check-feature-mechanization.test.cjs scripts/lib/feature-mechanization-db-reader.test.cjs scripts/lib/feature-mechanization-git-diff.test.cjs scripts/feature-mechanization-test-routing.test.cjs",
     "docs:governance:document-unit-map": "node scripts/generate-governance-document-unit-map.cjs",
     "docs:governance:document-unit-map:check": "node scripts/generate-governance-document-unit-map.cjs",
     "test:docs:governance:document-unit-map": "node --test scripts/generate-governance-document-unit-map.test.cjs",
@@ -231,6 +231,9 @@
     "tools/ci/**/*.cjs": [
       "prettier --write"
     ],
+    "tools/**/*.ts": [
+      "prettier --write"
+    ],
     "*.{js,json,md,yml,yaml}": [
       "prettier --write"
     ]
@@ -260,6 +263,7 @@
     "@eslint/compat": "^2.0.5",
     "@eslint/js": "^10.0.1",
     "@testing-library/dom": "^10.4.0",
+    "@types/js-yaml": "4.0.9",
     "@types/node": "26.1.1",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",

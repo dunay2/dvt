@@ -37,7 +37,8 @@ function openPendingRelationalOperationChooser(): void {
   cy.get('[data-slot="canvas-relational-tree-workbench"]').should('be.visible');
   cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
   cy.contains('[data-slot="canvas-relational-tree-source"]', 'orders').click();
-  cy.get('[data-slot="dvt-relational-operation-chooser"]').should('be.visible');
+  cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
+  cy.get('[role="listbox"]').should('be.visible');
 }
 
 describe('Canvas relational-operation chooser', () => {
@@ -78,12 +79,11 @@ describe('Canvas relational-operation chooser', () => {
 
     openPendingRelationalOperationChooser();
 
-    cy.get('[data-slot="dvt-relational-operation-chooser"]').should('be.visible');
+    cy.get('[role="listbox"]').should('be.visible');
     cy.get('[data-slot="dvt-select-operation-inner-join"]')
       .should('contain.text', 'Needs predicate')
-      .and('not.be.disabled')
-      .focus()
-      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+      .and('have.attr', 'aria-disabled', 'false');
+    cy.get('[role="combobox"]').type('INNER JOIN{enter}');
     cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
       'have.length',
       1
@@ -162,10 +162,8 @@ describe('Canvas relational-operation chooser', () => {
       if (condition == null || condition.kind === 'group') return;
       expect(condition.left.kind).to.equal('function');
     });
-    cy.get('[data-slot="canvas-relational-composition-badge"]')
-      .should('contain.text', 'INNER JOIN')
-      .and('have.attr', 'aria-label')
-      .and('match', /INNER JOIN.*2.*1/);
+    cy.get('[data-slot="canvas-relational-composition-badge"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-composition-junction"]').should('not.exist');
   });
 
   for (const scenario of [
@@ -195,9 +193,8 @@ describe('Canvas relational-operation chooser', () => {
       openPendingRelationalOperationChooser();
       cy.get(`[data-slot="dvt-select-operation-${scenario.operation}"]`)
         .should('contain.text', scenario.label)
-        .and('not.be.disabled')
-        .focus()
-        .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+        .and('have.attr', 'aria-disabled', 'false');
+      cy.get('[role="combobox"]').type(`${scenario.label}{enter}`);
       cy.get('[data-slot="canvas-relational-tree-apply"]').click();
 
       cy.wrap(null).should(() => {
@@ -227,10 +224,8 @@ describe('Canvas relational-operation chooser', () => {
           ).to.equal(true);
         }
       });
-      cy.get('[data-slot="canvas-relational-composition-badge"]', { timeout: 20_000 }).should(
-        'contain.text',
-        scenario.label
-      );
+      cy.get('[data-slot="canvas-relational-composition-badge"]').should('not.exist');
+      cy.get('[data-slot="canvas-relational-composition-junction"]').should('not.exist');
 
       cy.then(() => {
         const getCount = getE2eApiCalls('/workspace/graph/draft', 'GET').length;
@@ -240,10 +235,12 @@ describe('Canvas relational-operation chooser', () => {
           expect(getE2eApiCalls('/workspace/graph/draft', 'GET')).to.have.length(getCount + 1);
         });
       });
-      cy.get('[data-slot="canvas-relational-composition-badge"]', { timeout: 20_000 }).should(
-        'contain.text',
-        scenario.label
-      );
+      cy.get('[data-slot="canvas-relational-composition-badge"]').should('not.exist');
+      cy.get('[data-slot="canvas-relational-composition-junction"]').should('not.exist');
+      cy.get(
+        '.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]'
+      ).dblclick(40, 18);
+      cy.get('[data-operator="join"]').should('contain.text', scenario.label);
     });
   }
 
@@ -310,10 +307,8 @@ describe('Canvas relational-operation chooser', () => {
           )
         ).to.equal(true);
       });
-      cy.get('[data-slot="canvas-relational-composition-badge"]', { timeout: 20_000 }).should(
-        'contain.text',
-        scenario.label
-      );
+      cy.get('[data-slot="canvas-relational-composition-badge"]').should('not.exist');
+      cy.get('[data-slot="canvas-relational-composition-junction"]').should('not.exist');
 
       cy.then(() => {
         const getCount = getE2eApiCalls('/workspace/graph/draft', 'GET').length;
@@ -323,10 +318,12 @@ describe('Canvas relational-operation chooser', () => {
           expect(getE2eApiCalls('/workspace/graph/draft', 'GET')).to.have.length(getCount + 1);
         });
       });
-      cy.get('[data-slot="canvas-relational-composition-badge"]', { timeout: 20_000 }).should(
-        'contain.text',
-        scenario.label
-      );
+      cy.get('[data-slot="canvas-relational-composition-badge"]').should('not.exist');
+      cy.get('[data-slot="canvas-relational-composition-junction"]').should('not.exist');
+      cy.get(
+        '.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]'
+      ).dblclick(40, 18);
+      cy.get('[data-operator="join"]').should('contain.text', scenario.label);
     });
   }
 

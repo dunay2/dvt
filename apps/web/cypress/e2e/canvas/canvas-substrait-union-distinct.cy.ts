@@ -94,9 +94,8 @@ describe('Canvas Substrait UNION DISTINCT', () => {
         'customers_south',
       ]);
     });
-    cy.get('[data-slot="canvas-relational-composition-badge"]')
-      .should('contain.text', 'UNION')
-      .and('not.contain.text', 'UNION ALL');
+    cy.get('[data-slot="canvas-relational-composition-badge"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-composition-junction"]').should('not.exist');
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     visitCanvas();

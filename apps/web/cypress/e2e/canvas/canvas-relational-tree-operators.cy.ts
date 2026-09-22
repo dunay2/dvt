@@ -15,13 +15,17 @@ import {
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
 import {
+  workbenchOperation,
+  openWorkbenchOperations,
+  closeWorkbenchOperations,
+} from '../../support/relationalWorkbench/operationMenu';
+import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
 const form = '[data-slot="canvas-relational-operator-form"]';
-const tool = (id: string): string => `[data-operator-tool="${id}"]`;
 function openEditor(union = false, readOnly = false, nInput = false): void {
   stubShellBootstrapApis({
     scopes: readOnly
@@ -53,7 +57,12 @@ function openEditor(union = false, readOnly = false, nInput = false): void {
     },
   });
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
-  cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').first().click();
+  cy.get('[data-slot="canvas-workspace-tab"]')
+    .should('have.attr', 'role', 'tab')
+    .and('have.attr', 'aria-selected', 'true');
+  cy.get('.react-flow__node[data-id$="-transform"] [data-slot="canvas-node-shell"]')
+    .first()
+    .dblclick(40, 18);
   cy.get('[data-slot="canvas-relational-tree-workbench"]').should('be.visible');
 }
 
@@ -80,7 +89,7 @@ function activateMenu(slot: string): void {
 }
 
 function addWrapper(id: string): void {
-  cy.get(tool(id)).click();
+  workbenchOperation(id).click();
   cy.get(
     '[role="dialog"] ' + form + ', [role="dialog"][data-slot="canvas-relational-operator-form"]'
   )
@@ -89,8 +98,21 @@ function addWrapper(id: string): void {
 }
 
 describe('Relational operator toolbar', () => {
-  it('keeps compact expression, editing and selected-operation rows beside one another', () => {
+  it('separates right inspection tabs from selected-operation data below and keeps sources compact', () => {
     openEditor();
+    cy.get('[data-slot="shell-app-menu-trigger"]').should('have.text', '');
+    cy.get('[data-slot="canvas-model-main-tab"]').should('have.text', 'Semantic editor');
+    cy.get('[data-slot="canvas-model-toolbar"] h1')
+      .invoke('text')
+      .then((name) => {
+        cy.get('[data-slot="canvas-model-view-tab"][data-view="editor"]')
+          .should('have.text', name)
+          .and('have.attr', 'aria-selected', 'true');
+      });
+    cy.get('[data-slot="canvas-model-view-tab"]').should('have.length', 3);
+    cy.get('[data-slot="canvas-relational-tree-source"]').each(($source) => {
+      expect($source[0]!.getBoundingClientRect().height).to.be.at.most(40);
+    });
     addWrapper('aggregate');
     cy.get('[data-operator="aggregate"]').invoke('attr', 'data-relation-id').as('aggregateId');
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
@@ -104,7 +126,9 @@ describe('Relational operator toolbar', () => {
     });
     visitWithE2eWorkspaceSession('/canvas');
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
-    cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').first().click();
+    cy.get('.react-flow__node[data-id$="-transform"] [data-slot="canvas-node-shell"]')
+      .first()
+      .dblclick(40, 18);
     const samplePath = /\/workspace\/graph\/canvases\/[^/]+\/transforms\/[^/]+\/data-sample$/;
     stubE2eApi('GET', samplePath, ({ url }) => ({
       body: {
@@ -121,32 +145,129 @@ describe('Relational operator toolbar', () => {
         sampledAt: '2026-09-19T00:00:00.000Z',
       },
     }));
-    cy.get('[data-operator="join"]').first().dblclick();
-    cy.get('[data-slot="canvas-operation-data-preview"]:visible').as('preview');
+    cy.get('[data-operator="join"]').first().click();
+    cy.get('[data-slot="canvas-operation-data-preview"]')
+      .scrollIntoView()
+      .should('be.visible')
+      .as('preview');
     cy.get('@preview').find('[data-slot="canvas-model-preview"]').should('be.enabled').click();
     cy.get('@preview').find('table').should('contain.text', 'selected-operation-42');
-    cy.get('.canvas-operation-panels.with-preview:visible').then(($panels) => {
-      const controls = $panels[0]!
-        .querySelector('.canvas-operation-controls')!
-        .getBoundingClientRect();
-      const preview = $panels[0]!.querySelector('aside')!.getBoundingClientRect();
-      expect(preview.left).to.be.greaterThan(controls.right);
-      expect(Math.abs(preview.top - controls.top)).to.be.lessThan(2);
-      expect(preview.width).to.be.greaterThan(300);
+    cy.get('@preview')
+      .find('header')
+      .should(($header) => {
+        expect($header.find('h2').text()).to.equal('INNER JOIN');
+        expect($header.find('[data-slot="canvas-operation-record-count"]').text()).to.equal(
+          '1/20 registros'
+        );
+        expect($header.find('p')).to.have.length(0);
+        expect($header[0]!.getBoundingClientRect().height).to.be.at.most(32);
+      });
+    cy.get('@preview').find('code, time').should('not.exist');
+    cy.get('@preview').should(($preview) => {
+      const header = $preview.find('header')[0]!.getBoundingClientRect();
+      const table = $preview.find('table')[0]!.getBoundingClientRect();
+      expect(table.top - header.bottom, 'table follows the single header line').to.be.at.most(9);
     });
+    cy.get('@preview').closest('[data-slot="bottom-operational-drawer"]').should('be.visible');
+    cy.get('[data-slot="canvas-operation-properties-tab"]:visible').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
+    cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
+    cy.get(
+      '[data-slot="canvas-model-main-tab"], [data-slot="canvas-model-view-tab"][data-view="editor"], [data-slot="canvas-operation-tree-tab"]:visible'
+    ).each(($tab) => {
+      const style = $tab[0]!.ownerDocument.defaultView!.getComputedStyle($tab[0]!);
+      expect(style.borderRadius, 'flat navigation tabs').to.equal('0px');
+      expect(style.backgroundColor, 'no filled tab buttons').to.equal('rgba(0, 0, 0, 0)');
+      expect(style.borderBottomWidth, 'active underline').to.equal('2px');
+      expect(style.borderBottomColor, 'visible underline').not.to.equal('rgba(0, 0, 0, 0)');
+      expect(style.fontSize).to.equal('14px');
+      expect($tab[0]!.getBoundingClientRect().height).to.equal(36);
+    });
+    cy.get('[data-slot="canvas-relational-expression-tree"]:visible').should('have.length', 1);
+    cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('not.be.visible');
+    cy.get('[data-slot="canvas-operation-properties-tab"]:visible').click();
+    cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
+    cy.get('@preview').find('table').should('contain.text', 'selected-operation-42');
+    const editor = '[data-slot="canvas-relational-tree-inline-editor"]:visible';
+    const viewport = '[data-slot="canvas-relational-tree-draft-viewport"]';
+    cy.get(editor).then(($editor) => {
+      const properties = $editor[0]!.getBoundingClientRect();
+      expect($editor.find('[data-slot="canvas-operation-data-preview"]')).to.have.length(0);
+      cy.get('@preview').should(($preview) => {
+        const data = $preview[0]!.getBoundingClientRect();
+        expect(data.top).to.be.at.least(properties.bottom);
+        expect(data.width).to.be.greaterThan(properties.width);
+      });
+      cy.get(viewport).should(($viewport) => {
+        const tree = $viewport[0]!.getBoundingClientRect();
+        expect(properties.left).to.be.at.least(tree.right - 1);
+        expect(Math.abs(properties.top - tree.top)).to.be.lessThan(2);
+        expect(Math.abs(properties.bottom - tree.bottom)).to.be.lessThan(2);
+      });
+    });
+    cy.get('.canvas-operation-panels:visible').scrollTo('top', { ensureScrollable: false });
     cy.screenshot('selected-operation-preview-desktop');
+    const comparison =
+      '[data-slot="semantic-workbench-join-condition-editor"] select[aria-label="Comparador de la condición"]';
+    cy.get(comparison).select('not_equal').as('comparison');
+    cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
+    cy.get('[data-slot="canvas-relational-expression-tree"]:visible').should(
+      'contain.text',
+      'NOT_EQUAL'
+    );
+    cy.get('[data-slot="canvas-operation-properties-tab"]:visible').click();
+    cy.get('@comparison').should('have.value', 'not_equal');
+    cy.get('@comparison').trigger('keydown', { key: 'Escape' });
     cy.get('[data-operator="aggregate"]').click();
     cy.get('[data-slot="canvas-operation-data-preview"]:visible table').should('not.exist');
     cy.then(() => expect(getE2eApiCalls(samplePath, 'GET')).to.have.length(1));
     cy.viewport(1000, 800);
     cy.get('[data-slot="canvas-relational-tree-draft-viewport"]').should('be.visible');
-    cy.get('.canvas-operation-panels.with-preview:visible').then(($panels) => {
-      const controls = $panels[0]!
-        .querySelector('.canvas-operation-controls')!
-        .getBoundingClientRect();
-      const preview = $panels[0]!.querySelector('aside')!.getBoundingClientRect();
-      expect(preview.top).to.be.greaterThan(controls.bottom);
+    cy.get(
+      '[data-slot="bottom-operational-drawer"] [data-slot="canvas-operation-data-preview"]'
+    ).should('be.visible');
+    cy.get(editor).then(($editor) => {
+      const properties = $editor[0]!.getBoundingClientRect();
+      expect(properties.right).to.be.at.most(1000);
+      cy.get(viewport).then(($viewport) => {
+        const tree = $viewport[0]!.getBoundingClientRect();
+        cy.get('[data-slot="canvas-relational-collapse"]:visible').click();
+        cy.get('[data-slot="canvas-operation-data-preview"]').should('not.exist');
+        cy.get(viewport).should(($expanded) => {
+          const expanded = $expanded[0]!.getBoundingClientRect();
+          expect(expanded.height).to.equal(tree.height);
+          expect(expanded.width).to.be.greaterThan(tree.width);
+        });
+      });
     });
+    cy.get('[data-operator="aggregate"]').click();
+    cy.viewport(600, 800);
+    cy.get(editor).should(($editor) => {
+      const properties = $editor[0]!.getBoundingClientRect();
+      expect(properties.left).to.be.at.least(0);
+      expect(properties.right).to.be.at.most(600);
+    });
+    cy.screenshot('selected-operation-properties-narrow');
+    cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible [role="tablist"]').should(
+      ($list) => {
+        expect($list[0]!.scrollHeight, 'inspector navigation needs no vertical scrollbar').to.equal(
+          $list[0]!.clientHeight
+        );
+      }
+    );
+    cy.get('[data-slot="canvas-relational-collapse"]:visible').click();
+    cy.get(viewport).should('be.visible');
+    cy.viewport(1440, 900);
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
+    cy.get('[data-slot="canvas-workspace-tab"]')
+      .should('have.attr', 'aria-selected', 'true')
+      .and('have.css', 'border-radius', '0px');
+    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data:operation"]').should(
+      'not.exist'
+    );
   });
 
   for (const applied of [false, true]) {
@@ -154,7 +275,7 @@ describe('Relational operator toolbar', () => {
       openEditor();
       cy.get('[data-operator="join"]').rightclick();
       activateMenu('canvas-relational-remove-left');
-      cy.get(tool('filter')).click();
+      workbenchOperation('filter').click();
       cy.get(form).find('input').type('C-001');
       cy.get(form).find('button[type="submit"]').click();
       if (applied) {
@@ -165,8 +286,12 @@ describe('Relational operator toolbar', () => {
         ? '[data-slot="canvas-relational-tree-viewport"]'
         : '[data-slot="canvas-relational-tree-draft-viewport"]';
       const join = '[data-slot="dvt-select-operation-inner-join"]';
-      cy.get(join).should('be.visible').and('be.disabled');
+      openWorkbenchOperations();
+      cy.get('[role="combobox"]').type('INNER JOIN');
+      cy.get(join).should('be.visible').and('have.attr', 'aria-disabled', 'true');
+      cy.get('[role="combobox"]').clear().type('UNION ALL');
       cy.get('[data-slot="dvt-select-operation-union-all"]').should('be.visible');
+      closeWorkbenchOperations();
       cy.get('[data-operator="filter"]').then(($filter) => {
         const identity = $filter.attr('data-relation-id');
         cy.window().then((window) => {
@@ -181,13 +306,15 @@ describe('Relational operator toolbar', () => {
         });
         cy.get('[data-operator="filter"]').should('have.attr', 'data-relation-id', identity);
         cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
-        cy.get(join).should('be.enabled').click();
+        openWorkbenchOperations();
+        cy.get(join).should('have.attr', 'aria-disabled', 'false').click();
         cy.get('[role="alertdialog"]').should('contain.text', 'filters and windows');
         cy.contains('[role="alertdialog"] button', 'Cancel').click();
         cy.get('[data-operator="filter"]').should('have.attr', 'data-relation-id', identity);
-        cy.get(tool('filter')).click();
+        workbenchOperation('filter').click();
         cy.get(form).find('input').should('have.value', 'C-001');
         cy.get(form).find('button[type="submit"]').click();
+        openWorkbenchOperations();
         cy.get(join).click();
         cy.contains('[role="alertdialog"] button', 'Apply').click();
       });
@@ -199,7 +326,9 @@ describe('Relational operator toolbar', () => {
       cy.get('[data-slot="canvas-model-sql"]').should('contain.text', 'JOIN');
       visitWithE2eWorkspaceSession('/canvas');
       waitForE2eApiCall('/workspace/graph/draft', 'GET');
-      cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').first().click();
+      cy.get('.react-flow__node[data-id$="-transform"] [data-slot="canvas-node-shell"]')
+        .first()
+        .dblclick(40, 18);
       cy.get('[data-operator="join"]').should('have.length', 1);
       cy.screenshot(`projection-source-drop-${applied ? 'saved' : 'local'}`);
     });
@@ -309,23 +438,26 @@ describe('Relational operator toolbar', () => {
     cy.then(() => {
       initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
-    cy.get('[data-operator="join"]').dblclick();
-    cy.get('[data-slot="canvas-join-expression-node"]').should('have.length.at.least', 3);
+    cy.get('[data-operator="join"]').click();
+    cy.get('[data-slot="canvas-relational-expression-node"]').should('have.length.at.least', 3);
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
-    cy.get(tool('aggregate')).click();
+    workbenchOperation('aggregate').click();
     cy.get(
       '[role="dialog"] ' + form + ', [role="dialog"][data-slot="canvas-relational-operator-form"]'
     )
       .find('button[type="submit"]')
       .click();
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
-    cy.get(tool('window')).click();
+    workbenchOperation('window').click();
     cy.get(
       '[role="dialog"] ' + form + ', [role="dialog"][data-slot="canvas-relational-operator-form"]'
     )
       .find('button[type="submit"]')
       .click();
-    cy.get('[data-slot="canvas-join-expression-node"][data-kind="field"]').first().click();
+    cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
+    cy.get('[data-slot="canvas-relational-expression-node"][data-kind="field"]:visible')
+      .first()
+      .click();
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
     cy.screenshot('selected-join-connected-expression-under-window');
     cy.get('[aria-label="Comparador de la condición"]').select('not_equal');
@@ -333,12 +465,12 @@ describe('Relational operator toolbar', () => {
     cy.get('[data-operator="aggregate"]').rightclick();
     cy.get('[data-slot="canvas-relational-edit-operation"]').click();
     cy.get('[data-slot="context-menu-content"][data-state="open"]').should('not.exist');
-    cy.get('[data-slot="canvas-join-expression-tree"]').should('contain.text', 'COUNT');
+    cy.get('[data-slot="canvas-relational-expression-tree"]').should('contain.text', 'COUNT');
     cy.contains(
       '[data-slot="canvas-relational-tree-inline-editor"]',
       'downstream dependencies'
     ).should('be.visible');
-    cy.get('[data-operator="join"]').dblclick();
+    cy.get('[data-operator="join"]').click();
     cy.get('[aria-label="Comparador de la condición"]').should('have.value', 'not_equal');
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
     cy.contains('button', 'Guardar condición').click();
@@ -364,13 +496,13 @@ describe('Relational operator toolbar', () => {
       if (union) {
         cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers_north').click();
         cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers_south').click();
-        cy.get('[data-slot="dvt-select-operation-union-all"]').click();
+        workbenchOperation('union_all').click();
       }
-      cy.get(tool('aggregate')).should('be.enabled').click();
+      workbenchOperation('aggregate').should('have.attr', 'aria-disabled', 'false').click();
       cy.get(form).find('input').clear().type('customer_count');
       cy.get(form).find('button[type="submit"]').click();
       cy.get('[data-operator="aggregate"]').should('have.length', 1);
-      cy.get(tool('window')).click();
+      workbenchOperation('window').click();
       cy.get(form).should('contain.text', 'customer_count DESC NULLS LAST');
       cy.get(form).should('not.contain.text', 'PARTITION BY');
       cy.get(form).find('input').clear().type('ranked_customer');
@@ -402,7 +534,7 @@ describe('Relational operator toolbar', () => {
       });
       cy.get('[data-slot="canvas-relational-tree-fit"]').click();
       cy.screenshot(`operators-${union ? 'union' : 'join'}-count-window`);
-      cy.get(tool('window')).click();
+      workbenchOperation('window').click();
       cy.get(form).find('input').should('have.value', 'ranked_customer');
       cy.contains(form + ' button', 'Remove operation').click();
       cy.get('[data-slot="canvas-relational-node-title"]').should('not.contain.text', 'Window');
@@ -410,7 +542,9 @@ describe('Relational operator toolbar', () => {
       cy.get('[data-slot="canvas-relational-node-title"]').should('contain.text', 'Window');
       visitWithE2eWorkspaceSession('/canvas');
       waitForE2eApiCall('/workspace/graph/draft', 'GET');
-      cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').click();
+      cy.get('.react-flow__node[data-id$="-transform"] [data-slot="canvas-node-shell"]')
+        .first()
+        .dblclick(40, 18);
       // The workspace-session fixture restores the default Spanish locale on reload.
       cy.get('[data-slot="canvas-relational-node-title"]').should('contain.text', 'Ventana');
     });
@@ -419,15 +553,15 @@ describe('Relational operator toolbar', () => {
     openEditor();
     cy.get('[data-operator="join"]').rightclick();
     cy.get('[data-slot="canvas-relational-remove-left"]').click();
-    cy.get(tool('filter')).click();
+    workbenchOperation('filter').click();
     cy.get(form).find('input').type('C-001');
     cy.get(form).find('button[type="submit"]').click();
     cy.get('[data-operator="filter"]').should('have.length', 1);
-    cy.get(tool('filter')).click();
+    workbenchOperation('filter').click();
     cy.get(form).find('input').should('have.value', 'C-001');
     cy.contains(form + ' button', 'Remove operation').click();
     cy.get('[data-operator="filter"]').should('not.exist');
-    cy.get(tool('window')).click();
+    workbenchOperation('window').click();
     cy.get(form).find('select').should('exist');
     cy.get(form).find('input').clear().type('source_row');
     cy.get(form).find('button[type="submit"]').click();
@@ -437,7 +571,7 @@ describe('Relational operator toolbar', () => {
   });
   it('authors, reopens, edits and contextually removes ORDER BY below LIMIT', () => {
     openEditor();
-    cy.get(tool('sort')).should('be.enabled').click();
+    workbenchOperation('sort').should('have.attr', 'aria-disabled', 'false').click();
     cy.get(form).find('button').contains('Add key').click();
     cy.get(form).find('select[aria-label^="Field"]').should('have.length', 2);
     cy.get(form).find('select[aria-label="Field 2"]').select(1);
@@ -447,7 +581,7 @@ describe('Relational operator toolbar', () => {
       .should('have.length', 1)
       .and('contain.text', 'DESC NULLS LAST');
 
-    cy.get(tool('fetch')).should('be.enabled').click();
+    workbenchOperation('fetch').should('have.attr', 'aria-disabled', 'false').click();
     cy.get(form).find('input').eq(0).clear().type('2');
     cy.get(form).find('input').eq(1).clear().type('3');
     cy.get(form).find('button[type="submit"]').click();
@@ -499,7 +633,9 @@ describe('Relational operator toolbar', () => {
 
     visitWithE2eWorkspaceSession('/canvas');
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
-    cy.get('[data-slot="canvas-relational-composition-badge"][role="button"]').first().click();
+    cy.get('.react-flow__node[data-id$="-transform"] [data-slot="canvas-node-shell"]')
+      .first()
+      .dblclick(40, 18);
     cy.get<string>('@sortRelationId').then((relationId) => {
       cy.get(`[data-operator="sort"][data-relation-id="${relationId}"]`).rightclick();
     });
@@ -513,8 +649,20 @@ describe('Relational operator toolbar', () => {
   });
   it('does not enable mutations for a read-only model', () => {
     openEditor(false, true);
-    cy.get(tool('aggregate')).should('be.disabled');
-    cy.get(tool('window')).should('be.disabled');
+    workbenchOperation('aggregate').should('have.attr', 'aria-disabled', 'true');
+    closeWorkbenchOperations();
+    workbenchOperation('window').should('have.attr', 'aria-disabled', 'true');
+    closeWorkbenchOperations();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+    cy.get('[data-operator="join"]').click();
+    cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').then(($editor) => {
+      const properties = $editor[0]!.getBoundingClientRect();
+      cy.get('[data-slot="canvas-relational-tree-viewport"]').should(($viewport) => {
+        const tree = $viewport[0]!.getBoundingClientRect();
+        expect(properties.left).to.be.at.least(tree.right - 1);
+        expect(Math.abs(properties.top - tree.top)).to.be.lessThan(2);
+      });
+    });
+    cy.get('[data-slot="canvas-relational-tree-source"]').should('have.attr', 'draggable', 'false');
   });
 });

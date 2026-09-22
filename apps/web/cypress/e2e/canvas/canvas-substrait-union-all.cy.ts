@@ -133,9 +133,8 @@ describe('Canvas Substrait UNION ALL', () => {
         3
       );
     });
-    cy.get('[data-slot="canvas-relational-composition-badge"]')
-      .should('contain.text', 'UNION ALL')
-      .and('have.attr', 'aria-label', 'UNION ALL, inputs: 2, outputs: 3, bag semantics');
+    cy.get('[data-slot="canvas-relational-composition-badge"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-composition-junction"]').should('not.exist');
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     visitCanvas();

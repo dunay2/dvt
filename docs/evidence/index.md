@@ -163,6 +163,7 @@ Evidence documents that justify or validate relevant changes.
 - [Plugin Admission Architecture Hardening](ed-20260429-plugin-admission-architecture.md)
 - [Protected terminal Transform Preview](ED-20260911-terminal-transform-preview.md)
 - [Protected Transform row preview](ED-20260915-transform-row-preview.md)
+- [Repeated Read occurrence projection](ED-20260921-repeated-read-occurrence-projection.md)
 - [Restore ADR-0000 Traceability Gate On Main](ed-20260423-adr0-traceability-gate.md)
 - [Retire S08 Lifecycle Contract Vocabulary](ed-20260515-s08-lifecycle-contract-retirement.md)
 - [RIGHT and FULL OUTER JOIN end to end](ED-20260919-right-full-join-end-to-end.md)

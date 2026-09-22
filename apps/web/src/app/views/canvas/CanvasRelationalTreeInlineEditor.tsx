@@ -37,7 +37,10 @@ export function CanvasRelationalTreeInlineEditor(
   const selectedJoin = inspection?.projection.joinRelations.find(
     ({ relationId }) => relationId === selectedRelationId
   );
-  const selectedCross = operation === 'cross_join' && selectedRelationId != null;
+  const selectedRead = joinDraft.sidecar.relations.some(
+    (binding) => binding.relationId === selectedRelationId && binding.sourceRef != null
+  );
+  const selectedCross = operation === 'cross_join' && selectedRelationId != null && !selectedRead;
   return (
     <>
       {!selectedJoin && appendInput == null && expanded ? (
@@ -48,6 +51,7 @@ export function CanvasRelationalTreeInlineEditor(
           transformNode={transformNode}
           onChange={onChangeJoinDraft}
           onClose={onClose}
+          onPendingConditionChange={props.onPendingConditionChange}
         />
       ) : null}
       <CanvasRelationalTreeEditorFrame
@@ -55,6 +59,7 @@ export function CanvasRelationalTreeInlineEditor(
           selectedJoin == null ? operation : canvasJoinOperationForType(selectedJoin.joinType)
         }
         relationId={selectedRelationId}
+        hasExpression={selectedJoin != null && appendInput == null}
         hidden={appendInput == null && ((!selectedJoin && !selectedCross) || !expanded)}
         onClose={onClose}
       >

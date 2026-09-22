@@ -36,12 +36,14 @@ export function CanvasRelationalTreeSortFetchEditor({
     ];
   return (
     <CanvasRelationalTreeEditorFrame
+      hasExpression={false}
       operation={operation}
       relationId={relationId}
       onClose={onClose}
     >
       <div className="min-h-0 overflow-auto p-3">
         <CanvasRelationalTreeOperatorForm
+          key={`${relationId}:${operation}`}
           inline
           tool={tool}
           draft={draft}

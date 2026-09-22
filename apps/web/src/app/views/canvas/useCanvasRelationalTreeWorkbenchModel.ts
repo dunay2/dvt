@@ -1,5 +1,6 @@
 /** Owned concern: compose relational-tree query and guided-session state for presentation. */
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useCanvasRelationalSelection } from './useCanvasRelationalSelection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
@@ -7,7 +8,6 @@ import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCa
 import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
 import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
 import {
-  flattenCanvasRelationalTree,
   projectCanvasRelationalTreeCatalogue,
   projectPendingCanvasRelationalTreeCatalogue,
 } from './canvasRelationalTreeWorkbenchModel';
@@ -75,8 +75,8 @@ export function useCanvasRelationalTreeWorkbenchModel(
     inputs,
     authoring: args.authoring,
   });
-  const [selectedLocator, setSelectedLocator] = useState(projection?.root.locator ?? '');
-  useEffect(() => setSelectedLocator(projection?.root.locator ?? ''), [projection?.root.locator]);
+  const selection = useCanvasRelationalSelection(args.transformNode.id, projection);
+  const { selectedLocator, selectTreeNode } = selection;
 
   const catalogue = useMemo(() => {
     const base =
@@ -136,12 +136,6 @@ export function useCanvasRelationalTreeWorkbenchModel(
     session.selectedInputIds,
     selectedLocator,
   ]);
-  const selectedNode =
-    projection == null
-      ? null
-      : (flattenCanvasRelationalTree(projection.root).find(
-          (node) => node.locator === selectedLocator
-        ) ?? projection.root);
   const unavailableMessage = result.ok
     ? null
     : result.failure.code === 'invalid-semantic-authority'
@@ -151,10 +145,10 @@ export function useCanvasRelationalTreeWorkbenchModel(
         : args.copy.relationalTreeUnavailableMessage;
   const selectCatalogueItem = (item: CanvasRelationalTreeCatalogueItem): void => {
     if (!session.active && projection != null && item.treeLocator != null)
-      setSelectedLocator(item.treeLocator);
+      selectTreeNode(item.treeLocator);
     else if (authoringAvailable && item.sourceNodeId != null)
       session.selectInput(item.sourceNodeId);
-    else if (projection != null && item.treeLocator != null) setSelectedLocator(item.treeLocator);
+    else if (projection != null && item.treeLocator != null) selectTreeNode(item.treeLocator);
   };
 
   return {
@@ -163,10 +157,8 @@ export function useCanvasRelationalTreeWorkbenchModel(
     inputs,
     pendingAuthoring,
     projection,
-    selectedLocator,
-    selectedNode,
+    ...selection,
     selectCatalogueItem,
-    selectTreeNode: setSelectedLocator,
     session,
     unavailableMessage,
   } as const;

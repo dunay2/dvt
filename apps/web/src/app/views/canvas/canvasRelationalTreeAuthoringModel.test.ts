@@ -5,9 +5,9 @@ import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCa
 import {
   appendCanvasRelationalTreeJoinInput,
   createCanvasRelationalTreeInitialJoinDraft,
-  resolveCanvasRelationalTreeAuthoringCandidates,
   resolveCanvasRelationalTreeAuthoringChoices,
 } from './canvasRelationalTreeAuthoringModel';
+import { resolveCanvasRelationalTreeAuthoringCandidates } from './canvasRelationalTreeAuthoringCandidates';
 import {
   createCanvasRelationalTreeSetDraft,
   createCanvasRelationalTreeUnionAllDraft,

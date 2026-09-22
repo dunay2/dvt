@@ -90,7 +90,9 @@ const readModel: NodePropertiesReadModel = {
   ],
 };
 
-function Harness({ onApply }: Readonly<{ onApply: (draft: CanvasInspectorNodeDraft) => void }>): JSX.Element {
+function Harness({
+  onApply,
+}: Readonly<{ onApply: (draft: CanvasInspectorNodeDraft) => void }>): JSX.Element {
   const [draft, setDraft] = useState<CanvasInspectorNodeDraft>(initialDraft);
   const [tagsText, setTagsText] = useState('source, dvt');
   const draftController: CanvasNodeWorkbenchDraftController = {
@@ -155,10 +157,12 @@ describe('SourceOverviewPanel', () => {
     act(() => root.render(<Harness onApply={vi.fn()} />));
 
     expect(container.textContent).not.toContain('Database comment');
-    expect(container.textContent).not.toContain('Generic node comment without external database authority.');
+    expect(container.textContent).not.toContain(
+      'Generic node comment without external database authority.'
+    );
   });
 
-  it('uses the existing authoring command rail when activated Name editing loses focus', () => {
+  it('uses the existing authoring command rail when activated Name editing loses focus', async () => {
     const onApply = vi.fn();
     act(() => root.render(<Harness onApply={onApply} />));
 
@@ -170,12 +174,12 @@ describe('SourceOverviewPanel', () => {
     );
     expect(editButton).toBeDefined();
 
-    act(() => fireEvent.click(editButton!));
+    await act(() => fireEvent.click(editButton!));
     const input = container.querySelector('input[aria-label="Name"]') as HTMLInputElement | null;
     expect(input).not.toBeNull();
 
-    act(() => fireEvent.input(input!, { target: { value: 'audit events' } }));
-    act(() => fireEvent.focusOut(input!));
+    await act(() => fireEvent.input(input!, { target: { value: 'audit events' } }));
+    await act(() => fireEvent.focusOut(input!));
 
     expect(onApply).toHaveBeenCalledTimes(1);
     expect(onApply.mock.calls[0]?.[0]).toMatchObject({ name: 'audit events' });

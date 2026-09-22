@@ -1,9 +1,7 @@
 /** Owned concern: project canonical dependency edges into React Flow viewport state. */
-import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 import type { Edge } from '@xyflow/react';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { resolveGraphNodeCardCopy } from '../../plugins/graph/graphNodeCardCopyTokens';
 import { resolveCanvasAuthoringVisibleEdgeId } from './canvasAuthoringGraphProjection';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { CanvasDraftEdge } from './canvasDraftSession';
@@ -12,34 +10,6 @@ import {
   readCanvasDependencyEdgeData,
 } from './canvasDependencyEdgeModel';
 import { createCanvasDirectionalEdge } from './canvasNodeMapper';
-import {
-  resolveCanvasRelationalCompositionEdgeMembers,
-  type CanvasRelationalCompositionEdgeMember,
-} from './canvasRelationalCompositionEdgeGroup';
-import { resolveCanvasRelationalCompositionBadgeSummary } from './canvasRelationalCompositionBadgeSummary';
-
-function resolveCompositionLabel(
-  member: CanvasRelationalCompositionEdgeMember,
-  locale: string
-): string {
-  const cardCopy = resolveGraphNodeCardCopy(locale);
-  if (member.state === 'incomplete' || member.state === 'unresolved') {
-    return cardCopy.relationalCompositionIncompleteLabel;
-  }
-  const operationLabel =
-    member.operation == null
-      ? null
-      : resolveCanvasViewCopy(locale)[
-          resolveCanvasRelationalOperationPresentation(member.operation).labelKey
-        ];
-  if (member.state === 'canonical') {
-    return operationLabel ?? cardCopy.relationalCompositionIncompleteLabel;
-  }
-  return operationLabel == null
-    ? cardCopy.relationalCompositionPendingLabel
-    : `${operationLabel} + ${cardCopy.relationalCompositionPendingLabel}`;
-}
-
 export function projectCanvasViewportEdges(args: {
   visibleEdges: readonly CanvasDraftEdge[];
   allowedNodeIds: ReadonlySet<string>;
@@ -57,53 +27,20 @@ export function projectCanvasViewportEdges(args: {
     locale,
   } = args;
   const copy = resolveCanvasViewCopy(locale);
-  const compositionMembers = resolveCanvasRelationalCompositionEdgeMembers({
-    nodes: [...canonicalNodesById.values()],
-    edges: visibleEdges,
-  });
 
   return visibleEdges
     .filter((edge) => allowedNodeIds.has(edge.sourceId) && allowedNodeIds.has(edge.targetId))
     .map((edge) => {
       const canonicalEdge = canonicalEdgeBySignature.get(`${edge.sourceId}::${edge.targetId}`);
-      const compositionMember = compositionMembers.get(`${edge.sourceId}::${edge.targetId}`);
-      const compositionLabel =
-        compositionMember == null ? null : resolveCompositionLabel(compositionMember, locale);
-      const compositionTarget = canonicalNodesById.get(edge.targetId);
-      const compositionAccessibleLabel =
-        compositionMember?.state === 'canonical' &&
-        compositionMember.operation != null &&
-        compositionTarget != null
-          ? resolveCanvasRelationalCompositionBadgeSummary({
-              node: compositionTarget,
-              operation: compositionMember.operation,
-              locale,
-            })
-          : null;
       const data = buildCanvasDependencyEdgeData({
         sourceId: edge.sourceId,
         targetId: edge.targetId,
         executionGate: edge.executionGate,
         canonicalMetadata: canonicalEdge?.metadata,
-        ...(compositionMember == null
-          ? {}
-          : {
-              composition: {
-                ...compositionMember,
-                label: compositionLabel!,
-                ...(compositionAccessibleLabel == null
-                  ? {}
-                  : { accessibleLabel: compositionAccessibleLabel }),
-              },
-            }),
       });
       const baseAriaLabel = copy.canvasEdgeAccessibleLabelTemplate
         .replace('{source}', canonicalNodesById.get(edge.sourceId)?.name ?? edge.sourceId)
         .replace('{target}', canonicalNodesById.get(edge.targetId)?.name ?? edge.targetId);
-      const compositionAriaLabel =
-        data.composition == null
-          ? baseAriaLabel
-          : `${baseAriaLabel}, ${data.composition.accessibleLabel ?? data.composition.label}`;
 
       return createCanvasDirectionalEdge({
         id: resolveCanvasAuthoringVisibleEdgeId({ edge, canonicalEdgeIdBySignature }),
@@ -111,8 +48,8 @@ export function projectCanvasViewportEdges(args: {
         target: edge.targetId,
         ariaLabel:
           data.execution.gateState === 'closed'
-            ? `${compositionAriaLabel}, ${copy.canvasEdgeExcludedFromExecutionLabel}`
-            : compositionAriaLabel,
+            ? `${baseAriaLabel}, ${copy.canvasEdgeExcludedFromExecutionLabel}`
+            : baseAriaLabel,
         data,
       });
     });
