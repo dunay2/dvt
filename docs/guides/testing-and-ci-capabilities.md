@@ -301,6 +301,10 @@ Command semantics:
   route to direct adjacent `node --test` suites when that test file exists.
   The full `pnpm test:ci-tools` contract remains a broader merge/CI-tooling
   audit, not the default local proof for a one-file AI iteration.
+- Executable CI contract identities come from `EXECUTABLE_CI_TOOL_TESTS` in
+  `tools/ci/ci-tool-test-suite.mjs`. The scope API consumes that catalog directly;
+  `workflow-scope.json` names additional invalidating inputs, not another copy
+  of the executable test list.
 - Governance coverage/remediation report generator edits are routed to their
   exact `node --test scripts/generate-governance-*.test.cjs` suites. That keeps
   AI iteration on report rendering and DB-source normalization under the
