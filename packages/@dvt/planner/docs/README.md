@@ -8,7 +8,6 @@ Canonical planner status, roadmap, and public contract guidance now live in the
 repository docs, not in this package-local folder.
 
 - `../../../../docs/planning/status/planner-current-state-assessment-20260320.md`
-- `../../../../docs/planning/status/planner-local-doc-triage-20260320.md`
 - `../../../../docs/planning/proposals/planner-target-state-roadmap-20260320.md`
 - `../../../../docs/contracts/planner/index.md`
 

@@ -2,7 +2,7 @@
 title: Governance Document And Rule Inventory
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-22
 planning_type: status
 ---
 
@@ -49,6 +49,11 @@ There is no intermediate planning authority. Local lane files, workboards,
 open-task routes, task rows in Planning DB, and DB-to-GitHub task projections
 are retired and MUST NOT be recreated.
 
+DB-authoritative implementation validation follows the approved
+[single-team local acceptance boundary](../proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md#single-team-validation-boundary).
+Planning DB remains authoritative; GitHub CI does not independently enforce that
+local check. Its result must be recorded for the exact base/head before merge.
+
 ## Governance Layers
 
 | Layer           | Purpose                                          | Primary sources                                                       |
@@ -59,11 +64,10 @@ are retired and MUST NOT be recreated.
 | `enforcement`   | machine-enforced rules                           | `.arc-policy.yaml`, package scripts, hooks, workflows, CODEOWNERS     |
 | `status`        | what is true now                                 | code/test/CI state, system delivery status, canonical doc-code matrix |
 | `risk/evidence` | residual risk and proof                          | `docs/risk-register/**`, `docs/evidence/**`, runbooks                 |
-| `historical`    | prior decisions/workflows                        | archives, historical reviews, closeouts, superseded proposals         |
+| `historical`    | prior decisions/workflows                        | Git revisions and PR records, not documentation archive copies        |
 
-Historical material may accurately mention retired workflows. It is not an active
-startup or work-routing source unless a current authority explicitly promotes a
-specific historical fact.
+Historical material is consulted from Git when provenance is needed. It is not
+an active startup route, work queue, or reason to retain obsolete documents.
 
 ## Canonical Entry Points
 
@@ -124,10 +128,15 @@ indexes, generated governance surfaces, or the tooling that produces them.
 
 ## Historical Material Rule
 
-Do not rewrite archived evidence or historical closeouts merely because their
-workflow is obsolete. Preserve factual history. Active guides, entrypoints,
-status routers, and current roadmaps must not direct new work through retired
-mechanisms.
+Delete obsolete documentation after reconciling its consumers and current
+obligations. Git preserves the historical content; do not move it to another
+archive, maintain historical landing pages, or write preservation summaries.
+
+Current ADR, contract, risk, and evidence obligations must be checked explicitly.
+A date alone does not make a governing record obsolete. Conversely, a retired
+validator or historical backlink is not a reason to perpetuate a dead document:
+retire that dependency or cite the exact Git revision from the existing record.
+Architecture remains in Planning DB. Do not rebuild it from deleted Markdown.
 
 ## Maintenance Rule
 

@@ -2,7 +2,7 @@
 title: PR Preflight And CI Triage
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-09-10
+last_reviewed: 2026-09-17
 ---
 
 # PR Preflight And CI Triage
@@ -18,7 +18,6 @@ Use this guide for implementation slices and PR-green recovery work.
 - `AGENTS.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/status/governance-document-rule-inventory.md`
-- `docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md`
 - `docs/planning/reviews/ci-and-delivery/20260330-ci-prepush-pr-process-observations.md`
 
 ## Standard Flow
@@ -37,6 +36,26 @@ Use this guide for implementation slices and PR-green recovery work.
    - extract failed job logs first
    - patch root cause
    - rerun only required checks
+
+Before merging, run `pnpm docs:feature-mechanization:implementation` against the
+existing local Planning DB with explicit `GIT_BASE` and `GIT_HEAD` commit SHAs
+and a clean worktree. Record both SHAs, the command and result on the PR. Repeat
+when either SHA changes; a cached pre-push stamp is not fresh DB evidence.
+Unavailable DB or invalid comparison evidence blocks integration. This
+[single-team boundary](../planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md#single-team-validation-boundary)
+is a local operator obligation, not a check independently enforced by GitHub.
+
+## Conflict Triage And Cleanup Safety
+
+Classify each conflicted file by its current owner and intended change before
+choosing either side or resolving it manually. Do not apply a bulk side selection
+without checking what it discards. After resolution, scan for conflict markers,
+run the affected tests, and follow the commit and validation sequence in
+`AGENTS.md` before push.
+
+Branch diagnostics do not authorize deletion. Destructive cleanup remains an
+explicit opt-in operation with the confirmation supported by `scripts/hygiene.ps1`;
+never infer permission from a branch being reported as superseded.
 
 ## First-Red Triage Rule
 

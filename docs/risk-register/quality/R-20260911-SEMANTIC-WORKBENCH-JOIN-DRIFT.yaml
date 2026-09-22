@@ -5,20 +5,48 @@ status: Open
 date: 2026-09-11
 owners:
   - web
+  - api
   - packages/@dvt/contracts
+  - packages/@dvt/postgres-projection
 severity: Medium
 probability: Low
 ---
 mitigation:
   summary: >
     One typed Substrait expression remains authoritative for editor projection, deterministic graph
-    layout, sample rows, and PostgreSQL rendering. Unsupported operands, capability identities,
-    condition groups, source fields, and data types fail closed.
+    layout, sample rows, and PostgreSQL rendering. Each JOIN stage retains its exact admitted type;
+    LEFT, RIGHT and FULL OUTER output nullability follows stable field provenance through Canvas,
+    PostgreSQL schema and protected Preview/Run projection. RIGHT remains exact and never swaps its
+    operands to mimic LEFT. SEMI and ANTI selectors keep both inputs in predicate scope while only
+    the retained input enters emitted-field scope; EXISTS/NOT EXISTS lowering preserves retained
+    multiplicity and NULL behavior without DISTINCT, IN, or NOT IN rewrites. Unsupported operands,
+    selectors, capability identities, condition groups, source fields, and data types fail closed.
+    CROSS uses the exact predicate-free CrossRel identity and preserves both sides in SQL even when
+    one contributes no output fields. Left-associated chains and the admitted outer-JOIN subtree are
+    rendered without reassociation. Grouping and grouped-window wrappers delegate to that same
+    JOIN-family projector, so they cannot downgrade a LEFT stage to INNER. Historical INNER workload
+    identities are normalized only at the v1/v2 contract read seam and current producers emit only
+    the JOIN-family profile. Cardinality remains unknown until execution and no hidden COUNT or
+    per-input LIMIT is introduced.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ED-20260911-semantic-workbench-join-composition.md
+    - docs/evidence/ED-20260919-left-join-end-to-end.md
+    - docs/evidence/ED-20260919-right-full-join-end-to-end.md
+    - docs/evidence/ED-20260919-semi-anti-join-end-to-end.md
+    - docs/evidence/ED-20260919-cross-join-end-to-end.md
     - apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.test.ts
     - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts
+    - apps/api/test/integration/dvtSemiAntiJoinPostgres.integration.test.ts
+    - apps/api/test/integration/dvtCrossJoinPostgres.integration.test.ts
+    - apps/api/test/integration/dvtWrappedLeftJoinPostgres.integration.test.ts
+    - packages/@dvt/postgres-projection/test/joinPostgresProjection.test.ts
   follow_up:
     - Each newly admitted operator or function needs contract, inspection, mutation, and
       target-rendering proof.
+    - Future JOIN-family admission must prove cumulative nullability across mixed trees without
+      introducing another JOIN model or workload profile.
+    - Retained-side selectors must continue to prove duplicate preservation, empty-input behavior,
+      NULL predicate behavior, ordinal rebasing, and both physical dependencies end to end.
+    - Future CrossRel nesting must prove association boundaries, emitted-field multiplicity, and
+      closure authorization before entering the supported profile.

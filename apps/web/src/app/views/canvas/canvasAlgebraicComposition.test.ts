@@ -85,7 +85,14 @@ describe('Canvas algebraic composition', () => {
       targetNodeId: target.id,
     };
 
-    expect(resolveCanvasAlgebraicCompositionOperations(state)).toEqual(['union_all']);
+    expect(resolveCanvasAlgebraicCompositionOperations(state)).toEqual([
+      'union_all',
+      'union_distinct',
+      'intersect_distinct',
+      'except_distinct',
+      'intersect_all',
+      'except_all',
+    ]);
     const transaction = resolveCanvasAlgebraicCompositionTransaction({
       ...state,
       operation: 'union_all',
@@ -105,12 +112,14 @@ describe('Canvas algebraic composition', () => {
         ? {
             inputs: inspection.projection.inputs.map((input) => input.table),
             outputs: inspection.projection.outputs.map((output) => output.name),
+            operation: inspection.projection.operation,
             edges: transaction.draftSession.workingSet.visibleEdges,
           }
         : null
     ).toEqual({
       inputs: [north.id, south.id],
       outputs: [...FIELDS],
+      operation: 'union_all',
       edges: [...visibleEdges, { sourceId: south.id, targetId: target.id }],
     });
   });

@@ -12,20 +12,24 @@ import {
   createDvtNodeAuthoringMetadata,
 } from './canvasDvtAuthoringModel';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { createDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { resolveDvtSubstraitJoinEntry } from './canvasDvtSubstraitJoinSourceResolution';
 import {
-  createDvtSubstraitInnerJoinDraft,
-  resolveDvtSubstraitInnerJoinEntry,
-} from './canvasDvtSubstraitJoinComposition';
-import {
-  createDvtSubstraitUnionAllDraft,
+  createDvtSubstraitSetDraft,
   resolveDvtSubstraitUnionAllEntry,
+  type DvtSubstraitSetOperation,
 } from './canvasDvtSubstraitSetComposition';
 import {
   resolveCanvasEdgeCreationTransaction,
   type CanvasEdgeAdmissionTransaction,
 } from './canvasEdgeAdmissionTransaction';
+import {
+  isCanvasJoinOperation,
+  toSubstraitJoinType,
+  type CanvasJoinOperation,
+} from './canvasRelationalTreeJoinType';
 
-export type CanvasAlgebraicCompositionOperation = 'inner_join' | 'union_all';
+export type CanvasAlgebraicCompositionOperation = CanvasJoinOperation | DvtSubstraitSetOperation;
 
 type CompositionState = {
   canonicalNodesById: Map<string, CanonicalNode>;
@@ -68,8 +72,20 @@ function admittedOperations(args: {
 }): CanvasAlgebraicCompositionOperation[] {
   const edges = canonicalEdges(args.draftSession);
   return [
-    resolveDvtSubstraitInnerJoinEntry({ ...args, edges }) == null ? null : 'inner_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'inner_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'left_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'right_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'full_outer_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'left_semi_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'left_anti_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'right_semi_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'right_anti_join',
     resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'union_all',
+    resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'union_distinct',
+    resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'intersect_distinct',
+    resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'except_distinct',
+    resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'intersect_all',
+    resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'except_all',
   ].filter((operation): operation is CanvasAlgebraicCompositionOperation => operation != null);
 }
 
@@ -110,12 +126,17 @@ function createSemanticDraft(args: {
   draftSession: CanvasDraftSession;
 }) {
   const edges = canonicalEdges(args.draftSession);
-  if (args.operation === 'inner_join') {
-    const entry = resolveDvtSubstraitInnerJoinEntry({ ...args, edges });
-    return entry == null ? null : createDvtSubstraitInnerJoinDraft(entry);
+  if (isCanvasJoinOperation(args.operation)) {
+    const entry = resolveDvtSubstraitJoinEntry({ ...args, edges });
+    return entry == null
+      ? null
+      : createDvtSubstraitJoinDraft({
+          ...entry,
+          joinType: toSubstraitJoinType(args.operation),
+        });
   }
   const entry = resolveDvtSubstraitUnionAllEntry({ ...args, edges });
-  return entry == null ? null : createDvtSubstraitUnionAllDraft(entry);
+  return entry == null ? null : createDvtSubstraitSetDraft({ ...entry, operation: args.operation });
 }
 
 export function resolveCanvasAlgebraicCompositionTransaction(

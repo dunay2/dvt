@@ -15,6 +15,7 @@ import {
 import {
   applyDvtTransformAuthoringMetadata,
   createDvtTransformAuthoringMetadata,
+  resolveDvtTransformAuthoringMetadata,
   validateDvtTransformAuthoringMetadata,
 } from './canvasDvtTransformAuthoring';
 import type {
@@ -34,6 +35,21 @@ export {
   resolveEffectiveDvtConnectionRef,
   resolveInheritedDvtConnectionRef,
 } from './canvasDvtSourceAuthoring';
+
+export function resolveDvtNodeAuthoringMetadata(
+  node: CanonicalNode
+):
+  | Readonly<{ outcome: 'resolved'; metadata: DvtNodeAuthoringMetadata | undefined }>
+  | Readonly<{ outcome: 'rejected'; reason: 'invalid_document' | 'unsupported_shape' }> {
+  if (node.kind === 'dvt:transform' && node.pluginId === DVT_AUTHORING_PLUGIN_ID) {
+    return resolveDvtTransformAuthoringMetadata(node);
+  }
+  try {
+    return { outcome: 'resolved', metadata: createDvtNodeAuthoringMetadata(node) };
+  } catch {
+    return { outcome: 'rejected', reason: 'invalid_document' };
+  }
+}
 
 export function createDvtNodeAuthoringMetadata(
   node: CanonicalNode

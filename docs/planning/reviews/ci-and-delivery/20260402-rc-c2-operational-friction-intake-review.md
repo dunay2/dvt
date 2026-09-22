@@ -22,10 +22,10 @@ canonical output as a planning review rather than a `status` note.
 
 Canonical repo sources:
 
-- [20260328 Lane C AI Efficiency And Cost Review](./20260328-lane-c-ai-efficiency-and-cost-review.md)
+- [20260328 Lane C AI Efficiency And Cost Review](https://github.com/dunay2/dvt/blob/1b07acde33300a19d97914eb719b262b44e79182/docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md)
 - [20260330 CI, Prepush & PR Process Observations](./20260330-ci-prepush-pr-process-observations.md)
 - [20260401 RC-C2 Preflight And Log-First Triage Rollout Closeout](../../closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md)
-- [20260324 S18 Follow-Up Proposal Capture Closeout](../../closeouts/20260324-s18-follow-up-proposal-capture-closeout.md)
+- [20260324 S18 Follow-Up Proposal Capture Closeout](https://github.com/dunay2/dvt/blob/f3c5e5c80bb05279d0de9ca15582426398beba8d/docs/planning/closeouts/20260324-s18-follow-up-proposal-capture-closeout.md)
 - [20260324 Schema Migration Rollback Closeout](../../closeouts/20260324-schema-migration-rollback-closeout.md)
 - current enforcement surfaces in `scripts/check-changed.cjs`,
   `scripts/lint-markdown-changed.cjs`, `scripts/fix-changed.cjs`, and
@@ -99,7 +99,7 @@ Generalization rule:
 
 - [20260330 CI, Prepush & PR Process Observations](./20260330-ci-prepush-pr-process-observations.md)
   remains the main bug/debt inventory for the 2026-03-30 hardening pass.
-- [20260328 Lane C AI Efficiency And Cost Review](./20260328-lane-c-ai-efficiency-and-cost-review.md)
+- [20260328 Lane C AI Efficiency And Cost Review](https://github.com/dunay2/dvt/blob/1b07acde33300a19d97914eb719b262b44e79182/docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md)
   remains the baseline cost model and target-setting document.
 - [20260401 RC-C2 Preflight And Log-First Triage Rollout Closeout](../../closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md)
   remains the canonical record for the shipped tooling.

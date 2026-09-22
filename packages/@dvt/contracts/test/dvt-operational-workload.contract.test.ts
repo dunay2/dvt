@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY,
+  DVT_POSTGRES_JOIN_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
+  DVT_POSTGRES_SET_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
   KNOWN_STEP_KINDS,
@@ -74,7 +76,7 @@ describe('DVT terminal Transform operational workload contract', () => {
       },
       targetProjection: {
         ...workload.targetProjection,
-        profileId: 'dvt.vtx2.postgres.inner-join.v1',
+        profileId: DVT_POSTGRES_JOIN_PROFILE_ID,
       },
     };
 
@@ -88,6 +90,59 @@ describe('DVT terminal Transform operational workload contract', () => {
         graph: { ...joined.graph, selectedEdgeIds: joined.graph.selectedEdgeIds.slice(1) },
       }).success
     ).toBe(false);
+  });
+
+  it('normalizes the historical INNER profile while reading a Preview workload', () => {
+    const workload = buildWorkload();
+    const historical = {
+      ...workload,
+      graph: {
+        ...workload.graph,
+        selectedNodeIds: ['source-customers', 'source-orders', 'transform-a'],
+        selectedEdgeIds: ['customers-transform', 'orders-transform'],
+      },
+      targetProjection: {
+        ...workload.targetProjection,
+        profileId: 'dvt.vtx2.postgres.inner-join.v1',
+      },
+    };
+    const parsed = DvtOperationalWorkloadContractV1.schema.parse(historical);
+
+    expect(parsed.targetProjection.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
+    expect(
+      createDefaultStepTypeRegistry().validate(
+        KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD,
+        historical,
+        {
+          planOwnership: {
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'env-a',
+          },
+        }
+      ).success
+    ).toBe(true);
+  });
+
+  it.each([2, 3])('admits %i Set inputs as one Preview workload', (sourceCount) => {
+    const workload = buildWorkload();
+    const sources = Array.from({ length: sourceCount }, (_, index) => `source-${index}`);
+    const setWorkload = {
+      ...workload,
+      graph: {
+        ...workload.graph,
+        selectedNodeIds: [...sources, 'transform-a'],
+        selectedEdgeIds: sources.map((source) => `${source}-transform`),
+      },
+      targetProjection: {
+        ...workload.targetProjection,
+        profileId: DVT_POSTGRES_SET_PROFILE_ID,
+      },
+    };
+
+    expect(DvtOperationalWorkloadContractV1.schema.parse(setWorkload).graph).toEqual(
+      setWorkload.graph
+    );
   });
 
   it('accepts one ephemeral ProjectRel workload bound to exact protected identities', () => {

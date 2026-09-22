@@ -2,7 +2,7 @@
  * @file tools/docs/lib/walkDocs.ts
  * Recursively walk a directory tree and return .md file paths.
  */
-import { readdirSync, statSync } from 'node:fs';
+import { readdirSync, type Dirent } from 'node:fs';
 import { extname, join } from 'node:path';
 
 const DEFAULT_EXCLUDE: readonly string[] = [
@@ -26,7 +26,7 @@ export function walkMarkdown(dir: string, opts: WalkOptions = {}): string[] {
   const excludeDirs = opts.excludeDirs ?? DEFAULT_EXCLUDE;
   const results: string[] = [];
 
-  let entries: ReturnType<typeof readdirSync>;
+  let entries: Dirent[];
   try {
     entries = readdirSync(dir, { withFileTypes: true });
   } catch {

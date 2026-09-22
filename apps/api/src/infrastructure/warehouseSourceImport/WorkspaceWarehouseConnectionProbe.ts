@@ -1,7 +1,10 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 /** Owned concern: verify warehouse connection metadata with server-resolved credentials. */
-import type { IPostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
+import {
+  parsePostgresDvtPublicationMarker,
+  type IPostgresCredentialBindingResolver,
+} from '@dvt/adapter-postgres';
 import {
   buildRelationalSourceObjectId,
   SourceObjectConstraintSchema,
@@ -31,7 +34,12 @@ import {
   UnsupportedWarehouseAdapterError,
   WarehouseSourceDataSampleFailedError,
   WarehouseSourceDiscoveryFailedError,
+  WarehouseSourcePublicationChangedError,
 } from '../../application/ports/warehouseSourceImport.js';
+import {
+  postgresTypeNameFromDataTypeId,
+  serializePostgresSampleCell,
+} from '../postgres/postgresDataSampleSerialization.js';
 
 import {
   buildPostgresSourceObjectMetricEvidence,
@@ -77,6 +85,7 @@ type PostgresSchemaSummaryRow = {
 
 type PostgresRelationAuthorizationRow = {
   readonly relation_kind: 'r' | 'p' | 'v' | 'm' | 'f';
+  readonly relation_comment?: string | null;
 };
 
 type PostgresQueryResult<T> = {
@@ -222,12 +231,13 @@ export class WorkspaceWarehouseConnectionProbe
     let transactionStarted = false;
     try {
       await client.connect();
-      await client.query('begin transaction read only');
+      await client.query('begin transaction isolation level repeatable read read only');
       transactionStarted = true;
       await client.query(`set local statement_timeout = '${SOURCE_DATA_SAMPLE_TIMEOUT_MS}ms'`);
       const authorized = await client.query<PostgresRelationAuthorizationRow>(
         [
           'select relation.relkind as relation_kind',
+          ", obj_description(relation.oid, 'pg_class') as relation_comment",
           'from pg_class relation',
           'join pg_namespace namespace on namespace.oid = relation.relnamespace',
           'where current_database() = $1 and namespace.nspname = $2 and relation.relname = $3',
@@ -239,6 +249,13 @@ export class WorkspaceWarehouseConnectionProbe
       );
       if (authorized.rows.length === 0) {
         throw new SourceObjectNotFoundError(input.objectId);
+      }
+      if (input.expectedPublicationToken !== undefined) {
+        const relation = authorized.rows[0];
+        const marker = parsePostgresDvtPublicationMarker(relation?.relation_comment ?? null);
+        if (relation?.relation_kind !== 'r' || marker?.token !== input.expectedPublicationToken) {
+          throw new WarehouseSourcePublicationChangedError();
+        }
       }
 
       const result = (await client.query(
@@ -271,7 +288,8 @@ export class WorkspaceWarehouseConnectionProbe
       if (
         error instanceof SourceObjectNotFoundError ||
         error instanceof WarehouseSourceDiscoveryFailedError ||
-        error instanceof UnsupportedWarehouseAdapterError
+        error instanceof UnsupportedWarehouseAdapterError ||
+        error instanceof WarehouseSourcePublicationChangedError
       ) {
         throw error;
       }
@@ -904,63 +922,6 @@ function parseRelationalSourceObjectId(objectId: string): RelationalSourceObject
     return { catalog, schema, name };
   } catch (_error) {
     return null;
-  }
-}
-
-function serializePostgresSampleCell(value: unknown): string | null {
-  if (value === null || value === undefined) return null;
-  if (value instanceof Date) return value.toISOString();
-  if (Buffer.isBuffer(value)) return `\\x${value.toString('hex')}`;
-  if (typeof value === 'object') {
-    return JSON.stringify(value, (_key, nested) =>
-      typeof nested === 'bigint' ? nested.toString() : nested
-    );
-  }
-  return String(value);
-}
-
-function postgresTypeNameFromDataTypeId(dataTypeId: number | undefined): string {
-  switch (dataTypeId) {
-    case 16:
-      return 'boolean';
-    case 17:
-      return 'bytea';
-    case 20:
-      return 'bigint';
-    case 21:
-      return 'smallint';
-    case 23:
-      return 'integer';
-    case 25:
-      return 'text';
-    case 700:
-      return 'real';
-    case 701:
-      return 'double precision';
-    case 1042:
-      return 'character';
-    case 1043:
-      return 'character varying';
-    case 1082:
-      return 'date';
-    case 1083:
-      return 'time';
-    case 1114:
-      return 'timestamp';
-    case 114:
-      return 'json';
-    case 1184:
-      return 'timestamp with time zone';
-    case 1266:
-      return 'time with time zone';
-    case 1700:
-      return 'numeric';
-    case 2950:
-      return 'uuid';
-    case 3802:
-      return 'jsonb';
-    default:
-      return 'unknown';
   }
 }
 

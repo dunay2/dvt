@@ -31,7 +31,7 @@ describe('SemanticWorkbenchLab architecture', () => {
     expect(SOURCE).toContain('fixture.projectTransformSample(fixture.transform)');
     expect(SOURCE).toContain('OperationalDrawerDataTable');
     expect(SOURCE).toContain('onOpenSourceDataSample: openSourceDataSample');
-    expect(SOURCE).toContain('sourceDataSampleInteractionLabel:');
+    expect(SOURCE).toContain('dataActionLabel:');
     expect(SOURCE).not.toContain('<table');
   });
 

@@ -86,6 +86,7 @@ describe('canvasDraftAccessPostureModel', () => {
       label: 'Draft save failed',
       tone: 'danger',
       showReloadAction: false,
+      persistence: 'failed',
     });
   });
 

@@ -154,10 +154,6 @@ export function projectCanvasNodeFlowAdapter({
         data.onOpenNode(nodeId);
         return;
       }
-      if (typeof data.onOpenSourceDataSample === 'function') {
-        data.onOpenSourceDataSample(nodeId);
-        return;
-      }
       data.onInspectNode?.(nodeId, 'code');
     },
     attachSchema: (schemaName: string): void => data.onAttachSchemaToNode?.(nodeId, schemaName),

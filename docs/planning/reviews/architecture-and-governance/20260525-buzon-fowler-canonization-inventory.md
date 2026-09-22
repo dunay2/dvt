@@ -20,7 +20,7 @@ closed, superseded, reference-only, risk-tracked, accepted-risk, or non-goal.
 
 - [Governance document and rule inventory](../../status/governance-document-rule-inventory.md)
 - [Planning control tower](../../state/planning-control-tower.md)
-- [Review status board](../review-status-board.md)
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)
 - [Backlog intake reconciliation review](./20260525-backlog-intake-reconciliation-review.md)
 - [Command and query rail governance](../../../architecture/command-query-rail-governance.md)
 - [Fowler opportunity planning governance](../../../architecture/fowler-opportunity-planning-governance.md)

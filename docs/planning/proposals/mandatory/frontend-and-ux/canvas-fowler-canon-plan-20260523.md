@@ -27,7 +27,7 @@ Fowler review prose from becoming a hidden backlog.
 - `docs/architecture/components/web/graph/canvas-workbench-tabs-component.md`
 - `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md`
-- `docs/planning/reviews/review-status-board.md`
+- `docs/planning/state/github-mvp-issue-workflow.md`
 
 ## Fowler Analysis
 
@@ -147,7 +147,6 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/index.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-fowler-canon-plan-20260523.md
   - docs/planning/proposals/portfolio-map-20260403.md
-  - docs/planning/reviews/review-status-board.md
   - docs/planning/state/agent-lane-e.md
   - docs/planning/state/execution-workboard.md
   - docs/planning/state/open-task-route.md
@@ -203,7 +202,6 @@ redGreenCycles:
       - docs/architecture/components/web/graph/canvas-fowler-canon-user-stories.md
       - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
       - docs/architecture/components/web/graph/index.md
-      - docs/planning/reviews/review-status-board.md
       - buzon/20260523-codex-fowler-canvas-workbench-canon.md
     greenTest: node --test tools/ci/canvas-fowler-canon.test.mjs
 symbols:

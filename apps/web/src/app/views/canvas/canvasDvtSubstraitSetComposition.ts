@@ -1,4 +1,4 @@
-/** Owned concern: build and inspect the N-source UNION ALL shape admitted by #2634 and #2765. */
+/** Owned concern: build and inspect the admitted N-source Substrait SetRel family. */
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import {
   AggregateFunction_AggregationInvocation,
@@ -73,6 +73,19 @@ import {
 
 const ZERO_SHA256 = '0'.repeat(64);
 const UNION_ALL_PRODUCER = 'dvt-vtx2-union-all-card';
+const UNION_DISTINCT_PRODUCER = 'dvt-vtx2-union-distinct-card';
+const INTERSECT_DISTINCT_PRODUCER = 'dvt-vtx2-intersect-distinct-card';
+const EXCEPT_DISTINCT_PRODUCER = 'dvt-vtx2-except-distinct-card';
+const INTERSECT_ALL_PRODUCER = 'dvt-vtx2-intersect-all-card';
+const EXCEPT_ALL_PRODUCER = 'dvt-vtx2-except-all-card';
+
+export type DvtSubstraitSetOperation =
+  | 'union_all'
+  | 'union_distinct'
+  | 'intersect_distinct'
+  | 'except_distinct'
+  | 'intersect_all'
+  | 'except_all';
 
 export type DvtSubstraitUnionAllField = Readonly<{
   name: string;
@@ -98,6 +111,7 @@ export type DvtSubstraitUnionAllFieldEdit =
   | Readonly<{ kind: 'move'; fieldKey: string; direction: 'up' | 'down' }>;
 
 export type DvtSubstraitUnionAllProjection = Readonly<{
+  operation: DvtSubstraitSetOperation;
   inputs: readonly Readonly<{
     relationId: string;
     schema: string;
@@ -368,11 +382,93 @@ function readRelation(args: { relAnchor: number; source: DvtSubstraitUnionAllSou
   });
 }
 
-function requireUnionAllCapability(): void {
+function setOperationSelector(operation: DvtSubstraitSetOperation): string {
+  switch (operation) {
+    case 'union_all':
+      return 'SetOp.SET_OP_UNION_ALL';
+    case 'union_distinct':
+      return 'SetOp.SET_OP_UNION_DISTINCT';
+    case 'intersect_distinct':
+      return 'SetOp.SET_OP_INTERSECTION_MULTISET';
+    case 'except_distinct':
+      return 'SetOp.SET_OP_MINUS_PRIMARY';
+    case 'intersect_all':
+      return 'SetOp.SET_OP_INTERSECTION_MULTISET_ALL';
+    case 'except_all':
+      return 'SetOp.SET_OP_MINUS_PRIMARY_ALL';
+  }
+}
+
+function setOperationEnum(operation: DvtSubstraitSetOperation): SetRel_SetOp {
+  switch (operation) {
+    case 'union_all':
+      return SetRel_SetOp.UNION_ALL;
+    case 'union_distinct':
+      return SetRel_SetOp.UNION_DISTINCT;
+    case 'intersect_distinct':
+      return SetRel_SetOp.INTERSECTION_MULTISET;
+    case 'except_distinct':
+      return SetRel_SetOp.MINUS_PRIMARY;
+    case 'intersect_all':
+      return SetRel_SetOp.INTERSECTION_MULTISET_ALL;
+    case 'except_all':
+      return SetRel_SetOp.MINUS_PRIMARY_ALL;
+  }
+}
+
+function setOperationForEnum(operation: SetRel_SetOp): DvtSubstraitSetOperation | null {
+  if (operation === SetRel_SetOp.UNION_ALL) return 'union_all';
+  if (operation === SetRel_SetOp.UNION_DISTINCT) return 'union_distinct';
+  if (operation === SetRel_SetOp.INTERSECTION_MULTISET) return 'intersect_distinct';
+  if (operation === SetRel_SetOp.MINUS_PRIMARY) return 'except_distinct';
+  if (operation === SetRel_SetOp.INTERSECTION_MULTISET_ALL) return 'intersect_all';
+  if (operation === SetRel_SetOp.MINUS_PRIMARY_ALL) return 'except_all';
+  return null;
+}
+
+function setOperationProducer(operation: DvtSubstraitSetOperation): string {
+  switch (operation) {
+    case 'union_all':
+      return UNION_ALL_PRODUCER;
+    case 'union_distinct':
+      return UNION_DISTINCT_PRODUCER;
+    case 'intersect_distinct':
+      return INTERSECT_DISTINCT_PRODUCER;
+    case 'except_distinct':
+      return EXCEPT_DISTINCT_PRODUCER;
+    case 'intersect_all':
+      return INTERSECT_ALL_PRODUCER;
+    case 'except_all':
+      return EXCEPT_ALL_PRODUCER;
+  }
+}
+
+function setOperationInRelation(rel: Rel | undefined): DvtSubstraitSetOperation | null {
+  if (rel == null) return null;
+  switch (rel.relType.case) {
+    case 'set':
+      return setOperationForEnum(rel.relType.value.op);
+    case 'project':
+    case 'filter':
+    case 'aggregate':
+      return setOperationInRelation(rel.relType.value.input);
+    default:
+      return null;
+  }
+}
+
+export function resolveDvtSubstraitSetOperation(
+  draft: DvtSubstraitUnionAllDraft
+): DvtSubstraitSetOperation | null {
+  const root = draft.plan.relations[0]?.relType;
+  return root?.case === 'root' ? setOperationInRelation(root.value.input) : null;
+}
+
+function requireSetCapability(operation: DvtSubstraitSetOperation): void {
   const entryId = buildDvtSubstraitStandardCapabilityId('relation', {
     sourceKind: 'core',
     message: 'substrait.SetRel',
-    selector: 'SetOp.SET_OP_UNION_ALL',
+    selector: setOperationSelector(operation),
   });
   const capability = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
     (entry) =>
@@ -394,7 +490,7 @@ function assertCompatibleSources(inputs: readonly DvtSubstraitUnionAllSource[]):
         !sameConnectionRef(first.sourceRef.connectionRef, input.sourceRef.connectionRef)
     )
   ) {
-    throw new Error('VTX2 UNION ALL requires PostgreSQL sources on the same connection.');
+    throw new Error('VTX2 SetRel requires PostgreSQL sources on the same connection.');
   }
   if (
     inputs.some((input, index) =>
@@ -404,13 +500,13 @@ function assertCompatibleSources(inputs: readonly DvtSubstraitUnionAllSource[]):
       )
     )
   ) {
-    throw new Error('VTX2 UNION ALL requires distinct source identities.');
+    throw new Error('VTX2 SetRel requires distinct source identities.');
   }
   if (
     first.fields.length === 0 ||
     inputs.some((input) => !sameFields(first.fields, input.fields))
   ) {
-    throw new Error('VTX2 UNION ALL requires identical non-empty ordered field schemas.');
+    throw new Error('VTX2 SetRel requires identical non-empty ordered field schemas.');
   }
   const identityValues = inputs.flatMap((input) => [input.nodeId, input.schema, input.table]);
   if (
@@ -426,18 +522,18 @@ function assertCompatibleSources(inputs: readonly DvtSubstraitUnionAllSource[]):
     )
   ) {
     throw new Error(
-      'VTX2 UNION ALL source and field identities must be unique, non-blank and trimmed.'
+      'VTX2 SetRel source and field identities must be unique, non-blank and trimmed.'
     );
   }
 }
 
-export function createDvtSubstraitUnionAllDraft(
-  args: DvtSubstraitUnionAllEntry
+export function createDvtSubstraitSetDraft(
+  args: DvtSubstraitUnionAllEntry & Readonly<{ operation: DvtSubstraitSetOperation }>
 ): DvtSubstraitUnionAllDraft {
-  requireUnionAllCapability();
+  requireSetCapability(args.operation);
   assertCompatibleSources(args.inputs);
   if (args.targetNodeId.length === 0 || args.targetNodeId !== args.targetNodeId.trim()) {
-    throw new Error('VTX2 UNION ALL target node identity must be non-blank and trimmed.');
+    throw new Error('VTX2 SetRel target node identity must be non-blank and trimmed.');
   }
 
   const fieldNames = args.inputs[0]!.fields.map((field) => field.name);
@@ -457,7 +553,7 @@ export function createDvtSubstraitUnionAllDraft(
           },
         }),
         inputs,
-        op: SetRel_SetOp.UNION_ALL,
+        op: setOperationEnum(args.operation),
       }),
     },
   });
@@ -466,7 +562,7 @@ export function createDvtSubstraitUnionAllDraft(
       majorNumber: 0,
       minorNumber: 101,
       patchNumber: 0,
-      producer: UNION_ALL_PRODUCER,
+      producer: setOperationProducer(args.operation),
     },
     relations: [
       create(PlanRelSchema, {
@@ -520,13 +616,96 @@ export function createDvtSubstraitUnionAllDraft(
   return { plan, sidecar };
 }
 
+export function createDvtSubstraitUnionAllDraft(
+  args: DvtSubstraitUnionAllEntry
+): DvtSubstraitUnionAllDraft {
+  return createDvtSubstraitSetDraft({ ...args, operation: 'union_all' });
+}
+
+export function createDvtSubstraitUnionDistinctDraft(
+  args: DvtSubstraitUnionAllEntry
+): DvtSubstraitUnionAllDraft {
+  return createDvtSubstraitSetDraft({ ...args, operation: 'union_distinct' });
+}
+
 function hasPinnedPlanVersion(plan: Plan): boolean {
   return (
     plan.version?.majorNumber === 0 &&
     plan.version.minorNumber === 101 &&
     plan.version.patchNumber === 0 &&
-    plan.version.producer === UNION_ALL_PRODUCER
+    (plan.version.producer === UNION_ALL_PRODUCER ||
+      plan.version.producer === UNION_DISTINCT_PRODUCER ||
+      plan.version.producer === INTERSECT_DISTINCT_PRODUCER ||
+      plan.version.producer === EXCEPT_DISTINCT_PRODUCER ||
+      plan.version.producer === INTERSECT_ALL_PRODUCER ||
+      plan.version.producer === EXCEPT_ALL_PRODUCER)
   );
+}
+
+/** Append a compatible source while preserving all existing RelationIds and FieldIds. */
+export function appendDvtSubstraitUnionAllInput(
+  draft: DvtSubstraitUnionAllDraft,
+  source: DvtSubstraitUnionAllSource
+): DvtSubstraitUnionAllDraft {
+  const inspection = inspectDvtSubstraitUnionAllDraft(draft);
+  if (!inspection.ok) return draft;
+  try {
+    assertCompatibleSources([
+      ...inspection.projection.inputs.map((input) => ({
+        ...input,
+        nodeId: input.relationId,
+        fields: input.fields.map((field) => ({ name: field.name, type: 'string' as const })),
+      })),
+      source,
+    ]);
+  } catch {
+    return draft;
+  }
+  const plan = clonePlan(draft.plan);
+  const root = plan.relations[0]?.relType;
+  const set = root?.case === 'root' ? root.value.input?.relType : undefined;
+  if (set?.case !== 'set' || set.value.common == null) return draft;
+  const sourceAnchor = set.value.inputs.length + 1;
+  set.value.common.relAnchor = sourceAnchor + 1;
+  set.value.inputs.push(readRelation({ relAnchor: sourceAnchor, source }));
+  const relationId = allocateDvtRelationId();
+  const next: DvtSubstraitUnionAllDraft = {
+    plan,
+    sidecar: {
+      ...draft.sidecar,
+      semanticPlanSha256: ZERO_SHA256,
+      relations: [
+        ...draft.sidecar.relations.map((relation) =>
+          relation.relationId === inspection.projection.resultRelationId
+            ? {
+                ...relation,
+                relAnchor: sourceAnchor + 1,
+                displayName: [
+                  ...inspection.projection.inputs.map((input) => input.table),
+                  source.table,
+                ].join('+'),
+              }
+            : relation
+        ),
+        {
+          relationId,
+          relAnchor: sourceAnchor,
+          sourceRef: source.sourceRef,
+          displayName: source.table,
+        },
+      ],
+      fields: [
+        ...draft.sidecar.fields,
+        ...source.fields.map((field, outputOrdinal) => ({
+          fieldId: allocateDvtFieldId(),
+          relationId,
+          outputOrdinal,
+          displayName: field.name,
+        })),
+      ],
+    },
+  };
+  return inspectDvtSubstraitUnionAllDraft(next).ok ? next : draft;
 }
 
 function clonePlan(plan: Plan): Plan {
@@ -649,11 +828,12 @@ function inspectBaseUnionAll(
 
   const names = root.value.names;
   const setRelation = setRelType.value;
+  const operation = setOperationForEnum(setRelation.op);
   if (
     names.length === 0 ||
     new Set(names).size !== names.length ||
     names.some((name) => name.length === 0 || name !== name.trim()) ||
-    setRelation.op !== SetRel_SetOp.UNION_ALL ||
+    operation == null ||
     setRelation.advancedExtension != null ||
     setRelation.common?.relAnchor !== resultRelAnchor ||
     setRelation.common.hint != null ||
@@ -780,6 +960,7 @@ function inspectBaseUnionAll(
   if (outputs.some((output) => output == null)) return null;
 
   return {
+    operation,
     inputs,
     resultRelationId: resultBinding.relationId,
     availableFields: availableFields.map((fieldKey) => ({ fieldKey, defaultName: fieldKey })),
@@ -1472,6 +1653,7 @@ export function inspectDvtSubstraitUnionAllAcceptedDraft(draft: DvtSubstraitUnio
   | Readonly<{
       ok: true;
       projection: Readonly<{
+        operation: DvtSubstraitSetOperation;
         inputs: DvtSubstraitUnionAllProjection['inputs'];
         outputs: readonly Readonly<{
           name: string;
@@ -1482,9 +1664,11 @@ export function inspectDvtSubstraitUnionAllAcceptedDraft(draft: DvtSubstraitUnio
     }>
   | Readonly<{ ok: false }> {
   const groupedWindow = inspectDvtSubstraitUnionAllGroupedWindowDraft(draft);
-  if (groupedWindow.ok) return groupedWindow;
+  const operation = resolveDvtSubstraitSetOperation(draft);
+  if (operation == null) return { ok: false };
+  if (groupedWindow.ok) return { ok: true, projection: { ...groupedWindow.projection, operation } };
   const grouping = inspectDvtSubstraitUnionAllGroupingDraft(draft);
-  if (grouping.ok) return grouping;
+  if (grouping.ok) return { ok: true, projection: { ...grouping.projection, operation } };
   return inspectDvtSubstraitUnionAllDraft(draft);
 }
 
@@ -1493,7 +1677,7 @@ export function decodeDvtSubstraitUnionAllDocument(input: unknown): DvtSubstrait
   const plan = fromBinary(PlanSchema, base64Bytes(document.semanticPlan.bytesBase64));
   const draft = { plan, sidecar: document.sidecar };
   if (!inspectDvtSubstraitUnionAllAcceptedDraft(draft).ok) {
-    throw new Error('Unsupported VTX2 UNION ALL Substrait shape.');
+    throw new Error('Unsupported VTX2 SetRel Substrait shape.');
   }
   return draft;
 }
@@ -1502,7 +1686,7 @@ export function encodeDvtSubstraitUnionAllDocument(
   draft: DvtSubstraitUnionAllDraft
 ): DvtSubstraitSemanticDocumentV1 {
   if (!inspectDvtSubstraitUnionAllAcceptedDraft(draft).ok) {
-    throw new Error('Unsupported VTX2 UNION ALL Substrait shape.');
+    throw new Error('Unsupported VTX2 SetRel Substrait shape.');
   }
   const bytes = toBinary(PlanSchema, draft.plan);
   const sha256 = sha256Hex(bytes);

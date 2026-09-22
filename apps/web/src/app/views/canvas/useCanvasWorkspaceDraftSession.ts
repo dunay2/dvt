@@ -11,7 +11,8 @@ type ScopedDraftSession = {
 export type CanvasDraftSessionCommandRunner = <
   TResult extends
     | Readonly<{ outcome: 'applied'; draftSession: CanvasDraftSession }>
-    | Readonly<{ outcome: 'rejected' }>,
+    | Readonly<{ outcome: 'rejected' }>
+    | Readonly<{ outcome: 'no_changes' }>,
 >(
   command: (currentSession: CanvasDraftSession) => TResult
 ) => TResult;

@@ -6,7 +6,7 @@ import type { CoreNodeRole, CanonicalNode } from '../../types/canonical';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import {
-  inspectDvtSubstraitNInputJoinDraft,
+  inspectDvtSubstraitJoinDraft,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
   inspectDvtSubstraitInnerJoinGroupingDraft,
 } from './canvasDvtSubstraitJoinComposition';
@@ -153,7 +153,7 @@ function readSubstraitMultiInputLineage(node: CanonicalNode): DvtSubstraitMultiI
     const authority = readDvtTransformAuthoringAuthority(node);
     if (authority == null) return null;
     const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
-    const nInput = inspectDvtSubstraitNInputJoinDraft(draft);
+    const nInput = inspectDvtSubstraitJoinDraft(draft);
     if (nInput.ok) {
       return {
         inputs: nInput.projection.inputs,
@@ -193,7 +193,7 @@ function readSubstraitMultiInputLineage(node: CanonicalNode): DvtSubstraitMultiI
       outputs: projection.outputs.flatMap((output) =>
         projection.inputs.map((input, inputIndex) => {
           const field = input.fields.find((candidate) => candidate.name === output.fieldKey);
-          if (field == null) throw new Error('UNION ALL input field is not admitted.');
+          if (field == null) throw new Error('SetRel input field is not admitted.');
           return {
             name: output.name,
             fieldId: output.fieldId,

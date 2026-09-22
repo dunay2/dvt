@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 /** Owned concern: prove CanvasShell publishes Canvas operations into the bottom drawer. */
-import { act, isValidElement } from 'react';
+import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
@@ -13,8 +13,12 @@ import {
 import type { CanvasShellProps } from './canvasShell.types';
 import { canvasViewCopy } from './copy';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
-import { useUiLayoutStore } from '../../stores/uiLayoutStore';
-import type { SemanticTransformFocusPanelProps } from './SemanticTransformFocusPanel';
+import type { SourceDataSample } from '../../ports/workspace';
+import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
+import {
+  buildCanvasDependencyEdgeData,
+  readCanvasDependencyEdgeData,
+} from './canvasDependencyEdgeModel';
 
 describe('CanvasShell operational drawer registration', () => {
   let renderShell: (overrides?: CanvasShellPropsOverrides) => Promise<CanvasShellProps>;
@@ -64,8 +68,6 @@ describe('CanvasShell operational drawer registration', () => {
         { id: 'problems', label: 'Problems' },
         { id: 'runs', label: 'Runs' },
         { id: 'preview', label: 'Preview' },
-        { id: 'data', label: 'Data' },
-        { id: 'semantic', label: 'Semantics' },
       ],
       runs: {
         activeRunId: 'run-42',
@@ -88,14 +90,17 @@ describe('CanvasShell operational drawer registration', () => {
     expect(onRun).toHaveBeenCalledTimes(1);
   });
 
-  it('opens a real Substrait Transform in the semantic drawer on selection without changing geometry', async () => {
+  it('opens the Model editor from the Model while edges stay plain dependencies', async () => {
     const fixture = buildSemanticWorkbenchFixture();
     const position = { x: 320, y: 140 };
     const onApplyNodeDraft = vi.fn();
     const onInspectNode = vi.fn();
+    const previewTransformRows = vi.fn(() => new Promise<never>(() => undefined));
     await renderShell({
+      canvasTransformDataSampleQuery: { previewTransformRows },
       panels: {
         inspectorGraphNodes: [...fixture.sources, fixture.transform],
+        inspectorGraphEdges: fixture.edges,
         inspectorAuthoring: { canEditNode: true, onApplyNodeDraft },
       },
       graph: {
@@ -111,6 +116,17 @@ describe('CanvasShell operational drawer registration', () => {
             },
           },
         ],
+        edges: [
+          {
+            id: 'source-transform',
+            source: fixture.sources[0]!.id,
+            target: fixture.transform.id,
+            data: buildCanvasDependencyEdgeData({
+              sourceId: fixture.sources[0]!.id,
+              targetId: fixture.transform.id,
+            }),
+          },
+        ],
       },
     });
 
@@ -119,34 +135,67 @@ describe('CanvasShell operational drawer registration', () => {
         Array<{ position: { x: number; y: number }; data: Record<string, unknown> }> | undefined
     )?.[0];
 
-    expect(projectedNode?.data.onSelectNode).toBeTypeOf('function');
-    act(() => {
-      (projectedNode?.data.onSelectNode as (() => void) | undefined)?.();
+    const projectedEdge = (
+      getCanvasShellState().canvasViewportProps?.edges as
+        Array<{ data?: Record<string, unknown> }> | undefined
+    )?.[0];
+    expect(readCanvasDependencyEdgeData(projectedEdge?.data)).not.toHaveProperty('composition');
+    expect(projectedNode?.data.onOpenNode).toBeTypeOf('function');
+    await act(async () => {
+      (projectedNode?.data.onOpenNode as () => void)();
     });
 
-    expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('semantic');
-    expect(useUiLayoutStore.getState().bottomDrawerVisible).toBe(true);
-    expect(projectedNode?.position).toBe(position);
     expect(onInspectNode).not.toHaveBeenCalled();
+    expect(document.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
+    expect(
+      useOperationalDrawerContributionStore
+        .getState()
+        .contribution?.tabs.some((tab) => tab.id === 'semantic')
+    ).toBe(false);
+    expect(projectedNode?.position).toBe(position);
+    expect(useOperationalDrawerContributionStore.getState().contribution?.tabs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'data:operation', label: 'Data · operation' }),
+      ])
+    );
+    expect(previewTransformRows).not.toHaveBeenCalled();
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+  });
 
+  it('passes disconnected topology to the read-only relational-tree projection', async () => {
+    const fixture = buildSemanticWorkbenchFixture();
+    const connectedSources = fixture.sources.slice(1);
+    await renderShell({
+      panels: {
+        inspectorGraphNodes: [...connectedSources, fixture.transform],
+        inspectorGraphEdges: fixture.edges.slice(1),
+      },
+      graph: {
+        nodesWithImpact: [
+          {
+            id: fixture.transform.id,
+            type: 'dbtNode',
+            position: { x: 320, y: 140 },
+            data: {
+              ...fixture.transform,
+              pluginKind: fixture.transform.kind,
+            },
+          },
+        ],
+      },
+    });
+
+    const projectedNode = (
+      getCanvasShellState().canvasViewportProps?.nodesWithImpact as
+        Array<{ data: Record<string, unknown> }> | undefined
+    )?.[0];
     act(() => {
       (projectedNode?.data.onOpenNode as (() => void) | undefined)?.();
     });
-    expect(onInspectNode).toHaveBeenCalledExactlyOnceWith(fixture.transform.id, 'general');
-    expect(projectedNode?.position).toBe(position);
-
-    const semanticBody = useOperationalDrawerContributionStore
-      .getState()
-      .contribution?.tabs.find((tab) => tab.id === 'semantic')?.content;
-    expect(isValidElement<SemanticTransformFocusPanelProps>(semanticBody)).toBe(true);
-    if (!isValidElement<SemanticTransformFocusPanelProps>(semanticBody)) {
-      throw new Error('Expected the shared semantic Transform panel.');
-    }
-    semanticBody.props.onTransformChange(fixture.transform);
-    expect(onApplyNodeDraft).toHaveBeenCalledOnce();
-    expect(onApplyNodeDraft).toHaveBeenCalledWith(
-      expect.objectContaining({ name: fixture.transform.name, dvt: expect.any(Object) })
-    );
+    expect(document.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
+    expect(
+      document.querySelector('[data-slot="canvas-relational-tree-workbench"]')?.textContent
+    ).toContain('Missing');
   });
 
   it('publishes no execution drawer for a surface strategy without execution operations', async () => {
@@ -171,5 +220,113 @@ describe('CanvasShell operational drawer registration', () => {
     });
 
     expect(useOperationalDrawerContributionStore.getState().contribution).toBeNull();
+  });
+
+  it('keeps a late Source response isolated from the open Model editor', async () => {
+    const fixture = buildSemanticWorkbenchFixture();
+    let resolveSample: ((sample: SourceDataSample) => void) | undefined;
+    const previewSourceObjectRows = vi.fn(
+      () =>
+        new Promise<SourceDataSample>((resolve) => {
+          resolveSample = resolve;
+        })
+    );
+    const runMaterializationSampleQuery = vi.fn();
+    const transformSample = {
+      contractVersion: 1 as const,
+      canvasId: 'canvas-test',
+      transformNodeId: fixture.transform.id,
+      draftRevision: 'revision-7',
+      semanticPlanSha256: 'a'.repeat(64),
+      columns: [{ name: 'id', type: 'integer', nullable: false }],
+      rows: [{ values: ['2'] }],
+      limit: 20,
+      truncated: false,
+      sampledAt: '2026-09-15T10:00:00.000Z',
+    };
+    const previewTransformRows = vi.fn().mockResolvedValue(transformSample);
+    const onInspectNode = vi.fn();
+    await renderShell({
+      warehouseSourceDataSampleQuery: { previewSourceObjectRows },
+      canvasTransformDataSampleQuery: { previewTransformRows },
+      runMaterializationSampleQuery,
+      panels: { inspectorGraphNodes: [...fixture.sources, fixture.transform] },
+      graph: {
+        nodesWithImpact: [
+          {
+            id: 'source',
+            type: 'dbtNode',
+            position: { x: 0, y: 0 },
+            data: {
+              name: 'Source',
+              status: 'idle',
+              metadata: {
+                connectedSourceRef: {
+                  schemaVersion: 'connected-source-ref.v1',
+                  connectionRef: {
+                    schemaVersion: 'connection-ref.v1',
+                    connectionId: 'postgres',
+                    provider: 'postgres',
+                  },
+                  sourceObjectId: 'relation/dvt/public/orders',
+                },
+              },
+            },
+          },
+          {
+            id: fixture.transform.id,
+            type: 'dbtNode',
+            position: { x: 100, y: 0 },
+            data: { ...fixture.transform, pluginKind: fixture.transform.kind, onInspectNode },
+          },
+        ],
+      },
+    });
+    const nodes = getCanvasShellState().canvasViewportProps?.nodesWithImpact as Array<{
+      data: DbtNodeData;
+    }>;
+    act(() => {
+      nodes[1]?.data.onSelectNode?.(fixture.transform.id);
+    });
+    expect(previewSourceObjectRows).not.toHaveBeenCalled();
+    act(() => {
+      nodes[0]?.data.onOpenSourceDataSample?.('source');
+      nodes[1]?.data.onOpenNode?.(fixture.transform.id);
+    });
+    const sourceSample: SourceDataSample = {
+      contractVersion: 1,
+      connectionId: 'postgres',
+      objectId: 'relation/dvt/public/orders',
+      columns: [{ name: 'id', type: 'integer', nullable: false }],
+      rows: [{ values: ['1'] }],
+      limit: 20,
+      truncated: false,
+      sampledAt: '2026-09-14T00:00:00Z',
+    };
+    await act(async () => {
+      resolveSample?.(sourceSample);
+      await Promise.resolve();
+    });
+    expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
+      activeTab: 'data:source',
+      contribution: {
+        tabs: expect.arrayContaining([
+          expect.objectContaining({
+            id: 'data:source',
+            dataSample: { status: 'ready', nodeName: 'Source', sample: sourceSample },
+          }),
+        ]),
+      },
+    });
+    expect(previewSourceObjectRows).toHaveBeenCalledOnce();
+    expect(previewTransformRows).not.toHaveBeenCalled();
+    expect(document.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
+    expect(runMaterializationSampleQuery).not.toHaveBeenCalled();
+    expect(onInspectNode).not.toHaveBeenCalled();
+    act(() => {
+      useOperationalDrawerContributionStore.getState().selectOperationalDrawerTab('data:source');
+    });
+    expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('data:source');
+    expect(previewSourceObjectRows).toHaveBeenCalledOnce();
   });
 });

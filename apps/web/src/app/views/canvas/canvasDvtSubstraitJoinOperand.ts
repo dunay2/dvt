@@ -90,7 +90,7 @@ export function buildDvtSubstraitJoinOperandExpression<Field extends JoinFieldOp
   });
   const identity = capability == null ? null : functionIdentity(capability);
   if (capability == null || identity == null) {
-    throw new Error('VTX2 INNER JOIN operand function is unavailable.');
+    throw new Error('VTX2 JOIN operand function is unavailable.');
   }
   const declaration = dvtSubstraitExpression.ensureScalarFunction(args.plan, identity);
   return dvtSubstraitExpression.scalarFunction({

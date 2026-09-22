@@ -1,6 +1,6 @@
 import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { DVT_TRANSFORM_AUTHORING_MODE, type ConnectionRef } from '@dvt/contracts';
-import type { DvtSubstraitAuthoringSidecarV1 } from '@dvt/contracts';
+import type { DvtSubstraitAuthoringSidecarV1, DvtTransformResultTargetV1 } from '@dvt/contracts';
 
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
@@ -18,13 +18,32 @@ export type DvtUninitializedTransformAuthoringMetadata = Readonly<{
   kind: 'transform';
   mode: 'uninitialized';
   materialized: string;
+  resultTarget?: DvtTransformResultTargetV1 | null;
 }>;
 
 export type DvtSubstraitTransformAuthoringMetadata = Readonly<{
   kind: 'transform';
   mode: typeof DVT_TRANSFORM_AUTHORING_MODE.substrait;
   materialized: string;
-  shape: 'projection' | 'pilot' | 'inner_join' | 'union_all';
+  resultTarget?: DvtTransformResultTargetV1 | null;
+  shape:
+    | 'projection'
+    | 'pilot'
+    | 'inner_join'
+    | 'left_join'
+    | 'right_join'
+    | 'full_outer_join'
+    | 'left_semi_join'
+    | 'left_anti_join'
+    | 'right_semi_join'
+    | 'right_anti_join'
+    | 'cross_join'
+    | 'union_all'
+    | 'union_distinct'
+    | 'intersect_distinct'
+    | 'except_distinct'
+    | 'intersect_all'
+    | 'except_all';
   plan: Plan;
   sidecar: DvtSubstraitAuthoringSidecarV1;
 }>;

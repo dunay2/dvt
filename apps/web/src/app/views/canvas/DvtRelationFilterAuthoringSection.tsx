@@ -17,7 +17,18 @@ import {
   resolveDvtSubstraitProjectionEntry,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
+import type { DvtSubstraitTextComparisonOperator } from './canvasDvtSubstraitTextComparison';
+import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
 import { canvasViewCopy } from './copy';
+
+const OPERATOR_LABEL: Readonly<Record<DvtSubstraitTextComparisonOperator, string>> = {
+  equal: '=',
+  not_equal: '!=',
+  gt: '>',
+  gte: '>=',
+  lt: '<',
+  lte: '<=',
+};
 
 export function DvtRelationFilterAuthoringSection({
   disabled,
@@ -36,6 +47,7 @@ export function DvtRelationFilterAuthoringSection({
 }>): JSX.Element | null {
   const active = inspectDvtSubstraitFilter(draft);
   const base = active == null ? draft : removeDvtSubstraitFilter(draft);
+  const composition = resolveCanvasRelationalCompositionTruth({ node, nodes, edges });
   const inspection = inspectDvtSubstraitProjectionDraft(base);
   const projection = resolveDvtSubstraitProjectionEntry({
     targetNode: node,
@@ -55,22 +67,32 @@ export function DvtRelationFilterAuthoringSection({
         );
   const defaultFieldId = compatibleOutputs[0]?.fieldId ?? '';
   const [fieldId, setFieldId] = useState(active?.fieldId ?? defaultFieldId);
+  const [capabilityId, setCapabilityId] = useState(active?.capabilityId ?? '');
   const [value, setValue] = useState(active?.value ?? '');
 
   useEffect(() => {
     setFieldId(active?.fieldId ?? defaultFieldId);
+    setCapabilityId(active?.capabilityId ?? '');
     setValue(active?.value ?? '');
-  }, [active?.fieldId, active?.value, defaultFieldId]);
+  }, [active?.capabilityId, active?.fieldId, active?.value, defaultFieldId]);
 
-  if (!inspection.ok || projection == null || compatibleOutputs.length === 0) return null;
+  if (
+    composition?.state !== 'single-input' ||
+    !inspection.ok ||
+    projection == null ||
+    compatibleOutputs.length === 0
+  )
+    return null;
   const selected = compatibleOutputs.find((output) => output.fieldId === fieldId);
-  const capability =
+  const capabilities =
     selected == null
-      ? undefined
+      ? []
       : resolveDvtSubstraitFilterCapabilities({
           dataType: selected.dataType,
           provider: projection.source.sourceRef.connectionRef.provider,
-        })[0];
+        });
+  const capability =
+    capabilities.find((candidate) => candidate.capabilityId === capabilityId) ?? capabilities[0];
   const apply = (): void => {
     if (selected == null || capability == null) return;
     onChange(
@@ -90,7 +112,7 @@ export function DvtRelationFilterAuthoringSection({
       </h3>
       {active ? (
         <p data-slot="dvt-filter-active" className="text-xs text-(--text-muted)">
-          {active.fieldName} = {JSON.stringify(active.value)}
+          {active.fieldName} {OPERATOR_LABEL[active.operator]} {JSON.stringify(active.value)}
         </p>
       ) : null}
       <div className="space-y-1">
@@ -118,10 +140,15 @@ export function DvtRelationFilterAuthoringSection({
           id="dvt-filter-operator"
           name="dvt-filter-operator"
           className="h-9 w-full rounded-md border border-input bg-input-background px-3 text-sm"
-          disabled
-          value="equal"
+          disabled={disabled || capabilities.length === 0}
+          value={capability?.capabilityId ?? ''}
+          onChange={(event) => setCapabilityId(event.currentTarget.value)}
         >
-          <option value="equal">{canvasViewCopy.inspectorDvtFilterEqualLabel}</option>
+          {capabilities.map((candidate) => (
+            <option key={candidate.capabilityId} value={candidate.capabilityId}>
+              {OPERATOR_LABEL[candidate.name]}
+            </option>
+          ))}
         </select>
       </div>
       <div className="space-y-1">

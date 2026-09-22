@@ -1,6 +1,7 @@
 /** Owned concern: render canonical Canvas nodes with plugin decorations and governed node-shell gestures. */
 import { useUpdateNodeInternals, type Node, type NodeProps } from '@xyflow/react';
 import { memo, useCallback, type DragEvent } from 'react';
+import { CanvasNodeDataAction } from './CanvasNodeDataAction';
 
 import type { MergedNodeDecoration } from '../../plugins/contracts/NodeRendering';
 import { FallbackNodeRenderer } from '../../plugins/FallbackNodeRenderer';
@@ -70,7 +71,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   onOpenNode?: (nodeId: string) => void;
   onSelectNode?: (nodeId: string) => void;
   onOpenSourceDataSample?: (nodeId: string) => void;
-  sourceDataSampleInteractionLabel?: string;
+  dataActionLabel?: string;
   canOpenNodeCode?: boolean;
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
@@ -161,9 +162,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       onContextMenuAction={projection.runAction}
       onSelectNode={projection.selectNode}
       onOpenNode={
-        typeof data.onOpenNode === 'function' ||
-        typeof data.onOpenSourceDataSample === 'function' ||
-        typeof data.onInspectNode === 'function'
+        typeof data.onOpenNode === 'function' || typeof data.onInspectNode === 'function'
           ? projection.openNode
           : undefined
       }
@@ -176,6 +175,12 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       >
         <Renderer {...projection.rendererProps} />
       </PluginContributionBoundary>
+      {data.dataActionLabel == null || data.onOpenSourceDataSample == null ? null : (
+        <CanvasNodeDataAction
+          label={data.dataActionLabel}
+          onExecute={() => data.onOpenSourceDataSample?.(id)}
+        />
+      )}
       {projection.badges.map((badge, index) => (
         <PluginContributionBoundary
           key={`${badge.position}-${badge.text ?? badge.tooltip ?? index}`}

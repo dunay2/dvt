@@ -69,4 +69,9 @@ describe('canvas dependency edge execution presentation', () => {
     expect(readCanvasDependencyEdgeData(data)).toEqual(data);
     expect(readCanvasDependencyEdgeData({ execution: data.execution })).toBeUndefined();
   });
+
+  it('keeps unrelated presentation metadata out of the dependency read model', () => {
+    const data = buildCanvasDependencyEdgeData({ sourceId: 'orders', targetId: 'transform' });
+    expect(readCanvasDependencyEdgeData({ ...data, unrelated: { label: 'JOIN' } })).toEqual(data);
+  });
 });

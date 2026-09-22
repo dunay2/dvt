@@ -111,6 +111,171 @@ describe('DVT Substrait capability catalog V1', () => {
     });
   });
 
+  it('admits LEFT JOIN through the canonical capability catalog', () => {
+    const leftJoin = findCapability(
+      buildDvtSubstraitStandardCapabilityId('relation', {
+        sourceKind: 'core',
+        message: 'substrait.JoinRel',
+        selector: 'JoinType.JOIN_TYPE_LEFT',
+      })
+    );
+
+    expect(leftJoin).toMatchObject({
+      profileStatus: 'supported-profile',
+      admission: {
+        productUseCaseRef: 'dvt:#3307',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+  });
+
+  it.each([
+    ['JoinType.JOIN_TYPE_RIGHT', 'RIGHT JOIN'],
+    ['JoinType.JOIN_TYPE_OUTER', 'FULL OUTER JOIN'],
+  ])('admits %s as the exact canonical selector for %s', (selector) => {
+    const join = findCapability(
+      buildDvtSubstraitStandardCapabilityId('relation', {
+        sourceKind: 'core',
+        message: 'substrait.JoinRel',
+        selector,
+      })
+    );
+
+    expect(join).toMatchObject({
+      profileStatus: 'supported-profile',
+      admission: {
+        productUseCaseRef: 'dvt:#3308',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+  });
+
+  it.each([
+    ['JoinType.JOIN_TYPE_LEFT_SEMI', 'LEFT SEMI JOIN'],
+    ['JoinType.JOIN_TYPE_LEFT_ANTI', 'LEFT ANTI JOIN'],
+    ['JoinType.JOIN_TYPE_RIGHT_SEMI', 'RIGHT SEMI JOIN'],
+    ['JoinType.JOIN_TYPE_RIGHT_ANTI', 'RIGHT ANTI JOIN'],
+  ])('admits %s as the exact canonical selector for %s', (selector) => {
+    const join = findCapability(
+      buildDvtSubstraitStandardCapabilityId('relation', {
+        sourceKind: 'core',
+        message: 'substrait.JoinRel',
+        selector,
+      })
+    );
+
+    expect(join).toMatchObject({
+      profileStatus: 'supported-profile',
+      admission: {
+        productUseCaseRef: 'dvt:#3320',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+  });
+
+  it('admits CROSS JOIN as the exact canonical CrossRel identity without a selector', () => {
+    const cross = findCapability(
+      buildDvtSubstraitStandardCapabilityId('relation', {
+        sourceKind: 'core',
+        message: 'substrait.CrossRel',
+      })
+    );
+
+    expect(cross).toMatchObject({
+      profileStatus: 'supported-profile',
+      identity: {
+        sourceKind: 'core',
+        message: 'substrait.CrossRel',
+      },
+      admission: {
+        productUseCaseRef: 'dvt:#3322',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+    expect(cross?.identity).not.toHaveProperty('selector');
+  });
+
+  it('admits UNION DISTINCT as its exact canonical SetRel selector', () => {
+    const unionDistinct = findCapability(
+      buildDvtSubstraitStandardCapabilityId('relation', {
+        sourceKind: 'core',
+        message: 'substrait.SetRel',
+        selector: 'SetOp.SET_OP_UNION_DISTINCT',
+      })
+    );
+
+    expect(unionDistinct).toMatchObject({
+      profileStatus: 'supported-profile',
+      admission: {
+        productUseCaseRef: 'dvt:#3317',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+  });
+
+  it.each([
+    ['SetOp.SET_OP_INTERSECTION_MULTISET', 'INTERSECT DISTINCT'],
+    ['SetOp.SET_OP_MINUS_PRIMARY', 'EXCEPT DISTINCT'],
+  ])('admits %s as the exact canonical selector for %s', (selector) => {
+    const operation = findCapability(
+      buildDvtSubstraitStandardCapabilityId('relation', {
+        sourceKind: 'core',
+        message: 'substrait.SetRel',
+        selector,
+      })
+    );
+
+    expect(operation).toMatchObject({
+      profileStatus: 'supported-profile',
+      admission: {
+        productUseCaseRef: 'dvt:#3318',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+  });
+
+  it.each([
+    ['SetOp.SET_OP_INTERSECTION_MULTISET_ALL', 'INTERSECT ALL'],
+    ['SetOp.SET_OP_MINUS_PRIMARY_ALL', 'EXCEPT ALL'],
+  ])('admits %s as the exact canonical selector for %s', (selector) => {
+    const operation = findCapability(
+      buildDvtSubstraitStandardCapabilityId('relation', {
+        sourceKind: 'core',
+        message: 'substrait.SetRel',
+        selector,
+      })
+    );
+
+    expect(operation).toMatchObject({
+      profileStatus: 'supported-profile',
+      admission: {
+        productUseCaseRef: 'dvt:#3319',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+  });
+
+  it.each(['SetOp.SET_OP_INTERSECTION_PRIMARY', 'SetOp.SET_OP_MINUS_MULTISET'])(
+    'keeps %s outside the supported profile',
+    (selector) => {
+      const capability = findCapability(
+        buildDvtSubstraitStandardCapabilityId('relation', {
+          sourceKind: 'core',
+          message: 'substrait.SetRel',
+          selector,
+        })
+      );
+      expect(capability == null || capability.profileStatus !== 'supported-profile').toBe(true);
+    }
+  );
+
   it.each([
     ['functions_boolean', 'and', 'dvt:#3087'],
     ['functions_boolean', 'or', 'dvt:#3087'],
@@ -192,6 +357,23 @@ describe('DVT Substrait capability catalog V1', () => {
       },
     });
     expect(findCapability(coalesceId)?.invocation).not.toHaveProperty('maximumArgumentCount');
+  });
+
+  it('admits SortRel and FetchRel only through the governed C8a vertical', () => {
+    for (const message of ['substrait.SortRel', 'substrait.FetchRel']) {
+      const entry = findCapability(
+        buildDvtSubstraitStandardCapabilityId('relation', { sourceKind: 'core', message })
+      );
+      expect(entry).toMatchObject({
+        profileStatus: 'supported-profile',
+        admission: {
+          productUseCaseRef: 'dvt:#3324',
+          canonicalFixtureRef: 'docs/evidence/ED-20260920-sort-fetch-end-to-end.md',
+          targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+          visualExposure: { status: 'exposed' },
+        },
+      });
+    }
   });
   it('admits the exact UTC year extraction invocation for timestamptz columns', () => {
     const extractId = buildDvtSubstraitStandardCapabilityId('scalar-function', {

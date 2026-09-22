@@ -2,7 +2,7 @@
 title: Review Naming Policy
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-03-22
+last_reviewed: 2026-09-15
 planning_type: review
 ---
 
@@ -21,8 +21,9 @@ Examples:
 - `docs/planning/reviews/ci-and-delivery/20260401-ci-process-review.md`
 - `docs/planning/reviews/execution-runtime/20260326-s03-hard-qa-review.md`
 
-Historical reviews that are no longer the active entry point for a topic should
-move to `docs/planning/archive/reviews/` and keep the same filename pattern.
+Delete reviews that no longer serve an active responsibility after reconciling
+consumers and current evidence obligations. Git preserves their history; do not
+move them to a documentation archive or create a historical replacement page.
 
 ## Required File Pattern
 
@@ -40,16 +41,15 @@ Examples:
 
 - `20260322-ddd-hexagonal-port-audit-review.md`
 - `20260315-workflow-helpers-architecture-review.md`
-- `20260307-architecture-doc-consolidation-matrix-review.md`
 
 ## Migration Rule
 
-Legacy names with uppercase, symbols, underscores, or mixed date formats must
-be renamed to this pattern and all references updated in the same PR.
+Rename legacy names only for reviews that remain active. Update all references
+in the same PR. Delete obsolete reviews instead of renaming them for retention.
 
 ## Indexing Rule
 
-After renaming or adding reviews, run:
+After renaming, adding, or deleting reviews, run:
 
 - `pnpm docs:sync`
 

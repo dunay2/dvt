@@ -54,7 +54,6 @@ history, domain-specific navigation, or a component-level map.
 | [web component](./components/web/index.md)                                   | `supporting`   | canonical frontend component home with routes, services, and code anchors | keep as the single frontend component home; use subsystem docs for flow context       |
 | [Engine Roadmap](./components/engine/roadmap/engine-phases.md)               | `supporting`   | execution-subsystem delivery projection and sequencing                    | keep as the active engine roadmap; do not let it compete with repo-wide roadmap truth |
 | [TypeScript Package Classification](./typescript-package-classification.md)  | `supporting`   | package taxonomy and workspace structure aid                              | keep as supporting classification                                                     |
-| [Architecture Atlas](./atlas/architecture/architecture-atlas.md)             | `historical`   | dated code snapshot from 2026-03-06                                       | keep as historical snapshot only                                                      |
 
 ## Planning-Adjacent Architecture Surfaces
 
@@ -66,12 +65,11 @@ the active execution direction through the current planning portfolio and lane
 registry, and treat the superseded proposal as historical rationale rather than
 architecture authority.
 
-| Surface                                                                                                                                                                                                     | Classification | Role                                                           | Current handling                                                      |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------- | --------------------------------------------------------------------- |
-| [Planning Execution Model Index](../planning/execution-model/index.md)                                                                                                                                      | `historical`   | draft working area for execution-model notes                   | keep only as non-canonical working area until archived or rewritten   |
-| [Domain - Execution Runtime](../planning/domains/execution-runtime.md)                                                                                                                                      | `supporting`   | planning-domain navigation for runtime work                    | truth-corrected; keep as planning context, not architecture authority |
-| [Domain - Event Lifecycle And Retention](../planning/domains/event-lifecycle-and-retention.md)                                                                                                              | `supporting`   | planning-domain navigation for archival/retention work         | truth-corrected; keep as planning context, not architecture authority |
-| [Domain Cohesion Refactor Plan](../planning/archive/proposals/domain-cohesion-refactor-plan.md) and [Domain Cohesion Refactor Subplans](../planning/archive/proposals/domain-cohesion-refactor-subplans.md) | `historical`   | superseded refactor draft pack from the pre-lane planning wave | archived on 2026-04-08; do not cite as current execution authority    |
+| Surface                                                                                        | Classification | Role                                                   | Current handling                                                      |
+| ---------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------ | --------------------------------------------------------------------- |
+| [Planning Execution Model Index](../planning/execution-model/index.md)                         | `historical`   | draft working area for execution-model notes           | keep only as non-canonical working area until archived or rewritten   |
+| [Domain - Execution Runtime](../planning/domains/execution-runtime.md)                         | `supporting`   | planning-domain navigation for runtime work            | truth-corrected; keep as planning context, not architecture authority |
+| [Domain - Event Lifecycle And Retention](../planning/domains/event-lifecycle-and-retention.md) | `supporting`   | planning-domain navigation for archival/retention work | truth-corrected; keep as planning context, not architecture authority |
 
 ## Confirmed Drift Closed In This Pass
 

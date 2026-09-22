@@ -5,7 +5,10 @@ import {
   hasCanvasInspectorNodeDraftChanges,
   validateCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
-import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
+import type {
+  CanvasInspectorNodeDraft,
+  CanvasInspectorNodeDraftApplyResult,
+} from './canvasInspectorAuthoring.types';
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import type { CanonicalNode } from '../../types/canonical';
 import type { WorkspaceScope } from '../../ports/sessionContext';
@@ -16,7 +19,7 @@ export function applyCanvasInspectorNodeDraftToSession(args: {
   node: CanonicalNode;
   draft: CanvasInspectorNodeDraft;
   workspaceScope: WorkspaceScope;
-}): CanvasDraftSession {
+}): CanvasInspectorNodeDraftApplyResult {
   const { canonicalNodesById, draftSession, node, draft, workspaceScope } = args;
   const nodes = resolveCanvasDraftNodes(draftSession, canonicalNodesById);
   const edges = draftSession.workingSet.visibleEdges.map((edge, index) => ({
@@ -27,16 +30,17 @@ export function applyCanvasInspectorNodeDraftToSession(args: {
     ...(edge.executionGate == null ? {} : { executionGate: edge.executionGate }),
   }));
 
-  if (
-    !hasCanvasInspectorNodeDraftChanges(node, draft) ||
-    Object.keys(validateCanvasInspectorNodeDraft(draft, { node, nodes, edges, workspaceScope }))
-      .length > 0
-  ) {
-    return draftSession;
-  }
+  if (!hasCanvasInspectorNodeDraftChanges(node, draft)) return { outcome: 'no_changes' };
 
-  return canvasDraftSession.workingSet.upsertNode(
-    draftSession,
-    applyCanvasInspectorNodeDraft(node, draft, workspaceScope)
-  );
+  const errors = validateCanvasInspectorNodeDraft(draft, { node, nodes, edges, workspaceScope });
+  if (Object.keys(errors).length > 0)
+    return { outcome: 'rejected', reason: 'invalid_draft', errors };
+
+  return {
+    outcome: 'applied',
+    draftSession: canvasDraftSession.workingSet.upsertNode(
+      draftSession,
+      applyCanvasInspectorNodeDraft(node, draft, workspaceScope)
+    ),
+  };
 }

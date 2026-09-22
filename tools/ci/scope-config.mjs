@@ -9,6 +9,7 @@ import {
   isGovernanceToolingCommand,
 } from './repository-command-catalog.mjs';
 import { classifyRepositoryFileScope } from './repository-change-scope.mjs';
+import { EXECUTABLE_CI_TOOL_TESTS } from './ci-tool-test-suite.mjs';
 
 const execFileAsync = promisify(execFile);
 
@@ -42,6 +43,7 @@ function readWorkflowScopePolicy() {
     'workspace_projector_worker',
     'workspace_temporal_worker',
     'workspace_temporal_dbt_plugin',
+    'workspace_temporal_dvt_postgres_plugin',
     'workspace_temporal_http_json_plugin',
     'workspace_temporal_object_file_postgres_plugin',
     'workspace_web',
@@ -100,8 +102,10 @@ export const WORKFLOW_SCOPE_PATTERNS = {
   generated_capability_relevant: WORKFLOW_SCOPE_POLICY.generated_capability_relevant,
   changed_file_validation_relevant: WORKFLOW_SCOPE_POLICY.changed_file_validation_relevant,
   security_analysis_relevant: WORKFLOW_SCOPE_POLICY.security_analysis_relevant,
-  ci_tool_executable_contracts_relevant:
-    WORKFLOW_SCOPE_POLICY.ci_tool_executable_contracts_relevant,
+  ci_tool_executable_contracts_relevant: [
+    ...WORKFLOW_SCOPE_POLICY.ci_tool_executable_contracts_relevant,
+    ...EXECUTABLE_CI_TOOL_TESTS,
+  ],
 };
 
 export const WORKSPACE_ENTRIES = [
@@ -135,6 +139,12 @@ export const WORKSPACE_ENTRIES = [
     name: 'temporal-dbt-plugin',
     pkg: '@dvt/temporal-dbt-plugin',
     patterns: WORKFLOW_SCOPE_POLICY.workspace_temporal_dbt_plugin,
+  },
+  {
+    key: 'temporal_dvt_postgres_plugin',
+    name: 'temporal-dvt-postgres-plugin',
+    pkg: '@dvt/temporal-dvt-postgres-plugin',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_temporal_dvt_postgres_plugin,
   },
   {
     key: 'temporal_http_json_plugin',
@@ -345,6 +355,7 @@ export const TEST_SCOPE_PATTERNS = {
   projector_worker: ['apps/projector-worker/**'],
   temporal_worker: ['apps/temporal-worker/**'],
   temporal_dbt_plugin: ['packages/@dvt/temporal-dbt-plugin/**'],
+  temporal_dvt_postgres_plugin: WORKFLOW_SCOPE_POLICY.workspace_temporal_dvt_postgres_plugin,
   temporal_http_json_plugin: WORKFLOW_SCOPE_POLICY.workspace_temporal_http_json_plugin,
   temporal_object_file_postgres_plugin:
     WORKFLOW_SCOPE_POLICY.workspace_temporal_object_file_postgres_plugin,
@@ -447,6 +458,7 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     'packages/@dvt/adapter-temporal/package.json',
     'packages/@dvt/engine/**',
     'packages/@dvt/contracts/**',
+    'packages/@dvt/temporal-dvt-postgres-plugin/**',
     'packages/@dvt/temporal-object-file-postgres-plugin/**',
     'scripts/build-workspace-runtime-deps.cjs',
     'scripts/run-het1-public-vertical-live-proof.cjs',

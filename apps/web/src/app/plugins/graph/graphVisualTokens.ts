@@ -183,11 +183,7 @@ export const graphNodeColumnClasses = {
     'nodrag nopan flex size-4 shrink-0 cursor-pointer items-center justify-center rounded border border-slate-600 bg-transparent p-0 text-emerald-300 transition hover:border-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:cursor-default disabled:hover:border-slate-600',
   outputCheck: 'size-3',
   tooltip:
-    'w-72 border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 shadow-xl shadow-slate-950/40',
-  tooltipRows: 'space-y-1.5',
-  tooltipRow: 'grid grid-cols-[5.5rem_minmax(0,1fr)] gap-2',
-  tooltipLabel: 'text-slate-400',
-  tooltipValue: 'break-words font-medium text-slate-100',
+    'w-auto max-w-72 break-words border border-slate-700 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-100 shadow-xl shadow-slate-950/40',
   remainderToggle:
     'nodrag nopan mt-2 w-full cursor-pointer rounded border border-slate-700 bg-slate-900 px-2 py-1.5 text-left text-xs font-medium text-blue-200 transition hover:border-blue-400/60 hover:bg-slate-800 hover:text-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
   automap:

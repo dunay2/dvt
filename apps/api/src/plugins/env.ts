@@ -61,6 +61,7 @@ const EnvSchema = z.object({
   TEMPORAL_STEP_ACTIVITY_ROUTES: z.string().optional(),
   DVT_TEMPORAL_WORKER_READYZ_URL: z.string().url().optional(),
   DVT_TEMPORAL_DBT_ENABLED: strictTrueBoolean.default(false),
+  DVT_TEMPORAL_DVT_POSTGRES_ENABLED: strictTrueBoolean.default(false),
   DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: strictTrueBoolean.default(false),
   DVT_TEMPORAL_HTTP_JSON_ENABLED: strictTrueBoolean.default(false),
   DVT_DBT_BUNDLE_STORE_BACKEND: z.enum(['file', 's3']).optional(),

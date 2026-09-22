@@ -139,6 +139,7 @@ export type PreviewWarehouseSourceObjectRowsInput = SourceDataSampleRequest & {
 export type WarehouseSourceDataSampleProbeTarget = WarehouseConnectionProbeTarget & {
   readonly objectId: string;
   readonly limit: number;
+  readonly expectedPublicationToken?: string;
 };
 
 export type WarehouseSourceDataSampleProbeResult = Omit<
@@ -163,6 +164,13 @@ export class SourceObjectNotFoundError extends Error {
   public constructor(readonly objectId: string) {
     super(`Source object not found: ${objectId}`);
     this.name = 'SourceObjectNotFoundError';
+  }
+}
+
+export class WarehouseSourcePublicationChangedError extends Error {
+  public constructor() {
+    super('The governed publication changed before its rows were sampled.');
+    this.name = 'WarehouseSourcePublicationChangedError';
   }
 }
 

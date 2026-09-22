@@ -5,10 +5,10 @@ import type { CSSProperties } from 'react';
 import type { CanonicalNode } from '../../types/canonical';
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import {
-  createSemanticExpressionProjector,
-  layoutSemanticExpressionGraph,
-} from './semanticExpressionGraphProjection';
+import { createSemanticExpressionProjector } from './semanticExpressionGraphProjection';
+import { layoutSemanticExpressionGraph } from './semanticExpressionGraphLayout';
+import { semanticExpressionStyles } from './semanticExpressionGraphLayout';
+import { createSemanticExpressionDescription } from './semanticExpressionDescription';
 import { getLayoutedElements } from './canvasGraphUtils';
 
 export type SemanticWorkbenchGroup = 'source' | 'condition' | 'transformation';
@@ -26,6 +26,8 @@ export type SemanticWorkbenchNodeData = Readonly<{
     joinRelationId: string;
     operand: 'left' | 'right';
   }>;
+  joinConditionIndex?: number;
+  fieldReference?: Readonly<{ fieldId: string; relationId: string; sourceFieldId?: string }>;
 }>;
 
 type SemanticWorkbenchEdgeData = Readonly<{
@@ -127,12 +129,18 @@ function expressionsOwnedByRelation(rel: Rel): readonly Expression[] {
       return rel.relType.value.expression == null ? [] : [rel.relType.value.expression];
     case 'project':
       return rel.relType.value.expressions;
+    case 'aggregate':
+      return rel.relType.value.groupingExpressions;
     default:
       return [];
   }
 }
 
-function relationFieldNames(rel: Rel, qualifyReadFields = false): readonly string[] {
+function relationFieldNames(
+  rel: Rel,
+  qualifyReadFields = false,
+  bindingNames?: ReadonlyMap<number, readonly string[]>
+): readonly string[] {
   if (rel.relType.case === 'read') {
     const names = rel.relType.value.baseSchema?.names ?? [];
     const readType = rel.relType.value.readType;
@@ -142,11 +150,14 @@ function relationFieldNames(rel: Rel, qualifyReadFields = false): readonly strin
       : names;
   }
 
+  const boundNames = bindingNames?.get(relationAnchor(rel) ?? -1);
+  if (!qualifyReadFields && boundNames != null && boundNames.length > 0) return boundNames;
+
   const inputs = relationInputs(rel);
   const inputNames =
     rel.relType.case === 'join'
-      ? inputs.flatMap((input) => relationFieldNames(input, qualifyReadFields))
-      : inputs.flatMap((input) => relationFieldNames(input, false));
+      ? inputs.flatMap((input) => relationFieldNames(input, qualifyReadFields, bindingNames))
+      : inputs.flatMap((input) => relationFieldNames(input, false, bindingNames));
   const common =
     rel.relType.case === 'filter' ||
     rel.relType.case === 'project' ||
@@ -296,8 +307,8 @@ function layoutGraph(
 export function projectSemanticWorkbenchGraph(
   transformNode: CanonicalNode,
   options: Readonly<{
-    view?: 'complete' | 'relations' | 'join-expression';
-    joinRelationId?: string;
+    view?: 'complete' | 'relations' | 'relation-expressions';
+    expressionRelationId?: string;
   }> = {}
 ): SemanticWorkbenchGraph {
   const authority = readDvtTransformAuthoringAuthority(transformNode);
@@ -308,6 +319,18 @@ export function projectSemanticWorkbenchGraph(
     throw new Error('Semantic Workbench requires one canonical Substrait root relation.');
   }
 
+  const bindingNames = new Map(
+    draft.sidecar.relations.map(
+      (binding) =>
+        [
+          binding.relAnchor,
+          draft.sidecar.fields
+            .filter((field) => field.relationId === binding.relationId)
+            .sort((left, right) => left.outputOrdinal - right.outputOrdinal)
+            .map((field) => field.displayName ?? field.fieldId),
+        ] as const
+    )
+  );
   const relationIdByAnchor = new Map(
     draft.sidecar.relations.map((binding) => [binding.relAnchor, binding.relationId] as const)
   );
@@ -315,6 +338,8 @@ export function projectSemanticWorkbenchGraph(
   const edges: SemanticWorkbenchEdge[] = [];
   let sequence = 0;
   let relationCount = 0;
+  let aggregateCount = 0;
+  const { functionName } = createSemanticExpressionDescription(draft.plan);
   const expressionProjector = createSemanticExpressionProjector({
     plan: draft.plan,
     nodes,
@@ -334,11 +359,11 @@ export function projectSemanticWorkbenchGraph(
     const relationId = anchor == null ? null : relationIdByAnchor.get(anchor);
     const id = relationId ?? nextId('relation');
     const inputs = relationInputs(rel);
-    const outputFields = relationFieldNames(rel);
+    const outputFields = relationFieldNames(rel, false, bindingNames);
     const expressionFields =
       rel.relType.case === 'join'
-        ? inputs.flatMap((input) => relationFieldNames(input, true))
-        : inputs.flatMap((input) => relationFieldNames(input));
+        ? inputs.flatMap((input) => relationFieldNames(input, true, bindingNames))
+        : inputs.flatMap((input) => relationFieldNames(input, false, bindingNames));
     const ownedExpressions = expressionsOwnedByRelation(rel);
     const expression =
       ownedExpressions[0] == null
@@ -415,6 +440,42 @@ export function projectSemanticWorkbenchGraph(
         style: { stroke: '#10b981', strokeWidth: 1.4 },
       });
     }
+    if (rel.relType.case === 'aggregate') {
+      for (const { measure } of rel.relType.value.measures) {
+        if (measure == null) continue;
+        const measureId = nextId('aggregate-expression');
+        aggregateCount += 1;
+        const name = functionName(measure.functionReference);
+        nodes.push({
+          id: measureId,
+          type: 'default',
+          position: { x: 0, y: 0 },
+          data: {
+            label: `${name.toUpperCase()}\n${measure.arguments.length === 0 ? '(*)' : name}`,
+            semanticKind: 'expression',
+            semanticGroup: 'condition',
+            detail: name,
+          },
+          style: semanticExpressionStyles.expression,
+        });
+        edges.push({
+          id: nextId('edge'),
+          source: measureId,
+          target: id,
+          data: { semanticEdgeKind: 'expression' },
+        });
+        for (const argument of measure.arguments) {
+          if (argument.argType.case !== 'value') continue;
+          const argumentId = addExpression(argument.argType.value, expressionFields);
+          edges.push({
+            id: nextId('edge'),
+            source: argumentId,
+            target: measureId,
+            data: { semanticEdgeKind: 'expression' },
+          });
+        }
+      }
+    }
     return id;
   }
 
@@ -438,13 +499,13 @@ export function projectSemanticWorkbenchGraph(
     };
   }
 
-  if (options.view === 'join-expression') {
-    if (options.joinRelationId == null) {
-      throw new Error('JOIN expression view requires a selected relation identity.');
+  if (options.view === 'relation-expressions') {
+    if (options.expressionRelationId == null) {
+      throw new Error('Expression view requires a selected relation identity.');
     }
     const includedNodeIds = new Set<string>();
     const pendingNodeIds = edges.flatMap((edge) =>
-      edge.data?.semanticEdgeKind === 'expression' && edge.target === options.joinRelationId
+      edge.data?.semanticEdgeKind === 'expression' && edge.target === options.expressionRelationId
         ? [edge.source]
         : []
     );
@@ -461,7 +522,7 @@ export function projectSemanticWorkbenchGraph(
       );
     }
     if (includedNodeIds.size === 0) {
-      throw new Error('Selected relation does not own a projected JOIN expression.');
+      throw new Error('Selected relation does not own a projected scalar expression.');
     }
     const expressionNodes = nodes
       .filter((node) => includedNodeIds.has(node.id))
@@ -486,7 +547,7 @@ export function projectSemanticWorkbenchGraph(
       edges: expressionEdges,
       relationCount: 0,
       expressionCount: expressionNodes.length,
-      relationId: options.joinRelationId,
+      relationId: options.expressionRelationId,
     });
   }
 
@@ -494,7 +555,7 @@ export function projectSemanticWorkbenchGraph(
     nodes: layoutGraph(nodes, routedEdges),
     edges: routedEdges,
     relationCount,
-    expressionCount: expressionProjector.count,
+    expressionCount: expressionProjector.count + aggregateCount,
     relationId,
   };
 }

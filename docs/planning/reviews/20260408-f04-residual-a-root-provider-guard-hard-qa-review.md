@@ -40,7 +40,7 @@ Canonical execution tracking remains in:
 - `AGENTS.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
-- `docs/planning/reviews/review-status-board.md`
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)
 - `docs/planning/reviews/review-naming-policy.md`
 - `docs/planning/state/agent-lane-e.yaml`
 - `docs/architecture/frontend/appshell/data-source-service-boundary.md`
@@ -139,8 +139,8 @@ Canonical execution tracking remains in:
   - `pnpm docs:sync`
   - `pnpm docs:workboard:generate`
   - `pnpm verify:prepush`
-  - `pnpm exec prettier --check apps/web/src/app/App.tsx apps/web/src/app/Root.tsx apps/web/src/app/Root.test.tsx docs/planning/state/agent-lane-e.yaml docs/planning/closeouts/F-04-RESIDUAL-A-root-provider-guard-closeout.md docs/planning/reviews/20260408-f04-residual-a-root-provider-guard-hard-qa-review.md docs/planning/reviews/review-status-board.md`
-  - `pnpm exec markdownlint-cli2 --ignore-path .markdownlintignore docs/planning/closeouts/F-04-RESIDUAL-A-root-provider-guard-closeout.md docs/planning/reviews/20260408-f04-residual-a-root-provider-guard-hard-qa-review.md docs/planning/reviews/review-status-board.md`
+  - [Recorded validation command](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/20260408-f04-residual-a-root-provider-guard-hard-qa-review.md#L142)
+  - [Recorded validation command](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/20260408-f04-residual-a-root-provider-guard-hard-qa-review.md#L143)
 - What passed:
   - the real route root now owns the app-services provider
   - the focused Root integration guard is meaningful and green

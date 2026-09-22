@@ -565,11 +565,6 @@ allowedImplementationSurfaces:
   - docs/.manifest.json
   - docs/adr/ADR-0032-compiledcoderef-ownership.md
   - docs/architecture/architecture-surface-inventory-20260402.md
-  - docs/architecture/atlas/README.md
-  - docs/architecture/atlas/architecture/architecture-atlas.md
-  - docs/architecture/atlas/engineering/engineering-playbook.md
-  - docs/architecture/atlas/index.md
-  - docs/architecture/atlas/status/code-completion-assessment-2026-03-06.md
   - docs/architecture/component-map.md
   - docs/architecture/domain-execution.md
   - docs/architecture/domain-map.md
@@ -587,7 +582,6 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a6-snapshot-rebuild-concurrency-contract-plan-20260513.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
-  - docs/planning/reviews/architecture-and-governance/20260307-architecture-doc-consolidation-matrix-review.md
   - docs/planning/status/canonical-doc-code-matrix.md
   - docs/planning/status/governance-document-rule-inventory.md
   - docs/planning/status/system-operations-inventory-20260501.md

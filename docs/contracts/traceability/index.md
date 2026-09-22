@@ -58,8 +58,6 @@ The canonical generic artifact read/integrity path is implemented in:
 
 ## Governance Rules
 
-- Planning docs under `docs/planning/archive/gaps/g6/` explain historical execution
-  sequence and closure strategy, but they are not the normative facet contract.
 - Any change to emitted `_schemaURL`, facet field names, or required properties
   must update the schema artifact in this folder and the corresponding canonical
   architecture evidence where required.
@@ -80,7 +78,6 @@ was valid; it is not active architecture.
 
 ## Related
 
-- [G6 Hub](../../planning/archive/gaps/g6/index.md)
-- [G6 OpenLineage CI and Schema Pin Plan](../../planning/archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
-- [Gap Execution Plans](../../planning/archive/gaps/GAP_EXECUTION_PLANS.md)
+- [Glossary](../../concepts/glossary.md)
+- [Domain Language](../../concepts/domain-language.md)
 - [Canonical Doc Code Matrix](../../planning/status/canonical-doc-code-matrix.md)

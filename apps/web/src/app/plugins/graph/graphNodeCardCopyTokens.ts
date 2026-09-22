@@ -27,6 +27,15 @@ type GraphNodeCardCopy = Readonly<{
   testsLabel: string;
   readyStatusLabel: string;
   draftStatusLabel: string;
+  relationalCompositionIncompleteLabel: string;
+  relationalCompositionJoinSummaryTemplate: string;
+  relationalCompositionCrossSummaryTemplate: string;
+  relationalCompositionUnionAllSummaryTemplate: string;
+  relationalCompositionUnionDistinctSummaryTemplate: string;
+  relationalCompositionIntersectDistinctSummaryTemplate: string;
+  relationalCompositionExceptDistinctSummaryTemplate: string;
+  relationalCompositionIntersectAllSummaryTemplate: string;
+  relationalCompositionExceptAllSummaryTemplate: string;
   filterLabel: string;
   testStatusLabels: Readonly<Record<string, string>>;
   healthTitleTemplate: string;
@@ -38,16 +47,6 @@ type GraphNodeCardCopy = Readonly<{
   automapColumnsLabel: string;
   sourceColumnPortLabelTemplate: string;
   targetColumnPortLabelTemplate: string;
-  columnTypeLabel: string;
-  columnNullabilityLabel: string;
-  columnNotNullValue: string;
-  columnNullableValue: string;
-  columnOriginLabel: string;
-  columnReferenceLabel: string;
-  columnLineageLabel: string;
-  columnCommentLabel: string;
-  columnOutputValue: string;
-  columnAvailableInputValue: string;
   columnOutputAriaLabelTemplate: string;
   columnAvailableInputAriaLabelTemplate: string;
   columnFunctionCategoryLabels: Readonly<
@@ -127,6 +126,23 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   testsLabel: 'Tests',
   readyStatusLabel: 'Ready',
   draftStatusLabel: 'Draft',
+  relationalCompositionIncompleteLabel: 'RECONNECT INPUT',
+  relationalCompositionJoinSummaryTemplate:
+    '{operation}, inputs: {inputCount}, predicates: {predicateCount}',
+  relationalCompositionCrossSummaryTemplate:
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, cartesian product',
+  relationalCompositionUnionAllSummaryTemplate:
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, bag semantics',
+  relationalCompositionUnionDistinctSummaryTemplate:
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, set semantics',
+  relationalCompositionIntersectDistinctSummaryTemplate:
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, set semantics',
+  relationalCompositionExceptDistinctSummaryTemplate:
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, primary-input difference',
+  relationalCompositionIntersectAllSummaryTemplate:
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, bag multiplicity',
+  relationalCompositionExceptAllSummaryTemplate:
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, primary-input bag difference',
   filterLabel: 'Filter',
   testStatusLabels: {
     pass: 'Passed',
@@ -151,16 +167,6 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   automapColumnsLabel: 'Map compatible columns',
   sourceColumnPortLabelTemplate: 'Connect {column} output',
   targetColumnPortLabelTemplate: 'Map into {column}',
-  columnTypeLabel: 'Type',
-  columnNullabilityLabel: 'Nullability',
-  columnNotNullValue: 'Not null',
-  columnNullableValue: 'Nullable',
-  columnOriginLabel: 'Origin',
-  columnReferenceLabel: 'Reference',
-  columnLineageLabel: 'Transformation lineage',
-  columnCommentLabel: 'Comment',
-  columnOutputValue: 'Included in output',
-  columnAvailableInputValue: 'Available input',
   columnOutputAriaLabelTemplate: '{column}, included in output',
   columnAvailableInputAriaLabelTemplate: '{column}, available input',
   columnFunctionCategoryLabels: {
@@ -250,6 +256,23 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   testsLabel: 'Pruebas',
   readyStatusLabel: 'Listo',
   draftStatusLabel: 'Borrador',
+  relationalCompositionIncompleteLabel: 'RECONECTAR ENTRADA',
+  relationalCompositionJoinSummaryTemplate:
+    '{operation}, entradas: {inputCount}, predicados: {predicateCount}',
+  relationalCompositionCrossSummaryTemplate:
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, producto cartesiano',
+  relationalCompositionUnionAllSummaryTemplate:
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, semántica bag',
+  relationalCompositionUnionDistinctSummaryTemplate:
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, semántica de conjunto',
+  relationalCompositionIntersectDistinctSummaryTemplate:
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, semántica de conjunto',
+  relationalCompositionExceptDistinctSummaryTemplate:
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, diferencia desde la entrada primaria',
+  relationalCompositionIntersectAllSummaryTemplate:
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, multiplicidad de bolsa',
+  relationalCompositionExceptAllSummaryTemplate:
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, diferencia de bolsa desde la entrada primaria',
   filterLabel: 'Filtro',
   testStatusLabels: {
     pass: 'Aprobadas',
@@ -274,16 +297,6 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   automapColumnsLabel: 'Asignar columnas compatibles',
   sourceColumnPortLabelTemplate: 'Conectar salida de {column}',
   targetColumnPortLabelTemplate: 'Asignar a {column}',
-  columnTypeLabel: 'Tipo',
-  columnNullabilityLabel: 'Nulabilidad',
-  columnNotNullValue: 'No nulo',
-  columnNullableValue: 'Admite nulos',
-  columnOriginLabel: 'Origen',
-  columnReferenceLabel: 'Referencia',
-  columnLineageLabel: 'Linaje de transformación',
-  columnCommentLabel: 'Comentario',
-  columnOutputValue: 'Incluida en salida',
-  columnAvailableInputValue: 'Entrada disponible',
   columnOutputAriaLabelTemplate: '{column}, incluida en salida',
   columnAvailableInputAriaLabelTemplate: '{column}, entrada disponible',
   columnFunctionCategoryLabels: {

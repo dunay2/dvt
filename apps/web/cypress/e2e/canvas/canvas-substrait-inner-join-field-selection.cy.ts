@@ -1,10 +1,11 @@
 /** Owned concern: prove Substrait INNER JOIN field authoring through the governed Canvas draft rail. */
 import {
-  decodeDvtSubstraitInnerJoinDocument,
+  decodeDvtSubstraitJoinDocument,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
-  inspectDvtSubstraitNInputJoinDraft,
+  inspectDvtSubstraitJoinDraft,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
+import { dragCanvasNodeByViewportDelta } from '../../support/canvasGraphAuthoring';
 import {
   getE2eApiCalls,
   installE2eApiFetchStub,
@@ -19,6 +20,7 @@ import {
 
 type CanvasDraftSaveRequestBody = {
   draft: {
+    edges?: Array<{ sourceId: string; targetId: string }>;
     nodes: Array<{
       id: string;
       metadata?: Record<string, unknown>;
@@ -86,16 +88,18 @@ function proveCardOutputControls(sourceCount: number): void {
     `${card} [data-slot="graph-node-column-piece"][data-column-name="${name}"]`;
   const toggle = `${field('order_id')} [data-slot="graph-node-column-output-state"]`;
   let position: string;
-  let baseline: ReturnType<typeof inspectDvtSubstraitNInputJoinDraft>;
-  const inspectSave = (): ReturnType<typeof inspectDvtSubstraitNInputJoinDraft> => {
+  let originalRows: HTMLElement[];
+  let originalToggle: HTMLElement;
+  let baseline: ReturnType<typeof inspectDvtSubstraitJoinDraft>;
+  const inspectSave = (): ReturnType<typeof inspectDvtSubstraitJoinDraft> => {
     expect(getE2eApiCalls('/workspace/graph/draft').at(-1)?.method).to.equal('GET');
     const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
       CanvasDraftSaveRequestBody | undefined;
     const node = saved?.draft.nodes.find((candidate) => candidate.id === 'join-transform');
     const authoring = node?.metadata?.transformAuthoring as
       { semanticDocument?: unknown } | undefined;
-    return inspectDvtSubstraitNInputJoinDraft(
-      decodeDvtSubstraitInnerJoinDocument(authoring?.semanticDocument)
+    return inspectDvtSubstraitJoinDraft(
+      decodeDvtSubstraitJoinDocument(authoring?.semanticDocument)
     );
   };
   const expectSavedOrder = (names: string[]): void => {
@@ -115,9 +119,21 @@ function proveCardOutputControls(sourceCount: number): void {
   toggleColumns('join-transform');
   cy.get(card).then(($card) => {
     position = $card[0]!.style.transform;
+    originalRows = [
+      ...$card[0]!.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-row"]'),
+    ];
+    originalToggle = $card[0]!.querySelector<HTMLElement>(
+      '[data-column-name="order_id"] [data-slot="graph-node-column-output-state"]'
+    )!;
   });
   cy.get(toggle).should('not.be.disabled').and('have.attr', 'aria-pressed', 'true').click();
   cy.get(toggle).should('have.attr', 'aria-pressed', 'false');
+  cy.get(toggle).should(($toggle) => {
+    expect($toggle[0], 'same checkbox after exclusion').to.equal(originalToggle);
+    expect($toggle[0]!.ownerDocument.activeElement, 'checkbox focus retained').to.equal(
+      originalToggle
+    );
+  });
   cy.wrap(null).should(() => {
     const result = inspectSave();
     expect(
@@ -126,8 +142,17 @@ function proveCardOutputControls(sourceCount: number): void {
     baseline = result;
   });
   cy.get(card).should(($card) => expect($card[0]!.style.transform).to.equal(position));
+  cy.get(`${card} [data-slot="graph-node-column-row"]`).should(($rows) => {
+    expect($rows.length).to.equal(originalRows.length);
+    [...$rows].forEach((row, index) =>
+      expect(row, 'unchanged row after save').to.equal(originalRows[index])
+    );
+  });
   cy.get(toggle).click();
   cy.get(toggle).should('have.attr', 'aria-pressed', 'true');
+  cy.get(toggle).should(($toggle) =>
+    expect($toggle[0], 'same checkbox after inclusion').to.equal(originalToggle)
+  );
   expectSavedOrder(['customer_id', 'name', 'order_id']);
 
   cy.window().then((window) => {
@@ -162,6 +187,99 @@ function proveCardOutputControls(sourceCount: number): void {
   expectSavedOrder(['customer_id', 'order_id', 'name']);
 }
 
+function proveEmptyJoinOutput(sourceCount: number): void {
+  const card = '.react-flow__node[data-id="join-transform"]';
+  const controls = `${card} [data-slot="graph-node-column-output-state"]`;
+  const stageEdges = '.react-flow__edge:not(.react-flow__edge-columnLineage)';
+  let baseline: ReturnType<typeof inspectDvtSubstraitJoinDraft>;
+  const assertSaved = (outputCount?: number): void => {
+    cy.wrap(null).should(() => {
+      expect(getE2eApiCalls('/workspace/graph/draft').at(-1)?.method).to.equal('GET');
+      const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)
+        ?.body as CanvasDraftSaveRequestBody;
+      expect(saved.draft.edges?.filter((edge) => edge.targetId === 'join-transform')).to.deep.equal(
+        []
+      );
+      const authoring = saved.draft.nodes.find((node) => node.id === 'join-transform')?.metadata
+        ?.transformAuthoring as { semanticDocument?: unknown };
+      const inspected = inspectDvtSubstraitJoinDraft(
+        decodeDvtSubstraitJoinDocument(authoring.semanticDocument)
+      );
+      expect(inspected.ok).to.equal(true);
+      if (!inspected.ok) return;
+      expect(inspected.projection.inputs).to.have.length(sourceCount);
+      if (outputCount == null) baseline = inspected;
+      else {
+        expect(inspected.projection.outputs).to.have.length(outputCount);
+        if (baseline?.ok) {
+          expect(inspected.projection.inputs).to.deep.equal(baseline.projection.inputs);
+          expect(inspected.projection.joins).to.deep.equal(baseline.projection.joins);
+          expect(inspected.projection.joinRelations).to.deep.equal(
+            baseline.projection.joinRelations
+          );
+        }
+      }
+    });
+  };
+  // Leave exposed connection segments: compact cards can cover a remaining edge
+  // after its neighbouring connection is removed and the ports are measured again.
+  dragCanvasNodeByViewportDelta('Customer Orders', { x: 160, y: 0 }, { nodeId: 'join-transform' });
+  cy.get(stageEdges).then(($edges) => {
+    for (let index = 0; index < $edges.length; index += 1) {
+      cy.get<SVGPathElement>(`${stageEdges} .react-flow__edge-interaction`).then(($paths) => {
+        // N-input edges can share a segment: remove an exposed edge, not the first DOM edge.
+        const exposed = [...$paths]
+          .map((path) => {
+            const matrix = path.getScreenCTM()!;
+            const points = Array.from({ length: 19 }, (_, index) =>
+              path
+                .getPointAtLength((path.getTotalLength() * (index + 1)) / 20)
+                .matrixTransform(matrix)
+            );
+            const point = points.find(
+              (point) => path.ownerDocument.elementFromPoint(point.x, point.y) === path
+            );
+            return point == null ? undefined : { path, point };
+          })
+          .find((candidate) => candidate != null);
+        expect(exposed, 'visible connection segment').not.to.equal(undefined);
+        const { path, point } = exposed!;
+        const rect = path.getBoundingClientRect();
+        cy.wrap(path).rightclick(point.x - rect.left, point.y - rect.top);
+      });
+      cy.contains('[data-slot="canvas-context-menu-item"]', 'Remove connection').click();
+      cy.get(stageEdges).should('have.length', $edges.length - index - 1);
+    }
+  });
+  assertSaved();
+  toggleColumns('join-transform');
+  cy.get(`${controls}[aria-pressed="true"]`).should(($selected) => {
+    expect(baseline?.ok && baseline.projection.outputs.length).to.equal($selected.length);
+  });
+  cy.get(`${controls}[aria-pressed="true"]`).then(($selected) => {
+    const names = [...$selected].map(
+      (element) => element.closest<HTMLElement>('[data-column-name]')!.dataset.columnName!
+    );
+    names.forEach((name, index) => {
+      const selector = `${card} [data-column-name="${name}"] [data-slot="graph-node-column-output-state"]`;
+      cy.get(selector).should('have.attr', 'aria-pressed', 'true').click();
+      cy.get(selector).should('have.attr', 'aria-pressed', 'false');
+      assertSaved(names.length - index - 1);
+    });
+  });
+  cy.get(controls).should('have.attr', 'aria-pressed', 'false');
+  cy.get(`${controls}[aria-pressed="true"]`).should('not.exist');
+  cy.on('window:before:load', installE2eApiFetchStub);
+  cy.reload();
+  toggleColumns('join-transform');
+  cy.get(controls).should('have.attr', 'aria-pressed', 'false');
+  cy.get(`${controls}[aria-pressed="true"]`).should('not.exist');
+  cy.screenshot(`empty-${sourceCount}-input-join`, { capture: 'viewport' });
+  cy.get(controls).first().click();
+  assertSaved(1);
+  cy.get(`${controls}[aria-pressed="true"]`).should('have.length', 1);
+}
+
 describe('Canvas Substrait INNER JOIN field selection', () => {
   beforeEach(() => {
     stubRuntimeCapabilities();
@@ -175,6 +293,12 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
     cy.viewport(1440, 1000);
     visitCanvas();
     proveCardOutputControls(2);
+  });
+
+  it('clears the last output after disconnecting both Sources and restores it after reload', () => {
+    cy.viewport(1440, 1000);
+    visitCanvas();
+    proveEmptyJoinOutput(2);
   });
 
   it('shows canonical Substrait provenance without SQL or dbt authority in the Transform inspector', () => {
@@ -194,6 +318,64 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
       const code = $lines.text().replaceAll('\u00a0', ' ');
       expect(code).to.contain('dvt-substrait-semantic-document.v1');
       expect(code).to.contain('semanticPlan');
+    });
+  });
+
+  it('edits a persisted JOIN predicate again after reload without replacing stable identities', () => {
+    let fieldIds: string[] = [];
+    let relationIds: string[] = [];
+    const inspectLatestSave = (): ReturnType<typeof inspectDvtSubstraitJoinDraft> => {
+      const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)
+        ?.body as CanvasDraftSaveRequestBody;
+      const authoring = saved.draft.nodes.find((node) => node.id === 'join-transform')?.metadata
+        ?.transformAuthoring as { semanticDocument?: unknown };
+      return inspectDvtSubstraitJoinDraft(
+        decodeDvtSubstraitJoinDocument(authoring.semanticDocument)
+      );
+    };
+
+    visitCanvas();
+    openJoinWorkbench();
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+    cy.get('[data-slot="semantic-workbench-join-condition-list"]').should('be.visible');
+    cy.get('[aria-label="Editar condición"]').click();
+    cy.get('[aria-label="Comparador de la condición"]').select('gt');
+    cy.contains('button', 'Guardar condición').click();
+    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
+
+    cy.wrap(null).should(() => {
+      const inspected = inspectLatestSave();
+      expect(inspected.ok).to.equal(true);
+      if (!inspected.ok) return;
+      const condition = inspected.projection.joins[0]?.conditions[0];
+      expect(condition != null && condition.kind !== 'group' && condition.operator).to.equal('gt');
+      fieldIds = inspected.projection.inputs.flatMap((input) =>
+        input.fields.map((field) => field.fieldId)
+      );
+      relationIds = inspected.projection.joinRelations.map((relation) => relation.relationId);
+    });
+
+    cy.on('window:before:load', installE2eApiFetchStub);
+    cy.reload();
+    openJoinWorkbench();
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+    cy.get('[aria-label="Editar condición"]').click();
+    cy.get('[aria-label="Comparador de la condición"]').should('have.value', 'gt').select('lt');
+    cy.contains('button', 'Guardar condición').click();
+    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
+
+    cy.wrap(null).should(() => {
+      const inspected = inspectLatestSave();
+      expect(inspected.ok).to.equal(true);
+      if (!inspected.ok) return;
+      const condition = inspected.projection.joins[0]?.conditions[0];
+      expect(condition != null && condition.kind !== 'group' && condition.operator).to.equal('lt');
+      expect(
+        inspected.projection.inputs.flatMap((input) => input.fields.map((field) => field.fieldId))
+      ).to.deep.equal(fieldIds);
+      expect(
+        inspected.projection.joinRelations.map((relation) => relation.relationId)
+      ).to.deep.equal(relationIds);
     });
   });
 
@@ -237,7 +419,7 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
       const transformAuthoring = savedTransform?.metadata?.transformAuthoring as
         { semanticDocument?: unknown } | undefined;
       const inspection = inspectDvtSubstraitInnerJoinGroupedWindowDraft(
-        decodeDvtSubstraitInnerJoinDocument(transformAuthoring?.semanticDocument)
+        decodeDvtSubstraitJoinDocument(transformAuthoring?.semanticDocument)
       );
 
       expect(
@@ -295,6 +477,20 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
     proveCardOutputControls(3);
   });
 
+  it('clears the last N-input output after disconnecting Sources and restores it after reload', () => {
+    cy.viewport(1440, 1000);
+    visitCanvas();
+    openJoinWorkbench();
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+    cy.get('[data-slot="dvt-substrait-append-right-field"]').select(
+      'source-shipments\u001fcustomer_id'
+    );
+    cy.get('[data-slot="dvt-substrait-append-submit"]').click();
+    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    proveEmptyJoinOutput(3);
+  });
+
   it('appends, edits, groups, ranks, and reloads N-input joins through one revision', () => {
     visitCanvas();
 
@@ -327,9 +523,7 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
       .type('shipping_customer', { delay: 0 });
     cy.get(
       'input[data-slot="dvt-substrait-n-input-output-name"][aria-label$="shipments.customer_id"]'
-    )
-      .should('have.value', 'shipping_customer')
-      .blur();
+    ).should('have.value', 'shipping_customer');
     cy.get(
       'input[data-slot="dvt-substrait-n-input-output-name"][aria-label$="shipments.customer_id"]'
     )
@@ -362,7 +556,7 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
       const transformAuthoring = savedTransform?.metadata?.transformAuthoring as
         { semanticDocument?: unknown } | undefined;
       const inspection = inspectDvtSubstraitInnerJoinGroupedWindowDraft(
-        decodeDvtSubstraitInnerJoinDocument(transformAuthoring?.semanticDocument)
+        decodeDvtSubstraitJoinDocument(transformAuthoring?.semanticDocument)
       );
 
       expect(

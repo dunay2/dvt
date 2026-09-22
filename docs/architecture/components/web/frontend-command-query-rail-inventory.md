@@ -327,12 +327,17 @@ commands or queries are still needed for a mature end-to-end workflow.
 - Scope and safety: tenant, project, environment, governed connection and source
   object are server-authorized; the client supplies no SQL or credentials; the
   response is bounded and string-or-null.
+- Result-publication reuse: a completed terminal DVT Transform may supply the
+  publication token from `GetRunSnapshot` as a read precondition. PostgreSQL
+  verifies that token against the managed stable-table marker and reads the rows
+  from the same repeatable-read snapshot. A missing or superseded marker fails
+  closed; it never returns current rows under an older Run identity.
 - Presentation rule: column positioning and row sorting are local projections of
   the returned sample. They never mutate the sample, canonical Canvas field order,
   `FieldId`, lineage, or `ConfigureCanvasDvtNode` state.
 - Negative evidence: unknown or cross-scope connection/object, unsupported
   provider, timeout, failed query, malformed response, stale response after a new
-  sample request, and the server-enforced row limit.
+  sample request, publication-token mismatch, and the server-enforced row limit.
 
 ### `ImportWarehouseSources`
 

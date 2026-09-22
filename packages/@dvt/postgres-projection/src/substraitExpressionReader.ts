@@ -3,6 +3,8 @@ import type { Expression } from '@buf/substrait_substrait.bufbuild_es/substrait/
 import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import type { Type } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 
+import { resolveFunctionReference } from './substrait-profile/functionReference.js';
+
 export type DvtSubstraitLiteralValue =
   | Readonly<{ dataType: 'string'; value: string }>
   | Readonly<{ dataType: 'bool'; value: boolean }>
@@ -12,20 +14,6 @@ export type DvtSubstraitLiteralValue =
 
 type ScalarFunctionIdentity = Readonly<{ urn: string; name: string }>;
 
-export function resolvedFunction(
-  plan: Plan,
-  functionAnchor: number
-): Readonly<{ urnAnchor: number; urn: string; name: string }> | null {
-  const declaration = plan.extensions.find(
-    (entry) =>
-      entry.mappingType.case === 'extensionFunction' &&
-      entry.mappingType.value.functionAnchor === functionAnchor
-  );
-  if (declaration?.mappingType.case !== 'extensionFunction') return null;
-  const urnAnchor = declaration.mappingType.value.extensionUrnReference;
-  const urn = plan.extensionUrns.find((entry) => entry.extensionUrnAnchor === urnAnchor)?.urn;
-  return urn == null ? null : { urnAnchor, urn, name: declaration.mappingType.value.name };
-}
 export const dvtSubstraitExpressionReader = {
   fieldOrdinal(expression: Expression | undefined): number | null {
     if (expression?.rexType.case !== 'selection') return null;
@@ -71,7 +59,9 @@ export const dvtSubstraitExpressionReader = {
   }> | null {
     if (expression?.rexType.case !== 'scalarFunction') return null;
     const scalar = expression.rexType.value;
-    const resolved = resolvedFunction(plan, scalar.functionReference);
+    const reference = resolveFunctionReference(plan, scalar.functionReference);
+    if (!reference.ok) return null;
+    const resolved = reference.value;
     if (
       resolved?.urn !== identity.urn ||
       resolved.name !== identity.name ||

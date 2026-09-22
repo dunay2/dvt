@@ -1,0 +1,32 @@
+---
+id: R-20260920-SUBSTRAIT-ORDER-FETCH-DRIFT
+title: Ordered relation semantics could drift across Canvas, Preview, Run, and PostgreSQL
+status: Open
+date: 2026-09-20
+owners:
+  - web
+  - api
+  - packages/@dvt/contracts
+  - packages/@dvt/postgres-projection
+severity: High
+probability: Low
+---
+mitigation:
+  summary: >
+    One canonical Substrait SortRel/FetchRel tree owns ordering and row selection. Stable FieldIds
+    resolve the authored keys, exact i64 values survive transport, the recursive PostgreSQL AST
+    projection preserves wrapper position, and the Preview sample cap is applied only after the
+    semantic query while repeating its final order at the outer boundary. Unsupported expressions,
+    directions, stale identities, negative limits, overflow, and non-admitted compositions fail
+    closed.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/evidence/ED-20260920-sort-fetch-end-to-end.md
+    - packages/@dvt/postgres-projection/test/sortFetchPostgresProjection.test.ts
+    - apps/api/test/integration/dvtSortFetchPostgres.integration.test.ts
+    - apps/web/cypress/e2e/canvas/canvas-relational-tree-operators.cy.ts
+  follow_up:
+    - Every additional sortable expression or provider needs explicit capability admission and
+      ordered-sequence proof.
+    - TopN, WITH TIES, keyset pagination, durable snapshots, and publication-order claims remain
+      separate governed capabilities.

@@ -43,6 +43,7 @@ export type GraphNodeCardViewProps = Readonly<{
   typeLabel: string;
   tags: readonly Readonly<{ value: string; label: string }>[];
   columns: readonly GraphNodeCardColumn[];
+  expressionInputs?: readonly GraphNodeCardColumn[];
   showColumns: boolean;
   icon?: LucideIcon;
   borderClass?: string;
@@ -55,8 +56,6 @@ export type GraphNodeCardViewProps = Readonly<{
     anchorElement: HTMLElement
   ) => void;
   onOpenCode?: () => void;
-  onOpenDataSample?: () => void;
-  dataSampleInteractionLabel?: string;
   onSelectTag?: (tag: string) => void;
   getSelectTagLabel?: (tag: string) => string;
   nodeId?: string;
@@ -140,6 +139,7 @@ export function GraphNodeCardView({
   typeLabel,
   tags,
   columns,
+  expressionInputs,
   showColumns,
   icon: Icon,
   borderClass,
@@ -149,8 +149,6 @@ export function GraphNodeCardView({
   overlayStyle,
   onOpenOperationalDetails,
   onOpenCode,
-  onOpenDataSample,
-  dataSampleInteractionLabel,
   onSelectTag,
   getSelectTagLabel,
   nodeId,
@@ -250,6 +248,7 @@ export function GraphNodeCardView({
           <GraphNodeColumnSection
             onColumnInspect={onColumnInspect}
             columns={columns}
+            expressionInputs={expressionInputs}
             expanded={columnDisclosureExpanded}
             nodeId={nodeId}
             portDirections={columnPortDirections}
@@ -276,17 +275,12 @@ export function GraphNodeCardView({
         )}
       </div>
 
-      {(onOpenOperationalDetails == null || interactiveOperationalDetail == null) &&
-      onOpenDataSample == null ? (
+      {onOpenOperationalDetails == null || interactiveOperationalDetail == null ? (
         <GraphNodeOperationalRail metrics={cardModel.operationalMetrics} />
       ) : (
         <GraphNodeOperationalRail
           metrics={cardModel.operationalMetrics}
-          ariaLabel={
-            interactiveOperationalDetail?.ariaLabel ?? dataSampleInteractionLabel ?? typeLabel
-          }
-          dataSampleInteractionLabel={dataSampleInteractionLabel}
-          onOpenDataSample={onOpenDataSample}
+          ariaLabel={interactiveOperationalDetail.ariaLabel}
           onOpen={
             onOpenOperationalDetails == null || interactiveOperationalDetail == null
               ? undefined

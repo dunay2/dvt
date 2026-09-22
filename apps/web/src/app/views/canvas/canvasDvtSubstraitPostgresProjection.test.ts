@@ -1,6 +1,7 @@
 import { create } from '@bufbuild/protobuf';
 import {
   FunctionOptionSchema,
+  JoinRel_JoinType,
   type Expression_ScalarFunction,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { describe, expect, it } from 'vitest';
@@ -17,7 +18,7 @@ import {
   projectDvtSubstraitPilotAggregationToPostgresSql,
   projectDvtSubstraitPilotAggregateWindowToPostgresSql,
   projectDvtSubstraitPilotWindowToPostgresSql,
-  projectDvtSubstraitInnerJoinToPostgresSql,
+  projectDvtSubstraitJoinToPostgresSql,
   projectDvtSubstraitPilotToPostgresSql,
   projectDvtSubstraitProjectionToPostgresSql,
   projectDvtSubstraitUnionAllToPostgresSql,
@@ -45,17 +46,19 @@ import {
   applyDvtSubstraitInnerJoinFieldEdit,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
   applyDvtSubstraitInnerJoinGrouping,
-  appendDvtSubstraitInnerJoinInput,
-  createDvtSubstraitInnerJoinDraft,
-  createDvtSubstraitStringInnerJoinDraft,
-  inspectDvtSubstraitNInputJoinDraft,
-  type DvtSubstraitInnerJoinDraft,
+  appendDvtSubstraitJoinInput,
+  createDvtSubstraitJoinDraft,
+  createDvtSubstraitStringJoinDraft,
+  inspectDvtSubstraitJoinDraft,
+  setDvtSubstraitJoinType,
+  type DvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   applyDvtSubstraitUnionAllGroupedRowNumber,
   applyDvtSubstraitUnionAllGrouping,
   applyDvtSubstraitUnionAllFieldEdit,
   createDvtSubstraitUnionAllDraft,
+  createDvtSubstraitUnionDistinctDraft,
   inspectDvtSubstraitUnionAllDraft,
   type DvtSubstraitUnionAllDraft,
 } from './canvasDvtSubstraitSetComposition';
@@ -69,11 +72,11 @@ function requirePilotOutputId(draft: DvtSubstraitPilotDraft, name: string): stri
 }
 
 function requireJoinInputFieldId(
-  draft: DvtSubstraitInnerJoinDraft,
+  draft: DvtSubstraitJoinDraft,
   inputIndex: number,
   name: string
 ): string {
-  const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+  const inspection = inspectDvtSubstraitJoinDraft(draft);
   if (!inspection.ok) throw new Error('Expected admitted INNER JOIN projection.');
   const field = inspection.projection.inputs[inputIndex]?.fields.find(
     (candidate) => candidate.name === name
@@ -82,8 +85,8 @@ function requireJoinInputFieldId(
   return field.fieldId;
 }
 
-function requireJoinOutputFieldId(draft: DvtSubstraitInnerJoinDraft, name: string): string {
-  const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+function requireJoinOutputFieldId(draft: DvtSubstraitJoinDraft, name: string): string {
+  const inspection = inspectDvtSubstraitJoinDraft(draft);
   if (!inspection.ok) throw new Error('Expected admitted INNER JOIN projection.');
   const output = inspection.projection.outputs.find((candidate) => candidate.name === name);
   if (output == null) throw new Error(`Expected INNER JOIN output ${name}.`);
@@ -494,6 +497,26 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     );
   });
 
+  it('renders the selected FilterRel comparison operator', async () => {
+    const capability = resolveDvtSubstraitFilterCapabilities({
+      dataType: 'text',
+      provider: 'postgres',
+    }).find((candidate) => candidate.name === 'not_equal');
+    if (capability == null) throw new Error('Expected the admitted not-equal filter capability.');
+    const draft = applyDvtSubstraitFilter(connectedOrdersProjectionDraft(), {
+      fieldId: 'output:customer',
+      dataType: 'text',
+      capabilityId: capability.capabilityId,
+      value: 'Ada',
+    });
+
+    const sql = await projectDvtSubstraitProjectionToPostgresSql(draft);
+
+    expect(sql.replaceAll(/\s+/g, ' ').trim().toLowerCase()).toMatch(
+      /^select order_id, customer as buyer, amount from raw\.orders where customer <> 'ada';?$/
+    );
+  });
+
   it('derives literals and ordered row numbers from the canonical projection', async () => {
     let draft = connectedOrdersProjectionDraft();
     draft = createProjectionOutput(draft, {
@@ -867,7 +890,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       connectionId: 'warehouse-main',
       provider: 'postgres' as const,
     };
-    const draft = createDvtSubstraitInnerJoinDraft({
+    const draft = createDvtSubstraitJoinDraft({
       left: {
         nodeId: 'source-customers',
         schema: 'tenant-data',
@@ -891,11 +914,76 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       targetNodeId: 'transform-customer-orders',
     });
 
-    const sql = await projectDvtSubstraitInnerJoinToPostgresSql(draft);
+    const sql = await projectDvtSubstraitJoinToPostgresSql(draft);
     const normalized = sql.replaceAll(/\s+/g, ' ').trim().toLowerCase();
 
     expect(normalized).toMatch(
       /^select left_source\.customer_id as customer_id, left_source\.name as name, right_source\.order_id as order_id from "tenant-data"\."customer-ledger" as left_source join "tenant-data"\."order-ledger" as right_source on left_source\.customer_id = right_source\.customer_id;?$/
+    );
+  });
+
+  it.each([
+    ['grouping', false],
+    ['grouped window', true],
+  ] as const)('preserves binary LEFT JOIN under %s', async (_label, includeWindow) => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    let draft = createDvtSubstraitJoinDraft({
+      left: {
+        nodeId: 'source-customers',
+        schema: 'public',
+        table: 'customers',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef,
+          sourceObjectId: 'public.customers',
+        },
+      },
+      right: {
+        nodeId: 'source-orders',
+        schema: 'public',
+        table: 'orders',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef,
+          sourceObjectId: 'public.orders',
+        },
+      },
+      targetNodeId: 'transform-customer-orders',
+    });
+    const inspection = inspectDvtSubstraitJoinDraft(draft);
+    const joinRelationId = inspection.ok
+      ? inspection.projection.joinRelations[0]?.relationId
+      : undefined;
+    if (joinRelationId == null) throw new Error('Expected one canonical JOIN relation.');
+    draft = setDvtSubstraitJoinType({
+      draft,
+      joinRelationId,
+      joinType: JoinRel_JoinType.LEFT,
+    });
+    draft = applyDvtSubstraitInnerJoinGrouping(draft, {
+      groupFieldId: requireJoinOutputFieldId(draft, 'customer_id'),
+      countOutputName: 'order_count',
+    });
+    if (includeWindow) {
+      draft = applyDvtSubstraitInnerJoinGroupedRowNumber(draft, {
+        outputName: 'count_rank',
+      });
+    }
+
+    const normalized = (await projectDvtSubstraitJoinToPostgresSql(draft))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    expect(normalized).toContain(
+      'from public.customers as left_source left join public.orders as right_source'
+    );
+    expect(normalized).not.toContain(
+      'from public.customers as left_source join public.orders as right_source'
     );
   });
 
@@ -905,7 +993,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       connectionId: 'warehouse-main',
       provider: 'postgres' as const,
     };
-    const draft = createDvtSubstraitStringInnerJoinDraft({
+    const draft = createDvtSubstraitStringJoinDraft({
       left: {
         source: {
           nodeId: 'source-active-customers',
@@ -938,7 +1026,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       rightFieldName: 'customer_id',
       targetNodeId: 'transform-active-customer-orders',
     });
-    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    const inspection = inspectDvtSubstraitJoinDraft(draft);
     if (!inspection.ok) throw new Error('Expected admitted INNER JOIN projection.');
     const relationId = inspection.projection.joinRelations[0]?.relationId;
     const activeFieldId = inspection.projection.inputs[1]?.fields.find(
@@ -958,7 +1046,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       },
     });
 
-    const normalized = (await projectDvtSubstraitInnerJoinToPostgresSql(conditioned))
+    const normalized = (await projectDvtSubstraitJoinToPostgresSql(conditioned))
       .replaceAll(/\s+/g, ' ')
       .trim()
       .toLowerCase();
@@ -969,7 +1057,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
   });
 
   it('projects a constant literal comparison through the PostgreSQL adapter', async () => {
-    const draft = createDvtSubstraitInnerJoinDraft({
+    const draft = createDvtSubstraitJoinDraft({
       left: {
         nodeId: 'source-customers',
         schema: 'public',
@@ -1000,7 +1088,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       },
       targetNodeId: 'transform-constant-condition',
     });
-    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    const inspection = inspectDvtSubstraitJoinDraft(draft);
     if (!inspection.ok) throw new Error('Expected admitted INNER JOIN projection.');
     const relationId = inspection.projection.joinRelations[0]?.relationId;
     if (relationId == null) throw new Error('Expected JOIN relation identity.');
@@ -1013,7 +1101,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       },
     });
 
-    const normalized = (await projectDvtSubstraitInnerJoinToPostgresSql(conditioned))
+    const normalized = (await projectDvtSubstraitJoinToPostgresSql(conditioned))
       .replaceAll(/\s+/g, ' ')
       .trim()
       .toLowerCase();
@@ -1027,7 +1115,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       connectionId: 'warehouse-main',
       provider: 'postgres' as const,
     };
-    const draft = createDvtSubstraitStringInnerJoinDraft({
+    const draft = createDvtSubstraitStringJoinDraft({
       left: {
         source: {
           nodeId: 'source-grouped-customers',
@@ -1059,7 +1147,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       rightFieldName: 'customer_id',
       targetNodeId: 'transform-grouped-customer-orders',
     });
-    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    const inspection = inspectDvtSubstraitJoinDraft(draft);
     if (!inspection.ok) throw new Error('Expected admitted INNER JOIN projection.');
     const joinRelationId = inspection.projection.joinRelations[0]?.relationId;
     const countryFieldId = inspection.projection.inputs[1]?.fields.find(
@@ -1090,7 +1178,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       },
     });
 
-    const normalized = (await projectDvtSubstraitInnerJoinToPostgresSql(grouped))
+    const normalized = (await projectDvtSubstraitJoinToPostgresSql(grouped))
       .replaceAll(/\s+/g, ' ')
       .trim()
       .toLowerCase();
@@ -1106,7 +1194,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       connectionId: 'warehouse-main',
       provider: 'postgres' as const,
     };
-    const draft = createDvtSubstraitStringInnerJoinDraft({
+    const draft = createDvtSubstraitStringJoinDraft({
       left: {
         source: {
           nodeId: 'source-normalized-orders',
@@ -1137,7 +1225,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       rightFieldName: 'client_id',
       targetNodeId: 'transform-normalized-client-join',
     });
-    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    const inspection = inspectDvtSubstraitJoinDraft(draft);
     if (!inspection.ok) throw new Error('Expected admitted INNER JOIN projection.');
     const joinRelationId = inspection.projection.joinRelations[0]?.relationId;
     const leftFieldId = inspection.projection.inputs[0]?.fields[0]?.fieldId;
@@ -1167,7 +1255,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       },
     });
 
-    const normalized = (await projectDvtSubstraitInnerJoinToPostgresSql(conditioned))
+    const normalized = (await projectDvtSubstraitJoinToPostgresSql(conditioned))
       .replaceAll(/\s+/g, ' ')
       .trim()
       .toLowerCase();
@@ -1197,7 +1285,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
         connectionId: 'warehouse-main',
         provider: 'postgres' as const,
       };
-      let draft = createDvtSubstraitInnerJoinDraft({
+      let draft = createDvtSubstraitJoinDraft({
         left: {
           nodeId: 'source-customers',
           schema: 'public',
@@ -1222,7 +1310,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       });
       for (const appended of fixture.appendedSources) {
         const leftSourceFieldId = requireJoinInputFieldId(draft, 0, 'customer_id');
-        draft = appendDvtSubstraitInnerJoinInput(draft, {
+        draft = appendDvtSubstraitJoinInput(draft, {
           source: {
             nodeId: appended.nodeId,
             schema: 'public',
@@ -1242,7 +1330,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
         });
       }
 
-      const normalized = (await projectDvtSubstraitInnerJoinToPostgresSql(draft))
+      const normalized = (await projectDvtSubstraitJoinToPostgresSql(draft))
         .replaceAll(/\s+/g, ' ')
         .trim()
         .toLowerCase();
@@ -1257,7 +1345,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       connectionId: 'warehouse-main',
       provider: 'postgres' as const,
     };
-    let draft = createDvtSubstraitInnerJoinDraft({
+    let draft = createDvtSubstraitJoinDraft({
       left: {
         nodeId: 'source-customers',
         schema: 'public',
@@ -1280,7 +1368,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       },
       targetNodeId: 'transform-customer-orders',
     });
-    draft = appendDvtSubstraitInnerJoinInput(draft, {
+    draft = appendDvtSubstraitJoinInput(draft, {
       source: {
         nodeId: 'source-shipments',
         schema: 'public',
@@ -1306,7 +1394,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       outputName: 'shipment_rank',
     });
 
-    const normalized = (await projectDvtSubstraitInnerJoinToPostgresSql(draft))
+    const normalized = (await projectDvtSubstraitJoinToPostgresSql(draft))
       .replaceAll(/\s+/g, ' ')
       .trim()
       .toLowerCase();
@@ -1322,7 +1410,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       connectionId: 'warehouse-main',
       provider: 'postgres' as const,
     };
-    let draft = createDvtSubstraitInnerJoinDraft({
+    let draft = createDvtSubstraitJoinDraft({
       left: {
         nodeId: 'source-customers',
         schema: 'public',
@@ -1361,7 +1449,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       selected: false,
     });
 
-    const sql = await projectDvtSubstraitInnerJoinToPostgresSql(draft);
+    const sql = await projectDvtSubstraitJoinToPostgresSql(draft);
     const normalized = sql.replaceAll(/\s+/g, ' ').trim().toLowerCase();
 
     expect(normalized).toMatch(
@@ -1375,7 +1463,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       connectionId: 'warehouse-main',
       provider: 'postgres' as const,
     };
-    let draft = createDvtSubstraitInnerJoinDraft({
+    let draft = createDvtSubstraitJoinDraft({
       left: {
         nodeId: 'source-customers',
         schema: 'public',
@@ -1421,7 +1509,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       outputName: 'count_rank',
     });
 
-    const normalized = (await projectDvtSubstraitInnerJoinToPostgresSql(draft))
+    const normalized = (await projectDvtSubstraitJoinToPostgresSql(draft))
       .replaceAll(/\s+/g, ' ')
       .trim()
       .toLowerCase();
@@ -1487,6 +1575,42 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     );
   });
 
+  it('projects the exact typed SetRel revision as ordered PostgreSQL UNION DISTINCT', async () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    const fields = ['customer_id', 'name', 'country'].map((name) => ({
+      name,
+      type: 'string' as const,
+    }));
+    const draft = createDvtSubstraitUnionDistinctDraft({
+      inputs: ['north', 'south', 'west'].map((region) => ({
+        nodeId: `source-${region}`,
+        schema: 'public',
+        table: `customers_${region}`,
+        fields,
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1' as const,
+          connectionRef,
+          sourceObjectId: `public.customers_${region}`,
+        },
+      })),
+      targetNodeId: 'transform-distinct-customers',
+    });
+
+    const normalized = (await projectDvtSubstraitUnionAllToPostgresSql(draft))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    expect(normalized).toMatch(
+      /^\(select customer_id, name, country from public\.customers_north union select customer_id, name, country from public\.customers_south\) union select customer_id, name, country from public\.customers_west;?$/
+    );
+    expect(normalized).not.toContain('union all');
+  });
+
   it('projects selected, renamed, and reordered fields from the same SetRel revision', async () => {
     const connectionRef = {
       schemaVersion: 'connection-ref.v1' as const,
@@ -1550,7 +1674,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       .trim()
       .toLowerCase();
     expect(normalized).toMatch(
-      /^select country as region, customer_id from public\.customers_north union all select country as region, customer_id from public\.customers_south;?$/
+      /^select country as region, customer_id from \( select customer_id, name, country from public\.customers_north union all select customer_id, name, country from public\.customers_south \) as set_input;?$/
     );
   });
 
@@ -1609,7 +1733,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       .trim()
       .toLowerCase();
     expect(normalized).toMatch(
-      /^select region, count\(\*\) as customer_count, row_number\(\) over \(order by count\(\*\) desc nulls last, region asc nulls last\) as count_rank from \(\s*select customer_id, name, country as region from public\.customers_north union all select customer_id, name, country as region from public\.customers_south\s*\) as union_all_input group by region;?$/
+      /^select region, count\(\*\) as customer_count, row_number\(\) over \(order by count\(\*\) desc nulls last, region asc nulls last\) as count_rank from \( select customer_id, name, country as region from \( select customer_id, name, country from public\.customers_north union all select customer_id, name, country from public\.customers_south \) as set_input \) as set_input group by region;?$/
     );
   });
 });

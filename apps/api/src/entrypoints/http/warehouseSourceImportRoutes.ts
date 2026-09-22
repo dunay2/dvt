@@ -26,6 +26,7 @@ import {
   SourceObjectNotFoundError,
   UnsupportedSourceObjectImportError,
   UnsupportedWarehouseAdapterError,
+  WarehouseSourcePublicationChangedError,
   WarehouseSourceDiscoveryFailedError,
   WarehouseSourceDataSampleFailedError,
   type CreateWarehouseConnectionInput,
@@ -65,6 +66,7 @@ type WarehouseSourceImportQuery = {
 type WarehouseSourceDataSampleQuery = WarehouseSourceImportQuery & {
   readonly objectId?: string;
   readonly limit?: string;
+  readonly expectedPublicationToken?: string;
 };
 
 type WarehouseSourceObjectCatalogQuery = WarehouseSourceImportQuery & {
@@ -229,6 +231,15 @@ export function registerWarehouseSourceImportRoutes(
         if (error instanceof SourceObjectNotFoundError) {
           reply.code(404).send({
             error: { type: 'not_found', reason: 'source_object_not_found' },
+          });
+          return;
+        }
+        if (error instanceof WarehouseSourcePublicationChangedError) {
+          reply.code(409).send({
+            error: {
+              type: 'conflict',
+              reason: HTTP_ERROR_REASON.warehouseSourcePublicationChanged,
+            },
           });
           return;
         }
@@ -602,6 +613,9 @@ function parseSourceDataSampleQuery(
     connectionId,
     objectId: query.objectId,
     ...(query.limit === undefined ? {} : { limit: Number(query.limit) }),
+    ...(query.expectedPublicationToken === undefined
+      ? {}
+      : { expectedPublicationToken: query.expectedPublicationToken }),
   });
   if (!parsed.success) {
     return {

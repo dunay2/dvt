@@ -10,62 +10,29 @@
 import { z } from 'zod';
 
 import { CommonStepTypeConfigSchema } from '../../step-registry/CommonStepTypeConfig.js';
-import { StepArtifactRefSchema } from '../../step-registry/DbtStepTypeConfig.js';
-import { ConnectionRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
 
-import { DvtSubstraitProfileRefV1Schema } from './DvtSubstraitProfile.v1.js';
+import {
+  DvtOperationalPostgresConnectionRefSchema,
+  DvtOperationalTargetProjectionRefSchema,
+  DvtOperationalWorkloadGraphRefSchema,
+  DvtOperationalWorkloadScopeSchema,
+  DvtOperationalWorkloadSemanticRefSchema,
+  addDvtOperationalWorkloadIdentityIssues,
+} from './DvtOperationalWorkload.shared.js';
 import type { PlanOwnership } from './ExecutionPlan.v1.js';
 
-export const DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY =
-  'executor.dvt-postgres-operational-workload' as const;
-export const DVT_POSTGRES_PROJECT_REL_PROFILE_ID = 'dvt.vtx2.postgres.project-rel.v1' as const;
-export const DVT_POSTGRES_INNER_JOIN_PROFILE_ID = 'dvt.vtx2.postgres.inner-join.v1' as const;
-export const DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY = 'pgsql-deparser@16.1.1' as const;
+export {
+  DVT_POSTGRES_JOIN_PROFILE_ID,
+  DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY,
+  DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
+  DVT_POSTGRES_SET_PROFILE_ID,
+  DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
+} from './DvtOperationalWorkload.shared.js';
 
-const NonBlankStringSchema = z
-  .string()
-  .refine((value) => value.length > 0 && value === value.trim(), 'Expected a non-blank string.');
-const Sha256Schema = z.string().regex(/^[0-9a-f]{64}$/u);
-const ScopeSchema = z
-  .object({
-    tenantId: NonBlankStringSchema,
-    projectId: NonBlankStringSchema,
-    environmentId: NonBlankStringSchema,
-  })
-  .strict();
-const GraphRefSchema = z
-  .object({
-    draftRevision: NonBlankStringSchema,
-    canvasId: NonBlankStringSchema,
-    selectedNodeIds: z.array(NonBlankStringSchema).min(2),
-    selectedEdgeIds: z.array(NonBlankStringSchema).min(1),
-  })
-  .strict();
-const SemanticRefSchema = z
-  .object({
-    transformNodeId: NonBlankStringSchema,
-    semanticPlanSha256: Sha256Schema,
-    profile: DvtSubstraitProfileRefV1Schema,
-  })
-  .strict();
-const CompiledSqlArtifactRefSchema = StepArtifactRefSchema.extend({
-  artifactKind: z.literal('compiled-sql'),
-}).strict();
-const TargetProjectionRefSchema = z
-  .object({
-    profileId: z.enum([DVT_POSTGRES_PROJECT_REL_PROFILE_ID, DVT_POSTGRES_INNER_JOIN_PROFILE_ID]),
-    toolIdentity: z.literal(DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY),
-    semanticPlanSha256: Sha256Schema,
-    artifact: CompiledSqlArtifactRefSchema,
-  })
-  .strict();
-const PostgresConnectionRefSchema = ConnectionRefSchema.extend({
-  provider: z.literal('postgres'),
-}).strict();
 const EphemeralPreviewOutputIntentSchema = z
   .object({
     kind: z.literal('ephemeral-preview'),
-    nodeId: NonBlankStringSchema,
+    nodeId: z.string().min(1),
   })
   .strict();
 
@@ -75,75 +42,15 @@ export const DvtOperationalWorkloadV1Schema = CommonStepTypeConfigSchema.pick({
 })
   .extend({
     schemaVersion: z.literal('dvt-operational-workload.v1'),
-    scope: ScopeSchema,
-    graph: GraphRefSchema,
-    semantics: z.array(SemanticRefSchema).length(1),
-    targetProjection: TargetProjectionRefSchema,
-    connectionRef: PostgresConnectionRefSchema,
+    scope: DvtOperationalWorkloadScopeSchema,
+    graph: DvtOperationalWorkloadGraphRefSchema,
+    semantics: z.array(DvtOperationalWorkloadSemanticRefSchema).length(1),
+    targetProjection: DvtOperationalTargetProjectionRefSchema,
+    connectionRef: DvtOperationalPostgresConnectionRefSchema,
     output: EphemeralPreviewOutputIntentSchema,
   })
   .strict()
-  .superRefine((workload, context) => {
-    addUniqueIssue(workload.graph.selectedNodeIds, ['graph', 'selectedNodeIds'], context);
-    addUniqueIssue(workload.graph.selectedEdgeIds, ['graph', 'selectedEdgeIds'], context);
-
-    const nodeCount = workload.graph.selectedNodeIds.length;
-    const edgeCount = workload.graph.selectedEdgeIds.length;
-    const cardinalityMatches =
-      workload.targetProjection.profileId === DVT_POSTGRES_PROJECT_REL_PROFILE_ID
-        ? nodeCount === 2 && edgeCount === 1
-        : nodeCount >= 3 && edgeCount === nodeCount - 1;
-    if (!cardinalityMatches) {
-      context.addIssue({
-        code: 'custom',
-        path: ['graph'],
-        message: 'Selected graph cardinality must match the bounded target projection profile.',
-      });
-    }
-
-    const semantic = workload.semantics[0];
-    if (semantic === undefined) return;
-    const selectedNodeIds = new Set(workload.graph.selectedNodeIds);
-
-    if (!selectedNodeIds.has(semantic.transformNodeId)) {
-      context.addIssue({
-        code: 'custom',
-        path: ['semantics', 0, 'transformNodeId'],
-        message: 'Semantic Transform must belong to the exact selected graph.',
-      });
-    }
-    if (!selectedNodeIds.has(workload.output.nodeId)) {
-      context.addIssue({
-        code: 'custom',
-        path: ['output', 'nodeId'],
-        message: 'Output node must belong to the exact selected graph.',
-      });
-    }
-    if (workload.output.nodeId !== semantic.transformNodeId) {
-      context.addIssue({
-        code: 'custom',
-        path: ['output', 'nodeId'],
-        message: 'Ephemeral output must identify the semantic Transform.',
-      });
-    }
-    if (workload.targetProjection.semanticPlanSha256 !== semantic.semanticPlanSha256) {
-      context.addIssue({
-        code: 'custom',
-        path: ['targetProjection', 'semanticPlanSha256'],
-        message: 'Target projection must bind the exact semantic plan.',
-      });
-    }
-  });
-
-function addUniqueIssue(
-  values: readonly string[],
-  path: Array<string | number>,
-  context: z.RefinementCtx
-): void {
-  if (new Set(values).size !== values.length) {
-    context.addIssue({ code: 'custom', path, message: 'Expected unique identities.' });
-  }
-}
+  .superRefine(addDvtOperationalWorkloadIdentityIssues);
 
 function validatePlanOwnership(
   config: unknown,

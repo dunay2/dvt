@@ -1,0 +1,51 @@
+/* Editor-scoped interface type; monospaced text is reserved for expressions. */
+[data-slot='canvas-model-editor'],
+.canvas-relational-card-menu {
+  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+[data-slot='canvas-model-editor'] :where(button, input, select, textarea) {
+  font-family: var(--font-sans);
+}
+
+.canvas-operation-workspace {
+  container-type: inline-size;
+}
+
+.canvas-operation-properties {
+  container-type: inline-size;
+  width: clamp(340px, 38%, 480px);
+  height: 100%;
+}
+
+.canvas-operation-editors {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+[data-slot='canvas-operation-data-host']:has([data-slot='canvas-operation-data-preview']) > p {
+  display: none;
+}
+
+.canvas-operation-editors > * {
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  [data-slot='canvas-relational-tree-operation-shelf'] {
+    max-height: 112px;
+    overflow: auto;
+  }
+}
+
+@container (max-width: 600px) {
+  .canvas-operation-properties {
+    position: absolute;
+    inset-block: 0;
+    right: 0;
+    z-index: 20;
+    width: min(100%, 340px);
+    box-shadow: -8px 0 24px #0003;
+  }
+}

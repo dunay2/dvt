@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-09-11",
+  "generated": "2026-09-15",
   "repo": {
     "sha": "local"
   },
@@ -111,6 +111,7 @@
       "number": "ADR-0003",
       "decisions": [
         "ADR-0030 section 3.3 - lookupRunRef derives workflowId from runId and probes Temporal to detect orphans",
+        "ADR-0066: Build a candidate before a target-scoped CAS transaction and preserve the target object.",
         "Administrative schema lifecycle stays separate from run-state and delivery port delegation",
         "Admit one UTF-8 CSV or JSON Lines object and one scoped staging relation.",
         "All adapter methods enforce tenant scope per ADR-0031",
@@ -118,7 +119,9 @@
         "Batch maintenance operations (detectStuckRuns) separated from IWorkflowEngine lifecycle",
         "Build run terminal event payloads from DVT runtime evidence instead of Temporal provider metadata",
         "Carry one bounded dbt selector in the admitted step configuration.",
+        "Centralize identifier quoting and provider catalog queries outside orchestration.",
         "Compose facade use cases through explicit dependencies instead of a multi-reason facade module.",
+        "Compose pool, transactional session and stable-table publisher behind one lifecycle.",
         "Decision - The engine's error hierarchy encodes domain failures with stable codes",
         "Decision â€” Expose a stable public surface of the engine for orchestration decoupled from the runtime",
         "Decision — Authorization is abstracted behind a port so the engine does not depend on a specific IAM provider",
@@ -138,6 +141,7 @@
         "Define workflow ports and cursor contracts at the DVT boundary before Temporal-specific execution",
         "Delegate recover-run facade input to the recovery application service.",
         "Delivery-facing port delegation remains the stable aggregate entrypoint for PostgreSQL state storage",
+        "Derive CAS lock keys and schema fingerprints from provider-native metadata.",
         "Derive active requirements from the injected binding policy before dispatch.",
         "Drive Temporal layer execution from resolved DVT execution segments and canonical workflow state",
         "Emit step lifecycle events and execute DVT-owned step activities with explicit retry handling",
@@ -156,6 +160,7 @@
         "Keep deterministic start-run intent creation in a named phase service.",
         "Keep implementation composition behind a governed entrypoint instead of the root barrel.",
         "Keep layer cursor, skipped-step emission, and continue-as-new handoff derived from DVT workflow state",
+        "Keep provider publication inputs and outcomes outside Engine contracts.",
         "Keep provider-ref and retry-attempt administration behind DVT-owned in-memory run-state support",
         "Keep provider-test behavior behind the real provider adapter contract.",
         "Keep recent control-signal ids in continue-as-new cursor state without making cursor size unbounded",
@@ -182,6 +187,7 @@
         "Re-export canonical types from @dvt/contracts — single source of truth",
         "Represent executor plugins as explicit step-activity profile inputs",
         "Resolve executable workflow segments from the canonical DVT execution plan, not from Temporal provider state",
+        "Resolve governed credentials and read only the exact PostgreSQL target marker.",
         "Resolve terminal, cancellation, and continue-as-new workflow outcomes through DVT lifecycle events",
         "Run-state contract delegation is isolated from snapshot-queue and delivery concerns",
         "Run-state writes are exposed via command port bridge, avoiding direct adapter/runtime coupling to concrete persistence callers.",
@@ -209,6 +215,7 @@
         "Translate runtime error evidence into DVT RunFailed reasons at the workflow boundary",
         "Type-check activity dependency fixtures against the scoped engine-dispatch plan query",
         "Type-check workflow mapping fixtures against canonical execution plan and task queue contracts",
+        "Use one strict marker grammar at admission and publication boundaries.",
         "Validate and evaluate gateway dependencies from canonical execution-plan facts",
         "Verify execution segment resolution exposes only bounded layer metadata needed by the workflow",
         "Verify workflow layer order follows resolved DVT execution segments and lifecycle guards",
@@ -217,6 +224,13 @@
       ],
       "implemented_by": [
         "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts",
+        "packages/@dvt/adapter-postgres/src/PostgresDvtPublicationCapability.ts",
+        "packages/@dvt/adapter-postgres/src/PostgresDvtPublicationMarker.ts",
+        "packages/@dvt/adapter-postgres/src/PostgresDvtPublicationMetadata.ts",
+        "packages/@dvt/adapter-postgres/src/PostgresDvtPublicationPredecessorReader.ts",
+        "packages/@dvt/adapter-postgres/src/PostgresDvtPublicationSql.ts",
+        "packages/@dvt/adapter-postgres/src/PostgresDvtPublicationTypes.ts",
+        "packages/@dvt/adapter-postgres/src/PostgresDvtStableTablePublisher.ts",
         "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
         "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoadingCapability.ts",
         "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
@@ -814,6 +828,7 @@
         "Carry one bounded dbt selector in the admitted step configuration.",
         "Define plan-compile step-type configuration schemas as explicit planner contract surface",
         "Enforce one shared budget contract across Canvas, API, and persistence boundaries.",
+        "Fingerprint the ordered PostgreSQL output schema before runtime publication.",
         "Keep common timeout, concurrency, and custom fields independent of step-family artifacts.",
         "Keep executable-selection intent as a canonical planner contract instead of UI-local state.",
         "Keep execution decisions in the persisted plan artifact so Web renders planner truth without reconstructing selection semantics.",
@@ -827,12 +842,16 @@
         "Publish plan-compile request and response schemas as a bounded planner contract pack",
         "Publish selected executable closure as a derived read model separate from editable authoring truth.",
         "Re-export only the execution-selection component contracts through this local barrel.",
-        "Validate canonical plan-admission findings through one focused strict schema pack."
+        "Reuse governed connection and identifier value objects for an explicit destination.",
+        "Validate canonical plan-admission findings through one focused strict schema pack.",
+        "Validate recognized DVT metadata through one shared policy."
       ],
       "implemented_by": [
         "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringFieldPolicy.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtPostgresOutputSchema.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtTransformResultTarget.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/HttpJsonArtifactStepTypeConfig.v1.ts",
@@ -844,6 +863,7 @@
         "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDvtNodeFieldPolicy.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/index.ts",
         "packages/@dvt/contracts/src/schema-packs/execution-selection.ts",
         "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
@@ -1166,20 +1186,28 @@
         "Bind exact pinned Plan bytes to one identity-only DVT sidecar.",
         "Bind terminal Transform Preview to the exact protected graph, semantic plan, target SQL projection, and governed connection.",
         "Compose one catalog from standard candidates, admissions, and product gaps.",
+        "Explore a protected Transform through semantic identity and server-owned bounds, never client SQL.",
         "Export the pinned Substrait profile, stable authoring bindings, and single semantic capability catalog through one bounded public contract surface.",
         "Fail closed when persisted bytes are not one decodable Plan at the pinned version.",
+        "Keep protected graph, semantic, projection, and connection identity checks shared across workload versions.",
         "Logical transformation semantics stay outside ExecutionPlan; plan steps represent runtime responsibilities only.",
         "Persist one strict, versioned ConnectedSourceRef instead of parallel loose connection and object binding coordinates.",
         "Pin one exact Substrait release and map stable DVT ids to rel_anchor/output ordinals.",
+        "Re-export only governed Canvas contracts from this narrow barrel.",
         "Rebind a persisted logical Source to one discovered physical object without changing logical identity.",
         "Require typed standard-first evidence before semantic admission.",
         "Retain product gaps separately from standard semantic identities.",
         "Seed candidates only from pinned core and official extension identities.",
         "Validate and serialize the capability read model deterministically.",
-        "Validate stable FieldId hierarchy against the current structural binding independently from document transport. FieldId/relationId own logical identity; outputOrdinal is only the current sibling position and must never be used to mint or repair identity."
+        "Validate stable FieldId hierarchy against the current structural binding independently from document transport. FieldId/relationId own logical identity; outputOrdinal is only the current sibling position and must never be used to mint or repair identity.",
+        "Version Run separately from the existing Preview workload and bind it to one explicit result target."
       ],
       "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/canvas/TransformDataSample.v1.ts",
+        "packages/@dvt/contracts/src/contracts/canvas/index.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.shared.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v2.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitAuthoringIdentity.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts",
@@ -1199,6 +1227,16 @@
         "packages/@dvt/contracts/src/substrait.ts"
       ],
       "title": "ADR-0064 - Substrait as the Semantic Reference and Bounded Logical Profile for DVT Transformations"
+    },
+    {
+      "number": "ADR-0066",
+      "decisions": [
+        "ADR-0066: Build a candidate before a target-scoped CAS transaction and preserve the target object."
+      ],
+      "implemented_by": [
+        "packages/@dvt/adapter-postgres/src/PostgresDvtStableTablePublisher.ts"
+      ],
+      "title": "ADR-0066 - PostgreSQL Stable-Table Publication"
     },
     {
       "number": "ADR-0067",

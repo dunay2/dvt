@@ -11,6 +11,7 @@ import type { CanvasWorkspaceMenuContribution } from './canvasWorkspaceMenuContr
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
 import { canvasViewCopy } from './copy';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { CanvasWorkspaceModelTabs } from './CanvasWorkspaceModelTabs';
 
 type CanvasWorkspaceMenuContributionRegistrarProps = CanvasWorkspaceMenuContribution;
 
@@ -187,6 +188,7 @@ export function CanvasWorkspaceMenuControls({
 }
 
 export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
+  const modelTab = useCanvasWorkspaceMenuContributionStore((state) => state.modelTab);
   const activeCanvas = useCanvasWorkspaceMenuContributionStore(
     (state) => state.contribution?.activeCanvas ?? null
   );
@@ -201,13 +203,16 @@ export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
       data-slot="shell-active-canvas-identity"
       data-canvas-id={activeCanvas.id}
       data-kind={activeCanvas.kind}
-      className="flex min-w-0 max-w-[calc(100%-2.5rem)] shrink-0 items-center gap-2 rounded-sm border border-(--border-muted) bg-(--surface-panel-subtle) px-2.5 py-1 text-xs sm:max-w-64 lg:max-w-[24rem]"
+      className="flex min-w-0 items-center self-stretch"
       aria-label={canvasViewCopy.workspaceActiveCanvasLabelTemplate.replace(
         '{title}',
         activeCanvas.title
       )}
     >
-      <span className="truncate font-semibold text-(--text-primary)">{activeCanvas.title}</span>
+      <CanvasWorkspaceModelTabs
+        canvasTitle={activeCanvas.title}
+        tab={modelTab?.canvasId === activeCanvas.id ? modelTab : undefined}
+      />
     </div>
   );
 }

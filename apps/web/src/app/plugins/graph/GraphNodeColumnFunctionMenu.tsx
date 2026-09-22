@@ -1,5 +1,5 @@
 /** Owned concern: render the canonical ResolveCanvasContextMenu column projection. */
-import { useRef, useState, type ReactElement } from 'react';
+import { useRef, type ReactElement } from 'react';
 
 import {
   buildCanvasColumnContextMenuModel,
@@ -110,7 +110,6 @@ export function GraphNodeColumnFunctionMenu(props: {
     }
     if (action.id === 'remove-structured-field') props.onStructuredRemove?.();
   };
-  const [pointerOpen, setPointerOpen] = useState(false);
   const applyPendingFunction = (
     pendingFunction: { current: (() => void) | null },
     event: Event
@@ -124,39 +123,30 @@ export function GraphNodeColumnFunctionMenu(props: {
 
   return (
     <Tooltip>
-      <ContextMenu
-        onOpenChange={(open) => {
-          if (open) setPointerOpen(true);
-        }}
-      >
+      <ContextMenu>
         <ContextMenuTrigger asChild>
           <TooltipTrigger asChild>{props.piece}</TooltipTrigger>
         </ContextMenuTrigger>
-        {pointerOpen ? (
-          <ContextMenuContent
-            data-slot="graph-node-column-function-menu"
-            onCloseAutoFocus={(event) => {
-              applyPendingFunction(pendingPointerFunction, event);
-              setPointerOpen(false);
-            }}
-          >
-            <ContextMenuLabel>{model.label}</ContextMenuLabel>
-            <ContextMenuGroup>
-              {model.actions.map((action) => (
-                <ContextMenuItem
-                  key={action.id + ('targetId' in action ? ':' + action.targetId : '')}
-                  data-slot={actionSlot(action)}
-                  data-capability-id={action.id === 'invoke-function' ? action.targetId : undefined}
-                  data-field-id={action.id === 'append-field' ? action.targetId : undefined}
-                  disabled={action.disabled}
-                  onSelect={() => selectAction(action, 'pointer')}
-                >
-                  {action.label}
-                </ContextMenuItem>
-              ))}
-            </ContextMenuGroup>
-          </ContextMenuContent>
-        ) : null}
+        <ContextMenuContent
+          data-slot="graph-node-column-function-menu"
+          onCloseAutoFocus={(event) => applyPendingFunction(pendingPointerFunction, event)}
+        >
+          <ContextMenuLabel>{model.label}</ContextMenuLabel>
+          <ContextMenuGroup>
+            {model.actions.map((action) => (
+              <ContextMenuItem
+                key={action.id + ('targetId' in action ? ':' + action.targetId : '')}
+                data-slot={actionSlot(action)}
+                data-capability-id={action.id === 'invoke-function' ? action.targetId : undefined}
+                data-field-id={action.id === 'append-field' ? action.targetId : undefined}
+                disabled={action.disabled}
+                onSelect={() => selectAction(action, 'pointer')}
+              >
+                {action.label}
+              </ContextMenuItem>
+            ))}
+          </ContextMenuGroup>
+        </ContextMenuContent>
       </ContextMenu>
       <DropdownMenu open={props.keyboardOpen} onOpenChange={props.onKeyboardOpenChange}>
         <DropdownMenuTrigger asChild>

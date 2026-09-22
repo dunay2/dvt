@@ -8,7 +8,8 @@ import {
 } from '../../support/workspaceSession';
 
 const CARD = '.react-flow__node[data-id="model-orders"]';
-const VIEWER = '[data-slot="semantic-output-expression"]';
+const VIEWER = '[data-slot="canvas-contextual-workbench"]';
+const CLOSE = '[data-slot="canvas-contextual-workbench-close"]';
 
 function visitCanvas(): void {
   visitWithE2eWorkspaceSession('/canvas', {
@@ -68,17 +69,17 @@ describe('Canvas output expression inspection', () => {
     cy.then(() => {
       saves = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
-    field('customer').dblclick();
-    cy.get(VIEWER).should('contain.text', 'Output expression · customer');
-    cy.get(`${VIEWER} [data-slot="semantic-workbench-node"]`)
+    field('customer').click();
+    cy.get(VIEWER).should('contain.text', 'Properties · customer');
+    cy.get(`${VIEWER} [data-slot="canvas-relational-expression-node"]`)
       .should('have.length', 1)
       .and('contain.text', 'customer');
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
-    cy.get(VIEWER).contains('button', 'Back to relational flow').should('have.focus').type('{esc}');
+    cy.get(VIEWER).find(CLOSE).should('have.focus').type('{esc}');
     field('customer')
       .should('have.focus')
       .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
-    cy.get(VIEWER).contains('button', 'Back to relational flow').click();
+    cy.get(VIEWER).find(CLOSE).click();
     field('customer').should('have.focus');
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(saves));
   });
@@ -99,9 +100,10 @@ describe('Canvas output expression inspection', () => {
       cy.get('button[type="submit"]').click();
     });
     field('country_literal').should('be.visible');
-    field('country_literal').dblclick();
+    field('country_literal').click();
     cy.get(VIEWER).should('contain.text', 'ES');
-    cy.get(VIEWER).contains('button', 'Back to relational flow').click();
+    cy.get(VIEWER).find(CLOSE).click();
+    showAll();
     field('customer_trimmed').focus().trigger('keydown', { key: 'F10', shiftKey: true });
     cy.get('[data-slot="graph-node-column-function-menu"]').contains('CONCAT').click();
     cy.get('[data-slot="graph-node-expression-composer"]').within(() => {
@@ -110,23 +112,23 @@ describe('Canvas output expression inspection', () => {
       cy.get('[data-slot="graph-node-column-function-alias-input"]').type('customer_country');
       cy.get('[data-slot="graph-node-column-function-alias-submit"]').click();
     });
-    field('customer_country').should('be.visible').dblclick();
+    field('customer_country').should('be.visible').click();
     cy.get(VIEWER).should('contain.text', 'concat(trim(customer), status)');
-    cy.get(`${VIEWER} [data-slot="semantic-workbench-node"]`).should('have.length', 4);
-    cy.get('[role="separator"]')
-      .first()
-      .focus()
-      .then(() => cy.press(Cypress.Keyboard.Keys.HOME));
-    cy.get(VIEWER).screenshot('output-expression-tree');
+    cy.get(`${VIEWER} [data-slot="canvas-relational-expression-node"]`).should('have.length', 4);
+
+    cy.screenshot('output-expression-tree', { capture: 'viewport' });
     cy.injectAxe();
     cy.checkA11y(VIEWER, { includedImpacts: ['serious', 'critical'] });
-    cy.get(`${VIEWER} [data-slot="semantic-workbench-node"]`).contains('FIELD').click();
-    cy.get(`${VIEWER} [data-slot="semantic-workbench-node"][aria-pressed="true"]`).should(
+    cy.get(`${VIEWER} [data-slot="canvas-relational-expression-node"]`)
+      .filter('[data-kind="field"]')
+      .first()
+      .click();
+    cy.get(`${VIEWER} [data-slot="canvas-relational-expression-node"][aria-pressed="true"]`).should(
       'contain.text',
       'FIELD'
     );
     cy.get('[data-slot="semantic-output-expression-detail"]').should('contain.text', 'customer');
-    cy.get(VIEWER).contains('button', 'Back to relational flow').click();
+    cy.get(VIEWER).find(CLOSE).click();
     // The existing stateful transport serves the saved canonical document, not a visual-tree fixture.
     cy.then(() => {
       scopes.splice(1);
@@ -142,8 +144,8 @@ describe('Canvas output expression inspection', () => {
       .focus()
       .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
     cy.get(VIEWER).should('contain.text', 'concat(trim(customer), status)');
-    cy.get(`${VIEWER} [data-slot="semantic-workbench-node"]`).should('have.length', 4);
-    cy.get(VIEWER).contains('button', 'Back to relational flow').type('{esc}');
+    cy.get(`${VIEWER} [data-slot="canvas-relational-expression-node"]`).should('have.length', 4);
+    cy.get(VIEWER).find(CLOSE).type('{esc}');
     field('customer_country').should('have.focus');
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(saves));
   });

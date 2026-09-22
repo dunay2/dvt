@@ -2,8 +2,7 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 
 import { CanvasNodePortHandle } from '../../components/canvas/CanvasNodePortHandle';
-import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
-import { Tooltip, TooltipTrigger } from '../../components/ui/tooltip';
+import { useGraphColumnInspection } from './useGraphColumnInspection';
 import type {
   GraphNodeColumn,
   GraphNodeColumnInspect,
@@ -17,7 +16,7 @@ import type {
   GraphNodeStructuredFieldIdentity,
 } from './graphNodeColumnContracts';
 import { GraphNodeColumnDropCompositionFlow } from './GraphNodeColumnDropCompositionFlow';
-import { GraphNodeColumnFunctionMenu } from './GraphNodeColumnFunctionMenu';
+import { GraphNodeColumnActions } from './GraphNodeColumnActions';
 import {
   GraphNodeColumnPiece,
   GraphNodeColumnTooltip,
@@ -36,6 +35,7 @@ export function GraphNodeColumnRow(props: {
   portDirections: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
   copy: GraphNodeColumnCopy;
+  showSourceName?: boolean;
   reorder: GraphNodeColumnReorderController;
   unavailableAliases: readonly string[];
   expressionOperandCandidates: readonly GraphNodeColumn[];
@@ -66,16 +66,7 @@ export function GraphNodeColumnRow(props: {
   const { column, nodeId, copy, reorder } = props;
   const columnId = column.id ?? column.name;
   const isOutput = column.output !== false;
-  const canInspect =
-    isOutput && column.id != null && nodeId != null && props.onColumnInspect != null;
-  function inspect() {
-    if (!canInspect || pieceRef.current == null) return;
-    props.onColumnInspect?.({
-      nodeId: nodeId!,
-      fieldId: column.id!,
-      anchorElement: pieceRef.current,
-    });
-  }
+  const inspectionProps = useGraphColumnInspection(column, nodeId, props.onColumnInspect, pieceRef);
   useEffect(() => {
     if (!props.focusRequested) return;
     pieceRef.current?.focus();
@@ -83,42 +74,18 @@ export function GraphNodeColumnRow(props: {
   }, [props.focusRequested, props.onFocusFulfilled]);
   const piece = (
     <GraphNodeColumnPiece
-      {...(canInspect ? canvasNodeEmbeddedControlProps : {})}
+      {...inspectionProps}
       ref={pieceRef}
       column={column}
       isOutput={isOutput}
       canReorder={reorder.canReorder(column)}
       outputToggleDisabled={nodeId == null || props.onColumnOutputToggle == null}
       copy={copy}
+      showSourceName={props.showSourceName}
       nodeId={nodeId}
       onNestedColumnReorder={props.onColumnReorder}
       onDragStart={(event) => reorder.startDrag(column, event)}
       onDragEnd={reorder.endDrag}
-      aria-keyshortcuts={canInspect ? 'Enter' : undefined}
-      onDoubleClick={(event) => {
-        if (
-          !canInspect ||
-          (event.target instanceof Element && event.target.closest('button') != null)
-        )
-          return;
-        event.stopPropagation();
-        inspect();
-      }}
-      onKeyDown={(event) => {
-        if (
-          !canInspect ||
-          event.target !== event.currentTarget ||
-          event.key !== 'Enter' ||
-          event.ctrlKey ||
-          event.altKey ||
-          event.shiftKey ||
-          event.metaKey
-        )
-          return;
-        event.preventDefault();
-        event.stopPropagation();
-        inspect();
-      }}
       onOutputToggle={() => {
         if (nodeId == null) return;
         props.onColumnOutputToggle?.({
@@ -126,67 +93,12 @@ export function GraphNodeColumnRow(props: {
           columnId,
           columnType: column.type,
           output: !isOutput,
-          ...(!isOutput ? { placement: reorder.resolveActivationPlacement(column.name) } : {}),
+          ...(column.source == null ? {} : { source: column.source }),
+          ...(!isOutput ? { placement: reorder.resolveActivationPlacement(columnId) } : {}),
         });
       }}
     />
   );
-  const tooltip = <GraphNodeColumnTooltip column={column} isOutput={isOutput} copy={copy} />;
-  const content =
-    nodeId != null ? (
-      <GraphNodeColumnFunctionMenu
-        nodeId={nodeId}
-        columnId={columnId}
-        menu={column.functionMenu}
-        columnName={column.name}
-        appendCandidates={props.structuredAppendCandidates}
-        copy={copy}
-        keyboardOpen={keyboardFunctionMenuOpen}
-        onKeyboardOpenChange={setKeyboardFunctionMenuOpen}
-        onCreateAlias={props.onCreateAlias}
-        onRequest={
-          props.onColumnFunctionApply == null
-            ? undefined
-            : (capabilityId) => {
-                const selectedFunction = column.functionMenu?.items.find(
-                  (item) => item.capabilityId === capabilityId
-                );
-                if (selectedFunction != null) {
-                  setPendingFunction({ capabilityId });
-                }
-              }
-        }
-        onStructuredAppend={
-          column.children == null || props.onStructuredFieldApply == null
-            ? undefined
-            : (candidate) =>
-                props.onStructuredFieldApply?.({
-                  nodeId,
-                  draggedFieldId: candidate.id ?? candidate.name,
-                  targetFieldId: columnId,
-                  parentName: column.name,
-                })
-        }
-        onStructuredRemove={
-          column.children == null || props.onColumnOutputToggle == null
-            ? undefined
-            : () =>
-                props.onColumnOutputToggle?.({
-                  nodeId,
-                  columnId,
-                  columnType: column.type,
-                  output: false,
-                })
-        }
-        piece={piece}
-        tooltip={tooltip}
-      />
-    ) : (
-      <Tooltip>
-        <TooltipTrigger asChild>{piece}</TooltipTrigger>
-        {tooltip}
-      </Tooltip>
-    );
 
   return (
     <div
@@ -222,7 +134,27 @@ export function GraphNodeColumnRow(props: {
           onActivate={() => props.onColumnPortActivate?.({ direction: 'target', nodeId, columnId })}
         />
       ) : null}
-      {content}
+      <GraphNodeColumnActions
+        column={column}
+        nodeId={nodeId}
+        copy={copy}
+        piece={piece}
+        tooltip={<GraphNodeColumnTooltip type={column.type} />}
+        appendCandidates={props.structuredAppendCandidates}
+        keyboardOpen={keyboardFunctionMenuOpen}
+        onKeyboardOpenChange={setKeyboardFunctionMenuOpen}
+        onCreateAlias={props.onCreateAlias}
+        onStructuredFieldApply={props.onStructuredFieldApply}
+        onColumnOutputToggle={props.onColumnOutputToggle}
+        onRequest={
+          props.onColumnFunctionApply == null
+            ? undefined
+            : (capabilityId) => {
+                if (column.functionMenu?.items.some((item) => item.capabilityId === capabilityId))
+                  setPendingFunction({ capabilityId });
+              }
+        }
+      />
       {nodeId == null ? null : (
         <GraphNodeColumnDropCompositionFlow
           nodeId={nodeId}

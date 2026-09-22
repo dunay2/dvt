@@ -7,10 +7,12 @@ last_reviewed: 2026-04-17
 
 # Planning Closeouts
 
-Closeout notes for planning slices that have been implemented and validated.
+Retained records for governed obligations and evidence. Task progress and
+acceptance live in [GitHub Issues](https://github.com/dunay2/dvt/issues).
 
-This index is domain-oriented and points to representative closeouts for quick
-navigation. The folder contains additional historical entries.
+This curated index is navigation, not proof of current product acceptance. Apply
+the [Historical Material Rule](../status/governance-document-rule-inventory.md#historical-material-rule)
+before retaining or retiring a record.
 
 ## Domain Navigation
 
@@ -39,34 +41,21 @@ navigation. The folder contains additional historical entries.
 - [20260424 TF-E2-K-E Dbt Host-Cycle Proof Closeout](./20260424-tf-e2-k-e-dbt-host-cycle-proof-closeout.md)
 - [20260424 TF-E2-K-D Transformation Host-Cycle Proof Closeout](./20260424-tf-e2-k-d-transformation-host-cycle-proof-closeout.md)
 - [20260424 TF-E2-K-D Host-Cycle DTO Closeout](./20260424-tf-e2-k-d-host-cycle-dto-closeout.md)
-- [20260424 TF-E2-K Cycle Story Capture Closeout](./20260424-tf-e2-k-cycle-story-capture-closeout.md)
 - [20260423 TF-E2-K-C Typed Empty-Canvas Posture Closeout](./20260423-tf-e2-k-c-typed-empty-canvas-posture-closeout.md)
 - [20260423 TF-E2-K-B Host Tab Restoration Closeout](./20260423-tf-e2-k-b-host-tab-restoration-closeout.md)
 - [20260423 TF-E2-K-A First-Canvas Playground Host Closeout](./20260423-tf-e2-k-a-first-canvas-playground-host-closeout.md)
-- [20260423 TF-E2 Project Playground Host Proposal Capture Closeout](./20260423-tf-e2-project-playground-host-proposal-capture-closeout.md)
-- [20260423 Selected-Closure UX Proof Story Capture Closeout](./20260423-selected-closure-ux-proof-story-capture-closeout.md)
 - [20260423 TF-A2-C5 Selected-Closure End-To-End Proof Closeout](./20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md)
 - [20260423 TF-A2-C2 Executable Subgraph Derivation Closeout](./20260423-tf-a2-c2-executable-subgraph-derivation-closeout.md)
 - [20260423 TF-A2-C1 Execution Selection Contract Pack Closeout](./20260423-tf-a2-c1-execution-selection-contract-pack-closeout.md)
 - [20260423 TF-A2-C Execution Selection Proposal Closeout](./20260423-tf-a2-c-execution-selection-proposal-closeout.md)
 - [20260423 Workspace Graph Draft Application Component Closeout](./20260423-workspace-graph-draft-application-component-closeout.md)
-- [20260423 Docs Markdown Parser Componentization Closeout](./20260423-docs-markdown-parser-componentization-closeout.md)
-- [20260421 Web XYFlow 12.10.2 Closeout](./20260421-web-xyflow-12-10-2-closeout.md)
 - [20260420 Temporal Fowler Architecture Drift Follow-Up Closeout](./20260420-temporal-fowler-architecture-drift-follow-up-closeout.md)
-- [20260417 Graph Architecture Doc Pack Split Closeout](./20260417-graph-architecture-doc-pack-split-closeout.md)
 - [20260417 TF-E2 Route Bootstrap SRP Refactor Closeout](./20260417-tf-e2-route-bootstrap-srp-refactor-closeout.md)
 - [20260417 TF-E2 Route Bootstrap Contract Generalization Closeout](./20260417-tf-e2-route-bootstrap-contract-generalization-closeout.md)
 - [20260417 TF-E2 Canvas Bootstrap Presentation Handoff Closeout](./20260417-tf-e2-canvas-bootstrap-presentation-handoff-closeout.md)
-- [20260417 Root-Local Doc English Integration Closeout](./20260417-root-local-doc-english-integration-closeout.md)
-- [20260417 Root-Local Doc Canonicalization Closeout](./20260417-root-local-doc-canonicalization-closeout.md)
-- [20260417 Planning Gaps Governance Refresh Closeout](./20260417-planning-gaps-governance-refresh-closeout.md)
-- [20260416 TF-E2 Web Typecheck Hardening Closeout](./20260416-tf-e2-web-typecheck-hardening-closeout.md)
 - [20260414 TF-C3 Dbt Plugin Runtime Projection Slice Closeout](./20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md)
 - [20260414 TF-C3 RunExecutionContext Resolver Slice Closeout](./20260414-tf-c3-run-execution-context-resolver-closeout.md)
 - [20260414 TF-C1 Preview-Persist Convergence Closeout](./20260414-tf-c1-preview-persist-convergence-closeout.md)
-- [20260414 Dev Stack Local Postgres Bootstrap Hotfix Closeout](./20260414-hotfix-dev-stack-local-postgres-bootstrap-closeout.md)
-- [20260414 App Services Context HMR Stability Hotfix Closeout](./20260414-hotfix-app-services-context-hmr-stability-closeout.md)
-- [20260414 Frontend AppServicesProvider Startup Hotfix Closeout](./20260414-hotfix-frontend-app-services-provider-startup-closeout.md)
 - [20260414 TF-A1-C SRP Hardening Closeout](./20260414-tf-a1-c-srp-hardening-closeout.md)
 - [20260414 TF-A1-B Compiler Mapping Closeout](./20260414-tf-a1-b-compiler-mapping-closeout.md)
 - [20260413 TF-D1 Proof Environment Lifecycle Closeout](./20260413-tf-d1-proof-environment-lifecycle-closeout.md)
@@ -75,18 +64,13 @@ navigation. The folder contains additional historical entries.
 - [20260331 MVP-A1 Contractual Inventory Closeout](./20260331-mvp-a1-contractual-inventory-closeout.md)
 - [20260324 S12 Remove Deprecated State-Store Methods Closeout](./20260324-s12-remove-deprecated-state-store-methods-closeout.md)
 - [20260324 Schema Migration Rollback Closeout](./20260324-schema-migration-rollback-closeout.md)
-- [20260324 S18 Follow-Up Proposal Capture Closeout](./20260324-s18-follow-up-proposal-capture-closeout.md)
 - [20260324 S18 Explicit State-Store Root Bindings Closeout](./20260324-s18-explicit-state-store-root-bindings-closeout.md)
 - [20260321 Gap 5 PR3 Delivery Buffer Retention Closeout](./20260321-gap-5-pr3-delivery-buffer-retention-closeout.md)
 - [20260321 Gap 5 PR2 Deferred Deletion Restore Closeout](./20260321-gap-5-pr2-deferred-deletion-restore-closeout.md)
 - [20260321 Gap 5 PR1 Export Verifier Closeout](./20260321-gap-5-pr1-export-verifier-closeout.md)
 - [20260320 API Runtime Query Integration Closeout](./20260320-api-runtime-query-integration-closeout.md)
-- [20260320 Planner Assessment Roadmap Closeout](./20260320-planner-assessment-roadmap-closeout.md)
-- [20260320 Planning Archive Sweep Closeout](./20260320-planning-archive-sweep-closeout.md)
 - [20260316 G7 Provider Ref Reconciliation Closeout](./20260316-g7-provider-ref-reconciliation-closeout.md)
 - [20260316 G7 Projector Worker Runtime Closeout](./20260316-g7-projector-worker-runtime-closeout.md)
-- [20260316 Docs Governance Tooling Closeout](./20260316-docs-governance-tooling-closeout.md)
-- [20260316 Principal Architecture Review Closeout](./20260316-principal-architecture-review-closeout.md)
 
 ## Full Portfolio Views
 

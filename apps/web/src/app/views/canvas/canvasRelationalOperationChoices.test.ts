@@ -1,0 +1,190 @@
+import { describe, expect, it } from 'vitest';
+
+import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
+import {
+  resolveCanvasRelationalOperationChoices,
+  type CanvasRelationalOperationAvailability,
+} from './canvasRelationalOperationChoices';
+
+function input(args: {
+  nodeId: string;
+  connectionId?: string;
+  provider?: 'postgres' | 'snowflake';
+  joinDataType?: CanvasDvtCompositionInput['fields'][number]['joinDataType'];
+}): CanvasDvtCompositionInput {
+  return {
+    nodeId: args.nodeId,
+    schema: 'raw',
+    table: args.nodeId,
+    sourceRef: {
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        provider: args.provider ?? 'postgres',
+        connectionId: args.connectionId ?? 'warehouse-main',
+      },
+      sourceObjectId: `raw.${args.nodeId}`,
+    },
+    fields: [
+      {
+        name: 'id',
+        dataType: args.joinDataType == null ? 'text' : args.joinDataType,
+        joinDataType: args.joinDataType === undefined ? 'string' : args.joinDataType,
+      },
+    ],
+  };
+}
+
+function availability(args: {
+  inputs?: readonly CanvasDvtCompositionInput[];
+  predicateAvailable?: boolean;
+  readOnly?: boolean;
+  unionAllAvailable?: boolean;
+}): Record<string, CanvasRelationalOperationAvailability> {
+  return Object.fromEntries(
+    resolveCanvasRelationalOperationChoices({
+      inputs: args.inputs ?? [input({ nodeId: 'orders' }), input({ nodeId: 'customers' })],
+      predicateAvailable: args.predicateAvailable ?? false,
+      readOnly: args.readOnly ?? false,
+      unionAllAvailable: args.unionAllAvailable ?? false,
+    }).map((choice) => [choice.operation, choice.availability])
+  );
+}
+
+describe('resolveCanvasRelationalOperationChoices', () => {
+  it('separates a pending JOIN predicate from an available schema-compatible UNION ALL', () => {
+    expect(availability({ unionAllAvailable: true })).toEqual({
+      inner_join: 'needs-predicate',
+      left_join: 'needs-predicate',
+      right_join: 'needs-predicate',
+      full_outer_join: 'needs-predicate',
+      left_semi_join: 'needs-predicate',
+      left_anti_join: 'needs-predicate',
+      right_semi_join: 'needs-predicate',
+      right_anti_join: 'needs-predicate',
+      cross_join: 'available',
+      union_all: 'available',
+      union_distinct: 'available',
+      intersect_distinct: 'available',
+      except_distinct: 'available',
+      intersect_all: 'available',
+      except_all: 'available',
+    });
+  });
+
+  it('reports schema alignment instead of offering an incompatible UNION ALL', () => {
+    expect(availability({})).toEqual({
+      inner_join: 'needs-predicate',
+      left_join: 'needs-predicate',
+      right_join: 'needs-predicate',
+      full_outer_join: 'needs-predicate',
+      left_semi_join: 'needs-predicate',
+      left_anti_join: 'needs-predicate',
+      right_semi_join: 'needs-predicate',
+      right_anti_join: 'needs-predicate',
+      cross_join: 'available',
+      union_all: 'needs-schema-alignment',
+      union_distinct: 'needs-schema-alignment',
+      intersect_distinct: 'needs-schema-alignment',
+      except_distinct: 'needs-schema-alignment',
+      intersect_all: 'needs-schema-alignment',
+      except_all: 'needs-schema-alignment',
+    });
+  });
+
+  it('offers INNER JOIN when a valid predicate proposal is already available', () => {
+    expect(availability({ predicateAvailable: true }).inner_join).toBe('available');
+    expect(availability({ predicateAvailable: true }).left_join).toBe('available');
+    expect(availability({ predicateAvailable: true }).right_join).toBe('available');
+    expect(availability({ predicateAvailable: true }).full_outer_join).toBe('available');
+    expect(availability({ predicateAvailable: true }).left_semi_join).toBe('available');
+    expect(availability({ predicateAvailable: true }).left_anti_join).toBe('available');
+    expect(availability({ predicateAvailable: true }).right_semi_join).toBe('available');
+    expect(availability({ predicateAvailable: true }).right_anti_join).toBe('available');
+  });
+
+  it('keeps target readiness separate from semantic admission', () => {
+    expect(
+      availability({
+        inputs: [
+          input({ nodeId: 'orders', connectionId: 'warehouse-a' }),
+          input({ nodeId: 'customers', connectionId: 'warehouse-b' }),
+        ],
+      })
+    ).toEqual({
+      inner_join: 'target-unavailable',
+      left_join: 'target-unavailable',
+      right_join: 'target-unavailable',
+      full_outer_join: 'target-unavailable',
+      left_semi_join: 'target-unavailable',
+      left_anti_join: 'target-unavailable',
+      right_semi_join: 'target-unavailable',
+      right_anti_join: 'target-unavailable',
+      cross_join: 'target-unavailable',
+      union_all: 'target-unavailable',
+      union_distinct: 'target-unavailable',
+      intersect_distinct: 'target-unavailable',
+      except_distinct: 'target-unavailable',
+      intersect_all: 'target-unavailable',
+      except_all: 'target-unavailable',
+    });
+  });
+
+  it('admits an existing non-string canonical type on both inputs', () => {
+    expect(
+      availability({
+        inputs: [
+          input({ nodeId: 'orders', joinDataType: 'i64' }),
+          input({ nodeId: 'customers', joinDataType: 'i64' }),
+        ],
+      }).inner_join
+    ).toBe('needs-predicate');
+  });
+
+  it('reports unbound or unlike predicate operands as semantically unavailable', () => {
+    expect(
+      availability({
+        inputs: [
+          input({ nodeId: 'orders', joinDataType: null }),
+          input({ nodeId: 'customers', joinDataType: null }),
+        ],
+      }).inner_join
+    ).toBe('semantically-unavailable');
+    expect(
+      availability({
+        inputs: [
+          input({ nodeId: 'orders', joinDataType: null }),
+          input({ nodeId: 'customers', joinDataType: null }),
+        ],
+      }).cross_join
+    ).toBe('semantically-unavailable');
+    expect(
+      availability({
+        inputs: [
+          input({ nodeId: 'orders', joinDataType: 'i64' }),
+          input({ nodeId: 'customers', joinDataType: 'bool' }),
+        ],
+      }).inner_join
+    ).toBe('semantically-unavailable');
+  });
+
+  it('projects read-only state over otherwise available operations', () => {
+    expect(availability({ readOnly: true, unionAllAvailable: true })).toEqual({
+      inner_join: 'read-only',
+      left_join: 'read-only',
+      right_join: 'read-only',
+      full_outer_join: 'read-only',
+      left_semi_join: 'read-only',
+      left_anti_join: 'read-only',
+      right_semi_join: 'read-only',
+      right_anti_join: 'read-only',
+      cross_join: 'read-only',
+      union_all: 'read-only',
+      union_distinct: 'read-only',
+      intersect_distinct: 'read-only',
+      except_distinct: 'read-only',
+      intersect_all: 'read-only',
+      except_all: 'read-only',
+    });
+  });
+});

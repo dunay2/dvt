@@ -43,6 +43,7 @@ describe('AppShellFrame', () => {
       root.render(
         <AppShellFrame
           bottomDrawer={<div data-testid="bottom-operational-drawer">Operations drawer</div>}
+          bottomDrawerHeight={360}
           focusMode={false}
           healthBanner={<div data-testid="shell-banner">Shell banner</div>}
           leftNavigation={<div data-testid="left-nav">Left nav</div>}
@@ -109,6 +110,7 @@ describe('AppShellFrame', () => {
       root.render(
         <AppShellFrame
           bottomDrawer={<div>Operations drawer</div>}
+          bottomDrawerHeight={360}
           focusMode
           healthBanner={<div>Shell banner</div>}
           leftNavigation={<div>Left nav</div>}
@@ -138,6 +140,7 @@ describe('AppShellFrame', () => {
       root.render(
         <AppShellFrame
           bottomDrawer={<div>Operations drawer</div>}
+          bottomDrawerHeight={0}
           focusMode={false}
           healthBanner={<div>Shell banner</div>}
           leftNavigation={<div>Left nav</div>}

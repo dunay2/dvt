@@ -129,6 +129,28 @@ Microcommits: root removal plus focused tests; command wiring plus handler proof
 Test CONCAT both with and without a literal, serialization/reopen, derived SQL,
 shared slots and malformed documents. Run Web tests, lint, typecheck and pre-push.
 
+## Empty JOIN output selection (#3180)
+
+A binary or N-input JOIN may retain no selected final outputs while being edited,
+including after its Canvas input edges are removed. The canonical final emit and
+root names are both empty; input identities, intermediate outputs, predicates and
+relation identities remain intact. Reopening reconstructs unchecked, available
+fields from that same document, and selecting one creates a real output again.
+
+```text
+Checkbox -> ConfigureCanvasDvtNode -> empty final emit -> save/read -> unchecked fields
+Empty final emit -> PostgreSQL AST projection -> explicit unsupported-shape rejection
+```
+
+This distinguishes authoring state from target readiness; it does not remove
+input/predicate/identity checks or admit empty intermediate JOIN outputs. Reuse
+the existing JOIN field editor, shared reader and SQL projection boundary. Do not
+add a visual-only selection flag, fabricated output or execution fallback. Source
+last-output policy, downstream removal approval and connection composition are
+unchanged. Prove clearing and restoring binary/N-input outputs, detached edges,
+save/reload, preserved identities and SQL rejection with focused unit and browser
+regressions. Issue #3180 owns the implementation journal and evidence.
+
 ## Physical field reinclusion correction (#3144)
 
 A validated projection from a physical Source distinguishes a selected input
@@ -200,6 +222,33 @@ authority inspection in composition for A2. Verify candidate connection/target,
 source identity exclusion, column admission, deterministic order and unchanged
 graph/plan/sidecar, plus the direct consumer and JOIN composition regressions.
 
+## Chained PostgreSQL projection correction (#3149)
+
+The existing `InspectCanvasNode` query must render the connected canonical
+ProjectRel chain, not treat derived output aliases as physical table columns.
+Keep the already validated upstream projection in the read model and reuse
+`pgRangeSubselect` recursively. This is derived, transient data, not another
+semantic authority, persisted document or execution rail.
+
+```text
+Before: Source -> A(UPPER/CONCAT/literal) -> B -> SELECT A_alias FROM source
+After:  Source -> A(UPPER/CONCAT/literal) -> B -> SELECT A_alias FROM (SELECT ...) A
+```
+
+The functional correction is followed by responsibility-only extractions, as
+requested in review. Move connected Project SQL construction out of the mixed
+renderer; reuse the AST subquery helper and preserve its error contract. Move
+chained inspection out of the authoring module, sharing structural predicates
+and type conversion rather than copying them. The chain inspector receives the
+existing recursive inspection function; it cannot own a second admission policy.
+Keep existing public entry points and avoid runtime import cycles. No JOIN/UNION,
+new authoring capability or validation-policy changes. Preserve aliases,
+output order, calculations, identity checks and unsupported-shape rejection.
+Verify Source -> A -> B -> C, serialization, malformed/disconnected/stale inputs,
+the real SQL viewer and read-only execution against test PostgreSQL. Existing
+filter admission is unchanged; unsupported nested relations still fail closed.
+Schema evolution (#3150) and Canvas runtime execution (#2723) are excluded.
+
 ## Feature mechanization
 
 Viewport correction (#3146): `ConfigureCanvasDvtNode` updates must preserve the
@@ -258,6 +307,11 @@ forbiddenImplementationSurfaces:
   - packages/@dvt/planner/**
   - packages/@dvt/adapter-*/**
 commandQueryRails:
+  - name: InspectCanvasNode
+    type: query
+    referenceOnly: true
+    authorityRef: docs/planning/proposals/mandatory/frontend-and-ux/source-inspector-alias-deduplication-plan-20260904.md
+    dddOwner: CanvasNodeInspector
   - name: ConfigureCanvasDvtNode
     type: command
     status: implemented
@@ -295,6 +349,41 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts
     greenTest: apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx
 symbols:
+  - &projectionSqlSymbol
+    name: buildDvtSubstraitProjectionPostgresAst
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitProjectPostgresAst.ts
+    dddOwner: CanvasNodeInspector
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Separate connected projection from unrelated renderers]
+    architectureGuard: pnpm --filter @dvt/web test:canvas-architecture:run
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts
+    unitTests: [apps/web/src/app/views/canvas/canvasDvtSubstraitOutputProjection.test.ts, apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts]
+  - { <<: *projectionSqlSymbol, name: requireConnectedFieldProjection }
+  - { <<: *projectionSqlSymbol, name: buildScalarExpressionPostgresAst }
+  - { <<: *projectionSqlSymbol, name: buildConnectedFieldPostgresAst }
+  - { <<: *projectionSqlSymbol, name: calculatedExpression }
+  - { <<: *projectionSqlSymbol, name: outputExpression }
+  - { <<: *projectionSqlSymbol, name: pgRangeSubselect, path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts }
+  - &projectionChainSymbol
+    <<: *projectionSqlSymbol
+    name: inspectChainedDvtSubstraitProjectionDraft
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitProjectionChainInspection.ts
+    fowlerSignals: [Separate chain inspection from authoring]
+    unitTests: [apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.identity.test.ts, apps/web/src/app/views/canvas/canvasDvtSubstraitOutputProjection.test.ts]
+  - { <<: *projectionChainSymbol, name: collectExpressionFunctionAnchors }
+  - { <<: *projectionChainSymbol, name: collectRelationFunctionAnchors }
+  - &projectionStructureSymbol
+    <<: *projectionChainSymbol
+    name: createProjectionType
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitProjectionStructure.ts
+    fowlerSignals: [Share existing structural admission rules without duplication]
+  - { <<: *projectionStructureSymbol, name: inspectProjectionDataType }
+  - { <<: *projectionStructureSymbol, name: canonicalizeDvtSubstraitProjectionDataType }
+  - { <<: *projectionStructureSymbol, name: commonHasNoHiddenSemantics }
+  - { <<: *projectionStructureSymbol, name: readHasOnlyProjectionSemantics }
+  - { <<: *projectionStructureSymbol, name: projectHasOnlyFieldSelection }
+  - { <<: *projectionStructureSymbol, name: sortedRelationFields }
+  - { <<: *projectionStructureSymbol, name: I64_DATA_TYPES }
   - &vtx2Symbol
     name: readDvtTransformAuthoringAuthority
     path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts

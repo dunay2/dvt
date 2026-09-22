@@ -3,9 +3,9 @@ import { Position } from '@xyflow/react';
 
 import {
   addDvtSubstraitJoinPredicateCondition,
-  decodeDvtSubstraitInnerJoinDocument,
-  encodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitNInputJoinDraft,
+  decodeDvtSubstraitJoinDocument,
+  encodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinDraft,
   setDvtSubstraitJoinConnectionFieldSelected,
   updateDvtSubstraitJoinPredicateCondition,
 } from '../views/canvas/canvasDvtSubstraitJoinComposition';
@@ -34,10 +34,10 @@ describe('semanticWorkbenchFixture', () => {
     [1, 80],
   ])('replaces the first condition of JOIN %i with 1 = 1', (stage, expectedRows) => {
     const fixture = buildSemanticWorkbenchFixture();
-    const draft = decodeDvtSubstraitInnerJoinDocument(
+    const draft = decodeDvtSubstraitJoinDocument(
       readDvtTransformAuthoringAuthority(fixture.transform)!.semanticDocument
     );
-    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    const inspection = inspectDvtSubstraitJoinDraft(draft);
     if (!inspection.ok) throw new Error('Expected JOIN.');
     const projection = inspection.projection;
     const keyName = stage === 0 ? 'client_id' : 'order_id';
@@ -60,11 +60,11 @@ describe('semanticWorkbenchFixture', () => {
     expect(edited).not.toBe(draft);
     const transform = applyDvtSubstraitSemanticDocument(
       fixture.transform,
-      encodeDvtSubstraitInnerJoinDocument(edited)
+      encodeDvtSubstraitJoinDocument(edited)
     );
     expect(fixture.projectTransformSample(transform)?.rows).toHaveLength(expectedRows);
-    const reloaded = inspectDvtSubstraitNInputJoinDraft(
-      decodeDvtSubstraitInnerJoinDocument(
+    const reloaded = inspectDvtSubstraitJoinDraft(
+      decodeDvtSubstraitJoinDocument(
         readDvtTransformAuthoringAuthority(transform)!.semanticDocument
       )
     );
@@ -85,10 +85,10 @@ describe('semanticWorkbenchFixture', () => {
       rows: ordersFixture.rows.map((row, index) => (index === 0 ? { ...row, country: null } : row)),
     };
     const fixture = buildSemanticWorkbenchFixture({ orders });
-    const draft = decodeDvtSubstraitInnerJoinDocument(
+    const draft = decodeDvtSubstraitJoinDocument(
       readDvtTransformAuthoringAuthority(fixture.transform)!.semanticDocument
     );
-    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    const inspection = inspectDvtSubstraitJoinDraft(draft);
     if (!inspection.ok) throw new Error('Expected JOIN.');
     const fields = inspection.projection.inputs[0]!.fields;
     const joinRelationId = inspection.projection.joinRelations[0]!.relationId;
@@ -132,7 +132,7 @@ describe('semanticWorkbenchFixture', () => {
     });
     const transform = applyDvtSubstraitSemanticDocument(
       fixture.transform,
-      encodeDvtSubstraitInnerJoinDocument(grouped)
+      encodeDvtSubstraitJoinDocument(grouped)
     );
     expect(fixture.projectTransformSample(transform)?.rows).toHaveLength(3);
     expect(
@@ -149,8 +149,8 @@ describe('semanticWorkbenchFixture', () => {
     (operator, count) => {
       const fixture = buildSemanticWorkbenchFixture();
       const authority = readDvtTransformAuthoringAuthority(fixture.transform)!;
-      const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
-      const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+      const draft = decodeDvtSubstraitJoinDocument(authority.semanticDocument);
+      const inspection = inspectDvtSubstraitJoinDraft(draft);
       if (!inspection.ok) throw new Error('Expected JOIN.');
       const field = inspection.projection.inputs[0]!.fields.find(
         (item) => item.name === 'discount'
@@ -163,7 +163,7 @@ describe('semanticWorkbenchFixture', () => {
       });
       const transform = applyDvtSubstraitSemanticDocument(
         fixture.transform,
-        encodeDvtSubstraitInnerJoinDocument(edited)
+        encodeDvtSubstraitJoinDocument(edited)
       );
       const sample = fixture.projectTransformSample(transform);
       expect(sample?.rows).toHaveLength(count);
@@ -304,8 +304,8 @@ describe('semanticWorkbenchFixture', () => {
     if (selectedJoin == null) throw new Error('Expected the second JOIN relation.');
 
     const expressionGraph = projectSemanticWorkbenchGraph(SEMANTIC_WORKBENCH_TRANSFORM, {
-      view: 'join-expression',
-      joinRelationId: selectedJoin.id,
+      view: 'relation-expressions',
+      expressionRelationId: selectedJoin.id,
     });
 
     expect(expressionGraph.nodes.map((node) => node.data.label)).toEqual(
@@ -328,8 +328,8 @@ describe('semanticWorkbenchFixture', () => {
     ).toBe(true);
     expect(
       projectSemanticWorkbenchGraph(SEMANTIC_WORKBENCH_TRANSFORM, {
-        view: 'join-expression',
-        joinRelationId: selectedJoin.id,
+        view: 'relation-expressions',
+        expressionRelationId: selectedJoin.id,
       }).nodes.map((node) => ({ id: node.id, position: node.position }))
     ).toEqual(expressionGraph.nodes.map((node) => ({ id: node.id, position: node.position })));
   });
@@ -402,8 +402,8 @@ describe('semanticWorkbenchFixture', () => {
     expect(authority?.mode).toBe('substrait');
     if (authority == null) throw new Error('Expected Substrait authority.');
 
-    const inspection = inspectDvtSubstraitNInputJoinDraft(
-      decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+    const inspection = inspectDvtSubstraitJoinDraft(
+      decodeDvtSubstraitJoinDocument(authority.semanticDocument)
     );
     expect(inspection.ok).toBe(true);
     if (!inspection.ok) throw new Error('Expected an accepted join.');
@@ -438,7 +438,7 @@ describe('semanticWorkbenchFixture', () => {
     const fixture = buildSemanticWorkbenchFixture();
     const authority = readDvtTransformAuthoringAuthority(fixture.transform);
     if (authority == null) throw new Error('Expected Substrait authority.');
-    const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+    const draft = decodeDvtSubstraitJoinDocument(authority.semanticDocument);
     const ordersEdge = fixture.edges[0];
     const orderDetailsEdge = fixture.edges[2];
     if (ordersEdge == null || orderDetailsEdge == null) {
@@ -461,7 +461,7 @@ describe('semanticWorkbenchFixture', () => {
     });
     const selectedTransform = applyDvtSubstraitSemanticDocument(
       fixture.transform,
-      encodeDvtSubstraitInnerJoinDocument(selectedDraft)
+      encodeDvtSubstraitJoinDocument(selectedDraft)
     );
 
     const sample = fixture.projectTransformSample(selectedTransform);
@@ -493,8 +493,8 @@ describe('semanticWorkbenchFixture', () => {
     const fixture = buildSemanticWorkbenchFixture();
     const authority = readDvtTransformAuthoringAuthority(fixture.transform);
     if (authority == null) throw new Error('Expected Substrait authority.');
-    const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
-    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    const draft = decodeDvtSubstraitJoinDocument(authority.semanticDocument);
+    const inspection = inspectDvtSubstraitJoinDraft(draft);
     if (!inspection.ok) throw new Error('Expected an accepted N-input join.');
     const activeFieldId = inspection.projection.inputs[1]?.fields.find(
       (field) => field.name === 'active'
@@ -514,7 +514,7 @@ describe('semanticWorkbenchFixture', () => {
     });
     const transform = applyDvtSubstraitSemanticDocument(
       fixture.transform,
-      encodeDvtSubstraitInnerJoinDocument(conditioned)
+      encodeDvtSubstraitJoinDocument(conditioned)
     );
 
     const sample = fixture.projectTransformSample(transform);
@@ -534,8 +534,8 @@ describe('semanticWorkbenchFixture', () => {
     const fixture = buildSemanticWorkbenchFixture();
     const authority = readDvtTransformAuthoringAuthority(fixture.transform);
     if (authority == null) throw new Error('Expected Substrait authority.');
-    const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
-    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    const draft = decodeDvtSubstraitJoinDocument(authority.semanticDocument);
+    const inspection = inspectDvtSubstraitJoinDraft(draft);
     if (!inspection.ok) throw new Error('Expected an accepted N-input join.');
     const priorityFieldId = inspection.projection.inputs[0]?.fields.find(
       (field) => field.name === 'priority'
@@ -560,7 +560,7 @@ describe('semanticWorkbenchFixture', () => {
     });
     const transform = applyDvtSubstraitSemanticDocument(
       fixture.transform,
-      encodeDvtSubstraitInnerJoinDocument(conditioned)
+      encodeDvtSubstraitJoinDocument(conditioned)
     );
     const graph = projectSemanticWorkbenchGraph(transform);
 
@@ -570,8 +570,8 @@ describe('semanticWorkbenchFixture', () => {
     expect(graph.nodes.map((node) => node.data.label)).not.toContain('VALUE\nboolean: true');
 
     const expressionGraph = projectSemanticWorkbenchGraph(transform, {
-      view: 'join-expression',
-      joinRelationId,
+      view: 'relation-expressions',
+      expressionRelationId: joinRelationId,
     });
     const rootNode = expressionGraph.nodes.find((node) => node.data.label === 'OR\nOR');
     const comparisons = expressionGraph.nodes.filter((node) => node.data.label === 'EQUAL\n=');
@@ -594,8 +594,8 @@ describe('semanticWorkbenchFixture', () => {
     const fixture = buildSemanticWorkbenchFixture();
     const authority = readDvtTransformAuthoringAuthority(fixture.transform);
     if (authority == null) throw new Error('Expected Substrait authority.');
-    const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
-    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    const draft = decodeDvtSubstraitJoinDocument(authority.semanticDocument);
+    const inspection = inspectDvtSubstraitJoinDraft(draft);
     if (!inspection.ok) throw new Error('Expected an accepted N-input join.');
     const joinRelationId = inspection.projection.joinRelations[0]?.relationId;
     const countryFieldId = inspection.projection.inputs[1]?.fields.find(
@@ -627,12 +627,12 @@ describe('semanticWorkbenchFixture', () => {
     });
     const transform = applyDvtSubstraitSemanticDocument(
       fixture.transform,
-      encodeDvtSubstraitInnerJoinDocument(grouped)
+      encodeDvtSubstraitJoinDocument(grouped)
     );
     const sample = fixture.projectTransformSample(transform);
     const expressionGraph = projectSemanticWorkbenchGraph(transform, {
-      view: 'join-expression',
-      joinRelationId,
+      view: 'relation-expressions',
+      expressionRelationId: joinRelationId,
     });
     const relationGraph = projectSemanticWorkbenchGraph(transform, { view: 'relations' });
     const root = expressionGraph.nodes.find((node) => node.data.label === 'AND\nAND');
@@ -655,8 +655,8 @@ describe('semanticWorkbenchFixture', () => {
     const fixture = buildSemanticWorkbenchFixture({ orders: normalizedOrders });
     const authority = readDvtTransformAuthoringAuthority(fixture.transform);
     if (authority == null) throw new Error('Expected Substrait authority.');
-    const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
-    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    const draft = decodeDvtSubstraitJoinDocument(authority.semanticDocument);
+    const inspection = inspectDvtSubstraitJoinDraft(draft);
     if (!inspection.ok) throw new Error('Expected an accepted N-input join.');
     const joinRelationId = inspection.projection.joinRelations[0]?.relationId;
     const countryFieldId = inspection.projection.inputs[0]?.fields.find(
@@ -690,12 +690,12 @@ describe('semanticWorkbenchFixture', () => {
     });
     const transform = applyDvtSubstraitSemanticDocument(
       fixture.transform,
-      encodeDvtSubstraitInnerJoinDocument(conditioned)
+      encodeDvtSubstraitJoinDocument(conditioned)
     );
     const sample = fixture.projectTransformSample(transform);
     const expressionGraph = projectSemanticWorkbenchGraph(transform, {
-      view: 'join-expression',
-      joinRelationId,
+      view: 'relation-expressions',
+      expressionRelationId: joinRelationId,
     });
 
     expect(sample?.rows).toHaveLength(6);
@@ -723,7 +723,7 @@ describe('semanticWorkbenchFixture', () => {
   it('keeps field selection scoped to each source-to-transform connection in an N:M graph', () => {
     const authority = readDvtTransformAuthoringAuthority(SEMANTIC_WORKBENCH_TRANSFORM);
     if (authority == null) throw new Error('Expected Substrait authority.');
-    const initialDraft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+    const initialDraft = decodeDvtSubstraitJoinDocument(authority.semanticDocument);
     const orders = SEMANTIC_WORKBENCH_SOURCE[0];
     const clients = SEMANTIC_WORKBENCH_SOURCE[1];
     const ordersEdge = SEMANTIC_WORKBENCH_EDGE[0];
@@ -764,8 +764,8 @@ describe('semanticWorkbenchFixture', () => {
       selected: false,
     });
 
-    const primary = inspectDvtSubstraitNInputJoinDraft(primaryDraft);
-    const secondary = inspectDvtSubstraitNInputJoinDraft(secondaryDraft);
+    const primary = inspectDvtSubstraitJoinDraft(primaryDraft);
+    const secondary = inspectDvtSubstraitJoinDraft(secondaryDraft);
     expect(primary.ok).toBe(true);
     expect(secondary.ok).toBe(true);
     if (!primary.ok || !secondary.ok) throw new Error('Expected accepted N-input joins.');
@@ -785,7 +785,7 @@ describe('semanticWorkbenchFixture', () => {
   it('rejects a field edit when the edge does not bind the supplied source and transform', () => {
     const authority = readDvtTransformAuthoringAuthority(SEMANTIC_WORKBENCH_TRANSFORM);
     if (authority == null) throw new Error('Expected Substrait authority.');
-    const initialDraft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+    const initialDraft = decodeDvtSubstraitJoinDocument(authority.semanticDocument);
     const clientsEdge = SEMANTIC_WORKBENCH_EDGE[1];
     if (clientsEdge == null) throw new Error('Expected the Client connection.');
 

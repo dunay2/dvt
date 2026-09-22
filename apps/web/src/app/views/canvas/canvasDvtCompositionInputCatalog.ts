@@ -1,12 +1,15 @@
 /** Owned concern: resolve connected source relations available for canonical DVT composition. */
 import { ConnectedSourceRefSchema, type ConnectedSourceRef } from '@dvt/contracts';
+import type { DvtSubstraitJoinDataType } from '@dvt/postgres-projection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { resolveCanvasDvtJoinDataType } from './canvasDvtJoinTypeAdmission';
 
 export type CanvasDvtCompositionField = Readonly<{
   name: string;
   dataType: string;
-  stringCompatible: boolean;
+  joinDataType: DvtSubstraitJoinDataType | null;
+  nullable?: boolean;
 }>;
 
 export type CanvasDvtCompositionInput = Readonly<{
@@ -21,12 +24,6 @@ function readText(value: unknown): string | null {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
 }
 
-function isStringCompatible(dataType: string): boolean {
-  return new Set(['text', 'string', 'varchar', 'character varying', 'char', 'character']).has(
-    dataType.trim().toLowerCase().replaceAll(/\s+/g, ' ')
-  );
-}
-
 function readFields(node: CanonicalNode): readonly CanvasDvtCompositionField[] | null {
   if (!Array.isArray(node.metadata?.columns)) return null;
   const fields = node.metadata.columns.map((candidate) => {
@@ -36,7 +33,12 @@ function readFields(node: CanonicalNode): readonly CanvasDvtCompositionField[] |
     const dataType = readText(record.type ?? record.dataType);
     return name == null || dataType == null
       ? null
-      : { name, dataType, stringCompatible: isStringCompatible(dataType) };
+      : {
+          name,
+          dataType,
+          joinDataType: resolveCanvasDvtJoinDataType(dataType),
+          nullable: typeof record.nullable === 'boolean' ? record.nullable : true,
+        };
   });
   if (fields.some((field) => field == null)) return null;
   const resolved = fields.filter((field) => field != null);

@@ -147,9 +147,12 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerRunsTab: 'Ejecuciones',
   operationalDrawerPreviewTab: 'Vista previa',
   operationalDrawerDataTab: 'Datos',
-  operationalDrawerSemanticTab: 'Semántica',
+  operationalDrawerSemanticTab: 'Árbol relacional',
   operationalDrawerSemanticIdleMessage:
-    'Selecciona un Transform Substrait para analizar su flujo relacional.',
+    'Selecciona un Transform para inspeccionar su árbol relacional.',
+  operationalDrawerSemanticTopologyMismatchTitle: 'Composición semántica pendiente',
+  operationalDrawerSemanticTopologyMismatchMessage:
+    '{transformName} tiene {connectedInputCount} entradas conectadas que ya no coinciden con su semántica guardada. Define la nueva composición para sustituirla.',
   operationalDrawerProblemsAriaLabel: 'Problemas del Canvas',
   operationalDrawerNoProblemsMessage: 'No hay problemas actuales en el Canvas.',
   operationalDrawerRunsAriaLabel: 'Ejecuciones del Canvas',
@@ -177,8 +180,6 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerDataTruncatedTemplate: 'Se muestran las primeras {limit} filas.',
   operationalDrawerDataCaptionTemplate: 'Muestra de datos de {nodeName}',
   operationalDrawerDataNullValue: 'NULO',
-  sourceDataSampleInteractionLabel:
-    'Haz doble clic en esta zona de métricas o pulsa Intro para abrir una muestra de datos.',
   operationalDrawerTabsAriaLabel: 'Cajón operativo del Canvas',
   operationalDrawerInfoSeverity: 'Información',
   operationalDrawerWarningSeverity: 'Advertencia',

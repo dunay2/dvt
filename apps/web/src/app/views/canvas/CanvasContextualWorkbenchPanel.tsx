@@ -1,6 +1,6 @@
 /** Owned concern: render contextual Canvas workbench panels without replacing the graph. */
 import { CircleHelp, X } from 'lucide-react';
-import type { HTMLAttributes, ReactNode } from 'react';
+import { useEffect, useRef, type HTMLAttributes, type ReactNode } from 'react';
 
 import {
   Tooltip,
@@ -27,6 +27,7 @@ export type CanvasContextualWorkbenchPanelProps = Readonly<{
   moveLabel: string;
   onClose: () => void;
   children: ReactNode;
+  autoFocus?: boolean;
 }>;
 
 export function CanvasContextualWorkbenchPanel({
@@ -37,17 +38,33 @@ export function CanvasContextualWorkbenchPanel({
   moveLabel,
   onClose,
   children,
+  autoFocus = false,
 }: CanvasContextualWorkbenchPanelProps): JSX.Element {
+  const closeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (autoFocus) closeRef.current?.focus({ preventScroll: true });
+  }, [autoFocus, title]);
   return (
-    <aside data-slot="canvas-contextual-workbench" aria-label={title} className={panelClassName}>
+    <aside
+      data-slot="canvas-contextual-workbench"
+      aria-label={title}
+      className={panelClassName}
+      onKeyDown={(event) => {
+        if (autoFocus && event.key === 'Escape') {
+          event.preventDefault();
+          event.stopPropagation();
+          onClose();
+        }
+      }}
+    >
       <div data-slot="canvas-contextual-workbench-header" className={headerClassName}>
         <div
           {...dragHandleProps}
           data-slot="canvas-contextual-workbench-drag-handle"
-          role="button"
-          tabIndex={0}
-          aria-label={moveLabel}
-          className={dragHandleClassName}
+          role={dragHandleProps == null ? undefined : 'button'}
+          tabIndex={dragHandleProps == null ? undefined : 0}
+          aria-label={dragHandleProps == null ? undefined : moveLabel}
+          className={dragHandleProps == null ? 'min-w-0 flex-1' : dragHandleClassName}
         >
           <h2 className={titleClassName}>{title}</h2>
         </div>
@@ -72,6 +89,7 @@ export function CanvasContextualWorkbenchPanel({
               <button
                 type="button"
                 data-slot="canvas-contextual-workbench-close"
+                ref={closeRef}
                 className={closeButtonClassName}
                 aria-label={`${closeLabel}: ${title}`}
                 onClick={onClose}

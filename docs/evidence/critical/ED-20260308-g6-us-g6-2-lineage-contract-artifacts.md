@@ -1,7 +1,7 @@
 ---
 title: ED-20260308 - G6 US-G6.2 lineage contract artifacts
 status: Final
-date: 2026-03-08T00:00:00.000Z
+date: '2026-03-08'
 owners: Traceability / Core Architecture / QA
 arc_level: ARC-1
 breaking: false
@@ -13,9 +13,9 @@ code_refs:
   - docs/contracts/traceability/facets/openlineage/SqlJobFacet.1-0-0.schema.json
   - docs/contracts/traceability/facets/DvtDbtDetailsJobFacet.v1.schema.json
   - docs/contracts/shared/CompiledCodeRef.v1.schema.json
-  - docs/planning/archive/gaps/g6/index.md
-  - docs/planning/archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
-  - docs/planning/archive/gaps/GAP_EXECUTION_PLANS.md
+  - https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/gaps/g6/index.md
+  - https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
+  - https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/gaps/GAP_EXECUTION_PLANS.md
   - docs/planning/status/canonical-doc-code-matrix.md
 contracts_touched:
   - id: OpenLineage SQL Job Facet
@@ -37,14 +37,14 @@ evidence:
   docs:
     - docs/contracts/traceability/index.md
     - docs/contracts/traceability/facets/openlineage/index.md
-    - docs/planning/archive/gaps/g6/index.md
-    - docs/planning/archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
+    - https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/gaps/g6/index.md
+    - https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
     - docs/planning/status/canonical-doc-code-matrix.md
   code:
     - packages/@dvt/traceability-service/src/lineage/openlineageSchema.ts
     - packages/@dvt/traceability-service/src/lineage/types.ts
 planning_refs:
-  - docs/planning/archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
+  - https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
   - docs/contracts/traceability/index.md
 rollout:
   required: false

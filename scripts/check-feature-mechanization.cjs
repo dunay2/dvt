@@ -7,12 +7,14 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
+const { FeatureMechanizationGitDiffReader } = require('./lib/feature-mechanization-git-diff.cjs');
 const { sha256HexUtf8 } = require('@dvt/crypto');
 const {
   extractFeatureMechanizationManifests,
 } = require('./lib/feature-mechanization-manifest.cjs');
-const { defaultPgUrl } = require('./planning-db-run.cjs');
+const {
+  readFeatureMechanizationManifestRowsFromDb,
+} = require('./lib/feature-mechanization-db-reader.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const defaultScanRoot = path.join(repoRoot, 'docs', 'planning', 'proposals', 'mandatory');
@@ -383,154 +385,6 @@ class FeatureImplementationGuard {
       objectMethodBeforeUrlPattern.test(fileContent) ||
       objectUrlBeforeMethodPattern.test(fileContent)
     );
-  }
-}
-
-class FeatureMechanizationGitDiffReader {
-  constructor(options = {}) {
-    this.baseRef = options.baseRef || process.env.GIT_BASE || 'origin/main';
-    this.repoRootPath = options.repoRootPath || repoRoot;
-    this.lastUntrackedFiles = new Set();
-  }
-
-  read() {
-    const changedFiles = this.readChangedFiles();
-
-    return {
-      changedFiles,
-      currentFiles: this.readCurrentFiles(),
-      deletedFiles: this.readDeletedFiles(changedFiles),
-      addedLinesByPath: this.readAddedLinesByPath(changedFiles),
-      fileContentsByPath: this.readFileContentsByPath(changedFiles),
-    };
-  }
-
-  readDeletedFiles(changedFiles) {
-    return changedFiles.filter((filePath) => {
-      if (this.lastUntrackedFiles.has(filePath)) {
-        return false;
-      }
-
-      return !fs.existsSync(path.join(this.repoRootPath, filePath));
-    });
-  }
-
-  readCurrentFiles() {
-    return this.readGitLines(['ls-files', '--cached', '--others', '--exclude-standard'])
-      .filter((filePath) => fs.existsSync(path.join(this.repoRootPath, filePath)))
-      .sort();
-  }
-
-  readChangedFiles() {
-    const changedFiles = new Set();
-    const nameOnlyCommands = [
-      ['diff', '--name-only', '--diff-filter=ACMRD', `${this.baseRef}...HEAD`],
-      ['diff', '--cached', '--name-only', '--diff-filter=ACMRD'],
-      ['diff', '--name-only', '--diff-filter=ACMRD'],
-    ];
-
-    for (const command of nameOnlyCommands) {
-      for (const filePath of this.readGitLines(command)) {
-        changedFiles.add(toPosix(filePath));
-      }
-    }
-
-    const untrackedFiles = this.readGitLines(['ls-files', '--others', '--exclude-standard']).map(
-      toPosix
-    );
-    this.lastUntrackedFiles = new Set(untrackedFiles);
-    for (const filePath of untrackedFiles) {
-      changedFiles.add(filePath);
-    }
-
-    return Array.from(changedFiles).sort();
-  }
-
-  readAddedLinesByPath(changedFiles) {
-    const addedLinesByPath = {};
-    const diffCommands = [
-      ['diff', '--unified=0', '--no-ext-diff', '--diff-filter=ACMRD', `${this.baseRef}...HEAD`],
-      ['diff', '--cached', '--unified=0', '--no-ext-diff', '--diff-filter=ACMRD'],
-      ['diff', '--unified=0', '--no-ext-diff', '--diff-filter=ACMRD'],
-    ];
-
-    for (const command of diffCommands) {
-      this.mergeAddedLines(addedLinesByPath, this.parseAddedLines(this.runGit(command)));
-    }
-
-    for (const filePath of changedFiles) {
-      const absolutePath = path.join(this.repoRootPath, filePath);
-      if (this.lastUntrackedFiles.has(filePath) && fs.existsSync(absolutePath)) {
-        addedLinesByPath[filePath] = fs.readFileSync(absolutePath, 'utf8').split(/\r?\n/);
-        continue;
-      }
-
-      if (fs.existsSync(absolutePath) && !addedLinesByPath[filePath]) {
-        addedLinesByPath[filePath] = [];
-      }
-    }
-
-    return addedLinesByPath;
-  }
-
-  readFileContentsByPath(changedFiles) {
-    const fileContentsByPath = {};
-
-    for (const filePath of changedFiles) {
-      const absolutePath = path.join(this.repoRootPath, filePath);
-      if (fs.existsSync(absolutePath) && fs.statSync(absolutePath).isFile()) {
-        fileContentsByPath[filePath] = fs.readFileSync(absolutePath, 'utf8');
-      }
-    }
-
-    return fileContentsByPath;
-  }
-
-  readGitLines(args) {
-    return this.runGit(args)
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
-  }
-
-  runGit(args) {
-    try {
-      return execFileSync('git', args, {
-        cwd: this.repoRootPath,
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'ignore'],
-      });
-    } catch {
-      return '';
-    }
-  }
-
-  parseAddedLines(diffText) {
-    const addedLinesByPath = {};
-    let currentFilePath = null;
-
-    for (const line of diffText.split(/\r?\n/)) {
-      if (line.startsWith('+++ b/')) {
-        currentFilePath = toPosix(line.slice('+++ b/'.length));
-        addedLinesByPath[currentFilePath] ||= [];
-        continue;
-      }
-
-      if (!currentFilePath || !line.startsWith('+') || line.startsWith('+++')) {
-        continue;
-      }
-
-      addedLinesByPath[currentFilePath].push(line.slice(1));
-    }
-
-    return addedLinesByPath;
-  }
-
-  mergeAddedLines(target, source) {
-    for (const [filePath, addedLines] of Object.entries(source)) {
-      target[filePath] ||= [];
-      target[filePath].push(...addedLines);
-    }
   }
 }
 
@@ -945,102 +799,19 @@ function normalizeDbFeatureMechanizationManifestRows(rows) {
 }
 
 async function readFeatureMechanizationManifestsFromDb(options = {}) {
-  const deps = {
-    Client: require('pg').Client,
-    runPlanningImport: require('./planning-db-import.cjs').runPlanningImport,
-    ...options.deps,
-  };
-  const connectionString =
-    options.databaseUrl ||
-    process.env.DVT_PLANNING_DB_URL ||
-    process.env.PLANNING_DATABASE_URL ||
-    process.env.DATABASE_URL ||
-    defaultPgUrl;
-
-  const client = options.client || new deps.Client({ connectionString });
-  const ownsClient = !options.client;
-
-  if (ownsClient) {
-    await client.connect();
-  }
-
-  try {
-    if (options.refresh !== false) {
-      const changedFeatureDocs =
-        options.changedFeatureMechanizationSourcePaths ||
-        readChangedFeatureMechanizationSourcePaths({
-          baseRef: options.baseRef,
-          changedFiles: options.changedFiles,
-        });
-      const currentSourceHashes =
-        options.currentSourceHashes || readCurrentSourceHashes(changedFeatureDocs);
-
-      if (await shouldRefreshFeatureMechanizationManifestDb(client, currentSourceHashes)) {
-        await deps.runPlanningImport(
-          {
-            databaseUrl: connectionString,
-            ifStale: false,
-            silent: true,
-          },
-          {
-            logger: {
-              log() {},
-            },
-          }
-        );
-      }
-    }
-
-    const result = await client.query(`
-      with db_feature_manifest_rows as (
-        select
-          rail_id,
-          source_path,
-          raw_manifest,
-          rail_source,
-          imported_at,
-          1 as projection_priority
-        from planning_query_store.command_query_rail_manifest_query
-        where raw_manifest ? 'featureId'
-          and rail_id not like 'current#rail-decision#%'
-        union all
-        select
-          rail_id,
-          source_path,
-          raw_manifest,
-          'local'::text as rail_source,
-          updated_at as imported_at,
-          0 as projection_priority
-        from planning_query_store.feature_mechanization_local_rails
-        where raw_manifest ? 'featureId'
-          and rail_id not like 'current#rail-decision#%'
-      ),
-      ranked_manifest_rows as (
-        select
-          source_path,
-          raw_manifest,
-          rail_source,
-          imported_at,
-          rail_id,
-          row_number() over (
-            partition by rail_id
-            order by projection_priority, imported_at desc
-          ) as projection_rank
-        from db_feature_manifest_rows
-      )
-      select
-        source_path,
-        raw_manifest
-      from ranked_manifest_rows
-      where projection_rank = 1
-      order by source_path, raw_manifest->>'featureId', rail_source, imported_at, rail_id
-    `);
-    return normalizeDbFeatureMechanizationManifestRows(result.rows);
-  } finally {
-    if (ownsClient) {
-      await client.end();
-    }
-  }
+  const changedFeatureDocs =
+    options.changedFeatureMechanizationSourcePaths ||
+    readChangedFeatureMechanizationSourcePaths({
+      baseRef: options.baseRef,
+      changedFiles: options.changedFiles,
+    });
+  const currentSourceHashes =
+    options.currentSourceHashes || readCurrentSourceHashes(changedFeatureDocs);
+  const rows = await readFeatureMechanizationManifestRowsFromDb({
+    ...options,
+    currentSourceHashes,
+  });
+  return normalizeDbFeatureMechanizationManifestRows(rows);
 }
 
 function isFeatureMechanizationSourcePath(sourcePath) {
@@ -1084,40 +855,6 @@ function readCurrentSourceHashes(sourcePaths) {
   }
 
   return sourceHashes;
-}
-
-async function shouldRefreshFeatureMechanizationManifestDb(client, currentSourceHashes) {
-  if (currentSourceHashes.size === 0) {
-    const result = await client.query(`
-      select count(*)::int as manifest_count
-      from planning_query_store.command_query_rails
-      where raw_manifest ? 'featureId'
-    `);
-    return Number(result.rows[0]?.manifest_count || 0) === 0;
-  }
-
-  const sourcePaths = [...currentSourceHashes.keys()];
-  const result = await client.query(
-    `
-      select distinct
-        source_path,
-        source_content_sha256
-      from planning_query_store.command_query_rails
-      where raw_manifest ? 'featureId'
-        and source_path = any($1::text[])
-    `,
-    [sourcePaths]
-  );
-  const dbHashes = new Map(
-    result.rows.map((row) => [
-      toPosix(row.source_path || row.sourcePath),
-      row.source_content_sha256 || row.sourceContentSha256,
-    ])
-  );
-
-  return sourcePaths.some(
-    (sourcePath) => dbHashes.get(sourcePath) !== currentSourceHashes.get(sourcePath)
-  );
 }
 
 function parseArgs(argv) {
@@ -1271,7 +1008,6 @@ module.exports = {
   readChangedFeatureMechanizationSourcePaths,
   readFeatureMechanizationDocs,
   readFeatureMechanizationManifestsFromDb,
-  shouldRefreshFeatureMechanizationManifestDb,
   validateFeatureImplementationManifests,
   validateFeatureMechanizationDocs,
   validateFeatureMechanizationManifestEntries,

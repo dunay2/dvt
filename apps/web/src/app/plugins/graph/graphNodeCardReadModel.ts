@@ -48,6 +48,11 @@ export function projectGraphNodeCardViewProps(
         ? node.metadata.columns
         : []
   ) as GraphNodeCardViewProps['columns'];
+  const columnInteractionProps = resolveGraphNodeColumnInteractionProps({
+    nodeId: node.id,
+    nodeRole: node.role,
+    data,
+  });
   const tags = Array.isArray(data.displayTags)
     ? data.displayTags.filter(
         (tag): tag is Readonly<{ value: string; label: string }> =>
@@ -58,7 +63,6 @@ export function projectGraphNodeCardViewProps(
       )
     : node.tags.map((tag) => ({ value: tag, label: tag }));
   const inspectNode = data.onInspectNode;
-  const openSourceDataSample = data.onOpenSourceDataSample;
   const openOperationalDetails = data.onOpenOperationalDetails;
 
   return {
@@ -73,7 +77,7 @@ export function projectGraphNodeCardViewProps(
     columns,
     showColumns:
       data.showColumns === true &&
-      columns.length > 0 &&
+      (columns.length > 0 || columnInteractionProps.expressionInputs.length > 0) &&
       (kindMeta.supportsColumns || node.role === 'input' || node.role === 'transform'),
     icon: kindMeta.icon,
     borderClass: kindMeta.borderClass,
@@ -82,16 +86,10 @@ export function projectGraphNodeCardViewProps(
     dimmed: overlayDecoration?.dimmed ?? false,
     ...(Object.keys(overlayStyle).length > 0 ? { overlayStyle } : {}),
     ...resolveGraphNodeTagActionProps(data),
-    ...resolveGraphNodeColumnInteractionProps({ nodeId: node.id, nodeRole: node.role, data }),
+    ...columnInteractionProps,
     onOpenCode:
       data.canOpenNodeCode !== false && typeof inspectNode === 'function'
         ? () => inspectNode(node.id, 'code')
-        : undefined,
-    onOpenDataSample:
-      typeof openSourceDataSample === 'function' ? () => openSourceDataSample(node.id) : undefined,
-    dataSampleInteractionLabel:
-      typeof data.sourceDataSampleInteractionLabel === 'string'
-        ? data.sourceDataSampleInteractionLabel
         : undefined,
     onOpenOperationalDetails:
       typeof openOperationalDetails === 'function'

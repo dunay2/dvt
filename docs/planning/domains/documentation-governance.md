@@ -24,11 +24,6 @@ gates.
 - [Architecture Governance Review Canon Plan 2026-05-24](../proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md)
 - [CI Delivery Governance Consolidated Action Plan](../proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md)
 
-## Relevant Reviews And Closeouts
-
-- [20260316 Docs Governance Tooling Closeout](../closeouts/20260316-docs-governance-tooling-closeout.md)
-- [20260320 Planning Archive Sweep Closeout](../closeouts/20260320-planning-archive-sweep-closeout.md)
-
 ## Operational Check References
 
 - [Testing and CI Capabilities](../../guides/testing-and-ci-capabilities.md)

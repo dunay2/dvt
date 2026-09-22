@@ -18,6 +18,8 @@ import type {
   HttpJsonArtifactAuthoringErrors,
 } from './httpJsonArtifactAuthoringModel';
 import type { WorkspaceScope } from '../../ports/sessionContext';
+import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
+import type { CanvasDraftSession } from './canvasDraftSession';
 
 export type CanvasInspectorNodeDraft = Readonly<{
   name: string;
@@ -26,6 +28,7 @@ export type CanvasInspectorNodeDraft = Readonly<{
   dbt?: DbtNodeAuthoringMetadata;
   dbtTest?: DbtTestAuthoringMetadata;
   dvt?: DvtNodeAuthoringMetadata;
+  semanticAuthoringIssue?: 'invalid_document' | 'unsupported_shape';
   outputNameDrafts?: Readonly<Record<string, string>>;
   objectFilePostgres?: ObjectFilePostgresAuthoringDraft;
   httpJsonArtifact?: HttpJsonArtifactAuthoringDraft;
@@ -43,8 +46,19 @@ export type CanvasInspectorNodeDraftErrors = Readonly<{
   httpJsonArtifact?: HttpJsonArtifactAuthoringErrors;
 }>;
 
+export type CanvasInspectorNodeDraftApplyResult =
+  | Readonly<{ outcome: 'applied'; draftSession: CanvasDraftSession }>
+  | Readonly<{ outcome: 'no_changes' }>
+  | Readonly<{
+      outcome: 'rejected';
+      reason: 'node_unavailable' | 'invalid_draft';
+      errors?: CanvasInspectorNodeDraftErrors;
+    }>;
+
 export type CanvasInspectorAuthoringContract = Readonly<{
   canEditNode: boolean;
   workspaceScope?: WorkspaceScope;
+  relationalPredicateSeed?: CanvasRelationalPredicateSeed;
+  onClearRelationalPredicateSeed?: () => void;
   onApplyNodeDraft: (draft: CanvasInspectorNodeDraft) => void;
 }>;

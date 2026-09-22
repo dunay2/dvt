@@ -1,4 +1,10 @@
 import {
+  ExtensionLeafRelSchema,
+  RelCommonSchema,
+  RelSchema,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { create } from '@bufbuild/protobuf';
+import {
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
   type SourceObjectMetricEvidence,
@@ -15,8 +21,8 @@ import {
 } from '../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import type { CanonicalNode } from '../../src/app/types/canonical';
 import {
-  createDvtSubstraitInnerJoinDraft,
-  encodeDvtSubstraitInnerJoinDocument,
+  createDvtSubstraitJoinDraft,
+  encodeDvtSubstraitJoinDocument,
 } from '../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
 import {
   createDvtSubstraitPilotDraft,
@@ -26,6 +32,7 @@ import {
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,
 } from '../../src/app/views/canvas/canvasDvtSubstraitProjection';
+import { encodeDvtSubstraitSemanticDocument } from '../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { normalizeProjectCanvasDraft } from '../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 
 import { stubE2eApi } from './e2eApiStub';
@@ -45,16 +52,23 @@ export type StubCanvasDraftReadOptions = {
   importedWarehouseSource?: boolean;
   authoringGenerated?: boolean;
   terminalTransformPreview?: boolean;
+  terminalTransformResultTarget?: {
+    schema: string;
+    relation: string;
+  };
   columnMapping?: boolean;
   columnMappingDisconnected?: boolean;
   columnMappingSecondSource?: boolean;
   columnMappingNotNullCustomer?: boolean;
   columnMappingTemporal?: boolean;
   sourceInspectorOrdering?: boolean;
+  substraitPendingComposition?: boolean;
+  substraitCompositionColumnType?: 'string' | 'bigint';
   substraitInnerJoin?: boolean;
   substraitNInputJoin?: boolean;
   substraitUnionAll?: boolean;
   substraitPilot?: boolean;
+  substraitUnsupported?: boolean;
   title?: string;
   readOnly?: boolean;
   largeGraph?: boolean;
@@ -80,16 +94,20 @@ export function buildCanvasAuthoringDraft({
   importedWarehouseSource = false,
   authoringGenerated = false,
   terminalTransformPreview = false,
+  terminalTransformResultTarget,
   columnMapping = false,
   columnMappingDisconnected = false,
   columnMappingSecondSource = false,
   columnMappingNotNullCustomer = false,
   columnMappingTemporal = false,
   sourceInspectorOrdering = false,
+  substraitPendingComposition = false,
+  substraitCompositionColumnType = 'string',
   substraitInnerJoin = false,
   substraitNInputJoin = false,
   substraitUnionAll = false,
   substraitPilot = false,
+  substraitUnsupported = false,
   title,
   largeGraph = false,
   performanceGraphNodeCount,
@@ -282,14 +300,14 @@ export function buildCanvasAuthoringDraft({
     });
   }
 
-  if (substraitInnerJoin || substraitNInputJoin) {
+  if (substraitPendingComposition || substraitInnerJoin || substraitNInputJoin) {
     const connectionRef = {
       schemaVersion: 'connection-ref.v1' as const,
       connectionId: 'warehouse-a',
       provider: 'postgres' as const,
     };
-    const semanticDocument = encodeDvtSubstraitInnerJoinDocument(
-      createDvtSubstraitInnerJoinDraft({
+    const semanticDocument = encodeDvtSubstraitJoinDocument(
+      createDvtSubstraitJoinDraft({
         left: {
           nodeId: 'source-customers',
           schema: 'public',
@@ -345,7 +363,7 @@ export function buildCanvasAuthoringDraft({
             schema: 'public',
             tableName: 'customers',
             columns: [
-              { name: 'customer_id', type: 'string' },
+              { name: 'customer_id', type: substraitCompositionColumnType },
               { name: 'name', type: 'string' },
             ],
             connectedSourceRef: {
@@ -368,7 +386,7 @@ export function buildCanvasAuthoringDraft({
             tableName: 'orders',
             columns: [
               { name: 'order_id', type: 'string' },
-              { name: 'customer_id', type: 'string' },
+              { name: 'customer_id', type: substraitCompositionColumnType },
             ],
             connectedSourceRef: {
               schemaVersion: 'connected-source-ref.v1',
@@ -433,13 +451,15 @@ export function buildCanvasAuthoringDraft({
           role: 'transform',
           status: 'idle',
           tags: ['authoring'],
-          metadata: {
-            transformAuthoring: {
-              version: 'v1',
-              mode: 'substrait',
-              semanticDocument,
-            },
-          },
+          metadata: substraitPendingComposition
+            ? {}
+            : {
+                transformAuthoring: {
+                  version: 'v1',
+                  mode: 'substrait',
+                  semanticDocument,
+                },
+              },
         },
       ],
       edges: [
@@ -475,13 +495,26 @@ export function buildCanvasAuthoringDraft({
     });
   }
 
-  if (substraitPilot) {
-    const semanticDocument = encodeDvtSubstraitPilotDocument(
-      createDvtSubstraitPilotDraft({
-        sourceNodeId: 'source-customers',
-        targetNodeId: 'transform-customers',
-      })
-    );
+  if (substraitPilot || substraitUnsupported) {
+    const semanticDraft = createDvtSubstraitPilotDraft({
+      sourceNodeId: 'source-customers',
+      targetNodeId: 'transform-customers',
+    });
+    if (substraitUnsupported) {
+      const root = semanticDraft.plan.relations[0]?.relType;
+      if (root?.case !== 'root') throw new Error('Expected a canonical relation root fixture.');
+      root.value.input = create(RelSchema, {
+        relType: {
+          case: 'extensionLeaf',
+          value: create(ExtensionLeafRelSchema, {
+            common: create(RelCommonSchema, { relAnchor: 1 }),
+          }),
+        },
+      });
+    }
+    const semanticDocument = substraitUnsupported
+      ? encodeDvtSubstraitSemanticDocument(semanticDraft)
+      : encodeDvtSubstraitPilotDocument(semanticDraft);
     return buildWorkspaceGraphAuthoringDraft({
       canvas,
       nodeIds: ['source-customers', 'transform-customers'],
@@ -878,17 +911,25 @@ export function buildCanvasAuthoringDraft({
               provider: 'postgres',
               connectionId,
             },
-            sourceObjectId: 'raw.orders',
+            sourceObjectId: terminalTransformPreview ? 'relation/dvt/raw/orders' : 'raw.orders',
           },
           fields: [
-            { name: 'order_id', dataType: 'integer' },
-            { name: 'total', dataType: 'decimal' },
+            ...(terminalTransformPreview
+              ? [{ name: 'customer', dataType: 'string' }]
+              : [
+                  { name: 'order_id', dataType: 'integer' },
+                  { name: 'total', dataType: 'decimal' },
+                ]),
           ],
         },
         targetNodeId: 'dvt-transform-1',
         outputs: [
-          { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
-          { fieldId: 'output:total', name: 'total', sourceFieldName: 'total' },
+          ...(terminalTransformPreview
+            ? [{ fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' }]
+            : [
+                { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+                { fieldId: 'output:total', name: 'total', sourceFieldName: 'total' },
+              ]),
         ],
       })
     );
@@ -930,11 +971,15 @@ export function buildCanvasAuthoringDraft({
                 provider: 'postgres',
                 connectionId,
               },
-              sourceObjectId: 'raw.orders',
+              sourceObjectId: terminalTransformPreview ? 'relation/dvt/raw/orders' : 'raw.orders',
             },
             columns: [
-              { name: 'order_id', type: 'integer', nullable: false },
-              { name: 'total', type: 'decimal', nullable: false },
+              ...(terminalTransformPreview
+                ? [{ name: 'customer', type: 'text', nullable: false }]
+                : [
+                    { name: 'order_id', type: 'integer', nullable: false },
+                    { name: 'total', type: 'decimal', nullable: false },
+                  ]),
             ],
             config: {
               database: 'legacy_warehouse',
@@ -954,6 +999,22 @@ export function buildCanvasAuthoringDraft({
           tags: ['authoring'],
           metadata: {
             typeLabel: 'Transform',
+            ...(terminalTransformResultTarget === undefined
+              ? {}
+              : {
+                  config: {
+                    materialized: 'table',
+                    resultTarget: {
+                      schemaVersion: 'dvt-transform-result-target.v1',
+                      connectionRef: {
+                        schemaVersion: 'connection-ref.v1',
+                        provider: 'postgres',
+                        connectionId,
+                      },
+                      ...terminalTransformResultTarget,
+                    },
+                  },
+                }),
             transformAuthoring: {
               version: 'v1',
               mode: 'substrait',
@@ -1241,7 +1302,7 @@ export function stubFailingCanvasDraftSave(
 export function stubStatefulCanvasDraftAuthoring(
   options: StubCanvasDraftReadOptions = {},
   scope: CanvasDraftSessionScope = E2E_WORKSPACE_SESSION
-): void {
+): CanvasAuthoringDraft {
   let revision = 'rev-e2e-graph-ready';
   let draft = buildCanvasAuthoringDraft(options);
 
@@ -1281,4 +1342,6 @@ export function stubStatefulCanvasDraftAuthoring(
       }),
     };
   });
+
+  return draft;
 }

@@ -17,7 +17,6 @@ context, or feature-mechanization evidence; do not route them as next work.
 ## Canvas And Authoring
 
 - [Authoring graph lab roadmap](../authoring-graph-lab-roadmap-plan-20260603.md)
-- [Canvas empty guide preference](../canvas-empty-guide-preference-plan-20260602.md)
 - [Canvas inspector plugin authoring fields](../canvas-inspector-plugin-authoring-fields-plan-20260604.md)
 - [Canvas node context properties panel](../canvas-node-context-properties-panel-plan-20260604.md)
 - [Canvas node identity policy](../canvas-node-identity-policy-plan-20260601.md)
@@ -31,7 +30,6 @@ context, or feature-mechanization evidence; do not route them as next work.
 - [F-15-F canvas workbench screen consolidation](../f15f-canvas-workbench-screen-consolidation-plan-20260519.md)
 - [F-15-G first canvas creation capability](../f15g-first-canvas-creation-capability-plan-20260519.md)
 - [F-15-H first canvas draft capability split](../f15h-first-canvas-draft-capability-split-plan-20260520.md)
-- [F-29-C canvas insert palette](../f29c-canvas-insert-palette-plan-20260525.md)
 - [TF-E2 canvas target architecture execution](../tf-e2-canvas-target-architecture-execution-plan-20260417.md)
 - [TF-E2 production node authoring and persistence](../tf-e2-production-node-authoring-and-persistence-plan-20260416.md)
 

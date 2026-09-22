@@ -4,6 +4,7 @@ import {
   CanvasShellContextualWorkbenchSplit,
   CanvasShellMainPanelFrame,
   CanvasShellReadOnlyBannerSlot,
+  CanvasShellWorkspaceSurfaces,
 } from './CanvasShellMainPanelFrame';
 import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
 import { isCanvasNodeWorkbenchVisible } from './canvasNodeWorkbenchVisibility';
@@ -36,6 +37,7 @@ type CanvasShellMainPanelProps = Readonly<{
   onOpenProjectCode?: () => void;
   onImportDbtProject?: () => void;
   onOpenCanvasSettings?: () => void;
+  onOpenModelEditor?: (nodeId: string) => void;
   contextMenuPresenter: CanvasContextMenuPresenter;
 }>;
 
@@ -179,7 +181,20 @@ function CanvasShellMainSurface({
     />
   );
 
-  const baseSurface = layout.centerSurface == null ? viewport : <>{layout.centerSurface}</>;
+  const baseSurface =
+    layout.centerSurfaceVisible == null ? (
+      layout.centerSurface == null ? (
+        viewport
+      ) : (
+        <>{layout.centerSurface}</>
+      )
+    ) : (
+      <CanvasShellWorkspaceSurfaces
+        viewport={viewport}
+        editor={layout.centerSurface}
+        editorVisible={layout.centerSurfaceVisible}
+      />
+    );
 
   if (layout.contextualWorkbench == null) {
     return baseSurface;
@@ -188,6 +203,7 @@ function CanvasShellMainSurface({
   return (
     <CanvasShellContextualWorkbenchSplit
       baseSurface={baseSurface}
+      presentation={layout.contextualWorkbench.presentation}
       title={layout.contextualWorkbench.title}
       closeLabel={layout.contextualWorkbench.closeLabel}
       moveLabel={layout.contextualWorkbench.moveLabel}
@@ -203,12 +219,17 @@ function CanvasShellNodeWorkbenchOverlay({
   layout,
   panels,
   chromeCommands,
-}: Pick<CanvasShellMainPanelProps, 'layout' | 'panels' | 'chromeCommands'>): JSX.Element | null {
+  onOpenModelEditor,
+}: Pick<
+  CanvasShellMainPanelProps,
+  'layout' | 'panels' | 'chromeCommands' | 'onOpenModelEditor'
+>): JSX.Element | null {
   return (
     <CanvasNodeWorkbenchOverlay
       layout={layout}
       panels={panels}
       onHide={chromeCommands.onHideInspector}
+      {...(onOpenModelEditor == null ? {} : { onOpenModelEditor })}
     />
   );
 }
@@ -225,9 +246,11 @@ export function CanvasShellMainPanel({
   onOpenProjectCode,
   onImportDbtProject,
   onOpenCanvasSettings,
+  onOpenModelEditor,
   contextMenuPresenter,
 }: CanvasShellMainPanelProps): JSX.Element {
-  const shouldShowGraphStatusOverlay = layout.centerSurface == null;
+  const shouldShowGraphStatusOverlay =
+    layout.centerSurface == null || layout.centerSurfaceVisible === false;
 
   return (
     <CanvasShellMainPanelFrame defaultSize={resolveCanvasShellMainPanelDefaultSize()}>
@@ -263,6 +286,7 @@ export function CanvasShellMainPanel({
           layout={layout}
           panels={panels}
           chromeCommands={chromeCommands}
+          onOpenModelEditor={onOpenModelEditor}
         />
       ) : null}
     </CanvasShellMainPanelFrame>

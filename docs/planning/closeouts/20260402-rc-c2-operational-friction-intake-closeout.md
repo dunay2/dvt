@@ -128,7 +128,7 @@ review becomes part of the lane's canonical evidence set.
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
 - `docs/planning/reviews/review-naming-policy.md`
-- `docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md`
+- [Historical efficiency review](https://github.com/dunay2/dvt/blob/1b07acde33300a19d97914eb719b262b44e79182/docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md)
 - `docs/planning/reviews/ci-and-delivery/20260330-ci-prepush-pr-process-observations.md`
 - `docs/planning/closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md`
 

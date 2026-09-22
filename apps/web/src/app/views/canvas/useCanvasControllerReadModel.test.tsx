@@ -60,8 +60,8 @@ import {
   encodeDvtSubstraitProjectionDocument,
 } from './canvasDvtSubstraitProjection';
 import {
-  createDvtSubstraitInnerJoinDraft,
-  encodeDvtSubstraitInnerJoinDocument,
+  createDvtSubstraitJoinDraft,
+  encodeDvtSubstraitJoinDocument,
   type DvtSubstraitJoinSource,
 } from './canvasDvtSubstraitJoinComposition';
 
@@ -69,6 +69,7 @@ type ReadModelArgs = Parameters<typeof useCanvasControllerReadModel>[0];
 type ReadModelState = ReturnType<typeof useCanvasControllerReadModel>;
 type ReadModelNodeData = {
   columns?: unknown;
+  expressionInputColumns?: unknown;
   onInspectNode?: unknown;
   onDuplicateNode?: unknown;
   onRemoveNode?: unknown;
@@ -248,8 +249,8 @@ describe('useCanvasControllerReadModel', () => {
           kind: 'dvt:transform',
           role: 'transform',
         },
-        encodeDvtSubstraitInnerJoinDocument(
-          createDvtSubstraitInnerJoinDraft({
+        encodeDvtSubstraitJoinDocument(
+          createDvtSubstraitJoinDraft({
             left: source('customers'),
             right: source('orders'),
             targetNodeId: 'joined',
@@ -558,7 +559,7 @@ describe('useCanvasControllerReadModel', () => {
         .columns as ReadonlyArray<{ id: string; name: string }>;
       expect(columns.map(({ id, name }) => ({ id, name }))).toEqual([
         { id: 'dvt_fld_event_type', name: 'event_type' },
-        { id: 'request_id', name: 'request_id' },
+        { id: 'dvt_fld_source_request_id', name: 'request_id' },
         { id: 'dvt_fld_event_id', name: 'event_id' },
         { id: 'dvt_fld_manual', name: 'manual' },
       ]);
@@ -1026,6 +1027,14 @@ describe('useCanvasControllerReadModel', () => {
       expect(transformData.onAddCanvasCalculatedColumn).toBe(
         args.graphHandlers.handleAddCanvasCalculatedColumn
       );
+      expect(
+        (
+          transformData.expressionInputColumns as ReadonlyArray<{
+            id: string;
+            name: string;
+          }>
+        ).map((column) => column.name)
+      ).toEqual(['customer', 'amount']);
       expect(columns.find((column) => column.id === 'output:customer')?.type).toBe('text');
       expect(columns.find((column) => column.id === 'output:customer')?.functionMenu).toEqual({
         category: 'text',

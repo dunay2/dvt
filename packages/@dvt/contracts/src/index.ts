@@ -3,6 +3,7 @@ export * from './types/artifacts.js';
 export * from './workflows.js';
 export * from './substrait.js';
 export * from './contracts/source-import/index.js';
+export * from './contracts/canvas/index.js';
 export * from './contracts/dbt-project/index.js';
 export * from './contracts/workspace/ProjectWorkspace.v1.js';
 export * from './contracts/engine/IOutboxStorage.v1.js';
@@ -54,12 +55,30 @@ export type { LoadObjectFileToPostgresStepTypeConfig } from './contracts/planner
 export {
   DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY,
   DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
-  DVT_POSTGRES_INNER_JOIN_PROFILE_ID,
+  DVT_POSTGRES_JOIN_PROFILE_ID,
+  DVT_POSTGRES_SET_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DvtOperationalWorkloadContractV1,
   DvtOperationalWorkloadV1Schema,
 } from './contracts/planner/DvtOperationalWorkload.v1.js';
 export type { DvtOperationalWorkloadV1 } from './contracts/planner/DvtOperationalWorkload.v1.js';
+export {
+  DvtOperationalWorkloadContract,
+  DvtOperationalWorkloadContractV2,
+  DvtOperationalWorkloadV2Schema,
+} from './contracts/planner/DvtOperationalWorkload.v2.js';
+export type { DvtOperationalWorkloadV2 } from './contracts/planner/DvtOperationalWorkload.v2.js';
+export {
+  DvtPostgresOutputSchemaV1Schema,
+  DvtPostgresOutputTypeV1Schema,
+  createDvtPostgresOutputSchemaDigestV1,
+} from './contracts/planner/DvtPostgresOutputSchema.v1.js';
+export type {
+  DvtPostgresOutputSchemaV1,
+  DvtPostgresOutputTypeV1,
+} from './contracts/planner/DvtPostgresOutputSchema.v1.js';
+export { DvtTransformResultTargetV1Schema } from './contracts/planner/DvtTransformResultTarget.v1.js';
+export type { DvtTransformResultTargetV1 } from './contracts/planner/DvtTransformResultTarget.v1.js';
 export {
   ACQUIRE_HTTP_JSON_ARTIFACT_MAX_BYTES,
   ACQUIRE_HTTP_JSON_ARTIFACT_REQUIRED_CAPABILITY,

@@ -492,11 +492,20 @@ export const canvasViewExecutionCopyByKey = {
   },
   operationalDrawerSemanticTab: {
     key: 'canvas.operationalDrawer.semanticTab',
-    fallback: 'Semantics',
+    fallback: 'Relational tree',
   },
   operationalDrawerSemanticIdleMessage: {
     key: 'canvas.operationalDrawer.semanticIdleMessage',
-    fallback: 'Select a Substrait Transform to inspect its relational flow.',
+    fallback: 'Select a Transform to inspect its relational tree.',
+  },
+  operationalDrawerSemanticTopologyMismatchTitle: {
+    key: 'canvas.operationalDrawer.semanticTopologyMismatchTitle',
+    fallback: 'Semantic composition pending',
+  },
+  operationalDrawerSemanticTopologyMismatchMessage: {
+    key: 'canvas.operationalDrawer.semanticTopologyMismatchMessage',
+    fallback:
+      '{transformName} has {connectedInputCount} connected inputs that no longer match its saved semantics. Define the new composition to replace it.',
   },
   operationalDrawerProblemsAriaLabel: {
     key: 'canvas.operationalDrawer.problemsAriaLabel',
@@ -589,10 +598,6 @@ export const canvasViewExecutionCopyByKey = {
   operationalDrawerDataNullValue: {
     key: 'canvas.operationalDrawer.dataNullValue',
     fallback: 'NULL',
-  },
-  sourceDataSampleInteractionLabel: {
-    key: 'canvas.sourceDataSample.interactionLabel',
-    fallback: 'Double-click this metrics area or press Enter to open a data sample.',
   },
   operationalDrawerTabsAriaLabel: {
     key: 'canvas.operationalDrawer.tabsAriaLabel',

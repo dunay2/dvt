@@ -24,28 +24,14 @@ flows, and operational lifecycle governance.
   ports and Postgres archive store.
 - Cold archive export redacts sensitive payload fields by default before writing
   object-store artifacts.
-- Regulated erasure, legal approval, and audit workflows remain governed by the
-  historical G5-PR4 follow-up and are not closed by sensitive-field redaction.
+- Regulated erasure, legal approval, and audit workflows remain separate
+  governance obligations; sensitive-field redaction does not close them.
 
 ## Active Planning Inputs
 
-- [Review Remediation Roadmap 2026-04-02](../roadmap/review-remediation-roadmap-20260402.md)
-- [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)
 - [20260330 MVP-D1 residual risk baseline review](../reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md)
 - [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
 - [CI Retention Review Canon Plan 2026-05-23](../proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md)
-
-## Historical Proposal Inputs
-
-These proposals remain useful background for archival and retention design, but
-they are archived inputs rather than active planning authorities.
-
-- [Gap 5 Event Lifecycle and Archival Design](../archive/proposals/gap-5-event-lifecycle-and-archival-design-20260319.md)
-- [Gap 5 PR1 Minimal Usable Archival](../archive/proposals/gap-5-pr1-minimal-usable-archival-20260319.md)
-- [Gap 5 PR2 Deferred Deletion and Restore](../archive/proposals/gap-5-pr2-deferred-deletion-and-restore-20260319.md)
-- [Gap 5 PR3 Delivery Buffer Retention](../archive/proposals/gap-5-pr3-delivery-buffer-retention-20260319.md)
-- [Gap 5 PR4 Redaction ADR and Follow-Up](../archive/proposals/gap-5-pr4-redaction-adr-follow-up-20260319.md)
-- [Gap 5 Executive Delivery Roadmap](../archive/proposals/gap-5-executive-delivery-roadmap-20260319.md)
 
 ## Relevant Reviews And Closeouts
 
@@ -73,4 +59,3 @@ expectations:
 ## Diagram Sources
 
 - [Event Lifecycle and Retention Architecture Delta](../roadmap/diagrams/event-lifecycle-retention-architecture-delta.md)
-- [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)

@@ -11,6 +11,8 @@ import {
   resolveDvtSubstraitProjectionEntry,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
+import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
+import { removeDvtSubstraitProjectionRoot } from './canvasDvtSubstraitStructuredFieldRemove';
 
 const UUID_V7 = '[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
 const DVT_FIELD_ID = new RegExp(`^dvt_fld_${UUID_V7}$`, 'i');
@@ -77,6 +79,29 @@ function targetNode(): CanonicalNode {
     status: 'idle',
     tags: [],
     metadata: {},
+  };
+}
+
+function transformNode(
+  id: string,
+  name: string,
+  projectionDraft: DvtSubstraitProjectionDraft
+): CanonicalNode {
+  return {
+    id,
+    name,
+    pluginId: 'dvt',
+    kind: 'dvt:transform',
+    role: 'transform',
+    status: 'idle',
+    tags: [],
+    metadata: {
+      transformAuthoring: {
+        version: 'v1',
+        mode: 'substrait',
+        semanticDocument: encodeDvtSubstraitProjectionDocument(projectionDraft),
+      },
+    },
   };
 }
 
@@ -199,6 +224,136 @@ describe('generic Substrait projection identity', () => {
         },
       ],
     });
+  });
+  it('keeps direct and multi-hop consumers explicit when an upstream Transform adds a field', () => {
+    const originalUpstream = draft();
+    const downstream = createDvtSubstraitProjectionDraftFromTransform({
+      source: originalUpstream,
+      targetNodeId: 'transform-orders-summary',
+      outputs: [
+        { fieldId: 'output:summary-buyer', name: 'buyer_alias', sourceFieldId: 'output:customer' },
+        {
+          fieldId: 'output:summary-order-id',
+          name: 'order_alias',
+          sourceFieldId: 'output:order_id',
+        },
+      ],
+    });
+    const terminal = createDvtSubstraitProjectionDraftFromTransform({
+      source: downstream,
+      targetNodeId: 'transform-orders-terminal',
+      outputs: [
+        {
+          fieldId: 'output:terminal-buyer',
+          name: 'terminal_buyer',
+          sourceFieldId: 'output:summary-buyer',
+        },
+      ],
+    });
+    const addition = createDvtSubstraitProjectionOutput(originalUpstream, {
+      alias: 'channel',
+      expression: { kind: 'string-literal', value: 'web' },
+    });
+    if (addition.outcome !== 'applied') throw new Error('Expected upstream field addition.');
+
+    const source = sourceNode();
+    const upstreamNode = transformNode('transform-orders', 'Orders', addition.draft);
+    const downstreamNode = transformNode('transform-orders-summary', 'Order summary', downstream);
+    const terminalNode: CanonicalNode = {
+      ...targetNode(),
+      id: 'transform-orders-terminal',
+      name: 'Order terminal',
+    };
+    const nodes = [source, upstreamNode, downstreamNode, terminalNode];
+    const edges = [
+      { sourceId: source.id, targetId: upstreamNode.id },
+      { sourceId: upstreamNode.id, targetId: downstreamNode.id },
+      { sourceId: downstreamNode.id, targetId: terminalNode.id },
+    ];
+
+    const resolvedDownstream = resolveDvtSubstraitProjectionEntry({
+      targetNode: downstreamNode,
+      nodes,
+      edges,
+      draft: downstream,
+    });
+    const resolvedTerminal = resolveDvtSubstraitProjectionEntry({
+      targetNode: terminalNode,
+      nodes,
+      edges,
+      draft: terminal,
+    });
+
+    expect(resolvedDownstream).toMatchObject({
+      source: {
+        nodeId: upstreamNode.id,
+        fields: [
+          { name: 'order_id', dataType: 'integer' },
+          { name: 'buyer', dataType: 'text' },
+        ],
+      },
+      outputs: [
+        {
+          fieldId: 'output:summary-buyer',
+          name: 'buyer_alias',
+          sourceFieldId: 'output:customer',
+        },
+        {
+          fieldId: 'output:summary-order-id',
+          name: 'order_alias',
+          sourceFieldId: 'output:order_id',
+        },
+      ],
+    });
+    expect(resolvedTerminal).toMatchObject({
+      source: {
+        nodeId: downstreamNode.id,
+        fields: [
+          { name: 'buyer_alias', dataType: 'text' },
+          { name: 'order_alias', dataType: 'integer' },
+        ],
+      },
+      outputs: [
+        {
+          fieldId: 'output:terminal-buyer',
+          name: 'terminal_buyer',
+          sourceFieldId: 'output:summary-buyer',
+        },
+      ],
+    });
+    expect(resolvedDownstream?.source.fields.some((field) => field.name === 'channel')).toBe(false);
+  });
+  it('keeps a consumer unresolved when an upstream referenced FieldId disappears', () => {
+    const originalUpstream = draft();
+    const downstream = createDvtSubstraitProjectionDraftFromTransform({
+      source: originalUpstream,
+      targetNodeId: 'transform-orders-summary',
+      outputs: [
+        { fieldId: 'output:summary-buyer', name: 'buyer', sourceFieldId: 'output:customer' },
+      ],
+    });
+    const upstreamWithoutBuyer = removeDvtSubstraitProjectionRoot(originalUpstream, {
+      fieldId: 'output:customer',
+    });
+    const source = sourceNode();
+    const upstreamNode = transformNode('transform-orders', 'Orders', upstreamWithoutBuyer);
+    const downstreamNode: CanonicalNode = {
+      ...targetNode(),
+      id: 'transform-orders-summary',
+      name: 'Order summary',
+    };
+
+    expect(
+      resolveDvtSubstraitProjectionEntry({
+        targetNode: downstreamNode,
+        nodes: [source, upstreamNode, downstreamNode],
+        edges: [
+          { sourceId: source.id, targetId: upstreamNode.id },
+          { sourceId: upstreamNode.id, targetId: downstreamNode.id },
+        ],
+        draft: downstream,
+      })
+    ).toBeNull();
   });
   it('applies a scalar function to a Model output consumed by another Model', () => {
     const chained = createDvtSubstraitProjectionDraftFromTransform({

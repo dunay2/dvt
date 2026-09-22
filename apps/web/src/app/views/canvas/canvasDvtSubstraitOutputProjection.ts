@@ -3,17 +3,17 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstraitAggregateWindow';
 import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
 import {
-  decodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitInnerJoinAcceptedDraft,
-  resolveDvtSubstraitInnerJoinEntry,
+  decodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinAcceptedDraft,
   resolveDvtSubstraitNInputJoinEntry,
 } from './canvasDvtSubstraitJoinComposition';
+import { resolveDvtSubstraitJoinEntry } from './canvasDvtSubstraitJoinSourceResolution';
 import {
   decodeDvtSubstraitPilotDocument,
   inspectDvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
 import {
-  projectDvtSubstraitInnerJoinToPostgresSql,
+  projectDvtSubstraitJoinToPostgresSql,
   projectDvtSubstraitPilotAggregateWindowToPostgresSql,
   projectDvtSubstraitPilotAggregationToPostgresSql,
   projectDvtSubstraitPilotToPostgresSql,
@@ -104,12 +104,12 @@ export async function projectDvtSubstraitTransformOutputToPostgresSql(
     return projectDvtSubstraitPilotWindowToPostgresSql(pilotDraft, sourceBinding());
   }
 
-  const joinDraft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
-  const joinInspection = inspectDvtSubstraitInnerJoinAcceptedDraft(joinDraft);
+  const joinDraft = decodeDvtSubstraitJoinDocument(authority.semanticDocument);
+  const joinInspection = inspectDvtSubstraitJoinAcceptedDraft(joinDraft);
   if (joinInspection.ok) {
     const entry =
       'left' in joinInspection.projection && 'right' in joinInspection.projection
-        ? resolveDvtSubstraitInnerJoinEntry({
+        ? resolveDvtSubstraitJoinEntry({
             targetNode: args.transformNode,
             nodes: args.nodes,
             edges: args.edges,
@@ -124,7 +124,7 @@ export async function projectDvtSubstraitTransformOutputToPostgresSql(
     if (entry == null) {
       throw new Error('Substrait INNER JOIN source identities do not match the connected graph.');
     }
-    return projectDvtSubstraitInnerJoinToPostgresSql(joinDraft);
+    return projectDvtSubstraitJoinToPostgresSql(joinDraft);
   }
 
   const unionAllDraft = decodeDvtSubstraitUnionAllDocument(authority.semanticDocument);
@@ -138,7 +138,7 @@ export async function projectDvtSubstraitTransformOutputToPostgresSql(
     requirePersistedAuthority: true,
   });
   if (unionEntry == null) {
-    throw new Error('Substrait UNION ALL source identities do not match the connected graph.');
+    throw new Error('Substrait SetRel source identities do not match the connected graph.');
   }
   return projectDvtSubstraitUnionAllToPostgresSql(unionAllDraft);
 }

@@ -2,6 +2,12 @@
 
 /** Owned concern: prove CanvasNodeWorkbenchPanel presents governed node metadata directly. */
 import React, { act } from 'react';
+import {
+  ExtensionLeafRelSchema,
+  RelCommonSchema,
+  RelSchema,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { create } from '@bufbuild/protobuf';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -17,6 +23,7 @@ import {
   encodeDvtSubstraitProjectionDocument,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import {
@@ -191,6 +198,30 @@ const DVT_SUBSTRAIT_TRANSFORM_NODE: CanonicalNode = (() => {
   );
 })();
 
+const DVT_UNSUPPORTED_SUBSTRAIT_TRANSFORM_NODE: CanonicalNode = (() => {
+  const source = resolveDvtSubstraitProjectionSource(SOURCE_NODE);
+  if (source == null) throw new Error('Expected a connected PostgreSQL source fixture.');
+  const semanticDraft = createDvtSubstraitProjectionDraft({
+    source,
+    targetNodeId: DVT_TRANSFORM_NODE.id,
+    outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' }],
+  });
+  const root = semanticDraft.plan.relations[0]?.relType;
+  if (root?.case !== 'root') throw new Error('Expected a canonical relation root.');
+  root.value.input = create(RelSchema, {
+    relType: {
+      case: 'extensionLeaf',
+      value: create(ExtensionLeafRelSchema, {
+        common: create(RelCommonSchema, { relAnchor: 1 }),
+      }),
+    },
+  });
+  return applyDvtSubstraitSemanticDocument(
+    DVT_TRANSFORM_NODE,
+    encodeDvtSubstraitSemanticDocument(semanticDraft)
+  );
+})();
+
 const DVT_SINK_NODE: CanonicalNode = {
   id: 'sink.orders',
   name: 'Orders Sink',
@@ -237,6 +268,7 @@ function renderNodePanel(
   graph?: Readonly<{
     nodes?: readonly CanonicalNode[];
     edges?: readonly CanonicalEdge[];
+    onOpenSemanticEditor?: () => void;
   }>
 ): void {
   act(() => {
@@ -276,6 +308,9 @@ function renderNodePanel(
         primarySectionIds={primarySectionIds}
         authoring={authoring}
         onClose={vi.fn()}
+        {...(graph?.onOpenSemanticEditor == null
+          ? {}
+          : { onOpenSemanticEditor: graph.onOpenSemanticEditor })}
       />
     );
   });
@@ -612,6 +647,52 @@ describe('CanvasNodeWorkbenchPanel', () => {
     ]);
   });
 
+  it('keeps unsupported canonical semantics local while common Inspector fields remain editable', () => {
+    const onApplyNodeDraft = vi.fn();
+    renderNodePanel(
+      root,
+      DVT_UNSUPPORTED_SUBSTRAIT_TRANSFORM_NODE,
+      'general',
+      { canEditNode: true, onApplyNodeDraft },
+      1,
+      undefined,
+      { nodes: [SOURCE_NODE, DVT_UNSUPPORTED_SUBSTRAIT_TRANSFORM_NODE], edges: [] }
+    );
+
+    const issue = container.querySelector(
+      '[data-slot="canvas-inspector-semantic-authoring-issue"]'
+    );
+    expect(issue?.getAttribute('role')).toBe('status');
+    expect(issue?.textContent).toContain('Semantic operation unavailable');
+    expect(issue?.textContent).toContain('stored semantics were left unchanged');
+    expect(container.querySelector('[data-slot="canvas-node-workbench-panel"]')).not.toBeNull();
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+
+    const nameInput = container.querySelector<HTMLInputElement>('input[name="node-name"]');
+    expect(nameInput).not.toBeNull();
+    act(() => {
+      fireEvent.input(nameInput!, { target: { value: 'Recovered orders' } });
+    });
+    const applyButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Apply'
+    );
+    expect(applyButton?.disabled).toBe(false);
+    act(() => {
+      fireEvent.click(applyButton!);
+    });
+
+    const submittedDraft = onApplyNodeDraft.mock.calls[0]?.[0];
+    expect(submittedDraft).toMatchObject({
+      name: 'Recovered orders',
+      semanticAuthoringIssue: 'unsupported_shape',
+    });
+    expect(submittedDraft).not.toHaveProperty('dvt');
+    expect(
+      applyCanvasInspectorNodeDraft(DVT_UNSUPPORTED_SUBSTRAIT_TRANSFORM_NODE, submittedDraft)
+        .metadata?.transformAuthoring
+    ).toEqual(DVT_UNSUPPORTED_SUBSTRAIT_TRANSFORM_NODE.metadata?.transformAuthoring);
+  });
+
   it('keeps an invalid business tag visible and blocks Apply with an accessible error', () => {
     const node = { ...DVT_TRANSFORM_NODE, tags: ['authoring'] };
     const onApplyNodeDraft = vi.fn();
@@ -734,6 +815,89 @@ describe('CanvasNodeWorkbenchPanel', () => {
       );
     });
     expect(outputSelector?.value).toBe('postgres-sql');
+  });
+
+  it('keeps pending relational information out of the contextual inspector', () => {
+    const onOpenSemanticEditor = vi.fn();
+    const pendingTransform: CanonicalNode = {
+      ...DVT_SUBSTRAIT_TRANSFORM_NODE,
+      metadata: {
+        ...DVT_SUBSTRAIT_TRANSFORM_NODE.metadata,
+        transformAuthoring: undefined,
+      },
+    };
+    const clients: CanonicalNode = {
+      ...SOURCE_NODE,
+      id: 'source.clients',
+      name: 'Clients Source',
+      metadata: {
+        ...SOURCE_NODE.metadata,
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-prod',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'relation/dvt/raw/clients',
+        },
+        tableName: 'clients',
+        columns: [{ name: 'client_id', type: 'integer', nullable: false }],
+      },
+    };
+    renderNodePanel(
+      root,
+      pendingTransform,
+      'code',
+      { canEditNode: true, onApplyNodeDraft: vi.fn() },
+      1,
+      undefined,
+      {
+        nodes: [SOURCE_NODE, clients, pendingTransform],
+        edges: [
+          {
+            id: 'edge-orders-transform',
+            sourceId: SOURCE_NODE.id,
+            targetId: pendingTransform.id,
+            relation: 'lineage',
+          },
+          {
+            id: 'edge-clients-transform',
+            sourceId: clients.id,
+            targetId: pendingTransform.id,
+            relation: 'lineage',
+          },
+        ],
+        onOpenSemanticEditor,
+      }
+    );
+
+    const panel = container.querySelector('[data-slot="canvas-node-workbench-panel"]');
+    const header = container.querySelector(
+      '[data-slot="canvas-node-workbench-header-actions"]'
+    )?.parentElement;
+    expect(panel?.querySelector('[data-slot="dvt-relational-operation-chooser"]')).toBeNull();
+    const openEditor = panel?.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-open-semantic-editor"]'
+    );
+    expect(openEditor).not.toBeNull();
+    act(() => openEditor!.click());
+    expect(onOpenSemanticEditor).toHaveBeenCalledOnce();
+    expect(panel?.querySelector('[data-slot="canvas-node-workbench-tabs"]')).not.toBeNull();
+    expect(panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')).not.toBeNull();
+    expect(panel?.querySelector('[data-slot="canvas-node-workbench-status"]')).not.toBeNull();
+    expect(panel?.querySelector('[data-slot="canvas-node-workbench-kind"]')?.textContent).toBe(
+      'Model'
+    );
+    const tabsList = panel?.querySelector('[data-slot="canvas-node-workbench-tabs-list"]');
+    const tabList = panel?.querySelector('[data-slot="canvas-node-workbench-tabs-list-tablist"]');
+    const moreTrigger = panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]');
+    expect(tabList?.parentElement).toBe(tabsList);
+    expect(moreTrigger?.parentElement).toBe(tabsList);
+    expect(tabList?.className).toContain('flex-1');
+    expect(tabList?.className).not.toContain('w-full');
+    expect(header?.textContent).toContain('Clean Orders');
+    expect(header?.querySelector('p')).toBeNull();
   });
 
   it('keeps canonical code scrolling inside Monaco without a nested workbench scrollbar', () => {

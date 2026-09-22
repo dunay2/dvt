@@ -9,6 +9,10 @@ type DropTarget = Readonly<{
   placement: 'before' | 'compose' | 'after';
 }>;
 
+function columnIdentity(column: GraphNodeColumn): string {
+  return column.id ?? column.name;
+}
+
 export function useGraphNodeColumnReorder(args: {
   columns: readonly GraphNodeColumn[];
   nodeId?: string;
@@ -24,13 +28,14 @@ export function useGraphNodeColumnReorder(args: {
   const draggedColumnIdRef = useRef<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const reorderableColumnIds = columnOrder.orderedColumns.flatMap((column) =>
-    column.id == null ? [] : [column.name]
+    column.id == null ? [] : [columnIdentity(column)]
   );
   const canReorder = (column: GraphNodeColumn): boolean =>
     column.id != null && args.nodeId != null && args.onColumnReorder != null;
 
   return {
     orderedColumns: columnOrder.orderedColumns,
+    rowKey: columnOrder.rowKey,
     resolveActivationPlacement: columnOrder.resolveActivationPlacement,
     canReorder,
     dropPlacement(column: GraphNodeColumn): DropTarget['placement'] | undefined {
@@ -40,9 +45,9 @@ export function useGraphNodeColumnReorder(args: {
       if (!canReorder(column)) return;
       event.stopPropagation();
       args.onColumnComposeRequest?.(null);
-      draggedColumnIdRef.current = column.name;
+      draggedColumnIdRef.current = columnIdentity(column);
       event.dataTransfer.effectAllowed = 'linkMove';
-      event.dataTransfer.setData('text/plain', column.name);
+      event.dataTransfer.setData('text/plain', columnIdentity(column));
     },
     endDrag(): void {
       draggedColumnIdRef.current = null;
@@ -50,12 +55,17 @@ export function useGraphNodeColumnReorder(args: {
     },
     dragOver(column: GraphNodeColumn, event: DragEvent<HTMLElement>): void {
       const draggedColumnId = draggedColumnIdRef.current;
-      if (!canReorder(column) || draggedColumnId == null || draggedColumnId === column.name) return;
+      if (
+        !canReorder(column) ||
+        draggedColumnId == null ||
+        draggedColumnId === columnIdentity(column)
+      )
+        return;
       event.preventDefault();
       event.stopPropagation();
       const bounds = event.currentTarget.getBoundingClientRect();
       const draggedColumn = columnOrder.orderedColumns.find(
-        (candidate) => candidate.name === draggedColumnId
+        (candidate) => columnIdentity(candidate) === draggedColumnId
       );
       const offset = event.clientY - bounds.top;
       const canCompose = draggedColumn?.id != null && args.onColumnComposeRequest != null;
@@ -80,7 +90,7 @@ export function useGraphNodeColumnReorder(args: {
         !canReorder(column) ||
         args.nodeId == null ||
         draggedColumnId == null ||
-        draggedColumnId === column.name
+        draggedColumnId === columnIdentity(column)
       ) {
         return;
       }
@@ -90,16 +100,20 @@ export function useGraphNodeColumnReorder(args: {
         dropTarget?.columnId === (column.id ?? column.name) ? dropTarget.placement : null;
       if (placement === 'compose') {
         const sourceColumn = columnOrder.orderedColumns.find(
-          (candidate) => candidate.name === draggedColumnId
+          (candidate) => columnIdentity(candidate) === draggedColumnId
         );
         if (sourceColumn?.id != null) {
           args.onColumnComposeRequest?.({ sourceColumn, targetColumn: column });
         }
       } else if (placement != null) {
-        const activePlacement = columnOrder.moveColumn(draggedColumnId, column.name, placement);
+        const activePlacement = columnOrder.moveColumn(
+          draggedColumnId,
+          columnIdentity(column),
+          placement
+        );
         if (activePlacement != null) {
           const draggedColumn = columnOrder.orderedColumns.find(
-            (candidate) => candidate.name === draggedColumnId
+            (candidate) => columnIdentity(candidate) === draggedColumnId
           );
           args.onColumnReorder?.({
             nodeId: args.nodeId,
@@ -121,7 +135,7 @@ export function useGraphNodeColumnReorder(args: {
         return false;
       }
       const sourceIndex = columnOrder.orderedColumns.findIndex(
-        (candidate) => candidate.name === column.name
+        (candidate) => columnIdentity(candidate) === columnIdentity(column)
       );
       const target = columnOrder.orderedColumns[sourceIndex + (event.key === 'ArrowLeft' ? -1 : 1)];
       event.preventDefault();
@@ -138,14 +152,14 @@ export function useGraphNodeColumnReorder(args: {
       ) {
         return false;
       }
-      const sourceIndex = reorderableColumnIds.indexOf(column.name);
+      const sourceIndex = reorderableColumnIds.indexOf(columnIdentity(column));
       const targetIndex = sourceIndex + (event.key === 'ArrowUp' ? -1 : 1);
       const targetColumnId = reorderableColumnIds[targetIndex];
       if (targetColumnId != null) {
         event.preventDefault();
         event.stopPropagation();
         const activePlacement = columnOrder.moveColumn(
-          column.name,
+          columnIdentity(column),
           targetColumnId,
           event.key === 'ArrowUp' ? 'before' : 'after'
         );

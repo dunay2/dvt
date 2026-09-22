@@ -1,12 +1,16 @@
 import type { IContentAddressedArtifactStore } from '@dvt/artifacts';
 import {
+  createDvtPostgresOutputSchemaDigestV1,
   type ConnectionRef,
   type ConnectedSourceRef,
   type DvtSubstraitSemanticDocumentV1,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 import { sha256Hex } from '@dvt/crypto';
-import type { ProjectedDvtConnectedFieldSql } from '@dvt/postgres-projection';
+import {
+  projectDvtPostgresOutputSchemaV1,
+  type ProjectedDvtConnectedFieldSql,
+} from '@dvt/postgres-projection';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -109,7 +113,7 @@ function projected(targetNodeId = 'transform-a'): ProjectedDvtConnectedFieldSql 
         schema: 'raw',
         table: 'orders',
         sourceRef: CONNECTED_SOURCE,
-        fields: [{ name: 'order_id', dataType: 'integer' }],
+        fields: [{ name: 'order_id', dataType: 'bigint' }],
       },
       outputs: [
         {
@@ -117,7 +121,7 @@ function projected(targetNodeId = 'transform-a'): ProjectedDvtConnectedFieldSql 
           name: 'order_id',
           sourceFieldId: 'field:source-a:order_id',
           sourceFieldName: 'order_id',
-          dataType: 'integer',
+          dataType: 'bigint',
           outputOrdinal: 0,
         },
       ],
@@ -156,6 +160,8 @@ describe('DvtPostgresTargetProjectionPublisher', () => {
     });
 
     const binding = await publisher.publish(publishInput());
+    const outputSchema = projectDvtPostgresOutputSchemaV1(projected().projection.outputs);
+    if (outputSchema == null) throw new Error('Expected canonical output schema.');
 
     expect(publish).toHaveBeenCalledWith({
       tenantId: 'tenant-a',
@@ -169,6 +175,7 @@ describe('DvtPostgresTargetProjectionPublisher', () => {
       profileId: 'dvt.vtx2.postgres.project-rel.v1',
       outputNodeId: 'transform-a',
       semanticPlanSha256: semanticDocument().semanticPlan.sha256,
+      schemaDigestSha256: createDvtPostgresOutputSchemaDigestV1(outputSchema),
       connectionRef: CONNECTION,
       artifact: {
         artifactKind: 'compiled-sql',
@@ -193,5 +200,33 @@ describe('DvtPostgresTargetProjectionPublisher', () => {
 
     await expect(publisher.publish(publishInput({ draft: buildDraft() }))).rejects.toThrow();
     expect(publish).not.toHaveBeenCalled();
+  });
+
+  it('preserves Preview SQL publication when the output type cannot be fingerprinted', async () => {
+    const publish = vi.fn<Pick<IContentAddressedArtifactStore, 'publish'>['publish']>(
+      async (request) => ({ ...request, disposition: 'created' })
+    );
+    const publisher = new DvtPostgresTargetProjectionPublisher({
+      artifactStore: { publish },
+      locateArtifact: ({ sha256 }) => `s3://artifacts/tenants/tenant-a/${sha256}`,
+      projectSemanticDocument: async () => {
+        const value = projected();
+        return {
+          ...value,
+          projection: {
+            ...value.projection,
+            outputs: value.projection.outputs.map((output) => ({
+              ...output,
+              dataType: 'unknown',
+            })),
+          },
+        };
+      },
+    });
+
+    const binding = await publisher.publish(publishInput());
+
+    expect(binding.schemaDigestSha256).toBeUndefined();
+    expect(publish).toHaveBeenCalledOnce();
   });
 });

@@ -50,6 +50,19 @@ describe('loadEnv', () => {
     expect(loadEnv({ DVT_TEMPORAL_DBT_ENABLED: 'yes' }).DVT_TEMPORAL_DBT_ENABLED).toBe(false);
   });
 
+  it('exposes DVT PostgreSQL runtime support only for explicit true', async () => {
+    expect(loadEnv({}).DVT_TEMPORAL_DVT_POSTGRES_ENABLED).toBe(false);
+    expect(
+      loadEnv({ DVT_TEMPORAL_DVT_POSTGRES_ENABLED: 'true' }).DVT_TEMPORAL_DVT_POSTGRES_ENABLED
+    ).toBe(true);
+    expect(
+      loadEnv({ DVT_TEMPORAL_DVT_POSTGRES_ENABLED: 'false' }).DVT_TEMPORAL_DVT_POSTGRES_ENABLED
+    ).toBe(false);
+    expect(
+      loadEnv({ DVT_TEMPORAL_DVT_POSTGRES_ENABLED: 'yes' }).DVT_TEMPORAL_DVT_POSTGRES_ENABLED
+    ).toBe(false);
+  });
+
   it('exposes object-file PostgreSQL runtime support only for explicit true', async () => {
     expect(loadEnv({}).DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED).toBe(false);
     expect(

@@ -80,6 +80,7 @@ test('buildApiEnv injects readiness flags and local postgres defaults for the co
     apiEnv.DVT_POSTGRES_CREDENTIAL_BINDINGS,
     JSON.stringify({ 'postgres:local-postgres-proof': defaultPgUrl })
   );
+  assert.equal(apiEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'true');
   assert.equal(apiEnv.TEMPORAL_ADDRESS, '127.0.0.1:7233');
   assert.equal(apiEnv.TEMPORAL_NAMESPACE, 'default');
   assert.equal(apiEnv.TEMPORAL_TASK_QUEUE, 'dvt-temporal');
@@ -106,6 +107,7 @@ test('buildApiEnv leaves database unset when postgres bootstrap is explicitly sk
   assert.equal(apiEnv.DATABASE_URL, undefined);
   assert.equal(apiEnv.DVT_LOCAL_POSTGRES_WAREHOUSE_URL, undefined);
   assert.equal(apiEnv.DVT_POSTGRES_CREDENTIAL_BINDINGS, undefined);
+  assert.equal(apiEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, undefined);
   assert.equal(apiEnv.TEMPORAL_ADDRESS, undefined);
   assert.equal(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL, undefined);
 });
@@ -213,6 +215,31 @@ test('buildCoordinatedTemporalWorkerEnv derives worker queue from local tenant, 
     workerEnv.DVT_POSTGRES_CREDENTIAL_BINDINGS,
     JSON.stringify({ 'postgres:local-postgres-proof': defaultPgUrl })
   );
+  assert.equal(workerEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'true');
+});
+
+test('buildCoordinatedTemporalWorkerEnv preserves an explicit DVT PostgreSQL opt-out', () => {
+  const apiEnv = buildApiEnv(
+    {
+      host: '127.0.0.1',
+      apiPort: 3000,
+      skipPostgres: false,
+    },
+    { DVT_TEMPORAL_DVT_POSTGRES_ENABLED: 'false' }
+  );
+
+  const workerEnv = buildCoordinatedTemporalWorkerEnv(
+    {
+      host: '127.0.0.1',
+      apiPort: 3000,
+      skipPostgres: false,
+    },
+    apiEnv,
+    {}
+  );
+
+  assert.equal(apiEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'false');
+  assert.equal(workerEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'false');
 });
 
 test('buildCoordinatedTemporalWorkerEnv preserves operator-owned worker queue', () => {
@@ -250,6 +277,7 @@ test('buildTemporalWorkerEnv forwards configured DBT bundle store settings', () 
       DVT_DBT_BUNDLE_STORE_BACKEND: 'file',
       DVT_DBT_BUNDLE_FILE_ROOT: 'C:\\custom\\dbt-bundles',
       DVT_WORKSPACE_FILES_ROOT: 'C:\\custom\\workspace-files',
+      DVT_CAS_FILE_ROOT: 'C:\\custom\\cas',
     },
     defaultPgUrl
   );
@@ -257,6 +285,7 @@ test('buildTemporalWorkerEnv forwards configured DBT bundle store settings', () 
   assert.equal(workerEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
   assert.equal(workerEnv.DVT_DBT_BUNDLE_FILE_ROOT, 'C:\\custom\\dbt-bundles');
   assert.equal(workerEnv.DVT_WORKSPACE_FILES_ROOT, 'C:\\custom\\workspace-files');
+  assert.equal(workerEnv.DVT_CAS_FILE_ROOT, 'C:\\custom\\cas');
 });
 
 test('buildCoordinatedTemporalWorkerEnv keeps DBT execution profile aligned with API env', () => {
@@ -399,10 +428,19 @@ test('buildLocalPostgresProofSeedSql creates real default source tables for Canv
   assert.match(sql, /CREATE SCHEMA IF NOT EXISTS raw/);
   assert.match(sql, /CREATE TABLE public\.source_1/);
   assert.match(sql, /CREATE TABLE raw\.orders/);
+  assert.match(sql, /CREATE TABLE raw\.orders \(\s+order_id text PRIMARY KEY/);
+  assert.match(sql, /client_id text NOT NULL/);
+  assert.match(sql, /CREATE TABLE raw\.client/);
+  assert.match(sql, /CREATE TABLE raw\.order_details/);
+  assert.match(sql, /CREATE TABLE raw\.order_details \(\s+order_id text NOT NULL/);
   assert.match(sql, /INSERT INTO public\.source_1/);
   assert.match(sql, /INSERT INTO raw\.orders/);
+  assert.match(sql, /INSERT INTO raw\.client/);
+  assert.match(sql, /INSERT INTO raw\.order_details/);
   assert.match(sql, /ANALYZE public\.source_1/);
   assert.match(sql, /ANALYZE raw\.orders/);
+  assert.match(sql, /ANALYZE raw\.client/);
+  assert.match(sql, /ANALYZE raw\.order_details/);
 });
 
 test('buildLocalWarehouseConnectionRequest uses the protected connection command contract', () => {

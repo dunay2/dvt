@@ -7,10 +7,8 @@ import {
 } from './canvasDvtSubstraitProjection';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import {
-  createSemanticExpressionProjector,
-  layoutSemanticExpressionGraph,
-} from './semanticExpressionGraphProjection';
+import { createSemanticExpressionProjector } from './semanticExpressionGraphProjection';
+import { layoutSemanticExpressionGraph } from './semanticExpressionGraphLayout';
 import type { SemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 
 export type CanvasOutputExpressionProjection =
@@ -19,6 +17,7 @@ export type CanvasOutputExpressionProjection =
       fieldId: string;
       alias: string;
       dataType: string;
+      semanticDigest: string;
       graph: SemanticWorkbenchGraph;
     }>
   | Readonly<{ status: 'unavailable'; reason: 'invalid-output' | 'unsupported-expression' }>;
@@ -84,6 +83,16 @@ export function projectCanvasOutputExpression(
       nodes: graph.nodes,
       edges: graph.edges,
       showArgumentOrder: true,
+      inputFields: inputs.map((field) => {
+        const sourceFieldId = draft.sidecar.fields.find(
+          (entry) => entry.fieldId === field.fieldId
+        )?.sourceFieldId;
+        return {
+          fieldId: field.fieldId,
+          relationId: inspection.projection.inputRelationId,
+          ...(sourceFieldId == null ? {} : { sourceFieldId }),
+        };
+      }),
       nextId: (prefix) => `${prefix}-${sequence++}`,
     });
     projector.addExpression(
@@ -95,6 +104,7 @@ export function projectCanvasOutputExpression(
       fieldId: output.fieldId,
       alias: output.name,
       dataType: output.dataType,
+      semanticDigest: authority.semanticDocument.semanticPlan.sha256,
       graph: layoutSemanticExpressionGraph({ ...graph, expressionCount: projector.count }),
     };
   } catch {

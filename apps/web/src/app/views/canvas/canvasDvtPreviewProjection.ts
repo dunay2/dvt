@@ -5,13 +5,15 @@ import {
   type ExecutionSelection,
   ConnectedSourceRefSchema,
 } from '@dvt/contracts';
-import { inspectDvtSubstraitNInputJoinDraft, hasSameConnectionRef } from '@dvt/postgres-projection';
+import { inspectDvtSubstraitJoinDraft, hasSameConnectionRef } from '@dvt/postgres-projection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import { toCanvasAuthoringSerializableValue } from './canvasAuthoringMetadata';
 import { resolveEffectiveDvtConnectionRef } from './canvasDvtAuthoringModel';
 import { decodeDvtSubstraitProjectionDocument } from './canvasDvtSubstraitProjection';
+import { inspectDvtSubstraitUnionAllAcceptedDraft } from './canvasDvtSubstraitSetComposition';
+import { peelCanvasDvtSubstraitSortFetch } from './canvasDvtSubstraitSortFetch';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { canvasViewCopy } from './copy';
 
@@ -75,15 +77,23 @@ function resolveTerminalProjectionClosure(
       return null;
     const authority = readDvtTransformAuthoringAuthority(transform);
     if (authority === null) return null;
-    const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+    const { base: draft } = peelCanvasDvtSubstraitSortFetch(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
     if (sources.length > 1) {
-      const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
-      if (!inspection.ok || inspection.projection.inputs.length !== sources.length) return null;
+      const joinInspection = inspectDvtSubstraitJoinDraft(draft);
+      const setInspection = inspectDvtSubstraitUnionAllAcceptedDraft(draft);
+      const semanticInputs = joinInspection.ok
+        ? joinInspection.projection.inputs
+        : setInspection.ok
+          ? setInspection.projection.inputs
+          : null;
+      if (semanticInputs == null || semanticInputs.length !== sources.length) return null;
       const refs = sources.map((source) =>
         ConnectedSourceRefSchema.parse(source.metadata?.connectedSourceRef)
       );
       if (
-        inspection.projection.inputs.some(
+        semanticInputs.some(
           (input) =>
             refs.filter(
               (ref) =>

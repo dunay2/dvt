@@ -156,6 +156,42 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     proofRef: 'docs/evidence/ED-20260826-vtx2-substrait-card-pilot.md',
   },
   {
+    entryIds: [standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT')],
+    useCaseRefs: ['dvt:#3307'],
+    proofRef: 'docs/evidence/ED-20260919-left-join-end-to-end.md',
+  },
+  {
+    entryIds: [
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT'),
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_OUTER'),
+    ],
+    useCaseRefs: ['dvt:#3308'],
+    proofRef: 'docs/evidence/ED-20260919-right-full-join-end-to-end.md',
+  },
+  {
+    entryIds: [
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT_SEMI'),
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT_ANTI'),
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT_SEMI'),
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT_ANTI'),
+    ],
+    useCaseRefs: ['dvt:#3320'],
+    proofRef: 'docs/evidence/ED-20260919-semi-anti-join-end-to-end.md',
+  },
+  {
+    entryIds: [standardId('relation', 'substrait.CrossRel')],
+    useCaseRefs: ['dvt:#3322'],
+    proofRef: 'docs/evidence/ED-20260919-cross-join-end-to-end.md',
+  },
+  {
+    entryIds: [
+      standardId('relation', 'substrait.SortRel'),
+      standardId('relation', 'substrait.FetchRel'),
+    ],
+    useCaseRefs: ['dvt:#3324'],
+    proofRef: 'docs/evidence/ED-20260920-sort-fetch-end-to-end.md',
+  },
+  {
     entryIds: [
       standardId('relation', 'substrait.AggregateRel'),
       functionId('aggregate-function', 'functions_aggregate_generic', 'count'),
@@ -189,6 +225,27 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     entryIds: [standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_UNION_ALL')],
     useCaseRefs: ['dvt:#2634'],
     proofRef: 'docs/evidence/ED-20260831-vtx2-substrait-union-all.md',
+  },
+  {
+    entryIds: [standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_UNION_DISTINCT')],
+    useCaseRefs: ['dvt:#3317'],
+    proofRef: 'docs/evidence/ED-20260919-union-distinct-end-to-end.md',
+  },
+  {
+    entryIds: [
+      standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_INTERSECTION_MULTISET'),
+      standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_MINUS_PRIMARY'),
+    ],
+    useCaseRefs: ['dvt:#3318'],
+    proofRef: 'docs/evidence/ED-20260920-intersect-except-distinct-end-to-end.md',
+  },
+  {
+    entryIds: [
+      standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_INTERSECTION_MULTISET_ALL'),
+      standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_MINUS_PRIMARY_ALL'),
+    ],
+    useCaseRefs: ['dvt:#3319'],
+    proofRef: 'docs/evidence/ED-20260920-intersect-except-all-end-to-end.md',
   },
   {
     entryIds: [

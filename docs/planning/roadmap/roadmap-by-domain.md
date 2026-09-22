@@ -128,7 +128,6 @@ flowchart LR
 ## Related Diagrams
 
 - [Strategic Product Roadmap](strategic-product-roadmap.md)
-- [Review Sprint Critical Path 2026-04](./diagrams/review-sprint-critical-path-2026-04.md)
 - [Planning Domain Map](./diagrams/planning-domain-map.md)
 - [Execution Runtime Architecture Delta](./diagrams/execution-runtime-architecture-delta.md)
 - [Engine Roadmap](../../architecture/components/engine/roadmap/engine-phases.md)

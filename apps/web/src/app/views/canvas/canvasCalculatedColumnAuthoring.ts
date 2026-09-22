@@ -9,6 +9,7 @@ import { canvasDraftSession } from './canvasDraftSession';
 import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
 import {
   encodeDvtSubstraitProjectionDocument,
+  inspectDvtSubstraitProjectionDraft,
   resolveDvtSubstraitProjectionEntry,
   type DvtSubstraitProjection,
   type DvtSubstraitProjectionAuthoringRejection,
@@ -91,10 +92,13 @@ function createOutput(args: {
   draft: DvtSubstraitProjectionDraft;
 }) {
   const request = creationRequest(args.request);
+  const inspection = inspectDvtSubstraitProjectionDraft(args.draft);
   const operands =
-    request.expression.kind === 'scalar-function'
+    request.expression.kind === 'scalar-function' && inspection.ok
       ? request.expression.operandFieldIds.map((fieldId) =>
-          args.projection.outputs.find((output) => output.fieldId === fieldId)
+          [...inspection.projection.outputs, ...inspection.projection.inputFields].find(
+            (field) => field.fieldId === fieldId
+          )
         )
       : [];
   return createDvtSubstraitProjectionOutput(

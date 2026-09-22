@@ -55,6 +55,7 @@ export function CanvasDependencyEdge({
   selected,
   data,
 }: EdgeProps<Edge<CanvasDependencyEdgeData>>): ReactElement {
+  const dependency = readCanvasDependencyEdgeData(data);
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -63,7 +64,7 @@ export function CanvasDependencyEdge({
     targetY,
     targetPosition,
   });
-  const execution = readCanvasDependencyEdgeData(data)?.execution;
+  const execution = dependency?.execution;
   const closed = execution?.gateState === 'closed';
   const resolvedStyle = {
     ...(style ?? createGraphFlowEdgeStyle()),
@@ -79,7 +80,6 @@ export function CanvasDependencyEdge({
         }
       : {}),
   };
-
   return (
     <>
       <BaseEdge

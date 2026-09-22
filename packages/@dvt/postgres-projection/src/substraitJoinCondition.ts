@@ -156,7 +156,7 @@ export function reduceDvtSubstraitJoinConditions<Operand, Result>(args: {
     if (!isDvtSubstraitJoinConditionGroup(condition)) return args.comparison(condition);
     const [first, ...rest] = condition.conditions;
     if (first == null || rest.length === 0) {
-      throw new Error('VTX2 INNER JOIN condition groups require at least two conditions.');
+      throw new Error('VTX2 JOIN condition groups require at least two conditions.');
     }
     return rest.reduce(
       (left, child) => args.combine(child.combination ?? 'and', left, term(child)),
@@ -164,7 +164,7 @@ export function reduceDvtSubstraitJoinConditions<Operand, Result>(args: {
     );
   };
   const [first, ...rest] = args.conditions;
-  if (first == null) throw new Error('VTX2 INNER JOIN requires at least one condition.');
+  if (first == null) throw new Error('VTX2 JOIN requires at least one condition.');
   return rest.reduce(
     (left, condition) => args.combine(condition.combination ?? 'and', left, term(condition)),
     term(first)

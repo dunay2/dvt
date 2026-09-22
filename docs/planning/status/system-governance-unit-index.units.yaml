@@ -73,6 +73,25 @@ units:
     fowlerSignals:
       - package boundary
       - semantic encapsulation
+  - id: SYS-ADAPTERS-TEMPORAL-DVT-POSTGRES-PLUGIN
+    name: Temporal DVT PostgreSQL plugin package
+    parent: SYS-ADAPTERS-ROOT
+    level: source
+    status: review
+    publicApi:
+      - packages/@dvt/temporal-dvt-postgres-plugin/src/index.ts
+    owns:
+      - packages/@dvt/temporal-dvt-postgres-plugin/**
+    childrenRequired: false
+    dddOwner: ADP
+    cqRails: WorkflowEngine.startRun DVT PostgreSQL execution
+    governance:
+      - docs/adr/ADR-0066-postgresql-stable-table-publication.md
+      - docs/evidence/ED-20260915-dvt-postgres-operational-runtime.md
+    fowlerSignals:
+      - package boundary
+      - single step-kind ownership
+      - static typed plugin composition
   - id: SYS-ADAPTERS-TEMPORAL-HTTP-JSON-PLUGIN
     name: Temporal HTTP JSON plugin package
     parent: SYS-ADAPTERS-ROOT
@@ -831,8 +850,6 @@ units:
       - repository metadata reviewed through governance checks
     owns:
       - .claude/**
-      - .gh-comments/**
-      - .git.bfg-report/**
       - .golden/**
       - .vscode/**
       - .arc-policy.yaml

@@ -14,9 +14,9 @@ import { CanvasNodeWorkbenchOverlay } from '../views/canvas/CanvasNodeWorkbenchO
 import { SemanticTransformFocusPanel } from '../views/canvas/SemanticTransformFocusPanel';
 import type { CanvasInspectorAuthoringContract } from '../views/canvas/canvasInspectorAuthoring.types';
 import {
-  decodeDvtSubstraitInnerJoinDocument,
-  encodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitNInputJoinDraft,
+  decodeDvtSubstraitJoinDocument,
+  encodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinDraft,
   setDvtSubstraitJoinConnectionFieldSelected,
   type DvtSubstraitNInputJoinProjection,
 } from '../views/canvas/canvasDvtSubstraitJoinComposition';
@@ -133,8 +133,8 @@ function inspectSemanticWorkbenchJoin(
   try {
     const authority = readDvtTransformAuthoringAuthority(transform);
     if (authority == null) return null;
-    const inspection = inspectDvtSubstraitNInputJoinDraft(
-      decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+    const inspection = inspectDvtSubstraitJoinDraft(
+      decodeDvtSubstraitJoinDocument(authority.semanticDocument)
     );
     return inspection.ok ? inspection.projection : null;
   } catch {
@@ -239,7 +239,7 @@ function SemanticWorkbenchLab() {
         }
         const authority = readDvtTransformAuthoringAuthority(current.transform);
         if (authority == null) return current;
-        const currentDraft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+        const currentDraft = decodeDvtSubstraitJoinDocument(authority.semanticDocument);
         const nextDraft = setDvtSubstraitJoinConnectionFieldSelected({
           draft: currentDraft,
           sourceNode,
@@ -253,7 +253,7 @@ function SemanticWorkbenchLab() {
           ...current,
           transform: applyDvtSubstraitSemanticDocument(
             current.transform,
-            encodeDvtSubstraitInnerJoinDocument(nextDraft)
+            encodeDvtSubstraitJoinDocument(nextDraft)
           ),
         };
       });
@@ -294,8 +294,7 @@ function SemanticWorkbenchLab() {
             ...(canOpenDataSample
               ? {
                   onOpenSourceDataSample: openSourceDataSample,
-                  sourceDataSampleInteractionLabel:
-                    'Doble clic o Intro para abrir la muestra de datos.',
+                  dataActionLabel: 'Ejecutar',
                 }
               : {}),
           },

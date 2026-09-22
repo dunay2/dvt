@@ -4,8 +4,10 @@
  */
 import {
   ConnectedSourceRefSchema,
-  DVT_POSTGRES_INNER_JOIN_PROFILE_ID,
+  decodeDvtSubstraitPlanV1,
+  DVT_POSTGRES_JOIN_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
+  DVT_POSTGRES_SET_PROFILE_ID,
   DvtTransformAuthoringAuthorityV1Schema,
   WorkspaceGraphAuthoringDraftSchema,
   isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
@@ -17,6 +19,9 @@ import {
   type WorkspaceGraphAuthoringNode,
 } from '@dvt/contracts';
 
+import { containsJoinRelation, containsSetRelation } from './dvtRelationFamily.js';
+import { hasExactDvtSourceCoverage, sameConnection } from './dvtSourceCoverage.js';
+
 export type DvtTerminalTransformClosure = {
   readonly draft: WorkspaceGraphAuthoringDraft;
   readonly sources: readonly { node: WorkspaceGraphAuthoringNode; ref: ConnectedSourceRef }[];
@@ -24,7 +29,9 @@ export type DvtTerminalTransformClosure = {
   readonly edges: readonly WorkspaceGraphAuthoringEdge[];
   readonly connectionRef: ConnectionRef;
   readonly profileId:
-    typeof DVT_POSTGRES_PROJECT_REL_PROFILE_ID | typeof DVT_POSTGRES_INNER_JOIN_PROFILE_ID;
+    | typeof DVT_POSTGRES_PROJECT_REL_PROFILE_ID
+    | typeof DVT_POSTGRES_JOIN_PROFILE_ID
+    | typeof DVT_POSTGRES_SET_PROFILE_ID;
   readonly authority: DvtTransformAuthoringAuthorityV1;
 };
 
@@ -103,17 +110,26 @@ export function resolveDvtTerminalTransformClosure(input: {
   if (
     connectionRef.provider !== 'postgres' ||
     sources.some(({ ref }) => !sameConnection(ref.connectionRef, connectionRef)) ||
-    semanticSources.length !== sources.length ||
-    sources.some(
-      ({ ref }) =>
-        semanticSources.filter((semantic) => sameConnectedSource(semantic, ref)).length !== 1
-    ) ||
-    semanticSources.some(
-      (semantic) => sources.filter(({ ref }) => sameConnectedSource(semantic, ref)).length !== 1
+    !hasExactDvtSourceCoverage(
+      semanticSources,
+      sources.map(({ ref }) => ref)
     )
   ) {
     throw new Error(
       'Transform semantic sources must exactly match the selected connected Sources on one PostgreSQL connection.'
+    );
+  }
+  const root = decodeDvtSubstraitPlanV1(authority.semanticDocument).relations[0]?.relType;
+  const semanticRoot = root?.case === 'root' ? root.value.input : undefined;
+  const hasJoin = semanticRoot == null ? false : containsJoinRelation(semanticRoot);
+  const hasSet = semanticRoot == null ? false : containsSetRelation(semanticRoot);
+  if (
+    (hasJoin && hasSet) ||
+    ((hasJoin || hasSet) && semanticSources.length < 2) ||
+    (!hasJoin && !hasSet && sources.length !== 1)
+  ) {
+    throw new Error(
+      'Transform operational profile must match its canonical semantic relation family.'
     );
   }
 
@@ -124,10 +140,11 @@ export function resolveDvtTerminalTransformClosure(input: {
     edges: selectedEdges,
     connectionRef,
     authority,
-    profileId:
-      sources.length === 1
-        ? DVT_POSTGRES_PROJECT_REL_PROFILE_ID
-        : DVT_POSTGRES_INNER_JOIN_PROFILE_ID,
+    profileId: hasJoin
+      ? DVT_POSTGRES_JOIN_PROFILE_ID
+      : hasSet
+        ? DVT_POSTGRES_SET_PROFILE_ID
+        : DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
   };
 }
 
@@ -148,20 +165,4 @@ function requireUniqueIdentities(ids: readonly string[], label: string): void {
   if (ids.length === 0 || new Set(ids).size !== ids.length) {
     throw new Error(`Expected unique ${label} identities.`);
   }
-}
-
-export function sameConnection(left: ConnectionRef, right: ConnectionRef): boolean {
-  return (
-    left.schemaVersion === right.schemaVersion &&
-    left.connectionId === right.connectionId &&
-    left.provider === right.provider
-  );
-}
-
-export function sameConnectedSource(left: ConnectedSourceRef, right: ConnectedSourceRef): boolean {
-  return (
-    left.schemaVersion === right.schemaVersion &&
-    left.sourceObjectId === right.sourceObjectId &&
-    sameConnection(left.connectionRef, right.connectionRef)
-  );
 }

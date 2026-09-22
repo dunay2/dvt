@@ -37,6 +37,7 @@ function baseEnv(overrides?: Partial<ObservabilityEnv>): ObservabilityEnv {
     DVT_VERSION_ENABLED: false,
     DVT_DB_READY_ENABLED: false,
     DVT_TEMPORAL_DBT_ENABLED: false,
+    DVT_TEMPORAL_DVT_POSTGRES_ENABLED: false,
     DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: false,
     DVT_TEMPORAL_HTTP_JSON_ENABLED: false,
     DVT_DBT_ANALYZER_BIN: 'dbt',

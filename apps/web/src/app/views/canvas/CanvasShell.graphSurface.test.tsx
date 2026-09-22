@@ -229,7 +229,7 @@ describe('CanvasShell graph base surface', () => {
         | Array<{
             data: {
               onOpenSourceDataSample?: (nodeId: string) => void;
-              sourceDataSampleInteractionLabel?: string;
+              dataActionLabel?: string;
             };
           }>
         | undefined
@@ -244,15 +244,13 @@ describe('CanvasShell graph base surface', () => {
       objectId: 'relation/dvt/public/orders',
       limit: 20,
     });
-    expect(forwardedNode?.data.sourceDataSampleInteractionLabel).toContain('Double-click');
-    expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
-      activeTab: 'data',
-      contribution: {
-        dataSample: {
-          status: 'ready',
-          nodeName: 'orders',
-        },
-      },
+    expect(forwardedNode?.data.dataActionLabel).toBe('Run');
+    const sourceDataState = useOperationalDrawerContributionStore.getState();
+    expect(sourceDataState.activeTab).toBe('data:source-orders');
+    expect(
+      sourceDataState.contribution?.tabs.find((tab) => tab.id === 'data:source-orders')
+    ).toMatchObject({
+      dataSample: { status: 'ready', nodeName: 'orders' },
     });
     expect(useUiLayoutStore.getState()).toMatchObject({
       bottomDrawerVisible: true,
@@ -411,18 +409,14 @@ describe('CanvasShell graph base surface', () => {
     expect(forwardedNode?.data.runStatusByNodeId?.get('sink-1')).toBe('completed');
     expect(forwardedNode?.ariaLabel).toBe('Sink 1, Output, Completed');
     expect(getRunMaterializationSample).toHaveBeenCalledWith('run-1', 20);
-    expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
-      activeTab: 'data',
-      contribution: {
-        dataSample: {
-          status: 'ready',
-          nodeName: 'Sink 1',
-        },
-      },
+    const sinkDataState = useOperationalDrawerContributionStore.getState();
+    expect(sinkDataState.activeTab).toBe('data:sink-1');
+    expect(sinkDataState.contribution?.tabs.find((tab) => tab.id === 'data:sink-1')).toMatchObject({
+      dataSample: { status: 'ready', nodeName: 'Sink 1' },
     });
   });
 
-  it('ignores a stale sample response after the user opens another source', async () => {
+  it('keeps both source samples when their responses finish out of order', async () => {
     const resolvers = new Map<string, (sample: SourceDataSample) => void>();
     const previewSourceObjectRows = vi.fn(
       ({ objectId }: { objectId: string }) =>
@@ -480,13 +474,26 @@ describe('CanvasShell graph base surface', () => {
       await Promise.resolve();
     });
 
-    expect(useOperationalDrawerContributionStore.getState().contribution?.dataSample).toMatchObject(
-      {
+    const dataState = useOperationalDrawerContributionStore.getState();
+    expect(dataState.activeTab).toBe('data:source-customers');
+    expect(
+      dataState.contribution?.tabs.find((tab) => tab.id === 'data:source-orders')
+    ).toMatchObject({
+      dataSample: {
+        status: 'ready',
+        nodeName: 'orders',
+        sample: { objectId: 'relation/dvt/public/orders' },
+      },
+    });
+    expect(
+      dataState.contribution?.tabs.find((tab) => tab.id === 'data:source-customers')
+    ).toMatchObject({
+      dataSample: {
         status: 'ready',
         nodeName: 'customers',
         sample: { objectId: 'relation/dvt/public/customers' },
-      }
-    );
+      },
+    });
   });
 
   it('keeps plain node click out of the application shell command contract', async () => {

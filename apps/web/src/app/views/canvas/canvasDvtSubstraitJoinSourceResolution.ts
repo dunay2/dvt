@@ -1,13 +1,24 @@
-/** Owned concern: resolve connected Canvas Sources that can participate in DVT INNER JOIN authoring. */
+/** Owned concern: resolve connected Canvas Sources that can participate in DVT JOIN authoring. */
 import { ConnectedSourceRefSchema, type ConnectedSourceRef } from '@dvt/contracts';
 import {
   hasSameConnectionRef,
-  inspectDvtSubstraitNInputJoinDraft,
-  type DvtSubstraitInnerJoinDraft,
+  inspectDvtSubstraitJoinDraft,
+  type DvtSubstraitJoinDraft,
 } from '@dvt/postgres-projection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { DvtSubstraitJoinInput } from './canvasDvtSubstraitJoinComposition';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import type {
+  DvtSubstraitJoinEntry,
+  DvtSubstraitJoinInput,
+  DvtSubstraitJoinSource,
+} from './canvasDvtSubstraitJoinComposition';
+import {
+  DVT_SUBSTRAIT_INNER_JOIN_LEFT_FIELD_NAMES,
+  DVT_SUBSTRAIT_INNER_JOIN_RIGHT_FIELD_NAMES,
+  hasDvtSubstraitLegacyBinaryInnerJoinShape,
+} from './canvasDvtSubstraitInnerJoinShape';
+import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 function readMetadataText(node: CanonicalNode, key: string): string | null {
   const value = node.metadata?.[key];
@@ -49,6 +60,16 @@ export function resolveJoinInput(node: CanonicalNode): DvtSubstraitJoinInput | n
   };
 }
 
+function resolveJoinSource(
+  node: CanonicalNode,
+  expectedColumns: readonly string[]
+): DvtSubstraitJoinSource | null {
+  const input = resolveJoinInput(node);
+  return input == null || input.fields.join('\u0000') !== expectedColumns.join('\u0000')
+    ? null
+    : input.source;
+}
+
 export function hasSameConnectedSourceRef(
   first: ConnectedSourceRef,
   second: ConnectedSourceRef
@@ -64,7 +85,7 @@ export function resolveDvtSubstraitJoinAppendCandidates(args: {
   targetNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
-  draft: DvtSubstraitInnerJoinDraft;
+  draft: DvtSubstraitJoinDraft;
 }): readonly DvtSubstraitJoinInput[] {
   if (
     args.targetNode.pluginId !== 'dvt' ||
@@ -73,7 +94,7 @@ export function resolveDvtSubstraitJoinAppendCandidates(args: {
   ) {
     return [];
   }
-  const inspection = inspectDvtSubstraitNInputJoinDraft(args.draft);
+  const inspection = inspectDvtSubstraitJoinDraft(args.draft);
   if (!inspection.ok) return [];
   const firstInput = inspection.projection.inputs[0];
   if (firstInput == null) return [];
@@ -99,4 +120,69 @@ export function resolveDvtSubstraitJoinAppendCandidates(args: {
         `${right.source.table}:${right.source.nodeId}`
       )
     );
+}
+
+export function resolveDvtSubstraitJoinEntry(args: {
+  targetNode: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
+  requirePersistedAuthority?: boolean;
+}): DvtSubstraitJoinEntry | null {
+  if (
+    args.targetNode.pluginId !== 'dvt' ||
+    args.targetNode.kind !== 'dvt:transform' ||
+    args.targetNode.role !== 'transform'
+  ) {
+    return null;
+  }
+  const sourceIds = [
+    ...new Set(
+      args.edges.filter((edge) => edge.targetId === args.targetNode.id).map((edge) => edge.sourceId)
+    ),
+  ];
+  if (sourceIds.length !== 2) return null;
+  const sources = sourceIds
+    .map((sourceId) => args.nodes.find((node) => node.id === sourceId))
+    .filter((node): node is CanonicalNode => node != null);
+  if (sources.length !== 2) return null;
+
+  const left = sources
+    .map((candidate) => resolveJoinSource(candidate, DVT_SUBSTRAIT_INNER_JOIN_LEFT_FIELD_NAMES))
+    .find((candidate) => candidate != null);
+  const right = sources
+    .map((candidate) => resolveJoinSource(candidate, DVT_SUBSTRAIT_INNER_JOIN_RIGHT_FIELD_NAMES))
+    .find((candidate) => candidate != null);
+  if (left == null || right == null || left.nodeId === right.nodeId) return null;
+  if (!hasSameConnectionRef(left.sourceRef.connectionRef, right.sourceRef.connectionRef)) {
+    return null;
+  }
+
+  if (args.requirePersistedAuthority) {
+    try {
+      const authority = readDvtTransformAuthoringAuthority(args.targetNode);
+      if (authority == null) return null;
+      const semanticDraft = decodeDvtSubstraitSemanticDocument(authority.semanticDocument);
+      const inspection = inspectDvtSubstraitJoinDraft(semanticDraft);
+      if (!inspection.ok || !hasDvtSubstraitLegacyBinaryInnerJoinShape(inspection.projection)) {
+        return null;
+      }
+      const persistedLeft = inspection.projection.inputs[0];
+      const persistedRight = inspection.projection.inputs[1];
+      if (
+        persistedLeft == null ||
+        persistedRight == null ||
+        persistedLeft.schema !== left.schema ||
+        persistedLeft.table !== left.table ||
+        !hasSameConnectedSourceRef(persistedLeft.sourceRef, left.sourceRef) ||
+        persistedRight.schema !== right.schema ||
+        persistedRight.table !== right.table ||
+        !hasSameConnectedSourceRef(persistedRight.sourceRef, right.sourceRef)
+      ) {
+        return null;
+      }
+    } catch {
+      return null;
+    }
+  }
+  return { left, right, targetNodeId: args.targetNode.id };
 }

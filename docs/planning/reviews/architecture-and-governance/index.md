@@ -8,7 +8,6 @@ planning_type: review
 
 # Architecture And Governance Reviews
 
-- [20260307 Architecture documentation consolidation matrix review](./20260307-architecture-doc-consolidation-matrix-review.md)
 - [20260314 Domain cohesion review](./20260314-domain-cohesion-review.md)
 - [20260322 DDD and hexagonal port audit review](./20260322-ddd-hexagonal-port-audit-review.md)
 - [20260323 SOLID DDD hexagonal CI and adapters review](./20260323-solid-ddd-hexagonal-ci-and-adapters-review.md)

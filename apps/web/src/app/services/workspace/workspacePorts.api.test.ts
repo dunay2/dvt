@@ -4,13 +4,17 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
+import { asSha256HexString } from '@dvt/contracts';
 
 import {
   buildGraphDraftSourceImportResult,
   buildSourceImportCommandInput,
 } from '../../../testing/sourceImportTestFixtures';
 import { ApiError } from '../api/createApiClient';
-import { WorkspaceFileRevisionConflictError } from './workspaceErrors';
+import {
+  WarehouseSourceDataSampleQueryError,
+  WorkspaceFileRevisionConflictError,
+} from './workspaceErrors';
 import {
   buildDraftReadNotFoundResponse,
   buildDraftReadOkResponse,
@@ -420,17 +424,45 @@ describe('workspace ports api warehouse source import', () => {
     const { getJson, warehouseSourceDataSampleQuery } = createApiWorkspacePortHarness({
       getJson: async <TResponse>() => sample as TResponse,
     });
+    const expectedPublicationToken = asSha256HexString('a'.repeat(64));
 
     await expect(
       warehouseSourceDataSampleQuery.previewSourceObjectRows({
         connectionId: 'warehouse-prod',
         objectId: 'relation/analytics/erp/orders',
+        expectedPublicationToken,
         limit: 20,
       })
     ).resolves.toEqual(sample);
     expect(getJson).toHaveBeenCalledWith(
-      `/workspace/warehouse/connections/warehouse-prod/source-data-sample?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}&objectId=${encodeURIComponent('relation/analytics/erp/orders')}&limit=20`
+      `/workspace/warehouse/connections/warehouse-prod/source-data-sample?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}&objectId=${encodeURIComponent('relation/analytics/erp/orders')}&limit=20&expectedPublicationToken=${expectedPublicationToken}`
     );
+  });
+
+  it('preserves a publication change as a typed sample conflict', async () => {
+    setWorkspaceScope(buildWorkspaceScope());
+    const { warehouseSourceDataSampleQuery } = createApiWorkspacePortHarness({
+      getJson: async () => {
+        throw new ApiError({
+          message: 'Published result changed',
+          endpoint: '/workspace/warehouse/connections/postgres/source-data-sample',
+          statusCode: 409,
+          category: 'client',
+          responseBody: {
+            error: { type: 'conflict', reason: 'warehouse_source_publication_changed' },
+          },
+        });
+      },
+    });
+
+    await expect(
+      warehouseSourceDataSampleQuery.previewSourceObjectRows({
+        connectionId: 'postgres',
+        objectId: 'relation/dvt/analytics/orders_enriched',
+        expectedPublicationToken: asSha256HexString('a'.repeat(64)),
+        limit: 20,
+      })
+    ).rejects.toEqual(new WarehouseSourceDataSampleQueryError('unavailable'));
   });
 
   it('rejects a malformed source-object catalog response', async () => {

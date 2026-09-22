@@ -27,6 +27,7 @@ type CanvasWorkbenchDefaultsDto = {
   inspectorGraphNodes: CanvasController['inspectorGraphNodes'];
   inspectorGraphEdges: CanvasController['inspectorGraphEdges'];
   canEditInspectorNode: CanvasController['canEditInspectorNode'];
+  relationalPredicateSeed: CanvasController['relationalPredicateSeed'];
   activeRunId: CanvasController['activeRunId'];
   registeredPlugins: CanvasController['registeredPlugins'];
   runtimeCapabilities: CanvasController['runtimeCapabilities'];
@@ -82,6 +83,7 @@ type CanvasExecutionDefaultsDto = {
   transformationValidation: CanvasController['transformationValidation'];
   planModalOpen: CanvasController['planModalOpen'];
   currentPlan: CanvasController['currentPlan'];
+  isCurrentPlanStale: CanvasController['isCurrentPlanStale'];
   executionSelectionRecovery: CanvasController['executionSelectionRecovery'];
   executionSelectionRecoveryCommands: CanvasController['executionSelectionRecoveryCommands'];
 };
@@ -95,6 +97,7 @@ export function buildDefaultCanvasDraftStatusState(): CanvasDraftStatusState {
     label: 'Draft synced',
     tone: 'neutral',
     showReloadAction: false,
+    persistence: 'durable',
   };
 }
 
@@ -143,6 +146,7 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     inspectorGraphNodes: [],
     inspectorGraphEdges: [],
     canEditInspectorNode: true,
+    relationalPredicateSeed: null,
     activeRunId: null,
     registeredPlugins: new Set(['dbt']),
     runtimeCapabilities: undefined,
@@ -235,6 +239,7 @@ function buildDefaultCanvasExecutionState(): CanvasExecutionDefaultsDto {
     transformationValidation: buildDefaultTransformationValidation(),
     planModalOpen: false,
     currentPlan: null,
+    isCurrentPlanStale: false,
     executionSelectionRecovery: null,
     executionSelectionRecoveryCommands: null,
   } satisfies CanvasExecutionDefaultsDto;
@@ -265,7 +270,9 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleSelectCanvasDocument'
   | 'handleExportProjectSnapshot'
   | 'handleImportProjectSnapshotFile'
+  | 'applyNodeDraft'
   | 'applyInspectorNodeDraft'
+  | 'clearRelationalPredicateSeed'
   | 'handleDuplicateNode'
   | 'handleToggleNodeSelection'
   | 'handleToggleFrozenNode'
@@ -306,7 +313,9 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleSelectCanvasDocument: vi.fn(),
     handleExportProjectSnapshot: vi.fn(),
     handleImportProjectSnapshotFile: vi.fn(),
+    applyNodeDraft: vi.fn(),
     applyInspectorNodeDraft: vi.fn(),
+    clearRelationalPredicateSeed: vi.fn(),
     handleDuplicateNode: vi.fn(),
     handleToggleNodeSelection: vi.fn(),
     handleToggleFrozenNode: vi.fn(),

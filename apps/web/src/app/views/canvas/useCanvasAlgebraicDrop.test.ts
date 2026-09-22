@@ -6,8 +6,27 @@ import type { Node } from '@xyflow/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { resolveCanvasAlgebraicDropHover, useCanvasAlgebraicDrop } from './useCanvasAlgebraicDrop';
+import {
+  CANVAS_ALGEBRAIC_DROP_GAP,
+  CANVAS_ALGEBRAIC_DROP_INSET,
+  CANVAS_ALGEBRAIC_DROP_PADDING,
+  resolveCanvasAlgebraicDropGrid,
+  resolveCanvasAlgebraicDropIndex,
+} from './canvasAlgebraicDropGeometry';
 
-function node(id: string, x: number, operations: readonly ('inner_join' | 'union_all')[]): Node {
+function node(
+  id: string,
+  x: number,
+  operations: readonly (
+    | 'inner_join'
+    | 'left_join'
+    | 'left_semi_join'
+    | 'left_anti_join'
+    | 'right_semi_join'
+    | 'right_anti_join'
+    | 'union_all'
+  )[]
+): Node {
   return {
     id,
     position: { x, y: 0 },
@@ -36,6 +55,51 @@ describe('Canvas algebraic drop', () => {
     expect(
       resolveCanvasAlgebraicDropHover(node('source', 100, []), [node('transform', 100, [])])
     ).toBeNull();
+  });
+
+  it('maps every admitted JOIN-family landing cell instead of blocking after two choices', () => {
+    const operations = [
+      'inner_join',
+      'left_join',
+      'left_semi_join',
+      'left_anti_join',
+      'right_semi_join',
+      'right_anti_join',
+    ] as const;
+    const target = node('transform', 100, operations);
+    const dragged = {
+      ...node('source', 130, []),
+      position: { x: 130, y: 33 },
+    };
+
+    expect(resolveCanvasAlgebraicDropHover(dragged, [target])).toMatchObject({
+      targetNodeId: target.id,
+      activeOperation: 'right_anti_join',
+    });
+  });
+
+  it('hit-tests every rendered cell from the same compact grid geometry', () => {
+    const operationCount = 10;
+    const width = 240;
+    const height = 180;
+    const { columns, rows } = resolveCanvasAlgebraicDropGrid(operationCount);
+    const offset = CANVAS_ALGEBRAIC_DROP_INSET + CANVAS_ALGEBRAIC_DROP_PADDING;
+    const cellWidth = (width - offset * 2 - CANVAS_ALGEBRAIC_DROP_GAP * (columns - 1)) / columns;
+    const cellHeight = (height - offset * 2 - CANVAS_ALGEBRAIC_DROP_GAP * (rows - 1)) / rows;
+
+    expect(
+      Array.from({ length: operationCount }, (_, index) => {
+        const column = index % columns;
+        const row = Math.floor(index / columns);
+        return resolveCanvasAlgebraicDropIndex({
+          operationCount,
+          width,
+          height,
+          x: offset + column * (cellWidth + CANVAS_ALGEBRAIC_DROP_GAP) + cellWidth / 2,
+          y: offset + row * (cellHeight + CANVAS_ALGEBRAIC_DROP_GAP) + cellHeight / 2,
+        });
+      })
+    ).toEqual(Array.from({ length: operationCount }, (_, index) => index));
   });
 
   it('uses live drag geometry and emits the admitted command exactly once', () => {

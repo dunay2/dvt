@@ -42,68 +42,6 @@ describe('GraphNodeColumnSection', () => {
     };
   });
 
-  it('inspects an output by stable identity using double-click or Enter without authoring', () => {
-    const onColumnInspect = vi.fn();
-    const onColumnOutputToggle = vi.fn();
-    const onColumnReorder = vi.fn();
-    act(() =>
-      root.render(
-        <GraphNodeColumnSection
-          nodeId="transform"
-          expanded
-          columns={[{ id: 'opaque-field-id', name: 'alias', type: 'text' }]}
-          onColumnInspect={onColumnInspect}
-          onColumnOutputToggle={onColumnOutputToggle}
-          onColumnReorder={onColumnReorder}
-        />
-      )
-    );
-    const piece = container.querySelector<HTMLElement>('[data-column-name="alias"]')!;
-    expect(piece.hasAttribute('data-canvas-node-control')).toBe(true);
-    act(() => {
-      fireEvent.doubleClick(piece);
-      fireEvent.keyDown(piece, { key: 'Enter' });
-    });
-    expect(onColumnInspect).toHaveBeenCalledTimes(2);
-    expect(onColumnInspect).toHaveBeenLastCalledWith({
-      nodeId: 'transform',
-      fieldId: 'opaque-field-id',
-      anchorElement: piece,
-    });
-    expect(onColumnOutputToggle).not.toHaveBeenCalled();
-    expect(onColumnReorder).not.toHaveBeenCalled();
-    const checkbox = piece.querySelector('button')!;
-    act(() => {
-      fireEvent.doubleClick(checkbox);
-      fireEvent.keyDown(checkbox, { key: 'Enter' });
-    });
-    expect(onColumnInspect).toHaveBeenCalledTimes(2);
-  });
-
-  it('does not inspect inactive inputs or fabricate output identity from an alias', () => {
-    const onColumnInspect = vi.fn();
-    act(() =>
-      root.render(
-        <GraphNodeColumnSection
-          nodeId="transform"
-          expanded
-          columns={[
-            { id: 'inactive', name: 'input', type: 'text', output: false },
-            { name: 'alias-only', type: 'text' },
-          ]}
-          onColumnInspect={onColumnInspect}
-        />
-      )
-    );
-    for (const piece of container.querySelectorAll('[data-slot="graph-node-column-piece"]')) {
-      act(() => {
-        fireEvent.doubleClick(piece);
-        fireEvent.keyDown(piece, { key: 'Enter' });
-      });
-    }
-    expect(onColumnInspect).not.toHaveBeenCalled();
-  });
-
   it('shows five columns before explicitly revealing and hiding the remainder', () => {
     act(() => {
       root.render(<GraphNodeColumnSection columns={EIGHT_COLUMNS} />);
@@ -168,6 +106,36 @@ describe('GraphNodeColumnSection', () => {
     expect(container.querySelector('[data-slot="graph-node-column-remainder-toggle"]')).toBeNull();
   });
 
+  it('keeps the calculated-column action in its hover-sensitive expanded gap', () => {
+    act(() => {
+      root.render(
+        <GraphNodeColumnSection
+          columns={[{ id: 'output:request_id', name: 'request_id', type: 'text' }]}
+          expressionInputs={[
+            { id: 'input:request_id', name: 'request_id', type: 'text' },
+            { id: 'input:event_id', name: 'event_id', type: 'text' },
+          ]}
+          nodeId="model-1"
+          onCalculatedColumnAdd={() => ({ outcome: 'applied', createdFieldId: 'created' })}
+        />
+      );
+    });
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+
+    const columnList = container.querySelector('[data-slot="graph-node-column-list"]');
+    const addButton = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-calculated-column-trigger"]'
+    );
+    expect(columnList?.parentElement?.contains(addButton)).toBe(true);
+    expect(addButton?.className).toContain('opacity-0');
+    expect(addButton?.className).toContain('group-hover/add:opacity-100');
+  });
+
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
@@ -187,7 +155,7 @@ describe('GraphNodeColumnSection', () => {
     }
   });
 
-  it('presents stacked output pieces with truthful inline and focused metadata', async () => {
+  it('keeps inline field controls but limits the focused tooltip to its type', async () => {
     await act(async () => {
       root.render(
         <GraphNodeColumnSection
@@ -245,14 +213,7 @@ describe('GraphNodeColumnSection', () => {
     });
 
     const tooltip = document.body.querySelector('[role="tooltip"]');
-    expect(tooltip?.textContent).toContain('Tipo');
-    expect(tooltip?.textContent).toContain('text');
-    expect(tooltip?.textContent).toContain('No nulo');
-    expect(tooltip?.textContent).toContain('auth_audit_events');
-    expect(tooltip?.textContent).toContain('field:model:event_id');
-    expect(tooltip?.textContent).toContain(
-      'event_id → TRIM(event_id) → UPPER(TRIM(event_id)) → event_id_clean'
-    );
+    expect(tooltip?.textContent).toBe('text');
   });
 
   it('toggles canonical output inclusion from the check control', async () => {
@@ -306,6 +267,149 @@ describe('GraphNodeColumnSection', () => {
         },
       ],
     ]);
+  });
+
+  it('keeps focus on the initiating output control when its semantic state commits', async () => {
+    const renderSection = (output: boolean): void =>
+      root.render(
+        <GraphNodeColumnSection
+          expanded
+          nodeId="transform-orders"
+          columns={[{ id: 'output:order_id', name: 'order_id', type: 'integer', output }]}
+          onColumnOutputToggle={vi.fn()}
+        />
+      );
+
+    await act(async () => renderSection(true));
+    const outputControl = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-output-state"]'
+    )!;
+    const disclosureControl = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-toggle"]'
+    )!;
+    let focusFrame: FrameRequestCallback | undefined;
+    const requestFrame = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation((callback) => {
+        focusFrame = callback;
+        return 29;
+      });
+
+    await act(async () => {
+      disclosureControl.focus();
+      fireEvent.pointerDown(outputControl);
+      fireEvent.click(outputControl);
+    });
+    expect(document.activeElement).toBe(outputControl);
+
+    await act(async () => {
+      disclosureControl.focus();
+      renderSection(false);
+    });
+    act(() => focusFrame!(0));
+
+    expect(container.querySelector('[data-slot="graph-node-column-output-state"]')).toBe(
+      outputControl
+    );
+    expect(document.activeElement).toBe(outputControl);
+    requestFrame.mockRestore();
+  });
+
+  it('does not reclaim output focus from a newer independent interaction', async () => {
+    const externalControl = document.createElement('button');
+    document.body.appendChild(externalControl);
+    const renderSection = (output: boolean): void =>
+      root.render(
+        <GraphNodeColumnSection
+          expanded
+          nodeId="transform-orders"
+          columns={[{ id: 'output:order_id', name: 'order_id', type: 'integer', output }]}
+          onColumnOutputToggle={vi.fn()}
+        />
+      );
+
+    await act(async () => renderSection(true));
+    const outputControl = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-output-state"]'
+    )!;
+    const disclosureControl = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-toggle"]'
+    )!;
+    let focusFrame: FrameRequestCallback | undefined;
+    const requestFrame = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation((callback) => {
+        focusFrame = callback;
+        return 30;
+      });
+
+    await act(async () => {
+      disclosureControl.focus();
+      fireEvent.pointerDown(outputControl);
+      fireEvent.click(outputControl);
+      externalControl.focus();
+      renderSection(false);
+    });
+    act(() => focusFrame!(0));
+
+    expect(document.activeElement).toBe(externalControl);
+    requestFrame.mockRestore();
+    externalControl.remove();
+  });
+
+  it('shows every inherited field origin and toggles the exact field row', async () => {
+    const onColumnOutputToggle = vi.fn();
+    await act(async () => {
+      root.render(
+        <GraphNodeColumnSection
+          expanded
+          nodeId="transform-orders"
+          columns={[
+            {
+              id: 'clients.client_id',
+              name: 'client_id',
+              type: 'text',
+              output: false,
+              sourceNodeName: 'client',
+              source: { nodeId: 'clients', columnId: 'client_id' },
+            },
+            {
+              id: 'orders.client_id',
+              name: 'client_id',
+              type: 'text',
+              output: false,
+              sourceNodeName: 'orders',
+              source: { nodeId: 'orders', columnId: 'client_id' },
+            },
+            {
+              id: 'clients.country',
+              name: 'country',
+              type: 'text',
+              output: false,
+              sourceNodeName: 'client',
+              source: { nodeId: 'clients', columnId: 'country' },
+            },
+          ]}
+          onColumnOutputToggle={onColumnOutputToggle}
+        />
+      );
+    });
+
+    const fields = container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-piece"]');
+    expect([...fields].map((field) => field.textContent)).toEqual([
+      expect.stringContaining('client.client_id'),
+      expect.stringContaining('orders.client_id'),
+      expect.stringContaining('client.country'),
+    ]);
+    await act(async () => fireEvent.click(fields[0]!.querySelector('button')!));
+
+    expect(onColumnOutputToggle).toHaveBeenCalledWith({
+      nodeId: 'transform-orders',
+      columnId: 'clients.client_id',
+      columnType: 'text',
+      output: true,
+      source: { nodeId: 'clients', columnId: 'client_id' },
+    });
   });
 
   it('emits the same semantic reorder command for pointer and keyboard movement', async () => {

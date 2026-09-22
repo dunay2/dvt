@@ -1,6 +1,7 @@
 import {
   buildNInputJoinPostgresAst,
   DvtSubstraitPostgresProjectionError,
+  projectDvtSetDraftToPostgresSql,
 } from '@dvt/postgres-projection';
 export {
   DvtSubstraitPostgresProjectionError,
@@ -14,12 +15,7 @@ import {
   type DvtSubstraitPilotDraft,
   type DvtSubstraitPilotProjection,
 } from './canvasDvtSubstraitPilot';
-import {
-  inspectDvtSubstraitProjectionDraft,
-  type DvtSubstraitProjectionDraft,
-  type DvtSubstraitProjectionSemantics,
-  type DvtSubstraitScalarExpression,
-} from './canvasDvtSubstraitProjection';
+import { type DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import {
   inspectDvtSubstraitPilotAggregationDraft,
   removeDvtSubstraitPilotAggregation,
@@ -38,15 +34,12 @@ import {
 import {
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
   inspectDvtSubstraitInnerJoinGroupingDraft,
-  inspectDvtSubstraitInnerJoinDraft,
-  inspectDvtSubstraitNInputJoinDraft,
+  inspectDvtSubstraitJoinDraft,
   removeDvtSubstraitInnerJoinGroupedRowNumber,
   removeDvtSubstraitInnerJoinGrouping,
-  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinDraft,
   type DvtSubstraitInnerJoinGroupedWindowProjection,
   type DvtSubstraitInnerJoinGroupingProjection,
-  type DvtSubstraitInnerJoinProjection,
-  type DvtSubstraitJoinComparisonOperator,
   type DvtSubstraitJoinPredicateOperand,
   type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
@@ -55,44 +48,27 @@ import {
   reduceDvtSubstraitJoinConditions,
 } from './canvasDvtSubstraitJoinCondition';
 import { resolveDvtSubstraitJoinUnaryFunction } from './canvasDvtSubstraitJoinOperand';
-import {
-  inspectDvtSubstraitUnionAllGroupedWindowDraft,
-  inspectDvtSubstraitUnionAllGroupingDraft,
-  inspectDvtSubstraitUnionAllDraft,
-  removeDvtSubstraitUnionAllGroupedRowNumber,
-  removeDvtSubstraitUnionAllGrouping,
-  type DvtSubstraitUnionAllDraft,
-  type DvtSubstraitUnionAllGroupedWindowProjection,
-  type DvtSubstraitUnionAllGroupingProjection,
-  type DvtSubstraitUnionAllProjection,
-} from './canvasDvtSubstraitSetComposition';
+import { type DvtSubstraitUnionAllDraft } from './canvasDvtSubstraitSetComposition';
 import {
   pgAnd,
   pgBooleanLiteral,
   pgColumnRef,
-  pgCoalesce,
-  pgConcatAcceptNulls,
-  pgExtractYearUtc,
   pgCountRows,
   pgComparison,
   pgNullTest,
   pgFp64Literal,
   pgFunction,
   pgI64Literal,
-  pgOrderedRowNumber,
   pgOr,
-  pgQualifiedColumnRef,
   pgRangeVar,
+  pgRangeSubselect,
   pgRowNumber,
   pgRowNumberOverCount,
-  pgString,
   pgStringLiteral,
   pgTimestampTzLiteral,
-  type PostgresComparisonOperator,
   type PostgresAstNode,
 } from './canvasDvtSubstraitPostgresAst';
-import { resolveDvtSubstraitFilterPostgresProjection } from './canvasDvtSubstraitFilterPostgresProjection';
-
+import { buildDvtSubstraitProjectionPostgresAst } from './canvasDvtSubstraitProjectPostgresAst';
 export type DvtSubstraitPostgresSourceBinding = Readonly<{
   schema: string;
   table: string;
@@ -103,126 +79,6 @@ function buildPilotOutputExpression(projection: DvtSubstraitPilotProjection): Po
     (expression, operation) => pgFunction(operation, expression),
     pgColumnRef(projection.inputFieldName)
   );
-}
-
-function requireConnectedFieldProjection(
-  draft: DvtSubstraitProjectionDraft
-): DvtSubstraitProjectionSemantics {
-  const inspection = inspectDvtSubstraitProjectionDraft(draft);
-  if (!inspection.ok) {
-    throw new DvtSubstraitPostgresProjectionError(
-      'unsupported_shape',
-      'PostgreSQL projection supports only the admitted connected-field Substrait shape.'
-    );
-  }
-  return inspection.projection;
-}
-
-function buildScalarExpressionPostgresAst(
-  expression: DvtSubstraitScalarExpression
-): PostgresAstNode {
-  if (expression.kind === 'field-reference') {
-    return pgColumnRef(expression.sourceFieldName);
-  }
-  if (expression.kind === 'timestamp-literal') {
-    return pgTimestampTzLiteral(expression.value);
-  }
-  if (
-    expression.kind === 'scalar-function' &&
-    (expression.functionName === 'trim' ||
-      expression.functionName === 'upper' ||
-      expression.functionName === 'lower') &&
-    expression.arguments.length === 1
-  ) {
-    return pgFunction(
-      expression.functionName,
-      buildScalarExpressionPostgresAst(expression.arguments[0])
-    );
-  }
-  if (
-    expression.kind === 'scalar-function' &&
-    expression.functionName === 'extract' &&
-    expression.arguments.length === 1 &&
-    expression.component === 'YEAR' &&
-    expression.timezone === 'UTC'
-  ) {
-    return pgExtractYearUtc(buildScalarExpressionPostgresAst(expression.arguments[0]));
-  }
-  if (
-    expression.kind === 'scalar-function' &&
-    expression.functionName === 'coalesce' &&
-    expression.arguments.length >= 2
-  ) {
-    return pgCoalesce(expression.arguments.map(buildScalarExpressionPostgresAst));
-  }
-  if (
-    expression.kind === 'scalar-function' &&
-    expression.functionName === 'concat' &&
-    expression.arguments.length === 2 &&
-    expression.nullHandling === 'ACCEPT_NULLS'
-  ) {
-    return pgConcatAcceptNulls(
-      buildScalarExpressionPostgresAst(expression.arguments[0]),
-      buildScalarExpressionPostgresAst(expression.arguments[1])
-    );
-  }
-  throw new DvtSubstraitPostgresProjectionError(
-    'unsupported_shape',
-    'Projection output contains an unsupported scalar expression.'
-  );
-}
-
-function buildConnectedFieldPostgresAst(
-  projection: DvtSubstraitProjectionSemantics,
-  whereClause?: PostgresAstNode
-): PostgresAstNode {
-  const calculatedExpression = (
-    output: DvtSubstraitProjectionSemantics['outputs'][number]
-  ): PostgresAstNode | null => {
-    const calculation = output.calculation;
-    if (calculation?.kind === 'string-literal') return pgStringLiteral(calculation.value);
-    if (calculation?.kind === 'timestamp-literal') return pgTimestampTzLiteral(calculation.value);
-    if (calculation?.kind === 'row-number') {
-      const orderField = projection.source.fields[calculation.orderSourceOrdinal];
-      return orderField == null ? null : pgOrderedRowNumber(orderField.name);
-    }
-    return null;
-  };
-  const outputExpression = (
-    output: DvtSubstraitProjectionSemantics['outputs'][number]
-  ): PostgresAstNode => {
-    const calculated = calculatedExpression(output);
-    if (calculated != null) return calculated;
-    if (output.scalarExpression != null) {
-      return buildScalarExpressionPostgresAst(output.scalarExpression);
-    }
-    if (output.sourceFieldName == null) {
-      throw new DvtSubstraitPostgresProjectionError(
-        'unsupported_shape',
-        'Projection output has no admitted source or calculation.'
-      );
-    }
-    return (output.operations ?? []).reduce<PostgresAstNode>(
-      (expression, operation) => pgFunction(operation, expression),
-      pgColumnRef(output.sourceFieldName)
-    );
-  };
-  return {
-    SelectStmt: {
-      targetList: projection.outputs.map((output) => ({
-        ResTarget: {
-          ...(output.name === output.sourceFieldName ? {} : { name: output.name }),
-          val: outputExpression(output),
-        },
-      })),
-      fromClause: [
-        pgRangeVar({ schema: projection.source.schema, table: projection.source.table }),
-      ],
-      ...(whereClause == null ? {} : { whereClause }),
-      limitOption: 'LIMIT_OPTION_DEFAULT',
-      op: 'SETOP_NONE',
-    },
-  };
 }
 
 function requireFinalPilotProjection(draft: DvtSubstraitPilotDraft): DvtSubstraitPilotProjection {
@@ -496,63 +352,15 @@ function buildWindowPostgresAst(
   };
 }
 
-function requireInnerJoinProjection(
-  draft: DvtSubstraitInnerJoinDraft
-): DvtSubstraitInnerJoinProjection {
-  const inspection = inspectDvtSubstraitInnerJoinDraft(draft);
+function buildAcceptedJoinPostgresAst(draft: DvtSubstraitJoinDraft): PostgresAstNode {
+  const inspection = inspectDvtSubstraitJoinDraft(draft);
   if (!inspection.ok) {
     throw new DvtSubstraitPostgresProjectionError(
       'unsupported_shape',
-      'PostgreSQL projection supports only the admitted VTX2 two-source INNER JOIN.'
+      'PostgreSQL projection supports only admitted VTX2 JOIN-family shapes.'
     );
   }
-  return inspection.projection;
-}
-
-function buildInnerJoinPostgresAst(projection: DvtSubstraitInnerJoinProjection): PostgresAstNode {
-  const leftAlias = 'left_source';
-  const rightAlias = 'right_source';
-
-  return {
-    SelectStmt: {
-      targetList: projection.outputs.map((output) => ({
-        ResTarget: {
-          name: output.name,
-          val: pgQualifiedColumnRef(
-            output.source.relation === 'left' ? leftAlias : rightAlias,
-            output.source.name
-          ),
-        },
-      })),
-      fromClause: [
-        {
-          JoinExpr: {
-            jointype: 'JOIN_INNER',
-            larg: pgRangeVar({
-              schema: projection.left.schema,
-              table: projection.left.table,
-              alias: leftAlias,
-            }),
-            rarg: pgRangeVar({
-              schema: projection.right.schema,
-              table: projection.right.table,
-              alias: rightAlias,
-            }),
-            quals: {
-              A_Expr: {
-                kind: 'AEXPR_OP',
-                name: [pgString('=')],
-                lexpr: pgQualifiedColumnRef(leftAlias, projection.leftKey),
-                rexpr: pgQualifiedColumnRef(rightAlias, projection.rightKey),
-              },
-            },
-          },
-        },
-      ],
-      limitOption: 'LIMIT_OPTION_DEFAULT',
-      op: 'SETOP_NONE',
-    },
-  };
+  return buildNInputJoinPostgresAst(inspection.projection);
 }
 
 function buildGroupedInnerJoinPostgresAst(
@@ -586,108 +394,6 @@ function buildGroupedInnerJoinPostgresAst(
   };
 }
 
-function buildAcceptedInnerJoinPostgresAst(draft: DvtSubstraitInnerJoinDraft): PostgresAstNode {
-  const nInputJoin = inspectDvtSubstraitNInputJoinDraft(draft);
-  return nInputJoin.ok && nInputJoin.projection.inputs.length > 2
-    ? buildNInputJoinPostgresAst(nInputJoin.projection)
-    : buildInnerJoinPostgresAst(requireInnerJoinProjection(draft));
-}
-
-function requireUnionAllProjection(
-  draft: DvtSubstraitUnionAllDraft
-): DvtSubstraitUnionAllProjection {
-  const inspection = inspectDvtSubstraitUnionAllDraft(draft);
-  if (!inspection.ok) {
-    throw new DvtSubstraitPostgresProjectionError(
-      'unsupported_shape',
-      'PostgreSQL projection supports only the admitted VTX2 N-source UNION ALL.'
-    );
-  }
-  return inspection.projection;
-}
-
-function buildUnionAllInputPostgresAst(
-  input: DvtSubstraitUnionAllProjection['inputs'][number],
-  outputs: DvtSubstraitUnionAllProjection['outputs']
-): PostgresAstNode {
-  return {
-    targetList: outputs.map((output) => ({
-      ResTarget: {
-        ...(output.name === output.fieldKey ? {} : { name: output.name }),
-        val: pgColumnRef(output.fieldKey),
-      },
-    })),
-    fromClause: [pgRangeVar({ schema: input.schema, table: input.table })],
-    limitOption: 'LIMIT_OPTION_DEFAULT',
-    op: 'SETOP_NONE',
-  };
-}
-
-function buildUnionAllPostgresAst(projection: DvtSubstraitUnionAllProjection): PostgresAstNode {
-  const first = projection.inputs[0];
-  if (first == null || projection.inputs.length < 2) {
-    throw new DvtSubstraitPostgresProjectionError(
-      'unsupported_shape',
-      'UNION ALL requires at least two admitted inputs.'
-    );
-  }
-  let union = buildUnionAllInputPostgresAst(first, projection.outputs);
-  for (const input of projection.inputs.slice(1)) {
-    union = {
-      op: 'SETOP_UNION',
-      all: true,
-      larg: union,
-      rarg: buildUnionAllInputPostgresAst(input, projection.outputs),
-      limitOption: 'LIMIT_OPTION_DEFAULT',
-    };
-  }
-  return { SelectStmt: union };
-}
-
-function pgRangeSubselect(subquery: PostgresAstNode, alias: string): PostgresAstNode {
-  return {
-    RangeSubselect: {
-      subquery,
-      alias: { aliasname: alias },
-    },
-  };
-}
-
-function buildGroupedUnionAllPostgresAst(
-  composition: DvtSubstraitUnionAllGroupingProjection | DvtSubstraitUnionAllGroupedWindowProjection,
-  unionAll: DvtSubstraitUnionAllProjection
-): PostgresAstNode {
-  const groupExpression = pgColumnRef(composition.groupField.name);
-  const groupedWindow = 'result' in composition ? composition : null;
-  return {
-    SelectStmt: {
-      targetList: [
-        { ResTarget: { val: groupExpression } },
-        {
-          ResTarget: {
-            name: composition.measure.name,
-            val: pgCountRows(),
-          },
-        },
-        ...(groupedWindow == null
-          ? []
-          : [
-              {
-                ResTarget: {
-                  name: groupedWindow.result.name,
-                  val: pgRowNumberOverCount(groupExpression),
-                },
-              },
-            ]),
-      ],
-      fromClause: [pgRangeSubselect(buildUnionAllPostgresAst(unionAll), 'union_all_input')],
-      groupClause: [groupExpression],
-      limitOption: 'LIMIT_OPTION_DEFAULT',
-      op: 'SETOP_NONE',
-    },
-  };
-}
-
 async function deparseBoundedPostgresAst(postgresAst: PostgresAstNode): Promise<string> {
   try {
     return await deparse(postgresAst as Parameters<typeof deparse>[0]);
@@ -707,13 +413,7 @@ async function deparseBoundedPostgresAst(postgresAst: PostgresAstNode): Promise<
 export async function projectDvtSubstraitProjectionToPostgresSql(
   draft: DvtSubstraitProjectionDraft
 ): Promise<string> {
-  const filter = resolveDvtSubstraitFilterPostgresProjection(draft);
-  return deparseBoundedPostgresAst(
-    buildConnectedFieldPostgresAst(
-      requireConnectedFieldProjection(filter.baseDraft),
-      filter.whereClause
-    )
-  );
+  return deparseBoundedPostgresAst(buildDvtSubstraitProjectionPostgresAst(draft));
 }
 
 export async function projectDvtSubstraitPilotToPostgresSql(
@@ -752,13 +452,13 @@ export async function projectDvtSubstraitPilotWindowToPostgresSql(
   );
 }
 
-export async function projectDvtSubstraitInnerJoinToPostgresSql(
-  draft: DvtSubstraitInnerJoinDraft
+export async function projectDvtSubstraitJoinToPostgresSql(
+  draft: DvtSubstraitJoinDraft
 ): Promise<string> {
   const groupedWindow = inspectDvtSubstraitInnerJoinGroupedWindowDraft(draft);
   if (groupedWindow.ok) {
     const groupingDraft = removeDvtSubstraitInnerJoinGroupedRowNumber(draft);
-    const innerJoin = buildAcceptedInnerJoinPostgresAst(
+    const innerJoin = buildAcceptedJoinPostgresAst(
       removeDvtSubstraitInnerJoinGrouping(groupingDraft)
     );
     return deparseBoundedPostgresAst(
@@ -767,36 +467,16 @@ export async function projectDvtSubstraitInnerJoinToPostgresSql(
   }
   const grouping = inspectDvtSubstraitInnerJoinGroupingDraft(draft);
   if (grouping.ok) {
-    const innerJoin = buildAcceptedInnerJoinPostgresAst(removeDvtSubstraitInnerJoinGrouping(draft));
+    const innerJoin = buildAcceptedJoinPostgresAst(removeDvtSubstraitInnerJoinGrouping(draft));
     return deparseBoundedPostgresAst(
       buildGroupedInnerJoinPostgresAst(grouping.projection, innerJoin)
     );
   }
-  const nInputJoin = inspectDvtSubstraitNInputJoinDraft(draft);
-  return deparseBoundedPostgresAst(
-    nInputJoin.ok
-      ? buildNInputJoinPostgresAst(nInputJoin.projection)
-      : buildInnerJoinPostgresAst(requireInnerJoinProjection(draft))
-  );
+  return deparseBoundedPostgresAst(buildAcceptedJoinPostgresAst(draft));
 }
 
 export async function projectDvtSubstraitUnionAllToPostgresSql(
   draft: DvtSubstraitUnionAllDraft
 ): Promise<string> {
-  const groupedWindow = inspectDvtSubstraitUnionAllGroupedWindowDraft(draft);
-  if (groupedWindow.ok) {
-    const groupingDraft = removeDvtSubstraitUnionAllGroupedRowNumber(draft);
-    const unionAll = requireUnionAllProjection(removeDvtSubstraitUnionAllGrouping(groupingDraft));
-    return deparseBoundedPostgresAst(
-      buildGroupedUnionAllPostgresAst(groupedWindow.projection, unionAll)
-    );
-  }
-  const grouping = inspectDvtSubstraitUnionAllGroupingDraft(draft);
-  if (grouping.ok) {
-    const unionAll = requireUnionAllProjection(removeDvtSubstraitUnionAllGrouping(draft));
-    return deparseBoundedPostgresAst(
-      buildGroupedUnionAllPostgresAst(grouping.projection, unionAll)
-    );
-  }
-  return deparseBoundedPostgresAst(buildUnionAllPostgresAst(requireUnionAllProjection(draft)));
+  return (await projectDvtSetDraftToPostgresSql(draft)).sql;
 }

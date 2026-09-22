@@ -23,7 +23,7 @@ import {
 } from './canvasDbtTestAuthoringModel';
 import {
   applyDvtNodeAuthoringMetadata,
-  createDvtNodeAuthoringMetadata,
+  resolveDvtNodeAuthoringMetadata,
   validateDvtNodeAuthoringMetadata,
 } from './canvasDvtAuthoringModel';
 import type { DvtNodeAuthoringMetadata } from './canvasDvtAuthoringTypes';
@@ -102,7 +102,9 @@ export function resolveCanvasDvtOutputNameDraftError(
 
 export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspectorNodeDraft {
   const hasDbtCompatibility = hasDbtCompatibilityMetadata(node);
-  const dvtMetadata = hasDbtCompatibility ? null : createDvtNodeAuthoringMetadata(node);
+  const dvtResolution = hasDbtCompatibility
+    ? ({ outcome: 'resolved', metadata: undefined } as const)
+    : resolveDvtNodeAuthoringMetadata(node);
   const objectFilePostgresDraft = createObjectFilePostgresAuthoringDraft(node);
   const httpJsonArtifactDraft = createHttpJsonArtifactAuthoringDraft(node);
   const tags = normalizeNodeTags(node.tags);
@@ -117,7 +119,12 @@ export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspe
     ...(node.pluginId === 'dbt' && node.kind === 'dbt:test'
       ? { dbtTest: createDbtTestAuthoringMetadata(node) }
       : {}),
-    ...(dvtMetadata ? { dvt: dvtMetadata } : {}),
+    ...(dvtResolution.outcome === 'resolved' && dvtResolution.metadata
+      ? { dvt: dvtResolution.metadata }
+      : {}),
+    ...(dvtResolution.outcome === 'rejected'
+      ? { semanticAuthoringIssue: dvtResolution.reason }
+      : {}),
     ...(objectFilePostgresDraft == null ? {} : { objectFilePostgres: objectFilePostgresDraft }),
     ...(httpJsonArtifactDraft == null ? {} : { httpJsonArtifact: httpJsonArtifactDraft }),
   };
@@ -127,7 +134,42 @@ export function areCanvasInspectorNodeDraftsEqual(
   left: CanvasInspectorNodeDraft,
   right: CanvasInspectorNodeDraft
 ): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
+  return areInspectorValuesEqual(left, right);
+}
+
+function areInspectorValuesEqual(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (typeof left !== typeof right || left == null || right == null) return false;
+  if (typeof left !== 'object') return false;
+  if (left instanceof Uint8Array || right instanceof Uint8Array) {
+    return (
+      left instanceof Uint8Array &&
+      right instanceof Uint8Array &&
+      left.length === right.length &&
+      left.every((value, index) => value === right[index])
+    );
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((value, index) => areInspectorValuesEqual(value, right[index]))
+    );
+  }
+  const leftRecord = left as Record<string, unknown>;
+  const rightRecord = right as Record<string, unknown>;
+  const leftKeys = Object.keys(leftRecord).filter((key) => leftRecord[key] !== undefined);
+  const rightKeys = Object.keys(rightRecord).filter((key) => rightRecord[key] !== undefined);
+  return (
+    leftKeys.length === rightKeys.length &&
+    leftKeys.every(
+      (key) =>
+        Object.hasOwn(rightRecord, key) &&
+        rightRecord[key] !== undefined &&
+        areInspectorValuesEqual(leftRecord[key], rightRecord[key])
+    )
+  );
 }
 
 export function validateCanvasInspectorNodeDraft(
@@ -303,15 +345,16 @@ export function hasCanvasInspectorNodeDraftChanges(
   return (
     node.name !== normalizeNodeName(draft.name) ||
     (node.description ?? undefined) !== normalizeNodeDescription(draft.description) ||
-    JSON.stringify(originalDraft.tags) !== JSON.stringify(draftTags) ||
-    JSON.stringify(originalDraft.dbt ?? null) !== JSON.stringify(draft.dbt ?? null) ||
-    JSON.stringify(originalDraft.dbtTest ?? null) !== JSON.stringify(draft.dbtTest ?? null) ||
-    JSON.stringify(originalDraft.dvt ?? null) !== JSON.stringify(draft.dvt ?? null) ||
+    !areInspectorValuesEqual(originalDraft.tags, draftTags) ||
+    !areInspectorValuesEqual(originalDraft.dbt ?? null, draft.dbt ?? null) ||
+    !areInspectorValuesEqual(originalDraft.dbtTest ?? null, draft.dbtTest ?? null) ||
+    !areInspectorValuesEqual(originalDraft.dvt ?? null, draft.dvt ?? null) ||
     Object.keys(draft.outputNameDrafts ?? {}).length > 0 ||
-    JSON.stringify(originalDraft.objectFilePostgres ?? null) !==
-      JSON.stringify(draft.objectFilePostgres ?? null) ||
-    JSON.stringify(originalDraft.httpJsonArtifact ?? null) !==
-      JSON.stringify(draft.httpJsonArtifact ?? null)
+    !areInspectorValuesEqual(
+      originalDraft.objectFilePostgres ?? null,
+      draft.objectFilePostgres ?? null
+    ) ||
+    !areInspectorValuesEqual(originalDraft.httpJsonArtifact ?? null, draft.httpJsonArtifact ?? null)
   );
 }
 

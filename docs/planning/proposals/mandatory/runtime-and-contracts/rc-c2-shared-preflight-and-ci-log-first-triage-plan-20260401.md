@@ -17,7 +17,7 @@ structured adoption log.
 References:
 
 - `docs/planning/state/agent-lane-c.yaml`
-- `docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md`
+- [Historical efficiency review](https://github.com/dunay2/dvt/blob/1b07acde33300a19d97914eb719b262b44e79182/docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md)
 - `scripts/hygiene.ps1`
 - `docs/guides/testing-and-ci-capabilities.md`
 
@@ -158,7 +158,6 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md
   - docs/guides/pr-preflight-and-ci-triage.md
 allowedImplementationSurfaces:
   - buzon/20260515-codex-fowler-rc-c2-adoption-gate-analysis.md

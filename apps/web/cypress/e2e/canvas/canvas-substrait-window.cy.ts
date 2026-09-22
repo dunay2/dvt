@@ -64,7 +64,8 @@ describe('Canvas Substrait row-number window', () => {
 
     cy.get(
       '.react-flow__node[data-id="transform-customers"] [data-slot="graph-node-card-title"]'
-    ).dblclick();
+    ).rightclick();
+    cy.contains('[role="menuitem"]', /^Properties$/).click();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('select[data-slot="dvt-substrait-window-partition-field"]')
       .select('country')
@@ -126,7 +127,8 @@ describe('Canvas Substrait row-number window', () => {
       .should('contain.text', 'NN');
     cy.get(
       '.react-flow__node[data-id="transform-customers"] [data-slot="graph-node-card-title"]'
-    ).dblclick();
+    ).rightclick();
+    cy.contains('[role="menuitem"]', /^Properties$/).click();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="dvt-substrait-window-partition-readonly"]').should(
       'contain.text',

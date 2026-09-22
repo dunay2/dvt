@@ -2,7 +2,10 @@
  * Owned concern: assemble the protected start-run runtime subcomponent for
  * `apps/api` from already-bound abstract dependencies.
  */
-import type { IPostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
+import {
+  PostgresDvtPublicationPredecessorReader,
+  type IPostgresCredentialBindingResolver,
+} from '@dvt/adapter-postgres';
 import type {
   DbtProjectBundleArtifactStore,
   IPlanStoreReader,
@@ -107,6 +110,9 @@ export function buildProtectedStartRunRuntime(
     executionConnectionBindingVerifier: deps.dbtExecutionConnectionBindingVerifier,
     stepTypeRegistry: deps.stepTypeRegistry,
     warehouseConnectionCatalog: deps.warehouseConnectionCatalog,
+    dvtPostgresPublicationPredecessorReader: new PostgresDvtPublicationPredecessorReader({
+      credentialResolver: deps.postgresCredentialResolver,
+    }),
   });
   const plannerBackedUseCase = new PlannerBackedStartRunUseCase({
     planner: planCompilePlanner,

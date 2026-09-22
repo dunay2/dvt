@@ -15,6 +15,10 @@ test('changed-file formatter covers web shell markup as a governed source format
   assert.match(fixChangedScript, /html\|css/);
 });
 
+test('pre-commit formats TypeScript tooling through the existing hook', () => {
+  assert.match(commandsForLintStagedPattern('tools/**/*.ts'), /prettier --write/);
+});
+
 test('pre-commit formatting covers web app sources and shell markup', () => {
   const appSourceCommands = commandsForLintStagedPattern('apps/**/*.{ts,tsx}');
   assert.match(appSourceCommands, /eslint --fix/);

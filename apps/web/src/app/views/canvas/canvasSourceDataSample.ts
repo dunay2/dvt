@@ -1,5 +1,5 @@
 /** Owned concern: resolve Canvas data-sample targets and presentation-safe failures. */
-import { ConnectedSourceRefSchema } from '@dvt/contracts';
+import { ConnectedSourceRefSchema, type SourceDataSampleRequest } from '@dvt/contracts';
 
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { OperationalDrawerDataSample } from '../../components/shell/operationalDrawerContributionStore';
@@ -12,6 +12,7 @@ export const CANVAS_SOURCE_DATA_SAMPLE_LIMIT = 20 as const;
 export type CanvasSourceDataSampleTarget = Readonly<{
   connectionId: string;
   objectId: string;
+  expectedPublicationToken?: SourceDataSampleRequest['expectedPublicationToken'];
   nodeName: string;
 }>;
 

@@ -14,7 +14,9 @@ import {
   applyDvtSubstraitUnionAllFieldEdit,
   applyDvtSubstraitUnionAllGroupedRowNumber,
   applyDvtSubstraitUnionAllGrouping,
+  createDvtSubstraitSetDraft,
   createDvtSubstraitUnionAllDraft,
+  createDvtSubstraitUnionDistinctDraft,
   decodeDvtSubstraitUnionAllDocument,
   encodeDvtSubstraitUnionAllDocument,
   inspectDvtSubstraitUnionAllDraft,
@@ -182,6 +184,77 @@ function legacyDraft(draft: DvtSubstraitUnionAllDraft): DvtSubstraitUnionAllDraf
 }
 
 describe('VTX2 Substrait UNION ALL identity', () => {
+  it.each([
+    ['intersect_distinct', SetRel_SetOp.INTERSECTION_MULTISET],
+    ['except_distinct', SetRel_SetOp.MINUS_PRIMARY],
+    ['intersect_all', SetRel_SetOp.INTERSECTION_MULTISET_ALL],
+    ['except_all', SetRel_SetOp.MINUS_PRIMARY_ALL],
+  ] as const)(
+    'round-trips %s with its exact canonical selector and operand order',
+    (operation, selector) => {
+      const draft = createDvtSubstraitSetDraft({
+        inputs: [
+          source('source-customers-north', 'customers_north'),
+          source('source-customers-south', 'customers_south'),
+          source('source-customers-west', 'customers_west'),
+        ],
+        targetNodeId: 'transform-set-customers',
+        operation,
+      });
+      const root = draft.plan.relations[0]?.relType;
+      const set = root?.case === 'root' ? root.value.input?.relType : undefined;
+      expect(set?.case).toBe('set');
+      if (set?.case === 'set') expect(set.value.op).toBe(selector);
+
+      const persisted = encodeDvtSubstraitUnionAllDocument(draft);
+      const reopened = decodeDvtSubstraitUnionAllDocument(persisted);
+      expect(inspectDvtSubstraitUnionAllDraft(reopened)).toMatchObject({
+        ok: true,
+        projection: {
+          operation,
+          inputs: [
+            { table: 'customers_north' },
+            { table: 'customers_south' },
+            { table: 'customers_west' },
+          ],
+        },
+      });
+      expect(encodeDvtSubstraitUnionAllDocument(reopened)).toEqual(persisted);
+    }
+  );
+
+  it('round-trips UNION DISTINCT with the exact canonical selector and stable input order', () => {
+    const draft = createDvtSubstraitUnionDistinctDraft({
+      inputs: [
+        source('source-customers-north', 'customers_north'),
+        source('source-customers-south', 'customers_south'),
+        source('source-customers-west', 'customers_west'),
+      ],
+      targetNodeId: 'transform-distinct-customers',
+    });
+
+    const root = draft.plan.relations[0]?.relType;
+    const set = root?.case === 'root' ? root.value.input?.relType : undefined;
+    expect(set?.case).toBe('set');
+    if (set?.case === 'set') expect(set.value.op).toBe(SetRel_SetOp.UNION_DISTINCT);
+
+    const persisted = encodeDvtSubstraitUnionAllDocument(draft);
+    const reopened = decodeDvtSubstraitUnionAllDocument(persisted);
+    const inspection = inspectDvtSubstraitUnionAllDraft(reopened);
+    expect(inspection).toMatchObject({
+      ok: true,
+      projection: {
+        operation: 'union_distinct',
+        inputs: [
+          { table: 'customers_north' },
+          { table: 'customers_south' },
+          { table: 'customers_west' },
+        ],
+      },
+    });
+    expect(encodeDvtSubstraitUnionAllDocument(reopened)).toEqual(persisted);
+  });
+
   it('allocates opaque persisted identity while SetRel semantics stay positional', () => {
     const draft = fixture();
     const projection = inspectBase(draft);

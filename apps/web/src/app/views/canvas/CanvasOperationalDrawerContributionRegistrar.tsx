@@ -7,7 +7,8 @@ import type { PlanRunReadinessBlocker } from './canvasPlanReadiness';
 import type { CanvasShellPanels, CanvasShellChromeState } from './canvasShell.types';
 import type { CanvasExecutionSelectionRecoveryCommands } from '../../types/canvasExecutionSelectionRecovery';
 import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
-import type { OperationalDrawerDataSample } from '../../components/shell/operationalDrawerContributionStore';
+import type { OperationalDrawerDataSampleTab } from '../../components/shell/operationalDrawerContributionStore';
+import type { OperationalDrawerTab } from '../../components/shell/operationalDrawerContributionStore';
 import { buildCanvasOperationalDrawerContribution } from './canvasOperationalDrawerContribution';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
@@ -20,8 +21,9 @@ type CanvasOperationalDrawerContributionRegistrarProps = Readonly<{
   onPreviewExecutionPlan: () => void;
   onStartRun: () => void;
   selectionRecoveryCommands: CanvasExecutionSelectionRecoveryCommands | null;
-  dataSample: OperationalDrawerDataSample;
+  dataSampleTabs: readonly OperationalDrawerDataSampleTab[];
   semanticBody?: ReactNode;
+  operationDataTab?: OperationalDrawerTab;
 }>;
 
 export function CanvasOperationalDrawerContributionRegistrar({
@@ -32,8 +34,9 @@ export function CanvasOperationalDrawerContributionRegistrar({
   runControls,
   chromeState,
   selectionRecoveryCommands,
-  dataSample,
+  dataSampleTabs,
   semanticBody = null,
+  operationDataTab,
 }: CanvasOperationalDrawerContributionRegistrarProps): null {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = useMemo(() => resolveCanvasViewCopy(applicationLanguage), [applicationLanguage]);
@@ -74,8 +77,9 @@ export function CanvasOperationalDrawerContributionRegistrar({
         selectionRecovery: chromeState.executionSelectionRecovery,
         selectionRecoveryCommands,
         selectionRecoveryMessages: copy,
-        dataSample,
+        dataSampleTabs,
         semanticBody,
+        operationDataTab,
         copy,
         onPreviewExecutionPlan: () => latestCommandsRef.current.onPreviewExecutionPlan(),
         onStartRun: () => latestCommandsRef.current.onStartRun(),
@@ -90,12 +94,13 @@ export function CanvasOperationalDrawerContributionRegistrar({
       chromeState.planStatusSummary,
       chromeState.executionSelectionRecovery,
       copy,
-      dataSample,
+      dataSampleTabs,
       panels.activeRunId,
       panels.userPermissions.canPlan,
       stablePolicy,
       runControls,
       semanticBody,
+      operationDataTab,
       selectionRecoveryCommands,
     ]
   );

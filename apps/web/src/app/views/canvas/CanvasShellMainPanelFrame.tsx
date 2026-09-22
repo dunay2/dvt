@@ -8,11 +8,52 @@ import { useCanvasNodeWorkbenchPosition } from './useCanvasNodeWorkbenchPosition
 const canvasShellMainPanelFrameClassNames = {
   root: 'relative h-full flex flex-col bg-(--surface-panel)',
   readOnlyBanner: 'shrink-0',
+  workspaceSurfaces: 'relative flex min-h-0 min-w-0 flex-1',
+  workspaceSurface: 'absolute inset-0 flex min-h-0 min-w-0 flex-col',
+  workspaceSurfaceInactive: 'invisible pointer-events-none',
   workbenchSplit: 'relative flex min-h-0 flex-1',
   workbenchBaseSurface: 'flex min-h-0 min-w-0 flex-1',
   workbenchOverlay:
     'absolute z-20 flex h-[min(42rem,calc(100%-2rem))] w-[min(48rem,calc(100%-2rem))] overflow-hidden rounded-md border border-(--border-default) bg-(--surface-panel) shadow-xl',
 } as const;
+
+export function CanvasShellWorkspaceSurfaces({
+  viewport,
+  editor,
+  editorVisible,
+}: Readonly<{
+  viewport: ReactNode;
+  editor: ReactNode;
+  editorVisible: boolean;
+}>): JSX.Element {
+  return (
+    <div
+      data-slot="canvas-workspace-surfaces"
+      className={canvasShellMainPanelFrameClassNames.workspaceSurfaces}
+    >
+      <div
+        aria-hidden={editorVisible}
+        {...(editorVisible ? { inert: '' } : {})}
+        data-slot="canvas-workspace-surface"
+        className={`${canvasShellMainPanelFrameClassNames.workspaceSurface} ${
+          editorVisible ? canvasShellMainPanelFrameClassNames.workspaceSurfaceInactive : ''
+        }`}
+      >
+        {viewport}
+      </div>
+      <div
+        aria-hidden={!editorVisible}
+        {...(editorVisible ? {} : { inert: '' })}
+        data-slot="canvas-model-workspace-surface"
+        className={`${canvasShellMainPanelFrameClassNames.workspaceSurface} ${
+          editorVisible ? '' : canvasShellMainPanelFrameClassNames.workspaceSurfaceInactive
+        }`}
+      >
+        {editor}
+      </div>
+    </div>
+  );
+}
 
 export function CanvasShellMainPanelFrame({
   children,
@@ -42,6 +83,7 @@ export function CanvasShellContextualWorkbenchSplit({
   moveLabel,
   onClose,
   title,
+  presentation,
 }: Readonly<{
   baseSurface: ReactNode;
   children: ReactNode;
@@ -50,8 +92,27 @@ export function CanvasShellContextualWorkbenchSplit({
   moveLabel?: string;
   onClose: () => void;
   title: string;
+  presentation?: 'docked';
 }>): JSX.Element {
-  const positionController = useCanvasNodeWorkbenchPosition(true);
+  const positionController = useCanvasNodeWorkbenchPosition(presentation !== 'docked');
+
+  if (presentation === 'docked')
+    return (
+      <div className={canvasShellMainPanelFrameClassNames.workbenchSplit}>
+        <div className={canvasShellMainPanelFrameClassNames.workbenchBaseSurface}>
+          {baseSurface}
+        </div>
+        <CanvasContextualWorkbenchPanel
+          title={title}
+          closeLabel={closeLabel}
+          onClose={onClose}
+          moveLabel={title}
+          autoFocus
+        >
+          {children}
+        </CanvasContextualWorkbenchPanel>
+      </div>
+    );
 
   return (
     <div className={canvasShellMainPanelFrameClassNames.workbenchSplit}>

@@ -1,0 +1,19 @@
+---
+id: R-20260914-TRANSFORM-RESULT-TARGET
+title: Authored destination mistaken for authorized runtime publication
+status: Open
+date: 2026-09-14
+owners:
+  - '@dvt/contracts'
+  - '@dvt/web'
+severity: Low
+probability: Low
+---
+description: >-
+  An explicit Transform destination is configuration, not evidence of connection authorization,
+  existing storage, or completed execution.
+mitigations:
+  - Strict non-secret references and protected graph persistence
+  - No inferred target, unchanged Run capability gate and no SQL in authoring
+  - Future admission binds authorization and exact workload identity under issue 3115 and ADR-0066
+  - Contract, UI and graph round-trip regressions guard the current boundary

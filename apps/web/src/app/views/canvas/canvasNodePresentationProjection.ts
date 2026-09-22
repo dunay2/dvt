@@ -23,8 +23,8 @@ import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAg
 import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstraitAggregateWindow';
 import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
 import {
-  decodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitInnerJoinAcceptedDraft,
+  decodeDvtSubstraitJoinDocument,
+  inspectDvtSubstraitJoinAcceptedDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   decodeDvtSubstraitUnionAllDocument,
@@ -42,6 +42,7 @@ import {
   readDvtSourceOutputProjection,
   type DvtSourceOutputProjection,
 } from './canvasDvtSourceSemanticAuthoring';
+import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
 
 export function projectCanvasNodePresentationTruth(
   args: Readonly<{
@@ -267,8 +268,8 @@ function projectCanvasNodePresentationTruthInternal(
                     if (windowInspection.ok) {
                       substraitOutputs = windowInspection.projection.outputs;
                     } else {
-                      const joinInspection = inspectDvtSubstraitInnerJoinAcceptedDraft(
-                        decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+                      const joinInspection = inspectDvtSubstraitJoinAcceptedDraft(
+                        decodeDvtSubstraitJoinDocument(authority.semanticDocument)
                       );
                       if (joinInspection.ok) {
                         const targetNodeId =
@@ -327,8 +328,10 @@ function projectCanvasNodePresentationTruthInternal(
           } as const,
         }),
   });
+  const relationalComposition = resolveCanvasRelationalCompositionTruth(args);
   const baseTruth: CanvasNodePresentationTruth = {
     ...projectedTruth,
+    ...(relationalComposition == null ? {} : { relationalComposition }),
     code: invalidCanonicalSubstraitDocument
       ? { kind: 'unavailable', reason: 'invalid-canonical-substrait-document' }
       : (canonicalSubstraitCode ?? projectedTruth.code),
