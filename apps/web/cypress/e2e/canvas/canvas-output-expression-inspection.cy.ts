@@ -119,6 +119,7 @@ describe('Canvas output expression inspection', () => {
     cy.get(VIEWER).should('contain.text', 'concat(trim(customer), status)');
     cy.get(`${VIEWER} [data-slot="canvas-relational-expression-node"]`).should('have.length', 4);
 
+    cy.viewport(1280, 720);
     cy.get(VIEWER).should(($panel) => {
       const panel = $panel[0]!;
       const bounds = panel.getBoundingClientRect();
