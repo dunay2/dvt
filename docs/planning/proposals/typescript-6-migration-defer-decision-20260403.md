@@ -118,5 +118,4 @@ work item, but that linkage is intentionally deferred in this slice.
 - [`tsconfig.package-bundler.base.json`](../../../tsconfig.package-bundler.base.json)
 - [`tsconfig.node-runtime.base.json`](../../../tsconfig.node-runtime.base.json)
 - [`docs/architecture/typescript-package-classification.md`](../../architecture/typescript-package-classification.md)
-- [`docs/planning/closeouts/20260318-typescript-package-classification-closeout.md`](../closeouts/20260318-typescript-package-classification-closeout.md)
 - TypeScript 6 migration assessment discussed in planning session dated 2026-04-03.
