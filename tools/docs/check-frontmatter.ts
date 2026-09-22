@@ -102,7 +102,6 @@ function checkAdrFrontmatter(filePath: string, report: Report): void {
   if (!fields['Owners']) {
     warnOrError(report, filePath, 'ADR missing recommended field: Owners');
   }
-
 }
 
 // ── Evidence check ────────────────────────────────────────────────────────────
