@@ -165,3 +165,14 @@ test('the real depth-two PR merge checkout contains enough comparison ancestry',
   });
   assert.deepEqual(reader.read().changedFiles, ['model.ts']);
 });
+
+for (const name of ['name with spaces.ts', 'caf\u00e9.ts']) {
+  test(`added symbols retain exact path identity: ${name}`, (t) => {
+    const repo = repository(t);
+    repo.write(name, 'export const added = true;\n');
+    const head = repo.commit(repo.base);
+    const diff = repo.reader({ headRef: head }).read();
+    assert.deepEqual(diff.changedFiles, [name]);
+    assert.deepEqual(diff.addedLinesByPath[name], ['export const added = true;']);
+  });
+}

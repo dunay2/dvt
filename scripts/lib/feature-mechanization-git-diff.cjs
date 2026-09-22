@@ -102,7 +102,7 @@ class FeatureMechanizationGitDiffReader {
       let file = null;
       for (const line of text.split(/\r?\n/)) {
         if (line.startsWith('+++ b/')) {
-          file = line.slice(6);
+          file = line.slice(6).replace(/\t$/, '');
           result[file] ||= [];
         } else if (line.startsWith('+++ ')) {
           file = null;
