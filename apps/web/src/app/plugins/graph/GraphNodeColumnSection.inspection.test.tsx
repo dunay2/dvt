@@ -52,13 +52,13 @@ describe('output inspection gestures', () => {
     return { piece, inspect, toggle, openCard };
   }
 
-  it('inspects on one click or Enter, with no extra double-click action or output mutation', () => {
+  it('inspects on one click or Enter, with no extra double-click action or output mutation', async () => {
     const { piece, inspect, toggle, openCard } = mount({
       id: 'output:id',
       name: 'alias',
       type: 'integer',
     });
-    act(() => fireEvent.doubleClick(piece));
+    await act(() => fireEvent.doubleClick(piece));
     expect(inspect).not.toHaveBeenCalled();
     act(() => {
       fireEvent.click(piece, { detail: 1 });
@@ -74,7 +74,7 @@ describe('output inspection gestures', () => {
     });
     expect(inspect).toHaveBeenCalledOnce();
     inspect.mockClear();
-    act(() => fireEvent.keyDown(piece, { key: 'Enter' }));
+    await act(() => fireEvent.keyDown(piece, { key: 'Enter' }));
     expect(inspect).toHaveBeenCalledOnce();
     inspect.mockClear();
     const checkbox = piece.querySelector('button')!;
