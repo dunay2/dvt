@@ -231,6 +231,9 @@
     "tools/ci/**/*.cjs": [
       "prettier --write"
     ],
+    "tools/**/*.ts": [
+      "prettier --write"
+    ],
     "*.{js,json,md,yml,yaml}": [
       "prettier --write"
     ]

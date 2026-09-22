@@ -63,7 +63,7 @@ const EVIDENCE_REQUIRED_KEYS: readonly string[] = [
   'evidence',
 ];
 
-// ── ADR check ─────────────────────────────────────────────────────────────────
+// ── ADR frontmatter ───────────────────────────────────────────────────────────
 
 function checkAdrFrontmatter(filePath: string, report: Report): void {
   const content = readIfExists(filePath);
