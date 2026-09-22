@@ -8,6 +8,15 @@ const workflow = yaml.load(readFileSync('.github/workflows/pr-quality-gate.yml',
 const steps = workflow.jobs['pr-checks'].steps;
 const step = steps.find((entry) => entry.name === 'Validate feature implementation mechanization');
 
+test('the normal mechanization test command includes its real Git regressions', () => {
+  const scripts = JSON.parse(readFileSync('package.json', 'utf8')).scripts;
+  assert.ok(
+    scripts['test:docs:feature-mechanization']
+      .split(/\s+/)
+      .includes('scripts/lib/feature-mechanization-git-diff.test.cjs')
+  );
+});
+
 test('the DB implementation gate receives the actual immutable comparison endpoints', () => {
   assert.ok(step, 'Existing command must remain the gate');
   assert.ok(step.run.split('\n').includes('pnpm docs:feature-mechanization:implementation'));

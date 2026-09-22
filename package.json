@@ -168,7 +168,7 @@
     "docs:feature-mechanization:tf-e2-m-c": "node scripts/check-feature-mechanization.cjs --feature TF-E2-M-C --implementation",
     "docs:feature-mechanization:tf-e2-m-d": "node scripts/check-feature-mechanization.cjs --feature TF-E2-M-D",
     "docs:feature-mechanization:implementation": "node scripts/check-feature-mechanization.cjs --implementation",
-    "test:docs:feature-mechanization": "node --test scripts/check-feature-mechanization.test.cjs scripts/lib/feature-mechanization-db-reader.test.cjs",
+    "test:docs:feature-mechanization": "node --test scripts/check-feature-mechanization.test.cjs scripts/lib/feature-mechanization-db-reader.test.cjs scripts/lib/feature-mechanization-git-diff.test.cjs scripts/feature-mechanization-test-routing.test.cjs",
     "docs:governance:document-unit-map": "node scripts/generate-governance-document-unit-map.cjs",
     "docs:governance:document-unit-map:check": "node scripts/generate-governance-document-unit-map.cjs",
     "test:docs:governance:document-unit-map": "node --test scripts/generate-governance-document-unit-map.test.cjs",
