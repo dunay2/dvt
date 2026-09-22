@@ -1,4 +1,6 @@
 /** UI contract: explicit Play queries data below without navigating or authoring. */
+import { SourceDataSampleResponseSchema, TransformDataSampleResponseSchema } from '@dvt/contracts';
+
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import {
   getE2eApiCalls,
@@ -21,7 +23,7 @@ const sample = {
   rows: [{ values: ['Ada'] }],
   limit: 20,
   truncated: false,
-  sampledAt: '2026-09-22T10:00:00Z',
+  sampledAt: '2026-09-22T10:00:00.000Z',
 };
 
 describe('Canvas explicit data action', () => {
@@ -44,19 +46,23 @@ describe('Canvas explicit data action', () => {
       authoringGenerated: true,
       terminalTransformPreview: true,
     });
-    stubE2eJsonApi('GET', sourcePath, {
-      ...sample,
-      connectionId: 'local-postgres-proof',
-      objectId: 'relation/dvt/raw/orders',
-    });
+    stubE2eJsonApi(
+      'GET',
+      sourcePath,
+      SourceDataSampleResponseSchema.parse({
+        ...sample,
+        connectionId: 'local-postgres-proof',
+        objectId: 'relation/dvt/raw/orders',
+      })
+    );
     stubE2eApi('GET', transformPath, ({ url }) => ({
-      body: {
+      body: TransformDataSampleResponseSchema.parse({
         ...sample,
         canvasId: url.pathname.split('/')[4],
         transformNodeId: 'dvt-transform-1',
         draftRevision: 'revision-1',
         semanticPlanSha256: 'a'.repeat(64),
-      },
+      }),
     }));
     visitWithE2eWorkspaceSession('/canvas', {
       onBeforeLoad(window) {
@@ -67,10 +73,16 @@ describe('Canvas explicit data action', () => {
       },
     });
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
   });
 
-  for (const nodeId of ['source-1', 'dvt-transform-1']) {
-    it(`loads ${nodeId} below only after Play, including native keyboard activation`, () => {
+  for (const [nodeId, gesture] of [
+    ['source-1', 'pointer'],
+    ['dvt-transform-1', 'pointer'],
+    ['source-1', 'keyboard'],
+    ['dvt-transform-1', 'keyboard'],
+  ]) {
+    it(`loads ${nodeId} below only after Play with ${gesture}`, () => {
       const card = `.react-flow__node[data-id="${nodeId}"]`;
       const path = nodeId === 'source-1' ? sourcePath : transformPath;
       let saves = 0;
@@ -86,7 +98,7 @@ describe('Canvas explicit data action', () => {
         .should('be.visible')
         .should('have.focus')
         .then(($button) =>
-          nodeId === 'source-1' ? cy.wrap($button).click() : cy.press(Cypress.Keyboard.Keys.ENTER)
+          gesture === 'pointer' ? cy.wrap($button).click() : cy.press(Cypress.Keyboard.Keys.SPACE)
         );
       waitForE2eApiCall(path, 'GET');
       cy.get(`[data-slot="bottom-operational-drawer-tab"][data-tab="data:${nodeId}"]`).should(

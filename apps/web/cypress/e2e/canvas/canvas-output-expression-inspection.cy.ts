@@ -30,7 +30,10 @@ function field(name: string): Cypress.Chainable<JQuery<HTMLElement>> {
 
 function showAll(): void {
   cy.get(CARD).then(($card) => {
-    if ($card.find('[data-slot="graph-node-column-remainder-toggle"]').length > 0) {
+    if (
+      $card.find('[data-slot="graph-node-column-remainder-toggle"][aria-expanded="false"]').length >
+      0
+    ) {
       cy.get(CARD).find('[data-slot="graph-node-column-remainder-toggle"]').click();
     }
   });
