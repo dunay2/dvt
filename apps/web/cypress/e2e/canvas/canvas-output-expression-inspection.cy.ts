@@ -125,7 +125,7 @@ describe('Canvas output expression inspection', () => {
       expect(bounds.left).to.be.at.least(0);
       expect(bounds.right).to.be.at.most(panel.ownerDocument.defaultView!.innerWidth);
     });
-    cy.screenshot('output-expression-tree', { capture: 'fullPage' });
+    cy.screenshot('output-expression-tree', { capture: 'viewport', scale: true });
     cy.injectAxe();
     cy.checkA11y(VIEWER, { includedImpacts: ['serious', 'critical'] });
     cy.get(`${VIEWER} [data-slot="canvas-relational-expression-node"]`)
