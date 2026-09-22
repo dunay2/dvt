@@ -1,9 +1,11 @@
 /** Owned concern: bind the selected operation panel to the existing protected data query. */
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { CanvasModelDataView, type CanvasModelPreviewPreparation } from './CanvasModelDataView';
+import type { CanvasModelPreviewPreparation } from './CanvasModelDataView';
+import { CanvasModelDataPanel } from './CanvasModelDataPanel';
+import { useCanvasModelDataQuery } from './useCanvasModelDataQuery';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 
 export type CanvasOperationPreviewPorts = Readonly<{
@@ -42,22 +44,37 @@ export function CanvasOperationPreviewProvider({
     nodeId: string;
     relationId: string;
     label: string;
-    semanticDigest: string | null;
-    sequence: number;
   } | null>(null);
+  const language = useApplicationLanguageStore((value) => value.language);
+  const copy = resolveCanvasSemanticEditorCopy(language);
+  const previewCopy = {
+    ...copy,
+    previewEmpty: copy.operationPreviewEmpty,
+    failed: copy.operationPreviewFailed,
+  };
+  const data = useCanvasModelDataQuery({
+    ...state,
+    canvasId: ports?.canvasId ?? '',
+    query: ports?.query,
+    preparePreview: ports?.preparePreview,
+    relationId: requested?.relationId,
+    copy: previewCopy,
+    blocked: state.unapplied,
+  });
+  const { reset } = data;
   useEffect(() => {
     setRequested(null);
-  }, [state.nodeId, state.semanticDigest, state.unapplied]);
+    reset();
+  }, [ports?.canvasId, state.nodeId, state.semanticDigest, state.unapplied, reset]);
   const execute = (relationId: string, label: string): void => {
-    if (state.unapplied || ports?.query == null || state.semanticDigest == null) return;
-    ports.onOpenData?.();
-    setRequested((previous) => ({
+    if (!data.available) return;
+    ports?.onOpenData?.();
+    setRequested({
       nodeId: state.nodeId,
       relationId,
       label,
-      semanticDigest: state.semanticDigest,
-      sequence: (previous?.sequence ?? 0) + 1,
-    }));
+    });
+    void data.load(relationId);
   };
   return (
     <CanvasOperationPreviewContext.Provider
@@ -66,53 +83,23 @@ export function CanvasOperationPreviewProvider({
       {children}
       {requested?.nodeId === state.nodeId && ports?.dataHost != null
         ? createPortal(
-            <CanvasOperationDataPreview
-              relationId={requested.relationId}
-              label={requested.label}
-              executionRequest={
-                requested.semanticDigest === state.semanticDigest ? requested.sequence : undefined
-              }
-            />,
+            <aside
+              data-slot="canvas-operation-data-preview"
+              data-relation-id={requested.relationId}
+              className="h-full min-h-0 min-w-0 overflow-hidden"
+            >
+              <CanvasModelDataPanel
+                {...data}
+                semanticDigest={state.semanticDigest}
+                nodeName={requested.label}
+                compact
+                copy={previewCopy}
+                disabledReason={state.unapplied ? copy.operationPreviewUnapplied : undefined}
+              />
+            </aside>,
             ports.dataHost
           )
         : null}
     </CanvasOperationPreviewContext.Provider>
-  );
-}
-
-export function CanvasOperationDataPreview({
-  relationId,
-  label,
-  executionRequest,
-}: Readonly<{
-  relationId: string;
-  label: string;
-  executionRequest?: number;
-}>): JSX.Element | null {
-  const context = useContext(CanvasOperationPreviewContext);
-  const language = useApplicationLanguageStore((state) => state.language);
-  const copy = resolveCanvasSemanticEditorCopy(language);
-  if (context == null) return null;
-  return (
-    <aside
-      data-slot="canvas-operation-data-preview"
-      data-relation-id={relationId}
-      className="h-full min-h-0 min-w-0 overflow-hidden"
-    >
-      <CanvasModelDataView
-        key={`${relationId}:${context.semanticDigest}`}
-        {...context}
-        relationId={relationId}
-        executionRequest={executionRequest}
-        compact
-        nodeName={label}
-        disabledReason={context.unapplied ? copy.operationPreviewUnapplied : undefined}
-        copy={{
-          ...copy,
-          previewEmpty: copy.operationPreviewEmpty,
-          failed: copy.operationPreviewFailed,
-        }}
-      />
-    </aside>
   );
 }
