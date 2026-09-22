@@ -1,5 +1,6 @@
 /** Owned concern: define graph-node column presentation and interaction contracts. */
 import type { DvtSubstraitProjectionAuthoringRejection } from '../../views/canvas/canvasDvtSubstraitProjection';
+import type { GraphNodeColumnInspect } from './graphColumnInspection';
 import type { ActiveColumnPlacement } from './useGraphNodeColumnOrder';
 
 export type GraphNodeColumnFunction = Readonly<{
@@ -39,14 +40,6 @@ export type GraphNodeColumnCompositionFunctionResolver = (
     sourceType: string;
   }>
 ) => readonly GraphNodeColumnFunction[];
-
-export type GraphNodeColumnInspect = (
-  identity: Readonly<{
-    nodeId: string;
-    fieldId: string;
-    anchorElement: HTMLElement;
-  }>
-) => void;
 
 export type GraphNodeColumnPortDirection = 'source' | 'target';
 export type GraphNodeColumnPortIdentity = Readonly<{

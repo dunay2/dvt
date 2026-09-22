@@ -1,10 +1,18 @@
 /** Own read-only row gestures; output mutation remains on the explicit checkbox. */
 import type { HTMLAttributes, RefObject } from 'react';
-import type { GraphNodeColumn, GraphNodeColumnInspect } from './graphNodeColumnContracts';
+
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 
-export function useGraphColumnInspection(
-  column: GraphNodeColumn,
+export type GraphNodeColumnInspect = (
+  identity: Readonly<{
+    nodeId: string;
+    fieldId: string;
+    anchorElement: HTMLElement;
+  }>
+) => void;
+
+export function graphColumnInspectionProps(
+  column: Readonly<{ id?: string; output?: boolean }>,
   nodeId: string | undefined,
   inspect: GraphNodeColumnInspect | undefined,
   ref: RefObject<HTMLDivElement>

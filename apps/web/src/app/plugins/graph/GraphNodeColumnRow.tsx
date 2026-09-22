@@ -2,18 +2,15 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 
 import { CanvasNodePortHandle } from '../../components/canvas/CanvasNodePortHandle';
-import { useGraphColumnInspection } from './useGraphColumnInspection';
+import { graphColumnInspectionProps, type GraphNodeColumnInspect } from './graphColumnInspection';
 import type {
   GraphNodeColumn,
-  GraphNodeColumnInspect,
   GraphNodeColumnCompositionFunctionResolver,
-  GraphNodeColumnFunctionApplyIdentity,
-  GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
   GraphNodeColumnReorderIdentity,
-  GraphNodeStructuredFieldIdentity,
+  GraphNodeColumnSectionProps,
 } from './graphNodeColumnContracts';
 import { GraphNodeColumnDropCompositionFlow } from './GraphNodeColumnDropCompositionFlow';
 import { GraphNodeColumnActions } from './GraphNodeColumnActions';
@@ -25,8 +22,6 @@ import {
 import { GraphNodeExpressionComposer } from './GraphNodeExpressionComposer';
 import { graphNodeColumnClasses } from './graphVisualTokens';
 import type { GraphNodeColumnReorderController } from './useGraphNodeColumnReorder';
-
-type PendingFunctionRequest = Readonly<{ capabilityId: string }>;
 
 export function GraphNodeColumnRow(props: {
   onColumnInspect?: GraphNodeColumnInspect;
@@ -51,22 +46,23 @@ export function GraphNodeColumnRow(props: {
   onCreateAlias?: () => void;
   resolveColumnCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onColumnFunctionApply?: (
-    identity: GraphNodeColumnFunctionApplyIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
-  onStructuredFieldApply?: (
-    identity: GraphNodeStructuredFieldIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  onColumnFunctionApply?: GraphNodeColumnSectionProps['onColumnFunctionApply'];
+  onStructuredFieldApply?: GraphNodeColumnSectionProps['onStructuredFieldApply'];
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
 }): ReactElement {
   const pieceRef = useRef<HTMLDivElement>(null);
   const [keyboardFunctionMenuOpen, setKeyboardFunctionMenuOpen] = useState(false);
-  const [pendingFunction, setPendingFunction] = useState<PendingFunctionRequest | null>(null);
+  const [pendingFunction, setPendingFunction] = useState<string | null>(null);
   const { column, nodeId, copy, reorder } = props;
   const columnId = column.id ?? column.name;
   const isOutput = column.output !== false;
-  const inspectionProps = useGraphColumnInspection(column, nodeId, props.onColumnInspect, pieceRef);
+  const inspectionProps = graphColumnInspectionProps(
+    column,
+    nodeId,
+    props.onColumnInspect,
+    pieceRef
+  );
   useEffect(() => {
     if (!props.focusRequested) return;
     pieceRef.current?.focus();
@@ -151,7 +147,7 @@ export function GraphNodeColumnRow(props: {
             ? undefined
             : (capabilityId) => {
                 if (column.functionMenu?.items.some((item) => item.capabilityId === capabilityId))
-                  setPendingFunction({ capabilityId });
+                  setPendingFunction(capabilityId);
               }
         }
       />
@@ -172,11 +168,11 @@ export function GraphNodeColumnRow(props: {
       )}
       {nodeId != null && pendingFunction != null && props.onColumnFunctionApply != null ? (
         <GraphNodeExpressionComposer
-          key={`${columnId}:${pendingFunction.capabilityId}`}
+          key={`${columnId}:${pendingFunction}`}
           nodeId={nodeId}
           columnId={columnId}
           functions={column.functionMenu?.items ?? []}
-          initialCapabilityId={pendingFunction.capabilityId}
+          initialCapabilityId={pendingFunction}
           initialOperandFieldIds={[columnId]}
           operandCandidates={props.expressionOperandCandidates}
           resolveCompositionFunctions={props.resolveColumnCompositionFunctions}

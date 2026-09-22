@@ -1,13 +1,25 @@
 // @vitest-environment jsdom
 import { act } from 'react';
-import { createRoot } from 'react-dom/client';
+import { createRoot, type Root } from 'react-dom/client';
 import { fireEvent } from '@testing-library/dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
+import type { GraphNodeColumn } from './graphNodeColumnContracts';
 
 describe('output inspection gestures', () => {
-  afterEach(() => vi.unstubAllGlobals());
-  it('inspects on one click or Enter, with no extra double-click action or output mutation', () => {
+  let root: Root;
+  let container: HTMLDivElement;
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+    vi.unstubAllGlobals();
+  });
+  function mount(column: GraphNodeColumn): {
+    piece: HTMLElement;
+    inspect: ReturnType<typeof vi.fn>;
+    toggle: ReturnType<typeof vi.fn>;
+    openCard: ReturnType<typeof vi.fn>;
+  } {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     vi.stubGlobal(
       'ResizeObserver',
@@ -17,9 +29,9 @@ describe('output inspection gestures', () => {
         disconnect(): void {}
       }
     );
-    const container = document.createElement('div');
+    container = document.createElement('div');
     document.body.append(container);
-    const root = createRoot(container);
+    root = createRoot(container);
     const inspect = vi.fn(),
       toggle = vi.fn(),
       openCard = vi.fn();
@@ -29,7 +41,7 @@ describe('output inspection gestures', () => {
           <GraphNodeColumnSection
             expanded
             nodeId="model"
-            columns={[{ id: 'output:id', name: 'alias', type: 'integer' }]}
+            columns={[column]}
             onColumnInspect={inspect}
             onColumnOutputToggle={toggle}
           />
@@ -37,6 +49,15 @@ describe('output inspection gestures', () => {
       )
     );
     const piece = container.querySelector<HTMLElement>('[data-slot="graph-node-column-piece"]')!;
+    return { piece, inspect, toggle, openCard };
+  }
+
+  it('inspects on one click or Enter, with no extra double-click action or output mutation', () => {
+    const { piece, inspect, toggle, openCard } = mount({
+      id: 'output:id',
+      name: 'alias',
+      type: 'integer',
+    });
     act(() => fireEvent.doubleClick(piece));
     expect(inspect).not.toHaveBeenCalled();
     act(() => {
@@ -64,7 +85,21 @@ describe('output inspection gestures', () => {
     });
     expect(toggle).toHaveBeenCalledOnce();
     expect(inspect).not.toHaveBeenCalled();
-    act(() => root.unmount());
-    container.remove();
+  });
+
+  it.each([
+    { name: 'inactive', id: 'output:id', type: 'integer', output: false },
+    { name: 'without stable identity', type: 'integer' },
+  ])('does not inspect $name or invent identity from its alias', (column) => {
+    const { piece, inspect, toggle, openCard } = mount(column);
+    act(() => {
+      fireEvent.click(piece);
+      fireEvent.keyDown(piece, { key: 'Enter' });
+      fireEvent.doubleClick(piece);
+    });
+    expect(inspect).not.toHaveBeenCalled();
+    expect(toggle).not.toHaveBeenCalled();
+    expect(openCard).not.toHaveBeenCalled();
+    expect(piece.hasAttribute('aria-keyshortcuts')).toBe(false);
   });
 });

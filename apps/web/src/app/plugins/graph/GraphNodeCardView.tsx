@@ -1,5 +1,6 @@
 /** Owned concern: render graph-node card markup from an already-projected card model. */
 import { type CSSProperties, type ReactElement } from 'react';
+import type { GraphNodeColumnInspect } from './graphColumnInspection';
 import type { LucideIcon } from 'lucide-react';
 
 import { cn } from '../../components/ui/utils';
@@ -7,7 +8,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/too
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
 import type {
   GraphNodeColumn,
-  GraphNodeColumnInspect,
   GraphNodeCalculatedColumnIdentity,
   GraphNodeColumnCompositionFunctionResolver,
   GraphNodeColumnFunctionApplyIdentity,

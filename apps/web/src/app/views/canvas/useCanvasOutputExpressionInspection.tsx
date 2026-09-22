@@ -1,7 +1,7 @@
 /** Scope transient output inspection to the current Canvas and own return focus. */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CanonicalNode } from '../../types/canonical';
-import type { GraphNodeColumnInspect } from '../../plugins/graph/graphNodeColumnContracts';
+import type { GraphNodeColumnInspect } from '../../plugins/graph/graphColumnInspection';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type { CanvasShellContextualWorkbench } from './canvasShell.types';
 import { projectCanvasOutputExpression } from './canvasOutputExpressionProjection';
