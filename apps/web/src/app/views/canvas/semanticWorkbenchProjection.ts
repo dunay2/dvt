@@ -10,6 +10,7 @@ import { layoutSemanticExpressionGraph } from './semanticExpressionGraphLayout';
 import { semanticExpressionStyles } from './semanticExpressionGraphLayout';
 import { createSemanticExpressionDescription } from './semanticExpressionDescription';
 import { getLayoutedElements } from './canvasGraphUtils';
+import { childInputs, relationAnchor } from './canvasRelationalTraversal';
 
 export type SemanticWorkbenchGroup = 'source' | 'condition' | 'transformation';
 
@@ -85,35 +86,8 @@ function relationDisplayName(rel: Rel): string {
   }
 }
 
-function relationAnchor(rel: Rel): number | null {
-  switch (rel.relType.case) {
-    case 'read':
-    case 'filter':
-    case 'project':
-    case 'join':
-    case 'aggregate':
-    case 'set':
-      return rel.relType.value.common?.relAnchor ?? null;
-    default:
-      return null;
-  }
-}
-
 function relationInputs(rel: Rel): readonly Rel[] {
-  switch (rel.relType.case) {
-    case 'filter':
-    case 'project':
-    case 'aggregate':
-      return rel.relType.value.input == null ? [] : [rel.relType.value.input];
-    case 'join':
-      return [rel.relType.value.left, rel.relType.value.right].filter(
-        (candidate): candidate is Rel => candidate != null
-      );
-    case 'set':
-      return rel.relType.value.inputs;
-    default:
-      return [];
-  }
+  return childInputs(rel).map(({ rel: input }) => input);
 }
 
 function relationSourceCount(rel: Rel): number {
