@@ -149,7 +149,7 @@ classDiagram
 - `tools/docs/check-frontmatter.ts`
 - `tools/docs/check-links.ts`
 - `tools/docs/generate-docs-manifest.ts`
-- `tools/ci/docs-frontmatter-bom.test.mjs`
+- `tools/ci/docs-frontmatter-policy.test.mjs`
 - `tools/ci/docs-markdown-component-architecture.test.mjs`
 
 ## Fowler Reading

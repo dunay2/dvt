@@ -14,7 +14,7 @@ export const EXECUTABLE_CI_TOOL_TESTS = Object.freeze([
   'tools/ci/architecture-dependency-guard.test.mjs',
   'tools/ci/contracts-package-governance.test.mjs',
   'tools/ci/docs-changed-governance-policy.test.mjs',
-  'tools/ci/docs-frontmatter-bom.test.mjs',
+  'tools/ci/docs-frontmatter-policy.test.mjs',
   'tools/ci/docs-manifest-contract.test.mjs',
   'tools/ci/feature-mechanization-workflow.test.mjs',
   'tools/ci/generated-docs-single-writer-policy.test.mjs',
