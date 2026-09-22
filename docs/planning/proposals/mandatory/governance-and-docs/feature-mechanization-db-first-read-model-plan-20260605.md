@@ -25,6 +25,8 @@ base, or failed Git command rejects validation. A verified empty diff remains
 valid. CI supplies explicit base and head identities and validates committed
 content; local pre-push additionally includes staged, unstaged, and untracked
 files. Neither mode may interpret a Git failure as successful empty evidence.
+Manual CI implementation validation requires a caller-supplied comparison base;
+it must not default to comparing the candidate with itself.
 
 The CI authority transport is tracked in
 [#2957](https://github.com/dunay2/dvt/issues/2957). Repository import alone cannot
