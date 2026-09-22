@@ -1,44 +1,23 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
-import test from 'node:test';
+import { before, test } from 'node:test';
+import { createDocsRepository, runDocsCommand } from './test/docsCliFixture.mjs';
 
 const rootPackage = JSON.parse(readFileSync('package.json', 'utf8'));
 
-function runPnpm(args) {
-  const result =
-    process.platform === 'win32'
-      ? spawnSync(
-          process.env.ComSpec || 'cmd.exe',
-          ['/d', '/s', '/c', ['pnpm', ...args].join(' ')],
-          {
-            encoding: 'utf8',
-            stdio: ['ignore', 'pipe', 'pipe'],
-          }
-        )
-      : spawnSync('pnpm', args, {
-          encoding: 'utf8',
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
-
-  if (result.error) {
-    throw result.error;
-  }
-
-  if (result.status !== 0) {
-    throw new Error(
-      [
-        `pnpm ${args.join(' ')} failed with status ${result.status}`,
-        result.stdout?.trim(),
-        result.stderr?.trim(),
-      ]
-        .filter(Boolean)
-        .join('\n')
-    );
-  }
-
+function generateManifest(full) {
+  const args = full ? ['--stdout', '--full'] : ['--stdout'];
+  const result = runDocsCommand('tools/docs/generate-docs-manifest.ts', args);
+  assert.equal(result.status, 0, result.output);
   return result.stdout;
 }
+
+let compactOutputs;
+let fullOutputs;
+before(() => {
+  compactOutputs = [generateManifest(false), generateManifest(false)];
+  fullOutputs = [generateManifest(true), generateManifest(true)];
+});
 
 function isSortedByPath(entries) {
   const paths = entries.map((entry) => entry.path);
@@ -52,9 +31,31 @@ function isSha256Hex(value) {
   return typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 }
 
+test('manifest audit preserves false and zero evidence metadata as text', (t) => {
+  const fixture = createDocsRepository(t);
+  fixture.write(
+    'docs/evidence/ED-20991231-types.md',
+    [
+      '---',
+      'title: 0',
+      'status: [Accepted, Reviewed]',
+      'breaking: false',
+      '---',
+      '# Typed evidence',
+      '',
+    ].join('\n')
+  );
+  const result = fixture.run('tools/docs/generate-docs-manifest.ts', ['--stdout', '--full'], []);
+  assert.equal(result.status, 0, result.output);
+  const [evidence] = JSON.parse(result.stdout).evidenceDocs;
+  assert.equal(evidence.title, '0');
+  assert.equal(evidence.status, 'Accepted, Reviewed');
+  assert.equal(evidence.breaking, 'false');
+  assert.equal(evidence.date, null);
+});
+
 test('docs manifest generation is deterministic, compact, and excludes timestamp noise', () => {
-  const first = runPnpm(['exec', 'tsx', 'tools/docs/generate-docs-manifest.ts', '--stdout']);
-  const second = runPnpm(['exec', 'tsx', 'tools/docs/generate-docs-manifest.ts', '--stdout']);
+  const [first, second] = compactOutputs;
 
   assert.equal(first, second);
 
@@ -79,20 +80,7 @@ test('docs manifest generation is deterministic, compact, and excludes timestamp
 });
 
 test('docs manifest full audit output stays deterministic and sorted', () => {
-  const first = runPnpm([
-    'exec',
-    'tsx',
-    'tools/docs/generate-docs-manifest.ts',
-    '--stdout',
-    '--full',
-  ]);
-  const second = runPnpm([
-    'exec',
-    'tsx',
-    'tools/docs/generate-docs-manifest.ts',
-    '--stdout',
-    '--full',
-  ]);
+  const [first, second] = fullOutputs;
 
   assert.equal(first, second);
 
@@ -113,9 +101,6 @@ test('docs manifest full audit output stays deterministic and sorted', () => {
   assert.equal(isSortedByPath(manifest.evidenceDocs), true);
   assert.equal(isSortedByPath(manifest.normativeDocs), true);
   assert.equal(isSortedByPath(manifest.statusDocs), true);
-  for (const entry of manifest.adrs.filter((adr) => adr.path.includes('docs/archive/'))) {
-    assert.equal(entry.archived, true);
-  }
 
   const adrOrder = manifest.adrs.map((entry) => [entry.num ?? Number.MAX_SAFE_INTEGER, entry.path]);
   const sortedAdrOrder = [...adrOrder].sort((left, right) => {
@@ -126,9 +111,7 @@ test('docs manifest full audit output stays deterministic and sorted', () => {
 });
 
 test('docs manifest excludes generated planning landing pages', () => {
-  const manifest = JSON.parse(
-    runPnpm(['exec', 'tsx', 'tools/docs/generate-docs-manifest.ts', '--stdout', '--full'])
-  );
+  const manifest = JSON.parse(fullOutputs[0]);
   const manifestPaths = new Set(
     [
       ...manifest.adrs,

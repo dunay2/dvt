@@ -138,8 +138,7 @@ jobs:
       - name: Prepare planning DB for DB-backed validation
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          (steps.scope.outputs.feature_mechanization_relevant == 'true' ||
-          steps.scope.outputs.planning_db_inventory_relevant == 'true' ||
+          (steps.scope.outputs.planning_db_inventory_relevant == 'true' ||
           steps.scope.outputs.governance_global_relevant == 'true' ||
           steps.scope.outputs.docs_structure_changed == 'true')) || (github.event_name ==
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
@@ -227,13 +226,6 @@ jobs:
           steps.scope.outputs.feature_mechanization_relevant == 'true') || (github.event_name ==
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:feature-mechanization
-
-      - name: Validate feature implementation mechanization
-        if:
-          github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          steps.scope.outputs.feature_mechanization_relevant == 'true') || (github.event_name ==
-          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
-        run: pnpm docs:feature-mechanization:implementation
 
       - name: ADR-0000 traceability gate
         if:

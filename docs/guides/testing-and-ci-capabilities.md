@@ -301,6 +301,10 @@ Command semantics:
   route to direct adjacent `node --test` suites when that test file exists.
   The full `pnpm test:ci-tools` contract remains a broader merge/CI-tooling
   audit, not the default local proof for a one-file AI iteration.
+- Executable CI contract identities come from `EXECUTABLE_CI_TOOL_TESTS` in
+  `tools/ci/ci-tool-test-suite.mjs`. The scope API consumes that catalog directly;
+  `workflow-scope.json` names additional invalidating inputs, not another copy
+  of the executable test list.
 - Governance coverage/remediation report generator edits are routed to their
   exact `node --test scripts/generate-governance-*.test.cjs` suites. That keeps
   AI iteration on report rendering and DB-source normalization under the
@@ -685,7 +689,7 @@ Frontend Tests` lane and the main/manual `Full CI` baseline both set the same we
   merge-blocking governance subset from `pnpm verify:prepush` on PRs and
   pushes: changed-doc filename/frontmatter checks when docs changed, governance
   unit coverage, document-unit map, file fingerprints, ADR-0000 traceability,
-  feature-mechanization manifests, implementation mechanization, and QA
+  repository feature-mechanization manifests and QA
   artifact validation. On PRs those expensive groups are conditional:
   governance maps require `governance_global_relevant`,
   `governance_tooling_changed`, or `root_build_sensitive`; ADR-0000 requires
@@ -695,9 +699,17 @@ Frontend Tests` lane and the main/manual `Full CI` baseline both set the same we
   Workflow YAML edits are CI-policy changes for this scope as well: they keep
   PR metadata, changed-file validation, and CI contract coverage, but no longer
   imply Temporal or adapter-postgres runtime integration by themselves. Pushes
-  and manual full gates keep the full remote posture. The scope detector uses
+  and manual full gates keep the full remote posture for those checks. The scope detector uses
   shallow checkout plus `fetch-scope-base`; Temporal integration jobs keep
   shallow checkout because they do not compute changed-file diffs.
+
+DB-authoritative implementation mechanization runs locally before merge, not
+against the imported CI database. The exact base/head SHAs, command and result
+are recorded on the PR under the approved
+[single-team validation boundary](../planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md#single-team-validation-boundary).
+GitHub does not independently enforce this local control. Repository manifest
+validation is DB-free and does not alone trigger CI database preparation; other
+DB-backed governance checks retain their existing preparation.
 
 ## Notes
 

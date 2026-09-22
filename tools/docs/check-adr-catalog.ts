@@ -15,7 +15,7 @@
  * Usage:
  *   tsx tools/docs/check-adr-catalog.ts
  */
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, type Dirent } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -36,7 +36,7 @@ interface AdrFile {
 
 function collectAdrFiles(dir: string): AdrFile[] {
   const results: AdrFile[] = [];
-  let entries: ReturnType<typeof readdirSync>;
+  let entries: Dirent[];
   try {
     entries = readdirSync(dir, { withFileTypes: true });
   } catch {
@@ -86,7 +86,6 @@ function main(): void {
   for (const [key, paths] of byNum) {
     // Strip language tag (.en.md, .es.md …) before deduplicating
     const canonical = paths.filter((p) => !/\.[a-z]{2}\.md$/.test(basename(p)));
-    const translated = paths.filter((p) => /\.[a-z]{2}\.md$/.test(basename(p)));
     // Error only if there are multiple canonical (non-translated) files with the same number
     if (canonical.length > 1) {
       report.error(
