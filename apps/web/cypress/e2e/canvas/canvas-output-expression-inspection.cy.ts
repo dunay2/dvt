@@ -119,7 +119,13 @@ describe('Canvas output expression inspection', () => {
     cy.get(VIEWER).should('contain.text', 'concat(trim(customer), status)');
     cy.get(`${VIEWER} [data-slot="canvas-relational-expression-node"]`).should('have.length', 4);
 
-    cy.screenshot('output-expression-tree', { capture: 'viewport' });
+    cy.get(VIEWER).should(($panel) => {
+      const panel = $panel[0]!;
+      const bounds = panel.getBoundingClientRect();
+      expect(bounds.left).to.be.at.least(0);
+      expect(bounds.right).to.be.at.most(panel.ownerDocument.defaultView!.innerWidth);
+    });
+    cy.screenshot('output-expression-tree', { capture: 'fullPage' });
     cy.injectAxe();
     cy.checkA11y(VIEWER, { includedImpacts: ['serious', 'critical'] });
     cy.get(`${VIEWER} [data-slot="canvas-relational-expression-node"]`)
