@@ -28,7 +28,6 @@ const PR_QUALITY_GOVERNANCE_COMMANDS = [
   'pnpm docs:governance:unit-coverage',
   'pnpm traceability:adr0',
   'pnpm docs:feature-mechanization',
-  'pnpm docs:feature-mechanization:implementation',
   'pnpm qa:artifact:check',
   'pnpm arch:deps',
 ];
@@ -464,7 +463,7 @@ test('PR quality gate consumes prepush-equivalent scope outputs for expensive ga
   assertWorkflowContains(prQualityGate, 'steps.scope.outputs.code_validation_relevant');
 });
 
-test('PR quality gate prepares planning DB before DB-first feature implementation checks', () => {
+test('PR quality gate prepares planning DB for its remaining DB-backed consumers', () => {
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
   const preparePlanningDbAction = readFileSync(
     '.github/actions/prepare-planning-db/action.yml',
@@ -476,20 +475,20 @@ test('PR quality gate prepares planning DB before DB-first feature implementatio
   );
   const prepareDbIndex = prQualityGate.indexOf('Prepare planning DB for DB-backed validation');
   const prepareDbActionIndex = prQualityGate.indexOf('uses: ./.github/actions/prepare-planning-db');
-  const implementationGateIndex = prQualityGate.indexOf(
-    'pnpm docs:feature-mechanization:implementation'
-  );
+  const inventoryGateIndex = prQualityGate.indexOf('pnpm planning:db:inventory:check');
 
   assert.notEqual(prepareDbIndex, -1);
   assert.notEqual(prepareDbActionIndex, -1);
-  assert.notEqual(implementationGateIndex, -1);
+  assert.notEqual(inventoryGateIndex, -1);
   assert.ok(prepareDbIndex < prepareDbActionIndex);
-  assert.ok(prepareDbActionIndex < implementationGateIndex);
+  assert.ok(prepareDbActionIndex < inventoryGateIndex);
   assertWorkflowContains(prQualityGate, "github.event_name == 'push'");
+  assertWorkflowExcludes(prepareDbStep, 'feature_mechanization_relevant');
   assertWorkflowContains(
-    prQualityGate,
-    "steps.scope.outputs.feature_mechanization_relevant == 'true'"
+    prepareDbStep,
+    "steps.scope.outputs.planning_db_inventory_relevant == 'true'"
   );
+  assertWorkflowContains(prepareDbStep, "steps.scope.outputs.docs_structure_changed == 'true'");
   assertWorkflowContains(prepareDbStep, "steps.scope.outputs.governance_global_relevant == 'true'");
   assertWorkflowExcludes(prQualityGate, 'pnpm docs:dbt-roundtrip-capabilities:check');
   assertWorkflowExcludes(prQualityGate, 'DVT_GIT_EVIDENCE_REPO');

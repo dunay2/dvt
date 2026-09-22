@@ -1,15 +1,16 @@
-/** Owned concern: bind the existing governance gate to explicit candidate evidence. */
+/** Owned concern: keep authoritative implementation validation local, not CI-imported. */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import yaml from 'js-yaml';
+import validationPlan from '../../scripts/local-validation-plan.cjs';
 
 const workflow = yaml.load(readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8'));
 const steps = workflow.jobs['pr-checks'].steps;
-const step = steps.find((entry) => entry.name === 'Validate feature implementation mechanization');
+const scripts = JSON.parse(readFileSync('package.json', 'utf8')).scripts;
+const implementationCommand = 'pnpm docs:feature-mechanization:implementation';
 
 test('the normal mechanization test command includes its real Git regressions', () => {
-  const scripts = JSON.parse(readFileSync('package.json', 'utf8')).scripts;
   assert.ok(
     scripts['test:docs:feature-mechanization']
       .split(/\s+/)
@@ -17,19 +18,27 @@ test('the normal mechanization test command includes its real Git regressions', 
   );
 });
 
-test('the DB implementation gate receives the actual immutable comparison endpoints', () => {
-  assert.ok(step, 'Existing command must remain the gate');
-  assert.ok(step.run.split('\n').includes('pnpm docs:feature-mechanization:implementation'));
-  assert.match(step.env?.GIT_BASE ?? '', /github\.event\.pull_request\.base\.sha/);
-  assert.match(step.env?.GIT_BASE ?? '', /github\.event\.before/);
-  assert.equal(step.env?.GIT_HEAD, '${{ github.sha }}');
+test('PR and full CI retain manifest checks without claiming DB implementation validation', () => {
+  assert.ok(steps.some((entry) => entry.run === 'pnpm docs:feature-mechanization'));
+  assert.ok(steps.every((entry) => !entry.run?.includes(implementationCommand)));
+  assert.ok(scripts['ci:full'].split(' && ').includes('pnpm ci:docs'));
+  const docsCommands = scripts['ci:docs'].split(' && ');
+  assert.ok(docsCommands.includes('pnpm docs:feature-mechanization'));
+  assert.ok(!docsCommands.includes(implementationCommand));
 });
 
-test('manual validation requires a supplied base instead of an automatic empty comparison', () => {
-  assert.equal(workflow.on.workflow_dispatch.inputs.comparison_base?.type, 'string');
-  assert.equal(
-    step.env.GIT_BASE,
-    '${{ github.event.pull_request.base.sha || github.event.before || inputs.comparison_base }}'
-  );
-  assert.match(step.run.split('\n')[0], /^: "\$\{GIT_BASE:\?[^}]+\}"$/);
+test('local verification keeps the real implementation gate while committed CI tests stay DB-free', () => {
+  const files = ['apps/web/src/app/views/canvas/CanvasView.tsx'];
+  const commands = validationPlan.buildVerifyChangedPlan(files).map(validationPlan.commandLabel);
+  assert.ok(commands.includes(implementationCommand));
+  assert.ok(scripts['docs:gov'].split(' && ').includes(implementationCommand));
+  assert.match(scripts['docs:feature-mechanization:implementation'], /--implementation\b/u);
+  const focusedCommands = validationPlan
+    .buildFocusedChangedTestPlan(files)
+    .map(validationPlan.commandLabel);
+  assert.ok(!focusedCommands.includes(implementationCommand));
+});
+
+test('manual CI has no unused local-comparison input', () => {
+  assert.equal(workflow.on.workflow_dispatch.inputs.comparison_base, undefined);
 });
