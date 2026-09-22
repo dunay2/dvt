@@ -39,14 +39,14 @@ function sourceFieldCount(
   return Array.isArray(columns) ? columns.length : null;
 }
 
-function readLocatorBySource(root: CanvasRelationalTreeNode): ReadonlyMap<string, string> {
-  return new Map(
-    flattenCanvasRelationalTree(root).flatMap((node) =>
-      node.operator === 'read' && node.sourceRef != null
-        ? [[sourceKey(node.sourceRef), node.locator] as const]
-        : []
-    )
-  );
+function readLocatorBySource(root: CanvasRelationalTreeNode): ReadonlyMap<string, string | null> {
+  const locators = new Map<string, string | null>();
+  for (const node of flattenCanvasRelationalTree(root)) {
+    if (node.operator !== 'read' || node.sourceRef == null) continue;
+    const key = sourceKey(node.sourceRef);
+    locators.set(key, locators.has(key) ? null : node.locator);
+  }
+  return locators;
 }
 
 export function projectCanvasRelationalTreeCatalogue(
@@ -57,7 +57,8 @@ export function projectCanvasRelationalTreeCatalogue(
   }>
 ): readonly CanvasRelationalTreeCatalogueItem[] {
   const locatorBySource = readLocatorBySource(args.root);
-  return args.inputs.map((input) => ({
+  const sources = new Map(args.inputs.map((input) => [sourceKey(input.sourceRef), input]));
+  return [...sources.values()].map((input) => ({
     key: sourceKey(input.sourceRef),
     label: sourceLabel(input.sourceNodeId, input.sourceRef, args.nodes),
     sourceNodeId: input.sourceNodeId,

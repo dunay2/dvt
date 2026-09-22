@@ -1,13 +1,7 @@
 /** Owns PostgreSQL AST projection for the admitted SetRel family. */
 import { DvtSubstraitPostgresProjectionError } from './dvtProjection.js';
-import {
-  pgColumnRef,
-  pgCountRows,
-  pgRangeSubselect,
-  pgRangeVar,
-  pgRowNumberOverCount,
-  type PostgresAstNode,
-} from './postgresAst.js';
+import { buildGroupedRelationalPostgresAst } from './groupedRelationalPostgresAst.js';
+import { pgColumnRef, pgRangeSubselect, pgRangeVar, type PostgresAstNode } from './postgresAst.js';
 import { renderPostgresAst } from './renderPostgresAst.js';
 import {
   inspectDvtSubstraitSetComposition,
@@ -104,51 +98,23 @@ export function buildDvtSetPostgresAst(projection: DvtSubstraitSetProjection): P
 export function buildSetCompositionPostgresAst(
   composition: DvtSubstraitSetComposition
 ): PostgresAstNode {
-  const setAst = buildDvtSetPostgresAst(composition.baseProjection);
-  if (composition.kind === 'set') return setAst;
-  const groupFieldName = composition.groupFieldName;
-  const measureName = composition.measureName;
-  if (groupFieldName == null || measureName == null) {
-    throw new DvtSubstraitPostgresProjectionError(
-      'unsupported_shape',
-      'PostgreSQL Set wrapper projection requires canonical grouping metadata.'
-    );
-  }
-  const groupExpression = pgColumnRef(groupFieldName);
-  return {
-    SelectStmt: {
-      targetList: [
-        { ResTarget: { val: groupExpression } },
-        { ResTarget: { name: measureName, val: pgCountRows() } },
-        ...(composition.kind === 'window'
-          ? [
-              {
-                ResTarget: {
-                  name: composition.windowName,
-                  val: pgRowNumberOverCount(groupExpression),
-                },
-              },
-            ]
-          : []),
-      ],
-      fromClause: [pgRangeSubselect(setAst, 'set_input')],
-      groupClause: [groupExpression],
-      limitOption: 'LIMIT_OPTION_DEFAULT',
-      op: 'SETOP_NONE',
-    },
-  };
+  const ast = buildDvtSetPostgresAst(composition.baseProjection);
+  return composition.kind === 'set'
+    ? ast
+    : buildGroupedRelationalPostgresAst(ast, composition, 'set_input');
 }
 
 export async function projectDvtSetDraftToPostgresSql(
   draft: DvtSubstraitSetDraft
 ): Promise<Readonly<{ sql: string; projection: DvtSubstraitSetProjection; ast: PostgresAstNode }>> {
-  const composition = inspectDvtSubstraitSetComposition(draft);
-  if (composition == null) {
+  const inspection = inspectDvtSubstraitSetComposition(draft);
+  if (!inspection.ok) {
     throw new DvtSubstraitPostgresProjectionError(
       'unsupported_shape',
-      'PostgreSQL projection requires an admitted N-input SetRel shape.'
+      `PostgreSQL projection requires an admitted N-input SetRel shape: ${inspection.reason}.`
     );
   }
+  const composition = inspection.value;
   const ast = buildSetCompositionPostgresAst(composition);
   return { projection: composition.projection, ast, sql: await renderPostgresAst(ast) };
 }

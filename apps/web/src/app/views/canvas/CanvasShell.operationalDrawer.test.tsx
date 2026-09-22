@@ -90,7 +90,7 @@ describe('CanvasShell operational drawer registration', () => {
     expect(onRun).toHaveBeenCalledTimes(1);
   });
 
-  it('opens the Model editor from the composition badge without querying or writing', async () => {
+  it('opens the Model editor from the Model while edges stay plain dependencies', async () => {
     const fixture = buildSemanticWorkbenchFixture();
     const position = { x: 320, y: 140 };
     const onApplyNodeDraft = vi.fn();
@@ -124,13 +124,6 @@ describe('CanvasShell operational drawer registration', () => {
             data: buildCanvasDependencyEdgeData({
               sourceId: fixture.sources[0]!.id,
               targetId: fixture.transform.id,
-              composition: {
-                groupId: `relational-composition:${fixture.transform.id}`,
-                label: 'RELATE / COMPOSE',
-                memberCount: 2,
-                role: 'trunk-owner',
-                state: 'pending',
-              },
             }),
           },
         ],
@@ -146,10 +139,10 @@ describe('CanvasShell operational drawer registration', () => {
       getCanvasShellState().canvasViewportProps?.edges as
         Array<{ data?: Record<string, unknown> }> | undefined
     )?.[0];
-    const composition = readCanvasDependencyEdgeData(projectedEdge?.data)?.composition;
-    expect(composition?.onActivate).toBeTypeOf('function');
-    act(() => {
-      composition?.onActivate?.();
+    expect(readCanvasDependencyEdgeData(projectedEdge?.data)).not.toHaveProperty('composition');
+    expect(projectedNode?.data.onOpenNode).toBeTypeOf('function');
+    await act(async () => {
+      (projectedNode?.data.onOpenNode as () => void)();
     });
 
     expect(onInspectNode).not.toHaveBeenCalled();
@@ -160,6 +153,11 @@ describe('CanvasShell operational drawer registration', () => {
         .contribution?.tabs.some((tab) => tab.id === 'semantic')
     ).toBe(false);
     expect(projectedNode?.position).toBe(position);
+    expect(useOperationalDrawerContributionStore.getState().contribution?.tabs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'data:operation', label: 'Data · operation' }),
+      ])
+    );
     expect(previewTransformRows).not.toHaveBeenCalled();
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });

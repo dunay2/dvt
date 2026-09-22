@@ -8,6 +8,8 @@ import {
   type CanvasRelationalTreeNodeSize,
 } from './canvasRelationalTreeGeometryMetrics';
 
+export type CardPosition = Readonly<{ x: number; y: number }>;
+
 const NODE_HEIGHT = 76;
 const HORIZONTAL_PADDING = 36;
 const OUTPUT_GAP = 64;
@@ -48,11 +50,17 @@ export type CanvasRelationalTreeLayout = Readonly<{
 
 export function layoutCanvasRelationalTree(
   root: CanvasRelationalTreeNode,
-  sizes: ReadonlyMap<string, CanvasRelationalTreeNodeSize> = new Map()
+  sizes: ReadonlyMap<string, CanvasRelationalTreeNodeSize> = new Map(),
+  positions: ReadonlyMap<string, CardPosition> = new Map()
 ): CanvasRelationalTreeLayout {
   const { depths, rootDepth, rows, columnLeft, sizeFor } = measureCanvasRelationalTree(root, sizes);
   const nodes: CanvasRelationalTreePlacedNode[] = [];
   const edges: CanvasRelationalTreePlacedEdge[] = [];
+  const positionFor = (node: CanvasRelationalTreeNode): CardPosition =>
+    positions.get(node.relationId ?? node.locator) ?? {
+      x: columnLeft[depths.get(node.locator) ?? 0]!,
+      y: rows.get(node.locator)!,
+    };
 
   const place = (
     node: CanvasRelationalTreeNode,
@@ -62,8 +70,7 @@ export function layoutCanvasRelationalTree(
     siblingCount: number
   ): void => {
     const depth = depths.get(node.locator) ?? 0;
-    const x = columnLeft[depth]!;
-    const y = rows.get(node.locator)!;
+    const { x, y } = positionFor(node);
     nodes.push({
       node,
       x,
@@ -77,9 +84,7 @@ export function layoutCanvasRelationalTree(
     });
 
     node.children.forEach((child, index) => {
-      const childDepth = depths.get(child.node.locator) ?? 0;
-      const childX = columnLeft[childDepth]!;
-      const childY = rows.get(child.node.locator)!;
+      const { x: childX, y: childY } = positionFor(child.node);
       edges.push({
         key: `${node.locator}:${child.role}:${child.ordinal}`,
         parentLocator: node.locator,
@@ -103,7 +108,9 @@ export function layoutCanvasRelationalTree(
     height: NODE_HEIGHT,
   };
   return {
-    width: output.x + OUTPUT_WIDTH + HORIZONTAL_PADDING,
+    width:
+      Math.max(output.x + OUTPUT_WIDTH, ...nodes.map((node) => node.x + node.width)) +
+      HORIZONTAL_PADDING,
     height:
       Math.max(...nodes.map((node) => node.y + node.height), output.y + output.height) +
       BOTTOM_PADDING,

@@ -12,7 +12,6 @@ import type { CanvasRelationalOperandPosition } from './CanvasRelationalTreeOper
 import { CanvasRelationalTreeOperationShelf } from './CanvasRelationalTreeOperationShelf';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
-import { CanvasRelationalTreeOperatorTools } from './CanvasRelationalTreeOperatorTools';
 
 export function CanvasRelationalTreeBlockCanvas({
   appendInput,
@@ -34,7 +33,8 @@ export function CanvasRelationalTreeBlockCanvas({
   onSelectOperation,
   initiallyExpanded = false,
   onPendingConditionChange,
-  initialRelationId = null,
+  selectedRelationId,
+  onSelectRelation,
   onRemove,
 }: Readonly<{
   appendInput: CanvasDvtCompositionInput | null;
@@ -58,11 +58,11 @@ export function CanvasRelationalTreeBlockCanvas({
   onSelectOperation: (operation: CanvasRelationalOperation) => void;
   initiallyExpanded?: boolean;
   onPendingConditionChange?: (pending: boolean) => void;
-  initialRelationId?: string | null;
+  selectedRelationId: string | null;
+  onSelectRelation: (relationId: string | null) => void;
   onRemove: (relationId: string, keep?: 'left' | 'right') => void;
 }>): JSX.Element {
   const hasOperands = selectedInputIds.length > 0;
-  const [selectedRelationId, setSelectedRelationId] = useState(initialRelationId);
   const [expanded, setExpanded] = useState(initiallyExpanded);
 
   return (
@@ -71,23 +71,18 @@ export function CanvasRelationalTreeBlockCanvas({
       aria-label={copy.relationalTreeCanvasLabel}
       className="flex min-h-0 min-w-0 flex-col overflow-hidden"
     >
-      {
-        <CanvasRelationalTreeOperationShelf
-          choices={choices}
-          copy={copy}
-          hasOperands={hasOperands}
-          operation={operation}
-          selectedInputCount={selectedInputIds.length}
-          onSelectOperation={onSelectOperation}
-        >
-          <CanvasRelationalTreeOperatorTools
-            draft={joinDraft}
-            editable
-            onChange={onChangeJoinDraft}
-          />
-        </CanvasRelationalTreeOperationShelf>
-      }
-      <div className="relative flex min-h-0 flex-1 flex-col">
+      <CanvasRelationalTreeOperationShelf
+        choices={choices}
+        copy={copy}
+        hasOperands={hasOperands}
+        operation={operation}
+        selectedInputCount={selectedInputIds.length}
+        onSelectOperation={onSelectOperation}
+        draft={joinDraft}
+        editable
+        onChangeDraft={onChangeJoinDraft}
+      />
+      <div className="canvas-operation-workspace relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
         <CanvasRelationalTreeDraftViewport
           copy={copy}
           edges={edges}
@@ -103,10 +98,10 @@ export function CanvasRelationalTreeBlockCanvas({
           onSelectInput={onSelectInput}
           onSelectOperation={onSelectOperation}
           selectedRelationId={selectedRelationId}
-          onSelectRelation={setSelectedRelationId}
+          onSelectRelation={onSelectRelation}
           onRemove={onRemove}
           onExpandRelation={(relationId) => {
-            setSelectedRelationId(relationId);
+            onSelectRelation(relationId);
             setExpanded(true);
           }}
         />

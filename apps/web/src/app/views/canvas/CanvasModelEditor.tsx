@@ -46,6 +46,8 @@ export function CanvasModelEditor({
   draftStatus,
   query,
   preparePreview,
+  operationDataHost,
+  onOpenOperationData,
   onClose,
   active = true,
   onSelect,
@@ -62,6 +64,8 @@ export function CanvasModelEditor({
   draftStatus: CanvasDraftStatusState;
   query?: ICanvasTransformDataSampleQueryPort;
   preparePreview?: CanvasModelPreviewPreparation;
+  operationDataHost?: HTMLDivElement | null;
+  onOpenOperationData?: () => void;
   onClose: () => void;
   active?: boolean;
   onSelect: () => void;
@@ -230,7 +234,7 @@ export function CanvasModelEditor({
     return () => window.removeEventListener('beforeunload', preventLostDraft);
   }, [draftStatus.persistence, saving]);
   const tabs = [
-    { id: 'editor', label: copy.editor, icon: GitBranch },
+    { id: 'editor', label: transformNode.name, icon: GitBranch },
     { id: 'sql', label: copy.sql, icon: Braces },
     { id: 'data', label: copy.data, icon: Table2 },
   ] as const;
@@ -249,17 +253,13 @@ export function CanvasModelEditor({
         data-slot="canvas-model-toolbar"
         className="flex shrink-0 flex-wrap items-center gap-x-3 border-b border-(--border-subtle) bg-(--surface-shell) px-3"
       >
-        <Table2 className="size-4 shrink-0 text-(--primary)" aria-hidden="true" />
-        <h1
-          className="max-w-48 truncate text-sm font-semibold"
-          title={`${canvasName} / ${transformNode.name}`}
-        >
+        <h1 className="sr-only" title={`${canvasName} / ${transformNode.name}`}>
           {transformNode.name}
         </h1>
         <div
           role="tablist"
           aria-label={transformNode.name}
-          className="flex min-w-0 overflow-x-auto self-stretch"
+          className="workspace-navigation-tabs self-stretch"
         >
           {tabs.map(({ id, label, icon: Icon }, index) => (
             <button
@@ -272,7 +272,8 @@ export function CanvasModelEditor({
               tabIndex={view === id ? 0 : -1}
               data-slot="canvas-model-view-tab"
               data-view={id}
-              className="flex h-11 shrink-0 items-center gap-2 border-b-2 border-transparent px-3 text-xs font-medium text-(--text-muted) hover:text-(--text-strong) aria-selected:border-(--primary) aria-selected:text-(--text-strong) focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
+              className="workspace-navigation-tab"
+              title={label}
               onClick={() => requestNavigation(id)}
               onKeyDown={(event) => {
                 const next =
@@ -291,8 +292,8 @@ export function CanvasModelEditor({
                 document.getElementById(`model-tab-${tabs[next]!.id}`)?.focus();
               }}
             >
-              <Icon aria-hidden="true" className="size-4" />
-              {label}
+              <Icon aria-hidden="true" className="size-4 shrink-0" />
+              <span className="max-w-64 truncate">{label}</span>
             </button>
           ))}
         </div>
@@ -323,7 +324,13 @@ export function CanvasModelEditor({
           copy={treeCopy}
           authoring={authoring}
           actionsHost={actionsHost}
-          preview={{ canvasId, query, preparePreview }}
+          preview={{
+            canvasId,
+            query,
+            preparePreview,
+            dataHost: active && view === 'editor' ? operationDataHost : null,
+            onOpenData: active && view === 'editor' ? onOpenOperationData : undefined,
+          }}
         />
       </div>
       {view === 'sql' ? (

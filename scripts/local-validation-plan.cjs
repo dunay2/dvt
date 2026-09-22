@@ -7,6 +7,19 @@ const { classifyRepositoryChangedScope } = require('../tools/ci/repository-chang
 
 const repoRoot = path.resolve(__dirname, '..');
 const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
+  'scripts/check-feature-mechanization.cjs': 'scripts/check-feature-mechanization.test.cjs',
+  'scripts/check-feature-mechanization.test.cjs': 'scripts/check-feature-mechanization.test.cjs',
+  'scripts/lib/feature-mechanization-manifest.cjs': 'scripts/check-feature-mechanization.test.cjs',
+  'scripts/lib/feature-mechanization-db-reader.cjs':
+    'scripts/lib/feature-mechanization-db-reader.test.cjs',
+  'scripts/lib/feature-mechanization-db-reader.test.cjs':
+    'scripts/lib/feature-mechanization-db-reader.test.cjs',
+  'scripts/lib/feature-mechanization-git-diff.cjs':
+    'scripts/lib/feature-mechanization-git-diff.test.cjs',
+  'scripts/lib/feature-mechanization-git-diff.test.cjs':
+    'scripts/lib/feature-mechanization-git-diff.test.cjs',
+  'scripts/feature-mechanization-test-routing.test.cjs':
+    'scripts/feature-mechanization-test-routing.test.cjs',
   'scripts/ai-preflight.cjs': 'scripts/ai-preflight.test.cjs',
   'scripts/ai-preflight.test.cjs': 'scripts/ai-preflight.test.cjs',
   'scripts/closeout-changed.cjs': 'scripts/closeout-changed.test.cjs',

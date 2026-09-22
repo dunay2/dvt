@@ -158,6 +158,34 @@ retains all primary files, assertions, isolated workers and existing commands.
 | Temporal time-skipping integration | `pnpm test:adapter-temporal:integration`                                   | Temporal worker/workflow integration                 | [`package.json`](../../package.json)                                                                   |
 | Coverage run                       | `pnpm test:coverage`                                                       | Recursive workspace coverage                         | [`package.json`](../../package.json)                                                                   |
 
+## Persisted Semantic Editing Live Proof
+
+Use the existing protected-runtime runner with an isolated PostgreSQL database
+named `dvt`, supplied through `DATABASE_URL`. The runner recreates its source
+fixtures in `raw` and `public`; never point this proof at an application or
+Planning DB database. It owns a separate publication schema and starts real auth,
+API, Temporal worker and Web processes. Windows can select native Chrome with
+`DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME=native`.
+
+```bash
+pnpm --filter @dvt/web test:e2e:selected-closure:live --spec apps/web/cypress/e2e/canvas/canvas-semantic-persistence-run-live.cy.ts
+pnpm --filter @dvt/web test:e2e:selected-closure:live --spec apps/web/cypress/e2e/canvas/canvas-semantic-unsupported-live.cy.ts
+```
+
+The positive story edits Sort/Fetch over LEFT JOIN, applies and reopens the saved
+Substrait, queries selected and model rows, then starts the accepted Preview plan
+and verifies its PostgreSQL publication. An unmatched row distinguishes LEFT
+from INNER; exact query order and row membership distinguish ordering and limit
+errors. Published tables are compared without assuming physical row order.
+The selected intermediate Sort must return three rows while the final Fetch
+returns two, so ignoring the selected relation cannot pass as model data.
+
+The negative story preserves a canonical but unsupported Sort selector, requires
+explicit query rejection, and verifies that no Run was created. Generic Cypress
+discovery follows the existing live-only skip convention when no runtime is
+configured. Such skips are not proof: closeout requires both explicit live runs
+with zero pending or skipped tests. Partial runtime configuration fails.
+
 ## Determinism and Replay
 
 | Capability                           | Command                 | Source                                                                                                         |
@@ -273,6 +301,10 @@ Command semantics:
   route to direct adjacent `node --test` suites when that test file exists.
   The full `pnpm test:ci-tools` contract remains a broader merge/CI-tooling
   audit, not the default local proof for a one-file AI iteration.
+- Executable CI contract identities come from `EXECUTABLE_CI_TOOL_TESTS` in
+  `tools/ci/ci-tool-test-suite.mjs`. The scope API consumes that catalog directly;
+  `workflow-scope.json` names additional invalidating inputs, not another copy
+  of the executable test list.
 - Governance coverage/remediation report generator edits are routed to their
   exact `node --test scripts/generate-governance-*.test.cjs` suites. That keeps
   AI iteration on report rendering and DB-source normalization under the
@@ -657,7 +689,7 @@ Frontend Tests` lane and the main/manual `Full CI` baseline both set the same we
   merge-blocking governance subset from `pnpm verify:prepush` on PRs and
   pushes: changed-doc filename/frontmatter checks when docs changed, governance
   unit coverage, document-unit map, file fingerprints, ADR-0000 traceability,
-  feature-mechanization manifests, implementation mechanization, and QA
+  repository feature-mechanization manifests and QA
   artifact validation. On PRs those expensive groups are conditional:
   governance maps require `governance_global_relevant`,
   `governance_tooling_changed`, or `root_build_sensitive`; ADR-0000 requires
@@ -667,9 +699,17 @@ Frontend Tests` lane and the main/manual `Full CI` baseline both set the same we
   Workflow YAML edits are CI-policy changes for this scope as well: they keep
   PR metadata, changed-file validation, and CI contract coverage, but no longer
   imply Temporal or adapter-postgres runtime integration by themselves. Pushes
-  and manual full gates keep the full remote posture. The scope detector uses
+  and manual full gates keep the full remote posture for those checks. The scope detector uses
   shallow checkout plus `fetch-scope-base`; Temporal integration jobs keep
   shallow checkout because they do not compute changed-file diffs.
+
+DB-authoritative implementation mechanization runs locally before merge, not
+against the imported CI database. The exact base/head SHAs, command and result
+are recorded on the PR under the approved
+[single-team validation boundary](../planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md#single-team-validation-boundary).
+GitHub does not independently enforce this local control. Repository manifest
+validation is DB-free and does not alone trigger CI database preparation; other
+DB-backed governance checks retain their existing preparation.
 
 ## Notes
 

@@ -6,6 +6,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CanvasRelationalTreeCardMenu } from './CanvasRelationalTreeCardMenu';
+import { CanvasRelationalTreeLayout } from './CanvasRelationalTreeLayout';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 
 const node: CanvasRelationalTreeNode = {
@@ -67,5 +69,47 @@ describe('CanvasRelationalTreeCardMenu', () => {
     expect(remove).not.toBeNull();
     await act(async () => fireEvent.click(remove!));
     expect(onRemove).toHaveBeenCalledWith(node.relationId);
+  });
+
+  it('keeps portalled menu actions usable after a cancelled card drag', async () => {
+    const onExpand = vi.fn();
+    act(() =>
+      root.render(
+        <CanvasRelationalTreeLayout
+          root={node}
+          outputName="Model"
+          selectedLocator={node.locator}
+          copy={resolveCanvasViewCopy('en')}
+          onSelect={vi.fn()}
+          onExpand={onExpand}
+        />
+      )
+    );
+    const card = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-relational-tree-node"]'
+    )!;
+    Object.assign(card, {
+      setPointerCapture: vi.fn(),
+      releasePointerCapture: vi.fn(),
+      hasPointerCapture: () => true,
+    });
+    for (const type of ['pointerdown', 'pointermove', 'pointercancel']) {
+      const event = new MouseEvent(type, {
+        bubbles: true,
+        button: 0,
+        clientX: type === 'pointerdown' ? 100 : 140,
+        clientY: 100,
+      });
+      Object.defineProperty(event, 'pointerId', { value: 1 });
+      act(() => {
+        card.dispatchEvent(event);
+      });
+    }
+    await act(async () => fireEvent.contextMenu(card));
+    const edit = document.body.querySelector<HTMLElement>(
+      '[data-slot="canvas-relational-edit-operation"]'
+    )!;
+    await act(async () => fireEvent.click(edit));
+    expect(onExpand).toHaveBeenCalledExactlyOnceWith(node.locator);
   });
 });

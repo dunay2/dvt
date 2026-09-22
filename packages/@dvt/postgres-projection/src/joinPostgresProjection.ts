@@ -21,7 +21,6 @@ import {
   pgFp64Literal,
   type PostgresComparisonOperator,
 } from './postgresPredicateAst.js';
-import { renderPostgresAst } from './renderPostgresAst.js';
 import {
   reduceDvtSubstraitJoinConditions,
   isDvtSubstraitJoinNullCondition,
@@ -31,8 +30,6 @@ import {
   resolveDvtSubstraitJoinUnaryFunction,
   type DvtSubstraitJoinPredicateOperand,
 } from './substraitJoinOperandReader.js';
-import { inspectDvtSubstraitJoinDraft } from './substraitJoinReader.js';
-import type { DvtSubstraitJoinDraft } from './substraitJoinReadModel.js';
 import {
   isDvtSubstraitSemiAntiJoin,
   type DvtSubstraitNInputJoinProjection,
@@ -42,24 +39,6 @@ export function nInputJoinAlias(inputIndex: number): string {
   if (inputIndex === 0) return 'left_source';
   if (inputIndex === 1) return 'right_source';
   return `join_source_${inputIndex + 1}`;
-}
-
-export async function projectDvtJoinDraftToPostgresSql(draft: DvtSubstraitJoinDraft): Promise<
-  Readonly<{
-    sql: string;
-    projection: DvtSubstraitNInputJoinProjection;
-    ast: PostgresAstNode;
-  }>
-> {
-  const inspection = inspectDvtSubstraitJoinDraft(draft);
-  if (!inspection.ok) {
-    throw new DvtSubstraitPostgresProjectionError(
-      'unsupported_shape',
-      'PostgreSQL projection requires an admitted N-input JOIN shape.'
-    );
-  }
-  const ast = buildNInputJoinPostgresAst(inspection.projection);
-  return { projection: inspection.projection, ast, sql: await renderPostgresAst(ast) };
 }
 
 export const POSTGRES_JOIN_COMPARISON: Readonly<

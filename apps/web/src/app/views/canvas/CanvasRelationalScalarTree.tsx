@@ -31,7 +31,7 @@ export function CanvasRelationalScalarTree({
       >
         <div className={compact ? 'flex h-8 min-w-0 items-center' : 'py-1'}>
           <span
-            data-slot="canvas-join-expression-node"
+            data-slot="canvas-relational-expression-node"
             data-kind={node.data.semanticKind}
             data-semantic-node-id={id}
             title={node.data.detail}
@@ -57,7 +57,7 @@ export function CanvasRelationalScalarTree({
   };
   return (
     <div
-      data-slot="canvas-join-expression-tree"
+      data-slot="canvas-relational-expression-tree"
       data-relation-id={graph.relationId}
       className={
         compact

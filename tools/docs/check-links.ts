@@ -160,7 +160,8 @@ export function loadGeneratedPublicationRoutes(): Set<string> {
     if (artifactClass.publication?.enabled !== true) continue;
     for (const artifact of artifactClass.artifacts ?? []) {
       const match = /^\.generated-docs\/(.+\.md)$/u.exec(artifact.replace(/\\/gu, '/'));
-      if (match && !/[*?]/u.test(match[1])) routes.add(resolve(DOCS_DIR, match[1]));
+      const route = match?.[1];
+      if (route != null && !/[*?]/u.test(route)) routes.add(resolve(DOCS_DIR, route));
     }
   }
   return routes;

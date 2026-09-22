@@ -1,8 +1,8 @@
 export {
   type DvtSubstraitLiteralValue,
   dvtSubstraitExpressionReader,
-  resolvedFunction,
 } from './substraitExpressionReader.js';
+export { resolveFunctionReference } from './substrait-profile/functionReference.js';
 export {
   createDvtSubstraitFetchDraft,
   createDvtSubstraitSortDraft,
@@ -108,8 +108,8 @@ export {
   nInputJoinAlias,
   POSTGRES_JOIN_COMPARISON,
   buildNInputJoinPostgresAst,
-  projectDvtJoinDraftToPostgresSql,
 } from './joinPostgresProjection.js';
+export { projectDvtJoinDraftToPostgresSql } from './projectJoinDraft.js';
 export {
   buildConnectedFieldPostgresAst,
   buildPilotOutputExpression,

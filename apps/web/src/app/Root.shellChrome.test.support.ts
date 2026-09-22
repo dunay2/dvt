@@ -44,7 +44,12 @@ function expectRootShellHeaderChrome(container: ParentNode, mode: RootShellHeade
     '[data-slot="shell-menu-trigger"]'
   );
 
-  expect(shellTopBar.textContent).toContain('Raven');
+  const appMenu = requireElement<HTMLButtonElement>(
+    shellTopBar,
+    '[data-slot="shell-app-menu-trigger"]'
+  );
+  expect(appMenu.getAttribute('aria-label')).toBe('Raven');
+  expect(appMenu.textContent).toBe('');
   expect(shellTopBar.textContent).toContain('View');
   expect(shellTopBar.className).toContain('bg-[var(--surface-shell)]');
   expect(shellTopBar.querySelector('[data-slot="shell-workspace-selectors"]')).toBeNull();

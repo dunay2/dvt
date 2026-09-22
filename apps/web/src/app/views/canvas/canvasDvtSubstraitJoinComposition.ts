@@ -88,6 +88,8 @@ import {
 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { resolveCanvasDvtJoinOccurrenceIdentities } from './relational-source-occurrence/joinOccurrenceIdentity';
+import { resolveCanvasDvtJoinPhysicalBindings } from './relational-source-occurrence/joinPhysicalBindings';
 import {
   createDvtSubstraitFieldReference,
   createDvtSubstraitRequiredI64Type,
@@ -98,10 +100,7 @@ import {
   removeDvtSubstraitCountExtension,
 } from './canvasDvtSubstraitAggregation';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import {
-  hasSameConnectedSourceRef,
-  resolveJoinInput,
-} from './canvasDvtSubstraitJoinSourceResolution';
+import { hasSameConnectedSourceRef } from './canvasDvtSubstraitJoinSourceResolution';
 import {
   DVT_SUBSTRAIT_INNER_JOIN_LEFT_FIELD_NAMES as LEFT_FIELD_NAMES,
   DVT_SUBSTRAIT_INNER_JOIN_OUTPUT_FIELDS as INNER_JOIN_OUTPUT_FIELDS,
@@ -365,6 +364,7 @@ type JoinBuildSource = Readonly<{
   sourceRef: ConnectedSourceRef;
 }>;
 type JoinBuildInput = Readonly<{
+  relationId?: string;
   source: JoinBuildSource;
   fields: readonly string[];
   fieldTypes?: readonly DvtSubstraitJoinDataType[];
@@ -381,75 +381,6 @@ type JoinBuildPredicateOperand = DvtSubstraitJoinOperand<
 type JoinBuildPredicate = Readonly<{
   conditions: readonly DvtSubstraitJoinCondition<JoinBuildPredicateOperand>[];
 }>;
-
-function sameInputShape(
-  left: Readonly<{
-    schema: string;
-    table: string;
-    sourceRef: ConnectedSourceRef;
-    fields: readonly Readonly<{
-      name: string;
-      dataType: DvtSubstraitJoinDataType;
-      nullable: boolean;
-    }>[];
-  }>,
-  right: JoinBuildInput
-): boolean {
-  return (
-    left.schema === right.source.schema &&
-    left.table === right.source.table &&
-    hasSameConnectedSourceRef(left.sourceRef, right.source.sourceRef) &&
-    left.fields.map((field) => field.name).join('\u0000') === right.fields.join('\u0000') &&
-    left.fields.map((field) => field.dataType).join('\u0000') ===
-      resolveJoinFieldTypes(right).join('\u0000') &&
-    left.fields.map((field) => field.nullable).join('\u0000') ===
-      resolveJoinFieldNullabilities(right).join('\u0000')
-  );
-}
-
-function matchesSemanticInput(
-  semantic: DvtSubstraitNInputJoinProjection['inputs'][number],
-  graph: DvtSubstraitJoinInput
-): boolean {
-  return (
-    semantic.schema === graph.source.schema &&
-    semantic.table === graph.source.table &&
-    hasSameConnectedSourceRef(semantic.sourceRef, graph.source.sourceRef) &&
-    semantic.fields.map((field) => field.name).join('\u0000') === graph.fields.join('\u0000')
-  );
-}
-
-function resolveGraphInputs(args: {
-  targetNode: CanonicalNode;
-  nodes: readonly CanonicalNode[];
-  edges: readonly CanonicalEdge[];
-  semanticInputs: DvtSubstraitNInputJoinProjection['inputs'];
-}): DvtSubstraitJoinInput[] | null {
-  const incomingIds = [
-    ...new Set(
-      args.edges.filter((edge) => edge.targetId === args.targetNode.id).map((edge) => edge.sourceId)
-    ),
-  ];
-  if (incomingIds.length !== args.semanticInputs.length) return null;
-  const candidates = incomingIds
-    .map((nodeId) => args.nodes.find((node) => node.id === nodeId))
-    .map((node) => (node == null ? null : resolveJoinInput(node)))
-    .filter((input): input is DvtSubstraitJoinInput => input != null);
-  if (candidates.length !== args.semanticInputs.length) return null;
-
-  const used = new Set<string>();
-  const resolved: DvtSubstraitJoinInput[] = [];
-  for (const semantic of args.semanticInputs) {
-    const matches = candidates.filter(
-      (candidate) => !used.has(candidate.source.nodeId) && matchesSemanticInput(semantic, candidate)
-    );
-    if (matches.length !== 1) return null;
-    const match = matches[0]!;
-    used.add(match.source.nodeId);
-    resolved.push(match);
-  }
-  return resolved;
-}
 
 export function resolveDvtSubstraitNInputJoinEntry(args: {
   targetNode: CanonicalNode;
@@ -483,7 +414,7 @@ export function resolveDvtSubstraitNInputJoinEntry(args: {
       : draft;
   const inspection = inspectDvtSubstraitJoinProjection(joinDraft);
   if (!inspection.ok) return null;
-  const graphInputs = resolveGraphInputs({
+  const graphInputs = resolveCanvasDvtJoinPhysicalBindings({
     ...args,
     semanticInputs: inspection.projection.inputs,
   });
@@ -778,7 +709,7 @@ function samePrefix(
 ): boolean {
   if (previous.inputs.length < count || inputs.length < count) return false;
   for (let index = 0; index < count; index += 1) {
-    if (!sameInputShape(previous.inputs[index]!, inputs[index]!)) return false;
+    if (previous.inputs[index]!.relationId !== inputs[index]!.relationId) return false;
   }
   return true;
 }
@@ -814,16 +745,6 @@ function createDvtSubstraitNInputJoinDraft(args: {
   );
   assertCompatibleSourceRefs(args.inputs.map((input) => input.source));
   if (
-    new Set(
-      args.inputs.map(
-        (input) =>
-          `${input.source.sourceRef.connectionRef.connectionId}:${input.source.sourceRef.sourceObjectId}`
-      )
-    ).size !== args.inputs.length
-  ) {
-    throw new Error('VTX2 JOIN requires distinct source identities.');
-  }
-  if (
     args.outputs.some(
       (output) =>
         output.name.length === 0 ||
@@ -840,20 +761,18 @@ function createDvtSubstraitNInputJoinDraft(args: {
 
   const previous =
     args.previousDraft == null ? null : inspectNInputJoinStructure(args.previousDraft);
-  const inputIdentities = args.inputs.map((input, inputIndex) => {
-    const prior = previous?.inputs.find((candidate) => sameInputShape(candidate, input));
-    const relationId = prior?.relationId ?? allocateDvtRelationId();
-    const priorFields = new Map(prior?.fields.map((field) => [field.name, field.fieldId] as const));
-    return {
-      relationId,
+  const inputIdentities = resolveCanvasDvtJoinOccurrenceIdentities(
+    args.inputs.map((input, inputIndex) => ({
+      source: input.source,
+      relationId: input.relationId,
       fields: input.fields.map((name, fieldIndex) => ({
         name,
-        fieldId: priorFields.get(name) ?? allocateDvtFieldId(),
         dataType: fieldTypesByInput[inputIndex]![fieldIndex]!,
         nullable: fieldNullabilitiesByInput[inputIndex]![fieldIndex]!,
       })),
-    };
-  });
+    })),
+    previous
+  );
 
   const originByLocator = new Map<string, JoinOriginField>();
   inputIdentities.forEach((identity, inputIndex) => {
@@ -1120,7 +1039,10 @@ function createDvtSubstraitNInputJoinDraft(args: {
       relationId: inputIdentities[index]!.relationId,
       relAnchor: index + 1,
       sourceRef: input.source.sourceRef,
-      displayName: input.source.table,
+      displayName:
+        args.previousDraft?.sidecar.relations.find(
+          (relation) => relation.relationId === inputIdentities[index]!.relationId
+        )?.displayName ?? input.source.table,
     })),
     ...joinRelationIds.map((relationId, stageIndex) => ({
       relationId,
@@ -1179,15 +1101,19 @@ function createCollisionSafeOutputName(args: {
   input: JoinBuildSource;
   sourceName: string;
   usedNames: ReadonlySet<string>;
-}): string | null {
-  return (
+}): string {
+  const available =
     [
       args.sourceName,
       `${args.input.table}_${args.sourceName}`,
       `${args.input.schema}_${args.input.table}_${args.sourceName}`,
       ...(args.input.nodeId == null ? [] : [`${args.input.nodeId}_${args.sourceName}`]),
-    ].find((candidate) => !args.usedNames.has(candidate)) ?? null
-  );
+    ].find((candidate) => !args.usedNames.has(candidate)) ?? null;
+  if (available != null) return available;
+  const prefix = `${args.input.table}_${args.sourceName}`;
+  let suffix = 2;
+  while (args.usedNames.has(`${prefix}_${suffix}`)) suffix += 1;
+  return `${prefix}_${suffix}`;
 }
 
 export function createDvtSubstraitStringJoinDraft(
@@ -1216,7 +1142,6 @@ export function createDvtSubstraitStringJoinDraft(
         sourceName: field,
         usedNames,
       });
-      if (name == null) throw new Error('VTX2 JOIN could not create a collision-safe output.');
       usedNames.add(name);
       outputs.push({ name, source: { inputIndex, fieldName: field } });
     });
@@ -1298,6 +1223,7 @@ function locatorForFieldId(
 
 function buildInputsFromProjection(projection: DvtSubstraitNInputJoinProjection): JoinBuildInput[] {
   return projection.inputs.map((input) => ({
+    relationId: input.relationId,
     source: {
       schema: input.schema,
       table: input.table,
@@ -1453,9 +1379,6 @@ export function appendDvtSubstraitJoinInput(
   const firstInput = projection.inputs[0];
   if (
     firstInput == null ||
-    projection.inputs.some((existing) =>
-      hasSameConnectedSourceRef(existing.sourceRef, input.source.sourceRef)
-    ) ||
     !hasSameConnectionRef(
       firstInput.sourceRef.connectionRef,
       input.source.sourceRef.connectionRef
@@ -1499,7 +1422,6 @@ export function appendDvtSubstraitJoinInput(
         sourceName: field,
         usedNames,
       });
-      if (name == null) return draft;
       usedNames.add(name);
       outputs.push({ name, source: { inputIndex: newInputIndex, fieldName: field } });
     }
@@ -1895,9 +1817,11 @@ export function setDvtSubstraitJoinConnectionFieldSelected(args: {
   );
   const inspection = inspectDvtSubstraitJoinProjection(args.draft);
   if (!sourceRef.success || !inspection.ok) return args.draft;
-  const inputIndex = inspection.projection.inputs.findIndex((input) =>
+  const matching = inspection.projection.inputs.filter((input) =>
     hasSameConnectedSourceRef(input.sourceRef, sourceRef.data)
   );
+  if (matching.length !== 1) return args.draft;
+  const inputIndex = inspection.projection.inputs.indexOf(matching[0]!);
   const field = inspection.projection.inputs[inputIndex]?.fields.find(
     (candidate) => candidate.name === args.columnName
   );

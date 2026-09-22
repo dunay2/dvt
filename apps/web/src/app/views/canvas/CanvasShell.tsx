@@ -29,7 +29,11 @@ import { buildGraphDraftWorkspaceFileCodeContributions } from './graphDraftWorks
 import { findCanvasGraphNodeElement } from './canvasNodeWorkbenchDomGeometry';
 import { useCanvasNodeDataSample } from './useCanvasNodeDataSample';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
-import { projectCanvasRelationalCompositionEdgeInteractions } from './canvasRelationalCompositionEdgeInteraction';
+import { useUiLayoutStore } from '../../stores/uiLayoutStore';
+import {
+  useOperationalDrawerContributionStore,
+  type OperationalDrawerTab,
+} from '../../components/shell/operationalDrawerContributionStore';
 
 type WorkbenchOpener = Readonly<{
   element: HTMLElement | null;
@@ -84,6 +88,37 @@ export default function CanvasShell({
   });
   const [relationalTreeTransformId, setRelationalTreeTransformId] = useState<string | null>(null);
   const [modelTabActive, setModelTabActive] = useState(true);
+  const [operationDataHost, setOperationDataHost] = useState<HTMLDivElement | null>(null);
+  const selectDrawerTab = useOperationalDrawerContributionStore(
+    (state) => state.selectOperationalDrawerTab
+  );
+  const showBottomDrawer = useUiLayoutStore((state) => state.showBottomDrawer);
+  const openOperationData = useCallback(() => {
+    selectDrawerTab('data:operation');
+    const drawer = useUiLayoutStore.getState();
+    showBottomDrawer(
+      drawer.bottomDrawerVisible && drawer.bottomDrawerHeight >= 200
+        ? drawer.bottomDrawerHeight
+        : 260
+    );
+  }, [selectDrawerTab, showBottomDrawer]);
+  const operationDataTab = useMemo<OperationalDrawerTab>(() => {
+    const semanticCopy = resolveCanvasSemanticEditorCopy(applicationLanguage);
+    return {
+      id: 'data:operation',
+      label: semanticCopy.operationData,
+      count: null,
+      content: (
+        <div
+          ref={setOperationDataHost}
+          data-slot="canvas-operation-data-host"
+          className="h-full min-h-0 min-w-0"
+        >
+          <p className="p-4 text-sm text-(--text-muted)">{semanticCopy.selectOperation}</p>
+        </div>
+      ),
+    };
+  }, [applicationLanguage]);
   const [initialModelView, setInitialModelView] = useState<CanvasModelView>('editor');
   const [modelViewRequestId, setModelViewRequestId] = useState(0);
   const relationalTreeTransformIds = useMemo(
@@ -330,11 +365,7 @@ export default function CanvasShell({
           data: projectedData,
         };
       }),
-      edges: projectCanvasRelationalCompositionEdgeInteractions({
-        edges: graph.edges,
-        relationalTreeTargetNodeIds: relationalTreeTransformIds,
-        onActivate: openRelationalTree,
-      }),
+      edges: graph.edges,
     }),
     [
       applicationLanguage,
@@ -422,6 +453,9 @@ export default function CanvasShell({
           onStartRun={chromeCommands.onRun}
           selectionRecoveryCommands={chromeCommands.executionSelectionRecovery}
           dataSampleTabs={dataSampleTabs}
+          operationDataTab={
+            modelTabActive && relationalTreeTransform != null ? operationDataTab : undefined
+          }
         />
       )}
       <CanvasShellMainPanel
@@ -447,6 +481,12 @@ export default function CanvasShell({
                     draftStatus={chromeState.draftStatusState}
                     query={canvasTransformDataSampleQuery}
                     preparePreview={prepareModelPreview}
+                    operationDataHost={operationDataHost}
+                    onOpenOperationData={
+                      layout.surfaceStrategy?.operationalDrawer?.tabs.includes('data')
+                        ? openOperationData
+                        : undefined
+                    }
                     active={modelTabActive}
                     onSelect={() => setModelTabActive(true)}
                     onShowCanvas={() => setModelTabActive(false)}

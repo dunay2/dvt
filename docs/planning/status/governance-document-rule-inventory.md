@@ -2,7 +2,7 @@
 title: Governance Document And Rule Inventory
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-09-15
+last_reviewed: 2026-09-22
 planning_type: status
 ---
 
@@ -48,6 +48,11 @@ defines the active planning boundary:
 There is no intermediate planning authority. Local lane files, workboards,
 open-task routes, task rows in Planning DB, and DB-to-GitHub task projections
 are retired and MUST NOT be recreated.
+
+DB-authoritative implementation validation follows the approved
+[single-team local acceptance boundary](../proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md#single-team-validation-boundary).
+Planning DB remains authoritative; GitHub CI does not independently enforce that
+local check. Its result must be recorded for the exact base/head before merge.
 
 ## Governance Layers
 

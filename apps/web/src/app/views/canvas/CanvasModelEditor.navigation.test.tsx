@@ -13,6 +13,12 @@ import { CanvasModelEditor } from './CanvasModelEditor';
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
+import {
+  openOperationMenu,
+  setupOperationMenuDom,
+} from './operation-menu/operationMenu.test-support';
+
+setupOperationMenuDom();
 
 const NativeRequest = globalThis.Request;
 class MemoryRouterRequest extends NativeRequest {
@@ -96,10 +102,9 @@ function beginProjection(container: HTMLElement): void {
       .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')!
       .click();
   });
+  openOperationMenu(container);
   act(() => {
-    container
-      .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-projection"]')!
-      .click();
+    document.querySelector<HTMLElement>('[data-slot="dvt-select-operation-projection"]')!.click();
   });
 }
 
@@ -161,7 +166,9 @@ describe('CanvasModelEditor navigation', () => {
     expect(onApplyNodeDraft).toHaveBeenCalledOnce();
     expect(document.activeElement).toBe(applyAndContinue);
     expect(document.querySelector('[role="alert"]')?.textContent).toContain('no longer available');
-    expect(findButton('Semantic editor').getAttribute('aria-selected')).toBe('true');
+    expect(container.querySelector('[data-view="editor"]')?.getAttribute('aria-selected')).toBe(
+      'true'
+    );
     expect(container.querySelector('[data-slot="canvas-relational-tree-apply"]')).not.toBeNull();
   });
 

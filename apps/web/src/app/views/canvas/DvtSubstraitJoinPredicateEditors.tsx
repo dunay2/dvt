@@ -9,7 +9,7 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import { SemanticWorkbenchJoinConditionEditor } from './SemanticWorkbenchJoinConditionEditor';
 import type { CanonicalNode } from '../../types/canonical';
-import { CanvasRelationalJoinExpressionTree } from './CanvasRelationalJoinExpressionTree';
+import { CanvasRelationalExpressionTree } from './CanvasRelationalExpressionTree';
 
 export function DvtSubstraitJoinPredicateEditors({
   disabled,
@@ -43,7 +43,7 @@ export function DvtSubstraitJoinPredicateEditors({
   }, [editing.size, onPendingConditionChange]);
   return (
     <div
-      className={transformNode == null ? 'space-y-3' : 'h-full min-h-0'}
+      className={transformNode == null ? 'space-y-3' : 'min-h-0'}
       data-slot="dvt-substrait-join-predicate-editors"
     >
       {projection.joins.map((join, index) => {
@@ -56,7 +56,7 @@ export function DvtSubstraitJoinPredicateEditors({
             hidden={
               selectedRelationId !== undefined && joinRelation.relationId !== selectedRelationId
             }
-            className={transformNode == null ? 'border-0 p-0' : 'h-full min-h-0 border-0 p-0'}
+            className="min-h-0 border-0 p-0"
             data-relation-id={joinRelation.relationId}
           >
             <SemanticWorkbenchJoinConditionEditor
@@ -88,11 +88,11 @@ export function DvtSubstraitJoinPredicateEditors({
                                 condition: edit.condition,
                               });
                       return (
-                        <CanvasRelationalJoinExpressionTree
+                        <CanvasRelationalExpressionTree
                           transformNode={transformNode}
                           relationId={joinRelation.relationId}
                           draft={previewDraft}
-                          onSelectCondition={onSelectCondition}
+                          onSelectCondition={disabled ? undefined : onSelectCondition}
                         />
                       );
                     }

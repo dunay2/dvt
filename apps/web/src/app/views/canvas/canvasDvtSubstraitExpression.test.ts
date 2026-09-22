@@ -75,4 +75,16 @@ describe('DVT Substrait expression primitives', () => {
       dvtSubstraitExpression.literal({ dataType: 'fp64', value: Number.POSITIVE_INFINITY })
     ).toThrow();
   });
+
+  it('rejects an ambiguous function reference without allocating a replacement', () => {
+    const plan = create(PlanSchema);
+    const identity = { urn: 'extension:io.substrait:functions_comparison', name: 'equal' };
+    dvtSubstraitExpression.ensureScalarFunction(plan, identity);
+    plan.extensions.push(globalThis.structuredClone(plan.extensions[0]!));
+    const before = globalThis.structuredClone(plan);
+    expect(() => dvtSubstraitExpression.ensureScalarFunction(plan, identity)).toThrow(
+      'ambiguous-function-anchor'
+    );
+    expect(plan).toEqual(before);
+  });
 });

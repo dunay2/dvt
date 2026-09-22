@@ -83,9 +83,25 @@ export function CanvasNodeShell({
       <ContextMenuTrigger asChild>
         <div
           data-slot="canvas-node-shell"
+          tabIndex={onOpenNode == null ? undefined : 0}
+          role="group"
+          aria-label={contextMenuModel.target.nodeName}
+          aria-keyshortcuts={onOpenNode == null ? undefined : 'Enter'}
           className={cn(styles.root, 'relative')}
           onClick={handleClick}
           onDoubleClick={handleDoubleClick}
+          onKeyDown={(event) => {
+            if (
+              event.key !== 'Enter' ||
+              event.repeat ||
+              event.target !== event.currentTarget ||
+              onOpenNode == null
+            )
+              return;
+            event.preventDefault();
+            event.stopPropagation();
+            onOpenNode();
+          }}
           onContextMenu={handleContextMenu}
           onDragOver={onDragOver}
           onDrop={onDrop}

@@ -390,7 +390,7 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
       className={
         props.renderExpression == null
           ? undefined
-          : 'canvas-operation-editors grid h-full min-h-0 min-w-0 gap-3'
+          : 'canvas-operation-editors grid min-h-0 min-w-0 gap-3'
       }
     >
       {props.renderExpression?.(

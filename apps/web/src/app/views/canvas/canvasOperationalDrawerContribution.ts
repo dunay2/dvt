@@ -35,6 +35,7 @@ type BuildCanvasOperationalDrawerContributionArgs = Readonly<{
   onStartRun: () => void;
   dataSampleTabs?: readonly OperationalDrawerDataSampleTab[];
   semanticBody?: ReactNode;
+  operationDataTab?: OperationalDrawerTab;
 }>;
 
 function buildReadinessProblems({
@@ -90,6 +91,7 @@ export function buildCanvasOperationalDrawerContribution({
   selectionRecoveryMessages = canvasViewCopy,
   dataSampleTabs = [],
   semanticBody,
+  operationDataTab,
 }: BuildCanvasOperationalDrawerContributionArgs): OperationalDrawerContribution {
   const selectionRecoveryBlocked = selectionRecovery?.status === 'blocked';
   const canPreviewExecutionPlan = canPlan && canPlanGraph && !selectionRecoveryBlocked;
@@ -183,12 +185,15 @@ export function buildCanvasOperationalDrawerContribution({
     },
     tabs: policy.tabs.flatMap<OperationalDrawerTab>((id) =>
       id === 'data'
-        ? dataSampleTabs.map((tab) => ({
-            id: tab.id,
-            label: tab.dataSample.status === 'idle' ? tab.id : tab.dataSample.nodeName,
-            count: null,
-            dataSample: tab.dataSample,
-          }))
+        ? [
+            ...(operationDataTab == null ? [] : [operationDataTab]),
+            ...dataSampleTabs.map((tab) => ({
+              id: tab.id,
+              label: tab.dataSample.status === 'idle' ? tab.id : tab.dataSample.nodeName,
+              count: null,
+              dataSample: tab.dataSample,
+            })),
+          ]
         : [
             {
               id,

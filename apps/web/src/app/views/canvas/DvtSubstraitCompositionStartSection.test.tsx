@@ -181,7 +181,9 @@ describe('DvtSubstraitCompositionStartSection', () => {
     act(() => {
       fireEvent.click(operation);
     });
-    expect(container.textContent).toContain(canvasViewCopy.inspectorDvtSubstraitUnionDistinctTitle);
+    expect(container.textContent).toContain(
+      'raw.customers_north UNION DISTINCT raw.customers_south'
+    );
     expect(onStartUnionDistinct).not.toHaveBeenCalled();
 
     act(() => {
@@ -193,31 +195,11 @@ describe('DvtSubstraitCompositionStartSection', () => {
   });
 
   it.each([
-    [
-      'intersect-distinct',
-      'INTERSECT',
-      'onStartIntersectDistinct',
-      canvasViewCopy.inspectorDvtSubstraitIntersectDistinctTitle,
-    ],
-    [
-      'except-distinct',
-      'EXCEPT',
-      'onStartExceptDistinct',
-      canvasViewCopy.inspectorDvtSubstraitExceptDistinctTitle,
-    ],
-    [
-      'intersect-all',
-      'INTERSECT ALL',
-      'onStartIntersectAll',
-      canvasViewCopy.inspectorDvtSubstraitIntersectAllTitle,
-    ],
-    [
-      'except-all',
-      'EXCEPT ALL',
-      'onStartExceptAll',
-      canvasViewCopy.inspectorDvtSubstraitExceptAllTitle,
-    ],
-  ] as const)('applies %s through its exact SetRel choice', (slot, label, callbackName, title) => {
+    ['intersect-distinct', 'INTERSECT', 'onStartIntersectDistinct'],
+    ['except-distinct', 'EXCEPT', 'onStartExceptDistinct'],
+    ['intersect-all', 'INTERSECT ALL', 'onStartIntersectAll'],
+    ['except-all', 'EXCEPT ALL', 'onStartExceptAll'],
+  ] as const)('applies %s through its exact SetRel choice', (slot, label, callbackName) => {
     const callback = vi.fn();
     act(() => {
       root.render(
@@ -237,7 +219,7 @@ describe('DvtSubstraitCompositionStartSection', () => {
     act(() => {
       fireEvent.click(operation);
     });
-    expect(container.textContent).toContain(title);
+    expect(container.textContent).toContain(`raw.customers_north ${label} raw.customers_south`);
     expect(callback).not.toHaveBeenCalled();
     act(() => {
       fireEvent.click(

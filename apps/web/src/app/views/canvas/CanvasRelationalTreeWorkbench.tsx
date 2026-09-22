@@ -1,15 +1,15 @@
 /** Owned concern: compose the source catalogue and central block Workbench for one Transform. */
 
 import { forwardRef, useEffect, useState } from 'react';
+import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type {
   CanvasRelationalTreeAuthoringContract,
   CanvasRelationalTreeWorkbenchCopy,
 } from './canvasRelationalTreeWorkbench.types';
 import { CanvasRelationalTreeSessionActions } from './CanvasRelationalTreeSessionActions';
-import { CanvasRelationalTreeInspection } from './CanvasRelationalTreeInspection';
 import { CanvasRelationalRemovalConfirmation } from './CanvasRelationalRemovalConfirmation';
-import { CanvasRelationalTreeBlockCanvas } from './CanvasRelationalTreeBlockCanvas';
+import { CanvasRelationalTreeContent } from './CanvasRelationalTreeContent';
 import { CanvasRelationalTreeSourceCatalogue } from './CanvasRelationalTreeSourceCatalogue';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import {
@@ -46,8 +46,6 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
     copy,
     authoring,
   });
-  const showAuthoring =
-    model.authoringAvailable && (model.projection == null || model.session.active);
   const [pendingCondition, setPendingCondition] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [sourcesCollapsed, setSourcesCollapsed] = useState(false);
@@ -64,75 +62,48 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
       canEditModel={model.authoringAvailable}
       unapplied={sessionHandle.hasUnappliedChanges}
     >
-      <div
-        data-slot="canvas-relational-tree-workbench"
-        onContextMenu={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-        }}
-        className={`relative grid h-full min-h-0 min-w-0 w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-(--surface-panel) md:grid-rows-1 ${sourcesCollapsed ? 'md:grid-cols-[3rem_minmax(0,1fr)]' : 'md:grid-cols-[14rem_minmax(0,1fr)]'}`}
-      >
-        <CanvasRelationalTreeSessionActions
-          session={sessionHandle}
-          copy={copy}
-          host={actionsHost}
-        />
-        <CanvasRelationalRemovalConfirmation
-          operations={model.session.removal.pending?.result.operations ?? null}
-          onConfirm={model.session.removal.confirm}
-          onCancel={model.session.removal.cancel}
-          error={model.session.removal.error}
-          clearError={model.session.removal.clearError}
-        />
-        <CanvasRelationalTreeSourceCatalogue
-          items={model.catalogue}
-          collapsed={sourcesCollapsed}
-          onToggle={() => setSourcesCollapsed((current) => !current)}
-          copy={copy}
-          draggable={model.authoringAvailable}
-          onSelect={model.selectCatalogueItem}
-        />
-        {showAuthoring ? (
-          <CanvasRelationalTreeBlockCanvas
-            onPendingConditionChange={setPendingCondition}
-            initiallyExpanded={expanded}
-            appendInput={model.session.appendInput}
-            choices={model.session.choices}
+      <RelationalLayoutSession key={transformNode.id}>
+        <div
+          data-slot="canvas-relational-tree-workbench"
+          onContextMenu={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+          }}
+          className={`relative grid h-full min-h-0 min-w-0 w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-(--surface-panel) md:grid-rows-1 ${sourcesCollapsed ? 'md:grid-cols-[3rem_minmax(0,1fr)]' : 'md:grid-cols-[12rem_minmax(0,1fr)]'}`}
+        >
+          <CanvasRelationalTreeSessionActions
+            session={sessionHandle}
             copy={copy}
-            edges={edges}
-            inputs={model.inputs}
-            joinDraft={model.session.joinDraft}
-            initialRelationId={model.selectedNode?.relationId ?? null}
-            nodes={nodes}
-            operation={model.session.operation}
-            primaryInputId={model.session.primaryInputId}
-            secondaryInputId={model.session.secondaryInputId}
-            selectedInputIds={model.session.selectedInputIds}
-            transformNode={transformNode}
-            onAppendJoinInput={model.session.appendJoinInput}
-            onChangeJoinDraft={model.session.setJoinDraft}
-            onRemove={model.session.removal.remove}
-            onPlaceInput={model.session.placeInput}
-            onSelectInput={model.session.selectInput}
-            onSelectOperation={model.session.selectOperation}
+            host={actionsHost}
           />
-        ) : model.projection == null ? (
-          <section
-            data-slot="canvas-relational-tree-unavailable"
-            className="grid min-h-64 place-items-center p-6 text-center text-sm text-(--text-muted)"
-          >
-            {model.unavailableMessage}
-          </section>
-        ) : (
-          <CanvasRelationalTreeInspection
+          <CanvasRelationalRemovalConfirmation
+            operations={model.session.removal.pending?.result.operations ?? null}
+            onConfirm={model.session.removal.confirm}
+            onCancel={model.session.removal.cancel}
+            error={model.session.removal.error}
+            clearError={model.session.removal.clearError}
+          />
+          <CanvasRelationalTreeSourceCatalogue
+            items={model.catalogue}
+            collapsed={sourcesCollapsed}
+            onToggle={() => setSourcesCollapsed((current) => !current)}
+            copy={copy}
+            draggable={model.authoringAvailable}
+            onSelect={model.selectCatalogueItem}
+            occurrences={model.authoringAvailable ? model.session.occurrences : undefined}
+          />
+          <CanvasRelationalTreeContent
             model={model}
             transformNode={transformNode}
+            nodes={nodes}
+            edges={edges}
             copy={copy}
             expanded={expanded}
             onExpandedChange={setExpanded}
+            onPendingConditionChange={setPendingCondition}
           />
-        )}
-      </div>
+        </div>
+      </RelationalLayoutSession>
     </CanvasOperationPreviewProvider>
   );
 });

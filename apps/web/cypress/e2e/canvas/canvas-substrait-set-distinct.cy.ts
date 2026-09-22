@@ -119,10 +119,8 @@ describe('Canvas Substrait Set operations', () => {
           'customers_south',
         ]);
       });
-      cy.get('[data-slot="canvas-relational-composition-badge"]').should(
-        'contain.text',
-        testCase.label
-      );
+      cy.get('[data-slot="canvas-relational-composition-badge"]').should('not.exist');
+      cy.get('[data-slot="canvas-relational-composition-junction"]').should('not.exist');
 
       cy.get('[data-slot="canvas-node-workbench-close"]').click();
       visitCanvas();

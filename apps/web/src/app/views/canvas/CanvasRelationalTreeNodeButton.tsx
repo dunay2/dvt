@@ -1,5 +1,5 @@
 /** Owned concern: readable card content and accessible semantic input roles. */
-import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
+import { resolveCanvasRelationalNodePresentation } from './canvasRelationalNodePresentation';
 import type { CanvasRelationalTreePlacedNode } from './canvasRelationalTreeGeometry';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 
@@ -50,32 +50,35 @@ export function CanvasRelationalTreeNodeButton({
               : copy.inspectorDbtOriginLabel;
   const subtitle = node.displayName ?? node.substraitKind;
   const isSource = node.operator === 'read';
-  const window = node.decorations.some((decoration) => decoration.kind === 'window');
-  const presentation = resolveCanvasRelationalOperationPresentation(
-    window
-      ? 'window'
-      : (node.operation ?? (node.operator === 'project' ? 'projection' : node.operator))
-  );
+  const { presentation } = resolveCanvasRelationalNodePresentation(node);
   const title = isSource ? subtitle : copy[presentation.labelKey];
   const Icon = presentation.icon;
   return (
     <button
       type="button"
+      draggable={false}
       role="treeitem"
       aria-level={placed.level}
       aria-posinset={placed.ordinal + 1}
       aria-setsize={placed.siblingCount}
       aria-selected={selected}
+      aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown Alt+ArrowLeft Alt+ArrowRight"
       aria-expanded={node.children.length === 0 ? undefined : true}
       aria-label={roleLabel == null ? title : `${roleLabel}: ${title}`}
       data-slot="canvas-relational-tree-node"
       data-locator={node.locator}
       data-relation-id={node.relationId ?? undefined}
       data-operator={node.operator}
-      onClick={() => onSelect(node.locator)}
-      onDoubleClick={() => node.operator !== 'read' && onExpand?.(node.locator)}
-      style={{ height: detailed ? 76 : '100%', fontFamily: '"Segoe UI", system-ui, sans-serif' }}
-      className={`w-full rounded-md border px-3 py-2 text-left shadow-sm transition-colors hover:border-(--status-info) aria-selected:border-(--status-info) aria-selected:ring-2 aria-selected:ring-(--status-info) ${operatorTone[presentation.category]}`}
+      onClick={() => {
+        onSelect(node.locator);
+        onExpand?.(node.locator);
+      }}
+      style={{
+        touchAction: 'none',
+        height: detailed ? 76 : '100%',
+        fontFamily: '"Segoe UI", system-ui, sans-serif',
+      }}
+      className={`w-full select-none rounded-md border px-3 py-2 text-left shadow-sm transition-colors hover:border-(--status-info) aria-selected:border-(--status-info) aria-selected:ring-2 aria-selected:ring-(--status-info) ${operatorTone[presentation.category]}`}
     >
       <span className="flex items-center gap-2 pr-5">
         <Icon aria-hidden="true" className="size-4 shrink-0 text-(--status-info)" />

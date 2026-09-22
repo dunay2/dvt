@@ -1,5 +1,5 @@
 /** Owned concern: lay out shell chrome slots from already-resolved presentation posture. */
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 
 import type { ShellNavigationDisposition } from '../../shell/shellNavigationDisposition';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../ui/resizable';
@@ -34,9 +34,14 @@ export function AppShellFrame({
 }: AppShellFrameProps) {
   const showLeftNavigation = !focusMode && navigationDisposition.railMode === 'visible';
   const showOperationalDrawer = !focusMode && showBottomDrawer;
-  const bottomDrawerDefaultSize = resolveBottomDrawerDefaultSize(
-    bottomDrawerHeight,
-    typeof window === 'undefined' ? 0 : window.innerHeight
+  // A default is a size request, not a continuously recomputed viewport constraint.
+  const bottomDrawerDefaultSize = useMemo(
+    () =>
+      resolveBottomDrawerDefaultSize(
+        bottomDrawerHeight,
+        typeof window === 'undefined' ? 0 : window.innerHeight
+      ),
+    [bottomDrawerHeight]
   );
   const focusMainContent = (): void => {
     document.getElementById(APP_SHELL_MAIN_CONTENT_ID)?.focus({ preventScroll: true });
@@ -96,7 +101,7 @@ export function AppShellFrame({
                 <>
                   <ResizableHandle id="app-shell-bottom-drawer-resize-handle" withHandle />
                   <ResizablePanel
-                    key={`bottom-drawer-${Math.round(bottomDrawerDefaultSize)}`}
+                    key={`bottom-drawer-${Math.round(bottomDrawerHeight)}`}
                     id="app-shell-bottom-drawer-panel"
                     order={2}
                     defaultSize={bottomDrawerDefaultSize}
