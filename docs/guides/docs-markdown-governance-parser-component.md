@@ -179,6 +179,16 @@ each new check can accidentally change another check's parsing semantics.
 
 The component is guarded by:
 
+The executable CI tool suite also compiles `tools/docs` with the root TypeScript
+strictness settings. It infers the real JavaScript publication adapter through
+`allowJs`; it does not substitute declarations or relax TypeScript diagnostics.
+This contract complements the real CLI behavior tests and uses the existing
+executable test catalog and workflow lane.
+
+The manifest audit renders evidence metadata as text or `null` for missing
+values. YAML booleans and numbers retain their meaning (`false` and `0` must
+not become missing); arrays retain the existing comma-separated presentation.
+
 ```bash
 node --test tools/ci/docs-markdown-component-architecture.test.mjs
 pnpm test:ci-tools

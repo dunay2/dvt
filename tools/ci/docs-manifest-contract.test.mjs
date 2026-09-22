@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { before, test } from 'node:test';
-import { runDocsCommand } from './test/docsCliFixture.mjs';
+import { createDocsRepository, runDocsCommand } from './test/docsCliFixture.mjs';
 
 const rootPackage = JSON.parse(readFileSync('package.json', 'utf8'));
 
@@ -30,6 +30,29 @@ function isSortedByPath(entries) {
 function isSha256Hex(value) {
   return typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 }
+
+test('manifest audit preserves false and zero evidence metadata as text', (t) => {
+  const fixture = createDocsRepository(t);
+  fixture.write(
+    'docs/evidence/ED-20991231-types.md',
+    [
+      '---',
+      'title: 0',
+      'status: [Accepted, Reviewed]',
+      'breaking: false',
+      '---',
+      '# Typed evidence',
+      '',
+    ].join('\n')
+  );
+  const result = fixture.run('tools/docs/generate-docs-manifest.ts', ['--stdout', '--full'], []);
+  assert.equal(result.status, 0, result.output);
+  const [evidence] = JSON.parse(result.stdout).evidenceDocs;
+  assert.equal(evidence.title, '0');
+  assert.equal(evidence.status, 'Accepted, Reviewed');
+  assert.equal(evidence.breaking, 'false');
+  assert.equal(evidence.date, null);
+});
 
 test('docs manifest generation is deterministic, compact, and excludes timestamp noise', () => {
   const [first, second] = compactOutputs;

@@ -21,7 +21,7 @@
  * Usage:
  *   tsx tools/docs/check-governance-references.ts
  */
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, type Dirent } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -46,7 +46,7 @@ const CANONICAL_DOCS = [
 
 function buildAdrInventory(adrDir: string): Map<string, string> {
   const inventory = new Map<string, string>(); // "ADR-0003" → absolute path
-  let entries: ReturnType<typeof readdirSync>;
+  let entries: Dirent[];
   try {
     entries = readdirSync(adrDir, { withFileTypes: true });
   } catch {
