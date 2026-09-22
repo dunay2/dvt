@@ -13,6 +13,7 @@ import { toCanvasAuthoringSerializableValue } from './canvasAuthoringMetadata';
 import { resolveEffectiveDvtConnectionRef } from './canvasDvtAuthoringModel';
 import { decodeDvtSubstraitProjectionDocument } from './canvasDvtSubstraitProjection';
 import { inspectDvtSubstraitUnionAllAcceptedDraft } from './canvasDvtSubstraitSetComposition';
+import { peelCanvasDvtSubstraitSortFetch } from './canvasDvtSubstraitSortFetch';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { canvasViewCopy } from './copy';
 
@@ -76,7 +77,9 @@ function resolveTerminalProjectionClosure(
       return null;
     const authority = readDvtTransformAuthoringAuthority(transform);
     if (authority === null) return null;
-    const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+    const { base: draft } = peelCanvasDvtSubstraitSortFetch(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
     if (sources.length > 1) {
       const joinInspection = inspectDvtSubstraitJoinDraft(draft);
       const setInspection = inspectDvtSubstraitUnionAllAcceptedDraft(draft);

@@ -36,7 +36,8 @@ export function CanvasRelationalTreeContent({
         edges={edges}
         inputs={model.inputs}
         joinDraft={session.joinDraft}
-        initialRelationId={model.selectedNode?.relationId ?? null}
+        selectedRelationId={model.selectedRelationId}
+        onSelectRelation={model.selectRelation}
         nodes={nodes}
         operation={session.operation}
         primaryInputId={session.primaryInputId}

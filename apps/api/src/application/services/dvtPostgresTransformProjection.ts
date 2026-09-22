@@ -14,6 +14,7 @@ import {
   buildConnectedFieldPostgresAst,
   inspectDvtSubstraitSortFetchRoot,
   renderPostgresAst,
+  removeDvtSubstraitSortFetchRelation,
   selectDvtSubstraitRelation,
   type DvtPostgresOrderKey,
   type DvtSubstraitJoinDraft,
@@ -62,7 +63,7 @@ export async function projectDvtPostgresTransform(
   if (
     selectedRoot != null &&
     (selectedRoot.case !== 'root' ||
-      !['join', 'project', 'set', 'cross', 'sort', 'fetch'].includes(
+      !['join', 'project', 'aggregate', 'set', 'cross', 'sort', 'fetch'].includes(
         selectedRoot.value.input?.relType.case ?? ''
       ))
   ) {
@@ -85,7 +86,7 @@ export async function projectDvtPostgresTransform(
     if (relationCase === 'sort' || relationCase === 'fetch') {
       const inspection = inspectDvtSubstraitSortFetchRoot(draft);
       if (!inspection.ok) throw new Error('Sort/Fetch relation is outside the admitted profile.');
-      const innerDraft = selectDvtSubstraitRelation(draft, inspection.inputRelationId);
+      const innerDraft = removeDvtSubstraitSortFetchRelation(draft, inspection.relationId);
       const inner = await projectDraft(innerDraft, true);
       const inputFields = draft.sidecar.fields
         .filter((field) => field.relationId === inspection.inputRelationId)

@@ -4,9 +4,8 @@ import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWo
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import { CanvasRelationalTreeOperationShelf } from './CanvasRelationalTreeOperationShelf';
 import { CanvasRelationalTreeView } from './CanvasRelationalTreeView';
-import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
-import { CanvasRelationalJoinExpressionTree } from './CanvasRelationalJoinExpressionTree';
-import { CanvasRelationalCrossNotice } from './CanvasRelationalCrossNotice';
+import { RelationalInspectionPanel } from './relational-inspection/RelationalInspectionPanel';
+import { resolveRelationalInspection } from './relational-inspection/inspectionModel';
 
 export function CanvasRelationalTreeInspection({
   model,
@@ -54,27 +53,13 @@ export function CanvasRelationalTreeInspection({
             if (model.authoringAvailable) model.session.start();
           }}
         />
-        {expanded &&
-        model.selectedNode != null &&
-        (model.selectedNode.expressionRefs.length > 0 ||
-          model.selectedNode.operator === 'cross' ||
-          (model.authoringAvailable && model.selectedNode.operator === 'fetch')) ? (
-          <CanvasRelationalTreeEditorFrame
-            operation={model.selectedNode.operation ?? 'unsupported'}
-            relationId={model.selectedNode.relationId}
-            hasExpression={model.selectedNode.expressionRefs.length > 0}
-            readOnly
+        {expanded ? (
+          <RelationalInspectionPanel
+            inspection={resolveRelationalInspection(model.selectedNode)}
+            transformNode={transformNode}
+            copy={copy}
             onClose={() => onExpandedChange(false)}
-          >
-            {model.selectedNode.operator === 'cross' ? (
-              <CanvasRelationalCrossNotice />
-            ) : (
-              <CanvasRelationalJoinExpressionTree
-                transformNode={transformNode}
-                relationId={model.selectedNode.relationId}
-              />
-            )}
-          </CanvasRelationalTreeEditorFrame>
+          />
         ) : null}
       </div>
     </div>

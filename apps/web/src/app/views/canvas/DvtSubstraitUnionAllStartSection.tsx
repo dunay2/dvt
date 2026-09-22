@@ -4,22 +4,10 @@ import { Button } from '../../components/ui/button';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { DvtSubstraitSetOperation } from './canvasDvtSubstraitSetComposition';
 import { canvasViewCopy } from './copy';
+import { canvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 
 function titleFor(operation: DvtSubstraitSetOperation): string {
-  switch (operation) {
-    case 'union_all':
-      return canvasViewCopy.inspectorDvtSubstraitUnionAllTitle;
-    case 'union_distinct':
-      return canvasViewCopy.inspectorDvtSubstraitUnionDistinctTitle;
-    case 'intersect_distinct':
-      return canvasViewCopy.inspectorDvtSubstraitIntersectDistinctTitle;
-    case 'except_distinct':
-      return canvasViewCopy.inspectorDvtSubstraitExceptDistinctTitle;
-    case 'intersect_all':
-      return canvasViewCopy.inspectorDvtSubstraitIntersectAllTitle;
-    case 'except_all':
-      return canvasViewCopy.inspectorDvtSubstraitExceptAllTitle;
-  }
+  return canvasViewCopy[canvasRelationalOperationPresentation[operation].labelKey];
 }
 
 export function DvtSubstraitUnionAllStartSection({
@@ -39,7 +27,7 @@ export function DvtSubstraitUnionAllStartSection({
     <section data-slot="dvt-substrait-union-all-start" className="space-y-3">
       <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>{titleFor(operation)}</h3>
       <p className="text-xs text-(--text-muted)">
-        {inputs.map((input) => `${input.schema}.${input.table}`).join(' + ')}
+        {inputs.map((input) => `${input.schema}.${input.table}`).join(` ${titleFor(operation)} `)}
       </p>
       <div className="flex flex-wrap gap-2">
         <Button

@@ -37,6 +37,14 @@ Use this guide for implementation slices and PR-green recovery work.
    - patch root cause
    - rerun only required checks
 
+Before merging, run `pnpm docs:feature-mechanization:implementation` against the
+existing local Planning DB with explicit `GIT_BASE` and `GIT_HEAD` commit SHAs
+and a clean worktree. Record both SHAs, the command and result on the PR. Repeat
+when either SHA changes; a cached pre-push stamp is not fresh DB evidence.
+Unavailable DB or invalid comparison evidence blocks integration. This
+[single-team boundary](../planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md#single-team-validation-boundary)
+is a local operator obligation, not a check independently enforced by GitHub.
+
 ## Conflict Triage And Cleanup Safety
 
 Classify each conflicted file by its current owner and intended change before

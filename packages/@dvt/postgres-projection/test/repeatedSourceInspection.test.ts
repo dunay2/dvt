@@ -17,6 +17,18 @@ import {
 import { repeatedSourceDraft } from './fixtures/repeatedSourceDraft.js';
 
 describe('repeated physical Read occurrences', () => {
+  it('treats independent Read aliases as presentation, preserving canonical SQL and field lineage', async () => {
+    const draft = repeatedSourceDraft();
+    const before = await projectDvtJoinDraftToPostgresSql(draft);
+    const bytes = toBinary(PlanSchema, draft.plan);
+    draft.sidecar.relations[0]!.displayName = 'Places';
+    draft.sidecar.relations[1]!.displayName = 'Parent places';
+    const after = await projectDvtJoinDraftToPostgresSql(draft);
+    expect(after.sql).toBe(before.sql);
+    expect(after.projection).toEqual(before.projection);
+    expect(toBinary(PlanSchema, draft.plan)).toEqual(bytes);
+  });
+
   it('shares the exact canonical serialization fixture with protected API tests', () => {
     const document = DvtSubstraitSemanticDocumentV1Schema.parse(
       JSON.parse(
@@ -27,6 +39,16 @@ describe('repeated physical Read occurrences', () => {
       repeatedSourceDraft()
     );
   });
+  it.each(['', '   ', 'x'.repeat(501)])(
+    'rejects invalid Read display names without modifying the plan',
+    (name) => {
+      const draft = repeatedSourceDraft();
+      draft.sidecar.relations[1]!.displayName = name;
+      const before = globalThis.structuredClone(draft);
+      expect(inspectDvtSubstraitJoinDraft(draft)).toEqual({ ok: false });
+      expect(draft).toEqual(before);
+    }
+  );
   it.each([JoinRel_JoinType.INNER, JoinRel_JoinType.LEFT, JoinRel_JoinType.OUTER])(
     'preserves distinct identities, lineage and selector %i after protobuf roundtrip',
     async (type) => {
@@ -38,6 +60,7 @@ describe('repeated physical Read occurrences', () => {
       };
       const selected = selectDvtSubstraitRelation(draft, draft.sidecar.relations[2]!.relationId);
       const result = await projectDvtJoinDraftToPostgresSql(selected);
+      if (result.kind !== 'join') throw new Error('Expected the raw JOIN projection.');
       const [left, right] = result.projection.inputs;
       expect(left!.sourceRef).toEqual(right!.sourceRef);
       expect(left!.relationId).not.toBe(right!.relationId);

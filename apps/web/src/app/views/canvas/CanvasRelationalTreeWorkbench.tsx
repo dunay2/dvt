@@ -90,6 +90,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
             copy={copy}
             draggable={model.authoringAvailable}
             onSelect={model.selectCatalogueItem}
+            occurrences={model.authoringAvailable ? model.session.occurrences : undefined}
           />
           <CanvasRelationalTreeContent
             model={model}

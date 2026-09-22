@@ -285,9 +285,7 @@ test('emit-scope workflow mode routes executable CI tool contracts only for inst
 
   assert.equal(executableScope.ci_tool_executable_contracts_relevant, true);
 
-  const staticScope = computeWorkflowModeScopeOutputs('workflow', [
-    'tools/ci/workflow-pattern-parity.test.mjs',
-  ]);
+  const staticScope = computeWorkflowModeScopeOutputs('workflow', ['tools/ci/emit-scope.test.mjs']);
 
   assert.equal(staticScope.changed_file_validation_relevant, true);
   assert.equal(staticScope.ci_tool_executable_contracts_relevant, false);

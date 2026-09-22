@@ -28,6 +28,7 @@ export function CanvasRelationalTreeEditorFrame({
   relationId,
   hasExpression = true,
   readOnly = false,
+  label,
 }: Readonly<{
   operation: CanvasPresentationOperation;
   children: ReactNode;
@@ -36,11 +37,12 @@ export function CanvasRelationalTreeEditorFrame({
   relationId?: string | null;
   hasExpression?: boolean;
   readOnly?: boolean;
+  label?: string;
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
   const presentation = resolveCanvasRelationalOperationPresentation(operation);
-  const title = resolveCanvasViewCopy(language)[presentation.labelKey];
+  const title = label ?? resolveCanvasViewCopy(language)[presentation.labelKey];
   const Icon = presentation.icon;
   const preview = useContext(CanvasOperationPreviewContext);
   const [tab, setTab] = useState(readOnly ? 'tree' : 'properties');

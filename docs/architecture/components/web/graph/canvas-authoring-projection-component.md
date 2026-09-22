@@ -177,6 +177,30 @@ the editor draft; persistence still belongs to explicit Apply through the
 existing authoring rail. Selecting a card opens its properties without fetching
 rows, running the model or applying a semantic revision.
 
+Applied inspection dispatches by the selected canonical operation, including the
+transition immediately after Apply. Sort and Fetch show their projected key/order
+or limit/offset summary in Properties and retain the selected data dock. They do
+not mount the scalar predicate viewer: a sort-key reference is not a JOIN
+condition, and Fetch has no scalar predicate. Read-only inspection follows the
+same rule. JOIN and other expression-owning operations retain their existing
+expression tree. This boundary must hold while navigation waits for Apply; it
+must not reset selection, swallow projection errors or change the saved plan.
+
+Admission and relation kind are separate facts. A rejected Sort or Fetch remains
+visibly unsupported and must never enter the JOIN expression viewer, even when
+its canonical relation contains expression references. Selection follows the
+stable RelationId within the same Model across Apply, not a digest-bearing tree
+locator; a removed relation or a different Model falls back to its current root.
+Switching selected relations resets the local operator form, not the saved plan.
+
+The `relational-inspection/` component owns the applied inspector presentation
+model and panel. An exhaustive operator policy selects source, CROSS, summary,
+scalar expressions or unsupported content. Scalar inspection requires the
+operator's declared expression slot and a stable relation identity; an arbitrary
+nonempty expression list is not admission to that viewer. The parent workbench
+only composes its operation shelf, graph and inspector panel. This disposable
+view model does not re-decode Substrait or define operation semantics.
+
 ```mermaid
 flowchart LR
   Container[Operator form] --> Controller[Local form controller]
@@ -237,9 +261,57 @@ between the number of Read occurrences and graph Sources. Every occurrence
 resolves to one authorized source and every selected dependency is used.
 Selected-operation preview may use a subset of that already validated closure.
 
-This shared-reader/API admission does not expose repeated-input creation in the
-Web editor. Generic transformed branches, aliases and occurrence-aware editing
-remain open in #3342 and require their own authoring/reopen/provider proof.
+Shared-reader/API admission alone does not complete repeated-input authoring.
+Generic transformed branches and end-to-end browser/provider acceptance remain
+open in #3342; the bounded occurrence controls below expose only admitted shapes.
+
+The `relational-source-occurrence/` component separates canonical JOIN Read
+identity allocation from physical graph binding. Existing Reads are preserved
+only by their RelationId, never by matching a table name or physical source.
+Each physical binding verifies field names, types and nullability. Repeated
+Reads retain separate entries in the relational projection and its reopen seed;
+the left source catalogue remains one entry per physical source. A physical
+entry with several occurrences cannot arbitrarily select or edit the first one.
+
+Read relation display names follow the existing human-name contract, not the
+physical table name. Aliases do not change plan bytes, SQL or protected source
+coverage. JOIN edits preserve these labels. The identity foundation does not
+admit transformed-result reuse.
+Retaining a single Read also preserves its label and identities. If its types or
+required-field nullability cannot be expressed by the current projection profile,
+removal rejects without changing the draft; it must not silently widen the schema.
+
+### Explicit Source occurrence controls
+
+The [bounded UI plan](https://github.com/dunay2/dvt/issues/3342#issuecomment-5763838796)
+reuses ConfigureCanvasDvtNode. `sourceOccurrencePolicy` owns admission and the
+immutable Read-label edit; `sourceOccurrenceActions` prepares the discardable
+append intent. Catalogue action, alias properties and append form are separate
+presentation components. `useCanvasRelationalTreeDraftState` owns local reset and
+hydration; it does not save, query or run the model.
+
+```text
+Physical catalogue -> Add instance -> admission -> existing predicate form
+                                             -> new canonical Read identity
+Read click -> Properties -> alias by RelationId -> local draft
+Local draft -> Apply -> existing graph save / CAS -> reopen
+Read selection -> existing bottom data dock -> explicit protected data query
+```
+
+Add instance admits an existing JOIN accepted by the shared JOIN reader and
+compatible connected fields. It does not replace a Project, CROSS, Set or wrapped
+composition to manufacture support. The unavailable action explains its reason
+and performs no write. Confirmation allocates a Read, not a physical Source or
+graph edge. Repeated field options use aliases and, where labels repeat, ordinal
+disambiguation; their values remain canonical FieldIds.
+
+A single Read click opens Properties and the existing selected data dock. Alias
+edits use the canonical human-name contract, preserve Plan bytes and source
+bindings, and remain cancelable until Apply. Read-only inspection exposes no
+mutation controls. Non-JOIN alias editing is explicitly unavailable where the
+current reader does not admit it. These boundaries do not close #3342: initial
+repeated-source construction from a single projection, general transformed reuse
+and browser-through-live-PostgreSQL acceptance remain separate pending work.
 
 ```text
 Canonical document -> document admission -> Read bindings -> JOIN stages
@@ -263,6 +335,64 @@ Indirect consumers:
 
 ## Fitness Functions
 
+### Compositional regression boundaries (#3352)
+
+Source-append admission is a pure read model, separate from draft construction
+and operation-choice presentation. Consumers import that policy directly; there
+is no compatibility facade. The operation catalogue remains the single owner of
+the supported choice list and its order.
+
+```text
+Canonical Substrait -> wrapper admission -> existing JOIN / Set base reader
+                                        -> shared bounded Aggregate / Window AST
+Protected selected query -> identity-preserving Sort / Fetch removal -> same reader
+```
+
+Aggregate and Window inspection share one bounded wrapper policy in
+`@dvt/postgres-projection`. JOIN and Set retain their existing base readers and
+canonical selectors. Wrapper removal preserves relation and field identities;
+generated aggregate outputs do not claim source-field lineage. SQL remains a
+projection, never an additional authoring authority.
+
+Protected Preview intent must inspect the base composition through the existing
+`peelCanvasDvtSubstraitSortFetch` policy. An admitted ordering or limit wrapper
+does not change its physical source closure. Rejected wrappers are not peeled
+and must not become executable through a fallback. This inspection is read-only:
+the saved canonical document, identities and signature retain every wrapper.
+
+Function reference integrity and bounded-profile admission are separate concerns.
+The shared `substrait-profile/` inspection component resolves the referenced
+function anchor and its URN anchor unambiguously. Other functions declared in the
+same extension module do not change that identity. Missing or duplicate referenced
+anchors reject explicitly. COUNT and ROW_NUMBER validators own their invocation
+constraints; the calculated-expression and grouped-wrapper readers share them.
+Their executable registrations refer to the existing capability catalogue and
+do not create another semantic catalogue or import PostgreSQL rendering code.
+
+```text
+Plan + functionReference -> reference integrity -> registered invocation validator
+Root relType -> registered wrapper inspector -> admitted read model / unsupported reason
+Admitted read model -> existing PostgreSQL AST projection
+```
+
+Wrapper dispatch selects exactly one inspector by the canonical relation kind.
+Failure does not try a different operation. Consumers require the precise
+capability they can project: registering another aggregate must not cause a
+COUNT-only wrapper to render it as COUNT. Unsupported profile shapes are not
+reported as universally invalid Substrait. This boundary does not widen the
+existing aggregate, window ordering/frame, or base-document admission profiles.
+
+Canonical correctness is the first acceptance gate: tests assert Substrait
+relation selectors, input order, expressions, stable identities and lossless
+encode/decode across selection and editing. SQL text or database rows are not an
+oracle for the canonical document. PostgreSQL is only the downstream fidelity
+gate.
+
+PostgreSQL regression tests must project canonical documents through the API
+before executing SQL. Handwritten SQL wrappers around a base projection do not
+prove that canonical composition is supported. Browser tests separately prove
+Apply, selected-relation identity and data navigation.
+
 The canonical fitness checks for this component are:
 
 - `workspaceGraphDraftProjection.test.ts`
@@ -284,6 +414,9 @@ Those tests must keep proving:
 navigation only. The sibling `canvas-relational-workbench-*.cy.ts` specs isolate
 viewport behavior, contextual removal, pending JOIN creation, source append,
 predicate editing, chain persistence, CROSS preview and UNION creation.
+`canvas-relational-source-occurrence.cy.ts` owns explicit repeated-Read append,
+alias Apply/save/reopen and the selected data query. Its controlled sample checks
+query identity and explicit execution, not PostgreSQL result correctness.
 Each spec selects its scenario explicitly from
 `cypress/support/relationalWorkbench/scenario.ts`; test titles never select
 fixtures. Shared support owns navigation, geometry assertions, chain setup and

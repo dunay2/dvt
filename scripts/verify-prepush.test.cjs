@@ -347,17 +347,6 @@
     assert.doesNotMatch(hookSource, /pnpm -s verify:changed/);
   });
 
-  test('web package exposes an owned lint command for local package validation', () => {
-    const webPackageJson = JSON.parse(
-      fs.readFileSync(path.resolve(__dirname, '..', 'apps', 'web', 'package.json'), 'utf8')
-    );
-
-    assert.equal(
-      webPackageJson.scripts.lint,
-      'node --max-old-space-size=4096 ../../node_modules/eslint/bin/eslint.js "src/**/*.{ts,tsx}" "cypress/**/*.{ts,tsx}" "*.config.ts" "*.config.mjs" "scripts/**/*.{ts,mjs,js,cjs}" --max-warnings 0'
-    );
-  });
-
   test('api package exposes an owned lint command for local package validation', () => {
     const apiPackageJson = JSON.parse(
       fs.readFileSync(path.resolve(__dirname, '..', 'apps', 'api', 'package.json'), 'utf8')

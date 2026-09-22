@@ -9,6 +9,8 @@ import type {
   CanvasRelationalTreeWorkbenchCopy,
 } from './canvasRelationalTreeWorkbench.types';
 import { CanvasRelationalTreeSourceCard } from './CanvasRelationalTreeSourceCard';
+import { SourceOccurrenceAction } from './relational-source-occurrence/SourceOccurrenceAction';
+import type { createSourceOccurrenceActions } from './relational-source-occurrence/sourceOccurrenceActions';
 
 export function CanvasRelationalTreeSourceCatalogue({
   items,
@@ -17,6 +19,7 @@ export function CanvasRelationalTreeSourceCatalogue({
   onToggle,
   draggable = false,
   onSelect,
+  occurrences,
 }: Readonly<{
   items: readonly CanvasRelationalTreeCatalogueItem[];
   copy: CanvasRelationalTreeWorkbenchCopy;
@@ -24,6 +27,7 @@ export function CanvasRelationalTreeSourceCatalogue({
   onToggle?: () => void;
   draggable?: boolean;
   onSelect: (item: CanvasRelationalTreeCatalogueItem) => void;
+  occurrences?: ReturnType<typeof createSourceOccurrenceActions>;
 }>): JSX.Element {
   const [search, setSearch] = useState('');
   const contentId = useId();
@@ -87,13 +91,20 @@ export function CanvasRelationalTreeSourceCatalogue({
         </label>
         <ul className="mt-2 flex gap-1 overflow-x-auto pb-1 md:block md:space-y-1 md:overflow-x-visible md:pb-0">
           {visibleItems.map((item) => (
-            <li key={item.key} className="min-w-44 md:min-w-0">
+            <li key={item.key} className="flex min-w-44 items-center gap-1 md:min-w-0">
               <CanvasRelationalTreeSourceCard
                 item={item}
                 copy={copy}
                 draggable={draggable}
                 onSelect={onSelect}
               />
+              {occurrences == null || item.sourceNodeId == null ? null : (
+                <SourceOccurrenceAction
+                  label={item.label}
+                  rejection={occurrences.rejection(item.sourceNodeId)}
+                  onAdd={() => occurrences.add(item.sourceNodeId!)}
+                />
+              )}
             </li>
           ))}
         </ul>

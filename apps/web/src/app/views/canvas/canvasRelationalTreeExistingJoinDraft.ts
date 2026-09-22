@@ -34,7 +34,8 @@ export function resolveCanvasRelationalTreeExistingJoinDraft(
     return {
       draft: { plan: metadata.plan, sidecar: metadata.sidecar },
       operation: metadata.shape,
-      inputIds: [...new Set(inputIds.filter((nodeId): nodeId is string => nodeId != null))],
+      // Ordered physical provenance for every occurrence; not a set of occurrence identities.
+      inputIds: inputIds.filter((nodeId): nodeId is string => nodeId != null),
     };
   } catch {
     return null;

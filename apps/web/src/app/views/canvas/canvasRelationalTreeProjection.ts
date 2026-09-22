@@ -99,33 +99,24 @@ function sourceRefKey(sourceRef: ConnectedSourceRef): string {
   ].join('|');
 }
 
-function uniqueSourceBindings(relations: readonly RelationBinding[]): readonly RelationBinding[] {
-  return relations.filter(
-    (relation, index) =>
-      relation.sourceRef != null &&
-      relations.findIndex(
-        (candidate) =>
-          candidate.sourceRef != null &&
-          hasSameConnectedSourceRef(candidate.sourceRef, relation.sourceRef!)
-      ) === index
-  );
-}
-
 function projectInputs(
   relations: readonly RelationBinding[],
   connected: readonly CanvasDvtCompositionInput[]
 ): readonly CanvasRelationalTreeInput[] {
-  const canonical = uniqueSourceBindings(relations).map((relation) => {
-    const match = connected.find((input) =>
-      hasSameConnectedSourceRef(input.sourceRef, relation.sourceRef!)
-    );
-    return {
-      sourceRef: relation.sourceRef!,
-      sourceNodeId: match?.nodeId ?? null,
-      relationId: relation.relationId,
-      state: match == null ? ('missing' as const) : ('participating' as const),
-    };
-  });
+  const canonical = relations
+    .filter((relation) => relation.sourceRef != null)
+    .sort((left, right) => left.relAnchor - right.relAnchor)
+    .map((relation) => {
+      const match = connected.find((input) =>
+        hasSameConnectedSourceRef(input.sourceRef, relation.sourceRef!)
+      );
+      return {
+        sourceRef: relation.sourceRef!,
+        sourceNodeId: match?.nodeId ?? null,
+        relationId: relation.relationId,
+        state: match == null ? ('missing' as const) : ('participating' as const),
+      };
+    });
   const pending = connected
     .filter(
       (input) =>

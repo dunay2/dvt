@@ -68,6 +68,16 @@ function descendants(rel: Rel): Rel[] {
 }
 
 function orderedSelectionRelations(rel: Rel, included: readonly Rel[]): readonly Rel[] {
+  switch (rel.relType.case) {
+    case 'project':
+    case 'filter':
+    case 'aggregate':
+    case 'sort':
+    case 'fetch': {
+      const input = rel.relType.value.input ?? reject();
+      return [...orderedSelectionRelations(input, descendants(input)), rel];
+    }
+  }
   const joinTree = flattenNInputJoinTree(rel);
   if (joinTree != null) return [...joinTree.reads, ...joinTree.joins];
 

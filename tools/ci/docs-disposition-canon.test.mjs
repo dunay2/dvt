@@ -113,6 +113,11 @@ test('docs disposition canonization has semantic ownership and DB-first closure'
 
 // This is a retirement guard, not a substitute for DB-backed docs generation.
 test('retired historical packs and generators cannot return', () => {
+  const currentPaths = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+    { encoding: 'utf8' }
+  ).split('\0');
   const retiredPaths = [
     'docs/planning/proposals/mandatory/frontend-and-ux/superseded',
     'docs/planning/proposals/mandatory/frontend-and-ux/archive-candidates',
@@ -147,7 +152,11 @@ test('retired historical packs and generators cannot return', () => {
     'docs/planning/proposals/mandatory/governance-and-docs/planner-local-doc-archive-plan-20260601.md',
   ];
   for (const path of retiredPaths) {
-    assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, path);
+    assert.equal(
+      currentPaths.some((name) => name === path || name.startsWith(`${path}/`)),
+      false,
+      path
+    );
   }
 
   const frontendClassification = readRepoFile(

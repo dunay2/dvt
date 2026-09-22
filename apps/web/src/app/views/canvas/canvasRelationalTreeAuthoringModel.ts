@@ -1,9 +1,5 @@
 /** Owned concern: derive guided relational authoring choices and canonical DVT drafts. */
 import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
-import {
-  hasSameConnectionRef,
-  inspectDvtSubstraitAcceptedCrossDraft,
-} from '@dvt/postgres-projection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
@@ -18,24 +14,13 @@ import {
 import {
   resolveCanvasRelationalOperationChoices,
   resolveCanvasRelationalProjectionChoice,
-  isCanvasSetOperation,
   type CanvasRelationalOperation,
-  type CanvasRelationalOperationAvailability,
   type CanvasRelationalOperationChoice,
 } from './canvasRelationalOperationChoices';
 import {
   appendDvtSubstraitJoinInput,
-  inspectDvtSubstraitJoinDraft,
   type DvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
-import { inspectDvtSubstraitUnionAllDraft } from './canvasDvtSubstraitSetComposition';
-
-export type CanvasRelationalTreeAuthoringCandidate = Readonly<{
-  nodeId: string;
-  selectable: boolean;
-  selected: boolean;
-  reason: CanvasRelationalOperationAvailability | null;
-}>;
 
 export function createCanvasRelationalTreeInitialJoinDraft(
   args: Readonly<{
@@ -108,20 +93,6 @@ export function createCanvasRelationalTreeNodeDraft(
   };
 }
 
-function operationChoice(
-  operation: CanvasRelationalOperation,
-  inputs: readonly CanvasDvtCompositionInput[],
-  readOnly: boolean,
-  unionAllAvailable: boolean
-): CanvasRelationalOperationChoice {
-  return resolveCanvasRelationalOperationChoices({
-    inputs,
-    predicateAvailable: false,
-    readOnly,
-    unionAllAvailable,
-  }).find((choice) => choice.operation === operation)!;
-}
-
 export function resolveCanvasRelationalTreeAuthoringChoices(
   args: Readonly<{
     inputs: readonly CanvasDvtCompositionInput[];
@@ -157,102 +128,10 @@ export function resolveCanvasRelationalTreeAuthoringChoices(
       ...args,
       selectedInputIds: [first.nodeId, second.nodeId],
     }) != null;
-  return [
-    operationChoice('inner_join', selectedInputs, args.readOnly, false),
-    operationChoice('left_join', selectedInputs, args.readOnly, false),
-    operationChoice('right_join', selectedInputs, args.readOnly, false),
-    operationChoice('full_outer_join', selectedInputs, args.readOnly, false),
-    operationChoice('left_semi_join', selectedInputs, args.readOnly, false),
-    operationChoice('left_anti_join', selectedInputs, args.readOnly, false),
-    operationChoice('right_semi_join', selectedInputs, args.readOnly, false),
-    operationChoice('right_anti_join', selectedInputs, args.readOnly, false),
-    operationChoice('cross_join', selectedInputs, args.readOnly, false),
-    operationChoice('union_all', selectedInputs, args.readOnly, unionAvailable),
-    operationChoice('union_distinct', selectedInputs, args.readOnly, unionAvailable),
-    operationChoice('intersect_distinct', selectedInputs, args.readOnly, unionAvailable),
-    operationChoice('except_distinct', selectedInputs, args.readOnly, unionAvailable),
-    operationChoice('intersect_all', selectedInputs, args.readOnly, unionAvailable),
-    operationChoice('except_all', selectedInputs, args.readOnly, unionAvailable),
-  ];
-}
-
-function unavailableReason(
-  operation: CanvasRelationalOperation,
-  inputs: readonly CanvasDvtCompositionInput[]
-): CanvasRelationalOperationAvailability {
-  if (operation === 'projection') return 'semantically-unavailable';
-  return operationChoice(operation, inputs, false, false).availability;
-}
-
-export function resolveCanvasRelationalTreeAuthoringCandidates(
-  args: Readonly<{
-    operation: CanvasRelationalOperation;
-    inputs: readonly CanvasDvtCompositionInput[];
-    selectedInputIds: readonly string[];
-    joinDraft: DvtSubstraitJoinDraft | null;
-    targetNodeId: string;
-    nodes: readonly CanonicalNode[];
-    edges: readonly CanonicalEdge[];
-  }>
-): readonly CanvasRelationalTreeAuthoringCandidate[] {
-  const selected = new Set(args.selectedInputIds);
-  const first = args.inputs.find((input) => input.nodeId === args.selectedInputIds[0]);
-  const joinInspection =
-    args.joinDraft == null ? null : inspectDvtSubstraitJoinDraft(args.joinDraft);
-  const crossInspection =
-    args.joinDraft == null ? null : inspectDvtSubstraitAcceptedCrossDraft(args.joinDraft);
-  return args.inputs.map((input) => {
-    if (selected.has(input.nodeId)) {
-      return { nodeId: input.nodeId, selectable: false, selected: true, reason: null };
-    }
-    let selectable = false;
-    if (args.operation === 'projection') {
-      selectable =
-        first != null &&
-        (resolveCanvasDvtInitialJoinPairForInputs(first, input) != null ||
-          orderedCanvasRelationalTreeUnionAllEntry({
-            ...args,
-            selectedInputIds: [first.nodeId, input.nodeId],
-          }) != null);
-    } else if (isCanvasSetOperation(args.operation)) {
-      selectable =
-        (args.joinDraft == null || inspectDvtSubstraitUnionAllDraft(args.joinDraft).ok) &&
-        orderedCanvasRelationalTreeUnionAllEntry({
-          ...args,
-          selectedInputIds: [...args.selectedInputIds, input.nodeId],
-        }) != null;
-    } else if (args.operation === 'cross_join') {
-      const connection =
-        crossInspection?.ok === true
-          ? crossInspection.projection.inputs[0]?.sourceRef.connectionRef
-          : first?.sourceRef.connectionRef;
-      selectable =
-        connection != null &&
-        input.sourceRef.connectionRef.provider === 'postgres' &&
-        hasSameConnectionRef(connection, input.sourceRef.connectionRef) &&
-        input.fields.every((field) => field.joinDataType != null);
-    } else if (args.joinDraft == null) {
-      selectable = first != null && resolveCanvasDvtInitialJoinPairForInputs(first, input) != null;
-    } else if (joinInspection?.ok) {
-      const connection = joinInspection.projection.inputs[0]?.sourceRef.connectionRef;
-      selectable =
-        connection != null &&
-        hasSameConnectionRef(connection, input.sourceRef.connectionRef) &&
-        input.fields.some(
-          (field) =>
-            field.joinDataType != null &&
-            joinInspection.projection.outputs.some(
-              (output) => output.dataType === field.joinDataType
-            )
-        );
-    }
-    return {
-      nodeId: input.nodeId,
-      selectable,
-      selected: false,
-      reason: selectable
-        ? null
-        : unavailableReason(args.operation, first == null ? [input] : [first, input]),
-    };
+  return resolveCanvasRelationalOperationChoices({
+    inputs: selectedInputs,
+    predicateAvailable: false,
+    readOnly: args.readOnly,
+    unionAllAvailable: unionAvailable,
   });
 }

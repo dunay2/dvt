@@ -1,5 +1,5 @@
 /** Owned concern: readable card content and accessible semantic input roles. */
-import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
+import { resolveCanvasRelationalNodePresentation } from './canvasRelationalNodePresentation';
 import type { CanvasRelationalTreePlacedNode } from './canvasRelationalTreeGeometry';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 
@@ -50,12 +50,7 @@ export function CanvasRelationalTreeNodeButton({
               : copy.inspectorDbtOriginLabel;
   const subtitle = node.displayName ?? node.substraitKind;
   const isSource = node.operator === 'read';
-  const window = node.decorations.some((decoration) => decoration.kind === 'window');
-  const presentation = resolveCanvasRelationalOperationPresentation(
-    window
-      ? 'window'
-      : (node.operation ?? (node.operator === 'project' ? 'projection' : node.operator))
-  );
+  const { presentation } = resolveCanvasRelationalNodePresentation(node);
   const title = isSource ? subtitle : copy[presentation.labelKey];
   const Icon = presentation.icon;
   return (
@@ -76,7 +71,7 @@ export function CanvasRelationalTreeNodeButton({
       data-operator={node.operator}
       onClick={() => {
         onSelect(node.locator);
-        if (node.operator !== 'read') onExpand?.(node.locator);
+        onExpand?.(node.locator);
       }}
       style={{
         touchAction: 'none',

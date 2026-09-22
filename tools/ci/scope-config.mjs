@@ -9,6 +9,7 @@ import {
   isGovernanceToolingCommand,
 } from './repository-command-catalog.mjs';
 import { classifyRepositoryFileScope } from './repository-change-scope.mjs';
+import { EXECUTABLE_CI_TOOL_TESTS } from './ci-tool-test-suite.mjs';
 
 const execFileAsync = promisify(execFile);
 
@@ -101,8 +102,10 @@ export const WORKFLOW_SCOPE_PATTERNS = {
   generated_capability_relevant: WORKFLOW_SCOPE_POLICY.generated_capability_relevant,
   changed_file_validation_relevant: WORKFLOW_SCOPE_POLICY.changed_file_validation_relevant,
   security_analysis_relevant: WORKFLOW_SCOPE_POLICY.security_analysis_relevant,
-  ci_tool_executable_contracts_relevant:
-    WORKFLOW_SCOPE_POLICY.ci_tool_executable_contracts_relevant,
+  ci_tool_executable_contracts_relevant: [
+    ...WORKFLOW_SCOPE_POLICY.ci_tool_executable_contracts_relevant,
+    ...EXECUTABLE_CI_TOOL_TESTS,
+  ],
 };
 
 export const WORKSPACE_ENTRIES = [

@@ -91,6 +91,33 @@ describe('GraphNodeColumnFunctionMenu pointer lifecycle', () => {
     return document.querySelector('[data-slot="graph-node-column-function-menu"]');
   }
 
+  it('keeps a reopened pointer menu alive when the previous focus scope finishes closing', async () => {
+    const piece = container.querySelector<HTMLElement>('[data-slot="graph-node-column-piece"]')!;
+    act(() => {
+      fireEvent.contextMenu(piece);
+    });
+    expect(menu()).not.toBeNull();
+
+    act(() => {
+      fireEvent.keyDown(document.body, { key: 'Escape' });
+    });
+    expect(menu()).toBeNull();
+    act(() => {
+      fireEvent.contextMenu(piece);
+    });
+    expect(menu()).not.toBeNull();
+
+    // Radix defers close autofocus; let the old scope finish after the new one opens.
+    await act(async () => vi.advanceTimersByTimeAsync(0));
+    expect(menu()).not.toBeNull();
+    act(() => {
+      fireEvent.keyDown(document.body, { key: 'Escape' });
+    });
+    await act(async () => vi.runOnlyPendingTimersAsync());
+    expect(menu()).toBeNull();
+    expect(document.body.style.pointerEvents).not.toBe('none');
+  });
+
   it.each(['pointer', 'keyboard'] as const)(
     'opens the existing alias form for the selected output through %s without changing the original',
     async (gesture) => {

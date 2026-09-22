@@ -1,4 +1,4 @@
-/** Owned concern: show the existing scalar projection of the selected JOIN, not another AST. */
+/** Owned concern: display a selected relation's existing scalar projection, not another AST. */
 import { useContext, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { CanvasOperationExpressionHost } from './CanvasRelationalTreeEditorFrame';
@@ -10,7 +10,7 @@ import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 import { CanvasRelationalScalarTree } from './CanvasRelationalScalarTree';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 
-export function CanvasRelationalJoinExpressionTree({
+export function CanvasRelationalExpressionTree({
   transformNode,
   draft,
   relationId,
@@ -34,8 +34,8 @@ export function CanvasRelationalJoinExpressionTree({
             createCanvasRelationalTreeNodeDraft(transformNode, operation, draft)
           );
     return projectSemanticWorkbenchGraph(node, {
-      view: 'join-expression',
-      joinRelationId: relationId,
+      view: 'relation-expressions',
+      expressionRelationId: relationId,
     });
   }, [transformNode, draft, relationId, operation]);
   if (graph == null) return null;
