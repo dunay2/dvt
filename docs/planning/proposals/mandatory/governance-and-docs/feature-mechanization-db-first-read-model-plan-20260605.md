@@ -28,13 +28,11 @@ files. Neither mode may interpret a Git failure as successful empty evidence.
 Manual CI implementation validation requires a caller-supplied comparison base;
 it must not default to comparing the candidate with itself.
 
-The CI authority transport is tracked in
+The CI authority gap is tracked in
 [#2957](https://github.com/dunay2/dvt/issues/2957). Repository import alone cannot
-restore DB-authored decisions. The selected portable-projection design must
-preserve effective declarations and prove producer identity, candidate binding,
-revision, integrity, and freshness before replacing the existing DB read. It
-must not introduce a second writable authority. Until publication and trust
-are exercised, an import-only CI database is not evidence of complete authority.
+restore DB-authored decisions. An import-only CI database is not evidence of
+complete authority. No additional publication infrastructure is part of this
+Git-evidence correction.
 
 Validation is `pnpm docs:feature-mechanization:implementation`,
 `node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-operate.test.cjs`,
