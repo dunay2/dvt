@@ -56,7 +56,14 @@ function relationsMatch(nodeRelation: string, materializedRelation: string): boo
 export function resolveCanvasSourceDataSampleTarget(
   data: DbtNodeData
 ): CanvasSourceDataSampleTarget | null {
-  const connectedSourceRef = ConnectedSourceRefSchema.safeParse(data.metadata?.connectedSourceRef);
+  return resolveCanvasConnectedSourceDataSampleTarget(data.metadata?.connectedSourceRef, data.name);
+}
+
+export function resolveCanvasConnectedSourceDataSampleTarget(
+  sourceRef: unknown,
+  nodeName: string
+): CanvasSourceDataSampleTarget | null {
+  const connectedSourceRef = ConnectedSourceRefSchema.safeParse(sourceRef);
   if (
     !connectedSourceRef.success ||
     !connectedSourceRef.data.sourceObjectId.startsWith('relation/')
@@ -67,7 +74,7 @@ export function resolveCanvasSourceDataSampleTarget(
   return {
     connectionId: connectedSourceRef.data.connectionRef.connectionId,
     objectId: connectedSourceRef.data.sourceObjectId,
-    nodeName: data.name,
+    nodeName,
   };
 }
 

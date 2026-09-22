@@ -80,7 +80,11 @@ export default function CanvasShell({
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
-  const { dataSampleTabs, projectNode: projectNodeDataSample } = useCanvasNodeDataSample({
+  const {
+    dataSampleTabs,
+    projectNode: projectNodeDataSample,
+    openSource,
+  } = useCanvasNodeDataSample({
     activeCanvasId: panels.activeCanvasId,
     canvasTransformDataSampleQuery,
     runMaterializationSampleQuery,
@@ -484,6 +488,7 @@ export default function CanvasShell({
                     viewRequestId={modelViewRequestId}
                     draftStatus={chromeState.draftStatusState}
                     query={canvasTransformDataSampleQuery}
+                    onExecuteSource={openSource}
                     preparePreview={prepareModelPreview}
                     operationDataHost={operationDataHost}
                     onOpenOperationData={

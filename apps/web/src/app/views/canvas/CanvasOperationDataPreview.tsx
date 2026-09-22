@@ -7,6 +7,7 @@ import type { CanvasModelPreviewPreparation } from './CanvasModelDataView';
 import { CanvasModelDataPanel } from './CanvasModelDataPanel';
 import { useCanvasModelDataQuery } from './useCanvasModelDataQuery';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import type { CanvasSourceDataSampleTarget } from './canvasSourceDataSample';
 
 export type CanvasOperationPreviewPorts = Readonly<{
   canvasId: string;
@@ -14,6 +15,7 @@ export type CanvasOperationPreviewPorts = Readonly<{
   preparePreview?: CanvasModelPreviewPreparation;
   dataHost?: HTMLDivElement | null;
   onOpenData?: () => void;
+  onExecuteSource?: (nodeId: string, target: CanvasSourceDataSampleTarget) => void;
 }>;
 
 export const CanvasOperationPreviewContext = createContext<

@@ -8,6 +8,7 @@ import {
   stubE2eJsonApi,
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
+import { openWorkbenchModel } from '../../support/relationalWorkbench/navigation';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -119,4 +120,23 @@ describe('Canvas explicit data action', () => {
       });
     });
   }
+
+  it('queries the canonical source from inside the model without calling transform preview', () => {
+    openWorkbenchModel('dvt-transform-1');
+    const source = '[data-slot="canvas-relational-tree-node"][data-operator="read"]';
+    cy.get(source).click();
+    cy.then(() => expect(getE2eApiCalls(sourcePath, 'GET')).to.have.length(0));
+    cy.get(source).parent().find('[data-slot="canvas-node-execute"]').focus().click();
+    waitForE2eApiCall(sourcePath, 'GET');
+    cy.get('[data-slot="bottom-operational-drawer-data"]').should('contain.text', 'Ada');
+    cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
+    cy.then(() => {
+      const calls = getE2eApiCalls(sourcePath, 'GET');
+      expect(calls).to.have.length(1);
+      expect(calls[0]!.url.searchParams.get('objectId')).to.equal('relation/dvt/raw/orders');
+      expect(calls[0]!.url.searchParams.get('limit')).to.equal('20');
+      expect(getE2eApiCalls(transformPath, 'GET')).to.have.length(0);
+      expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+    });
+  });
 });

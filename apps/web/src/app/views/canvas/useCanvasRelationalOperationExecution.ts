@@ -6,17 +6,31 @@ import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { resolveCanvasRelationalNodePresentation } from './canvasRelationalNodePresentation';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
+import { resolveCanvasConnectedSourceDataSampleTarget } from './canvasSourceDataSample';
 
 export function useCanvasRelationalOperationExecution(node: CanvasRelationalTreeNode) {
   const context = useContext(CanvasOperationPreviewContext);
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
   if (context == null || node.relationId == null || node.operator === 'unsupported') return null;
+  if (node.operator === 'read') {
+    const target = resolveCanvasConnectedSourceDataSampleTarget(
+      node.sourceRef,
+      node.displayName ?? copy.data
+    );
+    const disabled = target == null || context.onExecuteSource == null;
+    return {
+      label: copy.execute,
+      disabled,
+      title: disabled ? copy.unavailable : copy.execute,
+      onExecute: () => {
+        if (target != null)
+          context.onExecuteSource?.(`${context.nodeId}:${node.relationId}`, target);
+      },
+    };
+  }
   const { presentation } = resolveCanvasRelationalNodePresentation(node);
-  const label =
-    node.operator === 'read'
-      ? (node.displayName ?? copy.data)
-      : resolveCanvasViewCopy(language)[presentation.labelKey];
+  const label = resolveCanvasViewCopy(language)[presentation.labelKey];
   const disabled =
     context.unapplied ||
     context.query == null ||

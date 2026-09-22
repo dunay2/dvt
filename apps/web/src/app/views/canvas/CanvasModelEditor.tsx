@@ -23,6 +23,7 @@ import {
 } from './CanvasRelationalTreeWorkbench';
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
+import type { CanvasOperationPreviewPorts } from './CanvasOperationDataPreview';
 import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
 import { projectCanvasRelationalTreeCatalogue } from './canvasRelationalTreeWorkbenchModel';
 import { CanvasModelSqlView } from './CanvasModelSqlView';
@@ -48,6 +49,7 @@ export function CanvasModelEditor({
   preparePreview,
   operationDataHost,
   onOpenOperationData,
+  onExecuteSource,
   onClose,
   active = true,
   onSelect,
@@ -66,6 +68,7 @@ export function CanvasModelEditor({
   preparePreview?: CanvasModelPreviewPreparation;
   operationDataHost?: HTMLDivElement | null;
   onOpenOperationData?: () => void;
+  onExecuteSource?: CanvasOperationPreviewPorts['onExecuteSource'];
   onClose: () => void;
   active?: boolean;
   onSelect: () => void;
@@ -327,6 +330,7 @@ export function CanvasModelEditor({
           preview={{
             canvasId,
             query,
+            onExecuteSource,
             preparePreview,
             dataHost: active && view === 'editor' ? operationDataHost : null,
             onOpenData: active && view === 'editor' ? onOpenOperationData : undefined,
