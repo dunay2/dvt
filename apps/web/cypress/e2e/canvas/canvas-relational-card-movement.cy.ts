@@ -76,7 +76,13 @@ describe('Relational card movement', () => {
       cy.get(source).should(($moved) => {
         expect(position($moved[0])).to.deep.equal([before[0] + 10, before[1]]);
       });
-      cy.get(source).click().should('have.attr', 'aria-selected', 'true');
+      const relationId = $card.attr('data-relation-id')!;
+      cy.get(source).click();
+      cy.get(`[data-slot="canvas-relational-tree-node"][data-relation-id="${relationId}"]`).should(
+        'have.attr',
+        'aria-selected',
+        'true'
+      );
       cy.then(() => expect(semanticWrites('join-transform')).to.have.length(writes));
     });
   });

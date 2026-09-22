@@ -108,9 +108,11 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
         'data-operator',
         'sort'
       );
-      cy.get(
-        '[data-slot="canvas-operation-data-preview"] [data-slot="canvas-model-preview"]'
-      ).click();
+      cy.get('[data-slot="canvas-relational-tree-node"][data-operator="sort"]')
+        .parent()
+        .find('[data-slot="canvas-node-execute"]')
+        .focus()
+        .click();
       cy.get('[data-slot="canvas-operation-data-preview"] table').should('contain.text', 'C-001');
       cy.then(() => {
         const call = getE2eApiCalls(/\/data-sample/, 'GET').at(-1)!;
@@ -126,9 +128,11 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
         '[data-slot="canvas-relational-tree-inline-editor"]:visible select[aria-label="Direction and nulls 1"]'
       ).should(($select) => expect($select.val()).to.equal(selectedDirection));
       cy.get('[data-operator="fetch"]').should('contain.text', 'LIMIT 100');
-      cy.get(
-        '[data-slot="canvas-operation-data-preview"] [data-slot="canvas-model-preview"]'
-      ).click();
+      cy.get('[data-slot="canvas-relational-tree-node"][data-operator="sort"]')
+        .parent()
+        .find('[data-slot="canvas-node-execute"]')
+        .focus()
+        .click();
       cy.get('[data-slot="canvas-operation-data-preview"] table').should('contain.text', 'C-001');
       cy.then(() => {
         const call = getE2eApiCalls(/\/data-sample/, 'GET').at(-1)!;

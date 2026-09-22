@@ -88,14 +88,15 @@ describe('editing a JOIN beneath canonical Sort/Fetch', () => {
       expect(reopened.sidecar.fields.map(({ fieldId }) => fieldId)).toEqual(
         draft.sidecar.fields.map(({ fieldId }) => fieldId)
       );
-      const wrapperShape = (value: typeof draft) =>
+      const [originalWrappers, reopenedWrappers] = [draft, reopened].map((value) =>
         peelCanvasDvtSubstraitSortFetch(value).wrappers.map((wrapper) => ({
           relationId: wrapper.relationId,
           operation: wrapper.operation,
           specification:
             wrapper.operation === 'sort' ? wrapper.keys : [wrapper.count, wrapper.offset],
-        }));
-      expect(wrapperShape(reopened)).toEqual(wrapperShape(draft));
+        }))
+      );
+      expect(reopenedWrappers).toEqual(originalWrappers);
       expect(encodeDvtSubstraitSemanticDocument(draft)).toEqual(before);
     }
   );
