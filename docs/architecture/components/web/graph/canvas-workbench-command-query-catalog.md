@@ -2,7 +2,7 @@
 title: Canvas Workbench Command And Query Catalog
 status: Proposed
 owner: Frontend / Architecture
-last_reviewed: 2026-09-07
+last_reviewed: 2026-09-22
 planning_type: architecture
 ---
 
@@ -159,6 +159,16 @@ DDD ownership rules:
 | Review-as-queue drift: Fowler reviews looked actionable after closure.                                            | `RecordCanvasFowlerCanon` and `ClassifyCanvasFowlerDisposition` name owner.                                                                                                             | Planning Aggregate plus Query Model.     |
 
 <!-- markdownlint-enable MD060 -->
+
+## Column Menu Lifecycle
+
+The contextual menu primitive owns content presence, modality and focus cleanup.
+Its presentation must not mirror that lifetime in a latch cleared by deferred
+close autofocus: an older close cannot unmount a newly opened menu. A selected
+function or alias transfers to the existing authoring surface after menu cleanup;
+closing without selection performs no command. Pointer and keyboard entries keep
+the same action owner. Neither entry may repair a leaked modal lock by rewriting
+global pointer styles or disabling modal behavior.
 
 ## Retired Rail Disposition
 
