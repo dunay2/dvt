@@ -196,22 +196,11 @@ function CanvasShellMainSurface({
       />
     );
 
-  if (layout.contextualWorkbench == null) {
-    return baseSurface;
-  }
-
   return (
     <CanvasShellContextualWorkbenchSplit
       baseSurface={baseSurface}
-      presentation={layout.contextualWorkbench.presentation}
-      title={layout.contextualWorkbench.title}
-      closeLabel={layout.contextualWorkbench.closeLabel}
-      moveLabel={layout.contextualWorkbench.moveLabel}
-      description={layout.contextualWorkbench.description}
-      onClose={() => void layout.contextualWorkbench?.requestClose()}
-    >
-      {layout.contextualWorkbench.panel}
-    </CanvasShellContextualWorkbenchSplit>
+      workbench={layout.contextualWorkbench}
+    />
   );
 }
 

@@ -12,13 +12,13 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
-const sourcePath = '/workspace/warehouse/connections/warehouse-a/source-data-sample';
+const sourcePath = '/workspace/warehouse/connections/local-postgres-proof/source-data-sample';
 const transformPath =
   /\/workspace\/graph\/canvases\/[^/]+\/transforms\/dvt-transform-1\/data-sample/;
 const sample = {
   contractVersion: 1,
-  columns: [{ name: 'order_id', type: 'integer', nullable: false }],
-  rows: [{ values: ['7'] }],
+  columns: [{ name: 'customer', type: 'string', nullable: false }],
+  rows: [{ values: ['Ada'] }],
   limit: 20,
   truncated: false,
   sampledAt: '2026-09-22T10:00:00Z',
@@ -39,11 +39,15 @@ describe('Canvas explicit data action', () => {
       minFrontendVersion: '0.0.1',
       plugins: { dvt: { available: true } },
     });
-    stubStatefulCanvasDraftAuthoring({ canvasKind: 'transformation', authoringGenerated: true });
+    stubStatefulCanvasDraftAuthoring({
+      canvasKind: 'transformation',
+      authoringGenerated: true,
+      terminalTransformPreview: true,
+    });
     stubE2eJsonApi('GET', sourcePath, {
       ...sample,
-      connectionId: 'warehouse-a',
-      objectId: 'raw.orders',
+      connectionId: 'local-postgres-proof',
+      objectId: 'relation/dvt/raw/orders',
     });
     stubE2eApi('GET', transformPath, ({ url }) => ({
       body: {
@@ -80,7 +84,10 @@ describe('Canvas explicit data action', () => {
         .find('[data-slot="canvas-node-execute"]')
         .focus()
         .should('be.visible')
-        .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+        .should('have.focus')
+        .then(($button) =>
+          nodeId === 'source-1' ? cy.wrap($button).click() : cy.press(Cypress.Keyboard.Keys.ENTER)
+        );
       waitForE2eApiCall(path, 'GET');
       cy.get(`[data-slot="bottom-operational-drawer-tab"][data-tab="data:${nodeId}"]`).should(
         'have.attr',
@@ -88,8 +95,8 @@ describe('Canvas explicit data action', () => {
         'true'
       );
       cy.get('[data-slot="bottom-operational-drawer-data"]')
-        .should('contain.text', 'order_id')
-        .and('contain.text', '7');
+        .should('contain.text', 'customer')
+        .and('contain.text', 'Ada');
       cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
       cy.then(() => {
         expect(getE2eApiCalls(path, 'GET')).to.have.length(1);

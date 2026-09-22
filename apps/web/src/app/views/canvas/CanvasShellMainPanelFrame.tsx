@@ -77,43 +77,27 @@ export function CanvasShellReadOnlyBannerSlot({
 
 export function CanvasShellContextualWorkbenchSplit({
   baseSurface,
-  children,
-  closeLabel,
-  description,
-  moveLabel,
-  onClose,
-  title,
-  presentation,
+  workbench,
 }: Readonly<{
   baseSurface: ReactNode;
-  children: ReactNode;
-  closeLabel: string;
-  description?: string;
-  moveLabel?: string;
-  onClose: () => void;
-  title: string;
-  presentation?: 'docked';
+  workbench?: import('./canvasShell.types').CanvasShellContextualWorkbench;
 }>): JSX.Element {
-  const positionController = useCanvasNodeWorkbenchPosition(presentation !== 'docked');
-
-  if (presentation === 'docked')
-    return (
-      <div className={canvasShellMainPanelFrameClassNames.workbenchSplit}>
-        <div className={canvasShellMainPanelFrameClassNames.workbenchBaseSurface}>
-          {baseSurface}
-        </div>
-        <CanvasContextualWorkbenchPanel
-          title={title}
-          closeLabel={closeLabel}
-          onClose={onClose}
-          moveLabel={title}
-          autoFocus
-        >
-          {children}
-        </CanvasContextualWorkbenchPanel>
-      </div>
+  const docked = workbench?.presentation === 'docked';
+  const positionController = useCanvasNodeWorkbenchPosition(workbench != null && !docked);
+  const panel =
+    workbench == null ? null : (
+      <CanvasContextualWorkbenchPanel
+        title={workbench.title}
+        closeLabel={workbench.closeLabel}
+        description={workbench.description}
+        moveLabel={workbench.moveLabel ?? workbench.title}
+        onClose={() => void workbench.requestClose()}
+        autoFocus={docked}
+        dragHandleProps={docked ? undefined : positionController.dragHandleProps}
+      >
+        {workbench.panel}
+      </CanvasContextualWorkbenchPanel>
     );
-
   return (
     <div className={canvasShellMainPanelFrameClassNames.workbenchSplit}>
       <div
@@ -122,27 +106,22 @@ export function CanvasShellContextualWorkbenchSplit({
       >
         {baseSurface}
       </div>
-      <div
-        ref={positionController.surfaceRef}
-        data-slot="canvas-contextual-workbench-overlay"
-        className={canvasShellMainPanelFrameClassNames.workbenchOverlay}
-        style={{
-          left: `${positionController.position.left}px`,
-          top: `${positionController.position.top}px`,
-        }}
-        {...positionController.surfacePointerProps}
-      >
-        <CanvasContextualWorkbenchPanel
-          title={title}
-          closeLabel={closeLabel}
-          description={description}
-          moveLabel={moveLabel ?? title}
-          dragHandleProps={positionController.dragHandleProps}
-          onClose={onClose}
+      {workbench == null || docked ? (
+        panel
+      ) : (
+        <div
+          ref={positionController.surfaceRef}
+          data-slot="canvas-contextual-workbench-overlay"
+          className={canvasShellMainPanelFrameClassNames.workbenchOverlay}
+          style={{
+            left: `${positionController.position.left}px`,
+            top: `${positionController.position.top}px`,
+          }}
+          {...positionController.surfacePointerProps}
         >
-          {children}
-        </CanvasContextualWorkbenchPanel>
-      </div>
+          {panel}
+        </div>
+      )}
     </div>
   );
 }

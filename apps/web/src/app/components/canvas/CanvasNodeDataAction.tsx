@@ -20,6 +20,9 @@ export function CanvasNodeDataAction({
         if (event.detail < 2) onExecute();
       }}
       onDoubleClick={(event) => event.stopPropagation()}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') event.stopPropagation();
+      }}
     >
       <Play aria-hidden="true" className="size-3.5" />
       {label}

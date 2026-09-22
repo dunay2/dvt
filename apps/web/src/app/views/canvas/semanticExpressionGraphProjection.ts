@@ -20,7 +20,6 @@ type JoinContext = Readonly<{
   conditionIndex?: number;
 }>;
 type InputField = NonNullable<SemanticWorkbenchNodeData['fieldReference']>;
-
 export function createSemanticExpressionProjector({
   plan,
   nodes,
