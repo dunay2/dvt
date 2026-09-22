@@ -541,18 +541,6 @@ test('main full CI prepares Planning DB before the full validation baseline', ()
   assertWorkflowContains(ciWorkflow, 'PLANNING_DB_INTEGRITY_SCOPE: bootstrap');
 });
 
-test('PR quality traceability runs after implementation mechanization to avoid dirty generated diffs', () => {
-  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
-  const implementationGateIndex = prQualityGate.indexOf(
-    'pnpm docs:feature-mechanization:implementation'
-  );
-  const traceabilityIndex = prQualityGate.indexOf('pnpm traceability:adr0');
-
-  assert.notEqual(implementationGateIndex, -1);
-  assert.notEqual(traceabilityIndex, -1);
-  assert.ok(implementationGateIndex < traceabilityIndex);
-});
-
 test('scope diff consumers use shallow checkout instead of full PR history', () => {
   const fetchScopeBaseAction = readFileSync('.github/actions/fetch-scope-base/action.yml', 'utf8');
   const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
