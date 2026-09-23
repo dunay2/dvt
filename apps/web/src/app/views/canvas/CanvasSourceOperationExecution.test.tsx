@@ -58,7 +58,7 @@ it.each(['available', 'missing-reference', 'missing-port'] as const)(
             <CanvasRelationalTreeLayout
               root={node}
               outputName="Model"
-              selectedLocator={null}
+              selectedLocator={node.locator}
               copy={resolveCanvasViewCopy('en')}
               onSelect={vi.fn()}
             />
