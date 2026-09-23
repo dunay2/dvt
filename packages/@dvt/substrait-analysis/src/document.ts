@@ -15,7 +15,8 @@ export class SubstraitAnalysisError extends Error {
       | 'unsupported_relation'
       | 'unknown_relation'
       | 'stale_document',
-    message: string
+    message: string,
+    readonly relationId?: string
   ) {
     super(message);
     this.name = 'SubstraitAnalysisError';

@@ -23,6 +23,7 @@ import {
 import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 
 import { sameConnectedSource, requireDvtProjectedSourceCoverage } from './dvtSourceCoverage.js';
+import { withSubstraitOutputSchema } from './dvtSubstraitOutputSchema.js';
 import type { DvtTerminalTransformClosure } from './resolveDvtTerminalTransformClosure.js';
 
 export type ProjectDvtConnectedFieldDocument = (
@@ -169,7 +170,8 @@ export async function projectDvtPostgresTransform(
     };
   };
 
-  return projectDraft(selected ?? canonicalDraft, selected != null);
+  const draft = selected ?? canonicalDraft;
+  return withSubstraitOutputSchema(draft, await projectDraft(draft, selected != null));
 }
 
 function projectCanonicalConnectedFieldDocument(

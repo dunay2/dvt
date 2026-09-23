@@ -19,26 +19,28 @@ type UnaryKind = 'project' | 'filter' | 'aggregate' | 'sort' | 'fetch';
 type BinaryKind = 'join' | 'cross' | 'set';
 type RelationsFixture = {
   read(): Rel;
-  unary(kind: UnaryKind, input: Rel): Rel;
-  combine(kind: BinaryKind, inputs: Rel[]): Rel;
+  unary(kind: UnaryKind, input: Rel, outputMapping?: number[]): Rel;
+  combine(kind: BinaryKind, inputs: Rel[], outputMapping?: number[]): Rel;
   document(root: Rel, signed?: boolean): SubstraitDocument;
 };
 
 export function relationsFixture(): RelationsFixture {
   const relations: DvtSubstraitAuthoringSidecarV1['relations'] = [];
   const fields: DvtSubstraitAuthoringSidecarV1['fields'] = [];
-  function bind(rel: Rel, anchor: number): Rel {
+  function bind(rel: Rel, anchor: number, width = 1): Rel {
     relations.push({
       relationId: `r${anchor}`,
       relAnchor: anchor,
       displayName: `Instance ${anchor}`,
     });
-    fields.push({
-      fieldId: `f${anchor}`,
-      relationId: `r${anchor}`,
-      outputOrdinal: 0,
-      displayName: 'value',
-    });
+    for (let ordinal = 0; ordinal < width; ordinal += 1) {
+      fields.push({
+        fieldId: ordinal === 0 ? `f${anchor}` : `f${anchor}_${ordinal}`,
+        relationId: `r${anchor}`,
+        outputOrdinal: ordinal,
+        displayName: ordinal === 0 ? 'value' : `value_${ordinal}`,
+      });
+    }
     return rel;
   }
   function read(): Rel {
@@ -64,11 +66,11 @@ export function relationsFixture(): RelationsFixture {
       anchor
     );
   }
-  function unary(kind: UnaryKind, input: Rel): Rel {
+  function unary(kind: UnaryKind, input: Rel, outputMapping = [0]): Rel {
     const anchor = relations.length + 1;
     const common = {
       relAnchor: anchor,
-      emitKind: { case: 'emit' as const, value: { outputMapping: [0] } },
+      emitKind: { case: 'emit' as const, value: { outputMapping } },
     };
     const rel =
       kind === 'filter'
@@ -88,13 +90,13 @@ export function relationsFixture(): RelationsFixture {
             },
           })
         : create(RelSchema, { relType: { case: kind, value: { input, common } } });
-    return bind(rel, anchor);
+    return bind(rel, anchor, outputMapping.length);
   }
-  function combine(kind: BinaryKind, inputs: Rel[]): Rel {
+  function combine(kind: BinaryKind, inputs: Rel[], outputMapping = [0]): Rel {
     const anchor = relations.length + 1;
     const common = {
       relAnchor: anchor,
-      emitKind: { case: 'emit' as const, value: { outputMapping: [0] } },
+      emitKind: { case: 'emit' as const, value: { outputMapping } },
     };
     const rel =
       kind === 'set'
@@ -116,12 +118,24 @@ export function relationsFixture(): RelationsFixture {
           : create(RelSchema, {
               relType: { case: kind, value: { common, left: inputs[0]!, right: inputs[1]! } },
             });
-    return bind(rel, anchor);
+    return bind(rel, anchor, outputMapping.length);
   }
   function document(root: Rel, signed = false): SubstraitDocument {
     const plan = create(PlanSchema, {
       version: { majorNumber: 0, minorNumber: 101, patchNumber: 0 },
-      relations: [{ relType: { case: 'root', value: { input: root, names: ['value'] } } }],
+      relations: [
+        {
+          relType: {
+            case: 'root',
+            value: {
+              input: root,
+              names: fields
+                .filter((field) => field.relationId === relations.at(-1)?.relationId)
+                .map((field) => field.displayName!),
+            },
+          },
+        },
+      ],
     });
     const sidecar: DvtSubstraitAuthoringSidecarV1 = {
       schemaVersion: DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,

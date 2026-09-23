@@ -552,7 +552,8 @@ units:
     level: component
     status: review
     ownedConcern:
-      Derive provider-neutral relation indexing and exact subtree selection from Substrait.
+      Derive provider-neutral relation indexing, output schemas, field dependencies and exact
+      subtree selection from Substrait.
     owns:
       - packages/@dvt/substrait-analysis/**
     childrenRequired: false
