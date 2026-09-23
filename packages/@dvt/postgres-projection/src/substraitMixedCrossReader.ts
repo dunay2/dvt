@@ -12,10 +12,9 @@ import {
   hasPinnedPlanVersion,
   hasSameConnectionRef,
   hasUniqueJoinSidecarIdentity,
-  joinFieldType,
-  namedTableIdentity,
 } from './substraitJoinInspectionGuards.js';
 import { inspectDvtSubstraitJoinDraft } from './substraitJoinReader.js';
+import { inspectReadInputs } from './substraitReadInputs.js';
 import { indexDvtSubstraitRelations } from './substraitRelationBindings.js';
 import { selectDvtSubstraitRelation } from './substraitRelationSelection.js';
 
@@ -96,26 +95,12 @@ export function inspectDvtSubstraitMixedCrossDraft(
     return { ok: false };
   }
   const left = inspectDvtSubstraitJoinDraft(leftDraft);
-  const rightTable = namedTableIdentity(cross.right);
-  const rightNames = cross.right.relType.value.baseSchema?.names;
-  const rightTypes = cross.right.relType.value.baseSchema?.struct?.types?.map(joinFieldType);
-  const rightFields = draft.sidecar.fields
-    .filter((field) => field.relationId === rightBinding.relationId)
-    .sort((a, b) => a.outputOrdinal - b.outputOrdinal);
+  const rightInput = inspectReadInputs(draft, [cross.right])?.[0];
   if (
     !left.ok ||
-    rightTable == null ||
-    rightBinding.displayName !== rightTable.table ||
-    rightNames == null ||
-    rightTypes == null ||
-    rightNames.length === 0 ||
-    rightNames.length !== rightTypes.length ||
-    rightTypes.some((type) => type == null) ||
-    rightFields.length !== rightNames.length ||
-    rightFields.some(
-      (field, index) => field.outputOrdinal !== index || field.displayName !== rightNames[index]
-    ) ||
-    rightBinding.sourceRef.connectionRef.provider !== 'postgres' ||
+    left.projection.outputs.length === 0 ||
+    rightInput == null ||
+    rightBinding.displayName !== rightInput.table ||
     !hasSameConnectionRef(
       left.projection.inputs[0]!.sourceRef.connectionRef,
       rightBinding.sourceRef.connectionRef
@@ -128,17 +113,6 @@ export function inspectDvtSubstraitMixedCrossDraft(
   ) {
     return { ok: false };
   }
-  const rightInput = {
-    relationId: rightBinding.relationId,
-    ...rightTable,
-    sourceRef: rightBinding.sourceRef,
-    fields: rightFields.map((field, index) => ({
-      name: rightNames[index]!,
-      fieldId: field.fieldId,
-      dataType: rightTypes[index]!.dataType,
-      nullable: rightTypes[index]!.nullable,
-    })),
-  };
   const available = [
     ...left.projection.outputs.map((output) => ({
       originFieldId: output.source.fieldId,
@@ -160,7 +134,7 @@ export function inspectDvtSubstraitMixedCrossDraft(
   const stageFields = draft.sidecar.fields
     .filter((field) => field.relationId === crossBinding.relationId)
     .sort((a, b) => a.outputOrdinal - b.outputOrdinal);
-  const expectedDisplayName = `${leftBinding.displayName}+${rightTable.table}`;
+  const expectedDisplayName = `${leftBinding.displayName}+${rightInput.table}`;
   if (
     crossBinding.displayName !== expectedDisplayName ||
     mapping.length === 0 ||
