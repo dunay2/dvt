@@ -3,14 +3,37 @@ import {
   ConnectedSourceRefSchema,
   DvtOperationalWorkloadContractV1,
   DvtOperationalWorkloadContractV2,
+  type DvtOperationalWorkloadV1,
+  type DvtOperationalWorkloadV2,
+  type GenericGraphSourceV1,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
-import { vi } from 'vitest';
+import { vi, type Mock } from 'vitest';
 
-import { DvtOperationalWorkloadProjector } from '../../src/application/services/dvtOperationalWorkloadProjector.js';
-import { DvtPostgresTargetProjectionPublisher } from '../../src/application/services/dvtPostgresTargetProjectionPublisher.js';
+import {
+  DvtOperationalWorkloadProjector,
+  type DvtTerminalTransformProjectionBinding,
+} from '../../src/application/services/dvtOperationalWorkloadProjector.js';
+import {
+  DvtPostgresTargetProjectionPublisher,
+  type DvtPostgresTargetProjectionPublishInput,
+} from '../../src/application/services/dvtPostgresTargetProjectionPublisher.js';
 
-export function publicationHarness(source: WorkspaceGraphAuthoringDraft, run = false) {
+type PublishedWorkload = {
+  binding: DvtTerminalTransformProjectionBinding;
+  graph: GenericGraphSourceV1;
+  workload: DvtOperationalWorkloadV1 | DvtOperationalWorkloadV2;
+};
+
+export function publicationHarness(
+  source: WorkspaceGraphAuthoringDraft,
+  run = false
+): {
+  input: DvtPostgresTargetProjectionPublishInput;
+  publisher: DvtPostgresTargetProjectionPublisher;
+  publish: Mock<IContentAddressedArtifactStore['publish']>;
+  execute: () => Promise<PublishedWorkload>;
+} {
   const draft = globalThis.structuredClone(source);
   if (run) {
     const connectionRef = ConnectedSourceRefSchema.parse(
@@ -45,7 +68,7 @@ export function publicationHarness(source: WorkspaceGraphAuthoringDraft, run = f
     selectedNodeIds: draft.nodeIds,
     selectedEdgeIds: draft.edges.map((edge) => edge.id),
   };
-  async function execute() {
+  async function execute(): Promise<PublishedWorkload> {
     const binding = await publisher.publish(input);
     const result = new DvtOperationalWorkloadProjector().project({
       ...input,

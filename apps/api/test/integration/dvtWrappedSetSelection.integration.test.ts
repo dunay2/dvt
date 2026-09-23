@@ -106,7 +106,7 @@ describeWithPostgres('selected grouped Set rows in PostgreSQL', () => {
       SELECT customer_id, country FROM raw.customers_north ${operator}
       SELECT customer_id, country FROM raw.customers_south ${operator}
       SELECT customer_id, country FROM raw.customers_west) result`);
-    const values = (rows: unknown[]) => rows.map((row) => JSON.stringify(row)).sort();
+    const values = (rows: unknown[]): string[] => rows.map((row) => JSON.stringify(row)).sort();
     expect(values(actual.rows)).toEqual(values(expected.rows));
     expect(actual.rows.length).toBeGreaterThan(0);
   });

@@ -82,7 +82,7 @@ describe('Multi-input publication schema and admission', () => {
     'changed physical binding',
   ])('rejects %s before publishing SQL', async (scenario) => {
     const { input, publisher, publish } = publicationHarness(buildDvtJoinPreviewDraft(3));
-    const candidate = globalThis.structuredClone(input);
+    const candidate = { ...globalThis.structuredClone(input) };
     if (scenario === 'missing input')
       candidate.selectedNodeIds = candidate.selectedNodeIds.slice(1);
     if (scenario === 'duplicate input')

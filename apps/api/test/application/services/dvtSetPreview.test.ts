@@ -39,7 +39,7 @@ describe('SET publication admission', () => {
     'rejects %s before publishing SQL',
     async (scenario) => {
       const { input, publisher, publish } = publicationHarness(buildDvtSetPreviewDraft());
-      const candidate = globalThis.structuredClone(input);
+      const candidate = { ...globalThis.structuredClone(input) };
       if (scenario === 'missing input') {
         candidate.selectedNodeIds = candidate.selectedNodeIds.slice(1);
         candidate.selectedEdgeIds = candidate.selectedEdgeIds.slice(1);
