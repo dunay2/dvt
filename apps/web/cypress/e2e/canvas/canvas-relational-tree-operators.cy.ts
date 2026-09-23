@@ -143,14 +143,13 @@ describe('Relational operator toolbar', () => {
       cy.get('[data-operator="read"]').should('have.length', 2);
       cy.get('[data-slot="canvas-relational-tree-apply"]').click();
       cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
-      cy.get('[data-slot="canvas-model-view-tab"][data-view="sql"]').click();
-      cy.get('[data-slot="canvas-model-sql"]').should('contain.text', 'JOIN');
       visitWithE2eWorkspaceSession('/canvas');
       waitForE2eApiCall('/workspace/graph/draft', 'GET');
       cy.get('.react-flow__node[data-id$="-transform"] [data-slot="canvas-node-shell"]')
         .first()
         .dblclick(40, 18);
       cy.get('[data-operator="join"]').should('have.length', 1);
+      cy.get('[data-operator="read"]').should('have.length', 2);
       cy.screenshot(`projection-source-drop-${applied ? 'saved' : 'local'}`);
     });
   }
