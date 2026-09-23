@@ -1,7 +1,10 @@
 import {
+  ExpressionSchema,
+  Expression_LiteralSchema,
   JoinRel_JoinType,
   SetRel_SetOp,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { create, type MessageInitShape } from '@bufbuild/protobuf';
 import { describe, expect, it } from 'vitest';
 
 import { projectSubstraitToPostgresSql } from '../src/relationalSql/project.js';
@@ -9,6 +12,36 @@ import { projectSubstraitToPostgresSql } from '../src/relationalSql/project.js';
 import { compositionalFixture } from './relationalSqlFixture.js';
 
 describe('Compositional SQL admission', () => {
+  it.each([
+    { case: 'string', value: 'sample' },
+    { case: 'boolean', value: true },
+    { case: 'i64', value: 7n },
+    { case: 'fp64', value: 1.25 },
+    { case: 'precisionTimestampTz', value: { precision: 3, value: 0n } },
+  ] satisfies Array<MessageInitShape<typeof Expression_LiteralSchema>['literalType']>)(
+    'admits the base $case literal but rejects its type variation without mutation',
+    async (literalType) => {
+      const document = compositionalFixture('cross');
+      const root = document.plan.relations[0]!.relType;
+      if (root.case !== 'root' || root.value.input?.relType.case !== 'cross')
+        throw new Error('Expected CROSS');
+      const left = root.value.input.relType.value.left?.relType;
+      if (left?.case !== 'project') throw new Error('Expected Project');
+      const expression = create(ExpressionSchema, {
+        rexType: { case: 'literal', value: { literalType } },
+      });
+      left.value.expressions = [expression];
+      await expect(projectSubstraitToPostgresSql(document)).resolves.toBeDefined();
+      if (expression.rexType.case !== 'literal') throw new Error('Expected literal');
+      expression.rexType.value.typeVariationReference = 1;
+      const before = globalThis.structuredClone(document);
+      await expect(projectSubstraitToPostgresSql(document)).rejects.toMatchObject({
+        code: 'unsupported_shape',
+      });
+      expect(document).toEqual(before);
+    }
+  );
+
   it.each(['join', 'cross', 'set'] as const)(
     'rejects invalid %s bindings before SQL is produced',
     async (kind) => {

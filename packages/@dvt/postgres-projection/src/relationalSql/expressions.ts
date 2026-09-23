@@ -52,6 +52,8 @@ function lower(
     return { ast: column, type: field.type };
   }
   if (rex.case === 'literal') {
+    if (rex.value.typeVariationReference !== 0)
+      return unsupported('Literal type variation is outside the admitted PostgreSQL profile.');
     const type = deriveExpressionSchema(expression, scope.fields).type;
     const value = dvtSubstraitExpressionReader.literalValue(expression);
     if (value == null) return unsupported('Literal is outside the admitted PostgreSQL profile.');
