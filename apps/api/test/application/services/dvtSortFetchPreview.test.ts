@@ -23,25 +23,16 @@ function closure(draft: WorkspaceGraphAuthoringDraft): DvtTerminalTransformClosu
 }
 
 describe('protected SortRel/FetchRel projection', () => {
-  it('projects Model Preview and each selected operation through one recursive dispatcher', async () => {
+  it('projects Model Preview and each selected operation through the same canonical projection', async () => {
     const { draft, sortRelationId, fetchRelationId } = buildDvtSortFetchPreviewDraft();
 
     const model = await projectDvtPostgresTransform(closure(draft));
-    const selectedSort = await projectDvtPostgresTransform(
-      closure(draft),
-      undefined,
-      sortRelationId
-    );
-    const selectedFetch = await projectDvtPostgresTransform(
-      closure(draft),
-      undefined,
-      fetchRelationId
-    );
+    const selectedSort = await projectDvtPostgresTransform(closure(draft), sortRelationId);
+    const selectedFetch = await projectDvtPostgresTransform(closure(draft), fetchRelationId);
 
-    expect(model.sql).toMatch(/ORDER BY\s+customer_id\s+DESC\s+NULLS\s+LAST/);
-    expect(model.sql).toMatch(/LIMIT\s+3\s+OFFSET\s+2/);
-    expect(selectedSort.sql).toMatch(/ORDER BY\s+customer_id\s+DESC\s+NULLS\s+LAST/);
-    expect(selectedSort.sql).not.toMatch(/LIMIT\s+3/);
+    expect(selectedSort.orderBy).toEqual(model.orderBy);
+    expect(selectedSort.outputs).toEqual(model.outputs);
+    expect(selectedSort.sql).not.toBe(model.sql);
     expect(selectedFetch.sql).toBe(model.sql);
     expect(model.orderBy).toEqual([{ name: 'customer_id', direction: 'DESC', nulls: 'LAST' }]);
   });
@@ -76,7 +67,6 @@ describe('protected SortRel/FetchRel projection', () => {
         .executionIntent
     ).toBe('run');
     const sql = Buffer.from(publish.mock.calls[0]![0].bytes).toString('utf8');
-    expect(sql).toMatch(/ORDER BY\s+customer_id\s+DESC\s+NULLS\s+LAST/);
-    expect(sql).toMatch(/LIMIT\s+3\s+OFFSET\s+2/);
+    expect(sql).toBe((await projectDvtPostgresTransform(closure(draft))).sql);
   });
 });

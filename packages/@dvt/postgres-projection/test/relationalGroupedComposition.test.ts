@@ -2,11 +2,7 @@ import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/su
 import { encodeDvtSubstraitPlanV1 } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-import {
-  projectDvtJoinDraftToPostgresSql,
-  projectDvtSetDraftToPostgresSql,
-  type DvtSubstraitJoinDraft,
-} from '../src/index.js';
+import { projectSubstraitToPostgresSql, type DvtSubstraitJoinDraft } from '../src/index.js';
 
 import { wrapperFixture } from './relationalWrapperFixtures.js';
 
@@ -21,8 +17,7 @@ function invalidateGrouping(draft: DvtSubstraitJoinDraft): void {
 }
 
 describe.each(['join', 'set'] as const)('shared %s wrapper admission', (base) => {
-  const project =
-    base === 'join' ? projectDvtJoinDraftToPostgresSql : projectDvtSetDraftToPostgresSql;
+  const project = projectSubstraitToPostgresSql;
 
   it.each(['aggregate', 'window'] as const)(
     'projects %s without mutating canonical identity',
@@ -41,11 +36,11 @@ describe.each(['join', 'set'] as const)('shared %s wrapper admission', (base) =>
     async (wrapper) => {
       const draft = wrapperFixture(base, wrapper);
       invalidateGrouping(draft);
-      await expect(project(draft)).rejects.toMatchObject({ code: 'unsupported_shape' });
+      await expect(project(draft)).rejects.toMatchObject({ code: 'invalid_structure' });
     }
   );
 
-  it('rejects a window ordering outside the bounded profile', async () => {
+  it('accepts window directions without a shape-specific restriction', async () => {
     const draft = wrapperFixture(base, 'window');
     const root = draft.plan.relations[0]?.relType;
     const relation = root?.case === 'root' ? root.value.input?.relType : undefined;
@@ -57,6 +52,9 @@ describe.each(['join', 'set'] as const)('shared %s wrapper admission', (base) =>
       value: SortField_SortDirection.ASC_NULLS_FIRST,
     };
     draft.sidecar.semanticPlanSha256 = encodeDvtSubstraitPlanV1(draft.plan).sha256;
-    await expect(project(draft)).rejects.toMatchObject({ code: 'unsupported_shape' });
+    const before = globalThis.structuredClone(draft);
+    const result = await project(draft);
+    expect(result.projection.outputs).toHaveLength(3);
+    expect(draft).toEqual(before);
   });
 });

@@ -1,7 +1,7 @@
 import {
   buildNInputJoinPostgresAst,
   DvtSubstraitPostgresProjectionError,
-  projectDvtSetDraftToPostgresSql,
+  projectSubstraitToPostgresSql,
 } from '@dvt/postgres-projection';
 export {
   DvtSubstraitPostgresProjectionError,
@@ -478,5 +478,5 @@ export async function projectDvtSubstraitJoinToPostgresSql(
 export async function projectDvtSubstraitUnionAllToPostgresSql(
   draft: DvtSubstraitUnionAllDraft
 ): Promise<string> {
-  return (await projectDvtSetDraftToPostgresSql(draft)).sql;
+  return (await projectSubstraitToPostgresSql(draft)).sql;
 }

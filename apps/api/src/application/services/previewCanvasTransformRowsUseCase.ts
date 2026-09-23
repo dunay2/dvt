@@ -71,7 +71,7 @@ export class PreviewCanvasTransformRowsUseCase {
       if (input.relationId !== undefined && input.semanticPlanSha256 === undefined) {
         throw new CanvasTransformDataSampleUnavailableError('selection_unavailable');
       }
-      projection = await projectDvtPostgresTransform(closure, undefined, input.relationId);
+      projection = await projectDvtPostgresTransform(closure, input.relationId);
     } catch (error) {
       if (error instanceof CanvasTransformDataSampleUnavailableError) throw error;
       throw new CanvasTransformDataSampleUnavailableError('projection_unsupported');

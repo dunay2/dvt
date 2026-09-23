@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildNInputJoinPostgresAst,
   inspectDvtSubstraitJoinDraft,
-  projectDvtJoinDraftToPostgresSql,
+  projectSubstraitToPostgresSql,
   ZERO_SHA256,
 } from '../src/index.js';
 
@@ -32,7 +32,7 @@ describe('JOIN empty output authoring versus SQL readiness', () => {
     expect(inspected.projection.outputs).toEqual([]);
     expect(inspected.projection.inputs).toHaveLength(3);
     expect(() => buildNInputJoinPostgresAst(inspected.projection)).toThrow(/output/i);
-    await expect(projectDvtJoinDraftToPostgresSql(candidate)).rejects.toMatchObject({
+    await expect(projectSubstraitToPostgresSql(candidate)).rejects.toMatchObject({
       code: 'unsupported_shape',
     });
   });

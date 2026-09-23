@@ -4,9 +4,7 @@ import {
   inspectDvtSubstraitAcceptedCrossDraft,
   inspectDvtSubstraitJoinDraft,
   inspectDvtSubstraitSetDraft,
-  projectDvtCrossDraftToPostgresSql,
-  projectDvtJoinDraftToPostgresSql,
-  projectDvtSetDraftToPostgresSql,
+  projectSubstraitToPostgresSql,
 } from '../src/index.js';
 
 import { readOccurrences, repeatFirstSource } from './occurrenceAdmissionFixtures.js';
@@ -16,32 +14,29 @@ const scenarios = [
   {
     kind: 'join',
     inspect: inspectDvtSubstraitJoinDraft,
-    project: projectDvtJoinDraftToPostgresSql,
   },
   {
     kind: 'cross',
     inspect: inspectDvtSubstraitAcceptedCrossDraft,
-    project: projectDvtCrossDraftToPostgresSql,
   },
   {
     kind: 'mixed-cross',
     inspect: inspectDvtSubstraitAcceptedCrossDraft,
-    project: projectDvtCrossDraftToPostgresSql,
   },
-  { kind: 'set', inspect: inspectDvtSubstraitSetDraft, project: projectDvtSetDraftToPostgresSql },
+  { kind: 'set', inspect: inspectDvtSubstraitSetDraft },
 ] as const;
 
-describe.each(scenarios)('$kind occurrence admission', ({ kind, inspect, project }) => {
+describe.each(scenarios)('$kind occurrence admission', ({ kind, inspect }) => {
   it('keeps relation labels out of semantic admission and SQL generation', async () => {
     const draft = identityFixture(kind);
-    const before = await project(draft);
+    const before = await projectSubstraitToPostgresSql(draft);
     const identities = draft.sidecar.relations.map(({ relationId }) => relationId);
     draft.sidecar.relations.forEach((rel, ordinal) => {
       rel.displayName = `Label ${ordinal}`;
     });
 
     expect(inspect(draft).ok).toBe(true);
-    expect((await project(draft)).sql).toBe(before.sql);
+    expect((await projectSubstraitToPostgresSql(draft)).sql).toBe(before.sql);
     expect(draft.sidecar.relations.map(({ relationId }) => relationId)).toEqual(identities);
   });
 
@@ -58,7 +53,7 @@ describe.each(scenarios)('$kind occurrence admission', ({ kind, inspect, project
     expect(inputs.at(-1)!.sourceRef).toEqual(inputs[0]!.sourceRef);
     expect(inputs.at(-1)!.relationId).not.toBe(inputs[0]!.relationId);
     expect(inputs.at(-1)!.fields[0]!.fieldId).not.toBe(inputs[0]!.fields[0]!.fieldId);
-    const rendered = await project(draft);
+    const rendered = await projectSubstraitToPostgresSql(draft);
     expect(rendered.sql.split(`${inputs[0]!.schema}.${inputs[0]!.table}`)).toHaveLength(3);
     expect(draft).toEqual(before);
     expect(draft.sidecar.fields.map(({ fieldId }) => fieldId)).toEqual(identities);

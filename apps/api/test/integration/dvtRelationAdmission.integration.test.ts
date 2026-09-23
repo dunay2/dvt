@@ -2,11 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { URL } from 'node:url';
 
 import { SetRel_SetOp } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import {
-  projectDvtCrossDraftToPostgresSql,
-  projectDvtJoinDraftToPostgresSql,
-  projectDvtSetDraftToPostgresSql,
-} from '@dvt/postgres-projection';
+import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
 import { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -69,9 +65,9 @@ describeIfPostgres('relation admission against real PostgreSQL', () => {
   });
 
   it.each([
-    { kind: 'join', project: projectDvtJoinDraftToPostgresSql },
-    { kind: 'cross', project: projectDvtCrossDraftToPostgresSql },
-    { kind: 'mixed-cross', project: projectDvtCrossDraftToPostgresSql },
+    { kind: 'join', project: projectSubstraitToPostgresSql },
+    { kind: 'cross', project: projectSubstraitToPostgresSql },
+    { kind: 'mixed-cross', project: projectSubstraitToPostgresSql },
   ] as const)(
     'executes $kind with repeated occurrences, arbitrary labels and exact rows',
     async ({ kind, project }) => {
@@ -118,7 +114,7 @@ describeIfPostgres('relation admission against real PostgreSQL', () => {
       root.relType.value.op = op;
       renameReadField(draft, 1, 0, 'client_key');
       renameReadField(draft, 2, 1, 'region');
-      const { sql } = await projectDvtSetDraftToPostgresSql(draft);
+      const { sql } = await projectSubstraitToPostgresSql(draft);
       const result = await client.query(sql);
       const copies = count === 9 ? 3 : 1;
       const expected =
@@ -142,7 +138,7 @@ describeIfPostgres('relation admission against real PostgreSQL', () => {
     repeatFirstSource(draft);
     renameReadField(draft, 1, 0, 'client_key');
     refreshDigest(draft);
-    const { sql } = await projectDvtSetDraftToPostgresSql(draft);
+    const { sql } = await projectSubstraitToPostgresSql(draft);
     const result = await client.query(sql);
     expect(result.rowCount).toBe(9);
     expect(result.rows.filter((row) => row.customer_id == null)).toHaveLength(3);

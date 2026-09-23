@@ -109,7 +109,6 @@ export {
   POSTGRES_JOIN_COMPARISON,
   buildNInputJoinPostgresAst,
 } from './joinPostgresProjection.js';
-export { projectDvtJoinDraftToPostgresSql } from './projectJoinDraft.js';
 export {
   buildConnectedFieldPostgresAst,
   buildPilotOutputExpression,
@@ -136,10 +135,6 @@ export {
 } from './postgresAst.js';
 export { renderPostgresAst } from './renderPostgresAst.js';
 export { inspectDvtConnectedFieldProjection } from './substraitConnectedFieldReader.js';
-export {
-  projectDvtConnectedFieldDraftToPostgresSql,
-  type ProjectedDvtConnectedFieldSql,
-} from './substraitConnectedFieldProjection.js';
 export type {
   DvtCalculatedExpression,
   DvtConnectedFieldNodeBinding,
@@ -159,10 +154,6 @@ export {
   inspectDvtSubstraitSetComposition,
   type DvtSubstraitSetComposition,
 } from './substraitSetCompositionReader.js';
-export {
-  buildDvtSetPostgresAst,
-  projectDvtSetDraftToPostgresSql,
-} from './setPostgresProjection.js';
 export type {
   DvtSubstraitCrossDraft,
   DvtSubstraitCrossInspection,
@@ -178,7 +169,4 @@ export {
   inspectDvtSubstraitAcceptedCrossDraft,
   inspectDvtSubstraitMixedCrossDraft,
 } from './substraitMixedCrossReader.js';
-export {
-  buildDvtCrossPostgresAst,
-  projectDvtCrossDraftToPostgresSql,
-} from './crossPostgresProjection.js';
+export { projectSubstraitToPostgresSql } from './relationalSql/project.js';

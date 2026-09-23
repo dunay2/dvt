@@ -53,7 +53,7 @@ describeWithPostgres('selected grouped Set rows in PostgreSQL', () => {
         selectedEdgeIds: draft.edges.map((edge) => edge.id),
       });
       for (const relationId of [undefined, sortRelationId, fetchRelationId]) {
-        const projection = await projectDvtPostgresTransform(closure, undefined, relationId);
+        const projection = await projectDvtPostgresTransform(closure, relationId);
         const { rows } = await client.query(projection.sql);
         const values = rows.map((row) => [
           row['customer_id'],

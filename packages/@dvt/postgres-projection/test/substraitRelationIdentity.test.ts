@@ -5,9 +5,7 @@ import {
   inspectDvtSubstraitJoinDraft,
   inspectDvtSubstraitAcceptedCrossDraft,
   inspectDvtSubstraitSetDraft,
-  projectDvtJoinDraftToPostgresSql,
-  projectDvtCrossDraftToPostgresSql,
-  projectDvtSetDraftToPostgresSql,
+  projectSubstraitToPostgresSql,
 } from '../src/index.js';
 
 import {
@@ -24,29 +22,26 @@ const families = [
   {
     kind: 'join',
     inspect: inspectDvtSubstraitJoinDraft,
-    project: projectDvtJoinDraftToPostgresSql,
   },
   {
     kind: 'cross',
     inspect: inspectDvtSubstraitAcceptedCrossDraft,
-    project: projectDvtCrossDraftToPostgresSql,
   },
   {
     kind: 'mixed-cross',
     inspect: inspectDvtSubstraitAcceptedCrossDraft,
-    project: projectDvtCrossDraftToPostgresSql,
   },
-  { kind: 'set', inspect: inspectDvtSubstraitSetDraft, project: projectDvtSetDraftToPostgresSql },
+  { kind: 'set', inspect: inspectDvtSubstraitSetDraft },
 ] as const;
 
-describe.each(families)('$kind canonical relation identity', ({ kind, inspect, project }) => {
+describe.each(families)('$kind canonical relation identity', ({ kind, inspect }) => {
   it('preserves SQL, schema and physical sources under sparse permuted anchors', async () => {
     const original = identityFixture(kind);
     const candidate = identityFixture(kind);
     permuteAnchors(candidate);
     const before = globalThis.structuredClone(candidate);
-    const expected = await project(original);
-    const actual = await project(candidate);
+    const expected = await projectSubstraitToPostgresSql(original);
+    const actual = await projectSubstraitToPostgresSql(candidate);
     expect(actual.sql).toBe(expected.sql);
     expect(actual.projection.inputs).toEqual(expected.projection.inputs);
     expect(actual.projection.outputs).toEqual(expected.projection.outputs);

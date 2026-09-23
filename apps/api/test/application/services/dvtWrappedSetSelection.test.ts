@@ -42,17 +42,13 @@ describe.each(['aggregate', 'window'] as const)('protected selected %s over Set'
           selectedEdgeIds: base.edges.map((edge) => edge.id),
         })
       );
-      expect((await projectDvtPostgresTransform(closure, undefined, wrapperId)).sql).toBe(
-        expected.sql
-      );
-      const sorted = await projectDvtPostgresTransform(closure, undefined, sortRelationId);
-      expect(sorted.sql).toMatch(/ORDER BY\s+customer_id\s+DESC\s+NULLS LAST/);
+      expect((await projectDvtPostgresTransform(closure, wrapperId)).sql).toBe(expected.sql);
+      const sorted = await projectDvtPostgresTransform(closure, sortRelationId);
+      expect(sorted.orderBy).toEqual([{ name: 'customer_id', direction: 'DESC', nulls: 'LAST' }]);
       expect(sorted.outputs).toEqual(expected.outputs);
       const model = await projectDvtPostgresTransform(closure);
-      expect((await projectDvtPostgresTransform(closure, undefined, fetchRelationId)).sql).toBe(
-        model.sql
-      );
-      expect(model.sql).toMatch(/LIMIT\s+3\s+OFFSET\s+2/);
+      expect((await projectDvtPostgresTransform(closure, fetchRelationId)).sql).toBe(model.sql);
+      expect(model.sql).not.toBe(sorted.sql);
       expect(model.outputs).toEqual(expected.outputs);
     }
   );

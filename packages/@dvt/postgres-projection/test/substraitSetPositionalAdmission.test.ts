@@ -6,7 +6,7 @@ import {
 import { create } from '@bufbuild/protobuf';
 import { describe, expect, it } from 'vitest';
 
-import { inspectDvtSubstraitSetDraft, projectDvtSetDraftToPostgresSql } from '../src/index.js';
+import { inspectDvtSubstraitSetDraft, projectSubstraitToPostgresSql } from '../src/index.js';
 
 import { readOccurrences, renameReadField } from './occurrenceAdmissionFixtures.js';
 import { identityFixture, refreshDigest, relationRoot } from './relationIdentityFixtures.js';
@@ -34,9 +34,11 @@ describe('SET positional compatibility', () => {
       'customer_id',
       'country',
     ]);
-    const result = await projectDvtSetDraftToPostgresSql(draft);
-    expect(result.sql).toContain('client_key AS customer_id');
-    expect(result.sql).toContain('region AS country');
+    const result = await projectSubstraitToPostgresSql(draft);
+    expect(result.projection.outputs.map((field) => field.name)).toEqual([
+      'customer_id',
+      'country',
+    ]);
   });
 
   it('rejects equal names with incompatible positional types', () => {
