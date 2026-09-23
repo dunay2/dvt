@@ -12,16 +12,16 @@ import { createCanvasShellHarness, getCanvasShellState } from './CanvasShell.tes
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import type { CanvasDraftLifecycle } from './canvasDraftLifecycle.types';
 import type { CanvasShellProps } from './canvasShell.types';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 describe('Canvas Model card revision-safe execution', () => {
   const model = node(fixture());
   const changedModel = node(fixture('renamed'));
-  const canonicalNodes = [model];
   const semanticPlanSha256 =
     readDvtTransformAuthoringAuthority(model)!.semanticDocument.semanticPlan.sha256;
   const saved = {
     ok: true,
-    canonicalNodes,
+    canonicalNodes: [model],
     canonicalEdges: [],
     workspaceNodeIds: [model.id],
   } as const;
@@ -46,21 +46,25 @@ describe('Canvas Model card revision-safe execution', () => {
     prepare.mockReset().mockResolvedValue(saved);
   });
   afterEach(() => harness.unmount());
-  async function mount(canEditModel = true, withPreparation = true): Promise<CanvasShellProps> {
+  async function mount(editable = true, prepared = true, shown = model): Promise<CanvasShellProps> {
+    const presentationTruth = projectCanvasNodePresentationTruth({
+      node: shown,
+      nodes: [shown],
+      edges: [],
+    });
+    const data = { ...shown, pluginKind: shown.kind, presentationTruth };
     return harness.render({
       panels: {
-        inspectorGraphNodes: canonicalNodes,
+        inspectorGraphNodes: [shown],
         inspectorGraphEdges: [],
-        relationalTreeAuthoring: { canEditNode: canEditModel, onApplyNodeDraft: vi.fn() },
+        relationalTreeAuthoring: { canEditNode: editable, onApplyNodeDraft: vi.fn() },
       },
       graph: {
         viewport: { x: 40, y: 70, zoom: 0.8 },
-        nodesWithImpact: [
-          { id: model.id, position: { x: 0, y: 0 }, data: { ...model, pluginKind: model.kind } },
-        ],
+        nodesWithImpact: [{ id: shown.id, position: { x: 0, y: 0 }, data }],
       },
       canvasTransformDataSampleQuery: query,
-      prepareModelPreview: withPreparation ? prepare : undefined,
+      prepareModelPreview: prepared ? prepare : undefined,
     });
   }
   function card(): DbtNodeData {
@@ -122,6 +126,15 @@ describe('Canvas Model card revision-safe execution', () => {
     await mount(true, false);
     expect(card().onOpenSourceDataSample).toBeUndefined();
   });
+  it.each([undefined, {}, { version: 1, mode: 'sql' }])(
+    'keeps unavailable authority %j visible without enabling Play',
+    async (transformAuthoring) => {
+      await mount(true, true, { ...model, metadata: { transformAuthoring } });
+      expect(card().onOpenSourceDataSample).toBeUndefined();
+      expect(prepare).not.toHaveBeenCalled();
+      expect(query.previewTransformRows).not.toHaveBeenCalled();
+    }
+  );
   it('queries a read-only model without a write, still bound to its digest', async () => {
     await mount(false, false);
     await execute();

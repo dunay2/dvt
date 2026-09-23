@@ -118,11 +118,8 @@ export function useCanvasNodeDataSample({
   const projectNode = useCallback(
     (nodeId: string, data: DbtNodeData): CanvasNodeDataSampleProjection => {
       const isNativeTransform = data.pluginKind === 'dvt:transform';
-      const node = isNativeTransform ? canonicalNodes.find((entry) => entry.id === nodeId) : null;
-      const semanticDigest =
-        node == null
-          ? null
-          : readDvtTransformAuthoringAuthority(node)?.semanticDocument.semanticPlan.sha256;
+      const code = data.presentationTruth?.code;
+      const semanticDigest = code?.kind === 'canonical' ? code.digest : null;
       const sourceTarget = resolveCanvasSourceDataSampleTarget(data);
       const sinkTarget = resolveCanvasSinkDataSampleTarget(data, runSnapshot);
       const onOpen = isNativeTransform
@@ -143,7 +140,6 @@ export function useCanvasNodeDataSample({
     [
       activeCanvasId,
       canvasTransformDataSampleQuery,
-      canonicalNodes,
       canEditModel,
       prepareModelPreview,
       openSink,
