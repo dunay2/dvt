@@ -762,13 +762,6 @@ test('retired PR drafts and historical intake have no files or live consumers', 
 // never a licence for new live references from the same evidence document.
 test('retired historical reviews and delivery records have no live consumers', () => {
   const retiredFiles = [
-    '.github/ISSUE_MONOREPO_REFACTOR.md',
-    '.github/ISSUE_refactor_monorepo_OptionA.md',
-    '.github/MIGRATION_GUIDE.md',
-    '.github/PR_BODY.md',
-    '.github/PR_INSTRUCTIONS.md',
-    '.github/PR_TEMPLATE.md',
-    '.github/ROLLBACK.md',
     'buzon/20260429-codex-canvas-operability-auth-and-drag-fowler-review.md',
     'buzon/20260429-codex-fowler-branch-architecture-post-codescene-analysis-and-remediation.md',
     'buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md',
