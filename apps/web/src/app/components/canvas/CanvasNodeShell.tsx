@@ -87,7 +87,7 @@ export function CanvasNodeShell({
           role="group"
           aria-label={contextMenuModel.target.nodeName}
           aria-keyshortcuts={onOpenNode == null ? undefined : 'Enter'}
-          className={cn(styles.root, 'relative')}
+          className={cn(styles.root, 'relative group/canvas-node')}
           onClick={handleClick}
           onDoubleClick={handleDoubleClick}
           onKeyDown={(event) => {

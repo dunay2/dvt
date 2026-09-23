@@ -401,7 +401,7 @@ describe('GraphNodeColumnSection', () => {
       expect.stringContaining('orders.client_id'),
       expect.stringContaining('client.country'),
     ]);
-    await act(async () => fireEvent.click(fields[0]!));
+    await act(async () => fireEvent.click(fields[0]!.querySelector('button')!));
 
     expect(onColumnOutputToggle).toHaveBeenCalledWith({
       nodeId: 'transform-orders',

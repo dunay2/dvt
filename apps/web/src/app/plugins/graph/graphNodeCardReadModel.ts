@@ -63,7 +63,6 @@ export function projectGraphNodeCardViewProps(
       )
     : node.tags.map((tag) => ({ value: tag, label: tag }));
   const inspectNode = data.onInspectNode;
-  const openSourceDataSample = data.onOpenSourceDataSample;
   const openOperationalDetails = data.onOpenOperationalDetails;
 
   return {
@@ -91,12 +90,6 @@ export function projectGraphNodeCardViewProps(
     onOpenCode:
       data.canOpenNodeCode !== false && typeof inspectNode === 'function'
         ? () => inspectNode(node.id, 'code')
-        : undefined,
-    onOpenDataSample:
-      typeof openSourceDataSample === 'function' ? () => openSourceDataSample(node.id) : undefined,
-    dataSampleInteractionLabel:
-      typeof data.sourceDataSampleInteractionLabel === 'string'
-        ? data.sourceDataSampleInteractionLabel
         : undefined,
     onOpenOperationalDetails:
       typeof openOperationalDetails === 'function'

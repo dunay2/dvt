@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act } from 'react';
+import { act, useContext } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -7,16 +7,28 @@ import {
   type TransformDataSampleResponse,
 } from '@dvt/contracts';
 import {
-  CanvasOperationDataPreview,
+  CanvasOperationPreviewContext,
   CanvasOperationPreviewProvider,
 } from './CanvasOperationDataPreview';
-import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+
+function Execute({ relationId }: Readonly<{ relationId: string }>): JSX.Element {
+  const context = useContext(CanvasOperationPreviewContext);
+  return (
+    <button
+      data-slot="test-execute"
+      disabled={context?.unapplied}
+      onClick={() => context?.execute(relationId, 'INNER JOIN')}
+    >
+      Execute
+    </button>
+  );
+}
 
 describe('selected operation data preview', () => {
   let container: HTMLDivElement;
+  let controls: HTMLDivElement;
   let root: Root;
-  let dataHost: HTMLDivElement;
   const digest = 'a'.repeat(64);
   const query = { previewTransformRows: vi.fn() };
   const sample = (relationId: string): TransformDataSampleResponse =>
@@ -38,37 +50,36 @@ describe('selected operation data preview', () => {
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
     container = document.createElement('div');
-    document.body.appendChild(container);
-    root = createRoot(container);
-    dataHost = document.createElement('div');
-    document.body.appendChild(dataHost);
+    controls = document.createElement('div');
+    document.body.append(container, controls);
+    root = createRoot(controls);
     query.previewTransformRows.mockReset();
     useApplicationLanguageStore.setState({ language: 'en' });
   });
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
-    dataHost.remove();
+    controls.remove();
     useApplicationLanguageStore.setState({ language: 'en' });
   });
   function render(relationId: string, unapplied = false): void {
     act(() =>
       root.render(
         <CanvasOperationPreviewProvider
-          ports={{ canvasId: 'canvas-test', query }}
+          ports={{ canvasId: 'canvas-test', query, dataHost: container }}
           nodeId="model"
           semanticDigest={digest}
           canEditModel={false}
           unapplied={unapplied}
         >
-          <CanvasOperationDataPreview relationId={relationId} label="INNER JOIN" />
+          <Execute relationId={relationId} />
         </CanvasOperationPreviewProvider>
       )
     );
   }
   async function preview(): Promise<void> {
     await act(async () => {
-      container.querySelector<HTMLButtonElement>('[data-slot="canvas-model-preview"]')!.click();
+      controls.querySelector<HTMLButtonElement>('[data-slot="test-execute"]')!.click();
     });
   }
   it.each([
@@ -87,7 +98,7 @@ describe('selected operation data preview', () => {
         truncated,
       });
       render('join-1');
-      expect(container.querySelector('h2')?.textContent).toBe('INNER JOIN');
+      expect(container.querySelector('h2')).toBeNull();
       expect(container.querySelector('[data-slot="canvas-operation-record-count"]')).toBeNull();
       await preview();
       const header = container.querySelector('header');
@@ -100,66 +111,13 @@ describe('selected operation data preview', () => {
         container.querySelector('header')?.querySelector('[data-slot="canvas-model-preview"]')
       ).not.toBeNull();
       render('join-2');
-      expect(container.querySelector('[data-slot="canvas-operation-record-count"]')).toBeNull();
+      expect(
+        container.querySelector('[data-slot="canvas-operation-record-count"]')?.textContent
+      ).toBe(expected);
+      expect(query.previewTransformRows).toHaveBeenCalledOnce();
     }
   );
-  it('portals one preview to the bottom host, retains it across inspector tabs and removes hidden frames', async () => {
-    const onOpenData = vi.fn();
-    const renderDock = (hidden = false): void => {
-      act(() =>
-        root.render(
-          <CanvasOperationPreviewProvider
-            ports={{ canvasId: 'canvas-test', query, dataHost, onOpenData }}
-            nodeId="model"
-            semanticDigest={digest}
-            canEditModel={false}
-            unapplied={false}
-          >
-            <CanvasRelationalTreeEditorFrame
-              operation="inner_join"
-              relationId="join-1"
-              hidden={hidden}
-              onClose={() => undefined}
-            >
-              <input aria-label="Property" defaultValue="draft" />
-            </CanvasRelationalTreeEditorFrame>
-            <CanvasRelationalTreeEditorFrame
-              operation="inner_join"
-              relationId="join-2"
-              hidden
-              onClose={() => undefined}
-            >
-              <span>Inactive editor</span>
-            </CanvasRelationalTreeEditorFrame>
-          </CanvasOperationPreviewProvider>
-        )
-      );
-    };
-    query.previewTransformRows.mockResolvedValue(sample('join-1'));
-    renderDock();
-    expect(onOpenData).toHaveBeenCalledOnce();
-    expect(query.previewTransformRows).not.toHaveBeenCalled();
-    expect(container.querySelector('[data-slot="canvas-operation-data-preview"]')).toBeNull();
-    expect(dataHost.querySelectorAll('[data-slot="canvas-operation-data-preview"]')).toHaveLength(
-      1
-    );
-    await act(async () =>
-      dataHost.querySelector<HTMLButtonElement>('[data-slot="canvas-model-preview"]')!.click()
-    );
-    const table = dataHost.querySelector('table');
-    expect(table?.textContent).toContain('intermediate-result');
-    await act(async () => {
-      container
-        .querySelector('[data-slot="canvas-operation-tree-tab"]')!
-        .dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    });
-    expect(dataHost.querySelector('table')).toBe(table);
-    expect(query.previewTransformRows).toHaveBeenCalledOnce();
-    renderDock(true);
-    expect(dataHost.childElementCount).toBe(0);
-    expect(onOpenData).toHaveBeenCalledOnce();
-  });
-  it('requests a bounded selected relation, then clears its sample on selection change', async () => {
+  it('requests a bounded relation and retains its sample when another card is selected', async () => {
     query.previewTransformRows.mockResolvedValue(sample('join-1'));
     render('join-1');
     expect(query.previewTransformRows).not.toHaveBeenCalled();
@@ -173,12 +131,12 @@ describe('selected operation data preview', () => {
     });
     expect(container.querySelector('table')?.textContent).toContain('intermediate-result');
     render('join-2');
-    expect(container.querySelector('table')).toBeNull();
+    expect(container.querySelector('table')?.textContent).toContain('intermediate-result');
     expect(query.previewTransformRows).toHaveBeenCalledOnce();
   });
-  it('ignores a response arriving after the selected operation changes', async () => {
+  it('ignores a response arriving after another operation is executed', async () => {
     let resolve!: (result: TransformDataSampleResponse) => void;
-    query.previewTransformRows.mockReturnValue(
+    query.previewTransformRows.mockReturnValueOnce(
       new Promise((done) => {
         resolve = done;
       })
@@ -186,17 +144,21 @@ describe('selected operation data preview', () => {
     render('join-1');
     await preview();
     render('join-2');
+    query.previewTransformRows.mockResolvedValue(sample('join-2'));
+    await preview();
     await act(async () => {
-      resolve(sample('join-1'));
+      resolve({ ...sample('join-1'), rows: [{ values: ['late-first-operation'] }] });
     });
-    expect(container.querySelector('table')).toBeNull();
+    expect(container.querySelector('table')?.textContent).toContain('intermediate-result');
+    expect(container.querySelector('table')?.textContent).not.toContain('late-first-operation');
+    expect(container.querySelector('aside')?.dataset.relationId).toBe('join-2');
     expect(container.querySelector('[role="alert"]')).toBeNull();
   });
   it('blocks unapplied edits and rejects data tagged with another relation', async () => {
     render('join-1', true);
-    expect(
-      container.querySelector<HTMLButtonElement>('[data-slot="canvas-model-preview"]')!.disabled
-    ).toBe(true);
+    expect(controls.querySelector<HTMLButtonElement>('[data-slot="test-execute"]')!.disabled).toBe(
+      true
+    );
     await preview();
     expect(query.previewTransformRows).not.toHaveBeenCalled();
     render('join-1');

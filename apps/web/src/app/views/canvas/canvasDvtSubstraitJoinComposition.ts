@@ -102,6 +102,10 @@ import {
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { hasSameConnectedSourceRef } from './canvasDvtSubstraitJoinSourceResolution';
 import {
+  peelCanvasDvtSubstraitSortFetch,
+  restoreCanvasDvtSubstraitSortFetch,
+} from './canvasDvtSubstraitSortFetch';
+import {
   DVT_SUBSTRAIT_INNER_JOIN_LEFT_FIELD_NAMES as LEFT_FIELD_NAMES,
   DVT_SUBSTRAIT_INNER_JOIN_OUTPUT_FIELDS as INNER_JOIN_OUTPUT_FIELDS,
   DVT_SUBSTRAIT_INNER_JOIN_RIGHT_FIELD_NAMES as RIGHT_FIELD_NAMES,
@@ -1545,8 +1549,9 @@ function editDvtSubstraitJoinPredicateConditions(args: {
 
 /** Resolve predicate ownership without making the Model's root its editing identity. */
 export function inspectDvtSubstraitJoinPredicateContext(draft: DvtSubstraitJoinDraft) {
-  const window = inspectValidInnerJoinGroupedWindow(draft);
-  const grouped = window?.baseDraft ?? draft;
+  const { base } = peelCanvasDvtSubstraitSortFetch(draft);
+  const window = inspectValidInnerJoinGroupedWindow(base);
+  const grouped = window?.baseDraft ?? base;
   const baseDraft = inspectValidInnerJoinGrouping(grouped)?.baseDraft ?? grouped;
   const inspection = inspectDvtSubstraitJoinProjection(baseDraft);
   return inspection.ok ? { baseDraft, inspection } : null;
@@ -1558,6 +1563,14 @@ export function restoreDvtSubstraitJoinContext(
   edited: DvtSubstraitJoinDraft
 ): DvtSubstraitJoinDraft {
   if (baseDraft === original) return edited;
+  const chain = peelCanvasDvtSubstraitSortFetch(original);
+  if (chain.wrappers.length > 0) {
+    if (chain.base === original) return original;
+    const context = inspectDvtSubstraitJoinPredicateContext(chain.base);
+    if (context == null) return original;
+    const restored = restoreDvtSubstraitJoinContext(chain.base, context.baseDraft, edited);
+    return restoreCanvasDvtSubstraitSortFetch(chain, restored) ?? original;
+  }
   const window = inspectValidInnerJoinGroupedWindow(original);
   const grouping = inspectValidInnerJoinGrouping(window?.baseDraft ?? original);
   const inspection = inspectDvtSubstraitJoinProjection(edited);

@@ -1,5 +1,6 @@
 /** Owned concern: render graph-node card markup from an already-projected card model. */
 import { type CSSProperties, type ReactElement } from 'react';
+import type { GraphNodeColumnInspect } from './graphColumnInspection';
 import type { LucideIcon } from 'lucide-react';
 
 import { cn } from '../../components/ui/utils';
@@ -37,6 +38,7 @@ import {
 export type GraphNodeCardColumn = GraphNodeColumn;
 
 export type GraphNodeCardViewProps = Readonly<{
+  onColumnInspect?: GraphNodeColumnInspect;
   cardModel: GraphNodeCardReadModel;
   typeLabel: string;
   tags: readonly Readonly<{ value: string; label: string }>[];
@@ -54,8 +56,6 @@ export type GraphNodeCardViewProps = Readonly<{
     anchorElement: HTMLElement
   ) => void;
   onOpenCode?: () => void;
-  onOpenDataSample?: () => void;
-  dataSampleInteractionLabel?: string;
   onSelectTag?: (tag: string) => void;
   getSelectTagLabel?: (tag: string) => string;
   nodeId?: string;
@@ -134,6 +134,7 @@ function GraphNodeCardTitle({ cardModel }: { cardModel: GraphNodeCardReadModel }
 }
 
 export function GraphNodeCardView({
+  onColumnInspect,
   cardModel,
   typeLabel,
   tags,
@@ -148,8 +149,6 @@ export function GraphNodeCardView({
   overlayStyle,
   onOpenOperationalDetails,
   onOpenCode,
-  onOpenDataSample,
-  dataSampleInteractionLabel,
   onSelectTag,
   getSelectTagLabel,
   nodeId,
@@ -247,6 +246,7 @@ export function GraphNodeCardView({
 
         {showColumns && (
           <GraphNodeColumnSection
+            onColumnInspect={onColumnInspect}
             columns={columns}
             expressionInputs={expressionInputs}
             expanded={columnDisclosureExpanded}
@@ -275,17 +275,12 @@ export function GraphNodeCardView({
         )}
       </div>
 
-      {(onOpenOperationalDetails == null || interactiveOperationalDetail == null) &&
-      onOpenDataSample == null ? (
+      {onOpenOperationalDetails == null || interactiveOperationalDetail == null ? (
         <GraphNodeOperationalRail metrics={cardModel.operationalMetrics} />
       ) : (
         <GraphNodeOperationalRail
           metrics={cardModel.operationalMetrics}
-          ariaLabel={
-            interactiveOperationalDetail?.ariaLabel ?? dataSampleInteractionLabel ?? typeLabel
-          }
-          dataSampleInteractionLabel={dataSampleInteractionLabel}
-          onOpenDataSample={onOpenDataSample}
+          ariaLabel={interactiveOperationalDetail.ariaLabel}
           onOpen={
             onOpenOperationalDetails == null || interactiveOperationalDetail == null
               ? undefined

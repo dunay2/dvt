@@ -366,7 +366,6 @@ export type CanvasViewCopy = {
   readonly operationalDrawerDataTruncatedTemplate: string;
   readonly operationalDrawerDataCaptionTemplate: string;
   readonly operationalDrawerDataNullValue: string;
-  readonly sourceDataSampleInteractionLabel: string;
   readonly operationalDrawerTabsAriaLabel: string;
   readonly operationalDrawerInfoSeverity: string;
   readonly operationalDrawerWarningSeverity: string;

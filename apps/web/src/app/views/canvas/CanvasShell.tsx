@@ -28,6 +28,7 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 import { buildGraphDraftWorkspaceFileCodeContributions } from './graphDraftWorkspaceFileCodeContribution';
 import { findCanvasGraphNodeElement } from './canvasNodeWorkbenchDomGeometry';
 import { useCanvasNodeDataSample } from './useCanvasNodeDataSample';
+import { useCanvasOutputExpressionInspection } from './useCanvasOutputExpressionInspection';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import {
@@ -79,7 +80,11 @@ export default function CanvasShell({
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
-  const { dataSampleTabs, projectNode: projectNodeDataSample } = useCanvasNodeDataSample({
+  const {
+    dataSampleTabs,
+    projectNode: projectNodeDataSample,
+    openSource,
+  } = useCanvasNodeDataSample({
     activeCanvasId: panels.activeCanvasId,
     canvasTransformDataSampleQuery,
     runMaterializationSampleQuery,
@@ -87,6 +92,10 @@ export default function CanvasShell({
     warehouseSourceDataSampleQuery,
   });
   const [relationalTreeTransformId, setRelationalTreeTransformId] = useState<string | null>(null);
+  const outputInspection = useCanvasOutputExpressionInspection(
+    panels.activeCanvasId,
+    panels.inspectorGraphNodes
+  );
   const [modelTabActive, setModelTabActive] = useState(true);
   const [operationDataHost, setOperationDataHost] = useState<HTMLDivElement | null>(null);
   const selectDrawerTab = useOperationalDrawerContributionStore(
@@ -324,8 +333,8 @@ export default function CanvasShell({
             : new Map(data.runStatusByNodeId).set(node.id, sinkDataSampleTarget.status);
         const projectedData: DbtNodeData = {
           ...data,
-          modelDataActionLabel: canOpenRelationalTree
-            ? resolveCanvasSemanticEditorCopy(applicationLanguage).viewData
+          dataActionLabel: dataSampleProjection.canOpen
+            ? resolveCanvasSemanticEditorCopy(applicationLanguage).execute
             : undefined,
           canOpenNodeCode,
           ...(participatesInActiveRun
@@ -342,15 +351,9 @@ export default function CanvasShell({
                 lastRunAt: sinkDataSampleTarget.completedAt,
                 runStatusByNodeId,
               }),
-          onOpenSourceDataSample: canOpenRelationalTree
-            ? () => openRelationalTree(node.id, 'data')
-            : dataSampleProjection.onOpen,
-          sourceDataSampleInteractionLabel: canOpenRelationalTree
-            ? resolveCanvasSemanticEditorCopy(applicationLanguage).openEditor
-            : dataSampleProjection.canOpen
-              ? copy.sourceDataSampleInteractionLabel
-              : undefined,
+          onOpenSourceDataSample: dataSampleProjection.onOpen,
           onSelectNode: data.onSelectNode,
+          onInspectCanvasColumn: isNativeTransform ? outputInspection.open : undefined,
           onOpenNode:
             isNativeTransform && canOpenRelationalTree
               ? () => openRelationalTree(node.id)
@@ -369,9 +372,9 @@ export default function CanvasShell({
     }),
     [
       applicationLanguage,
-      copy.sourceDataSampleInteractionLabel,
       graph,
       openRelationalTree,
+      outputInspection.open,
       projectNodeDataSample,
       relationalTreeTransformIds,
       runSnapshot,
@@ -461,11 +464,16 @@ export default function CanvasShell({
       <CanvasShellMainPanel
         layout={
           relationalTreeTransform == null || panels.activeCanvasId == null
-            ? shellLayout
+            ? {
+                ...shellLayout,
+                contextualWorkbench: outputInspection.workbench ?? shellLayout.contextualWorkbench,
+              }
             : {
                 ...shellLayout,
                 inspectorPanelVisible: modelTabActive ? false : shellLayout.inspectorPanelVisible,
-                contextualWorkbench: undefined,
+                contextualWorkbench: modelTabActive
+                  ? undefined
+                  : (outputInspection.workbench ?? shellLayout.contextualWorkbench),
                 centerSurfaceVisible: modelTabActive,
                 centerSurface: (
                   <CanvasModelEditor
@@ -480,6 +488,7 @@ export default function CanvasShell({
                     viewRequestId={modelViewRequestId}
                     draftStatus={chromeState.draftStatusState}
                     query={canvasTransformDataSampleQuery}
+                    onExecuteSource={openSource}
                     preparePreview={prepareModelPreview}
                     operationDataHost={operationDataHost}
                     onOpenOperationData={

@@ -7,9 +7,13 @@ import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewpo
 export function CanvasRelationalScalarGraph({
   graph,
   onSelectCondition,
+  selectedNodeId,
+  onSelectedNodeChange,
 }: Readonly<{
   graph: SemanticWorkbenchGraph;
   onSelectCondition?: (index: number, operand?: 'left' | 'right') => void;
+  selectedNodeId?: string;
+  onSelectedNodeChange?: (nodeId: string) => void;
 }>): JSX.Element {
   const marker = useId();
   const [selected, setSelected] = useState<string | null>(null);
@@ -57,14 +61,20 @@ export function CanvasRelationalScalarGraph({
                 y2 = child.position.y;
               const mid = (y1 + y2) / 2;
               return (
-                <path
-                  key={edge.id}
-                  d={`M${x1},${y1} V${mid} H${x2} V${y2}`}
-                  fill="none"
-                  stroke="#38bdf8"
-                  strokeWidth="1.4"
-                  markerEnd={`url(#${marker})`}
-                />
+                <g key={edge.id}>
+                  <path
+                    d={`M${x1},${y1} V${mid} H${x2} V${y2}`}
+                    fill="none"
+                    stroke="#38bdf8"
+                    strokeWidth="1.4"
+                    markerEnd={`url(#${marker})`}
+                  />
+                  {edge.label == null ? null : (
+                    <text x={x2 + 6} y={y2 - 8} fill="currentColor" fontSize="12">
+                      {edge.label}
+                    </text>
+                  )}
+                </g>
               );
             })}
           </svg>
@@ -84,9 +94,10 @@ export function CanvasRelationalScalarGraph({
                 data-kind={node.data.semanticKind}
                 data-semantic-node-id={node.id}
                 title={node.data.detail}
-                aria-pressed={selected === node.id}
+                aria-pressed={(selectedNodeId ?? selected) === node.id}
                 onClick={() => {
                   setSelected(node.id);
+                  onSelectedNodeChange?.(node.id);
                   if (node.data.joinConditionIndex != null)
                     onSelectCondition?.(
                       node.data.joinConditionIndex,

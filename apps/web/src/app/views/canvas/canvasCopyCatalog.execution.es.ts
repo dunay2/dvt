@@ -180,8 +180,6 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerDataTruncatedTemplate: 'Se muestran las primeras {limit} filas.',
   operationalDrawerDataCaptionTemplate: 'Muestra de datos de {nodeName}',
   operationalDrawerDataNullValue: 'NULO',
-  sourceDataSampleInteractionLabel:
-    'Haz doble clic en esta zona de métricas o pulsa Intro para abrir una muestra de datos.',
   operationalDrawerTabsAriaLabel: 'Cajón operativo del Canvas',
   operationalDrawerInfoSeverity: 'Información',
   operationalDrawerWarningSeverity: 'Advertencia',

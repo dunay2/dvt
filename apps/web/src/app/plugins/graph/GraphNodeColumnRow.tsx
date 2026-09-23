@@ -2,20 +2,18 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 
 import { CanvasNodePortHandle } from '../../components/canvas/CanvasNodePortHandle';
-import { Tooltip, TooltipTrigger } from '../../components/ui/tooltip';
+import { graphColumnInspectionProps, type GraphNodeColumnInspect } from './graphColumnInspection';
 import type {
   GraphNodeColumn,
   GraphNodeColumnCompositionFunctionResolver,
-  GraphNodeColumnFunctionApplyIdentity,
-  GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
   GraphNodeColumnReorderIdentity,
-  GraphNodeStructuredFieldIdentity,
+  GraphNodeColumnSectionProps,
 } from './graphNodeColumnContracts';
 import { GraphNodeColumnDropCompositionFlow } from './GraphNodeColumnDropCompositionFlow';
-import { GraphNodeColumnFunctionMenu } from './GraphNodeColumnFunctionMenu';
+import { GraphNodeColumnActions } from './GraphNodeColumnActions';
 import {
   GraphNodeColumnPiece,
   GraphNodeColumnTooltip,
@@ -25,9 +23,8 @@ import { GraphNodeExpressionComposer } from './GraphNodeExpressionComposer';
 import { graphNodeColumnClasses } from './graphVisualTokens';
 import type { GraphNodeColumnReorderController } from './useGraphNodeColumnReorder';
 
-type PendingFunctionRequest = Readonly<{ capabilityId: string }>;
-
 export function GraphNodeColumnRow(props: {
+  onColumnInspect?: GraphNodeColumnInspect;
   column: GraphNodeColumn;
   nodeId?: string;
   portDirections: readonly GraphNodeColumnPortDirection[];
@@ -49,21 +46,23 @@ export function GraphNodeColumnRow(props: {
   onCreateAlias?: () => void;
   resolveColumnCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onColumnFunctionApply?: (
-    identity: GraphNodeColumnFunctionApplyIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
-  onStructuredFieldApply?: (
-    identity: GraphNodeStructuredFieldIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  onColumnFunctionApply?: GraphNodeColumnSectionProps['onColumnFunctionApply'];
+  onStructuredFieldApply?: GraphNodeColumnSectionProps['onStructuredFieldApply'];
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
 }): ReactElement {
   const pieceRef = useRef<HTMLDivElement>(null);
   const [keyboardFunctionMenuOpen, setKeyboardFunctionMenuOpen] = useState(false);
-  const [pendingFunction, setPendingFunction] = useState<PendingFunctionRequest | null>(null);
+  const [pendingFunction, setPendingFunction] = useState<string | null>(null);
   const { column, nodeId, copy, reorder } = props;
   const columnId = column.id ?? column.name;
   const isOutput = column.output !== false;
+  const inspectionProps = graphColumnInspectionProps(
+    column,
+    nodeId,
+    props.onColumnInspect,
+    pieceRef
+  );
   useEffect(() => {
     if (!props.focusRequested) return;
     pieceRef.current?.focus();
@@ -71,6 +70,7 @@ export function GraphNodeColumnRow(props: {
   }, [props.focusRequested, props.onFocusFulfilled]);
   const piece = (
     <GraphNodeColumnPiece
+      {...inspectionProps}
       ref={pieceRef}
       column={column}
       isOutput={isOutput}
@@ -95,62 +95,6 @@ export function GraphNodeColumnRow(props: {
       }}
     />
   );
-  const tooltip = <GraphNodeColumnTooltip type={column.type} />;
-  const content =
-    nodeId != null ? (
-      <GraphNodeColumnFunctionMenu
-        nodeId={nodeId}
-        columnId={columnId}
-        menu={column.functionMenu}
-        columnName={column.name}
-        appendCandidates={props.structuredAppendCandidates}
-        copy={copy}
-        keyboardOpen={keyboardFunctionMenuOpen}
-        onKeyboardOpenChange={setKeyboardFunctionMenuOpen}
-        onCreateAlias={props.onCreateAlias}
-        onRequest={
-          props.onColumnFunctionApply == null
-            ? undefined
-            : (capabilityId) => {
-                const selectedFunction = column.functionMenu?.items.find(
-                  (item) => item.capabilityId === capabilityId
-                );
-                if (selectedFunction != null) {
-                  setPendingFunction({ capabilityId });
-                }
-              }
-        }
-        onStructuredAppend={
-          column.children == null || props.onStructuredFieldApply == null
-            ? undefined
-            : (candidate) =>
-                props.onStructuredFieldApply?.({
-                  nodeId,
-                  draggedFieldId: candidate.id ?? candidate.name,
-                  targetFieldId: columnId,
-                  parentName: column.name,
-                })
-        }
-        onStructuredRemove={
-          column.children == null || props.onColumnOutputToggle == null
-            ? undefined
-            : () =>
-                props.onColumnOutputToggle?.({
-                  nodeId,
-                  columnId,
-                  columnType: column.type,
-                  output: false,
-                })
-        }
-        piece={piece}
-        tooltip={tooltip}
-      />
-    ) : (
-      <Tooltip>
-        <TooltipTrigger asChild>{piece}</TooltipTrigger>
-        {tooltip}
-      </Tooltip>
-    );
 
   return (
     <div
@@ -186,7 +130,27 @@ export function GraphNodeColumnRow(props: {
           onActivate={() => props.onColumnPortActivate?.({ direction: 'target', nodeId, columnId })}
         />
       ) : null}
-      {content}
+      <GraphNodeColumnActions
+        column={column}
+        nodeId={nodeId}
+        copy={copy}
+        piece={piece}
+        tooltip={<GraphNodeColumnTooltip type={column.type} />}
+        appendCandidates={props.structuredAppendCandidates}
+        keyboardOpen={keyboardFunctionMenuOpen}
+        onKeyboardOpenChange={setKeyboardFunctionMenuOpen}
+        onCreateAlias={props.onCreateAlias}
+        onStructuredFieldApply={props.onStructuredFieldApply}
+        onColumnOutputToggle={props.onColumnOutputToggle}
+        onRequest={
+          props.onColumnFunctionApply == null
+            ? undefined
+            : (capabilityId) => {
+                if (column.functionMenu?.items.some((item) => item.capabilityId === capabilityId))
+                  setPendingFunction(capabilityId);
+              }
+        }
+      />
       {nodeId == null ? null : (
         <GraphNodeColumnDropCompositionFlow
           nodeId={nodeId}
@@ -204,11 +168,11 @@ export function GraphNodeColumnRow(props: {
       )}
       {nodeId != null && pendingFunction != null && props.onColumnFunctionApply != null ? (
         <GraphNodeExpressionComposer
-          key={`${columnId}:${pendingFunction.capabilityId}`}
+          key={`${columnId}:${pendingFunction}`}
           nodeId={nodeId}
           columnId={columnId}
           functions={column.functionMenu?.items ?? []}
-          initialCapabilityId={pendingFunction.capabilityId}
+          initialCapabilityId={pendingFunction}
           initialOperandFieldIds={[columnId]}
           operandCandidates={props.expressionOperandCandidates}
           resolveCompositionFunctions={props.resolveColumnCompositionFunctions}

@@ -1,14 +1,16 @@
 import { Position, type Edge, type Node, type SmoothStepPathOptions } from '@xyflow/react';
 import type { Expression, Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import type { CSSProperties } from 'react';
 
 import type { CanonicalNode } from '../../types/canonical';
-import { readDvtSubstraitFieldReferenceOrdinal } from './canvasDvtSubstraitAggregation';
-import { DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS } from './canvasDvtSubstraitJoinComposition';
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { createSemanticExpressionProjector } from './semanticExpressionGraphProjection';
+import { layoutSemanticExpressionGraph } from './semanticExpressionGraphLayout';
+import { semanticExpressionStyles } from './semanticExpressionGraphLayout';
+import { createSemanticExpressionDescription } from './semanticExpressionDescription';
 import { getLayoutedElements } from './canvasGraphUtils';
+import { childInputs, relationAnchor } from './canvasRelationalTraversal';
 
 export type SemanticWorkbenchGroup = 'source' | 'condition' | 'transformation';
 
@@ -26,6 +28,7 @@ export type SemanticWorkbenchNodeData = Readonly<{
     operand: 'left' | 'right';
   }>;
   joinConditionIndex?: number;
+  fieldReference?: Readonly<{ fieldId: string; relationId: string; sourceFieldId?: string }>;
 }>;
 
 type SemanticWorkbenchEdgeData = Readonly<{
@@ -58,34 +61,6 @@ const RELATION_STYLE: CSSProperties = {
   textAlign: 'left',
 };
 
-const EXPRESSION_STYLE: CSSProperties = {
-  width: 138,
-  minHeight: 44,
-  padding: 0,
-  border: '1px solid #3b5b88',
-  borderRadius: 8,
-  background: '#10192d',
-  color: '#e2e8f0',
-  fontFamily: 'IBM Plex Mono, monospace',
-  fontSize: 11,
-  textAlign: 'left',
-};
-
-const FIELD_STYLE: CSSProperties = {
-  ...EXPRESSION_STYLE,
-  width: 206,
-  border: '1px solid #245f88',
-  background: '#0a1829',
-  color: '#7dd3fc',
-};
-
-const LITERAL_STYLE: CSSProperties = {
-  ...EXPRESSION_STYLE,
-  border: '1px solid #67552d',
-  background: '#211b0d',
-  color: '#f3d58a',
-};
-
 function relationDisplayName(rel: Rel): string {
   switch (rel.relType.case) {
     case 'read': {
@@ -111,35 +86,8 @@ function relationDisplayName(rel: Rel): string {
   }
 }
 
-function relationAnchor(rel: Rel): number | null {
-  switch (rel.relType.case) {
-    case 'read':
-    case 'filter':
-    case 'project':
-    case 'join':
-    case 'aggregate':
-    case 'set':
-      return rel.relType.value.common?.relAnchor ?? null;
-    default:
-      return null;
-  }
-}
-
 function relationInputs(rel: Rel): readonly Rel[] {
-  switch (rel.relType.case) {
-    case 'filter':
-    case 'project':
-    case 'aggregate':
-      return rel.relType.value.input == null ? [] : [rel.relType.value.input];
-    case 'join':
-      return [rel.relType.value.left, rel.relType.value.right].filter(
-        (candidate): candidate is Rel => candidate != null
-      );
-    case 'set':
-      return rel.relType.value.inputs;
-    default:
-      return [];
-  }
+  return childInputs(rel).map(({ rel: input }) => input);
 }
 
 function relationSourceCount(rel: Rel): number {
@@ -197,50 +145,6 @@ function relationFieldNames(
         inputNames[ordinal] == null ? [] : [inputNames[ordinal]]
       )
     : inputNames;
-}
-
-function functionNames(plan: Plan): ReadonlyMap<number, string> {
-  return new Map(
-    plan.extensions.flatMap((entry) =>
-      entry.mappingType.case === 'extensionFunction'
-        ? [
-            [
-              entry.mappingType.value.functionAnchor,
-              entry.mappingType.value.name.split(':', 1)[0]!,
-            ] as const,
-          ]
-        : []
-    )
-  );
-}
-
-function operatorLabel(name: string): string {
-  const aliases: Readonly<Record<string, string>> = {
-    equal: '=',
-    not_equal: '!=',
-    is_null: 'IS NULL',
-    is_not_null: 'IS NOT NULL',
-    gt: '>',
-    gte: '>=',
-    lt: '<',
-    lte: '<=',
-    add: '+',
-    subtract: '-',
-    multiply: '*',
-    divide: '/',
-    and: 'AND',
-    or: 'OR',
-    not: 'NOT',
-  };
-  return aliases[name] ?? name;
-}
-
-function literalLabel(expression: Expression): string {
-  if (expression.rexType.case !== 'literal') return 'literal';
-  const literal = expression.rexType.value.literalType;
-  if (literal.case === 'string') return `'${literal.value}'`;
-  if (literal.case === undefined) return 'NULL';
-  return String(literal.value);
 }
 
 function routeEdgesByTransition(
@@ -389,7 +293,6 @@ export function projectSemanticWorkbenchGraph(
     throw new Error('Semantic Workbench requires one canonical Substrait root relation.');
   }
 
-  const namesByFunctionAnchor = functionNames(draft.plan);
   const bindingNames = new Map(
     draft.sidecar.relations.map(
       (binding) =>
@@ -409,241 +312,19 @@ export function projectSemanticWorkbenchGraph(
   const edges: SemanticWorkbenchEdge[] = [];
   let sequence = 0;
   let relationCount = 0;
-  let expressionCount = 0;
-  const conditionIndexes = new Map<string, number>();
+  let aggregateCount = 0;
+  const { functionName } = createSemanticExpressionDescription(draft.plan);
+  const expressionProjector = createSemanticExpressionProjector({
+    plan: draft.plan,
+    nodes,
+    edges,
+    nextId,
+  });
+  const { addExpression, describeExpression } = expressionProjector;
 
   function nextId(prefix: string): string {
     sequence += 1;
     return `${prefix}-${sequence}`;
-  }
-
-  function describeExpression(
-    expression: Expression,
-    fieldNames: readonly string[],
-    nested = false
-  ): string {
-    if (expression.rexType.case === 'selection') {
-      const ordinal = readDvtSubstraitFieldReferenceOrdinal(expression);
-      return ordinal == null ? 'field' : (fieldNames[ordinal] ?? `field[${ordinal}]`);
-    }
-    if (expression.rexType.case === 'literal') return literalLabel(expression);
-    if (expression.rexType.case === 'scalarFunction') {
-      const scalar = expression.rexType.value;
-      const functionName =
-        namesByFunctionAnchor.get(scalar.functionReference) ?? `fn#${scalar.functionReference}`;
-      const operator = operatorLabel(functionName);
-      const argumentsList = scalar.arguments.flatMap((argument) =>
-        argument.argType.case === 'value'
-          ? [describeExpression(argument.argType.value, fieldNames, true)]
-          : []
-      );
-      const detail =
-        argumentsList.length === 1 && (functionName === 'is_null' || functionName === 'is_not_null')
-          ? `${argumentsList[0]} ${operator}`
-          : argumentsList.length === 2
-            ? `${argumentsList[0]} ${operator} ${argumentsList[1]}`
-            : `${operator}(${argumentsList.join(', ')})`;
-      return nested && (functionName === 'and' || functionName === 'or') ? `(${detail})` : detail;
-    }
-    return expression.rexType.case ?? 'expression';
-  }
-
-  function addExpression(
-    expression: Expression,
-    fieldNames: readonly string[],
-    joinContext?: Readonly<{
-      joinRelationId: string;
-      operand?: 'left' | 'right';
-      conditionIndex?: number;
-    }>
-  ): string {
-    expressionCount += 1;
-    if (expression.rexType.case === 'selection') {
-      const ordinal = readDvtSubstraitFieldReferenceOrdinal(expression);
-      const label = ordinal == null ? 'field' : (fieldNames[ordinal] ?? `field[${ordinal}]`);
-      const id = nextId('field');
-      nodes.push({
-        id,
-        position: { x: 0, y: 0 },
-        sourcePosition: Position.Right,
-        targetPosition: Position.Left,
-        data: {
-          label: `FIELD\n${label}`,
-          semanticKind: 'field',
-          semanticGroup: 'condition',
-          detail: `Campo de entrada: ${label}`,
-          joinConditionIndex: joinContext?.conditionIndex,
-          ...(joinContext?.operand == null
-            ? {}
-            : {
-                joinOperand: {
-                  joinRelationId: joinContext.joinRelationId,
-                  operand: joinContext.operand,
-                },
-              }),
-        },
-        style: FIELD_STYLE,
-      });
-      return id;
-    }
-    if (expression.rexType.case === 'literal') {
-      const id = nextId('literal');
-      nodes.push({
-        id,
-        position: { x: 0, y: 0 },
-        sourcePosition: Position.Right,
-        targetPosition: Position.Left,
-        data: {
-          label: `VALUE\n${literalLabel(expression)}`,
-          semanticKind: 'literal',
-          semanticGroup: 'condition',
-          detail: `Valor literal: ${literalLabel(expression)}`,
-          joinConditionIndex: joinContext?.conditionIndex,
-          ...(joinContext?.operand == null
-            ? {}
-            : {
-                joinOperand: {
-                  joinRelationId: joinContext.joinRelationId,
-                  operand: joinContext.operand,
-                },
-              }),
-        },
-        style: LITERAL_STYLE,
-      });
-      return id;
-    }
-    if (expression.rexType.case === 'scalarFunction') {
-      const scalar = expression.rexType.value;
-      const functionName =
-        namesByFunctionAnchor.get(scalar.functionReference) ?? `fn#${scalar.functionReference}`;
-      const id = nextId('function');
-      const expressionDetail = describeExpression(expression, fieldNames);
-      const isJoinComparison =
-        DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS.some((operator) => operator === functionName) ||
-        functionName === 'is_null' ||
-        functionName === 'is_not_null';
-      if (joinContext != null && isJoinComparison) {
-        const conditionIndex = conditionIndexes.get(joinContext.joinRelationId) ?? 0;
-        conditionIndexes.set(joinContext.joinRelationId, conditionIndex + 1);
-        joinContext = { ...joinContext, conditionIndex };
-      }
-      nodes.push({
-        id,
-        position: { x: 0, y: 0 },
-        sourcePosition: Position.Right,
-        targetPosition: Position.Left,
-        data: {
-          label: `${functionName.toUpperCase()}\n${operatorLabel(functionName)}`,
-          semanticKind: 'expression',
-          semanticGroup: 'condition',
-          detail: expressionDetail,
-          expression: expressionDetail,
-          joinConditionIndex: joinContext?.conditionIndex,
-          ...(joinContext?.operand == null
-            ? {}
-            : {
-                joinOperand: {
-                  joinRelationId: joinContext.joinRelationId,
-                  operand: joinContext.operand,
-                },
-              }),
-        },
-        style: EXPRESSION_STYLE,
-      });
-      for (const [argumentIndex, argument] of scalar.arguments.entries()) {
-        if (argument.argType.case !== 'value') continue;
-        const argumentId = addExpression(
-          argument.argType.value,
-          fieldNames,
-          joinContext == null
-            ? undefined
-            : {
-                ...joinContext,
-                ...(isJoinComparison && scalar.arguments.length === 2
-                  ? { operand: argumentIndex === 0 ? 'left' : 'right' }
-                  : {}),
-              }
-        );
-        edges.push({
-          id: nextId('edge'),
-          source: argumentId,
-          target: id,
-          type: 'smoothstep',
-          data: { semanticEdgeKind: 'expression' },
-          style: { stroke: '#10b981', strokeWidth: 1.4 },
-        });
-      }
-      return id;
-    }
-    if (expression.rexType.case === 'windowFunction') {
-      const window = expression.rexType.value;
-      const functionName =
-        namesByFunctionAnchor.get(window.functionReference) ?? `fn#${window.functionReference}`;
-      const id = nextId('window');
-      nodes.push({
-        id,
-        position: { x: 0, y: 0 },
-        sourcePosition: Position.Right,
-        targetPosition: Position.Left,
-        data: {
-          label: `WINDOW\n${functionName}`,
-          semanticKind: 'expression',
-          semanticGroup: 'condition',
-          detail: `Window function: ${functionName}`,
-        },
-        style: EXPRESSION_STYLE,
-      });
-      for (const argument of window.arguments) {
-        if (argument.argType.case !== 'value') continue;
-        const argumentId = addExpression(argument.argType.value, fieldNames);
-        edges.push({
-          id: nextId('edge'),
-          source: argumentId,
-          target: id,
-          type: 'smoothstep',
-          data: { semanticEdgeKind: 'expression' },
-          style: { stroke: '#10b981', strokeWidth: 1.4 },
-        });
-      }
-      for (const partition of window.partitions) {
-        const partitionId = addExpression(partition, fieldNames);
-        edges.push({
-          id: nextId('edge'),
-          source: partitionId,
-          target: id,
-          label: 'partition',
-          data: { semanticEdgeKind: 'expression' },
-        });
-      }
-      for (const sort of window.sorts) {
-        if (sort.expr == null) continue;
-        const sortId = addExpression(sort.expr, fieldNames);
-        edges.push({
-          id: nextId('edge'),
-          source: sortId,
-          target: id,
-          label: 'order',
-          data: { semanticEdgeKind: 'expression' },
-        });
-      }
-      return id;
-    }
-
-    const id = nextId('expression');
-    nodes.push({
-      id,
-      position: { x: 0, y: 0 },
-      sourcePosition: Position.Right,
-      targetPosition: Position.Left,
-      data: {
-        label: `EXPRESSION\n${expression.rexType.case ?? 'unknown'}`,
-        semanticKind: 'expression',
-        semanticGroup: 'condition',
-        detail: describeExpression(expression, fieldNames),
-      },
-      style: EXPRESSION_STYLE,
-    });
-    return id;
   }
 
   function addRelation(rel: Rel): string {
@@ -737,8 +418,8 @@ export function projectSemanticWorkbenchGraph(
       for (const { measure } of rel.relType.value.measures) {
         if (measure == null) continue;
         const measureId = nextId('aggregate-expression');
-        expressionCount += 1;
-        const name = namesByFunctionAnchor.get(measure.functionReference) ?? 'aggregate';
+        aggregateCount += 1;
+        const name = functionName(measure.functionReference);
         nodes.push({
           id: measureId,
           type: 'default',
@@ -749,7 +430,7 @@ export function projectSemanticWorkbenchGraph(
             semanticGroup: 'condition',
             detail: name,
           },
-          style: EXPRESSION_STYLE,
+          style: semanticExpressionStyles.expression,
         });
         edges.push({
           id: nextId('edge'),
@@ -787,7 +468,7 @@ export function projectSemanticWorkbenchGraph(
       nodes: layoutGraph(relationNodes, relationEdges, 'LR'),
       edges: relationEdges,
       relationCount,
-      expressionCount,
+      expressionCount: expressionProjector.count,
       relationId,
     };
   }
@@ -835,27 +516,20 @@ export function projectSemanticWorkbenchGraph(
         ...edge,
         pathOptions: { borderRadius: 8, offset: 16, stepPosition: 0.5 },
       }));
-    return {
-      nodes: getLayoutedElements(expressionNodes, expressionEdges, {
-        rankdir: 'BT',
-        ranksep: 28,
-        nodesep: 28,
-        marginx: 8,
-        marginy: 8,
-        nodeSize: { width: 206, height: 60 },
-      }).nodes,
+    return layoutSemanticExpressionGraph({
+      nodes: expressionNodes,
       edges: expressionEdges,
       relationCount: 0,
       expressionCount: expressionNodes.length,
       relationId: options.expressionRelationId,
-    };
+    });
   }
 
   return {
     nodes: layoutGraph(nodes, routedEdges),
     edges: routedEdges,
     relationCount,
-    expressionCount,
+    expressionCount: expressionProjector.count + aggregateCount,
     relationId,
   };
 }

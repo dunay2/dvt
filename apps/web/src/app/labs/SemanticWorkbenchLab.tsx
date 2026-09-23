@@ -294,8 +294,7 @@ function SemanticWorkbenchLab() {
             ...(canOpenDataSample
               ? {
                   onOpenSourceDataSample: openSourceDataSample,
-                  sourceDataSampleInteractionLabel:
-                    'Doble clic o Intro para abrir la muestra de datos.',
+                  dataActionLabel: 'Ejecutar',
                 }
               : {}),
           },

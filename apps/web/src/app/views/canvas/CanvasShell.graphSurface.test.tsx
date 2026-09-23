@@ -229,7 +229,7 @@ describe('CanvasShell graph base surface', () => {
         | Array<{
             data: {
               onOpenSourceDataSample?: (nodeId: string) => void;
-              sourceDataSampleInteractionLabel?: string;
+              dataActionLabel?: string;
             };
           }>
         | undefined
@@ -244,7 +244,7 @@ describe('CanvasShell graph base surface', () => {
       objectId: 'relation/dvt/public/orders',
       limit: 20,
     });
-    expect(forwardedNode?.data.sourceDataSampleInteractionLabel).toContain('Double-click');
+    expect(forwardedNode?.data.dataActionLabel).toBe('Run');
     const sourceDataState = useOperationalDrawerContributionStore.getState();
     expect(sourceDataState.activeTab).toBe('data:source-orders');
     expect(

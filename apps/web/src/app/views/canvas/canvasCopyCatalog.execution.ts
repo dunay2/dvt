@@ -599,10 +599,6 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.operationalDrawer.dataNullValue',
     fallback: 'NULL',
   },
-  sourceDataSampleInteractionLabel: {
-    key: 'canvas.sourceDataSample.interactionLabel',
-    fallback: 'Double-click this metrics area or press Enter to open a data sample.',
-  },
   operationalDrawerTabsAriaLabel: {
     key: 'canvas.operationalDrawer.tabsAriaLabel',
     fallback: 'Canvas operational drawer',

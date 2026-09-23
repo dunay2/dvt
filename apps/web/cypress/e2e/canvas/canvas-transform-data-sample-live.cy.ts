@@ -6,6 +6,7 @@ import {
   seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
+import { openWorkbenchModel } from '../../support/relationalWorkbench/navigation';
 
 describe('Canvas live data exploration', () => {
   beforeEach(function () {
@@ -39,13 +40,12 @@ describe('Canvas live data exploration', () => {
     );
 
     visitWithLiveWorkspaceSession('/canvas');
-    getVisibleCanvasNode('dvt-transform-1').find('[data-slot="canvas-model-view-data"]').click();
-    cy.get('[data-slot="canvas-model-view-tab"][data-view="data"]').should(
+    getVisibleCanvasNode('dvt-transform-1').find('[data-slot="canvas-node-execute"]').click();
+    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data:dvt-transform-1"]').should(
       'have.attr',
       'aria-selected',
       'true'
     );
-    cy.get('[data-slot="canvas-model-preview"]').click();
     cy.wait('@transformRows', { timeout: 30_000 }).then((interception) => {
       expect(interception.response?.statusCode).to.equal(200);
       expect(interception.response?.body).to.deep.include({
@@ -56,14 +56,11 @@ describe('Canvas live data exploration', () => {
       });
       expect(interception.response?.body.rows).to.have.length(3);
     });
-    cy.get('[data-slot="canvas-model-data"]')
+    cy.get('[data-slot="bottom-operational-drawer-data"]')
       .should('contain.text', 'customer')
       .and('contain.text', 'Ada');
-    cy.get('[data-slot="canvas-model-tab-close"]').click();
 
-    getVisibleCanvasNode('source-1')
-      .find('[data-slot="canvas-node-shell"]')
-      .dblclick('bottom', { force: true });
+    getVisibleCanvasNode('source-1').find('[data-slot="canvas-node-execute"]').click();
     cy.wait('@sourceRows', { timeout: 30_000 }).its('response.statusCode').should('equal', 200);
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data:source-1"]').should(
       'have.attr',
@@ -73,6 +70,19 @@ describe('Canvas live data exploration', () => {
     cy.get('[data-slot="bottom-operational-drawer-data"]')
       .should('contain.text', 'customer')
       .and('contain.text', 'Ada');
+    openWorkbenchModel('dvt-transform-1');
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]')
+      .parent()
+      .find('[data-slot="canvas-node-execute"]')
+      .focus()
+      .click();
+    cy.wait('@sourceRows', { timeout: 30_000 }).then(({ request, response }) => {
+      expect(response?.statusCode).to.equal(200);
+      expect(new URL(request.url).searchParams.get('objectId')).to.equal('relation/dvt/raw/orders');
+      expect(response?.body.rows).to.have.length(3);
+    });
+    cy.get('[data-slot="bottom-operational-drawer-data"]').should('contain.text', 'Ada');
+    cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
     cy.then(() => {
       expect(previewRequests).to.equal(0);
       expect(runRequests).to.equal(0);

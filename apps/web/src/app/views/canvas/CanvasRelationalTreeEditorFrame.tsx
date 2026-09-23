@@ -5,13 +5,8 @@ import {
   type CanvasPresentationOperation,
 } from './canvasRelationalOperationPresentation';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
+import { createContext, useMemo, useState, type ReactNode } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import {
-  CanvasOperationDataPreview,
-  CanvasOperationPreviewContext,
-} from './CanvasOperationDataPreview';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 
@@ -44,7 +39,6 @@ export function CanvasRelationalTreeEditorFrame({
   const presentation = resolveCanvasRelationalOperationPresentation(operation);
   const title = label ?? resolveCanvasViewCopy(language)[presentation.labelKey];
   const Icon = presentation.icon;
-  const preview = useContext(CanvasOperationPreviewContext);
   const [tab, setTab] = useState(readOnly ? 'tree' : 'properties');
   const [expressionHost, setExpressionHost] = useState<HTMLDivElement | null>(null);
   const expressionContext = useMemo(
@@ -54,14 +48,10 @@ export function CanvasRelationalTreeEditorFrame({
     }),
     [expressionHost]
   );
-  const openData = preview?.onOpenData;
-  useEffect(() => {
-    if (!hidden && relationId != null) openData?.();
-  }, [hidden, relationId, openData]);
-  const showPreview = !hidden && preview?.dataHost != null && relationId != null;
   return (
     <section
       data-slot="canvas-relational-tree-inline-editor"
+      data-relation-id={relationId ?? undefined}
       aria-label={title}
       hidden={hidden}
       className={`canvas-operation-properties ${hidden ? 'hidden' : 'flex'} min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-l border-(--border-subtle) bg-(--surface-panel)`}
@@ -126,12 +116,6 @@ export function CanvasRelationalTreeEditorFrame({
           </TabsContent>
         </Tabs>
       </CanvasOperationExpressionHost.Provider>
-      {showPreview
-        ? createPortal(
-            <CanvasOperationDataPreview relationId={relationId} label={title} />,
-            preview.dataHost!
-          )
-        : null}
     </section>
   );
 }

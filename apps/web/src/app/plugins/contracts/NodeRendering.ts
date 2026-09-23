@@ -89,7 +89,7 @@ export type GraphNodeRendererData = Readonly<{
   columns?: readonly GraphNodeColumn[];
   displayTags?: readonly Readonly<{ value: string; label: string }>[];
   canOpenNodeCode?: boolean;
-  sourceDataSampleInteractionLabel?: string;
+  dataActionLabel?: string;
   columnPortDirections?: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
   algebraicDrop?: GraphNodeAlgebraicDrop;

@@ -42,3 +42,13 @@ test('local verification keeps the real implementation gate while committed CI t
 test('manual CI has no unused local-comparison input', () => {
   assert.equal(workflow.on.workflow_dispatch.inputs.comparison_base, undefined);
 });
+
+test('PR Git governance prepares its runtime dependency independently of the DB route', () => {
+  const checkIndex = steps.findIndex(
+    (step) => step.run === 'pnpm docs:governance:changed-files:check'
+  );
+  const buildIndex = steps.findIndex((step) => step.run === 'pnpm --filter @dvt/crypto build');
+  assert.ok(buildIndex >= 0 && buildIndex < checkIndex);
+  assert.equal(steps[buildIndex].if, "github.event_name == 'pull_request'");
+  assert.equal(steps[buildIndex].if, steps[checkIndex].if);
+});

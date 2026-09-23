@@ -1,5 +1,7 @@
 /** Owned concern: compose one relational card, contextual actions and semantic detail. */
 import { ChevronDown } from 'lucide-react';
+import { CanvasNodeDataAction } from '../../components/canvas/CanvasNodeDataAction';
+import { useCanvasRelationalOperationExecution } from './useCanvasRelationalOperationExecution';
 import { CanvasRelationalScalarTree } from './CanvasRelationalScalarTree';
 import { CanvasRelationalTreeCardMenu } from './CanvasRelationalTreeCardMenu';
 import { CanvasRelationalTreeNodeButton } from './CanvasRelationalTreeNodeButton';
@@ -25,11 +27,12 @@ export function CanvasRelationalTreeGraphNode({
   semanticGraph?: SemanticWorkbenchGraph;
 }>): JSX.Element {
   const canExpand = placed.node.expressionRefs.length > 0 || placed.node.operator === 'cross';
+  const execution = useCanvasRelationalOperationExecution(placed.node);
   return (
     <CanvasRelationalTreeCardMenu node={placed.node} onRemove={onRemove} onExpand={onExpand}>
       <li
         role="none"
-        className="absolute"
+        className="group/canvas-node absolute"
         style={{ left: placed.x, top: placed.y, width: placed.width, height: placed.height }}
         data-parent-locator={placed.parentLocator ?? undefined}
       >
@@ -41,6 +44,11 @@ export function CanvasRelationalTreeGraphNode({
           onExpand={onExpand}
           detailed={semanticGraph != null}
         />
+        {execution == null ? null : (
+          <div className="absolute top-full w-full">
+            <CanvasNodeDataAction {...execution} />
+          </div>
+        )}
         {semanticGraph == null ? null : (
           <div
             data-slot="canvas-relational-semantic-zoom"

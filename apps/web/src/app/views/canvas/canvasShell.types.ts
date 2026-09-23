@@ -64,7 +64,8 @@ export type CanvasShellLayout = {
 };
 
 export type CanvasShellContextualWorkbench = Readonly<{
-  id: 'project-code';
+  id: 'project-code' | 'output-expression';
+  presentation?: 'docked';
   title: string;
   closeLabel: string;
   moveLabel?: string;

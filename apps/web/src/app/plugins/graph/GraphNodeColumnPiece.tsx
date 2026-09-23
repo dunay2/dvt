@@ -66,13 +66,13 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
         ref={ref}
         data-slot="graph-node-column-piece"
         data-column-name={column.name}
+        data-field-id={column.id}
         data-output={String(isOutput)}
         tabIndex={0}
         aria-label={accessibleLabel}
         draggable={canReorder}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
-        onClick={outputToggleDisabled ? undefined : onOutputToggle}
         className={graphNodeColumnClasses.piece}
       >
         {column.sourceFieldName != null && column.sourceFieldName !== column.name ? (

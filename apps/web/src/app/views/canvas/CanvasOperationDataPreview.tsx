@@ -1,9 +1,13 @@
 /** Owned concern: bind the selected operation panel to the existing protected data query. */
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useEffect, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { CanvasModelDataView, type CanvasModelPreviewPreparation } from './CanvasModelDataView';
+import type { CanvasModelPreviewPreparation } from './CanvasModelDataView';
+import { CanvasModelDataPanel } from './CanvasModelDataPanel';
+import { useCanvasModelDataQuery } from './useCanvasModelDataQuery';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import type { CanvasSourceDataSampleTarget } from './canvasSourceDataSample';
 
 export type CanvasOperationPreviewPorts = Readonly<{
   canvasId: string;
@@ -11,6 +15,7 @@ export type CanvasOperationPreviewPorts = Readonly<{
   preparePreview?: CanvasModelPreviewPreparation;
   dataHost?: HTMLDivElement | null;
   onOpenData?: () => void;
+  onExecuteSource?: (nodeId: string, target: CanvasSourceDataSampleTarget) => void;
 }>;
 
 export const CanvasOperationPreviewContext = createContext<
@@ -20,6 +25,7 @@ export const CanvasOperationPreviewContext = createContext<
         semanticDigest: string | null;
         canEditModel: boolean;
         unapplied: boolean;
+        execute: (relationId: string, label: string) => void;
       }>)
   | null
 >(null);
@@ -36,43 +42,66 @@ export function CanvasOperationPreviewProvider({
   unapplied: boolean;
   children: ReactNode;
 }>): JSX.Element {
-  return (
-    <CanvasOperationPreviewContext.Provider value={ports == null ? null : { ...ports, ...state }}>
-      {children}
-    </CanvasOperationPreviewContext.Provider>
-  );
-}
-
-export function CanvasOperationDataPreview({
-  relationId,
-  label,
-}: Readonly<{
-  relationId: string;
-  label: string;
-}>): JSX.Element | null {
-  const context = useContext(CanvasOperationPreviewContext);
-  const language = useApplicationLanguageStore((state) => state.language);
+  const [requested, setRequested] = useState<{
+    nodeId: string;
+    relationId: string;
+    label: string;
+  } | null>(null);
+  const language = useApplicationLanguageStore((value) => value.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
-  if (context == null) return null;
+  const previewCopy = {
+    ...copy,
+    previewEmpty: copy.operationPreviewEmpty,
+    failed: copy.operationPreviewFailed,
+  };
+  const data = useCanvasModelDataQuery({
+    ...state,
+    canvasId: ports?.canvasId ?? '',
+    query: ports?.query,
+    preparePreview: ports?.preparePreview,
+    relationId: requested?.relationId,
+    copy: previewCopy,
+    blocked: state.unapplied,
+  });
+  const { reset } = data;
+  useEffect(() => {
+    setRequested(null);
+    reset();
+  }, [ports?.canvasId, state.nodeId, state.semanticDigest, state.unapplied, reset]);
+  const execute = (relationId: string, label: string): void => {
+    if (!data.available) return;
+    ports?.onOpenData?.();
+    setRequested({
+      nodeId: state.nodeId,
+      relationId,
+      label,
+    });
+    void data.load(relationId);
+  };
   return (
-    <aside
-      data-slot="canvas-operation-data-preview"
-      data-relation-id={relationId}
-      className="h-full min-h-0 min-w-0 overflow-hidden"
+    <CanvasOperationPreviewContext.Provider
+      value={ports == null ? null : { ...ports, ...state, execute }}
     >
-      <CanvasModelDataView
-        key={`${relationId}:${context.semanticDigest}:${context.unapplied}`}
-        {...context}
-        relationId={relationId}
-        compact
-        nodeName={label}
-        disabledReason={context.unapplied ? copy.operationPreviewUnapplied : undefined}
-        copy={{
-          ...copy,
-          previewEmpty: copy.operationPreviewEmpty,
-          failed: copy.operationPreviewFailed,
-        }}
-      />
-    </aside>
+      {children}
+      {requested?.nodeId === state.nodeId && ports?.dataHost != null
+        ? createPortal(
+            <aside
+              data-slot="canvas-operation-data-preview"
+              data-relation-id={requested.relationId}
+              className="h-full min-h-0 min-w-0 overflow-hidden"
+            >
+              <CanvasModelDataPanel
+                {...data}
+                semanticDigest={state.semanticDigest}
+                nodeName={requested.label}
+                compact
+                copy={previewCopy}
+                disabledReason={state.unapplied ? copy.operationPreviewUnapplied : undefined}
+              />
+            </aside>,
+            ports.dataHost
+          )
+        : null}
+    </CanvasOperationPreviewContext.Provider>
   );
 }

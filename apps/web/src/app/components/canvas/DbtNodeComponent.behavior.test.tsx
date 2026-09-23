@@ -66,7 +66,7 @@ describe('DbtNodeComponent behavior', () => {
     expect(onRemoveNode).toHaveBeenCalledWith('model.orders');
   });
 
-  it('opens source data on card double-click instead of the node inspector', () => {
+  it('retrieves source data only through the explicit Play action', () => {
     const onInspectNode = vi.fn();
     const onOpenSourceDataSample = vi.fn();
     const nodeProps = {
@@ -78,6 +78,7 @@ describe('DbtNodeComponent behavior', () => {
         status: 'idle',
         onInspectNode,
         onOpenSourceDataSample,
+        dataActionLabel: 'Run',
       },
     } as unknown as ComponentProps<typeof DbtNodeComponent>;
 
@@ -93,9 +94,12 @@ describe('DbtNodeComponent behavior', () => {
       fireEvent.dblClick(container.querySelector('[data-slot="canvas-node-shell"]')!);
     });
 
+    expect(onOpenSourceDataSample).not.toHaveBeenCalled();
+    act(() => {
+      fireEvent.click(container.querySelector('[data-slot="canvas-node-execute"]')!);
+    });
     expect(onOpenSourceDataSample).toHaveBeenCalledOnce();
     expect(onOpenSourceDataSample).toHaveBeenCalledWith('source.orders');
-    expect(onInspectNode).not.toHaveBeenCalled();
   });
 
   it('translates a valid schema resource drop into one attachment command', () => {

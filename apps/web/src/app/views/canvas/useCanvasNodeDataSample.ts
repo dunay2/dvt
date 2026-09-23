@@ -36,6 +36,7 @@ export function useCanvasNodeDataSample({
 }: CanvasNodeDataSampleArgs): Readonly<{
   dataSampleTabs: ReturnType<typeof useCanvasDataSample>['dataSampleTabs'];
   projectNode: (nodeId: string, data: DbtNodeData) => CanvasNodeDataSampleProjection;
+  openSource?: (nodeId: string, target: CanvasSourceDataSampleTarget) => void;
 }> {
   const { dataSampleTabs, openDataSample } = useCanvasDataSample();
   const openSource = useCallback(
@@ -105,5 +106,9 @@ export function useCanvasNodeDataSample({
     ]
   );
 
-  return { dataSampleTabs, projectNode };
+  return {
+    dataSampleTabs,
+    projectNode,
+    openSource: warehouseSourceDataSampleQuery == null ? undefined : openSource,
+  };
 }

@@ -1,5 +1,6 @@
 /** Owned concern: define graph-node column presentation and interaction contracts. */
 import type { DvtSubstraitProjectionAuthoringRejection } from '../../views/canvas/canvasDvtSubstraitProjection';
+import type { GraphNodeColumnInspect } from './graphColumnInspection';
 import type { ActiveColumnPlacement } from './useGraphNodeColumnOrder';
 
 export type GraphNodeColumnFunction = Readonly<{
@@ -96,6 +97,7 @@ export type GraphNodeCalculatedColumnIdentity =
     }>;
 
 export type GraphNodeColumnSectionProps = Readonly<{
+  onColumnInspect?: GraphNodeColumnInspect;
   columns: readonly GraphNodeColumn[];
   expressionInputs?: readonly GraphNodeColumn[];
   expanded?: boolean;
@@ -127,6 +129,10 @@ export function resolveGraphNodeColumnInteractionProps(args: {
 }) {
   const { data } = args;
   return {
+    onColumnInspect:
+      args.nodeRole === 'transform' && typeof data.onInspectCanvasColumn === 'function'
+        ? (data.onInspectCanvasColumn as GraphNodeColumnInspect)
+        : undefined,
     nodeId: args.nodeId,
     columnPortDirections: Array.isArray(data.columnPortDirections)
       ? (data.columnPortDirections as readonly GraphNodeColumnPortDirection[])
