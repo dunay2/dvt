@@ -62,7 +62,7 @@ describe('Canvas explicit data action', () => {
         canvasId: url.pathname.split('/')[4],
         transformNodeId: 'dvt-transform-1',
         draftRevision: 'revision-1',
-        semanticPlanSha256: 'a'.repeat(64),
+        semanticPlanSha256: url.searchParams.get('semanticPlanSha256'),
       }),
     }));
     visitWithE2eWorkspaceSession('/canvas', {
@@ -114,6 +114,11 @@ describe('Canvas explicit data action', () => {
       cy.then(() => {
         expect(getE2eApiCalls(path, 'GET')).to.have.length(1);
         expect(getE2eApiCalls(path, 'GET')[0]!.url.searchParams.get('limit')).to.equal('20');
+        if (nodeId === 'dvt-transform-1') {
+          expect(
+            getE2eApiCalls(path, 'GET')[0]!.url.searchParams.get('semanticPlanSha256')
+          ).to.match(/^[a-f0-9]{64}$/);
+        }
         expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(saves);
         expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(0);
         expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);

@@ -5,7 +5,10 @@ import {
   TransformDataSampleRequestSchema,
   type TransformDataSampleResponse,
 } from '@dvt/contracts';
-import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
+import {
+  CanvasTransformDataSampleQueryError,
+  type ICanvasTransformDataSampleQueryPort,
+} from '../../ports/canvasDataSample';
 import type { CanvasDraftLifecycle } from './canvasDraftLifecycle.types';
 import type { CanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
@@ -21,6 +24,57 @@ export type CanvasModelDataQueryOptions = Readonly<{
   copy: CanvasSemanticEditorCopy;
   blocked: boolean;
 }>;
+
+export class CanvasModelDataQueryError extends CanvasTransformDataSampleQueryError {
+  constructor(readonly reason: 'save-failed' | 'stale') {
+    super();
+  }
+}
+
+/** Shared lifecycle for whole-Model and selected-relation samples, independent of presentation. */
+export async function queryCanvasModelDataSample(
+  options: Pick<
+    CanvasModelDataQueryOptions,
+    'canvasId' | 'nodeId' | 'relationId' | 'canEditModel' | 'preparePreview'
+  > &
+    Readonly<{ semanticDigest: string; query: ICanvasTransformDataSampleQueryPort }>,
+  isCurrent: () => boolean
+): Promise<TransformDataSampleResponse> {
+  const { canvasId, nodeId, relationId, semanticDigest, canEditModel, preparePreview, query } =
+    options;
+  const request = TransformDataSampleRequestSchema.parse({
+    canvasId,
+    transformNodeId: nodeId,
+    limit: TRANSFORM_DATA_SAMPLE_DEFAULT_LIMIT,
+    semanticPlanSha256: semanticDigest,
+    ...(relationId == null ? {} : { relationId }),
+  });
+  if (!isCurrent()) throw new CanvasModelDataQueryError('stale');
+  if (canEditModel) {
+    const saved = await preparePreview?.();
+    if (saved?.ok !== true) throw new CanvasModelDataQueryError('save-failed');
+    const savedNode = saved.canonicalNodes.find((node) => node.id === nodeId);
+    if (
+      savedNode == null ||
+      readDvtTransformAuthoringAuthority(savedNode)?.semanticDocument.semanticPlan.sha256 !==
+        semanticDigest
+    ) {
+      throw new CanvasModelDataQueryError('stale');
+    }
+  }
+  if (!isCurrent()) throw new CanvasModelDataQueryError('stale');
+  const sample = await query.previewTransformRows(request);
+  if (
+    !isCurrent() ||
+    sample.canvasId !== canvasId ||
+    sample.transformNodeId !== nodeId ||
+    sample.relationId !== relationId ||
+    sample.semanticPlanSha256 !== semanticDigest
+  ) {
+    throw new CanvasModelDataQueryError('stale');
+  }
+  return sample;
+}
 
 export function useCanvasModelDataQuery({
   canvasId,
@@ -59,7 +113,12 @@ export function useCanvasModelDataQuery({
     semanticDigest != null;
   const load = useCallback(
     async (selectedRelationId = relationId) => {
-      if (!available || (busy.current && activeRelation.current === selectedRelationId)) return;
+      if (
+        !available ||
+        semanticDigest == null ||
+        (busy.current && activeRelation.current === selectedRelationId)
+      )
+        return;
       const id = ++requestId.current;
       busy.current = true;
       activeRelation.current = selectedRelationId;
@@ -67,46 +126,27 @@ export function useCanvasModelDataQuery({
       setError(null);
       setSample((previous) => (previous?.relationId === selectedRelationId ? previous : null));
       try {
-        if (canEditModel) {
-          const saved = await preparePreview!();
-          if (requestId.current !== id) return;
-          if (!saved.ok) {
-            setError(copy.saveFailed);
-            return;
-          }
-          const savedNode = saved.canonicalNodes.find((node) => node.id === nodeId);
-          if (
-            savedNode == null ||
-            readDvtTransformAuthoringAuthority(savedNode)?.semanticDocument.semanticPlan.sha256 !==
-              semanticDigest
-          ) {
-            setError(copy.staleHint);
-            return;
-          }
-        }
-        const next = await query.previewTransformRows(
-          TransformDataSampleRequestSchema.parse({
+        const next = await queryCanvasModelDataSample(
+          {
             canvasId,
-            transformNodeId: nodeId,
-            limit: TRANSFORM_DATA_SAMPLE_DEFAULT_LIMIT,
-            ...(selectedRelationId == null
-              ? {}
-              : { relationId: selectedRelationId, semanticPlanSha256: semanticDigest! }),
-          })
+            nodeId,
+            semanticDigest,
+            relationId: selectedRelationId,
+            canEditModel,
+            preparePreview,
+            query,
+          },
+          () => requestId.current === id
         );
         if (requestId.current !== id) return;
-        if (
-          next.canvasId !== canvasId ||
-          next.transformNodeId !== nodeId ||
-          next.relationId !== selectedRelationId ||
-          next.semanticPlanSha256 !== semanticDigest
-        ) {
-          setError(copy.staleHint);
-          return;
-        }
         setSample(next);
-      } catch {
-        if (requestId.current === id) setError(copy.failed);
+      } catch (failure) {
+        if (requestId.current === id)
+          setError(
+            failure instanceof CanvasModelDataQueryError
+              ? { 'save-failed': copy.saveFailed, stale: copy.staleHint }[failure.reason]
+              : copy.failed
+          );
       } finally {
         if (requestId.current === id) {
           busy.current = false;

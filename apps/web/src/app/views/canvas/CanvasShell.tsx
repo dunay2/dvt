@@ -87,6 +87,9 @@ export default function CanvasShell({
   } = useCanvasNodeDataSample({
     activeCanvasId: panels.activeCanvasId,
     canvasTransformDataSampleQuery,
+    prepareModelPreview,
+    canonicalNodes: panels.inspectorGraphNodes,
+    canEditModel: panels.relationalTreeAuthoring?.canEditNode === true,
     runMaterializationSampleQuery,
     runSnapshot,
     warehouseSourceDataSampleQuery,

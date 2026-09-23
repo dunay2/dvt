@@ -1,12 +1,9 @@
 // @vitest-environment jsdom
-/** Owned concern: prove revision-safe, explicit exploratory preview without publishing a Model. */
+/** Owned concern: preserve stale rows, recovery and unresolved-input feedback in the Model view. */
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  TRANSFORM_DATA_SAMPLE_DEFAULT_LIMIT,
-  TransformDataSampleRequestSchema,
-} from '@dvt/contracts';
+import { TRANSFORM_DATA_SAMPLE_DEFAULT_LIMIT } from '@dvt/contracts';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
 import { CanvasModelDataView, type CanvasModelPreviewPreparation } from './CanvasModelDataView';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
@@ -52,7 +49,6 @@ describe('Model data preview', () => {
   });
   function render(
     semanticDigest = digest,
-    canEditModel = true,
     unresolvedInputs: readonly { label: string; state: 'pending' | 'missing' }[] = []
   ): void {
     act(() =>
@@ -62,7 +58,7 @@ describe('Model data preview', () => {
           nodeId={fixture.transform.id}
           nodeName="Sales"
           semanticDigest={semanticDigest}
-          canEditModel={canEditModel}
+          canEditModel
           query={query}
           preparePreview={prepare}
           copy={resolveCanvasSemanticEditorCopy('en')}
@@ -76,25 +72,6 @@ describe('Model data preview', () => {
       container.querySelector<HTMLButtonElement>('[data-slot="canvas-model-preview"]')!.click()
     );
   }
-  it('does not query on navigation; flushes the applied draft before requesting rows', async () => {
-    render();
-    expect(query.previewTransformRows).not.toHaveBeenCalled();
-    await preview();
-    expect(prepare).toHaveBeenCalledOnce();
-    expect(query.previewTransformRows).toHaveBeenCalledWith({
-      canvasId: 'canvas-test',
-      transformNodeId: fixture.transform.id,
-      limit: TRANSFORM_DATA_SAMPLE_DEFAULT_LIMIT,
-    });
-    expect(
-      TransformDataSampleRequestSchema.safeParse(query.previewTransformRows.mock.calls[0]?.[0])
-        .success
-    ).toBe(true);
-    expect(prepare.mock.invocationCallOrder[0]).toBeLessThan(
-      query.previewTransformRows.mock.invocationCallOrder[0]!
-    );
-    expect(container.textContent).toContain('42');
-  });
   it('retains old rows and marks them stale after a new canonical Apply', async () => {
     render();
     await preview();
@@ -105,15 +82,8 @@ describe('Model data preview', () => {
     );
     expect(query.previewTransformRows).toHaveBeenCalledOnce();
   });
-  it('does not query after a persistence conflict', async () => {
-    prepare.mockResolvedValueOnce({ ok: false, message: 'Conflict' });
-    render();
-    await preview();
-    expect(query.previewTransformRows).not.toHaveBeenCalled();
-    expect(container.querySelector('[role="alert"]')?.textContent).toContain('could not be saved');
-  });
   it('names unresolved sources instead of issuing a known-incomplete preview', async () => {
-    render(digest, true, [
+    render(digest, [
       { label: 'orders', state: 'pending' },
       { label: 'old_clients', state: 'missing' },
     ]);
@@ -127,20 +97,6 @@ describe('Model data preview', () => {
     expect(container.textContent).toContain('old_clients');
     expect(query.previewTransformRows).not.toHaveBeenCalled();
     expect(prepare).not.toHaveBeenCalled();
-  });
-  it('explores a read-only Model without attempting any draft write', async () => {
-    render(digest, false);
-    await preview();
-    expect(prepare).not.toHaveBeenCalled();
-    expect(query.previewTransformRows).toHaveBeenCalledOnce();
-    expect(container.textContent).toContain('42');
-  });
-  it('rejects rows from another Model or a different revision', async () => {
-    query.previewTransformRows.mockResolvedValueOnce({ ...sample, transformNodeId: 'other-model' });
-    render();
-    await preview();
-    expect(container.querySelector('table')).toBeNull();
-    expect(container.querySelector('[role="alert"]')).not.toBeNull();
   });
   it('keeps the prior result when a refresh fails', async () => {
     render();

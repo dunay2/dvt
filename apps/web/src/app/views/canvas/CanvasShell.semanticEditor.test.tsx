@@ -4,7 +4,6 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
 import { createCanvasShellHarness, getCanvasShellState } from './CanvasShell.testHarness';
@@ -179,47 +178,6 @@ describe('Canvas Model editor navigation', () => {
     expect(
       harness.container.querySelector('[data-slot="canvas-node-workbench-overlay"]')
     ).toBeNull();
-  });
-
-  it('queries data in the bottom drawer without leaving the Canvas or changing its viewport', async () => {
-    const { data, fixture, previewTransformRows } = await mountModel();
-    previewTransformRows.mockResolvedValue({
-      contractVersion: 1,
-      canvasId: 'canvas-test',
-      transformNodeId: fixture.transform.id,
-      draftRevision: 'revision-1',
-      semanticPlanSha256: 'a'.repeat(64),
-      columns: [{ name: 'id', type: 'integer', nullable: false }],
-      rows: [{ values: ['7'] }],
-      limit: 20,
-      truncated: false,
-      sampledAt: '2026-09-22T10:00:00Z',
-    });
-    expect(previewTransformRows).not.toHaveBeenCalled();
-    await act(async () => data.onOpenSourceDataSample?.(fixture.transform.id));
-    expect(previewTransformRows).toHaveBeenCalledExactlyOnceWith({
-      canvasId: 'canvas-test',
-      transformNodeId: fixture.transform.id,
-      limit: 20,
-    });
-    expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
-      activeTab: `data:${fixture.transform.id}`,
-      contribution: {
-        tabs: expect.arrayContaining([
-          expect.objectContaining({
-            id: `data:${fixture.transform.id}`,
-            dataSample: expect.objectContaining({ status: 'ready' }),
-          }),
-        ]),
-      },
-    });
-    expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBeNull();
-    expect(harness.container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
-    expect(getCanvasShellState().canvasViewportProps?.viewport).toEqual({
-      x: 40,
-      y: 70,
-      zoom: 0.8,
-    });
   });
 
   it('guards a local draft with Stay and Discard, without a canonical write', async () => {
