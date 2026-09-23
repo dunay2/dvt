@@ -1,8 +1,6 @@
 /** Owned concern: apply edited ordering before explicit data queries without crashing inspection. */
-import {
-  inspectDvtSubstraitSortFetchRoot,
-  selectDvtSubstraitRelation,
-} from '@dvt/postgres-projection';
+import { inspectDvtSubstraitSortFetchRoot } from '@dvt/postgres-projection';
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { getE2eApiCalls } from '../../support/e2eApiStub';

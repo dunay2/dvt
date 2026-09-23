@@ -1,8 +1,6 @@
 /** Owned concern: verify admitted operator tools, draft isolation and canonical persistence. */
-import {
-  inspectDvtSubstraitSortFetchRoot,
-  selectDvtSubstraitRelation,
-} from '@dvt/postgres-projection';
+import { inspectDvtSubstraitSortFetchRoot } from '@dvt/postgres-projection';
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 
 import { inspectDvtSubstraitInnerJoinGroupedWindowDraft } from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
