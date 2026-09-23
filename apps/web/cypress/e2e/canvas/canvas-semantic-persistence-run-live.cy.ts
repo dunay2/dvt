@@ -102,9 +102,14 @@ describe('Persisted semantic editing through protected Preview and Run', () => {
     });
     cy.get('[data-operator="fetch"]').should('contain.text', 'LIMIT 2');
     cy.get('[data-operator="sort"]').should('contain.text', 'DESC NULLS LAST').click();
-    cy.get(
-      '[data-slot="canvas-operation-data-preview"] [data-slot="canvas-model-preview"]'
-    ).click();
+    cy.then(() => {
+      expect(sampleRequests).to.equal(0);
+    });
+    cy.get('[data-operator="sort"]')
+      .parent()
+      .find('[data-slot="canvas-node-execute"]')
+      .focus()
+      .click();
     cy.wait('@liveRows', { timeout: 30_000 }).then(({ request, response }) => {
       const query = new URL(request.url).searchParams;
       expect(query.get('relationId')).to.equal(sortId);
