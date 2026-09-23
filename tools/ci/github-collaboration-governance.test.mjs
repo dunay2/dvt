@@ -51,7 +51,10 @@ test('GitHub collaboration governance keeps ownership, dependency, and PR policy
     pullRequestTemplate.trim().length >= 50,
     'active PR template must satisfy CI body length policy'
   );
-  assert.match(prInstructions, /CODEOWNERS/u);
+  assert.match(
+    readText('docs/planning/status/governance-document-rule-inventory.md'),
+    /CODEOWNERS/u
+  );
   assert.match(prInstructions, /pnpm pr:validate-title/u);
   assert.match(prInstructions, /gh pr create/u);
   assert.match(prInstructions, /--body/u);

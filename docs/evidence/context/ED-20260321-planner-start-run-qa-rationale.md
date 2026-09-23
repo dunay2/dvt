@@ -13,7 +13,7 @@ code_refs:
   - packages/@dvt/adapter-postgres/test/PostgresPlanStore.test.ts
   - packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts
   - https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/execution-runtime/20260321-planner-backed-start-run-qa-review.md
-  - docs/risk-register/quality/R-20260321-planner-validation-lifecycle-semantics.md
+  - docs/risk-register/quality/r-20260321-planner-validation-lifecycle-semantics.md
 evidence:
   tests: []
   notes:
@@ -175,7 +175,7 @@ Reason:
 
 The unresolved debt is intentionally tracked outside this evidence doc in:
 
-- `docs/risk-register/quality/R-20260321-planner-validation-lifecycle-semantics.md`
+- `docs/risk-register/quality/r-20260321-planner-validation-lifecycle-semantics.md`
 
 That risk captures the open contract questions we did not patch locally:
 
