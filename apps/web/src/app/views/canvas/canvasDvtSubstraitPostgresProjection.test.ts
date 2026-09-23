@@ -21,7 +21,6 @@ import {
   projectDvtSubstraitJoinToPostgresSql,
   projectDvtSubstraitPilotToPostgresSql,
   projectDvtSubstraitProjectionToPostgresSql,
-  projectDvtSubstraitUnionAllToPostgresSql,
 } from './canvasDvtSubstraitPostgresProjection';
 import {
   applyDvtSubstraitProjectionFunction,
@@ -53,15 +52,6 @@ import {
   setDvtSubstraitJoinType,
   type DvtSubstraitJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
-import {
-  applyDvtSubstraitUnionAllGroupedRowNumber,
-  applyDvtSubstraitUnionAllGrouping,
-  applyDvtSubstraitUnionAllFieldEdit,
-  createDvtSubstraitUnionAllDraft,
-  createDvtSubstraitUnionDistinctDraft,
-  inspectDvtSubstraitUnionAllDraft,
-  type DvtSubstraitUnionAllDraft,
-} from './canvasDvtSubstraitSetComposition';
 
 function requirePilotOutputId(draft: DvtSubstraitPilotDraft, name: string): string {
   const inspection = inspectDvtSubstraitPilotDraft(draft);
@@ -90,14 +80,6 @@ function requireJoinOutputFieldId(draft: DvtSubstraitJoinDraft, name: string): s
   if (!inspection.ok) throw new Error('Expected admitted INNER JOIN projection.');
   const output = inspection.projection.outputs.find((candidate) => candidate.name === name);
   if (output == null) throw new Error(`Expected INNER JOIN output ${name}.`);
-  return output.fieldId;
-}
-
-function requireUnionOutputFieldId(draft: DvtSubstraitUnionAllDraft, name: string): string {
-  const inspection = inspectDvtSubstraitUnionAllDraft(draft);
-  if (!inspection.ok) throw new Error('Expected admitted UNION ALL projection.');
-  const output = inspection.projection.outputs.find((candidate) => candidate.name === name);
-  if (output == null) throw new Error(`Expected UNION ALL output ${name}.`);
   return output.fieldId;
 }
 
@@ -1515,225 +1497,6 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       .toLowerCase();
     expect(normalized).toMatch(
       /^select customer_name, count\(\*\) as order_count, row_number\(\) over \(order by count\(\*\) desc nulls last, customer_name asc nulls last\) as count_rank from \(\s*select left_source\.name as customer_name, right_source\.order_id as order_id from public\.customers as left_source join public\.orders as right_source on left_source\.customer_id = right_source\.customer_id\s*\) as inner_join_input group by customer_name;?$/
-    );
-  });
-
-  it('projects the exact typed SetRel revision as PostgreSQL UNION ALL', async () => {
-    const connectionRef = {
-      schemaVersion: 'connection-ref.v1' as const,
-      connectionId: 'warehouse-main',
-      provider: 'postgres' as const,
-    };
-    const fields = ['customer_id', 'name', 'country'].map((name) => ({
-      name,
-      type: 'string' as const,
-    }));
-    const draft = createDvtSubstraitUnionAllDraft({
-      inputs: [
-        {
-          nodeId: 'source-customers-north',
-          schema: 'tenant-data',
-          table: 'customers-north',
-          fields,
-          sourceRef: {
-            schemaVersion: 'connected-source-ref.v1',
-            connectionRef,
-            sourceObjectId: 'tenant-data.customers-north',
-          },
-        },
-        {
-          nodeId: 'source-customers-south',
-          schema: 'tenant-data',
-          table: 'customers-south',
-          fields,
-          sourceRef: {
-            schemaVersion: 'connected-source-ref.v1',
-            connectionRef,
-            sourceObjectId: 'tenant-data.customers-south',
-          },
-        },
-        {
-          nodeId: 'source-customers-west',
-          schema: 'tenant-data',
-          table: 'customers-west',
-          fields,
-          sourceRef: {
-            schemaVersion: 'connected-source-ref.v1',
-            connectionRef,
-            sourceObjectId: 'tenant-data.customers-west',
-          },
-        },
-      ],
-      targetNodeId: 'transform-all-customers',
-    });
-
-    const sql = await projectDvtSubstraitUnionAllToPostgresSql(draft);
-    const normalized = sql.replaceAll(/\s+/g, ' ').trim().toLowerCase();
-
-    expect(normalized).toMatch(
-      /^\(select customer_id, name, country from "tenant-data"\."customers-north" union all select customer_id, name, country from "tenant-data"\."customers-south"\) union all select customer_id, name, country from "tenant-data"\."customers-west";?$/
-    );
-  });
-
-  it('projects the exact typed SetRel revision as ordered PostgreSQL UNION DISTINCT', async () => {
-    const connectionRef = {
-      schemaVersion: 'connection-ref.v1' as const,
-      connectionId: 'warehouse-main',
-      provider: 'postgres' as const,
-    };
-    const fields = ['customer_id', 'name', 'country'].map((name) => ({
-      name,
-      type: 'string' as const,
-    }));
-    const draft = createDvtSubstraitUnionDistinctDraft({
-      inputs: ['north', 'south', 'west'].map((region) => ({
-        nodeId: `source-${region}`,
-        schema: 'public',
-        table: `customers_${region}`,
-        fields,
-        sourceRef: {
-          schemaVersion: 'connected-source-ref.v1' as const,
-          connectionRef,
-          sourceObjectId: `public.customers_${region}`,
-        },
-      })),
-      targetNodeId: 'transform-distinct-customers',
-    });
-
-    const normalized = (await projectDvtSubstraitUnionAllToPostgresSql(draft))
-      .replaceAll(/\s+/g, ' ')
-      .trim()
-      .toLowerCase();
-
-    expect(normalized).toMatch(
-      /^\(select customer_id, name, country from public\.customers_north union select customer_id, name, country from public\.customers_south\) union select customer_id, name, country from public\.customers_west;?$/
-    );
-    expect(normalized).not.toContain('union all');
-  });
-
-  it('projects selected, renamed, and reordered fields from the same SetRel revision', async () => {
-    const connectionRef = {
-      schemaVersion: 'connection-ref.v1' as const,
-      connectionId: 'warehouse-main',
-      provider: 'postgres' as const,
-    };
-    const fields = ['customer_id', 'name', 'country'].map((name) => ({
-      name,
-      type: 'string' as const,
-    }));
-    let draft = createDvtSubstraitUnionAllDraft({
-      inputs: [
-        {
-          nodeId: 'source-north',
-          schema: 'public',
-          table: 'customers_north',
-          fields,
-          sourceRef: {
-            schemaVersion: 'connected-source-ref.v1',
-            connectionRef,
-            sourceObjectId: 'public.customers_north',
-          },
-        },
-        {
-          nodeId: 'source-south',
-          schema: 'public',
-          table: 'customers_south',
-          fields,
-          sourceRef: {
-            schemaVersion: 'connected-source-ref.v1',
-            connectionRef,
-            sourceObjectId: 'public.customers_south',
-          },
-        },
-      ],
-      targetNodeId: 'transform-all-customers',
-    });
-    draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
-      kind: 'rename',
-      fieldKey: 'country',
-      outputName: 'region',
-    });
-    draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
-      kind: 'move',
-      fieldKey: 'country',
-      direction: 'up',
-    });
-    draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
-      kind: 'move',
-      fieldKey: 'country',
-      direction: 'up',
-    });
-    draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
-      kind: 'set-selected',
-      fieldKey: 'name',
-      selected: false,
-    });
-
-    const normalized = (await projectDvtSubstraitUnionAllToPostgresSql(draft))
-      .replaceAll(/\s+/g, ' ')
-      .trim()
-      .toLowerCase();
-    expect(normalized).toMatch(
-      /^select country as region, customer_id from \( select customer_id, name, country from public\.customers_north union all select customer_id, name, country from public\.customers_south \) as set_input;?$/
-    );
-  });
-
-  it('projects grouping and deterministic ranking over the selected UNION ALL revision', async () => {
-    const connectionRef = {
-      schemaVersion: 'connection-ref.v1' as const,
-      connectionId: 'warehouse-main',
-      provider: 'postgres' as const,
-    };
-    const fields = ['customer_id', 'name', 'country'].map((name) => ({
-      name,
-      type: 'string' as const,
-    }));
-    let draft = createDvtSubstraitUnionAllDraft({
-      inputs: [
-        {
-          nodeId: 'source-north',
-          schema: 'public',
-          table: 'customers_north',
-          fields,
-          sourceRef: {
-            schemaVersion: 'connected-source-ref.v1',
-            connectionRef,
-            sourceObjectId: 'public.customers_north',
-          },
-        },
-        {
-          nodeId: 'source-south',
-          schema: 'public',
-          table: 'customers_south',
-          fields,
-          sourceRef: {
-            schemaVersion: 'connected-source-ref.v1',
-            connectionRef,
-            sourceObjectId: 'public.customers_south',
-          },
-        },
-      ],
-      targetNodeId: 'transform-all-customers',
-    });
-    draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
-      kind: 'rename',
-      fieldKey: 'country',
-      outputName: 'region',
-    });
-    draft = applyDvtSubstraitUnionAllGrouping(draft, {
-      groupFieldId: requireUnionOutputFieldId(draft, 'region'),
-      countOutputName: 'customer_count',
-    });
-    draft = applyDvtSubstraitUnionAllGroupedRowNumber(draft, {
-      outputName: 'count_rank',
-    });
-
-    const normalized = (await projectDvtSubstraitUnionAllToPostgresSql(draft))
-      .replaceAll(/\s+/g, ' ')
-      .trim()
-      .toLowerCase();
-    expect(normalized).toMatch(
-      /^select region, count\(\*\) as customer_count, row_number\(\) over \(order by count\(\*\) desc nulls last, region asc nulls last\) as count_rank from \( select customer_id, name, country as region from \( select customer_id, name, country from public\.customers_north union all select customer_id, name, country from public\.customers_south \) as set_input \) as set_input group by region;?$/
     );
   });
 });

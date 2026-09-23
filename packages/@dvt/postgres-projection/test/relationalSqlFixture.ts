@@ -34,7 +34,7 @@ export const comparison = (reference: number, left: number, right: number | bigi
       value: {
         functionReference: reference,
         arguments: [field(left), typeof right === 'bigint' ? integer(right) : field(right)].map(
-          (value) => ({ argType: { case: 'value', value } })
+          (value) => ({ argType: { case: 'value' as const, value } })
         ),
         outputType: { kind: { case: 'bool', value: { nullability: Type_Nullability.NULLABLE } } },
       },

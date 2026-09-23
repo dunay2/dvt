@@ -5,11 +5,11 @@ import {
   JoinRel_JoinType,
   SetRel_SetOp,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
 import { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { projectSubstraitToPostgresSql } from '../../../../packages/@dvt/postgres-projection/src/relationalSql/project.js';
-import { compositionalFixture } from '../../../../packages/@dvt/postgres-projection/test/relationalSqlFixture.js';
+import { compositionalFixture } from '../fixtures/dvtCompositionalSqlFixture.js';
 
 const url = process.env['DVT_PG_URL'];
 const database = `dvt_composition_${randomUUID().replaceAll('-', '')}`;
