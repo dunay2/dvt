@@ -1,6 +1,7 @@
 /** Owns the bounded mixed profile `(admitted JoinRel) CrossRel ReadRel`. */
 import { DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION } from '@dvt/contracts';
 
+import { hasConsistentJoinPhysicalSources } from './join-inspection/physicalSources.js';
 import { inspectDvtSubstraitCrossDraft } from './substraitCrossReader.js';
 import type {
   DvtSubstraitCrossDraft,
@@ -100,16 +101,11 @@ export function inspectDvtSubstraitMixedCrossDraft(
     !left.ok ||
     left.projection.outputs.length === 0 ||
     rightInput == null ||
-    rightBinding.displayName !== rightInput.table ||
     !hasSameConnectionRef(
       left.projection.inputs[0]!.sourceRef.connectionRef,
       rightBinding.sourceRef.connectionRef
     ) ||
-    left.projection.inputs.some(
-      (input) =>
-        input.sourceRef.sourceObjectId === rightBinding.sourceRef!.sourceObjectId &&
-        hasSameConnectionRef(input.sourceRef.connectionRef, rightBinding.sourceRef!.connectionRef)
-    )
+    !hasConsistentJoinPhysicalSources([...left.projection.inputs, rightInput])
   ) {
     return { ok: false };
   }
@@ -134,9 +130,7 @@ export function inspectDvtSubstraitMixedCrossDraft(
   const stageFields = draft.sidecar.fields
     .filter((field) => field.relationId === crossBinding.relationId)
     .sort((a, b) => a.outputOrdinal - b.outputOrdinal);
-  const expectedDisplayName = `${leftBinding.displayName}+${rightInput.table}`;
   if (
-    crossBinding.displayName !== expectedDisplayName ||
     mapping.length === 0 ||
     new Set(mapping).size !== mapping.length ||
     selected.some((field) => field == null) ||

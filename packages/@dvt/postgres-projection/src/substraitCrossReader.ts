@@ -63,16 +63,7 @@ export function inspectDvtSubstraitCrossDraft(
   }
 
   const inputs = inspectReadInputs(draft, tree.reads);
-  if (
-    inputs == null ||
-    new Set(inputs.map((input) => input.sourceRef.sourceObjectId)).size !== inputs.length ||
-    inputs.some(
-      (input) =>
-        sidecar.relations.find((binding) => binding.relationId === input.relationId)
-          ?.displayName !== input.table
-    )
-  )
-    return { ok: false };
+  if (inputs == null) return { ok: false };
 
   let workingFields = inputs[0]!.fields.map<JoinOriginField>((field) => ({
     inputIndex: 0,
@@ -113,12 +104,7 @@ export function inspectDvtSubstraitCrossDraft(
       new Set(outputMapping).size !== outputMapping.length ||
       outputMapping.some((ordinal) => ordinal < 0 || ordinal >= availableFields.length) ||
       binding == null ||
-      binding.sourceRef != null ||
-      binding.displayName !==
-        inputs
-          .slice(0, crossIndex + 2)
-          .map((input) => input.table)
-          .join('+')
+      binding.sourceRef != null
     ) {
       return { ok: false };
     }

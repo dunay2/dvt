@@ -70,11 +70,6 @@ export function inspectJoinStages(
       inspectedJoin == null ||
       relationBinding == null ||
       relationBinding.sourceRef != null ||
-      relationBinding.displayName !==
-        inputs
-          .slice(0, joinIndex + 2)
-          .map((input) => input.table)
-          .join('+') ||
       (inspectedJoin.outputMapping.length === 0 && joinIndex !== joinRels.length - 1) ||
       new Set(inspectedJoin.outputMapping).size !== inspectedJoin.outputMapping.length ||
       inspectedJoin.outputMapping.some((ordinal) => ordinal < 0 || ordinal >= emittedFields.length)

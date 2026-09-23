@@ -76,20 +76,14 @@ export function inspectDvtSubstraitSetDraft(
     firstTable == null ||
     resultBinding == null ||
     resultBinding.sourceRef != null ||
-    new Set(inputs.map((input) => input.sourceRef.sourceObjectId)).size !== inputCount ||
     inputs.some(
       (input) =>
         input.fields.length !== firstTable.fields.length ||
         input.fields.some(
-          (field, ordinal) =>
-            field.name !== firstTable.fields[ordinal]?.name ||
-            field.dataType !== firstTable.fields[ordinal]?.dataType
-        ) ||
-        sidecar.relations.find((binding) => binding.relationId === input.relationId)
-          ?.displayName !== input.table
+          (field, ordinal) => field.dataType !== firstTable.fields[ordinal]?.dataType
+        )
     ) ||
-    sidecar.fields.some((field) => field.parentFieldId != null) ||
-    resultBinding.displayName !== inputs.map((input) => input.table).join('+')
+    sidecar.fields.some((field) => field.parentFieldId != null)
   )
     return { ok: false };
 
