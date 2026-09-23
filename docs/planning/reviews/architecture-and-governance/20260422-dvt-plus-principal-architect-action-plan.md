@@ -8,7 +8,7 @@ planning_type: review
 
 # DVT+ Principal Architect Action Plan
 
-**Derived from:** [20260422-dvt-plus-principal-architect-deep-review.md](./20260422-dvt-plus-principal-architect-deep-review.md)
+**Derived from:** [DVT+ Principal Architect Deep Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260422-dvt-plus-principal-architect-deep-review.md)
 **Classification:** Pre-production blockers (P0) → Structural risks (P1) → Operational gaps (P2)
 
 ---

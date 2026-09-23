@@ -108,4 +108,4 @@ pnpm --filter dvt-api test:arch
 - Governing workflow: `AGENTS.md`, `docs/guides/ai-work-protocol.md`
 - Runtime boundary: `ADR-0003`
 - Tenant/repair route constraint: `ADR-0031`
-- Slice closeout: `docs/planning/closeouts/20260315-api-protected-runtime-closeout.md`
+- Slice closeout: [20260315 api protected runtime closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260315-api-protected-runtime-closeout.md)

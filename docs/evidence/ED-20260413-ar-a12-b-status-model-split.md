@@ -15,7 +15,7 @@ code_refs:
   - packages/@dvt/engine/src/contracts/engine/ExecutionSemantics.v1.ts
   - packages/@dvt/engine/test/types/engine-types.test.ts
   - apps/web/src/app/views/canvas/useCanvasOverlayModel.ts
-  - docs/planning/closeouts/20260413-ar-a12-b-status-model-split-closeout.md
+  - https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260413-ar-a12-b-status-model-split-closeout.md
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test

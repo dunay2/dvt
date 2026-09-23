@@ -263,7 +263,7 @@ Local docs PR preflight usage:
 - `pnpm docs:pr:fast`
 - `pnpm docs:pr:full`
 - `pnpm docs:pr:full -- --title "docs(docs): Your PR title"`
-- `pnpm docs:pr:create -- --title "docs(docs): Subject" --body-file .github/PR_BODY.md --dry-run`
+- `pnpm docs:pr:create -- --title "docs(docs): Subject" --body-file /tmp/dvt-pr-body.md --dry-run`
 
 Command semantics:
 

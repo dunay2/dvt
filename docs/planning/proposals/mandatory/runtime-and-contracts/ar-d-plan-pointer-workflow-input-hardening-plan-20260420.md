@@ -47,8 +47,8 @@ with a governed target:
 - `packages/@dvt/adapter-temporal/src/TemporalAdapter.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts`
-- `docs/planning/reviews/architecture-and-governance/20260414-principal-architect-review-dvtplus.md`
-- `docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md`
+- [DVT+ Principal/Staff Architect Review — 2026-04-14](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260414-principal-architect-review-dvtplus.md)
+- [DVT+ system architecture review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md)
 
 ## Problem
 

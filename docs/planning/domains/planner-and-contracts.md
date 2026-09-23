@@ -26,11 +26,6 @@ plan-version compatibility.
 - [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md)
 - [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
 
-## Relevant Reviews And Closeouts
-
-- [20260320 Planner R2 Redefinition Closeout](../closeouts/20260320-planner-r2-redefinition-closeout.md)
-- [20260320 Planner R2 Typed Graph Source Boundary Closeout](../closeouts/20260320-planner-r2-typed-graph-source-boundary-closeout.md)
-
 ## Diagram Sources
 
 - [Planner and Contracts Architecture Delta](../roadmap/diagrams/planner-contracts-architecture-delta.md)

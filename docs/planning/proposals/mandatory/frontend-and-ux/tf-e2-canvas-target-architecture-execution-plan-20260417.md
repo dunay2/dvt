@@ -49,7 +49,7 @@ own planning DB task and governing evidence.
 - `docs/adr/ADR-0003-execution-model.md`
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md`
-- `docs/planning/reviews/20260417-dvt-plus-deep-architectural-review.md`
+- [DVT+ Deep Architectural Review (2026-04-17)](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/20260417-dvt-plus-deep-architectural-review.md)
 - `docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md`
 - `docs/architecture/components/web/frontend-data-boundary-architecture.md`
 - `docs/architecture/components/web/graph/graph-frontend-architecture.md`
@@ -1071,7 +1071,7 @@ publication stops being coupled to route discovery heuristics.
 ## Related Documents
 
 - [TF-E2 Production Node Authoring And Persistence Plan 2026-04-16](./tf-e2-production-node-authoring-and-persistence-plan-20260416.md)
-- [DVT+ Deep Architectural Review](../../reviews/20260417-dvt-plus-deep-architectural-review.md)
+- [DVT+ Deep Architectural Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/20260417-dvt-plus-deep-architectural-review.md)
 - [Graph Frontend Architecture](../../../../architecture/components/web/graph/graph-frontend-architecture.md)
 - [Canvas Controller Current To Target Architecture](../../../../architecture/components/web/graph/canvas-controller-current-to-target-architecture.md)
 - [Canvas Component Map And Modernization Review](../../../../architecture/components/web/graph/canvas-component-map-and-modernization-review.md)

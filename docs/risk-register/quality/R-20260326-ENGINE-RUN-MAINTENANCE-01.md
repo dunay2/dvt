@@ -59,4 +59,4 @@ Even after the refactor, residual risk remains:
 - `packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceStuckRunService.ts`
 - `packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceObservabilityFacade.ts`
 - `packages/@dvt/engine/test/services/RunMaintenanceService.test.ts`
-- `docs/planning/reviews/execution-runtime/20260326-run-maintenance-service-srp-review.md`
+- [20260326 RunMaintenanceService SRP Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/execution-runtime/20260326-run-maintenance-service-srp-review.md)

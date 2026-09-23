@@ -43,7 +43,6 @@ flowchart LR
 
 - `Execution Runtime`
   Current sources: [Execution Runtime domain view](../domains/execution-runtime.md),
-  [20260407 Engine boundary current/target review](../reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md),
   [Engine Roadmap](../../architecture/components/engine/roadmap/engine-phases.md),
   [WorkflowEngine hexagonal derivation plan 2026-04-03](../proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md),
@@ -68,11 +67,7 @@ flowchart LR
   Current sources: [API and Admission domain view](../domains/api-and-admission.md),
   [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md),
-  [Closeout: TF-C3 production plugin host composition](../closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md),
-  [Closeout: TF-C3 dbt plugin runtime projection slice](../closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md),
-  [Closeout: TF-C3 runExecutionContext resolver slice](../closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md),
-  [Closeout: TF-C1 preview-persist convergence](../closeouts/20260414-tf-c1-preview-persist-convergence-closeout.md),
-  [Closeout: TF-C1-B preview profile contract](../closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md)
+  [Closeout: TF-C3 production plugin host composition](../closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md)
   Near-term target: keep the now-closed preview-persist boundary truthful as
   the fixed protected ingress, build on the landed `runExecutionContext`
   artifact wiring, the standalone `apps/temporal-worker` composition root, the
@@ -84,9 +79,6 @@ flowchart LR
   [Transformation Flow Product Decisions 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md),
   [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md),
   [20260417 DVT artifacts review](../reviews/architecture-and-governance/20260417-dvt-artifacts-review.md),
-  [20260419 Plan-route boundary remediation review](../reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md),
-  [20260410 Contract pack and read boundary reset Fowler review](../reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md),
-  [20260411 AR-A12-B status model split Fowler review](../reviews/architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md),
   [Contract pack and read boundary reset plan 2026-04-10](../proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md),
   [AR-A12-B status model split plan 2026-04-11](../proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md),
   [TF-A1-C SRP and extensibility hardening plan 2026-04-14](../proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md),
@@ -97,7 +89,6 @@ flowchart LR
   rails retain planner and execution sovereignty.
 - `Event Lifecycle and Retention`
   Current sources: [Event Lifecycle and Retention domain view](../domains/event-lifecycle-and-retention.md),
-  [20260330 MVP-D1 residual risk baseline review](../reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
   Near-term target: keep the shipped retention baseline explicit now that the
   repeatable Docker PostgreSQL reset/cleanup lifecycle is canonical, and shift
@@ -109,7 +100,6 @@ flowchart LR
   [Frontend subsystem architecture](../../architecture/components/web/index.md),
   [UI / Visualization Domain](../../architecture/domain-ui.md),
   [20260417 DVT artifacts review](../reviews/architecture-and-governance/20260417-dvt-artifacts-review.md),
-  [20260425 Canvas graph strategy Fowler hard QA review](../reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md),
   [Documentation and UX implementation guide](../../architecture/components/web/ux-implementation-guide.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
   Near-term target: keep the canonical Substrait authoring and persisted Canvas

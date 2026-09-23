@@ -55,8 +55,8 @@ This review therefore proposes a global Canvas runtime-policy component:
 - [Graph Frontend Architecture](../../../architecture/components/web/graph/graph-frontend-architecture.md)
 - [Canvas Empty Authoring Entrypoint Component](../../../architecture/components/web/graph/canvas-empty-authoring-entrypoint-component.md)
 - [Canvas Inspector Authoring Component](../../../architecture/components/web/graph/canvas-inspector-authoring-component.md)
-- [Canvas Graph Strategy Fowler Hard QA Review](./20260425-canvas-graph-strategy-fowler-hard-qa-review.md)
-- [Canvas Handler Seams Fowler Review](./20260421-canvas-handler-seams-fowler-review.md)
+- [Canvas Graph Strategy Fowler Hard QA Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md)
+- [Canvas Handler Seams Fowler Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md)
 - [Canvas Runtime Truth Hard-Cut Review](./20260422-canvas-runtime-truth-hardcut-review.md)
 
 ## Findings

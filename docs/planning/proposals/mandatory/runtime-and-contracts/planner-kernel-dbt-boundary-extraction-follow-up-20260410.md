@@ -46,7 +46,7 @@ This proposal prepares one concrete follow-up package that answers:
 - [ADR-0018](../../../adr/ADR-0018_Shared_Kernel_Ownership_Governance.md)
 - [MW-A2 GenericGraphSource plan](./mw-a2-generic-graph-source-plan-20260404.md)
 - [DVT DBT-agnostic generalization plan](./dvt-dbt-agnostic-generalization-plan-20260403.md)
-- [Workflow helpers architecture review](../../reviews/execution-runtime/20260315-workflow-helpers-architecture-review.md)
+- [Workflow helpers architecture review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/execution-runtime/20260315-workflow-helpers-architecture-review.md)
 - [ExecutionPlan.v1.ts](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)
 
 ## Problem Summary

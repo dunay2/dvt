@@ -45,7 +45,7 @@ Minimum review decisions:
 - `docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md`
 - `docs/contracts/planner/plan-store-records-v1.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md`
-- `docs/planning/closeouts/20260425-production-tenant-isolation-baseline-closeout.md`
+- [Production Tenant Isolation Baseline](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260425-production-tenant-isolation-baseline-closeout.md)
 - `docs/architecture/components/engine/security/SECURITY_INVARIANTS.v1.md`
 - `docs/architecture/components/engine/security/TENANT_ISOLATION_TESTS.v1.md`
 

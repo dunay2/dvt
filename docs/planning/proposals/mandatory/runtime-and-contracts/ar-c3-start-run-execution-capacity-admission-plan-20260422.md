@@ -37,7 +37,7 @@ The implementation route is intentionally split:
 - `docs/architecture/components/api/api-current-to-target-architecture.md`
 - `docs/guides/api-control-plane-technical-manual-20260404.md`
 - `docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md`
-- `docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md`
+- [DVT+ system architecture review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md)
 
 ## Problem statement
 
@@ -315,7 +315,7 @@ Definition of done:
 - Touched files or paths:
   - `docs/planning/state/agent-lane-c.yaml`
   - `docs/architecture/components/api/api-current-to-target-architecture.md`
-  - `docs/planning/closeouts/20260422-api-start-run-execution-capacity-admission-closeout.md`
+  - [API start-run execution capacity admission closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260422-api-start-run-execution-capacity-admission-closeout.md)
   - `apps/api/docs/start-run-execution-capacity-admission-component.md`
   - `apps/api/test/application/services/startRunExecutionCapacityAdmission.architecture.test.ts`
   - `buzon/20260423-codex-fowler-ar-c3-execution-capacity-admission-analysis-and-remediation.md`

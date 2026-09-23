@@ -67,7 +67,7 @@ review becomes part of the lane's canonical evidence set.
 
 - Mode: Slim
 - Scope:
-  - `docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md`
+  - [RC-C2 Operational Friction Intake Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md)
   - `docs/planning/closeouts/20260402-rc-c2-operational-friction-intake-closeout.md`
   - `docs/planning/state/agent-lane-c.yaml`
   - generated planning surfaces from `pnpm docs:sync` and
@@ -108,7 +108,7 @@ review becomes part of the lane's canonical evidence set.
 
 ## Real Work Performed
 
-- Added `docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md` as
+- Added [RC-C2 Operational Friction Intake Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md) as
   the canonical synthesis of operational friction across multiple session
   artifacts.
 - Moved the private working log from
@@ -129,8 +129,8 @@ review becomes part of the lane's canonical evidence set.
 - `docs/planning/state/planning-control-tower.md`
 - `docs/planning/reviews/review-naming-policy.md`
 - [Historical efficiency review](https://github.com/dunay2/dvt/blob/1b07acde33300a19d97914eb719b262b44e79182/docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md)
-- `docs/planning/reviews/ci-and-delivery/20260330-ci-prepush-pr-process-observations.md`
-- `docs/planning/closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md`
+- [CI, Prepush & PR Process — Observations and Improvement Log](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/ci-and-delivery/20260330-ci-prepush-pr-process-observations.md)
+- [20260401 rc c2 preflight and log triage rollout closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md)
 
 ## Docs Synced
 

@@ -171,7 +171,7 @@ semantic boundary that `AR-C3-A` just created.
   review
 - `api-current-to-target-architecture.md` now points the capacity default
   binding at `buildProtectedStartRunRuntime.ts`
-- `20260422-api-start-run-execution-capacity-admission-closeout.md` now cites
+- [API start-run execution capacity admission closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260422-api-start-run-execution-capacity-admission-closeout.md) now cites
   the real composition owner
 - the local component guide now records Fowler lessons, explicit anti-patterns,
   and semantic fitness rules

@@ -36,7 +36,7 @@ It fixes the component boundary at the most important seam first:
 - [ADR-0034](../../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)
 - [ADR-0035](../../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)
 - [Planner kernel DBT boundary extraction follow-up 2026-04-10](./planner-kernel-dbt-boundary-extraction-follow-up-20260410.md)
-- [workflowHelpers.ts Architecture Review](../../reviews/execution-runtime/20260315-workflow-helpers-architecture-review.md)
+- [workflowHelpers.ts Architecture Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/execution-runtime/20260315-workflow-helpers-architecture-review.md)
 - [MW-A2 GenericGraphSource plan](./mw-a2-generic-graph-source-plan-20260404.md)
 - [ExecutionPlan.v1.ts](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)
 - [StepTypeRegistry.ts](../../../../packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts)

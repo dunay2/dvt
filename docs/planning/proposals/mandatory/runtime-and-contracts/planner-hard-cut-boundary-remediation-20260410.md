@@ -35,7 +35,7 @@ This proposal sets one explicit direction:
 If callers must break to restore one healthy canonical system, they break.
 
 The hard-cut runtime slice is now implemented in `apps/api`; see
-[MW-A6 closeout](../../closeouts/20260410-mw-a6-planner-hard-cut-boundary-remediation-closeout.md).
+[MW-A6 closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260410-mw-a6-planner-hard-cut-boundary-remediation-closeout.md).
 
 ## Governing Sources
 
@@ -44,7 +44,7 @@ The hard-cut runtime slice is now implemented in `apps/api`; see
 - [ADR-0035](../../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)
 - [Planner kernel DBT boundary extraction follow-up 2026-04-10](./planner-kernel-dbt-boundary-extraction-follow-up-20260410.md)
 - [Temporal workflow helper artifact facts narrowing slice 2026-04-10](./temporal-workflow-helper-artifact-facts-narrowing-slice-20260410.md)
-- [workflowHelpers.ts Architecture Review](../../reviews/execution-runtime/20260315-workflow-helpers-architecture-review.md)
+- [workflowHelpers.ts Architecture Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/execution-runtime/20260315-workflow-helpers-architecture-review.md)
 
 ## Problem Summary
 

@@ -33,7 +33,7 @@ cancellation work lands.
 - [ADR-0047](../../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
 - [Implementation architecture diagrams](../../../../architecture/diagrams/implementation-architecture-diagrams.md)
 - [Temporal Engine Policies](../../../../architecture/components/engine/adapters/temporal/engine-policies.md)
-- [20260407 engine boundary current-target and migration review](../../../reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md)
+- [20260407 engine boundary current-target and migration review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md)
 - [Contract pack and read boundary reset plan](./contract-pack-and-read-boundary-reset-plan-20260410.md)
 
 ## Original problem statement

@@ -35,9 +35,9 @@ Out of scope:
 - `docs/planning/state/planning-control-tower.md`
 - `docs/planning/state/agent-lane-e.yaml`
 - `docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md`
-- `docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md`
-- `docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md`
-- `docs/planning/reviews/execution-runtime/20260331-mvp-a1-backend-contractual-inventory-review.md`
+- [F-03 Shell Health Fowler Hard Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md)
+- [F03 shell health banner hard QA review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md)
+- [MVP-A1 Backend Contractual Inventory Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/execution-runtime/20260331-mvp-a1-backend-contractual-inventory-review.md)
 
 ## Rationale
 

@@ -59,7 +59,7 @@ for the first active workbench route.
   Canvas owns route operability; the shell consumes a generic startup seam
 - `docs/architecture/components/web/graph/canvas-component-map-and-modernization-review.md`:
   route metadata plus a presentation seam are the canonical startup handoff
-- `docs/planning/reviews/20260417-dvt-plus-deep-architectural-review.md`:
+- [DVT+ Deep Architectural Review (2026-04-17)](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/20260417-dvt-plus-deep-architectural-review.md):
   mature-system alignment requires removing the residual route-special casing
 - `ADR-0003`:
   lifecycle authority must live in explicit seams, not incidental UI heuristics

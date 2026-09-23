@@ -255,7 +255,7 @@ Each slice should close with:
 
 ## Related surfaces
 
-- [Runtime and shared-kernel risk triage review](../../reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md)
+- [Runtime and shared-kernel risk triage review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md)
 - [WorkflowEngine hexagonal derivation plan](./workflow-engine-hexagonal-derivation-plan-20260403.md)
 - [Contracts domain ownership migration plan](./contracts-domain-ownership-migration-plan-20260327.md)
 - [Transformation Flow Delivery Plan](./transformation-flow-delivery-plan-20260405.md)

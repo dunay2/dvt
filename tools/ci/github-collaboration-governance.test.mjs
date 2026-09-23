@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
 import yaml from 'js-yaml';
@@ -13,8 +14,7 @@ test('GitHub collaboration governance keeps ownership, dependency, and PR policy
   const dependabotSource = readText('.github/dependabot.yml');
   const dependabot = yaml.load(dependabotSource);
   const pullRequestTemplate = readText('.github/pull_request_template.md');
-  const prBody = readText('.github/PR_BODY.md').trim();
-  const prInstructions = readText('.github/PR_INSTRUCTIONS.md');
+  const prInstructions = readText('AGENTS.md');
   const prQualityGate = readText('.github/workflows/pr-quality-gate.yml');
 
   for (const requiredPattern of [
@@ -47,11 +47,26 @@ test('GitHub collaboration governance keeps ownership, dependency, and PR policy
   assert.match(pullRequestTemplate, /Declared ARC Level/u);
   assert.match(pullRequestTemplate, /docs\/evidence\/ED-YYYYMMDD-<slug>\.md/u);
 
-  assert.ok(prBody.length >= 50, 'default PR body must satisfy CI body length policy');
-  assert.match(prBody, /\.github\/CODEOWNERS/u);
+  assert.ok(
+    pullRequestTemplate.trim().length >= 50,
+    'active PR template must satisfy CI body length policy'
+  );
+  assert.match(prInstructions, /CODEOWNERS/u);
   assert.match(prInstructions, /pnpm pr:validate-title/u);
   assert.match(prInstructions, /gh pr create/u);
-  assert.match(prInstructions, /--body-file \.github\/PR_BODY\.md/u);
+  assert.match(prInstructions, /--body/u);
+
+  for (const [body, status] of [
+    ['x'.repeat(49), 1],
+    ['x'.repeat(50), 0],
+    [' '.repeat(50), 1],
+  ]) {
+    const result = spawnSync(process.execPath, ['tools/ci/check-pr-description.mjs'], {
+      env: { ...process.env, PR_BODY: body },
+      encoding: 'utf8',
+    });
+    assert.equal(result.status, status, result.stdout + result.stderr);
+  }
 
   assert.match(prQualityGate, /run: pnpm pr:validate-title "\$PR_TITLE"/u);
   assert.match(prQualityGate, /PR_TITLE: \$\{\{ github\.event\.pull_request\.title \}\}/u);

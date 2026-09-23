@@ -30,7 +30,7 @@ This is a replace-and-converge plan, not a compatibility wrapper plan.
 - `docs/adr/ADR-0015-getRunStatus-read-model-separation.md`
 - `docs/adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md`
 - `docs/architecture/components/engine/contracts/VERSIONING.md`
-- `docs/planning/reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md`
+- [Contract pack and read boundary reset Fowler review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md)
 - `docs/planning/state/agent-lane-a.yaml`
 
 ## Problem statement
@@ -183,7 +183,7 @@ Deliverables:
   - `docs/architecture/components/engine/contracts/engine/ExecutionSemantics.v1.md`
   - `docs/architecture/components/engine/contracts/engine/GlossaryContract.v1.md`
 - slice-specific rationale and execution docs:
-  - `docs/planning/reviews/architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md`
+  - [AR-A12-B status model split Fowler review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md)
   - `docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md`
 
 Acceptance:

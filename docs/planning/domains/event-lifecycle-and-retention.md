@@ -29,18 +29,11 @@ flows, and operational lifecycle governance.
 
 ## Active Planning Inputs
 
-- [20260330 MVP-D1 residual risk baseline review](../reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md)
 - [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
 - [CI Retention Review Canon Plan 2026-05-23](../proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md)
 
 ## Relevant Reviews And Closeouts
 
-- [20260319 Gap 5 PR1 Archive Artifact Contracts Closeout](../closeouts/20260319-gap-5-pr1-archive-artifact-contracts-closeout.md)
-- [20260320 Gap 5 PR1 Terminal Snapshot Pinning Closeout](../closeouts/20260320-gap-5-pr1-terminal-snapshot-pinning-closeout.md)
-- [20260321 Gap 5 PR1 Export Verifier Closeout](../closeouts/20260321-gap-5-pr1-export-verifier-closeout.md)
-- [20260321 Gap 5 PR2 Deferred Deletion Restore Closeout](../closeouts/20260321-gap-5-pr2-deferred-deletion-restore-closeout.md)
-- [20260321 Gap 5 PR3 Delivery Buffer Retention Closeout](../closeouts/20260321-gap-5-pr3-delivery-buffer-retention-closeout.md)
-- [20260413 TF-D1 Proof Environment Lifecycle Closeout](../closeouts/20260413-tf-d1-proof-environment-lifecycle-closeout.md)
 - [AR-D5 tenant-configurable retention policy closeout](../closeouts/20260522-ar-d5-tenant-configurable-retention-policy-closeout.md)
 
 ## Review Canon
