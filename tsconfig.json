@@ -45,6 +45,9 @@
       "@dvt/postgres-projection/*": [
         "./packages/@dvt/postgres-projection/src/*"
       ],
+      "@dvt/substrait-analysis": [
+        "./packages/@dvt/substrait-analysis/src/index.ts"
+      ],
       "@dvt/plan-interpreter": [
         "./packages/@dvt/plan-interpreter/src/index.ts"
       ],
