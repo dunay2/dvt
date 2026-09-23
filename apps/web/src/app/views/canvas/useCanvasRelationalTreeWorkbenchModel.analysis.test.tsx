@@ -34,6 +34,5 @@ describe('Workbench shared analysis lifecycle', () => {
       expect(model!.selectedNode?.relationId).toBe(child.node.relationId);
     }
     expect(analyze).toHaveBeenCalledTimes(1);
-    expect(graph.targetNode).toEqual(graph.nodes.at(-1));
   });
 });

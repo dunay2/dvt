@@ -7,6 +7,20 @@ import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoring
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 describe('shared Canvas relational analysis', () => {
+  it('preserves the existing graph-order resolution of a physical dependency', () => {
+    const graph = occurrenceGraph();
+    const duplicate = { ...graph.source, id: 'another-source-card' };
+    const analysis = analyzeCanvasRelations({
+      node: graph.targetNode,
+      nodes: [graph.source, duplicate, graph.targetNode],
+      edges: [...graph.edges, { ...graph.edges[0]!, id: 'another-edge', sourceId: duplicate.id }],
+    });
+    expect(analysis.projectedInputs.map((input) => input.sourceNodeId)).toEqual([
+      graph.source.id,
+      graph.source.id,
+    ]);
+  });
+
   it('preserves both occurrences of one physical source and never mutates authority', () => {
     const graph = occurrenceGraph();
     const args = { ...graph, node: graph.targetNode };

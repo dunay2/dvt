@@ -41,9 +41,11 @@ function projectInputs(
   index: SubstraitRelationIndex,
   inputs: readonly CanvasDvtCompositionInput[]
 ): readonly CanvasRelationalTreeInput[] {
-  const connected = new Map(
-    inputs.map((input) => [canvasSourceReferenceKey(input.sourceRef), input])
-  );
+  const connected = new Map<string, CanvasDvtCompositionInput>();
+  for (const input of inputs) {
+    const key = canvasSourceReferenceKey(input.sourceRef);
+    if (!connected.has(key)) connected.set(key, input);
+  }
   const participating = new Set<string>();
   const canonical = [...index.relations.values()]
     .map((entry) => entry.binding)
