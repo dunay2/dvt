@@ -546,6 +546,24 @@ units:
       - docs/architecture/reference-architecture.md
       - docs/concepts/domain-language.md
       - docs/planning/status/governance-document-rule-inventory.md
+  - id: SYS-SUBSTRAIT-ANALYSIS
+    name: Substrait document analysis
+    parent: SYS-DVT
+    level: component
+    status: review
+    ownedConcern:
+      Derive provider-neutral relation indexing and exact subtree selection from Substrait.
+    owns:
+      - packages/@dvt/substrait-analysis/**
+    childrenRequired: false
+    dddOwner: DS
+    cqRails: ProjectCanvasRelationalTree; PreviewCanvasTransformRows
+    publicApi:
+      - packages/@dvt/substrait-analysis/src/index.ts
+    governance:
+      - https://github.com/dunay2/dvt/issues/3342
+    fowlerSignals:
+      - Extract shared domain component from target adapter
   - id: SYS-OBSERVABILITY
     name: Observability domain
     parent: SYS-DVT
