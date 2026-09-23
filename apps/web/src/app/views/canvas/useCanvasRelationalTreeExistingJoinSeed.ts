@@ -5,6 +5,7 @@ import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatal
 import { resolveCanvasRelationalTreeAuthoringCandidates } from './canvasRelationalTreeAuthoringCandidates';
 import { resolveCanvasRelationalTreeExistingJoinDraft } from './canvasRelationalTreeExistingJoinDraft';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { CanvasRelationalTreeProjection } from './canvasRelationalTreeProjection';
 import {
   resolveCanvasRelationalTreeSeedHydration,
   type CanvasRelationalTreeJoinSeedHydration,
@@ -18,14 +19,15 @@ export function useCanvasRelationalTreeExistingJoinSeed(
     nodes: readonly CanonicalNode[];
     targetNodeId: string;
     transformNode: CanonicalNode;
+    projection: CanvasRelationalTreeProjection | null;
     onHydrate: (seed: CanvasRelationalTreeJoinSeedHydration) => void;
   }>
 ) {
-  const { edges, inputs, nodes, onHydrate, targetNodeId, transformNode } = args;
+  const { edges, inputs, nodes, onHydrate, targetNodeId, transformNode, projection } = args;
   const [baselineDraft, setBaselineDraft] = useState<DvtSubstraitJoinDraft | null>(null);
   const seed = useMemo(
-    () => resolveCanvasRelationalTreeExistingJoinDraft({ transformNode, nodes, edges }),
-    [edges, nodes, transformNode]
+    () => resolveCanvasRelationalTreeExistingJoinDraft({ transformNode, projection }),
+    [projection, transformNode]
   );
 
   const hydrateExistingJoin = useCallback(

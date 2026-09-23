@@ -4,9 +4,9 @@ import { useCanvasRelationalSelection } from './useCanvasRelationalSelection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
-import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
-import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
-import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
+import { analyzeCanvasRelations } from './canvasRelationalAnalysis';
+import { projectCanvasRelationalComposition } from './canvasRelationalCompositionTruth';
+import { projectAnalyzedCanvasRelationalTree } from './canvasRelationalTreeProjection';
 import {
   projectCanvasRelationalTreeCatalogue,
   projectPendingCanvasRelationalTreeCatalogue,
@@ -32,34 +32,19 @@ export function useCanvasRelationalTreeWorkbenchModel(
     authoring?: CanvasRelationalTreeAuthoringContract;
   }>
 ) {
-  const result = useMemo(
+  const analysis = useMemo(
     () =>
-      projectCanvasRelationalTree({
+      analyzeCanvasRelations({
         node: args.transformNode,
         nodes: args.nodes,
         edges: args.edges,
       }),
     [args.edges, args.nodes, args.transformNode]
   );
+  const result = useMemo(() => projectAnalyzedCanvasRelationalTree(analysis), [analysis]);
   const projection = result.ok ? result.projection : null;
-  const composition = useMemo(
-    () =>
-      resolveCanvasRelationalCompositionTruth({
-        node: args.transformNode,
-        nodes: args.nodes,
-        edges: args.edges,
-      }),
-    [args.edges, args.nodes, args.transformNode]
-  );
-  const inputs = useMemo(
-    () =>
-      resolveCanvasDvtCompositionInputs({
-        targetNodeId: args.transformNode.id,
-        nodes: args.nodes,
-        edges: args.edges,
-      }),
-    [args.edges, args.nodes, args.transformNode.id]
-  );
+  const composition = useMemo(() => projectCanvasRelationalComposition(analysis), [analysis]);
+  const { inputs } = analysis;
   const pendingAuthoring =
     args.authoring != null &&
     (composition?.state === 'pending' ||
@@ -73,6 +58,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
     nodes: args.nodes,
     edges: args.edges,
     inputs,
+    projection,
     authoring: args.authoring,
   });
   const selection = useCanvasRelationalSelection(args.transformNode.id, projection);

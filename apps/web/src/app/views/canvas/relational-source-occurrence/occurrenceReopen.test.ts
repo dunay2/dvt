@@ -32,8 +32,10 @@ describe('source occurrence reopening', () => {
         .map((relation) => relation.relationId)
     );
     expect(
-      resolveCanvasRelationalTreeExistingJoinDraft({ ...graph, transformNode: graph.targetNode })
-        ?.inputIds
+      resolveCanvasRelationalTreeExistingJoinDraft({
+        transformNode: graph.targetNode,
+        projection: result.projection,
+      })?.inputIds
     ).toEqual([graph.source.id, graph.source.id]);
     const catalogue = projectCanvasRelationalTreeCatalogue({
       ...result.projection,
