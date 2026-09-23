@@ -78,4 +78,36 @@ describeWithPostgres('selected grouped Set rows in PostgreSQL', () => {
       }
     }
   );
+  it.each([
+    ['intersect_distinct', 'INTERSECT'],
+    ['except_distinct', 'EXCEPT'],
+    ['intersect_all', 'INTERSECT ALL'],
+    ['except_all', 'EXCEPT ALL'],
+  ] as const)('applies %s to full tuples before selecting a field', async (operation, operator) => {
+    await client.query('TRUNCATE raw.customers_north, raw.customers_south, raw.customers_west');
+    await client.query(
+      "INSERT INTO raw.customers_north VALUES ('a','es'), ('a','es'), ('a','pt'), (NULL,'es')"
+    );
+    for (const region of ['south', 'west']) {
+      await client.query(
+        `INSERT INTO raw.customers_${region} VALUES ('a','es'), ('a','es'), (NULL,'es')`
+      );
+    }
+    const draft = buildDvtSetPreviewDraft(undefined, operation, true);
+    const projection = await projectDvtPostgresTransform(
+      resolveDvtTerminalTransformClosure({
+        draft,
+        selectedNodeIds: draft.nodeIds,
+        selectedEdgeIds: draft.edges.map((edge) => edge.id),
+      })
+    );
+    const actual = await client.query(projection.sql);
+    const expected = await client.query(`SELECT customer_id FROM (
+      SELECT customer_id, country FROM raw.customers_north ${operator}
+      SELECT customer_id, country FROM raw.customers_south ${operator}
+      SELECT customer_id, country FROM raw.customers_west) result`);
+    const values = (rows: unknown[]) => rows.map((row) => JSON.stringify(row)).sort();
+    expect(values(actual.rows)).toEqual(values(expected.rows));
+    expect(actual.rows.length).toBeGreaterThan(0);
+  });
 });
