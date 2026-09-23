@@ -58,6 +58,7 @@ function readWorkflowScopePolicy() {
     'workspace_plan_interpreter',
     'workspace_plan_verifier',
     'workspace_postgres_projection',
+    'workspace_substrait_analysis',
     'workspace_planner',
     'workspace_run_domain',
     'workspace_state_store',
@@ -221,6 +222,12 @@ export const WORKSPACE_ENTRIES = [
     patterns: WORKFLOW_SCOPE_POLICY.workspace_postgres_projection,
   },
   {
+    key: 'substrait_analysis',
+    name: 'substrait-analysis',
+    pkg: '@dvt/substrait-analysis',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_substrait_analysis,
+  },
+  {
     key: 'planner',
     name: 'planner',
     pkg: '@dvt/planner',
@@ -369,6 +376,7 @@ export const TEST_SCOPE_PATTERNS = {
   plan_interpreter: ['packages/@dvt/plan-interpreter/**'],
   plan_verifier: ['packages/@dvt/plan-verifier/**'],
   postgres_projection: ['packages/@dvt/postgres-projection/**'],
+  substrait_analysis: WORKFLOW_SCOPE_POLICY.workspace_substrait_analysis,
   planner: ['packages/@dvt/planner/**'],
   run_domain: ['packages/@dvt/run-domain/**'],
   state_store: ['packages/@dvt/state-store/**'],

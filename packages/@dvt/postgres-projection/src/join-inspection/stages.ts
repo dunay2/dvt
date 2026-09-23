@@ -34,7 +34,9 @@ export function inspectJoinStages(
   const stages: InspectedJoinStage[] = [];
   let outputs: DvtSubstraitNInputJoinProjection['outputs'][number][] = [];
   for (const [joinIndex, joinRel] of joinRels.entries()) {
-    const relAnchor = inputs.length + joinIndex + 1;
+    if (joinRel.relType.case !== 'join') return null;
+    const relAnchor = joinRel.relType.value.common?.relAnchor;
+    if (relAnchor == null) return null;
     const inspectedJoin = inspectNInputJoinNode(plan, joinRel, relAnchor);
     const rightInput = inputs[joinIndex + 1]!;
     const leftFields = workingFields.map<JoinOriginField>((field) => ({
@@ -68,11 +70,6 @@ export function inspectJoinStages(
       inspectedJoin == null ||
       relationBinding == null ||
       relationBinding.sourceRef != null ||
-      relationBinding.displayName !==
-        inputs
-          .slice(0, joinIndex + 2)
-          .map((input) => input.table)
-          .join('+') ||
       (inspectedJoin.outputMapping.length === 0 && joinIndex !== joinRels.length - 1) ||
       new Set(inspectedJoin.outputMapping).size !== inspectedJoin.outputMapping.length ||
       inspectedJoin.outputMapping.some((ordinal) => ordinal < 0 || ordinal >= emittedFields.length)

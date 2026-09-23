@@ -18,26 +18,23 @@ describe('protected repeated-source projection', () => {
     expect(result.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
     expect(publish).toHaveBeenCalledTimes(1);
     const sql = Buffer.from(publish.mock.calls[0]![0].bytes).toString('utf8');
-    expect(sql).toContain('LEFT JOIN raw.records AS right_source');
-    expect(sql).toContain('left_source.parent_id = right_source.id');
+    expect(sql).toBe(
+      (await projectDvtPostgresTransform(resolveDvtTerminalTransformClosure(input))).sql
+    );
     expect(input).toEqual(before);
   });
 
   it('previews the selected JOIN without discarding its second logical use', async () => {
     const closure = resolveDvtTerminalTransformClosure(repeatedSourceInput());
     const relations = closure.authority.semanticDocument.sidecar.relations;
-    const projected = await projectDvtPostgresTransform(
-      closure,
-      undefined,
-      relations[2]!.relationId
-    );
+    const projected = await projectDvtPostgresTransform(closure, relations[2]!.relationId);
     expect(projected.outputs.map((f) => f.name)).toEqual([
       'id',
       'parent_id',
       'related_id',
       'related_parent_id',
     ]);
-    expect(projected.sql).toContain('raw.records AS right_source');
+    expect(projected.sql).toBe((await projectDvtPostgresTransform(closure)).sql);
   });
 
   it.each([

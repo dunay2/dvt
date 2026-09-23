@@ -2,7 +2,7 @@ import {
   JoinRel_JoinType,
   SortField_SortDirection,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { selectDvtSubstraitRelation } from '@dvt/postgres-projection';
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 import { describe, expect, it } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 

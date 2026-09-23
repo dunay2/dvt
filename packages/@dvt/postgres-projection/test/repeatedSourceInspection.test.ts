@@ -5,12 +5,12 @@ import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { fromBinary, toBinary } from '@bufbuild/protobuf';
 import { decodeDvtSubstraitPlanV1, DvtSubstraitSemanticDocumentV1Schema } from '@dvt/contracts';
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 import { describe, expect, it } from 'vitest';
 
 import {
   inspectDvtSubstraitJoinDraft,
-  projectDvtJoinDraftToPostgresSql,
-  selectDvtSubstraitRelation,
+  projectSubstraitToPostgresSql,
   ZERO_SHA256,
 } from '../src/index.js';
 
@@ -19,11 +19,11 @@ import { repeatedSourceDraft } from './fixtures/repeatedSourceDraft.js';
 describe('repeated physical Read occurrences', () => {
   it('treats independent Read aliases as presentation, preserving canonical SQL and field lineage', async () => {
     const draft = repeatedSourceDraft();
-    const before = await projectDvtJoinDraftToPostgresSql(draft);
+    const before = await projectSubstraitToPostgresSql(draft);
     const bytes = toBinary(PlanSchema, draft.plan);
     draft.sidecar.relations[0]!.displayName = 'Places';
     draft.sidecar.relations[1]!.displayName = 'Parent places';
-    const after = await projectDvtJoinDraftToPostgresSql(draft);
+    const after = await projectSubstraitToPostgresSql(draft);
     expect(after.sql).toBe(before.sql);
     expect(after.projection).toEqual(before.projection);
     expect(toBinary(PlanSchema, draft.plan)).toEqual(bytes);
@@ -59,8 +59,8 @@ describe('repeated physical Read occurrences', () => {
         plan: fromBinary(PlanSchema, toBinary(PlanSchema, original.plan)),
       };
       const selected = selectDvtSubstraitRelation(draft, draft.sidecar.relations[2]!.relationId);
-      const result = await projectDvtJoinDraftToPostgresSql(selected);
-      if (result.kind !== 'join') throw new Error('Expected the raw JOIN projection.');
+      const result = inspectDvtSubstraitJoinDraft(selected);
+      if (!result.ok) throw new Error('Expected the authoring JOIN projection.');
       const [left, right] = result.projection.inputs;
       expect(left!.sourceRef).toEqual(right!.sourceRef);
       expect(left!.relationId).not.toBe(right!.relationId);
@@ -75,9 +75,10 @@ describe('repeated physical Read occurrences', () => {
       expect(result.projection.outputs.map((f) => f.source.fieldId)).toEqual(
         [...left!.fields, ...right!.fields].map((f) => f.fieldId)
       );
-      expect(result.sql).toContain('raw.records AS left_source');
-      expect(result.sql).toContain('raw.records AS right_source');
-      expect(result.sql).toContain('left_source.parent_id = right_source.id');
+      const sql = await projectSubstraitToPostgresSql(selected);
+      expect(sql.projection.outputs.map((field) => field.name)).toEqual(
+        result.projection.outputs.map((field) => field.name)
+      );
       expect(original).toEqual(before);
     }
   );

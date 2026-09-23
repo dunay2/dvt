@@ -107,7 +107,6 @@ describeIfPostgres('protected repeated-source PostgreSQL result semantics', () =
       const closure = resolveDvtTerminalTransformClosure(input);
       const selected = await projectDvtPostgresTransform(
         closure,
-        undefined,
         closure.authority.semanticDocument.sidecar.relations[2]!.relationId
       );
       const preview = await client.query(selected.sql);

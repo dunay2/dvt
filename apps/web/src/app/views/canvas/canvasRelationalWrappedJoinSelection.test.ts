@@ -6,8 +6,8 @@ import {
   createDvtSubstraitSortDraft,
   createDvtSubstraitFetchDraft,
   removeDvtSubstraitSortFetchRelation,
-  selectDvtSubstraitRelation,
 } from '@dvt/postgres-projection';
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 import { describe, expect, it } from 'vitest';
 import {
   createDvtSubstraitJoinDraft,

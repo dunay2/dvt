@@ -4,10 +4,7 @@ import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/su
 import { DvtSubstraitPostgresProjectionError } from './dvtProjection.js';
 import { pgColumnRef, pgRangeSubselect, type PostgresAstNode } from './postgresAst.js';
 import { pgI64Literal } from './postgresPredicateAst.js';
-import type {
-  DvtSubstraitSortDirection,
-  DvtSubstraitSortFetchRootInspection,
-} from './substraitSortFetch.js';
+import type { DvtSubstraitSortFetchRootInspection } from './substraitSortFetch.js';
 
 export type DvtPostgresOrderKey = Readonly<{
   name: string;
@@ -18,7 +15,7 @@ export type DvtPostgresOrderKey = Readonly<{
 type AdmittedInspection = Extract<DvtSubstraitSortFetchRootInspection, { ok: true }>;
 
 export function postgresSortDirection(
-  direction: DvtSubstraitSortDirection
+  direction: SortField_SortDirection
 ): Omit<DvtPostgresOrderKey, 'name'> {
   switch (direction) {
     case SortField_SortDirection.ASC_NULLS_FIRST:

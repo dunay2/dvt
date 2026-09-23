@@ -751,6 +751,7 @@ async function main() {
     });
 
     await ensureLocalWarehouseConnectionViaApi({
+      databaseUrl,
       apiBaseUrl: `http://127.0.0.1:${DEFAULT_API_PORT}`,
       bearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
       workspaceScope: localProtectedRuntimeAuth.workspaceScope,

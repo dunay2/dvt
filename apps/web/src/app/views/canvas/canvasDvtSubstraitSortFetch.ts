@@ -5,9 +5,9 @@ import {
   createDvtSubstraitSortDraft,
   inspectDvtSubstraitSortFetchRoot,
   removeDvtSubstraitSortFetchRelation,
-  selectDvtSubstraitRelation,
   type DvtSubstraitSortKey,
 } from '@dvt/postgres-projection';
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 
@@ -191,8 +191,6 @@ export function peelCanvasDvtSubstraitSortFetch(
     const inspection = inspectDvtSubstraitSortFetchRoot(base);
     if (!inspection.ok) break;
     wrappers.push(inspection);
-    // Generic subtree selection rebases anchors for transient queries. Removing only the wrapper
-    // retains persisted inner ordering, which JOIN admission treats as structural identity.
     const unwrapped = removeDvtSubstraitSortFetchRelation(base, inspection.relationId);
     if (unwrapped === base) break;
     base = unwrapped;

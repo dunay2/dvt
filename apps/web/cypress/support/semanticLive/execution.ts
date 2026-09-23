@@ -1,5 +1,9 @@
 /** Owns live execution fidelity: accepted plan -> Run evidence -> published PostgreSQL rows. */
-import { DvtOperationalWorkloadV2Schema, KNOWN_STEP_KINDS } from '@dvt/contracts';
+import {
+  DvtOperationalWorkloadV2Schema,
+  KNOWN_STEP_KINDS,
+  SourceObjectCatalogResponseSchema,
+} from '@dvt/contracts';
 
 import {
   clickPreviewExecutionPlanFromOperationalDrawer,
@@ -80,21 +84,44 @@ export function executePersistedModel(semanticSha: string): void {
   );
   const query = new URLSearchParams({
     ...resolveLiveWorkspaceSession(),
-    objectId: `relation/dvt/${String(Cypress.env('postgresTargetSchema'))}/${resultRelation}`,
-    limit: '10',
+    kind: 'name-search',
+    name: resultRelation,
   });
   cy.request({
-    url: `${String(Cypress.env('apiBaseUrl'))}/workspace/warehouse/connections/local-postgres-proof/source-data-sample?${query}`,
+    url: `${String(Cypress.env('apiBaseUrl'))}/workspace/warehouse/connections/local-postgres-proof/objects?${query}`,
     auth: { bearer: String(Cypress.env('apiBearerToken')) },
-  }).then(({ status, body }) => {
-    expect(status).to.equal(200);
-    expect(body.columns.map((column: { name: string }) => column.name)).to.deep.equal(
-      expectedColumns
-    );
-    // A published table has no inherent row order; ordering is asserted on the data-query rail.
-    expect(body.rows.map((row: { values: unknown[] }) => row.values).sort()).to.deep.equal(
-      [...expectedRows].sort()
-    );
-  });
+  })
+    .then(({ status, body }) => {
+      expect(status).to.equal(200);
+      const catalog = SourceObjectCatalogResponseSchema.parse(body);
+      if (catalog.kind !== 'object-page') throw new Error('Expected source object catalog page');
+      expect(catalog.truncated).to.equal(false);
+      const matches = catalog.objects.filter(
+        ({ locator }) =>
+          locator.kind === 'relation' &&
+          locator.schema === String(Cypress.env('postgresTargetSchema')) &&
+          locator.name === resultRelation
+      );
+      expect(matches).to.have.length(1);
+      const sampleQuery = new URLSearchParams({
+        ...resolveLiveWorkspaceSession(),
+        objectId: matches[0]!.objectId,
+        limit: '10',
+      });
+      return cy.request({
+        url: `${String(Cypress.env('apiBaseUrl'))}/workspace/warehouse/connections/local-postgres-proof/source-data-sample?${sampleQuery}`,
+        auth: { bearer: String(Cypress.env('apiBearerToken')) },
+      });
+    })
+    .then(({ status, body }) => {
+      expect(status).to.equal(200);
+      expect(body.columns.map((column: { name: string }) => column.name)).to.deep.equal(
+        expectedColumns
+      );
+      // A published table has no inherent row order; ordering is asserted on the data-query rail.
+      expect(body.rows.map((row: { values: unknown[] }) => row.values).sort()).to.deep.equal(
+        [...expectedRows].sort()
+      );
+    });
   cy.screenshot('semantic-live-published-result');
 }

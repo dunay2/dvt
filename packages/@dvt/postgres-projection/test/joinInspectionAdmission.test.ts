@@ -78,12 +78,6 @@ const invalidIdentity: readonly [string, (draft: DvtSubstraitJoinDraft) => void]
       d.sidecar.fields.at(-1)!.sourceFieldId = 'unknown-field';
     },
   ],
-  [
-    'wrong stage display name',
-    (d) => {
-      d.sidecar.relations.at(-1)!.displayName = 'another-join';
-    },
-  ],
 ];
 
 describe('JOIN inspection admission boundary', () => {

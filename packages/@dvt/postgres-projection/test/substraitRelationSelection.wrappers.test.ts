@@ -7,13 +7,10 @@ import {
   encodeDvtSubstraitPlanV1,
   DvtSubstraitSemanticDocumentV1Schema,
 } from '@dvt/contracts';
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 import { describe, expect, it } from 'vitest';
 
-import {
-  createDvtSubstraitSortDraft,
-  removeDvtSubstraitSortFetchRelation,
-  selectDvtSubstraitRelation,
-} from '../src/index.js';
+import { createDvtSubstraitSortDraft, removeDvtSubstraitSortFetchRelation } from '../src/index.js';
 
 const documents = JSON.parse(
   readFileSync(new URL('./fixtures/set-documents.json', import.meta.url), 'utf8')

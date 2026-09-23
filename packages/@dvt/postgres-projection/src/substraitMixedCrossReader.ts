@@ -1,13 +1,8 @@
 /** Owns the bounded mixed profile `(admitted JoinRel) CrossRel ReadRel`. */
-import type { Rel, RelCommon } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import { clone, toBinary } from '@bufbuild/protobuf';
-import {
-  DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
-  DvtSubstraitAuthoringSidecarV1Schema,
-} from '@dvt/contracts';
-import { sha256Hex } from '@dvt/crypto';
+import { DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION } from '@dvt/contracts';
+import { indexSubstraitRelations, selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 
+import { hasConsistentJoinPhysicalSources } from './join-inspection/physicalSources.js';
 import { inspectDvtSubstraitCrossDraft } from './substraitCrossReader.js';
 import type {
   DvtSubstraitCrossDraft,
@@ -15,15 +10,13 @@ import type {
   DvtSubstraitMixedCrossInspection,
 } from './substraitCrossReadModel.js';
 import {
-  flattenNInputJoinTree,
   hasCurrentJoinSemanticHash,
   hasPinnedPlanVersion,
   hasSameConnectionRef,
   hasUniqueJoinSidecarIdentity,
-  joinFieldType,
-  namedTableIdentity,
 } from './substraitJoinInspectionGuards.js';
 import { inspectDvtSubstraitJoinDraft } from './substraitJoinReader.js';
+import { inspectReadInputs } from './substraitReadInputs.js';
 
 export function inspectDvtSubstraitAcceptedCrossDraft(
   draft: DvtSubstraitCrossDraft
@@ -34,70 +27,6 @@ export function inspectDvtSubstraitAcceptedCrossDraft(
   return mixed.ok ? { ok: true, projection: mixed.projection.projection } : { ok: false };
 }
 
-function relationCommon(rel: Rel): RelCommon | null {
-  switch (rel.relType.case) {
-    case 'read':
-    case 'join':
-      return rel.relType.value.common ?? null;
-    default:
-      return null;
-  }
-}
-
-function selectedJoinDraft(
-  draft: DvtSubstraitCrossDraft,
-  left: Rel,
-  leftRelationId: string
-): DvtSubstraitCrossDraft | null {
-  const tree = flattenNInputJoinTree(left);
-  if (tree == null) return null;
-  const ordered = [...tree.reads, ...tree.joins];
-  const anchors = ordered.map((rel) => relationCommon(rel)?.relAnchor);
-  if (anchors.some((anchor) => anchor == null) || new Set(anchors).size !== anchors.length) {
-    return null;
-  }
-  const anchorSet = new Set(anchors as number[]);
-  const relations = draft.sidecar.relations.filter((relation) => anchorSet.has(relation.relAnchor));
-  if (relations.length !== ordered.length) return null;
-  const relationIds = new Set(relations.map((relation) => relation.relationId));
-  const fields = draft.sidecar.fields.filter((field) => relationIds.has(field.relationId));
-  const names = fields
-    .filter((field) => field.relationId === leftRelationId)
-    .sort((a, b) => a.outputOrdinal - b.outputOrdinal)
-    .map((field) => field.displayName);
-  if (names.length === 0 || names.some((name) => name == null)) return null;
-
-  const plan = clone(PlanSchema, draft.plan);
-  const root = plan.relations[0]?.relType;
-  if (root?.case !== 'root' || root.value.input?.relType.case !== 'cross') return null;
-  const selected = root.value.input.relType.value.left;
-  if (selected == null) return null;
-  root.value.input = selected;
-  root.value.names = names as string[];
-  const remap = new Map(anchors.map((anchor, index) => [anchor!, index + 1]));
-  const clonedTree = flattenNInputJoinTree(selected);
-  if (clonedTree == null) return null;
-  for (const rel of [...clonedTree.reads, ...clonedTree.joins]) {
-    const common = relationCommon(rel);
-    if (common?.relAnchor == null) return null;
-    const nextAnchor = remap.get(common.relAnchor);
-    if (nextAnchor == null) return null;
-    common.relAnchor = nextAnchor;
-  }
-  return {
-    plan,
-    sidecar: DvtSubstraitAuthoringSidecarV1Schema.parse({
-      ...draft.sidecar,
-      semanticPlanSha256: sha256Hex(toBinary(PlanSchema, plan)),
-      relations: relations.map((relation) => ({
-        ...relation,
-        relAnchor: remap.get(relation.relAnchor)!,
-      })),
-      fields,
-    }),
-  };
-}
-
 export function inspectDvtSubstraitMixedCrossDraft(
   draft: DvtSubstraitCrossDraft
 ): DvtSubstraitMixedCrossInspection {
@@ -106,7 +35,8 @@ export function inspectDvtSubstraitMixedCrossDraft(
     draft.plan.relations.length !== 1 ||
     draft.sidecar.schemaVersion !== DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION ||
     !hasUniqueJoinSidecarIdentity(draft) ||
-    !hasCurrentJoinSemanticHash(draft)
+    !hasCurrentJoinSemanticHash(draft) ||
+    !indexSubstraitRelations(draft).ok
   ) {
     return { ok: false };
   }
@@ -158,52 +88,26 @@ export function inspectDvtSubstraitMixedCrossDraft(
   ) {
     return { ok: false };
   }
-  const leftDraft = selectedJoinDraft(draft, cross.left, leftBinding.relationId);
-  if (leftDraft == null) return { ok: false };
+  let leftDraft: DvtSubstraitCrossDraft;
+  try {
+    leftDraft = selectDvtSubstraitRelation(draft, leftBinding.relationId);
+  } catch {
+    return { ok: false };
+  }
   const left = inspectDvtSubstraitJoinDraft(leftDraft);
-  const rightTable = namedTableIdentity(cross.right);
-  const rightNames = cross.right.relType.value.baseSchema?.names;
-  const rightTypes = cross.right.relType.value.baseSchema?.struct?.types?.map(joinFieldType);
-  const rightFields = draft.sidecar.fields
-    .filter((field) => field.relationId === rightBinding.relationId)
-    .sort((a, b) => a.outputOrdinal - b.outputOrdinal);
+  const rightInput = inspectReadInputs(draft, [cross.right])?.[0];
   if (
     !left.ok ||
-    rightTable == null ||
-    rightBinding.displayName !== rightTable.table ||
-    rightNames == null ||
-    rightTypes == null ||
-    rightNames.length === 0 ||
-    rightNames.length !== rightTypes.length ||
-    rightTypes.some((type) => type == null) ||
-    rightFields.length !== rightNames.length ||
-    rightFields.some(
-      (field, index) => field.outputOrdinal !== index || field.displayName !== rightNames[index]
-    ) ||
-    rightBinding.sourceRef.connectionRef.provider !== 'postgres' ||
+    left.projection.outputs.length === 0 ||
+    rightInput == null ||
     !hasSameConnectionRef(
       left.projection.inputs[0]!.sourceRef.connectionRef,
       rightBinding.sourceRef.connectionRef
     ) ||
-    left.projection.inputs.some(
-      (input) =>
-        input.sourceRef.sourceObjectId === rightBinding.sourceRef!.sourceObjectId &&
-        hasSameConnectionRef(input.sourceRef.connectionRef, rightBinding.sourceRef!.connectionRef)
-    )
+    !hasConsistentJoinPhysicalSources([...left.projection.inputs, rightInput])
   ) {
     return { ok: false };
   }
-  const rightInput = {
-    relationId: rightBinding.relationId,
-    ...rightTable,
-    sourceRef: rightBinding.sourceRef,
-    fields: rightFields.map((field, index) => ({
-      name: rightNames[index]!,
-      fieldId: field.fieldId,
-      dataType: rightTypes[index]!.dataType,
-      nullable: rightTypes[index]!.nullable,
-    })),
-  };
   const available = [
     ...left.projection.outputs.map((output) => ({
       originFieldId: output.source.fieldId,
@@ -225,9 +129,7 @@ export function inspectDvtSubstraitMixedCrossDraft(
   const stageFields = draft.sidecar.fields
     .filter((field) => field.relationId === crossBinding.relationId)
     .sort((a, b) => a.outputOrdinal - b.outputOrdinal);
-  const expectedDisplayName = `${leftBinding.displayName}+${rightTable.table}`;
   if (
-    crossBinding.displayName !== expectedDisplayName ||
     mapping.length === 0 ||
     new Set(mapping).size !== mapping.length ||
     selected.some((field) => field == null) ||

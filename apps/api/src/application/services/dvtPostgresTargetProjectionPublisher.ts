@@ -11,10 +11,7 @@ import { sha256Hex } from '@dvt/crypto';
 import { projectDvtPostgresOutputSchemaV1 } from '@dvt/postgres-projection';
 
 import type { DvtTerminalTransformProjectionBinding } from './dvtOperationalWorkloadProjector.js';
-import {
-  projectDvtPostgresTransform,
-  type ProjectDvtConnectedFieldDocument,
-} from './dvtPostgresTransformProjection.js';
+import { projectDvtPostgresTransform } from './dvtPostgresTransformProjection.js';
 import { resolveDvtTerminalTransformClosure } from './resolveDvtTerminalTransformClosure.js';
 
 const SQL_MEDIA_TYPE = 'application/sql; charset=utf-8';
@@ -38,7 +35,6 @@ export class DvtPostgresTargetProjectionPublisher {
         readonly tenantId: string;
         readonly sha256: string;
       }) => string;
-      readonly projectSemanticDocument?: ProjectDvtConnectedFieldDocument;
     }
   ) {}
 
@@ -47,7 +43,7 @@ export class DvtPostgresTargetProjectionPublisher {
   ): Promise<DvtTerminalTransformProjectionBinding> {
     const closure = resolveDvtTerminalTransformClosure(input);
     const semanticDocument = closure.authority.semanticDocument;
-    const projected = await projectDvtPostgresTransform(closure, this.deps.projectSemanticDocument);
+    const projected = await projectDvtPostgresTransform(closure);
     const sql = projected.sql;
     const outputSchema = projectDvtPostgresOutputSchemaV1(projected.outputs);
     const bytes = Buffer.from(sql, 'utf8');

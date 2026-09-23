@@ -444,12 +444,21 @@ test('buildLocalPostgresProofSeedSql creates real default source tables for Canv
 });
 
 test('buildLocalWarehouseConnectionRequest uses the protected connection command contract', () => {
-  assert.deepEqual(buildLocalWarehouseConnectionRequest(), {
+  assert.deepEqual(buildLocalWarehouseConnectionRequest(defaultPgUrl), {
     name: 'Local Postgres proof',
     type: 'postgres',
     database: 'dvt',
     credentialRef: 'postgres:local-postgres-proof',
   });
+});
+
+test('local warehouse metadata follows the configured database, including escaped names', () => {
+  for (const database of ['dvt_schema_proof', 'Warehouse 2', 'tenant/archive']) {
+    const url = new URL(defaultPgUrl);
+    url.pathname = `/${encodeURIComponent(database)}`;
+    assert.equal(buildLocalWarehouseConnectionRequest(url.toString()).database, database);
+  }
+  assert.throws(() => buildLocalWarehouseConnectionRequest('postgresql://localhost/'));
 });
 
 test('ensureLocalWarehouseConnectionViaApi scopes and authenticates the real command rail', async () => {
@@ -471,6 +480,7 @@ test('ensureLocalWarehouseConnectionViaApi scopes and authenticates the real com
     const address = server.address();
     assert.ok(address && typeof address !== 'string');
     const statusCode = await ensureLocalWarehouseConnectionViaApi({
+      databaseUrl: defaultPgUrl,
       apiBaseUrl: `http://127.0.0.1:${address.port}`,
       bearerToken: 'proof-token',
       workspaceScope: {
@@ -486,7 +496,7 @@ test('ensureLocalWarehouseConnectionViaApi scopes and authenticates the real com
       received.url,
       /^\/workspace\/warehouse\/connections\?tenantId=tenant-a&projectId=project-a&environmentId=env-a$/
     );
-    assert.deepEqual(received.body, buildLocalWarehouseConnectionRequest());
+    assert.deepEqual(received.body, buildLocalWarehouseConnectionRequest(defaultPgUrl));
   } finally {
     await new Promise((resolve, reject) =>
       server.close((error) => (error ? reject(error) : resolve()))
@@ -509,6 +519,7 @@ test('ensureLocalWarehouseConnectionViaApi accepts only the canonical duplicate 
     const address = server.address();
     assert.ok(address && typeof address !== 'string');
     const statusCode = await ensureLocalWarehouseConnectionViaApi({
+      databaseUrl: defaultPgUrl,
       apiBaseUrl: `http://127.0.0.1:${address.port}`,
       bearerToken: 'proof-token',
       workspaceScope: {
@@ -540,6 +551,7 @@ test('ensureLocalWarehouseConnectionViaApi honors the caller command timeout', a
     assert.ok(address && typeof address !== 'string');
     await assert.rejects(
       ensureLocalWarehouseConnectionViaApi({
+        databaseUrl: defaultPgUrl,
         apiBaseUrl: `http://127.0.0.1:${address.port}`,
         bearerToken: 'proof-token',
         workspaceScope: {
@@ -570,6 +582,7 @@ test('ensureLocalWarehouseConnectionViaApi rejects unrelated conflicts', async (
     assert.ok(address && typeof address !== 'string');
     await assert.rejects(
       ensureLocalWarehouseConnectionViaApi({
+        databaseUrl: defaultPgUrl,
         apiBaseUrl: `http://127.0.0.1:${address.port}`,
         bearerToken: 'proof-token',
         workspaceScope: {

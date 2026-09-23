@@ -1,7 +1,7 @@
 /** Owns document admission and orchestration of the shared JOIN inspection component. */
 import { DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION } from '@dvt/contracts';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 
-import { inspectJoinInputs } from './join-inspection/inputs.js';
 import { inspectJoinStages } from './join-inspection/stages.js';
 import {
   hasPinnedPlanVersion,
@@ -14,6 +14,7 @@ import type {
   DvtSubstraitNInputJoinInspection,
   InspectedJoinStructure,
 } from './substraitJoinReadModel.js';
+import { inspectReadInputs } from './substraitReadInputs.js';
 
 export function inspectNInputJoinStructure(
   draft: DvtSubstraitJoinDraft
@@ -24,7 +25,8 @@ export function inspectNInputJoinStructure(
     plan.relations.length !== 1 ||
     sidecar.schemaVersion !== DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION ||
     !hasUniqueJoinSidecarIdentity(draft) ||
-    !hasCurrentJoinSemanticHash(draft)
+    !hasCurrentJoinSemanticHash(draft) ||
+    !indexSubstraitRelations(draft).ok
   ) {
     return null;
   }
@@ -47,7 +49,7 @@ export function inspectNInputJoinStructure(
     return null;
   }
 
-  const inputs = inspectJoinInputs(draft, tree.reads);
+  const inputs = inspectReadInputs(draft, tree.reads);
   return inputs == null ? null : inspectJoinStages(draft, root.value.names, inputs, tree.joins);
 }
 

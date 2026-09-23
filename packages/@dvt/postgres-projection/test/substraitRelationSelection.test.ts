@@ -7,14 +7,10 @@ import {
   DvtSubstraitSemanticDocumentV1Schema,
   encodeDvtSubstraitPlanV1,
 } from '@dvt/contracts';
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 import { describe, expect, it } from 'vitest';
 
-import {
-  projectDvtJoinDraftToPostgresSql,
-  projectDvtSetDraftToPostgresSql,
-  selectDvtSubstraitRelation,
-  type DvtSubstraitJoinDraft,
-} from '../src/index.js';
+import { projectSubstraitToPostgresSql, type DvtSubstraitJoinDraft } from '../src/index.js';
 
 const joinFixtures = JSON.parse(
   readFileSync(new URL('./fixtures/inner-join-documents.json', import.meta.url), 'utf8')
@@ -46,10 +42,14 @@ describe('selected relation query projection', () => {
     const before = globalThis.structuredClone(original);
     const joins = original.sidecar.relations.filter((relation) => relation.sourceRef == null);
     const selected = selectDvtSubstraitRelation(original, joins[0]!.relationId);
-    const result = await projectDvtJoinDraftToPostgresSql(selected);
+    const result = await projectSubstraitToPostgresSql(selected);
     expect(result.projection.inputs).toHaveLength(2);
-    expect(result.sql.match(/\bJOIN\b/g)).toHaveLength(1);
-    expect(result.sql).not.toContain('raw.order_details');
+    expect(result.projection.resultRelationId).toBe(joins[0]!.relationId);
+    expect(result.projection.inputs.map((input) => input.relationId)).toEqual(
+      selected.sidecar.relations
+        .filter((relation) => relation.sourceRef != null)
+        .map((relation) => relation.relationId)
+    );
     expect(result.projection.outputs.map((output) => output.name)).toEqual([
       'order_id',
       'client_id',
@@ -60,11 +60,11 @@ describe('selected relation query projection', () => {
       joins[0]!.relationId
     );
     expect(original).toEqual(before);
-    const final = await projectDvtJoinDraftToPostgresSql(
+    const final = await projectSubstraitToPostgresSql(
       selectDvtSubstraitRelation(original, joins[1]!.relationId)
     );
     expect(final.projection.inputs).toHaveLength(3);
-    expect(final.sql.match(/\bJOIN\b/g)).toHaveLength(2);
+    expect(final.projection.resultRelationId).toBe(joins[1]!.relationId);
   });
 
   it.each([
@@ -73,30 +73,25 @@ describe('selected relation query projection', () => {
     ['except_distinct', SetRel_SetOp.MINUS_PRIMARY],
     ['intersect_all', SetRel_SetOp.INTERSECTION_MULTISET_ALL],
     ['except_all', SetRel_SetOp.MINUS_PRIMARY_ALL],
-  ] as const)(
-    'rebases selected %s in read-first anchor order for exact preview',
-    async (name, op) => {
-      const original = setFixture(op);
-      const before = globalThis.structuredClone(original);
-      const relationId = original.sidecar.relations.find(
-        (relation) => relation.sourceRef == null
-      )!.relationId;
+  ] as const)('preserves selected %s relation identities for exact preview', async (_name, op) => {
+    const original = setFixture(op);
+    const before = globalThis.structuredClone(original);
+    const relationId = original.sidecar.relations.find(
+      (relation) => relation.sourceRef == null
+    )!.relationId;
 
-      const selected = selectDvtSubstraitRelation(original, relationId);
-      const result = await projectDvtSetDraftToPostgresSql(selected);
+    const selected = selectDvtSubstraitRelation(original, relationId);
+    const result = await projectSubstraitToPostgresSql(selected);
 
-      expect(result.projection.operation).toBe(name);
-      expect(result.projection.inputs.map((input) => input.table)).toEqual([
-        'customers_north',
-        'customers_south',
-        'customers_west',
-      ]);
-      expect(selected.sidecar.relations.map((relation) => relation.relAnchor)).toEqual([
-        1, 2, 3, 4,
-      ]);
-      expect(original).toEqual(before);
-    }
-  );
+    expect(result.projection.resultRelationId).toBe(relationId);
+    expect(result.projection.inputs.map((input) => input.table)).toEqual([
+      'customers_north',
+      'customers_south',
+      'customers_west',
+    ]);
+    expect(selected.sidecar.relations).toEqual(original.sidecar.relations);
+    expect(original).toEqual(before);
+  });
 
   it.each(['foreign relation', 'stale plan', 'duplicate anchor'])(
     'fails closed for %s',

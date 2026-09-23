@@ -23,10 +23,8 @@ import { removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import { removeDvtSubstraitProjectionRoot } from './canvasDvtSubstraitStructuredFieldRemove';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import { canvasJoinOperationForType, isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
-import {
-  inspectDvtSubstraitCrossDraft,
-  selectDvtSubstraitRelation,
-} from '@dvt/postgres-projection';
+import { inspectDvtSubstraitCrossDraft } from '@dvt/postgres-projection';
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 import { createDvtSubstraitCrossDraft } from './canvasDvtSubstraitCrossComposition';
 import {
   inspectCanvasDvtSubstraitSortFetch,
