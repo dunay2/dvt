@@ -93,7 +93,6 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(OperandSlotsSource.split('\n').length).toBeLessThan(90);
     expect(ProjectionAuthoringSource.split('\n').length).toBeLessThan(60);
     expect(SessionActionsSource.split('\n').length).toBeLessThan(80);
-    expect(WorkbenchModelSource).toContain('projectCanvasRelationalTree');
   });
 
   it('does not introduce a second Canvas or semantic write authority', () => {

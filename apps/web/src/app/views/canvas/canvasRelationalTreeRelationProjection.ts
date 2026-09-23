@@ -1,7 +1,7 @@
 /** Owned concern: project one canonical Substrait relation subtree into the Canvas tree read model. */
 import type { Expression, Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import type { DvtSubstraitAuthoringSidecarV1 } from '@dvt/contracts';
+import type { SubstraitRelationIndex } from '@dvt/substrait-analysis';
 import { dvtSubstraitExpressionReader } from '@dvt/postgres-projection';
 
 import { canvasPresentationOperationForRel } from './canvasRelationalOperationPresentation';
@@ -11,8 +11,6 @@ import type {
   CanvasRelationalTreeNode,
   CanvasRelationalTreeOperator,
 } from './canvasRelationalTreeProjection';
-
-type RelationBinding = DvtSubstraitAuthoringSidecarV1['relations'][number];
 
 import {
   childInputs,
@@ -76,20 +74,16 @@ function windowCount(expressions: readonly Expression[]): number {
 }
 
 function fieldsForRelation(
-  sidecar: DvtSubstraitAuthoringSidecarV1,
-  relationId: string | null
+  index: SubstraitRelationIndex,
+  relationId: string
 ): readonly CanvasRelationalTreeField[] {
-  if (relationId == null) return [];
-  return sidecar.fields
-    .filter((field) => field.relationId === relationId)
-    .sort((left, right) => left.outputOrdinal - right.outputOrdinal)
-    .map((field) => ({
-      fieldId: field.fieldId,
-      outputOrdinal: field.outputOrdinal,
-      displayName: field.displayName ?? null,
-      sourceFieldId: field.sourceFieldId ?? null,
-      operandFieldIds: field.operandFieldIds ?? [],
-    }));
+  return (index.relations.get(relationId)?.fields ?? []).map((field) => ({
+    fieldId: field.fieldId,
+    outputOrdinal: field.outputOrdinal,
+    displayName: field.displayName ?? null,
+    sourceFieldId: field.sourceFieldId ?? null,
+    operandFieldIds: field.operandFieldIds ?? [],
+  }));
 }
 
 function directionLabel(value: SortField_SortDirection): string {
@@ -107,11 +101,7 @@ function directionLabel(value: SortField_SortDirection): string {
   }
 }
 
-function sortFetchSummary(
-  rel: Rel,
-  sidecar: DvtSubstraitAuthoringSidecarV1,
-  relationByAnchor: ReadonlyMap<number, RelationBinding>
-): string | null {
+function sortFetchSummary(rel: Rel, index: SubstraitRelationIndex): string | null {
   if (rel.relType.case === 'fetch') {
     const literal = (expression: typeof rel.relType.value.countExpr): bigint | null => {
       const value =
@@ -122,9 +112,8 @@ function sortFetchSummary(
   }
   if (rel.relType.case !== 'sort' || rel.relType.value.input == null) return null;
   const inputAnchor = relationAnchor(rel.relType.value.input);
-  const inputRelation = inputAnchor == null ? undefined : relationByAnchor.get(inputAnchor);
-  const inputFields =
-    inputRelation == null ? [] : fieldsForRelation(sidecar, inputRelation.relationId);
+  const inputRelation = inputAnchor == null ? undefined : index.byAnchor.get(inputAnchor);
+  const inputFields = inputRelation == null ? [] : fieldsForRelation(index, inputRelation);
   return rel.relType.value.sorts
     .map((field) => {
       const ordinal = dvtSubstraitExpressionReader.fieldOrdinal(field.expr);
@@ -137,42 +126,42 @@ function sortFetchSummary(
 }
 
 export function buildCanvasRelationalTreeRelation(
-  args: Readonly<{
-    rel: Rel;
-    path: string;
-    semanticDigest: string;
-    sidecar: DvtSubstraitAuthoringSidecarV1;
-    relationByAnchor: ReadonlyMap<number, RelationBinding>;
-  }>
+  args: Readonly<{ index: SubstraitRelationIndex; digest: string }>
 ): CanvasRelationalTreeNode {
-  const anchor = relationAnchor(args.rel);
-  const binding = anchor == null ? undefined : args.relationByAnchor.get(anchor);
-  const relationId = binding?.relationId ?? null;
-  const inputs = childInputs(args.rel);
-  const windows =
-    args.rel.relType.case === 'project' ? windowCount(args.rel.relType.value.expressions) : 0;
-  return {
-    locator: `rel:${args.semanticDigest}:${args.path}`,
-    operator: operator(args.rel),
-    substraitKind: args.rel.relType.case ?? 'unknown',
-    operation: canvasPresentationOperationForRel(args.rel),
-    relationId,
-    displayName:
-      sortFetchSummary(args.rel, args.sidecar, args.relationByAnchor) ??
-      binding?.displayName ??
-      null,
-    sourceRef: binding?.sourceRef ?? null,
-    output: { fields: fieldsForRelation(args.sidecar, relationId) },
-    expressionRefs: expressionRefs(args.rel),
-    decorations: windows === 0 ? [] : [{ kind: 'window', count: windows }],
-    children: inputs.map((input) => ({
-      role: input.role,
-      ordinal: input.ordinal,
-      node: buildCanvasRelationalTreeRelation({
-        ...args,
-        rel: input.rel,
-        path: `${args.path}/${input.role}:${input.ordinal}`,
-      }),
-    })),
-  };
+  const { index, digest } = args;
+  const paths = new Map([[index.rootId, 'root']]);
+  const children = new Map<string, ReturnType<typeof childInputs>>();
+  for (let ordinal = index.postorder.length - 1; ordinal >= 0; ordinal -= 1) {
+    const id = index.postorder[ordinal]!;
+    const entry = index.relations.get(id)!;
+    const inputs = childInputs(entry.relation);
+    children.set(id, inputs);
+    inputs.forEach((input, position) =>
+      paths.set(entry.inputs[position]!, `${paths.get(id)}/${input.role}:${input.ordinal}`)
+    );
+  }
+  const nodes = new Map<string, CanvasRelationalTreeNode>();
+  for (const id of index.postorder) {
+    const entry = index.relations.get(id)!;
+    const rel = entry.relation;
+    const windows = rel.relType.case === 'project' ? windowCount(rel.relType.value.expressions) : 0;
+    nodes.set(id, {
+      locator: `rel:${digest}:${paths.get(id)}`,
+      operator: operator(rel),
+      substraitKind: rel.relType.case ?? 'unknown',
+      operation: canvasPresentationOperationForRel(rel),
+      relationId: id,
+      displayName: sortFetchSummary(rel, index) ?? entry.binding.displayName ?? null,
+      sourceRef: entry.binding.sourceRef ?? null,
+      output: { fields: fieldsForRelation(index, id) },
+      expressionRefs: expressionRefs(rel),
+      decorations: windows === 0 ? [] : [{ kind: 'window', count: windows }],
+      children: children.get(id)!.map((input, position) => ({
+        role: input.role,
+        ordinal: input.ordinal,
+        node: nodes.get(entry.inputs[position]!)!,
+      })),
+    });
+  }
+  return nodes.get(index.rootId)!;
 }

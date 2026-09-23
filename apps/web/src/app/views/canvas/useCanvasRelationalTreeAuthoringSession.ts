@@ -13,6 +13,7 @@ import { useCanvasRelationalTreeJoinDraftActions } from './useCanvasRelationalTr
 import { useCanvasRelationalTreeRemoval } from './useCanvasRelationalTreeRemoval';
 import { useCanvasRelationalTreeInputSelection } from './useCanvasRelationalTreeInputSelection';
 import { createSourceOccurrenceActions } from './relational-source-occurrence/sourceOccurrenceActions';
+import type { CanvasRelationalTreeProjection } from './canvasRelationalTreeProjection';
 export function useCanvasRelationalTreeAuthoringSession(
   args: Readonly<{
     enabled: boolean;
@@ -20,6 +21,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     nodes: readonly CanonicalNode[];
     edges: readonly CanonicalEdge[];
     inputs: readonly CanvasDvtCompositionInput[];
+    projection: CanvasRelationalTreeProjection | null;
     authoring?: W.CanvasRelationalTreeAuthoringContract;
   }>
 ) {
@@ -55,6 +57,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     nodes,
     targetNodeId: transformNode.id,
     transformNode,
+    projection: args.projection,
     onHydrate: hydrateExistingJoinState,
   });
   useEffect(reset, [enabled, reset, transformNode.id]);
