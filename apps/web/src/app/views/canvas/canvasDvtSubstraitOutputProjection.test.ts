@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ConnectedSourceRef } from '@dvt/contracts';
+import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
@@ -322,8 +323,13 @@ describe('DVT Substrait output projection', () => {
       ],
     });
 
-    expect(sql.replaceAll(/\s+/g, ' ').trim().toLowerCase()).toMatch(
-      /^select customer_id from raw\.customers_north union select customer_id from raw\.customers_south;?$/
-    );
+    expect(sql).toBe((await projectSubstraitToPostgresSql(draft)).sql);
+    await expect(
+      projectDvtSubstraitTransformOutputToPostgresSql({
+        transformNode: transform,
+        nodes: [north, south, transform],
+        edges: [{ ...EDGE, id: 'north-transform', sourceId: north.id }],
+      })
+    ).rejects.toThrow('source identities do not match');
   });
 });
