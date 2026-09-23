@@ -226,11 +226,14 @@ function prepareTemporalWorkerRuntimeDependencies(apiEnv, { spawnCommand = spawn
   return true;
 }
 
-function buildLocalWarehouseConnectionRequest() {
+function buildLocalWarehouseConnectionRequest(databaseUrl) {
+  const database = decodeURIComponent(new URL(databaseUrl).pathname.slice(1));
+  if (database.length === 0)
+    throw new Error('Local warehouse connection requires a database name.');
   return {
     name: LOCAL_POSTGRES_CONNECTION_NAME,
     type: 'postgres',
-    database: 'dvt',
+    database,
     credentialRef: LOCAL_POSTGRES_CREDENTIAL_REF,
   };
 }
@@ -337,7 +340,7 @@ async function ensureLocalWarehouseConnectionViaApi(args) {
   const response = await sendJsonCommand(
     endpoint.href,
     args.bearerToken,
-    buildLocalWarehouseConnectionRequest(),
+    buildLocalWarehouseConnectionRequest(args.databaseUrl),
     args.commandTimeoutMs
   );
   if (response.statusCode === 201) {
@@ -649,6 +652,7 @@ async function main() {
 
       if (seedLocalWarehouseProof) {
         const statusCode = await ensureLocalWarehouseConnectionViaApi({
+          databaseUrl: apiEnv.DATABASE_URL,
           apiBaseUrl,
           bearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
           workspaceScope: localProtectedRuntimeAuth.workspaceScope,
