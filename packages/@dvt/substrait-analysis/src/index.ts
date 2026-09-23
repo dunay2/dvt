@@ -9,3 +9,4 @@ export { readRelationStructure } from './relationStructure.js';
 export { selectDvtSubstraitRelation } from './relationSelection.js';
 export { deriveSubstraitSchemas, type SubstraitSchemas } from './relationSchema.js';
 export { isSchemaTypeNullable, type SchemaField } from './schemaTypes.js';
+export { deriveExpressionSchema } from './schemaExpression.js';
