@@ -10,12 +10,11 @@ import type {
 import {
   hasCurrentJoinSemanticHash,
   hasPinnedPlanVersion,
-  hasSameConnectionRef,
   hasUniqueJoinSidecarIdentity,
-  joinFieldType,
-  namedTableIdentity,
 } from './substraitJoinInspectionGuards.js';
 import type { JoinOriginField } from './substraitJoinReadModel.js';
+import { inspectReadInputs } from './substraitReadInputs.js';
+import { indexDvtSubstraitRelations } from './substraitRelationBindings.js';
 
 type FlattenedCrossTree = Readonly<{ reads: readonly Rel[]; crosses: readonly Rel[] }>;
 
@@ -39,7 +38,8 @@ export function inspectDvtSubstraitCrossDraft(
     plan.relations.length !== 1 ||
     sidecar.schemaVersion !== DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION ||
     !hasUniqueJoinSidecarIdentity(draft) ||
-    !hasCurrentJoinSemanticHash(draft)
+    !hasCurrentJoinSemanticHash(draft) ||
+    indexDvtSubstraitRelations(draft) == null
   ) {
     return { ok: false };
   }
@@ -62,69 +62,17 @@ export function inspectDvtSubstraitCrossDraft(
     return { ok: false };
   }
 
-  const inputs: DvtSubstraitCrossProjection['inputs'][number][] = [];
-  for (const [index, readRel] of tree.reads.entries()) {
-    if (readRel.relType.case !== 'read' || readRel.relType.value.common?.relAnchor !== index + 1) {
-      return { ok: false };
-    }
-    const table = namedTableIdentity(readRel);
-    const names = readRel.relType.value.baseSchema?.names;
-    const types = readRel.relType.value.baseSchema?.struct?.types;
-    const inspectedTypes = types?.map(joinFieldType);
-    const binding = sidecar.relations.find((relation) => relation.relAnchor === index + 1);
-    if (
-      table == null ||
-      names == null ||
-      names.length === 0 ||
-      names.some((name) => name.length === 0 || name !== name.trim()) ||
-      new Set(names).size !== names.length ||
-      types == null ||
-      types.length !== names.length ||
-      inspectedTypes == null ||
-      inspectedTypes.some((type) => type == null) ||
-      binding?.sourceRef == null ||
-      binding.displayName !== table.table
-    ) {
-      return { ok: false };
-    }
-    const fields = sidecar.fields
-      .filter((field) => field.relationId === binding.relationId)
-      .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
-    if (
-      fields.length !== names.length ||
-      fields.some(
-        (field, fieldIndex) =>
-          field.outputOrdinal !== fieldIndex || field.displayName !== names[fieldIndex]
-      )
-    ) {
-      return { ok: false };
-    }
-    inputs.push({
-      relationId: binding.relationId,
-      ...table,
-      sourceRef: binding.sourceRef,
-      fields: fields.map((field, fieldIndex) => ({
-        name: names[fieldIndex]!,
-        fieldId: field.fieldId,
-        dataType: inspectedTypes[fieldIndex]!.dataType,
-        nullable: inspectedTypes[fieldIndex]!.nullable,
-      })),
-    });
-  }
+  const inputs = inspectReadInputs(draft, tree.reads);
   if (
-    new Set(
-      inputs.map(
-        (input) => `${input.sourceRef.connectionRef.connectionId}:${input.sourceRef.sourceObjectId}`
-      )
-    ).size !== inputs.length ||
+    inputs == null ||
+    new Set(inputs.map((input) => input.sourceRef.sourceObjectId)).size !== inputs.length ||
     inputs.some(
       (input) =>
-        input.sourceRef.connectionRef.provider !== 'postgres' ||
-        !hasSameConnectionRef(inputs[0]!.sourceRef.connectionRef, input.sourceRef.connectionRef)
+        sidecar.relations.find((binding) => binding.relationId === input.relationId)
+          ?.displayName !== input.table
     )
-  ) {
+  )
     return { ok: false };
-  }
 
   let workingFields = inputs[0]!.fields.map<JoinOriginField>((field) => ({
     inputIndex: 0,
@@ -139,7 +87,7 @@ export function inspectDvtSubstraitCrossDraft(
   for (const [crossIndex, crossRel] of tree.crosses.entries()) {
     if (crossRel.relType.case !== 'cross') return { ok: false };
     const cross = crossRel.relType.value;
-    const relAnchor = inputs.length + crossIndex + 1;
+    const relAnchor = cross.common?.relAnchor;
     const outputMapping =
       cross.common?.emitKind.case === 'emit' ? cross.common.emitKind.value.outputMapping : null;
     const rightInput = inputs[crossIndex + 1]!;
@@ -155,7 +103,8 @@ export function inspectDvtSubstraitCrossDraft(
     ];
     const binding = sidecar.relations.find((relation) => relation.relAnchor === relAnchor);
     if (
-      cross.common?.relAnchor !== relAnchor ||
+      cross.common == null ||
+      relAnchor == null ||
       cross.common.hint != null ||
       cross.common.advancedExtension != null ||
       cross.advancedExtension != null ||

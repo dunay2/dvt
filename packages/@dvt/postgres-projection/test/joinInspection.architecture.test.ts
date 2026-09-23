@@ -6,7 +6,8 @@ import { describe, expect, it } from 'vitest';
 
 const readerModules = [
   'substraitJoinReader.ts',
-  'join-inspection/inputs.ts',
+  'substraitReadInputs.ts',
+  'substraitRelationBindings.ts',
   'join-inspection/stages.ts',
   'join-inspection/predicates.ts',
   'join-inspection/physicalSources.ts',

@@ -34,7 +34,9 @@ export function inspectJoinStages(
   const stages: InspectedJoinStage[] = [];
   let outputs: DvtSubstraitNInputJoinProjection['outputs'][number][] = [];
   for (const [joinIndex, joinRel] of joinRels.entries()) {
-    const relAnchor = inputs.length + joinIndex + 1;
+    if (joinRel.relType.case !== 'join') return null;
+    const relAnchor = joinRel.relType.value.common?.relAnchor;
+    if (relAnchor == null) return null;
     const inspectedJoin = inspectNInputJoinNode(plan, joinRel, relAnchor);
     const rightInput = inputs[joinIndex + 1]!;
     const leftFields = workingFields.map<JoinOriginField>((field) => ({

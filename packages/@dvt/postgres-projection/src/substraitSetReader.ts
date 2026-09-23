@@ -1,101 +1,35 @@
-/** Owns fail-closed inspection of admitted base SetRel documents. */
-import {
-  SetRel_SetOp,
-  type Rel,
-} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+/** Owns admission, output mapping and nullability of the bounded SetRel profile. */
+import { SetRel_SetOp } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 
 import {
   hasCurrentJoinSemanticHash,
   hasPinnedPlanVersion,
-  hasSameConnectionRef,
   hasUniqueJoinSidecarIdentity,
-  joinFieldType,
-  namedTableIdentity,
 } from './substraitJoinInspectionGuards.js';
+import { inspectReadInputs } from './substraitReadInputs.js';
+import { indexDvtSubstraitRelations } from './substraitRelationBindings.js';
 import type {
   DvtSubstraitSetDraft,
   DvtSubstraitSetInspection,
   DvtSubstraitSetOperation,
-  DvtSubstraitSetProjection,
 } from './substraitSetReadModel.js';
 
-type RelationBinding = DvtSubstraitSetDraft['sidecar']['relations'][number];
-type FieldBinding = DvtSubstraitSetDraft['sidecar']['fields'][number];
-
-function operationFor(op: SetRel_SetOp): DvtSubstraitSetOperation | null {
-  if (op === SetRel_SetOp.UNION_ALL) return 'union_all';
-  if (op === SetRel_SetOp.UNION_DISTINCT) return 'union_distinct';
-  if (op === SetRel_SetOp.INTERSECTION_MULTISET) return 'intersect_distinct';
-  if (op === SetRel_SetOp.MINUS_PRIMARY) return 'except_distinct';
-  if (op === SetRel_SetOp.INTERSECTION_MULTISET_ALL) return 'intersect_all';
-  if (op === SetRel_SetOp.MINUS_PRIMARY_ALL) return 'except_all';
-  return null;
-}
-
-function tableFields(rel: Rel): Readonly<{
-  schema: string;
-  table: string;
-  relAnchor: number;
-  fields: readonly Readonly<{ name: string; dataType: string; nullable: boolean }>[];
-}> | null {
-  const table = namedTableIdentity(rel);
-  if (table == null || rel.relType.case !== 'read') return null;
-  const read = rel.relType.value;
-  const names = read.baseSchema?.names ?? [];
-  const types = read.baseSchema?.struct?.types ?? [];
-  const relAnchor = read.common?.relAnchor;
-  if (
-    relAnchor == null ||
-    names.length === 0 ||
-    names.length !== types.length ||
-    new Set(names).size !== names.length ||
-    names.some((name) => name.length === 0 || name !== name.trim())
-  ) {
-    return null;
-  }
-  const fields = names.map((name, index) => {
-    const fieldType = types[index] == null ? null : joinFieldType(types[index]);
-    return fieldType == null ? null : { name, ...fieldType };
-  });
-  return fields.some((field) => field == null)
-    ? null
-    : {
-        ...table,
-        relAnchor,
-        fields: fields.filter((field) => field != null),
-      };
-}
+const SET_OPERATIONS: Partial<Record<SetRel_SetOp, DvtSubstraitSetOperation>> = {
+  [SetRel_SetOp.UNION_ALL]: 'union_all',
+  [SetRel_SetOp.UNION_DISTINCT]: 'union_distinct',
+  [SetRel_SetOp.INTERSECTION_MULTISET]: 'intersect_distinct',
+  [SetRel_SetOp.MINUS_PRIMARY]: 'except_distinct',
+  [SetRel_SetOp.INTERSECTION_MULTISET_ALL]: 'intersect_all',
+  [SetRel_SetOp.MINUS_PRIMARY_ALL]: 'except_all',
+};
 
 function sortedFields(
   sidecar: DvtSubstraitSetDraft['sidecar'],
   relationId: string
-): FieldBinding[] {
+): DvtSubstraitSetDraft['sidecar']['fields'] {
   return sidecar.fields
     .filter((field) => field.relationId === relationId)
     .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
-}
-
-function sameSource(first: RelationBinding, second: RelationBinding): boolean {
-  return (
-    first.sourceRef != null &&
-    second.sourceRef != null &&
-    first.sourceRef.schemaVersion === second.sourceRef.schemaVersion &&
-    first.sourceRef.sourceObjectId === second.sourceRef.sourceObjectId &&
-    hasSameConnectionRef(first.sourceRef.connectionRef, second.sourceRef.connectionRef)
-  );
-}
-
-function sameOrderedFieldShape(
-  first: readonly Readonly<{ name: string; dataType: string }>[],
-  second: readonly Readonly<{ name: string; dataType: string }>[]
-): boolean {
-  return (
-    first.length === second.length &&
-    first.every(
-      (field, ordinal) =>
-        field.name === second[ordinal]?.name && field.dataType === second[ordinal]?.dataType
-    )
-  );
 }
 
 export function inspectDvtSubstraitSetDraft(
@@ -109,104 +43,55 @@ export function inspectDvtSubstraitSetDraft(
     !hasPinnedPlanVersion(plan) ||
     !hasUniqueJoinSidecarIdentity(draft) ||
     !hasCurrentJoinSemanticHash(draft) ||
-    plan.relations.length !== 1 ||
+    indexDvtSubstraitRelations(draft) == null ||
     plan.extensionUrns.length !== 0 ||
     plan.extensions.length !== 0 ||
     rootValue == null ||
     rel?.case !== 'set'
-  ) {
+  )
     return { ok: false };
-  }
+
   const set = rel.value;
-  const operation = operationFor(set.op);
+  const operation = SET_OPERATIONS[set.op];
   const inputCount = set.inputs.length;
-  const resultRelAnchor = inputCount + 1;
+  const resultRelAnchor = set.common?.relAnchor;
   if (
     operation == null ||
     inputCount < 2 ||
     set.advancedExtension != null ||
-    set.common?.relAnchor !== resultRelAnchor ||
+    set.common == null ||
+    resultRelAnchor == null ||
     set.common.hint != null ||
     set.common.advancedExtension != null ||
     set.common.emitKind.case !== 'emit' ||
-    sidecar.relations.length !== resultRelAnchor
-  ) {
+    sidecar.relations.length !== inputCount + 1
+  )
     return { ok: false };
-  }
 
-  const tables = set.inputs.map(tableFields);
-  const firstTable = tables[0];
-  if (
-    firstTable == null ||
-    tables.some(
-      (table, index) =>
-        table == null ||
-        table.relAnchor !== index + 1 ||
-        !sameOrderedFieldShape(table.fields, firstTable.fields)
-    )
-  ) {
-    return { ok: false };
-  }
-  const sourceBindings = Array.from({ length: inputCount }, (_, index) =>
-    sidecar.relations.find((binding) => binding.relAnchor === index + 1)
-  );
+  const inputs = inspectReadInputs(draft, set.inputs);
+  const firstTable = inputs?.[0];
   const resultBinding = sidecar.relations.find((binding) => binding.relAnchor === resultRelAnchor);
-  const firstBinding = sourceBindings[0];
   if (
-    firstBinding == null ||
-    firstBinding.sourceRef == null ||
-    firstBinding.sourceRef.connectionRef.provider !== 'postgres' ||
+    inputs == null ||
+    firstTable == null ||
     resultBinding == null ||
     resultBinding.sourceRef != null ||
-    sourceBindings.some(
-      (binding, index) =>
-        binding == null ||
-        binding.sourceRef == null ||
-        binding.sourceRef.connectionRef.provider !== 'postgres' ||
-        !hasSameConnectionRef(
-          firstBinding.sourceRef!.connectionRef,
-          binding.sourceRef.connectionRef
+    new Set(inputs.map((input) => input.sourceRef.sourceObjectId)).size !== inputCount ||
+    inputs.some(
+      (input) =>
+        input.fields.length !== firstTable.fields.length ||
+        input.fields.some(
+          (field, ordinal) =>
+            field.name !== firstTable.fields[ordinal]?.name ||
+            field.dataType !== firstTable.fields[ordinal]?.dataType
         ) ||
-        binding.displayName !== tables[index]?.table ||
-        sourceBindings.some(
-          (candidate, candidateIndex) =>
-            candidate != null && candidateIndex !== index && sameSource(binding, candidate)
-        )
+        sidecar.relations.find((binding) => binding.relationId === input.relationId)
+          ?.displayName !== input.table
     ) ||
-    resultBinding.displayName !== tables.map((table) => table!.table).join('+')
-  ) {
+    sidecar.fields.some((field) => field.parentFieldId != null) ||
+    resultBinding.displayName !== inputs.map((input) => input.table).join('+')
+  )
     return { ok: false };
-  }
-
-  const inputs: DvtSubstraitSetProjection['inputs'][number][] = [];
-  for (const [index, binding] of sourceBindings.entries()) {
-    const table = tables[index];
-    if (binding?.sourceRef == null || table == null) return { ok: false };
-    const fields = sortedFields(sidecar, binding.relationId);
-    if (
-      fields.length !== table.fields.length ||
-      fields.some(
-        (field, ordinal) =>
-          field.outputOrdinal !== ordinal ||
-          field.displayName !== table.fields[ordinal]?.name ||
-          field.parentFieldId != null
-      )
-    ) {
-      return { ok: false };
-    }
-    inputs.push({
-      relationId: binding.relationId,
-      schema: table.schema,
-      table: table.table,
-      sourceRef: binding.sourceRef,
-      fields: fields.map((field, ordinal) => ({
-        name: table.fields[ordinal]!.name,
-        fieldId: field.fieldId,
-        dataType: table.fields[ordinal]!.dataType,
-        nullable: table.fields[ordinal]!.nullable,
-      })),
-    });
-  }
 
   const names = rootValue.names;
   const outputMapping = set.common.emitKind.value.outputMapping;

@@ -73,30 +73,25 @@ describe('selected relation query projection', () => {
     ['except_distinct', SetRel_SetOp.MINUS_PRIMARY],
     ['intersect_all', SetRel_SetOp.INTERSECTION_MULTISET_ALL],
     ['except_all', SetRel_SetOp.MINUS_PRIMARY_ALL],
-  ] as const)(
-    'rebases selected %s in read-first anchor order for exact preview',
-    async (name, op) => {
-      const original = setFixture(op);
-      const before = globalThis.structuredClone(original);
-      const relationId = original.sidecar.relations.find(
-        (relation) => relation.sourceRef == null
-      )!.relationId;
+  ] as const)('preserves selected %s relation identities for exact preview', async (name, op) => {
+    const original = setFixture(op);
+    const before = globalThis.structuredClone(original);
+    const relationId = original.sidecar.relations.find(
+      (relation) => relation.sourceRef == null
+    )!.relationId;
 
-      const selected = selectDvtSubstraitRelation(original, relationId);
-      const result = await projectDvtSetDraftToPostgresSql(selected);
+    const selected = selectDvtSubstraitRelation(original, relationId);
+    const result = await projectDvtSetDraftToPostgresSql(selected);
 
-      expect(result.projection.operation).toBe(name);
-      expect(result.projection.inputs.map((input) => input.table)).toEqual([
-        'customers_north',
-        'customers_south',
-        'customers_west',
-      ]);
-      expect(selected.sidecar.relations.map((relation) => relation.relAnchor)).toEqual([
-        1, 2, 3, 4,
-      ]);
-      expect(original).toEqual(before);
-    }
-  );
+    expect(result.projection.operation).toBe(name);
+    expect(result.projection.inputs.map((input) => input.table)).toEqual([
+      'customers_north',
+      'customers_south',
+      'customers_west',
+    ]);
+    expect(selected.sidecar.relations).toEqual(original.sidecar.relations);
+    expect(original).toEqual(before);
+  });
 
   it.each(['foreign relation', 'stale plan', 'duplicate anchor'])(
     'fails closed for %s',

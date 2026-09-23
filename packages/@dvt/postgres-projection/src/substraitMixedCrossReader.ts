@@ -1,12 +1,5 @@
 /** Owns the bounded mixed profile `(admitted JoinRel) CrossRel ReadRel`. */
-import type { Rel, RelCommon } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import { clone, toBinary } from '@bufbuild/protobuf';
-import {
-  DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
-  DvtSubstraitAuthoringSidecarV1Schema,
-} from '@dvt/contracts';
-import { sha256Hex } from '@dvt/crypto';
+import { DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION } from '@dvt/contracts';
 
 import { inspectDvtSubstraitCrossDraft } from './substraitCrossReader.js';
 import type {
@@ -15,7 +8,6 @@ import type {
   DvtSubstraitMixedCrossInspection,
 } from './substraitCrossReadModel.js';
 import {
-  flattenNInputJoinTree,
   hasCurrentJoinSemanticHash,
   hasPinnedPlanVersion,
   hasSameConnectionRef,
@@ -24,6 +16,8 @@ import {
   namedTableIdentity,
 } from './substraitJoinInspectionGuards.js';
 import { inspectDvtSubstraitJoinDraft } from './substraitJoinReader.js';
+import { indexDvtSubstraitRelations } from './substraitRelationBindings.js';
+import { selectDvtSubstraitRelation } from './substraitRelationSelection.js';
 
 export function inspectDvtSubstraitAcceptedCrossDraft(
   draft: DvtSubstraitCrossDraft
@@ -34,70 +28,6 @@ export function inspectDvtSubstraitAcceptedCrossDraft(
   return mixed.ok ? { ok: true, projection: mixed.projection.projection } : { ok: false };
 }
 
-function relationCommon(rel: Rel): RelCommon | null {
-  switch (rel.relType.case) {
-    case 'read':
-    case 'join':
-      return rel.relType.value.common ?? null;
-    default:
-      return null;
-  }
-}
-
-function selectedJoinDraft(
-  draft: DvtSubstraitCrossDraft,
-  left: Rel,
-  leftRelationId: string
-): DvtSubstraitCrossDraft | null {
-  const tree = flattenNInputJoinTree(left);
-  if (tree == null) return null;
-  const ordered = [...tree.reads, ...tree.joins];
-  const anchors = ordered.map((rel) => relationCommon(rel)?.relAnchor);
-  if (anchors.some((anchor) => anchor == null) || new Set(anchors).size !== anchors.length) {
-    return null;
-  }
-  const anchorSet = new Set(anchors as number[]);
-  const relations = draft.sidecar.relations.filter((relation) => anchorSet.has(relation.relAnchor));
-  if (relations.length !== ordered.length) return null;
-  const relationIds = new Set(relations.map((relation) => relation.relationId));
-  const fields = draft.sidecar.fields.filter((field) => relationIds.has(field.relationId));
-  const names = fields
-    .filter((field) => field.relationId === leftRelationId)
-    .sort((a, b) => a.outputOrdinal - b.outputOrdinal)
-    .map((field) => field.displayName);
-  if (names.length === 0 || names.some((name) => name == null)) return null;
-
-  const plan = clone(PlanSchema, draft.plan);
-  const root = plan.relations[0]?.relType;
-  if (root?.case !== 'root' || root.value.input?.relType.case !== 'cross') return null;
-  const selected = root.value.input.relType.value.left;
-  if (selected == null) return null;
-  root.value.input = selected;
-  root.value.names = names as string[];
-  const remap = new Map(anchors.map((anchor, index) => [anchor!, index + 1]));
-  const clonedTree = flattenNInputJoinTree(selected);
-  if (clonedTree == null) return null;
-  for (const rel of [...clonedTree.reads, ...clonedTree.joins]) {
-    const common = relationCommon(rel);
-    if (common?.relAnchor == null) return null;
-    const nextAnchor = remap.get(common.relAnchor);
-    if (nextAnchor == null) return null;
-    common.relAnchor = nextAnchor;
-  }
-  return {
-    plan,
-    sidecar: DvtSubstraitAuthoringSidecarV1Schema.parse({
-      ...draft.sidecar,
-      semanticPlanSha256: sha256Hex(toBinary(PlanSchema, plan)),
-      relations: relations.map((relation) => ({
-        ...relation,
-        relAnchor: remap.get(relation.relAnchor)!,
-      })),
-      fields,
-    }),
-  };
-}
-
 export function inspectDvtSubstraitMixedCrossDraft(
   draft: DvtSubstraitCrossDraft
 ): DvtSubstraitMixedCrossInspection {
@@ -106,7 +36,8 @@ export function inspectDvtSubstraitMixedCrossDraft(
     draft.plan.relations.length !== 1 ||
     draft.sidecar.schemaVersion !== DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION ||
     !hasUniqueJoinSidecarIdentity(draft) ||
-    !hasCurrentJoinSemanticHash(draft)
+    !hasCurrentJoinSemanticHash(draft) ||
+    indexDvtSubstraitRelations(draft) == null
   ) {
     return { ok: false };
   }
@@ -158,8 +89,12 @@ export function inspectDvtSubstraitMixedCrossDraft(
   ) {
     return { ok: false };
   }
-  const leftDraft = selectedJoinDraft(draft, cross.left, leftBinding.relationId);
-  if (leftDraft == null) return { ok: false };
+  let leftDraft: DvtSubstraitCrossDraft;
+  try {
+    leftDraft = selectDvtSubstraitRelation(draft, leftBinding.relationId);
+  } catch {
+    return { ok: false };
+  }
   const left = inspectDvtSubstraitJoinDraft(leftDraft);
   const rightTable = namedTableIdentity(cross.right);
   const rightNames = cross.right.relType.value.baseSchema?.names;
