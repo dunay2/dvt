@@ -213,6 +213,10 @@ jobs:
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:governance:unit-coverage
 
+      - name: Build Git governance runtime dependency
+        if: github.event_name == 'pull_request'
+        run: pnpm --filter @dvt/crypto build
+
       - name: Validate governed changed files
         if: github.event_name == 'pull_request'
         run: pnpm docs:governance:changed-files:check
