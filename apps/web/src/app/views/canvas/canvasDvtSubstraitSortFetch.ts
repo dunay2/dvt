@@ -5,9 +5,9 @@ import {
   createDvtSubstraitSortDraft,
   inspectDvtSubstraitSortFetchRoot,
   removeDvtSubstraitSortFetchRelation,
-  selectDvtSubstraitRelation,
   type DvtSubstraitSortKey,
 } from '@dvt/postgres-projection';
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 

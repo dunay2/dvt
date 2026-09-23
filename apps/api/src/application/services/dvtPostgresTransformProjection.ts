@@ -15,12 +15,12 @@ import {
   inspectDvtSubstraitSortFetchRoot,
   renderPostgresAst,
   removeDvtSubstraitSortFetchRelation,
-  selectDvtSubstraitRelation,
   type DvtPostgresOrderKey,
   type DvtSubstraitJoinDraft,
   type PostgresAstNode,
   type ProjectedDvtConnectedFieldSql,
 } from '@dvt/postgres-projection';
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 
 import { sameConnectedSource, requireDvtProjectedSourceCoverage } from './dvtSourceCoverage.js';
 import type { DvtTerminalTransformClosure } from './resolveDvtTerminalTransformClosure.js';

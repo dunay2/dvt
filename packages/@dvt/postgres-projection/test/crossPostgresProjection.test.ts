@@ -10,12 +10,12 @@ import {
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { create, toBinary } from '@bufbuild/protobuf';
 import { decodeDvtSubstraitPlanV1, DvtSubstraitSemanticDocumentV1Schema } from '@dvt/contracts';
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 import { describe, expect, it } from 'vitest';
 
 import {
   inspectDvtSubstraitCrossDraft,
   projectDvtCrossDraftToPostgresSql,
-  selectDvtSubstraitRelation,
   ZERO_SHA256,
   type DvtSubstraitCrossDraft,
 } from '../src/index.js';

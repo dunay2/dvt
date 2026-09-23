@@ -7,12 +7,12 @@ import {
   DvtSubstraitSemanticDocumentV1Schema,
   encodeDvtSubstraitPlanV1,
 } from '@dvt/contracts';
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 import { describe, expect, it } from 'vitest';
 
 import {
   projectDvtJoinDraftToPostgresSql,
   projectDvtSetDraftToPostgresSql,
-  selectDvtSubstraitRelation,
   type DvtSubstraitJoinDraft,
 } from '../src/index.js';
 
@@ -48,8 +48,14 @@ describe('selected relation query projection', () => {
     const selected = selectDvtSubstraitRelation(original, joins[0]!.relationId);
     const result = await projectDvtJoinDraftToPostgresSql(selected);
     expect(result.projection.inputs).toHaveLength(2);
-    expect(result.sql.match(/\bJOIN\b/g)).toHaveLength(1);
-    expect(result.sql).not.toContain('raw.order_details');
+    expect(result.projection.joinRelations.map((relation) => relation.relationId)).toEqual([
+      joins[0]!.relationId,
+    ]);
+    expect(result.projection.inputs.map((input) => input.relationId)).toEqual(
+      selected.sidecar.relations
+        .filter((relation) => relation.sourceRef != null)
+        .map((relation) => relation.relationId)
+    );
     expect(result.projection.outputs.map((output) => output.name)).toEqual([
       'order_id',
       'client_id',
@@ -64,7 +70,9 @@ describe('selected relation query projection', () => {
       selectDvtSubstraitRelation(original, joins[1]!.relationId)
     );
     expect(final.projection.inputs).toHaveLength(3);
-    expect(final.sql.match(/\bJOIN\b/g)).toHaveLength(2);
+    expect(final.projection.joinRelations.map((relation) => relation.relationId)).toEqual(
+      joins.map((relation) => relation.relationId)
+    );
   });
 
   it.each([

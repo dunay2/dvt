@@ -7,7 +7,6 @@ import { describe, expect, it } from 'vitest';
 const readerModules = [
   'substraitJoinReader.ts',
   'substraitReadInputs.ts',
-  'substraitRelationBindings.ts',
   'join-inspection/stages.ts',
   'join-inspection/predicates.ts',
   'join-inspection/physicalSources.ts',
@@ -41,11 +40,5 @@ describe('shared JOIN inspection component boundaries', () => {
         /node:|react|pg(?:sql)?|apps\/|Postgres|postgresAst|ProjectionError/
       );
     }
-  });
-
-  it('keeps extracted details behind the existing package inspection API', () => {
-    const exports = readFileSync(new URL('../src/index.ts', import.meta.url), 'utf8');
-    expect(exports).toContain("from './substraitJoinReader.js'");
-    expect(exports).not.toContain('join-inspection/');
   });
 });

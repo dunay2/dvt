@@ -5,12 +5,12 @@ import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { fromBinary, toBinary } from '@bufbuild/protobuf';
 import { decodeDvtSubstraitPlanV1, DvtSubstraitSemanticDocumentV1Schema } from '@dvt/contracts';
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 import { describe, expect, it } from 'vitest';
 
 import {
   inspectDvtSubstraitJoinDraft,
   projectDvtJoinDraftToPostgresSql,
-  selectDvtSubstraitRelation,
   ZERO_SHA256,
 } from '../src/index.js';
 

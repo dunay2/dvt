@@ -1,3 +1,4 @@
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -7,7 +8,6 @@ import {
   projectDvtJoinDraftToPostgresSql,
   projectDvtCrossDraftToPostgresSql,
   projectDvtSetDraftToPostgresSql,
-  selectDvtSubstraitRelation,
 } from '../src/index.js';
 
 import {

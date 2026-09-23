@@ -148,7 +148,6 @@ export type {
   DvtSubstraitProjectionDraft,
 } from './substraitProjectionReadModel.js';
 export { projectDvtPostgresOutputSchemaV1 } from './dvtPostgresOutputSchema.js';
-export { selectDvtSubstraitRelation } from './substraitRelationSelection.js';
 export type {
   DvtSubstraitSetDraft,
   DvtSubstraitSetInspection,

@@ -1,5 +1,5 @@
 {
-  "name": "@dvt/postgres-projection",
+  "name": "@dvt/substrait-analysis",
   "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",
@@ -19,15 +19,13 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "pnpm run build && pnpm -C ../../.. exec vitest run packages/@dvt/postgres-projection/test"
+    "test": "pnpm run build && pnpm -C ../../.. exec vitest run packages/@dvt/substrait-analysis/test"
   },
   "dependencies": {
-    "@dvt/substrait-analysis": "workspace:*",
     "@bufbuild/protobuf": "2.14.0",
-    "@dvt/crypto": "workspace:*",
     "@buf/substrait_substrait.bufbuild_es": "2.14.0-20260816025439-ce0808dab3ac.1",
     "@dvt/contracts": "workspace:*",
-    "pgsql-deparser": "16.1.1"
+    "@dvt/crypto": "workspace:*"
   },
   "devDependencies": {
     "typescript": "5.9.3",

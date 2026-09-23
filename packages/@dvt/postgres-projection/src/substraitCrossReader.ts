@@ -1,6 +1,7 @@
 /** Owns projection of the exact admitted CrossRel chain to its verified read model. */
 import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION } from '@dvt/contracts';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 
 import type {
   DvtSubstraitCrossDraft,
@@ -14,7 +15,6 @@ import {
 } from './substraitJoinInspectionGuards.js';
 import type { JoinOriginField } from './substraitJoinReadModel.js';
 import { inspectReadInputs } from './substraitReadInputs.js';
-import { indexDvtSubstraitRelations } from './substraitRelationBindings.js';
 
 type FlattenedCrossTree = Readonly<{ reads: readonly Rel[]; crosses: readonly Rel[] }>;
 
@@ -39,7 +39,7 @@ export function inspectDvtSubstraitCrossDraft(
     sidecar.schemaVersion !== DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION ||
     !hasUniqueJoinSidecarIdentity(draft) ||
     !hasCurrentJoinSemanticHash(draft) ||
-    indexDvtSubstraitRelations(draft) == null
+    !indexSubstraitRelations(draft).ok
   ) {
     return { ok: false };
   }

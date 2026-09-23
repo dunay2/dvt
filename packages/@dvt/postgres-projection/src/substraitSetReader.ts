@@ -1,5 +1,6 @@
 /** Owns admission, output mapping and nullability of the bounded SetRel profile. */
 import { SetRel_SetOp } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 
 import {
   hasCurrentJoinSemanticHash,
@@ -7,7 +8,6 @@ import {
   hasUniqueJoinSidecarIdentity,
 } from './substraitJoinInspectionGuards.js';
 import { inspectReadInputs } from './substraitReadInputs.js';
-import { indexDvtSubstraitRelations } from './substraitRelationBindings.js';
 import type {
   DvtSubstraitSetDraft,
   DvtSubstraitSetInspection,
@@ -43,7 +43,7 @@ export function inspectDvtSubstraitSetDraft(
     !hasPinnedPlanVersion(plan) ||
     !hasUniqueJoinSidecarIdentity(draft) ||
     !hasCurrentJoinSemanticHash(draft) ||
-    indexDvtSubstraitRelations(draft) == null ||
+    !indexSubstraitRelations(draft).ok ||
     plan.extensionUrns.length !== 0 ||
     plan.extensions.length !== 0 ||
     rootValue == null ||

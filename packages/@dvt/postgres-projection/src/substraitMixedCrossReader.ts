@@ -1,5 +1,6 @@
 /** Owns the bounded mixed profile `(admitted JoinRel) CrossRel ReadRel`. */
 import { DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION } from '@dvt/contracts';
+import { indexSubstraitRelations, selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 
 import { hasConsistentJoinPhysicalSources } from './join-inspection/physicalSources.js';
 import { inspectDvtSubstraitCrossDraft } from './substraitCrossReader.js';
@@ -16,8 +17,6 @@ import {
 } from './substraitJoinInspectionGuards.js';
 import { inspectDvtSubstraitJoinDraft } from './substraitJoinReader.js';
 import { inspectReadInputs } from './substraitReadInputs.js';
-import { indexDvtSubstraitRelations } from './substraitRelationBindings.js';
-import { selectDvtSubstraitRelation } from './substraitRelationSelection.js';
 
 export function inspectDvtSubstraitAcceptedCrossDraft(
   draft: DvtSubstraitCrossDraft
@@ -37,7 +36,7 @@ export function inspectDvtSubstraitMixedCrossDraft(
     draft.sidecar.schemaVersion !== DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION ||
     !hasUniqueJoinSidecarIdentity(draft) ||
     !hasCurrentJoinSemanticHash(draft) ||
-    indexDvtSubstraitRelations(draft) == null
+    !indexSubstraitRelations(draft).ok
   ) {
     return { ok: false };
   }
