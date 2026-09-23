@@ -96,7 +96,8 @@ class FeatureMechanizationGitDiffReader {
         '--unified=0',
         '--no-ext-diff',
         '--no-renames',
-        '--diff-filter=ACMRD',
+        // Deleted paths remain in the inventory; they have no added lines to read.
+        '--diff-filter=ACMR',
         ...scope,
       ]);
       let file = null;
