@@ -3,11 +3,7 @@ import { resolveCanvasRelationalOperationPresentation } from './canvasRelational
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
-import {
-  inspectCanvasDvtSubstraitSortFetch,
-  selectCanvasDvtSubstraitSortFetch,
-} from './canvasDvtSubstraitSortFetch';
-import { resolveCanvasRelationalOperatorTools } from './canvasRelationalTreeOperatorModel';
+import { useSelectedRelationTool } from './useSelectedRelationTool';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { CanvasRelationalTreeOperatorForm } from './CanvasRelationalTreeOperatorForm';
 
@@ -17,19 +13,18 @@ export function CanvasRelationalTreeSortFetchEditor({
   relationId,
   onChange,
   onClose,
+  onPendingChange,
 }: Readonly<{
   draft: DvtSubstraitProjectionDraft;
   operation: 'sort' | 'fetch';
   relationId: string;
   onChange: (draft: DvtSubstraitProjectionDraft) => void;
   onClose: () => void;
+  onPendingChange?: (pending: boolean) => void;
 }>): JSX.Element | null {
   const language = useApplicationLanguageStore((state) => state.language);
-  const selectedDraft = selectCanvasDvtSubstraitSortFetch(draft, relationId);
-  const tool = resolveCanvasRelationalOperatorTools(selectedDraft ?? draft).find(
-    (item) => item.id === operation
-  );
-  if (tool == null) return null;
+  const selected = useSelectedRelationTool(relationId, operation, 'edit');
+  if (selected == null || !selected.tool.enabled) return null;
   const title =
     resolveCanvasViewCopy(language)[
       resolveCanvasRelationalOperationPresentation(operation).labelKey
@@ -43,26 +38,17 @@ export function CanvasRelationalTreeSortFetchEditor({
     >
       <div className="min-h-0 overflow-auto p-3">
         <CanvasRelationalTreeOperatorForm
-          key={`${relationId}:${operation}`}
+          key={`${relationId}:${selected.analysis.revision}`}
           inline
-          tool={tool}
+          tool={selected.tool}
           draft={draft}
           targetRelationId={relationId}
           title={title}
           onChange={onChange}
           onClose={onClose}
+          onPendingChange={onPendingChange}
         />
       </div>
     </CanvasRelationalTreeEditorFrame>
   );
-}
-
-export function selectedCanvasDvtSortFetchOperation(
-  draft: DvtSubstraitProjectionDraft,
-  relationId: string | null
-): 'sort' | 'fetch' | null {
-  if (relationId == null) return null;
-  const selected = selectCanvasDvtSubstraitSortFetch(draft, relationId);
-  const inspection = inspectCanvasDvtSubstraitSortFetch(selected ?? draft);
-  return inspection.ok && inspection.relationId === relationId ? inspection.operation : null;
 }

@@ -6,7 +6,7 @@ import {
   decodeDvtSubstraitSemanticDocument,
   encodeDvtSubstraitSemanticDocument,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
-import { applyDvtSubstraitSort } from '../../../src/app/views/canvas/canvasDvtSubstraitSortFetch';
+import { applyDvtSubstraitSort } from '../../../src/app/views/canvas/canvasSortFetch.test-support';
 
 import { leftJoinDocument } from './fixture';
 

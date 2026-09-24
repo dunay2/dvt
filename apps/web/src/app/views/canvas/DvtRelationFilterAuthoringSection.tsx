@@ -4,7 +4,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
-import { useSelectedRelationFilter } from './useSelectedRelationFilter';
+import { useSelectedRelationTool } from './useSelectedRelationTool';
 import { CanvasRelationalTreeOperatorForm } from './CanvasRelationalTreeOperatorForm';
 
 type FilterSectionProps = Readonly<{
@@ -25,7 +25,7 @@ function ProjectionInputFilterForm({
   }>): JSX.Element | null {
   const analysis = useContext(CanvasRelationAnalysisContext);
   const [formVersion, resetForm] = useState(0);
-  const filter = useSelectedRelationFilter(relationId, intent);
+  const filter = useSelectedRelationTool(relationId, 'filter', intent);
   if (filter?.tool.enabled !== true) return null;
   return (
     <CanvasRelationalTreeOperatorForm

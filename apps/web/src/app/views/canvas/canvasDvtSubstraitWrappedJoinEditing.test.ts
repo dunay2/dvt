@@ -9,11 +9,8 @@ import {
   inspectDvtSubstraitJoinDraft,
   setDvtSubstraitJoinType,
 } from './canvasDvtSubstraitJoinComposition';
-import {
-  applyDvtSubstraitFetch,
-  applyDvtSubstraitSort,
-  peelCanvasDvtSubstraitSortFetch,
-} from './canvasDvtSubstraitSortFetch';
+import { applyDvtSubstraitFetch, applyDvtSubstraitSort } from './canvasSortFetch.test-support';
+import { peelCanvasDvtSubstraitSortFetch } from './canvasDvtSubstraitSortFetch';
 import {
   decodeDvtSubstraitSemanticDocument,
   encodeDvtSubstraitSemanticDocument,

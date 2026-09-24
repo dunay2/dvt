@@ -1,6 +1,6 @@
 /** Compose the shared selected-relation command with the existing property form. */
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
-import { useSelectedRelationFilter } from './useSelectedRelationFilter';
+import { useSelectedRelationTool } from './useSelectedRelationTool';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { CanvasRelationalTreeOperatorForm } from './CanvasRelationalTreeOperatorForm';
 
@@ -17,7 +17,7 @@ export function CanvasSelectedFilterEditor({
   onClose: () => void;
   onPendingChange?: (pending: boolean) => void;
 }>): JSX.Element | null {
-  const filter = useSelectedRelationFilter(relationId, 'edit');
+  const filter = useSelectedRelationTool(relationId, 'filter', 'edit');
   if (filter == null) return null;
   return (
     <CanvasRelationalTreeEditorFrame operation="filter" relationId={relationId} onClose={onClose}>

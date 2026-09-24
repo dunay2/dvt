@@ -6,7 +6,7 @@ import { setupWorkbenchTest, root, container } from './CanvasRelationalTreeWorkb
 import { createDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
-import { useSelectedRelationFilter } from './useSelectedRelationFilter';
+import { useSelectedRelationTool } from './useSelectedRelationTool';
 import { CanvasRelationalTreeOperatorForm } from './CanvasRelationalTreeOperatorForm';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 
@@ -50,7 +50,7 @@ describe('selected Filter form', () => {
       const onClose = vi.fn();
       let analysis: ReturnType<typeof useCanvasRelationAnalysisSession>;
       function Form(): React.JSX.Element | null {
-        const selected = useSelectedRelationFilter(selectedId, 'insert');
+        const selected = useSelectedRelationTool(selectedId, 'filter', 'insert');
         return selected == null ? null : (
           <CanvasRelationalTreeOperatorForm
             inline
