@@ -59,7 +59,7 @@ Touched paths:
 
 - `docs/planning/state/agent-lane-e.yaml`
 - [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)
-- `docs/planning/reviews/architecture-and-governance/20260426-canvas-runtime-policy-architecture-review.md`
+- [Canvas runtime policy architecture review](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/reviews/architecture-and-governance/20260426-canvas-runtime-policy-architecture-review.md)
 - `tools/ci/planning-truth-sync.test.mjs`
 - `apps/web/index.html`
 - `apps/web/src/app/bootstrap/appBootstrapScreen.ts`

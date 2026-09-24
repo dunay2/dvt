@@ -56,7 +56,6 @@ bounded contexts, ports, aggregates, and phased validation".
 - `docs/planning/state/planning-control-tower.md`
 - [Task: E-PROP-DISP-1] `docs/planning/state/how-to-add-tasks.md`
 - `docs/planning/state/agent-lane-e.yaml`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md`
 - `docs/architecture/components/web/graph/canvas-component-map-and-modernization-review.md`

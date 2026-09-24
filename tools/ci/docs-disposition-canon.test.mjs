@@ -698,6 +698,16 @@ test('retired atlas and superseded Canvas guidance have no live consumers', () =
 test('retired PR drafts and historical intake have no files or live consumers', () => {
   const retiredDirectories = ['.gh-comments', '.git.bfg-report'];
   const retiredFiles = [
+    'buzon/20260514-codex-fowler-ar-c2-t2-dashboard-evidence-analysis.md',
+    'buzon/20260514-codex-fowler-ar-c2-t3-alert-evidence-analysis.md',
+    'buzon/20260523-codex-fowler-postgres-tenant-isolation-canon.md',
+    'buzon/20260703-web-state-health-direction-update.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/temporal-workflow-helper-artifact-facts-narrowing-slice-20260410.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-authoring-draft-aggregate-roots-plan-20260423.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md',
+    'docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260426-canvas-runtime-policy-architecture-review.md',
     'docs/planning/closeouts/20260423-rc-c2-post-merge-ci-measurement.md',
     'docs/planning/reviews/architecture-and-governance/20260513-ar-d6-triple-versioning-governance-review.md',
     'docs/planning/reviews/architecture-and-governance/20260525-f29-canvas-workbench-proposal-disposition-review.md',
@@ -722,12 +732,21 @@ test('retired PR drafts and historical intake have no files or live consumers', 
     assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, path);
   }
   const retiredNames = retiredFiles.map((path) => path.split('/').at(-1));
-  const paths = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
+  const paths = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+    { encoding: 'utf8' }
+  )
     .split('\0')
     .filter(Boolean);
   for (const path of paths) {
     if (path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
     if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
+    assert.equal(
+      retiredNames.includes(path.split('/').at(-1)),
+      false,
+      `Relocated retired document: ${path}`
+    );
     let current = readRepoFile(path).replace(
       /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
       ''

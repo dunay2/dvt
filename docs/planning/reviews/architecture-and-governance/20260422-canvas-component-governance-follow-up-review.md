@@ -23,7 +23,7 @@ follow-up on 2026-04-22.
 - [Graph Frontend Architecture](../../../architecture/components/web/graph/graph-frontend-architecture.md)
 - [Canvas Controller Current To Target Architecture](../../../architecture/components/web/graph/canvas-controller-current-to-target-architecture.md)
 - [Canvas Component Map And Modernization Review](../../../architecture/components/web/graph/canvas-component-map-and-modernization-review.md)
-- [Canvas runtime truth hard-cut review](./20260422-canvas-runtime-truth-hardcut-review.md)
+- [Canvas runtime truth hard-cut review](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md)
 - [Canvas Draft Session Component](../../../architecture/components/web/graph/canvas-draft-session-component.md)
 - [Canvas Graph Lifecycle Component](../../../architecture/components/web/graph/canvas-graph-lifecycle-component.md)
 - [Canvas Handler Contracts Component](../../../architecture/components/web/graph/canvas-handler-contracts-component.md)

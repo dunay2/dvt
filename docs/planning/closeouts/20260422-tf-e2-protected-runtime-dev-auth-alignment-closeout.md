@@ -52,7 +52,7 @@ boundary that local startup cannot actually satisfy.
 - `docs/guides/ai-work-protocol.md`: this is a `Full` slice because it changes
   runtime startup posture, dev workflow, frontend/backend integration wiring,
   tests, and documentation.
-- `docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md`:
+- [Canvas runtime truth hard-cut review](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md):
   active Canvas authoring must either talk to protected runtime truth or fail
   closed.
 - `docs/architecture/components/web/frontend-backend-contract-mvp-e1-20260404.md`:
@@ -125,7 +125,7 @@ Verified against the governing baseline:
 ## Phase 4. Traceability And Artifact Recording
 
 - Governing review and contracts:
-  - `docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md`
+  - [Canvas runtime truth hard-cut review](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md)
   - `docs/architecture/components/web/frontend-backend-contract-mvp-e1-20260404.md`
   - `docs/runbooks/backend-mvp-control-plane-runbook-20260329.md`
   - `docs/runbooks/workspace-graph-draft-protected-boundary-20260416.md`

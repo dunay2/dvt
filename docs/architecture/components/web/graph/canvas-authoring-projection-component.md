@@ -24,7 +24,6 @@ It explains:
 
 - [Graph Frontend Architecture](./graph-frontend-architecture.md)
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
-- [Canvas runtime truth hard-cut review](../../../../planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md)
 - [Canvas component governance follow-up review](../../../../planning/reviews/architecture-and-governance/20260422-canvas-component-governance-follow-up-review.md)
 - [Frontend Fowler Implementation Pattern](../frontend-fowler-implementation-pattern.md)
 

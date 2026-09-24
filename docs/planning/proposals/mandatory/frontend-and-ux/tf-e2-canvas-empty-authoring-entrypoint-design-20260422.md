@@ -36,7 +36,6 @@ The design decision is:
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
 - `docs/planning/state/agent-lane-e.yaml`
-- `docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md`
 - `docs/architecture/components/web/graph/graph-frontend-architecture.md`
 - `docs/architecture/components/web/graph/graph-route-bootstrap-architecture.md`

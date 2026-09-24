@@ -40,7 +40,6 @@ This proposal freezes that missing seam as:
 - `docs/architecture/reference-architecture.md`
 - `docs/contracts/planner/workspace-graph-draft-persistence-v1.md`
 - `docs/architecture/components/planner/workspace-authoring-draft-aggregate.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-authoring-draft-aggregate-roots-plan-20260423.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md`
 

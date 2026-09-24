@@ -93,7 +93,6 @@ Canonical `F-07` baseline pack:
 - [Frontend Fowler Implementation Pattern](../../../../architecture/components/web/frontend-fowler-implementation-pattern.md)
 - [Frontend Runtime Contract Technical Manual](../../../../architecture/components/web/runs/frontend-runtime-contract-technical-manual.md)
 - [Frontend Runtime Contract User Manual](../../../../architecture/components/web/runs/frontend-runtime-contract-user-manual.md)
-- [F-07 Frontend Runtime Contract Baseline Plan](../../mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md)
 
 Canonical `MVP-E1` contract artifact:
 

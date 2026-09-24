@@ -50,7 +50,6 @@ own planning DB task and governing evidence.
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md`
 - `docs/planning/reviews/20260417-dvt-plus-deep-architectural-review.md`
-- `docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md`
 - `docs/architecture/components/web/frontend-data-boundary-architecture.md`
 - `docs/architecture/components/web/graph/graph-frontend-architecture.md`
 - `docs/architecture/components/web/graph/graph-route-bootstrap-architecture.md`
