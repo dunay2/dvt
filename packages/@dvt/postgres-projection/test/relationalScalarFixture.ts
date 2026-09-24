@@ -9,6 +9,7 @@ import {
 } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { create } from '@bufbuild/protobuf';
 import { encodeDvtSubstraitPlanV1 } from '@dvt/contracts';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 
 import { relationsFixture } from '../../substrait-analysis/test/relationsFixture.js';
 
@@ -30,7 +31,10 @@ export const scalar = (reference: number, args: Expression[]): Expression =>
     },
   });
 
-export function scalarFixture(temporal = false) {
+export function scalarFixture(temporal = false): {
+  document: SubstraitDocument;
+  fn: Expression_ScalarFunction;
+} {
   const grammar = relationsFixture();
   const read = grammar.read();
   if (read.relType.case !== 'read') throw new Error('Expected Read');

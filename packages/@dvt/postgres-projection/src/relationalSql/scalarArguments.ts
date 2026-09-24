@@ -6,7 +6,7 @@ export type ScalarArgumentGuard = (
   fn: Expression_ScalarFunction,
   types: readonly Type[]
 ) => boolean;
-const valuesOnly = (fn: Expression_ScalarFunction) =>
+const valuesOnly = (fn: Expression_ScalarFunction): boolean =>
   fn.arguments.every((arg) => arg.argType.case === 'value');
 export const sameType =
   (kind: 'string' | 'bool'): ScalarArgumentGuard =>
