@@ -27,7 +27,6 @@ canonical presentation truth for the Canvas route.
 - [Canvas Component Map And Modernization Review](./canvas-component-map-and-modernization-review.md)
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Graph Frontend Architecture](./graph-frontend-architecture.md)
-- [TF-E2 Canvas Target Architecture Execution Plan 2026-04-17](../../../../planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md)
 
 ## Reading rule
 

@@ -30,7 +30,6 @@ The goal is structural hardening, not a second contract redesign.
 - [ADR-0018](../../../../adr/ADR-0018_Shared_Kernel_Ownership_Governance.md)
 - [ADR-0035](../../../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)
 - [Reference Architecture](../../../../architecture/reference-architecture.md)
-- [Transformation Flow Delivery Plan 2026-04-05](./transformation-flow-delivery-plan-20260405.md)
 - [Transformation flow preview and design graph v1](../../../../contracts/planner/transformation-flow-preview-v1.md)
 - [Transformation flow compiler mapping v1](../../../../contracts/planner/transformation-flow-compiler-v1.md)
 

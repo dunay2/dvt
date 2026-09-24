@@ -15,10 +15,7 @@ const BOUNDARY_USER_STORIES = join(
   REPO_ROOT,
   'docs/architecture/components/engine/architecture/workflow-engine-boundary-ownership-user-stories.md'
 );
-const FOWLER_REVIEW = join(
-  REPO_ROOT,
-  'docs/planning/reviews/architecture-and-governance/20260429-we-hx-1-fowler-architecture-review.md'
-);
+
 const API_STORED_PLAN_PORT = join(REPO_ROOT, 'apps/api/src/application/ports/storedPlan.ts');
 const ARTIFACTS_STORED_PLAN_PORT = join(
   REPO_ROOT,
@@ -66,7 +63,6 @@ describe('WorkflowEngine boundary ownership architecture', () => {
   it('documents the external ownership map with public API, invariants, transitions, consumers, user stories, and diagrams', () => {
     expect(existsSync(BOUNDARY_COMPONENT_GUIDE)).toBe(true);
     expect(existsSync(BOUNDARY_USER_STORIES)).toBe(true);
-    expect(existsSync(FOWLER_REVIEW)).toBe(true);
 
     const guide = readFileSync(BOUNDARY_COMPONENT_GUIDE, 'utf8');
     for (const heading of [
@@ -99,18 +95,6 @@ describe('WorkflowEngine boundary ownership architecture', () => {
     }
     expect(stories).toContain('## Negative Scenarios');
     expect(stories).toContain('## Scenario Coverage Matrix');
-
-    const review = readFileSync(FOWLER_REVIEW, 'utf8');
-    for (const section of [
-      '## Fowler Architecture Analysis',
-      '## Mature-System Comparison',
-      '## Antipatterns And Fixes',
-      '## Repetitions And Drift',
-      '## Patterns Applied',
-      '## Future Lessons',
-    ]) {
-      expect(review).toContain(section);
-    }
   });
 
   it('keeps owned-concern docblocks on the boundary modules touched by the slice', () => {

@@ -29,7 +29,6 @@ flows, and operational lifecycle governance.
 
 ## Active Planning Inputs
 
-- [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
 - [CI Retention Review Canon Plan 2026-05-23](../proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md)
 
 ## Relevant Reviews And Closeouts

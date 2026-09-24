@@ -104,6 +104,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Graph-authored dbt artifacts can diverge during publication](R-20260729-GRAPH-DBT-ATOMIC-PUBLICATION.yaml)
 - [Heterogeneous plan projection can drift across authoring and runtime plugins](R-20260805-HET1-PUBLIC-VERTICAL.yaml)
 - [Historical compile-boundary language could leak back into active contracts and route seams](R-20260419-PLAN-COMPILE-LANGUAGE-DRIFT.yaml)
+- [Historical document retirement could hide a live validation obligation](r-20260924-historical-document-test-consumers.yaml)
 - [HTTP artifact acquisition can cross network or evidence boundaries](R-20260805-HET2-PUBLIC-VERTICAL.yaml)
 - [Identifier-derived consumers could misbind opaque semantic identities](R-20260906-OPAQUE-DVT-AUTHORING-IDENTITY.yaml)
 - [Imported dbt sources could bind ambiguously or create duplicate declarations](R-20260816-DBT-SOURCE-BINDING-DRIFT.yaml)

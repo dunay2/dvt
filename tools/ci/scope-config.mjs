@@ -305,7 +305,6 @@ const TEST_COVERAGE_PATTERNS = [
 const WEB_FRONTEND_TEST_GOVERNANCE_PATTERNS = [
   'docs/architecture/components/web/frontend-test-governance-*.md',
   'docs/architecture/components/web/index.md',
-  'buzon/20260518-f14-fowler-frontend-test-governance-analysis.md',
 ];
 
 const PR_QUALITY_ROOT_BUILD_PATTERNS = [

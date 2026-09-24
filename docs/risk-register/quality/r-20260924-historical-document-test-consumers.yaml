@@ -1,0 +1,22 @@
+---
+id: R-20260924-HISTORICAL-DOCUMENT-TEST-CONSUMERS
+title: Historical document retirement could hide a live validation obligation
+status: Open
+date: 2026-09-24
+owners:
+  - Architecture / Docs
+severity: Medium
+probability: Low
+description: >
+  Removing old report-presence assertions can accidentally remove a current behavioral or
+  architecture requirement. Operated evidence relationships and independent review have not been
+  accepted in this best-effort cut.
+mitigation: >
+  Preserve current contracts, component guides, user stories, evidence, risk records and all
+  feature-mechanization blocks. Keep each behavioral assertion; use current-owner assertions instead
+  of obsolete report headings. Validate touched package architecture tests, contracts, schema and
+  golden fixtures, CI-tool partitions and the normal prepush gate. Exercise individual restoration,
+  relocation and authority-reference negatives. Record operated reconciliation and independent
+  review in issue 3004 when actually executed; do not infer them from bootstrap CI or close this
+  risk merely on merge.
+---

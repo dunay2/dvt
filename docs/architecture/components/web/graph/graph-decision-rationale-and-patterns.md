@@ -78,6 +78,5 @@ Medium term:
 
 ## Canonical References
 
-- [TF-E2 Canvas Target Architecture Execution Plan](../../../../planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md)
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Canvas Component Map And Modernization Review](./canvas-component-map-and-modernization-review.md)
