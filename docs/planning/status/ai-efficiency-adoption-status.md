@@ -2,7 +2,7 @@
 title: AI Efficiency Adoption Status
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-04-01
+last_reviewed: 2026-09-24
 planning_type: status
 ---
 
@@ -16,7 +16,7 @@ Human-readable companion to the canonical machine-readable adoption log:
 
 - Initiative: `RC-C2`
 - Historical measurement baseline, not an operational playbook:
-  [20260328 Lane C AI Efficiency And Cost Review](https://github.com/dunay2/dvt/blob/1b07acde33300a19d97914eb719b262b44e79182/docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md)
+  [Historical AI efficiency measurement review](https://github.com/dunay2/dvt/blob/1b07acde33300a19d97914eb719b262b44e79182/docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md)
 - Canonical operational guide:
   [PR Preflight And CI Triage](../../guides/pr-preflight-and-ci-triage.md)
 
@@ -33,9 +33,9 @@ Human-readable companion to the canonical machine-readable adoption log:
 
 ## Current Window
 
-No qualifying post-rollout Lane C PR cycles have been logged yet.
+No qualifying post-rollout PR cycles have been logged yet.
 
-The task is not closed until the YAML log records 3 consecutive Lane C cycles
+The task is not closed until the YAML log records 3 consecutive PR cycles
 that satisfy the adoption and round-reduction rules.
 
 The mechanical closure check is:
@@ -50,7 +50,7 @@ Current result on 2026-05-22:
 0/3 qualifying consecutive cycles; RC-C2 must remain open.
 ```
 
-The 2026-05-22 reconciliation reviewed recent merged Lane C PRs and confirmed
+The [2026-05-22 reconciliation](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/status/ai-efficiency-adoption-status.md#current-window) confirmed
 that PR-level CI evidence exists, but the required interaction, tool-call, and
 avoidable-rerun measurements are not present in the canonical adoption log.
 Those PRs therefore cannot be recorded as qualifying cycles without inventing
@@ -60,7 +60,7 @@ measurement data.
 
 Each qualifying cycle must record:
 
-- lane and PR identity
+- PR identity
 - whether `hygiene.ps1` preflight was used
 - whether `pnpm verify:prepush` ran before push
 - whether first-red CI triage started with failed-job log extraction

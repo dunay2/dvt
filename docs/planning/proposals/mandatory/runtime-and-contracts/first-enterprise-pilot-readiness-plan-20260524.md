@@ -26,7 +26,7 @@ positioning work.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/planning/roadmap/strategic-product-roadmap.md`
-- `docs/planning/reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md`
+- [MVP-D1 Residual Risk Baseline Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md)
 
 ## Think-First Analysis
 
@@ -61,15 +61,15 @@ operator workflow.
 
 The pilot can start only when all entry criteria are true:
 
-| Criterion                        | Evidence source                                                                                                |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| MVP residual-risk baseline       | `docs/planning/reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md`         |
-| Operation-level RBAC             | `docs/planning/state/execution-workboard.md` task `RBAC at operation level`                                    |
-| Read-your-writes freshness       | `docs/planning/state/execution-workboard.md` task `read-your-writes contract`                                  |
-| Cost attribution usage facts     | `docs/planning/proposals/mandatory/runtime-and-contracts/cost-attribution-model-plan-20260524.md`              |
-| Projector queue invalidation     | `docs/planning/proposals/mandatory/runtime-and-contracts/projector-event-driven-invalidation-plan-20260524.md` |
-| Internal alpha route evidence    | `docs/planning/closeouts/20260514-f27-alpha-route-acceptance-matrix-closeout.md`                               |
-| Explicit pilot owner and cadence | Named in CRM or customer-facing record outside the repository before the POC begins                            |
+| Criterion                        | Evidence source                                                                                                                                                                                                          |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| MVP residual-risk baseline       | [MVP-D1 Residual Risk Baseline Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md) |
+| Operation-level RBAC             | `docs/planning/state/execution-workboard.md` task `RBAC at operation level`                                                                                                                                              |
+| Read-your-writes freshness       | `docs/planning/state/execution-workboard.md` task `read-your-writes contract`                                                                                                                                            |
+| Cost attribution usage facts     | `docs/planning/proposals/mandatory/runtime-and-contracts/cost-attribution-model-plan-20260524.md`                                                                                                                        |
+| Projector queue invalidation     | `docs/planning/proposals/mandatory/runtime-and-contracts/projector-event-driven-invalidation-plan-20260524.md`                                                                                                           |
+| Internal alpha route evidence    | `docs/planning/closeouts/20260514-f27-alpha-route-acceptance-matrix-closeout.md`                                                                                                                                         |
+| Explicit pilot owner and cadence | Named in CRM or customer-facing record outside the repository before the POC begins                                                                                                                                      |
 
 ## POC Structure
 

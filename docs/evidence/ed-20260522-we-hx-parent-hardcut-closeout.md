@@ -9,7 +9,7 @@ breaking: false
 code_refs:
   - packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts
   - docs/planning/state/agent-lane-a.yaml
-  - docs/planning/closeouts/20260522-we-hx-parent-hardcut-closeout.md
+  - https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260522-we-hx-parent-hardcut-closeout.md
 evidence:
   tests:
     - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts test/architecture/workflowEngineFacadeUseCases.architecture.test.ts test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts test/architecture/workflowEngineBoundaryFitness.architecture.test.ts

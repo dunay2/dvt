@@ -22,7 +22,7 @@ record provenance, not content-addressed identity input.
 
 In scope:
 
-- close `AR-A5` in Lane A as verified;
+- record verified acceptance for `AR-A5` in its governing GitHub issue;
 - cite the planner, contracts, and engine evidence that already enforces the
   boundary;
 - keep generated governance fingerprints aligned.

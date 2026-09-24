@@ -97,28 +97,10 @@ flowchart LR
 
 ## Task Tracking Strategy
 
-To stop multiple agents from colliding on Markdown tables, lane work is tracked
-in YAML and rendered into Markdown views.
-
-Canonical sources:
-
-- `docs/planning/state/agent-lane-a.yaml`
-- `docs/planning/state/agent-lane-b.yaml`
-- `docs/planning/state/agent-lane-c.yaml`
-- `docs/planning/state/agent-lane-d.yaml`
-
-Rendered views:
-
-- `docs/planning/state/agent-lane-a.md`
-- `docs/planning/state/agent-lane-b.md`
-- `docs/planning/state/agent-lane-c.md`
-- `docs/planning/state/agent-lane-d.md`
-
-The rule is simple:
-
-1. edit the lane YAML, not the rendered Markdown table;
-2. run `pnpm docs:sync`;
-3. let the generated views and the global planning surfaces stay in sync.
+Record task identity, priority, status, blockers and acceptance in the governing
+GitHub issue. Keep durable architecture in its governed sources and refresh
+documentation indexes when those sources change. Do not maintain a parallel
+local task registry.
 
 ## Why This Is Not "More DDD"
 

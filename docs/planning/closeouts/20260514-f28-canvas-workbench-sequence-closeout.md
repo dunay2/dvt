@@ -40,7 +40,7 @@ protected draft authority.
 - `F-28-B` is done and records the Stage 2 automatic-save browser proof without
   introducing a manual Save command.
 - `F-28-C` is done and accepted in
-  [F28C Canvas Project Snapshot Roundtrip Closeout](./20260511-f28c-project-snapshot-roundtrip-closeout.md).
+  [F28C Canvas Project Snapshot Roundtrip Closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260511-f28c-project-snapshot-roundtrip-closeout.md).
 - The workboard already reports `F-28-C` as `done`, so this closeout reconciles
   the parent task state with the closed child sequence instead of adding new
   product behavior.

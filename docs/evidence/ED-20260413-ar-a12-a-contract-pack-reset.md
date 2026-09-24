@@ -16,7 +16,7 @@ code_refs:
   - packages/@dvt/engine/test/idempotency.vectors.test.ts
   - docs/architecture/components/engine/contracts/security/AuditLog.v1.md
   - scripts/generate-contract-index.cjs
-  - docs/planning/closeouts/20260413-ar-a12-a-contract-pack-reset-closeout.md
+  - https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260413-ar-a12-a-contract-pack-reset-closeout.md
 evidence:
   tests:
     - pnpm docs:sync

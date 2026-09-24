@@ -232,5 +232,4 @@ Blockers:
 ## Next Documents To Update
 
 - `docs/planning/state/planning-control-tower.md`
-- `docs/planning/state/agent-lane-*.yaml`
 - [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md) after review artifacts are produced

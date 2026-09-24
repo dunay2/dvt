@@ -6,7 +6,6 @@ last_reviewed: 2026-06-03
 owners:
   - apps/web
 planning_type: proposal
-lane: E
 ---
 
 # Authoring Graph Lab Roadmap Plan

@@ -28,7 +28,7 @@ That seam is not a one-off bug. It is a boundary-ownership problem.
 - [ADR-0005](../../adr/ADR-0005-contract-formalization-tooling.md)
 - [ADR-0006](../../adr/ADR-0006-contract-tooling-governance.md)
 - [Run Events Contract v1](../../architecture/components/engine/contracts/engine/RunEvents.v1.md)
-- [TF-C2-B read-surface evidence closeout](../closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md)
+- [TF-C2-B read-surface evidence closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md)
 - [TF-C2-B runtime read-surface evidence](../../evidence/ED-20260408-tf-c2-b-read-surface-evidence.md)
 - [RunStateVocabulary.v1.ts](../../../packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts)
 - [applyRunEvent.ts](../../../packages/@dvt/run-domain/src/applyRunEvent.ts)

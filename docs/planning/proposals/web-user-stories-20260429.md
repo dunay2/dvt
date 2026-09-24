@@ -920,4 +920,4 @@ drift anterior: no todo lo que consume la UI tiene ruta backend verificada todav
   `Gap`, `Drift/gap` o `Parcial` sin una decisión explícita de alcance.
 - Las historias marcadas con dependencia en gaps arquitecturales (R13 cost attribution, R15
   ownership validation) deben coordinarse con el plan de hardening del review
-  `20260429-dvt-plus-principal-deep-review-april-2026.md`.
+  [DVT+ Principal Architect Deep Review — April 2026](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260429-dvt-plus-principal-deep-review-april-2026.md).

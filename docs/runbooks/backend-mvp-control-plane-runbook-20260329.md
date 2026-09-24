@@ -280,7 +280,7 @@ Out of scope for this runbook:
 - scale-tuning and sharding procedures
 - retention and partition operations
 
-Use dedicated lane-D runbooks/procedures when those slices are promoted.
+Use the dedicated operational runbooks/procedures when those slices are promoted.
 
 ## Distributed consistency reference
 

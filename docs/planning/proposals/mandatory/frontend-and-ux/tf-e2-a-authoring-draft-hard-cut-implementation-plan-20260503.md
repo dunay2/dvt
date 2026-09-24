@@ -4,7 +4,6 @@ status: Accepted
 owner: Frontend / Architecture / Product
 last_reviewed: 2026-05-03
 planning_type: proposal
-lane: E
 task_ids:
   - TF-E2-A
 ---
@@ -43,7 +42,6 @@ authoring modules, and repository feature-mechanization guards.
 - `docs/architecture/components/planner/workspace-authoring-draft-aggregate.md`
 - `apps/api/docs/workspace-graph-draft-application-component.md`
 - `docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md`
-- `docs/planning/state/agent-lane-e.yaml`
 
 ## Review Result For Steps 1 And 2
 
@@ -272,8 +270,6 @@ flowchart LR
 - `docs/planning/closeouts/index.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md`
 - `docs/planning/proposals/portfolio-map-20260403.md`
-- `docs/planning/state/agent-lane-e.md`
-- `docs/planning/state/agent-lane-e.yaml`
 - `docs/planning/state/execution-workboard.md`
 - [Task: E-PROP-DISP-1] `docs/planning/state/open-task-route.md`
 - `docs/planning/status/generated-code-state.md`
@@ -479,17 +475,15 @@ out of scope.
       responder is allowed only as a call recorder or UI-flow response; it must not
       seed the draft without a user action.
 
-### Task 7: Close Docs, Lane, And Generated State
+### Task 7: Close Docs, Issue Evidence, And Generated State
 
 - [ ] Update this plan from `Proposed` to `Accepted`.
 - [ ] Update
       `docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md`
       from `Proposed` to `Active`.
-- [ ] Update `docs/planning/state/agent-lane-e.yaml` for `TF-E2-A`.
+- [ ] Record status and evidence in the governing GitHub issue for `TF-E2-A`.
 - [ ] Run:
       `pnpm docs:sync`
-- [ ] Run:
-      `pnpm docs:workboard:generate`
 - [ ] Run:
       `pnpm docs:status:generate`
 - [ ] Run:
@@ -528,7 +522,7 @@ must rely on a named CI or live-proof check before the task can be marked done.
 ## Planning Mechanization Manifest
 
 This manifest closes the design-and-planning slice only. It does not mark the
-`TF-E2-A` implementation complete; it makes the current documentation, lane
+`TF-E2-A` implementation complete; it makes the current documentation, task
 state, Fowler review, generated governance files, and allowed implementation
 surfaces mechanically checkable before code changes begin.
 

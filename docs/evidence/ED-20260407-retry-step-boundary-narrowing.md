@@ -19,7 +19,7 @@ code_refs:
   - packages/@dvt/contracts/test/validation.test.ts
   - packages/@dvt/contracts/test/signalSemantics.test.ts
   - docs/adr/ADR-0048-retry-step-as-separate-engine-use-case.md
-  - docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-and-use-case-review.md
+  - https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-and-use-case-review.md
 evidence:
   tests:
     - pnpm --filter @dvt/contracts build

@@ -4,7 +4,6 @@ status: Proposed
 owner: Product / Architecture / API / Web
 last_reviewed: 2026-04-05
 planning_type: proposal
-lane: E
 task_id: F-22
 ---
 

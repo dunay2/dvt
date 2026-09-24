@@ -72,10 +72,10 @@ Do not use these as active operational posture:
 
 ## Next closure path
 
-The remaining operational closure is already tracked in Lane C:
+The remaining operational closure is tracked in the governing GitHub issues:
 
 1. dashboard wiring evidence (`AR-C2-T2`)
 2. alert wiring evidence (`AR-C2-T3`)
 3. sustained threshold validation evidence (`AR-C2-T4`)
 
-Use Lane C, not this page, to decide whether the SLO program is closed.
+Use those GitHub issues, not this page, to decide whether the SLO program is closed.

@@ -319,7 +319,7 @@ Required coverage:
 When the slice changes active planning posture:
 
 - update the relevant proposal or closeout
-- update the linked lane YAML task entry
+- record status and evidence in the governing GitHub issue
 - regenerate planning-derived views
 - sync docs indexes
 
