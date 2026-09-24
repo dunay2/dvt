@@ -1,18 +1,7 @@
-/** Owned concern: author and inspect one admitted FilterRel on a field projection. */
-import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
-import {
-  FilterRelSchema,
-  RelCommonSchema,
-  RelSchema,
-  type ProjectRel,
-} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+/** Read the existing projected Filter presentation; mutations belong to canvasSelectedRelationFilter. */
+import { fromBinary, toBinary } from '@bufbuild/protobuf';
+import type { ProjectRel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import {
-  DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
-  allocateDvtRelationId,
-  buildDvtSubstraitStandardCapabilityId,
-  type DvtSubstraitSemanticDocumentV1,
-} from '@dvt/contracts';
 
 import {
   inspectDvtSubstraitProjectionDraft,
@@ -22,13 +11,6 @@ import {
   dvtSubstraitTextComparison,
   type DvtSubstraitTextComparisonOperator,
 } from './canvasDvtSubstraitTextComparison';
-import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
-
-const FILTER_ID = buildDvtSubstraitStandardCapabilityId('relation', {
-  sourceKind: 'core',
-  message: 'substrait.FilterRel',
-});
-const STRING_TYPES = new Set(['text', 'string', 'varchar', 'character varying', 'char']);
 
 export type DvtSubstraitFilter = Readonly<{
   fieldId: string;
@@ -37,32 +19,6 @@ export type DvtSubstraitFilter = Readonly<{
   operator: DvtSubstraitTextComparisonOperator;
   value: string;
 }>;
-
-export function resolveDvtSubstraitFilterCapabilities(args: {
-  dataType: string;
-  provider: string;
-}): readonly Readonly<{
-  capabilityId: string;
-  name: DvtSubstraitTextComparisonOperator;
-}>[] {
-  const supported = new Set(
-    DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.flatMap((entry) =>
-      entry.kind === 'standard' && entry.profileStatus === 'supported-profile'
-        ? [entry.entryId]
-        : []
-    )
-  );
-  return args.provider === 'postgres' &&
-    STRING_TYPES.has(args.dataType.trim().toLowerCase()) &&
-    supported.has(FILTER_ID)
-    ? dvtSubstraitTextComparison.capabilities
-        .filter((capability) => supported.has(capability.capabilityId))
-        .map((capability) => ({
-          capabilityId: capability.capabilityId,
-          name: capability.operator,
-        }))
-    : [];
-}
 
 function clonePlan(plan: Plan): Plan {
   return fromBinary(PlanSchema, toBinary(PlanSchema, plan));
@@ -73,16 +29,6 @@ function rootProject(plan: Plan): ProjectRel | null {
   return root?.case === 'root' && root.value.input?.relType.case === 'project'
     ? root.value.input.relType.value
     : null;
-}
-
-function filterRelationId(draft: DvtSubstraitProjectionDraft): string | null {
-  const project = rootProject(draft.plan);
-  const filter = project?.input?.relType;
-  const anchor = filter?.case === 'filter' ? filter.value.common?.relAnchor : undefined;
-  return anchor == null
-    ? null
-    : (draft.sidecar.relations.find((relation) => relation.relAnchor === anchor)?.relationId ??
-        null);
 }
 
 function stripFilter(draft: DvtSubstraitProjectionDraft): Readonly<{
@@ -152,66 +98,4 @@ export function removeDvtSubstraitFilter(
   return stripped != null && inspectDvtSubstraitProjectionDraft(stripped.draft).ok
     ? stripped.draft
     : draft;
-}
-
-export function encodeDvtSubstraitFilterDocument(
-  draft: DvtSubstraitProjectionDraft
-): DvtSubstraitSemanticDocumentV1 {
-  if (inspectDvtSubstraitFilter(draft) == null) {
-    throw new Error('Substrait connected-source filter is invalid.');
-  }
-  return encodeDvtSubstraitSemanticDocument(draft);
-}
-
-export function applyDvtSubstraitFilter(
-  draft: DvtSubstraitProjectionDraft,
-  request: Readonly<{ fieldId: string; dataType: string; capabilityId: string; value: string }>
-): DvtSubstraitProjectionDraft {
-  const existingFilterRelationId = filterRelationId(draft);
-  const base = removeDvtSubstraitFilter(draft);
-  const inspection = inspectDvtSubstraitProjectionDraft(base);
-  if (!inspection.ok) return draft;
-  const output = inspection.projection.outputs.find((entry) => entry.fieldId === request.fieldId);
-  const sourceOrdinal = inspection.projection.inputFields.findIndex(
-    (field) => field.name === output?.sourceFieldName
-  );
-  const sourceField = inspection.projection.inputFields[sourceOrdinal];
-  const capability = resolveDvtSubstraitFilterCapabilities({
-    dataType: request.dataType,
-    provider: inspection.projection.source.sourceRef.connectionRef.provider,
-  }).find((candidate) => candidate.capabilityId === request.capabilityId);
-  if (output == null || sourceField == null || capability == null) return draft;
-  const plan = clonePlan(base.plan);
-  const project = rootProject(plan);
-  if (project?.input == null) return draft;
-  const anchor = Math.max(0, ...base.sidecar.relations.map((relation) => relation.relAnchor)) + 1;
-  project.input = create(RelSchema, {
-    relType: {
-      case: 'filter',
-      value: create(FilterRelSchema, {
-        common: create(RelCommonSchema, { relAnchor: anchor }),
-        input: project.input,
-        condition: dvtSubstraitTextComparison.create(
-          plan,
-          capability.name,
-          sourceOrdinal,
-          request.value
-        ),
-      }),
-    },
-  });
-  return {
-    plan,
-    sidecar: {
-      ...base.sidecar,
-      relations: [
-        ...base.sidecar.relations,
-        {
-          relationId: existingFilterRelationId ?? allocateDvtRelationId(),
-          relAnchor: anchor,
-          displayName: 'filter',
-        },
-      ],
-    },
-  };
 }

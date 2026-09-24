@@ -1,11 +1,10 @@
+import { encodeDvtSubstraitSemanticDocument } from '../../views/canvas/canvasDvtSubstraitSemanticDocument';
+import { filterProjectionInputFixture } from '../../views/canvas/canvasFilterProjection.test-support';
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
-import {
-  applyDvtSubstraitFilter,
-  encodeDvtSubstraitFilterDocument,
-  resolveDvtSubstraitFilterCapabilities,
-} from '../../views/canvas/canvasDvtSubstraitFilter';
+import { resolveDvtSubstraitFilterCapabilities } from '../../views/canvas/canvasFilterCapabilities';
+
 import {
   createDvtSubstraitProjectionDraft,
   resolveDvtSubstraitProjectionSource,
@@ -13,7 +12,7 @@ import {
 import { applyDvtSubstraitSemanticDocument } from '../../views/canvas/canvasDvtTransformAuthoringAuthority';
 import { buildDvtGraphNodeSemanticMetric } from './dvtGraphNodeSemanticMetric';
 
-function filteredSource(): CanonicalNode {
+async function filteredSource(): Promise<CanonicalNode> {
   const source: CanonicalNode = {
     id: 'source-orders',
     name: 'orders',
@@ -38,12 +37,9 @@ function filteredSource(): CanonicalNode {
     },
   };
   const resolved = resolveDvtSubstraitProjectionSource(source);
-  const capability = resolveDvtSubstraitFilterCapabilities({
-    dataType: 'text',
-    provider: 'postgres',
-  })[0];
+  const capability = resolveDvtSubstraitFilterCapabilities({ dataType: 'text' })[0];
   if (resolved == null || capability == null) throw new Error('Expected admitted fixtures.');
-  const draft = applyDvtSubstraitFilter(
+  const draft = await filterProjectionInputFixture(
     createDvtSubstraitProjectionDraft({
       source: resolved,
       targetNodeId: source.id,
@@ -56,16 +52,16 @@ function filteredSource(): CanonicalNode {
       value: 'Ada',
     }
   );
-  return applyDvtSubstraitSemanticDocument(source, encodeDvtSubstraitFilterDocument(draft));
+  return applyDvtSubstraitSemanticDocument(source, encodeDvtSubstraitSemanticDocument(draft));
 }
 
 describe('DVT graph node semantic metric', () => {
-  it('does not project a legacy Source FilterRel as card state', () => {
-    expect(buildDvtGraphNodeSemanticMetric(filteredSource(), 'es')).toBeNull();
+  it('does not project a legacy Source FilterRel as card state', async () => {
+    expect(buildDvtGraphNodeSemanticMetric(await filteredSource(), 'es')).toBeNull();
   });
 
-  it('projects an admitted Transform FilterRel as a localized card summary', () => {
-    const source = filteredSource();
+  it('projects an admitted Transform FilterRel as a localized card summary', async () => {
+    const source = await filteredSource();
     expect(
       buildDvtGraphNodeSemanticMetric(
         { ...source, pluginId: 'dvt', kind: 'dvt:transform', role: 'transform' },
@@ -78,10 +74,13 @@ describe('DVT graph node semantic metric', () => {
     });
   });
 
-  it('omits the metric when no filter authority exists', () => {
+  it('omits the metric when no filter authority exists', async () => {
     expect(
       buildDvtGraphNodeSemanticMetric(
-        { ...filteredSource(), metadata: { columns: [{ name: 'customer', type: 'text' }] } },
+        {
+          ...(await filteredSource()),
+          metadata: { columns: [{ name: 'customer', type: 'text' }] },
+        },
         'es'
       )
     ).toBeNull();

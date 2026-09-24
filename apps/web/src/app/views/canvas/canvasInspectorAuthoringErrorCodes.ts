@@ -21,6 +21,7 @@ export type CanvasInspectorNodeDraftErrorCode =
   | 'dvt_table_required'
   | 'dvt_alias_required'
   | 'dvt_alias_duplicate'
+  | 'dvt_semantic_field_invalid'
   | 'dvt_identifier_invalid'
   | 'dvt_identifier_too_long'
   | 'dvt_identifier_whitespace'

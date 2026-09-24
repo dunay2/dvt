@@ -1,3 +1,4 @@
+import { filterProjectionInputFixture } from './canvasFilterProjection.test-support';
 import { create } from '@bufbuild/protobuf';
 import {
   RelCommonSchema,
@@ -7,11 +8,8 @@ import {
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
-import {
-  applyDvtSubstraitFilter,
-  encodeDvtSubstraitFilterDocument,
-  resolveDvtSubstraitFilterCapabilities,
-} from './canvasDvtSubstraitFilter';
+import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
+
 import {
   createDvtSubstraitPilotDraft,
   encodeDvtSubstraitPilotDocument,
@@ -71,7 +69,7 @@ const orders: CanonicalNode = {
 };
 
 describe('ProjectCanvasRelationalTree admitted shapes', () => {
-  it('preserves ProjectRel and FilterRel while delegating the scalar tree', () => {
+  it('preserves ProjectRel and FilterRel while delegating the scalar tree', async () => {
     const resolved = resolveDvtSubstraitProjectionSource(orders);
     if (resolved == null) throw new Error('Expected an admitted projection source.');
     const base = createDvtSubstraitProjectionDraft({
@@ -83,12 +81,9 @@ describe('ProjectCanvasRelationalTree admitted shapes', () => {
         sourceFieldName: field.name,
       })),
     });
-    const capability = resolveDvtSubstraitFilterCapabilities({
-      dataType: 'string',
-      provider: 'postgres',
-    })[0];
+    const capability = resolveDvtSubstraitFilterCapabilities({ dataType: 'string' })[0];
     if (capability == null) throw new Error('Expected filter authority.');
-    const filtered = applyDvtSubstraitFilter(base, {
+    const filtered = await filterProjectionInputFixture(base, {
       fieldId: 'output:customer',
       dataType: 'string',
       capabilityId: capability.capabilityId,
@@ -96,7 +91,7 @@ describe('ProjectCanvasRelationalTree admitted shapes', () => {
     });
     const transform = applyDvtSubstraitSemanticDocument(
       targetNode(),
-      encodeDvtSubstraitFilterDocument(filtered)
+      encodeDvtSubstraitSemanticDocument(filtered)
     );
     const result = projectCanvasRelationalTree({
       node: transform,

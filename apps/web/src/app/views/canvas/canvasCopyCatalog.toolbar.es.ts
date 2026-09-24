@@ -3,6 +3,7 @@ import type { CanvasViewCopy } from './canvasCopy.types';
 
 export const canvasViewToolbarCopyEs = {
   dependencyAddedMessage: 'Dependencia añadida',
+  dependencyCreationFailedMessage: 'La conexión ha fallado. Revisa el modelo e inténtalo de nuevo.',
   layoutAppliedMessage: 'Layout aplicado',
   toolbarWorkflowRecoveryLabel: 'Recuperación',
   toolbarWorkflowReadOnlyLabel: 'Solo lectura',

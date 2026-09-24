@@ -12,6 +12,9 @@ code_refs:
   - packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringFieldPolicy.v1.ts
   - packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts
+  - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanFieldPolicy.v1.ts
+  - packages/@dvt/substrait-analysis/src/relationChangeSet.ts
+  - packages/@dvt/postgres-projection/src/relationalSql/project.ts
   - apps/api/src/infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.ts
   - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts
 evidence:
@@ -80,3 +83,140 @@ authority both return HTTP 400, with unchanged stored draft and revision.
 Ordinary Canvas selection still opens the semantic tree; Preview displays
 `MISSING_CAPABILITY executor.dvt-postgres-operational-workload` with Run disabled.
 This proves validation/persistence, not native provider execution or publication.
+
+## Neutral semantic names and target admission — 2026-09-24
+
+The #3263 / RELINC1 convergence removes the PostgreSQL identifier budget from
+semantic field/root display names. The contract owns their limit of 256 Unicode
+code points, rejects malformed names instead of trimming, and the PostgreSQL
+draft store enforces the same character budget. Physical database identifiers
+and generated PostgreSQL output names retain the target's 63-byte limit. A valid
+semantic draft can therefore be unavailable for that target without being corrupt.
+
+The implementation follows the boundary correction in
+[PCV1](../planning/proposals/mandatory/runtime-and-contracts/pcv1-canvas-authoring-field-budgets-3019-20260908.md)
+and the pre-implementation
+[convergence journal](https://github.com/dunay2/dvt/issues/3263#issuecomment-5814426257).
+Roll out contracts, Web and API together. No stored document is rewritten, no
+wire version is invented, and no compatibility reader is retained. Older readers
+may reject newly admitted long semantic names; this is an explicit hard cut.
+
+Verified during this cut: the contract suite passed 669 tests; real PostgreSQL
+semantic persistence passed all seven cases, including direct-write rejection
+and unchanged persisted authority after rejection. The neutral analysis and
+PostgreSQL target suites passed 327 tests together. Target tests distinguish
+Unicode character budgets from UTF-8 identifier bytes and preserve fail-closed
+physical-source validation.
+
+The Web SQL boundary now calls the shared PostgreSQL target, after verifying the
+selected graph's source and upstream-document bindings. The four shape-specific
+Web SQL renderers were removed. Nullable CONCAT uses PostgreSQL concatenation
+with Substrait's null propagation; UTC-year projection is independent of the
+database session timezone. Real PostgreSQL scalar and compositional integration
+tests passed all 18 cases. This is projection/sample evidence, not operational
+Run/publication or completion of every Canvas presentation reader.
+
+Current implementation and behavioral evidence:
+
+- `apps/web/src/app/views/canvas/canvasDvtSubstraitOutputProjection.ts`
+- `apps/web/src/app/views/canvas/canvasSubstraitGraphBindings.ts`
+- `packages/@dvt/postgres-projection/src/relationalSql/scalarBindings.ts`
+- `packages/@dvt/postgres-projection/test/relationalSqlNames.test.ts`
+- `apps/api/test/integration/dvtScalarSql.integration.test.ts`
+- `apps/api/test/integration/workspaceGraphDraftSemanticPersistence.test.ts`
+
+The `code_refs` of the earlier SQL evidence and the affected open risk entries
+now point to the shared target and focused replacement tests. Their original
+dated execution commands remain historical evidence, not claims that a deleted
+test still runs. Existing proposal snapshots are not the current mechanization
+authority: Planning DB records the implemented ConfigureCanvasDvtNode and
+PreviewExecutionPlan rails for GH-3263-SELECTED-RELATION-FILTER.
+
+Selected-filter browser proof passed both controlled-boundary cases (left/right
+insert, Apply, reload, edit, remove, no implicit sample or Run) and the real
+protected-API/PostgreSQL case (filter both operands, save/reload, explicit sample,
+LEFT JOIN unmatched rows and matching semantic-plan hash):
+
+```text
+pnpm --filter @dvt/web test:e2e:native --spec cypress/e2e/canvas/canvas-selected-relation-filter.cy.ts
+DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME=native pnpm --filter @dvt/web test:e2e:selected-closure:live --spec apps/web/cypress/e2e/canvas/canvas-selected-filter-live.cy.ts
+```
+
+An additional RED/GREEN component proof holds the schema query pending, then
+unmounts the editor or removes edit permission. Both cases now cancel removal
+without advancing the document revision; normal completion still applies once.
+No global invalidation workaround, stub, alternate authority or rule relaxation
+was introduced. The cache's hot relation queries are incremental; the existing
+Apply/document export boundary still materializes and hashes the whole document.
+That boundary and legacy column-presentation readers are not declared converged.
+
+The approved #3369 presentation migration first closes a neutral-analysis gap:
+struct constructors, nested field selections and flattened schema names now
+preserve hierarchical types and per-child value dependencies. SET merges child
+dependencies from every operand; selection through a null-extended JOIN parent
+is nullable without changing the stored child type. Cached schema facts use a
+new internal key version; no stored semantic document or public hash changes.
+RED reproduced rejected struct schemas and lost right-hand SET dependencies.
+GREEN: `pnpm --filter @dvt/substrait-analysis test` passed 98 tests and
+`pnpm --filter @dvt/postgres-projection test` passed 236. These are prerequisite
+package checks, not evidence that the external Canvas consumer is migrated.
+
+## Canvas field consumers and controller separation — 2026-09-24
+
+The [approved consumer cut](https://github.com/dunay2/dvt/issues/3369#issuecomment-5817197666)
+now projects external cards, the inspector and column lineage from the shared
+Substrait analysis. Shape-specific presentation branches and the redundant
+structured-field presentation/lineage adapters are removed. Types, nullability,
+nested fields and multi-input dependencies come from canonical schema facts;
+PostgreSQL admission remains a separate, explicit projection.
+
+The [controller design journal](https://github.com/dunay2/dvt/issues/3369#issuecomment-5817924201)
+separates card actions, column actions, composition, lineage and transient geometry.
+The read-model contract no longer selects a long list from the producer hook's
+return type. Its tests are split by behavior; source-text implementation recipes
+are removed where command, permission and identity tests already prove the intent.
+The viewport also separates card projection from state synchronization and reuses
+its computed edge projection rather than computing it twice.
+
+One bounded schema cache is shared by a consumer's sessions through the existing
+`RelationAnalysisCache` interface. Independent Canvas inputs are scheduled once
+per batch, in dependency order. Geometry-only frames reuse semantic inputs and
+results. Replacement, cancellation and unmount cannot publish obsolete results;
+pending edge commands recheck draft, catalog and edit permission before mutation.
+Receiving a complete document still indexes/hashes that document: this is not a
+claim that whole-document receipt or every authoring reader is incremental.
+
+The cache regression was RED with two relations reanalyzed after replacement,
+then GREEN with zero analysis and identical fields/bindings. The complete Web unit
+suite passed 2,164 cases; the additional cache and selected-operand card assertions
+passed six focused cases. The controller split preserved all 18 behavior cases.
+Connection routing and lifetime checks passed 24 cases. Web typecheck passed.
+
+Both browser commands above were rerun for this consumer cut. The controlled
+suite passed 2/2 and the protected PostgreSQL suite passed 1/1, without skips.
+They now assert the external card's output columns before editing and after
+Apply/reload, not just the internal relation tree. The live sample preserves
+LEFT JOIN unmatched rows, canonical field order and the exact saved plan hash.
+No implicit sample or operational Run was introduced.
+
+These results are scope evidence; the complete presentation/architecture suites,
+hook-normalized formatting and pre-push gate remain required before integration.
+
+The complete Web primary suites passed in [CI for PR #3405](https://github.com/dunay2/dvt/actions/runs/36036015693).
+The earlier complete local presentation runs hit the existing five-second test
+budget under parallel load; their affected cases passed together under the
+existing serial CI configuration. No timeouts or checks were relaxed.
+
+[PR review corrections](https://github.com/dunay2/dvt/issues/3369#issuecomment-5819285162)
+preserve the inspector's Project(Filter(input)) placement by passing its exact
+input RelationId to the shared Filter command. Reopening edits that Filter rather
+than inserting another. A pending second incoming node blocks the old projection
+form until composition is resolved; unrelated edges and read-only permissions
+retain their own behavior. Both reported failures were reproduced before fixing
+the adapter. All 24 focused component cases passed, including apply/reopen/edit/
+remove with stable bindings, pending-composition transitions and selected-relation
+editing. The source-filter inspector and selected-left/right Cypress proofs passed
+all three cases; the source-filter proof now uses the shared form's visible controls.
+The contract traceability header and generated manifest also pass
+`pnpm traceability:adr0`. These corrections remain subject to the final committed
+pre-push and PR checks.

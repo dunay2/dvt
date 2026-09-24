@@ -314,13 +314,12 @@ describe('Canvas authoring field policy v1', () => {
     expect(
       DvtSubstraitFieldBindingV1Schema.safeParse({
         ...base,
-        displayName: 'a'.repeat(59) + '😀',
+        displayName: '😀'.repeat(256),
         description: 'a'.repeat(4095) + '😀',
       }).success
     ).toBe(true);
     expect(
-      DvtSubstraitFieldBindingV1Schema.safeParse({ ...base, displayName: 'a'.repeat(60) + '😀' })
-        .success
+      DvtSubstraitFieldBindingV1Schema.safeParse({ ...base, displayName: '😀'.repeat(257) }).success
     ).toBe(false);
     expect(
       DvtSubstraitFieldBindingV1Schema.safeParse({
@@ -329,4 +328,13 @@ describe('Canvas authoring field policy v1', () => {
       }).success
     ).toBe(false);
   });
+
+  it.each(['', ' name', 'name ', 'bad\u0000name', '\ud800'])(
+    'rejects malformed semantic field names without normalization',
+    (displayName) => {
+      const field = { fieldId: 'field:1', relationId: 'relation:1', outputOrdinal: 0, displayName };
+      expect(DvtSubstraitFieldBindingV1Schema.safeParse(field).success).toBe(false);
+      expect(field.displayName).toBe(displayName);
+    }
+  );
 });

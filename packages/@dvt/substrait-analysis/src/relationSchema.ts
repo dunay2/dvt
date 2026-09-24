@@ -6,6 +6,7 @@ import {
   type IndexedRelation,
 } from './relationIndex.js';
 import { readRelationStructure } from './relationStructure.js';
+import { bindSchemaFields, schemaNameCount } from './schemaHierarchy.js';
 import { deriveOperatorSchema } from './schemaOperators.js';
 import { invalidSchema, schemaFieldAt, type SchemaField } from './schemaTypes.js';
 
@@ -25,8 +26,7 @@ export function deriveRelationSchema(
       common?.emitKind.case === 'emit'
         ? common.emitKind.value.outputMapping.map((ordinal) => schemaFieldAt(derived, ordinal))
         : derived;
-    if (entry.fields.some((field) => outputs[field.outputOrdinal] == null))
-      return invalidSchema('A field binding is outside its relation output schema.');
+    bindSchemaFields(outputs, entry.fields);
     return outputs;
   } catch (error) {
     if (!(error instanceof SubstraitAnalysisError)) throw error;
@@ -50,7 +50,11 @@ export function deriveSubstraitSchemas(document: SubstraitDocument): SubstraitSc
     );
   }
   const root = document.plan.relations[0]!.relType;
-  if (root.case !== 'root' || root.value.names.length !== schemas.get(index.rootId)!.length) {
+  if (
+    root.case !== 'root' ||
+    root.value.names.length !==
+      schemaNameCount(schemas.get(index.rootId)!.map((field) => field.type))
+  ) {
     return invalidSchema('Root names do not match the derived output width.');
   }
   return { index, schemas };

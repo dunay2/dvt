@@ -7,8 +7,6 @@ const { sha256Hex } = require('@dvt/crypto');
 
 const { allocateFreePort } = require('./run-dev-stack.temporal.cjs');
 
-const MINIO_IMAGE =
-  'quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e';
 const MINIO_ACCESS_KEY_ID = 'minioadmin';
 const MINIO_SECRET_ACCESS_KEY = 'minioadmin';
 const S3_REGION = 'us-east-1';
@@ -59,7 +57,7 @@ function validateObjectFileFixture(content, manifest) {
   return manifest;
 }
 
-function buildMinioDockerArgs({ containerName, port, accessKeyId, secretAccessKey }) {
+function buildMinioDockerArgs({ image, containerName, port, accessKeyId, secretAccessKey }) {
   return [
     'run',
     '--detach',
@@ -72,7 +70,7 @@ function buildMinioDockerArgs({ containerName, port, accessKeyId, secretAccessKe
     `MINIO_ROOT_USER=${accessKeyId}`,
     '--env',
     `MINIO_ROOT_PASSWORD=${secretAccessKey}`,
-    MINIO_IMAGE,
+    image,
     'server',
     '/data',
     '--console-address',
@@ -243,9 +241,11 @@ async function main() {
   let minioStarted = false;
 
   try {
+    const image = runDocker(['build', '--quiet', 'infra/minio-test']);
     console.log(`[het1-public-live] Starting pinned MinIO at ${endpoint}`);
     runDocker(
       buildMinioDockerArgs({
+        image,
         containerName,
         port,
         accessKeyId: MINIO_ACCESS_KEY_ID,

@@ -192,6 +192,7 @@ export {
   CanvasTagV1Schema,
   CanvasTagsV1Schema,
   DvtStringLiteralV1Schema,
+  DvtSemanticFieldNameV1Schema,
   DvtTimestampLiteralV1Schema,
   PostgresIdentifierV1Schema,
   countUnicodeCodePoints,

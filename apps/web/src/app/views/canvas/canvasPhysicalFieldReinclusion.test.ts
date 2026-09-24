@@ -238,11 +238,11 @@ describe('physical field reinclusion beside calculations', () => {
 
   it.each([false, true])(
     'keeps the physical input visible independently of expression lineage (literal: %s)',
-    (withLiteral) => {
+    async (withLiteral) => {
       const { source, hidden } = fixture(withLiteral);
       const model = hidden.localNodeCatalog!.model!;
       const before = JSON.stringify(model);
-      const truth = projectCanvasNodePresentationTruth({
+      const truth = await projectCanvasNodePresentationTruth({
         node: model,
         nodes: [source, model],
         edges: hidden.workingSet.visibleEdges,
@@ -264,9 +264,9 @@ describe('physical field reinclusion beside calculations', () => {
     }
   );
 
-  it('keeps a renamed passthrough selected without duplicating its physical input', () => {
+  it('keeps a renamed passthrough selected without duplicating its physical input', async () => {
     const { source, model, session } = fixture(false, 'customer_alias');
-    const truth = projectCanvasNodePresentationTruth({
+    const truth = await projectCanvasNodePresentationTruth({
       node: model,
       nodes: [source, model],
       edges: session.workingSet.visibleEdges,
@@ -287,7 +287,7 @@ describe('physical field reinclusion beside calculations', () => {
     'same-name-wrong-source',
     'invalid-placement',
     'invalid-document',
-  ])('rejects %s without changing the document', (scenario) => {
+  ])('rejects %s without changing the document', async (scenario) => {
     const { source, hidden, toggle } = fixture();
     const current = structuredClone(hidden);
     if (scenario === 'disconnected') current.workingSet.visibleEdges = [];
@@ -364,7 +364,7 @@ describe('physical field reinclusion beside calculations', () => {
     expect(result.outcome).toBe('rejected');
     expect(JSON.stringify(current)).toBe(before);
     if (scenario === 'same-name-wrong-source') {
-      const truth = projectCanvasNodePresentationTruth({
+      const truth = await projectCanvasNodePresentationTruth({
         node: current.localNodeCatalog!.model!,
         nodes: Object.values(current.localNodeCatalog!),
         edges: current.workingSet.visibleEdges,

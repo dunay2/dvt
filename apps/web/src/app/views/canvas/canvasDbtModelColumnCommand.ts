@@ -2,7 +2,7 @@
 import type { CanonicalNode } from '../../types/canonical';
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
-import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+import { readDbtModelAvailableColumnNames } from './canvasDbtModelColumns';
 import {
   reorderDbtModelProjectionColumn,
   setDbtModelProjectionColumnOutput,
@@ -29,11 +29,11 @@ export function configureDbtModelColumnOutput(args: {
     return { outcome: 'rejected', reason: 'not_generated_dbt_model' };
   }
   const nodes = [...nodeCatalog.values()];
-  const availableColumns = projectCanvasNodePresentationTruth({
-    node,
+  const availableColumns = readDbtModelAvailableColumnNames({
+    modelNode: node,
     nodes,
     edges: args.draftSession.workingSet.visibleEdges,
-  }).columns.visible.map((column) => column.name);
+  });
   const result = setDbtModelProjectionColumnOutput({
     node,
     availableColumns,
@@ -66,11 +66,11 @@ export function configureDbtModelColumnOrder(args: {
   }
   const result = reorderDbtModelProjectionColumn({
     node,
-    availableColumns: projectCanvasNodePresentationTruth({
-      node,
+    availableColumns: readDbtModelAvailableColumnNames({
+      modelNode: node,
       nodes: [...nodeCatalog.values()],
       edges: args.draftSession.workingSet.visibleEdges,
-    }).columns.visible.map((column) => column.name),
+    }),
     columnName: args.columnName,
     targetColumnName: args.targetColumnName,
     placement: args.placement,

@@ -8,8 +8,6 @@ const { sha256Hex } = require('@dvt/crypto');
 
 const { allocateFreePort } = require('./run-dev-stack.temporal.cjs');
 
-const MINIO_IMAGE =
-  'quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e';
 const MINIO_ACCESS_KEY_ID = 'minioadmin';
 const MINIO_SECRET_ACCESS_KEY = 'minioadmin';
 const S3_REGION = 'us-east-1';
@@ -43,7 +41,7 @@ function validateHttpJsonFixture(content, manifest) {
   return manifest;
 }
 
-function buildMinioDockerArgs({ containerName, port }) {
+function buildMinioDockerArgs({ image, containerName, port }) {
   return [
     'run',
     '--detach',
@@ -56,7 +54,7 @@ function buildMinioDockerArgs({ containerName, port }) {
     `MINIO_ROOT_USER=${MINIO_ACCESS_KEY_ID}`,
     '--env',
     `MINIO_ROOT_PASSWORD=${MINIO_SECRET_ACCESS_KEY}`,
-    MINIO_IMAGE,
+    image,
     'server',
     '/data',
     '--console-address',
@@ -274,8 +272,9 @@ async function main() {
   let fixtureServer;
 
   try {
+    const image = runDocker(['build', '--quiet', 'infra/minio-test']);
     console.log(`[het2-public-live] Starting pinned MinIO at ${minioEndpoint}`);
-    runDocker(buildMinioDockerArgs({ containerName, port: minioPort }));
+    runDocker(buildMinioDockerArgs({ image, containerName, port: minioPort }));
     minioStarted = true;
     await waitForMinio(minioEndpoint);
     await createArtifactBucket({ endpoint: minioEndpoint, bucket: manifest.bucket });

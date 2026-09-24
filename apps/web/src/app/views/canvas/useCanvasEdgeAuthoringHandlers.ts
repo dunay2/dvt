@@ -91,13 +91,15 @@ function useCanvasConnectionCreationHandler({
         return;
       }
 
-      edgeCommandRunner.createConnection({
-        connection,
-        onNoop: notifyRejectedConnection,
-        onCreated: () => {
-          toast.success(canvasViewCopy.dependencyAddedMessage);
-        },
-      });
+      void edgeCommandRunner
+        .createConnection({
+          connection,
+          onNoop: notifyRejectedConnection,
+          onCreated: () => {
+            toast.success(canvasViewCopy.dependencyAddedMessage);
+          },
+        })
+        .catch(() => toast.error(canvasViewCopy.dependencyCreationFailedMessage));
     },
     [canEditEdges, edgeCommandRunner]
   );
@@ -145,6 +147,7 @@ export function useCanvasEdgeAuthoringHandlers(
     state,
     effects,
     pluginPortMap,
+    canEditEdges: policy.canEditEdges,
   });
   const columnMappingHandlers = useCanvasColumnConnectionHandlers(
     { state, effects, policy },

@@ -19,6 +19,7 @@ import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { CanvasRelationalCrossNotice } from './CanvasRelationalCrossNotice';
+import { useSelectedRelationFilter } from './useSelectedRelationFilter';
 
 export function CanvasRelationalTreeOperationShelf({
   choices,
@@ -30,6 +31,7 @@ export function CanvasRelationalTreeOperationShelf({
   draft,
   editable,
   onChangeDraft,
+  selectedRelationId,
 }: Readonly<{
   choices: readonly CanvasRelationalOperationChoice[];
   copy: CanvasRelationalTreeWorkbenchCopy;
@@ -40,13 +42,22 @@ export function CanvasRelationalTreeOperationShelf({
   draft: DvtSubstraitProjectionDraft | null;
   editable: boolean;
   onChangeDraft: (draft: DvtSubstraitProjectionDraft) => void;
+  selectedRelationId: string | null;
 }>): JSX.Element {
   const [replacement, setReplacement] = useState<CanvasRelationalOperation | null>(null);
-  const [selectedTool, setSelectedTool] = useState<CanvasRelationalOperatorTool | null>(null);
+  const [selection, setSelection] = useState<{
+    tool: CanvasRelationalOperatorTool;
+    targetId?: string;
+  } | null>(null);
+  const selectedTool = selection?.tool;
   const language = useApplicationLanguageStore((state) => state.language);
   const localCopy = resolveCanvasSemanticEditorCopy(language);
   const menuCopy = resolveCanvasOperationMenuCopy(language);
-  const tools = draft == null ? [] : resolveCanvasRelationalOperatorTools(draft);
+  const filter = useSelectedRelationFilter(selectedRelationId, 'insert');
+  const tools =
+    draft == null
+      ? []
+      : [...(filter == null ? [] : [filter.tool]), ...resolveCanvasRelationalOperatorTools(draft)];
   const items = buildCanvasOperationMenuItems({
     choices,
     tools,
@@ -68,7 +79,7 @@ export function CanvasRelationalTreeOperationShelf({
             if (!items.some((item) => item.id === next && item.selectable)) return;
             const tool = tools.find((item) => item.id === next);
             if (tool != null) {
-              setSelectedTool(tool);
+              setSelection({ tool, targetId: tool.id === 'filter' ? filter?.targetId : undefined });
               return;
             }
             const choice = choices.find((item) => item.operation === next);
@@ -91,9 +102,10 @@ export function CanvasRelationalTreeOperationShelf({
       {selectedTool == null || draft == null ? null : (
         <CanvasRelationalTreeOperatorForm
           tool={selectedTool}
+          targetRelationId={selection?.targetId}
           draft={draft}
           title={copy[resolveCanvasRelationalOperationPresentation(selectedTool.id).labelKey]}
-          onClose={() => setSelectedTool(null)}
+          onClose={() => setSelection(null)}
           onChange={onChangeDraft}
         />
       )}

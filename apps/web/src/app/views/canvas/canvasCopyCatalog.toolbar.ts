@@ -9,6 +9,10 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.edge.dependencyAddedMessage',
     fallback: 'Dependency added',
   },
+  dependencyCreationFailedMessage: {
+    key: 'canvas.edge.dependencyCreationFailedMessage',
+    fallback: 'The connection failed. Check the model and try again.',
+  },
   layoutAppliedMessage: {
     key: 'canvas.layout.appliedMessage',
     fallback: 'Layout applied',

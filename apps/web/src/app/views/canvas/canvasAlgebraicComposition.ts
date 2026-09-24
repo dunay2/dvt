@@ -139,16 +139,16 @@ function createSemanticDraft(args: {
   return entry == null ? null : createDvtSubstraitSetDraft({ ...entry, operation: args.operation });
 }
 
-export function resolveCanvasAlgebraicCompositionTransaction(
+export async function resolveCanvasAlgebraicCompositionTransaction(
   args: CompositionState &
     CanvasAlgebraicCompositionIdentity & { operation: CanvasAlgebraicCompositionOperation }
-): CanvasAlgebraicCompositionTransaction {
+): Promise<CanvasAlgebraicCompositionTransaction> {
   if (!resolveCanvasAlgebraicCompositionOperations(args).includes(args.operation)) {
     return { outcome: 'noop', rejection: { code: 'operation_not_available' } };
   }
   const nodes = resolveCanvasDraftNodes(args.draftSession, args.canonicalNodesById);
   const canonicalNodesById = new Map(nodes.map((node) => [node.id, node]));
-  const transaction = resolveCanvasEdgeCreationTransaction({
+  const transaction = await resolveCanvasEdgeCreationTransaction({
     ...args,
     canonicalNodesById,
     connection: connection(args),

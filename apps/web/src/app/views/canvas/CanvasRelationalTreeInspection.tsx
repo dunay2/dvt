@@ -28,6 +28,7 @@ export function CanvasRelationalTreeInspection({
     >
       <CanvasRelationalTreeOperationShelf
         choices={model.session.choices}
+        selectedRelationId={model.selectedNode?.relationId ?? null}
         copy={copy}
         hasOperands
         operation={model.session.seed?.operation ?? null}

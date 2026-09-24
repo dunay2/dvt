@@ -1,7 +1,7 @@
+import { projectCanvasColumnLineageForGraph as projectCanvasColumnLineage } from './canvasColumnLineageProjection.test-fixtures';
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { projectCanvasColumnLineage } from './canvasColumnLineageProjection';
 
 const source: CanonicalNode = {
   id: 'source-orders',
@@ -54,7 +54,7 @@ function model(
 }
 
 describe('DBT model column lineage', () => {
-  it('does not infer lineage from DBT field names without stable field references', () => {
+  it('does not infer lineage from DBT field names without stable field references', async () => {
     const first = model('model-1', source.id);
     const second = model('model-2', first.id, [
       { name: 'order_id', output: true },
@@ -66,7 +66,7 @@ describe('DBT model column lineage', () => {
       { id: 'e2', sourceId: first.id, targetId: second.id, relation: 'lineage' },
     ];
 
-    const projected = projectCanvasColumnLineage({
+    const projected = await projectCanvasColumnLineage({
       nodes,
       edges,
       expandedNodeIds: new Set(nodes.map((node) => node.id)),

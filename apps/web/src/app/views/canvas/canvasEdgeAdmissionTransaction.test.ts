@@ -96,7 +96,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     vi.restoreAllMocks();
   });
 
-  it('creates an edge with the next viewport edges and draft visible edges together', () => {
+  it('creates an edge with the next viewport edges and draft visible edges together', async () => {
     vi.spyOn(Date, 'now').mockReturnValue(123);
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
@@ -109,7 +109,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       targetHandle: null,
     };
 
-    const transaction = resolveCanvasEdgeCreationTransaction({
+    const transaction = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection,
       draftSession: buildDraftSession(),
@@ -133,7 +133,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     ]);
   });
 
-  it('binds a newly connected DBT model to the real origin schema in the same transaction', () => {
+  it('binds a newly connected DBT model to the real origin schema in the same transaction', async () => {
     const source = {
       ...buildConnectedSourceNode('source-node', []),
       pluginId: 'dvt.warehouse-source',
@@ -151,7 +151,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       },
     };
 
-    const transaction = resolveCanvasEdgeCreationTransaction({
+    const transaction = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById: new Map([
         [source.id, source],
         [model.id, model],
@@ -177,7 +177,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     });
   });
 
-  it('creates canonical column mappings with opaque output identities in the stage transaction', () => {
+  it('creates canonical column mappings with opaque output identities in the stage transaction', async () => {
     const source = buildConnectedSourceNode('source-node', [
       { name: 'order_id', type: 'integer' },
       { name: 'customer', type: 'text' },
@@ -188,7 +188,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       [transform.id, transform],
     ]);
 
-    const transaction = resolveCanvasEdgeCreationTransaction({
+    const transaction = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: source.id,
@@ -233,7 +233,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     expect(outputIds[1]).not.toContain('customer');
   });
 
-  it('creates editable downstream Model outputs when connecting Model to Model', () => {
+  it('creates editable downstream Model outputs when connecting Model to Model', async () => {
     const source = buildConnectedSourceNode('source-node', [
       { name: 'order_id', type: 'integer' },
       { name: 'customer', type: 'text' },
@@ -268,7 +268,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
         [downstream.id]: downstream,
       },
     };
-    const transaction = resolveCanvasEdgeCreationTransaction({
+    const transaction = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById: new Map([
         [source.id, source],
         [upstream.id, upstream],
@@ -323,11 +323,13 @@ describe('canvasEdgeAdmissionTransaction', () => {
     const removedNode = removed.draftSession.localNodeCatalog?.[downstream.id];
     if (removedNode == null) throw new Error('Expected downstream output selection.');
     expect(
-      projectCanvasNodePresentationTruth({
-        node: removedNode,
-        nodes: [source, upstream, removedNode],
-        edges: removed.draftSession.workingSet.visibleEdges,
-      }).columns.visible.find((column) => column.name === 'customer')
+      (
+        await projectCanvasNodePresentationTruth({
+          node: removedNode,
+          nodes: [source, upstream, removedNode],
+          edges: removed.draftSession.workingSet.visibleEdges,
+        })
+      ).columns.visible.find((column) => column.name === 'customer')
     ).toMatchObject({
       provenance: 'inherited',
       reference: 'upstream:customer',
@@ -407,7 +409,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     ]);
   });
 
-  it('creates a second source edge without inventing a multi-source projection', () => {
+  it('creates a second source edge without inventing a multi-source projection', async () => {
     const firstSource = buildConnectedSourceNode('source-node', [
       { name: 'shared_id', type: 'integer' },
       { name: 'first_only', type: 'text' },
@@ -431,7 +433,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       },
     };
 
-    const firstTransaction = resolveCanvasEdgeCreationTransaction({
+    const firstTransaction = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: firstSource.id,
@@ -448,7 +450,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       throw new Error('Expected the first edge transaction to be created');
     }
 
-    const transaction = resolveCanvasEdgeCreationTransaction({
+    const transaction = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: secondSource.id,
@@ -486,7 +488,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       'first_only',
     ]);
 
-    const presentation = projectCanvasNodePresentationTruth({
+    const presentation = await projectCanvasNodePresentationTruth({
       node: mappedTransform,
       nodes: [firstSource, secondSource, mappedTransform],
       edges: transaction.draftSession.workingSet.visibleEdges,
@@ -534,12 +536,12 @@ describe('canvasEdgeAdmissionTransaction', () => {
     expect(new Set(duplicateIds).size).toBe(2);
   });
 
-  it('rejects creation when an endpoint is missing from the canonical graph', () => {
+  it('rejects creation when an endpoint is missing from the canonical graph', async () => {
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
     ]);
 
-    const transaction = resolveCanvasEdgeCreationTransaction({
+    const transaction = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: 'source-node',
@@ -558,12 +560,12 @@ describe('canvasEdgeAdmissionTransaction', () => {
     });
   });
 
-  it('rejects self-loop creation before graph effects are produced', () => {
+  it('rejects self-loop creation before graph effects are produced', async () => {
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
     ]);
 
-    const transaction = resolveCanvasEdgeCreationTransaction({
+    const transaction = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: 'source-node',
@@ -582,14 +584,14 @@ describe('canvasEdgeAdmissionTransaction', () => {
     });
   });
 
-  it('rejects reverse transformation direction in constrained transformation graphs', () => {
+  it('rejects reverse transformation direction in constrained transformation graphs', async () => {
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
       ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:transform')],
       ['sink-node', buildCanonicalNode('sink-node', 'output', 'dvt:sink')],
     ]);
 
-    const transaction = resolveCanvasEdgeCreationTransaction({
+    const transaction = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: 'sink-node',
@@ -608,7 +610,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     });
   });
 
-  it('keeps a rejected stage edge out of persistence and Inputs/Outputs', () => {
+  it('keeps a rejected stage edge out of persistence and Inputs/Outputs', async () => {
     const source = buildCanonicalNode('source-node', 'input', 'dvt:source');
     const sink = buildCanonicalNode('sink-node', 'output', 'dvt:sink');
     const canonicalNodes = [source, sink];
@@ -623,7 +625,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     };
     const viewportEdges: Edge[] = [];
 
-    const transaction = resolveCanvasEdgeCreationTransaction({
+    const transaction = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: source.id,
@@ -724,7 +726,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     ]);
   });
 
-  it('reprojects available transform columns from the replacement upstream source', () => {
+  it('reprojects available transform columns from the replacement upstream source', async () => {
     const firstSource = {
       ...buildCanonicalNode('source-node', 'input', 'dvt:source'),
       metadata: { columns: [{ name: 'legacy_id', type: 'integer' }] },
@@ -775,7 +777,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       { sourceId: replacementSource.id, targetId: transform.id },
     ]);
 
-    const presentation = projectCanvasNodePresentationTruth({
+    const presentation = await projectCanvasNodePresentationTruth({
       node: transform,
       nodes: [firstSource, replacementSource, transform],
       edges: transaction.draftSession.workingSet.visibleEdges,

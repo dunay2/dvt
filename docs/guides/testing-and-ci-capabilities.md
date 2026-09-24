@@ -485,6 +485,15 @@ Planning-generated pages that are intentionally untracked:
 
 ## GitHub Workflow Coverage
 
+The object-store fixture used by PR Quality Gate and the HET1/HET2 live proofs
+is built from `infra/minio-test/Dockerfile`. It pins the official MinIO source
+commit and Go builder digest; the community release no longer supplies a usable
+prebuilt image. Each caller runs the returned local image ID, not a mutable tag.
+Docker reuses unchanged build layers. Build failure stops the proof; there is no
+fallback provider or skipped integration. This image is an isolated test fixture,
+not a production deployment. The upstream release and build instructions are
+[RELEASE.2025-10-15T17-29-55Z](https://github.com/minio/minio/releases/tag/RELEASE.2025-10-15T17-29-55Z).
+
 - `CI - Code Quality`: ordinary pull requests run changed-slice verification
   through `pnpm verify:changed` and affected build/lint/type-check preflight
   through `pnpm preflight:affected:ci`; pushes to `main` and manual runs use
