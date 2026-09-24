@@ -101,7 +101,7 @@ planning_type: closeout
   so the workspace-graph-draft topic now includes the application component
   guide and the new architecture test.
 - Extended the canonical mailbox review
-  `buzon/20260423-codex-fowler-workspace-authoring-draft-aggregate-analysis.md`
+  [20260423 codex fowler workspace authoring draft aggregate analysis](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260423-codex-fowler-workspace-authoring-draft-aggregate-analysis.md)
   with the API-application-component addendum.
 
 ## Governing Sources Used

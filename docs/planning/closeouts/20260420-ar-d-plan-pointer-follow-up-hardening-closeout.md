@@ -50,7 +50,7 @@ This is not a formatting issue. It is leftover policy ownership drift.
   validation-backed completion
 - `docs/guides/ai-work-protocol.md`: think-first analysis, pre-implementation
   brief, and governed closeout before and after implementation
-- `docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-workflow-input-hardening-plan-20260420.md`:
+- [AR-D plan-pointer workflow input hardening plan 2026-04-20](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-workflow-input-hardening-plan-20260420.md):
   workflow input and rollover must stay bounded and must not drift back toward
   durable whole-run state
 - `docs/adr/ADR-0003-execution-model.md`: lifecycle authority stays inside DVT,

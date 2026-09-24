@@ -16,7 +16,7 @@ those items are non-blocking for the current MVP control-plane definition.
 
 ## Scope
 
-Aligned to [MVP Backend Operability Baseline Roadmap](../../proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md):
+Aligned to [MVP Backend Operability Baseline Roadmap](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md):
 
 - `IN` scope remains the currently implemented and testable backend control-plane.
 - This review does not add new runtime behavior or expand MVP promises.

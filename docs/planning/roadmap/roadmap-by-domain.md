@@ -88,7 +88,6 @@ flowchart LR
   [20260410 Contract pack and read boundary reset Fowler review](../reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md),
   [20260411 AR-A12-B status model split Fowler review](../reviews/architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md),
   [Contract pack and read boundary reset plan 2026-04-10](../proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md),
-  [AR-A12-B status model split plan 2026-04-11](../proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md),
   [TF-A1-C SRP and extensibility hardening plan 2026-04-14](../proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md),
   [Runtime hardening, shared-kernel, and operations roadmap 2026-04-10](../proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
   Near-term target: complete #2600 by removing the remaining SQL-first runtime
@@ -131,8 +130,4 @@ flowchart LR
 - [Planning Domain Map](./diagrams/planning-domain-map.md)
 - [Execution Runtime Architecture Delta](./diagrams/execution-runtime-architecture-delta.md)
 - [Engine Roadmap](../../architecture/components/engine/roadmap/engine-phases.md)
-- [API and Admission Architecture Delta](./diagrams/api-admission-architecture-delta.md)
-- [Planner and Contracts Architecture Delta](./diagrams/planner-contracts-architecture-delta.md)
-- [Event Lifecycle and Retention Architecture Delta](./diagrams/event-lifecycle-retention-architecture-delta.md)
-- [Documentation Governance Architecture Delta](./diagrams/documentation-governance-architecture-delta.md)
 - [Execution Model Index](../execution-model/index.md)

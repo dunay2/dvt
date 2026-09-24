@@ -105,7 +105,7 @@ should be refactored (split into `runTool` + `runBatched`) in a follow-up.
 
 ### 3.5 `docs/planning/reviews/` document appeared as uncommitted at PR creation
 
-The performance review document (`20260330-ci-performance-review-and-action-plan.md`) was
+The performance review document ([CI Performance Review And Action Plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/reviews/ci-and-delivery/20260330-ci-performance-review-and-action-plan.md)) was
 created early in the session but never staged or committed — it appeared as an untracked file
 at `gh pr create` time, producing a warning. Documents created during a task should either be
 committed immediately or explicitly staged before opening the PR.

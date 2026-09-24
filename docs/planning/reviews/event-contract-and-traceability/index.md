@@ -10,4 +10,3 @@ planning_type: review
 
 - [20260326 Reconciler runtime SOLID QA review](./20260326-reconciler-runtime-solid-qa-review.md)
 - [20260328 Lineage outbox Fowler QA hard review](./20260328-lineage-outbox-fowler-qa-hard-review.md)
-- [20260330 MVP-B1 claim-to-evidence traceability matrix](./20260330-mvp-b1-claim-evidence-traceability-matrix.md)

@@ -134,7 +134,7 @@ planning_type: closeout
 - `docs/architecture/reference-architecture.md`
 - `docs/contracts/planner/workspace-graph-draft-persistence-v1.md`
 - `docs/architecture/components/planner/workspace-authoring-draft-aggregate.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md`
+- [TF-A2-C execution selection and executable subgraph plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md)
 - `.arc-policy.yaml`
 
 ## Validation Evidence

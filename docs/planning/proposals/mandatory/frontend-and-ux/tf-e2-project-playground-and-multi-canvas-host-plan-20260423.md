@@ -45,14 +45,13 @@ is premature: there is still no governed user-visible flow for:
 - `docs/planning/state/agent-lane-e.yaml`
 - `docs/architecture/reference-architecture.md`
 - `docs/concepts/domain-language.md`
-- `docs/planning/proposals/workspace-first-frontend-architecture-specification.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md`
 - `docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md`
 
 ## Relationship to current canon
 
-- `workspace-first-frontend-architecture-specification.md` already freezes the
+- [Workspace-First Frontend Architecture Specification](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/workspace-first-frontend-architecture-specification.md) already freezes the
   principle that Canvas is a graph document inside a workspace and should be
   demoted from sole product center.
 - `tf-e2-canvas-target-architecture-execution-plan-20260417.md` already freezes

@@ -80,7 +80,7 @@ planning_type: closeout
 ## Real Work Performed
 
 - Added the dedicated proposal:
-  `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md`
+  [TF-A2-C execution selection and executable subgraph plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md)
 - Updated `docs/planning/state/agent-lane-a.yaml` to:
   - add the new `TF-A2-C` child task
   - correct the stale `TF-A2` status note that still claimed

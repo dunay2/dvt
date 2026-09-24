@@ -17,7 +17,7 @@ This artifact converts the MW-A2 QA review into executable closure tasks for pol
 Canonical execution tracking remains in:
 
 - `docs/planning/state/agent-lane-a.yaml`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md`
+- [DVT DBT-Agnostic Generalization Plan 2026-04-03](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md)
 
 ## Governing Sources
 
@@ -26,7 +26,7 @@ Canonical execution tracking remains in:
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/templates/qa/qa-artifact-example-template.md`
 - `docs/architecture/components/planner/index.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md`
+- [DVT DBT-Agnostic Generalization Plan 2026-04-03](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md)
 
 ## Findings
 

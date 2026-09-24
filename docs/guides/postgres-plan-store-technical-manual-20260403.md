@@ -21,7 +21,6 @@ invariants, and the current architectural-gap status.
 - `docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md`
 - `docs/adr/ADR-0054-plan-store-scoped-record-identity.md`
 - `docs/architecture/components/engine/contracts/plan-store-records-component.md`
-- `docs/planning/reviews/architecture-and-governance/20260403-postgres-plan-store-srp-remediation-target.md`
 - `docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md`
 
 ## Runtime role

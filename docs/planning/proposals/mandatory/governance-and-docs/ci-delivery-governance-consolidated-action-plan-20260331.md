@@ -14,7 +14,7 @@ This is the single active proposal for repository delivery-process hardening.
 It replaces the former audit prompt with an executable plan and absorbs the
 still-relevant work from prior CI/docs proposals and reviews, including:
 
-- [Task: GOV-PROP-DISP-1] [CI Performance Review And Action Plan](../../../reviews/ci-and-delivery/20260330-ci-performance-review-and-action-plan.md)
+- [Task: GOV-PROP-DISP-1] [CI Performance Review And Action Plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/reviews/ci-and-delivery/20260330-ci-performance-review-and-action-plan.md)
 - [CI, Prepush & PR Process - Observations and Improvement Log](../../../reviews/ci-and-delivery/20260330-ci-prepush-pr-process-observations.md)
 
 This document does not reopen already-closed fixes. It carries forward only the

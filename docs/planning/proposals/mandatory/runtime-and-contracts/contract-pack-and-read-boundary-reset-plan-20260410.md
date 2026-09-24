@@ -184,7 +184,7 @@ Deliverables:
   - `docs/architecture/components/engine/contracts/engine/GlossaryContract.v1.md`
 - slice-specific rationale and execution docs:
   - `docs/planning/reviews/architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md`
-  - `docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md`
+  - [AR-A12-B status model split plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md)
 
 Acceptance:
 

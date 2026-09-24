@@ -36,7 +36,7 @@ Canonical execution tracking remains in:
 
 - `docs/planning/state/agent-lane-c.yaml`
 - `docs/planning/closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/tf-c2-b-runtime-read-surface-evidence-plan-20260408.md`
+- [TF-C2-B Runtime Read-Surface Evidence Plan 2026-04-08](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/tf-c2-b-runtime-read-surface-evidence-plan-20260408.md)
 
 This document is the hard-QA intake, correction map, and Definition of Done
 baseline for closing `TF-C2-B` credibly.
@@ -66,7 +66,7 @@ Debt handling for this review:
 - `docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md`
 - `docs/architecture/engine/VERSIONING.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/tf-c2-b-runtime-read-surface-evidence-plan-20260408.md`
+- [TF-C2-B Runtime Read-Surface Evidence Plan 2026-04-08](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/tf-c2-b-runtime-read-surface-evidence-plan-20260408.md)
 
 ## Findings
 

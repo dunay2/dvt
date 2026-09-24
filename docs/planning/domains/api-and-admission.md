@@ -37,7 +37,3 @@ and auth-runtime integration.
 
 - [API Auth Runtime Integration Coverage Risk](../../risk-register/quality/R-20260308-api-auth-runtime-integration-coverage.md)
 - [Evidence Index](../../evidence/index.md)
-
-## Diagram Sources
-
-- [API and Admission Architecture Delta](../roadmap/diagrams/api-admission-architecture-delta.md)

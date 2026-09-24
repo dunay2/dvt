@@ -55,7 +55,3 @@ expectations:
 - [CI retention review canon component](../../architecture/components/ci-governance/ci-retention-review-canon-component.md)
 - [CI retention review canon user stories](../../architecture/components/ci-governance/ci-retention-review-canon-user-stories.md)
 - [Run event retention policy component](../../architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-component.md)
-
-## Diagram Sources
-
-- [Event Lifecycle and Retention Architecture Delta](../roadmap/diagrams/event-lifecycle-retention-architecture-delta.md)

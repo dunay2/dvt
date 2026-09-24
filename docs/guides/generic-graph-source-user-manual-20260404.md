@@ -283,5 +283,3 @@ Before requesting implementation or review, ensure:
 ## Related documents
 
 - [DB-first Component Map](../architecture/component-map.md)
-- `docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md`

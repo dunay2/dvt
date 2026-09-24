@@ -19,7 +19,7 @@ status: Accepted
 - Constraints and invariants:
   `AGENTS.md`; `docs/planning/status/governance-document-rule-inventory.md`;
   `docs/guides/ai-work-protocol.md`;
-  `docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md`.
+  [DVT DBT-Agnostic Generalization Plan 2026-04-03](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md).
 - Options considered:
   1. Hard switch to `stepArtifactRef` only (breaking existing payload readers).
   2. Introduce `stepArtifactRef` as canonical and keep read compatibility for

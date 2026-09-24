@@ -120,7 +120,7 @@ planning_type: closeout
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/reference-architecture.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md`
+- [TF-A2-C execution selection and executable subgraph plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md)
 - `docs/architecture/components/planner/execution-selection-component.md`
 - `docs/contracts/planner/execution-selection-and-executable-subgraph-v1.md`
 - `.arc-policy.yaml`

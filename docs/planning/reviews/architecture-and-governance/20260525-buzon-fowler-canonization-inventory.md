@@ -75,27 +75,27 @@ The following tracked analyses had zero direct `docs/**` references at the time
 of this review. They are not automatically unowned; they are the first files to
 inspect when executing the canonization tasks.
 
-| Bucket       | Source                                                                                       |
-| ------------ | -------------------------------------------------------------------------------------------- |
-| Frontend     | `buzon/20260429-codex-fowler-temporal-step-plugin-architecture-analysis-and-remediation.md`  |
-| Frontend     | `buzon/20260430-codex-fowler-canvas-ready-node-authoring-analysis.md`                        |
-| Frontend     | `buzon/20260430-codex-frontend-operability-fowler-review.md`                                 |
-| Frontend     | `buzon/20260510-codex-fowler-web-api-mock-hardcut-semantic-encapsulation-analysis.md`        |
-| Frontend     | `buzon/20260516-codex-fowler-canvas-screen-problems-architecture-analysis.md`                |
-| Frontend     | `buzon/20260516-codex-fowler-element-canvas-empty-state-placement.md`                        |
-| Frontend     | `buzon/20260516-codex-fowler-element-canvas-route-shell-posture.md`                          |
-| Frontend     | `buzon/20260516-codex-fowler-element-canvas-topbar-command-priority.md`                      |
-| Frontend     | `buzon/20260516-codex-fowler-element-readonly-first-canvas-policy.md`                        |
-| Frontend     | `buzon/20260518-codex-fowler-f27-alpha-route-gate-branch-analysis.md`                        |
-| Frontend     | `buzon/20260518-f10-fowler-run-event-convergence-analysis.md`                                |
-| Runtime      | `buzon/20260514-codex-fowler-ar-c2-t2-dashboard-evidence-analysis.md`                        |
-| Runtime      | `buzon/20260514-codex-fowler-ar-c2-t3-alert-evidence-analysis.md`                            |
-| Runtime      | `buzon/20260518-dhm-ws4-fowler-runtime-path-boundary-hardening-analysis.md`                  |
-| Runtime      | `buzon/20260523-codex-fowler-postgres-tenant-isolation-canon.md`                             |
-| Architecture | `buzon/20260429-codex-fowler-branch-architecture-post-codescene-analysis-and-remediation.md` |
-| Architecture | `buzon/20260515-codex-fowler-ar-d-plan-pointer-architecture-authority-analysis.md`           |
-| Architecture | `buzon/20260523-codex-fowler-planner-ingress-hard-cut-canon.md`                              |
-| Mixed        | `buzon/20260514-codex-fowler-ea-20260429-06-semantic-fitness-analysis.md`                    |
+| Bucket       | Source                                                                                                                                                                                                                                        |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frontend     | `buzon/20260429-codex-fowler-temporal-step-plugin-architecture-analysis-and-remediation.md`                                                                                                                                                   |
+| Frontend     | `buzon/20260430-codex-fowler-canvas-ready-node-authoring-analysis.md`                                                                                                                                                                         |
+| Frontend     | [Frontend Operability Fowler Review](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260430-codex-frontend-operability-fowler-review.md)                                                                  |
+| Frontend     | [20260510 codex fowler web api mock hardcut semantic encapsulation analysis](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260510-codex-fowler-web-api-mock-hardcut-semantic-encapsulation-analysis.md) |
+| Frontend     | `buzon/20260516-codex-fowler-canvas-screen-problems-architecture-analysis.md`                                                                                                                                                                 |
+| Frontend     | `buzon/20260516-codex-fowler-element-canvas-empty-state-placement.md`                                                                                                                                                                         |
+| Frontend     | `buzon/20260516-codex-fowler-element-canvas-route-shell-posture.md`                                                                                                                                                                           |
+| Frontend     | `buzon/20260516-codex-fowler-element-canvas-topbar-command-priority.md`                                                                                                                                                                       |
+| Frontend     | `buzon/20260516-codex-fowler-element-readonly-first-canvas-policy.md`                                                                                                                                                                         |
+| Frontend     | `buzon/20260518-codex-fowler-f27-alpha-route-gate-branch-analysis.md`                                                                                                                                                                         |
+| Frontend     | `buzon/20260518-f10-fowler-run-event-convergence-analysis.md`                                                                                                                                                                                 |
+| Runtime      | `buzon/20260514-codex-fowler-ar-c2-t2-dashboard-evidence-analysis.md`                                                                                                                                                                         |
+| Runtime      | `buzon/20260514-codex-fowler-ar-c2-t3-alert-evidence-analysis.md`                                                                                                                                                                             |
+| Runtime      | [DHM-WS4 Fowler runtime path boundary hardening analysis](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260518-dhm-ws4-fowler-runtime-path-boundary-hardening-analysis.md)                              |
+| Runtime      | `buzon/20260523-codex-fowler-postgres-tenant-isolation-canon.md`                                                                                                                                                                              |
+| Architecture | `buzon/20260429-codex-fowler-branch-architecture-post-codescene-analysis-and-remediation.md`                                                                                                                                                  |
+| Architecture | `buzon/20260515-codex-fowler-ar-d-plan-pointer-architecture-authority-analysis.md`                                                                                                                                                            |
+| Architecture | `buzon/20260523-codex-fowler-planner-ingress-hard-cut-canon.md`                                                                                                                                                                               |
+| Mixed        | `buzon/20260514-codex-fowler-ea-20260429-06-semantic-fitness-analysis.md`                                                                                                                                                                     |
 
 ## Disposition Rules
 

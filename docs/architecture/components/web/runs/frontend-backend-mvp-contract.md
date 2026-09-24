@@ -310,8 +310,6 @@ Retry/backoff contract:
 
 ## Traceability
 
-- planning source:
-  `docs/planning/proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md`
 - delivery tracking: governing GitHub MVP issue and linked pull request
 - runtime route source: `apps/api/src/entrypoints/http/runtimeRoutes.constants.ts`
 - shell health wiring source: `apps/web/src/app/Root.tsx`,

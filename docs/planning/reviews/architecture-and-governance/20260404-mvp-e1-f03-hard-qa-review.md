@@ -38,7 +38,7 @@ qa_artifact: true
 - Title: Contract section promises canonical envelope examples but only provides narrative bullets.
   Why it matters: plan asks for canonical success/error envelope examples; current doc is descriptive only.
   Evidence:
-  - plan asks for examples in [MVP-E1-D](../../proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md)
+  - plan asks for examples in [MVP-E1-D](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md)
   - current contract section [Canonical success and error envelope baseline](../../../architecture/components/web/frontend-backend-contract-mvp-e1-20260404.md) has no concrete payload samples.
     Risk: frontend error handling can diverge by interpretation.
     Recommendation: add minimal JSON examples for `2xx`, `401/403`, and health degraded/offline mappings.

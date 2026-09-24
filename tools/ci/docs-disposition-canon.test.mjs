@@ -757,3 +757,107 @@ test('retired PR drafts and historical intake have no files or live consumers', 
     'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md',
   ]);
 });
+
+// Retire dated migration narratives; keep immutable recorded commands exact.
+test('retired migration plans and dated assessments cannot return', () => {
+  const retired = [
+    'buzon/20260423-codex-fowler-workspace-authoring-draft-aggregate-analysis.md',
+    'buzon/20260424-codex-fowler-ar-c3-admission-observability-analysis-and-remediation.md',
+    'buzon/20260430-codex-frontend-operability-fowler-review.md',
+    'buzon/20260510-codex-fowler-web-api-mock-hardcut-semantic-encapsulation-analysis.md',
+    'buzon/20260518-dhm-ws4-fowler-runtime-path-boundary-hardening-analysis.md',
+    'docs/planning/execution-model/execution-state.md',
+    'docs/planning/execution-model/handbook-state.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-b1-run-status-write-boundary-plan-20260404.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-workflow-input-hardening-plan-20260420.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-hard-qa-remediation-roadmap-20260404.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/planner-hard-cut-boundary-remediation-20260410.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/planner-kernel-dbt-boundary-extraction-follow-up-20260410.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/tf-c2-b-runtime-read-surface-evidence-plan-20260408.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-postgresql-publication-contract-study-20260903.md',
+    'docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md',
+    'docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md',
+    'docs/planning/proposals/nice-to-have/frontend-and-ux/f-23-git-file-history-review-plan-20260407.md',
+    'docs/planning/proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md',
+    'docs/planning/proposals/web-user-stories-20260530.md',
+    'docs/planning/proposals/workspace-first-frontend-architecture-specification.md',
+    'docs/planning/reviews/architecture-and-governance/20260403-postgres-plan-store-srp-remediation-target.md',
+    'docs/planning/reviews/ci-and-delivery/20260330-ci-performance-review-and-action-plan.md',
+    'docs/planning/reviews/event-contract-and-traceability/20260330-mvp-b1-claim-evidence-traceability-matrix.md',
+    'docs/planning/roadmap/ar-b1-quality-hardening-roadmap-20260404.md',
+    'docs/planning/roadmap/diagrams/api-admission-architecture-delta.md',
+    'docs/planning/roadmap/diagrams/documentation-governance-architecture-delta.md',
+    'docs/planning/roadmap/diagrams/event-lifecycle-retention-architecture-delta.md',
+    'docs/planning/roadmap/diagrams/planner-contracts-architecture-delta.md',
+    'docs/planning/status/frontend-mature-system-gap-status-20260602.md',
+    'docs/planning/studies/planner-source-first-study-20260828.md',
+  ];
+  const recordedCommands = new Map([
+    [
+      'docs/evidence/ED-20260410-temporal-native-cancel-semantics.md',
+      new Set(['a0360c62f2b476cac9f7fb02d64445848699dfa8']),
+    ],
+    [
+      'docs/evidence/ED-20260412-ar-a12-c5-read-boundary-purity-closeout.md',
+      new Set(['a44bb818547d021f2b0c990ecfb7ba70799bf9af']),
+    ],
+    [
+      'docs/planning/closeouts/20260420-ar-d-plan-pointer-follow-up-hardening-closeout.md',
+      new Set(['61746b9adc302c249901549c8281cbfd836d87c3']),
+    ],
+  ]);
+  const observedCommands = new Set();
+  const stems = retired.map((path) => path.split('/').at(-1).replace(/\.md$/u, ''));
+  const referencePatterns = stems.map(
+    (stem) =>
+      escapeRegExp(stem) +
+      (['execution-state', 'handbook-state'].includes(stem) ? '\\.md' : '(?:\\.md)?')
+  );
+  const references = new RegExp(`(?<![\\w.-])(?:${referencePatterns.join('|')})(?![\\w.-])`, 'u');
+  for (const path of retired)
+    assert.equal(existsSync(path), false, `Retired document returned: ${path}`);
+  const paths = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+    { encoding: 'utf8' }
+  )
+    .split('\0')
+    .filter(Boolean);
+  for (const path of paths) {
+    if (!existsSync(path) || path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
+    assert.equal(
+      stems.includes(path.split('/').at(-1).replace(/\.md$/u, '')),
+      false,
+      `Retired document relocated: ${path}`
+    );
+    for (const line of readRepoFile(path).split(/\r?\n/u)) {
+      const live = line.replace(
+        /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
+        ''
+      );
+      if (!references.test(live)) continue;
+      const hash = execFileSync('git', ['hash-object', '--stdin'], {
+        input: line.trim(),
+        encoding: 'utf8',
+      }).trim();
+      assert.ok(
+        recordedCommands.get(path)?.has(hash),
+        `Live retired reference in ${path}: ${line.trim()}`
+      );
+      observedCommands.add(`${path}:${hash}`);
+    }
+  }
+  for (const [path, hashes] of recordedCommands) {
+    for (const hash of hashes)
+      assert.ok(
+        observedCommands.has(`${path}:${hash}`),
+        `Recorded command changed or missing: ${path}:${hash}`
+      );
+  }
+});

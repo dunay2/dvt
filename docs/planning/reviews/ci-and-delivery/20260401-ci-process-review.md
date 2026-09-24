@@ -19,7 +19,7 @@ planning_type: review
 # CI Process Review — DVT (2026-04-01)
 
 **Method:** Full read of the four workflow files, the composite action, and the `package.json` scripts.  
-**Prior art:** `20260330-ci-performance-review-and-action-plan.md` and `20260330-ci-prepush-pr-process-observations.md` — read in full before writing this review to avoid re-stating already-documented findings.
+**Prior art:** [CI Performance Review And Action Plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/reviews/ci-and-delivery/20260330-ci-performance-review-and-action-plan.md) and `20260330-ci-prepush-pr-process-observations.md` — read in full before writing this review to avoid re-stating already-documented findings.
 
 ---
 

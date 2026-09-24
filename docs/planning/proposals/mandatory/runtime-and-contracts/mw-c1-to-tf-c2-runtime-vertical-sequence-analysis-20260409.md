@@ -30,7 +30,6 @@ delivery plan, and the current open task route.
 - [Transformation Flow Proposal Set 2026-04-05](./plan-creation-interface-route-proposal-20260405.md)
 - [Transformation Flow Delivery Plan 2026-04-05](./transformation-flow-delivery-plan-20260405.md)
 - [Transformation Flow Architecture And Contracts 2026-04-05](./transformation-flow-architecture-and-contracts-20260405.md)
-- [TF-C2-B Runtime Read-Surface Evidence Plan 2026-04-08](./tf-c2-b-runtime-read-surface-evidence-plan-20260408.md)
 - [Current Status](../../../../architecture/system-delivery-status.md)
 
 ## Why this document exists

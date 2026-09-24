@@ -56,8 +56,6 @@ That means:
 - `docs/adr/ADR-0017_ExecutionPlan_Schema_Versioning.md`
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md`
 - `docs/architecture/components/api/api-current-to-target-architecture.md`
 - `docs/architecture/components/planner/planner-ddd.md`
 - `docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md`

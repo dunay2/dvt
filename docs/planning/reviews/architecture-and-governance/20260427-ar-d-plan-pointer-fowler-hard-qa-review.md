@@ -39,7 +39,7 @@ closed.
 - `docs/adr/ADR-0014-run-driven-adapter-model.md`
 - `docs/adr/ADR-0030-pre-dispatch-intent-log.md`
 - `docs/adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-workflow-input-hardening-plan-20260420.md`
+- [AR-D plan-pointer workflow input hardening plan 2026-04-20](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-workflow-input-hardening-plan-20260420.md)
 - `docs/planning/closeouts/20260420-temporal-fowler-architecture-drift-follow-up-closeout.md`
 - `docs/planning/closeouts/20260420-ar-d-plan-pointer-follow-up-hardening-closeout.md`
 - `docs/planning/closeouts/20260424-temporal-plan-ref-contract-closeout.md`

@@ -40,7 +40,7 @@ as a convenience alias. That left the repo in an unstable in-between state:
   adapters must not define canonical status meaning.
 - `docs/adr/ADR-0015-getRunStatus-read-model-separation.md`: canonical status
   is event-log-backed truth; enrichment is separate and must fail closed.
-- `docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md`:
+- [AR-A12-B status model split plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md):
   the active contract line must expose exactly `CanonicalRunStatus`,
   `ProviderRunStatusView`, and `RunStatusEnrichment`.
 - `docs/planning/reviews/architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md`:

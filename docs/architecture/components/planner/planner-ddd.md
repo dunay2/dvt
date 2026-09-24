@@ -48,4 +48,3 @@ flowchart LR
 
 - [Planner component entry](./index.md)
 - [DB-first Component Map](../../component-map.md)
-- [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)

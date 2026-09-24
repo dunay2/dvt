@@ -19,7 +19,7 @@ surfaces.
 - `AGENTS.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/ar-b1-run-status-write-boundary-plan-20260404.md`
+- [AR-B1 run-status write-boundary plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/ar-b1-run-status-write-boundary-plan-20260404.md)
 - `docs/guides/run-status-write-boundary-technical-manual-20260404.md`
 - `docs/guides/run-status-write-boundary-user-manual-20260404.md`
 - `docs/planning/state/agent-lane-b.yaml`

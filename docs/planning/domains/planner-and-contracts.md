@@ -30,7 +30,3 @@ plan-version compatibility.
 
 - [20260320 Planner R2 Redefinition Closeout](../closeouts/20260320-planner-r2-redefinition-closeout.md)
 - [20260320 Planner R2 Typed Graph Source Boundary Closeout](../closeouts/20260320-planner-r2-typed-graph-source-boundary-closeout.md)
-
-## Diagram Sources
-
-- [Planner and Contracts Architecture Delta](../roadmap/diagrams/planner-contracts-architecture-delta.md)

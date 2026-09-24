@@ -25,7 +25,7 @@ status: Accepted
   `docs/adr/ADR-0018_Shared_Kernel_Ownership_Governance.md`;
   `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`;
   `docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md`;
-  `docs/planning/proposals/mandatory/runtime-and-contracts/planner-hard-cut-boundary-remediation-20260410.md`.
+  [Planner hard-cut boundary remediation 2026-04-10](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/planner-hard-cut-boundary-remediation-20260410.md).
 - Options considered:
   1. Keep compatibility and keep translating `manifestRef` inside runtime.
   2. Deprecate compatibility but keep it callable for one more slice.

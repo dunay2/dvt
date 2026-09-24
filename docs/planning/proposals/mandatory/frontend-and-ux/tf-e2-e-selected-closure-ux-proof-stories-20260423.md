@@ -45,7 +45,6 @@ inventing a second planning line.
 - `docs/planning/state/agent-lane-a.yaml`
 - `docs/architecture/reference-architecture.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md`
 - `docs/architecture/components/planner/workspace-authoring-draft-aggregate.md`
 - `apps/api/docs/executable-subgraph-resolution-component.md`
 - `docs/architecture/components/web/graph/canvas-execution-selection-component.md`

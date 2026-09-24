@@ -26,7 +26,6 @@ before physical retirement. History stays in Git.
 - [Governance document and rule inventory](../../../status/governance-document-rule-inventory.md)
 - [GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md)
 - [Proposal portfolio map](../../portfolio-map-20260403.md)
-- [Frontend mature-system gap status](../../../status/frontend-mature-system-gap-status-20260602.md)
 - [Command and query rail governance](../../../../architecture/command-query-rail-governance.md)
 - [Fowler opportunity planning governance](../../../../architecture/fowler-opportunity-planning-governance.md)
 
