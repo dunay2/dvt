@@ -1399,3 +1399,52 @@ test('current task guidance no longer routes work through retired planning group
     /^# Execution Dependency Gates$/mu
   );
 });
+
+// These dated validation reports are recoverable at their exact Git revision.
+// Current contracts, tests, risk evidence and mechanization obligations remain.
+test('retired historical validation records have no current files or references', () => {
+  const retiredDocuments = [
+    'docs/evidence/ED-20260402-rc-g1-governance-startup-reconciliation.md',
+    'docs/evidence/ED-20260408-pr679-adapter-postgres-integration-smoke.md',
+    'docs/evidence/ED-20260409-provider-ref-empty-string-preservation.md',
+    'docs/evidence/ED-20260409-trace-context-adapter-type-alignment.md',
+    'docs/evidence/ED-20260809-temporal-cancellation-test-barrier.md',
+    'docs/evidence/ed-20260429-dbt-cli-plugin-runner-srp.md',
+    'docs/evidence/ed-20260429-run-execution-context-admission-test-srp.md',
+    'docs/evidence/ed-20260510-plan-integrity-validator-traceability-baseline.md',
+    'docs/evidence/ed-20260601-planner-local-doc-archive.md',
+    'docs/evidence/ed-20260731-planning-authority-engine-guard.md',
+  ];
+  const names = new Set(retiredDocuments.map((path) => path.split('/').at(-1).toLowerCase()));
+  const stems = retiredDocuments.map((path) =>
+    path.split('/').at(-1).replace(/\.md$/u, '').toLowerCase()
+  );
+  const references = new RegExp(stems.map(escapeRegExp).join('|'), 'u');
+  for (const path of retiredDocuments) {
+    assert.equal(existsSync(path), false, `Retired historical record returned: ${path}`);
+  }
+  const paths = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+    { encoding: 'utf8' }
+  )
+    .split('\0')
+    .filter(Boolean);
+  for (const path of paths) {
+    if (path === 'tools/ci/docs-disposition-canon.test.mjs' || !existsSync(path)) continue;
+    assert.equal(
+      names.has(path.split('/').at(-1).toLowerCase()),
+      false,
+      `Relocated historical report: ${path}`
+    );
+    const current = readRepoFile(path).replace(
+      /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/giu,
+      ''
+    );
+    assert.doesNotMatch(
+      current.toLowerCase(),
+      references,
+      `Live historical validation reference: ${path}`
+    );
+  }
+});
