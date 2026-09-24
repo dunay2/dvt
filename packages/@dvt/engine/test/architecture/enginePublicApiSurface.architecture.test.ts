@@ -49,16 +49,13 @@ function expectNoExportFamilies(
 }
 
 describe('@dvt/engine public API surface architecture', () => {
-  it('documents the package-surface component, stories, proposal, and Fowler analysis', () => {
+  it('documents the package-surface component, stories, and proposal', () => {
     expectFileExists(engineArchitectureDocPath('engine-public-api-surface-component.md'));
     expectFileExists(engineArchitectureDocPath('engine-public-api-surface-user-stories.md'));
     expectFileExists(
       repoPath(
         'docs/planning/proposals/mandatory/runtime-and-contracts/ea-20260429-05-engine-public-api-surface-plan-20260514.md'
       )
-    );
-    expectFileExists(
-      repoPath('buzon/20260514-codex-fowler-ea-20260429-05-engine-public-api-surface-analysis.md')
     );
 
     const guide = readRepoSource(
@@ -91,22 +88,6 @@ describe('@dvt/engine public API surface architecture', () => {
     ]) {
       expect(stories).toContain(storyId);
     }
-
-    const analysis = readRepoSource(
-      'buzon/20260514-codex-fowler-ea-20260429-05-engine-public-api-surface-analysis.md'
-    );
-    expectMarkdownSections(analysis, [
-      '## Fowler Architecture Analysis',
-      '## Mature-System Comparison',
-      '## Improved Patterns',
-      '## Antipatterns Detected',
-      '## Component Grouping',
-      '## Repetition Register',
-      '## Opportunity Register',
-      '## Drift Register',
-      '## Applied Fixes',
-      '## Future Lessons',
-    ]);
   });
 
   it('publishes root, runtime, and testing as the only governed package entrypoints', () => {

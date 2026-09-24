@@ -29,8 +29,6 @@ context, or feature-mechanization evidence; do not route them as next work.
 - [F-15-F canvas workbench screen consolidation](../f15f-canvas-workbench-screen-consolidation-plan-20260519.md)
 - [F-15-G first canvas creation capability](../f15g-first-canvas-creation-capability-plan-20260519.md)
 - [F-15-H first canvas draft capability split](../f15h-first-canvas-draft-capability-split-plan-20260520.md)
-- [TF-E2 canvas target architecture execution](../tf-e2-canvas-target-architecture-execution-plan-20260417.md)
-- [TF-E2 production node authoring and persistence](../tf-e2-production-node-authoring-and-persistence-plan-20260416.md)
 
 ## Code, Artifacts, Templates, And Diff
 

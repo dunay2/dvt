@@ -117,4 +117,3 @@ stateDiagram-v2
 ## Related Records
 
 - [WE-HX-5 user stories](./workflow-engine-provider-telemetry-seams-user-stories.md)
-- [Fowler mailbox analysis](../../../../../buzon/20260512-codex-fowler-we-hx-5-provider-telemetry-seams-analysis-and-remediation.md)

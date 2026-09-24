@@ -26,8 +26,8 @@ Use this document when the question is architectural rather than tactical:
 - how compile fits into the broader system at C4 level
 - how the target compile path should collaborate internally
 
-For roadmap sequencing and backlog execution, use
-[MW-D1 External Plan Definition SDK/API Plan 2026-04-17](../planning/proposals/mandatory/runtime-and-contracts/mw-d1-external-plan-definition-sdk-api-plan-20260417.md).
+For durable sequencing, use the [Roadmap Of Record](../planning/roadmap/index.md).
+The governing GitHub issue owns delivery status and acceptance.
 
 ## Governing sources
 
@@ -39,7 +39,6 @@ For roadmap sequencing and backlog execution, use
 - `docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md`
 - `docs/architecture/components/planner/planner-ddd.md`
 - `docs/architecture/components/api/index.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/mw-d1-external-plan-definition-sdk-api-plan-20260417.md`
 - `docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md`
 
 ## Scope and non-goals

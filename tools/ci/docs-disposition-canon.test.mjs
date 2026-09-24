@@ -1029,10 +1029,6 @@ test('retired historical reviews and delivery records have no live consumers', (
       'docs/evidence/ED-20260421-api-plan-route-response-and-adapter-build-baseline.md',
       new Set(['cadcf55b38f1ffc7890be49f515ae98f917fe557']),
     ],
-    [
-      'docs/planning/closeouts/20260429-static-analysis-followup-closeout.md',
-      new Set(['92d32d12c874463faea047cbdc3b12f2fb61cf7a']),
-    ],
   ]);
   const observedInvocations = new Set();
   const names = retiredFiles
@@ -1328,11 +1324,9 @@ test('current task guidance no longer routes work through retired planning group
     'docs/planning/proposals/mandatory/frontend-and-ux/pending-work/index.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/sql-canvas-demanding-user-flow-review-plan-20260608.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md',
     'docs/planning/proposals/mandatory/governance-and-docs/arc-state-store-policy-routing-plan-20260510.md',
     'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md',
@@ -1350,8 +1344,6 @@ test('current task guidance no longer routes work through retired planning group
     'docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/dbt-step-capability-admission-plan-20260603.md',
-    'docs/planning/proposals/mandatory/runtime-and-contracts/mw-c1-to-tf-c2-runtime-vertical-sequence-analysis-20260409.md',
-    'docs/planning/proposals/mandatory/runtime-and-contracts/mw-d1-external-plan-definition-sdk-api-plan-20260417.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md',
@@ -1363,11 +1355,9 @@ test('current task guidance no longer routes work through retired planning group
     'docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md',
-    'docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md',
     'docs/planning/proposals/nice-to-have/architecture/ddd-hexagonal-modularization-plan-20260323.md',
-    'docs/planning/proposals/nice-to-have/architecture/evidence-information-architecture-plan-20260402.md',
     'docs/planning/proposals/nice-to-have/architecture/todo.md',
     'docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md',
     'docs/planning/proposals/portfolio-map-20260403.md',
@@ -1881,5 +1871,222 @@ test('historical implementation journals stay retired without erasing mechanizat
       })
       .join('\n');
     assert.equal(hasRetiredName(text), false, `Live reference to retired journal in ${path}`);
+  }
+});
+
+test('historical delivery support documents stay retired with current contracts intact', async () => {
+  const { sha256Hex, sha256HexUtf8 } = await import('@dvt/crypto');
+  const { readFileSync } = await import('node:fs');
+  const { extractFeatureMechanizationManifests } =
+    await import('../../scripts/lib/feature-mechanization-manifest.cjs');
+  const retired = [
+    'buzon/20260429-codex-fowler-plan-admission-hard-cut-analysis-and-remediation.md',
+    'buzon/20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md',
+    'buzon/20260430-codex-fowler-ar-d2-temporal-capacity-sla-analysis-and-remediation.md',
+    'buzon/20260430-codex-fowler-we-hx-2-facade-use-cases-analysis-and-remediation.md',
+    'buzon/20260512-codex-fowler-dhm-ws6-semantic-closure-analysis.md',
+    'buzon/20260512-codex-fowler-we-hx-5-provider-telemetry-seams-analysis-and-remediation.md',
+    'buzon/20260512-codex-fowler-we-hx-6-boundary-fitness-analysis-and-remediation.md',
+    'buzon/20260513-codex-fowler-ar-d4-zero-downtime-schema-rollback-analysis.md',
+    'buzon/20260513-codex-fowler-ea-20260429-01-schema-version-admission-analysis.md',
+    'buzon/20260514-codex-fowler-ea-20260429-02-plan-admission-matrix-analysis.md',
+    'buzon/20260514-codex-fowler-ea-20260429-05-engine-public-api-surface-analysis.md',
+    'buzon/20260515-codex-fowler-we-hx-3-hardcut-analysis.md',
+    'buzon/20260515-codex-we-hx-3-qa-hardening-tasks.md',
+    'buzon/20260518-f14-fowler-frontend-test-governance-analysis.md',
+    'buzon/20260518-f14a-fowler-web-vitest-changed-suite-routing-analysis.md',
+    'buzon/20260523-codex-fowler-ar-d5-tenant-retention-policy-analysis.md',
+    'buzon/20260531-db-first-architecture-generated-docs-fowler-analysis.md',
+    'docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md',
+    'docs/planning/closeouts/20260429-static-analysis-followup-closeout.md',
+    'docs/planning/closeouts/20260430-we-hx-2-facade-use-cases-closeout.md',
+    'docs/planning/closeouts/20260512-dhm-ws6-semantic-closure-closeout.md',
+    'docs/planning/closeouts/20260512-we-hx-3-start-run-application-decomposition-closeout.md',
+    'docs/planning/closeouts/20260514-tf-e2-parent-closeout.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/no-left-rail-menu-visual-direction-20260531-v2.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-automated-evidence-generation-plan-20260404.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/mw-c1-to-tf-c2-runtime-vertical-sequence-analysis-20260409.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/mw-d1-external-plan-definition-sdk-api-plan-20260417.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md',
+    'docs/planning/proposals/nice-to-have/architecture/evidence-information-architecture-plan-20260402.md',
+    'docs/planning/reviews/architecture-and-governance/20260417-dvt-artifacts-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260422-dvt-plus-principal-architect-action-plan.md',
+    'docs/planning/reviews/architecture-and-governance/20260424-dvt-plus-hard-architecture-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260429-we-hx-1-fowler-architecture-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260527-docs-engine-component-reconciliation-fowler-review.md',
+    'docs/planning/reviews/ci-and-delivery/20260422-environment-configuration-audit-review.md',
+    'docs/superpowers/plans/2026-06-28-canvas-background-context-menu-db-first.md',
+    'docs/superpowers/plans/2026-06-28-canvas-context-menu-presenter-informe.md',
+    'docs/superpowers/plans/2026-06-28-canvas-context-menu-qa-backlog.md',
+    'docs/superpowers/plans/2026-06-29-node-floating-toolbar.md',
+  ];
+  const retiredContentHashes = new Set([
+    '3340813caa2e2a7dfd817467bbcd84feffd027a44debf4177006170fda460ace',
+    '9c3667f315c287642401dd3d8ac2f044df02d5a6f61178d89fdd88b13f58e45c',
+    'd2616de599a98e1b7f920fbd268f26db6f751800284b0740a77bca2da08ee209',
+    'c9b0d3ed298d5873f6c3214df02c2314905b4bd46d88e0513803619f9fd5f41e',
+    '5c4759958c602f792a4a215558cb415cef76a347af7d55199d36b97513d4e344',
+    'fe1b8360a90d721fb527a8244adb6aeebb886c7f789aa62e814810b547400578',
+    'a425ee6013cf577687e2c3d149d9c55a9546a6b3db07caad38e6e69fa7b9baa3',
+    '71d16140020a9b6ddf10e807dce415374812948a1a0ef52d92605563c44ea3dd',
+    '8278c0e7f8f2c343743c08e219ce9a484f02ae7db535fddca402f24d99e8800b',
+    'dcda1d622a9205272162af236e694a22051111fe547d781e7394507eeedc1e96',
+    '447095b560fdf56c9c02c36befeb1efec9eddff0503f0710071e5ffb7a1eb62e',
+    'c16e77ab1c7be953fbafec93701c5b928ec7c3484c5a3ef7088855dd7f2a96ee',
+    '690ebc87d51ef67b3337b92a7bc4bf18b8e402acfb06edc41bbc06eb20f84f00',
+    '5d28495459f19d7a73fd5210d6bb34cbcbf5c2f892de5ee2b5c47f06f0355f85',
+    '97085ee44a6a757731129054ec2869aa73b78785d7185502276b4729d7ce2c87',
+    '38074e154962641ac1b3c9d339f6da45667fd5255ca9c50b4af52686821fc4ae',
+    '5b396e4e7e0da3dbc31af32c6f76eb374ec9ca474cdeadbbecb0c747e487d5ef',
+    '58b27fcd7dba392e0d6dc3c3dbb8a8e303d2a990ccb4a8ee625cb434bac31f06',
+    '2f7458be11622f2a715831563d919b4f7cae444da7f4b7ac60dbf36b977147c2',
+    '8d733d6759ec32c77c34ce4c86d08e02d26a7478c730cbdf06ee2c48b438b656',
+    '05d2648c8c76cf98da3eb5640257817c1a80857813cda6d99e5ab74923149229',
+    '2f6b5932741c032a7194a16016c06c89dbae2f0d72396826ce8451c8bd88e1dd',
+    'e7115e7d5ea73e35bb3a1c5014016b6183d6f9bc6851a13d277059ddb9162fda',
+    '28819622e521025c5fdb8db285e351357992b4fa448f90f906256dd3afae26b9',
+    '83b219be2bf889cd19ba7cec4c648fbd234f177bd7f63ba5e3b5034073e943dd',
+    '95813f41cee3199fd9a42aff160b7d8b06ccbce84f10c3abb822e4aae2a65f18',
+    '0962401eac321f15e7066331e86036ae9fda98b1fced6b252ec4d78ccaf68a0d',
+    '7eb2b719ff65f485a1746ce9ede9512cb60c091c9da2f5dcf3a4f2ed0e9a2214',
+    '434264ccb9d1410172d373215a7f577a4b0369286cba0bd4e049f059453332e7',
+    'b1565d7a1d972193c0654a0d0951a182b940d45c1bb6b7e03bdf63058e2887a5',
+    'f5fac210a1565beb16ceba82a4cd88eefbc58c3186e7e39d3e6044b6f46fc56d',
+    '50ea9c72326082a5d170d0236eba6b80c98e6d8a42751317eec9b9a41e02830b',
+    '4b47da95c79f8bbdd443ecabe6f58c2574a7bc71e9a445e07601795217f343e4',
+    '0baf1da7f51673180b150cd2f779932e65d848afc2a734e576c9df5196091c0c',
+    'c3c07c714ef45cd761f3471d4f739fab4ec3a71dce5bbcd0b856ac46433f42ed',
+    'cff43a1c6099663fb2524b57e6830a520496c2739a917493fc9d591e55781e11',
+    '65d6435cd6f442d58f7daacd0e2370e8bb85a2694e3b2930388637400929ede9',
+    '0d78a7423fb969250bf805c8c6fc0714393ceb112b1ebbbb9912f2d05aaa655f',
+    '0f60e2a2357ce7320f989501bac08a99c0fe06904284fb869ec2d9e7f5a2275e',
+    '3a15f67536d12ea3b20358967b7583cc36468e31e8ecf6aa1d8b9e2b5f0b4710',
+    '79ac20b5c17cd21d7def59ff43f5e27831195012597ad19ce1b0832aaf22ebfd',
+    '817778eb638aec806fa39c2747b129d0df5e8e15d460378ccd481b1a50094794',
+  ]);
+  // SHA256([consumer path, featureId, exact field path, retired value]) -> original count.
+  // Removing a historical field is allowed; moving, duplicating or adding a reference is not.
+  const historicalFields = {
+    '8cc996008309b0e755bf34f50655987b44f6a5f2aac896b085316de898650364': 1,
+    '4aa82761d0943303a6d65224d7e9f31e0bde8d83e488b49f18cf58e0d1c799be': 1,
+    '15a2d43e1d0466ce247523b1bd7e3c10c41c72ce71550235c466ce1294dfaeab': 1,
+    f47797f4e2c3bf2fe2cfc824256c41d10bd3166413775cb2ae6cbe343a0d7965: 1,
+    d031b6973476f1d9143ed0ba0fdfeb6087916187d9490ab82ff43cdcd3e2cb2b: 1,
+    '79b710cf77086bbb84255512d1e4526198e5faf8bea26d9170c4a35492f453fb': 1,
+    cb99108dea5432d688aff1d845aa99997807bf59533fea21a85eaeb90f70896a: 1,
+    '05f9c53dcb4917a18a9291722d597ab257f9ef26d176f30322dfb2b003a413cf': 1,
+    '4c7e537dc8dd50d9d777a84ad09a75cc6fccb18fb1b681dca6d1422715a37538': 1,
+    '16ca3eb24f96b375f9c6e7e88e87e0fe52a8cb30e20012d9f4b851fa0ba0710f': 1,
+    '94f988da9e1df187bef3e762047ecee5c51ca7b3e042e3ab021df1bd867c3b63': 1,
+    fcfcd50a68fc44e8b4386a23563501e58beb12a67502e72de4aaaa146048a1d4: 1,
+    d5a8e128b94d0fa9eac87bc25c216c93259e4445deeddd248fee86951d9ba3e1: 1,
+    b1427e923c70a29c3b6d07fe4b8d3219b61272535d42dfee213c15d6b947ea43: 1,
+    '1e5f57ae28ee1d4c7ee226b34f6f5fe4e2e598aadf6934d24d9657a15d3f5e52': 1,
+    '19cb3b6605753c13536b3aeeecfcf624b5c68a82d00f9a9944285ac4323d8184': 1,
+    a1a1873724cd5da5c08d8e8abf9f23cc120ac4c5f2a6a224b57506d5a07f7c5b: 1,
+    '439fa1936c59978518b839273dc7ffb763597ea0d0ed1c89b56cd44da8d4240c': 1,
+    d1f4b0236aeec35de0b4b0324dd904ef8fc36470ef83bf1c6db290b6510cb4e6: 1,
+    f5f22ae761776f07a34870d177b0532b364351370926679d8dd660d90c6eecf6: 1,
+    '9c974ccbb5e72bdafadcd579898418069daa3447aafddc0816f62c6740d6f508': 1,
+    '221ee55b6e7f4af092b01f068e1a741eedb8a3e8bbadab6421046820b77b1da5': 1,
+    '62ecac85351b93ae92f05ecbe38568b6b01cd8e945f2145ac8ec6f0599fe475f': 1,
+    '8d7542626bd8a72e6ac07bbd2064da53b7271ef2c048d41f6662d957a7e63f1f': 1,
+  };
+  // SHA256([consumer path, exact trimmed command line]) -> original count.
+  const recordedCommands = {
+    '0a6c58c42c4d7ff652a1f1b827ad4cb15903f7807f17332374001177c0f9f678': 1,
+  };
+  const identity = (value) => sha256HexUtf8(JSON.stringify(value));
+  const counts = new Map();
+  const consume = (allowed, key, context) => {
+    const count = (counts.get(key) || 0) + 1;
+    assert.ok(Object.hasOwn(allowed, key) && count <= allowed[key], context);
+    counts.set(key, count);
+  };
+  const names = new Set(
+    retired.map((path) => posix.basename(path).toLowerCase().replace(/\.md$/u, ''))
+  );
+  const pinnedGit =
+    /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu;
+  const hasRetiredName = (text) => {
+    const withoutProvenance = text.replace(pinnedGit, '');
+    return [...withoutProvenance.toLowerCase().matchAll(/[\w.-]+/gu)].some(([token]) =>
+      names.has(token.replace(/\.md$/u, ''))
+    );
+  };
+  const paths = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+    {
+      encoding: 'utf8',
+    }
+  )
+    .split('\0')
+    .filter(Boolean);
+  for (const path of paths) {
+    assert.equal(hasRetiredName(posix.basename(path)), false, `Retired journal relocated: ${path}`);
+  }
+  for (const path of paths) {
+    if (path === 'tools/ci/docs-disposition-canon.test.mjs' || !existsSync(path)) continue;
+    const bytes = readFileSync(path);
+    assert.equal(
+      retiredContentHashes.has(sha256Hex(bytes)),
+      false,
+      `Retired content relocated: ${path}`
+    );
+    if (bytes.includes(0)) continue;
+    let text = bytes.toString('utf8');
+    if (!hasRetiredName(text)) continue;
+    text = text.replace(/```feature-mechanization\s*\r?\n([\s\S]*?)\r?\n```/gu, (fence, raw) => {
+      const [record] = extractFeatureMechanizationManifests(fence, path);
+      assert.ok(record?.manifest && !record.parseError, `Invalid manifest in ${path}`);
+      const manifest = record.manifest;
+      let remaining = raw;
+      const visit = (value, keys = []) => {
+        if (typeof value === 'string' && hasRetiredName(value)) {
+          const allowedRole =
+            (keys.length === 2 && keys[0] === 'allowedImplementationSurfaces') ||
+            (keys.length === 4 && keys[0] === 'redGreenCycles' && keys[2] === 'patchSurfaces');
+          assert.ok(allowedRole, `Retired journal used as authority: ${path} ${keys.join('.')}`);
+          consume(
+            historicalFields,
+            identity([path, manifest.featureId, keys, value]),
+            `New or moved historical field in ${path} ${keys.join('.')}`
+          );
+          remaining = remaining.replace(value, '');
+        } else if (Array.isArray(value)) {
+          value.forEach((item, index) => visit(item, [...keys, String(index)]));
+        } else if (value && typeof value === 'object') {
+          for (const [key, item] of Object.entries(value)) {
+            assert.equal(hasRetiredName(key), false, `Retired name in manifest key: ${path}`);
+            visit(item, [...keys, key]);
+          }
+        }
+      };
+      visit(manifest);
+      // Comments, duplicated scalars, aliases and other text do not inherit field exemptions.
+      assert.equal(hasRetiredName(remaining), false, `New raw manifest reference in ${path}`);
+      return '';
+    });
+    text = text
+      .split('\n')
+      .map((line) => {
+        if (!hasRetiredName(line)) return line;
+        const key = identity([path, line.trim()]);
+        if (Object.hasOwn(recordedCommands, key)) {
+          consume(recordedCommands, key, `Duplicated recorded command in ${path}`);
+          return '';
+        }
+        return line;
+      })
+      .join('\n');
+    assert.equal(hasRetiredName(text), false, `Live reference to retired journal in ${path}`);
+  }
+
+  for (const [key, required] of Object.entries(recordedCommands)) {
+    assert.equal(counts.get(key), required, `Recorded evidence command altered or removed: ${key}`);
   }
 });
