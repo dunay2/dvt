@@ -1,14 +1,14 @@
 ---
-title: Execution Parallel Lanes
+title: Execution Dependency Gates
 status: Review
 owner: Architecture / Delivery / Docs
 last_reviewed: 2026-09-10
 planning_type: reference
 ---
 
-# Execution Parallel Lanes
+# Execution Dependency Gates
 
-Parallel lane model with synchronization gates.
+Execution dependencies with synchronization gates.
 
 ```mermaid
 flowchart TB
@@ -17,10 +17,10 @@ flowchart TB
   C[Gate C: Contract compatibility]
   P[Gate P: Prepush + docs governance]
 
-  F --> A[Track A: Runtime hardening]
-  F --> B[Track B: API and admission]
-  F --> D[Track D: Traceability]
-  F --> E[Track C: Planner and contracts]
+  F --> A[Runtime hardening]
+  F --> B[API and admission]
+  F --> D[Traceability]
+  F --> E[Planner and contracts]
 
   A --> R
   D --> C

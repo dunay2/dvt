@@ -26,7 +26,6 @@ This is a **reconcile-and-replace** plan, not an additive docs layer.
 - `ADR-0042`
 - `docs/guides/dvt-code-style-solid-hexagonal-cqrs.md`
 - `docs/architecture/components/engine/reviews/engine-class-review-and-gaps-2026-03-31.md`
-- `docs/planning/state/agent-lane-a.yaml`
 
 ## As-is findings
 
@@ -59,7 +58,7 @@ Hardcut target:
 No-go constraints:
 
 - no runtime refactor in this docs/planning slice
-- no shadow roadmap parallel to lane planning
+- no shadow roadmap parallel to GitHub issue tracking
 - no peer-domain runtime behavior inside engine internals
 
 ### `DHM-WS2` Runtime composition root simplification
@@ -1643,9 +1642,9 @@ symbols:
       - pnpm --filter @dvt/engine test -- test/architecture/engineArchitectureTestSupport.test.ts
 ```
 
-## Lane mapping
+## Task ownership
 
-Lane A execution mapping:
+Implementation mapping:
 
 - [Task: RUNTIME-PROP-DISP-1] create umbrella `WE-HX` with child tasks `WE-HX-0..6`
 - reference this proposal and the two canonical docs:
@@ -1672,7 +1671,7 @@ Primary risks:
 
 Mitigation:
 
-- enforce wave sequencing in Lane A
+- record execution sequencing in the governing GitHub issue
 - keep canonical navigation explicit in engine and components indexes
 - [Task: RUNTIME-PROP-DISP-1] add architecture fitness checks in `WE-HX-6`
 
@@ -1693,7 +1692,6 @@ single active architecture narrative for this subsystem.
 ## Validation baseline
 
 ```bash
-pnpm docs:workboard:generate
 pnpm docs:sync
 pnpm verify:prepush
 ```

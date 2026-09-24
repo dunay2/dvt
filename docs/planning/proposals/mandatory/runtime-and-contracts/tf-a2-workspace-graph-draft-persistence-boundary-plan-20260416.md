@@ -4,7 +4,6 @@ status: Draft
 owner: Architecture / API / Web
 last_reviewed: 2026-04-23
 planning_type: proposal
-lane: A
 task_id: TF-A2
 ---
 
@@ -16,7 +15,7 @@ This proposal closes the contract gap between Canvas authoring and backend-owned
 persistence.
 
 The goal is not to add another frontend draft cache. The goal is to define one
-typed, blocking, cross-lane boundary for editable workspace graph drafts so
+typed, blocking, cross-component boundary for editable workspace graph drafts so
 `web`, `api`, and the persistence owner stop drifting behind local DTOs,
 browser-only state, or route-local save heuristics.
 
@@ -83,9 +82,9 @@ It must not introduce:
 
 The boundary chain is:
 
-1. Lane A freezes the shared contract pack and port semantics
-2. Lane C implements the protected API and store-facing write boundary
-3. Lane E adopts the boundary and removes UI-local persistence authority
+1. The contract implementation freezes the shared contract pack and port semantics
+2. The API implementation provides the protected API and store-facing write boundary
+3. The frontend adopts the boundary and removes UI-local persistence authority
 
 ## Aggregate split
 
@@ -216,7 +215,7 @@ subgraph. The editable draft must not.
 ## Exact minimum caller-visible envelopes
 
 `TF-A2` does not need to freeze final package file names yet, but it does need
-to freeze the minimum field-level shape that downstream lanes must preserve.
+to freeze the minimum field-level shape that downstream consumers must preserve.
 
 ### Capability outcome
 
@@ -340,7 +339,7 @@ persist or emit, even if the final storage schema is implemented later:
 - `decisionId`
 - server timestamp
 
-This is the minimum auditable payload. Lane C may enrich it, but it must not
+This is the minimum auditable payload. The API may enrich it, but it must not
 emit less.
 
 ### Minimum observability correlation obligation
@@ -400,7 +399,7 @@ That means:
 
 ### 1.2.2 Migration and backfill posture
 
-- Lane C owns the protected read/write behavior for format migration and any
+- The API owns the protected read/write behavior for format migration and any
   write-back or batch backfill execution needed to converge stored drafts
 - read-time migration may be used for the first compatible legacy window, but
   indefinite mixed-version persistence is not acceptable as steady state
@@ -478,10 +477,10 @@ That means:
 
 - the caller-visible read model for the editable draft must have an explicit
   freshness expectation
-- Lane C must tie route behavior to the existing `read-your-writes contract`
+- The API must tie route behavior to the existing `read-your-writes contract`
   instead of leaving freshness implicit
 
-## Cross-lane execution rule
+## Cross-component execution rule
 
 `TF-E2` must not treat graph persistence as a frontend-owned slice.
 
@@ -506,11 +505,11 @@ This boundary slice is only ready when all of the following are true:
 5. tenant, project, and environment scope plus explicit read, write, and
    read-only authorization outcomes are part of the governed boundary
 6. capability outcomes and audit references use the exact minimum field-level
-   shapes frozen above rather than lane-local aliases or stringly-typed drift
+   shapes frozen above rather than consumer-local aliases or stringly-typed drift
 7. protected decisions and writes are required to emit or reference auditable
    outcomes instead of leaving audit behavior implicit
 8. observability correlation semantics are frozen so runtime traces, metrics,
-   and audit evidence can be joined without per-lane reinterpretation
+   and audit evidence can be joined without consumer-specific reinterpretation
 9. format metadata, migration state, and typed format-error outcomes use the
    exact minimum field-level shapes frozen above
 10. schemaVersion ownership, compatibility window, migration strategy, and
@@ -522,13 +521,11 @@ This boundary slice is only ready when all of the following are true:
     whole-draft compile-by-default behavior
 14. conflict, auth, freshness, retry, and format-evolution behavior are
     caller-visible and typed
-15. Lane E depends on this chain instead of inventing local persistence
+15. The frontend depends on this chain instead of inventing local persistence
 
 ## Validation baseline
 
 ```bash
-pnpm docs:planning:lanes:generate
-pnpm docs:workboard:generate
 pnpm docs:sync
 pnpm verify:prepush
 ```

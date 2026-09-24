@@ -63,7 +63,7 @@ stateDiagram-v2
 ## Consumers
 
 - Runtime/API maintainers deciding whether a review finding requires code.
-- Planning stewards routing Lane C work through Planning DB instead of review
+- Planning stewards routing delivery work through GitHub Issues instead of review
   prose.
 - PR reviewers checking that protected runtime changes update rail docs and
   semantic guards together.
@@ -75,7 +75,7 @@ stateDiagram-v2
 
 | Rail                               | Type    | DDD owner                             | Surface                                        | Negative check                                                              |
 | ---------------------------------- | ------- | ------------------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------- |
-| `RecordRuntimeReviewCanon`         | command | Runtime review canon aggregate        | Planning DB task plus review status board      | Rejects orphan reviews without task, closeout, or explicit reference status |
+| `RecordRuntimeReviewCanon`         | command | Runtime review canon aggregate        | GitHub issue plus review status board          | Rejects orphan reviews without task, closeout, or explicit reference status |
 | `ClassifyRuntimeReviewDisposition` | query   | Runtime review disposition read model | Review board and execution-runtime domain page | Fails when an active runtime review lacks canonical disposition             |
 
 ## Semantic Fitness Function
@@ -98,7 +98,7 @@ flowchart TD
   Reviews[Runtime and API reviews]
   Board[Review status board]
   Rails[Protected runtime rail catalog]
-  Tasks[Planning DB Lane C tasks]
+  Tasks[GitHub Issues]
   Closeouts[Runtime closeouts]
 
   Reviews --> Board

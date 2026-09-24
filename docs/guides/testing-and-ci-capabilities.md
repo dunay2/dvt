@@ -387,7 +387,7 @@ Command semantics:
   ahead of `origin/main`. The component-level API, invariants, transitions,
   consumers, and user stories are documented in
   [Local Changed Files Gate Component](../architecture/components/ci-governance/local-changed-files-gate-component.md).
-- `pnpm verify:prepush` uses `node scripts/docs-workboard-check-changed.cjs`, so workboard drift is enforced when lane YAML changed, not for every module-only commit.
+- `pnpm verify:prepush` routes validation through the current changed-file gates; GitHub Issues owns task status.
 - `pnpm verify:prepush` is mechanical by default. It runs changed-file docs, markdown, formatting, ARC evidence, QA artifact, feature mechanization implementation, and forbidden-file checks without root type-check, architecture dependency checks, global governance maps, or verifier self-tests.
 - `.husky/pre-push` routes through `pnpm verify:prepush -- --hook` by default
   and `pnpm verify:prepush -- --full --hook` when `DVT_PREPUSH_STRICT=1`.

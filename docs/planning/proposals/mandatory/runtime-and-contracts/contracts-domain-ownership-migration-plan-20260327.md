@@ -34,7 +34,7 @@ Separate physical and semantic ownership so that:
 
 This document is the accepted canonical proposal for `RC-G1`.
 
-- operational tracker: `docs/planning/state/agent-lane-a.yaml`
+- operational tracker: the governing GitHub issue
 - [Task: RUNTIME-PROP-DISP-1] umbrella task: `RC-G1`
 - delivered slices:
   - `RC-G1-A`: ownership-matrix freeze
@@ -450,7 +450,6 @@ This document acts as the dedicated tracker for the work governed by ADR-0034.
   - target date: `2026-04-02`
   - touched scope: `docs/planning/proposals`, `docs/planning/reviews`,
     `docs/planning/state`, `docs/contracts`
-  - validation baseline: `pnpm docs:sync`, `pnpm docs:workboard:generate`,
     `pnpm verify:prepush`
   - rollback note: not applicable; docs and tracker freeze only
 - `RC-G1-B`

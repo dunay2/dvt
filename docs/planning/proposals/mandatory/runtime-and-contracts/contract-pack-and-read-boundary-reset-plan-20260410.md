@@ -31,7 +31,6 @@ This is a replace-and-converge plan, not a compatibility wrapper plan.
 - `docs/adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md`
 - `docs/architecture/components/engine/contracts/VERSIONING.md`
 - `docs/planning/reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md`
-- `docs/planning/state/agent-lane-a.yaml`
 
 ## Problem statement
 
@@ -243,7 +242,6 @@ Acceptance:
 
 ```bash
 pnpm docs:sync
-pnpm docs:workboard:generate
 pnpm docs:planning:generated:check
 pnpm verify:prepush
 ```

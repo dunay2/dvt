@@ -4,7 +4,6 @@ status: Accepted
 owner: Frontend / Architecture
 last_reviewed: 2026-06-01
 planning_type: proposal
-lane: E
 task_id: E-DVT-INSPECTOR-PANELS-1
 ---
 

@@ -15,7 +15,7 @@ Diagram navigation for planning structure, domains, and delivery lanes.
 - [Planning Domain Map](./planning-domain-map.md)
 - [Execution Tracking Flow](./execution-tracking-flow.md)
 - [Gap Execution Dependency Graph](./gap-execution-dependency-graph.md)
-- [Gap Execution Parallel Lanes](./gap-execution-parallel-lanes.md)
+- [Execution Dependency Gates](./execution-dependency-gates.md)
 - [Execution Runtime Architecture Delta](./execution-runtime-architecture-delta.md)
 - [API and Admission Architecture Delta](./api-admission-architecture-delta.md)
 - [Planner and Contracts Architecture Delta](./planner-contracts-architecture-delta.md)

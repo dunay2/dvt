@@ -4,7 +4,6 @@ status: Review
 owner: Frontend / API / Architecture
 last_reviewed: 2026-04-23
 domain: frontend
-lane: E
 task_id: MVP-E1
 ---
 

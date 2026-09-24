@@ -4,7 +4,6 @@ status: Proposed
 owner: Frontend / API / Architecture
 last_reviewed: 2026-04-04
 planning_type: proposal
-lane: E
 task_id: F-07
 ---
 
@@ -40,7 +39,7 @@ This was the drift that motivated `F-07` before the current implementation:
 - explicit read-model split is mandatory:
   `RunSummaryItem`, `RunSnapshot`, `RunEventTimelinePage`, and
   `RunWorkspaceViewModel`
-- frontend runtime contract docs are canonical references for Lane E runtime
+- frontend runtime contract docs are canonical references for frontend runtime
   slices
 - snapshot-only payloads are not presented as full run aggregates with fake
   step or event detail
@@ -99,14 +98,12 @@ flowchart LR
 2. `runsService.startRun` targets `/runs/start`
 3. frontend does not depend on `/runs/:runId/status`
 4. tests prove route and error behavior before and after implementation
-5. lane metadata and roadmap references are aligned
+5. GitHub issue evidence and roadmap references are aligned
 6. required governance checks pass
 
 ## Validation Plan
 
 - `pnpm docs:sync`
-- `pnpm docs:workboard:generate`
-- `pnpm docs:workboard:check`
 - `pnpm docs:sync:check`
 - `pnpm --dir apps/web exec vitest run src/app/services/runs/runsService.test.ts`
 - `pnpm --filter @dvt/web typecheck`

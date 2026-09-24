@@ -4,7 +4,6 @@ status: Accepted
 owner: Frontend / Architecture / Product
 last_reviewed: 2026-05-02
 planning_type: proposal
-lane: E
 task_ids:
   - TF-E2-M-C
 ---
@@ -43,7 +42,6 @@ HTTP boundary, and existing Canvas draft/session persistence seams.
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/planning/state/agent-lane-e.yaml`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md`
 - `docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md`
@@ -282,7 +280,6 @@ creating the expected backend state outside the route.
 | `docs/.manifest.json`                                                                                                     | Modify | Keep generated governance manifest aligned.                                                  |
 | `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md` | Modify | Narrow prior forbidden surfaces so Canvas feature work is not blocked by JWT wording drift.  |
 | `docs/planning/proposals/portfolio-map-20260403.md`                                                                       | Modify | Keep mandatory proposal navigation aligned.                                                  |
-| `docs/planning/state/agent-lane-e.yaml`                                                                                   | Modify | Keep Lane E status and evidence refs aligned.                                                |
 | `docs/planning/reviews/architecture-and-governance/20260501-tf-e2-m-c-fowler-hard-qa-review.md`                           | Create | Hard QA findings and fix plan for the live-proof closure pass.                               |
 | `docs/planning/status/generated-code-state.md`                                                                            | Modify | Keep generated source/test inventory aligned after Cypress additions.                        |
 | `docs/planning/status/governance-document-rule-inventory.md`                                                              | Modify | Document implementation-mode enforcement.                                                    |

@@ -4,7 +4,6 @@ status: Draft
 date: 2026-04-23
 owner: Architecture / API / Web
 planning_type: proposal
-lane: A
 task_id: TF-A2
 ---
 
@@ -44,7 +43,7 @@ This is a replace-and-converge plan, not a compatibility plan.
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
-- `docs/planning/state/agent-lane-a.yaml` (`TF-A2`)
+- Governing GitHub issue for `TF-A2`.
 - `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md`
 - `docs/architecture/components/web/graph/canvas-draft-session-component.md`
@@ -771,6 +770,5 @@ Definition of done:
 
 ```bash
 pnpm docs:sync
-pnpm docs:workboard:generate
 pnpm verify:prepush
 ```

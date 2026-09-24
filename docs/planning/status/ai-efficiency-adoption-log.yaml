@@ -10,7 +10,6 @@ targets:
   min_round_reduction_pct: 20
   required_consecutive_cycles: 3
 qualification_rules:
-  lane: C
   required_fields:
     - pr.number
     - pr.url

@@ -241,7 +241,7 @@ Expected design:
 - do not claim operational closure where only definitions exist
 - [Task: RUNTIME-PROP-DISP-1] do not extract a fake generic worker abstraction that hides different domain
   semantics
-- keep architecture docs, lane YAML, and status surfaces aligned after each
+- keep architecture docs, GitHub issue evidence, and status surfaces aligned after each
   slice
 
 ## Recommended execution rule

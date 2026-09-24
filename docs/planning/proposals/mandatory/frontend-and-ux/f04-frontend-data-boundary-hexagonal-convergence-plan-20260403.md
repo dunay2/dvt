@@ -401,10 +401,9 @@ flowchart LR
   style W6 fill:#ecfdf5,stroke:#059669
 ```
 
-## Lane mapping
+## Task ownership
 
-This proposal maps to **Lane E** (Frontend) or a new frontend-specific lane if
-one is created. Task structure:
+The governing frontend GitHub issue owns this proposal. Task structure:
 
 - [Task: E-PROP-DISP-1] Create umbrella task `F-04` with child tasks `F04-W0..W6`
 - Reference this proposal and:

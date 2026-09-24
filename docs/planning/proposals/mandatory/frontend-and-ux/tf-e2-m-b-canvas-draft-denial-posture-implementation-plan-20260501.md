@@ -4,7 +4,6 @@ status: Accepted
 owner: Frontend / Architecture / Product
 last_reviewed: 2026-05-02
 planning_type: proposal
-lane: E
 task_ids:
   - TF-E2-M-B
 ---
@@ -39,7 +38,6 @@ Canvas copy catalogs, existing protected workspace graph draft contract.
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/planning/state/agent-lane-e.yaml`
 - `docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md`
 - `docs/architecture/components/web/api-client-auth-component.md`
 - `docs/architecture/components/web/graph/canvas-execution-selection-component.md`
@@ -61,7 +59,7 @@ In scope:
 - copy catalog additions in English and Spanish;
 - toolbar, banner, center-surface, route interaction, and bootstrap consumers;
 - unit tests, architecture tests, and Cypress user-flow tests;
-- documentation and lane planning alignment.
+- documentation and GitHub issue alignment.
 
 Out of scope:
 
@@ -227,7 +225,6 @@ implement a session-grants command or token-refresh command in this task.
 | `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md` | Modify   | Add `TF-E2-M-B` story rows and test mapping.                                                                                |
 | `docs/architecture/components/web/graph/index.md`                                          | Modify   | Keep graph component navigation aligned with the new local guide.                                                           |
 | `docs/planning/proposals/portfolio-map-20260403.md`                                        | Modify   | Keep proposal navigation aligned with the new implementation plan.                                                          |
-| `docs/planning/state/agent-lane-e.yaml`                                                    | Modify   | Keep Lane E task state and evidence references aligned.                                                                     |
 | `docs/.manifest.json`                                                                      | Generate | Keep governed documentation manifest aligned after docs generation.                                                         |
 
 ## Feature Mechanization Manifest
@@ -2029,7 +2026,7 @@ pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-draft
 
 Expected: pass in local environment with Cypress available.
 
-### Task 8: Update Docs And Lane State After Code Green
+### Task 8: Update Docs And GitHub Evidence After Code Green
 
 **Files:**
 
@@ -2041,8 +2038,6 @@ Expected: pass in local environment with Cypress available.
   `docs/architecture/components/web/graph/index.md`
 - Modify:
   `docs/planning/proposals/portfolio-map-20260403.md`
-- Modify:
-  `docs/planning/state/agent-lane-e.yaml`
 - Generate:
   `docs/.manifest.json`
 
@@ -2051,7 +2046,7 @@ Expected: pass in local environment with Cypress available.
 When code is green, update the component guide `status` from `Proposed` to
 `Active`, and update the implementation plan status from `Draft` to `Accepted`.
 
-- [ ] **Step 2: Update Lane E**
+- [ ] **Step 2: Update the governing GitHub issue**
 
 Set `TF-E2-M-B` to `review` only after:
 
@@ -2066,7 +2061,6 @@ Run:
 
 ```powershell
 pnpm docs:sync
-pnpm docs:workboard:generate
 pnpm docs:gov:manifest
 ```
 
@@ -2085,7 +2079,6 @@ pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.t
 pnpm --filter @dvt/web typecheck
 pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
 pnpm docs:sync
-pnpm docs:workboard:generate
 pnpm docs:gov:manifest
 pnpm verify:prepush
 ```
@@ -2148,9 +2141,9 @@ tests, with explicit negative scenarios.
 ### Iteration 5: Drift Closure
 
 Finding: design and plan docs risked drifting from existing Canvas guides.
-Closure: this plan updates the graph index, startup and draft-recovery component
-guide, user stories, portfolio map, and Lane E registry in the same documentation
-slice.
+Current rule: keep the graph index, startup and draft-recovery component guide,
+user stories and portfolio aligned; record task evidence in the governing
+GitHub issue. The earlier implementation journal remains in Git history.
 
 ### Iteration 6: Remaining Gap Scan
 

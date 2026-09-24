@@ -238,7 +238,6 @@ That gives one bounded execution slice:
   `pnpm --filter @dvt/contracts test`,
   `pnpm --filter @dvt/adapter-temporal test`,
   `pnpm docs:sync`,
-  `pnpm docs:workboard:generate`,
   `pnpm verify:prepush`
 - test coverage plan:
   add positive and negative tests that prove valid compiled artifact extraction,

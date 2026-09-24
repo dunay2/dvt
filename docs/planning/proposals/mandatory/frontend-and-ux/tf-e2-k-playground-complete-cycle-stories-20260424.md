@@ -4,7 +4,6 @@ status: Draft
 owner: Frontend / UX / Architecture
 last_reviewed: 2026-04-24
 planning_type: proposal
-lane: E
 task_id: TF-E2-K
 ---
 
@@ -52,7 +51,6 @@ behavior is already mostly present.
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
-- `docs/planning/state/agent-lane-e.yaml`
 - `docs/architecture/reference-architecture.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md`

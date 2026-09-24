@@ -4,7 +4,6 @@ status: Proposed
 owner: Product / Architecture / Delivery / Runtime
 last_reviewed: 2026-09-10
 planning_type: proposal
-lane: C
 task_id: TF-C2
 ---
 
@@ -129,7 +128,7 @@ Both options increase the exact drift that `MW-C1` exists to remove.
   - one canonical Docker PostgreSQL proof surface for local acceptance,
     rerun, and operator-facing verification
 - Remaining downstream follow-through:
-  - repeatability/retention discipline under Lane D
+  - repeatability/retention discipline
   - deeper provenance linkage under `TF-B1-B`
 
 ### Rationale
@@ -213,7 +212,7 @@ render result evidence, not infer it.
 The read-surface contract should be shaped around real executor outputs, not
 around guessed or placeholder fields.
 
-`TF-C2-B` already has meaningful analysis and partial progress, but its own lane
+`TF-C2-B` already has meaningful analysis and partial progress, but its existing task
 state says that full closure still depends on real executor payload emission
 from `TF-C2-A` and evidence linkage from `TF-B1-B`.
 
@@ -232,7 +231,7 @@ behavior for stale snapshots; it does not unblock the first runtime vertical.
 
 ### `RC-G1-B`
 
-Important, but it is ownership hygiene in Lane A. It reduces contract drift,
+Important, but it is contract ownership hygiene. It reduces contract drift,
 not the first end-to-end execution gap.
 
 ### `F-01`
@@ -255,7 +254,7 @@ Treat the sequence as materially complete only when:
    Docker proof environment
 3. `TF-C2-B` exposes normalized runtime evidence on the caller-visible read
    surfaces
-4. Lane E can then consume those surfaces in `TF-E1-C` without inventing local
+4. The frontend can then consume those surfaces in `TF-E1-C` without inventing local
    result semantics
 
 ## Recommended execution rule

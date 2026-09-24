@@ -97,7 +97,7 @@ const baseActivePlanningEntrypoints = [
   'docs/planning/roadmap/diagrams/execution-runtime-architecture-delta.md',
   'docs/planning/roadmap/diagrams/execution-tracking-flow.md',
   'docs/planning/roadmap/diagrams/gap-execution-dependency-graph.md',
-  'docs/planning/roadmap/diagrams/gap-execution-parallel-lanes.md',
+  'docs/planning/roadmap/diagrams/execution-dependency-gates.md',
   'docs/planning/domains/index.md',
   ...planningDomainEntrypoints,
   'docs/planning/gaps/index.md',

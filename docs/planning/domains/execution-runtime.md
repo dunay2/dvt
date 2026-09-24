@@ -58,5 +58,5 @@ invariants, transitions, consumers, and semantic fitness-function expectations:
 - [DVT Dependency Risk Map](../execution-model/dvt-dependency-risk-map.md)
 - [Planning Domain Map](../roadmap/diagrams/planning-domain-map.md)
 - [Gap Execution Dependency Graph](../roadmap/diagrams/gap-execution-dependency-graph.md)
-- [Gap Execution Parallel Lanes](../roadmap/diagrams/gap-execution-parallel-lanes.md)
+- [Execution Dependency Gates](../roadmap/diagrams/execution-dependency-gates.md)
 - [Execution Runtime Architecture Delta](../roadmap/diagrams/execution-runtime-architecture-delta.md)

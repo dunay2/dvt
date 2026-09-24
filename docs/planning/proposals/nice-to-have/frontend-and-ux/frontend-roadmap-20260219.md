@@ -12,7 +12,7 @@ planning_type: proposal
 
 The execution of this roadmap is tracked through the
 [GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md).
-The former Lane E identifiers (`MVP-E1`, `F-01` through `F-23`) remain
+The existing task identifiers (`MVP-E1`, `F-01` through `F-23`) remain
 historical cross-references, not current task authority.
 This document captures the convergence sequence and the architectural rationale
 behind those tasks.

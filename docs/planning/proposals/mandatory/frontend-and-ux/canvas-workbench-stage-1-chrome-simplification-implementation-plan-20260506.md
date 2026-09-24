@@ -4,7 +4,6 @@ status: Proposed
 owner: Product / Frontend / Architecture
 last_reviewed: 2026-05-06
 planning_type: mandatory-proposal
-lane: E
 task_id: F-28-A
 parent_task_id: F-28
 ---
@@ -31,7 +30,6 @@ or protected draft API changes.
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
-- `docs/planning/state/agent-lane-e.yaml`
 - `docs/architecture/reference-architecture.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
@@ -489,7 +487,6 @@ Commands:
 
 ```bash
 pnpm docs:sync
-pnpm docs:workboard:generate
 pnpm docs:gov:manifest
 pnpm docs:governance:document-unit-map
 pnpm docs:governance:file-component-index

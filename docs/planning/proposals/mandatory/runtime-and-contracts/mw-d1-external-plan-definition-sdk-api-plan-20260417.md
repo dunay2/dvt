@@ -4,7 +4,6 @@ status: Active
 owner: API / Planner / Runtime / Docs
 last_reviewed: 2026-04-17
 planning_type: proposal
-lane: D
 task_id: MW-D1
 ---
 
@@ -975,7 +974,6 @@ following are true:
   - `pnpm --filter @dvt/contracts test`
   - `pnpm --filter @dvt/planner test`
   - `pnpm --filter dvt-api test`
-  - `pnpm docs:workboard:generate`
   - `pnpm docs:sync`
   - `pnpm verify:prepush`
 - Test coverage plan:

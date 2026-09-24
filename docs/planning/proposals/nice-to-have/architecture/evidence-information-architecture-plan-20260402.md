@@ -403,7 +403,6 @@ Rules:
 Structural validation for this proposal and future implementation:
 
 - `pnpm docs:sync`
-- `pnpm docs:workboard:generate`
 - `pnpm docs:quality:check`
 - `pnpm docs:doctor`
 - `pnpm docs:canonical:check`

@@ -4,7 +4,6 @@ status: Proposed
 owner: Frontend / Architecture
 last_reviewed: 2026-05-08
 planning_type: proposal
-lane: E
 ---
 
 # Canvas Visible I18n Debt Plan

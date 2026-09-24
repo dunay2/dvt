@@ -22,7 +22,6 @@ so future adapter bindings can reuse the same acceptance stories.
 - `AGENTS.md`
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
-- `docs/planning/state/agent-lane-c.yaml`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md`
 - `apps/api/docs/start-run-execution-capacity-admission-component.md`
 - `docs/runbooks/admission-control-runbook.md`
