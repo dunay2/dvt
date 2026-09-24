@@ -47,7 +47,7 @@ Architecture and ADRs:
 
 Evidence:
 
-- `docs/evidence/critical/ED-20260401-cancel-lifecycle-workflow-owned-ordering.md`
+- [Workflow-owned cancellation lifecycle ordering and maintenance alignment](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/critical/ED-20260401-cancel-lifecycle-workflow-owned-ordering.md)
 
 Primary code paths:
 
@@ -258,7 +258,7 @@ Evidence:
 - ADR-0007 allows engine-side `RunCancelRequested` but does not require it, and
   explicitly forbids the engine from emitting `RunCancelled`
 - the accepted evidence
-  [ED-20260401-cancel-lifecycle-workflow-owned-ordering](../../../evidence/critical/ED-20260401-cancel-lifecycle-workflow-owned-ordering.md)
+  [Workflow-owned cancellation lifecycle ordering and maintenance alignment](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/critical/ED-20260401-cancel-lifecycle-workflow-owned-ordering.md)
   states that engine `cancel()` and `signal(CANCEL)` no longer append
   `RunCancelRequested`
 - tests in `WorkflowEngineCoreService.test.ts` assert that `cancel()` and

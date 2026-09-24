@@ -757,3 +757,180 @@ test('retired PR drafts and historical intake have no files or live consumers', 
     'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md',
   ]);
 });
+
+// One-off validation history stays in Git, not in the current navigation tree.
+test('retired one-off validation reports have no live consumers', () => {
+  const retired = [
+    'docs/evidence/ED-20260401-temporal-live-status-query.md',
+    'docs/evidence/ED-20260402-rc-g1-governance-startup-reconciliation.md',
+    'docs/evidence/ED-20260402-s05-envelope-boundary-hardening.md',
+    'docs/evidence/ED-20260403-s08-4-ci-regression-fix.md',
+    'docs/evidence/ED-20260403-structured-contracts-error-model.md',
+    'docs/evidence/ED-20260404-guards-alignment-adapter-postgres.md',
+    'docs/evidence/ED-20260404-inmemory-state-store-invariants-hardening.md',
+    'docs/evidence/ED-20260404-mw-a2-graph-source-cardinality-and-boundary-hardening.md',
+    'docs/evidence/ED-20260404-planner-v1-contract-normalization.md',
+    'docs/evidence/ED-20260405-admin-rebuild-and-plan-store-alignment.md',
+    'docs/evidence/ED-20260405-mwa2-policy-unbounded-precedence.md',
+    'docs/evidence/ED-20260405-workflow-snapshot-schema-versioning.md',
+    'docs/evidence/ED-20260407-execution-plan-and-run-execution-policy-separation.md',
+    'docs/evidence/ED-20260407-retry-step-boundary-narrowing.md',
+    'docs/evidence/ED-20260407-signal-semantics-contract-versioning.md',
+    'docs/evidence/ED-20260407-status-heads-and-snapshot-hash-cleanup.md',
+    'docs/evidence/ED-20260408-ar-b3-manifest-node-key-determinism.md',
+    'docs/evidence/ED-20260408-intent-reconcile-outcome-classification.md',
+    'docs/evidence/ED-20260408-mw-c1-step-activity-dispatcher.md',
+    'docs/evidence/ED-20260408-pr679-adapter-postgres-integration-smoke.md',
+    'docs/evidence/ED-20260408-pr807-react-day-picker-and-adapter-postgres-tests.md',
+    'docs/evidence/ED-20260408-retry-run-boundary-and-provider-signal-mapper.md',
+    'docs/evidence/ED-20260408-signal-transition-guard-stale-snapshot-idempotency.md',
+    'docs/evidence/ED-20260409-ci-rebuild-dedupe-and-adapter-postgres-consolidation.md',
+    'docs/evidence/ED-20260409-provider-ref-contract-hardening.md',
+    'docs/evidence/ED-20260409-provider-ref-empty-string-preservation.md',
+    'docs/evidence/ED-20260409-temporal-provider-native-status-view.md',
+    'docs/evidence/ED-20260409-tf-c2-b-run-read-evidence-attempt-safety.md',
+    'docs/evidence/ED-20260409-trace-context-adapter-type-alignment.md',
+    'docs/evidence/ED-20260410-contract-mapper-boundary-option-a.md',
+    'docs/evidence/ED-20260410-planner-hard-cut-boundary-remediation.md',
+    'docs/evidence/ED-20260412-tf-c2-b-success-only-materialization-reads.md',
+    'docs/evidence/ED-20260413-ar-a12-a-contract-pack-reset.md',
+    'docs/evidence/ED-20260413-ar-a12-b-status-model-split.md',
+    'docs/evidence/ED-20260413-temporal-native-cancel-provider-status-convergence.md',
+    'docs/evidence/ED-20260413-temporal-sdk-1-16-adapter-upgrade.md',
+    'docs/evidence/ED-20260413-tf-a1-a-preview-contract-freeze.md',
+    'docs/evidence/ED-20260413-tf-c2-runtime-vertical-acceptance.md',
+    'docs/evidence/ED-20260414-ar-b2-distributed-consistency-model.md',
+    'docs/evidence/ED-20260414-tf-a1-b-compiler-mapping-freeze.md',
+    'docs/evidence/ED-20260414-tf-a1-c-srp-hardening.md',
+    'docs/evidence/ED-20260415-ar-c4-runtime-circuit-breaker-and-integration-hardening.md',
+    'docs/evidence/ED-20260416-ar-b1-write-boundary-closure.md',
+    'docs/evidence/context/ED-20260311-execution-core-assessment.md',
+    'docs/evidence/context/ED-20260329-mvp-backend-operability-roadmap-reset.md',
+    'docs/evidence/critical/ED-20260304-g3-intentstore-postgres-reconciler.md',
+    'docs/evidence/critical/ED-20260304-temporal-lookup-run-ref.md',
+    'docs/evidence/critical/ED-20260312-g6-golden-schema-closeout.md',
+    'docs/evidence/critical/ED-20260312-g8-arch-tests-engine-wiring.md',
+    'docs/evidence/critical/ED-20260314-g9-step-type-registry-closeout.md',
+    'docs/evidence/critical/ED-20260315-adapter-postgres-phase1-items5-7.md',
+    'docs/evidence/critical/ED-20260315-api-modules-protected-runtime.md',
+    'docs/evidence/critical/ED-20260315-g10-closeout.md',
+    'docs/evidence/critical/ED-20260315-intent-store-bug-fixes.md',
+    'docs/evidence/critical/ED-20260316-g7-closeout.md',
+    'docs/evidence/critical/ED-20260319-planner-slice4-artifact-boundary-extraction.md',
+    'docs/evidence/critical/ED-20260328-lineage-outbox-retry-scheduling.md',
+    'docs/evidence/critical/ED-20260328-rc-b5-f2-lineage-claim-timeout-race-integration.md',
+    'docs/evidence/critical/ED-20260329-lane-c-rbac-operation-level-closeout.md',
+    'docs/evidence/critical/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md',
+    'docs/evidence/critical/ED-20260330-lineage-dlq-alerting-auto-replay.md',
+    'docs/evidence/critical/ED-20260330-planner-manifest-ref-cache.md',
+    'docs/evidence/critical/ED-20260330-retention-archive-object-store-hardening.md',
+    'docs/evidence/critical/ED-20260330-snapshot-staleness-api-surface.md',
+    'docs/evidence/critical/ED-20260331-lane-a-ws5-b-engine-test-fixture-modularization.md',
+    'docs/evidence/critical/ED-20260331-manifestref-production-path.md',
+    'docs/evidence/critical/ED-20260331-planner-determinism-hash-pin.md',
+    'docs/evidence/critical/ED-20260331-rc-c1-boundary-legacy-hardening.md',
+    'docs/evidence/critical/ED-20260401-cancel-lifecycle-workflow-owned-ordering.md',
+    'docs/evidence/critical/ED-20260401-execution-plan-canonical-identity-unification.md',
+    'docs/evidence/critical/ED-20260401-temporal-live-status-query.md',
+    'docs/evidence/critical/ED-20260402-snapshot-retry-and-projector-fallback-hardening.md',
+    'docs/evidence/critical/ED-20260407-engine-entrypoint-plan-integrity.md',
+    'docs/evidence/ed-20260416-tf-a2-workspace-graph-draft-boundary.md',
+    'docs/evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md',
+    'docs/evidence/ed-20260423-tf-e2-k-a-first-canvas-playground-host.md',
+    'docs/evidence/ed-20260423-workspace-authoring-draft-aggregate.md',
+    'docs/evidence/ed-20260427-dev-stack-local-temporal-bootstrap.md',
+    'docs/evidence/ed-20260427-temporal-planref-config-hardening.md',
+    'docs/evidence/ed-20260429-dbt-cli-plugin-runner-srp.md',
+    'docs/evidence/ed-20260429-plan-admission-hard-cut.md',
+    'docs/evidence/ed-20260429-plugin-admission-architecture.md',
+    'docs/evidence/ed-20260429-run-execution-context-admission-test-srp.md',
+    'docs/evidence/ed-20260429-temporal-step-plugin-semantics.md',
+    'docs/evidence/ed-20260429-we-hx-1-boundary-ownership.md',
+    'docs/evidence/ed-20260430-ar-d-continuation-safety.md',
+    'docs/evidence/ed-20260430-temporal-sdk-1-16-1-patch-upgrade.md',
+    'docs/evidence/ed-20260430-we-hx-2-facade-use-cases.md',
+    'docs/evidence/ed-20260505-adr0-traceability-gate.md',
+    'docs/evidence/ed-20260509-stored-plan-artifact-port-ownership.md',
+    'docs/evidence/ed-20260510-plan-integrity-validator-traceability-baseline.md',
+    'docs/evidence/ed-20260514-ea-20260429-05-engine-public-api-surface.md',
+    'docs/evidence/ed-20260514-ea-20260429-06-semantic-architecture-fitness.md',
+    'docs/evidence/ed-20260515-ar-d-plan-pointer-semantic-fitness.md',
+    'docs/evidence/ed-20260522-we-hx-parent-hardcut-closeout.md',
+    'docs/evidence/ed-20260523-postgres-tenant-isolation-canon.md',
+    'docs/evidence/ed-20260526-dbt-authoring-run-plan-store-reuse.md',
+    'docs/evidence/supporting/ED-20260319-ts-esm-monorepo-migration.md',
+    'docs/evidence/supporting/ED-20260328-adapter-runtime-sonar-closeout.md',
+    'docs/evidence/supporting/ED-20260330-staleness-followup-code-quality.md',
+  ];
+  const recordedCommands = new Map([
+    [
+      'docs/planning/closeouts/20260315-api-protected-runtime-closeout.md',
+      new Map([
+        ['43b8d878235162d685d1a3487a96c032e8f96d4b', 1],
+        ['72e3545df88cdc9d38bea36a205642d025bcf37f', 1],
+      ]),
+    ],
+    [
+      'docs/planning/closeouts/20260414-ar-b2-distributed-consistency-model-closeout.md',
+      new Map([['da5c051a18f4857c77850a51cd330b977290d586', 2]]),
+    ],
+    [
+      'docs/planning/closeouts/20260414-tf-a1-b-compiler-mapping-closeout.md',
+      new Map([['db8499c0879ad8335758375328bf64935b6de5fb', 1]]),
+    ],
+    [
+      'docs/planning/closeouts/20260416-ar-b1-write-boundary-closeout.md',
+      new Map([['6471f1e1d97491098336de29589c2699df8ef8f5', 1]]),
+    ],
+  ]);
+  const observedCommands = new Map();
+  const names = new Set(retired.map((path) => path.split('/').at(-1).toLowerCase()));
+  const references = new RegExp(
+    [...names].map((name) => escapeRegExp(name.replace(/\.md$/u, ''))).join('|'),
+    'iu'
+  );
+  for (const path of retired)
+    assert.equal(existsSync(path), false, `Retired report returned: ${path}`);
+  const paths = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+    { encoding: 'utf8' }
+  )
+    .split('\0')
+    .filter(Boolean);
+  for (const path of paths) {
+    if (path === 'tools/ci/docs-disposition-canon.test.mjs' || !existsSync(path)) continue;
+    assert.equal(
+      names.has(path.split('/').at(-1).toLowerCase()),
+      false,
+      `Relocated report: ${path}`
+    );
+    let current = readRepoFile(path).replace(
+      /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
+      ''
+    );
+    current = current.replace(/`([^`\r\n]+)`/gu, (whole, command) => {
+      if (!references.test(command)) return whole;
+      const hash = execFileSync('git', ['hash-object', '--stdin'], {
+        input: command,
+        encoding: 'utf8',
+      }).trim();
+      if (!recordedCommands.get(path)?.has(hash)) return whole;
+      const key = `${path}:${hash}`;
+      observedCommands.set(key, (observedCommands.get(key) || 0) + 1);
+      return '';
+    });
+    assert.doesNotMatch(current, references, `Live retired report reference: ${path}`);
+  }
+  for (const [path, commands] of recordedCommands) {
+    // Other admitted cuts retire these containing journals; do not resurrect them.
+    if (!existsSync(path)) continue;
+    for (const [hash, count] of commands) {
+      assert.equal(
+        observedCommands.get(`${path}:${hash}`),
+        count,
+        `Recorded command changed in ${path}`
+      );
+    }
+  }
+});

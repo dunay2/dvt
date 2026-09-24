@@ -116,7 +116,7 @@ signals instead of leaving the model at pattern level.
   - `docs/planning/state/agent-lane-b.yaml`
   - `docs/planning/state/domain-status-board.md`
   - `docs/planning/closeouts/20260414-ar-b2-distributed-consistency-model-closeout.md`
-  - `docs/evidence/ED-20260414-ar-b2-distributed-consistency-model.md`
+  - [Publish the DVT distributed consistency model](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/ED-20260414-ar-b2-distributed-consistency-model.md)
 - Expected outcome:
   - one canonical architecture document defines the DVT distributed consistency
     model
@@ -180,7 +180,7 @@ signals instead of leaving the model at pattern level.
   - `docs/planning/state/agent-lane-b.yaml`
   - `docs/planning/state/domain-status-board.md`
 - Published accepted evidence:
-  - `docs/evidence/ED-20260414-ar-b2-distributed-consistency-model.md`
+  - [Publish the DVT distributed consistency model](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/ED-20260414-ar-b2-distributed-consistency-model.md)
 - Regenerated derived planning and docs surfaces:
   - `docs/planning/state/execution-workboard.md`
   - `docs/planning/state/open-task-route.md`
