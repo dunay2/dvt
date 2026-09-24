@@ -4,8 +4,9 @@ import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra
 import type { IndexedRelation } from './relationIndex.js';
 import { deriveAggregateSchema } from './schemaAggregate.js';
 import { deriveExpressionSchema } from './schemaExpression.js';
+import { deriveReadFields, schemaNameCount } from './schemaHierarchy.js';
 import { deriveJoinSchema, deriveSetSchema } from './schemaMultiInput.js';
-import { invalidSchema, requireSchemaType, type SchemaField } from './schemaTypes.js';
+import { invalidSchema, type SchemaField } from './schemaTypes.js';
 
 type Variant = Exclude<Rel['relType'], { case: undefined }>;
 type SchemaInputs = readonly (readonly SchemaField[])[];
@@ -24,14 +25,9 @@ const handlers = {
         'Read projection requires physical field bindings before schema derivation.'
       );
     const types = read.baseSchema?.struct?.types;
-    if (types == null || read.baseSchema?.names.length !== types.length)
-      return invalidSchema('A flat Read schema is required.');
-    const bindings = new Map(entry.fields.map((field) => [field.outputOrdinal, field]));
-    return types.map((type, ordinal) => {
-      const binding = bindings.get(ordinal);
-      if (binding == null) return invalidSchema('A Read field has no stable identity binding.');
-      return { type: requireSchemaType(type), sourceFieldIds: [binding.fieldId] };
-    });
+    if (types == null || read.baseSchema?.names.length !== schemaNameCount(types))
+      return invalidSchema('Read names do not match its schema hierarchy.');
+    return deriveReadFields(types, entry.fields);
   },
   project: (project, [input]) => [
     ...input!,

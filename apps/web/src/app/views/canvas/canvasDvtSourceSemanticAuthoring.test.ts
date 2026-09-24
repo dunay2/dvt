@@ -1,12 +1,11 @@
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { filterProjectionInputFixture } from './canvasFilterProjection.test-support';
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { buildCanvasAuthoringGraphProjection } from './canvasAuthoringGraphProjection';
-import {
-  applyDvtSubstraitFilter,
-  encodeDvtSubstraitFilterDocument,
-  resolveDvtSubstraitFilterCapabilities,
-} from './canvasDvtSubstraitFilter';
+import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
+
 import {
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,
@@ -68,26 +67,24 @@ function semanticSource(): CanonicalNode {
   return applyDvtSubstraitSemanticDocument(source, encodeDvtSubstraitProjectionDocument(draft));
 }
 
-function legacyFilteredSource(): CanonicalNode {
+async function legacyFilteredSource(): Promise<CanonicalNode> {
   const semantic = semanticSource();
   const draft = createDvtSourceSemanticDraft(semantic);
-  const capability = resolveDvtSubstraitFilterCapabilities({
-    dataType: 'text',
-    provider: 'postgres',
-  })[0];
+  const capability = resolveDvtSubstraitFilterCapabilities({ dataType: 'text' })[0];
   if (draft == null || capability == null) throw new Error('Invalid Source fixture.');
-  const filtered = applyDvtSubstraitFilter(draft, {
+  const filtered = await filterProjectionInputFixture(draft, {
     fieldId: FIELD_IDS[1],
     dataType: 'text',
     capabilityId: capability.capabilityId,
     value: 'Ada',
   });
-  return applyDvtSubstraitSemanticDocument(source, encodeDvtSubstraitFilterDocument(filtered));
+  return applyDvtSubstraitSemanticDocument(source, encodeDvtSubstraitSemanticDocument(filtered));
 }
 
 describe('DVT Source semantic authority', () => {
-  it('fails closed on a retired filtered Source authority instead of normalizing it', () => {
-    expect(() => createDvtSourceSemanticDraft(legacyFilteredSource())).toThrow(
+  it('fails closed on a retired filtered Source authority instead of normalizing it', async () => {
+    const legacy = await legacyFilteredSource();
+    expect(() => createDvtSourceSemanticDraft(legacy)).toThrow(
       'DVT Source semantic authority is not an admitted projection shape.'
     );
   });

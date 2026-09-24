@@ -1,3 +1,4 @@
+import { projectCanvasColumnLineageForGraph as projectCanvasColumnLineage } from './canvasColumnLineageProjection.test-fixtures';
 import { SetRel_SetOp } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { describe, expect, it } from 'vitest';
 
@@ -8,7 +9,6 @@ import {
   applyDvtNodeAuthoringMetadata,
   createDvtNodeAuthoringMetadata,
 } from './canvasDvtAuthoringModel';
-import { projectCanvasColumnLineage } from './canvasColumnLineageProjection';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import {
   applyDvtSubstraitUnionAllFieldEdit,
@@ -497,7 +497,7 @@ describe('VTX2 Substrait UNION ALL identity', () => {
     ).toThrow();
   });
 
-  it('presents the actual allocated output IDs instead of reconstructing names', () => {
+  it('presents the actual allocated output IDs instead of reconstructing names', async () => {
     let draft = fixture();
     const base = inspectBase(draft);
     const countryId = outputByKey(base, 'country').fieldId;
@@ -530,8 +530,8 @@ describe('VTX2 Substrait UNION ALL identity', () => {
       shape: 'union_all',
     });
     expect(
-      projectCanvasNodePresentationTruth({ node: persisted, nodes: [persisted], edges: [] }).columns
-        .visible
+      (await projectCanvasNodePresentationTruth({ node: persisted, nodes: [persisted], edges: [] }))
+        .columns.visible
     ).toMatchObject([
       { name: 'country', reference: countryId },
       { name: 'customer_count', reference: countId },
@@ -543,7 +543,7 @@ describe('VTX2 Substrait UNION ALL identity', () => {
 describe('UNION ALL reference-backed Canvas lineage', () => {
   it.each(['base', 'grouping', 'window'] as const)(
     'projects every input for %s and rejects disconnected or ambiguous provenance',
-    (shape) => {
+    async (shape) => {
       const base = fixture();
       const baseProjection = inspectBase(base);
       const country = outputByKey(baseProjection, 'country');
@@ -570,9 +570,14 @@ describe('UNION ALL reference-backed Canvas lineage', () => {
       const nodes = [north, south, target];
       const edges = [inputEdge('south-union', south.id), inputEdge('north-union', north.id)];
       const expandedNodeIds = new Set(nodes.map((node) => node.id));
-      const lineage = projectCanvasColumnLineage({ nodes, edges, expandedNodeIds });
+      const lineage = await projectCanvasColumnLineage({ nodes, edges, expandedNodeIds });
       const outputs = shape === 'base' ? baseProjection.outputs : [country];
-      expect(lineage).toHaveLength(outputs.length * 2);
+      expect(lineage).toHaveLength((outputs.length + (shape === 'window' ? 1 : 0)) * 2);
+      if (shape === 'window') {
+        const ranking = lineage.filter((edge) => edge.data?.targetColumnName === 'row_number');
+        expect(ranking.map((edge) => edge.source).sort()).toEqual([north.id, south.id].sort());
+        expect(ranking.every((edge) => edge.data?.sourceColumnName === 'country')).toBe(true);
+      }
       for (const [index, source] of [north, south].entries()) {
         for (const output of outputs) {
           expect(lineage).toContainEqual(
@@ -589,12 +594,12 @@ describe('UNION ALL reference-backed Canvas lineage', () => {
           );
         }
       }
-      expect(projectCanvasColumnLineage({ nodes, edges: edges.slice(1), expandedNodeIds })).toEqual(
-        []
-      );
+      expect(
+        await projectCanvasColumnLineage({ nodes, edges: edges.slice(1), expandedNodeIds })
+      ).toEqual([]);
       const duplicate = { ...north, id: 'ambiguous-north' };
       expect(
-        projectCanvasColumnLineage({
+        await projectCanvasColumnLineage({
           nodes: [...nodes, duplicate],
           edges: [...edges, inputEdge('duplicate-union', duplicate.id)],
           expandedNodeIds: new Set([...expandedNodeIds, duplicate.id]),

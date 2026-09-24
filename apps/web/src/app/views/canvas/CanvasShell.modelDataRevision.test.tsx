@@ -47,7 +47,7 @@ describe('Canvas Model card revision-safe execution', () => {
   });
   afterEach(() => harness.unmount());
   async function mount(editable = true, prepared = true, shown = model): Promise<CanvasShellProps> {
-    const presentationTruth = projectCanvasNodePresentationTruth({
+    const presentationTruth = await projectCanvasNodePresentationTruth({
       node: shown,
       nodes: [shown],
       edges: [],

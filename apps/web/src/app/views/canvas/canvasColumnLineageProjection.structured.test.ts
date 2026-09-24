@@ -1,8 +1,8 @@
+import { projectCanvasColumnLineageForGraph as projectCanvasColumnLineage } from './canvasColumnLineageProjection.test-fixtures';
 import { describe, expect, it } from 'vitest';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
-import { projectCanvasColumnLineage } from './canvasColumnLineageProjection';
 import { createDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { composeDvtSubstraitProjectionFields } from './canvasDvtSubstraitStructuredFieldMutation';
 import { encodeDvtSubstraitStructuredFieldDocument } from './canvasDvtSubstraitStructuredField';
@@ -19,7 +19,7 @@ const sourceRef: ConnectedSourceRef = {
 };
 
 describe('structured Canvas column lineage', () => {
-  it('connects each persisted leaf to its structured parent handle', () => {
+  it('connects each persisted leaf to its structured parent handle', async () => {
     const source: CanonicalNode = {
       id: 'source-orders',
       name: 'orders',
@@ -80,26 +80,31 @@ describe('structured Canvas column lineage', () => {
       encodeDvtSubstraitStructuredFieldDocument(draft)
     );
 
-    const edges = projectCanvasColumnLineage({
+    const edges = await projectCanvasColumnLineage({
       nodes: [source, transform],
       edges: [{ sourceId: source.id, targetId: transform.id }],
       expandedNodeIds: new Set([source.id, transform.id]),
     });
 
+    expect(edges).toHaveLength(5);
     expect(
       edges.map((edge) => ({
         source: edge.data?.sourceColumnName,
         target: edge.data?.targetColumnName,
         targetHandle: edge.targetHandle,
       }))
-    ).toEqual([
-      expect.objectContaining({ source: 'order_id', target: 'identity.order_id' }),
-      expect.objectContaining({ source: 'customer', target: 'identity.customer' }),
-      expect.objectContaining({ source: 'order_id', target: 'order_id' }),
-      expect.objectContaining({ source: 'customer', target: 'customer' }),
-      expect.objectContaining({ source: 'amount', target: 'amount' }),
-    ]);
-    expect(edges[0]?.targetHandle).toBe(edges[1]?.targetHandle);
-    expect(edges[2]?.targetHandle).not.toBe(edges[0]?.targetHandle);
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ source: 'order_id', target: 'identity.order_id' }),
+        expect.objectContaining({ source: 'customer', target: 'identity.customer' }),
+        expect.objectContaining({ source: 'order_id', target: 'order_id' }),
+        expect.objectContaining({ source: 'customer', target: 'customer' }),
+        expect.objectContaining({ source: 'amount', target: 'amount' }),
+      ])
+    );
+    const handle = (target: string): string | null | undefined =>
+      edges.find((edge) => edge.data?.targetColumnName === target)?.targetHandle;
+    expect(handle('identity.order_id')).toBe(handle('identity.customer'));
+    expect(handle('order_id')).not.toBe(handle('identity.order_id'));
   });
 });

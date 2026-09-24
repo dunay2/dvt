@@ -21,6 +21,7 @@ export {
   CanvasDescriptionV1Schema,
   CanvasHumanNameV1Schema,
   DvtStringLiteralV1Schema,
+  DvtSemanticFieldNameV1Schema,
   DvtTimestampLiteralV1Schema,
   PostgresIdentifierV1Schema,
   countUnicodeCodePoints,

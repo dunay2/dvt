@@ -9,18 +9,18 @@ import type { RelationSnapshot } from './relationSnapshot.js';
 import { requireSchemaType, type SchemaField } from './schemaTypes.js';
 
 export function encodeSchema(fields: readonly SchemaField[]): string {
-  return JSON.stringify(
-    fields.map((field) => ({
-      type: toJson(TypeSchema, field.type),
-      sourceFieldIds: field.sourceFieldIds,
-    }))
-  );
+  const encode = (field: SchemaField): JsonValue => ({
+    type: toJson(TypeSchema, field.type),
+    sourceFieldIds: [...field.sourceFieldIds],
+    ...(field.children == null ? {} : { children: field.children.map(encode) }),
+  });
+  return JSON.stringify(fields.map(encode));
 }
 
 export function decodeSchema(value: string): readonly SchemaField[] {
   const fields: unknown = JSON.parse(value);
   if (!Array.isArray(fields)) throw new Error('Cached schema is not an array.');
-  return fields.map((field: unknown) => {
+  const decode = (field: unknown): SchemaField => {
     if (
       field == null ||
       typeof field !== 'object' ||
@@ -30,11 +30,16 @@ export function decodeSchema(value: string): readonly SchemaField[] {
       !field.sourceFieldIds.every((id: unknown) => typeof id === 'string')
     )
       throw new Error('Cached field is malformed.');
+    const children = 'children' in field ? field.children : undefined;
+    if (children !== undefined && !Array.isArray(children))
+      throw new Error('Cached children are malformed.');
     return {
       type: requireSchemaType(fromJson(TypeSchema, field.type as JsonValue)),
       sourceFieldIds: field.sourceFieldIds as string[],
+      ...(children === undefined ? {} : { children: children.map(decode) }),
     };
-  });
+  };
+  return fields.map(decode);
 }
 
 type SchemaQuery = Readonly<{
@@ -50,7 +55,7 @@ type SchemaQuery = Readonly<{
 export async function queryRelationSchemas(args: SchemaQuery): Promise<string> {
   const { snapshot, cache, relationId } = args;
   const key = (id: string): string =>
-    JSON.stringify(['substrait-schema-v1', args.scope, id, snapshot.fingerprints.get(id)]);
+    JSON.stringify(['substrait-schema-v2', args.scope, id, snapshot.fingerprints.get(id)]);
   async function read(ids: readonly string[]): Promise<readonly (string | null)[]> {
     try {
       const values = await awaitAnalysis(cache.getMany(ids.map(key), args.signal), args.signal);

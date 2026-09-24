@@ -1400,11 +1400,60 @@ test('current task guidance no longer routes work through retired planning group
   );
 });
 
+// These dated validation reports are recoverable at their exact Git revision.
+// Current contracts, tests, risk evidence and mechanization obligations remain.
+test('retired historical validation records have no current files or references', () => {
+  const retiredDocuments = [
+    'docs/evidence/ED-20260402-rc-g1-governance-startup-reconciliation.md',
+    'docs/evidence/ED-20260408-pr679-adapter-postgres-integration-smoke.md',
+    'docs/evidence/ED-20260409-provider-ref-empty-string-preservation.md',
+    'docs/evidence/ED-20260409-trace-context-adapter-type-alignment.md',
+    'docs/evidence/ED-20260809-temporal-cancellation-test-barrier.md',
+    'docs/evidence/ed-20260429-dbt-cli-plugin-runner-srp.md',
+    'docs/evidence/ed-20260429-run-execution-context-admission-test-srp.md',
+    'docs/evidence/ed-20260510-plan-integrity-validator-traceability-baseline.md',
+    'docs/evidence/ed-20260601-planner-local-doc-archive.md',
+    'docs/evidence/ed-20260731-planning-authority-engine-guard.md',
+  ];
+  const names = new Set(retiredDocuments.map((path) => path.split('/').at(-1).toLowerCase()));
+  const stems = retiredDocuments.map((path) =>
+    path.split('/').at(-1).replace(/\.md$/u, '').toLowerCase()
+  );
+  const references = new RegExp(stems.map(escapeRegExp).join('|'), 'u');
+  for (const path of retiredDocuments) {
+    assert.equal(existsSync(path), false, `Retired historical record returned: ${path}`);
+  }
+  const paths = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+    { encoding: 'utf8' }
+  )
+    .split('\0')
+    .filter(Boolean);
+  for (const path of paths) {
+    if (path === 'tools/ci/docs-disposition-canon.test.mjs' || !existsSync(path)) continue;
+    assert.equal(
+      names.has(path.split('/').at(-1).toLowerCase()),
+      false,
+      `Relocated historical report: ${path}`
+    );
+    const current = readRepoFile(path).replace(
+      /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/giu,
+      ''
+    );
+    assert.doesNotMatch(
+      current.toLowerCase(),
+      references,
+      `Live historical validation reference: ${path}`
+    );
+  }
+});
+
 // Refs #3004: dated implementation journals are historical Git content, not live authority.
 // Retained mechanization paths below describe previously allowed/changed surfaces only.
 // They are NOT governing sources, component guides, user stories, or evidence presence rules.
 test('historical implementation journals stay retired without erasing mechanization history', async () => {
-  const { createHash } = await import('node:crypto');
+  const { sha256Hex, sha256HexUtf8 } = await import('@dvt/crypto');
   const { readFileSync } = await import('node:fs');
   const { extractFeatureMechanizationManifests } =
     await import('../../scripts/lib/feature-mechanization-manifest.cjs');
@@ -1747,8 +1796,7 @@ test('historical implementation journals stay retired without erasing mechanizat
     '6fdc18990474a443759b58cdbe1bf47574528b029a46df5215f3ed6eb32fe2df': 1,
     f2b92a391063e3103d755f364fff208a7e0f9c126cc445eed48da3930183206b: 1,
   };
-  const digest = (value) => createHash('sha256').update(value).digest('hex');
-  const identity = (value) => digest(JSON.stringify(value));
+  const identity = (value) => sha256HexUtf8(JSON.stringify(value));
   const counts = new Map();
   const consume = (allowed, key, context) => {
     const count = (counts.get(key) || 0) + 1;
@@ -1782,7 +1830,7 @@ test('historical implementation journals stay retired without erasing mechanizat
     if (path === 'tools/ci/docs-disposition-canon.test.mjs' || !existsSync(path)) continue;
     const bytes = readFileSync(path);
     assert.equal(
-      retiredContentHashes.has(digest(bytes)),
+      retiredContentHashes.has(sha256Hex(bytes)),
       false,
       `Retired content relocated: ${path}`
     );

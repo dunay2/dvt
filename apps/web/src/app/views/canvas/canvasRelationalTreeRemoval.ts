@@ -19,7 +19,6 @@ import {
   resolveDvtSubstraitSetOperation,
 } from './canvasDvtSubstraitSetComposition';
 import { applyCanvasRelationalOperatorTool } from './canvasRelationalTreeOperatorCommands';
-import { removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import { removeDvtSubstraitProjectionRoot } from './canvasDvtSubstraitStructuredFieldRemove';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import { canvasJoinOperationForType, isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
@@ -112,17 +111,6 @@ export function removeCanvasRelationalTreeNode(
   const root = args.draft.plan.relations[0]?.relType;
   const rel = root?.case === 'root' ? root.value.input?.relType : undefined;
   if (rel?.case === 'project') {
-    const input = rel.value.input?.relType;
-    if (input?.case === 'filter') {
-      const filterId = args.draft.sidecar.relations.find(
-        (binding) => binding.relAnchor === input.value.common?.relAnchor
-      )?.relationId;
-      if (filterId === args.relationId) {
-        const draft = removeDvtSubstraitFilter(args.draft);
-        if (draft !== args.draft)
-          return { ok: true, draft, operation: 'projection', retained: [0] };
-      }
-    }
     const projection = inspectDvtSubstraitProjectionDraft(args.draft);
     if (projection.ok && projection.projection.targetRelationId === args.relationId) {
       const windows = projection.projection.outputs.filter(

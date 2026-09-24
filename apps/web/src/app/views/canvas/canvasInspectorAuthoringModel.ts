@@ -6,7 +6,7 @@ import {
   CanvasTagsV1Schema,
   countUnicodeCodePoints,
   isWellFormedCanvasText,
-  PostgresIdentifierV1Schema,
+  DvtSemanticFieldNameV1Schema,
 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -78,9 +78,7 @@ export function resolveCanvasDvtOutputNameDraftError(
   const value = outputNameDrafts[key];
   if (value == null) return null;
   if (value.trim().length === 0) return 'dvt_alias_required';
-  if (!isWellFormedCanvasText(value)) return 'dvt_identifier_invalid';
-  if (value !== value.trim()) return 'dvt_identifier_whitespace';
-  if (!PostgresIdentifierV1Schema.safeParse(value).success) return 'dvt_identifier_too_long';
+  if (!DvtSemanticFieldNameV1Schema.safeParse(value).success) return 'dvt_semantic_field_invalid';
   if (dvt?.kind !== 'transform' || dvt.mode !== 'substrait') return null;
 
   const resultRelation = dvt.sidecar.relations

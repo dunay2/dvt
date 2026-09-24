@@ -19,6 +19,7 @@ export function CanvasRelationalTreeOperatorForm({
   onChange,
   inline = false,
   targetRelationId,
+  onPendingChange,
 }: Readonly<{
   tool: CanvasRelationalOperatorTool;
   draft: DvtSubstraitProjectionDraft;
@@ -27,8 +28,16 @@ export function CanvasRelationalTreeOperatorForm({
   onChange: (draft: DvtSubstraitProjectionDraft) => void;
   inline?: boolean;
   targetRelationId?: string;
+  onPendingChange?: (pending: boolean) => void;
 }>): JSX.Element {
-  const model = useOperatorForm({ tool, draft, onClose, onChange, targetRelationId });
+  const model = useOperatorForm({
+    tool,
+    draft,
+    onClose,
+    onChange,
+    targetRelationId,
+    onPendingChange,
+  });
   const form = <OperatorFormView tool={tool} form={model} inline={inline} />;
   if (inline) return form;
   return (

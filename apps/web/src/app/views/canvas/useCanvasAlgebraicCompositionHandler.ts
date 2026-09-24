@@ -1,5 +1,5 @@
 /** Owned concern: expose supported algebraic composition through ConfigureCanvasDvtNode. */
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { getPluginPortMap } from '../../plugins/registry';
 import type { CanvasGraphInteractionContracts } from './canvasGraphHandlerContracts';
@@ -18,6 +18,15 @@ export function useCanvasAlgebraicCompositionHandler({
   const { canonicalNodesById, draftSession, edges } = state;
   const { setEdges, setDraftSession } = effects;
   const { canEditEdges } = policy;
+  const active = useRef(false);
+  useEffect(() => {
+    active.current = true;
+    return () => {
+      active.current = false;
+    };
+  }, []);
+  const latest = useRef({ draftSession, edges, canEditEdges, canonicalNodesById });
+  latest.current = { draftSession, edges, canEditEdges, canonicalNodesById };
 
   const resolveOperations = useCallback(
     (identity: CanvasAlgebraicCompositionIdentity): CanvasAlgebraicCompositionOperation[] =>
@@ -34,20 +43,28 @@ export function useCanvasAlgebraicCompositionHandler({
   );
 
   const composeNodes = useCallback(
-    (
+    async (
       identity: CanvasAlgebraicCompositionIdentity & {
         operation: CanvasAlgebraicCompositionOperation;
       }
     ) => {
-      if (!canEditEdges) return;
-      const transaction = resolveCanvasAlgebraicCompositionTransaction({
+      if (!active.current || !latest.current.canEditEdges) return;
+      const transaction = await resolveCanvasAlgebraicCompositionTransaction({
         canonicalNodesById,
         draftSession,
         edges,
         pluginPortMap: getPluginPortMap(),
         ...identity,
       });
-      if (transaction.outcome !== 'created') return;
+      if (
+        !active.current ||
+        latest.current.canonicalNodesById !== canonicalNodesById ||
+        transaction.outcome !== 'created' ||
+        latest.current.draftSession !== draftSession ||
+        latest.current.edges !== edges ||
+        !latest.current.canEditEdges
+      )
+        return;
       setEdges(transaction.edges);
       setDraftSession(transaction.draftSession);
     },

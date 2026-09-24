@@ -1,5 +1,5 @@
 /** Owned concern: route toolbar intents to existing Substrait mutation owners. */
-import { PostgresIdentifierV1Schema } from '@dvt/contracts';
+import { DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
 import {
   applyDvtSubstraitInnerJoinGrouping,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
@@ -18,7 +18,6 @@ import {
   renameDvtSubstraitUnionAllCountOutput,
   renameDvtSubstraitUnionAllGroupedRowNumberOutput,
 } from './canvasDvtSubstraitSetComposition';
-import { applyDvtSubstraitFilter, removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import type { DvtSubstraitSortKey } from '@dvt/postgres-projection';
@@ -60,7 +59,6 @@ export function applyCanvasRelationalOperatorTool(
   const union = inspectDvtSubstraitUnionAllAcceptedDraft(draft).ok;
   if (request.remove) {
     if (!tool.active) return draft;
-    if (tool.id === 'filter') return removeDvtSubstraitFilter(draft);
     if (tool.id === 'sort' || tool.id === 'fetch') {
       return removeDvtSubstraitSortFetch(draft, tool.id, request.targetRelationId);
     }
@@ -71,16 +69,6 @@ export function applyCanvasRelationalOperatorTool(
     return join
       ? removeDvtSubstraitInnerJoinGroupedRowNumber(draft)
       : removeDvtSubstraitUnionAllGroupedRowNumber(draft);
-  }
-  if (tool.id === 'filter') {
-    const field = tool.fields.find((item) => item.fieldId === request.fieldId);
-    if (field == null || request.capabilityId == null || request.value == null) return draft;
-    return applyDvtSubstraitFilter(draft, {
-      fieldId: field.fieldId,
-      dataType: field.dataType ?? '',
-      capabilityId: request.capabilityId,
-      value: request.value,
-    });
   }
   if (tool.id === 'sort') {
     if (
@@ -111,7 +99,7 @@ export function applyCanvasRelationalOperatorTool(
     }
   }
   const alias = request.alias?.trim();
-  if (alias == null || !PostgresIdentifierV1Schema.safeParse(alias).success) return draft;
+  if (alias == null || !DvtSemanticFieldNameV1Schema.safeParse(alias).success) return draft;
   if (tool.id === 'aggregate') {
     if (tool.active)
       return join

@@ -83,9 +83,11 @@ describe('Canvas Source filter boundary', () => {
 
     openColumns('model-orders');
     cy.get('[data-slot="dvt-filter-authoring"]').should('be.visible');
-    cy.get('select[name="dvt-filter-field"]').select('customer');
-    cy.get('input[name="dvt-filter-value"]').type('Ada');
-    cy.get('[data-slot="dvt-filter-apply"]').click();
+    cy.get('[data-slot="dvt-filter-authoring"] form').within(() => {
+      cy.get('select').first().select('customer');
+      cy.get('input').type('Ada');
+      cy.get('button[type="submit"]').click();
+    });
     cy.contains('button', /^Apply$/).click();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
 

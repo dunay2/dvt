@@ -64,6 +64,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.sourceOutput.lastFieldMessage',
     fallback: 'A Source must deliver at least one field.',
   },
+  connectionGraphChangedMessage: {
+    key: 'canvas.connection.graphChanged',
+    fallback: 'The graph changed. Connect the nodes again.',
+  },
   connectionIncompleteMessage: {
     key: 'canvas.connection.incompleteMessage',
     fallback: 'Connection is incomplete.',
@@ -1435,6 +1439,11 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorErrorDvtIdentifierInvalid: {
     key: 'canvas.inspector.authoring.errorDvtIdentifierInvalid',
     fallback: 'PostgreSQL identifiers contain invalid text, such as a NUL character.',
+  },
+  inspectorErrorDvtSemanticFieldInvalid: {
+    key: 'canvas.inspector.authoring.errorDvtSemanticFieldInvalid',
+    fallback:
+      'Use a valid field name without outer whitespace and with at most 256 Unicode characters.',
   },
   inspectorErrorDvtIdentifierTooLong: {
     key: 'canvas.inspector.authoring.errorDvtIdentifierTooLong',

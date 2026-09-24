@@ -4,6 +4,9 @@ import type { CanvasRelationalOperation } from './canvasRelationalOperationChoic
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { CanvasRelationalTreeExpressionOperatorEditor } from './CanvasRelationalTreeExpressionOperatorEditor';
 import { SourceOccurrenceProperties } from './relational-source-occurrence/SourceOccurrenceProperties';
+import { useContext } from 'react';
+import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
+import { CanvasSelectedFilterEditor } from './CanvasSelectedFilterEditor';
 import {
   CanvasRelationalTreeSortFetchEditor,
   selectedCanvasDvtSortFetchOperation,
@@ -26,6 +29,24 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
   onClose: () => void;
   onPendingConditionChange?: (pending: boolean) => void;
 }>): JSX.Element | null {
+  const analysis = useContext(CanvasRelationAnalysisContext);
+  const selected =
+    analysis?.error == null &&
+    analysis?.document?.sidecar.relations.some((entry) => entry.relationId === relationId) &&
+    analysis.revision === analysis.session.revision &&
+    relationId != null
+      ? analysis.session.locate(relationId, analysis.revision).relation.relType.case
+      : null;
+  if (selected === 'filter' && relationId != null)
+    return (
+      <CanvasSelectedFilterEditor
+        draft={draft}
+        relationId={relationId}
+        onChange={onChange}
+        onClose={onClose}
+        onPendingChange={onPendingConditionChange}
+      />
+    );
   const read = draft.sidecar.relations.find(
     (binding) => binding.relationId === relationId && binding.sourceRef != null
   );

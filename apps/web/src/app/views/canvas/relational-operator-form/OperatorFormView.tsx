@@ -32,6 +32,7 @@ export function OperatorFormView({
         {tool.active ? (
           <button
             type="button"
+            disabled={form.busy}
             className="mr-auto rounded px-3 py-2 text-rose-400 hover:bg-rose-950"
             onClick={form.remove}
           >
@@ -45,7 +46,11 @@ export function OperatorFormView({
         >
           {copy.cancel}
         </button>
-        <button type="submit" className="rounded bg-blue-600 px-3 py-2 text-white">
+        <button
+          type="submit"
+          disabled={form.busy}
+          className="rounded bg-blue-600 px-3 py-2 text-white"
+        >
           {copy.done}
         </button>
       </div>

@@ -163,7 +163,7 @@ describe('VTX2 typed Substrait grouping and count', () => {
     expect(removeDvtSubstraitPilotAggregation(grouped)).toBe(grouped);
   });
 
-  it('projects aggregate outputs on the Transform card from the persisted Plan', () => {
+  it('projects aggregate outputs on the Transform card from the persisted Plan', async () => {
     const initial = pilot();
     const country = requirePilotField(initial, 'country');
     const grouped = applyDvtSubstraitPilotAggregation(initial, {
@@ -197,7 +197,7 @@ describe('VTX2 typed Substrait grouping and count', () => {
       },
     };
 
-    const truth = projectCanvasNodePresentationTruth({
+    const truth = await projectCanvasNodePresentationTruth({
       node: transform,
       nodes: [source, transform],
       edges: [{ sourceId: source.id, targetId: transform.id }],

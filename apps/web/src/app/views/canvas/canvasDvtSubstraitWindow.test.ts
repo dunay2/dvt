@@ -244,7 +244,7 @@ describe('VTX2 typed Substrait row-number window', () => {
     ).toBe(duplicateName);
   });
 
-  it('projects the persisted window output on the Transform card', () => {
+  it('projects the persisted window output on the Transform card', async () => {
     const windowed = withRowNumber();
     const projection = requireWindow(windowed);
     const transform = applyDvtSubstraitSemanticDocument(
@@ -273,7 +273,7 @@ describe('VTX2 typed Substrait row-number window', () => {
       },
     };
 
-    const truth = projectCanvasNodePresentationTruth({
+    const truth = await projectCanvasNodePresentationTruth({
       node: transform,
       nodes: [source, transform],
       edges: [{ sourceId: source.id, targetId: transform.id }],

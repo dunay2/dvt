@@ -76,7 +76,7 @@ import {
   DVT_SUBSTRAIT_PLAN_ENCODING,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
   DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
-  PostgresIdentifierV1Schema,
+  DvtSemanticFieldNameV1Schema,
   ConnectedSourceRefSchema,
   allocateDvtFieldId,
   allocateDvtRelationId,
@@ -1712,7 +1712,7 @@ export function applyDvtSubstraitInnerJoinFieldEdit(
       if (
         current == null ||
         name.length === 0 ||
-        !PostgresIdentifierV1Schema.safeParse(name).success ||
+        !DvtSemanticFieldNameV1Schema.safeParse(name).success ||
         outputs.some((output, index) => index !== currentIndex && output.name === name)
       ) {
         return draft;
@@ -1776,7 +1776,7 @@ export function applyDvtSubstraitInnerJoinFieldEdit(
     if (
       current == null ||
       name.length === 0 ||
-      !PostgresIdentifierV1Schema.safeParse(name).success ||
+      !DvtSemanticFieldNameV1Schema.safeParse(name).success ||
       outputs.some((output, index) => index !== currentIndex && output.name === name)
     ) {
       return draft;
@@ -2100,7 +2100,7 @@ export function applyDvtSubstraitInnerJoinGrouping(
   const inspection =
     nInput.ok && (nInput.projection.inputs.length > 2 || !binary.ok) ? nInput : binary;
   const countOutputName = args.countOutputName;
-  if (!inspection.ok || !PostgresIdentifierV1Schema.safeParse(countOutputName).success)
+  if (!inspection.ok || !DvtSemanticFieldNameV1Schema.safeParse(countOutputName).success)
     return draft;
   const groupField = inspection.projection.outputs.find(
     (output) => output.fieldId === args.groupFieldId
@@ -2181,7 +2181,7 @@ export function renameDvtSubstraitInnerJoinCountOutput(
   const normalized = outputName;
   if (
     valid == null ||
-    !PostgresIdentifierV1Schema.safeParse(normalized).success ||
+    !DvtSemanticFieldNameV1Schema.safeParse(normalized).success ||
     normalized === valid.projection.groupField.name
   ) {
     return draft;
@@ -2408,7 +2408,7 @@ export function applyDvtSubstraitInnerJoinGroupedRowNumber(
   const outputName = args.outputName;
   if (
     !grouping.ok ||
-    !PostgresIdentifierV1Schema.safeParse(outputName).success ||
+    !DvtSemanticFieldNameV1Schema.safeParse(outputName).success ||
     grouping.projection.outputs.some((output) => output.name === outputName)
   ) {
     return draft;
@@ -2517,7 +2517,7 @@ export function renameDvtSubstraitInnerJoinGroupedRowNumberOutput(
   const normalized = outputName;
   if (
     valid == null ||
-    !PostgresIdentifierV1Schema.safeParse(normalized).success ||
+    !DvtSemanticFieldNameV1Schema.safeParse(normalized).success ||
     valid.projection.outputs.slice(0, 2).some((output) => output.name === normalized)
   ) {
     return draft;

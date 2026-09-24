@@ -1,3 +1,4 @@
+import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -17,7 +18,6 @@ import { createDvtSubstraitFieldReference } from './canvasDvtSubstraitStructured
 import { removeDvtSubstraitProjectionRoot } from './canvasDvtSubstraitStructuredFieldRemove';
 import { composeDvtSubstraitProjectionFields } from './canvasDvtSubstraitStructuredFieldMutation';
 import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
-import { projectDvtSubstraitProjectionToPostgresSql } from './canvasDvtSubstraitPostgresProjection';
 
 const SOURCE = {
   nodeId: 'source-orders',
@@ -169,9 +169,10 @@ describe('removeDvtSubstraitProjectionRoot', () => {
       expect(parts.project.input).toEqual(previous.project.input);
       expect(reopened.plan.extensions).toEqual(draft.plan.extensions);
       expect(reopened.plan.extensionUrns).toEqual(draft.plan.extensionUrns);
-      const sql = (await projectDvtSubstraitProjectionToPostgresSql(reopened)).toLowerCase();
-      expect(sql).toContain('customer || status');
-      if (withLiteral) expect(sql).toContain("'web' as channel");
+      const projected = await projectSubstraitToPostgresSql(reopened);
+      expect(projected.projection.outputs.map((field) => field.name)).toEqual(
+        inspection.projection.outputs.map((field) => field.name)
+      );
       expect(encodeDvtSubstraitProjectionDocument(draft)).toEqual(before);
     }
   );

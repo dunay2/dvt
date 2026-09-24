@@ -1,3 +1,4 @@
+import { filterProjectionInputFixture } from './canvasFilterProjection.test-support';
 import {
   ExtensionLeafRelSchema,
   RelCommonSchema,
@@ -20,12 +21,8 @@ import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
-import {
-  applyDvtSubstraitFilter,
-  encodeDvtSubstraitFilterDocument,
-  inspectDvtSubstraitFilter,
-  resolveDvtSubstraitFilterCapabilities,
-} from './canvasDvtSubstraitFilter';
+import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
+import { inspectDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import {
   createDvtSubstraitProjectionDraft,
   decodeDvtSubstraitProjectionDocument,
@@ -975,7 +972,7 @@ describe('canvasInspectorAuthoringModel', () => {
     ).toEqual({ outputNames: 'dvt_alias_duplicate' });
   });
 
-  it('rejects persisted legacy Source filter authority without changing physical identity', () => {
+  it('rejects persisted legacy Source filter authority without changing physical identity', async () => {
     const source = buildImportedWarehouseSourceNode({
       connectedSourceRef: {
         schemaVersion: 'connected-source-ref.v1',
@@ -989,10 +986,7 @@ describe('canvasInspectorAuthoringModel', () => {
       columns: [{ name: 'customer', type: 'text', nullable: false }],
     });
     const projectionSource = resolveDvtSubstraitProjectionSource(source);
-    const capability = resolveDvtSubstraitFilterCapabilities({
-      dataType: 'text',
-      provider: 'postgres',
-    })[0];
+    const capability = resolveDvtSubstraitFilterCapabilities({ dataType: 'text' })[0];
     if (projectionSource == null || capability == null) {
       throw new Error('Expected an admitted legacy Source fixture.');
     }
@@ -1003,7 +997,7 @@ describe('canvasInspectorAuthoringModel', () => {
         { fieldId: 'legacy-output:customer', name: 'customer', sourceFieldName: 'customer' },
       ],
     });
-    const filtered = applyDvtSubstraitFilter(base, {
+    const filtered = await filterProjectionInputFixture(base, {
       fieldId: 'legacy-output:customer',
       dataType: 'text',
       capabilityId: capability.capabilityId,
@@ -1011,7 +1005,7 @@ describe('canvasInspectorAuthoringModel', () => {
     });
     const legacySource = applyDvtSubstraitSemanticDocument(
       source,
-      encodeDvtSubstraitFilterDocument(filtered)
+      encodeDvtSubstraitSemanticDocument(filtered)
     );
 
     expect(createCanvasInspectorNodeDraft(legacySource)).toMatchObject({
@@ -1116,7 +1110,7 @@ describe('canvasInspectorAuthoringModel', () => {
         ...base,
         outputNameDrafts: { output_id: 'invalid\0identifier' },
       })
-    ).toEqual({ outputNames: 'dvt_identifier_invalid' });
+    ).toEqual({ outputNames: 'dvt_semantic_field_invalid' });
   });
 
   it('rejects Source and Sink PostgreSQL identifiers above 63 UTF-8 bytes', () => {
