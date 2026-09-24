@@ -66,7 +66,8 @@ describe.skipIf(url == null)('Canonical scalar results on PostgreSQL', () => {
         await client.query("SET LOCAL TIME ZONE 'Pacific/Honolulu'");
         const { sql } = await projectSubstraitToPostgresSql(document);
         const result = await client.query({ text: sql, rowMode: 'array' });
-        const multiset = (rows: unknown[][]) => rows.map((row) => JSON.stringify(row)).sort();
+        const multiset = (rows: unknown[][]): string[] =>
+          rows.map((row) => JSON.stringify(row)).sort();
         expect(multiset(result.rows)).toEqual(multiset(expected));
       } finally {
         await client.query('ROLLBACK');
