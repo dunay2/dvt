@@ -7,7 +7,6 @@ owners:
   - Architecture / Docs
 severity: Medium
 probability: Low
----
 description: >
   Removing old report-presence assertions can accidentally remove a current behavioral or
   architecture requirement. Operated evidence relationships and independent review have not been
@@ -20,3 +19,4 @@ mitigation: >
   relocation and authority-reference negatives. Record operated reconciliation and independent
   review in issue 3004 when actually executed; do not infer them from bootstrap CI or close this
   risk merely on merge.
+---
