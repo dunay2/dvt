@@ -104,4 +104,4 @@ flowchart TD
 - [DVT Workbench UX Canon Plan 2026-05-24](../../planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md)
 - [Workbench UI Contract And Component Inventory](./workbench-ui-contract-and-component-inventory.md)
 - [UX Implementation Guide](./ux-implementation-guide.md)
-- [Workbench UX Canon Mailbox Analysis](../../../../buzon/20260524-codex-fowler-workbench-ux-canon.md)
+- [Workbench UX Canon Mailbox Analysis](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260524-codex-fowler-workbench-ux-canon.md)

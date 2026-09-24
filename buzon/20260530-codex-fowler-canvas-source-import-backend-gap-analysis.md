@@ -48,7 +48,7 @@ It does not cover:
 - `apps/web/src/app/components/sourceImportWizard/constants.ts`
 - `apps/web/src/app/views/canvas/useCanvasController.ts`
 - `apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts`
-- `buzon/20260510-codex-fowler-workspace-port-decomposition-analysis.md`
+- [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260510-codex-fowler-workspace-port-decomposition-analysis.md)
 
 ## Mature-System Comparison
 

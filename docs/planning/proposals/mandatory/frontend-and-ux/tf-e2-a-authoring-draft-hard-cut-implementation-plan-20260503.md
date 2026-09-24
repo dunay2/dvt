@@ -263,10 +263,10 @@ flowchart LR
 - `apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts`
 - `apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts`
 - `apps/web/cypress/support/workspaceSession.ts`
-- `buzon/20260503-tf-e2-a-authoring-draft-hard-cut-fowler-review.md`
+- [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260503-tf-e2-a-authoring-draft-hard-cut-fowler-review.md)
 - `docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md`
 - `docs/architecture/components/web/graph/index.md`
-- `docs/planning/closeouts/20260503-tf-e2-a-authoring-draft-hard-cut-closeout.md`
+- [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/docs/planning/closeouts/20260503-tf-e2-a-authoring-draft-hard-cut-closeout.md)
 - `docs/planning/closeouts/index.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md`
 - `docs/planning/proposals/portfolio-map-20260403.md`
@@ -310,7 +310,7 @@ Planned new files:
 - `apps/web/src/app/views/canvas/canvasDraftReadModel.test.ts` is created in
   Task 2 to prove `ok`, `not_found`, `denied`, and `format_error` read model
   outcomes.
-- `docs/planning/closeouts/20260503-tf-e2-a-authoring-draft-hard-cut-closeout.md`
+- [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/docs/planning/closeouts/20260503-tf-e2-a-authoring-draft-hard-cut-closeout.md)
   is created in Task 7 after implementation evidence exists.
 
 ## Symbol Replacement Map
