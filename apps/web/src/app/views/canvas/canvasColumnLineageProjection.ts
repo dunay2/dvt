@@ -1,27 +1,11 @@
-/** Owned concern: derive stable Canvas column handles and lineage edges from canonical semantic truth. */
-import { ConnectedSourceRefSchema, type ConnectedSourceRef } from '@dvt/contracts';
+/** Column lineage consumes the same resolved field facts as the cards. */
 import type { Edge } from '@xyflow/react';
-
 import type { CoreNodeRole, CanonicalNode } from '../../types/canonical';
-import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
-import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import {
-  inspectDvtSubstraitJoinDraft,
-  inspectDvtSubstraitInnerJoinGroupedWindowDraft,
-  inspectDvtSubstraitInnerJoinGroupingDraft,
-} from './canvasDvtSubstraitJoinComposition';
-import {
-  decodeDvtSubstraitProjectionDocument,
-  resolveDvtSubstraitProjectionEntry,
-  type DvtSubstraitProjection,
-} from './canvasDvtSubstraitProjection';
-import {
-  inspectDvtSubstraitUnionAllDraft,
-  inspectDvtSubstraitUnionAllGroupingDraft,
-  inspectDvtSubstraitUnionAllGroupedWindowDraft,
-} from './canvasDvtSubstraitSetComposition';
-import { flattenCanvasStructuredLineage } from './canvasStructuredFieldLineage';
-
+import type {
+  CanvasNodePresentationColumn,
+  CanvasNodePresentationTruth,
+} from '../../components/canvas/canvasNodePresentationTruth.contract';
+import { canAuthorCanvasColumnMappings } from './canvasColumnProjectionAuthority';
 export type CanvasColumnPortDirection = 'source' | 'target';
 export type CanvasColumnHandleIdentity = Readonly<{
   direction: CanvasColumnPortDirection;
@@ -43,7 +27,6 @@ export type CanvasColumnLineageEdgeData = Readonly<{
   Record<string, unknown>;
 
 type CanvasColumnLineageEdge = Edge<CanvasColumnLineageEdgeData>;
-type Column = Readonly<{ name: string; type: string }>;
 
 const HANDLE_PREFIX = 'column';
 
@@ -86,135 +69,6 @@ export function resolveCanvasColumnPortDirections(
   if (role === 'transform') return ['target', 'source'];
   if (role === 'output') return ['target'];
   return [];
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function readString(value: unknown): string | undefined {
-  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
-}
-
-function readColumns(node: CanonicalNode): readonly Column[] {
-  const value = node.metadata?.columns;
-  if (Array.isArray(value)) {
-    return value.flatMap((candidate): readonly Column[] => {
-      if (!isRecord(candidate)) return [];
-      const name = readString(candidate.name);
-      if (name == null) return [];
-      return [{ name, type: readString(candidate.type ?? candidate.dataType) ?? 'unknown' }];
-    });
-  }
-  if (!isRecord(value)) return [];
-  return Object.entries(value).flatMap(([fallbackName, candidate]): readonly Column[] => {
-    if (!isRecord(candidate)) return [];
-    const name = readString(candidate.name) ?? fallbackName.trim();
-    if (name.length === 0) return [];
-    return [{ name, type: readString(candidate.type ?? candidate.dataType) ?? 'unknown' }];
-  });
-}
-
-function readSubstraitProjectionLineage(args: {
-  node: CanonicalNode;
-  nodes: readonly CanonicalNode[];
-  edges: readonly Readonly<{ sourceId: string; targetId: string }>[];
-}): DvtSubstraitProjection | null {
-  if (args.node.pluginId !== 'dvt' || args.node.kind !== 'dvt:transform') return null;
-  try {
-    const authority = readDvtTransformAuthoringAuthority(args.node);
-    if (authority == null) return null;
-    return resolveDvtSubstraitProjectionEntry({
-      targetNode: args.node,
-      nodes: args.nodes,
-      edges: args.edges,
-      draft: decodeDvtSubstraitProjectionDocument(authority.semanticDocument),
-    });
-  } catch {
-    return null;
-  }
-}
-
-type DvtSubstraitMultiInputLineage = Readonly<{
-  inputs: readonly Readonly<{
-    sourceRef: ConnectedSourceRef;
-    fields: readonly Readonly<{ name: string; fieldId: string }>[];
-  }>[];
-  outputs: readonly Readonly<{
-    name: string;
-    fieldId: string;
-    source: Readonly<{ inputIndex: number; name: string; fieldId: string }>;
-  }>[];
-}>;
-
-function readSubstraitMultiInputLineage(node: CanonicalNode): DvtSubstraitMultiInputLineage | null {
-  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return null;
-  try {
-    const authority = readDvtTransformAuthoringAuthority(node);
-    if (authority == null) return null;
-    const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
-    const nInput = inspectDvtSubstraitJoinDraft(draft);
-    if (nInput.ok) {
-      return {
-        inputs: nInput.projection.inputs,
-        outputs: nInput.projection.outputs,
-      };
-    }
-    const groupedWindow = inspectDvtSubstraitInnerJoinGroupedWindowDraft(draft);
-    if (groupedWindow.ok && groupedWindow.projection.kind === 'n-input') {
-      return {
-        inputs: groupedWindow.projection.inputs,
-        outputs: [groupedWindow.projection.groupField],
-      };
-    }
-    const grouping = inspectDvtSubstraitInnerJoinGroupingDraft(draft);
-    if (grouping.ok && grouping.projection.kind === 'n-input') {
-      return {
-        inputs: grouping.projection.inputs,
-        outputs: [grouping.projection.groupField],
-      };
-    }
-    const union = inspectDvtSubstraitUnionAllDraft(draft);
-    const unionGrouping = inspectDvtSubstraitUnionAllGroupingDraft(draft);
-    const unionWindow = inspectDvtSubstraitUnionAllGroupedWindowDraft(draft);
-    const projection = union.ok
-      ? { inputs: union.projection.inputs, outputs: union.projection.outputs }
-      : unionGrouping.ok
-        ? {
-            inputs: unionGrouping.projection.inputs,
-            outputs: [unionGrouping.projection.groupField],
-          }
-        : unionWindow.ok
-          ? { inputs: unionWindow.projection.inputs, outputs: [unionWindow.projection.groupField] }
-          : null;
-    if (projection == null) return null;
-    return {
-      inputs: projection.inputs,
-      outputs: projection.outputs.flatMap((output) =>
-        projection.inputs.map((input, inputIndex) => {
-          const field = input.fields.find((candidate) => candidate.name === output.fieldKey);
-          if (field == null) throw new Error('SetRel input field is not admitted.');
-          return {
-            name: output.name,
-            fieldId: output.fieldId,
-            source: { inputIndex, name: field.name, fieldId: field.fieldId },
-          };
-        })
-      ),
-    };
-  } catch {
-    return null;
-  }
-}
-
-function sameConnectedSourceRef(first: ConnectedSourceRef, second: ConnectedSourceRef): boolean {
-  return (
-    first.schemaVersion === second.schemaVersion &&
-    first.sourceObjectId === second.sourceObjectId &&
-    first.connectionRef.schemaVersion === second.connectionRef.schemaVersion &&
-    first.connectionRef.provider === second.connectionRef.provider &&
-    first.connectionRef.connectionId === second.connectionRef.connectionId
-  );
 }
 
 function createLineageEdgeId(parts: readonly string[]): string {
@@ -271,201 +125,79 @@ function buildLineageEdge(args: {
   };
 }
 
-function hasDependency(
-  edges: readonly Readonly<{ sourceId: string; targetId: string }>[],
-  sourceId: string,
-  targetId: string
-): boolean {
-  return edges.some((edge) => edge.sourceId === sourceId && edge.targetId === targetId);
-}
-
 export function projectCanvasColumnLineage(args: {
   nodes: readonly CanonicalNode[];
   edges: readonly Readonly<{ sourceId: string; targetId: string }>[];
   expandedNodeIds: ReadonlySet<string>;
+  presentations: ReadonlyMap<string, CanvasNodePresentationTruth>;
 }): CanvasColumnLineageEdge[] {
   const nodeById = new Map(args.nodes.map((node) => [node.id, node]));
   const projected: CanvasColumnLineageEdge[] = [];
-
-  for (const model of args.nodes) {
-    const substraitProjection = readSubstraitProjectionLineage({
-      node: model,
-      nodes: args.nodes,
-      edges: args.edges,
-    });
-    if (substraitProjection != null && args.expandedNodeIds.has(model.id)) {
-      const sourceNode = nodeById.get(substraitProjection.source.nodeId);
-      if (
-        sourceNode == null ||
-        !args.expandedNodeIds.has(sourceNode.id) ||
-        !hasDependency(args.edges, sourceNode.id, model.id)
-      ) {
-        continue;
-      }
-      const sourcedOutputs = substraitProjection.outputs.filter(
-        (output): output is typeof output & { sourceFieldName: string; sourceFieldId: string } =>
-          output.sourceFieldName != null && output.sourceFieldId != null
-      );
-      const sourceIsTransform =
-        sourceNode.pluginId === 'dvt' && sourceNode.kind === 'dvt:transform';
-      if (sourceIsTransform) {
-        const sourceColumns = projectCanvasNodePresentationTruth({
-          node: sourceNode,
-          nodes: args.nodes,
-          edges: args.edges,
-        }).columns.declared;
-        if (
-          sourcedOutputs.some(
-            (output) =>
-              !sourceColumns.some(
-                (column) =>
-                  column.reference === output.sourceFieldId &&
-                  column.name === output.sourceFieldName
-              )
-          )
-        ) {
-          continue;
-        }
-      } else {
-        const sourceRef = ConnectedSourceRefSchema.safeParse(
-          sourceNode.metadata?.connectedSourceRef
-        );
-        const sourceColumns = new Set(readColumns(sourceNode).map((column) => column.name));
-        if (
-          !sourceRef.success ||
-          !sameConnectedSourceRef(sourceRef.data, substraitProjection.source.sourceRef) ||
-          sourcedOutputs.some((output) => !sourceColumns.has(output.sourceFieldName))
-        ) {
-          continue;
-        }
-      }
-      for (const output of sourcedOutputs) {
-        projected.push(
-          buildLineageEdge({
-            sourceNodeId: sourceNode.id,
-            sourceFieldId: output.sourceFieldId,
-            sourceColumnName: output.sourceFieldName,
-            sourceHandleColumnId: sourceIsTransform ? output.sourceFieldId : output.sourceFieldName,
-            targetNodeId: model.id,
-            outputId: output.fieldId,
-            targetColumnName: output.name,
-            targetHandleColumnId: output.fieldId,
-            terminal: false,
-            removable: true,
-          })
-        );
-      }
+  const dependencies = new Set(
+    args.edges.map((edge) => JSON.stringify([edge.sourceId, edge.targetId]))
+  );
+  for (const node of args.nodes) {
+    if (!args.expandedNodeIds.has(node.id)) continue;
+    const truth = args.presentations.get(node.id);
+    if (truth == null || truth.columns.state === 'pending' || truth.columns.state === 'unavailable')
       continue;
-    }
-
-    if (args.expandedNodeIds.has(model.id)) {
-      const presentedColumns = projectCanvasNodePresentationTruth({
-        node: model,
-        nodes: args.nodes,
-        edges: args.edges,
-      }).columns.declared;
-      const structuredLeaves = flattenCanvasStructuredLineage(presentedColumns);
-      if (structuredLeaves.length > 0) {
-        const sourcedLeaves = [
-          ...structuredLeaves,
-          ...presentedColumns
-            .filter((column) => column.children == null)
-            .map((column) => ({ root: column, leaf: column, path: column.name })),
-        ];
-        for (const { root, leaf, path } of sourcedLeaves) {
-          const sourceNode = leaf.sourceNodeId == null ? null : nodeById.get(leaf.sourceNodeId);
-          if (
-            sourceNode == null ||
-            !args.expandedNodeIds.has(sourceNode.id) ||
-            !hasDependency(args.edges, sourceNode.id, model.id) ||
-            leaf.sourceFieldName == null ||
-            leaf.sourceReference == null ||
-            leaf.reference == null ||
-            root.reference == null ||
-            !readColumns(sourceNode).some((column) => column.name === leaf.sourceFieldName)
-          ) {
-            continue;
-          }
-          projected.push(
-            buildLineageEdge({
-              sourceNodeId: sourceNode.id,
-              sourceFieldId: leaf.sourceReference,
-              sourceColumnName: leaf.sourceFieldName,
-              sourceHandleColumnId: leaf.sourceFieldName,
-              targetNodeId: model.id,
-              outputId: leaf.reference,
-              targetColumnName: path,
-              targetHandleColumnId: root.reference,
-              terminal: false,
-              removable: false,
-            })
-          );
-        }
+    const roots = truth.columns.declared;
+    const pending = roots.map((field) => ({ field, root: field, path: field.name })).reverse();
+    while (pending.length > 0) {
+      const { field, root, path } = pending.pop()!;
+      if (field.children != null) {
+        pending.push(
+          ...field.children
+            .map((child) => ({ field: child, root, path: path + '.' + child.name }))
+            .reverse()
+        );
         continue;
       }
-    }
-
-    const multiInputLineage = readSubstraitMultiInputLineage(model);
-    if (multiInputLineage != null && args.expandedNodeIds.has(model.id)) {
-      const incomingEdges = args.edges.filter((edge) => edge.targetId === model.id);
-      const sourceByInputIndex = new Map<number, CanonicalNode>();
-      const usedSourceNodeIds = new Set<string>();
-      let exactClosure = incomingEdges.length === multiInputLineage.inputs.length;
-      for (const [inputIndex, input] of multiInputLineage.inputs.entries()) {
-        const matchingSources = incomingEdges.flatMap((edge) => {
-          if (usedSourceNodeIds.has(edge.sourceId)) return [];
-          const sourceNode = nodeById.get(edge.sourceId);
-          if (sourceNode == null || !args.expandedNodeIds.has(sourceNode.id)) return [];
-          const sourceRef = ConnectedSourceRefSchema.safeParse(
-            sourceNode.metadata?.connectedSourceRef
-          );
-          const sourceColumns = new Set(readColumns(sourceNode).map((column) => column.name));
-          return sourceRef.success &&
-            sameConnectedSourceRef(sourceRef.data, input.sourceRef) &&
-            input.fields.every((field) => sourceColumns.has(field.name))
-            ? [sourceNode]
-            : [];
-        });
-        if (matchingSources.length !== 1) {
-          exactClosure = false;
-          break;
-        }
-        const sourceNode = matchingSources[0]!;
-        usedSourceNodeIds.add(sourceNode.id);
-        sourceByInputIndex.set(inputIndex, sourceNode);
-      }
-      if (!exactClosure) continue;
-
-      const resolvedOutputs = multiInputLineage.outputs.map((output) => {
-        const input = multiInputLineage.inputs[output.source.inputIndex];
-        const sourceNode = sourceByInputIndex.get(output.source.inputIndex);
-        const sourceField = input?.fields.find(
-          (field) => field.fieldId === output.source.fieldId && field.name === output.source.name
+      if (field.reference == null || root.reference == null) continue;
+      for (const source of field.sources ?? []) {
+        const producer = nodeById.get(source.nodeId);
+        if (
+          producer == null ||
+          !args.expandedNodeIds.has(source.nodeId) ||
+          !dependencies.has(JSON.stringify([source.nodeId, node.id]))
+        )
+          continue;
+        const sourceTruth = args.presentations.get(source.nodeId);
+        const available = sourceTruth?.columns.visible.find((column) =>
+          producer.role === 'input'
+            ? column.name === source.name
+            : column.reference === source.fieldId
         );
-        return sourceNode == null || sourceField == null
-          ? null
-          : { output, sourceNode, sourceField };
-      });
-      if (resolvedOutputs.some((output) => output == null)) continue;
-      for (const resolved of resolvedOutputs) {
-        if (resolved == null) continue;
+        if (available == null || available.selected === false) continue;
         projected.push(
           buildLineageEdge({
-            sourceNodeId: resolved.sourceNode.id,
-            sourceFieldId: resolved.sourceField.fieldId,
-            sourceColumnName: resolved.sourceField.name,
-            sourceHandleColumnId: resolved.sourceField.name,
-            targetNodeId: model.id,
-            outputId: resolved.output.fieldId,
-            targetColumnName: resolved.output.name,
-            targetHandleColumnId: resolved.output.fieldId,
+            sourceNodeId: source.nodeId,
+            sourceFieldId: source.fieldId,
+            sourceColumnName: source.name,
+            sourceHandleColumnId: producer.role === 'input' ? source.name : source.fieldId,
+            targetNodeId: node.id,
+            outputId: field.reference,
+            targetColumnName: path,
+            targetHandleColumnId: root.reference,
             terminal: false,
-            removable: false,
+            removable:
+              root === field &&
+              canAuthorCanvasColumnMappings(node) &&
+              canRemoveMapping(field, roots),
           })
         );
       }
     }
   }
-
   return projected;
+}
+
+function canRemoveMapping(
+  field: CanvasNodePresentationColumn,
+  fields: readonly CanvasNodePresentationColumn[]
+): boolean {
+  return (
+    field.sources?.length === 1 &&
+    fields.every((column) => column.sources?.length === 1 && column.children == null)
+  );
 }

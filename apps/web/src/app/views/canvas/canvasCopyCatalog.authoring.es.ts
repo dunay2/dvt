@@ -28,6 +28,7 @@ export const canvasViewAuthoringCopyEs = {
     'Este campo lo usa un Modelo conectado. Elimina o reasigna antes esa dependencia.',
   sourceOutputLastFieldMessage: 'Un Origen debe entregar al menos un campo.',
   connectionIncompleteMessage: 'La conexión está incompleta.',
+  connectionGraphChangedMessage: 'El grafo ha cambiado. Vuelve a conectar los nodos.',
   nodeNotFoundInGraphMessage: 'No se ha encontrado el nodo en el grafo.',
   nodeAlreadyOnCanvasMessage: 'El nodo ya está en el canvas',
   nodeKindUnavailableForCanvasMessage:

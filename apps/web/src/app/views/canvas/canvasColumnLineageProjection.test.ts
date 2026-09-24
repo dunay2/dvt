@@ -1,3 +1,4 @@
+import { projectCanvasColumnLineageForGraph as projectCanvasColumnLineage } from './canvasColumnLineageProjection.test-fixtures';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
@@ -20,7 +21,6 @@ import {
 import {
   createCanvasColumnHandleId,
   parseCanvasColumnHandleId,
-  projectCanvasColumnLineage,
   resolveCanvasColumnPortDirections,
 } from './canvasColumnLineageProjection';
 
@@ -103,19 +103,19 @@ describe('Canvas column lineage projection', () => {
     expect(resolveCanvasColumnPortDirections('output')).toEqual(['target']);
   });
 
-  it('derives removable lineage only from connected, disclosed canonical fields', () => {
+  it('derives removable lineage only from connected, disclosed canonical fields', async () => {
     const [source, model, sourceFieldId] = buildProjectionGraph();
-    const project = (
+    const project = async (
       expandedNodeIds: ReadonlySet<string>,
       connected = true
     ): ReturnType<typeof projectCanvasColumnLineage> =>
-      projectCanvasColumnLineage({
+      await projectCanvasColumnLineage({
         nodes: [source, model],
         edges: connected ? [{ sourceId: source.id, targetId: model.id }] : [],
         expandedNodeIds,
       });
 
-    expect(project(new Set([source.id, model.id]))).toEqual([
+    expect(await project(new Set([source.id, model.id]))).toEqual([
       expect.objectContaining({
         source: source.id,
         target: model.id,
@@ -126,11 +126,11 @@ describe('Canvas column lineage projection', () => {
         }),
       }),
     ]);
-    expect(project(new Set([source.id]))).toEqual([]);
-    expect(project(new Set([source.id, model.id]), false)).toEqual([]);
+    expect(await project(new Set([source.id]))).toEqual([]);
+    expect(await project(new Set([source.id, model.id]), false)).toEqual([]);
   });
 
-  it('projects Model-to-Model lineage through stable FieldIds', () => {
+  it('projects Model-to-Model lineage through stable FieldIds', async () => {
     const [source, upstream] = buildProjectionGraph();
     const upstreamAuthority = readDvtTransformAuthoringAuthority(upstream);
     if (upstreamAuthority == null) throw new Error('Expected upstream authority.');
@@ -149,7 +149,7 @@ describe('Canvas column lineage projection', () => {
       buildNode('model-customer-orders', 'dvt:transform', 'transform'),
       encodeDvtSubstraitProjectionDocument(downstreamDraft)
     );
-    const lineage = projectCanvasColumnLineage({
+    const lineage = await projectCanvasColumnLineage({
       nodes: [source, upstream, downstream],
       edges: [
         { sourceId: source.id, targetId: upstream.id },
@@ -175,7 +175,7 @@ describe('Canvas column lineage projection', () => {
     });
   });
 
-  it('preserves mapped lineage when an unrelated second Source is connected', () => {
+  it('preserves mapped lineage when an unrelated second Source is connected', async () => {
     const [source, model, sourceFieldId] = buildProjectionGraph();
     const secondSource: CanonicalNode = {
       ...buildNode('source-health-check', 'dvt:source', 'input', [{ name: 'id', type: 'integer' }]),
@@ -195,7 +195,7 @@ describe('Canvas column lineage projection', () => {
       },
     };
 
-    const lineage = projectCanvasColumnLineage({
+    const lineage = await projectCanvasColumnLineage({
       nodes: [source, secondSource, model],
       edges: [
         { sourceId: source.id, targetId: model.id },
@@ -216,7 +216,7 @@ describe('Canvas column lineage projection', () => {
       }),
     ]);
   });
-  it('keeps lineage identity stable when only the target display name changes', () => {
+  it('keeps lineage identity stable when only the target display name changes', async () => {
     const [source, original] = buildProjectionGraph();
     const expanded = new Set([source.id, original.id]);
     const edges = [{ sourceId: source.id, targetId: original.id }];
@@ -235,12 +235,12 @@ describe('Canvas column lineage projection', () => {
     if (renamedResult.outcome === 'rejected') throw new Error('Expected renamed projection.');
     const renamed = renamedResult.node;
 
-    const originalLineage = projectCanvasColumnLineage({
+    const originalLineage = await projectCanvasColumnLineage({
       nodes: [source, original],
       edges,
       expandedNodeIds: expanded,
     });
-    const renamedLineage = projectCanvasColumnLineage({
+    const renamedLineage = await projectCanvasColumnLineage({
       nodes: [source, renamed],
       edges,
       expandedNodeIds: expanded,
@@ -254,7 +254,7 @@ describe('Canvas column lineage projection', () => {
     expect(renamedLineage[0]?.data?.targetColumnName).toBe('customer_order_id');
   });
 
-  it('does not fabricate lineage for dbt columns that only share a name', () => {
+  it('does not fabricate lineage for dbt columns that only share a name', async () => {
     const source: CanonicalNode = {
       id: 'dbt-source',
       name: 'source_orders',
@@ -277,7 +277,7 @@ describe('Canvas column lineage projection', () => {
     };
 
     expect(
-      projectCanvasColumnLineage({
+      await projectCanvasColumnLineage({
         nodes: [source, model],
         edges: [{ sourceId: source.id, targetId: model.id }],
         expandedNodeIds: new Set([source.id, model.id]),

@@ -12,6 +12,7 @@ import { transformNode } from './CanvasRelationalTreeWorkbench.test-support';
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { resolveDvtTransformAuthoringMetadata } from './canvasDvtTransformAuthoring';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 function scenario(): {
   document: ReturnType<typeof createDvtSubstraitJoinDraft>;
@@ -78,6 +79,18 @@ describe('selected relation Filter command', () => {
         throw new Error('Canonical document did not reopen');
       expect(reopened.metadata.plan).toEqual(filtered.plan);
       expect(reopened.metadata.sidecar).toEqual(filtered.sidecar);
+      const card = await projectCanvasNodePresentationTruth({
+        node: saved,
+        nodes: [saved],
+        edges: [],
+      });
+      expect(card.columns.state).toBe('ready');
+      expect(card.columns.declared).toHaveLength(baseline.fields.length);
+      expect(card.columns.declared.map((field) => field.reference)).toEqual(
+        (await session.query(session.rootId)).bindings
+          .filter((field) => field.parentFieldId == null)
+          .map((field) => field.fieldId)
+      );
       expect(deriveSubstraitSchemas(filtered).schemas.get(next.index.rootId)).toEqual(
         baseline.fields
       );

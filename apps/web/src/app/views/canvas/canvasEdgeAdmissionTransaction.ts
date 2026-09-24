@@ -60,11 +60,11 @@ function buildAcceptedEdgeTransaction(args: {
   };
 }
 
-function applyCreatedConnectionColumnMappings(args: {
+async function applyCreatedConnectionColumnMappings(args: {
   transaction: AcceptedCanvasEdgeAdmissionTransaction;
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   targetNodeId: string;
-}): AcceptedCanvasEdgeAdmissionTransaction {
+}): Promise<AcceptedCanvasEdgeAdmissionTransaction> {
   const rebasedDraftSession = rebaseStaleTransformProjection({
     draftSession: args.transaction.draftSession,
     canonicalNodesById: args.canonicalNodesById,
@@ -78,11 +78,13 @@ function applyCreatedConnectionColumnMappings(args: {
   if (targetNode?.pluginId !== 'dvt' || targetNode.kind !== 'dvt:transform') {
     return args.transaction;
   }
-  const targetColumns = projectCanvasNodePresentationTruth({
-    node: targetNode,
-    nodes,
-    edges: args.transaction.draftSession.workingSet.visibleEdges,
-  }).columns.visible.flatMap((column) =>
+  const targetColumns = (
+    await projectCanvasNodePresentationTruth({
+      node: targetNode,
+      nodes,
+      edges: args.transaction.draftSession.workingSet.visibleEdges,
+    })
+  ).columns.visible.flatMap((column) =>
     column.provenance === 'declared' ? [] : [{ name: column.name, type: column.type }]
   );
   const mappingResult = automapCanvasColumns({
@@ -122,13 +124,13 @@ function applyConnectedDbtModelOrigin(args: {
   };
 }
 
-export function resolveCanvasEdgeCreationTransaction({
+export async function resolveCanvasEdgeCreationTransaction({
   canonicalNodesById,
   connection,
   draftSession,
   edges,
   pluginPortMap,
-}: ResolveCanvasEdgeCreationTransactionArgs): CanvasEdgeAdmissionTransaction {
+}: ResolveCanvasEdgeCreationTransactionArgs): Promise<CanvasEdgeAdmissionTransaction> {
   const result = createConnection({
     connection,
     canonicalNodesById,
@@ -151,7 +153,7 @@ export function resolveCanvasEdgeCreationTransaction({
   if (transaction.outcome !== 'created' || connection.target == null) {
     return transaction;
   }
-  const mappedTransaction = applyCreatedConnectionColumnMappings({
+  const mappedTransaction = await applyCreatedConnectionColumnMappings({
     transaction,
     canonicalNodesById,
     targetNodeId: connection.target,

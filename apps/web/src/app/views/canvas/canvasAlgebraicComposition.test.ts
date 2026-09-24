@@ -56,7 +56,7 @@ function transform(): CanonicalNode {
 }
 
 describe('Canvas algebraic composition', () => {
-  it('adds the second dependency and persists one canonical UNION ALL', () => {
+  it('adds the second dependency and persists one canonical UNION ALL', async () => {
     const north = source('customers-north');
     const south = source('customers-south');
     const target = transform();
@@ -93,7 +93,7 @@ describe('Canvas algebraic composition', () => {
       'intersect_all',
       'except_all',
     ]);
-    const transaction = resolveCanvasAlgebraicCompositionTransaction({
+    const transaction = await resolveCanvasAlgebraicCompositionTransaction({
       ...state,
       operation: 'union_all',
     });
@@ -124,7 +124,7 @@ describe('Canvas algebraic composition', () => {
     });
   });
 
-  it('does not replace an authored Transform when another card is dropped on it', () => {
+  it('does not replace an authored Transform when another card is dropped on it', async () => {
     const north = source('customers-north');
     const south = source('customers-south');
     const target = {
@@ -157,7 +157,7 @@ describe('Canvas algebraic composition', () => {
 
     expect(resolveCanvasAlgebraicCompositionOperations(state)).toEqual([]);
     expect(
-      resolveCanvasAlgebraicCompositionTransaction({ ...state, operation: 'union_all' })
+      await resolveCanvasAlgebraicCompositionTransaction({ ...state, operation: 'union_all' })
     ).toEqual({ outcome: 'noop', rejection: { code: 'operation_not_available' } });
     expect(draftSession.workingSet.visibleEdges).toEqual(visibleEdges);
   });

@@ -1,6 +1,6 @@
 /** Owned concern: serialize Canvas edge command effects over one local snapshot. */
-import { useCallback, useRef } from 'react';
-import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 
 import type { Connection, Edge } from '@xyflow/react';
 import type { WorkspaceGraphAuthoringEdgeExecutionGateCommand } from '@dvt/contracts';
@@ -9,7 +9,7 @@ import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasConnectionRejection } from './canvasConnectionAggregate';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
-import { canvasGraphLifecycle } from './canvasGraphLifecycle';
+import { applyAcceptedEdgeTransaction } from './canvasEdgeCommandEffects';
 import {
   resolveCanvasEdgeCreationTransaction,
   resolveCanvasEdgeReconnectTransaction,
@@ -31,6 +31,7 @@ type UseCanvasEdgeCommandRunnerArgs = {
   state: CanvasEdgeCommandRunnerState;
   effects: CanvasEdgeCommandRunnerEffects;
   pluginPortMap: PluginPortMap;
+  canEditEdges: boolean;
 };
 
 type RunCanvasEdgeCreationCommandArgs = {
@@ -48,7 +49,7 @@ type RunCanvasEdgeReconnectCommandArgs = {
 
 export type RunCanvasEdgeCreationCommand = (
   args: RunCanvasEdgeCreationCommandArgs
-) => CanvasEdgeAdmissionTransaction;
+) => Promise<CanvasEdgeAdmissionTransaction>;
 
 export type RunCanvasEdgeReconnectCommand = (
   args: RunCanvasEdgeReconnectCommandArgs
@@ -64,37 +65,11 @@ export type CanvasEdgeCommandRunner = {
   }) => boolean;
 };
 
-function applyAcceptedEdgeTransaction(args: {
-  transaction: Extract<CanvasEdgeAdmissionTransaction, { outcome: 'created' | 'reconnected' }>;
-  baselineDraftSession: CanvasDraftSession;
-  latestEdgesRef: MutableRefObject<Edge[]>;
-  latestDraftSessionRef: MutableRefObject<CanvasDraftSession>;
-  setEdges: Dispatch<SetStateAction<Edge[]>>;
-  setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
-}) {
-  const changedNodes = Object.entries(args.transaction.draftSession.localNodeCatalog ?? {})
-    .filter(([nodeId, node]) => args.baselineDraftSession.localNodeCatalog?.[nodeId] !== node)
-    .map(([, node]) => node);
-  args.latestEdgesRef.current = args.transaction.edges;
-  args.latestDraftSessionRef.current = args.transaction.draftSession;
-  args.setEdges(args.transaction.edges);
-  args.setDraftSession((currentDraftSession) => {
-    let nextDraftSession = canvasGraphLifecycle.edge.replaceVisible(
-      currentDraftSession,
-      args.transaction.edges
-    );
-    for (const node of changedNodes) {
-      nextDraftSession = canvasDraftSession.workingSet.upsertNode(nextDraftSession, node);
-    }
-    args.latestDraftSessionRef.current = nextDraftSession;
-    return nextDraftSession;
-  });
-}
-
 export function useCanvasEdgeCommandRunner({
   state,
   effects,
   pluginPortMap,
+  canEditEdges,
 }: UseCanvasEdgeCommandRunnerArgs): CanvasEdgeCommandRunner {
   const { canonicalNodesById, draftSession, edges } = state;
   const { setDraftSession, setEdges } = effects;
@@ -102,17 +77,43 @@ export function useCanvasEdgeCommandRunner({
   const latestDraftSessionRef = useRef(draftSession);
   latestEdgesRef.current = edges;
   latestDraftSessionRef.current = draftSession;
+  const active = useRef(false);
+  useEffect(() => {
+    active.current = true;
+    return () => {
+      active.current = false;
+    };
+  }, []);
+  const latestPolicy = useRef({ canEditEdges, canonicalNodesById, pluginPortMap });
+  latestPolicy.current = { canEditEdges, canonicalNodesById, pluginPortMap };
 
   const createConnectionCommand = useCallback<RunCanvasEdgeCreationCommand>(
-    ({ connection, onNoop, onCreated }) => {
+    async ({ connection, onNoop, onCreated }) => {
+      if (!active.current || !latestPolicy.current.canEditEdges) {
+        return { outcome: 'noop', rejection: { code: 'graph_changed' } };
+      }
       const baselineDraftSession = latestDraftSessionRef.current;
-      const transaction = resolveCanvasEdgeCreationTransaction({
+      const baselineEdges = latestEdgesRef.current;
+      const transaction = await resolveCanvasEdgeCreationTransaction({
         canonicalNodesById,
         connection,
         draftSession: baselineDraftSession,
-        edges: latestEdgesRef.current,
+        edges: baselineEdges,
         pluginPortMap,
       });
+
+      if (
+        !active.current ||
+        !latestPolicy.current.canEditEdges ||
+        latestPolicy.current.canonicalNodesById !== canonicalNodesById ||
+        latestPolicy.current.pluginPortMap !== pluginPortMap ||
+        latestDraftSessionRef.current !== baselineDraftSession ||
+        latestEdgesRef.current !== baselineEdges
+      ) {
+        const rejection: CanvasConnectionRejection = { code: 'graph_changed' };
+        if (active.current) onNoop?.(rejection);
+        return { outcome: 'noop', rejection };
+      }
 
       if (transaction.outcome === 'noop') {
         onNoop?.(transaction.rejection);
@@ -135,6 +136,9 @@ export function useCanvasEdgeCommandRunner({
 
   const reconnectEdgeCommand = useCallback<RunCanvasEdgeReconnectCommand>(
     ({ edge, connection, onNoop, onReconnected }) => {
+      if (!active.current || !latestPolicy.current.canEditEdges) {
+        return { outcome: 'noop', rejection: { code: 'graph_changed' } };
+      }
       const baselineDraftSession = latestDraftSessionRef.current;
       const transaction = resolveCanvasEdgeReconnectTransaction({
         canonicalNodesById,
@@ -166,6 +170,7 @@ export function useCanvasEdgeCommandRunner({
 
   const setExecutionGateCommand = useCallback<CanvasEdgeCommandRunner['setExecutionGate']>(
     (command) => {
+      if (!active.current || !latestPolicy.current.canEditEdges) return false;
       const currentDraftSession = latestDraftSessionRef.current;
       const nextDraftSession = canvasDraftSession.workingSet.setEdgeExecutionGate(
         currentDraftSession,

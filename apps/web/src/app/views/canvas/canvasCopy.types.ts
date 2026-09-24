@@ -213,6 +213,7 @@ export type CanvasViewCopy = {
   readonly emptyCanvasReadyDetail: string;
   readonly canvasReadyDetail: string;
   readonly connectionIncompleteMessage: string;
+  readonly connectionGraphChangedMessage: string;
   readonly nodeNotFoundInGraphMessage: string;
   readonly nodeAlreadyOnCanvasMessage: string;
   readonly nodeKindUnavailableForCanvasMessage: string;

@@ -122,8 +122,8 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     const harness = renderGraphHandlersHook({ canEditEdges: false });
     await harness.render();
 
-    act(() => {
-      harness.latest()?.onConnect({
+    await act(async () => {
+      await harness.latest()?.onConnect({
         source: 'source-node',
         sourceHandle: null,
         target: 'sink-node',
@@ -161,8 +161,8 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
     await harness.render();
 
-    act(() => {
-      harness.latest()?.onConnect({
+    await act(async () => {
+      await harness.latest()?.onConnect({
         source: source.id,
         sourceHandle: createCanvasColumnHandleId({
           direction: 'source',
@@ -212,7 +212,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
     await harness.render();
 
-    act(() => {
+    await act(async () => {
       harness.latest()?.handleColumnPortActivate({
         direction: 'source',
         nodeId: source.id,
@@ -226,7 +226,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         columnId: 'order_id',
       })
     );
-    act(() => {
+    await act(async () => {
       harness.latest()?.handleColumnPortActivate({
         direction: 'target',
         nodeId: model.id,
@@ -288,8 +288,8 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
     await harness.render();
 
-    act(() => {
-      harness.latest()?.onConnect({
+    await act(async () => {
+      await harness.latest()?.onConnect({
         source: clients.id,
         sourceHandle: createCanvasColumnHandleId({
           direction: 'source',
@@ -314,7 +314,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       candidateOperator: 'equal',
     });
 
-    act(() => {
+    await act(async () => {
       harness.latest()?.clearRelationalPredicateSeed();
       harness.latest()?.handleColumnPortActivate({
         direction: 'source',
@@ -322,7 +322,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         columnId: 'client_id',
       });
     });
-    act(() => {
+    await act(async () => {
       harness.latest()?.handleColumnPortActivate({
         direction: 'target',
         nodeId: model.id,
@@ -352,8 +352,8 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
     await harness.render();
 
-    act(() => {
-      harness.latest()?.onConnect({
+    await act(async () => {
+      await harness.latest()?.onConnect({
         source: 'source-node',
         sourceHandle: null,
         target: 'sink-node',
@@ -417,8 +417,8 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
     await harness.render();
 
-    act(() => {
-      harness.latest()?.onConnect({
+    await act(async () => {
+      await harness.latest()?.onConnect({
         source: source.id,
         sourceHandle: null,
         target: transform.id,
@@ -467,8 +467,8 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     const harness = renderGraphHandlersHook({ canEditEdges: true });
     await harness.render();
 
-    act(() => {
-      harness.latest()?.onConnect({
+    await act(async () => {
+      await harness.latest()?.onConnect({
         source: 'source-node',
         sourceHandle: null,
         target: 'sink-node',
@@ -500,8 +500,8 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       });
       await harness.render();
 
-      act(() => {
-        harness.latest()?.onConnect({
+      await act(async () => {
+        await harness.latest()?.onConnect({
           source: 'source-node',
           sourceHandle: null,
           target: 'sink-node',
@@ -584,8 +584,8 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
     await harness.render();
 
-    act(() => {
-      harness.latest()?.onConnect({
+    await act(async () => {
+      await harness.latest()?.onConnect({
         source: 'warehouse-source',
         sourceHandle: null,
         target: 'dbt-model',
@@ -664,8 +664,8 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
     await harness.render();
 
-    act(() => {
-      harness.latest()?.onConnect({
+    await act(async () => {
+      await harness.latest()?.onConnect({
         source: 'warehouse-source',
         sourceHandle: null,
         target: 'dbt-model',
@@ -715,8 +715,8 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
     await harness.render();
 
-    act(() => {
-      harness.latest()?.onConnect({
+    await act(async () => {
+      await harness.latest()?.onConnect({
         source: HTTP_JSON_ACQUISITION_NODE.id,
         sourceHandle: null,
         target: OBJECT_FILE_LOAD_NODE.id,
@@ -751,8 +751,8 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
     await harness.render();
 
-    act(() => {
-      harness.latest()?.onConnect({
+    await act(async () => {
+      await harness.latest()?.onConnect({
         source: OBJECT_FILE_LOAD_NODE.id,
         sourceHandle: null,
         target: HTTP_JSON_ACQUISITION_NODE.id,
@@ -782,8 +782,8 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
     await harness.render();
 
-    act(() => {
-      harness.latest()?.onConnect({
+    await act(async () => {
+      await harness.latest()?.onConnect({
         source: 'source-node',
         sourceHandle: null,
         target: 'sink-node',
@@ -888,7 +888,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       | Readonly<{ outcome: 'applied'; createdFieldId: string }>
       | Readonly<{ outcome: 'rejected' }>
       | undefined;
-    act(() => {
+    await act(async () => {
       functionResult = harness.latest()?.handleApplyCanvasColumnFunction({
         nodeId: transform.id,
         columnId: 'output:order_id',
@@ -934,7 +934,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     let calculatedSession = nextSession;
     if (withLiteral) {
       setDraftSession.mockClear();
-      act(() => {
+      await act(async () => {
         harness.latest()?.handleAddCanvasCalculatedColumn({
           nodeId: transform.id,
           kind: 'string-literal',
@@ -975,7 +975,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       });
     }
     setDraftSession.mockClear();
-    act(() => {
+    await act(async () => {
       harness.latest()?.handleToggleCanvasColumnOutput({
         nodeId: transform.id,
         columnId: 'output:customer',
@@ -1002,7 +1002,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     ).toEqual(['output:order_id', 'output:amount', ...derivedFieldIds]);
 
     setDraftSession.mockClear();
-    act(() => {
+    await act(async () => {
       harness.latest()?.handleReorderCanvasColumnOutput({
         nodeId: transform.id,
         columnId: 'output:amount',

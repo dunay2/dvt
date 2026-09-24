@@ -1,7 +1,8 @@
 /** Owned concern: resolve the canonical DBT model targets connected to a DBT test. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
-import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
+import { readDbtModelAvailableColumnNames } from './canvasDbtModelColumns';
+import { createDbtNodeAuthoringMetadata, isDbtCompatibleModel } from './canvasDbtAuthoringModel';
+import { resolveDbtModelProjectionColumns } from './canvasDbtModelColumnAuthoring';
 
 export function readEffectiveDbtModelColumnNames(args: {
   node: CanonicalNode | undefined;
@@ -10,15 +11,16 @@ export function readEffectiveDbtModelColumnNames(args: {
 }): readonly string[] {
   if (args.node == null || !isDbtCompatibleModel(args.node)) return [];
 
-  return [
-    ...new Set(
-      projectCanvasNodePresentationTruth({
-        node: args.node,
-        nodes: args.nodes,
-        edges: args.edges,
-      }).columns.visible.map((column) => column.name)
-    ),
-  ];
+  return resolveDbtModelProjectionColumns(
+    createDbtNodeAuthoringMetadata(args.node).projectionColumns,
+    readDbtModelAvailableColumnNames({
+      modelNode: args.node,
+      nodes: args.nodes,
+      edges: args.edges,
+    })
+  )
+    .filter((column) => column.output)
+    .map((column) => column.name);
 }
 
 export function resolveConnectedDbtTestTargets(args: {

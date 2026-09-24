@@ -85,13 +85,13 @@ function useCanvasConnectionCreationHandler({
   const { canEditEdges } = policy;
 
   return useCallback<NonNullable<ReactFlowProps<Node, Edge>['onConnect']>>(
-    (connection) => {
+    async (connection) => {
       if (!canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
 
-      edgeCommandRunner.createConnection({
+      await edgeCommandRunner.createConnection({
         connection,
         onNoop: notifyRejectedConnection,
         onCreated: () => {
@@ -145,6 +145,7 @@ export function useCanvasEdgeAuthoringHandlers(
     state,
     effects,
     pluginPortMap,
+    canEditEdges: policy.canEditEdges,
   });
   const columnMappingHandlers = useCanvasColumnConnectionHandlers(
     { state, effects, policy },

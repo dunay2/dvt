@@ -64,6 +64,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.sourceOutput.lastFieldMessage',
     fallback: 'A Source must deliver at least one field.',
   },
+  connectionGraphChangedMessage: {
+    key: 'canvas.connection.graphChanged',
+    fallback: 'The graph changed. Connect the nodes again.',
+  },
   connectionIncompleteMessage: {
     key: 'canvas.connection.incompleteMessage',
     fallback: 'Connection is incomplete.',

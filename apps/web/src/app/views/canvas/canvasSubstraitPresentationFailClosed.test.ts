@@ -41,7 +41,7 @@ function transformNode(): CanonicalNode {
 }
 
 describe('Substrait card presentation fail-closed behavior', () => {
-  it('does not present inherited columns when persisted Substrait authority is outside the pilot', () => {
+  it('does not present inherited columns when persisted Substrait authority is outside the pilot', async () => {
     const draft = createDvtSubstraitPilotDraft({
       sourceNodeId: 'source-customers',
       targetNodeId: 'transform-customers',
@@ -55,7 +55,7 @@ describe('Substrait card presentation fail-closed behavior', () => {
     );
     const source = sourceNode();
 
-    const presentation = projectCanvasNodePresentationTruth({
+    const presentation = await projectCanvasNodePresentationTruth({
       node,
       nodes: [source, node],
       edges: [{ sourceId: source.id, targetId: node.id }],

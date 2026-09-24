@@ -33,7 +33,7 @@ import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualTokens';
-import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+import { useCanvasNodePresentation } from './useCanvasNodePresentations';
 import { useCanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { DvtTransformCodeWorkbenchContent } from './DvtTransformCodeWorkbenchContent';
@@ -159,10 +159,7 @@ export function CanvasNodeWorkbenchPanel({
   const [appliedPreferredTabKey, setAppliedPreferredTabKey] = useState<string | null>(null);
   const draftController = useCanvasNodeWorkbenchDraftController(node, authoring.workspaceScope);
   const renderTableCell = useCanvasColumnCommentCellRenderer({ copy, authoring, draftController });
-  const presentationTruth = useMemo(
-    () => projectCanvasNodePresentationTruth({ node, nodes, edges }),
-    [edges, node, nodes]
-  );
+  const presentationTruth = useCanvasNodePresentation({ node, nodes, edges });
   const dvtTransformAuthoringMode = readDvtTransformAuthoringMode(node);
   const semanticDvtTransform =
     node.pluginId === 'dvt' && node.kind === 'dvt:transform' && !isDbtCompatibleModel(node);

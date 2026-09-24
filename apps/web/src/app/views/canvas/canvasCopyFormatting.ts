@@ -222,6 +222,8 @@ export function formatCanvasConnectionRejection(
   const copy = resolveCanvasViewCopy(locale);
 
   switch (rejection.code) {
+    case 'graph_changed':
+      return copy.connectionGraphChangedMessage;
     case 'connection_incomplete':
       return copy.connectionIncompleteMessage;
     case 'node_not_found_in_graph':
