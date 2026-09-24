@@ -637,7 +637,7 @@ Validation plan:
 ### Implementation Outcome
 
 - Added the branch-level Fowler review in
-  `buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md`.
+  [Static Analysis Follow-Up Fowler Architecture Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md).
 - Added
   `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md`
   with Canvas startup, draft, presentation, architecture, and TDD scenarios.
@@ -656,7 +656,7 @@ Validation plan:
 
 - Red: `pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts`
   failed because
-  `buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md`
+  [Static Analysis Follow-Up Fowler Architecture Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md)
   and the user-story guide did not exist.
 - Green: the same command passed after adding the review, user stories, guide
   link, and documentation traceability assertions.

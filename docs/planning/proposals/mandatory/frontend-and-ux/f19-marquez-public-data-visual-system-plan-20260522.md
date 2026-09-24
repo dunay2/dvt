@@ -46,7 +46,7 @@ consumers, user stories, and an architecture guard.
    classification.
 2. Green: add the public-data component docs, user stories, UX guide text,
    reference-stack classification, component index entry, feature manifest,
-   closeout, and Lane E state closure.
+   evidence, and acceptance in the governing GitHub issue.
 3. Validate focused architecture test, docs sync/status generation, planning DB
    export, and pre-push.
 

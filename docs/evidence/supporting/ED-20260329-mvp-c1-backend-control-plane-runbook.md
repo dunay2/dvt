@@ -11,7 +11,7 @@ evidence_class: supporting
 code_refs:
   - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
   - docs/planning/state/agent-lane-c.yaml
-  - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
+  - https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md
 evidence:
   tests:
     - lane C MVP-C1 moved to review with explicit closure target

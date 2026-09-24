@@ -30,8 +30,8 @@ It is intended to:
   [`docs/guides/testing-and-ci-capabilities.md`](../../../guides/testing-and-ci-capabilities.md)
 - Related prior art:
   - [20260328 Lane C AI efficiency and cost review](https://github.com/dunay2/dvt/blob/1b07acde33300a19d97914eb719b262b44e79182/docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md)
-  - [20260330 CI performance review and action plan](./20260330-ci-performance-review-and-action-plan.md)
-  - [20260401 CI process review](./20260401-ci-process-review.md)
+  - [20260401 CI process review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/ci-and-delivery/20260401-ci-process-review.md)
+  - [20260330 CI performance review and action plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/reviews/ci-and-delivery/20260330-ci-performance-review-and-action-plan.md)
 
 This review complements those earlier CI reviews. It does not supersede them.
 

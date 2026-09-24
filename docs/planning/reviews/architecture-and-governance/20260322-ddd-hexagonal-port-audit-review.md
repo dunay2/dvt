@@ -308,4 +308,4 @@ ADR-0039 captures the concrete decisions for F1, F3, and F4.
 
 - [ADR-0034 — Bounded Context Boundaries](../../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)
 - [ADR-0039 — Hexagonal Port Hardening](../../../adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md)
-- [2026-03-14 Domain Cohesion Review](./20260314-domain-cohesion-review.md)
+- [2026-03-14 Domain Cohesion Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260314-domain-cohesion-review.md)

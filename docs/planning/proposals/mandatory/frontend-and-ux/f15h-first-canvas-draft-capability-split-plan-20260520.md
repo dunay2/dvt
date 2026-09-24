@@ -4,7 +4,6 @@ status: Accepted
 owner: Frontend / Canvas
 last_reviewed: 2026-05-20
 planning_type: mandatory
-lane: E
 task_id: F-15-H
 parent_task_id: F-15
 ---

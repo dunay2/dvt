@@ -34,7 +34,7 @@ canonical runtime rail, a closed task, or an explicit future task.
 - Runtime review documents cannot own executable runtime semantics directly.
 - Protected runtime behavior remains owned by the route rail catalog and
   application services, not by review prose.
-- A review with actionable runtime/API work must link to a Planning DB task or
+- A review with actionable runtime/API work must link to its governing GitHub issue or
   explicitly state that an existing task/closeout already absorbed it.
 - A reference review may stay in the board only when it is named as rationale,
   not as an implicit queue.
@@ -54,16 +54,16 @@ stateDiagram-v2
   ReviewFinding --> Superseded: newer canon replaces it
   ClosedByRail --> ReviewBoardDisposition
   ReferenceRationale --> ReviewBoardDisposition
-  FutureTask --> PlanningDbTask
+  FutureTask --> GitHubIssue
   Superseded --> ReviewBoardDisposition
-  PlanningDbTask --> ReviewBoardDisposition
+  GitHubIssue --> ReviewBoardDisposition
   ReviewBoardDisposition --> [*]
 ```
 
 ## Consumers
 
 - Runtime/API maintainers deciding whether a review finding requires code.
-- Planning stewards routing Lane C work through Planning DB instead of review
+- Planning stewards routing delivery work through GitHub Issues instead of review
   prose.
 - PR reviewers checking that protected runtime changes update rail docs and
   semantic guards together.
@@ -73,10 +73,10 @@ stateDiagram-v2
 
 ## Command And Query Rail
 
-| Rail                               | Type    | DDD owner                             | Surface                                        | Negative check                                                              |
-| ---------------------------------- | ------- | ------------------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------- |
-| `RecordRuntimeReviewCanon`         | command | Runtime review canon aggregate        | Planning DB task plus review status board      | Rejects orphan reviews without task, closeout, or explicit reference status |
-| `ClassifyRuntimeReviewDisposition` | query   | Runtime review disposition read model | Review board and execution-runtime domain page | Fails when an active runtime review lacks canonical disposition             |
+| Rail                               | Type    | DDD owner                             | Surface                                               | Negative check                                                              |
+| ---------------------------------- | ------- | ------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------- |
+| `RecordRuntimeReviewCanon`         | command | Runtime review canon aggregate        | Governed review disposition plus GitHub issue linkage | Rejects orphan reviews without task, closeout, or explicit reference status |
+| `ClassifyRuntimeReviewDisposition` | query   | Runtime review disposition read model | Review board and execution-runtime domain page        | Fails when an active runtime review lacks canonical disposition             |
 
 ## Semantic Fitness Function
 
@@ -98,7 +98,7 @@ flowchart TD
   Reviews[Runtime and API reviews]
   Board[Review status board]
   Rails[Protected runtime rail catalog]
-  Tasks[Planning DB Lane C tasks]
+  Tasks[GitHub Issues]
   Closeouts[Runtime closeouts]
 
   Reviews --> Board
@@ -116,4 +116,4 @@ Mature systems separate review intake from executable authority. Reviews are
 evidence and rationale; bounded contexts own behavior through command/query
 rails, contracts, and application services. This component applies that split
 to runtime/API planning so future reviewers can ask one question: "which rail
-or Planning DB task owns this finding?"
+or governing GitHub issue owns this finding?"

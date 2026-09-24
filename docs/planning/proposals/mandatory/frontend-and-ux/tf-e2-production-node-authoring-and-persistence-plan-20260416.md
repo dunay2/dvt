@@ -4,7 +4,6 @@ status: Implemented
 owner: Product / Frontend / Architecture / API
 last_reviewed: 2026-05-14
 planning_type: proposal
-lane: E
 task_id: TF-E2
 ---
 
@@ -19,7 +18,7 @@ This proposal defines the next governed slice: make Canvas node authoring
 behave like a real product surface with canonical persistence, durable edges,
 editable properties, deterministic reload, and a proof-oriented test matrix.
 
-The decision is to keep this work in `Lane E`. A new lane is not required. A
+The existing frontend GitHub issue owns this work. A
 new planning slice is required.
 
 The active implementation posture is also explicit after the 2026-04-20 sync:
@@ -55,8 +54,6 @@ bounded contexts, ports, aggregates, and phased validation".
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
 - [Task: E-PROP-DISP-1] `docs/planning/state/how-to-add-tasks.md`
-- `docs/planning/state/agent-lane-e.yaml`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md`
 - `docs/architecture/components/web/graph/canvas-component-map-and-modernization-review.md`
@@ -119,11 +116,11 @@ The target for this slice is not visual polish. It is operational integrity.
 
 ## Decision
 
-`Lane E` owns the frontend productization slice.
+The governing frontend GitHub issue owns the productization slice.
 
 This slice must not ship with fake persistence. If the current backend or
 workspace boundary cannot own canonical graph-draft persistence, the follow-up
-must be planned explicitly in the relevant backend lane instead of letting the
+must be planned explicitly in the governing backend GitHub issue instead of letting the
 frontend pretend that `localStorage` is the product source of truth.
 
 For the active Canvas authoring path, this proposal also rejects a long-lived
@@ -461,8 +458,6 @@ This slice is not done if any of the following remain true:
 ## Validation baseline for this planning slice
 
 ```bash
-pnpm docs:planning:lanes:generate
-pnpm docs:workboard:generate
 pnpm docs:sync
 pnpm verify:prepush
 ```

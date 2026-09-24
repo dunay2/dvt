@@ -83,7 +83,7 @@ routing, or live Prometheus collection.
 
 ## Consumers
 
-- Lane C planning closure for `AR-C2` and `AR-C2-INV-1`.
+- GitHub issue acceptance for `AR-C2` and `AR-C2-INV-1`.
 - `docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md`.
 - `docs/runbooks/ar-c2-evidence-generated-latest.md`.
 - `docs/guides/ar-c2-observability-technical-manual-20260404.md`.

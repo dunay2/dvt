@@ -84,27 +84,26 @@ must resolve to one of: in the parity baseline, covered by another step in a
 canonical merge-blocking workflow, or declared as an out-of-scope follow-up
 below.
 
-| `verify:prepush` command                               | Remote coverage                                                                              | Notes                                                  |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| `node scripts/docs-workboard-check-changed.cjs`        | `Validate planning workboard outputs` (`pnpm docs:workboard:check`) in `pr-quality-gate.yml` | Lane-yaml-gated; same drift signal.                    |
-| `pnpm docs:gov:locations -- --changed-only`            | `Enforce Markdown location policy` (`pnpm docs:gov:locations`) in `pr-quality-gate.yml`      | Remote runs the full-tree variant.                     |
-| `pnpm docs:gov:filenames:changed`                      | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
-| `pnpm docs:gov:frontmatter:changed`                    | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
-| `pnpm docs:gov:generated-policy`                       | Not currently mirrored on any workflow                                                       | Tracked as out-of-scope follow-up `CI-GOV-PARITY-F1`.  |
-| `pnpm docs:governance:unit-coverage`                   | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
-| `pnpm docs:governance:document-unit-map:check`         | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
-| `pnpm docs:governance:file-component-index:check`      | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
-| `pnpm docs:governance:file-fingerprint-baseline:check` | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
-| `pnpm docs:governance:file-fingerprint-impact:check`   | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
-| `pnpm docs:feature-mechanization`                      | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
-| `pnpm docs:feature-mechanization:implementation`       | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
-| `pnpm arch:deps`                                       | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
-| `pnpm docs:arc:evidence:check -- --changed-only`       | `ARC docs / evidence validate` (`tools/ci/doc-check.mjs`) in `pr-quality-gate.yml`           | Remote uses ARC JSON instead of `--changed-only`.      |
-| `pnpm qa:artifact:check`                               | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
-| `pnpm lint:md:changed`                                 | `Lint changed Markdown` (`pnpm lint:md:changed`) in `ci.yml`                                 | Same script, scoped to PR diff.                        |
-| `node scripts/check-changed.cjs`                       | `ci.yml` changed-file ESLint and Prettier jobs                                               | Same lint/format coverage on the diff.                 |
-| `node scripts/check-forbidden-tracked-files.cjs`       | `Enforce forbidden generated files policy` in `pr-quality-gate.yml`                          | Identical script invocation.                           |
-| `node scripts/type-check-prepush.cjs`                  | `test.yml` affected workspace type-check                                                     | Remote uses affected/full type-check, not the wrapper. |
+| `verify:prepush` command                               | Remote coverage                                                                         | Notes                                                  |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `pnpm docs:gov:locations -- --changed-only`            | `Enforce Markdown location policy` (`pnpm docs:gov:locations`) in `pr-quality-gate.yml` | Remote runs the full-tree variant.                     |
+| `pnpm docs:gov:filenames:changed`                      | Parity baseline                                                                         | Asserted by `workflow-pattern-parity.test.mjs`.        |
+| `pnpm docs:gov:frontmatter:changed`                    | Parity baseline                                                                         | Asserted by `workflow-pattern-parity.test.mjs`.        |
+| `pnpm docs:gov:generated-policy`                       | Not currently mirrored on any workflow                                                  | Tracked as out-of-scope follow-up `CI-GOV-PARITY-F1`.  |
+| `pnpm docs:governance:unit-coverage`                   | Parity baseline                                                                         | Asserted by `workflow-pattern-parity.test.mjs`.        |
+| `pnpm docs:governance:document-unit-map:check`         | Parity baseline                                                                         | Asserted by `workflow-pattern-parity.test.mjs`.        |
+| `pnpm docs:governance:file-component-index:check`      | Parity baseline                                                                         | Asserted by `workflow-pattern-parity.test.mjs`.        |
+| `pnpm docs:governance:file-fingerprint-baseline:check` | Parity baseline                                                                         | Asserted by `workflow-pattern-parity.test.mjs`.        |
+| `pnpm docs:governance:file-fingerprint-impact:check`   | Parity baseline                                                                         | Asserted by `workflow-pattern-parity.test.mjs`.        |
+| `pnpm docs:feature-mechanization`                      | Parity baseline                                                                         | Asserted by `workflow-pattern-parity.test.mjs`.        |
+| `pnpm docs:feature-mechanization:implementation`       | Parity baseline                                                                         | Asserted by `workflow-pattern-parity.test.mjs`.        |
+| `pnpm arch:deps`                                       | Parity baseline                                                                         | Asserted by `workflow-pattern-parity.test.mjs`.        |
+| `pnpm docs:arc:evidence:check -- --changed-only`       | `ARC docs / evidence validate` (`tools/ci/doc-check.mjs`) in `pr-quality-gate.yml`      | Remote uses ARC JSON instead of `--changed-only`.      |
+| `pnpm qa:artifact:check`                               | Parity baseline                                                                         | Asserted by `workflow-pattern-parity.test.mjs`.        |
+| `pnpm lint:md:changed`                                 | `Lint changed Markdown` (`pnpm lint:md:changed`) in `ci.yml`                            | Same script, scoped to PR diff.                        |
+| `node scripts/check-changed.cjs`                       | `ci.yml` changed-file ESLint and Prettier jobs                                          | Same lint/format coverage on the diff.                 |
+| `node scripts/check-forbidden-tracked-files.cjs`       | `Enforce forbidden generated files policy` in `pr-quality-gate.yml`                     | Identical script invocation.                           |
+| `node scripts/type-check-prepush.cjs`                  | `test.yml` affected workspace type-check                                                | Remote uses affected/full type-check, not the wrapper. |
 
 Inclusion rule for the parity baseline (the constant
 `PR_QUALITY_PREPUSH_GOVERNANCE_COMMANDS` in

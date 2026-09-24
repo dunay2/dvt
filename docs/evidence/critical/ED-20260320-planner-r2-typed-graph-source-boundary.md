@@ -101,4 +101,4 @@ pnpm validate:contracts
   `docs/adr/ADR-0012-plan-integrity-ownership.md`,
   `docs/adr/ADR-0017_ExecutionPlan_Schema_Versioning.md`
 - Slice closeout:
-  `docs/planning/closeouts/20260320-planner-r2-typed-graph-source-boundary-closeout.md`
+  [20260320 planner r2 typed graph source boundary closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260320-planner-r2-typed-graph-source-boundary-closeout.md)

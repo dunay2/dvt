@@ -19,7 +19,6 @@ Use this guide with:
 - [Temporal PlanRef capacity SLA](./temporal-planref-capacity-sla.md)
 - [Temporal PlanRef drained cutover runbook](../../../../../runbooks/temporal-planref-drained-cutover-20260427.md)
 - [Temporal worker DBT plugin runtime runbook](../../../../../runbooks/temporal-worker-dbt-plugin-runtime-20260414.md)
-- [Fowler PlanRef architecture analysis](../../../../../../buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md)
 - [Fowler AR-D continuation safety analysis](../../../../../../buzon/20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md)
 - [Fowler AR-D2 capacity SLA analysis](../../../../../../buzon/20260430-codex-fowler-ar-d2-temporal-capacity-sla-analysis-and-remediation.md)
 - [Temporal PlanRef workflow boundary user stories](./temporal-planref-workflow-boundary-user-stories.md)

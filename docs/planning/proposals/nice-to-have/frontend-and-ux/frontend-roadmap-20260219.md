@@ -12,12 +12,12 @@ planning_type: proposal
 
 The execution of this roadmap is tracked through the
 [GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md).
-The former Lane E identifiers (`MVP-E1`, `F-01` through `F-23`) remain
+The existing task identifiers (`MVP-E1`, `F-01` through `F-23`) remain
 historical cross-references, not current task authority.
 This document captures the convergence sequence and the architectural rationale
 behind those tasks.
-The dedicated F-04 boundary pack is tracked here:
-[F-04 Frontend Data-Boundary Hexagonal Convergence Plan](./f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md).
+The F-04 boundary is governed by the
+[Frontend Data-Boundary Architecture](../../../../architecture/components/web/frontend-data-boundary-architecture.md).
 
 Original analysis: 2026-02-19. Updated to reflect active state: 2026-04-03.
 
@@ -93,7 +93,6 @@ Canonical `F-07` baseline pack:
 - [Frontend Fowler Implementation Pattern](../../../../architecture/components/web/frontend-fowler-implementation-pattern.md)
 - [Frontend Runtime Contract Technical Manual](../../../../architecture/components/web/runs/frontend-runtime-contract-technical-manual.md)
 - [Frontend Runtime Contract User Manual](../../../../architecture/components/web/runs/frontend-runtime-contract-user-manual.md)
-- [F-07 Frontend Runtime Contract Baseline Plan](../../mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md)
 
 Canonical `MVP-E1` contract artifact:
 

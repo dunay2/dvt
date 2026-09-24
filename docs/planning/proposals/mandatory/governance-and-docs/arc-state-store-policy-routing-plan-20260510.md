@@ -38,7 +38,7 @@ flowchart LR
 - The trigger glob is exactly `packages/@dvt/state-store/**`.
 - The stale `packages/@dvt/state/**` glob is absent.
 - `pnpm test:ci-tools` covers the policy contract.
-- Lane C task `CI-AUDIT-ARC-STATE-STORE` records the closure evidence.
+- The governing task `CI-AUDIT-ARC-STATE-STORE` records the closure evidence.
 
 ## Feature Mechanization Manifest
 

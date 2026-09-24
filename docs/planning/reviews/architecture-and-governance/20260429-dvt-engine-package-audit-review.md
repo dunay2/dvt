@@ -476,7 +476,7 @@ tasks rather than leaving the review as open intake:
 
 Closeout evidence:
 
-- [EA-20260429 Engine Audit Disposition Closeout](../../closeouts/20260513-ea-20260429-engine-audit-disposition-closeout.md)
+- [EA-20260429 Engine Audit Disposition Closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260513-ea-20260429-engine-audit-disposition-closeout.md)
 
 ## Documentation Drift To Fix When Stories Start
 

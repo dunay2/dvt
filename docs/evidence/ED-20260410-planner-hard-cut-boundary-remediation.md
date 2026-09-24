@@ -20,8 +20,8 @@ code_refs:
   - apps/api/src/entrypoints/http/startRunRoutePlannerEnvelopeMapper.ts
   - apps/api/src/entrypoints/http/planRoutes.ts
   - apps/api/src/modules/buildProtectedRuntimeModule.ts
-  - docs/planning/proposals/mandatory/runtime-and-contracts/planner-hard-cut-boundary-remediation-20260410.md
-  - docs/planning/closeouts/20260410-mw-a6-planner-hard-cut-boundary-remediation-closeout.md
+  - https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260410-mw-a6-planner-hard-cut-boundary-remediation-closeout.md
+  - https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/planner-hard-cut-boundary-remediation-20260410.md
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test

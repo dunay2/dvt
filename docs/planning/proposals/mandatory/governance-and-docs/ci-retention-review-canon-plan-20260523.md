@@ -63,20 +63,20 @@ component guides, and closeouts as the only execution authorities.
 
 ## Review Disposition Matrix
 
-| Review input                                                   | Disposition                                                            | Owner                                |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------ |
-| `20260328 Lane C AI efficiency and cost review`                | blocked on measurement; still feeds `RC-C2`                            | AI efficiency adoption status        |
-| `20260330 CI, prepush, and PR process observations`            | blocked on measurement; shipped tooling evidence remains closeout-only | `RC-C2`                              |
-| `20260401 Lane C RC-C2 efficiency institutionalization review` | blocked on measurement; no closure without 3 qualifying cycles         | `RC-C2`                              |
-| `20260402 RC-C2 operational friction intake review`            | blocked on measurement; friction fixes are closeout evidence           | `RC-C2`                              |
-| `20260330 CI performance review and action plan`               | reference rationale for CI throughput                                  | CI governance component              |
-| `20260401 CI process review`                                   | reference baseline for CI process                                      | CI governance component              |
-| `20260422 Environment configuration audit`                     | reference intake for config/build posture                              | CI governance and CI-AUDIT tasks     |
-| `20260506 CI build config audit`                               | reference intake routed to `CI-AUDIT-*` tasks                          | CI-AUDIT task family                 |
-| `20260329 Run event retention TTL kickoff review`              | done/reference; component owner is run-event retention policy          | Event lifecycle and retention domain |
-| `20260329 Run event retention Fowler hard review`              | done/reference; QA rationale absorbed by retention policy component    | Event lifecycle and retention domain |
-| `20260329 Run event retention risks and mitigations`           | done/reference; residual risk handled by retention closeouts           | Event lifecycle and retention domain |
-| `20260330 MVP-D1 residual risk baseline review`                | done/reference; baseline retained as evidence                          | MVP-D1 and AR-D5 closeouts           |
+| Review input                                            | Disposition                                                            | Owner                                |
+| ------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------ |
+| `20260328 AI efficiency and cost review`                | blocked on measurement; still feeds `RC-C2`                            | AI efficiency adoption status        |
+| `20260330 CI, prepush, and PR process observations`     | blocked on measurement; shipped tooling evidence remains closeout-only | `RC-C2`                              |
+| `20260401 RC-C2 efficiency institutionalization review` | blocked on measurement; no closure without 3 qualifying cycles         | `RC-C2`                              |
+| `20260402 RC-C2 operational friction intake review`     | blocked on measurement; friction fixes are closeout evidence           | `RC-C2`                              |
+| `20260330 CI performance review and action plan`        | reference rationale for CI throughput                                  | CI governance component              |
+| `20260401 CI process review`                            | reference baseline for CI process                                      | CI governance component              |
+| `20260422 Environment configuration audit`              | reference intake for config/build posture                              | CI governance and CI-AUDIT tasks     |
+| `20260506 CI build config audit`                        | reference intake routed to `CI-AUDIT-*` tasks                          | CI-AUDIT task family                 |
+| `20260329 Run event retention TTL kickoff review`       | done/reference; component owner is run-event retention policy          | Event lifecycle and retention domain |
+| `20260329 Run event retention Fowler hard review`       | done/reference; QA rationale absorbed by retention policy component    | Event lifecycle and retention domain |
+| `20260329 Run event retention risks and mitigations`    | done/reference; residual risk handled by retention closeouts           | Event lifecycle and retention domain |
+| `20260330 MVP-D1 residual risk baseline review`         | done/reference; baseline retained as evidence                          | MVP-D1 and AR-D5 closeouts           |
 
 No CI, delivery, or retention review remains an orphan execution queue after
 this plan.

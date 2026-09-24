@@ -11,7 +11,6 @@ governing_sources:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/architecture/components/web/web-store-domain-ownership-component.md
-  - docs/planning/state/agent-lane-e.yaml
   - docs/architecture/components/web/f04-frontend-data-boundary-technical-manual-20260404.md
 last_reviewed: 2026-05-14
 ---
@@ -54,14 +53,12 @@ runtime ownership:
 
 ## Drift Register
 
-| Drift id       | Surface                                 | Current status                                                                                                      | Closure target                                                                                                      |
-| -------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `F05-DRIFT-01` | `docs/planning/state/agent-lane-e.yaml` | Closed in this slice: F-05 now points at the actual four-store topology and this plan.                              | Keep Lane E aligned when store ownership changes.                                                                   |
-| `F05-DRIFT-02` | generated workboard views               | Closed in this slice: generated views were regenerated from Lane E.                                                 | Regenerate workboard after future Lane E changes.                                                                   |
-| `F05-DRIFT-03` | `shell-baseline-target-guide.md`        | Closed in this slice: active baseline now lists the current stores, not `useAppStore`.                              | Keep the guide current with the component map.                                                                      |
-| `F05-DRIFT-04` | `executionStore.ts`                     | Hard-cut target: runtime evidence (`currentPlan`, `currentRun`) and permission projection must not share one store. | `authorizationStore.ts` owns `Authorization capability display`; `executionStore.ts` retains runtime evidence only. |
-| `F05-DRIFT-05` | `uiLayoutStore.ts`                      | Closed in this slice: `connectionStatus` moved out of shell layout ownership.                                       | `platformConnectionStore.ts` owns the `ProjectPlatformConnectionStatus` query projection.                           |
-| `F05-DRIFT-06` | historical planning/review docs         | Informational only: old reviews and closeouts may describe `appStore` because they captured earlier states.         | Do not rewrite historical evidence; active docs route to this plan and the component map.                           |
+| Drift id       | Surface                          | Current status                                                                                                      | Closure target                                                                                                      |
+| -------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `F05-DRIFT-03` | `shell-baseline-target-guide.md` | Closed in this slice: active baseline now lists the current stores, not `useAppStore`.                              | Keep the guide current with the component map.                                                                      |
+| `F05-DRIFT-04` | `executionStore.ts`              | Hard-cut target: runtime evidence (`currentPlan`, `currentRun`) and permission projection must not share one store. | `authorizationStore.ts` owns `Authorization capability display`; `executionStore.ts` retains runtime evidence only. |
+| `F05-DRIFT-05` | `uiLayoutStore.ts`               | Closed in this slice: `connectionStatus` moved out of shell layout ownership.                                       | `platformConnectionStore.ts` owns the `ProjectPlatformConnectionStatus` query projection.                           |
+| `F05-DRIFT-06` | historical planning/review docs  | Informational only: old reviews and closeouts may describe `appStore` because they captured earlier states.         | Do not rewrite historical evidence; active docs route to this plan and the component map.                           |
 
 ## Command And Query Rail
 
@@ -145,9 +142,9 @@ mixed `appStore`-style surface.
 
 Status: completed by this documentation slice.
 
-1. `docs/planning/state/agent-lane-e.yaml` describes the current four-store
+1. The governing GitHub issue references the current four-store
    topology instead of a live `appStore`.
-2. Planning views are regenerated from Lane E.
+2. Task status and acceptance are recorded in GitHub, not generated planning views.
 3. Active docs route readers to the current component map.
 4. Historical reviews remain historical; they are not rewritten as if produced
    today.
@@ -212,7 +209,7 @@ F-05 is closure-ready only when:
    role.
 3. Remaining mixed fields are either moved or explicitly documented as read
    projections with tests.
-4. Generated planning views match Lane E.
+4. The governing GitHub issue records task status and acceptance evidence.
 5. Web validation and repository pre-push validation have been run and reported.
 
 ## Feature Mechanization Manifest
