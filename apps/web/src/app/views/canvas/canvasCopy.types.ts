@@ -731,6 +731,7 @@ export type CanvasViewCopy = {
   readonly inspectorErrorDvtAliasRequired: string;
   readonly inspectorErrorDvtAliasDuplicate: string;
   readonly inspectorErrorDvtIdentifierInvalid: string;
+  readonly inspectorErrorDvtSemanticFieldInvalid: string;
   readonly inspectorErrorDvtIdentifierTooLong: string;
   readonly inspectorErrorDvtIdentifierWhitespace: string;
   readonly inspectorErrorDvtConnectionRequired: string;

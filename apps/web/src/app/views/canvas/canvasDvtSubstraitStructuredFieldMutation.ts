@@ -6,7 +6,7 @@ import {
   Expression_Nested_StructSchema,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import { PostgresIdentifierV1Schema } from '@dvt/contracts';
+import { DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
 
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import {
@@ -33,7 +33,7 @@ export function composeDvtSubstraitProjectionFields(
 ): DvtSubstraitProjectionDraft {
   const parentName = args.parentName;
   if (
-    !PostgresIdentifierV1Schema.safeParse(parentName).success ||
+    !DvtSemanticFieldNameV1Schema.safeParse(parentName).success ||
     args.draggedFieldId === args.targetFieldId
   )
     return draft;

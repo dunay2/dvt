@@ -20,11 +20,11 @@ import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
+import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
 import {
   applyDvtSubstraitFilter,
   encodeDvtSubstraitFilterDocument,
   inspectDvtSubstraitFilter,
-  resolveDvtSubstraitFilterCapabilities,
 } from './canvasDvtSubstraitFilter';
 import {
   createDvtSubstraitProjectionDraft,
@@ -989,10 +989,7 @@ describe('canvasInspectorAuthoringModel', () => {
       columns: [{ name: 'customer', type: 'text', nullable: false }],
     });
     const projectionSource = resolveDvtSubstraitProjectionSource(source);
-    const capability = resolveDvtSubstraitFilterCapabilities({
-      dataType: 'text',
-      provider: 'postgres',
-    })[0];
+    const capability = resolveDvtSubstraitFilterCapabilities({ dataType: 'text' })[0];
     if (projectionSource == null || capability == null) {
       throw new Error('Expected an admitted legacy Source fixture.');
     }
@@ -1116,7 +1113,7 @@ describe('canvasInspectorAuthoringModel', () => {
         ...base,
         outputNameDrafts: { output_id: 'invalid\0identifier' },
       })
-    ).toEqual({ outputNames: 'dvt_identifier_invalid' });
+    ).toEqual({ outputNames: 'dvt_semantic_field_invalid' });
   });
 
   it('rejects Source and Sink PostgreSQL identifiers above 63 UTF-8 bytes', () => {

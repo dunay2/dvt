@@ -520,7 +520,7 @@ describe('Canvas calculated column authoring', () => {
         {
           nodeId: transform.id,
           kind: 'field-ref' as const,
-          alias: 'x'.repeat(64),
+          alias: 'x'.repeat(257),
           inputFieldId: 'output:customer',
         },
         'invalid_alias',

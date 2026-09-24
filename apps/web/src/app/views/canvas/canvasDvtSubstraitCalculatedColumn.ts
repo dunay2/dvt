@@ -6,7 +6,7 @@ import {
   DvtStringLiteralV1Schema,
   DvtTimestampLiteralV1Schema,
   parseIsoUtcToEpochMs,
-  PostgresIdentifierV1Schema,
+  DvtSemanticFieldNameV1Schema,
 } from '@dvt/contracts';
 
 import {
@@ -76,7 +76,7 @@ export function createDvtSubstraitProjectionOutput(
   if (!inspection.ok) {
     return { outcome: 'rejected', reason: 'invalid_document' };
   }
-  if (alias.trim().length === 0 || !PostgresIdentifierV1Schema.safeParse(alias).success) {
+  if (alias.trim().length === 0 || !DvtSemanticFieldNameV1Schema.safeParse(alias).success) {
     return { outcome: 'rejected', reason: 'invalid_alias' };
   }
   if (

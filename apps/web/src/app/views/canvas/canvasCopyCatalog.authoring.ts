@@ -1436,6 +1436,11 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.errorDvtIdentifierInvalid',
     fallback: 'PostgreSQL identifiers contain invalid text, such as a NUL character.',
   },
+  inspectorErrorDvtSemanticFieldInvalid: {
+    key: 'canvas.inspector.authoring.errorDvtSemanticFieldInvalid',
+    fallback:
+      'Use a valid field name without outer whitespace and with at most 256 Unicode characters.',
+  },
   inspectorErrorDvtIdentifierTooLong: {
     key: 'canvas.inspector.authoring.errorDvtIdentifierTooLong',
     fallback: 'PostgreSQL identifiers may contain at most 63 UTF-8 bytes.',

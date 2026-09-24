@@ -187,7 +187,7 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnFunctionAliasCancelLabel: 'Cancel',
   columnFunctionAliasConflictLabel: 'Another column already uses this output name.',
   columnFunctionAliasPolicyErrorLabel:
-    'Use a valid PostgreSQL identifier without outer whitespace and with at most 63 UTF-8 bytes.',
+    'Use a valid field name without outer whitespace and with at most 256 Unicode characters.',
   expressionComposerTitle: 'Create derived output',
   expressionComposerFunctionLabel: 'Function',
   expressionComposerOperandsLabel: 'Ordered operands',
@@ -208,7 +208,7 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   calculatedColumnSubmitLabel: 'Create column',
   calculatedColumnCancelLabel: 'Cancel',
   calculatedColumnIdentifierPolicyError:
-    'Use a valid PostgreSQL identifier without outer whitespace and with at most 63 UTF-8 bytes.',
+    'Use a valid field name without outer whitespace and with at most 256 Unicode characters.',
   calculatedColumnLiteralPolicyError: 'Text values may contain at most 4096 UTF-8 bytes.',
   calculatedColumnTimestampPolicyError:
     'Use a canonical UTC timestamp such as 2026-09-08T12:00:00.000Z.',
@@ -317,7 +317,7 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnFunctionAliasCancelLabel: 'Cancelar',
   columnFunctionAliasConflictLabel: 'Otra columna ya utiliza este nombre de salida.',
   columnFunctionAliasPolicyErrorLabel:
-    'Usa un identificador PostgreSQL válido, sin espacios exteriores y con 63 bytes UTF-8 como máximo.',
+    'Usa un nombre de campo válido, sin espacios exteriores y con 256 caracteres Unicode como máximo.',
   expressionComposerTitle: 'Crear salida derivada',
   expressionComposerFunctionLabel: 'Función',
   expressionComposerOperandsLabel: 'Operandos ordenados',
@@ -338,7 +338,7 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   calculatedColumnSubmitLabel: 'Crear columna',
   calculatedColumnCancelLabel: 'Cancelar',
   calculatedColumnIdentifierPolicyError:
-    'Usa un identificador PostgreSQL válido, sin espacios exteriores y con 63 bytes UTF-8 como máximo.',
+    'Usa un nombre de campo válido, sin espacios exteriores y con 256 caracteres Unicode como máximo.',
   calculatedColumnLiteralPolicyError: 'Los valores de texto admiten 4096 bytes UTF-8 como máximo.',
   calculatedColumnTimestampPolicyError: 'Usa una fecha UTC canónica como 2026-09-08T12:00:00.000Z.',
   columnAuthoringInvalidReferenceLabel:
