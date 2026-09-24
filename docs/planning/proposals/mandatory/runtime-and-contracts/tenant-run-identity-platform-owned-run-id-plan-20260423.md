@@ -223,8 +223,6 @@ flowchart LR
 - `pnpm --filter dvt-api typecheck`
 - `pnpm --filter @dvt/web typecheck`
 - `pnpm docs:status:generate`
-- `pnpm docs:planning:lanes:generate`
-- `pnpm docs:workboard:generate`
 - `pnpm docs:sync`
 - `pnpm verify:prepush`
 

@@ -4,7 +4,6 @@ status: Active
 owner: Runtime / Temporal / Architecture
 last_reviewed: 2026-05-14
 planning_type: proposal
-lane: D
 task_id: AR-D-PLAN-POINTER
 ---
 

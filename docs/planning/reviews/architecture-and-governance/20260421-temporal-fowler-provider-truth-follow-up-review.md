@@ -29,8 +29,8 @@ as the companion map for this review.
 - `docs/architecture/reference-architecture.md`
 - `docs/architecture/system-delivery-status.md`
 - `docs/planning/state/domain-status-board.md`
-- `docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md`
-- `docs/planning/closeouts/20260420-temporal-fowler-architecture-drift-follow-up-closeout.md`
+- [DVT+ system architecture review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md)
+- [20260420 temporal fowler architecture drift follow up closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260420-temporal-fowler-architecture-drift-follow-up-closeout.md)
 - `docs/risk-register/quality/R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml`
 - `docs/risk-register/quality/R-20260421-UTILITY-MODULE-COMPONENTIZATION-DRIFT.yaml`
 - `apps/api/src/modules/planCompileBoundary.ts`

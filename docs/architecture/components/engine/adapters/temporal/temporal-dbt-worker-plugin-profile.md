@@ -17,7 +17,6 @@ Use this guide with:
 - [Temporal step plugin profile component](./temporal-step-plugin-profile.md)
 - [Temporal PlanRef workflow boundary component](./temporal-planref-workflow-boundary.md)
 - [Temporal Worker DBT Runtime Runbook](../../../../../runbooks/temporal-worker-dbt-plugin-runtime-20260414.md)
-- [Fowler DBT core decoupling analysis](../../../../../../buzon/20260428-codex-fowler-temporal-dbt-core-decoupling-analysis-and-remediation.md)
 - [ADR-0003 execution model](../../../../../adr/ADR-0003-execution-model.md)
 - [ADR-0014 run-driven adapter model](../../../../../adr/ADR-0014-run-driven-adapter-model.md)
 - [ADR-0046 execution plan definition and run execution policy separation](../../../../../adr/ADR-0046-execution-plan-definition-and-run-execution-policy-separation.md)

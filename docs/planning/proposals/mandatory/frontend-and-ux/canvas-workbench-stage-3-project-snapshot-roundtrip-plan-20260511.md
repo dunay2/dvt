@@ -4,7 +4,6 @@ status: Active
 owner: Product / Frontend / Architecture
 last_reviewed: 2026-05-11
 planning_type: mandatory-proposal
-lane: E
 task_id: F-28-C
 parent_task_id: F-28
 ---

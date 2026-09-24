@@ -4,7 +4,6 @@ status: Accepted
 owner: Frontend / Shell / Canvas
 last_reviewed: 2026-05-20
 planning_type: mandatory
-lane: E
 task_id: F-15-F
 parent_task_id: F-15
 ---
@@ -165,7 +164,7 @@ authority, protected draft semantics, or cross-package architecture.
 ## Closeout
 
 Accepted closeout:
-`docs/planning/closeouts/20260520-f15f-canvas-workbench-screen-consolidation-closeout.md`.
+[F-15-F Canvas Workbench Screen Consolidation Closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260520-f15f-canvas-workbench-screen-consolidation-closeout.md).
 
 ```feature-mechanization
 version: 1

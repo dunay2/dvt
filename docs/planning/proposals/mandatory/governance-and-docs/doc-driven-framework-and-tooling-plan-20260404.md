@@ -16,7 +16,7 @@ doc-driven operating framework with:
 - explicit document taxonomy and lifecycle rules;
 - planning and execution tracked as data, not prose only;
 - scaffolding and authoring commands that reduce manual friction;
-- automated traceability across proposal, lane, evidence, risk, and PR
+- automated traceability across proposal, GitHub issue, evidence, risk, and PR
   surfaces;
 - CI gates that validate the model instead of only linting the files.
 
@@ -39,7 +39,7 @@ What is still missing is a unifying framework layer:
 - no canonical authoring scaffolds per document type;
 - no single operational model for "how a governed slice moves from idea to
   execution to evidence to closure";
-- [Task: GOV-PROP-DISP-1] no first-class traceability object connecting proposal, lane task, risk,
+- [Task: GOV-PROP-DISP-1] no first-class traceability object connecting proposal, GitHub issue, risk,
   evidence, and implementation slice;
 - too much repo knowledge is still procedural and manual;
 - current tooling is strong at rejecting drift, but weaker at helping authors
@@ -55,9 +55,7 @@ repo-native scripts and governance documents:
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
-- `docs/planning/state/agent-lane-*.yaml`
 - `pnpm docs:sync`
-- `pnpm docs:workboard:generate`
 - `pnpm verify:prepush`
 - `tools/ci/arc-check.mjs`
 - GitHub workflows under `.github/workflows/`
@@ -166,11 +164,11 @@ style reading model so users know whether a page is:
 
 Planning state should continue to live in machine-readable tracked sources.
 
-The repo already does this well with lane YAML. The next step is to extend the
+GitHub Issues owns task identity and lifecycle. The next step is to extend the
 same discipline to proposal execution metadata:
 
 - proposal status;
-- [Task: GOV-PROP-DISP-1] owning lane and task;
+- [Task: GOV-PROP-DISP-1] governing GitHub issue;
 - dependencies;
 - rollout wave;
 - acceptance status;
@@ -186,7 +184,7 @@ planning data routes and validates.
 A governed slice should be able to answer, mechanically:
 
 - which proposal authorized it;
-- [Task: GOV-PROP-DISP-1] which lane task owns it;
+- [Task: GOV-PROP-DISP-1] which GitHub issue owns it;
 - which risks it mitigates or creates;
 - which evidence proves it;
 - which closeout closed it;
@@ -204,7 +202,7 @@ Current tooling validates well but scaffolds weakly. The framework needs:
 - `new evidence` scaffold
 - `new risk` scaffold
 - `new runbook` scaffold
-- [Task: GOV-PROP-DISP-1] lane-task creation helper for YAML-backed work items
+- [Task: GOV-PROP-DISP-1] GitHub issue creation through the existing delivery workflow
 - [Task: GOV-PROP-DISP-1] relationship helper for linking proposal, task, evidence, and risk
 
 The practical goal is simple:
@@ -219,7 +217,7 @@ model validation.
 
 Examples of target checks:
 
-- [Task: GOV-PROP-DISP-1] every mandatory proposal has an owning lane task;
+- [Task: GOV-PROP-DISP-1] every mandatory proposal has an governing GitHub issue;
 - [Task: GOV-PROP-DISP-1] every `done` task has evidence or closeout;
 - every ARC-triggering slice has matching evidence and risk entries;
 - proposal supersession chains are valid;
@@ -270,7 +268,7 @@ Pros:
 - preserves current repo authority and CI posture;
 - upgrades the model without a portal rewrite;
 - can be delivered incrementally;
-- aligns with existing scripts, lanes, ARC checks, and planning state.
+- aligns with existing scripts, GitHub Issues, ARC checks, and governed architecture state.
 
 Cons:
 
@@ -321,12 +319,12 @@ It upgrades how those pieces are authored and connected.
 ### Wave 2: Scaffold the authoring path
 
 - [Task: GOV-PROP-DISP-1] add scaffold commands for proposal/review/evidence/risk/runbook
-- [Task: GOV-PROP-DISP-1] add task-helper support for lane YAML creation or updates
+- [Task: GOV-PROP-DISP-1] use the existing GitHub issue workflow for task creation and updates
 - standardize frontmatter and required section templates
 
 ### Wave 3: Validate the planning model
 
-- [Task: GOV-PROP-DISP-1] add checks for proposal-to-lane linkage
+- [Task: GOV-PROP-DISP-1] add checks for proposal-to-issue linkage
 - [Task: GOV-PROP-DISP-1] add checks for done-task-to-evidence or closeout linkage
 - [Task: GOV-PROP-DISP-1] add checks for supersession and replacement integrity
 - [Task: GOV-PROP-DISP-1] add checks for active-vs-historical navigation correctness
@@ -345,9 +343,9 @@ It upgrades how those pieces are authored and connected.
   justify adoption
 - do not make that decision before the internal model is coherent
 
-## Lane Mapping
+## Task Ownership
 
-This proposal should be executed under a Lane A governance/docs tracker:
+This proposal should be executed through the governing documentation/governance GitHub issue:
 
 - umbrella: `GOV-S2`
 - expected follow-on slices:
@@ -380,13 +378,12 @@ existing command/query rails:
   refresh/check/export, and eventual generated-artifact compaction.
 - Existing docs governance gates for authoring, closeout, evidence, risk,
   frontmatter, links, and generated-doc ownership.
-- [Task: GOV-PROP-DISP-1] Existing lane YAML task entries for any future scoped scaffold or validation
+- [Task: GOV-PROP-DISP-1] Existing GitHub issues for any future scoped scaffold or validation
   helper.
 
 The Postgres query store is a derived read model. It may reduce loading and
 review fan-out, but it is not a second planning authority and must not replace
-Git-tracked proposals, reviews, closeouts, risk, evidence, or lane YAML as
-canonical sources.
+GitHub issue lifecycle or governed proposals, decisions, risk, and evidence.
 
 ## Tradeoffs
 
@@ -411,7 +408,7 @@ canonical sources.
 
 - keep execution incremental and wave-based;
 - ship scaffolding before adding new hard gates where possible;
-- reuse lane YAML and current planning entrypoints instead of creating parallel
+- reuse GitHub Issues and current governance entrypoints instead of creating parallel
   sources;
 - treat external platforms as optional later layers, not immediate
   prerequisites.
@@ -426,11 +423,11 @@ canonical sources.
 
 ## Acceptance Criteria
 
-1. The repo has one explicit doc-driven operating framework proposal and lane
+1. The repo has one explicit doc-driven operating framework proposal and GitHub issue
    owner instead of scattered intent.
 2. A contributor can discover canonical doc families, authoring expectations,
    and lifecycle rules without guessing.
-3. Framework rollout is sequenced as lane-backed work, not left as a narrative
+3. Framework rollout is sequenced as GitHub issue-backed work, not left as a narrative
    note.
 4. The proposal clearly distinguishes current controls from the target
    framework.

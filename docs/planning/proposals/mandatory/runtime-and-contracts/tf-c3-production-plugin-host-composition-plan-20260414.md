@@ -4,7 +4,6 @@ status: Review
 owner: Runtime / Adapters / API / Docs
 last_reviewed: 2026-09-11
 planning_type: proposal
-lane: C
 task_id: TF-C3
 ---
 

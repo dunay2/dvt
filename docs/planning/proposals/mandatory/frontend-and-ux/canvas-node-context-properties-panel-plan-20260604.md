@@ -6,7 +6,6 @@ last_reviewed: 2026-06-05
 owners:
   - apps/web
 planning_type: mandatory-plan
-lane: E
 ---
 
 # Canvas Node Context Properties Panel Plan

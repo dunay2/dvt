@@ -4,7 +4,6 @@ status: Implemented
 owner: Product / Frontend / Architecture
 last_reviewed: 2026-05-14
 planning_type: proposal
-lane: E
 task_id: TF-E2
 ---
 
@@ -43,14 +42,12 @@ own planning DB task and governing evidence.
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
-- `docs/planning/state/agent-lane-e.yaml`
 - `docs/architecture/reference-architecture.md`
 - `docs/concepts/domain-language.md`
 - `docs/adr/ADR-0003-execution-model.md`
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md`
-- `docs/planning/reviews/20260417-dvt-plus-deep-architectural-review.md`
-- `docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md`
+- [DVT+ Deep Architectural Review (2026-04-17)](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/20260417-dvt-plus-deep-architectural-review.md)
 - `docs/architecture/components/web/frontend-data-boundary-architecture.md`
 - `docs/architecture/components/web/graph/graph-frontend-architecture.md`
 - `docs/architecture/components/web/graph/graph-route-bootstrap-architecture.md`
@@ -73,8 +70,7 @@ own planning DB task and governing evidence.
 - `origin/main` already includes the execution-actions test split landed by
   `test(web): Split canvas execution action tests by responsibility (#984)`.
   Test-file sharding is baseline, not remaining TF-E2 work.
-- `origin/main` already includes the Lane E backlog alignment landed by
-  `docs(docs): Align lane E remediation backlog (#985)`.
+- The earlier backlog alignment is recorded in PR #985.
 - The current branch now exposes `IWorkspaceGraphDraftAuthoringPort` through
   the composition root in `AppServices`.
 - The active Canvas authoring read and write path now routes through
@@ -801,17 +797,17 @@ presentation during normal updates.
 The backlog below is executable, but it is not a promise of calendar dates.
 It is the canonical order and acceptance posture.
 
-| Backlog ID   | Maps to lane task | Slice                              | Output                                                                                                           |
-| ------------ | ----------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `E2-ARCH-01` | `TF-E2-A`         | Route bootstrap registry hardening | split contract, registration, registry, and publisher ownership with explicit `route.id` publication             |
-| `E2-ARCH-02` | `TF-E2-A`         | Typed authoring port adoption      | move active Canvas draft reads and writes to `IWorkspaceGraphDraftAuthoringPort`; remove projected DTO authority |
-| `E2-ARCH-03` | `TF-E2-B`         | Draft aggregate completion         | finish `CanvasDraftSession` ownership over baseline, working set, conflict, and missing-remote posture           |
-| `E2-ARCH-04` | `TF-E2-B`         | Graph projector seam               | make graph rendering a projection over visible scope and persisted positions only                                |
-| `E2-ARCH-05` | `TF-E2-C`         | Command model closure              | close node and edge command handling under the draft aggregate                                                   |
-| `E2-ARCH-06` | `TF-E2-D`         | Inspector application seam         | bind property editing, validation, cancel, and save to the same aggregate and ports                              |
-| `E2-ARCH-07` | `TF-E2-D`         | Plan/run handoff alignment         | ensure preview and run consume authoritative route scope and recovery posture                                    |
-| `E2-ARCH-08` | `TF-E2-E`         | Operability and telemetry          | define route failure taxonomy, correlation data, and diagnosis support                                           |
-| `E2-ARCH-09` | `TF-E2-E`         | Proof matrix                       | complete unit, integration, and Cypress evidence for authoring, recovery, and startup                            |
+| Backlog ID   | Maps to task | Slice                              | Output                                                                                                           |
+| ------------ | ------------ | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `E2-ARCH-01` | `TF-E2-A`    | Route bootstrap registry hardening | split contract, registration, registry, and publisher ownership with explicit `route.id` publication             |
+| `E2-ARCH-02` | `TF-E2-A`    | Typed authoring port adoption      | move active Canvas draft reads and writes to `IWorkspaceGraphDraftAuthoringPort`; remove projected DTO authority |
+| `E2-ARCH-03` | `TF-E2-B`    | Draft aggregate completion         | finish `CanvasDraftSession` ownership over baseline, working set, conflict, and missing-remote posture           |
+| `E2-ARCH-04` | `TF-E2-B`    | Graph projector seam               | make graph rendering a projection over visible scope and persisted positions only                                |
+| `E2-ARCH-05` | `TF-E2-C`    | Command model closure              | close node and edge command handling under the draft aggregate                                                   |
+| `E2-ARCH-06` | `TF-E2-D`    | Inspector application seam         | bind property editing, validation, cancel, and save to the same aggregate and ports                              |
+| `E2-ARCH-07` | `TF-E2-D`    | Plan/run handoff alignment         | ensure preview and run consume authoritative route scope and recovery posture                                    |
+| `E2-ARCH-08` | `TF-E2-E`    | Operability and telemetry          | define route failure taxonomy, correlation data, and diagnosis support                                           |
+| `E2-ARCH-09` | `TF-E2-E`    | Proof matrix                       | complete unit, integration, and Cypress evidence for authoring, recovery, and startup                            |
 
 ### Backlog delivery cards
 
@@ -1029,7 +1025,6 @@ Required validation when this plan is updated:
 
 - `pnpm exec markdownlint-cli2` on touched planning and architecture docs
 - `pnpm docs:sync` when docs files are added or renamed
-- `pnpm docs:workboard:generate` when lane YAML changes
 - `pnpm verify:prepush`
 
 Expected evidence for future implementation slices:
@@ -1071,7 +1066,7 @@ publication stops being coupled to route discovery heuristics.
 ## Related Documents
 
 - [TF-E2 Production Node Authoring And Persistence Plan 2026-04-16](./tf-e2-production-node-authoring-and-persistence-plan-20260416.md)
-- [DVT+ Deep Architectural Review](../../reviews/20260417-dvt-plus-deep-architectural-review.md)
+- [DVT+ Deep Architectural Review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/20260417-dvt-plus-deep-architectural-review.md)
 - [Graph Frontend Architecture](../../../../architecture/components/web/graph/graph-frontend-architecture.md)
 - [Canvas Controller Current To Target Architecture](../../../../architecture/components/web/graph/canvas-controller-current-to-target-architecture.md)
 - [Canvas Component Map And Modernization Review](../../../../architecture/components/web/graph/canvas-component-map-and-modernization-review.md)

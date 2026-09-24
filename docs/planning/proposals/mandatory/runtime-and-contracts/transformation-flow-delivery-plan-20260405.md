@@ -4,7 +4,6 @@ status: Proposed
 owner: Product / Architecture / Delivery / API / Web
 last_reviewed: 2026-04-05
 planning_type: proposal
-lane: E
 task_id: F-22
 ---
 
@@ -48,58 +47,58 @@ flowchart LR
   P5 --> P6[Phase 6 plugin-backed dbt mode]
 ```
 
-## Lane critical path
+## Delivery critical path
 
 ```mermaid
 flowchart TD
-  A1[Lane A graph and compiler] --> B1[Lane B provenance]
-  A1 --> C1[Lane C preview route]
+  A1[graph and compiler] --> B1[provenance]
+  A1 --> C1[preview route]
   B1 --> C1
-  C1 --> C2[Lane C relational executor seam]
-  C2 --> D1[Lane D proof environment reset and retention]
-  C1 --> E1[Lane E preview and start UX]
-  C2 --> E2[Lane E result UX]
+  C1 --> C2[relational executor seam]
+  C2 --> D1[proof environment reset and retention]
+  C1 --> E1[preview and start UX]
+  C2 --> E2[result UX]
   D1 --> P5[Phase 5 acceptance]
   E2 --> P5
-  P5 --> C3[Lane C dbt phase 2]
+  P5 --> C3[dbt phase 2]
 ```
 
 ## Phase summary
 
-| Phase | Goal                                                | Primary lanes               |
-| ----- | --------------------------------------------------- | --------------------------- |
-| 0     | freeze decisions and document set                   | E plus planning surfaces    |
-| 1     | freeze graph, contract, and compiler model          | A and B                     |
-| 2     | implement validate-plus-persist preview boundary    | C with A and B dependencies |
-| 3     | execute plans through the first relational seam     | C and D                     |
-| 4     | close operator flow in Canvas and result views      | E with C dependency         |
-| 5     | close evidence, reset, and repeatability            | B, C, D, E                  |
-| 6     | add plugin-backed dbt mode behind the same contract | C and E                     |
+| Phase | Goal                                                |
+| ----- | --------------------------------------------------- |
+| 0     | freeze decisions and document set                   |
+| 1     | freeze graph, contract, and compiler model          |
+| 2     | implement validate-plus-persist preview boundary    |
+| 3     | execute plans through the first relational seam     |
+| 4     | close operator flow in Canvas and result views      |
+| 5     | close evidence, reset, and repeatability            |
+| 6     | add plugin-backed dbt mode behind the same contract |
 
 ## Task matrix
 
-| Task id   | Lane | Deliverable                                                  | Depends on           |
-| --------- | ---- | ------------------------------------------------------------ | -------------------- |
-| `F-22`    | E    | proposal set, document split, planning classification        | `F-07`, `F-21`       |
-| `TF-A1`   | A    | graph and compiler umbrella                                  | `F-22`               |
-| `TF-A1-A` | A    | `DesignGraphDraft`, node types, invariants, preview contract | `F-22`               |
-| `TF-A1-B` | A    | graph-to-step mapping and canonical plan shape               | `TF-A1-A`            |
-| `TF-B1`   | B    | provenance and evidence umbrella                             | `TF-A1`              |
-| `TF-B1-A` | B    | `GitArtifactRef` and preview-time provenance rules           | `TF-A1-A`            |
-| `TF-B1-B` | B    | run evidence linkage back to Git-tracked inputs              | `TF-B1-A`, `TF-C2-A` |
-| `TF-C1`   | C    | preview and persist umbrella                                 | `TF-A1`, `TF-B1`     |
-| `TF-C1-A` | C    | protected `/plans/preview` route and typed validation errors | `TF-A1-A`, `TF-B1-A` |
-| `TF-C1-B` | C    | persisted plan store write and `PlanRef` issuance            | `TF-C1-A`, `TF-A1-B` |
-| `TF-C2`   | C    | first relational SQL execution umbrella                      | `TF-C1`              |
-| `TF-C2-A` | C    | relational SQL executor seam with PostgreSQL baseline        | `TF-C1-B`            |
-| `TF-C2-B` | C    | run read surfaces with materialization evidence              | `TF-C2-A`, `TF-B1-B` |
-| `TF-D1`   | D    | proof-environment reset, cleanup, retention, and runbook     | `TF-C2-A`            |
-| `TF-E1`   | E    | Canvas and result umbrella                                   | `TF-A1`, `TF-C1`     |
-| `TF-E1-A` | E    | Canvas graph authoring and inline validation                 | `TF-A1-A`            |
-| `TF-E1-B` | E    | preview/start UX with real `PlanRef`                         | `TF-C1-B`, `TF-E1-A` |
-| `TF-E1-C` | E    | result UX with success and failure evidence                  | `TF-C2-B`, `TF-E1-B` |
-| `TF-C3`   | C    | plugin-backed dbt phase-2 umbrella                           | `TF-C2`              |
-| `TF-C3-A` | C    | plugin-backed dbt mode under same preview and run contract   | `TF-C2-B`            |
+| Task id   | Deliverable                                                  | Depends on           |
+| --------- | ------------------------------------------------------------ | -------------------- |
+| `F-22`    | proposal set, document split, planning classification        | `F-07`, `F-21`       |
+| `TF-A1`   | graph and compiler umbrella                                  | `F-22`               |
+| `TF-A1-A` | `DesignGraphDraft`, node types, invariants, preview contract | `F-22`               |
+| `TF-A1-B` | graph-to-step mapping and canonical plan shape               | `TF-A1-A`            |
+| `TF-B1`   | provenance and evidence umbrella                             | `TF-A1`              |
+| `TF-B1-A` | `GitArtifactRef` and preview-time provenance rules           | `TF-A1-A`            |
+| `TF-B1-B` | run evidence linkage back to Git-tracked inputs              | `TF-B1-A`, `TF-C2-A` |
+| `TF-C1`   | preview and persist umbrella                                 | `TF-A1`, `TF-B1`     |
+| `TF-C1-A` | protected `/plans/preview` route and typed validation errors | `TF-A1-A`, `TF-B1-A` |
+| `TF-C1-B` | persisted plan store write and `PlanRef` issuance            | `TF-C1-A`, `TF-A1-B` |
+| `TF-C2`   | first relational SQL execution umbrella                      | `TF-C1`              |
+| `TF-C2-A` | relational SQL executor seam with PostgreSQL baseline        | `TF-C1-B`            |
+| `TF-C2-B` | run read surfaces with materialization evidence              | `TF-C2-A`, `TF-B1-B` |
+| `TF-D1`   | proof-environment reset, cleanup, retention, and runbook     | `TF-C2-A`            |
+| `TF-E1`   | Canvas and result umbrella                                   | `TF-A1`, `TF-C1`     |
+| `TF-E1-A` | Canvas graph authoring and inline validation                 | `TF-A1-A`            |
+| `TF-E1-B` | preview/start UX with real `PlanRef`                         | `TF-C1-B`, `TF-E1-A` |
+| `TF-E1-C` | result UX with success and failure evidence                  | `TF-C2-B`, `TF-E1-B` |
+| `TF-C3`   | plugin-backed dbt phase-2 umbrella                           | `TF-C2`              |
+| `TF-C3-A` | plugin-backed dbt mode under same preview and run contract   | `TF-C2-B`            |
 
 ## Phase 0. Document and decision freeze
 
@@ -111,7 +110,7 @@ Remove ambiguity before code slicing starts.
 
 - proposal set published
 - Mermaid diagrams render conservatively
-- lane decomposition explicit across A, B, C, D, and E
+- task ownership explicit in the governing GitHub issues
 - roadmap and portfolio surfaces classify the set correctly
 
 ### Tasks
@@ -123,7 +122,7 @@ Remove ambiguity before code slicing starts.
 
 1. one overview doc links the set
 2. decisions, architecture, and delivery docs are split and consistent
-3. lanes reference the new task graph
+3. governing GitHub issues reference the task graph
 
 ## Phase 1. Contract and graph freeze
 
@@ -131,10 +130,10 @@ Remove ambiguity before code slicing starts.
 
 Freeze the authoring, provenance, and compiler inputs before API and UI work.
 
-### Tasks by lane
+### Tasks
 
-- Lane A: `TF-A1`, `TF-A1-A`, `TF-A1-B`
-- Lane B: `TF-B1`, `TF-B1-A`
+- `TF-A1`, `TF-A1-A`, `TF-A1-B`
+- `TF-B1`, `TF-B1-A`
 
 ### Required outputs
 
@@ -163,11 +162,11 @@ Freeze the authoring, provenance, and compiler inputs before API and UI work.
 
 Turn preview into the real immutable plan boundary.
 
-### Tasks by lane
+### Tasks
 
-- Lane C: `TF-C1`, `TF-C1-A`, `TF-C1-B`
-- Lane A supports final contract interpretation
-- Lane B supports provenance capture rules
+- `TF-C1`, `TF-C1-A`, `TF-C1-B`
+- Contract work supports final contract interpretation
+- Provenance work supports provenance capture rules
 
 ### Required outputs
 
@@ -197,10 +196,10 @@ Turn preview into the real immutable plan boundary.
 Execute the persisted plan through a governed relational SQL seam and make the
 first implementation repeatable.
 
-### Tasks by lane
+### Tasks
 
-- Lane C: `TF-C2`, `TF-C2-A`
-- Lane D: `TF-D1`
+- `TF-C2`, `TF-C2-A`
+- `TF-D1`
 
 ### Required outputs
 
@@ -227,9 +226,9 @@ first implementation repeatable.
 
 Make the vertical usable from the UI instead of only from backend surfaces.
 
-### Tasks by lane
+### Tasks
 
-- Lane E: `TF-E1`, `TF-E1-A`, `TF-E1-B`
+- `TF-E1`, `TF-E1-A`, `TF-E1-B`
 
 ### Required outputs
 
@@ -255,12 +254,12 @@ Make the vertical usable from the UI instead of only from backend surfaces.
 
 Close the outcome loop so the operator can trust the result and rerun it.
 
-### Tasks by lane
+### Tasks
 
-- Lane B: `TF-B1-B`
-- Lane C: `TF-C2-B`
-- Lane D: `TF-D1`
-- Lane E: `TF-E1-C`
+- `TF-B1-B`
+- `TF-C2-B`
+- `TF-D1`
+- `TF-E1-C`
 
 ### Required outputs
 
@@ -287,10 +286,10 @@ Close the outcome loop so the operator can trust the result and rerun it.
 
 Add dbt as a plugin-backed runtime mode without replacing the outer product loop.
 
-### Tasks by lane
+### Tasks
 
-- Lane C: `TF-C3`, `TF-C3-A`
-- Lane E: extend result UX to show executor identity when needed
+- `TF-C3`, `TF-C3-A`
+- Frontend: extend result UX to show executor identity when needed
 
 ### Required outputs
 
@@ -360,7 +359,6 @@ For this planning slice:
 
 ```bash
 pnpm docs:sync
-pnpm docs:workboard:generate
 pnpm verify:prepush
 ```
 

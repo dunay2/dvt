@@ -40,7 +40,7 @@ longer carries local delivery state-machine internals.
 - `docs/planning/proposals/mandatory/runtime-and-contracts/ar-a7-delivery-domain-runtime-split-plan-20260514.md`
 - `docs/evidence/ed-20260514-ar-a7-delivery-in-memory-outbox-ownership.md`
 - `docs/risk-register/quality/R-20260514-AR-A7-IN-MEMORY-OUTBOX-OWNERSHIP.yaml`
-- `buzon/20260514-codex-fowler-ar-a7-delivery-domain-runtime-split-analysis.md`
+- [20260514 codex fowler ar a7 delivery domain runtime split analysis](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/buzon/20260514-codex-fowler-ar-a7-delivery-domain-runtime-split-analysis.md)
 
 ## Validation
 

@@ -27,7 +27,6 @@ surface, authorization rule, negative tests, and component documentation.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/api/protected-runtime-command-query-rail-design.md`
-- `docs/planning/state/agent-lane-c.yaml`
 - `docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/tenant-run-identity-platform-owned-run-id-plan-20260423.md`
 - `docs/adr/adr-0050-platform-owned-start-run-identity.md`
@@ -118,7 +117,7 @@ Current good signals:
 Current closure gap:
 
 - no canonical protected-runtime rail matrix covers the full route group,
-- [Task: RUNTIME-PROP-DISP-1] no lane task owns closure across all protected runtime routes,
+- [Task: RUNTIME-PROP-DISP-1] no governing task owns closure across all protected runtime routes,
 - negative authorization and tenant-scope requirements are not summarized in a
   single acceptance matrix,
 - compatibility posture for `CANCEL` through `/signal` is not governed as a
@@ -131,7 +130,7 @@ flowchart LR
   Matrix["Protected runtime C&Q rail matrix"] --> RouteGroup["Route group"]
   Matrix --> Docs["Component docs"]
   Matrix --> Tests["Negative tests"]
-  Matrix --> Workboard["Lane C task"]
+  Matrix --> Issue["Governing GitHub issue"]
 
   RouteGroup --> Commands["Commands"]
   RouteGroup --> Queries["Queries"]
@@ -255,12 +254,12 @@ Disallowed without a separate plan:
 
 ## Acceptance Criteria
 
-- [Task: RUNTIME-PROP-DISP-1] Lane C has one explicit protected runtime rail closure task.
+- [Task: RUNTIME-PROP-DISP-1] The governing GitHub issue owns protected runtime rail acceptance.
 - [Task: RUNTIME-PROP-DISP-1] `open-task-route.md` shows that task until closure is implemented.
 - Every protected runtime route in `runtimeRoutes.constants.ts` has a catalog
   row and component owner.
 - Every catalog row has at least one positive test and the required negative
-  tests, or an explicit blocker tracked in the lane task.
+  tests, or an explicit blocker tracked in the governing GitHub issue.
 - Every rail declares a compatibility posture: either canonical with no legacy
   behavior accepted, or explicit compatibility mapped back to its canonical
   rail and removal plan.
@@ -274,7 +273,6 @@ Disallowed without a separate plan:
 
 Planning PR:
 
-- `pnpm docs:workboard:generate`
 - `pnpm docs:sync`
 - `pnpm verify:prepush`
 

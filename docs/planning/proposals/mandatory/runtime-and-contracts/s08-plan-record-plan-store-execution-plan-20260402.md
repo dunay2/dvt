@@ -212,7 +212,7 @@ Correct active docs that still claim:
 Definition of done:
 
 - active status and roadmap docs are corrected
-- Lane A carries S08 explicitly
+- The governing GitHub issue carries S08 explicitly
 
 ### S08-1 - Ownership ADR
 
@@ -328,8 +328,6 @@ Definition of done:
 
 ## Validation baseline for the planning package
 
-- `pnpm docs:planning:lanes:generate`
-- `pnpm docs:workboard:generate`
 - `pnpm docs:sync`
 - `pnpm verify:prepush`
 

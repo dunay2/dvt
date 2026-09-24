@@ -104,4 +104,4 @@ pnpm verify:prepush
 ## Related docs
 
 - `docs/guides/planner-cycle-detection-user-manual-20260404.md`
-- `docs/planning/closeouts/20260404-ar-a9-planner-cycle-fail-closed-closeout.md`
+- [Closeout: AR-A9 Planner Cycle Fail-Closed](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260404-ar-a9-planner-cycle-fail-closed-closeout.md)

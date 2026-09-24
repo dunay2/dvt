@@ -1303,7 +1303,7 @@ Constraints and invariants:
   isolation.
 - Domain Language distinguishes DVT from the engine and keeps workspace/project
   terminology explicit.
-- Lane E requires views to avoid direct mock data and consume typed service or
+- The frontend contract requires views to avoid direct mock data and consume typed service or
   port boundaries.
 - No product route may render tenant/project graph data before authentication
   and project selection.
@@ -1434,7 +1434,6 @@ Validation plan:
 - Cypress tests for login-required, no-project clean startup, project creation,
   canvas creation, node add/remove/reload, and disabled-action gap copy.
 - `pnpm docs:sync`.
-- `pnpm docs:workboard:generate` when lane YAML changes.
 - `pnpm lint:md`.
 - `pnpm verify:prepush`.
 

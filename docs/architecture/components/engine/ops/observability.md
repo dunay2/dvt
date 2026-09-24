@@ -38,7 +38,7 @@ canonical runtime SLA documents.
 - Only Temporal is implemented as a real provider runtime path today.
 - Outbox worker health, readiness, ownership, lag, and delivery metrics are
   first-class operational signals.
-- Dashboard and alert closure still belongs to Lane C `AR-C2`; do not claim a
+- Dashboard and alert closure still belongs to `AR-C2`; do not claim a
   dashboard or alert is operationally closed unless the AR-C2 evidence surfaces
   prove it.
 
@@ -132,7 +132,7 @@ Do not use these older assumptions as current operator guidance:
 
 ## Current closure path
 
-Lane C owns the remaining operational closeout:
+The governing GitHub issues own the remaining operational acceptance:
 
 1. `AR-C2-T2` dashboard wiring evidence
 2. `AR-C2-T3` alert wiring and routing evidence

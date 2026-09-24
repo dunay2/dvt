@@ -4,7 +4,6 @@ status: Accepted
 owner: Product / Architecture / Frontend / Runtime Safety
 last_reviewed: 2026-09-12
 planning_type: proposal
-lane: E
 task_ids:
   - F-27
 ---

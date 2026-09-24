@@ -176,3 +176,25 @@ for (const name of ['name with spaces.ts', 'caf\u00e9.ts']) {
     assert.deepEqual(diff.addedLinesByPath[name], ['export const added = true;']);
   });
 }
+
+for (const committed of [true, false]) {
+  test(`large historical deletions retain complete ${committed ? 'committed' : 'local'} evidence`, (t) => {
+    const repo = repository(t);
+    const historical = 'Historical record with no newly added semantics.\n'.repeat(40000);
+    assert.ok(Buffer.byteLength(historical) > 1024 * 1024);
+    repo.write('history.md', historical);
+    const base = repo.commit(repo.base);
+    repo.git('rm', '--quiet', 'history.md');
+    repo.write('model.ts', 'export const model = 2;\n');
+    const options = committed ? { baseRef: base, headRef: repo.commit(base) } : { baseRef: base };
+    const diff = repo.reader(options).read();
+    assert.deepEqual(diff.changedFiles, ['history.md', 'model.ts']);
+    assert.deepEqual(diff.deletedFiles, ['history.md']);
+    assert.deepEqual(diff.currentFiles, ['model.ts', 'retired.ts']);
+    assert.deepEqual(diff.addedLinesByPath, {
+      'model.ts': ['export const model = 2;'],
+      'history.md': [],
+    });
+    assert.deepEqual(diff.fileContentsByPath, { 'model.ts': 'export const model = 2;\n' });
+  });
+}

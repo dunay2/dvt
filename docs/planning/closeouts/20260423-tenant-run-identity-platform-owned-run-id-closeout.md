@@ -156,7 +156,7 @@ The web start-run boundary now sends only:
   - `docs/planning/proposals/mandatory/runtime-and-contracts/tenant-run-identity-platform-owned-run-id-plan-20260423.md`
   - `docs/planning/closeouts/20260423-tenant-run-identity-platform-owned-run-id-closeout.md`
   - `docs/planning/state/agent-lane-c.yaml`
-  - `buzon/20260423-codex-fowler-tenant-run-identity-analysis-and-remediation.md`
+  - [20260423 codex fowler tenant run identity analysis and remediation](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260423-codex-fowler-tenant-run-identity-analysis-and-remediation.md)
 
 ## Validation run
 

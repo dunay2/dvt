@@ -68,9 +68,9 @@ Forbidden outcomes:
 - `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md`
-- `docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md`
-- `docs/planning/reviews/architecture-and-governance/20260422-canvas-component-governance-follow-up-review.md`
-- `docs/planning/reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md`
+- [Canvas route composition Fowler review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md)
+- [Canvas component governance follow-up review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260422-canvas-component-governance-follow-up-review.md)
+- [Canvas graph strategy Fowler hard QA review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md)
 
 ## Scope
 

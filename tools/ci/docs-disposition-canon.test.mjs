@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
+import { posix } from 'node:path';
 
 import {
   assertCanonPlan,
@@ -378,6 +379,35 @@ test('retired documentation-only closeouts have no files or local consumers', ()
     '20260318-stage-1-1-planner-canonicalization-policy-vocabulary-contracts-closeout.md',
   ]);
   const editorialCloseouts = new Set([
+    '20260318-stage-1-1-planner-policy-boundary-migration-closeout.md',
+    '20260331-mvp-a1-contractual-inventory-closeout.md',
+    '20260402-rc-c2-operational-friction-intake-closeout.md',
+    '20260403-api-current-to-target-architecture-closeout.md',
+    '20260404-ar-c2-sla-and-manuals-closeout.md',
+    '20260414-unified-raven-startup-bootstrap-closeout.md',
+    '20260415-tf-e1-selection-scoped-authoring-mvp-closeout.md',
+    '20260417-tf-e2-canvas-bootstrap-presentation-handoff-closeout.md',
+    '20260417-tf-e2-canvas-draft-aggregate-alignment-closeout.md',
+    '20260417-tf-e2-route-bootstrap-contract-generalization-closeout.md',
+    '20260423-tf-a2-c-execution-selection-proposal-closeout.md',
+    '20260423-tf-a2-c1-execution-selection-contract-pack-closeout.md',
+    '20260423-tf-a2-c2-executable-subgraph-derivation-closeout.md',
+    '20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md',
+    '20260423-tf-e2-k-a-first-canvas-playground-host-closeout.md',
+    '20260423-tf-e2-k-b-host-tab-restoration-closeout.md',
+    '20260423-tf-e2-k-c-typed-empty-canvas-posture-closeout.md',
+    '20260423-workspace-graph-draft-application-component-closeout.md',
+    '20260424-tf-e2-e-a-b-c-selected-closure-browser-proof-closeout.md',
+    '20260424-tf-e2-e-d-live-selected-closure-browser-proof-closeout.md',
+    '20260424-tf-e2-k-d-host-cycle-dto-closeout.md',
+    '20260424-tf-e2-k-d-transformation-host-cycle-proof-closeout.md',
+    '20260424-tf-e2-k-e-dbt-host-cycle-proof-closeout.md',
+    '20260424-tf-e2-k-f-authoritative-restore-proof-closeout.md',
+    '20260424-tf-e2-k-g-typed-canvas-preview-run-proof-closeout.md',
+    '20260424-tf-e2-k-h-blocked-readonly-host-cycle-proof-closeout.md',
+    '20260424-tf-e2-k-i-authoritative-first-canvas-lifecycle-proof-closeout.md',
+    '20260425-tf-e2-b-c-node-edge-lifecycle-closure-closeout.md',
+    '20260427-frontend-policy-drift-and-bootstrap-closeout.md',
     '20260316-workspace-build-baseline-closeout.md',
     '20260316-workspace-script-graph-dedup-closeout.md',
     '20260317-adapter-dependency-graph-alignment-closeout.md',
@@ -698,6 +728,16 @@ test('retired atlas and superseded Canvas guidance have no live consumers', () =
 test('retired PR drafts and historical intake have no files or live consumers', () => {
   const retiredDirectories = ['.gh-comments', '.git.bfg-report'];
   const retiredFiles = [
+    'buzon/20260514-codex-fowler-ar-c2-t2-dashboard-evidence-analysis.md',
+    'buzon/20260514-codex-fowler-ar-c2-t3-alert-evidence-analysis.md',
+    'buzon/20260523-codex-fowler-postgres-tenant-isolation-canon.md',
+    'buzon/20260703-web-state-health-direction-update.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/temporal-workflow-helper-artifact-facts-narrowing-slice-20260410.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-authoring-draft-aggregate-roots-plan-20260423.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md',
+    'docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260426-canvas-runtime-policy-architecture-review.md',
     'docs/planning/closeouts/20260423-rc-c2-post-merge-ci-measurement.md',
     'docs/planning/reviews/architecture-and-governance/20260513-ar-d6-triple-versioning-governance-review.md',
     'docs/planning/reviews/architecture-and-governance/20260525-f29-canvas-workbench-proposal-disposition-review.md',
@@ -722,12 +762,21 @@ test('retired PR drafts and historical intake have no files or live consumers', 
     assert.equal(existsSync(new URL(`../../${path}`, import.meta.url)), false, path);
   }
   const retiredNames = retiredFiles.map((path) => path.split('/').at(-1));
-  const paths = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
+  const paths = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+    { encoding: 'utf8' }
+  )
     .split('\0')
     .filter(Boolean);
   for (const path of paths) {
     if (path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
     if (!existsSync(new URL(`../../${path}`, import.meta.url))) continue;
+    assert.equal(
+      retiredNames.includes(path.split('/').at(-1)),
+      false,
+      `Relocated retired document: ${path}`
+    );
     let current = readRepoFile(path).replace(
       /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
       ''
@@ -756,4 +805,597 @@ test('retired PR drafts and historical intake have no files or live consumers', 
     'docs/planning/proposals/mandatory/frontend-and-ux/frontend-component-reflection-inventory-plan-20260604.md',
     'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md',
   ]);
+});
+
+test('retired historical reviews and delivery records have no live consumers', () => {
+  const retiredFiles = [
+    'docs/planning/reviews/ci-and-delivery/index.md',
+    'docs/planning/reviews/event-contract-and-traceability/index.md',
+    'docs/planning/closeouts/f-04-f-capabilities-port-and-route-query-boundary-closeout.md',
+    'buzon/20260429-codex-canvas-operability-auth-and-drag-fowler-review.md',
+    'buzon/20260429-codex-fowler-branch-architecture-post-codescene-analysis-and-remediation.md',
+    'buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md',
+    'buzon/20260430-codex-fowler-canvas-ready-node-authoring-analysis.md',
+    'buzon/20260514-codex-fowler-ar-a7-delivery-domain-runtime-split-analysis.md',
+    'buzon/20260514-codex-fowler-ea-20260429-06-semantic-fitness-analysis.md',
+    'buzon/20260515-codex-fowler-ar-d-plan-pointer-architecture-authority-analysis.md',
+    'buzon/20260515-codex-fowler-f05-store-domain-ownership-hard-review.md',
+    'buzon/20260516-codex-fowler-canvas-screen-problems-architecture-analysis.md',
+    'buzon/20260516-codex-fowler-element-canvas-empty-state-placement.md',
+    'buzon/20260516-codex-fowler-element-canvas-route-shell-posture.md',
+    'buzon/20260516-codex-fowler-element-canvas-topbar-command-priority.md',
+    'buzon/20260516-codex-fowler-element-readonly-first-canvas-policy.md',
+    'buzon/20260518-codex-fowler-f27-alpha-route-gate-branch-analysis.md',
+    'buzon/20260518-f10-fowler-run-event-convergence-analysis.md',
+    'buzon/20260523-codex-fowler-planner-ingress-hard-cut-canon.md',
+    'docs/planning/closeouts/20260315-api-protected-runtime-closeout.md',
+    'docs/planning/closeouts/20260316-api-start-run-adapter-config-closeout.md',
+    'docs/planning/closeouts/20260316-g7-projector-worker-runtime-closeout.md',
+    'docs/planning/closeouts/20260316-g7-provider-ref-reconciliation-closeout.md',
+    'docs/planning/closeouts/20260319-gap-5-pr1-archive-artifact-contracts-closeout.md',
+    'docs/planning/closeouts/20260319-planversion-governance-thinkfirst.md',
+    'docs/planning/closeouts/20260320-api-runtime-query-integration-closeout.md',
+    'docs/planning/closeouts/20260320-gap-5-pr1-terminal-snapshot-pinning-closeout.md',
+    'docs/planning/closeouts/20260320-planner-r2-redefinition-closeout.md',
+    'docs/planning/closeouts/20260320-planner-r2-typed-graph-source-boundary-closeout.md',
+    'docs/planning/closeouts/20260321-gap-5-pr1-export-verifier-closeout.md',
+    'docs/planning/closeouts/20260321-gap-5-pr2-deferred-deletion-restore-closeout.md',
+    'docs/planning/closeouts/20260321-gap-5-pr3-delivery-buffer-retention-closeout.md',
+    'docs/planning/closeouts/20260324-s12-remove-deprecated-state-store-methods-closeout.md',
+    'docs/planning/closeouts/20260324-schema-migration-rollback-closeout.md',
+    'docs/planning/closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md',
+    'docs/planning/closeouts/20260404-ar-a9-planner-cycle-fail-closed-closeout.md',
+    'docs/planning/closeouts/20260404-f04-findings-todo.md',
+    'docs/planning/closeouts/20260404-f04-qa-hardening-closeout.md',
+    'docs/planning/closeouts/20260404-f04-w4-decomposition-manifest.md',
+    'docs/planning/closeouts/20260404-plan-qa-tareas-mvp.md',
+    'docs/planning/closeouts/20260406-mw-a3-step-artifact-ref-generalization-closeout.md',
+    'docs/planning/closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md',
+    'docs/planning/closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md',
+    'docs/planning/closeouts/20260410-mw-a6-planner-hard-cut-boundary-remediation-closeout.md',
+    'docs/planning/closeouts/20260413-ar-a12-a-contract-pack-reset-closeout.md',
+    'docs/planning/closeouts/20260413-ar-a12-b-status-model-split-closeout.md',
+    'docs/planning/closeouts/20260413-tf-a1-a-preview-contract-freeze-closeout.md',
+    'docs/planning/closeouts/20260413-tf-c2-runtime-vertical-acceptance-closeout.md',
+    'docs/planning/closeouts/20260413-tf-d1-proof-environment-lifecycle-closeout.md',
+    'docs/planning/closeouts/20260414-ar-b2-distributed-consistency-model-closeout.md',
+    'docs/planning/closeouts/20260414-shell-chrome-signal-compaction-closeout.md',
+    'docs/planning/closeouts/20260414-tf-a1-b-compiler-mapping-closeout.md',
+    'docs/planning/closeouts/20260414-tf-a1-c-srp-hardening-closeout.md',
+    'docs/planning/closeouts/20260414-tf-c1-preview-persist-convergence-closeout.md',
+    'docs/planning/closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md',
+    'docs/planning/closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md',
+    'docs/planning/closeouts/20260416-ar-b1-write-boundary-closeout.md',
+    'docs/planning/closeouts/20260416-ar-d1-incremental-snapshot-projection-closeout.md',
+    'docs/planning/closeouts/20260417-mw-d1-planning-closeout.md',
+    'docs/planning/closeouts/20260417-tf-e2-route-bootstrap-srp-refactor-closeout.md',
+    'docs/planning/closeouts/20260419-rc-g1-c-owner-package-migration-closeout.md',
+    'docs/planning/closeouts/20260419-tf-a1-c14-plan-compile-language-alignment-closeout.md',
+    'docs/planning/closeouts/20260420-ar-d-plan-pointer-follow-up-hardening-closeout.md',
+    'docs/planning/closeouts/20260420-temporal-fowler-architecture-drift-follow-up-closeout.md',
+    'docs/planning/closeouts/20260421-api-http-entrypoint-response-componentization-closeout.md',
+    'docs/planning/closeouts/20260422-api-start-run-execution-capacity-admission-closeout.md',
+    'docs/planning/closeouts/20260422-tf-e2-protected-runtime-dev-auth-alignment-closeout.md',
+    'docs/planning/closeouts/20260424-temporal-plan-ref-contract-closeout.md',
+    'docs/planning/closeouts/20260425-production-tenant-isolation-baseline-closeout.md',
+    'docs/planning/closeouts/20260427-ar-d-plan-pointer-qa1-readiness-closeout.md',
+    'docs/planning/closeouts/20260427-rc-g1-d-planner-ownership-migration-closeout.md',
+    'docs/planning/closeouts/20260427-temporal-continue-payload-env-propagation-closeout.md',
+    'docs/planning/closeouts/20260428-canvas-draft-replacement-and-drag-closeout.md',
+    'docs/planning/closeouts/20260429-we-hx-1-boundary-ownership-closeout.md',
+    'docs/planning/closeouts/20260430-ar-d-continuation-safety-closeout.md',
+    'docs/planning/closeouts/20260507-ar-b5-lineage-worker-runtime-decomposition-closeout.md',
+    'docs/planning/closeouts/20260511-f28c-project-snapshot-roundtrip-closeout.md',
+    'docs/planning/closeouts/20260513-ea-20260429-engine-audit-disposition-closeout.md',
+    'docs/planning/closeouts/20260514-ar-d2-temporal-planref-capacity-sla-closeout.md',
+    'docs/planning/closeouts/20260514-ea-20260429-06-semantic-architecture-fitness-closeout.md',
+    'docs/planning/closeouts/20260514-f04-parent-acceptance-closeout.md',
+    'docs/planning/closeouts/20260514-f05-store-domain-ownership-closeout.md',
+    'docs/planning/closeouts/20260515-ar-d-plan-pointer-final-closeout.md',
+    'docs/planning/closeouts/20260520-f15f-canvas-workbench-screen-consolidation-closeout.md',
+    'docs/planning/closeouts/20260522-f25-plugin-ux-contract-closeout.md',
+    'docs/planning/closeouts/20260522-we-hx-parent-hardcut-closeout.md',
+    'docs/planning/closeouts/20260525-f17c-artifacts-monaco-readonly-viewer-closeout.md',
+    'docs/planning/closeouts/20260525-f17g-code-monaco-editable-workspace-access-closeout.md',
+    'docs/planning/closeouts/20260525-f29c-canvas-insert-palette-closeout.md',
+    'docs/planning/closeouts/F-02-closeout.md',
+    'docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md',
+    'docs/planning/closeouts/F-04-RESIDUAL-A-root-provider-guard-closeout.md',
+    'docs/planning/closeouts/G7.1-closeout.md',
+    'docs/planning/closeouts/engine-deps-refactor-closeout.md',
+    'docs/planning/closeouts/f-04-risk-a-qa-03-backend-owned-planref-closeout.md',
+    'docs/planning/closeouts/f-04-risk-b-mock-workspace-isolation-closeout.md',
+    'docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md',
+    'docs/planning/reviews/20260407-f04-f-capabilities-port-hard-qa-review.md',
+    'docs/planning/reviews/20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md',
+    'docs/planning/reviews/20260408-f04-residual-a-root-provider-guard-hard-qa-review.md',
+    'docs/planning/reviews/20260417-dvt-plus-deep-architectural-review.md',
+    'docs/planning/reviews/20260419-dvt-plus-deep-architectural-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260314-domain-cohesion-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260323-solid-ddd-hexagonal-ci-and-adapters-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260331-principal-architecture-deep-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260404-f04-frontend-data-boundary-hard-qa-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260404-mvp-e1-f03-hard-qa-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260407-dvt-principles-boundaries-and-target-state-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md',
+    'docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-and-use-case-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260408-retry-run-boundary-and-provider-signal-mapper-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260408-retry-run-boundary-hard-qa-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260409-dvt-monorepo-bug-audit-and-backend-valuation.md',
+    'docs/planning/reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260413-dvt-plus-architectural-audit-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260414-principal-architect-review-dvtplus.md',
+    'docs/planning/reviews/architecture-and-governance/20260418-mw-d1-external-compile-boundary-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260422-canvas-component-governance-follow-up-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260422-dvt-plus-principal-architect-deep-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260427-ar-d-plan-pointer-fowler-hard-qa-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260427-dvt-deep-architectural-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260427-rc-g1-d-fowler-architecture-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260429-dvt-plus-principal-deep-review-april-2026.md',
+    'docs/planning/reviews/architecture-and-governance/20260525-architecture-buzon-fowler-canonization-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260525-backlog-intake-reconciliation-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260525-buzon-fowler-canonization-inventory.md',
+    'docs/planning/reviews/architecture-and-governance/20260525-frontend-buzon-fowler-canonization-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-api-workspace-gap-report-source-extension.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-api-workspace-gap-report.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-contracts-workspace-gap-report-source-extension.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-contracts-workspace-gap-report.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-core-execution-planning-source-gap-report-source-extension.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-core-execution-planning-source-gap-report.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-cross-cutting-workspaces-source-gap-report-source-extension.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-cross-cutting-workspaces-source-gap-report.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-product-flow-closure-source-gap-report-source-extension.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-product-flow-closure-source-gap-report.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-runtime-adapters-workers-source-gap-report-source-extension.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-runtime-adapters-workers-source-gap-report.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-source-grounded-24-workspace-gap-reports-source-extension.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-source-grounded-24-workspace-gap-reports.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-web-workspace-gap-report-source-extension.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-web-workspace-gap-report.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-workspace-gap-reports-batch-01-source-extension.md',
+    'docs/planning/reviews/architecture-and-governance/20260607-workspace-gap-reports-batch-01.md',
+    'docs/planning/reviews/architecture-and-governance/20260823-dbt-osmosis-integration-study.md',
+    'docs/planning/reviews/canvas-controller-fowler-hard-qa-20260404.md',
+    'docs/planning/reviews/ci-and-delivery/20260330-ci-prepush-pr-process-observations.md',
+    'docs/planning/reviews/ci-and-delivery/20260401-ci-process-review.md',
+    'docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md',
+    'docs/planning/reviews/engine/20260405-mw-a2-policy-first-fowler-qa-review.md',
+    'docs/planning/reviews/event-contract-and-traceability/20260326-reconciler-runtime-solid-qa-review.md',
+    'docs/planning/reviews/event-contract-and-traceability/20260328-lineage-outbox-fowler-qa-hard-review.md',
+    'docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-fowler-qa-review.md',
+    'docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-hardening-plan-review.md',
+    'docs/planning/reviews/event-lifecycle-and-retention/20260329-run-event-retention-fowler-hard-review.md',
+    'docs/planning/reviews/event-lifecycle-and-retention/20260329-run-event-retention-risks-mitigations.md',
+    'docs/planning/reviews/event-lifecycle-and-retention/20260329-run-event-retention-ttl-kickoff-review.md',
+    'docs/planning/reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md',
+    'docs/planning/reviews/event-lifecycle-and-retention/index.md',
+    'docs/planning/reviews/execution-runtime/20260315-postgres-start-run-intent-store-qa-review.md',
+    'docs/planning/reviews/execution-runtime/20260315-postgres-state-store-adapter-refactor-review.md',
+    'docs/planning/reviews/execution-runtime/20260315-run-plan-workflow-architecture-review.md',
+    'docs/planning/reviews/execution-runtime/20260315-start-run-intent-schema-manager-architecture-review.md',
+    'docs/planning/reviews/execution-runtime/20260315-workflow-helpers-architecture-review.md',
+    'docs/planning/reviews/execution-runtime/20260321-planner-backed-start-run-qa-review.md',
+    'docs/planning/reviews/execution-runtime/20260323-start-run-route-parser-qa-review.md',
+    'docs/planning/reviews/execution-runtime/20260326-run-maintenance-service-srp-review.md',
+    'docs/planning/reviews/execution-runtime/20260326-s03-hard-qa-review.md',
+    'docs/planning/reviews/execution-runtime/20260328-runtime-command-rbac-review.md',
+    'docs/planning/reviews/execution-runtime/20260331-mvp-a1-backend-contractual-inventory-review.md',
+    'docs/planning/reviews/execution-runtime/20260409-tf-c2-b-read-surface-hard-qa-review.md',
+    'docs/planning/reviews/execution-runtime/index.md',
+  ];
+  const frozenInvocations = new Map([
+    [
+      'docs/evidence/ED-20260412-tf-c2-b-success-only-materialization-reads.md',
+      new Set(['8e5be5508ee7655486a746b806b09e022ecff770']),
+    ],
+    [
+      'docs/evidence/ED-20260414-ar-b2-distributed-consistency-model.md',
+      new Set(['186dec344fe87a5d3c79fb2db426f19278950e56']),
+    ],
+    [
+      'docs/evidence/ED-20260416-ar-b1-write-boundary-closure.md',
+      new Set(['7d9626e5db37fe770b090588d1569954b273aefc']),
+    ],
+    [
+      'docs/evidence/ED-20260417-mw-d1-external-compile-boundary-arc2.md',
+      new Set(['2fb89d37acc2002030bab76ec95e9d3e50679468']),
+    ],
+    [
+      'docs/evidence/ED-20260419-plan-compile-language-alignment-arc2.md',
+      new Set(['291120e04a8583a06a84e4af0c1586b3f0093d86']),
+    ],
+    [
+      'docs/evidence/ED-20260419-rc-g1-c-owner-package-migration.md',
+      new Set([
+        '9060f423eacb8372d91ca9fd0b532bd7950c0298',
+        'a862c50ac1819aa37df95eea352bbf4bb40f421b',
+      ]),
+    ],
+    [
+      'docs/evidence/ED-20260421-api-plan-route-response-and-adapter-build-baseline.md',
+      new Set(['cadcf55b38f1ffc7890be49f515ae98f917fe557']),
+    ],
+    [
+      'docs/planning/closeouts/20260429-static-analysis-followup-closeout.md',
+      new Set(['92d32d12c874463faea047cbdc3b12f2fb61cf7a']),
+    ],
+  ]);
+  const observedInvocations = new Set();
+  const names = retiredFiles
+    .filter((path) => !path.endsWith('/index.md'))
+    .map((path) => path.split('/').at(-1));
+  const references = new RegExp(
+    `(?<![\\w.-])(?:${names.map(escapeRegExp).join('|')})(?![\\w.-])`,
+    'u'
+  );
+  const retiredIndexes = retiredFiles.filter((path) => path.endsWith('/index.md'));
+  const paths = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+    { encoding: 'utf8' }
+  )
+    .split('\0')
+    .filter(Boolean);
+  for (const retired of retiredFiles) {
+    assert.equal(existsSync(retired), false, `Retired file returned: ${retired}`);
+  }
+  for (const path of paths) {
+    if (!existsSync(path) || path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
+    assert.equal(
+      names.includes(path.split('/').at(-1)),
+      false,
+      `Relocated historical file: ${path}`
+    );
+    const text = readRepoFile(path);
+    for (const line of text.split(/\r?\n/u)) {
+      const live = line.replace(
+        /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
+        ''
+      );
+      if (!references.test(live) && !retiredIndexes.some((retired) => live.includes(retired)))
+        continue;
+      const hash = execFileSync('git', ['hash-object', '--stdin'], {
+        input: line.trim(),
+        encoding: 'utf8',
+      }).trim();
+      assert.ok(
+        frozenInvocations.get(path)?.has(hash),
+        `Live historical reference in ${path}: ${line.trim()}`
+      );
+      observedInvocations.add(`${path}:${hash}`);
+    }
+  }
+  for (const [path, hashes] of frozenInvocations) {
+    for (const hash of hashes)
+      assert.ok(
+        observedInvocations.has(`${path}:${hash}`),
+        `Historical command changed or disappeared: ${path}:${hash}`
+      );
+  }
+});
+
+test('retired completed plans and intake packs have no live consumers', () => {
+  const retired = new Set([
+    'buzon/20260423-codex-fowler-access-decision-component-analysis-and-remediation.md',
+    'buzon/20260423-codex-fowler-ar-c3-execution-capacity-admission-analysis-and-remediation.md',
+    'buzon/20260423-codex-fowler-branch-start-run-control-boundary-analysis-and-remediation.md',
+    'buzon/20260423-codex-fowler-run-id-uuidv7-migration-analysis-and-remediation.md',
+    'buzon/20260423-codex-fowler-tenant-run-identity-analysis-and-remediation.md',
+    'buzon/20260424-codex-fowler-provider-vocabulary-hard-cut-qa.md',
+    'buzon/20260424-codex-fowler-temporal-plan-ref-contract-qa.md',
+    'buzon/20260428-codex-fowler-temporal-dbt-core-decoupling-analysis-and-remediation.md',
+    'buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md',
+    'buzon/20260429-codex-fowler-temporal-step-plugin-architecture-analysis-and-remediation.md',
+    'docs/planning/proposals/README.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/data/benchmark-comparison.csv',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/data/component-impact-matrix.csv',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/data/component-impact-matrix.json',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/00-executive-summary.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/01-market-benchmarks.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/02-dvt-current-state-audit.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/03-target-product-grammar-and-flows.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/04-visual-system-and-style-guide.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/06-impact-matrix.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/07-rollout-plan.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/08-doc-and-code-drift-notes.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/09-wireframes-and-layouts.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/10-governed-slice-extraction-and-lane-e-mapping.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/references/repo-surfaces.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/references/source-list.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/styles/dvt-professional-density.css',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/styles/dvt-professional-theme.tokens.css',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/styles/dvt-professional-typography.css',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/styles/dvt-workbench-monaco-theme-notes.md',
+    'docs/planning/proposals/frontend-f04-scope-and-slicing-20260404.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-inspector-authoring-and-lifecycle-closure-plan-20260425.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-node-and-edge-lifecycle-closure-plan-20260425.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/postgres-rls-fowler-qa-remediation-plan-20260426.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/postgres-rls-qa-remediation-plan-20260425.md',
+    'docs/planning/proposals/nice-to-have/architecture/rc-e3-execution-tracking-plan-20260328.md',
+    'docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-hardening-compliance-roadmap-20260404.md',
+    'docs/planning/proposals/nice-to-have/frontend-and-ux/dvt-ui-workbench-implementation-roadmap-20260404.md',
+    'docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md',
+  ]);
+  const uniqueNames = [...retired]
+    .filter(
+      (path) =>
+        !path.includes('dvt-product-ux-professionalization-bundle-20260409/') &&
+        !path.endsWith('/README.md')
+    )
+    .map((path) => path.split('/').at(-1));
+  const namedReference = new RegExp(`(?:${uniqueNames.map(escapeRegExp).join('|')})`, 'u');
+  const files = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+    { encoding: 'utf8' }
+  )
+    .split('\0')
+    .filter(Boolean);
+  for (const path of retired)
+    assert.equal(existsSync(path), false, `Retired file returned: ${path}`);
+  for (const path of files) {
+    if (!existsSync(path) || path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
+    assert.equal(
+      uniqueNames.includes(path.split('/').at(-1)),
+      false,
+      `Relocated retired file: ${path}`
+    );
+    const text = readRepoFile(path).replace(
+      /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
+      ''
+    );
+    assert.doesNotMatch(text, namedReference, `Live historical reference in ${path}`);
+    for (const target of retired)
+      assert.equal(text.includes(target), false, `Live historical path in ${path}: ${target}`);
+    for (const match of text.matchAll(/\]\(([^\s)]+)\)|`([^`\r\n]+)`/gu)) {
+      const value = (match[1] || match[2]).split('#')[0];
+      if (/^[a-z][a-z0-9+.-]*:/iu.test(value)) continue;
+      const resolved = posix.normalize(posix.join(posix.dirname(path), value));
+      assert.equal(
+        retired.has(resolved),
+        false,
+        `Relative historical reference in ${path}: ${value}`
+      );
+    }
+  }
+});
+
+test('retired migration plans and dated assessments cannot return', () => {
+  const retired = [
+    'buzon/20260423-codex-fowler-workspace-authoring-draft-aggregate-analysis.md',
+    'buzon/20260424-codex-fowler-ar-c3-admission-observability-analysis-and-remediation.md',
+    'buzon/20260430-codex-frontend-operability-fowler-review.md',
+    'buzon/20260510-codex-fowler-web-api-mock-hardcut-semantic-encapsulation-analysis.md',
+    'buzon/20260518-dhm-ws4-fowler-runtime-path-boundary-hardening-analysis.md',
+    'docs/planning/execution-model/execution-state.md',
+    'docs/planning/execution-model/handbook-state.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-b1-run-status-write-boundary-plan-20260404.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-workflow-input-hardening-plan-20260420.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-hard-qa-remediation-roadmap-20260404.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/planner-hard-cut-boundary-remediation-20260410.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/planner-kernel-dbt-boundary-extraction-follow-up-20260410.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/tf-c2-b-runtime-read-surface-evidence-plan-20260408.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-postgresql-publication-contract-study-20260903.md',
+    'docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md',
+    'docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md',
+    'docs/planning/proposals/nice-to-have/frontend-and-ux/f-23-git-file-history-review-plan-20260407.md',
+    'docs/planning/proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md',
+    'docs/planning/proposals/web-user-stories-20260530.md',
+    'docs/planning/proposals/workspace-first-frontend-architecture-specification.md',
+    'docs/planning/reviews/architecture-and-governance/20260403-postgres-plan-store-srp-remediation-target.md',
+    'docs/planning/reviews/ci-and-delivery/20260330-ci-performance-review-and-action-plan.md',
+    'docs/planning/reviews/event-contract-and-traceability/20260330-mvp-b1-claim-evidence-traceability-matrix.md',
+    'docs/planning/roadmap/ar-b1-quality-hardening-roadmap-20260404.md',
+    'docs/planning/roadmap/diagrams/api-admission-architecture-delta.md',
+    'docs/planning/roadmap/diagrams/documentation-governance-architecture-delta.md',
+    'docs/planning/roadmap/diagrams/event-lifecycle-retention-architecture-delta.md',
+    'docs/planning/roadmap/diagrams/planner-contracts-architecture-delta.md',
+    'docs/planning/status/frontend-mature-system-gap-status-20260602.md',
+    'docs/planning/studies/planner-source-first-study-20260828.md',
+  ];
+  const recordedCommands = new Map([
+    [
+      'docs/evidence/ED-20260410-temporal-native-cancel-semantics.md',
+      new Set(['a0360c62f2b476cac9f7fb02d64445848699dfa8']),
+    ],
+    [
+      'docs/evidence/ED-20260412-ar-a12-c5-read-boundary-purity-closeout.md',
+      new Set(['a44bb818547d021f2b0c990ecfb7ba70799bf9af']),
+    ],
+  ]);
+  const observedCommands = new Set();
+  const stems = retired.map((path) => path.split('/').at(-1).replace(/\.md$/u, ''));
+  const referencePatterns = stems.map(
+    (stem) =>
+      escapeRegExp(stem) +
+      (['execution-state', 'handbook-state'].includes(stem) ? '\\.md' : '(?:\\.md)?')
+  );
+  const references = new RegExp(`(?<![\\w.-])(?:${referencePatterns.join('|')})(?![\\w.-])`, 'u');
+  for (const path of retired)
+    assert.equal(existsSync(path), false, `Retired document returned: ${path}`);
+  const paths = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+    { encoding: 'utf8' }
+  )
+    .split('\0')
+    .filter(Boolean);
+  for (const path of paths) {
+    if (!existsSync(path) || path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
+    assert.equal(
+      stems.includes(path.split('/').at(-1).replace(/\.md$/u, '')),
+      false,
+      `Retired document relocated: ${path}`
+    );
+    for (const line of readRepoFile(path).split(/\r?\n/u)) {
+      const live = line.replace(
+        /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
+        ''
+      );
+      if (!references.test(live)) continue;
+      const hash = execFileSync('git', ['hash-object', '--stdin'], {
+        input: line.trim(),
+        encoding: 'utf8',
+      }).trim();
+      assert.ok(
+        recordedCommands.get(path)?.has(hash),
+        `Live retired reference in ${path}: ${line.trim()}`
+      );
+      observedCommands.add(`${path}:${hash}`);
+    }
+  }
+  for (const [path, hashes] of recordedCommands) {
+    for (const hash of hashes)
+      assert.ok(
+        observedCommands.has(`${path}:${hash}`),
+        `Recorded command changed or missing: ${path}:${hash}`
+      );
+  }
+});
+
+test('current task guidance no longer routes work through retired planning groups', () => {
+  const surfaces = [
+    'docs/architecture/architecture-surface-inventory-20260402.md',
+    'docs/architecture/components/api/runtime-review-canon-component.md',
+    'docs/architecture/components/ci-governance/local-changed-files-gate-component.md',
+    'docs/architecture/components/engine/adapters/state-store/postgres/run-events-partitioning-component.md',
+    'docs/architecture/components/engine/adapters/temporal/temporal-planref-capacity-sla.md',
+    'docs/architecture/components/engine/architecture/c4-engine.md',
+    'docs/architecture/components/engine/ops/ar-c2-immutable-evidence-gate-component.md',
+    'docs/architecture/components/engine/ops/observability.md',
+    'docs/architecture/components/engine/ops/runbooks/incident-response.md',
+    'docs/architecture/components/engine/ops/slo-posture.md',
+    'docs/architecture/components/engine/reviews/refactor-list-stale-snapshot-runs-sql.md',
+    'docs/architecture/components/web/graph/canvas-draft-access-posture-component.md',
+    'docs/architecture/components/web/runs/frontend-backend-mvp-contract.md',
+    'docs/architecture/domain-map.md',
+    'docs/architecture/fowler-opportunity-planning-governance.md',
+    'docs/guides/api-control-plane-technical-manual-20260404.md',
+    'docs/guides/ar-c2-automated-evidence-technical-manual-20260404.md',
+    'docs/guides/generic-graph-source-user-manual-20260404.md',
+    'docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md',
+    'docs/guides/testing-and-ci-capabilities.md',
+    'docs/planning/domains/execution-runtime.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/authoring-graph-lab-roadmap-plan-20260603.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/canvas-inspector-plugin-authoring-fields-plan-20260604.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-context-properties-panel-plan-20260604.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-identity-policy-plan-20260601.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/canvas-visible-i18n-debt-plan-20260508.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-2-autosave-e2e-proof-plan-20260508.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-3-project-snapshot-roundtrip-plan-20260511.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/e-dvt-inspector-panels-plan-20260601.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/e-source-import-commercial-hardening-plan-20260531.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/f15f-canvas-workbench-screen-consolidation-plan-20260519.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/f15g-first-canvas-creation-capability-plan-20260519.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/f15h-first-canvas-draft-capability-split-plan-20260520.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/f19-marquez-public-data-visual-system-plan-20260522.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/f24-context-panel-token-convergence-plan-20260522.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/f24-monaco-visual-token-convergence-plan-20260522.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/f25-plugin-capability-table-plan-20260522.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/implemented-capabilities/index.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/implemented-technical/index.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/index.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/pending-work/index.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/sql-canvas-demanding-user-flow-review-plan-20260608.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md',
+    'docs/planning/proposals/mandatory/governance-and-docs/arc-state-store-policy-routing-plan-20260510.md',
+    'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md',
+    'docs/planning/proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md',
+    'docs/planning/proposals/mandatory/governance-and-docs/ci-governance-parity-implementation-plan-20260502.md',
+    'docs/planning/proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md',
+    'docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md',
+    'docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md',
+    'docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-a5-plan-identity-determinism-verification-20260506.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-execution-capacity-admission-user-stories-20260424.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-dbt-plugin-package-extraction-plan-20260514.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/dbt-step-capability-admission-plan-20260603.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/mw-c1-to-tf-c2-runtime-vertical-sequence-analysis-20260409.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/mw-d1-external-plan-definition-sdk-api-plan-20260417.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/run-events-hash-partitioning-plan-20260513.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/tenant-run-identity-platform-owned-run-id-plan-20260423.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md',
+    'docs/planning/proposals/nice-to-have/architecture/ddd-hexagonal-modularization-plan-20260323.md',
+    'docs/planning/proposals/nice-to-have/architecture/evidence-information-architecture-plan-20260402.md',
+    'docs/planning/proposals/nice-to-have/architecture/todo.md',
+    'docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md',
+    'docs/planning/proposals/portfolio-map-20260403.md',
+    'docs/planning/roadmap/diagrams/execution-dependency-gates.md',
+    'docs/planning/roadmap/diagrams/index.md',
+    'docs/planning/status/ai-efficiency-adoption-status.md',
+    'docs/runbooks/api-runtime-sla-canonical-20260404.md',
+    'docs/runbooks/backend-mvp-control-plane-runbook-20260329.md',
+  ];
+  const reviewGuide = readRepoFile(
+    'docs/architecture/components/api/runtime-review-canon-component.md'
+  );
+  assert.doesNotMatch(reviewGuide, /Planning DB task|PlanningDbTask/u);
+  assert.match(reviewGuide, /governing GitHub issue/u);
+  const retiredRouting =
+    /(?<![\w-])(?:lane[ -]+[A-E]\b|lane[-\s]+(?:YAML|registry|tasks?|plan|closeout|metadata))|agent-lane-|lane_yaml_changed|^lane:\s*[A-E]\s*$|docs:planning:lanes|docs:workboard|gap-execution-parallel-lanes\.md/imu;
+  for (const path of surfaces) {
+    const currentGuidance = readRepoFile(path)
+      .replace(/^```feature-mechanization[^\n]*\n[\s\S]*?^```/gmu, '')
+      .replace(
+        /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
+        ''
+      );
+    assert.doesNotMatch(currentGuidance, retiredRouting, path);
+  }
+  assert.equal(existsSync('docs/planning/roadmap/diagrams/gap-execution-parallel-lanes.md'), false);
+  assert.match(
+    readRepoFile('docs/planning/roadmap/diagrams/execution-dependency-gates.md'),
+    /^# Execution Dependency Gates$/mu
+  );
 });

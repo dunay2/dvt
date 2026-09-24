@@ -33,7 +33,6 @@ gates.
 
 ## Diagram Sources
 
-- [Documentation Governance Architecture Delta](../roadmap/diagrams/documentation-governance-architecture-delta.md)
 - [Planning Domain Map](../roadmap/diagrams/planning-domain-map.md)
 
 ## 2026-05-23 Architecture Documentation Reconciliation Canon
