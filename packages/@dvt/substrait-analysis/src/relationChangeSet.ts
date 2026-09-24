@@ -7,7 +7,7 @@ import {
   DvtSubstraitRelationBindingV1Schema,
   type DvtSubstraitFieldBindingV1,
   type DvtSubstraitRelationBindingV1,
-  PostgresIdentifierV1Schema,
+  DvtSemanticFieldNameV1Schema,
 } from '@dvt/contracts';
 
 import { SubstraitAnalysisError } from './document.js';
@@ -57,7 +57,7 @@ export function applyRelationChanges(snapshot: RelationSnapshot, change: Relatio
   for (const id of removed) snapshot.get(id);
   const rootId = change.rootId ?? snapshot.rootId;
   const rootNames =
-    change.rootNames?.map((name) => PostgresIdentifierV1Schema.parse(name)) ?? snapshot.rootNames;
+    change.rootNames?.map((name) => DvtSemanticFieldNameV1Schema.parse(name)) ?? snapshot.rootNames;
   const anchors = new Map<number, string>();
   for (const entry of change.upserts) {
     const binding = DvtSubstraitRelationBindingV1Schema.parse(entry.binding);
