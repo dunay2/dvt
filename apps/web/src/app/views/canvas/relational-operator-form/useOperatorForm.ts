@@ -1,5 +1,5 @@
 /** Owned concern: discardable form state and dispatch to the existing draft command owner. */
-import { useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { DvtSubstraitSortKey } from '@dvt/postgres-projection';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
@@ -7,6 +7,11 @@ import type { DvtSubstraitProjectionDraft } from '../canvasDvtSubstraitProjectio
 import type { CanvasRelationalOperatorTool } from '../canvasRelationalTreeOperatorModel';
 import { applyCanvasRelationalOperatorTool } from '../canvasRelationalTreeOperatorCommands';
 import { operatorFormCopy } from './operatorFormCopy';
+import { CanvasRelationAnalysisContext } from '../CanvasRelationAnalysisContext';
+import {
+  applySelectedRelationFilter,
+  removeSelectedRelationFilter,
+} from '../canvasSelectedRelationFilter';
 
 export type OperatorFormValues = Readonly<{
   fieldId: string;
@@ -24,13 +29,25 @@ export function useOperatorForm({
   onChange,
   onClose,
   targetRelationId,
+  onPendingChange,
 }: Readonly<{
   tool: CanvasRelationalOperatorTool;
   draft: DvtSubstraitProjectionDraft;
   onChange: (draft: DvtSubstraitProjectionDraft) => void;
   onClose: () => void;
   targetRelationId?: string;
+  onPendingChange?: (pending: boolean) => void;
 }>) {
+  const analysis = useContext(CanvasRelationAnalysisContext);
+  const [revision] = useState(analysis?.revision);
+  const lifetime = useRef(new AbortController());
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    lifetime.current = controller;
+    return () => controller.abort();
+  }, []);
+  useEffect(() => () => onPendingChange?.(false), [onPendingChange]);
   const language = useApplicationLanguageStore((state) => state.language);
   const [values, setValues] = useState<OperatorFormValues>(() => ({
     fieldId: tool.fieldId ?? tool.fields[0]?.fieldId ?? '',
@@ -51,7 +68,35 @@ export function useOperatorForm({
     count: tool.count == null ? '' : String(tool.count),
   }));
   const [error, setError] = useState(false);
+  const commitFilter = async (remove: boolean) => {
+    if (busy || analysis == null || revision == null || targetRelationId == null) return;
+    setBusy(true);
+    setError(false);
+    const signal = lifetime.current.signal;
+    try {
+      const next = remove
+        ? await removeSelectedRelationFilter(analysis.session, targetRelationId, revision, signal)
+        : await applySelectedRelationFilter(analysis.session, {
+            ...values,
+            relationId: targetRelationId,
+            expectedRevision: revision,
+            intent: tool.active ? 'edit' : 'insert',
+            signal,
+          });
+      onPendingChange?.(false);
+      onChange(next);
+      onClose();
+    } catch {
+      if (!signal.aborted) setError(true);
+    } finally {
+      if (!signal.aborted) setBusy(false);
+    }
+  };
   const commit = (remove = false) => {
+    if (tool.id === 'filter') {
+      void commitFilter(remove);
+      return;
+    }
     let offset: bigint | undefined;
     let count: bigint | undefined;
     try {
@@ -79,12 +124,19 @@ export function useOperatorForm({
   return {
     values,
     error,
+    busy,
     copy: operatorFormCopy[language],
-    change: (patch: Partial<OperatorFormValues>) =>
-      setValues((current) => ({ ...current, ...patch })),
+    change: (patch: Partial<OperatorFormValues>) => {
+      setValues((current) => ({ ...current, ...patch }));
+      onPendingChange?.(true);
+    },
     submit: () => commit(),
     remove: () => commit(true),
-    cancel: onClose,
+    cancel: () => {
+      lifetime.current.abort();
+      onPendingChange?.(false);
+      onClose();
+    },
   };
 }
 

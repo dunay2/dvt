@@ -196,8 +196,6 @@ export function DvtAuthoringFields({
             disabled={disabled}
             draft={draft.dvt}
             node={node}
-            nodes={nodes}
-            edges={edges}
             onChange={(semantic) =>
               onChange((current) =>
                 current.dvt?.kind === 'transform' && current.dvt.mode === 'substrait'

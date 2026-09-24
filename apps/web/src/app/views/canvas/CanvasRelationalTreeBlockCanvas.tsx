@@ -73,6 +73,7 @@ export function CanvasRelationalTreeBlockCanvas({
     >
       <CanvasRelationalTreeOperationShelf
         choices={choices}
+        selectedRelationId={selectedRelationId}
         copy={copy}
         hasOperands={hasOperands}
         operation={operation}
