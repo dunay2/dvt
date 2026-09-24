@@ -82,7 +82,9 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
         selectedFields
       );
     });
-    cy.get('[data-slot="canvas-relational-collapse"]').click();
+    cy.get(
+      '[data-slot="canvas-relational-tree-inline-editor"]:visible [data-slot="canvas-relational-collapse"]'
+    ).click();
     cy.get('[data-operator="read"]')
       .last()
       .parent()
