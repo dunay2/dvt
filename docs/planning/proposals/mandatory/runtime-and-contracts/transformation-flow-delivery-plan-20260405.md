@@ -19,11 +19,11 @@ can be designed, planned, executed, and inspected.
 
 ## Inputs
 
-This delivery plan is governed by:
+Historical planning inputs, not current architecture or execution authority:
 
-- [Transformation Flow Proposal Set 2026-04-05](./plan-creation-interface-route-proposal-20260405.md)
-- [Transformation Flow Product Decisions 2026-04-05](./transformation-flow-product-decisions-20260405.md)
-- [Transformation Flow Architecture And Contracts 2026-04-05](./transformation-flow-architecture-and-contracts-20260405.md)
+- [Transformation Flow Proposal Set 2026-04-05](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md)
+- [Transformation Flow Product Decisions 2026-04-05](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md)
+- [Transformation Flow Architecture And Contracts 2026-04-05](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md)
 
 ## Delivery target
 

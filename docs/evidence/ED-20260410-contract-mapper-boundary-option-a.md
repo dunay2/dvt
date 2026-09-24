@@ -36,7 +36,7 @@ code_refs:
   - packages/@dvt/run-domain/src/mapEventEnvelopeToProjectableEvent.ts
   - apps/api/src/runtime/intentReconcilerRuntime.ts
   - scripts/sync-docs.cjs
-  - docs/planning/proposals/contract-mapper-event-boundary-study-20260409.md
+  - https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/docs/planning/proposals/contract-mapper-event-boundary-study-20260409.md
 evidence:
   tests:
     - pnpm type-check

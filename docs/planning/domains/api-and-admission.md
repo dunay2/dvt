@@ -20,7 +20,6 @@ and auth-runtime integration.
 
 ## Active Planning Inputs
 
-- [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md)
 - [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
 
 ## Risk And Evidence Links

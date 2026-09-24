@@ -137,10 +137,8 @@ Runtime run behavior is implemented through the presentation port and API
 adapter. Current command/query ownership is read from Planning DB rather than a
 compiled API rail vocabulary.
 
-The current roadmap reference for frontend and UX work is
-`docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md`.
-The former `docs/planning/proposals/frontend-roadmap-20260219.md` location is no
-longer an active path.
+Frontend product sequencing follows the [Roadmap Of Record](../../../planning/roadmap/index.md).
+Current delivery status and acceptance remain in the governing GitHub issues.
 
 ## Related Pages
 

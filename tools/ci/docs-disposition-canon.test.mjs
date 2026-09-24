@@ -1347,29 +1347,22 @@ test('current task guidance no longer routes work through retired planning group
     'docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-execution-capacity-admission-user-stories-20260424.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-dbt-plugin-package-extraction-plan-20260514.md',
-    'docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/dbt-step-capability-admission-plan-20260603.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/mw-c1-to-tf-c2-runtime-vertical-sequence-analysis-20260409.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/mw-d1-external-plan-definition-sdk-api-plan-20260417.md',
-    'docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/run-events-hash-partitioning-plan-20260513.md',
-    'docs/planning/proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/tenant-run-identity-platform-owned-run-id-plan-20260423.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md',
-    'docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md',
-    'docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md',
-    'docs/planning/proposals/nice-to-have/architecture/ddd-hexagonal-modularization-plan-20260323.md',
     'docs/planning/proposals/nice-to-have/architecture/evidence-information-architecture-plan-20260402.md',
     'docs/planning/proposals/nice-to-have/architecture/todo.md',
-    'docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md',
     'docs/planning/proposals/portfolio-map-20260403.md',
     'docs/planning/roadmap/diagrams/execution-dependency-gates.md',
     'docs/planning/roadmap/diagrams/index.md',
@@ -1881,5 +1874,205 @@ test('historical implementation journals stay retired without erasing mechanizat
       })
       .join('\n');
     assert.equal(hasRetiredName(text), false, `Live reference to retired journal in ${path}`);
+  }
+});
+
+// Refs #3004: obsolete studies are not new tasks or current execution evidence.
+test('superseded studies and delivery narratives stay retired with their obligations preserved', async () => {
+  const { sha256Hex, sha256HexUtf8 } = await import('@dvt/crypto');
+  const { readFileSync } = await import('node:fs');
+  const { extractFeatureMechanizationManifests } =
+    await import('../../scripts/lib/feature-mechanization-manifest.cjs');
+  const retired = [
+    'buzon/20260504-codex-fowler-code-tab-workspace-files-analysis-and-plan.md',
+    'buzon/20260515-codex-fowler-f27-session-gate-runtime-unavailable-analysis.md',
+    'buzon/20260515-codex-fowler-rc-c2-adoption-gate-analysis.md',
+    'buzon/20260515-codex-fowler-s08-lifecycle-contract-retirement-analysis.md',
+    'buzon/20260531-authoring-graph-lab-closeout.md',
+    'buzon/20260531-authoring-graph-lab-roadmap.md',
+    'buzon/20260531-web-test-lane-division-proposal.md',
+    'docs/planning/closeouts/20260514-ar-a7-delivery-domain-runtime-split-closeout.md',
+    'docs/planning/closeouts/20260515-rc-c2-adoption-gate-hardening-closeout.md',
+    'docs/planning/closeouts/20260531-dvt21-cost-attribution-ui-hard-cut-closeout.md',
+    'docs/planning/closeouts/20260821-red1-1-planner-contracts-retirement-closeout.md',
+    'docs/planning/closeouts/20260822-red1-3-canvas-legacy-route-retirement-closeout.md',
+    'docs/planning/closeouts/20260830-2745-export-dbt-project-retirement-closeout.md',
+    'docs/planning/closeouts/20260830-2748-planning-db-operational-integrity-closeout.md',
+    'docs/planning/closeouts/20260830-db-first-git-inventory-refresh-boundary-closeout.md',
+    'docs/planning/closeouts/20260904-2899-post-git-clean-tree-and-web-latency-closeout.md',
+    'docs/planning/closeouts/20260904-2906-source-import-row-double-click-closeout.md',
+    'docs/planning/closeouts/20260904-2908-source-inspector-alias-deduplication-closeout.md',
+    'docs/planning/closeouts/20260904-2915-generated-model-sql-projection-authority-closeout.md',
+    'docs/planning/closeouts/flow1-canvas-connection-valve-2581-closeout.md',
+    'docs/planning/closeouts/gh-2892-canvas-data-column-interactions-closeout.md',
+    'docs/planning/closeouts/gh-2911-execution-preview-connected-origin-closeout.md',
+    'docs/planning/closeouts/vtx2-web-sql-first-hardcut-2600-closeout.md',
+    'docs/planning/proposals/contract-mapper-event-boundary-study-20260409.md',
+    'docs/planning/proposals/dvt-canvas-workbench-proposal-v2-repo-validated.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md',
+    'docs/planning/proposals/nice-to-have/architecture/DVT-plus-state-machine-transition-proposal.md',
+    'docs/planning/proposals/nice-to-have/architecture/ddd-hexagonal-modularization-plan-20260323.md',
+    'docs/planning/proposals/nice-to-have/frontend-and-ux/dvt-ui-workbench-architecture-proposal-20260404.md',
+    'docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md',
+    'docs/planning/reviews/20260806-cux1-wux1-novice-fowler-qa-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260407-execution-plan-and-run-execution-policy-rationale.md',
+    'docs/planning/reviews/architecture-and-governance/20260407-plan-core-operational-consumption-design-spike.md',
+    'docs/planning/reviews/architecture-and-governance/20260501-tf-e2-m-c-fowler-hard-qa-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260504-dvt-deep-architectural-review.md',
+    'docs/planning/reviews/architecture-and-governance/20260527-frontend-ux-maturity-audit-review.md',
+  ];
+  const contentHashes = new Set([
+    '3f6515f78a17177a6ecc84d012d0e95f9c069dfc8980929945389949a9e247f3',
+    '8e99e8135db74c3485dbbcab99af1705a0ef5deabdcfb1bfa4d2316951a36989',
+    '2bb42df3b0907013091740bcf531a9812cb299bd1d904a272ea0c21b94ce3a65',
+    'f4c19accbdc0a986f1bea43de972b95da1652165abd9567977333b891ad0e74a',
+    '5515dd6592f8c2353c9d20acacff08c8d035b0e5237b93c2a81f26ec90512c6c',
+    '9524e243a96c4fd7f6c678acb982b1fd6744d16eae384430194b4dd0a55951b4',
+    'dc2f79d3a3a08a5d8cd88ee5be2861969a6ed32cc54791e740b130bb9c42bd1e',
+    '4ac660250667c1905e4f9c06559a5d9d8849ed2d8a4fe324656b2748f42e48d9',
+    '264fd0fcfec904aff5ded68b8284becf97ef17e949efc8fc40af06136213e39b',
+    'a5a09c90d0d48b52932e1f3ca19e09f5d6283bbf6a02baa7f148fd10c628c390',
+    'd254e8fa275acd9338d9851451b1c847e3b02107dd9a9c409c919d09633f0c1a',
+    '5f4b2f381435d2cc6c4bb54a12eeed7744b1e02555676146679334e4e0b2f517',
+    '994e4279c01b697e41df28b87a60e016e2b12daacaf24b46357123d672702a40',
+    'c707d1dd2fc7023dc50b3a5f1ea854fd5d7587770a6145db223ca07933def166',
+    'daab2a2a59305b6846331ec7d603681a466d7f7e0041e84691aaac1deb661923',
+    'acdb6c52b4835f57a73ac7b5105d337d312f390efc068e6d2f590be702a2eab4',
+    '26071208b4d8f0a6d5df1899c68542df1abc83d05e83c75dc56364f571458f3d',
+    '57e2969db1023734af99418ab0cf7dfbed374fe4a911ac6c865d162419a1769f',
+    '6bd2d37edb7851da3403ecd2e3ee156f167ace0bfc3fb3a336f267ccccdf4f0d',
+    'cae730c7d116271fbbf87d508183dd27b13c8ed5f8a5303d6790312aeea4cd40',
+    '9d5c4b7fe791ec1865c6c723820adaac5917addc2d793b72d03406568900ea18',
+    '4d954fc5bc9672ecedf2838c0996bc1cbef9ff79a843be7ac56bb4bcd1bfba5c',
+    'c0261e5123597a0ee396a17be4a7d86e5716ac95162b67ac0ff9a9fda32482eb',
+    'f88b009930ce22f6d820e0bae98ceaad8d8cd7ed6d46b6ff23154579813e5903',
+    '870722c9409310ca231425437cb520c850212fa0eaa158f5404c4631b1f0fbf6',
+    '933384b4d0423b0659b3650e469ac2f3395acc60dd0218760f40940762aab538',
+    'a78d0870f34cf1ba2353a69a78f4dba2eefc55e464150d7db6aff2e96769b721',
+    '44daf2fe7f6edfa20a24c2bca0c867c5862e3a43609e13279a58072d0dbd61bd',
+    'b7d2c7ffdfde9f8f215485435800d0d60173a04c83be3d5b12f04600ddba57fa',
+    '8b1b05ca097e9251356467e5b4c6b9b8bf174c81bb0c02ed9fe49728d3389a7f',
+    '8896714a7c2ee61fff24a9d714d76077852ffe3551be11ea03019a5614d297bb',
+    'b22fced7db687fff839d85231426800254937f97e08710b47aec7008864d8efa',
+    '464d2622ae66133a0d6217c85f42da6b6cbdf3e4253cd0ddd65837ebddf5b60d',
+    '7b9b4b497d532388cda0dc2b5bc1759f035dfe01daa27f78713cc6ef9bbe8d3f',
+    'b429c94a516f32dcf0ae86fba7a85f635a24e1419ba54c44997a8397131c3c51',
+    '4625c8dfe0ea7c83077dc82b5c4f61db81b86e32df98f6558ccfd87f40eb5644',
+    'd6aca221f51a19c035c788bdda5056d2dcebc18f042057d61772b6ed38754b85',
+    '9456be78f1cad4b7e96c52c9fd5cc8ebcf2145b9229bdd67a1ba61fd83b8147f',
+    '455bc0dff7e96eadc0c74ae14eb179472a74825af9ca7646cf1fa18d10aaf541',
+    'a792c3e46c677614123efd5211f4dee37a83b631a5cfbbf61b4978f7ac1ce704',
+  ]);
+  // Only exact pre-existing allowed/patch surfaces; never authority/evidence fields.
+  const historicalFields = {
+    '87ad0dfed6ef048ab289f6d5df2695c9520db920e9502031877da53e12a0eb3e': 1,
+    '453d617323963d8f2c054f17c285ab7f65645d915b2ed6b5741fed4113bf67e9': 1,
+    c64178d08413921a110ba84e5dc122e09168645cc7d002c30415145a0f790fd9: 1,
+    '6bcb074d6d5f6c460f512e05d358f86e547e16df446ddd26d7797407405969ef': 1,
+    b51519719bb8a8d5ff7fe8d3c0beebf52f3970638b5cc7102fde55b2d9647381: 1,
+    a8ef7ee7058939913374278d18eaf9a887659ee92420195a4909ed6811b4b34f: 1,
+    d4c3a6fb9e75335b3c3dbcedfbb417e797214d9d279602093f6945b55d7f55d2: 1,
+    '333b3f1c9c0d84745fe00af15f5dc96aa70fe6d63474587db9251869b8f70e9e': 1,
+    e3de97bcbe9d67dc4d7204e94dd104c91dc9819f08c04a853887d9f0fae7e130: 1,
+    '808600ac545ba5ece3e7c95eb4c6cd69f354d862c439083fb841ab7124b84f09': 1,
+    '0b57b97bc3292ed9944883d784373e338edac399d45bb8f684c7d6e50edda508': 1,
+    '44c301293c9cf2c59c16b686b035d5156e44e384050b32a024ce68f4e3223105': 1,
+    '23b8f3e3eb6258ae1b0809e503f12f464aa0a7517c49d3b4eefac84c1167ffcc': 1,
+    af75a176a837bb3778df45a67090457bbb05ff6b54f254c965a18a6aa8119a69: 1,
+    '54a9a3a9bc91c5f0cbcf5d73f4d7ba06bcb2f16e8ad6c8cb2a673aa49ddb66b2': 1,
+    a6b4af024069313e17fdadecf76ac3281c64a4ea3a992853486dbf15075ae9e1: 1,
+    '4d01f93da4d48e620a752d398b6a3d7a49a42a3fec6544b9e00eef9715557fba': 1,
+    '2a7ffec86b607dd0045fd8e2f8fbeac80f8eab4c78f6542b60c274f7fd8305bd': 1,
+    '990645b9446adde1731b539e8182741fe8f4e02a086c898f62150c042dbe17b9': 1,
+    '77b02c387261bdef1e06fd8b507be88093ba12d9769095fcf17626137a457f9f': 1,
+    '3fd7dc39d7a477d4a3c26a5e70c820bbe218b5a1e7fb9a5be78aa8ea0282c195': 1,
+    '0ce36b4b9a132c302333521c81001d789944a2995d23854c5e9a328a30b5a629': 1,
+    '79ec2057118c8a2e373175699408b9aeeb4de5f630ee92444026cb172d9c8622': 1,
+    '1bc6a1fe14dfa342182c7b73623b7f1540998ef4255b698aa863bec2c1de9414': 1,
+    '2fdb5cb40ff31595e2e0c0209c2a3e1a34d1233c8619d2bc2b1fbfebbfabe66e': 1,
+    ad528fd39b84eb6911ecc4c4275dd36a3ee289da7dee0baff6d72140d8d3bc03: 1,
+    '5517310481cd95f35c2c6715db0d81b500350be8437af597f1f46e3c229e4d0f': 1,
+    '724820b73d49e46577a3df4a772c8f0f9bc3c865633c653620d26481ca765410': 1,
+    ae5aa0aa6ada67f81c30ffe5ed1b4e9cfa8054b8a0705f7c1ea5b88f530f87a7: 1,
+    '1f70e203b7f9c39f84ef5dd69c4b26c9ab618a96e1af8ae87c12ca20d4cc48ca': 1,
+    ea6a085a42e268fc2c3cccca85980787e53d7b5a069bc877af2f87655a9bcd12: 1,
+    d24726ff8c19d80a43cc6ebc57e3e6d17cc3b6a0a317bcd70e4bec74e1d296ab: 1,
+    '164a351f77f0d82cf75270246439604ddfe816b788a45fcd3ca61c380cab370b': 1,
+    '25908adb653420aa19859683c66abfbf7248521e7d88d637a453dd52d14ad438': 1,
+  };
+  const counts = new Map();
+  const names = new Set(
+    retired.map((path) => posix.basename(path).toLowerCase().replace(/\.md$/u, ''))
+  );
+  const pinnedGit =
+    /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/giu;
+  const hasRetiredName = (value) =>
+    [
+      ...value
+        .replace(pinnedGit, '')
+        .toLowerCase()
+        .matchAll(/[\w.-]+/gu),
+    ].some(([token]) => names.has(token.replace(/\.md$/u, '')));
+  for (const path of retired)
+    assert.equal(existsSync(path), false, `Retired study returned: ${path}`);
+  const paths = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+    { encoding: 'utf8' }
+  )
+    .split('\0')
+    .filter(Boolean);
+  for (const path of paths) {
+    assert.equal(hasRetiredName(posix.basename(path)), false, `Retired study relocated: ${path}`);
+    if (path === 'tools/ci/docs-disposition-canon.test.mjs' || !existsSync(path)) continue;
+    const bytes = readFileSync(path);
+    assert.equal(
+      contentHashes.has(sha256Hex(bytes)),
+      false,
+      `Historical content relocated: ${path}`
+    );
+    if (bytes.includes(0)) continue;
+    let current = bytes.toString('utf8');
+    if (!hasRetiredName(current)) continue;
+    current = current.replace(
+      /```feature-mechanization\s*\r?\n([\s\S]*?)\r?\n```/gu,
+      (fence, raw) => {
+        const [record] = extractFeatureMechanizationManifests(fence, path);
+        assert.ok(record?.manifest && !record.parseError, `Invalid manifest: ${path}`);
+        const manifest = record.manifest;
+        let remaining = raw;
+        const visit = (value, keys = []) => {
+          if (typeof value === 'string' && hasRetiredName(value)) {
+            const allowedRole =
+              (keys.length === 2 && keys[0] === 'allowedImplementationSurfaces') ||
+              (keys.length === 4 && keys[0] === 'redGreenCycles' && keys[2] === 'patchSurfaces');
+            assert.ok(allowedRole, `Retired study used as authority: ${path} ${keys.join('.')}`);
+            const key = sha256HexUtf8(JSON.stringify([path, manifest.featureId, keys, value]));
+            const count = (counts.get(key) || 0) + 1;
+            assert.ok(
+              Object.hasOwn(historicalFields, key) && count <= historicalFields[key],
+              `New historical reference: ${path} ${keys.join('.')}`
+            );
+            counts.set(key, count);
+            remaining = remaining.replace(value, '');
+          } else if (Array.isArray(value)) {
+            value.forEach((item, index) => visit(item, [...keys, String(index)]));
+          } else if (value && typeof value === 'object') {
+            for (const [name, item] of Object.entries(value)) {
+              assert.equal(hasRetiredName(name), false, `Retired name in manifest key: ${path}`);
+              visit(item, [...keys, name]);
+            }
+          }
+        };
+        visit(manifest);
+        assert.equal(hasRetiredName(remaining), false, `Unaccounted historical reference: ${path}`);
+        return '';
+      }
+    );
+    assert.equal(hasRetiredName(current), false, `Live reference to retired study: ${path}`);
   }
 });

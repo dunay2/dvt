@@ -323,4 +323,3 @@ Done when:
 - [Frontend Runtime Contract Technical Manual](./runs/frontend-runtime-contract-technical-manual.md)
 - [Frontend Runtime Contract User Manual](./runs/frontend-runtime-contract-user-manual.md)
 - [Library And Open-Source Reference Stack](./library-and-open-source-reference-stack.md)
-- [Frontend Roadmap - Prototype To Operational UI](../../../planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)

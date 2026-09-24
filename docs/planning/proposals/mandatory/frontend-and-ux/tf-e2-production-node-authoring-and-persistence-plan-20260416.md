@@ -54,7 +54,7 @@ bounded contexts, ports, aggregates, and phased validation".
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
 - [Task: E-PROP-DISP-1] `docs/planning/state/how-to-add-tasks.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md`
+- [Transformation Flow Architecture And Contracts 2026-04-05](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md)
 - `docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md`
 - `docs/architecture/components/web/graph/canvas-component-map-and-modernization-review.md`
 - `docs/architecture/components/web/inspector/inspector-frontend-architecture.md`

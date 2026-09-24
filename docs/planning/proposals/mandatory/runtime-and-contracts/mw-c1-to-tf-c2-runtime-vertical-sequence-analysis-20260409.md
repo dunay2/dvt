@@ -26,9 +26,9 @@ delivery plan, and the current open task route.
 - [Roadmap By Domain](../../../roadmap/roadmap-by-domain.md)
 - [GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md)
 - [Engine Roadmap](../../../../architecture/components/engine/roadmap/engine-phases.md)
-- [Transformation Flow Proposal Set 2026-04-05](./plan-creation-interface-route-proposal-20260405.md)
+- [Transformation Flow Proposal Set 2026-04-05](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md)
 - [Transformation Flow Delivery Plan 2026-04-05](./transformation-flow-delivery-plan-20260405.md)
-- [Transformation Flow Architecture And Contracts 2026-04-05](./transformation-flow-architecture-and-contracts-20260405.md)
+- [Transformation Flow Architecture And Contracts 2026-04-05](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md)
 - [Current Status](../../../../architecture/system-delivery-status.md)
 
 ## Why this document exists
