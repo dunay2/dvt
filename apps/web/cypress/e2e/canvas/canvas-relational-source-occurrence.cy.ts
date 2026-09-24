@@ -1,9 +1,11 @@
-/** Owned concern: repeat and rename a Read through the screen, save, selected query and reopen. */
+/** Repeat a Read, preserve field identity, then query its physical source explicitly. */
+import { SourceDataSampleResponseSchema } from '@dvt/contracts';
+
 import {
   decodeDvtSubstraitJoinDocument,
   inspectDvtSubstraitJoinDraft,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
-import { getE2eApiCalls } from '../../support/e2eApiStub';
+import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
 import {
   openWorkbenchModel,
   visitWorkbenchCanvas,
@@ -11,14 +13,28 @@ import {
 import {
   semanticDocumentFromWrite,
   semanticWrites,
-  stubSavedWorkbenchSample,
 } from '../../support/relationalWorkbench/persistence';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
+
+const sourcePath = '/workspace/warehouse/connections/warehouse-a/source-data-sample';
 
 describe('Explicit source occurrences (controlled API boundary)', () => {
   it('persists an independently named Read without duplicating the physical source or querying implicitly', () => {
     stubWorkbenchScenario('saved-join');
-    stubSavedWorkbenchSample();
+    stubE2eJsonApi(
+      'GET',
+      sourcePath,
+      SourceDataSampleResponseSchema.parse({
+        contractVersion: 1,
+        connectionId: 'warehouse-a',
+        objectId: 'relation/dvt/public/customers',
+        columns: [{ name: 'customer_id', type: 'string', nullable: false }],
+        rows: [{ values: ['C-001'] }],
+        limit: 20,
+        truncated: false,
+        sampledAt: '2026-09-24T00:00:00.000Z',
+      })
+    );
     cy.viewport(1440, 1000);
     visitWorkbenchCanvas();
     openWorkbenchModel();
@@ -42,7 +58,7 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
         expect(new Set(selectedFields).size).to.equal(selectedFields.length);
       });
     cy.get('[data-slot="canvas-relational-tree-source"]').should('have.length', 2);
-    cy.then(() => expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(0));
+    cy.then(() => expect(getE2eApiCalls(/data-sample/, 'GET')).to.have.length(0));
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
     let appendedId = '';
     cy.wrap(null).should(() => {
@@ -93,10 +109,15 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
       .should('be.visible')
       .click();
     cy.wrap(null).should(() => {
-      const sample = getE2eApiCalls(/\/data-sample/, 'GET').at(-1);
-      expect(sample).not.to.equal(undefined);
-      expect(sample!.url.searchParams.get('relationId')).to.equal(appendedId);
+      const samples = getE2eApiCalls(sourcePath, 'GET');
+      expect(samples).to.have.length(1);
+      expect(samples[0]!.url.searchParams.get('objectId')).to.equal(
+        'relation/dvt/public/customers'
+      );
+      expect(samples[0]!.url.searchParams.get('limit')).to.equal('20');
+      expect(getE2eApiCalls(/\/transforms\/.*\/data-sample/, 'GET')).to.have.length(0);
+      expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
     });
-    cy.get('[data-slot="canvas-operation-data-preview"] table').should('contain.text', 'C-001');
+    cy.get('[data-slot="bottom-operational-drawer-data"] table').should('contain.text', 'C-001');
   });
 });

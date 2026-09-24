@@ -315,7 +315,7 @@ export function buildCanvasAuthoringDraft({
           sourceRef: {
             schemaVersion: 'connected-source-ref.v1',
             connectionRef,
-            sourceObjectId: 'public.customers',
+            sourceObjectId: 'relation/dvt/public/customers',
           },
         },
         right: {
@@ -325,7 +325,7 @@ export function buildCanvasAuthoringDraft({
           sourceRef: {
             schemaVersion: 'connected-source-ref.v1',
             connectionRef,
-            sourceObjectId: 'public.orders',
+            sourceObjectId: 'relation/dvt/public/orders',
           },
         },
         targetNodeId: 'join-transform',
@@ -369,7 +369,7 @@ export function buildCanvasAuthoringDraft({
             connectedSourceRef: {
               schemaVersion: 'connected-source-ref.v1',
               connectionRef,
-              sourceObjectId: 'public.customers',
+              sourceObjectId: 'relation/dvt/public/customers',
             },
           },
         },
@@ -391,7 +391,7 @@ export function buildCanvasAuthoringDraft({
             connectedSourceRef: {
               schemaVersion: 'connected-source-ref.v1',
               connectionRef,
-              sourceObjectId: 'public.orders',
+              sourceObjectId: 'relation/dvt/public/orders',
             },
           },
         },
@@ -415,7 +415,7 @@ export function buildCanvasAuthoringDraft({
                   connectedSourceRef: {
                     schemaVersion: 'connected-source-ref.v1' as const,
                     connectionRef,
-                    sourceObjectId: 'public.shipments',
+                    sourceObjectId: 'relation/dvt/public/shipments',
                   },
                 },
               },
@@ -437,7 +437,7 @@ export function buildCanvasAuthoringDraft({
                   connectedSourceRef: {
                     schemaVersion: 'connected-source-ref.v1' as const,
                     connectionRef,
-                    sourceObjectId: 'public.tickets',
+                    sourceObjectId: 'relation/dvt/public/tickets',
                   },
                 },
               },
