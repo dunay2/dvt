@@ -18,7 +18,6 @@ semantics consumed by `F-03`.
 - `apps/api/src/app.ts`
 - `apps/api/src/routes/healthContract.ts`
 - `apps/api/src/routes/health.ts`
-- `docs/planning/proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md`
 
 ## Protected runtime routes (OIDC required)
 
@@ -36,13 +35,13 @@ The routes below are only registered when OIDC is configured
 
 ## Public/optional health and info endpoints
 
-| Method | Path        | Auth posture             | Notes                                                    |
+| Method | Path | Auth posture | Notes |
 | ------ | ----------- | ------------------------ | -------------------------------------------------------- | ---------- |
-| `GET`  | `/healthz`  | public                   | Always mounted. Returns `ok: true` with `status: healthy | degraded`. |
-| `GET`  | `/readyz`   | public (feature-flagged) | Mounted only when `DVT_READYZ_ENABLED=true`.             |
-| `GET`  | `/version`  | public (feature-flagged) | Mounted only when `DVT_VERSION_ENABLED=true`.            |
-| `GET`  | `/db/ready` | public (feature-flagged) | Mounted only when DB readiness checks are enabled.       |
-| `GET`  | `/`         | public                   | Service liveness metadata.                               |
+| `GET` | `/healthz` | public | Always mounted. Returns `ok: true` with `status: healthy | degraded`. |
+| `GET` | `/readyz` | public (feature-flagged) | Mounted only when `DVT_READYZ_ENABLED=true`. |
+| `GET` | `/version` | public (feature-flagged) | Mounted only when `DVT_VERSION_ENABLED=true`. |
+| `GET` | `/db/ready` | public (feature-flagged) | Mounted only when DB readiness checks are enabled. |
+| `GET` | `/` | public | Service liveness metadata. |
 
 ## Canonical success and error envelope baseline
 

@@ -56,7 +56,7 @@ Out of scope:
 ## F-30 Reconciliation
 
 - F-17 task records this F-17-G implemented proposal as evidence-closed by
-  `docs/planning/closeouts/20260525-f17g-code-monaco-editable-workspace-access-closeout.md`.
+  [F-17-G Code Monaco Editable Workspace Access Closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260525-f17g-code-monaco-editable-workspace-access-closeout.md).
 
 ## Fowler Opportunity Matrix
 

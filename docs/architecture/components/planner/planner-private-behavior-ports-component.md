@@ -16,7 +16,6 @@ The normative sources remain:
 - [ADR-0034 Bounded Context Boundaries And Communication Rules](../../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)
 - [ADR-0035 Planner Public Contract Evolution Protocol](../../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)
 - [RC-G1 ownership migration plan](../../../planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md)
-- [RC-G1-D closeout](../../../planning/closeouts/20260427-rc-g1-d-planner-ownership-migration-closeout.md)
 
 ## Owned Concern
 

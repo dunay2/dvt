@@ -7,7 +7,7 @@ last_reviewed: 2026-04-04
 
 # API Runtime SLA Canonical
 
-This document is the canonical SLA baseline for Lane C runtime behavior.
+This document is the canonical SLA baseline for API runtime behavior.
 
 Truth-first rule for this document:
 
@@ -134,7 +134,7 @@ When any threshold breaches, operators must follow:
 ## Review Cadence
 
 - weekly SLO review by API/runtime owners
-- threshold changes require updating this document and Lane C task status
+- threshold changes require updating this document and evidence in the governing GitHub issue
 
 ## Code Anchors For Implemented Signals
 

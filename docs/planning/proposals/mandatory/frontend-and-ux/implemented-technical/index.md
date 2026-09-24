@@ -4,7 +4,6 @@ status: Active
 owner: Web / Architecture
 last_reviewed: 2026-06-05
 planning_type: status
-lane: E
 task_id: E-PROP-DISP-1
 ---
 

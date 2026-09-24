@@ -16,7 +16,7 @@ Problem summary:
   grow faster than the metadata, snapshot, and outbox tables.
 - The current physical table shape concentrates all inserts, index maintenance,
   and vacuum pressure on one heap and its indexes.
-- The planning task `run_events partitioning` names this as Lane D scale work:
+- The planning task `run_events partitioning` owns this scale work:
   "Partitioned event log storage" to reduce storage and write-path pressure.
 
 Root cause:

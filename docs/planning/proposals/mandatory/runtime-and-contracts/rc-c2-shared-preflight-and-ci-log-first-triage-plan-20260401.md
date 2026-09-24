@@ -11,12 +11,12 @@ planning_type: proposal
 ## Task
 
 Implement `RC-C2` as a shared repo-ready operational pattern for preflight and
-first-red CI triage, validated first through Lane C and measured through a
-structured adoption log.
+first-red CI triage, measured through PR evidence in the structured adoption log.
+Task lifecycle belongs to the governing GitHub issue; an obsolete group label
+is not a qualification criterion.
 
 References:
 
-- `docs/planning/state/agent-lane-c.yaml`
 - [Historical efficiency review](https://github.com/dunay2/dvt/blob/1b07acde33300a19d97914eb719b262b44e79182/docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md)
 - `scripts/hygiene.ps1`
 - `docs/guides/testing-and-ci-capabilities.md`
@@ -24,8 +24,8 @@ References:
 ## Rationale
 
 The repo already has strong correctness gates, but preflight predictability and
-CI triage discipline are still partially manual. The review of recent Lane C
-work showed repeated waste in four places:
+CI triage discipline are still partially manual. The historical review
+showed repeated waste in four places:
 
 1. push-time format/lint surprises
 2. repeated branch triage without a default hygiene path
@@ -49,8 +49,8 @@ tooling surface.
     before claiming readiness
   - `docs/guides/ai-work-protocol.md` requires planning surfaces, validation,
     and no hidden workflow shortcuts
-  - `docs/planning/state/planning-control-tower.md` requires planning changes
-    to update the lane registry and linked proposal/closeout surfaces
+  - ADR-0061 requires task lifecycle changes to be recorded in GitHub Issues;
+    architecture and mechanization remain in Planning DB
   - no fake adoption evidence or placeholder closeout may be introduced
 - Options considered:
   - docs-only workflow reminder
@@ -74,14 +74,14 @@ In scope:
 - [Task: RUNTIME-PROP-DISP-1] add a repo-native helper under `tools/ci/` with unit tests
 - [Task: RUNTIME-PROP-DISP-1] add a canonical guide for preflight and CI triage
 - [Task: RUNTIME-PROP-DISP-1] add YAML-backed adoption tracking plus a readable status companion
-- update Lane C planning state and the supporting proposal/closeout surfaces
+- record task status and evidence in the governing GitHub issue
 
 Out of scope:
 
 - new blocking CI jobs
 - changes to merge gates or workflow routing logic
 - automatic GitHub metrics harvesting
-- claiming `RC-C2` done before 3 qualifying Lane C cycles are logged
+- claiming `RC-C2` done before 3 qualifying PR cycles are logged
 
 ## Execution Plan
 
@@ -96,7 +96,7 @@ Out of scope:
 5. Update existing docs to point to the guide instead of repeating partial
    recipes.
 6. Add YAML-backed adoption tracking and a readable status companion.
-7. Move `RC-C2` from `queued` to `review` in Lane C and attach the new
+7. Record the `RC-C2` review posture in its governing GitHub issue and attach the new
    evidence surfaces.
 8. Regenerate docs/planning indexes and run the required validation baseline.
 
@@ -108,10 +108,10 @@ Out of scope:
       selection
 - [x] canonical guide published under `docs/guides/`
 - [x] YAML adoption log and readable status companion published
-- [x] `RC-C2` lane state updated to reflect shipped tooling but open adoption
+- [ ] Preserve the shipped tooling evidence and record adoption acceptance in GitHub
 - [x] docs indexes and planning views regenerated
 - [x] mechanical adoption closure check added as `pnpm docs:ai-efficiency:check`
-- [ ] 3 consecutive Lane C PR cycles logged
+- [ ] 3 consecutive PR cycles logged
 - [ ] > =20% round reduction demonstrated
 - [ ] [Task: RUNTIME-PROP-DISP-1] task marked `done`
 
@@ -126,19 +126,12 @@ pnpm test:ci-tools
 pnpm test:ai-efficiency:adoption
 pnpm docs:ai-efficiency:check
 pnpm docs:sync
-pnpm docs:planning:lanes:generate
-pnpm docs:workboard:generate
 pnpm verify:prepush
 ```
 
-## Tracking Log
+## Earlier implementation record
 
-| Date       | Owner  | Status        | Notes                                                                 |
-| ---------- | ------ | ------------- | --------------------------------------------------------------------- |
-| 2026-03-28 | Lane C | Review basis  | Efficiency review established the baseline, savings model, and rules. |
-| 2026-04-01 | Lane C | Implemented   | Shared tooling, guide, and structured tracking were added.            |
-| 2026-04-01 | Lane C | Adoption open | Task remains open until 3 qualifying Lane C cycles are logged.        |
-| 2026-05-15 | Lane C | Gate hardened | `docs:ai-efficiency:check` now prevents narrative-only closure.       |
+The dated implementation journal remains in [Git history](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md#tracking-log).
 
 ## 2026-05-15 Adoption Gate Mechanization
 

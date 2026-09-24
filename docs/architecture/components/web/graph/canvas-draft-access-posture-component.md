@@ -415,5 +415,5 @@ Testing impact:
 - [x] Cypress spec covers the user-visible denied and read-only states.
 - [x] Architecture tests prevent route-level JWT decoding and duplicated denial
       conditionals.
-- [x] Docs, user stories, implementation plan, lane YAML, and generated indexes
+- [x] Docs, user stories, implementation plan, issue evidence, and generated indexes
       reference the same slice.

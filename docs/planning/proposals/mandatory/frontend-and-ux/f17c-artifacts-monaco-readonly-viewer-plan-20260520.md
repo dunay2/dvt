@@ -56,7 +56,7 @@ Out of scope:
 ## F-30 Reconciliation
 
 - F-17-C task records this implemented proposal as evidence-closed by
-  `docs/planning/closeouts/20260525-f17c-artifacts-monaco-readonly-viewer-closeout.md`.
+  [F-17-C Artifacts Monaco Read-Only Viewer Closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260525-f17c-artifacts-monaco-readonly-viewer-closeout.md).
 
 Validation plan:
 

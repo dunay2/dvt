@@ -61,8 +61,7 @@ These files talk about architecture, but they live under planning and must not
 compete with the canonical architecture sources above.
 
 When a planning proposal that changes architecture posture is superseded, route
-the active execution direction through the current planning portfolio and lane
-registry, and treat the superseded proposal as historical rationale rather than
+the active execution direction through the current planning portfolio and governing GitHub issues, and treat the superseded proposal as historical rationale rather than
 architecture authority.
 
 | Surface                                                                                        | Classification | Role                                                   | Current handling                                                      |

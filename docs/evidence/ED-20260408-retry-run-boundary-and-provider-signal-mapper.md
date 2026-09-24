@@ -29,7 +29,7 @@ code_refs:
   - apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts
   - apps/api/test/entrypoints/http/recoverRunRoute.test.ts
   - docs/adr/ADR-0049-retry-run-as-separate-recovery-use-case.md
-  - docs/planning/reviews/architecture-and-governance/20260408-retry-run-boundary-and-provider-signal-mapper-review.md
+  - https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260408-retry-run-boundary-and-provider-signal-mapper-review.md
 evidence:
   tests:
     - pnpm docs:workboard:generate

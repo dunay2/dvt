@@ -164,7 +164,6 @@ Candidate archive-or-rewrite set:
 ## Validation Baseline
 
 - `pnpm docs:sync`
-- `pnpm docs:workboard:generate`
 - `pnpm verify:prepush`
 
 ## Exit Criteria

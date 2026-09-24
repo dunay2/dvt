@@ -27,7 +27,7 @@ Primary governing and status sources:
 - [Reference architecture](../../../architecture/reference-architecture.md)
 - [System delivery status](../../../architecture/system-delivery-status.md)
 - [RC-G1 ownership migration plan](../../proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md)
-- [RC-G1-C closeout](../../closeouts/20260419-rc-g1-c-owner-package-migration-closeout.md)
+- [RC-G1-C closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260419-rc-g1-c-owner-package-migration-closeout.md)
 
 Primary code anchors reviewed:
 

@@ -423,4 +423,3 @@ flowchart LR
 - [Frontend Fowler Implementation Pattern](../frontend-fowler-implementation-pattern.md)
 - [Runs Frontend Architecture](./dvt-runs-frontend-architecture.md)
 - [Frontend Runtime Contract User Manual](./frontend-runtime-contract-user-manual.md)
-- [F-07 Frontend Runtime Contract Baseline Plan](../../../../planning/proposals/mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md)

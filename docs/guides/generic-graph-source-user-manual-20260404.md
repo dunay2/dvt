@@ -274,7 +274,7 @@ pnpm verify:prepush
 Before requesting implementation or review, ensure:
 
 - this user manual and the technical manual are aligned
-- as-is/to-be diagrams match the current lane plan
+- as-is/to-be diagrams match the current implementation plan
 - invariants and common failures are not contradictory
 - every intended behavior change has a corresponding test expectation in the
   technical manual
@@ -283,5 +283,3 @@ Before requesting implementation or review, ensure:
 ## Related documents
 
 - [DB-first Component Map](../architecture/component-map.md)
-- `docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md`

@@ -20,7 +20,7 @@ document is not a second roadmap.
 - [ADR-0034: bounded context boundaries and communication rules](../../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)
 - [ADR-0043: plan record, plan store, and artifacts ownership](../../../adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md)
 - [Contracts domain ownership migration plan](../../proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md)
-- [Closeout: MW-A3 StepArtifactRef generalization](../../closeouts/20260406-mw-a3-step-artifact-ref-generalization-closeout.md)
+- [Closeout: MW-A3 StepArtifactRef generalization](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260406-mw-a3-step-artifact-ref-generalization-closeout.md)
 - [Closeout: TF-C3 production plugin host composition](../../closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md)
 
 ## Review intent

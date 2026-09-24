@@ -14,7 +14,7 @@ code_refs:
   - packages/@dvt/engine/src/state/InMemoryRunStateStore.ts
   - packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts
   - docs/planning/state/agent-lane-b.yaml
-  - docs/planning/closeouts/20260416-ar-b1-write-boundary-closeout.md
+  - https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260416-ar-b1-write-boundary-closeout.md
 evidence:
   tests:
     - pnpm --filter @dvt/run-domain test -- --run test/applyRunEvent.test.ts

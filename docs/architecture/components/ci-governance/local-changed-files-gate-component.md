@@ -146,8 +146,6 @@ sequenceDiagram
 - `scripts/lint-markdown-changed.cjs` and
   `scripts/format-markdown-changed.cjs` consume `ListLocalChangedFiles` for
   changed Markdown checks.
-- `scripts/docs-workboard-check-changed.cjs` consumes `ListLocalChangedFiles`
-  so lane YAML changes regenerate planning views before pre-push.
 - `scripts/fix-changed.cjs` consumes `ListLocalChangedFiles` for the local
   autofix surface.
 - `scripts/qa-artifact-check.cjs` consumes `ListLocalChangedFiles` to keep QA

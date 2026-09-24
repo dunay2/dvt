@@ -60,7 +60,6 @@ function normalizeTargets(rawTargets = {}) {
 
 function normalizeCycle(rawCycle = {}) {
   return {
-    lane: rawCycle.lane,
     pr: rawCycle.pr,
     usedHygienePreflight: readMetric(rawCycle, 'used_hygiene_preflight', 'usedHygienePreflight'),
     verifyPrepushBeforePush: readMetric(
@@ -94,9 +93,6 @@ function isQualifyingCycle(rawCycle, rawBaseline, rawTargets) {
   const targets = normalizeTargets(rawTargets);
   const reasons = [];
 
-  if (cycle.lane !== 'C') {
-    reasons.push('cycle is not Lane C');
-  }
   if (!cycle.pr || !cycle.pr.number || !cycle.pr.url) {
     reasons.push('cycle is missing PR number or URL');
   }
