@@ -1,5 +1,7 @@
 /** A trusted local command reports canonical changed messages; it does not invent another IR. */
 import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import { clone } from '@bufbuild/protobuf';
 import {
   DvtSubstraitFieldBindingV1Schema,
   DvtSubstraitRelationBindingV1Schema,
@@ -9,8 +11,9 @@ import {
 } from '@dvt/contracts';
 
 import { SubstraitAnalysisError } from './document.js';
+import { relationChangeOrder } from './relationChangeOrder.js';
 import { prepareFieldChanges, publishFieldChanges } from './relationFieldChanges.js';
-import { fingerprintRelation } from './relationFingerprint.js';
+import { fingerprintEnvironment, fingerprintRelation } from './relationFingerprint.js';
 import type { IndexedRelation } from './relationIndex.js';
 import { cloneLocalRelation } from './relationMessage.js';
 import type { RelationSnapshot } from './relationSnapshot.js';
@@ -26,6 +29,7 @@ export type RelationChangeSet = Readonly<{
   removed: readonly string[];
   rootId?: string;
   rootNames?: readonly string[];
+  extensions?: Pick<Plan, 'extensionUrns' | 'extensions'>;
 }>;
 
 function invalid(message: string): never {
@@ -33,6 +37,16 @@ function invalid(message: string): never {
 }
 
 export function applyRelationChanges(snapshot: RelationSnapshot, change: RelationChangeSet): void {
+  const header =
+    change.extensions == null
+      ? snapshot.header
+      : clone(PlanSchema, {
+          ...snapshot.header,
+          extensionUrns: change.extensions.extensionUrns,
+          extensions: change.extensions.extensions,
+        });
+  const environment =
+    header === snapshot.header ? snapshot.environment : fingerprintEnvironment(header);
   const touched = new Set([
     ...change.removed,
     ...change.upserts.map((entry) => entry.binding.relationId),
@@ -84,6 +98,7 @@ export function applyRelationChanges(snapshot: RelationSnapshot, change: Relatio
   }
   const affected = new Set<string>();
   const pending = [
+    ...(environment === snapshot.environment ? [] : snapshot.relations.keys()),
     ...touched,
     ...(change.rootNames != null || change.rootId != null ? [rootId, snapshot.rootId] : []),
   ];
@@ -119,29 +134,7 @@ export function applyRelationChanges(snapshot: RelationSnapshot, change: Relatio
     for (const input of entry.inputs) get(input);
   }
   get(rootId);
-  const order: string[] = [];
-  const done = new Set<string>();
-  const visiting = new Set<string>();
-  for (const start of affected) {
-    if (removed.has(start) || done.has(start)) continue;
-    const stack: { id: string; exit: boolean }[] = [{ id: start, exit: false }];
-    while (stack.length > 0) {
-      const { id, exit } = stack.pop()!;
-      if (done.has(id)) continue;
-      if (exit) {
-        visiting.delete(id);
-        done.add(id);
-        order.push(id);
-        continue;
-      }
-      if (visiting.has(id)) invalid('Relation cycle.');
-      visiting.add(id);
-      stack.push({ id, exit: true });
-      for (const input of get(id).inputs) {
-        if (affected.has(input)) stack.push({ id: input, exit: false });
-      }
-    }
-  }
+  const order = relationChangeOrder(affected, removed, get);
   const fields = prepareFieldChanges(snapshot, touched, staged, rootId);
   const fingerprints = new Map<string, string>();
   for (const id of order) {
@@ -159,7 +152,7 @@ export function applyRelationChanges(snapshot: RelationSnapshot, change: Relatio
       fingerprintRelation(
         owned,
         entry.inputs.map((input) => fingerprints.get(input) ?? snapshot.fingerprints.get(input)!),
-        snapshot.environment,
+        environment,
         id === rootId ? rootNames : undefined
       )
     );
@@ -186,6 +179,8 @@ export function applyRelationChanges(snapshot: RelationSnapshot, change: Relatio
   }
   snapshot.rootId = rootId;
   snapshot.rootNames = rootNames;
+  snapshot.header = header;
+  snapshot.environment = environment;
   snapshot.work.fingerprinted += fingerprints.size;
   snapshot.work.visited += affected.size;
 }

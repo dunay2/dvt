@@ -18,3 +18,4 @@ export type {
   RelationAnalysisCacheFailure,
 } from './analysisCache.js';
 export type { RelationChangeSet } from './relationChangeSet.js';
+export { cloneLocalRelation, withRelationInputs } from './relationMessage.js';

@@ -1,15 +1,23 @@
 /** Private owned snapshot. Only the session publishes copies or serialized derived facts. */
 import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import { clone, toBinary, toJson } from '@bufbuild/protobuf';
+import { clone, toBinary } from '@bufbuild/protobuf';
 import type { DvtSubstraitFieldBindingV1 } from '@dvt/contracts';
-import { sha256Hex, sha256HexUtf8, jcsCanonicalize } from '@dvt/crypto';
+import { sha256Hex } from '@dvt/crypto';
 
 import { type SubstraitDocument, SubstraitAnalysisError } from './document.js';
-import { fingerprintRelation } from './relationFingerprint.js';
+import { fingerprintEnvironment, fingerprintRelation } from './relationFingerprint.js';
 import { indexSubstraitRelations, type IndexedRelation } from './relationIndex.js';
 import { cloneLocalRelation } from './relationMessage.js';
 
 export type AnalysisWork = { analyzed: number; fingerprinted: number; visited: number };
+export type RelationLocation = Pick<
+  IndexedRelation,
+  'binding' | 'fields' | 'inputs' | 'consumers'
+> &
+  Readonly<{
+    path: readonly number[];
+    nextAnchor: number;
+  }>;
 
 export class RelationSnapshot {
   readonly relations = new Map<string, IndexedRelation>();
@@ -18,8 +26,8 @@ export class RelationSnapshot {
   readonly fieldConsumers = new Map<string, Set<string>>();
   readonly fingerprints = new Map<string, string>();
   readonly settled = new Set<string>();
-  readonly environment: string;
-  readonly header: Plan;
+  environment: string;
+  header: Plan;
   rootId: string;
   rootNames: readonly string[];
   nextAnchor = 1;
@@ -52,9 +60,7 @@ export class RelationSnapshot {
         },
       ],
     });
-    this.environment = sha256HexUtf8(
-      jcsCanonicalize(toJson(PlanSchema, { ...this.header, relations: [] }))
-    );
+    this.environment = fingerprintEnvironment(this.header);
     for (const id of index.postorder) {
       const original = index.relations.get(id)!;
       const entry: IndexedRelation = {
@@ -108,6 +114,27 @@ export class RelationSnapshot {
     if (entry == null)
       throw new SubstraitAnalysisError('unknown_relation', 'Relation is outside the snapshot.', id);
     return entry;
+  }
+
+  locate(relationId: string): RelationLocation {
+    const snapshot = this;
+    const selected = snapshot.get(relationId);
+    const path: number[] = [];
+    let child = selected;
+    while (child.consumers.length > 0) {
+      const parent = snapshot.get(child.consumers[0]!);
+      path.push(parent.inputs.indexOf(child.binding.relationId));
+      child = parent;
+      snapshot.work.visited += 1;
+    }
+    return {
+      path: path.reverse(),
+      binding: globalThis.structuredClone(selected.binding),
+      fields: globalThis.structuredClone(selected.fields),
+      inputs: [...selected.inputs],
+      consumers: [...selected.consumers],
+      nextAnchor: snapshot.nextAnchor,
+    };
   }
 
   postorder(id: string, cutAtSettled = false): string[] {
