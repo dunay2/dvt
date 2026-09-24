@@ -1,5 +1,6 @@
 /** Owned concern: hydrate a discardable authoring session from one existing canonical JOIN. */
 import { useCallback, useMemo, useState } from 'react';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { resolveCanvasRelationalTreeAuthoringCandidates } from './canvasRelationalTreeAuthoringCandidates';
@@ -18,16 +19,16 @@ export function useCanvasRelationalTreeExistingJoinSeed(
     inputs: readonly CanvasDvtCompositionInput[];
     nodes: readonly CanonicalNode[];
     targetNodeId: string;
-    transformNode: CanonicalNode;
+    document: SubstraitDocument | null;
     projection: CanvasRelationalTreeProjection | null;
     onHydrate: (seed: CanvasRelationalTreeJoinSeedHydration) => void;
   }>
 ) {
-  const { edges, inputs, nodes, onHydrate, targetNodeId, transformNode, projection } = args;
+  const { edges, inputs, nodes, onHydrate, targetNodeId, document, projection } = args;
   const [baselineDraft, setBaselineDraft] = useState<DvtSubstraitJoinDraft | null>(null);
   const seed = useMemo(
-    () => resolveCanvasRelationalTreeExistingJoinDraft({ transformNode, projection }),
-    [projection, transformNode]
+    () => resolveCanvasRelationalTreeExistingJoinDraft({ document, projection }),
+    [projection, document]
   );
 
   const hydrateExistingJoin = useCallback(

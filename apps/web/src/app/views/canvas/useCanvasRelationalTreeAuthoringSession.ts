@@ -14,6 +14,8 @@ import { useCanvasRelationalTreeRemoval } from './useCanvasRelationalTreeRemoval
 import { useCanvasRelationalTreeInputSelection } from './useCanvasRelationalTreeInputSelection';
 import { createSourceOccurrenceActions } from './relational-source-occurrence/sourceOccurrenceActions';
 import type { CanvasRelationalTreeProjection } from './canvasRelationalTreeProjection';
+import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 export function useCanvasRelationalTreeAuthoringSession(
   args: Readonly<{
     enabled: boolean;
@@ -22,6 +24,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     edges: readonly CanonicalEdge[];
     inputs: readonly CanvasDvtCompositionInput[];
     projection: CanvasRelationalTreeProjection | null;
+    document: SubstraitDocument | null;
     authoring?: W.CanvasRelationalTreeAuthoringContract;
   }>
 ) {
@@ -56,11 +59,15 @@ export function useCanvasRelationalTreeAuthoringSession(
     inputs,
     nodes,
     targetNodeId: transformNode.id,
-    transformNode,
+    document: args.document,
     projection: args.projection,
     onHydrate: hydrateExistingJoinState,
   });
   useEffect(reset, [enabled, reset, transformNode.id]);
+  const analysis = useCanvasRelationAnalysisSession(
+    !active && seed != null ? seed.draft : joinDraft,
+    transformNode.id
+  );
   const effectiveInputIds = !active && seed != null ? seed.inputIds : selectedInputIds;
   const { candidates, choices } = useCanvasRelationalTreeAuthoringOptions({
     editable,
@@ -139,6 +146,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     },
   });
   return {
+    analysis,
     occurrences: createSourceOccurrenceActions({
       editable: enabled && editable,
       draft: !active && seed != null ? seed.draft : joinDraft,

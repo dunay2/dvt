@@ -2,6 +2,7 @@
 
 import { forwardRef, useEffect, useState } from 'react';
 import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
+import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type {
   CanvasRelationalTreeAuthoringContract,
@@ -92,16 +93,18 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
             onSelect={model.selectCatalogueItem}
             occurrences={model.authoringAvailable ? model.session.occurrences : undefined}
           />
-          <CanvasRelationalTreeContent
-            model={model}
-            transformNode={transformNode}
-            nodes={nodes}
-            edges={edges}
-            copy={copy}
-            expanded={expanded}
-            onExpandedChange={setExpanded}
-            onPendingConditionChange={setPendingCondition}
-          />
+          <CanvasRelationAnalysisContext.Provider value={model.session.analysis}>
+            <CanvasRelationalTreeContent
+              model={model}
+              transformNode={transformNode}
+              nodes={nodes}
+              edges={edges}
+              copy={copy}
+              expanded={expanded}
+              onExpandedChange={setExpanded}
+              onPendingConditionChange={setPendingCondition}
+            />
+          </CanvasRelationAnalysisContext.Provider>
         </div>
       </RelationalLayoutSession>
     </CanvasOperationPreviewProvider>

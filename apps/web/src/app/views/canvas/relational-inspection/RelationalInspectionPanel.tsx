@@ -5,6 +5,7 @@ import { CanvasRelationalTreeEditorFrame } from '../CanvasRelationalTreeEditorFr
 import { CanvasRelationalExpressionTree } from '../CanvasRelationalExpressionTree';
 import { CanvasRelationalCrossNotice } from '../CanvasRelationalCrossNotice';
 import type { RelationalInspection } from './inspectionModel';
+import { CanvasRelationFields } from '../CanvasRelationFields';
 
 type InspectionContentProps = Readonly<{
   inspection: RelationalInspection;
@@ -19,7 +20,9 @@ function InspectionContent({
 }: InspectionContentProps): JSX.Element | null {
   switch (inspection.kind) {
     case 'source':
-      return null;
+      return inspection.relationId == null ? null : (
+        <CanvasRelationFields relationId={inspection.relationId} />
+      );
     case 'summary':
       return <p className="text-xs text-(--text-primary)">{inspection.text}</p>;
     case 'unsupported':

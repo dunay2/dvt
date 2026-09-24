@@ -33,7 +33,7 @@ describe('source occurrence reopening', () => {
     );
     expect(
       resolveCanvasRelationalTreeExistingJoinDraft({
-        transformNode: graph.targetNode,
+        document: graph.draft,
         projection: result.projection,
       })?.inputIds
     ).toEqual([graph.source.id, graph.source.id]);
