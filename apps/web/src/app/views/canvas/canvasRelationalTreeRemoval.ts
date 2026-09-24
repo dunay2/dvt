@@ -23,12 +23,9 @@ import { removeDvtSubstraitProjectionRoot } from './canvasDvtSubstraitStructured
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import { canvasJoinOperationForType, isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 import { inspectDvtSubstraitCrossDraft } from '@dvt/postgres-projection';
-import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 import { createDvtSubstraitCrossDraft } from './canvasDvtSubstraitCrossComposition';
 import {
-  inspectCanvasDvtSubstraitSortFetch,
   peelCanvasDvtSubstraitSortFetch,
-  removeDvtSubstraitSortFetch,
   restoreCanvasDvtSubstraitSortFetch,
 } from './canvasDvtSubstraitSortFetch';
 
@@ -68,31 +65,6 @@ export function removeCanvasRelationalTreeNode(
     keep?: 'left' | 'right';
   }>
 ): CanvasRelationalRemovalResult {
-  try {
-    const selected = selectDvtSubstraitRelation(args.draft, args.relationId);
-    const wrapper = inspectCanvasDvtSubstraitSortFetch(selected);
-    if (wrapper.ok && wrapper.relationId === args.relationId) {
-      const draft = removeDvtSubstraitSortFetch(args.draft, wrapper.operation, args.relationId);
-      if (draft !== args.draft) {
-        const sourceCount = draft.sidecar.relations.filter(
-          (relation) => relation.sourceRef != null
-        ).length;
-        const setOperation = resolveDvtSubstraitSetOperation(draft);
-        return {
-          ok: true,
-          draft,
-          operation:
-            operationForJoinDraft(draft) ??
-            (inspectDvtSubstraitCrossDraft(draft).ok ? 'cross_join' : null) ??
-            setOperation ??
-            'projection',
-          retained: Array.from({ length: sourceCount }, (_, index) => index),
-        };
-      }
-    }
-  } catch {
-    // Continue through the existing fail-closed family-specific removers.
-  }
   const sortFetchChain = peelCanvasDvtSubstraitSortFetch(args.draft);
   if (sortFetchChain.wrappers.length > 0) {
     const result = removeCanvasRelationalTreeNode({ ...args, draft: sortFetchChain.base });

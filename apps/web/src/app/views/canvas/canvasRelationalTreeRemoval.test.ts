@@ -1,3 +1,4 @@
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 import { describe, expect, it } from 'vitest';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
@@ -28,8 +29,7 @@ import {
   applyDvtSubstraitFetch,
   applyDvtSubstraitSort,
   inspectCanvasDvtSubstraitSortFetch,
-  selectCanvasDvtSubstraitSortFetch,
-} from './canvasDvtSubstraitSortFetch';
+} from './canvasSortFetch.test-support';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 
 function source(table: string): DvtSubstraitJoinSource {
@@ -365,41 +365,12 @@ describe('Contextual relational card removal', () => {
     if (!result.ok) return;
     const fetch = inspectCanvasDvtSubstraitSortFetch(result.draft);
     expect(fetch).toMatchObject({ ok: true, operation: 'fetch', count: 20n });
-    const reopenedSort = selectCanvasDvtSubstraitSortFetch(result.draft, sort.relationId);
+    const reopenedSort = selectDvtSubstraitRelation(result.draft, sort.relationId);
     expect(reopenedSort).not.toBeNull();
     expect(reopenedSort && inspectCanvasDvtSubstraitSortFetch(reopenedSort)).toMatchObject({
       ok: true,
       operation: 'sort',
       keys: [{ fieldId: projection.outputs[0]!.fieldId }],
-    });
-  });
-
-  it('removes ORDER BY below LIMIT without reclassifying the underlying JOIN as a projection', () => {
-    const { draft, projection } = fixture();
-    const sorted = applyDvtSubstraitSort(draft, [
-      {
-        fieldId: projection.outputs[0]!.fieldId,
-        direction: SortField_SortDirection.ASC_NULLS_LAST,
-      },
-    ]);
-    const sort = inspectCanvasDvtSubstraitSortFetch(sorted);
-    if (!sort.ok) throw new Error('Expected SortRel.');
-    const fetched = applyDvtSubstraitFetch(sorted, { offset: 2n, count: 3n });
-
-    const result = removeCanvasRelationalTreeNode({
-      draft: fetched,
-      relationId: sort.relationId,
-      targetNodeId: 'model',
-    });
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.operation).toBe('inner_join');
-    expect(inspectCanvasDvtSubstraitSortFetch(result.draft)).toMatchObject({
-      ok: true,
-      operation: 'fetch',
-      offset: 2n,
-      count: 3n,
     });
   });
 

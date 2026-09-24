@@ -7,7 +7,11 @@ import {
   createDvtSubstraitJoinDraft,
   encodeDvtSubstraitJoinDocument,
 } from './canvasDvtSubstraitJoinComposition';
-import { applyCanvasRelationalOperatorTool } from './canvasRelationalTreeOperatorCommands';
+import {
+  applyDvtSubstraitSort,
+  applyDvtSubstraitFetch,
+  resolveDvtSubstraitSortFetchInputFields,
+} from './canvasSortFetch.test-support';
 import { resolveCanvasRelationalOperatorTools } from './canvasRelationalTreeOperatorModel';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import {
@@ -49,14 +53,11 @@ describe('applied Sort/Fetch inspection', () => {
         },
         targetNodeId: 'transform',
       });
-      const field = resolveCanvasRelationalOperatorTools(joined).find((tool) => tool.id === 'sort')!
-        .fields[0]!;
-      const sorted = applyCanvasRelationalOperatorTool(joined, {
-        tool: 'sort',
-        sortKeys: [{ fieldId: field.fieldId, direction: SortField_SortDirection.DESC_NULLS_LAST }],
-      });
-      const fetched = applyCanvasRelationalOperatorTool(sorted, {
-        tool: 'fetch',
+      const field = resolveDvtSubstraitSortFetchInputFields(joined)[0]!;
+      const sorted = applyDvtSubstraitSort(joined, [
+        { fieldId: field.fieldId, direction: SortField_SortDirection.DESC_NULLS_LAST },
+      ]);
+      const fetched = applyDvtSubstraitFetch(sorted, {
         count: 100n,
         offset: 2n,
       });

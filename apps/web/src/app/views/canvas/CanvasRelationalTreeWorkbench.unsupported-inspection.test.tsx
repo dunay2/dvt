@@ -3,7 +3,7 @@
 import React, { act } from 'react';
 import { describe, expect, it } from 'vitest';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { applyDvtSubstraitSort } from './canvasDvtSubstraitSortFetch';
+import { applyDvtSubstraitSort } from './canvasSortFetch.test-support';
 import {
   createDvtSubstraitPilotDraft,
   inspectDvtSubstraitPilotDraft,

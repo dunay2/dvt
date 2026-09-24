@@ -44,7 +44,7 @@ export function CanvasRelationalTreeOperatorForm({
     <Dialog
       open
       onOpenChange={(open) => {
-        if (!open) onClose();
+        if (!open) model.cancel();
       }}
     >
       <DialogContent className="max-w-lg" data-slot="canvas-relational-operator-form">

@@ -1,17 +1,14 @@
-/** Owned concern: author and reopen canonical SortRel/FetchRel wrappers for the Canvas tree. */
-import { allocateDvtFieldId, allocateDvtRelationId } from '@dvt/contracts';
+/** Preserve outer wrappers while the remaining aggregate and binary editors are migrated. */
 import {
   createDvtSubstraitFetchDraft,
   createDvtSubstraitSortDraft,
   inspectDvtSubstraitSortFetchRoot,
   removeDvtSubstraitSortFetchRelation,
-  type DvtSubstraitSortKey,
 } from '@dvt/postgres-projection';
-import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 
-export type CanvasDvtSortFetchField = Readonly<{ fieldId: string; name: string }>;
+type CanvasDvtSortFetchField = Readonly<{ fieldId: string; name: string }>;
 
 function rootRelationId(draft: DvtSubstraitProjectionDraft): string | null {
   const root = draft.plan.relations[0]?.relType;
@@ -36,143 +33,6 @@ function fieldsForRelation(
     .flatMap((field) =>
       field.displayName == null ? [] : [{ fieldId: field.fieldId, name: field.displayName }]
     );
-}
-
-export function resolveDvtSubstraitSortFetchInputFields(
-  draft: DvtSubstraitProjectionDraft,
-  operation?: 'sort' | 'fetch'
-): readonly CanvasDvtSortFetchField[] {
-  const inspection = inspectDvtSubstraitSortFetchRoot(draft);
-  const relationId =
-    inspection.ok && inspection.operation === operation
-      ? inspection.inputRelationId
-      : rootRelationId(draft);
-  return relationId == null ? [] : fieldsForRelation(draft, relationId);
-}
-
-function wrapperIdentity(
-  draft: DvtSubstraitProjectionDraft,
-  operation: 'sort' | 'fetch'
-): Readonly<{
-  base: DvtSubstraitProjectionDraft;
-  relationId: string;
-  outputFieldIds: readonly string[];
-}> {
-  const inspection = inspectDvtSubstraitSortFetchRoot(draft);
-  if (inspection.ok && inspection.operation === operation) {
-    return {
-      base: removeDvtSubstraitSortFetchRelation(draft, inspection.relationId),
-      relationId: inspection.relationId,
-      outputFieldIds: inspection.outputFields.map((field) => field.fieldId),
-    };
-  }
-  const relationId = rootRelationId(draft);
-  if (relationId == null) throw new Error('Sort/Fetch input relation is unavailable.');
-  const fieldCount = fieldsForRelation(draft, relationId).length;
-  return {
-    base: draft,
-    relationId: allocateDvtRelationId(),
-    outputFieldIds: Array.from({ length: fieldCount }, () => allocateDvtFieldId()),
-  };
-}
-
-export function applyDvtSubstraitSort(
-  draft: DvtSubstraitProjectionDraft,
-  keys: readonly DvtSubstraitSortKey[],
-  relationId?: string
-): DvtSubstraitProjectionDraft {
-  if (relationId != null) {
-    return replaceSortFetchWrapper(draft, relationId, { operation: 'sort', keys });
-  }
-  const identity = wrapperIdentity(draft, 'sort');
-  return createDvtSubstraitSortDraft(identity.base, {
-    relationId: identity.relationId,
-    outputFieldIds: identity.outputFieldIds,
-    keys,
-  });
-}
-
-export function applyDvtSubstraitFetch(
-  draft: DvtSubstraitProjectionDraft,
-  values: Readonly<{ offset?: bigint | null; count?: bigint | null }>,
-  relationId?: string
-): DvtSubstraitProjectionDraft {
-  if (relationId != null) {
-    return replaceSortFetchWrapper(draft, relationId, { operation: 'fetch', ...values });
-  }
-  const identity = wrapperIdentity(draft, 'fetch');
-  return createDvtSubstraitFetchDraft(identity.base, {
-    relationId: identity.relationId,
-    outputFieldIds: identity.outputFieldIds,
-    ...values,
-  });
-}
-
-type SortFetchReplacement =
-  | Readonly<{ operation: 'sort'; keys: readonly DvtSubstraitSortKey[] }>
-  | Readonly<{ operation: 'fetch'; offset?: bigint | null; count?: bigint | null }>;
-
-function replaceSortFetchWrapper(
-  draft: DvtSubstraitProjectionDraft,
-  relationId: string,
-  replacement: SortFetchReplacement
-): DvtSubstraitProjectionDraft {
-  const chain: Array<
-    Readonly<{
-      draft: DvtSubstraitProjectionDraft;
-      inspection: Extract<ReturnType<typeof inspectDvtSubstraitSortFetchRoot>, { ok: true }>;
-    }>
-  > = [];
-  let current = draft;
-  while (true) {
-    const inspection = inspectDvtSubstraitSortFetchRoot(current);
-    if (!inspection.ok) break;
-    chain.push({ draft: current, inspection });
-    const unwrapped = removeDvtSubstraitSortFetchRelation(current, inspection.relationId);
-    if (unwrapped === current) break;
-    current = unwrapped;
-  }
-  const targetIndex = chain.findIndex((entry) => entry.inspection.relationId === relationId);
-  if (targetIndex < 0) return draft;
-  const target = chain[targetIndex]!;
-  let rebuilt = removeDvtSubstraitSortFetchRelation(target.draft, target.inspection.relationId);
-  const identity = {
-    relationId: target.inspection.relationId,
-    outputFieldIds: target.inspection.outputFields.map((field) => field.fieldId),
-  };
-  rebuilt =
-    replacement.operation === 'sort'
-      ? createDvtSubstraitSortDraft(rebuilt, { ...identity, keys: replacement.keys })
-      : createDvtSubstraitFetchDraft(rebuilt, { ...identity, ...replacement });
-  for (let index = targetIndex - 1; index >= 0; index -= 1) {
-    const outer = chain[index]!.inspection;
-    const outerIdentity = {
-      relationId: outer.relationId,
-      outputFieldIds: outer.outputFields.map((field) => field.fieldId),
-    };
-    rebuilt =
-      outer.operation === 'sort'
-        ? createDvtSubstraitSortDraft(rebuilt, { ...outerIdentity, keys: outer.keys })
-        : createDvtSubstraitFetchDraft(rebuilt, {
-            ...outerIdentity,
-            offset: outer.offset,
-            count: outer.count,
-          });
-  }
-  return rebuilt;
-}
-
-export function selectCanvasDvtSubstraitSortFetch(
-  draft: DvtSubstraitProjectionDraft,
-  relationId: string
-): DvtSubstraitProjectionDraft | null {
-  try {
-    const selected = selectDvtSubstraitRelation(draft, relationId);
-    const inspection = inspectDvtSubstraitSortFetchRoot(selected);
-    return inspection.ok && inspection.relationId === relationId ? selected : null;
-  } catch {
-    return null;
-  }
 }
 
 export type CanvasDvtSortFetchChain = Readonly<{
@@ -235,20 +95,4 @@ export function restoreCanvasDvtSubstraitSortFetch(
   } catch {
     return null;
   }
-}
-
-export function inspectCanvasDvtSubstraitSortFetch(draft: DvtSubstraitProjectionDraft) {
-  return inspectDvtSubstraitSortFetchRoot(draft);
-}
-
-export function removeDvtSubstraitSortFetch(
-  draft: DvtSubstraitProjectionDraft,
-  operation: 'sort' | 'fetch',
-  relationId?: string
-): DvtSubstraitProjectionDraft {
-  const inspection = inspectDvtSubstraitSortFetchRoot(draft);
-  if (relationId != null) return removeDvtSubstraitSortFetchRelation(draft, relationId);
-  return inspection.ok && inspection.operation === operation
-    ? removeDvtSubstraitSortFetchRelation(draft, inspection.relationId)
-    : draft;
 }

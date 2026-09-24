@@ -7,10 +7,7 @@ import { SourceOccurrenceProperties } from './relational-source-occurrence/Sourc
 import { useContext } from 'react';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import { CanvasSelectedFilterEditor } from './CanvasSelectedFilterEditor';
-import {
-  CanvasRelationalTreeSortFetchEditor,
-  selectedCanvasDvtSortFetchOperation,
-} from './CanvasRelationalTreeSortFetchEditor';
+import { CanvasRelationalTreeSortFetchEditor } from './CanvasRelationalTreeSortFetchEditor';
 
 export function CanvasRelationalTreeSelectedOperatorEditor({
   draft,
@@ -61,15 +58,15 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
         onPendingChange={onPendingConditionChange}
       />
     );
-  const sortFetchOperation = selectedCanvasDvtSortFetchOperation(draft, relationId);
-  if (sortFetchOperation != null && relationId != null) {
+  if ((selected === 'sort' || selected === 'fetch') && relationId != null) {
     return (
       <CanvasRelationalTreeSortFetchEditor
         draft={draft}
-        operation={sortFetchOperation}
+        operation={selected}
         relationId={relationId}
         onChange={onChange}
         onClose={onClose}
+        onPendingChange={onPendingConditionChange}
       />
     );
   }

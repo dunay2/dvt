@@ -18,7 +18,7 @@ import {
   applyDvtSubstraitFetch,
   applyDvtSubstraitSort,
   resolveDvtSubstraitSortFetchInputFields,
-} from './canvasDvtSubstraitSortFetch';
+} from './canvasSortFetch.test-support';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 function source(name: string): CanonicalNode {
