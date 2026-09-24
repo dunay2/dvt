@@ -22,6 +22,7 @@ export class RelationSnapshot {
   readonly header: Plan;
   rootId: string;
   rootNames: readonly string[];
+  nextAnchor = 1;
 
   constructor(
     readonly authority: SubstraitDocument,
@@ -69,6 +70,7 @@ export class RelationSnapshot {
       };
       this.relations.set(id, entry);
       this.anchors.set(entry.binding.relAnchor, id);
+      this.nextAnchor = Math.max(this.nextAnchor, entry.binding.relAnchor + 1);
       for (const field of entry.fields) this.fields.set(field.fieldId, field);
       for (const field of entry.fields) {
         for (const dependency of [

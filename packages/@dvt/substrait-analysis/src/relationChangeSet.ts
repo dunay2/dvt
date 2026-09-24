@@ -177,6 +177,7 @@ export function applyRelationChanges(snapshot: RelationSnapshot, change: Relatio
   for (const [id, entry] of staged) {
     snapshot.relations.set(id, entry);
     snapshot.anchors.set(entry.binding.relAnchor, id);
+    snapshot.nextAnchor = Math.max(snapshot.nextAnchor, entry.binding.relAnchor + 1);
   }
   publishFieldChanges(snapshot, fields);
   for (const [id, fingerprint] of fingerprints) {

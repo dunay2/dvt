@@ -70,6 +70,30 @@ export class RelationAnalysisSession {
       throw new SubstraitAnalysisError('stale_document', 'Analysis revision changed.');
   }
 
+  /** Locate a command target via inverse edges, without lending mutable canonical messages. */
+  locate(relationId: string, expectedRevision: number) {
+    this.assertRevision(expectedRevision);
+    const snapshot = this.current();
+    const selected = snapshot.get(relationId);
+    const path: number[] = [];
+    let child = selected;
+    while (child.consumers.length > 0) {
+      const parent = snapshot.get(child.consumers[0]!);
+      path.push(parent.inputs.indexOf(child.binding.relationId));
+      child = parent;
+      snapshot.work.visited += 1;
+    }
+    return {
+      revision: this.generation,
+      path: path.reverse(),
+      binding: globalThis.structuredClone(selected.binding),
+      fields: globalThis.structuredClone(selected.fields),
+      inputs: [...selected.inputs],
+      consumers: [...selected.consumers],
+      nextAnchor: snapshot.nextAnchor,
+    };
+  }
+
   async query(
     relationId: string,
     signal?: globalThis.AbortSignal
