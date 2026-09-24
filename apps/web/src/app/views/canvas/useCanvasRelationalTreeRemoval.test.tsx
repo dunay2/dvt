@@ -4,16 +4,22 @@ import { describe, expect, it, vi } from 'vitest';
 import { setupWorkbenchTest, root } from './CanvasRelationalTreeWorkbench.test-support';
 import { createDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetch';
 import { applySelectedRelationFilter } from './canvasSelectedRelationFilter';
 import { dvtSubstraitTextComparison } from './canvasDvtSubstraitTextComparison';
 import { useCanvasRelationalTreeRemoval } from './useCanvasRelationalTreeRemoval';
 import { source } from './canvasRelationalOperator.test-support';
 
-describe('selected Filter removal lifetime', () => {
+describe('selected unary removal lifetime', () => {
   setupWorkbenchTest();
-  it.each(['accept', 'unmount', 'read-only'] as const)(
-    'publishes a Filter removal only while its command remains valid (%s)',
-    async (outcome) => {
+  it.each(
+    ['filter', 'sort', 'fetch'].flatMap((operator) =>
+      ['accept', 'unmount', 'read-only'].map((outcome) => ({ operator, outcome }))
+    )
+  )(
+    'publishes $operator removal only while its command remains valid ($outcome)',
+    async ({ operator, outcome }) => {
       const session = new CanvasRelationAnalysisSession('model');
       session.receive(
         createDvtSubstraitJoinDraft({
@@ -23,14 +29,31 @@ describe('selected Filter removal lifetime', () => {
         })
       );
       const schema = await session.query(session.rootId);
-      const draft = await applySelectedRelationFilter(session, {
-        intent: 'insert',
+      const request = {
+        intent: 'insert' as const,
         relationId: session.rootId,
         expectedRevision: session.revision,
         fieldId: schema.bindings[0]!.fieldId,
         capabilityId: dvtSubstraitTextComparison.capabilities[0]!.capabilityId,
         value: 'active',
-      });
+      };
+      const draft =
+        operator === 'filter'
+          ? await applySelectedRelationFilter(session, request)
+          : await applySelectedRelationSortFetch(session, {
+              ...request,
+              ...(operator === 'sort'
+                ? {
+                    operation: 'sort' as const,
+                    keys: [
+                      {
+                        fieldId: request.fieldId,
+                        direction: SortField_SortDirection.ASC_NULLS_LAST as const,
+                      },
+                    ],
+                  }
+                : { operation: 'fetch' as const, count: 10n }),
+            });
       const revision = session.revision;
       const relationId = session.rootId;
       const analysis = { document: draft, session, revision, error: null };
@@ -71,6 +94,7 @@ describe('selected Filter removal lifetime', () => {
       });
       if (outcome === 'accept') {
         expect(accept).toHaveBeenCalledOnce();
+        expect(accept.mock.calls[0]![0].operation).toBe('inner_join');
         expect(session.rootId).not.toBe(relationId);
       } else {
         expect(accept).not.toHaveBeenCalled();

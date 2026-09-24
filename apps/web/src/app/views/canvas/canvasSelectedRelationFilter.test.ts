@@ -4,10 +4,8 @@ import { indexSubstraitRelations, deriveSubstraitSchemas } from '@dvt/substrait-
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { createDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import { dvtSubstraitTextComparison } from './canvasDvtSubstraitTextComparison';
-import {
-  applySelectedRelationFilter,
-  removeSelectedRelationFilter,
-} from './canvasSelectedRelationFilter';
+import { applySelectedRelationFilter } from './canvasSelectedRelationFilter';
+import { removeSelectedRelationPassthrough } from './canvasSelectedRelationPassthrough';
 import { transformNode } from './CanvasRelationalTreeWorkbench.test-support';
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
@@ -113,7 +111,7 @@ describe('selected relation Filter command', () => {
       expect(
         dvtSubstraitTextComparison.inspect(edited.plan, editedRelation.value.condition)
       ).toMatchObject({ sourceOrdinal: fields.bindings[0]!.outputOrdinal, value: 'Updated' });
-      const removed = await removeSelectedRelationFilter(
+      const removed = await removeSelectedRelationPassthrough(
         session,
         filter.binding.relationId,
         session.revision
@@ -172,7 +170,7 @@ describe('selected relation Filter command', () => {
     const secondId = session.rootId;
     expect(secondId).not.toBe(firstId);
     const before = await session.query(secondId);
-    const document = await removeSelectedRelationFilter(session, firstId, session.revision);
+    const document = await removeSelectedRelationPassthrough(session, firstId, session.revision);
     expect(document.sidecar.relations.some((entry) => entry.relationId === firstId)).toBe(false);
     const removedIds = new Set(firstSchema.bindings.map((field) => field.fieldId));
     expect(document.sidecar.fields.some((field) => removedIds.has(field.sourceFieldId ?? ''))).toBe(
