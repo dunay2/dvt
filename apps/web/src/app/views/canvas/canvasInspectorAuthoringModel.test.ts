@@ -1,3 +1,4 @@
+import { filterProjectionInputFixture } from './canvasFilterProjection.test-support';
 import {
   ExtensionLeafRelSchema,
   RelCommonSchema,
@@ -21,11 +22,7 @@ import {
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
 import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
-import {
-  applyDvtSubstraitFilter,
-  encodeDvtSubstraitFilterDocument,
-  inspectDvtSubstraitFilter,
-} from './canvasDvtSubstraitFilter';
+import { inspectDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import {
   createDvtSubstraitProjectionDraft,
   decodeDvtSubstraitProjectionDocument,
@@ -975,7 +972,7 @@ describe('canvasInspectorAuthoringModel', () => {
     ).toEqual({ outputNames: 'dvt_alias_duplicate' });
   });
 
-  it('rejects persisted legacy Source filter authority without changing physical identity', () => {
+  it('rejects persisted legacy Source filter authority without changing physical identity', async () => {
     const source = buildImportedWarehouseSourceNode({
       connectedSourceRef: {
         schemaVersion: 'connected-source-ref.v1',
@@ -1000,7 +997,7 @@ describe('canvasInspectorAuthoringModel', () => {
         { fieldId: 'legacy-output:customer', name: 'customer', sourceFieldName: 'customer' },
       ],
     });
-    const filtered = applyDvtSubstraitFilter(base, {
+    const filtered = await filterProjectionInputFixture(base, {
       fieldId: 'legacy-output:customer',
       dataType: 'text',
       capabilityId: capability.capabilityId,
@@ -1008,7 +1005,7 @@ describe('canvasInspectorAuthoringModel', () => {
     });
     const legacySource = applyDvtSubstraitSemanticDocument(
       source,
-      encodeDvtSubstraitFilterDocument(filtered)
+      encodeDvtSubstraitSemanticDocument(filtered)
     );
 
     expect(createCanvasInspectorNodeDraft(legacySource)).toMatchObject({

@@ -1,3 +1,5 @@
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { filterProjectionInputFixture } from './canvasFilterProjection.test-support';
 import { describe } from 'vitest';
 import { expect } from 'vitest';
 import { it } from 'vitest';
@@ -5,8 +7,7 @@ import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindi
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
 import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
-import { applyDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
-import { encodeDvtSubstraitFilterDocument } from './canvasDvtSubstraitFilter';
+
 import { createDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { resolveDvtSubstraitProjectionSource } from './canvasDvtSubstraitProjection';
 import {
@@ -57,7 +58,7 @@ describe('Canonical output projection', () => {
     const source = resolveDvtSubstraitProjectionSource(SOURCE);
     const capability = resolveDvtSubstraitFilterCapabilities({ dataType: 'text' })[0];
     if (source == null || capability == null) throw new Error('Expected admitted filter fixtures.');
-    const filtered = applyDvtSubstraitFilter(
+    const filtered = await filterProjectionInputFixture(
       createDvtSubstraitProjectionDraft({
         source,
         targetNodeId: TRANSFORM.id,
@@ -75,7 +76,7 @@ describe('Canonical output projection', () => {
     );
     const transform = applyDvtSubstraitSemanticDocument(
       TRANSFORM,
-      encodeDvtSubstraitFilterDocument(filtered)
+      encodeDvtSubstraitSemanticDocument(filtered)
     );
 
     const sql = await projectDvtSubstraitTransformOutputToPostgresSql({

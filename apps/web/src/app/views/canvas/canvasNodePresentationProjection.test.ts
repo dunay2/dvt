@@ -1,3 +1,5 @@
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { filterProjectionInputFixture } from './canvasFilterProjection.test-support';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
@@ -12,11 +14,8 @@ import {
 } from './canvasDvtSubstraitProjection';
 import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
-import {
-  applyDvtSubstraitFilter,
-  encodeDvtSubstraitFilterDocument,
-  resolveDvtSubstraitFilterCapabilities,
-} from './canvasDvtSubstraitFilter';
+import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
+
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 const SOURCE_REF: ConnectedSourceRef = {
@@ -94,14 +93,11 @@ function buildCanonicalTransform(): CanonicalNode {
 }
 
 describe('projectCanvasNodePresentationTruth', () => {
-  it('exposes canonical filter code while preserving the Source column presentation', () => {
+  it('exposes canonical filter code while preserving the Source column presentation', async () => {
     const source = resolveDvtSubstraitProjectionSource(SOURCE);
-    const capability = resolveDvtSubstraitFilterCapabilities({
-      dataType: 'text',
-      provider: 'postgres',
-    })[0];
+    const capability = resolveDvtSubstraitFilterCapabilities({ dataType: 'text' })[0];
     if (source == null || capability == null) throw new Error('Expected admitted fixtures.');
-    const filtered = applyDvtSubstraitFilter(
+    const filtered = await filterProjectionInputFixture(
       createDvtSubstraitProjectionDraft({
         source,
         targetNodeId: SOURCE.id,
@@ -120,7 +116,7 @@ describe('projectCanvasNodePresentationTruth', () => {
     );
     const filteredSource = applyDvtSubstraitSemanticDocument(
       SOURCE,
-      encodeDvtSubstraitFilterDocument(filtered)
+      encodeDvtSubstraitSemanticDocument(filtered)
     );
 
     const truth = projectCanvasNodePresentationTruth({
