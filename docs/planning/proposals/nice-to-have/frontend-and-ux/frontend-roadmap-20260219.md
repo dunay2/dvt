@@ -16,8 +16,8 @@ The former Lane E identifiers (`MVP-E1`, `F-01` through `F-23`) remain
 historical cross-references, not current task authority.
 This document captures the convergence sequence and the architectural rationale
 behind those tasks.
-The dedicated F-04 boundary pack is tracked here:
-[F-04 Frontend Data-Boundary Hexagonal Convergence Plan](./f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md).
+The F-04 boundary is governed by the
+[Frontend Data-Boundary Architecture](../../../../architecture/components/web/frontend-data-boundary-architecture.md).
 
 Original analysis: 2026-02-19. Updated to reflect active state: 2026-04-03.
 

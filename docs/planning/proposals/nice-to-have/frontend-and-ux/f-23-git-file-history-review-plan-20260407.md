@@ -32,7 +32,7 @@ implementation work starts.
 - `docs/planning/roadmap/index.md`
 - `docs/planning/state/agent-lane-e.yaml`
 - `docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md`
-- `docs/planning/proposals/nice-to-have/frontend-and-ux/dvt-ui-workbench-implementation-roadmap-20260404.md`
+- [DVT UI workbench implementation roadmap 2026-04-04](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/nice-to-have/frontend-and-ux/dvt-ui-workbench-implementation-roadmap-20260404.md)
 - `docs/architecture/components/web/index.md`
 - `docs/architecture/components/web/main-workspace-views-and-ux.md`
 - `docs/architecture/components/web/screen-manuals-and-user-stories.md`

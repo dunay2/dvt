@@ -26,7 +26,7 @@ canonical draft boundary already used by reload, preview, and run:
 ## Governing sources
 
 - [TF-E2 Canvas target architecture execution plan 2026-04-17](../proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md)
-- [TF-E2 node and edge lifecycle closure plan 2026-04-25](../proposals/mandatory/frontend-and-ux/tf-e2-node-and-edge-lifecycle-closure-plan-20260425.md)
+- [TF-E2 node and edge lifecycle closure plan 2026-04-25](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-node-and-edge-lifecycle-closure-plan-20260425.md)
 - [Canvas graph lifecycle component](../../architecture/components/web/graph/canvas-graph-lifecycle-component.md)
 - [Graph Canvas runtime model](../../architecture/components/web/graph/graph-canvas-runtime-model.md)
 - [Canvas handler contracts component](../../architecture/components/web/graph/canvas-handler-contracts-component.md)

@@ -19,7 +19,7 @@ planning_type: review
 - [Governance document and rule inventory](../status/governance-document-rule-inventory.md)
 - [Testing and CI capabilities](../../guides/testing-and-ci-capabilities.md)
 - [Canvas controller current-to-target architecture](../../architecture/components/web/graph/canvas-controller-current-to-target-architecture.md)
-- [Canvas controller hardening compliance roadmap](../proposals/nice-to-have/frontend-and-ux/canvas-controller-hardening-compliance-roadmap-20260404.md)
+- [Canvas controller hardening compliance roadmap](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-hardening-compliance-roadmap-20260404.md)
 - [Screen manuals and user stories](../../architecture/components/web/screen-manuals-and-user-stories.md)
 
 ## Checkable Findings

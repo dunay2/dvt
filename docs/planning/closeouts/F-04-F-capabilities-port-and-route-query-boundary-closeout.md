@@ -36,7 +36,7 @@ HTTP client. That keeps one transport seam outside the composition boundary.
 - `docs/planning/state/agent-lane-e.yaml`: `F-04-F` is the queued `P0` slice
   after `F-04-E` and explicitly targets route/query cleanup plus governed
   capability adapters.
-- `docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md`:
+- [F-04 Frontend Data-Boundary Hexagonal Convergence Plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md):
   route/view layers do not own mode selection, no raw fetch in route-level query
   hooks when a governed client exists, and `F-04-F` must be TDD-first.
 - `docs/architecture/frontend/frontend-data-boundary-architecture.md`: the

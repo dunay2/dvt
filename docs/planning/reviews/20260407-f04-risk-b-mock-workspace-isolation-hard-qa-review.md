@@ -30,7 +30,7 @@ The goal of this QA pass is to verify three things:
 Canonical execution tracking remains in:
 
 - `docs/planning/state/agent-lane-e.yaml`
-- `docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md`
+- [F-04 Frontend Data-Boundary Hexagonal Convergence Plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md)
 - [Historical closeout](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md)
 
 ## Governing Sources
@@ -42,7 +42,7 @@ Canonical execution tracking remains in:
 - `docs/planning/reviews/review-naming-policy.md`
 - `docs/planning/state/planning-control-tower.md`
 - `docs/planning/state/agent-lane-e.yaml`
-- `docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md`
+- [F-04 Frontend Data-Boundary Hexagonal Convergence Plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md)
 - `docs/architecture/frontend/appshell/data-source-service-boundary.md`
 - [Historical closeout](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md)
 

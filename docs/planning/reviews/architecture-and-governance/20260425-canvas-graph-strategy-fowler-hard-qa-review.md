@@ -34,7 +34,7 @@ multi-canvas host model explicit in code, tests, and documentation.
 - [Canvas Inspector Authoring Component](../../../architecture/components/web/graph/canvas-inspector-authoring-component.md)
 - [Canvas Playground Host Component](../../../architecture/components/web/graph/canvas-playground-host-component.md)
 - [Canvas Controller Current To Target Architecture](../../../architecture/components/web/graph/canvas-controller-current-to-target-architecture.md)
-- [TF-E2 Project Playground And Multi-Canvas Host Plan](../../proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md)
+- [TF-E2 Project Playground And Multi-Canvas Host Plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md)
 - [GitHub MVP issue workflow](../../state/github-mvp-issue-workflow.md)
 
 ## Summary

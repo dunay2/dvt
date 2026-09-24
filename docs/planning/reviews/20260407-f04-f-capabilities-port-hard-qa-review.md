@@ -24,7 +24,7 @@ runtime capabilities now enter the app through the governed composition root.
 Canonical execution tracking remains in:
 
 - `docs/planning/state/agent-lane-e.yaml`
-- `docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md`
+- [F-04 Frontend Data-Boundary Hexagonal Convergence Plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md)
 - `docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md`
 
 ## Governing Sources
@@ -34,7 +34,7 @@ Canonical execution tracking remains in:
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
 - `docs/planning/state/agent-lane-e.yaml`
-- `docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md`
+- [F-04 Frontend Data-Boundary Hexagonal Convergence Plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md)
 - `docs/architecture/frontend/frontend-data-boundary-architecture.md`
 - `docs/architecture/frontend/frontend-runtime-modes-user-manual.md`
 - `docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md`

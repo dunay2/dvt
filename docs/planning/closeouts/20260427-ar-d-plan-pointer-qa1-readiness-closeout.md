@@ -294,8 +294,8 @@ Intermediate test corrections:
 - `docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md`
 - `docs/architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md`
 - `docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md`
-- `buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md`
-- `buzon/20260428-codex-fowler-temporal-dbt-core-decoupling-analysis-and-remediation.md`
+- [20260428 codex fowler temporal planref workflow boundary analysis and remediation](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md)
+- [Fowler analysis and remediation for Temporal DBT core decoupling](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260428-codex-fowler-temporal-dbt-core-decoupling-analysis-and-remediation.md)
 - `docs/evidence/ed-20260427-temporal-planref-qa1-readiness.md`
 - `docs/evidence/index.md`
 - `docs/planning/closeouts/20260427-ar-d-plan-pointer-qa1-readiness-closeout.md`

@@ -26,7 +26,7 @@ It uses a small story-owned test DTO,
 
 ## Governing sources
 
-- [TF-E2 project playground and multi-canvas host plan 2026-04-23](../proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md)
+- [TF-E2 project playground and multi-canvas host plan 2026-04-23](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md)
 - [TF-E2-K playground complete-cycle stories 2026-04-24](../proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md)
 - [Canvas playground host component](../../architecture/components/web/graph/canvas-playground-host-component.md)
 - [AI work protocol](../../guides/ai-work-protocol.md)

@@ -46,7 +46,7 @@ This is a replace-and-converge plan, not a compatibility plan.
 - `docs/planning/state/planning-control-tower.md`
 - `docs/planning/state/agent-lane-a.yaml` (`TF-A2`)
 - `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md`
-- `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md`
+- [TF-E2 Canvas Empty Authoring Entrypoint Design 2026-04-22](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md)
 - `docs/architecture/components/web/graph/canvas-draft-session-component.md`
 - `docs/architecture/components/web/graph/graph-frontend-architecture.md`
 - `docs/contracts/planner/workspace-graph-draft-persistence-v1.md`

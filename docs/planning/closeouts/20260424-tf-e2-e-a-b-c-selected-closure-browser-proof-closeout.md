@@ -28,7 +28,7 @@ lane with no authoring-contract intercepts.
 
 ## Governing sources
 
-- [TF-E2-E selected-closure UX proof stories 2026-04-23](../proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md)
+- [TF-E2-E selected-closure UX proof stories 2026-04-23](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md)
 - [Canvas execution selection component](../../architecture/components/web/graph/canvas-execution-selection-component.md)
 - [Workspace authoring draft aggregate](../../architecture/components/planner/workspace-authoring-draft-aggregate.md)
 - [Executable-subgraph resolution component](../../../apps/api/docs/executable-subgraph-resolution-component.md)

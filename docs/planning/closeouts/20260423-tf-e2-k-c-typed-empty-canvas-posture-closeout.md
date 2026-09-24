@@ -102,7 +102,7 @@ planning_type: closeout
 - `docs/guides/ai-work-protocol.md`
 - `docs/guides/testing-and-ci-capabilities.md`
 - `docs/planning/state/agent-lane-e.yaml`
-- `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md`
+- [TF-E2 project playground and multi-canvas host plan 2026-04-23](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md)
 - `docs/architecture/components/web/graph/canvas-empty-authoring-entrypoint-component.md`
 - `docs/architecture/components/web/graph/canvas-playground-host-component.md`
 

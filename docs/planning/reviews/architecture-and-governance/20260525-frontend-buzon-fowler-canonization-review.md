@@ -138,9 +138,9 @@ records their Lane E disposition so they do not remain implicit backlog.
 The mailbox inventory priority set included one source that is not Lane E
 frontend work after inspection:
 
-| Source                                                                                      | Owning lane                                                | Disposition                                                                                |
-| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `buzon/20260429-codex-fowler-temporal-step-plugin-architecture-analysis-and-remediation.md` | Runtime / Temporal canonization (`C-BUZON-FOWLER-CANON-1`) | Routed out of Lane E. Do not create a frontend task for Temporal step-plugin architecture. |
+| Source                                                                                                                                                                                                                                         | Owning lane                                                | Disposition                                                                                |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [Fowler analysis and remediation for Temporal step plugin architecture](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260429-codex-fowler-temporal-step-plugin-architecture-analysis-and-remediation.md) | Runtime / Temporal canonization (`C-BUZON-FOWLER-CANON-1`) | Routed out of Lane E. Do not create a frontend task for Temporal step-plugin architecture. |
 
 ## Closeout Decision
 

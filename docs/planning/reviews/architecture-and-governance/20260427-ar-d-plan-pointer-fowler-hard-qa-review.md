@@ -43,7 +43,7 @@ closed.
 - `docs/planning/closeouts/20260420-temporal-fowler-architecture-drift-follow-up-closeout.md`
 - `docs/planning/closeouts/20260420-ar-d-plan-pointer-follow-up-hardening-closeout.md`
 - `docs/planning/closeouts/20260424-temporal-plan-ref-contract-closeout.md`
-- `buzon/20260424-codex-fowler-temporal-plan-ref-contract-qa.md`
+- [20260424 codex fowler temporal plan ref contract qa](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260424-codex-fowler-temporal-plan-ref-contract-qa.md)
 
 ## Evidence Inspected
 
@@ -76,7 +76,7 @@ closed.
 - `docs/architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md`
 - `docs/architecture/components/engine/contracts/engine/IProviderAdapter.v1.md`
 - `docs/architecture/components/engine/contracts/engine/StartRunProtocol.v1.md`
-- `buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md`
+- [20260428 codex fowler temporal planref workflow boundary analysis and remediation](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md)
 
 ## Executive Verdict
 

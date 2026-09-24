@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
+import { posix } from 'node:path';
 
 import {
   assertCanonPlan,
@@ -756,4 +757,95 @@ test('retired PR drafts and historical intake have no files or live consumers', 
     'docs/planning/proposals/mandatory/frontend-and-ux/frontend-component-reflection-inventory-plan-20260604.md',
     'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md',
   ]);
+});
+
+// Keep completed planning packs out of the live tree without erasing Git provenance.
+test('retired completed plans and intake packs have no live consumers', () => {
+  const retired = new Set([
+    'buzon/20260423-codex-fowler-access-decision-component-analysis-and-remediation.md',
+    'buzon/20260423-codex-fowler-ar-c3-execution-capacity-admission-analysis-and-remediation.md',
+    'buzon/20260423-codex-fowler-branch-start-run-control-boundary-analysis-and-remediation.md',
+    'buzon/20260423-codex-fowler-run-id-uuidv7-migration-analysis-and-remediation.md',
+    'buzon/20260423-codex-fowler-tenant-run-identity-analysis-and-remediation.md',
+    'buzon/20260424-codex-fowler-provider-vocabulary-hard-cut-qa.md',
+    'buzon/20260424-codex-fowler-temporal-plan-ref-contract-qa.md',
+    'buzon/20260428-codex-fowler-temporal-dbt-core-decoupling-analysis-and-remediation.md',
+    'buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md',
+    'buzon/20260429-codex-fowler-temporal-step-plugin-architecture-analysis-and-remediation.md',
+    'docs/planning/proposals/README.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/data/benchmark-comparison.csv',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/data/component-impact-matrix.csv',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/data/component-impact-matrix.json',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/00-executive-summary.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/01-market-benchmarks.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/02-dvt-current-state-audit.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/03-target-product-grammar-and-flows.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/04-visual-system-and-style-guide.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/06-impact-matrix.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/07-rollout-plan.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/08-doc-and-code-drift-notes.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/09-wireframes-and-layouts.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/10-governed-slice-extraction-and-lane-e-mapping.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/references/repo-surfaces.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/references/source-list.md',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/styles/dvt-professional-density.css',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/styles/dvt-professional-theme.tokens.css',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/styles/dvt-professional-typography.css',
+    'docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/styles/dvt-workbench-monaco-theme-notes.md',
+    'docs/planning/proposals/frontend-f04-scope-and-slicing-20260404.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-inspector-authoring-and-lifecycle-closure-plan-20260425.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-node-and-edge-lifecycle-closure-plan-20260425.md',
+    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/postgres-rls-fowler-qa-remediation-plan-20260426.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/postgres-rls-qa-remediation-plan-20260425.md',
+    'docs/planning/proposals/nice-to-have/architecture/rc-e3-execution-tracking-plan-20260328.md',
+    'docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-hardening-compliance-roadmap-20260404.md',
+    'docs/planning/proposals/nice-to-have/frontend-and-ux/dvt-ui-workbench-implementation-roadmap-20260404.md',
+    'docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md',
+  ]);
+  const uniqueNames = [...retired]
+    .filter(
+      (path) =>
+        !path.includes('dvt-product-ux-professionalization-bundle-20260409/') &&
+        !path.endsWith('/README.md')
+    )
+    .map((path) => path.split('/').at(-1));
+  const namedReference = new RegExp(`(?:${uniqueNames.map(escapeRegExp).join('|')})`, 'u');
+  const files = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+    { encoding: 'utf8' }
+  )
+    .split('\0')
+    .filter(Boolean);
+  for (const path of retired)
+    assert.equal(existsSync(path), false, `Retired file returned: ${path}`);
+  for (const path of files) {
+    if (!existsSync(path) || path === 'tools/ci/docs-disposition-canon.test.mjs') continue;
+    assert.equal(
+      uniqueNames.includes(path.split('/').at(-1)),
+      false,
+      `Relocated retired file: ${path}`
+    );
+    const text = readRepoFile(path).replace(
+      /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/gu,
+      ''
+    );
+    assert.doesNotMatch(text, namedReference, `Live historical reference in ${path}`);
+    for (const target of retired)
+      assert.equal(text.includes(target), false, `Live historical path in ${path}: ${target}`);
+    for (const match of text.matchAll(/\]\(([^\s)]+)\)|`([^`\r\n]+)`/gu)) {
+      const value = (match[1] || match[2]).split('#')[0];
+      if (/^[a-z][a-z0-9+.-]*:/iu.test(value)) continue;
+      const resolved = posix.normalize(posix.join(posix.dirname(path), value));
+      assert.equal(
+        retired.has(resolved),
+        false,
+        `Relative historical reference in ${path}: ${value}`
+      );
+    }
+  }
 });

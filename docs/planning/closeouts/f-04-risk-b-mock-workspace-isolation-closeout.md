@@ -37,7 +37,7 @@ apparently isolated service factory.
 - `docs/planning/state/agent-lane-e.yaml`: `F-04-RISK-B` explicitly requires
   `createMockWorkspaceService` to stop mutating process-global graph state
   unless a shared-state policy is explicit and tested.
-- `docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md`:
+- [F-04 Frontend Data-Boundary Hexagonal Convergence Plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md):
   frontend seams should be deterministic, testable, and composition-owned.
 - `docs/architecture/frontend/appshell/data-source-service-boundary.md`:
   tests inject seams through governed providers and should not depend on hidden

@@ -24,8 +24,6 @@ the backend's hexagonal principles already established in the engine subsystem.
 - `ADR-0034` — bounded context boundaries and communication rules
 - `docs/guides/dvt-code-style-solid-hexagonal-cqrs.md` — SOLID and hexagonal
   code-style baseline
-- `docs/planning/proposals/frontend-f04-scope-and-slicing-20260404.md` — F-04
-  scope and slicing reference
 - `docs/planning/templates/qa/qa-global-check-prompt.md` — QA quality
   bar
 
@@ -408,7 +406,7 @@ one is created. Task structure:
 
 - [Task: E-PROP-DISP-1] Create umbrella task `F-04` with child tasks `F04-W0..W6`
 - Reference this proposal and:
-  - `docs/planning/proposals/frontend-f04-scope-and-slicing-20260404.md`
+  - [F-04 Scope And Slice Proposal](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/frontend-f04-scope-and-slicing-20260404.md)
   - `docs/architecture/reference-architecture.md`
 - `F04-W0` and `F04-W2` can execute in parallel
 - `F04-W3` is the critical convergence point requiring both `W1` and `W2`

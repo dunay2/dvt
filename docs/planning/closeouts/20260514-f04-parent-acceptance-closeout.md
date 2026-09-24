@@ -21,7 +21,7 @@ capability-centered hexagonal model.
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/command-query-rail-governance.md`
-- `docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md`
+- [F-04 Frontend Data-Boundary Hexagonal Convergence Plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md)
 - `docs/architecture/components/web/frontend-data-boundary-architecture.md`
 - `docs/architecture/components/web/frontend-runtime-modes-user-manual.md`
 - `docs/architecture/components/web/f04-frontend-data-boundary-technical-manual-20260404.md`
@@ -83,11 +83,11 @@ query boundary, and isolate mock/runtime adapters behind explicit ports.
 
 ## Validation Evidence
 
-| Command                                                                                                                           | Result                                                                                                                             |
+| Command | Result |
 | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `pnpm planning:db:query tasks --lane E --limit 150`                                                                               | PASS: all F-04 child, risk, and residual tasks are `done 100%`; parent remains the only F-04 acceptance item before this closeout. |
-| `pnpm --filter @dvt/web test -- src/app/queries/queryKeyPolicy.architecture.test.ts src/app/services/AppServicesContext.test.tsx` | PASS                                                                                                                               |
-| `rg -n 'resolveDataSource\\(' apps/web/src/app -g '*.ts' -g '*.tsx'`                                                              | PASS: hits are limited to composition/config/test surfaces.                                                                        |
+| `pnpm planning:db:query tasks --lane E --limit 150` | PASS: all F-04 child, risk, and residual tasks are `done 100%`; parent remains the only F-04 acceptance item before this closeout. |
+| `pnpm --filter @dvt/web test -- src/app/queries/queryKeyPolicy.architecture.test.ts src/app/services/AppServicesContext.test.tsx` | PASS |
+| `rg -n 'resolveDataSource\\(' apps/web/src/app -g '*.ts' -g '*.tsx'` | PASS: hits are limited to composition/config/test surfaces. |
 | `rg -n 'createWorkspacePorts\\(                                                                                                   | createRunsService\\(                                                                                                               | createPlansService\\(' apps/web/src/app -g '_.ts' -g '_.tsx'` | PASS: hits are limited to service/composition modules and service tests. |
 
 ## Debt And Stub Evidence

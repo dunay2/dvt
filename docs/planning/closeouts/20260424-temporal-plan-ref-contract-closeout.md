@@ -126,7 +126,7 @@ sequenceDiagram
   models that existing documented convention instead of forcing link-breaking
   renames.
 - Fowler QA was stored in
-  `buzon/20260424-codex-fowler-temporal-plan-ref-contract-qa.md`.
+  [20260424 codex fowler temporal plan ref contract qa](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260424-codex-fowler-temporal-plan-ref-contract-qa.md).
 
 ## Validation Evidence
 

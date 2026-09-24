@@ -26,7 +26,6 @@ Use this guide with:
 - [Canvas execution selection component](../graph/canvas-execution-selection-component.md)
 - [Frontend-facing backend MVP contract](./frontend-backend-mvp-contract.md)
 - [ADR-0050 platform-owned start-run identity](../../../../adr/adr-0050-platform-owned-start-run-identity.md)
-- [Fowler analysis mailbox](../../../../../buzon/20260423-codex-fowler-tenant-run-identity-analysis-and-remediation.md)
 
 ## Owned Concern
 

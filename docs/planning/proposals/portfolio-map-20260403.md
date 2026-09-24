@@ -77,9 +77,7 @@ planning_type: proposal
 - [Canvas Fowler canon plan
   2026-05-23](./mandatory/frontend-and-ux/canvas-fowler-canon-plan-20260523.md)
 - [DVT Workbench UX Canon Plan 2026-05-24](./mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md)
-- [TF-E2 project playground and multi-canvas host plan 2026-04-23](./mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md)
 - [TF-E2-K playground complete-cycle stories 2026-04-24](./mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md)
-- [TF-E2-E selected-closure UX proof stories 2026-04-23](./mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md)
 - [TF-E2-M-B Canvas draft denial posture implementation plan 2026-05-01](./mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md)
 - [TF-E2-M-C first canvas and first node live proof implementation plan 2026-05-01](./mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md)
 - [DVT+ Web user stories 2026-04-29](./web-user-stories-20260429.md)

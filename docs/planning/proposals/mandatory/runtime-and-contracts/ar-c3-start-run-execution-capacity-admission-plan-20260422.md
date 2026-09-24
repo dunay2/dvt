@@ -318,7 +318,7 @@ Definition of done:
   - `docs/planning/closeouts/20260422-api-start-run-execution-capacity-admission-closeout.md`
   - `apps/api/docs/start-run-execution-capacity-admission-component.md`
   - `apps/api/test/application/services/startRunExecutionCapacityAdmission.architecture.test.ts`
-  - `buzon/20260423-codex-fowler-ar-c3-execution-capacity-admission-analysis-and-remediation.md`
+  - [20260423 codex fowler ar c3 execution capacity admission analysis and remediation](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260423-codex-fowler-ar-c3-execution-capacity-admission-analysis-and-remediation.md)
 - Expected outcome:
   AR-C3-A is represented consistently as an implemented abstract seam under
   review, the active docs point at the real composition owner, and the
