@@ -1,4 +1,11 @@
-/** Apply the semantic name and literal budgets to decoded canonical Plan values. */
+/**
+ * Apply the semantic name and literal budgets to decoded canonical Plan values.
+ *
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Validate canonical Plan values independently of provider identifier limits.
+ * @consequence SQL target constraints do not restrict otherwise valid semantic names.
+ * @version 1.0.0
+ */
 import type { z } from 'zod';
 
 import {
