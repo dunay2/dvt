@@ -88,7 +88,7 @@ The API is local to the engine package.
 ## User Stories
 
 - [Start-run application decomposition user stories](./start-run-application-decomposition-user-stories.md)
-- [Fowler WE-HX-3 mailbox analysis](../../../../../buzon/20260512-codex-fowler-we-hx-3-start-run-decomposition-analysis-and-remediation.md)
+- [Fowler WE-HX-3 mailbox analysis](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260512-codex-fowler-we-hx-3-start-run-decomposition-analysis-and-remediation.md)
 
 ## Diagrams
 

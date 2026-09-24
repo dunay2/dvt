@@ -75,15 +75,15 @@ Fowler review prose from becoming a hidden backlog.
 
 ## Review Disposition Matrix
 
-| Input                                                                                      | Disposition                                                                     | Owner                              |
-| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | ---------------------------------- |
-| `canvas-workbench-fowler-remediation-plan-20260504.md`                                     | canonized by this plan and task `F-MAND-CANVAS-FOWLER`                          | Canvas Fowler canon component      |
-| `20260421 Canvas route composition Fowler review`                                          | reference; route-composition findings remain under TF-E2-I/J and component docs | Canvas route composition component |
-| `20260421 Canvas handler seams Fowler review`                                              | reference; handler-contract findings remain under TF-E2-B/C/D                   | Canvas handler contracts component |
-| `20260422 Canvas component governance follow-up review`                                    | reference; local guide and semantic-fitness expectation retained                | Canvas component guide family      |
-| `20260425 Canvas graph strategy Fowler hard QA review`                                     | accepted; closed by TF-E2-L                                                     | Canvas graph strategy owner        |
-| `20260426 Canvas runtime policy architecture review`                                       | accepted; closed by TF-E2-POL                                                   | Canvas runtime policy owner        |
-| `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md` | accepted analysis; superseded for execution routing by this canon component     | Canvas Fowler canon component      |
+| Input                                                                                                                                                                                     | Disposition                                                                     | Owner                              |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------- |
+| `canvas-workbench-fowler-remediation-plan-20260504.md`                                                                                                                                    | canonized by this plan and task `F-MAND-CANVAS-FOWLER`                          | Canvas Fowler canon component      |
+| `20260421 Canvas route composition Fowler review`                                                                                                                                         | reference; route-composition findings remain under TF-E2-I/J and component docs | Canvas route composition component |
+| `20260421 Canvas handler seams Fowler review`                                                                                                                                             | reference; handler-contract findings remain under TF-E2-B/C/D                   | Canvas handler contracts component |
+| `20260422 Canvas component governance follow-up review`                                                                                                                                   | reference; local guide and semantic-fitness expectation retained                | Canvas component guide family      |
+| `20260425 Canvas graph strategy Fowler hard QA review`                                                                                                                                    | accepted; closed by TF-E2-L                                                     | Canvas graph strategy owner        |
+| `20260426 Canvas runtime policy architecture review`                                                                                                                                      | accepted; closed by TF-E2-POL                                                   | Canvas runtime policy owner        |
+| [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md) | accepted analysis; superseded for execution routing by this canon component     | Canvas Fowler canon component      |
 
 No Canvas Fowler remediation proposal remains an orphan execution queue after
 this plan.

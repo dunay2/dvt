@@ -133,4 +133,4 @@ sequenceDiagram
 - [Architecture Governance Review Canon User Stories](./architecture-governance-review-canon-user-stories.md)
 - [Architecture Governance Review Canon Plan 2026-05-24](../../../planning/proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md)
 - [Deep Technical Architectural Review 2026-04-02](../../../planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md)
-- [Architecture Governance Review Mailbox Analysis](../../../../buzon/20260524-codex-fowler-architecture-governance-review-canon.md)
+- [Architecture Governance Review Mailbox Analysis](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260524-codex-fowler-architecture-governance-review-canon.md)

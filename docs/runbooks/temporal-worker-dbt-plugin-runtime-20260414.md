@@ -165,7 +165,7 @@ Readiness rule:
 
 ### Run-state command circuit breaker
 
-Tracked when the worker binds the [`AR-C4`](../../planning/closeouts/20260415-ar-c4-run-state-circuit-breaker-closeout.md)
+Tracked when the worker binds the [`AR-C4`](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/docs/planning/closeouts/20260415-ar-c4-run-state-circuit-breaker-closeout.md)
 run-state command circuit breaker:
 
 - `dvt_temporal_worker_run_state_circuit_state{state=*}` — `closed`, `open`, or `half_open`
@@ -261,7 +261,7 @@ Most likely causes:
 ### Run-state command circuit breaker is `open`
 
 The circuit breaker guards state-store writes from Temporal activities (see
-[`AR-C4`](../../planning/closeouts/20260415-ar-c4-run-state-circuit-breaker-closeout.md)):
+[`AR-C4`](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/docs/planning/closeouts/20260415-ar-c4-run-state-circuit-breaker-closeout.md)):
 
 - `dvt_temporal_worker_run_state_circuit_state{state="open"} 1` indicates the
   state store has been unreachable or timing out.

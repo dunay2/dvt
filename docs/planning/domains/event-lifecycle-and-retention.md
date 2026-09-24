@@ -34,7 +34,7 @@ flows, and operational lifecycle governance.
 
 ## Relevant Reviews And Closeouts
 
-- [AR-D5 tenant-configurable retention policy closeout](../closeouts/20260522-ar-d5-tenant-configurable-retention-policy-closeout.md)
+- [AR-D5 tenant-configurable retention policy closeout](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/docs/planning/closeouts/20260522-ar-d5-tenant-configurable-retention-policy-closeout.md)
 
 ## Review Canon
 

@@ -1525,7 +1525,7 @@ Canonical component guide:
 
 - [Web Auth Project Onboarding Component](../../../../architecture/components/web/appshell/web-auth-project-onboarding-component.md)
 - [Web Auth Project Onboarding User Stories](../../../../architecture/components/web/appshell/web-auth-project-onboarding-user-stories.md)
-- [Fowler analysis in buzon](../../../../../buzon/20260523-codex-fowler-web-auth-project-onboarding-canon.md)
+- [Fowler analysis in buzon](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260523-codex-fowler-web-auth-project-onboarding-canon.md)
 
 Architecture fitness:
 

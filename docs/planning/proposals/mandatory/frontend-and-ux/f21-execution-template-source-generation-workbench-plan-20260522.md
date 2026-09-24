@@ -56,7 +56,7 @@ generates deterministic preview source and export metadata only; it does not
 persist, dispatch, or call provider APIs.
 
 - F-21 task records this implemented proposal as evidence-closed by
-  `docs/planning/closeouts/20260522-f21-execution-template-source-generation-workbench-closeout.md`.
+  [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/docs/planning/closeouts/20260522-f21-execution-template-source-generation-workbench-closeout.md).
 
 Rejected alternatives:
 
