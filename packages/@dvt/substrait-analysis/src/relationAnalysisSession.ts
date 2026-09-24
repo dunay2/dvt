@@ -1,4 +1,6 @@
 /** Revision owner for a single authorized model; never caches rows, credentials or authorization. */
+import type { DvtSubstraitFieldBindingV1 } from '@dvt/contracts';
+
 import type { RelationAnalysisCache, RelationAnalysisCacheFailure } from './analysisCache.js';
 import { awaitAnalysis } from './analysisCancellation.js';
 import { SubstraitAnalysisError, type SubstraitDocument } from './document.js';
@@ -13,6 +15,7 @@ export type RelationAnalysisResult = Readonly<{
   relationId: string;
   fingerprint: string;
   fields: readonly SchemaField[];
+  bindings: readonly DvtSubstraitFieldBindingV1[];
 }>;
 type SessionOptions = Readonly<{
   document: SubstraitDocument;
@@ -44,6 +47,9 @@ export class RelationAnalysisSession {
 
   get revision(): number {
     return this.generation;
+  }
+  get rootId(): string {
+    return this.current().rootId;
   }
   get work(): Readonly<AnalysisWork> {
     return { ...this.counters };
@@ -109,7 +115,13 @@ export class RelationAnalysisSession {
         'Root names do not match the derived output width.',
         relationId
       );
-    return { revision, relationId, fingerprint, fields };
+    return {
+      revision,
+      relationId,
+      fingerprint,
+      fields,
+      bindings: globalThis.structuredClone(snapshot.get(relationId).fields),
+    };
   }
 
   apply(change: RelationChangeSet): void {

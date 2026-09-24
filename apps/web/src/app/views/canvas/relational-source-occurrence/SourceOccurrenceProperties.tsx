@@ -7,6 +7,7 @@ import type { DvtSubstraitJoinDraft } from '../canvasDvtSubstraitJoinComposition
 import { CanvasRelationalTreeEditorFrame } from '../CanvasRelationalTreeEditorFrame';
 import { renameSourceOccurrence } from './sourceOccurrencePolicy';
 import { sourceOccurrenceCopy } from './sourceOccurrenceCopy';
+import { CanvasRelationFields } from '../CanvasRelationFields';
 
 export function SourceOccurrenceProperties({
   draft,
@@ -80,6 +81,7 @@ export function SourceOccurrenceProperties({
       ) : (
         <p className="text-xs text-(--text-muted)">{copy.aliasUnsupported}</p>
       )}
+      <CanvasRelationFields relationId={relationId} />
     </CanvasRelationalTreeEditorFrame>
   );
 }

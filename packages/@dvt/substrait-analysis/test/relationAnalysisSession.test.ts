@@ -1,19 +1,15 @@
-import { RelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { RelSchema, type Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { clone } from '@bufbuild/protobuf';
 import { describe, expect, it } from 'vitest';
 
+import type { SubstraitDocument } from '../src/document.js';
 import { MemoryRelationAnalysisCache } from '../src/memoryAnalysisCache.js';
 import { RelationAnalysisSession } from '../src/relationAnalysisSession.js';
 import { deriveSubstraitSchemas } from '../src/relationSchema.js';
 
 import { relationsFixture } from './relationsFixture.js';
 
-function branchFixture(): {
-  document: ReturnType<ReturnType<typeof relationsFixture>['document']>;
-  left: ReturnType<ReturnType<typeof relationsFixture>['read']>;
-  right: ReturnType<ReturnType<typeof relationsFixture>['read']>;
-  root: ReturnType<ReturnType<typeof relationsFixture>['read']>;
-} {
+function branchFixture(): { document: SubstraitDocument; left: Rel; right: Rel; root: Rel } {
   const fixture = relationsFixture();
   const left = fixture.unary('filter', fixture.read());
   const right = fixture.unary('filter', fixture.read());

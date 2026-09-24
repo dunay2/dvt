@@ -1,5 +1,9 @@
 /** One structural read shared by tree, composition status and input catalogue. */
-import { indexSubstraitRelations, type SubstraitRelationIndex } from '@dvt/substrait-analysis';
+import {
+  indexSubstraitRelations,
+  type SubstraitDocument,
+  type SubstraitRelationIndex,
+} from '@dvt/substrait-analysis';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
@@ -25,7 +29,11 @@ export type CanvasRelationalAnalysis = Readonly<{
   connectedInputCount: number;
   inputs: readonly CanvasDvtCompositionInput[];
   projectedInputs: readonly CanvasRelationalTreeInput[];
-  semantic: Readonly<{ index: SubstraitRelationIndex; digest: string }> | null;
+  semantic: Readonly<{
+    index: SubstraitRelationIndex;
+    digest: string;
+    document: SubstraitDocument;
+  }> | null;
   failure: Failure | null;
 }>;
 
@@ -106,14 +114,17 @@ export function analyzeCanvasRelations(
   try {
     const authority = readDvtTransformAuthoringAuthority(args.node);
     if (authority == null) return { ...base, failure: 'missing-semantic-authority' };
-    const indexed = indexSubstraitRelations(
-      decodeDvtSubstraitSemanticDocument(authority.semanticDocument)
-    );
+    const document = decodeDvtSubstraitSemanticDocument(authority.semanticDocument);
+    const indexed = indexSubstraitRelations(document);
     if (!indexed.ok) return { ...base, failure: 'invalid-semantic-authority' };
     return {
       ...base,
       failure: null,
-      semantic: { index: indexed.index, digest: authority.semanticDocument.semanticPlan.sha256 },
+      semantic: {
+        index: indexed.index,
+        digest: authority.semanticDocument.semanticPlan.sha256,
+        document,
+      },
       projectedInputs: projectInputs(indexed.index, inputs),
     };
   } catch {

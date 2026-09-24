@@ -4,7 +4,7 @@ import { useCanvasRelationalSelection } from './useCanvasRelationalSelection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
-import { analyzeCanvasRelations } from './canvasRelationalAnalysis';
+import { createCanvasRelationalAnalysisReader } from './canvasRelationalAnalysisMemo';
 import { projectCanvasRelationalComposition } from './canvasRelationalCompositionTruth';
 import { projectAnalyzedCanvasRelationalTree } from './canvasRelationalTreeProjection';
 import {
@@ -32,15 +32,8 @@ export function useCanvasRelationalTreeWorkbenchModel(
     authoring?: CanvasRelationalTreeAuthoringContract;
   }>
 ) {
-  const analysis = useMemo(
-    () =>
-      analyzeCanvasRelations({
-        node: args.transformNode,
-        nodes: args.nodes,
-        edges: args.edges,
-      }),
-    [args.edges, args.nodes, args.transformNode]
-  );
+  const readAnalysis = useMemo(createCanvasRelationalAnalysisReader, []);
+  const analysis = readAnalysis({ node: args.transformNode, nodes: args.nodes, edges: args.edges });
   const result = useMemo(() => projectAnalyzedCanvasRelationalTree(analysis), [analysis]);
   const projection = result.ok ? result.projection : null;
   const composition = useMemo(() => projectCanvasRelationalComposition(analysis), [analysis]);
@@ -59,6 +52,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
     edges: args.edges,
     inputs,
     projection,
+    document: analysis.semantic?.document ?? null,
     authoring: args.authoring,
   });
   const selection = useCanvasRelationalSelection(args.transformNode.id, projection);

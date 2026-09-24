@@ -35,4 +35,33 @@ describe('Workbench shared analysis lifecycle', () => {
     }
     expect(analyze).toHaveBeenCalledTimes(1);
   });
+
+  it('does not rebuild semantic analysis when cards move or model display text changes', async () => {
+    const graph = occurrenceGraph();
+    const analyze = vi.spyOn(analysis, 'analyzeCanvasRelations');
+    let model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
+    function Host(): React.JSX.Element {
+      model = useCanvasRelationalTreeWorkbenchModel({
+        transformNode: graph.targetNode,
+        nodes: graph.nodes,
+        edges: graph.edges,
+        copy: COPY,
+      });
+      return <output>{model.selectedLocator}</output>;
+    }
+    await act(async () => root.render(<Host />));
+    const owner = model!.session.analysis!.session;
+    const first = await owner.query(null);
+    const work = owner.work;
+    graph.targetNode = { ...graph.targetNode, name: 'Display only', position: { x: 400, y: 200 } };
+    graph.nodes = graph.nodes.map((node) =>
+      node.id === graph.targetNode.id ? graph.targetNode : { ...node, position: { x: 20, y: 10 } }
+    );
+    graph.edges = [...graph.edges];
+    await act(async () => root.render(<Host />));
+    expect(model!.session.analysis!.session).toBe(owner);
+    expect(await owner.query(null)).toEqual(first);
+    expect(owner.work).toEqual(work);
+    expect(analyze).toHaveBeenCalledTimes(1);
+  });
 });
