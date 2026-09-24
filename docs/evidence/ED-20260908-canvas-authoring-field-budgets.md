@@ -160,3 +160,44 @@ RED reproduced rejected struct schemas and lost right-hand SET dependencies.
 GREEN: `pnpm --filter @dvt/substrait-analysis test` passed 98 tests and
 `pnpm --filter @dvt/postgres-projection test` passed 236. These are prerequisite
 package checks, not evidence that the external Canvas consumer is migrated.
+
+## Canvas field consumers and controller separation — 2026-09-24
+
+The [approved consumer cut](https://github.com/dunay2/dvt/issues/3369#issuecomment-5817197666)
+now projects external cards, the inspector and column lineage from the shared
+Substrait analysis. Shape-specific presentation branches and the redundant
+structured-field presentation/lineage adapters are removed. Types, nullability,
+nested fields and multi-input dependencies come from canonical schema facts;
+PostgreSQL admission remains a separate, explicit projection.
+
+The [controller design journal](https://github.com/dunay2/dvt/issues/3369#issuecomment-5817924201)
+separates card actions, column actions, composition, lineage and transient geometry.
+The read-model contract no longer selects a long list from the producer hook's
+return type. Its tests are split by behavior; source-text implementation recipes
+are removed where command, permission and identity tests already prove the intent.
+The viewport also separates card projection from state synchronization and reuses
+its computed edge projection rather than computing it twice.
+
+One bounded schema cache is shared by a consumer's sessions through the existing
+`RelationAnalysisCache` interface. Independent Canvas inputs are scheduled once
+per batch, in dependency order. Geometry-only frames reuse semantic inputs and
+results. Replacement, cancellation and unmount cannot publish obsolete results;
+pending edge commands recheck draft, catalog and edit permission before mutation.
+Receiving a complete document still indexes/hashes that document: this is not a
+claim that whole-document receipt or every authoring reader is incremental.
+
+The cache regression was RED with two relations reanalyzed after replacement,
+then GREEN with zero analysis and identical fields/bindings. The complete Web unit
+suite passed 2,164 cases; the additional cache and selected-operand card assertions
+passed six focused cases. The controller split preserved all 18 behavior cases.
+Connection routing and lifetime checks passed 24 cases. Web typecheck passed.
+
+Both browser commands above were rerun for this consumer cut. The controlled
+suite passed 2/2 and the protected PostgreSQL suite passed 1/1, without skips.
+They now assert the external card's output columns before editing and after
+Apply/reload, not just the internal relation tree. The live sample preserves
+LEFT JOIN unmatched rows, canonical field order and the exact saved plan hash.
+No implicit sample or operational Run was introduced.
+
+These results are scope evidence; the complete presentation/architecture suites,
+hook-normalized formatting and pre-push gate remain required before integration.

@@ -4,6 +4,7 @@ import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { dvtSubstraitTextComparison } from '../../../src/app/views/canvas/canvasDvtSubstraitTextComparison';
 import { getE2eApiCalls } from '../../support/e2eApiStub';
+import { exteriorOutputColumns } from '../../support/relationalWorkbench/columns';
 import {
   openWorkbenchModel,
   visitWorkbenchCanvas,
@@ -20,6 +21,10 @@ describe('Filter on selected input (controlled API boundary)', () => {
       stubWorkbenchScenario('saved-join');
       cy.viewport(1440, 1000);
       visitWorkbenchCanvas();
+      let outputs: string[];
+      exteriorOutputColumns('join-transform').then((names) => {
+        outputs = names;
+      });
       openWorkbenchModel();
       let inputId = '';
       let filterId = '';
@@ -66,6 +71,9 @@ describe('Filter on selected input (controlled API boundary)', () => {
       });
       cy.get('[data-slot="canvas-model-tab-close"]').click();
       visitWorkbenchCanvas();
+      exteriorOutputColumns('join-transform').should((names) =>
+        expect(names).to.deep.equal(outputs)
+      );
       openWorkbenchModel();
       cy.get('[data-operator="filter"]')
         .should(($filter) => expect($filter.attr('data-relation-id')).to.equal(filterId))

@@ -8,6 +8,7 @@ import {
   hasLiveProtectedRuntimeEnv,
   seedLiveSelectedClosureDraft,
 } from '../../support/liveProtectedRuntime';
+import { exteriorOutputColumns } from '../../support/relationalWorkbench/columns';
 import { openWorkbenchModel } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import { readPersistedDocument } from '../../support/semanticLive/canonicalAssertions';
@@ -38,6 +39,7 @@ describe('Selected input Filter through real PostgreSQL', () => {
       request.continue();
     }).as('rows');
     importSemanticModel(initial);
+    exteriorOutputColumns(modelId).should('deep.equal', expectedColumns);
     openWorkbenchModel(modelId);
     for (const [source, field, value] of [
       ['orders', 'client_id', 'C-001'],
@@ -68,6 +70,7 @@ describe('Selected input Filter through real PostgreSQL', () => {
     cy.then(() => expect(samples).to.equal(0));
     cy.get('[data-slot="canvas-model-tab-close"]').click();
     visitSemanticCanvas();
+    exteriorOutputColumns(modelId).should('deep.equal', expectedColumns);
     openWorkbenchModel(modelId);
     cy.get('[data-operator="filter"]').should('have.length', 2);
     cy.get('[data-operator="join"]')

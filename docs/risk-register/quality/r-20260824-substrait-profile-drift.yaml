@@ -29,11 +29,14 @@ mitigation:
     rendered aliases follow target-specific byte limits. Web, contracts and API must roll out
     together; older readers may reject newly admitted long semantic names. Scalar target bindings
     preserve Substrait null propagation and UTC extraction, with real PostgreSQL regression tests.
-    SQL and dbt remain projections, never semantic fallbacks. Legacy Canvas presentation readers
-    remain an explicit convergence boundary; removing a SQL profile does not prove their migration.
-    The #3369 prerequisite preserves struct child schemas and dependency identities in the shared
+    SQL and dbt remain projections, never semantic fallbacks. Canvas cards, inspector fields and
+    column lineage now consume shared asynchronous schema facts rather than whole-plan profiles.
+    Consumer lifetime, canonical revision and edit authorization fence obsolete completions; a
+    bounded shared schema cache is independent of provider data and geometry changes. The #3369
+    prerequisite preserves struct child schemas and dependency identities in the shared
     analysis/cache, including nullable-parent selection and both SET operands. This does not grant
-    structured-value execution to a target or complete the Canvas migration.
+    structured-value execution to a target. Remaining shape-specific authoring readers and full
+    document receipt/export costs are not declared converged by this presentation migration.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ed-20260824-substrait-semantic-reference-traceability.md
@@ -52,6 +55,11 @@ mitigation:
     - apps/api/test/integration/dvtScalarSql.integration.test.ts
     - packages/@dvt/substrait-analysis/test/schemaHierarchy.test.ts
     - packages/@dvt/substrait-analysis/test/schemaStructuredComposition.test.ts
+    - apps/web/src/app/views/canvas/canvasNodePresentationProjection.ts
+    - apps/web/src/app/views/canvas/canvasPresentationAnalysis.test.ts
+    - apps/web/src/app/views/canvas/useCanvasControllerReadModel.geometry.test.tsx
+    - apps/web/src/app/views/canvas/useCanvasEdgeCommandRunner.lifecycle.test.tsx
+    - apps/web/cypress/e2e/canvas/canvas-selected-filter-live.cy.ts
   follow_up:
     - Issue #2597 must prove SQL AST/source mapping to the pinned semantic profile and governed target rendering.
     - Issue #2641 owns semantic admission/conformance and the first promotion to supported-profile.

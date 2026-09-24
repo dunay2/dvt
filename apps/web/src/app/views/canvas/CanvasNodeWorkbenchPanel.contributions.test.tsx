@@ -44,16 +44,16 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
     ).IS_REACT_ACT_ENVIRONMENT = true;
   });
 
-  afterEach(() => {
-    act(() => root.unmount());
+  afterEach(async () => {
+    await act(async () => root.unmount());
     container.remove();
     document.documentElement.lang = '';
     useApplicationLanguageStore.setState({ language: 'en' });
     vi.restoreAllMocks();
   });
 
-  it('renders a selected-node contribution and removes the passive row it supersedes', () => {
-    act(() => {
+  it('renders a selected-node contribution and removes the passive row it supersedes', async () => {
+    await act(async () => {
       root.render(
         <CanvasNodeWorkbenchPanel
           node={NODE}
@@ -91,8 +91,8 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
     expect(container.querySelector('[data-slot="canvas-node-workbench-code-section"]')).toBeNull();
   });
 
-  it('lets an authoritative Code contribution replace passive copy and the legacy launcher', () => {
-    act(() => {
+  it('lets an authoritative Code contribution replace passive copy and the legacy launcher', async () => {
+    await act(async () => {
       root.render(
         <CanvasNodeWorkbenchPanel
           node={FILE_BACKED_NODE}
@@ -122,10 +122,10 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
     expect(codeSection?.textContent).not.toContain(FILE_BACKED_NODE.path);
   });
 
-  it('resolves workbench commands through the Canvas locale catalog', () => {
+  it('resolves workbench commands through the Canvas locale catalog', async () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('es');
 
-    act(() => {
+    await act(async () => {
       root.render(
         <CanvasNodeWorkbenchPanel
           node={NODE}
@@ -149,8 +149,8 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
     ).toContain('Más');
   });
 
-  it('removes a generic section superseded by an authoritative contribution', () => {
-    act(() => {
+  it('removes a generic section superseded by an authoritative contribution', async () => {
+    await act(async () => {
       root.render(
         <CanvasNodeWorkbenchPanel
           node={NODE}
@@ -180,13 +180,13 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
     ).not.toBeNull();
   });
 
-  it('keeps healthy workbench contributions when a sibling contribution throws', () => {
+  it('keeps healthy workbench contributions when a sibling contribution throws', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const ThrowingContribution = (): never => {
       throw new Error('workbench contribution failed');
     };
 
-    act(() => {
+    await act(async () => {
       root.render(
         <CanvasNodeWorkbenchPanel
           node={NODE}
@@ -219,13 +219,13 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
     expect(container.querySelector('[data-slot="healthy-workbench-contribution"]')).not.toBeNull();
   });
 
-  it('recovers a contribution boundary when the selected node changes', () => {
+  it('recovers a contribution boundary when the selected node changes', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const ThrowingContribution = (): never => {
       throw new Error('workbench contribution failed');
     };
 
-    act(() => {
+    await act(async () => {
       root.render(
         <CanvasNodeWorkbenchPanel
           node={NODE}
@@ -248,7 +248,7 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
       );
     });
 
-    act(() => {
+    await act(async () => {
       root.render(
         <CanvasNodeWorkbenchPanel
           node={SECOND_NODE}
