@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent, waitFor } from '@testing-library/dom';
+import { fireEvent, getByRole, waitFor } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -9,9 +9,10 @@ import type { CanonicalNode } from '../../types/canonical';
 import {
   createDvtSubstraitProjectionDraft,
   resolveDvtSubstraitProjectionSource,
+  type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
 import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
-import { dvtSubstraitTextComparison } from './canvasDvtSubstraitTextComparison';
+import { inspectDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import { DvtRelationFilterAuthoringSection } from './DvtRelationFilterAuthoringSection';
 
 const source: CanonicalNode = {
@@ -71,7 +72,7 @@ describe('Inspector Filter command adapter', () => {
         targetNodeId: transform.id,
         outputs: [{ fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' }],
       });
-      const onChange = vi.fn();
+      const onChange = vi.fn<(draft: DvtSubstraitProjectionDraft) => void>();
       await act(async () =>
         root.render(
           <DvtRelationFilterAuthoringSection
@@ -101,14 +102,51 @@ describe('Inspector Filter command adapter', () => {
       await act(async () => fireEvent.submit(container.querySelector('form')!));
       expect(onChange).toHaveBeenCalledOnce();
       const updated = onChange.mock.calls[0]![0];
-      const updatedRoot = updated.plan.relations[0].relType;
-      expect(updatedRoot.value.input.relType.case).toBe('filter');
-      expect(
-        dvtSubstraitTextComparison.inspect(
-          updated.plan,
-          updatedRoot.value.input.relType.value.condition
+      expect(inspectDvtSubstraitFilter(updated)).toMatchObject({
+        fieldId: 'output:customer',
+        operator: 'not_equal',
+        value: 'Ada',
+      });
+      await act(async () =>
+        root.render(
+          <DvtRelationFilterAuthoringSection
+            disabled={false}
+            draft={updated}
+            node={transform}
+            onChange={onChange}
+          />
         )
-      ).toMatchObject({ operator: 'not_equal', value: 'Ada' });
+      );
+      expect((getByRole(container, 'textbox') as HTMLInputElement).value).toBe('Ada');
+      await act(async () =>
+        fireEvent.change(getByRole(container, 'textbox'), { target: { value: 'Grace' } })
+      );
+      await act(async () => fireEvent.submit(container.querySelector('form')!));
+      const edited = onChange.mock.calls[1]![0];
+      expect(inspectDvtSubstraitFilter(edited)).toMatchObject({ value: 'Grace' });
+      expect(edited.sidecar.relations).toEqual(updated.sidecar.relations);
+      expect(new Map(edited.sidecar.fields.map((field) => [field.fieldId, field]))).toEqual(
+        new Map(updated.sidecar.fields.map((field) => [field.fieldId, field]))
+      );
+      await act(async () =>
+        root.render(
+          <DvtRelationFilterAuthoringSection
+            disabled={false}
+            draft={edited}
+            node={transform}
+            onChange={onChange}
+          />
+        )
+      );
+      await act(async () =>
+        fireEvent.click(getByRole(container, 'button', { name: 'Remove operation' }))
+      );
+      const removed = onChange.mock.calls[2]![0];
+      expect(inspectDvtSubstraitFilter(removed)).toBeNull();
+      expect(removed.sidecar.relations).toEqual(draft.sidecar.relations);
+      expect(new Map(removed.sidecar.fields.map((field) => [field.fieldId, field]))).toEqual(
+        new Map(draft.sidecar.fields.map((field) => [field.fieldId, field]))
+      );
     }
   );
 });

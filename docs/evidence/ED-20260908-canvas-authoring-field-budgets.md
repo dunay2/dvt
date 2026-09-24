@@ -201,3 +201,22 @@ No implicit sample or operational Run was introduced.
 
 These results are scope evidence; the complete presentation/architecture suites,
 hook-normalized formatting and pre-push gate remain required before integration.
+
+The complete Web primary suites passed in [CI for PR #3405](https://github.com/dunay2/dvt/actions/runs/36036015693).
+The earlier complete local presentation runs hit the existing five-second test
+budget under parallel load; their affected cases passed together under the
+existing serial CI configuration. No timeouts or checks were relaxed.
+
+[PR review corrections](https://github.com/dunay2/dvt/issues/3369#issuecomment-5819285162)
+preserve the inspector's Project(Filter(input)) placement by passing its exact
+input RelationId to the shared Filter command. Reopening edits that Filter rather
+than inserting another. A pending second incoming node blocks the old projection
+form until composition is resolved; unrelated edges and read-only permissions
+retain their own behavior. Both reported failures were reproduced before fixing
+the adapter. All 24 focused component cases passed, including apply/reopen/edit/
+remove with stable bindings, pending-composition transitions and selected-relation
+editing. The source-filter inspector and selected-left/right Cypress proofs passed
+all three cases; the source-filter proof now uses the shared form's visible controls.
+The contract traceability header and generated manifest also pass
+`pnpm traceability:adr0`. These corrections remain subject to the final committed
+pre-push and PR checks.

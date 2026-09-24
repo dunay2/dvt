@@ -13,15 +13,19 @@ type FilterSectionProps = Readonly<{
   node: CanonicalNode;
   onChange: (draft: DvtSubstraitProjectionDraft) => void;
 }>;
-function RootFilterForm({
+function ProjectionInputFilterForm({
   draft,
   onChange,
-}: Pick<FilterSectionProps, 'draft' | 'onChange'>): JSX.Element | null {
+  relationId,
+  intent,
+}: Pick<FilterSectionProps, 'draft' | 'onChange'> &
+  Readonly<{
+    relationId: string;
+    intent: 'insert' | 'edit';
+  }>): JSX.Element | null {
   const analysis = useContext(CanvasRelationAnalysisContext);
   const [formVersion, resetForm] = useState(0);
-  const root = draft.plan.relations[0]?.relType;
-  const editing = root?.case === 'root' && root.value.input?.relType.case === 'filter';
-  const filter = useSelectedRelationFilter(null, editing ? 'edit' : 'insert');
+  const filter = useSelectedRelationFilter(relationId, intent);
   if (filter?.tool.enabled !== true) return null;
   return (
     <CanvasRelationalTreeOperatorForm
@@ -38,10 +42,26 @@ function RootFilterForm({
 }
 export function DvtRelationFilterAuthoringSection(props: FilterSectionProps): JSX.Element {
   const analysis = useCanvasRelationAnalysisSession(props.draft, props.node.id);
+  const root =
+    analysis?.document != null && analysis.error == null
+      ? analysis.session.locate(analysis.session.rootId, analysis.revision)
+      : null;
+  const inputId = root?.relation.relType.case === 'project' ? root.inputs[0] : undefined;
+  const input =
+    inputId == null || analysis == null
+      ? null
+      : analysis.session.locate(inputId, analysis.revision);
   return (
     <section data-slot="dvt-filter-authoring">
       <CanvasRelationAnalysisContext.Provider value={analysis}>
-        {props.disabled ? null : <RootFilterForm draft={props.draft} onChange={props.onChange} />}
+        {props.disabled || input == null ? null : (
+          <ProjectionInputFilterForm
+            draft={props.draft}
+            onChange={props.onChange}
+            relationId={input.binding.relationId}
+            intent={input.relation.relType.case === 'filter' ? 'edit' : 'insert'}
+          />
+        )}
       </CanvasRelationAnalysisContext.Provider>
     </section>
   );

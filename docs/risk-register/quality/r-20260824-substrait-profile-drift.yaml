@@ -36,7 +36,10 @@ mitigation:
     prerequisite preserves struct child schemas and dependency identities in the shared
     analysis/cache, including nullable-parent selection and both SET operands. This does not grant
     structured-value execution to a target. Remaining shape-specific authoring readers and full
-    document receipt/export costs are not declared converged by this presentation migration.
+    document receipt/export costs are not declared converged by this presentation migration. The
+    projection inspector keeps its exact Project input as the Filter command target and disables
+    stale projection editing while another incoming node awaits composition. Regression proofs cover
+    reopening without stacked filters and unchanged stable field bindings.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ed-20260824-substrait-semantic-reference-traceability.md
@@ -60,6 +63,9 @@ mitigation:
     - apps/web/src/app/views/canvas/useCanvasControllerReadModel.geometry.test.tsx
     - apps/web/src/app/views/canvas/useCanvasEdgeCommandRunner.lifecycle.test.tsx
     - apps/web/cypress/e2e/canvas/canvas-selected-filter-live.cy.ts
+    - apps/web/src/app/views/canvas/DvtAuthoringFields.filter.test.tsx
+    - apps/web/src/app/views/canvas/DvtRelationFilterAuthoringSection.test.tsx
+    - apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts
   follow_up:
     - Issue #2597 must prove SQL AST/source mapping to the pinned semantic profile and governed target rendering.
     - Issue #2641 owns semantic admission/conformance and the first promotion to supported-profile.
