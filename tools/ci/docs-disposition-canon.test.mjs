@@ -863,6 +863,11 @@ test('current task guidance no longer routes work through retired planning group
     'docs/runbooks/api-runtime-sla-canonical-20260404.md',
     'docs/runbooks/backend-mvp-control-plane-runbook-20260329.md',
   ];
+  const reviewGuide = readRepoFile(
+    'docs/architecture/components/api/runtime-review-canon-component.md'
+  );
+  assert.doesNotMatch(reviewGuide, /Planning DB task|PlanningDbTask/u);
+  assert.match(reviewGuide, /governing GitHub issue/u);
   const retiredRouting =
     /(?<![\w-])(?:lane[ -]+[A-E]\b|lane[-\s]+(?:YAML|registry|tasks?|plan|closeout|metadata))|agent-lane-|lane_yaml_changed|^lane:\s*[A-E]\s*$|docs:planning:lanes|docs:workboard|gap-execution-parallel-lanes\.md/imu;
   for (const path of surfaces) {
