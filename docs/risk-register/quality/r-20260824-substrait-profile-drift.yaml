@@ -20,13 +20,17 @@ mitigation:
     catalog is bound to that exact profile and records only selected upstream identities plus
     explicit product gaps; catalog presence does not imply provider execution, UI exposure, or
     semantic admission. The audited v0.102.0 delta remains governed by #2643 rather than silently
-    entering the pinned catalog. The #2598 card pilot consumes the exact generated v0.101.0 SDK,
-    edits only one admitted ReadRel/ProjectRel fixture, and fails closed instead of projecting or
-    executing unsupported Plan shapes or falling back to editable SQL. The #2634 INNER JOIN cut
-    admits only two PostgreSQL sources on one ConnectionRef and one exact ReadRel plus ReadRel plus
-    INNER JoinRel(equal) shape. Preview requires both scoped graph sources to match the sidecar's
-    connection, source-object, schema, and table identities before generating provider SQL. SQL and
-    dbt remain projections rather than semantic fallbacks.
+    entering the pinned catalog. The #2598 and #2634 pilots were historically bounded by whole-plan
+    shapes; RELINC1 now derives admitted relation schemas compositionally from canonical Substrait
+    and stable identities. The #3263 convergence removes the four shape-specific Web SQL renderers
+    and routes output through the shared PostgreSQL target. Preview still verifies scoped source
+    connection, source-object, schema, table and upstream semantic-document identity before SQL.
+    Semantic field names follow the contract's Unicode budget; physical PostgreSQL identifiers and
+    rendered aliases follow target-specific byte limits. Web, contracts and API must roll out
+    together; older readers may reject newly admitted long semantic names. Scalar target bindings
+    preserve Substrait null propagation and UTC extraction, with real PostgreSQL regression tests.
+    SQL and dbt remain projections, never semantic fallbacks. Legacy Canvas presentation readers
+    remain an explicit convergence boundary; removing a SQL profile does not prove their migration.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ed-20260824-substrait-semantic-reference-traceability.md
@@ -38,6 +42,11 @@ mitigation:
     - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
     - packages/@dvt/contracts/test/dvt-substrait-profile.contract.test.ts
     - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
+    - docs/evidence/ED-20260908-canvas-authoring-field-budgets.md
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitOutputProjection.ts
+    - apps/web/src/app/views/canvas/canvasSubstraitGraphBindings.ts
+    - packages/@dvt/postgres-projection/test/relationalSqlNames.test.ts
+    - apps/api/test/integration/dvtScalarSql.integration.test.ts
   follow_up:
     - Issue #2597 must prove SQL AST/source mapping to the pinned semantic profile and governed target rendering.
     - Issue #2641 owns semantic admission/conformance and the first promotion to supported-profile.

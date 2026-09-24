@@ -12,6 +12,9 @@ code_refs:
   - packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringFieldPolicy.v1.ts
   - packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts
+  - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanFieldPolicy.v1.ts
+  - packages/@dvt/substrait-analysis/src/relationChangeSet.ts
+  - packages/@dvt/postgres-projection/src/relationalSql/project.ts
   - apps/api/src/infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.ts
   - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts
 evidence:
@@ -80,3 +83,69 @@ authority both return HTTP 400, with unchanged stored draft and revision.
 Ordinary Canvas selection still opens the semantic tree; Preview displays
 `MISSING_CAPABILITY executor.dvt-postgres-operational-workload` with Run disabled.
 This proves validation/persistence, not native provider execution or publication.
+
+## Neutral semantic names and target admission — 2026-09-24
+
+The #3263 / RELINC1 convergence removes the PostgreSQL identifier budget from
+semantic field/root display names. The contract owns their limit of 256 Unicode
+code points, rejects malformed names instead of trimming, and the PostgreSQL
+draft store enforces the same character budget. Physical database identifiers
+and generated PostgreSQL output names retain the target's 63-byte limit. A valid
+semantic draft can therefore be unavailable for that target without being corrupt.
+
+The implementation follows the boundary correction in
+[PCV1](../planning/proposals/mandatory/runtime-and-contracts/pcv1-canvas-authoring-field-budgets-3019-20260908.md)
+and the pre-implementation
+[convergence journal](https://github.com/dunay2/dvt/issues/3263#issuecomment-5814426257).
+Roll out contracts, Web and API together. No stored document is rewritten, no
+wire version is invented, and no compatibility reader is retained. Older readers
+may reject newly admitted long semantic names; this is an explicit hard cut.
+
+Verified during this cut: the contract suite passed 669 tests; real PostgreSQL
+semantic persistence passed all seven cases, including direct-write rejection
+and unchanged persisted authority after rejection. The neutral analysis and
+PostgreSQL target suites passed 327 tests together. Target tests distinguish
+Unicode character budgets from UTF-8 identifier bytes and preserve fail-closed
+physical-source validation.
+
+The Web SQL boundary now calls the shared PostgreSQL target, after verifying the
+selected graph's source and upstream-document bindings. The four shape-specific
+Web SQL renderers were removed. Nullable CONCAT uses PostgreSQL concatenation
+with Substrait's null propagation; UTC-year projection is independent of the
+database session timezone. Real PostgreSQL scalar and compositional integration
+tests passed all 18 cases. This is projection/sample evidence, not operational
+Run/publication or completion of every Canvas presentation reader.
+
+Current implementation and behavioral evidence:
+
+- `apps/web/src/app/views/canvas/canvasDvtSubstraitOutputProjection.ts`
+- `apps/web/src/app/views/canvas/canvasSubstraitGraphBindings.ts`
+- `packages/@dvt/postgres-projection/src/relationalSql/scalarBindings.ts`
+- `packages/@dvt/postgres-projection/test/relationalSqlNames.test.ts`
+- `apps/api/test/integration/dvtScalarSql.integration.test.ts`
+- `apps/api/test/integration/workspaceGraphDraftSemanticPersistence.test.ts`
+
+The `code_refs` of the earlier SQL evidence and the affected open risk entries
+now point to the shared target and focused replacement tests. Their original
+dated execution commands remain historical evidence, not claims that a deleted
+test still runs. Existing proposal snapshots are not the current mechanization
+authority: Planning DB records the implemented ConfigureCanvasDvtNode and
+PreviewExecutionPlan rails for GH-3263-SELECTED-RELATION-FILTER.
+
+Selected-filter browser proof passed both controlled-boundary cases (left/right
+insert, Apply, reload, edit, remove, no implicit sample or Run) and the real
+protected-API/PostgreSQL case (filter both operands, save/reload, explicit sample,
+LEFT JOIN unmatched rows and matching semantic-plan hash):
+
+```text
+pnpm --filter @dvt/web test:e2e:native --spec cypress/e2e/canvas/canvas-selected-relation-filter.cy.ts
+DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME=native pnpm --filter @dvt/web test:e2e:selected-closure:live --spec apps/web/cypress/e2e/canvas/canvas-selected-filter-live.cy.ts
+```
+
+An additional RED/GREEN component proof holds the schema query pending, then
+unmounts the editor or removes edit permission. Both cases now cancel removal
+without advancing the document revision; normal completion still applies once.
+No global invalidation workaround, stub, alternate authority or rule relaxation
+was introduced. The cache's hot relation queries are incremental; the existing
+Apply/document export boundary still materializes and hashes the whole document.
+That boundary and legacy column-presentation readers are not declared converged.

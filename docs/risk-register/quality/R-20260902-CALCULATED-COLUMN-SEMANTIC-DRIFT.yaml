@@ -23,7 +23,7 @@ mitigation:
     - docs/planning/proposals/mandatory/frontend-and-ux/canvas-calculated-column-authoring-plan-20260902.md
     - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
     - apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.test.ts
-    - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts
+    - apps/web/src/app/views/canvas/canvasProjectionFunctionContract.test.ts
     - apps/web/cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts
   follow_up:
     - Issue #2833 owns this bounded authoring slice.

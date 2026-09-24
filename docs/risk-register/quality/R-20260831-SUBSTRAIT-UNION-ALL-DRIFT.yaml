@@ -25,7 +25,7 @@ mitigation:
     - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
     - apps/web/src/app/views/canvas/canvasDvtSubstraitSetComposition.ts
     - apps/web/src/app/views/canvas/canvasDvtSubstraitSetComposition.test.ts
-    - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts
+    - apps/web/src/app/views/canvas/canvasOutputProjectionSet.test.ts
     - apps/web/cypress/e2e/canvas/canvas-substrait-union-all.cy.ts
   follow_up:
     - Issue #2634 owns later multi-input and additional Set composition.
