@@ -21,7 +21,7 @@ reusable TypeScript AST-backed architecture fitness helper.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/planning/reviews/architecture-and-governance/20260429-dvt-engine-package-audit-review.md`
-- `docs/evidence/ed-20260514-ea-20260429-06-semantic-architecture-fitness.md`
+- [EA-20260429-06 semantic architecture fitness](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/ed-20260514-ea-20260429-06-semantic-architecture-fitness.md)
 - `docs/risk-register/quality/R-20260514-EA-20260429-06-SEMANTIC-FITNESS.yaml`
 
 ## Result

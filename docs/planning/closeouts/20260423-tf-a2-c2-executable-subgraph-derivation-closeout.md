@@ -108,7 +108,7 @@ planning_type: closeout
   - `docs/planning/status/generated-code-state.md`
   - `docs/.manifest.json`
 - Added ARC-2 evidence:
-  `docs/evidence/ed-20260423-tf-a2-c2-executable-subgraph-derivation.md`
+  [Close TF-A2-C2 planner executable-subgraph derivation](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/ed-20260423-tf-a2-c2-executable-subgraph-derivation.md)
 - Updated the active adoption-drift risk:
   `docs/risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml`
 - Updated Lane A execution state:

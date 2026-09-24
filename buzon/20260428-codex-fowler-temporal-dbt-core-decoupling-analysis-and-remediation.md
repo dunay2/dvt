@@ -148,4 +148,4 @@ core concept. The corrected design treats DBT like a future SQL plugin:
 - `docs/architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md`
 
 Validation commands are recorded in
-`docs/evidence/ed-20260427-temporal-planref-qa1-readiness.md`.
+[Temporal PlanRef QA1 readiness hardening](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/ed-20260427-temporal-planref-qa1-readiness.md).

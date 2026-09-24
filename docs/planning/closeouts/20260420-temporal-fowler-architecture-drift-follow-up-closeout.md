@@ -123,7 +123,7 @@ status: Completed
   `docs/risk-register/quality/R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml`,
   and the risk index was regenerated.
 - The slice now carries the required ARC-2 evidence companion in
-  `docs/evidence/ED-20260420-temporal-fowler-branch-drift-follow-up.md`, so the
+  [Centralize Temporal workflow payload semantics and record adapter drift](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/ED-20260420-temporal-fowler-branch-drift-follow-up.md), so the
   adapter-temporal changes are backed by both an explicit risk entry and a
   validation artifact.
 
@@ -164,7 +164,7 @@ status: Completed
 - `docs/planning/closeouts/index.md`
 - `docs/planning/closeouts/20260420-temporal-fowler-architecture-drift-follow-up-closeout.md`
 - `docs/planning/status/generated-code-state.md`
-- `docs/evidence/ED-20260420-temporal-fowler-branch-drift-follow-up.md`
+- [Centralize Temporal workflow payload semantics and record adapter drift](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/ED-20260420-temporal-fowler-branch-drift-follow-up.md)
 - `docs/risk-register/quality/R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml`
 - `docs/risk-register/quality/index.md`
 

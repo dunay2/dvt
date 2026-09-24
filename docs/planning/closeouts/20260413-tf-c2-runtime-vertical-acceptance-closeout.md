@@ -105,7 +105,7 @@ the still-open repeatability and phase-2 work.
 - Mode: Slim
 - Scope:
   - `docs/planning/closeouts/20260413-tf-c2-runtime-vertical-acceptance-closeout.md`
-  - `docs/evidence/ED-20260413-tf-c2-runtime-vertical-acceptance.md`
+  - [Accept the first PostgreSQL execution-first runtime vertical](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/ED-20260413-tf-c2-runtime-vertical-acceptance.md)
   - `docs/risk-register/quality/R-20260413-TF-C2-LOCAL-POSTGRES-PROOF-COMPATIBILITY.yaml`
   - `docs/planning/state/agent-lane-c.yaml`
   - `docs/planning/state/domain-status-board.md`

@@ -757,3 +757,155 @@ test('retired PR drafts and historical intake have no files or live consumers', 
     'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md',
   ]);
 });
+
+// These dated validation reports are recoverable at their exact Git revision.
+// Current contracts, tests, risk evidence and mechanization obligations remain.
+test('retired historical validation records have no current files or references', () => {
+  const retiredDocuments = [
+    'docs/evidence/context/ED-20260311-execution-core-assessment.md',
+    'docs/evidence/supporting/ED-20260319-ts-esm-monorepo-migration.md',
+    'docs/evidence/supporting/ED-20260328-adapter-runtime-sonar-closeout.md',
+    'docs/evidence/context/ED-20260329-mvp-backend-operability-roadmap-reset.md',
+    'docs/evidence/supporting/ED-20260330-staleness-followup-code-quality.md',
+    'docs/evidence/ED-20260402-rc-g1-governance-startup-reconciliation.md',
+    'docs/evidence/ED-20260402-s05-envelope-boundary-hardening.md',
+    'docs/evidence/ED-20260403-s08-4-ci-regression-fix.md',
+    'docs/evidence/ED-20260403-s08-4-postgres-three-part-model-arc2.md',
+    'docs/evidence/ED-20260403-s08-5-b-run-execution-context-boundary.md',
+    'docs/evidence/ED-20260404-guards-alignment-adapter-postgres.md',
+    'docs/evidence/ED-20260404-inmemory-state-store-invariants-hardening.md',
+    'docs/evidence/ED-20260404-mw-a2-graph-source-cardinality-and-boundary-hardening.md',
+    'docs/evidence/ED-20260404-planner-v1-contract-normalization.md',
+    'docs/evidence/ED-20260405-admin-rebuild-and-plan-store-alignment.md',
+    'docs/evidence/ED-20260405-mwa2-policy-unbounded-precedence.md',
+    'docs/evidence/ED-20260405-start-run-application-service-qa.md',
+    'docs/evidence/ED-20260407-execution-plan-and-run-execution-policy-separation.md',
+    'docs/evidence/ED-20260407-retry-step-boundary-narrowing.md',
+    'docs/evidence/ED-20260407-status-heads-and-snapshot-hash-cleanup.md',
+    'docs/evidence/ED-20260408-ar-b3-manifest-node-key-determinism.md',
+    'docs/evidence/ED-20260408-mw-c1-step-activity-dispatcher.md',
+    'docs/evidence/ED-20260408-pr679-adapter-postgres-integration-smoke.md',
+    'docs/evidence/ED-20260408-pr807-react-day-picker-and-adapter-postgres-tests.md',
+    'docs/evidence/ED-20260408-retry-run-boundary-and-provider-signal-mapper.md',
+    'docs/evidence/ED-20260408-signal-transition-guard-stale-snapshot-idempotency.md',
+    'docs/evidence/ED-20260409-ci-rebuild-dedupe-and-adapter-postgres-consolidation.md',
+    'docs/evidence/ED-20260409-provider-ref-empty-string-preservation.md',
+    'docs/evidence/ED-20260409-temporal-provider-native-status-view.md',
+    'docs/evidence/ED-20260409-tf-c2-b-run-read-evidence-attempt-safety.md',
+    'docs/evidence/ED-20260409-trace-context-adapter-type-alignment.md',
+    'docs/evidence/ED-20260410-contract-mapper-boundary-option-a.md',
+    'docs/evidence/ED-20260410-temporal-baseline-and-capability-lane-partition.md',
+    'docs/evidence/ED-20260412-ar-a10-start-run-boundary-contract.md',
+    'docs/evidence/ED-20260412-ar-a11-step-retry-policy-governance.md',
+    'docs/evidence/ED-20260413-ar-a12-a-contract-pack-reset.md',
+    'docs/evidence/ED-20260413-ar-a12-b-status-model-split.md',
+    'docs/evidence/ED-20260413-temporal-native-cancel-provider-status-convergence.md',
+    'docs/evidence/ED-20260413-temporal-sdk-1-16-adapter-upgrade.md',
+    'docs/evidence/ED-20260413-tf-a1-a-preview-contract-freeze.md',
+    'docs/evidence/ED-20260413-tf-c2-runtime-vertical-acceptance.md',
+    'docs/evidence/ED-20260414-contract-schema-packs-and-eslint10-compat.md',
+    'docs/evidence/ED-20260414-tf-a1-c-srp-hardening.md',
+    'docs/evidence/ED-20260415-ar-c4-runtime-circuit-breaker-and-integration-hardening.md',
+    'docs/evidence/ED-20260418-local-build-hook-warm-cache-p0.md',
+    'docs/evidence/ED-20260418-rc-c2-turbo-build-orchestrator.md',
+    'docs/evidence/ED-20260420-temporal-fowler-branch-drift-follow-up.md',
+    'docs/evidence/ED-20260421-temporal-activity-dependency-wiring.md',
+    'docs/evidence/ED-20260422-start-run-boundary-and-runtime-seams.md',
+    'docs/evidence/ed-20260423-access-decision-vocabulary-hardening.md',
+    'docs/evidence/ed-20260423-adr0-traceability-gate.md',
+    'docs/evidence/ed-20260423-rc-c2-turbo-ci-governance.md',
+    'docs/evidence/ed-20260423-runtime-boundary-hardening.md',
+    'docs/evidence/ed-20260423-tf-a2-c1-execution-selection-contract-pack.md',
+    'docs/evidence/ed-20260423-tf-a2-c2-executable-subgraph-derivation.md',
+    'docs/evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md',
+    'docs/evidence/ed-20260423-tf-e2-k-a-first-canvas-playground-host.md',
+    'docs/evidence/ed-20260423-workspace-authoring-draft-aggregate.md',
+    'docs/evidence/ed-20260427-dev-stack-local-temporal-bootstrap.md',
+    'docs/evidence/ed-20260427-temporal-planref-config-hardening.md',
+    'docs/evidence/ed-20260427-temporal-planref-qa1-readiness.md',
+    'docs/evidence/ed-20260429-dbt-cli-plugin-runner-srp.md',
+    'docs/evidence/ed-20260429-engine-static-analysis-cleanup.md',
+    'docs/evidence/ed-20260429-plan-admission-hard-cut.md',
+    'docs/evidence/ed-20260429-plugin-admission-architecture.md',
+    'docs/evidence/ed-20260429-run-execution-context-admission-test-srp.md',
+    'docs/evidence/ed-20260429-temporal-step-plugin-semantics.md',
+    'docs/evidence/ed-20260429-we-hx-1-boundary-ownership.md',
+    'docs/evidence/ed-20260430-ar-d-continuation-safety.md',
+    'docs/evidence/ed-20260430-temporal-sdk-1-16-1-patch-upgrade.md',
+    'docs/evidence/ed-20260430-we-hx-2-facade-use-cases.md',
+    'docs/evidence/ed-20260505-adr0-traceability-gate.md',
+    'docs/evidence/ed-20260510-plan-integrity-validator-traceability-baseline.md',
+    'docs/evidence/ed-20260514-ar-a7-delivery-in-memory-outbox-ownership.md',
+    'docs/evidence/ed-20260514-ea-20260429-06-semantic-architecture-fitness.md',
+    'docs/evidence/ed-20260514-s08-plan-store-inventory-drift.md',
+    'docs/evidence/ed-20260515-ar-d-plan-pointer-semantic-fitness.md',
+    'docs/evidence/ed-20260523-postgres-tenant-isolation-canon.md',
+    'docs/evidence/ed-20260526-dbt-authoring-run-plan-store-reuse.md',
+    'docs/evidence/ED-20260601-execution-plan-prealpha-schema-hardcut.md',
+    'docs/evidence/ed-20260601-planner-local-doc-archive.md',
+    'docs/evidence/ED-20260603-planner-json-canonicalize-2-upgrade.md',
+    'docs/evidence/ED-20260603-temporal-sdk-1-17-2-upgrade.md',
+    'docs/evidence/ed-20260603-dbt-step-capability-admission.md',
+    'docs/evidence/ED-20260607-state-store-archive-redaction-baseline.md',
+    'docs/evidence/ED-20260612-contracts-compat-schema-parity.md',
+    'docs/evidence/ED-20260630-temporal-protobuf-override.md',
+    'docs/evidence/ED-20260713-dbt-project-file-projection-phase2.md',
+    'docs/evidence/ED-20260714-dbt-project-import-phase3-runtime.md',
+    'docs/evidence/ED-20260715-dbt-project-roundtrip-phase4-run.md',
+    'docs/evidence/ED-20260717-dbt-yaml-description-roundtrip.md',
+    'docs/evidence/ED-20260721-temporal-sdk-1-20-upgrade.md',
+    'docs/evidence/ED-20260729-graph-dbt-atomic-publication.md',
+    'docs/evidence/ED-20260731-canvas-dbt-authoring-authority.md',
+    'docs/evidence/ED-20260731-plan-admission-findings.md',
+    'docs/evidence/ED-20260731-typed-plan-preview-outcomes.md',
+    'docs/evidence/ed-20260731-planning-authority-engine-guard.md',
+    'docs/evidence/ED-20260809-temporal-cancellation-test-barrier.md',
+    'docs/evidence/ED-20260810-active-provider-documentation-truth.md',
+    'docs/evidence/ED-20260810-on-demand-status-provider-guard.md',
+  ];
+  const retiredAssets = [
+    'docs/evidence/assets/20260713-dbt-project-file-projection-phase2/01-layout-overlap-before.png',
+    'docs/evidence/assets/20260713-dbt-project-file-projection-phase2/02-layout-after.png',
+    'docs/evidence/assets/20260713-dbt-project-file-projection-phase2/03-code-split-blank-before.png',
+    'docs/evidence/assets/20260713-dbt-project-file-projection-phase2/04-code-split-after.png',
+  ];
+  const names = new Set(retiredDocuments.map((path) => path.split('/').at(-1).toLowerCase()));
+  const stems = retiredDocuments.map((path) =>
+    path.split('/').at(-1).replace(/\.md$/u, '').toLowerCase()
+  );
+  const references = new RegExp(stems.map(escapeRegExp).join('|'), 'u');
+  for (const path of [...retiredDocuments, ...retiredAssets]) {
+    assert.equal(existsSync(path), false, `Retired historical record returned: ${path}`);
+  }
+  const paths = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+    { encoding: 'utf8' }
+  )
+    .split('\0')
+    .filter(Boolean);
+  for (const path of paths) {
+    if (path === 'tools/ci/docs-disposition-canon.test.mjs' || !existsSync(path)) continue;
+    assert.equal(
+      names.has(path.split('/').at(-1).toLowerCase()),
+      false,
+      `Relocated historical report: ${path}`
+    );
+    const current = readRepoFile(path).replace(
+      /https:\/\/github\.com\/dunay2\/dvt\/(?:blob|tree)\/[a-f0-9]{40}\/[^\s)\]<>"`]+/giu,
+      ''
+    );
+    assert.doesNotMatch(
+      current.toLowerCase(),
+      references,
+      `Live historical validation reference: ${path}`
+    );
+    for (const asset of retiredAssets) {
+      assert.equal(
+        current.includes(asset),
+        false,
+        `Live retired capture reference: ${path}: ${asset}`
+      );
+    }
+  }
+});

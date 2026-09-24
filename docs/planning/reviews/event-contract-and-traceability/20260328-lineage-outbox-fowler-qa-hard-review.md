@@ -72,7 +72,7 @@ Code baseline used for this state snapshot:
 ## Evidence links
 
 - [ED-20260328-lineage-outbox-retry-scheduling](../../../evidence/critical/ED-20260328-lineage-outbox-retry-scheduling.md)
-- [ED-20260328-adapter-runtime-sonar-closeout](../../../evidence/supporting/ED-20260328-adapter-runtime-sonar-closeout.md)
+- [Adapter runtime and Sonar closeout](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/supporting/ED-20260328-adapter-runtime-sonar-closeout.md)
 
 ## Next steps
 

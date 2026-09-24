@@ -122,7 +122,7 @@ planning_type: closeout
   - `docs/architecture/components/planner/index.md`
   - `docs/planning/status/canonical-doc-code-matrix.md`
 - Added ARC-2 evidence:
-  `docs/evidence/ed-20260423-tf-a2-c1-execution-selection-contract-pack.md`.
+  [Freeze TF-A2-C1 execution selection contract pack](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/ed-20260423-tf-a2-c1-execution-selection-contract-pack.md).
 - Updated the active adoption-drift risk:
   `docs/risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml`.
 

@@ -156,7 +156,7 @@ Target:
 - Recommended owner: `@dvt/planner`.
 - Dependencies: none.
 - Documentation impact: reflected in QA artifact and planner component docs.
-- Evidence / risk-doc impact: covered by `ED-20260405-mwa2-policy-unbounded-precedence.md` and `R-20260405-MWA2-POLICY-UNBOUNDED-PRECEDENCE.yaml`.
+- Evidence / risk-doc impact: covered by [MW-A2 policy unbounded precedence hardening](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/ED-20260405-mwa2-policy-unbounded-precedence.md) and `R-20260405-MWA2-POLICY-UNBOUNDED-PRECEDENCE.yaml`.
 - Comment with rationale: policy vocabulary is governance authority; omitted keys for unbounded must clear node caps.
 - Definition of Done:
   - `stepTimeoutMs` removed when policy timeout is unbounded;

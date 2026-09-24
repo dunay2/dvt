@@ -77,7 +77,7 @@ opening a second product loop or bypassing the existing start-run boundary.
   `docs/architecture/components/engine/contracts/extensions/PluginSandbox.v1.md`:
   extension or plugin runtime behavior must stay outside kernel authority and
   behind an explicit capability or isolation boundary.
-- `docs/evidence/ED-20260403-s08-5-b-run-execution-context-boundary.md` and
+- [S08-5-B runExecutionContext governed boundary](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/ED-20260403-s08-5-b-run-execution-context-boundary.md) and
   `docs/risk-register/quality/R-20260403-RUN-EXECUTION-CONTEXT-BOUNDARY.yaml`:
   the open follow-up is explicit composition-root resolver wiring behind the
   artifacts-owned seam.

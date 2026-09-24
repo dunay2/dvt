@@ -100,5 +100,5 @@ This closeout is accepted. The residual AR-D2 capacity concern cited above is
 now closed separately by
 `docs/planning/closeouts/20260514-ar-d2-temporal-planref-capacity-sla-closeout.md`.
 Continuation safety remains governed by ADR-0052, accepted evidence
-`docs/evidence/ed-20260430-ar-d-continuation-safety.md`, and residual risk
+[AR-D continuation safety hardening](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/ed-20260430-ar-d-continuation-safety.md), and residual risk
 `docs/risk-register/quality/r-20260430-ar-d-continuation-safety.yaml`.
