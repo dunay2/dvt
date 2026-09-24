@@ -8,6 +8,7 @@ import { MemoryRelationAnalysisCache } from './memoryAnalysisCache.js';
 import { applyRelationChanges, type RelationChangeSet } from './relationChangeSet.js';
 import { RelationSnapshot, type AnalysisWork, type RelationLocation } from './relationSnapshot.js';
 import { decodeSchema, queryRelationSchemas } from './schemaCache.js';
+import { schemaNameCount } from './schemaHierarchy.js';
 import type { SchemaField } from './schemaTypes.js';
 
 export type RelationAnalysisResult = Readonly<{
@@ -118,7 +119,10 @@ export class RelationAnalysisSession {
     signal?.throwIfAborted();
     this.assertRevision(revision);
     const fields = decodeSchema(serialized);
-    if (relationId === snapshot.rootId && fields.length !== snapshot.rootNames.length)
+    if (
+      relationId === snapshot.rootId &&
+      schemaNameCount(fields.map((field) => field.type)) !== snapshot.rootNames.length
+    )
       throw new SubstraitAnalysisError(
         'invalid_structure',
         'Root names do not match the derived output width.',

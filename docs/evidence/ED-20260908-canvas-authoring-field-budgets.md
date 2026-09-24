@@ -149,3 +149,14 @@ No global invalidation workaround, stub, alternate authority or rule relaxation
 was introduced. The cache's hot relation queries are incremental; the existing
 Apply/document export boundary still materializes and hashes the whole document.
 That boundary and legacy column-presentation readers are not declared converged.
+
+The approved #3369 presentation migration first closes a neutral-analysis gap:
+struct constructors, nested field selections and flattened schema names now
+preserve hierarchical types and per-child value dependencies. SET merges child
+dependencies from every operand; selection through a null-extended JOIN parent
+is nullable without changing the stored child type. Cached schema facts use a
+new internal key version; no stored semantic document or public hash changes.
+RED reproduced rejected struct schemas and lost right-hand SET dependencies.
+GREEN: `pnpm --filter @dvt/substrait-analysis test` passed 98 tests and
+`pnpm --filter @dvt/postgres-projection test` passed 236. These are prerequisite
+package checks, not evidence that the external Canvas consumer is migrated.

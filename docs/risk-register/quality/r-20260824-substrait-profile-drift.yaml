@@ -31,6 +31,9 @@ mitigation:
     preserve Substrait null propagation and UTC extraction, with real PostgreSQL regression tests.
     SQL and dbt remain projections, never semantic fallbacks. Legacy Canvas presentation readers
     remain an explicit convergence boundary; removing a SQL profile does not prove their migration.
+    The #3369 prerequisite preserves struct child schemas and dependency identities in the shared
+    analysis/cache, including nullable-parent selection and both SET operands. This does not grant
+    structured-value execution to a target or complete the Canvas migration.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ed-20260824-substrait-semantic-reference-traceability.md
@@ -47,6 +50,8 @@ mitigation:
     - apps/web/src/app/views/canvas/canvasSubstraitGraphBindings.ts
     - packages/@dvt/postgres-projection/test/relationalSqlNames.test.ts
     - apps/api/test/integration/dvtScalarSql.integration.test.ts
+    - packages/@dvt/substrait-analysis/test/schemaHierarchy.test.ts
+    - packages/@dvt/substrait-analysis/test/schemaStructuredComposition.test.ts
   follow_up:
     - Issue #2597 must prove SQL AST/source mapping to the pinned semantic profile and governed target rendering.
     - Issue #2641 owns semantic admission/conformance and the first promotion to supported-profile.
