@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 /** Owned concern: each selected wrapper owns an independent, discardable form. */
 import React, { act } from 'react';
+import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
+import { RelationAnalysisTestHost } from './SelectedUnaryForm.test-support';
 import { fireEvent, getByLabelText } from '@testing-library/dom';
 import { describe, expect, it, vi } from 'vitest';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
@@ -9,8 +11,7 @@ import {
   applyDvtSubstraitSort,
   inspectCanvasDvtSubstraitSortFetch,
   resolveDvtSubstraitSortFetchInputFields,
-  selectCanvasDvtSubstraitSortFetch,
-} from './canvasDvtSubstraitSortFetch';
+} from './canvasSortFetch.test-support';
 import { createDvtSubstraitPilotDraft } from './canvasDvtSubstraitPilot';
 import { CanvasRelationalTreeSortFetchEditor } from './CanvasRelationalTreeSortFetchEditor';
 import { setupWorkbenchTest, root, container } from './CanvasRelationalTreeWorkbench.test-support';
@@ -18,7 +19,7 @@ import { setupWorkbenchTest, root, container } from './CanvasRelationalTreeWorkb
 describe('Sort/Fetch editor selection', () => {
   setupWorkbenchTest();
 
-  it('does not submit the previous Fetch values to a newly selected inner Fetch', () => {
+  it('does not submit the previous Fetch values to a newly selected inner Fetch', async () => {
     const pilot = createDvtSubstraitPilotDraft({
       sourceNodeId: 'source',
       targetNodeId: 'transform',
@@ -36,35 +37,37 @@ describe('Sort/Fetch editor selection', () => {
     const outerInspection = inspectCanvasDvtSubstraitSortFetch(outer);
     if (!outerInspection.ok) throw new Error('Expected outer Fetch');
     const onChange = vi.fn();
-    const render = (relationId: string): void => {
-      act(() =>
+    const render = async (relationId: string): Promise<void> => {
+      await act(async () =>
         root.render(
-          <CanvasRelationalTreeSortFetchEditor
-            draft={outer}
-            operation="fetch"
-            relationId={relationId}
-            onChange={onChange}
-            onClose={vi.fn()}
-          />
+          <RelationAnalysisTestHost document={outer}>
+            <CanvasRelationalTreeSortFetchEditor
+              draft={outer}
+              operation="fetch"
+              relationId={relationId}
+              onChange={onChange}
+              onClose={vi.fn()}
+            />
+          </RelationAnalysisTestHost>
         )
       );
     };
-    render(outerInspection.relationId);
+    await render(outerInspection.relationId);
     expect((getByLabelText(container, 'LIMIT') as HTMLInputElement).value).toBe('8');
-    act(() => {
+    await act(async () => {
       fireEvent.change(getByLabelText(container, 'LIMIT'), { target: { value: '7' } });
     });
-    render(innerInspection.relationId);
+    await render(innerInspection.relationId);
     expect((getByLabelText(container, 'LIMIT') as HTMLInputElement).value).toBe('2');
     expect((getByLabelText(container, 'OFFSET') as HTMLInputElement).value).toBe('1');
     expect(onChange).not.toHaveBeenCalled();
-    act(() => {
+    await act(async () => {
       fireEvent.submit(container.querySelector('form')!);
     });
     const saved = onChange.mock.calls[0]![0];
     expect(
       inspectCanvasDvtSubstraitSortFetch(
-        selectCanvasDvtSubstraitSortFetch(saved, innerInspection.relationId)!
+        selectDvtSubstraitRelation(saved, innerInspection.relationId)
       )
     ).toMatchObject({ count: 2n, offset: 1n });
     expect(inspectCanvasDvtSubstraitSortFetch(saved)).toMatchObject({ count: 8n, offset: 3n });

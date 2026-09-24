@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import type { CanvasRelationalTreeExistingJoinDraft } from './canvasRelationalTreeExistingJoinDraft';
 import type { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
-import { removeSelectedRelationFilter } from './canvasSelectedRelationFilter';
+import { removeSelectedRelationPassthrough } from './canvasSelectedRelationPassthrough';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import {
   removeCanvasRelationalTreeNode,
@@ -53,13 +53,19 @@ export function useCanvasRelationalTreeRemoval(
     request.current?.abort();
     const analysis = args.analysis;
     if (analysis?.document === draft && analysis.error == null && args.operation != null) {
-      const selected = analysis.session.locate(relationId, analysis.revision);
-      if (selected.relation.relType.case === 'filter') {
+      let selected;
+      try {
+        selected = analysis.session.locate(relationId, analysis.revision);
+      } catch {
+        setError('unavailable');
+        return;
+      }
+      if (['filter', 'sort', 'fetch'].includes(selected.relation.relType.case ?? '')) {
         const operation = args.operation;
         const cancellation = new AbortController();
         request.current = cancellation;
         setPending(null);
-        void removeSelectedRelationFilter(
+        void removeSelectedRelationPassthrough(
           analysis.session,
           relationId,
           analysis.revision,

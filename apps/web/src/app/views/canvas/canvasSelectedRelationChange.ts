@@ -42,6 +42,11 @@ export function rebindSelectedFieldReferences(
   const affected = new Set(
     session
       .referencingFields([...replacements.keys()], expectedRevision)
+      .filter((field) =>
+        [field.sourceFieldId, ...(field.operandFieldIds ?? [])].some(
+          (id) => id != null && replacements.has(id)
+        )
+      )
       .map((field) => field.relationId)
   );
   const changes = new Map(reconnected.map((entry) => [entry.binding.relationId, entry]));

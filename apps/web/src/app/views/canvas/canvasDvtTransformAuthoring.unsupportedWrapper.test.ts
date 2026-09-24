@@ -4,13 +4,13 @@ import {
   SortField_SortDirection,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { create } from '@bufbuild/protobuf';
+import { allocateDvtRelationId, allocateDvtFieldId } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 import { createDvtSubstraitPilotDraft } from './canvasDvtSubstraitPilot';
 import {
-  applyDvtSubstraitFetch,
-  applyDvtSubstraitSort,
-  resolveDvtSubstraitSortFetchInputFields,
-} from './canvasDvtSubstraitSortFetch';
+  createDvtSubstraitFetchDraft,
+  createDvtSubstraitSortDraft,
+} from '@dvt/postgres-projection';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { resolveDvtTransformAuthoringMetadata } from './canvasDvtTransformAuthoring';
@@ -45,13 +45,22 @@ describe('unsupported wrapped relation authoring', () => {
             .map(({ sourceFieldId: _sourceFieldId, ...field }) => field),
         },
       };
-      const fields = resolveDvtSubstraitSortFetchInputFields(leaf);
+      const identity = {
+        relationId: allocateDvtRelationId(),
+        outputFieldIds: leaf.sidecar.fields.map(() => allocateDvtFieldId()),
+      };
       const wrapped =
         operation === 'fetch'
-          ? applyDvtSubstraitFetch(leaf, { count: 20n })
-          : applyDvtSubstraitSort(leaf, [
-              { fieldId: fields[0]!.fieldId, direction: SortField_SortDirection.ASC_NULLS_LAST },
-            ]);
+          ? createDvtSubstraitFetchDraft(leaf, { ...identity, count: 20n })
+          : createDvtSubstraitSortDraft(leaf, {
+              ...identity,
+              keys: [
+                {
+                  fieldId: leaf.sidecar.fields[0]!.fieldId,
+                  direction: SortField_SortDirection.ASC_NULLS_LAST,
+                },
+              ],
+            });
       const node = applyDvtSubstraitSemanticDocument(
         transformNode(),
         encodeDvtSubstraitSemanticDocument(wrapped)

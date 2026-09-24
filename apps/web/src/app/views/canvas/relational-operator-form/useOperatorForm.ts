@@ -8,10 +8,7 @@ import type { CanvasRelationalOperatorTool } from '../canvasRelationalTreeOperat
 import { applyCanvasRelationalOperatorTool } from '../canvasRelationalTreeOperatorCommands';
 import { operatorFormCopy } from './operatorFormCopy';
 import { CanvasRelationAnalysisContext } from '../CanvasRelationAnalysisContext';
-import {
-  applySelectedRelationFilter,
-  removeSelectedRelationFilter,
-} from '../canvasSelectedRelationFilter';
+import { applySelectedUnaryTool } from './applySelectedUnaryTool';
 
 export type OperatorFormValues = Readonly<{
   fieldId: string;
@@ -68,21 +65,22 @@ export function useOperatorForm({
     count: tool.count == null ? '' : String(tool.count),
   }));
   const [error, setError] = useState(false);
-  const commitFilter = async (remove: boolean) => {
+  const commitUnary = async (operation: 'filter' | 'sort' | 'fetch', remove: boolean) => {
     if (busy || analysis == null || revision == null || targetRelationId == null) return;
     setBusy(true);
     setError(false);
     const signal = lifetime.current.signal;
     try {
-      const next = remove
-        ? await removeSelectedRelationFilter(analysis.session, targetRelationId, revision, signal)
-        : await applySelectedRelationFilter(analysis.session, {
-            ...values,
-            relationId: targetRelationId,
-            expectedRevision: revision,
-            intent: tool.active ? 'edit' : 'insert',
-            signal,
-          });
+      const next = await applySelectedUnaryTool(analysis.session, {
+        ...values,
+        tool: operation,
+        remove,
+        relationId: targetRelationId,
+        expectedRevision: revision,
+        intent: tool.active ? 'edit' : 'insert',
+        signal,
+      });
+      signal.throwIfAborted();
       onPendingChange?.(false);
       onChange(next);
       onClose();
@@ -93,31 +91,20 @@ export function useOperatorForm({
     }
   };
   const commit = (remove = false) => {
-    if (tool.id === 'filter') {
-      void commitFilter(remove);
-      return;
-    }
-    let offset: bigint | undefined;
-    let count: bigint | undefined;
-    try {
-      offset = values.offset.trim() === '' ? undefined : BigInt(values.offset);
-      count = values.count.trim() === '' ? undefined : BigInt(values.count);
-    } catch {
-      setError(true);
+    if (tool.id !== 'aggregate' && tool.id !== 'window') {
+      void commitUnary(tool.id, remove);
       return;
     }
     const next = applyCanvasRelationalOperatorTool(draft, {
       ...values,
       tool: tool.id,
-      offset,
-      count,
-      targetRelationId,
       remove,
     });
     if (next === draft) {
       setError(true);
       return;
     }
+    onPendingChange?.(false);
     onChange(next);
     onClose();
   };

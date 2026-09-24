@@ -15,7 +15,7 @@ import {
   applyDvtSubstraitFetch,
   applyDvtSubstraitSort,
   resolveDvtSubstraitSortFetchInputFields,
-} from './canvasDvtSubstraitSortFetch';
+} from './canvasSortFetch.test-support';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 
 function intent(

@@ -23,7 +23,7 @@ import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { applyDvtSubstraitPilotRowNumber } from './canvasDvtSubstraitWindow';
-import { applyDvtSubstraitFetch, applyDvtSubstraitSort } from './canvasDvtSubstraitSortFetch';
+import { applyDvtSubstraitFetch, applyDvtSubstraitSort } from './canvasSortFetch.test-support';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 
 const TARGET_ID = 'transform-orders';

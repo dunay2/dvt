@@ -49,9 +49,10 @@ export function CanvasRelationalTreeInspection({
           onDropSource={model.authoringAvailable ? model.session.selectInput : undefined}
           onRemove={model.authoringAvailable ? model.session.removal.remove : undefined}
           onExpand={(locator) => {
-            model.selectTreeNode(locator);
+            const inspection = resolveRelationalInspection(model.selectTreeNode(locator));
             onExpandedChange(true);
-            if (model.authoringAvailable) model.session.start();
+            if (model.authoringAvailable && inspection != null && inspection.kind !== 'unsupported')
+              model.session.start();
           }}
         />
         {expanded ? (
