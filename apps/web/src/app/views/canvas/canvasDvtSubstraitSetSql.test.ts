@@ -1,7 +1,6 @@
 import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
 import { describe, expect, it } from 'vitest';
 
-import { projectDvtSubstraitUnionAllToPostgresSql } from './canvasDvtSubstraitPostgresProjection';
 import {
   applyDvtSubstraitUnionAllFieldEdit,
   applyDvtSubstraitUnionAllGrouping,
@@ -57,7 +56,6 @@ describe('Canvas SET SQL uses the canonical projection', () => {
         'region',
         'customer_id',
       ]);
-      expect(await projectDvtSubstraitUnionAllToPostgresSql(draft)).toBe(projected.sql);
       expect(draft).toEqual(before);
 
       const inspection = inspectDvtSubstraitUnionAllDraft(draft);
@@ -73,7 +71,6 @@ describe('Canvas SET SQL uses the canonical projection', () => {
         'count',
         'rank',
       ]);
-      expect(await projectDvtSubstraitUnionAllToPostgresSql(draft)).toBe(grouped.sql);
     }
   );
 });

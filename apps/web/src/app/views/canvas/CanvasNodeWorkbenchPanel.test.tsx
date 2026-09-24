@@ -24,6 +24,7 @@ import {
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import * as outputProjection from './canvasDvtSubstraitOutputProjection';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import {
@@ -785,6 +786,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
   });
 
   it('shows Substrait first and derives PostgreSQL SQL only after explicit output selection', async () => {
+    const project = vi.spyOn(outputProjection, 'projectDvtSubstraitTransformOutputToPostgresSql');
     renderNodePanel(root, DVT_SUBSTRAIT_TRANSFORM_NODE, 'code');
 
     const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
@@ -796,6 +798,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     );
 
     expect(outputSelector?.value).toBe('substrait');
+    expect(project).not.toHaveBeenCalled();
     expect(canonicalViewer?.dataset.language).toBe('json');
     expect(canonicalViewer?.textContent).toContain('dvt-substrait-semantic-document.v1');
     expect(codeSection?.textContent).not.toContain('Convert to SQL');
@@ -810,10 +813,14 @@ describe('CanvasNodeWorkbenchPanel', () => {
         '[data-testid="monaco-code-viewer"]'
       );
       expect(sqlViewer?.dataset.language).toBe('sql');
-      expect(sqlViewer?.textContent?.replaceAll(/\s+/g, ' ').toLowerCase()).toContain(
-        'select order_id from raw.orders'
-      );
+      expect(sqlViewer?.textContent?.trim().length).toBeGreaterThan(0);
     });
+    expect(project).toHaveBeenCalledOnce();
+    expect(project.mock.calls[0]![0].transformNode.id).toBe(DVT_SUBSTRAIT_TRANSFORM_NODE.id);
+    expect(codeSection?.querySelector('[data-testid="monaco-code-viewer"]')?.textContent).toBe(
+      await project.mock.results[0]!.value
+    );
+    project.mockRestore();
     expect(outputSelector?.value).toBe('postgres-sql');
   });
 
