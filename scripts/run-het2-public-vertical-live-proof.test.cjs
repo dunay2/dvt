@@ -48,15 +48,12 @@ test('keeps the HET2 fixture non-unique for the controlled dbt failure proof', (
   assert.equal(rows[0].order_id, rows[1].order_id);
 });
 
-test('starts the pinned MinIO image on loopback only', () => {
-  const args = buildMinioDockerArgs({ containerName: 'dvt-het2-proof', port: 19000 });
+test('starts the built MinIO image on loopback only', () => {
+  const image = 'sha256:built-minio-fixture';
+  const args = buildMinioDockerArgs({ image, containerName: 'dvt-het2-proof', port: 19000 });
   assert.equal(args[0], 'run');
   assert.ok(args.includes('127.0.0.1:19000:9000'));
-  assert.ok(
-    args.includes(
-      'quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e'
-    )
-  );
+  assert.ok(args.includes(image));
 });
 
 test('enables acquisition and loader against the same real content-addressed store', () => {

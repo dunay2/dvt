@@ -6,8 +6,9 @@ import { awaitAnalysis } from './analysisCancellation.js';
 import { SubstraitAnalysisError, type SubstraitDocument } from './document.js';
 import { MemoryRelationAnalysisCache } from './memoryAnalysisCache.js';
 import { applyRelationChanges, type RelationChangeSet } from './relationChangeSet.js';
-import { RelationSnapshot, type AnalysisWork } from './relationSnapshot.js';
+import { RelationSnapshot, type AnalysisWork, type RelationLocation } from './relationSnapshot.js';
 import { decodeSchema, queryRelationSchemas } from './schemaCache.js';
+import { schemaNameCount } from './schemaHierarchy.js';
 import type { SchemaField } from './schemaTypes.js';
 
 export type RelationAnalysisResult = Readonly<{
@@ -70,6 +71,15 @@ export class RelationAnalysisSession {
       throw new SubstraitAnalysisError('stale_document', 'Analysis revision changed.');
   }
 
+  /** Locate a command target via inverse edges, without lending mutable canonical messages. */
+  locate(
+    relationId: string,
+    expectedRevision: number
+  ): RelationLocation & Readonly<{ revision: number }> {
+    this.assertRevision(expectedRevision);
+    return { ...this.current().locate(relationId), revision: this.generation };
+  }
+
   async query(
     relationId: string,
     signal?: globalThis.AbortSignal
@@ -109,7 +119,10 @@ export class RelationAnalysisSession {
     signal?.throwIfAborted();
     this.assertRevision(revision);
     const fields = decodeSchema(serialized);
-    if (relationId === snapshot.rootId && fields.length !== snapshot.rootNames.length)
+    if (
+      relationId === snapshot.rootId &&
+      schemaNameCount(fields.map((field) => field.type)) !== snapshot.rootNames.length
+    )
       throw new SubstraitAnalysisError(
         'invalid_structure',
         'Root names do not match the derived output width.',
@@ -128,6 +141,18 @@ export class RelationAnalysisSession {
     this.assertRevision(change.expectedRevision);
     applyRelationChanges(this.current(), change);
     this.advance();
+  }
+
+  referencingFields(
+    fieldIds: readonly string[],
+    expectedRevision: number
+  ): readonly DvtSubstraitFieldBindingV1[] {
+    this.assertRevision(expectedRevision);
+    const snapshot = this.current();
+    const references = new Set(
+      fieldIds.flatMap((id) => [...(snapshot.fieldConsumers.get(id) ?? [])])
+    );
+    return [...references].map((id) => globalThis.structuredClone(snapshot.fields.get(id)!));
   }
 
   replace(document: SubstraitDocument, expectedRevision: number): void {

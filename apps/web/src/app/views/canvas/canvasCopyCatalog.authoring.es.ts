@@ -28,6 +28,7 @@ export const canvasViewAuthoringCopyEs = {
     'Este campo lo usa un Modelo conectado. Elimina o reasigna antes esa dependencia.',
   sourceOutputLastFieldMessage: 'Un Origen debe entregar al menos un campo.',
   connectionIncompleteMessage: 'La conexión está incompleta.',
+  connectionGraphChangedMessage: 'El grafo ha cambiado. Vuelve a conectar los nodos.',
   nodeNotFoundInGraphMessage: 'No se ha encontrado el nodo en el grafo.',
   nodeAlreadyOnCanvasMessage: 'El nodo ya está en el canvas',
   nodeKindUnavailableForCanvasMessage:
@@ -406,6 +407,8 @@ export const canvasViewAuthoringCopyEs = {
   inspectorErrorDvtTableRequired: 'La tabla es obligatoria.',
   inspectorErrorDvtAliasRequired: 'El alias es obligatorio.',
   inspectorErrorDvtAliasDuplicate: 'El alias ya está en uso.',
+  inspectorErrorDvtSemanticFieldInvalid:
+    'Usa un nombre de campo válido, sin espacios exteriores y con 256 caracteres Unicode como máximo.',
   inspectorErrorDvtIdentifierInvalid:
     'Los identificadores PostgreSQL contienen texto no válido, como un carácter NUL.',
   inspectorErrorDvtIdentifierTooLong:

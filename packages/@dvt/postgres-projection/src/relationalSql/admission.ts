@@ -1,5 +1,5 @@
 /** Preserve physical scope and profile integrity independently of relation shape. */
-import type { ConnectedSourceRef } from '@dvt/contracts';
+import { PostgresIdentifierV1Schema, type ConnectedSourceRef } from '@dvt/contracts';
 import type { SubstraitDocument, SubstraitSchemas } from '@dvt/substrait-analysis';
 
 import { DvtSubstraitPostgresProjectionError } from '../dvtProjection.js';
@@ -63,7 +63,9 @@ export function admitSqlSources(
       sourceRef?.connectionRef.provider !== 'postgres' ||
       (sources[0] != null &&
         !hasSameConnectionRef(sources[0].sourceRef.connectionRef, sourceRef.connectionRef)) ||
-      names.some((name) => name.length === 0 || name !== name.trim()) ||
+      !PostgresIdentifierV1Schema.safeParse(identity.schema).success ||
+      !PostgresIdentifierV1Schema.safeParse(identity.table).success ||
+      names.some((name) => !PostgresIdentifierV1Schema.safeParse(name).success) ||
       new Set(names).size !== names.length ||
       entry.fields.length !== names.length ||
       entry.fields.some(

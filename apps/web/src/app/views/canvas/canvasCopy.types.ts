@@ -62,6 +62,7 @@ export type CanvasViewCopy = {
   readonly missingRemoteDraftMessage: string;
   readonly reloadLatestDraftLabel: string;
   readonly dependencyAddedMessage: string;
+  readonly dependencyCreationFailedMessage: string;
   readonly columnMappingAddedMessage: string;
   readonly columnRelationProposedMessage: string;
   readonly columnMappingRemovedMessage: string;
@@ -213,6 +214,7 @@ export type CanvasViewCopy = {
   readonly emptyCanvasReadyDetail: string;
   readonly canvasReadyDetail: string;
   readonly connectionIncompleteMessage: string;
+  readonly connectionGraphChangedMessage: string;
   readonly nodeNotFoundInGraphMessage: string;
   readonly nodeAlreadyOnCanvasMessage: string;
   readonly nodeKindUnavailableForCanvasMessage: string;
@@ -731,6 +733,7 @@ export type CanvasViewCopy = {
   readonly inspectorErrorDvtAliasRequired: string;
   readonly inspectorErrorDvtAliasDuplicate: string;
   readonly inspectorErrorDvtIdentifierInvalid: string;
+  readonly inspectorErrorDvtSemanticFieldInvalid: string;
   readonly inspectorErrorDvtIdentifierTooLong: string;
   readonly inspectorErrorDvtIdentifierWhitespace: string;
   readonly inspectorErrorDvtConnectionRequired: string;

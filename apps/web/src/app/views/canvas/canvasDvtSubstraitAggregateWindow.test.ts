@@ -183,7 +183,7 @@ describe('VTX2 typed Substrait aggregate and window composition', () => {
     expect(aggregateRelationId(ranked)).toBe(legacyAggregateId);
   });
 
-  it('projects grain, count and rank fields on the Transform card from the same Plan', () => {
+  it('projects grain, count and rank fields on the Transform card from the same Plan', async () => {
     const ranked = applyDvtSubstraitPilotAggregateRowNumber(groupedDraft(), {
       outputName: 'count_rank',
     });
@@ -214,7 +214,7 @@ describe('VTX2 typed Substrait aggregate and window composition', () => {
       },
     };
 
-    const truth = projectCanvasNodePresentationTruth({
+    const truth = await projectCanvasNodePresentationTruth({
       node: transform,
       nodes: [source, transform],
       edges: [{ sourceId: source.id, targetId: transform.id }],

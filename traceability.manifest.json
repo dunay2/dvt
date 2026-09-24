@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-09-15",
+  "generated": "2026-09-24",
   "repo": {
     "sha": "local"
   },
@@ -1199,6 +1199,7 @@
         "Retain product gaps separately from standard semantic identities.",
         "Seed candidates only from pinned core and official extension identities.",
         "Validate and serialize the capability read model deterministically.",
+        "Validate canonical Plan values independently of provider identifier limits.",
         "Validate stable FieldId hierarchy against the current structural binding independently from document transport. FieldId/relationId own logical identity; outputOrdinal is only the current sibling position and must never be used to mint or repair identity.",
         "Version Run separately from the existing Preview workload and bind it to one explicit result target."
       ],
@@ -1215,6 +1216,7 @@
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityIdentity.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitFieldBindingHierarchy.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanBinary.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanFieldPolicy.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProductNeeds.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts",

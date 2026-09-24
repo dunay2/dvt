@@ -14,11 +14,8 @@ import {
   inspectDvtSubstraitProjectionDraft,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
-import {
-  inspectDvtSubstraitFilter,
-  removeDvtSubstraitFilter,
-  resolveDvtSubstraitFilterCapabilities,
-} from './canvasDvtSubstraitFilter';
+import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
+import { inspectDvtSubstraitFilter, removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import {
   inspectCanvasDvtSubstraitSortFetch,
   resolveDvtSubstraitSortFetchInputFields,
@@ -70,30 +67,11 @@ export function resolveCanvasRelationalOperatorTools(
   const sourceFields = projection.ok
     ? projection.projection.outputs.filter((field) => field.sourceFieldName != null)
     : [];
-  const comparisons = projection.ok
-    ? resolveDvtSubstraitFilterCapabilities({
-        dataType: 'string',
-        provider: projection.projection.source.sourceRef.connectionRef.provider,
-      })
-    : [];
   const grouping = group.ok ? group.projection : window.ok ? window.projection : null;
   const sortFetch = inspectCanvasDvtSubstraitSortFetch(draft);
   const sortFields = resolveDvtSubstraitSortFetchInputFields(draft, 'sort');
   const fetchFields = resolveDvtSubstraitSortFetchInputFields(draft, 'fetch');
   return [
-    {
-      id: 'filter',
-      enabled:
-        admitted('/substrait.FilterRel') &&
-        sourceFields.some((field) => field.dataType === 'string') &&
-        comparisons.length > 0,
-      active: filter != null,
-      fields: sourceFields.filter((field) => field.dataType === 'string'),
-      comparisons,
-      fieldId: filter?.fieldId,
-      value: filter?.value,
-      capabilityId: filter?.capabilityId,
-    },
     {
       id: 'aggregate',
       enabled:

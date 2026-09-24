@@ -181,6 +181,9 @@ export function DvtAuthoringFields({
     } else if (draft.dvt.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
       semanticFields = null;
     } else if (draft.dvt.shape === 'projection') {
+      const hasPendingComposition =
+        new Set(edges.filter((edge) => edge.targetId === node.id).map((edge) => edge.sourceId))
+          .size > 1;
       semanticFields = (
         <div className="space-y-4">
           <DvtSubstraitCompositionStart
@@ -193,11 +196,9 @@ export function DvtAuthoringFields({
             onChange={onChange}
           />
           <DvtRelationFilterAuthoringSection
-            disabled={disabled}
+            disabled={disabled || hasPendingComposition}
             draft={draft.dvt}
             node={node}
-            nodes={nodes}
-            edges={edges}
             onChange={(semantic) =>
               onChange((current) =>
                 current.dvt?.kind === 'transform' && current.dvt.mode === 'substrait'

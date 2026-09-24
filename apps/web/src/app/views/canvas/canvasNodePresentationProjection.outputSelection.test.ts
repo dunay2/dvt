@@ -43,7 +43,7 @@ const source: CanonicalNode = {
 };
 
 describe('Transform output-selection presentation', () => {
-  it('keeps an excluded physical field in place without admitting an unrelated Source', () => {
+  it('keeps an excluded physical field in place without admitting an unrelated Source', async () => {
     const semanticDocument = encodeDvtSubstraitProjectionDocument(
       createDvtSubstraitProjectionDraft({
         source: {
@@ -90,7 +90,7 @@ describe('Transform output-selection presentation', () => {
         columns: [{ name: 'id', type: 'integer', nullable: false }],
       },
     };
-    const truth = projectCanvasNodePresentationTruth({
+    const truth = await projectCanvasNodePresentationTruth({
       node: transform,
       nodes: [source, secondSource, transform],
       edges: [
@@ -108,7 +108,7 @@ describe('Transform output-selection presentation', () => {
       false
     );
   });
-  it('keeps original roots and inherited inactive fields visible beside a derived struct', () => {
+  it('keeps original roots and inherited inactive fields visible beside a derived struct', async () => {
     const sourceWithInactive: CanonicalNode = {
       ...source,
       metadata: {
@@ -159,7 +159,7 @@ describe('Transform output-selection presentation', () => {
       encodeDvtSubstraitStructuredFieldDocument(structuredDraft)
     );
 
-    const truth = projectCanvasNodePresentationTruth({
+    const truth = await projectCanvasNodePresentationTruth({
       node: transform,
       nodes: [sourceWithInactive, transform],
       edges: [{ sourceId: sourceWithInactive.id, targetId: transform.id }],
@@ -182,7 +182,7 @@ describe('Transform output-selection presentation', () => {
     expect(visibleByName.get('amount')).toMatchObject({ provenance: 'declared' });
     expect(visibleByName.get('status')).toMatchObject({ provenance: 'inherited' });
   });
-  it('does not inherit Source selection as an empty Transform output selection', () => {
+  it('does not inherit Source selection as an empty Transform output selection', async () => {
     const sourceDraft = createDvtSubstraitProjectionDraft({
       source: {
         nodeId: source.id,
@@ -231,7 +231,7 @@ describe('Transform output-selection presentation', () => {
         })
       )
     );
-    const truth = projectCanvasNodePresentationTruth({
+    const truth = await projectCanvasNodePresentationTruth({
       node: transform,
       nodes: [projectedSource, transform],
       edges: [{ sourceId: projectedSource.id, targetId: transform.id }],
@@ -246,7 +246,7 @@ describe('Transform output-selection presentation', () => {
     expect(truth.columns.visible[0]?.selected).toBeUndefined();
   });
 
-  it('keeps every physical Source field visible while downstream nodes receive only its projection', () => {
+  it('keeps every physical Source field visible while downstream nodes receive only its projection', async () => {
     const sourceDraft = createDvtSubstraitProjectionDraft({
       source: {
         nodeId: source.id,
@@ -281,7 +281,7 @@ describe('Transform output-selection presentation', () => {
     };
     const edges = [{ sourceId: projectedSource.id, targetId: transform.id }];
 
-    const sourceTruth = projectCanvasNodePresentationTruth({
+    const sourceTruth = await projectCanvasNodePresentationTruth({
       node: projectedSource,
       nodes: [projectedSource, transform],
       edges,
@@ -292,7 +292,7 @@ describe('Transform output-selection presentation', () => {
       { name: 'customer', selected: false },
     ]);
 
-    const transformTruth = projectCanvasNodePresentationTruth({
+    const transformTruth = await projectCanvasNodePresentationTruth({
       node: transform,
       nodes: [projectedSource, transform],
       edges,

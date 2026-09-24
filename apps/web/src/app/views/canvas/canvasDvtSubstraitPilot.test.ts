@@ -162,6 +162,12 @@ function buildPilotDraft(): DvtSubstraitPilotDraft {
       { relationId: 'relation:customer-project', relAnchor: 2, displayName: 'customers' },
     ],
     fields: [
+      ...['name', 'email', 'country'].map((displayName, outputOrdinal) => ({
+        fieldId: 'input:' + displayName,
+        relationId: 'relation:customers',
+        outputOrdinal,
+        displayName,
+      })),
       {
         fieldId: OUTPUT_FIELD_ID,
         relationId: 'relation:customer-project',
@@ -261,9 +267,11 @@ describe('typed Substrait DVT card pilot', () => {
       },
     });
     expect(persisted.sidecar.semanticPlanSha256).toBe(persisted.semanticPlan.sha256);
-    expect(persisted.sidecar.fields.find((field) => field.outputOrdinal === 0)?.fieldId).toBe(
-      OUTPUT_FIELD_ID
-    );
+    expect(
+      persisted.sidecar.fields.find(
+        (field) => field.relationId === 'relation:customer-project' && field.outputOrdinal === 0
+      )?.fieldId
+    ).toBe(OUTPUT_FIELD_ID);
     expect(
       reopened.plan.extensions.map((entry) =>
         entry.mappingType.case === 'extensionFunction' ? entry.mappingType.value.name : ''
@@ -271,7 +279,7 @@ describe('typed Substrait DVT card pilot', () => {
     ).toEqual(['trim:str', 'upper:str']);
   });
 
-  it('uses existing Apply, card projection, and Graph Draft reload without a second store', () => {
+  it('uses existing Apply, card projection, and Graph Draft reload without a second store', async () => {
     const initialDocument = encodeDvtSubstraitPilotDocument(buildPilotDraft());
     const node = applyDvtSubstraitSemanticDocument(buildTransformNode(), initialDocument);
     const originalAuthority = readDvtTransformAuthoringAuthority(node);
@@ -299,7 +307,7 @@ describe('typed Substrait DVT card pilot', () => {
     expect(appliedAuthority.mode).toBe('substrait');
 
     const sourceNode = buildSourceNode();
-    const presentation = projectCanvasNodePresentationTruth({
+    const presentation = await projectCanvasNodePresentationTruth({
       node: appliedNode,
       nodes: [sourceNode, appliedNode],
       edges: [{ sourceId: sourceNode.id, targetId: appliedNode.id }],

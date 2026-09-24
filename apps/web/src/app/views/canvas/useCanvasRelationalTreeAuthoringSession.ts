@@ -49,7 +49,6 @@ export function useCanvasRelationalTreeAuthoringSession(
     appendInput: appendOperand,
     placeInput: placeOperand,
     primaryInputId,
-    replaceInputs,
     secondaryInputId,
     selectedInputIds,
     selectInitialInput,
@@ -64,17 +63,15 @@ export function useCanvasRelationalTreeAuthoringSession(
     onHydrate: hydrateExistingJoinState,
   });
   useEffect(reset, [enabled, reset, transformNode.id]);
-  const analysis = useCanvasRelationAnalysisSession(
-    !active && seed != null ? seed.draft : joinDraft,
-    transformNode.id
-  );
+  const effectiveDraft = !active && seed != null ? seed.draft : joinDraft;
+  const analysis = useCanvasRelationAnalysisSession(effectiveDraft, transformNode.id);
   const effectiveInputIds = !active && seed != null ? seed.inputIds : selectedInputIds;
   const { candidates, choices } = useCanvasRelationalTreeAuthoringOptions({
     editable,
     edges,
     enabled,
     inputs,
-    joinDraft: !active && seed != null ? seed.draft : joinDraft,
+    joinDraft: effectiveDraft,
     nodes,
     operation: !active && seed != null ? seed.operation : operation,
     selectedInputIds: effectiveInputIds,
@@ -102,7 +99,7 @@ export function useCanvasRelationalTreeAuthoringSession(
       appendInputId,
       choices,
       inputs,
-      joinDraft: !active && seed != null ? seed.draft : joinDraft,
+      joinDraft: effectiveDraft,
       operation: !active && seed != null ? seed.operation : operation,
       selectedInputIds: effectiveInputIds,
       targetNodeId: transformNode.id,
@@ -130,6 +127,8 @@ export function useCanvasRelationalTreeAuthoringSession(
     return true;
   }, [active, editable, enabled, hydrateExistingJoin]);
   const removal = useCanvasRelationalTreeRemoval({
+    analysis,
+    operation: !active && seed != null ? seed.operation : operation,
     enabled: enabled && editable,
     active,
     draft: joinDraft,
@@ -137,19 +136,14 @@ export function useCanvasRelationalTreeAuthoringSession(
     seed,
     targetNodeId: transformNode.id,
     hydrate: hydrateExistingJoin,
-    accept: (result, ids) => {
-      setActive(true);
-      setJoinDraft(result.draft);
-      setOperation(result.operation);
-      replaceInputs(ids);
-      setAppendInputId(null);
-    },
+    accept: (result, ids) =>
+      hydrateExistingJoinState({ ...result, inputIds: ids, appendInputId: null }),
   });
   return {
     analysis,
     occurrences: createSourceOccurrenceActions({
       editable: enabled && editable,
-      draft: !active && seed != null ? seed.draft : joinDraft,
+      draft: effectiveDraft,
       inputs,
       start,
       setAppendInputId,

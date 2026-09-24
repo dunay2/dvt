@@ -47,7 +47,7 @@ import {
   DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
-  PostgresIdentifierV1Schema,
+  DvtSemanticFieldNameV1Schema,
   allocateDvtFieldId,
   allocateDvtRelationId,
   type ConnectedSourceRef,
@@ -1100,7 +1100,7 @@ export function applyDvtSubstraitProjectionFunction(
     args.provider !== inspection.projection.source.sourceRef.connectionRef.provider ||
     capability == null ||
     !admitsCompleteArgumentCount(capability, operandFieldIds.length) ||
-    !PostgresIdentifierV1Schema.safeParse(alias).success ||
+    !DvtSemanticFieldNameV1Schema.safeParse(alias).success ||
     output == null ||
     operands.some((operand) => operand == null) ||
     new Set(operandFieldIds).size !== operandFieldIds.length ||

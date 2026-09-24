@@ -300,8 +300,8 @@ export class PostgresWorkspaceGraphDraftStore implements IWorkspaceGraphDraftSto
                   OR ${schema}.workspace_graph_draft_trim(binding_item ->> 'displayName') = ''
                   OR ${schema}.workspace_graph_draft_trim(binding_item ->> 'displayName') <>
                     binding_item ->> 'displayName'
-                  OR octet_length(binding_item ->> 'displayName') >
-                    ${limits.postgresIdentifierUtf8Bytes})
+                  OR char_length(binding_item ->> 'displayName') >
+                    ${limits.humanNameCodePoints})
               THEN RETURN FALSE;
               END IF;
               IF binding_item ? 'description'

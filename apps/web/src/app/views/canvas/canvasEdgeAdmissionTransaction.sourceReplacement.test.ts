@@ -79,11 +79,11 @@ const draftSession = (): CanvasDraftSession => ({
 });
 
 describe('Canvas source replacement', () => {
-  it('projects the replacement source catalog after the previous dependency is removed', () => {
+  it('projects the replacement source catalog after the previous dependency is removed', async () => {
     const canonicalNodesById = new Map(
       [orders, outbox, transform].map((node) => [node.id, node] as const)
     );
-    const first = resolveCanvasEdgeCreationTransaction({
+    const first = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: orders.id,
@@ -102,7 +102,7 @@ describe('Canvas source replacement', () => {
       ...first.draftSession,
       workingSet: { ...first.draftSession.workingSet, visibleEdges: [] },
     };
-    const replacement = resolveCanvasEdgeCreationTransaction({
+    const replacement = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: outbox.id,
@@ -120,7 +120,7 @@ describe('Canvas source replacement', () => {
 
     const projectedTransform = replacement.draftSession.localNodeCatalog?.[transform.id];
     if (projectedTransform == null) throw new Error('Expected an authored Transform projection.');
-    const presentation = projectCanvasNodePresentationTruth({
+    const presentation = await projectCanvasNodePresentationTruth({
       node: projectedTransform,
       nodes: [orders, outbox, projectedTransform],
       edges: replacement.draftSession.workingSet.visibleEdges,

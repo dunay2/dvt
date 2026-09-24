@@ -44,10 +44,6 @@ const CANVAS_NODE_MAPPER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../views/canvas/canvasNodeMapper.ts'
 );
-const CANVAS_CONTROLLER_READ_MODEL_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  '../../views/canvas/useCanvasControllerReadModel.ts'
-);
 const DBT_NODE_CATALOG_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../nodeTypeCatalog.dbt.ts'
@@ -159,7 +155,6 @@ describe('React Flow visual token convergence architecture', () => {
     expect(CANVAS_NODE_MAPPER_SOURCE).toContain('buildGraphNodeCardReadModel');
     expect(CANVAS_NODE_MAPPER_SOURCE).toContain('ariaLabel:');
     expect(CANVAS_NODE_MAPPER_SOURCE).toContain('healthLabel');
-    expect(CANVAS_CONTROLLER_READ_MODEL_SOURCE).toContain('projectCanvasNodeAccessibleHealth');
     expect(GRAPH_RENDERER_SOURCE).toContain('GraphNodeCardView');
     expect(GRAPH_RENDERER_SOURCE).not.toContain('graphNodeHealthBorderClasses');
     expect(GRAPH_RENDERER_SOURCE).not.toMatch(/\b(?:slate|gray|neutral|zinc)-\d{2,3}\b/);

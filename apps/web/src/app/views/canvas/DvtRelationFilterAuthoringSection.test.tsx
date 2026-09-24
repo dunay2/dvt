@@ -1,19 +1,18 @@
 // @vitest-environment jsdom
 
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, getByRole, waitFor } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanonicalNode } from '../../types/canonical';
 import {
   createDvtSubstraitProjectionDraft,
   resolveDvtSubstraitProjectionSource,
+  type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
-import {
-  inspectDvtSubstraitFilter,
-  resolveDvtSubstraitFilterCapabilities,
-} from './canvasDvtSubstraitFilter';
+import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
+import { inspectDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import { DvtRelationFilterAuthoringSection } from './DvtRelationFilterAuthoringSection';
 
 const source: CanonicalNode = {
@@ -48,40 +47,10 @@ const transform: CanonicalNode = {
   status: 'idle',
   tags: ['authoring'],
 };
-const edges: readonly CanonicalEdge[] = [
-  { id: 'orders-model', sourceId: source.id, targetId: transform.id, relation: 'lineage' },
-];
 
-function connectedSource(id: string, tableName: string, columns: readonly string[]): CanonicalNode {
-  return {
-    id,
-    name: tableName,
-    pluginId: 'dvt.warehouse-source',
-    kind: 'dvt:source',
-    role: 'input',
-    status: 'success',
-    tags: ['source'],
-    metadata: {
-      schema: 'raw',
-      tableName,
-      connectedSourceRef: {
-        schemaVersion: 'connected-source-ref.v1',
-        connectionRef: {
-          schemaVersion: 'connection-ref.v1',
-          connectionId: 'postgres-main',
-          provider: 'postgres',
-        },
-        sourceObjectId: `raw.${tableName}`,
-      },
-      columns: columns.map((name) => ({ name, type: 'text' })),
-    },
-  };
-}
-
-describe('DvtRelationFilterAuthoringSection', () => {
+describe('Inspector Filter command adapter', () => {
   let container: HTMLDivElement;
   let root: Root;
-
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -90,104 +59,94 @@ describe('DvtRelationFilterAuthoringSection', () => {
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
   });
-
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
   });
-
-  it('lets the author select any admitted binary comparison', async () => {
-    const resolved = resolveDvtSubstraitProjectionSource(source);
-    if (resolved == null) throw new Error('Expected a connected source.');
-    const draft = createDvtSubstraitProjectionDraft({
-      source: resolved,
-      targetNodeId: transform.id,
-      outputs: [{ fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' }],
-    });
-    const onChange = vi.fn();
-
-    act(() => {
-      root.render(
-        <DvtRelationFilterAuthoringSection
-          disabled={false}
-          draft={draft}
-          node={transform}
-          nodes={[source, transform]}
-          edges={edges}
-          onChange={onChange}
-        />
-      );
-    });
-
-    const operator = container.querySelector<HTMLSelectElement>(
-      'select[name="dvt-filter-operator"]'
-    );
-    expect(operator?.disabled).toBe(false);
-    const capabilities = resolveDvtSubstraitFilterCapabilities({
-      dataType: 'text',
-      provider: 'postgres',
-    });
-    expect(Array.from(operator?.options ?? []).map((option) => option.value)).toEqual(
-      capabilities.map((capability) => capability.capabilityId)
-    );
-
-    const notEqual = capabilities.find((capability) => capability.name === 'not_equal');
-    if (notEqual == null) throw new Error('Expected the admitted not-equal predicate.');
-    await act(() => fireEvent.change(operator!, { target: { value: notEqual.capabilityId } }));
-    expect(operator?.value).toBe(notEqual.capabilityId);
-
-    act(() => {
-      fireEvent.input(container.querySelector('input[name="dvt-filter-value"]')!, {
-        target: { value: 'Ada' },
+  it.each([false, true])(
+    'respects read-only %s and shares canonical comparison semantics',
+    async (disabled) => {
+      const resolved = resolveDvtSubstraitProjectionSource(source)!;
+      const draft = createDvtSubstraitProjectionDraft({
+        source: resolved,
+        targetNodeId: transform.id,
+        outputs: [{ fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' }],
       });
-      fireEvent.click(container.querySelector('[data-slot="dvt-filter-apply"]')!);
-    });
-
-    expect(onChange).toHaveBeenCalledOnce();
-    expect(inspectDvtSubstraitFilter(onChange.mock.calls[0]![0])).toMatchObject({
-      operator: 'not_equal',
-      value: 'Ada',
-    });
-  });
-
-  it('does not offer a stale single-source filter while composition is pending', () => {
-    const resolved = resolveDvtSubstraitProjectionSource(source);
-    if (resolved == null) throw new Error('Expected a connected source.');
-    const draft = createDvtSubstraitProjectionDraft({
-      source: resolved,
-      targetNodeId: transform.id,
-      outputs: [{ fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' }],
-    });
-    const clients = connectedSource('clients', 'clients', ['client_id', 'country']);
-    const details = connectedSource('details', 'order_details', ['order_id', 'product']);
-
-    act(() => {
-      root.render(
-        <DvtRelationFilterAuthoringSection
-          disabled={false}
-          draft={draft}
-          node={transform}
-          nodes={[source, clients, details, transform]}
-          edges={[
-            ...edges,
-            {
-              id: 'clients-model',
-              sourceId: clients.id,
-              targetId: transform.id,
-              relation: 'lineage',
-            },
-            {
-              id: 'details-model',
-              sourceId: details.id,
-              targetId: transform.id,
-              relation: 'lineage',
-            },
-          ]}
-          onChange={vi.fn()}
-        />
+      const onChange = vi.fn<(draft: DvtSubstraitProjectionDraft) => void>();
+      await act(async () =>
+        root.render(
+          <DvtRelationFilterAuthoringSection
+            disabled={disabled}
+            draft={draft}
+            node={transform}
+            onChange={onChange}
+          />
+        )
       );
-    });
-
-    expect(container.querySelector('[data-slot="dvt-filter-authoring"]')).toBeNull();
-  });
+      if (disabled) {
+        expect(container.querySelector('form')).toBeNull();
+        expect(onChange).not.toHaveBeenCalled();
+        return;
+      }
+      await waitFor(() => expect(container.querySelectorAll('select')).toHaveLength(2));
+      const operator = container.querySelectorAll<HTMLSelectElement>('select')[1]!;
+      const comparisons = resolveDvtSubstraitFilterCapabilities({ dataType: 'text' });
+      expect([...operator.options].map((option) => option.value)).toEqual(
+        comparisons.map((item) => item.capabilityId)
+      );
+      const notEqual = comparisons.find((comparison) => comparison.name === 'not_equal')!;
+      await act(async () => {
+        fireEvent.change(operator, { target: { value: notEqual.capabilityId } });
+        fireEvent.change(container.querySelector('input')!, { target: { value: 'Ada' } });
+      });
+      await act(async () => fireEvent.submit(container.querySelector('form')!));
+      expect(onChange).toHaveBeenCalledOnce();
+      const updated = onChange.mock.calls[0]![0];
+      expect(inspectDvtSubstraitFilter(updated)).toMatchObject({
+        fieldId: 'output:customer',
+        operator: 'not_equal',
+        value: 'Ada',
+      });
+      await act(async () =>
+        root.render(
+          <DvtRelationFilterAuthoringSection
+            disabled={false}
+            draft={updated}
+            node={transform}
+            onChange={onChange}
+          />
+        )
+      );
+      expect((getByRole(container, 'textbox') as HTMLInputElement).value).toBe('Ada');
+      await act(async () =>
+        fireEvent.change(getByRole(container, 'textbox'), { target: { value: 'Grace' } })
+      );
+      await act(async () => fireEvent.submit(container.querySelector('form')!));
+      const edited = onChange.mock.calls[1]![0];
+      expect(inspectDvtSubstraitFilter(edited)).toMatchObject({ value: 'Grace' });
+      expect(edited.sidecar.relations).toEqual(updated.sidecar.relations);
+      expect(new Map(edited.sidecar.fields.map((field) => [field.fieldId, field]))).toEqual(
+        new Map(updated.sidecar.fields.map((field) => [field.fieldId, field]))
+      );
+      await act(async () =>
+        root.render(
+          <DvtRelationFilterAuthoringSection
+            disabled={false}
+            draft={edited}
+            node={transform}
+            onChange={onChange}
+          />
+        )
+      );
+      await act(async () =>
+        fireEvent.click(getByRole(container, 'button', { name: 'Remove operation' }))
+      );
+      const removed = onChange.mock.calls[2]![0];
+      expect(inspectDvtSubstraitFilter(removed)).toBeNull();
+      expect(removed.sidecar.relations).toEqual(draft.sidecar.relations);
+      expect(new Map(removed.sidecar.fields.map((field) => [field.fieldId, field]))).toEqual(
+        new Map(draft.sidecar.fields.map((field) => [field.fieldId, field]))
+      );
+    }
+  );
 });

@@ -80,6 +80,39 @@ export function deriveSetSchema(
         nullable(fields.map((candidate) => isSchemaTypeNullable(candidate.type)))
       ),
       sourceFieldIds: [...new Set(fields.flatMap((candidate) => candidate.sourceFieldIds))],
+      ...(field.children == null
+        ? {}
+        : {
+            children: field.children.map((_child, childOrdinal) =>
+              mergeChildDependencies(
+                fields.map(
+                  (candidate) =>
+                    candidate.children?.[childOrdinal] ??
+                    invalidSchema('SET child schema is missing.')
+                )
+              )
+            ),
+          }),
     };
   });
+}
+
+function mergeChildDependencies(fields: readonly SchemaField[]): SchemaField {
+  const first = fields[0]!;
+  return {
+    ...first,
+    sourceFieldIds: [...new Set(fields.flatMap((field) => field.sourceFieldIds))],
+    ...(first.children == null
+      ? {}
+      : {
+          children: first.children.map((_child, ordinal) =>
+            mergeChildDependencies(
+              fields.map(
+                (field) =>
+                  field.children?.[ordinal] ?? invalidSchema('SET child schema is missing.')
+              )
+            )
+          ),
+        }),
+  };
 }

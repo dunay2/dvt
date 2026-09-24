@@ -2,6 +2,7 @@
 import {
   RelationAnalysisSession,
   SubstraitAnalysisError,
+  readRelationStructure,
   type RelationAnalysisResult,
   type RelationChangeSet,
   type SubstraitDocument,
@@ -35,9 +36,29 @@ export class CanvasRelationAnalysisSession {
     return this.current().work;
   }
 
+  get rootId(): string {
+    return this.current().rootId;
+  }
+
+  locate(relationId: string, expectedRevision: number) {
+    const location = this.current().locate(relationId, expectedRevision);
+    const root = this.accepted!.plan.relations[0]!.relType;
+    if (root.case !== 'root' || root.value.input == null)
+      throw new SubstraitAnalysisError('invalid_structure', 'Canonical root is absent.');
+    let relation = root.value.input;
+    for (const port of location.path) relation = readRelationStructure(relation).inputs[port]!;
+    if (readRelationStructure(relation).common?.relAnchor !== location.binding.relAnchor)
+      throw new SubstraitAnalysisError('stale_document', 'Command target and snapshot differ.');
+    return { ...location, relation, plan: this.accepted!.plan };
+  }
+
   async query(relationId: string | null, signal?: AbortSignal): Promise<RelationAnalysisResult> {
     const analysis = this.current();
     return analysis.query(relationId ?? analysis.rootId, signal);
+  }
+
+  referencingFields(fieldIds: readonly string[], expectedRevision: number) {
+    return this.current().referencingFields(fieldIds, expectedRevision);
   }
 
   apply(change: RelationChangeSet): SubstraitDocument {

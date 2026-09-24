@@ -278,6 +278,12 @@ export function createDvtSubstraitPilotDraft(_args: {
   });
   const sourceRelationId = allocateDvtRelationId();
   const projectRelationId = allocateDvtRelationId();
+  const inputFields = PILOT_FIELD_NAMES.map((name, outputOrdinal) => ({
+    fieldId: allocateDvtFieldId(),
+    relationId: sourceRelationId,
+    outputOrdinal,
+    displayName: name,
+  }));
   const sidecar: DvtSubstraitAuthoringSidecarV1 = {
     schemaVersion: DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
     semanticPlanSha256: ZERO_SHA256,
@@ -289,12 +295,16 @@ export function createDvtSubstraitPilotDraft(_args: {
       },
       { relationId: projectRelationId, relAnchor: 2, displayName: PILOT_SOURCE_NAME },
     ],
-    fields: PILOT_FIELD_NAMES.map((name, outputOrdinal) => ({
-      fieldId: allocateDvtFieldId(),
-      relationId: projectRelationId,
-      outputOrdinal,
-      displayName: name,
-    })),
+    fields: [
+      ...PILOT_FIELD_NAMES.map((name, outputOrdinal) => ({
+        fieldId: allocateDvtFieldId(),
+        relationId: projectRelationId,
+        outputOrdinal,
+        displayName: name,
+        sourceFieldId: inputFields[outputOrdinal]!.fieldId,
+      })),
+      ...inputFields,
+    ],
   };
   return { plan, sidecar };
 }

@@ -1,4 +1,5 @@
 /** One compositional PostgreSQL target, driven by canonical Substrait analysis. */
+import { PostgresIdentifierV1Schema } from '@dvt/contracts';
 import {
   deriveSubstraitSchemas,
   isSchemaTypeNullable,
@@ -54,10 +55,12 @@ export async function projectSubstraitToPostgresSql(
   const result = rendered.get(analysis.index.rootId)!;
   const names = root.value.names;
   if (
-    names.some((name) => name.length === 0 || name !== name.trim()) ||
+    names.some((name) => !PostgresIdentifierV1Schema.safeParse(name).success) ||
     new Set(names).size !== names.length
   )
-    return unsupported('Root outputs require unique non-blank names.');
+    return unsupported(
+      'Root outputs require unique names representable as PostgreSQL identifiers.'
+    );
   const ast = selectAst([], [inputRange(result, 'result')], {
     targetList: names.map((name, ordinal) => ({
       ResTarget: { name, val: pgQualifiedColumnRef('result', columnName(ordinal)) },

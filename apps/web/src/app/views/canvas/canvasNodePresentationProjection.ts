@@ -1,522 +1,102 @@
-/** Owned concern: adapt plugin artifact queries into the shared Canvas node presentation DTO. */
-import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
-
-import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
-import type {
-  CanvasNodeCodeTruth,
-  CanvasNodePresentationColumn,
-  CanvasNodePresentationTruth,
-} from '../../components/canvas/canvasNodePresentationTruth.contract';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
-import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+/** One disposable projection per graph revision, with iterative dependency ordering. */
+import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
+import { CanvasPresentationAnalysis } from './canvasPresentationAnalysis';
 import {
-  decodeDvtSubstraitPilotDocument,
-  inspectDvtSubstraitPilotDraft,
-} from './canvasDvtSubstraitPilot';
-import {
-  decodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
-  resolveDvtSubstraitProjectionEntry,
-} from './canvasDvtSubstraitProjection';
-import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
-import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstraitAggregateWindow';
-import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
-import {
-  decodeDvtSubstraitJoinDocument,
-  inspectDvtSubstraitJoinAcceptedDraft,
-} from './canvasDvtSubstraitJoinComposition';
-import {
-  decodeDvtSubstraitUnionAllDocument,
-  inspectDvtSubstraitUnionAllAcceptedDraft,
-} from './canvasDvtSubstraitSetComposition';
-import {
-  isObjectFilePostgresNode,
-  resolveObjectFilePostgresAuthoringMetadata,
-} from './objectFilePostgresAuthoringModel';
-import { projectTransformColumnsInStableOrder } from './canvasTransformColumnOrderProjection';
-import { projectCanvasStructuredFieldOutputs } from './canvasStructuredFieldPresentation';
-import { inspectDvtSubstraitFilter, removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
-import {
-  isDvtSourceOutputProjectionNode,
-  readDvtSourceOutputProjection,
-  type DvtSourceOutputProjection,
-} from './canvasDvtSourceSemanticAuthoring';
-import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
+  canvasNodePresentationBase,
+  type CanvasPresentationQuery,
+} from './canvasNodePresentationBase';
+import { canvasColumnTruth } from './canvasPresentationColumns';
+import { projectCanvasPresentationNode } from './canvasPresentationNode';
 
-export function projectCanvasNodePresentationTruth(
-  args: Readonly<{
-    node: CanonicalNode;
-    nodes: readonly CanonicalNode[];
-    edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
-  }>
-): CanvasNodePresentationTruth {
-  return projectCanvasNodePresentationTruthInternal(args, new Set());
-}
+type Graph = Pick<CanvasPresentationQuery, 'nodes' | 'edges'>;
 
-type DvtSubstraitPresentedOutput = Readonly<{
-  name: string;
-  fieldId: string;
-  dataType?: string;
-  sourceNodeId?: string;
-  sourceFieldId?: string;
-  sourceFieldName?: string;
-  operations?: readonly string[];
-  nullable?: boolean;
-  description?: string;
-  children?: readonly DvtSubstraitPresentedOutput[];
-  selectsSourceField?: boolean;
-}>;
-
-function presentSubstraitOutput(
-  output: DvtSubstraitPresentedOutput,
-  inherited: CanvasNodePresentationTruth['columns']['inherited']
-): CanvasNodePresentationColumn {
-  const sourceColumn = inherited.find(
-    (column) =>
-      (output.sourceFieldId != null &&
-        column.sourceNodeId === output.sourceNodeId &&
-        column.reference === output.sourceFieldId) ||
-      (column.sourceNodeId === output.sourceNodeId && column.name === output.sourceFieldName)
-  );
-  const nullable = output.nullable ?? sourceColumn?.nullable;
-  return {
-    name: output.name,
-    type: output.dataType ?? 'string',
-    provenance: 'declared' as const,
-    reference: output.fieldId,
-    ...(output.sourceNodeId == null ? {} : { sourceNodeId: output.sourceNodeId }),
-    ...(output.sourceFieldName == null ? {} : { sourceFieldName: output.sourceFieldName }),
-    ...(output.operations == null ? {} : { operations: output.operations }),
-    ...(output.description == null ? {} : { description: output.description }),
-    ...(sourceColumn?.sourceNodeName == null
-      ? {}
-      : { sourceNodeName: sourceColumn.sourceNodeName }),
-    ...(nullable == null ? {} : { nullable }),
-    ...(output.sourceFieldId == null && sourceColumn?.reference == null
-      ? {}
-      : { sourceReference: output.sourceFieldId ?? sourceColumn?.reference }),
-    ...(output.children == null
-      ? {}
-      : { children: output.children.map((child) => presentSubstraitOutput(child, inherited)) }),
-  };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function projectCanvasNodePresentationTruthInternal(
-  args: Readonly<{
-    node: CanonicalNode;
-    nodes: readonly CanonicalNode[];
-    edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
-  }>,
-  ancestorNodeIds: ReadonlySet<string>
-): CanvasNodePresentationTruth {
-  const nextAncestorNodeIds = new Set(ancestorNodeIds);
-  nextAncestorNodeIds.add(args.node.id);
-  const artifactProjection = projectDbtModelArtifact({
-    modelNode: args.node,
-    nodes: args.nodes,
-    edges: args.edges,
-  });
-  const generatedArtifact =
-    artifactProjection.ok && artifactProjection.artifact.provenance === 'generated'
-      ? artifactProjection.artifact
-      : null;
-  const objectFileMetadata = isObjectFilePostgresNode(args.node)
-    ? resolveObjectFilePostgresAuthoringMetadata(args.node)
-    : null;
-  const presentationNode =
-    objectFileMetadata == null
-      ? args.node
-      : {
-          ...args.node,
-          metadata: {
-            ...args.node.metadata,
-            columns: objectFileMetadata.columns.map((column) => ({
-              name: column.targetColumn,
-              type: column.dataType,
-              nullable: column.nullable,
-            })),
-          },
-        };
-  let substraitOutputs: readonly DvtSubstraitPresentedOutput[] | null = null;
-  let sourceOutputProjection: DvtSourceOutputProjection | null = null;
-  let physicalTransformInput: DvtSourceOutputProjection | null = null;
-  let substraitRejected = false;
-  let unresolvedMultiInputProjection = false;
-  let canonicalSubstraitCode: Extract<CanvasNodeCodeTruth, { kind: 'canonical' }> | null = null;
-  let invalidCanonicalSubstraitDocument = false;
-  const supportsDvtSemantics =
-    (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:transform') ||
-    (args.node.kind === 'dvt:source' &&
-      (args.node.pluginId === 'dvt' || args.node.pluginId === 'dvt.warehouse-source'));
-  if (supportsDvtSemantics) {
-    const rawAuthority = args.node.metadata?.transformAuthoring;
-    const declaresSubstraitAuthority =
-      isRecord(rawAuthority) && rawAuthority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait;
-    try {
-      const authority = readDvtTransformAuthoringAuthority(args.node);
-      if (authority != null) {
-        canonicalSubstraitCode = {
-          kind: 'canonical',
-          content: JSON.stringify(authority.semanticDocument, null, 2),
-          language: 'json',
-          schemaVersion: authority.semanticDocument.schemaVersion,
-          digest: authority.semanticDocument.semanticPlan.sha256,
-        };
-        try {
-          const projectionDraft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
-          const projectionFilter = inspectDvtSubstraitFilter(projectionDraft);
-          const resolvedProjectionDraft =
-            projectionFilter == null ? projectionDraft : removeDvtSubstraitFilter(projectionDraft);
-          const projection = resolveDvtSubstraitProjectionEntry({
-            targetNode: args.node,
-            nodes: args.nodes,
-            edges: args.edges,
-            draft: resolvedProjectionDraft,
-          });
-          if (projection != null) {
-            const input = args.nodes.find((node) => node.id === projection.source.nodeId);
-            if (input != null && isDvtSourceOutputProjectionNode(input)) {
-              physicalTransformInput = readDvtSourceOutputProjection(input);
-            }
-            substraitOutputs = projection.outputs.map((output) => {
-              const calculation = output.calculation;
-              const rowOrderField =
-                calculation?.kind === 'row-number'
-                  ? projection.source.fields[calculation.orderSourceOrdinal]
-                  : undefined;
-              const calculatedOperations =
-                calculation?.kind === 'string-literal'
-                  ? [`LITERAL(${JSON.stringify(calculation.value)})`]
-                  : calculation?.kind === 'timestamp-literal'
-                    ? [`TIMESTAMP_TZ(${calculation.value})`]
-                    : calculation?.kind === 'row-number'
-                      ? ['ROW_NUMBER']
-                      : undefined;
-              const sourceFieldName = output.sourceFieldName ?? rowOrderField?.name;
-              return {
-                name: output.name,
-                fieldId: output.fieldId,
-                dataType: output.dataType,
-                ...(physicalTransformInput == null
-                  ? {}
-                  : {
-                      selectsSourceField:
-                        output.calculation == null &&
-                        output.scalarExpression == null &&
-                        (output.operations?.length ?? 0) === 0,
-                    }),
-                ...(sourceFieldName == null
-                  ? {}
-                  : {
-                      sourceNodeId: projection.source.nodeId,
-                      sourceFieldId: output.sourceFieldId,
-                      sourceFieldName,
-                    }),
-                ...(calculation?.kind === 'row-number' ? { nullable: false } : {}),
-                ...(calculatedOperations == null
-                  ? output.operations == null
-                    ? {}
-                    : { operations: output.operations }
-                  : { operations: calculatedOperations }),
-                ...(output.description == null ? {} : { description: output.description }),
-              };
-            });
-          } else {
-            const structuredOutputs = projectCanvasStructuredFieldOutputs({
-              node: args.node,
-              nodes: args.nodes,
-              edges: args.edges,
-              draft: projectionDraft,
-            });
-            if (structuredOutputs != null) {
-              substraitOutputs = structuredOutputs;
-            } else {
-              const projectionInspection = inspectDvtSubstraitProjectionDraft(projectionDraft);
-              const incomingSourceIds = new Set(
-                args.edges
-                  .filter((edge) => edge.targetId === args.node.id)
-                  .map((edge) => edge.sourceId)
-              );
-              unresolvedMultiInputProjection =
-                projectionInspection.ok && incomingSourceIds.size > 1;
-              const pilotInspection = inspectDvtSubstraitPilotDraft(
-                decodeDvtSubstraitPilotDocument(authority.semanticDocument)
-              );
-              if (pilotInspection.ok) {
-                substraitOutputs = pilotInspection.projection.outputs;
-              } else {
-                const aggregateWindowInspection = inspectDvtSubstraitPilotAggregateWindowDraft(
-                  decodeDvtSubstraitPilotDocument(authority.semanticDocument)
-                );
-                if (aggregateWindowInspection.ok) {
-                  substraitOutputs = aggregateWindowInspection.projection.outputs;
-                } else {
-                  const aggregateInspection = inspectDvtSubstraitPilotAggregationDraft(
-                    decodeDvtSubstraitPilotDocument(authority.semanticDocument)
-                  );
-                  if (aggregateInspection.ok) {
-                    substraitOutputs = aggregateInspection.projection.outputs;
-                  } else {
-                    const windowInspection = inspectDvtSubstraitPilotWindowDraft(
-                      decodeDvtSubstraitPilotDocument(authority.semanticDocument)
-                    );
-                    if (windowInspection.ok) {
-                      substraitOutputs = windowInspection.projection.outputs;
-                    } else {
-                      const joinInspection = inspectDvtSubstraitJoinAcceptedDraft(
-                        decodeDvtSubstraitJoinDocument(authority.semanticDocument)
-                      );
-                      if (joinInspection.ok) {
-                        const targetNodeId =
-                          'targetNodeId' in joinInspection.projection
-                            ? joinInspection.projection.targetNodeId
-                            : args.node.id;
-                        if (targetNodeId === args.node.id) {
-                          substraitOutputs = joinInspection.projection.outputs;
-                        } else {
-                          substraitRejected = true;
-                        }
-                      } else {
-                        const unionAllInspection = inspectDvtSubstraitUnionAllAcceptedDraft(
-                          decodeDvtSubstraitUnionAllDocument(authority.semanticDocument)
-                        );
-                        if (unionAllInspection.ok) {
-                          substraitOutputs = unionAllInspection.projection.outputs;
-                        } else {
-                          substraitRejected = true;
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        } catch {
-          substraitRejected = true;
-        }
-      }
-    } catch {
-      substraitOutputs = null;
-      invalidCanonicalSubstraitDocument = declaresSubstraitAuthority;
-      substraitRejected = declaresSubstraitAuthority;
-    }
+export async function projectCanvasGraphPresentation(
+  graph: Graph,
+  analysis: CanvasPresentationAnalysis,
+  signal?: AbortSignal,
+  targets: readonly string[] = graph.nodes.map((node) => node.id)
+): Promise<ReadonlyMap<string, CanvasNodePresentationTruth>> {
+  const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
+  const inputs = new Map<string, Set<string>>();
+  const consumers = new Map<string, Set<string>>();
+  for (const edge of graph.edges) {
+    if (!nodes.has(edge.sourceId) || !nodes.has(edge.targetId)) continue;
+    if (!inputs.has(edge.targetId)) inputs.set(edge.targetId, new Set());
+    if (!consumers.has(edge.sourceId)) consumers.set(edge.sourceId, new Set());
+    inputs.get(edge.targetId)!.add(edge.sourceId);
+    consumers.get(edge.sourceId)!.add(edge.targetId);
   }
-  if (isDvtSourceOutputProjectionNode(args.node)) {
-    try {
-      sourceOutputProjection = readDvtSourceOutputProjection(args.node);
-    } catch {
-      substraitRejected = true;
-    }
+  const selected = new Set<string>();
+  const pending = [...targets];
+  while (pending.length > 0) {
+    const id = pending.pop()!;
+    if (selected.has(id) || !nodes.has(id)) continue;
+    selected.add(id);
+    pending.push(...(inputs.get(id) ?? []));
   }
-  const projectedTruth = buildCanvasNodePresentationTruth({
-    ...args,
-    node: presentationNode,
-    generatedCodeIsAuthoritative: false,
-    ...(generatedArtifact == null
-      ? {}
-      : {
-          generatedCode: {
-            content: generatedArtifact.content,
-            path: generatedArtifact.path,
-            language: generatedArtifact.language,
-          } as const,
-        }),
-  });
-  const relationalComposition = resolveCanvasRelationalCompositionTruth(args);
-  const baseTruth: CanvasNodePresentationTruth = {
-    ...projectedTruth,
-    ...(relationalComposition == null ? {} : { relationalComposition }),
-    code: invalidCanonicalSubstraitDocument
-      ? { kind: 'unavailable', reason: 'invalid-canonical-substrait-document' }
-      : (canonicalSubstraitCode ?? projectedTruth.code),
-  };
-
-  if (substraitRejected) {
-    if (unresolvedMultiInputProjection || args.node.kind === 'dvt:source') {
-      return baseTruth;
-    }
-    return {
-      ...baseTruth,
-      columns: {
-        declared: [],
-        inherited: [],
-        visible: [],
-        declaredCount: 0,
-        inheritedCount: 0,
-        visibleCount: 0,
-        visibleProvenance: 'none',
-      },
-    };
-  }
-
-  const hasProjectedSourceInput = args.edges.some((edge) => {
-    if (edge.targetId !== args.node.id) return false;
-    const sourceNode = args.nodes.find((node) => node.id === edge.sourceId);
-    if (sourceNode == null || !isDvtSourceOutputProjectionNode(sourceNode)) return false;
-    try {
-      return readDvtSourceOutputProjection(sourceNode)?.draft != null;
-    } catch {
-      return true;
-    }
-  });
-  const shouldProjectUpstreamColumns =
-    args.node.role === 'output' ||
-    (args.node.role === 'transform' &&
-      baseTruth.columns.declared.length === 0 &&
-      (baseTruth.columns.inherited.length === 0 || hasProjectedSourceInput));
-  const upstreamNodeIds = shouldProjectUpstreamColumns
-    ? new Set(
-        args.edges.filter((edge) => edge.targetId === args.node.id).map((edge) => edge.sourceId)
+  const remaining = new Map([...selected].map((id) => [id, inputs.get(id)?.size ?? 0]));
+  let ready = [...remaining].filter(([, count]) => count === 0).map(([id]) => id);
+  const projected = new Map<string, CanvasNodePresentationTruth>();
+  while (ready.length > 0) {
+    signal?.throwIfAborted();
+    const wave = ready;
+    ready = [];
+    const values = await Promise.all(
+      wave.map(
+        async (id) =>
+          [
+            id,
+            await projectCanvasPresentationNode(
+              { ...graph, node: nodes.get(id)! },
+              analysis,
+              signal,
+              [...(inputs.get(id) ?? [])].map((input) => nodes.get(input)!),
+              projected
+            ),
+          ] as const
       )
-    : new Set<string>();
-  const upstreamVisibleColumns = args.nodes
-    .filter((node) => upstreamNodeIds.has(node.id) && !nextAncestorNodeIds.has(node.id))
-    .flatMap((node) => {
-      const upstreamTruth = projectCanvasNodePresentationTruthInternal(
-        { node, nodes: args.nodes, edges: args.edges },
-        nextAncestorNodeIds
-      );
-      const upstreamArtifact = projectDbtModelArtifact({
-        modelNode: node,
-        nodes: args.nodes,
-        edges: args.edges,
-      });
-      const activeColumnNames =
-        upstreamArtifact.ok && upstreamArtifact.artifact.provenance === 'generated'
-          ? new Set(upstreamArtifact.artifact.outputColumns)
-          : null;
-      return upstreamTruth.columns.visible
-        .filter((column) => column.selected !== false)
-        .filter((column) => activeColumnNames == null || activeColumnNames.has(column.name))
-        .map(({ selected: _sourceSelection, ...column }) => ({
-          ...column,
-          provenance: 'inherited' as const,
-          sourceNodeId: node.id,
-          sourceNodeName: node.name,
-        }));
+    );
+    for (const [id, value] of values) {
+      projected.set(id, value);
+      for (const consumer of consumers.get(id) ?? []) {
+        if (!remaining.has(consumer)) continue;
+        const count = remaining.get(consumer)! - 1;
+        remaining.set(consumer, count);
+        if (count === 0) ready.push(consumer);
+      }
+    }
+  }
+  for (const id of selected) {
+    if (projected.has(id)) continue;
+    projected.set(id, {
+      ...canvasNodePresentationBase({ ...graph, node: nodes.get(id)! }),
+      columns: {
+        ...canvasColumnTruth([], []),
+        state: 'unavailable',
+        diagnostic: 'Cyclic Canvas dependency.',
+      },
     });
-  if (args.node.role === 'output') {
-    const inherited = upstreamVisibleColumns;
-    const visible = baseTruth.columns.declared.length > 0 ? baseTruth.columns.declared : inherited;
-    return {
-      ...baseTruth,
-      columns: {
-        declared: baseTruth.columns.declared,
-        inherited,
-        visible,
-        declaredCount: baseTruth.columns.declaredCount,
-        inheritedCount: inherited.length,
-        visibleCount: visible.length,
-        visibleProvenance:
-          baseTruth.columns.declared.length > 0
-            ? 'declared'
-            : inherited.length > 0
-              ? 'inherited'
-              : 'none',
-      },
-    };
   }
-  const presentationTruth =
-    shouldProjectUpstreamColumns && args.node.role === 'transform'
-      ? (() => {
-          const inherited = upstreamVisibleColumns;
-          return {
-            ...baseTruth,
-            columns: {
-              declared: baseTruth.columns.declared,
-              inherited,
-              visible: inherited,
-              declaredCount: 0,
-              inheritedCount: inherited.length,
-              visibleCount: inherited.length,
-              visibleProvenance: inherited.length > 0 ? ('inherited' as const) : ('none' as const),
-            },
-          };
-        })()
-      : baseTruth;
+  return projected;
+}
 
-  if (sourceOutputProjection != null) {
-    const physicalByName = new Map(
-      presentationTruth.columns.visible.map((column) => [column.name, column] as const)
+export async function projectCanvasNodePresentationTruth(
+  args: CanvasPresentationQuery,
+  analysis?: CanvasPresentationAnalysis,
+  signal?: AbortSignal
+): Promise<CanvasNodePresentationTruth> {
+  const owner = analysis ?? new CanvasPresentationAnalysis();
+  const nodes = new Map(args.nodes.map((node) => [node.id, node]));
+  nodes.set(args.node.id, args.node);
+  try {
+    const values = await projectCanvasGraphPresentation(
+      { ...args, nodes: [...nodes.values()] },
+      owner,
+      signal,
+      [args.node.id]
     );
-    const selectedNames = new Set(
-      sourceOutputProjection.outputs.map((output) => output.sourceFieldName!)
-    );
-    const selected = sourceOutputProjection.outputs.flatMap((output) => {
-      const physical = physicalByName.get(output.sourceFieldName!);
-      return physical == null ? [] : [{ ...physical, selected: true }];
-    });
-    const excluded = presentationTruth.columns.visible
-      .filter((column) => !selectedNames.has(column.name))
-      .map((column) => ({ ...column, selected: false }));
-    const visible = [...selected, ...excluded];
-    return {
-      ...presentationTruth,
-      columns: {
-        declared: visible,
-        inherited: presentationTruth.columns.inherited,
-        visible,
-        declaredCount: visible.length,
-        inheritedCount: presentationTruth.columns.inheritedCount,
-        visibleCount: visible.length,
-        visibleProvenance: visible.length > 0 ? 'declared' : 'none',
-      },
-    };
+    return values.get(args.node.id)!;
+  } finally {
+    if (analysis == null) owner.dispose();
   }
-
-  if (substraitOutputs != null) {
-    const declared = substraitOutputs.map((output) =>
-      presentSubstraitOutput(output, presentationTruth.columns.inherited)
-    );
-    const preservesSourceRelativeInputs =
-      physicalTransformInput != null ||
-      substraitOutputs.every(
-        (output) =>
-          (output.sourceNodeId != null && output.sourceFieldName != null) || output.children != null
-      );
-    const visible = preservesSourceRelativeInputs
-      ? projectTransformColumnsInStableOrder({
-          declared,
-          inherited:
-            physicalTransformInput == null
-              ? presentationTruth.columns.inherited
-              : presentationTruth.columns.inherited.filter(
-                  (column) =>
-                    column.sourceNodeId === physicalTransformInput.source.nodeId &&
-                    physicalTransformInput.outputs.some(
-                      (output) => output.sourceFieldName === column.name
-                    )
-                ),
-          outputs: substraitOutputs,
-        })
-      : declared;
-    const unmatchedInherited = visible.filter((column) => column.provenance === 'inherited');
-    return {
-      ...presentationTruth,
-      columns: {
-        declared,
-        inherited: presentationTruth.columns.inherited,
-        visible,
-        declaredCount: declared.length,
-        inheritedCount: presentationTruth.columns.inheritedCount,
-        visibleCount: visible.length,
-        visibleProvenance:
-          declared.length > 0 && unmatchedInherited.length > 0
-            ? 'mixed'
-            : declared.length > 0
-              ? 'declared'
-              : unmatchedInherited.length > 0
-                ? 'inherited'
-                : 'none',
-      },
-    };
-  }
-
-  return presentationTruth;
 }

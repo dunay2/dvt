@@ -12,6 +12,8 @@ export type SchemaField = Readonly<{
   type: Type;
   /** Field dependencies of this value; row dependencies remain in the relation index. */
   sourceFieldIds: readonly string[];
+  /** Value-level dependencies at each struct position, independent of display names. */
+  children?: readonly SchemaField[];
 }>;
 
 export function invalidSchema(message: string): never {

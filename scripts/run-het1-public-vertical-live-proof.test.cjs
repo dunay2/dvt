@@ -51,9 +51,10 @@ test('validates the content-addressed HET1 fixture before infrastructure startup
   );
 });
 
-test('starts the pinned MinIO image on loopback only', () => {
+test('starts the built MinIO image on loopback only', () => {
   assert.deepEqual(
     buildMinioDockerArgs({
+      image: 'sha256:built-minio-fixture',
       containerName: 'dvt-het1-proof-123',
       port: 19000,
       accessKeyId: 'minioadmin',
@@ -71,7 +72,7 @@ test('starts the pinned MinIO image on loopback only', () => {
       'MINIO_ROOT_USER=minioadmin',
       '--env',
       'MINIO_ROOT_PASSWORD=minioadmin',
-      'quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e',
+      'sha256:built-minio-fixture',
       'server',
       '/data',
       '--console-address',

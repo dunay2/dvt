@@ -16,9 +16,17 @@ export type CanvasNodePresentationColumn = Readonly<{
   description?: string;
   selected?: boolean;
   children?: readonly CanvasNodePresentationColumn[];
+  sources?: readonly Readonly<{
+    nodeId: string;
+    fieldId: string;
+    name: string;
+    nodeName: string;
+  }>[];
 }>;
 
 export type CanvasNodeColumnTruth = Readonly<{
+  state?: 'ready' | 'pending' | 'unavailable';
+  diagnostic?: string;
   declared: readonly CanvasNodePresentationColumn[];
   inherited: readonly CanvasNodePresentationColumn[];
   visible: readonly CanvasNodePresentationColumn[];

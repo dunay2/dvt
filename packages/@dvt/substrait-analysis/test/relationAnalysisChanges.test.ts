@@ -8,6 +8,28 @@ import { deriveSubstraitSchemas } from '../src/relationSchema.js';
 import { relationsFixture } from './relationsFixture.js';
 
 describe('localized relation edits', () => {
+  it('preserves provider-neutral output names through delta, query and export', async () => {
+    const fixture = relationsFixture();
+    const session = new RelationAnalysisSession({
+      document: fixture.document(fixture.read()),
+      scope: 'model',
+    });
+    const name = '😀'.repeat(256);
+    session.apply({ expectedRevision: 0, upserts: [], removed: [], rootNames: [name] });
+    const accepted = session.document();
+    expect(accepted.plan.relations[0]!.relType).toMatchObject({
+      case: 'root',
+      value: { names: [name] },
+    });
+    expect((await session.query('r1')).fields).toEqual(
+      deriveSubstraitSchemas(accepted).schemas.get('r1')
+    );
+    expect(() =>
+      session.apply({ expectedRevision: 1, upserts: [], removed: [], rootNames: [name + 'x'] })
+    ).toThrow();
+    expect(session.document()).toEqual(accepted);
+  });
+
   it('inserts, reconnects and removes a wrapper without stale dependencies', async () => {
     const fixture = relationsFixture();
     const read = fixture.read();

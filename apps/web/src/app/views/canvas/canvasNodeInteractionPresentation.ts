@@ -14,12 +14,15 @@ import type {
   CanvasAlgebraicCompositionOperation,
 } from './canvasAlgebraicComposition';
 
-type NodeActionHandlers = {
+export type CanvasCardActions = {
   onInspectNode: (nodeId: string) => void;
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
   onAttachSchemaToNode?: (nodeId: string, schemaName: string) => void;
+};
+
+export type CanvasColumnActions = {
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   onApplyCanvasColumnFunction?: (
     identity: GraphNodeColumnFunctionApplyIdentity
@@ -34,6 +37,9 @@ type NodeActionHandlers = {
   onReorderCanvasColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeColumn[]) => void;
+};
+
+export type CanvasCompositionActions = {
   resolveAlgebraicCompositionOperations?: (
     identity: CanvasAlgebraicCompositionIdentity
   ) => CanvasAlgebraicCompositionOperation[];
@@ -49,7 +55,7 @@ type BuildCanvasNodeInteractionPresentationParams = {
   selectedNodeIds: string[];
   canMutateGraph: boolean;
   columnLevelLineageEnabled: boolean;
-  handlers: NodeActionHandlers;
+  handlers: CanvasCardActions & CanvasColumnActions & CanvasCompositionActions;
 };
 
 function shouldShowColumns(node: Node, columnLevelLineageEnabled: boolean): boolean {
