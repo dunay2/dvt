@@ -38,7 +38,7 @@ longer carries local delivery state-machine internals.
 - `packages/@dvt/engine/src/state/InMemoryOutboxState.ts`
 - `docs/architecture/components/delivery/**`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/ar-a7-delivery-domain-runtime-split-plan-20260514.md`
-- [AR-A7 delivery-owned in-memory outbox storage](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/ed-20260514-ar-a7-delivery-in-memory-outbox-ownership.md)
+- `docs/evidence/ed-20260514-ar-a7-delivery-in-memory-outbox-ownership.md`
 - `docs/risk-register/quality/R-20260514-AR-A7-IN-MEMORY-OUTBOX-OWNERSHIP.yaml`
 - [20260514 codex fowler ar a7 delivery domain runtime split analysis](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/buzon/20260514-codex-fowler-ar-a7-delivery-domain-runtime-split-analysis.md)
 

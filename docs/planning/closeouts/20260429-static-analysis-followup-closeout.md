@@ -110,7 +110,7 @@ context)` facade.
 
 ## ARC-2 Evidence
 
-- Updated [Engine and Temporal static analysis cleanup for admission and activity seams](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/evidence/ed-20260429-engine-static-analysis-cleanup.md).
+- Updated `docs/evidence/ed-20260429-engine-static-analysis-cleanup.md`.
 - Updated `docs/risk-register/quality/R-20260429-ENGINE-STATIC-ANALYSIS-CLEANUP.yaml`.
 
 ## No-Debt Statement
