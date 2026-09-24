@@ -25,7 +25,7 @@ Canonical execution tracking remains in:
 
 - `docs/planning/state/agent-lane-e.yaml`
 - [F-04 Frontend Data-Boundary Hexagonal Convergence Plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md)
-- `docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md`
+- `docs/planning/closeouts/f-04-f-capabilities-port-and-route-query-boundary-closeout.md`
 
 ## Governing Sources
 
@@ -37,7 +37,7 @@ Canonical execution tracking remains in:
 - [F-04 Frontend Data-Boundary Hexagonal Convergence Plan](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md)
 - `docs/architecture/frontend/frontend-data-boundary-architecture.md`
 - `docs/architecture/frontend/frontend-runtime-modes-user-manual.md`
-- `docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md`
+- `docs/planning/closeouts/f-04-f-capabilities-port-and-route-query-boundary-closeout.md`
 
 ## Findings
 
