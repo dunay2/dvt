@@ -1,33 +1,13 @@
-/** Owns decoding and persistence of canonical DVT Transform shapes. */
+/** Own canonical Transform persistence; presentation hints never determine admissible tree shapes. */
 import { DVT_TRANSFORM_AUTHORING_MODE, DvtTransformResultTargetV1Schema } from '@dvt/contracts';
-import { inspectDvtSubstraitAcceptedCrossDraft } from '@dvt/postgres-projection';
-
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import type { CanonicalNode } from '../../types/canonical';
 import type {
   DvtNodeAuthoringMetadataErrors,
   DvtSubstraitTransformAuthoringMetadata,
   DvtUninitializedTransformAuthoringMetadata,
 } from './canvasDvtAuthoringTypes';
-import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
-import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstraitAggregateWindow';
-import {
-  encodeDvtSubstraitJoinDocument,
-  inspectDvtSubstraitJoinAcceptedDraft,
-  inspectDvtSubstraitJoinPredicateContext,
-} from './canvasDvtSubstraitJoinComposition';
-import {
-  encodeDvtSubstraitPilotDocument,
-  inspectDvtSubstraitPilotDraft,
-} from './canvasDvtSubstraitPilot';
-import {
-  decodeDvtSubstraitProjectionDocument,
-  encodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
-} from './canvasDvtSubstraitProjection';
-import {
-  encodeDvtSubstraitUnionAllDocument,
-  resolveDvtSubstraitSetOperation,
-} from './canvasDvtSubstraitSetComposition';
+import { decodeDvtSubstraitProjectionDocument } from './canvasDvtSubstraitProjection';
 import {
   normalizeDvtIdentifier,
   readDvtNodeConfig,
@@ -39,15 +19,9 @@ import {
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
-import { peelCanvasDvtSubstraitSortFetch } from './canvasDvtSubstraitSortFetch';
-import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
-import {
-  encodeDvtSubstraitFilterDocument,
-  inspectDvtSubstraitFilter,
-} from './canvasDvtSubstraitFilter';
-import { canvasJoinOperationForType, isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
+import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 import { isCanvasSetOperation } from './canvasRelationalOperationChoices';
-import { encodeDvtSubstraitCrossDocument } from './canvasDvtSubstraitCrossComposition';
+import { canvasPresentationOperationForRel } from './canvasRelationalOperationPresentation';
 
 type TransformMetadata =
   DvtUninitializedTransformAuthoringMetadata | DvtSubstraitTransformAuthoringMetadata;
@@ -94,54 +68,25 @@ export function resolveDvtTransformAuthoringMetadata(
   } catch {
     return { outcome: 'rejected', reason: 'invalid_document' };
   }
-  const classified = peelCanvasDvtSubstraitSortFetch(projection).base;
+  const indexed = indexSubstraitRelations(projection);
+  if (!indexed.ok) return { outcome: 'rejected', reason: 'unsupported_shape' };
+  let entry = indexed.index.relations.get(indexed.index.rootId)!;
+  let shape: DvtSubstraitTransformAuthoringMetadata['shape'] = 'projection';
+  while (entry.inputs.length === 1) {
+    if (entry.relation.relType.case === 'aggregate') shape = 'pilot';
+    entry = indexed.index.relations.get(entry.inputs[0]!)!;
+  }
+  const operation = canvasPresentationOperationForRel(entry.relation);
   if (
-    inspectDvtSubstraitProjectionDraft(classified).ok ||
-    inspectDvtSubstraitFilter(classified) != null
-  ) {
-    return {
-      outcome: 'resolved',
-      metadata: fromDraft(authority.mode, disposition, 'projection', projection),
-    };
-  }
-  const pilot = classified;
-  if (
-    inspectDvtSubstraitPilotDraft(pilot).ok ||
-    inspectDvtSubstraitPilotAggregateWindowDraft(pilot).ok ||
-    inspectDvtSubstraitPilotAggregationDraft(pilot).ok ||
-    inspectDvtSubstraitPilotWindowDraft(pilot).ok
-  ) {
-    return {
-      outcome: 'resolved',
-      metadata: fromDraft(authority.mode, disposition, 'pilot', projection),
-    };
-  }
-  const join = classified;
-  if (inspectDvtSubstraitJoinAcceptedDraft(join).ok) {
-    const finalJoinType =
-      inspectDvtSubstraitJoinPredicateContext(join)?.inspection.projection.joinRelations.at(
-        -1
-      )?.joinType;
-    const operation = finalJoinType == null ? null : canvasJoinOperationForType(finalJoinType);
-    if (!isCanvasJoinOperation(operation))
-      return { outcome: 'rejected', reason: 'unsupported_shape' };
-    return {
-      outcome: 'resolved',
-      metadata: fromDraft(authority.mode, disposition, operation, projection),
-    };
-  }
-  if (inspectDvtSubstraitAcceptedCrossDraft(join).ok) {
-    return {
-      outcome: 'resolved',
-      metadata: fromDraft(authority.mode, disposition, 'cross_join', projection),
-    };
-  }
-  const setDraft = classified;
-  const setOperation = resolveDvtSubstraitSetOperation(setDraft);
-  if (setOperation == null) return { outcome: 'rejected', reason: 'unsupported_shape' };
+    isCanvasJoinOperation(operation) ||
+    isCanvasSetOperation(operation) ||
+    operation === 'cross_join'
+  )
+    shape = operation;
+  if (entry.relation.relType.case === 'read' && entry.binding.sourceRef == null) shape = 'pilot';
   return {
     outcome: 'resolved',
-    metadata: fromDraft(authority.mode, disposition, setOperation, projection),
+    metadata: fromDraft(authority.mode, disposition, shape, projection),
   };
 }
 
@@ -206,21 +151,9 @@ export function applyDvtTransformAuthoringMetadata(
   };
   if (metadata.mode === 'uninitialized') return withMaterialization(node);
   const draft = { plan: metadata.plan, sidecar: metadata.sidecar };
-  const sortFetchChain = peelCanvasDvtSubstraitSortFetch(draft);
-  const baseDraft = sortFetchChain.base;
-  const baseDocument =
-    metadata.shape === 'projection'
-      ? inspectDvtSubstraitFilter(baseDraft) == null
-        ? encodeDvtSubstraitProjectionDocument(baseDraft)
-        : encodeDvtSubstraitFilterDocument(baseDraft)
-      : isCanvasJoinOperation(metadata.shape)
-        ? encodeDvtSubstraitJoinDocument(baseDraft)
-        : metadata.shape === 'cross_join'
-          ? encodeDvtSubstraitCrossDocument(baseDraft)
-          : isCanvasSetOperation(metadata.shape)
-            ? encodeDvtSubstraitUnionAllDocument(baseDraft)
-            : encodeDvtSubstraitPilotDocument(baseDraft);
-  const document =
-    sortFetchChain.wrappers.length === 0 ? baseDocument : encodeDvtSubstraitSemanticDocument(draft);
-  return withMaterialization(applyDvtSubstraitSemanticDocument(node, document));
+  const indexed = indexSubstraitRelations(draft);
+  if (!indexed.ok) throw indexed.error;
+  return withMaterialization(
+    applyDvtSubstraitSemanticDocument(node, encodeDvtSubstraitSemanticDocument(draft))
+  );
 }
