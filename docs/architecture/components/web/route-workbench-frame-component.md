@@ -103,7 +103,7 @@ bounded contexts.
 
 - Task: `F-15`
 - Analysis:
-  `buzon/20260521-codex-fowler-route-workbench-frame-analysis-and-remediation.md`
+  [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260521-codex-fowler-route-workbench-frame-analysis-and-remediation.md)
 - Stories:
   `docs/architecture/components/web/route-workbench-frame-user-stories.md`
 - Source:

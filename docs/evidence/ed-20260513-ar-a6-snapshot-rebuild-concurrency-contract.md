@@ -32,7 +32,7 @@ with a typed transient concurrency error.
 ## Evidence
 
 - Fowler analysis saved to
-  `buzon/20260513-codex-fowler-ar-a6-snapshot-rebuild-concurrency-contract-analysis.md`.
+  [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260513-codex-fowler-ar-a6-snapshot-rebuild-concurrency-contract-analysis.md).
 - Component guide and user stories added under
   `docs/architecture/components/engine/contracts/state-store/`.
 - Semantic architecture guard added in
