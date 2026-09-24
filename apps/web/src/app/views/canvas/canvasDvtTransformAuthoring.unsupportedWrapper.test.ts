@@ -40,7 +40,9 @@ describe('unsupported wrapped relation authoring', () => {
           ...draft.sidecar,
           semanticPlanSha256: '0'.repeat(64),
           relations: [binding],
-          fields: draft.sidecar.fields.filter((field) => field.relationId === binding.relationId),
+          fields: draft.sidecar.fields
+            .filter((field) => field.relationId === binding.relationId)
+            .map(({ sourceFieldId: _sourceFieldId, ...field }) => field),
         },
       };
       const fields = resolveDvtSubstraitSortFetchInputFields(leaf);
