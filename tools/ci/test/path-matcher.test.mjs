@@ -99,6 +99,13 @@ test('computeBooleanScope marks temporal_postgres_changed for adapter-postgres c
   assert.equal(fromHetLiveProofChanges.temporal_postgres_changed, true);
 });
 
+test('MinIO build changes run the object-store integration without unrelated Temporal lanes', () => {
+  const scope = computeWorkflowModeScopeOutputs('pr-quality', ['infra/minio-test/Dockerfile']);
+  assert.equal(scope.temporal_postgres_changed, true);
+  assert.equal(scope.temporal_changed, false);
+  assert.equal(scope.temporal_transformation_changed, false);
+});
+
 test('computeBooleanScope isolates transformation-specific integration changes', () => {
   const fromTransformationIntegrationFile = computeBooleanScope(
     ['packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts'],
