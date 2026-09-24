@@ -1,17 +1,13 @@
+import { createSourceDocument } from './canvasSourceDocument';
+
 /** Construct SetRel from typed occurrences, aligned by ordinal rather than table-specific names. */
 import { create } from '@bufbuild/protobuf';
 import {
   RelSchema,
   SetRel_SetOp,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import {
-  allocateDvtFieldId,
-  allocateDvtRelationId,
-  DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
-  DVT_SUBSTRAIT_SPEC_VERSION,
-} from '@dvt/contracts';
-import { deriveSubstraitSchemas, type SubstraitDocument } from '@dvt/substrait-analysis';
+import { allocateDvtFieldId, allocateDvtRelationId } from '@dvt/contracts';
+import { type SubstraitDocument } from '@dvt/substrait-analysis';
 import {
   hasSameConnectionRef,
   type DvtSubstraitJoinDataType,
@@ -93,29 +89,6 @@ export function createSourceSet(
       },
     },
   });
-  const [majorNumber, minorNumber, patchNumber] = DVT_SUBSTRAIT_SPEC_VERSION.split('.').map(Number);
-  const document: SubstraitDocument = {
-    plan: create(PlanSchema, {
-      version: { majorNumber, minorNumber, patchNumber, producer: 'dvt-canvas' },
-      relations: [
-        {
-          relType: {
-            case: 'root',
-            value: { input: relation, names: fields.map((field) => field.displayName) },
-          },
-        },
-      ],
-    }),
-    sidecar: {
-      schemaVersion: DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
-      semanticPlanSha256: '0'.repeat(64),
-      relations: [
-        ...inputs.map((input) => input.binding),
-        { relationId, relAnchor, displayName: operation },
-      ],
-      fields: [...inputs.flatMap((input) => input.fields), ...fields],
-    },
-  };
-  deriveSubstraitSchemas(document);
-  return document;
+  const root = { relation, fields, binding: { relationId, relAnchor, displayName: operation } };
+  return createSourceDocument([...inputs, root], root);
 }

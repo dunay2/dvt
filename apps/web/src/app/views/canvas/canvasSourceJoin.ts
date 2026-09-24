@@ -1,21 +1,14 @@
+import { createSourceDocument, createSourcePlan } from './canvasSourceDocument';
+
 /** Initial JOIN construction from typed source occurrences; no fixture-specific product schema. */
 import { create, equals } from '@bufbuild/protobuf';
 import {
   JoinRel_JoinType,
   RelSchema,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import {
-  PlanSchema,
-  PlanRelSchema,
-} from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { TypeSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
-import {
-  allocateDvtRelationId,
-  allocateDvtFieldId,
-  DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
-  DVT_SUBSTRAIT_SPEC_VERSION,
-} from '@dvt/contracts';
-import { deriveSubstraitSchemas, type SubstraitDocument } from '@dvt/substrait-analysis';
+import { allocateDvtRelationId, allocateDvtFieldId } from '@dvt/contracts';
+import { type SubstraitDocument } from '@dvt/substrait-analysis';
 import { hasSameConnectionRef } from '@dvt/postgres-projection';
 import {
   createSourceRelation,
@@ -57,10 +50,7 @@ export function createSourceJoin(
   );
   if (!equals(TypeSchema, types[0]!, types[1]!))
     throw new Error('JOIN comparison input types differ.');
-  const [majorNumber, minorNumber, patchNumber] = DVT_SUBSTRAIT_SPEC_VERSION.split('.').map(Number);
-  const plan = create(PlanSchema, {
-    version: { majorNumber, minorNumber, patchNumber, producer: 'dvt-canvas' },
-  });
+  const plan = createSourcePlan();
   const functionReference = dvtSubstraitExpression.ensureScalarFunction(
     plan,
     comparisonFunctionIdentity('equal')
@@ -124,29 +114,6 @@ export function createSourceJoin(
       },
     },
   });
-  plan.relations = [
-    create(PlanRelSchema, {
-      relType: {
-        case: 'root',
-        value: {
-          input: relation,
-          names: outputs.map(({ name }) => name),
-        },
-      },
-    }),
-  ];
-  const document: SubstraitDocument = {
-    plan,
-    sidecar: {
-      schemaVersion: DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
-      semanticPlanSha256: '0'.repeat(64),
-      relations: [
-        ...inputs.map((input) => input.binding),
-        { relationId, relAnchor: 3, displayName: 'join' },
-      ],
-      fields: [...inputs.flatMap((input) => input.fields), ...fields],
-    },
-  };
-  deriveSubstraitSchemas(document);
-  return document;
+  const root = { relation, fields, binding: { relationId, relAnchor: 3, displayName: 'join' } };
+  return createSourceDocument([...inputs, root], root, plan);
 }
