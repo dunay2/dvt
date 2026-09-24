@@ -2,17 +2,14 @@
 import { create, clone } from '@bufbuild/protobuf';
 import { RelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import {
-  allocateDvtFieldId,
-  allocateDvtRelationId,
-  DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
-} from '@dvt/contracts';
+import { allocateDvtRelationId, DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1 } from '@dvt/contracts';
 import {
   cloneLocalRelation,
   SubstraitAnalysisError,
   type SubstraitDocument,
 } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { createRelationPassthroughFields } from './canvasRelationPassthroughFields';
 import { dvtSubstraitTextComparison } from './canvasDvtSubstraitTextComparison';
 import {
   reconnectSelectedRelation,
@@ -88,20 +85,9 @@ export async function applySelectedRelationFilter(
         },
       });
   if (relation.relType.case === 'filter') relation.relType.value.condition = condition;
-  const fieldIds = new Map(schema.bindings.map((source) => [source.fieldId, allocateDvtFieldId()]));
   const fields = editing
     ? target.fields
-    : schema.bindings.map((source) => ({
-        fieldId: fieldIds.get(source.fieldId)!,
-        relationId: binding.relationId,
-        outputOrdinal: source.outputOrdinal,
-        displayName: source.displayName,
-        sourceFieldId: source.fieldId,
-        ...(source.description == null ? {} : { description: source.description }),
-        ...(source.parentFieldId == null
-          ? {}
-          : { parentFieldId: fieldIds.get(source.parentFieldId)! }),
-      }));
+    : createRelationPassthroughFields(binding.relationId, schema.bindings);
   const reconnected = editing
     ? { upserts: [] }
     : reconnectSelectedRelation(

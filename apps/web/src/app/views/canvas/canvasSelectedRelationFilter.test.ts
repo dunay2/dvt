@@ -13,8 +13,12 @@ import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAutho
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { resolveDvtTransformAuthoringMetadata } from './canvasDvtTransformAuthoring';
 
-function scenario() {
-  const source = (table: string) => ({
+function scenario(): {
+  document: ReturnType<typeof createDvtSubstraitJoinDraft>;
+  session: CanvasRelationAnalysisSession;
+  index: import('@dvt/substrait-analysis').SubstraitRelationIndex;
+} {
+  const source = (table: string): Parameters<typeof createDvtSubstraitJoinDraft>[0]['left'] => ({
     nodeId: table,
     schema: 'raw',
     table,
