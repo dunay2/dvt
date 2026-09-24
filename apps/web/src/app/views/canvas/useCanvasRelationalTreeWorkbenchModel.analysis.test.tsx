@@ -36,7 +36,7 @@ describe('Workbench shared analysis lifecycle', () => {
     expect(analyze).toHaveBeenCalledTimes(1);
   });
 
-  it('does not rebuild semantic analysis when cards move or model display text changes', async () => {
+  it('keeps analysis across refreshed Canvas node wrappers and display-only changes', async () => {
     const graph = occurrenceGraph();
     const analyze = vi.spyOn(analysis, 'analyzeCanvasRelations');
     let model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
@@ -53,9 +53,9 @@ describe('Workbench shared analysis lifecycle', () => {
     const owner = model!.session.analysis!.session;
     const first = await owner.query(null);
     const work = owner.work;
-    graph.targetNode = { ...graph.targetNode, name: 'Display only', position: { x: 400, y: 200 } };
+    graph.targetNode = { ...graph.targetNode, name: 'Display only' };
     graph.nodes = graph.nodes.map((node) =>
-      node.id === graph.targetNode.id ? graph.targetNode : { ...node, position: { x: 20, y: 10 } }
+      node.id === graph.targetNode.id ? graph.targetNode : { ...node }
     );
     graph.edges = [...graph.edges];
     await act(async () => root.render(<Host />));

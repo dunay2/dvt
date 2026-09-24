@@ -11,7 +11,12 @@ export function CanvasRelationFields({
   const model = useCanvasRelationFields(relationId);
   if (!model.available) return null;
   return (
-    <section className="mt-4 space-y-2" aria-busy={model.loading} aria-label={copy.fields}>
+    <section
+      data-slot="canvas-relation-fields"
+      className="mt-4 space-y-2"
+      aria-busy={model.loading}
+      aria-label={copy.fields}
+    >
       <h3 className="text-xs text-(--text-muted)">{copy.fields}</h3>
       {model.error == null ? (
         <dl className="text-xs">

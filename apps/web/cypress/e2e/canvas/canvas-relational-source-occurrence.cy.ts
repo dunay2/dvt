@@ -23,6 +23,7 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
     visitWorkbenchCanvas();
     openWorkbenchModel();
     let originalReads: string[] = [];
+    let selectedFields: string[] = [];
     cy.get('[data-operator="read"]')
       .should('have.length', 2)
       .then(($reads) => {
@@ -34,6 +35,12 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
     cy.get('[data-slot="source-occurrence-alias"]').clear().type('Regional customers');
     cy.get('[data-slot="source-occurrence-update"]').click();
     cy.get('[data-operator="read"]').last().should('contain.text', 'Regional customers');
+    cy.get('[data-slot="canvas-relation-fields"] [data-field-id]')
+      .should('have.length.greaterThan', 0)
+      .then(($fields) => {
+        selectedFields = Array.from($fields, (field) => field.getAttribute('data-field-id')!);
+        expect(new Set(selectedFields).size).to.equal(selectedFields.length);
+      });
     cy.get('[data-slot="canvas-relational-tree-source"]').should('have.length', 2);
     cy.then(() => expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(0));
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
@@ -52,6 +59,12 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
       expect(inputs[2]!.sourceRef).to.deep.equal(inputs[0]!.sourceRef);
       appendedId = inputs[2]!.relationId;
       expect(
+        draft.sidecar.fields
+          .filter((field) => field.relationId === appendedId && field.parentFieldId == null)
+          .sort((left, right) => left.outputOrdinal - right.outputOrdinal)
+          .map((field) => field.fieldId)
+      ).to.deep.equal(selectedFields);
+      expect(
         draft.sidecar.relations.find((binding) => binding.relationId === appendedId)?.displayName
       ).to.equal('Regional customers');
       const { draft: savedGraph } = write!.body as { draft: { edges: { targetId: string }[] } };
@@ -64,10 +77,20 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
     openWorkbenchModel();
     cy.get('[data-operator="read"]').should('have.length', 3).last().click();
     cy.get('[data-slot="source-occurrence-alias"]').should('have.value', 'Regional customers');
-    cy.get(
-      '[data-slot="canvas-operation-data-preview"] [data-slot="canvas-model-preview"]'
-    ).click();
-    cy.then(() => {
+    cy.get('[data-slot="canvas-relation-fields"] [data-field-id]').should(($fields) => {
+      expect(Array.from($fields, (field) => field.getAttribute('data-field-id'))).to.deep.equal(
+        selectedFields
+      );
+    });
+    cy.get('[data-slot="canvas-relational-collapse"]').click();
+    cy.get('[data-operator="read"]')
+      .last()
+      .parent()
+      .find('[data-slot="canvas-node-execute"]')
+      .focus()
+      .should('be.visible')
+      .click();
+    cy.wrap(null).should(() => {
       const sample = getE2eApiCalls(/\/data-sample/, 'GET').at(-1);
       expect(sample).not.to.equal(undefined);
       expect(sample!.url.searchParams.get('relationId')).to.equal(appendedId);
