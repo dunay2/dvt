@@ -176,9 +176,7 @@ export function useCanvasEdgeCommandRunner({
         currentDraftSession,
         command
       );
-      if (nextDraftSession === currentDraftSession) {
-        return false;
-      }
+      if (nextDraftSession === currentDraftSession) return false;
 
       latestDraftSessionRef.current = nextDraftSession;
       setDraftSession((currentSession) => {

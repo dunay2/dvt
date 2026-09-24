@@ -62,6 +62,7 @@ export type CanvasViewCopy = {
   readonly missingRemoteDraftMessage: string;
   readonly reloadLatestDraftLabel: string;
   readonly dependencyAddedMessage: string;
+  readonly dependencyCreationFailedMessage: string;
   readonly columnMappingAddedMessage: string;
   readonly columnRelationProposedMessage: string;
   readonly columnMappingRemovedMessage: string;

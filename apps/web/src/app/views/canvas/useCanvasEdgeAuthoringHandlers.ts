@@ -85,19 +85,21 @@ function useCanvasConnectionCreationHandler({
   const { canEditEdges } = policy;
 
   return useCallback<NonNullable<ReactFlowProps<Node, Edge>['onConnect']>>(
-    async (connection) => {
+    (connection) => {
       if (!canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
 
-      await edgeCommandRunner.createConnection({
-        connection,
-        onNoop: notifyRejectedConnection,
-        onCreated: () => {
-          toast.success(canvasViewCopy.dependencyAddedMessage);
-        },
-      });
+      void edgeCommandRunner
+        .createConnection({
+          connection,
+          onNoop: notifyRejectedConnection,
+          onCreated: () => {
+            toast.success(canvasViewCopy.dependencyAddedMessage);
+          },
+        })
+        .catch(() => toast.error(canvasViewCopy.dependencyCreationFailedMessage));
     },
     [canEditEdges, edgeCommandRunner]
   );

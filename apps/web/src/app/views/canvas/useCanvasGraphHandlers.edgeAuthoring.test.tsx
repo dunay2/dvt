@@ -123,7 +123,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     await harness.render();
 
     await act(async () => {
-      await harness.latest()?.onConnect({
+      harness.latest()?.onConnect({
         source: 'source-node',
         sourceHandle: null,
         target: 'sink-node',
@@ -162,7 +162,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     await harness.render();
 
     await act(async () => {
-      await harness.latest()?.onConnect({
+      harness.latest()?.onConnect({
         source: source.id,
         sourceHandle: createCanvasColumnHandleId({
           direction: 'source',
@@ -289,7 +289,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     await harness.render();
 
     await act(async () => {
-      await harness.latest()?.onConnect({
+      harness.latest()?.onConnect({
         source: clients.id,
         sourceHandle: createCanvasColumnHandleId({
           direction: 'source',
@@ -353,7 +353,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     await harness.render();
 
     await act(async () => {
-      await harness.latest()?.onConnect({
+      harness.latest()?.onConnect({
         source: 'source-node',
         sourceHandle: null,
         target: 'sink-node',
@@ -418,7 +418,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     await harness.render();
 
     await act(async () => {
-      await harness.latest()?.onConnect({
+      harness.latest()?.onConnect({
         source: source.id,
         sourceHandle: null,
         target: transform.id,
@@ -468,7 +468,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     await harness.render();
 
     await act(async () => {
-      await harness.latest()?.onConnect({
+      harness.latest()?.onConnect({
         source: 'source-node',
         sourceHandle: null,
         target: 'sink-node',
@@ -501,7 +501,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       await harness.render();
 
       await act(async () => {
-        await harness.latest()?.onConnect({
+        harness.latest()?.onConnect({
           source: 'source-node',
           sourceHandle: null,
           target: 'sink-node',
@@ -585,7 +585,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     await harness.render();
 
     await act(async () => {
-      await harness.latest()?.onConnect({
+      harness.latest()?.onConnect({
         source: 'warehouse-source',
         sourceHandle: null,
         target: 'dbt-model',
@@ -665,7 +665,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     await harness.render();
 
     await act(async () => {
-      await harness.latest()?.onConnect({
+      harness.latest()?.onConnect({
         source: 'warehouse-source',
         sourceHandle: null,
         target: 'dbt-model',
@@ -716,7 +716,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     await harness.render();
 
     await act(async () => {
-      await harness.latest()?.onConnect({
+      harness.latest()?.onConnect({
         source: HTTP_JSON_ACQUISITION_NODE.id,
         sourceHandle: null,
         target: OBJECT_FILE_LOAD_NODE.id,
@@ -752,7 +752,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     await harness.render();
 
     await act(async () => {
-      await harness.latest()?.onConnect({
+      harness.latest()?.onConnect({
         source: OBJECT_FILE_LOAD_NODE.id,
         sourceHandle: null,
         target: HTTP_JSON_ACQUISITION_NODE.id,
@@ -783,7 +783,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     await harness.render();
 
     await act(async () => {
-      await harness.latest()?.onConnect({
+      harness.latest()?.onConnect({
         source: 'source-node',
         sourceHandle: null,
         target: 'sink-node',
