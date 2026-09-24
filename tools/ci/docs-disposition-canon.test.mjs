@@ -2090,3 +2090,39 @@ test('historical delivery support documents stay retired with current contracts 
     assert.equal(counts.get(key), required, `Recorded evidence command altered or removed: ${key}`);
   }
 });
+
+test('retained mitigations describe surviving historical support guards', () => {
+  const admissionRisk = readRepoFile(
+    'docs/risk-register/quality/R-20260429-PLAN-ADMISSION-DRIFT.yaml'
+  ).replace(/\s+/gu, ' ');
+  assert.doesNotMatch(admissionRisk, /mailbox analysis/u);
+  for (const scope of [
+    'current component guide',
+    'user stories',
+    'owned-concern docblocks',
+    'active admission surfaces',
+    'development plan-version',
+    'single engine admission-policy boundary',
+  ]) {
+    assert.ok(admissionRisk.includes(scope), scope);
+  }
+  const closureRisk = readRepoFile(
+    'docs/risk-register/quality/R-20260512-DHM-WS6-SEMANTIC-CLOSURE.yaml'
+  ).replace(/\s+/gu, ' ');
+  assert.doesNotMatch(closureRisk, /mailbox analysis, and closeout evidence/u);
+  assert.match(closureRisk, /retained semantic-closure hardening analysis/u);
+  assert.match(closureRisk, /Historical closeout existence is not asserted by that test/u);
+  const report = readRepoFile('docs/evidence/ed-20260429-plan-admission-hard-cut.md').replace(
+    /\s+/gu,
+    ' '
+  );
+  assert.match(report, /guarded, at the time of this report/u);
+  assert.match(report, /# Historical validation scope after PR #3413/u);
+  assert.match(report, /original commands and results above remain historical/u);
+  assert.match(report, /does not require the retired mailbox report/u);
+  assert.ok(
+    report.includes(
+      'https://github.com/dunay2/dvt/blob/d5d8755871b585ea40767e5f030cab644e6269bb/packages/@dvt/contracts/test/plan-admission-matrix.architecture.test.ts'
+    )
+  );
+});

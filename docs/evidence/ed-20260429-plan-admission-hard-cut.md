@@ -37,9 +37,9 @@ This evidence records the ARC-2 proof for strict start-run admission over the
   admission.
 - Added negative tests for `v1.future` on a supported `planVersion` and for
   no-dispatch behavior before provider execution.
-- Added a semantic architecture fitness test that guards the component guide,
-  user stories, mailbox Fowler analysis, owned-concern docblocks, and retired
-  naming drift.
+- Added a semantic architecture fitness test that guarded, at the time of this report,
+  the component guide, user stories, mailbox Fowler analysis, owned-concern
+  docblocks, and retired naming drift.
 - Removed the plan-verifier semver compatibility fallback and replaced it with
   explicit runtime admission.
 - Removed the separate engine `PlanVersionPolicy` boundary and consolidated
@@ -51,3 +51,14 @@ Targeted contracts and engine tests prove that only the current pair
 `(1.0, v1.2)` is accepted and that unsupported schema versions are rejected
 before adapter dispatch. Plan-verifier tests prove adapter-side verification
 uses admission instead of major/minor compatibility.
+
+# Historical validation scope after PR #3413
+
+The original commands and results above remain historical, not a claim about
+current regression coverage. The [pre-retirement architecture test](https://github.com/dunay2/dvt/blob/d5d8755871b585ea40767e5f030cab644e6269bb/packages/@dvt/contracts/test/plan-admission-matrix.architecture.test.ts)
+also required the mailbox analysis. PR #3413 retires that report-presence check.
+The surviving test checks the component guide, user stories, owned-concern
+headers, active admission surfaces, plan-version examples, retired naming and
+the engine admission-policy boundary; it does not require the retired mailbox report.
+This maintenance note does not reexecute the original commands or change the
+recorded acceptance, contract, runtime result or open risk status.
