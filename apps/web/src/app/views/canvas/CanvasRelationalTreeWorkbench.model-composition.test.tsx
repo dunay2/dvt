@@ -40,6 +40,10 @@ describe('Model composition Workbench', () => {
     }
 
     await act(async () => root.render(<Host />));
+    const surface = container.querySelector('[data-slot="canvas-relational-tree-surface"]');
+    expect(surface?.classList).toContain('h-full');
+    expect(surface?.classList).toContain('w-full');
+    expect(surface?.classList).not.toContain('flex');
     const output = container.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-relational-tree-output"]'
     );
