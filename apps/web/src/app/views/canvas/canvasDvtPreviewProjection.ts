@@ -5,15 +5,13 @@ import {
   type ExecutionSelection,
   ConnectedSourceRefSchema,
 } from '@dvt/contracts';
-import { inspectDvtSubstraitJoinDraft, hasSameConnectionRef } from '@dvt/postgres-projection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import { toCanvasAuthoringSerializableValue } from './canvasAuthoringMetadata';
 import { resolveEffectiveDvtConnectionRef } from './canvasDvtAuthoringModel';
 import { decodeDvtSubstraitProjectionDocument } from './canvasDvtSubstraitProjection';
-import { inspectDvtSubstraitUnionAllAcceptedDraft } from './canvasDvtSubstraitSetComposition';
-import { peelCanvasDvtSubstraitSortFetch } from './canvasDvtSubstraitSortFetch';
+import { hasConnectedRelationSources } from './canvasConnectedRelationInputs';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { canvasViewCopy } from './copy';
 
@@ -77,37 +75,16 @@ function resolveTerminalProjectionClosure(
       return null;
     const authority = readDvtTransformAuthoringAuthority(transform);
     if (authority === null) return null;
-    const { base: draft } = peelCanvasDvtSubstraitSortFetch(
-      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
-    );
-    if (sources.length > 1) {
-      const joinInspection = inspectDvtSubstraitJoinDraft(draft);
-      const setInspection = inspectDvtSubstraitUnionAllAcceptedDraft(draft);
-      const semanticInputs = joinInspection.ok
-        ? joinInspection.projection.inputs
-        : setInspection.ok
-          ? setInspection.projection.inputs
-          : null;
-      if (semanticInputs == null || semanticInputs.length !== sources.length) return null;
-      const refs = sources.map((source) =>
-        ConnectedSourceRefSchema.parse(source.metadata?.connectedSourceRef)
-      );
-      if (
-        semanticInputs.some(
-          (input) =>
-            refs.filter(
-              (ref) =>
-                ref.sourceObjectId === input.sourceRef.sourceObjectId &&
-                hasSameConnectionRef(ref.connectionRef, input.sourceRef.connectionRef)
-            ).length !== 1
-        )
+    const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+    if (
+      !hasConnectedRelationSources(
+        draft,
+        sources.map((source) => ({
+          sourceRef: ConnectedSourceRefSchema.parse(source.metadata?.connectedSourceRef),
+        }))
       )
-        return null;
-    } else if (
-      draft.sidecar.relations.filter((relation) => relation.sourceRef !== undefined).length !== 1
-    ) {
+    )
       return null;
-    }
   } catch {
     return null;
   }

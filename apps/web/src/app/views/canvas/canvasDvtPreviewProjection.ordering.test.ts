@@ -1,6 +1,9 @@
 /** Proves Preview admission follows canonical wrappers without mutating or disguising them. */
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import type { DvtSubstraitSortDirection } from '@dvt/postgres-projection';
+import {
+  projectSubstraitToPostgresSql,
+  type DvtSubstraitSortDirection,
+} from '@dvt/postgres-projection';
 import { describe, expect, it } from 'vitest';
 
 import documents from '../../../../../../packages/@dvt/postgres-projection/test/fixtures/inner-join-documents.json';
@@ -114,8 +117,8 @@ describe('protected Preview ordering admission', () => {
   );
 
   it.each([SortField_SortDirection.UNSPECIFIED, SortField_SortDirection.CLUSTERED])(
-    'rejects unsupported Sort selector %i without dropping it',
-    (direction) => {
+    'leaves unsupported target selector %i to the projection without rewriting the request',
+    async (direction) => {
       const draft = orderedDraft(['sort'], SortField_SortDirection.ASC_NULLS_LAST);
       const root = draft.plan.relations[0]!.relType;
       if (root.case !== 'root' || root.value.input?.relType.case !== 'sort')
@@ -123,7 +126,8 @@ describe('protected Preview ordering admission', () => {
       root.value.input.relType.value.sorts[0]!.sortKind = { case: 'direction', value: direction };
       const args = intent(draft);
       const before = structuredClone(args);
-      expect(buildProtectedDvtPreviewProjection(args).ok).toBe(false);
+      expect(buildProtectedDvtPreviewProjection(args).ok).toBe(true);
+      await expect(projectSubstraitToPostgresSql(draft)).rejects.toThrow();
       expect(args).toEqual(before);
     }
   );
