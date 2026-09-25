@@ -41,8 +41,10 @@ export function projectCanvasRelationalTreeSemanticZoom(
     inputs.set(edge.target, [...(inputs.get(edge.target) ?? []), edge]);
   }
   const visit = (relation: CanvasRelationalTreeNode): void => {
+    const expressionStage =
+      relation.operator === 'project' && (relation.projectionSummary?.derivedFieldCount ?? 0) > 0;
     if (
-      relation.operator === 'join' &&
+      (relation.operator === 'join' || expressionStage) &&
       relation.relationId != null &&
       relation.expressionRefs.length > 0
     ) {
