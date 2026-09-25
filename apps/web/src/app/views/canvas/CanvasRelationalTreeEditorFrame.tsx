@@ -26,6 +26,7 @@ export function CanvasRelationalTreeEditorFrame({
   readOnly = false,
   label,
   onEdit,
+  dataSlot = 'canvas-relational-tree-inline-editor',
 }: Readonly<{
   operation: CanvasPresentationOperation;
   children: ReactNode;
@@ -37,6 +38,7 @@ export function CanvasRelationalTreeEditorFrame({
   readOnly?: boolean;
   label?: string;
   onEdit?: () => void;
+  dataSlot?: string;
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
@@ -56,7 +58,8 @@ export function CanvasRelationalTreeEditorFrame({
   );
   return (
     <section
-      data-slot="canvas-relational-tree-inline-editor"
+      data-slot={dataSlot}
+      data-canvas-inspector="true"
       data-relation-id={relationId ?? undefined}
       aria-label={title}
       hidden={hidden}

@@ -3,9 +3,11 @@ import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import { CanvasRelationalTreeOperationShelf } from './CanvasRelationalTreeOperationShelf';
+import {
+  CanvasRelationalTreeSideInspector,
+  type CanvasModelOutputInspectorState,
+} from './CanvasRelationalTreeSideInspector';
 import { CanvasRelationalTreeView } from './CanvasRelationalTreeView';
-import { RelationalInspectionPanel } from './relational-inspection/RelationalInspectionPanel';
-import { resolveRelationalInspection } from './relational-inspection/inspectionModel';
 
 export function CanvasRelationalTreeInspection({
   model,
@@ -13,14 +15,14 @@ export function CanvasRelationalTreeInspection({
   copy,
   expanded,
   onExpandedChange,
-  onOpenModelComposition,
+  modelOutput,
 }: Readonly<{
   model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
   transformNode: CanonicalNode;
   copy: CanvasRelationalTreeWorkbenchCopy;
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
-  onOpenModelComposition: () => void;
+  modelOutput: CanvasModelOutputInspectorState;
 }>): JSX.Element | null {
   if (model.projection == null) return null;
   return (
@@ -49,21 +51,23 @@ export function CanvasRelationalTreeInspection({
           onDropSource={model.authoringAvailable ? model.session.selectInput : undefined}
           onRemove={model.authoringAvailable ? model.session.removal.remove : undefined}
           onExpand={(locator) => {
+            modelOutput.setOpen(false);
             model.selectTreeNode(locator);
             onExpandedChange(true);
           }}
-          onOpenOutput={onOpenModelComposition}
+          onOpenOutput={() => {
+            onExpandedChange(false);
+            modelOutput.setOpen(true);
+          }}
         />
-        {expanded ? (
-          <RelationalInspectionPanel
-            inspection={resolveRelationalInspection(model.selectedNode)}
-            transformNode={transformNode}
-            copy={copy}
-            onClose={() => onExpandedChange(false)}
-            onEdit={model.authoringAvailable ? model.session.start : undefined}
-            onOutputChange={model.authoringAvailable ? model.session.applyOutputOrder : undefined}
-          />
-        ) : null}
+        <CanvasRelationalTreeSideInspector
+          model={model}
+          transformNode={transformNode}
+          copy={copy}
+          expanded={expanded}
+          onExpandedChange={onExpandedChange}
+          modelOutput={modelOutput}
+        />
       </div>
     </div>
   );

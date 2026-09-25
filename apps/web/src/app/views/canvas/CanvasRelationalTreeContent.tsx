@@ -5,6 +5,7 @@ import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationa
 import { CanvasRelationalTreeBlockCanvas } from './CanvasRelationalTreeBlockCanvas';
 import { CanvasRelationalTreeCommandError } from './CanvasRelationalTreeCommandError';
 import { CanvasRelationalTreeInspection } from './CanvasRelationalTreeInspection';
+import type { CanvasModelOutputInspectorState } from './CanvasRelationalTreeSideInspector';
 
 type CanvasRelationalTreeContentProps = Readonly<{
   model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
@@ -16,7 +17,7 @@ type CanvasRelationalTreeContentProps = Readonly<{
   onExpandedChange: (expanded: boolean) => void;
   onPendingConditionChange: (pending: boolean) => void;
   onSelectRelation: (relationId: string | null) => void;
-  onOpenModelComposition: () => void;
+  modelOutput: CanvasModelOutputInspectorState;
 }>;
 
 export function CanvasRelationalTreeContent(props: CanvasRelationalTreeContentProps): JSX.Element {
@@ -41,7 +42,7 @@ function CanvasRelationalTreeContentView({
   onExpandedChange,
   onPendingConditionChange,
   onSelectRelation,
-  onOpenModelComposition,
+  modelOutput,
 }: CanvasRelationalTreeContentProps): JSX.Element {
   if (model.authoringAvailable && (model.projection == null || model.session.active)) {
     const { session } = model;
@@ -89,7 +90,7 @@ function CanvasRelationalTreeContentView({
       copy={copy}
       expanded={expanded}
       onExpandedChange={onExpandedChange}
-      onOpenModelComposition={onOpenModelComposition}
+      modelOutput={modelOutput}
     />
   );
 }

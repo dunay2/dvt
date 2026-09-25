@@ -17,7 +17,7 @@ import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.
 describe('Model composition Workbench', () => {
   setupWorkbenchTest();
 
-  it('opens from the Model output and commits a final-field alias through authoring', async () => {
+  it('opens the Model output in the fixed inspector and commits a final-field alias', async () => {
     const graph = occurrenceGraph();
     const applied = vi.fn();
     function Host(): React.JSX.Element {
@@ -41,21 +41,35 @@ describe('Model composition Workbench', () => {
     }
 
     await act(async () => root.render(<Host />));
-    const surface = container.querySelector('[data-slot="canvas-relational-tree-surface"]');
-    expect(surface?.classList).toContain('h-full');
-    expect(surface?.classList).toContain('w-full');
-    expect(surface?.classList).not.toContain('flex');
     const output = container.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-relational-tree-output"]'
     );
     expect(output?.tagName).toBe('BUTTON');
     await act(async () => output?.click());
 
-    const panel = container.querySelector('[data-slot="canvas-model-composition"]');
+    const panel = container.querySelector('[data-slot="canvas-model-output-inspector"]');
     expect(panel).not.toBeNull();
+    expect(container.querySelectorAll('[data-canvas-inspector="true"]')).toHaveLength(1);
+    expect(panel?.parentElement?.parentElement?.dataset.slot).toBe(
+      'canvas-relational-tree-inspection'
+    );
     expect(
-      panel?.querySelector('[data-slot="canvas-contextual-workbench-drag-handle"]')
-    ).not.toBeNull();
+      container.querySelector('[data-slot="canvas-contextual-workbench-drag-handle"]')
+    ).toBeNull();
+    expect(
+      panel?.querySelectorAll('[data-slot="canvas-model-composition-steps"] [data-kind="input"]')
+    ).toHaveLength(2);
+    expect(
+      panel?.querySelectorAll(
+        '[data-slot="canvas-model-composition-steps"] [data-kind="operation"]'
+      )
+    ).toHaveLength(1);
+
+    await act(async () => {
+      panel
+        ?.querySelector<HTMLButtonElement>('[data-slot="canvas-operation-output-tab"]')
+        ?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    });
 
     const alias = panel?.querySelector<HTMLInputElement>(
       '[data-slot="relation-output-field"] input:not([type="checkbox"])'
@@ -79,33 +93,19 @@ describe('Model composition Workbench', () => {
 
     await act(async () => {
       container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-model-composition-operations-tab"]')!
-        .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
-    });
-    expect(
-      container.querySelectorAll('[data-slot="canvas-model-composition-steps"] [data-kind="input"]')
-    ).toHaveLength(2);
-    expect(
-      container.querySelectorAll(
-        '[data-slot="canvas-model-composition-steps"] [data-kind="operation"]'
-      )
-    ).toHaveLength(1);
-
-    await act(async () => {
-      container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-contextual-workbench-close"]')!
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-collapse"]')!
         .click();
     });
-    expect(container.querySelector('[data-slot="canvas-model-composition"]')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-model-output-inspector"]')).toBeNull();
     await act(async () => {
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-output"]')!
         .click();
     });
-    expect(container.querySelector('[data-slot="canvas-model-composition"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-model-output-inspector"]')).not.toBeNull();
   });
 
-  it('keeps output commands read-only while an operation draft is active', async () => {
+  it('keeps exactly one fixed inspector when an operation is selected', async () => {
     const graph = occurrenceGraph();
     const applied = vi.fn(() => ({ outcome: 'no_changes' as const }));
     await act(async () =>
@@ -127,15 +127,8 @@ describe('Model composition Workbench', () => {
     await act(async () =>
       container.querySelector<HTMLButtonElement>('[data-operator="join"]')!.click()
     );
-    await act(async () =>
-      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')!.click()
-    );
-
-    const outputInputs = container.querySelectorAll<HTMLInputElement>(
-      '[data-slot="canvas-model-composition"] [data-slot="relation-output-field"] input'
-    );
-    expect(outputInputs.length).toBeGreaterThan(0);
-    expect(Array.from(outputInputs).every((input) => input.disabled)).toBe(true);
+    expect(container.querySelector('[data-slot="canvas-model-output-inspector"]')).toBeNull();
+    expect(container.querySelectorAll('[data-canvas-inspector="true"]')).toHaveLength(1);
     expect(applied).not.toHaveBeenCalled();
   });
 
@@ -160,8 +153,15 @@ describe('Model composition Workbench', () => {
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-output"]')!
         .click()
     );
+    await act(async () => {
+      container
+        .querySelector<HTMLButtonElement>(
+          '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-operation-output-tab"]'
+        )!
+        .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    });
     const alias = container.querySelector<HTMLInputElement>(
-      '[data-slot="canvas-model-composition"] [data-slot="relation-output-field"] input:not([type="checkbox"])'
+      '[data-slot="canvas-model-output-inspector"] [data-slot="relation-output-field"] input:not([type="checkbox"])'
     )!;
     await act(async () => {
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(
@@ -177,7 +177,7 @@ describe('Model composition Workbench', () => {
 
     await act(async () => handle.current?.cancel());
 
-    expect(container.querySelector('[data-slot="canvas-model-composition"]')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-model-output-inspector"]')).toBeNull();
     expect(handle.current?.hasUnappliedChanges).toBe(false);
     expect(applied).not.toHaveBeenCalled();
   });
