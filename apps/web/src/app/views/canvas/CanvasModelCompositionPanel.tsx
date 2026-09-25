@@ -19,6 +19,7 @@ export function CanvasModelCompositionPanel({
   copy,
   editable,
   onOutputChange,
+  onPendingOutputChange,
   onClose,
 }: Readonly<{
   modelName: string;
@@ -26,6 +27,7 @@ export function CanvasModelCompositionPanel({
   copy: CanvasRelationalTreeWorkbenchCopy;
   editable: boolean;
   onOutputChange: (document: SubstraitDocument) => void | boolean;
+  onPendingOutputChange: (pending: boolean) => void;
   onClose: () => void;
 }>): JSX.Element | null {
   const relationId = root.relationId;
@@ -77,6 +79,7 @@ export function CanvasModelCompositionPanel({
               relationId={relationId}
               disabled={!editable}
               onChange={onOutputChange}
+              onPendingChange={onPendingOutputChange}
             />
           </TabsContent>
           <TabsContent value="operations" className="m-0 min-h-0 overflow-auto p-4">

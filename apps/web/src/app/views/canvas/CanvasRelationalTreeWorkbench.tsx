@@ -49,13 +49,17 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
     authoring,
   });
   const [pendingCondition, setPendingCondition] = useState(false);
+  const [pendingCompositionOutput, setPendingCompositionOutput] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [sourcesCollapsed, setSourcesCollapsed] = useState(false);
   const [compositionOpen, setCompositionOpen] = useState(false);
   useEffect(() => {
     if (!model.session.active) setPendingCondition(false);
   }, [model.session.active]);
-  const sessionHandle = useCanvasRelationalTreeWorkbenchHandle(ref, model, pendingCondition);
+  const sessionHandle = useCanvasRelationalTreeWorkbenchHandle(ref, model, pendingCondition, {
+    pending: pendingCompositionOutput,
+    discard: () => setCompositionOpen(false),
+  });
   const navigation = useCanvasRelationEditNavigation({
     editing: model.session.active,
     selectedRelationId: model.selectedRelationId,
@@ -127,6 +131,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
                   copy={copy}
                   editable={model.authoringAvailable && !model.session.active}
                   onOutputChange={model.session.applyOutputOrder}
+                  onPendingOutputChange={setPendingCompositionOutput}
                   onClose={() => setCompositionOpen(false)}
                 />
               ) : null}
