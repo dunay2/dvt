@@ -64,6 +64,7 @@ export async function changeSelectedRelationOutputs(
   const removedIds = new Set(
     target.fields.filter((field) => !retainedIds.has(field.fieldId)).map((field) => field.fieldId)
   );
+  const fieldsById = new Map(target.fields.map((field) => [field.fieldId, field]));
   const fields = selected.flatMap((entry, outputOrdinal) => {
     if (entry.output != null) {
       const retained = new Set([entry.output.fieldId]);
@@ -71,8 +72,8 @@ export async function changeSelectedRelationOutputs(
         for (const child of target.fields.filter((field) => field.parentFieldId === id))
           retained.add(child.fieldId);
       const canonicalIds = new Map([[entry.output.fieldId, entry.key]]);
-      return target.fields
-        .filter((field) => retained.has(field.fieldId))
+      return [...retained]
+        .map((id) => fieldsById.get(id)!)
         .map((field) => {
           const canonical =
             field.parentFieldId == null

@@ -2,12 +2,10 @@
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
-import { CanvasRelationalTreeExpressionOperatorEditor } from './CanvasRelationalTreeExpressionOperatorEditor';
 import { SourceOccurrenceProperties } from './relational-source-occurrence/SourceOccurrenceProperties';
 import { useContext } from 'react';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
-import { CanvasSelectedFilterEditor } from './CanvasSelectedFilterEditor';
-import { CanvasRelationalTreeSortFetchEditor } from './CanvasRelationalTreeSortFetchEditor';
+import { CanvasSelectedUnaryEditor } from './CanvasSelectedUnaryEditor';
 
 export function CanvasRelationalTreeSelectedOperatorEditor({
   draft,
@@ -34,16 +32,6 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
     relationId != null
       ? analysis.session.locate(relationId, analysis.revision).relation.relType.case
       : null;
-  if (selected === 'filter' && relationId != null)
-    return (
-      <CanvasSelectedFilterEditor
-        draft={draft}
-        relationId={relationId}
-        onChange={onChange}
-        onClose={onClose}
-        onPendingChange={onPendingConditionChange}
-      />
-    );
   const read = draft.sidecar.relations.find(
     (binding) => binding.relationId === relationId && binding.sourceRef != null
   );
@@ -58,11 +46,21 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
         onPendingChange={onPendingConditionChange}
       />
     );
-  if ((selected === 'sort' || selected === 'fetch') && relationId != null) {
+  const tools = {
+    filter: 'filter',
+    sort: 'sort',
+    fetch: 'fetch',
+    aggregate: 'aggregate',
+    project: 'window',
+  } as const;
+  const tool = selected != null && selected in tools ? tools[selected as keyof typeof tools] : null;
+  if (tool != null && relationId != null) {
     return (
-      <CanvasRelationalTreeSortFetchEditor
+      <CanvasSelectedUnaryEditor
         draft={draft}
-        operation={selected}
+        operation={tool}
+        transformNode={transformNode}
+        modelOperation={operation}
         relationId={relationId}
         onChange={onChange}
         onClose={onClose}
@@ -70,14 +68,5 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
       />
     );
   }
-  return (
-    <CanvasRelationalTreeExpressionOperatorEditor
-      draft={draft}
-      operation={operation}
-      relationId={relationId}
-      transformNode={transformNode}
-      onChange={onChange}
-      onClose={onClose}
-    />
-  );
+  return null;
 }
