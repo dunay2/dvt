@@ -22,7 +22,7 @@ import { openOperationMenu } from './operation-menu/operationMenu.test-support';
 
 describe('Canvas relational-tree Workbench drag', () => {
   setupWorkbenchTest();
-  it('keeps the applied tree mounted during drag and stages a second input only on drop', () => {
+  it('keeps the applied tree mounted during drag and stages a second input only on drop', async () => {
     const customers = sourceNode('customers', 'customers');
     const orders = sourceNode('orders', 'orders');
     const transform = applyDvtSubstraitSemanticDocument(
@@ -48,7 +48,7 @@ describe('Canvas relational-tree Workbench drag', () => {
       )
     );
 
-    act(() => {
+    await act(async () => {
       root.render(
         <CanvasRelationalTreeWorkbench
           transformNode={transform}
@@ -65,11 +65,7 @@ describe('Canvas relational-tree Workbench drag', () => {
 
     const appliedTree = container.querySelector('[data-slot="canvas-relational-tree"]');
     openOperationMenu(container);
-    expect(
-      document
-        .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
-        ?.getAttribute('aria-disabled')
-    ).toBe('true');
+    expect(document.querySelector('[data-slot="dvt-select-operation-inner-join"]')).toBeNull();
     const ordersButton = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     ).find((button) => button.textContent?.includes('orders'));
@@ -82,7 +78,7 @@ describe('Canvas relational-tree Workbench drag', () => {
     const dragStart = new Event('dragstart', { bubbles: true });
     Object.defineProperty(dragStart, 'dataTransfer', { value: dataTransfer });
 
-    act(() => {
+    await act(async () => {
       ordersButton?.dispatchEvent(dragStart);
     });
 
@@ -91,12 +87,12 @@ describe('Canvas relational-tree Workbench drag', () => {
     const drop = new Event('drop', { bubbles: true, cancelable: true });
     Object.defineProperty(drop, 'dataTransfer', { value: dataTransfer });
     values.set('application/x-dvt-relational-source', 'not-connected');
-    act(() => {
+    await act(async () => {
       container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!.dispatchEvent(drop);
     });
     expect(container.querySelector('[data-slot="canvas-relational-tree"]')).toBe(appliedTree);
     values.set('application/x-dvt-relational-source', orders.id);
-    act(() => {
+    await act(async () => {
       container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!.dispatchEvent(drop);
     });
     openOperationMenu(container);
@@ -111,7 +107,7 @@ describe('Canvas relational-tree Workbench drag', () => {
       container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
         ?.disabled
     ).toBe(true);
-    act(() =>
+    await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-cancel"]')!
         .click()

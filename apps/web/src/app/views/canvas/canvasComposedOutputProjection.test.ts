@@ -3,7 +3,7 @@ import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { applySelectedRelationFilter } from './canvasSelectedRelationFilter';
 import { dvtSubstraitTextComparison } from './canvasDvtSubstraitTextComparison';
-import { createDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { createCustomerOrdersJoin } from './canvasJoin.test-support';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
@@ -39,17 +39,15 @@ describe('explicit SQL projection of composed inputs', () => {
           ),
         },
       }));
-      const source = (
-        ordinal: number
-      ): Parameters<typeof createDvtSubstraitJoinDraft>[0]['left'] => ({
+      const source = (ordinal: number): Parameters<typeof createCustomerOrdersJoin>[0]['left'] => ({
         nodeId: sources[ordinal]!.id,
         schema: 'raw',
         table: sources[ordinal]!.id,
         sourceRef: sources[ordinal]!.metadata!.connectedSourceRef as Parameters<
-          typeof createDvtSubstraitJoinDraft
+          typeof createCustomerOrdersJoin
         >[0]['left']['sourceRef'],
       });
-      const draft = createDvtSubstraitJoinDraft({
+      const draft = createCustomerOrdersJoin({
         left: source(0),
         right: source(1),
         targetNodeId: 'model',

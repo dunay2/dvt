@@ -3,9 +3,10 @@ import { useEffect, useId, useState } from 'react';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
-import type { DvtSubstraitJoinDraft } from '../canvasDvtSubstraitJoinComposition';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { CanvasRelationalTreeEditorFrame } from '../CanvasRelationalTreeEditorFrame';
-import { renameSourceOccurrence } from './sourceOccurrencePolicy';
+import { parseOccurrenceAlias, renameSourceOccurrence } from './renameSourceOccurrence';
+import { useRelationCommand } from '../useRelationCommand';
 import { sourceOccurrenceCopy } from './sourceOccurrenceCopy';
 import { CanvasRelationFields } from '../CanvasRelationFields';
 
@@ -16,9 +17,9 @@ export function SourceOccurrenceProperties({
   onClose,
   onPendingChange,
 }: Readonly<{
-  draft: DvtSubstraitJoinDraft;
+  draft: SubstraitDocument;
   relationId: string;
-  onChange: (draft: DvtSubstraitJoinDraft) => void;
+  onChange: (draft: SubstraitDocument) => void;
   onClose: () => void;
   onPendingChange?: (pending: boolean) => void;
 }>): JSX.Element {
@@ -28,8 +29,9 @@ export function SourceOccurrenceProperties({
   const binding = draft.sidecar.relations.find((read) => read.relationId === relationId);
   const currentAlias = binding?.displayName ?? '';
   const [alias, setAlias] = useState(currentAlias);
-  const result = renameSourceOccurrence(draft, relationId, alias);
-  const supported = renameSourceOccurrence(draft, relationId, currentAlias || 'Read').ok;
+  const result = parseOccurrenceAlias(alias);
+  const supported = binding?.sourceRef != null;
+  const command = useRelationCommand(relationId, onChange);
   const pending = supported && alias !== currentAlias;
   useEffect(() => {
     onPendingChange?.(pending);
@@ -48,9 +50,14 @@ export function SourceOccurrenceProperties({
           className="space-y-3"
           onSubmit={(event) => {
             event.preventDefault();
-            if (!result.ok) return;
-            onChange(result.draft);
-            setAlias(alias.trim());
+            if (!result.success) return;
+            void command
+              .execute((session, target) =>
+                renameSourceOccurrence(session, { ...target, alias: result.data })
+              )
+              .then((accepted) => {
+                if (accepted) setAlias(result.data);
+              });
           }}
         >
           <label htmlFor={id} className="block text-xs text-(--text-muted)">
@@ -60,20 +67,20 @@ export function SourceOccurrenceProperties({
             id={id}
             data-slot="source-occurrence-alias"
             value={alias}
-            aria-invalid={!result.ok}
-            aria-describedby={!result.ok ? `${id}-error` : undefined}
+            aria-invalid={!result.success}
+            aria-describedby={!result.success ? `${id}-error` : undefined}
             onChange={(event) => setAlias(event.currentTarget.value)}
           />
-          {result.ok ? null : (
+          {result.success && command.state !== 'error' ? null : (
             <p id={`${id}-error`} role="alert" className="text-xs text-amber-300">
-              {copy[result.reason]}
+              {copy[result.success ? 'unsupported' : 'invalid_alias']}
             </p>
           )}
           <Button
             type="submit"
             size="sm"
             data-slot="source-occurrence-update"
-            disabled={!pending || !result.ok}
+            disabled={!pending || !result.success || command.state === 'busy'}
           >
             {copy.update}
           </Button>

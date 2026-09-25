@@ -3,12 +3,13 @@
 import React, { act } from 'react';
 import { describe, expect, it } from 'vitest';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { createCustomerOrdersJoin } from './canvasJoin.test-support';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import {
-  createDvtSubstraitJoinDraft,
-  encodeDvtSubstraitJoinDocument,
-} from './canvasDvtSubstraitJoinComposition';
-import { applyCanvasRelationalOperatorTool } from './canvasRelationalTreeOperatorCommands';
-import { resolveCanvasRelationalOperatorTools } from './canvasRelationalTreeOperatorModel';
+  applyDvtSubstraitSort,
+  applyDvtSubstraitFetch,
+  resolveDvtSubstraitSortFetchInputFields,
+} from './canvasSortFetch.test-support';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import {
   applyDvtTransformAuthoringMetadata,
@@ -29,12 +30,16 @@ import {
 describe('applied Sort/Fetch inspection', () => {
   setupWorkbenchTest();
 
-  it.each(['sort', 'fetch'] as const)(
-    'opens %s properties in a read-only model without a predicate tree',
-    (operation) => {
+  it.each(
+    (['sort', 'fetch'] as const).flatMap((operation) =>
+      [false, true].map((editable) => ({ operation, editable }))
+    )
+  )(
+    'opens $operation properties without a predicate tree (editable: $editable)',
+    async ({ operation, editable }) => {
       const clients = sourceNode('clients', 'clients');
       const orders = sourceNode('orders', 'orders');
-      const joined = createDvtSubstraitJoinDraft({
+      const joined = createCustomerOrdersJoin({
         left: {
           nodeId: clients.id,
           schema: 'public',
@@ -49,20 +54,17 @@ describe('applied Sort/Fetch inspection', () => {
         },
         targetNodeId: 'transform',
       });
-      const field = resolveCanvasRelationalOperatorTools(joined).find((tool) => tool.id === 'sort')!
-        .fields[0]!;
-      const sorted = applyCanvasRelationalOperatorTool(joined, {
-        tool: 'sort',
-        sortKeys: [{ fieldId: field.fieldId, direction: SortField_SortDirection.DESC_NULLS_LAST }],
-      });
-      const fetched = applyCanvasRelationalOperatorTool(sorted, {
-        tool: 'fetch',
+      const field = resolveDvtSubstraitSortFetchInputFields(joined)[0]!;
+      const sorted = applyDvtSubstraitSort(joined, [
+        { fieldId: field.fieldId, direction: SortField_SortDirection.DESC_NULLS_LAST },
+      ]);
+      const fetched = applyDvtSubstraitFetch(sorted, {
         count: 100n,
         offset: 2n,
       });
       const base = applyDvtSubstraitSemanticDocument(
         transformNode(),
-        encodeDvtSubstraitJoinDocument(joined)
+        encodeDvtSubstraitSemanticDocument(joined)
       );
       const metadata = createDvtTransformAuthoringMetadata(base);
       if (metadata.mode === 'uninitialized') throw new Error('Expected canonical JOIN');
@@ -72,17 +74,22 @@ describe('applied Sort/Fetch inspection', () => {
         sidecar: fetched.sidecar,
       });
 
-      act(() => {
+      await act(async () => {
         root.render(
           <CanvasRelationalTreeWorkbench
             transformNode={transform}
             nodes={[clients, orders, transform]}
             edges={[edge(clients.id), edge(orders.id)]}
             copy={COPY}
+            authoring={
+              editable
+                ? { canEditNode: true, onApplyNodeDraft: () => ({ outcome: 'no_changes' }) }
+                : undefined
+            }
           />
         );
       });
-      act(() => {
+      await act(async () => {
         container
           .querySelector<HTMLButtonElement>(
             `[data-slot="canvas-relational-tree-node"][data-operator="${operation}"]`
@@ -107,6 +114,16 @@ describe('applied Sort/Fetch inspection', () => {
         properties!.querySelector('[data-slot="canvas-relational-expression-tree"]')
       ).toBeNull();
       expect(properties!.querySelector('form')).toBeNull();
+      const edit = properties!.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-relational-edit"]'
+      );
+      expect(edit != null).toBe(editable);
+      if (editable) {
+        await act(async () => edit!.click());
+        expect(
+          container.querySelector('[data-slot="canvas-relational-tree-inline-editor"] form')
+        ).not.toBeNull();
+      }
     }
   );
 });

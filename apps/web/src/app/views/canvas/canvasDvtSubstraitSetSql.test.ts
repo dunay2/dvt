@@ -1,71 +1,54 @@
 import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
 import { describe, expect, it } from 'vitest';
+import { createSourceSet } from './canvasSourceSet';
+import { source } from './canvasRelationalOperator.test-support';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
+import { applySelectedRelationAggregate } from './canvasSelectedRelationAggregate';
+import { applySelectedRelationWindow } from './canvasSelectedRelationWindow';
 
-import {
-  applyDvtSubstraitUnionAllFieldEdit,
-  applyDvtSubstraitUnionAllGrouping,
-  applyDvtSubstraitUnionAllGroupedRowNumber,
-  createDvtSubstraitUnionAllDraft,
-  createDvtSubstraitUnionDistinctDraft,
-  inspectDvtSubstraitUnionAllDraft,
-} from './canvasDvtSubstraitSetComposition';
-
-describe('Canvas SET SQL uses the canonical projection', () => {
-  it.each([createDvtSubstraitUnionAllDraft, createDvtSubstraitUnionDistinctDraft])(
-    'projects edited fields and grouped results without a second SQL interpretation %#',
-    async (createDraft) => {
-      let draft = createDraft({
-        targetNodeId: 'result',
-        inputs: ['north', 'south', 'west'].map((region) => ({
-          nodeId: region,
-          schema: 'tenant-data',
-          table: `customers-${region}`,
-          fields: ['customer_id', 'name', 'country'].map((name) => ({
-            name,
-            type: 'string' as const,
+describe('canonical SET SQL projection', () => {
+  it.each(['union_all', 'union_distinct'] as const)(
+    'projects %s after output selection, grouping and window authoring',
+    async (operation) => {
+      const session = new CanvasRelationAnalysisSession('set-sql');
+      session.receive(
+        createSourceSet({
+          targetNodeId: 'model',
+          operation,
+          inputs: ['north', 'south', 'west'].map((name) => ({
+            ...source(name),
+            fields: [
+              { name: 'id', type: 'string' as const },
+              { name: 'country', type: 'string' as const },
+            ],
           })),
-          sourceRef: {
-            schemaVersion: 'connected-source-ref.v1',
-            sourceObjectId: region,
-            connectionRef: {
-              schemaVersion: 'connection-ref.v1',
-              connectionId: 'warehouse',
-              provider: 'postgres',
-            },
-          },
-        })),
+        })
+      );
+      const selected = await changeSelectedRelationOutputs(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        outputs: [{ slot: 1, alias: 'region' }, { slot: 0 }],
       });
-      draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
-        kind: 'rename',
-        fieldKey: 'country',
-        outputName: 'region',
+      const projected = await projectSubstraitToPostgresSql(selected);
+      expect(projected.projection.outputs.map((field) => field.name)).toEqual(['region', 'id']);
+      const group = await session.query(session.rootId);
+      await applySelectedRelationAggregate(session, {
+        intent: 'insert',
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        fieldId: group.bindings[0]!.fieldId,
+        alias: 'count',
       });
-      draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
-        kind: 'set-selected',
-        fieldKey: 'name',
-        selected: false,
+      const aggregate = await session.query(session.rootId);
+      const window = await applySelectedRelationWindow(session, {
+        intent: 'insert',
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        fieldId: aggregate.bindings[0]!.fieldId,
+        alias: 'rank',
       });
-      draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
-        kind: 'move',
-        fieldKey: 'country',
-        direction: 'up',
-      });
-      const before = globalThis.structuredClone(draft);
-      const projected = await projectSubstraitToPostgresSql(draft);
-      expect(projected.projection.outputs.map((field) => field.name)).toEqual([
-        'region',
-        'customer_id',
-      ]);
-      expect(draft).toEqual(before);
-
-      const inspection = inspectDvtSubstraitUnionAllDraft(draft);
-      if (!inspection.ok) throw new Error('Expected SET authoring output');
-      draft = applyDvtSubstraitUnionAllGrouping(draft, {
-        groupFieldId: inspection.projection.outputs[0]!.fieldId,
-        countOutputName: 'count',
-      });
-      draft = applyDvtSubstraitUnionAllGroupedRowNumber(draft, { outputName: 'rank' });
-      const grouped = await projectSubstraitToPostgresSql(draft);
+      const grouped = await projectSubstraitToPostgresSql(window);
       expect(grouped.projection.outputs.map((field) => field.name)).toEqual([
         'region',
         'count',

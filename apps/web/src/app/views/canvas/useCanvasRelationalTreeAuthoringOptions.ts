@@ -4,9 +4,12 @@ import { useMemo } from 'react';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
+import { resolveCanvasRelationalOperationChoices } from './canvasRelationalOperationChoices';
+import { resultOperationFacts } from './canvasResultOperationFacts';
 import { resolveCanvasRelationalTreeAuthoringCandidates } from './canvasRelationalTreeAuthoringCandidates';
 import { resolveCanvasRelationalTreeAuthoringChoices } from './canvasRelationalTreeAuthoringModel';
-import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { RelationAnalysisResult } from '@dvt/substrait-analysis';
+import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 
 export function useCanvasRelationalTreeAuthoringOptions(
   args: Readonly<{
@@ -14,25 +17,35 @@ export function useCanvasRelationalTreeAuthoringOptions(
     edges: readonly CanonicalEdge[];
     enabled: boolean;
     inputs: readonly CanvasDvtCompositionInput[];
-    joinDraft: DvtSubstraitJoinDraft | null;
+    output: RelationAnalysisResult | null;
+    session: CanvasRelationAnalysisSession | null;
+    revision: number;
     nodes: readonly CanonicalNode[];
     operation: CanvasRelationalOperation | null;
     selectedInputIds: readonly string[];
     targetNodeId: string;
+    appendInputId: string | null;
   }>
 ) {
   const choices = useMemo(
     () =>
       !args.enabled || args.selectedInputIds.length === 0
         ? []
-        : resolveCanvasRelationalTreeAuthoringChoices({
-            edges: args.edges,
-            inputs: args.inputs,
-            nodes: args.nodes,
-            readOnly: !args.editable,
-            selectedInputIds: args.selectedInputIds,
-            targetNodeId: args.targetNodeId,
-          }),
+        : args.appendInputId != null
+          ? resolveCanvasRelationalOperationChoices(
+              resultOperationFacts({
+                ...args,
+                input: args.inputs.find((input) => input.nodeId === args.appendInputId),
+              })
+            )
+          : resolveCanvasRelationalTreeAuthoringChoices({
+              edges: args.edges,
+              inputs: args.inputs,
+              nodes: args.nodes,
+              readOnly: !args.editable,
+              selectedInputIds: args.selectedInputIds,
+              targetNodeId: args.targetNodeId,
+            }),
     [
       args.editable,
       args.edges,
@@ -41,6 +54,10 @@ export function useCanvasRelationalTreeAuthoringOptions(
       args.nodes,
       args.selectedInputIds,
       args.targetNodeId,
+      args.appendInputId,
+      args.output,
+      args.session,
+      args.revision,
     ]
   );
   const candidates = useMemo(
@@ -48,19 +65,20 @@ export function useCanvasRelationalTreeAuthoringOptions(
       !args.enabled || args.operation == null
         ? []
         : resolveCanvasRelationalTreeAuthoringCandidates({
-            edges: args.edges,
             inputs: args.inputs,
-            joinDraft: args.joinDraft,
-            nodes: args.nodes,
+            output: args.output,
+            session: args.session,
+            revision: args.revision,
             operation: args.operation,
             selectedInputIds: args.selectedInputIds,
-            targetNodeId: args.targetNodeId,
           }),
     [
       args.edges,
       args.enabled,
       args.inputs,
-      args.joinDraft,
+      args.output,
+      args.session,
+      args.revision,
       args.nodes,
       args.operation,
       args.selectedInputIds,

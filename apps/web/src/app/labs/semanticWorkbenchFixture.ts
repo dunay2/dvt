@@ -1,24 +1,16 @@
 import type { CanonicalEdge, CanonicalNode } from '../types/canonical';
+import { createSourceJoin } from '../views/canvas/canvasSourceJoin';
+import { encodeDvtSubstraitSemanticDocument } from '../views/canvas/canvasDvtSubstraitSemanticDocument';
+import { allocateDvtRelationId } from '@dvt/contracts';
+import { deriveRelationSchema, deriveSubstraitSchemas } from '@dvt/substrait-analysis';
+import { createCanonicalComposition } from '../views/canvas/canvasCanonicalComposition';
+import { createSourceDocument } from '../views/canvas/canvasSourceDocument';
 import {
-  appendDvtSubstraitJoinInput,
-  createDvtSubstraitStringJoinDraft,
-  decodeDvtSubstraitJoinDocument,
-  encodeDvtSubstraitJoinDocument,
-  inspectDvtSubstraitJoinDraft,
-  type DvtSubstraitJoinComparisonOperator,
-  type DvtSubstraitJoinDataType,
-  type DvtSubstraitJoinPredicateOperand,
-  type DvtSubstraitJoinSource,
-} from '../views/canvas/canvasDvtSubstraitJoinComposition';
-import {
-  isDvtSubstraitJoinNullCondition,
-  reduceDvtSubstraitJoinConditions,
-} from '../views/canvas/canvasDvtSubstraitJoinCondition';
-import { resolveDvtSubstraitJoinUnaryFunction } from '../views/canvas/canvasDvtSubstraitJoinOperand';
-import {
-  applyDvtSubstraitSemanticDocument,
-  readDvtTransformAuthoringAuthority,
-} from '../views/canvas/canvasDvtTransformAuthoringAuthority';
+  createSourceRelation,
+  type ConnectedRelationSource,
+} from '../views/canvas/canvasSourceRelation';
+import type { DvtSubstraitJoinDataType } from '@dvt/postgres-projection';
+import { applyDvtSubstraitSemanticDocument } from '../views/canvas/canvasDvtTransformAuthoringAuthority';
 import clientFixture from './fixtures/client.json';
 import orderDetailsFixture from './fixtures/order-details.json';
 import ordersFixture from './fixtures/orders.json';
@@ -118,7 +110,7 @@ export function buildSemanticWorkbenchFixture(
       },
     };
   };
-  const buildJoinSource = (node: CanonicalNode, dataset: Dataset): DvtSubstraitJoinSource => ({
+  const buildJoinSource = (node: CanonicalNode, dataset: Dataset): ConnectedRelationSource => ({
     nodeId: node.id,
     schema: dataset.schema,
     table: dataset.tableName,
@@ -138,202 +130,57 @@ export function buildSemanticWorkbenchFixture(
     buildSourceNode(clients),
     buildSourceNode(orderDetails),
   ] as const;
-  const join = createDvtSubstraitStringJoinDraft({
+  const join = createSourceJoin({
     left: {
       source: buildJoinSource(sources[0], orders),
       fields: orders.columns.map((column) => column.name),
       fieldTypes: orders.columns.map((column) => SUBSTRAIT_TYPE_BY_DATASET_TYPE[column.type]),
+      fieldNullabilities: orders.columns.map((column) => column.nullable === true),
     },
     right: {
       source: buildJoinSource(sources[1], clients),
       fields: clients.columns.map((column) => column.name),
       fieldTypes: clients.columns.map((column) => SUBSTRAIT_TYPE_BY_DATASET_TYPE[column.type]),
+      fieldNullabilities: clients.columns.map((column) => column.nullable === true),
     },
     leftFieldName: 'client_id',
     rightFieldName: 'client_id',
     targetNodeId: BASE_TRANSFORM.id,
   });
-  const initialInspection = inspectDvtSubstraitJoinDraft(join);
-  if (!initialInspection.ok) throw new Error('Expected the admitted Orders and Client join.');
-  const orderIdFieldId = initialInspection.projection.outputs.find(
-    (output) => output.source.inputIndex === 0 && output.source.name === 'order_id'
-  )?.source.fieldId;
-  if (orderIdFieldId == null) throw new Error('Expected orders.order_id in the join outputs.');
-  const joinedWithDetails = appendDvtSubstraitJoinInput(join, {
-    source: buildJoinSource(sources[2], orderDetails),
-    fields: orderDetails.columns.map((column) => column.name),
-    fieldTypes: orderDetails.columns.map((column) => SUBSTRAIT_TYPE_BY_DATASET_TYPE[column.type]),
-    predicate: {
-      leftSourceFieldId: orderIdFieldId,
-      rightFieldName: 'order_id',
+  const { index, schemas } = deriveSubstraitSchemas(join);
+  const left = index.relations.get(index.rootId)!;
+  const right = createSourceRelation(
+    {
+      source: buildJoinSource(sources[2], orderDetails),
+      fields: orderDetails.columns.map((column) => column.name),
+      fieldTypes: orderDetails.columns.map((column) => SUBSTRAIT_TYPE_BY_DATASET_TYPE[column.type]),
+      fieldNullabilities: orderDetails.columns.map((column) => column.nullable === true),
     },
-    selectedFields: orderDetails.columns.map((column) => column.name),
+    4
+  );
+  const composed = createCanonicalComposition({
+    plan: join.plan,
+    binding: { relationId: allocateDvtRelationId(), relAnchor: 5, displayName: 'join' },
+    inputs: [left, right],
+    schemas: [
+      schemas.get(index.rootId)!,
+      deriveRelationSchema({ ...right, inputs: [], consumers: [] }, []),
+    ],
+    operation: 'inner_join',
+    predicate: {
+      leftFieldId: left.fields.find((field) => field.displayName === 'order_id')!.fieldId,
+      rightFieldId: right.fields.find((field) => field.displayName === 'order_id')!.fieldId,
+    },
   });
-  if (joinedWithDetails === join)
-    throw new Error('Expected Order Details to join through N-source.');
+  const document = createSourceDocument(
+    [...index.relations.values(), right, composed],
+    composed,
+    composed.extensions
+  );
   const transform = applyDvtSubstraitSemanticDocument(
     BASE_TRANSFORM,
-    encodeDvtSubstraitJoinDocument(joinedWithDetails)
+    encodeDvtSubstraitSemanticDocument(document)
   );
-  const datasets = [orders, clients, orderDetails] as const;
-  const projectTransformSample = (currentTransform: CanonicalNode) => {
-    try {
-      const authority = readDvtTransformAuthoringAuthority(currentTransform);
-      if (authority == null) return null;
-      const inspection = inspectDvtSubstraitJoinDraft(
-        decodeDvtSubstraitJoinDocument(authority.semanticDocument)
-      );
-      if (!inspection.ok) return null;
-
-      const datasetsBySourceObjectId = new Map<string, Dataset>(
-        datasets.map((dataset) => [`${dataset.schema}.${dataset.tableName}`, dataset] as const)
-      );
-      const resolvedInputRows = inspection.projection.inputs.map(
-        (input) => datasetsBySourceObjectId.get(input.sourceRef.sourceObjectId)?.rows
-      );
-      if (resolvedInputRows.some((rows) => rows == null) || resolvedInputRows[0] == null) {
-        return null;
-      }
-      const inputRows = resolvedInputRows as readonly (typeof orders.rows)[];
-      type DatasetRow = (typeof orders.rows)[number];
-      type JoinedRow = Map<number, DatasetRow>;
-      const fieldById = new Map(
-        inspection.projection.inputs.flatMap((input, inputIndex) =>
-          input.fields.map(
-            (field) =>
-              [
-                field.fieldId,
-                { inputIndex, fieldName: field.name, dataType: field.dataType },
-              ] as const
-          )
-        )
-      );
-      let joinedRows: JoinedRow[] = inputRows[0]!.map(
-        (row) => new Map<number, DatasetRow>([[0, row]])
-      );
-
-      for (const [predicateIndex, predicate] of inspection.projection.joins.entries()) {
-        const rightInputIndex = predicateIndex + 1;
-        const rightRows = inputRows[rightInputIndex];
-        if (rightRows == null) return null;
-        joinedRows = joinedRows.flatMap((joined) =>
-          rightRows.flatMap((rightRow) => {
-            const candidate = new Map(joined).set(rightInputIndex, rightRow);
-            const operandValue = (
-              operand: DvtSubstraitJoinPredicateOperand
-            ): Readonly<{ dataType: DvtSubstraitJoinDataType; value: unknown }> | null => {
-              if (operand.kind === 'literal') return operand.literal;
-              if (operand.kind === 'function') {
-                const input = operandValue(operand.input);
-                if (input?.dataType !== 'string') return null;
-                const capability = resolveDvtSubstraitJoinUnaryFunction({
-                  capabilityId: operand.capabilityId,
-                  inputDataType: input.dataType,
-                });
-                if (capability == null) return null;
-                if (input.value === null) return input;
-                const value = String(input.value);
-                if (capability.name === 'trim') {
-                  return { dataType: 'string' as const, value: value.trim() };
-                }
-                if (capability.name === 'upper') {
-                  return { dataType: 'string' as const, value: value.toUpperCase() };
-                }
-                if (capability.name === 'lower') {
-                  return { dataType: 'string' as const, value: value.toLowerCase() };
-                }
-                return null;
-              }
-              const field = fieldById.get(operand.sourceFieldId);
-              if (field == null) return null;
-              const value = candidate.get(field.inputIndex)?.[field.fieldName];
-              return value === undefined ? null : { dataType: field.dataType, value };
-            };
-            const compareOperands = (
-              leftOperand: DvtSubstraitJoinPredicateOperand,
-              rightOperand: DvtSubstraitJoinPredicateOperand,
-              operator: DvtSubstraitJoinComparisonOperator
-            ) => {
-              const leftValue = operandValue(leftOperand);
-              const rightValue = operandValue(rightOperand);
-              if (
-                leftValue == null ||
-                rightValue == null ||
-                leftValue.value === null ||
-                rightValue.value === null ||
-                leftValue.dataType !== rightValue.dataType
-              ) {
-                return false;
-              }
-              const comparison = (() => {
-                if (leftValue.dataType === 'i64') {
-                  const left = BigInt(String(leftValue.value));
-                  const right = BigInt(String(rightValue.value));
-                  return left === right ? 0 : left < right ? -1 : 1;
-                }
-                if (leftValue.dataType === 'fp64') {
-                  const left = Number(leftValue.value);
-                  const right = Number(rightValue.value);
-                  return left === right ? 0 : left < right ? -1 : 1;
-                }
-                if (leftValue.dataType === 'precisionTimestampTz') {
-                  const left = Date.parse(String(leftValue.value));
-                  const right = Date.parse(String(rightValue.value));
-                  return left === right ? 0 : left < right ? -1 : 1;
-                }
-                if (leftValue.dataType === 'bool') {
-                  return Number(leftValue.value) - Number(rightValue.value);
-                }
-                const left = String(leftValue.value);
-                const right = String(rightValue.value);
-                return left === right ? 0 : left < right ? -1 : 1;
-              })();
-              if (operator === 'equal') return comparison === 0;
-              if (operator === 'not_equal') return comparison !== 0;
-              if (operator === 'gt') return comparison > 0;
-              if (operator === 'gte') return comparison >= 0;
-              if (operator === 'lt') return comparison < 0;
-              return comparison <= 0;
-            };
-            const matches = reduceDvtSubstraitJoinConditions({
-              conditions: predicate.conditions,
-              comparison: (condition) => {
-                if (isDvtSubstraitJoinNullCondition(condition)) {
-                  const operand = operandValue(condition.left);
-                  return (
-                    operand != null &&
-                    (condition.operator === 'is_null'
-                      ? operand.value === null
-                      : operand.value !== null)
-                  );
-                }
-                return compareOperands(
-                  condition.left,
-                  condition.right,
-                  condition.operator ?? 'equal'
-                );
-              },
-              combine: (combination, left, right) =>
-                combination === 'and' ? left && right : left || right,
-            });
-            return matches ? [candidate] : [];
-          })
-        );
-      }
-
-      return {
-        columns: inspection.projection.outputs.map((output) => ({ name: output.name })),
-        rows: joinedRows.map((joined) => ({
-          values: inspection.projection.outputs.map((output) => {
-            const value = joined.get(output.source.inputIndex)?.[output.source.name];
-            return value == null ? null : String(value);
-          }),
-        })),
-      };
-    } catch {
-      return null;
-    }
-  };
   const edges: readonly CanonicalEdge[] = sources.map((source) => ({
     id: `${source.id}-${transform.id}`,
     sourceId: source.id,
@@ -344,7 +191,6 @@ export function buildSemanticWorkbenchFixture(
     sources: Object.freeze(sources),
     transform,
     edges: Object.freeze(edges),
-    projectTransformSample,
   });
 }
 

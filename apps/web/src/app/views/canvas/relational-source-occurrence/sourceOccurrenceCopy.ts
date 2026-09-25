@@ -1,6 +1,5 @@
 /** Owned concern: localized labels and actionable occurrence admission feedback. */
 const en = {
-  fields: 'Fields',
   fieldsUnavailable: 'The fields of this relation could not be analyzed.',
   add: 'Add instance',
   alias: 'Instance alias',
@@ -14,7 +13,6 @@ const en = {
   incompatible: 'No compatible fields are available for the JOIN condition.',
 };
 const es: typeof en = {
-  fields: 'Campos',
   fieldsUnavailable: 'No se han podido analizar los campos de esta relación.',
   add: 'Añadir instancia',
   alias: 'Alias de instancia',

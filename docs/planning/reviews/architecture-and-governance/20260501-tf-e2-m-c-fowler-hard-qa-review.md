@@ -790,7 +790,7 @@ The corrective slice is now mature-system complete for `TF-E2-M-C`: the live
 Cypress proof is mandatory, the semantic proof model is closed and covered, the
 architecture guard rejects false-green shortcuts, and planning/docs state is
 aligned through
-[TF-E2-M-C First Authoring Live Proof Closeout](../../closeouts/20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md).
+[TF-E2-M-C First Authoring Live Proof Closeout](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/docs/planning/closeouts/20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md).
 
 Validation evidence recorded during closure:
 

@@ -12,10 +12,8 @@ import {
   transformNode,
   edge,
 } from './CanvasRelationalTreeWorkbench.test-support';
-import {
-  createDvtSubstraitStringJoinDraft,
-  type DvtSubstraitJoinInput,
-} from './canvasDvtSubstraitJoinComposition';
+import { createSourceJoin } from './canvasSourceJoin';
+import type { SourceRelationInput } from './canvasSourceRelation';
 import type { CanvasRelationalAnalysisArgs } from './canvasRelationalAnalysis';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
@@ -24,12 +22,12 @@ import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
 
 function composed(kind: 'join' | 'cross' | 'set'): CanvasRelationalAnalysisArgs {
   const sources = ['alpha', 'beta'].map((name) => sourceNode(name, name));
-  const operand = (name: string): DvtSubstraitJoinInput => ({
+  const operand = (name: string): SourceRelationInput => ({
     source: { nodeId: name, schema: 'public', table: name, sourceRef: sourceRef(name) },
     fields: [`${name}_id`],
     fieldTypes: ['string' as const],
   });
-  const draft = createDvtSubstraitStringJoinDraft({
+  const draft = createSourceJoin({
     left: operand('alpha'),
     right: operand('beta'),
     leftFieldName: 'alpha_id',

@@ -67,7 +67,7 @@ test('classifies Repository Map binding and lifecycle inputs as generated-status
 
 test('keeps mailbox analysis out of security analysis scope', () => {
   const scope = computeWorkflowModeScopeOutputs('workflow', [
-    'buzon/20260531-db-first-architecture-generated-docs-fowler-analysis.md',
+    'buzon/20260531-example-fowler-analysis.md',
   ]);
 
   assert.equal(scope.any_code, false);

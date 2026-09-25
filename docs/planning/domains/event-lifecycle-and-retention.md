@@ -29,12 +29,11 @@ flows, and operational lifecycle governance.
 
 ## Active Planning Inputs
 
-- [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
 - [CI Retention Review Canon Plan 2026-05-23](../proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md)
 
 ## Relevant Reviews And Closeouts
 
-- [AR-D5 tenant-configurable retention policy closeout](../closeouts/20260522-ar-d5-tenant-configurable-retention-policy-closeout.md)
+- [AR-D5 tenant-configurable retention policy closeout](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/docs/planning/closeouts/20260522-ar-d5-tenant-configurable-retention-policy-closeout.md)
 
 ## Review Canon
 

@@ -64,7 +64,7 @@ Touched files or paths:
 - `docs/architecture/components/engine/ops/ar-c2-immutable-evidence-gate-user-stories.md`
 - `docs/guides/ar-c2-observability-technical-manual-20260404.md`
 - `docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md`
-- `docs/planning/closeouts/20260513-ar-c2-inv-4-sustained-validation-window-gate-closeout.md`
+- [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/docs/planning/closeouts/20260513-ar-c2-inv-4-sustained-validation-window-gate-closeout.md)
 
 Expected outcome: reviewers can run
 `pnpm ops:ar-c2:evidence -- --require-sustained-validation-windows` and get a

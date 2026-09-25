@@ -1,8 +1,7 @@
 /** Owned concern: a four-source chain saves once, previews only on request and survives reopening. */
-import {
-  decodeDvtSubstraitJoinDocument,
-  inspectDvtSubstraitJoinDraft,
-} from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
+
+import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { getE2eApiCalls } from '../../support/e2eApiStub';
 import { authorFourSourceChain } from '../../support/relationalWorkbench/joinChain';
 import {
@@ -27,13 +26,12 @@ describe('Workbench chain-persistence', () => {
     cy.wrap(null).should(() => {
       const saves = semanticWrites('join-transform');
       expect(saves).to.have.length(1);
-      const inspection = inspectDvtSubstraitJoinDraft(
-        decodeDvtSubstraitJoinDocument(semanticDocumentFromWrite(saves[0]!))
+      const { index } = deriveSubstraitSchemas(
+        decodeDvtSubstraitSemanticDocument(semanticDocumentFromWrite(saves[0]!))
       );
-      expect(inspection.ok).to.equal(true);
-      if (!inspection.ok) throw new Error('Expected a persisted four-source JOIN chain');
-      expect(inspection.projection.inputs).to.have.length(4);
-      expect(inspection.projection.joinRelations).to.have.length(3);
+      const entries = [...index.relations.values()];
+      expect(entries.filter((entry) => entry.relation.relType.case === 'read')).to.have.length(4);
+      expect(entries.filter((entry) => entry.relation.relType.case === 'join')).to.have.length(3);
     });
     cy.get('[data-slot="canvas-model-view-tab"][data-view="sql"]').click();
     cy.get('[data-slot="canvas-model-sql"]').should('contain.text', 'SELECT');

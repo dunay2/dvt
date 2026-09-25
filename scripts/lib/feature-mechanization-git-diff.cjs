@@ -131,6 +131,7 @@ class FeatureMechanizationGitDiffReader {
       return execFileSync('git', ['-c', 'core.quotepath=false', ...args], {
         cwd: this.repoRootPath,
         encoding: 'utf8',
+        maxBuffer: 32 * 1024 * 1024,
         stdio: ['ignore', 'pipe', 'pipe'],
       });
     } catch (cause) {

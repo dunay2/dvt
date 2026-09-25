@@ -14,6 +14,7 @@ export function CanvasRelationalTreeContent({
   expanded,
   onExpandedChange,
   onPendingConditionChange,
+  onSelectRelation,
 }: Readonly<{
   model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
   transformNode: CanonicalNode;
@@ -23,6 +24,7 @@ export function CanvasRelationalTreeContent({
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
   onPendingConditionChange: (pending: boolean) => void;
+  onSelectRelation: (relationId: string | null) => void;
 }>): JSX.Element {
   if (model.authoringAvailable && (model.projection == null || model.session.active)) {
     const { session } = model;
@@ -37,7 +39,8 @@ export function CanvasRelationalTreeContent({
         inputs={model.inputs}
         joinDraft={session.joinDraft}
         selectedRelationId={model.selectedRelationId}
-        onSelectRelation={model.selectRelation}
+        onSelectRelation={onSelectRelation}
+        onReconcileSelection={model.selectRelation}
         nodes={nodes}
         operation={session.operation}
         primaryInputId={session.primaryInputId}

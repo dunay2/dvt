@@ -48,7 +48,7 @@ This document is the accepted canonical proposal for `RC-G1`.
   - `RC-G1-D`: planner-private migration plus final shared-kernel cleanup
 - parent closure:
   - `RC-G1`: final engine/planner/shared hardcut and truth sync, recorded in
-    `docs/planning/closeouts/20260514-rc-g1-contract-ownership-closure-closeout.md`
+    [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/docs/planning/closeouts/20260514-rc-g1-contract-ownership-closure-closeout.md)
 - completion note:
   - `RC-G1-B` is delivered by
     `docs/evidence/ED-20260411-rc-g1-b4-engine-shared-kernel-hardening.md`

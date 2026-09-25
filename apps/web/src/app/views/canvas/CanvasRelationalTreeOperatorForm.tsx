@@ -7,7 +7,7 @@ import {
   DialogDescription,
 } from '../../components/ui/dialog';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
-import type { CanvasRelationalOperatorTool } from './canvasRelationalTreeOperatorModel';
+import type { CanvasRelationalOperatorTool } from './relational-operator-form/OperatorTool';
 import { useOperatorForm } from './relational-operator-form/useOperatorForm';
 import { OperatorFormView } from './relational-operator-form/OperatorFormView';
 
@@ -44,7 +44,7 @@ export function CanvasRelationalTreeOperatorForm({
     <Dialog
       open
       onOpenChange={(open) => {
-        if (!open) onClose();
+        if (!open) model.cancel();
       }}
     >
       <DialogContent className="max-w-lg" data-slot="canvas-relational-operator-form">

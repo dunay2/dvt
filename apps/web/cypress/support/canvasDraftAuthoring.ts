@@ -21,19 +21,13 @@ import {
 } from '../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import type { CanonicalNode } from '../../src/app/types/canonical';
 import {
-  createDvtSubstraitJoinDraft,
-  encodeDvtSubstraitJoinDocument,
-} from '../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
-import {
-  createDvtSubstraitPilotDraft,
-  encodeDvtSubstraitPilotDocument,
-} from '../../src/app/views/canvas/canvasDvtSubstraitPilot';
-import {
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,
 } from '../../src/app/views/canvas/canvasDvtSubstraitProjection';
 import { encodeDvtSubstraitSemanticDocument } from '../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
+import { createCustomerOrdersJoin } from '../../src/app/views/canvas/canvasJoin.test-support';
 import { normalizeProjectCanvasDraft } from '../../src/app/views/canvas/canvasProjectCanvasLifecycle';
+import { projectionScenario } from '../../src/app/views/canvas/canvasProjectionScenario.test-support';
 
 import { stubE2eApi } from './e2eApiStub';
 import { E2E_WORKSPACE_SESSION } from './workspaceSession';
@@ -67,7 +61,7 @@ export type StubCanvasDraftReadOptions = {
   substraitInnerJoin?: boolean;
   substraitNInputJoin?: boolean;
   substraitUnionAll?: boolean;
-  substraitPilot?: boolean;
+  projectionModel?: boolean;
   substraitUnsupported?: boolean;
   title?: string;
   readOnly?: boolean;
@@ -106,7 +100,7 @@ export function buildCanvasAuthoringDraft({
   substraitInnerJoin = false,
   substraitNInputJoin = false,
   substraitUnionAll = false,
-  substraitPilot = false,
+  projectionModel = false,
   substraitUnsupported = false,
   title,
   largeGraph = false,
@@ -306,8 +300,8 @@ export function buildCanvasAuthoringDraft({
       connectionId: 'warehouse-a',
       provider: 'postgres' as const,
     };
-    const semanticDocument = encodeDvtSubstraitJoinDocument(
-      createDvtSubstraitJoinDraft({
+    const semanticDocument = encodeDvtSubstraitSemanticDocument(
+      createCustomerOrdersJoin({
         left: {
           nodeId: 'source-customers',
           schema: 'public',
@@ -495,8 +489,8 @@ export function buildCanvasAuthoringDraft({
     });
   }
 
-  if (substraitPilot || substraitUnsupported) {
-    const semanticDraft = createDvtSubstraitPilotDraft({
+  if (projectionModel || substraitUnsupported) {
+    const semanticDraft = projectionScenario({
       sourceNodeId: 'source-customers',
       targetNodeId: 'transform-customers',
     });
@@ -512,9 +506,7 @@ export function buildCanvasAuthoringDraft({
         },
       });
     }
-    const semanticDocument = substraitUnsupported
-      ? encodeDvtSubstraitSemanticDocument(semanticDraft)
-      : encodeDvtSubstraitPilotDocument(semanticDraft);
+    const semanticDocument = encodeDvtSubstraitSemanticDocument(semanticDraft);
     return buildWorkspaceGraphAuthoringDraft({
       canvas,
       nodeIds: ['source-customers', 'transform-customers'],
@@ -533,6 +525,9 @@ export function buildCanvasAuthoringDraft({
           tags: ['authoring'],
           metadata: {
             config: { schema: 'public', table: 'customers', alias: 'customers' },
+            schema: 'public',
+            tableName: 'customers',
+            connectedSourceRef: semanticDraft.sidecar.relations[0]!.sourceRef,
             columns: [
               { name: 'name', type: 'string' },
               { name: 'email', type: 'string' },
@@ -1304,6 +1299,7 @@ export function stubStatefulCanvasDraftAuthoring(
   scope: CanvasDraftSessionScope = E2E_WORKSPACE_SESSION
 ): CanvasAuthoringDraft {
   let revision = 'rev-e2e-graph-ready';
+  let savedRevision = 0;
   let draft = buildCanvasAuthoringDraft(options);
 
   stubE2eApi('GET', '/workspace/graph/draft', ({ url }) => {
@@ -1334,7 +1330,7 @@ export function stubStatefulCanvasDraftAuthoring(
     expect(saveRequest.scope).to.deep.equal(scope);
 
     draft = saveRequest.draft;
-    revision = `rev-e2e-graph-ready-${draft.nodeIds.join('-')}`;
+    revision = `rev-e2e-graph-ready-${++savedRevision}`;
 
     return {
       body: buildDraftSaveSavedResponse(scope, {

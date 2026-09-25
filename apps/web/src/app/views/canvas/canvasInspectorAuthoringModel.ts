@@ -81,17 +81,12 @@ export function resolveCanvasDvtOutputNameDraftError(
   if (!DvtSemanticFieldNameV1Schema.safeParse(value).success) return 'dvt_semantic_field_invalid';
   if (dvt?.kind !== 'transform' || dvt.mode !== 'substrait') return null;
 
-  const resultRelation = dvt.sidecar.relations
-    .filter((relation) => relation.sourceRef == null)
-    .reduce<(typeof dvt.sidecar.relations)[number] | undefined>(
-      (current, relation) =>
-        current == null || relation.relAnchor > current.relAnchor ? relation : current,
-      undefined
-    );
-  if (resultRelation == null) return null;
+  const fieldOwner = dvt.sidecar.fields.find((field) => field.fieldId === key);
+  if (fieldOwner == null) return null;
   const duplicate = dvt.sidecar.fields.some(
     (field) =>
-      field.relationId === resultRelation.relationId &&
+      field.relationId === fieldOwner.relationId &&
+      field.parentFieldId === fieldOwner.parentFieldId &&
       field.fieldId !== key &&
       field.displayName === value
   );

@@ -17,12 +17,12 @@ import { openOperationMenu } from './operation-menu/operationMenu.test-support';
 
 describe('Canvas relational-tree Workbench projection', () => {
   setupWorkbenchTest();
-  it('authors a one-Source projection from the same central block', () => {
+  it('authors a one-Source projection from the same central block', async () => {
     const orders = sourceNode('orders', 'orders');
     const transform = transformNode();
     const applied: CanvasInspectorNodeDraft[] = [];
 
-    act(() => {
+    await act(async () => {
       root.render(
         <CanvasRelationalTreeWorkbench
           transformNode={transform}
@@ -45,7 +45,7 @@ describe('Canvas relational-tree Workbench projection', () => {
         ?.click()
     );
     openOperationMenu(container);
-    act(() =>
+    await act(async () =>
       document
         .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-projection"]')
         ?.click()
@@ -64,12 +64,12 @@ describe('Canvas relational-tree Workbench projection', () => {
     });
   });
 
-  it('preserves the local operation, focus and rejection reason when the aggregate rejects Apply', () => {
+  it('preserves the local operation, focus and rejection reason when the aggregate rejects Apply', async () => {
     const orders = sourceNode('orders', 'orders');
     const transform = transformNode();
     const workbench = React.createRef<React.ElementRef<typeof CanvasRelationalTreeWorkbench>>();
 
-    act(() => {
+    await act(async () => {
       root.render(
         <CanvasRelationalTreeWorkbench
           ref={workbench}
@@ -90,7 +90,7 @@ describe('Canvas relational-tree Workbench projection', () => {
         .click()
     );
     openOperationMenu(container);
-    act(() =>
+    await act(async () =>
       document
         .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-projection"]')!
         .click()

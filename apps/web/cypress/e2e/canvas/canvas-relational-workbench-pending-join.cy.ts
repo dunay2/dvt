@@ -32,10 +32,9 @@ describe('Workbench pending-join', () => {
     cy.get('[data-slot="canvas-relational-node-expand"]').click();
     cy.get('[data-slot="dvt-substrait-join-predicate-editors"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
-    cy.get('[data-slot="canvas-relational-tree-block-canvas"]').should(
-      'contain.text',
-      'Select the first Source.'
-    );
+    cy.get('[data-slot="canvas-relational-tree-block-canvas"]').should('be.visible');
+    cy.get('[data-slot="canvas-relational-tree-draft"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
     cy.wrap(null).should(() => {
       expect(semanticWrites('join-transform')).to.have.length(0);
     });

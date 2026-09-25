@@ -18,13 +18,13 @@ import { openOperationMenu } from './operation-menu/operationMenu.test-support';
 
 describe('Canvas relational-tree Workbench apply', () => {
   setupWorkbenchTest();
-  it('authors in the central canvas with an on-demand operation menu and writes only on Apply', () => {
+  it('authors in the central canvas with an on-demand operation menu and writes only on Apply', async () => {
     const customers = sourceNode('customers', 'customers');
     const orders = sourceNode('orders', 'orders');
     const transform = transformNode();
     const applied: CanvasInspectorNodeDraft[] = [];
 
-    act(() => {
+    await act(async () => {
       root.render(
         <CanvasRelationalTreeWorkbench
           transformNode={transform}
@@ -66,7 +66,7 @@ describe('Canvas relational-tree Workbench apply', () => {
     );
     expect(primarySlot).not.toBeNull();
     expect(secondarySlot).not.toBeNull();
-    act(() => dragSourceTo(sourceButtons[0]!, primarySlot!));
+    await act(async () => dragSourceTo(sourceButtons[0]!, primarySlot!));
     expect(primarySlot?.textContent).toContain('customers');
     openOperationMenu(container);
     expect(document.querySelector('[data-slot="dvt-select-operation-projection"]')).not.toBeNull();
@@ -76,7 +76,7 @@ describe('Canvas relational-tree Workbench apply', () => {
         ?.getAttribute('aria-disabled')
     ).toBe('true');
 
-    act(() => dragSourceTo(sourceButtons[1]!, secondarySlot!));
+    await act(async () => dragSourceTo(sourceButtons[1]!, secondarySlot!));
     expect(secondarySlot?.textContent).toContain('orders');
     expect(document.querySelector('[role="listbox"]')).not.toBeNull();
     expect(document.querySelector('[data-slot="dvt-select-operation-projection"]')).toBeNull();
@@ -86,12 +86,12 @@ describe('Canvas relational-tree Workbench apply', () => {
     const draftViewport = container.querySelector<HTMLElement>(
       '[data-slot="canvas-relational-tree-draft-viewport"]'
     );
-    act(() => dragSourceTo(innerJoinOperation!, draftViewport!));
+    await act(async () => dragSourceTo(innerJoinOperation!, draftViewport!));
     expect(
       container.querySelector('[data-slot="dvt-substrait-join-predicate-editors"]')
     ).not.toBeNull();
 
-    act(() =>
+    await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-cancel"]')
         ?.click()
@@ -103,15 +103,15 @@ describe('Canvas relational-tree Workbench apply', () => {
       )?.textContent
     ).toContain('Drop a Source here.');
 
-    act(() => sourceButtons[0]?.click());
-    act(() => sourceButtons[1]?.click());
+    await act(async () => sourceButtons[0]?.click());
+    await act(async () => sourceButtons[1]?.click());
     openOperationMenu(container);
-    act(() =>
+    await act(async () =>
       document
         .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
         ?.click()
     );
-    act(() =>
+    await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
         ?.click()

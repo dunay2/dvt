@@ -1,18 +1,18 @@
-/** Owned concern: replace a stale single-input projection with one canonical composition. */
+/** Initialize a composition through the same canonical constructors as the workbench. */
 import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
 import type { Dispatch, SetStateAction } from 'react';
-
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
-import {
-  createDvtSubstraitSetDraft,
-  createDvtSubstraitUnionAllDraft,
-  createDvtSubstraitUnionDistinctDraft,
-  resolveDvtSubstraitUnionAllEntry,
-} from './canvasDvtSubstraitSetComposition';
+import { createSourceSet } from './canvasSourceSet';
+import { createSourceCross } from './canvasSourceCross';
+import type { CanvasPredicateFreeOperation } from './DvtRelationCompositionConfirmation';
+import { resolveConnectedSetEntry } from './canvasConnectedRelationInputs';
 import { DvtSubstraitCompositionStartSection } from './DvtSubstraitCompositionStartSection';
 import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
+import type { CanvasSetOperation } from './canvasRelationalOperationChoices';
+import type { CanvasJoinOperation } from './canvasRelationalTreeJoinType';
 
 export function DvtSubstraitCompositionStart({
   disabled,
@@ -33,154 +33,41 @@ export function DvtSubstraitCompositionStart({
 }>): JSX.Element | null {
   const inputs = resolveCanvasDvtCompositionInputs({ targetNodeId: node.id, nodes, edges });
   if (inputs.length < 2) return null;
-  const unionAllEntry = resolveDvtSubstraitUnionAllEntry({ targetNode: node, nodes, edges });
-
+  const entry = resolveConnectedSetEntry({ targetNode: node, nodes, edges });
+  const apply = (
+    document: SubstraitDocument,
+    shape: CanvasJoinOperation | CanvasPredicateFreeOperation
+  ) => {
+    if (disabled) return;
+    onChange((current) => ({
+      ...current,
+      dvt: {
+        kind: 'transform',
+        materialized: current.dvt?.kind === 'transform' ? current.dvt.materialized : 'view',
+        mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
+        shape,
+        ...document,
+      },
+    }));
+  };
+  const startSet = (operation: CanvasSetOperation) =>
+    entry == null ? undefined : () => apply(createSourceSet({ ...entry, operation }), operation);
   return (
     <DvtSubstraitCompositionStartSection
       disabled={disabled}
       inputs={inputs}
       predicateSeed={predicateSeed}
       onClearPredicateSeed={onClearPredicateSeed}
-      onStartInnerJoin={(join, operation) => {
-        onChange((currentDraft) => ({
-          ...currentDraft,
-          dvt: {
-            kind: 'transform',
-            materialized:
-              currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
-            mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
-            shape: operation,
-            plan: join.plan,
-            sidecar: join.sidecar,
-          },
-        }));
+      onStartInnerJoin={apply}
+      onStartWithoutPredicate={{
+        cross_join: () => apply(createSourceCross(inputs), 'cross_join'),
+        union_all: startSet('union_all'),
+        union_distinct: startSet('union_distinct'),
+        intersect_distinct: startSet('intersect_distinct'),
+        except_distinct: startSet('except_distinct'),
+        intersect_all: startSet('intersect_all'),
+        except_all: startSet('except_all'),
       }}
-      onStartUnionAll={
-        unionAllEntry == null
-          ? undefined
-          : () => {
-              const unionAll = createDvtSubstraitUnionAllDraft(unionAllEntry);
-              onChange((currentDraft) => ({
-                ...currentDraft,
-                dvt: {
-                  kind: 'transform',
-                  materialized:
-                    currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
-                  mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
-                  shape: 'union_all',
-                  plan: unionAll.plan,
-                  sidecar: unionAll.sidecar,
-                },
-              }));
-            }
-      }
-      onStartUnionDistinct={
-        unionAllEntry == null
-          ? undefined
-          : () => {
-              const unionDistinct = createDvtSubstraitUnionDistinctDraft(unionAllEntry);
-              onChange((currentDraft) => ({
-                ...currentDraft,
-                dvt: {
-                  kind: 'transform',
-                  materialized:
-                    currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
-                  mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
-                  shape: 'union_distinct',
-                  plan: unionDistinct.plan,
-                  sidecar: unionDistinct.sidecar,
-                },
-              }));
-            }
-      }
-      onStartIntersectDistinct={
-        unionAllEntry == null
-          ? undefined
-          : () => {
-              const set = createDvtSubstraitSetDraft({
-                ...unionAllEntry,
-                operation: 'intersect_distinct',
-              });
-              onChange((currentDraft) => ({
-                ...currentDraft,
-                dvt: {
-                  kind: 'transform',
-                  materialized:
-                    currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
-                  mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
-                  shape: 'intersect_distinct',
-                  plan: set.plan,
-                  sidecar: set.sidecar,
-                },
-              }));
-            }
-      }
-      onStartExceptDistinct={
-        unionAllEntry == null
-          ? undefined
-          : () => {
-              const set = createDvtSubstraitSetDraft({
-                ...unionAllEntry,
-                operation: 'except_distinct',
-              });
-              onChange((currentDraft) => ({
-                ...currentDraft,
-                dvt: {
-                  kind: 'transform',
-                  materialized:
-                    currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
-                  mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
-                  shape: 'except_distinct',
-                  plan: set.plan,
-                  sidecar: set.sidecar,
-                },
-              }));
-            }
-      }
-      onStartIntersectAll={
-        unionAllEntry == null
-          ? undefined
-          : () => {
-              const set = createDvtSubstraitSetDraft({
-                ...unionAllEntry,
-                operation: 'intersect_all',
-              });
-              onChange((currentDraft) => ({
-                ...currentDraft,
-                dvt: {
-                  kind: 'transform',
-                  materialized:
-                    currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
-                  mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
-                  shape: 'intersect_all',
-                  plan: set.plan,
-                  sidecar: set.sidecar,
-                },
-              }));
-            }
-      }
-      onStartExceptAll={
-        unionAllEntry == null
-          ? undefined
-          : () => {
-              const set = createDvtSubstraitSetDraft({
-                ...unionAllEntry,
-                operation: 'except_all',
-              });
-              onChange((currentDraft) => ({
-                ...currentDraft,
-                dvt: {
-                  kind: 'transform',
-                  materialized:
-                    currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
-                  mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
-                  shape: 'except_all',
-                  plan: set.plan,
-                  sidecar: set.sidecar,
-                },
-              }));
-            }
-      }
     />
   );
 }

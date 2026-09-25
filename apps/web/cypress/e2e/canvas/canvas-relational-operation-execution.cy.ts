@@ -1,4 +1,5 @@
 /** Own the real card gesture boundary: Properties on click, data only on explicit Play. */
+import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { getE2eApiCalls, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
   openWorkbenchModel,
@@ -7,6 +8,7 @@ import {
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import {
   semanticWrites,
+  semanticDocumentFromWrite,
   stubSavedWorkbenchSample,
 } from '../../support/relationalWorkbench/persistence';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
@@ -41,7 +43,35 @@ describe('Internal operation card execution', () => {
         'data-state',
         'active'
       );
-      cy.get(`${properties} [data-slot="canvas-relational-tree-join-type"]`).should('be.visible');
+      cy.get(properties).should('not.have.descendants', 'input, select, textarea');
+      cy.get(`${properties} [data-slot="canvas-relational-edit"]`).should('be.visible');
+      cy.get(`${properties} [data-slot="semantic-workbench-join-condition-row"]`).should(
+        'be.visible'
+      );
+      const outputs = `${properties} [data-slot="canvas-relation-outputs"]`;
+      cy.get(`${outputs} h3`).should('have.text', 'Output');
+      cy.get(`${outputs} [data-field-id]`).then((fields) => {
+        const ids = [...fields].map((field) => field.getAttribute('data-field-id'));
+        const expected = [ids[1], ids[0], ...ids.slice(2)];
+        cy.get(`${outputs} [data-field-id]`).first().find('button').last().click();
+        cy.get(`${outputs} [data-field-id]`).should((ordered) => {
+          expect([...ordered].map((field) => field.getAttribute('data-field-id'))).to.deep.equal(
+            expected
+          );
+        });
+        cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+        cy.wrap(null).should(() => {
+          const document = decodeDvtSubstraitSemanticDocument(
+            semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!)
+          );
+          expect(
+            document.sidecar.fields
+              .filter((field) => field.relationId === relationId && field.parentFieldId == null)
+              .sort((a, b) => a.outputOrdinal - b.outputOrdinal)
+              .map((field) => field.fieldId)
+          ).to.deep.equal(expected);
+        });
+      });
       cy.then(() => expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(0));
       cy.get(`${properties} [data-slot="canvas-relational-collapse"]`).click();
       cy.get(card)
@@ -63,7 +93,7 @@ describe('Internal operation card execution', () => {
         expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
       });
       cy.get(card).click();
-      cy.get(`${properties} [data-slot="canvas-relational-tree-join-type"]`).should('be.visible');
+      cy.get(properties).should('not.have.descendants', 'input, select, textarea');
       cy.get(`${data} table`).should('contain.text', 'C-001');
       cy.then(() => expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(1));
       cy.get(card).rightclick();

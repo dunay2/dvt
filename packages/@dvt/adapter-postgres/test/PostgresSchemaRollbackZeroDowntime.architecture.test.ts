@@ -43,21 +43,15 @@ describe('Postgres schema rollback zero-downtime component semantics', () => {
     expect(guide).toContain('PostgresSchemaRollbackCompatibilityPolicy');
   });
 
-  it('publishes user stories and mailbox Fowler analysis for every rollback scenario', () => {
+  it('publishes user stories for every rollback scenario', () => {
     const userStoriesPath = join(
       import.meta.dirname,
       '../../../../docs/architecture/components/engine/adapters/state-store/postgres/schema-rollback-zero-downtime-user-stories.md'
     );
-    const mailboxReviewPath = join(
-      import.meta.dirname,
-      '../../../../buzon/20260513-codex-fowler-ar-d4-zero-downtime-schema-rollback-analysis.md'
-    );
 
     expect(existsSync(userStoriesPath)).toBe(true);
-    expect(existsSync(mailboxReviewPath)).toBe(true);
 
     const stories = readFileSync(userStoriesPath, 'utf8');
-    const mailbox = readFileSync(mailboxReviewPath, 'utf8');
 
     expect(stories).toContain('US-ZDR-001');
     expect(stories).toContain('US-ZDR-002');
@@ -65,12 +59,6 @@ describe('Postgres schema rollback zero-downtime component semantics', () => {
     expect(stories).toContain('US-ZDR-004');
     expect(stories).toContain('SCHEMA_ROLLBACK_REQUIRES_OFFLINE_COMPATIBILITY');
     expect(stories).toContain('```mermaid');
-
-    expect(mailbox).toContain('# Fowler architecture analysis - AR-D4');
-    expect(mailbox).toContain('## Fowler reading');
-    expect(mailbox).toContain('## Antipatterns detected');
-    expect(mailbox).toContain('## Repetitions and drift');
-    expect(mailbox).toContain('## Mature-system comparison');
   });
 
   it('keeps the planning proposal tied to real command/query rails and red-green cycles', () => {

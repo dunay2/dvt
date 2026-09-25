@@ -12,7 +12,7 @@ import {
   createWritableCanvasAuthoringDraftReadModel,
   type CanvasAuthoringDraftReadModel,
 } from './canvasDraftReadModel';
-import type { CanvasDraftSession } from './canvasDraftSession';
+import { canvasDraftSession } from './canvasDraftSession';
 import type { DraftAttemptRefs } from './canvasDraftLifecycle.types';
 import { useCanvasExecutionDraftFlush } from './useCanvasExecutionDraftFlush';
 
@@ -55,8 +55,11 @@ function buildHookArgs(overrides: Partial<HookArgs> = {}): HookArgs {
       replaceRemoteDraftState: vi.fn(),
     },
     graphDraftState: buildDraftState('rev-1'),
-    draftRevision: 'rev-1',
-    draftSyncState: 'editing',
+    draftSession: canvasDraftSession.machine.bootstrap({
+      remoteDraft: buildDraftState('rev-1').record,
+      canonicalNodeIds: [],
+      canonicalEdges: [],
+    }),
     currentDraftPayload: buildAuthoringDraft(),
     currentDraftPayloadSignature: 'draft-sig-1',
     canPersistGraphDraft: true,
@@ -122,7 +125,7 @@ describe('useCanvasExecutionDraftFlush', () => {
     const refs = buildRefs();
     const savingArgs = buildHookArgs({
       refs,
-      draftSyncState: 'saving',
+      draftSession: { ...buildHookArgs().draftSession, syncState: 'saving' },
       graphDraftState: buildDraftState('rev-1'),
     });
     const harness = renderFlushHook(savingArgs);
@@ -141,7 +144,6 @@ describe('useCanvasExecutionDraftFlush', () => {
     await harness.render(
       buildHookArgs({
         refs,
-        draftSyncState: 'editing',
         graphDraftState: buildDraftState('rev-2'),
       })
     );

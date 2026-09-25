@@ -6,12 +6,12 @@ import {
   decodeDvtSubstraitSemanticDocument,
   encodeDvtSubstraitSemanticDocument,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
-import { applyDvtSubstraitSort } from '../../../src/app/views/canvas/canvasDvtSubstraitSortFetch';
+import { applyDvtSubstraitSort } from '../../../src/app/views/canvas/canvasSortFetch.test-support';
 
 import { leftJoinDocument } from './fixture';
 
-export function unsupportedSortDocument(): DvtSubstraitSemanticDocumentV1 {
-  const join = decodeDvtSubstraitSemanticDocument(leftJoinDocument());
+export async function unsupportedSortDocument(): Promise<DvtSubstraitSemanticDocumentV1> {
+  const join = decodeDvtSubstraitSemanticDocument(await leftJoinDocument());
   const output = join.sidecar.fields.find(
     (field) => field.displayName === 'order_id' && 'sourceFieldId' in field
   )!;

@@ -1,5 +1,5 @@
 /** Owned concern: separate selected-operation inspection tabs from the bottom data dock. */
-import { X } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 import {
   resolveCanvasRelationalOperationPresentation,
   type CanvasPresentationOperation,
@@ -24,6 +24,7 @@ export function CanvasRelationalTreeEditorFrame({
   hasExpression = true,
   readOnly = false,
   label,
+  onEdit,
 }: Readonly<{
   operation: CanvasPresentationOperation;
   children: ReactNode;
@@ -33,13 +34,14 @@ export function CanvasRelationalTreeEditorFrame({
   hasExpression?: boolean;
   readOnly?: boolean;
   label?: string;
+  onEdit?: () => void;
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
   const presentation = resolveCanvasRelationalOperationPresentation(operation);
   const title = label ?? resolveCanvasViewCopy(language)[presentation.labelKey];
   const Icon = presentation.icon;
-  const [tab, setTab] = useState(readOnly ? 'tree' : 'properties');
+  const [tab, setTab] = useState('properties');
   const [expressionHost, setExpressionHost] = useState<HTMLDivElement | null>(null);
   const expressionContext = useMemo(
     () => ({
@@ -59,6 +61,17 @@ export function CanvasRelationalTreeEditorFrame({
       <header className="flex h-9 shrink-0 items-center gap-2 border-b border-(--border-subtle) bg-(--surface-panel) px-3">
         <Icon className="size-4 text-(--status-info)" />
         <h3 className="text-xs font-semibold">{title}</h3>
+        {onEdit == null ? null : (
+          <button
+            type="button"
+            data-slot="canvas-relational-edit"
+            onClick={onEdit}
+            className="ml-auto flex items-center gap-1 rounded px-2 py-1 text-xs hover:bg-(--surface-selected)"
+          >
+            <Pencil aria-hidden="true" className="size-3" />
+            {copy.edit}
+          </button>
+        )}
         <button
           type="button"
           data-slot="canvas-relational-collapse"
@@ -112,7 +125,9 @@ export function CanvasRelationalTreeEditorFrame({
             className="canvas-operation-panels min-h-0 overflow-auto p-3 data-[state=inactive]:hidden"
           >
             <div className="canvas-operation-controls min-h-0 min-w-0">{children}</div>
-            {readOnly ? <p className="text-xs text-(--text-muted)">{copy.inspectionOnly}</p> : null}
+            {readOnly && onEdit == null ? (
+              <p className="text-xs text-(--text-muted)">{copy.inspectionOnly}</p>
+            ) : null}
           </TabsContent>
         </Tabs>
       </CanvasOperationExpressionHost.Provider>

@@ -7,7 +7,7 @@ import {
 import { projectCanvasColumnFunctionMenus } from './canvasColumnFunctionMenuProjection';
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import { isDvtSourceOutputProjectionNode } from './canvasDvtSourceSemanticAuthoring';
-import { readCanvasJoinColumnOutputs } from './canvasJoinColumnOutputModel';
+import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import { projectInteractiveCanvasColumns } from './canvasGraphNodeColumnProjection';
 import { resolveCanvasColumnPortDirections } from './canvasColumnLineageProjection';
 
@@ -27,18 +27,30 @@ export function projectCanvasNodeColumnInteraction(
   }: ColumnInteractionContext
 ): Node {
   const canonicalNode = canonicalNodesById.get(node.id);
-  const joinOutputs = canonicalNode == null ? null : readCanvasJoinColumnOutputs(canonicalNode);
+  const presentation = node.data.presentationTruth as CanvasNodePresentationTruth | undefined;
+  const columnsCurrent =
+    presentation?.columns.state !== 'pending' && presentation?.columns.state !== 'unavailable';
+  const hasRelationOutputs =
+    canonicalNode?.pluginId === 'dvt' &&
+    canonicalNode.kind === 'dvt:transform' &&
+    presentation?.code.kind === 'canonical' &&
+    presentation.columns.state === 'ready';
   const canAuthorColumnMappings =
-    canonicalNode?.role !== 'transform' || canAuthorCanvasColumnMappings(canonicalNode);
-  const canAuthorDbtModelColumns = canonicalNode != null && isDbtCompatibleModel(canonicalNode);
+    columnsCurrent &&
+    (canonicalNode?.role !== 'transform' || canAuthorCanvasColumnMappings(canonicalNode));
+  const canAuthorDbtModelColumns =
+    columnsCurrent && canonicalNode != null && isDbtCompatibleModel(canonicalNode);
   const canProjectSourceOutputs =
-    canonicalNode != null && isDvtSourceOutputProjectionNode(canonicalNode);
+    columnsCurrent && canonicalNode != null && isDvtSourceOutputProjectionNode(canonicalNode);
   const hasReadOnlyColumnLineage =
     canonicalNode?.role === 'transform' &&
     !canAuthorColumnMappings &&
     readOnlyColumnLineageNodeIds.has(canonicalNode.id);
   const functionProjection =
-    columnFunctionNodes != null && columnFunctionEdges != null && canonicalNode != null
+    columnsCurrent &&
+    columnFunctionNodes != null &&
+    columnFunctionEdges != null &&
+    canonicalNode != null
       ? projectCanvasColumnFunctionMenus({
           node: canonicalNode,
           nodes: columnFunctionNodes,
@@ -49,17 +61,10 @@ export function projectCanvasNodeColumnInteraction(
   const interactiveColumns = projectInteractiveCanvasColumns(
     node,
     canonicalNodesById,
-    columnFunctionMenus,
-    joinOutputs?.fields.map((field) => ({
-      id: field.columnId,
-      name: field.name,
-      type: field.dataType,
-      output: field.selected,
-      reference: field.columnId,
-      sourceReference: field.sourceReference,
-    }))
+    columnFunctionMenus
   );
   const hasStructuredProjection =
+    columnsCurrent &&
     canonicalNode?.pluginId === 'dvt' &&
     canonicalNode.kind === 'dvt:transform' &&
     interactiveColumns.some((column) => column.children?.length);
@@ -104,7 +109,7 @@ export function projectCanvasNodeColumnInteraction(
       hasStructuredProjection ||
       canAuthorDbtModelColumns ||
       canProjectSourceOutputs ||
-      joinOutputs != null
+      hasRelationOutputs
         ? node.data.onToggleCanvasColumnOutput
         : undefined,
     onReorderCanvasColumnOutput:
@@ -112,13 +117,13 @@ export function projectCanvasNodeColumnInteraction(
       hasStructuredProjection ||
       canAuthorDbtModelColumns ||
       canProjectSourceOutputs ||
-      joinOutputs != null
+      hasRelationOutputs
         ? node.data.onReorderCanvasColumnOutput
         : undefined,
     onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
     columns: interactiveColumns,
     columnPortDirections:
-      canonicalNode != null
+      columnsCurrent && canonicalNode != null
         ? canonicalNode.role === 'transform' &&
           !canAuthorColumnMappings &&
           !hasReadOnlyColumnLineage &&

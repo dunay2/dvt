@@ -7,10 +7,8 @@ import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatal
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
-import {
-  createDvtSubstraitCrossDraft,
-  encodeDvtSubstraitCrossDocument,
-} from './canvasDvtSubstraitCrossComposition';
+import { createSourceCross } from './canvasSourceCross';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import {
   setupWorkbenchTest,
   COPY,
@@ -26,14 +24,14 @@ import { openOperationMenu } from './operation-menu/operationMenu.test-support';
 
 describe('Canvas relational-tree Workbench cross', () => {
   setupWorkbenchTest();
-  it('authors and appends an explicit CrossRel without opening a predicate editor', () => {
+  it('authors and appends an explicit CrossRel without opening a predicate editor', async () => {
     const sizes = sourceNode('sizes', 'sizes');
     const colours = sourceNode('colours', 'colours');
     const stores = sourceNode('stores', 'stores');
     const transform = transformNode();
     const applied: CanvasInspectorNodeDraft[] = [];
 
-    act(() => {
+    await act(async () => {
       root.render(
         <CanvasRelationalTreeWorkbench
           transformNode={transform}
@@ -54,15 +52,15 @@ describe('Canvas relational-tree Workbench cross', () => {
     const sources = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     );
-    act(() => sources[0]!.click());
-    act(() => sources[1]!.click());
+    await act(async () => sources[0]!.click());
+    await act(async () => sources[1]!.click());
     openOperationMenu(container);
     const cross = document.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-select-operation-cross-join"]'
     );
     expect(cross?.getAttribute('aria-disabled')).toBe('false');
     expect(cross?.draggable).toBe(true);
-    act(() =>
+    await act(async () =>
       dragSourceTo(
         cross!,
         container.querySelector<HTMLElement>('[data-slot="canvas-relational-tree-draft-viewport"]')!
@@ -76,14 +74,14 @@ describe('Canvas relational-tree Workbench cross', () => {
     ).toBeNull();
     expect(container.querySelector('[data-slot="canvas-relational-cross-warning"]')).not.toBeNull();
 
-    act(() => sources[2]!.click());
+    await act(async () => sources[2]!.click());
     expect(container.querySelectorAll('[data-operator="cross"]')).toHaveLength(2);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(3);
     expect(
       container.querySelector('[data-slot="dvt-substrait-join-predicate-editors"]')
     ).toBeNull();
 
-    act(() =>
+    await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')!
         .click()
@@ -96,7 +94,7 @@ describe('Canvas relational-tree Workbench cross', () => {
     });
   });
 
-  it('reopens a persisted CROSS and appends structurally without a JOIN predicate editor', () => {
+  it('reopens a persisted CROSS and appends structurally without a JOIN predicate editor', async () => {
     const sizes = sourceNode('sizes', 'sizes');
     const colours = sourceNode('colours', 'colours');
     const stores = sourceNode('stores', 'stores');
@@ -116,12 +114,10 @@ describe('Canvas relational-tree Workbench cross', () => {
     });
     const transform = applyDvtSubstraitSemanticDocument(
       transformNode(),
-      encodeDvtSubstraitCrossDocument(
-        createDvtSubstraitCrossDraft({ inputs: [asInput(sizes), asInput(colours)] })
-      )
+      encodeDvtSubstraitSemanticDocument(createSourceCross([asInput(sizes), asInput(colours)]))
     );
 
-    act(() => {
+    await act(async () => {
       root.render(
         <CanvasRelationalTreeWorkbench
           transformNode={transform}
@@ -136,7 +132,7 @@ describe('Canvas relational-tree Workbench cross', () => {
       );
     });
 
-    act(() =>
+    await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-node-expand"]')
         ?.click()
@@ -144,7 +140,7 @@ describe('Canvas relational-tree Workbench cross', () => {
     const storesButton = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     ).find((button) => button.textContent?.includes('stores'));
-    act(() => storesButton?.click());
+    await act(async () => storesButton?.click());
 
     expect(container.querySelectorAll('[data-operator="cross"]')).toHaveLength(2);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(3);

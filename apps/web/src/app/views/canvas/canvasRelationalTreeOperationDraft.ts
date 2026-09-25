@@ -6,10 +6,10 @@ import {
 } from './canvasRelationalOperationChoices';
 import { createCanvasRelationalTreeInitialJoinDraft } from './canvasRelationalTreeAuthoringModel';
 import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
-import { createDvtSubstraitSetDraft } from './canvasDvtSubstraitSetComposition';
+import { createSourceSet } from './canvasSourceSet';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
-import { createDvtSubstraitCrossDraft } from './canvasDvtSubstraitCrossComposition';
+import { createSourceCross } from './canvasSourceCross';
 
 export function createCanvasRelationalTreeOperationDraft(
   args: Readonly<{
@@ -38,7 +38,7 @@ export function createCanvasRelationalTreeOperationDraft(
     );
     if (inputs.some((source) => source == null)) return null;
     try {
-      return createDvtSubstraitCrossDraft({ inputs: inputs.filter((source) => source != null) });
+      return createSourceCross(inputs.filter((source) => source != null));
     } catch {
       return null;
     }
@@ -49,16 +49,20 @@ export function createCanvasRelationalTreeOperationDraft(
   );
   if (
     inputs.some(
-      (source) => source == null || source.fields.some((field) => field.joinDataType !== 'string')
+      (source) => source == null || source.fields.some((field) => field.joinDataType == null)
     )
   )
     return null;
-  return createDvtSubstraitSetDraft({
+  return createSourceSet({
     targetNodeId: args.targetNodeId,
     operation: args.operation,
     inputs: inputs.map((source) => ({
       ...source!,
-      fields: source!.fields.map((field) => ({ name: field.name, type: 'string' })),
+      fields: source!.fields.map((field) => ({
+        name: field.name,
+        type: field.joinDataType!,
+        nullable: field.nullable,
+      })),
     })),
   });
 }

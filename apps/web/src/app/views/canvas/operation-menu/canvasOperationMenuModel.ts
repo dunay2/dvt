@@ -3,7 +3,7 @@ import type {
   CanvasRelationalOperation,
   CanvasRelationalOperationChoice,
 } from '../canvasRelationalOperationChoices';
-import type { CanvasRelationalOperatorTool } from '../canvasRelationalTreeOperatorModel';
+import type { CanvasRelationalOperatorTool } from '../relational-operator-form/OperatorTool';
 import { canvasRelationalAvailabilityLabel } from '../DvtRelationalOperationChooser';
 import {
   canvasRelationalUnaryPresentation,

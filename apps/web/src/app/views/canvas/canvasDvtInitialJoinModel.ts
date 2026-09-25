@@ -3,10 +3,9 @@ import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait
 import { hasSameConnectionRef, type DvtSubstraitJoinType } from '@dvt/postgres-projection';
 
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
-import {
-  createDvtSubstraitStringJoinDraft,
-  type DvtSubstraitJoinDraft,
-} from './canvasDvtSubstraitJoinComposition';
+import { createSourceJoin } from './canvasSourceJoin';
+import { toSourceRelationInput } from './canvasSourceRelation';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import {
   hasCompatibleCanvasDvtJoinFields,
   resolveCanvasDvtJoinFieldPair,
@@ -31,10 +30,10 @@ export function resolveCanvasDvtInitialJoinPairForInputs(
   preferred?: Readonly<{ leftFieldName: string; rightFieldName: string }>
 ): CanvasDvtInitialJoinPair | null {
   if (!(
-    left.nodeId !== right.nodeId &&
     left.sourceRef.connectionRef.provider === 'postgres' &&
     right.sourceRef.connectionRef.provider === 'postgres' &&
     hasSameConnectionRef(left.sourceRef.connectionRef, right.sourceRef.connectionRef) &&
+    [...left.fields, ...right.fields].every((field) => field.joinDataType != null) &&
     hasCompatibleCanvasDvtJoinFields(left.fields, right.fields)
   )) {
     return null;
@@ -105,33 +104,13 @@ export function createCanvasDvtInitialJoinDraft(
   pair: CanvasDvtInitialJoinPair,
   targetNodeId: string,
   joinType: DvtSubstraitJoinType = JoinRel_JoinType.INNER
-): DvtSubstraitJoinDraft | null {
+): SubstraitDocument | null {
   const left = inputs.find((input) => input.nodeId === pair.leftNodeId);
   const right = inputs.find((input) => input.nodeId === pair.rightNodeId);
   if (left == null || right == null) return null;
-  const leftFields = left.fields.flatMap((field) =>
-    field.joinDataType == null ? [] : [{ name: field.name, dataType: field.joinDataType }]
-  );
-  const rightFields = right.fields.flatMap((field) =>
-    field.joinDataType == null ? [] : [{ name: field.name, dataType: field.joinDataType }]
-  );
-  return createDvtSubstraitStringJoinDraft({
-    left: {
-      source: left,
-      fields: leftFields.map((field) => field.name),
-      fieldTypes: leftFields.map((field) => field.dataType),
-      fieldNullabilities: left.fields
-        .filter((field) => field.joinDataType != null)
-        .map((field) => field.nullable ?? true),
-    },
-    right: {
-      source: right,
-      fields: rightFields.map((field) => field.name),
-      fieldTypes: rightFields.map((field) => field.dataType),
-      fieldNullabilities: right.fields
-        .filter((field) => field.joinDataType != null)
-        .map((field) => field.nullable ?? true),
-    },
+  return createSourceJoin({
+    left: toSourceRelationInput(left),
+    right: toSourceRelationInput(right),
     leftFieldName: pair.leftFieldName,
     rightFieldName: pair.rightFieldName,
     targetNodeId,

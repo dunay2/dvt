@@ -2,13 +2,7 @@
 import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
-import {
-  inspectDvtSubstraitJoinAcceptedDraft,
-  inspectDvtSubstraitJoinDraft,
-  setDvtSubstraitJoinType,
-  type DvtSubstraitJoinDraft,
-  type DvtSubstraitJoinType,
-} from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinType } from '@dvt/postgres-projection';
 
 export type CanvasJoinOperation = Extract<
   CanvasRelationalOperation,
@@ -81,22 +75,4 @@ export function canvasJoinOperationForType(
     default:
       return 'unsupported';
   }
-}
-
-export function setFinalCanvasJoinType(
-  draft: DvtSubstraitJoinDraft,
-  operation: CanvasJoinOperation
-): DvtSubstraitJoinDraft | null {
-  if (!inspectDvtSubstraitJoinAcceptedDraft(draft).ok) return null;
-  const inspection = inspectDvtSubstraitJoinDraft(draft);
-  const joinRelationId = inspection.ok
-    ? inspection.projection.joinRelations.at(-1)?.relationId
-    : null;
-  return joinRelationId == null
-    ? null
-    : setDvtSubstraitJoinType({
-        draft,
-        joinRelationId,
-        joinType: toSubstraitJoinType(operation),
-      });
 }

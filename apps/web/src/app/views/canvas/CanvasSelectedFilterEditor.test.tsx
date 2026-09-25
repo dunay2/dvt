@@ -3,10 +3,10 @@ import React, { act } from 'react';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import { describe, expect, it, vi } from 'vitest';
 import { setupWorkbenchTest, root, container } from './CanvasRelationalTreeWorkbench.test-support';
-import { createDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { createCustomerOrdersJoin } from './canvasJoin.test-support';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
-import { useSelectedRelationFilter } from './useSelectedRelationFilter';
+import { useSelectedRelationTool } from './useSelectedRelationTool';
 import { CanvasRelationalTreeOperatorForm } from './CanvasRelationalTreeOperatorForm';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 
@@ -19,9 +19,7 @@ describe('selected Filter form', () => {
   )(
     '$action respects input identity and the draft boundary on $provider',
     async ({ action, provider }) => {
-      const source = (
-        table: string
-      ): Parameters<typeof createDvtSubstraitJoinDraft>[0]['left'] => ({
+      const source = (table: string): Parameters<typeof createCustomerOrdersJoin>[0]['left'] => ({
         nodeId: table,
         schema: 'raw',
         table,
@@ -35,7 +33,7 @@ describe('selected Filter form', () => {
           },
         },
       });
-      const document = createDvtSubstraitJoinDraft({
+      const document = createCustomerOrdersJoin({
         left: source('orders'),
         right: source('customers'),
         targetNodeId: 'model',
@@ -50,7 +48,7 @@ describe('selected Filter form', () => {
       const onClose = vi.fn();
       let analysis: ReturnType<typeof useCanvasRelationAnalysisSession>;
       function Form(): React.JSX.Element | null {
-        const selected = useSelectedRelationFilter(selectedId, 'insert');
+        const selected = useSelectedRelationTool(selectedId, 'filter', 'insert');
         return selected == null ? null : (
           <CanvasRelationalTreeOperatorForm
             inline

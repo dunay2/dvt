@@ -151,6 +151,7 @@ const SCRIPT_FILE_RULES = [
     'docs-governance',
   ],
   [/^scripts\/lib\/feature-mechanization-(db-reader|git-diff|manifest)\.cjs$/u, 'docs-governance'],
+  [/^scripts\/lib\/feature-mechanization-git-fixture\.cjs$/u, 'test-tooling'],
   [/^tools\/docs\/.+\.ts$/u, 'docs-governance'],
   [
     /^scripts\/(ai-preflight|closeout-changed|commit|fix-changed|format-markdown-changed|git-local-changes|local-validation-plan|pr-closeout|run-determinism-precommit|setup-git-hooks|validate-pr-title|verify-changed|verify-prepush)\.cjs$/u,
