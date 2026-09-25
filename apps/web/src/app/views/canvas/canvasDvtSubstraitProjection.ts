@@ -36,10 +36,7 @@ import {
 } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {
   NamedStructSchema,
-  TypeSchema,
-  Type_I64Schema,
   Type_Nullability,
-  Type_StringSchema,
   Type_StructSchema,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import {
@@ -58,6 +55,7 @@ import {
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
+import { buildDvtSubstraitScalarFunction } from './canvasDvtSubstraitScalarFunction';
 import {
   inspectDvtSubstraitCalculatedExpression,
   type DvtSubstraitCalculatedExpression,
@@ -1148,53 +1146,14 @@ export function applyDvtSubstraitProjectionFunction(
     (expression): expression is Expression => expression != null
   );
 
-  const functionEntry = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
-    (entry) => entry.entryId === capability.capabilityId
-  );
-  if (
-    functionEntry == null ||
-    functionEntry.kind !== 'standard' ||
-    functionEntry.category !== 'scalar-function' ||
-    functionEntry.profileStatus !== 'supported-profile' ||
-    functionEntry.identity.sourceKind !== 'simple-extension'
-  ) {
-    return draft;
-  }
-  const functionIdentity = functionEntry.identity;
-  const signature = functionEntry.invocation?.signature ?? `${functionIdentity.name}:str`;
-  const temporalExtract =
-    functionIdentity.urn === 'extension:io.substrait:functions_datetime' &&
-    functionIdentity.name === 'extract' &&
-    signature === 'extract:req_ptstz_str';
-  const extensionFunction = dvtSubstraitExpression.ensureScalarFunction(plan, {
-    urn: functionIdentity.urn,
-    name: signature,
+  const nextExpression = buildDvtSubstraitScalarFunction({
+    plan,
+    capabilityId: capability.capabilityId,
+    dataTypes: operands.map((operand) => operand!.dataType),
+    operands: definedOperandExpressions,
+    provider: args.provider,
   });
-
-  const nextExpression = dvtSubstraitExpression.scalarFunction({
-    functionReference: extensionFunction.functionAnchor,
-    arguments: temporalExtract
-      ? [
-          definedOperandExpressions[0]!,
-          dvtSubstraitExpression.literal({ dataType: 'string', value: 'UTC' }),
-        ]
-      : definedOperandExpressions,
-    leadingEnumArguments: temporalExtract ? ['YEAR'] : undefined,
-    options: functionEntry.invocation?.options,
-    outputType: temporalExtract
-      ? create(TypeSchema, {
-          kind: {
-            case: 'i64',
-            value: create(Type_I64Schema, { nullability: Type_Nullability.NULLABLE }),
-          },
-        })
-      : create(TypeSchema, {
-          kind: {
-            case: 'string',
-            value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
-          },
-        }),
-  });
+  if (nextExpression == null) return draft;
   const targetExpressionOrdinal = targetMapping - sourceFieldCount;
   const referenceCount = outputMapping.filter((mapping) => mapping === targetMapping).length;
   if (targetMapping < sourceFieldCount || referenceCount > 1) {
