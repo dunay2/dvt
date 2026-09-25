@@ -8,6 +8,7 @@ import { querySelectedJoin } from './canvasSelectedJoin';
 import { replaceSelectedJoinConditions } from './canvasSelectedJoinPredicate';
 import { relationOutputSlots } from './canvasRelationOutputSchema';
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
+import { isDvtSubstraitJoinConditionGroup } from './canvasDvtSubstraitJoinCondition';
 
 function capability(name: 'trim' | 'upper'): string {
   const resolved = resolveDvtSubstraitColumnFunctions({
@@ -82,7 +83,10 @@ describe('selected relation derived output authoring', () => {
     const expression = target.relation.relType.value.expressions.at(-1)?.rexType;
     expect(expression?.case).toBe('scalarFunction');
     if (expression?.case !== 'scalarFunction') throw new Error('Expected scalar expression.');
-    expect(expression.value.arguments[0]?.argType.value.rexType.case).toBe('scalarFunction');
+    const argument = expression.value.arguments[0]?.argType;
+    expect(argument?.case).toBe('value');
+    if (argument?.case !== 'value') throw new Error('Expected expression argument.');
+    expect(argument.value.rexType.case).toBe('scalarFunction');
   });
 
   it('rejects duplicate aliases and stale revisions without changing the session', async () => {
@@ -174,8 +178,10 @@ describe('selected relation derived output authoring', () => {
     expect(
       (await reopened.query(reopened.rootId)).bindings.map((field) => field.fieldId)
     ).toContain(finalField.fieldId);
-    expect(
-      (await querySelectedJoin(reopened, joinId, reopened.revision)).conditions?.[0]?.left
-    ).toEqual({ kind: 'field', sourceFieldId: branchField.fieldId });
+    const condition = (await querySelectedJoin(reopened, joinId, reopened.revision))
+      .conditions?.[0];
+    if (condition == null || isDvtSubstraitJoinConditionGroup(condition))
+      throw new Error('Expected comparison condition.');
+    expect(condition.left).toEqual({ kind: 'field', sourceFieldId: branchField.fieldId });
   });
 });

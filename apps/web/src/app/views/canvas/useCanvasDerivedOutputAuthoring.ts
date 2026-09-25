@@ -20,7 +20,7 @@ export function useCanvasDerivedOutputAuthoring(relationId: string) {
         );
         return dataType == null
           ? []
-          : [{ fieldId: field.fieldId, name: field.displayName, dataType }];
+          : [{ fieldId: field.fieldId, name: field.displayName ?? field.fieldId, dataType }];
       });
     return {
       fields,
