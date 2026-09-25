@@ -13,7 +13,7 @@ describe('production authoring in the local lab', () => {
   setupWorkbenchTest();
   it('edits a selected JOIN, applies the draft and reopens its condition', async () => {
     await act(async () => root.render(<SemanticWorkbenchLab />));
-    const selectJoin = async () =>
+    const selectJoin = async (): Promise<void> =>
       act(async () => {
         container
           .querySelector<HTMLButtonElement>(

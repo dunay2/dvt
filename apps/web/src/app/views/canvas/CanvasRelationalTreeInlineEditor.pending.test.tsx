@@ -27,7 +27,7 @@ describe('pending edits across relation selection', () => {
       fieldId: input.bindings[0]!.fieldId,
       alias: 'total',
     });
-    function Host() {
+    function Host(): React.JSX.Element {
       const [selected, select] = useState(joinId);
       const [pending, setPending] = useState(false);
       return (
@@ -58,7 +58,8 @@ describe('pending edits across relation selection', () => {
       );
     }
     await act(async () => root.render(<Host />));
-    const apply = () => container.querySelector<HTMLButtonElement>('[data-testid="apply"]')!;
+    const apply = (): HTMLButtonElement =>
+      container.querySelector<HTMLButtonElement>('[data-testid="apply"]')!;
     expect(apply().disabled).toBe(false);
     await act(async () =>
       fireEvent.change(container.querySelector('[aria-label="Comparador de la condición"]')!, {

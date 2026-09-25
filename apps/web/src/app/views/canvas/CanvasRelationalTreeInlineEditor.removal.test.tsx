@@ -37,7 +37,7 @@ describe('inspection after relation retirement', () => {
       fieldId: grouped.bindings[0]!.fieldId,
       alias: 'rank',
     });
-    const render = async (draft: typeof document, selected: string) =>
+    const render = async (draft: typeof document, selected: string): Promise<void> =>
       act(async () =>
         root.render(
           <RelationAnalysisTestHost document={draft}>
