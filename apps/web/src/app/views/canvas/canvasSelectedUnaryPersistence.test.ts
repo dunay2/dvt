@@ -6,8 +6,8 @@ import {
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetch';
-import { createDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
-import { createDvtSubstraitSetDraft } from './canvasDvtSubstraitSetComposition';
+import { createCustomerOrdersJoin } from './canvasJoin.test-support';
+import { createSourceSet } from './canvasSourceSet';
 import { createDvtSubstraitPilotDraft } from './canvasDvtSubstraitPilot';
 import { source } from './canvasRelationalOperator.test-support';
 import { transformNode } from './CanvasRelationalTreeWorkbench.test-support';
@@ -15,8 +15,8 @@ import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAutho
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { resolveDvtTransformAuthoringMetadata } from './canvasDvtTransformAuthoring';
 import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
-import { resolveCanvasRelationalOperatorTools } from './canvasRelationalTreeOperatorModel';
-import { applyCanvasRelationalOperatorTool } from './canvasRelationalTreeOperatorCommands';
+import { applySelectedRelationAggregate } from './canvasSelectedRelationAggregate';
+import { applySelectedRelationWindow } from './canvasSelectedRelationWindow';
 
 const joinTypes = [
   JoinRel_JoinType.INNER,
@@ -36,7 +36,7 @@ const scenarios = [
   ...joinTypes.map((joinType) => ({
     operation: canvasJoinOperationForType(joinType)!,
     create: () =>
-      createDvtSubstraitJoinDraft({
+      createCustomerOrdersJoin({
         left: source('left'),
         right: source('right'),
         targetNodeId: 'model',
@@ -48,7 +48,7 @@ const scenarios = [
   ).map((operation) => ({
     operation,
     create: () =>
-      createDvtSubstraitSetDraft({
+      createSourceSet({
         inputs: [source('north'), source('south')],
         targetNodeId: 'model',
         operation,
@@ -63,23 +63,26 @@ describe('selected unary persistence', () => {
       if (operation === 'unsupported') throw new Error('Fixture uses an unsupported JOIN');
       const original = create();
       let document = original;
+      const session = new CanvasRelationAnalysisSession('model');
+      session.receive(document);
       if (operation !== 'projection') {
-        const group = resolveCanvasRelationalOperatorTools(document).find(
-          (tool) => tool.id === 'aggregate'
-        )!;
-        expect(group.enabled).toBe(true);
-        document = applyCanvasRelationalOperatorTool(document, {
-          tool: 'aggregate',
-          fieldId: group.fields[0]!.fieldId,
+        const input = await session.query(session.rootId);
+        await applySelectedRelationAggregate(session, {
+          relationId: session.rootId,
+          expectedRevision: session.revision,
+          intent: 'insert',
+          fieldId: input.bindings[0]!.fieldId,
           alias: 'total',
         });
-        document = applyCanvasRelationalOperatorTool(document, {
-          tool: 'window',
+        const grouped = await session.query(session.rootId);
+        document = await applySelectedRelationWindow(session, {
+          relationId: session.rootId,
+          expectedRevision: session.revision,
+          intent: 'insert',
+          fieldId: grouped.bindings[0]!.fieldId,
           alias: 'position',
         });
       }
-      const session = new CanvasRelationAnalysisSession('model');
-      session.receive(document);
       const schema = await session.query(session.rootId);
       await applySelectedRelationSortFetch(session, {
         intent: 'insert',
