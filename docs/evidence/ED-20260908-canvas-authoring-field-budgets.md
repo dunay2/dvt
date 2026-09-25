@@ -292,3 +292,18 @@ provider status and execution behavior remain unchanged. The complete diff is
 therefore routed through ARC-2 because it touches contracts, with the existing
 risk entry and schema/golden checks retained. Validation is recorded in the PR
 against its committed base/head before integration.
+
+### Autosave snapshot acknowledgement — 2026-09-25
+
+The [closeout investigation](https://github.com/dunay2/dvt/issues/3369#issuecomment-5827555746)
+reproduced an aggregate race without browser timing: schedule snapshot A, edit B,
+send A, then acknowledge A. The old transition marked B as the submitted state
+and cleared its local delta. The focused three-case test was RED only for the
+edit-before-send interleaving; edits after send and unchanged submissions passed.
+
+The existing save rail now records the session that produced the sent payload.
+It preserves newer local state for the next autosave. No debounce, CAS,
+idempotency or authorization behavior is weakened. The snapshot, persistence
+runtime and session cohort passes 28 cases. The complementary browser regression
+holds the actual save acknowledgement while editing, for two and three inputs.
+Final uninstrumented browser and committed-tree gates remain required.
