@@ -83,7 +83,7 @@ function buildJoin(args: Composition): Built {
       bindings: input.fields,
       fields: args.schemas[port]!,
     })),
-    args.inputs.map((input) => input.binding.displayName ?? '')
+    (field, port) => `${args.inputs[port]!.binding.displayName}.${field.displayName}`
   );
   const built = buildSelectedJoinExpression(
     { plan: args.plan, relationId: args.binding.relationId, fields },
