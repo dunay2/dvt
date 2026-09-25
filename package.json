@@ -262,7 +262,7 @@
     "@dvt/crypto": "workspace:*",
     "@eslint/compat": "^2.0.5",
     "@eslint/js": "^10.0.1",
-    "@testing-library/dom": "^10.4.0",
+    "@testing-library/dom": "^10.4.2",
     "@types/js-yaml": "4.0.9",
     "@types/node": "26.6.2",
     "@typescript-eslint/eslint-plugin": "^8.70.0",
