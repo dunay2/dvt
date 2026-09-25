@@ -1,6 +1,7 @@
 /** Owned concern: render contextual Canvas workbench panels without replacing the graph. */
 import { CircleHelp, X } from 'lucide-react';
 import { useEffect, useRef, type HTMLAttributes, type ReactNode } from 'react';
+import { cn } from '../../components/ui/utils';
 
 import {
   Tooltip,
@@ -10,7 +11,8 @@ import {
 } from '../../components/ui/tooltip';
 
 const panelClassName =
-  'flex min-h-0 w-full min-w-0 max-w-full flex-col border-l border-(--border-subtle) bg-(--surface-panel) shadow-2xl sm:w-[38rem] sm:max-w-[42rem]';
+  'flex min-h-0 w-full min-w-0 max-w-full flex-col border-l border-(--border-subtle) bg-(--surface-panel) shadow-2xl';
+const defaultPanelSizeClassName = 'sm:w-[38rem] sm:max-w-[42rem]';
 const headerClassName =
   'flex shrink-0 items-start justify-between gap-3 border-b border-(--border-subtle) px-4 py-3';
 const titleClassName = 'text-sm font-semibold text-(--text-primary)';
@@ -28,6 +30,7 @@ export type CanvasContextualWorkbenchPanelProps = Readonly<{
   onClose: () => void;
   children: ReactNode;
   autoFocus?: boolean;
+  className?: string;
 }>;
 
 export function CanvasContextualWorkbenchPanel({
@@ -39,6 +42,7 @@ export function CanvasContextualWorkbenchPanel({
   onClose,
   children,
   autoFocus = false,
+  className,
 }: CanvasContextualWorkbenchPanelProps): JSX.Element {
   const closeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -48,7 +52,7 @@ export function CanvasContextualWorkbenchPanel({
     <aside
       data-slot="canvas-contextual-workbench"
       aria-label={title}
-      className={panelClassName}
+      className={cn(panelClassName, className ?? defaultPanelSizeClassName)}
       onKeyDown={(event) => {
         if (autoFocus && event.key === 'Escape') {
           event.preventDefault();

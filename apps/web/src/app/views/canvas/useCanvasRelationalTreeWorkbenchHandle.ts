@@ -19,7 +19,8 @@ export type CanvasRelationalTreeWorkbenchHandle = Readonly<{
 export function useCanvasRelationalTreeWorkbenchHandle(
   ref: ForwardedRef<CanvasRelationalTreeWorkbenchHandle>,
   model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>,
-  pendingCondition: boolean
+  pendingCondition: boolean,
+  directEdit: Readonly<{ pending: boolean; discard: () => void }>
 ): CanvasRelationalTreeWorkbenchHandle {
   const { session } = model;
   const changed =
@@ -29,8 +30,10 @@ export function useCanvasRelationalTreeWorkbenchHandle(
     session.appendInput != null;
   const handle = {
     hasUnappliedChanges:
-      session.active && (changed || pendingCondition) && session.selectedInputIds.length > 0,
+      directEdit.pending ||
+      (session.active && (changed || pendingCondition) && session.selectedInputIds.length > 0),
     canApply:
+      !directEdit.pending &&
       !pendingCondition &&
       model.authoringAvailable &&
       model.session.appendInput == null &&
@@ -41,7 +44,10 @@ export function useCanvasRelationalTreeWorkbenchHandle(
           model.session.selectedInputIds.length >= 2)),
     applyRejection: model.session.applyRejection,
     apply: model.session.apply,
-    cancel: model.session.cancel,
+    cancel: () => {
+      model.session.cancel();
+      if (directEdit.pending) directEdit.discard();
+    },
   };
   useImperativeHandle(ref, () => handle);
   return handle;

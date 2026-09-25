@@ -13,12 +13,14 @@ export function CanvasRelationalTreeInspection({
   copy,
   expanded,
   onExpandedChange,
+  onOpenModelComposition,
 }: Readonly<{
   model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
   transformNode: CanonicalNode;
   copy: CanvasRelationalTreeWorkbenchCopy;
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
+  onOpenModelComposition: () => void;
 }>): JSX.Element | null {
   if (model.projection == null) return null;
   return (
@@ -50,6 +52,7 @@ export function CanvasRelationalTreeInspection({
             model.selectTreeNode(locator);
             onExpandedChange(true);
           }}
+          onOpenOutput={onOpenModelComposition}
         />
         {expanded ? (
           <RelationalInspectionPanel

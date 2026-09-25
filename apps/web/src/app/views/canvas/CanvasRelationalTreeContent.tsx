@@ -3,19 +3,10 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import { CanvasRelationalTreeBlockCanvas } from './CanvasRelationalTreeBlockCanvas';
+import { CanvasRelationalTreeCommandError } from './CanvasRelationalTreeCommandError';
 import { CanvasRelationalTreeInspection } from './CanvasRelationalTreeInspection';
 
-export function CanvasRelationalTreeContent({
-  model,
-  transformNode,
-  nodes,
-  edges,
-  copy,
-  expanded,
-  onExpandedChange,
-  onPendingConditionChange,
-  onSelectRelation,
-}: Readonly<{
+type CanvasRelationalTreeContentProps = Readonly<{
   model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
   transformNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
@@ -25,7 +16,33 @@ export function CanvasRelationalTreeContent({
   onExpandedChange: (expanded: boolean) => void;
   onPendingConditionChange: (pending: boolean) => void;
   onSelectRelation: (relationId: string | null) => void;
-}>): JSX.Element {
+  onOpenModelComposition: () => void;
+}>;
+
+export function CanvasRelationalTreeContent(props: CanvasRelationalTreeContentProps): JSX.Element {
+  return (
+    <>
+      <CanvasRelationalTreeCommandError
+        visible={props.model.session.commandState === 'error'}
+        message={props.copy.relationalTreeUnavailableMessage}
+      />
+      <CanvasRelationalTreeContentView {...props} />
+    </>
+  );
+}
+
+function CanvasRelationalTreeContentView({
+  model,
+  transformNode,
+  nodes,
+  edges,
+  copy,
+  expanded,
+  onExpandedChange,
+  onPendingConditionChange,
+  onSelectRelation,
+  onOpenModelComposition,
+}: CanvasRelationalTreeContentProps): JSX.Element {
   if (model.authoringAvailable && (model.projection == null || model.session.active)) {
     const { session } = model;
     return (
@@ -72,6 +89,7 @@ export function CanvasRelationalTreeContent({
       copy={copy}
       expanded={expanded}
       onExpandedChange={onExpandedChange}
+      onOpenModelComposition={onOpenModelComposition}
     />
   );
 }

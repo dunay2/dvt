@@ -1,5 +1,4 @@
 /** Owned concern: compose the source catalogue and central block Workbench for one Transform. */
-
 import { forwardRef, useEffect, useState } from 'react';
 import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
@@ -14,6 +13,7 @@ import { CanvasRelationalTreeContent } from './CanvasRelationalTreeContent';
 import { CanvasRelationalTreeSourceCatalogue } from './CanvasRelationalTreeSourceCatalogue';
 import { useCanvasRelationEditNavigation } from './useCanvasRelationEditNavigation';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
+import { CanvasModelCompositionPanel } from './CanvasModelCompositionPanel';
 import {
   CanvasOperationPreviewProvider,
   type CanvasOperationPreviewPorts,
@@ -49,12 +49,17 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
     authoring,
   });
   const [pendingCondition, setPendingCondition] = useState(false);
+  const [pendingCompositionOutput, setPendingCompositionOutput] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [sourcesCollapsed, setSourcesCollapsed] = useState(false);
+  const [compositionOpen, setCompositionOpen] = useState(false);
   useEffect(() => {
     if (!model.session.active) setPendingCondition(false);
   }, [model.session.active]);
-  const sessionHandle = useCanvasRelationalTreeWorkbenchHandle(ref, model, pendingCondition);
+  const sessionHandle = useCanvasRelationalTreeWorkbenchHandle(ref, model, pendingCondition, {
+    pending: pendingCompositionOutput,
+    discard: () => setCompositionOpen(false),
+  });
   const navigation = useCanvasRelationEditNavigation({
     editing: model.session.active,
     selectedRelationId: model.selectedRelationId,
@@ -103,25 +108,34 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
             occurrences={model.authoringAvailable ? model.session.occurrences : undefined}
           />
           <CanvasRelationAnalysisContext.Provider value={model.session.analysis}>
-            {model.session.commandState === 'error' ? (
-              <p
-                role="alert"
-                className="absolute right-3 top-12 z-20 rounded bg-(--surface-panel) p-3 text-sm"
-              >
-                {copy.relationalTreeUnavailableMessage}
-              </p>
-            ) : null}
-            <CanvasRelationalTreeContent
-              model={model}
-              transformNode={transformNode}
-              nodes={nodes}
-              edges={edges}
-              copy={copy}
-              expanded={expanded}
-              onExpandedChange={setExpanded}
-              onPendingConditionChange={setPendingCondition}
-              onSelectRelation={navigation.select}
-            />
+            <div
+              data-slot="canvas-relational-tree-surface"
+              className="relative h-full min-h-0 w-full min-w-0 overflow-hidden"
+            >
+              <CanvasRelationalTreeContent
+                model={model}
+                transformNode={transformNode}
+                nodes={nodes}
+                edges={edges}
+                copy={copy}
+                expanded={expanded}
+                onExpandedChange={setExpanded}
+                onPendingConditionChange={setPendingCondition}
+                onSelectRelation={navigation.select}
+                onOpenModelComposition={() => setCompositionOpen(true)}
+              />
+              {compositionOpen && model.projection != null ? (
+                <CanvasModelCompositionPanel
+                  modelName={transformNode.name}
+                  root={model.projection.root}
+                  copy={copy}
+                  editable={model.authoringAvailable && !model.session.active}
+                  onOutputChange={model.session.applyOutputOrder}
+                  onPendingOutputChange={setPendingCompositionOutput}
+                  onClose={() => setCompositionOpen(false)}
+                />
+              ) : null}
+            </div>
           </CanvasRelationAnalysisContext.Provider>
         </div>
       </RelationalLayoutSession>

@@ -104,11 +104,24 @@ describe('Canvas relational-tree Workbench reopen', () => {
     expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(1);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(2);
 
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-operation-output-tab"]')!
+        .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }))
+    );
+    expect(container.querySelector('[data-value="output"]')?.getAttribute('data-state')).toBe(
+      'active'
+    );
+
     const countriesButton = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     ).find((button) => button.textContent?.includes('countries'));
     expect(countriesButton?.disabled).toBe(false);
     await act(async () => countriesButton?.click());
+    expect(container.querySelector('[data-slot="canvas-operation-output-tab"]')).toBeNull();
+    expect(container.querySelector('[data-value="properties"]')?.getAttribute('data-state')).toBe(
+      'active'
+    );
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-append-input"]')
     ).not.toBeNull();

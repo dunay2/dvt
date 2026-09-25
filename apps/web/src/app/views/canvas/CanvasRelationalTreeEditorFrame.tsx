@@ -18,6 +18,7 @@ export const CanvasOperationExpressionHost = createContext<Readonly<{
 export function CanvasRelationalTreeEditorFrame({
   operation,
   children,
+  output,
   hidden = false,
   onClose,
   relationId,
@@ -28,6 +29,7 @@ export function CanvasRelationalTreeEditorFrame({
 }: Readonly<{
   operation: CanvasPresentationOperation;
   children: ReactNode;
+  output?: ReactNode;
   hidden?: boolean;
   onClose: () => void;
   relationId?: string | null;
@@ -42,6 +44,8 @@ export function CanvasRelationalTreeEditorFrame({
   const title = label ?? resolveCanvasViewCopy(language)[presentation.labelKey];
   const Icon = presentation.icon;
   const [tab, setTab] = useState('properties');
+  const activeTab =
+    (!hasExpression && tab === 'tree') || (output == null && tab === 'output') ? 'properties' : tab;
   const [expressionHost, setExpressionHost] = useState<HTMLDivElement | null>(null);
   const expressionContext = useMemo(
     () => ({
@@ -84,11 +88,7 @@ export function CanvasRelationalTreeEditorFrame({
         </button>
       </header>
       <CanvasOperationExpressionHost.Provider value={expressionContext}>
-        <Tabs
-          value={hasExpression ? tab : 'properties'}
-          onValueChange={setTab}
-          className="min-h-0 flex-1 gap-0"
-        >
+        <Tabs value={activeTab} onValueChange={setTab} className="min-h-0 flex-1 gap-0">
           <TabsList
             aria-label={title}
             className="workspace-navigation-tabs border-b border-(--border-subtle)"
@@ -109,6 +109,15 @@ export function CanvasRelationalTreeEditorFrame({
             >
               {copy.properties}
             </TabsTrigger>
+            {output == null ? null : (
+              <TabsTrigger
+                value="output"
+                data-slot="canvas-operation-output-tab"
+                className="workspace-navigation-tab"
+              >
+                {copy.output}
+              </TabsTrigger>
+            )}
           </TabsList>
           <TabsContent
             value="tree"
@@ -129,6 +138,16 @@ export function CanvasRelationalTreeEditorFrame({
               <p className="text-xs text-(--text-muted)">{copy.inspectionOnly}</p>
             ) : null}
           </TabsContent>
+          {output == null ? null : (
+            <TabsContent
+              value="output"
+              data-value="output"
+              forceMount
+              className="min-h-0 overflow-auto p-3 data-[state=inactive]:hidden"
+            >
+              {output}
+            </TabsContent>
+          )}
         </Tabs>
       </CanvasOperationExpressionHost.Provider>
     </section>

@@ -15,11 +15,10 @@ export function CanvasRelationFields({
   return (
     <section
       data-slot="canvas-relation-fields"
-      className="mt-4 space-y-2"
+      className="space-y-2"
       aria-busy={model.loading}
       aria-label={outputLabel}
     >
-      <h3 className="text-xs text-(--text-muted)">{outputLabel}</h3>
       {model.error == null ? (
         <dl className="text-xs">
           {model.result?.bindings

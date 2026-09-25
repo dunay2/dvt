@@ -4,10 +4,12 @@ import { DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
 import { useEffect, useRef, useState } from 'react';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { useRelationOutputs } from './useRelationOutputs';
 import { useRelationCommand } from './useRelationCommand';
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 import { RelationOutputRow } from './RelationOutputRow';
+import { useInspectorListReorder } from '../../components/inspector/useInspectorListReorder';
 
 export type RelationOutputNames = Readonly<{
   values: Readonly<Record<string, string>>;
@@ -29,7 +31,9 @@ export function CanvasRelationOutputs({
   names?: RelationOutputNames;
   onPendingChange?: (pending: boolean) => void;
 }>) {
-  const copy = resolveCanvasViewCopy(useApplicationLanguageStore((state) => state.language));
+  const language = useApplicationLanguageStore((state) => state.language);
+  const copy = resolveCanvasViewCopy(language);
+  const editorCopy = resolveCanvasSemanticEditorCopy(language);
   const model = useRelationOutputs(relationId);
   const command = useRelationCommand(relationId, onChange);
   const [localNames, setLocalNames] = useState<Readonly<Record<string, string>>>({});
@@ -51,26 +55,41 @@ export function CanvasRelationOutputs({
     callback.current?.(pending);
     return () => callback.current?.(false);
   }, [pending]);
-  if (model == null) return null;
-  const selected = model.slots
+  const selected = (model?.slots ?? [])
     .filter((field) => field.output != null)
     .sort((a, b) => a.output!.outputOrdinal - b.output!.outputOrdinal);
   const outputs = selected.map((field) => ({ slot: field.slot, alias: field.name }));
+  const outputIds = selected.map((field) => field.output!.fieldId);
   const update = (next: typeof outputs) => {
-    if (!disabled && !model.physical)
+    if (!disabled && model != null && !model.physical)
       void command.execute((session, request) =>
         changeSelectedRelationOutputs(session, { ...request, outputs: next })
       );
   };
+  const reorder = useInspectorListReorder({
+    orderedIds: outputIds,
+    visibleIds: outputIds,
+    enabled: !disabled && model != null && !model.physical && command.state !== 'busy',
+    onMove: (movedId, targetId, placement) => {
+      const sourceIndex = outputIds.indexOf(movedId);
+      if (sourceIndex < 0) return;
+      const next = [...outputs];
+      const [moved] = next.splice(sourceIndex, 1);
+      const targetIndex = outputIds.filter((id) => id !== movedId).indexOf(targetId);
+      if (moved == null || targetIndex < 0) return;
+      next.splice(targetIndex + (placement === 'after' ? 1 : 0), 0, moved);
+      update(next);
+    },
+  });
+  if (model == null) return null;
   return (
     <section className="space-y-2" data-slot="canvas-relation-outputs">
-      <h3 className="text-xs font-semibold">{copy.relationalTreeOutputLabel}</h3>
       {(orderingOnly
         ? selected
         : [...selected, ...model.slots.filter((field) => field.output == null)]
       ).map((field) => {
-        const index = selected.indexOf(field);
         const key = field.output?.fieldId ?? field.key;
+        const canReorder = field.output != null && reorder.canReorder;
         const name = field.output == null ? field.name : (drafts.values[key] ?? field.name);
         const error =
           name.trim().length === 0
@@ -90,8 +109,24 @@ export function CanvasRelationOutputs({
             error={error}
             onNameChange={(value) => drafts.onChange(key, value)}
             disabled={disabled || model.physical || command.state === 'busy'}
-            first={index === 0}
-            last={index === selected.length - 1}
+            draggable={canReorder}
+            dropPlacement={reorder.dropPlacement(key)}
+            reorderLabel={editorCopy.reorderOutput}
+            reorderHint={editorCopy.reorderOutputHint}
+            onDragStart={(event) => {
+              if (canReorder) reorder.startDrag(key, event);
+            }}
+            onDragEnd={reorder.endDrag}
+            onDragOver={(event) => {
+              if (canReorder) reorder.dragOver(key, event);
+            }}
+            onDragLeave={reorder.dragLeave}
+            onDrop={(event) => {
+              if (canReorder) reorder.drop(key, event);
+            }}
+            onKeyDown={(event) => {
+              if (event.target === event.currentTarget) reorder.moveWithKeyboard(key, event);
+            }}
             onInclude={(included) =>
               update(
                 included
@@ -111,12 +146,6 @@ export function CanvasRelationOutputs({
                   output.slot === field.slot ? { ...output, alias } : output
                 )
               );
-            }}
-            onMove={(offset) => {
-              const next = [...outputs];
-              const [moved] = next.splice(index, 1);
-              next.splice(index + offset, 0, moved!);
-              update(next);
             }}
           />
         );

@@ -60,6 +60,19 @@ export function RelationalInspectionPanel({
   onOutputChange?: (document: SubstraitDocument) => boolean;
 }>): JSX.Element | null {
   if (inspection == null) return null;
+  const output =
+    inspection.relationId == null || inspection.kind === 'unsupported' ? null : inspection.kind ===
+        'source' || onOutputChange == null ? (
+      <CanvasRelationFields relationId={inspection.relationId} />
+    ) : (
+      <CanvasRelationOutputs
+        key={inspection.relationId}
+        relationId={inspection.relationId}
+        disabled={false}
+        orderingOnly
+        onChange={onOutputChange}
+      />
+    );
   return (
     <CanvasRelationalTreeEditorFrame
       operation={inspection.operation}
@@ -69,21 +82,9 @@ export function RelationalInspectionPanel({
       readOnly
       onEdit={inspection.kind === 'unsupported' ? undefined : onEdit}
       onClose={onClose}
+      output={output}
     >
       <InspectionContent inspection={inspection} {...content} />
-      {inspection.relationId == null ||
-      inspection.kind === 'unsupported' ? null : inspection.kind === 'source' ||
-        onOutputChange == null ? (
-        <CanvasRelationFields relationId={inspection.relationId} />
-      ) : (
-        <CanvasRelationOutputs
-          key={inspection.relationId}
-          relationId={inspection.relationId}
-          disabled={false}
-          orderingOnly
-          onChange={onOutputChange}
-        />
-      )}
     </CanvasRelationalTreeEditorFrame>
   );
 }

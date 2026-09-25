@@ -65,11 +65,51 @@ describe('direct output ordering', () => {
           '[data-slot="canvas-relational-tree-inline-editor"] input, [data-slot="canvas-relational-tree-inline-editor"] select'
         )
       ).toBeNull();
+      const properties = container.querySelector('[data-value="properties"]');
+      expect(properties?.querySelector('[data-slot="relation-output-field"]')).toBeNull();
+      const outputTab = container.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-operation-output-tab"]'
+      );
+      expect(outputTab?.textContent).toBe('Output');
+      await act(async () =>
+        outputTab?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }))
+      );
+      const outputPanel = container.querySelector('[data-value="output"]');
+      expect(outputPanel?.getAttribute('data-state')).toBe('active');
+      expect(outputPanel?.querySelector('[aria-label="Move field up"]')).toBeNull();
+      expect(rows()[0]?.querySelector('[data-slot="relation-output-drag-handle"]')).not.toBeNull();
       expect(applied).not.toHaveBeenCalled();
-      const move = async (): Promise<void> =>
-        act(async () =>
-          rows()[0]!.querySelector<HTMLButtonElement>('[aria-label="Move field down"]')!.click()
+      const move = async (): Promise<void> => {
+        const source = rows()[0] as HTMLElement;
+        const target = rows()[1] as HTMLElement;
+        const data = new Map<string, string>();
+        const dataTransfer = {
+          effectAllowed: 'move',
+          dropEffect: 'move',
+          getData: (type: string) => data.get(type) ?? '',
+          setData: (type: string, value: string) => data.set(type, value),
+        };
+        vi.spyOn(target, 'getBoundingClientRect').mockReturnValue({
+          top: 0,
+          height: 20,
+        } as DOMRect);
+        const dispatch = (element: HTMLElement, event: Event): void => {
+          Object.defineProperty(event, 'dataTransfer', { value: dataTransfer });
+          element.dispatchEvent(event);
+        };
+        await act(async () => dispatch(source, new Event('dragstart', { bubbles: true })));
+        await act(async () =>
+          dispatch(
+            target,
+            new MouseEvent('dragover', { bubbles: true, cancelable: true, clientY: 19 })
+          )
         );
+        expect(target.getAttribute('data-drop-placement')).toBe('after');
+        await act(async () => {
+          dispatch(target, new Event('drop', { bubbles: true, cancelable: true }));
+          source.dispatchEvent(new Event('dragend', { bubbles: true }));
+        });
+      };
       await move();
       if (rejectFirst) {
         expect(ids()).toEqual(before);
@@ -143,6 +183,15 @@ describe('direct output ordering', () => {
     for (const operator of ['read', 'join']) {
       await act(async () =>
         container.querySelector<HTMLButtonElement>(`[data-operator="${operator}"]`)!.click()
+      );
+      const outputTab = container.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-operation-output-tab"]'
+      );
+      await act(async () =>
+        outputTab?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }))
+      );
+      expect(container.querySelector('[data-value="output"]')?.getAttribute('data-state')).toBe(
+        'active'
       );
       const fields = container.querySelector('[data-slot="canvas-relation-fields"]');
       expect(fields).not.toBeNull();
