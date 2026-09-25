@@ -68,10 +68,14 @@ export function nameCompositionOutputs(fields: Fields, previous: Fields = []) {
     const key = origin(field);
     if (key != null) byOrigin.set(key, [...(byOrigin.get(key) ?? []), field]);
   }
+  const retained = new Set<string>();
   const identities = new Map(
     fields.flatMap((field) => {
       const candidates = byOrigin.get(origin(field) ?? '');
-      return candidates?.length === 1 ? [[field.fieldId, candidates[0]!] as const] : [];
+      const candidate = candidates?.length === 1 ? candidates[0] : undefined;
+      if (candidate == null || retained.has(candidate.fieldId)) return [];
+      retained.add(candidate.fieldId);
+      return [[field.fieldId, candidate] as const];
     })
   );
   return fields.map((field) => {

@@ -14,7 +14,10 @@ import {
 import type { DvtSubstraitFieldBindingV1 } from '@dvt/contracts';
 
 type Fields = readonly DvtSubstraitFieldBindingV1[];
-const top = (fields: Fields) => fields.filter((field) => field.parentFieldId == null);
+const top = (fields: Fields) =>
+  fields
+    .filter((field) => field.parentFieldId == null)
+    .sort((a, b) => a.outputOrdinal - b.outputOrdinal);
 
 function requireOrdinal(value: number | undefined): number {
   if (value == null)
@@ -85,7 +88,8 @@ export function rebaseRelationInput(
   relation: Rel,
   inputs: readonly Rel[],
   before: readonly Fields[],
-  after: readonly Fields[]
+  after: readonly Fields[],
+  retainedOutputs?: number[]
 ): Rel {
   const copy = cloneLocalRelation(relation, inputs);
   const oldWidths = before.map((fields) => top(fields).length);
@@ -120,7 +124,12 @@ export function rebaseRelationInput(
     common.emitKind.case === 'emit'
       ? common.emitKind.value.outputMapping
       : output.map((_, ordinal) => ordinal);
-  const mapping = selected.map((ordinal) => requireOrdinal(output[ordinal]));
+  const mapping = selected.flatMap((ordinal, position) => {
+    const mapped = output[ordinal];
+    if (retainedOutputs != null && mapped == null) return [];
+    retainedOutputs?.push(position);
+    return [requireOrdinal(mapped)];
+  });
   common.emitKind = {
     case: 'emit',
     value: { $typeName: 'substrait.RelCommon.Emit', outputMapping: mapping },
