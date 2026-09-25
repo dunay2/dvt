@@ -25,7 +25,7 @@ async function deriveOnBothInputs(
       relationId: input.relationId,
       expectedRevision: staged.revision,
       alias: `normalized_${index}`,
-      capabilityId: scalarCapability(),
+      capabilityIds: [scalarCapability()],
       operandFieldIds: [input.bindings.find((field) => field.parentFieldId == null)!.fieldId],
     });
   }

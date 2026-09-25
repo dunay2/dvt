@@ -34,7 +34,7 @@ describe('selected relation derived output authoring', () => {
       relationId: inputId,
       expectedRevision: session.revision,
       alias: 'normalized_name',
-      capabilityId: capability('upper'),
+      capabilityIds: [capability('upper')] as const,
       operandFieldIds: [sourceFieldId],
     });
 
@@ -60,7 +60,7 @@ describe('selected relation derived output authoring', () => {
       relationId: projectId,
       expectedRevision: session.revision,
       alias: 'trimmed_name',
-      capabilityId: capability('trim'),
+      capabilityIds: [capability('trim')],
       operandFieldIds: [sourceFieldId],
     });
     const trimmedField = trimmed.sidecar.fields.find(
@@ -71,7 +71,7 @@ describe('selected relation derived output authoring', () => {
       relationId: projectId,
       expectedRevision: session.revision,
       alias: 'normalized_name',
-      capabilityId: capability('upper'),
+      capabilityIds: [capability('upper')],
       operandFieldIds: [trimmedField.fieldId],
     });
 
@@ -89,6 +89,37 @@ describe('selected relation derived output authoring', () => {
     expect(argument.value.rexType.case).toBe('scalarFunction');
   });
 
+  it('creates one output for a nested admitted capability chain', async () => {
+    const session = new CanvasRelationAnalysisSession('nested-capability-chain');
+    session.receive(connectedNamesProjectionDraft());
+    const projectId = session.rootId;
+    const before = session.locate(projectId, session.revision);
+    const source = await session.query(projectId);
+    const sourceFieldId = source.bindings.find(
+      (field) => field.parentFieldId == null && field.displayName === 'first_name'
+    )!.fieldId;
+
+    const document = await applySelectedRelationDerivedOutput(session, {
+      intent: 'edit',
+      relationId: projectId,
+      expectedRevision: session.revision,
+      alias: 'normalized_name',
+      capabilityIds: [capability('trim'), capability('upper')],
+      operandFieldIds: [sourceFieldId],
+    });
+
+    const target = session.locate(projectId, session.revision);
+    if (before.relation.relType.case !== 'project' || target.relation.relType.case !== 'project')
+      throw new Error('Expected ProjectRel.');
+    expect(target.relation.relType.value.expressions).toHaveLength(
+      before.relation.relType.value.expressions.length + 1
+    );
+    expect(
+      document.sidecar.fields.find((field) => field.displayName === 'normalized_name')
+        ?.sourceFieldId
+    ).toBe(sourceFieldId);
+  });
+
   it('rejects duplicate aliases and stale revisions without changing the session', async () => {
     const session = new CanvasRelationAnalysisSession('derived-output-negative');
     session.receive(connectedNamesProjectionDraft());
@@ -99,7 +130,7 @@ describe('selected relation derived output authoring', () => {
       relationId: session.rootId,
       expectedRevision: revision,
       alias: schema.bindings[0]!.displayName!,
-      capabilityId: capability('upper'),
+      capabilityIds: [capability('upper')] as const,
       operandFieldIds: [schema.bindings[0]!.fieldId] as const,
     };
     await expect(applySelectedRelationDerivedOutput(session, request)).rejects.toThrow();
@@ -122,7 +153,7 @@ describe('selected relation derived output authoring', () => {
       relationId: leftId,
       expectedRevision: session.revision,
       alias: 'normalized_name',
-      capabilityId: capability('upper'),
+      capabilityIds: [capability('upper')],
       operandFieldIds: [sourceFieldId],
     });
     const branchField = branchDocument.sidecar.fields.find(
@@ -166,7 +197,7 @@ describe('selected relation derived output authoring', () => {
       relationId: joinId,
       expectedRevision: session.revision,
       alias: 'final_name',
-      capabilityId: capability('trim'),
+      capabilityIds: [capability('trim')],
       operandFieldIds: [reusableField.fieldId],
     });
     const finalField = finalDocument.sidecar.fields.find(

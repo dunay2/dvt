@@ -45,11 +45,12 @@ export function CanvasDerivedOutputSection({
                 });
           }}
           onCancel={() => setOpen(false)}
-          onSubmit={async (request) => {
+          onSubmit={async ({ capabilityId, ...request }) => {
             const applied = await command.execute((session, identity) =>
               applySelectedRelationDerivedOutput(session, {
                 ...identity,
                 ...request,
+                capabilityIds: [capabilityId],
                 intent: model.intent,
               })
             );

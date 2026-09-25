@@ -5,7 +5,7 @@ import {
   RelSchema,
   type Expression,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { allocateDvtFieldId, DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
 import { cloneLocalRelation, SubstraitAnalysisError } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
@@ -22,7 +22,7 @@ import {
 export type SelectedRelationDerivedOutputRequest = SelectedUnaryRequest &
   Readonly<{
     alias: string;
-    capabilityId: string;
+    capabilityIds: readonly [string, ...string[]];
     operandFieldIds: readonly [string, ...string[]];
   }>;
 
@@ -60,6 +60,37 @@ function reject(message: string, relationId: string): never {
   throw new SubstraitAnalysisError('invalid_binding', message, relationId);
 }
 
+function buildScalarChain(
+  args: Readonly<{
+    plan: Plan;
+    capabilityIds: readonly [string, ...string[]];
+    dataTypes: readonly string[];
+    operands: readonly Expression[];
+    provider: string;
+  }>
+): Expression | null {
+  let dataTypes = args.dataTypes;
+  let operands = args.operands;
+  let expression: Expression | null = null;
+  for (const capabilityId of args.capabilityIds) {
+    expression = buildDvtSubstraitScalarFunction({
+      plan: args.plan,
+      capabilityId,
+      dataTypes,
+      operands,
+      provider: args.provider,
+    });
+    if (expression?.rexType.case !== 'scalarFunction') return null;
+    const outputType = expression.rexType.value.outputType;
+    if (outputType == null) return null;
+    const outputDataType = inspectProjectionDataType(outputType);
+    if (outputDataType == null) return null;
+    dataTypes = [outputDataType];
+    operands = [expression];
+  }
+  return expression;
+}
+
 export async function applySelectedRelationDerivedOutput(
   session: CanvasRelationAnalysisSession,
   request: SelectedRelationDerivedOutputRequest
@@ -94,9 +125,9 @@ export async function applySelectedRelationDerivedOutput(
     reject('Derived-output operand cannot be projected.', request.relationId);
 
   const plan = clone(PlanSchema, { ...prepared.target.plan, relations: [] });
-  const expression = buildDvtSubstraitScalarFunction({
+  const expression = buildScalarChain({
     plan,
-    capabilityId: request.capabilityId,
+    capabilityIds: request.capabilityIds,
     dataTypes: dataTypes.filter((type): type is string => type != null),
     operands: expressions.filter((item): item is Expression => item != null),
     provider: session.executionProvider(request.expectedRevision),
@@ -131,9 +162,9 @@ export async function applySelectedRelationDerivedOutput(
       relationId: prepared.binding.relationId,
       outputOrdinal: available.fields.length,
       displayName: alias,
-      ...(request.operandFieldIds.length > 1
-        ? { operandFieldIds: [...request.operandFieldIds] }
-        : {}),
+      ...(request.operandFieldIds.length === 1
+        ? { sourceFieldId: request.operandFieldIds[0] }
+        : { operandFieldIds: [...request.operandFieldIds] }),
     },
   ];
   return commitSelectedRelationUnary(session, { ...prepared, fields }, relation, plan);
