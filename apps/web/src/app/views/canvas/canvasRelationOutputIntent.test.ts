@@ -14,6 +14,11 @@ describe('output command identities across persistence', () => {
     'excludes, restores and moves a field before the first output with %i operands',
     async (count) => {
       const { session } = graphJoin();
+      await changeSelectedRelationOutputs(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        outputs: [{ slot: 0 }, { slot: 1 }, { slot: 3 }],
+      });
       if (count === 3) await appendGraphSource(session, 'additional');
       const available = async () => {
         const root = session.locate(session.rootId, session.revision);
