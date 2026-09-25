@@ -708,10 +708,6 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSubstraitAppendInputAction',
     fallback: 'Add input',
   },
-  inspectorDvtSubstraitSelectedFieldsLabel: {
-    key: 'canvas.inspector.authoring.dvtSubstraitSelectedFieldsLabel',
-    fallback: 'Selected fields',
-  },
   inspectorDvtSubstraitMoveFieldUpLabel: {
     key: 'canvas.inspector.authoring.dvtSubstraitMoveFieldUpLabel',
     fallback: 'Move field up',

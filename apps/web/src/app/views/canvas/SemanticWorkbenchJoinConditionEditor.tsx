@@ -8,10 +8,9 @@ import {
 } from './canvasDvtSubstraitJoinCondition';
 import {
   dvtSubstraitJoinOperandKey,
-  resolveDvtSubstraitJoinUnaryFunctions,
   type DvtSubstraitJoinPredicateOperand,
 } from './canvasDvtSubstraitJoinOperand';
-import { projectSemanticWorkbenchJoinConditionRows } from './join-condition/conditionRows';
+import { joinConditionRows } from './join-condition/conditionRows';
 import {
   conditionFromDraft,
   editConditionDraft,
@@ -59,18 +58,7 @@ export function SemanticWorkbenchJoinConditionEditor(props: Props) {
   const { draft, onDraftChange: setDraft } = props;
   const editorRef = useRef<HTMLDivElement>(null);
   const rows = useMemo(
-    () =>
-      projectSemanticWorkbenchJoinConditionRows({
-        conditions: props.conditions,
-        fieldLabelById: new Map(props.fields.map((field) => [field.fieldId, field.label])),
-        functionNameById: new Map(
-          [...new Set(props.fields.map((field) => field.dataType))].flatMap((dataType) =>
-            resolveDvtSubstraitJoinUnaryFunctions({ dataType, provider: 'postgres' }).map(
-              (fn) => [fn.capabilityId, fn.name] as const
-            )
-          )
-        ),
-      }),
+    () => joinConditionRows(props.conditions, props.fields),
     [props.conditions, props.fields]
   );
   const condition = conditionFromDraft(draft);

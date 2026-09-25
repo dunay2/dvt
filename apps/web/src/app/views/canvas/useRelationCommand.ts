@@ -16,7 +16,7 @@ type Command = (
 
 export function useRelationCommand(
   relationId: string,
-  onChange: (document: SubstraitDocument) => void,
+  onChange: (document: SubstraitDocument) => void | boolean,
   owner?: ReturnType<typeof useCanvasRelationAnalysisSession>
 ) {
   const context = useContext(CanvasRelationAnalysisContext);
@@ -25,6 +25,8 @@ export function useRelationCommand(
   const [state, setState] = useState<'idle' | 'busy' | 'error'>('idle');
   useEffect(() => {
     setState('idle');
+  }, [analysis?.document, relationId]);
+  useEffect(() => {
     return () => {
       pending.current?.abort();
       pending.current = null;
@@ -43,7 +45,12 @@ export function useRelationCommand(
         signal: controller.signal,
       });
       controller.signal.throwIfAborted();
-      onChange(document);
+      if (onChange(document) === false) {
+        analysis.session.receive(analysis.document);
+        analysis.refresh();
+        setState('error');
+        return false;
+      }
       setState('idle');
       return true;
     } catch {

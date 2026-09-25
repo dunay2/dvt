@@ -6,6 +6,9 @@ import { CanvasRelationalExpressionTree } from '../CanvasRelationalExpressionTre
 import { CanvasRelationalCrossNotice } from '../CanvasRelationalCrossNotice';
 import type { RelationalInspection } from './inspectionModel';
 import { CanvasRelationFields } from '../CanvasRelationFields';
+import { CanvasRelationOutputs } from '../CanvasRelationOutputs';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
+import { JoinConditionSummary } from './JoinConditionSummary';
 
 type InspectionContentProps = Readonly<{
   inspection: RelationalInspection;
@@ -20,8 +23,10 @@ function InspectionContent({
 }: InspectionContentProps): JSX.Element | null {
   switch (inspection.kind) {
     case 'source':
-      return inspection.relationId == null ? null : (
-        <CanvasRelationFields relationId={inspection.relationId} />
+      return null;
+    case 'join':
+      return (
+        <JoinConditionSummary relationId={inspection.relationId} transformNode={transformNode} />
       );
     case 'summary':
       return <p className="text-xs text-(--text-primary)">{inspection.text}</p>;
@@ -44,6 +49,7 @@ export function RelationalInspectionPanel({
   inspection,
   onClose,
   onEdit,
+  onOutputChange,
   ...content
 }: Readonly<{
   inspection: RelationalInspection | null;
@@ -51,6 +57,7 @@ export function RelationalInspectionPanel({
   copy: CanvasRelationalTreeWorkbenchCopy;
   onClose: () => void;
   onEdit?: () => void;
+  onOutputChange?: (document: SubstraitDocument) => boolean;
 }>): JSX.Element | null {
   if (inspection == null) return null;
   return (
@@ -58,12 +65,25 @@ export function RelationalInspectionPanel({
       operation={inspection.operation}
       label={inspection.kind === 'source' ? inspection.label : undefined}
       relationId={inspection.relationId}
-      hasExpression={inspection.kind === 'expressions'}
+      hasExpression={inspection.kind === 'expressions' || inspection.kind === 'join'}
       readOnly
       onEdit={inspection.kind === 'unsupported' ? undefined : onEdit}
       onClose={onClose}
     >
       <InspectionContent inspection={inspection} {...content} />
+      {inspection.relationId == null ||
+      inspection.kind === 'unsupported' ? null : inspection.kind === 'source' ||
+        onOutputChange == null ? (
+        <CanvasRelationFields relationId={inspection.relationId} />
+      ) : (
+        <CanvasRelationOutputs
+          key={inspection.relationId}
+          relationId={inspection.relationId}
+          disabled={false}
+          orderingOnly
+          onChange={onOutputChange}
+        />
+      )}
     </CanvasRelationalTreeEditorFrame>
   );
 }

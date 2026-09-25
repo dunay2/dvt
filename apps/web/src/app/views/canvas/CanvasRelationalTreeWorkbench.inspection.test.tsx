@@ -160,8 +160,9 @@ describe('Canvas relational-tree Workbench inspection', () => {
       container.querySelector('[data-slot="canvas-relational-expression-tree"]')?.textContent
     ).toContain('clients.customer_id');
     const expression = container.querySelector(
-      '[role="tabpanel"][data-state="active"] [data-slot="canvas-relational-expression-tree"]'
+      '[role="tabpanel"][data-state="active"] [data-slot="semantic-workbench-join-condition-row"]'
     )!;
+    expect(expression.textContent).toContain('clients.customer_id');
     expect(expression.closest('[role="tabpanel"]')?.getAttribute('data-state')).toBe('active');
     expect(expression.closest('[role="tabpanel"]')?.getAttribute('data-value')).toBe('properties');
     expect(container.querySelector('[data-slot="canvas-operation-properties-tab"]')).not.toBeNull();

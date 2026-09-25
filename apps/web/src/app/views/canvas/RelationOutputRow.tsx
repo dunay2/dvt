@@ -19,6 +19,7 @@ export function RelationOutputRow({
   onInclude,
   onMove,
   onRename,
+  orderingOnly = false,
 }: Readonly<{
   field: RelationOutputSlot;
   disabled: boolean;
@@ -31,27 +32,34 @@ export function RelationOutputRow({
   onInclude: (included: boolean) => void;
   onMove: (offset: -1 | 1) => void;
   onRename: (name: string) => void;
+  orderingOnly?: boolean;
 }>) {
   const errorId = useId();
   return (
     <div data-slot="relation-output-field" data-field-id={field.output?.fieldId ?? field.key}>
       <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={field.output != null}
-          disabled={disabled}
-          aria-label={field.name}
-          onChange={(event) => onInclude(event.currentTarget.checked)}
-        />
-        <Input
-          aria-label={field.name}
-          value={name}
-          disabled={disabled || field.output == null}
-          aria-invalid={error == null ? undefined : true}
-          aria-describedby={error == null ? undefined : errorId}
-          onChange={(event) => onNameChange(event.currentTarget.value)}
-          onBlur={(event) => onRename(event.currentTarget.value)}
-        />
+        {orderingOnly ? (
+          <span className="min-w-0 flex-1 truncate">{field.name}</span>
+        ) : (
+          <>
+            <input
+              type="checkbox"
+              checked={field.output != null}
+              disabled={disabled}
+              aria-label={field.name}
+              onChange={(event) => onInclude(event.currentTarget.checked)}
+            />
+            <Input
+              aria-label={field.name}
+              value={name}
+              disabled={disabled || field.output == null}
+              aria-invalid={error == null ? undefined : true}
+              aria-describedby={error == null ? undefined : errorId}
+              onChange={(event) => onNameChange(event.currentTarget.value)}
+              onBlur={(event) => onRename(event.currentTarget.value)}
+            />
+          </>
+        )}
         <span className="text-xs text-(--text-muted)">{field.schema.type.kind.case}</span>
         <button
           type="button"

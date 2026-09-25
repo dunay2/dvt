@@ -1,5 +1,5 @@
 /** React owns lifetime only; canonical analysis and revision changes stay outside presentation. */
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 
@@ -24,5 +24,12 @@ export function useCanvasRelationAnalysisSession(
       setReady({ document, session, revision: session.revision, error });
     }
   }, [document, session]);
-  return ready?.document === document && ready?.session === session ? ready : null;
+  const refresh = useCallback(() => {
+    setReady((current) => (current == null ? null : { ...current, revision: session.revision }));
+  }, [session]);
+  return useMemo(
+    () =>
+      ready?.document === document && ready?.session === session ? { ...ready, refresh } : null,
+    [ready, document, session, refresh]
+  );
 }

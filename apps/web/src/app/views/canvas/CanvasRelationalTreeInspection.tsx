@@ -58,6 +58,7 @@ export function CanvasRelationalTreeInspection({
             copy={copy}
             onClose={() => onExpandedChange(false)}
             onEdit={model.authoringAvailable ? model.session.start : undefined}
+            onOutputChange={model.authoringAvailable ? model.session.applyOutputOrder : undefined}
           />
         ) : null}
       </div>

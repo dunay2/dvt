@@ -2,12 +2,14 @@
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { sourceOccurrenceCopy } from './relational-source-occurrence/sourceOccurrenceCopy';
 import { useCanvasRelationFields } from './useCanvasRelationFields';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 
 export function CanvasRelationFields({
   relationId,
 }: Readonly<{ relationId: string }>): JSX.Element | null {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = sourceOccurrenceCopy(language);
+  const outputLabel = resolveCanvasViewCopy(language).relationalTreeOutputLabel;
   const model = useCanvasRelationFields(relationId);
   if (!model.available) return null;
   return (
@@ -15,13 +17,14 @@ export function CanvasRelationFields({
       data-slot="canvas-relation-fields"
       className="mt-4 space-y-2"
       aria-busy={model.loading}
-      aria-label={copy.fields}
+      aria-label={outputLabel}
     >
-      <h3 className="text-xs text-(--text-muted)">{copy.fields}</h3>
+      <h3 className="text-xs text-(--text-muted)">{outputLabel}</h3>
       {model.error == null ? (
         <dl className="text-xs">
           {model.result?.bindings
             .filter((field) => field.parentFieldId == null)
+            .sort((left, right) => left.outputOrdinal - right.outputOrdinal)
             .map((field) => (
               <div
                 key={field.fieldId}
