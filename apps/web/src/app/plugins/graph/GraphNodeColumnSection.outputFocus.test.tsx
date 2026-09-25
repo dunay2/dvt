@@ -33,18 +33,33 @@ describe('column output focus ownership', () => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
-  function render(output: boolean): void {
+  function render(output: boolean, enabled = true): void {
     act(() =>
       root.render(
         <GraphNodeColumnSection
           expanded
           nodeId="model"
           columns={[{ id: 'id', name: 'id', type: 'integer', output }]}
-          onColumnOutputToggle={vi.fn()}
+          onColumnOutputToggle={enabled ? vi.fn() : undefined}
         />
       )
     );
   }
+  it('keeps a pending output control focusable without accepting activation', () => {
+    render(true);
+    const button = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-output-state"]'
+    )!;
+    act(() => button.focus());
+    render(true, false);
+    expect(button.disabled).toBe(false);
+    expect(button.getAttribute('aria-disabled')).toBe('true');
+    act(() => fireEvent.click(button));
+    expect(button.getAttribute('aria-pressed')).toBe('true');
+    expect(document.activeElement).toBe(button);
+    render(false);
+    expect(document.activeElement).toBe(button);
+  });
   it.each(['pointer', 'keyboard'] as const)(
     'keeps the same control focused after %s activation and disclosure restoration',
     (input) => {
