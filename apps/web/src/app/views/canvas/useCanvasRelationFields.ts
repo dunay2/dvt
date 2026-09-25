@@ -2,12 +2,17 @@
 import { useContext, useEffect, useState } from 'react';
 import type { RelationAnalysisResult } from '@dvt/substrait-analysis';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
+import type { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 
-export function useCanvasRelationFields(relationId: string) {
-  const analysis = useContext(CanvasRelationAnalysisContext);
+export function useCanvasRelationFields(
+  relationId: string | null,
+  owner?: ReturnType<typeof useCanvasRelationAnalysisSession>
+) {
+  const context = useContext(CanvasRelationAnalysisContext);
+  const analysis = owner === undefined ? context : owner;
   const [settled, setSettled] = useState<{
     analysis: typeof analysis;
-    relationId: string;
+    relationId: string | null;
     result: RelationAnalysisResult | null;
     error: unknown;
   } | null>(null);

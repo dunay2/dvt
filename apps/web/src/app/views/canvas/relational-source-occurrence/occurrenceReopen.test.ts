@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveCanvasRelationalTreeExistingJoinDraft } from '../canvasRelationalTreeExistingJoinDraft';
+import { resolveCanvasRelationalTreeExistingDraft } from '../canvasRelationalTreeExistingDraft';
 import { projectCanvasRelationalTree } from '../canvasRelationalTreeProjection';
 import { projectCanvasRelationalTreeCatalogue } from '../canvasRelationalTreeWorkbenchModel';
 import { occurrenceGraph } from './occurrence.test.fixtures';
@@ -16,7 +16,7 @@ describe('source occurrence reopening', () => {
         .map((relation) => relation.relationId)
     );
     expect(
-      resolveCanvasRelationalTreeExistingJoinDraft({
+      resolveCanvasRelationalTreeExistingDraft({
         document: graph.draft,
         projection: result.projection,
       })?.inputIds

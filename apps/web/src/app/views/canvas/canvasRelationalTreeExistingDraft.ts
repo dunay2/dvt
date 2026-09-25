@@ -1,23 +1,22 @@
 /** Reopen the already analyzed canonical document, without reclassifying tree shapes. */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
-import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
 import type { CanvasRelationalTreeProjection } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import { isCanvasSetOperation } from './canvasRelationalOperationChoices';
 import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 
-export type CanvasRelationalTreeExistingJoinDraft = Readonly<{
-  draft: DvtSubstraitJoinDraft;
+export type CanvasRelationalTreeExistingDraft = Readonly<{
+  draft: SubstraitDocument;
   inputIds: readonly string[];
   operation: CanvasRelationalOperation;
 }>;
 
-export function resolveCanvasRelationalTreeExistingJoinDraft(
+export function resolveCanvasRelationalTreeExistingDraft(
   args: Readonly<{
     document: SubstraitDocument | null;
     projection: CanvasRelationalTreeProjection | null;
   }>
-): CanvasRelationalTreeExistingJoinDraft | null {
+): CanvasRelationalTreeExistingDraft | null {
   if (args.projection == null || args.document == null) return null;
   let entry = args.projection.root;
   while (entry.children.length === 1) entry = entry.children[0]!.node;

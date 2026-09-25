@@ -8,7 +8,7 @@ import {
 } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { createRelationPassthroughFields } from './canvasRelationPassthroughFields';
-import { reconnectSelectedRelation } from './canvasSelectedRelationChange';
+import { commitSelectedRelation } from './canvasCommitSelectedRelation';
 
 export type SelectedUnaryRequest = Readonly<{
   intent: 'insert' | 'edit';
@@ -20,7 +20,7 @@ export type SelectedUnaryRequest = Readonly<{
 export async function prepareSelectedRelationUnary(
   session: CanvasRelationAnalysisSession,
   request: SelectedUnaryRequest,
-  operator: 'filter' | 'sort' | 'fetch'
+  operator: 'filter' | 'sort' | 'fetch' | 'aggregate' | 'project'
 ) {
   request.signal?.throwIfAborted();
   const target = session.locate(request.relationId, request.expectedRevision);
@@ -57,29 +57,19 @@ export async function prepareSelectedRelationUnary(
   };
 }
 
-export function commitSelectedRelationUnary(
+export async function commitSelectedRelationUnary(
   session: CanvasRelationAnalysisSession,
   prepared: Awaited<ReturnType<typeof prepareSelectedRelationUnary>>,
   relation: Rel,
   extensions?: RelationChangeSet['extensions']
-): SubstraitDocument {
+): Promise<SubstraitDocument> {
   const { request, binding, fields } = prepared;
-  request.signal?.throwIfAborted();
-  const reconnected =
-    request.intent === 'edit'
-      ? { upserts: [] }
-      : reconnectSelectedRelation(
-          session,
-          request.relationId,
-          relation,
-          binding.relationId,
-          request.expectedRevision
-        );
-  return session.apply({
-    expectedRevision: request.expectedRevision,
-    removed: [],
-    ...reconnected,
-    upserts: [{ relation, binding, fields }, ...reconnected.upserts],
-    ...(extensions == null ? {} : { extensions }),
+  return commitSelectedRelation(session, {
+    ...request,
+    replacement: { relation, binding, fields },
+    extensions,
+    createdInputs: new Map(
+      request.intent === 'insert' ? [[binding.relationId, [prepared.input.binding.relationId]]] : []
+    ),
   });
 }
