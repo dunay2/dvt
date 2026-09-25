@@ -13,6 +13,7 @@ code_refs:
   - packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanFieldPolicy.v1.ts
+  - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts
   - packages/@dvt/substrait-analysis/src/relationChangeSet.ts
   - packages/@dvt/postgres-projection/src/relationalSql/project.ts
   - apps/api/src/infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.ts
@@ -275,3 +276,19 @@ cohorts, generated inventories, committed-tree pre-push and PR gates must pass
 before integration. Scalar/structured projection primitives outside the removed
 operator-authoring family are not claimed to have disappeared. No rule was
 relaxed, hook bypassed, new debt approved or stub introduced by this hard cut.
+
+### Capability evidence consumer — 2026-09-25
+
+The [reference audit](https://github.com/dunay2/dvt/issues/3369#issuecomment-5827325181)
+identified an admission proof pointing at a deleted JOIN-composition test. Its
+replacement is `canvasSelectedJoinConditionPersistence.test.ts`, which exercises
+comparison and grouped AND/OR roundtrips with stable relation/field identities.
+The catalog must point to that current proof; retaining the old test as an alias
+would contradict the hard cut. A catalog-wide contract check requires local
+fixture, semantic and negative proof paths to resolve.
+
+Only the evidence reference changes: admitted identities, semantic wire format,
+provider status and execution behavior remain unchanged. The complete diff is
+therefore routed through ARC-2 because it touches contracts, with the existing
+risk entry and schema/golden checks retained. Validation is recorded in the PR
+against its committed base/head before integration.

@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs';
+import { URL } from 'node:url';
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -56,6 +59,23 @@ function extensionProposal(overrides: Record<string, unknown> = {}): Record<stri
 }
 
 describe('DVT Substrait standard-first capability admission', () => {
+  it('keeps every admitted local proof resolvable after implementation hard cuts', () => {
+    const proofs = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.flatMap((entry) =>
+      entry.kind === 'standard' && entry.admission != null
+        ? [
+            entry.admission.canonicalFixtureRef,
+            entry.admission.semanticValidationRef,
+            entry.admission.negativeValidationRef,
+          ]
+        : []
+    );
+    const repository = new URL('../../../../', import.meta.url);
+    expect(proofs.length).toBeGreaterThan(0);
+    for (const proof of new Set(proofs)) {
+      expect(existsSync(new URL(proof, repository)), proof).toBe(true);
+    }
+  });
+
   it('admits structured construction as one unavailable target slice', () => {
     const structuredCapabilities = [STRUCT_ID, NESTED_EXPRESSION_ID].map((entryId) =>
       DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find((candidate) => candidate.entryId === entryId)

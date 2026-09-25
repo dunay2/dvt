@@ -144,7 +144,7 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
       functionId('scalar-function', 'functions_comparison', 'lte'),
     ],
     useCaseRefs: ['dvt:#3087'],
-    proofRef: 'apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.test.ts',
+    proofRef: 'apps/web/src/app/views/canvas/canvasSelectedJoinConditionPersistence.test.ts',
   },
   {
     entryIds: [
