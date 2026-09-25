@@ -178,6 +178,14 @@ symbols:
   - <<: *commandSymbol
     name: buildDvtSubstraitScalarFunction
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitScalarFunction.ts
+  - <<: *commandSymbol
+    name: SelectedRelationDerivedOutputRequest
+  - <<: *commandSymbol
+    name: rootFields
+  - <<: *commandSymbol
+    name: resolveOperandExpression
+  - <<: *commandSymbol
+    name: reject
   - &formSymbol
     <<: *commandSymbol
     name: DerivedOutputForm
@@ -192,4 +200,37 @@ symbols:
   - <<: *formSymbol
     name: useCanvasDerivedOutputAuthoring
     path: apps/web/src/app/views/canvas/useCanvasDerivedOutputAuthoring.ts
+  - <<: *formSymbol
+    name: DerivedOutputFunction
+    path: apps/web/src/app/views/canvas/DerivedOutputForm.tsx
+  - <<: *formSymbol
+    name: DerivedOutputFunctionResolver
+    path: apps/web/src/app/views/canvas/DerivedOutputForm.tsx
+  - <<: *formSymbol
+    name: DerivedOutputRequest
+    path: apps/web/src/app/views/canvas/DerivedOutputForm.tsx
+  - <<: *formSymbol
+    name: bounds
+    path: apps/web/src/app/views/canvas/DerivedOutputForm.tsx
+  - <<: *formSymbol
+    name: normalize
+    path: apps/web/src/app/views/canvas/DerivedOutputForm.tsx
+  - <<: *formSymbol
+    name: DerivedOutputField
+    path: apps/web/src/app/views/canvas/DerivedOutputOperands.tsx
+  - <<: *formSymbol
+    name: DerivedOutputOperands
+    path: apps/web/src/app/views/canvas/DerivedOutputOperands.tsx
+  - &legacyFormSymbol
+    <<: *formSymbol
+    name: GraphNodeExpressionComposer
+    path: apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.tsx
+  - <<: *legacyFormSymbol
+    name: GraphNodeExpressionComposerFunction
+  - <<: *legacyFormSymbol
+    name: Rejection
+  - <<: *legacyFormSymbol
+    name: rejectionLabel
+  - <<: *legacyFormSymbol
+    name: createResolver
 ```
