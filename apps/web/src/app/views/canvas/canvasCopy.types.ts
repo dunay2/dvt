@@ -594,6 +594,8 @@ export type CanvasViewCopy = {
   readonly relationalTreeProjectOperationLabel: string;
   readonly relationalTreeExpressionStageLabel: string;
   readonly relationalTreeExpressionStageSummaryTemplate: string;
+  readonly relationalTreeFieldTransformationStageLabel: string;
+  readonly relationalTreeFieldTransformationStageSummaryTemplate: string;
   readonly relationalTreeSecondaryInputTemplate: string;
   readonly relationalTreeSecondarySlotLabel: string;
   readonly relationalTreeReadOnlyMessage: string;

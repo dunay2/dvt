@@ -1,5 +1,5 @@
 /** Owned concern: project one canonical Substrait relation subtree into the Canvas tree read model. */
-import type { Expression, Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { SubstraitRelationIndex } from '@dvt/substrait-analysis';
 import { dvtSubstraitExpressionReader } from '@dvt/postgres-projection';
@@ -18,6 +18,7 @@ import {
   isAdmittedSort,
   isAdmittedFetch,
 } from './canvasRelationalTraversal';
+import { projectCanvasRelationalProjectStage } from './canvasRelationalProjectStage';
 
 function operator(rel: Rel): CanvasRelationalTreeOperator {
   switch (rel.relType.case) {
@@ -67,34 +68,6 @@ export function relationExpressionRefs(rel: Rel): readonly CanvasRelationalTreeE
     default:
       return [];
   }
-}
-
-function windowCount(expressions: readonly Expression[]): number {
-  return expressions.filter((expression) => expression.rexType.case === 'windowFunction').length;
-}
-
-function projectOutputSummary(
-  rel: Rel,
-  index: SubstraitRelationIndex,
-  inputRelationIds: readonly string[]
-): CanvasRelationalTreeNode['projectionSummary'] {
-  if (rel.relType.case !== 'project') return undefined;
-  const inputFieldCount =
-    inputRelationIds[0] == null ? 0 : (index.relations.get(inputRelationIds[0])?.fields.length ?? 0);
-  const project = rel.relType.value;
-  const availableFieldCount = inputFieldCount + project.expressions.length;
-  const emitted =
-    project.common?.emitKind.case === 'emit'
-      ? project.common.emitKind.value.outputMapping
-      : Array.from({ length: availableFieldCount }, (_, ordinal) => ordinal);
-  return {
-    passthroughFieldCount: emitted.filter(
-      (ordinal) => ordinal >= 0 && ordinal < inputFieldCount
-    ).length,
-    derivedFieldCount: emitted.filter(
-      (ordinal) => ordinal >= inputFieldCount && ordinal < availableFieldCount
-    ).length,
-  };
 }
 
 function fieldsForRelation(
@@ -168,19 +141,19 @@ export function buildCanvasRelationalTreeRelation(
   for (const id of index.postorder) {
     const entry = index.relations.get(id)!;
     const rel = entry.relation;
-    const windows = rel.relType.case === 'project' ? windowCount(rel.relType.value.expressions) : 0;
-    const projectionSummary = projectOutputSummary(rel, index, entry.inputs);
+    const projectStage = projectCanvasRelationalProjectStage(rel, index, entry.inputs);
+    const windows = projectStage?.summary.windowFieldCount ?? 0;
     nodes.set(id, {
       locator: `rel:${digest}:${paths.get(id)}`,
       operator: operator(rel),
       substraitKind: rel.relType.case ?? 'unknown',
-      operation: canvasPresentationOperationForRel(rel),
+      operation: projectStage?.operation ?? canvasPresentationOperationForRel(rel),
       relationId: id,
       displayName: sortFetchSummary(rel, index) ?? entry.binding.displayName ?? null,
       sourceRef: entry.binding.sourceRef ?? null,
       output: { fields: fieldsForRelation(index, id) },
       expressionRefs: relationExpressionRefs(rel),
-      ...(projectionSummary == null ? {} : { projectionSummary }),
+      ...(projectStage == null ? {} : { projectionSummary: projectStage.summary }),
       decorations: windows === 0 ? [] : [{ kind: 'window', count: windows }],
       children: children.get(id)!.map((input, position) => ({
         role: input.role,

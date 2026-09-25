@@ -8,7 +8,7 @@ import { CanvasContextualWorkbenchPanel } from './CanvasContextualWorkbenchPanel
 import { CanvasRelationOutputs } from './CanvasRelationOutputs';
 import { resolveCanvasModelCompositionCopy } from './canvasModelCompositionCopy';
 import { projectCanvasModelComposition } from './canvasModelCompositionProjection';
-import { resolveCanvasRelationalNodePresentation } from './canvasRelationalNodePresentation';
+import { resolveCanvasRelationalNodeCopy } from './canvasRelationalNodePresentation';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import { useCanvasNodeWorkbenchPosition } from './useCanvasNodeWorkbenchPosition';
@@ -85,12 +85,9 @@ export function CanvasModelCompositionPanel({
           <TabsContent value="operations" className="m-0 min-h-0 overflow-auto p-4">
             <ol className="space-y-2" data-slot="canvas-model-composition-steps">
               {steps.map((step, index) => {
-                const presentation = resolveCanvasRelationalNodePresentation(step.node);
+                const presentation = resolveCanvasRelationalNodeCopy(step.node, copy);
                 const Icon = step.kind === 'input' ? Database : presentation.presentation.icon;
-                const title =
-                  step.kind === 'input'
-                    ? (step.node.displayName ?? step.node.substraitKind)
-                    : copy[presentation.presentation.labelKey];
+                const title = presentation.title;
                 return (
                   <li
                     key={step.locator}
@@ -109,9 +106,9 @@ export function CanvasModelCompositionPanel({
                       <span className="block truncate text-xs font-semibold text-(--text-primary)">
                         {title}
                       </span>
-                      {step.kind === 'input' || step.node.displayName == null ? null : (
+                      {step.kind === 'input' ? null : (
                         <span className="block truncate text-[11px] text-(--text-muted)">
-                          {step.node.displayName}
+                          {presentation.detail}
                         </span>
                       )}
                     </span>

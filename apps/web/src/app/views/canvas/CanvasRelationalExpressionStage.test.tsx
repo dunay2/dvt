@@ -6,21 +6,26 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { CanvasRelationalTreeView } from './CanvasRelationalTreeView';
+import type { CanvasPresentationOperation } from './canvasRelationalOperationPresentation';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 
-function projectNode(derivedFieldCount: number, passthroughFieldCount: number): CanvasRelationalTreeNode {
+function projectNode(
+  operation: CanvasPresentationOperation,
+  scalarFieldCount: number,
+  windowFieldCount: number
+): CanvasRelationalTreeNode {
   return {
     locator: 'project',
     operator: 'project',
     substraitKind: 'project',
-    operation: 'projection',
+    operation,
     relationId: 'relation:project',
     displayName: 'project',
     sourceRef: null,
     output: { fields: [] },
     expressionRefs:
-      derivedFieldCount === 0 ? [] : [{ slot: 'project-expression', ordinal: 0 }],
-    projectionSummary: { derivedFieldCount, passthroughFieldCount },
+      scalarFieldCount + windowFieldCount === 0 ? [] : [{ slot: 'project-expression', ordinal: 0 }],
+    projectionSummary: { scalarFieldCount, windowFieldCount, passthroughFieldCount: 18 },
     decorations: [],
     children: [],
   };
@@ -44,36 +49,13 @@ describe('Canvas Expression/Derive stage presentation', () => {
     container.remove();
   });
 
-  it.each([
-    ['en', 'EXPRESSION / DERIVE', 'Derived: 2 · Passthrough: 18'],
-    ['es', 'EXPRESIÓN / DERIVACIÓN', 'Derivados: 2 · Directos: 18'],
-  ])('labels a derived ProjectRel as an Expression stage in %s', (locale, title, summary) => {
+  it('renders the projected Expression identity instead of inferring it in the component', () => {
+    const copy = resolveCanvasViewCopy('es');
     act(() =>
       root.render(
         <CanvasRelationalTreeView
           outputName="Customers"
-          root={projectNode(2, 18)}
-          selectedLocator="project"
-          copy={resolveCanvasViewCopy(locale)}
-          onSelect={() => undefined}
-        />
-      )
-    );
-
-    expect(
-      container.querySelector('[data-slot="canvas-relational-node-title"]')?.textContent
-    ).toBe(title);
-    expect(container.textContent).toContain(summary);
-    expect(container.querySelector('[data-operator="project"]')).not.toBeNull();
-  });
-
-  it('keeps a ProjectRel without emitted expressions as a normal projection', () => {
-    const copy = resolveCanvasViewCopy('en');
-    act(() =>
-      root.render(
-        <CanvasRelationalTreeView
-          outputName="Customers"
-          root={projectNode(0, 2)}
+          root={projectNode('expression', 2, 0)}
           selectedLocator="project"
           copy={copy}
           onSelect={() => undefined}
@@ -81,9 +63,31 @@ describe('Canvas Expression/Derive stage presentation', () => {
       )
     );
 
-    expect(
-      container.querySelector('[data-slot="canvas-relational-node-title"]')?.textContent
-    ).toBe(copy.relationalTreeProjectOperationLabel);
-    expect(container.textContent).not.toContain('Derived:');
+    const card = container.querySelector('[data-presentation="expression"]');
+    expect(card).not.toBeNull();
+    expect(card?.textContent).toContain(copy.relationalTreeExpressionStageLabel);
+    expect(card?.textContent).toContain('2');
+    expect(card?.textContent).toContain('18');
+  });
+
+  it('renders one mixed field-transformation card for scalar and Window outputs', () => {
+    const copy = resolveCanvasViewCopy('en');
+    act(() =>
+      root.render(
+        <CanvasRelationalTreeView
+          outputName="Customers"
+          root={projectNode('field_transform', 2, 1)}
+          selectedLocator="project"
+          copy={copy}
+          onSelect={() => undefined}
+        />
+      )
+    );
+
+    const card = container.querySelector('[data-presentation="field_transform"]');
+    expect(card).not.toBeNull();
+    expect(card?.textContent).toContain(copy.relationalTreeFieldTransformationStageLabel);
+    expect(card?.textContent).toContain('2');
+    expect(card?.textContent).toContain('1');
   });
 });

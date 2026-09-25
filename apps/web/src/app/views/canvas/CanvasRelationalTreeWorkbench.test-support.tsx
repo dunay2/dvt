@@ -42,7 +42,10 @@ export const COPY = {
   relationalTreeSourceActionHint: 'Drag or press to add',
   relationalTreeProjectOperationLabel: 'PROJECT',
   relationalTreeExpressionStageLabel: 'EXPRESSION / DERIVE',
-  relationalTreeExpressionStageSummaryTemplate: 'Derived: {derived} · Passthrough: {passthrough}',
+  relationalTreeExpressionStageSummaryTemplate: 'Derived: {scalar} · Passthrough: {passthrough}',
+  relationalTreeFieldTransformationStageLabel: 'FIELD TRANSFORMATION',
+  relationalTreeFieldTransformationStageSummaryTemplate:
+    'Derived: {scalar} · Window: {window} · Passthrough: {passthrough}',
   inspectorDvtRelationalOperationTitle: 'Relate / compose',
   inspectorDvtRelationalAvailable: 'Available',
   inspectorDvtRelationalNeedsPredicate: 'Needs predicate',

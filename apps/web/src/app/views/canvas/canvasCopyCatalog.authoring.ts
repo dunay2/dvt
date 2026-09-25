@@ -882,7 +882,15 @@ export const canvasViewAuthoringCopyByKey = {
   },
   relationalTreeExpressionStageSummaryTemplate: {
     key: 'canvas.relationalTree.expressionStageSummaryTemplate',
-    fallback: 'Derived: {derived} · Passthrough: {passthrough}',
+    fallback: 'Derived: {scalar} · Passthrough: {passthrough}',
+  },
+  relationalTreeFieldTransformationStageLabel: {
+    key: 'canvas.relationalTree.fieldTransformationStageLabel',
+    fallback: 'FIELD TRANSFORMATION',
+  },
+  relationalTreeFieldTransformationStageSummaryTemplate: {
+    key: 'canvas.relationalTree.fieldTransformationStageSummaryTemplate',
+    fallback: 'Derived: {scalar} · Window: {window} · Passthrough: {passthrough}',
   },
   relationalTreeSecondaryInputTemplate: {
     key: 'canvas.relationalTree.secondaryInputTemplate',

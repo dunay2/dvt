@@ -1,5 +1,5 @@
 /** Owned concern: readable card content and accessible semantic input roles. */
-import { resolveCanvasRelationalNodePresentation } from './canvasRelationalNodePresentation';
+import { resolveCanvasRelationalNodeCopy } from './canvasRelationalNodePresentation';
 import type { CanvasRelationalTreePlacedNode } from './canvasRelationalTreeGeometry';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 
@@ -48,24 +48,8 @@ export function CanvasRelationalTreeNodeButton({
                   String(placed.ordinal + 1)
                 )
               : copy.inspectorDbtOriginLabel;
-  const subtitle = node.displayName ?? node.substraitKind;
   const isSource = node.operator === 'read';
-  const { presentation } = resolveCanvasRelationalNodePresentation(node);
-  const expressionStage =
-    node.operator === 'project' &&
-    node.operation === 'projection' &&
-    (node.projectionSummary?.derivedFieldCount ?? 0) > 0;
-  const title = isSource
-    ? subtitle
-    : expressionStage
-      ? copy.relationalTreeExpressionStageLabel
-      : copy[presentation.labelKey];
-  const detail =
-    expressionStage && node.projectionSummary != null
-      ? copy.relationalTreeExpressionStageSummaryTemplate
-          .replace('{derived}', String(node.projectionSummary.derivedFieldCount))
-          .replace('{passthrough}', String(node.projectionSummary.passthroughFieldCount))
-      : subtitle;
+  const { operation, presentation, title, detail } = resolveCanvasRelationalNodeCopy(node, copy);
   const Icon = presentation.icon;
   return (
     <button
@@ -83,6 +67,7 @@ export function CanvasRelationalTreeNodeButton({
       data-locator={node.locator}
       data-relation-id={node.relationId ?? undefined}
       data-operator={node.operator}
+      data-presentation={operation}
       onClick={() => {
         onSelect(node.locator);
         onExpand?.(node.locator);

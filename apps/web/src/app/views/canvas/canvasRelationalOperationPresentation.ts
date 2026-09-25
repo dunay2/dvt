@@ -1,14 +1,11 @@
 /** Owned concern: shared presentation metadata; never admission, execution or semantic authority. */
 import {
-  SetRel_SetOp,
-  type Rel,
-} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import {
   AlertTriangle,
   ArrowDownUp,
   ChartNoAxesCombined,
   Columns3,
   Filter,
+  FunctionSquare,
   Layers3,
   ListFilter,
   Sigma,
@@ -17,7 +14,6 @@ import {
 import { CanvasRelationalJoinIcon } from './CanvasRelationalJoinIcon';
 import type { CanvasViewCopy } from './canvasCopy.types';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
-import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
 
 export type CanvasRelationalOperationPresentation = Readonly<{
   labelKey: keyof CanvasViewCopy;
@@ -116,6 +112,8 @@ export type CanvasPresentationOperation =
   | 'read'
   | 'filter'
   | 'aggregate'
+  | 'expression'
+  | 'field_transform'
   | 'window'
   | 'sort'
   | 'fetch'
@@ -125,6 +123,16 @@ export const canvasRelationalUnaryPresentation = {
   read: { labelKey: 'operationReadLabel', icon: Table2, category: 'read' },
   filter: { labelKey: 'operationFilterLabel', icon: Filter, category: 'filter' },
   aggregate: { labelKey: 'operationAggregateLabel', icon: Sigma, category: 'aggregate' },
+  expression: {
+    labelKey: 'relationalTreeExpressionStageLabel',
+    icon: FunctionSquare,
+    category: 'project',
+  },
+  field_transform: {
+    labelKey: 'relationalTreeFieldTransformationStageLabel',
+    icon: FunctionSquare,
+    category: 'project',
+  },
   window: { labelKey: 'operationWindowLabel', icon: ChartNoAxesCombined, category: 'window' },
   sort: { labelKey: 'operationSortLabel', icon: ArrowDownUp, category: 'sort' },
   fetch: { labelKey: 'operationFetchLabel', icon: ListFilter, category: 'fetch' },
@@ -148,43 +156,4 @@ export function resolveCanvasRelationalOperationPresentation(operation: unknown)
     : canvasRelationalUnaryPresentation.unsupported;
 }
 
-/** Read the canonical selector, without inferring an operation from SQL or its display name. */
-export function canvasPresentationOperationForRel(rel: Rel): CanvasPresentationOperation {
-  switch (rel.relType.case) {
-    case 'join':
-      return canvasJoinOperationForType(rel.relType.value.type);
-    case 'cross':
-      return 'cross_join';
-    case 'read':
-    case 'filter':
-    case 'aggregate':
-    case 'sort':
-    case 'fetch':
-      return rel.relType.case;
-    case 'project':
-      return rel.relType.value.expressions.some(
-        (expression) => expression.rexType.case === 'windowFunction'
-      )
-        ? 'window'
-        : 'projection';
-    case 'set':
-      switch (rel.relType.value.op) {
-        case SetRel_SetOp.UNION_ALL:
-          return 'union_all';
-        case SetRel_SetOp.UNION_DISTINCT:
-          return 'union_distinct';
-        case SetRel_SetOp.INTERSECTION_MULTISET:
-          return 'intersect_distinct';
-        case SetRel_SetOp.MINUS_PRIMARY:
-          return 'except_distinct';
-        case SetRel_SetOp.INTERSECTION_MULTISET_ALL:
-          return 'intersect_all';
-        case SetRel_SetOp.MINUS_PRIMARY_ALL:
-          return 'except_all';
-        default:
-          return 'unsupported';
-      }
-    default:
-      return 'unsupported';
-  }
-}
+export { canvasPresentationOperationForRel } from './canvasRelationalOperationSelector';

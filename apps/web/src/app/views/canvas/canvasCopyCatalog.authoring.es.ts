@@ -259,7 +259,10 @@ export const canvasViewAuthoringCopyEs = {
   relationalTreePrimarySlotLabel: 'Operando izquierdo',
   relationalTreeProjectOperationLabel: 'PROYECCIÓN',
   relationalTreeExpressionStageLabel: 'EXPRESIÓN / DERIVACIÓN',
-  relationalTreeExpressionStageSummaryTemplate: 'Derivados: {derived} · Directos: {passthrough}',
+  relationalTreeExpressionStageSummaryTemplate: 'Derivados: {scalar} · Directos: {passthrough}',
+  relationalTreeFieldTransformationStageLabel: 'TRANSFORMACIÓN DE CAMPOS',
+  relationalTreeFieldTransformationStageSummaryTemplate:
+    'Derivados: {scalar} · Ventanas: {window} · Directos: {passthrough}',
   relationalTreeSecondaryInputTemplate: 'Entrada secundaria {ordinal}',
   relationalTreeSecondarySlotLabel: 'Operando derecho',
   relationalTreeReadOnlyMessage:

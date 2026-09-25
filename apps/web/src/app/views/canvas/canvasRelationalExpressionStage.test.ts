@@ -1,180 +1,60 @@
 import { describe, expect, it } from 'vitest';
-
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
 import {
-  createDvtSubstraitProjectionDraft,
-  encodeDvtSubstraitProjectionDocument,
-  resolveDvtSubstraitColumnFunctions,
-  type DvtSubstraitProjectionDraft,
-} from './canvasDvtSubstraitProjection';
-import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
-import {
-  projectCanvasRelationalTree,
-  type CanvasRelationalTreeProjection,
-} from './canvasRelationalTreeProjection';
-import { projectCanvasRelationalTreeSemanticZoom } from './canvasRelationalTreeSemanticZoom';
-
-const source: CanonicalNode = {
-  id: 'customers',
-  name: 'Customers',
-  pluginId: 'dvt',
-  kind: 'dvt:source',
-  role: 'input',
-  status: 'idle',
-  tags: [],
-  metadata: {
-    schema: 'public',
-    tableName: 'customers',
-    connectedSourceRef: {
-      schemaVersion: 'connected-source-ref.v1',
-      connectionRef: {
-        schemaVersion: 'connection-ref.v1',
-        connectionId: 'postgres-main',
-        provider: 'postgres',
-      },
-      sourceObjectId: 'public.customers',
-    },
-    columns: [
-      { name: 'customer_code', type: 'text' },
-      { name: 'country', type: 'text' },
-    ],
-  },
-};
-
-const edge: CanonicalEdge = {
-  id: 'customers-transform',
-  sourceId: source.id,
-  targetId: 'transform-customers',
-  relation: 'lineage',
-};
-
-function baseDraft(): DvtSubstraitProjectionDraft {
-  return createDvtSubstraitProjectionDraft({
-    source: {
-      nodeId: source.id,
-      schema: 'public',
-      table: 'customers',
-      sourceRef: source.metadata?.connectedSourceRef as never,
-      fields: [
-        { name: 'customer_code', dataType: 'text' },
-        { name: 'country', dataType: 'text' },
-      ],
-    },
-    targetNodeId: 'transform-customers',
-    outputs: [
-      {
-        fieldId: 'output:customer_code',
-        name: 'customer_code',
-        sourceFieldName: 'customer_code',
-      },
-      { fieldId: 'output:country', name: 'country', sourceFieldName: 'country' },
-    ],
-  });
-}
-
-function transform(draft: DvtSubstraitProjectionDraft): CanonicalNode {
-  return applyDvtSubstraitSemanticDocument(
-    {
-      id: 'transform-customers',
-      name: 'Customer normalization',
-      pluginId: 'dvt',
-      kind: 'dvt:transform',
-      role: 'transform',
-      status: 'idle',
-      tags: [],
-      metadata: {},
-    },
-    encodeDvtSubstraitProjectionDocument(draft)
-  );
-}
-
-function project(
-  draft: DvtSubstraitProjectionDraft
-): Readonly<{ node: CanonicalNode; projection: CanvasRelationalTreeProjection }> {
-  const node = transform(draft);
-  const result = projectCanvasRelationalTree({
-    node,
-    nodes: [source, node],
-    edges: [edge],
-  });
-  expect(result.ok).toBe(true);
-  if (!result.ok) throw new Error('Expected a relational-tree projection.');
-  return { node, projection: result.projection };
-}
+  expressionStageDraft,
+  projectExpressionStage,
+  withoutLastOutput,
+  withScalarOutput,
+  withWindowOutput,
+} from './canvasRelationalExpressionStage.test-support';
 
 describe('Canvas relational Expression/Derive stage projection', () => {
   it('keeps a direct ProjectRel as projection with only passthrough outputs', () => {
-    const { projection } = project(baseDraft());
+    const { projection } = projectExpressionStage(expressionStageDraft());
 
-    expect(projection.root.operator).toBe('project');
+    expect(projection.root.operation).toBe('projection');
     expect(projection.root.projectionSummary).toEqual({
-      derivedFieldCount: 0,
       passthroughFieldCount: 2,
+      scalarFieldCount: 0,
+      windowFieldCount: 0,
     });
   });
 
-  it('derives stage counts from emitted ProjectRel outputs, not from UI state', () => {
-    const upper = resolveDvtSubstraitColumnFunctions({
-      dataType: 'text',
-      provider: 'postgres',
-    }).find((candidate) => candidate.name === 'upper');
-    if (upper == null) throw new Error('Expected admitted UPPER capability.');
+  it('classifies an emitted scalar output as an Expression stage', () => {
+    const { projection } = projectExpressionStage(withScalarOutput());
 
-    const result = createDvtSubstraitProjectionOutput(
-      baseDraft(),
-      {
-        alias: 'customer_code_norm',
-        expression: {
-          kind: 'scalar-function',
-          operandFieldIds: ['output:customer_code'],
-          capabilityId: upper.capabilityId,
-        },
-      },
-      { inputDataTypes: ['text'], provider: 'postgres' }
-    );
-    if (result.outcome !== 'applied') throw new Error(result.reason);
-
-    const { projection } = project(result.draft);
+    expect(projection.root.operation).toBe('expression');
     expect(projection.root.projectionSummary).toEqual({
-      derivedFieldCount: 1,
       passthroughFieldCount: 2,
+      scalarFieldCount: 1,
+      windowFieldCount: 0,
     });
-    expect(projection.root.expressionRefs).toEqual([
-      { slot: 'project-expression', ordinal: 0 },
-    ]);
   });
 
-  it('reuses the canonical scalar graph as semantic zoom for a derived ProjectRel', () => {
-    const upper = resolveDvtSubstraitColumnFunctions({
-      dataType: 'text',
-      provider: 'postgres',
-    }).find((candidate) => candidate.name === 'upper');
-    if (upper == null) throw new Error('Expected admitted UPPER capability.');
+  it('keeps an emitted Window output distinct from scalar derivation', () => {
+    const { projection } = projectExpressionStage(withWindowOutput());
 
-    const result = createDvtSubstraitProjectionOutput(
-      baseDraft(),
-      {
-        alias: 'customer_code_norm',
-        expression: {
-          kind: 'scalar-function',
-          operandFieldIds: ['output:customer_code'],
-          capabilityId: upper.capabilityId,
-        },
-      },
-      { inputDataTypes: ['text'], provider: 'postgres' }
-    );
-    if (result.outcome !== 'applied') throw new Error(result.reason);
-
-    const { node, projection } = project(result.draft);
-    const detail = projectCanvasRelationalTreeSemanticZoom(projection.root, {
-      transformNode: node,
+    expect(projection.root.operation).toBe('window');
+    expect(projection.root.projectionSummary).toEqual({
+      passthroughFieldCount: 2,
+      scalarFieldCount: 0,
+      windowFieldCount: 1,
     });
-    const graph = detail.graphs.get(projection.root.locator);
+  });
 
-    expect(graph).toBeDefined();
-    expect(graph?.nodes.some((entry) => entry.data.label.startsWith('UPPER'))).toBe(true);
-    expect(graph?.nodes.some((entry) => entry.data.semanticKind === 'field')).toBe(true);
-    expect(detail.sizes.has(projection.root.locator)).toBe(true);
+  it('projects scalar and Window outputs in one field-transformation stage', () => {
+    const { projection } = projectExpressionStage(withWindowOutput(withScalarOutput()));
+
+    expect(projection.root.operation).toBe('field_transform');
+    expect(projection.root.projectionSummary).toEqual({
+      passthroughFieldCount: 2,
+      scalarFieldCount: 1,
+      windowFieldCount: 1,
+    });
+  });
+
+  it('fails closed when an authored expression is not emitted', () => {
+    expect(() => projectExpressionStage(withoutLastOutput(withScalarOutput()))).toThrow(
+      'Substrait connected-source projection is invalid.'
+    );
   });
 });
