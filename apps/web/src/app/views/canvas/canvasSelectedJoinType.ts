@@ -25,8 +25,10 @@ export const editableJoinTypes = [
 ] as const;
 const admitted = new Set<JoinRel_JoinType>(editableJoinTypes);
 
-export function joinOutputScope(type: DvtSubstraitJoinType, widths: readonly number[]) {
-  const retained = dvtSubstraitJoinRetainedSide(type);
+export function joinOutputScope(type: JoinRel_JoinType, widths: readonly number[]) {
+  if (!admitted.has(type))
+    throw new SubstraitAnalysisError('unsupported_relation', 'Unknown JOIN output semantics.');
+  const retained = dvtSubstraitJoinRetainedSide(type as DvtSubstraitJoinType);
   return Array.from({ length: widths[0]! + widths[1]! }, (_, ordinal) => ordinal).filter(
     (ordinal) =>
       retained === 'both' || (ordinal < widths[0]! ? retained === 'left' : retained === 'right')

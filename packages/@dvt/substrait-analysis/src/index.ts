@@ -14,6 +14,7 @@ export {
 } from './relationSchema.js';
 export { isSchemaTypeNullable, type SchemaField } from './schemaTypes.js';
 export { deriveExpressionSchema } from './schemaExpression.js';
+export { deriveOperatorSchema } from './schemaOperators.js';
 export { RelationAnalysisSession, type RelationAnalysisResult } from './relationAnalysisSession.js';
 export { MemoryRelationAnalysisCache } from './memoryAnalysisCache.js';
 export type {
