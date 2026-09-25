@@ -1,32 +1,24 @@
-/** Owns compact card summaries derived from canonical DVT relation semantics. */
+/** Localize the shared semantic presentation; cards never decode or analyze a plan. */
 import type { CanonicalNode } from '../../types/canonical';
-import { decodeDvtSubstraitProjectionDocument } from '../../views/canvas/canvasDvtSubstraitProjection';
-import { inspectDvtSubstraitFilter } from '../../views/canvas/canvasDvtSubstraitFilter';
-import { readDvtTransformAuthoringAuthority } from '../../views/canvas/canvasDvtTransformAuthoringAuthority';
+import { isCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import { resolveGraphNodeCardCopy } from '../graph/graphNodeCardCopyTokens';
 import type { GraphNodeCardMetric } from '../graph/graphNodeCardStrategyContracts';
 
 export function buildDvtGraphNodeSemanticMetric(
   node: CanonicalNode,
+  presentation: unknown,
   locale?: string
 ): GraphNodeCardMetric | null {
-  if (node.kind !== 'dvt:transform') return null;
-  try {
-    const authority = readDvtTransformAuthoringAuthority(node);
-    const filter =
-      authority == null
-        ? null
-        : inspectDvtSubstraitFilter(
-            decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
-          );
-    return filter == null
-      ? null
-      : {
-          id: 'filter',
-          label: resolveGraphNodeCardCopy(locale).filterLabel,
-          value: `${filter.fieldName} = ${JSON.stringify(filter.value)}`,
-        };
-  } catch {
+  if (
+    node.kind !== 'dvt:transform' ||
+    !isCanvasNodePresentationTruth(presentation) ||
+    presentation.columns.state !== 'ready' ||
+    presentation.filterSummary == null
+  )
     return null;
-  }
+  return {
+    id: 'filter',
+    label: resolveGraphNodeCardCopy(locale).filterLabel,
+    value: presentation.filterSummary,
+  };
 }

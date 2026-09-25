@@ -1,10 +1,8 @@
 /** Repeat a Read, preserve field identity, then query its physical source explicitly. */
 import { SourceDataSampleResponseSchema } from '@dvt/contracts';
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 
-import {
-  decodeDvtSubstraitJoinDocument,
-  inspectDvtSubstraitJoinDraft,
-} from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
+import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
 import {
   openWorkbenchModel,
@@ -64,11 +62,12 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
     cy.wrap(null).should(() => {
       const write = semanticWrites('join-transform').at(-1);
       expect(write).not.to.equal(undefined);
-      const draft = decodeDvtSubstraitJoinDocument(semanticDocumentFromWrite(write!));
-      const inspection = inspectDvtSubstraitJoinDraft(draft);
-      expect(inspection.ok).to.equal(true);
-      if (!inspection.ok) throw new Error('Saved occurrence JOIN rejected');
-      const inputs = inspection.projection.inputs;
+      const draft = decodeDvtSubstraitSemanticDocument(semanticDocumentFromWrite(write!));
+      const { index } = deriveSubstraitSchemas(draft);
+      const inputs = [...index.relations.values()]
+        .filter((entry) => entry.relation.relType.case === 'read')
+        .map((entry) => entry.binding)
+        .sort((left, right) => left.relAnchor - right.relAnchor);
       expect(inputs).to.have.length(3);
       expect(inputs.slice(0, 2).map((input) => input.relationId)).to.deep.equal(originalReads);
       expect(new Set(inputs.map((input) => input.relationId)).size).to.equal(3);

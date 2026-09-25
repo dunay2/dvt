@@ -1,150 +1,104 @@
-/** Owned concern: stable Read occurrence identities throughout canonical JOIN editing. */
 import { describe, expect, it } from 'vitest';
-import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { CanvasRelationAnalysisSession } from '../canvasRelationAnalysisSession';
+import { composeSourceRelation } from '../canvasComposeSourceRelation';
+import { prepareRelationRemoval } from '../canvasPrepareRelationRemoval';
+import { occurrenceInput, repeatedOccurrenceDraft } from './occurrence.test.fixtures';
 import {
-  appendDvtSubstraitJoinInput,
-  applyDvtSubstraitInnerJoinFieldEdit,
-  decodeDvtSubstraitJoinDocument,
-  encodeDvtSubstraitJoinDocument,
-  inspectDvtSubstraitJoinDraft,
-  retainDvtSubstraitJoinInputs,
-  setDvtSubstraitJoinType,
-  type DvtSubstraitJoinDraft,
-  type DvtSubstraitNInputJoinProjection,
-} from '../canvasDvtSubstraitJoinComposition';
-import {
-  occurrenceInput as input,
-  repeatedOccurrenceDraft as repeated,
-} from './occurrence.test.fixtures';
+  decodeDvtSubstraitSemanticDocument,
+  encodeDvtSubstraitSemanticDocument,
+} from '../canvasDvtSubstraitSemanticDocument';
 
-function inspect(draft: DvtSubstraitJoinDraft): DvtSubstraitNInputJoinProjection {
-  const result = inspectDvtSubstraitJoinDraft(draft);
-  if (!result.ok) throw new Error('Expected an admitted canonical JOIN');
-  return result.projection;
-}
+const input = {
+  ...occurrenceInput.source,
+  fields: occurrenceInput.fields.map((name, ordinal) => ({
+    name,
+    dataType: 'bigint',
+    joinDataType: occurrenceInput.fieldTypes![ordinal]!,
+    nullable: occurrenceInput.fieldNullabilities![ordinal]!,
+  })),
+};
 
-function append(draft: DvtSubstraitJoinDraft): DvtSubstraitJoinDraft {
-  return appendDvtSubstraitJoinInput(draft, {
-    ...input,
-    predicate: {
-      leftSourceFieldId: inspect(draft).inputs[0]!.fields[0]!.fieldId,
-      rightFieldName: 'id',
-    },
-    selectedFields: input.fields,
-  });
-}
-
-describe('canonical JOIN occurrence identity', () => {
-  it('allocates separate identities for the same physical source and survives serialization', () => {
-    const draft = repeated();
-    const before = inspect(draft);
-    expect(before.inputs).toHaveLength(2);
-    expect(new Set(before.inputs.map((item) => item.relationId)).size).toBe(2);
-    expect(
-      new Set(before.inputs.flatMap((item) => item.fields.map((field) => field.fieldId))).size
-    ).toBe(4);
-    expect(before.inputs.map((item) => item.sourceRef)).toEqual([
-      input.source.sourceRef,
-      input.source.sourceRef,
-    ]);
-    expect(inspect(decodeDvtSubstraitJoinDocument(encodeDvtSubstraitJoinDocument(draft)))).toEqual(
-      before
-    );
-  });
-
-  it('preserves both occurrences and their aliases when changing the JOIN type', () => {
-    const initial = repeated();
-    const before = inspect(initial);
-    const draft = {
-      ...initial,
-      sidecar: {
-        ...initial.sidecar,
-        relations: initial.sidecar.relations.map((relation) => ({
-          ...relation,
-          displayName:
-            relation.relationId === before.inputs[1]!.relationId
-              ? 'Parent place'
-              : relation.displayName,
-        })),
-      },
-    };
-    const changed = setDvtSubstraitJoinType({
-      draft,
-      joinRelationId: before.joinRelations[0]!.relationId,
-      joinType: JoinRel_JoinType.INNER,
+describe('independent source occurrences', () => {
+  it('composes six occurrences, removes an independent middle input and retains identities across persistence', async () => {
+    const session = new CanvasRelationAnalysisSession('occurrences');
+    session.receive(repeatedOccurrenceDraft());
+    const original = session.locate(session.rootId, session.revision);
+    const firstOutput = (await session.query(session.rootId)).bindings[0]!.fieldId;
+    await composeSourceRelation(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      operation: 'inner_join',
+      input,
+      predicate: { leftSourceFieldId: firstOutput, rightFieldName: 'id' },
     });
-    expect(inspect(changed).inputs).toEqual(before.inputs);
-    expect(
-      changed.sidecar.relations.find(
-        (relation) => relation.relationId === before.inputs[1]!.relationId
-      )?.displayName
-    ).toBe('Parent place');
-    expect(inspect(changed).joinRelations[0]!.joinType).toBe(JoinRel_JoinType.INNER);
-  });
-
-  it('keeps first and third identities when removing the independent middle occurrence', () => {
-    const draft = append(repeated());
-    const before = inspect(draft);
-    expect(before.inputs).toHaveLength(3);
-    const retained = retainDvtSubstraitJoinInputs(draft, [0, 2]);
-    expect(retained).not.toBeNull();
-    expect(inspect(retained!).inputs).toEqual([before.inputs[0], before.inputs[2]]);
-    expect(inspect(retained!).outputs.map((output) => output.fieldId)).toEqual(
-      before.outputs
-        .filter((output) => output.source.inputIndex !== 1)
-        .map((output) => output.fieldId)
-    );
-  });
-
-  it('does not impose a four-occurrence limit through output naming collisions', () => {
-    let draft = repeated();
-    for (let index = 0; index < 4; index += 1) draft = append(draft);
-    const result = inspect(draft);
-    expect(result.inputs).toHaveLength(6);
-    expect(new Set(result.outputs.map((output) => output.name)).size).toBe(12);
-    expect(new Set(result.inputs.map((item) => item.relationId)).size).toBe(6);
-  });
-
-  it('changes output participation by field identity without touching the other occurrence', () => {
-    const draft = repeated();
-    const before = inspect(draft);
-    const fieldId = before.inputs[0]!.fields[0]!.fieldId;
-    const changed = applyDvtSubstraitInnerJoinFieldEdit(draft, {
-      kind: 'set-selected',
-      sourceFieldId: fieldId,
-      selected: false,
+    for (let count = 0; count < 3; count += 1) {
+      const field = (await session.query(session.rootId)).bindings[0]!;
+      await composeSourceRelation(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        operation: 'inner_join',
+        input,
+        predicate: { leftSourceFieldId: field.fieldId, rightFieldName: 'id' },
+      });
+    }
+    const occurrences = session.matchingSources(input.sourceRef, session.revision);
+    expect(occurrences).toHaveLength(6);
+    expect(new Set(occurrences).size).toBe(6);
+    const before = await session.query(session.rootId);
+    expect(new Set(before.bindings.map((field) => field.displayName)).size).toBe(12);
+    const proposal = await prepareRelationRemoval(session, {
+      relationId: original.inputs[1]!,
+      expectedRevision: session.revision,
     });
-    const after = inspect(changed);
-    expect(after.inputs).toEqual(before.inputs);
-    expect(after.joins).toEqual(before.joins);
-    expect(after.outputs.map((output) => output.source.fieldId)).toEqual(
-      before.outputs
-        .filter((output) => output.source.fieldId !== fieldId)
-        .map((output) => output.source.fieldId)
+    const removed = session.apply(proposal.change);
+    expect(session.matchingSources(input.sourceRef, session.revision)).toEqual(
+      occurrences.filter((id) => id !== original.inputs[1])
     );
+    const remaining = await session.query(session.rootId);
+    const survivedIds = new Set(remaining.bindings.map((field) => field.fieldId));
+    expect(remaining.bindings).toHaveLength(10);
+    expect(
+      before.bindings
+        .filter((field) => survivedIds.has(field.fieldId))
+        .map((field) => field.fieldId)
+    ).toEqual(remaining.bindings.map((field) => field.fieldId));
+    const reopened = new CanvasRelationAnalysisSession('reopened');
+    reopened.receive(
+      decodeDvtSubstraitSemanticDocument(encodeDvtSubstraitSemanticDocument(removed))
+    );
+    expect((await reopened.query(reopened.rootId)).bindings).toEqual(remaining.bindings);
   });
 
-  it.each([
-    { ...input, source: { ...input.source, table: 'other_table' } },
-    { ...input, fields: ['id', 'different'] },
-    { ...input, fieldTypes: ['string', 'i64'] as const },
-    { ...input, fieldNullabilities: [true, true] },
-  ])(
-    'rejects inconsistent physical provenance without changing the original draft',
-    (inconsistent) => {
-      const draft = repeated();
-      const encoded = encodeDvtSubstraitJoinDocument(draft);
-      expect(
-        appendDvtSubstraitJoinInput(draft, {
-          ...inconsistent,
-          predicate: {
-            leftSourceFieldId: inspect(draft).inputs[0]!.fields[0]!.fieldId,
-            rightFieldName: 'id',
-          },
-          selectedFields: inconsistent.fields,
+  it.each(['table', 'fields', 'type', 'nullability'] as const)(
+    'rejects inconsistent repeated physical %s atomically',
+    async (fault) => {
+      const session = new CanvasRelationAnalysisSession('occurrence-rejection');
+      session.receive(repeatedOccurrenceDraft());
+      const before = await session.query(session.rootId);
+      const changed = {
+        ...input,
+        table: fault === 'table' ? 'other' : input.table,
+        fields: input.fields.map((field, ordinal) =>
+          ordinal > 0
+            ? field
+            : {
+                ...field,
+                name: fault === 'fields' ? 'changed' : field.name,
+                joinDataType: fault === 'type' ? ('string' as const) : field.joinDataType,
+                nullable: fault === 'nullability' ? !field.nullable : field.nullable,
+              }
+        ),
+      };
+      await expect(
+        composeSourceRelation(session, {
+          relationId: session.rootId,
+          expectedRevision: session.revision,
+          operation: 'cross_join',
+          input: changed,
         })
-      ).toBe(draft);
-      expect(encodeDvtSubstraitJoinDocument(draft)).toEqual(encoded);
+      ).rejects.toThrow();
+      expect(await session.query(session.rootId)).toEqual(before);
+      expect(session.matchingSources(input.sourceRef, session.revision)).toHaveLength(2);
     }
   );
 });

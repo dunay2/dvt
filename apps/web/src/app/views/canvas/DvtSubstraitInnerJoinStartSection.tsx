@@ -14,16 +14,12 @@ import {
   type CanvasDvtInitialJoinPair,
   type CanvasDvtInitialJoinSelection,
 } from './canvasDvtInitialJoinModel';
-import {
-  addDvtSubstraitJoinPredicateCondition,
-  inspectDvtSubstraitJoinDraft,
-  removeDvtSubstraitJoinPredicateCondition,
-  updateDvtSubstraitJoinPredicateCondition,
-  type DvtSubstraitJoinType,
-  type DvtSubstraitJoinDraft,
-} from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinType } from '@dvt/postgres-projection';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { canvasViewCopy } from './copy';
-import { SemanticWorkbenchJoinConditionEditor } from './SemanticWorkbenchJoinConditionEditor';
+import { CanvasRelationalTreeJoinEditor } from './CanvasRelationalTreeJoinEditor';
+import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
+import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
 
@@ -42,7 +38,7 @@ export function DvtSubstraitInnerJoinStartSection({
   inputs: readonly CanvasDvtCompositionInput[];
   initialSelection?: CanvasDvtInitialJoinSelection;
   joinType?: DvtSubstraitJoinType;
-  onApply: (draft: DvtSubstraitJoinDraft) => void;
+  onApply: (draft: SubstraitDocument) => void;
   onCancel: () => void;
 }>): JSX.Element | null {
   const availableInputs = useMemo(() => resolveCanvasDvtInitialJoinInputs(inputs), [inputs]);
@@ -62,11 +58,9 @@ export function DvtSubstraitInnerJoinStartSection({
       ? null
       : createCanvasDvtInitialJoinDraft(availableInputs, initialPair, targetNodeId, joinType)
   );
-  if (availableInputs.length < 2) return null;
+  const analysis = useCanvasRelationAnalysisSession(draft, targetNodeId);
+  if (availableInputs.length === 0) return null;
 
-  const inspection = draft == null ? null : inspectDvtSubstraitJoinDraft(draft);
-  const joinRelation = inspection?.ok ? inspection.projection.joinRelations[0] : undefined;
-  const predicate = inspection?.ok ? inspection.projection.joins[0] : undefined;
   const leftInput = availableInputs.find((input) => input.nodeId === selectedInputs.leftNodeId);
   const rightInputs =
     leftInput == null ? [] : resolveCanvasDvtInitialJoinRightInputs(availableInputs, leftInput);
@@ -158,48 +152,16 @@ export function DvtSubstraitInnerJoinStartSection({
           ))}
         </select>
       </label>
-      {inspection?.ok && joinRelation != null && predicate != null ? (
-        <SemanticWorkbenchJoinConditionEditor
-          projection={inspection.projection}
-          rightInputIndex={1}
-          conditions={predicate.conditions}
-          onAdd={(condition, groupWithPrevious) =>
-            setDraft((current) =>
-              current == null
-                ? current
-                : addDvtSubstraitJoinPredicateCondition({
-                    draft: current,
-                    joinRelationId: joinRelation.relationId,
-                    condition,
-                    groupWithPrevious,
-                  })
-            )
-          }
-          onUpdate={(conditionKey, condition) =>
-            setDraft((current) =>
-              current == null
-                ? current
-                : updateDvtSubstraitJoinPredicateCondition({
-                    draft: current,
-                    joinRelationId: joinRelation.relationId,
-                    conditionKey,
-                    condition,
-                  })
-            )
-          }
-          onRemove={(conditionKey) =>
-            setDraft((current) =>
-              current == null
-                ? current
-                : removeDvtSubstraitJoinPredicateCondition({
-                    draft: current,
-                    joinRelationId: joinRelation.relationId,
-                    conditionKey,
-                  })
-            )
+      <CanvasRelationAnalysisContext.Provider value={analysis}>
+        <CanvasRelationalTreeJoinEditor
+          copy={canvasViewCopy}
+          onChange={setDraft}
+          disabled={disabled}
+          selectedRelationId={
+            analysis?.document != null && analysis.error == null ? analysis.session.rootId : null
           }
         />
-      ) : null}
+      </CanvasRelationAnalysisContext.Provider>
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"

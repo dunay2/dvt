@@ -1,93 +1,30 @@
+/** Keep the local lab on the production editor and command rail, without a second engine. */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
-const SOURCE = readFileSync(join(import.meta.dirname, 'SemanticWorkbenchLab.tsx'), 'utf8');
-const PANEL = readFileSync(
-  join(import.meta.dirname, '../views/canvas/SemanticTransformFocusPanel.tsx'),
-  'utf8'
-);
-const JOIN_CONDITION_EDITOR = readFileSync(
-  join(import.meta.dirname, '../views/canvas/SemanticWorkbenchJoinConditionEditor.tsx'),
-  'utf8'
-);
-
-describe('SemanticWorkbenchLab architecture', () => {
-  it('delegates independent card movement to the production DVT viewport model', () => {
-    expect(SOURCE).toContain('useCanvasViewportGraphModel');
-    expect(SOURCE).toContain('onNodesChange={canvasProcess.onNodesChange}');
-    expect(SOURCE).toContain('nodesDraggable');
-    expect(SOURCE).not.toContain('applyNodeChanges(');
-  });
-
-  it('uses React Flow node state only to preserve movable semantic group geometry', () => {
-    expect(PANEL).toContain('useNodesState(');
-    expect(PANEL).toContain('const positions = new Map(');
-    expect(PANEL).toContain('onNodesChange={onNodesChange}');
-  });
-
-  it('reuses the DVT data table and existing source sample callback', () => {
-    expect(SOURCE).toContain('metadata?.sampleRows');
-    expect(SOURCE).toContain('fixture.projectTransformSample(fixture.transform)');
-    expect(SOURCE).toContain('OperationalDrawerDataTable');
-    expect(SOURCE).toContain('onOpenSourceDataSample: openSourceDataSample');
-    expect(SOURCE).toContain('dataActionLabel:');
-    expect(SOURCE).not.toContain('<table');
-  });
-
-  it('reuses the canonical Node Workbench without a second properties surface', () => {
-    expect(SOURCE).toContain("from '../views/canvas/CanvasNodeWorkbenchOverlay'");
-    expect(SOURCE).toContain('<CanvasNodeWorkbenchOverlay');
-    expect(SOURCE).toContain('onInspectNode: handleInspectNode');
-    expect(SOURCE).not.toContain("from '../views/canvas/CanvasNodeWorkbenchPanel'");
-    expect(SOURCE).not.toContain("from '../components/ui/context-menu'");
-  });
-
-  it('keeps semantic and Canvas projections memoized across Workbench state changes', () => {
-    expect(SOURCE).toContain('<SemanticTransformFocusPanel');
-    expect(PANEL).toContain('projectSemanticWorkbenchGraph(transform)');
-    expect(SOURCE).toContain('useState(() => buildCanvasProcess(fixture))');
-    expect(SOURCE).toContain('useCanvasViewportGraphModel(liveCanvasProjection)');
-    expect(SOURCE).toContain('canonicalNodesById: new Map(');
-    expect(SOURCE).not.toContain('useMemo(() => buildCanvasProcess(fixture), [fixture])');
-  });
-
-  it('routes Source field selection through the existing Substrait join authority', () => {
-    expect(SOURCE).toContain('onToggleCanvasColumnOutput: toggleConnectionColumn');
-    expect(SOURCE).toContain('setDvtSubstraitJoinConnectionFieldSelected');
-    expect(SOURCE).toContain('onEdgeClick={(_, edge) => setSelectedConnectionId(edge.id)}');
-    expect(SOURCE).not.toContain('selectedSourceFields:');
-  });
-
-  it('renders grouped Substrait nodes and one factual read-only inspector', () => {
-    expect(PANEL).toContain('data-slot="semantic-workbench-node"');
-    expect(PANEL).toContain('data-slot="semantic-workbench-inspector"');
-    expect(PANEL).toContain('setSelectedSemanticId');
-    expect(PANEL).toContain('Tooltip');
-    expect(PANEL).not.toContain('setDvtSubstraitJoinPredicateFields');
-    expect(PANEL).toContain('addDvtSubstraitJoinPredicateCondition');
-    expect(PANEL).toContain('updateDvtSubstraitJoinPredicateCondition');
-    expect(PANEL).toContain('removeDvtSubstraitJoinPredicateCondition');
-    expect(PANEL).toContain('conditions={selectedJoinPredicate.conditions}');
-    expect(PANEL).not.toContain('PendingJoinPredicate');
-    expect(JOIN_CONDITION_EDITOR).toContain('label="Añadir condición"');
-    expect(PANEL).toContain("details.join(' · ')");
-    expect(PANEL).toContain('selectedSemantic?.data.joinOperand');
-    expect(JOIN_CONDITION_EDITOR).toContain('Conector de la condición');
-    expect(JOIN_CONDITION_EDITOR).toContain('Comparador de la condición');
-    expect(JOIN_CONDITION_EDITOR).toContain('DVT_SUBSTRAIT_JOIN_PREDICATE_OPERATORS');
-    expect(PANEL).not.toContain('Impacto estimado');
-    expect(PANEL).not.toContain('Editar nodo');
-  });
-
-  it('uses one symmetric operand editor for both sides of every JOIN condition', () => {
-    expect(PANEL).toContain('<SemanticWorkbenchJoinConditionEditor');
-    expect(PANEL).not.toContain('<SemanticWorkbenchJoinOperandEditor');
-    expect(JOIN_CONDITION_EDITOR.match(/<SemanticWorkbenchJoinOperandEditor/g)).toHaveLength(2);
-    expect(JOIN_CONDITION_EDITOR).toContain('conditionDraft.left');
-    expect(JOIN_CONDITION_EDITOR).toContain('conditionDraft.right');
-    expect(JOIN_CONDITION_EDITOR).toContain('Editar condición');
-    expect(JOIN_CONDITION_EDITOR).toContain('Eliminar condición');
-    expect(PANEL).not.toContain('rightSourceFieldId: string | null;');
+describe('semantic lab dependency boundary', () => {
+  it('depends on the production editor and existing authoring command, not provider admission or a duplicate panel', () => {
+    const path = join(import.meta.dirname, 'SemanticWorkbenchLab.tsx');
+    const source = ts.createSourceFile(
+      path,
+      readFileSync(path, 'utf8'),
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TSX
+    );
+    const dependencies = source.statements
+      .filter(ts.isImportDeclaration)
+      .map((statement) =>
+        ts.isStringLiteral(statement.moduleSpecifier) ? statement.moduleSpecifier.text : ''
+      );
+    expect(dependencies).toEqual(
+      expect.arrayContaining([
+        '../views/canvas/CanvasRelationalTreeWorkbench',
+        '../views/canvas/canvasInspectorAuthoringCommand',
+      ])
+    );
+    expect(dependencies.filter((dependency) => dependency.startsWith('@dvt/'))).toEqual([]);
   });
 });

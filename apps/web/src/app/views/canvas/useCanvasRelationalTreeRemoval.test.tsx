@@ -2,7 +2,7 @@
 import React, { act } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { setupWorkbenchTest, root } from './CanvasRelationalTreeWorkbench.test-support';
-import { createDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { createCustomerOrdersJoin } from './canvasJoin.test-support';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetch';
@@ -22,7 +22,7 @@ describe('selected unary removal lifetime', () => {
     async ({ operator, outcome }) => {
       const session = new CanvasRelationAnalysisSession('model');
       session.receive(
-        createDvtSubstraitJoinDraft({
+        createCustomerOrdersJoin({
           left: source('records'),
           right: source('related'),
           targetNodeId: 'model',
@@ -63,12 +63,10 @@ describe('selected unary removal lifetime', () => {
         removal = useCanvasRelationalTreeRemoval({
           enabled,
           analysis,
-          operation: 'inner_join',
           active: true,
           draft,
-          selectedInputIds: ['source'],
+          selectedInputIds: ['records', 'related'],
           seed: null,
-          targetNodeId: 'model',
           hydrate: () => true,
           accept,
         });

@@ -1,12 +1,10 @@
-/** Owned concern: admit explicit occurrence edits without changing physical provenance. */
-import { CanvasHumanNameV1Schema } from '@dvt/contracts';
-import { hasSameConnectionRef, inspectDvtSubstraitJoinDraft } from '@dvt/postgres-projection';
+/** Admit a new occurrence from the already derived output, never from a PostgreSQL tree profile. */
+import type { RelationAnalysisResult } from '@dvt/substrait-analysis';
+import type { CanvasRelationAnalysisSession } from '../canvasRelationAnalysisSession';
 import type { CanvasDvtCompositionInput } from '../canvasDvtCompositionInputCatalog';
-import { resolveCanvasDvtJoinFieldPair } from '../canvasDvtJoinTypeAdmission';
-import {
-  inspectDvtSubstraitJoinPredicateContext,
-  type DvtSubstraitJoinDraft,
-} from '../canvasDvtSubstraitJoinComposition';
+import { conditionDataType } from '../canvasSelectedJoin';
+import type { CanvasRelationalOperation } from '../canvasRelationalOperationChoices';
+import { isCanvasSetOperation } from '../canvasRelationalOperationChoices';
 
 export type SourceOccurrenceRejection =
   'read_only' | 'unsupported' | 'unavailable' | 'incompatible';
@@ -14,54 +12,28 @@ export type SourceOccurrenceRejection =
 export function sourceOccurrenceAppendRejection(
   args: Readonly<{
     editable: boolean;
-    draft: DvtSubstraitJoinDraft | null;
+    output: RelationAnalysisResult | null;
+    session: CanvasRelationAnalysisSession | null;
+    revision: number;
     input: CanvasDvtCompositionInput | undefined;
+    operation?: CanvasRelationalOperation | null;
   }>
 ): SourceOccurrenceRejection | null {
   if (!args.editable) return 'read_only';
   if (args.input == null) return 'unavailable';
-  const inspection = args.draft == null ? null : inspectDvtSubstraitJoinDraft(args.draft);
-  if (!inspection?.ok) return 'unsupported';
-  const connection = inspection.projection.inputs[0]?.sourceRef.connectionRef;
-  if (connection == null || !hasSameConnectionRef(connection, args.input.sourceRef.connectionRef))
+  if (args.output == null || args.session == null) return 'unsupported';
+  try {
+    args.session.matchingSources(args.input.sourceRef, args.revision);
+  } catch {
     return 'unavailable';
-  const pair = resolveCanvasDvtJoinFieldPair(
-    inspection.projection.outputs.map((output) => ({
-      name: output.source.name,
-      joinDataType: output.dataType,
-    })),
-    args.input.fields
-  );
-  return pair == null ? 'incompatible' : null;
-}
-
-export function renameSourceOccurrence(
-  draft: DvtSubstraitJoinDraft,
-  relationId: string,
-  alias: string
-):
-  | { ok: true; draft: DvtSubstraitJoinDraft }
-  | { ok: false; reason: 'invalid_alias' | 'unsupported' } {
-  const name = CanvasHumanNameV1Schema.safeParse(alias);
-  if (!name.success) return { ok: false, reason: 'invalid_alias' };
-  const context = inspectDvtSubstraitJoinPredicateContext(draft);
-  const read = draft.sidecar.relations.find((binding) => binding.relationId === relationId);
-  if (
-    read?.sourceRef == null ||
-    !context?.inspection.projection.inputs.some((input) => input.relationId === relationId)
-  )
-    return { ok: false, reason: 'unsupported' };
-  if (read.displayName === name.data) return { ok: true, draft };
-  return {
-    ok: true,
-    draft: {
-      ...draft,
-      sidecar: {
-        ...draft.sidecar,
-        relations: draft.sidecar.relations.map((binding) =>
-          binding === read ? { ...binding, displayName: name.data } : binding
-        ),
-      },
-    },
-  };
+  }
+  const types = args.input.fields.map((field) => field.joinDataType);
+  if (types.length === 0 || types.some((type) => type == null)) return 'incompatible';
+  if (args.operation === 'cross_join' || args.operation === 'projection' || args.operation == null)
+    return null;
+  const outputs = args.output.fields.map((field) => conditionDataType(field.type.kind.case));
+  const compatible = isCanvasSetOperation(args.operation)
+    ? outputs.length === types.length && outputs.every((type, index) => type === types[index])
+    : outputs.some((type) => type != null && types.includes(type));
+  return compatible ? null : 'incompatible';
 }

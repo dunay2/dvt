@@ -13,6 +13,7 @@ code_refs:
   - packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanFieldPolicy.v1.ts
+  - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts
   - packages/@dvt/substrait-analysis/src/relationChangeSet.ts
   - packages/@dvt/postgres-projection/src/relationalSql/project.ts
   - apps/api/src/infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.ts
@@ -220,3 +221,89 @@ all three cases; the source-filter proof now uses the shared form's visible cont
 The contract traceability header and generated manifest also pass
 `pnpm traceability:adr0`. These corrections remain subject to the final committed
 pre-push and PR checks.
+
+## Selected-relation authoring hard cut — 2026-09-25
+
+The [approved hard-cut plan](https://github.com/dunay2/dvt/issues/3369#issuecomment-5823167237)
+removes shape-specific JOIN, CROSS, SET, aggregate, window and sort/fetch authoring
+modules before migrating their consumers. The first typecheck was intentionally
+RED on missing imports. The pilot forms, whole-tree command dispatch, seed
+hydration and JOIN-only output authoring are deleted, not compatibility wrappers.
+
+Operator forms now edit an exact RelationId at an expected session revision.
+Shared selected-relation commands validate the local change, rebind affected
+consumer fields and commit through the existing draft/Apply boundary. Source
+occurrences, output selection and the semantic lab use those same commands.
+Substrait and its sidecar remain the authority; no additional IR or SQL-derived
+authoring model was introduced. Existing incremental analysis and its bounded
+cache remain behind `CanvasRelationAnalysisSession`. Full document receipt,
+serialization and hashing at Apply are still explicit whole-document boundaries.
+
+Asynchronous card queries retain the last ready presentation while pending, but
+disable stale field commands. Output controls retain DOM identity and keyboard
+focus during that interval. Typed commands reject stale revisions, cancelled
+work, foreign fields and invalid output references without publishing edits.
+The browser proof also exposed identity aliasing when a pending input shared a
+field name with a selected output. Two RED unit cases demonstrated that the card
+adapter replaced distinct references with the output's reference. The adapter now
+matches identified fields by reference, including pending inherited fields;
+display-name matching cannot override an existing identity. Both cases are GREEN.
+
+Validation completed before final closeout:
+
+- `pnpm --filter @dvt/web typecheck`: passed.
+- `pnpm --filter @dvt/web test:canvas-unit:run`: 1,283 passed after the pending-field identity correction.
+- `pnpm --filter @dvt/web test:canvas-architecture:run`: 143 passed.
+- `pnpm --filter @dvt/web test:unit:run src/app/views/canvas/canvasRelationOutputIntent.test.ts`:
+  two additional cases passed, including sparse output mappings across persisted
+  binary and composed relations.
+- `pnpm --filter @dvt/web test:e2e:native --spec cypress/e2e/canvas/canvas-card-field-lifecycle.cy.ts`:
+  four passed. Selection, focus, pointer/keyboard reordering, empty outputs,
+  disconnected sources and reload are exercised on two- and three-input models.
+- `node --test scripts/lib/feature-mechanization-git-diff.test.cjs`: 16 passed.
+  The real-Git addition/modification cases were RED on the default 1 MiB stdout
+  buffer. The reader now uses a bounded 32 MiB budget and retains fail-closed
+  behavior. No added evidence is filtered out to make the gate pass; the bounded
+  correction is recorded in the [closeout scope](https://github.com/dunay2/dvt/issues/3369#issuecomment-5826362594).
+- With `DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME=native`,
+  `pnpm --filter @dvt/web test:e2e:selected-closure:live --spec apps/web/cypress/e2e/canvas/canvas-selected-filter-live.cy.ts`:
+  one passed against the protected API and PostgreSQL, with no pending or skipped
+  tests. Filters, sorting and limits on both operands preserve LEFT JOIN unmatched
+  rows, output order and the saved plan hash after reload.
+
+These are bounded results, not an integration declaration. Remaining browser
+cohorts, generated inventories, committed-tree pre-push and PR gates must pass
+before integration. Scalar/structured projection primitives outside the removed
+operator-authoring family are not claimed to have disappeared. No rule was
+relaxed, hook bypassed, new debt approved or stub introduced by this hard cut.
+
+### Capability evidence consumer — 2026-09-25
+
+The [reference audit](https://github.com/dunay2/dvt/issues/3369#issuecomment-5827325181)
+identified an admission proof pointing at a deleted JOIN-composition test. Its
+replacement is `canvasSelectedJoinConditionPersistence.test.ts`, which exercises
+comparison and grouped AND/OR roundtrips with stable relation/field identities.
+The catalog must point to that current proof; retaining the old test as an alias
+would contradict the hard cut. A catalog-wide contract check requires local
+fixture, semantic and negative proof paths to resolve.
+
+Only the evidence reference changes: admitted identities, semantic wire format,
+provider status and execution behavior remain unchanged. The complete diff is
+therefore routed through ARC-2 because it touches contracts, with the existing
+risk entry and schema/golden checks retained. Validation is recorded in the PR
+against its committed base/head before integration.
+
+### Autosave snapshot acknowledgement — 2026-09-25
+
+The [closeout investigation](https://github.com/dunay2/dvt/issues/3369#issuecomment-5827555746)
+reproduced an aggregate race without browser timing: schedule snapshot A, edit B,
+send A, then acknowledge A. The old transition marked B as the submitted state
+and cleared its local delta. The focused three-case test was RED only for the
+edit-before-send interleaving; edits after send and unchanged submissions passed.
+
+The existing save rail now records the session that produced the sent payload.
+It preserves newer local state for the next autosave. No debounce, CAS,
+idempotency or authorization behavior is weakened. The snapshot, persistence
+runtime and session cohort passes 28 cases. The complementary browser regression
+holds the actual save acknowledgement while editing, for two and three inputs.
+Final uninstrumented browser and committed-tree gates remain required.

@@ -1,120 +1,50 @@
-/** Owned concern: keep contextual removal local until the existing Apply command. */
-import { useEffect, useRef, useState } from 'react';
-import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
-import type { CanvasRelationalTreeExistingJoinDraft } from './canvasRelationalTreeExistingJoinDraft';
+/** Bind relation retirement to the existing guided draft and its ordered source occurrences. */
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
+import type { CanvasRelationalTreeExistingDraft } from './canvasRelationalTreeExistingDraft';
 import type { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
-import { removeSelectedRelationPassthrough } from './canvasSelectedRelationPassthrough';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
-import {
-  removeCanvasRelationalTreeNode,
-  type CanvasRelationalRemovalResult,
-} from './canvasRelationalTreeRemoval';
+import { relationOperation } from './canvasRelationOperation';
+import { useRelationRemoval } from './useRelationRemoval';
+
+export function retainedSourceInputIds(
+  previous: SubstraitDocument,
+  next: SubstraitDocument,
+  inputIds: readonly string[]
+): readonly string[] {
+  // Input slots use occurrence-anchor order, matching the canonical provenance projection.
+  const occurrences = previous.sidecar.relations
+    .filter((entry) => entry.sourceRef != null)
+    .sort((left, right) => left.relAnchor - right.relAnchor);
+  if (occurrences.length !== inputIds.length)
+    throw new Error('Source occurrence slots are inconsistent.');
+  const surviving = new Set(next.sidecar.relations.map((entry) => entry.relationId));
+  return inputIds.filter((_, ordinal) => surviving.has(occurrences[ordinal]!.relationId));
+}
 
 export function useCanvasRelationalTreeRemoval(
   args: Readonly<{
     enabled: boolean;
     analysis: ReturnType<typeof useCanvasRelationAnalysisSession>;
-    operation: CanvasRelationalOperation | null;
     active: boolean;
-    draft: DvtSubstraitJoinDraft | null;
+    draft: SubstraitDocument | null;
     selectedInputIds: readonly string[];
-    seed: CanvasRelationalTreeExistingJoinDraft | null;
-    targetNodeId: string;
+    seed: CanvasRelationalTreeExistingDraft | null;
     hydrate: () => boolean;
     accept: (
-      result: Extract<CanvasRelationalRemovalResult, { ok: true }>,
+      result: Readonly<{ draft: SubstraitDocument; operation: CanvasRelationalOperation }>,
       ids: readonly string[]
     ) => void;
   }>
 ) {
-  const request = useRef<AbortController | null>(null);
-  useEffect(() => () => request.current?.abort(), [args.analysis, args.enabled, args.draft]);
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState<Readonly<{
-    draft: DvtSubstraitJoinDraft;
-    result: Extract<CanvasRelationalRemovalResult, { reason: 'dependent-operations' }>;
-    ids: readonly string[];
-  }> | null>(null);
-  const accept = (
-    result: Extract<CanvasRelationalRemovalResult, { ok: true }>,
-    ids: readonly string[]
-  ) => {
-    if (!args.active) args.hydrate();
-    args.accept(
-      result,
-      result.retained.map((index) => ids[index]!)
-    );
-  };
-  const remove = (relationId: string, keep?: 'left' | 'right'): void => {
-    if (!args.enabled) return;
-    const draft = args.active ? args.draft : args.seed?.draft;
-    const ids = args.active ? args.selectedInputIds : args.seed?.inputIds;
-    if (draft == null || ids == null) return;
-    request.current?.abort();
-    const analysis = args.analysis;
-    if (analysis?.document === draft && analysis.error == null && args.operation != null) {
-      let selected;
-      try {
-        selected = analysis.session.locate(relationId, analysis.revision);
-      } catch {
-        setError('unavailable');
-        return;
-      }
-      if (['filter', 'sort', 'fetch'].includes(selected.relation.relType.case ?? '')) {
-        const operation = args.operation;
-        const cancellation = new AbortController();
-        request.current = cancellation;
-        setPending(null);
-        void removeSelectedRelationPassthrough(
-          analysis.session,
-          relationId,
-          analysis.revision,
-          cancellation.signal
-        ).then(
-          (next) => {
-            if (cancellation.signal.aborted) return;
-            setError(null);
-            accept(
-              { ok: true, draft: next, operation, retained: ids.map((_, index) => index) },
-              ids
-            );
-          },
-          () => {
-            if (!cancellation.signal.aborted) setError('unavailable');
-          }
-        );
-        return;
-      }
-    }
-    const result = removeCanvasRelationalTreeNode({
-      draft,
-      relationId,
-      keep,
-      targetNodeId: args.targetNodeId,
-    });
-    setPending(null);
-    if (!result.ok && result.reason === 'dependent-operations') {
-      setError(null);
-      setPending({ draft, result, ids });
-      return;
-    }
-    setError(result.ok ? null : result.reason);
-    if (!result.ok) return;
-    accept(result, ids);
-  };
-  const confirm = () => {
-    if (pending == null) return;
-    const current = args.active ? args.draft : args.seed?.draft;
-    if (args.enabled && current === pending.draft) accept(pending.result.proposal, pending.ids);
-    else setError('unavailable');
-    setPending(null);
-  };
-  return {
-    remove,
-    error,
-    clearError: () => setError(null),
-    pending,
-    confirm,
-    cancel: () => setPending(null),
-  };
+  return useRelationRemoval(
+    (next) => {
+      const analysis = args.analysis!;
+      const ids = args.active ? args.selectedInputIds : args.seed!.inputIds;
+      const retained = retainedSourceInputIds(analysis.document!, next, ids);
+      if (!args.active) args.hydrate();
+      args.accept({ draft: next, operation: relationOperation(analysis.session) }, retained);
+    },
+    args.enabled,
+    args.analysis
+  );
 }

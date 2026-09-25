@@ -2,10 +2,10 @@
 import { describe, expect, it } from 'vitest';
 import { indexSubstraitRelations, deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
-import { createDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { createCustomerOrdersJoin } from './canvasJoin.test-support';
 import { dvtSubstraitTextComparison } from './canvasDvtSubstraitTextComparison';
 import { applySelectedRelationFilter } from './canvasSelectedRelationFilter';
-import { removeSelectedRelationPassthrough } from './canvasSelectedRelationPassthrough';
+import { prepareRelationRemoval } from './canvasPrepareRelationRemoval';
 import { transformNode } from './CanvasRelationalTreeWorkbench.test-support';
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
@@ -13,11 +13,11 @@ import { resolveDvtTransformAuthoringMetadata } from './canvasDvtTransformAuthor
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 function scenario(): {
-  document: ReturnType<typeof createDvtSubstraitJoinDraft>;
+  document: ReturnType<typeof createCustomerOrdersJoin>;
   session: CanvasRelationAnalysisSession;
   index: import('@dvt/substrait-analysis').SubstraitRelationIndex;
 } {
-  const source = (table: string): Parameters<typeof createDvtSubstraitJoinDraft>[0]['left'] => ({
+  const source = (table: string): Parameters<typeof createCustomerOrdersJoin>[0]['left'] => ({
     nodeId: table,
     schema: 'raw',
     table,
@@ -31,7 +31,7 @@ function scenario(): {
       sourceObjectId: `relation/dvt/raw/${table}`,
     },
   });
-  const document = createDvtSubstraitJoinDraft({
+  const document = createCustomerOrdersJoin({
     left: source('orders'),
     right: source('customers'),
     targetNodeId: 'model',
@@ -111,10 +111,13 @@ describe('selected relation Filter command', () => {
       expect(
         dvtSubstraitTextComparison.inspect(edited.plan, editedRelation.value.condition)
       ).toMatchObject({ sourceOrdinal: fields.bindings[0]!.outputOrdinal, value: 'Updated' });
-      const removed = await removeSelectedRelationPassthrough(
-        session,
-        filter.binding.relationId,
-        session.revision
+      const removed = session.apply(
+        (
+          await prepareRelationRemoval(session, {
+            relationId: filter.binding.relationId,
+            expectedRevision: session.revision,
+          })
+        ).change
       );
       expect(removed.sidecar.relations).toEqual(document.sidecar.relations);
       expect(new Map(removed.sidecar.fields.map((field) => [field.fieldId, field]))).toEqual(
@@ -170,7 +173,14 @@ describe('selected relation Filter command', () => {
     const secondId = session.rootId;
     expect(secondId).not.toBe(firstId);
     const before = await session.query(secondId);
-    const document = await removeSelectedRelationPassthrough(session, firstId, session.revision);
+    const document = session.apply(
+      (
+        await prepareRelationRemoval(session, {
+          relationId: firstId,
+          expectedRevision: session.revision,
+        })
+      ).change
+    );
     expect(document.sidecar.relations.some((entry) => entry.relationId === firstId)).toBe(false);
     const removedIds = new Set(firstSchema.bindings.map((field) => field.fieldId));
     expect(document.sidecar.fields.some((field) => removedIds.has(field.sourceFieldId ?? ''))).toBe(

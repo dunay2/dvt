@@ -184,12 +184,12 @@ export function useCanvasColumnConnectionHandlers(
   );
 
   const handleToggleCanvasColumnOutput = useCallback(
-    (identity: GraphNodeColumnOutputToggleIdentity) => {
+    async (identity: GraphNodeColumnOutputToggleIdentity) => {
       if (!canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
-      const result = columnAuthoringCommandRunner.toggleOutput(identity);
+      const result = await columnAuthoringCommandRunner.toggleOutput(identity);
       if (result.outcome === 'rejected') {
         toast.error(formatColumnMappingRejection(result.reason));
       }
@@ -198,12 +198,12 @@ export function useCanvasColumnConnectionHandlers(
   );
 
   const handleReorderCanvasColumnOutput = useCallback(
-    (identity: GraphNodeColumnReorderIdentity) => {
+    async (identity: GraphNodeColumnReorderIdentity) => {
       if (!canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
-      const result = columnAuthoringCommandRunner.reorderOutput(identity);
+      const result = await columnAuthoringCommandRunner.reorderOutput(identity);
       if (result.outcome === 'rejected') {
         toast.error(formatColumnMappingRejection(result.reason));
       }

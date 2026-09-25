@@ -3,10 +3,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { resolveDvtSubstraitJoinUnaryFunctions } from '../views/canvas/canvasDvtSubstraitJoinOperand';
-import {
-  SemanticWorkbenchJoinOperandEditor,
-  buildSemanticWorkbenchJoinOperand,
-} from '../views/canvas/SemanticWorkbenchJoinOperandEditor';
+import { SemanticWorkbenchJoinOperandEditor } from '../views/canvas/SemanticWorkbenchJoinOperandEditor';
+import { buildSemanticWorkbenchJoinOperand } from '../views/canvas/join-condition/operandDraft';
 
 describe('SemanticWorkbenchJoinOperandEditor', () => {
   it('keeps VALUE selectable when the other operand is already a literal', () => {

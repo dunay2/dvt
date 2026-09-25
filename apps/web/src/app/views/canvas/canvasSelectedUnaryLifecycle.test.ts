@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { deriveSubstraitSchemas, indexSubstraitRelations } from '@dvt/substrait-analysis';
 import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetch';
-import { removeSelectedRelationPassthrough } from './canvasSelectedRelationPassthrough';
+import { prepareRelationRemoval } from './canvasPrepareRelationRemoval';
 import { selectedUnaryScenario } from './canvasSelectedUnary.test-support';
 
 describe('selected unary lifecycle', () => {
@@ -72,7 +72,14 @@ describe('selected unary lifecycle', () => {
           [...selected.relation.relType.value.sorts].reverse().map((key) => key.expr?.rexType)
         );
       expect(indexSubstraitRelations(edited).ok).toBe(true);
-      const removed = await removeSelectedRelationPassthrough(session, newId, session.revision);
+      const removed = session.apply(
+        (
+          await prepareRelationRemoval(session, {
+            relationId: newId,
+            expectedRevision: session.revision,
+          })
+        ).change
+      );
       expect(new Map(removed.sidecar.fields.map((field) => [field.fieldId, field]))).toEqual(
         new Map(document.sidecar.fields.map((field) => [field.fieldId, field]))
       );

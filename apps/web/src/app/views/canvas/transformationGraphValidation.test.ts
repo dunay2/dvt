@@ -3,10 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
-import {
-  createDvtSubstraitJoinDraft,
-  encodeDvtSubstraitJoinDocument,
-} from './canvasDvtSubstraitJoinComposition';
+import { createCustomerOrdersJoin } from './canvasJoin.test-support';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { validateTransformationGraph } from './transformationGraphValidation';
 
 function buildNode(
@@ -84,7 +82,7 @@ function buildValidSubstraitInnerJoinGraph(): {
       connectedSourceRef: connectedSourceRef(table),
     },
   });
-  const draft = createDvtSubstraitJoinDraft({
+  const draft = createCustomerOrdersJoin({
     left: {
       nodeId: 'customers',
       schema: 'public',
@@ -111,7 +109,7 @@ function buildValidSubstraitInnerJoinGraph(): {
       path: 'models/customer-orders.sql',
       metadata: { config: { dialect: 'postgres' } },
     },
-    encodeDvtSubstraitJoinDocument(draft)
+    encodeDvtSubstraitSemanticDocument(draft)
   );
   const nodes = [
     source('customers', 'customers', ['customer_id', 'name']),

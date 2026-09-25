@@ -2,17 +2,17 @@
 import { describe, expect, it } from 'vitest';
 import { cloneLocalRelation } from '@dvt/substrait-analysis';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { createDvtSubstraitPilotDraft } from './canvasDvtSubstraitPilot';
+import { projectionScenario } from './canvasProjectionScenario.test-support';
 import { composeDvtSubstraitProjectionFields } from './canvasDvtSubstraitStructuredFieldMutation';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetch';
-import { removeSelectedRelationPassthrough } from './canvasSelectedRelationPassthrough';
+import { prepareRelationRemoval } from './canvasPrepareRelationRemoval';
 
 describe('selected unary structural preservation', () => {
   it.each(['sort', 'fetch'] as const)(
     '%s preserves nested identities through insertion and removal',
     async (operation) => {
-      const pilot = createDvtSubstraitPilotDraft({
+      const pilot = projectionScenario({
         sourceNodeId: 'records',
         targetNodeId: 'model',
       });
@@ -55,10 +55,13 @@ describe('selected unary structural preservation', () => {
         if (input.parentFieldId != null)
           expect(field.parentFieldId).toBe(bySource.get(input.parentFieldId)!.fieldId);
       }
-      const removed = await removeSelectedRelationPassthrough(
-        session,
-        session.rootId,
-        session.revision
+      const removed = session.apply(
+        (
+          await prepareRelationRemoval(session, {
+            relationId: session.rootId,
+            expectedRevision: session.revision,
+          })
+        ).change
       );
       expect(removed.plan).toEqual(document.plan);
       expect(new Map(removed.sidecar.fields.map((field) => [field.fieldId, field]))).toEqual(
@@ -72,9 +75,7 @@ describe('selected unary structural preservation', () => {
     'removing %s retains a non-identity emit as a projection',
     async (operation) => {
       const session = new CanvasRelationAnalysisSession('model');
-      session.receive(
-        createDvtSubstraitPilotDraft({ sourceNodeId: 'records', targetNodeId: 'model' })
-      );
+      session.receive(projectionScenario({ sourceNodeId: 'records', targetNodeId: 'model' }));
       const schema = await session.query(session.rootId);
       await applySelectedRelationSortFetch(session, {
         intent: 'insert',
@@ -112,7 +113,14 @@ describe('selected unary structural preservation', () => {
         upserts: [{ relation, binding: target.binding, fields }],
       });
       const before = await session.query(session.rootId);
-      await removeSelectedRelationPassthrough(session, session.rootId, session.revision);
+      session.apply(
+        (
+          await prepareRelationRemoval(session, {
+            relationId: session.rootId,
+            expectedRevision: session.revision,
+          })
+        ).change
+      );
       const after = await session.query(session.rootId);
       expect(after.fields).toEqual(before.fields);
       expect(after.bindings).toEqual(before.bindings);

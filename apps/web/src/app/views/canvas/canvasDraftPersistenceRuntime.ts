@@ -54,9 +54,17 @@ export function startNextSaveAttempt(refs: DraftAttemptRefs): DraftSaveAttempt {
 }
 
 export function markDraftSaving(
-  setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void
+  setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void,
+  sentSession: CanvasDraftSession
 ) {
-  setDraftSession((currentSession) => canvasDraftSession.machine.markSaving(currentSession));
+  const snapshot = canvasDraftSession.machine.markSaving(sentSession);
+  setDraftSession((currentSession) => ({
+    ...currentSession,
+    syncState: snapshot.syncState,
+    savingWorkingSet: snapshot.savingWorkingSet,
+    savingBaseRevision: snapshot.savingBaseRevision,
+    savingLocalNodeCatalog: snapshot.savingLocalNodeCatalog,
+  }));
 }
 
 export function applyConflictResolution(args: {

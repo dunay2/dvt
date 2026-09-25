@@ -14,15 +14,10 @@ import {
   encodeDvtSubstraitProjectionDocument,
 } from './canvasDvtSubstraitProjection';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
-import {
-  createDvtSubstraitJoinDraft,
-  encodeDvtSubstraitJoinDocument,
-  type DvtSubstraitJoinSource,
-} from './canvasDvtSubstraitJoinComposition';
-import {
-  createDvtSubstraitCrossDraft,
-  encodeDvtSubstraitCrossDocument,
-} from './canvasDvtSubstraitCrossComposition';
+import { createCustomerOrdersJoin } from './canvasJoin.test-support';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import type { ConnectedRelationSource } from './canvasSourceRelation';
+import { createSourceCross } from './canvasSourceCross';
 
 const target: DvtTransformResultTargetV1 = {
   schemaVersion: 'dvt-transform-result-target.v1',
@@ -60,9 +55,7 @@ describe('Transform result destination metadata', () => {
     });
     const semanticNode = applyDvtSubstraitSemanticDocument(
       node,
-      encodeDvtSubstraitCrossDocument(
-        createDvtSubstraitCrossDraft({ inputs: [input('sizes'), input('colours')] })
-      )
+      encodeDvtSubstraitSemanticDocument(createSourceCross([input('sizes'), input('colours')]))
     );
 
     const metadata = createDvtTransformAuthoringMetadata(semanticNode);
@@ -80,7 +73,7 @@ describe('Transform result destination metadata', () => {
     [JoinRel_JoinType.RIGHT_SEMI, 'right_semi_join'],
     [JoinRel_JoinType.RIGHT_ANTI, 'right_anti_join'],
   ] as const)('restores and persists %s as the canonical %s authoring shape', (joinType, shape) => {
-    const source = (id: string, table: string): DvtSubstraitJoinSource => ({
+    const source = (id: string, table: string): ConnectedRelationSource => ({
       nodeId: id,
       schema: 'raw',
       table,
@@ -92,8 +85,8 @@ describe('Transform result destination metadata', () => {
     });
     const semanticNode = applyDvtSubstraitSemanticDocument(
       node,
-      encodeDvtSubstraitJoinDocument(
-        createDvtSubstraitJoinDraft({
+      encodeDvtSubstraitSemanticDocument(
+        createCustomerOrdersJoin({
           left: source('orders', 'orders'),
           right: source('clients', 'clients'),
           targetNodeId: node.id,

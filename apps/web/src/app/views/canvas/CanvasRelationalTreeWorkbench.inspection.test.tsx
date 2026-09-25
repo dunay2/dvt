@@ -2,10 +2,8 @@
 /** Owned concern: relational workbench inspection behavior. */
 import React, { act } from 'react';
 import { describe, expect, it } from 'vitest';
-import {
-  createDvtSubstraitJoinDraft,
-  encodeDvtSubstraitJoinDocument,
-} from './canvasDvtSubstraitJoinComposition';
+import { createCustomerOrdersJoin } from './canvasJoin.test-support';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import {
@@ -24,7 +22,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
   it('presents useful selected-JOIN conditions without a metadata or column-count panel', () => {
     const clients = sourceNode('clients', 'clients');
     const orders = sourceNode('orders', 'orders');
-    const draft = createDvtSubstraitJoinDraft({
+    const draft = createCustomerOrdersJoin({
       left: {
         nodeId: clients.id,
         schema: 'public',
@@ -41,7 +39,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
     });
     const transform = applyDvtSubstraitSemanticDocument(
       transformNode(),
-      encodeDvtSubstraitJoinDocument(draft)
+      encodeDvtSubstraitSemanticDocument(draft)
     );
 
     act(() => {

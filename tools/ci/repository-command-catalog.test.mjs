@@ -211,6 +211,17 @@ test('detects repository command files and excludes non-command metadata', () =>
   assert.equal(isRepositoryCommandFile('tools/ci/jsconfig.json'), false);
 });
 
+test('keeps the isolated Git fixture in test validation without runtime fan-out', () => {
+  assert.deepEqual(classifyScriptFilePath('scripts/lib/feature-mechanization-git-fixture.cjs'), {
+    path: 'scripts/lib/feature-mechanization-git-fixture.cjs',
+    domain: 'test-tooling',
+    sensitivity: 'test-contract',
+    runtimeFanout: false,
+    changedFileValidationRelevant: true,
+  });
+  assert.equal(classifyScriptFilePath('scripts/lib/unclassified-fixture.cjs').domain, 'unknown');
+});
+
 test('discovers repository command files deterministically', () => {
   const files = discoverRepositoryCommandFiles();
 

@@ -1,11 +1,9 @@
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
-import {
-  createDvtSubstraitPilotDraft,
-  encodeDvtSubstraitPilotDocument,
-} from './canvasDvtSubstraitPilot';
+import { projectionScenario } from './canvasProjectionScenario.test-support';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 function sourceNode(): CanonicalNode {
@@ -42,7 +40,7 @@ function transformNode(): CanonicalNode {
 
 describe('Substrait card presentation fail-closed behavior', () => {
   it('does not present inherited columns when persisted Substrait authority is outside the pilot', async () => {
-    const draft = createDvtSubstraitPilotDraft({
+    const draft = projectionScenario({
       sourceNodeId: 'source-customers',
       targetNodeId: 'transform-customers',
     });
@@ -51,7 +49,7 @@ describe('Substrait card presentation fail-closed behavior', () => {
     draft.plan.relations.push(existingRelation);
     const node = applyDvtSubstraitSemanticDocument(
       transformNode(),
-      encodeDvtSubstraitPilotDocument(draft)
+      encodeDvtSubstraitSemanticDocument(draft)
     );
     const source = sourceNode();
 

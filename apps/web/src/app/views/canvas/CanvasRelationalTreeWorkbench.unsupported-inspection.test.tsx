@@ -1,13 +1,11 @@
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 // @vitest-environment jsdom
 /** Owned concern: rejected ordering stays visibly unsupported and never opens a JOIN viewer. */
 import React, { act } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { applyDvtSubstraitSort } from './canvasSortFetch.test-support';
-import {
-  createDvtSubstraitPilotDraft,
-  inspectDvtSubstraitPilotDraft,
-} from './canvasDvtSubstraitPilot';
+import { projectionScenario } from './canvasProjectionScenario.test-support';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
@@ -33,16 +31,16 @@ describe('unsupported relation inspection', () => {
   ] as const)(
     'inspects rejected Sort without authoring (editable=%s, direction=%s)',
     async (editable, direction) => {
-      const pilot = createDvtSubstraitPilotDraft({
+      const pilot = projectionScenario({
         sourceNodeId: 'source',
         targetNodeId: 'transform',
       });
-      const inspection = inspectDvtSubstraitPilotDraft(pilot);
-      if (!inspection.ok) throw new Error('Expected pilot');
+      const { index } = deriveSubstraitSchemas(pilot);
+      const outputs = index.relations.get(index.rootId)!.fields;
       pilot.sidecar.relations[0]!.sourceRef = sourceRef('customers');
       const sorted = applyDvtSubstraitSort(pilot, [
         {
-          fieldId: inspection.projection.outputs[0]!.fieldId,
+          fieldId: outputs[0]!.fieldId,
           direction: SortField_SortDirection.ASC_NULLS_LAST,
         },
       ]);

@@ -1,12 +1,11 @@
 /** Owned concern: render and accept drops on one scalable canonical relational draft graph. */
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { CanvasRelationalTreeOperandCanvas } from './CanvasRelationalTreeOperandCanvas';
-import { flattenCanvasRelationalTree } from './canvasRelationalTreeWorkbenchModel';
+import { useCanvasRelationalDraftProjection } from './useCanvasRelationalDraftProjection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
-import { projectCanvasRelationalTreeAuthoringDraft } from './canvasRelationalTreeAuthoringProjection';
 import {
   readCanvasRelationalOperationDrag,
   readCanvasRelationalSourceDrag,
@@ -16,7 +15,7 @@ import { CanvasRelationalTreeLayout } from './CanvasRelationalTreeLayout';
 import { CanvasRelationalTreeZoomControls } from './CanvasRelationalTreeZoomControls';
 import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewport';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 
 export function CanvasRelationalTreeDraftViewport({
   copy,
@@ -40,7 +39,7 @@ export function CanvasRelationalTreeDraftViewport({
   copy: CanvasRelationalTreeWorkbenchCopy;
   edges: readonly CanonicalEdge[];
   inputs: readonly CanvasDvtCompositionInput[];
-  joinDraft: DvtSubstraitJoinDraft | null;
+  joinDraft: SubstraitDocument | null;
   nodes: readonly CanonicalNode[];
   operation: CanvasRelationalOperation | null;
   primaryInputId: string | null;
@@ -49,7 +48,7 @@ export function CanvasRelationalTreeDraftViewport({
   transformNode: CanonicalNode;
   onPlaceInput: (nodeId: string, position: CanvasRelationalOperandPosition) => void;
   onSelectInput: (nodeId: string) => void;
-  onSelectOperation: (operation: CanvasRelationalOperation) => void;
+  onSelectOperation: (operation: CanvasRelationalOperation, relationId?: string) => void;
   selectedRelationId: string | null;
   onSelectRelation: (relationId: string | null) => void;
   onExpandRelation: (relationId: string | null) => void;
@@ -59,32 +58,18 @@ export function CanvasRelationalTreeDraftViewport({
     () => new Map(inputs.map((input) => [input.nodeId, input] as const)),
     [inputs]
   );
-  const draftProjection = useMemo(
-    () =>
-      projectCanvasRelationalTreeAuthoringDraft({
-        edges,
-        inputs,
-        joinDraft,
-        nodes,
-        operation,
-        selectedInputIds,
-        transformNode,
-      }),
-    [edges, inputs, joinDraft, nodes, operation, selectedInputIds, transformNode]
+  const {
+    projection: draftProjection,
+    selectedLocator,
+    relationIdFor,
+  } = useCanvasRelationalDraftProjection(
+    { edges, joinDraft, nodes, operation, transformNode },
+    selectedRelationId,
+    onSelectRelation
   );
-  const treeNodes =
-    draftProjection == null ? [] : flattenCanvasRelationalTree(draftProjection.root);
-  const selectedLocator =
-    treeNodes.find((node) => node.relationId === selectedRelationId)?.locator ?? '';
-  const rootRelationId = draftProjection?.root.relationId ?? null;
-  const relationIdFor = (locator: string) =>
-    treeNodes.find((node) => node.locator === locator)?.relationId ?? null;
   const viewport = useCanvasRelationalTreeViewport(
     `${draftProjection?.root.locator ?? ''}:${selectedInputIds.join(',')}:${operation}`
   );
-  useEffect(() => {
-    if (selectedRelationId == null && rootRelationId != null) onSelectRelation(rootRelationId);
-  }, [onSelectRelation, rootRelationId, selectedRelationId]);
 
   const placeDroppedSource = (nodeId: string): void => {
     if (selectedInputIds.includes(nodeId)) return;
@@ -116,7 +101,8 @@ export function CanvasRelationalTreeDraftViewport({
         onDrop={(event) => {
           event.preventDefault();
           const droppedOperation = readCanvasRelationalOperationDrag(event.dataTransfer);
-          if (droppedOperation != null) return onSelectOperation(droppedOperation);
+          if (droppedOperation != null)
+            return onSelectOperation(droppedOperation, selectedRelationId ?? undefined);
           const nodeId = readCanvasRelationalSourceDrag(event.dataTransfer);
           if (nodeId != null) placeDroppedSource(nodeId);
         }}

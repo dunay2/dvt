@@ -1,8 +1,12 @@
 /** Owned concern: prove filters belong to Transform and never to Source. */
-import { inspectDvtSubstraitFilter } from '../../../src/app/views/canvas/canvasDvtSubstraitFilter';
-import { decodeDvtSubstraitProjectionDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitProjection';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
+
+import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { openWorkbenchModel } from '../../support/relationalWorkbench/navigation';
+import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
+import { form } from '../../support/relationalWorkbench/operatorEditor';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -51,18 +55,12 @@ function openColumns(nodeId: string): void {
   cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
 }
 
-function latestFilter(nodeId: string): ReturnType<typeof inspectDvtSubstraitFilter> | undefined {
-  const node = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+function latestNode(nodeId: string): DraftSave['draft']['nodes'][number] | undefined {
+  return getE2eApiCalls('/workspace/graph/draft', 'PUT')
     .map((call) => call.body as DraftSave)
     .map((save) => save.draft.nodes.find((candidate) => candidate.id === nodeId))
     .filter((candidate) => candidate != null)
     .at(-1);
-  const authority = node?.metadata?.transformAuthoring as
-    { semanticDocument?: unknown } | undefined;
-  if (authority?.semanticDocument == null) return undefined;
-  return inspectDvtSubstraitFilter(
-    decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
-  );
 }
 
 describe('Canvas Source filter boundary', () => {
@@ -73,7 +71,7 @@ describe('Canvas Source filter boundary', () => {
     visitCanvas();
 
     openColumns('source-orders');
-    cy.get('[data-slot="dvt-filter-authoring"]').should('not.exist');
+    cy.get(form).should('not.exist');
     card('source-orders').should('not.contain.text', 'Filter');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
@@ -81,28 +79,42 @@ describe('Canvas Source filter boundary', () => {
     card('model-orders').contains('button', 'Map compatible columns').click();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
 
-    openColumns('model-orders');
-    cy.get('[data-slot="dvt-filter-authoring"]').should('be.visible');
-    cy.get('[data-slot="dvt-filter-authoring"] form').within(() => {
+    let sourceMetadata: Record<string, unknown> | undefined;
+    cy.then(() => {
+      sourceMetadata = latestNode('source-orders')!.metadata;
+      expect(sourceMetadata?.transformAuthoring).to.equal(undefined);
+    });
+    openWorkbenchModel('model-orders');
+    workbenchOperation('filter').click();
+    cy.get(form).within(() => {
       cy.get('select').first().select('customer');
       cy.get('input').type('Ada');
       cy.get('button[type="submit"]').click();
     });
-    cy.contains('button', /^Apply$/).click();
+    cy.get('[data-slot="canvas-relational-tree-apply"]').click();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
 
     cy.wrap(null).should(() => {
-      expect(latestFilter('source-orders')).to.equal(undefined);
-      expect(latestFilter('model-orders')).to.deep.include({
-        fieldName: 'customer',
-        value: 'Ada',
-      });
+      expect(latestNode('source-orders')!.metadata).to.deep.equal(sourceMetadata);
+      const authority = latestNode('model-orders')!.metadata!.transformAuthoring as {
+        semanticDocument: unknown;
+      };
+      const indexed = indexSubstraitRelations(
+        decodeDvtSubstraitSemanticDocument(authority.semanticDocument)
+      );
+      if (!indexed.ok) throw indexed.error;
+      const filters = [...indexed.index.relations.values()].filter(
+        (entry) => entry.relation.relType.case === 'filter'
+      );
+      expect(filters).to.have.length(1);
+      expect(indexed.index.relations.has(filters[0]!.inputs[0]!)).to.equal(true);
     });
-    card('source-orders').should('not.contain.text', 'customer = "Ada"');
-    card('model-orders').should('contain.text', 'customer = "Ada"');
 
     visitCanvas();
-    card('source-orders').should('not.contain.text', 'customer = "Ada"');
-    card('model-orders').should('contain.text', 'customer = "Ada"');
+    card('source-orders').should('not.contain.text', 'Filter');
+    openWorkbenchModel('model-orders');
+    cy.get('[data-operator="filter"]').should('have.length', 1).click();
+    cy.get(form).find('select').first().find('option:selected').should('have.text', 'customer');
+    cy.get(form).find('input').should('have.value', 'Ada');
   });
 });

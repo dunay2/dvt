@@ -6,7 +6,7 @@ import {
 import { create } from '@bufbuild/protobuf';
 import { allocateDvtRelationId, allocateDvtFieldId } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
-import { createDvtSubstraitPilotDraft } from './canvasDvtSubstraitPilot';
+import { projectionScenario } from './canvasProjectionScenario.test-support';
 import {
   createDvtSubstraitFetchDraft,
   createDvtSubstraitSortDraft,
@@ -20,7 +20,7 @@ describe('unsupported wrapped relation authoring', () => {
   it.each(['sort', 'fetch'] as const)(
     'rejects %s over ExtensionLeaf without an uncaught selection error',
     (operation) => {
-      const draft = createDvtSubstraitPilotDraft({
+      const draft = projectionScenario({
         sourceNodeId: 'source',
         targetNodeId: 'transform',
       });

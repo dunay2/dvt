@@ -1,5 +1,5 @@
-import type { DvtSubstraitUnionAllSource } from './canvasDvtSubstraitSetComposition';
-export const source = (table: string): DvtSubstraitUnionAllSource => ({
+import type { SourceSetInput } from './canvasSourceSet';
+export const source = (table: string): SourceSetInput => ({
   nodeId: table,
   schema: 'public',
   table,

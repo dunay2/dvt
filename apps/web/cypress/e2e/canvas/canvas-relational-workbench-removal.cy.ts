@@ -1,6 +1,7 @@
 /** Owned concern: contextual removal, cancel without writes and canonical save/reopen. */
-import { decodeDvtSubstraitJoinDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
-import { inspectDvtSubstraitProjectionDraft } from '../../../src/app/views/canvas/canvasDvtSubstraitProjection';
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
+
+import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
   visitWorkbenchCanvas,
@@ -79,10 +80,13 @@ describe('Workbench removal', () => {
     );
     cy.then(() => {
       const document = semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!);
-      const draft = decodeDvtSubstraitJoinDocument(document);
-      const inspection = inspectDvtSubstraitProjectionDraft(draft);
-      expect(inspection.ok, 'saved canonical projection').to.equal(true);
-      if (inspection.ok) expect(inspection.projection.source.table).to.equal('customers');
+      const draft = decodeDvtSubstraitSemanticDocument(document);
+      const { index } = deriveSubstraitSchemas(draft);
+      const reads = [...index.relations.values()].filter(
+        (entry) => entry.relation.relType.case === 'read'
+      );
+      expect(reads).to.have.length(1);
+      expect(reads[0]!.binding.sourceRef?.sourceObjectId).to.equal('relation/dvt/public/customers');
     });
     cy.get('[data-slot="canvas-model-view-tab"][data-view="sql"]').click();
     cy.get('[data-slot="canvas-model-sql"]')

@@ -1,3 +1,4 @@
+import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 /** Sort and Fetch supply their Substrait messages; selection and mutation are shared. */
 import { create } from '@bufbuild/protobuf';
 import {
@@ -14,7 +15,6 @@ import {
 } from '@dvt/substrait-analysis';
 import type { DvtSubstraitSortKey } from '@dvt/postgres-projection';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
-import { createDvtSubstraitFieldReference } from './canvasDvtSubstraitAggregation';
 import {
   prepareSelectedRelationUnary,
   commitSelectedRelationUnary,
@@ -100,7 +100,7 @@ export async function applySelectedRelationSortFetch(
       );
     relation.relType.value.sorts = request.keys.map((key) =>
       create(SortFieldSchema, {
-        expr: createDvtSubstraitFieldReference(fields.get(key.fieldId)!),
+        expr: dvtSubstraitExpression.field(fields.get(key.fieldId)!),
         sortKind: { case: 'direction', value: key.direction },
       })
     );

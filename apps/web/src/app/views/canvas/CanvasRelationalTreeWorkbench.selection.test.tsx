@@ -1,3 +1,4 @@
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 // @vitest-environment jsdom
 /** Owned concern: retain a selected nested relation across applied semantic revisions. */
 import React, { act } from 'react';
@@ -6,10 +7,7 @@ import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/su
 import { applyDvtSubstraitFetch, applyDvtSubstraitSort } from './canvasSortFetch.test-support';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetch';
-import {
-  createDvtSubstraitPilotDraft,
-  inspectDvtSubstraitPilotDraft,
-} from './canvasDvtSubstraitPilot';
+import { projectionScenario } from './canvasProjectionScenario.test-support';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
@@ -27,14 +25,14 @@ describe('applied relation selection', () => {
   it.each(['revision', 'removed', 'different-model'] as const)(
     'reconciles %s by stable relation identity',
     async (transition) => {
-      const pilot = createDvtSubstraitPilotDraft({
+      const pilot = projectionScenario({
         sourceNodeId: 'source',
         targetNodeId: 'transform',
       });
-      const inspection = inspectDvtSubstraitPilotDraft(pilot);
-      if (!inspection.ok) throw new Error('Expected pilot');
+      const { index } = deriveSubstraitSchemas(pilot);
+      const outputs = index.relations.get(index.rootId)!.fields;
       const key = {
-        fieldId: inspection.projection.outputs[0]!.fieldId,
+        fieldId: outputs[0]!.fieldId,
         direction: SortField_SortDirection.ASC_NULLS_LAST as const,
       };
       const sorted = applyDvtSubstraitSort(pilot, [key]);

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { allocateDvtFieldId, allocateDvtRelationId } from '@dvt/contracts';
 import { createDvtSubstraitFetchDraft } from '@dvt/postgres-projection';
 import { indexSubstraitRelations, selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
-import { createDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { createCustomerOrdersJoin } from './canvasJoin.test-support';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { reconnectSelectedRelation } from './canvasSelectedRelationChange';
 import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetch';
@@ -13,7 +13,7 @@ describe('selected unary operation', () => {
   it.each([0, 1] as const)(
     'edits Fetch in operand %s without touching its sibling',
     async (port) => {
-      const original = createDvtSubstraitJoinDraft({
+      const original = createCustomerOrdersJoin({
         left: source('left'),
         right: source('right'),
         targetNodeId: 'model',

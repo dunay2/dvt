@@ -14,21 +14,23 @@ import {
 } from '../CanvasRelationalTreeWorkbench.test-support';
 import { occurrenceGraph } from './occurrence.test.fixtures';
 
-function changeAlias(value: string): void {
+async function changeAlias(value: string): Promise<void> {
   const input = container.querySelector<HTMLInputElement>('[data-slot="source-occurrence-alias"]')!;
   expect(input).not.toBeNull();
-  act(() => {
+  await act(async () => {
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, value);
     input.dispatchEvent(new Event('input', { bubbles: true }));
   });
 }
-function click(slot: string): void {
-  act(() => container.querySelector<HTMLButtonElement>(`[data-slot="${slot}"]`)!.click());
+async function click(slot: string): Promise<void> {
+  await act(async () =>
+    container.querySelector<HTMLButtonElement>(`[data-slot="${slot}"]`)!.click()
+  );
 }
 
 describe('Read properties alias', () => {
   setupWorkbenchTest();
-  it('opens on one click, updates only that occurrence, and preserves the alias after Apply/reopen', () => {
+  it('opens on one click, updates only that occurrence, and preserves the alias after Apply/reopen', async () => {
     const graph = occurrenceGraph();
     let target = graph.targetNode;
     const session = canvasDraftSession.machine.bootstrap({
@@ -43,8 +45,8 @@ describe('Read properties alias', () => {
         draftSession: canvasDraftSession.workingSet.upsertNode(session, target),
       };
     });
-    const render = (): void =>
-      act(() =>
+    const render = async (): Promise<void> =>
+      await act(async () =>
         root.render(
           <CanvasRelationalTreeWorkbench
             transformNode={target}
@@ -55,16 +57,16 @@ describe('Read properties alias', () => {
           />
         )
       );
-    render();
+    await render();
     const reads = container.querySelectorAll<HTMLButtonElement>('[data-operator="read"]');
     const readId = reads[1]!.getAttribute('data-relation-id');
-    act(() => reads[1]!.click());
-    changeAlias('Parents');
+    await act(async () => reads[1]!.click());
+    await changeAlias('Parents');
     expect(
       container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
         ?.disabled
     ).toBe(true);
-    click('source-occurrence-update');
+    await click('source-occurrence-update');
     expect(
       container.querySelector(`[data-relation-id="${readId}"][data-operator="read"]`)?.textContent
     ).toContain('Parents');
@@ -72,10 +74,10 @@ describe('Read properties alias', () => {
       'Parents'
     );
     expect(apply).not.toHaveBeenCalled();
-    click('canvas-relational-tree-apply');
+    await click('canvas-relational-tree-apply');
     expect(apply).toHaveBeenCalledTimes(1);
-    render();
-    act(() =>
+    await render();
+    await act(async () =>
       container
         .querySelector<HTMLButtonElement>(`[data-relation-id="${readId}"][data-operator="read"]`)!
         .click()
@@ -88,10 +90,10 @@ describe('Read properties alias', () => {
     );
   });
 
-  it('blocks invalid alias submission and cancels back to the unchanged document', () => {
+  it('blocks invalid alias submission and cancels back to the unchanged document', async () => {
     const graph = occurrenceGraph();
     const apply = vi.fn();
-    act(() =>
+    await act(async () =>
       root.render(
         <CanvasRelationalTreeWorkbench
           transformNode={graph.targetNode}
@@ -102,15 +104,19 @@ describe('Read properties alias', () => {
         />
       )
     );
-    act(() => container.querySelector<HTMLButtonElement>('[data-operator="read"]')!.click());
-    changeAlias('');
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-operator="read"]')!.click()
+    );
+    await changeAlias('');
     expect(container.querySelector('[role="alert"]')).not.toBeNull();
     expect(
       container.querySelector<HTMLButtonElement>('[data-slot="source-occurrence-update"]')?.disabled
     ).toBe(true);
-    click('canvas-relational-tree-cancel');
+    await click('canvas-relational-tree-cancel');
     expect(apply).not.toHaveBeenCalled();
-    act(() => container.querySelector<HTMLButtonElement>('[data-operator="read"]')!.click());
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-operator="read"]')!.click()
+    );
     expect(
       container.querySelector<HTMLInputElement>('[data-slot="source-occurrence-alias"]')?.value
     ).toBe('places');

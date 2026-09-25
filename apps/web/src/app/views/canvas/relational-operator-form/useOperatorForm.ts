@@ -4,14 +4,15 @@ import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/su
 import type { DvtSubstraitSortKey } from '@dvt/postgres-projection';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import type { DvtSubstraitProjectionDraft } from '../canvasDvtSubstraitProjection';
-import type { CanvasRelationalOperatorTool } from '../canvasRelationalTreeOperatorModel';
-import { applyCanvasRelationalOperatorTool } from '../canvasRelationalTreeOperatorCommands';
+import type { CanvasRelationalOperatorTool } from './OperatorTool';
 import { operatorFormCopy } from './operatorFormCopy';
 import { CanvasRelationAnalysisContext } from '../CanvasRelationAnalysisContext';
 import { applySelectedUnaryTool } from './applySelectedUnaryTool';
+import { useRelationRemoval } from '../useRelationRemoval';
 
 export type OperatorFormValues = Readonly<{
   fieldId: string;
+  partitionFieldIds: readonly string[];
   alias: string;
   value: string;
   capabilityId: string;
@@ -22,7 +23,6 @@ export type OperatorFormValues = Readonly<{
 
 export function useOperatorForm({
   tool,
-  draft,
   onChange,
   onClose,
   targetRelationId,
@@ -48,6 +48,7 @@ export function useOperatorForm({
   const language = useApplicationLanguageStore((state) => state.language);
   const [values, setValues] = useState<OperatorFormValues>(() => ({
     fieldId: tool.fieldId ?? tool.fields[0]?.fieldId ?? '',
+    partitionFieldIds: tool.partitionFieldIds ?? [],
     alias: tool.alias ?? (tool.id === 'window' ? 'row_number' : 'total'),
     value: tool.value ?? '',
     capabilityId: tool.capabilityId ?? tool.comparisons?.[0]?.capabilityId ?? '',
@@ -65,7 +66,12 @@ export function useOperatorForm({
     count: tool.count == null ? '' : String(tool.count),
   }));
   const [error, setError] = useState(false);
-  const commitUnary = async (operation: 'filter' | 'sort' | 'fetch', remove: boolean) => {
+  const removal = useRelationRemoval((next) => {
+    onPendingChange?.(false);
+    onChange(next);
+    onClose();
+  }, !busy);
+  const commit = async () => {
     if (busy || analysis == null || revision == null || targetRelationId == null) return;
     setBusy(true);
     setError(false);
@@ -73,8 +79,7 @@ export function useOperatorForm({
     try {
       const next = await applySelectedUnaryTool(analysis.session, {
         ...values,
-        tool: operation,
-        remove,
+        tool: tool.id,
         relationId: targetRelationId,
         expectedRevision: revision,
         intent: tool.active ? 'edit' : 'insert',
@@ -90,24 +95,6 @@ export function useOperatorForm({
       if (!signal.aborted) setBusy(false);
     }
   };
-  const commit = (remove = false) => {
-    if (tool.id !== 'aggregate' && tool.id !== 'window') {
-      void commitUnary(tool.id, remove);
-      return;
-    }
-    const next = applyCanvasRelationalOperatorTool(draft, {
-      ...values,
-      tool: tool.id,
-      remove,
-    });
-    if (next === draft) {
-      setError(true);
-      return;
-    }
-    onPendingChange?.(false);
-    onChange(next);
-    onClose();
-  };
   return {
     values,
     error,
@@ -117,8 +104,13 @@ export function useOperatorForm({
       setValues((current) => ({ ...current, ...patch }));
       onPendingChange?.(true);
     },
-    submit: () => commit(),
-    remove: () => commit(true),
+    submit: () => {
+      void commit();
+    },
+    removal,
+    remove: () => {
+      if (targetRelationId != null) removal.remove(targetRelationId);
+    },
     cancel: () => {
       lifetime.current.abort();
       onPendingChange?.(false);

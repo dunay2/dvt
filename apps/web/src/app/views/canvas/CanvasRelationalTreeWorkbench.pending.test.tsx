@@ -22,7 +22,7 @@ import { openOperationMenu } from './operation-menu/operationMenu.test-support';
 
 describe('Canvas relational-tree Workbench pending', () => {
   setupWorkbenchTest();
-  it('keeps a partial canonical tree visible until guided authoring starts', () => {
+  it('keeps a partial canonical tree visible until guided authoring starts', async () => {
     const customers = sourceNode('customers', 'customers');
     const orders = sourceNode('orders', 'orders');
     const orderDetails = sourceNode('order-details', 'order_details');
@@ -49,7 +49,7 @@ describe('Canvas relational-tree Workbench pending', () => {
       )
     );
 
-    act(() => {
+    await act(async () => {
       root.render(
         <CanvasRelationalTreeWorkbench
           transformNode={transform}
@@ -82,7 +82,7 @@ describe('Canvas relational-tree Workbench pending', () => {
     );
     expect(ordersButton?.disabled).toBe(false);
     expect(detailsButton?.disabled).toBe(false);
-    act(() => ordersButton?.click());
+    await act(async () => ordersButton?.click());
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
     ).not.toBeNull();
@@ -92,7 +92,7 @@ describe('Canvas relational-tree Workbench pending', () => {
       container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
         ?.disabled
     ).toBe(true);
-    act(() => detailsButton?.click());
+    await act(async () => detailsButton?.click());
     openOperationMenu(container);
     expect(document.querySelector('[role="listbox"]')).not.toBeNull();
     expect(document.querySelector('[data-slot="dvt-select-operation-inner-join"]')).not.toBeNull();

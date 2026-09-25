@@ -27,6 +27,7 @@ import { applyCanvasCalculatedColumn } from './canvasCalculatedColumnAuthoring';
 import { applyCanvasColumnFunction } from './canvasColumnFunctionAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type { CanvasDraftSessionCommandRunner } from './useCanvasWorkspaceDraftSession';
+import { useCanvasRelationOutputCommand } from './useCanvasRelationOutputCommand';
 import {
   applyCanvasStructuredField,
   reorderCanvasStructuredFieldChildren,
@@ -47,8 +48,10 @@ type UseCanvasColumnAuthoringCommandRunnerArgs = {
 };
 
 export type CanvasColumnAuthoringCommandRunner = {
-  toggleOutput: (identity: GraphNodeColumnOutputToggleIdentity) => CanvasColumnMappingResult;
-  reorderOutput: (identity: GraphNodeColumnReorderIdentity) => CanvasColumnMappingResult;
+  toggleOutput: (
+    identity: GraphNodeColumnOutputToggleIdentity
+  ) => Promise<CanvasColumnMappingResult>;
+  reorderOutput: (identity: GraphNodeColumnReorderIdentity) => Promise<CanvasColumnMappingResult>;
   applyFunction: (
     identity: GraphNodeColumnFunctionApplyIdentity
   ) => GraphNodeColumnFunctionApplyResult;
@@ -144,20 +147,25 @@ export function useCanvasColumnAuthoringCommandRunner({
 }: UseCanvasColumnAuthoringCommandRunnerArgs): CanvasColumnAuthoringCommandRunner {
   const { canonicalNodesById } = state;
   const { runDraftSessionCommand } = effects;
+  const runOutput = useCanvasRelationOutputCommand(canonicalNodesById, runDraftSessionCommand);
   const toggleOutput = useCallback(
     (identity: GraphNodeColumnOutputToggleIdentity) =>
-      runDraftSessionCommand((currentDraftSession) =>
-        applyToggleOutput(currentDraftSession, canonicalNodesById, identity)
+      runOutput(identity, () =>
+        runDraftSessionCommand((currentDraftSession) =>
+          applyToggleOutput(currentDraftSession, canonicalNodesById, identity)
+        )
       ),
-    [canonicalNodesById, runDraftSessionCommand]
+    [canonicalNodesById, runDraftSessionCommand, runOutput]
   );
 
   const reorderOutput = useCallback(
     (identity: GraphNodeColumnReorderIdentity) =>
-      runDraftSessionCommand((currentDraftSession) =>
-        applyReorderOutput(currentDraftSession, canonicalNodesById, identity)
+      runOutput(identity, () =>
+        runDraftSessionCommand((currentDraftSession) =>
+          applyReorderOutput(currentDraftSession, canonicalNodesById, identity)
+        )
       ),
-    [canonicalNodesById, runDraftSessionCommand]
+    [canonicalNodesById, runDraftSessionCommand, runOutput]
   );
 
   const applyFunction = useCallback(

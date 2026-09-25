@@ -12,13 +12,11 @@ import {
   createDvtNodeAuthoringMetadata,
 } from './canvasDvtAuthoringModel';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import { createDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { createCanvasDvtInitialJoinDraft } from './canvasDvtInitialJoinModel';
 import { resolveDvtSubstraitJoinEntry } from './canvasDvtSubstraitJoinSourceResolution';
-import {
-  createDvtSubstraitSetDraft,
-  resolveDvtSubstraitUnionAllEntry,
-  type DvtSubstraitSetOperation,
-} from './canvasDvtSubstraitSetComposition';
+import { createSourceSet } from './canvasSourceSet';
+import { resolveConnectedSetEntry } from './canvasConnectedRelationInputs';
+import type { DvtSubstraitSetOperation } from '@dvt/postgres-projection';
 import {
   resolveCanvasEdgeCreationTransaction,
   type CanvasEdgeAdmissionTransaction,
@@ -80,12 +78,12 @@ function admittedOperations(args: {
     resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'left_anti_join',
     resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'right_semi_join',
     resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'right_anti_join',
-    resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'union_all',
-    resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'union_distinct',
-    resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'intersect_distinct',
-    resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'except_distinct',
-    resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'intersect_all',
-    resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'except_all',
+    resolveConnectedSetEntry({ ...args, edges }) == null ? null : 'union_all',
+    resolveConnectedSetEntry({ ...args, edges }) == null ? null : 'union_distinct',
+    resolveConnectedSetEntry({ ...args, edges }) == null ? null : 'intersect_distinct',
+    resolveConnectedSetEntry({ ...args, edges }) == null ? null : 'except_distinct',
+    resolveConnectedSetEntry({ ...args, edges }) == null ? null : 'intersect_all',
+    resolveConnectedSetEntry({ ...args, edges }) == null ? null : 'except_all',
   ].filter((operation): operation is CanvasAlgebraicCompositionOperation => operation != null);
 }
 
@@ -130,13 +128,15 @@ function createSemanticDraft(args: {
     const entry = resolveDvtSubstraitJoinEntry({ ...args, edges });
     return entry == null
       ? null
-      : createDvtSubstraitJoinDraft({
-          ...entry,
-          joinType: toSubstraitJoinType(args.operation),
-        });
+      : createCanvasDvtInitialJoinDraft(
+          entry.inputs,
+          entry.pair,
+          entry.targetNodeId,
+          toSubstraitJoinType(args.operation)
+        );
   }
-  const entry = resolveDvtSubstraitUnionAllEntry({ ...args, edges });
-  return entry == null ? null : createDvtSubstraitSetDraft({ ...entry, operation: args.operation });
+  const entry = resolveConnectedSetEntry({ ...args, edges });
+  return entry == null ? null : createSourceSet({ ...entry, operation: args.operation });
 }
 
 export async function resolveCanvasAlgebraicCompositionTransaction(

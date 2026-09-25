@@ -12,15 +12,15 @@ import {
   inspectCanvasDvtSubstraitSortFetch,
   resolveDvtSubstraitSortFetchInputFields,
 } from './canvasSortFetch.test-support';
-import { createDvtSubstraitPilotDraft } from './canvasDvtSubstraitPilot';
-import { CanvasRelationalTreeSortFetchEditor } from './CanvasRelationalTreeSortFetchEditor';
+import { projectionScenario } from './canvasProjectionScenario.test-support';
+import { CanvasSelectedUnaryEditor } from './CanvasSelectedUnaryEditor';
 import { setupWorkbenchTest, root, container } from './CanvasRelationalTreeWorkbench.test-support';
 
 describe('Sort/Fetch editor selection', () => {
   setupWorkbenchTest();
 
   it('does not submit the previous Fetch values to a newly selected inner Fetch', async () => {
-    const pilot = createDvtSubstraitPilotDraft({
+    const pilot = projectionScenario({
       sourceNodeId: 'source',
       targetNodeId: 'transform',
     });
@@ -41,7 +41,7 @@ describe('Sort/Fetch editor selection', () => {
       await act(async () =>
         root.render(
           <RelationAnalysisTestHost document={outer}>
-            <CanvasRelationalTreeSortFetchEditor
+            <CanvasSelectedUnaryEditor
               draft={outer}
               operation="fetch"
               relationId={relationId}

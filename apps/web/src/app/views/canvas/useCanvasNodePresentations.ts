@@ -104,8 +104,20 @@ export function useCanvasNodePresentations(
     []
   );
   const initial = useMemo(
-    () => new Map(current.nodes.map((node) => [node.id, initialTruth(node, current)])),
-    [current]
+    () =>
+      new Map(
+        current.nodes.map((node) => {
+          const value = initialTruth(node, current);
+          const previous = published?.values.get(node.id);
+          return [
+            node.id,
+            value.columns.state === 'pending' && previous?.columns.state === 'ready'
+              ? { ...value, columns: { ...previous.columns, state: 'pending' as const } }
+              : value,
+          ];
+        })
+      ),
+    [current, published]
   );
   return published?.graph === current ? published.values : initial;
 }

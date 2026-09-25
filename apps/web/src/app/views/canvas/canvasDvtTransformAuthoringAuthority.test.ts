@@ -1,3 +1,4 @@
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { WorkspaceGraphAuthoringDraftSchema } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
@@ -8,10 +9,7 @@ import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
-import {
-  createDvtSubstraitPilotDraft,
-  encodeDvtSubstraitPilotDocument,
-} from './canvasDvtSubstraitPilot';
+import { projectionScenario } from './canvasProjectionScenario.test-support';
 
 function buildTransformNode(metadata: CanonicalNode['metadata'] = {}): CanonicalNode {
   return {
@@ -43,9 +41,9 @@ function buildSourceNode(metadata: CanonicalNode['metadata'] = {}): CanonicalNod
   };
 }
 
-function buildSemanticDocument(): ReturnType<typeof encodeDvtSubstraitPilotDocument> {
-  return encodeDvtSubstraitPilotDocument(
-    createDvtSubstraitPilotDraft({
+function buildSemanticDocument(): ReturnType<typeof encodeDvtSubstraitSemanticDocument> {
+  return encodeDvtSubstraitSemanticDocument(
+    projectionScenario({
       sourceNodeId: 'source-orders',
       targetNodeId: 'transform-orders',
     })

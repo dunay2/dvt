@@ -1,45 +1,54 @@
 import { describe, expect, it } from 'vitest';
 import { source } from './canvasRelationalOperator.test-support';
-import {
-  appendDvtSubstraitUnionAllInput,
-  createDvtSubstraitSetDraft,
-  inspectDvtSubstraitUnionAllAcceptedDraft,
-} from './canvasDvtSubstraitSetComposition';
+import { createSourceSet, sourceSetOperations } from './canvasSourceSet';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { composeSourceRelation } from './canvasComposeSourceRelation';
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 
-describe('canvasSetInputAppend', () => {
-  it.each([
-    'union_all',
-    'intersect_distinct',
-    'except_distinct',
-    'intersect_all',
-    'except_all',
-  ] as const)(
-    'appends a third %s source without replacing semantics, relations, or fields',
-    (operation) => {
-      const draft = createDvtSubstraitSetDraft({
+describe('SET result composition', () => {
+  it.each(Object.entries(sourceSetOperations))(
+    'composes %s with fresh occurrences without flattening its operands',
+    async (operation, selector) => {
+      const session = new CanvasRelationAnalysisSession('set-append');
+      const document = createSourceSet({
         inputs: [source('north'), source('south')],
         targetNodeId: 'model',
-        operation,
+        operation: operation as keyof typeof sourceSetOperations,
       });
-      const next = appendDvtSubstraitUnionAllInput(draft, source('west'));
-      const inspection = inspectDvtSubstraitUnionAllAcceptedDraft(next);
-      expect(inspection.ok).toBe(true);
-      if (inspection.ok) {
-        expect(inspection.projection.inputs).toHaveLength(3);
-        expect(inspection.projection.operation).toBe(operation);
-      }
-      for (const field of draft.sidecar.fields) expect(next.sidecar.fields).toContainEqual(field);
-      for (const relation of draft.sidecar.relations)
-        expect(next.sidecar.relations).toContainEqual(
-          expect.objectContaining({ relationId: relation.relationId })
+      session.receive(document);
+      const previous = session.locate(session.rootId, session.revision);
+      const input = {
+        ...source('west'),
+        fields: source('west').fields.map((field) => ({
+          name: field.name,
+          dataType: field.type,
+          joinDataType: field.type,
+          nullable: true,
+        })),
+      };
+      for (let occurrence = 0; occurrence < 2; occurrence += 1) {
+        const priorId = session.rootId;
+        const next = await composeSourceRelation(session, {
+          relationId: priorId,
+          expectedRevision: session.revision,
+          input,
+          operation: operation as keyof typeof sourceSetOperations,
+        });
+        const root = session.locate(session.rootId, session.revision);
+        expect(root.inputs[0]).toBe(priorId);
+        expect(root.relation.relType.case === 'set' && root.relation.relType.value.op).toBe(
+          selector
         );
-      expect(appendDvtSubstraitUnionAllInput(next, source('west'))).toBe(next);
-      expect(
-        appendDvtSubstraitUnionAllInput(next, {
-          ...source('bad'),
-          fields: [{ name: 'wrong', type: 'string' }],
-        })
-      ).toBe(next);
+        expect(session.locate(previous.binding.relationId, session.revision).relation).toEqual(
+          previous.relation
+        );
+        expect(deriveSubstraitSchemas(next).schemas.get(session.rootId)).toEqual(
+          (await session.query(session.rootId)).fields
+        );
+      }
+      expect(session.matchingSources(input.sourceRef, session.revision)).toHaveLength(2);
+      for (const binding of document.sidecar.relations)
+        expect(session.locate(binding.relationId, session.revision).binding).toEqual(binding);
     }
   );
 });

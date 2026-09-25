@@ -7,7 +7,7 @@ import {
   DialogDescription,
 } from '../../components/ui/dialog';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
-import type { CanvasRelationalOperatorTool } from './canvasRelationalTreeOperatorModel';
+import type { CanvasRelationalOperatorTool } from './relational-operator-form/OperatorTool';
 import { useOperatorForm } from './relational-operator-form/useOperatorForm';
 import { OperatorFormView } from './relational-operator-form/OperatorFormView';
 
