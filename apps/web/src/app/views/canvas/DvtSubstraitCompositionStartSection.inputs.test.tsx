@@ -103,7 +103,7 @@ describe('Composition start inputs', () => {
     expect(
       view.container.querySelector('[data-slot="semantic-workbench-join-condition-row"]')
         ?.textContent
-    ).toContain('customers · 1.id = shipments · 2.id');
+    ).toContain('customers.id = shipments.id');
     expect(apply.disabled).toBe(false);
 
     await act(async () => fireEvent.click(apply));
