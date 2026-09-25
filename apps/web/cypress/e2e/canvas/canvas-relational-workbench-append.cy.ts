@@ -54,6 +54,8 @@ describe('Workbench append', () => {
     cy.get('[data-slot="canvas-relational-expression-tree"]:visible').should('have.length', 1);
     cy.get('[data-slot="canvas-operation-properties-tab"]:visible').click();
     cy.then(expectPublishedSemanticUnchanged);
+    cy.get('[data-slot="canvas-relational-edit"]').click();
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
     cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
       'have.length',
       1
@@ -67,9 +69,9 @@ describe('Workbench append', () => {
 
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'shipments').click();
     cy.get('[data-slot="canvas-relational-tree-existing-field"]')
-      .should('contain.text', 'customers.customer_id')
+      .should('contain.text', 'customer_id')
       .find('option:selected')
-      .should('have.text', 'customers.customer_id');
+      .should('have.text', 'customer_id');
     cy.get('[data-slot="canvas-relational-tree-connected-field"]')
       .should('have.value', 'customer_id')
       .find('option:selected')

@@ -10,14 +10,16 @@ export function CanvasRelationalTreeSessionActions({
   session,
   copy,
   host,
+  active,
 }: Readonly<{
   session: CanvasRelationalTreeWorkbenchHandle;
   copy: CanvasRelationalTreeWorkbenchCopy;
   host?: HTMLElement | null;
+  active: boolean;
 }>): JSX.Element | null {
   const language = useApplicationLanguageStore((state) => state.language);
   const localCopy = resolveCanvasSemanticEditorCopy(language);
-  if (!session.hasUnappliedChanges) return null;
+  if (!active) return null;
   const rejectionMessage =
     session.applyRejection?.reason === 'node_unavailable'
       ? localCopy.applyNodeUnavailable
@@ -31,15 +33,17 @@ export function CanvasRelationalTreeSessionActions({
           {rejectionMessage}
         </span>
       )}
-      <span role="status" className="px-2 text-[11px] text-amber-200">
-        {localCopy.draft}
-      </span>
+      {session.hasUnappliedChanges ? (
+        <span role="status" className="px-2 text-[11px] text-amber-200">
+          {localCopy.draft}
+        </span>
+      ) : null}
       <button
         type="button"
         data-slot="canvas-relational-tree-apply"
         aria-label={copy.inspectorDvtRelationalApply}
         title={copy.inspectorDvtRelationalApply}
-        disabled={!session.canApply}
+        disabled={!session.canApply || !session.hasUnappliedChanges}
         onClick={session.apply}
         className="grid size-8 place-items-center rounded text-emerald-300 hover:bg-(--surface-selected) disabled:cursor-not-allowed disabled:opacity-40"
       >

@@ -19,7 +19,7 @@ import {
 
 describe('Canvas relational-tree Workbench inspection', () => {
   setupWorkbenchTest();
-  it('presents useful selected-JOIN conditions without a metadata or column-count panel', () => {
+  it('presents useful selected-JOIN conditions without a metadata or column-count panel', async () => {
     const clients = sourceNode('clients', 'clients');
     const orders = sourceNode('orders', 'orders');
     const draft = createCustomerOrdersJoin({
@@ -42,7 +42,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
       encodeDvtSubstraitSemanticDocument(draft)
     );
 
-    act(() => {
+    await act(async () => {
       root.render(
         <CanvasRelationalTreeWorkbench
           transformNode={transform}
@@ -72,7 +72,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
     expect(container.querySelector('[data-slot="canvas-relational-tree-detail"]')).toBeNull();
     expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).toBeNull();
     const zoomIn = container.querySelector<HTMLButtonElement>('button[aria-label="Zoom in"]')!;
-    act(() => {
+    await act(async () => {
       zoomIn.click();
       zoomIn.click();
       zoomIn.click();
@@ -85,7 +85,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
     ).toBeGreaterThan(1);
     expect(container.querySelector('[data-slot="canvas-relational-tree-detail"]')).toBeNull();
     const zoomOut = container.querySelector<HTMLButtonElement>('button[aria-label="Zoom out"]')!;
-    act(() => {
+    await act(async () => {
       zoomOut.click();
       zoomOut.click();
       zoomOut.click();
@@ -93,7 +93,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
     expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).toBeNull();
     const tree = container.querySelector('[data-slot="canvas-relational-tree"]');
     const viewport = container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!;
-    act(() => {
+    await act(async () => {
       viewport.dispatchEvent(
         new WheelEvent('wheel', { deltaY: -120, bubbles: true, cancelable: true })
       );
@@ -102,7 +102,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
       '120%'
     );
     expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).not.toBeNull();
-    act(() => {
+    await act(async () => {
       viewport.dispatchEvent(
         new WheelEvent('wheel', { deltaY: 120, bubbles: true, cancelable: true })
       );
@@ -112,7 +112,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
       '[data-slot="canvas-relational-tree-sources-toggle"]'
     );
     expect(toggle).not.toBeNull();
-    act(() => {
+    await act(async () => {
       toggle!.click();
     });
     expect(toggle?.getAttribute('aria-expanded')).toBe('false');
@@ -122,13 +122,13 @@ describe('Canvas relational-tree Workbench inspection', () => {
         ?.hasAttribute('hidden')
     ).toBe(true);
     expect(container.querySelector('[data-slot="canvas-relational-tree"]')).toBe(tree);
-    act(() => {
+    await act(async () => {
       toggle!.dispatchEvent(
         new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
       );
     });
     expect(toggle?.getAttribute('aria-expanded')).toBe('true');
-    act(() => {
+    await act(async () => {
       toggle!.dispatchEvent(
         new KeyboardEvent('keydown', {
           key: 'Enter',
@@ -149,7 +149,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-source"]')?.textContent
     ).not.toContain('Columns: 1');
-    act(() =>
+    await act(async () =>
       container
         .querySelector<HTMLButtonElement>(
           '[data-slot="canvas-relational-tree-node"][data-operator="join"]'
@@ -159,9 +159,11 @@ describe('Canvas relational-tree Workbench inspection', () => {
     expect(
       container.querySelector('[data-slot="canvas-relational-expression-tree"]')?.textContent
     ).toContain('clients.customer_id');
-    const expression = container.querySelector('[data-slot="canvas-relational-expression-tree"]')!;
+    const expression = container.querySelector(
+      '[role="tabpanel"][data-state="active"] [data-slot="canvas-relational-expression-tree"]'
+    )!;
     expect(expression.closest('[role="tabpanel"]')?.getAttribute('data-state')).toBe('active');
-    expect(expression.closest('[role="tabpanel"]')?.getAttribute('data-value')).toBe('tree');
+    expect(expression.closest('[role="tabpanel"]')?.getAttribute('data-value')).toBe('properties');
     expect(container.querySelector('[data-slot="canvas-operation-properties-tab"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-relational-tree"]')).toBe(tree);
     expect(
@@ -172,7 +174,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
       '[data-slot="canvas-relational-tree-source"]'
     );
     expect(source?.disabled).toBe(false);
-    act(() => source?.click());
+    await act(async () => source?.click());
     expect(source?.getAttribute('aria-pressed')).toBe('true');
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-detail"]')?.textContent

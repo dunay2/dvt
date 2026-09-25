@@ -37,6 +37,8 @@ describe('selected JOIN properties', () => {
       );
     }
     await act(async () => root.render(<Host />));
+    expect(container.querySelector('[aria-label="Comparador de la condición"]')).toBeNull();
+    await act(async () => fireEvent.click(getByLabelText(container, 'Editar condición')));
     await act(async () =>
       fireEvent.change(getByLabelText(container, 'Comparador de la condición'), {
         target: { value: 'not_equal' },

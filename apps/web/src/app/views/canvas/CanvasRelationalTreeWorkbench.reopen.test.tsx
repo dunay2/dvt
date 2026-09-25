@@ -95,6 +95,9 @@ describe('Canvas relational-tree Workbench reopen', () => {
     );
     expect(start).not.toBeNull();
     await act(async () => start?.click());
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')!.click()
+    );
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
     ).not.toBeNull();

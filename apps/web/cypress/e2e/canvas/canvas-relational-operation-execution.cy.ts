@@ -41,7 +41,8 @@ describe('Internal operation card execution', () => {
         'data-state',
         'active'
       );
-      cy.get(`${properties} [data-slot="canvas-relational-tree-join-type"]`).should('be.visible');
+      cy.get(properties).should('not.have.descendants', 'input, select, textarea');
+      cy.get(`${properties} [data-slot="canvas-relational-edit"]`).should('be.visible');
       cy.then(() => expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(0));
       cy.get(`${properties} [data-slot="canvas-relational-collapse"]`).click();
       cy.get(card)
@@ -63,7 +64,7 @@ describe('Internal operation card execution', () => {
         expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
       });
       cy.get(card).click();
-      cy.get(`${properties} [data-slot="canvas-relational-tree-join-type"]`).should('be.visible');
+      cy.get(properties).should('not.have.descendants', 'input, select, textarea');
       cy.get(`${data} table`).should('contain.text', 'C-001');
       cy.then(() => expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(1));
       cy.get(card).rightclick();

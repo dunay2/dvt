@@ -34,6 +34,7 @@ function InspectionContent({
         <CanvasRelationalExpressionTree
           transformNode={transformNode}
           relationId={inspection.relationId}
+          showSummary
         />
       );
   }
@@ -42,12 +43,14 @@ function InspectionContent({
 export function RelationalInspectionPanel({
   inspection,
   onClose,
+  onEdit,
   ...content
 }: Readonly<{
   inspection: RelationalInspection | null;
   transformNode: CanonicalNode;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onClose: () => void;
+  onEdit?: () => void;
 }>): JSX.Element | null {
   if (inspection == null) return null;
   return (
@@ -57,6 +60,7 @@ export function RelationalInspectionPanel({
       relationId={inspection.relationId}
       hasExpression={inspection.kind === 'expressions'}
       readOnly
+      onEdit={inspection.kind === 'unsupported' ? undefined : onEdit}
       onClose={onClose}
     >
       <InspectionContent inspection={inspection} {...content} />

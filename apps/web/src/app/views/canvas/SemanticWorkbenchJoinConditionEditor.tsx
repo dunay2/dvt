@@ -1,13 +1,6 @@
 /** Compose canonical condition presentation with a controlled, discardable edit. */
 import { Plus } from 'lucide-react';
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  type Dispatch,
-  type SetStateAction,
-  type ReactNode,
-} from 'react';
+import { useMemo, useRef, type Dispatch, type SetStateAction, type ReactNode } from 'react';
 import { Button } from '../../components/ui/button';
 import {
   dvtSubstraitJoinConditionKey,
@@ -65,7 +58,6 @@ export function hasPendingConditionDraft(draft: ConditionDraft | null): boolean 
 export function SemanticWorkbenchJoinConditionEditor(props: Props) {
   const { draft, onDraftChange: setDraft } = props;
   const editorRef = useRef<HTMLDivElement>(null);
-  const automaticallyOpened = useRef(false);
   const rows = useMemo(
     () =>
       projectSemanticWorkbenchJoinConditionRows({
@@ -84,17 +76,6 @@ export function SemanticWorkbenchJoinConditionEditor(props: Props) {
   const condition = conditionFromDraft(draft);
   const editing = hasPendingConditionDraft(draft);
   const edit = (row: ComparisonRow) => setDraft(editConditionDraft(props.fields, row));
-  useEffect(() => {
-    if (props.renderExpression == null || automaticallyOpened.current) return;
-    if (draft != null) {
-      automaticallyOpened.current = true;
-      return;
-    }
-    const row = rows.find((item) => item.kind === 'comparison');
-    if (row?.kind !== 'comparison') return;
-    automaticallyOpened.current = true;
-    edit(row);
-  });
   const save = async () => {
     if (draft == null || condition == null) return;
     const saved =

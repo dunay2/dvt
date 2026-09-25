@@ -12,14 +12,14 @@ describe('join-consumers', () => {
     });
     cy.get('[data-operator="join"]').click();
     cy.get('[data-slot="canvas-relational-expression-node"]').should('have.length.at.least', 3);
-    cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
+    cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-edit"]').click();
     workbenchOperation('aggregate').click();
     cy.get(
       '[role="dialog"] ' + form + ', [role="dialog"][data-slot="canvas-relational-operator-form"]'
     )
       .find('button[type="submit"]')
       .click();
-    cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
     workbenchOperation('window').click();
     cy.get(
       '[role="dialog"] ' + form + ', [role="dialog"][data-slot="canvas-relational-operator-form"]'
@@ -33,16 +33,6 @@ describe('join-consumers', () => {
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('be.visible');
     cy.screenshot('selected-join-connected-expression-under-window');
     cy.get('[aria-label="Comparador de la condición"]').select('not_equal');
-    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
-    cy.get('[data-operator="aggregate"]').rightclick();
-    cy.get('[data-slot="canvas-relational-edit-operation"]').click();
-    cy.get('[data-slot="context-menu-content"][data-state="open"]').should('not.exist');
-    cy.get('[data-slot="canvas-relational-expression-tree"]').should('contain.text', 'COUNT');
-    cy.get('[data-slot="canvas-relational-tree-inline-editor"] button[type="submit"]').should(
-      'be.enabled'
-    );
-    cy.get('[data-operator="join"]').click();
-    cy.get('[aria-label="Comparador de la condición"]').should('have.value', 'not_equal');
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
     cy.contains('button', 'Guardar condición').click();
     cy.contains('[data-operator="project"]', 'Window').rightclick();

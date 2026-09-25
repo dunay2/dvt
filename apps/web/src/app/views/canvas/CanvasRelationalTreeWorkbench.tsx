@@ -12,6 +12,10 @@ import { CanvasRelationalTreeSessionActions } from './CanvasRelationalTreeSessio
 import { CanvasRelationalRemovalConfirmation } from './CanvasRelationalRemovalConfirmation';
 import { CanvasRelationalTreeContent } from './CanvasRelationalTreeContent';
 import { CanvasRelationalTreeSourceCatalogue } from './CanvasRelationalTreeSourceCatalogue';
+import { useCanvasRelationEditNavigation } from './useCanvasRelationEditNavigation';
+import { CanvasDraftDecisionDialog } from './CanvasDraftDecisionDialog';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import {
   CanvasOperationPreviewProvider,
@@ -54,6 +58,14 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
     if (!model.session.active) setPendingCondition(false);
   }, [model.session.active]);
   const sessionHandle = useCanvasRelationalTreeWorkbenchHandle(ref, model, pendingCondition);
+  const navigation = useCanvasRelationEditNavigation({
+    editing: model.session.active,
+    selectedRelationId: model.selectedRelationId,
+    session: sessionHandle,
+    onSelect: model.selectRelation,
+  });
+  const language = useApplicationLanguageStore((state) => state.language);
+  const localCopy = resolveCanvasSemanticEditorCopy(language);
 
   return (
     <CanvasOperationPreviewProvider
@@ -73,9 +85,18 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
           className={`relative grid h-full min-h-0 min-w-0 w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-(--surface-panel) md:grid-rows-1 ${sourcesCollapsed ? 'md:grid-cols-[3rem_minmax(0,1fr)]' : 'md:grid-cols-[12rem_minmax(0,1fr)]'}`}
         >
           <CanvasRelationalTreeSessionActions
+            active={model.session.active}
             session={sessionHandle}
             copy={copy}
             host={actionsHost}
+          />
+          <CanvasDraftDecisionDialog
+            open={navigation.pending}
+            canApply={sessionHandle.canApply}
+            onStay={navigation.stay}
+            onDiscard={navigation.discard}
+            onApply={navigation.apply}
+            error={sessionHandle.applyRejection == null ? null : localCopy.applyRejected}
           />
           <CanvasRelationalRemovalConfirmation
             operations={model.session.removal.pending?.result.operations ?? null}
@@ -111,6 +132,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
               expanded={expanded}
               onExpandedChange={setExpanded}
               onPendingConditionChange={setPendingCondition}
+              onSelectRelation={navigation.select}
             />
           </CanvasRelationAnalysisContext.Provider>
         </div>
