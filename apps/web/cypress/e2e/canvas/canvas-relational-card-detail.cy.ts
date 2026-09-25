@@ -83,9 +83,9 @@ describe('Relational card detail', () => {
       cy.get('[data-slot="canvas-relational-tree-fit"]').click();
       cy.then(() => expect(geometry()).to.deep.equal(before));
     });
-    cy.get('[data-slot="canvas-relational-node-expand"]').each(($button) =>
-      cy.wrap($button).click()
-    );
+    cy.get('[data-slot="canvas-relational-node-expand"]').each(($button) => {
+      cy.wrap($button).click();
+    });
     cy.get('[data-slot="canvas-relational-card-detail"]').should('not.exist');
     cy.then(() => {
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writes);
