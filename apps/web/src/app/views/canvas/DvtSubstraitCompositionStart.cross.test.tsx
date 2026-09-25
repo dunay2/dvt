@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, type Dispatch, type SetStateAction } from 'react';
 import { fireEvent } from '@testing-library/dom';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 import { DvtSubstraitCompositionStart } from './DvtSubstraitCompositionStart';
 import { graphModel, graphSource } from './canvasRelationGraph.test-support';
@@ -10,11 +10,15 @@ import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types'
 
 describe('initial CROSS composition', () => {
   const view = useCompositionStartHarness();
-  const choose = () =>
+  const choose = (): HTMLButtonElement =>
     view.container.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-select-operation-cross-join"]'
     )!;
-  function render(count: number, disabled = false, mixed = false) {
+  async function render(
+    count: number,
+    disabled = false,
+    mixed = false
+  ): Promise<Mock<Dispatch<SetStateAction<CanvasInspectorNodeDraft>>>> {
     const inputs = Array.from({ length: count }, (_, index) => graphSource(`source-${index}`));
     if (mixed) {
       const metadata = inputs[1]!.metadata!;
@@ -23,7 +27,7 @@ describe('initial CROSS composition', () => {
     }
     const model = graphModel();
     const onChange = vi.fn<Dispatch<SetStateAction<CanvasInspectorNodeDraft>>>();
-    act(() =>
+    await act(async () =>
       view.root.render(
         <DvtSubstraitCompositionStart
           disabled={disabled}
@@ -44,19 +48,19 @@ describe('initial CROSS composition', () => {
 
   it.each([2, 3])(
     'confirms %i typed inputs into canonical CrossRel without a predicate',
-    (count) => {
-      const onChange = render(count);
+    async (count) => {
+      const onChange = await render(count);
       expect(choose().disabled).toBe(false);
-      act(() => fireEvent.click(choose()));
+      await act(() => fireEvent.click(choose()));
       expect(onChange).not.toHaveBeenCalled();
       const cancel = view.container.querySelector<HTMLButtonElement>(
         '[data-slot="dvt-cancel-relational-operation"]'
       );
       expect(cancel).not.toBeNull();
-      act(() => fireEvent.click(cancel!));
+      await act(() => fireEvent.click(cancel!));
       expect(onChange).not.toHaveBeenCalled();
-      act(() => fireEvent.click(choose()));
-      act(() =>
+      await act(() => fireEvent.click(choose()));
+      await act(() =>
         fireEvent.click(view.container.querySelector('[data-slot="dvt-confirm-composition"]')!)
       );
       expect(onChange).toHaveBeenCalledOnce();
@@ -83,10 +87,10 @@ describe('initial CROSS composition', () => {
 
   it.each(['read-only', 'different-connection'])(
     'rejects %s inputs before any mutation',
-    (reason) => {
-      const onChange = render(2, reason === 'read-only', reason === 'different-connection');
+    async (reason) => {
+      const onChange = await render(2, reason === 'read-only', reason === 'different-connection');
       expect(choose().disabled).toBe(true);
-      act(() => fireEvent.click(choose()));
+      await act(() => fireEvent.click(choose()));
       expect(onChange).not.toHaveBeenCalled();
       expect(view.container.querySelector('[data-slot="dvt-confirm-composition"]')).toBeNull();
     }
