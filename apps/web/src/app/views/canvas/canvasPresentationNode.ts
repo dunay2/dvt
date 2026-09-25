@@ -15,6 +15,7 @@ import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
 import { resolveCanvasPresentationInputs } from './canvasPresentationInputs';
 import type { CanonicalNode } from '../../types/canonical';
 import { presentRelationOutputSelection } from './canvasRelationOutputPresentation';
+import { presentCanvasFilterSummary } from './canvasPresentationFilterSummary';
 
 export async function projectCanvasPresentationNode(
   args: CanvasPresentationQuery,
@@ -113,9 +114,12 @@ export async function projectCanvasPresentationNode(
       args.node.role === 'input'
         ? projectSourceSelection(base.columns.declared, declared)
         : await presentRelationOutputSelection(semantic, declared, fieldInputs, sources, signal);
+    const filterSummary =
+      args.node.role === 'input' ? undefined : await presentCanvasFilterSummary(semantic, signal);
     return {
       ...truth,
       code,
+      ...(filterSummary == null ? {} : { filterSummary }),
       columns: {
         ...columns,
         inherited: args.node.role === 'input' ? [] : inherited,

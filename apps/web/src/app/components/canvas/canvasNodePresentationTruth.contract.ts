@@ -116,6 +116,7 @@ export type CanvasNodePresentationTruth = Readonly<{
   columns: CanvasNodeColumnTruth;
   code: CanvasNodeCodeTruth;
   relationalComposition?: CanvasRelationalCompositionTruth;
+  filterSummary?: string;
 }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -141,6 +142,7 @@ export function isCanvasNodePresentationTruth(
         relationalComposition.state === 'unresolved'));
 
   return (
+    (value.filterSummary == null || typeof value.filterSummary === 'string') &&
     typeof value.columns.visibleCount === 'number' &&
     (value.columns.visibleProvenance === 'declared' ||
       value.columns.visibleProvenance === 'inherited' ||

@@ -11,8 +11,9 @@ import {
 } from '../../views/canvas/canvasDvtSubstraitProjection';
 import { applyDvtSubstraitSemanticDocument } from '../../views/canvas/canvasDvtTransformAuthoringAuthority';
 import { buildDvtGraphNodeSemanticMetric } from './dvtGraphNodeSemanticMetric';
+import { projectCanvasNodePresentationTruth } from '../../views/canvas/canvasNodePresentationProjection';
 
-async function filteredSource(): Promise<CanonicalNode> {
+async function filteredSource(comparison = 'equal'): Promise<CanonicalNode> {
   const source: CanonicalNode = {
     id: 'source-orders',
     name: 'orders',
@@ -37,7 +38,9 @@ async function filteredSource(): Promise<CanonicalNode> {
     },
   };
   const resolved = resolveDvtSubstraitProjectionSource(source);
-  const capability = resolveDvtSubstraitFilterCapabilities({ dataType: 'text' })[0];
+  const capability = resolveDvtSubstraitFilterCapabilities({ dataType: 'text' }).find(
+    (entry) => entry.name === comparison
+  );
   if (resolved == null || capability == null) throw new Error('Expected admitted fixtures.');
   const draft = await filterProjectionInputFixture(
     createDvtSubstraitProjectionDraft({
@@ -57,21 +60,46 @@ async function filteredSource(): Promise<CanonicalNode> {
 
 describe('DVT graph node semantic metric', () => {
   it('does not project a legacy Source FilterRel as card state', async () => {
-    expect(buildDvtGraphNodeSemanticMetric(await filteredSource(), 'es')).toBeNull();
+    const node = await filteredSource();
+    const presentation = await projectCanvasNodePresentationTruth({
+      node,
+      nodes: [node],
+      edges: [],
+    });
+    expect(buildDvtGraphNodeSemanticMetric(node, presentation, 'es')).toBeNull();
   });
 
-  it('projects an admitted Transform FilterRel as a localized card summary', async () => {
-    const source = await filteredSource();
-    expect(
-      buildDvtGraphNodeSemanticMetric(
-        { ...source, pluginId: 'dvt', kind: 'dvt:transform', role: 'transform' },
-        'es'
-      )
-    ).toEqual({
+  it.each([
+    ['equal', '='],
+    ['not_equal', '!='],
+  ])('projects %s from the shared presentation', async (comparison, symbol) => {
+    const source = await filteredSource(comparison);
+    const node: CanonicalNode = {
+      ...source,
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
+      role: 'transform',
+    };
+    const presentation = await projectCanvasNodePresentationTruth({
+      node,
+      nodes: [node],
+      edges: [],
+    });
+    expect(buildDvtGraphNodeSemanticMetric(node, presentation, 'es')).toEqual({
       id: 'filter',
       label: 'Filtro',
-      value: 'customer = "Ada"',
+      value: `customer ${symbol} 'Ada'`,
     });
+    expect(
+      buildDvtGraphNodeSemanticMetric(
+        node,
+        {
+          ...presentation,
+          columns: { ...presentation.columns, state: 'pending' },
+        },
+        'es'
+      )
+    ).toBeNull();
   });
 
   it('omits the metric when no filter authority exists', async () => {
@@ -81,6 +109,7 @@ describe('DVT graph node semantic metric', () => {
           ...(await filteredSource()),
           metadata: { columns: [{ name: 'customer', type: 'text' }] },
         },
+        undefined,
         'es'
       )
     ).toBeNull();
