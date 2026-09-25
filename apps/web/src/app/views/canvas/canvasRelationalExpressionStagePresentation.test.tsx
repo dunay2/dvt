@@ -31,7 +31,7 @@ function projectNode(
   };
 }
 
-describe('Canvas Expression/Derive stage presentation', () => {
+describe('Canvas field transformation stage presentation', () => {
   let container: HTMLDivElement;
   let root: Root;
 

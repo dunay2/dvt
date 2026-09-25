@@ -147,7 +147,8 @@ symbols:
     name: resolveCanvasRelationalNodeCopy
     path: apps/web/src/app/views/canvas/canvasRelationalNodePresentation.ts
     dddOwner: Canvas relation presentation
-    unitTests: [apps/web/src/app/views/canvas/CanvasRelationalExpressionStage.test.tsx]
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasRelationalExpressionStagePresentation.test.tsx
   - <<: *presentationSymbol
     name: canvasPresentationOperationForRel
     path: apps/web/src/app/views/canvas/canvasRelationalOperationSelector.ts
