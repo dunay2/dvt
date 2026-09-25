@@ -182,14 +182,16 @@ describe('useCanvasColumnAuthoringCommandRunner', () => {
     ]);
   });
 
-  it('serializes Source toggle and reorder while an autosave is in flight', () => {
+  it('serializes Source toggle and reorder while an autosave is in flight', async () => {
     let runner!: CanvasColumnAuthoringCommandRunner;
     let currentSession = buildSavingSession();
     let commandCalls = 0;
     const runDraftSessionCommand: CanvasDraftSessionCommandRunner = (command) => {
-      commandCalls += 1;
       const result = command(currentSession);
-      if (result.outcome === 'applied') currentSession = result.draftSession;
+      if (result.outcome === 'applied') {
+        currentSession = result.draftSession;
+        commandCalls += 1;
+      }
       return result;
     };
 
@@ -206,7 +208,7 @@ describe('useCanvasColumnAuthoringCommandRunner', () => {
 
     act(() => root.render(<Harness />));
     expect(
-      runner.toggleOutput({
+      await runner.toggleOutput({
         nodeId: source.id,
         columnId: 'customer',
         columnType: 'text',
@@ -214,7 +216,7 @@ describe('useCanvasColumnAuthoringCommandRunner', () => {
       })
     ).toMatchObject({ outcome: 'applied' });
     expect(
-      runner.reorderOutput({
+      await runner.reorderOutput({
         nodeId: source.id,
         columnId: 'amount',
         targetColumnId: 'order_id',

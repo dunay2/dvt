@@ -8,16 +8,13 @@ import {
   canvasNodePresentationBase,
   type CanvasPresentationQuery,
 } from './canvasNodePresentationBase';
-import {
-  canvasColumnTruth,
-  projectSemanticColumns,
-  projectSourceSelection,
-} from './canvasPresentationColumns';
+import { canvasColumnTruth, projectSourceSelection } from './canvasPresentationColumns';
 import { presentCanvasSubstraitFields } from './canvasSubstraitFieldPresentation';
 import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
 import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
 import { resolveCanvasPresentationInputs } from './canvasPresentationInputs';
 import type { CanonicalNode } from '../../types/canonical';
+import { presentRelationOutputSelection } from './canvasRelationOutputPresentation';
 
 export async function projectCanvasPresentationNode(
   args: CanvasPresentationQuery,
@@ -115,7 +112,7 @@ export async function projectCanvasPresentationNode(
     const columns =
       args.node.role === 'input'
         ? projectSourceSelection(base.columns.declared, declared)
-        : projectSemanticColumns(declared, fieldInputs);
+        : await presentRelationOutputSelection(semantic, declared, fieldInputs, sources, signal);
     return {
       ...truth,
       code,
