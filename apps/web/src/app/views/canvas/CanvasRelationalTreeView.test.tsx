@@ -161,6 +161,9 @@ describe('Canvas relational-tree branching view', () => {
       container.querySelector<HTMLElement>('[data-slot="canvas-relational-tree-output"]')?.style
         .left ?? '0'
     );
+    expect(container.querySelector('[data-slot="canvas-relational-tree-output"]')?.tagName).toBe(
+      'DIV'
+    );
     expect(outputLeft).toBeGreaterThan(rootLeft);
     expect(container.textContent).toContain('Model 1');
     expect(container.querySelector('[data-slot="canvas-relational-tree-zoom"]')?.textContent).toBe(

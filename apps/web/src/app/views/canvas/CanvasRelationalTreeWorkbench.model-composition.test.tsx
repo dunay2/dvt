@@ -103,4 +103,38 @@ describe('Model composition Workbench', () => {
     });
     expect(container.querySelector('[data-slot="canvas-model-composition"]')).not.toBeNull();
   });
+
+  it('keeps output commands read-only while an operation draft is active', async () => {
+    const graph = occurrenceGraph();
+    const applied = vi.fn(() => ({ outcome: 'no_changes' as const }));
+    await act(async () =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={graph.targetNode}
+          nodes={graph.nodes}
+          edges={graph.edges}
+          copy={COPY}
+          authoring={{ canEditNode: true, onApplyNodeDraft: applied }}
+        />
+      )
+    );
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-output"]')!
+        .click()
+    );
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-operator="join"]')!.click()
+    );
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')!.click()
+    );
+
+    const outputInputs = container.querySelectorAll<HTMLInputElement>(
+      '[data-slot="canvas-model-composition"] [data-slot="relation-output-field"] input'
+    );
+    expect(outputInputs.length).toBeGreaterThan(0);
+    expect(Array.from(outputInputs).every((input) => input.disabled)).toBe(true);
+    expect(applied).not.toHaveBeenCalled();
+  });
 });
