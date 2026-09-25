@@ -37,19 +37,20 @@ export function CanvasSelectedUnaryEditor({
   const selected = useSelectedRelationTool(relationId, operation, 'edit');
   const pending = usePendingRelationEdits(onPendingChange);
   if (selected == null) return null;
+  const hasExpression = transformNode != null && operation !== 'sort' && operation !== 'fetch';
   const title =
     resolveCanvasViewCopy(language)[
       resolveCanvasRelationalOperationPresentation(operation).labelKey
     ];
   return (
     <CanvasRelationalTreeEditorFrame
-      hasExpression={transformNode != null && operation !== 'sort' && operation !== 'fetch'}
+      hasExpression={hasExpression}
       readOnly={false}
       operation={operation}
       relationId={relationId}
       onClose={onClose}
     >
-      {transformNode == null ? null : (
+      {!hasExpression ? null : (
         <CanvasRelationalExpressionTree
           transformNode={transformNode}
           draft={draft}
