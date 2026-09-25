@@ -73,6 +73,30 @@ function windowCount(expressions: readonly Expression[]): number {
   return expressions.filter((expression) => expression.rexType.case === 'windowFunction').length;
 }
 
+function projectOutputSummary(
+  rel: Rel,
+  index: SubstraitRelationIndex,
+  inputRelationIds: readonly string[]
+): CanvasRelationalTreeNode['projectionSummary'] {
+  if (rel.relType.case !== 'project') return undefined;
+  const inputFieldCount =
+    inputRelationIds[0] == null ? 0 : (index.relations.get(inputRelationIds[0])?.fields.length ?? 0);
+  const project = rel.relType.value;
+  const availableFieldCount = inputFieldCount + project.expressions.length;
+  const emitted =
+    project.common?.emitKind.case === 'emit'
+      ? project.common.emitKind.value.outputMapping
+      : Array.from({ length: availableFieldCount }, (_, ordinal) => ordinal);
+  return {
+    passthroughFieldCount: emitted.filter(
+      (ordinal) => ordinal >= 0 && ordinal < inputFieldCount
+    ).length,
+    derivedFieldCount: emitted.filter(
+      (ordinal) => ordinal >= inputFieldCount && ordinal < availableFieldCount
+    ).length,
+  };
+}
+
 function fieldsForRelation(
   index: SubstraitRelationIndex,
   relationId: string
@@ -145,6 +169,7 @@ export function buildCanvasRelationalTreeRelation(
     const entry = index.relations.get(id)!;
     const rel = entry.relation;
     const windows = rel.relType.case === 'project' ? windowCount(rel.relType.value.expressions) : 0;
+    const projectionSummary = projectOutputSummary(rel, index, entry.inputs);
     nodes.set(id, {
       locator: `rel:${digest}:${paths.get(id)}`,
       operator: operator(rel),
@@ -155,6 +180,7 @@ export function buildCanvasRelationalTreeRelation(
       sourceRef: entry.binding.sourceRef ?? null,
       output: { fields: fieldsForRelation(index, id) },
       expressionRefs: relationExpressionRefs(rel),
+      ...(projectionSummary == null ? {} : { projectionSummary }),
       decorations: windows === 0 ? [] : [{ kind: 'window', count: windows }],
       children: children.get(id)!.map((input, position) => ({
         role: input.role,
