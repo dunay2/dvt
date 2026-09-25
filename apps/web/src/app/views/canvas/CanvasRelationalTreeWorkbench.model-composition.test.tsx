@@ -57,14 +57,46 @@ describe('Model composition Workbench', () => {
     );
     expect(alias).not.toBeNull();
     await act(async () => {
-      alias!.value = 'order_key';
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(
+        alias,
+        'order_key'
+      );
       alias!.dispatchEvent(new Event('input', { bubbles: true }));
-      alias!.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+    });
+    await act(async () => {
+      alias!.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
     });
 
     const draft = applied.mock.calls.at(-1)?.[0] as CanvasInspectorNodeDraft;
     expect(draft.dvt?.kind).toBe('transform');
     if (draft.dvt?.kind !== 'transform' || draft.dvt.mode !== 'substrait') return;
     expect(draft.dvt.sidecar.fields.some((field) => field.displayName === 'order_key')).toBe(true);
+
+    await act(async () => {
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-model-composition-operations-tab"]')!
+        .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    });
+    expect(
+      container.querySelectorAll('[data-slot="canvas-model-composition-steps"] [data-kind="input"]')
+    ).toHaveLength(2);
+    expect(
+      container.querySelectorAll(
+        '[data-slot="canvas-model-composition-steps"] [data-kind="operation"]'
+      )
+    ).toHaveLength(1);
+
+    await act(async () => {
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-contextual-workbench-close"]')!
+        .click();
+    });
+    expect(container.querySelector('[data-slot="canvas-model-composition"]')).toBeNull();
+    await act(async () => {
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-output"]')!
+        .click();
+    });
+    expect(container.querySelector('[data-slot="canvas-model-composition"]')).not.toBeNull();
   });
 });

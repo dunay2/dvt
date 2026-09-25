@@ -21,6 +21,7 @@ export function CanvasRelationalTreeView({
   onRemove,
   transformNode,
   onDropSource,
+  onOpenOutput,
 }: Readonly<{
   outputName: string;
   root: CanvasRelationalTreeNode;
@@ -31,6 +32,7 @@ export function CanvasRelationalTreeView({
   onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
   transformNode?: CanonicalNode;
   onDropSource?: (nodeId: string) => void;
+  onOpenOutput?: () => void;
 }>): JSX.Element {
   const viewport = useCanvasRelationalTreeViewport(root.locator);
 
@@ -88,6 +90,7 @@ export function CanvasRelationalTreeView({
               onRemove={onRemove}
               zoom={viewport.zoom}
               onManualLayout={viewport.stopAutoFit}
+              onOpenOutput={onOpenOutput}
               semanticContext={transformNode == null ? undefined : { transformNode }}
             />
           </div>

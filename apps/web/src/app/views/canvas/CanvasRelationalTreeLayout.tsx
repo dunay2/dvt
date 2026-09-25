@@ -26,6 +26,7 @@ export function CanvasRelationalTreeLayout({
   semanticContext,
   zoom = 1,
   onManualLayout,
+  onOpenOutput,
 }: Readonly<{
   outputName: string;
   root: CanvasRelationalTreeNode;
@@ -37,6 +38,7 @@ export function CanvasRelationalTreeLayout({
   semanticContext?: CanvasRelationalSemanticContext;
   zoom?: number;
   onManualLayout?: () => void;
+  onOpenOutput?: () => void;
 }>): JSX.Element {
   const detailed = Math.round(zoom * 100) >= CANVAS_RELATIONAL_SEMANTIC_ZOOM * 100;
   const detail = useMemo(
@@ -61,9 +63,12 @@ export function CanvasRelationalTreeLayout({
     >
       <RelationalTreeEdges layout={layout} />
 
-      <div
+      <button
+        type="button"
         data-slot="canvas-relational-tree-output"
-        className="absolute flex items-center gap-2 rounded-md border border-emerald-500 bg-emerald-950/30 px-3 text-left shadow-sm"
+        aria-label={`${outputName} · ${copy.relationalTreeOutputLabel}`}
+        onClick={onOpenOutput}
+        className="absolute z-10 flex items-center gap-2 rounded-md border border-emerald-500 bg-emerald-950/30 px-3 text-left shadow-sm transition-colors hover:bg-emerald-900/35 focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
         style={{
           left: layout.output.x,
           top: layout.output.y,
@@ -80,7 +85,7 @@ export function CanvasRelationalTreeLayout({
             {copy.relationalTreeOutputLabel}
           </span>
         </span>
-      </div>
+      </button>
 
       <ul role="tree" aria-label={copy.relationalTreeLabel} className="absolute inset-0">
         {layout.nodes.map((placed) => (
