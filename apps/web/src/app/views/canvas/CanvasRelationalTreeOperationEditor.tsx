@@ -34,7 +34,8 @@ export function CanvasRelationalTreeOperationEditor({
   cross,
   set = false,
 }: CanvasRelationalTreeOperationEditorProps): JSX.Element {
-  const pending = usePendingRelationEdits(onPendingConditionChange);
+  const [setPropertiesPending, setOutputsPending] =
+    usePendingRelationEdits(onPendingConditionChange);
   return (
     <div className="space-y-4">
       {appendInput == null ? null : (
@@ -48,7 +49,7 @@ export function CanvasRelationalTreeOperationEditor({
       <CanvasRelationalTreeJoinEditor
         copy={copy}
         onChange={onChangeJoinDraft}
-        onPendingConditionChange={pending.setProperties}
+        onPendingConditionChange={setPropertiesPending}
         selectedRelationId={appendInput != null || cross || set ? null : selectedRelationId}
       />
       {selectedRelationId == null || appendInput != null ? null : (
@@ -57,7 +58,7 @@ export function CanvasRelationalTreeOperationEditor({
           relationId={selectedRelationId}
           disabled={false}
           onChange={onChangeJoinDraft}
-          onPendingChange={pending.setOutputs}
+          onPendingChange={setOutputsPending}
         />
       )}
     </div>

@@ -11,5 +11,5 @@ export function usePendingRelationEdits(onChange?: (pending: boolean) => void) {
     callback.current?.(pending);
     return () => callback.current?.(false);
   }, [pending]);
-  return { setProperties, setOutputs };
+  return [setProperties, setOutputs] as const;
 }

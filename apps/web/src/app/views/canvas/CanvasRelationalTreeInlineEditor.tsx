@@ -1,7 +1,7 @@
 /** Owned concern: edit the operation selected in the central relational draft canvas. */
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
-import { useContext, useEffect, useRef, useState } from 'react';
-import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
+import { usePendingRelationEdits } from './usePendingRelationEdits';
+import { useSelectedRelation } from './useSelectedRelation';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
@@ -31,26 +31,11 @@ export function CanvasRelationalTreeInlineEditor(
     expanded,
     onClose,
   } = props;
-  const analysis = useContext(CanvasRelationAnalysisContext);
-  const [compositionPending, setCompositionPending] = useState(false);
-  const [selectionPending, setSelectionPending] = useState(false);
-  const pending = compositionPending || selectionPending;
-  const pendingCallback = useRef(props.onPendingConditionChange);
-  pendingCallback.current = props.onPendingConditionChange;
-  useEffect(() => {
-    pendingCallback.current?.(pending);
-    return () => pendingCallback.current?.(false);
-  }, [pending]);
+  const [setCompositionPending, setSelectionPending] = usePendingRelationEdits(
+    props.onPendingConditionChange
+  );
+  const selected = useSelectedRelation(selectedRelationId)?.relation.relType;
   if (operation == null || joinDraft == null) return null;
-  const selected =
-    analysis?.error == null &&
-    analysis?.revision === analysis?.session.revision &&
-    selectedRelationId != null &&
-    analysis?.document?.sidecar.relations.some(
-      (binding) => binding.relationId === selectedRelationId
-    )
-      ? analysis.session.locate(selectedRelationId, analysis.revision).relation.relType
-      : null;
   const selectedJoin = selected?.case === 'join' ? selected.value : null;
   const selectedCross = selected?.case === 'cross';
   const selectedSet = selected?.case === 'set';

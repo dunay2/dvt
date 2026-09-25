@@ -13,6 +13,7 @@ import { CanvasRelationalExpressionTree } from './CanvasRelationalExpressionTree
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { CanvasRelationOutputs } from './CanvasRelationOutputs';
 import { usePendingRelationEdits } from './usePendingRelationEdits';
+import { relationExpressionRefs } from './canvasRelationalTreeRelationProjection';
 
 export function CanvasSelectedUnaryEditor({
   draft,
@@ -35,18 +36,21 @@ export function CanvasSelectedUnaryEditor({
 }>): JSX.Element | null {
   const language = useApplicationLanguageStore((state) => state.language);
   const selected = useSelectedRelationTool(relationId, operation, 'edit');
-  const pending = usePendingRelationEdits(onPendingChange);
+  const [setPropertiesPending, setOutputsPending] = usePendingRelationEdits(onPendingChange);
   if (selected == null) return null;
-  const hasExpression = transformNode != null && operation !== 'sort' && operation !== 'fetch';
+  const hasExpression =
+    transformNode != null &&
+    relationExpressionRefs(selected.target.relation).some((ref) => ref.slot !== 'sort-key');
+  const presentation = operation === 'window' && !selected.tool.enabled ? 'projection' : operation;
   const title =
     resolveCanvasViewCopy(language)[
-      resolveCanvasRelationalOperationPresentation(operation).labelKey
+      resolveCanvasRelationalOperationPresentation(presentation).labelKey
     ];
   return (
     <CanvasRelationalTreeEditorFrame
       hasExpression={hasExpression}
       readOnly={false}
-      operation={operation}
+      operation={presentation}
       relationId={relationId}
       onClose={onClose}
     >
@@ -69,7 +73,7 @@ export function CanvasSelectedUnaryEditor({
             title={title}
             onChange={onChange}
             onClose={onClose}
-            onPendingChange={pending.setProperties}
+            onPendingChange={setPropertiesPending}
           />
         ) : (
           <p role="status">{resolveCanvasSemanticEditorCopy(language).inspectionOnly}</p>
@@ -78,7 +82,7 @@ export function CanvasSelectedUnaryEditor({
           relationId={relationId}
           disabled={false}
           onChange={onChange}
-          onPendingChange={pending.setOutputs}
+          onPendingChange={setOutputsPending}
         />
       </div>
     </CanvasRelationalTreeEditorFrame>

@@ -3,8 +3,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { SourceOccurrenceProperties } from './relational-source-occurrence/SourceOccurrenceProperties';
-import { useContext } from 'react';
-import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
+import { useSelectedRelation } from './useSelectedRelation';
 import { CanvasSelectedUnaryEditor } from './CanvasSelectedUnaryEditor';
 
 export function CanvasRelationalTreeSelectedOperatorEditor({
@@ -24,17 +23,9 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
   onClose: () => void;
   onPendingConditionChange?: (pending: boolean) => void;
 }>): JSX.Element | null {
-  const analysis = useContext(CanvasRelationAnalysisContext);
-  const selected =
-    analysis?.error == null &&
-    analysis?.document?.sidecar.relations.some((entry) => entry.relationId === relationId) &&
-    analysis.revision === analysis.session.revision &&
-    relationId != null
-      ? analysis.session.locate(relationId, analysis.revision).relation.relType.case
-      : null;
-  const read = draft.sidecar.relations.find(
-    (binding) => binding.relationId === relationId && binding.sourceRef != null
-  );
+  const entry = useSelectedRelation(relationId);
+  const selected = entry?.relation.relType.case;
+  const read = entry?.binding.sourceRef == null ? null : entry.binding;
   if (read != null)
     return (
       <SourceOccurrenceProperties
