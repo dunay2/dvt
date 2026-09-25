@@ -976,7 +976,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     }
     setDraftSession.mockClear();
     await act(async () => {
-      await harness.latest()?.handleToggleCanvasColumnOutput({
+      harness.latest()?.handleToggleCanvasColumnOutput({
         nodeId: transform.id,
         columnId: 'output:customer',
         columnType: 'text',
