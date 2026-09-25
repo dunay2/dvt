@@ -104,7 +104,10 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
             occurrences={model.authoringAvailable ? model.session.occurrences : undefined}
           />
           <CanvasRelationAnalysisContext.Provider value={model.session.analysis}>
-            <div className="relative flex min-h-0 min-w-0 overflow-hidden">
+            <div
+              data-slot="canvas-relational-tree-surface"
+              className="relative h-full min-h-0 w-full min-w-0 overflow-hidden"
+            >
               <CanvasRelationalTreeContent
                 model={model}
                 transformNode={transformNode}
