@@ -1,3 +1,5 @@
+import { sourceOperationFacts } from './canvasSourceOperationFacts';
+import { resolveCanvasDvtInitialJoinInputs } from './canvasDvtInitialJoinModel';
 /** Owned concern: orchestrate operation selection before canonical relational composition. */
 import { useState } from 'react';
 
@@ -9,10 +11,11 @@ import {
 } from './canvasRelationalPredicateSeed';
 import {
   resolveCanvasRelationalOperationChoices,
+  isCanvasSetOperation,
   type CanvasRelationalOperation,
 } from './canvasRelationalOperationChoices';
 import { canvasViewCopy } from './copy';
-import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { DvtRelationalOperationChooser } from './DvtRelationalOperationChooser';
 import { DvtSubstraitInnerJoinStartSection } from './DvtSubstraitInnerJoinStartSection';
 import { DvtSubstraitUnionAllStartSection } from './DvtSubstraitUnionAllStartSection';
@@ -39,7 +42,7 @@ export function DvtSubstraitCompositionStartSection({
   inputs: readonly CanvasDvtCompositionInput[];
   predicateSeed?: CanvasRelationalPredicateSeed | null;
   onClearPredicateSeed?: () => void;
-  onStartInnerJoin: (draft: DvtSubstraitJoinDraft, operation: CanvasJoinOperation) => void;
+  onStartInnerJoin: (draft: SubstraitDocument, operation: CanvasJoinOperation) => void;
   onStartUnionAll?: () => void;
   onStartUnionDistinct?: () => void;
   onStartIntersectDistinct?: () => void;
@@ -54,7 +57,7 @@ export function DvtSubstraitCompositionStartSection({
     predicateSeed != null && isCanvasRelationalPredicateSeedAvailable(inputs, predicateSeed)
       ? predicateSeed
       : null;
-  const choices = resolveCanvasRelationalOperationChoices({
+  const facts = {
     inputs,
     predicateAvailable: availablePredicateSeed != null,
     readOnly: disabled,
@@ -64,7 +67,17 @@ export function DvtSubstraitCompositionStartSection({
     exceptDistinctAvailable: onStartExceptDistinct != null,
     intersectAllAvailable: onStartIntersectAll != null,
     exceptAllAvailable: onStartExceptAll != null,
-  });
+  };
+  const choices = resolveCanvasRelationalOperationChoices(sourceOperationFacts(facts));
+  const joinChoices = resolveCanvasRelationalOperationChoices(
+    sourceOperationFacts({
+      ...facts,
+      inputs: resolveCanvasDvtInitialJoinInputs(inputs),
+    })
+  );
+  const availableChoices = choices.map((choice, index) =>
+    isCanvasJoinOperation(choice.operation) ? joinChoices[index]! : choice
+  );
 
   if (isCanvasJoinOperation(selectedOperation)) {
     return (
@@ -89,98 +102,22 @@ export function DvtSubstraitCompositionStartSection({
       />
     );
   }
-  if (selectedOperation === 'union_all' && onStartUnionAll != null) {
+  const startSet = {
+    union_all: onStartUnionAll,
+    union_distinct: onStartUnionDistinct,
+    intersect_distinct: onStartIntersectDistinct,
+    except_distinct: onStartExceptDistinct,
+    intersect_all: onStartIntersectAll,
+    except_all: onStartExceptAll,
+  };
+  if (isCanvasSetOperation(selectedOperation) && startSet[selectedOperation] != null) {
     return (
       <DvtSubstraitUnionAllStartSection
         disabled={disabled}
         inputs={inputs}
+        operation={selectedOperation}
         onApply={() => {
-          onStartUnionAll();
-          onClearPredicateSeed?.();
-        }}
-        onCancel={() => {
-          setSelectedOperation(null);
-          onClearPredicateSeed?.();
-        }}
-      />
-    );
-  }
-  if (selectedOperation === 'union_distinct' && onStartUnionDistinct != null) {
-    return (
-      <DvtSubstraitUnionAllStartSection
-        disabled={disabled}
-        inputs={inputs}
-        operation="union_distinct"
-        onApply={() => {
-          onStartUnionDistinct();
-          onClearPredicateSeed?.();
-        }}
-        onCancel={() => {
-          setSelectedOperation(null);
-          onClearPredicateSeed?.();
-        }}
-      />
-    );
-  }
-  if (selectedOperation === 'intersect_distinct' && onStartIntersectDistinct != null) {
-    return (
-      <DvtSubstraitUnionAllStartSection
-        disabled={disabled}
-        inputs={inputs}
-        operation="intersect_distinct"
-        onApply={() => {
-          onStartIntersectDistinct();
-          onClearPredicateSeed?.();
-        }}
-        onCancel={() => {
-          setSelectedOperation(null);
-          onClearPredicateSeed?.();
-        }}
-      />
-    );
-  }
-  if (selectedOperation === 'except_distinct' && onStartExceptDistinct != null) {
-    return (
-      <DvtSubstraitUnionAllStartSection
-        disabled={disabled}
-        inputs={inputs}
-        operation="except_distinct"
-        onApply={() => {
-          onStartExceptDistinct();
-          onClearPredicateSeed?.();
-        }}
-        onCancel={() => {
-          setSelectedOperation(null);
-          onClearPredicateSeed?.();
-        }}
-      />
-    );
-  }
-  if (selectedOperation === 'intersect_all' && onStartIntersectAll != null) {
-    return (
-      <DvtSubstraitUnionAllStartSection
-        disabled={disabled}
-        inputs={inputs}
-        operation="intersect_all"
-        onApply={() => {
-          onStartIntersectAll();
-          onClearPredicateSeed?.();
-        }}
-        onCancel={() => {
-          setSelectedOperation(null);
-          onClearPredicateSeed?.();
-        }}
-      />
-    );
-  }
-  if (selectedOperation === 'except_all' && onStartExceptAll != null) {
-    return (
-      <DvtSubstraitUnionAllStartSection
-        disabled={disabled}
-        inputs={inputs}
-        operation="except_all"
-        onApply={() => {
-          onStartExceptAll();
+          startSet[selectedOperation]?.();
           onClearPredicateSeed?.();
         }}
         onCancel={() => {
@@ -205,7 +142,7 @@ export function DvtSubstraitCompositionStartSection({
           {availablePredicateSeed.right.nodeId}.{availablePredicateSeed.right.fieldName}
         </p>
       ) : null}
-      <DvtRelationalOperationChooser choices={choices} onSelect={setSelectedOperation} />
+      <DvtRelationalOperationChooser choices={availableChoices} onSelect={setSelectedOperation} />
     </section>
   );
 }

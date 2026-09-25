@@ -2,7 +2,7 @@
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import { Button } from '../../components/ui/button';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
-import type { DvtSubstraitSetOperation } from './canvasDvtSubstraitSetComposition';
+import type { DvtSubstraitSetOperation } from '@dvt/postgres-projection';
 import { canvasViewCopy } from './copy';
 import { canvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 
