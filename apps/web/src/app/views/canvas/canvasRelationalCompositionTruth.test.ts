@@ -6,12 +6,10 @@ import type { ConnectedSourceRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import {
-  createDvtSubstraitStringJoinDraft,
-  encodeDvtSubstraitJoinDocument,
-  type DvtSubstraitJoinDraft,
-  type DvtSubstraitJoinType,
-} from './canvasDvtSubstraitJoinComposition';
+import { createSourceJoin } from './canvasSourceJoin';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import type { DvtSubstraitJoinType } from '@dvt/postgres-projection';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
 import {
@@ -19,7 +17,6 @@ import {
   applyDvtSubstraitSort,
   resolveDvtSubstraitSortFetchInputFields,
 } from './canvasSortFetch.test-support';
-import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 function source(name: string): CanonicalNode {
   const sourceRef: ConnectedSourceRef = {
@@ -73,8 +70,8 @@ function canonicalJoinDraft(
   left: CanonicalNode,
   right: CanonicalNode,
   joinType: DvtSubstraitJoinType = JoinRel_JoinType.INNER
-): DvtSubstraitJoinDraft {
-  return createDvtSubstraitStringJoinDraft({
+): SubstraitDocument {
+  return createSourceJoin({
     left: {
       source: {
         nodeId: left.id,
@@ -109,7 +106,7 @@ function canonicalJoin(
 ): CanonicalNode {
   return applyDvtSubstraitSemanticDocument(
     transform(),
-    encodeDvtSubstraitJoinDocument(canonicalJoinDraft(left, right, joinType))
+    encodeDvtSubstraitSemanticDocument(canonicalJoinDraft(left, right, joinType))
   );
 }
 

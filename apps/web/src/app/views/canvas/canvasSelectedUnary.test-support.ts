@@ -1,9 +1,9 @@
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
-import { createDvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import { createCustomerOrdersJoin } from './canvasJoin.test-support';
 import { source } from './canvasRelationalOperator.test-support';
 
 export function selectedUnaryScenario() {
-  const document = createDvtSubstraitJoinDraft({
+  const document = createCustomerOrdersJoin({
     left: source('left'),
     right: source('right'),
     targetNodeId: 'model',

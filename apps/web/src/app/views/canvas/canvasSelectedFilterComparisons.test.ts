@@ -3,7 +3,7 @@ import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { applySelectedRelationFilter } from './canvasSelectedRelationFilter';
-import { removeSelectedRelationPassthrough } from './canvasSelectedRelationPassthrough';
+import { prepareRelationRemoval } from './canvasPrepareRelationRemoval';
 import { dvtSubstraitTextComparison } from './canvasDvtSubstraitTextComparison';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
@@ -34,10 +34,13 @@ describe('selected Filter comparison semantics', () => {
           sourceOrdinal: field.outputOrdinal,
           value: "O'Reilly",
         });
-        const removed = await removeSelectedRelationPassthrough(
-          session,
-          session.rootId,
-          session.revision
+        const removed = session.apply(
+          (
+            await prepareRelationRemoval(session, {
+              relationId: session.rootId,
+              expectedRevision: session.revision,
+            })
+          ).change
         );
         expect(deriveSubstraitSchemas(removed).schemas.get(session.rootId)).toEqual(
           deriveSubstraitSchemas(draft).schemas.get(session.rootId)
