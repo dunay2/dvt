@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act } from 'react';
 import { describe, expect, it } from 'vitest';
-import { DvtSubstraitUnionAllStartSection } from './DvtSubstraitUnionAllStartSection';
+import { DvtRelationCompositionConfirmation } from './DvtRelationCompositionConfirmation';
 import {
   sourceRef,
   setupWorkbenchTest,
@@ -11,9 +11,10 @@ import {
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { canvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 
-describe('ordered Set confirmation', () => {
+describe('ordered predicate-free confirmation', () => {
   setupWorkbenchTest();
   it.each([
+    'cross_join',
     'union_all',
     'union_distinct',
     'intersect_distinct',
@@ -30,7 +31,7 @@ describe('ordered Set confirmation', () => {
     }));
     act(() =>
       root.render(
-        <DvtSubstraitUnionAllStartSection
+        <DvtRelationCompositionConfirmation
           disabled={false}
           operation={operation}
           inputs={inputs}

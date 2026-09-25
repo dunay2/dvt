@@ -38,7 +38,8 @@ export class CanvasRelationAnalysisSession {
       this.accepted != null &&
       equals(PlanSchema, document.plan, this.accepted.plan) &&
       jcsCanonicalize(document.sidecar) === jcsCanonicalize(this.accepted.sidecar)
-    ) return;
+    )
+      return;
     if (document == null) this.dispose();
     else if (this.analysis == null)
       this.analysis = new RelationAnalysisSession({ document, scope: this.scope });

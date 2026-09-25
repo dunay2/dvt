@@ -6,6 +6,8 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
 import { createSourceSet } from './canvasSourceSet';
+import { createSourceCross } from './canvasSourceCross';
+import type { CanvasPredicateFreeOperation } from './DvtRelationCompositionConfirmation';
 import { resolveConnectedSetEntry } from './canvasConnectedRelationInputs';
 import { DvtSubstraitCompositionStartSection } from './DvtSubstraitCompositionStartSection';
 import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
@@ -32,7 +34,10 @@ export function DvtSubstraitCompositionStart({
   const inputs = resolveCanvasDvtCompositionInputs({ targetNodeId: node.id, nodes, edges });
   if (inputs.length < 2) return null;
   const entry = resolveConnectedSetEntry({ targetNode: node, nodes, edges });
-  const apply = (document: SubstraitDocument, shape: CanvasJoinOperation | CanvasSetOperation) => {
+  const apply = (
+    document: SubstraitDocument,
+    shape: CanvasJoinOperation | CanvasPredicateFreeOperation
+  ) => {
     if (disabled) return;
     onChange((current) => ({
       ...current,
@@ -54,12 +59,15 @@ export function DvtSubstraitCompositionStart({
       predicateSeed={predicateSeed}
       onClearPredicateSeed={onClearPredicateSeed}
       onStartInnerJoin={apply}
-      onStartUnionAll={startSet('union_all')}
-      onStartUnionDistinct={startSet('union_distinct')}
-      onStartIntersectDistinct={startSet('intersect_distinct')}
-      onStartExceptDistinct={startSet('except_distinct')}
-      onStartIntersectAll={startSet('intersect_all')}
-      onStartExceptAll={startSet('except_all')}
+      onStartWithoutPredicate={{
+        cross_join: () => apply(createSourceCross(inputs), 'cross_join'),
+        union_all: startSet('union_all'),
+        union_distinct: startSet('union_distinct'),
+        intersect_distinct: startSet('intersect_distinct'),
+        except_distinct: startSet('except_distinct'),
+        intersect_all: startSet('intersect_all'),
+        except_all: startSet('except_all'),
+      }}
     />
   );
 }

@@ -1,40 +1,39 @@
-/** Owned concern: confirm one compatible SetRel without manufacturing a predicate. */
+/** Confirm ordered predicate-free composition without owning canonical construction. */
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import { Button } from '../../components/ui/button';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
-import type { DvtSubstraitSetOperation } from '@dvt/postgres-projection';
+import type { CanvasSetOperation } from './canvasRelationalOperationChoices';
 import { canvasViewCopy } from './copy';
 import { canvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 
-function titleFor(operation: DvtSubstraitSetOperation): string {
-  return canvasViewCopy[canvasRelationalOperationPresentation[operation].labelKey];
-}
+export type CanvasPredicateFreeOperation = CanvasSetOperation | 'cross_join';
 
-export function DvtSubstraitUnionAllStartSection({
+export function DvtRelationCompositionConfirmation({
   disabled,
   inputs,
-  operation = 'union_all',
+  operation,
   onApply,
   onCancel,
 }: Readonly<{
   disabled: boolean;
   inputs: readonly CanvasDvtCompositionInput[];
-  operation?: DvtSubstraitSetOperation;
+  operation: CanvasPredicateFreeOperation;
   onApply: () => void;
   onCancel: () => void;
 }>): JSX.Element {
+  const title = canvasViewCopy[canvasRelationalOperationPresentation[operation].labelKey];
   return (
-    <section data-slot="dvt-substrait-union-all-start" className="space-y-3">
-      <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>{titleFor(operation)}</h3>
+    <section data-slot="dvt-composition-confirmation" className="space-y-3">
+      <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>{title}</h3>
       <p className="text-xs text-(--text-muted)">
-        {inputs.map((input) => `${input.schema}.${input.table}`).join(` ${titleFor(operation)} `)}
+        {inputs.map((input) => `${input.schema}.${input.table}`).join(` ${title} `)}
       </p>
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"
           size="sm"
           disabled={disabled}
-          data-slot="dvt-start-connected-union-all"
+          data-slot="dvt-confirm-composition"
           onClick={onApply}
         >
           {canvasViewCopy.inspectorDvtRelationalApply}

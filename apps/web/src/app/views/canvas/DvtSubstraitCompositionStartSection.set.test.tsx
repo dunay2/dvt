@@ -18,7 +18,7 @@ describe('Composition start set', () => {
           disabled={false}
           inputs={[input('north', 'customers_north'), input('south', 'customers_south')]}
           onStartInnerJoin={onStartInnerJoin}
-          onStartUnionAll={onStartUnionAll}
+          onStartWithoutPredicate={{ union_all: onStartUnionAll }}
         />
       );
     });
@@ -36,9 +36,7 @@ describe('Composition start set', () => {
 
     await act(async () => {
       fireEvent.click(
-        view.container.querySelector<HTMLButtonElement>(
-          '[data-slot="dvt-start-connected-union-all"]'
-        )!
+        view.container.querySelector<HTMLButtonElement>('[data-slot="dvt-confirm-composition"]')!
       );
     });
     expect(onStartUnionAll).toHaveBeenCalledOnce();
@@ -52,7 +50,7 @@ describe('Composition start set', () => {
           disabled={false}
           inputs={[input('north', 'customers_north'), input('south', 'customers_south')]}
           onStartInnerJoin={vi.fn()}
-          onStartUnionDistinct={onStartUnionDistinct}
+          onStartWithoutPredicate={{ union_distinct: onStartUnionDistinct }}
         />
       );
     });
@@ -73,19 +71,17 @@ describe('Composition start set', () => {
 
     await act(async () => {
       fireEvent.click(
-        view.container.querySelector<HTMLButtonElement>(
-          '[data-slot="dvt-start-connected-union-all"]'
-        )!
+        view.container.querySelector<HTMLButtonElement>('[data-slot="dvt-confirm-composition"]')!
       );
     });
     expect(onStartUnionDistinct).toHaveBeenCalledOnce();
   });
   it.each([
-    ['intersect-distinct', 'INTERSECT', 'onStartIntersectDistinct'],
-    ['except-distinct', 'EXCEPT', 'onStartExceptDistinct'],
-    ['intersect-all', 'INTERSECT ALL', 'onStartIntersectAll'],
-    ['except-all', 'EXCEPT ALL', 'onStartExceptAll'],
-  ] as const)('applies %s through its exact SetRel choice', async (slot, label, callbackName) => {
+    ['intersect-distinct', 'INTERSECT', 'intersect_distinct'],
+    ['except-distinct', 'EXCEPT', 'except_distinct'],
+    ['intersect-all', 'INTERSECT ALL', 'intersect_all'],
+    ['except-all', 'EXCEPT ALL', 'except_all'],
+  ] as const)('applies %s through its exact SetRel choice', async (slot, label, operationId) => {
     const callback = vi.fn();
     await act(async () => {
       view.root.render(
@@ -93,7 +89,7 @@ describe('Composition start set', () => {
           disabled={false}
           inputs={[input('north', 'customers_north'), input('south', 'customers_south')]}
           onStartInnerJoin={vi.fn()}
-          {...{ [callbackName]: callback }}
+          onStartWithoutPredicate={{ [operationId]: callback }}
         />
       );
     });
@@ -111,9 +107,7 @@ describe('Composition start set', () => {
     expect(callback).not.toHaveBeenCalled();
     await act(async () => {
       fireEvent.click(
-        view.container.querySelector<HTMLButtonElement>(
-          '[data-slot="dvt-start-connected-union-all"]'
-        )!
+        view.container.querySelector<HTMLButtonElement>('[data-slot="dvt-confirm-composition"]')!
       );
     });
     expect(callback).toHaveBeenCalledOnce();

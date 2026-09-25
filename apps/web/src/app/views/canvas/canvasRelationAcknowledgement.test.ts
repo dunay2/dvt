@@ -32,18 +32,25 @@ describe('canonical document acknowledgements', () => {
     }
   });
 
-  it.each(['plan', 'sidecar'] as const)('invalidates open edits when the %s really changes', (change) => {
-    const { document, session } = graphJoin();
-    try {
-      const revision = session.revision;
-      const next = decodeDvtSubstraitSemanticDocument(encodeDvtSubstraitSemanticDocument(document));
-      if (change === 'sidecar') next.sidecar.relations[0]!.displayName = 'Renamed instance';
-      else next.plan.version!.producer = 'Another producer';
-      session.receive(decodeDvtSubstraitSemanticDocument(encodeDvtSubstraitSemanticDocument(next)));
-      expect(() => session.locate(session.rootId, revision)).toThrow();
-      expect(session.revision).toBeGreaterThan(revision);
-    } finally {
-      session.dispose();
+  it.each(['plan', 'sidecar'] as const)(
+    'invalidates open edits when the %s really changes',
+    (change) => {
+      const { document, session } = graphJoin();
+      try {
+        const revision = session.revision;
+        const next = decodeDvtSubstraitSemanticDocument(
+          encodeDvtSubstraitSemanticDocument(document)
+        );
+        if (change === 'sidecar') next.sidecar.relations[0]!.displayName = 'Renamed instance';
+        else next.plan.version!.producer = 'Another producer';
+        session.receive(
+          decodeDvtSubstraitSemanticDocument(encodeDvtSubstraitSemanticDocument(next))
+        );
+        expect(() => session.locate(session.rootId, revision)).toThrow();
+        expect(session.revision).toBeGreaterThan(revision);
+      } finally {
+        session.dispose();
+      }
     }
-  });
+  );
 });

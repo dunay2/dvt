@@ -18,7 +18,10 @@ import { canvasViewCopy } from './copy';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { DvtRelationalOperationChooser } from './DvtRelationalOperationChooser';
 import { DvtSubstraitInnerJoinStartSection } from './DvtSubstraitInnerJoinStartSection';
-import { DvtSubstraitUnionAllStartSection } from './DvtSubstraitUnionAllStartSection';
+import {
+  DvtRelationCompositionConfirmation,
+  type CanvasPredicateFreeOperation,
+} from './DvtRelationCompositionConfirmation';
 import {
   isCanvasJoinOperation,
   toSubstraitJoinType,
@@ -31,24 +34,14 @@ export function DvtSubstraitCompositionStartSection({
   predicateSeed,
   onClearPredicateSeed,
   onStartInnerJoin,
-  onStartUnionAll,
-  onStartUnionDistinct,
-  onStartIntersectDistinct,
-  onStartExceptDistinct,
-  onStartIntersectAll,
-  onStartExceptAll,
+  onStartWithoutPredicate = {},
 }: Readonly<{
   disabled: boolean;
   inputs: readonly CanvasDvtCompositionInput[];
   predicateSeed?: CanvasRelationalPredicateSeed | null;
   onClearPredicateSeed?: () => void;
   onStartInnerJoin: (draft: SubstraitDocument, operation: CanvasJoinOperation) => void;
-  onStartUnionAll?: () => void;
-  onStartUnionDistinct?: () => void;
-  onStartIntersectDistinct?: () => void;
-  onStartExceptDistinct?: () => void;
-  onStartIntersectAll?: () => void;
-  onStartExceptAll?: () => void;
+  onStartWithoutPredicate?: Readonly<Partial<Record<CanvasPredicateFreeOperation, () => void>>>;
 }>): JSX.Element {
   const [selectedOperation, setSelectedOperation] = useState<CanvasRelationalOperation | null>(
     null
@@ -61,12 +54,12 @@ export function DvtSubstraitCompositionStartSection({
     inputs,
     predicateAvailable: availablePredicateSeed != null,
     readOnly: disabled,
-    unionAllAvailable: onStartUnionAll != null,
-    unionDistinctAvailable: onStartUnionDistinct != null,
-    intersectDistinctAvailable: onStartIntersectDistinct != null,
-    exceptDistinctAvailable: onStartExceptDistinct != null,
-    intersectAllAvailable: onStartIntersectAll != null,
-    exceptAllAvailable: onStartExceptAll != null,
+    unionAllAvailable: onStartWithoutPredicate.union_all != null,
+    unionDistinctAvailable: onStartWithoutPredicate.union_distinct != null,
+    intersectDistinctAvailable: onStartWithoutPredicate.intersect_distinct != null,
+    exceptDistinctAvailable: onStartWithoutPredicate.except_distinct != null,
+    intersectAllAvailable: onStartWithoutPredicate.intersect_all != null,
+    exceptAllAvailable: onStartWithoutPredicate.except_all != null,
   };
   const choices = resolveCanvasRelationalOperationChoices(sourceOperationFacts(facts));
   const joinChoices = resolveCanvasRelationalOperationChoices(
@@ -75,9 +68,12 @@ export function DvtSubstraitCompositionStartSection({
       inputs: resolveCanvasDvtInitialJoinInputs(inputs),
     })
   );
-  const availableChoices = choices.map((choice, index) =>
-    isCanvasJoinOperation(choice.operation) ? joinChoices[index]! : choice
-  );
+  const availableChoices = choices.map((choice, index) => {
+    if (isCanvasJoinOperation(choice.operation)) return joinChoices[index]!;
+    return onStartWithoutPredicate[choice.operation as CanvasPredicateFreeOperation] == null
+      ? { ...choice, selectable: false }
+      : choice;
+  });
 
   if (isCanvasJoinOperation(selectedOperation)) {
     return (
@@ -102,22 +98,17 @@ export function DvtSubstraitCompositionStartSection({
       />
     );
   }
-  const startSet = {
-    union_all: onStartUnionAll,
-    union_distinct: onStartUnionDistinct,
-    intersect_distinct: onStartIntersectDistinct,
-    except_distinct: onStartExceptDistinct,
-    intersect_all: onStartIntersectAll,
-    except_all: onStartExceptAll,
-  };
-  if (isCanvasSetOperation(selectedOperation) && startSet[selectedOperation] != null) {
+  if (
+    (isCanvasSetOperation(selectedOperation) || selectedOperation === 'cross_join') &&
+    onStartWithoutPredicate[selectedOperation] != null
+  ) {
     return (
-      <DvtSubstraitUnionAllStartSection
+      <DvtRelationCompositionConfirmation
         disabled={disabled}
         inputs={inputs}
         operation={selectedOperation}
         onApply={() => {
-          startSet[selectedOperation]?.();
+          onStartWithoutPredicate[selectedOperation]?.();
           onClearPredicateSeed?.();
         }}
         onCancel={() => {

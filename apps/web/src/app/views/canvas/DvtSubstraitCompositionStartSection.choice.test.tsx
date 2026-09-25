@@ -18,7 +18,7 @@ describe('Composition start choice', () => {
           disabled={false}
           inputs={[input('orders', 'orders'), input('customers', 'customers')]}
           onStartInnerJoin={onStartInnerJoin}
-          onStartUnionAll={onStartUnionAll}
+          onStartWithoutPredicate={{ union_all: onStartUnionAll }}
         />
       );
     });
