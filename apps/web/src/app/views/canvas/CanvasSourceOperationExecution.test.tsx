@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { expect, it, vi } from 'vitest';
 import { CanvasOperationPreviewProvider } from './CanvasOperationDataPreview';
 import { CanvasRelationalTreeLayout } from './CanvasRelationalTreeLayout';
+import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 
@@ -55,13 +56,15 @@ it.each(['available', 'missing-reference', 'missing-port'] as const)(
             canEditModel
             unapplied
           >
-            <CanvasRelationalTreeLayout
-              root={node}
-              outputName="Model"
-              selectedLocator={node.locator}
-              copy={resolveCanvasViewCopy('en')}
-              onSelect={vi.fn()}
-            />
+            <RelationalLayoutSession>
+              <CanvasRelationalTreeLayout
+                root={node}
+                outputName="Model"
+                selectedLocator={node.locator}
+                copy={resolveCanvasViewCopy('en')}
+                onSelect={vi.fn()}
+              />
+            </RelationalLayoutSession>
           </CanvasOperationPreviewProvider>
         )
       );
