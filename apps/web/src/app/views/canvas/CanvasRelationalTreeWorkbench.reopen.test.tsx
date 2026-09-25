@@ -2,10 +2,8 @@
 /** Owned concern: relational workbench reopen behavior. */
 import React, { act } from 'react';
 import { describe, expect, it } from 'vitest';
-import {
-  createDvtSubstraitJoinDraft,
-  encodeDvtSubstraitJoinDocument,
-} from './canvasDvtSubstraitJoinComposition';
+import { createCustomerOrdersJoin } from './canvasJoin.test-support';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
@@ -22,7 +20,7 @@ import {
 
 describe('Canvas relational-tree Workbench reopen', () => {
   setupWorkbenchTest();
-  it('opens an existing JOIN as the structural draft before appending a pending Source', () => {
+  it('opens an existing JOIN as the structural draft before appending a pending Source', async () => {
     const customers = {
       ...sourceNode('customers', 'customers'),
       metadata: {
@@ -53,7 +51,7 @@ describe('Canvas relational-tree Workbench reopen', () => {
         ],
       },
     };
-    const baseDraft = createDvtSubstraitJoinDraft({
+    const baseDraft = createCustomerOrdersJoin({
       left: {
         nodeId: customers.id,
         schema: 'public',
@@ -70,11 +68,11 @@ describe('Canvas relational-tree Workbench reopen', () => {
     });
     const transform = applyDvtSubstraitSemanticDocument(
       transformNode(),
-      encodeDvtSubstraitJoinDocument(baseDraft)
+      encodeDvtSubstraitSemanticDocument(baseDraft)
     );
     const applied: CanvasInspectorNodeDraft[] = [];
 
-    act(() => {
+    await act(async () => {
       root.render(
         <CanvasRelationalTreeWorkbench
           transformNode={transform}
@@ -96,7 +94,10 @@ describe('Canvas relational-tree Workbench reopen', () => {
       '[data-slot="canvas-relational-node-expand"]'
     );
     expect(start).not.toBeNull();
-    act(() => start?.click());
+    await act(async () => start?.click());
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')!.click()
+    );
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
     ).not.toBeNull();
@@ -107,7 +108,7 @@ describe('Canvas relational-tree Workbench reopen', () => {
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     ).find((button) => button.textContent?.includes('countries'));
     expect(countriesButton?.disabled).toBe(false);
-    act(() => countriesButton?.click());
+    await act(async () => countriesButton?.click());
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-append-input"]')
     ).not.toBeNull();
@@ -117,8 +118,8 @@ describe('Canvas relational-tree Workbench reopen', () => {
           '[data-slot="canvas-relational-tree-existing-field"] option'
         )
       ).map((option) => option.textContent)
-    ).toEqual(expect.arrayContaining(['customers.customer_id', 'orders.order_id']));
-    act(() =>
+    ).toEqual(expect.arrayContaining(['customer_id', 'order_id']));
+    await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-append-input"]')
         ?.click()
@@ -127,7 +128,7 @@ describe('Canvas relational-tree Workbench reopen', () => {
     expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(2);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(3);
     expect(applied).toHaveLength(0);
-    act(() =>
+    await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
         ?.click()

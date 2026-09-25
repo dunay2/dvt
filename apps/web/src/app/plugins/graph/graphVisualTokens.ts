@@ -180,7 +180,7 @@ export const graphNodeColumnClasses = {
   constraint:
     'rounded border border-slate-600 px-1 py-0.5 text-[9px] font-semibold tracking-wide text-slate-200',
   outputState:
-    'nodrag nopan flex size-4 shrink-0 cursor-pointer items-center justify-center rounded border border-slate-600 bg-transparent p-0 text-emerald-300 transition hover:border-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:cursor-default disabled:hover:border-slate-600',
+    'nodrag nopan flex size-4 shrink-0 cursor-pointer items-center justify-center rounded border border-slate-600 bg-transparent p-0 text-emerald-300 transition hover:border-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 aria-disabled:cursor-default aria-disabled:hover:border-slate-600',
   outputCheck: 'size-3',
   tooltip:
     'w-auto max-w-72 break-words border border-slate-700 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-100 shadow-xl shadow-slate-950/40',

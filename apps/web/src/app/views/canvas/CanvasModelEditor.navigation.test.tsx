@@ -96,14 +96,14 @@ function Editor(props: {
   );
 }
 
-function beginProjection(container: HTMLElement): void {
-  act(() => {
+async function beginProjection(container: HTMLElement): Promise<void> {
+  await act(async () => {
     container
       .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')!
       .click();
   });
   openOperationMenu(container);
-  act(() => {
+  await act(async () => {
     document.querySelector<HTMLElement>('[data-slot="dvt-select-operation-projection"]')!.click();
   });
 }
@@ -156,7 +156,7 @@ describe('CanvasModelEditor navigation', () => {
     await act(async () => {
       root.render(<Editor authoring={{ canEditNode: true, onApplyNodeDraft }} />);
     });
-    beginProjection(container);
+    await beginProjection(container);
 
     act(() => findButton('SQL').click());
     const applyAndContinue = findButton('Apply and continue');
@@ -177,7 +177,7 @@ describe('CanvasModelEditor navigation', () => {
     await act(async () => {
       root.render(<Editor authoring={{ canEditNode: true, onApplyNodeDraft }} />);
     });
-    beginProjection(container);
+    await beginProjection(container);
 
     act(() => findButton('SQL').click());
     const applyAndContinue = findButton('Apply and continue');
@@ -198,7 +198,7 @@ describe('CanvasModelEditor navigation', () => {
     await act(async () => {
       root.render(<Editor authoring={{ canEditNode: true, onApplyNodeDraft }} />);
     });
-    beginProjection(container);
+    await beginProjection(container);
 
     act(() => useCanvasWorkspaceMenuContributionStore.getState().modelTab?.onClose(continuation));
     expect(document.querySelector('[role="alertdialog"]')).not.toBeNull();

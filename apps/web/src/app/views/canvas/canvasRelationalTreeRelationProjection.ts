@@ -38,7 +38,7 @@ function operator(rel: Rel): CanvasRelationalTreeOperator {
   }
 }
 
-function expressionRefs(rel: Rel): readonly CanvasRelationalTreeExpressionRef[] {
+export function relationExpressionRefs(rel: Rel): readonly CanvasRelationalTreeExpressionRef[] {
   switch (rel.relType.case) {
     case 'filter':
       return rel.relType.value.condition == null ? [] : [{ slot: 'filter-condition', ordinal: 0 }];
@@ -154,7 +154,7 @@ export function buildCanvasRelationalTreeRelation(
       displayName: sortFetchSummary(rel, index) ?? entry.binding.displayName ?? null,
       sourceRef: entry.binding.sourceRef ?? null,
       output: { fields: fieldsForRelation(index, id) },
-      expressionRefs: expressionRefs(rel),
+      expressionRefs: relationExpressionRefs(rel),
       decorations: windows === 0 ? [] : [{ kind: 'window', count: windows }],
       children: children.get(id)!.map((input, position) => ({
         role: input.role,

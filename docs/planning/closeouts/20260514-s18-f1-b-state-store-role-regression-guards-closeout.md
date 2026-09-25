@@ -26,7 +26,7 @@ guide with public API, invariants, transitions, consumers, and diagrams.
 - `docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md`
 - `docs/planning/closeouts/20260324-s18-explicit-state-store-root-bindings-closeout.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/s18-f1-a-state-store-role-boundary-plan-20260513.md`
-- `docs/planning/closeouts/20260513-s18-f1-a-state-store-role-boundary-closeout.md`
+- [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/docs/planning/closeouts/20260513-s18-f1-a-state-store-role-boundary-closeout.md)
 
 ## Real Work Performed
 

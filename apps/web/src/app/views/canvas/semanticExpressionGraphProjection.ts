@@ -5,7 +5,7 @@ import type {
   FunctionArgument,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import { DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS } from './canvasDvtSubstraitJoinComposition';
+import { DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS } from './canvasDvtSubstraitJoinCondition';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import type {
   SemanticWorkbenchGraph,

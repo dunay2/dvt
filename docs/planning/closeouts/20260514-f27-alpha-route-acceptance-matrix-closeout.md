@@ -29,7 +29,7 @@ keeping child slices as their own implementation authorities.
 - Added the semantic architecture guard:
   `apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts`.
 - Saved Fowler analysis in:
-  `buzon/20260514-codex-fowler-f27-alpha-route-gate-analysis.md`.
+  [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260514-codex-fowler-f27-alpha-route-gate-analysis.md).
 - Accepted the cadence decision with named audience, entry date, duration, exit
   owner, and extension rule.
 - Accepted route-stage risk triage with included and excluded risk rationale.

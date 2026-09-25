@@ -43,7 +43,7 @@ export function projectInteractiveCanvasColumns(
   const presentationTruth = node.data.presentationTruth as CanvasNodePresentationTruth | undefined;
   const presentationColumns = presentationTruth?.columns.visible ?? [];
   const presentationColumnsByReference = new Map(
-    presentationColumns.flatMap((column) =>
+    [...(presentationTruth?.columns.inherited ?? []), ...presentationColumns].flatMap((column) =>
       column.reference == null ? [] : [[column.reference, column] as const]
     )
   );
@@ -52,8 +52,9 @@ export function projectInteractiveCanvasColumns(
   );
   return columns.map((column) => {
     const presentationColumn =
-      (column.id == null ? undefined : presentationColumnsByReference.get(column.id)) ??
-      presentationColumnsByName.get(column.name);
+      column.id == null
+        ? presentationColumnsByName.get(column.name)
+        : presentationColumnsByReference.get(column.id);
     const sourceNodeId = presentationColumn?.sourceNodeId;
     const sourceNode = sourceNodeId == null ? undefined : canonicalNodesById.get(sourceNodeId);
     const id =

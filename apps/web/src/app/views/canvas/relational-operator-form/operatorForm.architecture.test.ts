@@ -21,21 +21,26 @@ describe('operator form component boundary', () => {
       .map((node) => (node.moduleSpecifier as ts.StringLiteral).text);
     expect(runtimeImports).not.toEqual(
       expect.arrayContaining([
-        expect.stringMatching(/canvasDvt|OperatorCommands|\/(ports|stores)\//),
+        expect.stringMatching(
+          /canvasDvt|canvasSelectedRelation|canvasSelectedJoin|canvasCommitSelected|\/(ports|stores)\//
+        ),
       ])
     );
     expect(text.split('\n').length).toBeLessThanOrEqual(200);
   });
 
-  it('keeps command dispatch behind the local form controller', () => {
+  it('keeps persistence and protobuf construction out of the form controller', () => {
     const text = controllerSource;
     const source = ts.createSourceFile('controller.ts', text, ts.ScriptTarget.Latest, true);
-    const commandImports = source.statements
+    const infrastructureImports = source.statements
       .filter(ts.isImportDeclaration)
+      .filter((node) => !node.importClause?.isTypeOnly)
       .filter((node) =>
-        (node.moduleSpecifier as ts.StringLiteral).text.endsWith('OperatorCommands')
+        /@bufbuild\/protobuf|postgres-projection|\/(ports|services)\//.test(
+          (node.moduleSpecifier as ts.StringLiteral).text
+        )
       );
-    expect(commandImports).toHaveLength(1);
+    expect(infrastructureImports).toEqual([]);
     expect(text.split('\n').length).toBeLessThanOrEqual(200);
   });
 });

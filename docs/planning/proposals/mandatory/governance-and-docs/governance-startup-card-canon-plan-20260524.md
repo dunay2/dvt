@@ -126,7 +126,7 @@ governed evidence where its rails apply; it is not a task tracker.
 - `docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md`:
   scenario coverage.
 - `tools/ci/startup-card-canon.test.mjs`: architecture fitness function.
-- `buzon/20260524-codex-fowler-governance-startup-card-canon.md`: Fowler
+- [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260524-codex-fowler-governance-startup-card-canon.md): Fowler
   analysis mailbox evidence.
 
 ## User Stories

@@ -6,8 +6,6 @@ import {
   expectMarkdownSections,
   readEngineArchitectureDoc,
   readEngineSource,
-  readRepoSource,
-  repoPath,
 } from './engineArchitectureTestSupport.js';
 
 describe('WorkflowEngine provider and telemetry seams architecture', () => {
@@ -50,17 +48,12 @@ describe('WorkflowEngine provider and telemetry seams architecture', () => {
     expect(application).not.toContain('function buildMetricTags(');
   });
 
-  it('documents the WE-HX-5 component, scenarios, mailbox analysis, and drift guards', () => {
+  it('documents the WE-HX-5 component, scenarios, and drift guards', () => {
     expectFileExists(
       engineArchitectureDocPath('workflow-engine-provider-telemetry-seams-component.md')
     );
     expectFileExists(
       engineArchitectureDocPath('workflow-engine-provider-telemetry-seams-user-stories.md')
-    );
-    expectFileExists(
-      repoPath(
-        'buzon/20260512-codex-fowler-we-hx-5-provider-telemetry-seams-analysis-and-remediation.md'
-      )
     );
 
     const guide = readEngineArchitectureDoc(
@@ -93,17 +86,5 @@ describe('WorkflowEngine provider and telemetry seams architecture', () => {
     ]) {
       expect(stories).toContain(expectedStory);
     }
-
-    const mailbox = readRepoSource(
-      'buzon/20260512-codex-fowler-we-hx-5-provider-telemetry-seams-analysis-and-remediation.md'
-    );
-    expectMarkdownSections(mailbox, [
-      '## Fowler Architecture Analysis',
-      '## Mature-System Comparison',
-      '## Antipatterns Detected',
-      '## Repetitions To Fix',
-      '## Drift To Fix',
-      '## Future Lessons',
-    ]);
   });
 });

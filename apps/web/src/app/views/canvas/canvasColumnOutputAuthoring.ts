@@ -31,10 +31,6 @@ import {
 } from './canvasDvtSourceSemanticAuthoring';
 import { sourceOutputIsRequired } from './canvasSourceOutputDependencyPolicy';
 import {
-  reorderCanvasJoinColumnOutput,
-  setCanvasJoinColumnOutputIncluded,
-} from './canvasJoinColumnOutputAuthoring';
-import {
   reorderCanvasStructuredFieldRoots,
   setCanvasStructuredRootOutputIncluded,
 } from './canvasStructuredFieldRootAuthoring';
@@ -53,8 +49,6 @@ export function reorderCanvasColumnOutput(args: {
     args.targetNodeId
   );
   if (targetNode == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
-  const joinResult = reorderCanvasJoinColumnOutput({ ...args, targetNode });
-  if (joinResult != null) return joinResult;
   if (isDvtSourceOutputProjectionNode(targetNode)) {
     const result = reorderDvtSourceOutputs(
       targetNode,
@@ -132,8 +126,6 @@ export function setCanvasColumnOutputIncluded(args: {
     args.targetNodeId
   );
   if (targetNode == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
-  const joinResult = setCanvasJoinColumnOutputIncluded({ ...args, targetNode });
-  if (joinResult != null) return joinResult;
   if (isDvtSourceOutputProjectionNode(targetNode)) {
     if (
       !args.output &&

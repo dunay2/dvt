@@ -1,179 +1,19 @@
-import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import type { ConnectedSourceRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
-
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { CanonicalNode } from '../../types/canonical';
 import {
-  appendDvtSubstraitJoinInput,
-  createDvtSubstraitStringJoinDraft,
-  encodeDvtSubstraitJoinDocument,
-  inspectDvtSubstraitJoinDraft,
-  type DvtSubstraitJoinDraft,
-  type DvtSubstraitJoinInput,
-  type DvtSubstraitJoinType,
-} from './canvasDvtSubstraitJoinComposition';
-import {
-  createDvtSubstraitUnionAllDraft,
-  createDvtSubstraitSetDraft,
-  encodeDvtSubstraitUnionAllDocument,
-} from './canvasDvtSubstraitSetComposition';
-import {
-  createDvtSubstraitCrossDraft,
-  encodeDvtSubstraitCrossDocument,
-} from './canvasDvtSubstraitCrossComposition';
-import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+  graphJoin,
+  graphModel,
+  graphSource,
+  appendGraphSource,
+} from './canvasRelationGraph.test-support';
+import { createSourceSet, sourceSetOperations } from './canvasSourceSet';
+import { source } from './canvasRelationalOperator.test-support';
+import { applySelectedRelationAggregate } from './canvasSelectedRelationAggregate';
+import { applySelectedRelationWindow } from './canvasSelectedRelationWindow';
 import { readCanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
 import { projectCanvasViewportEdges } from './canvasViewportEdgeProjection';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
-import { applyCanvasRelationalOperatorTool } from './canvasRelationalTreeOperatorCommands';
-import { resolveCanvasRelationalOperatorTools } from './canvasRelationalTreeOperatorModel';
-
-function source(id: string): CanonicalNode {
-  const sourceRef: ConnectedSourceRef = {
-    schemaVersion: 'connected-source-ref.v1',
-    connectionRef: {
-      schemaVersion: 'connection-ref.v1',
-      connectionId: 'warehouse-main',
-      provider: 'postgres',
-    },
-    sourceObjectId: `raw.${id}`,
-  };
-  return {
-    id,
-    name: id,
-    pluginId: 'dvt',
-    kind: 'dvt:source',
-    role: 'input',
-    status: 'idle',
-    tags: [],
-    metadata: {
-      schema: 'raw',
-      tableName: id,
-      connectedSourceRef: sourceRef,
-      columns: [{ name: 'id', type: 'text' }],
-    },
-  };
-}
-
-function transform(id = 'model'): CanonicalNode {
-  return {
-    id,
-    name: 'Model',
-    pluginId: 'dvt',
-    kind: 'dvt:transform',
-    role: 'transform',
-    status: 'idle',
-    tags: [],
-    metadata: {},
-  };
-}
-
-function sourceRef(node: CanonicalNode): ConnectedSourceRef {
-  return node.metadata!.connectedSourceRef as ConnectedSourceRef;
-}
-
-function joinInput(node: CanonicalNode): DvtSubstraitJoinInput {
-  return {
-    source: {
-      nodeId: node.id,
-      schema: 'raw',
-      table: node.name,
-      sourceRef: sourceRef(node),
-    },
-    fields: ['id'],
-    fieldTypes: ['string' as const],
-  };
-}
-
-function initialJoin(
-  left: CanonicalNode,
-  right: CanonicalNode,
-  joinType: DvtSubstraitJoinType = JoinRel_JoinType.INNER
-): DvtSubstraitJoinDraft {
-  return createDvtSubstraitStringJoinDraft({
-    left: joinInput(left),
-    right: joinInput(right),
-    leftFieldName: 'id',
-    rightFieldName: 'id',
-    targetNodeId: 'model',
-    joinType,
-  });
-}
-
-function canonicalJoin(left: CanonicalNode, right: CanonicalNode): CanonicalNode {
-  return applyDvtSubstraitSemanticDocument(
-    transform(),
-    encodeDvtSubstraitJoinDocument(initialJoin(left, right))
-  );
-}
-
-function canonicalLeftJoin(left: CanonicalNode, right: CanonicalNode): CanonicalNode {
-  return applyDvtSubstraitSemanticDocument(
-    transform(),
-    encodeDvtSubstraitJoinDocument(initialJoin(left, right, JoinRel_JoinType.LEFT))
-  );
-}
-
-function canonicalUnionAll(left: CanonicalNode, right: CanonicalNode): CanonicalNode {
-  return applyDvtSubstraitSemanticDocument(
-    transform(),
-    encodeDvtSubstraitUnionAllDocument(
-      createDvtSubstraitUnionAllDraft({
-        inputs: [left, right].map((node) => ({
-          nodeId: node.id,
-          schema: 'raw',
-          table: node.name,
-          fields: [{ name: 'id', type: 'string' as const }],
-          sourceRef: sourceRef(node),
-        })),
-        targetNodeId: 'model',
-      })
-    )
-  );
-}
-
-function canonicalCross(left: CanonicalNode, right: CanonicalNode): CanonicalNode {
-  return applyDvtSubstraitSemanticDocument(
-    transform(),
-    encodeDvtSubstraitCrossDocument(
-      createDvtSubstraitCrossDraft({
-        inputs: [left, right].map((node) => ({
-          nodeId: node.id,
-          schema: 'raw',
-          table: node.name,
-          fields: [
-            { name: 'id', dataType: 'string', joinDataType: 'string' as const, nullable: true },
-          ],
-          sourceRef: sourceRef(node),
-        })),
-      })
-    )
-  );
-}
-
-function canonicalThreeInputJoin(
-  left: CanonicalNode,
-  right: CanonicalNode,
-  third: CanonicalNode
-): CanonicalNode {
-  const initial = initialJoin(left, right);
-  const inspection = inspectDvtSubstraitJoinDraft(initial);
-  if (!inspection.ok) throw new Error('Expected initial JOIN inspection.');
-  const leftSourceFieldId = inspection.projection.outputs[0]?.source.fieldId;
-  if (leftSourceFieldId == null) throw new Error('Expected initial JOIN output.');
-  const appended = appendDvtSubstraitJoinInput(initial, {
-    source: {
-      nodeId: third.id,
-      schema: 'raw',
-      table: third.name,
-      sourceRef: sourceRef(third),
-    },
-    fields: ['id', 'detail'],
-    predicate: { leftSourceFieldId, rightFieldName: 'id' },
-    selectedFields: ['detail'],
-  });
-  return applyDvtSubstraitSemanticDocument(transform(), encodeDvtSubstraitJoinDocument(appended));
-}
 
 function assertDependencies(
   model: CanonicalNode,
@@ -222,79 +62,57 @@ describe('Canvas viewport dependency projection', () => {
     JoinRel_JoinType.RIGHT,
     JoinRel_JoinType.OUTER,
     JoinRel_JoinType.LEFT_SEMI,
-    JoinRel_JoinType.LEFT_ANTI,
     JoinRel_JoinType.RIGHT_SEMI,
+    JoinRel_JoinType.LEFT_ANTI,
     JoinRel_JoinType.RIGHT_ANTI,
-  ] as const)('keeps internal JOIN %s and its wrappers out of the outer graph', (type) => {
-    const left = source('left');
-    const right = source('right');
-    const joined = initialJoin(left, right, type);
-    const field = resolveCanvasRelationalOperatorTools(joined).find(
-      (tool) => tool.id === 'aggregate'
-    )!.fields[0]!;
-    const grouped = applyCanvasRelationalOperatorTool(joined, {
-      tool: 'aggregate',
-      fieldId: field.fieldId,
+  ])('keeps internal JOIN %s and unary operations out of the outer graph', async (joinType) => {
+    const { session, sources, document: joined } = graphJoin(joinType);
+    const schema = await session.query(session.rootId);
+    const grouped = await applySelectedRelationAggregate(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      intent: 'insert',
+      fieldId: schema.bindings[0]!.fieldId,
       alias: 'total',
     });
-    const windowed = applyCanvasRelationalOperatorTool(grouped, {
-      tool: 'window',
+    const groupedSchema = await session.query(session.rootId);
+    const windowed = await applySelectedRelationWindow(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      intent: 'insert',
       alias: 'position',
+      fieldId: groupedSchema.bindings[0]!.fieldId,
     });
-    expect(grouped).not.toBe(joined);
-    expect(windowed).not.toBe(grouped);
-    for (const draft of [joined, grouped, windowed]) {
-      const model = applyDvtSubstraitSemanticDocument(
-        transform(),
-        encodeDvtSubstraitJoinDocument(draft)
-      );
-      for (const locale of ['en', 'es']) assertDependencies(model, [left, right], locale);
+    for (const document of [joined, grouped, windowed])
+      for (const locale of ['en', 'es']) assertDependencies(graphModel(document), sources, locale);
+  });
+
+  it.each(Object.keys(sourceSetOperations))(
+    'keeps internal %s out of the outer graph',
+    (operation) => {
+      const inputs = ['left', 'right'].map(source);
+      const document = createSourceSet({
+        inputs,
+        targetNodeId: 'model',
+        operation: operation as keyof typeof sourceSetOperations,
+      });
+      for (const locale of ['en', 'es'])
+        assertDependencies(
+          graphModel(document),
+          inputs.map((input) => graphSource(input.nodeId)),
+          locale
+        );
     }
-  });
+  );
 
-  it.each([
-    'union_all',
-    'union_distinct',
-    'intersect_distinct',
-    'except_distinct',
-    'intersect_all',
-    'except_all',
-  ] as const)('keeps internal %s out of the outer graph', (operation) => {
-    const sources = [source('left'), source('right')];
-    const model = applyDvtSubstraitSemanticDocument(
-      transform(),
-      encodeDvtSubstraitUnionAllDocument(
-        createDvtSubstraitSetDraft({
-          inputs: sources.map((node) => ({
-            nodeId: node.id,
-            schema: 'raw',
-            table: node.name,
-            fields: [{ name: 'id', type: 'string' as const }],
-            sourceRef: sourceRef(node),
-          })),
-          targetNodeId: 'model',
-          operation,
-        })
-      )
-    );
-    for (const locale of ['en', 'es']) assertDependencies(model, sources, locale);
-  });
-
-  it('retains every real dependency for pending, canonical, extra and missing inputs', () => {
-    const orders = source('orders');
-    const clients = source('clients');
-    const details = source('details');
+  it('retains actual graph dependencies even while canonical bindings are incomplete', async () => {
+    const { document, session, sources } = graphJoin();
+    const recursive = await appendGraphSource(session, 'third');
     for (const locale of ['en', 'es']) {
-      assertDependencies(transform(), [orders, clients], locale);
-      assertDependencies(canonicalJoin(orders, clients), [orders, clients], locale);
-      assertDependencies(canonicalLeftJoin(orders, clients), [orders, clients, details], locale);
-      assertDependencies(canonicalUnionAll(orders, clients), [orders], locale);
-      assertDependencies(canonicalCross(orders, clients), [orders, clients], locale);
-      assertDependencies(
-        canonicalThreeInputJoin(orders, clients, details),
-        [orders, clients, details],
-        locale
-      );
+      assertDependencies(graphModel(), sources, locale);
+      assertDependencies(graphModel(document), [...sources, graphSource('extra')], locale);
+      assertDependencies(graphModel(document), sources.slice(0, 1), locale);
+      assertDependencies(graphModel(recursive), [...sources, graphSource('third')], locale);
     }
   });
 

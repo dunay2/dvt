@@ -3,11 +3,9 @@
 import React, { act } from 'react';
 import { describe, expect, it } from 'vitest';
 import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { inspectDvtSubstraitMixedCrossDraft } from '@dvt/postgres-projection';
-import {
-  createDvtSubstraitJoinDraft,
-  encodeDvtSubstraitJoinDocument,
-} from './canvasDvtSubstraitJoinComposition';
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
+import { createCustomerOrdersJoin } from './canvasJoin.test-support';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
@@ -25,7 +23,7 @@ import { openOperationMenu } from './operation-menu/operationMenu.test-support';
 
 describe('Canvas relational-tree Workbench mixed-cross', () => {
   setupWorkbenchTest();
-  it('preserves an existing LEFT JOIN when CROSS-composing one pending Source', () => {
+  it('preserves an existing LEFT JOIN when CROSS-composing one pending Source', async () => {
     const customers = sourceNode('customers', 'customers');
     const orders = sourceNode('orders', 'orders');
     const countries = {
@@ -35,7 +33,7 @@ describe('Canvas relational-tree Workbench mixed-cross', () => {
         columns: [{ name: 'customer_id', type: 'text' }],
       },
     };
-    const leftJoin = createDvtSubstraitJoinDraft({
+    const leftJoin = createCustomerOrdersJoin({
       left: {
         nodeId: customers.id,
         schema: 'public',
@@ -53,11 +51,11 @@ describe('Canvas relational-tree Workbench mixed-cross', () => {
     });
     const transform = applyDvtSubstraitSemanticDocument(
       transformNode(),
-      encodeDvtSubstraitJoinDocument(leftJoin)
+      encodeDvtSubstraitSemanticDocument(leftJoin)
     );
     const applied: CanvasInspectorNodeDraft[] = [];
 
-    act(() => {
+    await act(async () => {
       root.render(
         <CanvasRelationalTreeWorkbench
           transformNode={transform}
@@ -75,7 +73,7 @@ describe('Canvas relational-tree Workbench mixed-cross', () => {
       );
     });
 
-    act(() =>
+    await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-node-expand"]')
         ?.click()
@@ -83,7 +81,7 @@ describe('Canvas relational-tree Workbench mixed-cross', () => {
     const countriesButton = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     ).find((button) => button.textContent?.includes('countries'));
-    act(() => countriesButton?.click());
+    await act(async () => countriesButton?.click());
     openOperationMenu(container);
     const crossButton = document.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-select-operation-cross-join"]'
@@ -94,17 +92,17 @@ describe('Canvas relational-tree Workbench mixed-cross', () => {
     ).not.toBeNull();
     expect(crossButton).not.toBeNull();
     expect(crossButton?.getAttribute('aria-disabled')).toBe('false');
-    act(() => crossButton?.click());
+    await act(async () => crossButton?.click());
     const confirmReplacement = Array.from(
       document.body.querySelectorAll<HTMLButtonElement>('button')
     ).find((button) => button.textContent === COPY.inspectorDvtRelationalApply);
     expect(confirmReplacement).not.toBeNull();
-    act(() => confirmReplacement?.click());
+    await act(async () => confirmReplacement?.click());
 
     expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(1);
     expect(container.querySelectorAll('[data-operator="cross"]')).toHaveLength(1);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(3);
-    act(() =>
+    await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
         ?.click()
@@ -114,15 +112,15 @@ describe('Canvas relational-tree Workbench mixed-cross', () => {
     if (semantic?.kind !== 'transform' || semantic.mode !== 'substrait') {
       throw new Error('Expected applied Substrait draft.');
     }
-    const inspection = inspectDvtSubstraitMixedCrossDraft({
-      plan: semantic.plan,
-      sidecar: semantic.sidecar,
-    });
-    expect(inspection.ok).toBe(true);
-    if (inspection.ok) {
-      expect(inspection.projection.leftJoin.joinRelations.at(-1)?.joinType).toBe(
-        JoinRel_JoinType.LEFT
-      );
-    }
+    const { index } = deriveSubstraitSchemas(semantic);
+    expect(index.relations.get(index.rootId)?.inputs).toHaveLength(2);
+    const rootRelation = semantic.plan.relations[0]!.relType;
+    if (rootRelation.case !== 'root' || rootRelation.value.input?.relType.case !== 'cross')
+      throw new Error('Expected a canonical CROSS root.');
+    expect(rootRelation.value.input.relType.value.left).toEqual(
+      leftJoin.plan.relations[0]!.relType.case === 'root'
+        ? leftJoin.plan.relations[0]!.relType.value.input
+        : null
+    );
   });
 });

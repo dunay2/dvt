@@ -10,13 +10,14 @@ import {
   setupWorkbenchTest,
 } from '../CanvasRelationalTreeWorkbench.test-support';
 import { occurrenceGraph } from './occurrence.test.fixtures';
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 
 describe('explicit source occurrence controls', () => {
   setupWorkbenchTest();
-  it('adds a third independent Read with one physical catalogue row and cancels without writing', () => {
+  it('adds a third independent Read with one physical catalogue row and cancels without writing', async () => {
     const graph = occurrenceGraph();
     const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' as const }));
-    act(() =>
+    await act(async () =>
       root.render(
         <CanvasRelationalTreeWorkbench
           transformNode={graph.targetNode}
@@ -30,7 +31,7 @@ describe('explicit source occurrence controls', () => {
     const add = container.querySelector<HTMLButtonElement>('[data-slot="source-occurrence-add"]');
     expect(add).not.toBeNull();
     expect(add!.disabled).toBe(false);
-    act(() => add!.click());
+    await act(async () => add!.click());
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-append-join-input"]')
     ).not.toBeNull();
@@ -39,13 +40,22 @@ describe('explicit source occurrence controls', () => {
       (option) => option.textContent
     );
     expect(new Set(labels).size).toBe(labels.length);
-    expect(labels.some((label) => label?.startsWith('places · 1.'))).toBe(true);
-    expect(labels.some((label) => label?.startsWith('places · 2.'))).toBe(true);
+    const { index } = deriveSubstraitSchemas(graph.draft);
+    const fields = index.relations.get(index.rootId)!.fields;
+    expect(labels).toEqual(fields.map((field) => field.displayName));
+    expect(
+      Array.from(
+        container.querySelectorAll<HTMLOptionElement>(
+          '[data-slot="canvas-relational-tree-existing-field"] option'
+        ),
+        (option) => option.value
+      )
+    ).toEqual(fields.map((field) => field.fieldId));
     expect(
       container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
         ?.disabled
     ).toBe(true);
-    act(() =>
+    await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-append-input"]')!
         .click()
@@ -58,7 +68,7 @@ describe('explicit source occurrence controls', () => {
     );
     expect(graph.edges).toHaveLength(1);
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
-    act(() =>
+    await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-cancel"]')!
         .click()
@@ -67,10 +77,10 @@ describe('explicit source occurrence controls', () => {
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });
 
-  it('offers no mutation action in a read-only workbench', () => {
+  it('offers no mutation action in a read-only workbench', async () => {
     const graph = occurrenceGraph();
     const onApplyNodeDraft = vi.fn();
-    act(() =>
+    await act(async () =>
       root.render(
         <CanvasRelationalTreeWorkbench
           transformNode={graph.targetNode}
@@ -82,7 +92,9 @@ describe('explicit source occurrence controls', () => {
       )
     );
     expect(container.querySelector('[data-slot="source-occurrence-add"]')).toBeNull();
-    act(() => container.querySelector<HTMLButtonElement>('[data-operator="read"]')!.click());
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-operator="read"]')!.click()
+    );
     expect(container.querySelector('[data-slot="source-occurrence-alias"]')).toBeNull();
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });

@@ -7,8 +7,8 @@ import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindi
 import { type CanonicalNode } from '../../types/canonical';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
-import { createDvtSubstraitUnionDistinctDraft } from './canvasDvtSubstraitSetComposition';
-import { encodeDvtSubstraitUnionAllDocument } from './canvasDvtSubstraitSetComposition';
+import { createSourceSet } from './canvasSourceSet';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { SOURCE, TRANSFORM, EDGE } from './canvasOutputProjection.test-support';
 
 describe('Canonical output projection', () => {
@@ -34,19 +34,22 @@ describe('Canonical output projection', () => {
     });
     const north = setSource('customers_north');
     const south = setSource('customers_south');
-    const draft = createDvtSubstraitUnionDistinctDraft({
-      inputs: [north, south].map((source) => ({
-        nodeId: source.id,
-        schema: 'raw',
-        table: source.id,
-        fields: [{ name: 'customer_id', type: 'string' as const }],
-        sourceRef: source.metadata?.connectedSourceRef as ConnectedSourceRef,
-      })),
-      targetNodeId: TRANSFORM.id,
+    const draft = createSourceSet({
+      ...{
+        inputs: [north, south].map((source) => ({
+          nodeId: source.id,
+          schema: 'raw',
+          table: source.id,
+          fields: [{ name: 'customer_id', type: 'string' as const }],
+          sourceRef: source.metadata?.connectedSourceRef as ConnectedSourceRef,
+        })),
+        targetNodeId: TRANSFORM.id,
+      },
+      operation: 'union_distinct',
     });
     const transform = applyDvtSubstraitSemanticDocument(
       TRANSFORM,
-      encodeDvtSubstraitUnionAllDocument(draft)
+      encodeDvtSubstraitSemanticDocument(draft)
     );
     const sql = await projectDvtSubstraitTransformOutputToPostgresSql({
       transformNode: transform,

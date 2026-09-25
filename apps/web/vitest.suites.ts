@@ -572,8 +572,6 @@ function isWebVitestGovernancePath(filePath: string): boolean {
     normalizedPath ===
       'docs/architecture/components/web/web-vitest-changed-suite-router-component.md' ||
     normalizedPath ===
-      'docs/architecture/components/web/web-vitest-changed-suite-router-user-stories.md' ||
-    normalizedPath === 'buzon/20260518-f14-fowler-frontend-test-governance-analysis.md' ||
-    normalizedPath === 'buzon/20260518-f14a-fowler-web-vitest-changed-suite-routing-analysis.md'
+      'docs/architecture/components/web/web-vitest-changed-suite-router-user-stories.md'
   );
 }

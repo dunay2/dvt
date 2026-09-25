@@ -48,7 +48,6 @@ planning_type: proposal
 - [API governance subdivision plan
   2026-05-02](./mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md)
 - [Contract pack and read boundary reset plan](./mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md)
-- [MW-C1 to TF-C2 runtime vertical sequence analysis](./mandatory/runtime-and-contracts/mw-c1-to-tf-c2-runtime-vertical-sequence-analysis-20260409.md)
 - [Runtime hardening, shared-kernel, and operations roadmap](./mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
 - [Runtime review canon plan 2026-05-23](./mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md)
 - [Transformation Flow Proposal Set](./mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md)
@@ -59,7 +58,6 @@ planning_type: proposal
 ## Mandatory (continued)
 
 - [F-04 Frontend Data Boundary Hexagonal Convergence](./mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md)
-- [TF-E2 Canvas Target Architecture Execution Plan 2026-04-17](./mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md)
 - [TF-E2-A Authoring Draft Hard Cut Implementation Plan 2026-05-03](./mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md)
 - [Canvas workbench tabs placement design plan 2026-05-03](./mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md)
 - [Canvas Fowler canon plan

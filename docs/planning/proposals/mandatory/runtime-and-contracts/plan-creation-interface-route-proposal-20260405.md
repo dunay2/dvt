@@ -60,7 +60,6 @@ controlled split.
 - [Transformation Flow Architecture And Contracts 2026-04-05](./transformation-flow-architecture-and-contracts-20260405.md)
   Terms, runtime boundaries, public interfaces, graph and plan model, compiler
   mapping, and sequence diagrams.
-- [Transformation Flow Delivery Plan 2026-04-05](./transformation-flow-delivery-plan-20260405.md)
   Phase-by-phase execution roadmap, task breakdown, entry and exit
   criteria, validations, and delivery dependencies.
 
@@ -84,7 +83,7 @@ This overview document remains the entry point for the set.
 
 1. read [Transformation Flow Product Decisions 2026-04-05](./transformation-flow-product-decisions-20260405.md)
 2. read [Transformation Flow Architecture And Contracts 2026-04-05](./transformation-flow-architecture-and-contracts-20260405.md)
-3. read [Transformation Flow Delivery Plan 2026-04-05](./transformation-flow-delivery-plan-20260405.md)
+3. read the [Roadmap Of Record](../../../roadmap/index.md) and the governing GitHub issue
 4. then record implementation and acceptance in the governing GitHub issue
 
 ## Relationship map

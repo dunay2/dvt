@@ -4,14 +4,14 @@ import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
 
 import documents from '../../../../../packages/@dvt/postgres-projection/test/fixtures/inner-join-documents.json';
 import {
-  addDvtSubstraitJoinPredicateCondition,
-  setDvtSubstraitJoinType,
-} from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
-import {
   decodeDvtSubstraitSemanticDocument,
   encodeDvtSubstraitSemanticDocument,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { exportProjectSnapshot } from '../../../src/app/views/canvas/canvasProjectSnapshot';
+import { CanvasRelationAnalysisSession } from '../../../src/app/views/canvas/canvasRelationAnalysisSession';
+import { querySelectedJoin } from '../../../src/app/views/canvas/canvasSelectedJoin';
+import { replaceSelectedJoinConditions } from '../../../src/app/views/canvas/canvasSelectedJoinPredicate';
+import { changeSelectedJoinType } from '../../../src/app/views/canvas/canvasSelectedJoinType';
 import { buildCanvasAuthoringDraft } from '../canvasDraftAuthoring';
 import { getVisibleCanvasNode } from '../canvasExecutionSelection';
 import {
@@ -29,7 +29,7 @@ export const expectedSortedRows = [
 ];
 export const expectedRows = expectedSortedRows.slice(0, 2);
 
-export function leftJoinDocument(): DvtSubstraitSemanticDocumentV1 {
+export async function leftJoinDocument(): Promise<DvtSubstraitSemanticDocumentV1> {
   const draft = decodeDvtSubstraitSemanticDocument(documents.two);
   const joinRelationId = draft.sidecar.relations.find(
     (relation) => !('sourceRef' in relation)
@@ -37,17 +37,32 @@ export function leftJoinDocument(): DvtSubstraitSemanticDocumentV1 {
   const country = draft.sidecar.fields.find(
     (field) => field.displayName === 'country' && !('sourceFieldId' in field)
   )!;
-  return encodeDvtSubstraitSemanticDocument(
-    addDvtSubstraitJoinPredicateCondition({
-      draft: setDvtSubstraitJoinType({ draft, joinRelationId, joinType: JoinRel_JoinType.LEFT }),
-      joinRelationId,
-      condition: {
-        operator: 'equal',
-        left: { kind: 'field', sourceFieldId: country.fieldId },
-        right: { kind: 'literal', literal: { dataType: 'string', value: 'ES' } },
-      },
-    })
-  );
+  const session = new CanvasRelationAnalysisSession(modelId);
+  session.receive(draft);
+  try {
+    await changeSelectedJoinType(session, {
+      relationId: joinRelationId,
+      expectedRevision: session.revision,
+      joinType: JoinRel_JoinType.LEFT,
+    });
+    const selected = await querySelectedJoin(session, joinRelationId, session.revision);
+    if (selected.conditions == null) throw new Error('Fixture condition is unavailable.');
+    const next = await replaceSelectedJoinConditions(session, {
+      relationId: joinRelationId,
+      expectedRevision: session.revision,
+      conditions: [
+        ...selected.conditions,
+        {
+          operator: 'equal',
+          left: { kind: 'field', sourceFieldId: country.fieldId },
+          right: { kind: 'literal', literal: { dataType: 'string', value: 'ES' } },
+        },
+      ],
+    });
+    return encodeDvtSubstraitSemanticDocument(next);
+  } finally {
+    session.dispose();
+  }
 }
 
 export function visitSemanticCanvas(): void {

@@ -1272,7 +1272,7 @@ first:
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md`
 - `docs/planning/proposals/portfolio-map-20260403.md`
-- `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
+- [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md)
 - generated docs indexes and governance status files required by validation
 
 Forbidden surfaces for this slice:

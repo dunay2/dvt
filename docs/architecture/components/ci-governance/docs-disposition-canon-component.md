@@ -101,4 +101,4 @@ flowchart TD
 
 - [Docs Disposition Canon User Stories](./docs-disposition-canon-user-stories.md)
 - [Docs Disposition Canon Plan 2026-05-24](../../../planning/proposals/mandatory/governance-and-docs/docs-disposition-canon-plan-20260524.md)
-- [Docs Disposition Mailbox Analysis](../../../../buzon/20260524-codex-fowler-docs-disposition-canon.md)
+- [Docs Disposition Mailbox Analysis](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260524-codex-fowler-docs-disposition-canon.md)

@@ -1,11 +1,11 @@
 /** Owned concern: bind an explicit new occurrence using distinguishable canonical input fields. */
 import { useEffect, useState } from 'react';
-import type { DvtSubstraitNInputJoinProjection } from '@dvt/postgres-projection';
 import { Button } from '../../../components/ui/button';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from '../canvasSemanticEditorCopy';
 import { resolveCanvasDvtJoinFieldPair } from '../canvasDvtJoinTypeAdmission';
-import type { DvtSubstraitJoinDraft } from '../canvasDvtSubstraitJoinComposition';
+import { useSelectedRelationInput } from '../useSelectedRelationInput';
+import { conditionDataType } from '../canvasSelectedJoin';
 import type { CanvasDvtCompositionInput } from '../canvasDvtCompositionInputCatalog';
 import type { CanvasRelationalTreeWorkbenchCopy } from '../canvasRelationalTreeWorkbench.types';
 
@@ -14,20 +14,16 @@ const selectClassName =
 
 export function SourceOccurrenceAppendForm({
   appendInput,
-  projection,
-  draft,
   copy,
   onAppend,
 }: Readonly<{
   appendInput: CanvasDvtCompositionInput;
-  projection: DvtSubstraitNInputJoinProjection;
-  draft: DvtSubstraitJoinDraft;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onAppend: (selection: Readonly<{ leftSourceFieldId: string; rightFieldName: string }>) => void;
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const editorCopy = resolveCanvasSemanticEditorCopy(language);
-  const outputs = projection.outputs;
+  const selected = useSelectedRelationInput(null, 'insert');
   const inputId = appendInput?.nodeId ?? null;
   const [selection, setSelection] = useState({
     inputId,
@@ -41,11 +37,16 @@ export function SourceOccurrenceAppendForm({
     selection.inputId === inputId
       ? selection
       : { inputId, leftSourceFieldId: '', rightFieldName: '' };
-  const existingFields = outputs.map((output) => ({
-    name: output.source.name,
-    joinDataType: output.dataType,
-    fieldId: output.source.fieldId,
-  }));
+  const existingFields =
+    selected?.schema.bindings
+      .filter((field) => field.parentFieldId == null)
+      .map((field) => ({
+        name: field.displayName ?? field.fieldId,
+        joinDataType: conditionDataType(
+          selected.schema.fields[field.outputOrdinal]?.type.kind.case
+        ),
+        fieldId: field.fieldId,
+      })) ?? [];
   const suggestion = resolveCanvasDvtJoinFieldPair(existingFields, appendInput?.fields ?? []);
   const manualLeft = existingFields.find(
     (field) => field.fieldId === activeSelection.leftSourceFieldId
@@ -61,19 +62,6 @@ export function SourceOccurrenceAppendForm({
       ? activeSelection.rightFieldName
       : (resolveCanvasDvtJoinFieldPair(leftField == null ? [] : [leftField], rightFields)?.right
           .name ?? '');
-  const inputLabel = (inputIndex: number): string => {
-    const input = projection.inputs[inputIndex];
-    const alias = draft.sidecar.relations.find(
-      (binding) => binding.relationId === input?.relationId
-    )?.displayName;
-    const label = alias ?? input?.table ?? '?';
-    const sameLabels = projection.inputs.filter(
-      (candidate) =>
-        (draft.sidecar.relations.find((binding) => binding.relationId === candidate.relationId)
-          ?.displayName ?? candidate.table) === label
-    );
-    return sameLabels.length > 1 ? `${label} · ${inputIndex + 1}` : label;
-  };
   return (
     <form
       data-slot="canvas-relational-tree-append-join-input"
@@ -107,9 +95,9 @@ export function SourceOccurrenceAppendForm({
               {editorCopy.noCompatibleJoinFields}
             </option>
           ) : null}
-          {outputs.map((output) => (
-            <option key={output.source.fieldId} value={output.source.fieldId}>
-              {inputLabel(output.source.inputIndex)}.{output.source.name}
+          {existingFields.map((field) => (
+            <option key={field.fieldId} value={field.fieldId}>
+              {field.name}
             </option>
           ))}
         </select>

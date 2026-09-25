@@ -1,67 +1,48 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
-import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+import { graphJoin, graphModel } from './canvasRelationGraph.test-support';
 import {
-  createDvtSubstraitJoinDraft,
-  encodeDvtSubstraitJoinDocument,
-  type DvtSubstraitJoinSource,
-} from './canvasDvtSubstraitJoinComposition';
-import {
-  type ReadModelArgs,
-  testNode,
   buildReadModelArgs,
   renderReadModel,
   readProjectedNodeData,
 } from './useCanvasControllerReadModel.test-support';
 
-describe('Canvas read model joins', () => {
+describe('canonical relation card actions', () => {
   it.each([true, false])(
-    'projects JOIN output controls without enabling input remapping (editable=%s)',
+    'uses analyzed output authority without enabling input remapping (editable=%s)',
     async (editable) => {
-      const source = (table: string): DvtSubstraitJoinSource => ({
-        nodeId: table,
-        schema: 'raw',
-        table,
-        sourceRef: {
-          schemaVersion: 'connected-source-ref.v1' as const,
-          sourceObjectId: `raw.${table}`,
-          connectionRef: {
-            schemaVersion: 'connection-ref.v1' as const,
-            connectionId: 'pg',
-            provider: 'postgres' as const,
-          },
-        },
+      const graph = graphJoin();
+      const model = graphModel(graph.document);
+      const nodes = [...graph.sources, model];
+      const edges = graph.sources.map((source) => ({
+        id: source.id,
+        sourceId: source.id,
+        targetId: model.id,
+        relation: 'lineage' as const,
+      }));
+      const presentationTruth = await projectCanvasNodePresentationTruth({
+        node: model,
+        nodes,
+        edges,
       });
-      const join = applyDvtSubstraitSemanticDocument(
-        {
-          ...testNode,
-          id: 'joined',
-          kind: 'dvt:transform',
-          role: 'transform',
-        },
-        encodeDvtSubstraitJoinDocument(
-          createDvtSubstraitJoinDraft({
-            left: source('customers'),
-            right: source('orders'),
-            targetNodeId: 'joined',
-          })
-        )
-      );
-      const base = buildReadModelArgs({ canMutateGraph: editable });
+      expect(presentationTruth.columns.state).toBe('ready');
       const mapped = mapCanonicalNodeToCanvasNode({
-        canonicalNode: join,
+        canonicalNode: model,
         index: 0,
         showColumns: true,
+        presentationTruth,
       });
-      const args: ReadModelArgs = {
+      const base = buildReadModelArgs({ canMutateGraph: editable });
+      const args = {
         ...base,
         graphModel: {
           ...base.graphModel,
           nodes: [mapped],
-          canonicalNodesById: new Map([[join.id, join]]),
+          canonicalNodesById: new Map(nodes.map((node) => [node.id, node])),
         },
-        visibleScope: { canonicalNodes: [join], canonicalEdges: [] },
+        visibleScope: { canonicalNodes: nodes, canonicalEdges: edges },
       };
       const mounted = await renderReadModel(args);
       try {

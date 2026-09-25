@@ -691,7 +691,6 @@ these properties:
 ## 2026-04-22 Integrated Execution Overlay
 
 This proposal also absorbs the
-[20260422 Environment Configuration Audit](../../../reviews/ci-and-delivery/20260422-environment-configuration-audit-review.md)
 as the current CI/delivery efficiency overlay.
 
 Do not create a parallel proposal for that audit. This section is the canonical

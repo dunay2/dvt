@@ -37,7 +37,7 @@ Mermaid architecture docs, existing web service composition root.
 - `docs/planning/proposals/mandatory/frontend-and-ux/web-api-workspace-port-route-parity-remediation-plan-20260510.md`
 - `docs/architecture/components/web/workspace/workspace-port-decomposition-component.md`
 - `docs/architecture/components/web/workspace/workspace-port-decomposition-user-stories.md`
-- `buzon/20260510-codex-fowler-workspace-port-decomposition-analysis.md`
+- [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260510-codex-fowler-workspace-port-decomposition-analysis.md)
 
 ## Feature Mechanization
 

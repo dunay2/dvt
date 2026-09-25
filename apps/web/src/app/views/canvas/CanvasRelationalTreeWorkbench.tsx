@@ -12,6 +12,7 @@ import { CanvasRelationalTreeSessionActions } from './CanvasRelationalTreeSessio
 import { CanvasRelationalRemovalConfirmation } from './CanvasRelationalRemovalConfirmation';
 import { CanvasRelationalTreeContent } from './CanvasRelationalTreeContent';
 import { CanvasRelationalTreeSourceCatalogue } from './CanvasRelationalTreeSourceCatalogue';
+import { useCanvasRelationEditNavigation } from './useCanvasRelationEditNavigation';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import {
   CanvasOperationPreviewProvider,
@@ -54,6 +55,12 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
     if (!model.session.active) setPendingCondition(false);
   }, [model.session.active]);
   const sessionHandle = useCanvasRelationalTreeWorkbenchHandle(ref, model, pendingCondition);
+  const navigation = useCanvasRelationEditNavigation({
+    editing: model.session.active,
+    selectedRelationId: model.selectedRelationId,
+    session: sessionHandle,
+    onSelect: model.selectRelation,
+  });
 
   return (
     <CanvasOperationPreviewProvider
@@ -73,9 +80,11 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
           className={`relative grid h-full min-h-0 min-w-0 w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-(--surface-panel) md:grid-rows-1 ${sourcesCollapsed ? 'md:grid-cols-[3rem_minmax(0,1fr)]' : 'md:grid-cols-[12rem_minmax(0,1fr)]'}`}
         >
           <CanvasRelationalTreeSessionActions
+            active={model.session.active}
             session={sessionHandle}
             copy={copy}
             host={actionsHost}
+            navigation={navigation}
           />
           <CanvasRelationalRemovalConfirmation
             operations={model.session.removal.pending?.result.operations ?? null}
@@ -94,6 +103,14 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
             occurrences={model.authoringAvailable ? model.session.occurrences : undefined}
           />
           <CanvasRelationAnalysisContext.Provider value={model.session.analysis}>
+            {model.session.commandState === 'error' ? (
+              <p
+                role="alert"
+                className="absolute right-3 top-12 z-20 rounded bg-(--surface-panel) p-3 text-sm"
+              >
+                {copy.relationalTreeUnavailableMessage}
+              </p>
+            ) : null}
             <CanvasRelationalTreeContent
               model={model}
               transformNode={transformNode}
@@ -103,6 +120,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
               expanded={expanded}
               onExpandedChange={setExpanded}
               onPendingConditionChange={setPendingCondition}
+              onSelectRelation={navigation.select}
             />
           </CanvasRelationAnalysisContext.Provider>
         </div>

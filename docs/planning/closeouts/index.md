@@ -25,10 +25,6 @@ before retaining or retiring a record.
 ## Representative Recent Closeouts
 
 - [20260531 DVT21 Cost Attribution UI Hard-Cut Closeout](./20260531-dvt21-cost-attribution-ui-hard-cut-closeout.md)
-- [20260514 AR-D PlanRef DBT Plugin Package Extraction Closeout](./20260514-ar-d-plan-pointer-dbt-package-extraction-closeout.md)
-- [20260503 TF-E2-M-D Startup Route Readiness Closeout](./20260503-tf-e2-m-d-startup-route-readiness-closeout.md)
-- [20260503 TF-E2-M-B Canvas Draft Access Posture Closeout](./20260503-tf-e2-m-b-canvas-draft-access-posture-closeout.md)
-- [20260502 TF-E2-M-C First Authoring Live Proof Closeout](./20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md)
 - [20260324 S18 Explicit State-Store Root Bindings Closeout](./20260324-s18-explicit-state-store-root-bindings-closeout.md)
 
 ## Full Portfolio Views

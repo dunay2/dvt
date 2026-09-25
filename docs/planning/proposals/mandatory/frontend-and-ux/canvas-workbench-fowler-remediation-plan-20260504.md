@@ -154,14 +154,14 @@ Component guide destinations:
 - `docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md`
 - `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`
 - `docs/architecture/components/web/graph/canvas-layout-persistence-user-stories.md`
-- `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
+- [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md)
 
 ## Task 1: Mailbox Fowler Analysis
 
 **Files:**
 
 - [Task: F-29] Create:
-  `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
+  [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md)
 
 - [x] **Step 1: Write the analysis document**
 
@@ -379,7 +379,7 @@ evidence artifact path for them.
 **Files:**
 
 - Modify:
-  `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
+  [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md)
 - [Task: F-29] Create ADR only if this task introduces a new long-lived decision not already
   covered by accepted component docs and existing planning proposal.
 

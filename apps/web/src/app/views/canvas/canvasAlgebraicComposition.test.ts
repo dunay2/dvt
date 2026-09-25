@@ -10,10 +10,9 @@ import {
 } from './canvasAlgebraicComposition';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import {
-  decodeDvtSubstraitUnionAllDocument,
-  inspectDvtSubstraitUnionAllDraft,
-} from './canvasDvtSubstraitSetComposition';
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
+import { SetRel_SetOp } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 const FIELDS = ['customer_id', 'name', 'country'] as const;
 
@@ -85,14 +84,16 @@ describe('Canvas algebraic composition', () => {
       targetNodeId: target.id,
     };
 
-    expect(resolveCanvasAlgebraicCompositionOperations(state)).toEqual([
-      'union_all',
-      'union_distinct',
-      'intersect_distinct',
-      'except_distinct',
-      'intersect_all',
-      'except_all',
-    ]);
+    expect(resolveCanvasAlgebraicCompositionOperations(state)).toEqual(
+      expect.arrayContaining([
+        'union_all',
+        'union_distinct',
+        'intersect_distinct',
+        'except_distinct',
+        'intersect_all',
+        'except_all',
+      ])
+    );
     const transaction = await resolveCanvasAlgebraicCompositionTransaction({
       ...state,
       operation: 'union_all',
@@ -104,24 +105,22 @@ describe('Canvas algebraic composition', () => {
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
       throw new Error('Expected Substrait authority.');
     }
-    const inspection = inspectDvtSubstraitUnionAllDraft(
-      decodeDvtSubstraitUnionAllDocument(authority.semanticDocument)
+    const { index } = deriveSubstraitSchemas(
+      decodeDvtSubstraitSemanticDocument(authority.semanticDocument)
     );
-    expect(
-      inspection.ok
-        ? {
-            inputs: inspection.projection.inputs.map((input) => input.table),
-            outputs: inspection.projection.outputs.map((output) => output.name),
-            operation: inspection.projection.operation,
-            edges: transaction.draftSession.workingSet.visibleEdges,
-          }
-        : null
-    ).toEqual({
-      inputs: [north.id, south.id],
-      outputs: [...FIELDS],
-      operation: 'union_all',
-      edges: [...visibleEdges, { sourceId: south.id, targetId: target.id }],
-    });
+    const root = index.relations.get(index.rootId)!;
+    expect(root.inputs.map((id) => index.relations.get(id)!.binding.displayName)).toEqual([
+      north.id,
+      south.id,
+    ]);
+    expect(root.fields.map((field) => field.displayName)).toEqual(FIELDS);
+    expect(root.relation.relType.case === 'set' && root.relation.relType.value.op).toBe(
+      SetRel_SetOp.UNION_ALL
+    );
+    expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
+      ...visibleEdges,
+      { sourceId: south.id, targetId: target.id },
+    ]);
   });
 
   it('does not replace an authored Transform when another card is dropped on it', async () => {

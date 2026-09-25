@@ -30,9 +30,7 @@ export function CanvasRelationalTreeInspection({
         choices={model.session.choices}
         selectedRelationId={model.selectedNode?.relationId ?? null}
         copy={copy}
-        hasOperands
         operation={model.session.seed?.operation ?? null}
-        selectedInputCount={model.session.seed?.inputIds.length ?? 0}
         onSelectOperation={model.session.selectOperation}
         draft={model.session.seed?.draft ?? null}
         editable={model.authoringAvailable}
@@ -51,7 +49,6 @@ export function CanvasRelationalTreeInspection({
           onExpand={(locator) => {
             model.selectTreeNode(locator);
             onExpandedChange(true);
-            if (model.authoringAvailable) model.session.start();
           }}
         />
         {expanded ? (
@@ -60,6 +57,8 @@ export function CanvasRelationalTreeInspection({
             transformNode={transformNode}
             copy={copy}
             onClose={() => onExpandedChange(false)}
+            onEdit={model.authoringAvailable ? model.session.start : undefined}
+            onOutputChange={model.authoringAvailable ? model.session.applyOutputOrder : undefined}
           />
         ) : null}
       </div>

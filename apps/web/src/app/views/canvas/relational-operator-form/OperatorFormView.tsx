@@ -1,7 +1,8 @@
 /** Owned concern: operator form presentation, errors and explicit actions. */
-import type { CanvasRelationalOperatorTool } from '../canvasRelationalTreeOperatorModel';
+import type { CanvasRelationalOperatorTool } from './OperatorTool';
 import type { OperatorFormModel } from './useOperatorForm';
 import { OperatorFormFields } from './OperatorFormFields';
+import { CanvasRelationalRemovalConfirmation } from '../CanvasRelationalRemovalConfirmation';
 
 export function OperatorFormView({
   tool,
@@ -23,6 +24,13 @@ export function OperatorFormView({
       }}
     >
       <OperatorFormFields tool={tool} form={form} />
+      <CanvasRelationalRemovalConfirmation
+        operations={form.removal.pending?.result.operations ?? null}
+        onConfirm={form.removal.confirm}
+        onCancel={form.removal.cancel}
+        error={form.removal.error}
+        clearError={form.removal.clearError}
+      />
       {form.error ? (
         <p role="alert" className="text-amber-400">
           {copy.invalid}

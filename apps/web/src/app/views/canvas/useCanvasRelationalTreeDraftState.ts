@@ -1,15 +1,15 @@
 /** Owned concern: own the discardable relation draft and reset/hydrate it atomically. */
 import { useCallback, useState } from 'react';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
-import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { RelationalApplyRejection } from './canvasRelationalTreeWorkbench.types';
-import type { CanvasRelationalTreeJoinSeedHydration } from './useCanvasRelationalTreeExistingJoinSeed';
+import type { CanvasRelationalTreeSeedHydration } from './useCanvasRelationalTreeExistingSeed';
 import { useCanvasRelationalOperandSlots } from './useCanvasRelationalOperandSlots';
 
 export function useCanvasRelationalTreeDraftState() {
   const [operation, setOperation] = useState<CanvasRelationalOperation | null>(null);
   const [active, setActive] = useState(false);
-  const [joinDraft, setJoinDraft] = useState<DvtSubstraitJoinDraft | null>(null);
+  const [joinDraft, setJoinDraft] = useState<SubstraitDocument | null>(null);
   const [appendInputId, setAppendInputId] = useState<string | null>(null);
   const [applyRejection, setApplyRejection] = useState<RelationalApplyRejection | null>(null);
   const slots = useCanvasRelationalOperandSlots();
@@ -23,7 +23,7 @@ export function useCanvasRelationalTreeDraftState() {
     setApplyRejection(null);
   }, [resetOperands]);
   const hydrate = useCallback(
-    (seed: CanvasRelationalTreeJoinSeedHydration) => {
+    (seed: CanvasRelationalTreeSeedHydration) => {
       setActive(true);
       replaceInputs(seed.inputIds);
       setOperation(seed.operation);

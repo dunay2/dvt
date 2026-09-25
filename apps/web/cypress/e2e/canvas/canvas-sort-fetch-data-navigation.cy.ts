@@ -1,6 +1,5 @@
 /** Owned concern: apply edited ordering before explicit data queries without crashing inspection. */
-import { inspectDvtSubstraitSortFetchRoot } from '@dvt/postgres-projection';
-import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { getE2eApiCalls } from '../../support/e2eApiStub';
@@ -55,6 +54,7 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
           sortId = $card.attr('data-relation-id')!;
         })
         .click();
+      cy.get('[data-slot="canvas-relational-edit"]').click();
       cy.get(
         '[data-slot="canvas-relational-tree-inline-editor"]:visible select[aria-label="Direction and nulls 1"]'
       )
@@ -83,14 +83,18 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
         expect(document.semanticPlan.sha256).not.to.equal(originalDigest);
         savedDigest = document.semanticPlan.sha256;
         const draft = decodeDvtSubstraitSemanticDocument(document);
-        const sort = inspectDvtSubstraitSortFetchRoot(selectDvtSubstraitRelation(draft, sortId));
-        expect(sort.ok && sort.operation).to.equal('sort');
-        if (!sort.ok || sort.operation !== 'sort') throw new Error('Expected saved Sort');
-        expect(sort.keys.map((key) => key.direction)).to.deep.equal([Number(selectedDirection)]);
-        const fetch = inspectDvtSubstraitSortFetchRoot(selectDvtSubstraitRelation(draft, fetchId));
-        expect(fetch.ok && fetch.operation).to.equal('fetch');
-        if (!fetch.ok || fetch.operation !== 'fetch') throw new Error('Expected preserved Fetch');
-        expect(fetch.count).to.equal(100n);
+        const indexed = indexSubstraitRelations(draft);
+        if (!indexed.ok) throw indexed.error;
+        const sort = indexed.index.relations.get(sortId)?.relation.relType;
+        if (sort?.case !== 'sort') throw new Error('Expected saved Sort');
+        expect(sort.value.sorts.map((key) => key.sortKind)).to.deep.equal([
+          { case: 'direction', value: Number(selectedDirection) },
+        ]);
+        const fetch = indexed.index.relations.get(fetchId)?.relation.relType;
+        if (fetch?.case !== 'fetch') throw new Error('Expected preserved Fetch');
+        const count = fetch.value.countExpr?.rexType;
+        if (count?.case !== 'literal') throw new Error('Expected literal Fetch count');
+        expect(count.value.literalType).to.deep.equal({ case: 'i64', value: 100n });
       });
       cy.then(() => expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(0));
       cy.get('[data-slot="canvas-model-data"]:visible [data-slot="canvas-model-preview"]').click();
@@ -122,6 +126,7 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
       visitWorkbenchCanvas();
       openWorkbenchModel();
       cy.get('[data-operator="sort"]').should('contain.text', 'DESC NULLS LAST').click();
+      cy.get('[data-slot="canvas-relational-edit"]').click();
       cy.get(
         '[data-slot="canvas-relational-tree-inline-editor"]:visible select[aria-label="Direction and nulls 1"]'
       ).should(($select) => expect($select.val()).to.equal(selectedDirection));

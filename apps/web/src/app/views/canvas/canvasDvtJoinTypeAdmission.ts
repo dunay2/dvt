@@ -13,7 +13,13 @@ export function resolveCanvasDvtJoinDataType(
   if (STRING_DATA_TYPES.has(normalized)) return 'string';
   if (TIMESTAMPTZ_DATA_TYPES.has(normalized)) return 'precisionTimestampTz';
   if (normalized === 'bool' || normalized === 'boolean') return 'bool';
-  if (normalized === 'bigint' || normalized === 'int8' || normalized === 'i64') return 'i64';
+  if (
+    normalized === 'bigint' ||
+    normalized === 'int8' ||
+    normalized === 'int64' ||
+    normalized === 'i64'
+  )
+    return 'i64';
   if (
     normalized === 'double precision' ||
     normalized === 'double' ||

@@ -6,8 +6,7 @@ import physical from './joinPhysicalBindings.ts?raw';
 import identitiesTest from './joinOccurrenceIdentity.test.ts?raw';
 import reopenTest from './occurrenceReopen.test.ts?raw';
 import fixture from './occurrence.test.fixtures.ts?raw';
-import retained from './retainedReadProjection.ts?raw';
-import removalTest from './occurrenceRemoval.test.ts?raw';
+import removal from '../canvasPrepareRelationRemoval.ts?raw';
 import policy from './sourceOccurrencePolicy.ts?raw';
 import properties from './SourceOccurrenceProperties.tsx?raw';
 import action from './SourceOccurrenceAction.tsx?raw';
@@ -25,8 +24,7 @@ describe('source occurrence component boundaries', () => {
     ['identity scenarios', identitiesTest],
     ['reopen scenarios', reopenTest],
     ['fixture', fixture],
-    ['retained projection', retained],
-    ['removal scenarios', removalTest],
+    ['relation removal', removal],
     ['occurrence policy', policy],
     ['alias properties', properties],
     ['source action', action],

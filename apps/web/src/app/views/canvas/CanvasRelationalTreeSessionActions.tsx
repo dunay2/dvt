@@ -1,23 +1,29 @@
 /** Owned concern: present the existing local Apply/Cancel transaction without a second edit gate. */
-import { Check, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import type { CanvasRelationalTreeWorkbenchHandle } from './useCanvasRelationalTreeWorkbenchHandle';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import { CanvasDraftDecisionDialog } from './CanvasDraftDecisionDialog';
+import type { useCanvasRelationEditNavigation } from './useCanvasRelationEditNavigation';
+import { CanvasRelationalTreeEditButtons } from './CanvasRelationalTreeEditButtons';
 
 export function CanvasRelationalTreeSessionActions({
   session,
   copy,
   host,
+  active,
+  navigation,
 }: Readonly<{
   session: CanvasRelationalTreeWorkbenchHandle;
   copy: CanvasRelationalTreeWorkbenchCopy;
   host?: HTMLElement | null;
+  active: boolean;
+  navigation: ReturnType<typeof useCanvasRelationEditNavigation>;
 }>): JSX.Element | null {
   const language = useApplicationLanguageStore((state) => state.language);
   const localCopy = resolveCanvasSemanticEditorCopy(language);
-  if (!session.hasUnappliedChanges) return null;
+  if (!active) return null;
   const rejectionMessage =
     session.applyRejection?.reason === 'node_unavailable'
       ? localCopy.applyNodeUnavailable
@@ -31,35 +37,29 @@ export function CanvasRelationalTreeSessionActions({
           {rejectionMessage}
         </span>
       )}
-      <span role="status" className="px-2 text-[11px] text-amber-200">
-        {localCopy.draft}
-      </span>
-      <button
-        type="button"
-        data-slot="canvas-relational-tree-apply"
-        aria-label={copy.inspectorDvtRelationalApply}
-        title={copy.inspectorDvtRelationalApply}
-        disabled={!session.canApply}
-        onClick={session.apply}
-        className="grid size-8 place-items-center rounded text-emerald-300 hover:bg-(--surface-selected) disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        <Check aria-hidden="true" className="size-4" />
-      </button>
-      <button
-        type="button"
-        data-slot="canvas-relational-tree-cancel"
-        aria-label={copy.inspectorDvtRelationalCancel}
-        title={copy.inspectorDvtRelationalCancel}
-        onClick={session.cancel}
-        className="grid size-8 place-items-center rounded text-(--text-muted) hover:bg-(--surface-selected)"
-      >
-        <X aria-hidden="true" className="size-4" />
-      </button>
+      {session.hasUnappliedChanges ? (
+        <span role="status" className="px-2 text-[11px] text-amber-200">
+          {localCopy.draft}
+        </span>
+      ) : null}
+      <CanvasRelationalTreeEditButtons session={session} copy={copy} />
     </div>
   );
-  return host ? (
-    createPortal(actions, host)
-  ) : (
-    <div className="absolute right-3 top-2 z-20">{actions}</div>
+  return (
+    <>
+      <CanvasDraftDecisionDialog
+        open={navigation.pending}
+        canApply={session.canApply}
+        onStay={navigation.stay}
+        onDiscard={navigation.discard}
+        onApply={navigation.apply}
+        error={rejectionMessage}
+      />
+      {host ? (
+        createPortal(actions, host)
+      ) : (
+        <div className="absolute right-3 top-2 z-20">{actions}</div>
+      )}
+    </>
   );
 }

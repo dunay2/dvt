@@ -5,10 +5,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { Button } from '../../components/ui/button';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
-import {
-  createDvtSubstraitPilotDraft,
-  resolveDvtSubstraitPilotEntry,
-} from './canvasDvtSubstraitPilot';
+import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
 import { DvtSubstraitCompositionStart } from './DvtSubstraitCompositionStart';
 import { canvasViewCopy } from './copy';
@@ -31,21 +28,9 @@ export function DvtSubstraitTransformStart({
   onClearPredicateSeed?: () => void;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element | null {
-  if (resolveCanvasDvtCompositionInputs({ targetNodeId: node.id, nodes, edges }).length > 1) {
-    return (
-      <DvtSubstraitCompositionStart
-        disabled={disabled}
-        node={node}
-        nodes={nodes}
-        edges={edges}
-        predicateSeed={predicateSeed}
-        onClearPredicateSeed={onClearPredicateSeed}
-        onChange={onChange}
-      />
-    );
-  }
-  const sourceNodeId = resolveDvtSubstraitPilotEntry({ targetNode: node, nodes, edges });
-  if (sourceNodeId == null) {
+  const inputs = resolveCanvasDvtCompositionInputs({ targetNodeId: node.id, nodes, edges });
+  const input = inputs.length === 1 ? inputs[0] : null;
+  if (input == null) {
     return (
       <DvtSubstraitCompositionStart
         disabled={disabled}
@@ -64,11 +49,12 @@ export function DvtSubstraitTransformStart({
       type="button"
       size="sm"
       variant="outline"
-      disabled={disabled}
-      data-slot="dvt-start-substrait-pilot"
+      disabled={disabled || input.fields.some((field) => field.joinDataType == null)}
+      data-slot="dvt-start-substrait-projection"
       onClick={() => {
-        const pilot = createDvtSubstraitPilotDraft({
-          sourceNodeId,
+        if (disabled) return;
+        const projection = createCanvasRelationalTreeProjectionDraft({
+          input,
           targetNodeId: node.id,
         });
         onChange((currentDraft) => ({
@@ -78,9 +64,9 @@ export function DvtSubstraitTransformStart({
             materialized:
               currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
             mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
-            shape: 'pilot',
-            plan: pilot.plan,
-            sidecar: pilot.sidecar,
+            shape: 'projection',
+            plan: projection.plan,
+            sidecar: projection.sidecar,
           },
         }));
       }}

@@ -3,7 +3,7 @@ import { useContext, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { CanvasOperationExpressionHost } from './CanvasRelationalTreeEditorFrame';
 import type { CanonicalNode } from '../../types/canonical';
-import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
@@ -16,12 +16,14 @@ export function CanvasRelationalExpressionTree({
   relationId,
   onSelectCondition,
   operation = 'inner_join',
+  showSummary = false,
 }: Readonly<{
   transformNode: CanonicalNode;
-  draft?: DvtSubstraitJoinDraft;
+  draft?: SubstraitDocument;
   relationId: string | null;
   onSelectCondition?: (index: number, operand?: 'left' | 'right') => void;
   operation?: CanvasRelationalOperation;
+  showSummary?: boolean;
 }>): JSX.Element | null {
   const dock = useContext(CanvasOperationExpressionHost);
   const graph = useMemo(() => {
@@ -52,5 +54,11 @@ export function CanvasRelationalExpressionTree({
       }
     />
   );
-  return dock == null ? tree : dock.host == null ? null : createPortal(tree, dock.host);
+  if (dock == null) return tree;
+  return (
+    <>
+      {showSummary ? <CanvasRelationalScalarTree graph={graph} compact /> : null}
+      {dock.host == null ? null : createPortal(tree, dock.host)}
+    </>
+  );
 }

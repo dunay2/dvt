@@ -30,14 +30,6 @@ const CAPACITY_SLA_PATH = join(
   'docs/architecture/components/engine/adapters/temporal/temporal-planref-capacity-sla.md'
 );
 const CAPACITY_POLICY_PATH = join(TEMPORAL_SRC_ROOT, 'temporalPlanRefCapacitySlaPolicy.ts');
-const CAPACITY_MAILBOX_REVIEW_PATH = join(
-  REPO_ROOT,
-  'buzon/20260430-codex-fowler-ar-d2-temporal-capacity-sla-analysis-and-remediation.md'
-);
-const MAILBOX_REVIEW_PATH = join(
-  REPO_ROOT,
-  'buzon/20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md'
-);
 
 describe('Temporal PlanRef workflow component semantics', () => {
   it('states the exact owned concern at the top of every documented component module', () => {
@@ -82,17 +74,12 @@ describe('Temporal PlanRef workflow component semantics', () => {
     expect(guide).toContain('apps/temporal-worker runtime host');
     expect(guide).toContain('ADR-0052');
     expect(guide).toContain('temporal-planref-workflow-boundary-user-stories.md');
-    expect(guide).toContain(
-      '20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md'
-    );
   });
 
-  it('publishes user stories and branch mailbox analysis for continuation safety', () => {
+  it('publishes user stories for continuation safety', () => {
     expect(existsSync(USER_STORIES_PATH)).toBe(true);
-    expect(existsSync(MAILBOX_REVIEW_PATH)).toBe(true);
 
     const stories = readFileSync(USER_STORIES_PATH, 'utf8');
-    const mailbox = readFileSync(MAILBOX_REVIEW_PATH, 'utf8');
 
     expect(stories).toContain('# Temporal PlanRef workflow boundary user stories');
     expect(stories).toContain('## Story coverage matrix');
@@ -103,12 +90,6 @@ describe('Temporal PlanRef workflow component semantics', () => {
     expect(stories).toContain('PLAN_REF_UNAVAILABLE');
     expect(stories).toContain('CURSOR_OVERFLOW');
     expect(stories).toContain('```mermaid');
-
-    expect(mailbox).toContain('# Fowler architecture analysis - AR-D continuation safety');
-    expect(mailbox).toContain('## Fowler reading');
-    expect(mailbox).toContain('## Antipatterns detected');
-    expect(mailbox).toContain('## Remediation applied');
-    expect(mailbox).toContain('## Future teachings');
   });
 
   it('publishes the AR-D2 capacity SLA and keeps it linked to PlanRef stories', () => {
@@ -151,23 +132,16 @@ describe('Temporal PlanRef workflow component semantics', () => {
     ]);
   });
 
-  it('keeps Fowler AR-D2 capacity analysis in the mailbox with mature-system comparison', () => {
-    expect(existsSync(CAPACITY_MAILBOX_REVIEW_PATH)).toBe(true);
-
-    const mailbox = readFileSync(CAPACITY_MAILBOX_REVIEW_PATH, 'utf8');
-
-    expect(mailbox).toContain('# Fowler architecture analysis - AR-D2 Temporal capacity SLA');
-    expect(mailbox).toContain('## Fowler reading');
-    expect(mailbox).toContain('## Mature-system comparison');
-    expect(mailbox).toContain('## Improved patterns');
-    expect(mailbox).toContain('## Antipatterns detected');
-    expect(mailbox).toContain('## Drift and remediation');
-    expect(mailbox).toContain('## Future teachings');
-    expect(mailbox).toContain('## User stories covered');
-    expect(mailbox).toContain('## ADR decision');
-    expect(mailbox).toContain('```mermaid');
-    expect(mailbox).toContain('temporalPlanRefCapacitySlaPolicy.ts');
-    expect(mailbox).toContain('temporal-planref-capacity-sla.md');
+  it('links the capacity guide to the implemented policy exports', () => {
+    const sla = readFileSync(CAPACITY_SLA_PATH, 'utf8');
+    const policy = readFileSync(CAPACITY_POLICY_PATH, 'utf8');
+    for (const symbol of [
+      'TEMPORAL_PLANREF_CAPACITY_PROFILE',
+      'evaluateTemporalPlanRefCapacitySla',
+    ]) {
+      expect(sla).toContain(symbol);
+      expect(policy).toContain(symbol);
+    }
   });
 
   it('keeps durable workflow input on PlanRef plus control budget, not full ExecutionPlan', () => {

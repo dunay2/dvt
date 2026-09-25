@@ -11,7 +11,7 @@ import { CanvasRelationalTreeInlineEditor } from './CanvasRelationalTreeInlineEd
 import type { CanvasRelationalOperandPosition } from './CanvasRelationalTreeOperandSlot';
 import { CanvasRelationalTreeOperationShelf } from './CanvasRelationalTreeOperationShelf';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 
 export function CanvasRelationalTreeBlockCanvas({
   appendInput,
@@ -35,6 +35,7 @@ export function CanvasRelationalTreeBlockCanvas({
   onPendingConditionChange,
   selectedRelationId,
   onSelectRelation,
+  onReconcileSelection,
   onRemove,
 }: Readonly<{
   appendInput: CanvasDvtCompositionInput | null;
@@ -42,7 +43,7 @@ export function CanvasRelationalTreeBlockCanvas({
   copy: CanvasRelationalTreeWorkbenchCopy;
   edges: readonly CanonicalEdge[];
   inputs: readonly CanvasDvtCompositionInput[];
-  joinDraft: DvtSubstraitJoinDraft | null;
+  joinDraft: SubstraitDocument | null;
   nodes: readonly CanonicalNode[];
   operation: CanvasRelationalOperation | null;
   primaryInputId: string | null;
@@ -52,17 +53,17 @@ export function CanvasRelationalTreeBlockCanvas({
   onAppendJoinInput: (
     selection: Readonly<{ leftSourceFieldId: string; rightFieldName: string }>
   ) => void;
-  onChangeJoinDraft: (draft: DvtSubstraitJoinDraft) => void;
+  onChangeJoinDraft: (draft: SubstraitDocument) => void;
   onPlaceInput: (nodeId: string, position: CanvasRelationalOperandPosition) => void;
   onSelectInput: (nodeId: string) => void;
-  onSelectOperation: (operation: CanvasRelationalOperation) => void;
+  onSelectOperation: (operation: CanvasRelationalOperation, relationId?: string) => void;
   initiallyExpanded?: boolean;
   onPendingConditionChange?: (pending: boolean) => void;
   selectedRelationId: string | null;
   onSelectRelation: (relationId: string | null) => void;
+  onReconcileSelection: (relationId: string | null) => void;
   onRemove: (relationId: string, keep?: 'left' | 'right') => void;
 }>): JSX.Element {
-  const hasOperands = selectedInputIds.length > 0;
   const [expanded, setExpanded] = useState(initiallyExpanded);
 
   return (
@@ -73,11 +74,10 @@ export function CanvasRelationalTreeBlockCanvas({
     >
       <CanvasRelationalTreeOperationShelf
         choices={choices}
+        appending={appendInput != null}
         selectedRelationId={selectedRelationId}
         copy={copy}
-        hasOperands={hasOperands}
         operation={operation}
-        selectedInputCount={selectedInputIds.length}
         onSelectOperation={onSelectOperation}
         draft={joinDraft}
         editable
@@ -100,6 +100,7 @@ export function CanvasRelationalTreeBlockCanvas({
           onSelectOperation={onSelectOperation}
           selectedRelationId={selectedRelationId}
           onSelectRelation={onSelectRelation}
+          onReconcileSelection={onReconcileSelection}
           onRemove={onRemove}
           onExpandRelation={(relationId) => {
             onSelectRelation(relationId);
