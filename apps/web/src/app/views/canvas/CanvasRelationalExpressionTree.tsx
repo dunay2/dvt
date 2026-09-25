@@ -3,7 +3,7 @@ import { useContext, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { CanvasOperationExpressionHost } from './CanvasRelationalTreeEditorFrame';
 import type { CanonicalNode } from '../../types/canonical';
-import type { DvtSubstraitJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
@@ -18,7 +18,7 @@ export function CanvasRelationalExpressionTree({
   operation = 'inner_join',
 }: Readonly<{
   transformNode: CanonicalNode;
-  draft?: DvtSubstraitJoinDraft;
+  draft?: SubstraitDocument;
   relationId: string | null;
   onSelectCondition?: (index: number, operand?: 'left' | 'right') => void;
   operation?: CanvasRelationalOperation;

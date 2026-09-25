@@ -1,9 +1,6 @@
-/** Owned concern: order selected Canvas inputs and create one canonical SetRel draft. */
+/** Owned concern: order selected Canvas inputs for initial SET capability discovery. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { createSourceSet } from './canvasSourceSet';
 import { resolveConnectedSetEntry } from './canvasConnectedRelationInputs';
-import type { DvtSubstraitSetOperation } from '@dvt/postgres-projection';
-import type { SubstraitDocument } from '@dvt/substrait-analysis';
 
 export type CanvasRelationalTreeUnionContext = Readonly<{
   selectedInputIds: readonly string[];
@@ -29,19 +26,4 @@ export function orderedCanvasRelationalTreeUnionAllEntry(args: CanvasRelationalT
   return ordered.some((input) => input == null)
     ? null
     : { ...entry, inputs: ordered.filter((input) => input != null) };
-}
-
-export function createCanvasRelationalTreeUnionAllDraft(
-  args: CanvasRelationalTreeUnionContext
-): SubstraitDocument | null {
-  const entry = orderedCanvasRelationalTreeUnionAllEntry(args);
-  return entry == null ? null : createSourceSet(entry);
-}
-
-export function createCanvasRelationalTreeSetDraft(
-  args: CanvasRelationalTreeUnionContext,
-  operation: DvtSubstraitSetOperation
-): SubstraitDocument | null {
-  const entry = orderedCanvasRelationalTreeUnionAllEntry(args);
-  return entry == null ? null : createSourceSet({ ...entry, operation });
 }
