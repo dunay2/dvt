@@ -24,6 +24,7 @@ import {
 } from '../../support/semanticLive/fixture';
 
 describe('Persisted semantic editing through protected Preview and Run', () => {
+  let initialDocument: DvtSubstraitSemanticDocumentV1;
   beforeEach(function () {
     // The generic Cypress lane has no protected runtime; only the live runner proves this story.
     if (Cypress.env('apiBaseUrl') == null && Cypress.env('apiBearerToken') == null) this.skip();
@@ -35,6 +36,9 @@ describe('Persisted semantic editing through protected Preview and Run', () => {
     cy.viewport(1440, 1000);
     seedLiveSelectedClosureDraft({ emptyCanvas: true });
     visitSemanticCanvas();
+    cy.then(leftJoinDocument).then((document) => {
+      initialDocument = document;
+    });
   });
 
   it('preserves LEFT JOIN, edited Sort and Fetch through save, reopen, data and publication', () => {
@@ -52,8 +56,7 @@ describe('Persisted semantic editing through protected Preview and Run', () => {
       runRequests += 1;
       request.continue();
     });
-    const initialDocument = leftJoinDocument();
-    importSemanticModel(initialDocument);
+    cy.then(() => importSemanticModel(initialDocument));
     openWorkbenchModel(modelId);
     workbenchOperation('sort').click();
     cy.get('[role="dialog"] button[type="submit"]').click();
@@ -62,7 +65,7 @@ describe('Persisted semantic editing through protected Preview and Run', () => {
     cy.get('[role="dialog"] button[type="submit"]').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
-    readPersistedDocument(initialDocument.semanticPlan.sha256).then((document) => {
+    cy.then(() => readPersistedDocument(initialDocument.semanticPlan.sha256)).then((document) => {
       beforeEdit = document;
     });
     cy.get('[data-operator="fetch"]').then(($card) => {
