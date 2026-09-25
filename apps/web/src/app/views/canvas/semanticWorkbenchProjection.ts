@@ -11,6 +11,7 @@ import { semanticExpressionStyles } from './semanticExpressionGraphLayout';
 import { createSemanticExpressionDescription } from './semanticExpressionDescription';
 import { getLayoutedElements } from './canvasGraphUtils';
 import { childInputs, relationAnchor } from './canvasRelationalTraversal';
+import { createCanvasSemanticFieldNames } from './canvasSemanticFieldNames';
 
 export type SemanticWorkbenchGroup = 'source' | 'condition' | 'transformation';
 
@@ -108,43 +109,6 @@ function expressionsOwnedByRelation(rel: Rel): readonly Expression[] {
     default:
       return [];
   }
-}
-
-function relationFieldNames(
-  rel: Rel,
-  qualifyReadFields = false,
-  bindingNames?: ReadonlyMap<number, readonly string[]>
-): readonly string[] {
-  if (rel.relType.case === 'read') {
-    const names = rel.relType.value.baseSchema?.names ?? [];
-    const readType = rel.relType.value.readType;
-    const relationName = readType.case === 'namedTable' ? readType.value.names.join('.') : null;
-    return qualifyReadFields && relationName
-      ? names.map((name) => `${relationName}.${name}`)
-      : names;
-  }
-
-  const boundNames = bindingNames?.get(relationAnchor(rel) ?? -1);
-  if (!qualifyReadFields && boundNames != null && boundNames.length > 0) return boundNames;
-
-  const inputs = relationInputs(rel);
-  const inputNames =
-    rel.relType.case === 'join'
-      ? inputs.flatMap((input) => relationFieldNames(input, qualifyReadFields, bindingNames))
-      : inputs.flatMap((input) => relationFieldNames(input, false, bindingNames));
-  const common =
-    rel.relType.case === 'filter' ||
-    rel.relType.case === 'project' ||
-    rel.relType.case === 'join' ||
-    rel.relType.case === 'aggregate' ||
-    rel.relType.case === 'set'
-      ? rel.relType.value.common
-      : undefined;
-  return common?.emitKind.case === 'emit'
-    ? common.emitKind.value.outputMapping.flatMap((ordinal) =>
-        inputNames[ordinal] == null ? [] : [inputNames[ordinal]]
-      )
-    : inputNames;
 }
 
 function routeEdgesByTransition(
@@ -293,18 +257,7 @@ export function projectSemanticWorkbenchGraph(
     throw new Error('Semantic Workbench requires one canonical Substrait root relation.');
   }
 
-  const bindingNames = new Map(
-    draft.sidecar.relations.map(
-      (binding) =>
-        [
-          binding.relAnchor,
-          draft.sidecar.fields
-            .filter((field) => field.relationId === binding.relationId)
-            .sort((left, right) => left.outputOrdinal - right.outputOrdinal)
-            .map((field) => field.displayName ?? field.fieldId),
-        ] as const
-    )
-  );
+  const relationFieldNames = createCanvasSemanticFieldNames(draft);
   const relationIdByAnchor = new Map(
     draft.sidecar.relations.map((binding) => [binding.relAnchor, binding.relationId] as const)
   );
@@ -333,11 +286,11 @@ export function projectSemanticWorkbenchGraph(
     const relationId = anchor == null ? null : relationIdByAnchor.get(anchor);
     const id = relationId ?? nextId('relation');
     const inputs = relationInputs(rel);
-    const outputFields = relationFieldNames(rel, false, bindingNames);
+    const outputFields = relationFieldNames(rel);
     const expressionFields =
       rel.relType.case === 'join'
-        ? inputs.flatMap((input) => relationFieldNames(input, true, bindingNames))
-        : inputs.flatMap((input) => relationFieldNames(input, false, bindingNames));
+        ? inputs.flatMap((input) => relationFieldNames(input, true))
+        : inputs.flatMap((input) => relationFieldNames(input));
     const ownedExpressions = expressionsOwnedByRelation(rel);
     const expression =
       ownedExpressions[0] == null

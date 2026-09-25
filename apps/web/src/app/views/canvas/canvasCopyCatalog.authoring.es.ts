@@ -216,7 +216,6 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDvtSubstraitExistingFieldLabel: 'Campo existente',
   inspectorDvtSubstraitConnectedFieldLabel: 'Campo de la entrada conectada',
   inspectorDvtSubstraitAppendInputAction: 'Añadir entrada',
-  inspectorDvtSubstraitSelectedFieldsLabel: 'Campos seleccionados',
   inspectorDvtSubstraitMoveFieldUpLabel: 'Subir campo',
   inspectorDvtSubstraitMoveFieldDownLabel: 'Bajar campo',
   inspectorDvtSubstraitUnionAllAction: 'UNION ALL',

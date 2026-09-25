@@ -6,14 +6,14 @@ import type { ComparisonRow } from './conditionDraft';
 
 export function JoinConditionList({
   rows,
-  activeKey,
+  activeKey = null,
   onEdit,
   onRemove,
 }: Readonly<{
   rows: readonly SemanticWorkbenchJoinConditionRow[];
-  activeKey: string | null;
-  onEdit: (row: ComparisonRow) => void;
-  onRemove: (key: string) => void;
+  activeKey?: string | null;
+  onEdit?: (row: ComparisonRow) => void;
+  onRemove?: (key: string) => void;
 }>) {
   const canRemove = rows.filter((row) => row.kind === 'comparison').length > 1;
   return (
@@ -31,17 +31,19 @@ export function JoinConditionList({
             <span className="min-w-0 flex-1 break-words font-mono text-emerald-100">
               {row.label}
             </span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label="Editar condición"
-              title="Editar condición"
-              onClick={() => onEdit(row)}
-            >
-              <Pencil size={12} aria-hidden />
-            </Button>
-            {canRemove ? (
+            {onEdit == null ? null : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Editar condición"
+                title="Editar condición"
+                onClick={() => onEdit(row)}
+              >
+                <Pencil size={12} aria-hidden />
+              </Button>
+            )}
+            {canRemove && onRemove != null ? (
               <Button
                 type="button"
                 variant="ghost"

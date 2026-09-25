@@ -61,6 +61,7 @@ describe('Read properties alias', () => {
     const reads = container.querySelectorAll<HTMLButtonElement>('[data-operator="read"]');
     const readId = reads[1]!.getAttribute('data-relation-id');
     await act(async () => reads[1]!.click());
+    await click('canvas-relational-edit');
     await changeAlias('Parents');
     expect(
       container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
@@ -82,6 +83,11 @@ describe('Read properties alias', () => {
         .querySelector<HTMLButtonElement>(`[data-relation-id="${readId}"][data-operator="read"]`)!
         .click()
     );
+    expect(
+      container.querySelector('[data-slot="canvas-relational-tree-inline-editor"]')?.textContent
+    ).toContain('Parents');
+    expect(container.querySelector('[data-slot="source-occurrence-alias"]')).toBeNull();
+    await click('canvas-relational-edit');
     expect(
       container.querySelector<HTMLInputElement>('[data-slot="source-occurrence-alias"]')?.value
     ).toBe('Parents');
@@ -107,6 +113,7 @@ describe('Read properties alias', () => {
     await act(async () =>
       container.querySelector<HTMLButtonElement>('[data-operator="read"]')!.click()
     );
+    await click('canvas-relational-edit');
     await changeAlias('');
     expect(container.querySelector('[role="alert"]')).not.toBeNull();
     expect(
@@ -117,8 +124,9 @@ describe('Read properties alias', () => {
     await act(async () =>
       container.querySelector<HTMLButtonElement>('[data-operator="read"]')!.click()
     );
+    expect(container.querySelector('[data-slot="source-occurrence-alias"]')).toBeNull();
     expect(
-      container.querySelector<HTMLInputElement>('[data-slot="source-occurrence-alias"]')?.value
-    ).toBe('places');
+      container.querySelector('[data-slot="canvas-relational-tree-inline-editor"]')?.textContent
+    ).toContain('places');
   });
 });

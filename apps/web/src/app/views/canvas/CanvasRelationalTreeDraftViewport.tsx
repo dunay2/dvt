@@ -33,6 +33,7 @@ export function CanvasRelationalTreeDraftViewport({
   onSelectOperation,
   selectedRelationId,
   onSelectRelation,
+  onReconcileSelection,
   onExpandRelation,
   onRemove,
 }: Readonly<{
@@ -51,6 +52,7 @@ export function CanvasRelationalTreeDraftViewport({
   onSelectOperation: (operation: CanvasRelationalOperation, relationId?: string) => void;
   selectedRelationId: string | null;
   onSelectRelation: (relationId: string | null) => void;
+  onReconcileSelection: (relationId: string | null) => void;
   onExpandRelation: (relationId: string | null) => void;
   onRemove: (relationId: string, keep?: 'left' | 'right') => void;
 }>): JSX.Element {
@@ -65,7 +67,7 @@ export function CanvasRelationalTreeDraftViewport({
   } = useCanvasRelationalDraftProjection(
     { edges, joinDraft, nodes, operation, transformNode },
     selectedRelationId,
-    onSelectRelation
+    onReconcileSelection
   );
   const viewport = useCanvasRelationalTreeViewport(
     `${draftProjection?.root.locator ?? ''}:${selectedInputIds.join(',')}:${operation}`

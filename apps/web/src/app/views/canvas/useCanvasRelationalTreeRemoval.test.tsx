@@ -56,7 +56,7 @@ describe('selected unary removal lifetime', () => {
             });
       const revision = session.revision;
       const relationId = session.rootId;
-      const analysis = { document: draft, session, revision, error: null };
+      const analysis = { document: draft, session, revision, error: null, refresh: vi.fn() };
       const accept = vi.fn();
       let removal: ReturnType<typeof useCanvasRelationalTreeRemoval>;
       function Host({ enabled }: Readonly<{ enabled: boolean }>): React.JSX.Element | null {

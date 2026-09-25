@@ -62,6 +62,9 @@ describe('pending edits across relation selection', () => {
       container.querySelector<HTMLButtonElement>('[data-testid="apply"]')!;
     expect(apply().disabled).toBe(false);
     await act(async () =>
+      container.querySelector<HTMLButtonElement>('[aria-label="Editar condición"]')!.click()
+    );
+    await act(async () =>
       fireEvent.change(container.querySelector('[aria-label="Comparador de la condición"]')!, {
         target: { value: 'not_equal' },
       })

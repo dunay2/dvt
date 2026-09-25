@@ -60,7 +60,7 @@ export async function replaceSelectedComposition(
   const schemas = await Promise.all(target.inputs.map((id) => session.query(id, request.signal)));
   const fields = joinConditionFields(
     schemas,
-    inputs.map((input) => input.binding.displayName ?? '')
+    (field, port) => `${inputs[port]!.binding.displayName}.${field.displayName}`
   );
   const options = (port: number) =>
     fields

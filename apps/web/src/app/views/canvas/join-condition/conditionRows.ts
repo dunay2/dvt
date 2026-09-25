@@ -11,8 +11,27 @@ import {
 } from '../canvasDvtSubstraitJoinCondition';
 import {
   dvtSubstraitJoinOperandKey,
+  resolveDvtSubstraitJoinUnaryFunctions,
   type DvtSubstraitJoinPredicateOperand,
 } from '../canvasDvtSubstraitJoinOperand';
+import type { ConditionFieldOption } from './conditionDraft';
+
+export function joinConditionRows(
+  conditions: readonly DvtSubstraitJoinPredicateCondition[],
+  fields: readonly ConditionFieldOption[]
+) {
+  return projectSemanticWorkbenchJoinConditionRows({
+    conditions,
+    fieldLabelById: new Map(fields.map((field) => [field.fieldId, field.label])),
+    functionNameById: new Map(
+      [...new Set(fields.map((field) => field.dataType))].flatMap((dataType) =>
+        resolveDvtSubstraitJoinUnaryFunctions({ dataType, provider: 'postgres' }).map(
+          (fn) => [fn.capabilityId, fn.name] as const
+        )
+      )
+    ),
+  });
+}
 export const COMPARISON_LABEL: Readonly<Record<DvtSubstraitJoinPredicateOperator, string>> = {
   equal: '=',
   not_equal: '!=',

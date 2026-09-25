@@ -20,10 +20,12 @@ export function CanvasRelationOutputs({
   onChange,
   names,
   onPendingChange,
+  orderingOnly = false,
 }: Readonly<{
   relationId: string;
   disabled: boolean;
-  onChange: (document: SubstraitDocument) => void;
+  onChange: (document: SubstraitDocument) => void | boolean;
+  orderingOnly?: boolean;
   names?: RelationOutputNames;
   onPendingChange?: (pending: boolean) => void;
 }>) {
@@ -62,8 +64,11 @@ export function CanvasRelationOutputs({
   };
   return (
     <section className="space-y-2" data-slot="canvas-relation-outputs">
-      <h3 className="text-xs font-semibold">{copy.inspectorDvtSubstraitSelectedFieldsLabel}</h3>
-      {[...selected, ...model.slots.filter((field) => field.output == null)].map((field) => {
+      <h3 className="text-xs font-semibold">{copy.relationalTreeOutputLabel}</h3>
+      {(orderingOnly
+        ? selected
+        : [...selected, ...model.slots.filter((field) => field.output == null)]
+      ).map((field) => {
         const index = selected.indexOf(field);
         const key = field.output?.fieldId ?? field.key;
         const name = field.output == null ? field.name : (drafts.values[key] ?? field.name);
@@ -77,6 +82,7 @@ export function CanvasRelationOutputs({
                 : null;
         return (
           <RelationOutputRow
+            orderingOnly={orderingOnly}
             key={key}
             field={field}
             copy={copy}

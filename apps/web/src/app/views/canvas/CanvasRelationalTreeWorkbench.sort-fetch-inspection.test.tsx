@@ -101,10 +101,9 @@ describe('applied Sort/Fetch inspection', () => {
         '[data-slot="canvas-relational-tree-inline-editor"]'
       );
       expect(properties).not.toBeNull();
-      if (!editable)
-        expect(properties!.textContent).toContain(
-          operation === 'sort' ? `${field.name} DESC NULLS LAST` : 'LIMIT 100 · OFFSET 2'
-        );
+      expect(properties!.textContent).toContain(
+        operation === 'sort' ? `${field.name} DESC NULLS LAST` : 'LIMIT 100 · OFFSET 2'
+      );
       expect(
         properties!
           .querySelector('[data-slot="canvas-operation-properties-tab"]')
@@ -114,7 +113,17 @@ describe('applied Sort/Fetch inspection', () => {
       expect(
         properties!.querySelector('[data-slot="canvas-relational-expression-tree"]')
       ).toBeNull();
-      expect(properties!.querySelector('form') != null).toBe(editable);
+      expect(properties!.querySelector('form')).toBeNull();
+      const edit = properties!.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-relational-edit"]'
+      );
+      expect(edit != null).toBe(editable);
+      if (editable) {
+        await act(async () => edit!.click());
+        expect(
+          container.querySelector('[data-slot="canvas-relational-tree-inline-editor"] form')
+        ).not.toBeNull();
+      }
     }
   );
 });

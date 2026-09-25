@@ -1,13 +1,6 @@
 /** Compose canonical condition presentation with a controlled, discardable edit. */
 import { Plus } from 'lucide-react';
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  type Dispatch,
-  type SetStateAction,
-  type ReactNode,
-} from 'react';
+import { useMemo, useRef, type Dispatch, type SetStateAction, type ReactNode } from 'react';
 import { Button } from '../../components/ui/button';
 import {
   dvtSubstraitJoinConditionKey,
@@ -15,10 +8,9 @@ import {
 } from './canvasDvtSubstraitJoinCondition';
 import {
   dvtSubstraitJoinOperandKey,
-  resolveDvtSubstraitJoinUnaryFunctions,
   type DvtSubstraitJoinPredicateOperand,
 } from './canvasDvtSubstraitJoinOperand';
-import { projectSemanticWorkbenchJoinConditionRows } from './join-condition/conditionRows';
+import { joinConditionRows } from './join-condition/conditionRows';
 import {
   conditionFromDraft,
   editConditionDraft,
@@ -65,36 +57,13 @@ export function hasPendingConditionDraft(draft: ConditionDraft | null): boolean 
 export function SemanticWorkbenchJoinConditionEditor(props: Props) {
   const { draft, onDraftChange: setDraft } = props;
   const editorRef = useRef<HTMLDivElement>(null);
-  const automaticallyOpened = useRef(false);
   const rows = useMemo(
-    () =>
-      projectSemanticWorkbenchJoinConditionRows({
-        conditions: props.conditions,
-        fieldLabelById: new Map(props.fields.map((field) => [field.fieldId, field.label])),
-        functionNameById: new Map(
-          [...new Set(props.fields.map((field) => field.dataType))].flatMap((dataType) =>
-            resolveDvtSubstraitJoinUnaryFunctions({ dataType, provider: 'postgres' }).map(
-              (fn) => [fn.capabilityId, fn.name] as const
-            )
-          )
-        ),
-      }),
+    () => joinConditionRows(props.conditions, props.fields),
     [props.conditions, props.fields]
   );
   const condition = conditionFromDraft(draft);
   const editing = hasPendingConditionDraft(draft);
   const edit = (row: ComparisonRow) => setDraft(editConditionDraft(props.fields, row));
-  useEffect(() => {
-    if (props.renderExpression == null || automaticallyOpened.current) return;
-    if (draft != null) {
-      automaticallyOpened.current = true;
-      return;
-    }
-    const row = rows.find((item) => item.kind === 'comparison');
-    if (row?.kind !== 'comparison') return;
-    automaticallyOpened.current = true;
-    edit(row);
-  });
   const save = async () => {
     if (draft == null || condition == null) return;
     const saved =

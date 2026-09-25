@@ -16,25 +16,25 @@ describe('semantic expression projection', () => {
         'SOURCE\nraw.orders',
         'SOURCE\nraw.client',
         'SOURCE\nraw.order_details',
-        'FIELD\nraw.orders.client_id',
-        'FIELD\nraw.client.client_id',
-        'FIELD\nraw.orders.order_id',
-        'FIELD\nraw.order_details.order_id',
+        'FIELD\norders.client_id',
+        'FIELD\nclient.client_id',
+        'FIELD\norders.order_id',
+        'FIELD\norder_details.order_id',
         'EQUAL\n=',
-        'JOIN · INNER\nraw.orders.client_id = raw.client.client_id',
-        'JOIN · INNER\nraw.orders.order_id = raw.order_details.order_id',
+        'JOIN · INNER\norders.client_id = client.client_id',
+        'JOIN · INNER\norders.order_id = order_details.order_id',
       ])
     );
     const joinNode = graph.nodes.find((node) => node.id === graph.relationId);
-    expect(joinNode?.data.expression).toBe('raw.orders.order_id = raw.order_details.order_id');
+    expect(joinNode?.data.expression).toBe('orders.order_id = order_details.order_id');
     expect(
       graph.nodes
         .filter((node) => node.data.semanticKind === 'relation')
         .map((node) => node.data.expression)
     ).toEqual(
       expect.arrayContaining([
-        'raw.orders.client_id = raw.client.client_id',
-        'raw.orders.order_id = raw.order_details.order_id',
+        'orders.client_id = client.client_id',
+        'orders.order_id = order_details.order_id',
       ])
     );
     expect(joinNode?.data.inputSummary).toBe('3 fuentes');
@@ -59,9 +59,7 @@ describe('semantic expression projection', () => {
   it('projects only the selected JOIN expression when contextual detail is expanded', () => {
     const completeGraph = projectSemanticWorkbenchGraph(SEMANTIC_WORKBENCH_TRANSFORM);
     const selectedJoin = completeGraph.nodes.find(
-      (node) =>
-        node.data.relationKind === 'join' &&
-        node.data.expression === 'raw.orders.order_id = raw.order_details.order_id'
+      (node) => node.data.relationKind === 'join' && node.id === completeGraph.relationId
     );
     if (selectedJoin == null) throw new Error('Expected the second JOIN relation.');
 
@@ -72,8 +70,8 @@ describe('semantic expression projection', () => {
 
     expect(expressionGraph.nodes.map((node) => node.data.label)).toEqual(
       expect.arrayContaining([
-        'FIELD\nraw.orders.order_id',
-        'FIELD\nraw.order_details.order_id',
+        'FIELD\norders.order_id',
+        'FIELD\norder_details.order_id',
         'EQUAL\n=',
       ])
     );

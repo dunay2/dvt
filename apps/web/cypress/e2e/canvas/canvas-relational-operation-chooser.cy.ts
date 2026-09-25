@@ -26,6 +26,7 @@ describe('Canonical operation discovery', () => {
     openPendingRelationalOperationChooser();
     cy.get('[data-slot="dvt-select-operation-inner-join"]').click();
     cy.get('[data-operator="join"]').click();
+    cy.get('[aria-label="Editar condición"]').click();
     cy.get('[aria-label="Tipo del operando derecho"]').select('literal');
     cy.get('[aria-label="Valor literal del operando derecho"]').type('1');
     cy.get('[data-slot="semantic-workbench-join-izquierdo-operand"] summary').click();
@@ -62,6 +63,7 @@ describe('Canonical operation discovery', () => {
     openPendingRelationalOperationChooser();
     cy.get('[data-slot="dvt-select-operation-inner-join"]').click();
     cy.get('[data-operator="join"]').click();
+    cy.get('[aria-label="Editar condición"]').click();
     cy.get('[aria-label="Tipo de dato de la condición"]').should('have.value', 'i64');
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
     cy.wrap(null, { timeout: 20_000 }).should(() =>
