@@ -4,6 +4,10 @@ import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-su
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { selectedUnaryScenario } from './canvasSelectedUnary.test-support';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
+import { querySelectedJoin } from './canvasSelectedJoin';
+import { replaceSelectedJoinConditions } from './canvasSelectedJoinPredicate';
+import { relationOutputSlots } from './canvasRelationOutputSchema';
+import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 
 function capability(name: 'trim' | 'upper'): string {
   const resolved = resolveDvtSubstraitColumnFunctions({
@@ -99,5 +103,79 @@ describe('selected relation derived output authoring', () => {
       applySelectedRelationDerivedOutput(session, { ...request, expectedRevision: revision + 1 })
     ).rejects.toThrow();
     expect(session.revision).toBe(revision);
+  });
+
+  it('reuses a branch derivation in JOIN, derives after JOIN, and reloads stable identities', async () => {
+    const { session, root } = selectedUnaryScenario();
+    const joinId = root.binding.relationId;
+    const leftId = root.inputs[0]!;
+    const left = await session.query(leftId);
+    const sourceFieldId = left.bindings.find(
+      (field) => field.parentFieldId == null && field.displayName === 'name'
+    )!.fieldId;
+    const branchDocument = await applySelectedRelationDerivedOutput(session, {
+      intent: 'insert',
+      relationId: leftId,
+      expectedRevision: session.revision,
+      alias: 'normalized_name',
+      capabilityId: capability('upper'),
+      operandFieldIds: [sourceFieldId],
+    });
+    const branchField = branchDocument.sidecar.fields.find(
+      (field) => field.displayName === 'normalized_name'
+    )!;
+    const selectedJoin = await querySelectedJoin(session, joinId, session.revision);
+    expect(selectedJoin.fields.some((field) => field.fieldId === branchField.fieldId)).toBe(true);
+
+    const rightField = selectedJoin.fields.find((field) => field.inputIndex === 1)!;
+    await replaceSelectedJoinConditions(session, {
+      relationId: joinId,
+      expectedRevision: session.revision,
+      conditions: [
+        {
+          left: { kind: 'field', sourceFieldId: branchField.fieldId },
+          right: { kind: 'field', sourceFieldId: rightField.fieldId },
+        },
+      ],
+    });
+    const joined = await querySelectedJoin(session, joinId, session.revision);
+    const slots = relationOutputSlots(joined.target, joined.inputs);
+    const branchSlot = slots.find((slot) =>
+      slot.fields.some((field) => field.sourceFieldId === branchField.fieldId)
+    )!;
+    await changeSelectedRelationOutputs(session, {
+      relationId: joinId,
+      expectedRevision: session.revision,
+      outputs: [
+        ...slots.flatMap((slot) =>
+          slot.output == null ? [] : [{ slot: slot.slot, alias: slot.name }]
+        ),
+        { slot: branchSlot.slot, alias: branchSlot.name },
+      ],
+    });
+    const joinOutput = await session.query(joinId);
+    const reusableField = joinOutput.bindings.find(
+      (field) => field.parentFieldId == null && field.sourceFieldId === branchField.fieldId
+    )!;
+    const finalDocument = await applySelectedRelationDerivedOutput(session, {
+      intent: 'insert',
+      relationId: joinId,
+      expectedRevision: session.revision,
+      alias: 'final_name',
+      capabilityId: capability('trim'),
+      operandFieldIds: [reusableField.fieldId],
+    });
+    const finalField = finalDocument.sidecar.fields.find(
+      (field) => field.displayName === 'final_name'
+    )!;
+
+    const reopened = new CanvasRelationAnalysisSession('derived-output-reload');
+    reopened.receive(finalDocument);
+    expect(
+      (await reopened.query(reopened.rootId)).bindings.map((field) => field.fieldId)
+    ).toContain(finalField.fieldId);
+    expect(
+      (await querySelectedJoin(reopened, joinId, reopened.revision)).conditions?.[0]?.left
+    ).toEqual({ kind: 'field', sourceFieldId: branchField.fieldId });
   });
 });
