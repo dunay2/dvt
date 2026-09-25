@@ -238,6 +238,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Temporal runtime closure helper depends on PNPM JSON output shape](R-20260410-TEMPORAL-RUNTIME-CLOSURE-PNPM-JSON-COUPLING.yaml)
 - [Temporal SDK 1.16 upgrade could hide unsupported Nexus compatibility drift](R-20260413-TEMPORAL-SDK-1-16-COMPATIBILITY.yaml)
 - [Temporal SDK 1.23 could change worker or replay behavior](R-20260902-TEMPORAL-SDK-1-23-UPGRADE.yaml)
+- [Temporal SDK 1.24 could change worker or replay behavior](R-20260925-TEMPORAL-SDK-1-24-UPGRADE.yaml)
 - [Temporal SDK minor upgrade could change worker or replay behavior](R-20260721-TEMPORAL-SDK-1-20-UPGRADE.yaml)
 - [Temporal SDK minor upgrades can drift from provider integration behavior](R-20260603-TEMPORAL-SDK-1-17-2-UPGRADE.yaml)
 - [Temporal SDK patch upgrades can drift from provider integration behavior](R-20260430-TEMPORAL-SDK-1-16-1-PATCH.yaml)

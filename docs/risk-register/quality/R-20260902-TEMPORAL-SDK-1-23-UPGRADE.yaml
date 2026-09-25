@@ -1,7 +1,7 @@
 ---
 id: R-20260902-TEMPORAL-SDK-1-23-UPGRADE
 title: Temporal SDK 1.23 could change worker or replay behavior
-status: Open
+status: Closed
 date: 2026-09-02
 owners:
   - packages/@dvt/adapter-temporal
@@ -19,4 +19,7 @@ mitigations:
   - Require frozen-lockfile installation plus adapter and worker behavior suites.
   - Require Temporal integration, dependency-review, and deterministic-workflow merge gates.
 review_after: 2026-10-02
+resolution: >
+  Superseded by the aligned Temporal SDK 1.24.0 upgrade in PR #3345. Ongoing compatibility risk is
+  tracked by R-20260925-TEMPORAL-SDK-1-24-UPGRADE.
 ---
