@@ -70,7 +70,7 @@ export function CanvasRelationalTreeBlockCanvas({
     <section
       data-slot="canvas-relational-tree-block-canvas"
       aria-label={copy.relationalTreeCanvasLabel}
-      className="flex min-h-0 min-w-0 flex-col overflow-hidden"
+      className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
     >
       <CanvasRelationalTreeOperationShelf
         choices={choices}

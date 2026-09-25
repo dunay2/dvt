@@ -44,7 +44,8 @@ export function CanvasRelationalTreeEditorFrame({
   const title = label ?? resolveCanvasViewCopy(language)[presentation.labelKey];
   const Icon = presentation.icon;
   const [tab, setTab] = useState('properties');
-  const activeTab = !hasExpression && tab === 'tree' ? 'properties' : tab;
+  const activeTab =
+    (!hasExpression && tab === 'tree') || (output == null && tab === 'output') ? 'properties' : tab;
   const [expressionHost, setExpressionHost] = useState<HTMLDivElement | null>(null);
   const expressionContext = useMemo(
     () => ({
