@@ -89,6 +89,8 @@ export type CanvasRelationalTreeWorkbenchCopy = Pick<
   | 'relationalTreePrimaryInputLabel'
   | 'relationalTreePrimarySlotLabel'
   | 'relationalTreeProjectOperationLabel'
+  | 'relationalTreeExpressionStageLabel'
+  | 'relationalTreeExpressionStageSummaryTemplate'
   | 'relationalTreeReadOnlyMessage'
   | 'relationalTreeSecondaryInputTemplate'
   | 'relationalTreeSecondarySlotLabel'
