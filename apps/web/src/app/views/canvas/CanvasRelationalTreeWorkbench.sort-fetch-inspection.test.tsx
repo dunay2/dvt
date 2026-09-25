@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /** Owned concern: inspect applied ordering and limits without routing them to JOIN predicates. */
 import React, { act } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { createCustomerOrdersJoin } from './canvasJoin.test-support';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
@@ -73,6 +73,7 @@ describe('applied Sort/Fetch inspection', () => {
         plan: fetched.plan,
         sidecar: fetched.sidecar,
       });
+      const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' as const }));
 
       await act(async () => {
         root.render(
@@ -81,14 +82,26 @@ describe('applied Sort/Fetch inspection', () => {
             nodes={[clients, orders, transform]}
             edges={[edge(clients.id), edge(orders.id)]}
             copy={COPY}
-            authoring={
-              editable
-                ? { canEditNode: true, onApplyNodeDraft: () => ({ outcome: 'no_changes' }) }
-                : undefined
-            }
+            authoring={editable ? { canEditNode: true, onApplyNodeDraft } : undefined}
           />
         );
       });
+      await act(async () => {
+        const zoomIn = container.querySelector<HTMLButtonElement>('[aria-label="Zoom in"]')!;
+        zoomIn.click();
+        zoomIn.click();
+        zoomIn.click();
+      });
+      for (const card of container.querySelectorAll('[data-slot="canvas-relational-tree-node"]')) {
+        const detail = card
+          .closest('li')!
+          .querySelector('[data-slot="canvas-relational-semantic-zoom"]');
+        expect(detail, `Missing detail for ${card.getAttribute('data-operator')}`).not.toBeNull();
+        expect(
+          detail!.querySelectorAll('[data-slot="canvas-relational-expression-node"]').length
+        ).toBeGreaterThan(0);
+      }
+      expect(onApplyNodeDraft).not.toHaveBeenCalled();
       await act(async () => {
         container
           .querySelector<HTMLButtonElement>(
