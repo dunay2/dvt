@@ -44,6 +44,7 @@ export function SourceOccurrenceProperties({
       label={currentAlias}
       hasExpression={false}
       onClose={onClose}
+      output={<CanvasRelationFields relationId={relationId} />}
     >
       {supported ? (
         <form
@@ -88,7 +89,6 @@ export function SourceOccurrenceProperties({
       ) : (
         <p className="text-xs text-(--text-muted)">{copy.aliasUnsupported}</p>
       )}
-      <CanvasRelationFields relationId={relationId} />
     </CanvasRelationalTreeEditorFrame>
   );
 }

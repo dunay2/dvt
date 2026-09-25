@@ -6,6 +6,7 @@ import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
 import { CanvasRelationalTreeSelectedOperatorEditor } from './CanvasRelationalTreeSelectedOperatorEditor';
+import { CanvasRelationOutputs } from './CanvasRelationOutputs';
 import {
   CanvasRelationalTreeOperationEditor,
   type CanvasRelationalTreeOperationEditorProps,
@@ -34,6 +35,7 @@ export function CanvasRelationalTreeInlineEditor(
   const [setCompositionPending, setSelectionPending] = usePendingRelationEdits(
     props.onPendingConditionChange
   );
+  const [setPropertiesPending, setOutputsPending] = usePendingRelationEdits(setCompositionPending);
   const selected = useSelectedRelation(selectedRelationId)?.relation.relType;
   if (operation == null || joinDraft == null) return null;
   const selectedJoin = selected?.case === 'join' ? selected.value : null;
@@ -60,13 +62,24 @@ export function CanvasRelationalTreeInlineEditor(
           appendInput == null && ((!selectedJoin && !selectedCross && !selectedSet) || !expanded)
         }
         onClose={onClose}
+        output={
+          selectedRelationId == null || appendInput != null ? null : (
+            <CanvasRelationOutputs
+              key={selectedRelationId}
+              relationId={selectedRelationId}
+              disabled={false}
+              onChange={onChangeJoinDraft}
+              onPendingChange={setOutputsPending}
+            />
+          )
+        }
       >
         <CanvasRelationalTreeOperationEditor
           {...props}
           cross={selectedCross}
           set={selectedSet}
           draft={joinDraft}
-          onPendingConditionChange={setCompositionPending}
+          onPendingConditionChange={setPropertiesPending}
         />
       </CanvasRelationalTreeEditorFrame>
     </>

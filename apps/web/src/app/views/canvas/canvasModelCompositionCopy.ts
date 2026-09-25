@@ -9,7 +9,7 @@ const en = {
 
 const es: typeof en = {
   title: 'Composición',
-  output: 'Salida',
+  output: 'Output',
   operations: 'Operaciones',
   close: 'Cerrar composición',
   move: 'Mover panel de composición',

@@ -6,8 +6,6 @@ import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWo
 import { CanvasRelationalCrossNotice } from './CanvasRelationalCrossNotice';
 import { CanvasRelationalTreeJoinEditor } from './CanvasRelationalTreeJoinEditor';
 import { SourceOccurrenceAppendForm } from './relational-source-occurrence/SourceOccurrenceAppendForm';
-import { CanvasRelationOutputs } from './CanvasRelationOutputs';
-import { usePendingRelationEdits } from './usePendingRelationEdits';
 
 export type CanvasRelationalTreeOperationEditorProps = Readonly<{
   appendInput: CanvasDvtCompositionInput | null;
@@ -34,8 +32,6 @@ export function CanvasRelationalTreeOperationEditor({
   cross,
   set = false,
 }: CanvasRelationalTreeOperationEditorProps): JSX.Element {
-  const [setPropertiesPending, setOutputsPending] =
-    usePendingRelationEdits(onPendingConditionChange);
   return (
     <div className="space-y-4">
       {appendInput == null ? null : (
@@ -49,18 +45,9 @@ export function CanvasRelationalTreeOperationEditor({
       <CanvasRelationalTreeJoinEditor
         copy={copy}
         onChange={onChangeJoinDraft}
-        onPendingConditionChange={setPropertiesPending}
+        onPendingConditionChange={onPendingConditionChange}
         selectedRelationId={appendInput != null || cross || set ? null : selectedRelationId}
       />
-      {selectedRelationId == null || appendInput != null ? null : (
-        <CanvasRelationOutputs
-          key={selectedRelationId}
-          relationId={selectedRelationId}
-          disabled={false}
-          onChange={onChangeJoinDraft}
-          onPendingChange={setOutputsPending}
-        />
-      )}
     </div>
   );
 }

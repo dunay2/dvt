@@ -53,6 +53,14 @@ export function CanvasSelectedUnaryEditor({
       operation={presentation}
       relationId={relationId}
       onClose={onClose}
+      output={
+        <CanvasRelationOutputs
+          relationId={relationId}
+          disabled={false}
+          onChange={onChange}
+          onPendingChange={setOutputsPending}
+        />
+      }
     >
       {!hasExpression ? null : (
         <CanvasRelationalExpressionTree
@@ -78,12 +86,6 @@ export function CanvasSelectedUnaryEditor({
         ) : (
           <p role="status">{resolveCanvasSemanticEditorCopy(language).inspectionOnly}</p>
         )}
-        <CanvasRelationOutputs
-          relationId={relationId}
-          disabled={false}
-          onChange={onChange}
-          onPendingChange={setOutputsPending}
-        />
       </div>
     </CanvasRelationalTreeEditorFrame>
   );
