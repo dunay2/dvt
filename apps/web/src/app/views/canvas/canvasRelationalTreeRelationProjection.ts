@@ -1,6 +1,6 @@
 /** Owned concern: project one canonical Substrait relation subtree into the Canvas tree read model. */
 import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { sortDirectionLabel } from './semanticWorkbenchRelationMetadata';
 import type { SubstraitRelationIndex } from '@dvt/substrait-analysis';
 import { dvtSubstraitExpressionReader } from '@dvt/postgres-projection';
 
@@ -83,21 +83,6 @@ function fieldsForRelation(
   }));
 }
 
-function directionLabel(value: SortField_SortDirection): string {
-  switch (value) {
-    case SortField_SortDirection.ASC_NULLS_FIRST:
-      return 'ASC NULLS FIRST';
-    case SortField_SortDirection.ASC_NULLS_LAST:
-      return 'ASC NULLS LAST';
-    case SortField_SortDirection.DESC_NULLS_FIRST:
-      return 'DESC NULLS FIRST';
-    case SortField_SortDirection.DESC_NULLS_LAST:
-      return 'DESC NULLS LAST';
-    default:
-      return '';
-  }
-}
-
 function sortFetchSummary(rel: Rel, index: SubstraitRelationIndex): string | null {
   if (rel.relType.case === 'fetch') {
     const literal = (expression: typeof rel.relType.value.countExpr): bigint | null => {
@@ -115,7 +100,8 @@ function sortFetchSummary(rel: Rel, index: SubstraitRelationIndex): string | nul
     .map((field) => {
       const ordinal = dvtSubstraitExpressionReader.fieldOrdinal(field.expr);
       const name = ordinal == null ? null : inputFields[ordinal]?.displayName;
-      const value = field.sortKind.case === 'direction' ? directionLabel(field.sortKind.value) : '';
+      const value =
+        field.sortKind.case === 'direction' ? sortDirectionLabel(field.sortKind.value) : '';
       return name == null || value.length === 0 ? null : `${name} ${value}`;
     })
     .filter((value): value is string => value != null)

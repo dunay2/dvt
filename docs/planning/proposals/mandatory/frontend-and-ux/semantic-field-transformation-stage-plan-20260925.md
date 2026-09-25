@@ -57,6 +57,37 @@ projection authority and fails closed.
 
 ## Delivery Boundaries
 
+### Card detail convergence (#3422)
+
+Every admitted relational card participates in the existing read-only semantic
+zoom, not only JOIN and scalar/Window ProjectRel. Filter shows its predicate;
+Aggregate shows grouping and measures; Sort shows ordered keys with direction
+and null placement; Fetch shows count and offset, including canonical defaults.
+Read, direct Project, Cross and Set show their local input/output structure when
+they have no expression tree. No upstream subtree is copied into each card.
+
+```mermaid
+flowchart LR
+  A[Current: JOIN or derived Project gate] --> B[Other cards lack detail]
+  C[Canonical relation and expressions] --> D[Shared graph projection]
+  D --> E[Local expression tree or input/output structure]
+  E --> F[Existing compact card renderer and geometry]
+```
+
+The query remains `ProjectCanvasRelationalTree` in Web/Canvas. Projection reads
+the already-scoped semantic document, performs no writes/provider calls and
+does not grant mutation permission. Expansion and zoom are presentation only.
+Unsupported operations do not acquire fabricated supported detail. Sorting
+priority and argument order must survive graph slicing and rendering.
+
+| Scenario           | Opportunity                   | Fowler pattern                                       | DDD owner                      | Rail                        | Implementation surfaces                                                        | Unit/package test                                                                       | Architecture test                                        | User-flow test                                                                                         | Out of scope                                             |
+| ------------------ | ----------------------------- | ---------------------------------------------------- | ------------------------------ | --------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| Inspect every card | Hidden presentation authority | Remove operation whitelist; reuse Presentation Model | CanvasRelationalTreeProjection | ProjectCanvasRelationalTree | semanticWorkbench projection/layout, relational semantic zoom and compact tree | canonical Sort/Fetch/Filter/Aggregate and structural details; order; unchanged document | existing read-only boundary and bounded component checks | zoom production Workbench, inspect Sort/Fetch and source detail, return to compact view without saving | new commands, editors, IR, execution, JOIN normalization |
+
+Extract the oversized existing Workbench projector by projection versus layout
+responsibility only where needed for this change. Delete the moved bodies;
+retain one expression projector and one compact renderer, with bounded files.
+
 - Read path: `ProjectCanvasRelationalTree`.
 - Write path: `ConfigureCanvasDvtNode`, then `SaveWorkspaceGraphDraft`.
 - Data path: `PreviewCanvasTransformRows`; Preview/Run ignore visual-stage state.
@@ -85,6 +116,7 @@ governingSources:
   - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
 allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/**
+  - apps/web/src/app/labs/semanticWorkbenchProjection.architecture.test.ts
   - apps/web/cypress/e2e/canvas/**
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/planning/proposals/mandatory/frontend-and-ux/semantic-field-transformation-stage-plan-20260925.md
