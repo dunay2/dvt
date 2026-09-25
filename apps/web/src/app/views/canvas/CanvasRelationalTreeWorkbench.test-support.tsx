@@ -41,6 +41,8 @@ export const COPY = {
   relationalTreePendingInputsMessage: 'Inputs available',
   relationalTreeSourceActionHint: 'Drag or press to add',
   relationalTreeProjectOperationLabel: 'PROJECT',
+  relationalTreeExpressionStageLabel: 'EXPRESSION / DERIVE',
+  relationalTreeExpressionStageSummaryTemplate: 'Derived: {derived} · Passthrough: {passthrough}',
   inspectorDvtRelationalOperationTitle: 'Relate / compose',
   inspectorDvtRelationalAvailable: 'Available',
   inspectorDvtRelationalNeedsPredicate: 'Needs predicate',
