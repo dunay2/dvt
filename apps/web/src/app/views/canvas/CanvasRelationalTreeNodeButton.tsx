@@ -51,7 +51,21 @@ export function CanvasRelationalTreeNodeButton({
   const subtitle = node.displayName ?? node.substraitKind;
   const isSource = node.operator === 'read';
   const { presentation } = resolveCanvasRelationalNodePresentation(node);
-  const title = isSource ? subtitle : copy[presentation.labelKey];
+  const expressionStage =
+    node.operator === 'project' &&
+    node.operation === 'projection' &&
+    (node.projectionSummary?.derivedFieldCount ?? 0) > 0;
+  const title = isSource
+    ? subtitle
+    : expressionStage
+      ? copy.relationalTreeExpressionStageLabel
+      : copy[presentation.labelKey];
+  const detail =
+    expressionStage && node.projectionSummary != null
+      ? copy.relationalTreeExpressionStageSummaryTemplate
+          .replace('{derived}', String(node.projectionSummary.derivedFieldCount))
+          .replace('{passthrough}', String(node.projectionSummary.passthroughFieldCount))
+      : subtitle;
   const Icon = presentation.icon;
   return (
     <button
@@ -92,10 +106,10 @@ export function CanvasRelationalTreeNodeButton({
       </span>
       {isSource ? null : (
         <span
-          title={subtitle}
+          title={detail}
           className="mt-1 block truncate text-[13px] font-normal leading-5 text-(--text-muted)"
         >
-          {subtitle}
+          {detail}
         </span>
       )}
       {roleLabel == null ? null : <span className="sr-only">{roleLabel}</span>}
