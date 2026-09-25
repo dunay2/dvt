@@ -1,4 +1,6 @@
 /** Proves unsupported canonical selectors remain intact and cannot become an executable fallback. */
+import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
+
 import { getVisibleCanvasNode } from '../../support/canvasExecutionSelection';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
 import {
@@ -25,7 +27,7 @@ describe('Unsupported semantic selector on the protected runtime', () => {
     expect(hasLiveProtectedRuntimeEnv(), 'A live protected runtime is mandatory').to.equal(true);
     resetE2eApiStubs();
     cy.viewport(1440, 1000);
-    const document = unsupportedSortDocument();
+    let document: DvtSubstraitSemanticDocumentV1;
     let initialRuns: string[];
     let starts = 0;
     readLiveRunIds().then((ids) => {
@@ -38,7 +40,10 @@ describe('Unsupported semantic selector on the protected runtime', () => {
     cy.intercept('GET', `**/transforms/${modelId}/data-sample?*`).as('rejectedRows');
     seedLiveSelectedClosureDraft({ emptyCanvas: true });
     visitSemanticCanvas();
-    importSemanticModel(document);
+    cy.then(unsupportedSortDocument).then((value) => {
+      document = value;
+      importSemanticModel(value);
+    });
     openWorkbenchModel(modelId);
     cy.get('[data-operator="unsupported"]').should('be.visible').click();
     cy.get('[data-slot="canvas-relational-tree-inline-editor"]').should(

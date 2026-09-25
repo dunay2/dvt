@@ -17,7 +17,7 @@ import { openOperationMenu } from './operation-menu/operationMenu.test-support';
 
 describe('Canvas relational-tree Workbench join-chain', () => {
   setupWorkbenchTest();
-  it('chains every connected Source and keeps earlier Source fields available to later JOINs', () => {
+  it('chains every connected Source and keeps earlier Source fields available to later JOINs', async () => {
     const customers = sourceNode('customers', 'customers');
     const orders = sourceNode('orders', 'orders');
     const countries = sourceNode('countries', 'countries');
@@ -25,7 +25,7 @@ describe('Canvas relational-tree Workbench join-chain', () => {
     const transform = transformNode();
     const applied: CanvasInspectorNodeDraft[] = [];
 
-    act(() => {
+    await act(async () => {
       root.render(
         <CanvasRelationalTreeWorkbench
           transformNode={transform}
@@ -46,10 +46,10 @@ describe('Canvas relational-tree Workbench join-chain', () => {
     const sourceButtons = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     );
-    act(() => sourceButtons[0]?.click());
-    act(() => sourceButtons[1]?.click());
+    await act(async () => sourceButtons[0]?.click());
+    await act(async () => sourceButtons[1]?.click());
     openOperationMenu(container);
-    act(() =>
+    await act(async () =>
       document
         .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
         ?.click()
@@ -58,15 +58,15 @@ describe('Canvas relational-tree Workbench join-chain', () => {
     expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(1);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(2);
 
-    act(() => sourceButtons[2]?.click());
+    await act(async () => sourceButtons[2]?.click());
     const existingFieldOptions = Array.from(
       container.querySelectorAll<HTMLOptionElement>(
         '[data-slot="canvas-relational-tree-existing-field"] option'
       )
     ).map((option) => option.textContent);
-    expect(existingFieldOptions).toContain('customers.customers_id');
-    expect(existingFieldOptions).toContain('orders.orders_id');
-    act(() =>
+    expect(existingFieldOptions).toContain('customers_id');
+    expect(existingFieldOptions).toContain('orders_id');
+    await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-append-input"]')
         ?.click()
@@ -81,14 +81,14 @@ describe('Canvas relational-tree Workbench join-chain', () => {
     const visiblePredicates = (): HTMLElement[] =>
       Array.from(
         container.querySelectorAll<HTMLElement>(
-          '[data-slot="dvt-substrait-join-predicate-editors"] fieldset'
+          'fieldset[data-slot="dvt-substrait-join-predicate-editors"]'
         )
       ).filter((fieldset) => !fieldset.hidden);
-    act(() => joinCards[1]!.click());
+    await act(async () => joinCards[1]!.click());
     expect(visiblePredicates()).toHaveLength(1);
-    expect(visiblePredicates()[0]?.textContent).toContain('orders.orders_id');
-    expect(visiblePredicates()[0]?.textContent).not.toContain('countries.countries_id');
-    act(() =>
+    const innerRelationId = joinCards[1]!.getAttribute('data-relation-id');
+    expect(visiblePredicates()[0]?.getAttribute('data-relation-id')).toBe(innerRelationId);
+    await act(async () =>
       visiblePredicates()[0]!
         .querySelector<HTMLButtonElement>('[aria-label="Editar condición"]')!
         .click()
@@ -96,35 +96,37 @@ describe('Canvas relational-tree Workbench join-chain', () => {
     const pendingEditor = visiblePredicates()[0]!.querySelector(
       '[data-slot="semantic-workbench-join-condition-editor"]'
     );
-    act(() => {
+    await act(async () => {
       const comparison = pendingEditor!.querySelector<HTMLSelectElement>(
         '[aria-label="Comparador de la condición"]'
       )!;
       comparison.value = 'not_equal';
       comparison.dispatchEvent(new Event('change', { bubbles: true }));
     });
-    act(() => joinCards[0]!.click());
+    await act(async () => joinCards[0]!.click());
     expect(visiblePredicates()).toHaveLength(1);
-    expect(visiblePredicates()[0]?.textContent).toContain('countries.countries_id');
+    expect(visiblePredicates()[0]?.getAttribute('data-relation-id')).toBe(
+      joinCards[0]!.getAttribute('data-relation-id')
+    );
     expect(
       container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
         ?.disabled
     ).toBe(true);
-    act(() => joinCards[1]!.click());
+    await act(async () => joinCards[1]!.click());
     expect(
-      visiblePredicates()[0]!.querySelector(
-        '[data-slot="semantic-workbench-join-condition-editor"]'
-      )
-    ).toBe(pendingEditor);
-    act(() =>
+      visiblePredicates()[0]!.querySelector<HTMLSelectElement>(
+        '[aria-label="Comparador de la condición"]'
+      )?.value
+    ).toBe('not_equal');
+    await act(async () =>
       visiblePredicates()[0]!
         .querySelector<HTMLButtonElement>('[aria-label="Cerrar editor"]')!
         .click()
     );
     expect(applied).toHaveLength(0);
 
-    act(() => sourceButtons[3]?.click());
-    act(() =>
+    await act(async () => sourceButtons[3]?.click());
+    await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-append-input"]')
         ?.click()
@@ -137,7 +139,7 @@ describe('Canvas relational-tree Workbench join-chain', () => {
     );
     expect(applied).toHaveLength(0);
 
-    act(() =>
+    await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
         ?.click()

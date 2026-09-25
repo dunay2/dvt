@@ -68,40 +68,40 @@ describe('Canvas Model editor navigation', () => {
 
   it('guards replacement by another Model and cancels the queued replacement when staying', async () => {
     const { data, fixture, onApplyNodeDraft } = await mountModel(true);
-    act(() => data.onOpenNode?.(fixture.transform.id));
-    act(() =>
+    await act(async () => data.onOpenNode?.(fixture.transform.id));
+    await act(async () =>
       harness.container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-node-expand"]')!
         .click()
     );
-    act(() =>
+    await act(async () =>
       harness.container.querySelector<HTMLButtonElement>('[aria-label="Editar condición"]')!.click()
     );
-    act(() => {
+    await act(async () => {
       const field = harness.container.querySelector<HTMLSelectElement>(
         '[aria-label="Comparador de la condición"]'
       )!;
       field.value = 'not_equal';
       field.dispatchEvent(new Event('change', { bubbles: true }));
     });
-    act(() =>
+    await act(async () =>
       navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-workspace-tab"]')!.click()
     );
     const other = (
       getCanvasShellState().canvasViewportProps?.nodesWithImpact as Array<{ data: DbtNodeData }>
     )[1]!.data;
-    act(() => other.onOpenNode?.('other-model'));
+    await act(async () => other.onOpenNode?.('other-model'));
     expect(document.querySelector('[role="alertdialog"]')).not.toBeNull();
-    act(() =>
+    await act(async () =>
       Array.from(document.querySelectorAll<HTMLButtonElement>('[role="alertdialog"] button'))
         .find((button) => button.textContent === 'Keep editing')!
         .click()
     );
     expect(harness.container.querySelector('h1')?.textContent).toBe(fixture.transform.name);
-    act(() =>
+    await act(async () =>
       navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-model-tab-close"]')!.click()
     );
-    act(() =>
+    await act(async () =>
       Array.from(document.querySelectorAll<HTMLButtonElement>('[role="alertdialog"] button'))
         .find((button) => button.textContent === 'Discard changes')!
         .click()
@@ -113,10 +113,10 @@ describe('Canvas Model editor navigation', () => {
 
   it('selects without navigation or queries, then opens the full-width editor on double-click', async () => {
     const { data, fixture, onSelectNode, previewTransformRows } = await mountModel();
-    act(() => data.onSelectNode?.(fixture.transform.id));
+    await act(async () => data.onSelectNode?.(fixture.transform.id));
     expect(onSelectNode).toHaveBeenCalledOnce();
     expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBeNull();
-    act(() => data.onOpenNode?.(fixture.transform.id));
+    await act(async () => data.onOpenNode?.(fixture.transform.id));
     expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
     expect(harness.container.querySelectorAll('[data-slot="canvas-model-view-tab"]')).toHaveLength(
       3
@@ -171,7 +171,7 @@ describe('Canvas Model editor navigation', () => {
     );
     expect(openEditor).not.toBeNull();
 
-    act(() => openEditor!.click());
+    await act(async () => openEditor!.click());
 
     expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
     expect(navigation.querySelector('[data-slot="canvas-model-main-tab"]')).not.toBeNull();
@@ -182,8 +182,8 @@ describe('Canvas Model editor navigation', () => {
 
   it('guards a local draft with Stay and Discard, without a canonical write', async () => {
     const { data, fixture, onApplyNodeDraft } = await mountModel();
-    act(() => data.onOpenNode?.(fixture.transform.id));
-    act(() =>
+    await act(async () => data.onOpenNode?.(fixture.transform.id));
+    await act(async () =>
       harness.container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-node-expand"]')!
         .click()
@@ -192,10 +192,10 @@ describe('Canvas Model editor navigation', () => {
     expect(
       harness.container.querySelector('[data-slot="canvas-relational-tree-apply"]')
     ).toBeNull();
-    act(() =>
+    await act(async () =>
       harness.container.querySelector<HTMLButtonElement>('[aria-label="Editar condición"]')!.click()
     );
-    act(() => {
+    await act(async () => {
       const comparison = harness.container.querySelector<HTMLSelectElement>(
         '[aria-label="Comparador de la condición"]'
       )!;
@@ -211,7 +211,7 @@ describe('Canvas Model editor navigation', () => {
     const comparison = harness.container.querySelector<HTMLSelectElement>(
       '[aria-label="Comparador de la condición"]'
     )!;
-    act(() =>
+    await act(async () =>
       navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-workspace-tab"]')!.click()
     );
     expect(
@@ -225,13 +225,13 @@ describe('Canvas Model editor navigation', () => {
         ?.getAttribute('aria-hidden')
     ).toBe('false');
     expect(document.querySelector('[role="alertdialog"]')).toBeNull();
-    act(() =>
+    await act(async () =>
       navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-model-main-tab"]')!.click()
     );
     expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBe(editor);
     expect(comparison.value).toBe('not_equal');
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
-    act(() =>
+    await act(async () =>
       navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-model-tab-close"]')!.click()
     );
     expect(document.querySelector('[role="alertdialog"]')).not.toBeNull();
@@ -239,22 +239,22 @@ describe('Canvas Model editor navigation', () => {
       Array.from(document.querySelectorAll<HTMLButtonElement>('[role="alertdialog"] button')).find(
         (item) => item.textContent === text
       )!;
-    act(() => button('Keep editing').click());
+    await act(async () => button('Keep editing').click());
     expect(
       harness.container.querySelector('[data-slot="canvas-relational-tree-draft"]')
     ).not.toBeNull();
-    act(() =>
+    await act(async () =>
       navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-model-tab-close"]')!.click()
     );
-    act(() => button('Discard changes').click());
+    await act(async () => button('Discard changes').click());
     expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBeNull();
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });
 
   it('does not enter authoring when selecting an already participating source', async () => {
     const { data, fixture, onApplyNodeDraft } = await mountModel();
-    act(() => data.onOpenNode?.(fixture.transform.id));
-    act(() =>
+    await act(async () => data.onOpenNode?.(fixture.transform.id));
+    await act(async () =>
       harness.container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')!
         .click()

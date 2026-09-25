@@ -1,7 +1,7 @@
 /** Owned concern: controlled, ordered sort-key inputs; no draft mutation. */
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { DvtSubstraitSortDirection, DvtSubstraitSortKey } from '@dvt/postgres-projection';
-import type { CanvasRelationalOperatorTool } from '../canvasRelationalTreeOperatorModel';
+import type { CanvasRelationalOperatorTool } from './OperatorTool';
 import type { OperatorFormCopy } from './operatorFormCopy';
 
 export function SortKeyFields({

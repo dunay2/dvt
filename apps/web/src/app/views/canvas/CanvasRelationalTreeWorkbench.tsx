@@ -94,6 +94,14 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
             occurrences={model.authoringAvailable ? model.session.occurrences : undefined}
           />
           <CanvasRelationAnalysisContext.Provider value={model.session.analysis}>
+            {model.session.commandState === 'error' ? (
+              <p
+                role="alert"
+                className="absolute right-3 top-12 z-20 rounded bg-(--surface-panel) p-3 text-sm"
+              >
+                {copy.relationalTreeUnavailableMessage}
+              </p>
+            ) : null}
             <CanvasRelationalTreeContent
               model={model}
               transformNode={transformNode}

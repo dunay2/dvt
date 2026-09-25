@@ -1,283 +1,80 @@
-import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
-import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { describe, expect, it } from 'vitest';
-import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-
-import type { ConnectedSourceRef } from '@dvt/contracts';
-
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import {
-  appendDvtSubstraitJoinInput,
-  applyDvtSubstraitInnerJoinGrouping,
-  createDvtSubstraitJoinDraft,
-  encodeDvtSubstraitJoinDocument,
-  inspectDvtSubstraitJoinDraft,
-  type DvtSubstraitJoinDraft,
-  type DvtSubstraitJoinSource,
-} from './canvasDvtSubstraitJoinComposition';
-import {
-  createDvtSubstraitSetDraft,
-  createDvtSubstraitUnionAllDraft,
-  createDvtSubstraitUnionDistinctDraft,
-  encodeDvtSubstraitUnionAllDocument,
-  type DvtSubstraitUnionAllSource,
-} from './canvasDvtSubstraitSetComposition';
-import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import {
   projectCanvasRelationalTree,
   type CanvasRelationalTreeNode,
-  type CanvasRelationalTreeProjectionResult,
 } from './canvasRelationalTreeProjection';
 import {
-  createDvtSubstraitCrossDraft,
-  encodeDvtSubstraitCrossDocument,
-} from './canvasDvtSubstraitCrossComposition';
-
-const TARGET_ID = 'transform-orders';
-
-function sourceRef(table: string): ConnectedSourceRef {
-  return {
-    schemaVersion: 'connected-source-ref.v1',
-    connectionRef: {
-      schemaVersion: 'connection-ref.v1',
-      connectionId: 'warehouse-main',
-      provider: 'postgres',
-    },
-    sourceObjectId: `public.${table}`,
-  };
-}
-
-function joinSource(nodeId: string, table: string): DvtSubstraitJoinSource {
-  return { nodeId, schema: 'public', table, sourceRef: sourceRef(table) };
-}
-
-function sourceNode(nodeId: string, table: string, fields: readonly string[]): CanonicalNode {
-  return {
-    id: nodeId,
-    name: table,
-    pluginId: 'dvt',
-    kind: 'dvt:source',
-    role: 'input',
-    status: 'idle',
-    tags: [],
-    metadata: {
-      schema: 'public',
-      tableName: table,
-      connectedSourceRef: sourceRef(table),
-      columns: fields.map((name) => ({ name, type: 'string' })),
-    },
-  };
-}
-
-function targetNode(): CanonicalNode {
-  return {
-    id: TARGET_ID,
-    name: 'Orders',
-    pluginId: 'dvt',
-    kind: 'dvt:transform',
-    role: 'transform',
-    status: 'idle',
-    tags: [],
-    metadata: {},
-  };
-}
-
-function edge(sourceId: string): CanonicalEdge {
-  return {
-    id: `${sourceId}-${TARGET_ID}`,
-    sourceId,
-    targetId: TARGET_ID,
-    relation: 'lineage',
-  };
-}
+  graphJoin,
+  graphModel,
+  graphSource,
+  appendGraphSource,
+} from './canvasRelationGraph.test-support';
+import { createSourceSet, sourceSetOperations } from './canvasSourceSet';
+import { source } from './canvasRelationalOperator.test-support';
+import { applySelectedRelationAggregate } from './canvasSelectedRelationAggregate';
+import type { CanonicalNode } from '../../types/canonical';
 
 function project(
   node: CanonicalNode,
   sources: readonly CanonicalNode[]
-): CanvasRelationalTreeProjectionResult {
+): ReturnType<typeof projectCanvasRelationalTree> {
   return projectCanvasRelationalTree({
     node,
     nodes: [...sources, node],
-    edges: sources.map((source) => edge(source.id)),
+    edges: sources.map((input) => ({
+      id: input.id,
+      sourceId: input.id,
+      targetId: node.id,
+      relation: 'lineage',
+    })),
   });
 }
-
 function flatten(root: CanvasRelationalTreeNode): readonly CanvasRelationalTreeNode[] {
   return [root, ...root.children.flatMap((child) => flatten(child.node))];
 }
 
-function threeInputJoin(): DvtSubstraitJoinDraft {
-  const initial = createDvtSubstraitJoinDraft({
-    left: joinSource('customers', 'customers'),
-    right: joinSource('orders', 'orders'),
-    targetNodeId: TARGET_ID,
-  });
-  const inspection = inspectDvtSubstraitJoinDraft(initial);
-  if (!inspection.ok) throw new Error('Expected an admitted base JOIN.');
-  const customerId = inspection.projection.outputs.find((output) => output.name === 'customer_id')
-    ?.source.fieldId;
-  if (customerId == null) throw new Error('Expected the customer_id output.');
-  return appendDvtSubstraitJoinInput(initial, {
-    source: joinSource('shipments', 'shipments'),
-    fields: ['shipment_id', 'customer_id'],
-    predicate: { leftSourceFieldId: customerId, rightFieldName: 'customer_id' },
-    selectedFields: ['shipment_id'],
-  });
-}
-
-describe('ProjectCanvasRelationalTree', () => {
-  it('projects a left-associated CrossRel with explicit L/R child roles', () => {
-    const sources = [
-      sourceNode('sizes', 'sizes', ['size']),
-      sourceNode('colours', 'colours', ['colour']),
-      sourceNode('stores', 'stores', ['store']),
-    ];
-    const draft = createDvtSubstraitCrossDraft({
-      inputs: sources.map((source) => ({
-        nodeId: source.id,
-        schema: 'public',
-        table: source.name,
-        sourceRef: sourceRef(source.name),
-        fields: (source.metadata?.columns as { name: string }[]).map(({ name }) => ({
-          name,
-          dataType: 'string',
-          joinDataType: 'string' as const,
-        })),
-      })),
-    });
-    const result = project(
-      applyDvtSubstraitSemanticDocument(targetNode(), encodeDvtSubstraitCrossDocument(draft)),
-      sources
-    );
-
+describe('canonical relation tree projection', () => {
+  it('preserves recursive port order and stable identities across reopening', async () => {
+    const { session, sources } = graphJoin();
+    const document = await appendGraphSource(session, 'third');
+    const nodes = [...sources, graphSource('third')];
+    const model = graphModel(document);
+    const result = project(model, nodes);
+    expect(result).toEqual(project(structuredClone(model), structuredClone(nodes)));
     expect(result.ok).toBe(true);
-    if (!result.ok) return;
+    if (!result.ok) throw new Error('Expected canonical tree');
     expect(result.projection.root).toMatchObject({
-      operator: 'cross',
-      operation: 'cross_join',
-      children: [{ role: 'left' }, { role: 'right' }],
+      operator: 'join',
+      children: [
+        { role: 'left', node: { operator: 'join' } },
+        { role: 'right', node: { operator: 'read' } },
+      ],
     });
-    expect(result.projection.root.children[0]?.node.operator).toBe('cross');
     expect(result.projection.inputs.map((input) => input.state)).toEqual([
       'participating',
       'participating',
       'participating',
     ]);
-  });
-
-  it('projects a recursive N-input JOIN with canonical child order and stable identity', () => {
-    const draft = threeInputJoin();
-    const transform = applyDvtSubstraitSemanticDocument(
-      targetNode(),
-      encodeDvtSubstraitJoinDocument(draft)
-    );
-    const sources = [
-      sourceNode('customers', 'customers', ['customer_id', 'name', 'country']),
-      sourceNode('orders', 'orders', ['order_id', 'customer_id', 'amount']),
-      sourceNode('shipments', 'shipments', ['shipment_id', 'customer_id']),
-    ];
-
-    const first = project(transform, sources);
-    const second = project(structuredClone(transform), structuredClone(sources));
-    expect(first).toEqual(second);
-    expect(first.ok).toBe(true);
-    if (!first.ok) return;
-
-    expect(first.projection.root.operator).toBe('join');
-    expect(first.projection.root.children.map((child) => child.role)).toEqual(['left', 'right']);
-    expect(first.projection.root.children[0]?.node.operator).toBe('join');
-    expect(first.projection.inputs.map((input) => input.state)).toEqual([
-      'participating',
-      'participating',
-      'participating',
-    ]);
-    const relationIds = new Set(draft.sidecar.relations.map((relation) => relation.relationId));
-    for (const relation of flatten(first.projection.root)) {
-      expect(relation.locator).toContain(first.projection.semanticDigest);
-      expect(relation.relationId == null || relationIds.has(relation.relationId)).toBe(true);
-    }
-  });
-
-  it.each([
-    [JoinRel_JoinType.LEFT, 'LEFT JOIN'],
-    [JoinRel_JoinType.RIGHT, 'RIGHT JOIN'],
-    [JoinRel_JoinType.OUTER, 'FULL OUTER JOIN'],
-    [JoinRel_JoinType.LEFT_SEMI, 'LEFT SEMI JOIN'],
-    [JoinRel_JoinType.LEFT_ANTI, 'LEFT ANTI JOIN'],
-    [JoinRel_JoinType.RIGHT_SEMI, 'RIGHT SEMI JOIN'],
-    [JoinRel_JoinType.RIGHT_ANTI, 'RIGHT ANTI JOIN'],
-  ] as const)('projects the exact %s type in a mixed JOIN tree', (joinType, label) => {
-    const initial = createDvtSubstraitJoinDraft({
-      left: joinSource('customers', 'customers'),
-      right: joinSource('orders', 'orders'),
-      targetNodeId: TARGET_ID,
-    });
-    const inspection = inspectDvtSubstraitJoinDraft(initial);
-    if (!inspection.ok) throw new Error('Expected an admitted base JOIN.');
-    const customerId = inspection.projection.outputs.find((output) => output.name === 'customer_id')
-      ?.source.fieldId;
-    if (customerId == null) throw new Error('Expected the customer_id output.');
-    const draft = appendDvtSubstraitJoinInput(initial, {
-      source: joinSource('shipments', 'shipments'),
-      fields: ['shipment_id', 'customer_id'],
-      predicate: { leftSourceFieldId: customerId, rightFieldName: 'customer_id' },
-      selectedFields: ['shipment_id'],
-      joinType,
-    });
-    const transform = applyDvtSubstraitSemanticDocument(
-      targetNode(),
-      encodeDvtSubstraitJoinDocument(draft)
-    );
-    const result = project(transform, [
-      sourceNode('customers', 'customers', ['customer_id', 'name', 'country']),
-      sourceNode('orders', 'orders', ['order_id', 'customer_id', 'amount']),
-      sourceNode('shipments', 'shipments', ['shipment_id', 'customer_id']),
-    ]);
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
     expect(
-      resolveCanvasViewCopy('en')[
-        resolveCanvasRelationalOperationPresentation(result.projection.root.operation).labelKey
-      ]
-    ).toBe(label);
-    expect(result.projection.root.children[0]?.node.operation).toBe('inner_join');
+      flatten(result.projection.root)
+        .map((node) => node.relationId)
+        .sort()
+    ).toEqual(document.sidecar.relations.map((binding) => binding.relationId).sort());
   });
 
-  it('projects every ordered child of an N-ary SetRel', () => {
-    const inputs: readonly DvtSubstraitUnionAllSource[] = [
-      'north_customers',
-      'south_customers',
-      'west_customers',
-    ].map((table) => ({
-      nodeId: table,
-      schema: 'public',
-      table,
-      fields: ['customer_id', 'name', 'country'].map((name) => ({
-        name,
-        type: 'string' as const,
-      })),
-      sourceRef: sourceRef(table),
-    }));
-    const draft = createDvtSubstraitUnionAllDraft({ inputs, targetNodeId: TARGET_ID });
-    const transform = applyDvtSubstraitSemanticDocument(
-      targetNode(),
-      encodeDvtSubstraitUnionAllDocument(draft)
-    );
+  it.each(Object.keys(sourceSetOperations))('keeps every ordered operand of %s', (operation) => {
+    const inputs = ['north', 'south', 'west'].map(source);
+    const document = createSourceSet({
+      inputs,
+      targetNodeId: 'model',
+      operation: operation as keyof typeof sourceSetOperations,
+    });
     const result = project(
-      transform,
-      inputs.map((input) =>
-        sourceNode(
-          input.nodeId,
-          input.table,
-          input.fields.map((field) => field.name)
-        )
-      )
+      graphModel(document),
+      inputs.map((input) => graphSource(input.nodeId))
     );
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.projection.root.operator).toBe('set');
+    if (!result.ok) throw new Error('Expected canonical SET tree');
+    expect(result.projection.root).toMatchObject({ operator: 'set', operation });
     expect(result.projection.root.children.map(({ role, ordinal }) => ({ role, ordinal }))).toEqual(
       [
         { role: 'primary', ordinal: 0 },
@@ -287,118 +84,44 @@ describe('ProjectCanvasRelationalTree', () => {
     );
   });
 
-  it.each([
-    ['union_distinct', 'UNION DISTINCT'],
-    ['intersect_distinct', 'INTERSECT'],
-    ['except_distinct', 'EXCEPT'],
-    ['intersect_all', 'INTERSECT ALL'],
-    ['except_all', 'EXCEPT ALL'],
-  ] as const)('projects %s as the exact SetRel operation label', (operation, label) => {
-    const inputs: readonly DvtSubstraitUnionAllSource[] = ['north', 'south'].map((table) => ({
-      nodeId: table,
-      schema: 'public',
-      table,
-      fields: [{ name: 'customer_id', type: 'string' as const }],
-      sourceRef: sourceRef(table),
-    }));
-    const draft =
-      operation === 'union_distinct'
-        ? createDvtSubstraitUnionDistinctDraft({ inputs, targetNodeId: TARGET_ID })
-        : createDvtSubstraitSetDraft({ inputs, targetNodeId: TARGET_ID, operation });
-    const transform = applyDvtSubstraitSemanticDocument(
-      targetNode(),
-      encodeDvtSubstraitUnionAllDocument(draft)
-    );
-    const result = project(
-      transform,
-      inputs.map((input) => sourceNode(input.nodeId, input.table, ['customer_id']))
-    );
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(
-      resolveCanvasViewCopy('en')[
-        resolveCanvasRelationalOperationPresentation(result.projection.root.operation).labelKey
-      ]
-    ).toBe(label);
+  it('keeps a unary operation above its complete binary input', async () => {
+    const { session, sources } = graphJoin();
+    const schema = await session.query(session.rootId);
+    const document = await applySelectedRelationAggregate(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      intent: 'insert',
+      fieldId: schema.bindings[0]!.fieldId,
+      alias: 'total',
+    });
+    const result = project(graphModel(document), sources);
+    if (!result.ok) throw new Error('Expected aggregate tree');
     expect(result.projection.root).toMatchObject({
-      operator: 'set',
-      operation,
-    });
-  });
-
-  it('keeps an AggregateRel as a unary operator over a binary JOIN', () => {
-    const initial = createDvtSubstraitJoinDraft({
-      left: joinSource('customers', 'customers'),
-      right: joinSource('orders', 'orders'),
-      targetNodeId: TARGET_ID,
-    });
-    const inspection = inspectDvtSubstraitJoinDraft(initial);
-    if (!inspection.ok) throw new Error('Expected an admitted JOIN.');
-    const groupFieldId = inspection.projection.outputs.find(
-      (output) => output.name === 'name'
-    )?.fieldId;
-    if (groupFieldId == null) throw new Error('Expected the name output.');
-    const grouped = applyDvtSubstraitInnerJoinGrouping(initial, {
-      groupFieldId,
-      countOutputName: 'customer_count',
-    });
-    const transform = applyDvtSubstraitSemanticDocument(
-      targetNode(),
-      encodeDvtSubstraitJoinDocument(grouped)
-    );
-    const result = project(transform, [
-      sourceNode('customers', 'customers', ['customer_id', 'name', 'country']),
-      sourceNode('orders', 'orders', ['order_id', 'customer_id', 'amount']),
-    ]);
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.projection.root.operator).toBe('aggregate');
-    expect(result.projection.root.children).toHaveLength(1);
-    expect(result.projection.root.children[0]).toMatchObject({
-      role: 'input',
-      ordinal: 0,
-      node: { operator: 'join' },
+      operator: 'aggregate',
+      children: [{ role: 'input', ordinal: 0, node: { operator: 'join' } }],
     });
     expect(result.projection.output.fields).toHaveLength(2);
   });
 
-  it('classifies topology-only and canonical-only sources without fabricating children', () => {
-    const draft = createDvtSubstraitJoinDraft({
-      left: joinSource('customers', 'customers'),
-      right: joinSource('orders', 'orders'),
-      targetNodeId: TARGET_ID,
-    });
-    const transform = applyDvtSubstraitSemanticDocument(
-      targetNode(),
-      encodeDvtSubstraitJoinDocument(draft)
-    );
-    const result = project(transform, [
-      sourceNode('customers', 'customers', ['customer_id', 'name', 'country']),
-      sourceNode('payments', 'payments', ['payment_id', 'customer_id']),
-    ]);
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
+  it('distinguishes missing and pending connections without inventing canonical inputs', () => {
+    const { document, sources } = graphJoin();
+    const result = project(graphModel(document), [sources[0]!, graphSource('extra')]);
+    if (!result.ok) throw new Error('Expected canonical tree');
     expect(
-      result.projection.inputs.map(({ sourceRef: ref, state }) => ({
-        source: ref.sourceObjectId,
-        state,
-      }))
+      result.projection.inputs.map(({ sourceRef, state }) => [sourceRef.sourceObjectId, state])
     ).toEqual([
-      { source: 'public.customers', state: 'participating' },
-      { source: 'public.orders', state: 'missing' },
-      { source: 'public.payments', state: 'pending' },
+      ['public.left', 'participating'],
+      ['public.right', 'missing'],
+      ['public.extra', 'pending'],
     ]);
     expect(flatten(result.projection.root).filter((node) => node.operator === 'read')).toHaveLength(
       2
     );
   });
 
-  it('returns one explicit failure for invalid canonical authority', () => {
-    const invalid = {
-      ...targetNode(),
+  it('returns a typed failure for invalid authority', () => {
+    const node = {
+      ...graphModel(),
       metadata: {
         transformAuthoring: {
           version: 'v1',
@@ -406,10 +129,8 @@ describe('ProjectCanvasRelationalTree', () => {
           semanticDocument: { broken: true },
         },
       },
-    } satisfies CanonicalNode;
-
-    expect(() => project(invalid, [])).not.toThrow();
-    expect(project(invalid, [])).toEqual({
+    };
+    expect(project(node, [])).toEqual({
       ok: false,
       failure: { code: 'invalid-semantic-authority' },
     });

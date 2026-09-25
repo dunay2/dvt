@@ -4,17 +4,15 @@ import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/su
 import type { DvtSubstraitSortKey } from '@dvt/postgres-projection';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import type { DvtSubstraitProjectionDraft } from '../canvasDvtSubstraitProjection';
-import type { CanvasRelationalOperatorTool } from '../canvasRelationalTreeOperatorModel';
-import { applyCanvasRelationalOperatorTool } from '../canvasRelationalTreeOperatorCommands';
+import type { CanvasRelationalOperatorTool } from './OperatorTool';
 import { operatorFormCopy } from './operatorFormCopy';
 import { CanvasRelationAnalysisContext } from '../CanvasRelationAnalysisContext';
-import {
-  applySelectedRelationFilter,
-  removeSelectedRelationFilter,
-} from '../canvasSelectedRelationFilter';
+import { applySelectedUnaryTool } from './applySelectedUnaryTool';
+import { useRelationRemoval } from '../useRelationRemoval';
 
 export type OperatorFormValues = Readonly<{
   fieldId: string;
+  partitionFieldIds: readonly string[];
   alias: string;
   value: string;
   capabilityId: string;
@@ -25,7 +23,6 @@ export type OperatorFormValues = Readonly<{
 
 export function useOperatorForm({
   tool,
-  draft,
   onChange,
   onClose,
   targetRelationId,
@@ -51,6 +48,7 @@ export function useOperatorForm({
   const language = useApplicationLanguageStore((state) => state.language);
   const [values, setValues] = useState<OperatorFormValues>(() => ({
     fieldId: tool.fieldId ?? tool.fields[0]?.fieldId ?? '',
+    partitionFieldIds: tool.partitionFieldIds ?? [],
     alias: tool.alias ?? (tool.id === 'window' ? 'row_number' : 'total'),
     value: tool.value ?? '',
     capabilityId: tool.capabilityId ?? tool.comparisons?.[0]?.capabilityId ?? '',
@@ -68,21 +66,26 @@ export function useOperatorForm({
     count: tool.count == null ? '' : String(tool.count),
   }));
   const [error, setError] = useState(false);
-  const commitFilter = async (remove: boolean) => {
+  const removal = useRelationRemoval((next) => {
+    onPendingChange?.(false);
+    onChange(next);
+    onClose();
+  }, !busy);
+  const commit = async () => {
     if (busy || analysis == null || revision == null || targetRelationId == null) return;
     setBusy(true);
     setError(false);
     const signal = lifetime.current.signal;
     try {
-      const next = remove
-        ? await removeSelectedRelationFilter(analysis.session, targetRelationId, revision, signal)
-        : await applySelectedRelationFilter(analysis.session, {
-            ...values,
-            relationId: targetRelationId,
-            expectedRevision: revision,
-            intent: tool.active ? 'edit' : 'insert',
-            signal,
-          });
+      const next = await applySelectedUnaryTool(analysis.session, {
+        ...values,
+        tool: tool.id,
+        relationId: targetRelationId,
+        expectedRevision: revision,
+        intent: tool.active ? 'edit' : 'insert',
+        signal,
+      });
+      signal.throwIfAborted();
       onPendingChange?.(false);
       onChange(next);
       onClose();
@@ -91,35 +94,6 @@ export function useOperatorForm({
     } finally {
       if (!signal.aborted) setBusy(false);
     }
-  };
-  const commit = (remove = false) => {
-    if (tool.id === 'filter') {
-      void commitFilter(remove);
-      return;
-    }
-    let offset: bigint | undefined;
-    let count: bigint | undefined;
-    try {
-      offset = values.offset.trim() === '' ? undefined : BigInt(values.offset);
-      count = values.count.trim() === '' ? undefined : BigInt(values.count);
-    } catch {
-      setError(true);
-      return;
-    }
-    const next = applyCanvasRelationalOperatorTool(draft, {
-      ...values,
-      tool: tool.id,
-      offset,
-      count,
-      targetRelationId,
-      remove,
-    });
-    if (next === draft) {
-      setError(true);
-      return;
-    }
-    onChange(next);
-    onClose();
   };
   return {
     values,
@@ -130,8 +104,13 @@ export function useOperatorForm({
       setValues((current) => ({ ...current, ...patch }));
       onPendingChange?.(true);
     },
-    submit: () => commit(),
-    remove: () => commit(true),
+    submit: () => {
+      void commit();
+    },
+    removal,
+    remove: () => {
+      if (targetRelationId != null) removal.remove(targetRelationId);
+    },
     cancel: () => {
       lifetime.current.abort();
       onPendingChange?.(false);

@@ -106,7 +106,7 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
             {...canvasNodeEmbeddedControlProps}
             aria-label={accessibleLabel}
             aria-pressed={isOutput}
-            disabled={outputToggleDisabled}
+            aria-disabled={outputToggleDisabled}
             className={graphNodeColumnClasses.outputState}
             onPointerDown={(event) => {
               outputFocus.capturePointerFocus(event.currentTarget);
@@ -114,6 +114,7 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
             }}
             onClick={(event) => {
               event.stopPropagation();
+              if (outputToggleDisabled) return;
               onOutputToggle();
               outputFocus.retainFocus(event.currentTarget);
             }}

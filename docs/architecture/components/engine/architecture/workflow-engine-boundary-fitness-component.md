@@ -122,4 +122,3 @@ stateDiagram-v2
 - [WE-HX-6 user stories](./workflow-engine-boundary-fitness-user-stories.md)
 - [WE-HX-5 provider and telemetry seams](./workflow-engine-provider-telemetry-seams-component.md)
 - [WorkflowEngine target architecture](./workflow-engine-target-architecture.v1.md)
-- [Fowler mailbox analysis](../../../../../buzon/20260512-codex-fowler-we-hx-6-boundary-fitness-analysis-and-remediation.md)

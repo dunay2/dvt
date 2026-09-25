@@ -5,10 +5,8 @@ import documents from '../../../../../../packages/@dvt/postgres-projection/test/
 import type { CanonicalNode } from '../../types/canonical';
 import { buildProtectedDvtPreviewProjection } from './canvasDvtPreviewProjection';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
-import {
-  createDvtSubstraitUnionDistinctDraft,
-  encodeDvtSubstraitUnionAllDocument,
-} from './canvasDvtSubstraitSetComposition';
+import { createSourceSet } from './canvasSourceSet';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 function fixture(count: 2 | 3): Parameters<typeof buildProtectedDvtPreviewProjection>[0] {
   const document = DvtSubstraitSemanticDocumentV1Schema.parse(
@@ -109,10 +107,13 @@ describe('N-input protected Preview intent', () => {
         sourceObjectId: `raw.${table}`,
       },
     }));
-    const document = encodeDvtSubstraitUnionAllDocument(
-      createDvtSubstraitUnionDistinctDraft({
-        inputs: sourceSpecs,
-        targetNodeId: 'transform-customers',
+    const document = encodeDvtSubstraitSemanticDocument(
+      createSourceSet({
+        ...{
+          inputs: sourceSpecs,
+          targetNodeId: 'transform-customers',
+        },
+        operation: 'union_distinct',
       })
     );
     const sources: CanonicalNode[] = sourceSpecs.map((source) => ({

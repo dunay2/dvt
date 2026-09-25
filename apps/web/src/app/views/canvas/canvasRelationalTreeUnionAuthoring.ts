@@ -1,12 +1,6 @@
-/** Owned concern: order selected Canvas inputs and create one canonical SetRel draft. */
+/** Owned concern: order selected Canvas inputs for initial SET capability discovery. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import {
-  createDvtSubstraitSetDraft,
-  createDvtSubstraitUnionAllDraft,
-  resolveDvtSubstraitUnionAllEntry,
-  type DvtSubstraitSetOperation,
-  type DvtSubstraitUnionAllDraft,
-} from './canvasDvtSubstraitSetComposition';
+import { resolveConnectedSetEntry } from './canvasConnectedRelationInputs';
 
 export type CanvasRelationalTreeUnionContext = Readonly<{
   selectedInputIds: readonly string[];
@@ -19,7 +13,7 @@ export function orderedCanvasRelationalTreeUnionAllEntry(args: CanvasRelationalT
   const selectedIds = new Set(args.selectedInputIds);
   const targetNode = args.nodes.find((node) => node.id === args.targetNodeId);
   if (targetNode == null) return null;
-  const entry = resolveDvtSubstraitUnionAllEntry({
+  const entry = resolveConnectedSetEntry({
     targetNode,
     nodes: args.nodes,
     edges: args.edges.filter(
@@ -32,19 +26,4 @@ export function orderedCanvasRelationalTreeUnionAllEntry(args: CanvasRelationalT
   return ordered.some((input) => input == null)
     ? null
     : { ...entry, inputs: ordered.filter((input) => input != null) };
-}
-
-export function createCanvasRelationalTreeUnionAllDraft(
-  args: CanvasRelationalTreeUnionContext
-): DvtSubstraitUnionAllDraft | null {
-  const entry = orderedCanvasRelationalTreeUnionAllEntry(args);
-  return entry == null ? null : createDvtSubstraitUnionAllDraft(entry);
-}
-
-export function createCanvasRelationalTreeSetDraft(
-  args: CanvasRelationalTreeUnionContext,
-  operation: DvtSubstraitSetOperation
-): DvtSubstraitUnionAllDraft | null {
-  const entry = orderedCanvasRelationalTreeUnionAllEntry(args);
-  return entry == null ? null : createDvtSubstraitSetDraft({ ...entry, operation });
 }

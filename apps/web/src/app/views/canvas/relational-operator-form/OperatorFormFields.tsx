@@ -1,5 +1,5 @@
 /** Owned concern: compose controlled inputs for each admitted operator. */
-import type { CanvasRelationalOperatorTool } from '../canvasRelationalTreeOperatorModel';
+import type { CanvasRelationalOperatorTool } from './OperatorTool';
 import type { OperatorFormModel } from './useOperatorForm';
 import { SortKeyFields } from './SortKeyFields';
 
@@ -41,24 +41,11 @@ export function OperatorFormFields({
             />
           </label>
         </div>
-      ) : tool.id === 'window' && tool.order != null ? (
-        <div className="rounded border border-(--border-subtle) p-3 font-mono text-[13px]">
-          ROW_NUMBER()
-          <br />
-          ORDER BY {tool.order} DESC NULLS LAST,
-          <br />
-          {tool.tieBreaker} ASC NULLS LAST
-        </div>
       ) : (
         <label className="block">
-          {tool.id === 'window'
-            ? 'ORDER BY · ASC NULLS LAST'
-            : tool.id === 'aggregate'
-              ? 'GROUP BY'
-              : copy.field}
+          {tool.id === 'window' ? 'ORDER BY' : tool.id === 'aggregate' ? 'GROUP BY' : copy.field}
           <select
             value={values.fieldId}
-            disabled={tool.id === 'aggregate' && tool.active}
             required
             onChange={(event) => change({ fieldId: event.target.value })}
           >
@@ -70,6 +57,29 @@ export function OperatorFormFields({
           </select>
         </label>
       )}
+      {tool.id === 'window' ? (
+        <label className="block">
+          PARTITION BY
+          <select
+            multiple
+            value={[...values.partitionFieldIds]}
+            onChange={(event) =>
+              change({
+                partitionFieldIds: Array.from(
+                  event.currentTarget.selectedOptions,
+                  (option) => option.value
+                ),
+              })
+            }
+          >
+            {tool.fields.map((field) => (
+              <option key={field.fieldId} value={field.fieldId}>
+                {field.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
       {tool.id === 'filter' ? (
         <>
           <label className="block">

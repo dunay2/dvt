@@ -1,3 +1,4 @@
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 import { filterProjectionInputFixture } from './canvasFilterProjection.test-support';
 import { create } from '@bufbuild/protobuf';
 import {
@@ -10,11 +11,7 @@ import { describe, expect, it } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
 
-import {
-  createDvtSubstraitPilotDraft,
-  encodeDvtSubstraitPilotDocument,
-  inspectDvtSubstraitPilotDraft,
-} from './canvasDvtSubstraitPilot';
+import { projectionScenario } from './canvasProjectionScenario.test-support';
 import {
   createDvtSubstraitProjectionDraft,
   resolveDvtSubstraitProjectionSource,
@@ -22,8 +19,9 @@ import {
 import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
-import { applyDvtSubstraitPilotRowNumber } from './canvasDvtSubstraitWindow';
-import { applyDvtSubstraitFetch, applyDvtSubstraitSort } from './canvasDvtSubstraitSortFetch';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { applySelectedRelationWindow } from './canvasSelectedRelationWindow';
+import { applyDvtSubstraitFetch, applyDvtSubstraitSort } from './canvasSortFetch.test-support';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 
 const TARGET_ID = 'transform-orders';
@@ -109,23 +107,26 @@ describe('ProjectCanvasRelationalTree admitted shapes', () => {
     expect(result.projection.root.children[0]?.node.children[0]?.node.operator).toBe('read');
   });
 
-  it('reports the current window decoration without copying its scalar tree', () => {
-    const pilot = createDvtSubstraitPilotDraft({
+  it('reports the current window decoration without copying its scalar tree', async () => {
+    const pilot = projectionScenario({
       sourceNodeId: 'customers',
       targetNodeId: TARGET_ID,
     });
-    const inspection = inspectDvtSubstraitPilotDraft(pilot);
-    if (!inspection.ok) throw new Error('Expected the admitted pilot.');
-    const [partition, order] = inspection.projection.outputs;
-    if (partition == null || order == null) throw new Error('Expected pilot fields.');
-    const windowed = applyDvtSubstraitPilotRowNumber(pilot, {
-      partitionFieldId: partition.fieldId,
-      orderFieldId: order.fieldId,
-      outputName: 'row_number',
+    const { index } = deriveSubstraitSchemas(pilot);
+    const outputs = index.relations.get(index.rootId)!.fields;
+    const session = new CanvasRelationAnalysisSession(TARGET_ID);
+    session.receive(pilot);
+    const windowed = await applySelectedRelationWindow(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      intent: 'insert',
+      fieldId: outputs[1]!.fieldId,
+      alias: 'row_number',
     });
+    session.dispose();
     const transform = applyDvtSubstraitSemanticDocument(
       targetNode(),
-      encodeDvtSubstraitPilotDocument(windowed)
+      encodeDvtSubstraitSemanticDocument(windowed)
     );
     const result = projectCanvasRelationalTree({ node: transform, nodes: [transform], edges: [] });
 
@@ -134,13 +135,13 @@ describe('ProjectCanvasRelationalTree admitted shapes', () => {
     expect(result.projection.root).toMatchObject({
       operator: 'project',
       decorations: [{ kind: 'window', count: 1 }],
-      children: [{ role: 'input', node: { operator: 'read' } }],
+      children: [{ role: 'input', node: { operator: 'project' } }],
     });
     expect(result.projection.output.fields).toHaveLength(4);
   });
 
   it('keeps a valid unrendered relation bounded and inspectable', () => {
-    const pilot = createDvtSubstraitPilotDraft({
+    const pilot = projectionScenario({
       sourceNodeId: 'customers',
       targetNodeId: TARGET_ID,
     });
@@ -182,26 +183,26 @@ describe('ProjectCanvasRelationalTree admitted shapes', () => {
   });
 
   it('projects a valid Fetch(Sort(Project(Read))) as visible semantic cards', () => {
-    const pilot = createDvtSubstraitPilotDraft({
+    const pilot = projectionScenario({
       sourceNodeId: 'customers',
       targetNodeId: TARGET_ID,
     });
-    const inspection = inspectDvtSubstraitPilotDraft(pilot);
-    if (!inspection.ok) throw new Error('Expected the admitted pilot.');
+    const { index } = deriveSubstraitSchemas(pilot);
+    const outputs = index.relations.get(index.rootId)!.fields;
     const sorted = applyDvtSubstraitSort(pilot, [
       {
-        fieldId: inspection.projection.outputs[1]!.fieldId,
+        fieldId: outputs[1]!.fieldId,
         direction: SortField_SortDirection.DESC_NULLS_LAST,
       },
       {
-        fieldId: inspection.projection.outputs[0]!.fieldId,
+        fieldId: outputs[0]!.fieldId,
         direction: SortField_SortDirection.ASC_NULLS_FIRST,
       },
     ]);
     const fetched = applyDvtSubstraitFetch(sorted, { offset: 2n, count: 3n });
     const transform = applyDvtSubstraitSemanticDocument(
       targetNode(),
-      encodeDvtSubstraitPilotDocument(fetched)
+      encodeDvtSubstraitSemanticDocument(fetched)
     );
 
     const result = projectCanvasRelationalTree({ node: transform, nodes: [transform], edges: [] });

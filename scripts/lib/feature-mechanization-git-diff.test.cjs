@@ -1,6 +1,5 @@
 /** Owned concern: prove candidate evidence with real Git, including failure paths. */
 const assert = require('node:assert/strict');
-const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -8,49 +7,31 @@ const test = require('node:test');
 const { pathToFileURL } = require('node:url');
 const { FeatureMechanizationGitDiffReader } = require('../check-feature-mechanization.cjs');
 
-function repository(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-git-evidence-'));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
-  const git = (...args) =>
-    execFileSync('git', args, {
-      cwd: root,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-      env: {
-        ...process.env,
-        GIT_AUTHOR_NAME: 'Fixture',
-        GIT_AUTHOR_EMAIL: 'fixture@example.invalid',
-        GIT_COMMITTER_NAME: 'Fixture',
-        GIT_COMMITTER_EMAIL: 'fixture@example.invalid',
-      },
-    }).trim();
-  git('init', '--quiet', '--initial-branch=main');
-  const write = (name, value) => fs.writeFileSync(path.join(root, name), value);
-  const commit = (parent) => {
-    git('add', '--all');
-    const tree = git('write-tree');
-    const sha = git('commit-tree', tree, ...(parent ? ['-p', parent] : []), '-m', 'Fixture');
-    git('update-ref', 'HEAD', sha);
-    return sha;
-  };
-  write('model.ts', 'export const model = 1;\n');
-  write('retired.ts', 'export const retired = true;\n');
-  const base = commit();
-  const reader = (options = {}) =>
-    new FeatureMechanizationGitDiffReader({
-      repoRootPath: root,
-      baseRef: base,
-      headRef: 'HEAD',
-      includeWorktree: !options.headRef,
-      ...options,
-    });
-  return { root, git, write, commit, base, reader };
-}
+const { repository } = require('./feature-mechanization-git-fixture.cjs');
 
 test('an actual empty comparison succeeds', (t) => {
   const repo = repository(t);
   assert.deepEqual(repo.reader().read().changedFiles, []);
 });
+
+for (const committed of [true, false]) {
+  test(`large additions preserve every line of ${committed ? 'committed' : 'local'} evidence`, (t) => {
+    const repo = repository(t);
+    const lines = Array.from({ length: 45000 }, (_, i) => `export const field${i} = ${i};`);
+    const source = `${lines.join('\n')}\n`;
+    assert.ok(Buffer.byteLength(source) > 1024 * 1024);
+    repo.write('added.ts', source);
+    repo.write('model.ts', source);
+    if (!committed) repo.git('add', 'added.ts');
+    const options = committed ? { headRef: repo.commit(repo.base) } : {};
+    const diff = repo.reader(options).read();
+    assert.deepEqual(diff.changedFiles, ['added.ts', 'model.ts']);
+    for (const name of diff.changedFiles) {
+      assert.equal(diff.fileContentsByPath[name], source);
+      assert.deepEqual(diff.addedLinesByPath[name], lines);
+    }
+  });
+}
 
 for (const option of ['baseRef', 'headRef']) {
   test(`an unavailable ${option} rejects instead of becoming empty evidence`, (t) => {

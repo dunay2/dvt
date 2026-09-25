@@ -941,8 +941,13 @@ export function inspectDvtSubstraitProjectionDraft(
       persistedOperandFieldIds.length === rawScalarArguments.length &&
       persistedOperandFieldIds.every((fieldId, index) => {
         const operandField = targetFields.find((field) => field.fieldId === fieldId);
+        const inputField = sourceFields.find((field) => field.fieldId === fieldId);
         const operandExpression =
-          operandField == null ? null : mappedExpression(operandField.outputOrdinal);
+          operandField != null
+            ? mappedExpression(operandField.outputOrdinal)
+            : inputField == null
+              ? null
+              : dvtSubstraitExpression.field(inputField.outputOrdinal);
         return (
           fieldId !== targetField?.fieldId &&
           operandExpression != null &&

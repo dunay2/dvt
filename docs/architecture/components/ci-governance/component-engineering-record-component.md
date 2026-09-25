@@ -115,7 +115,7 @@ Evidence:
 That means the next engine component-engineering step is metadata enrichment,
 not a blind source refactor. The residual is tracked by
 `D-ENGINE-COMPONENT-METADATA-INDEX-1` and by the Fowler review at
-`docs/planning/reviews/architecture-and-governance/20260527-docs-engine-component-reconciliation-fowler-review.md`.
+[Docs And Engine Component Reconciliation Fowler Review](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/docs/planning/reviews/architecture-and-governance/20260527-docs-engine-component-reconciliation-fowler-review.md).
 
 ## Topology
 

@@ -1,13 +1,13 @@
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 // @vitest-environment jsdom
 /** Owned concern: retain a selected nested relation across applied semantic revisions. */
 import React, { act } from 'react';
 import { describe, expect, it } from 'vitest';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { applyDvtSubstraitFetch, applyDvtSubstraitSort } from './canvasDvtSubstraitSortFetch';
-import {
-  createDvtSubstraitPilotDraft,
-  inspectDvtSubstraitPilotDraft,
-} from './canvasDvtSubstraitPilot';
+import { applyDvtSubstraitFetch, applyDvtSubstraitSort } from './canvasSortFetch.test-support';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetch';
+import { projectionScenario } from './canvasProjectionScenario.test-support';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
@@ -24,25 +24,25 @@ describe('applied relation selection', () => {
 
   it.each(['revision', 'removed', 'different-model'] as const)(
     'reconciles %s by stable relation identity',
-    (transition) => {
-      const pilot = createDvtSubstraitPilotDraft({
+    async (transition) => {
+      const pilot = projectionScenario({
         sourceNodeId: 'source',
         targetNodeId: 'transform',
       });
-      const inspection = inspectDvtSubstraitPilotDraft(pilot);
-      if (!inspection.ok) throw new Error('Expected pilot');
+      const { index } = deriveSubstraitSchemas(pilot);
+      const outputs = index.relations.get(index.rootId)!.fields;
       const key = {
-        fieldId: inspection.projection.outputs[0]!.fieldId,
+        fieldId: outputs[0]!.fieldId,
         direction: SortField_SortDirection.ASC_NULLS_LAST as const,
       };
       const sorted = applyDvtSubstraitSort(pilot, [key]);
       const fetched = applyDvtSubstraitFetch(sorted, { count: 20n });
-      const render = (draft: typeof fetched, id = 'transform'): void => {
+      const render = async (draft: typeof fetched, id = 'transform'): Promise<void> => {
         const node = applyDvtSubstraitSemanticDocument(
           { ...transformNode(), id },
           encodeDvtSubstraitSemanticDocument(draft)
         );
-        act(() =>
+        await act(async () =>
           root.render(
             <CanvasRelationalTreeWorkbench
               transformNode={node}
@@ -53,18 +53,23 @@ describe('applied relation selection', () => {
           )
         );
       };
-      render(fetched);
+      await render(fetched);
       const card = container.querySelector<HTMLButtonElement>('[data-operator="sort"]')!;
       const relationId = card.dataset.relationId!;
       const previousLocator = card.dataset.locator;
-      act(() => card.click());
+      await act(async () => card.click());
       expect(card.getAttribute('aria-selected')).toBe('true');
-      const updated = applyDvtSubstraitSort(
-        fetched,
-        [{ ...key, direction: SortField_SortDirection.DESC_NULLS_LAST }],
-        relationId
-      );
-      render(
+      const session = new CanvasRelationAnalysisSession('model');
+      session.receive(fetched);
+      const updated = await applySelectedRelationSortFetch(session, {
+        intent: 'edit',
+        operation: 'sort',
+        relationId,
+        expectedRevision: session.revision,
+        keys: [{ ...key, direction: SortField_SortDirection.DESC_NULLS_LAST }],
+      });
+      session.dispose();
+      await render(
         transition === 'removed' ? pilot : updated,
         transition === 'different-model' ? 'other' : 'transform'
       );

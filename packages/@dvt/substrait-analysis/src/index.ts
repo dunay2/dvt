@@ -7,9 +7,14 @@ export {
 } from './relationIndex.js';
 export { readRelationStructure } from './relationStructure.js';
 export { selectDvtSubstraitRelation } from './relationSelection.js';
-export { deriveSubstraitSchemas, type SubstraitSchemas } from './relationSchema.js';
+export {
+  deriveRelationSchema,
+  deriveSubstraitSchemas,
+  type SubstraitSchemas,
+} from './relationSchema.js';
 export { isSchemaTypeNullable, type SchemaField } from './schemaTypes.js';
 export { deriveExpressionSchema } from './schemaExpression.js';
+export { deriveOperatorSchema } from './schemaOperators.js';
 export { RelationAnalysisSession, type RelationAnalysisResult } from './relationAnalysisSession.js';
 export { MemoryRelationAnalysisCache } from './memoryAnalysisCache.js';
 export type {

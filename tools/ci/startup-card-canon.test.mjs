@@ -104,7 +104,6 @@ const baseActivePlanningEntrypoints = [
   'docs/planning/proposals/mandatory/frontend-and-ux/index.md',
   'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md',
   'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md',
-  'docs/planning/proposals/mandatory/runtime-and-contracts/mw-c1-to-tf-c2-runtime-vertical-sequence-analysis-20260409.md',
   'scripts/sync-docs.cjs',
 ];
 
@@ -423,25 +422,23 @@ test('active domain and roadmap routing expand the retired-surface guard', () =>
   );
   assert.ok(
     linkedCurrentRoadmapDocuments.includes(
-      'docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md'
+      'docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md'
     ),
     'roadmap current sources must resolve mandatory plans'
   );
   assert.ok(
     linkedCurrentRoadmapRoutingDocuments.includes(
-      'docs/planning/reviews/architecture-and-governance/20260417-dvt-artifacts-review.md'
+      'docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md'
     ),
-    'roadmap current reviews must be exposed to retired-surface validation'
+    'roadmap current hardening plans must be exposed to retired-surface validation'
   );
   assert.ok(
-    linkedCurrentRoadmapDocuments.includes(
-      'docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md'
-    ),
-    'roadmap historical closeout evidence must still resolve as a current source'
+    linkedCurrentRoadmapDocuments.every((path) => !path.startsWith('docs/planning/closeouts/')),
+    'retired historical closeouts must not remain current roadmap sources'
   );
   assert.ok(
-    !linkedCurrentRoadmapRoutingDocuments.includes(
-      'docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md'
+    linkedCurrentRoadmapRoutingDocuments.every(
+      (path) => !path.startsWith('docs/planning/closeouts/')
     ),
     'historical closeout evidence must not be rewritten as current routing authority'
   );

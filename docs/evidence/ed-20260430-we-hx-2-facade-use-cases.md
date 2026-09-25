@@ -44,4 +44,4 @@ thin barrel over a multi-reason module.
 - Added local user stories in
   `docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-user-stories.md`.
 - Added Fowler mailbox analysis in
-  `buzon/20260430-codex-fowler-we-hx-2-facade-use-cases-analysis-and-remediation.md`.
+  [Fowler analysis and remediation for WE-HX-2 facade use cases](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/buzon/20260430-codex-fowler-we-hx-2-facade-use-cases-analysis-and-remediation.md).

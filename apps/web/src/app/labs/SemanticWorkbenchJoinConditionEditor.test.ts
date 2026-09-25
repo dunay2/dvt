@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { DvtSubstraitJoinPredicateCondition } from '../views/canvas/canvasDvtSubstraitJoinCondition';
-import { projectSemanticWorkbenchJoinConditionRows } from '../views/canvas/SemanticWorkbenchJoinConditionEditor';
+import { projectSemanticWorkbenchJoinConditionRows } from '../views/canvas/join-condition/conditionRows';
 
 describe('SemanticWorkbenchJoinConditionEditor', () => {
   it('labels null predicates without a right operand', () => {

@@ -105,7 +105,11 @@ function buildAuthorityMetrics(
       numericValue(data.lastCost) ??
       node.lastCost;
     pushMetric(metrics, 'cost', 'Cost', cost == null ? null : `$${cost.toFixed(2)}`);
-    const semanticMetric = buildDvtGraphNodeSemanticMetric(node);
+    const semanticMetric = buildDvtGraphNodeSemanticMetric(
+      node,
+      data.presentationTruth,
+      isCanvasNodePresentationCopy(data.presentationCopy) ? data.presentationCopy.locale : undefined
+    );
     if (semanticMetric != null) metrics.push(semanticMetric);
   }
   return metrics;

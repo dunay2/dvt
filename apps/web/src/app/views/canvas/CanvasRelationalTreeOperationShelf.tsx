@@ -9,40 +9,36 @@ import { CanvasOperationMenu } from './operation-menu/CanvasOperationMenu';
 import { CanvasOperationReplacementDialog } from './operation-menu/CanvasOperationReplacementDialog';
 import { buildCanvasOperationMenuItems } from './operation-menu/canvasOperationMenuModel';
 import { resolveCanvasOperationMenuCopy } from './operation-menu/canvasOperationMenuCopy';
-import {
-  resolveCanvasRelationalOperatorTools,
-  type CanvasRelationalOperatorTool,
-} from './canvasRelationalTreeOperatorModel';
+import type { CanvasRelationalOperatorTool } from './relational-operator-form/OperatorTool';
 import { CanvasRelationalTreeOperatorForm } from './CanvasRelationalTreeOperatorForm';
 import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { CanvasRelationalCrossNotice } from './CanvasRelationalCrossNotice';
-import { useSelectedRelationFilter } from './useSelectedRelationFilter';
+import { useSelectedRelationTools } from './useSelectedRelationTool';
+import { useCompositionChoices } from './useCompositionChoices';
 
 export function CanvasRelationalTreeOperationShelf({
-  choices,
+  choices: initialChoices,
   copy,
-  hasOperands,
-  operation,
-  selectedInputCount,
+  operation: initialOperation,
   onSelectOperation,
   draft,
   editable,
   onChangeDraft,
   selectedRelationId,
+  appending = false,
 }: Readonly<{
   choices: readonly CanvasRelationalOperationChoice[];
   copy: CanvasRelationalTreeWorkbenchCopy;
-  hasOperands: boolean;
   operation: CanvasRelationalOperation | null;
-  selectedInputCount: number;
-  onSelectOperation: (operation: CanvasRelationalOperation) => void;
+  onSelectOperation: (operation: CanvasRelationalOperation, relationId?: string) => void;
   draft: DvtSubstraitProjectionDraft | null;
   editable: boolean;
   onChangeDraft: (draft: DvtSubstraitProjectionDraft) => void;
   selectedRelationId: string | null;
+  appending?: boolean;
 }>): JSX.Element {
   const [replacement, setReplacement] = useState<CanvasRelationalOperation | null>(null);
   const [selection, setSelection] = useState<{
@@ -53,11 +49,11 @@ export function CanvasRelationalTreeOperationShelf({
   const language = useApplicationLanguageStore((state) => state.language);
   const localCopy = resolveCanvasSemanticEditorCopy(language);
   const menuCopy = resolveCanvasOperationMenuCopy(language);
-  const filter = useSelectedRelationFilter(selectedRelationId, 'insert');
-  const tools =
-    draft == null
-      ? []
-      : [...(filter == null ? [] : [filter.tool]), ...resolveCanvasRelationalOperatorTools(draft)];
+  const { tools, targetId } = useSelectedRelationTools(draft, selectedRelationId);
+  const replacing = draft != null && !appending;
+  const selected = useCompositionChoices(selectedRelationId, !editable, replacing);
+  const choices = replacing ? (selected?.choices ?? []) : initialChoices;
+  const operation = replacing ? (selected?.operation ?? null) : initialOperation;
   const items = buildCanvasOperationMenuItems({
     choices,
     tools,
@@ -79,24 +75,18 @@ export function CanvasRelationalTreeOperationShelf({
             if (!items.some((item) => item.id === next && item.selectable)) return;
             const tool = tools.find((item) => item.id === next);
             if (tool != null) {
-              setSelection({ tool, targetId: tool.id === 'filter' ? filter?.targetId : undefined });
+              setSelection({
+                tool,
+                targetId,
+              });
               return;
             }
             const choice = choices.find((item) => item.operation === next);
             if (choice == null || choice.operation === operation) return;
             if (operation != null) setReplacement(choice.operation);
-            else onSelectOperation(choice.operation);
+            else onSelectOperation(choice.operation, targetId);
           }}
         />
-        {choices.length === 0 ? (
-          <span className="text-xs text-(--text-muted)">
-            {!hasOperands
-              ? copy.relationalTreeSelectFirstSourceMessage
-              : selectedInputCount === 1
-                ? copy.relationalTreeSelectNextSourceMessage
-                : copy.relationalTreeSelectOperationMessage}
-          </span>
-        ) : null}
         {operation === 'cross_join' ? <CanvasRelationalCrossNotice /> : null}
       </div>
       {selectedTool == null || draft == null ? null : (
@@ -123,7 +113,7 @@ export function CanvasRelationalTreeOperationShelf({
           if (!open) setReplacement(null);
         }}
         onConfirm={() => {
-          if (replacement != null) onSelectOperation(replacement);
+          if (replacement != null) onSelectOperation(replacement, targetId);
           setReplacement(null);
         }}
       />

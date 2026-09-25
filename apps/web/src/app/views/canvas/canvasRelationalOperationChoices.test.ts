@@ -1,3 +1,4 @@
+import { sourceOperationFacts } from './canvasSourceOperationFacts';
 import { describe, expect, it } from 'vitest';
 
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
@@ -42,12 +43,14 @@ function availability(args: {
   unionAllAvailable?: boolean;
 }): Record<string, CanvasRelationalOperationAvailability> {
   return Object.fromEntries(
-    resolveCanvasRelationalOperationChoices({
-      inputs: args.inputs ?? [input({ nodeId: 'orders' }), input({ nodeId: 'customers' })],
-      predicateAvailable: args.predicateAvailable ?? false,
-      readOnly: args.readOnly ?? false,
-      unionAllAvailable: args.unionAllAvailable ?? false,
-    }).map((choice) => [choice.operation, choice.availability])
+    resolveCanvasRelationalOperationChoices(
+      sourceOperationFacts({
+        inputs: args.inputs ?? [input({ nodeId: 'orders' }), input({ nodeId: 'customers' })],
+        predicateAvailable: args.predicateAvailable ?? false,
+        readOnly: args.readOnly ?? false,
+        unionAllAvailable: args.unionAllAvailable ?? false,
+      })
+    ).map((choice) => [choice.operation, choice.availability])
   );
 }
 

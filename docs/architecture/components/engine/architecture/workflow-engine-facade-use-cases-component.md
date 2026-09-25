@@ -69,7 +69,6 @@ that perform execution behavior.
 ## Scenarios And Review
 
 - [Workflow engine facade use-case user stories](./workflow-engine-facade-use-cases-user-stories.md)
-- [Fowler WE-HX-2 mailbox analysis](../../../../../buzon/20260430-codex-fowler-we-hx-2-facade-use-cases-analysis-and-remediation.md)
 
 ## Diagrams
 

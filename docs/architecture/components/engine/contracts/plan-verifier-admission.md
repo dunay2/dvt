@@ -122,5 +122,3 @@ sequenceDiagram
   pair cases.
 - `verify.test.ts` proves `verifyPlanOrThrow` checks pair admission before
   hashing.
-- Fowler analysis is recorded in
-  `buzon/20260514-codex-fowler-ea-20260429-02-plan-admission-matrix-analysis.md`.

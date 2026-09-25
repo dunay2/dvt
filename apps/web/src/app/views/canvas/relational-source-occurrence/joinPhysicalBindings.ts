@@ -5,7 +5,7 @@ import {
   resolveCanvasDvtCompositionInputs,
   type CanvasDvtCompositionInput,
 } from '../canvasDvtCompositionInputCatalog';
-import type { DvtSubstraitJoinInput } from '../canvasDvtSubstraitJoinComposition';
+import type { SourceRelationInput } from '../canvasSourceRelation';
 import { hasSameConnectedSourceRef } from '../canvasDvtSubstraitJoinSourceResolution';
 
 function matches(
@@ -36,7 +36,7 @@ export function resolveCanvasDvtJoinPhysicalBindings(
     edges: readonly CanonicalEdge[];
     semanticInputs: DvtSubstraitNInputJoinProjection['inputs'];
   }>
-): DvtSubstraitJoinInput[] | null {
+): SourceRelationInput[] | null {
   const candidates = resolveCanvasDvtCompositionInputs({
     ...args,
     targetNodeId: args.targetNode.id,
@@ -46,7 +46,7 @@ export function resolveCanvasDvtJoinPhysicalBindings(
   );
   if (candidates.length !== connected.size) return null;
   const used = new Set<string>();
-  const bindings: DvtSubstraitJoinInput[] = [];
+  const bindings: SourceRelationInput[] = [];
   for (const semantic of args.semanticInputs) {
     const matching = candidates.filter((candidate) => matches(semantic, candidate));
     if (matching.length !== 1) return null;

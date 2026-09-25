@@ -1,3 +1,4 @@
+import { sourceOperationFacts } from './canvasSourceOperationFacts';
 /** Owned concern: derive guided relational authoring choices and canonical DVT drafts. */
 import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
 
@@ -17,10 +18,7 @@ import {
   type CanvasRelationalOperation,
   type CanvasRelationalOperationChoice,
 } from './canvasRelationalOperationChoices';
-import {
-  appendDvtSubstraitJoinInput,
-  type DvtSubstraitJoinDraft,
-} from './canvasDvtSubstraitJoinComposition';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 
 export function createCanvasRelationalTreeInitialJoinDraft(
   args: Readonly<{
@@ -30,7 +28,7 @@ export function createCanvasRelationalTreeInitialJoinDraft(
     rightInputId: string;
     operation?: CanvasJoinOperation;
   }>
-): DvtSubstraitJoinDraft | null {
+): SubstraitDocument | null {
   const left = args.inputs.find((input) => input.nodeId === args.leftInputId);
   const right = args.inputs.find((input) => input.nodeId === args.rightInputId);
   if (left == null || right == null) return null;
@@ -45,34 +43,10 @@ export function createCanvasRelationalTreeInitialJoinDraft(
       );
 }
 
-export function appendCanvasRelationalTreeJoinInput(
-  args: Readonly<{
-    draft: DvtSubstraitJoinDraft;
-    input: CanvasDvtCompositionInput;
-    leftSourceFieldId: string;
-    rightFieldName: string;
-    operation?: CanvasJoinOperation;
-  }>
-): DvtSubstraitJoinDraft {
-  const fields = args.input.fields.filter((field) => field.joinDataType != null);
-  return appendDvtSubstraitJoinInput(args.draft, {
-    source: args.input,
-    fields: fields.map((field) => field.name),
-    fieldTypes: fields.map((field) => field.joinDataType!),
-    fieldNullabilities: fields.map((field) => field.nullable ?? true),
-    predicate: {
-      leftSourceFieldId: args.leftSourceFieldId,
-      rightFieldName: args.rightFieldName,
-    },
-    selectedFields: fields.map((field) => field.name),
-    joinType: toSubstraitJoinType(args.operation ?? 'inner_join'),
-  });
-}
-
 export function createCanvasRelationalTreeNodeDraft(
   node: CanonicalNode,
   shape: CanvasRelationalOperation,
-  semantic: Pick<DvtSubstraitJoinDraft, 'plan' | 'sidecar'>
+  semantic: Pick<SubstraitDocument, 'plan' | 'sidecar'>
 ): CanvasInspectorNodeDraft {
   const draft = createCanvasInspectorNodeDraft(node);
   const disposition =
@@ -108,12 +82,14 @@ export function resolveCanvasRelationalTreeAuthoringChoices(
   if (args.selectedInputIds.length === 1) {
     return [
       resolveCanvasRelationalProjectionChoice(args.readOnly),
-      ...resolveCanvasRelationalOperationChoices({
-        inputs: args.inputs,
-        predicateAvailable: false,
-        readOnly: args.readOnly,
-        unionAllAvailable: false,
-      }).map((choice) => ({
+      ...resolveCanvasRelationalOperationChoices(
+        sourceOperationFacts({
+          inputs: args.inputs,
+          predicateAvailable: false,
+          readOnly: args.readOnly,
+          unionAllAvailable: false,
+        })
+      ).map((choice) => ({
         ...choice,
         selectable: false,
         availability: args.readOnly ? ('read-only' as const) : ('needs-input' as const),
@@ -128,10 +104,12 @@ export function resolveCanvasRelationalTreeAuthoringChoices(
       ...args,
       selectedInputIds: [first.nodeId, second.nodeId],
     }) != null;
-  return resolveCanvasRelationalOperationChoices({
-    inputs: selectedInputs,
-    predicateAvailable: false,
-    readOnly: args.readOnly,
-    unionAllAvailable: unionAvailable,
-  });
+  return resolveCanvasRelationalOperationChoices(
+    sourceOperationFacts({
+      inputs: selectedInputs,
+      predicateAvailable: false,
+      readOnly: args.readOnly,
+      unionAllAvailable: unionAvailable,
+    })
+  );
 }

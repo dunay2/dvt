@@ -24,12 +24,15 @@ export function useCanvasRelationalSelection(
     null;
   const selectRelation = (relationId: string | null) =>
     setSelection({ modelId, relationId, locator: null });
-  const selectTreeNode = (locator: string) =>
+  const selectTreeNode = (locator: string) => {
+    const node = nodes.find((entry) => entry.locator === locator) ?? null;
     setSelection({
       modelId,
       locator,
-      relationId: nodes.find((node) => node.locator === locator)?.relationId ?? null,
+      relationId: node?.relationId ?? null,
     });
+    return node;
+  };
   return {
     selectedNode,
     selectedLocator: selectedNode?.locator ?? '',

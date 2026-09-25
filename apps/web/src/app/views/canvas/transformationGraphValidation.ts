@@ -19,7 +19,7 @@ import type {
 import { TRANSFORMATION_REQUIRED_NODE_COUNT } from './transformationGraphValidation.types';
 import { resolveEffectiveDvtConnectionRef } from './canvasDvtAuthoringModel';
 import { resolveDvtSubstraitJoinEntry } from './canvasDvtSubstraitJoinSourceResolution';
-import { resolveDvtSubstraitUnionAllEntry } from './canvasDvtSubstraitSetComposition';
+import { resolveConnectedSetEntry } from './canvasConnectedRelationInputs';
 
 export type {
   TransformationGraphValidationResult,
@@ -90,7 +90,7 @@ export function validateTransformationGraph({
       : null;
     const unionAllEntry =
       transformNode && joinEntry == null
-        ? resolveDvtSubstraitUnionAllEntry({
+        ? resolveConnectedSetEntry({
             targetNode: transformNode,
             nodes: context.scopedNodes,
             edges: context.scopedEdges,

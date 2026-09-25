@@ -2398,7 +2398,7 @@ test('docs disposition snapshot classifies priority markers and date placeholder
     documents: [
       {
         sourcePath:
-          'docs/planning/reviews/architecture-and-governance/20260422-dvt-plus-principal-architect-action-plan.md',
+          'docs/planning/reviews/architecture-and-governance/20260422-example-architecture-review.md',
         raw: [
           '---',
           'title: Principal architect action plan',
