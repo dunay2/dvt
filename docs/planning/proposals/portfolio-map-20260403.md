@@ -47,10 +47,7 @@ planning_type: proposal
 - [Runtime And Contracts](./mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
 - [API governance subdivision plan
   2026-05-02](./mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md)
-- [Contract pack and read boundary reset plan](./mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md)
-- [Runtime hardening, shared-kernel, and operations roadmap](./mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
 - [Runtime review canon plan 2026-05-23](./mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md)
-- [Transformation Flow Proposal Set](./mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md)
 - [S08-4 StepKind stepTypeConfig hardening plan](./mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
 - [S08-5 post S08-4 invariant closure plan](./mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
 - [WorkflowEngine hexagonal derivation plan](./mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md)
@@ -79,7 +76,4 @@ planning_type: proposal
 
 ## Nice To Have
 
-- [Architecture](./nice-to-have/architecture/DVT-plus-state-machine-transition-proposal.md)
-- [Frontend And UX](./nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)
-- [DVT UI workbench architecture proposal 2026-04-04](./nice-to-have/frontend-and-ux/dvt-ui-workbench-architecture-proposal-20260404.md)
 - [Platform And AI](./nice-to-have/platform-and-ai/dvt-ai-first-cli-proposal.md)

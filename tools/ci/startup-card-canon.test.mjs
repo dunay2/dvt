@@ -422,7 +422,7 @@ test('active domain and roadmap routing expand the retired-surface guard', () =>
   );
   assert.ok(
     linkedCurrentRoadmapDocuments.includes(
-      'docs/planning/proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md'
+      'docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md'
     ),
     'roadmap current sources must resolve mandatory plans'
   );

@@ -24,7 +24,6 @@ before retaining or retiring a record.
 
 ## Representative Recent Closeouts
 
-- [20260531 DVT21 Cost Attribution UI Hard-Cut Closeout](./20260531-dvt21-cost-attribution-ui-hard-cut-closeout.md)
 - [20260324 S18 Explicit State-Store Root Bindings Closeout](./20260324-s18-explicit-state-store-root-bindings-closeout.md)
 
 ## Full Portfolio Views

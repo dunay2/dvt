@@ -319,9 +319,15 @@ symbols:
 - [DVT+ Execution Model Specification](../../../execution-model/dvt-execution-model.md)
 - [IProviderAdapter Contract](../../../../architecture/components/engine/contracts/engine/IProviderAdapter.v1.md)
 - [Plugin Sandbox Contract](../../../../architecture/components/engine/contracts/extensions/PluginSandbox.v1.md)
-- [Transformation Flow Product Decisions 2026-04-05](./transformation-flow-product-decisions-20260405.md)
 - [Execution Runtime domain](../../../domains/execution-runtime.md)
 - [System Delivery Status](../../../../architecture/system-delivery-status.md)
+
+## Historical provenance
+
+These inputs explain earlier implementation decisions; they are not current
+governing sources. Current contracts and the authorities above remain in force.
+
+- [Transformation Flow Product Decisions 2026-04-05](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md)
 
 ## Think-First Analysis
 
