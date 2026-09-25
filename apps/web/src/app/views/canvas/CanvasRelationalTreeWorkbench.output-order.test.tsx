@@ -71,7 +71,9 @@ describe('direct output ordering', () => {
         '[data-slot="canvas-operation-output-tab"]'
       );
       expect(outputTab?.textContent).toBe('Output');
-      await act(async () => outputTab?.click());
+      await act(async () =>
+        outputTab?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }))
+      );
       const outputPanel = container.querySelector('[data-value="output"]');
       expect(outputPanel?.getAttribute('data-state')).toBe('active');
       expect(outputPanel?.querySelector('[aria-label="Move field up"]')).toBeNull();
@@ -91,15 +93,20 @@ describe('direct output ordering', () => {
           top: 0,
           height: 20,
         } as DOMRect);
+        const dispatch = (element: HTMLElement, event: Event): void => {
+          Object.defineProperty(event, 'dataTransfer', { value: dataTransfer });
+          element.dispatchEvent(event);
+        };
+        await act(async () => dispatch(source, new Event('dragstart', { bubbles: true })));
+        await act(async () =>
+          dispatch(
+            target,
+            new MouseEvent('dragover', { bubbles: true, cancelable: true, clientY: 19 })
+          )
+        );
+        expect(target.getAttribute('data-drop-placement')).toBe('after');
         await act(async () => {
-          for (const event of [
-            new Event('dragstart', { bubbles: true }),
-            new MouseEvent('dragover', { bubbles: true, cancelable: true, clientY: 19 }),
-            new Event('drop', { bubbles: true, cancelable: true }),
-          ]) {
-            Object.defineProperty(event, 'dataTransfer', { value: dataTransfer });
-            (event.type === 'dragstart' ? source : target).dispatchEvent(event);
-          }
+          dispatch(target, new Event('drop', { bubbles: true, cancelable: true }));
           source.dispatchEvent(new Event('dragend', { bubbles: true }));
         });
       };
@@ -176,6 +183,15 @@ describe('direct output ordering', () => {
     for (const operator of ['read', 'join']) {
       await act(async () =>
         container.querySelector<HTMLButtonElement>(`[data-operator="${operator}"]`)!.click()
+      );
+      const outputTab = container.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-operation-output-tab"]'
+      );
+      await act(async () =>
+        outputTab?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }))
+      );
+      expect(container.querySelector('[data-value="output"]')?.getAttribute('data-state')).toBe(
+        'active'
       );
       const fields = container.querySelector('[data-slot="canvas-relation-fields"]');
       expect(fields).not.toBeNull();
