@@ -1,4 +1,4 @@
-/** Read-first entry point for adding a scalar-derived output to the selected relation. */
+/** Transform owns a stable edit draft; analysis refreshes cannot erase typed input. */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -19,9 +19,10 @@ export function CanvasDerivedOutputSection({
 }>): JSX.Element | null {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
-  const model = useCanvasDerivedOutputAuthoring(relationId);
+  const current = useCanvasDerivedOutputAuthoring(relationId);
   const command = useRelationCommand(relationId, onChange);
-  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<typeof current>(null);
+  const model = editing ?? current;
   if (model == null || model.fields.length === 0) return null;
   const initialField = model.fields.find(
     (field) =>
@@ -33,7 +34,7 @@ export function CanvasDerivedOutputSection({
   );
   return (
     <section className="mt-4 border-t border-(--border-subtle) pt-3">
-      {open && initialField != null ? (
+      {editing != null && initialField != null ? (
         <DerivedOutputForm
           fields={model.fields}
           initialOperandFieldIds={[initialField.fieldId]}
@@ -53,7 +54,7 @@ export function CanvasDerivedOutputSection({
                   resolution,
                 });
           }}
-          onCancel={() => setOpen(false)}
+          onCancel={() => setEditing(null)}
           onSubmit={async ({ capabilityId, ...request }) => {
             const applied = await command.execute((session, identity) =>
               applySelectedRelationDerivedOutput(session, {
@@ -65,14 +66,14 @@ export function CanvasDerivedOutputSection({
             );
             return applied ? null : copy.derivedOutput.failed;
           }}
-          onApplied={() => setOpen(false)}
+          onApplied={() => setEditing(null)}
         />
       ) : (
         <button
           type="button"
           data-slot="canvas-derived-output-trigger"
           disabled={initialField == null}
-          onClick={() => setOpen(true)}
+          onClick={() => setEditing(current)}
           className="flex items-center gap-1 rounded px-2 py-1.5 text-xs text-(--status-info) hover:bg-(--surface-selected)"
         >
           <Plus className="size-3" />

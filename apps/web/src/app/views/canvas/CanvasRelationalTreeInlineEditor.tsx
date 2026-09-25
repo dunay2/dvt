@@ -18,7 +18,6 @@ type InlineEditorProps = Omit<CanvasRelationalTreeOperationEditorProps, 'cross' 
   expanded: boolean;
   onClose: () => void;
 };
-
 export function CanvasRelationalTreeInlineEditor(
   props: Readonly<InlineEditorProps>
 ): JSX.Element | null {

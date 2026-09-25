@@ -20,8 +20,8 @@ describe('selected relation derived-output section', () => {
     const relationId = lookup.rootId;
     const onChange = vi.fn();
 
-    function Host(): React.JSX.Element {
-      const analysis = useCanvasRelationAnalysisSession(document, 'derived-output-section');
+    function Host({ snapshot = document }: { snapshot?: typeof document }): React.JSX.Element {
+      const analysis = useCanvasRelationAnalysisSession(snapshot, 'derived-output-section');
       return (
         <CanvasRelationAnalysisContext.Provider value={analysis}>
           <CanvasDerivedOutputSection relationId={relationId} onChange={onChange} />
@@ -54,6 +54,10 @@ describe('selected relation derived-output section', () => {
       fireEvent.change(container.querySelector<HTMLInputElement>('input[name="alias"]')!, {
         target: { value: 'normalized_name' },
       })
+    );
+    await act(async () => root.render(<Host snapshot={structuredClone(document)} />));
+    expect(container.querySelector<HTMLInputElement>('input[name="alias"]')?.value).toBe(
+      'normalized_name'
     );
     await act(async () => fireEvent.submit(container.querySelector('form')!));
 
