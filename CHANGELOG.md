@@ -1,5 +1,140 @@
 # Changelog
 
+## 0.18.0 (2026-09-25)
+
+## What's Changed
+* fix(planner): Preserve referenced feature rails by @dunay2 in https://github.com/dunay2/dvt/pull/3132
+* docs(docs): Retire redundant planning dashboards by @dunay2 in https://github.com/dunay2/dvt/pull/3105
+* fix(ci): Restore HET1 MinIO image pull by @dunay2 in https://github.com/dunay2/dvt/pull/3129
+* feat(web): Add catalog-driven expression composer by @dunay2 in https://github.com/dunay2/dvt/pull/3131
+* fix(web): Preserve Canvas authoring outcomes by @dunay2 in https://github.com/dunay2/dvt/pull/3134
+* fix(web): Preserve typed expression rejection reasons by @dunay2 in https://github.com/dunay2/dvt/pull/3138
+* refactor(web): Align column authoring command runner boundary by @dunay2 in https://github.com/dunay2/dvt/pull/3139
+* fix(web): Preserve calculated outputs when excluding a column by @dunay2 in https://github.com/dunay2/dvt/pull/3142
+* feat(web): Unify JOIN predicates and support null checks by @dunay2 in https://github.com/dunay2/dvt/pull/3143
+* fix(web): Restore physical field selection beside calculated outputs by @dunay2 in https://github.com/dunay2/dvt/pull/3145
+* fix(web): Preserve Canvas node measurements during field edits by @dunay2 in https://github.com/dunay2/dvt/pull/3147
+* fix(web): Preserve calculated upstream field selection by @dunay2 in https://github.com/dunay2/dvt/pull/3148
+* feat(api): Enable N-input JOIN Preview through the protected workload rail by @dunay2 in https://github.com/dunay2/dvt/pull/3154
+* refactor(web): Extract INNER JOIN source candidate resolution by @dunay2 in https://github.com/dunay2/dvt/pull/3140
+* chore(ci): Bump CodeQL actions to 4.38.0 by @dependabot[bot] in https://github.com/dunay2/dvt/pull/3153
+* fix(adapters): Preserve rejected plan identity when Preview is repeated by @dunay2 in https://github.com/dunay2/dvt/pull/3166
+* fix(contracts): Enforce native DVT Transform validation by @dunay2 in https://github.com/dunay2/dvt/pull/3169
+* fix(web): Keep calculated-column controls inside the Canvas interaction boundary by @dunay2 in https://github.com/dunay2/dvt/pull/3171
+* fix(web): Restore JOIN card output selection and ordering by @dunay2 in https://github.com/dunay2/dvt/pull/3174
+* fix(web): Restore Transform card and field entry points by @dunay2 in https://github.com/dunay2/dvt/pull/3176
+* fix(web): Allow the operational drawer to expand for semantic editing by @dunay2 in https://github.com/dunay2/dvt/pull/3178
+* fix(web): Allow clearing the final JOIN output by @dunay2 in https://github.com/dunay2/dvt/pull/3183
+* test(web): Synchronize Canvas authoring bootstrap notifications by @dunay2 in https://github.com/dunay2/dvt/pull/3187
+* fix(web): Compact Source column inspector typography by @dunay2 in https://github.com/dunay2/dvt/pull/3188
+* fix(web): Restore Transform double-click data entry by @dunay2 in https://github.com/dunay2/dvt/pull/3189
+* feat(web): Author explicit Transform result destinations by @dunay2 in https://github.com/dunay2/dvt/pull/3190
+* feat(contracts): Add terminal Transform Run workload v2 by @dunay2 in https://github.com/dunay2/dvt/pull/3191
+* feat(temporal): Execute DVT PostgreSQL operational workloads by @dunay2 in https://github.com/dunay2/dvt/pull/3192
+* fix(ci): Keep feature mechanization validation read-only by @dunay2 in https://github.com/dunay2/dvt/pull/3193
+* fix(web): Preserve chained Transform semantics in derived PostgreSQL SQL by @dunay2 in https://github.com/dunay2/dvt/pull/3194
+* fix(temporal): Enable native DVT PostgreSQL execution by @dunay2 in https://github.com/dunay2/dvt/pull/3195
+* feat(web): Show DVT PostgreSQL run evidence by @dunay2 in https://github.com/dunay2/dvt/pull/3196
+* test(web): Prove DVT run evidence survives reload by @dunay2 in https://github.com/dunay2/dvt/pull/3197
+* test(web): Prove stale DVT Preview cannot start a run by @dunay2 in https://github.com/dunay2/dvt/pull/3198
+* test(web): Prove N-input DVT PostgreSQL Run by @dunay2 in https://github.com/dunay2/dvt/pull/3199
+* test(web): Prove unsupported DVT view rejection by @dunay2 in https://github.com/dunay2/dvt/pull/3200
+* test(web): Prove cross-scope StartRun rejection by @dunay2 in https://github.com/dunay2/dvt/pull/3201
+* fix(api): Sanitize corrupt PlanRef rejection by @dunay2 in https://github.com/dunay2/dvt/pull/3202
+* test(web): Prove denied StartRun action by @dunay2 in https://github.com/dunay2/dvt/pull/3203
+* fix(web): Surface unavailable Canvas runtime by @dunay2 in https://github.com/dunay2/dvt/pull/3224
+* feat(web): Show authoritative Transform output rows by @dunay2 in https://github.com/dunay2/dvt/pull/3231
+* docs(docs): Remove historical archives and obsolete documentation tooling by @dunay2 in https://github.com/dunay2/dvt/pull/3223
+* fix(web): Keep a data tab for each Canvas card by @dunay2 in https://github.com/dunay2/dvt/pull/3234
+* fix(web): Align a new Transform card with its effective properties by @dunay2 in https://github.com/dunay2/dvt/pull/3236
+* feat(web): Preview Transform rows without publication by @dunay2 in https://github.com/dunay2/dvt/pull/3238
+* fix(adapters): Project unary Substrait chains from canonical plan by @dunay2 in https://github.com/dunay2/dvt/pull/3239
+* fix(web): Offer upstream fields as Transform expression inputs by @dunay2 in https://github.com/dunay2/dvt/pull/3241
+* feat(web): Converge relational composition authoring by @dunay2 in https://github.com/dunay2/dvt/pull/3258
+* fix(web): Prevent stale semantics after Source changes by @dunay2 in https://github.com/dunay2/dvt/pull/3260
+* fix(web): Show all Source fields during pending composition by @dunay2 in https://github.com/dunay2/dvt/pull/3272
+* fix(web): Allow admitted Transform filter comparisons by @dunay2 in https://github.com/dunay2/dvt/pull/3274
+* fix(web): Hide filters during pending relational composition by @dunay2 in https://github.com/dunay2/dvt/pull/3273
+* fix(web): Require explicit N-source JOIN inputs by @dunay2 in https://github.com/dunay2/dvt/pull/3275
+* refactor(web): Extract binary INNER JOIN entry resolution by @dunay2 in https://github.com/dunay2/dvt/pull/3172
+* feat(web): Project canonical Canvas relational tree by @dunay2 in https://github.com/dunay2/dvt/pull/3276
+* feat(web): Add global relational-tree workbench by @dunay2 in https://github.com/dunay2/dvt/pull/3277
+* feat(web): Enable guided relational authoring in tree workbench by @dunay2 in https://github.com/dunay2/dvt/pull/3278
+* fix(web): Move relational authoring into draggable center blocks by @dunay2 in https://github.com/dunay2/dvt/pull/3279
+* fix(web): Make relational authoring entry points visible by @dunay2 in https://github.com/dunay2/dvt/pull/3280
+* docs(docs): Remove retired planning history and triage snapshots by @dunay2 in https://github.com/dunay2/dvt/pull/3232
+* fix(web): Preserve column order across identity changes by @dunay2 in https://github.com/dunay2/dvt/pull/3281
+* fix(web): Adopt canonical order for schema replacements by @dunay2 in https://github.com/dunay2/dvt/pull/3283
+* docs(docs): Remove explicitly superseded runtime proposals by @dunay2 in https://github.com/dunay2/dvt/pull/3282
+* docs(docs): Clarify ARC artifact selection without weakening policy by @dunay2 in https://github.com/dunay2/dvt/pull/3285
+* fix(web): Scale the relational tree workbench by @dunay2 in https://github.com/dunay2/dvt/pull/3284
+* feat(web): Scale relational authoring across connected sources by @dunay2 in https://github.com/dunay2/dvt/pull/3286
+* docs(docs): Retire historical efficiency playbook and its consumers by @dunay2 in https://github.com/dunay2/dvt/pull/3288
+* docs(docs): Retire superseded runtime delivery plans by @dunay2 in https://github.com/dunay2/dvt/pull/3297
+* docs(docs): Retire legacy sprint boards and task-governance remnants by @dunay2 in https://github.com/dunay2/dvt/pull/3299
+* docs(docs): Retire historical editorial closeouts by @dunay2 in https://github.com/dunay2/dvt/pull/3300
+* fix(web): Use link icon for relational joins by @dunay2 in https://github.com/dunay2/dvt/pull/3287
+* chore(deps-dev): Bump @vitejs/plugin-react from 6.0.1 to 6.1.1 by @dependabot[bot] in https://github.com/dunay2/dvt/pull/3030
+* chore(deps-dev): Bump turbo from 2.9.6 to 2.10.12 by @dependabot[bot] in https://github.com/dunay2/dvt/pull/3031
+* docs(docs): Retire historical atlas and superseded Canvas guidance by @dunay2 in https://github.com/dunay2/dvt/pull/3303
+* feat(web): Add revision-aware semantic Model editor by @dunay2 in https://github.com/dunay2/dvt/pull/3301
+* docs(docs): Retire obsolete review snapshots and completed journals by @dunay2 in https://github.com/dunay2/dvt/pull/3304
+* docs(docs): Retire obsolete refactor journals by @dunay2 in https://github.com/dunay2/dvt/pull/3305
+* feat(web): Admit LEFT JOIN end to end by @dunay2 in https://github.com/dunay2/dvt/pull/3310
+* docs(docs): Retire obsolete HTTP Canvas and planning journals by @dunay2 in https://github.com/dunay2/dvt/pull/3306
+* docs(docs): Retire obsolete contract and CI journals by @dunay2 in https://github.com/dunay2/dvt/pull/3314
+* docs(docs): Retire obsolete Canvas session journals by @dunay2 in https://github.com/dunay2/dvt/pull/3315
+* feat(web): Add RIGHT and FULL OUTER JOIN end to end by @dunay2 in https://github.com/dunay2/dvt/pull/3316
+* feat(web): Add UNION DISTINCT end to end by @dunay2 in https://github.com/dunay2/dvt/pull/3321
+* docs(docs): Retire obsolete runtime maintenance journals by @dunay2 in https://github.com/dunay2/dvt/pull/3323
+* feat(web): Add semi and anti join family by @dunay2 in https://github.com/dunay2/dvt/pull/3326
+* feat(web): Add explicit CrossRel product path by @dunay2 in https://github.com/dunay2/dvt/pull/3327
+* docs(docs): Retire obsolete runtime and dbt delivery journals by @dunay2 in https://github.com/dunay2/dvt/pull/3325
+* docs(docs): Retire obsolete governance capture journals by @dunay2 in https://github.com/dunay2/dvt/pull/3328
+* fix(web): Preserve LEFT JOIN semantics and workload replay by @dunay2 in https://github.com/dunay2/dvt/pull/3329
+* fix(web): Stabilize relational composition and projection by @dunay2 in https://github.com/dunay2/dvt/pull/3331
+* feat(web): Admit INTERSECT and EXCEPT DISTINCT end to end by @dunay2 in https://github.com/dunay2/dvt/pull/3332
+* feat(web): Admit INTERSECT ALL and EXCEPT ALL end to end by @dunay2 in https://github.com/dunay2/dvt/pull/3333
+* feat(web): Add canonical Sort and Fetch authoring by @dunay2 in https://github.com/dunay2/dvt/pull/3334
+* fix(web): Confirm Apply before Model navigation by @dunay2 in https://github.com/dunay2/dvt/pull/3335
+* fix(web): Recover unsupported Substrait inspection locally by @dunay2 in https://github.com/dunay2/dvt/pull/3336
+* fix(web): Preserve Canvas output control focus by @dunay2 in https://github.com/dunay2/dvt/pull/3337
+* fix(web): Preserve semantic selections and Canvas viewport by @dunay2 in https://github.com/dunay2/dvt/pull/3338
+* fix(web): Route relational authoring through the semantic editor by @dunay2 in https://github.com/dunay2/dvt/pull/3339
+* fix(web): Preserve JOIN identity across relational wrappers by @dunay2 in https://github.com/dunay2/dvt/pull/3340
+* refactor(web): Unify relational operation presentation by @dunay2 in https://github.com/dunay2/dvt/pull/3341
+* feat(web): Stabilize semantic workbench and group operation discovery by @dunay2 in https://github.com/dunay2/dvt/pull/3346
+* fix(web): Preserve canonical source occurrence identity through JOIN edits by @dunay2 in https://github.com/dunay2/dvt/pull/3347
+* feat(web): Add explicit source occurrence controls by @dunay2 in https://github.com/dunay2/dvt/pull/3349
+* fix(web): Prevent Sort and Fetch inspection crash after Apply by @dunay2 in https://github.com/dunay2/dvt/pull/3351
+* fix(web): Stabilize canonical Canvas composition and inspection by @dunay2 in https://github.com/dunay2/dvt/pull/3353
+* fix(web): Prove persisted semantic editing through live Preview and Run by @dunay2 in https://github.com/dunay2/dvt/pull/3355
+* fix(ci): Harden comparison evidence and remove redundant validation work by @dunay2 in https://github.com/dunay2/dvt/pull/3356
+* chore(ci): Bump the codeql group with 2 updates by @dependabot[bot] in https://github.com/dunay2/dvt/pull/3344
+* chore(deps-dev): Bump the linting group across 1 directory with 5 updates by @dependabot[bot] in https://github.com/dunay2/dvt/pull/3029
+* fix(web): Preserve column menu lifecycle across reopen by @dunay2 in https://github.com/dunay2/dvt/pull/3357
+* docs(docs): Retire obsolete build and startup journals by @dunay2 in https://github.com/dunay2/dvt/pull/3348
+* feat(web): Inspect canonical expressions and execute card data explicitly by @dunay2 in https://github.com/dunay2/dvt/pull/3358
+* fix(web): Bind Model card samples to the saved revision by @dunay2 in https://github.com/dunay2/dvt/pull/3368
+* refactor(adapters): Compose PostgreSQL execution from canonical Substrait relations by @dunay2 in https://github.com/dunay2/dvt/pull/3372
+* refactor(web): Converge Workbench reads on canonical relation analysis by @dunay2 in https://github.com/dunay2/dvt/pull/3373
+* feat(web): Share bounded incremental relation analysis in the Workbench by @dunay2 in https://github.com/dunay2/dvt/pull/3375
+* docs(docs): Integrate historical cleanup and planning reference cuts by @dunay2 in https://github.com/dunay2/dvt/pull/3387
+* refactor(web): Converge Canvas fields on shared Substrait analysis by @dunay2 in https://github.com/dunay2/dvt/pull/3405
+* docs(docs): Retire high confidence historical evidence by @dunay2 in https://github.com/dunay2/dvt/pull/3381
+* docs(docs): Retire 100 historical implementation journals by @dunay2 in https://github.com/dunay2/dvt/pull/3406
+* refactor(web): Compose Sort and Fetch on selected relations by @dunay2 in https://github.com/dunay2/dvt/pull/3411
+* docs(docs): Retire historical support documents and reconcile test consumers by @dunay2 in https://github.com/dunay2/dvt/pull/3413
+* refactor(web): Hardcut shape-specific relation authoring by @dunay2 in https://github.com/dunay2/dvt/pull/3414
+* feat(web): Inspect relations before explicit editing by @dunay2 in https://github.com/dunay2/dvt/pull/3415
+* chore(deps): Bump @radix-ui/react-menubar from 1.1.21 to 1.1.24 by @dependabot[bot] in https://github.com/dunay2/dvt/pull/3152
+* chore(deps-dev): Bump @testing-library/dom to 10.4.2 by @dependabot[bot] in https://github.com/dunay2/dvt/pull/3343
+* chore(deps-dev): Bump @types/node from 26.1.1 to 26.6.2 in the typescript group across 1 directory by @dependabot[bot] in https://github.com/dunay2/dvt/pull/3028
+* chore(deps): Bump the temporal group across 1 directory with 5 updates by @dependabot[bot] in https://github.com/dunay2/dvt/pull/3345
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.17.0...v0.18.0
+
 ## 0.17.0 (2026-09-11)
 
 ## What's Changed
