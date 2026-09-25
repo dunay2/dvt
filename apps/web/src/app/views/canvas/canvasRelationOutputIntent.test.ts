@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
+import { deriveSubstraitSchemas, type IndexedRelation } from '@dvt/substrait-analysis';
 import { graphJoin, appendGraphSource } from './canvasRelationGraph.test-support';
-import { relationOutputSlots } from './canvasRelationOutputSchema';
+import { relationOutputSlots, type RelationOutputSlot } from './canvasRelationOutputSchema';
 import { relationOutputIntent, type RelationOutputIntent } from './canvasRelationOutputIntent';
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 import {
@@ -20,14 +20,14 @@ describe('output command identities across persistence', () => {
         outputs: [{ slot: 0 }, { slot: 1 }, { slot: 3 }],
       });
       if (count === 3) await appendGraphSource(session, 'additional');
-      const available = async () => {
+      const available = async (): Promise<readonly RelationOutputSlot[]> => {
         const root = session.locate(session.rootId, session.revision);
         return relationOutputSlots(
           root,
           await Promise.all(root.inputs.map((id) => session.query(id)))
         );
       };
-      const apply = async (intent: RelationOutputIntent) => {
+      const apply = async (intent: RelationOutputIntent): Promise<IndexedRelation['fields']> => {
         const outputs = relationOutputIntent(await available(), intent);
         const changed = await changeSelectedRelationOutputs(session, {
           relationId: session.rootId,
