@@ -125,118 +125,19 @@ retain one expression projector and one compact renderer, with bounded files.
 - UI components remain below 200 lines; large pre-existing copy catalogues are
   not broadened beyond the localized keys required by this slice.
 
-```feature-mechanization
-version: 1
-featureId: GH-3418-SEMANTIC-FIELD-TRANSFORMATION-PROJECTION
-mechanizationStatus: implemented
-noHumanDecisionsRemaining: true
-implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/semantic-field-transformation-stage-plan-20260925.md
-componentGuides:
-  - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
-userStories:
-  - https://github.com/dunay2/dvt/issues/3416
-  - https://github.com/dunay2/dvt/issues/3418
-governingSources:
-  - AGENTS.md
-  - docs/planning/status/governance-document-rule-inventory.md
-  - docs/guides/ai-work-protocol.md
-  - docs/architecture/command-query-rail-governance.md
-  - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
-allowedImplementationSurfaces:
-  - apps/web/src/app/views/canvas/**
-  - apps/web/src/app/labs/semanticWorkbenchProjection.architecture.test.ts
-  - apps/web/cypress/e2e/canvas/**
-  - apps/web/cypress/support/relationalWorkbench/geometry.ts
-  - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
-  - docs/planning/proposals/mandatory/frontend-and-ux/semantic-field-transformation-stage-plan-20260925.md
-  - docs/evidence/**
-  - docs/risk-register/quality/**
-  - docs/.manifest.json
-  - docs/**/index.md
-  - docs/planning/status/**
-forbiddenImplementationSurfaces:
-  - packages/@dvt/engine/**
-  - packages/@dvt/planner/**
-  - packages/@dvt/adapter-*/**
-  - apps/api/**
-domainObjects:
-  - CanvasRelationalTreeProjection
-  - CanvasRelationPresentation
-commandQueryRails:
-  - name: ProjectCanvasRelationalTree
-    type: query
-    referenceOnly: true
-    authorityRef: https://github.com/dunay2/dvt/issues/3266#issuecomment-5703815399
-    dddOwner: CanvasRelationalTreeProjection
-fowlerSignals:
-  - Primitive obsession
-  - Responsibility overload
-  - Duplicate semantics
-  - Boundary drift
-architectureGuards:
-  - pnpm docs:feature-mechanization:implementation -- --feature GH-3418-SEMANTIC-FIELD-TRANSFORMATION-PROJECTION
-cypressFlows:
-  - N/A - deterministic projection and component contract; browser authoring belongs to GH-3422
-completionGate:
-  - pnpm --filter @dvt/web test:canvas
-  - pnpm --filter @dvt/web lint
-  - pnpm --filter @dvt/web typecheck
-  - pnpm docs:feature-mechanization:implementation -- --feature GH-3418-SEMANTIC-FIELD-TRANSFORMATION-PROJECTION
-  - pnpm verify:prepush
-redGreenCycles:
-  - id: canonical-field-stage-classification
-    redTest: apps/web/src/app/views/canvas/canvasRelationalExpressionStage.test.ts
-    expectedFailure: ProjectRel outputs collapse to projection or Window-only presentation.
-    patchSurfaces:
-      - apps/web/src/app/views/canvas/canvasRelationalProjectStage.ts
-      - apps/web/src/app/views/canvas/canvasRelationalTreeRelationProjection.ts
-    greenTest: apps/web/src/app/views/canvas/canvasRelationalExpressionStage.test.ts
-symbols:
-  - &stageSymbol
-    name: projectCanvasRelationalProjectStage
-    path: apps/web/src/app/views/canvas/canvasRelationalProjectStage.ts
-    dddOwner: CanvasRelationalTreeProjection
-    cqRails: [ProjectCanvasRelationalTree]
-    fowlerSignals: [Presentation Model, Primitive obsession]
-    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature GH-3418-SEMANTIC-FIELD-TRANSFORMATION-PROJECTION
-    cypressCoverage: N/A - deterministic projection and component contract; browser authoring belongs to GH-3422
-    unitTests: [apps/web/src/app/views/canvas/canvasRelationalExpressionStage.test.ts]
-  - <<: *stageSymbol
-    name: CanvasRelationalProjectStage
-  - &presentationSymbol
-    <<: *stageSymbol
-    name: resolveCanvasRelationalNodeCopy
-    path: apps/web/src/app/views/canvas/canvasRelationalNodePresentation.ts
-    dddOwner: Canvas relation presentation
-    unitTests:
-      - apps/web/src/app/views/canvas/canvasRelationalExpressionStagePresentation.test.tsx
-  - <<: *presentationSymbol
-    name: canvasPresentationOperationForRel
-    path: apps/web/src/app/views/canvas/canvasRelationalOperationSelector.ts
-  - <<: *presentationSymbol
-    name: canvasPresentationOperationForRel
-    path: apps/web/src/app/views/canvas/canvasRelationalOperationPresentation.ts
-  - <<: *presentationSymbol
-    name: setPresentationOperation
-    path: apps/web/src/app/views/canvas/canvasRelationalOperationSelector.ts
-  - &supportSymbol
-    <<: *stageSymbol
-    name: expressionStageDraft
-    path: apps/web/src/app/views/canvas/canvasRelationalExpressionStage.test-support.ts
-  - <<: *supportSymbol
-    name: projectExpressionStage
-  - <<: *supportSymbol
-    name: withScalarOutput
-  - <<: *supportSymbol
-    name: withWindowOutput
-  - <<: *supportSymbol
-    name: withoutLastOutput
-  - <<: *supportSymbol
-    name: source
-  - <<: *supportSymbol
-    name: edge
-```
+## Mechanization Authority
+
+Planning DB owns the current `GH-3418-SEMANTIC-FIELD-TRANSFORMATION-PROJECTION` declaration,
+including its existing command/query references, implementation symbols,
+negative tests and allowed surfaces. Update it through
+`RecordFeatureMechanizationRail`; do not duplicate it as an imported Markdown
+manifest. The diagrams, design decisions and acceptance criteria above remain
+the source rationale.
+
+Before integration, validate this feature against the existing Planning DB with
+`pnpm docs:feature-mechanization:implementation -- --feature GH-3418-SEMANTIC-FIELD-TRANSFORMATION-PROJECTION`
+and explicit `GIT_BASE` / `GIT_HEAD` commit identities. Record the evidence in
+the governing issue and PR under the approved single-team validation boundary.
 
 ## Completion
 

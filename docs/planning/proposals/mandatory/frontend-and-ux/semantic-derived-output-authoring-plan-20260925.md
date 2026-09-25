@@ -124,145 +124,16 @@ tests, the existing expression form extraction and Semantic Editor composition.
 Engine, planner, adapter and API packages are out of scope. PostgreSQL supplies
 current admitted capability evidence; the persisted meaning remains Substrait.
 
-```feature-mechanization
-version: 1
-featureId: GH-3419-SELECTED-RELATION-DERIVED-OUTPUT
-mechanizationStatus: implemented
-noHumanDecisionsRemaining: true
-implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/semantic-derived-output-authoring-plan-20260925.md
-componentGuides:
-  - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
-userStories:
-  - https://github.com/dunay2/dvt/issues/3416
-  - https://github.com/dunay2/dvt/issues/3419
-governingSources:
-  - AGENTS.md
-  - docs/planning/status/governance-document-rule-inventory.md
-  - docs/architecture/command-query-rail-governance.md
-  - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
-allowedImplementationSurfaces:
-  - apps/web/src/app/views/canvas/**
-  - apps/web/cypress/e2e/canvas/canvas-transform-stage.cy.ts
-  - apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.tsx
-  - docs/planning/proposals/mandatory/frontend-and-ux/semantic-derived-output-authoring-plan-20260925.md
-  - docs/planning/status/**
-forbiddenImplementationSurfaces:
-  - packages/@dvt/engine/**
-  - packages/@dvt/planner/**
-  - packages/@dvt/adapter-*/**
-  - apps/api/**
-domainObjects:
-  - CanvasRelationAnalysisSession
-  - SelectedRelationDerivedOutput
-  - DerivedOutputForm
-commandQueryRails:
-  - name: ConfigureCanvasDvtNode
-    type: command
-    referenceOnly: true
-    authorityRef: docs/planning/proposals/mandatory/frontend-and-ux/vtx2-web-vtx1-authoring-hardcut-plan-20260903.md
-    dddOwner: Canvas relational authoring
-  - name: ProjectCanvasRelationalTree
-    type: query
-    referenceOnly: true
-    authorityRef: https://github.com/dunay2/dvt/issues/3266#issuecomment-5703815399
-    dddOwner: CanvasRelationalTreeProjection
-fowlerSignals:
-  - Root-only authoring
-  - Duplicate form state
-  - Feature envy
-  - Parallel change
-architectureGuards:
-  - pnpm docs:feature-mechanization:implementation -- --feature GH-3419-SELECTED-RELATION-DERIVED-OUTPUT
-cypressFlows:
-  - apps/web/cypress/e2e/canvas/canvas-transform-stage.cy.ts
-completionGate:
-  - pnpm --filter @dvt/web test:canvas
-  - pnpm --filter @dvt/web lint
-  - pnpm --filter @dvt/web typecheck
-  - pnpm docs:feature-mechanization:implementation -- --feature GH-3419-SELECTED-RELATION-DERIVED-OUTPUT
-  - pnpm verify:prepush
-redGreenCycles:
-  - id: selected-relation-derived-output
-    redTest: apps/web/src/app/views/canvas/canvasSelectedRelationDerivedOutput.test.ts
-    expectedFailure: Scalar outputs can only be appended to the root projection.
-    patchSurfaces:
-      - apps/web/src/app/views/canvas/canvasSelectedRelationDerivedOutput.ts
-      - apps/web/src/app/views/canvas/canvasDvtSubstraitScalarFunction.ts
-    greenTest: apps/web/src/app/views/canvas/canvasSelectedRelationDerivedOutput.test.ts
-  - id: read-first-derived-output-form
-    redTest: apps/web/src/app/views/canvas/CanvasDerivedOutputSection.test.tsx
-    expectedFailure: The selected relation has no explicit derived-output action.
-    patchSurfaces:
-      - apps/web/src/app/views/canvas/DerivedOutputForm.tsx
-      - apps/web/src/app/views/canvas/CanvasDerivedOutputSection.tsx
-    greenTest: apps/web/src/app/views/canvas/CanvasDerivedOutputSection.test.tsx
-symbols:
-  - &commandSymbol
-    name: applySelectedRelationDerivedOutput
-    path: apps/web/src/app/views/canvas/canvasSelectedRelationDerivedOutput.ts
-    dddOwner: SelectedRelationDerivedOutput
-    cqRails: [ConfigureCanvasDvtNode]
-    fowlerSignals: [Replace conditional with command, Feature envy]
-    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature GH-3419-SELECTED-RELATION-DERIVED-OUTPUT
-    cypressCoverage: N/A - browser convergence and accessibility belong to GH-3422
-    unitTests: [apps/web/src/app/views/canvas/canvasSelectedRelationDerivedOutput.test.ts]
-  - <<: *commandSymbol
-    name: buildDvtSubstraitScalarFunction
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitScalarFunction.ts
-  - <<: *commandSymbol
-    name: SelectedRelationDerivedOutputRequest
-  - <<: *commandSymbol
-    name: rootFields
-  - <<: *commandSymbol
-    name: resolveOperandExpression
-  - <<: *commandSymbol
-    name: reject
-  - &formSymbol
-    <<: *commandSymbol
-    name: DerivedOutputForm
-    path: apps/web/src/app/views/canvas/DerivedOutputForm.tsx
-    dddOwner: DerivedOutputForm
-    unitTests:
-      - apps/web/src/app/views/canvas/CanvasDerivedOutputSection.test.tsx
-      - apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.test.tsx
-  - <<: *formSymbol
-    name: CanvasDerivedOutputSection
-    path: apps/web/src/app/views/canvas/CanvasDerivedOutputSection.tsx
-  - <<: *formSymbol
-    name: useCanvasDerivedOutputAuthoring
-    path: apps/web/src/app/views/canvas/useCanvasDerivedOutputAuthoring.ts
-  - <<: *formSymbol
-    name: DerivedOutputFunction
-    path: apps/web/src/app/views/canvas/DerivedOutputForm.tsx
-  - <<: *formSymbol
-    name: DerivedOutputFunctionResolver
-    path: apps/web/src/app/views/canvas/DerivedOutputForm.tsx
-  - <<: *formSymbol
-    name: DerivedOutputRequest
-    path: apps/web/src/app/views/canvas/DerivedOutputForm.tsx
-  - <<: *formSymbol
-    name: bounds
-    path: apps/web/src/app/views/canvas/DerivedOutputForm.tsx
-  - <<: *formSymbol
-    name: normalize
-    path: apps/web/src/app/views/canvas/DerivedOutputForm.tsx
-  - <<: *formSymbol
-    name: DerivedOutputField
-    path: apps/web/src/app/views/canvas/DerivedOutputOperands.tsx
-  - <<: *formSymbol
-    name: DerivedOutputOperands
-    path: apps/web/src/app/views/canvas/DerivedOutputOperands.tsx
-  - &legacyFormSymbol
-    <<: *formSymbol
-    name: GraphNodeExpressionComposer
-    path: apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.tsx
-  - <<: *legacyFormSymbol
-    name: GraphNodeExpressionComposerFunction
-  - <<: *legacyFormSymbol
-    name: Rejection
-  - <<: *legacyFormSymbol
-    name: rejectionLabel
-  - <<: *legacyFormSymbol
-    name: createResolver
-```
+## Mechanization Authority
+
+Planning DB owns the current `GH-3419-SELECTED-RELATION-DERIVED-OUTPUT` declaration,
+including its existing command/query references, implementation symbols,
+negative tests and allowed surfaces. Update it through
+`RecordFeatureMechanizationRail`; do not duplicate it as an imported Markdown
+manifest. The diagrams, design decisions and acceptance criteria above remain
+the source rationale.
+
+Before integration, validate this feature against the existing Planning DB with
+`pnpm docs:feature-mechanization:implementation -- --feature GH-3419-SELECTED-RELATION-DERIVED-OUTPUT`
+and explicit `GIT_BASE` / `GIT_HEAD` commit identities. Record the evidence in
+the governing issue and PR under the approved single-team validation boundary.
