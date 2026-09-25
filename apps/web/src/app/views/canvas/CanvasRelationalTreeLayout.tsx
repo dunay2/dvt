@@ -51,6 +51,27 @@ export function CanvasRelationalTreeLayout({
     [root, detail, positions]
   );
   const movement = useRelationalCardMovement(layout.nodes, zoom, setPosition, onManualLayout);
+  const outputStyle = {
+    left: layout.output.x,
+    top: layout.output.y,
+    width: layout.output.width,
+    height: layout.output.height,
+  };
+  const outputContent = (
+    <>
+      <Table2 aria-hidden="true" className="size-4 shrink-0 text-emerald-300" />
+      <span className="min-w-0">
+        <span className="block truncate text-[11px] font-semibold text-(--text-primary)">
+          {outputName}
+        </span>
+        <span className="block text-[9px] uppercase tracking-wide text-emerald-300">
+          {copy.relationalTreeOutputLabel}
+        </span>
+      </span>
+    </>
+  );
+  const outputClassName =
+    'absolute z-10 flex items-center gap-2 rounded-md border border-emerald-500 bg-emerald-950/30 px-3 text-left shadow-sm';
 
   return (
     <div
@@ -63,29 +84,26 @@ export function CanvasRelationalTreeLayout({
     >
       <RelationalTreeEdges layout={layout} />
 
-      <button
-        type="button"
-        data-slot="canvas-relational-tree-output"
-        aria-label={`${outputName} · ${copy.relationalTreeOutputLabel}`}
-        onClick={onOpenOutput}
-        className="absolute z-10 flex items-center gap-2 rounded-md border border-emerald-500 bg-emerald-950/30 px-3 text-left shadow-sm transition-colors hover:bg-emerald-900/35 focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
-        style={{
-          left: layout.output.x,
-          top: layout.output.y,
-          width: layout.output.width,
-          height: layout.output.height,
-        }}
-      >
-        <Table2 aria-hidden="true" className="size-4 shrink-0 text-emerald-300" />
-        <span className="min-w-0">
-          <span className="block truncate text-[11px] font-semibold text-(--text-primary)">
-            {outputName}
-          </span>
-          <span className="block text-[9px] uppercase tracking-wide text-emerald-300">
-            {copy.relationalTreeOutputLabel}
-          </span>
-        </span>
-      </button>
+      {onOpenOutput == null ? (
+        <div
+          data-slot="canvas-relational-tree-output"
+          className={outputClassName}
+          style={outputStyle}
+        >
+          {outputContent}
+        </div>
+      ) : (
+        <button
+          type="button"
+          data-slot="canvas-relational-tree-output"
+          aria-label={`${outputName} · ${copy.relationalTreeOutputLabel}`}
+          onClick={onOpenOutput}
+          className={`${outputClassName} transition-colors hover:bg-emerald-900/35 focus-visible:outline-2 focus-visible:outline-(--focus-ring)`}
+          style={outputStyle}
+        >
+          {outputContent}
+        </button>
+      )}
 
       <ul role="tree" aria-label={copy.relationalTreeLabel} className="absolute inset-0">
         {layout.nodes.map((placed) => (

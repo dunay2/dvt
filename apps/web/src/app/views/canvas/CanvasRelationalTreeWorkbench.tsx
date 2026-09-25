@@ -125,7 +125,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
                   modelName={transformNode.name}
                   root={model.projection.root}
                   copy={copy}
-                  editable={model.authoringAvailable}
+                  editable={model.authoringAvailable && !model.session.active}
                   onOutputChange={model.session.applyOutputOrder}
                   onClose={() => setCompositionOpen(false)}
                 />
