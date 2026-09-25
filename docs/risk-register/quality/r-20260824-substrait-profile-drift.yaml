@@ -44,7 +44,8 @@ mitigation:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ed-20260824-substrait-semantic-reference-traceability.md
     - docs/evidence/ED-20260826-vtx2-substrait-card-pilot.md
-    - apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
+    - apps/web/src/app/views/canvas/canvasRelationAnalysisSession.ts
+    - apps/web/src/app/views/canvas/canvasSelectedJoinConsumers.test.ts
     - apps/web/src/app/views/canvas/canvasSubstraitPreviewProvenance.test.ts
     - docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-substrait-semantic-reference-design-20260824.md
     - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts
@@ -63,8 +64,8 @@ mitigation:
     - apps/web/src/app/views/canvas/useCanvasControllerReadModel.geometry.test.tsx
     - apps/web/src/app/views/canvas/useCanvasEdgeCommandRunner.lifecycle.test.tsx
     - apps/web/cypress/e2e/canvas/canvas-selected-filter-live.cy.ts
-    - apps/web/src/app/views/canvas/DvtAuthoringFields.filter.test.tsx
-    - apps/web/src/app/views/canvas/DvtRelationFilterAuthoringSection.test.tsx
+    - apps/web/src/app/views/canvas/CanvasSelectedFilterEditor.test.tsx
+    - apps/web/src/app/views/canvas/canvasSelectedRelationFilter.test.ts
     - apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts
   follow_up:
     - Issue #2597 must prove SQL AST/source mapping to the pinned semantic profile and governed target rendering.
