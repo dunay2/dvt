@@ -65,11 +65,44 @@ describe('direct output ordering', () => {
           '[data-slot="canvas-relational-tree-inline-editor"] input, [data-slot="canvas-relational-tree-inline-editor"] select'
         )
       ).toBeNull();
+      const properties = container.querySelector('[data-value="properties"]');
+      expect(properties?.querySelector('[data-slot="relation-output-field"]')).toBeNull();
+      const outputTab = container.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-operation-output-tab"]'
+      );
+      expect(outputTab?.textContent).toBe('Output');
+      await act(async () => outputTab?.click());
+      const outputPanel = container.querySelector('[data-value="output"]');
+      expect(outputPanel?.getAttribute('data-state')).toBe('active');
+      expect(outputPanel?.querySelector('[aria-label="Move field up"]')).toBeNull();
+      expect(rows()[0]?.querySelector('[data-slot="relation-output-drag-handle"]')).not.toBeNull();
       expect(applied).not.toHaveBeenCalled();
-      const move = async (): Promise<void> =>
-        act(async () =>
-          rows()[0]!.querySelector<HTMLButtonElement>('[aria-label="Move field down"]')!.click()
-        );
+      const move = async (): Promise<void> => {
+        const source = rows()[0] as HTMLElement;
+        const target = rows()[1] as HTMLElement;
+        const data = new Map<string, string>();
+        const dataTransfer = {
+          effectAllowed: 'move',
+          dropEffect: 'move',
+          getData: (type: string) => data.get(type) ?? '',
+          setData: (type: string, value: string) => data.set(type, value),
+        };
+        vi.spyOn(target, 'getBoundingClientRect').mockReturnValue({
+          top: 0,
+          height: 20,
+        } as DOMRect);
+        await act(async () => {
+          for (const event of [
+            new Event('dragstart', { bubbles: true }),
+            new MouseEvent('dragover', { bubbles: true, cancelable: true, clientY: 19 }),
+            new Event('drop', { bubbles: true, cancelable: true }),
+          ]) {
+            Object.defineProperty(event, 'dataTransfer', { value: dataTransfer });
+            (event.type === 'dragstart' ? source : target).dispatchEvent(event);
+          }
+          source.dispatchEvent(new Event('dragend', { bubbles: true }));
+        });
+      };
       await move();
       if (rejectFirst) {
         expect(ids()).toEqual(before);
