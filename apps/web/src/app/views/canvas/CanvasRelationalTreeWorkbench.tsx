@@ -13,9 +13,6 @@ import { CanvasRelationalRemovalConfirmation } from './CanvasRelationalRemovalCo
 import { CanvasRelationalTreeContent } from './CanvasRelationalTreeContent';
 import { CanvasRelationalTreeSourceCatalogue } from './CanvasRelationalTreeSourceCatalogue';
 import { useCanvasRelationEditNavigation } from './useCanvasRelationEditNavigation';
-import { CanvasDraftDecisionDialog } from './CanvasDraftDecisionDialog';
-import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import {
   CanvasOperationPreviewProvider,
@@ -64,8 +61,6 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
     session: sessionHandle,
     onSelect: model.selectRelation,
   });
-  const language = useApplicationLanguageStore((state) => state.language);
-  const localCopy = resolveCanvasSemanticEditorCopy(language);
 
   return (
     <CanvasOperationPreviewProvider
@@ -89,14 +84,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
             session={sessionHandle}
             copy={copy}
             host={actionsHost}
-          />
-          <CanvasDraftDecisionDialog
-            open={navigation.pending}
-            canApply={sessionHandle.canApply}
-            onStay={navigation.stay}
-            onDiscard={navigation.discard}
-            onApply={navigation.apply}
-            error={sessionHandle.applyRejection == null ? null : localCopy.applyRejected}
+            navigation={navigation}
           />
           <CanvasRelationalRemovalConfirmation
             operations={model.session.removal.pending?.result.operations ?? null}
