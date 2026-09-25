@@ -10,7 +10,7 @@ import { applyDvtSubstraitFetch, applyDvtSubstraitSort } from './canvasSortFetch
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { buildCanvasRelationalTreeRelation } from './canvasRelationalTreeRelationProjection';
-import { projectCanvasRelationalTreeSemanticZoom } from './canvasRelationalTreeSemanticZoom';
+import { projectCanvasRelationalTreeDetails } from './canvasRelationalTreeDetails';
 import type { SemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
@@ -23,7 +23,7 @@ import { source } from './canvasRelationalOperator.test-support';
 
 function projectDetails(
   document: SubstraitDocument
-): ReturnType<typeof projectCanvasRelationalTreeSemanticZoom> & { root: CanvasRelationalTreeNode } {
+): ReturnType<typeof projectCanvasRelationalTreeDetails> & { root: CanvasRelationalTreeNode } {
   const indexed = indexSubstraitRelations(document);
   if (!indexed.ok) throw indexed.error;
   const root = buildCanvasRelationalTreeRelation({ index: indexed.index, digest: 'inspection' });
@@ -32,7 +32,7 @@ function projectDetails(
     encodeDvtSubstraitSemanticDocument(document)
   );
   const before = structuredClone(transformNode);
-  const details = projectCanvasRelationalTreeSemanticZoom(root, { transformNode });
+  const details = projectCanvasRelationalTreeDetails(root, { transformNode });
   expect(transformNode).toEqual(before);
   return { root, ...details };
 }
@@ -42,7 +42,7 @@ function roots(graph: SemanticWorkbenchGraph): SemanticWorkbenchGraph['nodes'] {
   return graph.nodes.filter((node) => !operands.has(node.id));
 }
 
-describe('relational card semantic zoom', () => {
+describe('relational card detail projection', () => {
   it('shows Filter conditions and Aggregate grouping/measures through the same projection', async () => {
     const filtered = await filterProjectionInputFixture(expressionStageDraft(), {
       fieldId: 'output:country',
@@ -151,9 +151,9 @@ describe('relational card semantic zoom', () => {
 
   it('does not project details without semantic context or invent detail for unsupported cards', () => {
     const { node, projection } = projectExpressionStage(expressionStageDraft());
-    expect(projectCanvasRelationalTreeSemanticZoom(projection.root).graphs.size).toBe(0);
+    expect(projectCanvasRelationalTreeDetails(projection.root).graphs.size).toBe(0);
     const root = { ...projection.root, operator: 'unsupported' as const };
-    const detail = projectCanvasRelationalTreeSemanticZoom(root, { transformNode: node });
+    const detail = projectCanvasRelationalTreeDetails(root, { transformNode: node });
     expect(detail.graphs.has(root.locator)).toBe(false);
   });
 });

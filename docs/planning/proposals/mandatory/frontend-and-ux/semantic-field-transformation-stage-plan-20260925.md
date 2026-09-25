@@ -59,8 +59,8 @@ projection authority and fails closed.
 
 ### Card detail convergence (#3422)
 
-Every admitted relational card participates in the existing read-only semantic
-zoom, not only JOIN and scalar/Window ProjectRel. Filter shows its predicate;
+Every admitted relational card exposes an explicitly collapsible read-only
+tree, not only JOIN and scalar/Window ProjectRel. Filter shows its predicate;
 Aggregate shows grouping and measures; Sort shows ordered keys with direction
 and null placement; Fetch shows count and offset, including canonical defaults.
 Read, direct Project, Cross and Set show their local input/output structure when
@@ -68,10 +68,11 @@ they have no expression tree. No upstream subtree is copied into each card.
 
 ```mermaid
 flowchart LR
-  A[Current: JOIN or derived Project gate] --> B[Other cards lack detail]
+  A[Removed: zoom threshold] --> B[Unexpected graph redistribution]
   C[Canonical relation and expressions] --> D[Shared graph projection]
   D --> E[Local expression tree or input/output structure]
-  E --> F[Existing compact card renderer and geometry]
+  E --> F[Explicit per-card disclosure and geometry]
+  Z[Zoom] --> V[Viewport scale only]
 ```
 
 The query remains `ProjectCanvasRelationalTree` in Web/Canvas. Projection reads
@@ -80,9 +81,37 @@ does not grant mutation permission. Expansion and zoom are presentation only.
 Unsupported operations do not acquire fabricated supported detail. Sorting
 priority and argument order must survive graph slicing and rendering.
 
-| Scenario           | Opportunity                   | Fowler pattern                                       | DDD owner                      | Rail                        | Implementation surfaces                                                        | Unit/package test                                                                       | Architecture test                                        | User-flow test                                                                                         | Out of scope                                             |
-| ------------------ | ----------------------------- | ---------------------------------------------------- | ------------------------------ | --------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
-| Inspect every card | Hidden presentation authority | Remove operation whitelist; reuse Presentation Model | CanvasRelationalTreeProjection | ProjectCanvasRelationalTree | semanticWorkbench projection/layout, relational semantic zoom and compact tree | canonical Sort/Fetch/Filter/Aggregate and structural details; order; unchanged document | existing read-only boundary and bounded component checks | zoom production Workbench, inspect Sort/Fetch and source detail, return to compact view without saving | new commands, editors, IR, execution, JOIN normalization |
+| Scenario           | Opportunity                   | Fowler pattern                                       | DDD owner                      | Rail                        | Implementation surfaces                                                       | Unit/package test                                                                       | Architecture test                                        | User-flow test                                                   | Out of scope                                             |
+| ------------------ | ----------------------------- | ---------------------------------------------------- | ------------------------------ | --------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------- |
+| Inspect every card | Hidden presentation authority | Remove operation whitelist; reuse Presentation Model | CanvasRelationalTreeProjection | ProjectCanvasRelationalTree | semanticWorkbench projection/layout, relational card details and compact tree | canonical Sort/Fetch/Filter/Aggregate and structural details; order; unchanged document | existing read-only boundary and bounded component checks | explicitly open and close Sort/Fetch/source trees without saving | new commands, editors, IR, execution, JOIN normalization |
+
+### Stable zoom and truthful gestures (#3422)
+
+Zoom must not change card bounds, graph coordinates, edge paths or disclosure
+state. Remove the semantic-zoom threshold and its names/tests; reuse the same
+canonical detail projection under an explicit card toggle. Clicking the card
+continues to select its existing inspector; disclosure does not open an editor.
+
+The existing disposable Model layout session owns manual positions and expanded
+relation identities, shared by inspection and draft views. Expanding a card can
+adjust automatic spacing to its new bounds; manually placed cards remain where
+the user put them. Arrange clears manual positions and applies the existing
+layout to current bounds. Fit only frames the drawing. Neither action persists
+semantic changes or fetches data.
+
+Background cursor is the normal arrow and primary-button background dragging
+does nothing in selection mode. Cards show grab/grabbing and retain existing
+pointer and Alt+Arrow movement. An explicit Hand tool enables primary-button
+viewport panning and disables card dragging; the viewport then shows grab and
+grabbing while panning. Middle-button panning remains available. Controls,
+portalled menus, cancellation and lost capture keep their own interaction
+boundaries. These are presentation interactions inside ProjectCanvasRelationalTree,
+not new command/query rails or mutation permissions.
+
+| Scenario                                 | Opportunity                  | Fowler pattern                                  | DDD owner                    | Rail                        | Implementation surfaces                                                                               | Unit/package test                                                                            | Architecture test                                           | User-flow test                                                 | Out of scope                                     |
+| ---------------------------------------- | ---------------------------- | ----------------------------------------------- | ---------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------ |
+| Zoom, disclose and arrange independently | Responsibility overload      | Separate presentation state from viewport scale | Canvas relation presentation | ProjectCanvasRelationalTree | existing relational View/DraftViewport/Layout/GraphNode/controls, detail projector and layout session | compare geometry and edge paths across scales; per-card disclosure and shared state          | existing projection boundary plus behavioral zoom invariant | open tree, zoom both directions, move card, arrange; no writes | new layout algorithm, persisted visual state     |
+| Match cursors to actual gestures         | Hidden interaction authority | One gesture owner per interaction               | Canvas relation presentation | ProjectCanvasRelationalTree | existing viewport pan and card movement hooks, card button and viewport controls                      | background no-op; card drag; pan mode; middle button; cancel/lost capture/control boundaries | no semantic write dependency                                | computed cursors, primary/middle drag, no selection after pan  | new pointer framework, global keyboard shortcuts |
 
 Extract the oversized existing Workbench projector by projection versus layout
 responsibility only where needed for this change. Delete the moved bodies;
@@ -118,6 +147,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/**
   - apps/web/src/app/labs/semanticWorkbenchProjection.architecture.test.ts
   - apps/web/cypress/e2e/canvas/**
+  - apps/web/cypress/support/relationalWorkbench/geometry.ts
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/planning/proposals/mandatory/frontend-and-ux/semantic-field-transformation-stage-plan-20260925.md
   - docs/evidence/**

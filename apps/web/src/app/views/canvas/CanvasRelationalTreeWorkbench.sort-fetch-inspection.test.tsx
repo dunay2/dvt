@@ -87,15 +87,14 @@ describe('applied Sort/Fetch inspection', () => {
         );
       });
       await act(async () => {
-        const zoomIn = container.querySelector<HTMLButtonElement>('[aria-label="Zoom in"]')!;
-        zoomIn.click();
-        zoomIn.click();
-        zoomIn.click();
+        container
+          .querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-node-expand"]')
+          .forEach((button) => button.click());
       });
       for (const card of container.querySelectorAll('[data-slot="canvas-relational-tree-node"]')) {
         const detail = card
           .closest('li')!
-          .querySelector('[data-slot="canvas-relational-semantic-zoom"]');
+          .querySelector('[data-slot="canvas-relational-card-detail"]');
         expect(detail, `Missing detail for ${card.getAttribute('data-operator')}`).not.toBeNull();
         expect(
           detail!.querySelectorAll('[data-slot="canvas-relational-expression-node"]').length

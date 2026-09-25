@@ -15,7 +15,8 @@ export function useRelationalCardMovement(
   nodes: readonly CanvasRelationalTreePlacedNode[],
   zoom: number,
   setPosition: (id: string, position: CardPosition) => void,
-  onManualLayout?: () => void
+  onManualLayout?: () => void,
+  enabled = true
 ) {
   const drag = useRef<Drag | null>(null);
   const suppressClick = useRef(false);
@@ -30,6 +31,7 @@ export function useRelationalCardMovement(
     const current = drag.current;
     if (current == null) return;
     drag.current = null;
+    delete current.target.dataset.dragging;
     suppressClick.current = current.moved;
     if (cancel && current.moved) setPosition(current.id, current.origin);
     if (current.target.hasPointerCapture(current.pointerId))
@@ -37,7 +39,7 @@ export function useRelationalCardMovement(
   };
   return {
     onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
-      if (event.button !== 0 || drag.current != null) return;
+      if (!enabled || event.button !== 0 || drag.current != null) return;
       suppressClick.current = false;
       const hit = locate(event.target);
       if (hit == null) return;
@@ -63,6 +65,7 @@ export function useRelationalCardMovement(
       event.stopPropagation();
       if (!current.moved) onManualLayout?.();
       current.moved = true;
+      current.target.dataset.dragging = 'true';
       setPosition(current.id, {
         x: Math.max(0, current.origin.x + dx / current.zoom),
         y: Math.max(0, current.origin.y + dy / current.zoom),
@@ -91,7 +94,11 @@ export function useRelationalCardMovement(
         return;
       }
       suppressClick.current = false;
-      if (!event.altKey || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key))
+      if (
+        !enabled ||
+        !event.altKey ||
+        !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)
+      )
         return;
       const hit = locate(event.target);
       if (hit == null) return;

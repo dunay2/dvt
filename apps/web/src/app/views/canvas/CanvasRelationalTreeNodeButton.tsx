@@ -22,6 +22,7 @@ export function CanvasRelationalTreeNodeButton({
   selected,
   copy,
   detailed,
+  movable,
   onSelect,
   onExpand,
 }: Readonly<{
@@ -29,6 +30,7 @@ export function CanvasRelationalTreeNodeButton({
   selected: boolean;
   copy: CanvasRelationalTreeWorkbenchCopy;
   detailed: boolean;
+  movable: boolean;
   onSelect: (locator: string) => void;
   onExpand?: (locator: string) => void;
 }>): JSX.Element {
@@ -77,7 +79,7 @@ export function CanvasRelationalTreeNodeButton({
         height: detailed ? 76 : '100%',
         fontFamily: '"Segoe UI", system-ui, sans-serif',
       }}
-      className={`w-full select-none rounded-md border px-3 py-2 text-left shadow-sm transition-colors hover:border-(--status-info) aria-selected:border-(--status-info) aria-selected:ring-2 aria-selected:ring-(--status-info) ${operatorTone[presentation.category]}`}
+      className={`w-full select-none rounded-md border px-3 py-2 text-left shadow-sm transition-colors hover:border-(--status-info) aria-selected:border-(--status-info) aria-selected:ring-2 aria-selected:ring-(--status-info) ${movable ? 'cursor-grab data-[dragging=true]:cursor-grabbing' : 'cursor-inherit'} ${operatorTone[presentation.category]}`}
     >
       <span className="flex items-center gap-2 pr-5">
         <Icon aria-hidden="true" className="size-4 shrink-0 text-(--status-info)" />

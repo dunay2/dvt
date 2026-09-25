@@ -50,21 +50,14 @@ export function verifyWheelZoom(viewportSelector: string): void {
     });
 }
 
-export function revealSemanticZoom(viewportSelector: string, joinCount: number): void {
+export function revealCardDetails(joinCount: number): void {
   cy.get('[data-slot="canvas-relational-tree-fit"]').click();
-  cy.get('[data-slot="canvas-relational-semantic-zoom"]').should('not.exist');
-  cy.get('[data-slot="canvas-relational-tree-zoom"]')
-    .invoke('text')
-    .then((label) => {
-      const current = Number.parseFloat(label) / 100;
-      cy.get(viewportSelector).trigger('wheel', {
-        eventConstructor: 'WheelEvent',
-        deltaY: -Math.log(1.3 / current) / 0.0015,
-        cancelable: true,
-      });
-    });
-  cy.get('[data-slot="canvas-relational-semantic-zoom"]').should('have.length', joinCount);
-  cy.get('[data-slot="canvas-relational-semantic-zoom"]').each(($detail) => {
+  cy.get('[data-slot="canvas-relational-card-detail"]').should('not.exist');
+  cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').each(($card) => {
+    cy.wrap($card).closest('li').find('[data-slot="canvas-relational-node-expand"]').click();
+  });
+  cy.get('[data-slot="canvas-relational-card-detail"]').should('have.length', joinCount);
+  cy.get('[data-slot="canvas-relational-card-detail"]').each(($detail) => {
     cy.wrap($detail)
       .find('[data-slot="canvas-relational-expression-node"]')
       .should('have.length.greaterThan', 2);

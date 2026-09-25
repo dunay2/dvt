@@ -168,6 +168,7 @@ describe('relational-tree mouse navigation', () => {
   it('pans with the middle button over a card without capturing right-click', () => {
     viewport.setPointerCapture = vi.fn();
     viewport.releasePointerCapture = vi.fn();
+    viewport.hasPointerCapture = () => true;
     viewport.scrollLeft = 200;
     viewport.scrollTop = 100;
     const event = (name: string, button: number, x: number, y: number): MouseEvent =>

@@ -48,7 +48,7 @@ describe('Workbench append', () => {
     openWorkbenchModel('join-transform');
     cy.get('[data-slot="canvas-relational-tree"]').should('contain.text', 'JOIN');
     cy.get('[data-slot="canvas-relational-tree-start-authoring"]').should('not.exist');
-    cy.get('[data-slot="canvas-relational-node-expand"]').click();
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
     cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
     cy.get('[data-slot="canvas-relational-expression-tree"]:visible').should('have.length', 1);

@@ -91,7 +91,7 @@ describe('Canvas relational-tree Workbench reopen', () => {
     });
 
     const start = container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-relational-node-expand"]'
+      '[data-slot="canvas-relational-tree-node"][data-operator="join"]'
     );
     expect(start).not.toBeNull();
     await act(async () => start?.click());

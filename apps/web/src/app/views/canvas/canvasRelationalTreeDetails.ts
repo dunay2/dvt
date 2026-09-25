@@ -1,4 +1,4 @@
-/** Owned concern: reuse canonical scalar projections for read-only relational semantic zoom. */
+/** Owned concern: project read-only card details independently of viewport scale. */
 import type { CanonicalNode } from '../../types/canonical';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
@@ -11,13 +11,12 @@ import {
 import type { CanvasRelationalTreeNodeSize } from './canvasRelationalTreeGeometryMetrics';
 import { projectCanvasRelationalStructureGraph } from './canvasRelationalStructureGraph';
 
-export const CANVAS_RELATIONAL_SEMANTIC_ZOOM = 1.2;
 export type CanvasRelationalSemanticContext = Readonly<{
   transformNode: CanonicalNode;
   draft?: SubstraitDocument;
 }>;
 
-export function projectCanvasRelationalTreeSemanticZoom(
+export function projectCanvasRelationalTreeDetails(
   root: CanvasRelationalTreeNode,
   context?: CanvasRelationalSemanticContext
 ): Readonly<{

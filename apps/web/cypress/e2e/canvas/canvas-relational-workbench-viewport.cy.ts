@@ -1,7 +1,7 @@
 /** Owned concern: zoom and source-rail layout preserve the draft, search and graph fit. */
 import {
   verifyWheelZoom,
-  revealSemanticZoom,
+  revealCardDetails,
   verifyCompleteTreeFit,
 } from '../../support/relationalWorkbench/geometry';
 import {
@@ -24,15 +24,15 @@ describe('Workbench viewport', () => {
     cy.then(() => {
       writesBeforeZoom = semanticWrites('join-transform').length;
     });
-    revealSemanticZoom('[data-slot="canvas-relational-tree-viewport"]', 1);
+    revealCardDetails(1);
     cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
-    cy.get('[data-slot="canvas-relational-semantic-zoom"]')
+    cy.get('[data-slot="canvas-relational-card-detail"]')
       .scrollIntoView()
       .should('contain.text', 'EQUAL');
-    cy.screenshot('semantic-editor-zoom-expressions');
+    cy.screenshot('semantic-editor-card-expressions');
     cy.then(() => expect(semanticWrites('join-transform')).to.have.length(writesBeforeZoom));
     verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
-    cy.get('[data-slot="canvas-relational-semantic-zoom"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-card-detail"]').should('have.length', 1);
     cy.get('[data-slot="canvas-relational-tree-sources"] input').type('customers');
     cy.get('[data-slot="canvas-relational-tree-zoom"]')
       .invoke('text')

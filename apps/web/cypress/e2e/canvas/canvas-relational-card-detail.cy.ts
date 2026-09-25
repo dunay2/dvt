@@ -1,4 +1,4 @@
-/** Card semantic zoom inspects canonical details without writing or executing data. */
+/** Explicit card detail survives zoom without layout, writes or data execution. */
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
@@ -12,7 +12,7 @@ import {
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Relational card detail', () => {
-  it('shows each local tree at semantic zoom and returns to compact cards without side effects', () => {
+  it('expands each local tree explicitly and preserves geometry across zoom and Fit', () => {
     stubWorkbenchScenario('saved-join');
     cy.viewport(1600, 1000);
     visitWorkbenchCanvas();
@@ -44,21 +44,12 @@ describe('Relational card detail', () => {
     cy.then(() => {
       writes = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
-    // The wheel is the existing precision zoom gesture, not a test-only state setter.
-    cy.get('[data-slot="canvas-relational-tree-zoom"]')
-      .invoke('text')
-      .then((label) => {
-        const deltaY = -Math.log(1.3 / (Number.parseInt(label, 10) / 100)) / 0.0015;
-        cy.get('[data-slot="canvas-relational-tree-viewport"]').trigger('wheel', {
-          deltaY,
-          eventConstructor: 'WheelEvent',
-        });
-      });
     cy.get('[data-slot="canvas-relational-tree-node"]').each(($card) => {
+      cy.wrap($card).closest('li').find('[data-slot="canvas-relational-node-expand"]').click();
       cy.wrap($card)
         .closest('li')
         .find(
-          '[data-slot="canvas-relational-semantic-zoom"] [data-slot="canvas-relational-expression-node"]'
+          '[data-slot="canvas-relational-card-detail"] [data-slot="canvas-relational-expression-node"]'
         )
         .should('not.be.empty');
     });
@@ -72,11 +63,30 @@ describe('Relational card detail', () => {
       .and('contain.text', 'NULLS');
     cy.get('[data-operator="sort"]').scrollIntoView();
     cy.screenshot('relational-card-details');
-    cy.get('[data-slot="canvas-relational-tree-viewport"]').trigger('wheel', {
-      deltaY: 300,
-      eventConstructor: 'WheelEvent',
+    cy.get('[data-slot="canvas-relational-tree-layout"]').then(($layout) => {
+      const geometry = (): (string | null)[][] =>
+        [
+          ...$layout[0].querySelectorAll(
+            ':scope > ul > li, :scope > svg path, [data-slot="canvas-relational-tree-output"]'
+          ),
+        ].map((element) => [element.getAttribute('style'), element.getAttribute('d')]);
+      const before = geometry();
+      const count = $layout.find('[data-slot="canvas-relational-card-detail"]').length;
+      for (const deltaY of [-800, 500, -150, 200]) {
+        cy.get('[data-slot="canvas-relational-tree-viewport"]').trigger('wheel', {
+          deltaY,
+          eventConstructor: 'WheelEvent',
+        });
+        cy.then(() => expect(geometry()).to.deep.equal(before));
+        cy.get('[data-slot="canvas-relational-card-detail"]').should('have.length', count);
+      }
+      cy.get('[data-slot="canvas-relational-tree-fit"]').click();
+      cy.then(() => expect(geometry()).to.deep.equal(before));
     });
-    cy.get('[data-slot="canvas-relational-semantic-zoom"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-node-expand"]').each(($button) =>
+      cy.wrap($button).click()
+    );
+    cy.get('[data-slot="canvas-relational-card-detail"]').should('not.exist');
     cy.then(() => {
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writes);
       expect(getE2eApiCalls(/\/transforms\/join-transform\/data-sample/, 'GET')).to.have.length(0);

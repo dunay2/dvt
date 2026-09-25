@@ -4,12 +4,12 @@ import {
   projectExpressionStage,
   withScalarOutput,
 } from './canvasRelationalExpressionStage.test-support';
-import { projectCanvasRelationalTreeSemanticZoom } from './canvasRelationalTreeSemanticZoom';
+import { projectCanvasRelationalTreeDetails } from './canvasRelationalTreeDetails';
 
-describe('Canvas Expression stage semantic zoom', () => {
+describe('Canvas Expression stage card detail', () => {
   it('reuses the canonical scalar graph without a second expression model', () => {
     const { node, projection } = projectExpressionStage(withScalarOutput());
-    const detail = projectCanvasRelationalTreeSemanticZoom(projection.root, {
+    const detail = projectCanvasRelationalTreeDetails(projection.root, {
       transformNode: node,
     });
     const graph = detail.graphs.get(projection.root.locator);
