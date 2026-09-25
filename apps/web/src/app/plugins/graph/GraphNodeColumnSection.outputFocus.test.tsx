@@ -54,7 +54,9 @@ describe('column output focus ownership', () => {
     render(true, false);
     expect(button.disabled).toBe(false);
     expect(button.getAttribute('aria-disabled')).toBe('true');
-    act(() => fireEvent.click(button));
+    act(() => {
+      fireEvent.click(button);
+    });
     expect(button.getAttribute('aria-pressed')).toBe('true');
     expect(document.activeElement).toBe(button);
     render(false);
