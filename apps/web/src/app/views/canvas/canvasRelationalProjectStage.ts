@@ -6,10 +6,7 @@ import type { CanvasPresentationOperation } from './canvasRelationalOperationPre
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 
 export type CanvasRelationalProjectStage = Readonly<{
-  operation: Extract<
-    CanvasPresentationOperation,
-    'projection' | 'expression' | 'window' | 'field_transform'
-  >;
+  operation: Extract<CanvasPresentationOperation, 'field_transform'>;
   summary: NonNullable<CanvasRelationalTreeNode['projectionSummary']>;
 }>;
 
@@ -40,14 +37,7 @@ export function projectCanvasRelationalProjectStage(
   ).length;
   const windowFieldCount = expressions.length - scalarFieldCount;
   return {
-    operation:
-      scalarFieldCount > 0 && windowFieldCount > 0
-        ? 'field_transform'
-        : windowFieldCount > 0
-          ? 'window'
-          : scalarFieldCount > 0
-            ? 'expression'
-            : 'projection',
+    operation: 'field_transform',
     summary: {
       passthroughFieldCount: emitted.filter((ordinal) => ordinal < inputFieldCount).length,
       scalarFieldCount,

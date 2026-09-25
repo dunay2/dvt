@@ -64,9 +64,9 @@ describe('Canvas relational-tree Workbench pending', () => {
       );
     });
 
-    expect(container.querySelector('[data-slot="canvas-relational-tree"]')?.textContent).toContain(
-      'PROJECT'
-    );
+    expect(
+      container.querySelector('[data-slot="canvas-relational-tree"] [data-operator="project"]')
+    ).not.toBeNull();
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-start-authoring"]')
     ).toBeNull();

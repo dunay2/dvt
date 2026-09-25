@@ -8,10 +8,10 @@ import {
 } from './canvasRelationalExpressionStage.test-support';
 
 describe('Canvas relational Expression/Derive stage projection', () => {
-  it('keeps a direct ProjectRel as projection with only passthrough outputs', () => {
+  it('projects a passthrough dataset as Transform', () => {
     const { projection } = projectExpressionStage(expressionStageDraft());
 
-    expect(projection.root.operation).toBe('projection');
+    expect(projection.root.operation).toBe('field_transform');
     expect(projection.root.projectionSummary).toEqual({
       passthroughFieldCount: 2,
       scalarFieldCount: 0,
@@ -22,7 +22,7 @@ describe('Canvas relational Expression/Derive stage projection', () => {
   it('classifies an emitted scalar output as an Expression stage', () => {
     const { projection } = projectExpressionStage(withScalarOutput());
 
-    expect(projection.root.operation).toBe('expression');
+    expect(projection.root.operation).toBe('field_transform');
     expect(projection.root.projectionSummary).toEqual({
       passthroughFieldCount: 2,
       scalarFieldCount: 1,
@@ -33,7 +33,7 @@ describe('Canvas relational Expression/Derive stage projection', () => {
   it('keeps an emitted Window output distinct from scalar derivation', () => {
     const { projection } = projectExpressionStage(withWindowOutput());
 
-    expect(projection.root.operation).toBe('window');
+    expect(projection.root.operation).toBe('field_transform');
     expect(projection.root.projectionSummary).toEqual({
       passthroughFieldCount: 2,
       scalarFieldCount: 0,

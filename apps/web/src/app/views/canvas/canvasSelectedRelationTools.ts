@@ -99,11 +99,14 @@ function fetchTool(input: SelectedRelationInput): CanvasRelationalOperatorTool {
 
 export const selectedUnaryTools = {
   filter: filterTool,
-  sort: sortTool,
-  fetch: fetchTool,
   aggregate: aggregateTool,
   window: windowTool,
+  sort: sortTool,
+  fetch: fetchTool,
 };
+export const selectedUnaryToolIds = Object.keys(
+  selectedUnaryTools
+) as (keyof typeof selectedUnaryTools)[];
 
 export function projectSelectedRelationTool(
   input: SelectedRelationInput | null,

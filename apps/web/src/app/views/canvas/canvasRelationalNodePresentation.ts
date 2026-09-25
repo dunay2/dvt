@@ -11,7 +11,7 @@ import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWo
 
 const fallbackOperations = {
   read: 'read',
-  project: 'projection',
+  project: 'field_transform',
   filter: 'filter',
   join: 'unsupported',
   cross: 'cross_join',
@@ -39,11 +39,9 @@ export function resolveCanvasRelationalNodeCopy(
   const title = node.operator === 'read' ? subtitle : copy[resolved.presentation.labelKey];
   const summary = node.projectionSummary;
   const template =
-    resolved.operation === 'expression'
-      ? copy.relationalTreeExpressionStageSummaryTemplate
-      : resolved.operation === 'window' || resolved.operation === 'field_transform'
-        ? copy.relationalTreeFieldTransformationStageSummaryTemplate
-        : null;
+    resolved.operation === 'field_transform'
+      ? copy.relationalTreeFieldTransformationStageSummaryTemplate
+      : null;
   const detail =
     template == null || summary == null
       ? subtitle

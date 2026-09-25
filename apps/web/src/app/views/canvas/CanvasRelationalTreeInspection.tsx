@@ -1,29 +1,24 @@
 /** Owned concern: compose the applied read-only tree and its explicit editing entry. */
-import type { CanonicalNode } from '../../types/canonical';
-import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
+import type { ComponentProps } from 'react';
 import { CanvasRelationalTreeOperationShelf } from './CanvasRelationalTreeOperationShelf';
-import {
-  CanvasRelationalTreeSideInspector,
-  type CanvasModelOutputInspectorState,
-} from './CanvasRelationalTreeSideInspector';
+import { CanvasRelationalTreeSideInspector } from './CanvasRelationalTreeSideInspector';
 import { CanvasRelationalTreeView } from './CanvasRelationalTreeView';
+import { useCanvasTransformStage } from './useCanvasTransformStage';
 
-export function CanvasRelationalTreeInspection({
-  model,
-  transformNode,
-  copy,
-  expanded,
-  onExpandedChange,
-  modelOutput,
-}: Readonly<{
-  model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
-  transformNode: CanonicalNode;
-  copy: CanvasRelationalTreeWorkbenchCopy;
-  expanded: boolean;
-  onExpandedChange: (expanded: boolean) => void;
-  modelOutput: CanvasModelOutputInspectorState;
-}>): JSX.Element | null {
+export function CanvasRelationalTreeInspection(
+  props: ComponentProps<typeof CanvasRelationalTreeSideInspector>
+): JSX.Element | null {
+  const { model, transformNode, copy, onExpandedChange, modelOutput } = props;
+  const transformStage = useCanvasTransformStage(
+    model.selectedNode?.relationId ?? null,
+    model.session.applyOutputOrder,
+    (relationId) => {
+      model.selectRelation(relationId);
+      modelOutput.setOpen(false);
+      onExpandedChange(true);
+    },
+    model.authoringAvailable
+  );
   if (model.projection == null) return null;
   return (
     <div
@@ -31,6 +26,7 @@ export function CanvasRelationalTreeInspection({
       className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
     >
       <CanvasRelationalTreeOperationShelf
+        transformStage={transformStage}
         choices={model.session.choices}
         selectedRelationId={model.selectedNode?.relationId ?? null}
         copy={copy}
@@ -60,14 +56,7 @@ export function CanvasRelationalTreeInspection({
             modelOutput.setOpen(true);
           }}
         />
-        <CanvasRelationalTreeSideInspector
-          model={model}
-          transformNode={transformNode}
-          copy={copy}
-          expanded={expanded}
-          onExpandedChange={onExpandedChange}
-          modelOutput={modelOutput}
-        />
+        <CanvasRelationalTreeSideInspector {...props} />
       </div>
     </div>
   );

@@ -112,7 +112,6 @@ export type CanvasPresentationOperation =
   | 'read'
   | 'filter'
   | 'aggregate'
-  | 'expression'
   | 'field_transform'
   | 'window'
   | 'sort'
@@ -123,11 +122,6 @@ export const canvasRelationalUnaryPresentation = {
   read: { labelKey: 'operationReadLabel', icon: Table2, category: 'read' },
   filter: { labelKey: 'operationFilterLabel', icon: Filter, category: 'filter' },
   aggregate: { labelKey: 'operationAggregateLabel', icon: Sigma, category: 'aggregate' },
-  expression: {
-    labelKey: 'relationalTreeExpressionStageLabel',
-    icon: FunctionSquare,
-    category: 'project',
-  },
   field_transform: {
     labelKey: 'relationalTreeFieldTransformationStageLabel',
     icon: FunctionSquare,

@@ -55,7 +55,7 @@ describe('Canvas field transformation stage presentation', () => {
       root.render(
         <CanvasRelationalTreeView
           outputName="Customers"
-          root={projectNode('expression', 2, 0)}
+          root={projectNode('field_transform', 2, 0)}
           selectedLocator="project"
           copy={copy}
           onSelect={() => undefined}
@@ -63,9 +63,9 @@ describe('Canvas field transformation stage presentation', () => {
       )
     );
 
-    const card = container.querySelector('[data-presentation="expression"]');
+    const card = container.querySelector('[data-presentation="field_transform"]');
     expect(card).not.toBeNull();
-    expect(card?.textContent).toContain(copy.relationalTreeExpressionStageLabel);
+    expect(card?.textContent).toContain(copy.relationalTreeFieldTransformationStageLabel);
     expect(card?.textContent).toContain('2');
     expect(card?.textContent).toContain('18');
   });

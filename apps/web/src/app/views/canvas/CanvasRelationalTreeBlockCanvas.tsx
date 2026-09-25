@@ -12,6 +12,7 @@ import type { CanvasRelationalOperandPosition } from './CanvasRelationalTreeOper
 import { CanvasRelationalTreeOperationShelf } from './CanvasRelationalTreeOperationShelf';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
+import { useCanvasTransformStage } from './useCanvasTransformStage';
 
 export function CanvasRelationalTreeBlockCanvas({
   appendInput,
@@ -65,6 +66,15 @@ export function CanvasRelationalTreeBlockCanvas({
   onRemove: (relationId: string, keep?: 'left' | 'right') => void;
 }>): JSX.Element {
   const [expanded, setExpanded] = useState(initiallyExpanded);
+  const transformStage = useCanvasTransformStage(
+    selectedRelationId,
+    onChangeJoinDraft,
+    (relationId) => {
+      onReconcileSelection(relationId);
+      setExpanded(true);
+    },
+    appendInput == null
+  );
 
   return (
     <section
@@ -73,6 +83,7 @@ export function CanvasRelationalTreeBlockCanvas({
       className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
     >
       <CanvasRelationalTreeOperationShelf
+        transformStage={transformStage}
         choices={choices}
         appending={appendInput != null}
         selectedRelationId={selectedRelationId}

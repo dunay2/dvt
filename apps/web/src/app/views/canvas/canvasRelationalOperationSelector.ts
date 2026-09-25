@@ -20,11 +20,7 @@ export function canvasPresentationOperationForRel(rel: Rel): CanvasPresentationO
     case 'fetch':
       return rel.relType.case;
     case 'project':
-      return rel.relType.value.expressions.some(
-        (expression) => expression.rexType.case === 'windowFunction'
-      )
-        ? 'window'
-        : 'projection';
+      return 'field_transform';
     case 'set':
       return setPresentationOperation(rel.relType.value.op);
     default:

@@ -22,16 +22,7 @@ type InlineEditorProps = Omit<CanvasRelationalTreeOperationEditorProps, 'cross' 
 export function CanvasRelationalTreeInlineEditor(
   props: Readonly<InlineEditorProps>
 ): JSX.Element | null {
-  const {
-    appendInput,
-    joinDraft,
-    operation,
-    selectedRelationId,
-    transformNode,
-    onChangeJoinDraft,
-    expanded,
-    onClose,
-  } = props;
+  const { appendInput, joinDraft, operation, selectedRelationId } = props;
   const [setCompositionPending, setSelectionPending] = usePendingRelationEdits(
     props.onPendingConditionChange
   );
@@ -43,14 +34,14 @@ export function CanvasRelationalTreeInlineEditor(
   const selectedSet = selected?.case === 'set';
   return (
     <>
-      {!selectedJoin && appendInput == null && expanded ? (
+      {!selectedJoin && appendInput == null && props.expanded ? (
         <CanvasRelationalTreeSelectedOperatorEditor
           draft={joinDraft}
           operation={operation}
           relationId={selectedRelationId}
-          transformNode={transformNode}
-          onChange={onChangeJoinDraft}
-          onClose={onClose}
+          transformNode={props.transformNode}
+          onChange={props.onChangeJoinDraft}
+          onClose={props.onClose}
           onPendingConditionChange={setSelectionPending}
         />
       ) : null}
@@ -59,16 +50,17 @@ export function CanvasRelationalTreeInlineEditor(
         relationId={selectedRelationId}
         hasExpression={selectedJoin != null && appendInput == null}
         hidden={
-          appendInput == null && ((!selectedJoin && !selectedCross && !selectedSet) || !expanded)
+          appendInput == null &&
+          ((!selectedJoin && !selectedCross && !selectedSet) || !props.expanded)
         }
-        onClose={onClose}
+        onClose={props.onClose}
         output={
           selectedRelationId == null || appendInput != null ? null : (
             <CanvasRelationOutputs
               key={selectedRelationId}
               relationId={selectedRelationId}
               disabled={false}
-              onChange={onChangeJoinDraft}
+              onChange={props.onChangeJoinDraft}
               onPendingChange={setOutputsPending}
             />
           )

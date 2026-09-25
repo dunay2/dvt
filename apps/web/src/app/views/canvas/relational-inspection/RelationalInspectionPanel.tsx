@@ -9,7 +9,6 @@ import { CanvasRelationFields } from '../CanvasRelationFields';
 import { CanvasRelationOutputs } from '../CanvasRelationOutputs';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { JoinConditionSummary } from './JoinConditionSummary';
-import { CanvasDerivedOutputSection } from '../CanvasDerivedOutputSection';
 
 type InspectionContentProps = Readonly<{
   inspection: RelationalInspection;
@@ -86,11 +85,6 @@ export function RelationalInspectionPanel({
       output={output}
     >
       <InspectionContent inspection={inspection} {...content} />
-      {inspection.relationId != null &&
-      inspection.kind !== 'unsupported' &&
-      onOutputChange != null ? (
-        <CanvasDerivedOutputSection relationId={inspection.relationId} onChange={onOutputChange} />
-      ) : null}
     </CanvasRelationalTreeEditorFrame>
   );
 }

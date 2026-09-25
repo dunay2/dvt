@@ -5,6 +5,7 @@ import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationa
 import { CanvasModelOutputInspector } from './CanvasModelOutputInspector';
 import { RelationalInspectionPanel } from './relational-inspection/RelationalInspectionPanel';
 import { resolveRelationalInspection } from './relational-inspection/inspectionModel';
+import { CanvasTransformInspector } from './CanvasTransformInspector';
 
 export type CanvasModelOutputInspectorState = Readonly<{
   open: boolean;
@@ -41,6 +42,16 @@ export function CanvasRelationalTreeSideInspector({
       />
     );
   if (!expanded) return null;
+  if (model.selectedNode?.operator === 'project' && model.selectedNode.relationId != null)
+    return (
+      <CanvasTransformInspector
+        key={model.selectedNode.relationId}
+        relationId={model.selectedNode.relationId}
+        transformNode={transformNode}
+        onChange={model.authoringAvailable ? model.session.applyOutputOrder : undefined}
+        onClose={() => onExpandedChange(false)}
+      />
+    );
   return (
     <RelationalInspectionPanel
       inspection={resolveRelationalInspection(model.selectedNode)}

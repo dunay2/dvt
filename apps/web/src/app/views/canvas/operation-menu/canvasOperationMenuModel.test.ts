@@ -45,7 +45,14 @@ describe('operation menu read model', () => {
     const items = build().filter(
       (item) => !operations.includes(item.id as CanvasRelationalOperation)
     );
-    expect(items.map(({ id }) => id)).toEqual(['filter', 'aggregate', 'window', 'sort', 'fetch']);
+    expect(items.map(({ id }) => id)).toEqual([
+      'field_transform',
+      'filter',
+      'aggregate',
+      'window',
+      'sort',
+      'fetch',
+    ]);
     expect(items.find(({ id }) => id === 'sort')).toMatchObject({
       group: 'order',
       active: true,

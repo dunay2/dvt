@@ -876,17 +876,9 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.relationalTree.projectOperationLabel',
     fallback: 'PROJECT',
   },
-  relationalTreeExpressionStageLabel: {
-    key: 'canvas.relationalTree.expressionStageLabel',
-    fallback: 'EXPRESSION / DERIVE',
-  },
-  relationalTreeExpressionStageSummaryTemplate: {
-    key: 'canvas.relationalTree.expressionStageSummaryTemplate',
-    fallback: 'Derived: {scalar} · Passthrough: {passthrough}',
-  },
   relationalTreeFieldTransformationStageLabel: {
     key: 'canvas.relationalTree.fieldTransformationStageLabel',
-    fallback: 'FIELD TRANSFORMATION',
+    fallback: 'Transform',
   },
   relationalTreeFieldTransformationStageSummaryTemplate: {
     key: 'canvas.relationalTree.fieldTransformationStageSummaryTemplate',

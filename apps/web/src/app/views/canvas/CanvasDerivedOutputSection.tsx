@@ -23,11 +23,20 @@ export function CanvasDerivedOutputSection({
   const command = useRelationCommand(relationId, onChange);
   const [open, setOpen] = useState(false);
   if (model == null || model.fields.length === 0) return null;
+  const initialField = model.fields.find(
+    (field) =>
+      resolveDvtSubstraitColumnFunctions({
+        dataTypes: [field.dataType],
+        provider: model.provider,
+        resolution: 'proposal',
+      }).length > 0
+  );
   return (
     <section className="mt-4 border-t border-(--border-subtle) pt-3">
-      {open ? (
+      {open && initialField != null ? (
         <DerivedOutputForm
           fields={model.fields}
+          initialOperandFieldIds={[initialField.fieldId]}
           dataSlot="canvas-derived-output-form"
           copy={copy.derivedOutput}
           unavailableAliases={model.fields.map((field) => field.name)}
@@ -62,6 +71,7 @@ export function CanvasDerivedOutputSection({
         <button
           type="button"
           data-slot="canvas-derived-output-trigger"
+          disabled={initialField == null}
           onClick={() => setOpen(true)}
           className="flex items-center gap-1 rounded px-2 py-1.5 text-xs text-(--status-info) hover:bg-(--surface-selected)"
         >
