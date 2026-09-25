@@ -18,8 +18,8 @@ export function useCanvasRelationalTreeApplyCommand(args: {
   reset: () => void;
   transformNode: CanonicalNode;
 }) {
-  return (): CanvasRelationalTreeApplyResult => {
-    const { authoring, editable, joinDraft, operation, reject, reset, transformNode } = args;
+  return (joinDraft = args.joinDraft): CanvasRelationalTreeApplyResult => {
+    const { authoring, editable, operation, reject, reset, transformNode } = args;
     if (!editable || operation == null || joinDraft == null || authoring == null) {
       const rejection = { outcome: 'rejected', reason: 'command_unavailable' } as const;
       reject(rejection);

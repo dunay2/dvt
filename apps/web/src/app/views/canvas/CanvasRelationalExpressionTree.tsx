@@ -16,12 +16,14 @@ export function CanvasRelationalExpressionTree({
   relationId,
   onSelectCondition,
   operation = 'inner_join',
+  showSummary = false,
 }: Readonly<{
   transformNode: CanonicalNode;
   draft?: SubstraitDocument;
   relationId: string | null;
   onSelectCondition?: (index: number, operand?: 'left' | 'right') => void;
   operation?: CanvasRelationalOperation;
+  showSummary?: boolean;
 }>): JSX.Element | null {
   const dock = useContext(CanvasOperationExpressionHost);
   const graph = useMemo(() => {
@@ -52,5 +54,11 @@ export function CanvasRelationalExpressionTree({
       }
     />
   );
-  return dock == null ? tree : dock.host == null ? null : createPortal(tree, dock.host);
+  if (dock == null) return tree;
+  return (
+    <>
+      {showSummary ? <CanvasRelationalScalarTree graph={graph} compact /> : null}
+      {dock.host == null ? null : createPortal(tree, dock.host)}
+    </>
+  );
 }

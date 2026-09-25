@@ -9,13 +9,13 @@ import type {
 
 type InspectionPolicy =
   | Readonly<{ kind: 'source' | 'summary' | 'cross' | 'unsupported' }>
-  | Readonly<{ kind: 'expressions'; slot: CanvasRelationalTreeExpressionRef['slot'] }>;
+  | Readonly<{ kind: 'expressions' | 'join'; slot: CanvasRelationalTreeExpressionRef['slot'] }>;
 
 const inspectionPolicies = {
   read: { kind: 'source' },
   project: { kind: 'expressions', slot: 'project-expression' },
   filter: { kind: 'expressions', slot: 'filter-condition' },
-  join: { kind: 'expressions', slot: 'join-condition' },
+  join: { kind: 'join', slot: 'join-condition' },
   cross: { kind: 'cross' },
   set: { kind: 'summary' },
   aggregate: { kind: 'expressions', slot: 'aggregate-expression' },
@@ -33,7 +33,7 @@ export type RelationalInspection = InspectionIdentity &
   (
     | Readonly<{ kind: 'source'; label: string | undefined }>
     | Readonly<{ kind: 'summary'; text: string }>
-    | Readonly<{ kind: 'expressions'; relationId: string }>
+    | Readonly<{ kind: 'expressions' | 'join'; relationId: string }>
     | Readonly<{ kind: 'cross' | 'unsupported' }>
   );
 
@@ -52,8 +52,9 @@ export function resolveRelationalInspection(
     case 'unsupported':
       return { ...identity, kind: policy.kind };
     case 'expressions':
+    case 'join':
       if (node.relationId != null && node.expressionRefs.some((ref) => ref.slot === policy.slot))
-        return { ...identity, kind: 'expressions', relationId: node.relationId };
+        return { ...identity, kind: policy.kind, relationId: node.relationId };
       return { ...identity, kind: 'summary', text: node.displayName ?? '' };
     case 'summary':
       return { ...identity, kind: 'summary', text: node.displayName ?? '' };

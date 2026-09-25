@@ -22,6 +22,13 @@ describe('production authoring in the local lab', () => {
           .click();
       });
     await selectJoin();
+    expect(
+      container.querySelector('[data-slot="canvas-relational-tree-inline-editor"] input')
+    ).toBeNull();
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')!.click()
+    );
+    await act(async () => fireEvent.click(getByLabelText(container, 'Editar condición')));
     await act(async () =>
       fireEvent.change(getByLabelText(container, 'Comparador de la condición'), {
         target: { value: 'not_equal' },
@@ -36,6 +43,10 @@ describe('production authoring in the local lab', () => {
     expect(container.querySelector('[role="alert"]')).toBeNull();
     expect(container.querySelector('[data-slot="canvas-relational-tree-apply"]')).toBeNull();
     await selectJoin();
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')!.click()
+    );
+    await act(async () => fireEvent.click(getByLabelText(container, 'Editar condición')));
     expect(
       (getByLabelText(container, 'Comparador de la condición') as HTMLSelectElement).value
     ).toBe('not_equal');

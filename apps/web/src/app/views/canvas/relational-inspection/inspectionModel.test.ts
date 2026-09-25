@@ -10,7 +10,7 @@ import { resolveRelationalInspection } from './inspectionModel';
 
 type Case = readonly [
   CanvasRelationalTreeOperator,
-  'source' | 'cross' | 'summary' | 'expressions' | 'unsupported',
+  'source' | 'cross' | 'summary' | 'expressions' | 'join' | 'unsupported',
   CanvasRelationalTreeExpressionRef['slot']?,
 ];
 const operations = {
@@ -22,14 +22,14 @@ const operations = {
   sort: ['sort', 'summary', 'sort-key'],
   fetch: ['fetch', 'summary'],
   cross_join: ['cross', 'cross'],
-  inner_join: ['join', 'expressions', 'join-condition'],
-  left_join: ['join', 'expressions', 'join-condition'],
-  right_join: ['join', 'expressions', 'join-condition'],
-  full_outer_join: ['join', 'expressions', 'join-condition'],
-  left_semi_join: ['join', 'expressions', 'join-condition'],
-  left_anti_join: ['join', 'expressions', 'join-condition'],
-  right_semi_join: ['join', 'expressions', 'join-condition'],
-  right_anti_join: ['join', 'expressions', 'join-condition'],
+  inner_join: ['join', 'join', 'join-condition'],
+  left_join: ['join', 'join', 'join-condition'],
+  right_join: ['join', 'join', 'join-condition'],
+  full_outer_join: ['join', 'join', 'join-condition'],
+  left_semi_join: ['join', 'join', 'join-condition'],
+  left_anti_join: ['join', 'join', 'join-condition'],
+  right_semi_join: ['join', 'join', 'join-condition'],
+  right_anti_join: ['join', 'join', 'join-condition'],
   union_all: ['set', 'summary'],
   union_distinct: ['set', 'summary'],
   intersect_distinct: ['set', 'summary'],

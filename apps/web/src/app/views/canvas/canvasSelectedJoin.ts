@@ -5,6 +5,8 @@ import { inspectJoinConditionChain } from './canvasDvtSubstraitJoinConditionInsp
 import { mapDvtSubstraitJoinConditionOperands } from './canvasDvtSubstraitJoinCondition';
 import { mapDvtSubstraitJoinOperandFields } from './canvasDvtSubstraitJoinOperand';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { createCanvasFieldAliasLabels } from './canvasFieldAliasLabels';
+import type { DvtSubstraitFieldBindingV1 } from '@dvt/contracts';
 
 export type JoinConditionField = Readonly<{
   fieldId: string;
@@ -26,7 +28,7 @@ export function conditionDataType(kind: string | undefined): DvtSubstraitJoinDat
 
 export function joinConditionFields(
   inputs: readonly Pick<RelationAnalysisResult, 'bindings' | 'fields'>[],
-  labels: readonly string[]
+  label: (field: DvtSubstraitFieldBindingV1, inputIndex: number) => string
 ): readonly JoinConditionField[] {
   let offset = 0;
   return inputs.flatMap((input, inputIndex) => {
@@ -38,7 +40,7 @@ export function joinConditionFields(
         : [
             {
               fieldId: field.fieldId,
-              label: `${labels[inputIndex]}.${field.displayName}`,
+              label: label(field, inputIndex),
               dataType,
               inputIndex,
               ordinal: offset + field.outputOrdinal,
@@ -68,11 +70,21 @@ export async function querySelectedJoin(
   );
   session.locate(relationId, expectedRevision);
   signal?.throwIfAborted();
-  const labels = inputs.map(
-    (input, port) =>
-      `${session.locate(input.relationId, expectedRevision).binding.displayName} · ${port + 1}`
+  const locations = new Map([[relationId, target]]);
+  const locate = (id: string) => {
+    if (!locations.has(id)) locations.set(id, session.locate(id, expectedRevision));
+    return locations.get(id)!;
+  };
+  const label = createCanvasFieldAliasLabels(
+    (field) =>
+      field.sourceFieldId == null
+        ? undefined
+        : locate(field.relationId)
+            .inputs.flatMap((id) => locate(id).fields)
+            .find((source) => source.fieldId === field.sourceFieldId),
+    (id) => locate(id).binding.displayName
   );
-  const fields = joinConditionFields(inputs, labels);
+  const fields = joinConditionFields(inputs, label);
   const byOrdinal = new Map(fields.map((field) => [field.ordinal, field]));
   const inspected = inspectJoinConditionChain(
     target.plan,

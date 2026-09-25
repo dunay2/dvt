@@ -87,7 +87,7 @@ describe('Composition start proposal', () => {
     expect(
       view.container.querySelector('[data-slot="semantic-workbench-join-condition-row"]')
         ?.textContent
-    ).toContain('orders · 1.customer_id = customers · 2.customer_id');
+    ).toContain('orders.customer_id = customers.customer_id');
 
     await act(async () => {
       fireEvent.click(

@@ -35,6 +35,7 @@ export function CanvasRelationalTreeBlockCanvas({
   onPendingConditionChange,
   selectedRelationId,
   onSelectRelation,
+  onReconcileSelection,
   onRemove,
 }: Readonly<{
   appendInput: CanvasDvtCompositionInput | null;
@@ -60,6 +61,7 @@ export function CanvasRelationalTreeBlockCanvas({
   onPendingConditionChange?: (pending: boolean) => void;
   selectedRelationId: string | null;
   onSelectRelation: (relationId: string | null) => void;
+  onReconcileSelection: (relationId: string | null) => void;
   onRemove: (relationId: string, keep?: 'left' | 'right') => void;
 }>): JSX.Element {
   const [expanded, setExpanded] = useState(initiallyExpanded);
@@ -98,6 +100,7 @@ export function CanvasRelationalTreeBlockCanvas({
           onSelectOperation={onSelectOperation}
           selectedRelationId={selectedRelationId}
           onSelectRelation={onSelectRelation}
+          onReconcileSelection={onReconcileSelection}
           onRemove={onRemove}
           onExpandRelation={(relationId) => {
             onSelectRelation(relationId);

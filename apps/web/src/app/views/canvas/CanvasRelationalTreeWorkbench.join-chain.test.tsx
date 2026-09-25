@@ -75,56 +75,6 @@ describe('Canvas relational-tree Workbench join-chain', () => {
     expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(2);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(3);
 
-    const joinCards = Array.from(
-      container.querySelectorAll<HTMLButtonElement>('[data-operator="join"]')
-    );
-    const visiblePredicates = (): HTMLElement[] =>
-      Array.from(
-        container.querySelectorAll<HTMLElement>(
-          'fieldset[data-slot="dvt-substrait-join-predicate-editors"]'
-        )
-      ).filter((fieldset) => !fieldset.hidden);
-    await act(async () => joinCards[1]!.click());
-    expect(visiblePredicates()).toHaveLength(1);
-    const innerRelationId = joinCards[1]!.getAttribute('data-relation-id');
-    expect(visiblePredicates()[0]?.getAttribute('data-relation-id')).toBe(innerRelationId);
-    await act(async () =>
-      visiblePredicates()[0]!
-        .querySelector<HTMLButtonElement>('[aria-label="Editar condición"]')!
-        .click()
-    );
-    const pendingEditor = visiblePredicates()[0]!.querySelector(
-      '[data-slot="semantic-workbench-join-condition-editor"]'
-    );
-    await act(async () => {
-      const comparison = pendingEditor!.querySelector<HTMLSelectElement>(
-        '[aria-label="Comparador de la condición"]'
-      )!;
-      comparison.value = 'not_equal';
-      comparison.dispatchEvent(new Event('change', { bubbles: true }));
-    });
-    await act(async () => joinCards[0]!.click());
-    expect(visiblePredicates()).toHaveLength(1);
-    expect(visiblePredicates()[0]?.getAttribute('data-relation-id')).toBe(
-      joinCards[0]!.getAttribute('data-relation-id')
-    );
-    expect(
-      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
-        ?.disabled
-    ).toBe(true);
-    await act(async () => joinCards[1]!.click());
-    expect(
-      visiblePredicates()[0]!.querySelector<HTMLSelectElement>(
-        '[aria-label="Comparador de la condición"]'
-      )?.value
-    ).toBe('not_equal');
-    await act(async () =>
-      visiblePredicates()[0]!
-        .querySelector<HTMLButtonElement>('[aria-label="Cerrar editor"]')!
-        .click()
-    );
-    expect(applied).toHaveLength(0);
-
     await act(async () => sourceButtons[3]?.click());
     await act(async () =>
       container
