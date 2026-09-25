@@ -1,3 +1,5 @@
+import { rowNumberFunction } from './canvasMeasureFunctions';
+import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 /** A window output is a ProjectRel over the selected input, not a JOIN-specific stage. */
 import { clone, create } from '@bufbuild/protobuf';
 import { RelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
@@ -6,8 +8,6 @@ import { allocateDvtFieldId, DvtSemanticFieldNameV1Schema } from '@dvt/contracts
 import { cloneLocalRelation, SubstraitAnalysisError } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { buildDvtSubstraitCalculatedExpression } from './canvasDvtSubstraitCalculatedExpression';
-import { isDvtSubstraitRowNumberFunction } from './canvasDvtSubstraitWindow';
-import { createDvtSubstraitFieldReference } from './canvasDvtSubstraitAggregation';
 import {
   prepareSelectedRelationUnary,
   commitSelectedRelationUnary,
@@ -17,7 +17,8 @@ import { relationOutputMapping } from './canvasRelationOutputBindings';
 
 export async function applySelectedRelationWindow(
   session: CanvasRelationAnalysisSession,
-  request: SelectedUnaryRequest & Readonly<{ fieldId: string; alias: string }>
+  request: SelectedUnaryRequest &
+    Readonly<{ fieldId: string; alias: string; partitionFieldIds?: readonly string[] }>
 ) {
   const prepared = await prepareSelectedRelationUnary(session, request, 'project');
   const { target, input, schema, binding } = prepared;
@@ -57,7 +58,7 @@ export async function applySelectedRelationWindow(
   if (
     project.expressions.length !== 1 ||
     window?.case !== 'windowFunction' ||
-    !isDvtSubstraitRowNumberFunction(plan, window.value)
+    !rowNumberFunction.matches(plan, window.value)
   )
     throw new SubstraitAnalysisError(
       'unsupported_relation',
@@ -70,7 +71,27 @@ export async function applySelectedRelationWindow(
       'This window needs a multi-key editor.',
       request.relationId
     );
-  window.value.sorts[0]!.expr = createDvtSubstraitFieldReference(order.outputOrdinal);
+  window.value.sorts[0]!.expr = dvtSubstraitExpression.field(order.outputOrdinal);
+  if (request.partitionFieldIds != null) {
+    if (new Set(request.partitionFieldIds).size !== request.partitionFieldIds.length)
+      throw new SubstraitAnalysisError(
+        'invalid_binding',
+        'Window partition fields must be unique.',
+        request.relationId
+      );
+    window.value.partitions = request.partitionFieldIds.map((fieldId) => {
+      const field = schema.bindings.find(
+        (candidate) => candidate.fieldId === fieldId && candidate.parentFieldId == null
+      );
+      if (field == null)
+        throw new SubstraitAnalysisError(
+          'invalid_binding',
+          'Window partition field is not in the input.',
+          request.relationId
+        );
+      return dvtSubstraitExpression.field(field.outputOrdinal);
+    });
+  }
   const mapping = relationOutputMapping(relation, schema.fields.length + 1);
   const fields =
     request.intent === 'edit'

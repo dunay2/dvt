@@ -1,3 +1,5 @@
+import { countFunction } from './canvasMeasureFunctions';
+import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 /** COUNT grouping is a local AggregateRel edit, independent of the operand's relation kind. */
 import { clone, create } from '@bufbuild/protobuf';
 import {
@@ -9,12 +11,6 @@ import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_
 import { allocateDvtFieldId, DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
 import { cloneLocalRelation, SubstraitAnalysisError } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
-import {
-  createDvtSubstraitFieldReference,
-  createDvtSubstraitRequiredI64Type,
-  ensureDvtSubstraitCountFunction,
-  isDvtSubstraitCountFunction,
-} from './canvasDvtSubstraitAggregation';
 import {
   prepareSelectedRelationUnary,
   commitSelectedRelationUnary,
@@ -41,7 +37,7 @@ export async function applySelectedRelationAggregate(
       request.relationId
     );
   const plan = clone(PlanSchema, { ...target.plan, relations: [] });
-  const functionReference = ensureDvtSubstraitCountFunction(plan);
+  const functionReference = countFunction.ensure(plan);
   const relation =
     request.intent === 'edit'
       ? cloneLocalRelation(target.relation, [input.relation])
@@ -51,7 +47,7 @@ export async function applySelectedRelationAggregate(
             value: {
               common: { relAnchor: binding.relAnchor },
               input: input.relation,
-              groupingExpressions: [createDvtSubstraitFieldReference(group.outputOrdinal)],
+              groupingExpressions: [dvtSubstraitExpression.field(group.outputOrdinal)],
               groupings: [{ expressionReferences: [0] }],
               measures: [
                 {
@@ -59,7 +55,7 @@ export async function applySelectedRelationAggregate(
                     functionReference,
                     phase: AggregationPhase.INITIAL_TO_RESULT,
                     invocation: AggregateFunction_AggregationInvocation.ALL,
-                    outputType: createDvtSubstraitRequiredI64Type(),
+                    outputType: countFunction.resultType(),
                   },
                 },
               ],
@@ -72,14 +68,14 @@ export async function applySelectedRelationAggregate(
   if (
     aggregate.groupingExpressions.length !== 1 ||
     aggregate.measures.length !== 1 ||
-    !isDvtSubstraitCountFunction(plan, aggregate)
+    !countFunction.matches(plan, aggregate)
   )
     throw new SubstraitAnalysisError(
       'unsupported_relation',
       'This grouping is not editable by the COUNT form.',
       request.relationId
     );
-  aggregate.groupingExpressions = [createDvtSubstraitFieldReference(group.outputOrdinal)];
+  aggregate.groupingExpressions = [dvtSubstraitExpression.field(group.outputOrdinal)];
   const natural = [
     ...retainCompositionOutputs(
       createRelationPassthroughFields(binding.relationId, schema.bindings),

@@ -8,7 +8,7 @@ import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetch';
 import { createCustomerOrdersJoin } from './canvasJoin.test-support';
 import { createSourceSet } from './canvasSourceSet';
-import { createDvtSubstraitPilotDraft } from './canvasDvtSubstraitPilot';
+import { projectionScenario } from './canvasProjectionScenario.test-support';
 import { source } from './canvasRelationalOperator.test-support';
 import { transformNode } from './CanvasRelationalTreeWorkbench.test-support';
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
@@ -31,7 +31,7 @@ const joinTypes = [
 const scenarios = [
   {
     operation: 'projection' as const,
-    create: () => createDvtSubstraitPilotDraft({ sourceNodeId: 'records', targetNodeId: 'model' }),
+    create: () => projectionScenario({ sourceNodeId: 'records', targetNodeId: 'model' }),
   },
   ...joinTypes.map((joinType) => ({
     operation: canvasJoinOperationForType(joinType)!,

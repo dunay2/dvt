@@ -6,7 +6,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createDvtSubstraitPilotDraft } from './canvasDvtSubstraitPilot';
+import { projectionScenario } from './canvasProjectionScenario.test-support';
 import { inspectCanvasDvtSubstraitSortFetch } from './canvasSortFetch.test-support';
 import { RelationAnalysisTestHost, SelectedUnaryTestForm } from './SelectedUnaryForm.test-support';
 import { resolveDvtSubstraitSortFetchInputFields } from './canvasSortFetch.test-support';
@@ -38,7 +38,7 @@ describe('CanvasRelationalTreeOperatorForm Sort/Fetch editing', () => {
   });
 
   it('submits exact i64 LIMIT/OFFSET values without converting through number', async () => {
-    const draft = createDvtSubstraitPilotDraft({
+    const draft = projectionScenario({
       sourceNodeId: 'orders',
       targetNodeId: 'model',
     });
@@ -75,7 +75,7 @@ describe('CanvasRelationalTreeOperatorForm Sort/Fetch editing', () => {
   it.each(['1.5', '-1', '9223372036854775808', 'invalid'])(
     'rejects invalid LIMIT %s without closing or changing the canonical draft',
     async (invalid) => {
-      const draft = createDvtSubstraitPilotDraft({
+      const draft = projectionScenario({
         sourceNodeId: 'orders',
         targetNodeId: 'model',
       });
@@ -106,7 +106,7 @@ describe('CanvasRelationalTreeOperatorForm Sort/Fetch editing', () => {
   );
 
   it('retains unsaved input across parent renders and cancels without mutation', async () => {
-    const draft = createDvtSubstraitPilotDraft({ sourceNodeId: 'orders', targetNodeId: 'model' });
+    const draft = projectionScenario({ sourceNodeId: 'orders', targetNodeId: 'model' });
     const before = JSON.stringify(draft);
     const onChange = vi.fn();
     const onClose = vi.fn();
@@ -125,7 +125,7 @@ describe('CanvasRelationalTreeOperatorForm Sort/Fetch editing', () => {
   });
 
   it('submits ordered multi-key sorting and rejects duplicate keys before recovery', async () => {
-    const draft = createDvtSubstraitPilotDraft({ sourceNodeId: 'orders', targetNodeId: 'model' });
+    const draft = projectionScenario({ sourceNodeId: 'orders', targetNodeId: 'model' });
     const before = JSON.stringify(draft);
     const fields = resolveDvtSubstraitSortFetchInputFields(draft);
     expect(fields.length).toBeGreaterThan(1);

@@ -1,24 +1,18 @@
+import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 /** Project unary controls from typed Substrait input facts, never from a SQL profile reader. */
 import type { Expression } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1 } from '@dvt/contracts';
 import type { DvtSubstraitSortDirection } from '@dvt/postgres-projection';
 import type { SelectedRelationInput } from './useSelectedRelationInput';
-import type { CanvasRelationalOperatorTool } from './canvasRelationalTreeOperatorModel';
+import type { CanvasRelationalOperatorTool } from './relational-operator-form/OperatorTool';
 import { dvtSubstraitTextComparison } from './canvasDvtSubstraitTextComparison';
 import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
-import { readDvtSubstraitFieldReferenceOrdinal } from './canvasDvtSubstraitAggregation';
 import { selectedSortDirections } from './canvasSelectedRelationSortFetch';
-
-function inputFields(input: SelectedRelationInput) {
-  return input.schema.bindings
-    .filter((field) => field.parentFieldId == null)
-    .map((field) => ({
-      fieldId: field.fieldId,
-      name: field.displayName ?? field.fieldId,
-      dataType: input.schema.fields[field.outputOrdinal]?.type.kind.case,
-      ordinal: field.outputOrdinal,
-    }));
-}
+import {
+  selectedInputFields as inputFields,
+  aggregateTool,
+  windowTool,
+} from './canvasSelectedMeasureTools';
 
 function filterTool(input: SelectedRelationInput): CanvasRelationalOperatorTool {
   const fields = inputFields(input).filter((field) => field.dataType === 'string');
@@ -50,7 +44,7 @@ function sortTool(input: SelectedRelationInput): CanvasRelationalOperatorTool {
     input.intent === 'edit' && sort.case === 'sort'
       ? sort.value.sorts.map((key) => {
           const field = fields.find(
-            (item) => item.ordinal === readDvtSubstraitFieldReferenceOrdinal(key.expr)
+            (item) => item.ordinal === dvtSubstraitExpression.fieldOrdinal(key.expr)
           );
           return field == null ||
             key.sortKind.case !== 'direction' ||
@@ -103,7 +97,13 @@ function fetchTool(input: SelectedRelationInput): CanvasRelationalOperatorTool {
   };
 }
 
-export const selectedUnaryTools = { filter: filterTool, sort: sortTool, fetch: fetchTool };
+export const selectedUnaryTools = {
+  filter: filterTool,
+  sort: sortTool,
+  fetch: fetchTool,
+  aggregate: aggregateTool,
+  window: windowTool,
+};
 
 export function projectSelectedRelationTool(
   input: SelectedRelationInput | null,
@@ -111,11 +111,18 @@ export function projectSelectedRelationTool(
 ): CanvasRelationalOperatorTool | null {
   if (
     input == null ||
-    (input.intent === 'edit' && input.target.relation.relType.case !== operation)
+    (input.intent === 'edit' &&
+      input.target.relation.relType.case !== (operation === 'window' ? 'project' : operation))
   )
     return null;
   const tool = selectedUnaryTools[operation](input);
-  const message = { filter: 'FilterRel', sort: 'SortRel', fetch: 'FetchRel' }[operation];
+  const message = {
+    filter: 'FilterRel',
+    sort: 'SortRel',
+    fetch: 'FetchRel',
+    aggregate: 'AggregateRel',
+    window: 'ProjectRel',
+  }[operation];
   const admitted = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.some(
     (entry) =>
       entry.profileStatus === 'supported-profile' && entry.entryId.endsWith(`/substrait.${message}`)
