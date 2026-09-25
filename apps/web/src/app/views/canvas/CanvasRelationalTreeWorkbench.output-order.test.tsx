@@ -108,6 +108,23 @@ describe('direct output ordering', () => {
       );
       expect(saved.output.bindings.map((field) => field.fieldId)).toEqual(ids());
       session.dispose();
+      await act(async () =>
+        container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')!.click()
+      );
+      await act(async () => {
+        const type = container.querySelector<HTMLSelectElement>(
+          '[data-slot="canvas-relational-tree-join-type"]'
+        )!;
+        type.value = '1';
+        type.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      await act(async () =>
+        container
+          .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')!
+          .click()
+      );
+      expect(handle.current!.hasUnappliedChanges).toBe(false);
+      expect(ids()).toEqual([before[1], before[0], ...before.slice(2)]);
     }
   );
 

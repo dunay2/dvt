@@ -147,7 +147,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     baselineDraft,
     seed,
     appendInput: inputs.find((input) => input.nodeId === appendInputId) ?? null,
-    apply,
+    apply: () => apply(),
     applyOutputOrder: (document: SubstraitDocument) => apply(document).outcome !== 'rejected',
     appendJoinInput: composition.appendJoinInput,
     commandState: composition.commandState,
