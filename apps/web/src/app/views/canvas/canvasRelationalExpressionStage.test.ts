@@ -9,7 +9,10 @@ import {
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
-import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
+import {
+  projectCanvasRelationalTree,
+  type CanvasRelationalTreeProjection,
+} from './canvasRelationalTreeProjection';
 import { projectCanvasRelationalTreeSemanticZoom } from './canvasRelationalTreeSemanticZoom';
 
 const source: CanonicalNode = {
@@ -86,7 +89,9 @@ function transform(draft: DvtSubstraitProjectionDraft): CanonicalNode {
   );
 }
 
-function project(draft: DvtSubstraitProjectionDraft) {
+function project(
+  draft: DvtSubstraitProjectionDraft
+): Readonly<{ node: CanonicalNode; projection: CanvasRelationalTreeProjection }> {
   const node = transform(draft);
   const result = projectCanvasRelationalTree({
     node,
