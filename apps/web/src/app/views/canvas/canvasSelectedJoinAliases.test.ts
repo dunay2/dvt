@@ -6,6 +6,24 @@ import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetc
 import { repeatedOccurrenceDraft } from './relational-source-occurrence/occurrence.test.fixtures';
 import { renameSourceOccurrence } from './relational-source-occurrence/renameSourceOccurrence';
 import { createCanvasSemanticFieldNames } from './canvasSemanticFieldNames';
+import { buildDvtSubstraitSemanticDocumentFixture } from '../../../../../../packages/@dvt/contracts/test/fixtures/dvtSubstraitSemanticDocument';
+import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+
+it('uses canonical Read names when optional field aliases are absent', () => {
+  const document = decodeDvtSubstraitSemanticDocument(buildDvtSubstraitSemanticDocumentFixture());
+  const root = document.plan.relations[0]!.relType;
+  const project = root.case === 'root' ? root.value.input?.relType : undefined;
+  const read = project?.case === 'project' ? project.value.input : undefined;
+  if (read?.relType.case !== 'read') throw new Error('Expected fixture Read');
+  const names = createCanvasSemanticFieldNames(document);
+  const schemaNames = read.relType.value.baseSchema!.names;
+  expect(names(read)).toEqual(schemaNames);
+  const anchor = read.relType.value.common!.relAnchor;
+  const alias = document.sidecar.relations.find(
+    (binding) => binding.relAnchor === anchor
+  )!.displayName;
+  expect(names(read, true)).toEqual(schemaNames.map((name) => `${alias}.${name}`));
+});
 
 it.each([0, 1])(
   'preserves occurrence aliases through a transformation on port %s',

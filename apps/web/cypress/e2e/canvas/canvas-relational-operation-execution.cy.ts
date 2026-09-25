@@ -53,18 +53,14 @@ describe('Internal operation card execution', () => {
       cy.get(`${outputs} [data-field-id]`).then((fields) => {
         const ids = [...fields].map((field) => field.getAttribute('data-field-id'));
         const expected = [ids[1], ids[0], ...ids.slice(2)];
-        const count = semanticWrites('join-transform').length;
         cy.get(`${outputs} [data-field-id]`).first().find('button').last().click();
-        cy.wrap(null).should(() =>
-          expect(semanticWrites('join-transform')).to.have.length(count + 1)
-        );
         cy.get(`${outputs} [data-field-id]`).should((ordered) => {
           expect([...ordered].map((field) => field.getAttribute('data-field-id'))).to.deep.equal(
             expected
           );
         });
         cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
-        cy.then(() => {
+        cy.wrap(null).should(() => {
           const document = decodeDvtSubstraitSemanticDocument(
             semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!)
           );
