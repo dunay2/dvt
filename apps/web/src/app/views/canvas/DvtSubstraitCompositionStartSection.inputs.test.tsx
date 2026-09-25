@@ -89,7 +89,7 @@ describe('Composition start inputs', () => {
       'shipments',
     ]);
 
-    await await act(async () => fireEvent.change(left, { target: { value: 'customers' } }));
+    await act(async () => fireEvent.change(left, { target: { value: 'customers' } }));
     expect(right.disabled).toBe(false);
     expect(right.value).toBe('');
     expect(Array.from(right.options).map((option) => option.value)).toEqual([
@@ -98,7 +98,7 @@ describe('Composition start inputs', () => {
       'customers',
       'shipments',
     ]);
-    await await act(async () => fireEvent.change(right, { target: { value: 'shipments' } }));
+    await act(async () => fireEvent.change(right, { target: { value: 'shipments' } }));
 
     expect(
       view.container.querySelector('[data-slot="semantic-workbench-join-condition-row"]')
@@ -106,7 +106,7 @@ describe('Composition start inputs', () => {
     ).toContain('customers · 1.id = shipments · 2.id');
     expect(apply.disabled).toBe(false);
 
-    await await act(async () => fireEvent.click(apply));
+    await act(async () => fireEvent.click(apply));
     expect(onStartInnerJoin).toHaveBeenCalledOnce();
     const inspection = inspectDvtSubstraitJoinDraft(
       onStartInnerJoin.mock.calls[0]?.[0] as SubstraitDocument
