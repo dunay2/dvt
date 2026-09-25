@@ -50,6 +50,10 @@ export type CanvasRelationalTreeNode = Readonly<{
   sourceRef: ConnectedSourceRef | null;
   output: Readonly<{ fields: readonly CanvasRelationalTreeField[] }>;
   expressionRefs: readonly CanvasRelationalTreeExpressionRef[];
+  projectionSummary?: Readonly<{
+    derivedFieldCount: number;
+    passthroughFieldCount: number;
+  }>;
   decorations: readonly Readonly<{ kind: 'window'; count: number }>[];
   children: readonly Readonly<{
     role: CanvasRelationalTreeChildRole;
