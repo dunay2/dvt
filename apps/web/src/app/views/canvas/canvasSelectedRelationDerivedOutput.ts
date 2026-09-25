@@ -155,6 +155,7 @@ export async function applySelectedRelationDerivedOutput(
       rootFields(prepared.schema.bindings).length + project.expressions.length - 1
     );
   }
+  const dependencies = [...new Set(request.operandFieldIds)];
   const fields = [
     ...prepared.fields,
     {
@@ -162,9 +163,9 @@ export async function applySelectedRelationDerivedOutput(
       relationId: prepared.binding.relationId,
       outputOrdinal: available.fields.length,
       displayName: alias,
-      ...(request.operandFieldIds.length === 1
-        ? { sourceFieldId: request.operandFieldIds[0] }
-        : { operandFieldIds: [...request.operandFieldIds] }),
+      ...(dependencies.length === 1
+        ? { sourceFieldId: dependencies[0] }
+        : { operandFieldIds: dependencies }),
     },
   ];
   return commitSelectedRelationUnary(session, { ...prepared, fields }, relation, plan);

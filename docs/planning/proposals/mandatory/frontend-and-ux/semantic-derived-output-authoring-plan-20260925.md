@@ -64,6 +64,37 @@ flowchart LR
 
 ## Delivery Cuts
 
+### Transform card interaction
+
+The Semantic Editor exposes **Transform** in Add operation. It inserts an
+identity `ProjectRel` after the selected dataset, reconnects its consumers and
+selects the new card. Its initial output is the full input dataset; this is a
+valid passthrough transformation, not a placeholder.
+
+```mermaid
+flowchart LR
+  Dataset[Selected dataset] --> Add[Add operation: Transform]
+  Add --> Project[ProjectRel: passthrough fields]
+  Project --> Inspector[Fixed right Transform inspector]
+  Inspector --> Fields[Add derived fields using admitted functions]
+  Fields --> Consumer[JOIN, Filter, Window or another Transform]
+```
+
+Transform owns dataset field derivation. Remove that action from generic
+relation properties. Scalar and Window fields share the Transform card and
+the existing output controls; Window parameters retain their existing editor.
+Inspection remains read-first, and the function form opens only on Add field.
+Insertion, field authoring and output changes use the existing revision-bound
+command and downstream rebinding boundary. Prove insertion on either JOIN
+operand, passthrough preservation, stale rejection and the production Workbench
+interaction without a floating editor.
+
+The focused browser proof saves and reopens Transform through the real Canvas
+UI with the existing stateful draft API transport. This is a frontend
+integration proof, not evidence of live PostgreSQL execution. Function argument
+order and repetitions belong to Substrait expressions; lineage records unique
+field dependencies.
+
 1. Extract and prove one provider-aware scalar-expression builder from the
    current projection implementation.
 2. TDD `applySelectedRelationDerivedOutput` for insertion, edit, stable identity,
@@ -112,6 +143,7 @@ governingSources:
   - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
 allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/**
+  - apps/web/cypress/e2e/canvas/canvas-transform-stage.cy.ts
   - apps/web/src/app/plugins/graph/GraphNodeExpressionComposer.tsx
   - docs/planning/proposals/mandatory/frontend-and-ux/semantic-derived-output-authoring-plan-20260925.md
   - docs/planning/status/**
@@ -143,7 +175,7 @@ fowlerSignals:
 architectureGuards:
   - pnpm docs:feature-mechanization:implementation -- --feature GH-3419-SELECTED-RELATION-DERIVED-OUTPUT
 cypressFlows:
-  - N/A - browser convergence and accessibility belong to GH-3422
+  - apps/web/cypress/e2e/canvas/canvas-transform-stage.cy.ts
 completionGate:
   - pnpm --filter @dvt/web test:canvas
   - pnpm --filter @dvt/web lint
