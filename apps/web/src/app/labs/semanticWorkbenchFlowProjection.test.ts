@@ -20,16 +20,12 @@ describe('semantic flow projection', () => {
     expect(graph.edges.every((edge) => edge.data?.semanticEdgeKind === 'relation')).toBe(true);
     expect(joinNodes.map((node) => node.data.expression)).toEqual(
       expect.arrayContaining([
-        'raw.orders.client_id = raw.client.client_id',
-        'raw.orders.order_id = raw.order_details.order_id',
+        'orders.client_id = client.client_id',
+        'orders.order_id = order_details.order_id',
       ])
     );
-    const firstJoin = joinNodes.find(
-      (node) => node.data.expression === 'raw.orders.client_id = raw.client.client_id'
-    );
-    const secondJoin = joinNodes.find(
-      (node) => node.data.expression === 'raw.orders.order_id = raw.order_details.order_id'
-    );
+    const firstJoin = joinNodes.find((node) => node.id !== graph.relationId);
+    const secondJoin = joinNodes.find((node) => node.id === graph.relationId);
     expect(firstJoin?.position.x).toBeLessThan(secondJoin?.position.x ?? 0);
     expect(
       graph.edges
@@ -55,19 +51,15 @@ describe('semantic flow projection', () => {
     ).toBe(true);
 
     const firstJoin = members.find(
-      (node) =>
-        node.data.semanticKind === 'relation' &&
-        node.data.expression === 'raw.orders.client_id = raw.client.client_id'
+      (node) => node.data.relationKind === 'join' && node.id !== graph.relationId
     );
     const secondJoin = members.find(
-      (node) =>
-        node.data.semanticKind === 'relation' &&
-        node.data.expression === 'raw.orders.order_id = raw.order_details.order_id'
+      (node) => node.data.relationKind === 'join' && node.id === graph.relationId
     );
     const secondEqual = members.find(
       (node) =>
         node.data.semanticKind === 'expression' &&
-        node.data.expression === 'raw.orders.order_id = raw.order_details.order_id'
+        graph.edges.some((edge) => edge.source === node.id && edge.target === secondJoin?.id)
     );
     if (firstJoin == null || secondJoin == null || secondEqual == null) {
       throw new Error('Expected both JOIN stages and the second equality expression.');
