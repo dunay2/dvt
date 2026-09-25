@@ -508,7 +508,7 @@ This review is the canonical UX maturity audit for the 2026-05-27 frontend
 state. It complements, rather than replaces:
 
 - [Canvas Workspace Explorer Fowler Review](./20260527-canvas-workspace-explorer-fowler-review.md)
-- [Docs And Engine Component Reconciliation Fowler Review](./20260527-docs-engine-component-reconciliation-fowler-review.md)
+- [Docs And Engine Component Reconciliation Fowler Review](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/docs/planning/reviews/architecture-and-governance/20260527-docs-engine-component-reconciliation-fowler-review.md)
 - [Web UX Implementation Guide](../../../architecture/components/web/ux-implementation-guide.md)
 - [Screen Layout And Cross-Surface Behavior Rules](../../../architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md)
 

@@ -24,7 +24,6 @@ contract validation, or engine determinism tests.
 
 - [web component](./index.md)
 - [Testing and CI Capabilities](../../../guides/testing-and-ci-capabilities.md)
-- [F-14 Fowler mailbox analysis](../../../../buzon/20260518-f14-fowler-frontend-test-governance-analysis.md)
 - [Web Vitest suite partition plan](../../../planning/proposals/mandatory/frontend-and-ux/web-vitest-suite-partition-plan-20260517.md)
 
 ## Public API

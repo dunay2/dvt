@@ -160,6 +160,7 @@ Evidence documents that justify or validate relevant changes.
 - [Retire S08 Lifecycle Contract Vocabulary](ed-20260515-s08-lifecycle-contract-retirement.md)
 - [RIGHT and FULL OUTER JOIN end to end](ED-20260919-right-full-join-end-to-end.md)
 - [Runtime Root Subdivision Evidence](ed-20260513-runtime-root-subdivision.md)
+- [Scope](ed-20260924-historical-document-test-consumers.md)
 - [Scope and authority](ED-20260914-n-input-join-preview.md)
 - [Semantic Workbench join composition evidence](ED-20260911-semantic-workbench-join-composition.md)
 - [SEMI and ANTI JOIN end to end](ED-20260919-semi-anti-join-end-to-end.md)

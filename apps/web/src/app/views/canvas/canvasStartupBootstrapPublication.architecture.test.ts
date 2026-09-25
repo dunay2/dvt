@@ -18,20 +18,13 @@ import {
 } from './canvasStartupAndDraftRecovery.architecture.support';
 
 describe('canvas startup bootstrap publication architecture', () => {
-  it('documents the Fowler analysis, user stories, and local component guide for the branch semantics', () => {
-    const closeout = readRepoFile(
-      'docs/planning/closeouts/20260429-static-analysis-followup-closeout.md'
-    );
+  it('documents the user stories and current component guide for the branch semantics', () => {
     const componentGuide = readRepoFile(
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
     );
     const userStories = readRepoFile(
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md'
     );
-
-    expect(closeout).toContain('## Think-First Analysis');
-    expect(closeout).toContain('## Validation Evidence');
-    expect(closeout).toContain('Canvas startup');
 
     expect(componentGuide).toContain('## Public API');
     expect(componentGuide).toContain('## Invariants');
@@ -56,33 +49,18 @@ describe('canvas startup bootstrap publication architecture', () => {
   });
 
   it('keeps TF-E2 parent closure aligned with the Canvas runtime architecture canon', () => {
-    const productionPlan = readRepoFile(
-      'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md'
-    );
-    const executionPlan = readRepoFile(
-      'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md'
-    );
     const runtimeModel = readRepoFile(
       'docs/architecture/components/web/graph/graph-canvas-runtime-model.md'
     );
-    const closeout = readRepoFile('docs/planning/closeouts/20260514-tf-e2-parent-closeout.md');
-
-    for (const source of [productionPlan, executionPlan]) {
-      expect(source).toContain('status: Implemented');
-      expect(source).toContain('## 2026-05-14 Parent Closure');
-      expect(source).not.toContain('TF-E2-A must hard-cut');
-      expect(source).not.toContain('next TF-E2 closure work');
-    }
 
     expect(runtimeModel).toContain('TF-E2 parent closure is complete');
     expect(runtimeModel).not.toContain('parent TF-E2 still remains open');
-
-    expect(closeout).toContain('## Outcome');
-    expect(closeout).toContain('## Fowler Architecture Assessment');
-    expect(closeout).toContain('## Drift Removed');
-    expect(closeout).toContain('## Validation');
-    expect(closeout).toContain('IWorkspaceGraphDraftAuthoringPort');
-    expect(closeout).toContain('React Flow is a projection');
+    expect(runtimeModel).toContain(
+      'React Flow state is a projection, never the semantic source of truth'
+    );
+    expect(readAppSource('../../services/workspace/workspaceGraphDraftAuthoring.api.ts')).toContain(
+      'IWorkspaceGraphDraftAuthoringPort'
+    );
   });
 
   it('keeps owned-concern docblocks on the modules that own the branch behavior', () => {

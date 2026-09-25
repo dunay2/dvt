@@ -26,7 +26,6 @@ architecture pack. It explains:
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Canvas Component Map And Modernization Review](./canvas-component-map-and-modernization-review.md)
 - [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
-- [TF-E2 Canvas Target Architecture Execution Plan 2026-04-17](../../../../planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md)
 
 ## Component reading rule
 

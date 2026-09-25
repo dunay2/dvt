@@ -30,10 +30,7 @@ const USER_STORIES = join(
   REPO_ROOT,
   'docs/architecture/components/engine/contracts/plan-schema-version-admission-user-stories.md'
 );
-const MAILBOX_ANALYSIS = join(
-  REPO_ROOT,
-  'buzon/20260513-codex-fowler-ea-20260429-01-schema-version-admission-analysis.md'
-);
+
 const PROPOSAL = join(
   REPO_ROOT,
   'docs/planning/proposals/mandatory/runtime-and-contracts/ea-20260429-01-plan-schema-version-admission-plan-20260513.md'
@@ -69,8 +66,8 @@ describe('Plan schema-version admission architecture', () => {
     ).toThrow(InvalidSchemaVersionError);
   });
 
-  it('documents API, invariants, transitions, consumers, diagrams, stories, and Fowler analysis', () => {
-    for (const path of [COMPONENT_GUIDE, USER_STORIES, MAILBOX_ANALYSIS, PROPOSAL]) {
+  it('documents API, invariants, transitions, consumers, diagrams, stories, and current proposal', () => {
+    for (const path of [COMPONENT_GUIDE, USER_STORIES, PROPOSAL]) {
       expect(existsSync(path)).toBe(true);
     }
 
@@ -99,19 +96,6 @@ describe('Plan schema-version admission architecture', () => {
       'US-EA-20260429-01-006',
     ]) {
       expect(stories).toContain(storyId);
-    }
-
-    const analysis = readFileSync(MAILBOX_ANALYSIS, 'utf8');
-    for (const section of [
-      '## Fowler Architecture Analysis',
-      '## Mature-System Comparison',
-      '## Antipatterns',
-      '## Repetitions Fixed',
-      '## Drift Fixed',
-      '## Future Lessons',
-      '## Opportunities',
-    ]) {
-      expect(analysis).toContain(section);
     }
   });
 });

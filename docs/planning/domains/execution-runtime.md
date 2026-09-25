@@ -22,7 +22,6 @@ runtime hardening.
 
 - [WorkflowEngine hexagonal derivation plan 2026-04-03](../proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md)
 - [TF-C3 production plugin host composition plan 2026-04-14](../proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md)
-- [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
 - [Runtime Review Canon Plan 2026-05-23](../proposals/mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md)
 
 ## Active Runbooks
@@ -32,7 +31,6 @@ runtime hardening.
 ## Relevant Reviews And Closeouts
 
 - [20260322 DDD and Hexagonal Port Audit](../reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md)
-- [20260414 TF-C3 production plugin host composition closeout](../closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md)
 - [AR-C10 protected runtime rail closure closeout 2026-05-05](../closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md)
 
 ## Runtime Review Canon

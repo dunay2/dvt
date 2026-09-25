@@ -227,7 +227,7 @@ test('emit-scope test mode marks engine package config coverage relevant', () =>
 test('emit-scope test mode routes governed web test docs to web frontend tests', () => {
   const scope = computeWorkflowModeScopeOutputs('test', [
     'docs/architecture/components/web/frontend-test-governance-component.md',
-    'buzon/20260518-f14-fowler-frontend-test-governance-analysis.md',
+    'docs/architecture/components/web/frontend-test-governance-user-stories.md',
   ]);
 
   assert.equal(scope.any_test, true);
