@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
+import type { CanvasRelationalTreeWorkbenchHandle } from './CanvasRelationalTreeWorkbench';
 import {
   container,
   COPY,
@@ -135,6 +136,49 @@ describe('Model composition Workbench', () => {
     );
     expect(outputInputs.length).toBeGreaterThan(0);
     expect(Array.from(outputInputs).every((input) => input.disabled)).toBe(true);
+    expect(applied).not.toHaveBeenCalled();
+  });
+
+  it('includes a pending output alias in the navigation transaction', async () => {
+    const graph = occurrenceGraph();
+    const applied = vi.fn(() => ({ outcome: 'no_changes' as const }));
+    const handle = React.createRef<CanvasRelationalTreeWorkbenchHandle>();
+    await act(async () =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          ref={handle}
+          transformNode={graph.targetNode}
+          nodes={graph.nodes}
+          edges={graph.edges}
+          copy={COPY}
+          authoring={{ canEditNode: true, onApplyNodeDraft: applied }}
+        />
+      )
+    );
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-output"]')!
+        .click()
+    );
+    const alias = container.querySelector<HTMLInputElement>(
+      '[data-slot="canvas-model-composition"] [data-slot="relation-output-field"] input:not([type="checkbox"])'
+    )!;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(
+        alias,
+        'pending_alias'
+      );
+      alias.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    expect(applied).not.toHaveBeenCalled();
+    expect(handle.current?.hasUnappliedChanges).toBe(true);
+    expect(handle.current?.canApply).toBe(false);
+
+    await act(async () => handle.current?.cancel());
+
+    expect(container.querySelector('[data-slot="canvas-model-composition"]')).toBeNull();
+    expect(handle.current?.hasUnappliedChanges).toBe(false);
     expect(applied).not.toHaveBeenCalled();
   });
 });
