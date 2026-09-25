@@ -3,12 +3,7 @@ import { useContext } from 'react';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import { inspectProjectionDataType } from './canvasDvtSubstraitProjectionStructure';
 import { useCanvasRelationFields } from './useCanvasRelationFields';
-
-export type CanvasDerivedOutputField = Readonly<{
-  fieldId: string;
-  name: string;
-  dataType: string;
-}>;
+import type { DerivedOutputField } from './DerivedOutputOperands';
 
 export function useCanvasDerivedOutputAuthoring(relationId: string) {
   const analysis = useContext(CanvasRelationAnalysisContext);
@@ -19,7 +14,7 @@ export function useCanvasDerivedOutputAuthoring(relationId: string) {
     const fields = schema.result.bindings
       .filter((field) => field.parentFieldId == null)
       .sort((left, right) => left.outputOrdinal - right.outputOrdinal)
-      .flatMap((field): CanvasDerivedOutputField[] => {
+      .flatMap((field): DerivedOutputField[] => {
         const dataType = inspectProjectionDataType(
           schema.result!.fields[field.outputOrdinal]!.type
         );

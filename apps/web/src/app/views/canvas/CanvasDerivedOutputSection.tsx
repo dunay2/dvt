@@ -2,9 +2,10 @@
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import { resolveDvtSubstraitColumnFunctions } from '@dvt/postgres-projection';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
-import { CanvasDerivedOutputForm } from './CanvasDerivedOutputForm';
+import { DerivedOutputForm } from './DerivedOutputForm';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { useCanvasDerivedOutputAuthoring } from './useCanvasDerivedOutputAuthoring';
 import { useRelationCommand } from './useRelationCommand';
@@ -25,11 +26,24 @@ export function CanvasDerivedOutputSection({
   return (
     <section className="mt-4 border-t border-(--border-subtle) pt-3">
       {open ? (
-        <CanvasDerivedOutputForm
+        <DerivedOutputForm
           fields={model.fields}
-          provider={model.provider}
-          busy={command.state === 'busy'}
+          dataSlot="canvas-derived-output-form"
           copy={copy.derivedOutput}
+          unavailableAliases={model.fields.map((field) => field.name)}
+          resolveFunctions={(fieldIds, resolution) => {
+            const dataTypes = fieldIds.flatMap((fieldId) => {
+              const field = model.fields.find((candidate) => candidate.fieldId === fieldId);
+              return field == null ? [] : [field.dataType];
+            });
+            return dataTypes.length !== fieldIds.length
+              ? []
+              : resolveDvtSubstraitColumnFunctions({
+                  dataTypes,
+                  provider: model.provider,
+                  resolution,
+                });
+          }}
           onCancel={() => setOpen(false)}
           onSubmit={async (request) => {
             const applied = await command.execute((session, identity) =>
@@ -39,9 +53,9 @@ export function CanvasDerivedOutputSection({
                 intent: model.intent,
               })
             );
-            if (applied) setOpen(false);
-            return applied;
+            return applied ? null : copy.derivedOutput.failed;
           }}
+          onApplied={() => setOpen(false)}
         />
       ) : (
         <button
