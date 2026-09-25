@@ -8,6 +8,9 @@ import {
   type SubstraitDocument,
 } from '@dvt/substrait-analysis';
 import type { ConnectedSourceRef, DvtSubstraitRelationBindingV1 } from '@dvt/contracts';
+import { jcsCanonicalize } from '@dvt/crypto';
+import { equals } from '@bufbuild/protobuf';
+import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 
 const connectionKey = (ref: ConnectedSourceRef) =>
   JSON.stringify([
@@ -28,6 +31,14 @@ export class CanvasRelationAnalysisSession {
 
   receive(document: SubstraitDocument | null): void {
     if (document === this.accepted) return;
+    // Full-document acknowledgements can allocate new objects without changing authority.
+    // Local edits retain the identity fast path and the existing incremental change rail.
+    if (
+      document != null &&
+      this.accepted != null &&
+      equals(PlanSchema, document.plan, this.accepted.plan) &&
+      jcsCanonicalize(document.sidecar) === jcsCanonicalize(this.accepted.sidecar)
+    ) return;
     if (document == null) this.dispose();
     else if (this.analysis == null)
       this.analysis = new RelationAnalysisSession({ document, scope: this.scope });

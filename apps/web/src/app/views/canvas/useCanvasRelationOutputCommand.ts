@@ -1,5 +1,6 @@
 /** Serialize asynchronous analysis, then commit through the existing draft rail with authority CAS. */
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { jcsCanonicalize } from '@dvt/crypto';
 import type { CanonicalNode } from '../../types/canonical';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { canvasDraftSession } from './canvasDraftSession';
@@ -80,7 +81,9 @@ export function useCanvasRelationOutputCommand(
             const now = resolveCanvasSessionNode(current, nodes, node.id);
             if (
               now == null ||
-              now.metadata?.transformAuthoring !== node.metadata?.transformAuthoring
+              (now.metadata?.transformAuthoring !== node.metadata?.transformAuthoring &&
+                jcsCanonicalize(now.metadata?.transformAuthoring ?? null) !==
+                  jcsCanonicalize(node.metadata?.transformAuthoring ?? null))
             )
               return { outcome: 'rejected', reason: 'invalid_transform_authority' };
             return {

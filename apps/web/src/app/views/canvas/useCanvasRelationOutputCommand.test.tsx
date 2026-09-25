@@ -22,7 +22,7 @@ function harness(): {
   fallback: Mock<() => CanvasColumnMappingResult>;
   submit: (intent: Parameters<OutputCommand>[0]) => ReturnType<OutputCommand>;
   current: CanvasDraftSession;
-  replaceAuthority: () => ReturnType<typeof graphModel>;
+  replaceAuthority: (same?: boolean) => ReturnType<typeof graphModel>;
 } {
   const { document, session } = graphJoin();
   const model = graphModel(document);
@@ -64,8 +64,10 @@ function harness(): {
     get current() {
       return current;
     },
-    replaceAuthority() {
-      const replacement = graphModel(graphJoin().document);
+    replaceAuthority(same = false) {
+      const replacement = same
+        ? structuredClone(current.localNodeCatalog![model.id]!)
+        : graphModel(graphJoin().document);
       current = { ...current, localNodeCatalog: { [model.id]: replacement } };
       return replacement;
     },
@@ -113,14 +115,14 @@ describe('canonical card output command', () => {
     }
   );
 
-  it('refuses an obsolete result when authority changes during analysis', async () => {
+  it.each([false, true])('compares authority content during analysis (identical: %s)', async (same) => {
     const h = harness();
     const original = CanvasRelationAnalysisSession.prototype.query;
     let replaced: ReturnType<typeof h.replaceAuthority> | undefined;
     const spy = vi
       .spyOn(CanvasRelationAnalysisSession.prototype, 'query')
       .mockImplementation(function (this: CanvasRelationAnalysisSession, id, signal) {
-        replaced ??= h.replaceAuthority();
+        replaced ??= h.replaceAuthority(same);
         return original.call(this, id, signal);
       });
     try {
@@ -131,8 +133,10 @@ describe('canonical card output command', () => {
           columnType: 'string',
           output: false,
         })
-      ).toMatchObject({ outcome: 'rejected' });
-      expect(h.current.localNodeCatalog!.model).toBe(replaced);
+      ).toMatchObject({ outcome: same ? 'applied' : 'rejected' });
+      if (same)
+        expect(h.outputs().map((field) => field.fieldId)).toEqual(h.fields.slice(1).map((field) => field.fieldId));
+      else expect(h.current.localNodeCatalog!.model).toBe(replaced);
       expect(h.fallback).not.toHaveBeenCalled();
     } finally {
       spy.mockRestore();

@@ -53,7 +53,10 @@ export function proveCardOutputControls(sourceCount: number): void {
   cy.wrap(null, { timeout: 20_000 }).should(() => {
     expect(getE2eApiCalls('/workspace/graph/draft').at(-1)?.method).to.equal('GET');
     const result = savedOutputs();
-    expect(result.outputs.some((output) => output.displayName === 'order_id')).to.equal(false);
+    expect(
+      result.outputs.map((output) => output.displayName),
+      'persisted fields after exclusion'
+    ).not.to.include('order_id');
     baseline = result;
   });
   cy.get(card).should(($card) => expect($card[0]!.style.transform).to.equal(position));

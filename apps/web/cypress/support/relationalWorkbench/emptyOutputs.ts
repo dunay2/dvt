@@ -55,17 +55,13 @@ export function proveEmptyJoinOutput(sourceCount: number): void {
           .find((candidate) => candidate != null);
         expect(exposed, 'visible connection segment').not.to.equal(undefined);
         const { path, point } = exposed!;
-        // SVG paths are not rectangular hit targets. Dispatch at the verified exposed
-        // segment, not Cypress's bounding-box centre (which can be empty canvas).
-        path.dispatchEvent(
-          new path.ownerDocument.defaultView!.MouseEvent('contextmenu', {
-            bubbles: true,
-            cancelable: true,
-            button: 2,
-            clientX: point.x,
-            clientY: point.y,
-          })
-        );
+        // Cypress checks actionability at the exposed segment, not the empty
+        // bounding-box centre of this curved SVG path.
+        const canvas = path.closest<HTMLElement>('.react-flow')!;
+        const bounds = canvas.getBoundingClientRect();
+        cy.wrap(canvas).rightclick(point.x - bounds.left, point.y - bounds.top, {
+          scrollBehavior: false,
+        });
       });
       cy.contains('[data-slot="canvas-context-menu-item"]', 'Remove connection').click();
       cy.get(stageEdges).should('have.length', $edges.length - index - 1);

@@ -111,7 +111,7 @@ describe('Canvas Source filter boundary', () => {
     });
 
     visitCanvas();
-    card('source-orders').should('not.contain.text', 'customer = "Ada"');
+    card('source-orders').should('not.contain.text', 'Filter');
     openWorkbenchModel('model-orders');
     cy.get('[data-operator="filter"]').should('have.length', 1).click();
     cy.get(form).find('select').first().find('option:selected').should('have.text', 'customer');
