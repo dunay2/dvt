@@ -1,14 +1,12 @@
 /** Test fixture: one authorized physical source and two canonical Read occurrences. */
 import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { CanonicalEdge, CanonicalNode } from '../../../types/canonical';
-import {
-  createDvtSubstraitStringJoinDraft,
-  encodeDvtSubstraitJoinDocument,
-  type DvtSubstraitJoinInput,
-} from '../canvasDvtSubstraitJoinComposition';
+import { createSourceJoin } from '../canvasSourceJoin';
+import { encodeDvtSubstraitSemanticDocument } from '../canvasDvtSubstraitSemanticDocument';
+import type { SourceRelationInput } from '../canvasSourceRelation';
 import { applyDvtSubstraitSemanticDocument } from '../canvasDvtTransformAuthoringAuthority';
 
-export const occurrenceInput: DvtSubstraitJoinInput = {
+export const occurrenceInput: SourceRelationInput = {
   source: {
     nodeId: 'source-places',
     schema: 'public',
@@ -29,7 +27,7 @@ export const occurrenceInput: DvtSubstraitJoinInput = {
 };
 
 export function repeatedOccurrenceDraft() {
-  return createDvtSubstraitStringJoinDraft({
+  return createSourceJoin({
     left: occurrenceInput,
     right: occurrenceInput,
     leftFieldName: 'parent_id',
@@ -72,7 +70,7 @@ export function occurrenceGraph() {
       tags: [],
       metadata: {},
     },
-    encodeDvtSubstraitJoinDocument(draft)
+    encodeDvtSubstraitSemanticDocument(draft)
   );
   const edge: CanonicalEdge = {
     id: 'source-model',
