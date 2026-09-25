@@ -60,6 +60,7 @@ describe('Persisted semantic editing through protected Preview and Run', () => {
     openWorkbenchModel(modelId);
     workbenchOperation('sort').click();
     cy.get('[role="dialog"] button[type="submit"]').click();
+    cy.get('[data-operator="sort"]').click();
     workbenchOperation('fetch').click();
     cy.contains('[role="dialog"] label', 'LIMIT').find('input').clear().type('2');
     cy.get('[role="dialog"] button[type="submit"]').click();
