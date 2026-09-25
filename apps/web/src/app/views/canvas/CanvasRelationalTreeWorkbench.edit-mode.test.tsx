@@ -54,9 +54,11 @@ describe('explicit relational editing', () => {
       );
       expect(edit).not.toBeNull();
       await act(async () => edit!.click());
-      expect(
-        container.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
-      ).not.toBeNull();
+      const authoringCanvas = container.querySelector(
+        '[data-slot="canvas-relational-tree-block-canvas"]'
+      );
+      expect(authoringCanvas).not.toBeNull();
+      expect(authoringCanvas?.classList).toContain('h-full');
       expect(handle.current!.hasUnappliedChanges).toBe(false);
       const cancel = container.querySelector<HTMLButtonElement>(
         '[data-slot="canvas-relational-tree-cancel"]'
