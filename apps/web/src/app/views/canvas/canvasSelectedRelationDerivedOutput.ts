@@ -24,7 +24,6 @@ export type SelectedRelationDerivedOutputRequest = SelectedUnaryRequest &
     alias: string;
     capabilityId: string;
     operandFieldIds: readonly [string, ...string[]];
-    provider: string;
   }>;
 
 function rootFields<T extends Readonly<{ parentFieldId?: string; outputOrdinal: number }>>(
@@ -65,8 +64,6 @@ export async function applySelectedRelationDerivedOutput(
   session: CanvasRelationAnalysisSession,
   request: SelectedRelationDerivedOutputRequest
 ) {
-  if (new Set(request.operandFieldIds).size !== request.operandFieldIds.length)
-    reject('Derived-output operands must be unique.', request.relationId);
   const alias = DvtSemanticFieldNameV1Schema.parse(request.alias.trim());
   const prepared = await prepareSelectedRelationUnary(session, request, 'project');
   const available =
@@ -102,7 +99,7 @@ export async function applySelectedRelationDerivedOutput(
     capabilityId: request.capabilityId,
     dataTypes: dataTypes.filter((type): type is string => type != null),
     operands: expressions.filter((item): item is Expression => item != null),
-    provider: request.provider,
+    provider: session.executionProvider(request.expectedRevision),
   });
   if (expression == null) reject('Derived-output capability is unavailable.', request.relationId);
 

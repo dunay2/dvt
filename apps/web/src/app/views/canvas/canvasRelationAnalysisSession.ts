@@ -86,6 +86,19 @@ export class CanvasRelationAnalysisSession {
     return [...(this.sourceOccurrences.get(sourceKey(ref)) ?? [])];
   }
 
+  executionProvider(expectedRevision: number): string {
+    this.current().locate(this.rootId, expectedRevision);
+    const providers = new Set(
+      [...this.sourceByRelation.values()].map((ref) => ref.connectionRef.provider)
+    );
+    if (this.sourceConnections.size !== 1 || providers.size !== 1)
+      throw new SubstraitAnalysisError(
+        'invalid_binding',
+        'Composition inputs must use one model execution connection.'
+      );
+    return [...providers][0]!;
+  }
+
   private current(): RelationAnalysisSession {
     if (this.analysis == null)
       throw new SubstraitAnalysisError('stale_document', 'No active model analysis.');

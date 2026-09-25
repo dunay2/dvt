@@ -31,7 +31,6 @@ describe('selected relation derived output authoring', () => {
       alias: 'normalized_name',
       capabilityId: capability('upper'),
       operandFieldIds: [sourceFieldId],
-      provider: 'postgres',
     });
 
     const nextRoot = session.locate(session.rootId, session.revision);
@@ -58,7 +57,6 @@ describe('selected relation derived output authoring', () => {
       alias: 'trimmed_name',
       capabilityId: capability('trim'),
       operandFieldIds: [sourceFieldId],
-      provider: 'postgres',
     });
     const trimmedField = trimmed.sidecar.fields.find(
       (field) => field.relationId === projectId && field.displayName === 'trimmed_name'
@@ -70,7 +68,6 @@ describe('selected relation derived output authoring', () => {
       alias: 'normalized_name',
       capabilityId: capability('upper'),
       operandFieldIds: [trimmedField.fieldId],
-      provider: 'postgres',
     });
 
     expect(
@@ -96,7 +93,6 @@ describe('selected relation derived output authoring', () => {
       alias: schema.bindings[0]!.displayName!,
       capabilityId: capability('upper'),
       operandFieldIds: [schema.bindings[0]!.fieldId] as const,
-      provider: 'postgres',
     };
     await expect(applySelectedRelationDerivedOutput(session, request)).rejects.toThrow();
     await expect(
