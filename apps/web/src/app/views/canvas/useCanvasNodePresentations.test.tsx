@@ -5,6 +5,11 @@ import { withTestQueryClient } from '../../../testing/reactQueryHarness';
 import { SOURCE, EDGE, buildCanonicalTransform } from './canvasOutputProjection.test-support';
 import { CanvasPresentationAnalysis } from './canvasPresentationAnalysis';
 import { useCanvasNodePresentations } from './useCanvasNodePresentations';
+import type { CanonicalNode } from '../../types/canonical';
+import {
+  applyCanvasInspectorNodeDraft,
+  createCanvasInspectorNodeDraft,
+} from './canvasInspectorAuthoringModel';
 import {
   readDvtTransformAuthoringAuthority,
   applyDvtSubstraitSemanticDocument,
@@ -25,6 +30,83 @@ function deferred(): { promise: Promise<void>; resolve: () => void } {
 afterEach(() => vi.restoreAllMocks());
 
 describe('Canvas asynchronous presentation ownership', () => {
+  it.each(['absent', 'first', 'last'] as const)(
+    'keeps native fields ready with configuration %s while changing only materialization',
+    async (position) => {
+      const initial = buildCanonicalTransform();
+      const config = { materialized: 'view' };
+      const model = {
+        ...initial,
+        metadata:
+          position === 'absent'
+            ? initial.metadata
+            : position === 'first'
+              ? { config, ...initial.metadata }
+              : { ...initial.metadata, config },
+      };
+      const query = vi.spyOn(CanvasPresentationAnalysis.prototype, 'query');
+      let current: CanonicalNode = model;
+      const states: (string | undefined)[] = [];
+      let values!: ReturnType<typeof useCanvasNodePresentations>;
+      function Probe(): null {
+        values = useCanvasNodePresentations({ nodes: [SOURCE, current], edges: [EDGE] });
+        states.push(values.get(model.id)?.columns.state);
+        return null;
+      }
+      const mounted = await withTestQueryClient(createElement(Probe));
+      try {
+        expect(values.get(model.id)?.columns.state).toBe('ready');
+        const completed = values;
+        const calls = query.mock.calls.length;
+        const draft = createCanvasInspectorNodeDraft(current);
+        if (draft.dvt?.kind !== 'transform') throw new Error('Expected native transform');
+        current = applyCanvasInspectorNodeDraft(current, {
+          ...draft,
+          dvt: { ...draft.dvt, materialized: 'table' },
+        });
+        states.length = 0;
+        await mounted.render(createElement(Probe));
+        expect(current.metadata?.config).toMatchObject({ materialized: 'table' });
+        expect(states).not.toContain('pending');
+        expect(values).toBe(completed);
+        expect(query).toHaveBeenCalledTimes(calls);
+      } finally {
+        await mounted.cleanup();
+      }
+    }
+  );
+
+  it.each(['sql', 'dbt'] as const)(
+    'still invalidates %s configuration projections',
+    async (kind) => {
+      const model = buildCanonicalTransform();
+      let current =
+        kind === 'dbt'
+          ? { ...model, metadata: { ...model.metadata, dbt: { materialized: 'view' } } }
+          : model;
+      let values!: ReturnType<typeof useCanvasNodePresentations>;
+      function Probe(): null {
+        values = useCanvasNodePresentations({ nodes: [SOURCE, current], edges: [EDGE] });
+        return null;
+      }
+      const mounted = await withTestQueryClient(createElement(Probe));
+      try {
+        const completed = values;
+        current = {
+          ...current,
+          metadata: {
+            ...current.metadata,
+            config: kind === 'sql' ? { sql: 'select 2' } : { materialized: 'table' },
+          },
+        };
+        await mounted.render(createElement(Probe));
+        expect(values).not.toBe(completed);
+      } finally {
+        await mounted.cleanup();
+      }
+    }
+  );
+
   it('never publishes an old revision after a newer query completes', async () => {
     const model = buildCanonicalTransform();
     const document = decodeDvtSubstraitSemanticDocument(

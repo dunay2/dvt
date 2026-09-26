@@ -1,5 +1,6 @@
 /** Keep semantic queries independent of Canvas geometry and discard obsolete completions. */
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { jcsCanonicalize } from '@dvt/crypto';
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import type { CanonicalNode } from '../../types/canonical';
 import { CanvasPresentationAnalysis } from './canvasPresentationAnalysis';
@@ -10,13 +11,29 @@ import {
 } from './canvasNodePresentationBase';
 import { projectCanvasGraphPresentation } from './canvasNodePresentationProjection';
 import { canvasColumnTruth } from './canvasPresentationColumns';
+import { canConfigureNativeMaterialization } from './canvasDvtMaterializationPolicy';
 
 type Graph = Pick<CanvasPresentationQuery, 'nodes' | 'edges'>;
 
-function sameMetadata(left: CanonicalNode['metadata'], right: CanonicalNode['metadata']): boolean {
-  if (left === right) return true;
+function presentationMetadata(node: CanonicalNode): CanonicalNode['metadata'] {
+  const config = node.metadata?.config;
+  if (
+    !canConfigureNativeMaterialization(node) ||
+    (config != null && (typeof config !== 'object' || Array.isArray(config)))
+  )
+    return node.metadata;
+  // Native materialization changes storage, not the field/code/composition projection.
+  // DBT materialization remains significant because its generated code includes it.
+  return { ...node.metadata, config: { ...config, materialized: undefined } };
+}
+
+function sameMetadata(left: CanonicalNode, right: CanonicalNode): boolean {
+  if (left.metadata === right.metadata) return true;
   try {
-    return JSON.stringify(left) === JSON.stringify(right);
+    return (
+      jcsCanonicalize(presentationMetadata(left) ?? null) ===
+      jcsCanonicalize(presentationMetadata(right) ?? null)
+    );
   } catch {
     return false;
   }
@@ -30,7 +47,7 @@ function sameGraph(left: Graph, right: Graph): boolean {
       const next = right.nodes[position]!;
       return (
         node.id === next.id &&
-        sameMetadata(node.metadata, next.metadata) &&
+        sameMetadata(node, next) &&
         node.name === next.name &&
         node.kind === next.kind &&
         node.pluginId === next.pluginId &&

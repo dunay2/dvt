@@ -10,12 +10,9 @@ const metricValueTones = {
 const operationalRail =
   'grid grid-cols-[repeat(auto-fit,minmax(4.75rem,1fr))] border-t border-slate-800/90 bg-slate-900/55';
 export const graphNodeMetricRowClasses = {
-  select:
-    'nodrag nopan cursor-pointer rounded-sm bg-slate-950 py-1 pl-1 pr-2 text-xs text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-default disabled:opacity-60',
   root: {
     body: 'mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-300',
-    header:
-      'inline-flex shrink-0 divide-x divide-blue-400/25 overflow-hidden rounded border border-blue-400/40 bg-blue-950/45 text-xs text-slate-300',
+    header: 'inline-flex shrink-0 items-center gap-1 text-xs text-slate-300',
   },
   item: {
     body: 'inline-flex items-center gap-1',
@@ -32,6 +29,15 @@ export const graphNodeMetricRowClasses = {
   value: 'min-w-0 truncate font-medium text-slate-200',
   interactiveValue: 'nodrag nopan',
   valueTone: metricValueTones,
+} as const;
+
+export const graphNodeMaterializationClasses = {
+  trigger:
+    'nodrag nopan inline-flex min-w-[5.5rem] cursor-pointer items-center gap-1.5 rounded px-2 py-1 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-default disabled:opacity-60',
+  value: 'flex-1 text-left',
+  chevron: 'size-3 shrink-0 text-slate-400',
+  menu: 'nodrag nopan min-w-28 border-slate-700 bg-slate-950 text-slate-200',
+  option: 'cursor-pointer text-xs focus:bg-slate-800 focus:text-slate-100',
 } as const;
 
 export const graphNodeOperationalRailClasses = {

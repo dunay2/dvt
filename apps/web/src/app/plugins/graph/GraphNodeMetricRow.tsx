@@ -13,6 +13,7 @@ import {
   resolveGraphNodeMetricEvidenceTone,
 } from './GraphNodeMetricHotspot';
 import { graphNodeMetricRowClasses } from './graphMetricVisualTokens';
+import { GraphNodeMaterializationMenu } from './GraphNodeMaterializationMenu';
 
 const summaryMetricIconByName: Partial<Record<GraphNodeCardMetricIcon, LucideIcon>> = {
   clock: Clock,
@@ -74,27 +75,11 @@ export function GraphNodeMetricRow({
           materializationControl != null
         ) {
           return (
-            <label key={metric.id} className={graphNodeMetricRowClasses.item.header}>
-              {iconElement}
-              <select
-                name="model-card-materialization"
-                aria-label={materializationControl.label}
-                value={materializationControl.value}
-                disabled={materializationControl.disabled}
-                className={graphNodeMetricRowClasses.select}
-                onPointerDown={(event) => event.stopPropagation()}
-                onClick={(event) => event.stopPropagation()}
-                onDoubleClick={(event) => event.stopPropagation()}
-                onKeyDown={(event) => event.stopPropagation()}
-                onChange={(event) => materializationControl.onChange(event.target.value)}
-              >
-                {materializationControl.options.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <GraphNodeMaterializationMenu
+              key={metric.id}
+              control={materializationControl}
+              icon={iconElement}
+            />
           );
         }
         if (placement === 'header') {

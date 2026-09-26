@@ -84,7 +84,7 @@ describe('GraphNodeCardView', () => {
     expect(container.querySelector('[data-slot="graph-node-status-chip"]')).toBeNull();
   });
 
-  it('edits materialization through the supplied control without opening or dragging the card', () => {
+  it('edits materialization through the supplied control without opening or dragging the card', async () => {
     const change = vi.fn();
     const open = vi.fn();
     act(() =>
@@ -117,13 +117,19 @@ describe('GraphNodeCardView', () => {
         </div>
       )
     );
-    const select = container.querySelector('select[name="model-card-materialization"]')!;
-    expect(select).not.toBeNull();
-    act(() => {
-      fireEvent.pointerDown(select);
-      fireEvent.doubleClick(select);
-      fireEvent.change(select, { target: { value: 'table' } });
+    const trigger = container.querySelector('button[aria-label="Materialization"]')!;
+    expect(trigger).not.toBeNull();
+    expect(container.querySelector('select')).toBeNull();
+    expect(trigger.querySelector('[data-icon="eye"]')).not.toBeNull();
+    await act(async () => {
+      fireEvent.doubleClick(trigger);
+      fireEvent.keyDown(trigger, { key: 'Enter' });
     });
+    const option = Array.from(document.querySelectorAll('[role="menuitemradio"]')).find(
+      (item) => item.textContent === 'table'
+    )!;
+    expect(option).not.toBeUndefined();
+    act(() => fireEvent.click(option));
     expect(change).toHaveBeenCalledExactlyOnceWith('table');
     expect(open).not.toHaveBeenCalled();
   });
