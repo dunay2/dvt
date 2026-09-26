@@ -3,11 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { resolveCanvasViewCopy } from '../../views/canvas/canvasCopyCatalog';
 import { buildCanvasNodePresentationCopy } from '../../views/canvas/canvasNodePresentationCopy';
-import {
-  buildNodePropertiesReadModel,
-  type NodePropertiesReadModel,
-  type NodePropertySection,
-} from './nodePropertiesReadModel';
+import { buildNodePropertiesReadModel } from './nodePropertiesReadModel';
+import { type NodePropertiesReadModel, type NodePropertySection } from './nodePropertiesContracts';
 
 const presentationCopy = {
   columnsLabel: 'Columns',

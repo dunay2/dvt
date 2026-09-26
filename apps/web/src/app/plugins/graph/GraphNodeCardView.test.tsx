@@ -27,10 +27,8 @@ const BASE_PROPS = {
     accentTone: 'model' as const,
     titleDetail: null,
   },
-  typeLabel: 'Model',
   tags: [],
-  columns: [],
-  showColumns: false,
+  columnSection: null,
   selected: false,
   hovered: false,
   dimmed: false,
@@ -86,6 +84,50 @@ describe('GraphNodeCardView', () => {
     expect(container.querySelector('[data-slot="graph-node-status-chip"]')).toBeNull();
   });
 
+  it('edits materialization through the supplied control without opening or dragging the card', () => {
+    const change = vi.fn();
+    const open = vi.fn();
+    act(() =>
+      root.render(
+        <div onDoubleClick={open} onPointerDown={open}>
+          <GraphNodeCardView
+            {...BASE_PROPS}
+            cardModel={{
+              ...BASE_PROPS.cardModel,
+              metrics: [
+                {
+                  id: 'materialization',
+                  label: 'Materialization',
+                  value: 'view',
+                  placement: 'header',
+                  icon: 'eye',
+                },
+              ],
+            }}
+            materializationControl={{
+              label: 'Materialization',
+              value: 'view',
+              options: [
+                { value: 'view', label: 'view' },
+                { value: 'table', label: 'table' },
+              ],
+              onChange: change,
+            }}
+          />
+        </div>
+      )
+    );
+    const select = container.querySelector('select[name="model-card-materialization"]')!;
+    expect(select).not.toBeNull();
+    act(() => {
+      fireEvent.pointerDown(select);
+      fireEvent.doubleClick(select);
+      fireEvent.change(select, { target: { value: 'table' } });
+    });
+    expect(change).toHaveBeenCalledExactlyOnceWith('table');
+    expect(open).not.toHaveBeenCalled();
+  });
+
   it('omits the redundant kind row from model cards', () => {
     act(() => {
       root.render(
@@ -122,7 +164,7 @@ describe('GraphNodeCardView', () => {
     ).not.toBe('model_1');
   });
 
-  it('reserves the materialization and last-run rail beside a long title with their icons', () => {
+  it('sizes the materialization rail to its content without reserving a last-run slot', () => {
     act(() => {
       root.render(
         <GraphNodeCardView
@@ -138,13 +180,6 @@ describe('GraphNodeCardView', () => {
                 icon: 'refresh',
                 placement: 'header',
               },
-              {
-                id: 'last-run',
-                label: 'Last run',
-                value: '12 min',
-                icon: 'clock',
-                placement: 'header',
-              },
               { id: 'dependencies', label: 'Deps', value: '2' },
             ],
           }}
@@ -154,10 +189,11 @@ describe('GraphNodeCardView', () => {
 
     const header = container.querySelector('[data-slot="graph-node-card-header"]');
     const rail = header?.querySelector('[data-slot="graph-node-card-header-rail"]');
-    expect(rail?.className).toContain('min-w-36');
-    expect(rail?.textContent).toBe('Mat.incrementalLast run12 min');
+    expect(rail?.className).not.toContain('min-w-36');
+    expect(rail?.textContent).toBe('Mat.incremental');
+    expect(rail?.querySelector('[data-placement="header"]')?.className).not.toContain('w-52');
     expect(rail?.querySelector('[data-icon="refresh"]')).not.toBeNull();
-    expect(rail?.querySelector('[data-icon="clock"]')).not.toBeNull();
+    expect(rail?.querySelector('[data-icon="clock"]')).toBeNull();
     expect(header?.querySelector('[data-slot="graph-node-card-title"]')?.className).toContain(
       'truncate'
     );

@@ -1,146 +1,25 @@
-/** Owned concern: render graph-node card markup from an already-projected card model. */
-import { type CSSProperties, type ReactElement } from 'react';
-import type { GraphNodeColumnInspect } from './graphColumnInspection';
-import type { LucideIcon } from 'lucide-react';
+/** Owned concern: GraphNodeCardView. */
 
+import { type ReactElement } from 'react';
 import { cn } from '../../components/ui/utils';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
-import type {
-  GraphNodeColumn,
-  GraphNodeCalculatedColumnIdentity,
-  GraphNodeColumnCompositionFunctionResolver,
-  GraphNodeColumnFunctionApplyIdentity,
-  GraphNodeColumnFunctionApplyResult,
-  GraphNodeColumnPortDirection,
-  GraphNodeColumnPortIdentity,
-  GraphNodeColumnReorderIdentity,
-  GraphNodeStructuredFieldIdentity,
-} from './graphNodeColumnContracts';
 import { GraphNodeMetricRow } from './GraphNodeMetricRow';
 import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
 import { GraphNodeTagList } from './GraphNodeTagList';
-import {
-  GraphNodeAlgebraicDropZone,
-  type GraphNodeAlgebraicDrop,
-} from './GraphNodeAlgebraicDropZone';
-import type {
-  GraphNodeCardReadModel,
-  GraphNodeOperationalDetail,
-} from './graphNodeCardStrategyContracts';
+import { GraphNodeAlgebraicDropZone } from './GraphNodeAlgebraicDropZone';
 import {
   graphNodeCardLayoutClasses,
   graphNodeHealthBorderClasses,
   graphNodeCardSurfaceClasses,
-  graphNodeSourceIdentityTooltipClasses,
-} from './graphVisualTokens';
-
-export type GraphNodeCardColumn = GraphNodeColumn;
-
-export type GraphNodeCardViewProps = Readonly<{
-  onColumnInspect?: GraphNodeColumnInspect;
-  cardModel: GraphNodeCardReadModel;
-  typeLabel: string;
-  tags: readonly Readonly<{ value: string; label: string }>[];
-  columns: readonly GraphNodeCardColumn[];
-  expressionInputs?: readonly GraphNodeCardColumn[];
-  showColumns: boolean;
-  icon?: LucideIcon;
-  borderClass?: string;
-  selected: boolean;
-  hovered: boolean;
-  dimmed: boolean;
-  overlayStyle?: CSSProperties;
-  onOpenOperationalDetails?: (
-    detail: GraphNodeOperationalDetail,
-    anchorElement: HTMLElement
-  ) => void;
-  onOpenCode?: () => void;
-  onSelectTag?: (tag: string) => void;
-  getSelectTagLabel?: (tag: string) => string;
-  nodeId?: string;
-  columnPortDirections?: readonly GraphNodeColumnPortDirection[];
-  activeColumnHandleId?: string | null;
-  columnDisclosureExpanded?: boolean;
-  onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onColumnFunctionApply?: (
-    identity: GraphNodeColumnFunctionApplyIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
-  resolveColumnCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
-  onStructuredFieldApply?: (
-    identity: GraphNodeStructuredFieldIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
-  onCalculatedColumnAdd?: (
-    identity: GraphNodeCalculatedColumnIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
-  onColumnOutputToggle?: (identity: {
-    nodeId: string;
-    columnId: string;
-    columnType: string;
-    output: boolean;
-  }) => void;
-  onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
-  onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
-  onColumnLayoutChange?: () => void;
-  onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeCardColumn[]) => void;
-  algebraicDrop?: GraphNodeAlgebraicDrop;
-}>;
-
-function GraphNodeCardTitle({ cardModel }: { cardModel: GraphNodeCardReadModel }): ReactElement {
-  const sourceIdentity = cardModel.sourceIdentity;
-  if (sourceIdentity == null) {
-    return (
-      <span
-        data-slot="graph-node-card-title"
-        className={graphNodeCardLayoutClasses.title}
-        title={cardModel.titleDetail ?? undefined}
-      >
-        {cardModel.title}
-      </span>
-    );
-  }
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span
-          data-slot="graph-node-source-identity-trigger"
-          tabIndex={0}
-          aria-label={sourceIdentity.ariaLabel}
-          className={cn(
-            graphNodeCardLayoutClasses.title,
-            graphNodeCardLayoutClasses.sourceIdentityTrigger
-          )}
-        >
-          {cardModel.title}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent
-        side="bottom"
-        sideOffset={6}
-        className={graphNodeSourceIdentityTooltipClasses.root}
-      >
-        <dl className={graphNodeSourceIdentityTooltipClasses.rows}>
-          {sourceIdentity.rows.map((row) => (
-            <div key={row.id} className={graphNodeSourceIdentityTooltipClasses.row}>
-              <dt className={graphNodeSourceIdentityTooltipClasses.label}>{row.label}</dt>
-              <dd className={graphNodeSourceIdentityTooltipClasses.value}>{row.value}</dd>
-            </div>
-          ))}
-        </dl>
-      </TooltipContent>
-    </Tooltip>
-  );
-}
+} from './graphCardVisualTokens';
+import type { GraphNodeCardViewProps } from './graphNodeCardViewContracts';
+import { GraphNodeCardTitle } from './GraphNodeCardTitle';
 
 export function GraphNodeCardView({
-  onColumnInspect,
+  materializationControl,
+  columnSection,
   cardModel,
-  typeLabel,
   tags,
-  columns,
-  expressionInputs,
-  showColumns,
   icon: Icon,
   borderClass,
   selected,
@@ -151,20 +30,6 @@ export function GraphNodeCardView({
   onOpenCode,
   onSelectTag,
   getSelectTagLabel,
-  nodeId,
-  columnPortDirections,
-  activeColumnHandleId,
-  columnDisclosureExpanded,
-  onColumnPortActivate,
-  onColumnFunctionApply,
-  resolveColumnCompositionFunctions,
-  onStructuredFieldApply,
-  onCalculatedColumnAdd,
-  onColumnOutputToggle,
-  onColumnReorder,
-  onColumnDisclosureChange,
-  onColumnLayoutChange,
-  onAutomapColumns,
   algebraicDrop,
 }: GraphNodeCardViewProps): ReactElement {
   const operationalDetail = cardModel.operationalDetail;
@@ -220,7 +85,11 @@ export function GraphNodeCardView({
               data-slot="graph-node-card-header-rail"
               className={graphNodeCardLayoutClasses.headerActions}
             >
-              <GraphNodeMetricRow metrics={headerMetrics} placement="header" />
+              <GraphNodeMetricRow
+                metrics={headerMetrics}
+                placement="header"
+                materializationControl={materializationControl}
+              />
             </div>
           )}
         </div>
@@ -244,35 +113,7 @@ export function GraphNodeCardView({
           getSelectTagLabel={getSelectTagLabel}
         />
 
-        {showColumns && (
-          <GraphNodeColumnSection
-            onColumnInspect={onColumnInspect}
-            columns={columns}
-            expressionInputs={expressionInputs}
-            expanded={columnDisclosureExpanded}
-            nodeId={nodeId}
-            portDirections={columnPortDirections}
-            activeColumnHandleId={activeColumnHandleId}
-            onColumnPortActivate={onColumnPortActivate}
-            onColumnFunctionApply={onColumnFunctionApply}
-            resolveColumnCompositionFunctions={resolveColumnCompositionFunctions}
-            onStructuredFieldApply={onStructuredFieldApply}
-            onCalculatedColumnAdd={onCalculatedColumnAdd}
-            onColumnOutputToggle={onColumnOutputToggle}
-            onColumnReorder={onColumnReorder}
-            onDisclosureChange={
-              nodeId == null || onColumnDisclosureChange == null
-                ? undefined
-                : (expanded) => onColumnDisclosureChange(nodeId, expanded)
-            }
-            onColumnLayoutChange={onColumnLayoutChange}
-            onAutomap={
-              nodeId == null || onAutomapColumns == null
-                ? undefined
-                : () => onAutomapColumns(nodeId, columns)
-            }
-          />
-        )}
+        {columnSection == null ? null : <GraphNodeColumnSection {...columnSection} />}
       </div>
 
       {onOpenOperationalDetails == null || interactiveOperationalDetail == null ? (
@@ -281,11 +122,8 @@ export function GraphNodeCardView({
         <GraphNodeOperationalRail
           metrics={cardModel.operationalMetrics}
           ariaLabel={interactiveOperationalDetail.ariaLabel}
-          onOpen={
-            onOpenOperationalDetails == null || interactiveOperationalDetail == null
-              ? undefined
-              : (anchorElement) =>
-                  onOpenOperationalDetails(interactiveOperationalDetail, anchorElement)
+          onOpen={(anchorElement) =>
+            onOpenOperationalDetails(interactiveOperationalDetail, anchorElement)
           }
         />
       )}

@@ -1,4 +1,5 @@
 /** Owned concern: project source-object and runtime volume evidence into graph-card metrics. */
+import { formatCompactNumber } from '../../components/canvas/formatCompactNumber';
 import type {
   SourceObjectByteSizeBasis,
   SourceObjectMetricConfidence,
@@ -13,7 +14,7 @@ import {
 } from '../../services/workspace/sourceObjectMetricEvidencePresentation';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import type { GraphNodeCardMetric } from './graphNodeCardStrategyContracts';
-import { formatBytes, formatCompactNumber, numericValue } from './graphNodeCardStrategyUtils';
+import { formatBytes, numericValue } from './graphNodeCardStrategyUtils';
 
 export type GraphNodeSizeEvidenceProjection = Readonly<{
   bytes: number;

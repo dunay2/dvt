@@ -1,4 +1,5 @@
 import type { Node } from '@xyflow/react';
+import type { CanvasInspectorNodeDraftApplyResult } from './canvasInspectorAuthoring.types';
 import type {
   GraphNodeColumn,
   GraphNodeCalculatedColumnIdentity,
@@ -20,6 +21,7 @@ export type CanvasCardActions = {
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
   onAttachSchemaToNode?: (nodeId: string, schemaName: string) => void;
+  onSetNodeMaterialization?: (nodeId: string, value: string) => CanvasInspectorNodeDraftApplyResult;
 };
 
 export type CanvasColumnActions = {

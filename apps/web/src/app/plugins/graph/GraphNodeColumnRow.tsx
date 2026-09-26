@@ -20,7 +20,7 @@ import {
   type GraphNodeColumnCopy,
 } from './GraphNodeColumnPiece';
 import { GraphNodeExpressionComposer } from './GraphNodeExpressionComposer';
-import { graphNodeColumnClasses } from './graphVisualTokens';
+import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 import type { GraphNodeColumnReorderController } from './useGraphNodeColumnReorder';
 
 export function GraphNodeColumnRow(props: {

@@ -5,7 +5,7 @@ import { fireEvent } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { NodePropertiesReadModel } from '../../components/inspector/nodePropertiesReadModel';
+import type { NodePropertiesReadModel } from '../../components/inspector/nodePropertiesContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import type { CanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';

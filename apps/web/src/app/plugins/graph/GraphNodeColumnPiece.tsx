@@ -12,7 +12,7 @@ import { TooltipContent } from '../../components/ui/tooltip';
 import type { GraphNodeColumn } from './graphNodeColumnContracts';
 import type { GraphNodeColumnReorderIdentity } from './graphNodeColumnContracts';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
-import { graphNodeColumnClasses } from './graphVisualTokens';
+import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 import { GraphNodeColumnChildren } from './GraphNodeColumnChildren';
 import { useGraphColumnOutputFocus } from './useGraphColumnOutputFocus';
 

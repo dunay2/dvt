@@ -7,8 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { SourceInputsOutputsPanel } from './SourceInputsOutputsPanel';
-import type { NodePropertySection } from './nodePropertiesReadModel';
+import type { NodePropertySection } from './nodePropertiesContracts';
 
 const sourceNode: CanonicalNode = {
   id: 'source.auth',
@@ -72,6 +73,7 @@ describe('SourceInputsOutputsPanel', () => {
 
   beforeEach(() => {
     localStorage.clear();
+    useApplicationLanguageStore.setState({ language: 'en' });
     useCanvasInteractionStore.setState({ _hasHydrated: true, canvasLayouts: {} });
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -84,6 +86,7 @@ describe('SourceInputsOutputsPanel', () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    useApplicationLanguageStore.setState({ language: 'en' });
   });
 
   function render(targetSection: NodePropertySection = section, canReorder = false): void {
@@ -224,5 +227,42 @@ describe('SourceInputsOutputsPanel', () => {
     expect(container.textContent).toContain('Outputs 0');
     expect(container.textContent).toContain('No Canvas connections are recorded for this Source.');
     expect(container.querySelectorAll('[data-slot="source-relationship-row"]')).toHaveLength(0);
+  });
+
+  it('uses localized copy without interpreting translated labels as topology identity', () => {
+    useApplicationLanguageStore.setState({ language: 'es' });
+    render({
+      ...section,
+      tableRows: section.tableRows.map((row) => ({
+        ...row,
+        cells: { ...row.cells, direction: 'Etiqueta traducida' },
+      })),
+    });
+    expect(container.textContent).toContain('Entradas 1');
+    expect(container.textContent).toContain('Salidas 2');
+    expect(container.textContent).toContain('Entrante');
+    expect(container.textContent).not.toContain('Canvas connections');
+  });
+
+  it('ignores malformed relationship rows and selects the next survivor after removal', () => {
+    render({
+      ...section,
+      tableRows: [
+        { id: 'unknown:bad', cells: { node: 'Not a relationship' } },
+        { id: 'output:empty', cells: { node: '   ' } },
+        ...section.tableRows,
+      ],
+    });
+    expect(container.querySelectorAll('[role="option"]')).toHaveLength(3);
+    act(() =>
+      fireEvent.click(container.querySelector('[data-relationship-id="output:edge-model-1"]')!)
+    );
+    render({ ...section, tableRows: [section.tableRows[2]!] });
+    const remaining = container.querySelector<HTMLButtonElement>('[role="option"]')!;
+    expect(remaining.getAttribute('aria-selected')).toBe('true');
+    expect(remaining.tabIndex).toBe(0);
+    expect(
+      container.querySelector('[data-slot="source-relationship-detail"]')?.textContent
+    ).toContain('Audit check');
   });
 });

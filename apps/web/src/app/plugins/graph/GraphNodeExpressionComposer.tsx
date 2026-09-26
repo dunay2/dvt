@@ -14,7 +14,7 @@ import type {
   GraphNodeColumnFunctionApplyResult,
 } from './graphNodeColumnContracts';
 import type { GraphNodeColumnCopy } from './GraphNodeColumnPiece';
-import { graphNodeColumnClasses } from './graphVisualTokens';
+import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 
 type Rejection = Extract<GraphNodeColumnFunctionApplyResult, { outcome: 'rejected' }>['reason'];
 

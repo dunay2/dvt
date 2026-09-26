@@ -11,7 +11,7 @@ import {
 
 import { cn } from '../../components/ui/utils';
 import type { GraphNodeOperationalDetail } from './graphNodeCardStrategyContracts';
-import { graphNodeHealthPopoverClasses } from './graphVisualTokens';
+import { graphNodeHealthPopoverClasses } from './graphMetricVisualTokens';
 
 export type GraphNodeHealthPopoverViewProps = Readonly<{
   detail: GraphNodeOperationalDetail;

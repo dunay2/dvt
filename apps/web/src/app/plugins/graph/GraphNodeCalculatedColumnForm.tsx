@@ -16,7 +16,7 @@ import type {
   GraphNodeColumnFunctionApplyResult,
 } from './graphNodeColumnContracts';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
-import { graphNodeColumnClasses } from './graphVisualTokens';
+import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 
 type CalculationKind = GraphNodeCalculatedColumnIdentity['kind'];
 const KINDS: readonly CalculationKind[] = [

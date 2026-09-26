@@ -2,6 +2,9 @@ import { useMemo } from 'react';
 import type { Node } from '@xyflow/react';
 import { getGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
 import { buildCanvasNodeInteractionPresentation } from './canvasNodeInteractionPresentation';
+import { projectCanvasMaterializationControl } from './canvasMaterializationControl';
+import { useCanvasMaterializationAction } from './useCanvasMaterializationAction';
+import { canvasViewCopy } from './copy';
 import { projectCanvasNodeColumnInteraction } from './canvasNodeColumnInteraction';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 import type { CanonicalNode, CanonicalEdge } from '../../types/canonical';
@@ -53,6 +56,9 @@ export function useCanvasNodeInteractionModel({
   semanticGraphNodes,
   readOnlyColumnLineageNodeIds,
 }: Args): Node[] {
+  const changeMaterialization = useCanvasMaterializationAction(
+    cardActions.onSetNodeMaterialization
+  );
   const graphNodeCardStrategies = useMemo(
     () => getGraphNodeCardStrategies(runtimeCapabilities),
     [runtimeCapabilities]
@@ -132,7 +138,17 @@ export function useCanvasNodeInteractionModel({
           : projectCanvasNodeAccessibleHealth({
               node: projected,
               canonicalNode,
-              data,
+              data: {
+                ...data,
+                materializationControl: projectCanvasMaterializationControl({
+                  node: canonicalNode,
+                  label: canvasViewCopy.inspectorDvtMaterializationLabel,
+                  change:
+                    canMutateGraph && cardActions.onSetNodeMaterialization
+                      ? changeMaterialization
+                      : undefined,
+                }),
+              },
               graphNodeCardStrategies,
             });
       }),
@@ -143,6 +159,8 @@ export function useCanvasNodeInteractionModel({
       columnFunctionNodes,
       columnLevelLineageEnabled,
       cardActions.onInspectNode,
+      cardActions.onSetNodeMaterialization,
+      changeMaterialization,
       cardActions.onDuplicateNode,
       cardActions.onRemoveNode,
       cardActions.onAttachSchemaToNode,

@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { NodePropertiesTabs } from './NodePropertiesTabs';
-import type { NodePropertiesReadModel } from './nodePropertiesReadModel';
+import type { NodePropertiesReadModel } from './nodePropertiesContracts';
 
 const sourceNode: CanonicalNode = {
   id: 'src-orders',

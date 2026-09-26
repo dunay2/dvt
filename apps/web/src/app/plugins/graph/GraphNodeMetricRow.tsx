@@ -6,12 +6,13 @@ import type {
   GraphNodeCardMetric,
   GraphNodeCardMetricIcon,
   GraphNodeCardStatusTone,
+  GraphNodeMaterializationControl,
 } from './graphNodeCardStrategyContracts';
 import {
   GraphNodeMetricHotspot,
   resolveGraphNodeMetricEvidenceTone,
 } from './GraphNodeMetricHotspot';
-import { graphNodeMetricRowClasses } from './graphVisualTokens';
+import { graphNodeMetricRowClasses } from './graphMetricVisualTokens';
 
 const summaryMetricIconByName: Partial<Record<GraphNodeCardMetricIcon, LucideIcon>> = {
   clock: Clock,
@@ -26,6 +27,7 @@ export type GraphNodeMetricRowProps = Readonly<{
   metrics: readonly GraphNodeCardMetric[];
   onOpenCode?: () => void;
   placement?: 'body' | 'header';
+  materializationControl?: GraphNodeMaterializationControl;
 }>;
 
 function resolveMetricValueClassName(tone: GraphNodeCardStatusTone | undefined): string {
@@ -38,6 +40,7 @@ export function GraphNodeMetricRow({
   metrics,
   onOpenCode,
   placement = 'body',
+  materializationControl,
 }: GraphNodeMetricRowProps): ReactElement | null {
   if (metrics.length === 0) {
     return null;
@@ -65,6 +68,35 @@ export function GraphNodeMetricRow({
             </span>
           );
 
+        if (
+          placement === 'header' &&
+          metric.id === 'materialization' &&
+          materializationControl != null
+        ) {
+          return (
+            <label key={metric.id} className={graphNodeMetricRowClasses.item.header}>
+              {iconElement}
+              <select
+                name="model-card-materialization"
+                aria-label={materializationControl.label}
+                value={materializationControl.value}
+                disabled={materializationControl.disabled}
+                className={graphNodeMetricRowClasses.select}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => event.stopPropagation()}
+                onDoubleClick={(event) => event.stopPropagation()}
+                onKeyDown={(event) => event.stopPropagation()}
+                onChange={(event) => materializationControl.onChange(event.target.value)}
+              >
+                {materializationControl.options.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          );
+        }
         if (placement === 'header') {
           return (
             <span

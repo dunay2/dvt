@@ -37,18 +37,18 @@ describe('projectGraphNodeCardViewProps', () => {
     const props = projectGraphNodeCardViewProps(rendererProps());
 
     expect(props).toMatchObject({
-      typeLabel: 'Transform',
       selected: true,
       hovered: false,
       dimmed: true,
-      showColumns: true,
       tags: [{ value: 'critical', label: 'Critical' }],
-      columns: [{ name: 'order_id', type: 'integer', nullable: false }],
+      columnSection: {
+        columns: [{ name: 'order_id', type: 'integer', nullable: false }],
+        nodeId: 'transform-1',
+      },
       overlayStyle: {
         borderColor: '#2563eb',
         backgroundColor: 'rgba(37, 99, 235, 0.1)',
       },
-      nodeId: 'transform-1',
     });
   });
 

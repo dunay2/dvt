@@ -26,12 +26,13 @@ import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemantic
 import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 import { isCanvasSetOperation } from './canvasRelationalOperationChoices';
 import { canvasPresentationOperationForRel } from './canvasRelationalOperationPresentation';
+import { DVT_TRANSFORM_MATERIALIZATIONS } from './canvasDvtMaterializationPolicy';
 
 type TransformMetadata =
   DvtUninitializedTransformAuthoringMetadata | DvtSubstraitTransformAuthoringMetadata;
 
 const DEFAULT_MATERIALIZATION = 'view';
-const VALID_MATERIALIZATIONS = new Set(['table', 'view']);
+const VALID_MATERIALIZATIONS = new Set<string>(DVT_TRANSFORM_MATERIALIZATIONS);
 
 function normalizeMaterialized(value: string | undefined): string {
   const normalized = normalizeDvtIdentifier(value, DEFAULT_MATERIALIZATION);

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { NODE_PROPERTY_ROW_ID } from '../../components/inspector/nodePropertiesReadModel';
+import { NODE_PROPERTY_ROW_ID } from '../../components/inspector/nodePropertiesContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import { buildDbtYamlDescriptionWorkbenchContributions } from './dbtYamlDescriptionWorkbenchContribution';
 

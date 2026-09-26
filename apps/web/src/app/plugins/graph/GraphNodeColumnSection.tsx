@@ -8,7 +8,7 @@ import type { GraphNodeColumnSectionProps } from './graphNodeColumnContracts';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { GraphNodeColumnRow } from './GraphNodeColumnRow';
 import { GraphNodeCalculatedColumnForm } from './GraphNodeCalculatedColumnForm';
-import { graphNodeColumnClasses } from './graphVisualTokens';
+import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 import { useGraphNodeColumnSectionState } from './useGraphNodeColumnSectionState';
 
 const compactRemainderClassName =

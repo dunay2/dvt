@@ -12,6 +12,7 @@ import type {
 } from './canvasInspectorAuthoring.types';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import { canvasViewCopy } from './copy';
+import { DVT_TRANSFORM_MATERIALIZATIONS } from './canvasDvtMaterializationPolicy';
 
 type DvtTransformAuthoringMetadata =
   DvtUninitializedTransformAuthoringMetadata | DvtSubstraitTransformAuthoringMetadata;
@@ -27,10 +28,13 @@ export function DvtTransformMaterializationField({
   errors: CanvasInspectorNodeDraftErrors['dvt'];
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
-  const options = [
-    { value: 'view', label: canvasViewCopy.inspectorDvtMaterializationViewLabel },
-    { value: 'table', label: canvasViewCopy.inspectorDvtMaterializationTableLabel },
-  ] as const;
+  const options = DVT_TRANSFORM_MATERIALIZATIONS.map((value) => ({
+    value,
+    label:
+      value === 'view'
+        ? canvasViewCopy.inspectorDvtMaterializationViewLabel
+        : canvasViewCopy.inspectorDvtMaterializationTableLabel,
+  }));
 
   return (
     <div className="space-y-2">

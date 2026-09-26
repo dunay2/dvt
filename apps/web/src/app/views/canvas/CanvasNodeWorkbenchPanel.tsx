@@ -19,7 +19,7 @@ import { NodePropertiesTabs } from '../../components/inspector/NodePropertiesTab
 import type {
   NodePropertiesReadModel,
   NodePropertySectionId,
-} from '../../components/inspector/nodePropertiesReadModel';
+} from '../../components/inspector/nodePropertiesContracts';
 import { buildNodePropertiesReadModel } from '../../components/inspector/nodePropertiesReadModel';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { CanvasInspectorAuthoringSection } from './CanvasInspectorAuthoringSection';

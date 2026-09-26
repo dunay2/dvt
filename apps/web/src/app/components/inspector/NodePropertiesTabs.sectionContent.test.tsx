@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import type { InspectorPanelContribution } from '../../plugins/contracts/PluginManifest';
 import { NodePropertiesTabs } from './NodePropertiesTabs';
-import type { NodePropertiesReadModel } from './nodePropertiesReadModel';
+import type { NodePropertiesReadModel } from './nodePropertiesContracts';
 
 vi.mock('../monaco/MonacoCodeViewer', () => ({
   MonacoCodeViewer: ({ value }: { value: string }) => (

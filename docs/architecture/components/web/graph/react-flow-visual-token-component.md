@@ -2,7 +2,7 @@
 title: React Flow Visual Token Component
 status: Active
 owner: Web / Canvas
-last_reviewed: 2026-09-01
+last_reviewed: 2026-09-26
 planning_type: architecture
 ---
 
@@ -12,6 +12,13 @@ This component owns the React Flow graph visual tokens used by Canvas graph
 projection, generic plugin graph node rendering, and graph-node card chrome.
 
 ## Public API
+
+Token ownership is split by concern: `graphCardVisualTokens.ts` owns card layout,
+tags, identity tooltips and health borders; `graphMetricVisualTokens.ts` owns
+metric rows, operational rails and popovers; `graphColumnVisualTokens.ts` owns
+column controls. `graphVisualTokens.ts` retains edge, node-kind and fallback
+tokens. Consumers import the owning module directly, without a compatibility
+barrel. The model header is content-sized and no longer reserves a last-run slot.
 
 - `graphNodeCardSurfaceClasses`: outer card surface and state classes.
 - `graphNodeCardLayoutClasses`: graph-node card internal layout classes.
@@ -41,6 +48,9 @@ projection, generic plugin graph node rendering, and graph-node card chrome.
   `slate-*`, `gray-*`, `neutral-*`, or hex visual decisions.
 - Graph-node card presentation components consume responsibility-specific token
   groups instead of a shared catch-all class bag.
+- Metric rows and operational rails share one status-tone map. Popovers reuse
+  that map with an explicit neutral-surface override; they do not redefine the
+  same success, warning, failure or running colors.
 - A card's base border comes only from its projected health: solid green for
   healthy, dashed red for failed, and solid neutral when evidence is absent or
   non-terminal. The line style keeps failure distinguishable without color.
