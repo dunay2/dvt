@@ -7,8 +7,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewport';
 import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
 
-function ViewportHarness(): JSX.Element {
-  const viewport = useCanvasRelationalTreeViewport('test-tree');
+function ViewportHarness({
+  semanticRevision = 'initial',
+}: Readonly<{ semanticRevision?: string }>): JSX.Element {
+  const viewport = useCanvasRelationalTreeViewport();
   return (
     <>
       <output>{viewport.zoom}</output>
@@ -17,6 +19,7 @@ function ViewportHarness(): JSX.Element {
       </button>
       <div
         data-testid="viewport"
+        data-semantic-revision={semanticRevision}
         ref={viewport.viewportRef}
         onPointerDown={viewport.onPointerDown}
         onPointerMove={viewport.onPointerMove}
@@ -171,6 +174,37 @@ describe('relational-tree mouse navigation', () => {
       fit.click();
     });
     expect(zoom()).toBeCloseTo(0.084);
+  });
+  it('keeps scroll and zoom when only semantic identity changes', () => {
+    Object.defineProperties(viewport, {
+      clientWidth: { value: 800 },
+      clientHeight: { value: 400 },
+    });
+    Object.defineProperties(content, {
+      offsetWidth: { value: 1600 },
+      offsetHeight: { value: 800 },
+    });
+    act(() => {
+      while (frames.length > 0) frames.shift()!(0);
+    });
+    viewport.scrollLeft = 180;
+    viewport.scrollTop = 90;
+    const beforeZoom = zoom();
+
+    act(() =>
+      root.render(
+        <RelationalLayoutSession>
+          <ViewportHarness semanticRevision="new-semantic-digest" />
+        </RelationalLayoutSession>
+      )
+    );
+    act(() => {
+      while (frames.length > 0) frames.shift()!(0);
+    });
+
+    expect(zoom()).toBe(beforeZoom);
+    expect(viewport.scrollLeft).toBe(180);
+    expect(viewport.scrollTop).toBe(90);
   });
   it('pans with the middle button over a card without capturing right-click', () => {
     viewport.setPointerCapture = vi.fn();

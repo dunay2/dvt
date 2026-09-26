@@ -41,9 +41,13 @@ export function useCanvasRelationAnalysisSession(
   const refresh = useCallback(() => {
     setReady((current) => (current == null ? null : { ...current, revision: session.revision }));
   }, [session]);
-  return useMemo(
-    () =>
-      ready?.document === document && ready?.session === session ? { ...ready, refresh } : null,
-    [ready, document, session, refresh]
-  );
+  return useMemo(() => {
+    if (ready?.session !== session || !session.hasDocument(document)) return null;
+    return {
+      ...ready,
+      document,
+      revision: session.revision,
+      refresh,
+    };
+  }, [ready, document, session, refresh]);
 }

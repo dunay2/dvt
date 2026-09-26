@@ -28,7 +28,7 @@ function ScalarGraphView({
 }: ScalarGraphProps): JSX.Element {
   const marker = useId();
   const [selected, setSelected] = useState<string | null>(null);
-  const viewport = useCanvasRelationalTreeViewport(graph.relationId, 8);
+  const viewport = useCanvasRelationalTreeViewport(8);
   const byId = new Map(graph.nodes.map((node) => [node.id, node]));
   const width = Math.max(420, ...graph.nodes.map((node) => node.position.x + 230));
   const height = Math.max(100, ...graph.nodes.map((node) => node.position.y + 68));

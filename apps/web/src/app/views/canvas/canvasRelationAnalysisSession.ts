@@ -31,22 +31,28 @@ export class CanvasRelationAnalysisSession {
 
   receive(document: SubstraitDocument | null, deniedInputs: ReadonlySet<string> = new Set()): void {
     this.deniedInputs = deniedInputs;
-    if (document === this.accepted) return;
     // Full-document acknowledgements can allocate new objects without changing authority.
     // Local edits retain the identity fast path and the existing incremental change rail.
-    if (
-      document != null &&
-      this.accepted != null &&
-      equals(PlanSchema, document.plan, this.accepted.plan) &&
-      jcsCanonicalize(document.sidecar) === jcsCanonicalize(this.accepted.sidecar)
-    )
+    if (this.hasDocument(document)) {
+      this.accepted = document;
       return;
+    }
     if (document == null) this.dispose();
     else if (this.analysis == null)
       this.analysis = new RelationAnalysisSession({ document, scope: this.scope });
     else this.analysis.replace(document, this.analysis.revision);
     this.accepted = document;
     this.reindexSources(document);
+  }
+
+  hasDocument(document: SubstraitDocument | null): boolean {
+    return (
+      document === this.accepted ||
+      (document != null &&
+        this.accepted != null &&
+        equals(PlanSchema, document.plan, this.accepted.plan) &&
+        jcsCanonicalize(document.sidecar) === jcsCanonicalize(this.accepted.sidecar))
+    );
   }
 
   private reindexSources(document: SubstraitDocument | null): void {

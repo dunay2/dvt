@@ -9,10 +9,7 @@ import {
 } from './canvasRelationalTreeViewport';
 import { useRelationalViewportPan } from './relational-layout/useRelationalViewportPan';
 import { useRelationalLayout } from './relational-layout/RelationalLayoutSession';
-export function useCanvasRelationalTreeViewport(
-  layoutKey: string,
-  fitPadding = 32
-): Readonly<{
+export function useCanvasRelationalTreeViewport(fitPadding = 32): Readonly<{
   viewportRef: RefObject<HTMLDivElement>;
   contentRef: RefObject<HTMLDivElement>;
   zoom: number;
@@ -43,10 +40,16 @@ export function useCanvasRelationalTreeViewport(
   }, []);
 
   const fit = useCallback(() => {
-    autoFit.current = true;
     const viewport = viewportRef.current;
     const content = contentRef.current;
     if (viewport == null || content == null) return;
+    if (
+      viewport.clientWidth <= 0 ||
+      viewport.clientHeight <= 0 ||
+      content.offsetWidth <= 0 ||
+      content.offsetHeight <= 0
+    )
+      return;
     const nextZoom = calculateCanvasRelationalTreeFit({
       viewportWidth: viewport.clientWidth,
       viewportHeight: viewport.clientHeight,
@@ -54,6 +57,7 @@ export function useCanvasRelationalTreeViewport(
       contentHeight: content.offsetHeight,
       padding: fitPadding,
     });
+    autoFit.current = false;
     setZoom(nextZoom);
     setMinimumZoom(Math.min(CANVAS_RELATIONAL_TREE_MIN_ZOOM, nextZoom));
     requestAnimationFrame(() => center(nextZoom));
@@ -81,7 +85,7 @@ export function useCanvasRelationalTreeViewport(
       cancelAnimationFrame(frame);
       observer?.disconnect();
     };
-  }, [autoFit, fit, layoutKey]);
+  }, [autoFit, fit]);
 
   const changeZoom = useCallback(
     (delta: number) => {

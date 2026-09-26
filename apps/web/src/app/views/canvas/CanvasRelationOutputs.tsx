@@ -102,7 +102,7 @@ export function CanvasRelationOutputs({
         return (
           <RelationOutputRow
             orderingOnly={orderingOnly}
-            key={key}
+            key={`${relationId}:${field.slot}`}
             field={field}
             copy={copy}
             name={name}

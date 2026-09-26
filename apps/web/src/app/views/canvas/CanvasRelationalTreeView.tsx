@@ -40,7 +40,7 @@ function TreeView({
   onDropSource?: (nodeId: string) => string | null | void;
   onOpenOutput?: () => void;
 }>): JSX.Element {
-  const viewport = useCanvasRelationalTreeViewport(root.locator);
+  const viewport = useCanvasRelationalTreeViewport();
   const { setPosition } = useRelationalLayout();
 
   return (

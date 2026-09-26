@@ -35,5 +35,9 @@ export function useRelationOutputs(relationId: string) {
     });
     return () => cancellation.abort();
   }, [analysis, relationId]);
-  return settled?.analysis === analysis && settled?.relationId === relationId ? settled : null;
+  return settled?.relationId === relationId &&
+    settled.analysis?.session === analysis?.session &&
+    analysis?.error == null
+    ? settled
+    : null;
 }

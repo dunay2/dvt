@@ -35,7 +35,6 @@ function DraftViewport({
     selectedRelationId,
     draft: joinDraft,
     operation,
-    selectedInputIds,
     pendingSources,
     nodes,
     edges,
@@ -51,9 +50,7 @@ function DraftViewport({
     actions.reconcileSelection,
     data.selectedPendingId != null
   );
-  const viewport = useCanvasRelationalTreeViewport(
-    `${draftProjection?.root.locator ?? ''}:${selectedInputIds.join(',')}:${operation}`
-  );
+  const viewport = useCanvasRelationalTreeViewport();
 
   const { setPosition } = useRelationalLayout();
 

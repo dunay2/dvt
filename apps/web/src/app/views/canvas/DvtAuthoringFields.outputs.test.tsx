@@ -112,6 +112,19 @@ describe.each(Object.entries(documents))('%s relation output editor', (_kind, do
       )
     ).toHaveLength(selectedCount - 1);
   });
+
+  it('keeps the activated output control mounted and focused', async () => {
+    await setup();
+    const checkbox = view.container.querySelector<HTMLInputElement>(
+      '[data-slot="relation-output-field"] input[type="checkbox"]'
+    )!;
+    checkbox.focus();
+
+    await act(async () => fireEvent.click(checkbox));
+
+    expect(checkbox.isConnected).toBe(true);
+    expect(documentOf(view.container).activeElement).toBe(checkbox);
+  });
 });
 function documentOf(element: HTMLElement): Document {
   return element.ownerDocument;

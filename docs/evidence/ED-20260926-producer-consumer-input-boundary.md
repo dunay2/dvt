@@ -18,6 +18,8 @@ code_refs:
   - apps/web/src/app/views/canvas/canvasInputBindingAuthoring.ts
   - apps/web/src/app/views/canvas/canvasRelationOutputAuthoring.ts
   - apps/web/src/app/views/canvas/canvasModelCompositionInput.ts
+  - apps/web/src/app/views/canvas/CanvasRelationOutputs.tsx
+  - apps/web/src/app/views/canvas/useCanvasRelationalTreeViewport.ts
   - apps/api/src/application/services/dvtProtectedTransformSelection.ts
   - apps/api/test/application/services/previewCanvasProducerRows.test.ts
 evidence:
@@ -99,6 +101,10 @@ protected preview. The shell extraction is a presentation adapter of
   were removed. The remaining output command delegates to selected-relation
   operations. Shared metadata controls, shell DTO assembly and pure working-set
   reconciliation were extracted without a second controller or store.
+- Output selection keeps one stable row identity while the relation session
+  acknowledges its next revision. Semantic digest changes no longer restart
+  relational viewport fitting; the initial fit and explicit Fit command are
+  one-shot operations, so checkbox changes preserve focus, zoom and scroll.
 
 Mechanization was reconciled through `RecordFeatureMechanizationRail`, including
 the cross-context `GH-3298-PRODUCER-CONSUMER-INPUT-BOUNDARY` declaration and the
@@ -123,7 +129,7 @@ direct SQL mutation or authority reconstruction was used.
 | API focused command below                                     | 76 tests passed in 7 files                                                                                             |
 | API production/test TypeScript checks and lint listed above   | Passed                                                                                                                 |
 | `pnpm --filter @dvt/web test:unit:run`                        | 2,175 tests passed in 382 files                                                                                        |
-| `pnpm --filter @dvt/web test:canvas-presentation:run`         | 788 tests passed in 205 files in the final isolated run                                                                |
+| `pnpm --filter @dvt/web test:canvas-presentation:run`         | 791 tests passed in 205 files, including Output focus and viewport-stability regressions                               |
 | `pnpm --filter @dvt/web lint` and `typecheck`                 | Passed                                                                                                                 |
 | Native Cypress command listed above                           | 4 tests passed, including second-producer mapping, persistence/reload, Output rejection and accessibility              |
 | `pnpm docs:feature-mechanization`                             | Passed with 223 effective manifests before final retired-reference reconciliation; see current closure condition below |
