@@ -99,7 +99,7 @@ describe('selected unary removal lifetime', () => {
         capabilityId: dvtSubstraitTextComparison.capabilities[0]!.capabilityId,
         value: 'active',
       };
-      const draft =
+      let draft =
         operator === 'filter'
           ? await applySelectedRelationFilter(session, request)
           : await applySelectedRelationSortFetch(session, {
@@ -116,8 +116,16 @@ describe('selected unary removal lifetime', () => {
                   }
                 : { operation: 'fetch' as const, count: 10n }),
             });
-      const revision = session.revision;
       const relationId = session.rootId;
+      draft = await applySelectedRelationSortFetch(session, {
+        operation: 'fetch',
+        relationId,
+        expectedRevision: session.revision,
+        intent: 'insert',
+        count: 77n,
+      });
+      const consumerId = session.rootId;
+      const revision = session.revision;
       const analysis = { document: draft, session, revision, error: null, refresh: vi.fn() };
       const accept = vi.fn();
       let removal: ReturnType<typeof useCanvasRelationalTreeRemoval>;
@@ -135,7 +143,7 @@ describe('selected unary removal lifetime', () => {
         return null;
       }
       await act(async () => root.render(<Host enabled />));
-      // Hold the real schema query at its asynchronous boundary; release it after invalidation.
+      // Hold the consumer's real schema query; retiring a root alone needs no schema work.
       const query = session.query.bind(session);
       let release!: () => void;
       const gate = new Promise<void>((resolve) => {
@@ -155,10 +163,11 @@ describe('selected unary removal lifetime', () => {
       if (outcome === 'accept') {
         expect(accept).toHaveBeenCalledOnce();
         expect(accept.mock.calls[0]![0].operation).toBe('inner_join');
-        expect(session.rootId).not.toBe(relationId);
+        expect(() => session.locate(relationId, session.revision)).toThrow();
+        expect(session.rootId).toBe(consumerId);
       } else {
         expect(accept).not.toHaveBeenCalled();
-        expect(session.rootId).toBe(relationId);
+        expect(session.rootId).toBe(consumerId);
         expect(session.revision).toBe(revision);
       }
       session.dispose();
