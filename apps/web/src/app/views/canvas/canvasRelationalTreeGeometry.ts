@@ -43,13 +43,9 @@ export type CanvasRelationalTreePlacedEdge = Readonly<{
 export type CanvasRelationalTreeLayout = Readonly<{
   width: number;
   height: number;
-  output: Readonly<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    inputLocator: string | null;
-  }> | null;
+  output:
+    | (CardPosition & CanvasRelationalTreeNodeSize & Readonly<{ inputLocator: string | null }>)
+    | null;
   nodes: readonly CanvasRelationalTreePlacedNode[];
   edges: readonly CanvasRelationalTreePlacedEdge[];
 }>;
@@ -141,7 +137,7 @@ export function layoutCanvasRelationalTree(
       siblingCount: detached.length,
     })
   );
-  const bounds = output == null ? nodes : [...nodes, output];
+  const bounds = [...nodes, output];
   return {
     width: Math.max(...bounds.map((node) => node.x + node.width)) + HORIZONTAL_PADDING,
     height: Math.max(...bounds.map((node) => node.y + node.height)) + BOTTOM_PADDING,
