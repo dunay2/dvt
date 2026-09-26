@@ -82,6 +82,7 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
                 portDirections={portDirections}
                 activeColumnHandleId={activeColumnHandleId}
                 copy={copy}
+                view={props.view}
                 showSourceName={props.showSourceName ?? column.sourceNodeName != null}
                 reorder={section.columnReorder}
                 expressionOperandCandidates={section.columnReorder.orderedColumns}

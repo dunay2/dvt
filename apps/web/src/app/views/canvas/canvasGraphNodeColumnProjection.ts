@@ -61,7 +61,8 @@ export function projectInteractiveCanvasColumns(
       columnOverrides != null || presentationColumn == null
         ? (column.id ?? column.name)
         : (presentationColumn.reference ?? column.id ?? column.name);
-    const functionProjection = functionMenus?.get(id) ?? functionMenus?.get(column.name);
+    const functionProjection =
+      functionMenus?.get(id) ?? (column.id == null ? functionMenus?.get(column.name) : undefined);
     const interactiveId = functionProjection?.columnId ?? id;
     const sourceColumnId =
       sourceNode?.kind === 'dvt:transform'

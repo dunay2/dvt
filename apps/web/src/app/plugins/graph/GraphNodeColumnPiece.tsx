@@ -26,6 +26,7 @@ type GraphNodeColumnPieceProps = Readonly<
     canReorder: boolean;
     outputToggleDisabled: boolean;
     showSourceName?: boolean;
+    view?: 'input' | 'output';
     copy: GraphNodeColumnCopy;
     onDragStart: DragEventHandler<HTMLDivElement>;
     onDragEnd: () => void;
@@ -44,6 +45,7 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
       canReorder,
       outputToggleDisabled,
       showSourceName,
+      view,
       onDragStart,
       onDragEnd,
       onOutputToggle,
@@ -56,7 +58,9 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
         ? `${column.sourceNodeName}.${column.name}`
         : column.name;
     const accessibleLabel = (
-      isOutput ? copy.columnOutputAriaLabelTemplate : copy.columnAvailableInputAriaLabelTemplate
+      view !== 'input' && isOutput
+        ? copy.columnOutputAriaLabelTemplate
+        : copy.columnAvailableInputAriaLabelTemplate
     ).replace('{column}', displayedName);
     const outputFocus = useGraphColumnOutputFocus();
 
@@ -68,12 +72,15 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
         data-slot="graph-node-column-piece"
         data-column-name={column.name}
         data-field-id={column.id}
-        data-output={String(isOutput)}
+        data-output={view === 'input' ? undefined : String(isOutput)}
         tabIndex={0}
         aria-label={accessibleLabel}
-        draggable={canReorder || (isOutput && nodeId != null && column.sourceHandleId != null)}
+        draggable={
+          canReorder ||
+          (view !== 'input' && isOutput && nodeId != null && column.sourceHandleId != null)
+        }
         onDragStart={(event) => {
-          if (isOutput && nodeId != null) {
+          if (view !== 'input' && isOutput && nodeId != null) {
             event.stopPropagation();
             writeGraphColumnTransfer(event, nodeId, column);
           }
@@ -107,32 +114,34 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
           {column.nullable === false ? (
             <span className={graphNodeColumnClasses.constraint}>NN</span>
           ) : null}
-          <button
-            type="button"
-            data-slot="graph-node-column-output-state"
-            {...canvasNodeEmbeddedControlProps}
-            aria-label={accessibleLabel}
-            aria-pressed={isOutput}
-            aria-disabled={outputToggleDisabled}
-            className={graphNodeColumnClasses.outputState}
-            onPointerDown={(event) => {
-              outputFocus.capturePointerFocus(event.currentTarget);
-              event.stopPropagation();
-            }}
-            onClick={(event) => {
-              event.stopPropagation();
-              if (outputToggleDisabled) return;
-              onOutputToggle();
-              outputFocus.retainFocus(event.currentTarget);
-            }}
-          >
-            {isOutput ? (
-              <Check
-                data-slot="graph-node-column-output-check"
-                className={graphNodeColumnClasses.outputCheck}
-              />
-            ) : null}
-          </button>
+          {view === 'input' ? null : (
+            <button
+              type="button"
+              data-slot="graph-node-column-output-state"
+              {...canvasNodeEmbeddedControlProps}
+              aria-label={accessibleLabel}
+              aria-pressed={isOutput}
+              aria-disabled={outputToggleDisabled}
+              className={graphNodeColumnClasses.outputState}
+              onPointerDown={(event) => {
+                outputFocus.capturePointerFocus(event.currentTarget);
+                event.stopPropagation();
+              }}
+              onClick={(event) => {
+                event.stopPropagation();
+                if (outputToggleDisabled) return;
+                onOutputToggle();
+                outputFocus.retainFocus(event.currentTarget);
+              }}
+            >
+              {isOutput ? (
+                <Check
+                  data-slot="graph-node-column-output-check"
+                  className={graphNodeColumnClasses.outputCheck}
+                />
+              ) : null}
+            </button>
+          )}
         </span>
         {column.children == null ? null : (
           <GraphNodeColumnChildren

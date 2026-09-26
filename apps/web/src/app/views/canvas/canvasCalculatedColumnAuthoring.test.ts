@@ -4,7 +4,6 @@ import type { CanonicalNode } from '../../types/canonical';
 import { buildDuplicateNodeCommand } from './canvasDuplicateNodeCommand';
 import { encodeDvtSubstraitStructuredFieldDocument } from './canvasDvtSubstraitStructuredField';
 import { composeDvtSubstraitProjectionFields } from './canvasDvtSubstraitStructuredFieldMutation';
-import { rebaseStaleTransformProjection } from './canvasTransformSourceReplacement';
 import { applyCanvasCalculatedColumn } from './canvasCalculatedColumnAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
@@ -371,50 +370,6 @@ describe('Canvas calculated column authoring', () => {
       'customer_clean',
       'customer_normalized',
     ]);
-  });
-  it('allocates opaque outputs when replacing a stale upstream source and preserves them on reread', () => {
-    const transform = projectionTransform();
-    const replacement: CanonicalNode = {
-      ...source,
-      id: 'replacement-source',
-      metadata: {
-        ...source.metadata,
-        tableName: 'new_orders',
-        connectedSourceRef: {
-          schemaVersion: 'connected-source-ref.v1',
-          connectionRef: {
-            schemaVersion: 'connection-ref.v1',
-            connectionId: 'postgres-main',
-            provider: 'postgres',
-          },
-          sourceObjectId: 'raw.new_orders',
-        },
-      },
-    };
-    const initial = session(replacement, transform);
-    initial.workingSet.visibleEdges.push({ sourceId: replacement.id, targetId: transform.id });
-    const canonicalNodesById = new Map([
-      [replacement.id, replacement],
-      [transform.id, transform],
-    ]);
-    const rebased = rebaseStaleTransformProjection({
-      draftSession: initial,
-      canonicalNodesById,
-      targetNodeId: transform.id,
-    });
-    const updated = rebased.localNodeCatalog?.[transform.id];
-    if (updated == null) throw new Error('Expected updated projection.');
-    const outputs = inspect(updated).outputs;
-    expect(outputs).toHaveLength(2);
-    outputs.forEach((output) => expect(output.fieldId).toMatch(OPAQUE_FIELD_ID));
-    expect(new Set(outputs.map((output) => output.fieldId)).size).toBe(2);
-    expect(
-      rebaseStaleTransformProjection({
-        draftSession: rebased,
-        canonicalNodesById,
-        targetNodeId: transform.id,
-      })
-    ).toBe(rebased);
   });
   it('duplicates structured semantic objects with fresh identities and intact internal references', () => {
     const transform = projectionTransform();

@@ -101,6 +101,7 @@ export type GraphNodeColumnSectionProps = Readonly<{
   onColumnInspect?: GraphNodeColumnInspect;
   columns: readonly GraphNodeColumn[];
   inputColumns?: readonly GraphNodeColumn[];
+  view?: 'input' | 'output';
   showSourceName?: boolean;
   expressionInputs?: readonly GraphNodeColumn[];
   expanded?: boolean;

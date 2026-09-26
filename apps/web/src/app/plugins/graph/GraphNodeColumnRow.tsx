@@ -30,6 +30,7 @@ export function GraphNodeColumnRow(props: {
   portDirections: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
   copy: GraphNodeColumnCopy;
+  view?: GraphNodeColumnSectionProps['view'];
   showSourceName?: boolean;
   reorder: GraphNodeColumnReorderController;
   unavailableAliases: readonly string[];
@@ -79,6 +80,7 @@ export function GraphNodeColumnRow(props: {
         column.outputToggleDisabled === true || nodeId == null || props.onColumnOutputToggle == null
       }
       copy={copy}
+      view={props.view}
       showSourceName={props.showSourceName}
       nodeId={nodeId}
       onNestedColumnReorder={props.onColumnReorder}

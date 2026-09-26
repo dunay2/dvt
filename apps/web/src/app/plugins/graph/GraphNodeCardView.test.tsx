@@ -129,7 +129,9 @@ describe('GraphNodeCardView', () => {
       (item) => item.textContent === 'table'
     )!;
     expect(option).not.toBeUndefined();
-    act(() => fireEvent.click(option));
+    act(() => {
+      fireEvent.click(option);
+    });
     expect(change).toHaveBeenCalledExactlyOnceWith('table');
     expect(open).not.toHaveBeenCalled();
   });

@@ -14,7 +14,6 @@ import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
-import { rebaseStaleTransformProjection } from './canvasTransformSourceReplacement';
 import { initializeConnectedModelProjection } from './canvasConnectedModelProjection';
 
 type CanvasEdgeAdmissionTransactionState = {
@@ -66,17 +65,13 @@ async function applyCreatedConnectionColumnMappings(args: {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   targetNodeId: string;
 }): Promise<AcceptedCanvasEdgeAdmissionTransaction> {
-  const rebasedDraftSession = rebaseStaleTransformProjection({
-    draftSession: args.transaction.draftSession,
-    canonicalNodesById: args.canonicalNodesById,
-    targetNodeId: args.targetNodeId,
-  });
-  if (rebasedDraftSession !== args.transaction.draftSession) {
-    return { ...args.transaction, draftSession: rebasedDraftSession };
-  }
-  const nodes = resolveCanvasDraftNodes(rebasedDraftSession, args.canonicalNodesById);
+  const nodes = resolveCanvasDraftNodes(args.transaction.draftSession, args.canonicalNodesById);
   const targetNode = nodes.find((node) => node.id === args.targetNodeId);
-  if (targetNode?.pluginId !== 'dvt' || targetNode.kind !== 'dvt:transform') {
+  if (
+    targetNode?.pluginId !== 'dvt' ||
+    targetNode.kind !== 'dvt:transform' ||
+    targetNode.metadata?.transformAuthoring != null
+  ) {
     return args.transaction;
   }
   const connectedModel = await initializeConnectedModelProjection({
@@ -87,7 +82,10 @@ async function applyCreatedConnectionColumnMappings(args: {
   if (connectedModel != null)
     return {
       ...args.transaction,
-      draftSession: canvasDraftSession.workingSet.upsertNode(rebasedDraftSession, connectedModel),
+      draftSession: canvasDraftSession.workingSet.upsertNode(
+        args.transaction.draftSession,
+        connectedModel
+      ),
     };
   const targetColumns = (
     await projectCanvasNodePresentationTruth({

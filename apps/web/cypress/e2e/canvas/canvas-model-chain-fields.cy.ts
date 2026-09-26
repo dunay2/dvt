@@ -96,9 +96,14 @@ describe('Model card field flow', () => {
     cy.get(consumer).should('not.contain.text', 'RECONNECT');
     cy.get('[data-sonner-toaster]').should('have.attr', 'data-y-position', 'bottom');
     cy.get(consumer).contains('button[aria-expanded]', 'Columns').click();
+    cy.get(`${consumer} ${outputToggle}`).should('not.exist');
+    cy.get(`${consumer} [role="tab"]`).contains('Output (2)').click();
     cy.get(`${consumer} ${columns}[data-column-name="total"] ${outputToggle}`)
       .should('have.attr', 'aria-disabled', 'false')
       .click();
+    cy.get(`${consumer} [role="tab"]`).contains('Input (2)').click();
+    cy.get(`${consumer} ${columns}`).should('have.length', 2);
+    cy.get(`${consumer} ${outputToggle}`).should('not.exist');
     cy.get(`${consumer} [role="tab"]`).contains('Output (1)').click();
     cy.get(`${consumer} ${columns}`).should('have.length', 1);
     cy.get(`${producer} [role="tab"]`).contains('Output').click();

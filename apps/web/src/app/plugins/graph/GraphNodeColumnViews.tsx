@@ -17,7 +17,7 @@ export function GraphNodeColumnViews(props: GraphNodeColumnSectionProps) {
       value={view}
       onValueChange={setView}
       className={graphNodeColumnClasses.views}
-      {...graphColumnTransferTarget(props)}
+      {...(view === 'output' ? graphColumnTransferTarget(props) : {})}
     >
       <TabsList className={graphNodeColumnClasses.viewList} {...canvasNodeEmbeddedControlProps}>
         <TabsTrigger value="input" className={graphNodeColumnClasses.viewTrigger}>
@@ -32,12 +32,14 @@ export function GraphNodeColumnViews(props: GraphNodeColumnSectionProps) {
           {...props}
           columns={columns}
           inputColumns={undefined}
+          view={view === 'input' ? 'input' : 'output'}
           showSourceName={view === 'input'}
+          onColumnOutputToggle={view === 'output' ? props.onColumnOutputToggle : undefined}
           onColumnReorder={view === 'output' ? props.onColumnReorder : undefined}
           onColumnFunctionApply={view === 'output' ? props.onColumnFunctionApply : undefined}
           onCalculatedColumnAdd={view === 'output' ? props.onCalculatedColumnAdd : undefined}
           onStructuredFieldApply={view === 'output' ? props.onStructuredFieldApply : undefined}
-          onAutomap={view === 'input' ? props.onAutomap : undefined}
+          onAutomap={view === 'output' ? props.onAutomap : undefined}
         />
       </TabsContent>
     </Tabs>

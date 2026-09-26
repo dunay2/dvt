@@ -41,6 +41,7 @@ describe('card Input / Output views', () => {
             expanded
             nodeId="consumer"
             onColumnOutputToggle={onColumnOutputToggle}
+            onAutomap={vi.fn()}
           />
         </ReactFlowProvider>
       )
@@ -49,26 +50,40 @@ describe('card Input / Output views', () => {
   it('separates received fields from selected outputs without duplicating rows', () => {
     render(vi.fn());
     expect(container.querySelectorAll('[data-slot="graph-node-column-row"]')).toHaveLength(2);
+    expect(container.querySelector('[data-slot="graph-node-column-output-state"]')).toBeNull();
+    expect(container.querySelector('[data-slot="graph-node-column-automap"]')).toBeNull();
     const output = [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find(
       (tab) => tab.textContent === 'Output (1)'
     )!;
-    act(() => fireEvent.keyDown(output, { key: 'Enter' }));
+    act(() => {
+      fireEvent.keyDown(output, { key: 'Enter' });
+    });
     expect(output.getAttribute('aria-selected')).toBe('true');
     expect(container.querySelectorAll('[data-slot="graph-node-column-row"]')).toHaveLength(1);
+    expect(container.querySelector('[data-slot="graph-node-column-output-state"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="graph-node-column-automap"]')).not.toBeNull();
   });
   it.each([true, false])('transfers only a connected available field (editable=%s)', (editable) => {
     const toggle = vi.fn();
     render(editable ? toggle : undefined);
     const target = container.querySelector('[data-slot="tabs"]')!;
     const drop = (nodeId: string): void => {
-      act(() =>
+      act(() => {
         fireEvent.drop(target, {
           dataTransfer: {
             getData: () => JSON.stringify({ nodeId, columnId: 'producer-email' }),
           },
-        })
-      );
+        });
+      });
     };
+    drop('producer');
+    expect(toggle).not.toHaveBeenCalled();
+    const output = [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find(
+      (tab) => tab.textContent === 'Output (1)'
+    )!;
+    act(() => {
+      fireEvent.keyDown(output, { key: 'Enter' });
+    });
     drop('unrelated');
     expect(toggle).not.toHaveBeenCalled();
     drop('producer');
