@@ -9,6 +9,7 @@ import { createSourceRelation, toSourceRelationInput } from './canvasSourceRelat
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import { createCanonicalComposition } from './canvasCanonicalComposition';
 import { commitSelectedRelation } from './canvasCommitSelectedRelation';
+import { nextSourceOccurrenceAlias } from './relational-source-occurrence/sourceOccurrenceAlias';
 
 export async function composeSourceRelation(
   session: CanvasRelationAnalysisSession,
@@ -24,6 +25,10 @@ export async function composeSourceRelation(
   const target = session.locate(request.relationId, request.expectedRevision);
   const schema = await session.query(request.relationId, request.signal);
   const read = createSourceRelation(toSourceRelationInput(request.input), target.nextAnchor);
+  read.binding.displayName = nextSourceOccurrenceAlias(
+    read.binding.displayName,
+    session.sourceAliases(request.expectedRevision)
+  );
   for (const id of session.matchingSources(request.input.sourceRef, request.expectedRevision)) {
     const prior = session.locate(id, request.expectedRevision).relation.relType;
     const next = read.relation.relType;

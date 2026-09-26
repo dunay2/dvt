@@ -5,6 +5,8 @@ const en = {
   alias: 'Instance alias',
   update: 'Update alias',
   invalid_alias: 'Enter a non-empty name of at most 256 characters.',
+  duplicate_alias: 'Another instance already uses this alias.',
+  update_failed: 'The alias could not be updated. Check the current model and try again.',
   aliasUnsupported: 'This composition does not support instance alias editing yet.',
   read_only: 'This model is read-only.',
   unsupported:
@@ -18,6 +20,9 @@ const es: typeof en = {
   alias: 'Alias de instancia',
   update: 'Actualizar alias',
   invalid_alias: 'Introduce un nombre no vacío de hasta 256 caracteres.',
+  duplicate_alias: 'Otra instancia ya utiliza este alias.',
+  update_failed:
+    'No se ha podido actualizar el alias. Comprueba el modelo actual e inténtalo de nuevo.',
   aliasUnsupported: 'Esta composición aún no admite editar alias de instancia.',
   read_only: 'Este modelo es de solo lectura.',
   unsupported:

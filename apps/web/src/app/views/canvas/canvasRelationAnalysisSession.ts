@@ -11,6 +11,7 @@ import type { ConnectedSourceRef, DvtSubstraitRelationBindingV1 } from '@dvt/con
 import { jcsCanonicalize } from '@dvt/crypto';
 import { equals } from '@bufbuild/protobuf';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import { sourceOccurrenceAliases } from './relational-source-occurrence/sourceOccurrenceAlias';
 
 const connectionKey = (ref: ConnectedSourceRef) =>
   JSON.stringify([
@@ -88,6 +89,11 @@ export class CanvasRelationAnalysisSession {
         'Composition inputs must use the model execution connection.'
       );
     return [...(this.sourceOccurrences.get(sourceKey(ref)) ?? [])];
+  }
+
+  sourceAliases(expectedRevision: number, exceptRelationId?: string): ReadonlySet<string> {
+    this.current().locate(this.rootId, expectedRevision);
+    return sourceOccurrenceAliases(this.accepted!.sidecar.relations, exceptRelationId);
   }
 
   executionProvider(expectedRevision: number): string {

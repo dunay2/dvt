@@ -30,6 +30,41 @@ async function click(slot: string): Promise<void> {
 
 describe('Read properties alias', () => {
   setupWorkbenchTest();
+  it('blocks a duplicate alias inline without applying a command', async () => {
+    const graph = occurrenceGraph();
+    const apply = vi.fn();
+    await act(async () =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={graph.targetNode}
+          nodes={graph.nodes}
+          edges={graph.edges}
+          copy={COPY}
+          authoring={{ canEditNode: true, onApplyNodeDraft: apply }}
+        />
+      )
+    );
+    const reads = graph.draft.sidecar.relations.filter((binding) => binding.sourceRef != null);
+    await act(async () =>
+      container.querySelectorAll<HTMLButtonElement>('[data-operator="read"]')[1]!.click()
+    );
+    await click('canvas-relational-edit');
+    await changeAlias(`  ${reads[0]!.displayName}  `);
+    expect(
+      container.querySelector('[data-slot="source-occurrence-alias"]')?.getAttribute('aria-invalid')
+    ).toBe('true');
+    expect(container.querySelector('[role="alert"]')).not.toBeNull();
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-slot="source-occurrence-update"]')!.disabled
+    ).toBe(true);
+    expect(apply).not.toHaveBeenCalled();
+    await changeAlias('Distinct instance');
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-slot="source-occurrence-update"]')!.disabled
+    ).toBe(false);
+  });
+
   it('opens on one click, updates only that occurrence, and preserves the alias after Apply/reopen', async () => {
     const graph = occurrenceGraph();
     let target = graph.targetNode;

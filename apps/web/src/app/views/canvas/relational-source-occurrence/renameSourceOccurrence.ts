@@ -23,6 +23,8 @@ export async function renameSourceOccurrence(
       'invalid_binding',
       'Alias target must be a source occurrence.'
     );
+  if (session.sourceAliases(request.expectedRevision, request.relationId).has(name.data))
+    throw new SubstraitAnalysisError('invalid_binding', 'Instance alias is already in use.');
   return session.apply({
     expectedRevision: request.expectedRevision,
     upserts: [

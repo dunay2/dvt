@@ -37,15 +37,39 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
     visitWorkbenchCanvas();
     openWorkbenchModel();
     let originalReads: string[] = [];
+    let originalAlias = '';
+    let writesBeforeRename = 0;
     let selectedFields: string[] = [];
     cy.get('[data-operator="read"]')
       .should('have.length', 2)
       .then(($reads) => {
         originalReads = Array.from($reads, (read) => read.getAttribute('data-relation-id')!);
+        originalAlias =
+          $reads[0]!.querySelector('[data-slot="canvas-relational-node-title"]')?.textContent ?? '';
+        expect(originalAlias).not.to.equal('');
       });
     cy.get('[data-slot="source-occurrence-add"]').first().click();
     cy.get('[data-slot="canvas-relational-tree-append-input"]').should('be.visible').click();
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+    cy.wrap(null).should(() => expect(semanticWrites('join-transform')).to.have.length(1));
+    cy.then(() => {
+      writesBeforeRename = semanticWrites('join-transform').length;
+    });
     cy.get('[data-operator="read"]').should('have.length', 3).last().click();
+    cy.get('[data-slot="canvas-relational-edit"]').click();
+    cy.get('[data-slot="source-occurrence-alias"]')
+      .should('exist')
+      .then(($input) => {
+        const alias = $input.val();
+        expect(alias).to.be.a('string').and.not.equal(originalAlias);
+      });
+    cy.then(() => {
+      cy.get('[data-slot="source-occurrence-alias"]').clear().type(`  ${originalAlias}  `);
+    });
+    cy.get('[data-slot="source-occurrence-alias"]').should('have.attr', 'aria-invalid', 'true');
+    cy.get('[data-slot="source-occurrence-update"]').should('be.disabled');
+    cy.then(() => expect(semanticWrites('join-transform')).to.have.length(writesBeforeRename));
     cy.get('[data-slot="source-occurrence-alias"]').clear().type('Regional customers');
     cy.get('[data-slot="source-occurrence-update"]').click();
     cy.get('[data-operator="read"]').last().should('contain.text', 'Regional customers');
@@ -71,6 +95,7 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
       expect(inputs).to.have.length(3);
       expect(inputs.slice(0, 2).map((input) => input.relationId)).to.deep.equal(originalReads);
       expect(new Set(inputs.map((input) => input.relationId)).size).to.equal(3);
+      expect(new Set(inputs.map((input) => input.displayName)).size).to.equal(3);
       expect(inputs[2]!.sourceRef).to.deep.equal(inputs[0]!.sourceRef);
       appendedId = inputs[2]!.relationId;
       expect(
@@ -91,6 +116,8 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
     visitWorkbenchCanvas();
     openWorkbenchModel();
     cy.get('[data-operator="read"]').should('have.length', 3).last().click();
+    cy.get('[data-slot="source-occurrence-alias"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-edit"]').click();
     cy.get('[data-slot="source-occurrence-alias"]').should('have.value', 'Regional customers');
     cy.get('[data-slot="canvas-relation-fields"] [data-field-id]').should(($fields) => {
       expect(Array.from($fields, (field) => field.getAttribute('data-field-id'))).to.deep.equal(
