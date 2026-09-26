@@ -5,6 +5,7 @@ import { applySelectedRelationAggregate } from './canvasSelectedRelationAggregat
 import { applySelectedRelationWindow } from './canvasSelectedRelationWindow';
 import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetch';
 import { prepareRelationRemoval } from './canvasPrepareRelationRemoval';
+import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 
 describe('atomic selected relation retirement', () => {
   it.each(['left', 'right'] as const)(
@@ -23,10 +24,10 @@ describe('atomic selected relation retirement', () => {
       expect(session.rootId).toBe(root.binding.relationId);
       expect(proposal.operations).toEqual([]);
       const next = session.apply(proposal.change);
-      expect(session.rootId).toBe(root.binding.relationId);
-      expect(session.locate(session.rootId, session.revision).inputs).toEqual([retained]);
+      expect(session.rootId).toBe(retained);
+      expect(session.locate(session.rootId, session.revision).inputs).toEqual([]);
       expect((await session.query(retained)).fields).toEqual(before.fields);
-      expect(next.sidecar.relations).toHaveLength(2);
+      expect(next.sidecar.relations).toHaveLength(1);
       expect(document.sidecar.relations).toHaveLength(3);
       expect(deriveSubstraitSchemas(next).schemas.get(retained)).toEqual(before.fields);
     }
@@ -50,10 +51,10 @@ describe('atomic selected relation retirement', () => {
     expect(proposal.operations).toEqual([]);
     const next = session.apply(proposal.change);
     expect(session.rootId).toBe(fetchId);
-    expect(session.locate(fetchId, session.revision).inputs).toEqual([root.binding.relationId]);
-    expect(session.locate(root.binding.relationId, session.revision).inputs).toEqual([
-      root.inputs[0],
-    ]);
+    expect(session.locate(fetchId, session.revision).inputs).toEqual([root.inputs[0]]);
+    expect(
+      next.sidecar.relations.some((entry) => entry.relationId === root.binding.relationId)
+    ).toBe(false);
     const fields = (await session.query(fetchId)).fields;
     expect(fields.length).toBeGreaterThan(0);
     expect(deriveSubstraitSchemas(next).schemas.get(fetchId)).toEqual(fields);
@@ -91,6 +92,34 @@ describe('atomic selected relation retirement', () => {
     expect(session.revision).toBe(revision + 1);
     expect(deriveSubstraitSchemas(next).schemas.get(session.rootId)).toEqual(input.fields);
   });
+
+  it.each([{ outputs: [] }, { outputs: [{ slot: 0, alias: 'only_this_operator' }] }])(
+    'removes a unary operation with edited output $outputs without replacing it with Project',
+    async ({ outputs }) => {
+      const { session, root, document } = selectedUnaryScenario();
+      await applySelectedRelationSortFetch(session, {
+        operation: 'fetch',
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        intent: 'insert',
+        count: 10n,
+      });
+      await changeSelectedRelationOutputs(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        outputs,
+      });
+      const proposal = await prepareRelationRemoval(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+      });
+      const result = session.apply(proposal.change);
+      expect(session.rootId).toBe(root.binding.relationId);
+      expect(result.sidecar.relations).toEqual(document.sidecar.relations);
+      expect(result.sidecar.fields).toEqual(document.sidecar.fields);
+      expect(session.locate(session.rootId, session.revision).relation).toEqual(root.relation);
+    }
+  );
 
   it('rejects stale confirmation and ambiguous branch removal', async () => {
     const { session, root } = selectedUnaryScenario();

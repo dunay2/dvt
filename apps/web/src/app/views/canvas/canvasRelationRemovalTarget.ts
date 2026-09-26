@@ -6,9 +6,6 @@ import {
   type RelationChangeSet,
 } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
-import { create } from '@bufbuild/protobuf';
-import { RelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { retainedOperandProjection } from './canvasRetainedOperandProjection';
 
 type Entry = RelationChangeSet['upserts'][number];
 
@@ -36,26 +33,6 @@ export function removalTarget(
       return { target, replacement: null, removed: new Set<string>(), operations };
   }
   const removed = new Set<string>();
-  const common = readRelationStructure(target.relation).common;
-  if (
-    target.inputs.length === 1 &&
-    ['filter', 'sort', 'fetch'].includes(target.relation.relType.case ?? '') &&
-    common?.emitKind.case === 'emit'
-  ) {
-    const input = session.locate(target.inputs[0]!, revision);
-    const width = input.fields.filter((field) => field.parentFieldId == null).length;
-    const mapping = common.emitKind.value.outputMapping;
-    if (mapping.length !== width || mapping.some((slot, ordinal) => slot !== ordinal)) {
-      const replacement: Entry = {
-        binding: { ...target.binding, displayName: 'project' },
-        fields: target.fields,
-        relation: create(RelSchema, {
-          relType: { case: 'project', value: { common, input: input.relation } },
-        }),
-      };
-      return { target, replacement, removed };
-    }
-  }
   const removeBranch = (id: string) => {
     const pending = [id];
     while (pending.length > 0) {
@@ -100,10 +77,6 @@ export function removalTarget(
   target.inputs.forEach((id, index) => {
     if (index !== port) removeBranch(id);
   });
-  if (target.inputs.length === 2) {
-    const survivor = session.locate(target.inputs[port]!, revision);
-    return { target, replacement: retainedOperandProjection(target, survivor, port), removed };
-  }
   removed.add(target.binding.relationId);
   return { target, replacement: session.locate(target.inputs[port]!, revision), removed };
 }

@@ -54,6 +54,9 @@ describe('Workbench removal', () => {
     cy.screenshot('semantic-editor-card-context-menu');
     cy.get('[data-slot="canvas-relational-remove-left"]').click();
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="project"]').should(
+      'not.exist'
+    );
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]').should(
       'have.length',
       1
@@ -86,6 +89,8 @@ describe('Workbench removal', () => {
         (entry) => entry.relation.relType.case === 'read'
       );
       expect(reads).to.have.length(1);
+      expect(index.relations.size).to.equal(1);
+      expect(draft.sidecar.fields.length).to.be.greaterThan(0);
       expect(reads[0]!.binding.sourceRef?.sourceObjectId).to.equal('relation/dvt/public/customers');
     });
     cy.get('[data-slot="canvas-model-tab-close"]').click();
@@ -96,5 +101,8 @@ describe('Workbench removal', () => {
       1
     );
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="project"]').should(
+      'not.exist'
+    );
   });
 });
