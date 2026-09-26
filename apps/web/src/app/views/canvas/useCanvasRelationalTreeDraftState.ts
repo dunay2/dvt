@@ -58,6 +58,15 @@ export function useCanvasRelationalTreeDraftState() {
       pendingSources.find((item) => item.read.binding.relationId === pendingSourceId) ?? null,
     setPendingSourceId,
     consumePendingSource,
+    clear: () => {
+      setActive(true);
+      setOperation(null);
+      resetOperands();
+      setJoinDraft(null);
+      setAppendInputId(null);
+      setPendingSourceId(null);
+      setApplyRejection(null);
+    },
     applyRejection,
     setApplyRejection,
     reset,

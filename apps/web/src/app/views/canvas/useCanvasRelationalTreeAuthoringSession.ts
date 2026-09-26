@@ -10,7 +10,6 @@ import { useCanvasRelationalTreeAuthoringOptions } from './useCanvasRelationalTr
 import { useCanvasRelationalTreeExistingSeed } from './useCanvasRelationalTreeExistingSeed';
 import { useCanvasRelationComposition } from './useCanvasRelationComposition';
 import { useCanvasRelationalTreeRemoval } from './useCanvasRelationalTreeRemoval';
-import { useCanvasRelationalTreeInputSelection } from './useCanvasRelationalTreeInputSelection';
 import { createSourceOccurrenceActions } from './relational-source-occurrence/sourceOccurrenceActions';
 import type { CanvasRelationalTreeProjection } from './canvasRelationalTreeProjection';
 import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
@@ -49,6 +48,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     applyRejection,
     setApplyRejection,
     reset,
+    clear,
     hydrate: hydrateExistingState,
   } = useCanvasRelationalTreeDraftState();
   const { hydrateExisting, baselineDraft, seed } = useCanvasRelationalTreeExistingSeed({
@@ -106,29 +106,15 @@ export function useCanvasRelationalTreeAuthoringSession(
     if (!active && !hydrateExisting()) setActive(true);
     return true;
   }, [active, editable, enabled, hydrateExisting]);
-  const { selectInput, placeInput } = useCanvasRelationalTreeInputSelection({
-    enabled,
-    editable,
-    active,
-    operation,
-    candidates,
-    inputs,
-    start,
-    hasDraft: effectiveDraft != null,
-    selectInitialInput: slots.selectInitialInput,
-    placeOperand: slots.placeInput,
-    requestAppend: composition.requestAppend,
-  });
   const removal = useCanvasRelationalTreeRemoval({
     analysis,
     enabled: enabled && editable,
     active,
-    draft: joinDraft,
     selectedInputIds: slots.selectedInputIds,
     seed,
     hydrate: hydrateExisting,
-    accept: (result, ids) =>
-      hydrateExistingState({ ...result, inputIds: ids, appendInputId: null }),
+    clear,
+    accept: hydrateExistingState,
   });
   return {
     analysis,
@@ -145,7 +131,7 @@ export function useCanvasRelationalTreeAuthoringSession(
       setPending: setPendingSources,
       selectedId: pendingSourceId,
       setSelectedId: setPendingSourceId,
-      selectInitialInput: (id) => slots.placeInput(id, 'primary'),
+      selectInitialInput: (id) => slots.replaceInputs([id]),
     }),
     removal,
     applyRejection,
@@ -162,11 +148,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     choices,
     joinDraft,
     operation,
-    placeInput,
-    primaryInputId: slots.primaryInputId,
-    secondaryInputId: slots.secondaryInputId,
     selectedInputIds: slots.selectedInputIds,
-    selectInput,
     selectOperation: (next: CanvasRelationalOperation, relationId?: string) => {
       if (start()) void composition.selectOperation(next, relationId);
     },

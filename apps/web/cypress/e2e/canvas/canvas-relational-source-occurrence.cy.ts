@@ -17,6 +17,79 @@ import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenari
 const sourcePath = '/workspace/warehouse/connections/warehouse-a/source-data-sample';
 
 describe('Explicit source occurrences (controlled API boundary)', () => {
+  it('clears the last source, guards the empty draft, restores on Cancel and accepts a replacement', () => {
+    stubWorkbenchScenario('projection');
+    cy.viewport(1440, 1000);
+    visitWorkbenchCanvas();
+    openWorkbenchModel('transform-customers');
+    let originalId = '';
+    cy.get('[data-operator="read"]')
+      .should('have.length', 1)
+      .then(($read) => {
+        originalId = $read.attr('data-relation-id')!;
+      });
+    const remove = (): void => {
+      cy.get('[data-operator="read"]').rightclick();
+      cy.get('[data-slot="canvas-relational-remove-source"]').click();
+      cy.get('[data-slot="canvas-relational-removal-confirm"]').click();
+      cy.get('[data-operator="read"]').should('not.exist');
+      cy.get('[data-slot="canvas-relational-tree-output"]').should('be.visible');
+      cy.get('[data-slot="canvas-relational-tree-layout"] > svg path').should('not.exist');
+      cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
+    };
+    remove();
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+    cy.get('[data-operator="read"]').should(($read) =>
+      expect($read.attr('data-relation-id')).to.equal(originalId)
+    );
+    cy.then(() => {
+      // Viewport autosave may write the unchanged graph; deleting/canceling must not change semantics.
+      for (const write of semanticWrites('transform-customers')) {
+        const document = decodeDvtSubstraitSemanticDocument(
+          semanticDocumentFromWrite(write, 'transform-customers')
+        );
+        expect(
+          document.sidecar.relations
+            .filter((binding) => binding.sourceRef != null)
+            .map((binding) => binding.relationId)
+        ).to.deep.equal([originalId]);
+      }
+    });
+    remove();
+    const dataTransfer = new DataTransfer();
+    cy.get('[data-slot="canvas-relational-tree-source"]')
+      .first()
+      .trigger('dragstart', { dataTransfer });
+    cy.get('[data-slot="canvas-relational-tree-draft-viewport"]')
+      .trigger('dragover', { dataTransfer })
+      .trigger('drop', { dataTransfer });
+    cy.get('[data-pending="true"]').should('have.length', 1);
+    cy.get('[data-slot="source-occurrence-connect"]').click();
+    cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
+    cy.get('[data-slot="dvt-select-operation-projection"]').click();
+    cy.get('[data-operator="read"]').should('have.length', 1).click();
+    cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
+    cy.get('[data-operation="field_transform"]')
+      .should('have.attr', 'aria-disabled', 'false')
+      .click();
+    cy.get('[data-slot="canvas-transform-inspector"]').should('be.visible');
+    cy.get('[data-operator="join"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+    cy.wrap(null).should(() => {
+      const write = semanticWrites('transform-customers').at(-1);
+      expect(write).not.to.equal(undefined);
+      const document = decodeDvtSubstraitSemanticDocument(
+        semanticDocumentFromWrite(write!, 'transform-customers')
+      );
+      const sources = document.sidecar.relations.filter((binding) => binding.sourceRef != null);
+      expect(sources).to.have.length(1);
+      expect(sources[0]!.relationId).not.to.equal(originalId);
+    });
+    cy.then(() => {
+      expect(getE2eApiCalls(/data-sample/, 'GET')).to.have.length(0);
+      expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+    });
+  });
   it('persists an independently named Read without duplicating the physical source or querying implicitly', () => {
     stubWorkbenchScenario('saved-join');
     stubE2eJsonApi(

@@ -1,5 +1,5 @@
 /** Owned concern: render and accept drops on one scalable canonical relational draft graph. */
-import { useMemo, type ComponentProps } from 'react';
+import type { ComponentProps } from 'react';
 import {
   RelationalLayoutSession,
   useRelationalLayout,
@@ -9,7 +9,6 @@ import type {
   CanvasRelationalTreeAuthoringActions,
 } from './canvasRelationalTreeAuthoringView';
 import { RelationalViewportSurface } from './relational-layout/RelationalViewportSurface';
-import { CanvasRelationalTreeOperandCanvas } from './CanvasRelationalTreeOperandCanvas';
 import { useCanvasRelationalDraftProjection } from './useCanvasRelationalDraftProjection';
 
 import {
@@ -33,22 +32,15 @@ function DraftViewport({
   onExpandRelation: (relationId: string | null) => void;
 }>): JSX.Element {
   const {
-    inputs,
     selectedRelationId,
     draft: joinDraft,
     operation,
-    primaryInputId,
-    secondaryInputId,
     selectedInputIds,
     pendingSources,
     nodes,
     edges,
     transformNode,
   } = data;
-  const inputById = useMemo(
-    () => new Map(inputs.map((input) => [input.nodeId, input] as const)),
-    [inputs]
-  );
   const {
     projection: draftProjection,
     selectedLocator,
@@ -95,57 +87,44 @@ function DraftViewport({
           }
         }}
       >
-        {draftProjection == null && pendingSources.length === 0 ? (
-          <CanvasRelationalTreeOperandCanvas
-            copy={copy}
-            primaryInput={primaryInputId == null ? null : (inputById.get(primaryInputId) ?? null)}
-            secondaryInput={
-              secondaryInputId == null ? null : (inputById.get(secondaryInputId) ?? null)
-            }
-            onPlaceInput={actions.placeInput}
-          />
-        ) : (
-          <div
-            ref={viewport.contentRef}
-            data-slot="canvas-relational-tree-draft"
-            className="w-max"
-            style={{ zoom: viewport.zoom }}
-          >
-            <CanvasRelationalTreeLayout
-              occurrences={{
-                pending: pendingSources,
-                selectedId: data.selectedPendingId,
-                select: actions.selectPending,
-                remove: actions.removePending,
-              }}
-              outputName={transformNode.name}
-              root={draftProjection?.root ?? null}
-              selectedLocator={selectedLocator}
-              copy={copy}
-              zoom={viewport.zoom}
-              panMode={viewport.panMode || viewport.panning}
-              onManualLayout={viewport.stopAutoFit}
-              semanticContext={{ transformNode, draft: joinDraft ?? undefined }}
-              onExpand={(locator) => onExpandRelation(relationIdFor(locator))}
-              onRemove={actions.remove}
-              onSelect={(locator) => actions.selectRelation(relationIdFor(locator))}
-            />
-          </div>
-        )}
-      </RelationalViewportSurface>
-      {draftProjection == null && pendingSources.length === 0 ? null : (
-        <div className="absolute bottom-3 left-3 z-10 rounded-md border border-(--border-subtle) bg-(--surface-panel) p-1 shadow-md">
-          <CanvasRelationalTreeZoomControls
+        <div
+          ref={viewport.contentRef}
+          data-slot="canvas-relational-tree-draft"
+          className="w-max"
+          style={{ zoom: viewport.zoom }}
+        >
+          <CanvasRelationalTreeLayout
+            occurrences={{
+              pending: pendingSources,
+              selectedId: data.selectedPendingId,
+              select: actions.selectPending,
+              remove: actions.removePending,
+            }}
+            outputName={transformNode.name}
+            root={draftProjection?.root ?? null}
+            selectedLocator={selectedLocator}
             copy={copy}
             zoom={viewport.zoom}
-            minimumZoom={viewport.minimumZoom}
-            onChange={viewport.changeZoom}
-            onFit={viewport.fit}
-            panMode={viewport.panMode}
-            onTogglePan={viewport.togglePanMode}
+            panMode={viewport.panMode || viewport.panning}
+            onManualLayout={viewport.stopAutoFit}
+            semanticContext={{ transformNode, draft: joinDraft ?? undefined }}
+            onExpand={(locator) => onExpandRelation(relationIdFor(locator))}
+            onRemove={actions.remove}
+            onSelect={(locator) => actions.selectRelation(relationIdFor(locator))}
           />
         </div>
-      )}
+      </RelationalViewportSurface>
+      <div className="absolute bottom-3 left-3 z-10 rounded-md border border-(--border-subtle) bg-(--surface-panel) p-1 shadow-md">
+        <CanvasRelationalTreeZoomControls
+          copy={copy}
+          zoom={viewport.zoom}
+          minimumZoom={viewport.minimumZoom}
+          onChange={viewport.changeZoom}
+          onFit={viewport.fit}
+          panMode={viewport.panMode}
+          onTogglePan={viewport.togglePanMode}
+        />
+      </div>
     </div>
   );
 }

@@ -39,6 +39,11 @@ export async function prepareRelationRemoval(
     revision,
     args.keep
   );
+  if (replacement == null)
+    throw new SubstraitAnalysisError(
+      'invalid_structure',
+      'An empty editor draft has no executable relation delta.'
+    );
   let before = target;
   let after: Entry = replacement;
   const upserts = new Map<string, Entry>();

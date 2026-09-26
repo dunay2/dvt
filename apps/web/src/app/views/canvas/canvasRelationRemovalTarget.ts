@@ -20,6 +20,7 @@ export function removalTarget(
 ) {
   let target = session.locate(relationId, revision);
   let dropPort: number | undefined;
+  const operations: string[] = [];
   if (target.inputs.length === 0) {
     while (target.consumers.length === 1) {
       const parent = session.locate(target.consumers[0]!, revision);
@@ -29,9 +30,10 @@ export function removalTarget(
         break;
       }
       target = parent;
+      operations.push(parent.relation.relType.case!.toUpperCase());
     }
     if (dropPort == null)
-      throw new SubstraitAnalysisError('invalid_binding', 'The last source cannot be removed.');
+      return { target, replacement: null, removed: new Set<string>(), operations };
   }
   const removed = new Set<string>();
   const common = readRelationStructure(target.relation).common;

@@ -10,9 +10,71 @@ import { applySelectedRelationFilter } from './canvasSelectedRelationFilter';
 import { dvtSubstraitTextComparison } from './canvasDvtSubstraitTextComparison';
 import { useCanvasRelationalTreeRemoval } from './useCanvasRelationalTreeRemoval';
 import { source } from './canvasRelationalOperator.test-support';
+import { createSourceRelation } from './canvasSourceRelation';
+import { createSourceDocument } from './canvasSourceDocument';
 
 describe('selected unary removal lifetime', () => {
   setupWorkbenchTest();
+  it.each(['confirm', 'cancel', 'stale', 'read-only'] as const)(
+    'guards final-source clearing with dependent operations (%s)',
+    async (outcome) => {
+      const session = new CanvasRelationAnalysisSession('model');
+      const read = createSourceRelation({ source: source('records'), fields: ['customer_id'] }, 1);
+      session.receive(createSourceDocument([read], read));
+      const draft = await applySelectedRelationSortFetch(session, {
+        operation: 'fetch',
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        intent: 'insert',
+        count: 10n,
+      });
+      const analysis = {
+        document: draft,
+        session,
+        revision: session.revision,
+        error: null,
+        refresh: vi.fn(),
+      };
+      const clear = vi.fn();
+      const accept = vi.fn();
+      const hydrate = vi.fn(() => true);
+      let removal: ReturnType<typeof useCanvasRelationalTreeRemoval>;
+      function Host({ enabled }: Readonly<{ enabled: boolean }>): null {
+        removal = useCanvasRelationalTreeRemoval({
+          enabled,
+          analysis,
+          active: false,
+          selectedInputIds: [],
+          seed: { draft, inputIds: ['records'], operation: 'projection' },
+          hydrate,
+          accept,
+          clear,
+        });
+        return null;
+      }
+      await act(async () => root.render(<Host enabled />));
+      await act(async () => removal!.remove(read.binding.relationId));
+      expect(removal!.pending?.result.operations).toHaveLength(1);
+      expect(clear).not.toHaveBeenCalled();
+      if (outcome === 'stale')
+        await applySelectedRelationSortFetch(session, {
+          operation: 'fetch',
+          relationId: session.rootId,
+          expectedRevision: session.revision,
+          intent: 'edit',
+          count: 20n,
+        });
+      if (outcome === 'read-only') await act(async () => root.render(<Host enabled={false} />));
+      await act(async () => (outcome === 'cancel' ? removal!.cancel() : removal!.confirm()));
+      expect(clear).toHaveBeenCalledTimes(outcome === 'confirm' ? 1 : 0);
+      expect(hydrate).toHaveBeenCalledTimes(outcome === 'confirm' ? 1 : 0);
+      expect(accept).not.toHaveBeenCalled();
+      expect(session.locate(read.binding.relationId, session.revision).relation.relType.case).toBe(
+        'read'
+      );
+      session.dispose();
+    }
+  );
   it.each(
     ['filter', 'sort', 'fetch'].flatMap((operator) =>
       ['accept', 'unmount', 'read-only'].map((outcome) => ({ operator, outcome }))
@@ -64,10 +126,10 @@ describe('selected unary removal lifetime', () => {
           enabled,
           analysis,
           active: true,
-          draft,
           selectedInputIds: ['records', 'related'],
           seed: null,
           hydrate: () => true,
+          clear: vi.fn(),
           accept,
         });
         return null;

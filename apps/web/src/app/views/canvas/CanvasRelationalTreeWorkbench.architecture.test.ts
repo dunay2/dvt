@@ -24,8 +24,6 @@ import AuthoringSource from './CanvasRelationalTreeAuthoring.tsx?raw';
 import CatalogueSource from './CanvasRelationalTreeSourceCatalogue.tsx?raw';
 import DraftViewportSource from './CanvasRelationalTreeDraftViewport.tsx?raw';
 import InlineEditorSource from './CanvasRelationalTreeInlineEditor.tsx?raw';
-import OperandSlotSource from './CanvasRelationalTreeOperandSlot.tsx?raw';
-import OperandCanvasSource from './CanvasRelationalTreeOperandCanvas.tsx?raw';
 import OperationShelfSource from './CanvasRelationalTreeOperationShelf.tsx?raw';
 import ReplacementDialogSource from './operation-menu/CanvasOperationReplacementDialog.tsx?raw';
 import TreeSource from './CanvasRelationalTreeView.tsx?raw';
@@ -87,8 +85,6 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(OperationShelfSource.split('\n').length).toBeLessThan(140);
     expect(ReplacementDialogSource.split('\n').length).toBeLessThan(80);
     expect(InlineEditorSource.split('\n').length).toBeLessThan(80);
-    expect(OperandSlotSource.split('\n').length).toBeLessThan(80);
-    expect(OperandCanvasSource.split('\n').length).toBeLessThan(80);
     expect(AuthoringOptionsSource.split('\n').length).toBeLessThan(100);
     expect(OperandSlotsSource.split('\n').length).toBeLessThan(90);
     expect(ProjectionAuthoringSource.split('\n').length).toBeLessThan(60);
@@ -126,8 +122,6 @@ describe('Canvas relational-tree Workbench architecture', () => {
       DraftViewportSource,
       OperationShelfSource,
       InlineEditorSource,
-      OperandSlotSource,
-      OperandCanvasSource,
     ].join('\n');
     expect(combined).not.toContain('@xyflow/react');
     expect(combined).not.toContain('applyDvtSubstraitSemanticDocument');

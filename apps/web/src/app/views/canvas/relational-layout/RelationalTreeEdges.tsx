@@ -42,7 +42,7 @@ function EdgeRoleBadge({ edge }: Readonly<{ edge: CanvasRelationalTreePlacedEdge
 }
 
 export function RelationalTreeEdges({ layout }: Readonly<{ layout: CanvasRelationalTreeLayout }>) {
-  const root = layout.nodes[0]!;
+  const root = layout.nodes.find((node) => node.node.locator === layout.output?.inputLocator);
   return (
     <svg
       aria-hidden="true"
@@ -50,7 +50,7 @@ export function RelationalTreeEdges({ layout }: Readonly<{ layout: CanvasRelatio
       width={layout.width}
       height={layout.height}
     >
-      {layout.output == null ? null : (
+      {layout.output == null || root == null ? null : (
         <path
           d={`M ${root.x + root.width} ${layout.output.y + layout.output.height / 2} H ${layout.output.x}`}
           fill="none"

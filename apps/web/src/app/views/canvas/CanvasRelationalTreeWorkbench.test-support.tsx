@@ -161,7 +161,7 @@ export function dragSourceTo(source: HTMLElement, target: HTMLElement): void {
     setData: (type: string, value: string) => values.set(type, value),
   };
   const dragStart = new Event('dragstart', { bubbles: true });
-  const drop = new Event('drop', { bubbles: true });
+  const drop = new MouseEvent('drop', { bubbles: true, clientX: 300, clientY: 200 });
   Object.defineProperty(dragStart, 'dataTransfer', { value: dataTransfer });
   Object.defineProperty(drop, 'dataTransfer', { value: dataTransfer });
   source.dispatchEvent(dragStart);

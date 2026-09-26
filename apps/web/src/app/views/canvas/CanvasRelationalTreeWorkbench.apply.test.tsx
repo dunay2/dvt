@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 /** Owned concern: relational workbench apply behavior. */
 import React, { act } from 'react';
+import { fireEvent } from '@testing-library/dom';
 import { describe, expect, it } from 'vitest';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
@@ -58,16 +59,40 @@ describe('Canvas relational-tree Workbench apply', () => {
       container.querySelector('[data-slot="canvas-relational-tree-operation-panel"]')
     ).toBeNull();
 
-    const primarySlot = container.querySelector<HTMLElement>(
-      '[data-slot="canvas-relational-tree-input-slot"][data-position="primary"]'
-    );
-    const secondarySlot = container.querySelector<HTMLElement>(
-      '[data-slot="canvas-relational-tree-input-slot"][data-position="secondary"]'
-    );
-    expect(primarySlot).not.toBeNull();
-    expect(secondarySlot).not.toBeNull();
-    await act(async () => dragSourceTo(sourceButtons[0]!, primarySlot!));
-    expect(primarySlot?.textContent).toContain('customers');
+    expect(container.querySelector('[data-slot="canvas-relational-tree-input-slot"]')).toBeNull();
+    const drop = async (ordinal: number): Promise<void> =>
+      act(async () =>
+        dragSourceTo(
+          sourceButtons[ordinal]!,
+          container.querySelector<HTMLElement>(
+            '[data-slot="canvas-relational-tree-draft-viewport"]'
+          )!
+        )
+      );
+    const connect = async (): Promise<void> =>
+      act(async () =>
+        container
+          .querySelector<HTMLButtonElement>('[data-slot="source-occurrence-connect"]')!
+          .click()
+      );
+    const append = async (): Promise<void> => {
+      const fields = container.querySelectorAll<HTMLSelectElement>(
+        '[data-slot="canvas-relational-tree-existing-field"], [data-slot="canvas-relational-tree-connected-field"]'
+      );
+      for (const field of fields)
+        await act(async () =>
+          fireEvent.change(field, {
+            target: { value: [...field.options].find((option) => option.value !== '')!.value },
+          })
+        );
+      await act(async () =>
+        container
+          .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-append-input"]')!
+          .click()
+      );
+    };
+    await drop(0);
+    await connect();
     openOperationMenu(container);
     expect(document.querySelector('[data-slot="dvt-select-operation-projection"]')).not.toBeNull();
     expect(
@@ -76,20 +101,25 @@ describe('Canvas relational-tree Workbench apply', () => {
         ?.getAttribute('aria-disabled')
     ).toBe('true');
 
-    await act(async () => dragSourceTo(sourceButtons[1]!, secondarySlot!));
-    expect(secondarySlot?.textContent).toContain('orders');
+    await act(async () =>
+      document
+        .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-projection"]')!
+        .click()
+    );
+    expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(1);
+    expect(container.querySelector('[data-operator="project"]')).not.toBeNull();
+    expect(container.querySelector('[data-operator="join"]')).toBeNull();
+    await drop(1);
+    await connect();
+    openOperationMenu(container);
     expect(document.querySelector('[role="listbox"]')).not.toBeNull();
     expect(document.querySelector('[data-slot="dvt-select-operation-projection"]')).toBeNull();
     const innerJoinOperation = document.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-select-operation-inner-join"]'
     );
-    const draftViewport = container.querySelector<HTMLElement>(
-      '[data-slot="canvas-relational-tree-draft-viewport"]'
-    );
-    await act(async () => dragSourceTo(innerJoinOperation!, draftViewport!));
-    expect(
-      container.querySelector('[data-slot="dvt-substrait-join-predicate-editors"]')
-    ).not.toBeNull();
+    await act(async () => innerJoinOperation!.click());
+    await append();
+    expect(container.querySelector('[data-operator="join"]')).not.toBeNull();
 
     await act(async () =>
       container
@@ -97,20 +127,26 @@ describe('Canvas relational-tree Workbench apply', () => {
         ?.click()
     );
     expect(applied).toHaveLength(0);
-    expect(
-      container.querySelector(
-        '[data-slot="canvas-relational-tree-input-slot"][data-position="primary"]'
-      )?.textContent
-    ).toContain('Drop a Source here.');
+    expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(0);
+    expect(container.querySelector('[data-slot="canvas-relational-tree-output"]')).not.toBeNull();
 
     await act(async () => sourceButtons[0]?.click());
+    await connect();
+    openOperationMenu(container);
+    await act(async () =>
+      document
+        .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-projection"]')!
+        .click()
+    );
     await act(async () => sourceButtons[1]?.click());
+    await connect();
     openOperationMenu(container);
     await act(async () =>
       document
         .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
         ?.click()
     );
+    await append();
     await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')

@@ -49,7 +49,7 @@ export function CanvasRelationalTreeOperationShelf({
   const replacing = draft != null && !appending;
   const selected = useCompositionChoices(selectedRelationId, !editable, replacing);
   const choices = replacing ? (selected?.choices ?? []) : initialChoices;
-  const operation = replacing ? (selected?.operation ?? null) : initialOperation;
+  const operation = appending ? null : replacing ? (selected?.operation ?? null) : initialOperation;
   const items = buildCanvasOperationMenuItems({
     choices,
     tools,

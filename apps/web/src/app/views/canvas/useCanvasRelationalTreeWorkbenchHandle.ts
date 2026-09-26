@@ -30,11 +30,7 @@ export function useCanvasRelationalTreeWorkbenchHandle(
     session.appendInput != null ||
     session.occurrences.pending.length > 0;
   const handle = {
-    hasUnappliedChanges:
-      directEdit.pending ||
-      (session.active &&
-        (changed || pendingCondition) &&
-        (session.selectedInputIds.length > 0 || session.occurrences.pending.length > 0)),
+    hasUnappliedChanges: directEdit.pending || (session.active && (changed || pendingCondition)),
     canApply:
       !directEdit.pending &&
       !pendingCondition &&

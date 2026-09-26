@@ -43,7 +43,13 @@ export type CanvasRelationalTreePlacedEdge = Readonly<{
 export type CanvasRelationalTreeLayout = Readonly<{
   width: number;
   height: number;
-  output: Readonly<{ x: number; y: number; width: number; height: number }> | null;
+  output: Readonly<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    inputLocator: string | null;
+  }> | null;
   nodes: readonly CanvasRelationalTreePlacedNode[];
   edges: readonly CanvasRelationalTreePlacedEdge[];
 }>;
@@ -55,7 +61,14 @@ export function layoutCanvasRelationalTree(
   detached: readonly CanvasRelationalTreeNode[] = []
 ): CanvasRelationalTreeLayout {
   const first = root ?? detached[0];
-  if (first == null) return { width: 0, height: 0, output: null, nodes: [], edges: [] };
+  const output = {
+    x: 320,
+    y: 36,
+    width: OUTPUT_WIDTH,
+    height: NODE_HEIGHT,
+    inputLocator: null as string | null,
+  };
+  if (first == null) return { width: 512, height: 148, output, nodes: [], edges: [] };
   const { depths, rootDepth, rows, columnLeft, sizeFor } = measureCanvasRelationalTree(
     first,
     sizes
@@ -107,15 +120,11 @@ export function layoutCanvasRelationalTree(
 
   if (root != null) place(root, null, null, 0, 1);
   const rootNode = nodes[0];
-  const output =
-    rootNode == null
-      ? null
-      : {
-          x: rootNode.x + rootNode.width + OUTPUT_GAP,
-          y: rootNode.y,
-          width: OUTPUT_WIDTH,
-          height: NODE_HEIGHT,
-        };
+  if (rootNode != null) {
+    output.inputLocator = rootNode.node.locator;
+    output.x = rootNode.x + rootNode.width + OUTPUT_GAP;
+    output.y = rootNode.y;
+  }
   const bottom = Math.max(0, ...nodes.map((node) => node.y + node.height)) + BOTTOM_PADDING;
   detached.forEach((node, ordinal) =>
     nodes.push({

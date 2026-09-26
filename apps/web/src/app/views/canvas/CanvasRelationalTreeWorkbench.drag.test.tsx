@@ -20,6 +20,9 @@ import {
   container,
 } from './CanvasRelationalTreeWorkbench.test-support';
 import { openOperationMenu } from './operation-menu/operationMenu.test-support';
+import { createSourceRelation } from './canvasSourceRelation';
+import { createSourceDocument } from './canvasSourceDocument';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 async function dropSource(sourceId: string, x = 400, y = 300): Promise<void> {
   const drop = new MouseEvent('drop', { bubbles: true, cancelable: true, clientX: x, clientY: y });
@@ -40,6 +43,95 @@ async function dropSource(sourceId: string, x = 400, y = 300): Promise<void> {
 
 describe('Canvas relational-tree Workbench drag', () => {
   setupWorkbenchTest();
+  it.each(['new', 'saved'] as const)(
+    'removes the final instance from a %s model and cancels without writes',
+    async (state) => {
+      const source = sourceNode('customers', 'customers');
+      const read = createSourceRelation(
+        {
+          source: {
+            nodeId: source.id,
+            schema: 'public',
+            table: 'customers',
+            sourceRef: sourceRef('customers'),
+          },
+          fields: ['customers_id'],
+        },
+        1
+      );
+      const target =
+        state === 'new'
+          ? transformNode()
+          : applyDvtSubstraitSemanticDocument(
+              transformNode(),
+              encodeDvtSubstraitSemanticDocument(createSourceDocument([read], read))
+            );
+      const apply = vi.fn(() => ({ outcome: 'no_changes' as const }));
+      const handle =
+        React.createRef<
+          import('./useCanvasRelationalTreeWorkbenchHandle').CanvasRelationalTreeWorkbenchHandle
+        >();
+      await act(async () =>
+        root.render(
+          <CanvasRelationalTreeWorkbench
+            ref={handle}
+            transformNode={target}
+            nodes={[source, target]}
+            edges={[edge(source.id)]}
+            copy={COPY}
+            authoring={{ canEditNode: true, onApplyNodeDraft: apply }}
+          />
+        )
+      );
+      if (state === 'new') {
+        await dropSource(source.id);
+        await act(async () =>
+          container
+            .querySelector<HTMLButtonElement>('[data-slot="source-occurrence-connect"]')!
+            .click()
+        );
+        openOperationMenu(container);
+        await act(async () =>
+          document
+            .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-projection"]')!
+            .click()
+        );
+      }
+      const card = container.querySelector<HTMLElement>('[data-operator="read"]')!;
+      await act(async () => card.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true })));
+      await act(async () =>
+        document
+          .querySelector<HTMLElement>('[data-slot="canvas-relational-remove-source"]')!
+          .click()
+      );
+      const confirm = document.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-relational-removal-confirm"]'
+      );
+      if (state === 'new') {
+        expect(confirm).not.toBeNull();
+        await act(async () => confirm!.click());
+      } else expect(confirm).toBeNull();
+      expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(0);
+      expect(container.querySelector('[data-slot="canvas-relational-tree-output"]')).not.toBeNull();
+      expect(
+        container.querySelector('[data-slot="canvas-relational-tree-layout"] > svg path')
+      ).toBeNull();
+      expect(handle.current!.hasUnappliedChanges).toBe(true);
+      expect(handle.current!.canApply).toBe(false);
+      await act(async () => expect(handle.current!.apply().outcome).toBe('rejected'));
+      expect(apply).not.toHaveBeenCalled();
+      await dropSource(source.id);
+      expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(1);
+      await act(async () => handle.current!.cancel());
+      expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(0);
+      expect(handle.current!.hasUnappliedChanges).toBe(false);
+      if (state === 'saved')
+        expect(
+          container.querySelector('[data-operator="read"]')?.getAttribute('data-relation-id')
+        ).toBe(read.binding.relationId);
+      expect(apply).not.toHaveBeenCalled();
+    }
+  );
   it('creates independent pending instances on repeated drops and discards them without writes', async () => {
     const graph = occurrenceGraph();
     const apply = vi.fn();

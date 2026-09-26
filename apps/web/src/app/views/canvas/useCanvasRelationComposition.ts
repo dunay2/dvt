@@ -64,12 +64,6 @@ export function useCanvasRelationComposition(
     }
     return accepted;
   };
-  const requestAppend = (nodeId: string) => {
-    const operation = args.operation;
-    if (operation == null || operation === 'projection' || isCanvasJoinOperation(operation))
-      args.setAppendInputId(nodeId);
-    else void append(nodeId, operation);
-  };
   const selectOperation = async (operation: CanvasRelationalOperation, relationId?: string) => {
     if (
       (args.draft == null || args.appendInputId != null) &&
@@ -105,7 +99,6 @@ export function useCanvasRelationComposition(
   return {
     commandState: initialError ? 'error' : command.state,
     selectOperation,
-    requestAppend,
     appendJoinInput: (
       predicate: Readonly<{ leftSourceFieldId: string; rightFieldName: string }>
     ) => {

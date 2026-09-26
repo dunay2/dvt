@@ -70,11 +70,11 @@ describe('canvas relational-tree graph geometry', () => {
       }
     }
   });
-  it('places disconnected instances without inventing edges or an output', () => {
+  it('keeps Output without inventing connections for disconnected or empty instances', () => {
     const pending = [relation('first'), relation('second')];
     const positions = new Map([['second', { x: 300, y: 200 }]]);
     const layout = layoutCanvasRelationalTree(null, new Map(), positions, pending);
-    expect(layout.output).toBeNull();
+    expect(layout.output?.inputLocator).toBeNull();
     expect(layout.edges).toEqual([]);
     expect(layout.nodes).toHaveLength(2);
     expect(layout.nodes.find((node) => node.node.relationId === 'second')).toMatchObject(
@@ -82,5 +82,10 @@ describe('canvas relational-tree graph geometry', () => {
     );
     expect(layout.width).toBeGreaterThan(300);
     expect(layout.height).toBeGreaterThan(200);
+    const empty = layoutCanvasRelationalTree(null);
+    expect(empty.nodes).toEqual([]);
+    expect(empty.edges).toEqual([]);
+    expect(empty.output?.inputLocator).toBeNull();
+    expect(empty.width).toBeGreaterThan(empty.output!.x + empty.output!.width);
   });
 });

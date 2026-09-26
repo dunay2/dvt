@@ -6,7 +6,6 @@ import type {
   CanvasRelationalOperation,
   CanvasRelationalOperationChoice,
 } from './canvasRelationalOperationChoices';
-import type { CanvasRelationalOperandPosition } from './CanvasRelationalTreeOperandSlot';
 import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 
@@ -19,8 +18,6 @@ export type CanvasRelationalTreeAuthoringDto = Readonly<{
   operation: CanvasRelationalOperation | null;
   choices: readonly CanvasRelationalOperationChoice[];
   appendInput: CanvasDvtCompositionInput | null;
-  primaryInputId: string | null;
-  secondaryInputId: string | null;
   selectedInputIds: readonly string[];
   selectedRelationId: string | null;
   pendingSources: readonly PendingSourceOccurrence[];
@@ -30,7 +27,6 @@ export type CanvasRelationalTreeAuthoringDto = Readonly<{
 export type CanvasRelationalTreeAuthoringActions = Readonly<{
   changeDraft: (document: SubstraitDocument) => void;
   selectOperation: (operation: CanvasRelationalOperation, relationId?: string) => void;
-  placeInput: (id: string, position: CanvasRelationalOperandPosition) => void;
   appendJoinInput: (
     selection: Readonly<{ leftSourceFieldId: string; rightFieldName: string }>
   ) => void;
@@ -59,10 +55,7 @@ export function projectCanvasRelationalTreeAuthoringView(
 }> {
   const { model, transformNode, nodes, edges } = context;
   const { session } = model;
-  const select =
-    session.occurrences.pending.length > 0 && !context.pendingCondition
-      ? model.selectRelation
-      : selectRelation;
+  const select = context.pendingCondition ? selectRelation : model.selectRelation;
   return {
     data: {
       transformNode,
@@ -73,8 +66,6 @@ export function projectCanvasRelationalTreeAuthoringView(
       operation: session.operation,
       choices: session.choices,
       appendInput: session.appendInput,
-      primaryInputId: session.primaryInputId,
-      secondaryInputId: session.secondaryInputId,
       selectedInputIds: session.selectedInputIds,
       selectedRelationId:
         session.appendInput == null
@@ -86,7 +77,6 @@ export function projectCanvasRelationalTreeAuthoringView(
     actions: {
       changeDraft: session.setJoinDraft,
       selectOperation: session.selectOperation,
-      placeInput: session.placeInput,
       appendJoinInput: session.appendJoinInput,
       selectRelation: select,
       reconcileSelection: model.selectRelation,

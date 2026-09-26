@@ -127,7 +127,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
     if (!session.active && projection != null && item.treeLocator != null)
       selectTreeNode(item.treeLocator);
     else if (authoringAvailable && item.sourceNodeId != null)
-      session.selectInput(item.sourceNodeId);
+      session.occurrences.add(item.sourceNodeId);
     else if (projection != null && item.treeLocator != null) selectTreeNode(item.treeLocator);
   };
 
