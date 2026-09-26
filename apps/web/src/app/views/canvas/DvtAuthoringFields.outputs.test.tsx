@@ -9,6 +9,7 @@ import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoring
 import { createCustomerOrdersJoin } from './canvasJoin.test-support';
 import { createSourceSet } from './canvasSourceSet';
 import { source } from './canvasRelationalOperator.test-support';
+import { graphSource } from './canvasRelationGraph.test-support';
 
 const documents = {
   join: () =>
@@ -25,6 +26,13 @@ const documents = {
 };
 describe.each(Object.entries(documents))('%s relation output editor', (_kind, document) => {
   const view = useAuthoringFieldsHarness();
+  const producers = ['left', 'right', ...(_kind === 'set' ? ['third'] : [])].map(graphSource);
+  const edges = producers.map((producer) => ({
+    id: `${producer.id}-model`,
+    sourceId: producer.id,
+    targetId: 'dvt-transform',
+    relation: 'lineage' as const,
+  }));
   const outputs = (): HTMLInputElement[] => [
     ...view.container.querySelectorAll<HTMLInputElement>(
       '[data-slot="relation-output-field"] input:not([type="checkbox"])'
@@ -35,7 +43,9 @@ describe.each(Object.entries(documents))('%s relation output editor', (_kind, do
       buildDvtNode('dvt:transform'),
       encodeDvtSubstraitSemanticDocument(document())
     );
-    await act(async () => view.renderFields(node, undefined, undefined, [node], [], 'columns'));
+    await act(async () =>
+      view.renderFields(node, undefined, undefined, [node, ...producers], edges, 'columns')
+    );
     return node;
   };
 
@@ -53,8 +63,12 @@ describe.each(Object.entries(documents))('%s relation output editor', (_kind, do
     const errorId = outputs()[0]!.getAttribute('aria-describedby');
     expect(documentOf(view.container).getElementById(errorId!)?.textContent).toBeTruthy();
 
-    await act(async () => view.renderFields(node, undefined, undefined, [node], [], 'general'));
-    await act(async () => view.renderFields(node, undefined, undefined, [node], [], 'columns'));
+    await act(async () =>
+      view.renderFields(node, undefined, undefined, [node, ...producers], edges, 'general')
+    );
+    await act(async () =>
+      view.renderFields(node, undefined, undefined, [node, ...producers], edges, 'columns')
+    );
     expect(outputs()[0]!.value).toBe(invalid);
     await act(async () => {
       fireEvent.input(outputs()[0]!, { target: { value: 'key_alias' } });

@@ -23,6 +23,7 @@ describe('physical source binding for composed occurrences', () => {
         targetNodeId: graph.targetNode.id,
       });
       const source = inputs[0]!;
+      if (source.sourceRef == null) throw new Error('Expected a physical occurrence fixture.');
       const actual =
         fault === 'missing'
           ? []

@@ -1,7 +1,7 @@
 import { clone } from '@bufbuild/protobuf';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
+import { createDvtSubstraitProjectionOutput } from './canvasLegacyProjectionOutput.test-support';
 import {
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,

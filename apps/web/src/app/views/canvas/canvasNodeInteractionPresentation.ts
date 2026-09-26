@@ -2,6 +2,7 @@ import type { Node } from '@xyflow/react';
 import type { CanvasInspectorNodeDraftApplyResult } from './canvasInspectorAuthoring.types';
 import type {
   GraphNodeColumn,
+  GraphNodeInputMapping,
   GraphNodeCalculatedColumnIdentity,
   GraphNodeColumnFunctionApplyIdentity,
   GraphNodeColumnFunctionApplyResult,
@@ -25,16 +26,18 @@ export type CanvasCardActions = {
 };
 
 export type CanvasColumnActions = {
+  onColumnViewChange?: (nodeId: string, view: 'input' | 'output') => void;
+  onMapCanvasInput?: (identity: GraphNodeInputMapping) => void;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   onApplyCanvasColumnFunction?: (
     identity: GraphNodeColumnFunctionApplyIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>;
   onApplyCanvasStructuredField?: (
     identity: GraphNodeStructuredFieldIdentity
   ) => GraphNodeColumnFunctionApplyResult;
   onAddCanvasCalculatedColumn?: (
     identity: GraphNodeCalculatedColumnIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>;
   onToggleCanvasColumnOutput?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onReorderCanvasColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
@@ -86,12 +89,14 @@ export function buildCanvasNodeInteractionPresentation({
       onToggleNodeSelection: handlers.onToggleNodeSelection,
       onAttachSchemaToNode: handlers.onAttachSchemaToNode,
       onColumnPortActivate: handlers.onColumnPortActivate,
+      onMapCanvasInput: handlers.onMapCanvasInput,
       onApplyCanvasColumnFunction: handlers.onApplyCanvasColumnFunction,
       onApplyCanvasStructuredField: handlers.onApplyCanvasStructuredField,
       onAddCanvasCalculatedColumn: handlers.onAddCanvasCalculatedColumn,
       onToggleCanvasColumnOutput: handlers.onToggleCanvasColumnOutput,
       onReorderCanvasColumnOutput: handlers.onReorderCanvasColumnOutput,
       onColumnDisclosureChange: handlers.onColumnDisclosureChange,
+      onColumnViewChange: handlers.onColumnViewChange,
       onAutomapColumns: handlers.onAutomapColumns,
       resolveAlgebraicCompositionOperations: handlers.resolveAlgebraicCompositionOperations,
       onComposeCanvasNodes: handlers.onComposeCanvasNodes,

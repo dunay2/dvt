@@ -5,12 +5,14 @@ import type {
   GraphNodeColumnFunction,
 } from '../../plugins/graph/graphNodeColumnContracts';
 import type { CanonicalNode } from '../../types/canonical';
-import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
+import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindings';
+import { inspectProjectionDataType } from './canvasDvtSubstraitProjectionStructure';
 import {
-  inspectDvtSubstraitProjectionDraft,
-  resolveDvtSubstraitColumnFunctions,
-  resolveDvtSubstraitProjectionEntry,
-} from './canvasDvtSubstraitProjection';
+  canvasInputSchemaIsEligible,
+  resolveUnmappedCanvasReadFields,
+} from './canvasInputFieldEligibility';
+import { resolveDvtSubstraitColumnFunctions } from './canvasDvtSubstraitProjection';
 
 export type CanvasColumnFunctionMenuMap = Map<
   string,
@@ -74,75 +76,51 @@ function projectDvtTransformMenus(args: {
   edges: readonly Readonly<{ sourceId: string; targetId: string }>[];
 }): CanvasColumnFunctionMenuProjection {
   try {
-    const metadata = createDvtNodeAuthoringMetadata(args.node);
-    const draft =
-      metadata?.kind === 'transform' &&
-      metadata.mode === 'substrait' &&
-      metadata.shape === 'projection'
-        ? { plan: metadata.plan, sidecar: metadata.sidecar }
-        : null;
-    const projection =
-      draft == null
-        ? null
-        : resolveDvtSubstraitProjectionEntry({
-            targetNode: args.node,
-            nodes: args.nodes,
-            edges: args.edges,
-            draft,
-          });
-    if (draft == null || projection == null)
-      return { hasEditableProjection: false, supportsCalculatedColumns: false };
-    const inspection = inspectDvtSubstraitProjectionDraft(draft);
-    if (!inspection.ok) return { hasEditableProjection: false, supportsCalculatedColumns: false };
+    const resolved = resolveCanvasSubstraitGraphBindings(args);
+    const analysis = deriveSubstraitSchemas(resolved.document);
+    const deniedInputs = resolveUnmappedCanvasReadFields({
+      ...args,
+      document: resolved.document,
+      nodeId: args.node.id,
+    });
+    const root = analysis.index.relations.get(analysis.index.rootId)!;
+    const provider = resolved.connection.provider;
     const menus: CanvasColumnFunctionMenuMap = new Map();
-    const provider = projection.source.sourceRef.connectionRef.provider;
-    for (const output of projection.outputs) {
-      addMenu({
-        menus,
-        columnId: output.fieldId,
-        name: output.name,
-        dataType: output.dataType,
-        provider,
-      });
-    }
-    const expressionMenus: CanvasColumnFunctionMenuMap = new Map();
-    for (const field of inspection.projection.inputFields) {
-      addMenu({
-        menus: expressionMenus,
-        columnId: field.fieldId,
-        name: field.name,
-        dataType: field.dataType,
-        provider,
-      });
-    }
-    const inputIds = new Set(inspection.projection.inputFields.map((field) => field.fieldId));
-    const inputNames = new Set(inspection.projection.inputFields.map((field) => field.name));
-    const expressionInputs: GraphNodeColumn[] = [
-      ...inspection.projection.inputFields.map((field) => {
-        const menu = expressionMenus.get(field.fieldId)?.menu;
-        return {
-          id: field.fieldId,
-          name: field.name,
-          type: field.dataType,
-          ...(menu == null ? {} : { functionMenu: menu }),
-        };
-      }),
-      ...projection.outputs.flatMap((output) => {
-        if (
-          (output.sourceFieldId != null && inputIds.has(output.sourceFieldId)) ||
-          (output.sourceFieldName != null && inputNames.has(output.sourceFieldName))
-        ) {
-          return [];
-        }
-        const menu = menus.get(output.fieldId)?.menu;
-        return [
-          {
-            id: output.fieldId,
-            name: output.name,
-            type: output.dataType,
-            ...(menu == null ? {} : { functionMenu: menu }),
-          },
-        ];
+    const projectFields = (relationId: string): GraphNodeColumn[] => {
+      const entry = analysis.index.relations.get(relationId)!;
+      return entry.fields
+        .filter(
+          (field) =>
+            field.parentFieldId == null &&
+            canvasInputSchemaIsEligible(
+              analysis.schemas.get(relationId)![field.outputOrdinal]!,
+              deniedInputs
+            )
+        )
+        .map((field) => {
+          const type = inspectProjectionDataType(
+            analysis.schemas.get(relationId)![field.outputOrdinal]!.type
+          );
+          if (type == null) throw new Error('Unsupported calculated-column operand type.');
+          const name = field.displayName ?? field.fieldId;
+          addMenu({ menus, columnId: field.fieldId, name, dataType: type, provider });
+          const menu = menus.get(field.fieldId)?.menu;
+          return { id: field.fieldId, name, type, ...(menu == null ? {} : { functionMenu: menu }) };
+        });
+    };
+    const inputId =
+      root.relation.relType.case === 'project' ? root.inputs[0]! : analysis.index.rootId;
+    const inputColumns = projectFields(inputId);
+    const inputIds = new Set(inputColumns.map((field) => field.id));
+    const outputs = projectFields(analysis.index.rootId);
+    const expressionInputs = [
+      ...inputColumns,
+      ...outputs.filter((output) => {
+        const binding = root.fields.find((field) => field.fieldId === output.id)!;
+        return (
+          !inputIds.has(output.id) &&
+          (binding.sourceFieldId == null || !inputIds.has(binding.sourceFieldId))
+        );
       }),
     ];
     return {

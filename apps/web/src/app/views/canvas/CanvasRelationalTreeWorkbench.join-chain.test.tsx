@@ -8,12 +8,19 @@ import {
   setupWorkbenchTest,
   COPY,
   sourceNode,
+  sourceRef,
   transformNode,
   edge,
   root,
   container,
 } from './CanvasRelationalTreeWorkbench.test-support';
-import { openOperationMenu } from './operation-menu/operationMenu.test-support';
+import {
+  connectWorkbenchSource,
+  appendWorkbenchJoin,
+} from './CanvasRelationalTreeWorkbench.gestures.test-support';
+import { createSourceJoin } from './canvasSourceJoin';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 describe('Canvas relational-tree Workbench join-chain', () => {
   setupWorkbenchTest();
@@ -22,7 +29,34 @@ describe('Canvas relational-tree Workbench join-chain', () => {
     const orders = sourceNode('orders', 'orders');
     const countries = sourceNode('countries', 'countries');
     const regions = sourceNode('regions', 'regions');
-    const transform = transformNode();
+    const transform = applyDvtSubstraitSemanticDocument(
+      transformNode(),
+      encodeDvtSubstraitSemanticDocument(
+        createSourceJoin({
+          targetNodeId: 'transform',
+          left: {
+            source: {
+              nodeId: customers.id,
+              schema: 'public',
+              table: 'customers',
+              sourceRef: sourceRef('customers'),
+            },
+            fields: ['customers_id'],
+          },
+          right: {
+            source: {
+              nodeId: orders.id,
+              schema: 'public',
+              table: 'orders',
+              sourceRef: sourceRef('orders'),
+            },
+            fields: ['orders_id'],
+          },
+          leftFieldName: 'customers_id',
+          rightFieldName: 'orders_id',
+        })
+      )
+    );
     const applied: CanvasInspectorNodeDraft[] = [];
 
     await act(async () => {
@@ -46,19 +80,11 @@ describe('Canvas relational-tree Workbench join-chain', () => {
     const sourceButtons = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     );
-    await act(async () => sourceButtons[0]?.click());
-    await act(async () => sourceButtons[1]?.click());
-    openOperationMenu(container);
-    await act(async () =>
-      document
-        .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
-        ?.click()
-    );
-
+    // Initial JOIN creation is covered by the apply test; this case owns chaining.
     expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(1);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(2);
 
-    await act(async () => sourceButtons[2]?.click());
+    await connectWorkbenchSource(sourceButtons[2]!);
     const existingFieldOptions = Array.from(
       container.querySelectorAll<HTMLOptionElement>(
         '[data-slot="canvas-relational-tree-existing-field"] option'
@@ -66,21 +92,13 @@ describe('Canvas relational-tree Workbench join-chain', () => {
     ).map((option) => option.textContent);
     expect(existingFieldOptions).toContain('customers_id');
     expect(existingFieldOptions).toContain('orders_id');
-    await act(async () =>
-      container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-append-input"]')
-        ?.click()
-    );
+    await appendWorkbenchJoin();
 
     expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(2);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(3);
 
-    await act(async () => sourceButtons[3]?.click());
-    await act(async () =>
-      container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-append-input"]')
-        ?.click()
-    );
+    await connectWorkbenchSource(sourceButtons[3]!);
+    await appendWorkbenchJoin();
 
     expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(3);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(4);

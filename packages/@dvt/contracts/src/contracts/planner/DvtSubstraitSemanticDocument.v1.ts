@@ -23,6 +23,10 @@ import { validateDvtSubstraitFieldHierarchyV1 } from './DvtSubstraitFieldBinding
 import { decodeDvtSubstraitPlanV1 } from './DvtSubstraitPlanBinary.v1.js';
 import { addDvtSubstraitPlanFieldPolicyIssues } from './DvtSubstraitPlanFieldPolicy.v1.js';
 import {
+  DvtSubstraitProducerReferenceV1Schema,
+  validateDvtProducerInputFields,
+} from './DvtSubstraitProducerReference.v1.js';
+import {
   DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
   DVT_SUBSTRAIT_PLAN_ENCODING,
   DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
@@ -66,6 +70,7 @@ export const DvtSubstraitRelationBindingV1Schema = z
     relationId: NonBlankStringSchema,
     relAnchor: z.number().int().positive().max(0xffffffff),
     sourceRef: ConnectedSourceRefSchema.optional(),
+    producerRef: DvtSubstraitProducerReferenceV1Schema.optional(),
     displayName: CanvasHumanNameV1Schema.optional(),
   })
   .strict();
@@ -92,6 +97,7 @@ export const DvtSubstraitAuthoringSidecarV1Schema = z
   })
   .strict()
   .superRefine((sidecar, context) => {
+    validateDvtProducerInputFields(sidecar.relations, sidecar.fields, context);
     const relationIds = new Set<string>();
     const relAnchors = new Set<number>();
     sidecar.relations.forEach((relation, index) => {

@@ -165,7 +165,7 @@ export function renderGraphHandlersHook({
       currentDraftSession = result.draftSession;
       setDraftSession(() => currentDraftSession);
     }
-    return result;
+    return { ...result, draft: currentDraftSession };
   }) as import('./useCanvasWorkspaceDraftSession').CanvasDraftSessionCommandRunner;
   let latest: LatestHook = null;
   const container = document.createElement('div');

@@ -14,6 +14,7 @@ export type CanvasViewCopy = {
   readonly sourceOccurrenceUnsupported: string;
   readonly sourceOccurrenceUnavailable: string;
   readonly sourceOccurrenceIncompatible: string;
+  readonly sourceOccurrenceInputProjectionRequired: string;
   readonly operationReadLabel: string;
   readonly operationFilterLabel: string;
   readonly operationAggregateLabel: string;

@@ -210,6 +210,12 @@ export {
   WorkspaceGraphAuthoringNodePositionSchema,
   WorkspaceGraphAuthoringNodeSchema,
 } from './contracts/planner/WorkspaceGraphAuthoringDraft.v1.js';
+export {
+  DVT_INPUT_BINDINGS_METADATA_KEY,
+  DvtInputBindingsV1Schema,
+  readDvtInputBindings,
+} from './contracts/planner/DvtInputBindings.v1.js';
+export type { DvtInputBindingsV1 } from './contracts/planner/DvtInputBindings.v1.js';
 export type {
   WorkspaceGraphAuthoringCanvasDocument,
   WorkspaceGraphAuthoringCanvasWorkspace,

@@ -8,16 +8,21 @@ import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 import { graphColumnTransferTarget } from './graphColumnTransfer';
 
 export function GraphNodeColumnViews(props: GraphNodeColumnSectionProps) {
-  const [view, setView] = useState('input');
+  const [localView, setView] = useState<'input' | 'output'>('input');
+  const view = props.view ?? localView;
   if (props.inputColumns == null) return <GraphNodeColumnSection {...props} />;
   const output = props.columns.filter((column) => column.output !== false);
   const columns = view === 'input' ? props.inputColumns : output;
   return (
     <Tabs
       value={view}
-      onValueChange={setView}
+      onValueChange={(next) => {
+        if (next !== 'input' && next !== 'output') return;
+        setView(next);
+        props.onViewChange?.(next);
+      }}
       className={graphNodeColumnClasses.views}
-      {...(view === 'output' ? graphColumnTransferTarget(props) : {})}
+      {...(view === 'input' ? graphColumnTransferTarget(props) : {})}
     >
       <TabsList className={graphNodeColumnClasses.viewList} {...canvasNodeEmbeddedControlProps}>
         <TabsTrigger value="input" className={graphNodeColumnClasses.viewTrigger}>
@@ -34,12 +39,13 @@ export function GraphNodeColumnViews(props: GraphNodeColumnSectionProps) {
           inputColumns={undefined}
           view={view === 'input' ? 'input' : 'output'}
           showSourceName={view === 'input'}
-          onColumnOutputToggle={view === 'output' ? props.onColumnOutputToggle : undefined}
-          onColumnReorder={view === 'output' ? props.onColumnReorder : undefined}
-          onColumnFunctionApply={view === 'output' ? props.onColumnFunctionApply : undefined}
-          onCalculatedColumnAdd={view === 'output' ? props.onCalculatedColumnAdd : undefined}
-          onStructuredFieldApply={view === 'output' ? props.onStructuredFieldApply : undefined}
-          onAutomap={view === 'output' ? props.onAutomap : undefined}
+          portDirections={view === 'input' ? ['target'] : ['source']}
+          onColumnOutputToggle={undefined}
+          onColumnReorder={undefined}
+          onColumnFunctionApply={undefined}
+          onCalculatedColumnAdd={undefined}
+          onStructuredFieldApply={undefined}
+          onAutomap={undefined}
         />
       </TabsContent>
     </Tabs>

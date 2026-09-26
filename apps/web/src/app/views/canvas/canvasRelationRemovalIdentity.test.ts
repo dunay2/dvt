@@ -7,7 +7,7 @@ import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 import { renameSourceOccurrence } from './relational-source-occurrence/renameSourceOccurrence';
 import { createSourceSet } from './canvasSourceSet';
 import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetch';
-import { inputIdentityMap } from './canvasRelationInputRemap';
+import { inputIdentityMap } from '@dvt/substrait-analysis';
 
 describe('retained operand identity after composition removal', () => {
   it.each([

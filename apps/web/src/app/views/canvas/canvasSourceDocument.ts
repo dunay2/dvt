@@ -35,7 +35,7 @@ export function createSourceDocument(
 ): SubstraitDocument {
   const aliases = new Set<string>();
   const relations = entries.map(({ binding }) => {
-    if (binding.sourceRef == null) return binding;
+    if (binding.sourceRef == null && binding.producerRef == null) return binding;
     const displayName = nextSourceOccurrenceAlias(binding.displayName!, aliases);
     aliases.add(displayName);
     return { ...binding, displayName };

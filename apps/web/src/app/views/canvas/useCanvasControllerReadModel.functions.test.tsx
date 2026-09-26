@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import {
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,
@@ -16,7 +17,7 @@ import {
 } from './useCanvasControllerReadModel.test-support';
 
 describe('Canvas read model functions', () => {
-  it('projects admitted Substrait function menus from connected column truth', async () => {
+  it('shows published field types without exposing operation editors on passive Output', async () => {
     const sourceNode = {
       ...testNode,
       pluginId: 'dvt.warehouse-source',
@@ -73,26 +74,29 @@ describe('Canvas read model functions', () => {
       relation: 'lineage' as const,
     };
     const base = buildReadModelArgs({ canMutateGraph: true });
-    const graphNodes = [sourceNode, transformNode].map((node, index) => {
-      const mapped = mapCanonicalNodeToCanvasNode({
-        canonicalNode: node,
-        index,
-        showColumns: true,
-      });
-      return node.id === transformNode.id
-        ? {
-            ...mapped,
-            data: {
-              ...mapped.data,
-              columns: sourceNode.metadata.columns.map((column) => ({
-                ...column,
-                type: 'unknown',
-              })),
-              columnDisclosureExpanded: true,
-            },
-          }
-        : mapped;
-    });
+    const graphNodes = await Promise.all(
+      [sourceNode, transformNode].map(async (node, index) => {
+        const mapped = mapCanonicalNodeToCanvasNode({
+          canonicalNode: node,
+          index,
+          showColumns: true,
+          presentationTruth: await projectCanvasNodePresentationTruth({
+            node,
+            nodes: [sourceNode, transformNode],
+            edges: [dependency],
+          }),
+        });
+        return node.id === transformNode.id
+          ? {
+              ...mapped,
+              data: {
+                ...mapped.data,
+                columnDisclosureExpanded: true,
+              },
+            }
+          : mapped;
+      })
+    );
     const args: ReadModelArgs = {
       ...base,
       graphModel: {
@@ -130,47 +134,15 @@ describe('Canvas read model functions', () => {
         }>;
       }>;
 
-      expect(transformData.onApplyCanvasColumnFunction).toBe(
-        args.columnActions.onApplyCanvasColumnFunction
-      );
-      expect(transformData.resolveCanvasColumnCompositionFunctions).toEqual(expect.any(Function));
-      expect(
-        (
-          transformData.resolveCanvasColumnCompositionFunctions as (args: {
-            targetType: string;
-            sourceType: string;
-          }) => readonly Readonly<{ name: string }>[]
-        )({ targetType: 'text', sourceType: 'text' })
-      ).toEqual([
-        expect.objectContaining({ name: 'coalesce', minimumArgumentCount: 2 }),
-        expect.objectContaining({
-          name: 'concat',
-          minimumArgumentCount: 2,
-          maximumArgumentCount: 2,
-        }),
-      ]);
-      expect(transformData.onApplyCanvasStructuredField).toBe(
-        args.columnActions.onApplyCanvasStructuredField
-      );
-      expect(transformData.onAddCanvasCalculatedColumn).toBe(
-        args.columnActions.onAddCanvasCalculatedColumn
-      );
-      expect(
-        (
-          transformData.expressionInputColumns as ReadonlyArray<{
-            id: string;
-            name: string;
-          }>
-        ).map((column) => column.name)
-      ).toEqual(['customer', 'amount']);
+      expect(transformData.onApplyCanvasColumnFunction).toBeUndefined();
+      expect(transformData.resolveCanvasColumnCompositionFunctions).toBeUndefined();
+      expect(transformData.onApplyCanvasStructuredField).toBeUndefined();
+      expect(transformData.onAddCanvasCalculatedColumn).toBeUndefined();
+      expect(transformData.expressionInputColumns).toEqual([]);
       expect(columns.find((column) => column.id === 'output:customer')?.type).toBe('text');
-      expect(columns.find((column) => column.id === 'output:customer')?.functionMenu).toEqual({
-        category: 'text',
-        items: expect.arrayContaining([
-          expect.objectContaining({ name: 'trim' }),
-          expect.objectContaining({ name: 'upper' }),
-        ]),
-      });
+      expect(
+        columns.find((column) => column.id === 'output:customer')?.functionMenu
+      ).toBeUndefined();
       expect(columns.find((column) => column.id === 'output:amount')?.functionMenu).toBeUndefined();
     } finally {
       await mounted.cleanup();

@@ -113,10 +113,19 @@ export type CanvasRelationalCompositionTruth =
     }>;
 
 export type CanvasNodePresentationTruth = Readonly<{
+  inputBindings?: readonly CanvasInputBindingPresentation[];
   columns: CanvasNodeColumnTruth;
   code: CanvasNodeCodeTruth;
   relationalComposition?: CanvasRelationalCompositionTruth;
   filterSummary?: string;
+}>;
+
+export type CanvasInputBindingPresentation = Readonly<{
+  inputId: string;
+  source: Readonly<{ nodeId: string; columnId: string }>;
+  name: string;
+  type: string;
+  state: 'available' | 'unresolved';
 }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {

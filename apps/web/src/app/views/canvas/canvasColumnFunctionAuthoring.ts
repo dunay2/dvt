@@ -19,17 +19,17 @@ export type CanvasColumnFunctionResult =
   | Readonly<{
       outcome: 'rejected';
       reason: Extract<
-        ReturnType<typeof applyCanvasCalculatedColumn>,
+        Awaited<ReturnType<typeof applyCanvasCalculatedColumn>>,
         { outcome: 'rejected' }
       >['reason'];
     }>;
 
-export function applyCanvasColumnFunction(args: {
+export async function applyCanvasColumnFunction(args: {
   draftSession: CanvasDraftSession;
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   identity: CanvasColumnFunctionIdentity;
-}): CanvasColumnFunctionResult {
-  const result = applyCanvasCalculatedColumn({
+}): Promise<CanvasColumnFunctionResult> {
+  const result = await applyCanvasCalculatedColumn({
     draftSession: args.draftSession,
     canonicalNodesById: args.canonicalNodesById,
     request: {

@@ -14,6 +14,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveCanvasViewCopy } from './copy';
 import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
 import type { CanvasNodeWorkbenchSectionPolicyId } from '../../plugins/canvasSurfaceStrategyContracts';
 import CanvasNodeWorkbenchPanelSource from './CanvasNodeWorkbenchPanel.tsx?raw';
@@ -600,6 +602,36 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.textContent).not.toContain('Autosaved');
   });
 
+  it('resolves metadata labels in the current language after rerender', async () => {
+    const language = useApplicationLanguageStore.getState().language;
+    try {
+      for (const nextLanguage of ['en', 'es'] as const) {
+        await act(async () => {
+          useApplicationLanguageStore.getState().configureApplicationLanguage(nextLanguage);
+        });
+        await renderNodePanel(root, DVT_TRANSFORM_NODE, 'general');
+        const copy = resolveCanvasViewCopy(nextLanguage);
+        expect(
+          container.querySelector(`label[for="inspector-node-name-${DVT_TRANSFORM_NODE.id}"]`)
+            ?.textContent
+        ).toBe(copy.inspectorNodeNameLabel);
+        expect(
+          container.querySelector(`label[for="inspector-node-tags-${DVT_TRANSFORM_NODE.id}"]`)
+            ?.textContent
+        ).toBe(copy.inspectorNodeTagsLabel);
+        expect(
+          container.querySelector(
+            `label[for="inspector-node-description-${DVT_TRANSFORM_NODE.id}"]`
+          )?.textContent
+        ).toBe(copy.inspectorNodeDescriptionLabel);
+      }
+    } finally {
+      await act(async () => {
+        useApplicationLanguageStore.getState().configureApplicationLanguage(language);
+      });
+    }
+  });
+
   it('projects saved business tags to the card only after Apply', async () => {
     const node = { ...DVT_TRANSFORM_NODE, tags: ['authoring'] };
     const onApplyNodeDraft = vi.fn();
@@ -763,7 +795,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.querySelector('[data-slot="canvas-source-overview"]')).not.toBeNull();
   });
 
-  it('renders DVT transform upstream columns as read-only facts inside the Columns tab', async () => {
+  it('does not present incoming fields as Output before the native model defines any', async () => {
     await renderNodePanel(root, DVT_TRANSFORM_NODE, 'columns');
 
     const columnsSection = container.querySelector(
@@ -773,11 +805,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
       '[data-slot="node-property-column-record"]'
     );
     expect(columnsSection).not.toBeNull();
-    expect(columnRecords).toHaveLength(2);
-    expect(columnRecords?.[0]?.textContent).toContain('Orders Source');
-    expect(columnRecords?.[0]?.textContent).toContain('order_id');
+    expect(columnRecords).toHaveLength(0);
     expect(columnsSection?.querySelector('table')).toBeNull();
-    expect(columnsSection?.textContent).toContain('integer');
     expect(columnsSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
     expect(
       columnsSection?.querySelector('[data-slot="canvas-node-workbench-authoring"]')

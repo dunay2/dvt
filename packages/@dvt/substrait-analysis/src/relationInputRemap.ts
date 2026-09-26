@@ -1,20 +1,19 @@
 /** Rebase a consumer's local ordinals while preserving its explicit output contract. */
-import { create } from '@bufbuild/protobuf';
 import {
   RelCommonSchema,
   JoinRel_JoinType,
   type Rel,
   type Expression_FieldReference,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import {
-  cloneLocalRelation,
-  readRelationStructure,
-  SubstraitAnalysisError,
-} from '@dvt/substrait-analysis';
+import { create } from '@bufbuild/protobuf';
 import type { DvtSubstraitFieldBindingV1 } from '@dvt/contracts';
 
+import { SubstraitAnalysisError } from './document.js';
+import { cloneLocalRelation } from './relationMessage.js';
+import { readRelationStructure } from './relationStructure.js';
+
 type Fields = readonly DvtSubstraitFieldBindingV1[];
-const top = (fields: Fields) =>
+const top = (fields: Fields): DvtSubstraitFieldBindingV1[] =>
   fields
     .filter((field) => field.parentFieldId == null)
     .sort((a, b) => a.outputOrdinal - b.outputOrdinal);

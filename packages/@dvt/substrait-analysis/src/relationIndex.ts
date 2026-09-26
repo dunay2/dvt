@@ -77,6 +77,11 @@ function buildRelationIndex(document: SubstraitDocument): SubstraitRelationIndex
       );
     }
     const id = binding.relationId;
+    if (binding.producerRef != null && relation.relType.case !== 'read')
+      throw new SubstraitAnalysisError(
+        'invalid_binding',
+        'Only an input Read can reference a producer.'
+      );
     byAnchor.set(binding.relAnchor, id);
     relations.set(id, {
       relation,

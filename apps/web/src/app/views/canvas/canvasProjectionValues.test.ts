@@ -5,7 +5,7 @@ import {
   inspectDvtSubstraitProjectionDraft,
   resolveDvtSubstraitColumnFunctions,
 } from './canvasDvtSubstraitProjection';
-import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
+import { createDvtSubstraitProjectionOutput } from './canvasLegacyProjectionOutput.test-support';
 import {
   connectedOrdersProjectionDraft,
   connectedFallbackNamesProjectionDraft,

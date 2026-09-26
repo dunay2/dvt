@@ -5,9 +5,10 @@ import type { CanvasDvtCompositionInput } from '../canvasDvtCompositionInputCata
 import { conditionDataType } from '../canvasSelectedJoin';
 import type { CanvasRelationalOperation } from '../canvasRelationalOperationChoices';
 import { isCanvasSetOperation } from '../canvasRelationalOperationChoices';
+import { canvasInputRequiresProjection } from '../canvasInputComposition';
 
 export type SourceOccurrenceRejection =
-  'read_only' | 'unsupported' | 'unavailable' | 'incompatible';
+  'read_only' | 'unsupported' | 'unavailable' | 'incompatible' | 'input_projection_required';
 
 export function sourceOccurrenceAppendRejection(
   args: Readonly<{
@@ -21,9 +22,17 @@ export function sourceOccurrenceAppendRejection(
 ): SourceOccurrenceRejection | null {
   if (!args.editable) return 'read_only';
   if (args.input == null) return 'unavailable';
+  if (canvasInputRequiresProjection(args.input)) return 'input_projection_required';
   if (args.output == null || args.session == null) return 'unsupported';
   try {
-    args.session.matchingSources(args.input.sourceRef, args.revision);
+    if (args.input.producer == null)
+      args.session.matchingSources(args.input.sourceRef, args.revision);
+    else
+      args.session.matchingProducer(
+        args.input.nodeId,
+        args.input.producer.connection,
+        args.revision
+      );
   } catch {
     return 'unavailable';
   }

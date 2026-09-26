@@ -103,6 +103,16 @@ export function useCanvasGraphHandlers({
     [setNodes]
   );
   const handleApplyCanvasColumnFunction = columnCommandRunner.applyFunction;
+  const handleColumnViewChange = useCallback(
+    (nodeId: string, view: 'input' | 'output') => {
+      setNodes((current) =>
+        current.map((node) =>
+          node.id === nodeId ? { ...node, data: { ...node.data, columnView: view } } : node
+        )
+      );
+    },
+    [setNodes]
+  );
   const handleAddCanvasCalculatedColumn = columnCommandRunner.addCalculated;
   const handleApplyCanvasStructuredField = columnCommandRunner.applyStructured;
   const selectionHandlers = useCanvasSelectionHandlers(
@@ -121,6 +131,7 @@ export function useCanvasGraphHandlers({
     ...layoutHandlers,
     ...nodeAuthoringHandlers,
     handleColumnDisclosureChange,
+    handleColumnViewChange,
     handleApplyCanvasColumnFunction,
     handleApplyCanvasStructuredField,
     handleAddCanvasCalculatedColumn,

@@ -10,7 +10,6 @@ import { createSourceCross } from './canvasSourceCross';
 import type { CanvasPredicateFreeOperation } from './DvtRelationCompositionConfirmation';
 import { resolveConnectedSetEntry } from './canvasConnectedRelationInputs';
 import { DvtSubstraitCompositionStartSection } from './DvtSubstraitCompositionStartSection';
-import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 import type { CanvasSetOperation } from './canvasRelationalOperationChoices';
 import type { CanvasJoinOperation } from './canvasRelationalTreeJoinType';
 
@@ -19,16 +18,12 @@ export function DvtSubstraitCompositionStart({
   node,
   nodes,
   edges,
-  predicateSeed,
-  onClearPredicateSeed,
   onChange,
 }: Readonly<{
   disabled: boolean;
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
-  predicateSeed?: CanvasRelationalPredicateSeed;
-  onClearPredicateSeed?: () => void;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element | null {
   const inputs = resolveCanvasDvtCompositionInputs({ targetNodeId: node.id, nodes, edges });
@@ -56,8 +51,6 @@ export function DvtSubstraitCompositionStart({
     <DvtSubstraitCompositionStartSection
       disabled={disabled}
       inputs={inputs}
-      predicateSeed={predicateSeed}
-      onClearPredicateSeed={onClearPredicateSeed}
       onStartInnerJoin={apply}
       onStartWithoutPredicate={{
         cross_join: () => apply(createSourceCross(inputs), 'cross_join'),

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { createProducerInput } from '@dvt/substrait-analysis';
 import type { CanonicalNode } from '../../types/canonical';
 import { getPluginPortMap } from '../../plugins/registry';
 import { graphModel, graphSource } from './canvasRelationGraph.test-support';
@@ -26,6 +27,7 @@ import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCa
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { composeSourceRelation } from './canvasComposeSourceRelation';
 import { projectInteractiveCanvasColumns } from './canvasGraphNodeColumnProjection';
+import { createSourceDocument } from './canvasSourceDocument';
 
 function scenario(): { model: CanonicalNode; nodes: CanonicalNode[]; draft: CanvasDraftSession } {
   const client = graphSource('client');
@@ -65,6 +67,40 @@ function scenario(): { model: CanonicalNode; nodes: CanonicalNode[]; draft: Canv
 }
 
 describe('connection preserves authored output', () => {
+  it('exposes only published producer fields to a consumer and never copies producer operations', async () => {
+    const { model: producer, nodes, draft } = scenario();
+    const consumer = { ...graphModel(), id: 'consumer', name: 'Consumer' };
+    const edges = [
+      ...draft.workingSet.visibleEdges,
+      { sourceId: producer.id, targetId: consumer.id },
+    ];
+    const input = createProducerInput(
+      {
+        nodeId: producer.id,
+        name: producer.name,
+        document: decodeDvtSubstraitSemanticDocument(
+          readDvtTransformAuthoringAuthority(producer)!.semanticDocument
+        ),
+      },
+      1
+    );
+    const connected = applyDvtSubstraitSemanticDocument(
+      consumer,
+      encodeDvtSubstraitSemanticDocument(createSourceDocument([input], input))
+    );
+    const graph = { node: connected!, nodes: [...nodes, connected!], edges };
+    const truth = await projectCanvasNodePresentationTruth(graph);
+    expect(truth.columns.inherited.map((column) => column.name)).toEqual(['id_cliente']);
+    const tree = projectCanvasRelationalTree(graph);
+    expect(tree.ok).toBe(true);
+    if (!tree.ok) throw new Error('Expected a consumer tree');
+    const operations = (node: typeof tree.projection.root): string[] => [
+      node.operator,
+      ...node.children.flatMap((child) => operations(child.node)),
+    ];
+    expect(operations(tree.projection.root)).toEqual(['read']);
+    expect(tree.projection.root.displayName).toBe(producer.name);
+  });
   it('does not borrow another field identity through a shared column name', () => {
     const columns = projectInteractiveCanvasColumns(
       {

@@ -117,7 +117,11 @@ describe('selected relation derived output authoring', () => {
     expect(
       document.sidecar.fields.find((field) => field.displayName === 'normalized_name')
         ?.sourceFieldId
-    ).toBe(sourceFieldId);
+    ).toBe(
+      (await session.query(before.inputs[0]!)).bindings.find(
+        (field) => field.displayName === 'first_name'
+      )!.fieldId
+    );
   });
 
   it('rejects duplicate aliases and stale revisions without changing the session', async () => {

@@ -15,8 +15,10 @@ preserving stable FieldIds. It reuses `ConfigureCanvasDvtNode`, the admitted
 Substrait function catalogue and the revision-bound relation analysis session.
 
 It does not add an expression IR, a visual-stage identity, a runtime step or a
-second output owner. The Transform instance `Output` tab remains authoritative
-for final inclusion, alias and order.
+second output owner. The Transform instance inside the semantic editor owns
+final inclusion, alias and order. The outer Canvas model card's `Output` tab is
+only a passive projection: it neither authors fields nor receives mappings.
+External mappings terminate at the consumer `Input`.
 
 ## Current Constraint
 

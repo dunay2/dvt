@@ -1,7 +1,7 @@
 /** Proves output inspection resolves canonical identity without a second expression authority. */
 import { expect } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
-import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
+import { createDvtSubstraitProjectionOutput } from './canvasLegacyProjectionOutput.test-support';
 import {
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,

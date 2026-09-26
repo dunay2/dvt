@@ -2,6 +2,7 @@
 import type { GraphNodeColumnInspect } from './graphColumnInspection';
 import type {
   GraphNodeColumn,
+  GraphNodeInputMapping,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
   GraphNodeColumnFunctionApplyIdentity,
@@ -25,6 +26,24 @@ export function resolveGraphNodeColumnInteractionProps(args: {
         ? (data.onInspectCanvasColumn as GraphNodeColumnInspect)
         : undefined,
     nodeId: args.nodeId,
+    view:
+      data.columnView === 'input'
+        ? ('input' as const)
+        : data.columnView === 'output'
+          ? ('output' as const)
+          : undefined,
+    onViewChange:
+      typeof data.onColumnViewChange === 'function'
+        ? (view: 'input' | 'output') =>
+            (data.onColumnViewChange as (nodeId: string, view: 'input' | 'output') => void)(
+              args.nodeId,
+              view
+            )
+        : undefined,
+    onInputMapping:
+      args.nodeRole === 'transform' && typeof data.onMapCanvasInput === 'function'
+        ? (data.onMapCanvasInput as (identity: GraphNodeInputMapping) => void)
+        : undefined,
     inputColumns:
       args.nodeRole === 'transform' && Array.isArray(data.inputColumns)
         ? (data.inputColumns as readonly GraphNodeColumn[])
@@ -49,7 +68,7 @@ export function resolveGraphNodeColumnInteractionProps(args: {
       args.nodeRole === 'transform' && typeof data.onApplyCanvasColumnFunction === 'function'
         ? (data.onApplyCanvasColumnFunction as (
             identity: GraphNodeColumnFunctionApplyIdentity
-          ) => GraphNodeColumnFunctionApplyResult)
+          ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>)
         : undefined,
     resolveColumnCompositionFunctions:
       args.nodeRole === 'transform' &&
@@ -66,7 +85,7 @@ export function resolveGraphNodeColumnInteractionProps(args: {
       typeof data.onAddCanvasCalculatedColumn === 'function'
         ? (data.onAddCanvasCalculatedColumn as (
             identity: GraphNodeCalculatedColumnIdentity
-          ) => GraphNodeColumnFunctionApplyResult)
+          ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>)
         : undefined,
     onColumnOutputToggle:
       (args.nodeRole === 'input' || args.nodeRole === 'transform') &&

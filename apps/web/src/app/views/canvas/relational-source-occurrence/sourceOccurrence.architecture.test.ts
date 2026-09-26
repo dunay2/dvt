@@ -2,7 +2,8 @@
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import identity from './joinOccurrenceIdentity.ts?raw';
-import physical from './joinPhysicalBindings.ts?raw';
+import physical from '../canvasPhysicalCompositionInput.ts?raw';
+import model from '../canvasModelCompositionInput.ts?raw';
 import identitiesTest from './joinOccurrenceIdentity.test.ts?raw';
 import reopenTest from './occurrenceReopen.test.ts?raw';
 import fixture from './occurrence.test.fixtures.ts?raw';
@@ -44,7 +45,8 @@ describe('source occurrence component boundaries', () => {
   );
   it.each([
     ['identity policy', identity],
-    ['physical binding', physical],
+    ['physical input catalogue', physical],
+    ['model input catalogue', model],
     ['identity scenarios', identitiesTest],
     ['reopen scenarios', reopenTest],
     ['fixture', fixture],
@@ -64,7 +66,8 @@ describe('source occurrence component boundaries', () => {
 
   it.each([
     ['identity policy', identity],
-    ['physical binding', physical],
+    ['physical input catalogue', physical],
+    ['model input catalogue', model],
     ['occurrence policy', policy],
     ['append intent', actions],
   ])('%s has no presentation, persistence or execution dependency', (name, text) => {

@@ -20,6 +20,7 @@ import {
   container,
 } from './CanvasRelationalTreeWorkbench.test-support';
 import { openOperationMenu } from './operation-menu/operationMenu.test-support';
+import { connectWorkbenchSource } from './CanvasRelationalTreeWorkbench.gestures.test-support';
 
 describe('Canvas relational-tree Workbench mixed-cross', () => {
   setupWorkbenchTest();
@@ -83,7 +84,7 @@ describe('Canvas relational-tree Workbench mixed-cross', () => {
     const countriesButton = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     ).find((button) => button.textContent?.includes('countries'));
-    await act(async () => countriesButton?.click());
+    await connectWorkbenchSource(countriesButton!);
     openOperationMenu(container);
     const crossButton = document.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-select-operation-cross-join"]'

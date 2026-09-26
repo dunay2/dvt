@@ -3,6 +3,7 @@
 import React, { act } from 'react';
 import { describe, expect, it } from 'vitest';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
+import { connectWorkbenchSource } from './CanvasRelationalTreeWorkbench.gestures.test-support';
 import {
   setupWorkbenchTest,
   COPY,
@@ -15,7 +16,7 @@ import {
 
 describe('Canvas relational-tree Workbench menu', () => {
   setupWorkbenchTest();
-  it('opens and dismisses operation discovery without discarding the draft', () => {
+  it('opens and dismisses operation discovery without discarding the draft', async () => {
     const customers = sourceNode('customers', 'customers');
     const orders = sourceNode('orders', 'orders');
     const transform = transformNode();
@@ -38,8 +39,11 @@ describe('Canvas relational-tree Workbench menu', () => {
     const sourceButtons = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     );
-    act(() => sourceButtons[0]?.click());
-    act(() => sourceButtons[1]?.click());
+    await connectWorkbenchSource(sourceButtons[0]!);
+    await connectWorkbenchSource(sourceButtons[1]!);
+    const pendingIds = [...container.querySelectorAll('[data-pending="true"]')].map((node) =>
+      node.getAttribute('data-relation-id')
+    );
     const toggle = container.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-operation-menu-trigger"]'
     );
@@ -50,8 +54,12 @@ describe('Canvas relational-tree Workbench menu', () => {
     act(() => toggle?.click());
     expect(toggle?.getAttribute('aria-expanded')).toBe('false');
     expect(document.querySelector('[role="listbox"]')).toBeNull();
-    expect(sourceButtons[0]?.getAttribute('aria-pressed')).toBe('true');
-    expect(sourceButtons[1]?.getAttribute('aria-pressed')).toBe('true');
+    expect(
+      [...container.querySelectorAll('[data-pending="true"]')].map((node) =>
+        node.getAttribute('data-relation-id')
+      )
+    ).toEqual(pendingIds);
+    expect(pendingIds).toHaveLength(2);
 
     act(() => toggle?.click());
     expect(document.querySelector('[role="listbox"]')).not.toBeNull();

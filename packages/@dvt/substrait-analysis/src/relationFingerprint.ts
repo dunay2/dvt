@@ -23,6 +23,7 @@ export function fingerprintRelation(
       rootNames: rootNames ?? null,
       relation: toJson(RelSchema, localRelation(entry.relation)),
       source: entry.binding.sourceRef ?? null,
+      producer: entry.binding.producerRef ?? null,
       fields: entry.fields.map(({ description: _description, ...field }) => field),
       inputs,
     })

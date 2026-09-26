@@ -5,10 +5,8 @@ import { toast } from 'sonner';
 import type {
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnReorderIdentity,
+  GraphNodeInputMapping,
 } from '../../plugins/graph/graphNodeColumnContracts';
-import { automapCanvasColumns } from './canvasColumnAutomap';
-import { removeCanvasColumnMapping } from './canvasColumnMappingAuthoring';
-import { resolveCanvasSessionNode } from './canvasColumnMappingModel';
 import {
   useCanvasColumnMappingGesture,
   formatColumnMappingRejection,
@@ -16,35 +14,41 @@ import {
 import {
   createCanvasColumnHandleId,
   type CanvasColumnHandleIdentity,
-  type CanvasColumnLineageEdgeData,
-} from './canvasColumnLineageProjection';
+} from './canvasColumnHandleIdentity';
+import { type CanvasColumnLineageEdgeData } from './canvasColumnLineageEdgeModel';
 import type { CanvasEdgeAuthoringContracts } from './canvasGraphHandlerContracts';
 import { canvasViewCopy } from './copy';
 import type { CanvasColumnAuthoringCommandRunner } from './useCanvasColumnAuthoringCommandRunner';
-import { type CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 
 export function useCanvasColumnConnectionHandlers(
-  { state, effects, policy }: CanvasEdgeAuthoringContracts,
+  { policy }: CanvasEdgeAuthoringContracts,
   columnAuthoringCommandRunner: CanvasColumnAuthoringCommandRunner
 ) {
   const [pendingSource, setPendingSource] = useState<CanvasColumnHandleIdentity | null>(null);
-  const [relationalPredicateSeed, setRelationalPredicateSeed] =
-    useState<CanvasRelationalPredicateSeed | null>(null);
-  const { canonicalNodesById, draftSession } = state;
-  const { setDraftSession } = effects;
   const { canEditEdges } = policy;
 
-  const tryColumnConnection = useCanvasColumnMappingGesture(
-    { state, effects, policy },
-    columnAuthoringCommandRunner,
-    { setPendingSource, setRelationalPredicateSeed }
+  const handleMapCanvasInput = useCallback(
+    (identity: GraphNodeInputMapping) => {
+      if (!canEditEdges) {
+        toast.error(canvasViewCopy.mutationUnavailableMessage);
+        return;
+      }
+      void columnAuthoringCommandRunner.mapInput(identity).then((result) => {
+        if (result.outcome === 'rejected') toast.error(formatColumnMappingRejection(result.reason));
+        else {
+          setPendingSource(null);
+          toast.success(canvasViewCopy.columnMappingAddedMessage);
+        }
+      });
+    },
+    [canEditEdges, columnAuthoringCommandRunner]
   );
+  const tryColumnConnection = useCanvasColumnMappingGesture(canEditEdges, handleMapCanvasInput);
 
   const handleColumnPortActivate = useCallback(
     (identity: CanvasColumnHandleIdentity) => {
       if (identity.direction === 'source') {
         setPendingSource(identity);
-        setRelationalPredicateSeed(null);
         toast.info(
           canvasViewCopy.columnMappingSourceSelectedTemplate.replace('{column}', identity.columnId)
         );
@@ -62,33 +66,6 @@ export function useCanvasColumnConnectionHandlers(
       });
     },
     [pendingSource, tryColumnConnection]
-  );
-
-  const handleAutomapCanvasColumns = useCallback(
-    (nodeId: string, columns: readonly Readonly<{ name: string; type: string }>[]) => {
-      if (!canEditEdges) {
-        toast.error(canvasViewCopy.mutationUnavailableMessage);
-        return;
-      }
-      const result = automapCanvasColumns({
-        draftSession,
-        canonicalNodesById,
-        targetNodeId: nodeId,
-        targetColumns: columns,
-      });
-      if (result.outcome === 'rejected') {
-        toast.error(formatColumnMappingRejection(result.reason));
-        return;
-      }
-      setDraftSession(result.draftSession);
-      toast.success(
-        canvasViewCopy.columnMappingAutomapSummaryTemplate.replace(
-          '{count}',
-          String(result.appliedCount)
-        )
-      );
-    },
-    [canEditEdges, canonicalNodesById, draftSession, setDraftSession]
   );
 
   const handleToggleCanvasColumnOutput = useCallback(
@@ -120,25 +97,13 @@ export function useCanvasColumnConnectionHandlers(
   );
 
   const handleRemoveColumnMapping = useCallback(
-    (mapping: CanvasColumnLineageEdgeData) => {
+    async (mapping: CanvasColumnLineageEdgeData) => {
       if (!canEditEdges || !mapping.removable) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
-      const targetNode = resolveCanvasSessionNode(
-        draftSession,
-        canonicalNodesById,
-        mapping.targetNodeId
-      );
-      if (targetNode == null) {
-        toast.error(canvasViewCopy.columnMappingUnavailableMessage);
-        return;
-      }
-      const result = removeCanvasColumnMapping({
-        draftSession,
-        canonicalNodesById,
-        targetNode,
-        outputId: mapping.outputId,
+      const result = await columnAuthoringCommandRunner.removeInput({
+        target: { nodeId: mapping.targetNodeId, inputId: mapping.outputId },
         source: {
           nodeId: mapping.sourceNodeId,
           columnId: mapping.sourceFieldId,
@@ -148,21 +113,18 @@ export function useCanvasColumnConnectionHandlers(
         toast.error(formatColumnMappingRejection(result.reason));
         return;
       }
-      setDraftSession(result.draftSession);
       toast.success(canvasViewCopy.columnMappingRemovedMessage);
     },
-    [canEditEdges, canonicalNodesById, draftSession, setDraftSession]
+    [canEditEdges, columnAuthoringCommandRunner]
   );
 
   return {
     tryColumnConnection,
     activeColumnHandleId: pendingSource == null ? null : createCanvasColumnHandleId(pendingSource),
     handleColumnPortActivate,
-    handleAutomapCanvasColumns,
+    handleMapCanvasInput,
     handleToggleCanvasColumnOutput,
     handleReorderCanvasColumnOutput,
     handleRemoveColumnMapping,
-    relationalPredicateSeed,
-    clearRelationalPredicateSeed: () => setRelationalPredicateSeed(null),
   };
 }

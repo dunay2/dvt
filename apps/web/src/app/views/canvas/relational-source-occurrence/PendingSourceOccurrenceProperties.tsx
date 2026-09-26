@@ -21,10 +21,11 @@ export function PendingSourceOccurrenceProperties({
   const { read } = occurrence;
   const schema = deriveRelationSchema({ ...read, inputs: [], consumers: [] }, []);
   const fields = [...read.fields]
+    .filter((field) => field.parentFieldId == null)
     .sort((a, b) => a.outputOrdinal - b.outputOrdinal)
     .map((field) => ({
       id: field.fieldId,
-      name: field.displayName,
+      name: field.displayName ?? field.fieldId,
       type: schema[field.outputOrdinal]?.type.kind.case,
     }));
   return (

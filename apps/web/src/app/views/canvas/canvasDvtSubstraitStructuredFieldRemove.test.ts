@@ -17,7 +17,7 @@ import {
 import { createDvtSubstraitFieldReference } from './canvasDvtSubstraitStructuredFieldAppend';
 import { removeDvtSubstraitProjectionRoot } from './canvasDvtSubstraitStructuredFieldRemove';
 import { composeDvtSubstraitProjectionFields } from './canvasDvtSubstraitStructuredFieldMutation';
-import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
+import { createDvtSubstraitProjectionOutput } from './canvasLegacyProjectionOutput.test-support';
 
 const SOURCE = {
   nodeId: 'source-orders',

@@ -3,25 +3,47 @@ import { create } from '@bufbuild/protobuf';
 import { RelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { allocateDvtFieldId, allocateDvtRelationId } from '@dvt/contracts';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
-import { createSourceRelation, toSourceRelationInput } from './canvasSourceRelation';
+import { createCanvasInputRead } from './canvasSourceRelation';
 import { createSourceDocument } from './canvasSourceDocument';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
+import { selectedCanvasInputOrdinals } from './canvasInputComposition';
 
 export function createCanvasRelationalTreeProjectionDraft(
   args: Readonly<{
     input: CanvasDvtCompositionInput;
     targetNodeId: string;
-    occurrence?: ReturnType<typeof createSourceRelation>;
+    occurrence?: ReturnType<typeof createCanvasInputRead>;
   }>
 ) {
-  const read = args.occurrence ?? createSourceRelation(toSourceRelationInput(args.input), 1);
+  const read = args.occurrence ?? createCanvasInputRead(args.input, 1);
   const relationId = allocateDvtRelationId();
-  const fields = read.fields.map((field) => ({
-    ...field,
-    fieldId: allocateDvtFieldId(),
-    relationId,
-    sourceFieldId: field.fieldId,
-  }));
+  const ordinals = selectedCanvasInputOrdinals(args.input);
+  const inputFields = read.fields
+    .filter((field) => field.parentFieldId == null)
+    .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
+  const copyField = (
+    field: (typeof read.fields)[number],
+    outputOrdinal: number,
+    parentFieldId?: string
+  ): typeof read.fields => {
+    const fieldId = allocateDvtFieldId();
+    return [
+      {
+        ...field,
+        fieldId,
+        relationId,
+        outputOrdinal,
+        sourceFieldId: field.fieldId,
+        ...(parentFieldId == null ? {} : { parentFieldId }),
+      },
+      ...read.fields
+        .filter((child) => child.parentFieldId === field.fieldId)
+        .flatMap((child) => copyField(child, child.outputOrdinal, fieldId)),
+    ];
+  };
+  const fields = ordinals.flatMap((ordinal, outputOrdinal) =>
+    copyField(inputFields[ordinal]!, outputOrdinal)
+  );
   const relation = create(RelSchema, {
     relType: {
       case: 'project',
@@ -31,12 +53,12 @@ export function createCanvasRelationalTreeProjectionDraft(
           emitKind: {
             case: 'emit',
             value: {
-              outputMapping: fields.map((_, ordinal) => fields.length + ordinal),
+              outputMapping: ordinals.map((_, ordinal) => inputFields.length + ordinal),
             },
           },
         },
         input: read.relation,
-        expressions: fields.map((_, ordinal) => dvtSubstraitExpression.field(ordinal)),
+        expressions: ordinals.map((ordinal) => dvtSubstraitExpression.field(ordinal)),
       },
     },
   });

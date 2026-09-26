@@ -13,6 +13,7 @@ import type { DvtPostgresOrderKey } from '../sortFetchPostgresProjection.js';
 
 import { admitSqlSources, type SqlSource } from './admission.js';
 import { sortAst } from './ordering.js';
+import { producerReadSql, type ProducerSqlBinding } from './producerRead.js';
 import { relationSql } from './relations.js';
 import { columnName, inputRange, selectAst, unsupported, type SqlInput } from './scope.js';
 
@@ -33,21 +34,24 @@ export type SubstraitPostgresProjection = Readonly<{
 }>;
 
 export async function projectSubstraitToPostgresSql(
-  document: SubstraitDocument
+  document: SubstraitDocument,
+  producers: ReadonlyMap<string, ProducerSqlBinding> = new Map()
 ): Promise<SubstraitPostgresProjection> {
   const analysis = deriveSubstraitSchemas(document);
-  const sources = admitSqlSources(document, analysis);
+  const sources = admitSqlSources(document, analysis, producers);
   const rendered = new Map<string, SqlInput>();
   for (const id of analysis.index.postorder) {
     const entry = analysis.index.relations.get(id)!;
     rendered.set(
       id,
-      relationSql(
-        document.plan,
-        entry,
-        entry.inputs.map((input) => rendered.get(input)!),
-        analysis.schemas.get(id)!
-      )
+      entry.binding.producerRef != null
+        ? producerReadSql(entry, producers.get(id)!, analysis.schemas.get(id)!)
+        : relationSql(
+            document.plan,
+            entry,
+            entry.inputs.map((input) => rendered.get(input)!),
+            analysis.schemas.get(id)!
+          )
     );
   }
   const root = document.plan.relations[0]!.relType;

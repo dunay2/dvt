@@ -11,7 +11,7 @@ export function sourceOccurrenceAliases(
 ): ReadonlySet<string> {
   return new Set(
     bindings.flatMap((binding) =>
-      binding.sourceRef != null &&
+      (binding.sourceRef != null || binding.producerRef != null) &&
       binding.relationId !== exceptRelationId &&
       binding.displayName != null
         ? [binding.displayName.trim()]

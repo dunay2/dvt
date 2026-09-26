@@ -41,6 +41,10 @@ export const canvasViewAuthoringCopyByKey = {
     fallback: 'No compatible fields are available for this composition.',
   },
   operationReadLabel: { key: 'canvas.operation.read', fallback: 'Source' },
+  sourceOccurrenceInputProjectionRequired: {
+    key: 'canvas.sourceOccurrence.inputProjectionRequired',
+    fallback: 'Add an explicit Transform for the mapped input fields before composing.',
+  },
   operationFilterLabel: { key: 'canvas.operation.filter', fallback: 'Filter' },
   operationAggregateLabel: { key: 'canvas.operation.aggregate', fallback: 'Aggregate' },
   operationWindowLabel: { key: 'canvas.operation.window', fallback: 'Window' },

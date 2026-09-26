@@ -16,7 +16,6 @@ import { DvtSubstraitCompositionStart } from './DvtSubstraitCompositionStart';
 import { DvtRelationAuthoringSection } from './DvtRelationAuthoringSection';
 import { DvtSubstraitTransformStart } from './DvtSubstraitTransformStart';
 import { DvtTransformMaterializationField } from './DvtTransformMaterializationField';
-import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 
 type DvtAuthoringFieldsProps = Readonly<{
   node: CanonicalNode;
@@ -26,8 +25,6 @@ type DvtAuthoringFieldsProps = Readonly<{
   draft: ReturnType<typeof createCanvasInspectorNodeDraft>;
   errors: ReturnType<typeof validateCanvasInspectorNodeDraft>;
   section?: 'all' | 'general' | 'columns' | 'code';
-  relationalPredicateSeed?: CanvasRelationalPredicateSeed;
-  onClearRelationalPredicateSeed?: () => void;
   onChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
 }>;
 
@@ -46,8 +43,6 @@ export function DvtAuthoringFields({
   draft,
   errors,
   section = 'all',
-  relationalPredicateSeed,
-  onClearRelationalPredicateSeed,
   onChange,
 }: DvtAuthoringFieldsProps): JSX.Element | null {
   if (!draft.dvt) return null;
@@ -66,8 +61,6 @@ export function DvtAuthoringFields({
   }
 
   if (draft.dvt.kind === 'transform') {
-    const predicateSeed =
-      relationalPredicateSeed?.targetNodeId === node.id ? relationalPredicateSeed : undefined;
     const materializationField = (
       <div className="space-y-4">
         <DvtTransformMaterializationField
@@ -101,8 +94,6 @@ export function DvtAuthoringFields({
           node={node}
           nodes={nodes}
           edges={edges}
-          predicateSeed={predicateSeed}
-          onClearPredicateSeed={onClearRelationalPredicateSeed}
           onChange={onChange}
         />
       );
@@ -117,13 +108,12 @@ export function DvtAuthoringFields({
               node={node}
               nodes={nodes}
               edges={edges}
-              predicateSeed={predicateSeed}
-              onClearPredicateSeed={onClearRelationalPredicateSeed}
               onChange={onChange}
             />
           ) : null}
           <DvtRelationAuthoringSection
             nodeId={node.id}
+            inputScope={{ nodes, edges }}
             disabled={disabled}
             draft={draft.dvt}
             outputNameDrafts={draft.outputNameDrafts}

@@ -24,3 +24,13 @@ export type {
 } from './analysisCache.js';
 export type { RelationChangeSet } from './relationChangeSet.js';
 export { cloneLocalRelation, withRelationInputs } from './relationMessage.js';
+export { createProducerInput, resolveProducerInput } from './producerInput.js';
+export { migrateEmbeddedProducerInput } from './migrateEmbeddedProducerInput.js';
+export {
+  resolveProducerGraph,
+  type ProducerGraph,
+  type ResolvedProducer,
+} from './producerGraph.js';
+export { inputIdentityMap, rebaseRelationInput } from './relationInputRemap.js';
+export { refreshProducerInputs } from './refreshProducerInputs.js';
+export { resolveProducerDocuments } from './producerDocuments.js';

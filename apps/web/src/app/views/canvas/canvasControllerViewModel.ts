@@ -1,148 +1,20 @@
-/** Owned concern: project Canvas controller state into a shell-ready view model. */
-import { type NodeTypes } from '@xyflow/react';
-
-import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
-import type { CanvasSurfaceStrategy } from '../../plugins/canvasSurfaceStrategyContracts';
-import { getAllCanvasKinds, getRegisteredPluginIds } from '../../plugins/registry';
-import type { CanvasRuntimePolicy } from './canvasRuntimePolicy';
-import type { useCanvasAuthoringRuntime } from './useCanvasAuthoringRuntime';
-import type { useCanvasControllerEnvironment } from './useCanvasControllerEnvironment';
-import type { useCanvasControllerReadModel } from './useCanvasControllerReadModel';
+/** Owned concern: bind Canvas commands and lifecycle state to the shell context DTO. */
+import { buildCanvasShellViewModel, type CanvasShellViewModelArgs } from './canvasShellViewModel';
 import type { useCanvasExecutionActions } from './useCanvasExecutionActions';
 import type { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
-import type { useCanvasInspectorCommands } from './useCanvasInspectorCommands';
 import type { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 import type { useCanvasMutationHandlers } from './useCanvasMutationHandlers';
-import type { useCanvasOverlayModel } from './useCanvasOverlayModel';
 import type { useCanvasExecutionSelectionRecovery } from './useCanvasExecutionSelectionRecovery';
-import {
-  listProjectCanvasDocuments,
-  resolveActiveProjectCanvasId,
-} from './canvasProjectCanvasLifecycle';
 
-const canvasControllerNodeTypes: NodeTypes = {
-  dbtNode: DbtNodeComponent,
-};
-
-type CanvasControllerEnvironment = ReturnType<typeof useCanvasControllerEnvironment>;
-type CanvasAuthoringRuntime = ReturnType<typeof useCanvasAuthoringRuntime>;
-type CanvasLayoutPersistence = ReturnType<typeof useCanvasLayoutPersistence>;
-type CanvasMutationHandlers = ReturnType<typeof useCanvasMutationHandlers>;
-type CanvasGraphHandlers = ReturnType<typeof useCanvasGraphHandlers>;
-type CanvasOverlayModel = ReturnType<typeof useCanvasOverlayModel>;
-type CanvasExecutionActions = ReturnType<typeof useCanvasExecutionActions>;
-type CanvasControllerReadModel = ReturnType<typeof useCanvasControllerReadModel>;
-type CanvasInspectorCommands = ReturnType<typeof useCanvasInspectorCommands>;
-type CanvasExecutionSelectionRecovery = ReturnType<typeof useCanvasExecutionSelectionRecovery>;
-type CanvasControllerGraphPolicy = {
-  runtimePolicy: CanvasRuntimePolicy;
-  surfaceStrategy: CanvasSurfaceStrategy | null;
-};
-
-type CanvasControllerViewModelArgs = {
-  environment: CanvasControllerEnvironment;
-  authoringRuntime: CanvasAuthoringRuntime;
-  persistence: CanvasLayoutPersistence;
-  mutationHandlers: CanvasMutationHandlers;
-  graphHandlers: CanvasGraphHandlers;
-  overlayModel: CanvasOverlayModel;
-  executionActions: CanvasExecutionActions;
-  graphPolicy: CanvasControllerGraphPolicy;
-  readModel: CanvasControllerReadModel;
-  inspectorCommands: CanvasInspectorCommands;
-  executionSelectionRecovery: CanvasExecutionSelectionRecovery;
-  handleImpactFocusNodeChange: (nodeId: string | null) => void;
-};
-
-function resolveCanvasGraphErrorMessage(authoringRuntime: CanvasAuthoringRuntime): string | null {
-  const graphError = authoringRuntime.graphModel.graphAuthorityQuery.error;
-  return graphError instanceof Error ? graphError.message : null;
-}
-
-function resolveRouteDraftRecord({
-  draftReadModel,
-  draftSession,
-}: Pick<CanvasAuthoringRuntime, 'draftReadModel' | 'draftSession'>) {
-  if (draftReadModel?.record != null) {
-    return draftReadModel.record;
-  }
-
-  if (draftReadModel?.accessMode === 'forbidden' || draftReadModel?.formatError != null) {
-    return null;
-  }
-
-  return draftSession.baseline.record;
-}
-
-function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
-  const {
-    environment: { applicationLanguage, capabilities, store },
-    graphPolicy: { runtimePolicy, surfaceStrategy },
-    authoringRuntime: {
-      backendPosture,
-      graphModel,
-      visibleScope,
-      draftReadModel,
-      draftSession,
-      canCreateCanvasDocument,
-    },
-    overlayModel,
-    readModel: { nodesWithImpact, edgesWithImpact, inspectorNode },
-  } = args;
-  const routeDraftRecord = resolveRouteDraftRecord({ draftReadModel, draftSession });
-  const routeDraft = routeDraftRecord?.draft ?? null;
-
-  return {
-    workspaceLayoutKey: store.workspaceLayoutKey,
-    workspaceScope: args.environment.sessionContext.getWorkspaceScopeSnapshot(),
-    isBackendCheckPending: backendPosture.isBackendCheckPending,
-    backendReady: backendPosture.backendReady,
-    backendBlockMessage: backendPosture.backendBlockMessage,
-    isLoadingGraph: graphModel.graphAuthorityQuery.isPending,
-    graphErrorMessage: resolveCanvasGraphErrorMessage(args.authoringRuntime),
-    focusMode: store.focusMode,
-    inspectorPanelVisible: store.inspectorPanelVisible,
-    inspectorNode,
-    inspectorPreferredTabId: store.inspectorPreferredTabId,
-    inspectorPreferredTabRequestId: store.inspectorPreferredTabRequestId,
-    inspectorGraphNodes: graphModel.canonicalNodes,
-    inspectorGraphEdges: visibleScope.canonicalEdges,
-    activeRunId: overlayModel.activeRunId,
-    registeredPlugins: getRegisteredPluginIds(capabilities),
-    runtimeCapabilities: capabilities,
-    availableCanvasKinds: getAllCanvasKinds(capabilities, applicationLanguage),
-    canvasDocument: routeDraft?.canvas ?? null,
-    canvasDocuments: listProjectCanvasDocuments(routeDraft),
-    activeCanvasId: resolveActiveProjectCanvasId(routeDraft),
-    executionEnvironmentOptions: args.environment.workspaceBootstrapConfig.environmentOptions,
-    canCreateCanvasDocument: canCreateCanvasDocument && routeDraftRecord == null,
-    authorizationPermissions: store.userPermissions,
-    userPermissions: {
-      ...store.userPermissions,
-      canPlan: runtimePolicy.commands.canPlan,
-      canRun: runtimePolicy.commands.canRun,
-      canEditEdges: runtimePolicy.commands.canMutateGraph,
-    },
-    canvasSurfaceStrategy: surfaceStrategy,
-    canOpenSourceImport: runtimePolicy.commands.canOpenSourceImport,
-    nodesWithImpact,
-    edges: edgesWithImpact,
-    nodeTypes: canvasControllerNodeTypes,
-    gridSize: store.gridSize,
-    canvasPalette: store.canvasPalette,
-    canvasGridVisible: store.canvasGridVisible,
-    canvasGridColor: store.canvasGridColor,
-    canvasSnapToGrid: store.canvasSnapToGrid,
-    viewport: store.persistedViewport,
-    frozenNodeIds: store.frozenNodeIds,
-    canEditInspectorNode: runtimePolicy.commands.canEditInspectorNode,
-    applyInspectorNodeDraft: args.inspectorCommands.applyInspectorNodeDraft,
-    applyNodeDraft: args.inspectorCommands.applyNodeDraft,
-    relationalPredicateSeed: args.graphHandlers.relationalPredicateSeed,
-    clearRelationalPredicateSeed: args.graphHandlers.clearRelationalPredicateSeed,
-  };
-}
-
+type CanvasControllerViewModelArgs = CanvasShellViewModelArgs &
+  Readonly<{
+    persistence: ReturnType<typeof useCanvasLayoutPersistence>;
+    mutationHandlers: ReturnType<typeof useCanvasMutationHandlers>;
+    graphHandlers: ReturnType<typeof useCanvasGraphHandlers>;
+    executionActions: ReturnType<typeof useCanvasExecutionActions>;
+    executionSelectionRecovery: ReturnType<typeof useCanvasExecutionSelectionRecovery>;
+    handleImpactFocusNodeChange: (nodeId: string | null) => void;
+  }>;
 function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
   const {
     environment: { store },

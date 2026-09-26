@@ -11,90 +11,92 @@ import {
 import { GraphNodeColumnViews } from './GraphNodeColumnViews';
 import type { GraphNodeColumnSectionProps } from './graphNodeColumnContracts';
 
-describe('card Input / Output views', () => {
+describe('card Input / Output boundary', () => {
   setupWorkbenchTest();
   const columns = [
+    { id: 'published', name: 'name', type: 'string', output: true },
+    { id: 'excluded', name: 'email', type: 'string', output: false },
+  ];
+  const inputs = [
     {
-      id: 'selected',
+      id: 'input-a',
       name: 'name',
       type: 'string',
-      output: true,
-      source: { nodeId: 'producer', columnId: 'producer-name' },
+      source: { nodeId: 'producer-a', columnId: 'name' },
     },
     {
-      id: 'available',
+      id: 'input-b',
       name: 'email',
       type: 'string',
-      output: false,
-      source: { nodeId: 'producer', columnId: 'producer-email' },
+      source: { nodeId: 'producer-b', columnId: 'email' },
     },
   ];
   function render(
-    onColumnOutputToggle?: GraphNodeColumnSectionProps['onColumnOutputToggle']
-  ): void {
+    onInputMapping?: GraphNodeColumnSectionProps['onInputMapping']
+  ): ReturnType<typeof vi.fn> {
+    const mutation = vi.fn();
     act(() =>
       root.render(
         <ReactFlowProvider>
           <GraphNodeColumnViews
             columns={columns}
-            inputColumns={columns}
+            inputColumns={inputs}
             expanded
             nodeId="consumer"
-            onColumnOutputToggle={onColumnOutputToggle}
-            onAutomap={vi.fn()}
+            onInputMapping={onInputMapping}
+            onColumnOutputToggle={mutation}
+            onAutomap={mutation}
+            onColumnReorder={mutation}
           />
         </ReactFlowProvider>
       )
     );
+    return mutation;
   }
-  it('separates received fields from selected outputs without duplicating rows', () => {
-    render(vi.fn());
+  function outputView(): void {
+    const tab = [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find(
+      (item) => item.textContent === 'Output (1)'
+    )!;
+    act(() => fireEvent.keyDown(tab, { key: 'Enter' }));
+  }
+  function drop(nodeId = 'producer-b', columnId = 'email'): void {
+    act(() =>
+      fireEvent.drop(container.querySelector('[data-slot="tabs"]')!, {
+        dataTransfer: { getData: () => JSON.stringify({ nodeId, columnId }) },
+      })
+    );
+  }
+  it('publishes only explicit outputs without output-authoring controls', () => {
+    const mutation = render();
     expect(container.querySelectorAll('[data-slot="graph-node-column-row"]')).toHaveLength(2);
+    outputView();
+    expect(container.querySelectorAll('[data-slot="graph-node-column-row"]')).toHaveLength(1);
     expect(container.querySelector('[data-slot="graph-node-column-output-state"]')).toBeNull();
     expect(container.querySelector('[data-slot="graph-node-column-automap"]')).toBeNull();
-    const output = [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find(
-      (tab) => tab.textContent === 'Output (1)'
-    )!;
-    act(() => {
-      fireEvent.keyDown(output, { key: 'Enter' });
-    });
-    expect(output.getAttribute('aria-selected')).toBe('true');
-    expect(container.querySelectorAll('[data-slot="graph-node-column-row"]')).toHaveLength(1);
-    expect(container.querySelector('[data-slot="graph-node-column-output-state"]')).not.toBeNull();
-    expect(container.querySelector('[data-slot="graph-node-column-automap"]')).not.toBeNull();
+    drop();
+    expect(mutation).not.toHaveBeenCalled();
   });
-  it.each([true, false])('transfers only a connected available field (editable=%s)', (editable) => {
-    const toggle = vi.fn();
-    render(editable ? toggle : undefined);
-    const target = container.querySelector('[data-slot="tabs"]')!;
-    const drop = (nodeId: string): void => {
-      act(() => {
-        fireEvent.drop(target, {
-          dataTransfer: {
-            getData: () => JSON.stringify({ nodeId, columnId: 'producer-email' }),
-          },
-        });
-      });
-    };
-    drop('producer');
-    expect(toggle).not.toHaveBeenCalled();
-    const output = [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find(
-      (tab) => tab.textContent === 'Output (1)'
-    )!;
-    act(() => {
-      fireEvent.keyDown(output, { key: 'Enter' });
+  it('delegates a second producer field to Input admission, never to Output', () => {
+    const map = vi.fn();
+    const mutation = render(map);
+    drop();
+    expect(map).toHaveBeenCalledExactlyOnceWith({
+      source: { nodeId: 'producer-b', columnId: 'email' },
+      target: { nodeId: 'consumer' },
     });
-    drop('unrelated');
-    expect(toggle).not.toHaveBeenCalled();
-    drop('producer');
-    if (editable)
-      expect(toggle).toHaveBeenCalledWith({
-        nodeId: 'consumer',
-        columnId: 'available',
-        columnType: 'string',
-        output: true,
-        source: columns[1]!.source,
-      });
-    else expect(toggle).not.toHaveBeenCalled();
+    outputView();
+    drop();
+    expect(map).toHaveBeenCalledTimes(1);
+    expect(mutation).not.toHaveBeenCalled();
+  });
+  it('does not admit read-only, self or malformed transfers', () => {
+    render();
+    drop();
+    const map = vi.fn();
+    render(map);
+    drop('consumer');
+    drop('');
+    drop('producer-b', '');
+    expect(map).not.toHaveBeenCalled();
   });
 });

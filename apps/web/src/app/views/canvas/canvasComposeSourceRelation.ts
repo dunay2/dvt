@@ -4,14 +4,19 @@ import { RelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebr
 import { NamedStructSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { allocateDvtRelationId } from '@dvt/contracts';
 import { hasSameConnectionRef } from '@dvt/postgres-projection';
-import { deriveRelationSchema, SubstraitAnalysisError } from '@dvt/substrait-analysis';
+import {
+  deriveRelationSchema,
+  resolveProducerInput,
+  SubstraitAnalysisError,
+} from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
-import { createSourceRelation, toSourceRelationInput } from './canvasSourceRelation';
+import { createCanvasInputRead } from './canvasSourceRelation';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import { createCanonicalComposition } from './canvasCanonicalComposition';
 import { commitSelectedRelation } from './canvasCommitSelectedRelation';
 import { nextSourceOccurrenceAlias } from './relational-source-occurrence/sourceOccurrenceAlias';
+import { requireCompleteCanvasInput } from './canvasInputComposition';
 
 export async function composeSourceRelation(
   session: CanvasRelationAnalysisSession,
@@ -20,16 +25,17 @@ export async function composeSourceRelation(
     expectedRevision: number;
     signal?: AbortSignal;
     input: CanvasDvtCompositionInput;
-    occurrence?: ReturnType<typeof createSourceRelation>;
+    occurrence?: ReturnType<typeof createCanvasInputRead>;
     operation: CanvasRelationalOperation;
     predicate?: Readonly<{ leftSourceFieldId: string; rightFieldName: string }>;
   }>
 ) {
+  requireCompleteCanvasInput(request.input);
   const target = session.locate(request.relationId, request.expectedRevision);
   const schema = await session.query(request.relationId, request.signal);
   const read =
     request.occurrence == null
-      ? createSourceRelation(toSourceRelationInput(request.input), target.nextAnchor)
+      ? createCanvasInputRead(request.input, target.nextAnchor)
       : {
           ...request.occurrence,
           relation: clone(RelSchema, request.occurrence.relation),
@@ -37,24 +43,36 @@ export async function composeSourceRelation(
         };
   if (
     read.relation.relType.case !== 'read' ||
-    read.binding.sourceRef == null ||
-    read.binding.sourceRef.sourceObjectId !== request.input.sourceRef.sourceObjectId ||
-    !hasSameConnectionRef(
-      read.binding.sourceRef.connectionRef,
-      request.input.sourceRef.connectionRef
-    )
+    (request.input.producer != null
+      ? read.binding.producerRef?.nodeId !== request.input.nodeId
+      : read.binding.sourceRef == null ||
+        read.binding.sourceRef.sourceObjectId !== request.input.sourceRef.sourceObjectId ||
+        !hasSameConnectionRef(
+          read.binding.sourceRef.connectionRef,
+          request.input.sourceRef.connectionRef
+        ))
   )
     throw new SubstraitAnalysisError(
       'invalid_binding',
       'Occurrence must match the selected source.'
     );
+  if (request.input.producer != null)
+    resolveProducerInput({ ...read, inputs: [], consumers: [] }, request.input.producer.document);
   read.relation.relType.value.common!.relAnchor = target.nextAnchor;
   const aliases = session.sourceAliases(request.expectedRevision);
   if (request.occurrence != null && aliases.has(read.binding.displayName))
     throw new SubstraitAnalysisError('invalid_binding', 'Instance alias is already in use.');
   if (request.occurrence == null)
     read.binding.displayName = nextSourceOccurrenceAlias(read.binding.displayName, aliases);
-  for (const id of session.matchingSources(request.input.sourceRef, request.expectedRevision)) {
+  const matching =
+    request.input.producer == null
+      ? session.matchingSources(request.input.sourceRef, request.expectedRevision)
+      : session.matchingProducer(
+          request.input.nodeId,
+          request.input.producer.connection,
+          request.expectedRevision
+        );
+  for (const id of matching) {
     const prior = session.locate(id, request.expectedRevision).relation.relType;
     const next = read.relation.relType;
     if (
@@ -65,7 +83,7 @@ export async function composeSourceRelation(
     )
       throw new SubstraitAnalysisError(
         'invalid_binding',
-        'Repeated occurrences must retain their physical source schema.',
+        'Repeated occurrences must retain their input schema.',
         id
       );
   }

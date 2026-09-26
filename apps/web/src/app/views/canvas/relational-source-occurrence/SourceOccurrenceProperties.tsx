@@ -33,7 +33,7 @@ export function SourceOccurrenceProperties({
         relationId,
         alias: binding?.displayName ?? '',
         occupied,
-        supported: binding?.sourceRef != null,
+        supported: binding?.sourceRef != null || binding?.producerRef != null,
       }}
       actions={{
         close: onClose,

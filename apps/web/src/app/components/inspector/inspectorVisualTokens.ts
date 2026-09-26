@@ -1,6 +1,7 @@
 /** Owned concern: own Inspector and node workbench visual tokens. */
 
 export const inspectorVisualClasses = {
+  inspectorField: 'space-y-2',
   inspectorCard: 'border-slate-700 bg-slate-950 p-3 text-slate-50',
   inspectorTitle: 'mb-2 text-sm font-medium text-slate-100',
   inspectorLabel: 'text-slate-400',

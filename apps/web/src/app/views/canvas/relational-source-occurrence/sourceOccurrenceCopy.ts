@@ -16,6 +16,7 @@ export function sourceOccurrenceCopy(language: string) {
     unsupported: copy.sourceOccurrenceUnsupported,
     unavailable: copy.sourceOccurrenceUnavailable,
     incompatible: copy.sourceOccurrenceIncompatible,
+    input_projection_required: copy.sourceOccurrenceInputProjectionRequired,
     duplicate_alias: copy.inspectorErrorDvtAliasDuplicate,
   };
 }

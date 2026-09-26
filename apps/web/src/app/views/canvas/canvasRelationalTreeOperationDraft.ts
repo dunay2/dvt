@@ -65,6 +65,7 @@ export function createCanvasRelationalTreeOperationDraft(
     inputs: inputs.map((source) => ({
       ...source!,
       fields: source!.fields.map((field) => ({
+        id: field.id,
         name: field.name,
         type: field.joinDataType!,
         nullable: field.nullable,

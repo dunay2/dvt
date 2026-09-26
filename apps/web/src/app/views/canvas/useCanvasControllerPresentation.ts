@@ -52,6 +52,7 @@ export function useCanvasControllerPresentation({
       onSetNodeMaterialization: inspectorCommands.setNodeMaterialization,
     },
     columnActions: {
+      onMapCanvasInput: graphHandlers.handleMapCanvasInput,
       onColumnPortActivate: graphHandlers.handleColumnPortActivate,
       onApplyCanvasColumnFunction: graphHandlers.handleApplyCanvasColumnFunction,
       onApplyCanvasStructuredField: graphHandlers.handleApplyCanvasStructuredField,
@@ -59,7 +60,7 @@ export function useCanvasControllerPresentation({
       onToggleCanvasColumnOutput: graphHandlers.handleToggleCanvasColumnOutput,
       onReorderCanvasColumnOutput: graphHandlers.handleReorderCanvasColumnOutput,
       onColumnDisclosureChange: graphHandlers.handleColumnDisclosureChange,
-      onAutomapColumns: graphHandlers.handleAutomapCanvasColumns,
+      onColumnViewChange: graphHandlers.handleColumnViewChange,
     },
     compositionActions: {
       resolveAlgebraicCompositionOperations:

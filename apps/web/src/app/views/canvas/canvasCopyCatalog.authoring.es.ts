@@ -15,6 +15,8 @@ export const canvasViewAuthoringCopyEs = {
   sourceOccurrenceUnavailable: 'Se necesita una fuente conectada en la misma conexión.',
   sourceOccurrenceIncompatible: 'No hay campos compatibles para esta composición.',
   operationReadLabel: 'Fuente',
+  sourceOccurrenceInputProjectionRequired:
+    'Añade un Transform explícito para los campos de entrada mapeados antes de componer.',
   operationFilterLabel: 'Filtrar',
   operationAggregateLabel: 'Agrupar',
   operationWindowLabel: 'Ventana',

@@ -5,9 +5,8 @@ import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
-import { applyCanvasColumnMapping } from './canvasColumnMappingAuthoring';
 import { canvasViewCopy } from './copy';
-import { createCanvasColumnHandleId } from './canvasColumnLineageProjection';
+import { createCanvasColumnHandleId } from './canvasColumnHandleIdentity';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import {
   decodeDvtSubstraitProjectionDocument,
@@ -136,7 +135,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     harness.cleanup();
   });
 
-  it('routes a pointer column connection into recipe authority without creating a node edge', async () => {
+  it('routes a pointer column connection into Input without creating semantic authority', async () => {
     const source = buildConnectedPostgresSource('source-node', [
       { name: 'order_id', type: 'integer' },
     ]);
@@ -148,7 +147,16 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       ...buildDraftSession(),
       workingSet: {
         visibleNodeIds: [source.id, model.id],
-        visibleEdges: [{ sourceId: source.id, targetId: model.id }],
+        visibleEdges: [
+          {
+            sourceId: source.id,
+            targetId: model.id,
+            inputBindings: {
+              version: 'v1' as const,
+              fields: [{ inputId: 'input-slot', producerFieldId: 'removed' }],
+            },
+          },
+        ],
         pendingExplicitNodeIds: [],
       },
     };
@@ -173,17 +181,24 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         targetHandle: createCanvasColumnHandleId({
           direction: 'target',
           nodeId: model.id,
-          columnId: 'order_id',
+          columnId: 'input-slot',
         }),
       });
     });
 
     expect(setDraftSession).toHaveBeenCalledTimes(1);
-    const nextSession = setDraftSession.mock.calls[0]?.[0];
-    expect(typeof nextSession).toBe('object');
-    const mapped = nextSession.localNodeCatalog?.[model.id];
-    expect(mapped).toBeDefined();
-    expect(readDvtTransformAuthoringAuthority(mapped)?.mode).toBe('substrait');
+    const nextSession = setDraftSession.mock.calls[0]?.[0]();
+    expect(nextSession.workingSet.visibleEdges).toEqual([
+      {
+        sourceId: source.id,
+        targetId: model.id,
+        inputBindings: {
+          version: 'v1',
+          fields: [{ inputId: 'input-slot', producerFieldId: 'order_id' }],
+        },
+      },
+    ]);
+    expect(nextSession.localNodeCatalog?.[model.id]).toBeUndefined();
     expect(toastState.success).toHaveBeenCalledWith(canvasViewCopy.columnMappingAddedMessage);
     harness.cleanup();
   });
@@ -204,7 +219,16 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         ...buildDraftSession(),
         workingSet: {
           visibleNodeIds: [source.id, model.id],
-          visibleEdges: [{ sourceId: source.id, targetId: model.id }],
+          visibleEdges: [
+            {
+              sourceId: source.id,
+              targetId: model.id,
+              inputBindings: {
+                version: 'v1' as const,
+                fields: [{ inputId: 'input-slot', producerFieldId: 'removed' }],
+              },
+            },
+          ],
           pendingExplicitNodeIds: [],
         },
       },
@@ -230,7 +254,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       harness.latest()?.handleColumnPortActivate({
         direction: 'target',
         nodeId: model.id,
-        columnId: 'order_id',
+        columnId: 'input-slot',
       });
     });
 
@@ -238,105 +262,6 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     expect(toastState.info).toHaveBeenCalledWith(
       canvasViewCopy.columnMappingSourceSelectedTemplate.replace('{column}', 'order_id')
     );
-    harness.cleanup();
-  });
-
-  it('opens a seeded relation proposal without mutating the draft', async () => {
-    const orders = buildConnectedPostgresSource('orders', [{ name: 'client_id', type: 'text' }]);
-    const clients = buildConnectedPostgresSource('clients', [{ name: 'client_id', type: 'text' }]);
-    const model = {
-      ...buildCanonicalNode('model-node', 'transform'),
-      kind: 'dvt:transform' as const,
-      metadata: { columns: [{ name: 'client_id', type: 'text' }] },
-    };
-    const canonicalNodes = [orders, clients, model];
-    const canonicalNodesById = new Map(canonicalNodes.map((node) => [node.id, node]));
-    const initialSession = {
-      ...buildDraftSession(),
-      workingSet: {
-        visibleNodeIds: canonicalNodes.map((node) => node.id),
-        visibleEdges: [
-          { sourceId: orders.id, targetId: model.id },
-          { sourceId: clients.id, targetId: model.id },
-        ],
-        pendingExplicitNodeIds: [],
-      },
-    };
-    const mapped = applyCanvasColumnMapping({
-      draftSession: initialSession,
-      canonicalNodesById,
-      source: { nodeId: orders.id, columnId: 'client_id' },
-      target: { nodeId: model.id, columnName: 'client_id' },
-    });
-    if (mapped.outcome !== 'applied') throw new Error('Expected initial mapping.');
-    const mappedModel = mapped.draftSession.localNodeCatalog?.[model.id];
-    const authority = mappedModel == null ? null : readDvtTransformAuthoringAuthority(mappedModel);
-    if (authority?.mode !== 'substrait') throw new Error('Expected Substrait projection.');
-    const inspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
-    );
-    if (!inspection.ok) throw new Error('Expected inspectable projection.');
-    const outputId = inspection.projection.outputs[0]!.fieldId;
-    const setDraftSession = vi.fn();
-    const setInspectorNode = vi.fn();
-    const harness = renderGraphHandlersHook({
-      canEditEdges: true,
-      canonicalNodes,
-      draftSession: mapped.draftSession,
-      setDraftSession,
-      setInspectorNode,
-    });
-    await harness.render();
-
-    await act(async () => {
-      harness.latest()?.onConnect({
-        source: clients.id,
-        sourceHandle: createCanvasColumnHandleId({
-          direction: 'source',
-          nodeId: clients.id,
-          columnId: 'client_id',
-        }),
-        target: model.id,
-        targetHandle: createCanvasColumnHandleId({
-          direction: 'target',
-          nodeId: model.id,
-          columnId: outputId,
-        }),
-      });
-    });
-
-    expect(setDraftSession).not.toHaveBeenCalled();
-    expect(setInspectorNode).toHaveBeenCalledWith(model.id, 'columns');
-    expect(harness.latest()?.relationalPredicateSeed).toMatchObject({
-      targetNodeId: model.id,
-      left: { nodeId: orders.id, fieldName: 'client_id' },
-      right: { nodeId: clients.id, fieldName: 'client_id' },
-      candidateOperator: 'equal',
-    });
-
-    await act(async () => {
-      harness.latest()?.clearRelationalPredicateSeed();
-      harness.latest()?.handleColumnPortActivate({
-        direction: 'source',
-        nodeId: clients.id,
-        columnId: 'client_id',
-      });
-    });
-    await act(async () => {
-      harness.latest()?.handleColumnPortActivate({
-        direction: 'target',
-        nodeId: model.id,
-        columnId: outputId,
-      });
-    });
-
-    expect(setDraftSession).not.toHaveBeenCalled();
-    expect(setInspectorNode).toHaveBeenCalledTimes(2);
-    expect(harness.latest()?.relationalPredicateSeed).toMatchObject({
-      targetNodeId: model.id,
-      left: { nodeId: orders.id, fieldName: 'client_id' },
-      right: { nodeId: clients.id, fieldName: 'client_id' },
-    });
     harness.cleanup();
   });
 
@@ -391,7 +316,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     harness.cleanup();
   });
 
-  it('commits deterministic mappings with the created stage edge', async () => {
+  it('commits a dependency without inventing model operations or Output', async () => {
     const source = buildConnectedPostgresSource('source-node', [
       { name: 'order_id', type: 'integer' },
       { name: 'customer', type: 'text' },
@@ -430,26 +355,9 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     const updateDraftSession = setDraftSession.mock.calls[0]?.[0];
     expect(typeof updateDraftSession).toBe('function');
     const nextDraftSession = updateDraftSession(draftSession);
-    const mappedTransform = nextDraftSession.localNodeCatalog?.[transform.id];
-    if (mappedTransform == null) {
-      throw new Error('Expected the edge command to commit the mapped transform');
-    }
-    const authority = readDvtTransformAuthoringAuthority(mappedTransform)!;
-    expect(authority.mode).toBe('substrait');
-    if (authority.mode !== 'substrait') return;
-    const inspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
-    );
-    expect(inspection.ok).toBe(true);
-    if (!inspection.ok) return;
-    expect(
-      inspection.projection.outputs.map((output) => ({
-        name: output.name,
-        sourceFieldName: output.sourceFieldName,
-      }))
-    ).toEqual([
-      { name: 'order_id', sourceFieldName: 'order_id' },
-      { name: 'customer', sourceFieldName: 'customer' },
+    expect(nextDraftSession.localNodeCatalog?.[transform.id]).toBeUndefined();
+    expect(nextDraftSession.workingSet.visibleEdges).toEqual([
+      { sourceId: source.id, targetId: transform.id },
     ]);
 
     harness.cleanup();
@@ -889,7 +797,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       | Readonly<{ outcome: 'rejected' }>
       | undefined;
     await act(async () => {
-      functionResult = harness.latest()?.handleApplyCanvasColumnFunction({
+      functionResult = await harness.latest()?.handleApplyCanvasColumnFunction({
         nodeId: transform.id,
         columnId: 'output:order_id',
         operandFieldIds: ['output:order_id', 'output:customer'],

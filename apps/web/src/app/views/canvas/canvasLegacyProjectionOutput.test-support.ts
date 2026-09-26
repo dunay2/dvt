@@ -1,4 +1,4 @@
-/** Owned concern: create one derived output in an admitted connected-source projection. */
+/** Legacy document fixture factory; production authoring uses the selected-relation command. */
 import { fromBinary, toBinary } from '@bufbuild/protobuf';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {

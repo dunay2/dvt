@@ -43,6 +43,10 @@ export type GraphNodeColumnCompositionFunctionResolver = (
 ) => readonly GraphNodeColumnFunction[];
 
 export type GraphNodeColumnPortDirection = 'source' | 'target';
+export type GraphNodeInputMapping = Readonly<{
+  source: Readonly<{ nodeId: string; columnId: string }>;
+  target: Readonly<{ nodeId: string; inputId?: string }>;
+}>;
 export type GraphNodeColumnPortIdentity = Readonly<{
   direction: GraphNodeColumnPortDirection;
   nodeId: string;
@@ -102,6 +106,7 @@ export type GraphNodeColumnSectionProps = Readonly<{
   columns: readonly GraphNodeColumn[];
   inputColumns?: readonly GraphNodeColumn[];
   view?: 'input' | 'output';
+  onViewChange?: (view: 'input' | 'output') => void;
   showSourceName?: boolean;
   expressionInputs?: readonly GraphNodeColumn[];
   expanded?: boolean;
@@ -109,16 +114,17 @@ export type GraphNodeColumnSectionProps = Readonly<{
   portDirections?: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
+  onInputMapping?: (identity: GraphNodeInputMapping) => void;
   onColumnFunctionApply?: (
     identity: GraphNodeColumnFunctionApplyIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>;
   resolveColumnCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
   onStructuredFieldApply?: (
     identity: GraphNodeStructuredFieldIdentity
   ) => GraphNodeColumnFunctionApplyResult;
   onCalculatedColumnAdd?: (
     identity: GraphNodeCalculatedColumnIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>;
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
   onDisclosureChange?: (expanded: boolean) => void;

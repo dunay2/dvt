@@ -10,6 +10,7 @@ import { createSourceSet } from './canvasSourceSet';
 import { source } from './canvasRelationalOperator.test-support';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { graphSource } from './canvasRelationGraph.test-support';
 
 describe.each(['join', 'set'] as const)('Inspector composes over %s results', (kind) => {
   const view = useAuthoringFieldsHarness();
@@ -27,7 +28,16 @@ describe.each(['join', 'set'] as const)('Inspector composes over %s results', (k
       buildDvtNode('dvt:transform'),
       encodeDvtSubstraitSemanticDocument(document)
     );
-    await act(async () => view.renderFields(node, undefined, undefined, [node], [], 'columns'));
+    const producers = ['left', 'right'].map(graphSource);
+    const edges = producers.map((producer) => ({
+      id: `${producer.id}-model`,
+      sourceId: producer.id,
+      targetId: node.id,
+      relation: 'lineage' as const,
+    }));
+    await act(async () =>
+      view.renderFields(node, undefined, undefined, [node, ...producers], edges, 'columns')
+    );
     await act(async () =>
       fireEvent.change(view.container.querySelector('select')!, { target: { value: target } })
     );

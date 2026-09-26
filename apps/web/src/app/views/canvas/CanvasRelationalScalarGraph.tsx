@@ -3,18 +3,29 @@ import { useId, useState } from 'react';
 import { Braces, FunctionSquare, Hash, Minus, Plus, Maximize } from 'lucide-react';
 import type { SemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewport';
+import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
 
-export function CanvasRelationalScalarGraph({
-  graph,
-  onSelectCondition,
-  selectedNodeId,
-  onSelectedNodeChange,
-}: Readonly<{
+type ScalarGraphProps = Readonly<{
   graph: SemanticWorkbenchGraph;
   onSelectCondition?: (index: number, operand?: 'left' | 'right') => void;
   selectedNodeId?: string;
   onSelectedNodeChange?: (nodeId: string) => void;
-}>): JSX.Element {
+}>;
+
+export function CanvasRelationalScalarGraph(props: ScalarGraphProps): JSX.Element {
+  return (
+    <RelationalLayoutSession isolated>
+      <ScalarGraphView {...props} />
+    </RelationalLayoutSession>
+  );
+}
+
+function ScalarGraphView({
+  graph,
+  onSelectCondition,
+  selectedNodeId,
+  onSelectedNodeChange,
+}: ScalarGraphProps): JSX.Element {
   const marker = useId();
   const [selected, setSelected] = useState<string | null>(null);
   const viewport = useCanvasRelationalTreeViewport(graph.relationId, 8);

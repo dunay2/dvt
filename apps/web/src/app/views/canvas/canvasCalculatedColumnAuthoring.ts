@@ -1,21 +1,19 @@
-/** Owned concern: execute calculated-column authoring through ConfigureCanvasDvtNode. */
+/** ConfigureCanvasDvtNode delegates calculation to the selected-relation command used by Transform. */
+import {
+  DvtSemanticFieldNameV1Schema,
+  DvtStringLiteralV1Schema,
+  DvtTimestampLiteralV1Schema,
+} from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
-import {
-  createDvtSubstraitProjectionOutput,
-  type DvtSubstraitCreateOutputRequest,
-} from './canvasDvtSubstraitCalculatedColumn';
-import type { CanvasDraftSession } from './canvasDraftSession';
-import { canvasDraftSession } from './canvasDraftSession';
-import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
-import {
-  encodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
-  resolveDvtSubstraitProjectionEntry,
-  type DvtSubstraitProjection,
-  type DvtSubstraitProjectionAuthoringRejection,
-  type DvtSubstraitProjectionDraft,
-} from './canvasDvtSubstraitProjection';
+import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
+import type { DvtSubstraitProjectionAuthoringRejection } from './canvasDvtSubstraitProjection';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindings';
+import { resolveCanvasProducerDocument } from './canvasProducerDocument';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
+import { resolveUnmappedCanvasReadFields } from './canvasInputFieldEligibility';
 
 export type CanvasCalculatedColumnRequest =
   | Readonly<{ nodeId: string; kind: 'field-ref'; alias: string; inputFieldId: string }>
@@ -48,134 +46,110 @@ export type CanvasCalculatedColumnResult =
   | Readonly<{ outcome: 'applied'; draftSession: CanvasDraftSession; createdFieldId: string }>
   | Readonly<{ outcome: 'rejected'; reason: DvtSubstraitProjectionAuthoringRejection }>;
 
-function nodeCatalog(
-  draftSession: CanvasDraftSession,
-  canonicalNodesById: ReadonlyMap<string, CanonicalNode>
-): Map<string, CanonicalNode> {
-  const catalog = new Map(canonicalNodesById);
-  Object.values(draftSession.localNodeCatalog ?? {}).forEach((node) => catalog.set(node.id, node));
-  return catalog;
-}
-
-function creationRequest(request: CanvasCalculatedColumnRequest): DvtSubstraitCreateOutputRequest {
-  if (request.kind === 'field-ref') {
-    return {
-      alias: request.alias,
-      expression: { kind: 'field-ref', inputFieldId: request.inputFieldId },
-    };
-  }
-  if (request.kind === 'scalar-function') {
-    return {
-      alias: request.alias,
-      expression: {
-        kind: 'scalar-function',
-        operandFieldIds: request.operandFieldIds ?? [request.inputFieldId],
-        capabilityId: request.capabilityId,
-      },
-    };
-  }
-  if (request.kind === 'row-number') {
-    return {
-      alias: request.alias,
-      expression: { kind: 'row-number', orderFieldId: request.orderFieldId },
-    };
-  }
-  return {
-    alias: request.alias,
-    expression: { kind: request.kind, value: request.value },
-  };
-}
-
-function createOutput(args: {
-  request: CanvasCalculatedColumnRequest;
-  projection: DvtSubstraitProjection;
-  draft: DvtSubstraitProjectionDraft;
-}) {
-  const request = creationRequest(args.request);
-  const inspection = inspectDvtSubstraitProjectionDraft(args.draft);
-  const operands =
-    request.expression.kind === 'scalar-function' && inspection.ok
-      ? request.expression.operandFieldIds.map((fieldId) =>
-          [...inspection.projection.outputs, ...inspection.projection.inputFields].find(
-            (field) => field.fieldId === fieldId
-          )
-        )
-      : [];
-  return createDvtSubstraitProjectionOutput(
-    args.draft,
-    request,
-    request.expression.kind === 'scalar-function' && operands.every((operand) => operand != null)
-      ? {
-          inputDataTypes: operands.map((operand) => operand!.dataType),
-          provider: args.projection.source.sourceRef.connectionRef.provider,
-        }
-      : undefined
-  );
-}
-
-type CanvasCalculatedColumnTransformResult =
-  | Readonly<{ outcome: 'applied'; node: CanonicalNode; createdFieldId: string }>
-  | Readonly<{ outcome: 'rejected'; reason: DvtSubstraitProjectionAuthoringRejection }>;
-
-function applyToTransform(args: {
-  target: CanonicalNode;
-  nodes: readonly CanonicalNode[];
-  edges: CanvasDraftSession['workingSet']['visibleEdges'];
-  request: CanvasCalculatedColumnRequest;
-}): CanvasCalculatedColumnTransformResult {
-  const metadata = createDvtNodeAuthoringMetadata(args.target);
-  if (
-    metadata?.kind !== 'transform' ||
-    metadata.mode !== 'substrait' ||
-    metadata.shape !== 'projection'
-  ) {
-    return { outcome: 'rejected', reason: 'invalid_target' };
-  }
-  const draft = { plan: metadata.plan, sidecar: metadata.sidecar };
-  const projection = resolveDvtSubstraitProjectionEntry({
-    targetNode: args.target,
-    nodes: args.nodes,
-    edges: args.edges,
-    draft,
-  });
-  if (projection == null) return { outcome: 'rejected', reason: 'invalid_reference' };
-  const creation = createOutput({ request: args.request, projection, draft });
-  if (creation.outcome === 'rejected') return creation;
-  return {
-    outcome: 'applied',
-    node: applyDvtSubstraitSemanticDocument(
-      args.target,
-      encodeDvtSubstraitProjectionDocument(creation.draft)
-    ),
-    createdFieldId: creation.createdFieldId,
-  };
-}
-
-export function applyCanvasCalculatedColumn(args: {
+export async function applyCanvasCalculatedColumn(args: {
   draftSession: CanvasDraftSession;
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   request: CanvasCalculatedColumnRequest;
-}): CanvasCalculatedColumnResult {
+}): Promise<CanvasCalculatedColumnResult> {
+  const request = args.request;
+  if (
+    !DvtSemanticFieldNameV1Schema.safeParse(request.alias).success ||
+    request.alias.trim().length === 0
+  )
+    return { outcome: 'rejected', reason: 'invalid_alias' };
+  const catalog = new Map(args.canonicalNodesById);
+  for (const node of Object.values(args.draftSession.localNodeCatalog ?? {}))
+    catalog.set(node.id, node);
+  const target = catalog.get(request.nodeId);
+  if (
+    target?.kind !== 'dvt:transform' ||
+    target.pluginId !== 'dvt' ||
+    target.metadata?.transformAuthoring == null
+  )
+    return { outcome: 'rejected', reason: 'invalid_target' };
+  if (
+    (request.kind === 'string-literal' &&
+      !DvtStringLiteralV1Schema.safeParse(request.value).success) ||
+    (request.kind === 'timestamp-literal' &&
+      !DvtTimestampLiteralV1Schema.safeParse(request.value).success)
+  )
+    return { outcome: 'rejected', reason: 'invalid_literal' };
+  let session: CanvasRelationAnalysisSession | undefined;
   try {
-    const catalog = nodeCatalog(args.draftSession, args.canonicalNodesById);
-    const target = catalog.get(args.request.nodeId);
-    if (target == null || target.kind !== 'dvt:transform') {
-      return { outcome: 'rejected', reason: 'invalid_target' };
+    const nodes = [...catalog.values()];
+    const document = resolveCanvasProducerDocument(target, nodes);
+    let connection;
+    try {
+      connection = resolveCanvasSubstraitGraphBindings({
+        node: target,
+        nodes,
+        edges: args.draftSession.workingSet.visibleEdges,
+      }).connection;
+    } catch {
+      // Authoring an incomplete draft does not require execution admission.
     }
-    const update = applyToTransform({
-      target,
-      nodes: [...catalog.values()],
-      edges: args.draftSession.workingSet.visibleEdges,
-      request: args.request,
+    session = new CanvasRelationAnalysisSession(target.id, connection);
+    session.receive(
+      document ?? null,
+      resolveUnmappedCanvasReadFields({
+        document: document ?? null,
+        nodeId: target.id,
+        nodes,
+        edges: args.draftSession.workingSet.visibleEdges,
+      })
+    );
+    const root = session.locate(session.rootId, session.revision);
+    const before = await session.query(session.rootId);
+    const inputs =
+      root.relation.relType.case === 'project' ? await session.query(root.inputs[0]!) : before;
+    const fields = [...inputs.bindings, ...before.bindings];
+    if (fields.some((field) => field.parentFieldId == null && field.displayName === request.alias))
+      return { outcome: 'rejected', reason: 'duplicate_alias' };
+    const ids =
+      request.kind === 'field-ref'
+        ? [request.inputFieldId]
+        : request.kind === 'row-number'
+          ? [request.orderFieldId]
+          : request.kind === 'scalar-function'
+            ? (request.operandFieldIds ?? [request.inputFieldId])
+            : [];
+    if (
+      new Set(ids).size !== ids.length ||
+      ids.some((id) => !fields.some((field) => field.fieldId === id))
+    )
+      return { outcome: 'rejected', reason: 'invalid_reference' };
+    const updated = await applySelectedRelationDerivedOutput(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      intent: root.relation.relType.case === 'project' ? 'edit' : 'insert',
+      alias: request.alias,
+      ...(request.kind === 'scalar-function'
+        ? {
+            capabilityIds: [request.capabilityId] as const,
+            operandFieldIds: request.operandFieldIds ?? ([request.inputFieldId] as const),
+          }
+        : { expression: request }),
     });
-    return update.outcome === 'rejected'
-      ? update
-      : {
-          outcome: 'applied',
-          draftSession: canvasDraftSession.workingSet.upsertNode(args.draftSession, update.node),
-          createdFieldId: update.createdFieldId,
-        };
-  } catch {
-    return { outcome: 'rejected', reason: 'invalid_document' };
+    const created = updated.sidecar.fields.find(
+      (field) => field.relationId === session!.rootId && field.displayName === request.alias
+    )!;
+    return {
+      outcome: 'applied',
+      createdFieldId: created.fieldId,
+      draftSession: canvasDraftSession.workingSet.upsertNode(
+        args.draftSession,
+        applyDvtSubstraitSemanticDocument(target, encodeDvtSubstraitSemanticDocument(updated))
+      ),
+    };
+  } catch (error) {
+    return {
+      outcome: 'rejected',
+      reason:
+        error instanceof Error && error.message.includes('capability')
+          ? 'unsupported_capability'
+          : 'invalid_document',
+    };
+  } finally {
+    session?.dispose();
   }
 }

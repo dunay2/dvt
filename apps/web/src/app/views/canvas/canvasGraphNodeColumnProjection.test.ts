@@ -10,6 +10,42 @@ import {
 } from './canvasGraphNodeColumnProjection';
 
 describe('projectGraphNodeColumn', () => {
+  it('uses the producer field identity rather than the consumer alias for a physical input', () => {
+    const producer: CanonicalNode = {
+      id: 'producer',
+      name: 'Clients',
+      pluginId: 'dvt.warehouse-source',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+    };
+    const node = {
+      id: 'consumer',
+      data: {
+        role: 'transform',
+        columns: [{ id: 'output-id', name: 'customer_alias', type: 'text' }],
+        presentationTruth: {
+          columns: {
+            inherited: [],
+            visible: [
+              {
+                reference: 'output-id',
+                name: 'customer_alias',
+                type: 'text',
+                provenance: 'declared',
+                sourceNodeId: producer.id,
+                sourceFieldName: 'client_id',
+              },
+            ],
+          },
+        },
+      },
+    } as unknown as Node;
+    expect(
+      projectInteractiveCanvasColumns(node, new Map([[producer.id, producer]]))[0]?.source
+    ).toEqual({ nodeId: producer.id, columnId: 'client_id' });
+  });
   it('preserves nested field presentation recursively', () => {
     expect(
       projectGraphNodeColumn(

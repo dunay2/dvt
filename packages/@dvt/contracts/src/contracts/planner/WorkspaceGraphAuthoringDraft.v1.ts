@@ -21,6 +21,10 @@ import {
   CanvasTagsV1Schema,
 } from './CanvasAuthoringFieldPolicy.v1.js';
 import {
+  validateDvtGraphInputBindings,
+  validateDvtInputBindingMetadata,
+} from './DvtInputBindings.v1.js';
+import {
   DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
   DvtTransformAuthoringAuthorityV1Schema,
 } from './DvtTransformAuthoringAuthority.v1.js';
@@ -226,7 +230,8 @@ export const WorkspaceGraphAuthoringEdgeSchema = z
     ]),
     metadata: RecordStringUnknownSchema.optional(),
   })
-  .strict() satisfies z.ZodType<WorkspaceGraphAuthoringEdge>;
+  .strict()
+  .superRefine(validateDvtInputBindingMetadata) satisfies z.ZodType<WorkspaceGraphAuthoringEdge>;
 
 export const WorkspaceGraphAuthoringCanvasWorkspaceSchema = z
   .object({
@@ -250,6 +255,7 @@ function addGraphShapeIssues(
   ctx: z.RefinementCtx,
   pathPrefix: Array<string | number> = []
 ): void {
+  validateDvtGraphInputBindings(graph, ctx, pathPrefix);
   const visibleNodeIds = new Set<string>(graph.nodeIds);
   if (visibleNodeIds.size !== graph.nodeIds.length) {
     ctx.addIssue({

@@ -5,7 +5,7 @@ import {
   reconnectSelectedRelation,
   rebindSelectedFieldReferences,
 } from './canvasSelectedRelationChange';
-import { inputIdentityMap, rebaseRelationInput } from './canvasRelationInputRemap';
+import { inputIdentityMap, rebaseRelationInput } from '@dvt/substrait-analysis';
 import { validateRelationChanges } from './canvasRelationChangeValidation';
 import {
   orderedDvtSubstraitFields,

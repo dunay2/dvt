@@ -1,4 +1,4 @@
-import type { WorkspaceGraphAuthoringEdgeExecutionGate } from '@dvt/contracts';
+import type { DvtInputBindingsV1, WorkspaceGraphAuthoringEdgeExecutionGate } from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
 
@@ -9,6 +9,7 @@ export type CanvasDraftEdge = {
   sourceId: string;
   targetId: string;
   executionGate?: WorkspaceGraphAuthoringEdgeExecutionGate;
+  inputBindings?: DvtInputBindingsV1;
 };
 
 export type CanvasDraftBaseline = {

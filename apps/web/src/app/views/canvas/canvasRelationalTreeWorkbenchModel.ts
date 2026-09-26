@@ -25,10 +25,15 @@ export function flattenCanvasRelationalTree(
 
 function sourceLabel(
   sourceNodeId: string | null,
-  sourceRef: ConnectedSourceRef,
+  sourceRef: ConnectedSourceRef | null,
   nodes: readonly CanonicalNode[]
 ) {
-  return nodes.find((node) => node.id === sourceNodeId)?.name ?? sourceRef.sourceObjectId;
+  return (
+    nodes.find((node) => node.id === sourceNodeId)?.name ??
+    sourceRef?.sourceObjectId ??
+    sourceNodeId ??
+    ''
+  );
 }
 
 function sourceFieldCount(
@@ -57,13 +62,20 @@ export function projectCanvasRelationalTreeCatalogue(
   }>
 ): readonly CanvasRelationalTreeCatalogueItem[] {
   const locatorBySource = readLocatorBySource(args.root);
-  const sources = new Map(args.inputs.map((input) => [sourceKey(input.sourceRef), input]));
+  const inputKey = (input: CanvasRelationalTreeInput): string =>
+    input.sourceRef == null ? `producer:${input.sourceNodeId}` : sourceKey(input.sourceRef);
+  const sources = new Map(args.inputs.map((input) => [inputKey(input), input]));
   return [...sources.values()].map((input) => ({
-    key: sourceKey(input.sourceRef),
+    key: inputKey(input),
     label: sourceLabel(input.sourceNodeId, input.sourceRef, args.nodes),
     sourceNodeId: input.sourceNodeId,
     state: input.state,
-    treeLocator: locatorBySource.get(sourceKey(input.sourceRef)) ?? null,
+    treeLocator:
+      input.sourceRef == null
+        ? (flattenCanvasRelationalTree(args.root).find(
+            (node) => node.relationId === input.relationId
+          )?.locator ?? null)
+        : (locatorBySource.get(sourceKey(input.sourceRef)) ?? null),
     fieldCount: sourceFieldCount(input.sourceNodeId, args.nodes),
   }));
 }
@@ -73,7 +85,7 @@ export function projectPendingCanvasRelationalTreeCatalogue(
   nodes: readonly CanonicalNode[]
 ): readonly CanvasRelationalTreeCatalogueItem[] {
   return inputs.map((input) => ({
-    key: sourceKey(input.sourceRef),
+    key: input.sourceRef == null ? `producer:${input.nodeId}` : sourceKey(input.sourceRef),
     label: sourceLabel(input.nodeId, input.sourceRef, nodes),
     sourceNodeId: input.nodeId,
     state: 'pending',

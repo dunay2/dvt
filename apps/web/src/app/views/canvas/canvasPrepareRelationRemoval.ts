@@ -6,7 +6,7 @@ import {
 } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { removalTarget } from './canvasRelationRemovalTarget';
-import { inputIdentityMap, rebaseRelationInput } from './canvasRelationInputRemap';
+import { inputIdentityMap, rebaseRelationInput } from '@dvt/substrait-analysis';
 import { retainCompositionOutputs } from './canvasCompositionOutputs';
 import { rebindSelectedFieldReferences } from './canvasSelectedRelationChange';
 import { validateRelationChanges } from './canvasRelationChangeValidation';

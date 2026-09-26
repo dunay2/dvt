@@ -48,9 +48,16 @@ function useLayout() {
 }
 const LayoutContext = createContext<ReturnType<typeof useLayout> | null>(null);
 
-export function RelationalLayoutSession({ children }: Readonly<{ children: ReactNode }>) {
+export function RelationalLayoutSession({
+  children,
+  isolated = false,
+}: Readonly<{ children: ReactNode; isolated?: boolean }>) {
   const parent = useContext(LayoutContext);
-  return parent == null ? <OwnedLayoutSession>{children}</OwnedLayoutSession> : <>{children}</>;
+  return parent == null || isolated ? (
+    <OwnedLayoutSession>{children}</OwnedLayoutSession>
+  ) : (
+    <>{children}</>
+  );
 }
 
 function OwnedLayoutSession({ children }: Readonly<{ children: ReactNode }>) {

@@ -14,14 +14,17 @@ import {
   createSourceRelation,
   sourceFieldType,
   type SourceRelationInput,
+  type CanvasRelationInputSource,
+  canvasInputConnection,
 } from './canvasSourceRelation';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import { comparisonFunctionIdentity } from './canvasDvtSubstraitJoinConditionInspection';
+import { requireCompleteCanvasInput } from './canvasInputComposition';
 
 export function createSourceJoin(
   args: Readonly<{
-    left: SourceRelationInput;
-    right: SourceRelationInput;
+    left: SourceRelationInput<CanvasRelationInputSource>;
+    right: SourceRelationInput<CanvasRelationInputSource>;
     leftFieldName: string;
     rightFieldName: string;
     targetNodeId: string;
@@ -29,12 +32,14 @@ export function createSourceJoin(
     outputs?: readonly Readonly<{ side: 0 | 1; fieldName: string; name: string }>[];
   }>
 ): SubstraitDocument {
+  requireCompleteCanvasInput(args.left);
+  requireCompleteCanvasInput(args.right);
   if (args.targetNodeId.trim() !== args.targetNodeId || args.targetNodeId.length === 0)
     throw new Error('The model identity must be nonblank and trimmed.');
   if (
     !hasSameConnectionRef(
-      args.left.source.sourceRef.connectionRef,
-      args.right.source.sourceRef.connectionRef
+      canvasInputConnection(args.left.source),
+      canvasInputConnection(args.right.source)
     )
   )
     throw new Error('Inputs must use the same execution connection.');

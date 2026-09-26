@@ -5,7 +5,7 @@ import {
 import {
   createDvtSubstraitProjectionOutput,
   type DvtSubstraitCreateOutputRequest,
-} from './canvasDvtSubstraitCalculatedColumn';
+} from './canvasLegacyProjectionOutput.test-support';
 
 export function connectedOrdersProjectionDraft(): DvtSubstraitProjectionDraft {
   return createDvtSubstraitProjectionDraft({

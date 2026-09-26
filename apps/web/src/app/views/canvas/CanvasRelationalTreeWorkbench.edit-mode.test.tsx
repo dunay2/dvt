@@ -99,7 +99,7 @@ describe('explicit relational editing', () => {
   });
 
   it.each(['operator', 'predicate'])(
-    'protects %s changes when selecting another card',
+    'retains completed edits and protects unsaved %s form changes when selecting another card',
     async (change) => {
       const graph = occurrenceGraph();
       const applied = vi.fn(() => ({ outcome: 'no_changes' as const }));
@@ -140,6 +140,18 @@ describe('explicit relational editing', () => {
         container.querySelector<HTMLButtonElement>('[data-operator="read"]')!.click()
       );
       const dialog = document.querySelector('[role="alertdialog"]');
+      if (change === 'operator') {
+        expect(dialog).toBeNull();
+        expect(handle.current!.hasUnappliedChanges).toBe(true);
+        await act(async () =>
+          container
+            .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-cancel"]')!
+            .click()
+        );
+        expect(handle.current!.hasUnappliedChanges).toBe(false);
+        expect(applied).not.toHaveBeenCalled();
+        return;
+      }
       expect(dialog).not.toBeNull();
       expect(handle.current!.hasUnappliedChanges).toBe(true);
       await act(async () =>

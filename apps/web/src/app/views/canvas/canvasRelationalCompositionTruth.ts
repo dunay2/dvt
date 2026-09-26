@@ -53,7 +53,9 @@ export function projectCanvasRelationalComposition(
   const missingInputCount = new Set(
     analysis.projectedInputs
       .filter((input) => input.state === 'missing')
-      .map((input) => canvasSourceReferenceKey(input.sourceRef))
+      .map((input) =>
+        input.sourceRef == null ? input.sourceNodeId : canvasSourceReferenceKey(input.sourceRef)
+      )
   ).size;
   const pendingInputCount = analysis.projectedInputs.filter(
     (input) => input.state === 'pending'

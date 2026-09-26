@@ -14,6 +14,10 @@ const AUTHORING_SECTION_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasInspectorAuthoringSection.tsx'
 );
+const SUBMISSION_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasInspectorDraftSubmission.ts'
+);
 
 describe('Canvas node workbench draft controller architecture', () => {
   it('keeps transient draft reconciliation outside presentation components', () => {
@@ -39,8 +43,11 @@ describe('Canvas node workbench draft controller architecture', () => {
     expect(AUTHORING_SECTION_SOURCE).toContain(
       'import type { CanvasNodeWorkbenchDraftController }'
     );
-    expect(AUTHORING_SECTION_SOURCE).toContain('authoring.onApplyNodeDraft(draft)');
-    expect(AUTHORING_SECTION_SOURCE).toContain('draftController.onDraftSubmitted(draft)');
+    expect(AUTHORING_SECTION_SOURCE).toContain('useCanvasInspectorDraftSubmission');
+    expect(AUTHORING_SECTION_SOURCE).not.toContain('validateCanvasInspectorNodeDraft');
+    expect(SUBMISSION_SOURCE).toContain('authoring.onApplyNodeDraft(draft)');
+    expect(SUBMISSION_SOURCE).toContain('draftController.onDraftSubmitted(draft)');
+    expect(SUBMISSION_SOURCE).toContain('validateCanvasInspectorNodeDraft');
     expect(AUTHORING_SECTION_SOURCE).not.toContain('useState(');
     expect(AUTHORING_SECTION_SOURCE).not.toContain('createCanvasInspectorNodeDraft');
   });

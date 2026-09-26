@@ -21,13 +21,16 @@ import {
   dragSourceTo,
 } from './CanvasRelationalTreeWorkbench.test-support';
 import { openOperationMenu } from './operation-menu/operationMenu.test-support';
+import {
+  connectWorkbenchSource,
+  selectWorkbenchOperation,
+} from './CanvasRelationalTreeWorkbench.gestures.test-support';
 
 describe('Canvas relational-tree Workbench cross', () => {
   setupWorkbenchTest();
-  it('authors and appends an explicit CrossRel without opening a predicate editor', async () => {
+  it('authors an explicit CrossRel by drag without opening a predicate editor', async () => {
     const sizes = sourceNode('sizes', 'sizes');
     const colours = sourceNode('colours', 'colours');
-    const stores = sourceNode('stores', 'stores');
     const transform = transformNode();
     const applied: CanvasInspectorNodeDraft[] = [];
 
@@ -35,8 +38,8 @@ describe('Canvas relational-tree Workbench cross', () => {
       root.render(
         <CanvasRelationalTreeWorkbench
           transformNode={transform}
-          nodes={[sizes, colours, stores, transform]}
-          edges={[edge(sizes.id), edge(colours.id), edge(stores.id)]}
+          nodes={[sizes, colours, transform]}
+          edges={[edge(sizes.id), edge(colours.id)]}
           copy={COPY}
           authoring={{
             canEditNode: true,
@@ -52,8 +55,9 @@ describe('Canvas relational-tree Workbench cross', () => {
     const sources = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     );
-    await act(async () => sources[0]!.click());
-    await act(async () => sources[1]!.click());
+    await connectWorkbenchSource(sources[0]!);
+    await selectWorkbenchOperation('projection');
+    await connectWorkbenchSource(sources[1]!);
     openOperationMenu(container);
     const cross = document.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-select-operation-cross-join"]'
@@ -69,17 +73,13 @@ describe('Canvas relational-tree Workbench cross', () => {
 
     expect(container.querySelectorAll('[data-operator="cross"]')).toHaveLength(1);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(2);
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-operator="cross"]')!.click()
+    );
     expect(
       container.querySelector('[data-slot="dvt-substrait-join-predicate-editors"]')
     ).toBeNull();
     expect(container.querySelector('[data-slot="canvas-relational-cross-warning"]')).not.toBeNull();
-
-    await act(async () => sources[2]!.click());
-    expect(container.querySelectorAll('[data-operator="cross"]')).toHaveLength(2);
-    expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(3);
-    expect(
-      container.querySelector('[data-slot="dvt-substrait-join-predicate-editors"]')
-    ).toBeNull();
 
     await act(async () =>
       container
@@ -142,7 +142,8 @@ describe('Canvas relational-tree Workbench cross', () => {
     const storesButton = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     ).find((button) => button.textContent?.includes('stores'));
-    await act(async () => storesButton?.click());
+    await connectWorkbenchSource(storesButton!);
+    await selectWorkbenchOperation('cross-join');
 
     expect(container.querySelectorAll('[data-operator="cross"]')).toHaveLength(2);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(3);

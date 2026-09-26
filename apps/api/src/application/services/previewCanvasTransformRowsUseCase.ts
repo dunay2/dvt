@@ -58,6 +58,7 @@ export class PreviewCanvasTransformRowsUseCase {
         draft: authorizedDraft.draft,
         selectedNodeIds: resolved.value.nodeIds,
         selectedEdgeIds: resolved.value.edgeIds,
+        previewTargetId: input.transformNodeId,
       });
       if (closure.transform.id !== input.transformNodeId) {
         throw new Error('Resolved closure does not target the requested Transform.');

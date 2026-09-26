@@ -1,10 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { Node, Edge, EdgeChange } from '@xyflow/react';
 import type { CanonicalNode, CanonicalEdge } from '../../types/canonical';
-import {
-  projectCanvasColumnLineage,
-  type CanvasColumnLineageEdgeData,
-} from './canvasColumnLineageProjection';
+import { projectCanvasColumnLineage } from './canvasColumnLineageProjection';
+import { type CanvasColumnLineageEdgeData } from './canvasColumnLineageEdgeModel';
 import type { InteractiveCanvasColumnLineageEdgeData } from './CanvasColumnLineageEdge';
 import { isCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 
@@ -35,6 +33,12 @@ export function useCanvasColumnLineageModel({
       nodes: visibleScope.canonicalNodes,
       edges: visibleScope.canonicalEdges,
       expandedNodeIds,
+      columnViews: new Map(
+        semanticGraphNodes.map((node) => [
+          node.id,
+          node.data.columnView === 'output' ? ('output' as const) : ('input' as const),
+        ])
+      ),
       presentations: new Map(
         semanticGraphNodes.flatMap((node) =>
           isCanvasNodePresentationTruth(node.data.presentationTruth)

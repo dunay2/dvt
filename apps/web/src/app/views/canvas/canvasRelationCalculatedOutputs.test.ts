@@ -4,7 +4,7 @@ import {
   createDvtSubstraitProjectionDraft,
   inspectDvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
-import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
+import { createDvtSubstraitProjectionOutput } from './canvasLegacyProjectionOutput.test-support';
 import { resolveDvtSubstraitColumnFunctions } from '@dvt/postgres-projection';
 import { source } from './canvasRelationalOperator.test-support';
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';

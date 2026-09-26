@@ -17,6 +17,7 @@ export function physicalReadMatches(
   const read = entry.relation.relType;
   if (
     read.case !== 'read' ||
+    source.sourceRef == null ||
     entry.binding.sourceRef == null ||
     read.value.readType.case !== 'namedTable'
   )
@@ -45,11 +46,14 @@ export function bindCanvasSubstraitInputs(
   const indexed = indexSubstraitRelations(document);
   if (!indexed.ok) throw indexed.error;
   const unbound = [...indexed.index.relations.values()].filter(
-    (entry) => entry.relation.relType.case === 'read' && entry.binding.sourceRef == null
+    (entry) =>
+      entry.relation.relType.case === 'read' &&
+      entry.binding.sourceRef == null &&
+      entry.binding.producerRef == null
   );
   if (unbound.length === 0) return document;
   const source = sources.length === 1 ? sources[0] : undefined;
-  if (unbound.length !== 1 || source == null)
+  if (unbound.length !== 1 || source?.sourceRef == null)
     throw new Error('An unbound named input requires one explicit connected source.');
   const plan = clone(PlanSchema, document.plan);
   const sidecar = globalThis.structuredClone(document.sidecar);

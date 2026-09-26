@@ -19,6 +19,7 @@ import {
   container,
 } from './CanvasRelationalTreeWorkbench.test-support';
 import { openOperationMenu } from './operation-menu/operationMenu.test-support';
+import { connectWorkbenchSource } from './CanvasRelationalTreeWorkbench.gestures.test-support';
 
 describe('Canvas relational-tree Workbench pending', () => {
   setupWorkbenchTest();
@@ -82,7 +83,7 @@ describe('Canvas relational-tree Workbench pending', () => {
     );
     expect(ordersButton?.disabled).toBe(false);
     expect(detailsButton?.disabled).toBe(false);
-    await act(async () => ordersButton?.click());
+    await connectWorkbenchSource(ordersButton!);
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
     ).not.toBeNull();
@@ -92,7 +93,7 @@ describe('Canvas relational-tree Workbench pending', () => {
       container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
         ?.disabled
     ).toBe(true);
-    await act(async () => detailsButton?.click());
+    await connectWorkbenchSource(detailsButton!);
     openOperationMenu(container);
     expect(document.querySelector('[role="listbox"]')).not.toBeNull();
     expect(document.querySelector('[data-slot="dvt-select-operation-inner-join"]')).not.toBeNull();

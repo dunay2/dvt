@@ -12,7 +12,11 @@ export function useCanvasDerivedOutputAuthoring(relationId: string) {
   try {
     const target = analysis.session.locate(relationId, analysis.revision);
     const fields = schema.result.bindings
-      .filter((field) => field.parentFieldId == null)
+      .filter(
+        (field) =>
+          field.parentFieldId == null &&
+          analysis.session.allowsInputSchema(schema.result!.fields[field.outputOrdinal]!)
+      )
       .sort((left, right) => left.outputOrdinal - right.outputOrdinal)
       .flatMap((field): DerivedOutputField[] => {
         const dataType = inspectProjectionDataType(

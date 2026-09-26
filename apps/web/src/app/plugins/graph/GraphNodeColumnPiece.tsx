@@ -114,7 +114,7 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
           {column.nullable === false ? (
             <span className={graphNodeColumnClasses.constraint}>NN</span>
           ) : null}
-          {view === 'input' ? null : (
+          {view != null ? null : (
             <button
               type="button"
               data-slot="graph-node-column-output-state"

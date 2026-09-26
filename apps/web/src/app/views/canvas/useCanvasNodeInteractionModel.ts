@@ -93,6 +93,7 @@ export function useCanvasNodeInteractionModel({
           onToggleNodeSelection: canSelectExecution ? onToggleExecutionSelection : undefined,
           onAttachSchemaToNode: canMutateGraph ? cardActions.onAttachSchemaToNode : undefined,
           onColumnPortActivate: canMutateGraph ? columnActions.onColumnPortActivate : undefined,
+          onMapCanvasInput: canMutateGraph ? columnActions.onMapCanvasInput : undefined,
           onApplyCanvasColumnFunction: canMutateGraph
             ? columnActions.onApplyCanvasColumnFunction
             : undefined,
@@ -109,6 +110,7 @@ export function useCanvasNodeInteractionModel({
             ? columnActions.onReorderCanvasColumnOutput
             : undefined,
           onColumnDisclosureChange: columnActions.onColumnDisclosureChange,
+          onColumnViewChange: columnActions.onColumnViewChange,
           onAutomapColumns: canMutateGraph ? columnActions.onAutomapColumns : undefined,
           resolveAlgebraicCompositionOperations: canMutateGraph
             ? compositionActions.resolveAlgebraicCompositionOperations
@@ -167,7 +169,9 @@ export function useCanvasNodeInteractionModel({
       activeColumnHandleId,
       columnActions.onAutomapColumns,
       columnActions.onColumnDisclosureChange,
+      columnActions.onColumnViewChange,
       columnActions.onColumnPortActivate,
+      columnActions.onMapCanvasInput,
       columnActions.onApplyCanvasColumnFunction,
       columnActions.onApplyCanvasStructuredField,
       columnActions.onAddCanvasCalculatedColumn,

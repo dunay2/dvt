@@ -3,6 +3,7 @@ import { useCallback, useMemo } from 'react';
 
 import type {
   GraphNodeCalculatedColumnIdentity,
+  GraphNodeInputMapping,
   GraphNodeColumnFunctionApplyIdentity,
   GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnOutputToggleIdentity,
@@ -10,28 +11,16 @@ import type {
   GraphNodeStructuredFieldIdentity,
 } from '../../plugins/graph/graphNodeColumnContracts';
 import type { CanonicalNode } from '../../types/canonical';
-import {
-  reorderCanvasColumnOutput,
-  setCanvasColumnOutputIncluded,
-} from './canvasColumnOutputAuthoring';
-import {
-  resolveCanvasSessionNode,
-  type CanvasColumnMappingResult,
-} from './canvasColumnMappingModel';
-import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
-import {
-  configureDbtModelColumnOrder,
-  configureDbtModelColumnOutput,
-} from './canvasDbtModelColumnCommand';
+import { applyToggleOutput, applyReorderOutput } from './canvasColumnOutputCommandAdapter';
+import type { CanvasColumnMappingResult } from './canvasColumnMappingModel';
 import { applyCanvasCalculatedColumn } from './canvasCalculatedColumnAuthoring';
 import { applyCanvasColumnFunction } from './canvasColumnFunctionAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type { CanvasDraftSessionCommandRunner } from './useCanvasWorkspaceDraftSession';
 import { useCanvasRelationOutputCommand } from './useCanvasRelationOutputCommand';
-import {
-  applyCanvasStructuredField,
-  reorderCanvasStructuredFieldChildren,
-} from './canvasStructuredFieldAuthoring';
+import { useCanvasColumnDraftCommand } from './useCanvasColumnDraftCommand';
+import { bindCanvasInputField, removeCanvasInputField } from './canvasInputBindingAuthoring';
+import { applyCanvasStructuredField } from './canvasStructuredFieldAuthoring';
 
 type CanvasColumnAuthoringCommandRunnerState = {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
@@ -48,98 +37,22 @@ type UseCanvasColumnAuthoringCommandRunnerArgs = {
 };
 
 export type CanvasColumnAuthoringCommandRunner = {
+  mapInput: (identity: GraphNodeInputMapping) => Promise<CanvasColumnMappingResult>;
+  removeInput: (identity: GraphNodeInputMapping) => Promise<CanvasColumnMappingResult>;
   toggleOutput: (
     identity: GraphNodeColumnOutputToggleIdentity
   ) => Promise<CanvasColumnMappingResult>;
   reorderOutput: (identity: GraphNodeColumnReorderIdentity) => Promise<CanvasColumnMappingResult>;
   applyFunction: (
     identity: GraphNodeColumnFunctionApplyIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  ) => Promise<GraphNodeColumnFunctionApplyResult>;
   addCalculated: (
     identity: GraphNodeCalculatedColumnIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  ) => Promise<GraphNodeColumnFunctionApplyResult>;
   applyStructured: (
     identity: GraphNodeStructuredFieldIdentity
   ) => GraphNodeColumnFunctionApplyResult;
 };
-
-function applyToggleOutput(
-  draftSession: CanvasDraftSession,
-  canonicalNodesById: ReadonlyMap<string, CanonicalNode>,
-  identity: GraphNodeColumnOutputToggleIdentity
-): CanvasColumnMappingResult {
-  const targetNode = resolveCanvasSessionNode(draftSession, canonicalNodesById, identity.nodeId);
-  if (targetNode != null && isDbtCompatibleModel(targetNode)) {
-    const result = configureDbtModelColumnOutput({
-      draftSession,
-      canonicalNodesById,
-      nodeId: identity.nodeId,
-      columnName: identity.columnId,
-      output: identity.output,
-    });
-    return result.outcome === 'applied'
-      ? result
-      : { outcome: 'rejected', reason: 'invalid_transform_authority' };
-  }
-
-  return setCanvasColumnOutputIncluded({
-    draftSession,
-    canonicalNodesById,
-    targetNodeId: identity.nodeId,
-    columnId: identity.columnId,
-    columnType: identity.columnType,
-    output: identity.output,
-    source: identity.source,
-    placement: identity.placement,
-  });
-}
-
-function applyReorderOutput(
-  draftSession: CanvasDraftSession,
-  canonicalNodesById: ReadonlyMap<string, CanonicalNode>,
-  identity: GraphNodeColumnReorderIdentity
-): CanvasColumnMappingResult {
-  if (identity.parentColumnId != null) {
-    const result = reorderCanvasStructuredFieldChildren({
-      draftSession,
-      canonicalNodesById,
-      request: {
-        nodeId: identity.nodeId,
-        parentFieldId: identity.parentColumnId,
-        fieldId: identity.columnId,
-        targetFieldId: identity.targetColumnId,
-        placement: identity.placement,
-      },
-    });
-    return result.outcome === 'applied'
-      ? result
-      : { outcome: 'rejected', reason: 'mapping_not_found' };
-  }
-
-  const targetNode = resolveCanvasSessionNode(draftSession, canonicalNodesById, identity.nodeId);
-  if (targetNode != null && isDbtCompatibleModel(targetNode)) {
-    const result = configureDbtModelColumnOrder({
-      draftSession,
-      canonicalNodesById,
-      nodeId: identity.nodeId,
-      columnName: identity.columnId,
-      targetColumnName: identity.targetColumnId,
-      placement: identity.placement,
-    });
-    return result.outcome === 'applied'
-      ? result
-      : { outcome: 'rejected', reason: 'invalid_transform_authority' };
-  }
-
-  return reorderCanvasColumnOutput({
-    draftSession,
-    canonicalNodesById,
-    targetNodeId: identity.nodeId,
-    columnId: identity.columnId,
-    targetColumnId: identity.targetColumnId,
-    placement: identity.placement,
-  });
-}
 
 export function useCanvasColumnAuthoringCommandRunner({
   state,
@@ -147,57 +60,80 @@ export function useCanvasColumnAuthoringCommandRunner({
 }: UseCanvasColumnAuthoringCommandRunnerArgs): CanvasColumnAuthoringCommandRunner {
   const { canonicalNodesById } = state;
   const { runDraftSessionCommand } = effects;
-  const runOutput = useCanvasRelationOutputCommand(canonicalNodesById, runDraftSessionCommand);
+  const submit = useCanvasColumnDraftCommand(runDraftSessionCommand);
+  const runOutput = useCanvasRelationOutputCommand(canonicalNodesById, submit);
+  const mapInput = useCallback(
+    (identity: GraphNodeInputMapping) =>
+      submit(
+        (draftSession, signal) =>
+          bindCanvasInputField({ draftSession, canonicalNodesById, ...identity, signal }),
+        () => ({ outcome: 'rejected' as const, reason: 'invalid_transform_authority' as const })
+      ),
+    [canonicalNodesById, submit]
+  );
+  const removeInput = useCallback(
+    (identity: GraphNodeInputMapping) =>
+      submit(
+        (draftSession, signal) =>
+          removeCanvasInputField({ draftSession, canonicalNodesById, ...identity, signal }),
+        () => ({ outcome: 'rejected' as const, reason: 'invalid_transform_authority' as const })
+      ),
+    [canonicalNodesById, submit]
+  );
   const toggleOutput = useCallback(
     (identity: GraphNodeColumnOutputToggleIdentity) =>
-      runOutput(identity, () =>
-        runDraftSessionCommand((currentDraftSession) =>
-          applyToggleOutput(currentDraftSession, canonicalNodesById, identity)
-        )
+      runOutput(identity, (currentDraftSession) =>
+        applyToggleOutput(currentDraftSession, canonicalNodesById, identity)
       ),
-    [canonicalNodesById, runDraftSessionCommand, runOutput]
+    [canonicalNodesById, runOutput]
   );
 
   const reorderOutput = useCallback(
     (identity: GraphNodeColumnReorderIdentity) =>
-      runOutput(identity, () =>
-        runDraftSessionCommand((currentDraftSession) =>
-          applyReorderOutput(currentDraftSession, canonicalNodesById, identity)
-        )
+      runOutput(identity, (currentDraftSession) =>
+        applyReorderOutput(currentDraftSession, canonicalNodesById, identity)
       ),
-    [canonicalNodesById, runDraftSessionCommand, runOutput]
+    [canonicalNodesById, runOutput]
   );
 
   const applyFunction = useCallback(
-    (identity: GraphNodeColumnFunctionApplyIdentity): GraphNodeColumnFunctionApplyResult => {
-      const result = runDraftSessionCommand((currentDraftSession) =>
-        applyCanvasColumnFunction({
-          draftSession: currentDraftSession,
-          canonicalNodesById,
-          identity,
-        })
+    async (
+      identity: GraphNodeColumnFunctionApplyIdentity
+    ): Promise<GraphNodeColumnFunctionApplyResult> => {
+      const result = await submit(
+        (currentDraftSession) =>
+          applyCanvasColumnFunction({
+            draftSession: currentDraftSession,
+            canonicalNodesById,
+            identity,
+          }),
+        () => ({ outcome: 'rejected' as const, reason: 'invalid_document' as const })
       );
       return result.outcome === 'applied'
         ? { outcome: 'applied', createdFieldId: result.createdFieldId }
         : result;
     },
-    [canonicalNodesById, runDraftSessionCommand]
+    [canonicalNodesById, submit]
   );
 
   const addCalculated = useCallback(
-    (identity: GraphNodeCalculatedColumnIdentity): GraphNodeColumnFunctionApplyResult => {
-      const result = runDraftSessionCommand((currentDraftSession) =>
-        applyCanvasCalculatedColumn({
-          draftSession: currentDraftSession,
-          canonicalNodesById,
-          request: identity,
-        })
+    async (
+      identity: GraphNodeCalculatedColumnIdentity
+    ): Promise<GraphNodeColumnFunctionApplyResult> => {
+      const result = await submit(
+        (currentDraftSession) =>
+          applyCanvasCalculatedColumn({
+            draftSession: currentDraftSession,
+            canonicalNodesById,
+            request: identity,
+          }),
+        () => ({ outcome: 'rejected' as const, reason: 'invalid_document' as const })
       );
       return result.outcome === 'applied'
         ? { outcome: 'applied', createdFieldId: result.createdFieldId }
         : result;
     },
-    [canonicalNodesById, runDraftSessionCommand]
+    [canonicalNodesById, submit]
   );
 
   const applyStructured = useCallback(
@@ -218,12 +154,22 @@ export function useCanvasColumnAuthoringCommandRunner({
 
   return useMemo(
     () => ({
+      mapInput,
+      removeInput,
       toggleOutput,
       reorderOutput,
       applyFunction,
       addCalculated,
       applyStructured,
     }),
-    [addCalculated, applyFunction, applyStructured, reorderOutput, toggleOutput]
+    [
+      addCalculated,
+      applyFunction,
+      applyStructured,
+      reorderOutput,
+      toggleOutput,
+      mapInput,
+      removeInput,
+    ]
   );
 }

@@ -5,6 +5,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+import { canvasInputSlotId } from './canvasInputBindings';
 import {
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,
@@ -18,7 +19,7 @@ import {
 } from './useCanvasControllerReadModel.test-support';
 
 describe('Canvas read model lineage', () => {
-  it('derives visible column lineage and attaches interactions without changing graph edges', async () => {
+  it('targets Input slots and protects consumed fields without changing graph edges', async () => {
     const sourceRef = {
       schemaVersion: 'connected-source-ref.v1' as const,
       connectionRef: {
@@ -108,12 +109,15 @@ describe('Canvas read model lineage', () => {
         source: sourceNode.id,
         target: modelNode.id,
         ariaLabel: 'order_id → order_id',
-        data: { kind: 'column-lineage', removable: true },
+        data: {
+          kind: 'column-lineage',
+          removable: false,
+          outputId: canvasInputSlotId(sourceNode.id, 'order_id'),
+        },
       });
       const onRemove = state?.edgesWithImpact[0]?.data?.onRemove;
-      expect(typeof onRemove).toBe('function');
-      (onRemove as () => void)();
-      expect(args.onRemoveColumnMapping).toHaveBeenCalledTimes(1);
+      expect(onRemove).toBeUndefined();
+      expect(args.onRemoveColumnMapping).not.toHaveBeenCalled();
       expect(args.graphModel.edges).toEqual([]);
 
       await act(async () => {
@@ -129,14 +133,14 @@ describe('Canvas read model lineage', () => {
           .readState()
           ?.handleEdgesChange([{ id: state?.edgesWithImpact[0]?.id ?? '', type: 'remove' }]);
       });
-      expect(args.onRemoveColumnMapping).toHaveBeenCalledTimes(2);
+      expect(args.onRemoveColumnMapping).not.toHaveBeenCalled();
 
       const sourceData = state?.nodesWithImpact[0]?.data as ReadModelNodeData;
       expect(sourceData.onColumnPortActivate).toBe(args.columnActions.onColumnPortActivate);
       expect(sourceData.onColumnDisclosureChange).toBe(args.columnActions.onColumnDisclosureChange);
       const modelData = state?.nodesWithImpact[1]?.data as ReadModelNodeData;
       expect(modelData.columnPortDirections).toEqual(['target', 'source']);
-      expect(modelData.onAutomapColumns).toBe(args.columnActions.onAutomapColumns);
+      expect(modelData.onAutomapColumns).toBeUndefined();
     } finally {
       await mounted.cleanup();
     }

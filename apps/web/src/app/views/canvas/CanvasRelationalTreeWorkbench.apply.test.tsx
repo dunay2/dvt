@@ -130,7 +130,7 @@ describe('Canvas relational-tree Workbench apply', () => {
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(0);
     expect(container.querySelector('[data-slot="canvas-relational-tree-output"]')).not.toBeNull();
 
-    await act(async () => sourceButtons[0]?.click());
+    await drop(0);
     await connect();
     openOperationMenu(container);
     await act(async () =>
@@ -138,7 +138,7 @@ describe('Canvas relational-tree Workbench apply', () => {
         .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-projection"]')!
         .click()
     );
-    await act(async () => sourceButtons[1]?.click());
+    await drop(1);
     await connect();
     openOperationMenu(container);
     await act(async () =>

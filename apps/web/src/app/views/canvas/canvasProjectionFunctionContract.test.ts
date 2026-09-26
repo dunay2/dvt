@@ -10,7 +10,7 @@ import {
   resolveDvtSubstraitColumnFunctions,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
-import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
+import { createDvtSubstraitProjectionOutput } from './canvasLegacyProjectionOutput.test-support';
 import { connectedOrdersProjectionDraft } from './canvasProjectionCommand.test-support';
 
 describe('Canonical scalar authoring contract', () => {

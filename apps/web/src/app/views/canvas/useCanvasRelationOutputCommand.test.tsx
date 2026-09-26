@@ -6,6 +6,7 @@ import { setupWorkbenchTest, root } from './CanvasRelationalTreeWorkbench.test-s
 import { graphJoin, graphModel } from './canvasRelationGraph.test-support';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { useCanvasRelationOutputCommand } from './useCanvasRelationOutputCommand';
+import { useCanvasColumnDraftCommand } from './useCanvasColumnDraftCommand';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type { CanvasDraftSessionCommandRunner } from './useCanvasWorkspaceDraftSession';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
@@ -24,14 +25,18 @@ function harness(): {
   current: CanvasDraftSession;
   replaceAuthority: (same?: boolean) => ReturnType<typeof graphModel>;
 } {
-  const { document, session } = graphJoin();
+  const { document, session, sources } = graphJoin();
   const model = graphModel(document);
   const fields = session.locate(session.rootId, session.revision).fields;
   let current: CanvasDraftSession = {
     syncState: 'editing',
     baseline: { record: null },
     draftRevision: 'rev-1',
-    workingSet: { visibleNodeIds: [model.id], visibleEdges: [], pendingExplicitNodeIds: [] },
+    workingSet: {
+      visibleNodeIds: [model.id, ...sources.map((source) => source.id)],
+      visibleEdges: sources.map((source) => ({ sourceId: source.id, targetId: model.id })),
+      pendingExplicitNodeIds: [],
+    },
     localNodeCatalog: { [model.id]: model },
   };
   const run: CanvasDraftSessionCommandRunner = (command) => {
@@ -41,7 +46,10 @@ function harness(): {
   };
   let submit!: ReturnType<typeof useCanvasRelationOutputCommand>;
   function Host(): null {
-    submit = useCanvasRelationOutputCommand(new Map([[model.id, model]]), run);
+    submit = useCanvasRelationOutputCommand(
+      new Map([model, ...sources].map((node) => [node.id, node])),
+      useCanvasColumnDraftCommand(run)
+    );
     return null;
   }
   act(() => root.render(<Host />));

@@ -12,6 +12,7 @@ import {
 import { projectCanvasGraphPresentation } from './canvasNodePresentationProjection';
 import { canvasColumnTruth } from './canvasPresentationColumns';
 import { canConfigureNativeMaterialization } from './canvasDvtMaterializationPolicy';
+import { readCanvasInputBindings } from './canvasInputBindings';
 
 type Graph = Pick<CanvasPresentationQuery, 'nodes' | 'edges'>;
 
@@ -58,7 +59,9 @@ function sameGraph(left: Graph, right: Graph): boolean {
     left.edges.every(
       (edge, position) =>
         edge.sourceId === right.edges[position]!.sourceId &&
-        edge.targetId === right.edges[position]!.targetId
+        edge.targetId === right.edges[position]!.targetId &&
+        jcsCanonicalize(readCanvasInputBindings(edge) ?? null) ===
+          jcsCanonicalize(readCanvasInputBindings(right.edges[position]!) ?? null)
     )
   );
 }

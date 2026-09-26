@@ -24,7 +24,9 @@ export function useRelationOutputs(relationId: string) {
       setSettled({
         analysis,
         relationId,
-        slots: relationOutputSlots(target, inputs),
+        slots: relationOutputSlots(target, inputs).filter((slot) =>
+          analysis.session.allowsInputSchema(slot.schema)
+        ),
         physical: target.relation.relType.case === 'read',
       });
     };

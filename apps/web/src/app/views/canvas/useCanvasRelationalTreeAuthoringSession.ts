@@ -1,5 +1,5 @@
 /** Owned concern: coordinate one discardable guided relation-authoring session. */
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
@@ -15,6 +15,8 @@ import type { CanvasRelationalTreeProjection } from './canvasRelationalTreeProje
 import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import { useCanvasRelationFields } from './useCanvasRelationFields';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
+import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindings';
+import { resolveUnmappedCanvasReadFields } from './canvasInputFieldEligibility';
 export function useCanvasRelationalTreeAuthoringSession(
   args: Readonly<{
     enabled: boolean;
@@ -58,7 +60,29 @@ export function useCanvasRelationalTreeAuthoringSession(
   });
   useEffect(reset, [enabled, reset, transformNode.id]);
   const effectiveDraft = !active && seed != null ? seed.draft : joinDraft;
-  const analysis = useCanvasRelationAnalysisSession(effectiveDraft, transformNode.id);
+  const connection = useMemo(() => {
+    try {
+      return resolveCanvasSubstraitGraphBindings({ node: transformNode, nodes, edges }).connection;
+    } catch {
+      return undefined;
+    }
+  }, [transformNode, nodes, edges]);
+  const deniedInputs = useMemo(
+    () =>
+      resolveUnmappedCanvasReadFields({
+        document: effectiveDraft,
+        nodeId: transformNode.id,
+        nodes,
+        edges,
+      }),
+    [effectiveDraft, transformNode.id, nodes, edges]
+  );
+  const analysis = useCanvasRelationAnalysisSession(
+    effectiveDraft,
+    transformNode.id,
+    connection,
+    deniedInputs
+  );
   const output = useCanvasRelationFields(null, analysis).result;
   const effectiveInputIds = !active && seed != null ? seed.inputIds : slots.selectedInputIds;
   const { candidates, choices } = useCanvasRelationalTreeAuthoringOptions({

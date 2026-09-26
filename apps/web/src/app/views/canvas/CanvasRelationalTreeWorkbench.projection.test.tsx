@@ -14,6 +14,7 @@ import {
   container,
 } from './CanvasRelationalTreeWorkbench.test-support';
 import { openOperationMenu } from './operation-menu/operationMenu.test-support';
+import { connectWorkbenchSource } from './CanvasRelationalTreeWorkbench.gestures.test-support';
 
 describe('Canvas relational-tree Workbench projection', () => {
   setupWorkbenchTest();
@@ -39,10 +40,8 @@ describe('Canvas relational-tree Workbench projection', () => {
         />
       );
     });
-    act(() =>
-      container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
-        ?.click()
+    await connectWorkbenchSource(
+      container.querySelector<HTMLElement>('[data-slot="canvas-relational-tree-source"]')!
     );
     openOperationMenu(container);
     await act(async () =>
@@ -84,10 +83,8 @@ describe('Canvas relational-tree Workbench projection', () => {
         />
       );
     });
-    act(() =>
-      container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')!
-        .click()
+    await connectWorkbenchSource(
+      container.querySelector<HTMLElement>('[data-slot="canvas-relational-tree-source"]')!
     );
     openOperationMenu(container);
     await act(async () =>

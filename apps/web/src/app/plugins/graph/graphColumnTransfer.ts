@@ -16,12 +16,12 @@ export function writeGraphColumnTransfer(
 export function graphColumnTransferTarget(props: GraphNodeColumnSectionProps) {
   return {
     onDragOver(event: DragEvent) {
-      if (props.onColumnOutputToggle == null || !event.dataTransfer.types.includes(mime)) return;
+      if (props.onInputMapping == null || !event.dataTransfer.types.includes(mime)) return;
       event.preventDefault();
       event.dataTransfer.dropEffect = 'link';
     },
     onDrop(event: DragEvent) {
-      if (props.nodeId == null || props.onColumnOutputToggle == null) return;
+      if (props.nodeId == null || props.onInputMapping == null) return;
       const raw = event.dataTransfer.getData(mime);
       if (!raw) return;
       event.preventDefault();
@@ -33,23 +33,16 @@ export function graphColumnTransferTarget(props: GraphNodeColumnSectionProps) {
           typeof identity !== 'object' ||
           !('nodeId' in identity) ||
           !('columnId' in identity) ||
+          typeof identity.nodeId !== 'string' ||
+          typeof identity.columnId !== 'string' ||
+          !identity.nodeId ||
+          !identity.columnId ||
           identity.nodeId === props.nodeId
         )
           return;
-        const matches =
-          props.inputColumns?.filter(
-            (column) =>
-              column.source?.nodeId === identity.nodeId &&
-              column.source?.columnId === identity.columnId
-          ) ?? [];
-        const column = matches.length === 1 ? matches[0] : undefined;
-        if (column == null || column.outputToggleDisabled || column.output) return;
-        props.onColumnOutputToggle({
-          nodeId: props.nodeId,
-          columnId: column.id ?? column.name,
-          columnType: column.type,
-          output: true,
-          source: column.source,
+        props.onInputMapping({
+          target: { nodeId: props.nodeId },
+          source: { nodeId: identity.nodeId, columnId: identity.columnId },
         });
       } catch {
         // A foreign or malformed drag does not author a field.

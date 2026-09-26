@@ -8,6 +8,10 @@ import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoring
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import {
+  connectWorkbenchSource,
+  appendWorkbenchJoin,
+} from './CanvasRelationalTreeWorkbench.gestures.test-support';
+import {
   setupWorkbenchTest,
   COPY,
   sourceRef,
@@ -117,7 +121,7 @@ describe('Canvas relational-tree Workbench reopen', () => {
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     ).find((button) => button.textContent?.includes('countries'));
     expect(countriesButton?.disabled).toBe(false);
-    await act(async () => countriesButton?.click());
+    await connectWorkbenchSource(countriesButton!);
     expect(container.querySelector('[data-slot="canvas-operation-output-tab"]')).toBeNull();
     expect(container.querySelector('[data-value="properties"]')?.getAttribute('data-state')).toBe(
       'active'
@@ -132,11 +136,7 @@ describe('Canvas relational-tree Workbench reopen', () => {
         )
       ).map((option) => option.textContent)
     ).toEqual(expect.arrayContaining(['customer_id', 'order_id']));
-    await act(async () =>
-      container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-append-input"]')
-        ?.click()
-    );
+    await appendWorkbenchJoin();
 
     expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(2);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(3);

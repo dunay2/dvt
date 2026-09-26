@@ -14,15 +14,13 @@ import type {
 import { canvasViewCopy, formatCanvasConnectionRejection } from './copy';
 import type {
   GraphNodeColumnOutputToggleIdentity,
+  GraphNodeInputMapping,
   GraphNodeColumnReorderIdentity,
 } from '../../plugins/graph/graphNodeColumnContracts';
-import {
-  type CanvasColumnHandleIdentity,
-  type CanvasColumnLineageEdgeData,
-} from './canvasColumnLineageProjection';
+import { type CanvasColumnHandleIdentity } from './canvasColumnHandleIdentity';
+import { type CanvasColumnLineageEdgeData } from './canvasColumnLineageEdgeModel';
 import type { CanvasColumnAuthoringCommandRunner } from './useCanvasColumnAuthoringCommandRunner';
 import { useCanvasColumnConnectionHandlers } from './useCanvasColumnConnectionHandlers';
-import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 import {
   useCanvasEdgeCommandRunner,
   type CanvasEdgeCommandRunner,
@@ -36,15 +34,10 @@ type UseCanvasEdgeAuthoringHandlersResult = {
   setExecutionGate: CanvasEdgeCommandRunner['setExecutionGate'];
   activeColumnHandleId: string | null;
   handleColumnPortActivate: (identity: CanvasColumnHandleIdentity) => void;
-  handleAutomapCanvasColumns: (
-    nodeId: string,
-    columns: readonly Readonly<{ name: string; type: string }>[]
-  ) => void;
+  handleMapCanvasInput: (identity: GraphNodeInputMapping) => void;
   handleToggleCanvasColumnOutput: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   handleReorderCanvasColumnOutput: (identity: GraphNodeColumnReorderIdentity) => void;
   handleRemoveColumnMapping: (mapping: CanvasColumnLineageEdgeData) => void;
-  relationalPredicateSeed: CanvasRelationalPredicateSeed | null;
-  clearRelationalPredicateSeed: () => void;
 };
 
 function resolveVisibleDraftPluginPortMap(args: {
@@ -177,11 +170,9 @@ export function useCanvasEdgeAuthoringHandlers(
     setExecutionGate: edgeCommandRunner.setExecutionGate,
     activeColumnHandleId: columnMappingHandlers.activeColumnHandleId,
     handleColumnPortActivate: columnMappingHandlers.handleColumnPortActivate,
-    handleAutomapCanvasColumns: columnMappingHandlers.handleAutomapCanvasColumns,
+    handleMapCanvasInput: columnMappingHandlers.handleMapCanvasInput,
     handleToggleCanvasColumnOutput: columnMappingHandlers.handleToggleCanvasColumnOutput,
     handleReorderCanvasColumnOutput: columnMappingHandlers.handleReorderCanvasColumnOutput,
     handleRemoveColumnMapping: columnMappingHandlers.handleRemoveColumnMapping,
-    relationalPredicateSeed: columnMappingHandlers.relationalPredicateSeed,
-    clearRelationalPredicateSeed: columnMappingHandlers.clearRelationalPredicateSeed,
   };
 }

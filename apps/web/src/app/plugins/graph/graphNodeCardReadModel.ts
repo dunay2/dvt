@@ -75,7 +75,9 @@ export function projectGraphNodeCardViewProps(
   } = columnInteractionProps;
   const showColumns =
     data.showColumns === true &&
-    (columns.length > 0 || columnProps.expressionInputs.length > 0) &&
+    (columns.length > 0 ||
+      columnProps.expressionInputs.length > 0 ||
+      columnProps.inputColumns != null) &&
     (kindMeta.supportsColumns || node.role === 'input' || node.role === 'transform');
 
   return {

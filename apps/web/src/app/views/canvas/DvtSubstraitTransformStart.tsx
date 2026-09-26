@@ -9,23 +9,18 @@ import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTre
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
 import { DvtSubstraitCompositionStart } from './DvtSubstraitCompositionStart';
 import { canvasViewCopy } from './copy';
-import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 
 export function DvtSubstraitTransformStart({
   disabled,
   node,
   nodes,
   edges,
-  predicateSeed,
-  onClearPredicateSeed,
   onChange,
 }: Readonly<{
   disabled: boolean;
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
-  predicateSeed?: CanvasRelationalPredicateSeed;
-  onClearPredicateSeed?: () => void;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element | null {
   const inputs = resolveCanvasDvtCompositionInputs({ targetNodeId: node.id, nodes, edges });
@@ -37,8 +32,6 @@ export function DvtSubstraitTransformStart({
         node={node}
         nodes={nodes}
         edges={edges}
-        predicateSeed={predicateSeed}
-        onClearPredicateSeed={onClearPredicateSeed}
         onChange={onChange}
       />
     );
@@ -49,7 +42,10 @@ export function DvtSubstraitTransformStart({
       type="button"
       size="sm"
       variant="outline"
-      disabled={disabled || input.fields.some((field) => field.joinDataType == null)}
+      disabled={
+        disabled ||
+        (input.producer == null && input.fields.some((field) => field.joinDataType == null))
+      }
       data-slot="dvt-start-substrait-projection"
       onClick={() => {
         if (disabled) return;

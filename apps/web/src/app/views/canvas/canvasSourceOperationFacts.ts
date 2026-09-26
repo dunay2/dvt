@@ -3,6 +3,8 @@ import { hasSameConnectionRef } from '@dvt/postgres-projection';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { CanvasOperationFacts } from './canvasRelationalOperationChoices';
 import { hasCompatibleCanvasDvtJoinFields } from './canvasDvtJoinTypeAdmission';
+import { canvasInputRequiresProjection } from './canvasInputComposition';
+import { canvasInputConnection } from './canvasSourceRelation';
 
 export function sourceOperationFacts(
   args: Readonly<{
@@ -17,7 +19,7 @@ export function sourceOperationFacts(
     exceptAllAvailable?: boolean;
   }>
 ): CanvasOperationFacts {
-  const connection = args.inputs[0]?.sourceRef.connectionRef;
+  const connection = args.inputs[0] == null ? null : canvasInputConnection(args.inputs[0]);
   return {
     readOnly: args.readOnly,
     inputCount: args.inputs.length,
@@ -25,10 +27,12 @@ export function sourceOperationFacts(
     sameConnection:
       connection != null &&
       connection.provider === 'postgres' &&
-      args.inputs.every((input) => hasSameConnectionRef(connection, input.sourceRef.connectionRef)),
+      args.inputs.every((input) => hasSameConnectionRef(connection, canvasInputConnection(input))),
     completeSchema: args.inputs.every(
       (input) =>
-        input.fields.length > 0 && input.fields.every((field) => field.joinDataType != null)
+        !canvasInputRequiresProjection(input) &&
+        input.fields.length > 0 &&
+        input.fields.every((field) => field.joinDataType != null)
     ),
     comparableFields: args.inputs.some((left, index) =>
       args.inputs

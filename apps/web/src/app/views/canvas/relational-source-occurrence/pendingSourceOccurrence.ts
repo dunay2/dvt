@@ -1,13 +1,13 @@
 /** A detached draft Read uses the same canonical identity and projection as a connected Read. */
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import type { CanvasDvtCompositionInput } from '../canvasDvtCompositionInputCatalog';
-import { createSourceRelation, toSourceRelationInput } from '../canvasSourceRelation';
+import { createCanvasInputRead } from '../canvasSourceRelation';
 import { createSourceDocument } from '../canvasSourceDocument';
 import { buildCanvasRelationalTreeRelation } from '../canvasRelationalTreeRelationProjection';
 
 export type PendingSourceOccurrence = Readonly<{
   sourceNodeId: string;
-  read: ReturnType<typeof createSourceRelation>;
+  read: ReturnType<typeof createCanvasInputRead>;
 }>;
 
 export function createPendingSourceOccurrence(
@@ -15,7 +15,7 @@ export function createPendingSourceOccurrence(
 ): PendingSourceOccurrence {
   return {
     sourceNodeId: input.nodeId,
-    read: createSourceRelation(toSourceRelationInput(input), 1),
+    read: createCanvasInputRead(input, 1),
   };
 }
 

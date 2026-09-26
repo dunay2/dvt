@@ -64,7 +64,7 @@ export type CanvasRelationalTreeNode = Readonly<{
 }>;
 
 export type CanvasRelationalTreeInput = Readonly<{
-  sourceRef: ConnectedSourceRef;
+  sourceRef: ConnectedSourceRef | null;
   sourceNodeId: string | null;
   relationId: string | null;
   state: 'participating' | 'pending' | 'missing';

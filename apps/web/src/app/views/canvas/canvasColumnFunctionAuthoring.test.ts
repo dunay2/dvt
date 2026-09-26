@@ -125,7 +125,7 @@ function inspect(node: CanonicalNode): DvtSubstraitProjectionSemantics {
 }
 
 describe('Canvas column function authoring', () => {
-  it('appends a binary CONCAT output and preserves reusable operands', () => {
+  it('appends a binary CONCAT output and preserves reusable operands', async () => {
     const transform = projectionTransform();
     const concat = resolveDvtSubstraitColumnFunctions({
       dataTypes: ['text', 'text'],
@@ -138,7 +138,7 @@ describe('Canvas column function authoring', () => {
     const right = before.outputs.find((output) => output.name === 'event_type');
     if (left == null || right == null) throw new Error('Expected two operands.');
 
-    const first = applyCanvasColumnFunction({
+    const first = await applyCanvasColumnFunction({
       draftSession: initial,
       canonicalNodesById: new Map([
         [source.id, source],
@@ -170,7 +170,7 @@ describe('Canvas column function authoring', () => {
       nullHandling: 'ACCEPT_NULLS',
     });
 
-    const second = applyCanvasColumnFunction({
+    const second = await applyCanvasColumnFunction({
       draftSession: first.draftSession,
       canonicalNodesById: new Map([
         [source.id, source],
@@ -198,7 +198,7 @@ describe('Canvas column function authoring', () => {
     });
   });
 
-  it('derives a new unary output from a card function without mutating the selected output', () => {
+  it('derives a new unary output from a card function without mutating the selected output', async () => {
     const transform = projectionTransform();
     const trim = resolveDvtSubstraitColumnFunctions({
       dataType: 'text',
@@ -210,7 +210,7 @@ describe('Canvas column function authoring', () => {
     const selectedBefore = before.outputs.find((output) => output.name === 'event_type');
     if (selectedBefore == null) throw new Error('Expected event_type output.');
 
-    const result = applyCanvasColumnFunction({
+    const result = await applyCanvasColumnFunction({
       draftSession: initial,
       canonicalNodesById: new Map([
         [source.id, source],
@@ -243,7 +243,7 @@ describe('Canvas column function authoring', () => {
     expect(created?.fieldId).not.toContain('event_type_clean');
   });
 
-  it('rejects duplicate aliases without mutating the selected output', () => {
+  it('rejects duplicate aliases without mutating the selected output', async () => {
     const transform = projectionTransform();
     const trim = resolveDvtSubstraitColumnFunctions({
       dataType: 'text',
@@ -254,7 +254,7 @@ describe('Canvas column function authoring', () => {
     const selected = inspect(transform).outputs.find((output) => output.name === 'event_type');
     if (selected == null) throw new Error('Expected event_type output.');
 
-    const result = applyCanvasColumnFunction({
+    const result = await applyCanvasColumnFunction({
       draftSession: initial,
       canonicalNodesById: new Map([
         [source.id, source],
@@ -272,7 +272,7 @@ describe('Canvas column function authoring', () => {
     expect(initial.localNodeCatalog?.[transform.id]).toBe(transform);
   });
 
-  it('rejects a function on an external DBT model without changing its identity or authority', () => {
+  it('rejects a function on an external DBT model without changing its identity or authority', async () => {
     const trim = resolveDvtSubstraitColumnFunctions({
       dataType: 'text',
       provider: 'postgres',
@@ -280,7 +280,7 @@ describe('Canvas column function authoring', () => {
     if (trim == null) throw new Error('Expected admitted TRIM capability.');
 
     const initial = draftSession(source, externalModel);
-    const result = applyCanvasColumnFunction({
+    const result = await applyCanvasColumnFunction({
       draftSession: initial,
       canonicalNodesById: new Map([
         [source.id, source],
@@ -297,7 +297,7 @@ describe('Canvas column function authoring', () => {
     expect(result).toEqual({ outcome: 'rejected', reason: 'invalid_target' });
     expect(initial.localNodeCatalog?.[externalModel.id]).toBe(externalModel);
   });
-  it('appends one variadic COALESCE output from ordered reusable FieldIds', () => {
+  it('appends one variadic COALESCE output from ordered reusable FieldIds', async () => {
     const transform = projectionTransform();
     const functions = resolveDvtSubstraitColumnFunctions({
       dataType: 'text',
@@ -315,7 +315,7 @@ describe('Canvas column function authoring', () => {
     const eventType = before.outputs.find((output) => output.name === 'event_type');
     if (eventId == null || eventType == null) throw new Error('Expected base operands.');
 
-    const trimmed = applyCanvasColumnFunction({
+    const trimmed = await applyCanvasColumnFunction({
       draftSession: initial,
       canonicalNodesById: new Map([
         [source.id, source],
@@ -332,7 +332,7 @@ describe('Canvas column function authoring', () => {
     if (trimmed.outcome !== 'applied') throw new Error('Expected reusable derived output.');
 
     expect(
-      applyCanvasColumnFunction({
+      await applyCanvasColumnFunction({
         draftSession: trimmed.draftSession,
         canonicalNodesById: new Map([
           [source.id, source],
@@ -348,7 +348,7 @@ describe('Canvas column function authoring', () => {
       })
     ).toEqual({ outcome: 'rejected', reason: 'unsupported_capability' });
 
-    const composed = applyCanvasColumnFunction({
+    const composed = await applyCanvasColumnFunction({
       draftSession: trimmed.draftSession,
       canonicalNodesById: new Map([
         [source.id, source],

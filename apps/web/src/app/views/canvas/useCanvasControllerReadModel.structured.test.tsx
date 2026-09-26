@@ -16,7 +16,7 @@ import {
 } from './useCanvasControllerReadModel.test-support';
 
 describe('Canvas read model structured', () => {
-  it('keeps structured output toggles and root reorder after a second Source is connected', async () => {
+  it('keeps structured Output passive after a second producer is connected', async () => {
     const sourceRef = {
       schemaVersion: 'connected-source-ref.v1' as const,
       connectionRef: {
@@ -142,12 +142,8 @@ describe('Canvas read model structured', () => {
       const modelData = mounted
         .readState()
         ?.nodesWithImpact.find((node) => node.id === transformNode.id)?.data as ReadModelNodeData;
-      expect(modelData.onToggleCanvasColumnOutput).toBe(
-        args.columnActions.onToggleCanvasColumnOutput
-      );
-      expect(modelData.onReorderCanvasColumnOutput).toBe(
-        args.columnActions.onReorderCanvasColumnOutput
-      );
+      expect(modelData.onToggleCanvasColumnOutput).toBeUndefined();
+      expect(modelData.onReorderCanvasColumnOutput).toBeUndefined();
     } finally {
       await mounted.cleanup();
     }

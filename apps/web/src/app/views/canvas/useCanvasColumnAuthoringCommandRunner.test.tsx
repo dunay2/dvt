@@ -117,7 +117,7 @@ describe('useCanvasColumnAuthoringCommandRunner', () => {
     container.remove();
   });
 
-  it('serializes two calculated-output submissions over the latest draft', () => {
+  it('serializes two calculated-output submissions over the latest draft', async () => {
     const transform = buildProjectionTransform();
     let runner!: CanvasColumnAuthoringCommandRunner;
     let currentSession: CanvasDraftSession = {
@@ -160,12 +160,12 @@ describe('useCanvasColumnAuthoringCommandRunner', () => {
       alias: 'customer_alias',
       inputFieldId: 'output:customer',
     };
-    expect(runner.addCalculated(request)).toMatchObject({ outcome: 'applied' });
-    expect(runner.addCalculated(request)).toEqual({
+    expect(await runner.addCalculated(request)).toMatchObject({ outcome: 'applied' });
+    expect(await runner.addCalculated(request)).toEqual({
       outcome: 'rejected',
       reason: 'duplicate_alias',
     });
-    expect(commandCalls).toBe(2);
+    expect(commandCalls).toBe(3);
 
     const updated = currentSession.localNodeCatalog?.[transform.id];
     if (updated == null) throw new Error('Expected updated Transform.');
