@@ -36,6 +36,11 @@ export function inputIdentityMap(before: Fields, after: Fields): ReadonlyMap<str
       direct.set(field.fieldId, field.sourceFieldId);
       continue;
     }
+    const operands = field.operandFieldIds?.filter((id) => direct.has(id));
+    if (operands?.length === 1) {
+      direct.set(field.fieldId, operands[0]!);
+      continue;
+    }
     const candidates = after.filter((next) => next.sourceFieldId === field.fieldId);
     const passthrough = candidates.filter(
       (next) => next.outputOrdinal === field.outputOrdinal && next.displayName === field.displayName
