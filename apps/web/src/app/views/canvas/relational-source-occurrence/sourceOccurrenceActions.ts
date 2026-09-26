@@ -9,6 +9,7 @@ import {
   type PendingSourceOccurrence,
 } from './pendingSourceOccurrence';
 import { nextSourceOccurrenceAlias } from './sourceOccurrenceAlias';
+import { parseOccurrenceAlias } from './renameSourceOccurrence';
 
 export function createSourceOccurrenceActions(
   args: Readonly<{
@@ -64,12 +65,9 @@ export function createSourceOccurrenceActions(
         },
       ];
     });
+    args.setSelectedId(occurrence.read.binding.relationId);
+    args.setAppendInputId(null);
     return occurrence.read.binding.relationId;
-  };
-  const select = (relationId: string, sourceId: string) => {
-    args.setSelectedId(relationId);
-    if (args.session == null) args.selectInitialInput(sourceId);
-    args.setAppendInputId(args.session == null ? null : sourceId);
   };
   return {
     pending: args.pending,
@@ -77,14 +75,49 @@ export function createSourceOccurrenceActions(
     rejection,
     drop,
     add: (id: string) => {
-      const relationId = drop(id);
-      if (relationId == null) return;
-      select(relationId, id);
+      drop(id);
     },
     select: (id: string) => {
       const pending = args.pending.find((item) => item.read.binding.relationId === id);
       if (pending == null) return;
-      select(id, pending.sourceNodeId);
+      args.setSelectedId(id);
+      args.setAppendInputId(null);
+    },
+    clearSelection: () => {
+      args.setSelectedId(null);
+      args.setAppendInputId(null);
+    },
+    connect: (id: string) => {
+      const pending = args.pending.find((item) => item.read.binding.relationId === id);
+      if (!args.editable || pending == null) return;
+      args.setSelectedId(id);
+      if (args.session == null) args.selectInitialInput(pending.sourceNodeId);
+      args.setAppendInputId(args.session == null ? null : pending.sourceNodeId);
+    },
+    rename: (id: string, alias: string): boolean => {
+      const name = parseOccurrenceAlias(alias);
+      if (
+        !args.editable ||
+        !name.success ||
+        !args.pending.some((item) => item.read.binding.relationId === id) ||
+        args.session?.sourceAliases(args.revision).has(name.data) ||
+        args.pending.some(
+          (item) =>
+            item.read.binding.relationId !== id && item.read.binding.displayName === name.data
+        )
+      )
+        return false;
+      args.setPending((current) =>
+        current.map((item) =>
+          item.read.binding.relationId !== id
+            ? item
+            : {
+                ...item,
+                read: { ...item.read, binding: { ...item.read.binding, displayName: name.data } },
+              }
+        )
+      );
+      return true;
     },
     remove: (id: string) => {
       args.setPending((current) => current.filter((item) => item.read.binding.relationId !== id));

@@ -141,8 +141,9 @@ export function CanvasRelationalTreeLayout({
             key={placed.node.locator}
             placed={placed}
             selected={
-              placed.node.locator === selectedLocator ||
-              placed.node.relationId === occurrences?.selectedId
+              occurrences?.selectedId != null
+                ? placed.node.relationId === occurrences.selectedId
+                : placed.node.locator === selectedLocator
             }
             copy={copy}
             onSelect={

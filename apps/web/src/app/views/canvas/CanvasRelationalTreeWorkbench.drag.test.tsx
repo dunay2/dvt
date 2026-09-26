@@ -105,6 +105,9 @@ describe('Canvas relational-tree Workbench drag', () => {
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(1);
     expect(container.querySelector('[data-operator="join"]')).toBeNull();
     await act(async () => pending.click());
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-slot="source-occurrence-connect"]')!.click()
+    );
     openOperationMenu(container);
     await act(async () =>
       document
@@ -141,6 +144,11 @@ describe('Canvas relational-tree Workbench drag', () => {
         ?.getAttribute('draggable')
     ).toBe('false');
     await dropSource(graph.source.id);
+    expect(container.querySelector('[data-slot="source-occurrence-add"]')).toBeNull();
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-operator="read"]')!.click()
+    );
+    expect(container.querySelector('[data-slot="source-occurrence-alias"]')).toBeNull();
     expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(0);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(2);
     expect(apply).not.toHaveBeenCalled();
@@ -225,6 +233,9 @@ describe('Canvas relational-tree Workbench drag', () => {
     });
     await act(async () =>
       container.querySelector<HTMLButtonElement>('[data-pending="true"]')!.click()
+    );
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-slot="source-occurrence-connect"]')!.click()
     );
     openOperationMenu(container);
     expect(container.querySelector('[data-operator="project"]')).not.toBeNull();

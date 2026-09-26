@@ -138,6 +138,15 @@ export function useCanvasRelationalTreeWorkbenchModel(
     pendingAuthoring,
     projection,
     ...selection,
+    selectedRelationId: session.occurrences.selectedId ?? selection.selectedRelationId,
+    selectRelation: (id: string | null) => {
+      if (session.occurrences.pending.some((item) => item.read.binding.relationId === id)) {
+        session.occurrences.select(id!);
+      } else {
+        session.occurrences.clearSelection();
+        selection.selectRelation(id);
+      }
+    },
     selectCatalogueItem,
     session,
     unavailableMessage,

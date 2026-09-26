@@ -17,6 +17,7 @@ type CanvasRelationalTreeContentProps = Readonly<{
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
   onPendingConditionChange: (pending: boolean) => void;
+  pendingCondition: boolean;
   onSelectRelation: (relationId: string | null) => void;
   modelOutput: CanvasModelOutputInspectorState;
 }>;
@@ -42,6 +43,7 @@ function CanvasRelationalTreeContentView({
   expanded,
   onExpandedChange,
   onPendingConditionChange,
+  pendingCondition,
   onSelectRelation,
   modelOutput,
 }: CanvasRelationalTreeContentProps): JSX.Element {
@@ -49,7 +51,7 @@ function CanvasRelationalTreeContentView({
     return (
       <CanvasRelationalTreeAuthoring
         {...projectCanvasRelationalTreeAuthoringView(
-          { model, transformNode, nodes, edges },
+          { model, transformNode, nodes, edges, pendingCondition },
           onSelectRelation
         )}
         onPendingConditionChange={onPendingConditionChange}

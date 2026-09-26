@@ -15,6 +15,7 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
   onChange,
   onClose,
   onPendingConditionChange,
+  reservedAliases,
 }: Readonly<{
   draft: DvtSubstraitProjectionDraft;
   operation: CanvasRelationalOperation;
@@ -23,6 +24,7 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
   onChange: (draft: DvtSubstraitProjectionDraft) => void;
   onClose: () => void;
   onPendingConditionChange?: (pending: boolean) => void;
+  reservedAliases?: readonly string[];
 }>): JSX.Element | null {
   const entry = useSelectedRelation(relationId);
   const selected = entry?.relation.relType.case;
@@ -44,6 +46,7 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
         key={read.relationId}
         draft={draft}
         relationId={read.relationId}
+        reservedAliases={reservedAliases}
         onChange={onChange}
         onClose={onClose}
         onPendingChange={onPendingConditionChange}

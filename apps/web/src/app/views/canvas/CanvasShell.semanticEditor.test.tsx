@@ -3,6 +3,7 @@
 import { act } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
+import { getCanvasShellState } from './CanvasShell.testHarness';
 import {
   setupSemanticEditorShell,
   harness,
@@ -19,6 +20,7 @@ describe('Canvas Model inspection', () => {
     expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBeNull();
     await act(async () => data.onOpenNode?.(fixture.transform.id));
     expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
+    expect(getCanvasShellState().canvasViewportProps?.externalNodeSurfaceActive).toBe(true);
     expect(harness.container.querySelectorAll('[data-slot="canvas-model-view-tab"]')).toHaveLength(
       3
     );
@@ -38,6 +40,10 @@ describe('Canvas Model inspection', () => {
     expect(
       harness.container.querySelector('[data-slot="canvas-relational-tree-start-authoring"]')
     ).toBeNull();
+    await act(async () =>
+      navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-workspace-tab"]')!.click()
+    );
+    expect(getCanvasShellState().canvasViewportProps?.externalNodeSurfaceActive).toBe(false);
   });
 
   it('routes the contextual inspector to the single semantic-editor tab', async () => {

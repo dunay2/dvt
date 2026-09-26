@@ -101,6 +101,26 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
       });
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
     cy.get('[data-pending="true"]').click();
+    cy.get('[data-slot="canvas-relational-tree-append-input"]').should('not.exist');
+    cy.get('[data-canvas-inspector="true"]:visible').should(($inspector) => {
+      expect($inspector.attr('data-relation-id')).to.equal(pendingId);
+    });
+    cy.get('[data-slot="source-occurrence-alias"]').focus().should('be.focused').clear();
+    cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
+    cy.then(() => {
+      for (const write of getE2eApiCalls('/workspace/graph/draft', 'PUT')) {
+        const document = decodeDvtSubstraitSemanticDocument(semanticDocumentFromWrite(write));
+        expect(
+          document.sidecar.relations
+            .filter((binding) => binding.sourceRef != null)
+            .map((binding) => binding.relationId)
+        ).to.have.members(originalReads);
+      }
+    });
+    cy.get('[data-slot="source-occurrence-alias"]').type('Pending customers');
+    cy.get('[data-slot="source-occurrence-update"]').click();
+    cy.get('[data-pending="true"]').should('contain.text', 'Pending customers');
+    cy.get('[data-slot="source-occurrence-connect"]').click();
     cy.get('[data-slot="canvas-relational-tree-append-input"]').should('be.visible').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');

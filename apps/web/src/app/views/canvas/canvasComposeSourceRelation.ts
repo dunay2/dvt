@@ -3,6 +3,7 @@ import { clone, equals } from '@bufbuild/protobuf';
 import { RelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { NamedStructSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { allocateDvtRelationId } from '@dvt/contracts';
+import { hasSameConnectionRef } from '@dvt/postgres-projection';
 import { deriveRelationSchema, SubstraitAnalysisError } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
@@ -36,7 +37,12 @@ export async function composeSourceRelation(
         };
   if (
     read.relation.relType.case !== 'read' ||
-    JSON.stringify(read.binding.sourceRef) !== JSON.stringify(request.input.sourceRef)
+    read.binding.sourceRef == null ||
+    read.binding.sourceRef.sourceObjectId !== request.input.sourceRef.sourceObjectId ||
+    !hasSameConnectionRef(
+      read.binding.sourceRef.connectionRef,
+      request.input.sourceRef.connectionRef
+    )
   )
     throw new SubstraitAnalysisError(
       'invalid_binding',

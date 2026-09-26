@@ -1,6 +1,19 @@
 import type { CanvasViewCopy } from './canvasCopy.types';
 
 export const canvasViewAuthoringCopyEs = {
+  sourceOccurrenceFieldsUnavailable: 'No se han podido analizar los campos de esta relación.',
+  sourceOccurrenceAdd: 'Añadir instancia',
+  sourceOccurrenceAlias: 'Alias de instancia',
+  sourceOccurrenceUpdate: 'Actualizar alias',
+  sourceOccurrenceConnect: 'Conectar al modelo',
+  sourceOccurrenceInvalidAlias: 'Introduce un nombre no vacío de hasta 256 caracteres.',
+  sourceOccurrenceUpdateFailed:
+    'No se ha podido actualizar el alias. Comprueba el modelo actual e inténtalo de nuevo.',
+  sourceOccurrenceAliasUnsupported: 'Esta composición aún no admite editar alias de instancia.',
+  sourceOccurrenceReadOnly: 'Este modelo es de solo lectura.',
+  sourceOccurrenceUnsupported: 'La salida del modelo no está disponible para componer.',
+  sourceOccurrenceUnavailable: 'Se necesita una fuente conectada en la misma conexión.',
+  sourceOccurrenceIncompatible: 'No hay campos compatibles para esta composición.',
   operationReadLabel: 'Fuente',
   operationFilterLabel: 'Filtrar',
   operationAggregateLabel: 'Agrupar',

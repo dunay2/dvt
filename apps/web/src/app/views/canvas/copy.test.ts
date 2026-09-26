@@ -3,6 +3,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { sourceOccurrenceCopy } from './relational-source-occurrence/sourceOccurrenceCopy';
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 import type { CanvasViewCopy } from './canvasCopy.types';
 import {
@@ -52,6 +53,21 @@ const INSPECTOR_DRAFT_ERROR_COPY_KEYS = [
 ])[];
 
 describe('canvas copy catalog', () => {
+  it.each(['en-US', 'es-ES'])(
+    'resolves instance copy through the canonical locale catalogs (%s)',
+    (locale) => {
+      const copy = sourceOccurrenceCopy(locale);
+      const catalog = resolveCanvasViewCopy(locale);
+      expect(copy.alias).toBe(catalog.sourceOccurrenceAlias);
+      expect(copy.connect).toBe(catalog.sourceOccurrenceConnect);
+      expect(copy.duplicate_alias).toBe(catalog.inspectorErrorDvtAliasDuplicate);
+      expect(
+        Object.values(copy).every((value) => typeof value === 'string' && value.length > 0)
+      ).toBe(true);
+      expect(sourceOccurrenceCopy('es-ES')).toEqual(sourceOccurrenceCopy('es'));
+      expect(sourceOccurrenceCopy('unknown')).toEqual(sourceOccurrenceCopy('en'));
+    }
+  );
   it('summarizes inherited and declared columns without explanatory prose', () => {
     const englishCopy = resolveCanvasViewCopy('en-US');
     const spanishCopy = resolveCanvasViewCopy('es-ES');

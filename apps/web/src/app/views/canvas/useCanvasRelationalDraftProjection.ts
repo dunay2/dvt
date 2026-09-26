@@ -6,7 +6,8 @@ import { flattenCanvasRelationalTree } from './canvasRelationalTreeWorkbenchMode
 export function useCanvasRelationalDraftProjection(
   args: Parameters<typeof projectCanvasRelationalTreeAuthoringDraft>[0],
   selectedRelationId: string | null,
-  onSelect: (relationId: string | null) => void
+  onSelect: (relationId: string | null) => void,
+  externalSelection = false
 ) {
   const { edges, joinDraft, nodes, operation, transformNode } = args;
   const projection = useMemo(
@@ -28,8 +29,8 @@ export function useCanvasRelationalDraftProjection(
   const rootId = projection?.root.relationId ?? null;
   const selectedId = selected?.relationId ?? null;
   useEffect(() => {
-    if (selectedId == null && rootId != null) onSelect(rootId);
-  }, [onSelect, rootId, selectedId]);
+    if (!externalSelection && selectedId == null && rootId != null) onSelect(rootId);
+  }, [externalSelection, onSelect, rootId, selectedId]);
   return {
     projection,
     selectedLocator: selected?.locator ?? '',

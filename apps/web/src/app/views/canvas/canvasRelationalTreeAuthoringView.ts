@@ -40,6 +40,8 @@ export type CanvasRelationalTreeAuthoringActions = Readonly<{
   dropSource: (id: string) => string | null;
   selectPending: (id: string) => void;
   removePending: (id: string) => void;
+  connectPending: (id: string) => void;
+  renamePending: (id: string, alias: string) => boolean;
 }>;
 
 export function projectCanvasRelationalTreeAuthoringView(
@@ -48,6 +50,7 @@ export function projectCanvasRelationalTreeAuthoringView(
     transformNode: CanonicalNode;
     nodes: readonly CanonicalNode[];
     edges: readonly CanonicalEdge[];
+    pendingCondition: boolean;
   }>,
   selectRelation: CanvasRelationalTreeAuthoringActions['selectRelation']
 ): Readonly<{
@@ -56,6 +59,10 @@ export function projectCanvasRelationalTreeAuthoringView(
 }> {
   const { model, transformNode, nodes, edges } = context;
   const { session } = model;
+  const select =
+    session.occurrences.pending.length > 0 && !context.pendingCondition
+      ? model.selectRelation
+      : selectRelation;
   return {
     data: {
       transformNode,
@@ -69,7 +76,10 @@ export function projectCanvasRelationalTreeAuthoringView(
       primaryInputId: session.primaryInputId,
       secondaryInputId: session.secondaryInputId,
       selectedInputIds: session.selectedInputIds,
-      selectedRelationId: model.selectedRelationId,
+      selectedRelationId:
+        session.appendInput == null
+          ? model.selectedRelationId
+          : (session.analysis?.session.rootId ?? null),
       pendingSources: session.occurrences.pending,
       selectedPendingId: session.occurrences.selectedId,
     },
@@ -78,12 +88,14 @@ export function projectCanvasRelationalTreeAuthoringView(
       selectOperation: session.selectOperation,
       placeInput: session.placeInput,
       appendJoinInput: session.appendJoinInput,
-      selectRelation,
+      selectRelation: select,
       reconcileSelection: model.selectRelation,
       remove: session.removal.remove,
       dropSource: session.occurrences.drop,
-      selectPending: session.occurrences.select,
+      selectPending: select,
       removePending: session.occurrences.remove,
+      connectPending: session.occurrences.connect,
+      renamePending: session.occurrences.rename,
     },
   };
 }
