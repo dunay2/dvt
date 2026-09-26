@@ -47,7 +47,8 @@ export async function prepareRelationRemoval(
   let before = target;
   let after: Entry = replacement;
   const upserts = new Map<string, Entry>();
-  upserts.set(replacement.binding.relationId, replacement);
+  if (replacement.binding.relationId === target.binding.relationId)
+    upserts.set(replacement.binding.relationId, replacement);
   const replacements = new Map<string, string>();
   const operations: string[] = [];
   const rebind = () => {

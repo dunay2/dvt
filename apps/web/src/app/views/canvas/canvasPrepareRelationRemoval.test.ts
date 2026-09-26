@@ -23,6 +23,7 @@ describe('atomic selected relation retirement', () => {
       expect(session.revision).toBe(revision);
       expect(session.rootId).toBe(root.binding.relationId);
       expect(proposal.operations).toEqual([]);
+      expect(proposal.change.upserts).toEqual([]);
       const next = session.apply(proposal.change);
       expect(session.rootId).toBe(retained);
       expect(session.locate(session.rootId, session.revision).inputs).toEqual([]);
