@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.19.0 (2026-09-26)
+
+## What's Changed
+* feat(web): Add movable Model composition workbench by @dunay2 in https://github.com/dunay2/dvt/pull/3424
+* feat(web): Compose dataset transformations in a dedicated Transform card by @dunay2 in https://github.com/dunay2/dvt/pull/3423
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.18.0...v0.19.0
+
 ## 0.18.0 (2026-09-25)
 
 ## What's Changed
