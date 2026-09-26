@@ -4,7 +4,6 @@ import type { RelationAnalysisResult } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from '../canvasRelationAnalysisSession';
 import type { CanvasRelationalOperation } from '../canvasRelationalOperationChoices';
 import { sourceOccurrenceAppendRejection } from './sourceOccurrencePolicy';
-import type { Dispatch, SetStateAction } from 'react';
 import {
   createPendingSourceOccurrence,
   type PendingSourceOccurrence,
@@ -22,7 +21,9 @@ export function createSourceOccurrenceActions(
     start: () => boolean;
     setAppendInputId: (id: string | null) => void;
     pending: readonly PendingSourceOccurrence[];
-    setPending: Dispatch<SetStateAction<readonly PendingSourceOccurrence[]>>;
+    setPending: (
+      update: (current: readonly PendingSourceOccurrence[]) => readonly PendingSourceOccurrence[]
+    ) => void;
     selectedId: string | null;
     setSelectedId: (id: string | null) => void;
     selectInitialInput: (id: string) => void;
