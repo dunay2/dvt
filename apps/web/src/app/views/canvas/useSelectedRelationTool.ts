@@ -2,6 +2,7 @@
 import { useSelectedRelationInput } from './useSelectedRelationInput';
 import {
   projectSelectedRelationTool,
+  selectedUnaryToolIds,
   type selectedUnaryTools,
 } from './canvasSelectedRelationTools';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
@@ -11,12 +12,10 @@ export function useSelectedRelationTools(
   relationId: string | null
 ) {
   const input = useSelectedRelationInput(relationId, 'insert');
-  const unary = (['filter', 'aggregate', 'window', 'sort', 'fetch'] as const).flatMap(
-    (operation) => {
-      const tool = projectSelectedRelationTool(input, operation);
-      return tool == null ? [] : [tool];
-    }
-  );
+  const unary = selectedUnaryToolIds.flatMap((operation) => {
+    const tool = projectSelectedRelationTool(input, operation);
+    return tool == null ? [] : [tool];
+  });
   return {
     targetId: input?.targetId,
     tools: document == null ? [] : unary,

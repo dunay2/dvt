@@ -75,7 +75,9 @@ describe('Canvas relational-tree Workbench mixed-cross', () => {
 
     await act(async () =>
       container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-node-expand"]')
+        .querySelector<HTMLButtonElement>(
+          '[data-slot="canvas-relational-tree-node"][data-operator="join"]'
+        )
         ?.click()
     );
     const countriesButton = Array.from(

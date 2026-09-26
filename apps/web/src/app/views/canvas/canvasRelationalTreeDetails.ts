@@ -1,4 +1,4 @@
-/** Owned concern: reuse canonical scalar projections for read-only relational semantic zoom. */
+/** Owned concern: project read-only card details independently of viewport scale. */
 import type { CanonicalNode } from '../../types/canonical';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
@@ -9,14 +9,14 @@ import {
   type SemanticWorkbenchGraph,
 } from './semanticWorkbenchProjection';
 import type { CanvasRelationalTreeNodeSize } from './canvasRelationalTreeGeometryMetrics';
+import { projectCanvasRelationalStructureGraph } from './canvasRelationalStructureGraph';
 
-export const CANVAS_RELATIONAL_SEMANTIC_ZOOM = 1.2;
 export type CanvasRelationalSemanticContext = Readonly<{
   transformNode: CanonicalNode;
   draft?: SubstraitDocument;
 }>;
 
-export function projectCanvasRelationalTreeSemanticZoom(
+export function projectCanvasRelationalTreeDetails(
   root: CanvasRelationalTreeNode,
   context?: CanvasRelationalSemanticContext
 ): Readonly<{
@@ -33,7 +33,7 @@ export function projectCanvasRelationalTreeSemanticZoom(
           context.transformNode,
           createCanvasRelationalTreeNodeDraft(context.transformNode, 'inner_join', context.draft)
         );
-  const projection = projectSemanticWorkbenchGraph(node);
+  const projection = projectSemanticWorkbenchGraph(node, { view: 'unlaid' });
   const nodes = new Map(projection.nodes.map((item) => [item.id, item]));
   const inputs = new Map<string, SemanticWorkbenchGraph['edges']>();
   for (const edge of projection.edges) {
@@ -41,14 +41,10 @@ export function projectCanvasRelationalTreeSemanticZoom(
     inputs.set(edge.target, [...(inputs.get(edge.target) ?? []), edge]);
   }
   const visit = (relation: CanvasRelationalTreeNode): void => {
-    if (
-      relation.operator === 'join' &&
-      relation.relationId != null &&
-      relation.expressionRefs.length > 0
-    ) {
+    if (relation.operator !== 'unsupported' && relation.relationId != null) {
       const ids = new Set<string>();
       const edges: SemanticWorkbenchGraph['edges'] = [];
-      const pending = (inputs.get(relation.relationId) ?? []).map((edge) => edge.source);
+      const pending = (inputs.get(relation.relationId) ?? []).map((edge) => edge.source).reverse();
       while (pending.length > 0) {
         const id = pending.pop()!;
         if (ids.has(id)) continue;
@@ -58,13 +54,16 @@ export function projectCanvasRelationalTreeSemanticZoom(
           pending.push(edge.source);
         }
       }
-      const graph: SemanticWorkbenchGraph = {
-        nodes: [...ids].map((id) => nodes.get(id)!),
-        edges,
-        relationCount: 0,
-        expressionCount: ids.size,
-        relationId: relation.relationId,
-      };
+      const graph: SemanticWorkbenchGraph =
+        ids.size === 0
+          ? projectCanvasRelationalStructureGraph(relation)
+          : {
+              nodes: [...ids].map((id) => nodes.get(id)!),
+              edges,
+              relationCount: 0,
+              expressionCount: ids.size,
+              relationId: relation.relationId,
+            };
       graphs.set(relation.locator, graph);
       sizes.set(relation.locator, { width: 420, height: 76 + 16 + graph.nodes.length * 32 });
     }

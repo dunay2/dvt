@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CanvasRelationalTreeCardMenu } from './CanvasRelationalTreeCardMenu';
 import { CanvasRelationalTreeLayout } from './CanvasRelationalTreeLayout';
+import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 
@@ -75,14 +76,16 @@ describe('CanvasRelationalTreeCardMenu', () => {
     const onExpand = vi.fn();
     act(() =>
       root.render(
-        <CanvasRelationalTreeLayout
-          root={node}
-          outputName="Model"
-          selectedLocator={node.locator}
-          copy={resolveCanvasViewCopy('en')}
-          onSelect={vi.fn()}
-          onExpand={onExpand}
-        />
+        <RelationalLayoutSession>
+          <CanvasRelationalTreeLayout
+            root={node}
+            outputName="Model"
+            selectedLocator={node.locator}
+            copy={resolveCanvasViewCopy('en')}
+            onSelect={vi.fn()}
+            onExpand={onExpand}
+          />
+        </RelationalLayoutSession>
       )
     );
     const card = container.querySelector<HTMLButtonElement>(

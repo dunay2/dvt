@@ -94,7 +94,9 @@ describe('Relational card movement', () => {
     const edges = paths();
     pointer('pointerdown', 100, 100);
     pointer('pointermove', 130, 120);
+    expect(card().dataset.dragging).toBe('true');
     pointer('pointerup', 130, 120);
+    expect(card().dataset.dragging).toBeUndefined();
     act(() => {
       card().click();
     });
@@ -113,6 +115,7 @@ describe('Relational card movement', () => {
     pointer('pointerdown', 100, 100);
     pointer('pointermove', 120, 120);
     pointer('pointercancel', 120, 120);
+    expect(card().dataset.dragging).toBeUndefined();
     expect(position()).toEqual(before);
   });
 

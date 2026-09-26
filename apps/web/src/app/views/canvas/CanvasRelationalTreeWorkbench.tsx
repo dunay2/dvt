@@ -13,7 +13,6 @@ import { CanvasRelationalTreeContent } from './CanvasRelationalTreeContent';
 import { CanvasRelationalTreeSourceCatalogue } from './CanvasRelationalTreeSourceCatalogue';
 import { useCanvasRelationEditNavigation } from './useCanvasRelationEditNavigation';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
-import { CanvasModelCompositionPanel } from './CanvasModelCompositionPanel';
 import {
   CanvasOperationPreviewProvider,
   type CanvasOperationPreviewPorts,
@@ -52,13 +51,14 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
   const [pendingCompositionOutput, setPendingCompositionOutput] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [sourcesCollapsed, setSourcesCollapsed] = useState(false);
-  const [compositionOpen, setCompositionOpen] = useState(false);
+  const [modelOutputOpen, setModelOutputOpen] = useState(false);
   useEffect(() => {
-    if (!model.session.active) setPendingCondition(false);
+    if (model.session.active) setModelOutputOpen(false);
+    else setPendingCondition(false);
   }, [model.session.active]);
   const sessionHandle = useCanvasRelationalTreeWorkbenchHandle(ref, model, pendingCondition, {
     pending: pendingCompositionOutput,
-    discard: () => setCompositionOpen(false),
+    discard: () => setModelOutputOpen(false),
   });
   const navigation = useCanvasRelationEditNavigation({
     editing: model.session.active,
@@ -122,19 +122,12 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
                 onExpandedChange={setExpanded}
                 onPendingConditionChange={setPendingCondition}
                 onSelectRelation={navigation.select}
-                onOpenModelComposition={() => setCompositionOpen(true)}
+                modelOutput={{
+                  open: modelOutputOpen,
+                  setOpen: setModelOutputOpen,
+                  setPending: setPendingCompositionOutput,
+                }}
               />
-              {compositionOpen && model.projection != null ? (
-                <CanvasModelCompositionPanel
-                  modelName={transformNode.name}
-                  root={model.projection.root}
-                  copy={copy}
-                  editable={model.authoringAvailable && !model.session.active}
-                  onOutputChange={model.session.applyOutputOrder}
-                  onPendingOutputChange={setPendingCompositionOutput}
-                  onClose={() => setCompositionOpen(false)}
-                />
-              ) : null}
             </div>
           </CanvasRelationAnalysisContext.Provider>
         </div>

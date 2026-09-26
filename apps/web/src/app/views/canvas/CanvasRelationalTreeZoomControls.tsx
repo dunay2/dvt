@@ -1,5 +1,6 @@
 /** Owned concern: present zoom controls for the relational-tree viewport. */
 import { Minus, Plus, Scan } from 'lucide-react';
+import { RelationalNavigationControls } from './relational-layout/RelationalNavigationControls';
 
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import {
@@ -13,12 +14,16 @@ export function CanvasRelationalTreeZoomControls({
   minimumZoom = CANVAS_RELATIONAL_TREE_MIN_ZOOM,
   onChange,
   onFit,
+  panMode,
+  onTogglePan,
 }: Readonly<{
   copy: CanvasRelationalTreeWorkbenchCopy;
   zoom: number;
   minimumZoom?: number;
   onChange: (delta: number) => void;
   onFit: () => void;
+  panMode: boolean;
+  onTogglePan: () => void;
 }>): JSX.Element {
   return (
     <div className="flex items-center gap-1">
@@ -56,6 +61,7 @@ export function CanvasRelationalTreeZoomControls({
       >
         <Plus className="size-4" />
       </button>
+      <RelationalNavigationControls panMode={panMode} onTogglePan={onTogglePan} />
     </div>
   );
 }

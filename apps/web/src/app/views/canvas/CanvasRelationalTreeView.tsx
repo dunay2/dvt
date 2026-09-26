@@ -2,6 +2,9 @@
 
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanonicalNode } from '../../types/canonical';
+import type { ComponentProps } from 'react';
+import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
+import { RelationalViewportSurface } from './relational-layout/RelationalViewportSurface';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import { CanvasRelationalTreeLayout } from './CanvasRelationalTreeLayout';
 import { CanvasRelationalTreeZoomControls } from './CanvasRelationalTreeZoomControls';
@@ -11,7 +14,7 @@ import {
   readCanvasRelationalSourceDrag,
 } from './canvasRelationalTreeDrag';
 
-export function CanvasRelationalTreeView({
+function TreeView({
   outputName,
   root,
   selectedLocator,
@@ -42,21 +45,8 @@ export function CanvasRelationalTreeView({
       aria-label={copy.relationalTreeLabel}
     >
       <div className="relative min-h-0 flex-1">
-        <div
-          ref={viewport.viewportRef}
-          data-slot="canvas-relational-tree-viewport"
-          data-panning={viewport.panning ? 'true' : 'false'}
-          className="absolute inset-0 cursor-grab overflow-auto p-5 active:cursor-grabbing"
-          style={{
-            backgroundColor: 'var(--surface-subtle)',
-            backgroundImage:
-              'radial-gradient(circle, color-mix(in srgb, var(--border-subtle) 72%, transparent) 1px, transparent 1px)',
-            backgroundSize: '18px 18px',
-          }}
-          onPointerDown={viewport.onPointerDown}
-          onPointerMove={viewport.onPointerMove}
-          onPointerUp={viewport.onPointerUp}
-          onPointerCancel={viewport.onPointerUp}
+        <RelationalViewportSurface
+          viewport={viewport}
           onDragOver={(event) => {
             if (
               onDropSource == null ||
@@ -89,12 +79,13 @@ export function CanvasRelationalTreeView({
               onExpand={onExpand}
               onRemove={onRemove}
               zoom={viewport.zoom}
+              panMode={viewport.panMode || viewport.panning}
               onManualLayout={viewport.stopAutoFit}
               onOpenOutput={onOpenOutput}
               semanticContext={transformNode == null ? undefined : { transformNode }}
             />
           </div>
-        </div>
+        </RelationalViewportSurface>
         <div className="absolute bottom-3 left-3 z-10 rounded-md border border-(--border-subtle) bg-(--surface-panel) p-1 shadow-md">
           <CanvasRelationalTreeZoomControls
             copy={copy}
@@ -102,9 +93,19 @@ export function CanvasRelationalTreeView({
             minimumZoom={viewport.minimumZoom}
             onChange={viewport.changeZoom}
             onFit={viewport.fit}
+            panMode={viewport.panMode}
+            onTogglePan={viewport.togglePanMode}
           />
         </div>
       </div>
     </section>
+  );
+}
+
+export function CanvasRelationalTreeView(props: ComponentProps<typeof TreeView>): JSX.Element {
+  return (
+    <RelationalLayoutSession>
+      <TreeView {...props} />
+    </RelationalLayoutSession>
   );
 }

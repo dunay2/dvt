@@ -65,7 +65,7 @@ export function CanvasRelationalScalarTree({
           : 'sticky top-0 min-w-0 overflow-auto rounded border border-(--border-subtle) bg-(--surface-panel) p-2'
       }
     >
-      <ul aria-label="JOIN · expression">
+      <ul>
         {graph.nodes.filter((node) => !operands.has(node.id)).map((node) => renderNode(node.id))}
       </ul>
     </div>

@@ -17,7 +17,7 @@ describe('Workbench predicates', () => {
     cy.wrap(null).should(() => expect(semanticWrites('join-transform')).to.have.length(1));
     const cards = '[data-slot="canvas-relational-tree-node"][data-operator="join"]';
     const editor = '[data-slot="dvt-substrait-join-predicate-editors"]:visible';
-    cy.get(cards).first().parent().find('[data-slot="canvas-relational-node-expand"]').click();
+    cy.get(cards).first().click();
     cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').should(
       'not.have.descendants',
       'input, select, textarea'

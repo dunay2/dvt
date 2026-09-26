@@ -5,6 +5,7 @@ import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection
 import { SourceOccurrenceProperties } from './relational-source-occurrence/SourceOccurrenceProperties';
 import { useSelectedRelation } from './useSelectedRelation';
 import { CanvasSelectedUnaryEditor } from './CanvasSelectedUnaryEditor';
+import { CanvasTransformInspector } from './CanvasTransformInspector';
 
 export function CanvasRelationalTreeSelectedOperatorEditor({
   draft,
@@ -26,6 +27,17 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
   const entry = useSelectedRelation(relationId);
   const selected = entry?.relation.relType.case;
   const read = entry?.binding.sourceRef == null ? null : entry.binding;
+  if (selected === 'project' && relationId != null)
+    return (
+      <CanvasTransformInspector
+        key={relationId}
+        relationId={relationId}
+        transformNode={transformNode}
+        draft={draft}
+        onChange={onChange}
+        onClose={onClose}
+      />
+    );
   if (read != null)
     return (
       <SourceOccurrenceProperties
@@ -42,7 +54,6 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
     sort: 'sort',
     fetch: 'fetch',
     aggregate: 'aggregate',
-    project: 'window',
   } as const;
   const tool = selected != null && selected in tools ? tools[selected as keyof typeof tools] : null;
   if (tool != null && relationId != null) {

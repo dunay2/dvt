@@ -1,5 +1,6 @@
 /** Owned concern: compose one relational card, contextual actions and semantic detail. */
 import { ChevronDown } from 'lucide-react';
+import { useId } from 'react';
 import { CanvasNodeDataAction } from '../../components/canvas/CanvasNodeDataAction';
 import { useCanvasRelationalOperationExecution } from './useCanvasRelationalOperationExecution';
 import { CanvasRelationalScalarTree } from './CanvasRelationalScalarTree';
@@ -17,6 +18,9 @@ export function CanvasRelationalTreeGraphNode({
   onExpand,
   onRemove,
   semanticGraph,
+  expanded,
+  onToggleDetail,
+  movable,
 }: Readonly<{
   placed: CanvasRelationalTreePlacedNode;
   selected: boolean;
@@ -25,8 +29,12 @@ export function CanvasRelationalTreeGraphNode({
   onExpand?: (locator: string) => void;
   onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
   semanticGraph?: SemanticWorkbenchGraph;
+  expanded: boolean;
+  onToggleDetail: () => void;
+  movable: boolean;
 }>): JSX.Element {
-  const canExpand = placed.node.expressionRefs.length > 0 || placed.node.operator === 'cross';
+  const detailId = useId();
+  const detailed = expanded && semanticGraph != null;
   const execution = useCanvasRelationalOperationExecution(placed.node);
   return (
     <CanvasRelationalTreeCardMenu node={placed.node} onRemove={onRemove} onExpand={onExpand}>
@@ -42,32 +50,36 @@ export function CanvasRelationalTreeGraphNode({
           copy={copy}
           onSelect={onSelect}
           onExpand={onExpand}
-          detailed={semanticGraph != null}
+          detailed={detailed}
+          movable={movable}
         />
         {execution == null ? null : (
           <div className="absolute top-full w-full">
             <CanvasNodeDataAction {...execution} />
           </div>
         )}
-        {semanticGraph == null ? null : (
+        {!detailed ? null : (
           <div
-            data-slot="canvas-relational-semantic-zoom"
+            id={detailId}
+            data-slot="canvas-relational-card-detail"
             data-relation-id={placed.node.relationId ?? undefined}
             className="rounded-b-md border border-t-0 border-blue-500 bg-(--surface-panel)"
           >
             <CanvasRelationalScalarTree graph={semanticGraph} compact />
           </div>
         )}
-        {!canExpand || onExpand == null ? null : (
+        {semanticGraph == null ? null : (
           <button
             type="button"
             data-slot="canvas-relational-node-expand"
             aria-label={`${copy.relationalTreeDetailLabel}: ${placed.node.operator.toUpperCase()} · ${placed.node.displayName ?? ''}`}
             title={`${copy.relationalTreeDetailLabel}: ${placed.node.operator.toUpperCase()}`}
-            onClick={() => onExpand(placed.node.locator)}
+            aria-expanded={detailed}
+            aria-controls={detailed ? detailId : undefined}
+            onClick={onToggleDetail}
             className="absolute right-1 top-1 grid size-7 place-items-center rounded text-(--text-muted) hover:bg-(--surface-selected) hover:text-(--text-strong)"
           >
-            <ChevronDown aria-hidden="true" className="size-4" />
+            <ChevronDown aria-hidden="true" className={`size-4 ${detailed ? 'rotate-180' : ''}`} />
           </button>
         )}
       </li>

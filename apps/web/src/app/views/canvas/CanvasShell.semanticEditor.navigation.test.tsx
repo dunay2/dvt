@@ -18,7 +18,9 @@ describe('Canvas Model draft protection', () => {
     await act(async () => data.onOpenNode?.(fixture.transform.id));
     await act(async () =>
       harness.container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-node-expand"]')!
+        .querySelector<HTMLButtonElement>(
+          '[data-slot="canvas-relational-tree-node"][data-operator="join"]'
+        )!
         .click()
     );
     await act(async () =>
@@ -68,7 +70,9 @@ describe('Canvas Model draft protection', () => {
     await act(async () => data.onOpenNode?.(fixture.transform.id));
     await act(async () =>
       harness.container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-node-expand"]')!
+        .querySelector<HTMLButtonElement>(
+          '[data-slot="canvas-relational-tree-node"][data-operator="join"]'
+        )!
         .click()
     );
     expect(onApplyNodeDraft).not.toHaveBeenCalled();

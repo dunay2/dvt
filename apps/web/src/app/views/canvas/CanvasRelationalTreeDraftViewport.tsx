@@ -1,5 +1,7 @@
 /** Owned concern: render and accept drops on one scalable canonical relational draft graph. */
-import { useMemo } from 'react';
+import { useMemo, type ComponentProps } from 'react';
+import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
+import { RelationalViewportSurface } from './relational-layout/RelationalViewportSurface';
 import { CanvasRelationalTreeOperandCanvas } from './CanvasRelationalTreeOperandCanvas';
 import { useCanvasRelationalDraftProjection } from './useCanvasRelationalDraftProjection';
 
@@ -17,7 +19,7 @@ import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewpo
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 
-export function CanvasRelationalTreeDraftViewport({
+function DraftViewport({
   copy,
   edges,
   inputs,
@@ -82,20 +84,9 @@ export function CanvasRelationalTreeDraftViewport({
 
   return (
     <div className="relative min-h-0 min-w-0 flex-1">
-      <div
-        ref={viewport.viewportRef}
-        data-slot="canvas-relational-tree-draft-viewport"
-        className="absolute inset-0 cursor-grab overflow-auto p-5 pb-16 active:cursor-grabbing"
-        onPointerDown={viewport.onPointerDown}
-        onPointerMove={viewport.onPointerMove}
-        onPointerUp={viewport.onPointerUp}
-        onPointerCancel={viewport.onPointerUp}
-        style={{
-          backgroundColor: 'var(--surface-subtle)',
-          backgroundImage:
-            'radial-gradient(circle, color-mix(in srgb, var(--border-subtle) 72%, transparent) 1px, transparent 1px)',
-          backgroundSize: '18px 18px',
-        }}
+      <RelationalViewportSurface
+        viewport={viewport}
+        draft
         onDragOver={(event) => {
           event.preventDefault();
           event.dataTransfer.dropEffect = 'copy';
@@ -131,6 +122,7 @@ export function CanvasRelationalTreeDraftViewport({
               selectedLocator={selectedLocator}
               copy={copy}
               zoom={viewport.zoom}
+              panMode={viewport.panMode || viewport.panning}
               onManualLayout={viewport.stopAutoFit}
               semanticContext={{ transformNode, draft: joinDraft ?? undefined }}
               onExpand={(locator) => onExpandRelation(relationIdFor(locator))}
@@ -139,7 +131,7 @@ export function CanvasRelationalTreeDraftViewport({
             />
           </div>
         )}
-      </div>
+      </RelationalViewportSurface>
       {draftProjection == null ? null : (
         <div className="absolute bottom-3 left-3 z-10 rounded-md border border-(--border-subtle) bg-(--surface-panel) p-1 shadow-md">
           <CanvasRelationalTreeZoomControls
@@ -148,9 +140,21 @@ export function CanvasRelationalTreeDraftViewport({
             minimumZoom={viewport.minimumZoom}
             onChange={viewport.changeZoom}
             onFit={viewport.fit}
+            panMode={viewport.panMode}
+            onTogglePan={viewport.togglePanMode}
           />
         </div>
       )}
     </div>
+  );
+}
+
+export function CanvasRelationalTreeDraftViewport(
+  props: ComponentProps<typeof DraftViewport>
+): JSX.Element {
+  return (
+    <RelationalLayoutSession>
+      <DraftViewport {...props} />
+    </RelationalLayoutSession>
   );
 }

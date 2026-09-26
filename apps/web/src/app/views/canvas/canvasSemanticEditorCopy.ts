@@ -91,6 +91,22 @@ const en = {
     'The current profile cannot use a filtered projection as a JOIN or UNION input. Replacing it rebuilds the composition from the selected sources and removes its projection, filters and windows. Cancel keeps the current tree unchanged.',
   replaceOperationHint:
     'Changing the operation replaces this local composition. Cancel restores the applied version.',
+  derivedOutput: {
+    add: 'Add derived field',
+    functionLabel: 'Function',
+    operandsLabel: 'Ordered fields',
+    addOperand: 'Add field',
+    removeOperand: 'Remove field {index}',
+    moveOperandUp: 'Move field {index} up',
+    moveOperandDown: 'Move field {index} down',
+    previewLabel: 'Expression',
+    aliasLabel: 'Output name',
+    aliasInvalid: 'Use a valid semantic field name.',
+    aliasConflict: 'That output name already exists.',
+    cancel: 'Cancel',
+    save: 'Add field',
+    failed: 'The derived field could not be added to this operation.',
+  },
 };
 const es: typeof en = {
   back: 'Volver al Canvas',
@@ -188,6 +204,22 @@ const es: typeof en = {
     'El perfil actual no admite una proyección filtrada como entrada de JOIN o UNION. Al sustituirla se reconstruye la composición con las fuentes seleccionadas y se retiran su proyección, filtros y ventanas. Cancelar mantiene el árbol actual intacto.',
   replaceOperationHint:
     'Cambiar la operación reemplaza esta composición local. Cancelar recupera la versión aplicada.',
+  derivedOutput: {
+    add: 'Añadir campo derivado',
+    functionLabel: 'Función',
+    operandsLabel: 'Campos ordenados',
+    addOperand: 'Añadir campo',
+    removeOperand: 'Retirar campo {index}',
+    moveOperandUp: 'Subir campo {index}',
+    moveOperandDown: 'Bajar campo {index}',
+    previewLabel: 'Expresión',
+    aliasLabel: 'Nombre de salida',
+    aliasInvalid: 'Usa un nombre de campo semántico válido.',
+    aliasConflict: 'Ese nombre de salida ya existe.',
+    cancel: 'Cancelar',
+    save: 'Añadir campo',
+    failed: 'No se ha podido añadir el campo derivado a esta operación.',
+  },
 };
 export type CanvasSemanticEditorCopy = typeof en;
 export function resolveCanvasSemanticEditorCopy(language: string): CanvasSemanticEditorCopy {

@@ -1,5 +1,5 @@
 /** Owned concern: readable card content and accessible semantic input roles. */
-import { resolveCanvasRelationalNodePresentation } from './canvasRelationalNodePresentation';
+import { resolveCanvasRelationalNodeCopy } from './canvasRelationalNodePresentation';
 import type { CanvasRelationalTreePlacedNode } from './canvasRelationalTreeGeometry';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 
@@ -22,6 +22,7 @@ export function CanvasRelationalTreeNodeButton({
   selected,
   copy,
   detailed,
+  movable,
   onSelect,
   onExpand,
 }: Readonly<{
@@ -29,6 +30,7 @@ export function CanvasRelationalTreeNodeButton({
   selected: boolean;
   copy: CanvasRelationalTreeWorkbenchCopy;
   detailed: boolean;
+  movable: boolean;
   onSelect: (locator: string) => void;
   onExpand?: (locator: string) => void;
 }>): JSX.Element {
@@ -48,10 +50,8 @@ export function CanvasRelationalTreeNodeButton({
                   String(placed.ordinal + 1)
                 )
               : copy.inspectorDbtOriginLabel;
-  const subtitle = node.displayName ?? node.substraitKind;
   const isSource = node.operator === 'read';
-  const { presentation } = resolveCanvasRelationalNodePresentation(node);
-  const title = isSource ? subtitle : copy[presentation.labelKey];
+  const { operation, presentation, title, detail } = resolveCanvasRelationalNodeCopy(node, copy);
   const Icon = presentation.icon;
   return (
     <button
@@ -69,6 +69,7 @@ export function CanvasRelationalTreeNodeButton({
       data-locator={node.locator}
       data-relation-id={node.relationId ?? undefined}
       data-operator={node.operator}
+      data-presentation={operation}
       onClick={() => {
         onSelect(node.locator);
         onExpand?.(node.locator);
@@ -78,7 +79,7 @@ export function CanvasRelationalTreeNodeButton({
         height: detailed ? 76 : '100%',
         fontFamily: '"Segoe UI", system-ui, sans-serif',
       }}
-      className={`w-full select-none rounded-md border px-3 py-2 text-left shadow-sm transition-colors hover:border-(--status-info) aria-selected:border-(--status-info) aria-selected:ring-2 aria-selected:ring-(--status-info) ${operatorTone[presentation.category]}`}
+      className={`w-full select-none rounded-md border px-3 py-2 text-left shadow-sm transition-colors hover:border-(--status-info) aria-selected:border-(--status-info) aria-selected:ring-2 aria-selected:ring-(--status-info) ${movable ? 'cursor-grab data-[dragging=true]:cursor-grabbing' : 'cursor-inherit'} ${operatorTone[presentation.category]}`}
     >
       <span className="flex items-center gap-2 pr-5">
         <Icon aria-hidden="true" className="size-4 shrink-0 text-(--status-info)" />
@@ -92,10 +93,10 @@ export function CanvasRelationalTreeNodeButton({
       </span>
       {isSource ? null : (
         <span
-          title={subtitle}
+          title={detail}
           className="mt-1 block truncate text-[13px] font-normal leading-5 text-(--text-muted)"
         >
-          {subtitle}
+          {detail}
         </span>
       )}
       {roleLabel == null ? null : <span className="sr-only">{roleLabel}</span>}

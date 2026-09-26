@@ -45,6 +45,10 @@ export class CanvasRelationAnalysisSession {
       this.analysis = new RelationAnalysisSession({ document, scope: this.scope });
     else this.analysis.replace(document, this.analysis.revision);
     this.accepted = document;
+    this.reindexSources(document);
+  }
+
+  private reindexSources(document: SubstraitDocument | null): void {
     this.sourceOccurrences.clear();
     this.sourceConnections.clear();
     this.sourceByRelation.clear();
@@ -84,6 +88,19 @@ export class CanvasRelationAnalysisSession {
         'Composition inputs must use the model execution connection.'
       );
     return [...(this.sourceOccurrences.get(sourceKey(ref)) ?? [])];
+  }
+
+  executionProvider(expectedRevision: number): string {
+    this.current().locate(this.rootId, expectedRevision);
+    const providers = new Set(
+      [...this.sourceByRelation.values()].map((ref) => ref.connectionRef.provider)
+    );
+    if (this.sourceConnections.size !== 1 || providers.size !== 1)
+      throw new SubstraitAnalysisError(
+        'invalid_binding',
+        'Composition inputs must use one model execution connection.'
+      );
+    return [...providers][0]!;
   }
 
   private current(): RelationAnalysisSession {
@@ -136,6 +153,28 @@ export class CanvasRelationAnalysisSession {
     // Existing draft/Apply boundary: explicitly materialize and hash the canonical document here.
     this.accepted = analysis.document();
     return this.accepted;
+  }
+
+  async transact(
+    expectedRevision: number,
+    work: (staged: CanvasRelationAnalysisSession) => Promise<void>,
+    signal?: AbortSignal
+  ): Promise<SubstraitDocument> {
+    signal?.throwIfAborted();
+    this.locate(this.rootId, expectedRevision);
+    const staged = new CanvasRelationAnalysisSession(`${this.scope}:staged`);
+    staged.receive(this.current().document());
+    try {
+      await work(staged);
+      signal?.throwIfAborted();
+      const document = staged.current().document();
+      this.current().replace(document, expectedRevision);
+      this.accepted = this.current().document();
+      this.reindexSources(this.accepted);
+      return this.accepted;
+    } finally {
+      staged.dispose();
+    }
   }
 
   dispose(): void {

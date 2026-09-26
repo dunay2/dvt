@@ -16,6 +16,7 @@ type Case = readonly [
 const operations = {
   read: ['read', 'source'],
   projection: ['project', 'expressions', 'project-expression'],
+  field_transform: ['project', 'expressions', 'project-expression'],
   filter: ['filter', 'expressions', 'filter-condition'],
   aggregate: ['aggregate', 'expressions', 'aggregate-expression'],
   window: ['project', 'expressions', 'project-expression'],

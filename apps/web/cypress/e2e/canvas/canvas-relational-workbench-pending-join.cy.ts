@@ -29,7 +29,7 @@ describe('Workbench pending-join', () => {
     dragWorkbenchSource('orders', 'secondary');
     cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
     cy.get('[role="combobox"]').type('INNER JOIN{enter}');
-    cy.get('[data-slot="canvas-relational-node-expand"]').click();
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').click();
     cy.get('[data-slot="dvt-substrait-join-predicate-editors"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
     cy.get('[data-slot="canvas-relational-tree-block-canvas"]').should('be.visible');

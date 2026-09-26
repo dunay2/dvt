@@ -70,44 +70,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
       container.querySelector('[data-slot="canvas-relational-tree-start-authoring"]')
     ).toBeNull();
     expect(container.querySelector('[data-slot="canvas-relational-tree-detail"]')).toBeNull();
-    expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).toBeNull();
-    const zoomIn = container.querySelector<HTMLButtonElement>('button[aria-label="Zoom in"]')!;
-    await act(async () => {
-      zoomIn.click();
-      zoomIn.click();
-      zoomIn.click();
-    });
-    expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).not.toBeNull();
-    expect(
-      container.querySelectorAll(
-        '[data-slot="canvas-relational-semantic-zoom"] [data-slot="canvas-relational-expression-node"]'
-      ).length
-    ).toBeGreaterThan(1);
-    expect(container.querySelector('[data-slot="canvas-relational-tree-detail"]')).toBeNull();
-    const zoomOut = container.querySelector<HTMLButtonElement>('button[aria-label="Zoom out"]')!;
-    await act(async () => {
-      zoomOut.click();
-      zoomOut.click();
-      zoomOut.click();
-    });
-    expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).toBeNull();
     const tree = container.querySelector('[data-slot="canvas-relational-tree"]');
-    const viewport = container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!;
-    await act(async () => {
-      viewport.dispatchEvent(
-        new WheelEvent('wheel', { deltaY: -120, bubbles: true, cancelable: true })
-      );
-    });
-    expect(container.querySelector('[data-slot="canvas-relational-tree-zoom"]')?.textContent).toBe(
-      '120%'
-    );
-    expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).not.toBeNull();
-    await act(async () => {
-      viewport.dispatchEvent(
-        new WheelEvent('wheel', { deltaY: 120, bubbles: true, cancelable: true })
-      );
-    });
-    expect(container.querySelector('[data-slot="canvas-relational-semantic-zoom"]')).toBeNull();
     const toggle = container.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-relational-tree-sources-toggle"]'
     );

@@ -41,6 +41,9 @@ export const COPY = {
   relationalTreePendingInputsMessage: 'Inputs available',
   relationalTreeSourceActionHint: 'Drag or press to add',
   relationalTreeProjectOperationLabel: 'PROJECT',
+  relationalTreeFieldTransformationStageLabel: 'Transform',
+  relationalTreeFieldTransformationStageSummaryTemplate:
+    'Derived: {scalar} · Window: {window} · Passthrough: {passthrough}',
   inspectorDvtRelationalOperationTitle: 'Relate / compose',
   inspectorDvtRelationalAvailable: 'Available',
   inspectorDvtRelationalNeedsPredicate: 'Needs predicate',

@@ -24,6 +24,8 @@ describe('Relational card movement', () => {
     visitWorkbenchCanvas();
     openWorkbenchModel();
     verifyCompleteTreeFit(viewport);
+    cy.get(viewport).should('have.css', 'cursor', 'default');
+    cy.get(join).should('have.css', 'cursor', 'grab');
   });
 
   it('moves a JOIN and its ports at the actual zoom without opening properties or saving', () => {
@@ -58,6 +60,7 @@ describe('Relational card movement', () => {
       });
       cy.get(join).click();
       cy.get('[data-slot="canvas-relational-tree-inline-editor"]').should('be.visible');
+      cy.get('[data-slot="canvas-relational-edit"]').click();
       cy.get('[data-slot="canvas-relational-tree-draft-viewport"] [data-operator="join"]').should(
         ($editing) => {
           const after = position($editing[0]);
@@ -76,6 +79,12 @@ describe('Relational card movement', () => {
       cy.get(source).should(($moved) => {
         expect(position($moved[0])).to.deep.equal([before[0] + 10, before[1]]);
       });
+      verifyCompleteTreeFit(viewport);
+      cy.get(source).should(($moved) =>
+        expect(position($moved[0])).to.deep.equal([before[0] + 10, before[1]])
+      );
+      cy.get('[data-slot="canvas-relational-tree-arrange"]').click();
+      cy.get(source).should(($arranged) => expect(position($arranged[0])).to.deep.equal(before));
       const relationId = $card.attr('data-relation-id')!;
       cy.get(source).click();
       cy.get(`[data-slot="canvas-relational-tree-node"][data-relation-id="${relationId}"]`).should(
@@ -83,6 +92,35 @@ describe('Relational card movement', () => {
         'aria-selected',
         'true'
       );
+      cy.then(() => expect(semanticWrites('join-transform')).to.have.length(writes));
+    });
+  });
+
+  it('pans with the explicit hand without moving or selecting a card', () => {
+    for (let step = 0; step < 5; step++)
+      cy.get('[data-slot="canvas-model-editor"] button[aria-label="Zoom in"]').click();
+    cy.get(source).scrollIntoView();
+    cy.get('[data-slot="canvas-relational-tree-pan"]')
+      .click()
+      .should('have.attr', 'aria-pressed', 'true');
+    cy.get(viewport).should('have.css', 'cursor', 'grab');
+    cy.get(source).then(($card) => {
+      const before = position($card[0]);
+      const writes = semanticWrites('join-transform').length;
+      cy.get(viewport).then(($viewport) => {
+        const scrollLeft = $viewport[0].scrollLeft;
+        moveWorkbenchCard(source, -40, 0);
+        cy.get(viewport).should(($panned) =>
+          expect($panned[0].scrollLeft).to.be.greaterThan(scrollLeft)
+        );
+      });
+      cy.get(source).should(($same) => expect(position($same[0])).to.deep.equal(before));
+      cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').should('not.exist');
+      cy.get('[data-slot="canvas-relational-tree-pan"]')
+        .click()
+        .should('have.attr', 'aria-pressed', 'false');
+      cy.get(viewport).should('have.css', 'cursor', 'default');
+      cy.get(source).should('have.css', 'cursor', 'grab');
       cy.then(() => expect(semanticWrites('join-transform')).to.have.length(writes));
     });
   });

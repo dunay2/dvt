@@ -1,6 +1,6 @@
 /** Owned concern: manage measured fit, zoom and pointer panning for the tree viewport. */
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import type { PointerEventHandler, RefObject } from 'react';
+import type { RefObject } from 'react';
 import { useCanvasRelationalTreeWheelZoom } from './useCanvasRelationalTreeWheelZoom';
 import {
   CANVAS_RELATIONAL_TREE_MIN_ZOOM,
@@ -16,14 +16,11 @@ export function useCanvasRelationalTreeViewport(
   contentRef: RefObject<HTMLDivElement>;
   zoom: number;
   minimumZoom: number;
-  panning: boolean;
   changeZoom: (delta: number) => void;
   fit: () => void;
   stopAutoFit: () => void;
-  onPointerDown: PointerEventHandler<HTMLDivElement>;
-  onPointerMove: PointerEventHandler<HTMLDivElement>;
-  onPointerUp: PointerEventHandler<HTMLDivElement>;
-}> {
+}> &
+  ReturnType<typeof useRelationalViewportPan> {
   const viewportRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const autoFit = useRef(true);

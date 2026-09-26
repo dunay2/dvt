@@ -1,13 +1,12 @@
 /** Owned concern: render deterministic graph geometry without creating a second Canvas authority. */
 import { Table2 } from 'lucide-react';
 import { useMemo } from 'react';
-import { useRelationalCardPositions } from './relational-layout/RelationalLayoutSession';
+import { useRelationalLayout } from './relational-layout/RelationalLayoutSession';
 import { useRelationalCardMovement } from './relational-layout/useRelationalCardMovement';
 import {
-  CANVAS_RELATIONAL_SEMANTIC_ZOOM,
-  projectCanvasRelationalTreeSemanticZoom,
+  projectCanvasRelationalTreeDetails,
   type CanvasRelationalSemanticContext,
-} from './canvasRelationalTreeSemanticZoom';
+} from './canvasRelationalTreeDetails';
 
 import { layoutCanvasRelationalTree } from './canvasRelationalTreeGeometry';
 import { RelationalTreeEdges } from './relational-layout/RelationalTreeEdges';
@@ -25,6 +24,7 @@ export function CanvasRelationalTreeLayout({
   onRemove,
   semanticContext,
   zoom = 1,
+  panMode = false,
   onManualLayout,
   onOpenOutput,
 }: Readonly<{
@@ -37,20 +37,35 @@ export function CanvasRelationalTreeLayout({
   onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
   semanticContext?: CanvasRelationalSemanticContext;
   zoom?: number;
+  panMode?: boolean;
   onManualLayout?: () => void;
   onOpenOutput?: () => void;
 }>): JSX.Element {
-  const detailed = Math.round(zoom * 100) >= CANVAS_RELATIONAL_SEMANTIC_ZOOM * 100;
   const detail = useMemo(
-    () => projectCanvasRelationalTreeSemanticZoom(root, detailed ? semanticContext : undefined),
-    [root, detailed, semanticContext?.transformNode, semanticContext?.draft]
+    () => projectCanvasRelationalTreeDetails(root, semanticContext),
+    [root, semanticContext?.transformNode, semanticContext?.draft]
   );
-  const { positions, setPosition } = useRelationalCardPositions();
+  const { positions, setPosition, expanded, toggleDetail } = useRelationalLayout();
+  const sizes = useMemo(() => {
+    const visible = new Map(detail.sizes);
+    const visit = (node: CanvasRelationalTreeNode): void => {
+      if (!expanded.has(node.relationId ?? node.locator)) visible.delete(node.locator);
+      node.children.forEach((child) => visit(child.node));
+    };
+    visit(root);
+    return visible;
+  }, [root, detail, expanded]);
   const layout = useMemo(
-    () => layoutCanvasRelationalTree(root, detail.sizes, positions),
-    [root, detail, positions]
+    () => layoutCanvasRelationalTree(root, sizes, positions),
+    [root, sizes, positions]
   );
-  const movement = useRelationalCardMovement(layout.nodes, zoom, setPosition, onManualLayout);
+  const movement = useRelationalCardMovement(
+    layout.nodes,
+    zoom,
+    setPosition,
+    onManualLayout,
+    !panMode
+  );
   const outputStyle = {
     left: layout.output.x,
     top: layout.output.y,
@@ -116,6 +131,9 @@ export function CanvasRelationalTreeLayout({
             onExpand={onExpand}
             onRemove={onRemove}
             semanticGraph={detail.graphs.get(placed.node.locator)}
+            expanded={expanded.has(placed.node.relationId ?? placed.node.locator)}
+            onToggleDetail={() => toggleDetail(placed.node.relationId ?? placed.node.locator)}
+            movable={!panMode}
           />
         ))}
       </ul>

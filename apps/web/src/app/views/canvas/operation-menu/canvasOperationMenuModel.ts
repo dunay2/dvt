@@ -6,14 +6,15 @@ import type {
 import type { CanvasRelationalOperatorTool } from '../relational-operator-form/OperatorTool';
 import { canvasRelationalAvailabilityLabel } from '../DvtRelationalOperationChooser';
 import {
-  canvasRelationalUnaryPresentation,
   resolveCanvasRelationalOperationPresentation,
   type CanvasRelationalOperationPresentation,
 } from '../canvasRelationalOperationPresentation';
 import type { CanvasRelationalTreeWorkbenchCopy } from '../canvasRelationalTreeWorkbench.types';
 import type { CanvasOperationMenuCopy } from './canvasOperationMenuCopy';
+import { selectedUnaryToolIds } from '../canvasSelectedRelationTools';
 
-export type CanvasMenuOperation = CanvasRelationalOperation | CanvasRelationalOperatorTool['id'];
+export type CanvasMenuOperation =
+  CanvasRelationalOperation | CanvasRelationalOperatorTool['id'] | 'field_transform';
 export type CanvasOperationMenuGroup = 'combine' | 'transform' | 'order';
 export type CanvasOperationMenuItem = Readonly<{
   id: CanvasMenuOperation;
@@ -49,6 +50,7 @@ export function buildCanvasOperationMenuItems(
     editable: boolean;
     copy: CanvasRelationalTreeWorkbenchCopy;
     menuCopy: CanvasOperationMenuCopy;
+    transformAvailable?: boolean;
   }>
 ): readonly CanvasOperationMenuItem[] {
   const item = (
@@ -83,24 +85,30 @@ export function buildCanvasOperationMenuItems(
         args.editable && choice.selectable && args.operation == null
       )
     ),
-    ...Object.keys(canvasRelationalUnaryPresentation)
-      .filter(
-        (id): id is CanvasRelationalOperatorTool['id'] => id !== 'read' && id !== 'unsupported'
-      )
-      .map((id) => {
-        const tool = args.tools.find((candidate) => candidate.id === id);
-        return item(
-          id,
-          args.editable && tool?.enabled === true,
-          tool?.active === true,
-          !args.editable
-            ? args.copy.inspectorDvtRelationalReadOnly
-            : tool == null
-              ? args.menuCopy.needsOutput
-              : !tool.enabled
-                ? args.menuCopy.unavailable
-                : null
-        );
-      }),
+    item(
+      'field_transform',
+      args.editable && args.transformAvailable === true,
+      false,
+      !args.editable
+        ? args.copy.inspectorDvtRelationalReadOnly
+        : args.transformAvailable
+          ? null
+          : args.menuCopy.needsOutput
+    ),
+    ...selectedUnaryToolIds.map((id) => {
+      const tool = args.tools.find((candidate) => candidate.id === id);
+      return item(
+        id,
+        args.editable && tool?.enabled === true,
+        tool?.active === true,
+        !args.editable
+          ? args.copy.inspectorDvtRelationalReadOnly
+          : tool == null
+            ? args.menuCopy.needsOutput
+            : !tool.enabled
+              ? args.menuCopy.unavailable
+              : null
+      );
+    }),
   ];
 }

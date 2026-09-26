@@ -98,9 +98,9 @@ describe('operation presentation catalog', () => {
       create(RelSchema, { relType: { case: 'fetch', value: create(FetchRelSchema) } }),
     ],
     [
-      'projection',
-      'PROJECT',
-      'PROYECCIÓN',
+      'field_transform',
+      'Transform',
+      'Transform',
       create(RelSchema, { relType: { case: 'project', value: create(ProjectRelSchema) } }),
     ],
     [
@@ -110,9 +110,9 @@ describe('operation presentation catalog', () => {
       create(RelSchema, { relType: { case: 'cross', value: create(CrossRelSchema) } }),
     ],
     [
-      'window',
-      'Window',
-      'Ventana',
+      'field_transform',
+      'Transform',
+      'Transform',
       create(RelSchema, {
         relType: {
           case: 'project',
