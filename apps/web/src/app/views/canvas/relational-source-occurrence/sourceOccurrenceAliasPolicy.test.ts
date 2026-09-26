@@ -1,4 +1,4 @@
-/** Naming stays a label policy, never a source identity or operator-specific rule. */
+/** Alias allocation policy preserves physical identity across composition operators. */
 import { describe, expect, it } from 'vitest';
 import { CanvasHumanNameV1Schema } from '@dvt/contracts';
 import { createSourceCross } from '../canvasSourceCross';
