@@ -19,7 +19,6 @@ export async function initializeConnectedModelProjection(args: {
   nodes: readonly CanonicalNode[];
   edges: readonly Readonly<{ sourceId: string; targetId: string }>[];
 }): Promise<CanonicalNode | null> {
-  if (readDvtTransformAuthoringAuthority(args.target) != null) return null;
   const incoming = new Set(
     args.edges.filter((edge) => edge.targetId === args.target.id).map((edge) => edge.sourceId)
   );
@@ -28,6 +27,7 @@ export async function initializeConnectedModelProjection(args: {
   if (producer?.pluginId !== 'dvt' || producer.kind !== 'dvt:transform') return null;
   const session = new CanvasRelationAnalysisSession(args.target.id);
   try {
+    if (readDvtTransformAuthoringAuthority(args.target) != null) return null;
     session.receive(resolveCanvasSubstraitGraphBindings({ ...args, node: producer }).document);
     const prepared = await prepareSelectedRelationUnary(
       session,

@@ -2,7 +2,6 @@
 import type { Connection } from '@xyflow/react';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
-import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { applyCanvasColumnMapping } from './canvasColumnMappingAuthoring';
 import {
   resolveCanvasSessionNode,
@@ -84,7 +83,7 @@ export function useCanvasColumnMappingGesture(
       if (
         sourceNode?.kind === 'dvt:transform' &&
         targetNode?.kind === 'dvt:transform' &&
-        readDvtTransformAuthoringAuthority(targetNode) != null
+        targetNode.metadata?.transformAuthoring != null
       ) {
         void columnAuthoringCommandRunner
           .toggleOutput({
