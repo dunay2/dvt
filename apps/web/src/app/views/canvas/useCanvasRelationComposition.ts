@@ -20,6 +20,7 @@ export function useCanvasRelationComposition(
     pendingSource?: PendingSourceOccurrence | null;
     onSourceConsumed?: (id: string) => void;
     appendInputId: string | null;
+    appendTargetRelationId: string | null;
     choices: readonly CanvasRelationalOperationChoice[];
     inputs: readonly CanvasDvtCompositionInput[];
     draft: SubstraitDocument | null;
@@ -28,6 +29,7 @@ export function useCanvasRelationComposition(
     targetNodeId: string;
     appendOperand: (nodeId: string) => void;
     setAppendInputId: (nodeId: string | null) => void;
+    setAppendTargetRelationId: (relationId: string | null) => void;
     setDraft: (draft: SubstraitDocument) => void;
     setOperation: (operation: CanvasRelationalOperation | null) => void;
   }>
@@ -42,25 +44,27 @@ export function useCanvasRelationComposition(
   const append = async (
     nodeId: string,
     operation: CanvasRelationalOperation,
-    predicate?: Readonly<{ leftSourceFieldId: string; rightFieldName: string }>
+    predicate?: Readonly<{ leftSourceFieldId: string; rightFieldName: string }>,
+    targetRelationId = args.appendTargetRelationId ?? rootId,
+    occurrence = args.pendingSource
   ) => {
     const input = args.inputs.find((candidate) => candidate.nodeId === nodeId);
     if (input == null) return false;
-    const accepted = await command.execute((session, target) =>
+    const accepted = await command.executeAt(targetRelationId, (session, target) =>
       composeSourceRelation(session, {
         ...target,
         input,
         operation,
         predicate,
-        occurrence: args.pendingSource?.read,
+        occurrence: occurrence?.read,
       })
     );
     if (accepted) {
-      if (args.pendingSource != null)
-        args.onSourceConsumed?.(args.pendingSource.read.binding.relationId);
+      if (occurrence != null) args.onSourceConsumed?.(occurrence.read.binding.relationId);
       args.appendOperand(nodeId);
       args.setOperation(operation);
       args.setAppendInputId(null);
+      args.setAppendTargetRelationId(null);
     }
     return accepted;
   };
@@ -105,5 +109,10 @@ export function useCanvasRelationComposition(
       if (args.appendInputId != null && isCanvasJoinOperation(args.operation))
         void append(args.appendInputId, args.operation, predicate);
     },
+    appendStaged: (
+      occurrence: PendingSourceOccurrence,
+      operation: CanvasRelationalOperation,
+      targetRelationId: string
+    ) => append(occurrence.sourceNodeId, operation, undefined, targetRelationId, occurrence),
   };
 }

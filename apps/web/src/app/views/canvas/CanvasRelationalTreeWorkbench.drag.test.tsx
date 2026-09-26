@@ -324,7 +324,10 @@ describe('Canvas relational-tree Workbench drag', () => {
 
     const appliedTree = container.querySelector('[data-slot="canvas-relational-tree"]');
     openOperationMenu(container);
-    expect(document.querySelector('[data-slot="dvt-select-operation-inner-join"]')).toBeNull();
+    expect(
+      document.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
+        ?.draggable
+    ).toBe(true);
     const ordersButton = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     ).find((button) => button.textContent?.includes('orders'));

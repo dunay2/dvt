@@ -297,6 +297,33 @@ selected columns only after DISTINCT/INTERSECT/EXCEPT is not equivalent to
 projecting each input first and must not be used as a shortcut. Negative tests
 cover this prerequisite, unchanged physical schemas and producer identity.
 
+### Staged operation connection boundary
+
+Adding an operation inside the Model is a two-step authoring intent. Dropping a
+palette item stages one movable operation card in the discardable editor
+session; it does not select an arbitrary relation and does not mutate the
+canonical document. A typed connection from a producer output to that card's
+Input supplies the exact relation target. Configuration is completed in the
+fixed inspector before the existing `ConfigureCanvasDvtNode` command admits the
+change.
+
+```mermaid
+flowchart LR
+  Palette[Admitted operation palette] -->|stage| Pending[Pending operation card]
+  Producer[Producer relation output] -->|typed Input connection| Pending
+  Pending -->|complete configuration| Command[ConfigureCanvasDvtNode]
+  Command --> Canonical[Canonical Substrait tree]
+  Canonical --> Projection[ProjectCanvasRelationalTree]
+```
+
+Pending cards, their incomplete connections and their positions are local
+authoring presentation state. Cancel removes them without a semantic write.
+After admission, pending lines are discarded and the tree is rendered only from
+the canonical projection. Output-to-output drops, connections to the Model
+output, cycles, incompatible arity and read-only mutation fail closed. The old
+operation-drop behavior that mutated whichever relation happened to be selected
+is retired rather than kept as a fallback.
+
 ## Exhaustiveness Rule
 
 Every externally observable Canvas workbench behavior must map to one rail in

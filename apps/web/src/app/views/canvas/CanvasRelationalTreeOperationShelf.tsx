@@ -18,6 +18,8 @@ import { useSelectedRelationTools } from './useSelectedRelationTool';
 import { useCompositionChoices } from './useCompositionChoices';
 import type { useCanvasTransformStage } from './useCanvasTransformStage';
 import { useCanvasOperationMenuSelection } from './operation-menu/useCanvasOperationMenuSelection';
+import { resolveCanvasRelationalStagedOperationChoices } from './canvasRelationalOperationChoices';
+import type { CanvasStagedOperationActions } from './canvasStagedOperationActions';
 
 export function CanvasRelationalTreeOperationShelf({
   choices: initialChoices,
@@ -30,6 +32,7 @@ export function CanvasRelationalTreeOperationShelf({
   selectedRelationId,
   appending = false,
   transformStage,
+  onStageOperation,
 }: Readonly<{
   choices: readonly CanvasRelationalOperationChoice[];
   copy: CanvasRelationalTreeWorkbenchCopy;
@@ -41,6 +44,7 @@ export function CanvasRelationalTreeOperationShelf({
   selectedRelationId: string | null;
   appending?: boolean;
   transformStage?: ReturnType<typeof useCanvasTransformStage>;
+  onStageOperation?: CanvasStagedOperationActions['stage'];
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const localCopy = resolveCanvasSemanticEditorCopy(language);
@@ -48,7 +52,13 @@ export function CanvasRelationalTreeOperationShelf({
   const { tools, targetId } = useSelectedRelationTools(draft, selectedRelationId);
   const replacing = draft != null && !appending;
   const selected = useCompositionChoices(selectedRelationId, !editable, replacing);
-  const choices = replacing ? (selected?.choices ?? []) : initialChoices;
+  const contextualChoices = replacing ? (selected?.choices ?? []) : initialChoices;
+  const choices = [
+    ...contextualChoices,
+    ...resolveCanvasRelationalStagedOperationChoices(!editable).filter(
+      (choice) => !contextualChoices.some((contextual) => contextual.operation === choice.operation)
+    ),
+  ];
   const operation = appending ? null : replacing ? (selected?.operation ?? null) : initialOperation;
   const items = buildCanvasOperationMenuItems({
     choices,
@@ -74,7 +84,12 @@ export function CanvasRelationalTreeOperationShelf({
       className="shrink-0 border-b border-(--border-subtle) bg-(--surface-panel)"
     >
       <div className="flex min-h-10 items-center gap-2 px-3 py-1">
-        <CanvasOperationMenu items={items} copy={menuCopy} onSelect={menu.select} />
+        <CanvasOperationMenu
+          items={items}
+          copy={menuCopy}
+          onSelect={menu.select}
+          onStage={onStageOperation}
+        />
         {operation === 'cross_join' ? <CanvasRelationalCrossNotice /> : null}
       </div>
       {transformStage?.error ? (

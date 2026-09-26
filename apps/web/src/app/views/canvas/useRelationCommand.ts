@@ -32,7 +32,7 @@ export function useRelationCommand(
       pending.current = null;
     };
   }, [analysis, relationId]);
-  const execute = async (command: Command): Promise<boolean> => {
+  const executeAt = async (targetRelationId: string, command: Command): Promise<boolean> => {
     if (pending.current != null || analysis?.document == null || analysis.error != null)
       return false;
     const controller = new AbortController();
@@ -40,7 +40,7 @@ export function useRelationCommand(
     setState('busy');
     try {
       const document = await command(analysis.session, {
-        relationId,
+        relationId: targetRelationId,
         expectedRevision: analysis.revision,
         signal: controller.signal,
       });
@@ -60,5 +60,5 @@ export function useRelationCommand(
       if (pending.current === controller) pending.current = null;
     }
   };
-  return { state, execute };
+  return { state, execute: (command: Command) => executeAt(relationId, command), executeAt };
 }

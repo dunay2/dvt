@@ -103,7 +103,11 @@ describe('Canvas relational-tree Workbench apply', () => {
         document
           .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
           ?.getAttribute('aria-disabled')
-      ).toBe('true');
+      ).toBe('false');
+      expect(
+        document.querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
+          ?.draggable
+      ).toBe(true);
 
       await act(async () =>
         document

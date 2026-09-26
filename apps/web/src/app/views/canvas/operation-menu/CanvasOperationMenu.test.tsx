@@ -10,6 +10,7 @@ describe('Canvas operation menu', () => {
   let host: HTMLDivElement;
   let root: Root;
   const onSelect = vi.fn();
+  const onStage = vi.fn();
   const scrollDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollIntoView');
   const items = [
     {
@@ -39,6 +40,15 @@ describe('Canvas operation menu', () => {
       active: false,
       draggable: false,
     },
+    {
+      id: 'aggregate',
+      group: 'transform',
+      label: 'Aggregate',
+      reason: 'Connect an Input after placing it',
+      selectable: false,
+      active: false,
+      draggable: true,
+    },
   ] as const;
   beforeEach(() => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
@@ -63,6 +73,7 @@ describe('Canvas operation menu', () => {
           items={items}
           copy={resolveCanvasOperationMenuCopy('en')}
           onSelect={onSelect}
+          onStage={onStage}
         />
       )
     );
@@ -76,6 +87,7 @@ describe('Canvas operation menu', () => {
       Object.defineProperty(Element.prototype, 'scrollIntoView', scrollDescriptor);
     else Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
     onSelect.mockClear();
+    onStage.mockClear();
   });
   function open(): void {
     act(() => host.querySelector<HTMLButtonElement>('button')!.click());
@@ -104,6 +116,7 @@ describe('Canvas operation menu', () => {
           items={items.slice(1)}
           copy={resolveCanvasOperationMenuCopy('en')}
           onSelect={onSelect}
+          onStage={onStage}
         />
       )
     );
@@ -131,6 +144,13 @@ describe('Canvas operation menu', () => {
     open();
     act(() => document.querySelector<HTMLElement>('[data-operation="left_join"]')!.click());
     expect(onSelect).toHaveBeenCalledExactlyOnceWith('left_join');
+    expect(document.querySelector('[role="listbox"]')).toBeNull();
+  });
+  it('stages an operation that needs an Input instead of pretending it is already configurable', () => {
+    open();
+    act(() => document.querySelector<HTMLElement>('[data-operation="aggregate"]')!.click());
+    expect(onStage).toHaveBeenCalledExactlyOnceWith('aggregate');
+    expect(onSelect).not.toHaveBeenCalled();
     expect(document.querySelector('[role="listbox"]')).toBeNull();
   });
 });

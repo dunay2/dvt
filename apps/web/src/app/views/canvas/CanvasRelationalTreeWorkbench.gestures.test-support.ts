@@ -45,3 +45,25 @@ export async function appendWorkbenchJoin(): Promise<void> {
       .click()
   );
 }
+
+export async function connectStagedWorkbenchBinaryOperation(): Promise<void> {
+  const outputs = Array.from(
+    container.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-output-port"]')
+  );
+  const canonical = outputs.find(
+    (port) => port.parentElement?.querySelector('[data-pending="true"]') == null
+  );
+  const pending = outputs.find((port) =>
+    port.parentElement?.querySelector('[data-pending="true"][data-operator="read"]')
+  );
+  const [left, right] = Array.from(
+    container.querySelectorAll<HTMLElement>(
+      '[data-pending-operation="true"] [data-slot="canvas-relational-input-port"]'
+    )
+  );
+  if (canonical == null || pending == null || left == null || right == null)
+    throw new Error('The staged binary operation does not expose its producer and Input ports.');
+  await act(async () => dragSourceTo(canonical, left));
+  await act(async () => dragSourceTo(pending, right));
+  await act(async () => Promise.resolve());
+}

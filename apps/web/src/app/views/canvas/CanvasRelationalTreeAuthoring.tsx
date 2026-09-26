@@ -11,6 +11,7 @@ import { useCanvasTransformStage } from './useCanvasTransformStage';
 import { CanvasRelationalTreeAuthoringTemplate } from './CanvasRelationalTreeAuthoring.templates';
 import { PendingSourceOccurrenceProperties } from './relational-source-occurrence/PendingSourceOccurrenceProperties';
 import { sourceOccurrenceAliases } from './relational-source-occurrence/sourceOccurrenceAlias';
+import { CanvasStagedOperationInspector } from './CanvasStagedOperationInspector';
 
 export function CanvasRelationalTreeAuthoring({
   data,
@@ -32,6 +33,9 @@ export function CanvasRelationalTreeAuthoring({
     data.appendInput == null
       ? data.pendingSources.find((item) => item.read.binding.relationId === data.selectedPendingId)
       : undefined;
+  const staged = data.stagedOperations.find(
+    (operation) => operation.id === data.selectedStagedOperationId
+  );
   const reservedAliases = data.pendingSources.map((item) => item.read.binding.displayName);
   const close = () => {
     actions.selectRelation(null);
@@ -65,6 +69,7 @@ export function CanvasRelationalTreeAuthoring({
           draft={data.draft}
           editable
           onChangeDraft={actions.changeDraft}
+          onStageOperation={actions.stageOperation}
         />
       }
       viewport={
@@ -76,7 +81,17 @@ export function CanvasRelationalTreeAuthoring({
         />
       }
       inspector={
-        pending != null ? (
+        staged != null ? (
+          <CanvasStagedOperationInspector
+            staged={staged}
+            draft={data.draft}
+            copy={copy}
+            onChange={actions.changeDraft}
+            onComplete={() => actions.removeStagedOperation(staged.id)}
+            onRemove={() => actions.removeStagedOperation(staged.id)}
+            onPendingChange={onPendingConditionChange}
+          />
+        ) : pending != null ? (
           <PendingSourceOccurrenceProperties
             key={pending.read.binding.relationId}
             occurrence={pending}

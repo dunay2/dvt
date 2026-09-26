@@ -66,8 +66,20 @@ function DraftViewport({
         onDrop={(event) => {
           event.preventDefault();
           const droppedOperation = readCanvasRelationalOperationDrag(event.dataTransfer);
-          if (droppedOperation != null)
-            return actions.selectOperation(droppedOperation, selectedRelationId ?? undefined);
+          if (droppedOperation != null) {
+            const bounds =
+              viewport.contentRef.current?.getBoundingClientRect() ??
+              event.currentTarget.getBoundingClientRect();
+            const id = actions.stageOperation(droppedOperation);
+            if (id != null) {
+              viewport.stopAutoFit();
+              setPosition(id, {
+                x: Math.max(0, (event.clientX - bounds.left) / viewport.zoom),
+                y: Math.max(0, (event.clientY - bounds.top) / viewport.zoom),
+              });
+            }
+            return;
+          }
           const nodeId = readCanvasRelationalSourceDrag(event.dataTransfer);
           if (nodeId != null) {
             const bounds =
@@ -97,6 +109,11 @@ function DraftViewport({
               select: actions.selectPending,
               remove: actions.removePending,
             }}
+            stagedOperations={data.stagedOperations}
+            selectedStagedOperationId={data.selectedStagedOperationId}
+            onSelectStagedOperation={actions.selectStagedOperation}
+            onConnectStagedOperation={actions.connectStagedOperation}
+            onRemoveStagedOperation={actions.removeStagedOperation}
             outputName={transformNode.name}
             root={draftProjection?.root ?? null}
             selectedLocator={selectedLocator}

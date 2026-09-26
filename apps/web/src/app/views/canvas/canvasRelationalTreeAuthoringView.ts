@@ -7,6 +7,8 @@ import type {
   CanvasRelationalOperationChoice,
 } from './canvasRelationalOperationChoices';
 import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
+import type { CanvasStagedOperation } from './canvasStagedOperation';
+import type { CanvasStagedOperationActions } from './canvasStagedOperationActions';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 
 export type CanvasRelationalTreeAuthoringDto = Readonly<{
@@ -22,6 +24,8 @@ export type CanvasRelationalTreeAuthoringDto = Readonly<{
   selectedRelationId: string | null;
   pendingSources: readonly PendingSourceOccurrence[];
   selectedPendingId: string | null;
+  stagedOperations: readonly CanvasStagedOperation[];
+  selectedStagedOperationId: string | null;
 }>;
 
 export type CanvasRelationalTreeAuthoringActions = Readonly<{
@@ -38,6 +42,10 @@ export type CanvasRelationalTreeAuthoringActions = Readonly<{
   removePending: (id: string) => void;
   connectPending: (id: string) => void;
   renamePending: (id: string, alias: string) => boolean;
+  stageOperation: CanvasStagedOperationActions['stage'];
+  selectStagedOperation: CanvasStagedOperationActions['select'];
+  connectStagedOperation: CanvasStagedOperationActions['connect'];
+  removeStagedOperation: CanvasStagedOperationActions['remove'];
 }>;
 
 export function projectCanvasRelationalTreeAuthoringView(
@@ -73,6 +81,8 @@ export function projectCanvasRelationalTreeAuthoringView(
           : (session.analysis?.session.rootId ?? null),
       pendingSources: session.occurrences.pending,
       selectedPendingId: session.occurrences.selectedId,
+      stagedOperations: session.staged.operations,
+      selectedStagedOperationId: session.staged.selectedId,
     },
     actions: {
       changeDraft: session.setJoinDraft,
@@ -86,6 +96,10 @@ export function projectCanvasRelationalTreeAuthoringView(
       removePending: session.occurrences.remove,
       connectPending: session.occurrences.connect,
       renamePending: session.occurrences.rename,
+      stageOperation: session.staged.stage,
+      selectStagedOperation: session.staged.select,
+      connectStagedOperation: session.staged.connect,
+      removeStagedOperation: session.staged.remove,
     },
   };
 }

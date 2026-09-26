@@ -4,6 +4,7 @@ import type {
   CanvasRelationalOperationChoice,
 } from '../canvasRelationalOperationChoices';
 import type { CanvasRelationalOperatorTool } from '../relational-operator-form/OperatorTool';
+import type { CanvasStagedOperationKind } from '../canvasStagedOperation';
 import { canvasRelationalAvailabilityLabel } from '../DvtRelationalOperationChooser';
 import {
   resolveCanvasRelationalOperationPresentation,
@@ -13,8 +14,7 @@ import type { CanvasRelationalTreeWorkbenchCopy } from '../canvasRelationalTreeW
 import type { CanvasOperationMenuCopy } from './canvasOperationMenuCopy';
 import { selectedUnaryToolIds } from '../canvasSelectedRelationTools';
 
-export type CanvasMenuOperation =
-  CanvasRelationalOperation | CanvasRelationalOperatorTool['id'] | 'field_transform';
+export type CanvasMenuOperation = CanvasStagedOperationKind;
 export type CanvasOperationMenuGroup = 'combine' | 'transform' | 'order';
 export type CanvasOperationMenuItem = Readonly<{
   id: CanvasMenuOperation;
@@ -82,7 +82,10 @@ export function buildCanvasOperationMenuItems(
           : choice.availability === 'available'
             ? null
             : canvasRelationalAvailabilityLabel(choice.availability, args.copy),
-        args.editable && choice.selectable && args.operation == null
+        args.editable &&
+          choice.availability !== 'read-only' &&
+          choice.availability !== 'semantically-unavailable' &&
+          choice.availability !== 'target-unavailable'
       )
     ),
     item(
@@ -93,7 +96,8 @@ export function buildCanvasOperationMenuItems(
         ? args.copy.inspectorDvtRelationalReadOnly
         : args.transformAvailable
           ? null
-          : args.menuCopy.needsOutput
+          : args.menuCopy.needsOutput,
+      args.editable && args.transformAvailable === true
     ),
     ...selectedUnaryToolIds.map((id) => {
       const tool = args.tools.find((candidate) => candidate.id === id);
@@ -107,7 +111,8 @@ export function buildCanvasOperationMenuItems(
             ? args.menuCopy.needsOutput
             : !tool.enabled
               ? args.menuCopy.unavailable
-              : null
+              : null,
+        args.editable && tool?.enabled === true
       );
     }),
   ];

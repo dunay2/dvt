@@ -9,6 +9,8 @@ import { CanvasRelationalTreeNodeButton } from './CanvasRelationalTreeNodeButton
 import type { SemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 import type { CanvasRelationalTreePlacedNode } from './canvasRelationalTreeGeometry';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
+import type { CanvasStagedOperation } from './canvasStagedOperation';
+import { CanvasRelationalOperationPorts } from './CanvasRelationalOperationPorts';
 
 export function CanvasRelationalTreeGraphNode({
   placed,
@@ -22,6 +24,10 @@ export function CanvasRelationalTreeGraphNode({
   onToggleDetail,
   movable,
   pending = false,
+  stagedOperation,
+  selectedConnectionSource,
+  onSelectConnectionSource,
+  onConnectOperation,
 }: Readonly<{
   placed: CanvasRelationalTreePlacedNode;
   selected: boolean;
@@ -34,6 +40,10 @@ export function CanvasRelationalTreeGraphNode({
   onToggleDetail: () => void;
   movable: boolean;
   pending?: boolean;
+  stagedOperation?: CanvasStagedOperation;
+  selectedConnectionSource?: string | null;
+  onSelectConnectionSource?: (relationId: string) => void;
+  onConnectOperation?: (operationId: string, port: number, relationId: string) => void;
 }>): JSX.Element {
   const detailId = useId();
   const detailed = expanded && semanticGraph != null;
@@ -45,6 +55,7 @@ export function CanvasRelationalTreeGraphNode({
         className="group/canvas-node absolute"
         style={{ left: placed.x, top: placed.y, width: placed.width, height: placed.height }}
         data-parent-locator={placed.parentLocator ?? undefined}
+        data-pending-operation={stagedOperation == null ? undefined : true}
       >
         <CanvasRelationalTreeNodeButton
           placed={placed}
@@ -56,6 +67,16 @@ export function CanvasRelationalTreeGraphNode({
           movable={movable}
           pending={pending}
         />
+        {onSelectConnectionSource == null || onConnectOperation == null ? null : (
+          <CanvasRelationalOperationPorts
+            relationId={placed.node.relationId}
+            staged={stagedOperation}
+            copy={copy}
+            selectedSource={selectedConnectionSource ?? null}
+            onSelectSource={onSelectConnectionSource}
+            onConnect={onConnectOperation}
+          />
+        )}
         {execution == null || pending ? null : (
           <div className="absolute top-full w-full">
             <CanvasNodeDataAction {...execution} />

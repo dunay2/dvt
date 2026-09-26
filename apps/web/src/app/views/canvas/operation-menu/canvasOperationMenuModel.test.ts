@@ -57,7 +57,7 @@ describe('operation menu read model', () => {
       group: 'order',
       active: true,
       selectable: true,
-      draggable: false,
+      draggable: true,
     });
     expect(items.find(({ id }) => id === 'filter')).toMatchObject({
       group: 'transform',

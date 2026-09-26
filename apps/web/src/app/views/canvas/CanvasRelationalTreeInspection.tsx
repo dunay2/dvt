@@ -35,6 +35,7 @@ export function CanvasRelationalTreeInspection(
         draft={model.session.seed?.draft ?? null}
         editable={model.authoringAvailable}
         onChangeDraft={model.session.setJoinDraft}
+        onStageOperation={model.session.staged.stage}
       />
       <div className="canvas-operation-workspace relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
         <CanvasRelationalTreeView
@@ -45,6 +46,7 @@ export function CanvasRelationalTreeInspection(
           copy={copy}
           onSelect={model.selectTreeNode}
           onDropSource={model.authoringAvailable ? model.session.occurrences.drop : undefined}
+          onDropOperation={model.authoringAvailable ? model.session.staged.stage : undefined}
           onRemove={model.authoringAvailable ? model.session.removal.remove : undefined}
           onExpand={(locator) => {
             modelOutput.setOpen(false);

@@ -1,5 +1,5 @@
 /** Owned concern: coordinate one discardable guided relation-authoring session. */
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect } from 'react';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
@@ -12,11 +12,10 @@ import { useCanvasRelationComposition } from './useCanvasRelationComposition';
 import { useCanvasRelationalTreeRemoval } from './useCanvasRelationalTreeRemoval';
 import { createSourceOccurrenceActions } from './relational-source-occurrence/sourceOccurrenceActions';
 import type { CanvasRelationalTreeProjection } from './canvasRelationalTreeProjection';
-import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
-import { useCanvasRelationFields } from './useCanvasRelationFields';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
-import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindings';
-import { resolveUnmappedCanvasReadFields } from './canvasInputFieldEligibility';
+import { useRelationCommand } from './useRelationCommand';
+import { useCanvasStagedOperationSession } from './useCanvasStagedOperationSession';
+import { useCanvasRelationalTreeAnalysisContext } from './useCanvasRelationalTreeAnalysisContext';
 export function useCanvasRelationalTreeAuthoringSession(
   args: Readonly<{
     enabled: boolean;
@@ -31,62 +30,25 @@ export function useCanvasRelationalTreeAuthoringSession(
 ) {
   const { authoring, edges, enabled, inputs, nodes, transformNode } = args;
   const editable = authoring?.canEditNode === true;
-  const {
-    slots,
-    operation,
-    setOperation,
-    active,
-    setActive,
-    joinDraft,
-    setJoinDraft,
-    appendInputId,
-    setAppendInputId,
-    pendingSources,
-    setPendingSources,
-    pendingSourceId,
-    pendingSource,
-    setPendingSourceId,
-    consumePendingSource,
-    applyRejection,
-    setApplyRejection,
-    reset,
-    clear,
-    hydrate: hydrateExistingState,
-  } = useCanvasRelationalTreeDraftState();
+  const state = useCanvasRelationalTreeDraftState();
   const { hydrateExisting, baselineDraft, seed } = useCanvasRelationalTreeExistingSeed({
     document: args.document,
     projection: args.projection,
-    onHydrate: hydrateExistingState,
+    onHydrate: state.hydrate,
   });
-  useEffect(reset, [enabled, reset, transformNode.id]);
-  const effectiveDraft = !active && seed != null ? seed.draft : joinDraft;
-  const connection = useMemo(() => {
-    try {
-      return resolveCanvasSubstraitGraphBindings({ node: transformNode, nodes, edges }).connection;
-    } catch {
-      return undefined;
-    }
-  }, [transformNode, nodes, edges]);
-  const deniedInputs = useMemo(
-    () =>
-      resolveUnmappedCanvasReadFields({
-        document: effectiveDraft,
-        nodeId: transformNode.id,
-        nodes,
-        edges,
-      }),
-    [effectiveDraft, transformNode.id, nodes, edges]
-  );
-  const analysis = useCanvasRelationAnalysisSession(
-    effectiveDraft,
-    transformNode.id,
-    connection,
-    deniedInputs
-  );
-  const output = useCanvasRelationFields(null, analysis).result;
-  const effectiveInputIds = !active && seed != null ? seed.inputIds : slots.selectedInputIds;
+  useEffect(state.reset, [enabled, state.reset, transformNode.id]);
+  const effectiveDraft = !state.active && seed != null ? seed.draft : state.joinDraft;
+  const { analysis, output } = useCanvasRelationalTreeAnalysisContext({
+    document: effectiveDraft,
+    transformNode,
+    nodes,
+    edges,
+  });
+  const stagedCommand = useRelationCommand('', state.setJoinDraft, analysis);
+  const effectiveInputIds =
+    !state.active && seed != null ? seed.inputIds : state.slots.selectedInputIds;
   const { candidates, choices } = useCanvasRelationalTreeAuthoringOptions({
-    appendInputId,
+    appendInputId: state.appendInputId,
     editable,
     edges,
     enabled,
@@ -95,53 +57,69 @@ export function useCanvasRelationalTreeAuthoringSession(
     session: analysis?.session ?? null,
     revision: analysis?.revision ?? 0,
     nodes,
-    operation: !active && seed != null ? seed.operation : operation,
+    operation: !state.active && seed != null ? seed.operation : state.operation,
     selectedInputIds: effectiveInputIds,
     targetNodeId: transformNode.id,
   });
   const composition = useCanvasRelationComposition({
-    pendingSource,
-    onSourceConsumed: consumePendingSource,
+    pendingSource: state.pendingSource,
+    onSourceConsumed: state.consumePendingSource,
     analysis,
-    appendInputId,
+    appendInputId: state.appendInputId,
+    appendTargetRelationId: state.appendTargetRelationId,
     choices,
     inputs,
     draft: effectiveDraft,
-    operation: !active && seed != null ? seed.operation : operation,
+    operation: !state.active && seed != null ? seed.operation : state.operation,
     selectedInputIds: effectiveInputIds,
     targetNodeId: transformNode.id,
-    appendOperand: slots.appendInput,
-    setAppendInputId,
-    setDraft: setJoinDraft,
-    setOperation,
+    appendOperand: state.slots.appendInput,
+    setAppendInputId: state.setAppendInputId,
+    setAppendTargetRelationId: state.setAppendTargetRelationId,
+    setDraft: state.setJoinDraft,
+    setOperation: state.setOperation,
   });
   const cleared =
-    active && joinDraft == null && operation == null && slots.selectedInputIds.length === 0;
+    state.active &&
+    state.joinDraft == null &&
+    state.operation == null &&
+    state.slots.selectedInputIds.length === 0;
   const apply = useCanvasRelationalTreeApplyCommand({
     cleared,
-    hasPendingSources: pendingSources.length > 0,
+    hasPendingSources: state.pendingSources.length > 0,
     authoring,
     editable,
-    joinDraft,
-    operation: !active && seed != null ? seed.operation : operation,
-    reject: setApplyRejection,
-    reset,
+    joinDraft: state.joinDraft,
+    operation: !state.active && seed != null ? seed.operation : state.operation,
+    reject: state.setApplyRejection,
+    reset: state.reset,
     transformNode,
   });
   const start = useCallback(() => {
     if (!enabled || !editable) return false;
-    if (!active && !hydrateExisting()) setActive(true);
+    if (!state.active && !hydrateExisting()) state.setActive(true);
     return true;
-  }, [active, editable, enabled, hydrateExisting]);
+  }, [state.active, state.setActive, editable, enabled, hydrateExisting]);
+  const staged = useCanvasStagedOperationSession({
+    editable: enabled && editable,
+    start,
+    targetNodeId: transformNode.id,
+    inputs,
+    pendingSources: state.pendingSources,
+    analysis,
+    composition,
+    command: stagedCommand,
+    state,
+  });
   const removal = useCanvasRelationalTreeRemoval({
     analysis,
     enabled: enabled && editable,
-    active,
-    selectedInputIds: slots.selectedInputIds,
+    active: state.active,
+    selectedInputIds: state.slots.selectedInputIds,
     seed,
     hydrate: hydrateExisting,
-    clear,
-    accept: hydrateExistingState,
+    clear: state.clear,
+    accept: state.hydrate,
   });
   return {
     analysis,
@@ -151,35 +129,36 @@ export function useCanvasRelationalTreeAuthoringSession(
       revision: analysis?.revision ?? 0,
       inputs,
       start,
-      setAppendInputId,
-      pending: pendingSources,
-      setPending: setPendingSources,
-      selectedId: pendingSourceId,
-      setSelectedId: setPendingSourceId,
-      selectInitialInput: (id) => slots.replaceInputs([id]),
+      setAppendInputId: state.setAppendInputId,
+      pending: state.pendingSources,
+      setPending: state.setPendingSources,
+      selectedId: state.pendingSourceId,
+      setSelectedId: state.setPendingSourceId,
+      selectInitialInput: (id) => state.slots.replaceInputs([id]),
     }),
+    staged,
     removal,
     cleared,
-    applyRejection,
-    active,
+    applyRejection: state.applyRejection,
+    active: state.active,
     baselineDraft,
     seed,
-    appendInput: inputs.find((input) => input.nodeId === appendInputId) ?? null,
+    appendInput: inputs.find((input) => input.nodeId === state.appendInputId) ?? null,
     apply: () => apply(),
     applyOutputOrder: (document: SubstraitDocument) => apply(document).outcome !== 'rejected',
     appendJoinInput: composition.appendJoinInput,
     commandState: composition.commandState,
-    cancel: reset,
+    cancel: state.reset,
     candidates,
     choices,
-    joinDraft,
-    operation,
-    selectedInputIds: slots.selectedInputIds,
+    joinDraft: state.joinDraft,
+    operation: state.operation,
+    selectedInputIds: state.slots.selectedInputIds,
     selectOperation: (next: CanvasRelationalOperation, relationId?: string) => {
       if (start()) void composition.selectOperation(next, relationId);
     },
     setJoinDraft: (draft: SubstraitDocument) => {
-      if (start()) setJoinDraft(draft);
+      if (start()) state.setJoinDraft(draft);
     },
     start,
   } as const;

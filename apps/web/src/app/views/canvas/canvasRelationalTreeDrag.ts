@@ -1,8 +1,12 @@
 /** Owned concern: transport Source and operation identities during relational-canvas drag/drop. */
-import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
+import {
+  isCanvasStagedOperationKind,
+  type CanvasStagedOperationKind,
+} from './canvasStagedOperation';
 
 export const CANVAS_RELATIONAL_SOURCE_DRAG_TYPE = 'application/x-dvt-relational-source';
 export const CANVAS_RELATIONAL_OPERATION_DRAG_TYPE = 'application/x-dvt-relational-operation';
+export const CANVAS_RELATIONAL_RELATION_DRAG_TYPE = 'application/x-dvt-relational-relation';
 
 export function writeCanvasRelationalSourceDrag(dataTransfer: DataTransfer, nodeId: string): void {
   dataTransfer.effectAllowed = 'copyMove';
@@ -16,7 +20,7 @@ export function readCanvasRelationalSourceDrag(dataTransfer: DataTransfer): stri
 
 export function writeCanvasRelationalOperationDrag(
   dataTransfer: DataTransfer,
-  operation: CanvasRelationalOperation
+  operation: CanvasStagedOperationKind
 ): void {
   dataTransfer.effectAllowed = 'copyMove';
   dataTransfer.setData(CANVAS_RELATIONAL_OPERATION_DRAG_TYPE, operation);
@@ -24,24 +28,20 @@ export function writeCanvasRelationalOperationDrag(
 
 export function readCanvasRelationalOperationDrag(
   dataTransfer: DataTransfer
-): CanvasRelationalOperation | null {
+): CanvasStagedOperationKind | null {
   const operation = dataTransfer.getData(CANVAS_RELATIONAL_OPERATION_DRAG_TYPE).trim();
-  return operation === 'projection' ||
-    operation === 'inner_join' ||
-    operation === 'left_join' ||
-    operation === 'right_join' ||
-    operation === 'full_outer_join' ||
-    operation === 'left_semi_join' ||
-    operation === 'left_anti_join' ||
-    operation === 'right_semi_join' ||
-    operation === 'right_anti_join' ||
-    operation === 'cross_join' ||
-    operation === 'union_all' ||
-    operation === 'union_distinct' ||
-    operation === 'intersect_distinct' ||
-    operation === 'except_distinct' ||
-    operation === 'intersect_all' ||
-    operation === 'except_all'
-    ? operation
-    : null;
+  return isCanvasStagedOperationKind(operation) ? operation : null;
+}
+
+export function writeCanvasRelationalRelationDrag(
+  dataTransfer: DataTransfer,
+  relationId: string
+): void {
+  dataTransfer.effectAllowed = 'link';
+  dataTransfer.setData(CANVAS_RELATIONAL_RELATION_DRAG_TYPE, relationId);
+}
+
+export function readCanvasRelationalRelationDrag(dataTransfer: DataTransfer): string | null {
+  const relationId = dataTransfer.getData(CANVAS_RELATIONAL_RELATION_DRAG_TYPE).trim();
+  return relationId.length === 0 ? null : relationId;
 }

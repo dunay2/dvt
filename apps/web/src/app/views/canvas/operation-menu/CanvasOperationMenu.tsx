@@ -14,7 +14,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '../../../components/ui/
 import { resolveCanvasRelationalOperationPresentation } from '../canvasRelationalOperationPresentation';
 import { writeCanvasRelationalOperationDrag } from '../canvasRelationalTreeDrag';
 import { canvasRelationalOperationPresentation } from '../canvasRelationalOperationPresentation';
-import type { CanvasRelationalOperation } from '../canvasRelationalOperationChoices';
 import type { CanvasOperationMenuCopy } from './canvasOperationMenuCopy';
 import type { CanvasMenuOperation, CanvasOperationMenuItem } from './canvasOperationMenuModel';
 
@@ -22,10 +21,12 @@ export function CanvasOperationMenu({
   items,
   copy,
   onSelect,
+  onStage,
 }: Readonly<{
   items: readonly CanvasOperationMenuItem[];
   copy: CanvasOperationMenuCopy;
   onSelect: (operation: CanvasMenuOperation) => void;
+  onStage: (operation: CanvasMenuOperation) => void;
 }>): JSX.Element {
   const [open, setOpen] = useState(false);
   const descriptionId = useId();
@@ -76,7 +77,7 @@ export function CanvasOperationMenu({
                           key={item.id}
                           value={item.id}
                           keywords={[item.label, copy[group]]}
-                          disabled={!item.selectable}
+                          disabled={!item.selectable && !item.draggable}
                           aria-describedby={item.reason == null ? undefined : reasonId}
                           data-operation={item.id}
                           data-slot={`dvt-select-operation-${item.id.replaceAll('_', '-')}`}
@@ -87,24 +88,18 @@ export function CanvasOperationMenu({
                           }
                           draggable={item.draggable}
                           onDragStart={(event) => {
-                            if (
-                              !item.selectable ||
-                              !item.draggable ||
-                              !Object.hasOwn(canvasRelationalOperationPresentation, item.id)
-                            ) {
+                            if (!item.draggable) {
                               event.preventDefault();
                               return;
                             }
-                            writeCanvasRelationalOperationDrag(
-                              event.dataTransfer,
-                              item.id as CanvasRelationalOperation
-                            );
+                            writeCanvasRelationalOperationDrag(event.dataTransfer, item.id);
                           }}
                           onDragEnd={() => setOpen(false)}
                           onSelect={() => {
-                            if (!item.selectable) return;
+                            if (!item.selectable && !item.draggable) return;
                             setOpen(false);
-                            onSelect(item.id);
+                            if (item.selectable) onSelect(item.id);
+                            else onStage(item.id);
                           }}
                           className="items-start data-[selected=true]:bg-(--surface-selected) data-[selected=true]:text-(--text-strong)"
                         >

@@ -13,9 +13,12 @@ import { CanvasRelationalTreeLayout } from './CanvasRelationalTreeLayout';
 import { CanvasRelationalTreeZoomControls } from './CanvasRelationalTreeZoomControls';
 import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewport';
 import {
+  CANVAS_RELATIONAL_OPERATION_DRAG_TYPE,
   CANVAS_RELATIONAL_SOURCE_DRAG_TYPE,
+  readCanvasRelationalOperationDrag,
   readCanvasRelationalSourceDrag,
 } from './canvasRelationalTreeDrag';
+import type { CanvasStagedOperationKind } from './canvasStagedOperation';
 
 function TreeView({
   outputName,
@@ -27,6 +30,7 @@ function TreeView({
   onRemove,
   transformNode,
   onDropSource,
+  onDropOperation,
   onOpenOutput,
 }: Readonly<{
   outputName: string;
@@ -38,6 +42,7 @@ function TreeView({
   onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
   transformNode?: CanonicalNode;
   onDropSource?: (nodeId: string) => string | null | void;
+  onDropOperation?: (operation: CanvasStagedOperationKind) => string | null;
   onOpenOutput?: () => void;
 }>): JSX.Element {
   const viewport = useCanvasRelationalTreeViewport();
@@ -52,15 +57,31 @@ function TreeView({
         <RelationalViewportSurface
           viewport={viewport}
           onDragOver={(event) => {
-            if (
-              onDropSource == null ||
-              !event.dataTransfer.types.includes(CANVAS_RELATIONAL_SOURCE_DRAG_TYPE)
-            )
+            if (!(
+              (onDropSource != null &&
+                event.dataTransfer.types.includes(CANVAS_RELATIONAL_SOURCE_DRAG_TYPE)) ||
+              (onDropOperation != null &&
+                event.dataTransfer.types.includes(CANVAS_RELATIONAL_OPERATION_DRAG_TYPE))
+            ))
               return;
             event.preventDefault();
             event.dataTransfer.dropEffect = 'copy';
           }}
           onDrop={(event) => {
+            const operation = readCanvasRelationalOperationDrag(event.dataTransfer);
+            if (operation != null && onDropOperation != null) {
+              event.preventDefault();
+              const bounds = viewport.contentRef.current?.getBoundingClientRect();
+              const id = onDropOperation(operation);
+              if (id != null && bounds != null) {
+                viewport.stopAutoFit();
+                setPosition(id, {
+                  x: Math.max(0, (event.clientX - bounds.left) / viewport.zoom),
+                  y: Math.max(0, (event.clientY - bounds.top) / viewport.zoom),
+                });
+              }
+              return;
+            }
             if (onDropSource == null) return;
             const nodeId = readCanvasRelationalSourceDrag(event.dataTransfer);
             if (nodeId == null) return;

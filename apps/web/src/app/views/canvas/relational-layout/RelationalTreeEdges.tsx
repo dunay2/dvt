@@ -4,6 +4,7 @@ import type {
   CanvasRelationalTreeLayout,
   CanvasRelationalTreePlacedEdge,
 } from '../canvasRelationalTreeGeometry';
+import type { CanvasStagedOperation } from '../canvasStagedOperation';
 
 function childRoleBadge(role: CanvasRelationalTreeChildRole, ordinal: number): string | null {
   if (role === 'left') return 'L';
@@ -41,8 +42,41 @@ function EdgeRoleBadge({ edge }: Readonly<{ edge: CanvasRelationalTreePlacedEdge
   );
 }
 
-export function RelationalTreeEdges({ layout }: Readonly<{ layout: CanvasRelationalTreeLayout }>) {
+export function RelationalTreeEdges({
+  layout,
+  stagedOperations = [],
+}: Readonly<{
+  layout: CanvasRelationalTreeLayout;
+  stagedOperations?: readonly CanvasStagedOperation[];
+}>) {
   const root = layout.nodes.find((node) => node.node.locator === layout.output?.inputLocator);
+  const placedByRelationId = new Map(
+    layout.nodes.flatMap((node) =>
+      node.node.relationId == null ? [] : [[node.node.relationId, node] as const]
+    )
+  );
+  const stagedEdges = stagedOperations.flatMap((operation) => {
+    const target = placedByRelationId.get(operation.id);
+    if (target == null) return [];
+    return operation.inputs.flatMap((relationId, port) => {
+      const source = relationId == null ? undefined : placedByRelationId.get(relationId);
+      if (source == null) return [];
+      const toY =
+        target.y + target.height * (operation.inputs.length === 1 ? 0.5 : port === 0 ? 0.35 : 0.65);
+      return [
+        {
+          key: `${operation.id}:${port}:${relationId}`,
+          parentLocator: operation.id,
+          role: port === 0 ? ('left' as const) : ('right' as const),
+          ordinal: port,
+          fromX: source.x + source.width,
+          fromY: source.y + source.height / 2,
+          toX: target.x,
+          toY,
+        },
+      ];
+    });
+  });
   return (
     <svg
       aria-hidden="true"
@@ -58,6 +92,18 @@ export function RelationalTreeEdges({ layout }: Readonly<{ layout: CanvasRelatio
           strokeWidth="1.5"
         />
       )}
+      {stagedEdges.map((edge) => (
+        <path
+          key={edge.key}
+          data-slot="canvas-relational-pending-edge"
+          data-port={edge.ordinal}
+          d={edgePath(edge)}
+          fill="none"
+          stroke="var(--status-info)"
+          strokeDasharray="4 4"
+          strokeWidth="1.5"
+        />
+      ))}
       {layout.nodes
         .filter((parent) => parent.node.children.length > 0)
         .map((parent) => (

@@ -23,6 +23,7 @@ import {
 import { openOperationMenu } from './operation-menu/operationMenu.test-support';
 import {
   connectWorkbenchSource,
+  connectStagedWorkbenchBinaryOperation,
   selectWorkbenchOperation,
 } from './CanvasRelationalTreeWorkbench.gestures.test-support';
 
@@ -70,6 +71,7 @@ describe('Canvas relational-tree Workbench cross', () => {
         container.querySelector<HTMLElement>('[data-slot="canvas-relational-tree-draft-viewport"]')!
       )
     );
+    await connectStagedWorkbenchBinaryOperation();
 
     expect(container.querySelectorAll('[data-operator="cross"]')).toHaveLength(1);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(2);
