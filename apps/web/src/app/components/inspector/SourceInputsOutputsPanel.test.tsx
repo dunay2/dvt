@@ -254,9 +254,9 @@ describe('SourceInputsOutputsPanel', () => {
       ],
     });
     expect(container.querySelectorAll('[role="option"]')).toHaveLength(3);
-    act(() =>
-      fireEvent.click(container.querySelector('[data-relationship-id="output:edge-model-1"]')!)
-    );
+    act(() => {
+      fireEvent.click(container.querySelector('[data-relationship-id="output:edge-model-1"]')!);
+    });
     render({ ...section, tableRows: [section.tableRows[2]!] });
     const remaining = container.querySelector<HTMLButtonElement>('[role="option"]')!;
     expect(remaining.getAttribute('aria-selected')).toBe('true');
