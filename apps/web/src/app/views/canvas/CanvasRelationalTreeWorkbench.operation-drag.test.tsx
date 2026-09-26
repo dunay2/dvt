@@ -21,7 +21,16 @@ import {
 import { openOperationMenu } from './operation-menu/operationMenu.test-support';
 import { appendWorkbenchJoin } from './CanvasRelationalTreeWorkbench.gestures.test-support';
 
-function transfer() {
+function transfer(): {
+  values: Map<string, string>;
+  dataTransfer: {
+    effectAllowed: string;
+    dropEffect: string;
+    types: string[];
+    getData: (type: string) => string;
+    setData: (type: string, value: string) => void;
+  };
+} {
   const values = new Map<string, string>();
   const types: string[] = [];
   return {
@@ -43,7 +52,7 @@ function drag(
   source: Element,
   target: Element,
   dataTransfer: ReturnType<typeof transfer>['dataTransfer']
-) {
+): void {
   const start = new Event('dragstart', { bubbles: true, cancelable: true });
   Object.defineProperty(start, 'dataTransfer', { value: dataTransfer });
   source.dispatchEvent(start);
