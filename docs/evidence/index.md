@@ -153,6 +153,7 @@ Evidence documents that justify or validate relevant changes.
 - [Planner environment input removal evidence](ED-20260902-planner-environment-contract-truth.md)
 - [Planner json-canonicalize 2.0.0 Upgrade](ED-20260603-planner-json-canonicalize-2-upgrade.md)
 - [Plugin Admission Architecture Hardening](ed-20260429-plugin-admission-architecture.md)
+- [Producer Input and passive Output boundary](ED-20260926-producer-consumer-input-boundary.md)
 - [Protected terminal Transform Preview](ED-20260911-terminal-transform-preview.md)
 - [Protected Transform row preview](ED-20260915-transform-row-preview.md)
 - [Repeated Read occurrence projection](ED-20260921-repeated-read-occurrence-projection.md)

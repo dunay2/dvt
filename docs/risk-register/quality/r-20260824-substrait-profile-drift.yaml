@@ -43,8 +43,26 @@ mitigation:
     repoints admission evidence from the removed JOIN-composition test to selected-condition
     persistence. Catalog contract checks require local canonical, semantic and negative proof
     references to resolve; a retired implementation cannot remain the advertised admission proof.
-    This changes no admitted identity or target status.
+    This changes no admitted identity or target status. The #3298 producer/consumer boundary adds
+    optional producerRef and inputBindings contracts: consumer Input stores provenance and explicit
+    internal operations alone define published Output. Stable producer FieldIds are validated
+    against the immediate published schema; excluded or missing fields cannot be recovered by
+    matching names. Exact-match migration may replace embedded producer trees, but does not guess
+    identity or widen semantic admission. Older strict clients may reject documents containing the
+    new optional fields, so Web, API and shared packages require coordinated deployment. Protected
+    preview continues to validate authorization, direct dependencies, cycles, physical source
+    coverage and a single connection before provider access. Incomplete draft persistence remains
+    separate from readiness. Browser fixture tests and protected API/SQL unit proofs do not
+    establish live PostgreSQL or complete chained StartRun support; bounded operational admission
+    remains unchanged.
   evidence:
+    - docs/evidence/ED-20260926-producer-consumer-input-boundary.md
+    - packages/@dvt/contracts/test/dvt-input-bindings.contract.test.ts
+    - packages/@dvt/substrait-analysis/test/producerInputRefresh.test.ts
+    - packages/@dvt/substrait-analysis/test/migrateEmbeddedProducerInput.test.ts
+    - packages/@dvt/postgres-projection/test/producerGraph.test.ts
+    - apps/api/test/application/services/previewCanvasProducerRows.test.ts
+    - apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ed-20260824-substrait-semantic-reference-traceability.md
     - docs/evidence/ED-20260826-vtx2-substrait-card-pilot.md

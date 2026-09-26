@@ -151,10 +151,20 @@ describe('Canvas explicit projection identity persistence', () => {
     const slots = await publishedSlots(session);
     const before = await session.query(session.rootId);
     expect(() =>
-      relationOutputIntent(slots, { nodeId: target.id, columnId: 'buyer', output: false })
+      relationOutputIntent(slots, {
+        nodeId: target.id,
+        columnId: 'buyer',
+        columnType: 'text',
+        output: false,
+      })
     ).toThrow(/outside the selected output/);
     expect(
-      relationOutputIntent(slots, { nodeId: target.id, columnId: 'output:customer', output: false })
+      relationOutputIntent(slots, {
+        nodeId: target.id,
+        columnId: 'output:customer',
+        columnType: 'text',
+        output: false,
+      })
     ).toEqual([
       {
         slot: slots.find((slot) => slot.output?.fieldId === 'output:order_id')!.slot,
