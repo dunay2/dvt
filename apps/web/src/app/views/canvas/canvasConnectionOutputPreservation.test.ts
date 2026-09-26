@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { CanonicalNode } from '../../types/canonical';
 import { getPluginPortMap } from '../../plugins/registry';
 import { graphModel, graphSource } from './canvasRelationGraph.test-support';
 import type { CanvasDraftSession } from './canvasDraftSession';
@@ -26,7 +27,7 @@ import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { composeSourceRelation } from './canvasComposeSourceRelation';
 import { projectInteractiveCanvasColumns } from './canvasGraphNodeColumnProjection';
 
-function scenario() {
+function scenario(): { model: CanonicalNode; nodes: CanonicalNode[]; draft: CanvasDraftSession } {
   const client = graphSource('client');
   client.metadata = {
     ...client.metadata,
