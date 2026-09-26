@@ -8,7 +8,10 @@ import {
   readLiveRunIds,
   seedLiveSelectedClosureDraft,
 } from '../../support/liveProtectedRuntime';
-import { openWorkbenchModel } from '../../support/relationalWorkbench/navigation';
+import {
+  openWorkbenchModel,
+  previewWorkbenchModel,
+} from '../../support/relationalWorkbench/navigation';
 import { readPersistedDocument } from '../../support/semanticLive/canonicalAssertions';
 import {
   importSemanticModel,
@@ -54,18 +57,17 @@ describe('Unsupported semantic selector on the protected runtime', () => {
     readPersistedDocument().then((saved) => {
       expect(saved).to.deep.equal(document);
     });
-    cy.get('[data-slot="canvas-model-open-data"]').click();
-    cy.get('[data-slot="canvas-model-data"]:visible [data-slot="canvas-model-preview"]')
-      .should('be.enabled')
-      .click();
+    previewWorkbenchModel(modelId);
     cy.wait('@rejectedRows', { timeout: 30_000 }).then(({ response }) => {
       expect(response?.statusCode).to.equal(422);
       expect(response!.body.error.type).to.equal('unprocessable_entity');
       expect(response!.body.error.reason).to.equal('transform_data_sample_failed');
       expect(response!.body).not.to.have.property('rows');
     });
-    cy.get('[data-slot="canvas-model-data"]:visible [role="alert"]').should('be.visible');
-    cy.get('[data-slot="canvas-model-data"]:visible table').should('not.exist');
+    cy.get('[data-slot="bottom-operational-drawer-data"]:visible [role="alert"]').should(
+      'be.visible'
+    );
+    cy.get('[data-slot="bottom-operational-drawer-data"]:visible table').should('not.exist');
     cy.screenshot('semantic-live-unsupported-data');
     readPersistedDocument().then((saved) => {
       expect(saved).to.deep.equal(document);

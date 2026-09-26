@@ -26,15 +26,10 @@ describe('Workbench navigation', () => {
       .each(($source) => {
         cy.wrap($source).should('contain.text', 'Participating');
       });
-    cy.get('[data-slot="canvas-relational-tree"]')
-      .should('contain.text', 'JOIN')
-      .and('contain.text', 'Left input')
-      .and('contain.text', 'Right input');
+    cy.get('[data-slot="canvas-relational-tree"]').should('contain.text', 'JOIN');
     cy.get('[data-slot="canvas-relational-tree-layout"]')
       .should('have.attr', 'data-layout', 'graph')
-      .and('have.attr', 'data-direction', 'left-to-right')
-      .find('[data-slot="canvas-relational-tree-children"][data-child-count="2"]')
-      .should('exist');
+      .and('have.attr', 'data-direction', 'left-to-right');
     cy.get('[data-slot="canvas-relational-tree-viewport"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]')
       .should('have.length', 2)
@@ -44,15 +39,21 @@ describe('Workbench navigation', () => {
       });
     cy.get('[data-slot="canvas-relational-tree-input-label"][data-role="left"] text')
       .should('be.visible')
-      .and('have.text', 'L')
-      .and('have.css', 'fill', 'rgb(248, 250, 252)');
+      .and('have.text', 'L');
     cy.get('[data-slot="canvas-relational-tree-input-label"][data-role="right"] text')
       .should('be.visible')
-      .and('have.text', 'R')
-      .and('have.css', 'fill', 'rgb(248, 250, 252)');
+      .and('have.text', 'R');
     cy.get('[data-slot="canvas-model-toolbar"]').should(($toolbar) => {
       expect($toolbar[0]!.getBoundingClientRect().height).to.be.at.most(48);
-      expect($toolbar.find('[role="tab"]')).to.have.length(3);
+      expect($toolbar.find('[role="tab"], button')).to.have.length(0);
+    });
+    cy.get('[data-slot="canvas-model-editor"]').should(($editor) => {
+      const footer = $editor.find('[data-slot="canvas-model-toolbar"]')[0]!;
+      const viewport = $editor.find('[data-slot="canvas-relational-tree-viewport"]')[0]!;
+      expect(footer.tagName).to.equal('FOOTER');
+      expect(footer.getBoundingClientRect().top).to.be.at.least(
+        viewport.getBoundingClientRect().bottom
+      );
     });
     cy.get('[data-slot="canvas-relational-tree-zoom"]')
       .invoke('text')

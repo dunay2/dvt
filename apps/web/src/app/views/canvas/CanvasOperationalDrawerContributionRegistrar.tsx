@@ -23,7 +23,7 @@ type CanvasOperationalDrawerContributionRegistrarProps = Readonly<{
   selectionRecoveryCommands: CanvasExecutionSelectionRecoveryCommands | null;
   dataSampleTabs: readonly OperationalDrawerDataSampleTab[];
   semanticBody?: ReactNode;
-  modelTabs?: readonly OperationalDrawerTab[];
+  operationDataTab?: OperationalDrawerTab;
 }>;
 
 export function CanvasOperationalDrawerContributionRegistrar({
@@ -36,7 +36,7 @@ export function CanvasOperationalDrawerContributionRegistrar({
   selectionRecoveryCommands,
   dataSampleTabs,
   semanticBody = null,
-  modelTabs,
+  operationDataTab,
 }: CanvasOperationalDrawerContributionRegistrarProps): null {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = useMemo(() => resolveCanvasViewCopy(applicationLanguage), [applicationLanguage]);
@@ -79,7 +79,7 @@ export function CanvasOperationalDrawerContributionRegistrar({
         selectionRecoveryMessages: copy,
         dataSampleTabs,
         semanticBody,
-        modelTabs,
+        operationDataTab,
         copy,
         onPreviewExecutionPlan: () => latestCommandsRef.current.onPreviewExecutionPlan(),
         onStartRun: () => latestCommandsRef.current.onStartRun(),
@@ -100,7 +100,7 @@ export function CanvasOperationalDrawerContributionRegistrar({
       stablePolicy,
       runControls,
       semanticBody,
-      modelTabs,
+      operationDataTab,
       selectionRecoveryCommands,
     ]
   );

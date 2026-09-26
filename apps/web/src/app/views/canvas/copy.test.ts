@@ -161,9 +161,9 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.canvasAddNodeCatalogSeedDescription).toBe(
       'Agrega un dataset seed estático gestionado por el proyecto.'
     );
-    expect(spanishCopy.draftSyncedLabel).toBe('Borrador sincronizado');
-    expect(spanishCopy.draftSavedLabel).toBe('Borrador guardado');
-    expect(spanishCopy.draftSaveFailedLabel).toBe('Guardado del borrador fallido');
+    expect(spanishCopy.draftSyncedLabel).toBe('Sincronizado');
+    expect(spanishCopy.draftSavedLabel).toBe('Guardado');
+    expect(spanishCopy.draftSaveFailedLabel).toBe('Error al guardar');
     expect(spanishCopy.newCanvasLabel).toBe('Nuevo canvas');
     expect(canvasViewCopy.selectionRecoveryRequestedRootsLabel).toBe('Selected nodes');
     expect(spanishCopy.selectionRecoveryRequestedRootsLabel).toBe('Nodos seleccionados');

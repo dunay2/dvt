@@ -15,7 +15,7 @@ import {
 
 describe('Canvas Model inspection', () => {
   setupSemanticEditorShell();
-  it('opens named SQL and data outputs in the existing drawer without replacing the editor', async () => {
+  it('opens only the model workspace and leaves existing data results in the drawer', async () => {
     const { data, fixture, previewTransformRows, onApplyNodeDraft } = await mountModel();
     await act(async () => data.onOpenNode?.(fixture.transform.id));
     const editor = harness.container.querySelector('[data-slot="canvas-model-editor"]');
@@ -24,18 +24,16 @@ describe('Canvas Model inspection', () => {
         .getState()
         .contribution?.tabs.some((tab) => tab.id.startsWith('sql:'))
     ).toBe(false);
-    for (const kind of ['sql', 'data']) {
-      await act(async () =>
-        harness.container
-          .querySelector<HTMLButtonElement>(`[data-slot="canvas-model-open-${kind}"]`)!
-          .click()
-      );
-      const drawer = useOperationalDrawerContributionStore.getState();
-      const tab = drawer.contribution?.tabs.find((item) => item.id === drawer.activeTab);
-      expect(tab?.id).toMatch(new RegExp(`^${kind}:`));
-      expect(tab?.label).toContain(fixture.transform.name);
-      expect(tab?.content).toBeDefined();
-    }
+    const toolbar = harness.container.querySelector('[data-slot="canvas-model-toolbar"]');
+    expect(toolbar?.tagName).toBe('FOOTER');
+    expect(editor?.firstElementChild).not.toBe(toolbar);
+    expect(editor?.lastElementChild).toBe(toolbar);
+    expect(toolbar?.querySelectorAll('button')).toHaveLength(0);
+    expect(
+      useOperationalDrawerContributionStore
+        .getState()
+        .contribution?.tabs.find((tab) => tab.id === 'data:operation')?.content
+    ).toBeDefined();
     expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBe(editor);
     expect(previewTransformRows).not.toHaveBeenCalled();
     expect(onApplyNodeDraft).not.toHaveBeenCalled();

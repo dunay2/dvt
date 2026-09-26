@@ -21,6 +21,19 @@ export function openWorkbenchModel(nodeId = 'join-transform'): void {
   cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
 }
 
+/** Request the model sample through the existing card action, not editor navigation. */
+export function previewWorkbenchModel(nodeId = 'join-transform'): void {
+  cy.get('[data-slot="canvas-workspace-tab"]').click();
+  cy.get(`.react-flow__node[data-id="${nodeId}"] [data-slot="canvas-node-execute"]`)
+    .focus()
+    .click();
+  cy.get(`[data-slot="bottom-operational-drawer-tab"][data-tab="data:${nodeId}"]`).should(
+    'have.attr',
+    'aria-selected',
+    'true'
+  );
+}
+
 export function dragWorkbenchSource(sourceLabel: string): void {
   cy.window().then((window) => {
     const dataTransfer = new window.DataTransfer();

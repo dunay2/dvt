@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import type { CanvasRelationalTreeWorkbenchHandle } from './useCanvasRelationalTreeWorkbenchHandle';
 import type { CanvasModelBlockedNavigation } from './CanvasModelNavigationGuard';
-import type { CanvasModelPreviewPreparation } from './CanvasModelDataView';
+import type { CanvasModelPreviewPreparation } from './canvasDraftLifecycle.types';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 

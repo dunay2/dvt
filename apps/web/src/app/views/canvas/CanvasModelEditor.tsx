@@ -1,4 +1,4 @@
-/** Owned concern: compose the full-width Model workspace from existing semantic, SQL and data owners. */
+/** Owned concern: compose the semantic Model workspace and its draft lifecycle. */
 import './canvasSemanticEditor.css';
 import { useRef, useState } from 'react';
 import { CanvasModelToolbar } from './CanvasModelToolbar';
@@ -18,7 +18,7 @@ import {
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { CanvasOperationPreviewPorts } from './CanvasOperationDataPreview';
-import type { CanvasModelPreviewPreparation } from './CanvasModelDataView';
+import type { CanvasModelPreviewPreparation } from './canvasDraftLifecycle.types';
 import { CanvasModelNavigationGuard } from './CanvasModelNavigationGuard';
 
 export function CanvasModelEditor({
@@ -27,7 +27,6 @@ export function CanvasModelEditor({
   nodes,
   edges,
   authoring,
-  outputs,
   draftStatus,
   query,
   preparePreview,
@@ -44,7 +43,6 @@ export function CanvasModelEditor({
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
   authoring?: CanvasRelationalTreeAuthoringContract;
-  outputs?: Readonly<{ onOpenSql?: () => void; onOpenData?: () => void }>;
   draftStatus: CanvasDraftStatusState;
   query?: ICanvasTransformDataSampleQueryPort;
   preparePreview?: CanvasModelPreviewPreparation;
@@ -84,15 +82,13 @@ export function CanvasModelEditor({
   return (
     <CanvasModelEditorTemplate
       label={`${transformNode.name} · ${copy.editor}`}
-      toolbar={
+      footer={
         <CanvasModelToolbar
           data={{
             modelName: transformNode.name,
             draftStatus,
-            sqlLabel: copy.sql,
-            dataLabel: copy.viewData,
           }}
-          actions={{ ...outputs, onActionsHost: setActionsHost }}
+          actions={{ onActionsHost: setActionsHost }}
         />
       }
       editor={

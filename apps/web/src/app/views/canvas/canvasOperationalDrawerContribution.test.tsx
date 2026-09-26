@@ -30,7 +30,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
         planStatusSummary: props.chromeState.planStatusSummary,
         onPreviewExecutionPlan: vi.fn(),
         onStartRun: vi.fn(),
-        modelTabs: [operationDataTab],
+        operationDataTab,
       });
       expect(contribution.tabs.find((tab) => tab.id === operationDataTab.id)).toBe(
         allowData ? operationDataTab : undefined

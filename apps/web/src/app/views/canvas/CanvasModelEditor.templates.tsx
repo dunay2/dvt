@@ -1,14 +1,14 @@
-/** Passive layout only; the coordinator owns navigation, authoring and output queries. */
+/** Passive layout: semantic canvas above the compact session footer. */
 import type { ReactNode } from 'react';
 
 export function CanvasModelEditorTemplate({
   label,
-  toolbar,
+  footer,
   editor,
   guards,
 }: Readonly<{
   label: string;
-  toolbar: ReactNode;
+  footer: ReactNode;
   editor: ReactNode;
   guards: ReactNode;
 }>) {
@@ -18,9 +18,9 @@ export function CanvasModelEditorTemplate({
       aria-label={label}
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-(--surface-app) text-(--text-default)"
     >
-      {toolbar}
       <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">{editor}</div>
       {guards}
+      {footer}
     </section>
   );
 }

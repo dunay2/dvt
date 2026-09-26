@@ -76,7 +76,6 @@ function Editor(props: {
   draftStatus?: CanvasDraftStatusState;
   preparePreview?: React.ComponentProps<typeof CanvasModelEditor>['preparePreview'];
   onClose?: () => void;
-  outputs?: React.ComponentProps<typeof CanvasModelEditor>['outputs'];
 }): React.JSX.Element {
   return (
     <CanvasModelEditor
@@ -85,7 +84,6 @@ function Editor(props: {
       nodes={[source, model]}
       edges={edges}
       authoring={props.authoring}
-      outputs={props.outputs}
       draftStatus={props.draftStatus ?? durableStatus}
       preparePreview={props.preparePreview}
       onClose={props.onClose ?? vi.fn()}
@@ -193,18 +191,17 @@ describe('CanvasModelEditor navigation', () => {
     expect(document.querySelector('[role="alertdialog"]')).toBeNull();
   });
 
-  it('opens outputs without applying or discarding the local composition', async () => {
+  it('keeps only draft actions in the session toolbar during an unapplied composition', async () => {
     const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' }) as const);
-    const outputs = { onOpenSql: vi.fn(), onOpenData: vi.fn() };
     await act(async () =>
-      root.render(<Editor outputs={outputs} authoring={{ canEditNode: true, onApplyNodeDraft }} />)
+      root.render(<Editor authoring={{ canEditNode: true, onApplyNodeDraft }} />)
     );
     await beginProjection(container);
     const card = container.querySelector('[data-operator="project"]');
-    await act(async () => findButton('SQL').click());
-    await act(async () => findButton('View data').click());
-    expect(outputs.onOpenSql).toHaveBeenCalledOnce();
-    expect(outputs.onOpenData).toHaveBeenCalledOnce();
+    const toolbar = container.querySelector('[data-slot="canvas-model-toolbar"]')!;
+    expect(toolbar.querySelectorAll('button')).toHaveLength(2);
+    expect(toolbar.querySelector('[data-slot="canvas-relational-tree-apply"]')).not.toBeNull();
+    expect(toolbar.querySelector('[data-slot="canvas-relational-tree-cancel"]')).not.toBeNull();
     expect(container.querySelector('[data-operator="project"]')).toBe(card);
     expect(document.querySelector('[role="alertdialog"]')).toBeNull();
     expect(onApplyNodeDraft).not.toHaveBeenCalled();

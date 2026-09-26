@@ -6,7 +6,10 @@ import {
   hasLiveProtectedRuntimeEnv,
   seedLiveSelectedClosureDraft,
 } from '../../support/liveProtectedRuntime';
-import { openWorkbenchModel } from '../../support/relationalWorkbench/navigation';
+import {
+  openWorkbenchModel,
+  previewWorkbenchModel,
+} from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import {
   expectCanonicalOrdering,
@@ -77,14 +80,14 @@ describe('Persisted semantic editing through protected Preview and Run', () => {
         sortId = $card.attr('data-relation-id')!;
       })
       .click();
+    cy.get('[data-slot="canvas-relational-edit"]').click();
     cy.get(
       '[data-slot="canvas-relational-tree-inline-editor"]:visible select[aria-label="Direction and nulls 1"]'
     ).select('DESC · NULLS LAST');
     cy.get(
       '[data-slot="canvas-relational-tree-inline-editor"]:visible button[type="submit"]'
     ).click();
-    cy.get('[data-slot="canvas-model-open-data"]').click();
-    cy.contains('[role="alertdialog"] button', 'Apply and continue').click();
+    cy.get('[data-slot="canvas-relational-tree-apply"]').click();
     cy.get('[role="alertdialog"]').should('not.exist');
     cy.then(() => readPersistedDocument(beforeEdit.semanticPlan.sha256)).then((document) => {
       persisted = document;
@@ -129,8 +132,7 @@ describe('Persisted semantic editing through protected Preview and Run', () => {
     });
     cy.get('[data-slot="canvas-operation-data-preview"] table').should('contain.text', 'C-014');
     cy.screenshot('semantic-live-reopened-operation-data');
-    cy.get('[data-slot="canvas-model-open-data"]').click();
-    cy.get('[data-slot="canvas-model-data"]:visible [data-slot="canvas-model-preview"]').click();
+    previewWorkbenchModel(modelId);
     cy.wait('@liveRows', { timeout: 30_000 }).then(({ request, response }) => {
       expect(new URL(request.url).searchParams.get('relationId')).to.equal(null);
       expect(response?.statusCode).to.equal(200);

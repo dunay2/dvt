@@ -5,6 +5,7 @@ import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canva
 import { getE2eApiCalls } from '../../support/e2eApiStub';
 import {
   openWorkbenchModel,
+  previewWorkbenchModel,
   visitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
@@ -66,12 +67,10 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
       cy.get(
         '[data-slot="canvas-relational-tree-inline-editor"]:visible button[type="submit"]'
       ).click();
-      cy.get('[data-slot="canvas-model-open-data"]').click();
       cy.get('[role="alertdialog"]').should('not.exist');
       cy.then(() => expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(0));
       cy.get('[data-slot="canvas-relational-tree-apply"]').click();
       cy.get('[role="alertdialog"]').should('not.exist');
-      cy.get('[data-slot="canvas-model-data"]:visible').should('be.visible');
       cy.wrap(null).should(() => {
         const document = semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!) as {
           semanticPlan: { sha256: string };
@@ -93,12 +92,12 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
         expect(count.value.literalType).to.deep.equal({ case: 'i64', value: 100n });
       });
       cy.then(() => expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(0));
-      cy.get('[data-slot="canvas-model-data"]:visible [data-slot="canvas-model-preview"]').click();
-      cy.get('[data-slot="canvas-model-data"]:visible table').should('contain.text', 'C-001');
+      previewWorkbenchModel();
+      cy.get('[data-slot="bottom-operational-drawer-data"] table').should('contain.text', 'C-001');
       cy.then(() => {
         const call = getE2eApiCalls(/\/data-sample/, 'GET').at(-1)!;
         expect(call.url.searchParams.get('relationId')).to.equal(null);
-        cy.get(`[data-slot="canvas-model-data"]:visible [title="${savedDigest}"]`).should('exist');
+        expect(call.url.searchParams.get('semanticPlanSha256')).to.equal(savedDigest);
       });
       cy.get('[data-slot="canvas-model-main-tab"]').click();
       cy.get('[data-slot="canvas-relational-tree-node"][aria-selected="true"]').should(

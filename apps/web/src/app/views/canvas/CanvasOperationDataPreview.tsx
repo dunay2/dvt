@@ -3,7 +3,7 @@ import { createContext, useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import type { CanvasModelPreviewPreparation } from './CanvasModelDataView';
+import type { CanvasModelPreviewPreparation } from './canvasDraftLifecycle.types';
 import { CanvasModelDataPanel } from './CanvasModelDataPanel';
 import { useCanvasModelDataQuery } from './useCanvasModelDataQuery';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
