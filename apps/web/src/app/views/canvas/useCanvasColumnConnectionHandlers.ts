@@ -1,5 +1,4 @@
 /** Owned concern: translate column-port gestures into governed column commands. */
-import { type Edge, type Node, type ReactFlowProps } from '@xyflow/react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -7,59 +6,22 @@ import type {
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnReorderIdentity,
 } from '../../plugins/graph/graphNodeColumnContracts';
-import type { CanonicalNode } from '../../types/canonical';
 import { automapCanvasColumns } from './canvasColumnAutomap';
+import { removeCanvasColumnMapping } from './canvasColumnMappingAuthoring';
+import { resolveCanvasSessionNode } from './canvasColumnMappingModel';
 import {
-  applyCanvasColumnMapping,
-  removeCanvasColumnMapping,
-} from './canvasColumnMappingAuthoring';
-import type { CanvasColumnMappingRejection } from './canvasColumnMappingModel';
-import { resolveCanvasColumnMappingTarget } from './canvasColumnProjectionAuthority';
+  useCanvasColumnMappingGesture,
+  formatColumnMappingRejection,
+} from './useCanvasColumnMappingGesture';
 import {
   createCanvasColumnHandleId,
-  parseCanvasColumnHandleId,
   type CanvasColumnHandleIdentity,
   type CanvasColumnLineageEdgeData,
 } from './canvasColumnLineageProjection';
-import type {
-  CanvasEdgeAuthoringContracts,
-  CanvasEdgeAuthoringState,
-} from './canvasGraphHandlerContracts';
+import type { CanvasEdgeAuthoringContracts } from './canvasGraphHandlerContracts';
 import { canvasViewCopy } from './copy';
 import type { CanvasColumnAuthoringCommandRunner } from './useCanvasColumnAuthoringCommandRunner';
-import {
-  resolveCanvasRelationalPredicateSeed,
-  type CanvasRelationalPredicateSeed,
-} from './canvasRelationalPredicateSeed';
-
-type PendingConnection = Parameters<NonNullable<ReactFlowProps<Node, Edge>['onConnect']>>[0];
-
-function formatColumnMappingRejection(reason: CanvasColumnMappingRejection): string {
-  if (reason === 'source_not_connected') {
-    return canvasViewCopy.columnMappingRequiresDependencyMessage;
-  }
-  if (reason === 'complex_expression_not_editable') {
-    return canvasViewCopy.columnMappingComplexExpressionMessage;
-  }
-  if (reason === 'no_compatible_mappings') {
-    return canvasViewCopy.columnMappingNoCompatibleColumnsMessage;
-  }
-  if (reason === 'source_output_required') {
-    return canvasViewCopy.sourceOutputRequiredMessage;
-  }
-  if (reason === 'source_output_last_field') {
-    return canvasViewCopy.sourceOutputLastFieldMessage;
-  }
-  return canvasViewCopy.columnMappingUnavailableMessage;
-}
-
-function resolveCurrentNode(
-  draftSession: CanvasEdgeAuthoringState['draftSession'],
-  canonicalNodesById: CanvasEdgeAuthoringState['canonicalNodesById'],
-  nodeId: string
-): CanonicalNode | undefined {
-  return draftSession.localNodeCatalog?.[nodeId] ?? canonicalNodesById.get(nodeId);
-}
+import { type CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 
 export function useCanvasColumnConnectionHandlers(
   { state, effects, policy }: CanvasEdgeAuthoringContracts,
@@ -69,67 +31,13 @@ export function useCanvasColumnConnectionHandlers(
   const [relationalPredicateSeed, setRelationalPredicateSeed] =
     useState<CanvasRelationalPredicateSeed | null>(null);
   const { canonicalNodesById, draftSession } = state;
-  const { setDraftSession, setInspectorNode } = effects;
+  const { setDraftSession } = effects;
   const { canEditEdges } = policy;
 
-  const tryColumnConnection = useCallback(
-    (connection: PendingConnection): boolean => {
-      const sourceHandle = parseCanvasColumnHandleId(connection.sourceHandle);
-      const targetHandle = parseCanvasColumnHandleId(connection.targetHandle);
-      if (sourceHandle == null && targetHandle == null) return false;
-      if (
-        !canEditEdges ||
-        sourceHandle?.direction !== 'source' ||
-        targetHandle?.direction !== 'target' ||
-        sourceHandle.nodeId !== connection.source ||
-        targetHandle.nodeId !== connection.target
-      ) {
-        toast.error(
-          canEditEdges
-            ? canvasViewCopy.columnMappingUnavailableMessage
-            : canvasViewCopy.mutationUnavailableMessage
-        );
-        return true;
-      }
-      const targetNode = resolveCurrentNode(draftSession, canonicalNodesById, targetHandle.nodeId);
-      const target =
-        targetNode == null
-          ? null
-          : resolveCanvasColumnMappingTarget(targetNode, targetHandle.columnId);
-      if (target == null) {
-        toast.error(canvasViewCopy.columnMappingUnavailableMessage);
-        return true;
-      }
-      const relationSeed = resolveCanvasRelationalPredicateSeed({
-        draftSession,
-        canonicalNodesById,
-        source: { nodeId: sourceHandle.nodeId, columnId: sourceHandle.columnId },
-        target,
-      });
-      if (relationSeed != null) {
-        setRelationalPredicateSeed(relationSeed);
-        setPendingSource(null);
-        setInspectorNode(relationSeed.targetNodeId, 'columns');
-        toast.info(canvasViewCopy.columnRelationProposedMessage);
-        return true;
-      }
-      const result = applyCanvasColumnMapping({
-        draftSession,
-        canonicalNodesById,
-        source: { nodeId: sourceHandle.nodeId, columnId: sourceHandle.columnId },
-        target,
-      });
-      if (result.outcome === 'rejected') {
-        toast.error(formatColumnMappingRejection(result.reason));
-        return true;
-      }
-      setDraftSession(result.draftSession);
-      setPendingSource(null);
-      setRelationalPredicateSeed(null);
-      toast.success(canvasViewCopy.columnMappingAddedMessage);
-      return true;
-    },
-    [canEditEdges, canonicalNodesById, draftSession, setDraftSession, setInspectorNode]
+  const tryColumnConnection = useCanvasColumnMappingGesture(
+    { state, effects, policy },
+    columnAuthoringCommandRunner,
+    { setPendingSource, setRelationalPredicateSeed }
   );
 
   const handleColumnPortActivate = useCallback(
@@ -217,7 +125,11 @@ export function useCanvasColumnConnectionHandlers(
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
-      const targetNode = resolveCurrentNode(draftSession, canonicalNodesById, mapping.targetNodeId);
+      const targetNode = resolveCanvasSessionNode(
+        draftSession,
+        canonicalNodesById,
+        mapping.targetNodeId
+      );
       if (targetNode == null) {
         toast.error(canvasViewCopy.columnMappingUnavailableMessage);
         return;

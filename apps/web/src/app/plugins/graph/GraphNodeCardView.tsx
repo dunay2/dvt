@@ -2,7 +2,7 @@
 
 import { type ReactElement } from 'react';
 import { cn } from '../../components/ui/utils';
-import { GraphNodeColumnSection } from './GraphNodeColumnSection';
+import { GraphNodeColumnViews } from './GraphNodeColumnViews';
 import { GraphNodeMetricRow } from './GraphNodeMetricRow';
 import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
 import { GraphNodeTagList } from './GraphNodeTagList';
@@ -113,7 +113,7 @@ export function GraphNodeCardView({
           getSelectTagLabel={getSelectTagLabel}
         />
 
-        {columnSection == null ? null : <GraphNodeColumnSection {...columnSection} />}
+        {columnSection == null ? null : <GraphNodeColumnViews {...columnSection} />}
       </div>
 
       {onOpenOperationalDetails == null || interactiveOperationalDetail == null ? (

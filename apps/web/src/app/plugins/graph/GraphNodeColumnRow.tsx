@@ -75,7 +75,9 @@ export function GraphNodeColumnRow(props: {
       column={column}
       isOutput={isOutput}
       canReorder={reorder.canReorder(column)}
-      outputToggleDisabled={nodeId == null || props.onColumnOutputToggle == null}
+      outputToggleDisabled={
+        column.outputToggleDisabled === true || nodeId == null || props.onColumnOutputToggle == null
+      }
       copy={copy}
       showSourceName={props.showSourceName}
       nodeId={nodeId}

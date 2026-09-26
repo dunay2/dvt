@@ -19,6 +19,7 @@ function compositionOperation(
   const index = analysis.semantic?.index;
   let entry = index?.relations.get(index.rootId);
   while (entry != null) {
+    if (analysis.connectedModelRelationIds.includes(entry.binding.relationId)) return null;
     const operation = canvasPresentationOperationForRel(entry.relation);
     if (
       isCanvasJoinOperation(operation) ||

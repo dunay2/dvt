@@ -47,11 +47,18 @@ export function useCanvasRelationOutputCommand(
       const execute = async (): Promise<CanvasColumnMappingResult> => {
         try {
           signal.throwIfAborted();
-          const { node } = run((current) => ({
+          const { node, sourceConnected } = run((current) => ({
             outcome: 'no_changes',
             node: resolveCanvasSessionNode(current, nodes, intent.nodeId),
+            sourceConnected:
+              !('source' in intent) ||
+              intent.source == null ||
+              current.workingSet.visibleEdges.some(
+                (edge) => edge.sourceId === intent.source!.nodeId && edge.targetId === intent.nodeId
+              ),
           }));
           if (node == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
+          if (!sourceConnected) return { outcome: 'rejected', reason: 'source_not_connected' };
           const authority = readDvtTransformAuthoringAuthority(node);
           if (
             node.kind !== 'dvt:transform' ||

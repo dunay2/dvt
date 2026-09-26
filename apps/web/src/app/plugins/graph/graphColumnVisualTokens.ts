@@ -1,6 +1,11 @@
 /** Owned concern: graphColumnVisualTokens. */
 
 export const graphNodeColumnClasses = {
+  views: 'mt-2 gap-0',
+  viewList:
+    'nodrag nopan h-7 w-full justify-start rounded-none border-b border-slate-700 bg-transparent p-0',
+  viewTrigger:
+    'flex-none rounded-none border-0 border-b-2 border-transparent px-3 py-1 text-xs data-[state=active]:border-blue-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none',
   shell: 'mt-2 border-t border-slate-700 pt-2',
   toggle:
     'flex w-full items-center justify-between text-xs text-slate-300 transition-colors hover:text-white',

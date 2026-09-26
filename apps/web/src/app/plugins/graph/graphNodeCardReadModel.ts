@@ -3,10 +3,8 @@ import type { CanonicalNode } from '../../types/canonical';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import { resolveNodeKindRegistration } from '../nodeTypeRegistry';
 import { defaultGraphNodeCardStrategy } from './defaultGraphNodeCardStrategy';
-import {
-  resolveGraphNodeColumnInteractionProps,
-  type GraphNodeColumn,
-} from './graphNodeColumnContracts';
+import type { GraphNodeColumn } from './graphNodeColumnContracts';
+import { resolveGraphNodeColumnInteractionProps } from './graphNodeColumnInteractionProps';
 import type {
   GraphNodeCardReadModel,
   GraphNodeCardStrategy,

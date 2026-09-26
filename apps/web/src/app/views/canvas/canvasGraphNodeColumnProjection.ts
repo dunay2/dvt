@@ -65,7 +65,9 @@ export function projectInteractiveCanvasColumns(
     const interactiveId = functionProjection?.columnId ?? id;
     const sourceColumnId =
       sourceNode?.kind === 'dvt:transform'
-        ? presentationColumn?.reference
+        ? presentationColumn?.provenance === 'inherited'
+          ? presentationColumn.reference
+          : (presentationColumn?.sourceReference ?? presentationColumn?.reference)
         : presentationColumn?.name;
     return {
       ...column,
@@ -116,6 +118,28 @@ export function projectGraphNodeColumn(
           children: column.children.map((child) => projectGraphNodeColumn(child, output)),
         }),
   };
+}
+
+/** Inputs retain producer identity; output actions address the consumer's canonical slot. */
+export function projectGraphNodeCardInputs(
+  truth: CanvasNodePresentationTruth,
+  columns: readonly GraphNodeColumn[]
+): readonly GraphNodeColumn[] {
+  return truth.columns.inherited.map((input) => {
+    const matches = columns.filter(
+      (column) =>
+        column.source?.nodeId === input.sourceNodeId &&
+        (column.source?.columnId === input.reference || column.source?.columnId === input.name)
+    );
+    const output = matches.length === 1 ? matches[0] : undefined;
+    return {
+      ...projectGraphNodeColumn(input, output?.output === true),
+      ...output,
+      name: input.name,
+      sourceNodeName: input.sourceNodeName,
+      outputToggleDisabled: output == null,
+    };
+  });
 }
 
 function representsInheritedInput(

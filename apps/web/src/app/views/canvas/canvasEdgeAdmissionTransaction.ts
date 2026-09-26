@@ -15,6 +15,7 @@ import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSessio
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
 import { rebaseStaleTransformProjection } from './canvasTransformSourceReplacement';
+import { initializeConnectedModelProjection } from './canvasConnectedModelProjection';
 
 type CanvasEdgeAdmissionTransactionState = {
   canonicalNodesById: Map<string, CanonicalNode>;
@@ -78,6 +79,16 @@ async function applyCreatedConnectionColumnMappings(args: {
   if (targetNode?.pluginId !== 'dvt' || targetNode.kind !== 'dvt:transform') {
     return args.transaction;
   }
+  const connectedModel = await initializeConnectedModelProjection({
+    target: targetNode,
+    nodes,
+    edges: args.transaction.draftSession.workingSet.visibleEdges,
+  });
+  if (connectedModel != null)
+    return {
+      ...args.transaction,
+      draftSession: canvasDraftSession.workingSet.upsertNode(rebasedDraftSession, connectedModel),
+    };
   const targetColumns = (
     await projectCanvasNodePresentationTruth({
       node: targetNode,

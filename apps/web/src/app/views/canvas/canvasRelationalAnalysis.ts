@@ -12,6 +12,10 @@ import {
 } from './canvasDvtCompositionInputCatalog';
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import {
+  matchesCanvasSubstraitUpstream,
+  type IndexedCanvasDocument,
+} from './canvasSubstraitUpstreamBinding';
 import type {
   CanvasRelationalTreeInput,
   CanvasRelationalTreeProjectionResult,
@@ -27,6 +31,7 @@ export type CanvasRelationalAnalysis = Readonly<{
   transformNodeId: string;
   isTransform: boolean;
   connectedInputCount: number;
+  connectedModelRelationIds: readonly string[];
   inputs: readonly CanvasDvtCompositionInput[];
   projectedInputs: readonly CanvasRelationalTreeInput[];
   semantic: Readonly<{
@@ -47,7 +52,8 @@ export function canvasSourceReferenceKey(ref: ConnectedSourceRef): string {
 
 function projectInputs(
   index: SubstraitRelationIndex,
-  inputs: readonly CanvasDvtCompositionInput[]
+  inputs: readonly CanvasDvtCompositionInput[],
+  producers: ReadonlyMap<string, string>
 ): readonly CanvasRelationalTreeInput[] {
   const connected = new Map<string, CanvasDvtCompositionInput>();
   for (const input of inputs) {
@@ -64,11 +70,13 @@ function projectInputs(
       const key = canvasSourceReferenceKey(sourceRef);
       participating.add(key);
       const input = connected.get(key);
+      const producerId = producers.get(binding.relationId);
       return {
         sourceRef,
-        sourceNodeId: input?.nodeId ?? null,
+        sourceNodeId: producerId ?? input?.nodeId ?? null,
         relationId: binding.relationId,
-        state: input == null ? ('missing' as const) : ('participating' as const),
+        state:
+          input == null && producerId == null ? ('missing' as const) : ('participating' as const),
       };
     });
   const pending = inputs
@@ -105,27 +113,48 @@ export function analyzeCanvasRelations(
     isTransform,
     inputs,
     connectedInputCount,
+    connectedModelRelationIds: [],
     projectedInputs: [],
     semantic: null,
   };
   if (!isTransform) return { ...base, failure: 'invalid-semantic-authority' };
-  if (inputs.length !== connectedInputCount)
-    return { ...base, failure: 'input-identity-unavailable' };
   try {
+    const incomingIds = new Set(
+      args.edges.filter((edge) => edge.targetId === args.node.id).map((edge) => edge.sourceId)
+    );
+    const producers = new Map<string, IndexedCanvasDocument>();
+    for (const node of args.nodes) {
+      if (!incomingIds.has(node.id) || node.pluginId !== 'dvt' || node.kind !== 'dvt:transform')
+        continue;
+      const producerAuthority = readDvtTransformAuthoringAuthority(node);
+      if (producerAuthority == null) continue;
+      const document = decodeDvtSubstraitSemanticDocument(producerAuthority.semanticDocument);
+      const indexed = indexSubstraitRelations(document);
+      if (indexed.ok) producers.set(node.id, { document, index: indexed.index });
+    }
+    if (inputs.length + producers.size !== connectedInputCount)
+      return { ...base, failure: 'input-identity-unavailable' };
     const authority = readDvtTransformAuthoringAuthority(args.node);
     if (authority == null) return { ...base, failure: 'missing-semantic-authority' };
     const document = decodeDvtSubstraitSemanticDocument(authority.semanticDocument);
     const indexed = indexSubstraitRelations(document);
     if (!indexed.ok) return { ...base, failure: 'invalid-semantic-authority' };
+    const covered = new Map<string, string>();
+    for (const [id, producer] of producers) {
+      if (!matchesCanvasSubstraitUpstream({ document, index: indexed.index }, producer))
+        return { ...base, failure: 'input-identity-unavailable' };
+      for (const relationId of producer.index.relations.keys()) covered.set(relationId, id);
+    }
     return {
       ...base,
       failure: null,
+      connectedModelRelationIds: [...producers.values()].map((producer) => producer.index.rootId),
       semantic: {
         index: indexed.index,
         digest: authority.semanticDocument.semanticPlan.sha256,
         document,
       },
-      projectedInputs: projectInputs(indexed.index, inputs),
+      projectedInputs: projectInputs(indexed.index, inputs, covered),
     };
   } catch {
     return { ...base, failure: 'invalid-semantic-authority' };

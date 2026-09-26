@@ -76,6 +76,20 @@ function harness(): {
 
 describe('canonical card output command', () => {
   setupWorkbenchTest();
+  it('rejects a field transfer from an unrelated producer without changing the draft', async () => {
+    const h = harness();
+    const before = h.current;
+    expect(
+      await h.submit({
+        nodeId: 'model',
+        columnId: h.fields[0]!.fieldId,
+        columnType: 'string',
+        output: true,
+        source: { nodeId: 'unrelated', columnId: 'other' },
+      })
+    ).toEqual({ outcome: 'rejected', reason: 'source_not_connected' });
+    expect(h.current).toBe(before);
+  });
   it('serializes overlapping reorder and exclusion against the latest canonical draft', async () => {
     const h = harness();
     const first = h.fields[0]!;

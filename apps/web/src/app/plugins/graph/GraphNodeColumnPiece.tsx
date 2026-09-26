@@ -15,6 +15,7 @@ import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 import { GraphNodeColumnChildren } from './GraphNodeColumnChildren';
 import { useGraphColumnOutputFocus } from './useGraphColumnOutputFocus';
+import { writeGraphColumnTransfer } from './graphColumnTransfer';
 
 export type GraphNodeColumnCopy = ReturnType<typeof resolveGraphNodeCardCopy>;
 
@@ -70,8 +71,14 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
         data-output={String(isOutput)}
         tabIndex={0}
         aria-label={accessibleLabel}
-        draggable={canReorder}
-        onDragStart={onDragStart}
+        draggable={canReorder || (isOutput && nodeId != null && column.sourceHandleId != null)}
+        onDragStart={(event) => {
+          if (isOutput && nodeId != null) {
+            event.stopPropagation();
+            writeGraphColumnTransfer(event, nodeId, column);
+          }
+          onDragStart(event);
+        }}
         onDragEnd={onDragEnd}
         className={graphNodeColumnClasses.piece}
       >

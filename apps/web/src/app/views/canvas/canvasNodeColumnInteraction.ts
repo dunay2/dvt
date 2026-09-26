@@ -8,7 +8,10 @@ import { projectCanvasColumnFunctionMenus } from './canvasColumnFunctionMenuProj
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import { isDvtSourceOutputProjectionNode } from './canvasDvtSourceSemanticAuthoring';
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
-import { projectInteractiveCanvasColumns } from './canvasGraphNodeColumnProjection';
+import {
+  projectInteractiveCanvasColumns,
+  projectGraphNodeCardInputs,
+} from './canvasGraphNodeColumnProjection';
 import { resolveCanvasColumnPortDirections } from './canvasColumnLineageProjection';
 
 type ColumnInteractionContext = {
@@ -90,7 +93,8 @@ export function projectCanvasNodeColumnInteraction(
 
   const projectedNodeData = {
     ...node.data,
-    onColumnPortActivate: canAuthorColumnMappings ? node.data.onColumnPortActivate : undefined,
+    onColumnPortActivate:
+      canAuthorColumnMappings || hasRelationOutputs ? node.data.onColumnPortActivate : undefined,
     onApplyCanvasColumnFunction: hasEditableProjection
       ? node.data.onApplyCanvasColumnFunction
       : undefined,
@@ -122,10 +126,15 @@ export function projectCanvasNodeColumnInteraction(
         : undefined,
     onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
     columns: interactiveColumns,
+    inputColumns:
+      canonicalNode?.role === 'transform' && presentation != null
+        ? projectGraphNodeCardInputs(presentation, interactiveColumns)
+        : undefined,
     columnPortDirections:
       columnsCurrent && canonicalNode != null
         ? canonicalNode.role === 'transform' &&
           !canAuthorColumnMappings &&
+          !hasRelationOutputs &&
           !hasReadOnlyColumnLineage &&
           !canAuthorDbtModelColumns
           ? []
