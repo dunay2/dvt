@@ -38,7 +38,7 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
     openWorkbenchModel();
     let originalReads: string[] = [];
     let originalAlias = '';
-    let writesBeforeRename = 0;
+    let documentBeforeRename: unknown;
     let selectedFields: string[] = [];
     cy.get('[data-operator="read"]')
       .should('have.length', 2)
@@ -52,9 +52,16 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
     cy.get('[data-slot="canvas-relational-tree-append-input"]').should('be.visible').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
-    cy.wrap(null).should(() => expect(semanticWrites('join-transform')).to.have.length(1));
+    cy.wrap(null).should(() => {
+      const write = semanticWrites('join-transform').at(-1);
+      expect(write).not.to.equal(undefined);
+      const document = decodeDvtSubstraitSemanticDocument(semanticDocumentFromWrite(write!));
+      expect(
+        document.sidecar.relations.filter((binding) => binding.sourceRef != null)
+      ).to.have.length(3);
+    });
     cy.then(() => {
-      writesBeforeRename = semanticWrites('join-transform').length;
+      documentBeforeRename = semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!);
     });
     cy.get('[data-operator="read"]').should('have.length', 3).last().click();
     cy.get('[data-slot="canvas-relational-edit"]').click();
@@ -69,7 +76,12 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
     });
     cy.get('[data-slot="source-occurrence-alias"]').should('have.attr', 'aria-invalid', 'true');
     cy.get('[data-slot="source-occurrence-update"]').should('be.disabled');
-    cy.then(() => expect(semanticWrites('join-transform')).to.have.length(writesBeforeRename));
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
+    cy.then(() => {
+      expect(semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!)).to.deep.equal(
+        documentBeforeRename
+      );
+    });
     cy.get('[data-slot="source-occurrence-alias"]').clear().type('Regional customers');
     cy.get('[data-slot="source-occurrence-update"]').click();
     cy.get('[data-operator="read"]').last().should('contain.text', 'Regional customers');
