@@ -43,17 +43,23 @@ export type CanvasRelationalTreePlacedEdge = Readonly<{
 export type CanvasRelationalTreeLayout = Readonly<{
   width: number;
   height: number;
-  output: Readonly<{ x: number; y: number; width: number; height: number }>;
+  output: Readonly<{ x: number; y: number; width: number; height: number }> | null;
   nodes: readonly CanvasRelationalTreePlacedNode[];
   edges: readonly CanvasRelationalTreePlacedEdge[];
 }>;
 
 export function layoutCanvasRelationalTree(
-  root: CanvasRelationalTreeNode,
+  root: CanvasRelationalTreeNode | null,
   sizes: ReadonlyMap<string, CanvasRelationalTreeNodeSize> = new Map(),
-  positions: ReadonlyMap<string, CardPosition> = new Map()
+  positions: ReadonlyMap<string, CardPosition> = new Map(),
+  detached: readonly CanvasRelationalTreeNode[] = []
 ): CanvasRelationalTreeLayout {
-  const { depths, rootDepth, rows, columnLeft, sizeFor } = measureCanvasRelationalTree(root, sizes);
+  const first = root ?? detached[0];
+  if (first == null) return { width: 0, height: 0, output: null, nodes: [], edges: [] };
+  const { depths, rootDepth, rows, columnLeft, sizeFor } = measureCanvasRelationalTree(
+    first,
+    sizes
+  );
   const nodes: CanvasRelationalTreePlacedNode[] = [];
   const edges: CanvasRelationalTreePlacedEdge[] = [];
   const positionFor = (node: CanvasRelationalTreeNode): CardPosition =>
@@ -99,21 +105,37 @@ export function layoutCanvasRelationalTree(
     });
   };
 
-  place(root, null, null, 0, 1);
-  const rootNode = nodes[0]!;
-  const output = {
-    x: rootNode.x + rootNode.width + OUTPUT_GAP,
-    y: rootNode.y,
-    width: OUTPUT_WIDTH,
-    height: NODE_HEIGHT,
-  };
+  if (root != null) place(root, null, null, 0, 1);
+  const rootNode = nodes[0];
+  const output =
+    rootNode == null
+      ? null
+      : {
+          x: rootNode.x + rootNode.width + OUTPUT_GAP,
+          y: rootNode.y,
+          width: OUTPUT_WIDTH,
+          height: NODE_HEIGHT,
+        };
+  const bottom = Math.max(0, ...nodes.map((node) => node.y + node.height)) + BOTTOM_PADDING;
+  detached.forEach((node, ordinal) =>
+    nodes.push({
+      node,
+      ...(positions.get(node.relationId ?? node.locator) ?? {
+        x: HORIZONTAL_PADDING,
+        y: bottom + ordinal * (NODE_HEIGHT + BOTTOM_PADDING),
+      }),
+      ...sizeFor(node),
+      level: 1,
+      parentLocator: null,
+      role: null,
+      ordinal,
+      siblingCount: detached.length,
+    })
+  );
+  const bounds = output == null ? nodes : [...nodes, output];
   return {
-    width:
-      Math.max(output.x + OUTPUT_WIDTH, ...nodes.map((node) => node.x + node.width)) +
-      HORIZONTAL_PADDING,
-    height:
-      Math.max(...nodes.map((node) => node.y + node.height), output.y + output.height) +
-      BOTTOM_PADDING,
+    width: Math.max(...bounds.map((node) => node.x + node.width)) + HORIZONTAL_PADDING,
+    height: Math.max(...bounds.map((node) => node.y + node.height)) + BOTTOM_PADDING,
     output,
     nodes,
     edges,

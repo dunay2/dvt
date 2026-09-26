@@ -20,7 +20,7 @@ import EdgesSource from './relational-layout/RelationalTreeEdges.tsx?raw';
 import ContentSource from './CanvasRelationalTreeContent.tsx?raw';
 import MovementSource from './relational-layout/useRelationalCardMovement.ts?raw';
 import SessionActionsSource from './CanvasRelationalTreeSessionActions.tsx?raw';
-import BlockCanvasSource from './CanvasRelationalTreeBlockCanvas.tsx?raw';
+import AuthoringSource from './CanvasRelationalTreeAuthoring.tsx?raw';
 import CatalogueSource from './CanvasRelationalTreeSourceCatalogue.tsx?raw';
 import DraftViewportSource from './CanvasRelationalTreeDraftViewport.tsx?raw';
 import InlineEditorSource from './CanvasRelationalTreeInlineEditor.tsx?raw';
@@ -82,7 +82,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(ExistingDraftSource.split('\n').length).toBeLessThan(80);
     expect(ExistingSeedSource.split('\n').length).toBeLessThan(80);
     expect(CompositionSource.split('\n').length).toBeLessThan(200);
-    expect(BlockCanvasSource.split('\n').length).toBeLessThan(140);
+    expect(AuthoringSource.split('\n').length).toBeLessThan(140);
     expect(DraftViewportSource.split('\n').length).toBeLessThan(170);
     expect(OperationShelfSource.split('\n').length).toBeLessThan(140);
     expect(ReplacementDialogSource.split('\n').length).toBeLessThan(80);
@@ -122,7 +122,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
       UseViewportSource,
       ZoomSource,
       DetailSource,
-      BlockCanvasSource,
+      AuthoringSource,
       DraftViewportSource,
       OperationShelfSource,
       InlineEditorSource,
@@ -148,9 +148,9 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(WorkbenchSource).toContain('CanvasRelationalTreeSessionActions');
     expect(WorkbenchSource).not.toContain('CanvasRelationalTreeAuthoringPrompt');
     expect(WorkbenchSource).not.toContain('CanvasRelationalTreeDraftView');
-    expect(BlockCanvasSource).not.toContain('CanvasRelationalTreeOperationPanel');
-    expect(BlockCanvasSource).toContain('CanvasRelationalTreeOperationShelf');
-    expect(BlockCanvasSource).toContain('CanvasRelationalTreeDraftViewport');
+    expect(AuthoringSource).not.toContain('CanvasRelationalTreeOperationPanel');
+    expect(AuthoringSource).toContain('CanvasRelationalTreeOperationShelf');
+    expect(AuthoringSource).toContain('CanvasRelationalTreeDraftViewport');
     expect(WorkbenchSource).not.toContain('minmax(15rem,20rem)');
     expect(DetailSource).not.toContain('<dl');
     expect(DetailSource).toContain('projectSemanticWorkbenchGraph');
@@ -160,7 +160,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(GraphNodeSource).toContain('CanvasRelationalScalarTree');
     expect(DetailSource).toContain('CanvasRelationalScalarTree');
     expect(CardDetailSource).not.toContain('onApplyNodeDraft');
-    expect(BlockCanvasSource).toContain('selectedRelationId');
+    expect(AuthoringSource).toContain('selectedRelationId');
     expect(InlineEditorSource).toContain('selectedRelationId');
   });
 

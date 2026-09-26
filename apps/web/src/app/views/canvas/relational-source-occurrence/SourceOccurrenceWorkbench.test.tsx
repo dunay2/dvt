@@ -32,6 +32,9 @@ describe('explicit source occurrence controls', () => {
     expect(add).not.toBeNull();
     expect(add!.disabled).toBe(false);
     await act(async () => add!.click());
+    const pendingId = container
+      .querySelector('[data-pending="true"]')!
+      .getAttribute('data-relation-id');
     expect(
       container.querySelector('[data-slot="canvas-relational-tree-append-join-input"]')
     ).not.toBeNull();
@@ -62,6 +65,8 @@ describe('explicit source occurrence controls', () => {
     );
     const reads = Array.from(container.querySelectorAll('[data-operator="read"]'));
     expect(reads).toHaveLength(3);
+    expect(reads.map((read) => read.getAttribute('data-relation-id'))).toContain(pendingId);
+    expect(container.querySelector('[data-pending="true"]')).toBeNull();
     expect(new Set(reads.map((read) => read.getAttribute('data-relation-id'))).size).toBe(3);
     expect(container.querySelectorAll('[data-slot="canvas-relational-tree-source"]')).toHaveLength(
       1

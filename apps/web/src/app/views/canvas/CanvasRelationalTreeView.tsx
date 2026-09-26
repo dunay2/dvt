@@ -3,7 +3,10 @@
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanonicalNode } from '../../types/canonical';
 import type { ComponentProps } from 'react';
-import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
+import {
+  RelationalLayoutSession,
+  useRelationalLayout,
+} from './relational-layout/RelationalLayoutSession';
 import { RelationalViewportSurface } from './relational-layout/RelationalViewportSurface';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import { CanvasRelationalTreeLayout } from './CanvasRelationalTreeLayout';
@@ -34,10 +37,11 @@ function TreeView({
   onExpand?: (locator: string) => void;
   onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
   transformNode?: CanonicalNode;
-  onDropSource?: (nodeId: string) => void;
+  onDropSource?: (nodeId: string) => string | null | void;
   onOpenOutput?: () => void;
 }>): JSX.Element {
   const viewport = useCanvasRelationalTreeViewport(root.locator);
+  const { setPosition } = useRelationalLayout();
 
   return (
     <section
@@ -61,7 +65,15 @@ function TreeView({
             const nodeId = readCanvasRelationalSourceDrag(event.dataTransfer);
             if (nodeId == null) return;
             event.preventDefault();
-            onDropSource(nodeId);
+            const bounds = viewport.contentRef.current?.getBoundingClientRect();
+            const id = onDropSource(nodeId);
+            if (typeof id === 'string' && bounds != null) {
+              viewport.stopAutoFit();
+              setPosition(id, {
+                x: Math.max(0, (event.clientX - bounds.left) / viewport.zoom),
+                y: Math.max(0, (event.clientY - bounds.top) / viewport.zoom),
+              });
+            }
           }}
         >
           <div

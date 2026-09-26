@@ -2,7 +2,8 @@
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
-import { CanvasRelationalTreeBlockCanvas } from './CanvasRelationalTreeBlockCanvas';
+import { CanvasRelationalTreeAuthoring } from './CanvasRelationalTreeAuthoring';
+import { projectCanvasRelationalTreeAuthoringView } from './canvasRelationalTreeAuthoringView';
 import { CanvasRelationalTreeCommandError } from './CanvasRelationalTreeCommandError';
 import { CanvasRelationalTreeInspection } from './CanvasRelationalTreeInspection';
 import type { CanvasModelOutputInspectorState } from './CanvasRelationalTreeSideInspector';
@@ -45,32 +46,16 @@ function CanvasRelationalTreeContentView({
   modelOutput,
 }: CanvasRelationalTreeContentProps): JSX.Element {
   if (model.authoringAvailable && (model.projection == null || model.session.active)) {
-    const { session } = model;
     return (
-      <CanvasRelationalTreeBlockCanvas
+      <CanvasRelationalTreeAuthoring
+        {...projectCanvasRelationalTreeAuthoringView(
+          { model, transformNode, nodes, edges },
+          onSelectRelation
+        )}
         onPendingConditionChange={onPendingConditionChange}
-        initiallyExpanded={expanded}
-        appendInput={session.appendInput}
-        choices={session.choices}
+        expanded={expanded}
+        onExpandedChange={onExpandedChange}
         copy={copy}
-        edges={edges}
-        inputs={model.inputs}
-        joinDraft={session.joinDraft}
-        selectedRelationId={model.selectedRelationId}
-        onSelectRelation={onSelectRelation}
-        onReconcileSelection={model.selectRelation}
-        nodes={nodes}
-        operation={session.operation}
-        primaryInputId={session.primaryInputId}
-        secondaryInputId={session.secondaryInputId}
-        selectedInputIds={session.selectedInputIds}
-        transformNode={transformNode}
-        onAppendJoinInput={session.appendJoinInput}
-        onChangeJoinDraft={session.setJoinDraft}
-        onRemove={session.removal.remove}
-        onPlaceInput={session.placeInput}
-        onSelectInput={session.selectInput}
-        onSelectOperation={session.selectOperation}
       />
     );
   }

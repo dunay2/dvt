@@ -33,7 +33,8 @@ describe('canvas relational-tree graph geometry', () => {
     const leaves = layout.nodes.filter((node) => node.node.operator === 'read');
 
     expect(leaves.every((node) => node.x < join.x)).toBe(true);
-    expect(layout.output.x).toBeGreaterThan(join.x);
+    expect(layout.output).not.toBeNull();
+    expect(layout.output!.x).toBeGreaterThan(join.x);
     expect(layout.edges.map((edge) => edge.role)).toEqual(['left', 'right']);
     expect(new Set(leaves.map((node) => node.y)).size).toBe(2);
   });
@@ -54,9 +55,10 @@ describe('canvas relational-tree graph geometry', () => {
       ['lower', { width: 420, height: 240 }],
     ]);
     const layout = layoutCanvasRelationalTree(root, sizes);
+    expect(layout.output).not.toBeNull();
     for (const placed of layout.nodes) {
       expect(placed.height).toBe(sizes.get(placed.node.locator)?.height ?? 76);
-      expect(placed.x + placed.width).toBeLessThan(layout.output.x);
+      expect(placed.x + placed.width).toBeLessThan(layout.output!.x);
       expect(placed.y + placed.height).toBeLessThan(layout.height);
       for (const other of layout.nodes.filter((node) => node !== placed)) {
         const overlap =
@@ -67,5 +69,18 @@ describe('canvas relational-tree graph geometry', () => {
         expect(overlap, `${placed.node.locator} overlaps ${other.node.locator}`).toBe(false);
       }
     }
+  });
+  it('places disconnected instances without inventing edges or an output', () => {
+    const pending = [relation('first'), relation('second')];
+    const positions = new Map([['second', { x: 300, y: 200 }]]);
+    const layout = layoutCanvasRelationalTree(null, new Map(), positions, pending);
+    expect(layout.output).toBeNull();
+    expect(layout.edges).toEqual([]);
+    expect(layout.nodes).toHaveLength(2);
+    expect(layout.nodes.find((node) => node.node.relationId === 'second')).toMatchObject(
+      positions.get('second')!
+    );
+    expect(layout.width).toBeGreaterThan(300);
+    expect(layout.height).toBeGreaterThan(200);
   });
 });

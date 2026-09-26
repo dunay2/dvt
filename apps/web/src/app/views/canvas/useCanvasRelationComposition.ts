@@ -12,10 +12,13 @@ import { composeSourceRelation } from './canvasComposeSourceRelation';
 import { replaceSelectedComposition } from './canvasReplaceSelectedComposition';
 import { createCanvasRelationalTreeOperationDraft } from './canvasRelationalTreeOperationDraft';
 import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
+import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 
 export function useCanvasRelationComposition(
   args: Readonly<{
     analysis: ReturnType<typeof useCanvasRelationAnalysisSession>;
+    pendingSource?: PendingSourceOccurrence | null;
+    onSourceConsumed?: (id: string) => void;
     appendInputId: string | null;
     choices: readonly CanvasRelationalOperationChoice[];
     inputs: readonly CanvasDvtCompositionInput[];
@@ -44,9 +47,17 @@ export function useCanvasRelationComposition(
     const input = args.inputs.find((candidate) => candidate.nodeId === nodeId);
     if (input == null) return false;
     const accepted = await command.execute((session, target) =>
-      composeSourceRelation(session, { ...target, input, operation, predicate })
+      composeSourceRelation(session, {
+        ...target,
+        input,
+        operation,
+        predicate,
+        occurrence: args.pendingSource?.read,
+      })
     );
     if (accepted) {
+      if (args.pendingSource != null)
+        args.onSourceConsumed?.(args.pendingSource.read.binding.relationId);
       args.appendOperand(nodeId);
       args.setOperation(operation);
       args.setAppendInputId(null);
@@ -70,6 +81,8 @@ export function useCanvasRelationComposition(
         const document = createCanvasRelationalTreeOperationDraft({ ...args, operation });
         setInitialError(document == null);
         if (document != null) {
+          if (args.pendingSource != null)
+            args.onSourceConsumed?.(args.pendingSource.read.binding.relationId);
           args.setDraft(document);
           args.setOperation(operation);
         }

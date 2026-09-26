@@ -48,7 +48,59 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
           $reads[0]!.querySelector('[data-slot="canvas-relational-node-title"]')?.textContent ?? '';
         expect(originalAlias).not.to.equal('');
       });
-    cy.get('[data-slot="source-occurrence-add"]').first().click();
+    const dataTransfer = new DataTransfer();
+    let pendingId = '';
+    let zoom = '';
+    cy.get('[data-slot="canvas-relational-tree"]').then(($tree) => {
+      zoom = $tree[0]!.style.zoom;
+    });
+    cy.get('[data-slot="canvas-relational-tree-source"]')
+      .first()
+      .should('have.attr', 'draggable', 'true')
+      .trigger('dragstart', { dataTransfer });
+    cy.get('[data-slot="canvas-relational-tree-viewport"]').then(($viewport) => {
+      const bounds = $viewport[0]!.getBoundingClientRect();
+      cy.wrap($viewport)
+        .trigger('dragover', { dataTransfer })
+        .trigger('drop', { dataTransfer, clientX: bounds.left + 240, clientY: bounds.top + 230 });
+    });
+    cy.get('[data-slot="canvas-relational-tree-draft"]').should(($tree) => {
+      expect($tree[0]!.style.zoom).to.equal(zoom);
+    });
+    cy.get('[data-pending="true"]')
+      .should('have.length', 1)
+      .should('be.visible')
+      .then(($read) => {
+        pendingId = $read.attr('data-relation-id')!;
+        const bounds = $read[0]!.getBoundingClientRect();
+        const card = $read[0]!.closest('li')!;
+        const initial = { left: card.style.left, top: card.style.top };
+        cy.wrap($read).trigger('pointerdown', {
+          pointerId: 1,
+          button: 0,
+          clientX: bounds.left + 20,
+          clientY: bounds.top + 20,
+        });
+        cy.get('[data-slot="canvas-relational-tree-layout"]')
+          .trigger('pointermove', {
+            pointerId: 1,
+            clientX: bounds.left + 90,
+            clientY: bounds.top + 60,
+          })
+          .trigger('pointerup', {
+            pointerId: 1,
+            clientX: bounds.left + 90,
+            clientY: bounds.top + 60,
+          });
+        cy.get('[data-pending="true"]').should(($moved) => {
+          const moved = $moved[0]!.closest('li')!;
+          expect(moved.style.left).not.to.equal(initial.left);
+          expect(moved.style.top).not.to.equal(initial.top);
+          expect($moved.attr('data-relation-id')).to.equal(pendingId);
+        });
+      });
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
+    cy.get('[data-pending="true"]').click();
     cy.get('[data-slot="canvas-relational-tree-append-input"]').should('be.visible').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
@@ -59,6 +111,9 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
       expect(
         document.sidecar.relations.filter((binding) => binding.sourceRef != null)
       ).to.have.length(3);
+      expect(
+        document.sidecar.relations.some((binding) => binding.relationId === pendingId)
+      ).to.equal(true);
     });
     cy.then(() => {
       documentBeforeRename = semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!);

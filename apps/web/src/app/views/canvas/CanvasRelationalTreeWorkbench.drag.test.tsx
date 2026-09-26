@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 /** Owned concern: relational workbench drag behavior. */
 import React, { act } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.fixtures';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import {
   createDvtSubstraitProjectionDraft,
@@ -20,8 +21,130 @@ import {
 } from './CanvasRelationalTreeWorkbench.test-support';
 import { openOperationMenu } from './operation-menu/operationMenu.test-support';
 
+async function dropSource(sourceId: string, x = 400, y = 300): Promise<void> {
+  const drop = new MouseEvent('drop', { bubbles: true, cancelable: true, clientX: x, clientY: y });
+  Object.defineProperty(drop, 'dataTransfer', {
+    value: {
+      types: ['application/x-dvt-relational-source'],
+      getData: (type: string) => (type === 'application/x-dvt-relational-source' ? sourceId : ''),
+    },
+  });
+  await act(async () =>
+    container
+      .querySelector(
+        '[data-slot="canvas-relational-tree-draft-viewport"], [data-slot="canvas-relational-tree-viewport"]'
+      )!
+      .dispatchEvent(drop)
+  );
+}
+
 describe('Canvas relational-tree Workbench drag', () => {
   setupWorkbenchTest();
+  it('creates independent pending instances on repeated drops and discards them without writes', async () => {
+    const graph = occurrenceGraph();
+    const apply = vi.fn();
+    await act(async () =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={graph.targetNode}
+          nodes={graph.nodes}
+          edges={graph.edges}
+          copy={COPY}
+          authoring={{ canEditNode: true, onApplyNodeDraft: apply }}
+        />
+      )
+    );
+    const original = Array.from(container.querySelectorAll('[data-operator="read"]'), (node) =>
+      node.getAttribute('data-relation-id')
+    );
+    for (let ordinal = 0; ordinal < 3; ordinal++) {
+      await dropSource(graph.source.id, 400 + ordinal * 40);
+      expect(
+        container.querySelectorAll('[data-operator="read"][data-pending="true"]')
+      ).toHaveLength(ordinal + 1);
+    }
+    const reads = Array.from(container.querySelectorAll('[data-operator="read"]'));
+    const ids = reads.map((node) => node.getAttribute('data-relation-id'));
+    expect(new Set(ids).size).toBe(original.length + 3);
+    expect(ids).toEqual(expect.arrayContaining(original));
+    const labels = reads.map(
+      (node) => node.querySelector('[data-slot="canvas-relational-node-title"]')?.textContent
+    );
+    expect(new Set(labels).size).toBe(reads.length);
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
+        ?.disabled
+    ).toBe(true);
+    expect(apply).not.toHaveBeenCalled();
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-cancel"]')!
+        .click()
+    );
+    expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(original.length);
+    expect(apply).not.toHaveBeenCalled();
+  });
+  it('starts a new model with the dropped instance without replacing its identity', async () => {
+    const source = sourceNode('customers', 'customers');
+    const target = transformNode();
+    await act(async () =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={target}
+          nodes={[source, target]}
+          edges={[edge(source.id)]}
+          copy={COPY}
+          authoring={{ canEditNode: true, onApplyNodeDraft: vi.fn() }}
+        />
+      )
+    );
+    await dropSource(source.id);
+    const pending = container.querySelector<HTMLButtonElement>('[data-pending="true"]')!;
+    const id = pending.getAttribute('data-relation-id');
+    expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(1);
+    expect(container.querySelector('[data-operator="join"]')).toBeNull();
+    await act(async () => pending.click());
+    openOperationMenu(container);
+    await act(async () =>
+      document
+        .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-projection"]')!
+        .click()
+    );
+    expect(container.querySelector('[data-pending="true"]')).toBeNull();
+    expect(
+      container.querySelector('[data-operator="read"]')?.getAttribute('data-relation-id')
+    ).toBe(id);
+    expect(container.querySelector('[data-operator="project"]')).not.toBeNull();
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')!
+        .disabled
+    ).toBe(false);
+  });
+  it('rejects catalogue drops in a read-only model', async () => {
+    const graph = occurrenceGraph();
+    const apply = vi.fn();
+    await act(async () =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={graph.targetNode}
+          nodes={graph.nodes}
+          edges={graph.edges}
+          copy={COPY}
+          authoring={{ canEditNode: false, onApplyNodeDraft: apply }}
+        />
+      )
+    );
+    expect(
+      container
+        .querySelector('[data-slot="canvas-relational-tree-source"]')
+        ?.getAttribute('draggable')
+    ).toBe('false');
+    await dropSource(graph.source.id);
+    expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(2);
+    expect(apply).not.toHaveBeenCalled();
+  });
   it('keeps the applied tree mounted during drag and stages a second input only on drop', async () => {
     const customers = sourceNode('customers', 'customers');
     const orders = sourceNode('orders', 'orders');
@@ -84,7 +207,12 @@ describe('Canvas relational-tree Workbench drag', () => {
 
     expect(container.querySelector('[data-slot="canvas-relational-tree"]')).toBe(appliedTree);
     expect(container.querySelector('[data-slot="canvas-relational-tree-apply"]')).toBeNull();
-    const drop = new Event('drop', { bubbles: true, cancelable: true });
+    const drop = new MouseEvent('drop', {
+      bubbles: true,
+      cancelable: true,
+      clientX: 300,
+      clientY: 200,
+    });
     Object.defineProperty(drop, 'dataTransfer', { value: dataTransfer });
     values.set('application/x-dvt-relational-source', 'not-connected');
     await act(async () => {
@@ -95,6 +223,9 @@ describe('Canvas relational-tree Workbench drag', () => {
     await act(async () => {
       container.querySelector('[data-slot="canvas-relational-tree-viewport"]')!.dispatchEvent(drop);
     });
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-pending="true"]')!.click()
+    );
     openOperationMenu(container);
     expect(container.querySelector('[data-operator="project"]')).not.toBeNull();
     expect(container.querySelector('[data-operator="read"]')?.textContent).toContain('customers');

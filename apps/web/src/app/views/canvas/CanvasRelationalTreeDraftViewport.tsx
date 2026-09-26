@@ -1,63 +1,50 @@
 /** Owned concern: render and accept drops on one scalable canonical relational draft graph. */
 import { useMemo, type ComponentProps } from 'react';
-import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
+import {
+  RelationalLayoutSession,
+  useRelationalLayout,
+} from './relational-layout/RelationalLayoutSession';
+import type {
+  CanvasRelationalTreeAuthoringDto,
+  CanvasRelationalTreeAuthoringActions,
+} from './canvasRelationalTreeAuthoringView';
 import { RelationalViewportSurface } from './relational-layout/RelationalViewportSurface';
 import { CanvasRelationalTreeOperandCanvas } from './CanvasRelationalTreeOperandCanvas';
 import { useCanvasRelationalDraftProjection } from './useCanvasRelationalDraftProjection';
 
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
-import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import {
   readCanvasRelationalOperationDrag,
   readCanvasRelationalSourceDrag,
 } from './canvasRelationalTreeDrag';
-import type { CanvasRelationalOperandPosition } from './CanvasRelationalTreeOperandSlot';
 import { CanvasRelationalTreeLayout } from './CanvasRelationalTreeLayout';
 import { CanvasRelationalTreeZoomControls } from './CanvasRelationalTreeZoomControls';
 import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewport';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-import type { SubstraitDocument } from '@dvt/substrait-analysis';
 
 function DraftViewport({
   copy,
-  edges,
-  inputs,
-  joinDraft,
-  nodes,
-  operation,
-  primaryInputId,
-  secondaryInputId,
-  selectedInputIds,
-  transformNode,
-  onPlaceInput,
-  onSelectInput,
-  onSelectOperation,
-  selectedRelationId,
-  onSelectRelation,
-  onReconcileSelection,
+  data,
+  actions,
   onExpandRelation,
-  onRemove,
 }: Readonly<{
   copy: CanvasRelationalTreeWorkbenchCopy;
-  edges: readonly CanonicalEdge[];
-  inputs: readonly CanvasDvtCompositionInput[];
-  joinDraft: SubstraitDocument | null;
-  nodes: readonly CanonicalNode[];
-  operation: CanvasRelationalOperation | null;
-  primaryInputId: string | null;
-  secondaryInputId: string | null;
-  selectedInputIds: readonly string[];
-  transformNode: CanonicalNode;
-  onPlaceInput: (nodeId: string, position: CanvasRelationalOperandPosition) => void;
-  onSelectInput: (nodeId: string) => void;
-  onSelectOperation: (operation: CanvasRelationalOperation, relationId?: string) => void;
-  selectedRelationId: string | null;
-  onSelectRelation: (relationId: string | null) => void;
-  onReconcileSelection: (relationId: string | null) => void;
+  data: CanvasRelationalTreeAuthoringDto;
+  actions: CanvasRelationalTreeAuthoringActions;
   onExpandRelation: (relationId: string | null) => void;
-  onRemove: (relationId: string, keep?: 'left' | 'right') => void;
 }>): JSX.Element {
+  const {
+    inputs,
+    selectedRelationId,
+    draft: joinDraft,
+    operation,
+    primaryInputId,
+    secondaryInputId,
+    selectedInputIds,
+    pendingSources,
+    nodes,
+    edges,
+    transformNode,
+  } = data;
   const inputById = useMemo(
     () => new Map(inputs.map((input) => [input.nodeId, input] as const)),
     [inputs]
@@ -69,18 +56,13 @@ function DraftViewport({
   } = useCanvasRelationalDraftProjection(
     { edges, joinDraft, nodes, operation, transformNode },
     selectedRelationId,
-    onReconcileSelection
+    actions.reconcileSelection
   );
   const viewport = useCanvasRelationalTreeViewport(
     `${draftProjection?.root.locator ?? ''}:${selectedInputIds.join(',')}:${operation}`
   );
 
-  const placeDroppedSource = (nodeId: string): void => {
-    if (selectedInputIds.includes(nodeId)) return;
-    if (primaryInputId == null) onPlaceInput(nodeId, 'primary');
-    else if (secondaryInputId == null && operation == null) onPlaceInput(nodeId, 'secondary');
-    else onSelectInput(nodeId);
-  };
+  const { setPosition } = useRelationalLayout();
 
   return (
     <div className="relative min-h-0 min-w-0 flex-1">
@@ -95,19 +77,31 @@ function DraftViewport({
           event.preventDefault();
           const droppedOperation = readCanvasRelationalOperationDrag(event.dataTransfer);
           if (droppedOperation != null)
-            return onSelectOperation(droppedOperation, selectedRelationId ?? undefined);
+            return actions.selectOperation(droppedOperation, selectedRelationId ?? undefined);
           const nodeId = readCanvasRelationalSourceDrag(event.dataTransfer);
-          if (nodeId != null) placeDroppedSource(nodeId);
+          if (nodeId != null) {
+            const bounds =
+              viewport.contentRef.current?.getBoundingClientRect() ??
+              event.currentTarget.getBoundingClientRect();
+            const id = actions.dropSource(nodeId);
+            if (id != null) {
+              viewport.stopAutoFit();
+              setPosition(id, {
+                x: Math.max(0, (event.clientX - bounds.left) / viewport.zoom),
+                y: Math.max(0, (event.clientY - bounds.top) / viewport.zoom),
+              });
+            }
+          }
         }}
       >
-        {draftProjection == null ? (
+        {draftProjection == null && pendingSources.length === 0 ? (
           <CanvasRelationalTreeOperandCanvas
             copy={copy}
             primaryInput={primaryInputId == null ? null : (inputById.get(primaryInputId) ?? null)}
             secondaryInput={
               secondaryInputId == null ? null : (inputById.get(secondaryInputId) ?? null)
             }
-            onPlaceInput={onPlaceInput}
+            onPlaceInput={actions.placeInput}
           />
         ) : (
           <div
@@ -117,8 +111,14 @@ function DraftViewport({
             style={{ zoom: viewport.zoom }}
           >
             <CanvasRelationalTreeLayout
+              occurrences={{
+                pending: pendingSources,
+                selectedId: data.selectedPendingId,
+                select: actions.selectPending,
+                remove: actions.removePending,
+              }}
               outputName={transformNode.name}
-              root={draftProjection.root}
+              root={draftProjection?.root ?? null}
               selectedLocator={selectedLocator}
               copy={copy}
               zoom={viewport.zoom}
@@ -126,13 +126,13 @@ function DraftViewport({
               onManualLayout={viewport.stopAutoFit}
               semanticContext={{ transformNode, draft: joinDraft ?? undefined }}
               onExpand={(locator) => onExpandRelation(relationIdFor(locator))}
-              onRemove={onRemove}
-              onSelect={(locator) => onSelectRelation(relationIdFor(locator))}
+              onRemove={actions.remove}
+              onSelect={(locator) => actions.selectRelation(relationIdFor(locator))}
             />
           </div>
         )}
       </RelationalViewportSurface>
-      {draftProjection == null ? null : (
+      {draftProjection == null && pendingSources.length === 0 ? null : (
         <div className="absolute bottom-3 left-3 z-10 rounded-md border border-(--border-subtle) bg-(--surface-panel) p-1 shadow-md">
           <CanvasRelationalTreeZoomControls
             copy={copy}

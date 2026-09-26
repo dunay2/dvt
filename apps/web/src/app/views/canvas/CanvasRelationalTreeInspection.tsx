@@ -44,7 +44,7 @@ export function CanvasRelationalTreeInspection(
           selectedLocator={model.selectedLocator}
           copy={copy}
           onSelect={model.selectTreeNode}
-          onDropSource={model.authoringAvailable ? model.session.selectInput : undefined}
+          onDropSource={model.authoringAvailable ? model.session.occurrences.drop : undefined}
           onRemove={model.authoringAvailable ? model.session.removal.remove : undefined}
           onExpand={(locator) => {
             modelOutput.setOpen(false);

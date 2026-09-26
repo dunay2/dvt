@@ -8,9 +8,13 @@ import { createSourceDocument } from './canvasSourceDocument';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 
 export function createCanvasRelationalTreeProjectionDraft(
-  args: Readonly<{ input: CanvasDvtCompositionInput; targetNodeId: string }>
+  args: Readonly<{
+    input: CanvasDvtCompositionInput;
+    targetNodeId: string;
+    occurrence?: ReturnType<typeof createSourceRelation>;
+  }>
 ) {
-  const read = createSourceRelation(toSourceRelationInput(args.input), 1);
+  const read = args.occurrence ?? createSourceRelation(toSourceRelationInput(args.input), 1);
   const relationId = allocateDvtRelationId();
   const fields = read.fields.map((field) => ({
     ...field,

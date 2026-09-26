@@ -40,19 +40,17 @@ export function useCanvasRelationalTreeAuthoringSession(
     setJoinDraft,
     appendInputId,
     setAppendInputId,
+    pendingSources,
+    setPendingSources,
+    pendingSourceId,
+    pendingSource,
+    setPendingSourceId,
+    consumePendingSource,
     applyRejection,
     setApplyRejection,
     reset,
     hydrate: hydrateExistingState,
   } = useCanvasRelationalTreeDraftState();
-  const {
-    appendInput: appendOperand,
-    placeInput: placeOperand,
-    primaryInputId,
-    secondaryInputId,
-    selectedInputIds,
-    selectInitialInput,
-  } = slots;
   const { hydrateExisting, baselineDraft, seed } = useCanvasRelationalTreeExistingSeed({
     document: args.document,
     projection: args.projection,
@@ -62,7 +60,7 @@ export function useCanvasRelationalTreeAuthoringSession(
   const effectiveDraft = !active && seed != null ? seed.draft : joinDraft;
   const analysis = useCanvasRelationAnalysisSession(effectiveDraft, transformNode.id);
   const output = useCanvasRelationFields(null, analysis).result;
-  const effectiveInputIds = !active && seed != null ? seed.inputIds : selectedInputIds;
+  const effectiveInputIds = !active && seed != null ? seed.inputIds : slots.selectedInputIds;
   const { candidates, choices } = useCanvasRelationalTreeAuthoringOptions({
     appendInputId,
     editable,
@@ -78,6 +76,8 @@ export function useCanvasRelationalTreeAuthoringSession(
     targetNodeId: transformNode.id,
   });
   const composition = useCanvasRelationComposition({
+    pendingSource,
+    onSourceConsumed: consumePendingSource,
     analysis,
     appendInputId,
     choices,
@@ -86,12 +86,13 @@ export function useCanvasRelationalTreeAuthoringSession(
     operation: !active && seed != null ? seed.operation : operation,
     selectedInputIds: effectiveInputIds,
     targetNodeId: transformNode.id,
-    appendOperand,
+    appendOperand: slots.appendInput,
     setAppendInputId,
     setDraft: setJoinDraft,
     setOperation,
   });
   const apply = useCanvasRelationalTreeApplyCommand({
+    hasPendingSources: pendingSources.length > 0,
     authoring,
     editable,
     joinDraft,
@@ -114,8 +115,8 @@ export function useCanvasRelationalTreeAuthoringSession(
     inputs,
     start,
     hasDraft: effectiveDraft != null,
-    selectInitialInput,
-    placeOperand,
+    selectInitialInput: slots.selectInitialInput,
+    placeOperand: slots.placeInput,
     requestAppend: composition.requestAppend,
   });
   const removal = useCanvasRelationalTreeRemoval({
@@ -123,7 +124,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     enabled: enabled && editable,
     active,
     draft: joinDraft,
-    selectedInputIds,
+    selectedInputIds: slots.selectedInputIds,
     seed,
     hydrate: hydrateExisting,
     accept: (result, ids) =>
@@ -134,12 +135,17 @@ export function useCanvasRelationalTreeAuthoringSession(
     occurrences: createSourceOccurrenceActions({
       editable: enabled && editable,
       output,
-      session: analysis?.session ?? null,
+      session: analysis?.document == null ? null : analysis.session,
       revision: analysis?.revision ?? 0,
       operation: !active && seed != null ? seed.operation : operation,
       inputs,
       start,
-      setAppendInputId: composition.requestAppend,
+      setAppendInputId,
+      pending: pendingSources,
+      setPending: setPendingSources,
+      selectedId: pendingSourceId,
+      setSelectedId: setPendingSourceId,
+      selectInitialInput: (id) => slots.placeInput(id, 'primary'),
     }),
     removal,
     applyRejection,
@@ -157,16 +163,15 @@ export function useCanvasRelationalTreeAuthoringSession(
     joinDraft,
     operation,
     placeInput,
-    primaryInputId,
-    secondaryInputId,
-    selectedInputIds,
+    primaryInputId: slots.primaryInputId,
+    secondaryInputId: slots.secondaryInputId,
+    selectedInputIds: slots.selectedInputIds,
     selectInput,
     selectOperation: (next: CanvasRelationalOperation, relationId?: string) => {
       if (start()) void composition.selectOperation(next, relationId);
     },
     setJoinDraft: (draft: SubstraitDocument) => {
-      if (!active) hydrateExisting();
-      setJoinDraft(draft);
+      if (start()) setJoinDraft(draft);
     },
     start,
   } as const;

@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewport';
+import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
 
 function ViewportHarness(): JSX.Element {
   const viewport = useCanvasRelationalTreeViewport('test-tree');
@@ -81,7 +82,13 @@ describe('relational-tree mouse navigation', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
-    act(() => root.render(<ViewportHarness />));
+    act(() =>
+      root.render(
+        <RelationalLayoutSession>
+          <ViewportHarness />
+        </RelationalLayoutSession>
+      )
+    );
     viewport = container.querySelector('[data-testid="viewport"]')!;
     content = container.querySelector('[data-testid="content"]')!;
     vi.spyOn(content, 'getBoundingClientRect').mockImplementation(

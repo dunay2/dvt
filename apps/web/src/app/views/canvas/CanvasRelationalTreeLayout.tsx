@@ -13,6 +13,8 @@ import { RelationalTreeEdges } from './relational-layout/RelationalTreeEdges';
 import { CanvasRelationalTreeGraphNode } from './CanvasRelationalTreeGraphNode';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
+import type { SourceOccurrenceActions } from './relational-source-occurrence/sourceOccurrenceActions';
+import { projectPendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 
 export function CanvasRelationalTreeLayout({
   outputName,
@@ -27,9 +29,11 @@ export function CanvasRelationalTreeLayout({
   panMode = false,
   onManualLayout,
   onOpenOutput,
+  occurrences,
 }: Readonly<{
   outputName: string;
-  root: CanvasRelationalTreeNode;
+  root: CanvasRelationalTreeNode | null;
+  occurrences?: Pick<SourceOccurrenceActions, 'pending' | 'selectedId' | 'select' | 'remove'>;
   selectedLocator: string;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
@@ -42,7 +46,10 @@ export function CanvasRelationalTreeLayout({
   onOpenOutput?: () => void;
 }>): JSX.Element {
   const detail = useMemo(
-    () => projectCanvasRelationalTreeDetails(root, semanticContext),
+    () =>
+      root == null
+        ? { sizes: new Map(), graphs: new Map() }
+        : projectCanvasRelationalTreeDetails(root, semanticContext),
     [root, semanticContext?.transformNode, semanticContext?.draft]
   );
   const { positions, setPosition, expanded, toggleDetail } = useRelationalLayout();
@@ -52,12 +59,17 @@ export function CanvasRelationalTreeLayout({
       if (!expanded.has(node.relationId ?? node.locator)) visible.delete(node.locator);
       node.children.forEach((child) => visit(child.node));
     };
-    visit(root);
+    if (root != null) visit(root);
     return visible;
   }, [root, detail, expanded]);
+  const detached = useMemo(
+    () => occurrences?.pending.map(projectPendingSourceOccurrence) ?? [],
+    [occurrences?.pending]
+  );
+  const detachedIds = new Set(detached.map((node) => node.relationId));
   const layout = useMemo(
-    () => layoutCanvasRelationalTree(root, sizes, positions),
-    [root, sizes, positions]
+    () => layoutCanvasRelationalTree(root, sizes, positions, detached),
+    [root, sizes, positions, detached]
   );
   const movement = useRelationalCardMovement(
     layout.nodes,
@@ -66,12 +78,15 @@ export function CanvasRelationalTreeLayout({
     onManualLayout,
     !panMode
   );
-  const outputStyle = {
-    left: layout.output.x,
-    top: layout.output.y,
-    width: layout.output.width,
-    height: layout.output.height,
-  };
+  const outputStyle =
+    layout.output == null
+      ? undefined
+      : {
+          left: layout.output.x,
+          top: layout.output.y,
+          width: layout.output.width,
+          height: layout.output.height,
+        };
   const outputContent = (
     <>
       <Table2 aria-hidden="true" className="size-4 shrink-0 text-emerald-300" />
@@ -99,7 +114,7 @@ export function CanvasRelationalTreeLayout({
     >
       <RelationalTreeEdges layout={layout} />
 
-      {onOpenOutput == null ? (
+      {layout.output == null ? null : onOpenOutput == null ? (
         <div
           data-slot="canvas-relational-tree-output"
           className={outputClassName}
@@ -125,11 +140,19 @@ export function CanvasRelationalTreeLayout({
           <CanvasRelationalTreeGraphNode
             key={placed.node.locator}
             placed={placed}
-            selected={placed.node.locator === selectedLocator}
+            selected={
+              placed.node.locator === selectedLocator ||
+              placed.node.relationId === occurrences?.selectedId
+            }
             copy={copy}
-            onSelect={onSelect}
-            onExpand={onExpand}
-            onRemove={onRemove}
+            onSelect={
+              detachedIds.has(placed.node.relationId)
+                ? () => occurrences?.select(placed.node.relationId!)
+                : onSelect
+            }
+            onExpand={detachedIds.has(placed.node.relationId) ? undefined : onExpand}
+            onRemove={detachedIds.has(placed.node.relationId) ? occurrences?.remove : onRemove}
+            pending={detachedIds.has(placed.node.relationId)}
             semanticGraph={detail.graphs.get(placed.node.locator)}
             expanded={expanded.has(placed.node.relationId ?? placed.node.locator)}
             onToggleDetail={() => toggleDetail(placed.node.relationId ?? placed.node.locator)}

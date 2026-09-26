@@ -21,6 +21,7 @@ export function CanvasRelationalTreeGraphNode({
   expanded,
   onToggleDetail,
   movable,
+  pending = false,
 }: Readonly<{
   placed: CanvasRelationalTreePlacedNode;
   selected: boolean;
@@ -32,6 +33,7 @@ export function CanvasRelationalTreeGraphNode({
   expanded: boolean;
   onToggleDetail: () => void;
   movable: boolean;
+  pending?: boolean;
 }>): JSX.Element {
   const detailId = useId();
   const detailed = expanded && semanticGraph != null;
@@ -52,8 +54,9 @@ export function CanvasRelationalTreeGraphNode({
           onExpand={onExpand}
           detailed={detailed}
           movable={movable}
+          pending={pending}
         />
-        {execution == null ? null : (
+        {execution == null || pending ? null : (
           <div className="absolute top-full w-full">
             <CanvasNodeDataAction {...execution} />
           </div>

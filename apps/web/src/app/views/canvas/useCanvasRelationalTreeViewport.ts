@@ -1,5 +1,5 @@
 /** Owned concern: manage measured fit, zoom and pointer panning for the tree viewport. */
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 import type { RefObject } from 'react';
 import { useCanvasRelationalTreeWheelZoom } from './useCanvasRelationalTreeWheelZoom';
 import {
@@ -8,6 +8,7 @@ import {
   changeCanvasRelationalTreeZoom,
 } from './canvasRelationalTreeViewport';
 import { useRelationalViewportPan } from './relational-layout/useRelationalViewportPan';
+import { useRelationalLayout } from './relational-layout/RelationalLayoutSession';
 export function useCanvasRelationalTreeViewport(
   layoutKey: string,
   fitPadding = 32
@@ -23,14 +24,15 @@ export function useCanvasRelationalTreeViewport(
   ReturnType<typeof useRelationalViewportPan> {
   const viewportRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const autoFit = useRef(true);
-  const [zoom, setZoom] = useState(1);
-  const [minimumZoom, setMinimumZoom] = useState(CANVAS_RELATIONAL_TREE_MIN_ZOOM);
+  const { autoFit, scroll, zoom, setZoom, minimumZoom, setMinimumZoom } = useRelationalLayout();
   const pan = useRelationalViewportPan();
-  const setManualZoom = useCallback((value: number) => {
-    autoFit.current = false;
-    setZoom(value);
-  }, []);
+  const setManualZoom = useCallback(
+    (value: number) => {
+      autoFit.current = false;
+      setZoom(value);
+    },
+    [autoFit, setZoom]
+  );
   useCanvasRelationalTreeWheelZoom(viewportRef, contentRef, zoom, setManualZoom, minimumZoom);
   const center = useCallback((nextZoom: number) => {
     const viewport = viewportRef.current;
@@ -55,7 +57,17 @@ export function useCanvasRelationalTreeViewport(
     setZoom(nextZoom);
     setMinimumZoom(Math.min(CANVAS_RELATIONAL_TREE_MIN_ZOOM, nextZoom));
     requestAnimationFrame(() => center(nextZoom));
-  }, [center, fitPadding]);
+  }, [autoFit, center, fitPadding, setMinimumZoom, setZoom]);
+
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    if (viewport == null) return;
+    viewport.scrollLeft = scroll.current.left;
+    viewport.scrollTop = scroll.current.top;
+    return () => {
+      scroll.current = { left: viewport.scrollLeft, top: viewport.scrollTop };
+    };
+  }, [scroll]);
 
   useLayoutEffect(() => {
     const refresh = (): void => {
@@ -69,14 +81,14 @@ export function useCanvasRelationalTreeViewport(
       cancelAnimationFrame(frame);
       observer?.disconnect();
     };
-  }, [fit, layoutKey]);
+  }, [autoFit, fit, layoutKey]);
 
   const changeZoom = useCallback(
     (delta: number) => {
       autoFit.current = false;
       setZoom((current) => changeCanvasRelationalTreeZoom(current, delta, minimumZoom));
     },
-    [minimumZoom]
+    [autoFit, minimumZoom, setZoom]
   );
 
   return {

@@ -50,12 +50,14 @@ export function RelationalTreeEdges({ layout }: Readonly<{ layout: CanvasRelatio
       width={layout.width}
       height={layout.height}
     >
-      <path
-        d={`M ${root.x + root.width} ${layout.output.y + layout.output.height / 2} H ${layout.output.x}`}
-        fill="none"
-        stroke="var(--status-info)"
-        strokeWidth="1.5"
-      />
+      {layout.output == null ? null : (
+        <path
+          d={`M ${root.x + root.width} ${layout.output.y + layout.output.height / 2} H ${layout.output.x}`}
+          fill="none"
+          stroke="var(--status-info)"
+          strokeWidth="1.5"
+        />
+      )}
       {layout.nodes
         .filter((parent) => parent.node.children.length > 0)
         .map((parent) => (

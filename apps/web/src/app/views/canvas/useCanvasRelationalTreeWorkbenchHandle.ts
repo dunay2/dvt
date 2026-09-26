@@ -27,14 +27,18 @@ export function useCanvasRelationalTreeWorkbenchHandle(
     session.operation !== session.seed?.operation ||
     session.joinDraft !== session.baselineDraft ||
     session.selectedInputIds.join(',') !== session.seed?.inputIds.join(',') ||
-    session.appendInput != null;
+    session.appendInput != null ||
+    session.occurrences.pending.length > 0;
   const handle = {
     hasUnappliedChanges:
       directEdit.pending ||
-      (session.active && (changed || pendingCondition) && session.selectedInputIds.length > 0),
+      (session.active &&
+        (changed || pendingCondition) &&
+        (session.selectedInputIds.length > 0 || session.occurrences.pending.length > 0)),
     canApply:
       !directEdit.pending &&
       !pendingCondition &&
+      session.occurrences.pending.length === 0 &&
       model.authoringAvailable &&
       model.session.appendInput == null &&
       ((isCanvasJoinOperation(model.session.operation) && model.session.joinDraft != null) ||

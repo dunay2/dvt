@@ -12,6 +12,7 @@ import type {
 export function useCanvasRelationalTreeApplyCommand(args: {
   authoring?: CanvasRelationalTreeAuthoringContract;
   editable: boolean;
+  hasPendingSources?: boolean;
   joinDraft: SubstraitDocument | null;
   operation: CanvasRelationalOperation | null;
   reject: (rejection: RelationalApplyRejection) => void;
@@ -20,7 +21,13 @@ export function useCanvasRelationalTreeApplyCommand(args: {
 }) {
   return (joinDraft = args.joinDraft): CanvasRelationalTreeApplyResult => {
     const { authoring, editable, operation, reject, reset, transformNode } = args;
-    if (!editable || operation == null || joinDraft == null || authoring == null) {
+    if (
+      !editable ||
+      args.hasPendingSources ||
+      operation == null ||
+      joinDraft == null ||
+      authoring == null
+    ) {
       const rejection = { outcome: 'rejected', reason: 'command_unavailable' } as const;
       reject(rejection);
       return rejection;

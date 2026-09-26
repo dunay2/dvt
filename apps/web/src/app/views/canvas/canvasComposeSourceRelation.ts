@@ -1,5 +1,6 @@
 /** Compose the selected output with a fresh Read; cache and canonical commit stay shared. */
-import { equals } from '@bufbuild/protobuf';
+import { clone, equals } from '@bufbuild/protobuf';
+import { RelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { NamedStructSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { allocateDvtRelationId } from '@dvt/contracts';
 import { deriveRelationSchema, SubstraitAnalysisError } from '@dvt/substrait-analysis';
@@ -18,17 +19,35 @@ export async function composeSourceRelation(
     expectedRevision: number;
     signal?: AbortSignal;
     input: CanvasDvtCompositionInput;
+    occurrence?: ReturnType<typeof createSourceRelation>;
     operation: CanvasRelationalOperation;
     predicate?: Readonly<{ leftSourceFieldId: string; rightFieldName: string }>;
   }>
 ) {
   const target = session.locate(request.relationId, request.expectedRevision);
   const schema = await session.query(request.relationId, request.signal);
-  const read = createSourceRelation(toSourceRelationInput(request.input), target.nextAnchor);
-  read.binding.displayName = nextSourceOccurrenceAlias(
-    read.binding.displayName,
-    session.sourceAliases(request.expectedRevision)
-  );
+  const read =
+    request.occurrence == null
+      ? createSourceRelation(toSourceRelationInput(request.input), target.nextAnchor)
+      : {
+          ...request.occurrence,
+          relation: clone(RelSchema, request.occurrence.relation),
+          binding: { ...request.occurrence.binding, relAnchor: target.nextAnchor },
+        };
+  if (
+    read.relation.relType.case !== 'read' ||
+    JSON.stringify(read.binding.sourceRef) !== JSON.stringify(request.input.sourceRef)
+  )
+    throw new SubstraitAnalysisError(
+      'invalid_binding',
+      'Occurrence must match the selected source.'
+    );
+  read.relation.relType.value.common!.relAnchor = target.nextAnchor;
+  const aliases = session.sourceAliases(request.expectedRevision);
+  if (request.occurrence != null && aliases.has(read.binding.displayName))
+    throw new SubstraitAnalysisError('invalid_binding', 'Instance alias is already in use.');
+  if (request.occurrence == null)
+    read.binding.displayName = nextSourceOccurrenceAlias(read.binding.displayName, aliases);
   for (const id of session.matchingSources(request.input.sourceRef, request.expectedRevision)) {
     const prior = session.locate(id, request.expectedRevision).relation.relType;
     const next = read.relation.relType;

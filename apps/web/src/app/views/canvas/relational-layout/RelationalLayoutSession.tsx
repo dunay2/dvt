@@ -1,7 +1,20 @@
 /** Owned concern: discardable layout and disclosure shared by inspection and editing. */
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import type { CardPosition } from '../canvasRelationalTreeGeometry';
+import { CANVAS_RELATIONAL_TREE_MIN_ZOOM } from '../canvasRelationalTreeViewport';
 function useLayout() {
+  const autoFit = useRef(true);
+  const scroll = useRef({ left: 0, top: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [minimumZoom, setMinimumZoom] = useState(CANVAS_RELATIONAL_TREE_MIN_ZOOM);
   const [positions, setPositions] = useState<ReadonlyMap<string, CardPosition>>(() => new Map());
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
   const setPosition = useCallback((id: string, position: CardPosition) => {
@@ -17,8 +30,20 @@ function useLayout() {
   }, []);
   const arrange = useCallback(() => setPositions(new Map()), []);
   return useMemo(
-    () => ({ positions, setPosition, expanded, toggleDetail, arrange }),
-    [positions, setPosition, expanded, toggleDetail, arrange]
+    () => ({
+      positions,
+      setPosition,
+      expanded,
+      toggleDetail,
+      arrange,
+      autoFit,
+      scroll,
+      zoom,
+      setZoom,
+      minimumZoom,
+      setMinimumZoom,
+    }),
+    [positions, setPosition, expanded, toggleDetail, arrange, zoom, minimumZoom]
   );
 }
 const LayoutContext = createContext<ReturnType<typeof useLayout> | null>(null);

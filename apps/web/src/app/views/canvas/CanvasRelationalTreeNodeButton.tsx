@@ -23,6 +23,7 @@ export function CanvasRelationalTreeNodeButton({
   copy,
   detailed,
   movable,
+  pending = false,
   onSelect,
   onExpand,
 }: Readonly<{
@@ -31,6 +32,7 @@ export function CanvasRelationalTreeNodeButton({
   copy: CanvasRelationalTreeWorkbenchCopy;
   detailed: boolean;
   movable: boolean;
+  pending?: boolean;
   onSelect: (locator: string) => void;
   onExpand?: (locator: string) => void;
 }>): JSX.Element {
@@ -69,6 +71,7 @@ export function CanvasRelationalTreeNodeButton({
       data-locator={node.locator}
       data-relation-id={node.relationId ?? undefined}
       data-operator={node.operator}
+      data-pending={pending || undefined}
       data-presentation={operation}
       onClick={() => {
         onSelect(node.locator);
@@ -91,7 +94,9 @@ export function CanvasRelationalTreeNodeButton({
           {title}
         </span>
       </span>
-      {isSource ? null : (
+      {pending ? (
+        <span className="mt-1 block text-xs text-amber-300">{copy.relationalTreePendingLabel}</span>
+      ) : isSource ? null : (
         <span
           title={detail}
           className="mt-1 block truncate text-[13px] font-normal leading-5 text-(--text-muted)"
