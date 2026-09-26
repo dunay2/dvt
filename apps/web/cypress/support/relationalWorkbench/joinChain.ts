@@ -9,14 +9,19 @@ export function authorFourSourceChain(): void {
 
   openWorkbenchModel('join-transform');
   cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
+  cy.get('[data-slot="source-occurrence-connect"]').click();
+  workbenchOperation('projection').click();
   cy.contains('[data-slot="canvas-relational-tree-source"]', 'orders').click();
+  cy.get('[data-slot="source-occurrence-connect"]').click();
   workbenchOperation('inner_join').should('have.attr', 'aria-disabled', 'false').click();
+  cy.get('[data-slot="canvas-relational-tree-append-input"]').click();
   cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
     'have.length',
     1
   );
 
   cy.contains('[data-slot="canvas-relational-tree-source"]', 'shipments').click();
+  cy.get('[data-slot="source-occurrence-connect"]').click();
   cy.get('[data-slot="canvas-relational-tree-existing-field"]')
     .should('contain.text', 'customer_id')
     .find('option:selected')
@@ -36,6 +41,7 @@ export function authorFourSourceChain(): void {
   );
 
   cy.contains('[data-slot="canvas-relational-tree-source"]', 'tickets').click();
+  cy.get('[data-slot="source-occurrence-connect"]').click();
   cy.get('[data-slot="canvas-relational-tree-existing-field"] option:selected').should(
     'have.text',
     'customer_id'

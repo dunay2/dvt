@@ -13,6 +13,7 @@ export function useCanvasRelationalTreeApplyCommand(args: {
   authoring?: CanvasRelationalTreeAuthoringContract;
   editable: boolean;
   hasPendingSources?: boolean;
+  cleared?: boolean;
   joinDraft: SubstraitDocument | null;
   operation: CanvasRelationalOperation | null;
   reject: (rejection: RelationalApplyRejection) => void;
@@ -24,8 +25,7 @@ export function useCanvasRelationalTreeApplyCommand(args: {
     if (
       !editable ||
       args.hasPendingSources ||
-      operation == null ||
-      joinDraft == null ||
+      (!args.cleared && (operation == null || joinDraft == null)) ||
       authoring == null
     ) {
       const rejection = { outcome: 'rejected', reason: 'command_unavailable' } as const;

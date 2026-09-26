@@ -33,6 +33,9 @@ import WorkbenchSource from './CanvasRelationalTreeWorkbench.tsx?raw';
 import EdgeProjectionSource from './canvasViewportEdgeProjection.ts?raw';
 import CanvasShellSource from './CanvasShell.tsx?raw';
 import ModelEditorSource from './CanvasModelEditor.tsx?raw';
+import ModelTemplateSource from './CanvasModelEditor.templates.tsx?raw';
+import ModelToolbarSource from './CanvasModelToolbar.tsx?raw';
+import ModelDataPanelSource from './CanvasModelDataPanel.tsx?raw';
 import CodeWorkbenchSource from './DvtTransformCodeWorkbenchContent.tsx?raw';
 import ApplyCommandSource from './useCanvasRelationalTreeApplyCommand.ts?raw';
 import WorkbenchModelSource from './useCanvasRelationalTreeWorkbenchModel.ts?raw';
@@ -159,6 +162,10 @@ describe('Canvas relational-tree Workbench architecture', () => {
   });
 
   it('keeps internal semantics out of edges and routes Models to one editor owner', () => {
+    for (const view of [ModelTemplateSource, ModelToolbarSource, ModelDataPanelSource]) {
+      expect(view).not.toMatch(/from ['"][^'"]*(?:stores\/|ports\/|useCanvas)/);
+      expect(view).not.toMatch(/\buse(?:State|Effect|Callback|Memo)\s*\(/);
+    }
     expect(EdgeProjectionSource).not.toMatch(/Substrait|[Cc]omposition|onActivate/);
     expect(CanvasShellSource).toContain('<CanvasModelEditor');
     expect(CanvasShellSource).not.toContain('<CanvasRelationalTreeWorkbench');

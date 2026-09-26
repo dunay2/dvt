@@ -88,7 +88,7 @@ describe('Workbench removal', () => {
       expect(reads).to.have.length(1);
       expect(reads[0]!.binding.sourceRef?.sourceObjectId).to.equal('relation/dvt/public/customers');
     });
-    cy.get('[data-slot="canvas-model-view-tab"][data-view="sql"]').click();
+    cy.get('[data-slot="canvas-model-open-sql"]').click();
     cy.get('[data-slot="canvas-model-sql"]')
       .should('contain.text', 'SELECT')
       .and('contain.text', 'customers')

@@ -1,5 +1,9 @@
 /** Own canonical Transform persistence; presentation hints never determine admissible tree shapes. */
-import { DVT_TRANSFORM_AUTHORING_MODE, DvtTransformResultTargetV1Schema } from '@dvt/contracts';
+import {
+  DVT_TRANSFORM_AUTHORING_MODE,
+  DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
+  DvtTransformResultTargetV1Schema,
+} from '@dvt/contracts';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import type { CanonicalNode } from '../../types/canonical';
 import type {
@@ -149,7 +153,11 @@ export function applyDvtTransformAuthoringMetadata(
     else if (metadata.resultTarget !== undefined) config.resultTarget = metadata.resultTarget;
     return withDvtConfig(updatedNode, config);
   };
-  if (metadata.mode === 'uninitialized') return withMaterialization(node);
+  if (metadata.mode === 'uninitialized') {
+    const { [DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]: _authority, ...retained } =
+      node.metadata ?? {};
+    return withMaterialization({ ...node, metadata: retained });
+  }
   const draft = { plan: metadata.plan, sidecar: metadata.sidecar };
   const indexed = indexSubstraitRelations(draft);
   if (!indexed.ok) throw indexed.error;

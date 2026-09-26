@@ -1,8 +1,9 @@
 /** Owned concern: compose the full-width Model workspace from existing semantic, SQL and data owners. */
 import './canvasSemanticEditor.css';
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { CanvasModelToolbar } from './CanvasModelToolbar';
-import { useCanvasModelNavigation, type CanvasModelView } from './useCanvasModelNavigation';
+import { useCanvasModelNavigation } from './useCanvasModelNavigation';
+import { CanvasModelEditorTemplate } from './CanvasModelEditor.templates';
 import { useCanvasModelWorkspaceTab } from './useCanvasModelWorkspaceTab';
 import { CanvasDraftDecisionDialog } from './CanvasDraftDecisionDialog';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -17,23 +18,16 @@ import {
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { CanvasOperationPreviewPorts } from './CanvasOperationDataPreview';
-import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
-import { projectCanvasRelationalTreeCatalogue } from './canvasRelationalTreeWorkbenchModel';
-import { CanvasModelSqlView } from './CanvasModelSqlView';
-import { CanvasModelDataView, type CanvasModelPreviewPreparation } from './CanvasModelDataView';
+import type { CanvasModelPreviewPreparation } from './CanvasModelDataView';
 import { CanvasModelNavigationGuard } from './CanvasModelNavigationGuard';
-
-export type { CanvasModelView } from './useCanvasModelNavigation';
 
 export function CanvasModelEditor({
   canvasId,
-  canvasName,
   transformNode,
   nodes,
   edges,
   authoring,
-  initialView,
-  viewRequestId,
+  outputs,
   draftStatus,
   query,
   preparePreview,
@@ -46,13 +40,11 @@ export function CanvasModelEditor({
   onShowCanvas,
 }: Readonly<{
   canvasId: string;
-  canvasName: string;
   transformNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
   authoring?: CanvasRelationalTreeAuthoringContract;
-  initialView: CanvasModelView;
-  viewRequestId: number;
+  outputs?: Readonly<{ onOpenSql?: () => void; onOpenData?: () => void }>;
   draftStatus: CanvasDraftStatusState;
   query?: ICanvasTransformDataSampleQueryPort;
   preparePreview?: CanvasModelPreviewPreparation;
@@ -70,25 +62,13 @@ export function CanvasModelEditor({
   const workbench = useRef<CanvasRelationalTreeWorkbenchHandle>(null);
   const [actionsHost, setActionsHost] = useState<HTMLDivElement | null>(null);
   const navigation = useCanvasModelNavigation({
-    initialView,
-    viewRequestId,
     workbench,
     onClose,
     preparePreview,
     draftStatus,
     copy,
   });
-  const { view, requestNavigation, onRouteBlocked } = navigation;
-  const projection = useMemo(
-    () => projectCanvasRelationalTree({ node: transformNode, nodes, edges }),
-    [transformNode, nodes, edges]
-  );
-  const digest = projection.ok ? projection.projection.semanticDigest : null;
-  const unresolvedInputs = projection.ok
-    ? projectCanvasRelationalTreeCatalogue({ ...projection.projection, nodes }).flatMap((input) =>
-        input.state === 'participating' ? [] : [{ label: input.label, state: input.state }]
-      )
-    : [];
+  const { onRouteBlocked } = navigation;
   useCanvasModelWorkspaceTab({
     canvasId,
     nodeId: transformNode.id,
@@ -102,30 +82,20 @@ export function CanvasModelEditor({
     },
   });
   return (
-    <section
-      data-slot="canvas-model-editor"
-      aria-label={`${transformNode.name} · ${copy.editor}`}
-      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-(--surface-app) text-(--text-default)"
-    >
-      <CanvasModelNavigationGuard
-        workbench={workbench}
-        hasUnpersistedChanges={draftStatus.persistence !== 'durable'}
-        onBlocked={onRouteBlocked}
-      />
-      <CanvasModelToolbar
-        canvasName={canvasName}
-        modelName={transformNode.name}
-        view={view}
-        draftStatus={draftStatus}
-        onViewChange={requestNavigation}
-        onActionsHost={setActionsHost}
-      />
-      <div
-        id="model-panel-editor"
-        role="tabpanel"
-        aria-labelledby="model-tab-editor"
-        className={view === 'editor' ? 'flex min-h-0 min-w-0 flex-1 overflow-hidden' : 'hidden'}
-      >
+    <CanvasModelEditorTemplate
+      label={`${transformNode.name} · ${copy.editor}`}
+      toolbar={
+        <CanvasModelToolbar
+          data={{
+            modelName: transformNode.name,
+            draftStatus,
+            sqlLabel: copy.sql,
+            dataLabel: copy.viewData,
+          }}
+          actions={{ ...outputs, onActionsHost: setActionsHost }}
+        />
+      }
+      editor={
         <CanvasRelationalTreeWorkbench
           ref={workbench}
           transformNode={transformNode}
@@ -139,46 +109,21 @@ export function CanvasModelEditor({
             query,
             onExecuteSource,
             preparePreview,
-            dataHost: active && view === 'editor' ? operationDataHost : null,
-            onOpenData: active && view === 'editor' ? onOpenOperationData : undefined,
+            dataHost: operationDataHost,
+            onOpenData: onOpenOperationData,
           }}
         />
-      </div>
-      {view === 'sql' ? (
-        <div
-          id="model-panel-sql"
-          role="tabpanel"
-          aria-labelledby="model-tab-sql"
-          className="min-h-0 flex-1"
-        >
-          <CanvasModelSqlView
-            transformNode={transformNode}
-            nodes={nodes}
-            edges={edges}
-            copy={copy}
+      }
+      guards={
+        <>
+          <CanvasModelNavigationGuard
+            workbench={workbench}
+            hasUnpersistedChanges={draftStatus.persistence !== 'durable'}
+            onBlocked={onRouteBlocked}
           />
-        </div>
-      ) : null}
-      <div
-        id="model-panel-data"
-        role="tabpanel"
-        aria-labelledby="model-tab-data"
-        className={view === 'data' ? 'min-h-0 flex-1' : 'hidden'}
-      >
-        <CanvasModelDataView
-          canvasId={canvasId}
-          nodeId={transformNode.id}
-          nodeName={transformNode.name}
-          semanticDigest={digest}
-          canEditModel={authoring?.canEditNode === true}
-          query={query}
-          preparePreview={preparePreview}
-          copy={copy}
-          unresolvedInputs={unresolvedInputs}
-          onReviewInputs={() => requestNavigation('editor')}
-        />
-      </div>
-      <CanvasDraftDecisionDialog {...navigation.decision} />
-    </section>
+          <CanvasDraftDecisionDialog {...navigation.decision} />
+        </>
+      }
+    />
   );
 }

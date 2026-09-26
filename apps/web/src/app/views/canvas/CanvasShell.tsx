@@ -7,7 +7,8 @@ import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { CanvasShellMainPanel } from './CanvasShellMainPanel';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
 import { canOpenCanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
-import { CanvasModelEditor, type CanvasModelView } from './CanvasModelEditor';
+import { CanvasModelEditor } from './CanvasModelEditor';
+import { useCanvasModelOutputs } from './useCanvasModelOutputs';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
 import { CanvasSettingsDialog } from './CanvasSettingsDialog';
@@ -30,11 +31,6 @@ import { findCanvasGraphNodeElement } from './canvasNodeWorkbenchDomGeometry';
 import { useCanvasNodeDataSample } from './useCanvasNodeDataSample';
 import { useCanvasOutputExpressionInspection } from './useCanvasOutputExpressionInspection';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
-import { useUiLayoutStore } from '../../stores/uiLayoutStore';
-import {
-  useOperationalDrawerContributionStore,
-  type OperationalDrawerTab,
-} from '../../components/shell/operationalDrawerContributionStore';
 
 type WorkbenchOpener = Readonly<{
   element: HTMLElement | null;
@@ -100,39 +96,6 @@ export default function CanvasShell({
     panels.inspectorGraphNodes
   );
   const [modelTabActive, setModelTabActive] = useState(true);
-  const [operationDataHost, setOperationDataHost] = useState<HTMLDivElement | null>(null);
-  const selectDrawerTab = useOperationalDrawerContributionStore(
-    (state) => state.selectOperationalDrawerTab
-  );
-  const showBottomDrawer = useUiLayoutStore((state) => state.showBottomDrawer);
-  const openOperationData = useCallback(() => {
-    selectDrawerTab('data:operation');
-    const drawer = useUiLayoutStore.getState();
-    showBottomDrawer(
-      drawer.bottomDrawerVisible && drawer.bottomDrawerHeight >= 200
-        ? drawer.bottomDrawerHeight
-        : 260
-    );
-  }, [selectDrawerTab, showBottomDrawer]);
-  const operationDataTab = useMemo<OperationalDrawerTab>(() => {
-    const semanticCopy = resolveCanvasSemanticEditorCopy(applicationLanguage);
-    return {
-      id: 'data:operation',
-      label: semanticCopy.operationData,
-      count: null,
-      content: (
-        <div
-          ref={setOperationDataHost}
-          data-slot="canvas-operation-data-host"
-          className="h-full min-h-0 min-w-0"
-        >
-          <p className="p-4 text-sm text-(--text-muted)">{semanticCopy.selectOperation}</p>
-        </div>
-      ),
-    };
-  }, [applicationLanguage]);
-  const [initialModelView, setInitialModelView] = useState<CanvasModelView>('editor');
-  const [modelViewRequestId, setModelViewRequestId] = useState(0);
   const relationalTreeTransformIds = useMemo(
     () =>
       new Set(
@@ -150,15 +113,13 @@ export default function CanvasShell({
     [panels.inspectorGraphNodes, relationalTreeTransformId, relationalTreeTransformIds]
   );
   const openRelationalTree = useCallback(
-    (nodeId: string, view: CanvasModelView = 'editor') => {
+    (nodeId: string) => {
       if (!relationalTreeTransformIds.has(nodeId)) return;
       workbenchOpenerRef.current = {
         element: document.activeElement instanceof HTMLElement ? document.activeElement : null,
         fallbackNodeId: nodeId,
       };
       const open = () => {
-        setInitialModelView(view);
-        setModelViewRequestId((current) => current + 1);
         setRelationalTreeTransformId(nodeId);
         setModelTabActive(true);
       };
@@ -170,6 +131,15 @@ export default function CanvasShell({
     [relationalTreeTransformIds, panels.activeCanvasId]
   );
   const workbenchOpenerRef = useRef<WorkbenchOpener | null>(null);
+  const modelOutputs = useCanvasModelOutputs({
+    canvasId: panels.activeCanvasId,
+    model: relationalTreeTransform,
+    nodes: panels.inspectorGraphNodes,
+    edges: panels.inspectorGraphEdges,
+    preview: { query: canvasTransformDataSampleQuery, preparePreview: prepareModelPreview },
+    canEditModel: panels.relationalTreeAuthoring?.canEditNode === true,
+    enabled: layout.surfaceStrategy?.operationalDrawer?.tabs.includes('data') === true,
+  });
   const contextualWorkbenchId = useCanvasInteractionStore((state) => state.contextualWorkbenchId);
   const contextualWorkbenchOwnerKey = useCanvasInteractionStore(
     (state) => state.contextualWorkbenchOwnerKey
@@ -459,9 +429,7 @@ export default function CanvasShell({
           onStartRun={chromeCommands.onRun}
           selectionRecoveryCommands={chromeCommands.executionSelectionRecovery}
           dataSampleTabs={dataSampleTabs}
-          operationDataTab={
-            modelTabActive && relationalTreeTransform != null ? operationDataTab : undefined
-          }
+          modelTabs={modelOutputs.tabs}
         />
       )}
       <CanvasShellMainPanel
@@ -482,23 +450,17 @@ export default function CanvasShell({
                   <CanvasModelEditor
                     key={`${panels.activeCanvasId}:${relationalTreeTransform.id}`}
                     canvasId={panels.activeCanvasId}
-                    canvasName={panels.activeCanvas?.title ?? ''}
                     transformNode={relationalTreeTransform}
                     nodes={panels.inspectorGraphNodes}
                     edges={panels.inspectorGraphEdges}
                     authoring={panels.relationalTreeAuthoring}
-                    initialView={initialModelView}
-                    viewRequestId={modelViewRequestId}
+                    outputs={modelOutputs}
                     draftStatus={chromeState.draftStatusState}
                     query={canvasTransformDataSampleQuery}
                     onExecuteSource={openSource}
                     preparePreview={prepareModelPreview}
-                    operationDataHost={operationDataHost}
-                    onOpenOperationData={
-                      layout.surfaceStrategy?.operationalDrawer?.tabs.includes('data')
-                        ? openOperationData
-                        : undefined
-                    }
+                    operationDataHost={modelOutputs.operationDataHost}
+                    onOpenOperationData={modelOutputs.onOpenOperationData}
                     active={modelTabActive}
                     onSelect={() => setModelTabActive(true)}
                     onShowCanvas={() => setModelTabActive(false)}

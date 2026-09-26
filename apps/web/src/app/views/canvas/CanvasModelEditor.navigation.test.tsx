@@ -76,17 +76,16 @@ function Editor(props: {
   draftStatus?: CanvasDraftStatusState;
   preparePreview?: React.ComponentProps<typeof CanvasModelEditor>['preparePreview'];
   onClose?: () => void;
+  outputs?: React.ComponentProps<typeof CanvasModelEditor>['outputs'];
 }): React.JSX.Element {
   return (
     <CanvasModelEditor
       canvasId="canvas-1"
-      canvasName="Canvas 1"
       transformNode={model}
       nodes={[source, model]}
       edges={edges}
       authoring={props.authoring}
-      initialView="editor"
-      viewRequestId={0}
+      outputs={props.outputs}
       draftStatus={props.draftStatus ?? durableStatus}
       preparePreview={props.preparePreview}
       onClose={props.onClose ?? vi.fn()}
@@ -102,6 +101,9 @@ async function beginProjection(container: HTMLElement): Promise<void> {
       .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')!
       .click();
   });
+  await act(async () =>
+    container.querySelector<HTMLButtonElement>('[data-slot="source-occurrence-connect"]')!.click()
+  );
   openOperationMenu(container);
   await act(async () => {
     document.querySelector<HTMLElement>('[data-slot="dvt-select-operation-projection"]')!.click();
@@ -158,7 +160,7 @@ describe('CanvasModelEditor navigation', () => {
     });
     await beginProjection(container);
 
-    act(() => findButton('SQL').click());
+    act(() => useCanvasWorkspaceMenuContributionStore.getState().modelTab?.onClose());
     const applyAndContinue = findButton('Apply and continue');
     applyAndContinue.focus();
     await act(async () => applyAndContinue.click());
@@ -166,20 +168,19 @@ describe('CanvasModelEditor navigation', () => {
     expect(onApplyNodeDraft).toHaveBeenCalledOnce();
     expect(document.activeElement).toBe(applyAndContinue);
     expect(document.querySelector('[role="alert"]')?.textContent).toContain('no longer available');
-    expect(container.querySelector('[data-view="editor"]')?.getAttribute('aria-selected')).toBe(
-      'true'
-    );
+    expect(container.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-relational-tree-apply"]')).not.toBeNull();
   });
 
   it('continues once for a legitimate no-change result despite a rapid double interaction', async () => {
     const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' }) as const);
+    const onClose = vi.fn();
     await act(async () => {
-      root.render(<Editor authoring={{ canEditNode: true, onApplyNodeDraft }} />);
+      root.render(<Editor onClose={onClose} authoring={{ canEditNode: true, onApplyNodeDraft }} />);
     });
     await beginProjection(container);
 
-    act(() => findButton('SQL').click());
+    act(() => useCanvasWorkspaceMenuContributionStore.getState().modelTab?.onClose());
     const applyAndContinue = findButton('Apply and continue');
     await act(async () => {
       applyAndContinue.click();
@@ -188,8 +189,25 @@ describe('CanvasModelEditor navigation', () => {
     });
 
     expect(onApplyNodeDraft).toHaveBeenCalledOnce();
-    expect(findButton('SQL').getAttribute('aria-selected')).toBe('true');
+    expect(onClose).toHaveBeenCalledOnce();
     expect(document.querySelector('[role="alertdialog"]')).toBeNull();
+  });
+
+  it('opens outputs without applying or discarding the local composition', async () => {
+    const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' }) as const);
+    const outputs = { onOpenSql: vi.fn(), onOpenData: vi.fn() };
+    await act(async () =>
+      root.render(<Editor outputs={outputs} authoring={{ canEditNode: true, onApplyNodeDraft }} />)
+    );
+    await beginProjection(container);
+    const card = container.querySelector('[data-operator="project"]');
+    await act(async () => findButton('SQL').click());
+    await act(async () => findButton('View data').click());
+    expect(outputs.onOpenSql).toHaveBeenCalledOnce();
+    expect(outputs.onOpenData).toHaveBeenCalledOnce();
+    expect(container.querySelector('[data-operator="project"]')).toBe(card);
+    expect(document.querySelector('[role="alertdialog"]')).toBeNull();
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });
 
   it('offers Stay or Discard before replacing a Model with unapplied work', async () => {

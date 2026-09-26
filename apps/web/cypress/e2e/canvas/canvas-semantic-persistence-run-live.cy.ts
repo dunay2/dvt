@@ -83,7 +83,7 @@ describe('Persisted semantic editing through protected Preview and Run', () => {
     cy.get(
       '[data-slot="canvas-relational-tree-inline-editor"]:visible button[type="submit"]'
     ).click();
-    cy.get('[data-slot="canvas-model-view-tab"][data-view="data"]').click();
+    cy.get('[data-slot="canvas-model-open-data"]').click();
     cy.contains('[role="alertdialog"] button', 'Apply and continue').click();
     cy.get('[role="alertdialog"]').should('not.exist');
     cy.then(() => readPersistedDocument(beforeEdit.semanticPlan.sha256)).then((document) => {
@@ -129,7 +129,7 @@ describe('Persisted semantic editing through protected Preview and Run', () => {
     });
     cy.get('[data-slot="canvas-operation-data-preview"] table').should('contain.text', 'C-014');
     cy.screenshot('semantic-live-reopened-operation-data');
-    cy.get('[data-slot="canvas-model-view-tab"][data-view="data"]').click();
+    cy.get('[data-slot="canvas-model-open-data"]').click();
     cy.get('[data-slot="canvas-model-data"]:visible [data-slot="canvas-model-preview"]').click();
     cy.wait('@liveRows', { timeout: 30_000 }).then(({ request, response }) => {
       expect(new URL(request.url).searchParams.get('relationId')).to.equal(null);

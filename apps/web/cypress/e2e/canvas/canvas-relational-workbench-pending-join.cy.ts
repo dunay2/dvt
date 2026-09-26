@@ -16,11 +16,7 @@ describe('Workbench pending-join', () => {
     visitWorkbenchCanvas();
 
     openWorkbenchModel('join-transform');
-    cy.get('[data-slot="canvas-model-view-tab"][data-view="editor"]').should(
-      'have.attr',
-      'aria-selected',
-      'true'
-    );
+    cy.get('[data-slot="canvas-model-main-tab"]').should('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="canvas-relational-tree-authoring"]').should('not.exist');
     cy.get('[data-slot="canvas-relational-tree-input-slot"]').should('not.exist');
     dragWorkbenchSource('customers');

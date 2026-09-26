@@ -33,9 +33,9 @@ describe('Workbench chain-persistence', () => {
       expect(entries.filter((entry) => entry.relation.relType.case === 'read')).to.have.length(4);
       expect(entries.filter((entry) => entry.relation.relType.case === 'join')).to.have.length(3);
     });
-    cy.get('[data-slot="canvas-model-view-tab"][data-view="sql"]').click();
+    cy.get('[data-slot="canvas-model-open-sql"]').click();
     cy.get('[data-slot="canvas-model-sql"]').should('contain.text', 'SELECT');
-    cy.get('[data-slot="canvas-model-view-tab"][data-view="data"]').click();
+    cy.get('[data-slot="canvas-model-open-data"]').click();
     cy.then(() => expect(getE2eApiCalls(/\/data-sample$/, 'GET')).to.have.length(0));
     cy.get('[data-slot="canvas-model-preview"]').click();
     cy.get('[data-slot="canvas-model-data"] table').should('contain.text', 'C-001');

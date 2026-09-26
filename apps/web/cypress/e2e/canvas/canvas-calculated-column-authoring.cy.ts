@@ -97,11 +97,7 @@ describe('Canvas calculated-column authoring', () => {
       if (entry === 'field-context-menu') {
         visibleNode().find('[data-slot="graph-node-card-title"]').click();
         visibleNode().find('[data-slot="graph-node-card-title"]').dblclick();
-        cy.get('[data-slot="canvas-model-view-tab"][data-view="editor"]').should(
-          'have.attr',
-          'aria-selected',
-          'true'
-        );
+        cy.get('[data-slot="canvas-model-main-tab"]').should('have.attr', 'aria-selected', 'true');
         cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
         cy.get('[data-slot="canvas-workspace-tab"]').click();
         visibleNode().find('[data-slot="graph-node-card-title"]').rightclick();
@@ -308,8 +304,8 @@ describe('Canvas calculated-column authoring', () => {
     visitCanvas();
     const canvasTab = '[data-slot="canvas-workspace-tab"]';
     const modelTab = '[data-slot="canvas-model-main-tab"]';
-    const editorTab = '[data-slot="canvas-model-view-tab"][data-view="editor"]';
-    const dataTab = '[data-slot="canvas-model-view-tab"][data-view="data"]';
+    const editorTab = '[data-slot="canvas-model-main-tab"]';
+    const dataTab = '[data-slot="canvas-model-open-data"]';
     const visibleNode = (nodeId: string): Cypress.Chainable<JQuery<HTMLElement>> =>
       cy
         .get(`.react-flow__node[data-id="${nodeId}"]`)
@@ -322,7 +318,8 @@ describe('Canvas calculated-column authoring', () => {
       .should('have.attr', 'aria-selected', 'true')
       .and('contain.text', 'Orders model');
     cy.get(editorTab).should('have.attr', 'aria-selected', 'true');
-    cy.get(dataTab).click().should('have.attr', 'aria-selected', 'true');
+    cy.get(dataTab).click();
+    cy.get('[data-slot="canvas-model-data"]:visible').should('be.visible');
 
     cy.get(canvasTab).click();
     visibleNode('model-orders-secondary').find('[data-slot="graph-node-card-title"]').dblclick();

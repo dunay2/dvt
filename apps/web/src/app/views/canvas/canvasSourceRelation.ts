@@ -25,22 +25,24 @@ export type ConnectedRelationSource = Readonly<{
 export type SourceRelationInput = Readonly<{
   source: ConnectedRelationSource;
   fields: readonly string[];
-  fieldTypes?: readonly DvtSubstraitJoinDataType[];
+  fieldTypes?: readonly (DvtSubstraitJoinDataType | null)[];
   fieldNullabilities?: readonly boolean[];
 }>;
 
 export function toSourceRelationInput(input: CanvasDvtCompositionInput): SourceRelationInput {
-  if (input.fields.some((field) => field.joinDataType == null))
-    throw new Error('Source fields need supported canonical types.');
   return {
     source: input,
     fields: input.fields.map((field) => field.name),
-    fieldTypes: input.fields.map((field) => field.joinDataType!),
+    fieldTypes: input.fields.map((field) => field.joinDataType),
     fieldNullabilities: input.fields.map((field) => field.nullable ?? true),
   };
 }
 
-export function sourceFieldType(dataType: DvtSubstraitJoinDataType, nullable: boolean): Type {
+export function sourceFieldType(
+  dataType: DvtSubstraitJoinDataType | null,
+  nullable: boolean
+): Type {
+  if (dataType === null) return create(TypeSchema, { kind: { case: 'unbound', value: {} } });
   const nullability = nullable ? Type_Nullability.NULLABLE : Type_Nullability.REQUIRED;
   const builders: Record<DvtSubstraitJoinDataType, () => Type> = {
     string: () => create(TypeSchema, { kind: { case: 'string', value: { nullability } } }),
@@ -88,7 +90,7 @@ export function createSourceRelation(input: SourceRelationInput, relAnchor: numb
             nullability: Type_Nullability.REQUIRED,
             types: names.map((_, ordinal) =>
               sourceFieldType(
-                input.fieldTypes?.[ordinal] ?? 'string',
+                input.fieldTypes === undefined ? 'string' : input.fieldTypes[ordinal]!,
                 input.fieldNullabilities?.[ordinal] ?? true
               )
             ),

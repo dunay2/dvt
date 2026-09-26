@@ -17,12 +17,8 @@ describe('Workbench navigation', () => {
       .should('be.focused')
       .type('{enter}');
 
-    cy.get('[data-slot="canvas-model-view-tab"][data-view="editor"]').should(
-      'have.attr',
-      'aria-selected',
-      'true'
-    );
-    cy.get('[data-slot="canvas-model-view-tab"]').should('have.length', 3);
+    cy.get('[data-slot="canvas-model-main-tab"]').should('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="canvas-model-view-tab"]').should('not.exist');
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="semantic"]').should('not.exist');
     cy.get('[data-slot="canvas-relational-tree-workbench"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-tree-source"]')
@@ -75,7 +71,7 @@ describe('Workbench navigation', () => {
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
     cy.viewport(1024, 720);
     cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
-    cy.get('[data-slot="canvas-model-view-tab"]').should('have.length', 3);
+    cy.get('[data-slot="canvas-model-view-tab"]').should('not.exist');
     cy.screenshot('semantic-editor-compact');
     cy.get('[data-slot="canvas-model-tab-close"]').click();
     cy.get('.react-flow__node[data-id="join-transform"]').should('exist');

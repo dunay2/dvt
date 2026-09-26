@@ -6,30 +6,20 @@ import type { CanvasModelPreviewPreparation } from './CanvasModelDataView';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 
-export type CanvasModelView = 'editor' | 'sql' | 'data';
-
 export function useCanvasModelNavigation({
-  initialView,
-  viewRequestId,
   workbench,
   onClose,
   preparePreview,
   draftStatus,
   copy,
 }: Readonly<{
-  initialView: CanvasModelView;
-  viewRequestId: number;
   workbench: RefObject<CanvasRelationalTreeWorkbenchHandle>;
   onClose: () => void;
   preparePreview?: CanvasModelPreviewPreparation;
   draftStatus: CanvasDraftStatusState;
   copy: ReturnType<typeof resolveCanvasSemanticEditorCopy>;
 }>) {
-  const [view, setView] = useState(initialView);
-  const handledViewRequest = useRef(viewRequestId);
-  const [pendingNavigation, setPendingNavigation] = useState<
-    CanvasModelView | 'canvas' | 'route' | null
-  >(null);
+  const [pendingNavigation, setPendingNavigation] = useState<'canvas' | 'route' | null>(null);
   const routeNavigation = useRef<CanvasModelBlockedNavigation | null>(null);
   const afterClose = useRef<(() => void) | undefined>(undefined);
   const [saving, setSaving] = useState(false);
@@ -43,7 +33,7 @@ export function useCanvasModelNavigation({
     if (workbench.current?.hasUnappliedChanges !== true) setAppliedForNavigation(true);
   }, []);
   const navigate = useCallback(
-    (target: CanvasModelView | 'canvas' | 'route') => {
+    (target: 'canvas' | 'route') => {
       if (target === 'route') {
         routeNavigation.current?.proceed();
         routeNavigation.current = null;
@@ -52,7 +42,7 @@ export function useCanvasModelNavigation({
         afterClose.current = undefined;
         if (continuation != null) continuation();
         else onClose();
-      } else setView(target);
+      }
       routeSaveInFlight.current = false;
       applyDecisionInFlight.current = false;
       setPendingNavigation(null);
@@ -135,16 +125,10 @@ export function useCanvasModelNavigation({
     pendingNavigation,
     preparePreview,
   ]);
-  const requestNavigation = (target: CanvasModelView | 'canvas') => {
-    if (target === view) return;
+  const requestNavigation = (target: 'canvas') => {
     if (workbench.current?.hasUnappliedChanges) setPendingNavigation(target);
     else navigate(target);
   };
-  useEffect(() => {
-    if (handledViewRequest.current === viewRequestId) return;
-    handledViewRequest.current = viewRequestId;
-    requestNavigation(initialView);
-  });
   useEffect(() => {
     const preventLostDraft = (event: BeforeUnloadEvent) => {
       if (
@@ -160,8 +144,6 @@ export function useCanvasModelNavigation({
     return () => window.removeEventListener('beforeunload', preventLostDraft);
   }, [draftStatus.persistence, saving]);
   return {
-    view,
-    requestNavigation,
     onRouteBlocked,
     requestClose: (continuation?: () => void) => {
       afterClose.current = continuation;

@@ -91,8 +91,12 @@ export function CanvasOperationPreviewProvider({
               className="h-full min-h-0 min-w-0 overflow-hidden"
             >
               <CanvasModelDataPanel
-                {...data}
-                semanticDigest={state.semanticDigest}
+                data={{
+                  ...data,
+                  stale:
+                    data.sample != null && data.sample.semanticPlanSha256 !== state.semanticDigest,
+                }}
+                actions={{ load: data.load }}
                 nodeName={requested.label}
                 compact
                 copy={previewCopy}

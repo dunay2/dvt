@@ -6,8 +6,29 @@ import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetc
 import { composeSourceRelation } from './canvasComposeSourceRelation';
 import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 import { createPendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
+import { createSourceDocument } from './canvasSourceDocument';
 
 describe('compose source occurrence with a transformed result', () => {
+  it('retains unbound catalogue fields without guessing types or losing physical identity', () => {
+    const input = {
+      ...source('orders'),
+      fields: [
+        { name: 'id', dataType: 'integer', joinDataType: null },
+        { name: 'amount', dataType: 'numeric', joinDataType: null },
+        { name: 'label', dataType: 'text', joinDataType: 'string' as const },
+      ],
+    };
+    const { read } = createPendingSourceOccurrence(input);
+    const schemas = deriveSubstraitSchemas(createSourceDocument([read], read));
+    expect(
+      schemas.schemas.get(read.binding.relationId)?.map((field) => field.type.kind.case)
+    ).toEqual(['unbound', 'unbound', 'string']);
+    expect(read.binding.sourceRef).toEqual(input.sourceRef);
+    expect(read.fields.map((field) => field.displayName)).toEqual(
+      input.fields.map((field) => field.name)
+    );
+    expect(new Set(read.fields.map((field) => field.fieldId)).size).toBe(input.fields.length);
+  });
   it.each(['inner_join', 'cross_join', 'union_all', 'except_all'] as const)(
     'composes %s without rebuilding its operand',
     async (operation) => {

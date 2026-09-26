@@ -1,9 +1,7 @@
 /** Owned concern: prepare an explicit occurrence intent in the existing discardable session. */
 import type { CanvasDvtCompositionInput } from '../canvasDvtCompositionInputCatalog';
-import type { RelationAnalysisResult } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from '../canvasRelationAnalysisSession';
-import type { CanvasRelationalOperation } from '../canvasRelationalOperationChoices';
-import { sourceOccurrenceAppendRejection } from './sourceOccurrencePolicy';
+import type { SourceOccurrenceRejection } from './sourceOccurrencePolicy';
 import {
   createPendingSourceOccurrence,
   type PendingSourceOccurrence,
@@ -14,10 +12,8 @@ import { parseOccurrenceAlias } from './renameSourceOccurrence';
 export function createSourceOccurrenceActions(
   args: Readonly<{
     editable: boolean;
-    output: RelationAnalysisResult | null;
     session: CanvasRelationAnalysisSession | null;
     revision: number;
-    operation: CanvasRelationalOperation | null;
     inputs: readonly CanvasDvtCompositionInput[];
     start: () => boolean;
     setAppendInputId: (id: string | null) => void;
@@ -30,24 +26,14 @@ export function createSourceOccurrenceActions(
     selectInitialInput: (id: string) => void;
   }>
 ) {
-  const rejection = (id: string) =>
-    sourceOccurrenceAppendRejection({
-      editable: args.editable,
-      output: args.output,
-      session: args.session,
-      revision: args.revision,
-      operation: args.operation,
-      input: args.inputs.find((input) => input.nodeId === id),
-    });
+  const rejection = (id: string): SourceOccurrenceRejection | null => {
+    if (!args.editable) return 'read_only';
+    const input = args.inputs.find((candidate) => candidate.nodeId === id);
+    return input == null || input.fields.length === 0 ? 'unavailable' : null;
+  };
   const drop = (id: string): string | null => {
     const input = args.inputs.find((candidate) => candidate.nodeId === id);
-    if (
-      !args.editable ||
-      input == null ||
-      input.fields.length === 0 ||
-      input.fields.some((field) => field.joinDataType == null)
-    )
-      return null;
+    if (input == null || rejection(id) != null) return null;
     const occurrence = createPendingSourceOccurrence(input);
     if (!args.start()) return null;
     const occupied = args.session?.sourceAliases(args.revision) ?? new Set<string>();

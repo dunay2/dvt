@@ -54,7 +54,7 @@ describe('Unsupported semantic selector on the protected runtime', () => {
     readPersistedDocument().then((saved) => {
       expect(saved).to.deep.equal(document);
     });
-    cy.get('[data-slot="canvas-model-view-tab"][data-view="data"]').click();
+    cy.get('[data-slot="canvas-model-open-data"]').click();
     cy.get('[data-slot="canvas-model-data"]:visible [data-slot="canvas-model-preview"]')
       .should('be.enabled')
       .click();

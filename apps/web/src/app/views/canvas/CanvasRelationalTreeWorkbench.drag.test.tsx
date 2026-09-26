@@ -43,6 +43,43 @@ async function dropSource(sourceId: string, x = 400, y = 300): Promise<void> {
 
 describe('Canvas relational-tree Workbench drag', () => {
   setupWorkbenchTest();
+  it('creates different source instances independently of JOIN field admission', async () => {
+    const customers = sourceNode('customers', 'customers');
+    const orders = sourceNode('orders', 'orders');
+    orders.metadata = {
+      ...orders.metadata,
+      columns: [
+        { name: 'order_id', type: 'integer' },
+        { name: 'amount', type: 'numeric' },
+      ],
+    };
+    const target = transformNode();
+    const apply = vi.fn();
+    await act(async () =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={target}
+          nodes={[customers, orders, target]}
+          edges={[edge(customers.id), edge(orders.id)]}
+          copy={COPY}
+          authoring={{ canEditNode: true, onApplyNodeDraft: apply }}
+        />
+      )
+    );
+    await dropSource(customers.id);
+    await dropSource(customers.id);
+    await dropSource(orders.id);
+    const cards = Array.from(container.querySelectorAll('[data-pending="true"]'));
+    expect(cards).toHaveLength(3);
+    expect(new Set(cards.map((card) => card.getAttribute('data-relation-id'))).size).toBe(3);
+    expect(
+      cards.map(
+        (card) => card.querySelector('[data-slot="canvas-relational-node-title"]')?.textContent
+      )
+    ).toEqual(['customers', 'customers 2', 'orders']);
+    expect(container.querySelector('[data-slot="source-occurrence-alias"]')).not.toBeNull();
+    expect(apply).not.toHaveBeenCalled();
+  });
   it.each(['new', 'saved'] as const)(
     'removes the final instance from a %s model and cancels without writes',
     async (state) => {
@@ -117,8 +154,7 @@ describe('Canvas relational-tree Workbench drag', () => {
         container.querySelector('[data-slot="canvas-relational-tree-layout"] > svg path')
       ).toBeNull();
       expect(handle.current!.hasUnappliedChanges).toBe(true);
-      expect(handle.current!.canApply).toBe(false);
-      await act(async () => expect(handle.current!.apply().outcome).toBe('rejected'));
+      expect(handle.current!.canApply).toBe(true);
       expect(apply).not.toHaveBeenCalled();
       await dropSource(source.id);
       expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(1);

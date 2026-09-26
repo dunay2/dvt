@@ -66,16 +66,12 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
       cy.get(
         '[data-slot="canvas-relational-tree-inline-editor"]:visible button[type="submit"]'
       ).click();
-      cy.get('[data-slot="canvas-model-view-tab"][data-view="data"]').click();
-      cy.get('[role="alertdialog"]').should('be.visible');
-      cy.then(() => expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(0));
-      cy.contains('[role="alertdialog"] button', 'Apply and continue').click();
+      cy.get('[data-slot="canvas-model-open-data"]').click();
       cy.get('[role="alertdialog"]').should('not.exist');
-      cy.get('[data-slot="canvas-model-view-tab"][data-view="data"]').should(
-        'have.attr',
-        'aria-selected',
-        'true'
-      );
+      cy.then(() => expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(0));
+      cy.get('[data-slot="canvas-relational-tree-apply"]').click();
+      cy.get('[role="alertdialog"]').should('not.exist');
+      cy.get('[data-slot="canvas-model-data"]:visible').should('be.visible');
       cy.wrap(null).should(() => {
         const document = semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!) as {
           semanticPlan: { sha256: string };
@@ -104,7 +100,7 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
         expect(call.url.searchParams.get('relationId')).to.equal(null);
         cy.get(`[data-slot="canvas-model-data"]:visible [title="${savedDigest}"]`).should('exist');
       });
-      cy.get('[data-slot="canvas-model-view-tab"][data-view="editor"]').click();
+      cy.get('[data-slot="canvas-model-main-tab"]').click();
       cy.get('[data-slot="canvas-relational-tree-node"][aria-selected="true"]').should(
         'have.attr',
         'data-operator',

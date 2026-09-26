@@ -1,86 +1,58 @@
-/** Present Model view tabs and session actions without owning navigation decisions. */
-import { Braces, GitBranch, Table2 } from 'lucide-react';
-import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
-import type { CanvasModelView } from './useCanvasModelNavigation';
+/** Passive session toolbar: output actions are not editor navigation. */
+import { Braces, Table2 } from 'lucide-react';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 
 export function CanvasModelToolbar({
-  canvasName,
-  modelName,
-  view,
-  draftStatus,
-  onViewChange,
-  onActionsHost,
+  data,
+  actions,
 }: Readonly<{
-  canvasName: string;
-  modelName: string;
-  view: CanvasModelView;
-  draftStatus: CanvasDraftStatusState;
-  onViewChange: (view: CanvasModelView) => void;
-  onActionsHost: (host: HTMLDivElement | null) => void;
+  data: Readonly<{
+    modelName: string;
+    draftStatus: CanvasDraftStatusState;
+    sqlLabel: string;
+    dataLabel: string;
+  }>;
+  actions: Readonly<{
+    onOpenSql?: () => void;
+    onOpenData?: () => void;
+    onActionsHost: (host: HTMLDivElement | null) => void;
+  }>;
 }>) {
-  const language = useApplicationLanguageStore((state) => state.language);
-  const copy = resolveCanvasSemanticEditorCopy(language);
-  const tabs = [
-    { id: 'editor', label: modelName, icon: GitBranch },
-    { id: 'sql', label: copy.sql, icon: Braces },
-    { id: 'data', label: copy.data, icon: Table2 },
-  ] as const;
   return (
     <header
       data-slot="canvas-model-toolbar"
-      className="flex shrink-0 flex-wrap items-center gap-x-3 border-b border-(--border-subtle) bg-(--surface-shell) px-3"
+      className="flex shrink-0 flex-wrap items-center gap-x-3 border-b border-(--border-subtle) bg-(--surface-shell) px-3 py-1"
     >
-      <h1 className="sr-only" title={`${canvasName} / ${modelName}`}>
-        {modelName}
-      </h1>
-      <div role="tablist" aria-label={modelName} className="workspace-navigation-tabs self-stretch">
-        {tabs.map(({ id, label, icon: Icon }, index) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            id={`model-tab-${id}`}
-            aria-controls={`model-panel-${id}`}
-            aria-selected={view === id}
-            tabIndex={view === id ? 0 : -1}
-            data-slot="canvas-model-view-tab"
-            data-view={id}
-            className="workspace-navigation-tab"
-            title={label}
-            onClick={() => onViewChange(id)}
-            onKeyDown={(event) => {
-              const next =
-                event.key === 'ArrowRight'
-                  ? (index + 1) % tabs.length
-                  : event.key === 'ArrowLeft'
-                    ? (index + tabs.length - 1) % tabs.length
-                    : event.key === 'Home'
-                      ? 0
-                      : event.key === 'End'
-                        ? tabs.length - 1
-                        : null;
-              if (next == null) return;
-              event.preventDefault();
-              onViewChange(tabs[next]!.id);
-              document.getElementById(`model-tab-${tabs[next]!.id}`)?.focus();
-            }}
-          >
-            <Icon aria-hidden="true" className="size-4 shrink-0" />
-            <span className="max-w-64 truncate">{label}</span>
-          </button>
-        ))}
-      </div>
+      <h1 className="sr-only">{data.modelName}</h1>
+      <button
+        type="button"
+        data-slot="canvas-model-open-sql"
+        disabled={actions.onOpenSql == null}
+        className="inline-flex items-center gap-2 rounded px-2 py-1 text-xs hover:bg-(--surface-panel) disabled:opacity-50"
+        onClick={actions.onOpenSql}
+      >
+        <Braces aria-hidden="true" className="size-4" />
+        {data.sqlLabel}
+      </button>
+      <button
+        type="button"
+        data-slot="canvas-model-open-data"
+        disabled={actions.onOpenData == null}
+        className="inline-flex items-center gap-2 rounded px-2 py-1 text-xs hover:bg-(--surface-panel) disabled:opacity-50"
+        onClick={actions.onOpenData}
+      >
+        <Table2 aria-hidden="true" className="size-4" />
+        {data.dataLabel}
+      </button>
       <span
         role="status"
         data-slot="canvas-model-save-status"
-        className={`ml-auto py-1 text-[11px] ${draftStatus.tone === 'danger' ? 'text-rose-300' : draftStatus.tone === 'warning' ? 'text-amber-200' : 'text-(--text-muted)'}`}
+        className={`ml-auto py-1 text-[11px] ${data.draftStatus.tone === 'danger' ? 'text-rose-300' : data.draftStatus.tone === 'warning' ? 'text-amber-200' : 'text-(--text-muted)'}`}
       >
-        {draftStatus.label}
+        {data.draftStatus.label}
       </span>
       <div
-        ref={onActionsHost}
+        ref={actions.onActionsHost}
         data-slot="canvas-model-actions"
         className="ml-auto flex items-center empty:hidden"
       />

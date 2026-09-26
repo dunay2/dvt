@@ -17,6 +17,76 @@ import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenari
 const sourcePath = '/workspace/warehouse/connections/warehouse-a/source-data-sample';
 
 describe('Explicit source occurrences (controlled API boundary)', () => {
+  it('keeps different catalogue sources as independent pending instances', () => {
+    stubWorkbenchScenario('saved-join');
+    cy.viewport(1440, 1000);
+    visitWorkbenchCanvas();
+    openWorkbenchModel();
+    const drop = (ordinal: number): void => {
+      const dataTransfer = new DataTransfer();
+      cy.get('[data-slot="canvas-relational-tree-source"]')
+        .eq(ordinal)
+        .trigger('dragstart', { dataTransfer });
+      cy.get(
+        '[data-slot="canvas-relational-tree-draft-viewport"], [data-slot="canvas-relational-tree-viewport"]'
+      )
+        .trigger('dragover', { dataTransfer })
+        .trigger('drop', { dataTransfer, clientX: 380 + ordinal * 160, clientY: 450 });
+    };
+    drop(0);
+    drop(0);
+    drop(1);
+    cy.get('[data-pending="true"]')
+      .should('have.length', 3)
+      .then(($cards) => {
+        expect(
+          new Set(Array.from($cards, (card) => card.getAttribute('data-relation-id'))).size
+        ).to.equal(3);
+        expect(
+          new Set(
+            Array.from(
+              $cards,
+              (card) =>
+                card.querySelector('[data-slot="canvas-relational-node-title"]')?.textContent
+            )
+          ).size
+        ).to.equal(3);
+      });
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+    cy.get('[data-pending="true"]').should('not.exist');
+    cy.get('[data-operator="read"]').should('have.length', 2);
+  });
+  it('applies the final deletion and reopens the same unconfigured model', () => {
+    stubWorkbenchScenario('projection');
+    cy.viewport(1440, 1000);
+    visitWorkbenchCanvas();
+    openWorkbenchModel('transform-customers');
+    cy.get('[data-operator="read"]').rightclick();
+    cy.get('[data-slot="canvas-relational-remove-source"]').click();
+    cy.get('[data-slot="canvas-relational-removal-confirm"]').click();
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+    cy.wrap(null).should(() => {
+      const call = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1);
+      expect(call).not.to.equal(undefined);
+      const body = call!.body as {
+        draft: {
+          nodes: Array<{ id: string; metadata?: Record<string, unknown> }>;
+          edges: unknown[];
+        };
+      };
+      const model = body.draft.nodes.find((node) => node.id === 'transform-customers');
+      expect(model).not.to.equal(undefined);
+      expect(model!.metadata?.transformAuthoring).to.equal(undefined);
+      expect(body.draft.edges).to.have.length(1);
+    });
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
+    visitWorkbenchCanvas();
+    openWorkbenchModel('transform-customers');
+    cy.get('[data-operator="read"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-tree-output"]').should('be.visible');
+    cy.get('[data-slot="canvas-model-main-tab"]').should('contain.text', 'Customer summary');
+  });
   it('clears the last source, guards the empty draft, restores on Cancel and accepts a replacement', () => {
     stubWorkbenchScenario('projection');
     cy.viewport(1440, 1000);
@@ -35,7 +105,7 @@ describe('Explicit source occurrences (controlled API boundary)', () => {
       cy.get('[data-operator="read"]').should('not.exist');
       cy.get('[data-slot="canvas-relational-tree-output"]').should('be.visible');
       cy.get('[data-slot="canvas-relational-tree-layout"] > svg path').should('not.exist');
-      cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
+      cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled');
     };
     remove();
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();

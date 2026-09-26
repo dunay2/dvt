@@ -111,7 +111,7 @@ export function CanvasRelationalTreeAuthoring({
             selectedRelationId={selectedRelationId}
             transformNode={transformNode}
             expanded={expanded}
-            onClose={close}
+            onClose={() => onExpandedChange(false)}
           />
         )
       }

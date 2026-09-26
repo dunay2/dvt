@@ -17,7 +17,8 @@ import type { ReactNode } from 'react';
 export type OperationalDrawerBuiltInTabId =
   'log' | 'problems' | 'runs' | 'preview' | 'data' | 'semantic';
 export type OperationalDrawerDataTabId = `data:${string}`;
-export type OperationalDrawerTabId = OperationalDrawerBuiltInTabId | OperationalDrawerDataTabId;
+export type OperationalDrawerTabId =
+  OperationalDrawerBuiltInTabId | OperationalDrawerDataTabId | `sql:${string}`;
 
 export type OperationalDrawerDataSample =
   | Readonly<{ status: 'idle' }>

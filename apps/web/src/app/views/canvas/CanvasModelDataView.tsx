@@ -13,6 +13,7 @@ export function CanvasModelDataView({
   query,
   preparePreview,
   relationId,
+  semanticDigest,
   ...presentation
 }: CanvasModelDataPanelProps &
   Readonly<{
@@ -22,6 +23,7 @@ export function CanvasModelDataView({
     query?: ICanvasTransformDataSampleQueryPort;
     preparePreview?: CanvasModelPreviewPreparation;
     relationId?: string;
+    semanticDigest: string | null;
   }>): JSX.Element {
   const data = useCanvasModelDataQuery({
     canvasId,
@@ -30,10 +32,20 @@ export function CanvasModelDataView({
     canEditModel,
     query,
     preparePreview,
-    semanticDigest: presentation.semanticDigest,
+    semanticDigest,
     copy: presentation.copy,
     blocked:
       presentation.disabledReason != null || (presentation.unresolvedInputs?.length ?? 0) > 0,
   });
-  return <CanvasModelDataPanel {...presentation} {...data} />;
+  const stale =
+    data.sample != null &&
+    (data.sample.semanticPlanSha256 !== semanticDigest ||
+      (presentation.unresolvedInputs?.length ?? 0) > 0);
+  return (
+    <CanvasModelDataPanel
+      {...presentation}
+      data={{ ...data, stale }}
+      actions={{ load: data.load }}
+    />
+  );
 }

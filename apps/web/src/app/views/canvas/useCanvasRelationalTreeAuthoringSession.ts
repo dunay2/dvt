@@ -91,7 +91,10 @@ export function useCanvasRelationalTreeAuthoringSession(
     setDraft: setJoinDraft,
     setOperation,
   });
+  const cleared =
+    active && joinDraft == null && operation == null && slots.selectedInputIds.length === 0;
   const apply = useCanvasRelationalTreeApplyCommand({
+    cleared,
     hasPendingSources: pendingSources.length > 0,
     authoring,
     editable,
@@ -120,10 +123,8 @@ export function useCanvasRelationalTreeAuthoringSession(
     analysis,
     occurrences: createSourceOccurrenceActions({
       editable: enabled && editable,
-      output,
       session: analysis?.document == null ? null : analysis.session,
       revision: analysis?.revision ?? 0,
-      operation: !active && seed != null ? seed.operation : operation,
       inputs,
       start,
       setAppendInputId,
@@ -134,6 +135,7 @@ export function useCanvasRelationalTreeAuthoringSession(
       selectInitialInput: (id) => slots.replaceInputs([id]),
     }),
     removal,
+    cleared,
     applyRejection,
     active,
     baselineDraft,
