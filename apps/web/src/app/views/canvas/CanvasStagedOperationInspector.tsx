@@ -23,6 +23,7 @@ const configurable = new Set<ConfigurableStagedOperation>([
 
 export function CanvasStagedOperationInspector({
   staged,
+  editingDocument,
   producerDocument,
   transformNode,
   copy,
@@ -31,17 +32,21 @@ export function CanvasStagedOperationInspector({
   onUpdate,
 }: Readonly<{
   staged: CanvasStagedOperation;
+  editingDocument?: SubstraitDocument | null;
   producerDocument: SubstraitDocument | null;
   transformNode: CanonicalNode;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onClose: () => void;
   onPendingChange: (pending: boolean) => void;
-  onUpdate: (update: Pick<CanvasStagedOperation, 'operation' | 'semanticDocument'>) => void;
+  onUpdate: (
+    update: Pick<CanvasStagedOperation, 'operation' | 'semanticDocument'>
+  ) => void | boolean;
 }>): JSX.Element {
   if (isCanvasJoinOperation(staged.operation) && staged.semanticDocument != null)
     return (
       <CanvasStagedJoinInspector
         staged={staged}
+        editingDocument={editingDocument}
         copy={copy}
         onChange={onUpdate}
         onPendingChange={onPendingChange}
@@ -51,6 +56,7 @@ export function CanvasStagedOperationInspector({
     return (
       <CanvasStagedTransformInspector
         staged={staged}
+        editingDocument={editingDocument}
         transformNode={transformNode}
         onClose={onClose}
         onChange={(semanticDocument) =>
@@ -63,6 +69,7 @@ export function CanvasStagedOperationInspector({
       <CanvasStagedUnaryOperationInspector
         operation={staged.operation as ConfigurableStagedOperation}
         staged={staged}
+        editingDocument={editingDocument}
         producerDocument={producerDocument}
         copy={copy}
         onClose={onClose}

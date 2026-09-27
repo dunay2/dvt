@@ -1,4 +1,5 @@
 /** Own the authoring toolbar, viewport and inspector against the existing workbench session. */
+import { useMemo } from 'react';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type {
   CanvasRelationalTreeAuthoringDto,
@@ -11,7 +12,10 @@ import { CanvasRelationalTreeAuthoringTemplate } from './CanvasRelationalTreeAut
 import { PendingSourceOccurrenceProperties } from './relational-source-occurrence/PendingSourceOccurrenceProperties';
 import { sourceOccurrenceAliases } from './relational-source-occurrence/sourceOccurrenceAlias';
 import { CanvasStagedOperationInspector } from './CanvasStagedOperationInspector';
-import { resolveCanvasStagedProducerDocument } from './canvasStagedOperationDocument';
+import {
+  resolveCanvasStagedProducerDocument,
+  resolveCanvasStagedEditingDocument,
+} from './canvasStagedOperationDocument';
 
 export function CanvasRelationalTreeAuthoring({
   data,
@@ -34,6 +38,11 @@ export function CanvasRelationalTreeAuthoring({
   );
   const staged = data.stagedOperations.find(
     (operation) => operation.id === data.selectedStagedOperationId
+  );
+  const editingDocument = useMemo(
+    () =>
+      staged == null ? null : resolveCanvasStagedEditingDocument(staged, data.stagedOperations),
+    [staged, data.stagedOperations]
   );
   const reservedAliases = data.pendingSources.map((item) => item.read.binding.displayName);
   const producerDocument = resolveCanvasStagedProducerDocument({
@@ -72,6 +81,7 @@ export function CanvasRelationalTreeAuthoring({
         staged != null ? (
           <CanvasStagedOperationInspector
             staged={staged}
+            editingDocument={editingDocument}
             producerDocument={producerDocument}
             transformNode={transformNode}
             copy={copy}

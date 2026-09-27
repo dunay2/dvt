@@ -118,10 +118,11 @@ protected preview. The shell extraction is a presentation adapter of
 - A staged Transform materializes one owned ProjectRel over its connected
   producer, opens the existing field-transformation editor and remains in the
   graph after configuration. Unary editors update their staged operation rather
-  than removing its card. Changing or disconnecting a producer invalidates only
-  downstream semantic documents, which are rebuilt from the new producer before
-  publication. Only the operation connected to terminal Output becomes the model
-  authority.
+  than removing its card. Editing a producer uses the complete configured consumer
+  document and the existing selected-relation rebinding command. Its staged
+  subtrees are then projected atomically; consumer expressions and aliases are
+  not rebuilt from defaults. Disconnection remains an explicit invalidation.
+  Only the operation connected to terminal Output becomes the model authority.
 - Explicit operations inside the model define its outputs. Consumers reference
   the immediate producer's published stable FieldIds through a local Read;
   producer operators are resolved for analysis/SQL, not copied into the consumer
@@ -283,13 +284,13 @@ gesture and one position map. Output movement changes geometry only; it does not
 change its producer, create an operation or write semantic state. The node overlay
 now yields empty space to the underlying edge actions, while each card remains an
 interactive island. Hovering or focusing a removable connection exposes its danger
-stroke; clicking it, or activating it with Delete/Backspace, delegates to the
-existing disconnect command.
+stroke. Left click selects and leaves the connection intact. The contextual
+Delete command or Delete/Backspace delegates to the existing disconnect command.
 
 Focused geometry and interaction tests cover a source, canonical operation,
 pending operation and Output. The Cypress test drives actual browser pointer
 capture and proves that Output moves, its edge follows, and a normal line click
-disconnects the producer. It also proves that card movement does not open editors,
+selects before Delete disconnects the producer. It also proves that card movement does not open editors,
 request data or persist semantic writes. This browser fixture is not live-provider
 verification.
 
@@ -336,3 +337,55 @@ not expose arbitrary cycle-ID reconciliation. Current test references and new
 symbols have been registered, but this cycle is a closure blocker until resolved
 through an approved canonical operation. No fake path or validation bypass is
 used to claim completion.
+
+## Integration review, 2026-09-27
+
+The review reproduced and corrected two real browser defects: the staged
+Transform inspector nested a second width-constrained panel and overflowed the
+viewport; toggling output inclusion disabled the focused checkbox and moved its
+DOM row. The duplicate panel was removed. Output rows now retain their position
+during inclusion changes, and busy commands reject duplicate gestures without
+disabling the focused control. Explicit reordering remains supported.
+
+The review also replaced destructive consumer reconstruction with the existing
+selected-relation command over the complete configured document. Regression
+coverage retains consumer aliases after a producer rename, rejects an isolated
+producer snapshot that omits its configured consumer, and rejects removal of a
+field required downstream without advancing the accepted revision.
+
+The Transform browser test now authors two derived fields, toggles an output
+without losing focus, explicitly connects terminal Output, applies, reloads and
+reopens the same operation. The producer-consumer test restores an Input mapping
+and proves that neither connection nor an Output drop copies producer operations.
+These tests previously asserted the retired automatic-output behavior. The DBT
+header assertion was aligned with the existing content-sized materialization
+rail contract; no last-run placeholder was added to production.
+
+Observed commands in this review:
+
+- `pnpm --filter @dvt/web test:canvas:run`: 2,364 tests in 527 files passed
+  before the final consumer-preservation correction.
+- Focused Canvas tests for staged editing, Transform, JOIN and output ordering:
+  12 tests in 4 files passed after that correction.
+- Native Cypress `canvas-relational-card-movement.cy.ts`: 4 passed.
+- Native Cypress `canvas-column-lineage-mapping.cy.ts`: 4 passed.
+- Native Cypress `canvas-transform-stage.cy.ts,canvas-model-chain-fields.cy.ts`:
+  both passed after reproducing the clipping and focus failures.
+- Web lint and typecheck passed. The full presentation run had 1,357 passing
+  tests and one 5-second module-reevaluation timeout in `AppServicesContext`.
+  Its unchanged isolated rerun and the corrected DBT test passed all 15 tests;
+  the timed-out full run is not reported as green.
+- The complete branch ARC evaluator returned ARC-2, requiring lint, tests,
+  schema validation, contract golden checks, evidence and risk; no rollout or
+  compatibility artifact was required.
+- `GIT_BASE=0c403a023 GIT_HEAD=218b9fd83 pnpm
+docs:feature-mechanization:implementation` failed on the historical empty
+  VTX1 cycle, five missing historical test references and contradictory
+  cross-rail forbidden surfaces. No validator or authorization rule was relaxed.
+
+This is not integration approval. Pending binary composition of two transformed
+producers, CROSS/SET staging and the remaining legacy pending-JOIN browser flows
+still require closure before the complete editor scope can be declared accepted.
+The governance-maintenance expansion has been requested separately; no database
+import or direct mutation was used. No new stub, fake-success path, skipped test
+or debt entry was introduced by this review.

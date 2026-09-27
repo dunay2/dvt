@@ -27,13 +27,24 @@ describe('Semantic dataset Transform', () => {
     cy.get('[data-operation="field_transform"]')
       .should('have.attr', 'aria-disabled', 'false')
       .click();
+    cy.get('[data-pending-operation="true"]').should('have.length', 1);
+    cy.get('[data-slot="canvas-relational-output-input-port"]').focus().type('{del}');
+    cy.window().then((window) => {
+      const dataTransfer = new window.DataTransfer();
+      cy.get('[data-operator="join"]')
+        .closest('li')
+        .find('[data-slot="canvas-relational-output-port"]')
+        .trigger('dragstart', { dataTransfer });
+      cy.get('[data-pending-operation="true"] [data-slot="canvas-relational-input-port"]')
+        .trigger('dragover', { dataTransfer })
+        .trigger('drop', { dataTransfer });
+    });
     cy.get(inspector)
       .should('be.visible')
       .and(($panel) => {
         const bounds = $panel[0]!.getBoundingClientRect();
         expect(bounds.right).to.be.closeTo(1440, 30);
       });
-    cy.get(card).should('have.length', 1);
     cy.get(form).should('not.exist');
     for (const alias of ['normalized_name', 'fallback_name']) {
       cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
@@ -45,7 +56,27 @@ describe('Semantic dataset Transform', () => {
     }
     cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();
     cy.get(inspector).find('input').filter('[value="normalized_name"]').should('exist');
+    cy.get(inspector)
+      .find('input[type="checkbox"]')
+      .first()
+      .as('outputCheckbox')
+      .focus()
+      .uncheck()
+      .should('not.be.checked')
+      .and('be.focused');
+    cy.window().then((window) => {
+      const dataTransfer = new window.DataTransfer();
+      cy.get('[data-pending-operation="true"] [data-slot="canvas-relational-output-port"]').trigger(
+        'dragstart',
+        { dataTransfer }
+      );
+      cy.get('[data-slot="canvas-relational-output-input-port"]')
+        .trigger('dragover', { dataTransfer })
+        .trigger('drop', { dataTransfer });
+    });
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
     cy.get(card).should('have.length', 1);
+    cy.get('[data-pending-operation="true"]').should('not.exist');
     cy.wrap(null).should(() => {
       const saved = JSON.stringify(getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body);
       expect(saved).to.include('normalized_name').and.include('fallback_name');

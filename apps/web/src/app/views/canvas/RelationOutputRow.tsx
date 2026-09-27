@@ -11,6 +11,7 @@ import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 export function RelationOutputRow({
   field,
   disabled,
+  busy = false,
   copy,
   name,
   error,
@@ -31,6 +32,7 @@ export function RelationOutputRow({
 }: Readonly<{
   field: RelationOutputSlot;
   disabled: boolean;
+  busy?: boolean;
   copy: CanvasViewCopy;
   name: string;
   error: CanvasInspectorNodeDraftErrorCode | null;
@@ -90,8 +92,12 @@ export function RelationOutputRow({
               type="checkbox"
               checked={field.output != null}
               disabled={disabled}
+              aria-disabled={busy || undefined}
+              aria-busy={busy || undefined}
               aria-label={field.name}
-              onChange={(event) => onInclude(event.currentTarget.checked)}
+              onChange={(event) => {
+                if (!busy) onInclude(event.currentTarget.checked);
+              }}
             />
             <Input
               aria-label={field.name}

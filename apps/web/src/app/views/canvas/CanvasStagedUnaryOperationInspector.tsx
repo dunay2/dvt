@@ -21,6 +21,7 @@ export type ConfigurableStagedOperation = CanvasRelationalOperatorTool['id'];
 export function CanvasStagedUnaryOperationInspector({
   operation,
   staged,
+  editingDocument,
   producerDocument,
   copy,
   onChange,
@@ -29,13 +30,17 @@ export function CanvasStagedUnaryOperationInspector({
 }: Readonly<{
   operation: ConfigurableStagedOperation;
   staged: CanvasStagedOperation;
+  editingDocument?: SubstraitDocument | null;
   producerDocument: SubstraitDocument | null;
   copy: CanvasRelationalTreeWorkbenchCopy;
-  onChange: (semanticDocument: CanvasStagedOperation['semanticDocument']) => void;
+  onChange: (semanticDocument: CanvasStagedOperation['semanticDocument']) => void | boolean;
   onClose: () => void;
   onPendingChange: (pending: boolean) => void;
 }>): JSX.Element | null {
-  const configured = useMemo(() => decodeCanvasStagedOperation(staged), [staged.semanticDocument]);
+  const configured = useMemo(
+    () => editingDocument ?? decodeCanvasStagedOperation(staged),
+    [editingDocument, staged.semanticDocument]
+  );
   const document = configured ?? producerDocument;
   const analysis = useCanvasRelationAnalysisSession(document, staged.id);
   const targetRelationId = configured == null ? (staged.inputs[0] ?? null) : staged.id;
@@ -74,7 +79,7 @@ function StagedUnaryForm({
   targetRelationId: string;
   editing: boolean;
   copy: CanvasRelationalTreeWorkbenchCopy;
-  onChange: (semanticDocument: CanvasStagedOperation['semanticDocument']) => void;
+  onChange: (semanticDocument: CanvasStagedOperation['semanticDocument']) => void | boolean;
   onClose: () => void;
   onPendingChange: (pending: boolean) => void;
 }>): JSX.Element | null {
@@ -97,7 +102,11 @@ function StagedUnaryForm({
         onPendingChange={onPendingChange}
         onClose={onClose}
         onChange={(next) =>
-          onChange(encodeDvtSubstraitSemanticDocument(assignCanvasStagedRoot(next, staged.id)))
+          onChange(
+            encodeDvtSubstraitSemanticDocument(
+              editing ? next : assignCanvasStagedRoot(next, staged.id)
+            )
+          )
         }
       />
     </aside>

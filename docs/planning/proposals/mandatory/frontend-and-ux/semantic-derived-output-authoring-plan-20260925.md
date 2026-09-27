@@ -68,15 +68,18 @@ flowchart LR
 
 ### Transform card interaction
 
-The Semantic Editor exposes **Transform** in Add operation. It inserts an
-identity `ProjectRel` after the selected dataset, reconnects its consumers and
-selects the new card. Its initial output is the full input dataset; this is a
-valid passthrough transformation, not a placeholder.
+The Semantic Editor exposes **Transform** in Add operation. The card is staged
+independently of selection. An explicit producer-to-Input connection creates
+one owned identity `ProjectRel`; no existing consumer is rewired implicitly.
+Its initial output is the full input dataset, a valid passthrough transformation.
+The author connects its output to a downstream operation or the passive terminal.
 
 ```mermaid
 flowchart LR
-  Dataset[Selected dataset] --> Add[Add operation: Transform]
-  Add --> Project[ProjectRel: passthrough fields]
+  Add[Add operation: Transform] --> Card[Unconnected operation card]
+  Dataset[Producer output] --> Input[Explicit Transform Input connection]
+  Card --> Input
+  Input --> Project[ProjectRel: passthrough fields]
   Project --> Inspector[Fixed right Transform inspector]
   Inspector --> Fields[Add derived fields using admitted functions]
   Fields --> Consumer[JOIN, Filter, Window or another Transform]
@@ -90,6 +93,19 @@ Insertion, field authoring and output changes use the existing revision-bound
 command and downstream rebinding boundary. Prove insertion on either JOIN
 operand, passthrough preservation, stale rejection and the production Workbench
 interaction without a floating editor.
+
+Acceptance includes editing output inclusion and derived fields, explicitly
+connecting the terminal, applying and reopening without lost selections or
+duplicate operations. Checkbox updates must retain focus and viewport geometry.
+Keep row identity and presentation order stable while toggling inclusion. Busy
+commands use accessible busy state and reject duplicate gestures without
+temporarily disabling the focused checkbox. Reordering remains an explicit
+gesture; inclusion follows the displayed order rather than moving its row.
+Staged and applied Transform use the same fixed inspector frame. Do not wrap
+that frame in another width-constrained properties panel: nested widths clip
+the controls beyond the viewport and duplicate ownership of the inspector layout.
+The producer-consumer browser proof must not create output semantics by connecting
+outer cards or by dropping fields on the passive Output tab.
 
 The focused browser proof saves and reopens Transform through the real Canvas
 UI with the existing stateful draft API transport. This is a frontend
@@ -109,6 +125,34 @@ field dependencies.
    predicates from #3420.
 
 ## Rails And Negative Proof
+
+### Preserve pending consumers during producer edits
+
+The pending graph currently edits each operation's embedded document in
+isolation and discards configured consumers after a producer change. Rebuilding
+an identity Transform cannot recover a consumer's authored expressions or
+output selections. This is an authority-boundary defect, not a rendering issue.
+
+```mermaid
+flowchart LR
+  Before[Edit isolated producer] --> Discard[Discard consumer semantics]
+  Discard --> Loss[Rebuild defaults and lose authored fields]
+  After[Edit relation in complete connected document] --> Commit[Existing selected-relation command]
+  Commit --> Rebind[Validate and rebind downstream fields]
+  Rebind --> Project[Project each staged subtree back into the same draft]
+```
+
+Select the complete configured consumer document for editing any staged
+ancestor. Reuse the existing selected-relation command and validation boundary;
+do not implement another expression rewriter. After a successful command,
+project the affected staged subtrees atomically using their stable relation
+identities. Removing a required producer field rejects the command rather than
+silently resetting a consumer. Disconnection remains a distinct explicit action.
+
+Regression proof must preserve an authored consumer alias or derived field
+after an upstream rename and reject a producer-field removal used downstream.
+The read projection belongs to `ProjectCanvasRelationalTree`; publication of
+the updated snapshots remains `ConfigureCanvasDvtNode` and the existing draft.
 
 - Command: `ConfigureCanvasDvtNode`.
 - Query: `ProjectCanvasRelationalTree`.

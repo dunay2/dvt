@@ -16,6 +16,48 @@ export function decodeCanvasStagedOperation(
   }
 }
 
+/** Edit an ancestor in its complete configured tree so the canonical command rebinds consumers. */
+export function resolveCanvasStagedEditingDocument(
+  operation: CanvasStagedOperation,
+  operations: readonly CanvasStagedOperation[]
+): SubstraitDocument | null {
+  let document = decodeCanvasStagedOperation(operation);
+  let id = operation.id;
+  const visited = new Set<string>();
+  while (!visited.has(id)) {
+    visited.add(id);
+    const consumer = operations.find((candidate) => candidate.inputs.includes(id));
+    const next = decodeCanvasStagedOperation(consumer);
+    if (consumer == null || next == null) break;
+    const indexed = indexSubstraitRelations(next);
+    if (!indexed.ok || !indexed.index.relations.has(operation.id)) break;
+    document = next;
+    id = consumer.id;
+  }
+  return document;
+}
+
+/** Project one owned subtree without changing expressions, aliases or stable field identities. */
+export function projectCanvasStagedDocument(
+  document: SubstraitDocument,
+  relationId: string
+): SubstraitDocument | null {
+  const indexed = indexSubstraitRelations(document);
+  if (!indexed.ok) return null;
+  const root = indexed.index.relations.get(relationId);
+  if (root == null) return null;
+  const reachable = new Set([relationId]);
+  for (const id of reachable)
+    for (const input of indexed.index.relations.get(id)!.inputs) reachable.add(input);
+  return createSourceDocument(
+    indexed.index.postorder
+      .filter((id) => reachable.has(id))
+      .map((id) => indexed.index.relations.get(id)!),
+    root,
+    document.plan
+  );
+}
+
 export function resolveCanvasStagedProducerDocument(args: {
   relationId: string | null;
   canonical: SubstraitDocument | null;

@@ -1,7 +1,6 @@
-/** Connected model input/output selection, field transfer and durable reload use production rails. */
+/** Producer fields enter the consumer Input without inventing its output semantics. */
 import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
-import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
@@ -41,7 +40,7 @@ function visitCanvas(): void {
 }
 
 describe('Model card field flow', () => {
-  it('connects models, selects outputs, transfers a field and reloads the saved result', () => {
+  it('connects a producer, restores an Input mapping and reloads without copying operations', () => {
     cy.viewport(1700, 1100);
     stubShellBootstrapApis();
     stubE2eJsonApi('GET', '/workspace/context', {
@@ -92,56 +91,58 @@ describe('Model card field flow', () => {
           });
       });
     });
-    cy.get(`${consumer} [role="tab"]`).contains('Output (2)').should('be.visible');
+    cy.get(`${consumer} [role="tab"]`).contains('Input (2)').should('be.visible');
+    cy.get(`${consumer} [role="tab"]`).contains('Output (0)').should('be.visible');
     cy.get(consumer).should('not.contain.text', 'RECONNECT');
     cy.get('[data-sonner-toaster]').should('have.attr', 'data-y-position', 'bottom');
     cy.get(consumer).contains('button[aria-expanded]', 'Columns').click();
     cy.get(`${consumer} ${outputToggle}`).should('not.exist');
-    cy.get(`${consumer} [role="tab"]`).contains('Output (2)').click();
-    cy.get(`${consumer} ${columns}[data-column-name="total"] ${outputToggle}`)
-      .should('have.attr', 'aria-disabled', 'false')
-      .click();
-    cy.get(`${consumer} [role="tab"]`).contains('Input (2)').click();
-    cy.get(`${consumer} ${columns}`).should('have.length', 2);
-    cy.get(`${consumer} ${outputToggle}`).should('not.exist');
-    cy.get(`${consumer} [role="tab"]`).contains('Output (1)').click();
-    cy.get(`${consumer} ${columns}`).should('have.length', 1);
     cy.get(`${producer} [role="tab"]`).contains('Output').click();
     cy.get(producer).contains('button[aria-expanded]', 'Columns').click();
+    cy.get('.react-flow__edge-columnLineage[aria-label="total → total"]').trigger('keydown', {
+      key: ' ',
+      code: 'Space',
+      force: true,
+    });
+    cy.get('button[aria-label="Remove mapping total to total"]').click({ force: true });
+    cy.get(`${consumer} [role="tab"]`).contains('Input (1)').should('be.visible');
     const transfer = new DataTransfer();
     cy.get(`${producer} ${columns}[data-column-name="total"]`)
       .should('have.attr', 'draggable', 'true')
       .trigger('dragstart', { dataTransfer: transfer });
-    cy.get(`${consumer} [data-slot="tabs"]`)
+    cy.get(`${consumer} [role="tabpanel"]`)
+      .trigger('dragover', { dataTransfer: transfer })
+      .trigger('drop', { dataTransfer: transfer });
+    cy.get(`${consumer} [role="tab"]`).contains('Input (2)').should('be.visible');
+    cy.get(`${consumer} ${columns}`).should('have.length', 2);
+    cy.get(`${consumer} ${outputToggle}`).should('not.exist');
+    cy.get(`${consumer} [role="tab"]`).contains('Output (0)').click();
+    cy.get(`${producer} ${columns}[data-column-name="total"]`)
+      .should('have.attr', 'draggable', 'true')
+      .trigger('dragstart', { dataTransfer: transfer });
+    cy.get(`${consumer} [role="tabpanel"]`)
       .trigger('dragover', { dataTransfer: transfer })
       .trigger('drop', { dataTransfer: transfer });
     cy.get(`${producer} ${columns}[data-column-name="total"]`).trigger('dragend', {
       dataTransfer: transfer,
     });
-    cy.get(`${consumer} [role="tab"]`).contains('Output (2)').should('be.visible');
-    cy.get(`${consumer} ${columns}`).should('have.length', 2);
-    cy.get(`${consumer} [data-port-variant="column"][data-port="source"]`).should('have.length', 2);
-    cy.get(`${consumer} ${columns}[data-column-name="total"]`)
-      .invoke('attr', 'data-field-id')
-      .then((fieldId) => {
-        cy.wrap(null).should(() => {
-          const body = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
-            { draft?: WorkspaceGraphAuthoringDraft } | undefined;
-          const saved = body?.draft?.nodes.find((node) => node.id === 'orphan-transform-1');
-          const authority = saved?.metadata?.transformAuthoring as
-            { semanticDocument?: unknown } | undefined;
-          expect(authority?.semanticDocument).not.to.equal(undefined);
-          const document = decodeDvtSubstraitSemanticDocument(authority!.semanticDocument);
-          expect(
-            document.sidecar.fields.some((field) => field.fieldId === fieldId),
-            'restored field persisted'
-          ).to.equal(true);
-        });
-      });
+    cy.get(`${consumer} [role="tab"]`).contains('Output (0)').should('be.visible');
+    cy.get(`${consumer} ${columns}`).should('not.exist');
+    cy.get(`${consumer} [data-port-variant="column"][data-port="source"]`).should('not.exist');
+    cy.wrap(null).should(() => {
+      const body = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+        { draft?: WorkspaceGraphAuthoringDraft } | undefined;
+      const saved = body?.draft?.nodes.find((node) => node.id === 'orphan-transform-1');
+      expect(saved).to.exist;
+      expect(saved?.metadata ?? {}).not.to.have.property('transformAuthoring');
+      const edge = body?.draft?.edges.find((entry) => entry.targetId === 'orphan-transform-1');
+      expect(edge?.metadata?.inputBindings?.fields).to.have.length(2);
+    });
     cy.get('.react-flow__controls-fitview').click();
     cy.screenshot('model-chain-input-output');
     visitCanvas();
-    cy.get(`${consumer} [role="tab"]`).contains('Output (2)').should('be.visible');
+    cy.get(`${consumer} [role="tab"]`).contains('Input (2)').should('be.visible');
+    cy.get(`${consumer} [role="tab"]`).contains('Output (0)').should('be.visible');
     cy.get(consumer).should('not.contain.text', 'RECONNECT');
   });
 });

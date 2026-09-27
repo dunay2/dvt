@@ -1,9 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { createCanvasStagedOperationActions } from './canvasStagedOperationActions';
-import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
-
-const semanticDocument = {} as DvtSubstraitSemanticDocumentV1;
+import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { configureCanvasStagedTransform } from './canvasStagedTransformConfiguration';
+import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
+import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
+import { resolveDvtSubstraitColumnFunctions } from '@dvt/postgres-projection';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import {
+  decodeCanvasStagedOperation,
+  resolveCanvasStagedEditingDocument,
+} from './canvasStagedOperationDocument';
 
 function actionsFor(state: {
   operations: readonly CanvasStagedOperation[];
@@ -102,24 +110,81 @@ describe('staged operation commands', () => {
     ]);
   });
 
-  it('invalidates configured consumers when a producer changes', () => {
+  it('edits a producer in its connected document without resetting consumer aliases', async () => {
+    const document = connectedNamesProjectionDraft();
+    const session = new CanvasRelationAnalysisSession('staged-chain');
+    session.receive(document);
+    const producerId = session.rootId;
+    const producer: CanvasStagedOperation = {
+      id: producerId,
+      operation: 'field_transform',
+      inputs: session.locate(producerId, session.revision).inputs,
+      semanticDocument: encodeDvtSubstraitSemanticDocument(document),
+    };
+    const consumer = await configureCanvasStagedTransform(
+      { id: 'pending-operation:consumer', operation: 'field_transform', inputs: [producerId] },
+      document
+    );
+    session.receive(decodeCanvasStagedOperation(consumer));
+    await changeSelectedRelationOutputs(session, {
+      relationId: consumer.id,
+      expectedRevision: session.revision,
+      outputs: [0, 1].map((slot) => ({ slot, alias: `retained_${slot}` })),
+    });
+    const capability = resolveDvtSubstraitColumnFunctions({
+      dataTypes: ['string'],
+      provider: 'postgres',
+      resolution: 'complete',
+    }).find((entry) => entry.name === 'upper')!;
+    const configured = await applySelectedRelationDerivedOutput(session, {
+      relationId: consumer.id,
+      expectedRevision: session.revision,
+      intent: 'edit',
+      alias: 'retained_derived',
+      capabilityIds: [capability.capabilityId],
+      operandFieldIds: [(await session.query(consumer.id)).bindings[0]!.fieldId],
+    });
     const state = {
       operations: [
-        { id: 'first', operation: 'filter', inputs: ['left'], semanticDocument },
-        { id: 'second', operation: 'field_transform', inputs: ['first'], semanticDocument },
-        { id: 'third', operation: 'sort', inputs: ['second'], semanticDocument },
-      ] satisfies readonly CanvasStagedOperation[],
+        producer,
+        { ...consumer, semanticDocument: encodeDvtSubstraitSemanticDocument(configured) },
+      ],
     };
-
-    actionsFor(state).updateConfiguration('first', {
-      operation: 'filter',
-      semanticDocument,
+    session.receive(resolveCanvasStagedEditingDocument(producer, state.operations));
+    const renamed = await changeSelectedRelationOutputs(session, {
+      relationId: producerId,
+      expectedRevision: session.revision,
+      outputs: [0, 1].map((slot) => ({ slot, alias: `renamed_${slot}` })),
     });
-
-    expect(state.operations.map((operation) => operation.semanticDocument != null)).toEqual([
-      true,
-      false,
-      false,
-    ]);
+    actionsFor(state).updateConfiguration(producerId, {
+      operation: 'field_transform',
+      semanticDocument: encodeDvtSubstraitSemanticDocument(renamed),
+    });
+    const saved = decodeCanvasStagedOperation(state.operations[1]);
+    expect(
+      saved?.sidecar.fields
+        .filter((field) => field.relationId === consumer.id)
+        .map((field) => field.displayName)
+    ).toEqual(['retained_0', 'retained_1', 'retained_derived']);
+    session.receive(saved);
+    expect(session.rootId).toBe(consumer.id);
+    const accepted = state.operations;
+    expect(
+      actionsFor(state).updateConfiguration(producerId, {
+        operation: 'field_transform',
+        semanticDocument: producer.semanticDocument,
+      })
+    ).toBe(false);
+    expect(state.operations).toBe(accepted);
+    const revision = session.revision;
+    await expect(
+      changeSelectedRelationOutputs(session, {
+        relationId: producerId,
+        expectedRevision: revision,
+        outputs: [{ slot: 0, alias: 'renamed_0' }],
+      })
+    ).rejects.toThrow();
+    expect(session.revision).toBe(revision);
+    session.dispose();
   });
 });

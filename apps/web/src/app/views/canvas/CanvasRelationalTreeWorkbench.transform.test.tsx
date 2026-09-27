@@ -99,6 +99,17 @@ describe('Transform card in the production Workbench', () => {
     await waitFor(() =>
       expect(container.querySelector('[data-slot="canvas-transform-inspector"]')).not.toBeNull()
     );
+    const inspector = container.querySelector('[data-slot="canvas-transform-inspector"]')!;
+    expect(inspector.parentElement?.classList.contains('canvas-operation-workspace')).toBe(true);
+    await waitFor(() =>
+      expect(inspector.querySelectorAll('input[type="checkbox"]')).toHaveLength(4)
+    );
+    const checkbox = inspector.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    const label = checkbox.getAttribute('aria-label')!;
+    checkbox.focus();
+    await act(async () => fireEvent.click(checkbox));
+    await waitFor(() => expect(checkbox.checked).toBe(false));
+    expect(document.activeElement).toBe(checkbox);
     await connectWorkbenchOutput(
       container,
       staged.querySelector<HTMLElement>('[data-slot="canvas-relational-output-port"]')!
@@ -113,6 +124,15 @@ describe('Transform card in the production Workbench', () => {
     const saved = applied.mock.calls[0]![0];
     expect(saved.dvt).toMatchObject({ mode: 'substrait', shape: 'projection' });
     expect(saved.relationalAuthoringDraft).toMatchObject({ sources: [], operations: [] });
+    expect(container.querySelectorAll('[data-pending-operation="true"]')).toHaveLength(0);
+    await act(async () => fireEvent.click(container.querySelector('[data-operator="project"]')!));
+    await waitFor(() => {
+      const restored = container.querySelector<HTMLInputElement>(
+        `[data-slot="canvas-transform-inspector"] input[type="checkbox"][aria-label="${label}"]`
+      );
+      expect(restored).not.toBeNull();
+      expect(restored!.checked).toBe(false);
+    });
   });
 
   it('denies Transform insertion in a read-only Model', async () => {

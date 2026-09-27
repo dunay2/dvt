@@ -7,6 +7,13 @@ import {
   type CanvasStagedOperation,
   type CanvasStagedOperationKind,
 } from './canvasStagedOperation';
+import {
+  decodeCanvasStagedOperation,
+  projectCanvasStagedDocument,
+  resolveCanvasStagedEditingDocument,
+} from './canvasStagedOperationDocument';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 
 export function createCanvasStagedOperationActions(
   args: Readonly<{
@@ -111,13 +118,32 @@ export function createCanvasStagedOperationActions(
       id: string,
       update: Pick<CanvasStagedOperation, 'operation' | 'semanticDocument'>
     ) => {
-      if (!args.editable || !args.start()) return;
+      if (!args.editable || !args.start()) return false;
+      const target = args.operations.find((operation) => operation.id === id);
+      if (target == null) return false;
+      const document = decodeCanvasStagedOperation({ ...target, ...update });
+      if (document == null) return false;
+      const currentDocument = resolveCanvasStagedEditingDocument(target, args.operations);
+      const currentIndex =
+        currentDocument == null ? null : indexSubstraitRelations(currentDocument);
+      if (
+        currentIndex?.ok &&
+        projectCanvasStagedDocument(document, currentIndex.index.rootId) == null
+      )
+        return false;
       args.setOperations((current) => {
-        const updated = current.map((operation) =>
-          operation.id === id ? { ...operation, ...update } : operation
-        );
-        return invalidateConsumers(updated, new Set([id]));
+        return current.map((operation) => {
+          const projected = projectCanvasStagedDocument(document, operation.id);
+          return projected == null
+            ? operation
+            : {
+                ...operation,
+                ...(operation.id === id ? { operation: update.operation } : {}),
+                semanticDocument: encodeDvtSubstraitSemanticDocument(projected),
+              };
+        });
       });
+      return true;
     },
     remove,
     complete: remove,
