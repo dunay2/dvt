@@ -86,9 +86,13 @@ protected preview. The shell extraction is a presentation adapter of
   ports, without mapping, selection, reorder or expression controls.
 - Staged relational operations expose only the Input ports required by their
   algebraic arity. Producers connect directly to any compatible free port in
-  any order, including the same producer on both ports for an explicit
-  self-join; selection is optional presentation state, never an admission
-  prerequisite. Occupied-port replacement and cycles reject atomically.
+  any order. Each instance has at most one consumer across canonical inputs,
+  staged ports and terminal Output. A self-join requires separate instances
+  with distinct aliases; selection is never an admission prerequisite.
+  Occupied-port replacement, producer fan-out and cycles reject atomically.
+  Only operation outputs may create a new terminal connection. Existing direct
+  source-to-Output wires remain removable without deleting cards or creating
+  a hidden Transform; saved drafts are not silently rewritten.
 - Incomplete source occurrences, operation nodes, port bindings, terminal
   Output selection and positions persist in the existing protected draft. They
   reopen without materializing a hidden Transform or copying another producer's
@@ -183,6 +187,42 @@ The new mechanization references were recorded additively through
 direct database mutation or Planning DB import was introduced.
 
 ## Compatibility and verification limits
+
+### Single-consumer correction, 2026-09-27
+
+The internal editor now admits only one consumer per relation instance across
+canonical inputs, staged operation ports and terminal Output. Source/input
+cards connect to operations, and operations may feed another operation or the
+passive terminal. Reusing one instance on two JOIN ports is rejected; two
+separately aliased instances remain valid. No outer dependency rule or saved
+draft schema was changed.
+
+The initial inspection view now delegates terminal disconnection to the same
+existing command as the draft view. An occupied terminal disconnects even when
+a producer was selected. Hand-mode panning no longer captures SVG button
+actions. Neither disconnection nor rejected rewiring creates a Transform,
+deletes a source card, resets layout or rewrites an existing saved draft.
+
+Five command/interaction regressions failed before the admission correction;
+the hand-mode regression also failed before its selector correction. The final
+focused command passed 97 tests in 28 files:
+
+```sh
+pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts CanvasRelationalTreeWorkbench CanvasRelationalTreeView.test RelationalViewportPan.test canvasStagedOperationActions canvasCanonicalRouteAuthority.architecture canvasDraftRecoveryBoundary.architecture canvasInteractionCommandSurface.architecture --maxWorkers=2
+```
+
+The earlier `pnpm --filter @dvt/web test:canvas:run` is not counted as green:
+2,334 tests passed, six still encoded the retired fan-out behavior, three
+architecture tests timed out, and one worker RPC timed out. Updated connection
+scenarios and all three architecture tests passed in the focused rerun with
+unchanged test timeouts. No checks were disabled. This is DOM-level interaction
+proof, not a new real-browser or live-provider verification.
+
+`pnpm docs:status:generate --code-state-only` and `pnpm governance:refresh`
+passed without importing or rebuilding Planning DB. The existing catalog and
+risk entry were updated; no debt entry, stub, new semantic rail or fallback was
+introduced. The repository-wide pre-push limitation below remains separately
+reported rather than hidden by the focused green result.
 
 The new `producerRef` and `inputBindings` fields are optional. Existing documents
 without them remain admitted, but this does not promise that older strict clients

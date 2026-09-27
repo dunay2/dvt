@@ -60,15 +60,15 @@ export function CanvasRelationalTreeOutput({
           {content}
         </button>
       )}
-      {onConnect == null ? null : (
+      {onConnect == null && onDisconnect == null ? null : (
         <button
           type="button"
           data-slot="canvas-relational-output-input-port"
           data-connected={connected || undefined}
           aria-label={copy.relationalTreePrimaryInputLabel}
           onClick={() => {
-            if (selectedSource != null) onConnect(selectedSource);
-            else if (connected) onDisconnect?.();
+            if (connected) onDisconnect?.();
+            else if (selectedSource != null) onConnect?.(selectedSource);
           }}
           onDragOver={(event) => {
             event.preventDefault();
@@ -80,7 +80,7 @@ export function CanvasRelationalTreeOutput({
             if (relationId == null) return;
             event.preventDefault();
             event.stopPropagation();
-            onConnect(relationId);
+            onConnect?.(relationId);
           }}
           className={`${relationalInputPortClass} top-1/2`}
         />

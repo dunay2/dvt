@@ -18,11 +18,21 @@ export function useCanvasRelationalGraphAuthoring(
   }>
 ) {
   const { analysis, editable, inputs, outputRelationId, start, state } = args;
+  const canonicalIds =
+    analysis?.document?.sidecar.relations.map((relation) => relation.relationId) ?? [];
+  // Every non-root relation in the canonical tree already has a consumer.
+  const canonicalConsumers = canonicalIds.filter((id) => id !== analysis?.session.rootId);
+  const producerIds = [
+    ...canonicalIds,
+    ...state.pendingSources.map((source) => source.read.binding.relationId),
+    ...state.stagedOperations.map((operation) => operation.id),
+  ];
   const staged = useCanvasStagedOperationSession({
     editable,
     start,
-    pendingSources: state.pendingSources,
-    analysis,
+    producerIds,
+    consumedProducerIds:
+      outputRelationId == null ? canonicalConsumers : [...canonicalConsumers, outputRelationId],
     state,
   });
   const occurrences = createSourceOccurrenceActions({
@@ -36,11 +46,6 @@ export function useCanvasRelationalGraphAuthoring(
     selectedId: state.pendingSourceId,
     setSelectedId: state.setPendingSourceId,
   });
-  const producerIds = new Set([
-    ...(analysis?.document?.sidecar.relations.map((relation) => relation.relationId) ?? []),
-    ...state.pendingSources.map((source) => source.read.binding.relationId),
-    ...state.stagedOperations.map((operation) => operation.id),
-  ]);
   return {
     occurrences: {
       ...occurrences,
@@ -60,15 +65,24 @@ export function useCanvasRelationalGraphAuthoring(
     output: {
       relationId: outputRelationId,
       connect: (relationId: string) => {
+        const isOperation =
+          state.stagedOperations.some((operation) => operation.id === relationId) ||
+          (analysis?.document != null &&
+            relationId === analysis.session.rootId &&
+            analysis.session.locate(relationId, analysis.revision).relation.relType.case !==
+              'read');
         if (
-          producerIds.has(relationId) &&
+          editable &&
+          isOperation &&
+          !canonicalConsumers.includes(relationId) &&
+          !state.stagedOperations.some((operation) => operation.inputs.includes(relationId)) &&
           (outputRelationId == null || outputRelationId === relationId) &&
           start()
         )
           state.setOutputRelationId(relationId);
       },
       disconnect: () => {
-        if (start()) state.setOutputRelationId(null);
+        if (editable && start()) state.setOutputRelationId(null);
       },
     },
   } as const;

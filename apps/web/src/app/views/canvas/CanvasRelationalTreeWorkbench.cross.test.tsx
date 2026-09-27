@@ -175,6 +175,11 @@ describe('Canvas relational-tree Workbench cross', () => {
         port.parentElement?.querySelector('[data-pending="true"][data-operator="read"]') != null
     )!;
     await act(async () => dragSourceTo(pendingStore, right!));
+    await act(async () =>
+      container
+        .querySelector<SVGElement>('[data-slot="canvas-relational-output-edge-action"]')!
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    );
     await act(async () => dragSourceTo(currentCross, left!));
 
     expect(container.querySelectorAll('[data-operator="cross"]')).toHaveLength(2);

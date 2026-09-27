@@ -112,6 +112,11 @@ describe('Canvas relational-tree Workbench join-chain', () => {
     const firstInputs = Array.from(
       operations[0]!.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-input-port"]')
     );
+    await act(async () =>
+      container
+        .querySelector<SVGElement>('[data-slot="canvas-relational-output-edge-action"]')!
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    );
     await act(async () => dragSourceTo(existingRoot, firstInputs[0]!));
     await act(async () => dragSourceTo(pendingSources[0]!, firstInputs[1]!));
     const secondInputs = Array.from(
@@ -124,11 +129,6 @@ describe('Canvas relational-tree Workbench join-chain', () => {
       )
     );
     await act(async () => dragSourceTo(pendingSources[1]!, secondInputs[1]!));
-    await act(async () =>
-      container
-        .querySelector<SVGElement>('[data-slot="canvas-relational-output-edge-action"]')!
-        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    );
     await connectWorkbenchOutput(
       container,
       operations[1]!.querySelector<HTMLElement>('[data-slot="canvas-relational-output-port"]')!

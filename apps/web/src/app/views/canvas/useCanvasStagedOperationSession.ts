@@ -1,7 +1,5 @@
 /** Own staged graph editing; semantic materialization is a separate explicit command. */
 import { createCanvasStagedOperationActions } from './canvasStagedOperationActions';
-import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
-import type { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import type { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 
 type DraftState = Pick<
@@ -16,8 +14,8 @@ export function useCanvasStagedOperationSession(
   args: Readonly<{
     editable: boolean;
     start: () => boolean;
-    pendingSources: readonly PendingSourceOccurrence[];
-    analysis: ReturnType<typeof useCanvasRelationAnalysisSession>;
+    producerIds: readonly string[];
+    consumedProducerIds: readonly string[];
     state: DraftState;
   }>
 ) {
@@ -28,10 +26,7 @@ export function useCanvasStagedOperationSession(
     setOperations: args.state.setStagedOperations,
     selectedId: args.state.selectedStagedOperationId,
     setSelectedId: args.state.setSelectedStagedOperationId,
-    producerIds: [
-      ...(args.analysis?.document?.sidecar.relations.map((relation) => relation.relationId) ?? []),
-      ...args.pendingSources.map((source) => source.read.binding.relationId),
-      ...args.state.stagedOperations.map((operation) => operation.id),
-    ],
+    producerIds: args.producerIds,
+    consumedProducerIds: args.consumedProducerIds,
   });
 }

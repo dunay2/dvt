@@ -86,6 +86,11 @@ describe('Transform card in the production Workbench', () => {
     const inputPort = staged.querySelector<HTMLElement>(
       '[data-slot="canvas-relational-input-port"]'
     )!;
+    await act(async () =>
+      container
+        .querySelector<SVGElement>('[data-slot="canvas-relational-output-edge-action"]')!
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    );
     await act(async () => dragSourceTo(producer, inputPort));
     expect(inputPort.getAttribute('data-connected')).toBe('true');
     expect(container.querySelectorAll('[data-slot="canvas-relational-pending-edge"]')).toHaveLength(

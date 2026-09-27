@@ -130,8 +130,19 @@ describe('Canvas relational-tree staged operation drag', () => {
 
     const relationTransfer = transfer();
     await act(async () =>
+      container
+        .querySelector<SVGElement>('[data-slot="canvas-relational-output-edge-action"]')!
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    );
+    await act(async () =>
       drag(
-        container.querySelector<HTMLElement>('[data-slot="canvas-relational-output-port"]')!,
+        Array.from(
+          container.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-output-port"]')
+        ).find(
+          (port) =>
+            port.parentElement?.hasAttribute('data-parent-locator') === false &&
+            port.parentElement.querySelector('[data-pending="true"]') == null
+        )!,
         container.querySelector<HTMLElement>(
           '[data-pending-operation="true"] [data-slot="canvas-relational-input-port"]'
         )!,
@@ -145,11 +156,6 @@ describe('Canvas relational-tree staged operation drag', () => {
     );
     expect(container.querySelectorAll('[data-slot="canvas-relational-output-port"]')).toHaveLength(
       3
-    );
-    await act(async () =>
-      container
-        .querySelector<SVGElement>('[data-slot="canvas-relational-output-edge-action"]')!
-        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
     );
     expect(container.querySelector('[data-slot="canvas-relational-output-edge"]')).toBeNull();
     expect(container.querySelector('[data-pending-operation="true"]')).not.toBeNull();
@@ -236,7 +242,9 @@ describe('Canvas relational-tree staged operation drag', () => {
       container.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-output-port"]')
     );
     const canonicalOutput = outputPorts.find(
-      (port) => port.parentElement?.querySelector('[data-pending="true"]') == null
+      (port) =>
+        port.parentElement?.hasAttribute('data-parent-locator') === false &&
+        port.parentElement.querySelector('[data-pending="true"]') == null
     )!;
     const pendingSourceOutput = outputPorts.find(
       (port) =>
@@ -246,6 +254,11 @@ describe('Canvas relational-tree staged operation drag', () => {
       container.querySelectorAll<HTMLElement>(
         '[data-pending-operation="true"] [data-slot="canvas-relational-input-port"]'
       )
+    );
+    await act(async () =>
+      container
+        .querySelector<SVGElement>('[data-slot="canvas-relational-output-edge-action"]')!
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
     );
     await act(async () => drag(canonicalOutput, leftInput!, transfer().dataTransfer));
     expect(container.querySelectorAll('[data-slot="canvas-relational-pending-edge"]')).toHaveLength(
@@ -332,7 +345,9 @@ describe('Canvas relational-tree staged operation drag', () => {
       container.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-output-port"]')
     );
     const canonicalOutput = outputPorts.find(
-      (port) => port.parentElement?.querySelector('[data-pending="true"]') == null
+      (port) =>
+        port.parentElement?.hasAttribute('data-parent-locator') === false &&
+        port.parentElement.querySelector('[data-pending="true"]') == null
     )!;
     const pendingSourceOutput = outputPorts.find(
       (port) =>
@@ -346,6 +361,11 @@ describe('Canvas relational-tree staged operation drag', () => {
     await act(async () => drag(pendingSourceOutput, rightInput!, transfer().dataTransfer));
     expect(container.querySelectorAll('[data-slot="canvas-relational-pending-edge"]')).toHaveLength(
       1
+    );
+    await act(async () =>
+      container
+        .querySelector<SVGElement>('[data-slot="canvas-relational-output-edge-action"]')!
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
     );
     await act(async () => drag(canonicalOutput, leftInput!, transfer().dataTransfer));
     await act(async () => Promise.resolve());

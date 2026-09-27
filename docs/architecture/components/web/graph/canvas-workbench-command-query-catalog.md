@@ -303,8 +303,9 @@ Dropping a palette item stages one movable operation card in the discardable
 editor session; it does not select an arbitrary relation and does not mutate the
 canonical document. Every operation exposes the Input ports required by its
 algebraic arity. Any known producer can connect directly to any compatible free
-Input, in any order; the same producer may occupy both binary ports for an
-explicit self-join. Left and right ports retain their algebraic meaning, but no
+Input, in any order, provided that instance has no other consumer. A self-join
+requires two distinct source instances with their own aliases, not one instance
+wired to both ports. Left and right ports retain their algebraic meaning, but no
 prior card selection or hidden gesture sequence assigns their producers. A
 typed producer-to-Input connection supplies the exact relation target.
 Configuration is completed in the fixed inspector before the existing
@@ -323,10 +324,29 @@ Pending cards, their incomplete connections and their positions are local
 authoring presentation state. Cancel removes them without a semantic write.
 After admission, pending lines are discarded and the tree is rendered only from
 the canonical projection. Occupied-port replacement, cycles, incompatible
-arity and read-only mutation fail closed. The terminal Model Output accepts one
-explicit producer and remains a passive publication boundary. The old
+arity, producer fan-out and read-only mutation fail closed. The terminal Model
+Output accepts one operation output, never a direct source/input card, and
+remains a passive publication boundary. Existing direct source-to-Output wires
+remain visible and removable; disconnecting preserves both cards and frees the
+producer without inserting an operation. This authoring admission change does
+not rewrite saved drafts or alter outer Canvas dependency rules. The old
 operation-drop behavior that mutated whichever relation happened to be selected
 is retired rather than kept as a fallback.
+
+The connection command counts canonical tree consumers, staged operation ports
+and the terminal Output together; separate handlers must not admit a second
+consumer. Negative tests cover fan-out across operations and Output, reuse of
+one instance on both JOIN ports, direct source-to-Output admission and occupied
+ports. Disconnect/reconnect and two aliased instances remain positive cases.
+
+```mermaid
+flowchart LR
+  A[Source instance A] -->|one consumer| J[JOIN Input L]
+  B[Source instance B] -->|one consumer| K[JOIN Input R]
+  J --> O[JOIN operation output]
+  K --> O
+  O -->|one consumer| T[Passive model Output]
+```
 
 ## Exhaustiveness Rule
 

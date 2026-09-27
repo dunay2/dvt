@@ -15,6 +15,9 @@ function Surface(): JSX.Element {
       <div data-testid="surface" data-panning={panning} {...handlers}>
         <button data-slot="canvas-relational-tree-node">Card</button>
         <input />
+        <svg>
+          <path role="button" tabIndex={0} aria-label="Disconnect" />
+        </svg>
       </div>
     </>
   );
@@ -73,6 +76,13 @@ describe('Relational viewport pan', () => {
     expect(surface.dataset.panning).toBe('true');
     pointer('pointerup', 50);
     expect(surface.dataset.panning).toBe('false');
+  });
+  it('leaves the disconnect action clickable in hand mode', () => {
+    act(() => container.querySelector('button')!.click());
+    expect(pointer('pointerdown', 100, 0, surface.querySelector('path')!).defaultPrevented).toBe(
+      false
+    );
+    expect(surface.setPointerCapture).not.toHaveBeenCalled();
   });
   it.each(['pointercancel', 'lostpointercapture'])(
     'retains middle pan and releases on %s',

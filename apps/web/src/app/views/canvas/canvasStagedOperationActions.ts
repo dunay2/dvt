@@ -19,6 +19,7 @@ export function createCanvasStagedOperationActions(
     selectedId: string | null;
     setSelectedId: (id: string | null) => void;
     producerIds: readonly string[];
+    consumedProducerIds: readonly string[];
   }>
 ) {
   const remove = (id: string) => {
@@ -47,8 +48,22 @@ export function createCanvasStagedOperationActions(
       args.setSelectedId(id);
     },
     connect: (id: string, port: number, relationId: string) => {
-      if (!args.editable || id === relationId || !args.producerIds.includes(relationId)) return;
+      if (
+        !args.editable ||
+        id === relationId ||
+        !args.producerIds.includes(relationId) ||
+        args.consumedProducerIds.includes(relationId)
+      )
+        return;
       args.setOperations((current) => {
+        if (
+          current.some((operation) =>
+            operation.inputs.some(
+              (input, ordinal) => input === relationId && (operation.id !== id || ordinal !== port)
+            )
+          )
+        )
+          return current;
         if (createsCanvasStagedOperationCycle(current, relationId, id)) return current;
         return current.map((operation) => {
           if (

@@ -143,13 +143,13 @@ describe('Canvas relational-tree Workbench reopen', () => {
       (port) =>
         port.parentElement?.querySelector('[data-pending="true"][data-operator="read"]') != null
     )!;
-    await act(async () => dragSourceTo(existingRoot, left!));
-    await act(async () => dragSourceTo(pendingCountry, right!));
     await act(async () =>
       container
         .querySelector<SVGElement>('[data-slot="canvas-relational-output-edge-action"]')!
         .dispatchEvent(new MouseEvent('click', { bubbles: true }))
     );
+    await act(async () => dragSourceTo(existingRoot, left!));
+    await act(async () => dragSourceTo(pendingCountry, right!));
     await connectWorkbenchOutput(
       container,
       staged.querySelector<HTMLElement>('[data-slot="canvas-relational-output-port"]')!

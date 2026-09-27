@@ -133,10 +133,14 @@ export function CanvasRelationalTreeLayout({
           onOpen={onOpenOutput}
           connected={effectiveOutputRelationId != null}
           selectedSource={selectedConnectionSource}
-          onConnect={(relationId) => {
-            onConnectOutput?.(relationId);
-            setSelectedConnectionSource(null);
-          }}
+          onConnect={
+            onConnectOutput == null
+              ? undefined
+              : (relationId) => {
+                  onConnectOutput?.(relationId);
+                  setSelectedConnectionSource(null);
+                }
+          }
           onDisconnect={onDisconnectOutput}
         />
       )}

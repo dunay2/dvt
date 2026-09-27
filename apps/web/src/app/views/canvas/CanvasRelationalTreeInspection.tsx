@@ -30,6 +30,9 @@ export function CanvasRelationalTreeInspection(
           onDropSource={model.authoringAvailable ? model.session.occurrences.drop : undefined}
           onDropOperation={model.authoringAvailable ? model.session.staged.stage : undefined}
           onRemove={model.authoringAvailable ? model.session.removal.remove : undefined}
+          onDisconnectOutput={
+            model.authoringAvailable ? model.session.output.disconnect : undefined
+          }
           onExpand={(locator) => {
             modelOutput.setOpen(false);
             model.selectTreeNode(locator);

@@ -32,6 +32,7 @@ function TreeView({
   onDropSource,
   onDropOperation,
   onOpenOutput,
+  onDisconnectOutput,
 }: Readonly<{
   outputName: string;
   root: CanvasRelationalTreeNode;
@@ -44,6 +45,7 @@ function TreeView({
   onDropSource?: (nodeId: string) => string | null | void;
   onDropOperation?: (operation: CanvasStagedOperationKind) => string | null;
   onOpenOutput?: () => void;
+  onDisconnectOutput?: () => void;
 }>): JSX.Element {
   const viewport = useCanvasRelationalTreeViewport();
   const { setPosition } = useRelationalLayout();
@@ -115,6 +117,7 @@ function TreeView({
               panMode={viewport.panMode || viewport.panning}
               onManualLayout={viewport.stopAutoFit}
               onOpenOutput={onOpenOutput}
+              onDisconnectOutput={onDisconnectOutput}
               semanticContext={transformNode == null ? undefined : { transformNode }}
             />
           </div>

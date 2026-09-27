@@ -55,9 +55,12 @@ mitigation:
     DvtRelationalAuthoringDraft v1 records incomplete source occurrences, algebraic operation ports,
     explicit terminal Output selection and card positions without promoting them to executable
     Substrait. Its validator rejects duplicate identities, invalid arity, unknown layout nodes and
-    cycles; draft persistence remains separate from readiness. Browser fixture tests and protected
-    API/SQL unit proofs do not establish live PostgreSQL or complete chained StartRun support;
-    bounded operational admission remains unchanged.
+    cycles; draft persistence remains separate from readiness. Internal editor connection commands
+    count canonical, staged and terminal consumers together, reject producer fan-out and require
+    distinct aliased instances for self-joins. New terminal links require operation outputs; legacy
+    direct source links remain visible and removable rather than silently migrated. Browser fixture
+    tests and protected API/SQL unit proofs do not establish live PostgreSQL or complete chained
+    StartRun support; bounded operational admission remains unchanged.
   evidence:
     - docs/evidence/ED-20260926-producer-consumer-input-boundary.md
     - packages/@dvt/contracts/test/dvt-input-bindings.contract.test.ts
