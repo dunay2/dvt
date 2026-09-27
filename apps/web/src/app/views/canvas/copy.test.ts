@@ -59,7 +59,6 @@ describe('canvas copy catalog', () => {
       const copy = sourceOccurrenceCopy(locale);
       const catalog = resolveCanvasViewCopy(locale);
       expect(copy.alias).toBe(catalog.sourceOccurrenceAlias);
-      expect(copy.connect).toBe(catalog.sourceOccurrenceConnect);
       expect(copy.duplicate_alias).toBe(catalog.inspectorErrorDvtAliasDuplicate);
       expect(
         Object.values(copy).every((value) => typeof value === 'string' && value.length > 0)

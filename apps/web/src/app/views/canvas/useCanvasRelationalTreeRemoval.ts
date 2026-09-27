@@ -43,7 +43,6 @@ export function useCanvasRelationalTreeRemoval(
         draft: next,
         operation: relationOperation(analysis.session),
         inputIds: retained,
-        appendInputId: null,
       });
     },
     args.enabled,

@@ -9,13 +9,13 @@ import {
 
 import { layoutCanvasRelationalTree } from './canvasRelationalTreeGeometry';
 import { RelationalTreeEdges } from './relational-layout/RelationalTreeEdges';
-import { CanvasRelationalTreeGraphNode } from './CanvasRelationalTreeGraphNode';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { SourceOccurrenceActions } from './relational-source-occurrence/sourceOccurrenceActions';
 import { projectPendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 import { projectCanvasStagedOperation, type CanvasStagedOperation } from './canvasStagedOperation';
 import { CanvasRelationalTreeOutput } from './CanvasRelationalTreeOutput';
+import { CanvasRelationalTreeNodes } from './CanvasRelationalTreeNodes';
 
 export function CanvasRelationalTreeLayout({
   outputName,
@@ -35,7 +35,11 @@ export function CanvasRelationalTreeLayout({
   selectedStagedOperationId = null,
   onSelectStagedOperation,
   onConnectStagedOperation,
+  onDisconnectStagedOperation,
   onRemoveStagedOperation,
+  outputRelationId,
+  onConnectOutput,
+  onDisconnectOutput,
 }: Readonly<{
   outputName: string;
   root: CanvasRelationalTreeNode | null;
@@ -44,7 +48,11 @@ export function CanvasRelationalTreeLayout({
   selectedStagedOperationId?: string | null;
   onSelectStagedOperation?: (id: string) => void;
   onConnectStagedOperation?: (id: string, port: number, relationId: string) => void;
+  onDisconnectStagedOperation?: (id: string, port: number) => void;
   onRemoveStagedOperation?: (id: string) => void;
+  outputRelationId?: string | null;
+  onConnectOutput?: (relationId: string) => void;
+  onDisconnectOutput?: () => void;
   selectedLocator: string;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
@@ -85,14 +93,6 @@ export function CanvasRelationalTreeLayout({
     () => [...detachedSources, ...detachedOperations],
     [detachedSources, detachedOperations]
   );
-  const detachedIds = useMemo(
-    () => new Set(detachedSources.map((node) => node.relationId)),
-    [detachedSources]
-  );
-  const stagedById = useMemo(
-    () => new Map(stagedOperations.map((operation) => [operation.id, operation])),
-    [stagedOperations]
-  );
   const layout = useMemo(
     () => layoutCanvasRelationalTree(root, sizes, positions, detached),
     [root, sizes, positions, detached]
@@ -105,6 +105,8 @@ export function CanvasRelationalTreeLayout({
     !panMode
   );
   const [selectedConnectionSource, setSelectedConnectionSource] = useState<string | null>(null);
+  const effectiveOutputRelationId =
+    outputRelationId === undefined ? (root?.relationId ?? null) : outputRelationId;
   return (
     <div
       {...movement}
@@ -114,7 +116,14 @@ export function CanvasRelationalTreeLayout({
       className="relative"
       style={{ width: layout.width, height: layout.height }}
     >
-      <RelationalTreeEdges layout={layout} stagedOperations={stagedOperations} />
+      <RelationalTreeEdges
+        layout={layout}
+        stagedOperations={stagedOperations}
+        disconnectLabel={copy.reactFlowEdgeDescription}
+        onDisconnectStagedOperation={onDisconnectStagedOperation}
+        outputRelationId={effectiveOutputRelationId}
+        onDisconnectOutput={onDisconnectOutput}
+      />
 
       {layout.output == null ? null : (
         <CanvasRelationalTreeOutput
@@ -122,63 +131,45 @@ export function CanvasRelationalTreeLayout({
           outputName={outputName}
           copy={copy}
           onOpen={onOpenOutput}
+          connected={effectiveOutputRelationId != null}
+          selectedSource={selectedConnectionSource}
+          onConnect={(relationId) => {
+            onConnectOutput?.(relationId);
+            setSelectedConnectionSource(null);
+          }}
+          onDisconnect={onDisconnectOutput}
         />
       )}
 
-      <ul role="tree" aria-label={copy.relationalTreeLabel} className="absolute inset-0">
-        {layout.nodes.map((placed) => {
-          const relationId = placed.node.relationId;
-          const staged = relationId == null ? undefined : stagedById.get(relationId);
-          const sourcePending = detachedIds.has(relationId);
-          return (
-            <CanvasRelationalTreeGraphNode
-              key={placed.node.locator}
-              placed={placed}
-              selected={
-                staged != null
-                  ? relationId === selectedStagedOperationId
-                  : occurrences?.selectedId != null
-                    ? relationId === occurrences.selectedId
-                    : placed.node.locator === selectedLocator
-              }
-              copy={copy}
-              onSelect={
-                staged != null
-                  ? () => onSelectStagedOperation?.(staged.id)
-                  : sourcePending
-                    ? () => occurrences?.select(relationId!)
-                    : onSelect
-              }
-              onExpand={sourcePending || staged != null ? undefined : onExpand}
-              onRemove={
-                staged != null
-                  ? () => onRemoveStagedOperation?.(staged.id)
-                  : sourcePending
-                    ? occurrences?.remove
-                    : onRemove
-              }
-              pending={sourcePending || staged != null}
-              stagedOperation={staged}
-              semanticGraph={detail.graphs.get(placed.node.locator)}
-              expanded={expanded.has(relationId ?? placed.node.locator)}
-              onToggleDetail={() => toggleDetail(relationId ?? placed.node.locator)}
-              movable={!panMode}
-              selectedConnectionSource={selectedConnectionSource}
-              onSelectConnectionSource={
-                onConnectStagedOperation == null ? undefined : setSelectedConnectionSource
-              }
-              onConnectOperation={
-                onConnectStagedOperation == null
-                  ? undefined
-                  : (operationId, port, sourceId) => {
-                      onConnectStagedOperation(operationId, port, sourceId);
-                      setSelectedConnectionSource(null);
-                    }
-              }
-            />
-          );
-        })}
-      </ul>
+      <CanvasRelationalTreeNodes
+        layout={layout}
+        graphs={detail.graphs}
+        expanded={expanded}
+        toggleDetail={toggleDetail}
+        occurrences={occurrences}
+        stagedOperations={stagedOperations}
+        selectedStagedOperationId={selectedStagedOperationId}
+        selectedLocator={selectedLocator}
+        selectedConnectionSource={selectedConnectionSource}
+        panMode={panMode}
+        copy={copy}
+        actions={{
+          select: onSelect,
+          expand: onExpand,
+          remove: onRemove,
+          selectStaged: onSelectStagedOperation,
+          removeStaged: onRemoveStagedOperation,
+          selectConnectionSource:
+            onConnectStagedOperation == null ? undefined : setSelectedConnectionSource,
+          connectOperation:
+            onConnectStagedOperation == null
+              ? undefined
+              : (id, port, producerId) => {
+                  onConnectStagedOperation(id, port, producerId);
+                  setSelectedConnectionSource(null);
+                },
+        }}
+      />
     </div>
   );
 }

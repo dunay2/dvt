@@ -1,7 +1,9 @@
 /** Commands for the discardable staged-operation presentation model. */
 import {
   connectCanvasStagedOperation,
+  createsCanvasStagedOperationCycle,
   createCanvasStagedOperation,
+  disconnectCanvasStagedOperation,
   type CanvasStagedOperation,
   type CanvasStagedOperationKind,
 } from './canvasStagedOperation';
@@ -16,11 +18,18 @@ export function createCanvasStagedOperationActions(
     ) => void;
     selectedId: string | null;
     setSelectedId: (id: string | null) => void;
-    onConnected: (operation: CanvasStagedOperation) => void;
+    producerIds: readonly string[];
   }>
 ) {
   const remove = (id: string) => {
-    args.setOperations((current) => current.filter((operation) => operation.id !== id));
+    args.setOperations((current) =>
+      current
+        .filter((operation) => operation.id !== id)
+        .map((operation) => ({
+          ...operation,
+          inputs: operation.inputs.map((input) => (input === id ? null : input)),
+        }))
+    );
     if (args.selectedId === id) args.setSelectedId(null);
   };
   return {
@@ -38,16 +47,35 @@ export function createCanvasStagedOperationActions(
       args.setSelectedId(id);
     },
     connect: (id: string, port: number, relationId: string) => {
-      if (!args.editable || id === relationId) return;
-      const operation = args.operations.find((candidate) => candidate.id === id);
-      if (operation == null) return;
-      const connected = connectCanvasStagedOperation(operation, port, relationId);
-      if (connected === operation) return;
-      args.setOperations((current) =>
-        current.map((candidate) => (candidate.id === id ? connected : candidate))
-      );
+      if (!args.editable || id === relationId || !args.producerIds.includes(relationId)) return;
+      args.setOperations((current) => {
+        if (createsCanvasStagedOperationCycle(current, relationId, id)) return current;
+        return current.map((operation) => {
+          if (
+            operation.id !== id ||
+            (operation.inputs[port] != null && operation.inputs[port] !== relationId)
+          )
+            return operation;
+          return connectCanvasStagedOperation(operation, port, relationId);
+        });
+      });
       args.setSelectedId(id);
-      args.onConnected(connected);
+    },
+    disconnect: (id: string, port: number) => {
+      if (!args.editable) return;
+      args.setOperations((current) =>
+        current.map((operation) =>
+          operation.id === id ? disconnectCanvasStagedOperation(operation, port) : operation
+        )
+      );
+    },
+    disconnectProducer: (relationId: string) => {
+      args.setOperations((current) =>
+        current.map((operation) => ({
+          ...operation,
+          inputs: operation.inputs.map((input) => (input === relationId ? null : input)),
+        }))
+      );
     },
     remove,
     complete: remove,

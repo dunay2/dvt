@@ -16,7 +16,13 @@ import ScalarGraphSource from './CanvasRelationalScalarGraph.tsx?raw';
 import SelectedOperatorSource from './CanvasRelationalTreeSelectedOperatorEditor.tsx?raw';
 import MetricsSource from './canvasRelationalTreeGeometryMetrics.ts?raw';
 import LayoutSource from './CanvasRelationalTreeLayout.tsx?raw';
+import NodeLayerSource from './CanvasRelationalTreeNodes.tsx?raw';
+import OperationPortsSource from './CanvasRelationalOperationPorts.tsx?raw';
+import OutputSource from './CanvasRelationalTreeOutput.tsx?raw';
+import PortStylesSource from './canvasRelationalPortStyles.ts?raw';
 import EdgesSource from './relational-layout/RelationalTreeEdges.tsx?raw';
+import EdgeActionSource from './relational-layout/RelationalEdgeAction.tsx?raw';
+import RelationalEdgeProjectionSource from './relational-layout/relationalTreeEdgeProjection.ts?raw';
 import ContentSource from './CanvasRelationalTreeContent.tsx?raw';
 import MovementSource from './relational-layout/useRelationalCardMovement.ts?raw';
 import SessionActionsSource from './CanvasRelationalTreeSessionActions.tsx?raw';
@@ -25,7 +31,6 @@ import CatalogueSource from './CanvasRelationalTreeSourceCatalogue.tsx?raw';
 import DraftViewportSource from './CanvasRelationalTreeDraftViewport.tsx?raw';
 import InlineEditorSource from './CanvasRelationalTreeInlineEditor.tsx?raw';
 import OperationShelfSource from './CanvasRelationalTreeOperationShelf.tsx?raw';
-import ReplacementDialogSource from './operation-menu/CanvasOperationReplacementDialog.tsx?raw';
 import TreeSource from './CanvasRelationalTreeView.tsx?raw';
 import ViewportSource from './canvasRelationalTreeViewport.ts?raw';
 import ZoomSource from './CanvasRelationalTreeZoomControls.tsx?raw';
@@ -40,13 +45,13 @@ import CodeWorkbenchSource from './DvtTransformCodeWorkbenchContent.tsx?raw';
 import ApplyCommandSource from './useCanvasRelationalTreeApplyCommand.ts?raw';
 import WorkbenchModelSource from './useCanvasRelationalTreeWorkbenchModel.ts?raw';
 import AuthoringSessionSource from './useCanvasRelationalTreeAuthoringSession.ts?raw';
+import GraphAuthoringSource from './useCanvasRelationalGraphAuthoring.ts?raw';
+import DraftHydrationSource from './useCanvasRelationalAuthoringDraftHydration.ts?raw';
 import AuthoringModelSource from './canvasRelationalTreeAuthoringModel.ts?raw';
 import AuthoringCandidatesSource from './canvasRelationalTreeAuthoringCandidates.ts?raw';
 import AuthoringProjectionSource from './canvasRelationalTreeAuthoringProjection.ts?raw';
 import ExistingDraftSource from './canvasRelationalTreeExistingDraft.ts?raw';
-import AuthoringOptionsSource from './useCanvasRelationalTreeAuthoringOptions.ts?raw';
 import ExistingSeedSource from './useCanvasRelationalTreeExistingSeed.ts?raw';
-import CompositionSource from './useCanvasRelationComposition.ts?raw';
 import OperandSlotsSource from './useCanvasRelationalOperandSlots.ts?raw';
 import ProjectionAuthoringSource from './canvasRelationalTreeProjectionAuthoring.ts?raw';
 import UseViewportSource from './useCanvasRelationalTreeViewport.ts?raw';
@@ -60,7 +65,13 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(CatalogueSource.split('\n').length).toBeLessThan(120);
     expect(TreeSource.split('\n').length).toBeLessThan(150);
     expect(LayoutSource.split('\n').length).toBeLessThan(190);
+    expect(NodeLayerSource.split('\n').length).toBeLessThan(140);
+    expect(OperationPortsSource.split('\n').length).toBeLessThan(120);
+    expect(OutputSource.split('\n').length).toBeLessThan(120);
+    expect(PortStylesSource.split('\n').length).toBeLessThan(40);
     expect(EdgesSource.split('\n').length).toBeLessThan(150);
+    expect(EdgeActionSource.split('\n').length).toBeLessThan(60);
+    expect(RelationalEdgeProjectionSource.split('\n').length).toBeLessThan(100);
     expect(ContentSource.split('\n').length).toBeLessThan(100);
     expect(MovementSource.split('\n').length).toBeLessThan(200);
     expect(GraphNodeSource.split('\n').length).toBeLessThan(140);
@@ -76,19 +87,18 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(DetailSource.split('\n').length).toBeLessThan(100);
     expect(WorkbenchModelSource.split('\n').length).toBeLessThan(180);
     expect(AuthoringSessionSource.split('\n').length).toBeLessThan(180);
+    expect(GraphAuthoringSource.split('\n').length).toBeLessThan(120);
+    expect(DraftHydrationSource.split('\n').length).toBeLessThan(80);
     expect(ApplyCommandSource.split('\n').length).toBeLessThan(100);
     expect(AuthoringModelSource.split('\n').length).toBeLessThan(200);
     expect(AuthoringCandidatesSource.split('\n').length).toBeLessThan(150);
     expect(AuthoringProjectionSource.split('\n').length).toBeLessThan(90);
     expect(ExistingDraftSource.split('\n').length).toBeLessThan(80);
     expect(ExistingSeedSource.split('\n').length).toBeLessThan(80);
-    expect(CompositionSource.split('\n').length).toBeLessThan(200);
     expect(AuthoringSource.split('\n').length).toBeLessThan(140);
     expect(DraftViewportSource.split('\n').length).toBeLessThan(170);
     expect(OperationShelfSource.split('\n').length).toBeLessThan(140);
-    expect(ReplacementDialogSource.split('\n').length).toBeLessThan(80);
     expect(InlineEditorSource.split('\n').length).toBeLessThan(80);
-    expect(AuthoringOptionsSource.split('\n').length).toBeLessThan(100);
     expect(OperandSlotsSource.split('\n').length).toBeLessThan(90);
     expect(ProjectionAuthoringSource.split('\n').length).toBeLessThan(60);
     expect(SessionActionsSource.split('\n').length).toBeLessThan(80);
@@ -101,7 +111,13 @@ describe('Canvas relational-tree Workbench architecture', () => {
       CatalogueSource,
       TreeSource,
       LayoutSource,
+      NodeLayerSource,
+      OperationPortsSource,
+      OutputSource,
+      PortStylesSource,
       EdgesSource,
+      EdgeActionSource,
+      RelationalEdgeProjectionSource,
       ContentSource,
       MovementSource,
       GraphNodeSource,

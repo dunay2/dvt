@@ -16,14 +16,12 @@ export function createSourceOccurrenceActions(
     revision: number;
     inputs: readonly CanvasDvtCompositionInput[];
     start: () => boolean;
-    setAppendInputId: (id: string | null) => void;
     pending: readonly PendingSourceOccurrence[];
     setPending: (
       update: (current: readonly PendingSourceOccurrence[]) => readonly PendingSourceOccurrence[]
     ) => void;
     selectedId: string | null;
     setSelectedId: (id: string | null) => void;
-    selectInitialInput: (id: string) => void;
   }>
 ) {
   const rejection = (id: string): SourceOccurrenceRejection | null => {
@@ -52,7 +50,6 @@ export function createSourceOccurrenceActions(
       ];
     });
     args.setSelectedId(occurrence.read.binding.relationId);
-    args.setAppendInputId(null);
     return occurrence.read.binding.relationId;
   };
   return {
@@ -67,18 +64,9 @@ export function createSourceOccurrenceActions(
       const pending = args.pending.find((item) => item.read.binding.relationId === id);
       if (pending == null) return;
       args.setSelectedId(id);
-      args.setAppendInputId(null);
     },
     clearSelection: () => {
       args.setSelectedId(null);
-      args.setAppendInputId(null);
-    },
-    connect: (id: string) => {
-      const pending = args.pending.find((item) => item.read.binding.relationId === id);
-      if (!args.editable || pending == null) return;
-      args.setSelectedId(id);
-      if (args.session == null) args.selectInitialInput(pending.sourceNodeId);
-      args.setAppendInputId(args.session == null ? null : pending.sourceNodeId);
     },
     rename: (id: string, alias: string): boolean => {
       const name = parseOccurrenceAlias(alias);
@@ -109,7 +97,6 @@ export function createSourceOccurrenceActions(
       args.setPending((current) => current.filter((item) => item.read.binding.relationId !== id));
       if (args.selectedId === id) {
         args.setSelectedId(null);
-        args.setAppendInputId(null);
       }
     },
   };

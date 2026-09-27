@@ -2,10 +2,10 @@
 import type { CanvasStagedOperation } from './canvasStagedOperation';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import {
-  CANVAS_RELATIONAL_RELATION_DRAG_TYPE,
   readCanvasRelationalRelationDrag,
   writeCanvasRelationalRelationDrag,
 } from './canvasRelationalTreeDrag';
+import { relationalInputPortClass, relationalOutputPortClass } from './canvasRelationalPortStyles';
 
 export function CanvasRelationalOperationPorts({
   relationId,
@@ -23,29 +23,29 @@ export function CanvasRelationalOperationPorts({
   onConnect: (operationId: string, port: number, relationId: string) => void;
 }>): JSX.Element | null {
   if (relationId == null) return null;
-  if (staged == null)
-    return (
-      <button
-        type="button"
-        draggable
-        data-slot="canvas-relational-output-port"
-        aria-label={copy.relationalTreeOutputLabel}
-        aria-pressed={selectedSource === relationId}
-        onPointerDown={(event) => event.stopPropagation()}
-        onClick={(event) => {
-          event.stopPropagation();
-          onSelectSource(relationId);
-        }}
-        onDragStart={(event) => {
-          event.stopPropagation();
-          writeCanvasRelationalRelationDrag(event.dataTransfer, relationId);
-        }}
-        className="absolute -right-2 top-1/2 z-20 size-4 -translate-y-1/2 rounded-full border-2 border-(--surface-panel) bg-(--status-info) shadow-sm focus-visible:outline-2 focus-visible:outline-(--focus-ring) aria-pressed:ring-2 aria-pressed:ring-(--focus-ring)"
-      />
-    );
+  const output = (
+    <button
+      type="button"
+      draggable
+      data-slot="canvas-relational-output-port"
+      aria-label={copy.relationalTreeOutputLabel}
+      aria-pressed={selectedSource === relationId}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        event.stopPropagation();
+        onSelectSource(relationId);
+      }}
+      onDragStart={(event) => {
+        event.stopPropagation();
+        writeCanvasRelationalRelationDrag(event.dataTransfer, relationId);
+      }}
+      className={relationalOutputPortClass}
+    />
+  );
   return (
     <>
-      {staged.inputs.map((connected, port) => {
+      {output}
+      {staged?.inputs.map((connected, port) => {
         const label =
           staged.inputs.length === 1
             ? copy.relationalTreePrimaryInputLabel
@@ -67,7 +67,6 @@ export function CanvasRelationalOperationPorts({
               if (selectedSource != null) onConnect(staged.id, port, selectedSource);
             }}
             onDragOver={(event) => {
-              if (!event.dataTransfer.types.includes(CANVAS_RELATIONAL_RELATION_DRAG_TYPE)) return;
               event.preventDefault();
               event.stopPropagation();
               event.dataTransfer.dropEffect = 'link';
@@ -79,7 +78,7 @@ export function CanvasRelationalOperationPorts({
               event.stopPropagation();
               onConnect(staged.id, port, source);
             }}
-            className="absolute -left-2 z-20 grid size-4 -translate-y-1/2 place-items-center rounded-full border-2 border-(--surface-panel) bg-(--surface-raised) text-[8px] font-semibold text-(--text-strong) shadow-sm hover:bg-(--status-info) focus-visible:outline-2 focus-visible:outline-(--focus-ring) data-[connected=true]:bg-(--status-success)"
+            className={`${relationalInputPortClass} grid place-items-center text-[9px] font-semibold text-(--text-strong)`}
             style={{ top: staged.inputs.length === 1 ? '50%' : port === 0 ? '35%' : '65%' }}
           >
             {staged.inputs.length === 1 ? '' : port === 0 ? 'L' : 'R'}

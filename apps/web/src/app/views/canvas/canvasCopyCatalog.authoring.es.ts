@@ -5,7 +5,6 @@ export const canvasViewAuthoringCopyEs = {
   sourceOccurrenceAdd: 'Añadir instancia',
   sourceOccurrenceAlias: 'Alias de instancia',
   sourceOccurrenceUpdate: 'Actualizar alias',
-  sourceOccurrenceConnect: 'Conectar al modelo',
   sourceOccurrenceInvalidAlias: 'Introduce un nombre no vacío de hasta 256 caracteres.',
   sourceOccurrenceUpdateFailed:
     'No se ha podido actualizar el alias. Comprueba el modelo actual e inténtalo de nuevo.',

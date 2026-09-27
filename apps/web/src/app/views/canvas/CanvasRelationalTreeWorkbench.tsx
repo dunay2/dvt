@@ -22,9 +22,7 @@ import {
   type CanvasRelationalTreeWorkbenchHandle,
 } from './useCanvasRelationalTreeWorkbenchHandle';
 export type { CanvasRelationalTreeWorkbenchHandle } from './useCanvasRelationalTreeWorkbenchHandle';
-
 export { canOpenCanvasRelationalTreeWorkbench } from './useCanvasRelationalTreeWorkbenchModel';
-
 export const CanvasRelationalTreeWorkbench = forwardRef<
   CanvasRelationalTreeWorkbenchHandle,
   Readonly<{
@@ -39,7 +37,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
 >(function CanvasRelationalTreeWorkbench(
   { transformNode, nodes, edges, copy, authoring, actionsHost, preview },
   ref
-): JSX.Element {
+) {
   const model = useCanvasRelationalTreeWorkbenchModel({
     transformNode,
     nodes,
@@ -66,7 +64,6 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
     session: sessionHandle,
     onSelect: model.selectRelation,
   });
-
   return (
     <CanvasOperationPreviewProvider
       ports={preview}
@@ -75,7 +72,10 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
       canEditModel={model.authoringAvailable}
       unapplied={sessionHandle.hasUnappliedChanges}
     >
-      <RelationalLayoutSession key={transformNode.id}>
+      <RelationalLayoutSession
+        initialPositions={model.session.positions}
+        onPositionsChange={model.session.setPositions}
+      >
         <div
           data-slot="canvas-relational-tree-workbench"
           onContextMenu={(event) => {

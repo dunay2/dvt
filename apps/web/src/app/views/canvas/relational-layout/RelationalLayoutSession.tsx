@@ -3,6 +3,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -10,16 +11,35 @@ import {
 } from 'react';
 import type { CardPosition } from '../canvasRelationalTreeGeometry';
 import { CANVAS_RELATIONAL_TREE_MIN_ZOOM } from '../canvasRelationalTreeViewport';
-function useLayout() {
+const EMPTY_POSITIONS: ReadonlyMap<string, CardPosition> = new Map();
+function useLayout(
+  initialPositions: ReadonlyMap<string, CardPosition>,
+  onPositionsChange?: (positions: ReadonlyMap<string, CardPosition>) => void
+) {
   const autoFit = useRef(true);
   const scroll = useRef({ left: 0, top: 0 });
   const [zoom, setZoom] = useState(1);
   const [minimumZoom, setMinimumZoom] = useState(CANVAS_RELATIONAL_TREE_MIN_ZOOM);
-  const [positions, setPositions] = useState<ReadonlyMap<string, CardPosition>>(() => new Map());
+  const [positions, setPositions] = useState<ReadonlyMap<string, CardPosition>>(
+    () => new Map(initialPositions)
+  );
+  const positionsRef = useRef(positions);
+  useEffect(() => {
+    if (initialPositions === positionsRef.current) return;
+    const next = new Map(initialPositions);
+    positionsRef.current = next;
+    setPositions(next);
+  }, [initialPositions]);
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
-  const setPosition = useCallback((id: string, position: CardPosition) => {
-    setPositions((current) => new Map(current).set(id, position));
-  }, []);
+  const setPosition = useCallback(
+    (id: string, position: CardPosition) => {
+      const next = new Map(positionsRef.current).set(id, position);
+      positionsRef.current = next;
+      setPositions(next);
+      onPositionsChange?.(next);
+    },
+    [onPositionsChange]
+  );
   const toggleDetail = useCallback((id: string) => {
     setExpanded((current) => {
       const next = new Set(current);
@@ -28,7 +48,12 @@ function useLayout() {
       return next;
     });
   }, []);
-  const arrange = useCallback(() => setPositions(new Map()), []);
+  const arrange = useCallback(() => {
+    const next = new Map<string, CardPosition>();
+    positionsRef.current = next;
+    setPositions(next);
+    onPositionsChange?.(next);
+  }, [onPositionsChange]);
   return useMemo(
     () => ({
       positions,
@@ -51,17 +76,34 @@ const LayoutContext = createContext<ReturnType<typeof useLayout> | null>(null);
 export function RelationalLayoutSession({
   children,
   isolated = false,
-}: Readonly<{ children: ReactNode; isolated?: boolean }>) {
+  initialPositions = EMPTY_POSITIONS,
+  onPositionsChange,
+}: Readonly<{
+  children: ReactNode;
+  isolated?: boolean;
+  initialPositions?: ReadonlyMap<string, CardPosition>;
+  onPositionsChange?: (positions: ReadonlyMap<string, CardPosition>) => void;
+}>) {
   const parent = useContext(LayoutContext);
   return parent == null || isolated ? (
-    <OwnedLayoutSession>{children}</OwnedLayoutSession>
+    <OwnedLayoutSession initialPositions={initialPositions} onPositionsChange={onPositionsChange}>
+      {children}
+    </OwnedLayoutSession>
   ) : (
     <>{children}</>
   );
 }
 
-function OwnedLayoutSession({ children }: Readonly<{ children: ReactNode }>) {
-  const value = useLayout();
+function OwnedLayoutSession({
+  children,
+  initialPositions,
+  onPositionsChange,
+}: Readonly<{
+  children: ReactNode;
+  initialPositions: ReadonlyMap<string, CardPosition>;
+  onPositionsChange?: (positions: ReadonlyMap<string, CardPosition>) => void;
+}>) {
+  const value = useLayout(initialPositions, onPositionsChange);
   return <LayoutContext.Provider value={value}>{children}</LayoutContext.Provider>;
 }
 

@@ -71,6 +71,7 @@ export type CanvasRelationalTreeWorkbenchCopy = Pick<
   | 'inspectorDvtSubstraitExceptAllAction'
   | 'nodePresentationColumnsLabel'
   | 'reactFlowFitViewLabel'
+  | 'reactFlowEdgeDescription'
   | 'reactFlowZoomInLabel'
   | 'reactFlowZoomOutLabel'
   | 'relationalTreeDetailLabel'

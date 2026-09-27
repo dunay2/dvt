@@ -8,13 +8,14 @@ import {
   container,
   root,
   setupWorkbenchTest,
+  dragSourceTo,
 } from '../CanvasRelationalTreeWorkbench.test-support';
 import { occurrenceGraph } from './occurrence.test.fixtures';
-import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
+import { openOperationMenu } from '../operation-menu/operationMenu.test-support';
 
 describe('explicit source occurrence controls', () => {
   setupWorkbenchTest();
-  it('adds a third independent Read with one physical catalogue row and cancels without writing', async () => {
+  it('adds a third independent Read, connects it explicitly and cancels without writing', async () => {
     const graph = occurrenceGraph();
     const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' as const }));
     await act(async () =>
@@ -49,46 +50,37 @@ describe('explicit source occurrence controls', () => {
     );
     expect(inspector?.querySelectorAll('[data-field-id]').length).toBeGreaterThan(0);
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
+    openOperationMenu(container);
     await act(async () =>
-      container.querySelector<HTMLButtonElement>('[data-slot="source-occurrence-connect"]')!.click()
+      document.querySelector<HTMLElement>('[data-slot="dvt-select-operation-aggregate"]')!.click()
     );
-    expect(
-      container.querySelector('[data-slot="canvas-relational-tree-append-join-input"]')
-    ).not.toBeNull();
-    const labels = Array.from(
-      container.querySelectorAll('[data-slot="canvas-relational-tree-existing-field"] option'),
-      (option) => option.textContent
-    );
-    expect(new Set(labels).size).toBe(labels.length);
-    const { index } = deriveSubstraitSchemas(graph.draft);
-    const fields = index.relations.get(index.rootId)!.fields;
-    expect(labels).toEqual(fields.map((field) => field.displayName));
-    expect(
-      Array.from(
-        container.querySelectorAll<HTMLOptionElement>(
-          '[data-slot="canvas-relational-tree-existing-field"] option'
-        ),
-        (option) => option.value
+    const operation = container.querySelector<HTMLElement>('[data-pending-operation="true"]')!;
+    const producer = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-output-port"]')
+    ).find(
+      (port) =>
+        port.parentElement?.querySelector(
+          `[data-pending="true"][data-relation-id="${pendingId}"]`
+        ) != null
+    )!;
+    await act(async () =>
+      dragSourceTo(
+        producer,
+        operation.querySelector<HTMLElement>('[data-slot="canvas-relational-input-port"]')!
       )
-    ).toEqual(fields.map((field) => field.fieldId));
-    expect(
-      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
-        ?.disabled
-    ).toBe(true);
-    await act(async () =>
-      container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-append-input"]')!
-        .click()
     );
-    const reads = Array.from(container.querySelectorAll('[data-operator="read"]'));
-    expect(reads).toHaveLength(3);
-    expect(reads.map((read) => read.getAttribute('data-relation-id'))).toContain(pendingId);
-    expect(container.querySelector('[data-pending="true"]')).toBeNull();
-    expect(new Set(reads.map((read) => read.getAttribute('data-relation-id'))).size).toBe(3);
+    expect(container.querySelectorAll('[data-slot="canvas-relational-pending-edge"]')).toHaveLength(
+      1
+    );
+    expect(container.querySelector('[data-pending="true"]')).not.toBeNull();
     expect(container.querySelectorAll('[data-slot="canvas-relational-tree-source"]')).toHaveLength(
       1
     );
     expect(graph.edges).toHaveLength(1);
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
+        ?.disabled
+    ).toBe(false);
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
     await act(async () =>
       container

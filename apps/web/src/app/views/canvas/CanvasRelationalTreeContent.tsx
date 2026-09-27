@@ -4,7 +4,6 @@ import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWo
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import { CanvasRelationalTreeAuthoring } from './CanvasRelationalTreeAuthoring';
 import { projectCanvasRelationalTreeAuthoringView } from './canvasRelationalTreeAuthoringView';
-import { CanvasRelationalTreeCommandError } from './CanvasRelationalTreeCommandError';
 import { CanvasRelationalTreeInspection } from './CanvasRelationalTreeInspection';
 import type { CanvasModelOutputInspectorState } from './CanvasRelationalTreeSideInspector';
 
@@ -23,15 +22,7 @@ type CanvasRelationalTreeContentProps = Readonly<{
 }>;
 
 export function CanvasRelationalTreeContent(props: CanvasRelationalTreeContentProps): JSX.Element {
-  return (
-    <>
-      <CanvasRelationalTreeCommandError
-        visible={props.model.session.commandState === 'error'}
-        message={props.copy.relationalTreeUnavailableMessage}
-      />
-      <CanvasRelationalTreeContentView {...props} />
-    </>
-  );
+  return <CanvasRelationalTreeContentView {...props} />;
 }
 
 function CanvasRelationalTreeContentView({

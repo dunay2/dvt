@@ -246,6 +246,12 @@ export {
 } from './contracts/planner/DvtTransformAuthoringAuthority.v1.js';
 export type { DvtTransformAuthoringAuthorityV1 } from './contracts/planner/DvtTransformAuthoringAuthority.v1.js';
 export {
+  DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY,
+  DVT_RELATIONAL_AUTHORING_DRAFT_VERSION,
+  DvtRelationalAuthoringDraftV1Schema,
+} from './contracts/planner/DvtRelationalAuthoringDraft.v1.js';
+export type { DvtRelationalAuthoringDraftV1 } from './contracts/planner/DvtRelationalAuthoringDraft.v1.js';
+export {
   WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE,
   WorkspaceGraphAuthoringCommandSchema,
 } from './contracts/planner/WorkspaceGraphAuthoringCommand.v1.js';

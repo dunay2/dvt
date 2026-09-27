@@ -16,7 +16,6 @@ import type {
   CanvasRelationalTreeCatalogueItem,
   CanvasRelationalTreeWorkbenchCopy,
 } from './canvasRelationalTreeWorkbench.types';
-import { canvasRelationalAvailabilityLabel } from './DvtRelationalOperationChooser';
 import { useCanvasRelationalTreeAuthoringSession } from './useCanvasRelationalTreeAuthoringSession';
 
 export function canOpenCanvasRelationalTreeWorkbench(node: CanonicalNode): boolean {
@@ -75,45 +74,28 @@ export function useCanvasRelationalTreeWorkbenchModel(
         selected: item.treeLocator != null && item.treeLocator === selectedLocator,
       }));
     }
-    const candidateById = new Map(session.candidates.map((item) => [item.nodeId, item] as const));
     return base.map((item) => {
-      const candidate =
-        item.sourceNodeId == null ? undefined : candidateById.get(item.sourceNodeId);
+      const selectedOccurrence = session.occurrences.pending.find(
+        (occurrence) =>
+          occurrence.sourceNodeId === item.sourceNodeId &&
+          occurrence.read.binding.relationId === session.occurrences.selectedId
+      );
       return {
         ...item,
-        state:
-          session.active && session.operation != null && item.state !== 'missing'
-            ? (session.operation === 'projection'
-                ? session.selectedInputIds.slice(0, 1)
-                : session.selectedInputIds
-              ).includes(item.sourceNodeId ?? '')
-              ? ('participating' as const)
-              : ('pending' as const)
-            : item.state,
-        selectable: session.operation == null || candidate?.selectable === true,
-        selected:
-          item.sourceNodeId != null &&
-          (session.selectedInputIds.includes(item.sourceNodeId) ||
-            session.appendInput?.nodeId === item.sourceNodeId),
-        reason:
-          candidate?.reason == null
-            ? null
-            : canvasRelationalAvailabilityLabel(candidate.reason, args.copy),
+        selectable: item.fieldCount !== 0,
+        selected: selectedOccurrence != null,
+        reason: null,
       };
     });
   }, [
     args.authoring?.canEditNode,
-    args.copy,
     args.nodes,
     composition?.state,
     inputs,
     authoringAvailable,
     projection,
-    session.appendInput?.nodeId,
-    session.active,
-    session.candidates,
-    session.operation,
-    session.selectedInputIds,
+    session.occurrences.pending,
+    session.occurrences.selectedId,
     selectedLocator,
   ]);
   const unavailableMessage = result.ok

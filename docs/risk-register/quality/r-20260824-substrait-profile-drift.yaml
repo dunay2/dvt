@@ -51,13 +51,17 @@ mitigation:
     identity or widen semantic admission. Older strict clients may reject documents containing the
     new optional fields, so Web, API and shared packages require coordinated deployment. Protected
     preview continues to validate authorization, direct dependencies, cycles, physical source
-    coverage and a single connection before provider access. Incomplete draft persistence remains
-    separate from readiness. Browser fixture tests and protected API/SQL unit proofs do not
-    establish live PostgreSQL or complete chained StartRun support; bounded operational admission
-    remains unchanged.
+    coverage and a single connection before provider access. The optional
+    DvtRelationalAuthoringDraft v1 records incomplete source occurrences, algebraic operation ports,
+    explicit terminal Output selection and card positions without promoting them to executable
+    Substrait. Its validator rejects duplicate identities, invalid arity, unknown layout nodes and
+    cycles; draft persistence remains separate from readiness. Browser fixture tests and protected
+    API/SQL unit proofs do not establish live PostgreSQL or complete chained StartRun support;
+    bounded operational admission remains unchanged.
   evidence:
     - docs/evidence/ED-20260926-producer-consumer-input-boundary.md
     - packages/@dvt/contracts/test/dvt-input-bindings.contract.test.ts
+    - packages/@dvt/contracts/test/dvt-relational-authoring-draft.contract.test.ts
     - packages/@dvt/substrait-analysis/test/producerInputRefresh.test.ts
     - packages/@dvt/substrait-analysis/test/migrateEmbeddedProducerInput.test.ts
     - packages/@dvt/postgres-projection/test/producerGraph.test.ts

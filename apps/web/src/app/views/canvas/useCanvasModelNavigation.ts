@@ -88,13 +88,7 @@ export function useCanvasModelNavigation({
     } else applyDecisionInFlight.current = false;
   };
   useEffect(() => {
-    if (
-      !appliedForNavigation ||
-      pendingNavigation == null ||
-      workbench.current?.hasUnappliedChanges === true ||
-      navigationError != null
-    )
-      return;
+    if (!appliedForNavigation || pendingNavigation == null || navigationError != null) return;
     if (pendingNavigation !== 'route') {
       navigate(pendingNavigation);
       return;

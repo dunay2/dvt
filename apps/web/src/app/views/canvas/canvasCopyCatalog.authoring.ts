@@ -11,7 +11,6 @@ export const canvasViewAuthoringCopyByKey = {
   sourceOccurrenceAdd: { key: 'canvas.sourceOccurrence.add', fallback: 'Add instance' },
   sourceOccurrenceAlias: { key: 'canvas.sourceOccurrence.alias', fallback: 'Instance alias' },
   sourceOccurrenceUpdate: { key: 'canvas.sourceOccurrence.update', fallback: 'Update alias' },
-  sourceOccurrenceConnect: { key: 'canvas.sourceOccurrence.connect', fallback: 'Connect to model' },
   sourceOccurrenceInvalidAlias: {
     key: 'canvas.sourceOccurrence.invalid_alias',
     fallback: 'Enter a non-empty name of at most 256 characters.',

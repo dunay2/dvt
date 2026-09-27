@@ -18,11 +18,14 @@ import {
   edge,
   root,
   container,
+  dragSourceTo,
 } from './CanvasRelationalTreeWorkbench.test-support';
 import { openOperationMenu } from './operation-menu/operationMenu.test-support';
 import { createSourceRelation } from './canvasSourceRelation';
 import { createSourceDocument } from './canvasSourceDocument';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
+import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 
 async function dropSource(sourceId: string, x = 400, y = 300): Promise<void> {
   const drop = new MouseEvent('drop', { bubbles: true, cancelable: true, clientX: x, clientY: y });
@@ -122,17 +125,6 @@ describe('Canvas relational-tree Workbench drag', () => {
       );
       if (state === 'new') {
         await dropSource(source.id);
-        await act(async () =>
-          container
-            .querySelector<HTMLButtonElement>('[data-slot="source-occurrence-connect"]')!
-            .click()
-        );
-        openOperationMenu(container);
-        await act(async () =>
-          document
-            .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-projection"]')!
-            .click()
-        );
       }
       const card = container.querySelector<HTMLElement>('[data-operator="read"]')!;
       await act(async () => card.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true })));
@@ -144,10 +136,7 @@ describe('Canvas relational-tree Workbench drag', () => {
       const confirm = document.querySelector<HTMLButtonElement>(
         '[data-slot="canvas-relational-removal-confirm"]'
       );
-      if (state === 'new') {
-        expect(confirm).not.toBeNull();
-        await act(async () => confirm!.click());
-      } else expect(confirm).toBeNull();
+      expect(confirm).toBeNull();
       expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(0);
       expect(container.querySelector('[data-slot="canvas-relational-tree-output"]')).not.toBeNull();
       expect(
@@ -202,7 +191,7 @@ describe('Canvas relational-tree Workbench drag', () => {
     expect(
       container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
         ?.disabled
-    ).toBe(true);
+    ).toBe(false);
     expect(apply).not.toHaveBeenCalled();
     await act(async () =>
       container
@@ -213,7 +202,7 @@ describe('Canvas relational-tree Workbench drag', () => {
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(original.length);
     expect(apply).not.toHaveBeenCalled();
   });
-  it('starts a new model with the dropped instance without replacing its identity', async () => {
+  it('connects a dropped instance to an explicit projection without replacing its identity', async () => {
     const source = sourceNode('customers', 'customers');
     const target = transformNode();
     await act(async () =>
@@ -232,21 +221,38 @@ describe('Canvas relational-tree Workbench drag', () => {
     const id = pending.getAttribute('data-relation-id');
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(1);
     expect(container.querySelector('[data-operator="join"]')).toBeNull();
-    await act(async () => pending.click());
-    await act(async () =>
-      container.querySelector<HTMLButtonElement>('[data-slot="source-occurrence-connect"]')!.click()
-    );
     openOperationMenu(container);
     await act(async () =>
       document
         .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-projection"]')!
         .click()
     );
-    expect(container.querySelector('[data-pending="true"]')).toBeNull();
+    const projection = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-pending-operation="true"]')
+    ).find((card) => card.querySelector('[data-operator="project"]') != null)!;
+    const producer = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-output-port"]')
+    ).find(
+      (port) =>
+        port.parentElement?.querySelector('[data-pending="true"][data-operator="read"]') != null
+    )!;
+    await act(async () =>
+      dragSourceTo(
+        producer,
+        projection.querySelector<HTMLElement>('[data-slot="canvas-relational-input-port"]')!
+      )
+    );
+    expect(container.querySelector('[data-pending="true"]')).not.toBeNull();
     expect(
       container.querySelector('[data-operator="read"]')?.getAttribute('data-relation-id')
     ).toBe(id);
     expect(container.querySelector('[data-operator="project"]')).not.toBeNull();
+    await act(async () =>
+      dragSourceTo(
+        projection.querySelector<HTMLElement>('[data-slot="canvas-relational-output-port"]')!,
+        container.querySelector<HTMLElement>('[data-slot="canvas-relational-output-input-port"]')!
+      )
+    );
     expect(
       container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')!
         .disabled
@@ -365,9 +371,6 @@ describe('Canvas relational-tree Workbench drag', () => {
     await act(async () =>
       container.querySelector<HTMLButtonElement>('[data-pending="true"]')!.click()
     );
-    await act(async () =>
-      container.querySelector<HTMLButtonElement>('[data-slot="source-occurrence-connect"]')!.click()
-    );
     openOperationMenu(container);
     expect(container.querySelector('[data-operator="project"]')).not.toBeNull();
     expect(container.querySelector('[data-operator="read"]')?.textContent).toContain('customers');
@@ -376,10 +379,16 @@ describe('Canvas relational-tree Workbench drag', () => {
         .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')
         ?.getAttribute('aria-disabled')
     ).toBe('false');
+    await act(async () =>
+      document
+        .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-inner-join"]')!
+        .click()
+    );
+    expect(container.querySelector('[data-pending-operation="true"]')).not.toBeNull();
     expect(
       container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
         ?.disabled
-    ).toBe(true);
+    ).toBe(false);
     await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-cancel"]')!
@@ -387,5 +396,60 @@ describe('Canvas relational-tree Workbench drag', () => {
     );
     expect(container.querySelector('[data-operator="project"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-relational-tree-apply"]')).toBeNull();
+  });
+
+  it('saves and reopens an incomplete occurrence with the same identity', async () => {
+    const source = sourceNode('customers', 'customers');
+    const target = transformNode();
+    const saved: CanvasInspectorNodeDraft[] = [];
+    const authoring = {
+      canEditNode: true,
+      onApplyNodeDraft: (_id: string, draft: CanvasInspectorNodeDraft) => {
+        saved.push(draft);
+        return { outcome: 'no_changes' as const };
+      },
+    };
+    await act(async () =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={target}
+          nodes={[source, target]}
+          edges={[edge(source.id)]}
+          copy={COPY}
+          authoring={authoring}
+        />
+      )
+    );
+
+    await dropSource(source.id, 460, 240);
+    const relationId = container
+      .querySelector<HTMLElement>('[data-pending="true"]')!
+      .getAttribute('data-relation-id');
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')!
+        .click()
+    );
+
+    const persisted = saved[0]!;
+    expect(persisted.relationalAuthoringDraft?.sources[0]?.relationId).toBe(relationId);
+    expect(persisted.relationalAuthoringDraft?.positions[relationId!]).toBeDefined();
+    const reopened = applyCanvasInspectorNodeDraft(target, persisted);
+    await act(async () =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={reopened}
+          nodes={[source, reopened]}
+          edges={[edge(source.id)]}
+          copy={COPY}
+          authoring={authoring}
+        />
+      )
+    );
+
+    expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(1);
+    expect(container.querySelector('[data-pending="true"]')?.getAttribute('data-relation-id')).toBe(
+      relationId
+    );
   });
 });

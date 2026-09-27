@@ -3,7 +3,7 @@
 import React, { act } from 'react';
 import { describe, expect, it } from 'vitest';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
-import { connectWorkbenchSource } from './CanvasRelationalTreeWorkbench.gestures.test-support';
+import { instantiateWorkbenchSource } from './CanvasRelationalTreeWorkbench.gestures.test-support';
 import {
   setupWorkbenchTest,
   COPY,
@@ -39,8 +39,8 @@ describe('Canvas relational-tree Workbench menu', () => {
     const sourceButtons = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     );
-    await connectWorkbenchSource(sourceButtons[0]!);
-    await connectWorkbenchSource(sourceButtons[1]!);
+    await instantiateWorkbenchSource(sourceButtons[0]!);
+    await instantiateWorkbenchSource(sourceButtons[1]!);
     const pendingIds = [...container.querySelectorAll('[data-pending="true"]')].map((node) =>
       node.getAttribute('data-relation-id')
     );

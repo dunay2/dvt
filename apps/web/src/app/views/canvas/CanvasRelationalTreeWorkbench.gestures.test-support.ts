@@ -1,10 +1,9 @@
-/** Public gestures: instantiate, connect, then explicitly choose semantic work. */
+/** Public gestures for explicit source, operation and port interactions. */
 import { act } from 'react';
-import { fireEvent } from '@testing-library/dom';
 import { container, dragSourceTo } from './CanvasRelationalTreeWorkbench.test-support';
 import { openOperationMenu } from './operation-menu/operationMenu.test-support';
 
-export async function connectWorkbenchSource(source: HTMLElement): Promise<void> {
+export async function instantiateWorkbenchSource(source: HTMLElement): Promise<void> {
   await act(async () =>
     dragSourceTo(
       source,
@@ -13,12 +12,9 @@ export async function connectWorkbenchSource(source: HTMLElement): Promise<void>
       )!
     )
   );
-  await act(async () =>
-    container.querySelector<HTMLButtonElement>('[data-slot="source-occurrence-connect"]')!.click()
-  );
 }
 
-export async function selectWorkbenchOperation(
+export async function stageWorkbenchOperation(
   operation: 'projection' | 'inner-join' | 'cross-join'
 ): Promise<void> {
   openOperationMenu(container);
@@ -29,41 +25,64 @@ export async function selectWorkbenchOperation(
   );
 }
 
-export async function appendWorkbenchJoin(): Promise<void> {
-  for (const field of container.querySelectorAll<HTMLSelectElement>(
-    '[data-slot="canvas-relational-tree-existing-field"], [data-slot="canvas-relational-tree-connected-field"]'
-  )) {
-    await act(async () =>
-      fireEvent.change(field, {
-        target: { value: [...field.options].find((option) => option.value !== '')!.value },
-      })
-    );
-  }
-  await act(async () =>
-    container
-      .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-append-input"]')!
-      .click()
-  );
-}
-
 export async function connectStagedWorkbenchBinaryOperation(): Promise<void> {
-  const outputs = Array.from(
+  const producers = Array.from(
     container.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-output-port"]')
-  );
-  const canonical = outputs.find(
-    (port) => port.parentElement?.querySelector('[data-pending="true"]') == null
-  );
-  const pending = outputs.find((port) =>
-    port.parentElement?.querySelector('[data-pending="true"][data-operator="read"]')
-  );
+  ).filter((port) => port.parentElement?.querySelector('[data-operator="read"]') != null);
   const [left, right] = Array.from(
     container.querySelectorAll<HTMLElement>(
       '[data-pending-operation="true"] [data-slot="canvas-relational-input-port"]'
     )
   );
-  if (canonical == null || pending == null || left == null || right == null)
+  if (producers.length < 2 || left == null || right == null)
     throw new Error('The staged binary operation does not expose its producer and Input ports.');
-  await act(async () => dragSourceTo(canonical, left));
-  await act(async () => dragSourceTo(pending, right));
+  await act(async () => dragSourceTo(producers[1]!, right));
+  await act(async () => dragSourceTo(producers[0]!, left));
+  await act(async () => Promise.resolve());
+}
+
+export async function connectStagedWorkbenchUnaryOperation(
+  producer?: HTMLElement
+): Promise<HTMLElement> {
+  const operation = Array.from(
+    container.querySelectorAll<HTMLElement>('[data-pending-operation="true"]')
+  ).at(-1);
+  const source =
+    producer ??
+    Array.from(
+      container.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-output-port"]')
+    ).find(
+      (port) =>
+        port.parentElement?.querySelector('[data-pending="true"][data-operator="read"]') != null
+    );
+  const input = operation?.querySelector<HTMLElement>('[data-slot="canvas-relational-input-port"]');
+  if (operation == null || source == null || input == null)
+    throw new Error('The staged unary operation does not expose its producer and Input port.');
+  await act(async () => dragSourceTo(source, input));
+  await act(async () => Promise.resolve());
+  return operation;
+}
+
+export async function connectWorkbenchOutput(
+  host: HTMLElement,
+  producer?: HTMLElement
+): Promise<void> {
+  const source =
+    producer ??
+    Array.from(
+      host.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-output-port"]')
+    ).find((port) => {
+      const card = port.parentElement;
+      return (
+        card?.hasAttribute('data-parent-locator') === false &&
+        card.querySelector('[data-pending="true"]') == null
+      );
+    });
+  const input = host.querySelector<HTMLElement>(
+    '[data-slot="canvas-relational-output-input-port"]'
+  );
+  if (source == null || input == null)
+    throw new Error('The producer and explicit Output Input port must both be present.');
+  await act(async () => dragSourceTo(source, input));
   await act(async () => Promise.resolve());
 }

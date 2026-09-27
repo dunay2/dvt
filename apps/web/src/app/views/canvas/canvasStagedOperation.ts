@@ -1,4 +1,4 @@
-/** Discardable operation placement before one typed connection admits semantic work. */
+/** Discardable operation nodes with algebra-defined, freely connectable Input ports. */
 import { allocateDvtRelationId } from '@dvt/contracts';
 import type { CanvasRelationalOperatorTool } from './relational-operator-form/OperatorTool';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
@@ -75,6 +75,33 @@ export function connectCanvasStagedOperation(
   return { ...operation, inputs };
 }
 
+export function disconnectCanvasStagedOperation(
+  operation: CanvasStagedOperation,
+  port: number
+): CanvasStagedOperation {
+  if (port < 0 || port >= operation.inputs.length || operation.inputs[port] == null)
+    return operation;
+  const inputs = [...operation.inputs];
+  inputs[port] = null;
+  return { ...operation, inputs };
+}
+
+export function createsCanvasStagedOperationCycle(
+  operations: readonly CanvasStagedOperation[],
+  producerId: string,
+  consumerId: string
+): boolean {
+  const byId = new Map(operations.map((operation) => [operation.id, operation]));
+  const visited = new Set<string>();
+  const dependsOn = (id: string): boolean => {
+    if (id === consumerId) return true;
+    if (visited.has(id)) return false;
+    visited.add(id);
+    return byId.get(id)?.inputs.some((input) => input != null && dependsOn(input)) ?? false;
+  };
+  return dependsOn(producerId);
+}
+
 function operatorFor(operation: CanvasStagedOperationKind): CanvasRelationalTreeOperator {
   if (operation === 'projection' || operation === 'field_transform') return 'project';
   if (operation === 'cross_join') return 'cross';
@@ -89,10 +116,10 @@ function operatorFor(operation: CanvasStagedOperationKind): CanvasRelationalTree
     operation === 'filter' ||
     operation === 'aggregate' ||
     operation === 'sort' ||
-    operation === 'fetch' ||
-    operation === 'window'
+    operation === 'fetch'
   )
     return operation;
+  if (operation === 'window') return 'window';
   return 'unsupported';
 }
 

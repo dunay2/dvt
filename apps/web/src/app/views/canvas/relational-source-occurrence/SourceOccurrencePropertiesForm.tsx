@@ -20,7 +20,6 @@ export function SourceOccurrencePropertiesForm({
   actions: Readonly<{
     save: (alias: string) => boolean | Promise<boolean>;
     close: () => void;
-    connect?: () => void;
   }>;
   output: ReactNode;
   onPendingChange?: (pending: boolean) => void;
@@ -58,7 +57,6 @@ export function SourceOccurrencePropertiesForm({
         alias,
         aliasLabel: copy.alias,
         updateLabel: copy.update,
-        connectLabel: copy.connect,
         unsupported: data.supported ? null : copy.aliasUnsupported,
         error: !result.success
           ? copy.invalid_alias
@@ -69,7 +67,6 @@ export function SourceOccurrencePropertiesForm({
               : null,
         invalid: !valid,
         canSubmit: pending && valid && status !== 'busy',
-        canConnect: !pending && status !== 'busy',
       }}
       actions={{
         changeAlias: (value) => {
@@ -80,7 +77,6 @@ export function SourceOccurrencePropertiesForm({
           void submit();
         },
         close: actions.close,
-        connect: actions.connect,
       }}
       output={output}
     />

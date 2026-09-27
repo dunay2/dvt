@@ -20,6 +20,10 @@ code_refs:
   - apps/web/src/app/views/canvas/canvasModelCompositionInput.ts
   - apps/web/src/app/views/canvas/CanvasRelationOutputs.tsx
   - apps/web/src/app/views/canvas/useCanvasRelationalTreeViewport.ts
+  - apps/web/src/app/views/canvas/canvasStagedOperationActions.ts
+  - apps/web/src/app/views/canvas/CanvasRelationalOperationPorts.tsx
+  - apps/web/src/app/views/canvas/relational-layout/RelationalTreeEdges.tsx
+  - packages/@dvt/contracts/src/contracts/planner/DvtRelationalAuthoringDraft.v1.ts
   - apps/api/src/application/services/dvtProtectedTransformSelection.ts
   - apps/api/test/application/services/previewCanvasProducerRows.test.ts
 evidence:
@@ -80,6 +84,15 @@ protected preview. The shell extraction is a presentation adapter of
   producer does not create outputs, copy its operators, infer a JOIN or revive an
   excluded field. The outer model Output is a passive publication with source
   ports, without mapping, selection, reorder or expression controls.
+- Staged relational operations expose only the Input ports required by their
+  algebraic arity. Producers connect directly to any compatible free port in
+  any order, including the same producer on both ports for an explicit
+  self-join; selection is optional presentation state, never an admission
+  prerequisite. Occupied-port replacement and cycles reject atomically.
+- Incomplete source occurrences, operation nodes, port bindings, terminal
+  Output selection and positions persist in the existing protected draft. They
+  reopen without materializing a hidden Transform or copying another producer's
+  operations.
 - Explicit operations inside the model define its outputs. Consumers reference
   the immediate producer's published stable FieldIds through a local Read;
   producer operators are resolved for analysis/SQL, not copied into the consumer
@@ -146,6 +159,25 @@ Shared package lint also passed:
 ```text
 pnpm exec eslint "packages/@dvt/contracts/**/*.{ts,tsx}" "packages/@dvt/substrait-analysis/**/*.{ts,tsx}" "packages/@dvt/postgres-projection/**/*.{ts,tsx}" --ignore-pattern vitest.config.ts --max-warnings 0
 ```
+
+The freely connected relational-draft extension was validated again on
+2026-09-27:
+
+- `pnpm --filter @dvt/web test:canvas`: 2,339 tests passed in
+  511 files.
+- Web lint and typecheck: passed.
+- Contract tests: 684 tests passed in 67 files; typecheck passed.
+- `pnpm lint:md`: 1,263 Markdown files checked with no issue.
+- `pnpm governance:refresh`: stable after two generation passes;
+  6,250 files governed and no drift.
+- `pnpm docs:feature-mechanization:implementation`: GH-3298 symbols
+  accepted; the gate fails only on the disclosed historical VTX1 cycle and
+  its five inherited symbols.
+
+The new mechanization references were recorded additively through
+`RecordFeatureMechanizationRail` under `ConfigureCanvasDvtNode`,
+`SaveWorkspaceGraphDraft` and `ProjectCanvasRelationalTree`. No duplicate rail,
+direct database mutation or Planning DB import was introduced.
 
 ## Compatibility and verification limits
 

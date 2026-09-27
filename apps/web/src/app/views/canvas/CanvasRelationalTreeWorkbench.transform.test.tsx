@@ -7,6 +7,7 @@ import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import {
   container,
   COPY,
+  dragSourceTo,
   root,
   setupWorkbenchTest,
 } from './CanvasRelationalTreeWorkbench.test-support';
@@ -21,7 +22,7 @@ import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemantic
 describe('Transform card in the production Workbench', () => {
   setupWorkbenchTest();
 
-  it('inserts Transform on a selected dataset and authors fields only in its fixed inspector', async () => {
+  it('stages Transform independently and connects its Input without prior selection', async () => {
     const graph = occurrenceGraph();
     const input = { ...occurrenceInput, fieldTypes: ['string', 'string'] as const };
     const initial = applyDvtSubstraitSemanticDocument(
@@ -65,10 +66,6 @@ describe('Transform card in the production Workbench', () => {
     }
     await act(async () => root.render(<Host />));
     await act(async () =>
-      container.querySelector<HTMLButtonElement>('[data-operator="read"]')!.click()
-    );
-    expect(container.querySelector('[data-slot="canvas-derived-output-trigger"]')).toBeNull();
-    await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[data-slot="canvas-operation-menu-trigger"]')!
         .click()
@@ -81,43 +78,36 @@ describe('Transform card in the production Workbench', () => {
     await act(async () =>
       fireEvent.click(document.querySelector('[data-operation="field_transform"]')!)
     );
-    await waitFor(() => expect(applied).toHaveBeenCalledOnce());
-    await waitFor(() =>
-      expect(container.querySelector('[data-slot="canvas-transform-inspector"]')).not.toBeNull()
+    const staged = container.querySelector<HTMLElement>('[data-pending-operation="true"]')!;
+    const producer = container
+      .querySelector<HTMLElement>('[data-operator="join"]')!
+      .closest('li')!
+      .querySelector<HTMLElement>('[data-slot="canvas-relational-output-port"]')!;
+    const inputPort = staged.querySelector<HTMLElement>(
+      '[data-slot="canvas-relational-input-port"]'
+    )!;
+    await act(async () => dragSourceTo(producer, inputPort));
+    expect(inputPort.getAttribute('data-connected')).toBe('true');
+    expect(container.querySelectorAll('[data-slot="canvas-relational-pending-edge"]')).toHaveLength(
+      1
     );
-    expect(container.querySelectorAll('[data-canvas-inspector="true"]')).toHaveLength(1);
-    expect(container.querySelector('[data-operator="project"]')).not.toBeNull();
-    expect(container.querySelector('form[data-slot="canvas-derived-output-form"]')).toBeNull();
-    for (const alias of ['normalized_key', 'second_key']) {
-      await act(async () =>
-        container
-          .querySelector<HTMLButtonElement>('[data-slot="canvas-derived-output-trigger"]')!
-          .click()
-      );
-      await act(async () =>
-        fireEvent.change(container.querySelector('input[name="alias"]')!, {
-          target: { value: alias },
-        })
-      );
-      await act(async () =>
-        fireEvent.submit(container.querySelector('form[data-slot="canvas-derived-output-form"]')!)
-      );
-      await waitFor(() =>
-        expect(container.querySelector('form[data-slot="canvas-derived-output-form"]')).toBeNull()
-      );
-    }
-    expect(container.querySelectorAll('[data-operator="project"]')).toHaveLength(1);
-    const draft = applied.mock.calls.at(-1)![0];
-    expect(
-      draft.dvt.sidecar.fields.filter((field: { displayName?: string }) =>
-        ['normalized_key', 'second_key'].includes(field.displayName ?? '')
-      )
-    ).toHaveLength(2);
+    expect(applied).not.toHaveBeenCalled();
     await act(async () =>
-      container.querySelector<HTMLButtonElement>('[data-operator="join"]')!.click()
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')!
+        .click()
     );
-    expect(container.querySelector('[data-slot="canvas-transform-inspector"]')).toBeNull();
-    expect(container.querySelector('[data-slot="canvas-derived-output-trigger"]')).toBeNull();
+    await waitFor(() => expect(applied).toHaveBeenCalledOnce());
+    const saved = applied.mock.calls[0]![0].relationalAuthoringDraft;
+    expect(saved?.operations).toEqual([
+      expect.objectContaining({
+        relationId: staged.querySelector('[data-relation-id]')?.getAttribute('data-relation-id'),
+        operation: 'field_transform',
+        inputs: [
+          container.querySelector('[data-operator="join"]')?.getAttribute('data-relation-id'),
+        ],
+      }),
+    ]);
   });
 
   it('denies Transform insertion in a read-only Model', async () => {

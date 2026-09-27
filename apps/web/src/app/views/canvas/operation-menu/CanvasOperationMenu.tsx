@@ -1,5 +1,5 @@
 /** Owned concern: accessible, compact discovery of already-admitted operation actions. */
-import { Check, ChevronDown, Plus } from 'lucide-react';
+import { ChevronDown, Plus } from 'lucide-react';
 import { useId, useState } from 'react';
 import { Button } from '../../../components/ui/button';
 import {
@@ -20,12 +20,10 @@ import type { CanvasMenuOperation, CanvasOperationMenuItem } from './canvasOpera
 export function CanvasOperationMenu({
   items,
   copy,
-  onSelect,
   onStage,
 }: Readonly<{
   items: readonly CanvasOperationMenuItem[];
   copy: CanvasOperationMenuCopy;
-  onSelect: (operation: CanvasMenuOperation) => void;
   onStage: (operation: CanvasMenuOperation) => void;
 }>): JSX.Element {
   const [open, setOpen] = useState(false);
@@ -77,7 +75,7 @@ export function CanvasOperationMenu({
                           key={item.id}
                           value={item.id}
                           keywords={[item.label, copy[group]]}
-                          disabled={!item.selectable && !item.draggable}
+                          disabled={!item.draggable}
                           aria-describedby={item.reason == null ? undefined : reasonId}
                           data-operation={item.id}
                           data-slot={`dvt-select-operation-${item.id.replaceAll('_', '-')}`}
@@ -96,10 +94,9 @@ export function CanvasOperationMenu({
                           }}
                           onDragEnd={() => setOpen(false)}
                           onSelect={() => {
-                            if (!item.selectable && !item.draggable) return;
+                            if (!item.draggable) return;
                             setOpen(false);
-                            if (item.selectable) onSelect(item.id);
-                            else onStage(item.id);
+                            onStage(item.id);
                           }}
                           className="items-start data-[selected=true]:bg-(--surface-selected) data-[selected=true]:text-(--text-strong)"
                         >
@@ -112,9 +109,6 @@ export function CanvasOperationMenu({
                               </span>
                             )}
                           </span>
-                          {item.active ? (
-                            <Check className="mt-0.5 size-4" aria-label={copy.current} />
-                          ) : null}
                         </CommandItem>
                       );
                     })}

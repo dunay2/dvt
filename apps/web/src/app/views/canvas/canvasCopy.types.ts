@@ -6,7 +6,6 @@ export type CanvasViewCopy = {
   readonly sourceOccurrenceAdd: string;
   readonly sourceOccurrenceAlias: string;
   readonly sourceOccurrenceUpdate: string;
-  readonly sourceOccurrenceConnect: string;
   readonly sourceOccurrenceInvalidAlias: string;
   readonly sourceOccurrenceUpdateFailed: string;
   readonly sourceOccurrenceAliasUnsupported: string;

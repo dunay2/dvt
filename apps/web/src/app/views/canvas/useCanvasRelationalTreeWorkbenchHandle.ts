@@ -27,22 +27,23 @@ export function useCanvasRelationalTreeWorkbenchHandle(
     session.operation !== session.seed?.operation ||
     session.joinDraft !== session.baselineDraft ||
     session.selectedInputIds.join(',') !== session.seed?.inputIds.join(',') ||
-    session.appendInput != null ||
-    session.occurrences.pending.length > 0;
+    session.occurrences.pending.length > 0 ||
+    session.staged.operations.length > 0 ||
+    session.output.relationId !== session.seed?.outputRelationId;
+  const completeSemanticDraft =
+    (isCanvasJoinOperation(model.session.operation) && model.session.joinDraft != null) ||
+    (model.session.operation === 'cross_join' && model.session.joinDraft != null) ||
+    (model.session.operation === 'projection' && model.session.selectedInputIds.length === 1) ||
+    (isCanvasSetOperation(model.session.operation) && model.session.selectedInputIds.length >= 2);
   const handle = {
     hasUnappliedChanges: directEdit.pending || (session.active && (changed || pendingCondition)),
     canApply:
       !directEdit.pending &&
       !pendingCondition &&
-      session.occurrences.pending.length === 0 &&
       model.authoringAvailable &&
-      model.session.appendInput == null &&
-      (session.cleared ||
-        (isCanvasJoinOperation(model.session.operation) && model.session.joinDraft != null) ||
-        (model.session.operation === 'cross_join' && model.session.joinDraft != null) ||
-        (model.session.operation === 'projection' && model.session.selectedInputIds.length === 1) ||
-        (isCanvasSetOperation(model.session.operation) &&
-          model.session.selectedInputIds.length >= 2)),
+      (session.hasIncompleteGraph ||
+        session.cleared ||
+        (session.output.relationId != null && completeSemanticDraft)),
     applyRejection: model.session.applyRejection,
     apply: model.session.apply,
     cancel: () => {

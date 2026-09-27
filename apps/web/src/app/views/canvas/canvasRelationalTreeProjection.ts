@@ -16,6 +16,7 @@ export type CanvasRelationalTreeOperator =
   | 'cross'
   | 'set'
   | 'aggregate'
+  | 'window'
   | 'sort'
   | 'fetch'
   | 'unsupported';

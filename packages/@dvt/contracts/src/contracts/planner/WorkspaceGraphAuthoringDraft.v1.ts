@@ -25,6 +25,10 @@ import {
   validateDvtInputBindingMetadata,
 } from './DvtInputBindings.v1.js';
 import {
+  DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY,
+  DvtRelationalAuthoringDraftV1Schema,
+} from './DvtRelationalAuthoringDraft.v1.js';
+import {
   DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
   DvtTransformAuthoringAuthorityV1Schema,
 } from './DvtTransformAuthoringAuthority.v1.js';
@@ -312,6 +316,33 @@ function addGraphShapeIssues(
         ],
       });
     }
+  });
+
+  graph.nodes.forEach((node, index) => {
+    if (
+      node.metadata === undefined ||
+      !Object.hasOwn(node.metadata, DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY)
+    )
+      return;
+    const isDvtTransform =
+      node.kind === 'dvt:transform' || (node.pluginId === 'dvt' && node.kind === 'transform');
+    if (
+      !isDvtTransform ||
+      !DvtRelationalAuthoringDraftV1Schema.safeParse(
+        node.metadata[DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY]
+      ).success
+    )
+      ctx.addIssue({
+        code: 'custom',
+        message: 'DVT relational authoring draft metadata is valid only on a DVT Transform.',
+        path: [
+          ...pathPrefix,
+          'nodes',
+          index,
+          'metadata',
+          DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY,
+        ],
+      });
   });
 
   for (const nodeId of graph.nodeIds) {

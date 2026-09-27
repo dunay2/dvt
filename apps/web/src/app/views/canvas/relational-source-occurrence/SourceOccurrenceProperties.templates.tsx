@@ -16,18 +16,15 @@ export function SourceOccurrencePropertiesTemplate({
     alias: string;
     aliasLabel: string;
     updateLabel: string;
-    connectLabel: string;
     unsupported: string | null;
     error: string | null;
     invalid: boolean;
     canSubmit: boolean;
-    canConnect: boolean;
   }>;
   actions: Readonly<{
     changeAlias: (alias: string) => void;
     submit: () => void;
     close: () => void;
-    connect?: () => void;
   }>;
   output: ReactNode;
 }>): JSX.Element {
@@ -75,18 +72,6 @@ export function SourceOccurrencePropertiesTemplate({
         </form>
       ) : (
         <p className="text-xs text-(--text-muted)">{data.unsupported}</p>
-      )}
-      {actions.connect == null ? null : (
-        <Button
-          type="button"
-          size="sm"
-          className="mt-3"
-          data-slot="source-occurrence-connect"
-          disabled={!data.canConnect}
-          onClick={actions.connect}
-        >
-          {data.connectLabel}
-        </Button>
       )}
     </CanvasRelationalTreeEditorFrame>
   );

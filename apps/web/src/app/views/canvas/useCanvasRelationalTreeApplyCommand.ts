@@ -1,8 +1,10 @@
 /** Apply persists the edited document without reconstructing or changing its identities. */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
+import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
+import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import type {
   CanvasRelationalTreeApplyResult,
   CanvasRelationalTreeAuthoringContract,
@@ -12,7 +14,7 @@ import type {
 export function useCanvasRelationalTreeApplyCommand(args: {
   authoring?: CanvasRelationalTreeAuthoringContract;
   editable: boolean;
-  hasPendingSources?: boolean;
+  relationalAuthoringDraft?: DvtRelationalAuthoringDraftV1;
   cleared?: boolean;
   joinDraft: SubstraitDocument | null;
   operation: CanvasRelationalOperation | null;
@@ -24,20 +26,27 @@ export function useCanvasRelationalTreeApplyCommand(args: {
     const { authoring, editable, operation, reject, reset, transformNode } = args;
     if (
       !editable ||
-      args.hasPendingSources ||
-      (!args.cleared && (operation == null || joinDraft == null)) ||
+      (args.relationalAuthoringDraft === undefined &&
+        !args.cleared &&
+        (operation == null || joinDraft == null)) ||
       authoring == null
     ) {
       const rejection = { outcome: 'rejected', reason: 'command_unavailable' } as const;
       reject(rejection);
       return rejection;
     }
-    const result = authoring.onApplyNodeDraft(
-      transformNode.id,
-      createCanvasRelationalTreeNodeDraft(transformNode, operation, joinDraft)
-    );
+    const semanticDraft =
+      operation == null || joinDraft == null
+        ? createCanvasInspectorNodeDraft(transformNode)
+        : createCanvasRelationalTreeNodeDraft(transformNode, operation, joinDraft);
+    const draft = {
+      ...semanticDraft,
+      relationalAuthoringDraft:
+        args.relationalAuthoringDraft === undefined ? null : args.relationalAuthoringDraft,
+    };
+    const result = authoring.onApplyNodeDraft(transformNode.id, draft);
     if (result.outcome === 'rejected') reject(result);
-    else reset();
+    else if (args.relationalAuthoringDraft === undefined) reset();
     return result;
   };
 }

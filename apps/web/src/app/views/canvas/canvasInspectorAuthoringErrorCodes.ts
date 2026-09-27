@@ -29,6 +29,7 @@ export type CanvasInspectorNodeDraftErrorCode =
   | 'dvt_visual_recipe_invalid'
   | 'dvt_materialization_invalid'
   | 'dvt_write_mode_invalid'
+  | 'dvt_relational_authoring_draft_invalid'
   | 'object_file_storage_uri_invalid'
   | 'object_file_sha256_invalid'
   | 'object_file_size_invalid'

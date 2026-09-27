@@ -11,7 +11,6 @@ import removal from '../canvasPrepareRelationRemoval.ts?raw';
 import policy from './sourceOccurrencePolicy.ts?raw';
 import properties from './SourceOccurrenceProperties.tsx?raw';
 import action from './SourceOccurrenceAction.tsx?raw';
-import appendForm from './SourceOccurrenceAppendForm.tsx?raw';
 import actions from './sourceOccurrenceActions.ts?raw';
 import aliasTests from './SourceOccurrenceAlias.test.tsx?raw';
 import appendTests from './SourceOccurrenceWorkbench.test.tsx?raw';
@@ -54,7 +53,6 @@ describe('source occurrence component boundaries', () => {
     ['occurrence policy', policy],
     ['alias properties', properties],
     ['source action', action],
-    ['append form', appendForm],
     ['append intent', actions],
     ['alias scenarios', aliasTests],
     ['append scenarios', appendTests],

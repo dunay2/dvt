@@ -4,6 +4,7 @@ import type { CanvasDvtCompositionInput } from '../canvasDvtCompositionInputCata
 import { createCanvasInputRead } from '../canvasSourceRelation';
 import { createSourceDocument } from '../canvasSourceDocument';
 import { buildCanvasRelationalTreeRelation } from '../canvasRelationalTreeRelationProjection';
+import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
 
 export type PendingSourceOccurrence = Readonly<{
   sourceNodeId: string;
@@ -16,6 +17,30 @@ export function createPendingSourceOccurrence(
   return {
     sourceNodeId: input.nodeId,
     read: createCanvasInputRead(input, 1),
+  };
+}
+
+export function restorePendingSourceOccurrence(
+  input: CanvasDvtCompositionInput,
+  source: DvtRelationalAuthoringDraftV1['sources'][number]
+): PendingSourceOccurrence | null {
+  const occurrence = createPendingSourceOccurrence(input);
+  if (occurrence.read.fields.length !== source.fieldIds.length) return null;
+  return {
+    sourceNodeId: source.sourceNodeId,
+    read: {
+      ...occurrence.read,
+      binding: {
+        ...occurrence.read.binding,
+        relationId: source.relationId,
+        displayName: source.displayName,
+      },
+      fields: occurrence.read.fields.map((field, index) => ({
+        ...field,
+        relationId: source.relationId,
+        fieldId: source.fieldIds[index]!,
+      })),
+    },
   };
 }
 

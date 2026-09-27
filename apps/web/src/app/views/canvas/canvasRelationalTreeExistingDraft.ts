@@ -9,6 +9,7 @@ export type CanvasRelationalTreeExistingDraft = Readonly<{
   draft: SubstraitDocument;
   inputIds: readonly string[];
   operation: CanvasRelationalOperation;
+  outputRelationId?: string;
 }>;
 
 export function resolveCanvasRelationalTreeExistingDraft(
@@ -17,7 +18,8 @@ export function resolveCanvasRelationalTreeExistingDraft(
     projection: CanvasRelationalTreeProjection | null;
   }>
 ): CanvasRelationalTreeExistingDraft | null {
-  if (args.projection == null || args.document == null) return null;
+  if (args.projection == null || args.document == null || args.projection.root.relationId == null)
+    return null;
   let entry = args.projection.root;
   while (entry.children.length === 1) entry = entry.children[0]!.node;
   const operation = entry.operation ?? null;
@@ -27,6 +29,7 @@ export function resolveCanvasRelationalTreeExistingDraft(
   if (inputIds.some((nodeId) => nodeId == null)) return null;
   return {
     draft: args.document,
+    outputRelationId: args.projection.root.relationId,
     operation:
       isCanvasJoinOperation(operation) ||
       isCanvasSetOperation(operation) ||

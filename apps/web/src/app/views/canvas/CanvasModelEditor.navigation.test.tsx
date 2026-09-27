@@ -17,6 +17,8 @@ import {
   openOperationMenu,
   setupOperationMenuDom,
 } from './operation-menu/operationMenu.test-support';
+import { connectWorkbenchOutput } from './CanvasRelationalTreeWorkbench.gestures.test-support';
+import { dragSourceTo } from './CanvasRelationalTreeWorkbench.test-support';
 
 setupOperationMenuDom();
 
@@ -94,18 +96,37 @@ function Editor(props: {
 }
 
 async function beginProjection(container: HTMLElement): Promise<void> {
-  await act(async () => {
-    container
-      .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')!
-      .click();
-  });
   await act(async () =>
-    container.querySelector<HTMLButtonElement>('[data-slot="source-occurrence-connect"]')!.click()
+    dragSourceTo(
+      container.querySelector<HTMLElement>('[data-slot="canvas-relational-tree-source"]')!,
+      container.querySelector<HTMLElement>(
+        '[data-slot="canvas-relational-tree-draft-viewport"], [data-slot="canvas-relational-tree-viewport"]'
+      )!
+    )
   );
   openOperationMenu(container);
   await act(async () => {
     document.querySelector<HTMLElement>('[data-slot="dvt-select-operation-projection"]')!.click();
   });
+  const projection = Array.from(
+    container.querySelectorAll<HTMLElement>('[data-pending-operation="true"]')
+  ).find((card) => card.querySelector('[data-operator="project"]') != null)!;
+  const producer = Array.from(
+    container.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-output-port"]')
+  ).find(
+    (port) =>
+      port.parentElement?.querySelector('[data-pending="true"][data-operator="read"]') != null
+  )!;
+  await act(async () =>
+    dragSourceTo(
+      producer,
+      projection.querySelector<HTMLElement>('[data-slot="canvas-relational-input-port"]')!
+    )
+  );
+  await connectWorkbenchOutput(
+    container,
+    projection.querySelector<HTMLElement>('[data-slot="canvas-relational-output-port"]')!
+  );
 }
 
 function findButton(label: string): HTMLButtonElement {
@@ -183,6 +204,7 @@ describe('CanvasModelEditor navigation', () => {
     await act(async () => {
       applyAndContinue.click();
       applyAndContinue.click();
+      await Promise.resolve();
       await Promise.resolve();
     });
 

@@ -7,35 +7,33 @@ import type { CanvasRelationalTreeSeedHydration } from './useCanvasRelationalTre
 import { useCanvasRelationalOperandSlots } from './useCanvasRelationalOperandSlots';
 import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
+import type { CardPosition } from './canvasRelationalTreeGeometry';
 
 export function useCanvasRelationalTreeDraftState() {
   const [operation, setOperation] = useState<CanvasRelationalOperation | null>(null);
   const [active, setActive] = useState(false);
   const [joinDraft, setJoinDraft] = useState<SubstraitDocument | null>(null);
-  const [appendInputId, setAppendInputId] = useState<string | null>(null);
-  const [appendTargetRelationId, setAppendTargetRelationId] = useState<string | null>(null);
   const [pendingSources, setPendingSources] = useState<readonly PendingSourceOccurrence[]>([]);
   const [pendingSourceId, setPendingSourceId] = useState<string | null>(null);
   const [stagedOperations, setStagedOperations] = useState<readonly CanvasStagedOperation[]>([]);
   const [selectedStagedOperationId, setSelectedStagedOperationId] = useState<string | null>(null);
+  const [outputRelationId, setOutputRelationId] = useState<string | null>(null);
+  const [positions, setPositions] = useState<ReadonlyMap<string, CardPosition>>(() => new Map());
   const [applyRejection, setApplyRejection] = useState<RelationalApplyRejection | null>(null);
   const slots = useCanvasRelationalOperandSlots();
   const { resetOperands, replaceInputs } = slots;
-  const consumePendingSource = (id: string) => {
-    setPendingSources((current) => current.filter((item) => item.read.binding.relationId !== id));
-    setPendingSourceId(null);
-  };
   const reset = useCallback(() => {
     setActive(false);
     setOperation(null);
     resetOperands();
     setJoinDraft(null);
-    setAppendInputId(null);
-    setAppendTargetRelationId(null);
     setPendingSources([]);
     setPendingSourceId(null);
     setStagedOperations([]);
     setSelectedStagedOperationId(null);
+    setOutputRelationId(null);
+    setPositions(new Map());
     setApplyRejection(null);
   }, [resetOperands]);
   const hydrate = useCallback(
@@ -44,10 +42,10 @@ export function useCanvasRelationalTreeDraftState() {
       replaceInputs(seed.inputIds);
       setOperation(seed.operation);
       setJoinDraft(seed.draft);
-      setAppendInputId(seed.appendInputId);
-      setAppendTargetRelationId(null);
       setStagedOperations([]);
       setSelectedStagedOperationId(null);
+      const indexed = indexSubstraitRelations(seed.draft);
+      setOutputRelationId(indexed.ok ? indexed.index.rootId : null);
     },
     [replaceInputs]
   );
@@ -59,31 +57,47 @@ export function useCanvasRelationalTreeDraftState() {
     setActive,
     joinDraft,
     setJoinDraft,
-    appendInputId,
-    setAppendInputId,
-    appendTargetRelationId,
-    setAppendTargetRelationId,
     pendingSources,
     setPendingSources,
     pendingSourceId,
-    pendingSource:
-      pendingSources.find((item) => item.read.binding.relationId === pendingSourceId) ?? null,
     setPendingSourceId,
     stagedOperations,
     setStagedOperations,
     selectedStagedOperationId,
     setSelectedStagedOperationId,
-    consumePendingSource,
+    outputRelationId,
+    setOutputRelationId,
+    positions,
+    setPositions,
+    restoreIncomplete: useCallback(
+      (
+        draft: Readonly<{
+          sources: readonly PendingSourceOccurrence[];
+          operations: readonly CanvasStagedOperation[];
+          outputRelationId: string | null;
+          positions: ReadonlyMap<string, CardPosition>;
+        }>
+      ) => {
+        setActive(true);
+        setPendingSources(draft.sources);
+        setPendingSourceId(null);
+        setStagedOperations(draft.operations);
+        setSelectedStagedOperationId(null);
+        setOutputRelationId(draft.outputRelationId);
+        setPositions(draft.positions);
+      },
+      []
+    ),
     clear: () => {
       setActive(true);
       setOperation(null);
       resetOperands();
       setJoinDraft(null);
-      setAppendInputId(null);
-      setAppendTargetRelationId(null);
       setPendingSourceId(null);
       setStagedOperations([]);
       setSelectedStagedOperationId(null);
+      setOutputRelationId(null);
+      setPositions(new Map());
       setApplyRejection(null);
     },
     applyRejection,

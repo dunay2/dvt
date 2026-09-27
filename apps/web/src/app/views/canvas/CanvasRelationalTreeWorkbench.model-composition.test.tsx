@@ -42,7 +42,7 @@ describe('Model composition Workbench', () => {
 
     await act(async () => root.render(<Host />));
     const output = container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-relational-tree-output"]'
+      '[data-slot="canvas-relational-tree-output-open"]'
     );
     expect(output?.tagName).toBe('BUTTON');
     await act(async () => output?.click());
@@ -99,7 +99,7 @@ describe('Model composition Workbench', () => {
     expect(container.querySelector('[data-slot="canvas-model-output-inspector"]')).toBeNull();
     await act(async () => {
       container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-output"]')!
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-output-open"]')!
         .click();
     });
     expect(container.querySelector('[data-slot="canvas-model-output-inspector"]')).not.toBeNull();
@@ -121,7 +121,7 @@ describe('Model composition Workbench', () => {
     );
     await act(async () =>
       container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-output"]')!
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-output-open"]')!
         .click()
     );
     await act(async () =>
@@ -150,7 +150,7 @@ describe('Model composition Workbench', () => {
     );
     await act(async () =>
       container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-output"]')!
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-output-open"]')!
         .click()
     );
     await act(async () => {

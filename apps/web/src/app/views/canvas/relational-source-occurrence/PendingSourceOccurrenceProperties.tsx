@@ -14,7 +14,7 @@ export function PendingSourceOccurrenceProperties({
 }: Readonly<{
   occurrence: PendingSourceOccurrence;
   occupied: ReadonlySet<string>;
-  actions: Readonly<{ rename: (alias: string) => boolean; connect: () => void; close: () => void }>;
+  actions: Readonly<{ rename: (alias: string) => boolean; close: () => void }>;
   onPendingChange: (pending: boolean) => void;
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
@@ -36,7 +36,7 @@ export function PendingSourceOccurrenceProperties({
         occupied,
         supported: true,
       }}
-      actions={{ save: actions.rename, connect: actions.connect, close: actions.close }}
+      actions={{ save: actions.rename, close: actions.close }}
       onPendingChange={onPendingChange}
       output={
         <CanvasRelationFieldsTemplate

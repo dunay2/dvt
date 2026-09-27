@@ -8,8 +8,9 @@ import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoring
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import {
-  connectWorkbenchSource,
-  appendWorkbenchJoin,
+  connectWorkbenchOutput,
+  instantiateWorkbenchSource,
+  stageWorkbenchOperation,
 } from './CanvasRelationalTreeWorkbench.gestures.test-support';
 import {
   setupWorkbenchTest,
@@ -20,11 +21,12 @@ import {
   edge,
   root,
   container,
+  dragSourceTo,
 } from './CanvasRelationalTreeWorkbench.test-support';
 
 describe('Canvas relational-tree Workbench reopen', () => {
   setupWorkbenchTest();
-  it('opens an existing JOIN as the structural draft before appending a pending Source', async () => {
+  it('reopens an existing JOIN as a producer for a staged JOIN and a pending Source', async () => {
     const customers = {
       ...sourceNode('customers', 'customers'),
       metadata: {
@@ -121,25 +123,43 @@ describe('Canvas relational-tree Workbench reopen', () => {
       container.querySelectorAll<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
     ).find((button) => button.textContent?.includes('countries'));
     expect(countriesButton?.disabled).toBe(false);
-    await connectWorkbenchSource(countriesButton!);
-    expect(container.querySelector('[data-slot="canvas-operation-output-tab"]')).toBeNull();
-    expect(container.querySelector('[data-value="properties"]')?.getAttribute('data-state')).toBe(
-      'active'
+    await instantiateWorkbenchSource(countriesButton!);
+    await stageWorkbenchOperation('inner-join');
+    const staged = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-pending-operation="true"]')
+    ).find((card) => card.querySelector('[data-operator="join"]') != null)!;
+    const [left, right] = Array.from(
+      staged.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-input-port"]')
     );
-    expect(
-      container.querySelector('[data-slot="canvas-relational-tree-append-input"]')
-    ).not.toBeNull();
-    expect(
-      Array.from(
-        container.querySelectorAll<HTMLOptionElement>(
-          '[data-slot="canvas-relational-tree-existing-field"] option'
-        )
-      ).map((option) => option.textContent)
-    ).toEqual(expect.arrayContaining(['customer_id', 'order_id']));
-    await appendWorkbenchJoin();
+    const producers = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-output-port"]')
+    );
+    const existingRoot = producers.find(
+      (port) =>
+        port.parentElement !== staged &&
+        port.parentElement?.querySelector('[data-operator="join"]') != null
+    )!;
+    const pendingCountry = producers.find(
+      (port) =>
+        port.parentElement?.querySelector('[data-pending="true"][data-operator="read"]') != null
+    )!;
+    await act(async () => dragSourceTo(existingRoot, left!));
+    await act(async () => dragSourceTo(pendingCountry, right!));
+    await act(async () =>
+      container
+        .querySelector<SVGElement>('[data-slot="canvas-relational-output-edge-action"]')!
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    );
+    await connectWorkbenchOutput(
+      container,
+      staged.querySelector<HTMLElement>('[data-slot="canvas-relational-output-port"]')!
+    );
 
     expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(2);
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(3);
+    expect(container.querySelectorAll('[data-slot="canvas-relational-pending-edge"]')).toHaveLength(
+      2
+    );
     expect(applied).toHaveLength(0);
     await act(async () =>
       container
@@ -147,5 +167,10 @@ describe('Canvas relational-tree Workbench reopen', () => {
         ?.click()
     );
     expect(applied).toHaveLength(1);
+    expect(applied[0]?.dvt).toMatchObject({ mode: 'substrait', shape: 'inner_join' });
+    expect(applied[0]?.relationalAuthoringDraft).toMatchObject({
+      sources: [{ sourceNodeId: countries.id }],
+      operations: [{ operation: 'inner_join', inputs: [expect.any(String), expect.any(String)] }],
+    });
   });
 });

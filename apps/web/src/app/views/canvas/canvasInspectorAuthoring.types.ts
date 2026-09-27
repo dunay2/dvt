@@ -19,6 +19,7 @@ import type {
 } from './httpJsonArtifactAuthoringModel';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { CanvasDraftSession } from './canvasDraftSession';
+import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
 
 export type CanvasInspectorNodeDraft = Readonly<{
   name: string;
@@ -29,6 +30,7 @@ export type CanvasInspectorNodeDraft = Readonly<{
   dvt?: DvtNodeAuthoringMetadata;
   semanticAuthoringIssue?: 'invalid_document' | 'unsupported_shape';
   outputNameDrafts?: Readonly<Record<string, string>>;
+  relationalAuthoringDraft?: DvtRelationalAuthoringDraftV1 | null;
   objectFilePostgres?: ObjectFilePostgresAuthoringDraft;
   httpJsonArtifact?: HttpJsonArtifactAuthoringDraft;
 }>;
@@ -41,6 +43,7 @@ export type CanvasInspectorNodeDraftErrors = Readonly<{
   dbtTest?: DbtTestAuthoringMetadataErrors;
   dvt?: DvtNodeAuthoringMetadataErrors;
   outputNames?: CanvasInspectorNodeDraftErrorCode;
+  relationalAuthoringDraft?: CanvasInspectorNodeDraftErrorCode;
   objectFilePostgres?: ObjectFilePostgresAuthoringErrors;
   httpJsonArtifact?: HttpJsonArtifactAuthoringErrors;
 }>;

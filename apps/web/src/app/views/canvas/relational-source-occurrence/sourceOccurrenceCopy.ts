@@ -8,7 +8,6 @@ export function sourceOccurrenceCopy(language: string) {
     add: copy.sourceOccurrenceAdd,
     alias: copy.sourceOccurrenceAlias,
     update: copy.sourceOccurrenceUpdate,
-    connect: copy.sourceOccurrenceConnect,
     invalid_alias: copy.sourceOccurrenceInvalidAlias,
     update_failed: copy.sourceOccurrenceUpdateFailed,
     aliasUnsupported: copy.sourceOccurrenceAliasUnsupported,

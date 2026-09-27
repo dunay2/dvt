@@ -1,9 +1,6 @@
 /** Owned concern: render and accept drops on one scalable canonical relational draft graph. */
 import type { ComponentProps } from 'react';
-import {
-  RelationalLayoutSession,
-  useRelationalLayout,
-} from './relational-layout/RelationalLayoutSession';
+import { useRelationalLayout } from './relational-layout/RelationalLayoutSession';
 import type {
   CanvasRelationalTreeAuthoringDto,
   CanvasRelationalTreeAuthoringActions,
@@ -113,6 +110,10 @@ function DraftViewport({
             selectedStagedOperationId={data.selectedStagedOperationId}
             onSelectStagedOperation={actions.selectStagedOperation}
             onConnectStagedOperation={actions.connectStagedOperation}
+            onDisconnectStagedOperation={actions.disconnectStagedOperation}
+            outputRelationId={data.outputRelationId}
+            onConnectOutput={actions.connectOutput}
+            onDisconnectOutput={actions.disconnectOutput}
             onRemoveStagedOperation={actions.removeStagedOperation}
             outputName={transformNode.name}
             root={draftProjection?.root ?? null}
@@ -146,9 +147,5 @@ function DraftViewport({
 export function CanvasRelationalTreeDraftViewport(
   props: ComponentProps<typeof DraftViewport>
 ): JSX.Element {
-  return (
-    <RelationalLayoutSession>
-      <DraftViewport {...props} />
-    </RelationalLayoutSession>
-  );
+  return <DraftViewport {...props} />;
 }
