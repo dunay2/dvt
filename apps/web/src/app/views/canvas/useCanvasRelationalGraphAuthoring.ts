@@ -4,7 +4,6 @@ import { createSourceOccurrenceActions } from './relational-source-occurrence/so
 import type { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import type { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 import { useCanvasStagedOperationSession } from './useCanvasStagedOperationSession';
-import { configureCanvasStagedBinary } from './canvasStagedBinaryConfiguration';
 import { useCanvasStagedOperationConfiguration } from './useCanvasStagedOperationConfiguration';
 
 type DraftState = ReturnType<typeof useCanvasRelationalTreeDraftState>;
@@ -20,6 +19,7 @@ export function useCanvasRelationalGraphAuthoring(
   }>
 ) {
   const { analysis, editable, inputs, outputRelationId, start, state } = args;
+  const configure = useCanvasStagedOperationConfiguration({ analysis, inputs, state });
   const canonicalIds =
     analysis?.document?.sidecar.relations.map((relation) => relation.relationId) ?? [];
   // Every non-root relation in the canonical tree already has a consumer.
@@ -36,16 +36,8 @@ export function useCanvasRelationalGraphAuthoring(
     consumedProducerIds:
       outputRelationId == null ? canonicalConsumers : [...canonicalConsumers, outputRelationId],
     state,
-    configure: (operation) =>
-      configureCanvasStagedBinary(
-        operation,
-        inputs,
-        state.pendingSources,
-        state.stagedOperations,
-        analysis?.document
-      ),
+    configure,
   });
-  useCanvasStagedOperationConfiguration({ analysis, inputs, state });
   const occurrences = createSourceOccurrenceActions({
     editable,
     session: analysis?.document == null ? null : analysis.session,
