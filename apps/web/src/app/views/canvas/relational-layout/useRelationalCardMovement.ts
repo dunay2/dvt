@@ -1,6 +1,8 @@
 /** Owned concern: translate pointer/keyboard gestures to local card positions only. */
 import { useRef, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
-import type { CardPosition, CanvasRelationalTreePlacedNode } from '../canvasRelationalTreeGeometry';
+import type { CardPosition } from '../canvasRelationalTreeGeometry';
+
+export type RelationalMovableCard = Readonly<CardPosition & { id: string }>;
 
 type Drag = {
   id: string;
@@ -12,7 +14,7 @@ type Drag = {
   moved: boolean;
 };
 export function useRelationalCardMovement(
-  nodes: readonly CanvasRelationalTreePlacedNode[],
+  cards: readonly RelationalMovableCard[],
   zoom: number,
   setPosition: (id: string, position: CardPosition) => void,
   onManualLayout?: () => void,
@@ -21,11 +23,9 @@ export function useRelationalCardMovement(
   const drag = useRef<Drag | null>(null);
   const suppressClick = useRef(false);
   const locate = (target: EventTarget) => {
-    const element = (target as Element).closest<HTMLElement>(
-      '[data-slot="canvas-relational-tree-node"]'
-    );
-    const placed = nodes.find((item) => item.node.locator === element?.dataset.locator);
-    return element != null && placed != null ? { element, placed } : null;
+    const element = (target as Element).closest<HTMLElement>('[data-relational-card-id]');
+    const card = cards.find((item) => item.id === element?.dataset.relationalCardId);
+    return element != null && card != null ? { element, card } : null;
   };
   const finish = (cancel: boolean) => {
     const current = drag.current;
@@ -46,10 +46,10 @@ export function useRelationalCardMovement(
       event.stopPropagation();
       hit.element.setPointerCapture(event.pointerId);
       drag.current = {
-        id: hit.placed.node.relationId ?? hit.placed.node.locator,
+        id: hit.card.id,
         pointerId: event.pointerId,
         target: hit.element,
-        origin: { x: hit.placed.x, y: hit.placed.y },
+        origin: { x: hit.card.x, y: hit.card.y },
         pointer: { x: event.clientX, y: event.clientY },
         zoom,
         moved: false,
@@ -106,14 +106,14 @@ export function useRelationalCardMovement(
       event.stopPropagation();
       onManualLayout?.();
       const step = event.shiftKey ? 40 : 10;
-      setPosition(hit.placed.node.relationId ?? hit.placed.node.locator, {
+      setPosition(hit.card.id, {
         x: Math.max(
           0,
-          hit.placed.x + (event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0)
+          hit.card.x + (event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0)
         ),
         y: Math.max(
           0,
-          hit.placed.y + (event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0)
+          hit.card.y + (event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0)
         ),
       });
     },

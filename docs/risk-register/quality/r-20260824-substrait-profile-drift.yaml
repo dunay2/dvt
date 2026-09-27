@@ -58,9 +58,11 @@ mitigation:
     cycles; draft persistence remains separate from readiness. Internal editor connection commands
     count canonical, staged and terminal consumers together, reject producer fan-out and require
     distinct aliased instances for self-joins. New terminal links require operation outputs; legacy
-    direct source links remain visible and removable rather than silently migrated. Browser fixture
-    tests and protected API/SQL unit proofs do not establish live PostgreSQL or complete chained
-    StartRun support; bounded operational admission remains unchanged.
+    direct source links remain visible and removable rather than silently migrated. Source,
+    operation and terminal Output cards share presentation-only movement, and the node overlay does
+    not obscure removable edge actions. Movement cannot mutate producers, consumers or semantic
+    output. Browser fixture tests and protected API/SQL unit proofs do not establish live PostgreSQL
+    or complete chained StartRun support; bounded operational admission remains unchanged.
   evidence:
     - docs/evidence/ED-20260926-producer-consumer-input-boundary.md
     - packages/@dvt/contracts/test/dvt-input-bindings.contract.test.ts
@@ -70,6 +72,7 @@ mitigation:
     - packages/@dvt/postgres-projection/test/producerGraph.test.ts
     - apps/api/test/application/services/previewCanvasProducerRows.test.ts
     - apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
+    - apps/web/cypress/e2e/canvas/canvas-relational-card-movement.cy.ts
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ed-20260824-substrait-semantic-reference-traceability.md
     - docs/evidence/ED-20260826-vtx2-substrait-card-pilot.md

@@ -1,6 +1,9 @@
 /** Presentation-only terminal for the model output in a relational layout. */
 import { Table2 } from 'lucide-react';
-import type { CanvasRelationalTreeLayout } from './canvasRelationalTreeGeometry';
+import {
+  CANVAS_RELATIONAL_OUTPUT_POSITION_ID,
+  type CanvasRelationalTreeLayout,
+} from './canvasRelationalTreeGeometry';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import { readCanvasRelationalRelationDrag } from './canvasRelationalTreeDrag';
 import { relationalInputPortClass } from './canvasRelationalPortStyles';
@@ -14,6 +17,7 @@ export function CanvasRelationalTreeOutput({
   selectedSource,
   onConnect,
   onDisconnect,
+  movable,
 }: Readonly<{
   output: NonNullable<CanvasRelationalTreeLayout['output']>;
   outputName: string;
@@ -23,6 +27,7 @@ export function CanvasRelationalTreeOutput({
   selectedSource: string | null;
   onConnect?: (relationId: string) => void;
   onDisconnect?: () => void;
+  movable: boolean;
 }>): JSX.Element {
   const style = {
     left: output.x,
@@ -43,10 +48,14 @@ export function CanvasRelationalTreeOutput({
       </span>
     </>
   );
-  const className =
-    'absolute z-10 flex items-center gap-2 rounded-md border border-emerald-500 bg-emerald-950/30 px-3 text-left shadow-sm';
+  const className = `absolute z-10 flex select-none items-center gap-2 rounded-md border border-emerald-500 bg-emerald-950/30 px-3 text-left shadow-sm ${movable ? 'cursor-grab data-[dragging=true]:cursor-grabbing' : 'cursor-inherit'}`;
   return (
-    <div data-slot="canvas-relational-tree-output" className={className} style={style}>
+    <div
+      data-slot="canvas-relational-tree-output"
+      data-relational-card-id={CANVAS_RELATIONAL_OUTPUT_POSITION_ID}
+      className={className}
+      style={{ ...style, touchAction: 'none' }}
+    >
       {onOpen == null ? (
         content
       ) : (
@@ -66,6 +75,7 @@ export function CanvasRelationalTreeOutput({
           data-slot="canvas-relational-output-input-port"
           data-connected={connected || undefined}
           aria-label={copy.relationalTreePrimaryInputLabel}
+          onPointerDown={(event) => event.stopPropagation()}
           onClick={() => {
             if (connected) onDisconnect?.();
             else if (selectedSource != null) onConnect?.(selectedSource);

@@ -69,6 +69,7 @@ export function CanvasRelationalTreeNodeButton({
       aria-label={roleLabel == null ? title : `${roleLabel}: ${title}`}
       data-slot="canvas-relational-tree-node"
       data-locator={node.locator}
+      data-relational-card-id={node.relationId ?? node.locator}
       data-relation-id={node.relationId ?? undefined}
       data-operator={node.operator}
       data-pending={pending || undefined}

@@ -52,7 +52,7 @@ export function CanvasRelationalTreeGraphNode({
     <CanvasRelationalTreeCardMenu node={placed.node} onRemove={onRemove} onExpand={onExpand}>
       <li
         role="none"
-        className="group/canvas-node absolute"
+        className="pointer-events-auto group/canvas-node absolute"
         style={{ left: placed.x, top: placed.y, width: placed.width, height: placed.height }}
         data-parent-locator={placed.parentLocator ?? undefined}
         data-pending-operation={stagedOperation == null ? undefined : true}

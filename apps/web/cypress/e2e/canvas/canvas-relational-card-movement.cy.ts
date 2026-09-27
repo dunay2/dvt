@@ -12,6 +12,7 @@ import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenari
 const viewport = '[data-slot="canvas-relational-tree-viewport"]';
 const join = `${viewport} [data-slot="canvas-relational-tree-node"][data-operator="join"]`;
 const source = `${viewport} [data-slot="canvas-relational-tree-node"][data-operator="read"]:first`;
+const output = `${viewport} [data-slot="canvas-relational-tree-output"]`;
 const position = (element: HTMLElement): number[] => [
   Number.parseFloat(element.parentElement!.style.left),
   Number.parseFloat(element.parentElement!.style.top),
@@ -71,7 +72,7 @@ describe('Relational card movement', () => {
     });
   });
 
-  it('moves a source using the keyboard and retains normal card navigation', () => {
+  it('moves a source with pointer and keyboard and retains normal card navigation', () => {
     cy.get(source).then(($card) => {
       const before = position($card[0]);
       const writes = semanticWrites('join-transform').length;
@@ -79,10 +80,13 @@ describe('Relational card movement', () => {
       cy.get(source).should(($moved) => {
         expect(position($moved[0])).to.deep.equal([before[0] + 10, before[1]]);
       });
+      moveWorkbenchCard(source, 20, 12);
+      cy.get(source).should(($moved) => {
+        const after = position($moved[0]);
+        expect(after[0]).to.be.greaterThan(before[0] + 10);
+        expect(after[1]).to.be.greaterThan(before[1]);
+      });
       verifyCompleteTreeFit(viewport);
-      cy.get(source).should(($moved) =>
-        expect(position($moved[0])).to.deep.equal([before[0] + 10, before[1]])
-      );
       cy.get('[data-slot="canvas-relational-tree-arrange"]').click();
       cy.get(source).should(($arranged) => expect(position($arranged[0])).to.deep.equal(before));
       const relationId = $card.attr('data-relation-id')!;
@@ -94,6 +98,29 @@ describe('Relational card movement', () => {
       );
       cy.then(() => expect(semanticWrites('join-transform')).to.have.length(writes));
     });
+  });
+
+  it('moves Output and disconnects its producer from the line', () => {
+    cy.get(output).then(($output) => {
+      const before = [
+        Number.parseFloat($output[0].style.left),
+        Number.parseFloat($output[0].style.top),
+      ];
+      const zoom = Number(
+        (Cypress.$('[data-slot="canvas-relational-tree"]')[0] as HTMLElement).style.zoom
+      );
+      moveWorkbenchCard(output, 40, 24);
+      cy.get(output).should(($moved) => {
+        expect(Number.parseFloat($moved[0].style.left)).to.be.closeTo(before[0]! + 40 / zoom, 2);
+        expect(Number.parseFloat($moved[0].style.top)).to.be.closeTo(before[1]! + 24 / zoom, 2);
+      });
+    });
+    cy.get('[data-slot="canvas-relational-output-edge-action"]').click();
+    cy.get('[data-slot="canvas-relational-output-edge"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-output-input-port"]').should(
+      'not.have.attr',
+      'data-connected'
+    );
   });
 
   it('pans with the explicit hand without moving or selecting a card', () => {

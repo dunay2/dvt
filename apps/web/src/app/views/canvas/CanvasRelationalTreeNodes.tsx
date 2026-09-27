@@ -51,7 +51,11 @@ export function CanvasRelationalTreeNodes({
     [stagedOperations]
   );
   return (
-    <ul role="tree" aria-label={copy.relationalTreeLabel} className="absolute inset-0">
+    <ul
+      role="tree"
+      aria-label={copy.relationalTreeLabel}
+      className="pointer-events-none absolute inset-0"
+    >
       {layout.nodes.map((placed) => {
         const relationId = placed.node.relationId;
         const staged = relationId == null ? undefined : stagedById.get(relationId);

@@ -57,17 +57,28 @@ describe('Relational card movement', () => {
     );
   const card = (): HTMLButtonElement =>
     container.querySelector<HTMLButtonElement>('[data-relation-id="employee"]')!;
+  const output = (): HTMLDivElement =>
+    container.querySelector<HTMLDivElement>('[data-slot="canvas-relational-tree-output"]')!;
   const position = (): CardPosition => ({
     x: parseFloat(card().parentElement!.style.left),
     y: parseFloat(card().parentElement!.style.top),
   });
-  const pointer = (type: string, x: number, y: number): void => {
+  const pointerAt = (
+    target: HTMLElement,
+    type: string,
+    x: number,
+    y: number,
+    pointerId = 1
+  ): void => {
     const event = new MouseEvent(type, { bubbles: true, clientX: x, clientY: y, button: 0 });
-    Object.defineProperty(event, 'pointerId', { value: 1 });
+    Object.defineProperty(event, 'pointerId', { value: pointerId });
     act(() => {
-      card().dispatchEvent(event);
+      target.dispatchEvent(event);
     });
   };
+  const pointer = (type: string, x: number, y: number): void => pointerAt(card(), type, x, y);
+  const outputPointer = (type: string, x: number, y: number): void =>
+    pointerAt(output(), type, x, y, 2);
   beforeEach(() => {
     vi.clearAllMocks();
     Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -159,5 +170,62 @@ describe('Relational card movement', () => {
     });
     expect(position()).toEqual({ x: before.x + 10, y: before.y });
     expect(select).not.toHaveBeenCalled();
+  });
+  it('moves the passive Output through the same presentation-only gesture', () => {
+    const terminal = output();
+    Object.assign(terminal, {
+      setPointerCapture: vi.fn(),
+      releasePointerCapture: vi.fn(),
+      hasPointerCapture: () => true,
+    });
+    const before = { x: parseFloat(terminal.style.left), y: parseFloat(terminal.style.top) };
+    outputPointer('pointerdown', 100, 100);
+    outputPointer('pointermove', 130, 120);
+    outputPointer('pointerup', 130, 120);
+    expect({ x: parseFloat(terminal.style.left), y: parseFloat(terminal.style.top) }).toEqual({
+      x: before.x + 60,
+      y: before.y + 40,
+    });
+    expect(select).not.toHaveBeenCalled();
+    expect(expand).not.toHaveBeenCalled();
+  });
+  it('moves a pending operation without selecting or connecting it', () => {
+    act(() =>
+      root.render(
+        <RelationalLayoutSession>
+          <CanvasRelationalTreeLayout
+            root={null}
+            stagedOperations={[
+              { id: 'pending-operation', operation: 'inner_join', inputs: [null, null] },
+            ]}
+            outputName="Model"
+            selectedLocator=""
+            copy={resolveCanvasViewCopy('en')}
+            onSelect={select}
+            onExpand={expand}
+            onManualLayout={manual}
+          />
+        </RelationalLayoutSession>
+      )
+    );
+    const pending = container.querySelector<HTMLElement>(
+      '[data-relational-card-id="pending-operation"]'
+    )!;
+    Object.assign(pending, {
+      setPointerCapture: vi.fn(),
+      releasePointerCapture: vi.fn(),
+      hasPointerCapture: () => true,
+    });
+    const host = pending.parentElement!;
+    const before = { x: parseFloat(host.style.left), y: parseFloat(host.style.top) };
+    pointerAt(pending, 'pointerdown', 100, 100, 3);
+    pointerAt(pending, 'pointermove', 130, 120, 3);
+    pointerAt(pending, 'pointerup', 130, 120, 3);
+    expect({ x: parseFloat(host.style.left), y: parseFloat(host.style.top) }).toEqual({
+      x: before.x + 30,
+      y: before.y + 20,
+    });
+    expect(select).not.toHaveBeenCalled();
+    expect(expand).not.toHaveBeenCalled();
   });
 });

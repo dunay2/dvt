@@ -10,6 +10,8 @@ import {
 
 export type CardPosition = Readonly<{ x: number; y: number }>;
 
+export const CANVAS_RELATIONAL_OUTPUT_POSITION_ID = 'canvas-relational-output';
+
 const NODE_HEIGHT = 76;
 const HORIZONTAL_PADDING = 36;
 const OUTPUT_GAP = 64;
@@ -58,8 +60,7 @@ export function layoutCanvasRelationalTree(
 ): CanvasRelationalTreeLayout {
   const first = root ?? detached[0];
   const output = {
-    x: 320,
-    y: 36,
+    ...(positions.get(CANVAS_RELATIONAL_OUTPUT_POSITION_ID) ?? { x: 320, y: 36 }),
     width: OUTPUT_WIDTH,
     height: NODE_HEIGHT,
     inputLocator: null as string | null,
@@ -118,8 +119,10 @@ export function layoutCanvasRelationalTree(
   const rootNode = nodes[0];
   if (rootNode != null) {
     output.inputLocator = rootNode.node.locator;
-    output.x = rootNode.x + rootNode.width + OUTPUT_GAP;
-    output.y = rootNode.y;
+    if (!positions.has(CANVAS_RELATIONAL_OUTPUT_POSITION_ID)) {
+      output.x = rootNode.x + rootNode.width + OUTPUT_GAP;
+      output.y = rootNode.y;
+    }
   }
   const bottom = Math.max(0, ...nodes.map((node) => node.y + node.height)) + BOTTOM_PADDING;
   detached.forEach((node, ordinal) =>

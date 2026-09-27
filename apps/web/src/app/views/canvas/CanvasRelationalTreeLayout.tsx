@@ -7,7 +7,10 @@ import {
   type CanvasRelationalSemanticContext,
 } from './canvasRelationalTreeDetails';
 
-import { layoutCanvasRelationalTree } from './canvasRelationalTreeGeometry';
+import {
+  CANVAS_RELATIONAL_OUTPUT_POSITION_ID,
+  layoutCanvasRelationalTree,
+} from './canvasRelationalTreeGeometry';
 import { RelationalTreeEdges } from './relational-layout/RelationalTreeEdges';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
@@ -97,8 +100,27 @@ export function CanvasRelationalTreeLayout({
     () => layoutCanvasRelationalTree(root, sizes, positions, detached),
     [root, sizes, positions, detached]
   );
+  const movableCards = useMemo(
+    () => [
+      ...layout.nodes.map((placed) => ({
+        id: placed.node.relationId ?? placed.node.locator,
+        x: placed.x,
+        y: placed.y,
+      })),
+      ...(layout.output == null
+        ? []
+        : [
+            {
+              id: CANVAS_RELATIONAL_OUTPUT_POSITION_ID,
+              x: layout.output.x,
+              y: layout.output.y,
+            },
+          ]),
+    ],
+    [layout]
+  );
   const movement = useRelationalCardMovement(
-    layout.nodes,
+    movableCards,
     zoom,
     setPosition,
     onManualLayout,
@@ -142,6 +164,7 @@ export function CanvasRelationalTreeLayout({
                 }
           }
           onDisconnect={onDisconnectOutput}
+          movable={!panMode}
         />
       )}
 

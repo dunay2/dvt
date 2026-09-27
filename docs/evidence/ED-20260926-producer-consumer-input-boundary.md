@@ -22,7 +22,11 @@ code_refs:
   - apps/web/src/app/views/canvas/useCanvasRelationalTreeViewport.ts
   - apps/web/src/app/views/canvas/canvasStagedOperationActions.ts
   - apps/web/src/app/views/canvas/CanvasRelationalOperationPorts.tsx
+  - apps/web/src/app/views/canvas/CanvasRelationalTreeOutput.tsx
+  - apps/web/src/app/views/canvas/CanvasRelationalTreeNodes.tsx
   - apps/web/src/app/views/canvas/relational-layout/RelationalTreeEdges.tsx
+  - apps/web/src/app/views/canvas/relational-layout/RelationalEdgeAction.tsx
+  - apps/web/src/app/views/canvas/relational-layout/useRelationalCardMovement.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtRelationalAuthoringDraft.v1.ts
   - apps/api/src/application/services/dvtProtectedTransformSelection.ts
   - apps/api/test/application/services/previewCanvasProducerRows.test.ts
@@ -46,6 +50,7 @@ evidence:
     - pnpm --filter @dvt/web lint
     - pnpm --filter @dvt/web typecheck
     - pnpm --filter @dvt/web test:e2e:native --spec cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
+    - pnpm --filter @dvt/web test:e2e:native --spec cypress/e2e/canvas/canvas-relational-card-movement.cy.ts
 ---
 
 # Producer Input and passive Output boundary
@@ -215,8 +220,24 @@ The earlier `pnpm --filter @dvt/web test:canvas:run` is not counted as green:
 2,334 tests passed; the run included failed expectations for retired fan-out
 behavior, architecture timeouts and one worker RPC timeout. Updated connection
 scenarios and the architecture checks passed in focused reruns with
-unchanged test timeouts. No checks were disabled. This is DOM-level interaction
-proof, not a new real-browser or live-provider verification.
+unchanged test timeouts. No checks were disabled.
+
+### Movable cards and visible disconnection, 2026-09-27
+
+Source, operation and passive Output cards share one presentation-only movement
+gesture and one position map. Output movement changes geometry only; it does not
+change its producer, create an operation or write semantic state. The node overlay
+now yields empty space to the underlying edge actions, while each card remains an
+interactive island. Hovering or focusing a removable connection exposes its danger
+stroke; clicking it, or activating it with Delete/Backspace, delegates to the
+existing disconnect command.
+
+Focused geometry and interaction tests cover a source, canonical operation,
+pending operation and Output. The Cypress test drives actual browser pointer
+capture and proves that Output moves, its edge follows, and a normal line click
+disconnects the producer. It also proves that card movement does not open editors,
+request data or persist semantic writes. This browser fixture is not live-provider
+verification.
 
 The additional command `pnpm --filter @dvt/web exec vitest run --config
 vitest.canvas.config.ts src/app/views/canvas/canvasAuthoringProjection.architecture.test.ts

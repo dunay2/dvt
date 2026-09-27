@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
-import { layoutCanvasRelationalTree } from './canvasRelationalTreeGeometry';
+import {
+  CANVAS_RELATIONAL_OUTPUT_POSITION_ID,
+  layoutCanvasRelationalTree,
+} from './canvasRelationalTreeGeometry';
 
 function relation(
   locator: string,
@@ -87,5 +90,15 @@ describe('canvas relational-tree graph geometry', () => {
     expect(empty.edges).toEqual([]);
     expect(empty.output?.inputLocator).toBeNull();
     expect(empty.width).toBeGreaterThan(empty.output!.x + empty.output!.width);
+  });
+  it('uses an explicit Output position without changing its producer', () => {
+    const root = relation('source');
+    const outputPosition = { x: 540, y: 260 };
+    const layout = layoutCanvasRelationalTree(
+      root,
+      new Map(),
+      new Map([[CANVAS_RELATIONAL_OUTPUT_POSITION_ID, outputPosition]])
+    );
+    expect(layout.output).toMatchObject({ ...outputPosition, inputLocator: root.locator });
   });
 });
