@@ -58,6 +58,7 @@ export function CanvasRelationalTreeGraphNode({
     >
       <li
         role="none"
+        data-slot="canvas-relational-card"
         className={styles.card}
         style={{ left: placed.x, top: placed.y, width: placed.width, height: placed.height }}
         data-parent-locator={placed.parentLocator ?? undefined}

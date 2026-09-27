@@ -2,7 +2,7 @@
 title: React Flow Visual Token Component
 status: Active
 owner: Web / Canvas
-last_reviewed: 2026-09-26
+last_reviewed: 2026-09-27
 planning_type: architecture
 ---
 
@@ -70,6 +70,24 @@ barrel. The model header is content-sized and no longer reserves a last-run slot
   so the focusable label and rendered border cannot diverge.
 - Plugin-specific behavior remains in plugin contracts; this component owns only
   presentation tokens.
+
+## Explicit data action
+
+`CanvasNodeDataAction` owns the shared Execute chrome in outer graph cards and
+relational operation cards. Reuse `PreviewWarehouseSourceObjectRows` and
+`PreviewCanvasTransformRows`; visibility never invokes either query or changes
+their existing scope/authorization checks.
+
+The action is hidden at rest and revealed only while its card/action area is
+hovered or contains keyboard-visible focus. A mouse-selected card does not pin
+the action open. Keep the button mounted and its space reserved: showing it
+must not resize the card, move ports or connections, or reset focus. The pointer
+must be able to cross the gap between the card and the button without hiding it.
+Disabled actions follow the same reveal rule and retain disabled styling.
+
+Use one CSS rule in the shared action owner, not per-card React hover state.
+Browser proof must cover outer Source/Model and inner operation cards, leaving
+the card, keyboard access, unchanged geometry and no query/save on reveal.
 
 ## Transitions
 

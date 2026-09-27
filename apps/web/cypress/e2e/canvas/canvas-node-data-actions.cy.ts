@@ -9,6 +9,8 @@ import {
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
 import { openWorkbenchModel } from '../../support/relationalWorkbench/navigation';
+import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
+import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -77,6 +79,60 @@ describe('Canvas explicit data action', () => {
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
   });
 
+  for (const nodeId of ['source-1', 'dvt-transform-1', 'inner-read', 'inner-project']) {
+    it(`reveals ${nodeId} Play only on hover or keyboard focus without layout or data changes`, () => {
+      if (nodeId.startsWith('inner-')) openWorkbenchModel('dvt-transform-1');
+      const host = nodeId.startsWith('inner-')
+        ? `li:has(> [data-slot="canvas-relational-tree-node"][data-operator="${nodeId.slice(6)}"])`
+        : `.react-flow__node[data-id="${nodeId}"] [data-slot="canvas-node-shell"]`;
+      const action = `${host} [data-slot="canvas-node-execute"]`;
+      const outside = '[data-slot="canvas-workspace-tab"]';
+      hoverWorkbenchCard(outside);
+      cy.get(host).then(($host) => {
+        const bounds = $host[0].getBoundingClientRect().toJSON();
+        const queries = getE2eApiCalls(/data-sample|preview|runs/).length;
+        const saves = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+        cy.get(action).should('have.css', 'opacity', '0').and('have.css', 'pointer-events', 'none');
+        cy.get(action).then(($action) => {
+          hoverWorkbenchCard(host);
+          cy.get(action).should('have.css', 'opacity', '1');
+          hoverWorkbenchCard(action, -0.05);
+          cy.get(action).should('have.css', 'opacity', '1');
+          hoverWorkbenchCard(action);
+          cy.get(action).should('have.css', 'pointer-events', 'auto');
+          hoverWorkbenchCard(outside);
+          cy.get(action).should('have.css', 'opacity', '0');
+          cy.press(Cypress.Keyboard.Keys.TAB);
+          cy.get(action).focus().should('have.css', 'opacity', '1').and('have.focus');
+          cy.get(action).blur().should('have.css', 'opacity', '0');
+          cy.get(action).should(($same) => expect($same[0]).to.equal($action[0]));
+        });
+        cy.get(host).should(($same) =>
+          expect($same[0].getBoundingClientRect().toJSON()).to.deep.equal(bounds)
+        );
+        cy.then(() => {
+          expect(getE2eApiCalls(/data-sample|preview|runs/)).to.have.length(queries);
+          expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(saves);
+        });
+      });
+    });
+  }
+
+  it('reveals a disabled pending operation action only while hovered', () => {
+    openWorkbenchModel('dvt-transform-1');
+    workbenchOperation('inner_join').click();
+    const host = '[data-pending-operation="true"]';
+    const action = `${host} [data-slot="canvas-node-execute"]`;
+    const outside = '[data-slot="canvas-workspace-tab"]';
+    hoverWorkbenchCard(outside);
+    cy.get(action).should('be.disabled').and('have.css', 'opacity', '0');
+    hoverWorkbenchCard(host);
+    cy.get(action).should('be.disabled').and('have.css', 'opacity', '0.5');
+    hoverWorkbenchCard(outside);
+    cy.get(action).should('have.css', 'opacity', '0');
+    cy.then(() => expect(getE2eApiCalls(/data-sample|preview|runs/)).to.have.length(0));
+  });
+
   for (const [nodeId, gesture] of [
     ['source-1', 'pointer'],
     ['dvt-transform-1', 'pointer'],
@@ -93,6 +149,8 @@ describe('Canvas explicit data action', () => {
       cy.get(card).find('[data-slot="graph-node-card-title"]').click();
       cy.get(card).find('[data-slot="graph-node-operational-rail"]').dblclick();
       cy.then(() => expect(getE2eApiCalls(path, 'GET')).to.have.length(0));
+      if (gesture === 'pointer') hoverWorkbenchCard(card);
+      else cy.press(Cypress.Keyboard.Keys.TAB);
       cy.get(card)
         .find('[data-slot="canvas-node-execute"]')
         .focus()
@@ -131,6 +189,7 @@ describe('Canvas explicit data action', () => {
     const source = '[data-slot="canvas-relational-tree-node"][data-operator="read"]';
     cy.get(source).click();
     cy.then(() => expect(getE2eApiCalls(sourcePath, 'GET')).to.have.length(0));
+    hoverWorkbenchCard(source);
     cy.get(source).parent().find('[data-slot="canvas-node-execute"]').focus().click();
     waitForE2eApiCall(sourcePath, 'GET');
     cy.get('[data-slot="bottom-operational-drawer-data"]').should('contain.text', 'Ada');

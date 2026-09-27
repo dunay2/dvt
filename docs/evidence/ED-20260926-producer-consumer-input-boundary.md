@@ -581,3 +581,41 @@ flows and live-provider acceptance described above are not closed by these
 focused results. The selected output frame/control identity follows the React
 review, and zoom remains a visual projection, not a semantic write. No new debt,
 stub, placeholder, disabled rule, increased timeout or bypassed hook was added.
+
+## Hover-only Execute correction, 2026-09-27
+
+The user's final visibility rule supersedes the earlier always-visible request.
+The governing visual-token component contract was updated before implementation;
+the existing GH-3298 ConfigureCanvasDvtNode reference declaration records the
+browser proof on revision 20. Execute retains the existing source/transform
+preview queries and authorization; showing the action does not call either query.
+
+`CanvasNodeShell.module.css` now owns one reveal rule for outer Source/Model and
+inner relational cards. `CanvasRelationalTreeGraphNode.tsx` supplies the inner
+card boundary. The action remains mounted and keeps its space; hover or
+keyboard-visible focus reveals it. Disabled actions share the same rule.
+No React hover state, duplicate component or execution path was introduced.
+
+Native browser pointer coordinates are shared with the existing movement helper
+in `cypress/support/relationalWorkbench/pointer.ts`. The data-action spec verifies
+leaving the card, crossing the card/button gap, keyboard focus, disabled actions,
+stable DOM and geometry, and absence of query/save side effects.
+
+Validation observed:
+
+- Before the fix, the native data-action spec passed five existing tests and
+  failed all three initial hover regressions: actual opacity 1, expected 0.
+- `pnpm --filter @dvt/web test:e2e:native --spec
+cypress/e2e/canvas/canvas-node-data-actions.cy.ts,cypress/e2e/canvas/canvas-relational-workbench-pending-join.cy.ts,cypress/e2e/canvas/canvas-relational-card-movement.cy.ts`:
+  20 passed, zero failed/skipped. This includes the expanded 10-test data-action
+  suite and the existing JOIN, Output gestures, movement and zoom regressions.
+  Build passed with the existing chunk-size warning; transport is controlled,
+  not a live PostgreSQL acceptance run.
+- `pnpm --filter @dvt/web lint` and `pnpm --filter @dvt/web typecheck`: passed
+  after adding the return type required by lint to the pointer helper.
+- An isolated browser on the running localhost application confirmed only the
+  hovered card reveals Execute; leaving hides all four actions. No execution
+  was triggered and the isolated browser was closed afterward.
+
+The React review kept visibility in CSS with stable mounted controls. No new
+debt, stub, placeholder, relaxed check or bypassed hook was introduced.
