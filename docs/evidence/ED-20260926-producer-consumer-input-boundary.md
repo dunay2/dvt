@@ -636,3 +636,37 @@ was performed. Explicit catalog recovery and publication of this additional
 issue evidence await authorization; no import/rebuild, direct SQL or policy
 bypass was used. This UI validation does not close the separate live-provider
 acceptance or remaining legacy-flow work noted above.
+
+## Explicitly authorized catalog recovery, 2026-09-27
+
+The user subsequently authorized inventory recovery and reconciliation. The
+recovery follows ADR-0061, ADR-0063 and the existing DB-first inventory and
+operational-integrity reconciliation plans. This is an explicit recovery, not
+a routine consultation import or a schema reset.
+
+`pnpm planning:db:import` passed after the importer preservation/transaction
+tests passed (two tests). Read-only count and content fingerprints of all 43
+DB-owned authority tables matched before and immediately after the import.
+The missing source inventory entries and component path finding disappeared.
+
+Two remaining findings were reconciled through existing audited commands:
+
+- `RecordFeatureMechanizationRail` changed the W4 workbench declaration of
+  ConfigureCanvasDvtNode into a reference to the existing VTX2 authoring rail
+  (revision 1 to 2). All 60 implementation symbols were retained; no parallel
+  command or permission scope was added.
+- `ReviseGovernanceComponent`, scoped by DB design
+  `GH-3298-CATALOG-RECOVERY`, completed SYS-SUBSTRAIT-ANALYSIS invariants,
+  transitions and actual consumers (revision 0 to 1). The current analysis
+  session, producer-input refresh, Web Canvas and PostgreSQL projection code
+  supplied the evidence. Component ownership, public API and review status were
+  preserved; no implementation or integrity baseline was changed.
+
+`pnpm planning:db:integrity:check` now passes: zero blockers/errors, zero rail
+vocabulary findings, zero source drift and no authority-dependent skipped checks.
+The existing progressive warning baseline passes unchanged (107 warnings).
+Full pre-push and exact-base/head acceptance must still be rerun before
+integration. These catalog operations do not close live-provider acceptance.
+No direct SQL write, reset, new debt, stub, disabled check or bypassed hook was
+used. Publication of the additional issue comment still awaits its separate
+authorization.
