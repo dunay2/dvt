@@ -10,6 +10,8 @@ planning_type: evidence
 arc_level: ARC-2
 breaking: false
 code_refs:
+  - scripts/planning-db-operate.cjs
+  - scripts/check-feature-mechanization.cjs
   - packages/@dvt/contracts/src/contracts/planner/DvtInputBindings.v1.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProducerReference.v1.ts
   - packages/@dvt/substrait-analysis/src/producerGraph.ts
@@ -389,3 +391,43 @@ still require closure before the complete editor scope can be declared accepted.
 The governance-maintenance expansion has been requested separately; no database
 import or direct mutation was used. No new stub, fake-success path, skipped test
 or debt entry was introduced by this review.
+
+## Authorized governance reconciliation, 2026-09-27
+
+The user explicitly authorized repairing the maintenance command before integration.
+The design and negative-test matrix were recorded in the existing feature-mechanization
+read-model contract and in Planning DB as `GH-3298-MECHANIZATION-RECONCILIATION`
+before implementation. The existing `RecordFeatureMechanizationRail` and
+`ValidateFeatureMechanizationImplementation` authorities are reused by reference.
+
+The new optional named-cycle argument updates one existing cycle under an exact
+expected revision, explicit admitted patch surfaces and the existing audited,
+idempotent write boundary. Unknown or ambiguous identities, missing/stale revisions
+and forbidden/out-of-scope surfaces reject. Unrelated cycles remain unchanged.
+No schema, import, bulk deletion or alternate write command was introduced.
+
+The reader now aggregates evidence only within identical allowed/forbidden surface
+sets, preserving distinct rail owners. The implementation guard and its specificity
+rules are unchanged. Tests prove that equally specific conflicting restrictions
+still reject, and missing/invalid evidence remains an error.
+
+The first focused run failed three new regressions. After correction,
+`node --test --test-reporter=spec scripts/check-feature-mechanization.test.cjs
+scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs
+scripts/lib/feature-mechanization-db-reader.test.cjs` passed 180 tests.
+`pnpm test:planning:db` passed 500 tests with zero skips. ESLint on the four
+changed scripts passed. These CommonJS surfaces do not have a TypeScript build;
+the parser, planner, writer, schema and query tests exercise their contract.
+
+Four retained VTX1 records were reconciled through the application command with
+their observed revisions: ConfigureCanvasDvtNode 1 to 2, ProjectCanvasAuthoringDraft
+1 to 2, SaveCanvasAuthoringDraft 0 to 1 and GetWorkspaceGraphDraft 0 to 1. Their
+allowed and forbidden scopes were retained. The empty historical cycle and five
+missing test-reference declarations now point to current Input/lineage evidence.
+`pnpm --filter @dvt/web test:canvas:run canvasInputBindingAuthoring.test.ts
+canvasColumnLineageProjection.test.ts --maxWorkers=2` passed all 18 tests.
+
+The final Canvas review rerun also passed 2,364 tests in 527 files. These results
+do not close the separately listed binary composition, CROSS/SET, browser-flow or
+live-provider acceptance gaps. Integration still requires the complete pre-push
+gate and fresh exact-base/head validation; no failed gate is bypassed.

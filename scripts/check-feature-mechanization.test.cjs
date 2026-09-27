@@ -377,6 +377,81 @@ test('validateFeatureMechanizationManifestEntries validates DB-backed manifests'
   assert.deepEqual(result.features, ['TF-E2-M-B']);
 });
 
+test('DB normalization preserves separate surface owners within one feature and source', () => {
+  const source_path = 'docs/feature.md';
+  const layout = {
+    ...validManifest,
+    allowedImplementationSurfaces: ['apps/web/layout.ts'],
+    forbiddenImplementationSurfaces: ['packages/contracts/**'],
+  };
+  const persistence = {
+    ...validManifest,
+    allowedImplementationSurfaces: ['packages/contracts/input.ts'],
+    forbiddenImplementationSurfaces: ['packages/engine/**'],
+  };
+  const entries = normalizeDbFeatureMechanizationManifestRows([
+    { source_path, raw_manifest: layout },
+    { source_path, raw_manifest: persistence },
+  ]);
+  assert.equal(entries.length, 2);
+  assert.deepEqual(
+    validateFeatureImplementationManifests(entries, {
+      changedFiles: ['packages/contracts/input.ts', 'apps/web/layout.ts'],
+    }).errors,
+    []
+  );
+  assert.deepEqual(layout.forbiddenImplementationSurfaces, ['packages/contracts/**']);
+  assert.match(
+    validateFeatureImplementationManifests(entries, {
+      changedFiles: ['packages/engine/unowned.ts'],
+    }).errors.join('\n'),
+    /outside allowedImplementationSurfaces/
+  );
+});
+
+test('DB normalization retains denials from equally specific conflicting owners', () => {
+  const source_path = 'docs/feature.md';
+  const owner = {
+    ...validManifest,
+    allowedImplementationSurfaces: ['packages/contracts/input.ts'],
+    forbiddenImplementationSurfaces: ['packages/engine/**'],
+  };
+  const entries = normalizeDbFeatureMechanizationManifestRows([
+    { source_path, raw_manifest: owner },
+    {
+      source_path,
+      raw_manifest: { ...owner, forbiddenImplementationSurfaces: ['packages/contracts/**'] },
+    },
+  ]);
+  assert.match(
+    validateFeatureImplementationManifests(entries, {
+      changedFiles: ['packages/contracts/input.ts'],
+    }).errors.join('\n'),
+    /forbiddenImplementationSurfaces/
+  );
+});
+
+test('DB normalization groups identical scopes regardless of order or duplicates', () => {
+  const source_path = 'docs/feature.md';
+  const first = {
+    ...validManifest,
+    allowedImplementationSurfaces: ['scripts/a.cjs', 'scripts/b.cjs'],
+    forbiddenImplementationSurfaces: ['apps/**', 'packages/**'],
+  };
+  const entries = normalizeDbFeatureMechanizationManifestRows([
+    { source_path, raw_manifest: first },
+    {
+      source_path,
+      raw_manifest: {
+        ...first,
+        allowedImplementationSurfaces: ['scripts/b.cjs', 'scripts/a.cjs', 'scripts/a.cjs'],
+        forbiddenImplementationSurfaces: ['packages/**', 'apps/**'],
+      },
+    },
+  ]);
+  assert.equal(entries.length, 1);
+});
+
 test('readFeatureMechanizationManifestsFromDb rejects stale authority without importing', async () => {
   const importCalls = [];
   const client = {

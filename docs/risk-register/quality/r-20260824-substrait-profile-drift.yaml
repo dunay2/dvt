@@ -60,17 +60,24 @@ mitigation:
     configured staged operation may carry a semantic document only with all Input ports filled and
     with a sidecar relation matching its own output identity. Transform materializes one ProjectRel
     over the exact connected producer; configuring it does not remove the operation card. Producer
-    edits and disconnections invalidate downstream staged semantic documents before they can be
-    published. Only the operation explicitly connected to terminal Output is promoted. Draft
-    persistence remains separate from readiness. Internal editor connection commands count
-    canonical, staged and terminal consumers together, reject producer fan-out and require distinct
-    aliased instances for self-joins. New terminal links require operation outputs; legacy direct
-    source links remain visible and removable rather than silently migrated. Source, operation and
-    terminal Output cards share presentation-only movement, and the node overlay does not obscure
-    removable edge actions. Movement cannot mutate producers, consumers or semantic output. Browser
-    fixture tests and protected API/SQL unit proofs do not establish live PostgreSQL or complete
-    chained StartRun support; bounded operational admission remains unchanged.
+    edits run through the complete configured tree so canonical rebinding preserves consumer aliases
+    and derived fields or rejects an incompatible edit atomically. Explicit disconnections
+    invalidate disconnected downstream documents before publication. Only the operation explicitly
+    connected to terminal Output is promoted. Draft persistence remains separate from readiness.
+    Internal editor connection commands count canonical, staged and terminal consumers together,
+    reject producer fan-out and require distinct aliased instances for self-joins. New terminal
+    links require operation outputs; legacy direct source links remain visible and removable rather
+    than silently migrated. Source, operation and terminal Output cards share presentation-only
+    movement, and the node overlay does not obscure removable edge actions. Movement cannot mutate
+    producers, consumers or semantic output. Browser fixture tests and protected API/SQL unit proofs
+    do not establish live PostgreSQL or complete chained StartRun support; bounded operational
+    admission remains unchanged. Governance evidence repair preserves exact cycle identity, expected
+    revision, audit and idempotency. Distinct rail surface scopes cannot be unioned into artificial
+    cross-rail permission or denial; equally specific conflicting owners still deny admission.
+    Governance acceptance is not product or live-provider execution proof.
   evidence:
+    - scripts/check-feature-mechanization.test.cjs
+    - scripts/planning-db-operate-tests/feature-mechanization.test.cjs
     - docs/evidence/ED-20260926-producer-consumer-input-boundary.md
     - packages/@dvt/contracts/test/dvt-input-bindings.contract.test.ts
     - packages/@dvt/contracts/test/dvt-relational-authoring-draft.contract.test.ts

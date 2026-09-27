@@ -778,7 +778,11 @@ function normalizeDbFeatureMechanizationManifestRows(rows) {
       continue;
     }
 
-    const key = `${sourcePath}#${featureId}`;
+    const scope = ['allowedImplementationSurfaces', 'forbiddenImplementationSurfaces'].map(
+      (field) =>
+        Array.isArray(manifest[field]) ? [...new Set(manifest[field])].sort() : manifest[field]
+    );
+    const key = `${sourcePath}#${featureId}#${stableJsonStringify(scope)}`;
     if (bySourceAndFeature.has(key)) {
       const existingEntry = bySourceAndFeature.get(key);
       existingEntry.manifest = mergeFeatureMechanizationManifest(existingEntry.manifest, manifest);
