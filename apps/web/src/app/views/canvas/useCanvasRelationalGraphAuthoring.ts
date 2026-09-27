@@ -4,7 +4,7 @@ import { createSourceOccurrenceActions } from './relational-source-occurrence/so
 import type { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import type { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 import { useCanvasStagedOperationSession } from './useCanvasStagedOperationSession';
-import { configureCanvasStagedJoin } from './canvasStagedJoinConfiguration';
+import { configureCanvasStagedBinary } from './canvasStagedBinaryConfiguration';
 import { useCanvasStagedOperationConfiguration } from './useCanvasStagedOperationConfiguration';
 
 type DraftState = ReturnType<typeof useCanvasRelationalTreeDraftState>;
@@ -37,7 +37,13 @@ export function useCanvasRelationalGraphAuthoring(
       outputRelationId == null ? canonicalConsumers : [...canonicalConsumers, outputRelationId],
     state,
     configure: (operation) =>
-      configureCanvasStagedJoin(operation, inputs, state.pendingSources, analysis),
+      configureCanvasStagedBinary(
+        operation,
+        inputs,
+        state.pendingSources,
+        state.stagedOperations,
+        analysis?.document
+      ),
   });
   useCanvasStagedOperationConfiguration({ analysis, inputs, state });
   const occurrences = createSourceOccurrenceActions({

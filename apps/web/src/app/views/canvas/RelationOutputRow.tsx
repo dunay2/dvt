@@ -57,7 +57,7 @@ export function RelationOutputRow({
       data-slot="relation-output-field"
       data-field-id={field.output?.fieldId ?? field.key}
       data-drop-placement={dropPlacement}
-      draggable={draggable}
+      draggable={draggable && !busy}
       tabIndex={draggable ? 0 : undefined}
       aria-label={draggable ? `${reorderLabel}: ${name}` : undefined}
       title={draggable ? reorderHint : undefined}

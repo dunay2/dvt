@@ -1,8 +1,7 @@
 /** Keep staged operation semantics aligned with their connected producers. */
 import { useEffect } from 'react';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
-import { configureCanvasStagedJoin } from './canvasStagedJoinConfiguration';
-import { configureCanvasStagedJoinFromProducer } from './canvasStagedJoinProducerConfiguration';
+import { configureCanvasStagedBinary } from './canvasStagedBinaryConfiguration';
 import { resolveCanvasStagedProducerDocument } from './canvasStagedOperationDocument';
 import { configureCanvasStagedTransform } from './canvasStagedTransformConfiguration';
 import type { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
@@ -17,29 +16,16 @@ export function useCanvasStagedOperationConfiguration(args: {
 }): void {
   const { analysis, inputs, state } = args;
   useEffect(() => {
-    state.setStagedOperations((current) => {
-      let changed = false;
-      const configured = current.map((operation) => {
-        if (operation.semanticDocument != null) return operation;
-        const next = configureCanvasStagedJoin(operation, inputs, state.pendingSources, analysis);
-        changed ||= next !== operation;
-        return next;
-      });
-      return changed ? configured : current;
-    });
-  }, [analysis, inputs, state.pendingSources, state.setStagedOperations]);
-
-  useEffect(() => {
     let cancelled = false;
     const snapshot = state.stagedOperations;
     void Promise.all(
       snapshot.map(async (operation) => {
-        const joined = await configureCanvasStagedJoinFromProducer(
+        const joined = configureCanvasStagedBinary(
           operation,
           inputs,
           state.pendingSources,
           snapshot,
-          analysis
+          analysis?.document
         );
         if (joined.semanticDocument != null) return joined;
         return configureCanvasStagedTransform(

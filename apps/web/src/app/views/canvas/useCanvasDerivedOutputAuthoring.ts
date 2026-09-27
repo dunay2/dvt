@@ -1,7 +1,7 @@
 /** Project selected-relation fields and execution identity for scalar output authoring. */
 import { useContext } from 'react';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
-import { inspectProjectionDataType } from './canvasDvtSubstraitProjectionStructure';
+import { derivedOutputDataType } from './canvasDerivedOutputExpression';
 import { useCanvasRelationFields } from './useCanvasRelationFields';
 import type { DerivedOutputField } from './DerivedOutputOperands';
 
@@ -19,9 +19,7 @@ export function useCanvasDerivedOutputAuthoring(relationId: string) {
       )
       .sort((left, right) => left.outputOrdinal - right.outputOrdinal)
       .flatMap((field): DerivedOutputField[] => {
-        const dataType = inspectProjectionDataType(
-          schema.result!.fields[field.outputOrdinal]!.type
-        );
+        const dataType = derivedOutputDataType(schema.result!.fields[field.outputOrdinal]!.type);
         return dataType == null
           ? []
           : [{ fieldId: field.fieldId, name: field.displayName ?? field.fieldId, dataType }];

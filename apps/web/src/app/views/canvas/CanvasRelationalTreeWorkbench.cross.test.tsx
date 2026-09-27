@@ -81,7 +81,7 @@ describe('Canvas relational-tree Workbench cross', () => {
     expect(
       container.querySelector('[data-slot="dvt-substrait-join-predicate-editors"]')
     ).toBeNull();
-    expect(container.querySelector('[data-slot="canvas-relational-cross-warning"]')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-relational-cross-warning"]')).not.toBeNull();
 
     const stagedOutput = stagedCross!.parentElement!.querySelector<HTMLElement>(
       '[data-slot="canvas-relational-output-port"]'
@@ -94,14 +94,10 @@ describe('Canvas relational-tree Workbench cross', () => {
         .click()
     );
     expect(applied).toHaveLength(1);
+    expect(applied[0]?.dvt).toMatchObject({ mode: 'substrait', shape: 'cross_join' });
     expect(applied[0]?.relationalAuthoringDraft).toMatchObject({
-      version: 'v1',
-      operations: [
-        {
-          operation: 'cross_join',
-          inputs: [expect.any(String), expect.any(String)],
-        },
-      ],
+      sources: [],
+      operations: [],
       outputRelationId: stagedCross!.getAttribute('data-relation-id'),
     });
   });

@@ -72,8 +72,7 @@ export function resolveCanvasStagedProducerDocument(args: {
   const source = args.sources.find((candidate) => candidate.read.binding.relationId === relationId);
   if (source != null) return createSourceDocument([source.read], source.read);
   if (args.canonical == null) return null;
-  const indexed = indexSubstraitRelations(args.canonical);
-  return indexed.ok && indexed.index.relations.has(relationId) ? args.canonical : null;
+  return projectCanvasStagedDocument(args.canonical, relationId);
 }
 
 export function assignCanvasStagedRoot(

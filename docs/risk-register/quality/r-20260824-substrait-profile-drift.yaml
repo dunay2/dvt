@@ -74,8 +74,19 @@ mitigation:
     admission remains unchanged. Governance evidence repair preserves exact cycle identity, expected
     revision, audit and idempotency. Distinct rail surface scopes cannot be unioned into artificial
     cross-rail permission or denial; equally specific conflicting owners still deny admission.
-    Governance acceptance is not product or live-provider execution proof.
+    Governance acceptance is not product or live-provider execution proof. Binary staging now uses
+    exact producer subtrees and a single canonical builder; document-local relation/function anchors
+    are rebased on clones, preserving stable identities and rejecting overlapping occurrences or
+    incompatible SET operands. Output refresh cannot replace the inspector or focused controls.
+    Semantic zoom reserves lexical-detail space as a disposable projection, never a semantic write
+    or replacement of manually authored coordinates. Browser checks cover repeated zoom, column
+    inclusion/reorder and JOIN/CROSS/UNION Apply/reopen; controlled API transport still does not
+    prove live provider execution.
   evidence:
+    - apps/web/src/app/views/canvas/canvasStagedBinaryConfiguration.test.ts
+    - apps/web/src/app/views/canvas/canvasRelationalTreeGeometry.test.ts
+    - apps/web/src/app/views/canvas/relational-layout/RelationalCardDisclosure.test.tsx
+    - apps/web/cypress/e2e/canvas/canvas-relational-workbench-pending-join.cy.ts
     - scripts/check-feature-mechanization.test.cjs
     - scripts/planning-db-operate-tests/feature-mechanization.test.cjs
     - docs/evidence/ED-20260926-producer-consumer-input-boundary.md

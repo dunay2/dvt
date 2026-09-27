@@ -1,7 +1,7 @@
 /** Route a selected staged operation to its specific property editor. */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanonicalNode } from '../../types/canonical';
-import { CanvasStagedJoinInspector } from './CanvasStagedJoinInspector';
+import { CanvasStagedBinaryInspector } from './CanvasStagedBinaryInspector';
 import { CanvasStagedTransformInspector } from './CanvasStagedTransformInspector';
 import {
   CanvasStagedUnaryOperationInspector,
@@ -9,6 +9,7 @@ import {
 } from './CanvasStagedUnaryOperationInspector';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
+import { isCanvasSetOperation } from './canvasRelationalOperationChoices';
 import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import styles from './CanvasStagedOperationInspector.module.css';
@@ -42,14 +43,21 @@ export function CanvasStagedOperationInspector({
     update: Pick<CanvasStagedOperation, 'operation' | 'semanticDocument'>
   ) => void | boolean;
 }>): JSX.Element {
-  if (isCanvasJoinOperation(staged.operation) && staged.semanticDocument != null)
+  if (
+    (isCanvasJoinOperation(staged.operation) ||
+      isCanvasSetOperation(staged.operation) ||
+      staged.operation === 'cross_join') &&
+    staged.semanticDocument != null
+  )
     return (
-      <CanvasStagedJoinInspector
+      <CanvasStagedBinaryInspector
         staged={staged}
         editingDocument={editingDocument}
         copy={copy}
         onChange={onUpdate}
         onPendingChange={onPendingChange}
+        onClose={onClose}
+        transformNode={transformNode}
       />
     );
   if (staged.operation === 'field_transform' && staged.semanticDocument != null)
@@ -71,6 +79,7 @@ export function CanvasStagedOperationInspector({
         staged={staged}
         editingDocument={editingDocument}
         producerDocument={producerDocument}
+        transformNode={transformNode}
         copy={copy}
         onClose={onClose}
         onPendingChange={onPendingChange}

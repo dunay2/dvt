@@ -98,7 +98,7 @@ export function CanvasRelationOutputs({
     <section className="space-y-2" data-slot="canvas-relation-outputs">
       {(orderingOnly ? selected : rows).map((field) => {
         const key = field.output?.fieldId ?? field.key;
-        const canReorder = field.output != null && reorder.canReorder;
+        const canReorder = field.output != null && !disabled && !model.physical;
         const name = field.output == null ? field.name : (drafts.values[key] ?? field.name);
         const error =
           name.trim().length === 0

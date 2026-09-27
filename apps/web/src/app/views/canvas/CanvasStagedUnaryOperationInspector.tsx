@@ -14,6 +14,8 @@ import { resolveCanvasRelationalOperationPresentation } from './canvasRelational
 import type { CanvasRelationalOperatorTool } from './relational-operator-form/OperatorTool';
 import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import { useSelectedRelationTool } from './useSelectedRelationTool';
+import { CanvasSelectedUnaryEditor } from './CanvasSelectedUnaryEditor';
+import type { CanonicalNode } from '../../types/canonical';
 import styles from './CanvasStagedOperationInspector.module.css';
 
 export type ConfigurableStagedOperation = CanvasRelationalOperatorTool['id'];
@@ -23,6 +25,7 @@ export function CanvasStagedUnaryOperationInspector({
   staged,
   editingDocument,
   producerDocument,
+  transformNode,
   copy,
   onChange,
   onClose,
@@ -32,6 +35,7 @@ export function CanvasStagedUnaryOperationInspector({
   staged: CanvasStagedOperation;
   editingDocument?: SubstraitDocument | null;
   producerDocument: SubstraitDocument | null;
+  transformNode: CanonicalNode;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onChange: (semanticDocument: CanvasStagedOperation['semanticDocument']) => void | boolean;
   onClose: () => void;
@@ -47,17 +51,28 @@ export function CanvasStagedUnaryOperationInspector({
   if (document == null || analysis == null || targetRelationId == null) return null;
   return (
     <CanvasRelationAnalysisContext.Provider value={analysis}>
-      <StagedUnaryForm
-        operation={operation}
-        staged={staged}
-        document={document}
-        targetRelationId={targetRelationId}
-        editing={configured != null}
-        copy={copy}
-        onChange={onChange}
-        onClose={onClose}
-        onPendingChange={onPendingChange}
-      />
+      {configured != null ? (
+        <CanvasSelectedUnaryEditor
+          draft={document}
+          operation={operation}
+          relationId={staged.id}
+          transformNode={transformNode}
+          onClose={onClose}
+          onPendingChange={onPendingChange}
+          onChange={(next) => onChange(encodeDvtSubstraitSemanticDocument(next))}
+        />
+      ) : (
+        <StagedUnaryForm
+          operation={operation}
+          staged={staged}
+          document={document}
+          targetRelationId={targetRelationId}
+          copy={copy}
+          onChange={onChange}
+          onClose={onClose}
+          onPendingChange={onPendingChange}
+        />
+      )}
     </CanvasRelationAnalysisContext.Provider>
   );
 }
@@ -67,7 +82,6 @@ function StagedUnaryForm({
   staged,
   document,
   targetRelationId,
-  editing,
   copy,
   onChange,
   onClose,
@@ -77,17 +91,12 @@ function StagedUnaryForm({
   staged: CanvasStagedOperation;
   document: SubstraitDocument;
   targetRelationId: string;
-  editing: boolean;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onChange: (semanticDocument: CanvasStagedOperation['semanticDocument']) => void | boolean;
   onClose: () => void;
   onPendingChange: (pending: boolean) => void;
 }>): JSX.Element | null {
-  const selected = useSelectedRelationTool(
-    targetRelationId,
-    operation,
-    editing ? 'edit' : 'insert'
-  );
+  const selected = useSelectedRelationTool(targetRelationId, operation, 'insert');
   if (selected == null) return null;
   const title = copy[resolveCanvasRelationalOperationPresentation(operation).labelKey];
   return (
@@ -102,11 +111,7 @@ function StagedUnaryForm({
         onPendingChange={onPendingChange}
         onClose={onClose}
         onChange={(next) =>
-          onChange(
-            encodeDvtSubstraitSemanticDocument(
-              editing ? next : assignCanvasStagedRoot(next, staged.id)
-            )
-          )
+          onChange(encodeDvtSubstraitSemanticDocument(assignCanvasStagedRoot(next, staged.id)))
         }
       />
     </aside>

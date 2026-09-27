@@ -14,6 +14,7 @@ import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { CanvasRelationOutputs } from './CanvasRelationOutputs';
 import { usePendingRelationEdits } from './usePendingRelationEdits';
 import { relationExpressionRefs } from './canvasRelationalTreeRelationProjection';
+import { useSelectedRelation } from './useSelectedRelation';
 
 export function CanvasSelectedUnaryEditor({
   draft,
@@ -36,18 +37,21 @@ export function CanvasSelectedUnaryEditor({
 }>): JSX.Element | null {
   const language = useApplicationLanguageStore((state) => state.language);
   const selected = useSelectedRelationTool(relationId, operation, 'edit');
+  const target = useSelectedRelation(relationId);
   const [setPropertiesPending, setOutputsPending] = usePendingRelationEdits(onPendingChange);
-  if (selected == null) return null;
+  if (target == null) return null;
   const hasExpression =
     transformNode != null &&
-    relationExpressionRefs(selected.target.relation).some((ref) => ref.slot !== 'sort-key');
-  const presentation = operation === 'window' && !selected.tool.enabled ? 'projection' : operation;
+    relationExpressionRefs(target.relation).some((ref) => ref.slot !== 'sort-key');
+  const presentation =
+    operation === 'window' && selected?.tool.enabled === false ? 'projection' : operation;
   const title =
     resolveCanvasViewCopy(language)[
       resolveCanvasRelationalOperationPresentation(presentation).labelKey
     ];
   return (
     <CanvasRelationalTreeEditorFrame
+      key={relationId}
       hasExpression={hasExpression}
       readOnly={false}
       operation={presentation}
@@ -71,7 +75,7 @@ export function CanvasSelectedUnaryEditor({
         />
       )}
       <div className="min-h-0 overflow-auto p-3">
-        {selected.tool.enabled ? (
+        {selected == null ? null : selected.tool.enabled ? (
           <CanvasRelationalTreeOperatorForm
             key={`${relationId}:${selected.analysis.revision}`}
             inline

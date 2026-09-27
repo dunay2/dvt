@@ -25,6 +25,49 @@ function relation(
 }
 
 describe('canvas relational-tree graph geometry', () => {
+  it('reserves zoom detail around restored positions, terminal and detached cards without rewriting them', () => {
+    const root = relation('join', [
+      { role: 'left', ordinal: 0, node: relation('orders') },
+      { role: 'right', ordinal: 1, node: relation('clients') },
+    ]);
+    const detached = [relation('pending')];
+    const positions = new Map([
+      ['orders', { x: 40, y: 0 }],
+      ['clients', { x: 40, y: 150 }],
+      ['join', { x: 400, y: 100 }],
+      ['pending', { x: 400, y: 250 }],
+      [CANVAS_RELATIONAL_OUTPUT_POSITION_ID, { x: 690, y: 100 }],
+    ]);
+    const before = [...positions];
+    const sizes = new Map([
+      ['join', { width: 420, height: 400 }],
+      ['orders', { width: 420, height: 250 }],
+      ['clients', { width: 420, height: 160 }],
+    ]);
+    const compact = layoutCanvasRelationalTree(root, new Map(), positions, detached);
+    const expanded = layoutCanvasRelationalTree(root, sizes, positions, detached);
+    const bounds = [...expanded.nodes, expanded.output!];
+    for (const [index, card] of bounds.entries()) {
+      for (const other of bounds.slice(index + 1)) {
+        expect(
+          card.x < other.x + other.width &&
+            card.x + card.width > other.x &&
+            card.y < other.y + other.height &&
+            card.y + card.height > other.y
+        ).toBe(false);
+      }
+    }
+    expect([...positions]).toEqual(before);
+    expect(layoutCanvasRelationalTree(root, new Map(), positions, detached)).toEqual(compact);
+    expect(layoutCanvasRelationalTree(root, sizes, positions, detached)).toEqual(expanded);
+    const join = expanded.nodes.find((node) => node.node.locator === 'join')!;
+    for (const edge of expanded.edges) {
+      expect(edge.toX).toBe(join.x);
+      const child = expanded.nodes.find((node) => node.role === edge.role)!;
+      expect(edge.fromX).toBe(child.x + child.width);
+      expect(edge.fromY).toBe(child.y + child.height / 2);
+    }
+  });
   it('places leaves before operations and the Transform output after the root', () => {
     const root = relation('join', [
       { role: 'left', ordinal: 0, node: relation('orders') },

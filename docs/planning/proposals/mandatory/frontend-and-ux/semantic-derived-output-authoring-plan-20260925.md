@@ -113,6 +113,42 @@ integration proof, not evidence of live PostgreSQL execution. Function argument
 order and repetitions belong to Substrait expressions; lineage records unique
 field dependencies.
 
+This stability rule applies to every operation, including Filter. Re-querying
+an operand after output selection or reorder must not unmount the inspector
+frame, reset its active tab or replace the focused output control. Keep the
+frame keyed by relation identity, independently of asynchronous property-form
+availability; never retain stale command authority just to keep it visible.
+Prove that inclusion, pointer drag and keyboard reorder preserve the exact DOM
+frame, active Output tab and focus while advancing the real semantic revision.
+A configured staged unary operation uses that same inspector; only its initial
+configuration needs the insertion form.
+
+### Semantic zoom without card collisions
+
+The current layout expands lexical detail while keeping manual compact-card
+coordinates unchanged. The expanded rectangles consequently cover neighboring
+cards. Do not remove lexical disclosure or reset the author's saved positions.
+
+```mermaid
+flowchart LR
+  Before[Manual compact positions] --> Grow[Expand lexical cards at the same coordinates]
+  Grow --> Collision[Cards overlap]
+  Positions[Unchanged authored coordinates] --> Reserve[Reserve expansion space along each axis]
+  Sizes[Visible lexical bounds] --> Reserve
+  Reserve --> View[Cards and connections use the same projected geometry]
+  View --> Drag[Convert display movement back to authored coordinates]
+```
+
+Within `ProjectCanvasRelationalTree`, project additional spacing from the
+compact layout whenever manually positioned cards reveal detail. Preserve the
+relative separation and gaps of nonoverlapping cards along each axis, including
+the passive terminal and pending cards. Collapsing detail restores the authored
+coordinates. Rendered movement must subtract the presentation-only expansion
+offset, avoiding accumulated drift. This is not another persisted layout or a
+semantic mutation. No draft save, provider query, tab switch or selection reset
+is allowed on zoom. Tests must cover restored/manual positions, uneven detail,
+repeated zoom, movement while expanded, terminal edges and unchanged node identity.
+
 1. Extract and prove one provider-aware scalar-expression builder from the
    current projection implementation.
 2. TDD `applySelectedRelationDerivedOutput` for insertion, edit, stable identity,
@@ -125,6 +161,61 @@ field dependencies.
    predicates from #3420.
 
 ## Rails And Negative Proof
+
+### One binary composition path
+
+The staged JOIN currently has separate Read/Read and relation-tree/Read
+configurators. Two transformed producers never enter either path. CROSS and
+SET cards can consequently remain pending despite complete ports. These shape
+restrictions are not algebraic rules and must be removed, not retained as fallbacks.
+
+```mermaid
+flowchart LR
+  Before[Two shape-specific JOIN configurators] --> Gap[Two transformed operands stay pending]
+  Ports[Exact producer at each Input port] --> Subtree[Project each owned subtree]
+  Subtree --> Merge[Merge local anchors and function identities]
+  Merge --> Builder[Existing canonical JOIN / CROSS / SET builder]
+  Builder --> Validate[Canonical schema and connection validation]
+  Validate --> Draft[One configured staged operation]
+```
+
+Use `ConfigureCanvasDvtNode` for the existing editable draft and
+`ProjectCanvasRelationalTree` for its exact operand projection. No provider
+execution, new command, schema or expression language is introduced. Preserve
+stable relation and field identities, aliases, port order and all operand
+operations. Rebase document-local relation and function anchors on cloned
+protobuf messages; resolve function identities by their declared URN and name,
+not by coincident numeric anchors. Reject shared occurrences, cross-connection
+operands, malformed documents and incompatible SET schemas without publishing
+partial semantics. A JOIN still needs its admitted typed equality, editable in
+the existing predicate inspector; CROSS has no fabricated predicate.
+
+Retire `canvasStagedJoinConfiguration.ts` and
+`canvasStagedJoinProducerConfiguration.ts`, their special decoder and the
+duplicate synchronous configuration effect. Migrate their behavioral tests to
+the common configurator rather than discarding coverage. Reuse the existing
+operation inspector and output editor for configured binary operations. Keep
+the passive terminal and explicit Input connection contract unchanged.
+
+| Signal                                      | Decision                                           | Required proof                                                         |
+| ------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------- |
+| Shape-dependent parallel commands           | One typed operand compositor and canonical builder | Read/Read, transformed/Read and transformed/transformed on either port |
+| Local numeric identity collisions           | Rebase only cloned protobuf anchors                | Different functions sharing an anchor retain distinct meaning          |
+| Whole-document lookup for an inner producer | Project exact owned subtree                        | No accidental ancestor or sibling copied into the operand              |
+| Pending binary property placeholder         | Reuse the existing canonical inspector             | JOIN equality, CROSS and SET outputs remain editable                   |
+
+Negative proof includes incomplete ports, duplicate occurrences, cross-connection
+composition and incompatible SET fields. Browser proof must apply and reopen a
+binary operation fed by two configured producers, without layout reset or copied
+upstream model internals. Retired source-specific configuration symbols must
+have no production references.
+
+The same review found that modern Transform authoring reused the legacy
+nullable-only projection inspector. Select Transform operands from the admitted
+analysis schema independently of nullability; preserve their original type and
+nullability in the semantic document. Share that type-label projection between
+the authoring query and command. Do not broaden the old projection reader's
+contract or treat a NOT NULL field as nullable to make it pass.
 
 ### Preserve pending consumers during producer edits
 

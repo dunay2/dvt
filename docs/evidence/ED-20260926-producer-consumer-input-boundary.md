@@ -21,6 +21,10 @@ code_refs:
   - apps/web/src/app/views/canvas/canvasRelationOutputAuthoring.ts
   - apps/web/src/app/views/canvas/canvasModelCompositionInput.ts
   - apps/web/src/app/views/canvas/CanvasRelationOutputs.tsx
+  - apps/web/src/app/views/canvas/CanvasSelectedUnaryEditor.tsx
+  - apps/web/src/app/views/canvas/canvasStagedBinaryConfiguration.ts
+  - apps/web/src/app/views/canvas/canvasCompositionOperands.ts
+  - apps/web/src/app/views/canvas/canvasRelationalCardExpansion.ts
   - apps/web/src/app/views/canvas/useCanvasRelationalTreeViewport.ts
   - apps/web/src/app/views/canvas/canvasStagedOperationActions.ts
   - apps/web/src/app/views/canvas/canvasStagedOperationDocument.ts
@@ -438,3 +442,70 @@ The final Canvas review rerun also passed 2,364 tests in 527 files. These result
 do not close the separately listed binary composition, CROSS/SET, browser-flow or
 live-provider acceptance gaps. Integration still requires the complete pre-push
 gate and fresh exact-base/head validation; no failed gate is bypassed.
+
+## Binary-path retirement and interaction review, 2026-09-27
+
+Governed by AGENTS.md, the governance inventory, ADR-0064, command/query rail
+governance, the semantic-derived-output authoring plan and Planning DB designs
+GH-3342-COMPOSABLE-RELATION-ANALYSIS-V4 and GH-3296-SEMANTIC-EDITOR-PRODUCT-V1.
+The existing GH-3298 ConfigureCanvasDvtNode declaration records the implementation
+and negative evidence; no parallel product command was created.
+
+Retired both source-shape-specific JOIN configurators and their special decoder.
+One binary configurator composes exact producer subtrees through the canonical
+JOIN/CROSS/SET builder. It clones and rebases relation/function anchors without
+changing stable identities. Tests reject shared occurrences, cross-connection
+operands and incompatible SET fields. The common binary inspector replaces the
+JOIN-only variant. Deleted tracked files remain recoverable through Git.
+
+The review reproduced Filter Output resetting to Properties after a column edit.
+The inspector is now retained by relation identity while its asynchronous form
+refreshes. Reordering retains the focused row's tab stop; configured staged
+unary operations reuse the same inspector instead of a properties-only variant.
+Checkbox, keyboard and pointer tests use the real semantic command/revision.
+The React review prompted stable frame/control identity and reuse of the shared
+inspector rather than another state-owning panel.
+
+Manual card positions previously overrode all extra spacing for lexical detail.
+The visual geometry now reserves expansion space along each axis, including
+pending cards and terminal Output. Collapse restores authored coordinates and
+movement converts display coordinates back without accumulating offsets. Edges
+use the expanded card bounds. Zoom does not remount cards, save semantics or
+request provider data. The geometry types and movement conversion stay in their
+shared owners; architecture size limits were not raised.
+
+Modern Transform type labels now accept admitted NOT NULL inputs without
+changing their semantic type. The full suite also caught rejection of an existing
+unknown-type field alias; its original passthrough admission was restored while
+function capability validation remains in place.
+
+Observed focused validation:
+
+- Binary composition: 25 tests passed, including all 15 binary choices with two
+  transformed producers and colliding function anchors.
+- Filter/geometry/edges: 19 tests passed; checkbox, pointer and keyboard gestures
+  retain the same DOM frame, selected tab and focus.
+- Calculated-column queue, derived output and binary composition: 32 passed
+  after reproducing and correcting unknown-type alias rejection.
+- Workbench architecture: 3 passed after extracting geometry responsibilities.
+- Native Cypress pending binary and card movement: 10 tests passed, zero skips.
+  Covers cancel, JOIN/CROSS/UNION Apply/reopen, Filter Output gestures, repeated
+  zoom, card movement, terminal disconnection and no implicit data execution.
+- Web lint and typecheck passed. E2E build passed with the existing chunk-size
+  warning. The browser proof uses controlled API transport, not live PostgreSQL.
+- Feature mechanization passed with 422 DB manifests on the working tree.
+- Complete diff classification remains ARC-2: evidence/risk, lint/tests,
+  schema validation and contract golden checks are required.
+
+The first complete Canvas run overlapped active corrections and ended with
+2,385 passing tests and four failures (zoom spacing, its initial DOM selector,
+unknown-type alias and architecture size). It is not counted as green; the
+affected reruns above passed. A fresh full run is required for committed closeout.
+
+Integration is not approved by these focused results. The pre-push integrity
+gate separately reports one duplicate ConfigureCanvasDvtNode rail, one component
+path missing from its DB inventory and four missing document-source inventory
+entries. These paths exist in Git; no import/rebuild or gate relaxation was used
+to erase the discrepancy. Remaining legacy browser helpers and live-provider
+acceptance are not silently declared complete. No new debt record, stub,
+placeholder, fake-success branch or bypass was introduced.

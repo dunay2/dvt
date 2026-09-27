@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import React, { act } from 'react';
+import React, { act, useState } from 'react';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import { describe, expect, it, vi } from 'vitest';
 import { setupWorkbenchTest, root, container } from './CanvasRelationalTreeWorkbench.test-support';
@@ -9,9 +9,83 @@ import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSes
 import { useSelectedRelationTool } from './useSelectedRelationTool';
 import { CanvasRelationalTreeOperatorForm } from './CanvasRelationalTreeOperatorForm';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
+import { graphJoin, graphModel } from './canvasRelationGraph.test-support';
+import { applySelectedRelationFilter } from './canvasSelectedRelationFilter';
+import { dvtSubstraitTextComparison } from './canvasDvtSubstraitTextComparison';
+import { CanvasSelectedUnaryEditor } from './CanvasSelectedUnaryEditor';
 
 describe('selected Filter form', () => {
   setupWorkbenchTest();
+  it.each(['include', 'reorder', 'drag'] as const)(
+    'keeps Output, frame and focus while updating %s',
+    async (gesture) => {
+      const { session } = graphJoin();
+      const fields = await session.query(session.rootId);
+      const initial = await applySelectedRelationFilter(session, {
+        intent: 'insert',
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        fieldId: fields.bindings[0]!.fieldId,
+        capabilityId: dvtSubstraitTextComparison.capabilities[0]!.capabilityId,
+        value: 'active',
+      });
+      const relationId = session.rootId;
+      session.dispose();
+      const changed = vi.fn();
+      function Host(): React.JSX.Element {
+        const [draft, setDraft] = useState(initial);
+        const analysis = useCanvasRelationAnalysisSession(draft, 'filter-output');
+        return (
+          <CanvasRelationAnalysisContext.Provider value={analysis}>
+            <CanvasSelectedUnaryEditor
+              draft={draft}
+              relationId={relationId}
+              operation="filter"
+              transformNode={graphModel()}
+              onClose={vi.fn()}
+              onChange={(next) => {
+                changed(next);
+                setDraft(next);
+              }}
+            />
+          </CanvasRelationAnalysisContext.Provider>
+        );
+      }
+      await act(async () => root.render(<Host />));
+      const tab = container.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-operation-output-tab"]'
+      )!;
+      await act(async () => fireEvent.mouseDown(tab, { button: 0, ctrlKey: false }));
+      expect(tab.getAttribute('aria-selected')).toBe('true');
+      const frame = container.querySelector('[data-canvas-inspector]')!;
+      const control =
+        gesture === 'include'
+          ? container.querySelector<HTMLElement>('input[type="checkbox"]')!
+          : container.querySelector<HTMLElement>('[data-slot="relation-output-field"]')!;
+      control.focus();
+      if (gesture === 'drag') {
+        const target = container.querySelectorAll('[data-slot="relation-output-field"]')[1]!;
+        const dataTransfer = { setData: vi.fn(), effectAllowed: '', dropEffect: '' };
+        await act(async () => fireEvent.dragStart(control, { dataTransfer }));
+        await act(async () => fireEvent.dragOver(target, { dataTransfer, clientY: 1 }));
+        await act(async () => fireEvent.drop(target, { dataTransfer }));
+        await act(async () => fireEvent.dragEnd(control, { dataTransfer }));
+      } else {
+        await act(async () => {
+          if (gesture === 'include') fireEvent.click(control);
+          else fireEvent.keyDown(control, { key: 'ArrowDown', altKey: true });
+        });
+      }
+      expect(changed).toHaveBeenCalledOnce();
+      expect(container.querySelector('[data-canvas-inspector]')).toBe(frame);
+      expect(container.querySelector('[data-slot="canvas-operation-output-tab"]')).toBe(tab);
+      expect(tab.getAttribute('aria-selected')).toBe('true');
+      expect(document.activeElement).toBe(control);
+      if (gesture !== 'include') {
+        expect(container.querySelectorAll('[data-slot="relation-output-field"]')[1]).toBe(control);
+      }
+    }
+  );
   it.each(
     ['postgres', 'duckdb'].flatMap((provider) =>
       ['submit', 'cancel', 'cancel-pending'].map((action) => ({ provider, action }))

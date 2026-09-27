@@ -45,5 +45,23 @@ export function dragWorkbenchSource(sourceLabel: string): void {
       .trigger('dragover', { dataTransfer })
       .trigger('drop', { dataTransfer });
   });
-  cy.get('[data-slot="source-occurrence-connect"]').click();
+}
+
+/** Connect an explicit producer output to one operation Input or the passive terminal. */
+export function connectWorkbenchProducer(
+  producer: string,
+  consumer: string,
+  port: number | null = 0
+): void {
+  cy.window().then((window) => {
+    const dataTransfer = new window.DataTransfer();
+    cy.get(producer)
+      .find('[data-slot="canvas-relational-output-port"]')
+      .trigger('dragstart', { dataTransfer });
+    const target =
+      port == null
+        ? cy.get(consumer)
+        : cy.get(consumer).find('[data-slot="canvas-relational-input-port"]').eq(port);
+    target.trigger('dragover', { dataTransfer }).trigger('drop', { dataTransfer });
+  });
 }

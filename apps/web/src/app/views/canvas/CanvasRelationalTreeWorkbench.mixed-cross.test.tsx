@@ -3,6 +3,7 @@
 import React, { act } from 'react';
 import { describe, expect, it } from 'vitest';
 import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import { createCustomerOrdersJoin } from './canvasJoin.test-support';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
@@ -131,12 +132,23 @@ describe('Canvas relational-tree Workbench mixed-cross', () => {
         .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
         ?.click()
     );
-    expect(applied[0]?.dvt).toMatchObject({ mode: 'substrait', shape: 'left_join' });
-    const relational = applied[0]?.relationalAuthoringDraft;
-    expect(relational).toMatchObject({
-      sources: [{ sourceNodeId: countries.id }],
-      operations: [{ operation: 'cross_join', inputs: [expect.any(String), expect.any(String)] }],
+    const semantic = applied[0]?.dvt;
+    expect(semantic).toMatchObject({ mode: 'substrait', shape: 'cross_join' });
+    if (semantic?.kind !== 'transform' || semantic.mode !== 'substrait')
+      throw new Error('Expected published CROSS.');
+    const indexed = indexSubstraitRelations(semantic);
+    if (!indexed.ok) throw indexed.error;
+    const cross = indexed.index.relations.get(indexed.index.rootId)!;
+    const retainedJoin = indexed.index.relations.get(cross.inputs[0]!)!;
+    expect(retainedJoin.relation.relType).toMatchObject({
+      case: 'join',
+      value: { type: JoinRel_JoinType.LEFT },
     });
-    expect(relational?.outputRelationId).toBe(relational?.operations[0]?.relationId);
+    expect(indexed.index.relations.size).toBe(5);
+    expect(applied[0]?.relationalAuthoringDraft).toMatchObject({
+      sources: [],
+      operations: [],
+      outputRelationId: indexed.index.rootId,
+    });
   });
 });

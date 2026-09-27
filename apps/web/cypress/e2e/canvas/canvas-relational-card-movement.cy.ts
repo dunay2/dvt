@@ -100,6 +100,46 @@ describe('Relational card movement', () => {
     });
   });
 
+  it('reserves lexical detail around manual positions without remounting or saving on zoom', () => {
+    cy.get(source).focus().type('{alt}{rightarrow}{alt}');
+    const cards = '[data-slot="canvas-relational-tree-node"]';
+    cy.get(cards).then(($before) => {
+      const nodes = $before.toArray();
+      const compact = nodes.map((card) => position(card));
+      const writes = semanticWrites('join-transform').length;
+      const requests = getE2eApiCalls(/data-sample/, 'GET').length;
+      for (let step = 0; step < 5; step++)
+        cy.get('[data-slot="canvas-model-editor"] button[aria-label="Zoom in"]').click();
+      cy.get('[data-slot="canvas-relational-card-detail"]').should('have.length.greaterThan', 0);
+      cy.get(cards).should(($expanded) => {
+        expect($expanded.toArray()).to.deep.equal(nodes);
+        const bounds = $expanded
+          .toArray()
+          .map((card) => card.closest('li')!.getBoundingClientRect());
+        for (const [index, card] of bounds.entries()) {
+          for (const other of bounds.slice(index + 1))
+            expect(
+              card.left < other.right &&
+                card.right > other.left &&
+                card.top < other.bottom &&
+                card.bottom > other.top,
+              'expanded cards overlap'
+            ).to.equal(false);
+        }
+      });
+      for (let step = 0; step < 5; step++)
+        cy.get('[data-slot="canvas-model-editor"] button[aria-label="Zoom out"]').click();
+      cy.get(cards).should(($collapsed) => {
+        expect($collapsed.toArray()).to.deep.equal(nodes);
+        expect($collapsed.toArray().map((card) => position(card))).to.deep.equal(compact);
+      });
+      cy.then(() => {
+        expect(semanticWrites('join-transform')).to.have.length(writes);
+        expect(getE2eApiCalls(/data-sample/, 'GET')).to.have.length(requests);
+      });
+    });
+  });
+
   it('moves Output, selects its properties and disconnects the focused connection with Delete', () => {
     cy.get(output).then(($output) => {
       const before = [

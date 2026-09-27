@@ -8,11 +8,11 @@ import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_
 import { allocateDvtFieldId, DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
 import { cloneLocalRelation } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
-import { inspectProjectionDataType } from './canvasDvtSubstraitProjectionStructure';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import { buildDvtSubstraitCalculatedExpression } from './canvasDvtSubstraitCalculatedExpression';
 import {
   rootFields,
+  derivedOutputDataType,
   resolveOperandExpression,
   reject,
   buildScalarChain,
@@ -74,9 +74,7 @@ export async function applySelectedRelationDerivedOutput(
     reject('Derived-output alias or operand is unavailable.', request.relationId);
 
   const expressions = operandIds.map((fieldId) => resolveOperandExpression(prepared, fieldId));
-  const dataTypes = operandIds.map((fieldId) =>
-    inspectProjectionDataType(operands.get(fieldId)!.type)
-  );
+  const dataTypes = operandIds.map((fieldId) => derivedOutputDataType(operands.get(fieldId)!.type));
   if (
     expressions.some((expression) => expression == null) ||
     dataTypes.some((type) => type == null)
