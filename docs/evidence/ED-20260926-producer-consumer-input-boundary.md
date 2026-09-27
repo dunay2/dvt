@@ -212,11 +212,16 @@ pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts CanvasRe
 ```
 
 The earlier `pnpm --filter @dvt/web test:canvas:run` is not counted as green:
-2,334 tests passed, six still encoded the retired fan-out behavior, three
-architecture tests timed out, and one worker RPC timed out. Updated connection
-scenarios and all three architecture tests passed in the focused rerun with
+2,334 tests passed; the run included failed expectations for retired fan-out
+behavior, architecture timeouts and one worker RPC timeout. Updated connection
+scenarios and the architecture checks passed in focused reruns with
 unchanged test timeouts. No checks were disabled. This is DOM-level interaction
 proof, not a new real-browser or live-provider verification.
+
+The additional command `pnpm --filter @dvt/web exec vitest run --config
+vitest.canvas.config.ts src/app/views/canvas/canvasAuthoringProjection.architecture.test.ts
+--maxWorkers=1` passed its one test. Package commands
+`pnpm --filter @dvt/web typecheck` and `pnpm --filter @dvt/web lint` also passed.
 
 `pnpm docs:status:generate --code-state-only` and `pnpm governance:refresh`
 passed without importing or rebuilding Planning DB. The existing catalog and
