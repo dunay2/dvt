@@ -1,4 +1,4 @@
-/** Explicit editing protects local predicates and persists their canonical source lineage. */
+/** Editing a condition protects local predicates and persists their canonical source lineage. */
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { CanvasRelationAnalysisSession } from '../../../src/app/views/canvas/canvasRelationAnalysisSession';
 import { querySelectedJoin } from '../../../src/app/views/canvas/canvasSelectedJoin';
@@ -10,7 +10,7 @@ import {
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Workbench predicates', () => {
-  it('inspects first, protects a pending edit and saves nested functions with source lineage', () => {
+  it('opens properties, protects a pending edit and saves nested functions with source lineage', () => {
     stubWorkbenchScenario('pending-chain');
     authorFourSourceChain();
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
@@ -18,11 +18,8 @@ describe('Workbench predicates', () => {
     const cards = '[data-slot="canvas-relational-tree-node"][data-operator="join"]';
     const editor = '[data-slot="dvt-substrait-join-predicate-editors"]:visible';
     cy.get(cards).first().click();
-    cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').should(
-      'not.have.descendants',
-      'input, select, textarea'
-    );
-    cy.get('[data-slot="canvas-relational-edit"]').click();
+    cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').should('be.visible');
+    cy.then(() => expect(semanticWrites('join-transform')).to.have.length(1));
     cy.get(`${editor} [aria-label="Editar condición"]`).first().click();
     cy.get(editor).should('have.length', 1).and('contain.text', 'tickets');
     cy.get(`${editor} [aria-label="Comparador de la condición"]`).select('not_equal');
@@ -53,9 +50,11 @@ describe('Workbench predicates', () => {
     cy.then(() => expect(semanticWrites('join-transform')).to.have.length(1));
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
     cy.wrap(null).should(() => expect(semanticWrites('join-transform')).to.have.length(2));
-    cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible')
-      .should('not.have.descendants', 'input, select, textarea')
-      .and('contain.text', 'UPPER');
+    cy.get(`${editor} [aria-label="Comparador de la condición"]`).should('not.exist');
+    cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').should(
+      'contain.text',
+      'UPPER'
+    );
     cy.then(async () => {
       const document = decodeDvtSubstraitSemanticDocument(
         semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!)

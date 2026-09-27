@@ -1,9 +1,12 @@
 /** Owned concern: append a pending source without changing the published canonical draft before Apply. */
 import { buildCanvasAuthoringDraft } from '../../support/canvasDraftAuthoring';
 import { verifyWheelZoom } from '../../support/relationalWorkbench/geometry';
+import { joinWorkbenchProducers } from '../../support/relationalWorkbench/joinChain';
 import {
   visitWorkbenchCanvas,
   openWorkbenchModel,
+  dragWorkbenchSource,
+  connectWorkbenchProducer,
 } from '../../support/relationalWorkbench/navigation';
 import {
   semanticWrites,
@@ -67,16 +70,20 @@ describe('Workbench append', () => {
     verifyWheelZoom('[data-slot="canvas-relational-tree-draft-viewport"]');
     cy.then(expectPublishedSemanticUnchanged);
 
-    cy.contains('[data-slot="canvas-relational-tree-source"]', 'shipments').click();
-    cy.get('[data-slot="canvas-relational-tree-existing-field"]')
-      .should('contain.text', 'customer_id')
-      .find('option:selected')
-      .should('have.text', 'customer_id');
-    cy.get('[data-slot="canvas-relational-tree-connected-field"]')
-      .should('have.value', 'customer_id')
-      .find('option:selected')
-      .should('have.text', 'shipments.customer_id');
-    cy.get('[data-slot="canvas-relational-tree-append-input"]').should('be.enabled').click();
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
+      .closest('li')
+      .as('existingJoin', { type: 'static' });
+    cy.get('[data-slot="canvas-relational-output-edge-action"]').focus().type('{del}');
+    dragWorkbenchSource('shipments');
+    cy.contains('[data-slot="canvas-relational-tree-node"][data-operator="read"]', 'shipments')
+      .closest('li')
+      .as('shipments', { type: 'static' });
+    joinWorkbenchProducers('@existingJoin', '@shipments', 'appendedJoin');
+    connectWorkbenchProducer(
+      '@appendedJoin',
+      '[data-slot="canvas-relational-output-input-port"]',
+      null
+    );
     cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
       'have.length',
       2

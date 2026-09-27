@@ -41,6 +41,9 @@ describe('Workbench chain-persistence', () => {
     cy.get('[data-slot="canvas-model-tab-close"]').click();
     visitWorkbenchCanvas();
     openWorkbenchModel('join-transform');
-    cy.get('[data-slot="canvas-relational-tree"] [data-operator="join"]').should('have.length', 3);
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should(
+      'have.length',
+      3
+    );
   });
 });

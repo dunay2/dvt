@@ -1,60 +1,44 @@
-/** Owned concern: author a four-source JOIN chain through UI with explicit field defaults. */
-import { visitWorkbenchCanvas, openWorkbenchModel } from './navigation';
+/** Author JOIN chains through producer outputs and explicit consumer Input ports. */
+import {
+  visitWorkbenchCanvas,
+  openWorkbenchModel,
+  dragWorkbenchSource,
+  connectWorkbenchProducer,
+} from './navigation';
 import { workbenchOperation } from './operationMenu';
 import { semanticWrites } from './persistence';
 
-export function authorFourSourceChain(): void {
-  cy.viewport(1280, 720);
-  visitWorkbenchCanvas('es');
-
-  openWorkbenchModel('join-transform');
-  cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
-  cy.get('[data-slot="source-occurrence-connect"]').click();
-  workbenchOperation('projection').click();
-  cy.contains('[data-slot="canvas-relational-tree-source"]', 'orders').click();
-  cy.get('[data-slot="source-occurrence-connect"]').click();
-  workbenchOperation('inner_join').should('have.attr', 'aria-disabled', 'false').click();
-  cy.get('[data-slot="canvas-relational-tree-append-input"]').click();
-  cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
-    'have.length',
-    1
-  );
-
-  cy.contains('[data-slot="canvas-relational-tree-source"]', 'shipments').click();
-  cy.get('[data-slot="source-occurrence-connect"]').click();
-  cy.get('[data-slot="canvas-relational-tree-existing-field"]')
+export function joinWorkbenchProducers(left: string, right: string, alias: string): void {
+  workbenchOperation('inner_join').click();
+  cy.get('[data-pending-operation="true"]').last().as(alias, { type: 'static' });
+  connectWorkbenchProducer(left, '@' + alias, 0);
+  connectWorkbenchProducer(right, '@' + alias, 1);
+  cy.get('[data-slot="canvas-staged-operation-inspector"]')
     .should('contain.text', 'customer_id')
-    .find('option:selected')
-    .should('have.text', 'customer_id');
-  cy.get('[data-slot="canvas-relational-tree-connected-field"]').should(
-    'have.value',
-    'customer_id'
-  );
-  cy.get('[data-slot="canvas-relational-tree-append-input"]').should('be.enabled').click();
-  cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
-    'have.length',
-    2
-  );
-  cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="read"]').should(
-    'have.length',
-    3
-  );
+    .and('contain.text', '=');
+}
 
-  cy.contains('[data-slot="canvas-relational-tree-source"]', 'tickets').click();
-  cy.get('[data-slot="source-occurrence-connect"]').click();
-  cy.get('[data-slot="canvas-relational-tree-existing-field"] option:selected').should(
-    'have.text',
-    'customer_id'
-  );
-  cy.get('[data-slot="canvas-relational-tree-connected-field"]').should(
-    'have.value',
-    'customer_id'
-  );
-  cy.get('[data-slot="canvas-relational-tree-append-input"]').click();
-  cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
-    'have.length',
-    3
-  );
+export function authorFourSourceChain(): void {
+  cy.viewport(1440, 900);
+  visitWorkbenchCanvas('es');
+  openWorkbenchModel('join-transform');
+  for (const [index, source] of ['customers', 'orders', 'shipments', 'tickets'].entries()) {
+    dragWorkbenchSource(source);
+    cy.contains('[data-slot="canvas-relational-tree-node"][data-operator="read"]', source)
+      .closest('li')
+      .as('source' + index, { type: 'static' });
+    if (index === 0) continue;
+    joinWorkbenchProducers(
+      index === 1 ? '@source0' : '@join' + (index - 1),
+      '@source' + index,
+      'join' + index
+    );
+    cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="join"]').should(
+      'have.length',
+      index
+    );
+  }
+  connectWorkbenchProducer('@join3', '[data-slot="canvas-relational-output-input-port"]', null);
   cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="read"]').should(
     'have.length',
     4

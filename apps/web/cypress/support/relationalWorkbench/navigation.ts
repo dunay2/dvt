@@ -40,7 +40,9 @@ export function dragWorkbenchSource(sourceLabel: string): void {
     cy.contains('[data-slot="canvas-relational-tree-source"]', sourceLabel).trigger('dragstart', {
       dataTransfer,
     });
-    cy.get('[data-slot="canvas-relational-tree-draft-viewport"]')
+    cy.get(
+      '[data-slot="canvas-relational-tree-draft-viewport"], [data-slot="canvas-relational-tree-viewport"]'
+    )
       .should('be.visible')
       .trigger('dragover', { dataTransfer })
       .trigger('drop', { dataTransfer });

@@ -670,3 +670,53 @@ integration. These catalog operations do not close live-provider acceptance.
 No direct SQL write, reset, new debt, stub, disabled check or bypassed hook was
 used. Publication of the additional issue comment still awaits its separate
 authorization.
+
+## Acceptance continuation and live-proof incident, 2026-09-28
+
+The existing chain helper still called retired source-connect/append controls.
+Native Cypress reproduced all three failures in chain persistence, predicates
+and append. The helper now builds the same four-source/three-JOIN chain through
+explicit Input ports and connects the final operation to passive Output.
+The append test disconnects terminal Output before connecting the existing JOIN
+to another operation. Predicate editing uses the restored properties inspector;
+pending-edit protection, nested functions and physical field lineage remain
+asserted. No production compatibility route or fake data path was restored.
+
+Changed files in this continuation are the existing `joinChain.ts` and
+`navigation.ts` Cypress helpers and the chain-persistence, predicates and append
+specs. The `fieldSelection.ts` migration was not retained without its own proof.
+
+Observed validation:
+
+- `pnpm --filter @dvt/web test:e2e:native --spec
+cypress/e2e/canvas/canvas-relational-workbench-chain-persistence.cy.ts,cypress/e2e/canvas/canvas-relational-workbench-predicates.cy.ts,cypress/e2e/canvas/canvas-relational-workbench-append.cy.ts,cypress/e2e/canvas/canvas-relational-source-occurrence.cy.ts,cypress/e2e/canvas/canvas-source-composition.cy.ts,cypress/e2e/canvas/canvas-contextual-removal.cy.ts`:
+  four passed, six failed, zero skipped/pending. All three updated stories pass.
+  The six remaining failures concern old connect/append/operator-form gestures
+  and Apply-state expectations in source-occurrence, source-composition and
+  contextual-removal. They block acceptance and have not been suppressed.
+- Web lint and typecheck passed on the retained changes.
+- `pnpm verify:prepush` passed DB integrity, mechanization and its routed Web
+  tests, then failed formatting on the in-progress Cypress edits. This run is
+  not reported as green; hook normalization and a final rerun remain required.
+
+The live JOIN proof was mistakenly started without an isolated `DATABASE_URL`:
+`DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME=native node
+scripts/run-selected-closure-live-proof.cjs --spec
+apps/web/cypress/e2e/canvas/canvas-dvt-join-preview-live.cy.ts`.
+Its existing seeder recreated `public.source_1`, `raw.orders`, `raw.client` and
+`raw.order_details` in the default local PostgreSQL database with example data
+(3, 3, 2 and 3 rows respectively). The runner was interrupted before its API
+startup completed. No live acceptance result was obtained. The original Web/API
+processes remain running; no proof process remains on ports 3300/4174.
+
+This was an execution-isolation error, not an authorized database reset. No
+pre-run snapshot exists to establish whether previous contents differed or to
+guarantee recovery. The user was informed of the exact tables and asked whether
+they had changed them and have a backup. No blind restoration or further live
+write is attempted. The testing guide explicitly requires a separate database;
+future live proof must meet that requirement before seeding.
+
+Planning DB integrity still passes after the incident. No repository rule,
+baseline, hook or test assertion was disabled to close it. No new stub or fake
+success path was added. This is an incomplete delivery: no push, PR or merge;
+the remaining browser failures and safe live-provider acceptance stay open.
