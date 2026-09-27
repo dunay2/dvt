@@ -619,3 +619,20 @@ cypress/e2e/canvas/canvas-node-data-actions.cy.ts,cypress/e2e/canvas/canvas-rela
 
 The React review kept visibility in CSS with stable mounted controls. No new
 debt, stub, placeholder, relaxed check or bypassed hook was introduced.
+
+Final product commit: `affa4a712f838297dbefccf7b7f5321ee3746396`.
+`pnpm --filter @dvt/web test:canvas:run --maxWorkers=4` completed with
+2,389 passing tests in 527 files, zero failures. The full run retained the
+existing React act warnings; no timeout or assertion was relaxed.
+`pnpm governance:refresh` passed after hook normalization, with 6,283 governed
+files, zero ungoverned files and zero fingerprint drift.
+The complete base `0c403a02393388b52305c91db9844ddae4630db7` to this product
+commit remains ARC-2 under `node tools/ci/arc-check.mjs`.
+
+`pnpm verify:prepush` still fails at Planning DB integrity: one exact duplicate
+rail, one component path absent from the file inventory and four missing source
+inventory entries. Later pre-push steps were not reached. No push, PR or merge
+was performed. Explicit catalog recovery and publication of this additional
+issue evidence await authorization; no import/rebuild, direct SQL or policy
+bypass was used. This UI validation does not close the separate live-provider
+acceptance or remaining legacy-flow work noted above.
