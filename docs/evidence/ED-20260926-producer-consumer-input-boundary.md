@@ -21,13 +21,20 @@ code_refs:
   - apps/web/src/app/views/canvas/CanvasRelationOutputs.tsx
   - apps/web/src/app/views/canvas/useCanvasRelationalTreeViewport.ts
   - apps/web/src/app/views/canvas/canvasStagedOperationActions.ts
+  - apps/web/src/app/views/canvas/canvasStagedOperationDocument.ts
+  - apps/web/src/app/views/canvas/canvasStagedTransformConfiguration.ts
+  - apps/web/src/app/views/canvas/CanvasStagedTransformInspector.tsx
   - apps/web/src/app/views/canvas/CanvasRelationalOperationPorts.tsx
   - apps/web/src/app/views/canvas/CanvasRelationalTreeOutput.tsx
+  - apps/web/src/app/views/canvas/CanvasRelationalPorts.module.css
+  - apps/web/src/app/views/canvas/CanvasRelationalTreeCard.module.css
   - apps/web/src/app/views/canvas/CanvasRelationalTreeNodes.tsx
   - apps/web/src/app/views/canvas/relational-layout/RelationalTreeEdges.tsx
   - apps/web/src/app/views/canvas/relational-layout/RelationalEdgeAction.tsx
   - apps/web/src/app/views/canvas/relational-layout/useRelationalCardMovement.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtRelationalAuthoringDraft.v1.ts
+  - apps/web/src/app/views/canvas/canvasRelationalTreeApplyDraft.ts
+  - apps/web/src/app/views/canvas/canvasRelationalAuthoringDraft.ts
   - apps/api/src/application/services/dvtProtectedTransformSelection.ts
   - apps/api/test/application/services/previewCanvasProducerRows.test.ts
 evidence:
@@ -102,6 +109,19 @@ protected preview. The shell extraction is a presentation adapter of
   Output selection and positions persist in the existing protected draft. They
   reopen without materializing a hidden Transform or copying another producer's
   operations.
+- Applying a configured operation promotes its semantic document exactly once.
+  Applied relation identities are removed from the incomplete-operation graph
+  while their positions remain available to the layout projection. Reopening
+  therefore renders one canonical operation tree, plus only genuinely incomplete
+  consumers or producers. A staged graph is no longer misclassified as an empty
+  model by the legacy `cleared` predicate.
+- A staged Transform materializes one owned ProjectRel over its connected
+  producer, opens the existing field-transformation editor and remains in the
+  graph after configuration. Unary editors update their staged operation rather
+  than removing its card. Changing or disconnecting a producer invalidates only
+  downstream semantic documents, which are rebuilt from the new producer before
+  publication. Only the operation connected to terminal Output becomes the model
+  authority.
 - Explicit operations inside the model define its outputs. Consumers reference
   the immediate producer's published stable FieldIds through a local Read;
   producer operators are resolved for analysis/SQL, not copied into the consumer
@@ -127,6 +147,11 @@ protected preview. The shell extraction is a presentation adapter of
   acknowledges its next revision. Semantic digest changes no longer restart
   relational viewport fitting; the initial fit and explicit Fit command are
   one-shot operations, so checkbox changes preserve focus, zoom and scroll.
+- Relational cards and typed ports use shared semantic CSS modules. Components
+  expose interaction state through attributes; they do not assemble utility
+  chains or embed visual port positions. Calculated canvas coordinates remain
+  geometry data. The removed class-name facade and unused port style have no
+  remaining consumers.
 
 Mechanization was reconciled through `RecordFeatureMechanizationRail`, including
 the cross-context `GH-3298-PRODUCER-CONSUMER-INPUT-BOUNDARY` declaration and the
@@ -185,6 +210,35 @@ The freely connected relational-draft extension was validated again on
 - `pnpm verify:prepush`: changed-file formatting, frontmatter, ARC evidence
   and Markdown checks passed; the command then failed on that same global
   VTX1 mechanization finding.
+
+The applied-tree normalization and presentation cleanup were validated again
+on 2026-09-27:
+
+- Contract tests: 685 tests passed in 67 files; contract typecheck passed.
+- Web typecheck and lint passed.
+- Focused unit tests for relational draft restoration and Apply passed: 6 tests.
+- Focused presentation tests for Apply/reopen/Output, card movement, disclosure,
+  deletion and node shell passed: 30 tests.
+- The Canvas architecture test passed its 3 checks, and every touched TypeScript,
+  TSX and CSS file remains at or below 200 lines.
+- The full web unit suite passed 2,197 tests in 385 files. The full presentation
+  run is not counted as green: 1,357 tests passed and one untouched DBT metric
+  expectation failed; its isolated rerun reproduced the same mismatch. No test,
+  timeout or rule was changed to hide it.
+
+The staged-operation semantic cycle was validated again on 2026-09-27:
+
+- `pnpm --filter @dvt/web test:canvas`: 2,364 tests passed in 527 files.
+- Focused Transform, Apply, removal, join-chain and staged-action tests: 18 tests
+  passed in 6 files.
+- Web lint and typecheck passed; `git diff --check` passed.
+- The relational draft contract accepts a fully connected operation only when
+  its semantic document owns the operation output identity. Its focused contract
+  suite passed 7 tests.
+- The complete contract suite passed 686 tests in 67 files; contract typecheck,
+  schema verification, contract compilation, contract validation and golden
+  validation passed.
+- Every touched TypeScript, TSX and CSS file remains at or below 200 lines.
 
 The new mechanization references were recorded additively through
 `RecordFeatureMechanizationRail` under `ConfigureCanvasDvtNode`,

@@ -9,6 +9,7 @@ import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import {
   connectWorkbenchOutput,
+  disconnectWorkbenchOutput,
   instantiateWorkbenchSource,
   stageWorkbenchOperation,
 } from './CanvasRelationalTreeWorkbench.gestures.test-support';
@@ -143,11 +144,7 @@ describe('Canvas relational-tree Workbench reopen', () => {
       (port) =>
         port.parentElement?.querySelector('[data-pending="true"][data-operator="read"]') != null
     )!;
-    await act(async () =>
-      container
-        .querySelector<SVGElement>('[data-slot="canvas-relational-output-edge-action"]')!
-        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    );
+    await disconnectWorkbenchOutput(container);
     await act(async () => dragSourceTo(existingRoot, left!));
     await act(async () => dragSourceTo(pendingCountry, right!));
     await connectWorkbenchOutput(
@@ -169,8 +166,8 @@ describe('Canvas relational-tree Workbench reopen', () => {
     expect(applied).toHaveLength(1);
     expect(applied[0]?.dvt).toMatchObject({ mode: 'substrait', shape: 'inner_join' });
     expect(applied[0]?.relationalAuthoringDraft).toMatchObject({
-      sources: [{ sourceNodeId: countries.id }],
-      operations: [{ operation: 'inner_join', inputs: [expect.any(String), expect.any(String)] }],
+      sources: [],
+      operations: [],
     });
   });
 });

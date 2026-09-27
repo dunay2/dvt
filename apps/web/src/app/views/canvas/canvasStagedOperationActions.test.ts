@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { createCanvasStagedOperationActions } from './canvasStagedOperationActions';
+import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
+
+const semanticDocument = {} as DvtSubstraitSemanticDocumentV1;
 
 function actionsFor(state: {
   operations: readonly CanvasStagedOperation[];
@@ -96,6 +99,27 @@ describe('staged operation commands', () => {
     expect(state.operations).toEqual([
       { id: 'first', operation: 'filter', inputs: ['left'] },
       { id: 'second', operation: 'aggregate', inputs: ['first'] },
+    ]);
+  });
+
+  it('invalidates configured consumers when a producer changes', () => {
+    const state = {
+      operations: [
+        { id: 'first', operation: 'filter', inputs: ['left'], semanticDocument },
+        { id: 'second', operation: 'field_transform', inputs: ['first'], semanticDocument },
+        { id: 'third', operation: 'sort', inputs: ['second'], semanticDocument },
+      ] satisfies readonly CanvasStagedOperation[],
+    };
+
+    actionsFor(state).updateConfiguration('first', {
+      operation: 'filter',
+      semanticDocument,
+    });
+
+    expect(state.operations.map((operation) => operation.semanticDocument != null)).toEqual([
+      true,
+      false,
+      false,
     ]);
   });
 });

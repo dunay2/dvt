@@ -1,6 +1,7 @@
 /** Own staged graph editing; semantic materialization is a separate explicit command. */
 import { createCanvasStagedOperationActions } from './canvasStagedOperationActions';
 import type { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
+import type { CanvasStagedOperation } from './canvasStagedOperation';
 
 type DraftState = Pick<
   ReturnType<typeof useCanvasRelationalTreeDraftState>,
@@ -16,6 +17,7 @@ export function useCanvasStagedOperationSession(
     start: () => boolean;
     producerIds: readonly string[];
     consumedProducerIds: readonly string[];
+    configure?: (operation: CanvasStagedOperation) => CanvasStagedOperation;
     state: DraftState;
   }>
 ) {
@@ -28,5 +30,6 @@ export function useCanvasStagedOperationSession(
     setSelectedId: args.state.setSelectedStagedOperationId,
     producerIds: args.producerIds,
     consumedProducerIds: args.consumedProducerIds,
+    configure: args.configure,
   });
 }

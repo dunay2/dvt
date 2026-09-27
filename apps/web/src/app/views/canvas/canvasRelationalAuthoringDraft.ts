@@ -10,6 +10,7 @@ import type { CanvasStagedOperation } from './canvasStagedOperation';
 import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 import { restorePendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
+import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
 
 export function readCanvasRelationalAuthoringDraft(
   node: CanonicalNode
@@ -44,6 +45,9 @@ export function createCanvasRelationalAuthoringDraft(
       relationId: operation.id,
       operation: operation.operation,
       inputs: operation.inputs,
+      ...(operation.semanticDocument == null
+        ? {}
+        : { semanticDocument: operation.semanticDocument }),
     })),
     outputRelationId: args.outputRelationId,
     positions: Object.fromEntries([...args.positions].filter(([id]) => nodeIds.has(id))),
@@ -52,25 +56,35 @@ export function createCanvasRelationalAuthoringDraft(
 
 export function restoreCanvasRelationalAuthoringDraft(
   draft: DvtRelationalAuthoringDraftV1,
-  inputs: readonly CanvasDvtCompositionInput[]
+  inputs: readonly CanvasDvtCompositionInput[],
+  appliedDocument?: SubstraitDocument | null
 ): Readonly<{
   sources: readonly PendingSourceOccurrence[];
   operations: readonly CanvasStagedOperation[];
   outputRelationId: string | null;
   positions: ReadonlyMap<string, CardPosition>;
 }> | null {
-  const sources = draft.sources.map((source) => {
-    const input = inputs.find((candidate) => candidate.nodeId === source.sourceNodeId);
-    return input == null ? null : restorePendingSourceOccurrence(input, source);
-  });
+  const indexed = appliedDocument == null ? null : indexSubstraitRelations(appliedDocument);
+  const appliedRelationIds = indexed?.ok === true ? new Set(indexed.index.relations.keys()) : null;
+  const sources = draft.sources
+    .filter((source) => !appliedRelationIds?.has(source.relationId))
+    .map((source) => {
+      const input = inputs.find((candidate) => candidate.nodeId === source.sourceNodeId);
+      return input == null ? null : restorePendingSourceOccurrence(input, source);
+    });
   if (sources.some((source) => source == null)) return null;
   return {
     sources: sources.filter((source): source is PendingSourceOccurrence => source != null),
-    operations: draft.operations.map((operation) => ({
-      id: operation.relationId,
-      operation: operation.operation,
-      inputs: operation.inputs,
-    })),
+    operations: draft.operations
+      .filter((operation) => !appliedRelationIds?.has(operation.relationId))
+      .map((operation) => ({
+        id: operation.relationId,
+        operation: operation.operation,
+        inputs: operation.inputs,
+        ...(operation.semanticDocument == null
+          ? {}
+          : { semanticDocument: operation.semanticDocument }),
+      })),
     outputRelationId: draft.outputRelationId,
     positions: new Map(Object.entries(draft.positions)),
   };

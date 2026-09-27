@@ -112,13 +112,21 @@ describe('Canvas relational-tree Workbench join-chain', () => {
     const firstInputs = Array.from(
       operations[0]!.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-input-port"]')
     );
+    const outputEdge = container.querySelector<SVGElement>(
+      '[data-slot="canvas-relational-output-edge-action"]'
+    )!;
+    await act(async () => outputEdge.dispatchEvent(new MouseEvent('click', { bubbles: true })));
     await act(async () =>
-      container
-        .querySelector<SVGElement>('[data-slot="canvas-relational-output-edge-action"]')!
-        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      outputEdge.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
     );
     await act(async () => dragSourceTo(existingRoot, firstInputs[0]!));
+    expect(container.querySelectorAll('[data-slot="canvas-relational-pending-edge"]')).toHaveLength(
+      1
+    );
     await act(async () => dragSourceTo(pendingSources[0]!, firstInputs[1]!));
+    expect(container.querySelectorAll('[data-slot="canvas-relational-pending-edge"]')).toHaveLength(
+      2
+    );
     const secondInputs = Array.from(
       operations[1]!.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-input-port"]')
     );
@@ -127,6 +135,9 @@ describe('Canvas relational-tree Workbench join-chain', () => {
         operations[0]!.querySelector<HTMLElement>('[data-slot="canvas-relational-output-port"]')!,
         secondInputs[0]!
       )
+    );
+    expect(container.querySelectorAll('[data-slot="canvas-relational-pending-edge"]')).toHaveLength(
+      3
     );
     await act(async () => dragSourceTo(pendingSources[1]!, secondInputs[1]!));
     await connectWorkbenchOutput(
@@ -152,8 +163,8 @@ describe('Canvas relational-tree Workbench join-chain', () => {
     expect(applied).toHaveLength(1);
     expect(applied[0]?.dvt).toMatchObject({ mode: 'substrait', shape: 'inner_join' });
     expect(applied[0]?.relationalAuthoringDraft).toMatchObject({
-      sources: [{ sourceNodeId: countries.id }, { sourceNodeId: regions.id }],
-      operations: [{ operation: 'inner_join' }, { operation: 'inner_join' }],
+      sources: [],
+      operations: [],
     });
   });
 });

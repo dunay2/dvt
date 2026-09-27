@@ -11,6 +11,7 @@ export function CanvasRelationalTreeNodes({
   layout,
   graphs,
   expanded,
+  zoomRevealsDetail,
   toggleDetail,
   occurrences,
   stagedOperations,
@@ -24,6 +25,7 @@ export function CanvasRelationalTreeNodes({
   layout: CanvasRelationalTreeLayout;
   graphs: ReadonlyMap<string, SemanticWorkbenchGraph>;
   expanded: ReadonlySet<string>;
+  zoomRevealsDetail: boolean;
   toggleDetail: (id: string) => void;
   occurrences?: Pick<SourceOccurrenceActions, 'pending' | 'selectedId' | 'select' | 'remove'>;
   stagedOperations: readonly CanvasStagedOperation[];
@@ -50,6 +52,17 @@ export function CanvasRelationalTreeNodes({
     () => new Map(stagedOperations.map((operation) => [operation.id, operation])),
     [stagedOperations]
   );
+  const configuredProducerIds = useMemo(
+    () =>
+      new Set(
+        stagedOperations.flatMap((operation) =>
+          operation.semanticDocument == null
+            ? []
+            : operation.inputs.filter((input): input is string => input != null)
+        )
+      ),
+    [stagedOperations]
+  );
   return (
     <ul
       role="tree"
@@ -59,7 +72,10 @@ export function CanvasRelationalTreeNodes({
       {layout.nodes.map((placed) => {
         const relationId = placed.node.relationId;
         const staged = relationId == null ? undefined : stagedById.get(relationId);
-        const sourcePending = relationId != null && pendingSourceIds.has(relationId);
+        const sourceOccurrencePending = relationId != null && pendingSourceIds.has(relationId);
+        const visuallyPending =
+          (sourceOccurrencePending && !configuredProducerIds.has(relationId!)) ||
+          (staged != null && staged.semanticDocument == null);
         return (
           <CanvasRelationalTreeGraphNode
             key={placed.node.locator}
@@ -75,23 +91,25 @@ export function CanvasRelationalTreeNodes({
             onSelect={
               staged != null
                 ? () => actions.selectStaged?.(staged.id)
-                : sourcePending
+                : sourceOccurrencePending
                   ? () => occurrences?.select(relationId!)
                   : actions.select
             }
-            onExpand={sourcePending || staged != null ? undefined : actions.expand}
+            onExpand={sourceOccurrencePending || staged != null ? undefined : actions.expand}
             onRemove={
               staged != null
                 ? () => actions.removeStaged?.(staged.id)
-                : sourcePending
+                : sourceOccurrencePending
                   ? occurrences?.remove
                   : actions.remove
             }
-            pending={sourcePending || staged != null}
+            pending={visuallyPending}
             stagedOperation={staged}
             semanticGraph={graphs.get(placed.node.locator)}
-            expanded={expanded.has(relationId ?? placed.node.locator)}
-            onToggleDetail={() => toggleDetail(relationId ?? placed.node.locator)}
+            expanded={zoomRevealsDetail || expanded.has(relationId ?? placed.node.locator)}
+            onToggleDetail={
+              zoomRevealsDetail ? undefined : () => toggleDetail(relationId ?? placed.node.locator)
+            }
             movable={!panMode}
             selectedConnectionSource={selectedConnectionSource}
             onSelectConnectionSource={actions.selectConnectionSource}

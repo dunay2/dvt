@@ -20,17 +20,23 @@ export function createCanvasStagedOperationActions(
     setSelectedId: (id: string | null) => void;
     producerIds: readonly string[];
     consumedProducerIds: readonly string[];
+    configure?: (operation: CanvasStagedOperation) => CanvasStagedOperation;
   }>
 ) {
   const remove = (id: string) => {
-    args.setOperations((current) =>
-      current
+    args.setOperations((current) => {
+      const detached = current
         .filter((operation) => operation.id !== id)
-        .map((operation) => ({
-          ...operation,
-          inputs: operation.inputs.map((input) => (input === id ? null : input)),
-        }))
-    );
+        .map((operation) =>
+          operation.inputs.includes(id)
+            ? withoutSemantic({
+                ...operation,
+                inputs: operation.inputs.map((input) => (input === id ? null : input)),
+              })
+            : operation
+        );
+      return invalidateConsumers(detached, new Set([id]));
+    });
     if (args.selectedId === id) args.setSelectedId(null);
   };
   return {
@@ -47,6 +53,7 @@ export function createCanvasStagedOperationActions(
       if (!args.operations.some((operation) => operation.id === id)) return;
       args.setSelectedId(id);
     },
+    clearSelection: () => args.setSelectedId(null),
     connect: (id: string, port: number, relationId: string) => {
       if (
         !args.editable ||
@@ -71,26 +78,46 @@ export function createCanvasStagedOperationActions(
             (operation.inputs[port] != null && operation.inputs[port] !== relationId)
           )
             return operation;
-          return connectCanvasStagedOperation(operation, port, relationId);
+          const connected = connectCanvasStagedOperation(operation, port, relationId);
+          return args.configure?.(connected) ?? connected;
         });
       });
       args.setSelectedId(id);
     },
     disconnect: (id: string, port: number) => {
       if (!args.editable) return;
-      args.setOperations((current) =>
-        current.map((operation) =>
+      args.setOperations((current) => {
+        const disconnected = current.map((operation) =>
           operation.id === id ? disconnectCanvasStagedOperation(operation, port) : operation
-        )
-      );
+        );
+        return invalidateConsumers(disconnected, new Set([id]));
+      });
     },
     disconnectProducer: (relationId: string) => {
-      args.setOperations((current) =>
-        current.map((operation) => ({
-          ...operation,
-          inputs: operation.inputs.map((input) => (input === relationId ? null : input)),
-        }))
-      );
+      args.setOperations((current) => {
+        const invalidated = new Set<string>();
+        const disconnected = current.map((operation) => {
+          if (!operation.inputs.includes(relationId)) return operation;
+          invalidated.add(operation.id);
+          return withoutSemantic({
+            ...operation,
+            inputs: operation.inputs.map((input) => (input === relationId ? null : input)),
+          });
+        });
+        return invalidateConsumers(disconnected, invalidated);
+      });
+    },
+    updateConfiguration: (
+      id: string,
+      update: Pick<CanvasStagedOperation, 'operation' | 'semanticDocument'>
+    ) => {
+      if (!args.editable || !args.start()) return;
+      args.setOperations((current) => {
+        const updated = current.map((operation) =>
+          operation.id === id ? { ...operation, ...update } : operation
+        );
+        return invalidateConsumers(updated, new Set([id]));
+      });
     },
     remove,
     complete: remove,
@@ -98,3 +125,36 @@ export function createCanvasStagedOperationActions(
 }
 
 export type CanvasStagedOperationActions = ReturnType<typeof createCanvasStagedOperationActions>;
+
+function withoutSemantic(operation: CanvasStagedOperation): CanvasStagedOperation {
+  if (operation.semanticDocument == null) return operation;
+  const { semanticDocument: _discarded, ...pending } = operation;
+  return pending;
+}
+
+function invalidateConsumers(
+  operations: readonly CanvasStagedOperation[],
+  changedProducers: ReadonlySet<string>
+): readonly CanvasStagedOperation[] {
+  const invalidated = new Set(changedProducers);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    operations.forEach((operation) => {
+      if (
+        !invalidated.has(operation.id) &&
+        operation.inputs.some((input) => input != null && invalidated.has(input))
+      ) {
+        invalidated.add(operation.id);
+        changed = true;
+      }
+    });
+  }
+  return operations.map((operation) =>
+    changedProducers.has(operation.id)
+      ? operation
+      : invalidated.has(operation.id)
+        ? withoutSemantic(operation)
+        : operation
+  );
+}

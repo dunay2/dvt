@@ -33,7 +33,6 @@ export function useCanvasRelationalTreeDraftState() {
     setStagedOperations([]);
     setSelectedStagedOperationId(null);
     setOutputRelationId(null);
-    setPositions(new Map());
     setApplyRejection(null);
   }, [resetOperands]);
   const hydrate = useCallback(
@@ -84,7 +83,7 @@ export function useCanvasRelationalTreeDraftState() {
         setStagedOperations(draft.operations);
         setSelectedStagedOperationId(null);
         setOutputRelationId(draft.outputRelationId);
-        setPositions(draft.positions);
+        setPositions((current) => new Map([...current, ...draft.positions]));
       },
       []
     ),
@@ -97,7 +96,6 @@ export function useCanvasRelationalTreeDraftState() {
       setStagedOperations([]);
       setSelectedStagedOperationId(null);
       setOutputRelationId(null);
-      setPositions(new Map());
       setApplyRejection(null);
     },
     applyRejection,

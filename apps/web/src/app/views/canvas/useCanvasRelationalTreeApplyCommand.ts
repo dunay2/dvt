@@ -3,8 +3,7 @@ import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
-import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
-import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
+import { createCanvasRelationalTreeApplyDraft } from './canvasRelationalTreeApplyDraft';
 import type {
   CanvasRelationalTreeApplyResult,
   CanvasRelationalTreeAuthoringContract,
@@ -14,7 +13,7 @@ import type {
 export function useCanvasRelationalTreeApplyCommand(args: {
   authoring?: CanvasRelationalTreeAuthoringContract;
   editable: boolean;
-  relationalAuthoringDraft?: DvtRelationalAuthoringDraftV1;
+  relationalAuthoringDraft?: DvtRelationalAuthoringDraftV1 | null;
   cleared?: boolean;
   joinDraft: SubstraitDocument | null;
   operation: CanvasRelationalOperation | null;
@@ -35,18 +34,15 @@ export function useCanvasRelationalTreeApplyCommand(args: {
       reject(rejection);
       return rejection;
     }
-    const semanticDraft =
-      operation == null || joinDraft == null
-        ? createCanvasInspectorNodeDraft(transformNode)
-        : createCanvasRelationalTreeNodeDraft(transformNode, operation, joinDraft);
-    const draft = {
-      ...semanticDraft,
-      relationalAuthoringDraft:
-        args.relationalAuthoringDraft === undefined ? null : args.relationalAuthoringDraft,
-    };
+    const draft = createCanvasRelationalTreeApplyDraft({
+      transformNode,
+      operation,
+      joinDraft,
+      relationalAuthoringDraft: args.relationalAuthoringDraft,
+    });
     const result = authoring.onApplyNodeDraft(transformNode.id, draft);
     if (result.outcome === 'rejected') reject(result);
-    else if (args.relationalAuthoringDraft === undefined) reset();
+    else if (args.relationalAuthoringDraft == null) reset();
     return result;
   };
 }

@@ -13,6 +13,12 @@ import { useCanvasRelationalTreeAnalysisContext } from './useCanvasRelationalTre
 import { createCanvasRelationalAuthoringDraft } from './canvasRelationalAuthoringDraft';
 import { useCanvasRelationalAuthoringDraftHydration } from './useCanvasRelationalAuthoringDraftHydration';
 import { useCanvasRelationalGraphAuthoring } from './useCanvasRelationalGraphAuthoring';
+import {
+  areCanvasInspectorNodeDraftsEqual,
+  canonicalizeCanvasInspectorNodeDraft,
+  createCanvasInspectorNodeDraft,
+} from './canvasInspectorAuthoringModel';
+import { createCanvasRelationalTreeApplyDraft } from './canvasRelationalTreeApplyDraft';
 export function useCanvasRelationalTreeAuthoringSession(
   args: Readonly<{
     enabled: boolean;
@@ -36,6 +42,7 @@ export function useCanvasRelationalTreeAuthoringSession(
   useCanvasRelationalAuthoringDraftHydration({
     enabled,
     transformNode,
+    document: args.document,
     inputs,
     hydrateExisting,
     state,
@@ -55,7 +62,9 @@ export function useCanvasRelationalTreeAuthoringSession(
     state.active &&
     state.joinDraft == null &&
     state.operation == null &&
-    state.slots.selectedInputIds.length === 0;
+    state.slots.selectedInputIds.length === 0 &&
+    state.pendingSources.length === 0 &&
+    state.stagedOperations.length === 0;
   const outputChanged = effectiveOutputRelationId !== (seed?.outputRelationId ?? null);
   const outputSelectsSemanticRoot =
     analysis?.document != null &&
@@ -73,13 +82,24 @@ export function useCanvasRelationalTreeAuthoringSession(
         positions: state.positions,
       })
     : undefined;
+  const applyOperation = !state.active && seed != null ? seed.operation : state.operation;
+  const applyDraft = createCanvasRelationalTreeApplyDraft({
+    transformNode,
+    relationalAuthoringDraft: cleared ? null : relationalAuthoringDraft,
+    joinDraft: state.joinDraft,
+    operation: applyOperation,
+  });
+  const hasDraftChanges = !areCanvasInspectorNodeDraftsEqual(
+    createCanvasInspectorNodeDraft(transformNode),
+    canonicalizeCanvasInspectorNodeDraft(transformNode, applyDraft)
+  );
   const apply = useCanvasRelationalTreeApplyCommand({
     cleared,
-    relationalAuthoringDraft,
+    relationalAuthoringDraft: cleared ? null : relationalAuthoringDraft,
     authoring,
     editable,
     joinDraft: state.joinDraft,
-    operation: !state.active && seed != null ? seed.operation : state.operation,
+    operation: applyOperation,
     reject: state.setApplyRejection,
     reset: state.reset,
     transformNode,
@@ -129,5 +149,6 @@ export function useCanvasRelationalTreeAuthoringSession(
     positions: state.positions,
     setPositions: state.setPositions,
     hasIncompleteGraph,
+    hasDraftChanges,
   } as const;
 }

@@ -1,0 +1,53 @@
+.inspector {
+  width: 20rem;
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--border-subtle);
+  background: var(--surface-panel);
+  padding: 1rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.status {
+  margin: 0.25rem 0 0;
+  color: var(--status-degraded);
+  font-size: 0.75rem;
+}
+
+.inputs {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+}
+
+.input {
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.inputLabel {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.inputValue {
+  margin-top: 0.25rem;
+  color: var(--text-strong);
+  font-size: 0.875rem;
+}

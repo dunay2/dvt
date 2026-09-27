@@ -6,6 +6,8 @@ import {
   WorkspaceGraphAuthoringDraftSchema,
 } from '../src/index.js';
 
+import { buildDvtSubstraitSemanticDocumentFixture } from './fixtures/dvtSubstraitSemanticDocument.js';
+
 const source = {
   relationId: 'relation:customers',
   sourceNodeId: 'customers',
@@ -57,6 +59,16 @@ describe('DVT relational authoring draft v1', () => {
     );
   });
 
+  it('retains applied relation positions without duplicating them as draft nodes', () => {
+    const layoutOnly = {
+      ...relationalDraft,
+      sources: [],
+      operations: [],
+      outputRelationId: operation.relationId,
+    };
+    expect(DvtRelationalAuthoringDraftV1Schema.parse(layoutOnly)).toEqual(layoutOnly);
+  });
+
   it('rejects duplicate identities and operation cycles', () => {
     expect(
       DvtRelationalAuthoringDraftV1Schema.safeParse({
@@ -88,6 +100,22 @@ describe('DVT relational authoring draft v1', () => {
         operations: [{ relationId: 'filter', operation: 'filter', inputs: [null, null] }],
       }).success
     ).toBe(false);
+  });
+
+  it('accepts semantic authoring for a fully connected Transform operation', () => {
+    const semanticDocument = buildDvtSubstraitSemanticDocumentFixture();
+    const configured = {
+      ...relationalDraft,
+      operations: [
+        {
+          relationId: 'relation:transform-node:project',
+          operation: 'field_transform' as const,
+          inputs: ['relation:source-node'],
+          semanticDocument,
+        },
+      ],
+    };
+    expect(DvtRelationalAuthoringDraftV1Schema.safeParse(configured).success).toBe(true);
   });
 
   it('rejects malformed draft metadata at the saved workspace boundary', () => {

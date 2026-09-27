@@ -22,6 +22,7 @@ import {
 import { openOperationMenu } from './operation-menu/operationMenu.test-support';
 import {
   connectWorkbenchOutput,
+  disconnectWorkbenchOutput,
   instantiateWorkbenchSource,
 } from './CanvasRelationalTreeWorkbench.gestures.test-support';
 
@@ -114,11 +115,7 @@ describe('Canvas relational-tree Workbench mixed-cross', () => {
       (port) =>
         port.parentElement?.querySelector('[data-pending="true"][data-operator="read"]') != null
     )!;
-    await act(async () =>
-      container
-        .querySelector<SVGElement>('[data-slot="canvas-relational-output-edge-action"]')!
-        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    );
+    await disconnectWorkbenchOutput(container);
     await act(async () => dragSourceTo(existingJoin, left!));
     await act(async () => dragSourceTo(pendingCountry, right!));
     await connectWorkbenchOutput(

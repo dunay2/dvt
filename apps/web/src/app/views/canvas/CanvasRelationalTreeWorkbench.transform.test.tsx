@@ -18,6 +18,10 @@ import {
 import { createSourceJoin } from './canvasSourceJoin';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import {
+  connectWorkbenchOutput,
+  disconnectWorkbenchOutput,
+} from './CanvasRelationalTreeWorkbench.gestures.test-support';
 
 describe('Transform card in the production Workbench', () => {
   setupWorkbenchTest();
@@ -86,15 +90,18 @@ describe('Transform card in the production Workbench', () => {
     const inputPort = staged.querySelector<HTMLElement>(
       '[data-slot="canvas-relational-input-port"]'
     )!;
-    await act(async () =>
-      container
-        .querySelector<SVGElement>('[data-slot="canvas-relational-output-edge-action"]')!
-        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    );
+    await disconnectWorkbenchOutput(container);
     await act(async () => dragSourceTo(producer, inputPort));
     expect(inputPort.getAttribute('data-connected')).toBe('true');
     expect(container.querySelectorAll('[data-slot="canvas-relational-pending-edge"]')).toHaveLength(
       1
+    );
+    await waitFor(() =>
+      expect(container.querySelector('[data-slot="canvas-transform-inspector"]')).not.toBeNull()
+    );
+    await connectWorkbenchOutput(
+      container,
+      staged.querySelector<HTMLElement>('[data-slot="canvas-relational-output-port"]')!
     );
     expect(applied).not.toHaveBeenCalled();
     await act(async () =>
@@ -103,16 +110,9 @@ describe('Transform card in the production Workbench', () => {
         .click()
     );
     await waitFor(() => expect(applied).toHaveBeenCalledOnce());
-    const saved = applied.mock.calls[0]![0].relationalAuthoringDraft;
-    expect(saved?.operations).toEqual([
-      expect.objectContaining({
-        relationId: staged.querySelector('[data-relation-id]')?.getAttribute('data-relation-id'),
-        operation: 'field_transform',
-        inputs: [
-          container.querySelector('[data-operator="join"]')?.getAttribute('data-relation-id'),
-        ],
-      }),
-    ]);
+    const saved = applied.mock.calls[0]![0];
+    expect(saved.dvt).toMatchObject({ mode: 'substrait', shape: 'projection' });
+    expect(saved.relationalAuthoringDraft).toMatchObject({ sources: [], operations: [] });
   });
 
   it('denies Transform insertion in a read-only Model', async () => {

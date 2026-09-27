@@ -70,6 +70,8 @@ export type CanvasRelationalTreeWorkbenchCopy = Pick<
   | 'inspectorDvtSubstraitIntersectAllAction'
   | 'inspectorDvtSubstraitExceptAllAction'
   | 'nodePresentationColumnsLabel'
+  | 'canvasContextMenuRemoveEdgeLabel'
+  | 'canvasNodeContextPropertiesLabel'
   | 'reactFlowFitViewLabel'
   | 'reactFlowEdgeDescription'
   | 'reactFlowZoomInLabel'

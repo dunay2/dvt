@@ -1,5 +1,6 @@
 /** Discardable operation nodes with algebra-defined, freely connectable Input ports. */
 import { allocateDvtRelationId } from '@dvt/contracts';
+import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
 import type { CanvasRelationalOperatorTool } from './relational-operator-form/OperatorTool';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import type {
@@ -14,6 +15,7 @@ export type CanvasStagedOperation = Readonly<{
   id: string;
   operation: CanvasStagedOperationKind;
   inputs: readonly (string | null)[];
+  semanticDocument?: DvtSubstraitSemanticDocumentV1;
 }>;
 
 const binary = new Set<CanvasStagedOperationKind>([
@@ -83,7 +85,8 @@ export function disconnectCanvasStagedOperation(
     return operation;
   const inputs = [...operation.inputs];
   inputs[port] = null;
-  return { ...operation, inputs };
+  const { semanticDocument: _discarded, ...pending } = operation;
+  return { ...pending, inputs };
 }
 
 export function createsCanvasStagedOperationCycle(

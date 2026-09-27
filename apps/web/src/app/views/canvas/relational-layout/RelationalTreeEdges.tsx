@@ -1,8 +1,8 @@
 /** Owned concern: render connections and operand roles from projected geometry. */
 import type { CanvasRelationalTreeChildRole } from '../canvasRelationalTreeProjection';
-import type {
-  CanvasRelationalTreeLayout,
-  CanvasRelationalTreePlacedEdge,
+import {
+  type CanvasRelationalTreeLayout,
+  type CanvasRelationalTreePlacedEdge,
 } from '../canvasRelationalTreeGeometry';
 import type { CanvasStagedOperation } from '../canvasStagedOperation';
 import {
@@ -11,6 +11,7 @@ import {
   relationalEdgePath,
 } from './relationalTreeEdgeProjection';
 import { RelationalEdgeAction } from './RelationalEdgeAction';
+import { RelationalOutputEdge } from './RelationalOutputEdge';
 
 function childRoleBadge(role: CanvasRelationalTreeChildRole, ordinal: number): string | null {
   if (role === 'left') return 'L';
@@ -46,16 +47,20 @@ function EdgeRoleBadge({ edge }: Readonly<{ edge: CanvasRelationalTreePlacedEdge
 export function RelationalTreeEdges({
   layout,
   stagedOperations = [],
-  disconnectLabel,
+  removeConnectionLabel,
+  onSelectStagedOperation,
   onDisconnectStagedOperation,
   outputRelationId,
+  onSelectOutput,
   onDisconnectOutput,
 }: Readonly<{
   layout: CanvasRelationalTreeLayout;
   stagedOperations?: readonly CanvasStagedOperation[];
-  disconnectLabel: string;
+  removeConnectionLabel: string;
+  onSelectStagedOperation?: (id: string) => void;
   onDisconnectStagedOperation?: (id: string, port: number) => void;
   outputRelationId: string | null;
+  onSelectOutput?: () => void;
   onDisconnectOutput?: () => void;
 }>) {
   const placedByRelationId = indexPlacedRelations(layout);
@@ -68,25 +73,13 @@ export function RelationalTreeEdges({
       width={layout.width}
       height={layout.height}
     >
-      {layout.output == null || outputProducer == null ? null : (
-        <g>
-          <path
-            data-slot="canvas-relational-output-edge"
-            d={`M ${outputProducer.x + outputProducer.width} ${outputProducer.y + outputProducer.height / 2} H ${layout.output.x}`}
-            fill="none"
-            stroke="var(--status-info)"
-            strokeWidth="1.5"
-          />
-          {onDisconnectOutput == null ? null : (
-            <RelationalEdgeAction
-              slot="canvas-relational-output-edge-action"
-              path={`M ${outputProducer.x + outputProducer.width} ${outputProducer.y + outputProducer.height / 2} H ${layout.output.x}`}
-              label={disconnectLabel}
-              onDisconnect={onDisconnectOutput}
-            />
-          )}
-        </g>
-      )}
+      <RelationalOutputEdge
+        output={layout.output}
+        producer={outputProducer}
+        removeLabel={removeConnectionLabel}
+        onSelect={onSelectOutput}
+        onDisconnect={onDisconnectOutput}
+      />
       {stagedEdges.map((edge) => (
         <g key={edge.key}>
           <path
@@ -103,7 +96,8 @@ export function RelationalTreeEdges({
               slot="canvas-relational-pending-edge-action"
               port={edge.ordinal}
               path={relationalEdgePath(edge)}
-              label={disconnectLabel}
+              removeLabel={removeConnectionLabel}
+              onSelect={() => onSelectStagedOperation?.(edge.parentLocator)}
               onDisconnect={() => onDisconnectStagedOperation(edge.parentLocator, edge.ordinal)}
             />
           )}

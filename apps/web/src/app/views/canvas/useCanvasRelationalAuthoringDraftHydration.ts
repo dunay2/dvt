@@ -1,6 +1,7 @@
 /** Hydrate persisted incomplete authoring without making it semantic authority. */
 import { useEffect, useMemo } from 'react';
 import type { CanonicalNode } from '../../types/canonical';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 import {
@@ -17,6 +18,7 @@ export function useCanvasRelationalAuthoringDraftHydration(
   args: Readonly<{
     enabled: boolean;
     transformNode: CanonicalNode;
+    document: SubstraitDocument | null;
     inputs: readonly CanvasDvtCompositionInput[];
     hydrateExisting: () => boolean;
     state: DraftState;
@@ -29,8 +31,10 @@ export function useCanvasRelationalAuthoringDraftHydration(
   );
   const restored = useMemo(
     () =>
-      persisted == null ? null : restoreCanvasRelationalAuthoringDraft(persisted, args.inputs),
-    [args.inputs, persisted]
+      persisted == null
+        ? null
+        : restoreCanvasRelationalAuthoringDraft(persisted, args.inputs, args.document),
+    [args.document, args.inputs, persisted]
   );
   useEffect(() => {
     reset();

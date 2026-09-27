@@ -57,13 +57,18 @@ describe('Relational card disclosure', () => {
     container.remove();
   });
 
-  it('preserves world geometry across zoom levels without opening any detail', () => {
+  it('reveals semantic detail when zoom reaches the readable threshold', () => {
     const before = geometry();
-    for (const zoom of [1.3, 0.5, 2, 1]) {
-      render(zoom);
-      expect(geometry()).toEqual(before);
-      expect(details()).toHaveLength(0);
-    }
+    render(1.19);
+    expect(details()).toHaveLength(0);
+    expect(geometry()).toEqual(before);
+    render(1.2);
+    expect(details().length).toBeGreaterThan(0);
+    expect(geometry()).not.toEqual(before);
+    expect(disclosures()).toHaveLength(0);
+    render(1);
+    expect(details()).toHaveLength(0);
+    expect(geometry()).toEqual(before);
   });
 
   it('toggles each card explicitly and shares disclosure between inspection and editing', () => {
@@ -72,7 +77,7 @@ describe('Relational card disclosure', () => {
     act(() => disclosures()[0]!.click());
     expect(details()).toHaveLength(1);
     const before = geometry();
-    render(1.6, 'editing');
+    render(1, 'editing');
     expect(details()).toHaveLength(1);
     expect(geometry()).toEqual(before);
     act(() => disclosures()[1]!.click());
@@ -96,7 +101,7 @@ describe('Relational card disclosure', () => {
     });
     const moved = position();
     expect(moved).not.toBe(before);
-    render(1.7);
+    render(1.1);
     expect(position()).toBe(moved);
     act(() =>
       container

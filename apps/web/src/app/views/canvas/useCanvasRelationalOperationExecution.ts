@@ -12,7 +12,14 @@ export function useCanvasRelationalOperationExecution(node: CanvasRelationalTree
   const context = useContext(CanvasOperationPreviewContext);
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
-  if (context == null || node.relationId == null || node.operator === 'unsupported') return null;
+  if (node.relationId == null) return null;
+  if (context == null || node.operator === 'unsupported')
+    return {
+      label: copy.execute,
+      disabled: true,
+      title: copy.unavailable,
+      onExecute: () => undefined,
+    };
   if (node.operator === 'read') {
     const target = resolveCanvasConnectedSourceDataSampleTarget(
       node.sourceRef,

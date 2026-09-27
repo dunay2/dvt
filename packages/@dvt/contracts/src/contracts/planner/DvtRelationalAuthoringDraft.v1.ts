@@ -8,6 +8,8 @@
  */
 import { z } from 'zod';
 
+import { DvtSubstraitSemanticDocumentV1Schema } from './DvtSubstraitSemanticDocument.v1.js';
+
 export const DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY = 'relationalAuthoringDraft' as const;
 export const DVT_RELATIONAL_AUTHORING_DRAFT_VERSION = 'v1' as const;
 
@@ -61,7 +63,6 @@ const BinaryOperations = new Set<string>([
   'intersect_all',
   'except_all',
 ]);
-
 const SourceSchema = z
   .object({
     relationId: NonBlankStringSchema,
@@ -75,6 +76,7 @@ const OperationDraftSchema = z
     relationId: NonBlankStringSchema,
     operation: OperationSchema,
     inputs: z.array(NonBlankStringSchema.nullable()).min(1).max(2),
+    semanticDocument: DvtSubstraitSemanticDocumentV1Schema.optional(),
   })
   .strict();
 
@@ -115,6 +117,23 @@ export const DvtRelationalAuthoringDraftV1Schema = z
           path: ['operations', index, 'inputs'],
           message: `Operation ${operation.operation} requires ${arity} input port(s).`,
         });
+      if (operation.semanticDocument != null && operation.inputs.some((input) => input == null))
+        context.addIssue({
+          code: 'custom',
+          path: ['operations', index, 'semanticDocument'],
+          message: 'A semantic staged operation requires every input port.',
+        });
+      if (
+        operation.semanticDocument != null &&
+        !operation.semanticDocument.sidecar.relations.some(
+          (relation) => relation.relationId === operation.relationId
+        )
+      )
+        context.addIssue({
+          code: 'custom',
+          path: ['operations', index, 'semanticDocument'],
+          message: 'A semantic staged operation must own its output relation identity.',
+        });
     });
     const operationIds = new Set(draft.operations.map((operation) => operation.relationId));
     const byId = new Map(draft.operations.map((operation) => [operation.relationId, operation]));
@@ -138,13 +157,6 @@ export const DvtRelationalAuthoringDraftV1Schema = z
         code: 'custom',
         path: ['operations'],
         message: 'Draft operation graph must be acyclic.',
-      });
-    const positioned = Object.keys(draft.positions);
-    if (positioned.some((id) => !ids.includes(id)))
-      context.addIssue({
-        code: 'custom',
-        path: ['positions'],
-        message: 'Draft positions may reference only draft nodes.',
       });
   });
 

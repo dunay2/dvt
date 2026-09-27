@@ -1,14 +1,19 @@
-/** Reuse the existing unary editor after a staged card receives its explicit Input. */
+/** Route a selected staged operation to its specific property editor. */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
-import { CanvasRelationalTreeOperatorForm } from './CanvasRelationalTreeOperatorForm';
+import type { CanonicalNode } from '../../types/canonical';
+import { CanvasStagedJoinInspector } from './CanvasStagedJoinInspector';
+import { CanvasStagedTransformInspector } from './CanvasStagedTransformInspector';
+import {
+  CanvasStagedUnaryOperationInspector,
+  type ConfigurableStagedOperation,
+} from './CanvasStagedUnaryOperationInspector';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
-import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-import { useSelectedRelationTool } from './useSelectedRelationTool';
-import type { CanvasRelationalOperatorTool } from './relational-operator-form/OperatorTool';
+import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
+import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
+import styles from './CanvasStagedOperationInspector.module.css';
 
-type ConfigurableOperation = CanvasRelationalOperatorTool['id'];
-const configurable = new Set<ConfigurableOperation>([
+const configurable = new Set<ConfigurableStagedOperation>([
   'filter',
   'aggregate',
   'window',
@@ -16,84 +21,97 @@ const configurable = new Set<ConfigurableOperation>([
   'fetch',
 ]);
 
-function isConfigurable(
-  operation: CanvasStagedOperation['operation']
-): operation is ConfigurableOperation {
-  return configurable.has(operation as ConfigurableOperation);
-}
-
 export function CanvasStagedOperationInspector({
   staged,
-  draft,
+  producerDocument,
+  transformNode,
   copy,
-  onChange,
-  onComplete,
-  onRemove,
+  onClose,
   onPendingChange,
+  onUpdate,
 }: Readonly<{
   staged: CanvasStagedOperation;
-  draft: SubstraitDocument | null;
+  producerDocument: SubstraitDocument | null;
+  transformNode: CanonicalNode;
   copy: CanvasRelationalTreeWorkbenchCopy;
-  onChange: (document: SubstraitDocument) => void;
-  onComplete: () => void;
-  onRemove: () => void;
+  onClose: () => void;
   onPendingChange: (pending: boolean) => void;
-}>): JSX.Element | null {
-  const operation = isConfigurable(staged.operation) ? staged.operation : null;
-  if (operation == null) return null;
+  onUpdate: (update: Pick<CanvasStagedOperation, 'operation' | 'semanticDocument'>) => void;
+}>): JSX.Element {
+  if (isCanvasJoinOperation(staged.operation) && staged.semanticDocument != null)
+    return (
+      <CanvasStagedJoinInspector
+        staged={staged}
+        copy={copy}
+        onChange={onUpdate}
+        onPendingChange={onPendingChange}
+      />
+    );
+  if (staged.operation === 'field_transform' && staged.semanticDocument != null)
+    return (
+      <CanvasStagedTransformInspector
+        staged={staged}
+        transformNode={transformNode}
+        onClose={onClose}
+        onChange={(semanticDocument) =>
+          onUpdate({ operation: 'field_transform', semanticDocument })
+        }
+      />
+    );
+  if (configurable.has(staged.operation as ConfigurableStagedOperation) && producerDocument != null)
+    return (
+      <CanvasStagedUnaryOperationInspector
+        operation={staged.operation as ConfigurableStagedOperation}
+        staged={staged}
+        producerDocument={producerDocument}
+        copy={copy}
+        onClose={onClose}
+        onPendingChange={onPendingChange}
+        onChange={(semanticDocument) => onUpdate({ operation: staged.operation, semanticDocument })}
+      />
+    );
+  return <CanvasStagedOperationProperties staged={staged} copy={copy} />;
+}
+
+function CanvasStagedOperationProperties({
+  staged,
+  copy,
+}: Readonly<{
+  staged: CanvasStagedOperation;
+  copy: CanvasRelationalTreeWorkbenchCopy;
+}>): JSX.Element {
+  const title = copy[resolveCanvasRelationalOperationPresentation(staged.operation).labelKey];
   return (
-    <CanvasStagedUnaryOperationInspector
-      operation={operation}
-      staged={staged}
-      draft={draft}
-      copy={copy}
-      onChange={onChange}
-      onComplete={onComplete}
-      onRemove={onRemove}
-      onPendingChange={onPendingChange}
-    />
+    <aside data-slot="canvas-staged-operation-inspector" className={styles.inspector}>
+      <p className={styles.eyebrow}>{copy.canvasNodeContextPropertiesLabel}</p>
+      <h2 className={styles.title}>{title}</h2>
+      <p className={styles.status}>{copy.relationalTreePendingLabel}</p>
+      <dl className={styles.inputs}>
+        {staged.inputs.map((connected, port) => (
+          <div
+            key={port}
+            data-slot="canvas-staged-operation-input-property"
+            data-port={port}
+            className={styles.input}
+          >
+            <dt className={styles.inputLabel}>{inputLabel(staged, port, copy)}</dt>
+            <dd className={styles.inputValue}>
+              {connected == null
+                ? copy.relationalTreeMissingLabel
+                : copy.relationalTreeParticipatingLabel}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </aside>
   );
 }
 
-function CanvasStagedUnaryOperationInspector({
-  operation,
-  staged,
-  draft,
-  copy,
-  onChange,
-  onComplete,
-  onRemove,
-  onPendingChange,
-}: Readonly<{
-  operation: ConfigurableOperation;
-  staged: CanvasStagedOperation;
-  draft: SubstraitDocument | null;
-  copy: CanvasRelationalTreeWorkbenchCopy;
-  onChange: (document: SubstraitDocument) => void;
-  onComplete: () => void;
-  onRemove: () => void;
-  onPendingChange: (pending: boolean) => void;
-}>): JSX.Element | null {
-  const relationId = staged.inputs[0] ?? null;
-  const selected = useSelectedRelationTool(relationId, operation, 'insert');
-  if (draft == null || relationId == null || selected == null) return null;
-  const title = copy[resolveCanvasRelationalOperationPresentation(operation).labelKey];
-  return (
-    <aside className="w-80 shrink-0 overflow-y-auto border-l border-(--border-subtle) bg-(--surface-panel) p-4">
-      <h2 className="mb-4 text-sm font-semibold text-(--text-strong)">{title}</h2>
-      <CanvasRelationalTreeOperatorForm
-        tool={selected.tool}
-        draft={draft}
-        title={title}
-        targetRelationId={relationId}
-        inline
-        onPendingChange={onPendingChange}
-        onClose={onRemove}
-        onChange={(document) => {
-          onChange(document);
-          onComplete();
-        }}
-      />
-    </aside>
-  );
+function inputLabel(
+  staged: CanvasStagedOperation,
+  port: number,
+  copy: CanvasRelationalTreeWorkbenchCopy
+): string {
+  if (staged.inputs.length === 1) return copy.relationalTreePrimaryInputLabel;
+  return port === 0 ? copy.inspectorDvtRelationalLeftInput : copy.inspectorDvtRelationalRightInput;
 }

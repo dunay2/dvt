@@ -4,6 +4,8 @@ import { createSourceOccurrenceActions } from './relational-source-occurrence/so
 import type { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import type { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 import { useCanvasStagedOperationSession } from './useCanvasStagedOperationSession';
+import { configureCanvasStagedJoin } from './canvasStagedJoinConfiguration';
+import { useCanvasStagedOperationConfiguration } from './useCanvasStagedOperationConfiguration';
 
 type DraftState = ReturnType<typeof useCanvasRelationalTreeDraftState>;
 
@@ -34,7 +36,10 @@ export function useCanvasRelationalGraphAuthoring(
     consumedProducerIds:
       outputRelationId == null ? canonicalConsumers : [...canonicalConsumers, outputRelationId],
     state,
+    configure: (operation) =>
+      configureCanvasStagedJoin(operation, inputs, state.pendingSources, analysis),
   });
+  useCanvasStagedOperationConfiguration({ analysis, inputs, state });
   const occurrences = createSourceOccurrenceActions({
     editable,
     session: analysis?.document == null ? null : analysis.session,
@@ -49,6 +54,18 @@ export function useCanvasRelationalGraphAuthoring(
   return {
     occurrences: {
       ...occurrences,
+      drop: (id: string) => {
+        staged.clearSelection();
+        return occurrences.drop(id);
+      },
+      add: (id: string) => {
+        staged.clearSelection();
+        occurrences.add(id);
+      },
+      select: (id: string) => {
+        staged.clearSelection();
+        occurrences.select(id);
+      },
       remove: (id: string) => {
         staged.disconnectProducer(id);
         if (outputRelationId === id) state.setOutputRelationId(null);
@@ -57,6 +74,18 @@ export function useCanvasRelationalGraphAuthoring(
     },
     staged: {
       ...staged,
+      stage: (operation: Parameters<typeof staged.stage>[0]) => {
+        occurrences.clearSelection();
+        return staged.stage(operation);
+      },
+      select: (id: string) => {
+        occurrences.clearSelection();
+        staged.select(id);
+      },
+      connect: (id: string, port: number, relationId: string) => {
+        occurrences.clearSelection();
+        staged.connect(id, port, relationId);
+      },
       remove: (id: string) => {
         if (outputRelationId === id) state.setOutputRelationId(null);
         staged.remove(id);

@@ -74,6 +74,13 @@ export function useCanvasRelationalTreeWorkbenchModel(
         selected: item.treeLocator != null && item.treeLocator === selectedLocator,
       }));
     }
+    const configuredProducerIds = new Set(
+      session.staged.operations.flatMap((operation) =>
+        operation.semanticDocument == null
+          ? []
+          : operation.inputs.filter((input): input is string => input != null)
+      )
+    );
     return base.map((item) => {
       const selectedOccurrence = session.occurrences.pending.find(
         (occurrence) =>
@@ -82,6 +89,15 @@ export function useCanvasRelationalTreeWorkbenchModel(
       );
       return {
         ...item,
+        state:
+          item.sourceNodeId != null &&
+          session.occurrences.pending.some(
+            (occurrence) =>
+              occurrence.sourceNodeId === item.sourceNodeId &&
+              configuredProducerIds.has(occurrence.read.binding.relationId)
+          )
+            ? ('participating' as const)
+            : item.state,
         selectable: item.fieldCount !== 0,
         selected: selectedOccurrence != null,
         reason: null,
@@ -96,6 +112,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
     projection,
     session.occurrences.pending,
     session.occurrences.selectedId,
+    session.staged.operations,
     selectedLocator,
   ]);
   const unavailableMessage = result.ok
@@ -122,6 +139,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
     ...selection,
     selectedRelationId: session.occurrences.selectedId ?? selection.selectedRelationId,
     selectRelation: (id: string | null) => {
+      session.staged.clearSelection();
       if (session.occurrences.pending.some((item) => item.read.binding.relationId === id)) {
         session.occurrences.select(id!);
       } else {

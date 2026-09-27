@@ -19,7 +19,6 @@ import LayoutSource from './CanvasRelationalTreeLayout.tsx?raw';
 import NodeLayerSource from './CanvasRelationalTreeNodes.tsx?raw';
 import OperationPortsSource from './CanvasRelationalOperationPorts.tsx?raw';
 import OutputSource from './CanvasRelationalTreeOutput.tsx?raw';
-import PortStylesSource from './canvasRelationalPortStyles.ts?raw';
 import EdgesSource from './relational-layout/RelationalTreeEdges.tsx?raw';
 import EdgeActionSource from './relational-layout/RelationalEdgeAction.tsx?raw';
 import RelationalEdgeProjectionSource from './relational-layout/relationalTreeEdgeProjection.ts?raw';
@@ -68,7 +67,6 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(NodeLayerSource.split('\n').length).toBeLessThan(140);
     expect(OperationPortsSource.split('\n').length).toBeLessThan(120);
     expect(OutputSource.split('\n').length).toBeLessThan(120);
-    expect(PortStylesSource.split('\n').length).toBeLessThan(40);
     expect(EdgesSource.split('\n').length).toBeLessThan(150);
     expect(EdgeActionSource.split('\n').length).toBeLessThan(60);
     expect(RelationalEdgeProjectionSource.split('\n').length).toBeLessThan(100);
@@ -114,7 +112,6 @@ describe('Canvas relational-tree Workbench architecture', () => {
       NodeLayerSource,
       OperationPortsSource,
       OutputSource,
-      PortStylesSource,
       EdgesSource,
       EdgeActionSource,
       RelationalEdgeProjectionSource,

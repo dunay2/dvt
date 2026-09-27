@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /** Owned concern: relational workbench apply behavior. */
-import React, { act } from 'react';
+import React, { act, createRef } from 'react';
 import { describe, expect, it } from 'vitest';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
@@ -16,6 +16,8 @@ import {
 } from './CanvasRelationalTreeWorkbench.test-support';
 import { openOperationMenu } from './operation-menu/operationMenu.test-support';
 import { connectWorkbenchOutput } from './CanvasRelationalTreeWorkbench.gestures.test-support';
+import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
+import type { CanvasRelationalTreeWorkbenchHandle } from './CanvasRelationalTreeWorkbench';
 
 describe('Canvas relational-tree Workbench apply', () => {
   setupWorkbenchTest();
@@ -26,10 +28,12 @@ describe('Canvas relational-tree Workbench apply', () => {
       const orders = sourceNode('orders', 'orders');
       const transform = transformNode();
       const applied: CanvasInspectorNodeDraft[] = [];
+      const workbench = createRef<CanvasRelationalTreeWorkbenchHandle>();
 
       await act(async () => {
         root.render(
           <CanvasRelationalTreeWorkbench
+            ref={workbench}
             transformNode={transform}
             nodes={[customers, orders, transform]}
             edges={[edge(customers.id), edge(orders.id)]}
@@ -82,6 +86,23 @@ describe('Canvas relational-tree Workbench apply', () => {
       const join = Array.from(
         container.querySelectorAll<HTMLElement>('[data-pending-operation="true"]')
       ).find((card) => card.querySelector('[data-operator="join"]') != null)!;
+      const joinCard = join.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-relational-tree-node"]'
+      )!;
+      await act(async () => joinCard.click());
+      expect(
+        container.querySelector('[data-slot="canvas-staged-operation-inspector"]')
+      ).not.toBeNull();
+      const pendingSource = container.querySelector<HTMLButtonElement>(
+        '[data-pending="true"][data-operator="read"]'
+      )!;
+      await act(async () => pendingSource.click());
+      expect(container.querySelector('[data-slot="source-occurrence-alias"]')).not.toBeNull();
+      expect(container.querySelector('[data-slot="canvas-staged-operation-inspector"]')).toBeNull();
+      await act(async () => joinCard.click());
+      expect(
+        container.querySelector('[data-slot="canvas-staged-operation-inspector"]')
+      ).not.toBeNull();
       const producers = Array.from(
         container.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-output-port"]')
       ).filter(
@@ -93,16 +114,39 @@ describe('Canvas relational-tree Workbench apply', () => {
       );
       await act(async () => dragSourceTo(producers[1]!, inputs[1]!));
       await act(async () => dragSourceTo(producers[0]!, inputs[0]!));
+      await act(async () => Promise.resolve());
+      expect(
+        container.querySelector('[data-slot="canvas-relational-tree-join-type"]')
+      ).not.toBeNull();
+      expect(
+        container.querySelector('[data-slot="dvt-substrait-join-predicate-editors"]')
+      ).not.toBeNull();
+      expect(
+        container.querySelector('[data-slot="semantic-workbench-join-condition-row"]')
+      ).not.toBeNull();
       await connectWorkbenchOutput(
         container,
         join.querySelector<HTMLElement>('[data-slot="canvas-relational-output-port"]')!
       );
 
-      await act(async () =>
-        container
-          .querySelector<HTMLButtonElement>(`[data-slot="canvas-relational-tree-${action}"]`)!
-          .click()
+      const cards = Array.from(
+        container.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-tree-node"]')
       );
+      expect(cards).toHaveLength(3);
+      expect(
+        cards.every(
+          (card) => card.closest('li')?.querySelector('[data-slot="canvas-node-execute"]') != null
+        )
+      ).toBe(true);
+
+      const actionButton = container.querySelector<HTMLButtonElement>(
+        `[data-slot="canvas-relational-tree-${action}"]`
+      )!;
+      if (action === 'apply') {
+        expect(workbench.current).toMatchObject({ hasUnappliedChanges: true, canApply: true });
+        expect(actionButton.disabled).toBe(false);
+      }
+      await act(async () => actionButton.click());
       if (action === 'cancel') {
         expect(applied).toHaveLength(0);
         expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(0);
@@ -115,10 +159,37 @@ describe('Canvas relational-tree Workbench apply', () => {
       expect(applied).toHaveLength(1);
       const saved = applied[0]?.relationalAuthoringDraft;
       expect(saved).toMatchObject({
-        sources: [{ sourceNodeId: customers.id }, { sourceNodeId: orders.id }],
-        operations: [{ operation: 'inner_join' }],
+        sources: [],
+        operations: [],
       });
-      expect(saved?.outputRelationId).toBe(saved?.operations[0]?.relationId);
+      expect(saved?.outputRelationId).not.toBeNull();
+      const persisted = applyCanvasInspectorNodeDraft(transform, applied[0]!);
+      await act(async () => {
+        root.render(
+          <CanvasRelationalTreeWorkbench
+            transformNode={persisted}
+            nodes={[customers, orders, persisted]}
+            edges={[edge(customers.id), edge(orders.id)]}
+            copy={COPY}
+            authoring={{
+              canEditNode: true,
+              onApplyNodeDraft: () => ({ outcome: 'no_changes' }),
+            }}
+          />
+        );
+        await Promise.resolve();
+      });
+      expect(
+        container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
+          ?.disabled
+      ).toBe(true);
+      expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(0);
+      expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(1);
+      expect(
+        Array.from(
+          container.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-tree-source"]')
+        ).every((source) => source.title.includes('Participating'))
+      ).toBe(true);
     }
   );
 });

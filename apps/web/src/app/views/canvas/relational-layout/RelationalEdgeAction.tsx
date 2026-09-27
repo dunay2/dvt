@@ -1,49 +1,57 @@
-/** Accessible hit target shared by removable relation lines. */
+/** Accessible selection and contextual removal shared by editable relation lines. */
+import { RelationalConnectionMenu } from './RelationalConnectionMenu';
+
 export function RelationalEdgeAction({
   path,
-  label,
+  removeLabel,
   slot,
   port,
+  onSelect,
   onDisconnect,
 }: Readonly<{
   path: string;
-  label: string;
+  removeLabel: string;
   slot: string;
   port?: number;
+  onSelect?: () => void;
   onDisconnect: () => void;
 }>): JSX.Element {
   return (
     <g className="group/relational-edge">
-      <path
-        d={path}
-        fill="none"
-        stroke="var(--status-danger)"
-        strokeWidth="3"
-        pointerEvents="none"
-        className="opacity-0 transition-opacity group-hover/relational-edge:opacity-100 group-focus-within/relational-edge:opacity-100"
-      />
-      <path
-        data-slot={slot}
-        data-port={port}
-        d={path}
-        fill="none"
-        stroke="transparent"
-        strokeWidth="14"
-        pointerEvents="stroke"
-        className="pointer-events-auto cursor-pointer"
-        role="button"
-        tabIndex={0}
-        aria-label={label}
-        onPointerDown={(event) => event.stopPropagation()}
-        onClick={onDisconnect}
-        onKeyDown={(event) => {
-          if (event.key !== 'Delete' && event.key !== 'Backspace') return;
-          event.preventDefault();
-          onDisconnect();
-        }}
-      >
-        <title>{label}</title>
-      </path>
+      <RelationalConnectionMenu removeLabel={removeLabel} onDisconnect={onDisconnect}>
+        <path
+          data-slot={slot}
+          data-port={port}
+          d={path}
+          fill="none"
+          stroke="transparent"
+          strokeWidth="14"
+          pointerEvents="stroke"
+          className="pointer-events-auto cursor-pointer focus:outline-none"
+          role="button"
+          tabIndex={0}
+          aria-label={removeLabel}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation();
+            onSelect?.();
+          }}
+          onContextMenu={(event) => {
+            event.stopPropagation();
+            onSelect?.();
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Delete' || event.key === 'Backspace') {
+              event.preventDefault();
+              event.stopPropagation();
+              onDisconnect();
+            } else if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              onSelect?.();
+            }
+          }}
+        />
+      </RelationalConnectionMenu>
     </g>
   );
 }

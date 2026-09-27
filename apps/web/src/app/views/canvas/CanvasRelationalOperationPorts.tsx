@@ -5,7 +5,7 @@ import {
   readCanvasRelationalRelationDrag,
   writeCanvasRelationalRelationDrag,
 } from './canvasRelationalTreeDrag';
-import { relationalInputPortClass, relationalOutputPortClass } from './canvasRelationalPortStyles';
+import portStyles from './CanvasRelationalPorts.module.css';
 
 export function CanvasRelationalOperationPorts({
   relationId,
@@ -39,7 +39,7 @@ export function CanvasRelationalOperationPorts({
         event.stopPropagation();
         writeCanvasRelationalRelationDrag(event.dataTransfer, relationId);
       }}
-      className={relationalOutputPortClass}
+      className={portStyles.outputPort}
     />
   );
   return (
@@ -59,6 +59,7 @@ export function CanvasRelationalOperationPorts({
             data-slot="canvas-relational-input-port"
             data-port={port}
             data-connected={connected != null || undefined}
+            data-position={staged.inputs.length === 1 ? 'center' : port === 0 ? 'left' : 'right'}
             aria-label={label}
             title={label}
             onPointerDown={(event) => event.stopPropagation()}
@@ -78,8 +79,7 @@ export function CanvasRelationalOperationPorts({
               event.stopPropagation();
               onConnect(staged.id, port, source);
             }}
-            className={`${relationalInputPortClass} grid place-items-center text-[9px] font-semibold text-(--text-strong)`}
-            style={{ top: staged.inputs.length === 1 ? '50%' : port === 0 ? '35%' : '65%' }}
+            className={portStyles.labeledInputPort}
           >
             {staged.inputs.length === 1 ? '' : port === 0 ? 'L' : 'R'}
           </button>

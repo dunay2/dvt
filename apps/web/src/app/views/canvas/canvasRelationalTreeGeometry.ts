@@ -9,9 +9,7 @@ import {
 } from './canvasRelationalTreeGeometryMetrics';
 
 export type CardPosition = Readonly<{ x: number; y: number }>;
-
 export const CANVAS_RELATIONAL_OUTPUT_POSITION_ID = 'canvas-relational-output';
-
 const NODE_HEIGHT = 76;
 const HORIZONTAL_PADDING = 36;
 const OUTPUT_GAP = 64;
@@ -30,7 +28,6 @@ export type CanvasRelationalTreePlacedNode = Readonly<{
   ordinal: number;
   siblingCount: number;
 }>;
-
 export type CanvasRelationalTreePlacedEdge = Readonly<{
   key: string;
   parentLocator: string;
@@ -41,7 +38,6 @@ export type CanvasRelationalTreePlacedEdge = Readonly<{
   toX: number;
   toY: number;
 }>;
-
 export type CanvasRelationalTreeLayout = Readonly<{
   width: number;
   height: number;

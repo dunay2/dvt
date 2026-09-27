@@ -100,7 +100,7 @@ describe('Relational card movement', () => {
     });
   });
 
-  it('moves Output and disconnects its producer from the line', () => {
+  it('moves Output, selects its properties and disconnects the focused connection with Delete', () => {
     cy.get(output).then(($output) => {
       const before = [
         Number.parseFloat($output[0].style.left),
@@ -113,9 +113,21 @@ describe('Relational card movement', () => {
       cy.get(output).should(($moved) => {
         expect(Number.parseFloat($moved[0].style.left)).to.be.closeTo(before[0]! + 40 / zoom, 2);
         expect(Number.parseFloat($moved[0].style.top)).to.be.closeTo(before[1]! + 24 / zoom, 2);
+        const coordinates = Cypress.$('[data-slot="canvas-relational-output-edge"]')[0]
+          .getAttribute('d')!
+          .match(/-?[\d.]+/g)!
+          .map(Number);
+        expect(coordinates.at(-2)).to.be.closeTo(Number.parseFloat($moved[0].style.left) - 10, 2);
+        expect(coordinates.at(-1)).to.be.closeTo(
+          Number.parseFloat($moved[0].style.top) + $moved[0].offsetHeight / 2,
+          2
+        );
       });
     });
     cy.get('[data-slot="canvas-relational-output-edge-action"]').click();
+    cy.get('[data-slot="canvas-relational-output-edge"]').should('exist');
+    cy.get('[data-slot="canvas-model-output-inspector"]').should('be.visible');
+    cy.get('[data-slot="canvas-relational-output-edge-action"]').type('{del}');
     cy.get('[data-slot="canvas-relational-output-edge"]').should('not.exist');
     cy.get('[data-slot="canvas-relational-output-input-port"]').should(
       'not.have.attr',

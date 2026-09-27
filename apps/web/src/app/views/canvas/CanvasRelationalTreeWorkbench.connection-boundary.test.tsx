@@ -52,7 +52,9 @@ describe('single-consumer internal connection boundary', () => {
       )
     );
     expect(outputEdge()).not.toBeNull();
-    await act(async () => terminal().click());
+    await act(async () =>
+      terminal().dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
+    );
     expect(outputEdge()).toBeNull();
     expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(1);
     expect(container.querySelector('[data-operator="project"]')).toBeNull();
@@ -113,7 +115,9 @@ describe('single-consumer internal connection boundary', () => {
     expect(pendingEdges()).toBe(2);
     // An old selected producer must not prevent disconnecting an occupied Output.
     await act(async () => reads[0]!.click());
-    await act(async () => terminal().click());
+    await act(async () =>
+      terminal().dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
+    );
     expect(outputEdge()).toBeNull();
     await connect(operationOutput, nextInput);
     expect(pendingEdges()).toBe(3);
@@ -124,14 +128,19 @@ describe('single-consumer internal connection boundary', () => {
         .querySelector<SVGElement>(
           '[data-slot="canvas-relational-pending-edge-action"][data-port="1"]'
         )!
-        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+        .dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
     );
     expect(pendingEdges()).toBe(2);
     await connect(reads[0]!, inputs[1]!);
     expect(pendingEdges()).toBe(3);
     expect(container.querySelectorAll('[data-pending="true"][data-operator="read"]')).toHaveLength(
-      2
+      0
     );
+    expect(
+      Array.from(
+        container.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-tree-source"]')
+      ).every((source) => source.title.includes('Participating'))
+    ).toBe(true);
   });
 
   it('counts canonical consumers and keeps terminal disconnection separate from deleting cards', async () => {

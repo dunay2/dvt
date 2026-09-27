@@ -16,11 +16,13 @@ import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection'
 export function CanvasRelationalTreeCardMenu({
   node,
   children,
+  pending = false,
   onRemove,
   onExpand,
 }: Readonly<{
   node: CanvasRelationalTreeNode;
   children: ReactElement;
+  pending?: boolean;
   onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
   onExpand?: (locator: string) => void;
 }>): JSX.Element {
@@ -56,12 +58,12 @@ export function CanvasRelationalTreeCardMenu({
               onSelect={() => onExpand(node.locator)}
             >
               <Pencil aria-hidden="true" className="size-4" />
-              {language === 'es' ? 'Abrir operación' : 'Open operation'}
+              {copy.edit}
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>
         )}
-        {node.operator === 'join' || node.operator === 'cross' ? (
+        {!pending && (node.operator === 'join' || node.operator === 'cross') ? (
           (['left', 'right'] as const).map((keep) => (
             <ContextMenuItem
               key={keep}

@@ -3,14 +3,12 @@ import { useMemo, useState } from 'react';
 import { useRelationalLayout } from './relational-layout/RelationalLayoutSession';
 import { useRelationalCardMovement } from './relational-layout/useRelationalCardMovement';
 import {
+  CANVAS_RELATIONAL_DETAIL_ZOOM,
   projectCanvasRelationalTreeDetails,
   type CanvasRelationalSemanticContext,
 } from './canvasRelationalTreeDetails';
 
-import {
-  CANVAS_RELATIONAL_OUTPUT_POSITION_ID,
-  layoutCanvasRelationalTree,
-} from './canvasRelationalTreeGeometry';
+import { layoutCanvasRelationalTree } from './canvasRelationalTreeGeometry';
 import { RelationalTreeEdges } from './relational-layout/RelationalTreeEdges';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
@@ -19,6 +17,7 @@ import { projectPendingSourceOccurrence } from './relational-source-occurrence/p
 import { projectCanvasStagedOperation, type CanvasStagedOperation } from './canvasStagedOperation';
 import { CanvasRelationalTreeOutput } from './CanvasRelationalTreeOutput';
 import { CanvasRelationalTreeNodes } from './CanvasRelationalTreeNodes';
+import { projectCanvasRelationalMovableCards } from './projectCanvasRelationalMovableCards';
 
 export function CanvasRelationalTreeLayout({
   outputName,
@@ -75,15 +74,17 @@ export function CanvasRelationalTreeLayout({
     [root, semanticContext?.transformNode, semanticContext?.draft]
   );
   const { positions, setPosition, expanded, toggleDetail } = useRelationalLayout();
+  const zoomRevealsDetail = Math.round(zoom * 100) >= CANVAS_RELATIONAL_DETAIL_ZOOM * 100;
   const sizes = useMemo(() => {
     const visible = new Map(detail.sizes);
     const visit = (node: CanvasRelationalTreeNode): void => {
-      if (!expanded.has(node.relationId ?? node.locator)) visible.delete(node.locator);
+      if (!zoomRevealsDetail && !expanded.has(node.relationId ?? node.locator))
+        visible.delete(node.locator);
       node.children.forEach((child) => visit(child.node));
     };
     if (root != null) visit(root);
     return visible;
-  }, [root, detail, expanded]);
+  }, [root, detail, expanded, zoomRevealsDetail]);
   const detachedSources = useMemo(
     () => occurrences?.pending.map(projectPendingSourceOccurrence) ?? [],
     [occurrences?.pending]
@@ -100,25 +101,7 @@ export function CanvasRelationalTreeLayout({
     () => layoutCanvasRelationalTree(root, sizes, positions, detached),
     [root, sizes, positions, detached]
   );
-  const movableCards = useMemo(
-    () => [
-      ...layout.nodes.map((placed) => ({
-        id: placed.node.relationId ?? placed.node.locator,
-        x: placed.x,
-        y: placed.y,
-      })),
-      ...(layout.output == null
-        ? []
-        : [
-            {
-              id: CANVAS_RELATIONAL_OUTPUT_POSITION_ID,
-              x: layout.output.x,
-              y: layout.output.y,
-            },
-          ]),
-    ],
-    [layout]
-  );
+  const movableCards = useMemo(() => projectCanvasRelationalMovableCards(layout), [layout]);
   const movement = useRelationalCardMovement(
     movableCards,
     zoom,
@@ -141,12 +124,13 @@ export function CanvasRelationalTreeLayout({
       <RelationalTreeEdges
         layout={layout}
         stagedOperations={stagedOperations}
-        disconnectLabel={copy.reactFlowEdgeDescription}
+        removeConnectionLabel={copy.canvasContextMenuRemoveEdgeLabel}
+        onSelectStagedOperation={onSelectStagedOperation}
         onDisconnectStagedOperation={onDisconnectStagedOperation}
         outputRelationId={effectiveOutputRelationId}
+        onSelectOutput={onOpenOutput}
         onDisconnectOutput={onDisconnectOutput}
       />
-
       {layout.output == null ? null : (
         <CanvasRelationalTreeOutput
           output={layout.output}
@@ -159,7 +143,7 @@ export function CanvasRelationalTreeLayout({
             onConnectOutput == null
               ? undefined
               : (relationId) => {
-                  onConnectOutput?.(relationId);
+                  onConnectOutput(relationId);
                   setSelectedConnectionSource(null);
                 }
           }
@@ -167,11 +151,11 @@ export function CanvasRelationalTreeLayout({
           movable={!panMode}
         />
       )}
-
       <CanvasRelationalTreeNodes
         layout={layout}
         graphs={detail.graphs}
         expanded={expanded}
+        zoomRevealsDetail={zoomRevealsDetail}
         toggleDetail={toggleDetail}
         occurrences={occurrences}
         stagedOperations={stagedOperations}

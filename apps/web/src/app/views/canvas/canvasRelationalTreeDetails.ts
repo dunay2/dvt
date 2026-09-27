@@ -1,4 +1,4 @@
-/** Owned concern: project read-only card details independently of viewport scale. */
+/** Owned concern: project canonical card details for explicit or zoom-driven disclosure. */
 import type { CanonicalNode } from '../../types/canonical';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
@@ -10,6 +10,8 @@ import {
 } from './semanticWorkbenchProjection';
 import type { CanvasRelationalTreeNodeSize } from './canvasRelationalTreeGeometryMetrics';
 import { projectCanvasRelationalStructureGraph } from './canvasRelationalStructureGraph';
+
+export const CANVAS_RELATIONAL_DETAIL_ZOOM = 1.2;
 
 export type CanvasRelationalSemanticContext = Readonly<{
   transformNode: CanonicalNode;

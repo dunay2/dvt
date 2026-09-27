@@ -23,24 +23,19 @@ export function useCanvasRelationalTreeWorkbenchHandle(
   directEdit: Readonly<{ pending: boolean; discard: () => void }>
 ): CanvasRelationalTreeWorkbenchHandle {
   const { session } = model;
-  const changed =
-    session.operation !== session.seed?.operation ||
-    session.joinDraft !== session.baselineDraft ||
-    session.selectedInputIds.join(',') !== session.seed?.inputIds.join(',') ||
-    session.occurrences.pending.length > 0 ||
-    session.staged.operations.length > 0 ||
-    session.output.relationId !== session.seed?.outputRelationId;
   const completeSemanticDraft =
     (isCanvasJoinOperation(model.session.operation) && model.session.joinDraft != null) ||
     (model.session.operation === 'cross_join' && model.session.joinDraft != null) ||
     (model.session.operation === 'projection' && model.session.selectedInputIds.length === 1) ||
     (isCanvasSetOperation(model.session.operation) && model.session.selectedInputIds.length >= 2);
   const handle = {
-    hasUnappliedChanges: directEdit.pending || (session.active && (changed || pendingCondition)),
+    hasUnappliedChanges:
+      directEdit.pending || (session.active && (session.hasDraftChanges || pendingCondition)),
     canApply:
       !directEdit.pending &&
       !pendingCondition &&
       model.authoringAvailable &&
+      session.hasDraftChanges &&
       (session.hasIncompleteGraph ||
         session.cleared ||
         (session.output.relationId != null && completeSemanticDraft)),

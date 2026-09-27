@@ -6,7 +6,9 @@ import {
 } from './canvasRelationalTreeGeometry';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import { readCanvasRelationalRelationDrag } from './canvasRelationalTreeDrag';
-import { relationalInputPortClass } from './canvasRelationalPortStyles';
+import { RelationalConnectionMenu } from './relational-layout/RelationalConnectionMenu';
+import styles from './CanvasRelationalTreeOutput.module.css';
+import portStyles from './CanvasRelationalPorts.module.css';
 
 export function CanvasRelationalTreeOutput({
   output,
@@ -29,32 +31,55 @@ export function CanvasRelationalTreeOutput({
   onDisconnect?: () => void;
   movable: boolean;
 }>): JSX.Element {
-  const style = {
-    left: output.x,
-    top: output.y,
-    width: output.width,
-    height: output.height,
-  };
   const content = (
     <>
-      <Table2 aria-hidden="true" className="size-4 shrink-0 text-emerald-300" />
-      <span className="min-w-0">
-        <span className="block truncate text-[11px] font-semibold text-(--text-primary)">
-          {outputName}
-        </span>
-        <span className="block text-[9px] uppercase tracking-wide text-emerald-300">
-          {copy.relationalTreeOutputLabel}
-        </span>
+      <Table2 aria-hidden="true" className={styles.icon} />
+      <span className={styles.identity}>
+        <span className={styles.name}>{outputName}</span>
+        <span className={styles.label}>{copy.relationalTreeOutputLabel}</span>
       </span>
     </>
   );
-  const className = `absolute z-10 flex select-none items-center gap-2 rounded-md border border-emerald-500 bg-emerald-950/30 px-3 text-left shadow-sm ${movable ? 'cursor-grab data-[dragging=true]:cursor-grabbing' : 'cursor-inherit'}`;
+  const inputPort = (
+    <button
+      type="button"
+      data-slot="canvas-relational-output-input-port"
+      data-connected={connected || undefined}
+      aria-label={copy.relationalTreePrimaryInputLabel}
+      aria-keyshortcuts="Delete Backspace"
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={() => {
+        if (connected) onOpen?.();
+        else if (selectedSource != null) onConnect?.(selectedSource);
+      }}
+      onKeyDown={(event) => {
+        if (!connected || (event.key !== 'Delete' && event.key !== 'Backspace')) return;
+        event.preventDefault();
+        event.stopPropagation();
+        onDisconnect?.();
+      }}
+      onDragOver={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        event.dataTransfer.dropEffect = 'link';
+      }}
+      onDrop={(event) => {
+        const relationId = readCanvasRelationalRelationDrag(event.dataTransfer);
+        if (relationId == null) return;
+        event.preventDefault();
+        event.stopPropagation();
+        onConnect?.(relationId);
+      }}
+      className={portStyles.centeredInputPort}
+    />
+  );
   return (
     <div
       data-slot="canvas-relational-tree-output"
       data-relational-card-id={CANVAS_RELATIONAL_OUTPUT_POSITION_ID}
-      className={className}
-      style={{ ...style, touchAction: 'none' }}
+      data-movable={movable}
+      className={styles.root}
+      style={{ left: output.x, top: output.y, width: output.width, height: output.height }}
     >
       {onOpen == null ? (
         content
@@ -64,36 +89,20 @@ export function CanvasRelationalTreeOutput({
           data-slot="canvas-relational-tree-output-open"
           aria-label={`${outputName} · ${copy.relationalTreeOutputLabel}`}
           onClick={onOpen}
-          className="flex min-w-0 flex-1 items-center gap-2 text-left focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
+          className={styles.open}
         >
           {content}
         </button>
       )}
-      {onConnect == null && onDisconnect == null ? null : (
-        <button
-          type="button"
-          data-slot="canvas-relational-output-input-port"
-          data-connected={connected || undefined}
-          aria-label={copy.relationalTreePrimaryInputLabel}
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={() => {
-            if (connected) onDisconnect?.();
-            else if (selectedSource != null) onConnect?.(selectedSource);
-          }}
-          onDragOver={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            event.dataTransfer.dropEffect = 'link';
-          }}
-          onDrop={(event) => {
-            const relationId = readCanvasRelationalRelationDrag(event.dataTransfer);
-            if (relationId == null) return;
-            event.preventDefault();
-            event.stopPropagation();
-            onConnect?.(relationId);
-          }}
-          className={`${relationalInputPortClass} top-1/2`}
-        />
+      {onConnect == null && onDisconnect == null ? null : connected && onDisconnect != null ? (
+        <RelationalConnectionMenu
+          removeLabel={copy.canvasContextMenuRemoveEdgeLabel}
+          onDisconnect={onDisconnect}
+        >
+          {inputPort}
+        </RelationalConnectionMenu>
+      ) : (
+        inputPort
       )}
     </div>
   );
