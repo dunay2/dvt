@@ -509,3 +509,75 @@ entries. These paths exist in Git; no import/rebuild or gate relaxation was used
 to erase the discrepancy. Remaining legacy browser helpers and live-provider
 acceptance are not silently declared complete. No new debt record, stub,
 placeholder, fake-success branch or bypass was introduced.
+
+## Committed validation and integration status, 2026-09-27
+
+Product commits are `3ef7325cce5253cd65f76e453afeb65146d10238`
+and `802a20080d7bbcf1a003203dbf1f040bd7d7e366`. The follow-up
+removes duplicated configurator wiring: the staged-operation configuration hook
+returns the same configurator used for initial connections and subsequent
+producer availability. No architecture limits were changed.
+
+Observed commands and results on this product state:
+
+- `pnpm --filter @dvt/web lint` and
+  `pnpm --filter @dvt/web typecheck`: passed.
+- `pnpm --filter @dvt/web test:e2e:native --spec
+cypress/e2e/canvas/canvas-relational-workbench-pending-join.cy.ts,cypress/e2e/canvas/canvas-relational-card-movement.cy.ts`:
+  10 passed, zero failed/pending/skipped. The build succeeded with the existing
+  chunk-size warning. The runner uses real Electron and controlled API transport.
+- `pnpm --filter @dvt/web test:canvas:run --maxWorkers=4`: the preceding
+  full run passed 2,388 tests and failed the coordinator's post-format line limit.
+  The duplicate wiring was removed; its unchanged architecture test now passes.
+- `pnpm --filter @dvt/web test:canvas:run --maxWorkers=8`: the final
+  parallel full run passed 2,382 tests and hit seven 5-second timeouts in six
+  files. This run is not reported as green.
+- `pnpm --filter @dvt/web test:canvas:run
+CanvasRelationalTreeWorkbench.join-chain.test.tsx
+CanvasRelationalTreeWorkbench.output-order.test.tsx
+CanvasRelationalTreeWorkbench.reopen.test.tsx
+CanvasRelationalTreeWorkbench.transform.test.tsx
+CanvasShell.semanticEditor.navigation.test.tsx
+DvtSubstraitCompositionStartSection.predicate.test.tsx --maxWorkers=1`:
+  all 10 tests in those six files passed without changing timeouts or assertions.
+  A separate output-order/architecture rerun passed six tests. The difference
+  supports host-concurrency contention, but does not replace a clean complete run.
+- `pnpm --filter @dvt/contracts test --maxWorkers=2`: 686 passed.
+- `pnpm --filter @dvt/substrait-analysis test`: 103 passed, including build.
+- `pnpm --filter @dvt/postgres-projection test`: 239 passed, including build.
+- `pnpm --filter dvt-api test:unit
+test/application/services/previewCanvasProducerRows.test.ts --maxWorkers=1`:
+  nine passed. This is not live-provider execution proof.
+- `pnpm --filter @dvt/contracts typecheck`,
+  `pnpm --filter @dvt/substrait-analysis typecheck` and
+  `pnpm --filter @dvt/postgres-projection typecheck`: passed.
+- The contracts workflow's AJV compile commands passed for both present schemas
+  under `docs/contracts`, selecting draft 2020-12 or draft 7 as specified.
+  AJV emitted its existing ignored-URI-format warning.
+  `pnpm validate:contracts`: all 25 golden-fixture checks passed; the command
+  reported its existing absent-glossary skip. No live golden-path execution was run.
+- `node tools/ci/arc-check.mjs` classified the complete
+  `0c403a02393388b52305c91db9844ddae4630db7...802a20080d7bbcf1a003203dbf1f040bd7d7e366`
+  diff as ARC-2. `node tools/ci/doc-check.mjs` passed using the evaluator's
+  actual classification/requirements and the same base/head.
+- `pnpm governance:refresh`: passed, 6,283 governed files, zero drift and
+  zero ungoverned files. No Planning DB import/rebuild was performed.
+- `pnpm verify:prepush`: failed at `planning:db:integrity:check`.
+  The same outstanding catalog violations remain: one component path without
+  inventoried files, one exact duplicate rail and four missing source-file
+  inventory entries. Later pre-push steps were not reached.
+
+The initial exact-SHA mechanization check additionally identified four undeclared
+geometry types. They were declared on the existing ConfigureCanvasDvtNode rail
+through its revision-checked application command (revision 19), retaining its
+authority and permission scopes. The rerun of
+`pnpm docs:feature-mechanization:implementation` passed with 422 DB manifests,
+using the exact base/head above and excluding worktree changes.
+This declaration is not a repair of the
+separate Planning DB inventory/integrity findings.
+
+No push, PR or merge was performed. Integration remains blocked; legacy browser
+flows and live-provider acceptance described above are not closed by these
+focused results. The selected output frame/control identity follows the React
+review, and zoom remains a visual projection, not a semantic write. No new debt,
+stub, placeholder, disabled rule, increased timeout or bypassed hook was added.
