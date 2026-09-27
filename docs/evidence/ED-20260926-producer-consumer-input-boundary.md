@@ -173,6 +173,9 @@ The freely connected relational-draft extension was validated again on
 - `pnpm docs:feature-mechanization:implementation`: GH-3298 symbols
   accepted; the gate fails only on the disclosed historical VTX1 cycle and
   its five inherited symbols.
+- `pnpm verify:prepush`: changed-file formatting, frontmatter, ARC evidence
+  and Markdown checks passed; the command then failed on that same global
+  VTX1 mechanization finding.
 
 The new mechanization references were recorded additively through
 `RecordFeatureMechanizationRail` under `ConfigureCanvasDvtNode`,
@@ -194,8 +197,10 @@ likewise do not prove a live database query. Complete chained `StartRun` support
 is not claimed; its existing bounded admission remains enforced. Incomplete draft
 persistence does not grant execution readiness.
 
-At this evidence snapshot, final `pnpm verify:prepush` remains to be completed.
-Earlier presentation runs had timeout failures; those are not reported as passing.
+`pnpm verify:prepush` was executed against implementation commit `37044febf`.
+It is not reported as green because the global feature-mechanization step fails
+on the historical VTX1 record described below. Earlier presentation runs had
+timeout failures; those are not reported as passing.
 Preparation repeated across JOIN/CROSS creation tests was removed, and cancel/apply
 were separated into independent cases with their original assertions and timeouts.
 The complete isolated presentation suite then passed. No test timeout, lint
