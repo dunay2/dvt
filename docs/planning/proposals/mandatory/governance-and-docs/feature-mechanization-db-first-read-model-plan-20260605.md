@@ -54,9 +54,11 @@ the forbidden scope fail before any write. The operation remains audited; it is 
 a bulk reset, cycle deletion, new command, import, or direct SQL repair.
 
 `ValidateFeatureMechanizationImplementation` retains its existing most-specific
-owner rule and all negative checks. The reader may aggregate rail evidence only
-when source, feature, allowed surfaces **and** forbidden surfaces are identical
-(ignoring list order and duplicates). Distinct scopes remain distinct entries;
+owner rule and all negative checks. Governing sources, tests and other feature
+evidence still aggregate by source and feature. Surface ownership is projected
+separately: allowed **and** forbidden sets must both match before scopes coalesce
+(ignoring list order and duplicates). Each distinct scope receives the shared
+feature evidence without inheriting another scope's permissions. Distinct scopes remain distinct entries;
 equally specific conflicting owners still deny the write. No restriction is deleted
 or promoted into a global allow list, and empty cycles remain invalid.
 

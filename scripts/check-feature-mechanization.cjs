@@ -769,6 +769,7 @@ function normalizeDbFeatureMechanizationManifestRows(rows) {
   }
 
   const bySourceAndFeature = new Map();
+  const byScope = new Map();
 
   for (const row of rows || []) {
     const sourcePath = toPosix(row.source_path || row.sourcePath || '');
@@ -782,7 +783,17 @@ function normalizeDbFeatureMechanizationManifestRows(rows) {
       (field) =>
         Array.isArray(manifest[field]) ? [...new Set(manifest[field])].sort() : manifest[field]
     );
-    const key = `${sourcePath}#${featureId}#${stableJsonStringify(scope)}`;
+    const key = `${sourcePath}#${featureId}`;
+    const scopeKey = `${key}#${stableJsonStringify(scope)}`;
+    if (!byScope.has(scopeKey))
+      byScope.set(scopeKey, {
+        sourcePath,
+        featureKey: key,
+        scope: {
+          allowedImplementationSurfaces: manifest.allowedImplementationSurfaces,
+          forbiddenImplementationSurfaces: manifest.forbiddenImplementationSurfaces,
+        },
+      });
     if (bySourceAndFeature.has(key)) {
       const existingEntry = bySourceAndFeature.get(key);
       existingEntry.manifest = mergeFeatureMechanizationManifest(existingEntry.manifest, manifest);
@@ -795,7 +806,10 @@ function normalizeDbFeatureMechanizationManifestRows(rows) {
     });
   }
 
-  return Array.from(bySourceAndFeature.values()).sort((left, right) =>
+  return Array.from(byScope.values(), ({ sourcePath, featureKey, scope }) => ({
+    sourcePath,
+    manifest: { ...bySourceAndFeature.get(featureKey).manifest, ...scope },
+  })).sort((left, right) =>
     `${left.sourcePath}#${left.manifest.featureId}`.localeCompare(
       `${right.sourcePath}#${right.manifest.featureId}`
     )

@@ -406,15 +406,18 @@ idempotent write boundary. Unknown or ambiguous identities, missing/stale revisi
 and forbidden/out-of-scope surfaces reject. Unrelated cycles remain unchanged.
 No schema, import, bulk deletion or alternate write command was introduced.
 
-The reader now aggregates evidence only within identical allowed/forbidden surface
-sets, preserving distinct rail owners. The implementation guard and its specificity
+The reader shares feature-wide governance and test evidence while projecting each
+distinct allowed/forbidden surface set independently. This preserves both common
+evidence and distinct rail permissions. The implementation guard and its specificity
 rules are unchanged. Tests prove that equally specific conflicting restrictions
-still reject, and missing/invalid evidence remains an error.
+still reject, and missing/invalid evidence remains an error. A subsequent red test
+reproduced missing citations caused by separating evidence as well as permissions;
+the correction shares evidence without transferring surface authorization.
 
 The first focused run failed three new regressions. After correction,
 `node --test --test-reporter=spec scripts/check-feature-mechanization.test.cjs
 scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs
-scripts/lib/feature-mechanization-db-reader.test.cjs` passed 180 tests.
+scripts/lib/feature-mechanization-db-reader.test.cjs` passed 181 tests.
 `pnpm test:planning:db` passed 500 tests with zero skips. ESLint on the four
 changed scripts passed. These CommonJS surfaces do not have a TypeScript build;
 the parser, planner, writer, schema and query tests exercise their contract.
@@ -426,6 +429,10 @@ allowed and forbidden scopes were retained. The empty historical cycle and five
 missing test-reference declarations now point to current Input/lineage evidence.
 `pnpm --filter @dvt/web test:canvas:run canvasInputBindingAuthoring.test.ts
 canvasColumnLineageProjection.test.ts --maxWorkers=2` passed all 18 tests.
+
+`pnpm docs:feature-mechanization:implementation` then passed with 422 DB
+manifests. This working-tree result is not a substitute for final committed-SHA
+validation or the complete pre-push gate.
 
 The final Canvas review rerun also passed 2,364 tests in 527 files. These results
 do not close the separately listed binary composition, CROSS/SET, browser-flow or

@@ -431,6 +431,38 @@ test('DB normalization retains denials from equally specific conflicting owners'
   );
 });
 
+test('DB normalization shares feature evidence without transferring surface restrictions', () => {
+  const source_path = 'docs/feature.md';
+  const entries = normalizeDbFeatureMechanizationManifestRows([
+    {
+      source_path,
+      raw_manifest: {
+        ...validManifest,
+        governingSources: [validManifest.governingSources[0]],
+        allowedImplementationSurfaces: ['apps/web/layout.ts'],
+        forbiddenImplementationSurfaces: ['packages/contracts/**'],
+      },
+    },
+    {
+      source_path,
+      raw_manifest: {
+        ...validManifest,
+        governingSources: [validManifest.governingSources[1]],
+        allowedImplementationSurfaces: ['packages/contracts/input.ts'],
+        forbiddenImplementationSurfaces: ['packages/engine/**'],
+      },
+    },
+  ]);
+  assert.equal(entries.length, 2);
+  assert.deepEqual(validateFeatureMechanizationManifestEntries(entries).errors, []);
+  assert.deepEqual(
+    validateFeatureImplementationManifests(entries, {
+      changedFiles: ['packages/contracts/input.ts'],
+    }).errors,
+    []
+  );
+});
+
 test('DB normalization groups identical scopes regardless of order or duplicates', () => {
   const source_path = 'docs/feature.md';
   const first = {
