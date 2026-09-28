@@ -35,6 +35,51 @@ const PR_QUALITY_GOVERNANCE_COMMANDS = [
 const DRAFT_AWARE_PR_TYPES =
   'types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]';
 
+test('Turbo cache uses a fresh writer key and a stable per-producer restore prefix', () => {
+  const action = yaml.load(readFileSync('.github/actions/setup-node-pnpm/action.yml', 'utf8'));
+  const cache = action.runs.steps.find((step) => step.name === 'Cache Turbo');
+  const pnpmCache = action.runs.steps.find((step) => step.name === 'Cache pnpm store');
+  assert.ok(cache);
+  assert.ok(pnpmCache);
+  assert.equal(cache.with.path, '.turbo');
+  assert.equal(cache.if, undefined);
+  assert.equal(pnpmCache.with.path, '${{ env.STORE_PATH }}');
+
+  const key = cache.with.key;
+  const restoreKeys = cache.with['restore-keys'];
+  for (const identity of [
+    'runner.os',
+    'github.workflow',
+    'github.job',
+    'inputs.turbo-cache-variant',
+    'github.run_id',
+    'github.run_attempt',
+  ]) {
+    assert.ok(key.includes(identity), `Turbo writer key must contain ${identity}`);
+  }
+  assert.ok(key.includes('hashFiles('));
+  assert.ok(restoreKeys.includes('inputs.turbo-cache-variant'));
+  assert.ok(restoreKeys.includes('hashFiles('));
+  assert.ok(!restoreKeys.includes('github.run_id'));
+  assert.ok(!restoreKeys.includes('github.run_attempt'));
+  const writeSuffix = '${{ github.run_id }}-${{ github.run_attempt }}';
+  assert.ok(key.endsWith(writeSuffix));
+  assert.equal(key.slice(0, -writeSuffix.length).replaceAll(/\s+/gu, ' '), restoreKeys.trim());
+  assert.match(key, /turbo-v2-/u);
+  assert.match(restoreKeys, /turbo-v2-/u);
+
+  const testWorkflow = yaml.load(readFileSync('.github/workflows/test.yml', 'utf8'));
+  const packageSetup = testWorkflow.jobs['package-tests'].steps.find(
+    (step) => step.uses === './.github/actions/setup-node-pnpm'
+  );
+  assert.equal(packageSetup.with['turbo-cache-variant'], '${{ matrix.name }}');
+  const packageBuild = testWorkflow.jobs['package-tests'].steps.find(
+    (step) => step.name === 'Build package dependency graph'
+  );
+  assert.ok(packageBuild);
+  assert.equal(packageBuild.if, undefined);
+});
+
 function assertWorkflowContains(workflow, snippet) {
   assert.ok(workflow.includes(snippet), `workflow must include: ${snippet}`);
 }

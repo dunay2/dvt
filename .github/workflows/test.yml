@@ -78,6 +78,7 @@ jobs:
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
+          turbo-cache-variant: ${{ matrix.name }}
 
       - name: Build package dependency graph
         run: node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}
