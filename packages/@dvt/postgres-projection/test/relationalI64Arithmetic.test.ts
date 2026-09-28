@@ -99,12 +99,7 @@ describe('bounded i64 arithmetic target binding', () => {
       },
     });
     expect(
-      scalarSql(
-        plan,
-        fn,
-        [pgColumnRef('left_value'), pgColumnRef('right_value')],
-        [i64, i64]
-      )
+      scalarSql(plan, fn, [pgColumnRef('left_value'), pgColumnRef('right_value')], [i64, i64])
     ).toEqual({
       A_Expr: {
         kind: 'AEXPR_OP',
@@ -152,12 +147,7 @@ describe('bounded i64 arithmetic target binding', () => {
       },
     });
     expect(() =>
-      scalarSql(
-        plan,
-        fn,
-        [pgColumnRef('left_value'), pgColumnRef('right_value')],
-        [string, string]
-      )
+      scalarSql(plan, fn, [pgColumnRef('left_value'), pgColumnRef('right_value')], [string, string])
     ).toThrow();
   });
 });
