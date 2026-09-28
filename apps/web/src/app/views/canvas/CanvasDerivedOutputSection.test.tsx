@@ -9,6 +9,7 @@ import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-su
 import { setupWorkbenchTest, root, container } from './CanvasRelationalTreeWorkbench.test-support';
 import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { createDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 
 describe('selected relation derived-output section', () => {
   setupWorkbenchTest();
@@ -290,5 +291,135 @@ describe('selected relation derived-output section', () => {
     expect(expression?.case).toBe('literal');
     if (expression?.case !== 'literal') throw new Error('Expected i64 literal expression.');
     expect(expression.value.literalType).toEqual({ case: 'i64', value: -3n });
+  });
+
+  it('authors ((1 + 1) + 3) as nested governed i64 arithmetic', async () => {
+    const document = createDvtSubstraitProjectionDraft({
+      source: {
+        nodeId: 'source-metrics',
+        schema: 'raw',
+        table: 'metrics',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-main',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'raw.metrics',
+        },
+        fields: [{ name: 'seed', dataType: 'bigint' }],
+      },
+      targetNodeId: 'transform-metrics',
+      outputs: [{ fieldId: 'output:seed', name: 'seed', sourceFieldName: 'seed' }],
+    });
+    const lookup = new CanvasRelationAnalysisSession('derived-output-arithmetic-identity');
+    lookup.receive(document);
+    const relationId = lookup.rootId;
+    const onChange = vi.fn();
+
+    function Host(): React.JSX.Element {
+      const analysis = useCanvasRelationAnalysisSession(document, 'derived-output-arithmetic');
+      return (
+        <CanvasRelationAnalysisContext.Provider value={analysis}>
+          <CanvasDerivedOutputSection relationId={relationId} onChange={onChange} />
+        </CanvasRelationAnalysisContext.Provider>
+      );
+    }
+
+    await act(async () => root.render(<Host />));
+    await waitFor(() =>
+      expect(container.querySelector('[data-slot="canvas-derived-output-trigger"]')).not.toBeNull()
+    );
+    await act(async () =>
+      fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-trigger"]')!)
+    );
+
+    const rootFunction = container.querySelector<HTMLSelectElement>('select[name="capabilityId"]')!;
+    const add = [...rootFunction.options].find((option) => option.textContent === 'ADD');
+    if (add == null) throw new Error('Expected governed ADD capability.');
+    await act(async () => fireEvent.change(rootFunction, { target: { value: add.value } }));
+
+    let rootArguments = [
+      ...container.querySelectorAll<HTMLElement>(
+        '[data-slot="derived-expression-argument"][data-depth="0"]'
+      ),
+    ];
+    expect(rootArguments).toHaveLength(2);
+
+    const firstKind = rootArguments[0]!.querySelector<HTMLSelectElement>(
+      '[data-slot="derived-expression-node-kind"]'
+    )!;
+    await act(async () => fireEvent.change(firstKind, { target: { value: 'function' } }));
+
+    rootArguments = [
+      ...container.querySelectorAll<HTMLElement>(
+        '[data-slot="derived-expression-argument"][data-depth="0"]'
+      ),
+    ];
+    const nestedFunction = rootArguments[0]!.querySelector<HTMLSelectElement>(
+      '[data-slot="derived-expression-function-select"][data-depth="1"]'
+    )!;
+    const nestedAdd = [...nestedFunction.options].find((option) => option.textContent === 'ADD');
+    if (nestedAdd == null) throw new Error('Expected nested ADD capability.');
+    await act(async () => fireEvent.change(nestedFunction, { target: { value: nestedAdd.value } }));
+
+    const nestedArguments = [
+      ...rootArguments[0]!.querySelectorAll<HTMLElement>(
+        '[data-slot="derived-expression-argument"][data-depth="1"]'
+      ),
+    ];
+    expect(nestedArguments).toHaveLength(2);
+    for (const argument of nestedArguments) {
+      const kind = argument.querySelector<HTMLSelectElement>(
+        '[data-slot="derived-expression-node-kind"]'
+      )!;
+      await act(async () => fireEvent.change(kind, { target: { value: 'i64-literal' } }));
+      const value = argument.querySelector<HTMLInputElement>(
+        '[data-slot="derived-expression-literal-value"]'
+      )!;
+      await act(async () => fireEvent.change(value, { target: { value: '1' } }));
+    }
+
+    rootArguments = [
+      ...container.querySelectorAll<HTMLElement>(
+        '[data-slot="derived-expression-argument"][data-depth="0"]'
+      ),
+    ];
+    const rightKind = rootArguments[1]!.querySelector<HTMLSelectElement>(
+      '[data-slot="derived-expression-node-kind"]'
+    )!;
+    await act(async () => fireEvent.change(rightKind, { target: { value: 'i64-literal' } }));
+    const rightValue = rootArguments[1]!.querySelector<HTMLInputElement>(
+      '[data-slot="derived-expression-literal-value"]'
+    )!;
+    await act(async () => fireEvent.change(rightValue, { target: { value: '3' } }));
+
+    expect(
+      container.querySelector('[data-slot="graph-node-column-function-expression"]')?.textContent
+    ).toBe('((1 + 1) + 3)');
+
+    await act(async () =>
+      fireEvent.change(container.querySelector<HTMLInputElement>('input[name="alias"]')!, {
+        target: { value: 'formula_result' },
+      })
+    );
+    await act(async () => fireEvent.submit(container.querySelector('form')!));
+
+    await waitFor(() => expect(onChange).toHaveBeenCalledOnce());
+    const indexed = indexSubstraitRelations(onChange.mock.calls[0]![0]);
+    if (!indexed.ok) throw indexed.error;
+    const project = indexed.index.relations.get(relationId);
+    if (project?.relation.relType.case !== 'project') throw new Error('Expected ProjectRel.');
+    const outer = project.relation.relType.value.expressions.at(-1)?.rexType;
+    if (outer?.case !== 'scalarFunction') throw new Error('Expected outer ADD.');
+    const left = outer.value.arguments[0]?.argType;
+    const right = outer.value.arguments[1]?.argType;
+    if (left?.case !== 'value' || right?.case !== 'value') throw new Error('Expected ADD values.');
+    expect(left.value.rexType.case).toBe('scalarFunction');
+    expect(right.value.rexType).toMatchObject({
+      case: 'literal',
+      value: { literalType: { case: 'i64', value: 3n } },
+    });
   });
 });
