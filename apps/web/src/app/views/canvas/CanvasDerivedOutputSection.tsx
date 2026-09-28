@@ -34,7 +34,7 @@ export function CanvasDerivedOutputSection({
   );
   return (
     <section className="mt-4 border-t border-(--border-subtle) pt-3">
-      {editing != null && initialField != null ? (
+      {editing != null ? (
         <DerivedOutputForm
           fields={model.fields}
           {...(initialField == null
@@ -59,20 +59,12 @@ export function CanvasDerivedOutputSection({
           onCancel={() => setEditing(null)}
           onSubmit={async ({ alias, expression }) => {
             const applied = await command.execute((session, identity) =>
-              expression.kind === 'function'
-                ? applySelectedRelationDerivedOutput(session, {
-                    ...identity,
-                    alias,
-                    capabilityIds: expression.capabilityIds,
-                    operandFieldIds: expression.operandFieldIds,
-                    intent: model.intent,
-                  })
-                : applySelectedRelationDerivedOutput(session, {
-                    ...identity,
-                    alias,
-                    literal: expression,
-                    intent: model.intent,
-                  })
+              applySelectedRelationDerivedOutput(session, {
+                ...identity,
+                alias,
+                expression,
+                intent: model.intent,
+              })
             );
             return applied ? null : copy.derivedOutput.failed;
           }}
