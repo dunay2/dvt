@@ -94,18 +94,19 @@ function buildExpressionNode(args: Readonly<{
   provider: string;
 }>): BuiltExpression | null {
   if (args.node.kind === 'field') {
+    const fieldId = args.node.fieldId;
     const binding = rootFields(args.available.bindings).find(
-      (field) => field.fieldId === args.node.fieldId
+      (field) => field.fieldId === fieldId
     );
     if (binding == null) return null;
-    const expression = resolveOperandExpression(args.prepared, args.node.fieldId);
+    const expression = resolveOperandExpression(args.prepared, fieldId);
     const type = inspectProjectionDataType(args.available.fields[binding.outputOrdinal]!.type);
     return expression == null || type == null
       ? null
       : {
           expression,
           dataType: type,
-          dependencies: [args.node.fieldId],
+          dependencies: [fieldId],
         };
   }
 
