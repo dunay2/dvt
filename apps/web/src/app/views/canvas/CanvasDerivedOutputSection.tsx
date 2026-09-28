@@ -42,7 +42,7 @@ export function CanvasDerivedOutputSection({
       {editing != null ? (
         <DerivedOutputFormulaForm
           initial={editing.initial}
-          fields={model.fields}
+          fields={model.fields.filter((field) => field.fieldId !== editing.outputFieldId)}
           provider={model.provider}
           copy={copy.derivedOutput}
           unavailableAliases={model.fields
