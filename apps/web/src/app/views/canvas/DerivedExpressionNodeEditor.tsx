@@ -480,7 +480,7 @@ export function DerivedExpressionNodeEditor({
             if (candidate != null) {
               updateArguments([...argumentsValue, { kind: 'field', fieldId: candidate.fieldId }]);
             }
-          }
+          }}
           className="flex items-center gap-1 text-xs text-(--status-info) disabled:opacity-40"
         >
           <Plus className="size-3" />
