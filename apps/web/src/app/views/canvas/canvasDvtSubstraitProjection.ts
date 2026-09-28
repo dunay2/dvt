@@ -889,10 +889,7 @@ export function inspectDvtSubstraitProjectionDraft(
       return {
         kind: 'scalar-function',
         functionName: 'concat',
-        arguments: [
-          publicScalar(expression.arguments[0]!),
-          publicScalar(expression.arguments[1]!),
-        ],
+        arguments: [publicScalar(expression.arguments[0]!), publicScalar(expression.arguments[1]!)],
         nullHandling: expression.nullHandling,
       };
     }
@@ -909,10 +906,7 @@ export function inspectDvtSubstraitProjectionDraft(
       return {
         kind: 'scalar-function',
         functionName: expression.functionName,
-        arguments: [
-          publicScalar(expression.arguments[0]!),
-          publicScalar(expression.arguments[1]!),
-        ],
+        arguments: [publicScalar(expression.arguments[0]!), publicScalar(expression.arguments[1]!)],
       };
     }
     return {
@@ -988,9 +982,7 @@ export function inspectDvtSubstraitProjectionDraft(
     const leftScalar = inspectScalar(left);
     const rightScalar = inspectScalar(right);
     return (
-      leftScalar != null &&
-      rightScalar != null &&
-      scalarKey(leftScalar) === scalarKey(rightScalar)
+      leftScalar != null && rightScalar != null && scalarKey(leftScalar) === scalarKey(rightScalar)
     );
   };
   const scalarExpressionDataType = (expression: DvtSubstraitScalarExpression): string => {
