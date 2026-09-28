@@ -46,19 +46,52 @@ describe('Semantic dataset Transform', () => {
         expect(bounds.right).to.be.closeTo(1280, 30);
       });
     cy.get(form).should('not.exist');
-    for (const [alias, formula] of [
-      ['normalized_name', "UPPER('hola')"],
-      ['fallback_name', "''"],
-      ['total', '(2 + 3) * 4'],
-    ]) {
-      cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
-      cy.get(form).within(() => {
-        cy.get('input[name="alias"]').type(alias!);
-        cy.get('textarea[name="formula"]').type(formula!);
-        cy.get('button[type="submit"]').should('be.enabled').click();
-      });
-      cy.get(form).should('not.exist');
-    }
+    cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
+    cy.get(form).within(() => {
+      cy.get('input[name="alias"]').type('normalized_name');
+      cy.get('[data-slot="derived-formula-node-kind"][data-depth="0"]').select('function');
+      cy.get('[data-slot="derived-formula-function"][data-depth="0"]').select('UPPER');
+      cy.get('[data-slot="derived-formula-argument"][data-depth="0"][data-argument-index="0"]')
+        .find('[data-slot="derived-formula-node-kind"]')
+        .select('string-literal');
+      cy.get('[data-slot="derived-formula-literal"]').type('hola');
+      cy.get('[data-slot="derived-formula-preview"]').should('contain', "UPPER('hola')");
+      cy.get('button[type="submit"]').should('be.enabled').click();
+    });
+    cy.get(form).should('not.exist');
+
+    cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
+    cy.get(form).within(() => {
+      cy.get('input[name="alias"]').type('fallback_name');
+      cy.get('[data-slot="derived-formula-node-kind"][data-depth="0"]').select('string-literal');
+      cy.get('[data-slot="derived-formula-preview"]').should('have.text', "''");
+      cy.get('button[type="submit"]').should('be.enabled').click();
+    });
+    cy.get(form).should('not.exist');
+
+    cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
+    cy.get(form).within(() => {
+      cy.get('input[name="alias"]').type('total');
+      cy.get('[data-slot="derived-formula-node-kind"][data-depth="0"]').select('number-literal');
+      cy.get('[data-slot="derived-formula-literal"]').clear().type('2');
+      cy.get('[data-slot="derived-formula-node-kind"][data-depth="0"]').select('function');
+      cy.get('[data-slot="derived-formula-function"][data-depth="0"]').select('MULTIPLY');
+      cy.get('[data-slot="derived-formula-argument"][data-depth="0"][data-argument-index="0"]')
+        .find('[data-slot="derived-formula-node-kind"]')
+        .select('function');
+      cy.get('[data-slot="derived-formula-function"][data-depth="1"]').first().select('ADD');
+      cy.get('[data-slot="derived-formula-argument"][data-depth="1"][data-argument-index="1"]')
+        .find('[data-slot="derived-formula-literal"]')
+        .clear()
+        .type('3');
+      cy.get('[data-slot="derived-formula-argument"][data-depth="0"][data-argument-index="1"]')
+        .find('[data-slot="derived-formula-literal"]')
+        .clear()
+        .type('4');
+      cy.get('[data-slot="derived-formula-preview"]').should('have.text', '((2 + 3) * 4)');
+      cy.get('button[type="submit"]').should('be.enabled').click();
+    });
+    cy.get(form).should('not.exist');
     cy.get(inspector)
       .find('[data-slot="canvas-derived-output"]')
       .contains('fallback_name')
@@ -68,12 +101,26 @@ describe('Semantic dataset Transform', () => {
       .invoke('attr', 'data-field-id')
       .then((fieldId) => {
         cy.get('@editableOutput').find('button').click();
-        cy.get(form)
-          .find('textarea[name="formula"]')
-          .should('have.value', "''")
-          .clear()
-          .type("CONCAT('hola', ' ', 'mundo')");
-        cy.get(form).find('button[type="submit"]').click();
+        cy.get(form).within(() => {
+          cy.get('[data-slot="derived-formula-preview"]').should('have.text', "''");
+          cy.get('[data-slot="derived-formula-node-kind"][data-depth="0"]').select('function');
+          cy.get('[data-slot="derived-formula-function"][data-depth="0"]').select('CONCAT');
+          cy.get('[data-slot="derived-formula-argument"][data-depth="0"][data-argument-index="0"]')
+            .find('[data-slot="derived-formula-literal"]')
+            .type('hola');
+          cy.get('[data-slot="derived-formula-argument"][data-depth="0"][data-argument-index="1"]')
+            .find('[data-slot="derived-formula-node-kind"]')
+            .select('function');
+          cy.get('[data-slot="derived-formula-function"][data-depth="1"]').select('CONCAT');
+          cy.get('[data-slot="derived-formula-argument"][data-depth="1"][data-argument-index="0"]')
+            .find('[data-slot="derived-formula-literal"]')
+            .type(' ');
+          cy.get('[data-slot="derived-formula-argument"][data-depth="1"][data-argument-index="1"]')
+            .find('[data-slot="derived-formula-literal"]')
+            .type('mundo');
+          cy.get('[data-slot="derived-formula-preview"]').should('contain', 'CONCAT');
+          cy.get('button[type="submit"]').click();
+        });
         cy.get(inspector)
           .find(`[data-slot="canvas-derived-output"][data-field-id="${fieldId}"]`)
           .should('contain', 'fallback_name')
@@ -124,7 +171,7 @@ describe('Semantic dataset Transform', () => {
       .find('button')
       .click();
     cy.get(form).find('input[name="alias"]').should('have.value', 'fallback_name');
-    cy.get(form).find('textarea[name="formula"]').should('include.value', "'mundo'");
+    cy.get(form).find('[data-slot="derived-formula-preview"]').should('contain', "'mundo'");
     cy.screenshot('transform-name-formula-edit');
     cy.get(form).find('[data-slot="canvas-derived-output-cancel"]').click();
     cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();
