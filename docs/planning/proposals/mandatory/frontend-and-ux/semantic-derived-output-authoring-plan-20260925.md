@@ -302,6 +302,9 @@ authorize changes to execution, planner, API or physical data. Arithmetic
 admission covers matching i64 and fp64 operands with explicit signatures;
 incompatible or mixed types reject without implicit conversion. PostgreSQL
 proof is read-only, using constants rather than user tables.
+The shared typed-literal SQL emitter must preserve i64/fp64 even without an
+enclosing arithmetic function. PostgreSQL numeric inference cannot become the
+output type authority; fp64 negative zero must survive provider rendering.
 
 Before production changes, update the existing Planning DB declarations for the
 affected Canvas, Contracts and PostgreSQL projection surfaces. Prove the full

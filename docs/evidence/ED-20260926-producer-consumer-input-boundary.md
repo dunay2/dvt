@@ -721,7 +721,7 @@ baseline, hook or test assertion was disabled to close it. No new stub or fake
 success path was added. This is an incomplete delivery: no push, PR or merge;
 the remaining browser failures and safe live-provider acceptance stay open.
 
-## Transform name and formula, 2026-09-29
+## Transform name and formula, 2026-09-28
 
 The user chose name plus formula for scalar output authoring. The governing
 sources are ADR-0064, the command/query rail rule, the semantic-derived-output
@@ -781,6 +781,31 @@ cypress/e2e/canvas/canvas-transform-stage.cy.ts`: passed, zero skipped. Real
   multiplication 4294967294 with type OID 20; fp64 results 5, -1, 10 with OID 701;
   composed text `hola mundo` and empty string with OID 25. Both numeric bindings
   propagated NULL; i64 overflow rejected with PostgreSQL code 22003.
+
+The subsequent full Canvas run
+`pnpm --filter @dvt/web exec vitest run src/app/views/canvas --maxWorkers=4`
+passed all 2,288 tests in 505 files. Strict lint for all changed Contracts and
+PostgreSQL projection files passed after hook normalization, as did package
+builds. The complete branch DB implementation check passed 422 manifests. The
+non-implementation feature check was an incorrect invocation for a DB-only
+declaration; selecting only #3419 against the entire multi-feature branch was
+also rejected. No authority or scope rule was widened to suppress either result.
+
+The provider review then found numeric-literal inference in the shared emitter:
+standalone i64 constants could return int4 and fp64 constants numeric. The
+regression failed before adding explicit target types in `postgresPredicateAst`.
+Existing Sort/Fetch SQL assertions now require the exact bigint casts while
+retaining large-value and operation-order checks. The expanded read-only probe
+passed standalone 42 (OID 20), 2.5, negative zero and 1e21 (OID 701), in addition
+to the previous expressions. `assert.strictEqual` preserves the negative-zero
+distinction although JSON logs display it as zero. No user table was touched.
+The reference-only declaration advanced to revision 14 before the respective
+typed-literal and affected Fetch-test changes.
+
+An intermediate `pnpm verify:prepush` passed integrity, 422 DB manifests and its
+routed Web suites but failed formatting on the then-in-progress typed-literal
+correction. The final committed-tree rerun remains required; the intermediate
+run is not represented as green.
 
 The earlier database incident and six outstanding broader browser failures are
 not resolved by these formula-specific proofs. Integration remains pending the

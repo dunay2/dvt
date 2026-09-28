@@ -81,7 +81,11 @@ mitigation:
     Semantic zoom reserves lexical-detail space as a disposable projection, never a semantic write
     or replacement of manually authored coordinates. Browser checks cover repeated zoom, column
     inclusion/reorder and JOIN/CROSS/UNION Apply/reopen; controlled API transport still does not
-    prove live provider execution.
+    prove live provider execution. Name/formula editing compiles directly to canonical expressions
+    and preserves FieldIds. Only matching i64/fp64 arithmetic signatures are admitted. Shared
+    numeric literal rendering explicitly retains those SQL types, including fp64 negative zero;
+    PostgreSQL inference cannot silently replace the model type. Read-only constant queries prove
+    values, result OIDs, NULL propagation and i64 overflow without touching user tables.
   evidence:
     - apps/web/src/app/views/canvas/canvasDerivedOutputFormula.test.ts
     - packages/@dvt/contracts/test/dvt-substrait-arithmetic.contract.test.ts

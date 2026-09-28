@@ -67,8 +67,8 @@ describe('SortRel/FetchRel PostgreSQL AST projection', () => {
       },
     });
     const sql = await renderPostgresAst(projected.ast);
-    expect(sql).toContain('LIMIT 9223372036854775807');
-    expect(sql).toContain('OFFSET 9007199254740993');
+    expect(sql).toContain('LIMIT CAST(9223372036854775807 AS bigint)');
+    expect(sql).toContain('OFFSET CAST(9007199254740993 AS bigint)');
     expect(sql).toMatch(/ORDER BY\s+id ASC NULLS LAST/);
     expect(projected.orderBy).toEqual([{ name: 'id', direction: 'ASC', nulls: 'LAST' }]);
   });
@@ -136,7 +136,7 @@ describe('SortRel/FetchRel PostgreSQL AST projection', () => {
     const first = await renderPostgresAst(fetchAfterSort.ast);
     const second = await renderPostgresAst(sortAfterFetch.ast);
     expect(first).not.toBe(second);
-    expect(first).toMatch(/ORDER BY[\s\S]+LIMIT 0/);
-    expect(second).toMatch(/LIMIT 0[\s\S]+ORDER BY/);
+    expect(first).toMatch(/ORDER BY[\s\S]+LIMIT CAST\(0 AS bigint\)/);
+    expect(second).toMatch(/LIMIT CAST\(0 AS bigint\)[\s\S]+ORDER BY/);
   });
 });

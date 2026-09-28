@@ -7,6 +7,7 @@ import { create } from '@bufbuild/protobuf';
 import { encodeDvtSubstraitPlanV1 } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
+import { pgFp64Literal, pgI64Literal } from '../src/postgresPredicateAst.js';
 import { projectSubstraitToPostgresSql } from '../src/relationalSql/project.js';
 
 import { scalarFixture } from './relationalScalarFixture.js';
@@ -56,6 +57,17 @@ function arithmetic(name: string, type: 'i64' | 'fp64'): ReturnType<typeof scala
 }
 
 describe('arithmetic PostgreSQL projection', () => {
+  it('retains the declared type and negative zero for standalone numeric constants', () => {
+    expect(pgI64Literal(2n)).toMatchObject({
+      TypeCast: { typeName: { names: [{ String: { sval: 'bigint' } }] } },
+    });
+    expect(pgFp64Literal(2.5)).toMatchObject({
+      TypeCast: { typeName: { names: [{ String: { sval: 'float8' } }] } },
+    });
+    expect(pgFp64Literal(-0)).toMatchObject({
+      TypeCast: { arg: { A_Const: { sval: { sval: '-0' } } } },
+    });
+  });
   for (const type of ['i64', 'fp64'] as const) {
     it.each([
       ['add', '+'],
