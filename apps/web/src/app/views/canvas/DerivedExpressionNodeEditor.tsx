@@ -6,7 +6,7 @@ import type { DerivedOutputField } from './DerivedOutputOperands';
 export type DerivedExpressionFunction = Readonly<{
   capabilityId: string;
   name: string;
-  category?: 'text' | 'date-time';
+  category?: 'text' | 'date-time' | 'arithmetic';
   minimumArgumentCount: number;
   maximumArgumentCount?: number;
   expressionTemplate?: string;
@@ -16,6 +16,7 @@ export type DerivedExpressionDraft =
   | Readonly<{ kind: 'field'; fieldId: string }>
   | Readonly<{ kind: 'string-literal'; value: string }>
   | Readonly<{ kind: 'timestamp-literal'; value: string }>
+  | Readonly<{ kind: 'i64-literal'; value: string }>
   | Readonly<{
       kind: 'function';
       capabilityId: string;
@@ -39,6 +40,7 @@ export type DerivedExpressionCopy = Readonly<{
   fieldNodeLabel?: string;
   stringLiteralNodeLabel?: string;
   timestampLiteralNodeLabel?: string;
+  i64LiteralNodeLabel?: string;
   literalValueLabel?: string;
 }>;
 
@@ -94,8 +96,14 @@ function proposalFunctions(
   fields: readonly DerivedOutputField[],
   resolveFunctions: DerivedExpressionFunctionResolver
 ): readonly DerivedExpressionFunction[] {
-  const fieldId = firstFieldId(expression) ?? fields[0]?.fieldId;
-  return fieldId == null ? [] : resolveFunctions([fieldId], 'proposal');
+  const fieldId = firstFieldId(expression);
+  const candidates =
+    fieldId == null
+      ? fields.flatMap((field) => resolveFunctions([field.fieldId], 'proposal'))
+      : resolveFunctions([fieldId], 'proposal');
+  return [
+    ...new Map(candidates.map((candidate) => [candidate.capabilityId, candidate] as const)).values(),
+  ];
 }
 
 export function formatDerivedExpression(
@@ -108,6 +116,7 @@ export function formatDerivedExpression(
   if (expression.kind === 'string-literal') return JSON.stringify(expression.value);
   if (expression.kind === 'timestamp-literal')
     return `TIMESTAMP_TZ(${JSON.stringify(expression.value)})`;
+  if (expression.kind === 'i64-literal') return expression.value;
   const functions = proposalFunctions(expression, fields, resolveFunctions);
   const operation =
     functions.find((candidate) => candidate.capabilityId === expression.capabilityId) ??
@@ -116,9 +125,14 @@ export function formatDerivedExpression(
     formatDerivedExpression(argument, fields, resolveFunctions)
   );
   if (operation == null) return `?(${argumentsText.join(', ')})`;
-  return operation.expressionTemplate != null && argumentsText.length === 1
-    ? operation.expressionTemplate.replace('{column}', argumentsText[0]!)
-    : `${operation.name.toUpperCase()}(${argumentsText.join(', ')})`;
+  if (operation.expressionTemplate != null) {
+    return argumentsText.reduce(
+      (template, value, index) =>
+        template.replaceAll(`{${index}}`, value).replace('{column}', argumentsText[0] ?? ''),
+      operation.expressionTemplate
+    );
+  }
+  return `${operation.name.toUpperCase()}(${argumentsText.join(', ')})`;
 }
 
 export function DerivedExpressionNodeEditor({
@@ -143,8 +157,7 @@ export function DerivedExpressionNodeEditor({
   onChange: (expression: DerivedExpressionDraft) => void;
 }>): JSX.Element {
   const probeFieldId = firstFieldId(expression) ?? fields[0]?.fieldId ?? null;
-  const functions =
-    probeFieldId == null ? [] : resolveFunctions([probeFieldId], 'proposal');
+  const functions = proposalFunctions(expression, fields, resolveFunctions);
   const selectedFunction =
     expression.kind === 'function'
       ? functions.find((candidate) => candidate.capabilityId === expression.capabilityId) ??
@@ -155,6 +168,7 @@ export function DerivedExpressionNodeEditor({
     if (kind === 'field') return onChange(defaultField(fields, probeFieldId));
     if (kind === 'string-literal') return onChange({ kind, value: '' });
     if (kind === 'timestamp-literal') return onChange({ kind, value: '' });
+    if (kind === 'i64-literal') return onChange({ kind, value: '' });
     const operation =
       functions.find(
         (candidate) =>
@@ -190,6 +204,7 @@ export function DerivedExpressionNodeEditor({
               <option value="timestamp-literal">
                 {copy.timestampLiteralNodeLabel ?? 'Timestamp constant'}
               </option>
+              <option value="i64-literal">{copy.i64LiteralNodeLabel ?? 'Integer constant'}</option>
             </>
           ) : null}
         </select>
@@ -217,7 +232,11 @@ export function DerivedExpressionNodeEditor({
     );
   }
 
-  if (expression.kind === 'string-literal' || expression.kind === 'timestamp-literal') {
+  if (
+    expression.kind === 'string-literal' ||
+    expression.kind === 'timestamp-literal' ||
+    expression.kind === 'i64-literal'
+  ) {
     return (
       <div data-slot="derived-expression-literal" className="space-y-2">
         {kindSelector}
