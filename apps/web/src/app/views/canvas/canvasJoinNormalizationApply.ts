@@ -64,7 +64,7 @@ function aliasesFor(
       if (alias == null || alias.trim() === '') {
         reject('JOIN normalization requires an explicit derived-output alias.', proposal.relationId);
       }
-      return [transformation.transformationKey, alias] as const;
+      return [transformation.transformationKey, alias.trim()] as const;
     })
   );
 }
