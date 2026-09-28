@@ -658,10 +658,13 @@ export function inspectDvtSubstraitProjectionDraft(
     if (expression.kind === 'string-literal') return 'string';
     if (expression.kind === 'timestamp-literal') return 'timestamp with time zone';
     if (expression.kind === 'i64-literal') return 'bigint';
-    return expression.functionName === 'extract' ||
+    if (
+      expression.functionName === 'extract' ||
       isI64ArithmeticFunctionName(expression.functionName)
-      ? 'bigint'
-      : 'string';
+    ) {
+      return 'bigint';
+    }
+    return 'string';
   };
   const inspectScalar = (expression: Expression): InspectedScalar | null => {
     if (expression.rexType.case === 'selection') {
@@ -679,8 +682,8 @@ export function inspectDvtSubstraitProjectionDraft(
         : null;
     }
     if (expression.rexType.case === 'literal') {
-      const calculated = inspectDvtSubstraitCalculatedExpression(draft.plan, expression)
-        ?.calculation;
+      const inspected = inspectDvtSubstraitCalculatedExpression(draft.plan, expression);
+      const calculated = inspected?.calculation;
       if (calculated?.kind === 'string-literal')
         return { kind: 'string-literal', value: calculated.value };
       if (calculated?.kind === 'timestamp-literal')
@@ -973,10 +976,11 @@ export function inspectDvtSubstraitProjectionDraft(
     if (mapping < sourceFields.length) return dvtSubstraitExpression.field(mapping);
     return project.expressions[mapping - sourceFields.length] ?? null;
   };
+  const bigintJsonReplacer = (_key: string, value: unknown): unknown => {
+    return typeof value === 'bigint' ? `${value}n` : value;
+  };
   const scalarKey = (expression: InspectedScalar): string =>
-    JSON.stringify(publicScalar(expression), (_key, value) =>
-      typeof value === 'bigint' ? `${value}n` : value
-    );
+    JSON.stringify(publicScalar(expression), bigintJsonReplacer);
   const expressionsMatch = (left: Expression, right: Expression): boolean => {
     const leftScalar = inspectScalar(left);
     const rightScalar = inspectScalar(right);
