@@ -5,9 +5,10 @@ import {
   createDvtSubstraitProjectionDraft,
   inspectDvtSubstraitProjectionDraft,
   resolveDvtSubstraitColumnFunctions,
+  type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
 
-function bigintProjection() {
+function bigintProjection(): DvtSubstraitProjectionDraft {
   return createDvtSubstraitProjectionDraft({
     source: {
       nodeId: 'source-metrics',
