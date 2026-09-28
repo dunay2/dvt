@@ -35,6 +35,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Authored destination mistaken for authorized runtime publication](R-20260914-TRANSFORM-RESULT-TARGET.yaml)
 - [Automatic lineage DLQ replay may requeue persistent poison events repeatedly](R-20260330-LINEAGE-DLQ-AUTO-REPLAY.md)
 - [Binary Canvas composition could drift from admitted Substrait semantics](R-20260908-ALGEBRAIC-DERIVED-OUTPUT-DRIFT.yaml)
+- [Integer Transform formulas could drift from admitted Substrait or PostgreSQL semantics](R-20260928-I64-ARITHMETIC-DRIFT.yaml)
 - [Bounded aggregation authoring could drift from admitted Substrait semantics](R-20260831-SUBSTRAIT-AGGREGATE-DRIFT.yaml)
 - [Bounded object parsing can pressure Temporal worker memory](R-20260804-OBJECT-FILE-POSTGRES-RUNTIME.yaml)
 - [Bounded set composition could drift from admitted Substrait semantics](R-20260831-SUBSTRAIT-UNION-ALL-DRIFT.yaml)
