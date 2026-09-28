@@ -4,8 +4,10 @@ import type { DvtSubstraitColumnFunction } from '@dvt/postgres-projection';
 
 import type { DerivedOutputField } from './DerivedOutputOperands';
 import {
+  compatibleDerivedOutputVisualFields,
   defaultDerivedOutputVisualFormula,
   derivedOutputVisualFormulaCandidates,
+  derivedOutputVisualFormulaDataType,
   formatDerivedOutputVisualFormula,
   type DerivedOutputVisualFormula,
   visualFormulaFunctionLabel,
@@ -29,6 +31,7 @@ type BuilderCopy = Readonly<{
   numberLiteralNodeLabel: string;
   booleanLiteralNodeLabel: string;
   literalValueLabel: string;
+  resultTypeLabel: string;
 }>;
 
 function normalizeArguments(
@@ -253,6 +256,13 @@ function FunctionNodeEditor({
           {choices.map((function_) => (
             <option key={function_.capabilityId} value={function_.capabilityId}>
               {function_.name.toUpperCase()}
+              {function_.name === 'add'
+                ? ' (+)'
+                : function_.name === 'subtract'
+                  ? ' (-)'
+                  : function_.name === 'multiply'
+                    ? ' (*)'
+                    : ''}
             </option>
           ))}
         </select>
@@ -260,7 +270,14 @@ function FunctionNodeEditor({
 
       <div className="space-y-2">
         <span className="text-xs text-(--text-muted)">{copy.operandsLabel}</span>
-        {expression.arguments.map((argument, index) => (
+        {expression.arguments.map((argument, index) => {
+          const compatibleFields = compatibleDerivedOutputVisualFields({
+            expression,
+            argumentIndex: index,
+            fields,
+            provider,
+          });
+          return (
           <div
             key={index}
             data-slot="derived-formula-argument"
@@ -271,7 +288,7 @@ function FunctionNodeEditor({
             <div className="min-w-0 flex-1 border-l border-(--border-subtle) pl-2">
               <FormulaNodeEditor
                 expression={argument}
-                fields={fields}
+                fields={compatibleFields}
                 provider={provider}
                 busy={busy}
                 copy={copy}
@@ -325,7 +342,8 @@ function FunctionNodeEditor({
               </button>
             </div>
           </div>
-        ))}
+          );
+        })}
         <button
           type="button"
           data-slot="derived-formula-add-argument"
@@ -361,6 +379,7 @@ export function DerivedOutputFormulaBuilder({
   copy: BuilderCopy;
   onChange: (expression: DerivedOutputVisualFormula) => void;
 }>): JSX.Element {
+  const resultType = derivedOutputVisualFormulaDataType(expression, fields, provider);
   return (
     <fieldset className="space-y-2">
       <legend className="text-xs font-semibold">{copy.formulaLabel}</legend>
@@ -374,7 +393,12 @@ export function DerivedOutputFormulaBuilder({
         onChange={onChange}
       />
       <div className="rounded border border-(--border-subtle) bg-(--surface-elevated) p-2 text-xs">
-        <span className="text-(--text-muted)">{copy.previewLabel}</span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-(--text-muted)">{copy.previewLabel}</span>
+          <span data-slot="derived-formula-result-type" className="text-(--text-muted)">
+            {copy.resultTypeLabel}: {resultType ?? '—'}
+          </span>
+        </div>
         <code data-slot="derived-formula-preview" className="mt-1 block break-words">
           {formatDerivedOutputVisualFormula(expression, fields) ?? '—'}
         </code>
