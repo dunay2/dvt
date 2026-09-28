@@ -26,7 +26,7 @@ import {
 
 type SelectedRelationLiteral = Extract<
   DvtSubstraitCalculatedExpression,
-  { kind: 'string-literal' | 'timestamp-literal' }
+  { kind: 'string-literal' | 'timestamp-literal' | 'i64-literal' }
 >;
 
 export type SelectedRelationDerivedExpression =
@@ -110,11 +110,20 @@ function buildExpressionNode(args: Readonly<{
         };
   }
 
-  if (args.node.kind === 'string-literal' || args.node.kind === 'timestamp-literal') {
+  if (
+    args.node.kind === 'string-literal' ||
+    args.node.kind === 'timestamp-literal' ||
+    args.node.kind === 'i64-literal'
+  ) {
     try {
       return {
         expression: buildDvtSubstraitCalculatedExpression(args.plan, args.node),
-        dataType: args.node.kind === 'string-literal' ? 'string' : 'timestamp with time zone',
+        dataType:
+          args.node.kind === 'string-literal'
+            ? 'string'
+            : args.node.kind === 'timestamp-literal'
+              ? 'timestamp with time zone'
+              : 'bigint',
         dependencies: [],
       };
     } catch {
