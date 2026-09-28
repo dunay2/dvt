@@ -55,14 +55,8 @@ export function buildDvtSubstraitScalarFunction(
     urn: entry.identity.urn,
     name: signature,
   });
-  return dvtSubstraitExpression.scalarFunction({
-    functionReference: declaration.functionAnchor,
-    arguments: extractYearUtc
-      ? [args.operands[0]!, dvtSubstraitExpression.literal({ dataType: 'string', value: 'UTC' })]
-      : args.operands,
-    leadingEnumArguments: extractYearUtc ? ['YEAR'] : undefined,
-    options: entry.invocation?.options,
-    outputType: extractYearUtc || i64Output
+  const outputType =
+    extractYearUtc || i64Output
       ? create(TypeSchema, {
           kind: {
             case: 'i64',
@@ -74,6 +68,14 @@ export function buildDvtSubstraitScalarFunction(
             case: 'string',
             value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
           },
-        }),
+        });
+  return dvtSubstraitExpression.scalarFunction({
+    functionReference: declaration.functionAnchor,
+    arguments: extractYearUtc
+      ? [args.operands[0]!, dvtSubstraitExpression.literal({ dataType: 'string', value: 'UTC' })]
+      : args.operands,
+    leadingEnumArguments: extractYearUtc ? ['YEAR'] : undefined,
+    options: entry.invocation?.options,
+    outputType,
   });
 }
