@@ -215,4 +215,28 @@ describe('selected relation derived output authoring', () => {
       throw new Error('Expected comparison condition.');
     expect(condition.left).toEqual({ kind: 'field', sourceFieldId: branchField.fieldId });
   });
+
+  it('adds a direct string literal without inventing a field dependency', async () => {
+    const session = new CanvasRelationAnalysisSession('literal-derived-output');
+    session.receive(connectedNamesProjectionDraft());
+    const relationId = session.rootId;
+
+    const document = await applySelectedRelationDerivedOutput(session, {
+      intent: 'edit',
+      relationId,
+      expectedRevision: session.revision,
+      alias: 'channel',
+      literal: { kind: 'string-literal', value: 'web' },
+    });
+
+    const field = document.sidecar.fields.find((candidate) => candidate.displayName === 'channel');
+    expect(field?.sourceFieldId).toBeUndefined();
+    expect(field?.operandFieldIds).toBeUndefined();
+    const target = session.locate(relationId, session.revision);
+    if (target.relation.relType.case !== 'project') throw new Error('Expected ProjectRel.');
+    const expression = target.relation.relType.value.expressions.at(-1)?.rexType;
+    expect(expression?.case).toBe('literal');
+    if (expression?.case !== 'literal') throw new Error('Expected literal expression.');
+    expect(expression.value.literalType).toEqual({ case: 'string', value: 'web' });
+  });
 });
