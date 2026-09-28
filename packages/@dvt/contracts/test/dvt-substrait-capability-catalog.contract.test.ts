@@ -346,30 +346,33 @@ describe('DVT Substrait capability catalog V1', () => {
         { name: 'on_division_by_zero', preference: ['ERROR'] },
       ],
     ],
-  ] as const)('admits bounded i64 arithmetic %s with exact target-safe options', (name, options) => {
-    const capabilityId = buildDvtSubstraitStandardCapabilityId('scalar-function', {
-      sourceKind: 'simple-extension',
-      urn: 'extension:io.substrait:functions_arithmetic',
-      name,
-    });
+  ] as const)(
+    'admits bounded i64 arithmetic %s with exact target-safe options',
+    (name, options) => {
+      const capabilityId = buildDvtSubstraitStandardCapabilityId('scalar-function', {
+        sourceKind: 'simple-extension',
+        urn: 'extension:io.substrait:functions_arithmetic',
+        name,
+      });
 
-    expect(findCapability(capabilityId)).toMatchObject({
-      profileStatus: 'supported-profile',
-      invocation: {
-        signature: `${name}:i64_i64`,
-        argumentTypes: ['i64', 'i64'],
-        minimumArgumentCount: 2,
-        maximumArgumentCount: 2,
-        outputType: 'i64',
-        options,
-      },
-      admission: {
-        productUseCaseRef: 'dvt:#3434',
-        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
-        visualExposure: { status: 'exposed' },
-      },
-    });
-  });
+      expect(findCapability(capabilityId)).toMatchObject({
+        profileStatus: 'supported-profile',
+        invocation: {
+          signature: `${name}:i64_i64`,
+          argumentTypes: ['i64', 'i64'],
+          minimumArgumentCount: 2,
+          maximumArgumentCount: 2,
+          outputType: 'i64',
+          options,
+        },
+        admission: {
+          productUseCaseRef: 'dvt:#3434',
+          targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+          visualExposure: { status: 'exposed' },
+        },
+      });
+    }
+  );
 
   it('admits the official unbounded variadic COALESCE invocation for PostgreSQL text', () => {
     const coalesceId = buildDvtSubstraitStandardCapabilityId('scalar-function', {
