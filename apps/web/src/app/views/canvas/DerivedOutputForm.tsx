@@ -1,17 +1,28 @@
 /** One canonical command form for creating a scalar-derived output. */
-import { DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
+import {
+  DvtSemanticFieldNameV1Schema,
+  DvtStringLiteralV1Schema,
+  DvtTimestampLiteralV1Schema,
+} from '@dvt/contracts';
 import { useId, useMemo, useState, type FormEvent } from 'react';
 import {
   DerivedExpressionBuilder,
   type DerivedExpressionFunction,
+  type DerivedExpressionMode,
 } from './DerivedExpressionBuilder';
 import type { DerivedOutputField } from './DerivedOutputOperands';
 
 export type DerivedOutputFunction = DerivedExpressionFunction;
 export type DerivedOutputRequest = Readonly<{
   alias: string;
-  capabilityIds: readonly [string, ...string[]];
-  operandFieldIds: readonly [string, ...string[]];
+  expression:
+    | Readonly<{
+        kind: 'function';
+        capabilityIds: readonly [string, ...string[]];
+        operandFieldIds: readonly [string, ...string[]];
+      }>
+    | Readonly<{ kind: 'string-literal'; value: string }>
+    | Readonly<{ kind: 'timestamp-literal'; value: string }>;
 }>;
 export type DerivedOutputFunctionResolver = (
   fieldIds: readonly string[],
@@ -26,7 +37,7 @@ function bounds(operation: DerivedOutputFunction, fieldCount: number) {
 function normalize(
   current: readonly string[],
   fields: readonly DerivedOutputField[],
-  range: ReturnType<typeof bounds>
+  range: Readonly<{ minimum: number; maximum: number }>
 ): string[] {
   const available = new Set(fields.map((field) => field.fieldId));
   const next = current.filter((fieldId) => available.has(fieldId)).slice(0, range.maximum);
@@ -40,6 +51,8 @@ export function DerivedOutputForm({
   resolveFunctions,
   initialCapabilityId,
   initialOperandFieldIds,
+  initialMode,
+  allowLiterals = true,
   unavailableAliases = [],
   dataSlot = 'derived-output-form',
   copy,
@@ -51,6 +64,8 @@ export function DerivedOutputForm({
   resolveFunctions: DerivedOutputFunctionResolver;
   initialCapabilityId?: string;
   initialOperandFieldIds?: readonly [string, ...string[]];
+  initialMode?: DerivedExpressionMode;
+  allowLiterals?: boolean;
   unavailableAliases?: readonly string[];
   dataSlot?: string;
   copy: Readonly<{
@@ -64,6 +79,11 @@ export function DerivedOutputForm({
     formulaLabel?: string;
     wrapFunction?: string;
     removeWrapper?: string;
+    nodeTypeLabel?: string;
+    functionNodeLabel?: string;
+    stringLiteralNodeLabel?: string;
+    timestampLiteralNodeLabel?: string;
+    literalValueLabel?: string;
     aliasLabel: string;
     aliasInvalid: string;
     aliasConflict: string;
@@ -78,6 +98,8 @@ export function DerivedOutputForm({
   const [fieldIds, setFieldIds] = useState<string[]>(() => (initial == null ? [] : [...initial]));
   const [capabilityId, setCapabilityId] = useState(initialCapabilityId ?? '');
   const [wrappers, setWrappers] = useState<string[]>([]);
+  const [mode, setMode] = useState<DerivedExpressionMode>(initialMode ?? 'function');
+  const [literalValue, setLiteralValue] = useState('');
   const [alias, setAlias] = useState('');
   const [busy, setBusy] = useState(false);
   const [commandError, setCommandError] = useState<string | null>(null);
@@ -87,14 +109,19 @@ export function DerivedOutputForm({
     [fieldIds, resolveFunctions]
   );
   const operation = functions.find((item) => item.capabilityId === capabilityId) ?? functions[0];
-  if (operation == null || fields.length === 0) return null;
-  const range = bounds(operation, fields.length);
+  if (fields.length === 0 && !allowLiterals) return null;
+  const range =
+    operation == null
+      ? { minimum: 1, maximum: Math.max(1, fields.length) }
+      : bounds(operation, fields.length);
   const operands = normalize(fieldIds, fields, range);
-  const compatible = resolveFunctions(operands, 'complete').some(
-    (item) => item.capabilityId === operation.capabilityId
-  );
+  const compatible =
+    operation != null &&
+    resolveFunctions(operands, 'complete').some(
+      (item) => item.capabilityId === operation.capabilityId
+    );
   const wrapperCandidates =
-    operation.category === 'text'
+    operation?.category === 'text'
       ? functions.filter(
           (candidate) =>
             candidate.category === 'text' &&
@@ -107,18 +134,34 @@ export function DerivedOutputForm({
   );
   const aliasInvalid = alias.length > 0 && !DvtSemanticFieldNameV1Schema.safeParse(alias).success;
   const aliasConflict = unavailableAliases.includes(alias);
-  const valid =
-    alias.length > 0 && !aliasInvalid && !aliasConflict && compatible && wrappersValid;
+  const literalValid =
+    mode === 'string-literal'
+      ? DvtStringLiteralV1Schema.safeParse(literalValue).success
+      : mode === 'timestamp-literal'
+        ? DvtTimestampLiteralV1Schema.safeParse(literalValue).success
+        : true;
+  const expressionValid =
+    mode === 'function' ? compatible && wrappersValid && operation != null : literalValid;
+  const valid = alias.length > 0 && !aliasInvalid && !aliasConflict && expressionValid;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!valid || operands.length === 0) return;
+    if (
+      !valid ||
+      (mode === 'function' && operands.length === 0) ||
+      (mode === 'function' && operation == null)
+    )
+      return;
     setBusy(true);
-    const error = await onSubmit({
-      alias,
-      capabilityIds: [operation.capabilityId, ...wrappers] as [string, ...string[]],
-      operandFieldIds: operands as [string, ...string[]],
-    });
+    const expression: DerivedOutputRequest['expression'] =
+      mode === 'function'
+        ? {
+            kind: 'function',
+            capabilityIds: [operation!.capabilityId, ...wrappers] as [string, ...string[]],
+            operandFieldIds: operands as [string, ...string[]],
+          }
+        : { kind: mode, value: literalValue };
+    const error = await onSubmit({ alias, expression });
     setBusy(false);
     setCommandError(error);
     if (error == null) onApplied?.();
@@ -131,14 +174,21 @@ export function DerivedOutputForm({
   return (
     <form data-slot={dataSlot} className="space-y-3" onSubmit={(event) => void submit(event)}>
       <DerivedExpressionBuilder
-        fields={fields.filter((candidate) => {
-          const probe =
-            range.maximum === 1 ? [candidate.fieldId] : [operands[0]!, candidate.fieldId];
-          return resolveFunctions(probe, 'complete').some(
-            (item) => item.capabilityId === operation.capabilityId
-          );
-        })}
+        fields={
+          operation == null
+            ? fields
+            : fields.filter((candidate) => {
+                const probe =
+                  range.maximum === 1 ? [candidate.fieldId] : [operands[0]!, candidate.fieldId];
+                return resolveFunctions(probe, 'complete').some(
+                  (item) => item.capabilityId === operation.capabilityId
+                );
+              })
+        }
         functions={functions}
+        mode={mode}
+        allowLiterals={allowLiterals}
+        literalValue={literalValue}
         operation={operation}
         operands={operands}
         wrappers={wrappers}
@@ -146,6 +196,15 @@ export function DerivedOutputForm({
         maximum={range.maximum}
         busy={busy}
         copy={copy}
+        onModeChange={(nextMode) => {
+          setMode(nextMode);
+          setWrappers([]);
+          setCommandError(null);
+        }}
+        onLiteralValueChange={(nextValue) => {
+          setLiteralValue(nextValue);
+          setCommandError(null);
+        }}
         onOperationChange={(nextCapabilityId) => {
           const next = functions.find((item) => item.capabilityId === nextCapabilityId);
           if (next == null) return;
@@ -156,7 +215,6 @@ export function DerivedOutputForm({
         }}
         onOperandsChange={(next) => {
           setFieldIds([...next]);
-          setWrappers([]);
           setCommandError(null);
         }}
         onWrappersChange={(next) => {
