@@ -1,4 +1,10 @@
-/** Stable producer/consumer identities; no copied producer operations or executable SQL. */
+/**
+ * Stable producer/consumer identities; no copied producer operations or executable SQL.
+ *
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Identify producer dependencies by stable node and field identities in the sidecar.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 const Identity = z

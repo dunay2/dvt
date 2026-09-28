@@ -1,4 +1,10 @@
-/** Input-port provenance on a producer dependency; never transformation semantics. */
+/**
+ * Input-port provenance on a producer dependency; never transformation semantics.
+ *
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Bind producer fields to stable consumer input slots as provenance, not copied semantics.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 const Identity = z
