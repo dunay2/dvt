@@ -279,60 +279,60 @@ function FunctionNodeEditor({
               className="flex items-start gap-1"
             >
               <div className="min-w-0 flex-1 border-l border-(--border-subtle) pl-2">
-              <FormulaNodeEditor
-                expression={argument}
-                fields={compatibleFields}
-                provider={provider}
-                busy={busy}
-                copy={copy}
-                depth={depth + 1}
-                onChange={(next) =>
-                  updateArguments(
-                    expression.arguments.map((candidate, slot) =>
-                      slot === index ? next : candidate
+                <FormulaNodeEditor
+                  expression={argument}
+                  fields={compatibleFields}
+                  provider={provider}
+                  busy={busy}
+                  copy={copy}
+                  depth={depth + 1}
+                  onChange={(next) =>
+                    updateArguments(
+                      expression.arguments.map((candidate, slot) =>
+                        slot === index ? next : candidate
+                      )
                     )
-                  )
-                }
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <button
-                type="button"
-                aria-label={copy.moveOperandUp.replace('{index}', String(index + 1))}
-                disabled={busy || index === 0}
-                onClick={() => {
-                  const next = [...expression.arguments];
-                  [next[index - 1], next[index]] = [next[index]!, next[index - 1]!];
-                  updateArguments(next);
-                }}
-                className="grid size-7 place-items-center rounded border border-(--border-subtle) disabled:opacity-40"
-              >
-                <ChevronUp className="size-3" />
-              </button>
-              <button
-                type="button"
-                aria-label={copy.moveOperandDown.replace('{index}', String(index + 1))}
-                disabled={busy || index === expression.arguments.length - 1}
-                onClick={() => {
-                  const next = [...expression.arguments];
-                  [next[index], next[index + 1]] = [next[index + 1]!, next[index]!];
-                  updateArguments(next);
-                }}
-                className="grid size-7 place-items-center rounded border border-(--border-subtle) disabled:opacity-40"
-              >
-                <ChevronDown className="size-3" />
-              </button>
-              <button
-                type="button"
-                aria-label={copy.removeOperand.replace('{index}', String(index + 1))}
-                disabled={busy || expression.arguments.length <= minimum}
-                onClick={() =>
-                  updateArguments(expression.arguments.filter((_, slot) => slot !== index))
-                }
-                className="grid size-7 place-items-center rounded border border-(--border-subtle) disabled:opacity-40"
-              >
-                <Minus className="size-3" />
-              </button>
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <button
+                  type="button"
+                  aria-label={copy.moveOperandUp.replace('{index}', String(index + 1))}
+                  disabled={busy || index === 0}
+                  onClick={() => {
+                    const next = [...expression.arguments];
+                    [next[index - 1], next[index]] = [next[index]!, next[index - 1]!];
+                    updateArguments(next);
+                  }}
+                  className="grid size-7 place-items-center rounded border border-(--border-subtle) disabled:opacity-40"
+                >
+                  <ChevronUp className="size-3" />
+                </button>
+                <button
+                  type="button"
+                  aria-label={copy.moveOperandDown.replace('{index}', String(index + 1))}
+                  disabled={busy || index === expression.arguments.length - 1}
+                  onClick={() => {
+                    const next = [...expression.arguments];
+                    [next[index], next[index + 1]] = [next[index + 1]!, next[index]!];
+                    updateArguments(next);
+                  }}
+                  className="grid size-7 place-items-center rounded border border-(--border-subtle) disabled:opacity-40"
+                >
+                  <ChevronDown className="size-3" />
+                </button>
+                <button
+                  type="button"
+                  aria-label={copy.removeOperand.replace('{index}', String(index + 1))}
+                  disabled={busy || expression.arguments.length <= minimum}
+                  onClick={() =>
+                    updateArguments(expression.arguments.filter((_, slot) => slot !== index))
+                  }
+                  className="grid size-7 place-items-center rounded border border-(--border-subtle) disabled:opacity-40"
+                >
+                  <Minus className="size-3" />
+                </button>
               </div>
             </div>
           );
