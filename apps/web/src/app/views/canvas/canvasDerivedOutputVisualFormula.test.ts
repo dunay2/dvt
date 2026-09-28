@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { resolveDvtSubstraitColumnFunctions } from '@dvt/postgres-projection';
 
 import {
+  compatibleDerivedOutputVisualFields,
   formatDerivedOutputVisualFormula,
   parseDerivedOutputVisualFormula,
   validateDerivedOutputVisualFormula,
@@ -81,5 +82,26 @@ describe('visual derived-output formula draft', () => {
     expect(
       validateDerivedOutputVisualFormula({ expression, fields, provider: 'postgres' })
     ).toEqual({ ok: false });
+  });
+
+  it('filters field choices by the selected function and sibling operand types', () => {
+    const multiply = capability('multiply', ['bigint', 'bigint']);
+    const expression: Extract<DerivedOutputVisualFormula, { kind: 'function' }> = {
+      kind: 'function',
+      capabilityId: multiply,
+      arguments: [
+        { kind: 'field', fieldId: 'field:price' },
+        { kind: 'field', fieldId: 'field:quantity' },
+      ],
+    };
+
+    expect(
+      compatibleDerivedOutputVisualFields({
+        expression,
+        argumentIndex: 1,
+        fields,
+        provider: 'postgres',
+      }).map((field) => field.fieldId)
+    ).toEqual(['field:price', 'field:quantity']);
   });
 });
