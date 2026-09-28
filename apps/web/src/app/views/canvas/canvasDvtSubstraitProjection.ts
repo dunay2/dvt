@@ -107,11 +107,18 @@ type DvtSubstraitProjectionSemanticSource = Readonly<{
 
 export type DvtSubstraitScalarExpression =
   | Readonly<{ kind: 'field-reference'; sourceFieldName: string }>
+  | Readonly<{ kind: 'string-literal'; value: string }>
   | Readonly<{ kind: 'timestamp-literal'; value: string }>
+  | Readonly<{ kind: 'i64-literal'; value: bigint }>
   | Readonly<{
       kind: 'scalar-function';
       functionName: 'trim' | 'upper' | 'lower';
       arguments: readonly [DvtSubstraitScalarExpression];
+    }>
+  | Readonly<{
+      kind: 'scalar-function';
+      functionName: 'add' | 'subtract' | 'multiply' | 'divide';
+      arguments: readonly [DvtSubstraitScalarExpression, DvtSubstraitScalarExpression];
     }>
   | Readonly<{
       kind: 'scalar-function';
@@ -610,7 +617,9 @@ export function inspectDvtSubstraitProjectionDraft(
   const usedFunctionAnchors = new Set<number>();
   type InspectedScalar =
     | Readonly<{ kind: 'field-reference'; sourceOrdinal: number }>
+    | Readonly<{ kind: 'string-literal'; value: string }>
     | Readonly<{ kind: 'timestamp-literal'; value: string }>
+    | Readonly<{ kind: 'i64-literal'; value: bigint }>
     | Readonly<{
         kind: 'scalar-function';
         functionName: 'trim' | 'upper' | 'lower';
@@ -621,6 +630,11 @@ export function inspectDvtSubstraitProjectionDraft(
         functionName: 'concat';
         arguments: readonly [InspectedScalar, InspectedScalar];
         nullHandling: 'ACCEPT_NULLS';
+      }>
+    | Readonly<{
+        kind: 'scalar-function';
+        functionName: 'add' | 'subtract' | 'multiply' | 'divide';
+        arguments: readonly [InspectedScalar, InspectedScalar];
       }>
     | Readonly<{
         kind: 'scalar-function';
@@ -638,8 +652,16 @@ export function inspectDvtSubstraitProjectionDraft(
     if (expression.kind === 'field-reference') {
       return inspectProjectionDataType(sourceTypes[expression.sourceOrdinal]!) ?? 'unknown';
     }
+    if (expression.kind === 'string-literal') return 'string';
     if (expression.kind === 'timestamp-literal') return 'timestamp with time zone';
-    return expression.functionName === 'extract' ? 'bigint' : 'string';
+    if (expression.kind === 'i64-literal') return 'bigint';
+    return expression.functionName === 'extract' ||
+      expression.functionName === 'add' ||
+      expression.functionName === 'subtract' ||
+      expression.functionName === 'multiply' ||
+      expression.functionName === 'divide'
+      ? 'bigint'
+      : 'string';
   };
   const inspectScalar = (expression: Expression): InspectedScalar | null => {
     if (expression.rexType.case === 'selection') {
@@ -657,10 +679,14 @@ export function inspectDvtSubstraitProjectionDraft(
         : null;
     }
     if (expression.rexType.case === 'literal') {
-      const calculated = inspectDvtSubstraitCalculatedExpression(draft.plan, expression);
-      return calculated?.calculation.kind === 'timestamp-literal'
-        ? { kind: 'timestamp-literal', value: calculated.calculation.value }
-        : null;
+      const calculated = inspectDvtSubstraitCalculatedExpression(draft.plan, expression)?.calculation;
+      if (calculated?.kind === 'string-literal')
+        return { kind: 'string-literal', value: calculated.value };
+      if (calculated?.kind === 'timestamp-literal')
+        return { kind: 'timestamp-literal', value: calculated.value };
+      if (calculated?.kind === 'i64-literal')
+        return { kind: 'i64-literal', value: calculated.value };
+      return null;
     }
     if (expression.rexType.case !== 'scalarFunction') return null;
     const scalarFunction = expression.rexType.value;
@@ -691,7 +717,13 @@ export function inspectDvtSubstraitProjectionDraft(
       entry.identity.urn === 'extension:io.substrait:functions_datetime' &&
       entry.identity.name === 'extract' &&
       entry.invocation?.signature === 'extract:req_ptstz_str';
-    const outputTypeMatches = temporalExtract
+    const arithmeticI64 =
+      entry?.kind === 'standard' &&
+      entry.identity.sourceKind === 'simple-extension' &&
+      entry.identity.urn === 'extension:io.substrait:functions_arithmetic' &&
+      ['add', 'subtract', 'multiply', 'divide'].includes(entry.identity.name) &&
+      entry.invocation?.outputType === 'i64';
+    const outputTypeMatches = temporalExtract || arithmeticI64
       ? outputType?.case === 'i64' &&
         outputType.value.typeVariationReference === 0 &&
         outputType.value.nullability === Type_Nullability.NULLABLE
@@ -766,6 +798,14 @@ export function inspectDvtSubstraitProjectionDraft(
     ) {
       return null;
     }
+    if (
+      arithmeticI64 &&
+      arguments_.some(
+        (argument) => argument == null || inspectedScalarDataType(argument) !== 'bigint'
+      )
+    ) {
+      return null;
+    }
     usedFunctionAnchors.add(scalarFunction.functionReference);
     if (entry.identity.name === 'coalesce' && arguments_.length >= 2) {
       return {
@@ -784,6 +824,20 @@ export function inspectDvtSubstraitProjectionDraft(
         functionName: 'concat',
         arguments: [arguments_[0]!, arguments_[1]!],
         nullHandling: 'ACCEPT_NULLS',
+      };
+    }
+    if (
+      arithmeticI64 &&
+      (entry.identity.name === 'add' ||
+        entry.identity.name === 'subtract' ||
+        entry.identity.name === 'multiply' ||
+        entry.identity.name === 'divide') &&
+      arguments_.length === 2
+    ) {
+      return {
+        kind: 'scalar-function',
+        functionName: entry.identity.name,
+        arguments: [arguments_[0]!, arguments_[1]!],
       };
     }
     if (
@@ -806,9 +860,13 @@ export function inspectDvtSubstraitProjectionDraft(
           kind: 'field-reference',
           sourceFieldName: sourceFields[expression.sourceOrdinal]!.displayName!,
         }
-      : expression.kind === 'timestamp-literal'
-        ? { kind: 'timestamp-literal', value: expression.value }
-        : expression.functionName === 'coalesce'
+      : expression.kind === 'string-literal'
+        ? { kind: 'string-literal', value: expression.value }
+        : expression.kind === 'timestamp-literal'
+          ? { kind: 'timestamp-literal', value: expression.value }
+          : expression.kind === 'i64-literal'
+            ? { kind: 'i64-literal', value: expression.value }
+            : expression.functionName === 'coalesce'
           ? {
               kind: 'scalar-function',
               functionName: 'coalesce',
@@ -836,11 +894,23 @@ export function inspectDvtSubstraitProjectionDraft(
                   component: expression.component,
                   timezone: expression.timezone,
                 }
-              : {
-                  kind: 'scalar-function',
-                  functionName: expression.functionName,
-                  arguments: [publicScalar(expression.arguments[0])],
-                };
+              : expression.functionName === 'add' ||
+                  expression.functionName === 'subtract' ||
+                  expression.functionName === 'multiply' ||
+                  expression.functionName === 'divide'
+                ? {
+                    kind: 'scalar-function',
+                    functionName: expression.functionName,
+                    arguments: [
+                      publicScalar(expression.arguments[0]),
+                      publicScalar(expression.arguments[1]),
+                    ],
+                  }
+                : {
+                    kind: 'scalar-function',
+                    functionName: expression.functionName,
+                    arguments: [publicScalar(expression.arguments[0])],
+                  };
   const scalarOperations = (expression: DvtSubstraitScalarExpression): readonly string[] =>
     expression.kind !== 'scalar-function'
       ? []
@@ -854,11 +924,20 @@ export function inspectDvtSubstraitProjectionDraft(
     if (expression.kind === 'field-reference') {
       return { sourceOrdinal: expression.sourceOrdinal, operations: [] };
     }
-    if (expression.kind === 'timestamp-literal') return null;
+    if (
+      expression.kind === 'string-literal' ||
+      expression.kind === 'timestamp-literal' ||
+      expression.kind === 'i64-literal'
+    )
+      return null;
     if (
       expression.functionName === 'concat' ||
       expression.functionName === 'coalesce' ||
-      expression.functionName === 'extract'
+      expression.functionName === 'extract' ||
+      expression.functionName === 'add' ||
+      expression.functionName === 'subtract' ||
+      expression.functionName === 'multiply' ||
+      expression.functionName === 'divide'
     ) {
       return null;
     }
@@ -899,7 +978,12 @@ export function inspectDvtSubstraitProjectionDraft(
     return (
       leftScalar != null &&
       rightScalar != null &&
-      JSON.stringify(publicScalar(leftScalar)) === JSON.stringify(publicScalar(rightScalar))
+      JSON.stringify(publicScalar(leftScalar), (_key, value) =>
+        typeof value === 'bigint' ? `${value}n` : value
+      ) ===
+        JSON.stringify(publicScalar(rightScalar), (_key, value) =>
+          typeof value === 'bigint' ? `${value}n` : value
+        )
     );
   };
   const outputs = mappings.value.outputMapping.map((mapping, outputOrdinal) => {
@@ -981,9 +1065,17 @@ export function inspectDvtSubstraitProjectionDraft(
       dataType:
         scalarExpression != null
           ? scalarExpression.kind === 'scalar-function' &&
-            scalarExpression.functionName === 'extract'
+            (scalarExpression.functionName === 'extract' ||
+              scalarExpression.functionName === 'add' ||
+              scalarExpression.functionName === 'subtract' ||
+              scalarExpression.functionName === 'multiply' ||
+              scalarExpression.functionName === 'divide')
             ? 'bigint'
-            : 'string'
+            : scalarExpression.kind === 'i64-literal'
+              ? 'bigint'
+              : scalarExpression.kind === 'timestamp-literal'
+                ? 'timestamp with time zone'
+                : 'string'
           : calculation == null
             ? sourceField == null
               ? 'unknown'
