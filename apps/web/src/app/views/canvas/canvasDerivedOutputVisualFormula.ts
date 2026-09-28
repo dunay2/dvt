@@ -160,7 +160,7 @@ export function compatibleDerivedOutputVisualFields(args: Readonly<{
       (candidate) => candidate.capabilityId === args.expression.capabilityId
     );
   });
-  return compatible.length === 0 ? args.fields : compatible;
+  return compatible;
 }
 
 export function defaultDerivedOutputVisualFormula(
