@@ -19,6 +19,7 @@ export function DerivedExpressionBuilder({
   resolveFunctionsForTypes,
   allowLiterals,
   allowNested,
+  legacySlots = false,
   busy,
   copy,
   onChange,
@@ -29,6 +30,7 @@ export function DerivedExpressionBuilder({
   resolveFunctionsForTypes?: DerivedExpressionTypeResolver;
   allowLiterals: boolean;
   allowNested: boolean;
+  legacySlots?: boolean;
   busy: boolean;
   copy: DerivedExpressionCopy &
     Readonly<{
@@ -60,6 +62,7 @@ export function DerivedExpressionBuilder({
           resolveFunctionsForTypes={resolveFunctionsForTypes}
           allowLiterals={allowLiterals}
           allowNested={allowNested}
+          legacySlots={legacySlots}
           busy={busy}
           copy={copy}
           onChange={onChange}
