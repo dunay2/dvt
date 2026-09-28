@@ -1,10 +1,7 @@
 /** Ephemeral visual Formula Builder model. Persisted meaning remains canonical Substrait. */
 import { create } from '@bufbuild/protobuf';
 import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import {
-  DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
-  type DvtSubstraitStandardCapabilityV1,
-} from '@dvt/contracts';
+import { DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1 } from '@dvt/contracts';
 import {
   resolveDvtSubstraitColumnFunctions,
   resolveFunctionReference,
@@ -38,18 +35,24 @@ const OPERATOR_SYMBOLS: Readonly<Record<string, string>> = {
   multiply: '*',
 };
 
-function supportedScalarCapability(
-  capabilityId: string
-): DvtSubstraitStandardCapabilityV1 | undefined {
+type SupportedScalarCapability = Readonly<{
+  entryId: string;
+  identity: Readonly<{ sourceKind: 'simple-extension'; urn: string; name: string }>;
+}>;
+
+function supportedScalarCapability(capabilityId: string): SupportedScalarCapability | undefined {
   const entry = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
     (candidate) => candidate.entryId === capabilityId
   );
-  return entry?.kind === 'standard' &&
-    entry.category === 'scalar-function' &&
-    entry.profileStatus === 'supported-profile' &&
-    entry.identity.sourceKind === 'simple-extension'
-    ? entry
-    : undefined;
+  if (
+    entry?.kind !== 'standard' ||
+    entry.category !== 'scalar-function' ||
+    entry.profileStatus !== 'supported-profile' ||
+    entry.identity.sourceKind !== 'simple-extension'
+  ) {
+    return undefined;
+  }
+  return { entryId: entry.entryId, identity: entry.identity };
 }
 
 function formulaFields(fields: readonly DerivedOutputField[]): readonly FormulaField[] {
