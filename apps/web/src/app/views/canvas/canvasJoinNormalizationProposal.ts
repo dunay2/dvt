@@ -22,6 +22,7 @@ export type JoinNormalizationTransformation = Readonly<{
   baseFieldId: string;
   capabilityIds: readonly [string, ...string[]];
   suggestedAlias: string | null;
+  reuseFieldId?: string;
   occurrences: readonly JoinNormalizationOccurrence[];
 }>;
 
