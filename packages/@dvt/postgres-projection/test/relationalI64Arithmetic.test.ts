@@ -7,10 +7,7 @@ import {
   SimpleExtensionDeclarationSchema,
   SimpleExtensionURNSchema,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/extensions/extensions_pb.js';
-import {
-  PlanSchema,
-  type Plan,
-} from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {
   TypeSchema,
   Type_I64Schema,
@@ -102,12 +99,7 @@ describe('bounded i64 arithmetic target binding', () => {
       },
     });
     expect(
-      scalarSql(
-        plan,
-        fn,
-        [pgColumnRef('left_value'), pgColumnRef('right_value')],
-        [i64, i64]
-      )
+      scalarSql(plan, fn, [pgColumnRef('left_value'), pgColumnRef('right_value')], [i64, i64])
     ).toEqual({
       A_Expr: {
         kind: 'AEXPR_OP',
@@ -155,12 +147,7 @@ describe('bounded i64 arithmetic target binding', () => {
       },
     });
     expect(() =>
-      scalarSql(
-        plan,
-        fn,
-        [pgColumnRef('left_value'), pgColumnRef('right_value')],
-        [string, string]
-      )
+      scalarSql(plan, fn, [pgColumnRef('left_value'), pgColumnRef('right_value')], [string, string])
     ).toThrow();
   });
 });
