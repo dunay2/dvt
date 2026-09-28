@@ -71,8 +71,9 @@ function relationAnchor(rel: Rel | undefined): number {
         : rel?.relType.case === 'project'
           ? rel.relType.value.common
           : undefined;
-  if (common == null) throw new Error('Expected anchored relation.');
-  return common.relAnchor;
+  const anchor = common?.relAnchor;
+  if (anchor == null) throw new Error('Expected anchored relation.');
+  return anchor;
 }
 
 export function buildExpressionJoinExpressionDocument(): SubstraitDocument {
@@ -85,10 +86,10 @@ export function buildExpressionJoinExpressionDocument(): SubstraitDocument {
   const sidecar = globalThis.structuredClone(authority.semanticDocument.sidecar);
 
   const root = plan.relations[0]?.relType;
-  if (root?.case !== 'root' || root.value.input?.relType.case !== 'join') {
-    throw new Error('Expected two-input JOIN fixture.');
-  }
-  const joinRel = root.value.input;
+  if (root?.case !== 'root') throw new Error('Expected RootRel fixture.');
+  const rootValue = root.value;
+  const joinRel = rootValue.input;
+  if (joinRel?.relType.case !== 'join') throw new Error('Expected two-input JOIN fixture.');
   const join = joinRel.relType.value;
   if (join.left == null || join.right == null || join.common?.emitKind.case !== 'emit') {
     throw new Error('Expected emitted binary JOIN.');
@@ -188,8 +189,8 @@ export function buildExpressionJoinExpressionDocument(): SubstraitDocument {
       },
     },
   });
-  root.value.input = postProject;
-  root.value.names = ['order_id_norm', 'client_id', 'client_client_id', 'country', 'country_norm'];
+  rootValue.input = postProject;
+  rootValue.names = ['order_id_norm', 'client_id', 'client_client_id', 'country', 'country_norm'];
   sidecar.relations.push({
     relationId: POST_RELATION_ID,
     relAnchor: 5,
