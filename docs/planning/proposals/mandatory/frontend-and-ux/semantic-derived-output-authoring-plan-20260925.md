@@ -157,8 +157,10 @@ repeated zoom, movement while expanded, terminal edges and unchanged node identi
    capabilities.
 4. Reuse one focused expression form in the Semantic Editor Properties tab;
    keep the existing read-only expression summary visible outside edit mode.
-5. Prove save/reload and downstream reuse before adding normalization of JOIN
-   predicates from #3420.
+5. Prove save/reload and downstream reuse. Scalar transformations are authored
+   explicitly in Transform/Expression before relational operations; the unused
+   JOIN-normalization proposal from #3420 is retired rather than becoming a
+   compatibility or parallel authoring path.
 
 ## Rails And Negative Proof
 
