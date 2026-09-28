@@ -105,15 +105,15 @@ describe('Relational card disclosure', () => {
     expect(geometry()).toEqual(before);
     render(1.2, 'inspection', positions);
     const expandedLeft = Number.parseFloat(cards[0]!.closest('li')!.style.left);
-    act(() =>
+    act(() => {
       cards[0]!.dispatchEvent(
         new KeyboardEvent('keydown', {
           bubbles: true,
           key: 'ArrowRight',
           altKey: true,
         })
-      )
-    );
+      );
+    });
     expect(Number.parseFloat(cards[0]!.closest('li')!.style.left)).toBe(expandedLeft + 10);
     render(1, 'inspection', positions);
     expect(Number.parseFloat(cards[0]!.closest('li')!.style.left)).toBe(compact.nodes[0]!.x + 10);
