@@ -88,6 +88,43 @@ describe('Transform name and formula syntax adapter', () => {
     expect(result.fieldIds).toEqual(['price', 'quantity']);
   });
 
+  it('compiles governed i64 division and preserves multiplicative precedence', () => {
+    const plan = create(PlanSchema);
+    const result = compileDerivedOutputFormula({
+      formula: 'price / quantity + 1',
+      fields,
+      plan,
+      provider: 'postgres',
+    });
+    expect(result.dataType).toBe('bigint');
+    expect(result.fieldIds).toEqual(['price', 'quantity']);
+    const rendered = describeDerivedOutputFormula(
+      plan,
+      result.expression,
+      fields.map((field) => field.name)
+    );
+    expect(rendered).toBe('((price / quantity) + 1)');
+    expect(
+      compileDerivedOutputFormula({
+        formula: rendered!,
+        fields,
+        plan: create(PlanSchema),
+        provider: 'postgres',
+      }).fieldIds
+    ).toEqual(result.fieldIds);
+  });
+
+  it('keeps fp64 divide outside the admitted formula profile', () => {
+    expect(() =>
+      compileDerivedOutputFormula({
+        formula: '2.5 / 1.0',
+        fields: [],
+        plan: create(PlanSchema),
+        provider: 'postgres',
+      })
+    ).toThrow();
+  });
+
   it.each(['2.0', '1e21', '-0.0', '1e-20'])(
     'preserves floating literals when editing %s',
     (formula) => {

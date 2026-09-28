@@ -40,7 +40,7 @@ class FormulaReader {
   ) {
     if (args.formula.length > 8192) throw new Error('Formula is too long.');
     const pattern =
-      /\s*(?:('(?:[^']|'')*')|("(?:[^"]|"")*")|(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|([A-Za-z_][A-Za-z_0-9]*)|([()+*,-]))/y;
+      /\s*(?:('(?:[^']|'')*')|("(?:[^"]|"")*")|(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|([A-Za-z_][A-Za-z_0-9]*)|([()+*/,-]))/y;
     let offset = 0;
     while (offset < args.formula.length) {
       if (args.formula.slice(offset).trim() === '') break;
@@ -175,8 +175,11 @@ class FormulaReader {
 
   private product(): FormulaValue {
     let value = this.atom();
-    while (this.take('*')) value = this.call('multiply', [value, this.atom()]);
-    return value;
+    while (true) {
+      if (this.take('*')) value = this.call('multiply', [value, this.atom()]);
+      else if (this.take('/')) value = this.call('divide', [value, this.atom()]);
+      else return value;
+    }
   }
 
   private sum(): FormulaValue {
@@ -236,9 +239,16 @@ export function describeDerivedOutputFormula(
   );
   if (args.some((argument) => argument == null)) return null;
   const name = reference.value.name.split(':')[0]!;
-  const operator = ({ add: '+', subtract: '-', multiply: '*' } as Readonly<Record<string, string>>)[
-    name
-  ];
+  const operator =
+    name === 'add'
+      ? '+'
+      : name === 'subtract'
+        ? '-'
+        : name === 'multiply'
+          ? '*'
+          : name === 'divide'
+            ? '/'
+            : undefined;
   return operator != null && args.length === 2
     ? `(${args[0]} ${operator} ${args[1]})`
     : `${name.toUpperCase()}(${args.join(', ')})`;

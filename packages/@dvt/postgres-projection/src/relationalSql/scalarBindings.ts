@@ -86,6 +86,32 @@ export const scalarBindings: Readonly<Record<string, Binding>> = {
       ])
     )
   ),
+  'divide:i64_i64': {
+    family: 'functions_arithmetic',
+    signature: 'divide:i64_i64',
+    minimum: 2,
+    maximum: 2,
+    accepts: sameType('i64'),
+    output: 'i64',
+    sql: (args) => ({
+      A_Expr: {
+        kind: 'AEXPR_OP',
+        name: [pgString('/')],
+        lexpr: {
+          TypeCast: {
+            arg: args[0],
+            typeName: { names: [pgString('bigint')], typemod: -1 },
+          },
+        },
+        rexpr: {
+          TypeCast: {
+            arg: args[1],
+            typeName: { names: [pgString('bigint')], typemod: -1 },
+          },
+        },
+      },
+    }),
+  },
   upper: unary('upper'),
   lower: unary('lower'),
   trim: unary('trim', 'btrim'),

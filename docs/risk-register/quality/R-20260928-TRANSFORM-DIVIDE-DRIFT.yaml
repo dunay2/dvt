@@ -1,0 +1,30 @@
+---
+id: R-20260928-TRANSFORM-DIVIDE-DRIFT
+title: Transform DIVIDE could drift from admitted Substrait or PostgreSQL bigint semantics
+status: Open
+date: 2026-09-28
+owners:
+  - web
+  - packages/@dvt/contracts
+  - packages/@dvt/postgres-projection
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    DVT admits only the exact Substrait v0.101.0 divide:i64_i64 invocation with binary arity, i64
+    output, overflow=ERROR, on_domain_error=ERROR, and on_division_by_zero=ERROR. PostgreSQL
+    lowering casts both operands to bigint and emits the native division operator. The formula
+    compiler and visual builder resolve DIVIDE only through the governed capability catalog. fp64,
+    decimal, mixed numeric types, alternative error policies, malformed invocations and unsupported
+    providers fail closed.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/evidence/ED-20260928-transform-bigint-divide.md
+    - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
+    - packages/@dvt/postgres-projection/test/relationalArithmetic.test.ts
+    - packages/@dvt/adapter-postgres/test/PostgresAppRoleRuntime.integration.test.ts
+    - apps/web/src/app/views/canvas/canvasDerivedOutputFormula.test.ts
+    - apps/web/src/app/views/canvas/canvasDerivedOutputVisualFormula.test.ts
+  follow_up:
+    - Any fp64 or decimal DIVIDE overload requires independent target-semantic proof and admission.

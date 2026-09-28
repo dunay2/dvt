@@ -16,6 +16,7 @@ Evidence documents that justify or validate relevant changes.
 - [Supporting](supporting/index.md)
 - [ADR-0000 Traceability Gate Restoration](ed-20260505-adr0-traceability-gate.md)
 - [Algebraic derived output evidence](ED-20260908-algebraic-derived-output.md)
+- [Transform bigint DIVIDE evidence](ED-20260928-transform-bigint-divide.md)
 - [AR-A4 Custom Policy Namespace Freeze Evidence](ed-20260513-ar-a4-custom-policy-namespace-freeze.md)
 - [AR-A6 Snapshot Rebuild Concurrency Contract](ed-20260513-ar-a6-snapshot-rebuild-concurrency-contract.md)
 - [AR-C2 Prometheus SLA Hardcut Evidence](ed-20260514-ar-c2-prometheus-sla-hardcut.md)
