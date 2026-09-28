@@ -256,13 +256,6 @@ function FunctionNodeEditor({
           {choices.map((function_) => (
             <option key={function_.capabilityId} value={function_.capabilityId}>
               {function_.name.toUpperCase()}
-              {function_.name === 'add'
-                ? ' (+)'
-                : function_.name === 'subtract'
-                  ? ' (-)'
-                  : function_.name === 'multiply'
-                    ? ' (*)'
-                    : ''}
             </option>
           ))}
         </select>
@@ -278,14 +271,14 @@ function FunctionNodeEditor({
             provider,
           });
           return (
-          <div
-            key={index}
-            data-slot="derived-formula-argument"
-            data-depth={depth}
-            data-argument-index={index}
-            className="flex items-start gap-1"
-          >
-            <div className="min-w-0 flex-1 border-l border-(--border-subtle) pl-2">
+            <div
+              key={index}
+              data-slot="derived-formula-argument"
+              data-depth={depth}
+              data-argument-index={index}
+              className="flex items-start gap-1"
+            >
+              <div className="min-w-0 flex-1 border-l border-(--border-subtle) pl-2">
               <FormulaNodeEditor
                 expression={argument}
                 fields={compatibleFields}
@@ -340,8 +333,8 @@ function FunctionNodeEditor({
               >
                 <Minus className="size-3" />
               </button>
+              </div>
             </div>
-          </div>
           );
         })}
         <button
