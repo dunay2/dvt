@@ -183,6 +183,7 @@ export function DerivedOutputForm({
   initialMode,
   allowLiterals = true,
   allowNested = true,
+  legacySlots = false,
   unavailableAliases = [],
   dataSlot = 'derived-output-form',
   copy,
@@ -198,6 +199,7 @@ export function DerivedOutputForm({
   initialMode?: 'function' | 'string-literal' | 'timestamp-literal' | 'i64-literal';
   allowLiterals?: boolean;
   allowNested?: boolean;
+  legacySlots?: boolean;
   unavailableAliases?: readonly string[];
   dataSlot?: string;
   copy: Readonly<{
@@ -278,6 +280,7 @@ export function DerivedOutputForm({
         resolveFunctionsForTypes={resolveFunctionsForTypes}
         allowLiterals={allowLiterals}
         allowNested={allowNested}
+        legacySlots={legacySlots}
         busy={busy}
         copy={copy}
         onChange={(next) => {
