@@ -19,12 +19,17 @@ describe('selected relation derived-output section', () => {
     lookup.receive(document);
     const relationId = lookup.rootId;
     const onChange = vi.fn();
+    const onPendingChange = vi.fn();
 
     function Host({ snapshot = document }: { snapshot?: typeof document }): React.JSX.Element {
       const analysis = useCanvasRelationAnalysisSession(snapshot, 'derived-output-section');
       return (
         <CanvasRelationAnalysisContext.Provider value={analysis}>
-          <CanvasDerivedOutputSection relationId={relationId} onChange={onChange} />
+          <CanvasDerivedOutputSection
+            relationId={relationId}
+            onChange={onChange}
+            onPendingChange={onPendingChange}
+          />
         </CanvasRelationAnalysisContext.Provider>
       );
     }
@@ -40,12 +45,14 @@ describe('selected relation derived-output section', () => {
     );
     expect(container.querySelector('[data-slot="canvas-derived-output-form"]')).not.toBeNull();
     expect(onChange).not.toHaveBeenCalled();
+    expect(onPendingChange).toHaveBeenLastCalledWith(true);
 
     await act(async () =>
       fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-cancel"]')!)
     );
     expect(container.querySelector('[data-slot="canvas-derived-output-form"]')).toBeNull();
     expect(onChange).not.toHaveBeenCalled();
+    expect(onPendingChange).toHaveBeenLastCalledWith(false);
 
     await act(async () =>
       fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-trigger"]')!)
@@ -53,6 +60,11 @@ describe('selected relation derived-output section', () => {
     await act(async () =>
       fireEvent.change(container.querySelector<HTMLInputElement>('input[name="alias"]')!, {
         target: { value: 'normalized_name' },
+      })
+    );
+    await act(async () =>
+      fireEvent.change(container.querySelector('textarea[name="formula"]')!, {
+        target: { value: "CONCAT(UPPER(first_name), ' ', last_name)" },
       })
     );
     await act(async () => root.render(<Host snapshot={structuredClone(document)} />));

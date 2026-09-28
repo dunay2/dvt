@@ -45,7 +45,8 @@ export function buildDvtSubstraitScalarFunction(
     return null;
   }
 
-  const signature = entry.invocation?.signature ?? `${entry.identity.name}:str`;
+  const invocation = capability.invocation ?? entry.invocation;
+  const signature = invocation?.signature ?? `${entry.identity.name}:str`;
   const extractYearUtc =
     entry.identity.urn === 'extension:io.substrait:functions_datetime' &&
     entry.identity.name === 'extract' &&
@@ -60,19 +61,27 @@ export function buildDvtSubstraitScalarFunction(
       ? [args.operands[0]!, dvtSubstraitExpression.literal({ dataType: 'string', value: 'UTC' })]
       : args.operands,
     leadingEnumArguments: extractYearUtc ? ['YEAR'] : undefined,
-    options: entry.invocation?.options,
-    outputType: extractYearUtc
-      ? create(TypeSchema, {
-          kind: {
-            case: 'i64',
-            value: create(Type_I64Schema, { nullability: Type_Nullability.NULLABLE }),
-          },
-        })
-      : create(TypeSchema, {
-          kind: {
-            case: 'string',
-            value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
-          },
-        }),
+    options: invocation?.options,
+    outputType:
+      capability.category === 'numeric'
+        ? create(TypeSchema, {
+            kind:
+              invocation?.outputType === 'i64'
+                ? { case: 'i64', value: { nullability: Type_Nullability.NULLABLE } }
+                : { case: 'fp64', value: { nullability: Type_Nullability.NULLABLE } },
+          })
+        : extractYearUtc
+          ? create(TypeSchema, {
+              kind: {
+                case: 'i64',
+                value: create(Type_I64Schema, { nullability: Type_Nullability.NULLABLE }),
+              },
+            })
+          : create(TypeSchema, {
+              kind: {
+                case: 'string',
+                value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
+              },
+            }),
   });
 }

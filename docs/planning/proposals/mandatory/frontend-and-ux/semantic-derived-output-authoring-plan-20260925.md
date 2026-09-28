@@ -256,8 +256,61 @@ the updated snapshots remains `ConfigureCanvasDvtNode` and the existing draft.
 
 ## Scope Guard
 
-Allowed implementation surfaces are the Canvas relation command, its focused
-tests, the existing expression form extraction and Semantic Editor composition.
+### Name and formula editing
+
+The accepted interaction for Transform is a named output and a formula, not a
+function selector that requires a physical field. The current form excludes
+literal-only outputs and the read-only expression summary does not provide an
+edit action. Arithmetic also requires capability admission; UI availability
+alone is not proof of executable support.
+
+```text
+Current: field -> function chooser -> append output; existing formulas read-only
+Target: name + formula -> admitted Substrait expression -> revision-bound edit
+        -> same ProjectRel and stable FieldId -> passive Output projection
+```
+
+Properties lists each derived output with its name, formula and explicit Edit
+action. Add opens the same form with empty name and formula. The expression tree
+remains available in Tree, without duplicating it in Properties. Empty text is
+written as `''` and is distinct from an unfinished empty formula and from NULL.
+Examples include `hola = ''`, `greeting = 'hola'`,
+`full_name = CONCAT(first_name, ' ', last_name)` and `total = price * quantity`.
+The formula is input syntax, never another persisted AST or SQL authority.
+Compile directly into the pinned Substrait expressions and retain the existing
+stable identity, validation, Apply/Cancel and persistence boundaries.
+An open formula draft participates in the existing pending-relation-edit guard,
+for both staged and applied Transform cards. Switching cards must require the
+same explicit discard decision as other unfinished operation properties.
+
+| Scenario                                | Opportunity                                 | Pattern / owner                                 | Rail                                      | Required proof                                                                             |
+| --------------------------------------- | ------------------------------------------- | ----------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Literal-only and compound outputs       | UI restricts the admitted expression model  | Syntax adapter / Substrait expression           | ConfigureCanvasDvtNode                    | Empty string, escaping, constants, nested calls, unknown fields, invalid syntax            |
+| Edit an existing formula                | Read-only projection has no command gesture | Existing selected-relation command / ProjectRel | ConfigureCanvasDvtNode                    | Stable FieldId, unchanged neighbors, downstream references, stale rejection                |
+| Arithmetic between fields and constants | Missing profile/provider admission          | Standard-first capability / bounded profile     | Existing capability and projection owners | Exact signatures, types, nullability, overflow, canonical round-trip and PostgreSQL result |
+
+The arithmetic cut must use the pinned official `functions_arithmetic` extension
+and explicitly admitted overloads. Do not infer support from the upstream name,
+coerce text columns into numbers, or display executable arithmetic before target
+conformance is proved. No JavaScript evaluation, handwritten SQL execution,
+provider query during editing, silent cast, or parallel command is permitted.
+
+This extension includes the scalar catalog schema and admission in
+`packages/@dvt/contracts`, the function resolver and scalar bindings in
+`packages/@dvt/postgres-projection`, and their focused tests. It does not
+authorize changes to execution, planner, API or physical data. Arithmetic
+admission covers matching i64 and fp64 operands with explicit signatures;
+incompatible or mixed types reject without implicit conversion. PostgreSQL
+proof is read-only, using constants rather than user tables.
+
+Before production changes, update the existing Planning DB declarations for the
+affected Canvas, Contracts and PostgreSQL projection surfaces. Prove the full
+browser create/edit/apply/reload path and negative cases. Runtime proofs must use
+an explicitly isolated database; never seed the application's local database.
+
+Allowed implementation surfaces include the Canvas relation command, its focused
+tests, the expression form and Semantic Editor composition, plus the exact
+catalog and PostgreSQL scalar surfaces declared above.
 Engine, planner, adapter and API packages are out of scope. PostgreSQL supplies
 current admitted capability evidence; the persisted meaning remains Substrait.
 

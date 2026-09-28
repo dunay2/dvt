@@ -104,6 +104,7 @@ export const DvtSubstraitStandardCapabilityV1Schema = z
     evidenceRefs: EvidenceRefsSchema,
     admission: DvtSubstraitStandardAdmissionEvidenceV1Schema.optional(),
     invocation: DvtSubstraitFunctionInvocationV1Schema.optional(),
+    overloads: z.array(DvtSubstraitFunctionInvocationV1Schema).min(2).optional(),
   })
   .strict()
   .superRefine((entry, context) => {
@@ -149,7 +150,25 @@ export const DvtSubstraitStandardCapabilityV1Schema = z
         path: ['admission'],
       });
     }
-    if (entry.invocation !== undefined) {
+    if (entry.invocation !== undefined && entry.overloads !== undefined) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Declare one invocation or its overloads, not both.',
+        path: ['overloads'],
+      });
+    }
+    if (
+      entry.overloads != null &&
+      new Set(entry.overloads.map((overload) => overload.signature)).size !== entry.overloads.length
+    ) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Overload signatures must be unique.',
+        path: ['overloads'],
+      });
+    }
+    for (const invocation of entry.overloads ??
+      (entry.invocation == null ? [] : [entry.invocation])) {
       const isFunction =
         entry.identity.sourceKind === 'simple-extension' &&
         ['scalar-function', 'aggregate-function', 'window-function'].includes(entry.category);
@@ -161,7 +180,7 @@ export const DvtSubstraitStandardCapabilityV1Schema = z
         });
       }
       const expectedName = `${entry.identity.sourceKind === 'simple-extension' ? entry.identity.name : ''}:`;
-      if (!entry.invocation.signature.startsWith(expectedName)) {
+      if (!invocation.signature.startsWith(expectedName)) {
         context.addIssue({
           code: 'custom',
           message: 'Invocation signature must retain the exact function identity name.',

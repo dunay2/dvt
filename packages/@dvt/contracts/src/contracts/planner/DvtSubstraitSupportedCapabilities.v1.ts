@@ -46,6 +46,9 @@ interface SupportedCapabilityGroup {
   readonly targetStatus?: 'unavailable' | 'mapped' | 'provider-accepted';
   readonly visualExposure?: 'not-exposed' | 'exposed';
   readonly invocationByEntryId?: Readonly<Record<string, DvtSubstraitFunctionInvocationV1>>;
+  readonly overloadsByEntryId?: Readonly<
+    Record<string, readonly DvtSubstraitFunctionInvocationV1[]>
+  >;
 }
 
 const LOWER_ID = functionId('scalar-function', 'functions_string', 'lower');
@@ -53,6 +56,26 @@ const CONCAT_ID = functionId('scalar-function', 'functions_string', 'concat');
 const COALESCE_ID = functionId('scalar-function', 'functions_comparison', 'coalesce');
 const EXTRACT_ID = functionId('scalar-function', 'functions_datetime', 'extract');
 const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
+  ...['add', 'subtract', 'multiply'].map((name): SupportedCapabilityGroup => ({
+    entryIds: [functionId('scalar-function', 'functions_arithmetic', name)],
+    useCaseRefs: ['dvt:#3419'],
+    proofRef: 'packages/@dvt/postgres-projection/test/relationalArithmetic.test.ts',
+    overloadsByEntryId: {
+      [functionId('scalar-function', 'functions_arithmetic', name)]: ['i64', 'fp64'].map(
+        (type) => ({
+          signature: `${name}:${type}_${type}`,
+          argumentTypes: [type, type],
+          minimumArgumentCount: 2,
+          maximumArgumentCount: 2,
+          outputType: type,
+          options:
+            type === 'i64'
+              ? [{ name: 'overflow', preference: ['ERROR'] }]
+              : [{ name: 'rounding', preference: ['TIE_TO_EVEN'] }],
+        })
+      ),
+    },
+  })),
   {
     entryIds: [
       functionId('scalar-function', 'functions_comparison', 'is_null'),
@@ -307,6 +330,9 @@ export function admitDvtSubstraitStandardCandidatesV1(
           profileStatus: 'supported-profile',
           evidenceRefs: [...entry.evidenceRefs, ...group.useCaseRefs],
           admission: admissionFor(entry, group),
+          ...(group.overloadsByEntryId?.[entry.entryId] == null
+            ? {}
+            : { overloads: group.overloadsByEntryId[entry.entryId] }),
           ...(group.invocationByEntryId?.[entry.entryId] === undefined
             ? {}
             : { invocation: group.invocationByEntryId[entry.entryId] }),

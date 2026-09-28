@@ -83,6 +83,9 @@ mitigation:
     inclusion/reorder and JOIN/CROSS/UNION Apply/reopen; controlled API transport still does not
     prove live provider execution.
   evidence:
+    - apps/web/src/app/views/canvas/canvasDerivedOutputFormula.test.ts
+    - packages/@dvt/contracts/test/dvt-substrait-arithmetic.contract.test.ts
+    - packages/@dvt/postgres-projection/test/relationalArithmetic.test.ts
     - apps/web/src/app/views/canvas/canvasStagedBinaryConfiguration.test.ts
     - apps/web/src/app/views/canvas/canvasRelationalTreeGeometry.test.ts
     - apps/web/src/app/views/canvas/relational-layout/RelationalCardDisclosure.test.tsx

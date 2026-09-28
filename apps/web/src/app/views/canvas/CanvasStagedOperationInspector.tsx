@@ -67,6 +67,7 @@ export function CanvasStagedOperationInspector({
         editingDocument={editingDocument}
         transformNode={transformNode}
         onClose={onClose}
+        onPendingChange={onPendingChange}
         onChange={(semanticDocument) =>
           onUpdate({ operation: 'field_transform', semanticDocument })
         }

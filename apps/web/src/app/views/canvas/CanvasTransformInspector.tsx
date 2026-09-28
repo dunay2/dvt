@@ -14,6 +14,7 @@ import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { useSelectedRelation } from './useSelectedRelation';
 import { relationExpressionRefs } from './canvasRelationalTreeRelationProjection';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { usePendingRelationEdits } from './usePendingRelationEdits';
 
 export function CanvasTransformInspector({
   relationId,
@@ -21,14 +22,18 @@ export function CanvasTransformInspector({
   draft,
   onChange,
   onClose,
+  onPendingChange,
 }: Readonly<{
   relationId: string;
   transformNode: CanonicalNode;
   draft?: SubstraitDocument;
   onChange?: (document: SubstraitDocument) => void | boolean;
   onClose: () => void;
+  onPendingChange?: (pending: boolean) => void;
 }>): JSX.Element {
   const [editingWindow, setEditingWindow] = useState(false);
+  const [setPropertiesPending, setOutputsPending] = usePendingRelationEdits(onPendingChange);
+  const [setFormulaPending, setWindowPending] = usePendingRelationEdits(setPropertiesPending);
   const selected = useSelectedRelation(relationId);
   const hasExpression = selected != null && relationExpressionRefs(selected.relation).length > 0;
   const window = useSelectedRelationTool(relationId, 'window', 'edit');
@@ -46,7 +51,12 @@ export function CanvasTransformInspector({
         onChange == null ? (
           <CanvasRelationFields relationId={relationId} />
         ) : (
-          <CanvasRelationOutputs relationId={relationId} disabled={false} onChange={onChange} />
+          <CanvasRelationOutputs
+            relationId={relationId}
+            disabled={false}
+            onChange={onChange}
+            onPendingChange={setOutputsPending}
+          />
         )
       }
     >
@@ -55,11 +65,15 @@ export function CanvasTransformInspector({
           transformNode={transformNode}
           draft={draft}
           relationId={relationId}
-          showSummary
         />
       ) : null}
       {onChange == null ? null : (
-        <CanvasDerivedOutputSection key={relationId} relationId={relationId} onChange={onChange} />
+        <CanvasDerivedOutputSection
+          key={relationId}
+          relationId={relationId}
+          onChange={onChange}
+          onPendingChange={setFormulaPending}
+        />
       )}
       {onChange == null || window?.tool.enabled !== true ? null : editingWindow ? (
         <CanvasRelationalTreeOperatorForm
@@ -70,6 +84,7 @@ export function CanvasTransformInspector({
           inline
           onChange={onChange}
           onClose={() => setEditingWindow(false)}
+          onPendingChange={setWindowPending}
         />
       ) : (
         <button

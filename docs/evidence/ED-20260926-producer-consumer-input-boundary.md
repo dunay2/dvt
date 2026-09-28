@@ -720,3 +720,70 @@ Planning DB integrity still passes after the incident. No repository rule,
 baseline, hook or test assertion was disabled to close it. No new stub or fake
 success path was added. This is an incomplete delivery: no push, PR or merge;
 the remaining browser failures and safe live-provider acceptance stay open.
+
+## Transform name and formula, 2026-09-29
+
+The user chose name plus formula for scalar output authoring. The governing
+sources are ADR-0064, the command/query rail rule, the semantic-derived-output
+authoring plan and the existing `GH-3419-SELECTED-RELATION-DERIVED-OUTPUT`
+Planning DB declaration. Its reference-only command record advanced from
+revision 10 to 12 before the respective formula and navigation changes; it
+continues to reference the existing `ConfigureCanvasDvtNode` authority.
+
+Transform Properties now lists derived columns with Edit and uses one form for
+creation and update. It replaces the Transform-only field/function selector;
+the lexical tree remains in Tree. `canvasDerivedOutputFormula.ts` compiles input
+syntax directly to Substrait, without storing a second expression model or SQL.
+The selected-relation command updates the same FieldId and ProjectRel. Form
+drafts survive analysis refresh and participate in existing pending-edit guards.
+
+Supported examples are `hola = ''`, `greeting = 'hola'`,
+`full_name = CONCAT(first_name, ' ', last_name)` and `total = price * quantity`.
+Scalar catalog/resolver/SQL bindings admit add, subtract and multiply only for
+matching i64 or fp64 operands. Integer overflow is ERROR; floating rounding is
+TIE_TO_EVEN. Explicit provider operand casts preserve the declared widths, not
+implicit conversion between semantic types. Mixed/text arithmetic rejects.
+Division, decimal arithmetic and free-form SQL are not advertised as supported.
+The existing literal/window model is not expanded beyond this declared cut.
+
+The pinned upstream identities were checked against Substrait v0.101.0
+`extensions/functions_arithmetic.yaml`. Contracts and PostgreSQL projection own
+the overloads and executable bindings; the frontend only consumes them.
+
+Observed validation before final branch closeout:
+
+- RED: formula module absent; arithmetic unavailable; command ignored formulas;
+  old form had no formula control. Additional tests reproduced lost pending-edit
+  notification and incorrect fp64 formatting of `1e21` and negative zero.
+- `pnpm --filter @dvt/web exec vitest run
+src/app/views/canvas/canvasDerivedOutputFormula.test.ts
+src/app/views/canvas/CanvasDerivedOutputSection.test.tsx
+src/app/views/canvas/canvasSelectedRelationDerivedOutput.test.ts
+src/app/views/canvas/CanvasRelationalTreeWorkbench.transform.test.tsx`:
+  31 passed. Invalid syntax/type rejection, empty strings, nested fields,
+  precedence, numeric round-trip, identity-preserving edit and pending guards.
+- `pnpm exec vitest run packages/@dvt/contracts/test
+packages/@dvt/postgres-projection/test --maxWorkers=4`: 938 passed, 97 files.
+- Web, Contracts and PostgreSQL projection typechecks passed. Web lint passed.
+  Strict package lint initially found import ordering and a test global/type
+  annotation; these findings are not hidden by skipped checks.
+- `pnpm --filter @dvt/web test:e2e:native --spec
+cypress/e2e/canvas/canvas-transform-stage.cy.ts`: passed, zero skipped. Real
+  frontend plus stateful test transport creates three outputs, edits a literal
+  preserving FieldId, applies, saves and reopens their canonical expressions.
+  This is not a live API execution proof.
+- A `pnpm exec tsx -e` provider probe compiled formula expressions, round-tripped
+  protobuf, used `expressionSql` and `renderPostgresAst`, then executed only
+  generated constant SELECTs. The connection enforced
+  `default_transaction_read_only=on`, `BEGIN READ ONLY` and verified
+  `SHOW transaction_read_only = on`; it ended with ROLLBACK. No tables were read,
+  seeded, created, dropped or changed. Results: i64 addition 5, subtraction -1,
+  multiplication 4294967294 with type OID 20; fp64 results 5, -1, 10 with OID 701;
+  composed text `hola mundo` and empty string with OID 25. Both numeric bindings
+  propagated NULL; i64 overflow rejected with PostgreSQL code 22003.
+
+The earlier database incident and six outstanding broader browser failures are
+not resolved by these formula-specific proofs. Integration remains pending the
+complete branch gates. No new debt, stub, fake production adapter, disabled rule
+or bypassed hook was introduced. GitHub publication still requires its separate
+authorization; this evidence has not been posted externally.

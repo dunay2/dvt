@@ -15,12 +15,14 @@ export function CanvasStagedTransformInspector({
   transformNode,
   onChange,
   onClose,
+  onPendingChange,
 }: Readonly<{
   staged: CanvasStagedOperation;
   editingDocument?: SubstraitDocument | null;
   transformNode: CanonicalNode;
   onChange: (semanticDocument: CanvasStagedOperation['semanticDocument']) => void | boolean;
   onClose: () => void;
+  onPendingChange?: (pending: boolean) => void;
 }>): JSX.Element | null {
   const document = useMemo(
     () => editingDocument ?? decodeCanvasStagedOperation(staged),
@@ -35,6 +37,7 @@ export function CanvasStagedTransformInspector({
         transformNode={transformNode}
         draft={document}
         onClose={onClose}
+        onPendingChange={onPendingChange}
         onChange={(next) => {
           return onChange(encodeDvtSubstraitSemanticDocument(next));
         }}

@@ -21,6 +21,49 @@ function capability(name: 'trim' | 'upper'): string {
 }
 
 describe('selected relation derived output authoring', () => {
+  it('creates an empty string and edits its formula without changing FieldId or neighbors', async () => {
+    const session = new CanvasRelationAnalysisSession('formula-edit');
+    session.receive(connectedNamesProjectionDraft());
+    const relationId = session.rootId;
+    const request = {
+      intent: 'edit' as const,
+      relationId,
+      expectedRevision: session.revision,
+      alias: 'hola',
+      formula: "''",
+    };
+    const created = await applySelectedRelationDerivedOutput(session, request);
+    const field = created.sidecar.fields.find(
+      (item) => item.relationId === relationId && item.displayName === 'hola'
+    )!;
+    expect(field).toBeDefined();
+    const revised = await applySelectedRelationDerivedOutput(session, {
+      ...request,
+      expectedRevision: session.revision,
+      outputFieldId: field.fieldId,
+      formula: "CONCAT(first_name, ' ', last_name)",
+    });
+    expect(revised.sidecar.fields.find((item) => item.fieldId === field.fieldId)?.displayName).toBe(
+      'hola'
+    );
+    expect(revised.sidecar.fields.map((item) => item.fieldId)).toEqual(
+      created.sidecar.fields.map((item) => item.fieldId)
+    );
+    expect(
+      (await session.query(relationId)).bindings.filter((item) => item.parentFieldId == null)
+    ).toHaveLength(3);
+    const revision = session.revision;
+    await expect(
+      applySelectedRelationDerivedOutput(session, {
+        ...request,
+        expectedRevision: revision,
+        formula: 'missing * 2',
+        alias: 'bad',
+      })
+    ).rejects.toThrow();
+    expect(session.revision).toBe(revision);
+  });
+
   it('inserts one ProjectRel over an exact JOIN operand and reconnects its consumer', async () => {
     const { session, root } = selectedUnaryScenario();
     const inputId = root.inputs[0]!;

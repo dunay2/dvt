@@ -10,7 +10,7 @@ type Binding = Readonly<{
   minimum: number;
   maximum?: number;
   accepts: ScalarArgumentGuard;
-  output: 'string' | 'bool' | 'i64';
+  output: 'string' | 'bool' | 'i64' | 'fp64';
   required?: boolean;
   sql: (args: readonly PostgresAstNode[]) => PostgresAstNode;
 }>;
@@ -55,6 +55,37 @@ const nullTest = (signature: string, negated: boolean): Binding => ({
   sql: (args) => pgNullTest(args[0]!, negated),
 });
 export const scalarBindings: Readonly<Record<string, Binding>> = {
+  ...Object.fromEntries(
+    ['add', 'subtract', 'multiply'].flatMap((name) =>
+      ['i64', 'fp64'].map((type) => [
+        `${name}:${type}_${type}`,
+        {
+          family: 'functions_arithmetic',
+          signature: `${name}:${type}_${type}`,
+          minimum: 2,
+          maximum: 2,
+          accepts: sameType(type as 'i64' | 'fp64'),
+          output: type as 'i64' | 'fp64',
+          sql: (args: readonly PostgresAstNode[]) => {
+            const operands = args.map((arg) => ({
+              TypeCast: {
+                arg,
+                typeName: { names: [pgString(type === 'i64' ? 'bigint' : 'float8')], typemod: -1 },
+              },
+            }));
+            return {
+              A_Expr: {
+                kind: 'AEXPR_OP',
+                name: [pgString(name === 'add' ? '+' : name === 'subtract' ? '-' : '*')],
+                lexpr: operands[0],
+                rexpr: operands[1],
+              },
+            };
+          },
+        },
+      ])
+    )
+  ),
   upper: unary('upper'),
   lower: unary('lower'),
   trim: unary('trim', 'btrim'),

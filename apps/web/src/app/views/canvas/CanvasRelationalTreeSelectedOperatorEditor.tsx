@@ -38,6 +38,7 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
         draft={draft}
         onChange={onChange}
         onClose={onClose}
+        onPendingChange={onPendingConditionChange}
       />
     );
   if (read != null)

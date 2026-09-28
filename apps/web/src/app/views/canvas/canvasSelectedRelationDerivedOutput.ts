@@ -10,6 +10,8 @@ import { cloneLocalRelation } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import { buildDvtSubstraitCalculatedExpression } from './canvasDvtSubstraitCalculatedExpression';
+import { compileDerivedOutputFormula, type FormulaField } from './canvasDerivedOutputFormula';
+import { relationOutputMapping } from './canvasRelationOutputBindings';
 import {
   rootFields,
   derivedOutputDataType,
@@ -28,8 +30,10 @@ import {
 export type SelectedRelationDerivedOutputRequest = SelectedUnaryRequest &
   Readonly<{
     alias: string;
+    outputFieldId?: string;
   }> &
   (
+    | Readonly<{ formula: string }>
     | Readonly<{
         capabilityIds: readonly [string, ...string[]];
         operandFieldIds: readonly [string, ...string[]];
@@ -49,14 +53,61 @@ export async function applySelectedRelationDerivedOutput(
     request.intent === 'edit'
       ? await session.query(request.relationId, request.signal)
       : prepared.schema;
+  const replacing =
+    request.outputFieldId == null
+      ? undefined
+      : prepared.fields.find(
+          (field) => field.fieldId === request.outputFieldId && field.parentFieldId == null
+        );
+  if (request.outputFieldId != null && (replacing == null || request.intent !== 'edit'))
+    reject('Output is unavailable for editing.', request.relationId);
+  const plan = clone(PlanSchema, { ...prepared.target.plan, relations: [] });
+  const formulaFields = [available, prepared.schema]
+    .flatMap((scope) =>
+      rootFields(scope.bindings).flatMap((field): FormulaField[] => {
+        const schema = scope.fields[field.outputOrdinal]!;
+        const dataType = derivedOutputDataType(schema.type);
+        const expression = resolveOperandExpression(prepared, field.fieldId);
+        return field.fieldId === request.outputFieldId ||
+          expression == null ||
+          dataType == null ||
+          !session.allowsInputSchema(schema)
+          ? []
+          : [
+              {
+                fieldId: field.fieldId,
+                name: field.displayName ?? field.fieldId,
+                dataType,
+                expression,
+              },
+            ];
+      })
+    )
+    .filter(
+      (field, index, fields) =>
+        fields.findIndex((candidate) => candidate.name === field.name) === index
+    );
+  const compiled =
+    'formula' in request
+      ? compileDerivedOutputFormula({
+          formula: request.formula,
+          plan,
+          fields: formulaFields,
+          provider: session.executionProvider(request.expectedRevision),
+        })
+      : null;
   const operandIds =
-    'operandFieldIds' in request
-      ? request.operandFieldIds
-      : request.expression.kind === 'field-ref'
-        ? [request.expression.inputFieldId]
-        : request.expression.kind === 'row-number'
-          ? [request.expression.orderFieldId]
-          : [];
+    compiled != null
+      ? compiled.fieldIds
+      : 'formula' in request
+        ? []
+        : 'operandFieldIds' in request
+          ? request.operandFieldIds
+          : request.expression.kind === 'field-ref'
+            ? [request.expression.inputFieldId]
+            : request.expression.kind === 'row-number'
+              ? [request.expression.orderFieldId]
+              : [];
   const operands = new Map(
     [prepared.schema, available].flatMap((schema) =>
       rootFields(schema.bindings)
@@ -68,7 +119,9 @@ export async function applySelectedRelationDerivedOutput(
     )
   );
   if (
-    rootFields(available.bindings).some((field) => field.displayName === alias) ||
+    rootFields(available.bindings).some(
+      (field) => field.displayName === alias && field.fieldId !== request.outputFieldId
+    ) ||
     operandIds.some((fieldId) => !operands.has(fieldId))
   )
     reject('Derived-output alias or operand is unavailable.', request.relationId);
@@ -81,29 +134,32 @@ export async function applySelectedRelationDerivedOutput(
   )
     reject('Derived-output operand cannot be projected.', request.relationId);
 
-  const plan = clone(PlanSchema, { ...prepared.target.plan, relations: [] });
   const expression =
-    'capabilityIds' in request
-      ? buildScalarChain({
-          plan,
-          capabilityIds: request.capabilityIds,
-          dataTypes: dataTypes.filter((type): type is string => type != null),
-          operands: expressions.filter((item): item is Expression => item != null),
-          provider: session.executionProvider(request.expectedRevision),
-        })
-      : request.expression.kind === 'field-ref'
-        ? expressions[0]!
-        : buildDvtSubstraitCalculatedExpression(
-            plan,
-            request.expression.kind === 'row-number'
-              ? {
-                  kind: 'row-number',
-                  orderSourceOrdinal:
-                    dvtSubstraitExpression.fieldOrdinal(expressions[0]!) ??
-                    reject('Window order requires an input field.', request.relationId),
-                }
-              : request.expression
-          );
+    compiled != null
+      ? compiled.expression
+      : 'formula' in request
+        ? null
+        : 'capabilityIds' in request
+          ? buildScalarChain({
+              plan,
+              capabilityIds: request.capabilityIds,
+              dataTypes: dataTypes.filter((type): type is string => type != null),
+              operands: expressions.filter((item): item is Expression => item != null),
+              provider: session.executionProvider(request.expectedRevision),
+            })
+          : request.expression.kind === 'field-ref'
+            ? expressions[0]!
+            : buildDvtSubstraitCalculatedExpression(
+                plan,
+                request.expression.kind === 'row-number'
+                  ? {
+                      kind: 'row-number',
+                      orderSourceOrdinal:
+                        dvtSubstraitExpression.fieldOrdinal(expressions[0]!) ??
+                        reject('Window order requires an input field.', request.relationId),
+                    }
+                  : request.expression
+              );
   if (expression == null) reject('Derived-output capability is unavailable.', request.relationId);
 
   const relation =
@@ -121,8 +177,25 @@ export async function applySelectedRelationDerivedOutput(
   if (relation.relType.case !== 'project')
     reject('Expected selected ProjectRel.', request.relationId);
   const project = relation.relType.value;
-  project.expressions.push(expression);
-  if (project.common?.emitKind.case === 'emit') {
+  if (replacing != null) {
+    const inputCount = rootFields(prepared.schema.bindings).length;
+    const mapping = [...relationOutputMapping(relation, inputCount + project.expressions.length)];
+    const slot = mapping[replacing.outputOrdinal];
+    if (slot == null) reject('Output expression is unavailable.', request.relationId);
+    if (slot >= inputCount && mapping.filter((item) => item === slot).length === 1)
+      project.expressions[slot - inputCount] = expression;
+    else {
+      project.expressions.push(expression);
+      mapping[replacing.outputOrdinal] = inputCount + project.expressions.length - 1;
+      project.common!.emitKind = {
+        case: 'emit',
+        value: { $typeName: 'substrait.RelCommon.Emit', outputMapping: mapping },
+      };
+    }
+  } else {
+    project.expressions.push(expression);
+  }
+  if (replacing == null && project.common?.emitKind.case === 'emit') {
     project.common.emitKind.value.outputMapping.push(
       rootFields(prepared.schema.bindings).length + project.expressions.length - 1
     );
@@ -132,19 +205,23 @@ export async function applySelectedRelationDerivedOutput(
     dependencies.length === 1
       ? referencedInputField(expressions[0]!, prepared.schema.bindings)
       : undefined;
-  const fields = [
-    ...prepared.fields,
-    {
-      fieldId: allocateDvtFieldId(),
-      relationId: prepared.binding.relationId,
-      outputOrdinal: available.fields.length,
-      displayName: alias,
-      ...(dependencies.length > 1
-        ? { operandFieldIds: dependencies }
-        : referencedInput == null
-          ? {}
-          : { sourceFieldId: referencedInput }),
-    },
-  ];
+  const updated = {
+    ...(replacing == null
+      ? {}
+      : { ...replacing, sourceFieldId: undefined, operandFieldIds: undefined }),
+    fieldId: replacing?.fieldId ?? allocateDvtFieldId(),
+    relationId: prepared.binding.relationId,
+    outputOrdinal: replacing?.outputOrdinal ?? available.fields.length,
+    displayName: alias,
+    ...(dependencies.length > 1
+      ? { operandFieldIds: dependencies }
+      : referencedInput == null
+        ? {}
+        : { sourceFieldId: referencedInput }),
+  };
+  const fields =
+    replacing == null
+      ? [...prepared.fields, updated]
+      : prepared.fields.map((field) => (field.fieldId === replacing.fieldId ? updated : field));
   return commitSelectedRelationUnary(session, { ...prepared, fields }, relation, plan);
 }

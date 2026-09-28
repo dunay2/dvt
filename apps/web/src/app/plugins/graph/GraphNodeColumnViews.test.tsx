@@ -57,14 +57,16 @@ describe('card Input / Output boundary', () => {
     const tab = [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find(
       (item) => item.textContent === 'Output (1)'
     )!;
-    act(() => fireEvent.keyDown(tab, { key: 'Enter' }));
+    act(() => {
+      fireEvent.keyDown(tab, { key: 'Enter' });
+    });
   }
   function drop(nodeId = 'producer-b', columnId = 'email'): void {
-    act(() =>
+    act(() => {
       fireEvent.drop(container.querySelector('[data-slot="tabs"]')!, {
         dataTransfer: { getData: () => JSON.stringify({ nodeId, columnId }) },
-      })
-    );
+      });
+    });
   }
   it('publishes only explicit outputs without output-authoring controls', () => {
     const mutation = render();

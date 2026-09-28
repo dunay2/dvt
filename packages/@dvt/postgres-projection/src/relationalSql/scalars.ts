@@ -21,7 +21,11 @@ export function scalarSql(
   if (!reference.ok) return unsupported(reference.reason);
   const identity = reference.value;
   const name = identity.name.split(':')[0]!;
-  const binding = Object.hasOwn(scalarBindings, name) ? scalarBindings[name]! : undefined;
+  const binding = Object.hasOwn(scalarBindings, identity.name)
+    ? scalarBindings[identity.name]!
+    : Object.hasOwn(scalarBindings, name)
+      ? scalarBindings[name]!
+      : undefined;
   const capability = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
     (entry) =>
       entry.kind === 'standard' &&
@@ -37,9 +41,13 @@ export function scalarSql(
     identity.urn !== `extension:io.substrait:${binding.family}`
   )
     return unsupported('Scalar function has no admitted PostgreSQL binding.');
-  const options = capability.invocation?.options ?? [];
+  const invocation =
+    capability.overloads?.find((item) => item.signature === identity.name) ?? capability.invocation;
+  if (capability.overloads != null && invocation == null)
+    return unsupported('Arithmetic overload is not admitted.');
+  const options = invocation?.options ?? [];
   if (
-    identity.name !== (capability.invocation?.signature ?? binding.signature) ||
+    identity.name !== (invocation?.signature ?? binding.signature) ||
     args.length < binding.minimum ||
     (binding.maximum != null && args.length > binding.maximum) ||
     !binding.accepts(fn, types) ||
