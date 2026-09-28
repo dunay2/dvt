@@ -8,11 +8,11 @@ import {
 } from './canvasDvtSubstraitJoinCondition';
 import type { DvtSubstraitJoinPredicateOperand } from './canvasDvtSubstraitJoinOperand';
 import {
-  projectJoinNormalization,
   type JoinNormalizationOccurrence,
   type JoinNormalizationProposal,
   type JoinNormalizationTransformation,
 } from './canvasJoinNormalizationProposal';
+import { projectJoinNormalizationWithReuse } from './canvasJoinNormalizationReuse';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
 import { querySelectedJoin } from './canvasSelectedJoin';
@@ -59,12 +59,13 @@ function aliasesFor(
   aliases: JoinNormalizationAliasMap
 ): ReadonlyMap<string, string> {
   return new Map(
-    proposal.transformations.map((transformation) => {
+    proposal.transformations.flatMap((transformation) => {
+      if (transformation.reuseFieldId != null) return [];
       const alias = aliases[transformation.transformationKey] ?? transformation.suggestedAlias;
       if (alias == null || alias.trim() === '') {
         reject('JOIN normalization requires an explicit derived-output alias.', proposal.relationId);
       }
-      return [transformation.transformationKey, alias.trim()] as const;
+      return [[transformation.transformationKey, alias.trim()] as const];
     })
   );
 }
@@ -98,17 +99,34 @@ export async function applyJoinNormalization(
         staged.revision,
         request.signal
       );
-      const current = projectJoinNormalization(selected);
+      const current = await projectJoinNormalizationWithReuse(
+        staged,
+        selected,
+        request.signal
+      );
       if (current.outcome !== 'available') {
         reject('JOIN normalization proposal is no longer available.', request.proposal.relationId);
       }
-      const expectedKeys = request.proposal.transformations.map((item) => item.transformationKey);
-      const currentKeys = current.proposal.transformations.map((item) => item.transformationKey);
+      const expected = request.proposal.transformations.map((item) => ({
+        key: item.transformationKey,
+        reuseFieldId: item.reuseFieldId ?? null,
+      }));
+      const actual = current.proposal.transformations.map((item) => ({
+        key: item.transformationKey,
+        reuseFieldId: item.reuseFieldId ?? null,
+      }));
       if (
-        expectedKeys.length !== currentKeys.length ||
-        expectedKeys.some((key, index) => key !== currentKeys[index])
+        expected.length !== actual.length ||
+        expected.some(
+          (item, index) =>
+            item.key !== actual[index]?.key ||
+            item.reuseFieldId !== actual[index]?.reuseFieldId
+        )
       ) {
-        reject('JOIN normalization proposal no longer matches the selected JOIN.', request.proposal.relationId);
+        reject(
+          'JOIN normalization proposal no longer matches the selected JOIN.',
+          request.proposal.relationId
+        );
       }
 
       const originalInputIds = selected.inputs.map((input) => input.relationId);
@@ -124,7 +142,12 @@ export async function applyJoinNormalization(
           request.signal
         );
         const input = before.inputs[inputIndex];
-        if (input == null) reject('JOIN normalization input is unavailable.', request.proposal.relationId);
+        if (input == null)
+          reject('JOIN normalization input is unavailable.', request.proposal.relationId);
+        if (transformation.reuseFieldId != null) {
+          created.set(transformation.transformationKey, transformation.reuseFieldId);
+          continue;
+        }
         const rootBindings = input.bindings.filter((field) => field.parentFieldId == null);
         const operand =
           input.relationId === transformation.inputRelationId
@@ -176,7 +199,17 @@ export async function applyJoinNormalization(
       }
       const replacements = new Map<string, string>();
       for (const transformation of request.proposal.transformations) {
-        const fieldId = created.get(transformation.transformationKey);
+        const inputIndex = inputIndexFor(request.proposal, transformation, originalInputIds);
+        const storedFieldId = created.get(transformation.transformationKey);
+        const fieldId =
+          transformation.reuseFieldId == null
+            ? storedFieldId
+            : rewrittenJoin.inputs[inputIndex]?.bindings.find(
+                (field) =>
+                  field.parentFieldId == null &&
+                  (field.fieldId === transformation.reuseFieldId ||
+                    field.sourceFieldId === transformation.reuseFieldId)
+              )?.fieldId;
         if (fieldId == null) {
           reject('JOIN normalization derived field is unavailable.', request.proposal.relationId);
         }
