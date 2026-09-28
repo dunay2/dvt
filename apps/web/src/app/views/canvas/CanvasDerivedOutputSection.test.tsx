@@ -57,14 +57,23 @@ describe('selected relation derived-output section', () => {
     await act(async () =>
       fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-trigger"]')!)
     );
+    expect(container.querySelector('textarea[name="formula"]')).toBeNull();
+    const rootKind = container.querySelector<HTMLSelectElement>(
+      '[data-slot="derived-formula-node-kind"][data-depth="0"]'
+    )!;
+    await act(async () => fireEvent.change(rootKind, { target: { value: 'function' } }));
+    const functionSelect = container.querySelector<HTMLSelectElement>(
+      '[data-slot="derived-formula-function"][data-depth="0"]'
+    )!;
+    const upper = [...functionSelect.options].find((option) => option.textContent === 'UPPER');
+    if (upper == null) throw new Error('Expected UPPER capability.');
+    await act(async () => fireEvent.change(functionSelect, { target: { value: upper.value } }));
+    expect(container.querySelector('[data-slot="derived-formula-preview"]')?.textContent).toBe(
+      'UPPER(first_name)'
+    );
     await act(async () =>
       fireEvent.change(container.querySelector<HTMLInputElement>('input[name="alias"]')!, {
         target: { value: 'normalized_name' },
-      })
-    );
-    await act(async () =>
-      fireEvent.change(container.querySelector('textarea[name="formula"]')!, {
-        target: { value: "CONCAT(UPPER(first_name), ' ', last_name)" },
       })
     );
     await act(async () => root.render(<Host snapshot={structuredClone(document)} />));
