@@ -21,6 +21,7 @@ export function CanvasRelationalTreeInspection(
       />
       <div className="canvas-operation-workspace relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
         <CanvasRelationalTreeView
+          sourceOutputFieldsByRelationId={model.sourceOutputFieldsByRelationId}
           transformNode={transformNode}
           outputName={transformNode.name}
           root={model.projection.root}

@@ -595,6 +595,14 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.operationalDrawer.dataCaptionTemplate',
     fallback: 'Data sample from {nodeName}',
   },
+  operationalDrawerDataRowsLabel: {
+    key: 'canvas.operationalDrawer.dataRowsLabel',
+    fallback: 'rows',
+  },
+  operationalDrawerDataColumnsLabel: {
+    key: 'canvas.operationalDrawer.dataColumnsLabel',
+    fallback: 'columns',
+  },
   operationalDrawerDataNullValue: {
     key: 'canvas.operationalDrawer.dataNullValue',
     fallback: 'NULL',

@@ -328,7 +328,7 @@ export default function CanvasShell({
         const projectedData: DbtNodeData = {
           ...data,
           dataActionLabel: dataSampleProjection.canOpen
-            ? resolveCanvasSemanticEditorCopy(applicationLanguage).execute
+            ? resolveCanvasSemanticEditorCopy(applicationLanguage).previewAction
             : undefined,
           canOpenNodeCode,
           ...(participatesInActiveRun
@@ -351,7 +351,8 @@ export default function CanvasShell({
           onOpenNode:
             isNativeTransform && canOpenRelationalTree
               ? () => openRelationalTree(node.id)
-              : data.role === 'transform' && typeof data.onInspectNode === 'function'
+              : (data.role === 'input' || data.role === 'transform') &&
+                  typeof data.onInspectNode === 'function'
                 ? () => data.onInspectNode?.(node.id, 'general')
                 : data.onOpenNode,
         };
@@ -430,6 +431,13 @@ export default function CanvasShell({
     onOpenCanvasSettings: openCanvasSettings,
   });
 
+  const relationalTreeGraphNodeData =
+    relationalTreeTransform == null
+      ? undefined
+      : (graphWithCanonicalCodeCommands.nodesWithImpact.find(
+          (node) => node.id === relationalTreeTransform.id
+        )?.data as DbtNodeData | undefined);
+
   return (
     <ResizablePanelGroup
       data-slot="canvas-shell-panel-group"
@@ -474,7 +482,15 @@ export default function CanvasShell({
                     transformNode={relationalTreeTransform}
                     nodes={panels.inspectorGraphNodes}
                     edges={panels.inspectorGraphEdges}
-                    authoring={panels.relationalTreeAuthoring}
+                    authoring={
+                      panels.relationalTreeAuthoring == null
+                        ? undefined
+                        : {
+                            ...panels.relationalTreeAuthoring,
+                            onMapInput: relationalTreeGraphNodeData?.onMapCanvasInput,
+                            onRemoveInput: relationalTreeGraphNodeData?.onRemoveCanvasInput,
+                          }
+                    }
                     draftStatus={chromeState.draftStatusState}
                     query={canvasTransformDataSampleQuery}
                     onExecuteSource={openSource}

@@ -98,29 +98,32 @@ export function useCanvasColumnConnectionHandlers(
     [canEditEdges, columnAuthoringCommandRunner]
   );
 
+  const handleRemoveCanvasInput = useCallback(
+    (identity: GraphNodeInputMapping) => {
+      if (!canEditEdges) {
+        toast.error(canvasViewCopy.mutationUnavailableMessage);
+        return;
+      }
+      void columnAuthoringCommandRunner.removeInput(identity).then((result) => {
+        if (result.outcome === 'rejected') toast.error(formatColumnMappingRejection(result.reason));
+        else toast.success(canvasViewCopy.columnMappingRemovedMessage);
+      });
+    },
+    [canEditEdges, columnAuthoringCommandRunner]
+  );
+
   const handleRemoveColumnMapping = useCallback(
     (mapping: CanvasColumnLineageEdgeData) => {
       if (!canEditEdges || !mapping.removable) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
-      void columnAuthoringCommandRunner
-        .removeInput({
-          target: { nodeId: mapping.targetNodeId, inputId: mapping.outputId },
-          source: {
-            nodeId: mapping.sourceNodeId,
-            columnId: mapping.sourceFieldId,
-          },
-        })
-        .then((result) => {
-          if (result.outcome === 'rejected') {
-            toast.error(formatColumnMappingRejection(result.reason));
-            return;
-          }
-          toast.success(canvasViewCopy.columnMappingRemovedMessage);
-        });
+      handleRemoveCanvasInput({
+        target: { nodeId: mapping.targetNodeId, inputId: mapping.outputId },
+        source: { nodeId: mapping.sourceNodeId, columnId: mapping.sourceFieldId },
+      });
     },
-    [canEditEdges, columnAuthoringCommandRunner]
+    [canEditEdges, handleRemoveCanvasInput]
   );
 
   return {
@@ -128,6 +131,7 @@ export function useCanvasColumnConnectionHandlers(
     activeColumnHandleId: pendingSource == null ? null : createCanvasColumnHandleId(pendingSource),
     handleColumnPortActivate,
     handleMapCanvasInput,
+    handleRemoveCanvasInput,
     handleToggleCanvasColumnOutput,
     handleReorderCanvasColumnOutput,
     handleRemoveColumnMapping,

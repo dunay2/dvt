@@ -72,6 +72,29 @@ function buildNode(partial: Partial<CanonicalNode>): CanonicalNode {
 }
 
 describe('buildGraphNodeCardReadModel', () => {
+  it('does not repeat inner Filter details on the outer Model card', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({ kind: 'dvt:transform', role: 'transform' }),
+      {
+        presentationTruth: {
+          columns: {
+            state: 'ready',
+            declared: [],
+            inherited: [],
+            visible: [],
+            declaredCount: 0,
+            inheritedCount: 0,
+            visibleCount: 0,
+            visibleProvenance: 'none',
+          },
+          code: { kind: 'unavailable' },
+          filterSummary: "order_id = '1'",
+        },
+      },
+      CARD_STRATEGIES
+    );
+    expect(model.metrics.map((metric) => metric.id)).not.toContain('filter');
+  });
   it('leaves last execution out of both model-card metric rails', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({

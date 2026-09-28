@@ -65,8 +65,28 @@ export function OperationalDrawerDataSamplePanel({
       </OperationalDrawerEmptyState>
     );
   } else {
+    const caption = formatDataSampleTemplate(contribution.copy.dataCaptionTemplate, {
+      nodeName: state.nodeName,
+      limit: String(state.sample.limit),
+    });
     content = (
       <>
+        <div
+          data-slot="data-sample-summary"
+          className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-(--border-subtle) pb-2"
+        >
+          <h3 className="min-w-0 truncate text-sm font-semibold text-(--text-primary)">
+            {caption}
+          </h3>
+          <div className="flex items-center gap-2 text-[11px] tabular-nums text-(--text-muted)">
+            <span className="rounded border border-(--border-subtle) px-2 py-0.5">
+              {state.sample.rows.length} {contribution.copy.dataRowsLabel}
+            </span>
+            <span className="rounded border border-(--border-subtle) px-2 py-0.5">
+              {state.sample.columns.length} {contribution.copy.dataColumnsLabel}
+            </span>
+          </div>
+        </div>
         {state.sample.truncated ? (
           <OperationalDrawerDataNotice>
             {formatDataSampleTemplate(contribution.copy.dataTruncatedTemplate, {
@@ -77,10 +97,7 @@ export function OperationalDrawerDataSamplePanel({
         ) : null}
         <OperationalDrawerDataTable
           key={'objectId' in state.sample ? state.sample.objectId : state.sample.transformNodeId}
-          caption={formatDataSampleTemplate(contribution.copy.dataCaptionTemplate, {
-            nodeName: state.nodeName,
-            limit: String(state.sample.limit),
-          })}
+          caption={caption}
           columns={state.sample.columns}
           rows={state.sample.rows}
           nullValueLabel={contribution.copy.dataNullValue}

@@ -20,6 +20,7 @@ import type { CanvasNodePresentationCopy } from './canvasNodePresentationCopy.co
 import type { CanvasNodePresentationTruth } from './canvasNodePresentationTruth.contract';
 import type {
   GraphNodeColumn,
+  GraphNodeInputMapping,
   GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
@@ -90,6 +91,8 @@ export interface DbtNodeData extends Record<string, unknown> {
   columnDisclosureExpanded?: boolean;
   activeColumnHandleId?: string | null;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
+  onMapCanvasInput?: (identity: GraphNodeInputMapping) => void;
+  onRemoveCanvasInput?: (identity: GraphNodeInputMapping) => void;
   columnPortDirections?: readonly GraphNodeColumnPortDirection[];
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onColumnLayoutChange?: () => void;

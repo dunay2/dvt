@@ -13,9 +13,10 @@ const operationalDrawerDataTableClassNames = {
     'min-w-32 max-w-80 overflow-hidden border-r border-[color:var(--border-default)] p-0 font-semibold last:border-r-0 data-[drop-edge=before]:shadow-[inset_3px_0_0_0_var(--accent-primary)] data-[drop-edge=after]:shadow-[inset_-3px_0_0_0_var(--accent-primary)]',
   headerButton:
     "block w-full cursor-grab overflow-hidden px-3 py-2 text-left text-ellipsis whitespace-nowrap after:ml-2 data-[sort=ascending]:after:content-['↑'] data-[sort=descending]:after:content-['↓'] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-400 active:cursor-grabbing",
-  row: 'last:[&>td]:border-b-0',
+  row: 'odd:bg-(--surface-subtle) hover:bg-(--surface-selected) last:[&>td]:border-b-0',
   cell: 'min-w-32 max-w-80 overflow-hidden border-r border-b border-[color:var(--border-muted)] px-3 py-2 text-[var(--text-default)] last:border-r-0',
   value: 'block max-w-80 truncate',
+  type: 'block truncate px-3 pb-1 text-[10px] font-normal text-(--text-muted)',
   nullValue: 'italic text-[var(--text-muted)]',
   screenReaderOnly: 'sr-only',
 } as const;
@@ -29,7 +30,7 @@ export function OperationalDrawerDataTable({
   rows,
 }: Readonly<{
   caption: string;
-  columns: readonly Readonly<{ name: string }>[];
+  columns: readonly Readonly<{ name: string; type?: string }>[];
   nullValueLabel: string;
   rows: readonly Readonly<{ values: readonly (string | null)[] }>[];
 }>): JSX.Element {
@@ -91,6 +92,7 @@ export function OperationalDrawerDataTable({
           <tr>
             {table.getFlatHeaders().map((header) => {
               const sorted = header.column.getIsSorted();
+              const dataType = columns.find((column) => column.name === header.column.id)?.type;
               const ariaSort: OperationalDrawerDataTableSort =
                 sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none';
               return (
@@ -159,6 +161,9 @@ export function OperationalDrawerDataTable({
                   >
                     {String(header.column.columnDef.header)}
                   </button>
+                  {dataType == null ? null : (
+                    <span className={operationalDrawerDataTableClassNames.type}>{dataType}</span>
+                  )}
                 </th>
               );
             })}

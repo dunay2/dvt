@@ -1,33 +1,32 @@
-/** Inspect a detached canonical Read without borrowing the selected JOIN's analysis session. */
-import { deriveRelationSchema } from '@dvt/substrait-analysis';
-import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
-import { resolveCanvasViewCopy } from '../canvasCopyCatalog';
-import { CanvasRelationFieldsTemplate } from '../CanvasRelationFields.templates';
+/** Inspect a detached Source through the same published Input controls as an applied Source. */
+import type { GraphNodeInputMapping } from '../../../plugins/graph/graphNodeColumnContracts';
+import { CanvasSourceOccurrenceOutputs } from '../CanvasSourceOccurrenceOutputs';
+import type { CanvasDvtCompositionInput } from '../canvasDvtCompositionInputCatalog';
 import type { PendingSourceOccurrence } from './pendingSourceOccurrence';
 import { SourceOccurrencePropertiesForm } from './SourceOccurrencePropertiesForm';
 
 export function PendingSourceOccurrenceProperties({
   occurrence,
+  input,
+  publishedFieldNames,
+  consumerNodeId,
+  onMapInput,
+  onRemoveInput,
   occupied,
   actions,
   onPendingChange,
 }: Readonly<{
   occurrence: PendingSourceOccurrence;
+  input?: CanvasDvtCompositionInput;
+  publishedFieldNames: readonly string[];
+  consumerNodeId: string;
+  onMapInput?: (mapping: GraphNodeInputMapping) => void;
+  onRemoveInput?: (mapping: GraphNodeInputMapping) => void;
   occupied: ReadonlySet<string>;
   actions: Readonly<{ rename: (alias: string) => boolean; close: () => void }>;
   onPendingChange: (pending: boolean) => void;
 }>): JSX.Element {
-  const language = useApplicationLanguageStore((state) => state.language);
   const { read } = occurrence;
-  const schema = deriveRelationSchema({ ...read, inputs: [], consumers: [] }, []);
-  const fields = [...read.fields]
-    .filter((field) => field.parentFieldId == null)
-    .sort((a, b) => a.outputOrdinal - b.outputOrdinal)
-    .map((field) => ({
-      id: field.fieldId,
-      name: field.displayName ?? field.fieldId,
-      type: schema[field.outputOrdinal]?.type.kind.case,
-    }));
   return (
     <SourceOccurrencePropertiesForm
       data={{
@@ -39,12 +38,15 @@ export function PendingSourceOccurrenceProperties({
       actions={{ save: actions.rename, close: actions.close }}
       onPendingChange={onPendingChange}
       output={
-        <CanvasRelationFieldsTemplate
-          fields={fields}
-          loading={false}
-          error={null}
-          label={resolveCanvasViewCopy(language).relationalTreeOutputLabel}
-        />
+        input == null ? null : (
+          <CanvasSourceOccurrenceOutputs
+            input={input}
+            publishedFieldNames={publishedFieldNames}
+            consumerNodeId={consumerNodeId}
+            onMapInput={onMapInput}
+            onRemoveInput={onRemoveInput}
+          />
+        )
       }
     />
   );

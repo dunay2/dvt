@@ -1,6 +1,7 @@
 /** Owned concern: present the active authoring or inspection view of one Model. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
+import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import { CanvasRelationalTreeAuthoring } from './CanvasRelationalTreeAuthoring';
 import { projectCanvasRelationalTreeAuthoringView } from './canvasRelationalTreeAuthoringView';
@@ -9,6 +10,7 @@ import type { CanvasModelOutputInspectorState } from './CanvasRelationalTreeSide
 
 type CanvasRelationalTreeContentProps = Readonly<{
   model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
+  authoring?: CanvasRelationalTreeAuthoringContract;
   transformNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
@@ -27,6 +29,7 @@ export function CanvasRelationalTreeContent(props: CanvasRelationalTreeContentPr
 
 function CanvasRelationalTreeContentView({
   model,
+  authoring,
   transformNode,
   nodes,
   edges,
@@ -49,6 +52,8 @@ function CanvasRelationalTreeContentView({
         expanded={expanded}
         onExpandedChange={onExpandedChange}
         copy={copy}
+        authoring={authoring}
+        sourceOutputFieldsByRelationId={model.sourceOutputFieldsByRelationId}
       />
     );
   }
@@ -64,6 +69,7 @@ function CanvasRelationalTreeContentView({
   return (
     <CanvasRelationalTreeInspection
       model={model}
+      authoring={authoring}
       transformNode={transformNode}
       copy={copy}
       expanded={expanded}

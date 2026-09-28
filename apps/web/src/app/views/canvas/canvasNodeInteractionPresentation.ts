@@ -28,6 +28,7 @@ export type CanvasCardActions = {
 export type CanvasColumnActions = {
   onColumnViewChange?: (nodeId: string, view: 'input' | 'output') => void;
   onMapCanvasInput?: (identity: GraphNodeInputMapping) => void;
+  onRemoveCanvasInput?: (identity: GraphNodeInputMapping) => void;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   onApplyCanvasColumnFunction?: (
     identity: GraphNodeColumnFunctionApplyIdentity
@@ -90,6 +91,7 @@ export function buildCanvasNodeInteractionPresentation({
       onAttachSchemaToNode: handlers.onAttachSchemaToNode,
       onColumnPortActivate: handlers.onColumnPortActivate,
       onMapCanvasInput: handlers.onMapCanvasInput,
+      onRemoveCanvasInput: handlers.onRemoveCanvasInput,
       onApplyCanvasColumnFunction: handlers.onApplyCanvasColumnFunction,
       onApplyCanvasStructuredField: handlers.onApplyCanvasStructuredField,
       onAddCanvasCalculatedColumn: handlers.onAddCanvasCalculatedColumn,

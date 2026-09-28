@@ -15,7 +15,12 @@ export type CanvasOperationPreviewPorts = Readonly<{
   preparePreview?: CanvasModelPreviewPreparation;
   dataHost?: HTMLDivElement | null;
   onOpenData?: () => void;
-  onExecuteSource?: (nodeId: string, target: CanvasSourceDataSampleTarget) => void;
+  onExecuteSource?: (
+    nodeId: string,
+    target: CanvasSourceDataSampleTarget,
+    selectedFieldNames?: readonly string[]
+  ) => void;
+  sourceOutputFieldsByRelationId?: ReadonlyMap<string, readonly string[]>;
 }>;
 
 export const CanvasOperationPreviewContext = createContext<

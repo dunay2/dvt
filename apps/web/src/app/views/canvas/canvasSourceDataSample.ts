@@ -3,11 +3,32 @@ import { ConnectedSourceRefSchema, type SourceDataSampleRequest } from '@dvt/con
 
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { OperationalDrawerDataSample } from '../../components/shell/operationalDrawerContributionStore';
+import type { SourceDataSample } from '../../ports/workspace';
 import type { RunSnapshot } from '../../ports/runs';
 import { WarehouseSourceDataSampleQueryError } from '../../services/workspace/workspaceErrors';
 import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
 
 export const CANVAS_SOURCE_DATA_SAMPLE_LIMIT = 20 as const;
+
+/** Present the selected Source publication without changing the physical query result. */
+export function projectCanvasSourceDataSample(
+  sample: SourceDataSample,
+  selectedFieldNames: readonly string[]
+): SourceDataSample {
+  const columnIndexes = selectedFieldNames.map((name) =>
+    sample.columns.findIndex((column) => column.name === name)
+  );
+  if (columnIndexes.some((index) => index < 0)) {
+    throw new Error('Selected Source output is absent from the sample.');
+  }
+  return {
+    ...sample,
+    columns: columnIndexes.map((index) => sample.columns[index]!),
+    rows: sample.rows.map((row) => ({
+      values: columnIndexes.map((index) => row.values[index] ?? null),
+    })),
+  };
+}
 
 export type CanvasSourceDataSampleTarget = Readonly<{
   connectionId: string;

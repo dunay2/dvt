@@ -161,7 +161,7 @@ describe('explicit relational editing', () => {
       expect(
         container.querySelector('[data-slot="canvas-relational-tree-inline-editor"] input')
       ).toBeNull();
-      expect(container.querySelector('[data-slot="canvas-relation-fields"]')).not.toBeNull();
+      expect(container.querySelector('[data-slot="source-occurrence-outputs"]')).not.toBeNull();
       expect(applied).not.toHaveBeenCalled();
     }
   );

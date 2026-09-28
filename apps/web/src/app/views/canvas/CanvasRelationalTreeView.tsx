@@ -1,5 +1,3 @@
-/** Owned concern: present one scalable, keyboard-selectable relational graph viewport. */
-
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanonicalNode } from '../../types/canonical';
 import type { ComponentProps } from 'react';
@@ -33,6 +31,7 @@ function TreeView({
   onDropOperation,
   onOpenOutput,
   onDisconnectOutput,
+  sourceOutputFieldsByRelationId,
 }: Readonly<{
   outputName: string;
   root: CanvasRelationalTreeNode;
@@ -46,6 +45,7 @@ function TreeView({
   onDropOperation?: (operation: CanvasStagedOperationKind) => string | null;
   onOpenOutput?: () => void;
   onDisconnectOutput?: () => void;
+  sourceOutputFieldsByRelationId?: ReadonlyMap<string, readonly string[]>;
 }>): JSX.Element {
   const viewport = useCanvasRelationalTreeViewport();
   const { setPosition } = useRelationalLayout();
@@ -106,6 +106,7 @@ function TreeView({
             style={{ zoom: viewport.zoom }}
           >
             <CanvasRelationalTreeLayout
+              sourceOutputFieldsByRelationId={sourceOutputFieldsByRelationId}
               outputName={outputName}
               root={root}
               selectedLocator={selectedLocator}

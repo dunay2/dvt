@@ -149,6 +149,24 @@ describe('relational card detail projection', () => {
     ).toBe(false);
   });
 
+  it('limits a Source Read detail to the external publication without changing its semantic fields', () => {
+    const { node, projection } = projectExpressionStage(expressionStageDraft());
+    const read = projection.root.children[0]!.node;
+    const first = read.output.fields[0]!.displayName!;
+    const details = projectCanvasRelationalTreeDetails(
+      projection.root,
+      { transformNode: node },
+      new Map([[read.relationId!, [first]]])
+    );
+    expect(read.output.fields.length).toBeGreaterThan(1);
+    expect(
+      details.graphs
+        .get(read.locator)!
+        .nodes.filter((item) => item.data.semanticKind === 'field')
+        .map((item) => item.data.detail)
+    ).toEqual([first]);
+  });
+
   it('does not project details without semantic context or invent detail for unsupported cards', () => {
     const { node, projection } = projectExpressionStage(expressionStageDraft());
     expect(projectCanvasRelationalTreeDetails(projection.root).graphs.size).toBe(0);

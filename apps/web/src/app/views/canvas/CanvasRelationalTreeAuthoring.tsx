@@ -12,6 +12,7 @@ import { CanvasRelationalTreeAuthoringTemplate } from './CanvasRelationalTreeAut
 import { PendingSourceOccurrenceProperties } from './relational-source-occurrence/PendingSourceOccurrenceProperties';
 import { sourceOccurrenceAliases } from './relational-source-occurrence/sourceOccurrenceAlias';
 import { CanvasStagedOperationInspector } from './CanvasStagedOperationInspector';
+import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import {
   resolveCanvasStagedProducerDocument,
   resolveCanvasStagedEditingDocument,
@@ -24,6 +25,8 @@ export function CanvasRelationalTreeAuthoring({
   expanded,
   onExpandedChange,
   onPendingConditionChange,
+  sourceOutputFieldsByRelationId,
+  authoring,
 }: Readonly<{
   data: CanvasRelationalTreeAuthoringDto;
   actions: CanvasRelationalTreeAuthoringActions;
@@ -31,6 +34,8 @@ export function CanvasRelationalTreeAuthoring({
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
   onPendingConditionChange: (pending: boolean) => void;
+  sourceOutputFieldsByRelationId: ReadonlyMap<string, readonly string[]>;
+  authoring?: CanvasRelationalTreeAuthoringContract;
 }>): JSX.Element {
   const { selectedRelationId, transformNode } = data;
   const pending = data.pendingSources.find(
@@ -74,6 +79,7 @@ export function CanvasRelationalTreeAuthoring({
           data={data}
           actions={actions}
           copy={copy}
+          sourceOutputFieldsByRelationId={sourceOutputFieldsByRelationId}
           onExpandRelation={expand}
         />
       }
@@ -93,6 +99,13 @@ export function CanvasRelationalTreeAuthoring({
           <PendingSourceOccurrenceProperties
             key={pending.read.binding.relationId}
             occurrence={pending}
+            input={data.inputs.find((input) => input.nodeId === pending.sourceNodeId)}
+            publishedFieldNames={
+              sourceOutputFieldsByRelationId.get(pending.read.binding.relationId) ?? []
+            }
+            consumerNodeId={transformNode.id}
+            onMapInput={authoring?.onMapInput}
+            onRemoveInput={authoring?.onRemoveInput}
             occupied={
               new Set([
                 ...sourceOccurrenceAliases(data.draft?.sidecar.relations ?? []),

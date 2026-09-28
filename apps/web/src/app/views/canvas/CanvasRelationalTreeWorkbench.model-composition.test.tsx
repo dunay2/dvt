@@ -17,6 +17,41 @@ import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.
 describe('Model composition Workbench', () => {
   setupWorkbenchTest();
 
+  it('opens a selected Source on Output with only its producer publication', async () => {
+    const graph = occurrenceGraph();
+    const onMapInput = vi.fn();
+    const onRemoveInput = vi.fn();
+    await act(async () =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={graph.targetNode}
+          nodes={graph.nodes}
+          edges={graph.edges}
+          copy={COPY}
+          authoring={{
+            canEditNode: true,
+            onApplyNodeDraft: vi.fn(),
+            onMapInput,
+            onRemoveInput,
+          }}
+        />
+      )
+    );
+    const source = container.querySelector<HTMLElement>('[data-operator="read"]');
+    await act(async () => source?.click());
+    const inspector = container.querySelector<HTMLElement>('[data-canvas-inspector="true"]');
+    expect(
+      inspector
+        ?.querySelector('[data-slot="canvas-operation-output-tab"]')
+        ?.getAttribute('data-state')
+    ).toBe('active');
+    expect(inspector?.querySelector('[data-slot="source-occurrence-outputs"]')).not.toBeNull();
+    expect(
+      inspector?.querySelectorAll('[data-slot="source-occurrence-remove-field"]')
+    ).toHaveLength(2);
+    expect(inspector?.querySelector('input[type="checkbox"]')).toBeNull();
+  });
+
   it('opens the Model output in the fixed inspector and commits a final-field alias', async () => {
     const graph = occurrenceGraph();
     const applied = vi.fn();

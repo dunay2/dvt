@@ -9,7 +9,7 @@ import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSes
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 
-it.each(['available', 'missing-reference', 'missing-port'] as const)(
+it.each(['available', 'missing-reference', 'missing-port', 'missing-publication'] as const)(
   'routes a source card to its governed source query (%s)',
   (availability) => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
@@ -50,6 +50,10 @@ it.each(['available', 'missing-reference', 'missing-port'] as const)(
               canvasId: 'canvas',
               query: { previewTransformRows },
               onExecuteSource: availability === 'missing-port' ? undefined : onExecuteSource,
+              sourceOutputFieldsByRelationId:
+                availability === 'missing-publication'
+                  ? new Map()
+                  : new Map([['source-occurrence', ['customer']]]),
             }}
             nodeId="model"
             semanticDigest={null}
@@ -75,14 +79,19 @@ it.each(['available', 'missing-reference', 'missing-port'] as const)(
       );
       expect(onExecuteSource).not.toHaveBeenCalled();
       const play = container.querySelector<HTMLButtonElement>('[data-slot="canvas-node-execute"]')!;
+      expect(play.textContent).toContain('Preview');
       expect(play.disabled).toBe(availability !== 'available');
       act(() => play.click());
       if (availability === 'available') {
-        expect(onExecuteSource).toHaveBeenCalledExactlyOnceWith('model:source-occurrence', {
-          connectionId: 'warehouse',
-          objectId: 'relation/dvt/raw/employees',
-          nodeName: 'Managers alias',
-        });
+        expect(onExecuteSource).toHaveBeenCalledExactlyOnceWith(
+          'model:source-occurrence',
+          {
+            connectionId: 'warehouse',
+            objectId: 'relation/dvt/raw/employees',
+            nodeName: 'Managers alias',
+          },
+          ['customer']
+        );
       } else expect(onExecuteSource).not.toHaveBeenCalled();
       expect(previewTransformRows).not.toHaveBeenCalled();
     } finally {

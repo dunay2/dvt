@@ -36,6 +36,7 @@ export function SourceOccurrencePropertiesTemplate({
       hasExpression={false}
       onClose={actions.close}
       output={output}
+      initialTab="output"
     >
       {data.unsupported == null ? (
         <form

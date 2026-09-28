@@ -193,10 +193,17 @@ describe('direct output ordering', () => {
       expect(container.querySelector('[data-value="output"]')?.getAttribute('data-state')).toBe(
         'active'
       );
-      const fields = container.querySelector('[data-slot="canvas-relation-fields"]');
+      const fields = container.querySelector(
+        operator === 'read'
+          ? '[data-slot="source-occurrence-outputs"]'
+          : '[data-slot="canvas-relation-fields"]'
+      );
       expect(fields).not.toBeNull();
       expect(fields!.querySelectorAll('[data-field-id]').length).toBe(operator === 'read' ? 2 : 4);
-      expect(fields!.querySelector('button, input, select')).toBeNull();
+      expect(fields!.querySelector('input, select')).toBeNull();
+      expect(
+        Array.from(fields!.querySelectorAll('button')).every((button) => button.disabled)
+      ).toBe(true);
       expect(container.querySelector('[data-slot="canvas-relational-edit"]')).toBeNull();
     }
   });
