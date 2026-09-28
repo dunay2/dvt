@@ -405,6 +405,15 @@ function buildVerifyChangedPlan(files) {
 function buildFocusedChangedTestPlan(files) {
   const changedFiles = normalizeChangedFiles(files);
   const plan = [];
+  if (
+    changedFiles.includes('scripts/check-changed.cjs') ||
+    changedFiles.includes('scripts/check-changed.test.cjs')
+  ) {
+    pushStepOnce(
+      plan,
+      step('test-check-changed', 'node', '--test', 'scripts/check-changed.test.cjs')
+    );
+  }
   const directPlanningWorkflowTestSteps = planningWorkflowTestSteps(changedFiles);
   pushSteps(plan, directPlanningWorkflowTestSteps);
   pushSteps(plan, ciToolingTestSteps(changedFiles));

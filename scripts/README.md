@@ -237,8 +237,12 @@ Runs changed-file quality checks against the Git diff baseline. It is used by
 
 Checks:
 
-- Prettier on changed `js/json/md/yml/yaml` files
-- ESLint on changed `ts/tsx/js/jsx` files
+- Prettier on changed `ts/tsx/js/cjs/mjs/json/md/yml/yaml` files
+- ESLint on changed `ts/tsx/js/cjs/mjs` files
+
+Prettier remains batched for Windows command-line limits. ESLint uses one
+instance for the entire changed-file inventory so the canonical type-aware
+configuration is initialized once; any warning or error still fails the gate.
 
 Diff policy:
 
