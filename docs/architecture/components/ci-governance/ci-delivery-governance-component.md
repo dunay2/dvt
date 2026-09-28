@@ -48,6 +48,7 @@ Command/query rail:
 | `ApplyPullRequestFileLabels`             | command | Repository collaboration governance | `PullRequestFileLabelPolicy` policy object    | `PORT-CI-APPLY-PR-FILE-LABELS` and `.github/workflows/pr-labeler.yml` | Fails when candidate code receives write authority, candidate configuration controls labels, or the trusted adapter checks out or executes candidate code.                         |
 | `LintChangedMarkdownFiles`               | query   | Repository Markdown governance      | `ChangedMarkdownFileSet` read model           | `scripts/lint-markdown-changed.cjs` and `verify:prepush`              | Fails when generated Markdown artifacts are passed explicitly to markdownlint despite repository ignore policy.                                                                    |
 | `ValidatePullRequestMetadata`            | query   | Repository delivery governance      | `PullRequestMetadataPolicy` policy object     | `.github/workflows/pr-quality-gate.yml` and existing Node validators  | Rejects an invalid title, excessive size, or short description before dependency setup; non-PR events skip only these PR-specific checks.                                          |
+| `RestoreAndPersistTurboCache`            | command | Repository delivery governance      | `TurboCacheLifecyclePolicy` policy object     | `.github/actions/setup-node-pnpm/action.yml` and GitHub cache adapter | Fails when a repeated successful run has an immutable exact-hit write key, matrix writers collide, or cache absence can alter build correctness.                                   |
 
 ## Invariants
 
@@ -146,6 +147,59 @@ flowchart LR
   Metadata -->|invalid| Reject[Fail job]
   Metadata -->|valid or non-PR event| Install[Existing setup and remaining checks]
 ```
+
+## Turbo cache lifecycle
+
+`RestoreAndPersistTurboCache` is a repository-delivery command, not a build
+authority. Its input is the OS, workflow/job/variant identity, dependency and
+toolchain configuration hash, run ID, and run attempt. Its output is a
+best-effort restored `.turbo` directory and, after a successful job, a new
+immutable cache entry. The shared setup action is the only application port;
+GitHub cache is the outbound adapter. PR jobs use the same read-only repository
+permissions as before and receive no new secret. A missing, evicted, or
+incompatible cache must leave Turbo to recompute tasks from its own hashes.
+The rail is **implemented**. Its input value objects are the producer identity,
+configuration digest, and execution identity; its receipt is GitHub cache's
+restore/save result, not a build-success claim. Cache writes are idempotent per
+run attempt and isolated by producer; the latest compatible restore may be
+eventually consistent. Only the shared setup action and its existing workflow
+callers execute this rail. Contract tests cover static-key reuse, absent
+restoration prefix, matrix collision, and the empty-cache build path.
+
+Current state: a stable configuration-derived write key can hit exactly and
+therefore cannot persist results produced later in that job.
+The 2026-09-19 `Package Tests (plan-verifier)` run linked from issue #2930
+restored the primary Turbo key, rebuilt all three tasks (`Cached: 0`), and
+reported `not saving cache` after the exact hit. This is one observed run,
+not a repository-wide timing average.
+
+```mermaid
+flowchart LR
+  Job[Job builds new outputs] --> Exact[Stable cache key already exists]
+  Exact --> Restore[Restore old .turbo]
+  Restore --> Build[Turbo recomputes missing tasks]
+  Build --> NoSave[Exact hit prevents new cache save]
+```
+
+Target: one stable restore prefix per producing job and matrix variant, with a
+fresh write suffix per run and attempt. Different variants do not race to save
+the same key. Configuration inputs remain in the prefix; Turbo's task hashes,
+not the cache entry, decide whether restored results are valid. This is a
+cache-lifecycle repair, not a new runner topology or a reduction in tests.
+
+```mermaid
+flowchart LR
+  Job[Workflow job and variant] --> Prefix[OS + workflow + job + variant + config hash]
+  Prefix --> Restore[Restore newest compatible prefix]
+  Restore --> Build[Turbo validates task hashes and builds misses]
+  Build --> Fresh[Save with run ID + attempt suffix on success]
+  Fresh --> Next[Next compatible run can restore new outputs]
+```
+
+The contract test must reject a static write key, an absent restore prefix,
+and package-matrix jobs without a distinct variant. It must preserve normal
+build behavior when the cache is empty and retain the existing pnpm-store
+cache independently of this change.
 
 ## Transitions
 
