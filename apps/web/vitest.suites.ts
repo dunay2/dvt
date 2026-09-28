@@ -32,6 +32,12 @@ type WebVitestSuiteDefinition = Readonly<{
 }>;
 
 const WEB_VITEST_DEFAULT_EXCLUDE = ['node_modules/**', 'dist/**'] as const;
+const NODE_ENVIRONMENT_SUITES = new Set<WebVitestSuiteName>([
+  'unit',
+  'architecture',
+  'canvas-unit',
+  'canvas-architecture',
+]);
 export const WEB_VITEST_CI_WORKER_COUNT = 1;
 export const WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB = 4096;
 export const WEB_VITEST_CI_NODE_OPTIONS = `--max-old-space-size=${WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB}`;
@@ -173,7 +179,7 @@ export function createWebVitestConfig(suiteName: WebVitestSuiteName): UserConfig
   return {
     test: {
       globals: true,
-      environment: suiteName === 'unit' || suiteName === 'architecture' ? 'node' : 'jsdom',
+      environment: NODE_ENVIRONMENT_SUITES.has(suiteName) ? 'node' : 'jsdom',
       include: [...suite.include],
       exclude: [...suite.exclude],
       ...(isWebVitestCi() ? createWebVitestCiWorkerConfig() : {}),

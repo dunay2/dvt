@@ -24,7 +24,7 @@ afterEach(() => {
 });
 
 describe('web Vitest suite catalog', () => {
-  it.each(['unit', 'architecture'] as const)(
+  it.each(['unit', 'architecture', 'canvas-unit', 'canvas-architecture'] as const)(
     'uses Node by default for the %s suite without changing its file ownership',
     (suiteName) => {
       expect(createWebVitestConfig(suiteName).test).toMatchObject({
@@ -35,12 +35,15 @@ describe('web Vitest suite catalog', () => {
     }
   );
 
-  it.each(['all', 'presentation', ...WEB_VITEST_FOCUS_SUITE_NAMES] as const)(
-    'retains the browser environment for the %s suite',
-    (suiteName) => {
-      expect(createWebVitestConfig(suiteName).test?.environment).toBe('jsdom');
-    }
-  );
+  it.each([
+    'all',
+    'presentation',
+    ...WEB_VITEST_FOCUS_SUITE_NAMES.filter(
+      (suiteName) => suiteName !== 'canvas-unit' && suiteName !== 'canvas-architecture'
+    ),
+  ] as const)('retains the browser environment for the %s suite', (suiteName) => {
+    expect(createWebVitestConfig(suiteName).test?.environment).toBe('jsdom');
+  });
 
   it('assigns every web Vitest file to exactly one primary suite', () => {
     for (const filePath of listWebVitestFiles()) {
