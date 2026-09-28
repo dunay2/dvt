@@ -8,14 +8,15 @@ import {
 import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { allocateDvtFieldId, DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
 import { cloneLocalRelation, SubstraitAnalysisError } from '@dvt/substrait-analysis';
+
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
-import { inspectProjectionDataType } from './canvasDvtSubstraitProjectionStructure';
-import { buildDvtSubstraitScalarFunction } from './canvasDvtSubstraitScalarFunction';
 import {
   buildDvtSubstraitCalculatedExpression,
   type DvtSubstraitCalculatedExpression,
 } from './canvasDvtSubstraitCalculatedExpression';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
+import { inspectProjectionDataType } from './canvasDvtSubstraitProjectionStructure';
+import { buildDvtSubstraitScalarFunction } from './canvasDvtSubstraitScalarFunction';
 import { relationOutputMapping } from './canvasRelationOutputBindings';
 import {
   commitSelectedRelationUnary,
@@ -28,20 +29,31 @@ type SelectedRelationLiteral = Extract<
   { kind: 'string-literal' | 'timestamp-literal' }
 >;
 
+export type SelectedRelationDerivedExpression =
+  | Readonly<{ kind: 'field'; fieldId: string }>
+  | SelectedRelationLiteral
+  | Readonly<{
+      kind: 'function';
+      capabilityId: string;
+      arguments: readonly [
+        SelectedRelationDerivedExpression,
+        ...SelectedRelationDerivedExpression[],
+      ];
+    }>;
+
 export type SelectedRelationDerivedOutputRequest = SelectedUnaryRequest &
-  Readonly<{ alias: string }> &
-  (
-    | Readonly<{
-        capabilityIds: readonly [string, ...string[]];
-        operandFieldIds: readonly [string, ...string[]];
-        literal?: never;
-      }>
-    | Readonly<{
-        literal: SelectedRelationLiteral;
-        capabilityIds?: never;
-        operandFieldIds?: never;
-      }>
-  );
+  Readonly<{
+    alias: string;
+    expression: SelectedRelationDerivedExpression;
+  }>;
+
+type PreparedUnary = Awaited<ReturnType<typeof prepareSelectedRelationUnary>>;
+type RelationSchema = Awaited<ReturnType<CanvasRelationAnalysisSession['query']>>;
+type BuiltExpression = Readonly<{
+  expression: Expression;
+  dataType: string;
+  dependencies: readonly string[];
+}>;
 
 function rootFields<T extends Readonly<{ parentFieldId?: string; outputOrdinal: number }>>(
   fields: readonly T[]
@@ -51,10 +63,7 @@ function rootFields<T extends Readonly<{ parentFieldId?: string; outputOrdinal: 
     .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
 }
 
-function resolveOperandExpression(
-  prepared: Awaited<ReturnType<typeof prepareSelectedRelationUnary>>,
-  fieldId: string
-): Expression | null {
+function resolveOperandExpression(prepared: PreparedUnary, fieldId: string): Expression | null {
   const inputs = rootFields(prepared.schema.bindings);
   const inputOrdinal = inputs.findIndex((field) => field.fieldId === fieldId);
   if (inputOrdinal >= 0) return dvtSubstraitExpression.field(inputOrdinal);
@@ -77,35 +86,63 @@ function reject(message: string, relationId: string): never {
   throw new SubstraitAnalysisError('invalid_binding', message, relationId);
 }
 
-function buildScalarChain(
-  args: Readonly<{
-    plan: Plan;
-    capabilityIds: readonly [string, ...string[]];
-    dataTypes: readonly string[];
-    operands: readonly Expression[];
-    provider: string;
-  }>
-): Expression | null {
-  let dataTypes = args.dataTypes;
-  let operands = args.operands;
-  let expression: Expression | null = null;
-  for (const capabilityId of args.capabilityIds) {
-    expression = buildDvtSubstraitScalarFunction({
-      plan: args.plan,
-      capabilityId,
-      dataTypes,
-      operands,
-      provider: args.provider,
-    });
-    if (expression?.rexType.case !== 'scalarFunction') return null;
-    const outputType = expression.rexType.value.outputType;
-    if (outputType == null) return null;
-    const outputDataType = inspectProjectionDataType(outputType);
-    if (outputDataType == null) return null;
-    dataTypes = [outputDataType];
-    operands = [expression];
+function buildExpressionNode(args: Readonly<{
+  node: SelectedRelationDerivedExpression;
+  prepared: PreparedUnary;
+  available: RelationSchema;
+  plan: Plan;
+  provider: string;
+}>): BuiltExpression | null {
+  if (args.node.kind === 'field') {
+    const binding = rootFields(args.available.bindings).find(
+      (field) => field.fieldId === args.node.fieldId
+    );
+    if (binding == null) return null;
+    const expression = resolveOperandExpression(args.prepared, args.node.fieldId);
+    const type = inspectProjectionDataType(args.available.fields[binding.outputOrdinal]!.type);
+    return expression == null || type == null
+      ? null
+      : {
+          expression,
+          dataType: type,
+          dependencies: [args.node.fieldId],
+        };
   }
-  return expression;
+
+  if (args.node.kind === 'string-literal' || args.node.kind === 'timestamp-literal') {
+    try {
+      return {
+        expression: buildDvtSubstraitCalculatedExpression(args.plan, args.node),
+        dataType: args.node.kind === 'string-literal' ? 'string' : 'timestamp with time zone',
+        dependencies: [],
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  const children = args.node.arguments.map((node) =>
+    buildExpressionNode({ ...args, node })
+  );
+  if (children.some((child) => child == null)) return null;
+  const builtChildren = children.filter((child): child is BuiltExpression => child != null);
+  const expression = buildDvtSubstraitScalarFunction({
+    plan: args.plan,
+    capabilityId: args.node.capabilityId,
+    dataTypes: builtChildren.map((child) => child.dataType),
+    operands: builtChildren.map((child) => child.expression),
+    provider: args.provider,
+  });
+  if (expression?.rexType.case !== 'scalarFunction') return null;
+  const outputType = expression.rexType.value.outputType;
+  if (outputType == null) return null;
+  const dataType = inspectProjectionDataType(outputType);
+  if (dataType == null) return null;
+  return {
+    expression,
+    dataType,
+    dependencies: [...new Set(builtChildren.flatMap((child) => child.dependencies))],
+  };
 }
 
 export async function applySelectedRelationDerivedOutput(
@@ -118,48 +155,18 @@ export async function applySelectedRelationDerivedOutput(
     request.intent === 'edit'
       ? await session.query(request.relationId, request.signal)
       : prepared.schema;
-  const operandFieldIds = request.literal == null ? request.operandFieldIds : [];
-  if (
-    rootFields(available.bindings).some((field) => field.displayName === alias) ||
-    operandFieldIds.some(
-      (fieldId) => !rootFields(available.bindings).some((field) => field.fieldId === fieldId)
-    )
-  )
-    reject('Derived-output alias or operand is unavailable.', request.relationId);
-
-  const expressions = operandFieldIds.map((fieldId) =>
-    resolveOperandExpression(prepared, fieldId)
-  );
-  const dataTypes = operandFieldIds.map((fieldId) => {
-    const binding = rootFields(available.bindings).find((field) => field.fieldId === fieldId);
-    return binding == null
-      ? null
-      : inspectProjectionDataType(available.fields[binding.outputOrdinal]!.type);
-  });
-  if (
-    expressions.some((expression) => expression == null) ||
-    dataTypes.some((type) => type == null)
-  )
-    reject('Derived-output operand cannot be projected.', request.relationId);
+  if (rootFields(available.bindings).some((field) => field.displayName === alias))
+    reject('Derived-output alias is unavailable.', request.relationId);
 
   const plan = clone(PlanSchema, { ...prepared.target.plan, relations: [] });
-  let expression: Expression | null = null;
-  if (request.literal != null) {
-    try {
-      expression = buildDvtSubstraitCalculatedExpression(plan, request.literal);
-    } catch {
-      expression = null;
-    }
-  } else {
-    expression = buildScalarChain({
-      plan,
-      capabilityIds: request.capabilityIds,
-      dataTypes: dataTypes.filter((type): type is string => type != null),
-      operands: expressions.filter((item): item is Expression => item != null),
-      provider: session.executionProvider(request.expectedRevision),
-    });
-  }
-  if (expression == null) reject('Derived-output expression is unavailable.', request.relationId);
+  const built = buildExpressionNode({
+    node: request.expression,
+    prepared,
+    available,
+    plan,
+    provider: session.executionProvider(request.expectedRevision),
+  });
+  if (built == null) reject('Derived-output expression is unavailable.', request.relationId);
 
   const relation =
     request.intent === 'edit'
@@ -176,13 +183,14 @@ export async function applySelectedRelationDerivedOutput(
   if (relation.relType.case !== 'project')
     reject('Expected selected ProjectRel.', request.relationId);
   const project = relation.relType.value;
-  project.expressions.push(expression);
+  project.expressions.push(built.expression);
   if (project.common?.emitKind.case === 'emit') {
     project.common.emitKind.value.outputMapping.push(
       rootFields(prepared.schema.bindings).length + project.expressions.length - 1
     );
   }
-  const dependencies = [...new Set(operandFieldIds)];
+
+  const dependencies = [...new Set(built.dependencies)];
   const fields = [
     ...prepared.fields,
     {
@@ -192,7 +200,9 @@ export async function applySelectedRelationDerivedOutput(
       displayName: alias,
       ...(dependencies.length === 1
         ? { sourceFieldId: dependencies[0] }
-        : { operandFieldIds: dependencies }),
+        : dependencies.length > 1
+          ? { operandFieldIds: dependencies }
+          : {}),
     },
   ];
   return commitSelectedRelationUnary(session, { ...prepared, fields }, relation, plan);
