@@ -26,4 +26,5 @@ mitigation:
     - packages/@dvt/postgres-projection/test/relationalI64Arithmetic.test.ts
     - apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedExpression.i64.test.ts
   follow_up:
-    - fp64, decimal arithmetic, mixed numeric types and coercion require independent admission and target proof.
+    - fp64, decimal arithmetic, mixed numeric types and coercion require independent admission and
+      target proof.
