@@ -679,10 +679,8 @@ export function inspectDvtSubstraitProjectionDraft(
         : null;
     }
     if (expression.rexType.case === 'literal') {
-      const calculated = inspectDvtSubstraitCalculatedExpression(
-        draft.plan,
-        expression
-      )?.calculation;
+      const calculated = inspectDvtSubstraitCalculatedExpression(draft.plan, expression)
+        ?.calculation;
       if (calculated?.kind === 'string-literal')
         return { kind: 'string-literal', value: calculated.value };
       if (calculated?.kind === 'timestamp-literal')
