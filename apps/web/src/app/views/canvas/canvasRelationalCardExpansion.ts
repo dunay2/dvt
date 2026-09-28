@@ -59,6 +59,8 @@ export function projectCanvasRelationalCardExpansion(
     ])
   );
   const reserved = previous?.key === key ? null : reserveCardSpace(cards, expandedSizes);
+  const origins =
+    reserved == null ? previous!.origins : new Map(cards.map(({ id, x, y }) => [id, { x, y }]));
   const offsets =
     reserved == null
       ? previous!.offsets
@@ -71,8 +73,15 @@ export function projectCanvasRelationalCardExpansion(
   const positions = new Map(
     cards.map((card) => {
       const offset = offsets.get(card.id)!;
-      return [card.id, { x: card.x + offset.x, y: card.y + offset.y }];
+      const origin = origins.get(card.id)!;
+      return [
+        card.id,
+        {
+          x: card.x + offset.x * (origin.x === 0 ? 1 : Math.min(1, card.x / origin.x)),
+          y: card.y + offset.y * (origin.y === 0 ? 1 : Math.min(1, card.y / origin.y)),
+        },
+      ];
     })
   );
-  return { positions, frame: { key, offsets } };
+  return { positions, frame: { key, offsets, origins } };
 }

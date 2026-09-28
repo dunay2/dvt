@@ -2,7 +2,20 @@
 import { useRef, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
 import type { CardPosition } from '../canvasRelationalTreeGeometry';
 
-export type RelationalMovableCard = Readonly<CardPosition & { id: string; offset?: CardPosition }>;
+export type RelationalMovableCard = Readonly<
+  CardPosition & {
+    id: string;
+    offset?: CardPosition;
+    expansionOrigin?: CardPosition;
+  }
+>;
+
+function authoredCoordinate(value: number, origin = 0, offset = 0): number {
+  return Math.max(
+    0,
+    origin > 0 && value < origin + offset ? (value * origin) / (origin + offset) : value - offset
+  );
+}
 
 type Drag = {
   id: string;
@@ -23,10 +36,10 @@ export function useRelationalCardMovement(
   const drag = useRef<Drag | null>(null);
   const suppressClick = useRef(false);
   const setPosition = (id: string, position: CardPosition) => {
-    const offset = cards.find((card) => card.id === id)?.offset;
+    const card = cards.find((item) => item.id === id);
     commitPosition(id, {
-      x: Math.max(0, position.x - (offset?.x ?? 0)),
-      y: Math.max(0, position.y - (offset?.y ?? 0)),
+      x: authoredCoordinate(position.x, card?.expansionOrigin?.x, card?.offset?.x),
+      y: authoredCoordinate(position.y, card?.expansionOrigin?.y, card?.offset?.y),
     });
   };
   const locate = (target: EventTarget) => {

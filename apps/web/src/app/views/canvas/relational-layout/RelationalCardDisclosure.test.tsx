@@ -239,6 +239,34 @@ describe('Relational card disclosure', () => {
     }
   );
 
+  it('can drag an offset expanded card to the drawable origin and cancel without losing compact coordinates', () => {
+    const compact = layoutCanvasRelationalTree(fixture.projection.root);
+    const positions = new Map(
+      compact.nodes.map((placed, index) => [
+        placed.node.relationId!,
+        index === 0 ? { x: 500, y: 200 } : { x: 36, y: 36 },
+      ])
+    );
+    render(1.2, 'inspection', positions);
+    const card = movableCard();
+    const before = cardPosition(card);
+    pointer(card, 'pointerdown', 1000, 1000);
+    for (const target of [0, 1, 5, 10, 5, 0]) {
+      pointer(
+        card,
+        'pointermove',
+        1000 + (target - before.x) * 1.2,
+        1000 + (target - before.y) * 1.2
+      );
+      expect(cardPosition(card).x).toBeCloseTo(target);
+      expect(cardPosition(card).y).toBeCloseTo(target);
+    }
+    pointer(card, 'pointercancel', 1000, 1000);
+    expect(cardPosition(card)).toEqual(before);
+    render(1, 'inspection', positions);
+    expect(cardPosition(card)).toEqual({ x: 500, y: 200 });
+  });
+
   it('keeps the first drag in the same expanded coordinate frame without restored positions', () => {
     render(1.2);
     const card = movableCard();

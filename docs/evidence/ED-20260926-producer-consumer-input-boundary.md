@@ -884,8 +884,31 @@ cypress/e2e/canvas/canvas-relational-card-movement.cy.ts`: six passed, zero
   step. All original cards remained connected, zero card removals were observed,
   and release preserved the final coordinate. No Apply, Preview or Run was used.
 - Web `typecheck` and package `lint` passed in the initial scope run. Full Canvas
-  and final committed-tree pre-push validation remain to be recorded below.
+  and pre-push results follow below.
 
 No user data, backup or semantic document was changed for this fix. No debt
 entry, stub, rule relaxation or hook bypass was introduced. The broader branch
 blockers recorded above are not implicitly resolved by this movement proof.
+
+The full `pnpm --filter @dvt/web test:canvas:run --maxWorkers=4` run passed
+2,418 tests in 528 files. Final review then added a drawable-origin regression:
+with a positive expansion offset, pure translation stopped the card at x=196
+instead of x=0. The new test failed before correcting the frame's inverse.
+Below its initial anchor the reserved offset now scales linearly to zero, and
+the movement owner uses that exact inverse. Above the anchor the offset remains
+constant. This preserves nonnegative persisted coordinates and exact cancellation
+without changing a contract or rebasing the frame on each move. The final focused
+command above passed 33 tests; the six Cypress movement tests passed again. The
+2,418-test broad run preceded this additional boundary correction and is not
+presented as a second full-suite run afterward.
+
+`pnpm verify:prepush` was run on implementation commit `2a02bdabb`. It passed DB
+integrity, 422 mechanization declarations, its routed Web suites, governance
+script tests and formatting. It failed at strict ESLint with the same five
+pre-existing asynchronous-callback errors in `useCanvasEdgeAuthoringHandlers.ts`,
+`useCanvasGraphHandlers.ts` and `useCanvasGraphHandlers.edgeAuthoring.test.tsx`.
+A separate strict audit of those files plus
+`packages/@dvt/contracts/test/dvt-relational-authoring-draft.contract.test.ts`
+also reconfirmed the existing missing-return-type warning. These files were not
+changed by the movement correction. No pre-push success, push or main integration
+is claimed; no hook or check was bypassed. GitHub publication remains unperformed.

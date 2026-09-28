@@ -11,6 +11,9 @@ export function projectCanvasRelationalMovableCards(layout: CanvasRelationalTree
       x: placed.x,
       y: placed.y,
       offset: layout.expansionFrame?.offsets.get(placed.node.relationId ?? placed.node.locator),
+      expansionOrigin: layout.expansionFrame?.origins.get(
+        placed.node.relationId ?? placed.node.locator
+      ),
     })),
     ...(layout.output == null
       ? []
@@ -20,6 +23,9 @@ export function projectCanvasRelationalMovableCards(layout: CanvasRelationalTree
             x: layout.output.x,
             y: layout.output.y,
             offset: layout.expansionFrame?.offsets.get(CANVAS_RELATIONAL_OUTPUT_POSITION_ID),
+            expansionOrigin: layout.expansionFrame?.origins.get(
+              CANVAS_RELATIONAL_OUTPUT_POSITION_ID
+            ),
           },
         ]),
   ];

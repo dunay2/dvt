@@ -148,6 +148,12 @@ coordinates. Movement changes authored coordinates through that stable frame;
 disclosure, a zoom detail transition, topology changes or Arrange invalidate it.
 The frame survives inspection/editor view changes, is not persisted and grants
 no semantic authority. Edges continue to derive from displayed card bounds.
+The frame must also have an inverse down to the drawable origin: a fixed positive
+translation alone would prevent dragging an expanded card to x=0 or y=0 because
+authored coordinates cannot be negative. Preserve the initial reservation, scale
+it linearly toward zero below its anchor, and invert that same mapping in the
+gesture owner. This keeps all coordinates nonnegative without rebasing on each
+move, changing contracts or breaking cancellation.
 
 ```mermaid
 flowchart LR

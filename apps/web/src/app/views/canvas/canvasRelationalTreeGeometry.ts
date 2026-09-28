@@ -25,7 +25,8 @@ const OUTPUT_WIDTH = 156;
 const BOTTOM_PADDING = 36;
 
 export type CanvasRelationalTreeLayout = Readonly<{
-  expansionFrame?: Readonly<{ key: string; offsets: ReadonlyMap<string, CardPosition> }>;
+  expansionFrame?: Readonly<{ key: string }> &
+    Readonly<Record<'offsets' | 'origins', ReadonlyMap<string, CardPosition>>>;
   width: number;
   height: number;
   output:
