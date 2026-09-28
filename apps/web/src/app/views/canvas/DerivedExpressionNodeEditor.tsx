@@ -294,6 +294,7 @@ export function DerivedExpressionNodeEditor({
             key={index}
             data-slot="derived-expression-argument"
             data-argument-index={index}
+            data-depth={depth}
             className="flex items-start gap-1"
           >
             <div className="min-w-0 flex-1 rounded border border-(--border-subtle) bg-(--surface-elevated) p-2">
