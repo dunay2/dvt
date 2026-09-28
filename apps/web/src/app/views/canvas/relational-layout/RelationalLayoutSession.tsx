@@ -3,7 +3,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -31,6 +31,10 @@ function useLayout(
   );
   const positionsRef = useRef(positions);
   const expansionFrame = useRef<CanvasRelationalTreeLayout['expansionFrame'] | null>(null);
+  const contentSize = useRef<Pick<CanvasRelationalTreeLayout, 'width' | 'height'> | null>(null);
+  const [extent, setExtent] = useState<Pick<CanvasRelationalTreeLayout, 'width' | 'height'> | null>(
+    null
+  );
   const projectLayout = useCallback(
     (
       root: CanvasRelationalTreeNode | null,
@@ -45,21 +49,38 @@ function useLayout(
         expansionFrame.current
       );
       expansionFrame.current = next.expansionFrame ?? null;
-      return next;
+      contentSize.current = { width: next.width, height: next.height };
+      return {
+        ...next,
+        width: Math.max(next.width, extent?.width ?? 0),
+        height: Math.max(next.height, extent?.height ?? 0),
+      };
     },
-    [positions]
+    [positions, extent]
   );
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (initialPositions === positionsRef.current) return;
     expansionFrame.current = null;
+    setExtent(null);
     const next = new Map(initialPositions);
     positionsRef.current = next;
     setPositions(next);
   }, [initialPositions]);
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
   const setPosition = useCallback(
-    (id: string, position: CardPosition) => {
-      const next = new Map(positionsRef.current).set(id, position);
+    (id: string, position: CardPosition, visiblePositions = EMPTY_POSITIONS) => {
+      const before = contentSize.current;
+      if (before != null) {
+        setExtent((current) =>
+          current != null && current.width >= before.width && current.height >= before.height
+            ? current
+            : {
+                width: Math.max(current?.width ?? 0, before.width),
+                height: Math.max(current?.height ?? 0, before.height),
+              }
+        );
+      }
+      const next = new Map([...visiblePositions, ...positionsRef.current]).set(id, position);
       positionsRef.current = next;
       setPositions(next);
       onPositionsChange?.(next);
@@ -76,6 +97,7 @@ function useLayout(
   }, []);
   const arrange = useCallback(() => {
     expansionFrame.current = null;
+    setExtent(null);
     const next = new Map<string, CardPosition>();
     positionsRef.current = next;
     setPositions(next);
@@ -85,6 +107,8 @@ function useLayout(
     () => ({
       positions,
       projectLayout,
+      contentSize,
+      setExtent,
       setPosition,
       expanded,
       toggleDetail,
