@@ -79,7 +79,10 @@ mitigation:
     are rebased on clones, preserving stable identities and rejecting overlapping occurrences or
     incompatible SET operands. Output refresh cannot replace the inspector or focused controls.
     Semantic zoom reserves lexical-detail space as a disposable projection, never a semantic write
-    or replacement of manually authored coordinates. Browser checks cover repeated zoom, column
+    or replacement of manually authored coordinates. Expansion offsets remain stable while cards
+    move; visible bounds/topology changes and Arrange invalidate the session frame. Repeated
+    boundary-crossing, cancellation and real-browser drag tests reject geometry feedback without
+    adding a persisted layout authority. Browser checks cover repeated zoom, column
     inclusion/reorder and JOIN/CROSS/UNION Apply/reopen; controlled API transport still does not
     prove live provider execution. Name/formula editing compiles directly to canonical expressions
     and preserves FieldIds. Only matching i64/fp64 arithmetic signatures are admitted. Shared

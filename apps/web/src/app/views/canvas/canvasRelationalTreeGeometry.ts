@@ -25,7 +25,7 @@ const OUTPUT_WIDTH = 156;
 const BOTTOM_PADDING = 36;
 
 export type CanvasRelationalTreeLayout = Readonly<{
-  positionOffsets?: ReadonlyMap<string, CardPosition>;
+  expansionFrame?: Readonly<{ key: string; offsets: ReadonlyMap<string, CardPosition> }>;
   width: number;
   height: number;
   output:
@@ -39,20 +39,19 @@ export function layoutCanvasRelationalTree(
   root: CanvasRelationalTreeNode | null,
   sizes: ReadonlyMap<string, CanvasRelationalTreeNodeSize> = new Map(),
   positions: ReadonlyMap<string, CardPosition> = new Map(),
-  detached: readonly CanvasRelationalTreeNode[] = []
+  detached: readonly CanvasRelationalTreeNode[] = [],
+  previousExpansion?: CanvasRelationalTreeLayout['expansionFrame'] | null
 ): CanvasRelationalTreeLayout {
-  let effectivePositions = positions;
-  let positionOffsets: ReadonlyMap<string, CardPosition> | undefined;
-  if (positions.size > 0 && sizes.size > 0) {
-    const compact = layoutCanvasRelationalTree(root, new Map(), positions, detached);
-    const expanded = projectCanvasRelationalCardExpansion(
-      compact,
-      sizes,
-      CANVAS_RELATIONAL_OUTPUT_POSITION_ID
-    );
-    effectivePositions = expanded.positions;
-    positionOffsets = expanded.offsets;
-  }
+  const expanded =
+    sizes.size > 0 && (positions.size > 0 || previousExpansion !== undefined)
+      ? projectCanvasRelationalCardExpansion(
+          layoutCanvasRelationalTree(root, new Map(), positions, detached),
+          sizes,
+          CANVAS_RELATIONAL_OUTPUT_POSITION_ID,
+          previousExpansion
+        )
+      : undefined;
+  const effectivePositions = expanded?.positions ?? positions;
   const first = root ?? detached[0];
   const output = {
     ...(effectivePositions.get(CANVAS_RELATIONAL_OUTPUT_POSITION_ID) ?? { x: 320, y: 36 }),
@@ -137,7 +136,7 @@ export function layoutCanvasRelationalTree(
   );
   const bounds = [...nodes, output];
   return {
-    positionOffsets,
+    expansionFrame: expanded?.frame,
     width: Math.max(...bounds.map((node) => node.x + node.width)) + HORIZONTAL_PADDING,
     height: Math.max(...bounds.map((node) => node.y + node.height)) + BOTTOM_PADDING,
     output,

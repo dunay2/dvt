@@ -140,6 +140,35 @@ describe('Relational card movement', () => {
     });
   });
 
+  it('drags through expanded spacing without a coordinate jump, remount or implicit request', () => {
+    cy.get(join).closest('li').find('[data-slot="canvas-relational-node-expand"]').click();
+    cy.get('[data-slot="canvas-relational-card-detail"]').should('exist');
+    cy.get(source).then(($card) => {
+      const card = $card[0];
+      const before = position(card);
+      const zoom = Number(
+        (Cypress.$('[data-slot="canvas-relational-tree"]')[0] as HTMLElement).style.zoom
+      );
+      const writes = semanticWrites('join-transform').length;
+      const queries = /\/(data-sample|preview|runs|execute)(\/|$)/;
+      const requests = getE2eApiCalls(queries).length;
+      let displacement = 0;
+      for (const delta of [220, -8, 8, -8, 8]) {
+        displacement += delta;
+        const expected = before[1]! + displacement;
+        moveWorkbenchCard(source, 0, delta * zoom);
+        cy.get(source).should(($moved) => {
+          expect($moved[0]).to.equal(card);
+          expect(position($moved[0])[1]).to.be.closeTo(expected, 1);
+        });
+      }
+      cy.then(() => {
+        expect(semanticWrites('join-transform')).to.have.length(writes);
+        expect(getE2eApiCalls(queries)).to.have.length(requests);
+      });
+    });
+  });
+
   it('moves Output, selects its properties and disconnects the focused connection with Delete', () => {
     cy.get(output).then(($output) => {
       const before = [

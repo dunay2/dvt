@@ -834,3 +834,58 @@ not resolved by these formula-specific proofs. Integration remains pending the
 complete branch gates. No new debt, stub, fake production adapter, disabled rule
 or bypassed hook was introduced. GitHub publication still requires its separate
 authorization; this evidence has not been posted externally.
+
+## Expanded-card movement feedback correction (2026-09-28)
+
+The governing issue remains #3298. Planning DB consultation returned the existing
+`GH-3342-CARD-LAYOUT` and `GH-3418-SEMANTIC-FIELD-TRANSFORMATION-PROJECTION`
+declarations for the `ProjectCanvasRelationalTree` rail. The existing semantic
+field transformation plan records the root cause, current/target diagrams,
+alternatives and negative-test matrix before the regression and production edits.
+No new rail, exported implementation symbol, data model or database write was
+needed. Complete-branch ARC evaluation still returns ARC-2 (evidence and risk;
+no separate compatibility matrix or rollout notes).
+
+The real local editor reproduced a coordinate feedback loop: one-pixel pointer
+steps alternated Filter between y=333.46875 and y=509.5625. The cards remained
+mounted; API reads were healthy. Expansion offsets were recalculated from manual
+positions that had just been derived by subtracting those same offsets.
+
+The existing layout session now retains one disposable expansion frame keyed by
+card identity, topology and visible dimensions. Geometry and movable-card
+projection share it. Disclosure, detail-threshold changes, topology changes,
+external layout hydration and Arrange invalidate it. Pointer movement does not.
+This removes feedback rather than debouncing renders or hiding lexical detail.
+The React skill review kept frame ownership in the shared session, not in a new
+component or effect-driven duplicate layout. Existing component size limits and
+semantic-write guards remain unchanged.
+
+Validation recorded for this slice:
+
+- Red: `pnpm --filter @dvt/web test:canvas-presentation:run
+src/app/views/canvas/relational-layout/RelationalCardDisclosure.test.tsx
+--maxWorkers=1` failed all six new regressions before the fix (horizontal and
+  vertical boundary crossing, three cancellation modes and first expanded drag).
+- Green: `pnpm --filter @dvt/web test:canvas:run
+src/app/views/canvas/relational-layout
+src/app/views/canvas/canvasRelationalTreeGeometry.test.ts
+src/app/views/canvas/CanvasRelationalTreeWorkbench.architecture.test.ts
+--maxWorkers=1` passed 32 tests in seven files. The intermediate component-size
+  failures were fixed by retaining projection in its session and simplifying
+  geometry, not by raising limits.
+- `pnpm --filter @dvt/web test:e2e:native --spec
+cypress/e2e/canvas/canvas-relational-card-movement.cy.ts`: six passed, zero
+  skipped. This includes real pointer capture, expanded-boundary movement,
+  zoom, Output/connection geometry and no implicit semantic/data requests. The
+  scenario uses the existing controlled test transport; it does not seed a DB.
+- A separate browser session against the running app repeated the original
+  drag. Pointer y=415,416,417,418 produced card y=388.46875,389.46875,390.46875,
+  391.46875; reversing the pointer reversed the card by exactly one pixel per
+  step. All original cards remained connected, zero card removals were observed,
+  and release preserved the final coordinate. No Apply, Preview or Run was used.
+- Web `typecheck` and package `lint` passed in the initial scope run. Full Canvas
+  and final committed-tree pre-push validation remain to be recorded below.
+
+No user data, backup or semantic document was changed for this fix. No debt
+entry, stub, rule relaxation or hook bypass was introduced. The broader branch
+blockers recorded above are not implicitly resolved by this movement proof.

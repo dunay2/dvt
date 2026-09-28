@@ -30,7 +30,8 @@ function reserveCardSpace(
 export function projectCanvasRelationalCardExpansion(
   compact: CanvasRelationalTreeLayout,
   sizes: ReadonlyMap<string, CanvasRelationalTreeNodeSize>,
-  outputId: string
+  outputId: string,
+  previous?: CanvasRelationalTreeLayout['expansionFrame'] | null
 ) {
   const cards: CardBounds[] = compact.nodes.map((placed) => ({
     id: placed.node.relationId ?? placed.node.locator,
@@ -46,12 +47,32 @@ export function projectCanvasRelationalCardExpansion(
       sizes.get(placed.node.locator) ?? placed,
     ])
   );
-  const positions = reserveCardSpace(cards, expandedSizes);
-  const offsets = new Map(
+  const key = JSON.stringify(
+    compact.nodes.map((placed) => [
+      placed.node.relationId,
+      placed.node.locator,
+      placed.parentLocator,
+      placed.role,
+      placed.ordinal,
+      expandedSizes.get(placed.node.relationId ?? placed.node.locator)?.width,
+      expandedSizes.get(placed.node.relationId ?? placed.node.locator)?.height,
+    ])
+  );
+  const reserved = previous?.key === key ? null : reserveCardSpace(cards, expandedSizes);
+  const offsets =
+    reserved == null
+      ? previous!.offsets
+      : new Map(
+          cards.map((card) => {
+            const expanded = reserved.get(card.id)!;
+            return [card.id, { x: expanded.x - card.x, y: expanded.y - card.y }];
+          })
+        );
+  const positions = new Map(
     cards.map((card) => {
-      const expanded = positions.get(card.id)!;
-      return [card.id, { x: expanded.x - card.x, y: expanded.y - card.y }];
+      const offset = offsets.get(card.id)!;
+      return [card.id, { x: card.x + offset.x, y: card.y + offset.y }];
     })
   );
-  return { positions, offsets };
+  return { positions, frame: { key, offsets } };
 }

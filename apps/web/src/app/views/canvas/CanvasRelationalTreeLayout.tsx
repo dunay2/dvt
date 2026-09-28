@@ -8,7 +8,6 @@ import {
   type CanvasRelationalSemanticContext,
 } from './canvasRelationalTreeDetails';
 
-import { layoutCanvasRelationalTree } from './canvasRelationalTreeGeometry';
 import { RelationalTreeEdges } from './relational-layout/RelationalTreeEdges';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
@@ -73,7 +72,7 @@ export function CanvasRelationalTreeLayout({
         : projectCanvasRelationalTreeDetails(root, semanticContext),
     [root, semanticContext?.transformNode, semanticContext?.draft]
   );
-  const { positions, setPosition, expanded, toggleDetail } = useRelationalLayout();
+  const { projectLayout, setPosition, expanded, toggleDetail } = useRelationalLayout();
   const zoomRevealsDetail = Math.round(zoom * 100) >= CANVAS_RELATIONAL_DETAIL_ZOOM * 100;
   const sizes = useMemo(() => {
     const visible = new Map(detail.sizes);
@@ -98,8 +97,8 @@ export function CanvasRelationalTreeLayout({
     [detachedSources, detachedOperations]
   );
   const layout = useMemo(
-    () => layoutCanvasRelationalTree(root, sizes, positions, detached),
-    [root, sizes, positions, detached]
+    () => projectLayout(root, sizes, detached),
+    [root, sizes, detached, projectLayout]
   );
   const movableCards = useMemo(() => projectCanvasRelationalMovableCards(layout), [layout]);
   const movement = useRelationalCardMovement(

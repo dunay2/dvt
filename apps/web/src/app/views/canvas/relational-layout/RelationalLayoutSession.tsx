@@ -9,7 +9,13 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import type { CardPosition } from '../canvasRelationalTreeGeometry';
+import {
+  layoutCanvasRelationalTree,
+  type CardPosition,
+  type CanvasRelationalTreeLayout,
+} from '../canvasRelationalTreeGeometry';
+import type { CanvasRelationalTreeNode } from '../canvasRelationalTreeProjection';
+import type { CanvasRelationalTreeNodeSize } from '../canvasRelationalTreeGeometryMetrics';
 import { CANVAS_RELATIONAL_TREE_MIN_ZOOM } from '../canvasRelationalTreeViewport';
 const EMPTY_POSITIONS: ReadonlyMap<string, CardPosition> = new Map();
 function useLayout(
@@ -24,8 +30,28 @@ function useLayout(
     () => new Map(initialPositions)
   );
   const positionsRef = useRef(positions);
+  const expansionFrame = useRef<CanvasRelationalTreeLayout['expansionFrame'] | null>(null);
+  const projectLayout = useCallback(
+    (
+      root: CanvasRelationalTreeNode | null,
+      sizes: ReadonlyMap<string, CanvasRelationalTreeNodeSize>,
+      detached: readonly CanvasRelationalTreeNode[]
+    ) => {
+      const next = layoutCanvasRelationalTree(
+        root,
+        sizes,
+        positions,
+        detached,
+        expansionFrame.current
+      );
+      expansionFrame.current = next.expansionFrame ?? null;
+      return next;
+    },
+    [positions]
+  );
   useEffect(() => {
     if (initialPositions === positionsRef.current) return;
+    expansionFrame.current = null;
     const next = new Map(initialPositions);
     positionsRef.current = next;
     setPositions(next);
@@ -49,6 +75,7 @@ function useLayout(
     });
   }, []);
   const arrange = useCallback(() => {
+    expansionFrame.current = null;
     const next = new Map<string, CardPosition>();
     positionsRef.current = next;
     setPositions(next);
@@ -57,6 +84,7 @@ function useLayout(
   return useMemo(
     () => ({
       positions,
+      projectLayout,
       setPosition,
       expanded,
       toggleDetail,
@@ -68,7 +96,7 @@ function useLayout(
       minimumZoom,
       setMinimumZoom,
     }),
-    [positions, setPosition, expanded, toggleDetail, arrange, zoom, minimumZoom]
+    [positions, projectLayout, setPosition, expanded, toggleDetail, arrange, zoom, minimumZoom]
   );
 }
 const LayoutContext = createContext<ReturnType<typeof useLayout> | null>(null);
