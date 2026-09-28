@@ -62,8 +62,14 @@ describe('dataset Transform insertion', () => {
       expectedRevision: session.revision,
       intent: 'edit',
       alias: 'normalized',
-      capabilityIds: [fn.capabilityId],
-      operandFieldIds: [field.fieldId, field.fieldId],
+      expression: {
+        kind: 'function',
+        capabilityId: fn.capabilityId,
+        arguments: [
+          { kind: 'field', fieldId: field.fieldId },
+          { kind: 'field', fieldId: field.fieldId },
+        ],
+      },
     });
     expect((await session.query(relationId)).bindings.at(-1)).toMatchObject({
       displayName: 'normalized',
