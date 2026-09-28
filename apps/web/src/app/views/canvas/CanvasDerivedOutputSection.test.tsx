@@ -96,4 +96,55 @@ describe('selected relation derived-output section', () => {
       )
     ).toBe(true);
   });
+
+  it('authors a direct text constant as a visual formula node', async () => {
+    const document = connectedNamesProjectionDraft();
+    const lookup = new CanvasRelationAnalysisSession('derived-output-literal-identity');
+    lookup.receive(document);
+    const relationId = lookup.rootId;
+    const onChange = vi.fn();
+
+    function Host(): React.JSX.Element {
+      const analysis = useCanvasRelationAnalysisSession(document, 'derived-output-literal');
+      return (
+        <CanvasRelationAnalysisContext.Provider value={analysis}>
+          <CanvasDerivedOutputSection relationId={relationId} onChange={onChange} />
+        </CanvasRelationAnalysisContext.Provider>
+      );
+    }
+
+    await act(async () => root.render(<Host />));
+    await waitFor(() =>
+      expect(container.querySelector('[data-slot="canvas-derived-output-trigger"]')).not.toBeNull()
+    );
+    await act(async () =>
+      fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-trigger"]')!)
+    );
+    await act(async () =>
+      fireEvent.change(container.querySelector('[data-slot="derived-expression-kind"]')!, {
+        target: { value: 'string-literal' },
+      })
+    );
+    await act(async () =>
+      fireEvent.change(container.querySelector('[data-slot="derived-expression-literal-value"]')!, {
+        target: { value: 'web' },
+      })
+    );
+    await act(async () =>
+      fireEvent.change(container.querySelector<HTMLInputElement>('input[name="alias"]')!, {
+        target: { value: 'channel' },
+      })
+    );
+    await act(async () => fireEvent.submit(container.querySelector('form')!));
+
+    await waitFor(() => expect(onChange).toHaveBeenCalledOnce());
+    const indexed = indexSubstraitRelations(onChange.mock.calls[0]![0]);
+    if (!indexed.ok) throw indexed.error;
+    const project = indexed.index.relations.get(relationId);
+    if (project?.relation.relType.case !== 'project') throw new Error('Expected ProjectRel.');
+    const expression = project.relation.relType.value.expressions.at(-1)?.rexType;
+    expect(expression?.case).toBe('literal');
+    if (expression?.case !== 'literal') throw new Error('Expected literal expression.');
+    expect(expression.value.literalType).toEqual({ case: 'string', value: 'web' });
+  });
 });
