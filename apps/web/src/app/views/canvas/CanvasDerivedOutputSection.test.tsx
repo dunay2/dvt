@@ -179,7 +179,7 @@ describe('selected relation derived-output section', () => {
 
     const argumentsList = [
       ...container.querySelectorAll<HTMLElement>('[data-slot="derived-expression-argument"]'),
-    ].filter((element) => element.dataset.argumentIndex != null);
+    ].filter((element) => element.dataset.depth === '0');
     expect(argumentsList.length).toBeGreaterThanOrEqual(2);
 
     const firstKind = argumentsList[0]!.querySelector<HTMLSelectElement>(
@@ -195,7 +195,7 @@ describe('selected relation derived-output section', () => {
 
     const refreshedArguments = [
       ...container.querySelectorAll<HTMLElement>('[data-slot="derived-expression-argument"]'),
-    ].filter((element) => element.dataset.argumentIndex != null);
+    ].filter((element) => element.dataset.depth === '0');
     const secondKind = refreshedArguments[1]!.querySelector<HTMLSelectElement>(
       '[data-slot="derived-expression-node-kind"]'
     )!;
