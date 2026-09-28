@@ -56,6 +56,13 @@ export function CanvasDerivedOutputSection({
                   resolution,
                 });
           }}
+          resolveFunctionsForTypes={(dataTypes, resolution) =>
+            resolveDvtSubstraitColumnFunctions({
+              dataTypes,
+              provider: model.provider,
+              resolution,
+            })
+          }
           onCancel={() => setEditing(null)}
           onSubmit={async ({ alias, expression }) => {
             const applied = await command.execute((session, identity) =>
