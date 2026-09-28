@@ -26,6 +26,26 @@ const unary = (name: string, target = name): Binding => ({
   output: 'string',
   sql: (args) => call(target, args),
 });
+const arithmetic = (
+  name: 'add' | 'subtract' | 'multiply' | 'divide',
+  operator: '+' | '-' | '*' | '/'
+): Binding => ({
+  family: 'functions_arithmetic',
+  signature: `${name}:i64_i64`,
+  minimum: 2,
+  maximum: 2,
+  accepts: sameType('i64'),
+  output: 'i64',
+  sql: (args) => ({
+    A_Expr: {
+      kind: 'AEXPR_OP',
+      name: [pgString(operator)],
+      lexpr: args[0],
+      rexpr: args[1],
+      location: -1,
+    },
+  }),
+});
 const compare = (signature: string, operator: '=' | '<>' | '>' | '>=' | '<' | '<='): Binding => ({
   family: 'functions_comparison',
   signature,
@@ -78,6 +98,10 @@ export const scalarBindings: Readonly<Record<string, Binding>> = {
     output: 'string',
     sql: (args) => ({ CoalesceExpr: { args } }),
   },
+  add: arithmetic('add', '+'),
+  subtract: arithmetic('subtract', '-'),
+  multiply: arithmetic('multiply', '*'),
+  divide: arithmetic('divide', '/'),
   extract: {
     family: 'functions_datetime',
     signature: 'extract:req_ptstz_str',

@@ -9,7 +9,7 @@ export type ScalarArgumentGuard = (
 const valuesOnly = (fn: Expression_ScalarFunction): boolean =>
   fn.arguments.every((arg) => arg.argType.case === 'value');
 export const sameType =
-  (kind: 'string' | 'bool'): ScalarArgumentGuard =>
+  (kind: 'string' | 'bool' | 'i64'): ScalarArgumentGuard =>
   (fn, types) =>
     valuesOnly(fn) && types.every((type) => type.kind.case === kind);
 export const comparable: ScalarArgumentGuard = (fn, types) => {
