@@ -118,6 +118,14 @@ add/remove buttons instead of selection checkboxes, retaining focus and the
 existing dependency-aware output command after each action.
 Header movement and field dragging must have disjoint interaction boundaries.
 
+Staged unary forms must retain their query inputs while only presentation state
+changes. The authoring presenter currently reconstructs a producer document on
+every pending-edit update; the new analysis snapshot briefly clears its field
+query and unmounts the form. Memoize that existing subtree projection against
+its semantic inputs, not the pending UI flag. Do not add another draft store,
+delay input events or accept stale semantic revisions. Prove DOM identity,
+focus and typed LIMIT through pending-state renders, then Apply and reopen.
+
 Main Canvas left-click opens the existing fixed inspector. Source inspection
 starts at Output; Model double-click retains semantic-editor navigation.
 Embedded controls, Preview and drag must not trigger card navigation.

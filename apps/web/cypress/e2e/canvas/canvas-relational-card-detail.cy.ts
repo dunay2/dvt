@@ -38,7 +38,7 @@ describe('Relational card detail', () => {
           .type('73')
           .should('have.value', '73');
       cy.get('[data-slot="canvas-relational-operator-form"] button[type="submit"]').click();
-      if (operation === 'fetch') cy.get('@operation').should('contain.text', '73');
+      cy.get('[data-slot="canvas-relational-operator-form"]').should('not.exist');
       cy.get('@operation').as('producer', { type: 'static' });
     }
     connectWorkbenchProducer(
