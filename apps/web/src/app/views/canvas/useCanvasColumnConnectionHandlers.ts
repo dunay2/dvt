@@ -69,51 +69,56 @@ export function useCanvasColumnConnectionHandlers(
   );
 
   const handleToggleCanvasColumnOutput = useCallback(
-    async (identity: GraphNodeColumnOutputToggleIdentity) => {
+    (identity: GraphNodeColumnOutputToggleIdentity) => {
       if (!canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
-      const result = await columnAuthoringCommandRunner.toggleOutput(identity);
-      if (result.outcome === 'rejected') {
-        toast.error(formatColumnMappingRejection(result.reason));
-      }
+      void columnAuthoringCommandRunner.toggleOutput(identity).then((result) => {
+        if (result.outcome === 'rejected') {
+          toast.error(formatColumnMappingRejection(result.reason));
+        }
+      });
     },
     [canEditEdges, columnAuthoringCommandRunner]
   );
 
   const handleReorderCanvasColumnOutput = useCallback(
-    async (identity: GraphNodeColumnReorderIdentity) => {
+    (identity: GraphNodeColumnReorderIdentity) => {
       if (!canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
-      const result = await columnAuthoringCommandRunner.reorderOutput(identity);
-      if (result.outcome === 'rejected') {
-        toast.error(formatColumnMappingRejection(result.reason));
-      }
+      void columnAuthoringCommandRunner.reorderOutput(identity).then((result) => {
+        if (result.outcome === 'rejected') {
+          toast.error(formatColumnMappingRejection(result.reason));
+        }
+      });
     },
     [canEditEdges, columnAuthoringCommandRunner]
   );
 
   const handleRemoveColumnMapping = useCallback(
-    async (mapping: CanvasColumnLineageEdgeData) => {
+    (mapping: CanvasColumnLineageEdgeData) => {
       if (!canEditEdges || !mapping.removable) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
-      const result = await columnAuthoringCommandRunner.removeInput({
-        target: { nodeId: mapping.targetNodeId, inputId: mapping.outputId },
-        source: {
-          nodeId: mapping.sourceNodeId,
-          columnId: mapping.sourceFieldId,
-        },
-      });
-      if (result.outcome === 'rejected') {
-        toast.error(formatColumnMappingRejection(result.reason));
-        return;
-      }
-      toast.success(canvasViewCopy.columnMappingRemovedMessage);
+      void columnAuthoringCommandRunner
+        .removeInput({
+          target: { nodeId: mapping.targetNodeId, inputId: mapping.outputId },
+          source: {
+            nodeId: mapping.sourceNodeId,
+            columnId: mapping.sourceFieldId,
+          },
+        })
+        .then((result) => {
+          if (result.outcome === 'rejected') {
+            toast.error(formatColumnMappingRejection(result.reason));
+            return;
+          }
+          toast.success(canvasViewCopy.columnMappingRemovedMessage);
+        });
     },
     [canEditEdges, columnAuthoringCommandRunner]
   );

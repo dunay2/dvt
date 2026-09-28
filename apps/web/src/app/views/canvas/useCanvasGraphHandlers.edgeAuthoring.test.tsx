@@ -843,7 +843,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     if (withLiteral) {
       setDraftSession.mockClear();
       await act(async () => {
-        harness.latest()?.handleAddCanvasCalculatedColumn({
+        await harness.latest()?.handleAddCanvasCalculatedColumn({
           nodeId: transform.id,
           kind: 'string-literal',
           alias: 'channel',

@@ -912,3 +912,50 @@ A separate strict audit of those files plus
 also reconfirmed the existing missing-return-type warning. These files were not
 changed by the movement correction. No pre-push success, push or main integration
 is claimed; no hook or check was bypassed. GitHub publication remains unperformed.
+
+## Branch integration validation (2026-09-28)
+
+The #3298 editor contract and the existing `ProjectCanvasRelationalTree`,
+`ConfigureCanvasDvtNode`, `PreviewCanvasTransformRows` and
+`SaveWorkspaceGraphDraft` rails remain the authorities. No parallel command,
+editor route, persistence store or semantic IR was added. The async Canvas
+column/composition commands now cross void UI-event boundaries without returning
+unobserved promises; composition failures are surfaced, and tests await
+result-bearing commands. Strict lint rules were not relaxed.
+
+Three Cypress specs encoding implicit source append or older contextual-removal
+gestures were retired: `canvas-source-composition.cy.ts`,
+`canvas-relational-source-occurrence.cy.ts` and
+`canvas-contextual-removal.cy.ts`. The active explicit-port scenarios and
+instance-identity tests remain. The component's browser-scenario contract now
+points to those owners rather than a deleted file. No test was skipped to pass
+the suite.
+
+Validation of this integration slice:
+
+- `pnpm --filter @dvt/web typecheck`: passed.
+- `pnpm --filter @dvt/web lint:strict`: passed with zero warnings after fixing
+  one additional unawaited Workbench selection in its test.
+- `pnpm --filter @dvt/web test:canvas:run --maxWorkers=4`: 2,419 passed in
+  528 files.
+- `pnpm --filter @dvt/contracts test --
+test/dvt-relational-authoring-draft.contract.test.ts`: seven passed.
+- `pnpm --filter @dvt/web test:e2e:native --spec
+cypress/e2e/canvas/canvas-relational-workbench-pending-join.cy.ts,
+cypress/e2e/canvas/canvas-relational-workbench-append.cy.ts,
+cypress/e2e/canvas/canvas-relational-workbench-removal.cy.ts,
+cypress/e2e/canvas/canvas-relational-workbench-chain-persistence.cy.ts,
+cypress/e2e/canvas/canvas-relational-card-movement.cy.ts`: 14 passed, zero
+  failed/skipped, using the controlled API test transport. No live database
+  seeding or shared-table write was run.
+- `pnpm docs:status:generate --code-state-only`: passed; inventory already
+  current.
+
+The prior shared-database incident is not resolved by these code tests. A local
+backup made after recreation of `public.source_1`, `raw.orders`,
+`raw.client` and `raw.order_details` cannot recover their previous rows.
+No restore or further data mutation is asserted. A separately supplied
+pre-incident backup would be required to assess recovery. The repository gate,
+fresh Planning DB implementation check and remote PR checks remain to be
+recorded separately before claiming main integration. No new debt, stub,
+placeholder, disabled rule or bypassed hook was introduced in this slice.

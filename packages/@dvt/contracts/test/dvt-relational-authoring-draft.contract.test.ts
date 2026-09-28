@@ -30,7 +30,7 @@ const relationalDraft = {
   },
 };
 
-function workspace(value: unknown) {
+function workspace(value: unknown): { nodes: { pluginId: string }[]; [key: string]: unknown } {
   return {
     canvas: { kind: 'transformation', title: 'Canvas' },
     nodeIds: ['model'],
