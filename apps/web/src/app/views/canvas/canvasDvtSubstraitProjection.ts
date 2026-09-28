@@ -727,14 +727,16 @@ export function inspectDvtSubstraitProjectionDraft(
       entry.identity.urn === 'extension:io.substrait:functions_arithmetic' &&
       isI64ArithmeticFunctionName(entry.identity.name) &&
       entry.invocation?.outputType === 'i64';
-    const outputTypeMatches =
-      temporalExtract || arithmeticI64
-        ? outputType?.case === 'i64' &&
-          outputType.value.typeVariationReference === 0 &&
-          outputType.value.nullability === Type_Nullability.NULLABLE
-        : outputType?.case === 'string' &&
-          outputType.value.typeVariationReference === 0 &&
-          outputType.value.nullability === Type_Nullability.NULLABLE;
+    let outputTypeMatches =
+      outputType?.case === 'string' &&
+      outputType.value.typeVariationReference === 0 &&
+      outputType.value.nullability === Type_Nullability.NULLABLE;
+    if (temporalExtract || arithmeticI64) {
+      outputTypeMatches =
+        outputType?.case === 'i64' &&
+        outputType.value.typeVariationReference === 0 &&
+        outputType.value.nullability === Type_Nullability.NULLABLE;
+    }
     if (
       entry == null ||
       entry.kind !== 'standard' ||
