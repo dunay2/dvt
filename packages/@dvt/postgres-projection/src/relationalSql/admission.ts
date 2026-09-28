@@ -10,6 +10,7 @@ import {
   namedTableIdentity,
 } from '../substraitJoinInspectionGuards.js';
 
+import type { ProducerSqlBinding } from './producerRead.js';
 import { unsupported } from './scope.js';
 
 export type SqlSource = Readonly<{
@@ -20,7 +21,8 @@ export type SqlSource = Readonly<{
 }>;
 export function admitSqlSources(
   document: SubstraitDocument,
-  analysis: SubstraitSchemas
+  analysis: SubstraitSchemas,
+  producers: ReadonlyMap<string, ProducerSqlBinding> = new Map()
 ): readonly SqlSource[] {
   if (!hasPinnedPlanVersion(document.plan) || !hasCurrentJoinSemanticHash(document))
     unsupported('A current pinned Substrait document is required.');
@@ -43,6 +45,13 @@ export function admitSqlSources(
     if (entry.relation.relType.case !== 'read') {
       if (entry.binding.sourceRef != null)
         unsupported('Only Read relations own physical source bindings.');
+      continue;
+    }
+    if (entry.binding.producerRef != null) {
+      const producer = producers.get(id);
+      if (producer == null)
+        unsupported('A producer input requires its authorized connected result.');
+      sources.push(...producer.projection.projection.inputs);
       continue;
     }
     const identity = namedTableIdentity(entry.relation);
@@ -88,5 +97,12 @@ export function admitSqlSources(
     sources.push({ relationId: id, sourceRef, ...identity });
   }
   if (sources.length === 0) unsupported('A physical PostgreSQL source is required.');
+  if (
+    sources.some(
+      (source) =>
+        !hasSameConnectionRef(sources[0]!.sourceRef.connectionRef, source.sourceRef.connectionRef)
+    )
+  )
+    unsupported('Producer inputs must share the protected PostgreSQL connection.');
   return sources;
 }

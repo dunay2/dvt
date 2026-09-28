@@ -4,6 +4,7 @@ import {
   readRelationStructure,
   type RelationChangeSet,
   type SchemaField,
+  SubstraitAnalysisError,
 } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 
@@ -46,7 +47,16 @@ export async function validateRelationChanges(
     signal?.throwIfAborted();
     const consumers = previous?.consumers ?? [];
     const entry = edited ?? previous!;
-    schemas.set(id, deriveRelationSchema({ ...entry, inputs: inputIds, consumers }, inputs));
+    const derived = deriveRelationSchema({ ...entry, inputs: inputIds, consumers }, inputs);
+    if (
+      relation.relType.case !== 'read' &&
+      derived.some((field) => !session.allowsInputSchema(field))
+    )
+      throw new SubstraitAnalysisError(
+        'invalid_binding',
+        'Operation references a field outside mapped Input.'
+      );
+    schemas.set(id, derived);
     visited.add(id);
     pending.shift();
     pending.push(...consumers.filter((consumer) => !change.removed.includes(consumer)));

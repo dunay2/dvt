@@ -93,6 +93,9 @@ const en = {
     'Changing the operation replaces this local composition. Cancel restores the applied version.',
   derivedOutput: {
     add: 'Add derived field',
+    formulaLabel: 'Formula',
+    formulaHint: "Combine fields, constants and functions. Use '' for empty text.",
+    update: 'Save changes',
     functionLabel: 'Function',
     operandsLabel: 'Ordered fields',
     addOperand: 'Add field',
@@ -105,7 +108,7 @@ const en = {
     aliasConflict: 'That output name already exists.',
     cancel: 'Cancel',
     save: 'Add field',
-    failed: 'The derived field could not be added to this operation.',
+    failed: 'The field could not be saved. Check the formula, field names and compatible types.',
   },
 };
 const es: typeof en = {
@@ -206,6 +209,9 @@ const es: typeof en = {
     'Cambiar la operación reemplaza esta composición local. Cancelar recupera la versión aplicada.',
   derivedOutput: {
     add: 'Añadir campo derivado',
+    formulaLabel: 'Fórmula',
+    formulaHint: "Combina campos, constantes y funciones. Usa '' para texto vacío.",
+    update: 'Guardar cambios',
     functionLabel: 'Función',
     operandsLabel: 'Campos ordenados',
     addOperand: 'Añadir campo',
@@ -218,7 +224,8 @@ const es: typeof en = {
     aliasConflict: 'Ese nombre de salida ya existe.',
     cancel: 'Cancelar',
     save: 'Añadir campo',
-    failed: 'No se ha podido añadir el campo derivado a esta operación.',
+    failed:
+      'No se ha podido guardar el campo. Comprueba la fórmula, los nombres y la compatibilidad de tipos.',
   },
 };
 export type CanvasSemanticEditorCopy = typeof en;

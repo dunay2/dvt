@@ -1,11 +1,15 @@
 /** Owned concern: resolve connected source relations available for canonical DVT composition. */
-import { ConnectedSourceRefSchema, type ConnectedSourceRef } from '@dvt/contracts';
+import type { ConnectedSourceRef, ConnectionRef, DvtInputBindingsV1 } from '@dvt/contracts';
 import type { DvtSubstraitJoinDataType } from '@dvt/postgres-projection';
 
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { resolveCanvasDvtJoinDataType } from './canvasDvtJoinTypeAdmission';
+import type { CanonicalNode } from '../../types/canonical';
+import type { CanvasInputBindingEdge } from './canvasInputBindings';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
+import { resolveCanvasModelCompositionInput } from './canvasModelCompositionInput';
+import { resolveCanvasPhysicalCompositionInput } from './canvasPhysicalCompositionInput';
 
 export type CanvasDvtCompositionField = Readonly<{
+  id?: string;
   name: string;
   dataType: string;
   joinDataType: DvtSubstraitJoinDataType | null;
@@ -16,54 +20,27 @@ export type CanvasDvtCompositionInput = Readonly<{
   nodeId: string;
   schema: string;
   table: string;
-  sourceRef: ConnectedSourceRef;
   fields: readonly CanvasDvtCompositionField[];
-}>;
-
-function readText(value: unknown): string | null {
-  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
-}
-
-function readFields(node: CanonicalNode): readonly CanvasDvtCompositionField[] | null {
-  if (!Array.isArray(node.metadata?.columns)) return null;
-  const fields = node.metadata.columns.map((candidate) => {
-    if (candidate == null || typeof candidate !== 'object' || Array.isArray(candidate)) return null;
-    const record = candidate as Record<string, unknown>;
-    const name = readText(record.name);
-    const dataType = readText(record.type ?? record.dataType);
-    return name == null || dataType == null
-      ? null
-      : {
-          name,
-          dataType,
-          joinDataType: resolveCanvasDvtJoinDataType(dataType),
-          nullable: typeof record.nullable === 'boolean' ? record.nullable : true,
-        };
-  });
-  if (fields.some((field) => field == null)) return null;
-  const resolved = fields.filter((field) => field != null);
-  return resolved.length > 0 &&
-    new Set(resolved.map((field) => field.name)).size === resolved.length
-    ? resolved
-    : null;
-}
-
-function resolveInput(node: CanonicalNode): CanvasDvtCompositionInput | null {
-  if (node.kind !== 'dvt:source' || node.role !== 'input') return null;
-  const sourceRef = ConnectedSourceRefSchema.safeParse(node.metadata?.connectedSourceRef);
-  const schema = readText(node.metadata?.schema);
-  const table = readText(node.metadata?.tableName);
-  const fields = readFields(node);
-  return !sourceRef.success || schema == null || table == null || fields == null
-    ? null
-    : { nodeId: node.id, schema, table, sourceRef: sourceRef.data, fields };
-}
+  inputBindings?: DvtInputBindingsV1;
+}> &
+  (
+    | Readonly<{ sourceRef: ConnectedSourceRef; producer?: never }>
+    | Readonly<{
+        sourceRef: null;
+        producer: Readonly<{
+          nodeId: string;
+          name: string;
+          document: SubstraitDocument;
+          connection: ConnectionRef;
+        }>;
+      }>
+  );
 
 export function resolveCanvasDvtCompositionInputs(
   args: Readonly<{
     targetNodeId: string;
     nodes: readonly CanonicalNode[];
-    edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
+    edges: readonly CanvasInputBindingEdge[];
   }>
 ): readonly CanvasDvtCompositionInput[] {
   const sourceIds = new Set(
@@ -71,6 +48,14 @@ export function resolveCanvasDvtCompositionInputs(
   );
   return args.nodes
     .filter((node) => sourceIds.has(node.id))
-    .map(resolveInput)
+    .map((node) => {
+      const edge = args.edges.find(
+        (candidate) => candidate.sourceId === node.id && candidate.targetId === args.targetNodeId
+      )!;
+      return (
+        resolveCanvasPhysicalCompositionInput(node, edge) ??
+        resolveCanvasModelCompositionInput(node, args.nodes, edge, args.edges)
+      );
+    })
     .filter((input): input is CanvasDvtCompositionInput => input != null);
 }

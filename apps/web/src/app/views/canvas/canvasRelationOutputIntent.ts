@@ -16,6 +16,15 @@ export function relationOutputIntent(
   const field = slots.find((slot) => slot.key === intent.columnId);
   if (field == null)
     throw new SubstraitAnalysisError('invalid_binding', 'Field is outside the selected output.');
+  if (
+    'source' in intent &&
+    intent.source != null &&
+    intent.output &&
+    !field.fields.some((binding) => binding.sourceFieldId === intent.source!.columnId) &&
+    field.output?.sourceFieldId !== intent.source.columnId &&
+    field.name !== intent.source.columnId
+  )
+    throw new SubstraitAnalysisError('invalid_binding', 'The field is not supplied by this input.');
   const selected = slots
     .filter((slot) => slot.output != null)
     .sort((a, b) => a.output!.outputOrdinal - b.output!.outputOrdinal);

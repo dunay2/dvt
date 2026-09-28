@@ -8,8 +8,12 @@ import { projectCanvasColumnFunctionMenus } from './canvasColumnFunctionMenuProj
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import { isDvtSourceOutputProjectionNode } from './canvasDvtSourceSemanticAuthoring';
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
-import { projectInteractiveCanvasColumns } from './canvasGraphNodeColumnProjection';
-import { resolveCanvasColumnPortDirections } from './canvasColumnLineageProjection';
+import {
+  projectInteractiveCanvasColumns,
+  projectGraphNodeCardInputs,
+} from './canvasGraphNodeColumnProjection';
+import { resolveCanvasColumnPortDirections } from './canvasColumnHandleIdentity';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 
 type ColumnInteractionContext = {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
@@ -30,11 +34,37 @@ export function projectCanvasNodeColumnInteraction(
   const presentation = node.data.presentationTruth as CanvasNodePresentationTruth | undefined;
   const columnsCurrent =
     presentation?.columns.state !== 'pending' && presentation?.columns.state !== 'unavailable';
-  const hasRelationOutputs =
+  if (
     canonicalNode?.pluginId === 'dvt' &&
     canonicalNode.kind === 'dvt:transform' &&
-    presentation?.code.kind === 'canonical' &&
-    presentation.columns.state === 'ready';
+    !isDbtCompatibleModel(canonicalNode)
+  ) {
+    let inputsCurrent = columnsCurrent;
+    try {
+      readDvtTransformAuthoringAuthority(canonicalNode);
+    } catch {
+      inputsCurrent = false;
+    }
+    return {
+      ...node,
+      data: {
+        ...node.data,
+        columns: projectInteractiveCanvasColumns(node, canonicalNodesById),
+        inputColumns: presentation == null ? [] : projectGraphNodeCardInputs(presentation, node.id),
+        columnPortDirections: inputsCurrent ? ['target', 'source'] : [],
+        expressionInputColumns: [],
+        onMapCanvasInput: inputsCurrent ? node.data.onMapCanvasInput : undefined,
+        onColumnPortActivate: inputsCurrent ? node.data.onColumnPortActivate : undefined,
+        onAutomapColumns: undefined,
+        onApplyCanvasColumnFunction: undefined,
+        onApplyCanvasStructuredField: undefined,
+        onAddCanvasCalculatedColumn: undefined,
+        onToggleCanvasColumnOutput: undefined,
+        onReorderCanvasColumnOutput: undefined,
+        resolveCanvasColumnCompositionFunctions: undefined,
+      },
+    };
+  }
   const canAuthorColumnMappings =
     columnsCurrent &&
     (canonicalNode?.role !== 'transform' || canAuthorCanvasColumnMappings(canonicalNode));
@@ -63,11 +93,6 @@ export function projectCanvasNodeColumnInteraction(
     canonicalNodesById,
     columnFunctionMenus
   );
-  const hasStructuredProjection =
-    columnsCurrent &&
-    canonicalNode?.pluginId === 'dvt' &&
-    canonicalNode.kind === 'dvt:transform' &&
-    interactiveColumns.some((column) => column.children?.length);
   const hasEditableProjection = functionProjection.hasEditableProjection;
   const hasMaterializableMappingInput =
     canAuthorColumnMappings &&
@@ -86,18 +111,18 @@ export function projectCanvasNodeColumnInteraction(
         }).length > 0
       );
     });
-  const canApplyStructuredField = hasEditableProjection || hasStructuredProjection;
 
   const projectedNodeData = {
     ...node.data,
     onColumnPortActivate: canAuthorColumnMappings ? node.data.onColumnPortActivate : undefined,
+    onMapCanvasInput: undefined,
     onApplyCanvasColumnFunction: hasEditableProjection
       ? node.data.onApplyCanvasColumnFunction
       : undefined,
     resolveCanvasColumnCompositionFunctions: hasEditableProjection
       ? functionProjection.resolveCompositionFunctions
       : undefined,
-    onApplyCanvasStructuredField: canApplyStructuredField
+    onApplyCanvasStructuredField: hasEditableProjection
       ? node.data.onApplyCanvasStructuredField
       : undefined,
     onAddCanvasCalculatedColumn: functionProjection.supportsCalculatedColumns
@@ -106,22 +131,17 @@ export function projectCanvasNodeColumnInteraction(
     expressionInputColumns: functionProjection.expressionInputs,
     onToggleCanvasColumnOutput:
       (canAuthorColumnMappings && (hasEditableProjection || hasMaterializableMappingInput)) ||
-      hasStructuredProjection ||
       canAuthorDbtModelColumns ||
-      canProjectSourceOutputs ||
-      hasRelationOutputs
+      canProjectSourceOutputs
         ? node.data.onToggleCanvasColumnOutput
         : undefined,
     onReorderCanvasColumnOutput:
-      hasEditableProjection ||
-      hasStructuredProjection ||
-      canAuthorDbtModelColumns ||
-      canProjectSourceOutputs ||
-      hasRelationOutputs
+      hasEditableProjection || canAuthorDbtModelColumns || canProjectSourceOutputs
         ? node.data.onReorderCanvasColumnOutput
         : undefined,
     onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
     columns: interactiveColumns,
+    inputColumns: undefined,
     columnPortDirections:
       columnsCurrent && canonicalNode != null
         ? canonicalNode.role === 'transform' &&

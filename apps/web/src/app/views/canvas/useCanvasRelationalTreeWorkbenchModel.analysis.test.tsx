@@ -10,7 +10,7 @@ describe('Workbench shared analysis lifecycle', () => {
   setupWorkbenchTest();
   afterEach(() => vi.restoreAllMocks());
 
-  it('shares one structural analysis and does not repeat it when selecting another occurrence', () => {
+  it('shares one structural analysis and does not repeat it when selecting another occurrence', async () => {
     const graph = occurrenceGraph();
     const analyze = vi.spyOn(analysis, 'analyzeCanvasRelations');
     let model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
@@ -30,7 +30,7 @@ describe('Workbench shared analysis lifecycle', () => {
     const children = model!.projection!.root.children;
     expect(children).toHaveLength(2);
     for (const child of children) {
-      act(() => model!.selectTreeNode(child.node.locator));
+      await act(async () => model!.selectTreeNode(child.node.locator));
       expect(model!.selectedNode?.relationId).toBe(child.node.relationId);
     }
     expect(analyze).toHaveBeenCalledTimes(1);

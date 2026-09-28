@@ -1,21 +1,24 @@
 /** Owned concern: coordinate one discardable guided relation-authoring session. */
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
-import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import type * as W from './canvasRelationalTreeWorkbench.types';
 import { useCanvasRelationalTreeApplyCommand } from './useCanvasRelationalTreeApplyCommand';
 import { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
-import { useCanvasRelationalTreeAuthoringOptions } from './useCanvasRelationalTreeAuthoringOptions';
 import { useCanvasRelationalTreeExistingSeed } from './useCanvasRelationalTreeExistingSeed';
-import { useCanvasRelationComposition } from './useCanvasRelationComposition';
 import { useCanvasRelationalTreeRemoval } from './useCanvasRelationalTreeRemoval';
-import { useCanvasRelationalTreeInputSelection } from './useCanvasRelationalTreeInputSelection';
-import { createSourceOccurrenceActions } from './relational-source-occurrence/sourceOccurrenceActions';
 import type { CanvasRelationalTreeProjection } from './canvasRelationalTreeProjection';
-import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
-import { useCanvasRelationFields } from './useCanvasRelationFields';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
+import { useCanvasRelationalTreeAnalysisContext } from './useCanvasRelationalTreeAnalysisContext';
+import { createCanvasRelationalAuthoringDraft } from './canvasRelationalAuthoringDraft';
+import { useCanvasRelationalAuthoringDraftHydration } from './useCanvasRelationalAuthoringDraftHydration';
+import { useCanvasRelationalGraphAuthoring } from './useCanvasRelationalGraphAuthoring';
+import {
+  areCanvasInspectorNodeDraftsEqual,
+  canonicalizeCanvasInspectorNodeDraft,
+  createCanvasInspectorNodeDraft,
+} from './canvasInspectorAuthoringModel';
+import { createCanvasRelationalTreeApplyDraft } from './canvasRelationalTreeApplyDraft';
 export function useCanvasRelationalTreeAuthoringSession(
   args: Readonly<{
     enabled: boolean;
@@ -30,144 +33,122 @@ export function useCanvasRelationalTreeAuthoringSession(
 ) {
   const { authoring, edges, enabled, inputs, nodes, transformNode } = args;
   const editable = authoring?.canEditNode === true;
-  const {
-    slots,
-    operation,
-    setOperation,
-    active,
-    setActive,
-    joinDraft,
-    setJoinDraft,
-    appendInputId,
-    setAppendInputId,
-    applyRejection,
-    setApplyRejection,
-    reset,
-    hydrate: hydrateExistingState,
-  } = useCanvasRelationalTreeDraftState();
-  const {
-    appendInput: appendOperand,
-    placeInput: placeOperand,
-    primaryInputId,
-    secondaryInputId,
-    selectedInputIds,
-    selectInitialInput,
-  } = slots;
+  const state = useCanvasRelationalTreeDraftState();
   const { hydrateExisting, baselineDraft, seed } = useCanvasRelationalTreeExistingSeed({
     document: args.document,
     projection: args.projection,
-    onHydrate: hydrateExistingState,
+    onHydrate: state.hydrate,
   });
-  useEffect(reset, [enabled, reset, transformNode.id]);
-  const effectiveDraft = !active && seed != null ? seed.draft : joinDraft;
-  const analysis = useCanvasRelationAnalysisSession(effectiveDraft, transformNode.id);
-  const output = useCanvasRelationFields(null, analysis).result;
-  const effectiveInputIds = !active && seed != null ? seed.inputIds : selectedInputIds;
-  const { candidates, choices } = useCanvasRelationalTreeAuthoringOptions({
-    appendInputId,
-    editable,
-    edges,
+  useCanvasRelationalAuthoringDraftHydration({
     enabled,
+    transformNode,
+    document: args.document,
     inputs,
-    output,
-    session: analysis?.session ?? null,
-    revision: analysis?.revision ?? 0,
+    hydrateExisting,
+    state,
+  });
+  const effectiveDraft = !state.active && seed != null ? seed.draft : state.joinDraft;
+  const { analysis } = useCanvasRelationalTreeAnalysisContext({
+    document: effectiveDraft,
+    transformNode,
     nodes,
-    operation: !active && seed != null ? seed.operation : operation,
-    selectedInputIds: effectiveInputIds,
-    targetNodeId: transformNode.id,
+    edges,
   });
-  const composition = useCanvasRelationComposition({
-    analysis,
-    appendInputId,
-    choices,
-    inputs,
-    draft: effectiveDraft,
-    operation: !active && seed != null ? seed.operation : operation,
-    selectedInputIds: effectiveInputIds,
-    targetNodeId: transformNode.id,
-    appendOperand,
-    setAppendInputId,
-    setDraft: setJoinDraft,
-    setOperation,
+  const effectiveInputIds =
+    !state.active && seed != null ? seed.inputIds : state.slots.selectedInputIds;
+  const effectiveOutputRelationId =
+    (!state.active && seed != null ? seed.outputRelationId : state.outputRelationId) ?? null;
+  const cleared =
+    state.active &&
+    state.joinDraft == null &&
+    state.operation == null &&
+    state.slots.selectedInputIds.length === 0 &&
+    state.pendingSources.length === 0 &&
+    state.stagedOperations.length === 0;
+  const outputChanged = effectiveOutputRelationId !== (seed?.outputRelationId ?? null);
+  const outputSelectsSemanticRoot =
+    analysis?.document != null &&
+    effectiveOutputRelationId != null &&
+    effectiveOutputRelationId === analysis.session.rootId;
+  const hasIncompleteGraph =
+    state.pendingSources.length > 0 ||
+    state.stagedOperations.length > 0 ||
+    (outputChanged && !outputSelectsSemanticRoot);
+  const relationalAuthoringDraft = hasIncompleteGraph
+    ? createCanvasRelationalAuthoringDraft({
+        sources: state.pendingSources,
+        operations: state.stagedOperations,
+        outputRelationId: effectiveOutputRelationId,
+        positions: state.positions,
+      })
+    : undefined;
+  const applyOperation = !state.active && seed != null ? seed.operation : state.operation;
+  const applyDraft = createCanvasRelationalTreeApplyDraft({
+    transformNode,
+    relationalAuthoringDraft: cleared ? null : relationalAuthoringDraft,
+    joinDraft: state.joinDraft,
+    operation: applyOperation,
   });
+  const hasDraftChanges = !areCanvasInspectorNodeDraftsEqual(
+    createCanvasInspectorNodeDraft(transformNode),
+    canonicalizeCanvasInspectorNodeDraft(transformNode, applyDraft)
+  );
   const apply = useCanvasRelationalTreeApplyCommand({
+    cleared,
+    relationalAuthoringDraft: cleared ? null : relationalAuthoringDraft,
     authoring,
     editable,
-    joinDraft,
-    operation: !active && seed != null ? seed.operation : operation,
-    reject: setApplyRejection,
-    reset,
+    joinDraft: state.joinDraft,
+    operation: applyOperation,
+    reject: state.setApplyRejection,
+    reset: state.reset,
     transformNode,
   });
   const start = useCallback(() => {
     if (!enabled || !editable) return false;
-    if (!active && !hydrateExisting()) setActive(true);
+    if (!state.active && !hydrateExisting()) state.setActive(true);
     return true;
-  }, [active, editable, enabled, hydrateExisting]);
-  const { selectInput, placeInput } = useCanvasRelationalTreeInputSelection({
-    enabled,
-    editable,
-    active,
-    operation,
-    candidates,
+  }, [state.active, state.setActive, editable, enabled, hydrateExisting]);
+  const graph = useCanvasRelationalGraphAuthoring({
+    editable: enabled && editable,
     inputs,
+    analysis,
+    state,
     start,
-    hasDraft: effectiveDraft != null,
-    selectInitialInput,
-    placeOperand,
-    requestAppend: composition.requestAppend,
+    outputRelationId: effectiveOutputRelationId,
   });
   const removal = useCanvasRelationalTreeRemoval({
     analysis,
     enabled: enabled && editable,
-    active,
-    draft: joinDraft,
-    selectedInputIds,
+    active: state.active,
+    selectedInputIds: state.slots.selectedInputIds,
     seed,
     hydrate: hydrateExisting,
-    accept: (result, ids) =>
-      hydrateExistingState({ ...result, inputIds: ids, appendInputId: null }),
+    clear: state.clear,
+    accept: state.hydrate,
   });
   return {
     analysis,
-    occurrences: createSourceOccurrenceActions({
-      editable: enabled && editable,
-      output,
-      session: analysis?.session ?? null,
-      revision: analysis?.revision ?? 0,
-      operation: !active && seed != null ? seed.operation : operation,
-      inputs,
-      start,
-      setAppendInputId: composition.requestAppend,
-    }),
+    ...graph,
     removal,
-    applyRejection,
-    active,
+    cleared,
+    applyRejection: state.applyRejection,
+    active: state.active,
     baselineDraft,
     seed,
-    appendInput: inputs.find((input) => input.nodeId === appendInputId) ?? null,
     apply: () => apply(),
     applyOutputOrder: (document: SubstraitDocument) => apply(document).outcome !== 'rejected',
-    appendJoinInput: composition.appendJoinInput,
-    commandState: composition.commandState,
-    cancel: reset,
-    candidates,
-    choices,
-    joinDraft,
-    operation,
-    placeInput,
-    primaryInputId,
-    secondaryInputId,
-    selectedInputIds,
-    selectInput,
-    selectOperation: (next: CanvasRelationalOperation, relationId?: string) => {
-      if (start()) void composition.selectOperation(next, relationId);
-    },
+    cancel: state.reset,
+    joinDraft: state.joinDraft,
+    operation: state.operation,
+    selectedInputIds: state.slots.selectedInputIds,
     setJoinDraft: (draft: SubstraitDocument) => {
-      if (!active) hydrateExisting();
-      setJoinDraft(draft);
+      if (start()) state.setJoinDraft(draft);
     },
     start,
+    positions: state.positions,
+    setPositions: state.setPositions,
+    hasIncompleteGraph,
+    hasDraftChanges,
   } as const;
 }

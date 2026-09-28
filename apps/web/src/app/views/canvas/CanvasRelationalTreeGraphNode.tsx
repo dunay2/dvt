@@ -9,6 +9,9 @@ import { CanvasRelationalTreeNodeButton } from './CanvasRelationalTreeNodeButton
 import type { SemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 import type { CanvasRelationalTreePlacedNode } from './canvasRelationalTreeGeometry';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
+import type { CanvasStagedOperation } from './canvasStagedOperation';
+import { CanvasRelationalOperationPorts } from './CanvasRelationalOperationPorts';
+import styles from './CanvasRelationalTreeCard.module.css';
 
 export function CanvasRelationalTreeGraphNode({
   placed,
@@ -21,6 +24,11 @@ export function CanvasRelationalTreeGraphNode({
   expanded,
   onToggleDetail,
   movable,
+  pending = false,
+  stagedOperation,
+  selectedConnectionSource,
+  onSelectConnectionSource,
+  onConnectOperation,
 }: Readonly<{
   placed: CanvasRelationalTreePlacedNode;
   selected: boolean;
@@ -30,19 +38,31 @@ export function CanvasRelationalTreeGraphNode({
   onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
   semanticGraph?: SemanticWorkbenchGraph;
   expanded: boolean;
-  onToggleDetail: () => void;
+  onToggleDetail?: () => void;
   movable: boolean;
+  pending?: boolean;
+  stagedOperation?: CanvasStagedOperation;
+  selectedConnectionSource?: string | null;
+  onSelectConnectionSource?: (relationId: string) => void;
+  onConnectOperation?: (operationId: string, port: number, relationId: string) => void;
 }>): JSX.Element {
   const detailId = useId();
   const detailed = expanded && semanticGraph != null;
   const execution = useCanvasRelationalOperationExecution(placed.node);
   return (
-    <CanvasRelationalTreeCardMenu node={placed.node} onRemove={onRemove} onExpand={onExpand}>
+    <CanvasRelationalTreeCardMenu
+      node={placed.node}
+      pending={pending}
+      onRemove={onRemove}
+      onExpand={onExpand}
+    >
       <li
         role="none"
-        className="group/canvas-node absolute"
+        data-slot="canvas-relational-card"
+        className={styles.card}
         style={{ left: placed.x, top: placed.y, width: placed.width, height: placed.height }}
         data-parent-locator={placed.parentLocator ?? undefined}
+        data-pending-operation={stagedOperation == null ? undefined : true}
       >
         <CanvasRelationalTreeNodeButton
           placed={placed}
@@ -50,11 +70,28 @@ export function CanvasRelationalTreeGraphNode({
           copy={copy}
           onSelect={onSelect}
           onExpand={onExpand}
+          onDelete={
+            onRemove == null || placed.node.relationId == null
+              ? undefined
+              : () => onRemove(placed.node.relationId!)
+          }
           detailed={detailed}
           movable={movable}
+          pending={pending}
+          hideDetail={stagedOperation != null && !pending}
         />
+        {onSelectConnectionSource == null || onConnectOperation == null ? null : (
+          <CanvasRelationalOperationPorts
+            relationId={placed.node.relationId}
+            staged={stagedOperation}
+            copy={copy}
+            selectedSource={selectedConnectionSource ?? null}
+            onSelectSource={onSelectConnectionSource}
+            onConnect={onConnectOperation}
+          />
+        )}
         {execution == null ? null : (
-          <div className="absolute top-full w-full">
+          <div className={styles.execution}>
             <CanvasNodeDataAction {...execution} />
           </div>
         )}
@@ -63,12 +100,12 @@ export function CanvasRelationalTreeGraphNode({
             id={detailId}
             data-slot="canvas-relational-card-detail"
             data-relation-id={placed.node.relationId ?? undefined}
-            className="rounded-b-md border border-t-0 border-blue-500 bg-(--surface-panel)"
+            className={styles.semanticDetail}
           >
             <CanvasRelationalScalarTree graph={semanticGraph} compact />
           </div>
         )}
-        {semanticGraph == null ? null : (
+        {semanticGraph == null || onToggleDetail == null ? null : (
           <button
             type="button"
             data-slot="canvas-relational-node-expand"
@@ -77,9 +114,13 @@ export function CanvasRelationalTreeGraphNode({
             aria-expanded={detailed}
             aria-controls={detailed ? detailId : undefined}
             onClick={onToggleDetail}
-            className="absolute right-1 top-1 grid size-7 place-items-center rounded text-(--text-muted) hover:bg-(--surface-selected) hover:text-(--text-strong)"
+            className={styles.expand}
           >
-            <ChevronDown aria-hidden="true" className={`size-4 ${detailed ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              aria-hidden="true"
+              data-expanded={detailed}
+              className={styles.expandIcon}
+            />
           </button>
         )}
       </li>

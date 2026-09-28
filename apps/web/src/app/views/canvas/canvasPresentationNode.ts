@@ -16,6 +16,9 @@ import { resolveCanvasPresentationInputs } from './canvasPresentationInputs';
 import type { CanonicalNode } from '../../types/canonical';
 import { presentRelationOutputSelection } from './canvasRelationOutputPresentation';
 import { presentCanvasFilterSummary } from './canvasPresentationFilterSummary';
+import { resolveCanvasProducerDocument } from './canvasProducerDocument';
+import { projectCanvasInputBindings } from './canvasInputBindings';
+import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 
 export async function projectCanvasPresentationNode(
   args: CanvasPresentationQuery,
@@ -56,9 +59,39 @@ export async function projectCanvasPresentationNode(
   });
   signal?.throwIfAborted();
   const composition = resolveCanvasRelationalCompositionTruth(args);
-  const truth = { ...base, ...(composition == null ? {} : { relationalComposition: composition }) };
+  const nativeModel =
+    args.node.pluginId === 'dvt' &&
+    args.node.kind === 'dvt:transform' &&
+    !isDbtCompatibleModel(args.node);
+  const inputBindings = nativeModel
+    ? projectCanvasInputBindings({
+        targetNodeId: args.node.id,
+        edges: args.edges,
+        producers: new Map(
+          inputs.map((producer) => [
+            producer.id,
+            presentations
+              .get(producer.id)!
+              .columns.visible.filter((column) => column.selected !== false)
+              .map((column) => ({
+                columnId:
+                  producer.role === 'input'
+                    ? (column.sourceFieldName ?? column.name)
+                    : (column.reference ?? column.name),
+                name: column.name,
+                type: column.type,
+              })),
+          ])
+        ),
+      })
+    : undefined;
+  const truth = {
+    ...base,
+    ...(inputBindings == null ? {} : { inputBindings }),
+    ...(composition == null ? {} : { relationalComposition: composition }),
+  };
   const semanticNode =
-    (args.node.kind === 'dvt:transform' && args.node.pluginId === 'dvt') ||
+    nativeModel ||
     (args.node.kind === 'dvt:source' &&
       ['dvt', 'dvt.warehouse-source'].includes(args.node.pluginId));
   if (!semanticNode)
@@ -70,14 +103,15 @@ export async function projectCanvasPresentationNode(
           : canvasColumnTruth(base.columns.declared, inherited),
     };
   try {
-    const semantic = await analysis.query(args.node, signal);
+    const resolved =
+      args.node.role === 'transform' && args.node.metadata?.transformAuthoring != null
+        ? resolveCanvasProducerDocument(args.node, args.nodes)
+        : undefined;
+    const semantic = await analysis.query(args.node, signal, resolved);
     if (semantic == null)
       return {
         ...truth,
-        columns:
-          args.node.role === 'input'
-            ? base.columns
-            : canvasColumnTruth(base.columns.declared, inherited),
+        columns: args.node.role === 'input' ? base.columns : canvasColumnTruth([], inherited, []),
       };
     const authority = args.node.metadata!.transformAuthoring as {
       semanticDocument: { schemaVersion: string; semanticPlan: { sha256: string } };
@@ -90,9 +124,7 @@ export async function projectCanvasPresentationNode(
       digest: authority.semanticDocument.semanticPlan.sha256,
     };
     const sources =
-      args.node.role === 'input'
-        ? [args.node]
-        : resolveCanvasPresentationInputs(semantic, inputs, analysis);
+      args.node.role === 'input' ? [args.node] : resolveCanvasPresentationInputs(semantic, inputs);
     const participantIds = new Set(sources.map((source) => source.id));
     const fieldInputs =
       args.node.role === 'input'

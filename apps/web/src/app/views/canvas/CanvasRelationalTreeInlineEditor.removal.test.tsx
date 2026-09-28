@@ -42,7 +42,6 @@ describe('inspection after relation retirement', () => {
         root.render(
           <RelationAnalysisTestHost document={draft}>
             <CanvasRelationalTreeInlineEditor
-              appendInput={null}
               copy={COPY}
               joinDraft={draft}
               selectedRelationId={selected}
@@ -51,7 +50,6 @@ describe('inspection after relation retirement', () => {
               expanded
               onClose={() => {}}
               onChangeJoinDraft={() => {}}
-              onAppendJoinInput={() => {}}
             />
           </RelationAnalysisTestHost>
         )

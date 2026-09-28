@@ -4,7 +4,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { NODE_PROPERTY_ROW_ID } from '../../components/inspector/nodePropertiesReadModel';
+import { NODE_PROPERTY_ROW_ID } from '../../components/inspector/nodePropertiesContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import { CanvasNodeWorkbenchPanel } from './CanvasNodeWorkbenchPanel';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';

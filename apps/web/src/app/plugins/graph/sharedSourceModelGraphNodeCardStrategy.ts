@@ -1,129 +1,33 @@
-/** Owned concern: project shared Source and Model product cards across authority profiles. */
+/** Owned concern: sharedSourceModelGraphNodeCardStrategy. */
+
 import type { CanonicalNode, PluginNodeKind } from '../../types/canonical';
+import { hasDbtCompatibilityMetadata } from '../../views/canvas/canvasDbtAuthoringModel';
 import { isCanvasNodePresentationCopy } from '../../components/canvas/canvasNodePresentationCopy.contract';
 import { isCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
-import { buildDvtGraphNodeSemanticMetric } from '../dvt/dvtGraphNodeSemanticMetric';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { buildGraphNodeOperationalSummary } from './graphNodeOperationalSummary';
 import { buildGraphNodeVolumeMetricProjection } from './graphNodeSourceMetricProjection';
 import { buildGraphNodeTitlePresentation } from './graphNodeTitlePresentation';
 import type {
-  GraphNodeCardMetric,
-  GraphNodeCardMetricIcon,
   GraphNodeCardReadModel,
   GraphNodeCardStrategy,
 } from './graphNodeCardStrategyContracts';
 import {
-  arrayCount,
   buildGraphNodeSourceIdentity,
   metadataOf,
   numericValue,
-  pushMetric,
-  pushRuntimeMetrics,
   resolveColumnCount,
   resolveGraphNodeRelationPath,
   resolveNodeCardAccentTone,
   resolveNodeCardHealth,
   stringValue,
 } from './graphNodeCardStrategyUtils';
+import { buildAuthorityMetrics, buildTitleDetail } from './graphNodeAuthorityMetrics';
 
 const SHARED_SOURCE_MODEL_KINDS = new Set<PluginNodeKind>(['dvt:source', 'dvt:transform']);
 
 export function isSharedSourceModelKind(kind: PluginNodeKind): boolean {
   return SHARED_SOURCE_MODEL_KINDS.has(kind);
-}
-
-function resolveMaterialization(
-  node: CanonicalNode,
-  metadata: Record<string, unknown>
-): string | null {
-  const dbt = metadata.dbt;
-  const dbtRecord =
-    typeof dbt === 'object' && dbt !== null && !Array.isArray(dbt)
-      ? (dbt as Record<string, unknown>)
-      : {};
-  const config = metadata.config ?? dbtRecord.config;
-  const record =
-    typeof config === 'object' && config !== null && !Array.isArray(config)
-      ? (config as Record<string, unknown>)
-      : {};
-  const configured = stringValue(record.materialized) ?? stringValue(record.materialization);
-  if (configured != null) return configured;
-
-  return node.pluginId === 'dvt' && node.kind === 'dvt:transform' ? 'view' : null;
-}
-
-function containsDbtCompatibilityMetadata(metadata: Record<string, unknown>): boolean {
-  return (
-    metadata.authority === 'dbt-project-files' ||
-    (typeof metadata.dbt === 'object' && metadata.dbt !== null && !Array.isArray(metadata.dbt))
-  );
-}
-
-function resolveMaterializationIcon(value: string | null): GraphNodeCardMetricIcon | undefined {
-  switch (value?.toLowerCase()) {
-    case 'view':
-      return 'eye';
-    case 'incremental':
-      return 'refresh';
-    case 'table':
-      return 'table';
-    case 'ephemeral':
-      return 'workflow';
-    case 'materialized_view':
-    case 'materialized-view':
-      return 'database';
-    default:
-      return undefined;
-  }
-}
-
-function buildAuthorityMetrics(
-  node: CanonicalNode,
-  metadata: Record<string, unknown>,
-  data: Record<string, unknown>,
-  isSource: boolean,
-  copy: ReturnType<typeof resolveGraphNodeCardCopy>
-): GraphNodeCardMetric[] {
-  const metrics: GraphNodeCardMetric[] = [];
-  if (!isSource) {
-    const materialization = resolveMaterialization(node, metadata);
-    pushMetric(metrics, 'materialization', 'Mat.', materialization ?? copy.notConfiguredLabel, {
-      placement: 'header',
-      ...(resolveMaterializationIcon(materialization) == null
-        ? {}
-        : { icon: resolveMaterializationIcon(materialization) }),
-    });
-  }
-  if (containsDbtCompatibilityMetadata(metadata)) {
-    pushMetric(metrics, 'dependencies', 'Deps', arrayCount(metadata.dependencies));
-  } else {
-    pushRuntimeMetrics(metrics, metadata, data);
-    const cost =
-      numericValue(metadata.cost) ??
-      numericValue(metadata.lastCost) ??
-      numericValue(data.lastCost) ??
-      node.lastCost;
-    pushMetric(metrics, 'cost', 'Cost', cost == null ? null : `$${cost.toFixed(2)}`);
-    const semanticMetric = buildDvtGraphNodeSemanticMetric(
-      node,
-      data.presentationTruth,
-      isCanvasNodePresentationCopy(data.presentationCopy) ? data.presentationCopy.locale : undefined
-    );
-    if (semanticMetric != null) metrics.push(semanticMetric);
-  }
-  return metrics;
-}
-
-function buildTitleDetail(node: CanonicalNode): string | null {
-  const metadata = metadataOf(node);
-  if (!containsDbtCompatibilityMetadata(metadata)) return null;
-  const tags = node.tags
-    .map((tag) => tag.trim())
-    .filter(Boolean)
-    .map((tag) => `#${tag}`)
-    .join(' ');
-  return [node.description?.trim(), tags].filter(Boolean).join(' · ') || null;
 }
 
 function buildSharedSourceModelCard(
@@ -173,7 +77,6 @@ function buildSharedSourceModelCard(
   const relationalComposition = isCanvasNodePresentationTruth(data.presentationTruth)
     ? data.presentationTruth.relationalComposition
     : undefined;
-  const lastRunMetric = summary.metrics.find((metric) => metric.id === 'last-run');
   const authorityMetrics = buildAuthorityMetrics(
     node,
     metadata,
@@ -181,16 +84,7 @@ function buildSharedSourceModelCard(
     isSource,
     copy
   ).filter((metric) => metric.id !== 'last-run');
-  if (!isSource) {
-    authorityMetrics.push({
-      id: 'last-run',
-      label: copy.lastRunLabel,
-      value: lastRunMetric?.value ?? copy.notCalculatedLabel,
-      icon: 'clock',
-      placement: 'header',
-    });
-  }
-  const authorityLabel = containsDbtCompatibilityMetadata(metadata)
+  const authorityLabel = hasDbtCompatibilityMetadata(node)
     ? (stringValue(metadata.package) ?? stringValue(metadata.packageName))
     : null;
   const projectedRows = volume.metrics.find((metric) => metric.id === 'rows');

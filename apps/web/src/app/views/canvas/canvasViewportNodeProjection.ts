@@ -80,6 +80,7 @@ export function projectViewportNodes(args: {
     return {
       ...projectedNode,
       ...(fallbackNode?.measured == null ? {} : { measured: fallbackNode.measured }),
+      ...(fallbackNode?.selected == null ? {} : { selected: fallbackNode.selected }),
       data: {
         ...projectedNode.data,
         columnDisclosureExpanded: fallbackNode?.data.columnDisclosureExpanded === true,

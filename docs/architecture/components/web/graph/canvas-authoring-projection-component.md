@@ -412,9 +412,12 @@ Those tests must keep proving:
 navigation only. The sibling `canvas-relational-workbench-*.cy.ts` specs isolate
 viewport behavior, contextual removal, pending JOIN creation, source append,
 predicate editing, chain persistence, CROSS preview and UNION creation.
-`canvas-relational-source-occurrence.cy.ts` owns explicit repeated-Read append,
-alias Apply/save/reopen and the selected data query. Its controlled sample checks
-query identity and explicit execution, not PostgreSQL result correctness.
+`canvas-relational-workbench-append.cy.ts` proves explicit producer-to-port
+connection without publishing before Apply. Instance identity and alias
+reopening are covered by `CanvasRelationalTreeWorkbench.source-reopen.test.tsx`
+and `relational-source-occurrence/joinOccurrenceIdentity.test.ts`. The retired
+source-composition, source-occurrence and contextual-removal browser specs
+encoded implicit append gestures; they are not an interaction authority.
 Each spec selects its scenario explicitly from
 `cypress/support/relationalWorkbench/scenario.ts`; test titles never select
 fixtures. Shared support owns navigation, geometry assertions, chain setup and

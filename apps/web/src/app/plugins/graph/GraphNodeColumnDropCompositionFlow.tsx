@@ -33,7 +33,7 @@ export function GraphNodeColumnDropCompositionFlow(props: {
   resolveCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
   onFunctionApply?: (
     identity: GraphNodeColumnFunctionApplyIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>;
   onFunctionApplied?: (createdFieldId: string) => void;
   onStructuredFieldApply?: (
     identity: GraphNodeStructuredFieldIdentity

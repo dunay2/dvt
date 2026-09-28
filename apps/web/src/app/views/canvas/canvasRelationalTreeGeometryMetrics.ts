@@ -1,9 +1,34 @@
 /** Owned concern: measure variable relational-card bounds before positioning their edges. */
-import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
+import type {
+  CanvasRelationalTreeNode,
+  CanvasRelationalTreeChildRole,
+} from './canvasRelationalTreeProjection';
 
 export type CanvasRelationalTreeNodeSize = Readonly<{ width: number; height: number }>;
+export type CardPosition = Readonly<{ x: number; y: number }>;
+export type CanvasRelationalTreePlacedNode = Readonly<
+  CardPosition &
+    CanvasRelationalTreeNodeSize & {
+      node: CanvasRelationalTreeNode;
+      level: number;
+      parentLocator: string | null;
+      role: CanvasRelationalTreeChildRole | null;
+      ordinal: number;
+      siblingCount: number;
+    }
+>;
+export type CanvasRelationalTreePlacedEdge = Readonly<{
+  key: string;
+  parentLocator: string;
+  role: CanvasRelationalTreeChildRole;
+  ordinal: number;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+}>;
 const DEFAULT_SIZE: CanvasRelationalTreeNodeSize = { width: 224, height: 76 };
-const GAP = 34;
+const GAP = 48;
 
 export function measureCanvasRelationalTree(
   root: CanvasRelationalTreeNode,

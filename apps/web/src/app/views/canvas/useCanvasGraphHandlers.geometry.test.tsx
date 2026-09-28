@@ -25,7 +25,6 @@ const READ_MODEL_COMMANDS = [
   'handleToggleCanvasColumnOutput',
   'handleReorderCanvasColumnOutput',
   'handleColumnDisclosureChange',
-  'handleAutomapCanvasColumns',
   'handleRemoveColumnMapping',
   'resolveCanvasAlgebraicCompositionOperations',
   'handleComposeCanvasNodes',

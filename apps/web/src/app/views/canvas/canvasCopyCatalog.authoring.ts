@@ -4,7 +4,46 @@ import type { CanvasViewCopy } from './canvasCopy.types';
 type CanvasCopySection = Partial<Record<keyof CanvasViewCopy, LocalizableString>>;
 
 export const canvasViewAuthoringCopyByKey = {
+  sourceOccurrenceFieldsUnavailable: {
+    key: 'canvas.sourceOccurrence.fieldsUnavailable',
+    fallback: 'The fields of this relation could not be analyzed.',
+  },
+  sourceOccurrenceAdd: { key: 'canvas.sourceOccurrence.add', fallback: 'Add instance' },
+  sourceOccurrenceAlias: { key: 'canvas.sourceOccurrence.alias', fallback: 'Instance alias' },
+  sourceOccurrenceUpdate: { key: 'canvas.sourceOccurrence.update', fallback: 'Update alias' },
+  sourceOccurrenceInvalidAlias: {
+    key: 'canvas.sourceOccurrence.invalid_alias',
+    fallback: 'Enter a non-empty name of at most 256 characters.',
+  },
+  sourceOccurrenceUpdateFailed: {
+    key: 'canvas.sourceOccurrence.update_failed',
+    fallback: 'The alias could not be updated. Check the current model and try again.',
+  },
+  sourceOccurrenceAliasUnsupported: {
+    key: 'canvas.sourceOccurrence.aliasUnsupported',
+    fallback: 'This composition does not support instance alias editing yet.',
+  },
+  sourceOccurrenceReadOnly: {
+    key: 'canvas.sourceOccurrence.read_only',
+    fallback: 'This model is read-only.',
+  },
+  sourceOccurrenceUnsupported: {
+    key: 'canvas.sourceOccurrence.unsupported',
+    fallback: 'The model output is not available for composition.',
+  },
+  sourceOccurrenceUnavailable: {
+    key: 'canvas.sourceOccurrence.unavailable',
+    fallback: 'A connected source on the same connection is required.',
+  },
+  sourceOccurrenceIncompatible: {
+    key: 'canvas.sourceOccurrence.incompatible',
+    fallback: 'No compatible fields are available for this composition.',
+  },
   operationReadLabel: { key: 'canvas.operation.read', fallback: 'Source' },
+  sourceOccurrenceInputProjectionRequired: {
+    key: 'canvas.sourceOccurrence.inputProjectionRequired',
+    fallback: 'Add an explicit Transform for the mapped input fields before composing.',
+  },
   operationFilterLabel: { key: 'canvas.operation.filter', fallback: 'Filter' },
   operationAggregateLabel: { key: 'canvas.operation.aggregate', fallback: 'Aggregate' },
   operationWindowLabel: { key: 'canvas.operation.window', fallback: 'Window' },

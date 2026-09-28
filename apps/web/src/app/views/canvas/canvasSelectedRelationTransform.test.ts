@@ -65,9 +65,10 @@ describe('dataset Transform insertion', () => {
       capabilityIds: [fn.capabilityId],
       operandFieldIds: [field.fieldId, field.fieldId],
     });
+    expect(field.sourceFieldId).toBeDefined();
     expect((await session.query(relationId)).bindings.at(-1)).toMatchObject({
       displayName: 'normalized',
-      sourceFieldId: field.fieldId,
+      sourceFieldId: field.sourceFieldId,
     });
     const project = session.locate(relationId, session.revision).relation.relType;
     if (project.case !== 'project') throw new Error('Expected Transform.');

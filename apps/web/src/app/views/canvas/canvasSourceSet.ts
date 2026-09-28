@@ -6,23 +6,32 @@ import {
   RelSchema,
   SetRel_SetOp,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { allocateDvtFieldId, allocateDvtRelationId } from '@dvt/contracts';
+import { allocateDvtFieldId, allocateDvtRelationId, type DvtInputBindingsV1 } from '@dvt/contracts';
 import { type SubstraitDocument } from '@dvt/substrait-analysis';
 import {
   hasSameConnectionRef,
   type DvtSubstraitJoinDataType,
   type DvtSubstraitSetOperation,
 } from '@dvt/postgres-projection';
-import { createSourceRelation, type ConnectedRelationSource } from './canvasSourceRelation';
+import {
+  createSourceRelation,
+  canvasInputConnection,
+  type CanvasRelationInputSource,
+  type ConnectedRelationSource,
+} from './canvasSourceRelation';
+import { requireCompleteCanvasInput } from './canvasInputComposition';
 
-export type SourceSetInput = ConnectedRelationSource &
-  Readonly<{
-    fields: readonly Readonly<{
-      name: string;
-      type: DvtSubstraitJoinDataType;
-      nullable?: boolean;
-    }>[];
-  }>;
+export type SourceSetInput<Source extends CanvasRelationInputSource = ConnectedRelationSource> =
+  Source &
+    Readonly<{
+      inputBindings?: DvtInputBindingsV1;
+      fields: readonly Readonly<{
+        id?: string;
+        name: string;
+        type: DvtSubstraitJoinDataType;
+        nullable?: boolean;
+      }>[];
+    }>;
 
 export const sourceSetOperations: Readonly<Record<DvtSubstraitSetOperation, SetRel_SetOp>> = {
   union_all: SetRel_SetOp.UNION_ALL,
@@ -35,11 +44,12 @@ export const sourceSetOperations: Readonly<Record<DvtSubstraitSetOperation, SetR
 
 export function createSourceSet(
   args: Readonly<{
-    inputs: readonly SourceSetInput[];
+    inputs: readonly SourceSetInput<CanvasRelationInputSource>[];
     targetNodeId: string;
     operation?: DvtSubstraitSetOperation;
   }>
 ): SubstraitDocument {
+  args.inputs.forEach(requireCompleteCanvasInput);
   const first = args.inputs[0];
   if (
     first == null ||
@@ -50,7 +60,7 @@ export function createSourceSet(
     throw new Error('A SET needs two inputs and an explicit model identity.');
   if (
     args.inputs.some(
-      (input) => !hasSameConnectionRef(first.sourceRef.connectionRef, input.sourceRef.connectionRef)
+      (input) => !hasSameConnectionRef(canvasInputConnection(first), canvasInputConnection(input))
     )
   )
     throw new Error('Inputs must use the same execution connection.');
@@ -59,6 +69,7 @@ export function createSourceSet(
       {
         source,
         fields: source.fields.map((field) => field.name),
+        fieldIds: source.fields.map((field) => field.id ?? field.name),
         fieldTypes: source.fields.map((field) => field.type),
         fieldNullabilities: source.fields.map((field) => field.nullable ?? true),
       },

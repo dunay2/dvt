@@ -7,7 +7,7 @@ export function input(
   table: string,
   dataType = 'text',
   joinDataType: CanvasDvtCompositionInput['fields'][number]['joinDataType'] = 'string'
-): CanvasDvtCompositionInput {
+): Exclude<CanvasDvtCompositionInput, { sourceRef: null }> {
   return {
     nodeId,
     schema: 'raw',
@@ -29,7 +29,7 @@ export function inputOnConnection(
   table: string,
   provider: 'postgres' | 'snowflake',
   connectionId: string
-): CanvasDvtCompositionInput {
+): Exclude<CanvasDvtCompositionInput, { sourceRef: null }> {
   const value = input(nodeId, table);
   return {
     ...value,

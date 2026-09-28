@@ -19,6 +19,7 @@ import {
   buildDvtSubstraitFieldTree,
   flattenDvtSubstraitFieldNames,
 } from './canvasDvtSubstraitStructuredField';
+import { nextSourceOccurrenceAlias } from './relational-source-occurrence/sourceOccurrenceAlias';
 
 export function createSourcePlan(): Plan {
   const [majorNumber, minorNumber, patchNumber] = DVT_SUBSTRAIT_SPEC_VERSION.split('.').map(Number);
@@ -32,6 +33,13 @@ export function createSourceDocument(
   root: RelationChangeSet['upserts'][number],
   plan = createSourcePlan()
 ): SubstraitDocument {
+  const aliases = new Set<string>();
+  const relations = entries.map(({ binding }) => {
+    if (binding.sourceRef == null && binding.producerRef == null) return binding;
+    const displayName = nextSourceOccurrenceAlias(binding.displayName!, aliases);
+    aliases.add(displayName);
+    return { ...binding, displayName };
+  });
   const names = flattenDvtSubstraitFieldNames(
     orderedDvtSubstraitFields(root.fields, root.binding.relationId).map((field) =>
       buildDvtSubstraitFieldTree(field, root.fields)
@@ -49,7 +57,7 @@ export function createSourceDocument(
     sidecar: {
       schemaVersion: DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
       semanticPlanSha256: '0'.repeat(64),
-      relations: entries.map((entry) => entry.binding),
+      relations,
       fields: entries.flatMap((entry) => entry.fields),
     },
   };

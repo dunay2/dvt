@@ -18,6 +18,7 @@ export type GraphNodeColumn = Readonly<{
   nullable?: boolean;
   primaryKey?: boolean;
   output?: boolean;
+  outputToggleDisabled?: boolean;
   sourceNodeName?: string;
   sourceFieldName?: string;
   sourceReference?: string;
@@ -42,6 +43,10 @@ export type GraphNodeColumnCompositionFunctionResolver = (
 ) => readonly GraphNodeColumnFunction[];
 
 export type GraphNodeColumnPortDirection = 'source' | 'target';
+export type GraphNodeInputMapping = Readonly<{
+  source: Readonly<{ nodeId: string; columnId: string }>;
+  target: Readonly<{ nodeId: string; inputId?: string }>;
+}>;
 export type GraphNodeColumnPortIdentity = Readonly<{
   direction: GraphNodeColumnPortDirection;
   nodeId: string;
@@ -99,103 +104,30 @@ export type GraphNodeCalculatedColumnIdentity =
 export type GraphNodeColumnSectionProps = Readonly<{
   onColumnInspect?: GraphNodeColumnInspect;
   columns: readonly GraphNodeColumn[];
+  inputColumns?: readonly GraphNodeColumn[];
+  view?: 'input' | 'output';
+  onViewChange?: (view: 'input' | 'output') => void;
+  showSourceName?: boolean;
   expressionInputs?: readonly GraphNodeColumn[];
   expanded?: boolean;
   nodeId?: string;
   portDirections?: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
+  onInputMapping?: (identity: GraphNodeInputMapping) => void;
   onColumnFunctionApply?: (
     identity: GraphNodeColumnFunctionApplyIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>;
   resolveColumnCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
   onStructuredFieldApply?: (
     identity: GraphNodeStructuredFieldIdentity
   ) => GraphNodeColumnFunctionApplyResult;
   onCalculatedColumnAdd?: (
     identity: GraphNodeCalculatedColumnIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>;
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
   onDisclosureChange?: (expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
   onAutomap?: () => void;
 }>;
-
-export function resolveGraphNodeColumnInteractionProps(args: {
-  nodeId: string;
-  nodeRole: string;
-  data: Record<string, unknown>;
-}) {
-  const { data } = args;
-  return {
-    onColumnInspect:
-      args.nodeRole === 'transform' && typeof data.onInspectCanvasColumn === 'function'
-        ? (data.onInspectCanvasColumn as GraphNodeColumnInspect)
-        : undefined,
-    nodeId: args.nodeId,
-    columnPortDirections: Array.isArray(data.columnPortDirections)
-      ? (data.columnPortDirections as readonly GraphNodeColumnPortDirection[])
-      : [],
-    activeColumnHandleId:
-      typeof data.activeColumnHandleId === 'string' ? data.activeColumnHandleId : null,
-    columnDisclosureExpanded:
-      typeof data.columnDisclosureExpanded === 'boolean'
-        ? data.columnDisclosureExpanded
-        : undefined,
-    expressionInputs: Array.isArray(data.expressionInputColumns)
-      ? (data.expressionInputColumns as readonly GraphNodeColumn[])
-      : [],
-    onColumnPortActivate:
-      typeof data.onColumnPortActivate === 'function'
-        ? (data.onColumnPortActivate as (identity: GraphNodeColumnPortIdentity) => void)
-        : undefined,
-    onColumnFunctionApply:
-      args.nodeRole === 'transform' && typeof data.onApplyCanvasColumnFunction === 'function'
-        ? (data.onApplyCanvasColumnFunction as (
-            identity: GraphNodeColumnFunctionApplyIdentity
-          ) => GraphNodeColumnFunctionApplyResult)
-        : undefined,
-    resolveColumnCompositionFunctions:
-      args.nodeRole === 'transform' &&
-      typeof data.resolveCanvasColumnCompositionFunctions === 'function'
-        ? (data.resolveCanvasColumnCompositionFunctions as GraphNodeColumnCompositionFunctionResolver)
-        : undefined,
-    onStructuredFieldApply:
-      args.nodeRole === 'transform' && typeof data.onApplyCanvasStructuredField === 'function'
-        ? (data.onApplyCanvasStructuredField as (
-            identity: GraphNodeStructuredFieldIdentity
-          ) => GraphNodeColumnFunctionApplyResult)
-        : undefined,
-    onCalculatedColumnAdd:
-      typeof data.onAddCanvasCalculatedColumn === 'function'
-        ? (data.onAddCanvasCalculatedColumn as (
-            identity: GraphNodeCalculatedColumnIdentity
-          ) => GraphNodeColumnFunctionApplyResult)
-        : undefined,
-    onColumnOutputToggle:
-      (args.nodeRole === 'input' || args.nodeRole === 'transform') &&
-      typeof data.onToggleCanvasColumnOutput === 'function'
-        ? (data.onToggleCanvasColumnOutput as (
-            identity: GraphNodeColumnOutputToggleIdentity
-          ) => GraphNodeColumnFunctionApplyResult)
-        : undefined,
-    onColumnReorder:
-      (args.nodeRole === 'input' || args.nodeRole === 'transform') &&
-      typeof data.onReorderCanvasColumnOutput === 'function'
-        ? (data.onReorderCanvasColumnOutput as (identity: GraphNodeColumnReorderIdentity) => void)
-        : undefined,
-    onColumnDisclosureChange:
-      typeof data.onColumnDisclosureChange === 'function'
-        ? (data.onColumnDisclosureChange as (nodeId: string, expanded: boolean) => void)
-        : undefined,
-    onColumnLayoutChange:
-      typeof data.onColumnLayoutChange === 'function'
-        ? (data.onColumnLayoutChange as () => void)
-        : undefined,
-    onAutomapColumns:
-      args.nodeRole === 'transform' && typeof data.onAutomapColumns === 'function'
-        ? (data.onAutomapColumns as (nodeId: string, columns: readonly GraphNodeColumn[]) => void)
-        : undefined,
-  };
-}

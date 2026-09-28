@@ -25,7 +25,7 @@ import {
   GraphNodeMetricHotspot,
   resolveGraphNodeMetricEvidenceTone,
 } from './GraphNodeMetricHotspot';
-import { graphNodeOperationalRailClasses } from './graphVisualTokens';
+import { graphNodeOperationalRailClasses } from './graphMetricVisualTokens';
 
 const metricIconByName: Record<GraphNodeCardMetricIcon, LucideIcon> = {
   clock: Clock,

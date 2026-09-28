@@ -2,7 +2,7 @@
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanvasRelationalTreeExistingDraft } from './canvasRelationalTreeExistingDraft';
 import type { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
-import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
+import type { CanvasRelationalTreeSeedHydration } from './useCanvasRelationalTreeExistingSeed';
 import { relationOperation } from './canvasRelationOperation';
 import { useRelationRemoval } from './useRelationRemoval';
 
@@ -26,14 +26,11 @@ export function useCanvasRelationalTreeRemoval(
     enabled: boolean;
     analysis: ReturnType<typeof useCanvasRelationAnalysisSession>;
     active: boolean;
-    draft: SubstraitDocument | null;
     selectedInputIds: readonly string[];
     seed: CanvasRelationalTreeExistingDraft | null;
     hydrate: () => boolean;
-    accept: (
-      result: Readonly<{ draft: SubstraitDocument; operation: CanvasRelationalOperation }>,
-      ids: readonly string[]
-    ) => void;
+    clear: () => void;
+    accept: (result: CanvasRelationalTreeSeedHydration) => void;
   }>
 ) {
   return useRelationRemoval(
@@ -42,9 +39,17 @@ export function useCanvasRelationalTreeRemoval(
       const ids = args.active ? args.selectedInputIds : args.seed!.inputIds;
       const retained = retainedSourceInputIds(analysis.document!, next, ids);
       if (!args.active) args.hydrate();
-      args.accept({ draft: next, operation: relationOperation(analysis.session) }, retained);
+      args.accept({
+        draft: next,
+        operation: relationOperation(analysis.session),
+        inputIds: retained,
+      });
     },
     args.enabled,
-    args.analysis
+    args.analysis,
+    () => {
+      if (!args.active && !args.hydrate()) return;
+      args.clear();
+    }
   );
 }

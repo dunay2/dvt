@@ -1,5 +1,9 @@
 /** Own canonical Transform persistence; presentation hints never determine admissible tree shapes. */
-import { DVT_TRANSFORM_AUTHORING_MODE, DvtTransformResultTargetV1Schema } from '@dvt/contracts';
+import {
+  DVT_TRANSFORM_AUTHORING_MODE,
+  DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
+  DvtTransformResultTargetV1Schema,
+} from '@dvt/contracts';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import type { CanonicalNode } from '../../types/canonical';
 import type {
@@ -22,12 +26,13 @@ import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemantic
 import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 import { isCanvasSetOperation } from './canvasRelationalOperationChoices';
 import { canvasPresentationOperationForRel } from './canvasRelationalOperationPresentation';
+import { DVT_TRANSFORM_MATERIALIZATIONS } from './canvasDvtMaterializationPolicy';
 
 type TransformMetadata =
   DvtUninitializedTransformAuthoringMetadata | DvtSubstraitTransformAuthoringMetadata;
 
 const DEFAULT_MATERIALIZATION = 'view';
-const VALID_MATERIALIZATIONS = new Set(['table', 'view']);
+const VALID_MATERIALIZATIONS = new Set<string>(DVT_TRANSFORM_MATERIALIZATIONS);
 
 function normalizeMaterialized(value: string | undefined): string {
   const normalized = normalizeDvtIdentifier(value, DEFAULT_MATERIALIZATION);
@@ -149,7 +154,11 @@ export function applyDvtTransformAuthoringMetadata(
     else if (metadata.resultTarget !== undefined) config.resultTarget = metadata.resultTarget;
     return withDvtConfig(updatedNode, config);
   };
-  if (metadata.mode === 'uninitialized') return withMaterialization(node);
+  if (metadata.mode === 'uninitialized') {
+    const { [DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]: _authority, ...retained } =
+      node.metadata ?? {};
+    return withMaterialization({ ...node, metadata: retained });
+  }
   const draft = { plan: metadata.plan, sidecar: metadata.sidecar };
   const indexed = indexSubstraitRelations(draft);
   if (!indexed.ok) throw indexed.error;

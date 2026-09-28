@@ -39,7 +39,7 @@ function model(
   return {
     id,
     name: id,
-    pluginId: 'dvt',
+    pluginId: 'dbt',
     kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',

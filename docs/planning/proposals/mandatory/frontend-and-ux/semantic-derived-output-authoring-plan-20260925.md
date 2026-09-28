@@ -15,8 +15,10 @@ preserving stable FieldIds. It reuses `ConfigureCanvasDvtNode`, the admitted
 Substrait function catalogue and the revision-bound relation analysis session.
 
 It does not add an expression IR, a visual-stage identity, a runtime step or a
-second output owner. The Transform instance `Output` tab remains authoritative
-for final inclusion, alias and order.
+second output owner. The Transform instance inside the semantic editor owns
+final inclusion, alias and order. The outer Canvas model card's `Output` tab is
+only a passive projection: it neither authors fields nor receives mappings.
+External mappings terminate at the consumer `Input`.
 
 ## Current Constraint
 
@@ -66,15 +68,18 @@ flowchart LR
 
 ### Transform card interaction
 
-The Semantic Editor exposes **Transform** in Add operation. It inserts an
-identity `ProjectRel` after the selected dataset, reconnects its consumers and
-selects the new card. Its initial output is the full input dataset; this is a
-valid passthrough transformation, not a placeholder.
+The Semantic Editor exposes **Transform** in Add operation. The card is staged
+independently of selection. An explicit producer-to-Input connection creates
+one owned identity `ProjectRel`; no existing consumer is rewired implicitly.
+Its initial output is the full input dataset, a valid passthrough transformation.
+The author connects its output to a downstream operation or the passive terminal.
 
 ```mermaid
 flowchart LR
-  Dataset[Selected dataset] --> Add[Add operation: Transform]
-  Add --> Project[ProjectRel: passthrough fields]
+  Add[Add operation: Transform] --> Card[Unconnected operation card]
+  Dataset[Producer output] --> Input[Explicit Transform Input connection]
+  Card --> Input
+  Input --> Project[ProjectRel: passthrough fields]
   Project --> Inspector[Fixed right Transform inspector]
   Inspector --> Fields[Add derived fields using admitted functions]
   Fields --> Consumer[JOIN, Filter, Window or another Transform]
@@ -89,11 +94,60 @@ command and downstream rebinding boundary. Prove insertion on either JOIN
 operand, passthrough preservation, stale rejection and the production Workbench
 interaction without a floating editor.
 
+Acceptance includes editing output inclusion and derived fields, explicitly
+connecting the terminal, applying and reopening without lost selections or
+duplicate operations. Checkbox updates must retain focus and viewport geometry.
+Keep row identity and presentation order stable while toggling inclusion. Busy
+commands use accessible busy state and reject duplicate gestures without
+temporarily disabling the focused checkbox. Reordering remains an explicit
+gesture; inclusion follows the displayed order rather than moving its row.
+Staged and applied Transform use the same fixed inspector frame. Do not wrap
+that frame in another width-constrained properties panel: nested widths clip
+the controls beyond the viewport and duplicate ownership of the inspector layout.
+The producer-consumer browser proof must not create output semantics by connecting
+outer cards or by dropping fields on the passive Output tab.
+
 The focused browser proof saves and reopens Transform through the real Canvas
 UI with the existing stateful draft API transport. This is a frontend
 integration proof, not evidence of live PostgreSQL execution. Function argument
 order and repetitions belong to Substrait expressions; lineage records unique
 field dependencies.
+
+This stability rule applies to every operation, including Filter. Re-querying
+an operand after output selection or reorder must not unmount the inspector
+frame, reset its active tab or replace the focused output control. Keep the
+frame keyed by relation identity, independently of asynchronous property-form
+availability; never retain stale command authority just to keep it visible.
+Prove that inclusion, pointer drag and keyboard reorder preserve the exact DOM
+frame, active Output tab and focus while advancing the real semantic revision.
+A configured staged unary operation uses that same inspector; only its initial
+configuration needs the insertion form.
+
+### Semantic zoom without card collisions
+
+The current layout expands lexical detail while keeping manual compact-card
+coordinates unchanged. The expanded rectangles consequently cover neighboring
+cards. Do not remove lexical disclosure or reset the author's saved positions.
+
+```mermaid
+flowchart LR
+  Before[Manual compact positions] --> Grow[Expand lexical cards at the same coordinates]
+  Grow --> Collision[Cards overlap]
+  Positions[Unchanged authored coordinates] --> Reserve[Reserve expansion space along each axis]
+  Sizes[Visible lexical bounds] --> Reserve
+  Reserve --> View[Cards and connections use the same projected geometry]
+  View --> Drag[Convert display movement back to authored coordinates]
+```
+
+Within `ProjectCanvasRelationalTree`, project additional spacing from the
+compact layout whenever manually positioned cards reveal detail. Preserve the
+relative separation and gaps of nonoverlapping cards along each axis, including
+the passive terminal and pending cards. Collapsing detail restores the authored
+coordinates. Rendered movement must subtract the presentation-only expansion
+offset, avoiding accumulated drift. This is not another persisted layout or a
+semantic mutation. No draft save, provider query, tab switch or selection reset
+is allowed on zoom. Tests must cover restored/manual positions, uneven detail,
+repeated zoom, movement while expanded, terminal edges and unchanged node identity.
 
 1. Extract and prove one provider-aware scalar-expression builder from the
    current projection implementation.
@@ -108,6 +162,89 @@ field dependencies.
 
 ## Rails And Negative Proof
 
+### One binary composition path
+
+The staged JOIN currently has separate Read/Read and relation-tree/Read
+configurators. Two transformed producers never enter either path. CROSS and
+SET cards can consequently remain pending despite complete ports. These shape
+restrictions are not algebraic rules and must be removed, not retained as fallbacks.
+
+```mermaid
+flowchart LR
+  Before[Two shape-specific JOIN configurators] --> Gap[Two transformed operands stay pending]
+  Ports[Exact producer at each Input port] --> Subtree[Project each owned subtree]
+  Subtree --> Merge[Merge local anchors and function identities]
+  Merge --> Builder[Existing canonical JOIN / CROSS / SET builder]
+  Builder --> Validate[Canonical schema and connection validation]
+  Validate --> Draft[One configured staged operation]
+```
+
+Use `ConfigureCanvasDvtNode` for the existing editable draft and
+`ProjectCanvasRelationalTree` for its exact operand projection. No provider
+execution, new command, schema or expression language is introduced. Preserve
+stable relation and field identities, aliases, port order and all operand
+operations. Rebase document-local relation and function anchors on cloned
+protobuf messages; resolve function identities by their declared URN and name,
+not by coincident numeric anchors. Reject shared occurrences, cross-connection
+operands, malformed documents and incompatible SET schemas without publishing
+partial semantics. A JOIN still needs its admitted typed equality, editable in
+the existing predicate inspector; CROSS has no fabricated predicate.
+
+Retire `canvasStagedJoinConfiguration.ts` and
+`canvasStagedJoinProducerConfiguration.ts`, their special decoder and the
+duplicate synchronous configuration effect. Migrate their behavioral tests to
+the common configurator rather than discarding coverage. Reuse the existing
+operation inspector and output editor for configured binary operations. Keep
+the passive terminal and explicit Input connection contract unchanged.
+
+| Signal                                      | Decision                                           | Required proof                                                         |
+| ------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------- |
+| Shape-dependent parallel commands           | One typed operand compositor and canonical builder | Read/Read, transformed/Read and transformed/transformed on either port |
+| Local numeric identity collisions           | Rebase only cloned protobuf anchors                | Different functions sharing an anchor retain distinct meaning          |
+| Whole-document lookup for an inner producer | Project exact owned subtree                        | No accidental ancestor or sibling copied into the operand              |
+| Pending binary property placeholder         | Reuse the existing canonical inspector             | JOIN equality, CROSS and SET outputs remain editable                   |
+
+Negative proof includes incomplete ports, duplicate occurrences, cross-connection
+composition and incompatible SET fields. Browser proof must apply and reopen a
+binary operation fed by two configured producers, without layout reset or copied
+upstream model internals. Retired source-specific configuration symbols must
+have no production references.
+
+The same review found that modern Transform authoring reused the legacy
+nullable-only projection inspector. Select Transform operands from the admitted
+analysis schema independently of nullability; preserve their original type and
+nullability in the semantic document. Share that type-label projection between
+the authoring query and command. Do not broaden the old projection reader's
+contract or treat a NOT NULL field as nullable to make it pass.
+
+### Preserve pending consumers during producer edits
+
+The pending graph currently edits each operation's embedded document in
+isolation and discards configured consumers after a producer change. Rebuilding
+an identity Transform cannot recover a consumer's authored expressions or
+output selections. This is an authority-boundary defect, not a rendering issue.
+
+```mermaid
+flowchart LR
+  Before[Edit isolated producer] --> Discard[Discard consumer semantics]
+  Discard --> Loss[Rebuild defaults and lose authored fields]
+  After[Edit relation in complete connected document] --> Commit[Existing selected-relation command]
+  Commit --> Rebind[Validate and rebind downstream fields]
+  Rebind --> Project[Project each staged subtree back into the same draft]
+```
+
+Select the complete configured consumer document for editing any staged
+ancestor. Reuse the existing selected-relation command and validation boundary;
+do not implement another expression rewriter. After a successful command,
+project the affected staged subtrees atomically using their stable relation
+identities. Removing a required producer field rejects the command rather than
+silently resetting a consumer. Disconnection remains a distinct explicit action.
+
+Regression proof must preserve an authored consumer alias or derived field
+after an upstream rename and reject a producer-field removal used downstream.
+The read projection belongs to `ProjectCanvasRelationalTree`; publication of
+the updated snapshots remains `ConfigureCanvasDvtNode` and the existing draft.
+
 - Command: `ConfigureCanvasDvtNode`.
 - Query: `ProjectCanvasRelationalTree`.
 - Draft persistence: `SaveWorkspaceGraphDraft`.
@@ -119,8 +256,64 @@ field dependencies.
 
 ## Scope Guard
 
-Allowed implementation surfaces are the Canvas relation command, its focused
-tests, the existing expression form extraction and Semantic Editor composition.
+### Name and formula editing
+
+The accepted interaction for Transform is a named output and a formula, not a
+function selector that requires a physical field. The current form excludes
+literal-only outputs and the read-only expression summary does not provide an
+edit action. Arithmetic also requires capability admission; UI availability
+alone is not proof of executable support.
+
+```text
+Current: field -> function chooser -> append output; existing formulas read-only
+Target: name + formula -> admitted Substrait expression -> revision-bound edit
+        -> same ProjectRel and stable FieldId -> passive Output projection
+```
+
+Properties lists each derived output with its name, formula and explicit Edit
+action. Add opens the same form with empty name and formula. The expression tree
+remains available in Tree, without duplicating it in Properties. Empty text is
+written as `''` and is distinct from an unfinished empty formula and from NULL.
+Examples include `hola = ''`, `greeting = 'hola'`,
+`full_name = CONCAT(first_name, ' ', last_name)` and `total = price * quantity`.
+The formula is input syntax, never another persisted AST or SQL authority.
+Compile directly into the pinned Substrait expressions and retain the existing
+stable identity, validation, Apply/Cancel and persistence boundaries.
+An open formula draft participates in the existing pending-relation-edit guard,
+for both staged and applied Transform cards. Switching cards must require the
+same explicit discard decision as other unfinished operation properties.
+
+| Scenario                                | Opportunity                                 | Pattern / owner                                 | Rail                                      | Required proof                                                                             |
+| --------------------------------------- | ------------------------------------------- | ----------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Literal-only and compound outputs       | UI restricts the admitted expression model  | Syntax adapter / Substrait expression           | ConfigureCanvasDvtNode                    | Empty string, escaping, constants, nested calls, unknown fields, invalid syntax            |
+| Edit an existing formula                | Read-only projection has no command gesture | Existing selected-relation command / ProjectRel | ConfigureCanvasDvtNode                    | Stable FieldId, unchanged neighbors, downstream references, stale rejection                |
+| Arithmetic between fields and constants | Missing profile/provider admission          | Standard-first capability / bounded profile     | Existing capability and projection owners | Exact signatures, types, nullability, overflow, canonical round-trip and PostgreSQL result |
+
+The arithmetic cut must use the pinned official `functions_arithmetic` extension
+and explicitly admitted overloads. Do not infer support from the upstream name,
+coerce text columns into numbers, or display executable arithmetic before target
+conformance is proved. No JavaScript evaluation, handwritten SQL execution,
+provider query during editing, silent cast, or parallel command is permitted.
+
+This extension includes the scalar catalog schema and admission in
+`packages/@dvt/contracts`, the function resolver and scalar bindings in
+`packages/@dvt/postgres-projection`, and their focused tests. It does not
+authorize changes to execution, planner, API or physical data. Arithmetic
+admission covers matching i64 and fp64 operands with explicit signatures;
+incompatible or mixed types reject without implicit conversion. PostgreSQL
+proof is read-only, using constants rather than user tables.
+The shared typed-literal SQL emitter must preserve i64/fp64 even without an
+enclosing arithmetic function. PostgreSQL numeric inference cannot become the
+output type authority; fp64 negative zero must survive provider rendering.
+
+Before production changes, update the existing Planning DB declarations for the
+affected Canvas, Contracts and PostgreSQL projection surfaces. Prove the full
+browser create/edit/apply/reload path and negative cases. Runtime proofs must use
+an explicitly isolated database; never seed the application's local database.
+
+Allowed implementation surfaces include the Canvas relation command, its focused
+tests, the expression form and Semantic Editor composition, plus the exact
+catalog and PostgreSQL scalar surfaces declared above.
 Engine, planner, adapter and API packages are out of scope. PostgreSQL supplies
 current admitted capability evidence; the persisted meaning remains Substrait.
 

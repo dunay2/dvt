@@ -108,7 +108,7 @@ describe('canonical relation tree projection', () => {
     const result = project(graphModel(document), [sources[0]!, graphSource('extra')]);
     if (!result.ok) throw new Error('Expected canonical tree');
     expect(
-      result.projection.inputs.map(({ sourceRef, state }) => [sourceRef.sourceObjectId, state])
+      result.projection.inputs.map(({ sourceRef, state }) => [sourceRef?.sourceObjectId, state])
     ).toEqual([
       ['public.left', 'participating'],
       ['public.right', 'missing'],

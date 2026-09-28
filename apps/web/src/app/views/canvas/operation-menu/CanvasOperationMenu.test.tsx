@@ -9,7 +9,7 @@ import { resolveCanvasOperationMenuCopy } from './canvasOperationMenuCopy';
 describe('Canvas operation menu', () => {
   let host: HTMLDivElement;
   let root: Root;
-  const onSelect = vi.fn();
+  const onStage = vi.fn();
   const scrollDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollIntoView');
   const items = [
     {
@@ -17,7 +17,6 @@ describe('Canvas operation menu', () => {
       group: 'combine',
       label: 'LEFT JOIN',
       reason: null,
-      selectable: true,
       active: false,
       draggable: true,
     },
@@ -26,7 +25,6 @@ describe('Canvas operation menu', () => {
       group: 'transform',
       label: 'Filter',
       reason: 'Unavailable for this output',
-      selectable: false,
       active: false,
       draggable: false,
     },
@@ -35,9 +33,16 @@ describe('Canvas operation menu', () => {
       group: 'order',
       label: 'Order by',
       reason: null,
-      selectable: true,
       active: false,
       draggable: false,
+    },
+    {
+      id: 'aggregate',
+      group: 'transform',
+      label: 'Aggregate',
+      reason: 'Connect an Input after placing it',
+      active: false,
+      draggable: true,
     },
   ] as const;
   beforeEach(() => {
@@ -62,7 +67,7 @@ describe('Canvas operation menu', () => {
         <CanvasOperationMenu
           items={items}
           copy={resolveCanvasOperationMenuCopy('en')}
-          onSelect={onSelect}
+          onStage={onStage}
         />
       )
     );
@@ -75,7 +80,7 @@ describe('Canvas operation menu', () => {
     if (scrollDescriptor)
       Object.defineProperty(Element.prototype, 'scrollIntoView', scrollDescriptor);
     else Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
-    onSelect.mockClear();
+    onStage.mockClear();
   });
   function open(): void {
     act(() => host.querySelector<HTMLButtonElement>('button')!.click());
@@ -87,7 +92,7 @@ describe('Canvas operation menu', () => {
     for (const label of ['Combine', 'Transform', 'Order and limit']) {
       expect(document.querySelector('[role="listbox"]')?.textContent).toContain(label);
     }
-    expect(onSelect).not.toHaveBeenCalled();
+    expect(onStage).not.toHaveBeenCalled();
   });
   it('shows unavailable reasons and refuses their selection', () => {
     open();
@@ -95,7 +100,7 @@ describe('Canvas operation menu', () => {
     expect(item.getAttribute('aria-disabled')).toBe('true');
     expect(item.textContent).toContain('Unavailable for this output');
     act(() => item.click());
-    expect(onSelect).not.toHaveBeenCalled();
+    expect(onStage).not.toHaveBeenCalled();
   });
   it('omits empty groups before relational operands are available', () => {
     act(() =>
@@ -103,7 +108,7 @@ describe('Canvas operation menu', () => {
         <CanvasOperationMenu
           items={items.slice(1)}
           copy={resolveCanvasOperationMenuCopy('en')}
-          onSelect={onSelect}
+          onStage={onStage}
         />
       )
     );
@@ -113,7 +118,7 @@ describe('Canvas operation menu', () => {
       (heading) => heading.textContent
     );
     expect(headings).toEqual(['Transform', 'Order and limit']);
-    expect(onSelect).not.toHaveBeenCalled();
+    expect(onStage).not.toHaveBeenCalled();
   });
   it.each(['Enter', ' ', 'ArrowDown'])(
     'opens on %s without relying on a synthesized click',
@@ -124,13 +129,19 @@ describe('Canvas operation menu', () => {
           .dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
       });
       expect(document.querySelector('[role="listbox"]')).not.toBeNull();
-      expect(onSelect).not.toHaveBeenCalled();
+      expect(onStage).not.toHaveBeenCalled();
     }
   );
-  it('dispatches one exact admitted selector and dismisses the menu', () => {
+  it('stages an admitted operation and dismisses the menu', () => {
     open();
     act(() => document.querySelector<HTMLElement>('[data-operation="left_join"]')!.click());
-    expect(onSelect).toHaveBeenCalledExactlyOnceWith('left_join');
+    expect(onStage).toHaveBeenCalledExactlyOnceWith('left_join');
+    expect(document.querySelector('[role="listbox"]')).toBeNull();
+  });
+  it('stages an operation that needs an Input instead of pretending it is already configurable', () => {
+    open();
+    act(() => document.querySelector<HTMLElement>('[data-operation="aggregate"]')!.click());
+    expect(onStage).toHaveBeenCalledExactlyOnceWith('aggregate');
     expect(document.querySelector('[role="listbox"]')).toBeNull();
   });
 });

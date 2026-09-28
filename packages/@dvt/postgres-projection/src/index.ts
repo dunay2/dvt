@@ -170,3 +170,4 @@ export {
   inspectDvtSubstraitMixedCrossDraft,
 } from './substraitMixedCrossReader.js';
 export { projectSubstraitToPostgresSql } from './relationalSql/project.js';
+export { projectSubstraitProducerGraph } from './relationalSql/producerGraph.js';

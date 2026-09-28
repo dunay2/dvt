@@ -4,11 +4,10 @@ import { Button } from '../../components/ui/button';
 import { OperationalDrawerDataTable } from '../../components/shell/OperationalDrawerDataTable';
 import { CanvasModelUnresolvedInputs } from './CanvasModelUnresolvedInputs';
 import type { CanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
-import type { useCanvasModelDataQuery } from './useCanvasModelDataQuery';
+import type { TransformDataSampleResponse } from '@dvt/contracts';
 
 export type CanvasModelDataPanelProps = Readonly<{
   nodeName: string;
-  semanticDigest: string | null;
   copy: CanvasSemanticEditorCopy;
   unresolvedInputs?: readonly Readonly<{ label: string; state: 'pending' | 'missing' }>[];
   onReviewInputs?: () => void;
@@ -18,21 +17,24 @@ export type CanvasModelDataPanelProps = Readonly<{
 
 export function CanvasModelDataPanel({
   nodeName,
-  semanticDigest,
   copy,
   unresolvedInputs = [],
   onReviewInputs,
   compact = false,
   disabledReason,
-  sample,
-  loading,
-  error,
-  available,
-  load,
+  data: { sample, loading, error, available, stale },
+  actions: { load },
 }: CanvasModelDataPanelProps &
-  Omit<ReturnType<typeof useCanvasModelDataQuery>, 'reset'>): JSX.Element {
-  const stale =
-    sample != null && (sample.semanticPlanSha256 !== semanticDigest || unresolvedInputs.length > 0);
+  Readonly<{
+    data: Readonly<{
+      sample: TransformDataSampleResponse | null;
+      loading: boolean;
+      error: string | null;
+      available: boolean;
+      stale: boolean;
+    }>;
+    actions: Readonly<{ load: () => Promise<void> }>;
+  }>): JSX.Element {
   return (
     <section
       data-slot="canvas-model-data"

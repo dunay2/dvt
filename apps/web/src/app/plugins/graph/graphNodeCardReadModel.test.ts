@@ -16,13 +16,6 @@ const CARD_STRATEGIES = [
 
 const DEFAULT_DVT_TRANSFORM_HEADER = [
   { id: 'materialization', label: 'Mat.', value: 'view', icon: 'eye', placement: 'header' },
-  {
-    id: 'last-run',
-    label: 'Last run',
-    value: 'Not calculated',
-    icon: 'clock',
-    placement: 'header',
-  },
 ] as const;
 const SOURCE_METRICS_OBSERVED_AT = '2026-07-10T21:00:00.000Z';
 const SPANISH_PRESENTATION_COPY = {
@@ -79,6 +72,20 @@ function buildNode(partial: Partial<CanonicalNode>): CanonicalNode {
 }
 
 describe('buildGraphNodeCardReadModel', () => {
+  it('leaves last execution out of both model-card metric rails', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:transform',
+        role: 'transform',
+        metadata: { lastRunAt: '2026-09-26T10:00:00Z' },
+      }),
+      {},
+      CARD_STRATEGIES
+    );
+    expect(
+      [...model.metrics, ...model.operationalMetrics].map((metric) => metric.id)
+    ).not.toContain('last-run');
+  });
   it('shows the effective view materialization for a new DVT Transform', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({ kind: 'dvt:transform', pluginId: 'dvt', role: 'transform' }),
@@ -515,13 +522,6 @@ describe('buildGraphNodeCardReadModel', () => {
       { id: 'status', label: 'Status', value: 'completed' },
       { id: 'duration', label: 'Duration', value: '1m 15s' },
       { id: 'warnings', label: 'Warnings', value: '2' },
-      {
-        id: 'last-run',
-        label: 'Last run',
-        value: '2026-06-12T20:45:00Z',
-        icon: 'clock',
-        placement: 'header',
-      },
     ]);
     expect(model.operationalMetrics).toEqual([
       { id: 'duration', label: 'Duration', value: '1m 15s', icon: 'timer' },
@@ -632,7 +632,6 @@ describe('buildGraphNodeCardReadModel', () => {
       },
       { id: 'duration', label: 'Duration', value: '1m 15s' },
       { id: 'cost', label: 'Cost', value: '$0.42' },
-      DEFAULT_DVT_TRANSFORM_HEADER[1],
     ]);
   });
 
@@ -858,13 +857,6 @@ describe('buildGraphNodeCardReadModel', () => {
         placement: 'header',
       },
       { id: 'dependencies', label: 'Deps', value: '2' },
-      {
-        id: 'last-run',
-        label: 'Last run',
-        value: 'Not calculated',
-        icon: 'clock',
-        placement: 'header',
-      },
     ]);
     expect(model.operationalMetrics).toEqual([
       { id: 'rows', label: 'Rows', value: 'Not calculated', icon: 'rows' },

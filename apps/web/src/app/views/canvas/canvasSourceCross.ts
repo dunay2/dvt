@@ -3,16 +3,22 @@ import { allocateDvtRelationId } from '@dvt/contracts';
 import { deriveRelationSchema, type RelationChangeSet } from '@dvt/substrait-analysis';
 import { hasSameConnectionRef } from '@dvt/postgres-projection';
 import { createCanonicalComposition } from './canvasCanonicalComposition';
-import { createSourceRelation, toSourceRelationInput } from './canvasSourceRelation';
+import {
+  createSourceRelation,
+  toSourceRelationInput,
+  canvasInputConnection,
+} from './canvasSourceRelation';
 import { createSourceDocument, createSourcePlan } from './canvasSourceDocument';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
+import { requireCompleteCanvasInput } from './canvasInputComposition';
 
 export function createSourceCross(inputs: readonly CanvasDvtCompositionInput[]) {
+  inputs.forEach(requireCompleteCanvasInput);
   const first = inputs[0];
   if (first == null || inputs.length < 2) throw new Error('CROSS requires at least two inputs.');
   if (
     inputs.some(
-      (input) => !hasSameConnectionRef(first.sourceRef.connectionRef, input.sourceRef.connectionRef)
+      (input) => !hasSameConnectionRef(canvasInputConnection(first), canvasInputConnection(input))
     )
   )
     throw new Error('Inputs must use the same execution connection.');

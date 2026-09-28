@@ -6,12 +6,14 @@ import type {
   GraphNodeCardMetric,
   GraphNodeCardMetricIcon,
   GraphNodeCardStatusTone,
+  GraphNodeMaterializationControl,
 } from './graphNodeCardStrategyContracts';
 import {
   GraphNodeMetricHotspot,
   resolveGraphNodeMetricEvidenceTone,
 } from './GraphNodeMetricHotspot';
-import { graphNodeMetricRowClasses } from './graphVisualTokens';
+import { graphNodeMetricRowClasses } from './graphMetricVisualTokens';
+import { GraphNodeMaterializationMenu } from './GraphNodeMaterializationMenu';
 
 const summaryMetricIconByName: Partial<Record<GraphNodeCardMetricIcon, LucideIcon>> = {
   clock: Clock,
@@ -26,6 +28,7 @@ export type GraphNodeMetricRowProps = Readonly<{
   metrics: readonly GraphNodeCardMetric[];
   onOpenCode?: () => void;
   placement?: 'body' | 'header';
+  materializationControl?: GraphNodeMaterializationControl;
 }>;
 
 function resolveMetricValueClassName(tone: GraphNodeCardStatusTone | undefined): string {
@@ -38,6 +41,7 @@ export function GraphNodeMetricRow({
   metrics,
   onOpenCode,
   placement = 'body',
+  materializationControl,
 }: GraphNodeMetricRowProps): ReactElement | null {
   if (metrics.length === 0) {
     return null;
@@ -65,6 +69,19 @@ export function GraphNodeMetricRow({
             </span>
           );
 
+        if (
+          placement === 'header' &&
+          metric.id === 'materialization' &&
+          materializationControl != null
+        ) {
+          return (
+            <GraphNodeMaterializationMenu
+              key={metric.id}
+              control={materializationControl}
+              icon={iconElement}
+            />
+          );
+        }
         if (placement === 'header') {
           return (
             <span

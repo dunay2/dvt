@@ -11,7 +11,7 @@ import {
 } from './useCanvasControllerReadModel.test-support';
 
 describe('Canvas read model admission', () => {
-  it('offers the first output toggle but no reorder before a flat Model has canonical outputs', async () => {
+  it('keeps Output passive before a consumer has canonical outputs', async () => {
     const sourceNode = {
       ...testNode,
       metadata: {
@@ -76,7 +76,7 @@ describe('Canvas read model admission', () => {
 
     try {
       const data = mounted.readState()?.nodesWithImpact[1]?.data as ReadModelNodeData;
-      expect(data.onToggleCanvasColumnOutput).toBe(base.columnActions.onToggleCanvasColumnOutput);
+      expect(data.onToggleCanvasColumnOutput).toBeUndefined();
       expect(data.onReorderCanvasColumnOutput).toBeUndefined();
     } finally {
       await mounted.cleanup();

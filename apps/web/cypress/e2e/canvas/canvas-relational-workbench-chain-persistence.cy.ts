@@ -7,6 +7,7 @@ import { authorFourSourceChain } from '../../support/relationalWorkbench/joinCha
 import {
   visitWorkbenchCanvas,
   openWorkbenchModel,
+  previewWorkbenchModel,
 } from '../../support/relationalWorkbench/navigation';
 import {
   semanticWrites,
@@ -33,16 +34,16 @@ describe('Workbench chain-persistence', () => {
       expect(entries.filter((entry) => entry.relation.relType.case === 'read')).to.have.length(4);
       expect(entries.filter((entry) => entry.relation.relType.case === 'join')).to.have.length(3);
     });
-    cy.get('[data-slot="canvas-model-view-tab"][data-view="sql"]').click();
-    cy.get('[data-slot="canvas-model-sql"]').should('contain.text', 'SELECT');
-    cy.get('[data-slot="canvas-model-view-tab"][data-view="data"]').click();
     cy.then(() => expect(getE2eApiCalls(/\/data-sample$/, 'GET')).to.have.length(0));
-    cy.get('[data-slot="canvas-model-preview"]').click();
-    cy.get('[data-slot="canvas-model-data"] table').should('contain.text', 'C-001');
+    previewWorkbenchModel();
+    cy.get('[data-slot="bottom-operational-drawer-data"] table').should('contain.text', 'C-001');
     cy.screenshot('semantic-editor-data-preview');
     cy.get('[data-slot="canvas-model-tab-close"]').click();
     visitWorkbenchCanvas();
     openWorkbenchModel('join-transform');
-    cy.get('[data-slot="canvas-relational-tree"] [data-operator="join"]').should('have.length', 3);
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should(
+      'have.length',
+      3
+    );
   });
 });

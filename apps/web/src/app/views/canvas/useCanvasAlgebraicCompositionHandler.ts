@@ -1,8 +1,10 @@
 /** Owned concern: expose supported algebraic composition through ConfigureCanvasDvtNode. */
 import { useCallback, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 
 import { getPluginPortMap } from '../../plugins/registry';
 import type { CanvasGraphInteractionContracts } from './canvasGraphHandlerContracts';
+import { canvasViewCopy } from './copy';
 import {
   resolveCanvasAlgebraicCompositionOperations,
   resolveCanvasAlgebraicCompositionTransaction,
@@ -43,30 +45,33 @@ export function useCanvasAlgebraicCompositionHandler({
   );
 
   const composeNodes = useCallback(
-    async (
+    (
       identity: CanvasAlgebraicCompositionIdentity & {
         operation: CanvasAlgebraicCompositionOperation;
       }
     ) => {
       if (!active.current || !latest.current.canEditEdges) return;
-      const transaction = await resolveCanvasAlgebraicCompositionTransaction({
+      void resolveCanvasAlgebraicCompositionTransaction({
         canonicalNodesById,
         draftSession,
         edges,
         pluginPortMap: getPluginPortMap(),
         ...identity,
-      });
-      if (
-        !active.current ||
-        latest.current.canonicalNodesById !== canonicalNodesById ||
-        transaction.outcome !== 'created' ||
-        latest.current.draftSession !== draftSession ||
-        latest.current.edges !== edges ||
-        !latest.current.canEditEdges
-      )
-        return;
-      setEdges(transaction.edges);
-      setDraftSession(transaction.draftSession);
+      })
+        .then((transaction) => {
+          if (
+            !active.current ||
+            latest.current.canonicalNodesById !== canonicalNodesById ||
+            transaction.outcome !== 'created' ||
+            latest.current.draftSession !== draftSession ||
+            latest.current.edges !== edges ||
+            !latest.current.canEditEdges
+          )
+            return;
+          setEdges(transaction.edges);
+          setDraftSession(transaction.draftSession);
+        })
+        .catch(() => toast.error(canvasViewCopy.dependencyCreationFailedMessage));
     },
     [canEditEdges, canonicalNodesById, draftSession, edges, setDraftSession, setEdges]
   );

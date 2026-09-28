@@ -3,16 +3,21 @@ import { rebindDvtSubstraitSemanticSourceRefV1 } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
-import {
-  persistCanvasProjectionOutputs,
-  readEditableCanvasProjectionEntry,
-  resolveCanvasColumnMappingTarget,
-} from './canvasColumnProjectionAuthority';
+import { readCanvasColumnMappingInputFields } from './canvasColumnProjectionAuthority';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
+import { relationOutputSlots, type RelationOutputSlot } from './canvasRelationOutputSchema';
+import { relationOutputIntent } from './canvasRelationOutputIntent';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
-import { decodeDvtSubstraitProjectionDocument } from './canvasDvtSubstraitProjection';
+import {
+  createDvtSubstraitProjectionDraft,
+  decodeDvtSubstraitProjectionDocument,
+  resolveDvtSubstraitProjectionSource,
+} from './canvasDvtSubstraitProjection';
 
 const sourceRef = {
   schemaVersion: 'connected-source-ref.v1' as const,
@@ -80,143 +85,122 @@ function identitySnapshot(node: CanonicalNode): Readonly<{
   };
 }
 
-describe('Canvas projection identity persistence', () => {
-  it('keeps relation and source FieldIds stable when the same projection is edited', () => {
-    const source = sourceNode();
-    const target = targetNode();
-    const resolveNode = (nodeId: string): CanonicalNode | undefined =>
-      nodeId === source.id ? source : nodeId === target.id ? target : undefined;
-
-    const created = persistCanvasProjectionOutputs({
-      targetNode: target,
-      projection: null,
-      outputs: [
-        {
-          fieldId: 'output:order_id',
-          name: 'order_id',
-          sourceFieldName: 'order_id',
-          dataType: 'integer',
-          outputOrdinal: 0,
-        },
-        {
-          fieldId: 'output:customer',
-          name: 'buyer',
-          sourceFieldName: 'customer',
-          dataType: 'text',
-          outputOrdinal: 1,
-        },
-      ],
-      resolveNode,
-      sourceNodeIdHint: source.id,
-    });
-    if (created.outcome !== 'applied') throw new Error('Expected initial projection persistence.');
-    const before = identitySnapshot(created.node);
-
-    const entry = readEditableCanvasProjectionEntry({
-      targetNode: created.node,
-      edges: [{ sourceId: source.id, targetId: target.id }],
-      resolveNode: (nodeId) =>
-        nodeId === source.id ? source : nodeId === target.id ? created.node : undefined,
-    });
-    if (entry.outcome !== 'ready' || entry.projection == null) {
-      throw new Error('Expected graph-bound projection.');
-    }
-
-    const edited = persistCanvasProjectionOutputs({
-      targetNode: created.node,
-      projection: entry.projection,
-      outputs: entry.projection.outputs.map((output) =>
-        output.fieldId === 'output:customer' ? { ...output, name: 'customer_name' } : output
-      ),
-      resolveNode: (nodeId) =>
-        nodeId === source.id ? source : nodeId === target.id ? created.node : undefined,
-    });
-    if (edited.outcome !== 'applied') throw new Error('Expected edited projection persistence.');
-
-    expect(identitySnapshot(edited.node)).toEqual(before);
+function explicitProjection(): Readonly<{
+  source: CanonicalNode;
+  target: CanonicalNode;
+  draft: ReturnType<typeof createDvtSubstraitProjectionDraft>;
+}> {
+  const source = sourceNode();
+  const target = targetNode();
+  const draft = createDvtSubstraitProjectionDraft({
+    source: resolveDvtSubstraitProjectionSource(source)!,
+    targetNodeId: target.id,
+    outputs: [
+      { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+      { fieldId: 'output:customer', name: 'buyer', sourceFieldName: 'customer' },
+    ],
   });
+  return {
+    source,
+    draft,
+    target: applyDvtSubstraitSemanticDocument(target, encodeDvtSubstraitSemanticDocument(draft)),
+  };
+}
+async function publishedSlots(
+  session: CanvasRelationAnalysisSession
+): Promise<readonly RelationOutputSlot[]> {
+  const root = session.locate(session.rootId, session.revision);
+  return relationOutputSlots(root, await Promise.all(root.inputs.map((id) => session.query(id))));
+}
 
-  it('does not resolve an existing semantic output by its display name', () => {
-    const source = sourceNode();
-    const target = targetNode();
-    const created = persistCanvasProjectionOutputs({
-      targetNode: target,
-      projection: null,
-      outputs: [
-        {
-          fieldId: 'dvt_fld_01991dc0-0000-7000-8000-000000000201',
-          name: 'buyer',
-          sourceFieldName: 'customer',
-          dataType: 'text',
-          outputOrdinal: 0,
-        },
-      ],
-      resolveNode: (nodeId) => (nodeId === source.id ? source : undefined),
-      sourceNodeIdHint: source.id,
+describe('Canvas explicit projection identity persistence', () => {
+  it('keeps relation and input/output FieldIds stable through the shared alias command', async () => {
+    const { target, draft } = explicitProjection();
+    const before = identitySnapshot(target);
+    const session = new CanvasRelationAnalysisSession(target.id);
+    session.receive(draft);
+    const slots = await publishedSlots(session);
+    const edited = await changeSelectedRelationOutputs(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      outputs: slots
+        .filter((slot) => slot.output != null)
+        .map((slot) => ({
+          slot: slot.slot,
+          alias: slot.output!.fieldId === 'output:customer' ? 'customer_name' : slot.name,
+        })),
     });
-    if (created.outcome !== 'applied') throw new Error('Expected initial projection persistence.');
-
-    expect(resolveCanvasColumnMappingTarget(created.node, 'buyer')).toBeNull();
+    const node = applyDvtSubstraitSemanticDocument(
+      target,
+      encodeDvtSubstraitSemanticDocument(edited)
+    );
+    expect(identitySnapshot(node)).toEqual(before);
+    expect(edited.sidecar.fields.map((field) => field.fieldId).sort()).toEqual(
+      draft.sidecar.fields.map((field) => field.fieldId).sort()
+    );
     expect(
-      resolveCanvasColumnMappingTarget(created.node, 'dvt_fld_01991dc0-0000-7000-8000-000000000201')
-    ).toEqual({
-      nodeId: target.id,
-      outputId: 'dvt_fld_01991dc0-0000-7000-8000-000000000201',
-      columnName: 'buyer',
-    });
+      edited.sidecar.fields.find((field) => field.fieldId === 'output:customer')?.displayName
+    ).toBe('customer_name');
+    session.dispose();
   });
-  it('reopens a Transform after a compatible Source schema rebind', () => {
-    const source = sourceNode();
-    const target = targetNode();
-    const created = persistCanvasProjectionOutputs({
-      targetNode: target,
-      projection: null,
-      outputs: [
-        {
-          fieldId: 'output:order_id',
-          name: 'order_id',
-          sourceFieldName: 'order_id',
-          dataType: 'integer',
-          outputOrdinal: 0,
-        },
-      ],
-      resolveNode: (nodeId) => (nodeId === source.id ? source : undefined),
-      sourceNodeIdHint: source.id,
-    });
-    if (created.outcome !== 'applied') throw new Error('Expected initial projection persistence.');
-    const before = identitySnapshot(created.node);
-    const authority = readDvtTransformAuthoringAuthority(created.node);
-    if (authority == null) throw new Error('Expected Transform authoring authority.');
+
+  it('rejects display names at the FieldId command boundary without modifying authority', async () => {
+    const { target, draft } = explicitProjection();
+    const session = new CanvasRelationAnalysisSession(target.id);
+    session.receive(draft);
+    const slots = await publishedSlots(session);
+    const before = await session.query(session.rootId);
+    expect(() =>
+      relationOutputIntent(slots, {
+        nodeId: target.id,
+        columnId: 'buyer',
+        columnType: 'text',
+        output: false,
+      })
+    ).toThrow(/outside the selected output/);
+    expect(
+      relationOutputIntent(slots, {
+        nodeId: target.id,
+        columnId: 'output:customer',
+        columnType: 'text',
+        output: false,
+      })
+    ).toEqual([
+      {
+        slot: slots.find((slot) => slot.output?.fieldId === 'output:order_id')!.slot,
+        alias: 'order_id',
+      },
+    ]);
+    expect(await session.query(session.rootId)).toEqual(before);
+    session.dispose();
+  });
+
+  it('reopens a Transform after a compatible Source schema rebind without reallocating identities', () => {
+    const { source, target } = explicitProjection();
+    const before = identitySnapshot(target);
+    const authority = readDvtTransformAuthoringAuthority(target)!;
     const reboundSourceRef = {
       ...sourceRef,
       connectionRef: { ...sourceRef.connectionRef, connectionId: 'warehouse-recovery' },
       sourceObjectId: 'archive.orders',
     };
     const reboundTarget = applyDvtSubstraitSemanticDocument(
-      created.node,
+      target,
       rebindDvtSubstraitSemanticSourceRefV1(authority.semanticDocument, sourceRef, reboundSourceRef)
     );
     const reboundSource: CanonicalNode = {
       ...source,
-      metadata: {
-        ...source.metadata,
-        connectedSourceRef: reboundSourceRef,
-        schema: 'archive',
-      },
+      metadata: { ...source.metadata, connectedSourceRef: reboundSourceRef, schema: 'archive' },
     };
-
-    const entry = readEditableCanvasProjectionEntry({
-      targetNode: reboundTarget,
+    const fields = readCanvasColumnMappingInputFields({
+      sourceNode: reboundTarget,
       edges: [{ sourceId: reboundSource.id, targetId: reboundTarget.id }],
-      resolveNode: (nodeId) =>
-        nodeId === reboundSource.id
-          ? reboundSource
-          : nodeId === reboundTarget.id
-            ? reboundTarget
-            : undefined,
+      resolveNode: (id) => [reboundSource, reboundTarget].find((node) => node.id === id),
     });
-
-    expect(entry.outcome).toBe('ready');
+    expect(fields.map((field) => ({ columnId: field.columnId, name: field.name }))).toEqual([
+      { columnId: 'output:order_id', name: 'order_id' },
+      { columnId: 'output:customer', name: 'buyer' },
+    ]);
     expect(identitySnapshot(reboundTarget)).toEqual(before);
   });
 });

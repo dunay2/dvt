@@ -2,8 +2,8 @@
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
-import { CanvasRelationalTreeBlockCanvas } from './CanvasRelationalTreeBlockCanvas';
-import { CanvasRelationalTreeCommandError } from './CanvasRelationalTreeCommandError';
+import { CanvasRelationalTreeAuthoring } from './CanvasRelationalTreeAuthoring';
+import { projectCanvasRelationalTreeAuthoringView } from './canvasRelationalTreeAuthoringView';
 import { CanvasRelationalTreeInspection } from './CanvasRelationalTreeInspection';
 import type { CanvasModelOutputInspectorState } from './CanvasRelationalTreeSideInspector';
 
@@ -16,20 +16,13 @@ type CanvasRelationalTreeContentProps = Readonly<{
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
   onPendingConditionChange: (pending: boolean) => void;
+  pendingCondition: boolean;
   onSelectRelation: (relationId: string | null) => void;
   modelOutput: CanvasModelOutputInspectorState;
 }>;
 
 export function CanvasRelationalTreeContent(props: CanvasRelationalTreeContentProps): JSX.Element {
-  return (
-    <>
-      <CanvasRelationalTreeCommandError
-        visible={props.model.session.commandState === 'error'}
-        message={props.copy.relationalTreeUnavailableMessage}
-      />
-      <CanvasRelationalTreeContentView {...props} />
-    </>
-  );
+  return <CanvasRelationalTreeContentView {...props} />;
 }
 
 function CanvasRelationalTreeContentView({
@@ -41,36 +34,21 @@ function CanvasRelationalTreeContentView({
   expanded,
   onExpandedChange,
   onPendingConditionChange,
+  pendingCondition,
   onSelectRelation,
   modelOutput,
 }: CanvasRelationalTreeContentProps): JSX.Element {
   if (model.authoringAvailable && (model.projection == null || model.session.active)) {
-    const { session } = model;
     return (
-      <CanvasRelationalTreeBlockCanvas
+      <CanvasRelationalTreeAuthoring
+        {...projectCanvasRelationalTreeAuthoringView(
+          { model, transformNode, nodes, edges, pendingCondition },
+          onSelectRelation
+        )}
         onPendingConditionChange={onPendingConditionChange}
-        initiallyExpanded={expanded}
-        appendInput={session.appendInput}
-        choices={session.choices}
+        expanded={expanded}
+        onExpandedChange={onExpandedChange}
         copy={copy}
-        edges={edges}
-        inputs={model.inputs}
-        joinDraft={session.joinDraft}
-        selectedRelationId={model.selectedRelationId}
-        onSelectRelation={onSelectRelation}
-        onReconcileSelection={model.selectRelation}
-        nodes={nodes}
-        operation={session.operation}
-        primaryInputId={session.primaryInputId}
-        secondaryInputId={session.secondaryInputId}
-        selectedInputIds={session.selectedInputIds}
-        transformNode={transformNode}
-        onAppendJoinInput={session.appendJoinInput}
-        onChangeJoinDraft={session.setJoinDraft}
-        onRemove={session.removal.remove}
-        onPlaceInput={session.placeInput}
-        onSelectInput={session.selectInput}
-        onSelectOperation={session.selectOperation}
       />
     );
   }

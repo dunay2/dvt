@@ -1,5 +1,8 @@
 /** Owns shared catalog-driven function admission; no Canvas or runtime dependency. */
-import { DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1 } from '@dvt/contracts';
+import {
+  DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
+  type DvtSubstraitFunctionInvocationV1,
+} from '@dvt/contracts';
 
 export const STRING_DATA_TYPES = new Set([
   'text',
@@ -24,7 +27,8 @@ export function normalizeProjectionDataType(dataType: unknown): string {
 export type DvtSubstraitColumnFunction = Readonly<{
   capabilityId: string;
   name: string;
-  category: 'text' | 'date-time';
+  category: 'text' | 'date-time' | 'numeric';
+  invocation?: DvtSubstraitFunctionInvocationV1;
   minimumArgumentCount: number;
   maximumArgumentCount?: number;
   expressionTemplate?: string;
@@ -97,6 +101,35 @@ export function resolveDvtSubstraitColumnFunctions(args: {
         (entry.identity.urn === 'extension:io.substrait:functions_comparison' &&
           entry.identity.name === 'coalesce' &&
           entry.invocation?.signature === 'coalesce:any1');
+      if (entry.identity.urn === 'extension:io.substrait:functions_arithmetic') {
+        const types = normalizedTypes.map((type) =>
+          ['bigint', 'int8', 'i64'].includes(type)
+            ? 'i64'
+            : ['double precision', 'float8', 'fp64'].includes(type)
+              ? 'fp64'
+              : null
+        );
+        const invocation = entry.overloads?.find((item) =>
+          types.every((type) => type != null && type === item.outputType)
+        );
+        if (invocation == null) return [];
+        const range = invocationArgumentRange(invocation);
+        const admitted =
+          args.resolution === 'proposal'
+            ? admitsProposedArgumentCount(range, types.length)
+            : admitsCompleteArgumentCount(range, types.length);
+        return admitted
+          ? [
+              {
+                capabilityId: entry.entryId,
+                name: entry.identity.name,
+                category: 'numeric' as const,
+                invocation,
+                ...range,
+              },
+            ]
+          : [];
+      }
       if (stringOperands && textFunction) {
         const range = invocationArgumentRange(entry.invocation);
         const admitted =

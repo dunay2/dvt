@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 /** Protect the same draft when closing or replacing the Model workspace. */
 import { act } from 'react';
+import { fireEvent } from '@testing-library/dom';
 import { describe, expect, it } from 'vitest';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import { getCanvasShellState } from './CanvasShell.testHarness';
@@ -39,7 +40,10 @@ describe('Canvas Model draft protection', () => {
       field.dispatchEvent(new Event('change', { bubbles: true }));
     });
     await act(async () =>
-      navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-workspace-tab"]')!.click()
+      fireEvent.mouseDown(
+        navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-workspace-tab"]')!,
+        { button: 0, ctrlKey: false }
+      )
     );
     const other = (
       getCanvasShellState().canvasViewportProps?.nodesWithImpact as Array<{ data: DbtNodeData }>
@@ -104,7 +108,10 @@ describe('Canvas Model draft protection', () => {
       '[aria-label="Comparador de la condición"]'
     )!;
     await act(async () =>
-      navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-workspace-tab"]')!.click()
+      fireEvent.mouseDown(
+        navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-workspace-tab"]')!,
+        { button: 0, ctrlKey: false }
+      )
     );
     expect(
       harness.container
@@ -118,7 +125,10 @@ describe('Canvas Model draft protection', () => {
     ).toBe('false');
     expect(document.querySelector('[role="alertdialog"]')).toBeNull();
     await act(async () =>
-      navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-model-main-tab"]')!.click()
+      fireEvent.mouseDown(
+        navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-model-main-tab"]')!,
+        { button: 0, ctrlKey: false }
+      )
     );
     expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBe(editor);
     expect(comparison.value).toBe('not_equal');

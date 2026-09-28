@@ -11,7 +11,10 @@ async function setup(transformed = false): Promise<{
   revision: number;
   editable: boolean;
   output: Awaited<ReturnType<CanvasRelationAnalysisSession['query']>>;
-  input: NonNullable<Parameters<typeof sourceOccurrenceAppendRejection>[0]['input']>;
+  input: Exclude<
+    NonNullable<Parameters<typeof sourceOccurrenceAppendRejection>[0]['input']>,
+    { sourceRef: null }
+  >;
 }> {
   const graph = occurrenceGraph();
   const session = new CanvasRelationAnalysisSession('occurrences');
@@ -29,6 +32,7 @@ async function setup(transformed = false): Promise<{
     edges: graph.edges,
     targetNodeId: graph.targetNode.id,
   });
+  if (input?.sourceRef == null) throw new Error('Expected a physical occurrence fixture.');
   return {
     session,
     revision: session.revision,

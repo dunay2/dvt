@@ -1,11 +1,9 @@
 /** Render one authorized Substrait relation without selecting a reader by tree shape. */
-import { decodeDvtSubstraitPlanV1 } from '@dvt/contracts';
 import {
-  projectSubstraitToPostgresSql,
+  projectSubstraitProducerGraph,
   type DvtPostgresOrderKey,
   type PostgresAstNode,
 } from '@dvt/postgres-projection';
-import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 
 import { requireDvtProjectedSourceCoverage } from './dvtSourceCoverage.js';
 import type { DvtTerminalTransformClosure } from './resolveDvtTerminalTransformClosure.js';
@@ -26,15 +24,17 @@ export async function projectDvtPostgresTransform(
   closure: DvtTerminalTransformClosure,
   relationId?: string
 ): Promise<DvtPostgresTransformProjection> {
-  const document = closure.authority.semanticDocument;
-  const canonical = { plan: decodeDvtSubstraitPlanV1(document), sidecar: document.sidecar };
-  const selected =
-    relationId === undefined ? canonical : selectDvtSubstraitRelation(canonical, relationId);
-  const result = await projectSubstraitToPostgresSql(selected);
+  const result = await projectSubstraitProducerGraph({
+    targetId: closure.transform.id,
+    documents: closure.documents,
+    sources: new Map(closure.sources.map(({ node, ref }) => [node.id, ref])),
+    edges: closure.edges,
+    ...(relationId == null ? {} : { relationId }),
+  });
   requireDvtProjectedSourceCoverage(
     result.projection.inputs,
     closure.sources,
-    relationId === undefined
+    relationId === undefined && !closure.preview
   );
   return {
     sql: result.sql,

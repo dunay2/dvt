@@ -42,7 +42,6 @@ describe('pending edits across relation selection', () => {
             Apply
           </button>
           <CanvasRelationalTreeInlineEditor
-            appendInput={null}
             copy={COPY}
             joinDraft={document}
             selectedRelationId={selected}
@@ -51,7 +50,6 @@ describe('pending edits across relation selection', () => {
             expanded
             onClose={() => {}}
             onChangeJoinDraft={() => {}}
-            onAppendJoinInput={() => {}}
             onPendingConditionChange={setPending}
           />
         </RelationAnalysisTestHost>

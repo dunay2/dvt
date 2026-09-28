@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { NodePropertySection } from '../../components/inspector/nodePropertiesReadModel';
+import type { NodePropertySection } from '../../components/inspector/nodePropertiesContracts';
 import {
   resolveCanvasNodeWorkbenchSectionModel,
   resolveNodeWorkbenchPrimarySectionIds,

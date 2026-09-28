@@ -7,7 +7,11 @@ import { relationOutputField } from './canvasRelationOutputBindings';
 
 export function selectedInputFields(input: SelectedRelationInput) {
   return input.schema.bindings
-    .filter((field) => field.parentFieldId == null)
+    .filter(
+      (field) =>
+        field.parentFieldId == null &&
+        input.analysis.session.allowsInputSchema(input.schema.fields[field.outputOrdinal]!)
+    )
     .map((field) => ({
       fieldId: field.fieldId,
       name: field.displayName ?? field.fieldId,

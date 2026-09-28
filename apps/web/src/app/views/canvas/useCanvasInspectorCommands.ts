@@ -2,6 +2,8 @@
 import { useCallback } from 'react';
 
 import { applyCanvasInspectorNodeDraftToSession } from './canvasInspectorAuthoringCommand';
+import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
+import { canConfigureNativeMaterialization } from './canvasDvtMaterializationPolicy';
 import type {
   CanvasInspectorNodeDraft,
   CanvasInspectorNodeDraftApplyResult,
@@ -16,6 +18,7 @@ type UseCanvasInspectorCommandsArgs = {
   inspectorNode: CanonicalNode | null;
   runDraftSessionCommand: CanvasDraftSessionCommandRunner;
   workspaceScope: WorkspaceScope;
+  canEditNode?: boolean;
 };
 
 export function useCanvasInspectorCommands({
@@ -23,6 +26,7 @@ export function useCanvasInspectorCommands({
   inspectorNode,
   runDraftSessionCommand,
   workspaceScope,
+  canEditNode = false,
 }: UseCanvasInspectorCommandsArgs) {
   const applyNodeDraft = useCallback(
     (nodeId: string, draft: CanvasInspectorNodeDraft): CanvasInspectorNodeDraftApplyResult =>
@@ -48,9 +52,31 @@ export function useCanvasInspectorCommands({
         : applyNodeDraft(inspectorNode.id, draft),
     [applyNodeDraft, inspectorNode]
   );
+  const setNodeMaterialization = useCallback(
+    (nodeId: string, materialized: string): CanvasInspectorNodeDraftApplyResult =>
+      runDraftSessionCommand((currentSession) => {
+        const node = resolveCanvasDraftNodes(currentSession, canonicalNodesById).find(
+          (candidate) => candidate.id === nodeId
+        );
+        if (!canEditNode || !canConfigureNativeMaterialization(node))
+          return { outcome: 'rejected', reason: 'node_unavailable' } as const;
+        const draft = createCanvasInspectorNodeDraft(node);
+        if (draft.dvt?.kind !== 'transform')
+          return { outcome: 'rejected', reason: 'invalid_draft' } as const;
+        return applyCanvasInspectorNodeDraftToSession({
+          canonicalNodesById,
+          draftSession: currentSession,
+          node,
+          workspaceScope,
+          draft: { ...draft, dvt: { ...draft.dvt, materialized } },
+        });
+      }),
+    [canEditNode, canonicalNodesById, runDraftSessionCommand, workspaceScope]
+  );
 
   return {
     applyNodeDraft,
     applyInspectorNodeDraft,
+    setNodeMaterialization,
   };
 }

@@ -43,7 +43,7 @@ export function projectTransformColumnsInStableOrder(args: {
         ? null
         : sourceKey(output?.sourceNodeId, output?.sourceFieldName);
     return {
-      column,
+      column: { ...column, selected: true },
       sourceOrdinal: key == null ? null : (inheritedOrdinalBySource.get(key) ?? null),
     };
   });
@@ -77,7 +77,7 @@ export function projectTransformColumnsInStableOrder(args: {
         : followingIndex >= 0
           ? followingIndex
           : ordered.length;
-    ordered.splice(insertionIndex, 0, { column, sourceOrdinal });
+    ordered.splice(insertionIndex, 0, { column: { ...column, selected: false }, sourceOrdinal });
   }
 
   return ordered.map(({ column }) => column);

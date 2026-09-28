@@ -45,21 +45,26 @@ export function createCanvasRelationalTreeInitialJoinDraft(
 
 export function createCanvasRelationalTreeNodeDraft(
   node: CanonicalNode,
-  shape: CanvasRelationalOperation,
-  semantic: Pick<SubstraitDocument, 'plan' | 'sidecar'>
+  shape: CanvasRelationalOperation | null,
+  semantic: Pick<SubstraitDocument, 'plan' | 'sidecar'> | null
 ): CanvasInspectorNodeDraft {
   const draft = createCanvasInspectorNodeDraft(node);
   const disposition =
     draft.dvt?.kind === 'transform'
       ? draft.dvt
       : { kind: 'transform' as const, mode: 'uninitialized' as const, materialized: 'view' };
+  const common = {
+    kind: 'transform' as const,
+    materialized: disposition.materialized,
+    ...(disposition.resultTarget === undefined ? {} : { resultTarget: disposition.resultTarget }),
+  };
+  if (semantic == null) return { ...draft, dvt: { ...common, mode: 'uninitialized' } };
+  if (shape == null) throw new Error('A configured relation requires its presentation operation.');
   return {
     ...draft,
     dvt: {
-      kind: 'transform',
+      ...common,
       mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
-      materialized: disposition.materialized,
-      ...(disposition.resultTarget === undefined ? {} : { resultTarget: disposition.resultTarget }),
       shape,
       plan: semantic.plan,
       sidecar: semantic.sidecar,

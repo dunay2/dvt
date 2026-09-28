@@ -8,16 +8,17 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   applyDvtSubstraitProjectionFunction,
   createDvtSubstraitProjectionDraft,
-  createDvtSubstraitProjectionDraftFromTransform,
   encodeDvtSubstraitProjectionDocument,
   resolveDvtSubstraitColumnFunctions,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
-import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
+import { createDvtSubstraitProjectionOutput } from './canvasLegacyProjectionOutput.test-support';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
 
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+import { createProducerInput } from '@dvt/substrait-analysis';
+import { createSourceDocument } from './canvasSourceDocument';
 
 const SOURCE_REF: ConnectedSourceRef = {
   schemaVersion: 'connected-source-ref.v1',
@@ -212,21 +213,13 @@ describe('projectCanvasNodePresentationTruth', () => {
       'upstream-b',
       encodeDvtSubstraitProjectionDocument(upstreamDraftB)
     );
+    const input = createProducerInput(
+      { nodeId: upstreamB.id, name: upstreamB.name, document: upstreamDraftB },
+      1
+    );
     const downstream = buildTransform(
       'downstream',
-      encodeDvtSubstraitProjectionDocument(
-        createDvtSubstraitProjectionDraftFromTransform({
-          source: upstreamDraftB,
-          targetNodeId: 'downstream',
-          outputs: [
-            {
-              fieldId: 'downstream:customer',
-              name: 'customer',
-              sourceFieldId: 'shared:customer',
-            },
-          ],
-        })
-      )
+      encodeDvtSubstraitSemanticDocument(createSourceDocument([input], input))
     );
 
     const truth = await projectCanvasNodePresentationTruth({
@@ -242,7 +235,7 @@ describe('projectCanvasNodePresentationTruth', () => {
 
     expect(truth.columns.declared).toEqual([
       expect.objectContaining({
-        reference: 'downstream:customer',
+        reference: input.fields[0]!.fieldId,
         sourceNodeId: upstreamB.id,
         sourceNodeName: upstreamB.name,
         nullable: true,
@@ -362,7 +355,7 @@ describe('projectCanvasNodePresentationTruth', () => {
       pendingInputCount: 1,
     });
   });
-  it('projects only a direct upstream schema and keeps declared outputs authoritative', async () => {
+  it('does not invent outputs through an unauthored consumer and keeps sink declarations authoritative', async () => {
     const transform: CanonicalNode = {
       ...buildCanonicalTransform(),
       metadata: {},
@@ -400,11 +393,18 @@ describe('projectCanvasNodePresentationTruth', () => {
           edges,
         })
       ).columns.visible
-    ).toEqual([
-      expect.objectContaining({ name: 'order_id', type: 'integer' }),
-      expect.objectContaining({ name: 'customer', type: 'text', nullable: false }),
-      expect.objectContaining({ name: 'amount', type: 'numeric' }),
+    ).toEqual([]);
+    const consumerTruth = await projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [SOURCE, transform, sink],
+      edges,
+    });
+    expect(consumerTruth.inputBindings?.map((input) => input.name)).toEqual([
+      'order_id',
+      'customer',
+      'amount',
     ]);
+    expect(consumerTruth.columns.visible).toEqual([]);
 
     const declaredSink = {
       ...sink,

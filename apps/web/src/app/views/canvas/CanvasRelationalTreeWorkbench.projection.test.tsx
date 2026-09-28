@@ -14,6 +14,11 @@ import {
   container,
 } from './CanvasRelationalTreeWorkbench.test-support';
 import { openOperationMenu } from './operation-menu/operationMenu.test-support';
+import {
+  connectWorkbenchOutput,
+  connectStagedWorkbenchUnaryOperation,
+  instantiateWorkbenchSource,
+} from './CanvasRelationalTreeWorkbench.gestures.test-support';
 
 describe('Canvas relational-tree Workbench projection', () => {
   setupWorkbenchTest();
@@ -39,16 +44,19 @@ describe('Canvas relational-tree Workbench projection', () => {
         />
       );
     });
-    act(() =>
-      container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')
-        ?.click()
+    await instantiateWorkbenchSource(
+      container.querySelector<HTMLElement>('[data-slot="canvas-relational-tree-source"]')!
     );
     openOperationMenu(container);
     await act(async () =>
       document
         .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-projection"]')
         ?.click()
+    );
+    const projection = await connectStagedWorkbenchUnaryOperation();
+    await connectWorkbenchOutput(
+      container,
+      projection.querySelector<HTMLElement>('[data-slot="canvas-relational-output-port"]')!
     );
     act(() =>
       container
@@ -57,10 +65,9 @@ describe('Canvas relational-tree Workbench projection', () => {
     );
 
     expect(applied).toHaveLength(1);
-    expect(applied[0]?.dvt).toMatchObject({
-      kind: 'transform',
-      mode: 'substrait',
-      shape: 'projection',
+    expect(applied[0]?.relationalAuthoringDraft).toMatchObject({
+      sources: [{ sourceNodeId: orders.id }],
+      operations: [{ operation: 'projection' }],
     });
   });
 
@@ -84,16 +91,19 @@ describe('Canvas relational-tree Workbench projection', () => {
         />
       );
     });
-    act(() =>
-      container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')!
-        .click()
+    await instantiateWorkbenchSource(
+      container.querySelector<HTMLElement>('[data-slot="canvas-relational-tree-source"]')!
     );
     openOperationMenu(container);
     await act(async () =>
       document
         .querySelector<HTMLButtonElement>('[data-slot="dvt-select-operation-projection"]')!
         .click()
+    );
+    const projection = await connectStagedWorkbenchUnaryOperation();
+    await connectWorkbenchOutput(
+      container,
+      projection.querySelector<HTMLElement>('[data-slot="canvas-relational-output-port"]')!
     );
     const apply = container.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-relational-tree-apply"]'

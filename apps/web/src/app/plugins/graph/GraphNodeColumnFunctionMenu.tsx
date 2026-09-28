@@ -24,7 +24,7 @@ import {
 import { Tooltip, TooltipTrigger } from '../../components/ui/tooltip';
 import type { GraphNodeColumn } from './graphNodeColumnContracts';
 import type { GraphNodeColumnCopy } from './GraphNodeColumnPiece';
-import { graphNodeColumnClasses } from './graphVisualTokens';
+import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 
 type FunctionMenu = NonNullable<GraphNodeColumn['functionMenu']>;
 

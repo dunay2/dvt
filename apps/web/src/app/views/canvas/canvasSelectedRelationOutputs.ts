@@ -36,6 +36,11 @@ export async function changeSelectedRelationOutputs(
         'invalid_binding',
         'Output slot is outside the selected relation.'
       );
+    if (!session.allowsInputSchema(available.schema))
+      throw new SubstraitAnalysisError(
+        'invalid_binding',
+        'Output references a field outside mapped Input.'
+      );
     return { ...available, name: DvtSemanticFieldNameV1Schema.parse(alias ?? available.name) };
   });
   if (

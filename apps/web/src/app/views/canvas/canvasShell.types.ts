@@ -36,7 +36,7 @@ import type {
 import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
 import type { IRunsPort, RunSnapshot } from '../../ports/runs';
 import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
-import type { CanvasModelPreviewPreparation } from './CanvasModelDataView';
+import type { CanvasModelPreviewPreparation } from './canvasDraftLifecycle.types';
 
 export type UserPermissions = {
   canPlan: boolean;

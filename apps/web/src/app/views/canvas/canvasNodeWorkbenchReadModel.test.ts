@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { NodePropertiesReadModel } from '../../components/inspector/nodePropertiesReadModel';
+import type { NodePropertiesReadModel } from '../../components/inspector/nodePropertiesContracts';
 import { buildNodeWorkbenchReadModel } from './canvasNodeWorkbenchReadModel';
 import { transformNode } from './CanvasRelationalTreeWorkbench.test-support';
 

@@ -243,10 +243,10 @@ describe('Transform output-selection presentation', () => {
         provenance: 'inherited',
       }),
     ]);
-    expect(truth.columns.visible[0]?.selected).toBeUndefined();
+    expect(truth.columns.visible[0]?.selected).toBe(false);
   });
 
-  it('keeps every physical Source field visible while downstream nodes receive only its projection', async () => {
+  it('keeps physical source fields visible and receives their publication only at consumer Input', async () => {
     const sourceDraft = createDvtSubstraitProjectionDraft({
       source: {
         nodeId: source.id,
@@ -297,9 +297,10 @@ describe('Transform output-selection presentation', () => {
       nodes: [projectedSource, transform],
       edges,
     });
-    expect(transformTruth.columns.visible.map((column) => column.name)).toEqual([
+    expect(transformTruth.inputBindings?.map((input) => input.name)).toEqual([
       'amount',
       'order_id',
     ]);
+    expect(transformTruth.columns.visible).toEqual([]);
   });
 });

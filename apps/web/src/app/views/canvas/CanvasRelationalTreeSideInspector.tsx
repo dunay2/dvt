@@ -50,6 +50,7 @@ export function CanvasRelationalTreeSideInspector({
         transformNode={transformNode}
         onChange={model.authoringAvailable ? model.session.applyOutputOrder : undefined}
         onClose={() => onExpandedChange(false)}
+        onPendingChange={modelOutput.setPending}
       />
     );
   return (

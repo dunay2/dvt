@@ -68,11 +68,12 @@ they have no expression tree. No upstream subtree is copied into each card.
 
 ```mermaid
 flowchart LR
-  A[Removed: zoom threshold] --> B[Unexpected graph redistribution]
   C[Canonical relation and expressions] --> D[Shared graph projection]
   D --> E[Local expression tree or input/output structure]
-  E --> F[Explicit per-card disclosure and geometry]
-  Z[Zoom] --> V[Viewport scale only]
+  E --> F[Shared card disclosure and geometry]
+  T[Explicit per-card disclosure] --> F
+  Z[Readable zoom threshold] --> F
+  Z --> V[Viewport scale]
 ```
 
 The query remains `ProjectCanvasRelationalTree` in Web/Canvas. Projection reads
@@ -87,15 +88,16 @@ priority and argument order must survive graph slicing and rendering.
 
 ### Stable zoom and truthful gestures (#3422)
 
-Zoom must not change card bounds, graph coordinates, edge paths or disclosure
-state. Remove the semantic-zoom threshold and its names/tests; reuse the same
-canonical detail projection under an explicit card toggle. Clicking the card
-continues to select its existing inspector; disclosure does not open an editor.
+Zoom within one detail regime changes scale only. Crossing the readable detail
+threshold reveals the same canonical lexical tree as explicit disclosure, as
+requested subsequently for #3298. Preserve card identity, focus and authored
+coordinates across that transition. Clicking the card continues to select its
+existing inspector; disclosure does not open an editor.
 
 The existing disposable Model layout session owns manual positions and expanded
 relation identities, shared by inspection and draft views. Expanding a card can
-adjust automatic spacing to its new bounds; manually placed cards remain where
-the user put them. Arrange clears manual positions and applies the existing
+adjust displayed spacing to its new bounds without rewriting authored compact
+coordinates. Arrange clears manual positions and applies the existing
 layout to current bounds. Fit only frames the drawing. Neither action persists
 semantic changes or fetches data.
 
@@ -124,6 +126,53 @@ retain one expression projector and one compact renderer, with bounded files.
 - No per-function cards, column edges, second editor or capability catalogue.
 - UI components remain below 200 lines; large pre-existing copy catalogues are
   not broadened beyond the localized keys required by this slice.
+
+### Stable expansion coordinates during movement (#3298)
+
+The reproduced drag flicker is a coordinate feedback loop, not a reload: moving
+the pointer one pixel alternates a card between positions approximately 176 pixels
+apart, without removing its DOM node. Expansion spacing is recalculated from the
+same manual coordinate that the gesture just obtained by subtracting that spacing.
+
+```mermaid
+flowchart LR
+  P[Pointer position] --> I[Subtract current expansion offset]
+  I --> M[Manual coordinates]
+  M --> E[Recalculate expansion spacing]
+  E --> I
+```
+
+Keep one disposable expansion frame in the existing relational layout session.
+Its offsets depend on card identities, topology and visible bounds, not pointer
+coordinates. Movement changes authored coordinates through that stable frame;
+disclosure, a zoom detail transition, topology changes or Arrange invalidate it.
+The frame survives inspection/editor view changes, is not persisted and grants
+no semantic authority. Edges continue to derive from displayed card bounds.
+The frame must also have an inverse down to the drawable origin: a fixed positive
+translation alone would prevent dragging an expanded card to x=0 or y=0 because
+authored coordinates cannot be negative. Preserve the initial reservation, scale
+it linearly toward zero below its anchor, and invert that same mapping in the
+gesture owner. This keeps all coordinates nonnegative without rebasing on each
+move, changing contracts or breaking cancellation.
+
+```mermaid
+flowchart LR
+  B[Card identities, topology and visible bounds] --> F[Session expansion frame]
+  F --> I[Display-to-authored coordinate conversion]
+  P[Pointer or keyboard position] --> I
+  I --> M[Manual coordinates]
+  M --> V[Displayed cards and port geometry]
+  F --> V
+```
+
+Freezing only the gesture's original offset is insufficient: the next layout
+would still move the displayed card at the spacing boundary. Removing detail or
+debouncing renders would hide the symptom. Stable presentation offsets remove
+the feedback loop for pointer, keyboard, cancellation and release together.
+
+| Scenario                          | Opportunity                   | Fowler pattern                               | DDD owner                      | Command/query rail                       | Implementation surfaces                                                                             | Unit or package test                                                                  | Architecture test                          | User-flow test                                                               | Out of scope                                                                   |
+| --------------------------------- | ----------------------------- | -------------------------------------------- | ------------------------------ | ---------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Move across expanded-card spacing | Hidden presentation authority | One coordinate frame per presentation regime | CanvasRelationalTreeProjection | ProjectCanvasRelationalTree; no new rail | Existing relational layout session, geometry, expansion, movable-card projection and movement tests | Repeated one-pixel crossings, release, cancellation, keyboard, zoom and view identity | Existing bounded read-only Workbench guard | Real drag across expanded bounds; no remount, data request or semantic write | Database data, operations, formula authoring, new persistence or editor routes |
 
 ## Mechanization Authority
 

@@ -11,7 +11,7 @@ import {
 
 describe('canonical relation card actions', () => {
   it.each([true, false])(
-    'uses analyzed output authority without enabling input remapping (editable=%s)',
+    'keeps analyzed Output passive and gates Input gestures by edit authority (editable=%s)',
     async (editable) => {
       const graph = graphJoin();
       const model = graphModel(graph.document);
@@ -47,13 +47,11 @@ describe('canonical relation card actions', () => {
       const mounted = await renderReadModel(args);
       try {
         const data = readProjectedNodeData(mounted.readState())!;
-        expect(data.onToggleCanvasColumnOutput).toBe(
-          editable ? args.columnActions.onToggleCanvasColumnOutput : undefined
+        expect(data.onToggleCanvasColumnOutput).toBeUndefined();
+        expect(data.onReorderCanvasColumnOutput).toBeUndefined();
+        expect(data.onColumnPortActivate).toBe(
+          editable ? args.columnActions.onColumnPortActivate : undefined
         );
-        expect(data.onReorderCanvasColumnOutput).toBe(
-          editable ? args.columnActions.onReorderCanvasColumnOutput : undefined
-        );
-        expect(data.onColumnPortActivate).toBeUndefined();
         expect(data.onApplyCanvasColumnFunction).toBeUndefined();
         expect(data.onAddCanvasCalculatedColumn).toBeUndefined();
       } finally {

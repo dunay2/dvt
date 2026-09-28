@@ -1,4 +1,4 @@
-/** Rename one canonical Read binding without changing its physical source or descendants. */
+/** Rename one canonical Read binding without changing its producer or descendants. */
 import { CanvasHumanNameV1Schema } from '@dvt/contracts';
 import { SubstraitAnalysisError } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from '../canvasRelationAnalysisSession';
@@ -18,11 +18,16 @@ export async function renameSourceOccurrence(
   const name = parseOccurrenceAlias(request.alias);
   if (!name.success) throw new SubstraitAnalysisError('invalid_binding', 'Invalid instance alias.');
   const selected = session.locate(request.relationId, request.expectedRevision);
-  if (selected.relation.relType.case !== 'read' || selected.binding.sourceRef == null)
+  if (
+    selected.relation.relType.case !== 'read' ||
+    (selected.binding.sourceRef == null && selected.binding.producerRef == null)
+  )
     throw new SubstraitAnalysisError(
       'invalid_binding',
       'Alias target must be a source occurrence.'
     );
+  if (session.sourceAliases(request.expectedRevision, request.relationId).has(name.data))
+    throw new SubstraitAnalysisError('invalid_binding', 'Instance alias is already in use.');
   return session.apply({
     expectedRevision: request.expectedRevision,
     upserts: [

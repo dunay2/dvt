@@ -1,11 +1,11 @@
 /** Transform owns a stable edit draft; analysis refreshes cannot erase typed input. */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
-import { Plus } from 'lucide-react';
-import { useState } from 'react';
-import { resolveDvtSubstraitColumnFunctions } from '@dvt/postgres-projection';
+import { Pencil, Plus } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Button } from '../../components/ui/button';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
-import { DerivedOutputForm } from './DerivedOutputForm';
+import { DerivedOutputFormulaForm } from './DerivedOutputFormulaForm';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { useCanvasDerivedOutputAuthoring } from './useCanvasDerivedOutputAuthoring';
 import { useRelationCommand } from './useRelationCommand';
@@ -13,78 +13,99 @@ import { useRelationCommand } from './useRelationCommand';
 export function CanvasDerivedOutputSection({
   relationId,
   onChange,
+  onPendingChange,
 }: Readonly<{
   relationId: string;
   onChange: (document: SubstraitDocument) => void | boolean;
+  onPendingChange?: (pending: boolean) => void;
 }>): JSX.Element | null {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
   const current = useCanvasDerivedOutputAuthoring(relationId);
   const command = useRelationCommand(relationId, onChange);
-  const [editing, setEditing] = useState<typeof current>(null);
-  const model = editing ?? current;
-  if (model == null || model.fields.length === 0) return null;
-  const initialField = model.fields.find(
-    (field) =>
-      resolveDvtSubstraitColumnFunctions({
-        dataTypes: [field.dataType],
-        provider: model.provider,
-        resolution: 'proposal',
-      }).length > 0
-  );
+  const [editing, setEditing] = useState<Readonly<{
+    model: NonNullable<typeof current>;
+    outputFieldId?: string;
+    initial?: Readonly<{ alias: string; formula: string }>;
+  }> | null>(null);
+  const model = editing?.model ?? current;
+  const pendingCallback = useRef(onPendingChange);
+  pendingCallback.current = onPendingChange;
+  const pending = editing != null;
+  useEffect(() => {
+    pendingCallback.current?.(pending);
+    return () => pendingCallback.current?.(false);
+  }, [pending]);
+  if (model == null) return null;
   return (
-    <section className="mt-4 border-t border-(--border-subtle) pt-3">
-      {editing != null && initialField != null ? (
-        <DerivedOutputForm
-          fields={model.fields}
-          initialOperandFieldIds={[initialField.fieldId]}
-          dataSlot="canvas-derived-output-form"
+    <section className="space-y-3">
+      {editing != null ? (
+        <DerivedOutputFormulaForm
+          initial={editing.initial}
           copy={copy.derivedOutput}
-          unavailableAliases={model.fields.map((field) => field.name)}
-          resolveFunctions={(fieldIds, resolution) => {
-            const dataTypes = fieldIds.flatMap((fieldId) => {
-              const field = model.fields.find((candidate) => candidate.fieldId === fieldId);
-              return field == null ? [] : [field.dataType];
-            });
-            return dataTypes.length !== fieldIds.length
-              ? []
-              : resolveDvtSubstraitColumnFunctions({
-                  dataTypes,
-                  provider: model.provider,
-                  resolution,
-                });
-          }}
+          unavailableAliases={model.fields
+            .filter((field) => field.fieldId !== editing.outputFieldId)
+            .map((field) => field.name)}
           onCancel={() => setEditing(null)}
-          onSubmit={async ({ capabilityId, ...request }) => {
+          onSubmit={async (request) => {
             const applied = await command.execute((session, identity) =>
               applySelectedRelationDerivedOutput(session, {
                 ...identity,
                 ...request,
-                capabilityIds: [capabilityId],
+                outputFieldId: editing.outputFieldId,
                 intent: model.intent,
               })
             );
             return applied ? null : copy.derivedOutput.failed;
           }}
-          onApplied={() => setEditing(null)}
         />
       ) : (
-        <button
-          type="button"
-          data-slot="canvas-derived-output-trigger"
-          disabled={initialField == null}
-          onClick={() => setEditing(current)}
-          className="flex items-center gap-1 rounded px-2 py-1.5 text-xs text-(--status-info) hover:bg-(--surface-selected)"
-        >
-          <Plus className="size-3" />
-          {copy.derivedOutput.add}
-        </button>
+        <>
+          {model.outputs.map((output) => (
+            <div
+              key={output.fieldId}
+              data-slot="canvas-derived-output"
+              data-field-id={output.fieldId}
+              className="rounded border border-(--border-subtle) p-2"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold">{output.name}</span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  aria-label={`${copy.edit} ${output.name}`}
+                  disabled={output.formula == null}
+                  onClick={() => {
+                    if (output.formula != null)
+                      setEditing({
+                        model,
+                        outputFieldId: output.fieldId,
+                        initial: { alias: output.name, formula: output.formula },
+                      });
+                  }}
+                >
+                  <Pencil aria-hidden="true" />
+                  {copy.edit}
+                </Button>
+              </div>
+              <code className="block break-words text-xs">
+                {output.formula ?? copy.inspectionOnly}
+              </code>
+            </div>
+          ))}
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            data-slot="canvas-derived-output-trigger"
+            onClick={() => setEditing({ model })}
+          >
+            <Plus aria-hidden="true" />
+            {copy.derivedOutput.add}
+          </Button>
+        </>
       )}
-      {command.state === 'error' ? (
-        <p role="alert" className="mt-2 text-xs text-red-400">
-          {copy.derivedOutput.failed}
-        </p>
-      ) : null}
     </section>
   );
 }

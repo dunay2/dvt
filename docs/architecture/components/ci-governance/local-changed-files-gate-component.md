@@ -136,6 +136,32 @@ sequenceDiagram
 
 ## Consumers
 
+### Changed-file lint execution
+
+`ValidateChangedFiles` keeps one canonical changed-file inventory and the same
+strict ESLint config, warnings-as-errors policy, ignored-file behavior, and
+Prettier check. The lint adapter may reuse one ESLint process across that
+inventory; it must not replace the canonical type-aware rules with the faster
+pre-commit config. On Windows, passing every changed path through a command
+line is not a safe substitute for process reuse because command length is
+bounded. The adapter must report any lint warning or error and fail closed if
+ESLint cannot initialize or lint a file.
+
+```mermaid
+flowchart LR
+  Files[LocalChangedFileSet] --> Format[Prettier: all eligible files]
+  Files --> Old[Before: repeated ESLint CLI initialization per batch]
+  Files --> New[After: one ESLint instance, same file inventory and rules]
+  Old --> Cost[Repeated TypeScript project and import resolver startup]
+  New --> Result[Fail on any error or warning]
+  Format --> Result
+```
+
+The performance comparison uses the same changed-file set before and after.
+It records wall time, number of linted files, and a deliberate warning/error
+failure case. Faster execution alone is insufficient if any of those checks
+or the Prettier gate disappear.
+
 - `scripts/check-changed.cjs` consumes `ListLocalChangedFiles` for changed-only
   lint and format checks.
 - `scripts/verify-changed.cjs` consumes `ListLocalChangedFiles` to plan the
@@ -176,6 +202,8 @@ sequenceDiagram
 
 - `scripts/git-local-changes.test.cjs` proves local changed-file query semantics
   and this component guide.
+- `scripts/check-changed.test.cjs` proves whole-inventory ESLint execution,
+  warnings-as-errors, and failure when ESLint cannot run.
 - `scripts/check-governance-changed-files.test.cjs` proves name-status local
   change inclusion for governance fingerprints.
 - `scripts/check-feature-mechanization.test.cjs` proves implementation-surface,

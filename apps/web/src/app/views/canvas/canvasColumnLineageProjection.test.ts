@@ -1,19 +1,20 @@
 import { projectCanvasColumnLineageForGraph as projectCanvasColumnLineage } from './canvasColumnLineageProjection.test-fixtures';
 import type { ConnectedSourceRef } from '@dvt/contracts';
+import { createProducerInput } from '@dvt/substrait-analysis';
+import { canvasInputSlotId } from './canvasInputBindings';
+import { createSourceDocument } from './canvasSourceDocument';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import {
   createDvtSubstraitProjectionDraft,
-  createDvtSubstraitProjectionDraftFromTransform,
   decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
-import {
-  persistCanvasProjectionOutputs,
-  readEditableCanvasProjectionEntry,
-} from './canvasColumnProjectionAuthority';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
+import { relationOutputSlots } from './canvasRelationOutputSchema';
 import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
@@ -22,7 +23,7 @@ import {
   createCanvasColumnHandleId,
   parseCanvasColumnHandleId,
   resolveCanvasColumnPortDirections,
-} from './canvasColumnLineageProjection';
+} from './canvasColumnHandleIdentity';
 
 function buildNode(
   id: string,
@@ -42,7 +43,7 @@ function buildNode(
   };
 }
 
-function buildProjectionGraph(): readonly [CanonicalNode, CanonicalNode, string] {
+function buildProjectionGraph(): readonly [CanonicalNode, CanonicalNode] {
   const sourceRef: ConnectedSourceRef = {
     schemaVersion: 'connected-source-ref.v1',
     connectionRef: {
@@ -72,16 +73,11 @@ function buildProjectionGraph(): readonly [CanonicalNode, CanonicalNode, string]
     targetNodeId: 'model-orders',
     outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' }],
   });
-  const inspection = inspectDvtSubstraitProjectionDraft(draft);
-  if (!inspection.ok || inspection.projection.outputs[0]?.sourceFieldId == null) {
-    throw new Error('Expected admitted connected source lineage.');
-  }
-  const sourceFieldId = inspection.projection.outputs[0].sourceFieldId;
   const model = applyDvtSubstraitSemanticDocument(
     buildNode('model-orders', 'dvt:transform', 'transform'),
     encodeDvtSubstraitProjectionDocument(draft)
   );
-  return [source, model, sourceFieldId];
+  return [source, model];
 }
 
 describe('Canvas column lineage projection', () => {
@@ -103,8 +99,8 @@ describe('Canvas column lineage projection', () => {
     expect(resolveCanvasColumnPortDirections('output')).toEqual(['target']);
   });
 
-  it('derives removable lineage only from connected, disclosed canonical fields', async () => {
-    const [source, model, sourceFieldId] = buildProjectionGraph();
+  it('connects disclosed producer fields to stable consumer Inputs without deleting consumed bindings', async () => {
+    const [source, model] = buildProjectionGraph();
     const project = async (
       expandedNodeIds: ReadonlySet<string>,
       connected = true
@@ -120,9 +116,9 @@ describe('Canvas column lineage projection', () => {
         source: source.id,
         target: model.id,
         data: expect.objectContaining({
-          sourceFieldId,
-          outputId: 'output:order_id',
-          removable: true,
+          sourceFieldId: 'order_id',
+          outputId: canvasInputSlotId(source.id, 'order_id'),
+          removable: false,
         }),
       }),
     ]);
@@ -130,24 +126,22 @@ describe('Canvas column lineage projection', () => {
     expect(await project(new Set([source.id, model.id]), false)).toEqual([]);
   });
 
-  it('projects Model-to-Model lineage through stable FieldIds', async () => {
+  it('projects producer-to-consumer lineage through published FieldIds, without producer operations', async () => {
     const [source, upstream] = buildProjectionGraph();
     const upstreamAuthority = readDvtTransformAuthoringAuthority(upstream);
     if (upstreamAuthority == null) throw new Error('Expected upstream authority.');
-    const downstreamDraft = createDvtSubstraitProjectionDraftFromTransform({
-      source: decodeDvtSubstraitProjectionDocument(upstreamAuthority.semanticDocument),
-      targetNodeId: 'model-customer-orders',
-      outputs: [
-        {
-          fieldId: 'downstream:order_id',
-          name: 'order_id',
-          sourceFieldId: 'output:order_id',
-        },
-      ],
-    });
+    const input = createProducerInput(
+      {
+        nodeId: upstream.id,
+        name: upstream.name,
+        document: decodeDvtSubstraitProjectionDocument(upstreamAuthority.semanticDocument),
+      },
+      1
+    );
+    const downstreamDraft = createSourceDocument([input], input);
     const downstream = applyDvtSubstraitSemanticDocument(
       buildNode('model-customer-orders', 'dvt:transform', 'transform'),
-      encodeDvtSubstraitProjectionDocument(downstreamDraft)
+      encodeDvtSubstraitSemanticDocument(downstreamDraft)
     );
     const lineage = await projectCanvasColumnLineage({
       nodes: [source, upstream, downstream],
@@ -169,14 +163,14 @@ describe('Canvas column lineage projection', () => {
       }),
       data: {
         sourceFieldId: 'output:order_id',
-        outputId: 'downstream:order_id',
-        removable: true,
+        outputId: canvasInputSlotId(upstream.id, 'output:order_id'),
+        removable: false,
       },
     });
   });
 
-  it('preserves mapped lineage when an unrelated second Source is connected', async () => {
-    const [source, model, sourceFieldId] = buildProjectionGraph();
+  it('preserves the first binding and independently maps the second producer to Input', async () => {
+    const [source, model] = buildProjectionGraph();
     const secondSource: CanonicalNode = {
       ...buildNode('source-health-check', 'dvt:source', 'input', [{ name: 'id', type: 'integer' }]),
       metadata: {
@@ -209,31 +203,47 @@ describe('Canvas column lineage projection', () => {
         source: source.id,
         target: model.id,
         data: expect.objectContaining({
-          sourceFieldId,
-          outputId: 'output:order_id',
+          sourceFieldId: 'order_id',
+          outputId: canvasInputSlotId(source.id, 'order_id'),
+          removable: false,
+        }),
+      }),
+      expect.objectContaining({
+        source: secondSource.id,
+        target: model.id,
+        data: expect.objectContaining({
+          sourceFieldId: 'id',
+          outputId: canvasInputSlotId(secondSource.id, 'id'),
           removable: true,
         }),
       }),
     ]);
+    expect(new Set(lineage.map((edge) => edge.targetHandle)).size).toBe(2);
   });
-  it('keeps lineage identity stable when only the target display name changes', async () => {
+  it('does not rename or retarget Input lineage when the consumer Output alias changes', async () => {
     const [source, original] = buildProjectionGraph();
     const expanded = new Set([source.id, original.id]);
     const edges = [{ sourceId: source.id, targetId: original.id }];
-    const resolveNode = (nodeId: string): CanonicalNode | undefined =>
-      [source, original].find((node) => node.id === nodeId);
-    const entry = readEditableCanvasProjectionEntry({ targetNode: original, edges, resolveNode });
-    if (entry.outcome === 'rejected' || entry.projection == null) {
-      throw new Error('Expected editable projection.');
-    }
-    const renamedResult = persistCanvasProjectionOutputs({
-      targetNode: original,
-      resolveNode,
-      projection: entry.projection,
-      outputs: entry.projection.outputs.map((output) => ({ ...output, name: 'customer_order_id' })),
+    const authority = readDvtTransformAuthoringAuthority(original)!;
+    const session = new CanvasRelationAnalysisSession(original.id);
+    session.receive(decodeDvtSubstraitProjectionDocument(authority.semanticDocument));
+    const root = session.locate(session.rootId, session.revision);
+    const slots = relationOutputSlots(
+      root,
+      await Promise.all(root.inputs.map((id) => session.query(id)))
+    );
+    const draft = await changeSelectedRelationOutputs(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      outputs: slots
+        .filter((slot) => slot.output != null)
+        .map((slot) => ({ slot: slot.slot, alias: 'customer_order_id' })),
     });
-    if (renamedResult.outcome === 'rejected') throw new Error('Expected renamed projection.');
-    const renamed = renamedResult.node;
+    const renamed = applyDvtSubstraitSemanticDocument(
+      original,
+      encodeDvtSubstraitSemanticDocument(draft)
+    );
+    session.dispose();
 
     const originalLineage = await projectCanvasColumnLineage({
       nodes: [source, original],
@@ -251,7 +261,11 @@ describe('Canvas column lineage projection', () => {
     expect(renamedLineage[0]?.id).toBe(originalLineage[0]?.id);
     expect(renamedLineage[0]?.data?.sourceFieldId).toBe(originalLineage[0]?.data?.sourceFieldId);
     expect(renamedLineage[0]?.data?.outputId).toBe(originalLineage[0]?.data?.outputId);
-    expect(renamedLineage[0]?.data?.targetColumnName).toBe('customer_order_id');
+    expect(renamedLineage[0]?.data?.targetColumnName).toBe('order_id');
+    expect(renamedLineage[0]?.targetHandle).toBe(originalLineage[0]?.targetHandle);
+    expect(parseCanvasColumnHandleId(renamedLineage[0]?.targetHandle)?.columnId).toBe(
+      canvasInputSlotId(source.id, 'order_id')
+    );
   });
 
   it('does not fabricate lineage for dbt columns that only share a name', async () => {
@@ -268,7 +282,7 @@ describe('Canvas column lineage projection', () => {
     const model: CanonicalNode = {
       id: 'dbt-model',
       name: 'fct_orders',
-      pluginId: 'dvt',
+      pluginId: 'dbt',
       kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',

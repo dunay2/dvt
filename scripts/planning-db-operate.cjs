@@ -435,6 +435,7 @@ const operationHelp = Object.freeze({
     details: [
       'RecordFeatureMechanizationRail stores a database command/query rail declaration and a valid feature-mechanization manifest projection without editing Markdown manifests.',
       'Explicit replace flags hard-cut inherited implementation refs or architecture guards with audited idempotency.',
+      '--red-green-cycle <existing-id> reconciles one cycle with --expected-revision and explicit admitted --patch-surface evidence.',
       'Requires --ddd-owner, --implementation-plan, --source-ref, --source-content-sha256, governance/doc/surface/validation fields, and at least one --implementation-ref in path#symbol form.',
       'Referenced rails require the exact pair --reference-only true and --authority-ref <canonical-source>.',
       'RetireFeatureMechanizationRail deletes one stale local rail under exact may-delete design scope, expected revision, and audited provenance.',
@@ -1569,6 +1570,7 @@ function operationPayload(command) {
       redTest: command.redTest,
       expectedFailure: command.expectedFailure,
       patchSurfaces: command.patchSurfaces || [],
+      ...(command.redGreenCycle === undefined ? {} : { redGreenCycle: command.redGreenCycle }),
       greenTest: command.greenTest,
       replaceImplementationRefs: command.replaceImplementationRefs,
       replaceArchitectureGuards: command.replaceArchitectureGuards,
@@ -3213,6 +3215,31 @@ function validateFeatureMechanizationRecordCommand(command) {
     );
   }
 
+  if (command.redGreenCycle !== undefined) {
+    if (!normalizeOptionalText(command.redGreenCycle) || command.expectedRevision == null) {
+      throw new Error(
+        'Named red-green cycle reconciliation requires an ID and --expected-revision.'
+      );
+    }
+    if (command.patchSurfaces.length === 0) {
+      throw new Error(
+        'Named red-green cycle reconciliation requires explicit --patch-surface evidence.'
+      );
+    }
+    for (const surface of command.patchSurfaces) {
+      if (excludesFeatureMechanizationSurface(surface, command.forbiddenImplementationSurfaces)) {
+        throw new Error(`Red-green cycle patch surface ${surface} is forbidden.`);
+      }
+      if (
+        !command.allowedImplementationSurfaces.some((pattern) =>
+          surfaceMatchesPattern(surface, pattern)
+        )
+      ) {
+        throw new Error(`Red-green cycle patch surface ${surface} is outside allowed surfaces.`);
+      }
+    }
+  }
+
   const terminalRailStatus =
     command.railStatus === 'retired' || command.railStatus === 'deprecated';
   if (terminalRailStatus && command.mechanizationStatus !== 'closed') {
@@ -3310,6 +3337,9 @@ function parseFeatureMechanizationCommand(action, args) {
     redTest: requireOption(options, 'redTest'),
     expectedFailure: requireOption(options, 'expectedFailure'),
     patchSurfaces: normalizeListOption(options.patchSurface),
+    ...(options.redGreenCycle === undefined
+      ? {}
+      : { redGreenCycle: requireOption(options, 'redGreenCycle') }),
     greenTest: requireOption(options, 'greenTest'),
     replaceImplementationRefs:
       parseBooleanOption(options.replaceImplementationRefs, 'replace-implementation-refs') ?? false,
@@ -5208,11 +5238,15 @@ function mergeFeatureMechanizationManifest(existingManifest, incomingManifest, c
       incomingManifest.commandQueryRails,
       (rail) => `${rail.type}#${rail.name}`
     ),
-    redGreenCycles: mergeFeatureMechanizationObjectsByKey(
-      existing.redGreenCycles || [],
-      incomingManifest.redGreenCycles,
-      (cycle) => cycle.id
-    ),
+    redGreenCycles: command.redGreenCycle
+      ? existing.redGreenCycles.map((cycle) =>
+          cycle.id === command.redGreenCycle ? incomingManifest.redGreenCycles[0] : cycle
+        )
+      : mergeFeatureMechanizationObjectsByKey(
+          existing.redGreenCycles || [],
+          incomingManifest.redGreenCycles,
+          (cycle) => cycle.id
+        ),
     symbols,
   };
   return {
@@ -5247,6 +5281,7 @@ function buildFeatureMechanizationSymbols(command) {
 }
 
 function planFeatureMechanizationRailRecordOperation({ command, existingRail, operationId, now }) {
+  if (command.redGreenCycle !== undefined) validateFeatureMechanizationRecordCommand(command);
   const previous = normalizeFeatureMechanizationRail(existingRail);
   const previousRevision = previous ? previous.revision : null;
   if (
@@ -5259,6 +5294,15 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     );
   }
 
+  if (
+    command.redGreenCycle !== undefined &&
+    previous?.rawManifest.redGreenCycles?.filter((cycle) => cycle.id === command.redGreenCycle)
+      .length !== 1
+  ) {
+    throw new Error(
+      `Red-green cycle ${command.redGreenCycle} not found uniquely in rail ${command.railId}.`
+    );
+  }
   const resultingRevision = previousRevision === null ? 0 : previousRevision + 1;
   const updatedAt = toIso(now);
   const createdAt = previous?.createdAt || updatedAt;
@@ -5304,7 +5348,7 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     commandQueryRails: [rawRail],
     redGreenCycles: [
       {
-        id: `${command.normalizedRailName}-record`,
+        id: command.redGreenCycle ?? `${command.normalizedRailName}-record`,
         redTest: command.redTest,
         expectedFailure: command.expectedFailure,
         patchSurfaces,

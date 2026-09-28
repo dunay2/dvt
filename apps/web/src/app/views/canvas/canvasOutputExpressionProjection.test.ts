@@ -1,6 +1,6 @@
 /** Proves output inspection resolves canonical identity without a second expression authority. */
 import { describe, expect, it } from 'vitest';
-import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
+import { createDvtSubstraitProjectionOutput } from './canvasLegacyProjectionOutput.test-support';
 import { resolveDvtSubstraitColumnFunctions } from './canvasDvtSubstraitProjection';
 import { fixture, node, scalar } from './canvasOutputExpression.test.fixtures';
 import { projectCanvasOutputExpression } from './canvasOutputExpressionProjection';

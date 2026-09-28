@@ -7,25 +7,33 @@ import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSes
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import { CanvasRelationOperatorFields } from './CanvasRelationOperatorFields';
 import { canvasViewCopy } from './copy';
+import { resolveUnmappedCanvasReadFields } from './canvasInputFieldEligibility';
+import type { CanonicalNode, CanonicalEdge } from '../../types/canonical';
 
 export function DvtRelationAuthoringSection({
   nodeId,
   disabled,
   draft,
   outputNameDrafts,
+  inputScope,
   onChange,
 }: Readonly<{
   nodeId: string;
   disabled: boolean;
   draft: DvtSubstraitTransformAuthoringMetadata;
   outputNameDrafts?: Readonly<Record<string, string>>;
+  inputScope: Readonly<{ nodes: readonly CanonicalNode[]; edges: readonly CanonicalEdge[] }>;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>) {
   const document = useMemo(
     () => ({ plan: draft.plan, sidecar: draft.sidecar }),
     [draft.plan, draft.sidecar]
   );
-  const analysis = useCanvasRelationAnalysisSession(document, nodeId);
+  const deniedInputs = useMemo(
+    () => resolveUnmappedCanvasReadFields({ document, nodeId, ...inputScope }),
+    [document, nodeId, inputScope.nodes, inputScope.edges]
+  );
+  const analysis = useCanvasRelationAnalysisSession(document, nodeId, undefined, deniedInputs);
   const [selected, setSelected] = useState<string | null>(null);
   const relationId =
     analysis?.error != null

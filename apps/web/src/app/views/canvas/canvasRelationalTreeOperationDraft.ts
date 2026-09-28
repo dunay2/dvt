@@ -10,6 +10,7 @@ import { createSourceSet } from './canvasSourceSet';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 import { createSourceCross } from './canvasSourceCross';
+import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 
 export function createCanvasRelationalTreeOperationDraft(
   args: Readonly<{
@@ -17,13 +18,18 @@ export function createCanvasRelationalTreeOperationDraft(
     inputs: readonly CanvasDvtCompositionInput[];
     selectedInputIds: readonly string[];
     targetNodeId: string;
+    pendingSource?: PendingSourceOccurrence | null;
   }>
 ): DvtSubstraitProjectionDraft | null {
   const [leftInputId, rightInputId] = args.selectedInputIds;
   const input = args.inputs.find((candidate) => candidate.nodeId === leftInputId);
   if (input == null) return null;
   if (args.operation === 'projection')
-    return createCanvasRelationalTreeProjectionDraft({ input, targetNodeId: args.targetNodeId });
+    return createCanvasRelationalTreeProjectionDraft({
+      input,
+      targetNodeId: args.targetNodeId,
+      occurrence: args.pendingSource?.read,
+    });
   if (rightInputId == null) return null;
   if (isCanvasJoinOperation(args.operation))
     return createCanvasRelationalTreeInitialJoinDraft({
@@ -59,6 +65,7 @@ export function createCanvasRelationalTreeOperationDraft(
     inputs: inputs.map((source) => ({
       ...source!,
       fields: source!.fields.map((field) => ({
+        id: field.id,
         name: field.name,
         type: field.joinDataType!,
         nullable: field.nullable,

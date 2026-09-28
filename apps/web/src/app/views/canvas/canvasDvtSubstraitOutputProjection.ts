@@ -1,5 +1,5 @@
 /** Explicit target projection; Substrait and connected identities remain authoritative. */
-import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
+import { projectSubstraitProducerGraph } from '@dvt/postgres-projection';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindings';
 
@@ -12,10 +12,10 @@ export type DvtSubstraitTransformOutputProjectionArgs = Readonly<{
 export async function projectDvtSubstraitTransformOutputToPostgresSql(
   args: DvtSubstraitTransformOutputProjectionArgs
 ): Promise<string> {
-  const { document } = resolveCanvasSubstraitGraphBindings({
+  const { graph } = resolveCanvasSubstraitGraphBindings({
     node: args.transformNode,
     nodes: args.nodes,
     edges: args.edges,
   });
-  return (await projectSubstraitToPostgresSql(document)).sql;
+  return (await projectSubstraitProducerGraph(graph)).sql;
 }

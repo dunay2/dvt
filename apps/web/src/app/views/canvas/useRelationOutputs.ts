@@ -24,7 +24,9 @@ export function useRelationOutputs(relationId: string) {
       setSettled({
         analysis,
         relationId,
-        slots: relationOutputSlots(target, inputs),
+        slots: relationOutputSlots(target, inputs).filter((slot) =>
+          analysis.session.allowsInputSchema(slot.schema)
+        ),
         physical: target.relation.relType.case === 'read',
       });
     };
@@ -33,5 +35,9 @@ export function useRelationOutputs(relationId: string) {
     });
     return () => cancellation.abort();
   }, [analysis, relationId]);
-  return settled?.analysis === analysis && settled?.relationId === relationId ? settled : null;
+  return settled?.relationId === relationId &&
+    settled.analysis?.session === analysis?.session &&
+    analysis?.error == null
+    ? settled
+    : null;
 }

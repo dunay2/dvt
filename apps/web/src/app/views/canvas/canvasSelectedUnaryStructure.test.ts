@@ -1,4 +1,4 @@
-/** Unary controls must not flatten nested fields or erase a relation's output mapping. */
+/** Unary retirement preserves its surviving input, including nested fields and explicit emit. */
 import { describe, expect, it } from 'vitest';
 import { cloneLocalRelation } from '@dvt/substrait-analysis';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
@@ -72,7 +72,7 @@ describe('selected unary structural preservation', () => {
   );
 
   it.each(['sort', 'fetch'] as const)(
-    'removing %s retains a non-identity emit as a projection',
+    'removing %s restores the input itself instead of retaining the deleted operation emit',
     async (operation) => {
       const session = new CanvasRelationAnalysisSession('model');
       session.receive(projectionScenario({ sourceNodeId: 'records', targetNodeId: 'model' }));
@@ -112,7 +112,6 @@ describe('selected unary structural preservation', () => {
         rootNames: fields.map((field) => field.displayName!),
         upserts: [{ relation, binding: target.binding, fields }],
       });
-      const before = await session.query(session.rootId);
       session.apply(
         (
           await prepareRelationRemoval(session, {
@@ -122,11 +121,11 @@ describe('selected unary structural preservation', () => {
         ).change
       );
       const after = await session.query(session.rootId);
-      expect(after.fields).toEqual(before.fields);
-      expect(after.bindings).toEqual(before.bindings);
-      expect(session.locate(session.rootId, session.revision).relation.relType.case).toBe(
-        'project'
-      );
+      expect(session.rootId).toBe(input.binding.relationId);
+      expect(after.fields).toEqual(schema.fields);
+      expect(after.bindings).toEqual(schema.bindings);
+      expect(session.locate(session.rootId, session.revision).relation).toEqual(input.relation);
+      expect(() => session.locate(target.binding.relationId, session.revision)).toThrow();
       session.dispose();
     }
   );

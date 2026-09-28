@@ -6,7 +6,7 @@ import {
 } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { removalTarget } from './canvasRelationRemovalTarget';
-import { inputIdentityMap, rebaseRelationInput } from './canvasRelationInputRemap';
+import { inputIdentityMap, rebaseRelationInput } from '@dvt/substrait-analysis';
 import { retainCompositionOutputs } from './canvasCompositionOutputs';
 import { rebindSelectedFieldReferences } from './canvasSelectedRelationChange';
 import { validateRelationChanges } from './canvasRelationChangeValidation';
@@ -39,10 +39,16 @@ export async function prepareRelationRemoval(
     revision,
     args.keep
   );
+  if (replacement == null)
+    throw new SubstraitAnalysisError(
+      'invalid_structure',
+      'An empty editor draft has no executable relation delta.'
+    );
   let before = target;
   let after: Entry = replacement;
   const upserts = new Map<string, Entry>();
-  upserts.set(replacement.binding.relationId, replacement);
+  if (replacement.binding.relationId === target.binding.relationId)
+    upserts.set(replacement.binding.relationId, replacement);
   const replacements = new Map<string, string>();
   const operations: string[] = [];
   const rebind = () => {

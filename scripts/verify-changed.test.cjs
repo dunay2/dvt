@@ -48,6 +48,12 @@ test('buildFocusedChangedTestPlan retains the ordinary-workflow publication guar
   );
 });
 
+test('buildFocusedChangedTestPlan validates changes to the changed-file lint gate once', () => {
+  const labels = focusedLabelsFor(['scripts/check-changed.cjs', 'scripts/check-changed.test.cjs']);
+
+  assert.deepEqual(labels, ['node --test scripts/check-changed.test.cjs']);
+});
+
 test('buildVerifyChangedPlan keeps docs-only iteration on changed-file gates', () => {
   const labels = labelsFor(['docs/planning/templates/component-engineering-record-template.md']);
 

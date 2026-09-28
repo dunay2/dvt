@@ -1,19 +1,12 @@
 /** Owned concern: orchestrate the route-owned Inspector authoring surface for governed node details. */
-import { useMemo } from 'react';
 
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
-import {
-  hasCanvasInspectorNodeDraftChanges,
-  validateCanvasInspectorNodeDraft,
-} from './canvasInspectorAuthoringModel';
+import { useCanvasInspectorDraftSubmission } from './useCanvasInspectorDraftSubmission';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
 import { canvasViewCopy } from './copy';
+import { CanvasInspectorMetadataFields } from './CanvasInspectorMetadataFields';
 import { DbtAuthoringFields } from './DbtAuthoringFields';
 import { DvtAuthoringFields } from './DvtAuthoringFields';
 import type { CanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
@@ -39,22 +32,10 @@ export function CanvasInspectorAuthoringSection({
   draftController,
 }: CanvasInspectorAuthoringSectionProps) {
   const draft = draftController.draft;
-  const tagsText = draftController.tagsText;
   const setDraft = draftController.onDraftChange;
-  const setTagsText = draftController.onTagsTextChange;
 
-  const errors = useMemo(
-    () =>
-      validateCanvasInspectorNodeDraft(draft, {
-        node,
-        nodes,
-        edges,
-        workspaceScope: authoring.workspaceScope,
-      }),
-    [authoring.workspaceScope, draft, edges, node, nodes]
-  );
-  const isDirty = useMemo(() => hasCanvasInspectorNodeDraftChanges(node, draft), [draft, node]);
-  const canApply = authoring.canEditNode && isDirty && Object.keys(errors).length === 0;
+  const { errors, isDirty, canApply, commitDbtModelDraft, commitCurrentDbtModelDraft, applyDraft } =
+    useCanvasInspectorDraftSubmission({ node, nodes, edges, authoring, draftController });
   const showGeneral = section === 'all' || section === 'general';
   const showDvtAuthoring =
     draft.dvt != null &&
@@ -83,21 +64,6 @@ export function CanvasInspectorAuthoringSection({
         : section === 'all'
           ? 'all'
           : 'general';
-  const commitDbtModelDraft = (nextDraft: typeof draft): void => {
-    setDraft(nextDraft);
-    const nextErrors = validateCanvasInspectorNodeDraft(nextDraft, {
-      node,
-      nodes,
-      edges,
-      workspaceScope: authoring.workspaceScope,
-    });
-    if (!authoring.canEditNode || Object.keys(nextErrors).length > 0) return;
-    authoring.onApplyNodeDraft(nextDraft);
-    draftController.onDraftSubmitted(nextDraft);
-  };
-  const commitCurrentDbtModelDraft = (): void => {
-    if (isDbtCompatibleModel(node)) commitDbtModelDraft(draft);
-  };
 
   if (
     !showGeneral &&
@@ -116,175 +82,89 @@ export function CanvasInspectorAuthoringSection({
       className={inspectorVisualClasses.contextPanelDetailsSection}
     >
       <div className="space-y-3">
-        {showGeneral ? (
-          <>
-            <div className="space-y-2">
-              <Label htmlFor={`inspector-node-name-${node.id}`}>
-                {canvasViewCopy.inspectorNodeNameLabel}
-              </Label>
-              <Input
-                id={`inspector-node-name-${node.id}`}
-                name="node-name"
-                value={draft.name}
-                disabled={!authoring.canEditNode}
-                aria-invalid={errors.name ? 'true' : undefined}
-                aria-describedby={errors.name ? `inspector-node-name-error-${node.id}` : undefined}
-                onChange={(event) =>
-                  setDraft((currentDraft) => ({
-                    ...currentDraft,
-                    name: event.target.value,
-                  }))
-                }
-                onBlur={commitCurrentDbtModelDraft}
-              />
-              {errors.name ? (
-                <p
-                  id={`inspector-node-name-error-${node.id}`}
-                  className={inspectorVisualClasses.inspectorErrorText}
-                  role="alert"
-                >
-                  {formatCanvasInspectorNodeDraftError(errors.name, canvasViewCopy)}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor={`inspector-node-tags-${node.id}`}>
-                {canvasViewCopy.inspectorNodeTagsLabel}
-              </Label>
-              <Input
-                id={`inspector-node-tags-${node.id}`}
-                name="node-tags"
-                value={tagsText}
-                disabled={!authoring.canEditNode}
-                placeholder={canvasViewCopy.inspectorNodeTagsPlaceholder}
-                aria-invalid={errors.tags ? 'true' : undefined}
-                aria-describedby={errors.tags ? `inspector-node-tags-error-${node.id}` : undefined}
-                onChange={(event) => setTagsText(event.target.value)}
-                onBlur={commitCurrentDbtModelDraft}
-              />
-              {errors.tags ? (
-                <p
-                  id={`inspector-node-tags-error-${node.id}`}
-                  className={inspectorVisualClasses.inspectorErrorText}
-                  role="alert"
-                >
-                  {formatCanvasInspectorNodeDraftError(errors.tags, canvasViewCopy)}
-                </p>
-              ) : null}
-            </div>
-          </>
-        ) : null}
-
-        {showDbtAuthoring ? (
-          <DbtAuthoringFields
-            node={node}
-            nodes={nodes}
-            edges={edges}
-            disabled={!authoring.canEditNode}
-            draft={draft}
-            errors={errors}
-            section={section === 'code' ? 'code' : 'general'}
-            onChange={setDraft}
-            onCommitModelChange={commitDbtModelDraft}
-          />
-        ) : null}
-
-        {showDvtAuthoring ? (
-          <DvtAuthoringFields
-            node={node}
-            nodes={nodes}
-            edges={edges}
-            disabled={!authoring.canEditNode}
-            draft={draft}
-            errors={errors}
-            section={dvtAuthoringSection}
-            relationalPredicateSeed={authoring.relationalPredicateSeed}
-            onClearRelationalPredicateSeed={authoring.onClearRelationalPredicateSeed}
-            onChange={setDraft}
-          />
-        ) : null}
-
-        {showSemanticAuthoringIssue ? (
-          <div
-            data-slot="canvas-inspector-semantic-authoring-issue"
-            className={inspectorVisualClasses.contextPanelDetailsSection}
-            role="status"
-          >
-            <p className={inspectorVisualClasses.inspectorTitle}>
-              {canvasViewCopy.inspectorSemanticAuthoringUnavailableTitle}
-            </p>
-            <p className={inspectorVisualClasses.inspectorBody}>
-              {draft.semanticAuthoringIssue === 'invalid_document'
-                ? canvasViewCopy.inspectorSemanticAuthoringInvalidMessage
-                : canvasViewCopy.inspectorSemanticAuthoringUnsupportedMessage}
-            </p>
-          </div>
-        ) : null}
-
-        {showObjectFilePostgresAuthoring && draft.objectFilePostgres ? (
-          <ObjectFilePostgresAuthoringFields
-            nodeId={node.id}
-            disabled={!authoring.canEditNode}
-            draft={draft.objectFilePostgres}
-            errors={errors.objectFilePostgres}
-            onChange={(objectFilePostgres) =>
-              setDraft((currentDraft) => ({ ...currentDraft, objectFilePostgres }))
-            }
-          />
-        ) : null}
-
-        {showHttpJsonArtifactAuthoring && draft.httpJsonArtifact ? (
-          <HttpJsonArtifactAuthoringFields
-            nodeId={node.id}
-            disabled={!authoring.canEditNode}
-            draft={draft.httpJsonArtifact}
-            errors={errors.httpJsonArtifact}
-            onChange={(httpJsonArtifact) =>
-              setDraft((currentDraft) => ({ ...currentDraft, httpJsonArtifact }))
-            }
-          />
-        ) : null}
-
-        {showGeneral ? (
-          <div className="space-y-2">
-            <Label htmlFor={`inspector-node-description-${node.id}`}>
-              {canvasViewCopy.inspectorNodeDescriptionLabel}
-            </Label>
-            <Textarea
-              id={`inspector-node-description-${node.id}`}
-              name="node-description"
-              value={draft.description}
+        <CanvasInspectorMetadataFields
+          model={{
+            nodeId: node.id,
+            draft,
+            tagsText: draftController.tagsText,
+            errors,
+            disabled: !authoring.canEditNode,
+            visible: showGeneral,
+          }}
+          actions={{
+            onDraftChange: setDraft,
+            onTagsTextChange: draftController.onTagsTextChange,
+            onBlur: commitCurrentDbtModelDraft,
+          }}
+        >
+          {showDbtAuthoring ? (
+            <DbtAuthoringFields
+              node={node}
+              nodes={nodes}
+              edges={edges}
               disabled={!authoring.canEditNode}
-              aria-invalid={errors.description ? 'true' : undefined}
-              aria-describedby={
-                errors.description ? `inspector-node-description-error-${node.id}` : undefined
-              }
-              onChange={(event) =>
-                setDraft((currentDraft) => ({
-                  ...currentDraft,
-                  description: event.target.value,
-                }))
-              }
-              onBlur={commitCurrentDbtModelDraft}
+              draft={draft}
+              errors={errors}
+              section={section === 'code' ? 'code' : 'general'}
+              onChange={setDraft}
+              onCommitModelChange={commitDbtModelDraft}
             />
-            {errors.description ? (
-              <p
-                id={`inspector-node-description-error-${node.id}`}
-                className={inspectorVisualClasses.inspectorErrorText}
-                role="alert"
-              >
-                {formatCanvasInspectorNodeDraftError(errors.description, canvasViewCopy)}
-              </p>
-            ) : null}
-          </div>
-        ) : null}
+          ) : null}
 
-        {!authoring.canEditNode && showGeneral ? (
-          <p className={inspectorVisualClasses.inspectorBody}>
-            {canvasViewCopy.inspectorNodeReadOnlyMessage}
-          </p>
-        ) : null}
+          {showDvtAuthoring ? (
+            <DvtAuthoringFields
+              node={node}
+              nodes={nodes}
+              edges={edges}
+              disabled={!authoring.canEditNode}
+              draft={draft}
+              errors={errors}
+              section={dvtAuthoringSection}
+              onChange={setDraft}
+            />
+          ) : null}
+
+          {showSemanticAuthoringIssue ? (
+            <div
+              data-slot="canvas-inspector-semantic-authoring-issue"
+              className={inspectorVisualClasses.contextPanelDetailsSection}
+              role="status"
+            >
+              <p className={inspectorVisualClasses.inspectorTitle}>
+                {canvasViewCopy.inspectorSemanticAuthoringUnavailableTitle}
+              </p>
+              <p className={inspectorVisualClasses.inspectorBody}>
+                {draft.semanticAuthoringIssue === 'invalid_document'
+                  ? canvasViewCopy.inspectorSemanticAuthoringInvalidMessage
+                  : canvasViewCopy.inspectorSemanticAuthoringUnsupportedMessage}
+              </p>
+            </div>
+          ) : null}
+
+          {showObjectFilePostgresAuthoring && draft.objectFilePostgres ? (
+            <ObjectFilePostgresAuthoringFields
+              nodeId={node.id}
+              disabled={!authoring.canEditNode}
+              draft={draft.objectFilePostgres}
+              errors={errors.objectFilePostgres}
+              onChange={(objectFilePostgres) =>
+                setDraft((currentDraft) => ({ ...currentDraft, objectFilePostgres }))
+              }
+            />
+          ) : null}
+
+          {showHttpJsonArtifactAuthoring && draft.httpJsonArtifact ? (
+            <HttpJsonArtifactAuthoringFields
+              nodeId={node.id}
+              disabled={!authoring.canEditNode}
+              draft={draft.httpJsonArtifact}
+              errors={errors.httpJsonArtifact}
+              onChange={(httpJsonArtifact) =>
+                setDraft((currentDraft) => ({ ...currentDraft, httpJsonArtifact }))
+              }
+            />
+          ) : null}
+        </CanvasInspectorMetadataFields>
 
         {authoring.canEditNode && isDirty && !(isDbtCompatibleModel(node) && showGeneral) ? (
           <div className="flex items-center justify-end gap-2">
@@ -296,13 +176,7 @@ export function CanvasInspectorAuthoringSection({
               variant="secondary"
               size="sm"
               disabled={!canApply}
-              onClick={() => {
-                if (!canApply) {
-                  return;
-                }
-                authoring.onApplyNodeDraft(draft);
-                draftController.onDraftSubmitted(draft);
-              }}
+              onClick={applyDraft}
             >
               {canvasViewCopy.inspectorApplyLabel}
             </Button>

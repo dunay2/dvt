@@ -12,7 +12,6 @@ import {
   resolveCanvasDvtInitialJoinPairForInputs,
   resolveCanvasDvtInitialJoinRightInputs,
   type CanvasDvtInitialJoinPair,
-  type CanvasDvtInitialJoinSelection,
 } from './canvasDvtInitialJoinModel';
 import type { DvtSubstraitJoinType } from '@dvt/postgres-projection';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
@@ -29,30 +28,27 @@ const sourceSelectClassName =
 export function DvtSubstraitInnerJoinStartSection({
   disabled,
   inputs,
-  initialSelection,
   joinType = JoinRel_JoinType.INNER,
   onApply,
   onCancel,
 }: Readonly<{
   disabled: boolean;
   inputs: readonly CanvasDvtCompositionInput[];
-  initialSelection?: CanvasDvtInitialJoinSelection;
   joinType?: DvtSubstraitJoinType;
   onApply: (draft: SubstraitDocument) => void;
   onCancel: () => void;
 }>): JSX.Element | null {
   const availableInputs = useMemo(() => resolveCanvasDvtInitialJoinInputs(inputs), [inputs]);
   const initialPair = useMemo(
-    () => resolveCanvasDvtInitialJoinPair(availableInputs, initialSelection),
-    [availableInputs, initialSelection]
+    () => resolveCanvasDvtInitialJoinPair(availableInputs),
+    [availableInputs]
   );
   const [selectedInputs, setSelectedInputs] = useState(() => ({
     leftNodeId: initialPair?.leftNodeId ?? '',
     rightNodeId: initialPair?.rightNodeId ?? '',
   }));
   const joinOperation = canvasJoinOperationForType(joinType);
-  const targetNodeId =
-    initialSelection?.targetNodeId ?? `pending-${joinOperation.replaceAll('_', '-')}`;
+  const targetNodeId = `pending-${joinOperation.replaceAll('_', '-')}`;
   const [draft, setDraft] = useState(() =>
     initialPair == null
       ? null

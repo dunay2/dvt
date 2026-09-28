@@ -6,7 +6,7 @@ import type {
   CanvasColumnActions,
   CanvasCompositionActions,
 } from './canvasNodeInteractionPresentation';
-import type { CanvasColumnLineageEdgeData } from './canvasColumnLineageProjection';
+import { type CanvasColumnLineageEdgeData } from './canvasColumnLineageEdgeModel';
 
 export type CanvasControllerReadModelArgs = {
   graphModel: {

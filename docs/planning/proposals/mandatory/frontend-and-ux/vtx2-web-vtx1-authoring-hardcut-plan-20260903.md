@@ -37,6 +37,10 @@ capability.
   semantic authority.
 - A new Transform may be uninitialized in presentation state, but applying authoring
   creates canonical Substrait metadata through `ConfigureCanvasDvtNode`.
+- Explicitly clearing the final relation returns the same Transform to uninitialized
+  through that command: remove its semantic authority, preserve its identity,
+  disposition and workspace dependencies. Apply may persist that deliberate empty
+  state; incomplete pending compositions remain local and cannot be applied.
 - Existing canonical projection, field-function, join, set, aggregate, window, reorder,
   output-toggle, alias, lineage, and comment behaviors remain available.
 - Legacy SQL/VTX1 metadata is unsupported and fails closed; there is no migration,

@@ -1,6 +1,8 @@
 import { projectCanvasColumnLineageForGraph as projectCanvasColumnLineage } from './canvasColumnLineageProjection.test-fixtures';
 import { describe, expect, it } from 'vitest';
 import type { ConnectedSourceRef } from '@dvt/contracts';
+import { canvasInputSlotId } from './canvasInputBindings';
+import { parseCanvasColumnHandleId } from './canvasColumnHandleIdentity';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { createDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
@@ -19,7 +21,7 @@ const sourceRef: ConnectedSourceRef = {
 };
 
 describe('structured Canvas column lineage', () => {
-  it('connects each persisted leaf to its structured parent handle', async () => {
+  it('keeps external wiring at Input and publishes structured parents as single producer fields', async () => {
     const source: CanonicalNode = {
       id: 'source-orders',
       name: 'orders',
@@ -86,25 +88,45 @@ describe('structured Canvas column lineage', () => {
       expandedNodeIds: new Set([source.id, transform.id]),
     });
 
-    expect(edges).toHaveLength(5);
-    expect(
-      edges.map((edge) => ({
-        source: edge.data?.sourceColumnName,
-        target: edge.data?.targetColumnName,
-        targetHandle: edge.targetHandle,
-      }))
-    ).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ source: 'order_id', target: 'identity.order_id' }),
-        expect.objectContaining({ source: 'customer', target: 'identity.customer' }),
-        expect.objectContaining({ source: 'order_id', target: 'order_id' }),
-        expect.objectContaining({ source: 'customer', target: 'customer' }),
-        expect.objectContaining({ source: 'amount', target: 'amount' }),
-      ])
-    );
-    const handle = (target: string): string | null | undefined =>
-      edges.find((edge) => edge.data?.targetColumnName === target)?.targetHandle;
-    expect(handle('identity.order_id')).toBe(handle('identity.customer'));
-    expect(handle('order_id')).not.toBe(handle('identity.order_id'));
+    expect(edges).toHaveLength(3);
+    expect(edges.map((edge) => edge.data?.targetColumnName)).toEqual([
+      'order_id',
+      'customer',
+      'amount',
+    ]);
+    for (const edge of edges) {
+      expect(parseCanvasColumnHandleId(edge.targetHandle)?.columnId).toBe(
+        canvasInputSlotId(source.id, edge.data!.sourceFieldId)
+      );
+      expect(edge.data?.removable).toBe(false);
+    }
+
+    const consumer: CanonicalNode = {
+      id: 'consumer',
+      name: 'Consumer',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+    };
+    const downstream = await projectCanvasColumnLineage({
+      nodes: [source, transform, consumer],
+      edges: [
+        { sourceId: source.id, targetId: transform.id },
+        { sourceId: transform.id, targetId: consumer.id },
+      ],
+      expandedNodeIds: new Set([transform.id, consumer.id]),
+    });
+    expect(downstream).toHaveLength(4);
+    expect(downstream.every((edge) => edge.source === transform.id)).toBe(true);
+    const parent = downstream.find((edge) => edge.data?.sourceFieldId === 'output:identity');
+    expect(parent?.data).toMatchObject({
+      sourceFieldId: 'output:identity',
+      targetColumnName: 'identity',
+      outputId: canvasInputSlotId(transform.id, 'output:identity'),
+    });
+    expect(parseCanvasColumnHandleId(parent?.sourceHandle)?.columnId).toBe('output:identity');
+    expect(downstream.some((edge) => edge.data?.targetColumnName.includes('.'))).toBe(false);
   });
 });

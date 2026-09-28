@@ -44,6 +44,10 @@ describe('independent source occurrences', () => {
     const occurrences = session.matchingSources(input.sourceRef, session.revision);
     expect(occurrences).toHaveLength(6);
     expect(new Set(occurrences).size).toBe(6);
+    const aliases = new Map(
+      occurrences.map((id) => [id, session.locate(id, session.revision).binding.displayName])
+    );
+    expect(new Set(aliases.values()).size).toBe(occurrences.length);
     const before = await session.query(session.rootId);
     expect(new Set(before.bindings.map((field) => field.displayName)).size).toBe(12);
     const proposal = await prepareRelationRemoval(session, {
@@ -67,6 +71,9 @@ describe('independent source occurrences', () => {
       decodeDvtSubstraitSemanticDocument(encodeDvtSubstraitSemanticDocument(removed))
     );
     expect((await reopened.query(reopened.rootId)).bindings).toEqual(remaining.bindings);
+    for (const id of reopened.matchingSources(input.sourceRef, reopened.revision)) {
+      expect(reopened.locate(id, reopened.revision).binding.displayName).toBe(aliases.get(id));
+    }
   });
 
   it.each(['table', 'fields', 'type', 'nullability'] as const)(

@@ -83,7 +83,7 @@ describe('canvasDraftAccessPostureModel', () => {
       mutationBlocked: false,
     });
     expect(toCanvasDraftStatusState(posture)).toEqual({
-      label: 'Draft save failed',
+      label: 'Save failed',
       tone: 'danger',
       showReloadAction: false,
       persistence: 'failed',

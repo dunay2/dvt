@@ -2,14 +2,11 @@ import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
 
 export type CanvasColumnMappingSource = Readonly<{ nodeId: string; columnId: string }>;
-export type CanvasColumnMappingTarget = Readonly<{
-  nodeId: string;
-  outputId?: string;
-  columnName: string;
-  dataType?: string;
-}>;
 
 export type CanvasColumnMappingRejection =
+  | 'read_only'
+  | 'input_in_use'
+  | 'invalid_input_bindings'
   | 'source_node_not_found'
   | 'target_node_not_found'
   | 'target_not_canonical_transform'
@@ -25,15 +22,6 @@ export type CanvasColumnMappingRejection =
 
 export type CanvasColumnMappingResult =
   | Readonly<{ outcome: 'applied'; draftSession: CanvasDraftSession }>
-  | Readonly<{ outcome: 'rejected'; reason: CanvasColumnMappingRejection }>;
-
-export type CanvasColumnAutomapResult =
-  | Readonly<{
-      outcome: 'applied';
-      draftSession: CanvasDraftSession;
-      appliedCount: number;
-      skippedCount: number;
-    }>
   | Readonly<{ outcome: 'rejected'; reason: CanvasColumnMappingRejection }>;
 
 export type CanvasColumn = Readonly<{ name: string; type: string }>;
@@ -73,14 +61,4 @@ export function resolveCanvasSessionNode(
   nodeId: string
 ): CanonicalNode | undefined {
   return draftSession.localNodeCatalog?.[nodeId] ?? canonicalNodesById.get(nodeId);
-}
-
-export function hasCanvasStageDependency(
-  draftSession: CanvasDraftSession,
-  sourceNodeId: string,
-  targetNodeId: string
-): boolean {
-  return draftSession.workingSet.visibleEdges.some(
-    (edge) => edge.sourceId === sourceNodeId && edge.targetId === targetNodeId
-  );
 }

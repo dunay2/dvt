@@ -17,7 +17,7 @@ export function orderedCanvasRelationalTreeUnionAllEntry(args: CanvasRelationalT
     targetNode,
     nodes: args.nodes,
     edges: args.edges.filter(
-      (edge) => edge.targetId === args.targetNodeId && selectedIds.has(edge.sourceId)
+      (edge) => edge.targetId !== args.targetNodeId || selectedIds.has(edge.sourceId)
     ),
   });
   if (entry == null) return null;

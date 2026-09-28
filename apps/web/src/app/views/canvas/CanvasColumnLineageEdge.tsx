@@ -10,7 +10,7 @@ import { type ReactElement } from 'react';
 
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import type { CanvasColumnLineageEdgeData } from './canvasColumnLineageProjection';
+import { type CanvasColumnLineageEdgeData } from './canvasColumnLineageEdgeModel';
 
 export type InteractiveCanvasColumnLineageEdgeData = CanvasColumnLineageEdgeData &
   Readonly<{ onRemove?: () => void }>;

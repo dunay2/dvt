@@ -1,17 +1,26 @@
 import { describe, expect, it } from 'vitest';
 
 import { readArchitectureSiblingSource } from '../../views/architecture.test.support';
+import { fallbackGraphNodeClasses } from './graphVisualTokens';
 import {
-  fallbackGraphNodeClasses,
   graphNodeCardSurfaceClasses,
-  graphNodeColumnClasses,
-  graphNodeMetricRowClasses,
   graphNodeHealthBorderClasses,
-  graphNodeOperationalRailClasses,
   graphNodeTagListClasses,
-} from './graphVisualTokens';
+} from './graphCardVisualTokens';
+import { graphNodeColumnClasses } from './graphColumnVisualTokens';
+import {
+  graphNodeMetricRowClasses,
+  graphNodeOperationalRailClasses,
+} from './graphMetricVisualTokens';
 
-const TOKEN_SOURCE = readArchitectureSiblingSource(import.meta.dirname, 'graphVisualTokens.ts');
+const TOKEN_SOURCE = [
+  'graphVisualTokens.ts',
+  'graphCardVisualTokens.ts',
+  'graphColumnVisualTokens.ts',
+  'graphMetricVisualTokens.ts',
+]
+  .map((file) => readArchitectureSiblingSource(import.meta.dirname, file))
+  .join('\n');
 const GRAPH_RENDERER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'GraphNodeRenderer.tsx'
@@ -95,13 +104,13 @@ const GRAPH_CONSUMER_SOURCES = [
   DBT_NODE_RENDERER_SOURCE,
 ];
 const GRAPH_CARD_PRESENTATION_SOURCES = [
-  GRAPH_CARD_VIEW_SOURCE,
-  GRAPH_METRIC_ROW_SOURCE,
-  GRAPH_TAG_LIST_SOURCE,
-  GRAPH_OPERATIONAL_RAIL_SOURCE,
-  GRAPH_HEALTH_POPOVER_SOURCE,
-  FALLBACK_RENDERER_SOURCE,
-];
+  [GRAPH_CARD_VIEW_SOURCE, 'graphCardVisualTokens'],
+  [GRAPH_METRIC_ROW_SOURCE, 'graphMetricVisualTokens'],
+  [GRAPH_TAG_LIST_SOURCE, 'graphCardVisualTokens'],
+  [GRAPH_OPERATIONAL_RAIL_SOURCE, 'graphMetricVisualTokens'],
+  [GRAPH_HEALTH_POPOVER_SOURCE, 'graphMetricVisualTokens'],
+  [FALLBACK_RENDERER_SOURCE, 'graphVisualTokens'],
+] as const;
 
 describe('React Flow visual token convergence architecture', () => {
   it('keeps primary graph-node copy at a readable source size before viewport scaling', () => {
@@ -201,8 +210,8 @@ describe('React Flow visual token convergence architecture', () => {
   });
 
   it('keeps graph card presentation components on responsibility-specific token groups', () => {
-    for (const source of GRAPH_CARD_PRESENTATION_SOURCES) {
-      expect(source).toContain('graphVisualTokens');
+    for (const [source, owner] of GRAPH_CARD_PRESENTATION_SOURCES) {
+      expect(source).toContain(owner);
       expect(source).not.toContain('graphVisualClasses');
     }
   });

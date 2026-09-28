@@ -15,13 +15,11 @@ import {
 } from '../ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { cn } from '../ui/utils';
-import {
-  NodePropertySectionView,
-  type NodePropertyTableCellRenderContext,
-} from './NodePropertySectionView';
+import { NodePropertySectionView } from './NodePropertySectionView';
+import type { NodePropertyTableCellRenderContext } from './NodePropertyTable';
 import { SourceColumnsPanel } from './SourceColumnsPanel';
 import { SourceInputsOutputsPanel } from './SourceInputsOutputsPanel';
-import type { NodePropertiesReadModel, NodePropertySection } from './nodePropertiesReadModel';
+import type { NodePropertiesReadModel, NodePropertySection } from './nodePropertiesContracts';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 export type NodePropertiesTabsProps = Readonly<{

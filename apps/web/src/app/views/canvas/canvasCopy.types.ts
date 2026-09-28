@@ -2,6 +2,18 @@
 export type CanvasDisabledCapability = 'plan_preview' | 'run_start' | 'graph_edits';
 
 export type CanvasViewCopy = {
+  readonly sourceOccurrenceFieldsUnavailable: string;
+  readonly sourceOccurrenceAdd: string;
+  readonly sourceOccurrenceAlias: string;
+  readonly sourceOccurrenceUpdate: string;
+  readonly sourceOccurrenceInvalidAlias: string;
+  readonly sourceOccurrenceUpdateFailed: string;
+  readonly sourceOccurrenceAliasUnsupported: string;
+  readonly sourceOccurrenceReadOnly: string;
+  readonly sourceOccurrenceUnsupported: string;
+  readonly sourceOccurrenceUnavailable: string;
+  readonly sourceOccurrenceIncompatible: string;
+  readonly sourceOccurrenceInputProjectionRequired: string;
   readonly operationReadLabel: string;
   readonly operationFilterLabel: string;
   readonly operationAggregateLabel: string;

@@ -5,7 +5,7 @@ import {
   type NodePropertiesReadModel,
   type NodePropertyRowId,
   type NodePropertySectionId,
-} from '../../components/inspector/nodePropertiesReadModel';
+} from '../../components/inspector/nodePropertiesContracts';
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import type { CanvasNodeCodeTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 

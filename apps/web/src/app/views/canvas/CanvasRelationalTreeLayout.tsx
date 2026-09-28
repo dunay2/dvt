@@ -1,18 +1,22 @@
 /** Owned concern: render deterministic graph geometry without creating a second Canvas authority. */
-import { Table2 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useRelationalLayout } from './relational-layout/RelationalLayoutSession';
 import { useRelationalCardMovement } from './relational-layout/useRelationalCardMovement';
 import {
+  CANVAS_RELATIONAL_DETAIL_ZOOM,
   projectCanvasRelationalTreeDetails,
   type CanvasRelationalSemanticContext,
 } from './canvasRelationalTreeDetails';
 
-import { layoutCanvasRelationalTree } from './canvasRelationalTreeGeometry';
 import { RelationalTreeEdges } from './relational-layout/RelationalTreeEdges';
-import { CanvasRelationalTreeGraphNode } from './CanvasRelationalTreeGraphNode';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
+import type { SourceOccurrenceActions } from './relational-source-occurrence/sourceOccurrenceActions';
+import { projectPendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
+import { projectCanvasStagedOperation, type CanvasStagedOperation } from './canvasStagedOperation';
+import { CanvasRelationalTreeOutput } from './CanvasRelationalTreeOutput';
+import { CanvasRelationalTreeNodes } from './CanvasRelationalTreeNodes';
+import { projectCanvasRelationalMovableCards } from './projectCanvasRelationalMovableCards';
 
 export function CanvasRelationalTreeLayout({
   outputName,
@@ -27,9 +31,29 @@ export function CanvasRelationalTreeLayout({
   panMode = false,
   onManualLayout,
   onOpenOutput,
+  occurrences,
+  stagedOperations = [],
+  selectedStagedOperationId = null,
+  onSelectStagedOperation,
+  onConnectStagedOperation,
+  onDisconnectStagedOperation,
+  onRemoveStagedOperation,
+  outputRelationId,
+  onConnectOutput,
+  onDisconnectOutput,
 }: Readonly<{
   outputName: string;
-  root: CanvasRelationalTreeNode;
+  root: CanvasRelationalTreeNode | null;
+  occurrences?: Pick<SourceOccurrenceActions, 'pending' | 'selectedId' | 'select' | 'remove'>;
+  stagedOperations?: readonly CanvasStagedOperation[];
+  selectedStagedOperationId?: string | null;
+  onSelectStagedOperation?: (id: string) => void;
+  onConnectStagedOperation?: (id: string, port: number, relationId: string) => void;
+  onDisconnectStagedOperation?: (id: string, port: number) => void;
+  onRemoveStagedOperation?: (id: string) => void;
+  outputRelationId?: string | null;
+  onConnectOutput?: (relationId: string) => void;
+  onDisconnectOutput?: () => void;
   selectedLocator: string;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
@@ -42,52 +66,51 @@ export function CanvasRelationalTreeLayout({
   onOpenOutput?: () => void;
 }>): JSX.Element {
   const detail = useMemo(
-    () => projectCanvasRelationalTreeDetails(root, semanticContext),
+    () =>
+      root == null
+        ? { sizes: new Map(), graphs: new Map() }
+        : projectCanvasRelationalTreeDetails(root, semanticContext),
     [root, semanticContext?.transformNode, semanticContext?.draft]
   );
-  const { positions, setPosition, expanded, toggleDetail } = useRelationalLayout();
+  const { projectLayout, setPosition, expanded, toggleDetail } = useRelationalLayout();
+  const zoomRevealsDetail = Math.round(zoom * 100) >= CANVAS_RELATIONAL_DETAIL_ZOOM * 100;
   const sizes = useMemo(() => {
     const visible = new Map(detail.sizes);
     const visit = (node: CanvasRelationalTreeNode): void => {
-      if (!expanded.has(node.relationId ?? node.locator)) visible.delete(node.locator);
+      if (!zoomRevealsDetail && !expanded.has(node.relationId ?? node.locator))
+        visible.delete(node.locator);
       node.children.forEach((child) => visit(child.node));
     };
-    visit(root);
+    if (root != null) visit(root);
     return visible;
-  }, [root, detail, expanded]);
-  const layout = useMemo(
-    () => layoutCanvasRelationalTree(root, sizes, positions),
-    [root, sizes, positions]
+  }, [root, detail, expanded, zoomRevealsDetail]);
+  const detachedSources = useMemo(
+    () => occurrences?.pending.map(projectPendingSourceOccurrence) ?? [],
+    [occurrences?.pending]
   );
+  const detachedOperations = useMemo(
+    () => stagedOperations.map(projectCanvasStagedOperation),
+    [stagedOperations]
+  );
+  const detached = useMemo(
+    () => [...detachedSources, ...detachedOperations],
+    [detachedSources, detachedOperations]
+  );
+  const layout = useMemo(
+    () => projectLayout(root, sizes, detached),
+    [root, sizes, detached, projectLayout]
+  );
+  const movableCards = useMemo(() => projectCanvasRelationalMovableCards(layout), [layout]);
   const movement = useRelationalCardMovement(
-    layout.nodes,
+    movableCards,
     zoom,
     setPosition,
     onManualLayout,
     !panMode
   );
-  const outputStyle = {
-    left: layout.output.x,
-    top: layout.output.y,
-    width: layout.output.width,
-    height: layout.output.height,
-  };
-  const outputContent = (
-    <>
-      <Table2 aria-hidden="true" className="size-4 shrink-0 text-emerald-300" />
-      <span className="min-w-0">
-        <span className="block truncate text-[11px] font-semibold text-(--text-primary)">
-          {outputName}
-        </span>
-        <span className="block text-[9px] uppercase tracking-wide text-emerald-300">
-          {copy.relationalTreeOutputLabel}
-        </span>
-      </span>
-    </>
-  );
-  const outputClassName =
-    'absolute z-10 flex items-center gap-2 rounded-md border border-emerald-500 bg-emerald-950/30 px-3 text-left shadow-sm';
-
+  const [selectedConnectionSource, setSelectedConnectionSource] = useState<string | null>(null);
+  const effectiveOutputRelationId =
+    outputRelationId === undefined ? (root?.relationId ?? null) : outputRelationId;
   return (
     <div
       {...movement}
@@ -97,46 +120,66 @@ export function CanvasRelationalTreeLayout({
       className="relative"
       style={{ width: layout.width, height: layout.height }}
     >
-      <RelationalTreeEdges layout={layout} />
-
-      {onOpenOutput == null ? (
-        <div
-          data-slot="canvas-relational-tree-output"
-          className={outputClassName}
-          style={outputStyle}
-        >
-          {outputContent}
-        </div>
-      ) : (
-        <button
-          type="button"
-          data-slot="canvas-relational-tree-output"
-          aria-label={`${outputName} · ${copy.relationalTreeOutputLabel}`}
-          onClick={onOpenOutput}
-          className={`${outputClassName} transition-colors hover:bg-emerald-900/35 focus-visible:outline-2 focus-visible:outline-(--focus-ring)`}
-          style={outputStyle}
-        >
-          {outputContent}
-        </button>
+      <RelationalTreeEdges
+        layout={layout}
+        stagedOperations={stagedOperations}
+        removeConnectionLabel={copy.canvasContextMenuRemoveEdgeLabel}
+        onSelectStagedOperation={onSelectStagedOperation}
+        onDisconnectStagedOperation={onDisconnectStagedOperation}
+        outputRelationId={effectiveOutputRelationId}
+        onSelectOutput={onOpenOutput}
+        onDisconnectOutput={onDisconnectOutput}
+      />
+      {layout.output == null ? null : (
+        <CanvasRelationalTreeOutput
+          output={layout.output}
+          outputName={outputName}
+          copy={copy}
+          onOpen={onOpenOutput}
+          connected={effectiveOutputRelationId != null}
+          selectedSource={selectedConnectionSource}
+          onConnect={
+            onConnectOutput == null
+              ? undefined
+              : (relationId) => {
+                  onConnectOutput(relationId);
+                  setSelectedConnectionSource(null);
+                }
+          }
+          onDisconnect={onDisconnectOutput}
+          movable={!panMode}
+        />
       )}
-
-      <ul role="tree" aria-label={copy.relationalTreeLabel} className="absolute inset-0">
-        {layout.nodes.map((placed) => (
-          <CanvasRelationalTreeGraphNode
-            key={placed.node.locator}
-            placed={placed}
-            selected={placed.node.locator === selectedLocator}
-            copy={copy}
-            onSelect={onSelect}
-            onExpand={onExpand}
-            onRemove={onRemove}
-            semanticGraph={detail.graphs.get(placed.node.locator)}
-            expanded={expanded.has(placed.node.relationId ?? placed.node.locator)}
-            onToggleDetail={() => toggleDetail(placed.node.relationId ?? placed.node.locator)}
-            movable={!panMode}
-          />
-        ))}
-      </ul>
+      <CanvasRelationalTreeNodes
+        layout={layout}
+        graphs={detail.graphs}
+        expanded={expanded}
+        zoomRevealsDetail={zoomRevealsDetail}
+        toggleDetail={toggleDetail}
+        occurrences={occurrences}
+        stagedOperations={stagedOperations}
+        selectedStagedOperationId={selectedStagedOperationId}
+        selectedLocator={selectedLocator}
+        selectedConnectionSource={selectedConnectionSource}
+        panMode={panMode}
+        copy={copy}
+        actions={{
+          select: onSelect,
+          expand: onExpand,
+          remove: onRemove,
+          selectStaged: onSelectStagedOperation,
+          removeStaged: onRemoveStagedOperation,
+          selectConnectionSource:
+            onConnectStagedOperation == null ? undefined : setSelectedConnectionSource,
+          connectOperation:
+            onConnectStagedOperation == null
+              ? undefined
+              : (id, port, producerId) => {
+                  onConnectStagedOperation(id, port, producerId);
+                  setSelectedConnectionSource(null);
+                },
+        }}
+      />
     </div>
   );
 }

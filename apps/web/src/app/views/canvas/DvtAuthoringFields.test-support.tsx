@@ -10,7 +10,6 @@ import {
   validateCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
 import { DvtAuthoringFields } from './DvtAuthoringFields';
-import type { CanvasRelationalPredicateSeed } from './canvasRelationalPredicateSeed';
 import { beforeEach, afterEach, vi } from 'vitest';
 
 function DvtAuthoringFieldsHarness({
@@ -20,8 +19,6 @@ function DvtAuthoringFieldsHarness({
   section,
   warehouseSourceImport,
   externalConnectionId,
-  relationalPredicateSeed,
-  onClearRelationalPredicateSeed,
 }: Readonly<{
   node: CanonicalNode;
   nodes?: readonly CanonicalNode[];
@@ -29,8 +26,6 @@ function DvtAuthoringFieldsHarness({
   section?: 'all' | 'general' | 'columns' | 'code';
   warehouseSourceImport?: IWarehouseSourceImportPort;
   externalConnectionId?: string;
-  relationalPredicateSeed?: CanvasRelationalPredicateSeed;
-  onClearRelationalPredicateSeed?: () => void;
 }>): JSX.Element {
   const [draft, setDraft] = useState(() => createCanvasInspectorNodeDraft(node));
   const errors = validateCanvasInspectorNodeDraft(draft);
@@ -70,8 +65,6 @@ function DvtAuthoringFieldsHarness({
         draft={draft}
         errors={errors}
         section={section}
-        relationalPredicateSeed={relationalPredicateSeed}
-        onClearRelationalPredicateSeed={onClearRelationalPredicateSeed}
         onChange={setDraft}
       />
       <output data-slot="dvt-draft-json">{JSON.stringify(draft.dvt)}</output>
@@ -119,9 +112,7 @@ export function useAuthoringFieldsHarness() {
     externalConnectionId?: string,
     nodes?: readonly CanonicalNode[],
     edges?: readonly CanonicalEdge[],
-    section?: 'all' | 'general' | 'columns' | 'code',
-    relationalPredicateSeed?: CanvasRelationalPredicateSeed,
-    onClearRelationalPredicateSeed?: () => void
+    section?: 'all' | 'general' | 'columns' | 'code'
   ): void {
     act(() => {
       root.render(
@@ -132,8 +123,6 @@ export function useAuthoringFieldsHarness() {
           section={section}
           warehouseSourceImport={warehouseSourceImport}
           externalConnectionId={externalConnectionId}
-          relationalPredicateSeed={relationalPredicateSeed}
-          onClearRelationalPredicateSeed={onClearRelationalPredicateSeed}
         />
       );
     });

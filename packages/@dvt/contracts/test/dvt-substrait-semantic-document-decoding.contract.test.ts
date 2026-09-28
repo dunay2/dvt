@@ -15,6 +15,62 @@ import {
 import { buildDvtSubstraitSemanticDocumentFixture } from './fixtures/dvtSubstraitSemanticDocument.js';
 
 describe('DVT Substrait semantic document decoding', () => {
+  it('admits an explicit producer reference, never a second physical source identity', () => {
+    const document = buildDvtSubstraitSemanticDocumentFixture();
+    const physical = document.sidecar.relations[0]!;
+    const fields = document.sidecar.fields.map((field) => ({
+      ...field,
+      relationId: physical.relationId,
+      fieldId: `input:${field.fieldId}`,
+    }));
+    document.sidecar.fields.push(...fields);
+    const sourceRef = {
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        provider: 'postgres',
+        connectionId: 'connection',
+      },
+      sourceObjectId: 'raw.customers',
+    };
+    const producerRef = {
+      nodeId: 'producer',
+      fields: fields.map((field) => ({
+        fieldId: field.fieldId,
+        producerFieldId: `published:${field.fieldId}`,
+      })),
+    };
+    const relations = document.sidecar.relations.map((relation) =>
+      relation === physical ? { ...relation, sourceRef: undefined, producerRef } : relation
+    );
+    expect(
+      DvtSubstraitAuthoringSidecarV1Schema.safeParse({ ...document.sidecar, relations }).success
+    ).toBe(true);
+    expect(
+      DvtSubstraitAuthoringSidecarV1Schema.safeParse({
+        ...document.sidecar,
+        relations: relations.map((relation) =>
+          relation.relationId === physical.relationId ? { ...relation, sourceRef } : relation
+        ),
+      }).success
+    ).toBe(false);
+    expect(
+      DvtSubstraitAuthoringSidecarV1Schema.safeParse({
+        ...document.sidecar,
+        relations: relations.map((relation) =>
+          relation.relationId === physical.relationId
+            ? {
+                ...relation,
+                producerRef: {
+                  ...producerRef,
+                  fields: [{ fieldId: 'unknown', producerFieldId: 'published' }],
+                },
+              }
+            : relation
+        ),
+      }).success
+    ).toBe(false);
+  });
   it('decodes the pinned typed Plan carried by the canonical document', () => {
     const plan = decodeDvtSubstraitPlanV1(buildDvtSubstraitSemanticDocumentFixture());
 

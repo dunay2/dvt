@@ -57,12 +57,6 @@ export function buildCanvasShellPanels({
       canEditNode: panelState.canEditInspectorNode,
       workspaceScope: routePresentation.workspaceScope,
       onApplyNodeDraft: panelState.applyInspectorNodeDraft,
-      ...(panelState.relationalPredicateSeed == null
-        ? {}
-        : {
-            relationalPredicateSeed: panelState.relationalPredicateSeed,
-            onClearRelationalPredicateSeed: panelState.clearRelationalPredicateSeed,
-          }),
     },
     relationalTreeAuthoring: {
       canEditNode: panelState.canEditInspectorNode,

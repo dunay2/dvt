@@ -36,16 +36,18 @@ export function CanvasRelationalTreeSourceCard({
       data-slot="canvas-relational-tree-source"
       data-node-id={item.sourceNodeId ?? undefined}
       aria-pressed={item.selected === true}
-      draggable={draggable && item.sourceNodeId != null && item.selectable !== false}
+      draggable={draggable && item.sourceNodeId != null && item.state !== 'missing'}
       onDragStart={(event) => {
-        if (item.sourceNodeId == null || item.selectable === false) {
+        if (!draggable || item.sourceNodeId == null || item.state === 'missing') {
           event.preventDefault();
           return;
         }
         writeCanvasRelationalSourceDrag(event.dataTransfer, item.sourceNodeId);
       }}
-      disabled={item.selectable === false || (item.selectable == null && item.treeLocator == null)}
-      onClick={() => onSelect(item)}
+      disabled={item.state === 'missing' || item.sourceNodeId == null}
+      onClick={() => {
+        if (item.selectable !== false) onSelect(item);
+      }}
       className="flex h-9 w-full items-center gap-2 rounded border border-(--border-subtle) bg-(--surface-subtle) px-2 text-left enabled:cursor-grab enabled:hover:border-(--status-info) enabled:active:cursor-grabbing aria-pressed:border-(--status-info) aria-pressed:ring-1 aria-pressed:ring-(--status-info) disabled:cursor-default"
     >
       <span className="flex min-w-0 flex-1 items-center gap-2">

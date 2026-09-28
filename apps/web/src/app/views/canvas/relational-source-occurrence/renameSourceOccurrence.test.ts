@@ -19,6 +19,44 @@ function setup(): {
 }
 
 describe('rename canonical occurrence', () => {
+  it('rejects another occurrence alias after trimming without changing identity or revision', async () => {
+    const { session, reads } = setup();
+    const before = await session.query(session.rootId);
+    const alias = reads[0]!.displayName!;
+    await expect(
+      renameSourceOccurrence(session, {
+        relationId: reads[1]!.relationId,
+        expectedRevision: session.revision,
+        alias: `  ${alias}  `,
+      })
+    ).rejects.toThrow();
+    expect(session.revision).toBe(before.revision);
+    expect(await session.query(session.rootId)).toEqual(before);
+  });
+
+  it('allows retaining the same alias and rejects an outdated rename', async () => {
+    const { session, reads } = setup();
+    const read = reads[0]!;
+    const revision = session.revision;
+    const result = await renameSourceOccurrence(session, {
+      relationId: read.relationId,
+      expectedRevision: revision,
+      alias: read.displayName!,
+    });
+    expect(result.sidecar.relations.find((entry) => entry.relationId === read.relationId)).toEqual(
+      read
+    );
+    const acceptedRevision = session.revision;
+    await expect(
+      renameSourceOccurrence(session, {
+        relationId: read.relationId,
+        expectedRevision: revision,
+        alias: 'Changed after stale selection',
+      })
+    ).rejects.toThrow();
+    expect(session.revision).toBe(acceptedRevision);
+  });
+
   it.each([0, 1])(
     'renames port %s below a transformed input without altering data semantics',
     async (port) => {

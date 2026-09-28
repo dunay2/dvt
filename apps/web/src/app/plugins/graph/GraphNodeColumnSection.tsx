@@ -8,7 +8,7 @@ import type { GraphNodeColumnSectionProps } from './graphNodeColumnContracts';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { GraphNodeColumnRow } from './GraphNodeColumnRow';
 import { GraphNodeCalculatedColumnForm } from './GraphNodeCalculatedColumnForm';
-import { graphNodeColumnClasses } from './graphVisualTokens';
+import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 import { useGraphNodeColumnSectionState } from './useGraphNodeColumnSectionState';
 
 const compactRemainderClassName =
@@ -82,7 +82,8 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
                 portDirections={portDirections}
                 activeColumnHandleId={activeColumnHandleId}
                 copy={copy}
-                showSourceName={column.sourceNodeName != null}
+                view={props.view}
+                showSourceName={props.showSourceName ?? column.sourceNodeName != null}
                 reorder={section.columnReorder}
                 expressionOperandCandidates={section.columnReorder.orderedColumns}
                 unavailableAliases={section.columnReorder.orderedColumns

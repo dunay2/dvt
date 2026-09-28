@@ -1,10 +1,19 @@
-import type { Edge } from '@xyflow/react';
 import { describe, expect, it } from 'vitest';
 
 import { getPluginPortMap } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
-import { resolveCanvasEdgeCreationTransaction } from './canvasEdgeAdmissionTransaction';
+import {
+  resolveCanvasEdgeCreationTransaction,
+  resolveCanvasEdgeReconnectTransaction,
+} from './canvasEdgeAdmissionTransaction';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
+import { createSourceRelation, toSourceRelationInput } from './canvasSourceRelation';
+import { createSourceDocument } from './canvasSourceDocument';
+import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindings';
+
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 const connectedSource = (
@@ -79,58 +88,56 @@ const draftSession = (): CanvasDraftSession => ({
 });
 
 describe('Canvas source replacement', () => {
-  it('projects the replacement source catalog after the previous dependency is removed', async () => {
-    const canonicalNodesById = new Map(
-      [orders, outbox, transform].map((node) => [node.id, node] as const)
-    );
-    const first = await resolveCanvasEdgeCreationTransaction({
-      canonicalNodesById,
-      connection: {
-        source: orders.id,
-        sourceHandle: null,
-        target: transform.id,
-        targetHandle: null,
-      },
-      draftSession: draftSession(),
-      edges: [],
-      pluginPortMap: getPluginPortMap(),
-    });
-    if (first.outcome !== 'created')
-      throw new Error('Expected the first dependency to be created.');
-
-    const withoutOrders: CanvasDraftSession = {
-      ...first.draftSession,
-      workingSet: { ...first.draftSession.workingSet, visibleEdges: [] },
-    };
-    const replacement = await resolveCanvasEdgeCreationTransaction({
-      canonicalNodesById,
-      connection: {
-        source: outbox.id,
-        sourceHandle: null,
-        target: transform.id,
-        targetHandle: null,
-      },
-      draftSession: withoutOrders,
-      edges: [] as Edge[],
-      pluginPortMap: getPluginPortMap(),
-    });
-    if (replacement.outcome !== 'created') {
-      throw new Error('Expected the replacement dependency to be created.');
+  it.each(['replace', 'reconnect'] as const)(
+    'does not rewrite an authored Read on dependency %s',
+    async (intent) => {
+      const oldEdge = { sourceId: orders.id, targetId: transform.id };
+      const input = resolveCanvasDvtCompositionInputs({
+        nodes: [orders, transform],
+        edges: [oldEdge],
+        targetNodeId: transform.id,
+      })[0]!;
+      const read = createSourceRelation(toSourceRelationInput(input), 1);
+      const authored = applyDvtSubstraitSemanticDocument(
+        transform,
+        encodeDvtSubstraitSemanticDocument(createSourceDocument([read], read))
+      );
+      const nodes = [orders, outbox, authored];
+      const snapshot = structuredClone(authored);
+      const edge = { id: 'dependency', source: orders.id, target: authored.id };
+      const args = {
+        canonicalNodesById: new Map(nodes.map((node) => [node.id, node])),
+        connection: {
+          source: outbox.id,
+          sourceHandle: null,
+          target: authored.id,
+          targetHandle: null,
+        },
+        draftSession: {
+          ...draftSession(),
+          localNodeCatalog: { [authored.id]: authored },
+          workingSet: {
+            ...draftSession().workingSet,
+            visibleEdges: intent === 'reconnect' ? [oldEdge] : [],
+          },
+        },
+        edges: intent === 'reconnect' ? [edge] : [],
+        pluginPortMap: getPluginPortMap(),
+      };
+      const result =
+        intent === 'reconnect'
+          ? resolveCanvasEdgeReconnectTransaction({ ...args, edge })
+          : await resolveCanvasEdgeCreationTransaction(args);
+      if (result.outcome === 'noop') throw new Error('Expected admitted dependency');
+      expect(result.draftSession.localNodeCatalog?.[authored.id]).toBe(authored);
+      expect(authored).toEqual(snapshot);
+      const graph = { node: authored, nodes, edges: result.draftSession.workingSet.visibleEdges };
+      expect(() => resolveCanvasSubstraitGraphBindings(graph)).toThrow();
+      const presentation = await projectCanvasNodePresentationTruth(graph);
+      expect(presentation.relationalComposition?.state).toBe('incomplete');
+      expect(presentation.columns.inherited.map((column) => column.name)).toEqual(
+        outboxColumns.map((column) => column.name)
+      );
     }
-
-    const projectedTransform = replacement.draftSession.localNodeCatalog?.[transform.id];
-    if (projectedTransform == null) throw new Error('Expected an authored Transform projection.');
-    const presentation = await projectCanvasNodePresentationTruth({
-      node: projectedTransform,
-      nodes: [orders, outbox, projectedTransform],
-      edges: replacement.draftSession.workingSet.visibleEdges,
-    });
-
-    expect(presentation.columns.visible.map((column) => column.name)).toEqual(
-      outboxColumns.map((column) => column.name)
-    );
-    expect(presentation.columns.visible.every((column) => column.sourceNodeId === outbox.id)).toBe(
-      true
-    );
-  });
+  );
 });

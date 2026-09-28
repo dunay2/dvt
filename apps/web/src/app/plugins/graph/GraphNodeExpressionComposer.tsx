@@ -14,7 +14,7 @@ import type {
   GraphNodeColumnFunctionApplyResult,
 } from './graphNodeColumnContracts';
 import type { GraphNodeColumnCopy } from './GraphNodeColumnPiece';
-import { graphNodeColumnClasses } from './graphVisualTokens';
+import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 
 type Rejection = Extract<GraphNodeColumnFunctionApplyResult, { outcome: 'rejected' }>['reason'];
 
@@ -69,7 +69,9 @@ export function GraphNodeExpressionComposer(props: {
   resolveCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
   unavailableAliases: readonly string[];
   copy: GraphNodeColumnCopy;
-  onApply: (identity: GraphNodeColumnFunctionApplyIdentity) => GraphNodeColumnFunctionApplyResult;
+  onApply: (
+    identity: GraphNodeColumnFunctionApplyIdentity
+  ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>;
   onApplied?: (createdFieldId: string) => void;
   onCancel: () => void;
 }): ReactElement {
@@ -117,8 +119,8 @@ export function GraphNodeExpressionComposer(props: {
             save: props.copy.columnFunctionAliasSubmitLabel,
           }}
           onCancel={props.onCancel}
-          onSubmit={(request) => {
-            const result = props.onApply({
+          onSubmit={async (request) => {
+            const result = await props.onApply({
               ...request,
               nodeId: props.nodeId,
               columnId: props.columnId,

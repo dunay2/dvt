@@ -9,6 +9,7 @@ import type { GraphNodeAlgebraicDrop } from '../graph/GraphNodeAlgebraicDropZone
 import type {
   GraphNodeCalculatedColumnIdentity,
   GraphNodeColumn,
+  GraphNodeInputMapping,
   GraphNodeColumnFunctionApplyIdentity,
   GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnOutputToggleIdentity,
@@ -105,15 +106,16 @@ export type GraphNodeRendererData = Readonly<{
   onFilterByTag?: (tag: string) => void;
   getTagFilterLabel?: (tag: string) => string;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
+  onMapCanvasInput?: (identity: GraphNodeInputMapping) => void;
   onApplyCanvasColumnFunction?: (
     identity: GraphNodeColumnFunctionApplyIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>;
   onApplyCanvasStructuredField?: (
     identity: GraphNodeStructuredFieldIdentity
   ) => GraphNodeColumnFunctionApplyResult;
   onAddCanvasCalculatedColumn?: (
     identity: GraphNodeCalculatedColumnIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>;
   onToggleCanvasColumnOutput?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onReorderCanvasColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;

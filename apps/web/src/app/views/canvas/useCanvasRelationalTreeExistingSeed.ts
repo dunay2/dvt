@@ -7,8 +7,7 @@ import {
 } from './canvasRelationalTreeExistingDraft';
 import type { CanvasRelationalTreeProjection } from './canvasRelationalTreeProjection';
 
-export type CanvasRelationalTreeSeedHydration = CanvasRelationalTreeExistingDraft &
-  Readonly<{ appendInputId: string | null }>;
+export type CanvasRelationalTreeSeedHydration = CanvasRelationalTreeExistingDraft;
 
 export function useCanvasRelationalTreeExistingSeed(
   args: Readonly<{
@@ -26,7 +25,7 @@ export function useCanvasRelationalTreeExistingSeed(
   const hydrateExisting = useCallback((): boolean => {
     if (seed == null) return false;
     setBaselineDraft(seed.draft);
-    onHydrate({ ...seed, appendInputId: null });
+    onHydrate(seed);
     return true;
   }, [onHydrate, seed]);
   return { hydrateExisting, baselineDraft, seed };

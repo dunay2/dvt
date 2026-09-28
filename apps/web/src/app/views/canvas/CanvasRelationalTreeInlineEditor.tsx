@@ -17,11 +17,12 @@ type InlineEditorProps = Omit<CanvasRelationalTreeOperationEditorProps, 'cross' 
   operation: CanvasRelationalOperation | null;
   expanded: boolean;
   onClose: () => void;
+  reservedAliases?: readonly string[];
 };
 export function CanvasRelationalTreeInlineEditor(
   props: Readonly<InlineEditorProps>
 ): JSX.Element | null {
-  const { appendInput, joinDraft, operation, selectedRelationId } = props;
+  const { joinDraft, operation, selectedRelationId } = props;
   const [setCompositionPending, setSelectionPending] = usePendingRelationEdits(
     props.onPendingConditionChange
   );
@@ -31,9 +32,10 @@ export function CanvasRelationalTreeInlineEditor(
   const selectedJoin = selected?.case === 'join' ? selected.value : null;
   const selectedCross = selected?.case === 'cross';
   const selectedSet = selected?.case === 'set';
+  const selectedUnary = !selectedJoin && !selectedCross && !selectedSet;
   return (
     <>
-      {!selectedJoin && appendInput == null && props.expanded ? (
+      {selectedUnary && props.expanded ? (
         <CanvasRelationalTreeSelectedOperatorEditor
           draft={joinDraft}
           operation={operation}
@@ -42,19 +44,17 @@ export function CanvasRelationalTreeInlineEditor(
           onChange={props.onChangeJoinDraft}
           onClose={props.onClose}
           onPendingConditionChange={setSelectionPending}
+          reservedAliases={props.reservedAliases}
         />
       ) : null}
       <CanvasRelationalTreeEditorFrame
         operation={selectedJoin == null ? operation : canvasJoinOperationForType(selectedJoin.type)}
         relationId={selectedRelationId}
-        hasExpression={selectedJoin != null && appendInput == null}
-        hidden={
-          appendInput == null &&
-          ((!selectedJoin && !selectedCross && !selectedSet) || !props.expanded)
-        }
+        hasExpression={selectedJoin != null}
+        hidden={selectedUnary || !props.expanded}
         onClose={props.onClose}
         output={
-          selectedRelationId == null || appendInput != null ? null : (
+          selectedRelationId == null ? null : (
             <CanvasRelationOutputs
               key={selectedRelationId}
               relationId={selectedRelationId}

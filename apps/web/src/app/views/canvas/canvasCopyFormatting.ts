@@ -138,6 +138,8 @@ export function formatCanvasInspectorNodeDraftError(
       return copy.inspectorErrorDvtMaterializationInvalid;
     case 'dvt_write_mode_invalid':
       return copy.inspectorErrorDvtWriteModeInvalid;
+    case 'dvt_relational_authoring_draft_invalid':
+      return copy.inspectorErrorDvtVisualRecipeInvalid;
     case 'object_file_storage_uri_invalid':
       return copy.inspectorErrorObjectFileStorageUriInvalid;
     case 'object_file_sha256_invalid':

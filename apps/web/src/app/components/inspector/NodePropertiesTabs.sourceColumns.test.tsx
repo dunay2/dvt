@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { NodePropertiesTabs } from './NodePropertiesTabs';
-import type { NodePropertiesReadModel } from './nodePropertiesReadModel';
+import type { NodePropertiesReadModel } from './nodePropertiesContracts';
 
 const sourceNode: CanonicalNode = {
   id: 'src-orders',
@@ -94,9 +94,9 @@ describe('NodePropertiesTabs Source Columns presentation', () => {
 
     expect(container.querySelector('[data-slot="canvas-source-columns"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="node-property-column-disclosure"]')).toBeNull();
-    expect(container.querySelector('[data-slot="node-inspector-tab-columns"]')?.textContent).toContain(
-      '2'
-    );
+    expect(
+      container.querySelector('[data-slot="node-inspector-tab-columns"]')?.textContent
+    ).toContain('2');
   });
 
   it('preserves the shared accordion presentation for non-Source workbench columns', () => {

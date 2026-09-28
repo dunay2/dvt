@@ -16,10 +16,12 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtInputBindings.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.shared.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v2.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtPostgresOutputSchema.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtRelationalAuthoringDraft.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitAuthoringIdentity.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts`
@@ -28,6 +30,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitFieldBindingHierarchy.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanBinary.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanFieldPolicy.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProducerReference.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProductNeeds.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts`

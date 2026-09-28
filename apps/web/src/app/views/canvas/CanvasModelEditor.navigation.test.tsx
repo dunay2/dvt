@@ -17,6 +17,8 @@ import {
   openOperationMenu,
   setupOperationMenuDom,
 } from './operation-menu/operationMenu.test-support';
+import { connectWorkbenchOutput } from './CanvasRelationalTreeWorkbench.gestures.test-support';
+import { dragSourceTo } from './CanvasRelationalTreeWorkbench.test-support';
 
 setupOperationMenuDom();
 
@@ -80,13 +82,10 @@ function Editor(props: {
   return (
     <CanvasModelEditor
       canvasId="canvas-1"
-      canvasName="Canvas 1"
       transformNode={model}
       nodes={[source, model]}
       edges={edges}
       authoring={props.authoring}
-      initialView="editor"
-      viewRequestId={0}
       draftStatus={props.draftStatus ?? durableStatus}
       preparePreview={props.preparePreview}
       onClose={props.onClose ?? vi.fn()}
@@ -97,15 +96,37 @@ function Editor(props: {
 }
 
 async function beginProjection(container: HTMLElement): Promise<void> {
-  await act(async () => {
-    container
-      .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-source"]')!
-      .click();
-  });
+  await act(async () =>
+    dragSourceTo(
+      container.querySelector<HTMLElement>('[data-slot="canvas-relational-tree-source"]')!,
+      container.querySelector<HTMLElement>(
+        '[data-slot="canvas-relational-tree-draft-viewport"], [data-slot="canvas-relational-tree-viewport"]'
+      )!
+    )
+  );
   openOperationMenu(container);
   await act(async () => {
     document.querySelector<HTMLElement>('[data-slot="dvt-select-operation-projection"]')!.click();
   });
+  const projection = Array.from(
+    container.querySelectorAll<HTMLElement>('[data-pending-operation="true"]')
+  ).find((card) => card.querySelector('[data-operator="project"]') != null)!;
+  const producer = Array.from(
+    container.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-output-port"]')
+  ).find(
+    (port) =>
+      port.parentElement?.querySelector('[data-pending="true"][data-operator="read"]') != null
+  )!;
+  await act(async () =>
+    dragSourceTo(
+      producer,
+      projection.querySelector<HTMLElement>('[data-slot="canvas-relational-input-port"]')!
+    )
+  );
+  await connectWorkbenchOutput(
+    container,
+    projection.querySelector<HTMLElement>('[data-slot="canvas-relational-output-port"]')!
+  );
 }
 
 function findButton(label: string): HTMLButtonElement {
@@ -158,7 +179,7 @@ describe('CanvasModelEditor navigation', () => {
     });
     await beginProjection(container);
 
-    act(() => findButton('SQL').click());
+    act(() => useCanvasWorkspaceMenuContributionStore.getState().modelTab?.onClose());
     const applyAndContinue = findButton('Apply and continue');
     applyAndContinue.focus();
     await act(async () => applyAndContinue.click());
@@ -166,30 +187,46 @@ describe('CanvasModelEditor navigation', () => {
     expect(onApplyNodeDraft).toHaveBeenCalledOnce();
     expect(document.activeElement).toBe(applyAndContinue);
     expect(document.querySelector('[role="alert"]')?.textContent).toContain('no longer available');
-    expect(container.querySelector('[data-view="editor"]')?.getAttribute('aria-selected')).toBe(
-      'true'
-    );
+    expect(container.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-relational-tree-apply"]')).not.toBeNull();
   });
 
   it('continues once for a legitimate no-change result despite a rapid double interaction', async () => {
     const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' }) as const);
+    const onClose = vi.fn();
     await act(async () => {
-      root.render(<Editor authoring={{ canEditNode: true, onApplyNodeDraft }} />);
+      root.render(<Editor onClose={onClose} authoring={{ canEditNode: true, onApplyNodeDraft }} />);
     });
     await beginProjection(container);
 
-    act(() => findButton('SQL').click());
+    act(() => useCanvasWorkspaceMenuContributionStore.getState().modelTab?.onClose());
     const applyAndContinue = findButton('Apply and continue');
     await act(async () => {
       applyAndContinue.click();
       applyAndContinue.click();
       await Promise.resolve();
+      await Promise.resolve();
     });
 
     expect(onApplyNodeDraft).toHaveBeenCalledOnce();
-    expect(findButton('SQL').getAttribute('aria-selected')).toBe('true');
+    expect(onClose).toHaveBeenCalledOnce();
     expect(document.querySelector('[role="alertdialog"]')).toBeNull();
+  });
+
+  it('keeps only draft actions in the session toolbar during an unapplied composition', async () => {
+    const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' }) as const);
+    await act(async () =>
+      root.render(<Editor authoring={{ canEditNode: true, onApplyNodeDraft }} />)
+    );
+    await beginProjection(container);
+    const card = container.querySelector('[data-operator="project"]');
+    const toolbar = container.querySelector('[data-slot="canvas-model-toolbar"]')!;
+    expect(toolbar.querySelectorAll('button')).toHaveLength(2);
+    expect(toolbar.querySelector('[data-slot="canvas-relational-tree-apply"]')).not.toBeNull();
+    expect(toolbar.querySelector('[data-slot="canvas-relational-tree-cancel"]')).not.toBeNull();
+    expect(container.querySelector('[data-operator="project"]')).toBe(card);
+    expect(document.querySelector('[role="alertdialog"]')).toBeNull();
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });
 
   it('offers Stay or Discard before replacing a Model with unapplied work', async () => {

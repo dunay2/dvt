@@ -5,8 +5,30 @@ import { source } from './canvasRelationalOperator.test-support';
 import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetch';
 import { composeSourceRelation } from './canvasComposeSourceRelation';
 import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
+import { createPendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
+import { createSourceDocument } from './canvasSourceDocument';
 
 describe('compose source occurrence with a transformed result', () => {
+  it('retains unbound catalogue fields without guessing types or losing physical identity', () => {
+    const input = {
+      ...source('orders'),
+      fields: [
+        { name: 'id', dataType: 'integer', joinDataType: null },
+        { name: 'amount', dataType: 'numeric', joinDataType: null },
+        { name: 'label', dataType: 'text', joinDataType: 'string' as const },
+      ],
+    };
+    const { read } = createPendingSourceOccurrence(input);
+    const schemas = deriveSubstraitSchemas(createSourceDocument([read], read));
+    expect(
+      schemas.schemas.get(read.binding.relationId)?.map((field) => field.type.kind.case)
+    ).toEqual(['unbound', 'unbound', 'string']);
+    expect(read.binding.sourceRef).toEqual(input.sourceRef);
+    expect(read.fields.map((field) => field.displayName)).toEqual(
+      input.fields.map((field) => field.name)
+    );
+    expect(new Set(read.fields.map((field) => field.fieldId)).size).toBe(input.fields.length);
+  });
   it.each(['inner_join', 'cross_join', 'union_all', 'except_all'] as const)(
     'composes %s without rebuilding its operand',
     async (operation) => {
@@ -86,5 +108,41 @@ describe('compose source occurrence with a transformed result', () => {
     ).rejects.toThrow();
     expect(await session.query(session.rootId)).toEqual(before);
     expect(session.revision).toBe(before.revision);
+  });
+  it('consumes a pending Read once, retaining its field identity and leaving its draft unchanged', async () => {
+    const { session } = selectedUnaryScenario();
+    const input = {
+      ...source('other'),
+      fields: [{ name: 'value', dataType: 'string', joinDataType: 'string' as const }],
+    };
+    const { read } = createPendingSourceOccurrence(input);
+    const before = structuredClone(read);
+    const request = {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      input,
+      occurrence: read,
+      operation: 'cross_join' as const,
+    };
+    const document = await composeSourceRelation(session, request);
+    const connected = deriveSubstraitSchemas(document).index.relations.get(
+      read.binding.relationId
+    )!;
+    expect(connected.fields.map((field) => field.fieldId)).toEqual(
+      read.fields.map((field) => field.fieldId)
+    );
+    expect(connected.binding.displayName).toBe(read.binding.displayName);
+    expect(connected.consumers).toHaveLength(1);
+    expect(read).toEqual(before);
+    const revision = session.revision;
+    await expect(composeSourceRelation(session, request)).rejects.toThrow();
+    await expect(
+      composeSourceRelation(session, {
+        ...request,
+        relationId: session.rootId,
+        expectedRevision: revision,
+      })
+    ).rejects.toThrow();
+    expect(session.revision).toBe(revision);
   });
 });

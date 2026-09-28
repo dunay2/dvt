@@ -1,7 +1,8 @@
 /** Adapt non-semantic plugin metadata without interpreting Substrait. */
 import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanonicalNode } from '../../types/canonical';
+import type { CanvasInputBindingEdge } from './canvasInputBindings';
 import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
 import {
   isObjectFilePostgresNode,
@@ -12,7 +13,7 @@ import { canvasColumnTruth } from './canvasPresentationColumns';
 export type CanvasPresentationQuery = Readonly<{
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
-  edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
+  edges: readonly CanvasInputBindingEdge[];
 }>;
 
 export function canvasNodePresentationBase(

@@ -17,6 +17,7 @@ const fallbackOperations = {
   cross: 'cross_join',
   set: 'unsupported',
   aggregate: 'aggregate',
+  window: 'window',
   sort: 'sort',
   fetch: 'fetch',
   unsupported: 'unsupported',

@@ -12,7 +12,7 @@ export function useRelationalViewportPan() {
     if (!event.currentTarget.contains(event.target as Node) || origin.current != null) return;
     suppressClick.current = false;
     const control = (event.target as Element).closest(
-      'button, input, select, textarea, summary, a, [contenteditable="true"]'
+      'button, [role="button"], input, select, textarea, summary, a, [contenteditable="true"]'
     );
     if (
       (event.button !== 0 && event.button !== 1) ||

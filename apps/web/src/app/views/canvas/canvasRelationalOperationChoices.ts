@@ -128,3 +128,17 @@ export function resolveCanvasRelationalProjectionChoice(
       : 'semantically-unavailable';
   return { operation: 'projection', availability, selectable: availability === 'available' };
 }
+
+export function resolveCanvasRelationalStagedOperationChoices(
+  readOnly: boolean
+): readonly CanvasRelationalOperationChoice[] {
+  return resolveCanvasRelationalOperationChoices({
+    readOnly,
+    inputCount: 0,
+    sameConnection: true,
+    completeSchema: true,
+    comparableFields: true,
+    predicateAvailable: false,
+    sets: {},
+  });
+}

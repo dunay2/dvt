@@ -52,19 +52,83 @@ describe('useCanvasInspectorCommands', () => {
     container.remove();
   });
 
-  function Harness(): null {
+  function Harness({
+    canEditNode = true,
+    node = model,
+  }: {
+    canEditNode?: boolean;
+    node?: CanonicalNode;
+  }): null {
     const [session, setSession, runDraftSessionCommand] = useCanvasWorkspaceDraftSession(
       'tenant-1::project-1::dev'
     );
     const commands = useCanvasInspectorCommands({
-      canonicalNodesById: new Map([[model.id, model]]),
-      inspectorNode: model,
+      canonicalNodesById: new Map([[node.id, node]]),
+      inspectorNode: node,
       runDraftSessionCommand,
       workspaceScope,
+      canEditNode,
     });
     latest = { session, setSession, commands };
     return null;
   }
+
+  it('changes only materialization on the current node and rejects unsupported values', () => {
+    act(() => root.render(<Harness />));
+    act(() =>
+      latest!.setSession(
+        canvasDraftSession.machine.bootstrap({
+          remoteDraft: null,
+          canonicalNodeIds: [model.id],
+          canonicalEdges: [],
+        })
+      )
+    );
+    act(() => {
+      latest!.commands.applyNodeDraft(model.id, {
+        ...createCanvasInspectorNodeDraft(model),
+        name: 'Current model name',
+      });
+      expect(latest!.commands.setNodeMaterialization(model.id, 'table').outcome).toBe('applied');
+    });
+    const current = latest!.session.localNodeCatalog![model.id]!;
+    expect(current.name).toBe('Current model name');
+    expect(current.metadata?.config).toMatchObject({ materialized: 'table' });
+    expect(current.metadata?.transformAuthoring).toBeUndefined();
+    expect(latest!.commands.setNodeMaterialization(model.id, 'table').outcome).toBe('no_changes');
+    const baseline = latest!.session;
+    expect(latest!.commands.setNodeMaterialization(model.id, 'incremental').outcome).toBe(
+      'rejected'
+    );
+    expect(latest!.commands.setNodeMaterialization('missing', 'view').outcome).toBe('rejected');
+    expect(latest!.session).toBe(baseline);
+  });
+
+  it('does not change materialization in read-only posture', () => {
+    act(() => root.render(<Harness canEditNode={false} />));
+    const baseline = latest!.session;
+    expect(latest!.commands.setNodeMaterialization(model.id, 'table').outcome).toBe('rejected');
+    expect(latest!.session).toBe(baseline);
+  });
+
+  it.each([{ authority: 'dbt-project-files' }, { dbt: {} }])(
+    'rejects file-owned/compatible model mutation: %o',
+    (metadata) => {
+      act(() => root.render(<Harness node={{ ...model, metadata }} />));
+      act(() =>
+        latest!.setSession(
+          canvasDraftSession.machine.bootstrap({
+            remoteDraft: null,
+            canonicalNodeIds: [model.id],
+            canonicalEdges: [],
+          })
+        )
+      );
+      const baseline = latest!.session;
+      expect(latest!.commands.setNodeMaterialization(model.id, 'table').outcome).toBe('rejected');
+      expect(latest!.session).toBe(baseline);
+    }
+  );
 
   it('commits applied once and reports no-change and unavailable-node outcomes without mutation', () => {
     act(() => root.render(<Harness />));

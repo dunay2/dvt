@@ -4,7 +4,6 @@ import type { CanonicalNode } from '../../types/canonical';
 import { buildDuplicateNodeCommand } from './canvasDuplicateNodeCommand';
 import { encodeDvtSubstraitStructuredFieldDocument } from './canvasDvtSubstraitStructuredField';
 import { composeDvtSubstraitProjectionFields } from './canvasDvtSubstraitStructuredFieldMutation';
-import { rebaseStaleTransformProjection } from './canvasTransformSourceReplacement';
 import { applyCanvasCalculatedColumn } from './canvasCalculatedColumnAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
@@ -111,9 +110,9 @@ function projectionTransform(
 }
 
 describe('Canvas calculated column authoring', () => {
-  it('rejects calculated output authoring on Source without mutating physical identity', () => {
+  it('rejects calculated output authoring on Source without mutating physical identity', async () => {
     const initial = session(source);
-    const result = applyCanvasCalculatedColumn({
+    const result = await applyCanvasCalculatedColumn({
       draftSession: initial,
       canonicalNodesById: new Map([[source.id, source]]),
       request: { nodeId: source.id, kind: 'string-literal', alias: 'channel', value: 'web' },
@@ -124,7 +123,7 @@ describe('Canvas calculated column authoring', () => {
     expect(source.metadata).not.toHaveProperty('transformAuthoring');
   });
 
-  it('appends an admitted scalar function to an existing projection Transform', () => {
+  it('appends an admitted scalar function to an existing projection Transform', async () => {
     const transform = projectionTransform();
     const trim = resolveDvtSubstraitColumnFunctions({
       dataType: 'text',
@@ -134,7 +133,7 @@ describe('Canvas calculated column authoring', () => {
     const initial = session(source, transform);
     initial.workingSet.visibleEdges.push({ sourceId: source.id, targetId: transform.id });
 
-    const result = applyCanvasCalculatedColumn({
+    const result = await applyCanvasCalculatedColumn({
       draftSession: initial,
       canonicalNodesById: new Map([
         [source.id, source],
@@ -163,12 +162,12 @@ describe('Canvas calculated column authoring', () => {
     expect(created?.fieldId).not.toContain('customer_clean');
   });
 
-  it('adds a direct alias with a fresh FieldId and preserves its source mapping on reread', () => {
+  it('adds a direct alias with a fresh FieldId and preserves its source mapping on reread', async () => {
     const transform = projectionTransform();
     const initial = session(source, transform);
     initial.workingSet.visibleEdges.push({ sourceId: source.id, targetId: transform.id });
 
-    const result = applyCanvasCalculatedColumn({
+    const result = await applyCanvasCalculatedColumn({
       draftSession: initial,
       canonicalNodesById: new Map([
         [source.id, source],
@@ -203,7 +202,7 @@ describe('Canvas calculated column authoring', () => {
     expect(result.createdFieldId).toBe(created?.fieldId);
   });
 
-  it('creates a direct alias from an upstream input that is not already an output', () => {
+  it('creates a direct alias from an upstream input that is not already an output', async () => {
     const transform = projectionTransform([
       { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
     ]);
@@ -214,7 +213,7 @@ describe('Canvas calculated column authoring', () => {
     const initial = session(source, transform);
     initial.workingSet.visibleEdges.push({ sourceId: source.id, targetId: transform.id });
 
-    const result = applyCanvasCalculatedColumn({
+    const result = await applyCanvasCalculatedColumn({
       draftSession: initial,
       canonicalNodesById: new Map([
         [source.id, source],
@@ -238,7 +237,7 @@ describe('Canvas calculated column authoring', () => {
     ]);
   });
 
-  it('applies an admitted function to an upstream input that is not already an output', () => {
+  it('applies an admitted function to an upstream input that is not already an output', async () => {
     const transform = projectionTransform([
       { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
     ]);
@@ -256,7 +255,7 @@ describe('Canvas calculated column authoring', () => {
     const initial = session(source, transform);
     initial.workingSet.visibleEdges.push({ sourceId: source.id, targetId: transform.id });
 
-    const result = applyCanvasCalculatedColumn({
+    const result = await applyCanvasCalculatedColumn({
       draftSession: initial,
       canonicalNodesById: new Map([
         [source.id, source],
@@ -281,10 +280,10 @@ describe('Canvas calculated column authoring', () => {
     });
   });
 
-  it('rejects a direct alias for an unknown FieldId without mutating the Transform', () => {
+  it('rejects a direct alias for an unknown FieldId without mutating the Transform', async () => {
     const transform = projectionTransform();
     const initial = session(source, transform);
-    const result = applyCanvasCalculatedColumn({
+    const result = await applyCanvasCalculatedColumn({
       draftSession: initial,
       canonicalNodesById: new Map([
         [source.id, source],
@@ -303,7 +302,7 @@ describe('Canvas calculated column authoring', () => {
     expect(inspect(transform).outputs).toHaveLength(2);
   });
 
-  it('chains derived outputs by FieldId and rejects mutable names as identities', () => {
+  it('chains derived outputs by FieldId and rejects mutable names as identities', async () => {
     const transform = projectionTransform();
     const functions = resolveDvtSubstraitColumnFunctions({
       dataType: 'text',
@@ -319,7 +318,7 @@ describe('Canvas calculated column authoring', () => {
       [transform.id, transform],
     ]);
 
-    const first = applyCanvasCalculatedColumn({
+    const first = await applyCanvasCalculatedColumn({
       draftSession: initial,
       canonicalNodesById,
       request: {
@@ -334,7 +333,7 @@ describe('Canvas calculated column authoring', () => {
     if (first.outcome !== 'applied') return;
 
     expect(
-      applyCanvasCalculatedColumn({
+      await applyCanvasCalculatedColumn({
         draftSession: first.draftSession,
         canonicalNodesById,
         request: {
@@ -347,7 +346,7 @@ describe('Canvas calculated column authoring', () => {
       })
     ).toEqual({ outcome: 'rejected', reason: 'invalid_reference' });
 
-    const second = applyCanvasCalculatedColumn({
+    const second = await applyCanvasCalculatedColumn({
       draftSession: first.draftSession,
       canonicalNodesById,
       request: {
@@ -372,51 +371,7 @@ describe('Canvas calculated column authoring', () => {
       'customer_normalized',
     ]);
   });
-  it('allocates opaque outputs when replacing a stale upstream source and preserves them on reread', () => {
-    const transform = projectionTransform();
-    const replacement: CanonicalNode = {
-      ...source,
-      id: 'replacement-source',
-      metadata: {
-        ...source.metadata,
-        tableName: 'new_orders',
-        connectedSourceRef: {
-          schemaVersion: 'connected-source-ref.v1',
-          connectionRef: {
-            schemaVersion: 'connection-ref.v1',
-            connectionId: 'postgres-main',
-            provider: 'postgres',
-          },
-          sourceObjectId: 'raw.new_orders',
-        },
-      },
-    };
-    const initial = session(replacement, transform);
-    initial.workingSet.visibleEdges.push({ sourceId: replacement.id, targetId: transform.id });
-    const canonicalNodesById = new Map([
-      [replacement.id, replacement],
-      [transform.id, transform],
-    ]);
-    const rebased = rebaseStaleTransformProjection({
-      draftSession: initial,
-      canonicalNodesById,
-      targetNodeId: transform.id,
-    });
-    const updated = rebased.localNodeCatalog?.[transform.id];
-    if (updated == null) throw new Error('Expected updated projection.');
-    const outputs = inspect(updated).outputs;
-    expect(outputs).toHaveLength(2);
-    outputs.forEach((output) => expect(output.fieldId).toMatch(OPAQUE_FIELD_ID));
-    expect(new Set(outputs.map((output) => output.fieldId)).size).toBe(2);
-    expect(
-      rebaseStaleTransformProjection({
-        draftSession: rebased,
-        canonicalNodesById,
-        targetNodeId: transform.id,
-      })
-    ).toBe(rebased);
-  });
-  it('duplicates structured semantic objects with fresh identities and intact internal references', () => {
+  it('duplicates structured semantic objects with fresh identities and intact internal references', async () => {
     const transform = projectionTransform();
     const authority = readDvtTransformAuthoringAuthority(transform)!;
     const structured = composeDvtSubstraitProjectionFields(
@@ -460,12 +415,12 @@ describe('Canvas calculated column authoring', () => {
       before.sidecar.relations.map((relation) => relation.sourceRef)
     );
   });
-  it('keeps duplicate-alias validation on Transform after removing Source authoring', () => {
+  it('keeps duplicate-alias validation on Transform after removing Source authoring', async () => {
     const transform = projectionTransform();
     const initial = session(source, transform);
     initial.workingSet.visibleEdges.push({ sourceId: source.id, targetId: transform.id });
 
-    const result = applyCanvasCalculatedColumn({
+    const result = await applyCanvasCalculatedColumn({
       draftSession: initial,
       canonicalNodesById: new Map([
         [source.id, source],
@@ -478,9 +433,9 @@ describe('Canvas calculated column authoring', () => {
     expect(initial.localNodeCatalog?.[transform.id]).toBe(transform);
   });
 
-  it('rejects timestamp and row-number calculated fields on Source', () => {
+  it('rejects timestamp and row-number calculated fields on Source', async () => {
     const initial = session(source);
-    const timestamp = applyCanvasCalculatedColumn({
+    const timestamp = await applyCanvasCalculatedColumn({
       draftSession: initial,
       canonicalNodesById: new Map([[source.id, source]]),
       request: {
@@ -490,7 +445,7 @@ describe('Canvas calculated column authoring', () => {
         value: '2026-09-02T12:30:00Z',
       },
     });
-    const rowNumber = applyCanvasCalculatedColumn({
+    const rowNumber = await applyCanvasCalculatedColumn({
       draftSession: initial,
       canonicalNodesById: new Map([[source.id, source]]),
       request: {
@@ -506,7 +461,7 @@ describe('Canvas calculated column authoring', () => {
     expect(initial.localNodeCatalog?.[source.id]).toBe(source);
   });
 
-  it('rejects policy-invalid aliases and literals without mutating the Transform', () => {
+  it('rejects policy-invalid aliases and literals without mutating the Transform', async () => {
     const transform = projectionTransform();
     const initial = session(source, transform);
     initial.workingSet.visibleEdges.push({ sourceId: source.id, targetId: transform.id });
@@ -536,7 +491,7 @@ describe('Canvas calculated column authoring', () => {
       ],
     ] as const) {
       expect(
-        applyCanvasCalculatedColumn({
+        await applyCanvasCalculatedColumn({
           draftSession: initial,
           canonicalNodesById: context,
           request,

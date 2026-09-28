@@ -243,6 +243,111 @@ flowchart TD
   ImportSnapshot --> Canvas
 ```
 
+## Producer Input And Published Output Boundary
+
+The Canvas model card has two read models, not two transformation editors.
+`Input` receives bindings from connected producers. `Output` passively publishes
+the fields defined by explicit operations inside the model. Connecting another
+producer cannot select outputs, restore excluded fields, copy producer operations
+or invent a JOIN/Transform.
+
+```mermaid
+flowchart LR
+    Producer[Producer published output] --> Input[Consumer input bindings]
+    Input --> Operations[Explicit operations inside the model]
+    Operations --> Output[Passive consumer output]
+    Output --> Next[Next consumer input]
+```
+
+Previously, external field gestures reused output selection and a single-source
+projection writer. Retire that path; moving the same mutation behind an Input
+label would retain the ownership error.
+
+- `CreateCanvasEdge` admits producer dependencies; `ConfigureCanvasDvtNode`
+  owns input bindings and explicit semantic edits in the Canvas authoring
+  aggregate, through the existing draft command/CAS ports.
+- `ProjectGraphNodeCardReadModel` projects Input-only target ports and
+  Output-only source ports. Output has no selection, mapping, reorder or
+  expression-authoring controls. Those operations stay in the semantic editor.
+- `ProjectCanvasRelationalTree` consumes the same producer identities. Input
+  availability does not imply participation in an executable relation.
+- `SaveWorkspaceGraphDraft` preserves incomplete authoring; preview readiness
+  remains distinct from draft persistence.
+
+Adapters are the card transfer/connection handlers and semantic editor. Scope
+is the active editable workspace draft and authorized direct dependencies.
+Negative tests reject foreign producers, unavailable/excluded fields, Output
+drop targets, read-only writes and stale commands. Regression tests prove second
+producer admission, unchanged operations/outputs, stable identities and reload.
+
+Input field wiring is identity/provenance on the existing dependency edge:
+stable consumer input slot identity and published producer field identity. It
+contains no expression, type system, selection flag or relational operation.
+Whole-producer attachment and individual field mapping are distinct intents.
+The existing graph draft persists these bindings; no second store or semantic
+IR is introduced. Unconsumed producers remain pending until explicit semantic
+composition. Missing producer fields remain unresolved, never matched by name.
+
+Partial physical inputs require an explicit Transform before relational
+composition. The selected Transform preserves the complete physical Read schema
+and projects the mapped Input fields through the already admitted Project
+operator. JOIN, CROSS and SET creation/append reject partial raw inputs until
+that projection exists; they do not add hidden Projects. In particular, emitting
+selected columns only after DISTINCT/INTERSECT/EXCEPT is not equivalent to
+projecting each input first and must not be used as a shortcut. Negative tests
+cover this prerequisite, unchanged physical schemas and producer identity.
+
+### Staged operation connection boundary
+
+Dropping a palette item stages one movable operation card in the discardable
+editor session; it does not select an arbitrary relation and does not mutate the
+canonical document. Every operation exposes the Input ports required by its
+algebraic arity. Any known producer can connect directly to any compatible free
+Input, in any order, provided that instance has no other consumer. A self-join
+requires two distinct source instances with their own aliases, not one instance
+wired to both ports. Left and right ports retain their algebraic meaning, but no
+prior card selection or hidden gesture sequence assigns their producers. A
+typed producer-to-Input connection supplies the exact relation target.
+Configuration is completed in the fixed inspector before the existing
+`ConfigureCanvasDvtNode` command admits the change.
+
+```mermaid
+flowchart LR
+  Palette[Admitted operation palette] -->|stage| Pending[Pending operation card]
+  Producer[Producer relation output] -->|typed Input connection| Pending
+  Pending -->|complete configuration| Command[ConfigureCanvasDvtNode]
+  Command --> Canonical[Canonical Substrait tree]
+  Canonical --> Projection[ProjectCanvasRelationalTree]
+```
+
+Pending cards, their incomplete connections and their positions are local
+authoring presentation state. Cancel removes them without a semantic write.
+After admission, pending lines are discarded and the tree is rendered only from
+the canonical projection. Occupied-port replacement, cycles, incompatible
+arity, producer fan-out and read-only mutation fail closed. The terminal Model
+Output accepts one operation output, never a direct source/input card, and
+remains a passive publication boundary. Existing direct source-to-Output wires
+remain visible and removable; disconnecting preserves both cards and frees the
+producer without inserting an operation. This authoring admission change does
+not rewrite saved drafts or alter outer Canvas dependency rules. The old
+operation-drop behavior that mutated whichever relation happened to be selected
+is retired rather than kept as a fallback.
+
+The connection command counts canonical tree consumers, staged operation ports
+and the terminal Output together; separate handlers must not admit a second
+consumer. Negative tests cover fan-out across operations and Output, reuse of
+one instance on both JOIN ports, direct source-to-Output admission and occupied
+ports. Disconnect/reconnect and two aliased instances remain positive cases.
+
+```mermaid
+flowchart LR
+  A[Source instance A] -->|one consumer| J[JOIN Input L]
+  B[Source instance B] -->|one consumer| K[JOIN Input R]
+  J --> O[JOIN operation output]
+  K --> O
+  O -->|one consumer| T[Passive model Output]
+```
+
 ## Exhaustiveness Rule
 
 Every externally observable Canvas workbench behavior must map to one rail in

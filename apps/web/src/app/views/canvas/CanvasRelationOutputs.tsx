@@ -37,6 +37,7 @@ export function CanvasRelationOutputs({
   const model = useRelationOutputs(relationId);
   const command = useRelationCommand(relationId, onChange);
   const [localNames, setLocalNames] = useState<Readonly<Record<string, string>>>({});
+  const [rowOrder, setRowOrder] = useState<readonly number[] | null>(null);
   const drafts = names ?? {
     values: localNames,
     onChange: (id: string, value: string) =>
@@ -60,8 +61,15 @@ export function CanvasRelationOutputs({
     .sort((a, b) => a.output!.outputOrdinal - b.output!.outputOrdinal);
   const outputs = selected.map((field) => ({ slot: field.slot, alias: field.name }));
   const outputIds = selected.map((field) => field.output!.fieldId);
+  const rows = [...selected, ...(model?.slots ?? []).filter((field) => field.output == null)];
+  if (rowOrder != null)
+    rows.sort(
+      (a, b) =>
+        (rowOrder.indexOf(a.slot) < 0 ? Infinity : rowOrder.indexOf(a.slot)) -
+        (rowOrder.indexOf(b.slot) < 0 ? Infinity : rowOrder.indexOf(b.slot))
+    );
   const update = (next: typeof outputs) => {
-    if (!disabled && model != null && !model.physical)
+    if (!disabled && command.state !== 'busy' && model != null && !model.physical)
       void command.execute((session, request) =>
         changeSelectedRelationOutputs(session, { ...request, outputs: next })
       );
@@ -78,18 +86,19 @@ export function CanvasRelationOutputs({
       const targetIndex = outputIds.filter((id) => id !== movedId).indexOf(targetId);
       if (moved == null || targetIndex < 0) return;
       next.splice(targetIndex + (placement === 'after' ? 1 : 0), 0, moved);
+      setRowOrder([
+        ...next.map((field) => field.slot),
+        ...rows.filter((field) => field.output == null).map((field) => field.slot),
+      ]);
       update(next);
     },
   });
   if (model == null) return null;
   return (
     <section className="space-y-2" data-slot="canvas-relation-outputs">
-      {(orderingOnly
-        ? selected
-        : [...selected, ...model.slots.filter((field) => field.output == null)]
-      ).map((field) => {
+      {(orderingOnly ? selected : rows).map((field) => {
         const key = field.output?.fieldId ?? field.key;
-        const canReorder = field.output != null && reorder.canReorder;
+        const canReorder = field.output != null && !disabled && !model.physical;
         const name = field.output == null ? field.name : (drafts.values[key] ?? field.name);
         const error =
           name.trim().length === 0
@@ -102,13 +111,14 @@ export function CanvasRelationOutputs({
         return (
           <RelationOutputRow
             orderingOnly={orderingOnly}
-            key={key}
+            key={`${relationId}:${field.slot}`}
             field={field}
             copy={copy}
             name={name}
             error={error}
             onNameChange={(value) => drafts.onChange(key, value)}
-            disabled={disabled || model.physical || command.state === 'busy'}
+            disabled={disabled || model.physical}
+            busy={command.state === 'busy'}
             draggable={canReorder}
             dropPlacement={reorder.dropPlacement(key)}
             reorderLabel={editorCopy.reorderOutput}
@@ -127,13 +137,17 @@ export function CanvasRelationOutputs({
             onKeyDown={(event) => {
               if (event.target === event.currentTarget) reorder.moveWithKeyboard(key, event);
             }}
-            onInclude={(included) =>
+            onInclude={(included) => {
+              const order = rows.map((row) => row.slot);
+              setRowOrder(order);
               update(
                 included
-                  ? [...outputs, { slot: field.slot, alias: field.name }]
+                  ? [...outputs, { slot: field.slot, alias: field.name }].sort(
+                      (a, b) => order.indexOf(a.slot) - order.indexOf(b.slot)
+                    )
                   : outputs.filter((output) => output.slot !== field.slot)
-              )
-            }
+              );
+            }}
             onRename={(alias) => {
               if (
                 alias === field.name ||

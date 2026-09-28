@@ -1,23 +1,38 @@
 /** Owned concern: connected expression cards over the existing scalar projection. */
 import { useId, useState } from 'react';
-import { Braces, FunctionSquare, Hash, Minus, Plus, Maximize } from 'lucide-react';
+import { Braces, FunctionSquare, Hash } from 'lucide-react';
 import type { SemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewport';
+import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
+import { CanvasRelationalScalarGraphControls } from './CanvasRelationalScalarGraphControls';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 
-export function CanvasRelationalScalarGraph({
-  graph,
-  onSelectCondition,
-  selectedNodeId,
-  onSelectedNodeChange,
-}: Readonly<{
+type ScalarGraphProps = Readonly<{
   graph: SemanticWorkbenchGraph;
   onSelectCondition?: (index: number, operand?: 'left' | 'right') => void;
   selectedNodeId?: string;
   onSelectedNodeChange?: (nodeId: string) => void;
-}>): JSX.Element {
+}>;
+
+export function CanvasRelationalScalarGraph(props: ScalarGraphProps): JSX.Element {
+  return (
+    <RelationalLayoutSession isolated>
+      <ScalarGraphView {...props} />
+    </RelationalLayoutSession>
+  );
+}
+
+function ScalarGraphView({
+  graph,
+  onSelectCondition,
+  selectedNodeId,
+  onSelectedNodeChange,
+}: ScalarGraphProps): JSX.Element {
   const marker = useId();
   const [selected, setSelected] = useState<string | null>(null);
-  const viewport = useCanvasRelationalTreeViewport(graph.relationId, 8);
+  const copy = resolveCanvasViewCopy(useApplicationLanguageStore((state) => state.language));
+  const viewport = useCanvasRelationalTreeViewport(8);
   const byId = new Map(graph.nodes.map((node) => [node.id, node]));
   const width = Math.max(420, ...graph.nodes.map((node) => node.position.x + 230));
   const height = Math.max(100, ...graph.nodes.map((node) => node.position.y + 68));
@@ -119,33 +134,12 @@ export function CanvasRelationalScalarGraph({
           })}
         </div>
       </div>
-      <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded border border-(--border-subtle) bg-(--surface-panel) p-1">
-        <button
-          type="button"
-          aria-label="Alejar expresión"
-          className="grid size-7 place-items-center"
-          onClick={() => viewport.changeZoom(-0.1)}
-        >
-          <Minus className="size-4" />
-        </button>
-        <span className="min-w-10 text-center text-xs">{Math.round(viewport.zoom * 100)}%</span>
-        <button
-          type="button"
-          aria-label="Ajustar expresión"
-          className="grid size-7 place-items-center"
-          onClick={viewport.fit}
-        >
-          <Maximize className="size-4" />
-        </button>
-        <button
-          type="button"
-          aria-label="Acercar expresión"
-          className="grid size-7 place-items-center"
-          onClick={() => viewport.changeZoom(0.1)}
-        >
-          <Plus className="size-4" />
-        </button>
-      </div>
+      <CanvasRelationalScalarGraphControls
+        zoom={viewport.zoom}
+        onChange={viewport.changeZoom}
+        onFit={viewport.fit}
+        copy={copy}
+      />
     </div>
   );
 }

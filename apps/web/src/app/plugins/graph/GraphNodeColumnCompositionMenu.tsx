@@ -11,7 +11,7 @@ import {
 } from '../../components/ui/dropdown-menu';
 import type { GraphNodeColumn, GraphNodeColumnFunction } from './graphNodeColumnContracts';
 import type { GraphNodeColumnCopy } from './GraphNodeColumnPiece';
-import { graphNodeColumnClasses } from './graphVisualTokens';
+import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 
 export function GraphNodeColumnCompositionMenu(props: {
   sourceColumn: GraphNodeColumn;

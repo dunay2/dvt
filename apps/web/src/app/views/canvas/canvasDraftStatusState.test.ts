@@ -58,7 +58,7 @@ describe('canvasDraftStatusState', () => {
         recoveryReason: null,
       })
     ).toEqual({
-      label: 'Draft save failed',
+      label: canvasViewCopy.draftSaveFailedLabel,
       tone: 'danger',
       showReloadAction: false,
       persistence: 'failed',

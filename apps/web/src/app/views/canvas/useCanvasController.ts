@@ -1,94 +1,44 @@
 /** Owned concern: compose Canvas environment, authoring runtime, adapter seams, and execution seams into one route facade. */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo } from 'react';
 
-import {
-  resolveActiveCanvasGraphStrategy,
-  selectActiveCanvasExecutionStrategy,
-  selectActiveCanvasGraphStrategy,
-  selectActiveCanvasSurfaceStrategy,
-} from './canvasActiveGraphStrategy';
 import { buildCanvasControllerViewModel } from './canvasControllerViewModel';
-import { applyCanvasDraftPostureToRuntimePolicyInput } from './canvasDraftAccessPostureModel';
-import { resolveGraphDraftAuthoringCanvasId } from './canvasDraftReadModel';
-import { resolveCanvasRuntimePolicy } from './canvasRuntimePolicy';
-import { useCanvasAuthoringRuntime } from './useCanvasAuthoringRuntime';
+import { useCanvasControllerRuntime } from './useCanvasControllerRuntime';
 import { useCanvasControllerEnvironment } from './useCanvasControllerEnvironment';
-import { useCanvasControllerReadModel } from './useCanvasControllerReadModel';
 import { useCanvasExecutionActions } from './useCanvasExecutionActions';
 import { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
 import { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 import { useCanvasMutationHandlers } from './useCanvasMutationHandlers';
 import { useCanvasOverlayModel } from './useCanvasOverlayModel';
-import { useCanvasInspectorCommands } from './useCanvasInspectorCommands';
+import { useCanvasControllerPresentation } from './useCanvasControllerPresentation';
 import { useCanvasSelectionSync } from './useCanvasSelectionSync';
-import { createCanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 export function useCanvasController() {
   const environment = useCanvasControllerEnvironment();
   const {
     capabilities,
-    platformHealthQuery,
     workspaceFilesQuery,
-    workspaceFileContentCommand,
     graphDbtWorkspaceArtifactPublicationCommand,
     graphDbtModelCompilationQuery,
-    hasAuthorizedSourceImportContribution,
-    workspaceGraphDraftAuthoringPort,
     plansService,
     runsService,
     sessionContext,
     shellFeedback,
-    workspaceBootstrapConfig,
     navigationActions,
     store,
   } = environment;
-  const workspaceScope = sessionContext.getWorkspaceScopeSnapshot();
-  const previousWorkspaceLayoutKeyRef = useRef(store.workspaceLayoutKey);
-  const [impactFocusNodeId, setImpactFocusNodeId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (previousWorkspaceLayoutKeyRef.current === store.workspaceLayoutKey) {
-      return;
-    }
-
-    previousWorkspaceLayoutKeyRef.current = store.workspaceLayoutKey;
-    setImpactFocusNodeId(null);
-    store.setExecutionSelectionIntent(createCanvasExecutionSelectionIntent([]));
-    store.setInspectorNode(null);
-    store.closeContextualWorkbench();
-    store.setCurrentPlan(null);
-    store.setCurrentRun(null);
-  }, [
-    store.closeContextualWorkbench,
-    store.setCurrentPlan,
-    store.setCurrentRun,
-    store.setExecutionSelectionIntent,
-    store.setInspectorNode,
-    store.workspaceLayoutKey,
-  ]);
-
-  const authoringRuntime = useCanvasAuthoringRuntime({
-    platformHealthQuery: {
-      isPending: platformHealthQuery.isPending,
-      isError: platformHealthQuery.isError,
-      data: platformHealthQuery.data,
-      error: platformHealthQuery.error,
-      failureCount: platformHealthQuery.failureCount,
-      errorUpdatedAt: platformHealthQuery.errorUpdatedAt,
-    },
-    workspaceGraphDraftAuthoringPort,
-    workspaceLayoutKey: store.workspaceLayoutKey,
-    columnLevelLineageEnabled: store.columnLevelLineageEnabled,
-    persistedNodePositions: store.persistedNodePositions,
-    frozenNodeIds: store.frozenNodeIds,
-    selectionIntent: store.executionSelectionIntent,
-    inspectorNodeId: store.inspectorNodeId,
-    canPersistGraphDraftTransport: store.userPermissions.canPersistGraphDraft,
-    canMutateGraphTransport: store.userPermissions.canEditEdges,
-    workspaceScope,
-    previewProvenanceConfig: workspaceBootstrapConfig,
-    setCanvasNodePositions: store.setCanvasNodePositions,
-  });
+  const runtime = useCanvasControllerRuntime(environment);
+  const {
+    authoringRuntime,
+    runtimePolicy,
+    graphStrategy,
+    executionStrategy,
+    surfaceStrategy,
+    resolvedGraphDraftCanvasId,
+    canMutateActiveCanvas,
+    executionSelectionIntent,
+    impactFocusNodeId,
+    setImpactFocusNodeId,
+  } = runtime;
   const {
     graphModel,
     draftSession,
@@ -97,72 +47,9 @@ export function useCanvasController() {
     visibleScope,
     uiScope,
     executionScope,
-    isDraftRecoveryBlocked,
-    canMutateGraph,
     draftReadModel,
-    draftAccessPosture,
   } = authoringRuntime;
-  const activeCanvasGraphStrategyResolution = useMemo(
-    () => resolveActiveCanvasGraphStrategy(draftReadModel, capabilities),
-    [capabilities, draftReadModel?.record?.draft.canvas.kind]
-  );
-  const graphStrategy = selectActiveCanvasGraphStrategy(activeCanvasGraphStrategyResolution);
-  const executionStrategy = selectActiveCanvasExecutionStrategy(
-    activeCanvasGraphStrategyResolution
-  );
-  const surfaceStrategy = selectActiveCanvasSurfaceStrategy(activeCanvasGraphStrategyResolution);
-  const resolvedGraphDraftCanvasId = resolveGraphDraftAuthoringCanvasId(draftReadModel);
-  const hasResolvedGraphDraftAuthority = resolvedGraphDraftCanvasId !== null;
-  const runtimePolicy = useMemo(() => {
-    const draftAdmission = applyCanvasDraftPostureToRuntimePolicyInput({
-      posture: draftAccessPosture,
-      canMutateGraph: canMutateGraph && hasResolvedGraphDraftAuthority,
-      canPlan:
-        store.userPermissions.canPlan && !isDraftRecoveryBlocked && hasResolvedGraphDraftAuthority,
-      canRun:
-        store.userPermissions.canRun && !isDraftRecoveryBlocked && hasResolvedGraphDraftAuthority,
-      canReloadLatestDraft: authoringRuntime.draftStatusState.showReloadAction,
-    });
-
-    return resolveCanvasRuntimePolicy({
-      activeRuntime: activeCanvasGraphStrategyResolution,
-      canMutateGraph: draftAdmission.canMutateGraph,
-      canOpenSourceImport: hasAuthorizedSourceImportContribution,
-      canPlan: draftAdmission.canPlan,
-      canRun: draftAdmission.canRun,
-      canReloadLatestDraft: draftAdmission.canReloadLatestDraft,
-    });
-  }, [
-    activeCanvasGraphStrategyResolution,
-    authoringRuntime.draftStatusState.showReloadAction,
-    canMutateGraph,
-    draftAccessPosture,
-    hasResolvedGraphDraftAuthority,
-    isDraftRecoveryBlocked,
-    store.userPermissions.canPlan,
-    store.userPermissions.canRun,
-    hasAuthorizedSourceImportContribution,
-  ]);
-  const canMutateActiveCanvas = runtimePolicy.commands.canMutateGraph;
-  const canSelectExecution = runtimePolicy.commands.canPlan || runtimePolicy.commands.canRun;
-  const executionSelectionIntent = useMemo(
-    () =>
-      createCanvasExecutionSelectionIntent(
-        executionScope.selectedNodeIds,
-        executionScope.selectionMode
-      ),
-    [executionScope.selectedNodeIds, executionScope.selectionMode]
-  );
-  const setSelectedNodesForActiveCanvas = useCallback(
-    (nodeIds: string[]) => store.setSelectedNodes(nodeIds),
-    [store.setSelectedNodes]
-  );
-  const reconcileSelectionAfterNodeRemoval = useCallback(
-    (remainingVisibleNodeIds: string[]) => {
-      setSelectedNodesForActiveCanvas(remainingVisibleNodeIds);
-    },
-    [setSelectedNodesForActiveCanvas]
-  );
+  const setSelectedNodesForActiveCanvas = store.setSelectedNodes;
 
   useCanvasSelectionSync({
     isBootstrapping: draftSession.syncState === 'bootstrapping',
@@ -194,7 +81,7 @@ export function useCanvasController() {
     selectedNodeIds: store.selectedNodeIds,
     setDraftSession,
     setSelectedNodes: setSelectedNodesForActiveCanvas,
-    reconcileSelectionAfterNodeRemoval,
+    reconcileSelectionAfterNodeRemoval: setSelectedNodesForActiveCanvas,
     setInspectorNode: store.setInspectorNode,
     showInspectorPanel: store.showInspectorPanel,
     setCurrentPlan: store.setCurrentPlan,
@@ -223,7 +110,7 @@ export function useCanvasController() {
     setDraftSession,
     runDraftSessionCommand,
     setSelectedNodes: setSelectedNodesForActiveCanvas,
-    reconcileSelectionAfterNodeRemoval,
+    reconcileSelectionAfterNodeRemoval: setSelectedNodesForActiveCanvas,
     setInspectorNode: store.setInspectorNode,
     toggleInspectorPanel: store.toggleInspectorPanel,
     onLayoutComplete: persistence.handleNodePositionsSave,
@@ -271,55 +158,12 @@ export function useCanvasController() {
     onRunStarted: navigationActions.handleRunStarted,
   });
 
-  const {
-    transformationValidation,
-    nodesWithImpact,
-    edgesWithImpact,
-    handleEdgesChange,
-    inspectorNode,
-  } = useCanvasControllerReadModel({
-    graphModel: {
-      ...graphModel,
-      onEdgesChange: mutationHandlers.handleEdgesChange,
-    },
-    visibleScope,
-    executionScope,
-    uiScope,
+  const { readModel, inspectorCommands } = useCanvasControllerPresentation({
+    environment,
+    runtime,
+    graphHandlers,
+    mutationHandlers,
     overlayModel,
-    cardActions: {
-      onInspectNode: graphHandlers.handleInspectNode,
-      onDuplicateNode: graphHandlers.handleDuplicateNode,
-      onRemoveNode: graphHandlers.handleRemoveNode,
-      onAttachSchemaToNode: graphHandlers.handleAttachSchemaToNode,
-    },
-    columnActions: {
-      onColumnPortActivate: graphHandlers.handleColumnPortActivate,
-      onApplyCanvasColumnFunction: graphHandlers.handleApplyCanvasColumnFunction,
-      onApplyCanvasStructuredField: graphHandlers.handleApplyCanvasStructuredField,
-      onAddCanvasCalculatedColumn: graphHandlers.handleAddCanvasCalculatedColumn,
-      onToggleCanvasColumnOutput: graphHandlers.handleToggleCanvasColumnOutput,
-      onReorderCanvasColumnOutput: graphHandlers.handleReorderCanvasColumnOutput,
-      onColumnDisclosureChange: graphHandlers.handleColumnDisclosureChange,
-      onAutomapColumns: graphHandlers.handleAutomapCanvasColumns,
-    },
-    compositionActions: {
-      resolveAlgebraicCompositionOperations:
-        graphHandlers.resolveCanvasAlgebraicCompositionOperations,
-      onComposeCanvasNodes: graphHandlers.handleComposeCanvasNodes,
-    },
-    activeColumnHandleId: graphHandlers.activeColumnHandleId,
-    onRemoveColumnMapping: graphHandlers.handleRemoveColumnMapping,
-    onToggleExecutionSelection: graphHandlers.handleToggleNodeSelection,
-    runtimeCapabilities: capabilities,
-    canMutateGraph: canMutateActiveCanvas,
-    canSelectExecution,
-    columnLevelLineageEnabled: store.columnLevelLineageEnabled,
-  });
-  const inspectorCommands = useCanvasInspectorCommands({
-    canonicalNodesById: graphModel.canonicalNodesById,
-    inspectorNode,
-    runDraftSessionCommand,
-    workspaceScope,
   });
 
   return buildCanvasControllerViewModel({
@@ -334,13 +178,7 @@ export function useCanvasController() {
       runtimePolicy,
       surfaceStrategy,
     },
-    readModel: {
-      transformationValidation,
-      nodesWithImpact,
-      edgesWithImpact,
-      handleEdgesChange,
-      inspectorNode,
-    },
+    readModel,
     inspectorCommands,
     executionSelectionRecovery: { model: null, commands: null },
     handleImpactFocusNodeChange: setImpactFocusNodeId,

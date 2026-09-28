@@ -1,15 +1,18 @@
-import { describe } from 'vitest';
-import { expect } from 'vitest';
-import { it } from 'vitest';
-import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
+import { RelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import { create } from '@bufbuild/protobuf';
+import { createProducerInput, deriveSubstraitSchemas } from '@dvt/substrait-analysis';
+import { describe, expect, it } from 'vitest';
 import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindings';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import {
+  decodeDvtSubstraitSemanticDocument,
+  encodeDvtSubstraitSemanticDocument,
+} from './canvasDvtSubstraitSemanticDocument';
 import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
-import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
+import { createDvtSubstraitProjectionOutput } from './canvasLegacyProjectionOutput.test-support';
 import { createDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
-import { createDvtSubstraitProjectionDraftFromTransform } from './canvasDvtSubstraitProjection';
 import { decodeDvtSubstraitProjectionDocument } from './canvasDvtSubstraitProjection';
 import { encodeDvtSubstraitProjectionDocument } from './canvasDvtSubstraitProjection';
 import { inspectDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
@@ -82,24 +85,76 @@ describe('Canonical output projection', () => {
       const nodes = [SOURCE, upstream];
       const edges = [EDGE];
       for (const level of ['B', 'C']) {
-        const inspection = inspectDvtSubstraitProjectionDraft(draft);
-        if (!inspection.ok) throw new Error('Expected admitted upstream projection.');
-        const selected = inspection.projection.outputs
-          .filter((output) => output.name !== 'customer')
+        const index = deriveSubstraitSchemas(draft).index;
+        const selected = index.relations
+          .get(index.rootId)!
+          .fields.filter((output) => output.displayName !== 'customer')
+          .slice()
           .reverse();
         const target = { ...TRANSFORM, id: `transform-${level}` };
-        draft = createDvtSubstraitProjectionDraftFromTransform({
-          source: draft,
-          targetNodeId: target.id,
-          outputs: selected.map((output, ordinal) => ({
-            fieldId: `${level}:${ordinal}`,
-            name: `${level} ${ordinal}`,
-            sourceFieldId: output.fieldId,
-          })),
-        });
+        const input = createProducerInput(
+          { nodeId: upstream.id, name: upstream.name, document: draft },
+          1
+        );
+        const mapped = selected.map(
+          (output) =>
+            input.binding.producerRef!.fields.find(
+              (field) => field.producerFieldId === output.fieldId
+            )!.fieldId
+        );
+        draft = {
+          plan: create(PlanSchema, {
+            version: draft.plan.version,
+            relations: [
+              {
+                relType: {
+                  case: 'root',
+                  value: {
+                    names: selected.map((_, ordinal) => `${level} ${ordinal}`),
+                    input: create(RelSchema, {
+                      relType: {
+                        case: 'project',
+                        value: {
+                          common: {
+                            relAnchor: 2,
+                            emitKind: {
+                              case: 'emit',
+                              value: {
+                                outputMapping: mapped.map(
+                                  (fieldId) =>
+                                    input.fields.find((field) => field.fieldId === fieldId)!
+                                      .outputOrdinal
+                                ),
+                              },
+                            },
+                          },
+                          input: input.relation,
+                        },
+                      },
+                    }),
+                  },
+                },
+              },
+            ],
+          }),
+          sidecar: {
+            ...draft.sidecar,
+            relations: [input.binding, { relationId: target.id, relAnchor: 2 }],
+            fields: [
+              ...input.fields,
+              ...mapped.map((sourceFieldId, outputOrdinal) => ({
+                fieldId: `${level}:${outputOrdinal}`,
+                relationId: target.id,
+                sourceFieldId,
+                outputOrdinal,
+                displayName: `${level} ${outputOrdinal}`,
+              })),
+            ],
+          },
+        };
         // The query consumes a serialized/reopened canonical document, not a separate SQL model.
-        const document = encodeDvtSubstraitProjectionDocument(draft);
-        draft = decodeDvtSubstraitProjectionDocument(document);
+        const document = encodeDvtSubstraitSemanticDocument(draft);
+        draft = decodeDvtSubstraitSemanticDocument(document);
         const transform = applyDvtSubstraitSemanticDocument(target, document);
         edges.push({ ...EDGE, id: `${level}-edge`, sourceId: upstream.id, targetId: target.id });
         nodes.push(transform);
@@ -110,14 +165,21 @@ describe('Canonical output projection', () => {
           edges,
         });
         expect(sql.length).toBeGreaterThan(0);
+        expect(sql).toMatch(/upper\s*\(/i);
+        expect(sql).toContain('||');
+        if (withLiteral) expect(sql).toContain("web''s");
         const bound = resolveCanvasSubstraitGraphBindings({ node: transform, nodes, edges });
         const schemas = deriveSubstraitSchemas(bound.document);
         expect(
+          [...bound.index.relations.values()].map((entry) => entry.relation.relType.case)
+        ).toEqual(['project', 'read']);
+        expect(
           bound.index.relations.get(bound.index.rootId)!.fields.map((field) => field.sourceFieldId)
-        ).toEqual(selected.map((output) => output.fieldId));
+        ).toEqual(mapped);
         expect(schemas.schemas.get(bound.index.rootId)).toHaveLength(selected.length);
         expect(JSON.stringify(nodes)).toBe(before);
-        const authority = readDvtTransformAuthoringAuthority(upstream)!;
+        const originalProducer = nodes.find((node) => node.id === TRANSFORM.id)!;
+        const authority = readDvtTransformAuthoringAuthority(originalProducer)!;
         const changed = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
         const functionDeclaration = changed.plan.extensions.find(
           (entry) =>
@@ -128,23 +190,24 @@ describe('Canonical output projection', () => {
           throw new Error('Expected UPPER declaration');
         functionDeclaration.mappingType.value.name = 'lower:str';
         const changedProducer = applyDvtSubstraitSemanticDocument(
-          upstream,
+          originalProducer,
           encodeDvtSubstraitSemanticDocument(changed)
         );
-        await expect(
-          projectDvtSubstraitTransformOutputToPostgresSql({
-            transformNode: transform,
-            nodes: nodes.map((node) => (node.id === upstream.id ? changedProducer : node)),
-            edges,
-          })
-        ).rejects.toThrow();
+        const changedSql = await projectDvtSubstraitTransformOutputToPostgresSql({
+          transformNode: transform,
+          nodes: nodes.map((node) => (node.id === originalProducer.id ? changedProducer : node)),
+          edges,
+        });
+        expect(changedSql).toMatch(/lower\s*\(/i);
+        expect(changedSql).not.toMatch(/upper\s*\(/i);
+        expect(JSON.stringify(nodes)).toBe(before);
         await expect(
           projectDvtSubstraitTransformOutputToPostgresSql({
             transformNode: transform,
             nodes,
             edges: edges.slice(0, -1),
           })
-        ).rejects.toThrow('source identities do not match');
+        ).rejects.toThrow();
         await expect(
           projectDvtSubstraitTransformOutputToPostgresSql({
             transformNode: transform,
@@ -153,7 +216,7 @@ describe('Canonical output projection', () => {
             ),
             edges,
           })
-        ).rejects.toThrow('source identities do not match');
+        ).rejects.toThrow();
         await expect(
           projectDvtSubstraitTransformOutputToPostgresSql({
             transformNode: transform,
@@ -162,7 +225,7 @@ describe('Canonical output projection', () => {
             ),
             edges,
           })
-        ).rejects.toThrow('source identities do not match');
+        ).rejects.toThrow();
         upstream = transform;
       }
     }

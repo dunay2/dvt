@@ -10,7 +10,7 @@ import {
   resolveCanvasDvtCompositionInputs,
   type CanvasDvtCompositionInput,
 } from './canvasDvtCompositionInputCatalog';
-import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { resolveCanvasProducerDocument } from './canvasProducerDocument';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import type {
   CanvasRelationalTreeInput,
@@ -27,6 +27,7 @@ export type CanvasRelationalAnalysis = Readonly<{
   transformNodeId: string;
   isTransform: boolean;
   connectedInputCount: number;
+  connectedModelRelationIds: readonly string[];
   inputs: readonly CanvasDvtCompositionInput[];
   projectedInputs: readonly CanvasRelationalTreeInput[];
   semantic: Readonly<{
@@ -47,19 +48,31 @@ export function canvasSourceReferenceKey(ref: ConnectedSourceRef): string {
 
 function projectInputs(
   index: SubstraitRelationIndex,
-  inputs: readonly CanvasDvtCompositionInput[]
+  inputs: readonly CanvasDvtCompositionInput[],
+  producers: ReadonlyMap<string, CanonicalNode>
 ): readonly CanvasRelationalTreeInput[] {
   const connected = new Map<string, CanvasDvtCompositionInput>();
   for (const input of inputs) {
+    if (input.sourceRef == null) continue;
     const key = canvasSourceReferenceKey(input.sourceRef);
     if (!connected.has(key)) connected.set(key, input);
   }
   const participating = new Set<string>();
   const canonical = [...index.relations.values()]
     .map((entry) => entry.binding)
-    .filter((binding) => binding.sourceRef != null)
+    .filter((binding) => binding.sourceRef != null || binding.producerRef != null)
     .sort((a, b) => a.relAnchor - b.relAnchor)
     .map((binding) => {
+      if (binding.producerRef != null) {
+        const sourceNodeId = binding.producerRef.nodeId;
+        participating.add(sourceNodeId);
+        return {
+          sourceRef: null,
+          sourceNodeId,
+          relationId: binding.relationId,
+          state: producers.has(sourceNodeId) ? ('participating' as const) : ('missing' as const),
+        };
+      }
       const sourceRef = binding.sourceRef!;
       const key = canvasSourceReferenceKey(sourceRef);
       participating.add(key);
@@ -72,9 +85,12 @@ function projectInputs(
       };
     });
   const pending = inputs
-    .filter((input) => !participating.has(canvasSourceReferenceKey(input.sourceRef)))
+    .filter(
+      (input) =>
+        input.sourceRef != null && !participating.has(canvasSourceReferenceKey(input.sourceRef))
+    )
     .sort((a, b) =>
-      canvasSourceReferenceKey(a.sourceRef).localeCompare(canvasSourceReferenceKey(b.sourceRef))
+      canvasSourceReferenceKey(a.sourceRef!).localeCompare(canvasSourceReferenceKey(b.sourceRef!))
     )
     .map((input) => ({
       sourceRef: input.sourceRef,
@@ -82,7 +98,18 @@ function projectInputs(
       relationId: null,
       state: 'pending' as const,
     }));
-  return [...canonical, ...pending];
+  return [
+    ...canonical,
+    ...pending,
+    ...[...producers.keys()]
+      .filter((id) => !participating.has(id))
+      .map((sourceNodeId) => ({
+        sourceRef: null,
+        sourceNodeId,
+        relationId: null,
+        state: 'pending' as const,
+      })),
+  ];
 }
 
 export function analyzeCanvasRelations(
@@ -105,27 +132,40 @@ export function analyzeCanvasRelations(
     isTransform,
     inputs,
     connectedInputCount,
+    connectedModelRelationIds: [],
     projectedInputs: [],
     semantic: null,
   };
   if (!isTransform) return { ...base, failure: 'invalid-semantic-authority' };
-  if (inputs.length !== connectedInputCount)
-    return { ...base, failure: 'input-identity-unavailable' };
   try {
+    const incomingIds = new Set(
+      args.edges.filter((edge) => edge.targetId === args.node.id).map((edge) => edge.sourceId)
+    );
+    const producers = new Map<string, CanonicalNode>();
+    for (const node of args.nodes) {
+      if (!incomingIds.has(node.id) || node.pluginId !== 'dvt' || node.kind !== 'dvt:transform')
+        continue;
+      producers.set(node.id, node);
+    }
+    if (inputs.length !== connectedInputCount)
+      return { ...base, failure: 'input-identity-unavailable' };
     const authority = readDvtTransformAuthoringAuthority(args.node);
     if (authority == null) return { ...base, failure: 'missing-semantic-authority' };
-    const document = decodeDvtSubstraitSemanticDocument(authority.semanticDocument);
+    const document = resolveCanvasProducerDocument(args.node, args.nodes)!;
     const indexed = indexSubstraitRelations(document);
     if (!indexed.ok) return { ...base, failure: 'invalid-semantic-authority' };
     return {
       ...base,
       failure: null,
+      connectedModelRelationIds: [...indexed.index.relations.values()]
+        .filter((entry) => entry.binding.producerRef != null)
+        .map((entry) => entry.binding.relationId),
       semantic: {
         index: indexed.index,
         digest: authority.semanticDocument.semanticPlan.sha256,
         document,
       },
-      projectedInputs: projectInputs(indexed.index, inputs),
+      projectedInputs: projectInputs(indexed.index, inputs, producers),
     };
   } catch {
     return { ...base, failure: 'invalid-semantic-authority' };

@@ -21,6 +21,14 @@ import {
   CanvasTagsV1Schema,
 } from './CanvasAuthoringFieldPolicy.v1.js';
 import {
+  validateDvtGraphInputBindings,
+  validateDvtInputBindingMetadata,
+} from './DvtInputBindings.v1.js';
+import {
+  DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY,
+  DvtRelationalAuthoringDraftV1Schema,
+} from './DvtRelationalAuthoringDraft.v1.js';
+import {
   DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
   DvtTransformAuthoringAuthorityV1Schema,
 } from './DvtTransformAuthoringAuthority.v1.js';
@@ -226,7 +234,8 @@ export const WorkspaceGraphAuthoringEdgeSchema = z
     ]),
     metadata: RecordStringUnknownSchema.optional(),
   })
-  .strict() satisfies z.ZodType<WorkspaceGraphAuthoringEdge>;
+  .strict()
+  .superRefine(validateDvtInputBindingMetadata) satisfies z.ZodType<WorkspaceGraphAuthoringEdge>;
 
 export const WorkspaceGraphAuthoringCanvasWorkspaceSchema = z
   .object({
@@ -250,6 +259,7 @@ function addGraphShapeIssues(
   ctx: z.RefinementCtx,
   pathPrefix: Array<string | number> = []
 ): void {
+  validateDvtGraphInputBindings(graph, ctx, pathPrefix);
   const visibleNodeIds = new Set<string>(graph.nodeIds);
   if (visibleNodeIds.size !== graph.nodeIds.length) {
     ctx.addIssue({
@@ -306,6 +316,33 @@ function addGraphShapeIssues(
         ],
       });
     }
+  });
+
+  graph.nodes.forEach((node, index) => {
+    if (
+      node.metadata === undefined ||
+      !Object.hasOwn(node.metadata, DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY)
+    )
+      return;
+    const isDvtTransform =
+      node.kind === 'dvt:transform' || (node.pluginId === 'dvt' && node.kind === 'transform');
+    if (
+      !isDvtTransform ||
+      !DvtRelationalAuthoringDraftV1Schema.safeParse(
+        node.metadata[DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY]
+      ).success
+    )
+      ctx.addIssue({
+        code: 'custom',
+        message: 'DVT relational authoring draft metadata is valid only on a DVT Transform.',
+        path: [
+          ...pathPrefix,
+          'nodes',
+          index,
+          'metadata',
+          DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY,
+        ],
+      });
   });
 
   for (const nodeId of graph.nodeIds) {

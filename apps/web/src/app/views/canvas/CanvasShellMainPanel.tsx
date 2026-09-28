@@ -146,7 +146,11 @@ function CanvasShellViewport({
       canOpenCanvasSettings={typeof onOpenCanvasSettings === 'function'}
       onOpenCanvasSettings={onOpenCanvasSettings}
       contextMenuPresenter={contextMenuPresenter}
-      externalNodeSurfaceActive={nodeWorkbenchVisible || layout.contextualWorkbench != null}
+      externalNodeSurfaceActive={
+        nodeWorkbenchVisible ||
+        layout.contextualWorkbench != null ||
+        layout.centerSurfaceVisible === true
+      }
     />
   );
 }

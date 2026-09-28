@@ -19,6 +19,7 @@ const inspectionPolicies = {
   cross: { kind: 'cross' },
   set: { kind: 'summary' },
   aggregate: { kind: 'expressions', slot: 'aggregate-expression' },
+  window: { kind: 'summary' },
   sort: { kind: 'summary' },
   fetch: { kind: 'summary' },
   unsupported: { kind: 'unsupported' },

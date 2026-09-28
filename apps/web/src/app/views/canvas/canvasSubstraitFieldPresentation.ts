@@ -51,6 +51,22 @@ function resolveFieldSource(context: Context, fieldId: string): FieldSource | nu
     };
   }
   const relation = context.entry.index.relations.get(field.relationId)!;
+  const producer = relation.binding.producerRef;
+  if (producer != null) {
+    const reference = producer.fields.find((candidate) => candidate.fieldId === fieldId);
+    const published = context.inherited.find(
+      (column) =>
+        column.sourceNodeId === producer.nodeId && column.reference === reference?.producerFieldId
+    );
+    return published == null
+      ? null
+      : {
+          nodeId: producer.nodeId,
+          fieldId: reference!.producerFieldId,
+          name: published.name,
+          nodeName: published.sourceNodeName!,
+        };
+  }
   const sourceRef = relation.binding.sourceRef;
   if (sourceRef == null || relation.relation.relType.case !== 'read') return null;
   const sources = context.sources.filter((node) => {
@@ -70,6 +86,12 @@ async function fieldSources(
   binding: DvtSubstraitFieldBindingV1,
   field: SchemaField
 ): Promise<FieldSource[]> {
+  const direct = resolveFieldSource(context, binding.fieldId);
+  if (
+    direct != null &&
+    context.entry.index.relations.get(binding.relationId)?.binding.producerRef != null
+  )
+    return [direct];
   // Immediate producer identity wins over physical ancestry for chained model handles.
   let current: DvtSubstraitFieldBindingV1 | undefined = binding;
   const visited = new Set<string>();

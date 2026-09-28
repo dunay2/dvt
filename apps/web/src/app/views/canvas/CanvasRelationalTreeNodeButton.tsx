@@ -2,20 +2,7 @@
 import { resolveCanvasRelationalNodeCopy } from './canvasRelationalNodePresentation';
 import type { CanvasRelationalTreePlacedNode } from './canvasRelationalTreeGeometry';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-
-const operatorTone = {
-  read: 'border-sky-800/90 bg-sky-950/25',
-  project: 'border-blue-700/90 bg-blue-950/25',
-  filter: 'border-violet-700/90 bg-violet-950/25',
-  join: 'border-blue-500 bg-blue-950/35',
-  cross: 'border-cyan-500 bg-cyan-950/30',
-  set: 'border-indigo-600/90 bg-indigo-950/30',
-  aggregate: 'border-amber-700/90 bg-amber-950/25',
-  sort: 'border-cyan-600/90 bg-cyan-950/25',
-  fetch: 'border-teal-600/90 bg-teal-950/25',
-  window: 'border-blue-700/90 bg-blue-950/25',
-  unsupported: 'border-rose-700/90 bg-rose-950/25',
-};
+import styles from './CanvasRelationalTreeCard.module.css';
 
 export function CanvasRelationalTreeNodeButton({
   placed,
@@ -23,16 +10,22 @@ export function CanvasRelationalTreeNodeButton({
   copy,
   detailed,
   movable,
+  pending = false,
+  hideDetail = false,
   onSelect,
   onExpand,
+  onDelete,
 }: Readonly<{
   placed: CanvasRelationalTreePlacedNode;
   selected: boolean;
   copy: CanvasRelationalTreeWorkbenchCopy;
   detailed: boolean;
   movable: boolean;
+  pending?: boolean;
+  hideDetail?: boolean;
   onSelect: (locator: string) => void;
   onExpand?: (locator: string) => void;
+  onDelete?: () => void;
 }>): JSX.Element {
   const { node, role } = placed;
   const roleLabel =
@@ -67,35 +60,37 @@ export function CanvasRelationalTreeNodeButton({
       aria-label={roleLabel == null ? title : `${roleLabel}: ${title}`}
       data-slot="canvas-relational-tree-node"
       data-locator={node.locator}
+      data-relational-card-id={node.relationId ?? node.locator}
       data-relation-id={node.relationId ?? undefined}
       data-operator={node.operator}
+      data-pending={pending || undefined}
       data-presentation={operation}
+      data-category={presentation.category}
+      data-detailed={detailed}
+      data-movable={movable}
       onClick={() => {
         onSelect(node.locator);
         onExpand?.(node.locator);
       }}
-      style={{
-        touchAction: 'none',
-        height: detailed ? 76 : '100%',
-        fontFamily: '"Segoe UI", system-ui, sans-serif',
+      onKeyDown={(event) => {
+        if (event.key !== 'Delete' && event.key !== 'Backspace') return;
+        if (onDelete == null) return;
+        event.preventDefault();
+        event.stopPropagation();
+        onDelete();
       }}
-      className={`w-full select-none rounded-md border px-3 py-2 text-left shadow-sm transition-colors hover:border-(--status-info) aria-selected:border-(--status-info) aria-selected:ring-2 aria-selected:ring-(--status-info) ${movable ? 'cursor-grab data-[dragging=true]:cursor-grabbing' : 'cursor-inherit'} ${operatorTone[presentation.category]}`}
+      className={styles.nodeButton}
     >
-      <span className="flex items-center gap-2 pr-5">
-        <Icon aria-hidden="true" className="size-4 shrink-0 text-(--status-info)" />
-        <span
-          data-slot="canvas-relational-node-title"
-          title={title}
-          className="truncate text-sm font-medium leading-5 text-(--text-strong)"
-        >
+      <span className={styles.identity}>
+        <Icon aria-hidden="true" className={styles.icon} />
+        <span data-slot="canvas-relational-node-title" title={title} className={styles.title}>
           {title}
         </span>
       </span>
-      {isSource ? null : (
-        <span
-          title={detail}
-          className="mt-1 block truncate text-[13px] font-normal leading-5 text-(--text-muted)"
-        >
+      {pending ? (
+        <span className={styles.pending}>{copy.relationalTreePendingLabel}</span>
+      ) : isSource || hideDetail ? null : (
+        <span title={detail} className={styles.detail}>
           {detail}
         </span>
       )}

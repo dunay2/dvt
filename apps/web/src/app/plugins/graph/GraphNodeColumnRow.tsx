@@ -20,7 +20,7 @@ import {
   type GraphNodeColumnCopy,
 } from './GraphNodeColumnPiece';
 import { GraphNodeExpressionComposer } from './GraphNodeExpressionComposer';
-import { graphNodeColumnClasses } from './graphVisualTokens';
+import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 import type { GraphNodeColumnReorderController } from './useGraphNodeColumnReorder';
 
 export function GraphNodeColumnRow(props: {
@@ -30,6 +30,7 @@ export function GraphNodeColumnRow(props: {
   portDirections: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
   copy: GraphNodeColumnCopy;
+  view?: GraphNodeColumnSectionProps['view'];
   showSourceName?: boolean;
   reorder: GraphNodeColumnReorderController;
   unavailableAliases: readonly string[];
@@ -75,8 +76,11 @@ export function GraphNodeColumnRow(props: {
       column={column}
       isOutput={isOutput}
       canReorder={reorder.canReorder(column)}
-      outputToggleDisabled={nodeId == null || props.onColumnOutputToggle == null}
+      outputToggleDisabled={
+        column.outputToggleDisabled === true || nodeId == null || props.onColumnOutputToggle == null
+      }
       copy={copy}
+      view={props.view}
       showSourceName={props.showSourceName}
       nodeId={nodeId}
       onNestedColumnReorder={props.onColumnReorder}
