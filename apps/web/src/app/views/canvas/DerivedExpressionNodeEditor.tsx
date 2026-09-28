@@ -192,6 +192,7 @@ export function DerivedExpressionNodeEditor({
   resolveFunctionsForTypes,
   allowLiterals,
   allowNested,
+  legacySlots = false,
   busy,
   copy,
   depth = 0,
@@ -203,6 +204,7 @@ export function DerivedExpressionNodeEditor({
   resolveFunctionsForTypes?: DerivedExpressionTypeResolver;
   allowLiterals: boolean;
   allowNested: boolean;
+  legacySlots?: boolean;
   busy: boolean;
   copy: DerivedExpressionCopy;
   depth?: number;
@@ -365,74 +367,97 @@ export function DerivedExpressionNodeEditor({
       </label>
       <div className="space-y-2">
         <span className="text-xs text-(--text-muted)">{copy.operandsLabel}</span>
-        {argumentsValue.map((argument, index) => (
-          <div
-            key={index}
-            data-slot="derived-expression-argument"
-            data-argument-index={index}
-            data-depth={depth}
-            className="flex items-start gap-1"
-          >
-            <div className="min-w-0 flex-1 rounded border border-(--border-subtle) bg-(--surface-elevated) p-2">
-              <DerivedExpressionNodeEditor
-                expression={argument}
-                fields={fields}
-                resolveFunctions={resolveFunctions}
-                resolveFunctionsForTypes={resolveFunctionsForTypes}
-                allowLiterals={allowLiterals}
-                allowNested={allowNested}
-                busy={busy}
-                copy={copy}
-                depth={depth + 1}
-                onChange={(next) =>
-                  updateArguments(
-                    argumentsValue.map((candidate, slot) => (slot === index ? next : candidate))
-                  )
-                }
-              />
+        {argumentsValue.map((argument, index) => {
+          const compatibleFields =
+            allowNested || expression.arguments.some((candidate) => candidate.kind !== 'field')
+              ? fields
+              : fields.filter((field) => {
+                  const next = argumentsValue.map((candidate, slot) =>
+                    slot === index ? ({ kind: 'field', fieldId: field.fieldId } as const) : candidate
+                  );
+                  if (next.some((candidate) => candidate.kind !== 'field')) return true;
+                  return resolveFunctions(
+                    next.map((candidate) => candidate.fieldId),
+                    'complete'
+                  ).some((candidate) => candidate.capabilityId === selectedFunction.capabilityId);
+                });
+          return (
+            <div
+              key={index}
+              data-slot={
+                legacySlots ? 'graph-node-expression-operand' : 'derived-expression-argument'
+              }
+              data-argument-index={index}
+              data-depth={depth}
+              className="flex items-start gap-1"
+            >
+              <div className="min-w-0 flex-1 rounded border border-(--border-subtle) bg-(--surface-elevated) p-2">
+                <DerivedExpressionNodeEditor
+                  expression={argument}
+                  fields={compatibleFields}
+                  resolveFunctions={resolveFunctions}
+                  resolveFunctionsForTypes={resolveFunctionsForTypes}
+                  allowLiterals={allowLiterals}
+                  allowNested={allowNested}
+                  legacySlots={legacySlots}
+                  busy={busy}
+                  copy={copy}
+                  depth={depth + 1}
+                  onChange={(next) =>
+                    updateArguments(
+                      argumentsValue.map((candidate, slot) => (slot === index ? next : candidate))
+                    )
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <button
+                  type="button"
+                  data-slot={legacySlots ? 'graph-node-expression-move-up' : undefined}
+                  aria-label={copy.moveOperandUp.replace('{index}', String(index + 1))}
+                  disabled={busy || index === 0}
+                  onClick={() => {
+                    const next = [...argumentsValue];
+                    [next[index - 1], next[index]] = [next[index]!, next[index - 1]!];
+                    updateArguments(next);
+                  }}
+                  className="grid size-7 place-items-center rounded border border-(--border-subtle) disabled:opacity-40"
+                >
+                  <ChevronUp className="size-3" />
+                </button>
+                <button
+                  type="button"
+                  data-slot={legacySlots ? 'graph-node-expression-move-down' : undefined}
+                  aria-label={copy.moveOperandDown.replace('{index}', String(index + 1))}
+                  disabled={busy || index === argumentsValue.length - 1}
+                  onClick={() => {
+                    const next = [...argumentsValue];
+                    [next[index], next[index + 1]] = [next[index + 1]!, next[index]!];
+                    updateArguments(next);
+                  }}
+                  className="grid size-7 place-items-center rounded border border-(--border-subtle) disabled:opacity-40"
+                >
+                  <ChevronDown className="size-3" />
+                </button>
+                <button
+                  type="button"
+                  data-slot={legacySlots ? 'graph-node-expression-remove' : undefined}
+                  aria-label={copy.removeOperand.replace('{index}', String(index + 1))}
+                  disabled={busy || argumentsValue.length <= range.minimum}
+                  onClick={() => updateArguments(argumentsValue.filter((_, slot) => slot !== index))}
+                  className="grid size-7 place-items-center rounded border border-(--border-subtle) disabled:opacity-40"
+                >
+                  <Minus className="size-3" />
+                </button>
+              </div>
             </div>
-            <div className="flex flex-col gap-1">
-              <button
-                type="button"
-                aria-label={copy.moveOperandUp.replace('{index}', String(index + 1))}
-                disabled={busy || index === 0}
-                onClick={() => {
-                  const next = [...argumentsValue];
-                  [next[index - 1], next[index]] = [next[index]!, next[index - 1]!];
-                  updateArguments(next);
-                }}
-                className="grid size-7 place-items-center rounded border border-(--border-subtle) disabled:opacity-40"
-              >
-                <ChevronUp className="size-3" />
-              </button>
-              <button
-                type="button"
-                aria-label={copy.moveOperandDown.replace('{index}', String(index + 1))}
-                disabled={busy || index === argumentsValue.length - 1}
-                onClick={() => {
-                  const next = [...argumentsValue];
-                  [next[index], next[index + 1]] = [next[index + 1]!, next[index]!];
-                  updateArguments(next);
-                }}
-                className="grid size-7 place-items-center rounded border border-(--border-subtle) disabled:opacity-40"
-              >
-                <ChevronDown className="size-3" />
-              </button>
-              <button
-                type="button"
-                aria-label={copy.removeOperand.replace('{index}', String(index + 1))}
-                disabled={busy || argumentsValue.length <= range.minimum}
-                onClick={() => updateArguments(argumentsValue.filter((_, slot) => slot !== index))}
-                className="grid size-7 place-items-center rounded border border-(--border-subtle) disabled:opacity-40"
-              >
-                <Minus className="size-3" />
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
         <button
           type="button"
-          data-slot="derived-expression-add-argument"
+          data-slot={
+            legacySlots ? 'graph-node-expression-add-operand' : 'derived-expression-add-argument'
+          }
           disabled={busy || argumentsValue.length >= range.maximum}
           onClick={() => updateArguments([...argumentsValue, defaultField(fields, probeFieldId)])}
           className="flex items-center gap-1 text-xs text-(--status-info) disabled:opacity-40"
