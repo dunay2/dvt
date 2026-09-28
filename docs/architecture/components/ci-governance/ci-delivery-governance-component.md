@@ -47,6 +47,7 @@ Command/query rail:
 | `PublishReleaseCandidateIntegrityCheck`  | command | Repository release governance       | `ReleaseCandidateCheckPublicationService`     | `PORT-CI-RELEASE-CANDIDATE-CHECK-PUBLISH` and GitHub Checks adapter   | Fails closed when the check is not opened and completed on the exact PR head SHA, candidate assessment receives write authority, or the final assessment failure is not published. |
 | `ApplyPullRequestFileLabels`             | command | Repository collaboration governance | `PullRequestFileLabelPolicy` policy object    | `PORT-CI-APPLY-PR-FILE-LABELS` and `.github/workflows/pr-labeler.yml` | Fails when candidate code receives write authority, candidate configuration controls labels, or the trusted adapter checks out or executes candidate code.                         |
 | `LintChangedMarkdownFiles`               | query   | Repository Markdown governance      | `ChangedMarkdownFileSet` read model           | `scripts/lint-markdown-changed.cjs` and `verify:prepush`              | Fails when generated Markdown artifacts are passed explicitly to markdownlint despite repository ignore policy.                                                                    |
+| `AssessCodeQualityRequiredJobs`          | query   | Repository delivery governance      | `CodeQualityJobOutcomePolicy` read model      | `.github/workflows/ci.yml` required aggregate and GitHub job results  | Fails if a required job is failed, cancelled, or skipped without event/scope justification; `main` and manual runs must include `full-ci`.                                         |
 | `ValidatePullRequestMetadata`            | query   | Repository delivery governance      | `PullRequestMetadataPolicy` policy object     | `.github/workflows/pr-quality-gate.yml` and existing Node validators  | Rejects an invalid title, excessive size, or short description before dependency setup; non-PR events skip only these PR-specific checks.                                          |
 | `RestoreAndPersistTurboCache`            | command | Repository delivery governance      | `TurboCacheLifecyclePolicy` policy object     | `.github/actions/setup-node-pnpm/action.yml` and GitHub cache adapter | Fails when a repeated successful run has an immutable exact-hit write key, matrix writers collide, or cache absence can alter build correctness.                                   |
 
@@ -114,6 +115,58 @@ Command/query rail:
     workflow composition boundary MUST project only its nested `policy` into
     `AssessReleaseCandidateIntegrity`; passing the envelope as domain policy is
     forbidden.
+
+## Draft work and Code Quality fan-in
+
+`AssessCodeQualityRequiredJobs` reads the event kind, draft state, affected
+workspace and executable-contract scope, requested manual Markdown lint, and
+the direct job outcomes. Its output is an explicit pass/fail assessment for
+the existing `Code Quality Required for Merge` context. The
+`CodeQualityJobOutcomePolicy` read model owns the expected result of each job;
+the existing `ci.yml` job conditions and GitHub-script aggregate are the
+application/adapter surfaces. The rail is **implemented** and read-only.
+GitHub Actions provides the event and job results; no secret, tenant scope, or
+new permission is involved. Each event is assessed on its own SHA. A draft may
+skip expensive executable-contract and workspace preflight jobs, but a
+`ready_for_review` event must rerun those jobs for the current SHA when scope
+requires them. A skipped required job is a failure, not a success substitute.
+
+Current state: draft updates can run the same heavy preflight as a ready PR;
+the aggregate does not depend on `full-ci`, so on `main` its green result need
+not represent full CI completion.
+
+```mermaid
+flowchart LR
+  Draft[Draft PR] --> Preflight[Heavy affected preflight]
+  Main[main push] --> Full[Full CI]
+  Main --> Aggregate[Code Quality aggregate]
+  Full -. not in needs .-> Aggregate
+```
+
+Target: static tool checks and scope detection remain on drafts, while heavy
+jobs are skipped until reviewability changes. The aggregate waits for every
+direct job and accepts `skipped` only when the event and scope explain it.
+Ready PRs require the applicable preflight; push and manual runs require
+`full-ci`; Markdown lint is required only for push or an opted-in manual run.
+This preserves final review coverage without building repeatedly during
+draft iterations.
+
+```mermaid
+flowchart LR
+  Event[PR draft, PR ready, main or manual] --> Static[Static checks and scope]
+  Static -->|draft| Skip[Declared heavy-job skips]
+  Static -->|ready and affected| Preflight[Workspace preflight]
+  Static -->|main or manual| Full[Full CI]
+  Skip --> Aggregate[Required aggregate]
+  Preflight --> Aggregate
+  Full --> Aggregate
+  Aggregate -->|unexpected failure or skip| Reject[Fail]
+```
+
+Contract tests execute the actual aggregate script against draft, ready PR,
+push, and manual job-result scenarios, including negative cases for a skipped
+required preflight or `full-ci`. They also check that `converted_to_draft`
+cancels an older run and `ready_for_review` launches the applicable validation.
 
 ## Early pull-request metadata rejection
 
