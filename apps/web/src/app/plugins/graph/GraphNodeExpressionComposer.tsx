@@ -119,7 +119,9 @@ export function GraphNodeExpressionComposer(props: {
           onCancel={props.onCancel}
           onSubmit={(request) => {
             const result = props.onApply({
-              ...request,
+              alias: request.alias,
+              capabilityId: request.capabilityIds[0],
+              operandFieldIds: request.operandFieldIds,
               nodeId: props.nodeId,
               columnId: props.columnId,
             });

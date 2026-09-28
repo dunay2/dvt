@@ -1,18 +1,16 @@
 /** One canonical command form for creating a scalar-derived output. */
 import { DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
 import { useId, useMemo, useState, type FormEvent } from 'react';
-import { DerivedOutputOperands, type DerivedOutputField } from './DerivedOutputOperands';
+import {
+  DerivedExpressionBuilder,
+  type DerivedExpressionFunction,
+} from './DerivedExpressionBuilder';
+import type { DerivedOutputField } from './DerivedOutputOperands';
 
-export type DerivedOutputFunction = Readonly<{
-  capabilityId: string;
-  name: string;
-  minimumArgumentCount: number;
-  maximumArgumentCount?: number;
-  expressionTemplate?: string;
-}>;
+export type DerivedOutputFunction = DerivedExpressionFunction;
 export type DerivedOutputRequest = Readonly<{
   alias: string;
-  capabilityId: string;
+  capabilityIds: readonly [string, ...string[]];
   operandFieldIds: readonly [string, ...string[]];
 }>;
 export type DerivedOutputFunctionResolver = (
@@ -63,6 +61,9 @@ export function DerivedOutputForm({
     moveOperandUp: string;
     moveOperandDown: string;
     previewLabel: string;
+    formulaLabel?: string;
+    wrapFunction?: string;
+    removeWrapper?: string;
     aliasLabel: string;
     aliasInvalid: string;
     aliasConflict: string;
@@ -76,6 +77,7 @@ export function DerivedOutputForm({
   const initial = initialOperandFieldIds ?? (fields[0] == null ? null : [fields[0].fieldId]);
   const [fieldIds, setFieldIds] = useState<string[]>(() => (initial == null ? [] : [...initial]));
   const [capabilityId, setCapabilityId] = useState(initialCapabilityId ?? '');
+  const [wrappers, setWrappers] = useState<string[]>([]);
   const [alias, setAlias] = useState('');
   const [busy, setBusy] = useState(false);
   const [commandError, setCommandError] = useState<string | null>(null);
@@ -91,15 +93,22 @@ export function DerivedOutputForm({
   const compatible = resolveFunctions(operands, 'complete').some(
     (item) => item.capabilityId === operation.capabilityId
   );
+  const wrapperCandidates =
+    operation.category === 'text'
+      ? functions.filter(
+          (candidate) =>
+            candidate.category === 'text' &&
+            candidate.minimumArgumentCount === 1 &&
+            candidate.maximumArgumentCount === 1
+        )
+      : [];
+  const wrappersValid = wrappers.every((wrapperCapabilityId) =>
+    wrapperCandidates.some((candidate) => candidate.capabilityId === wrapperCapabilityId)
+  );
   const aliasInvalid = alias.length > 0 && !DvtSemanticFieldNameV1Schema.safeParse(alias).success;
   const aliasConflict = unavailableAliases.includes(alias);
-  const valid = alias.length > 0 && !aliasInvalid && !aliasConflict && compatible;
-  const labels = new Map(fields.map((field) => [field.fieldId, field.name] as const));
-  const names = operands.map((fieldId) => labels.get(fieldId) ?? fieldId);
-  const preview =
-    operation.expressionTemplate != null && names.length === 1
-      ? operation.expressionTemplate.replace('{column}', names[0]!)
-      : `${operation.name.toUpperCase()}(${names.join(', ')})`;
+  const valid =
+    alias.length > 0 && !aliasInvalid && !aliasConflict && compatible && wrappersValid;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -107,7 +116,7 @@ export function DerivedOutputForm({
     setBusy(true);
     const error = await onSubmit({
       alias,
-      capabilityId: operation.capabilityId,
+      capabilityIds: [operation.capabilityId, ...wrappers] as [string, ...string[]],
       operandFieldIds: operands as [string, ...string[]],
     });
     setBusy(false);
@@ -121,29 +130,7 @@ export function DerivedOutputForm({
       : commandError;
   return (
     <form data-slot={dataSlot} className="space-y-3" onSubmit={(event) => void submit(event)}>
-      <label className="block space-y-1 text-xs">
-        <span className="text-(--text-muted)">{copy.functionLabel}</span>
-        <select
-          name="capabilityId"
-          value={operation.capabilityId}
-          disabled={busy}
-          className="h-8 w-full rounded border border-(--border-subtle) bg-(--surface-panel) px-2"
-          onChange={(event) => {
-            const next = functions.find((item) => item.capabilityId === event.currentTarget.value);
-            if (next == null) return;
-            setCapabilityId(next.capabilityId);
-            setFieldIds((current) => normalize(current, fields, bounds(next, fields.length)));
-            setCommandError(null);
-          }}
-        >
-          {functions.map((item) => (
-            <option key={item.capabilityId} value={item.capabilityId}>
-              {item.name.toUpperCase()}
-            </option>
-          ))}
-        </select>
-      </label>
-      <DerivedOutputOperands
+      <DerivedExpressionBuilder
         fields={fields.filter((candidate) => {
           const probe =
             range.maximum === 1 ? [candidate.fieldId] : [operands[0]!, candidate.fieldId];
@@ -151,22 +138,32 @@ export function DerivedOutputForm({
             (item) => item.capabilityId === operation.capabilityId
           );
         })}
-        fieldIds={operands}
+        functions={functions}
+        operation={operation}
+        operands={operands}
+        wrappers={wrappers}
         minimum={range.minimum}
         maximum={range.maximum}
         busy={busy}
         copy={copy}
-        onChange={(next) => {
+        onOperationChange={(nextCapabilityId) => {
+          const next = functions.find((item) => item.capabilityId === nextCapabilityId);
+          if (next == null) return;
+          setCapabilityId(next.capabilityId);
+          setFieldIds((current) => normalize(current, fields, bounds(next, fields.length)));
+          setWrappers([]);
+          setCommandError(null);
+        }}
+        onOperandsChange={(next) => {
           setFieldIds([...next]);
+          setWrappers([]);
+          setCommandError(null);
+        }}
+        onWrappersChange={(next) => {
+          setWrappers([...next]);
           setCommandError(null);
         }}
       />
-      <div className="rounded border border-(--border-subtle) p-2 text-xs">
-        <span className="text-(--text-muted)">{copy.previewLabel}</span>
-        <code data-slot="graph-node-column-function-expression" className="mt-1 block">
-          {preview}
-        </code>
-      </div>
       <label className="block space-y-1 text-xs">
         <span className="text-(--text-muted)">{copy.aliasLabel}</span>
         <input

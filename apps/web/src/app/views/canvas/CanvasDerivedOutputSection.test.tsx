@@ -50,6 +50,22 @@ describe('selected relation derived-output section', () => {
     await act(async () =>
       fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-trigger"]')!)
     );
+    const baseFunction = container.querySelector<HTMLSelectElement>('select[name="capabilityId"]')!;
+    const trim = [...baseFunction.options].find((option) => option.textContent === 'TRIM');
+    if (trim == null) throw new Error('Expected TRIM capability.');
+    await act(async () => fireEvent.change(baseFunction, { target: { value: trim.value } }));
+    await act(async () =>
+      fireEvent.click(container.querySelector('[data-slot="derived-expression-add-wrapper"]')!)
+    );
+    const wrapper = container.querySelector<HTMLSelectElement>(
+      '[data-slot="derived-expression-wrapper-function"]'
+    )!;
+    const upper = [...wrapper.options].find((option) => option.textContent === 'UPPER');
+    if (upper == null) throw new Error('Expected UPPER capability.');
+    await act(async () => fireEvent.change(wrapper, { target: { value: upper.value } }));
+    expect(
+      container.querySelector('[data-slot="graph-node-column-function-expression"]')?.textContent
+    ).toContain('UPPER(TRIM(');
     await act(async () =>
       fireEvent.change(container.querySelector<HTMLInputElement>('input[name="alias"]')!, {
         target: { value: 'normalized_name' },
@@ -66,6 +82,14 @@ describe('selected relation derived-output section', () => {
     if (!indexed.ok) throw indexed.error;
     const project = indexed.index.relations.get(relationId);
     expect(project?.relation.relType.case).toBe('project');
+    if (project?.relation.relType.case !== 'project') throw new Error('Expected ProjectRel.');
+    const expression = project.relation.relType.value.expressions.at(-1)?.rexType;
+    expect(expression?.case).toBe('scalarFunction');
+    if (expression?.case !== 'scalarFunction') throw new Error('Expected outer scalar function.');
+    const argument = expression.value.arguments[0]?.argType;
+    expect(argument?.case).toBe('value');
+    if (argument?.case !== 'value') throw new Error('Expected scalar function argument.');
+    expect(argument.value.rexType.case).toBe('scalarFunction');
     expect(
       onChange.mock.calls[0]![0].sidecar.fields.some(
         (field: { displayName?: string }) => field.displayName === 'normalized_name'
