@@ -5,6 +5,7 @@ import { applyJoinNormalization } from './canvasJoinNormalizationApply';
 import { projectJoinNormalization } from './canvasJoinNormalizationProposal';
 import {
   isDvtSubstraitJoinConditionGroup,
+  type DvtSubstraitJoinComparisonCondition,
   type DvtSubstraitJoinPredicateCondition,
 } from './canvasDvtSubstraitJoinCondition';
 import type { DvtSubstraitJoinPredicateOperand } from './canvasDvtSubstraitJoinOperand';
@@ -29,7 +30,10 @@ function functionOperand(
   return { kind: 'function', capabilityId, input };
 }
 
-function leaf(conditions: readonly DvtSubstraitJoinPredicateCondition[], index: number) {
+function leaf(
+  conditions: readonly DvtSubstraitJoinPredicateCondition[],
+  index: number
+): DvtSubstraitJoinComparisonCondition<DvtSubstraitJoinPredicateOperand> {
   const condition = conditions[index];
   if (condition == null || isDvtSubstraitJoinConditionGroup(condition)) {
     throw new Error('Expected comparison condition.');
