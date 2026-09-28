@@ -182,10 +182,12 @@ unsupported shapes.
 
 The capability catalog promotes the bounded capabilities proven by Canvas authoring:
 named-table `ReadRel`, `RelCommon.Emit`, `ProjectRel`, field selection, scalar-function
-expressions, string type, `trim`, `upper`, `lower`, and `concat`. Substrait owns the
-official variadic `concat:str` meaning; the DVT profile admits exactly two ordered string
-operands with `ACCEPT_NULLS`, and the PostgreSQL renderer projects that recursive expression
-through the governed AST. Catalog presence for other relations/functions/types remains
+expressions, string and i64 types, the admitted text functions, and the bounded i64 arithmetic
+functions `add`, `subtract`, `multiply` and `divide`. Substrait owns the official function
+identities and signatures. The DVT profile narrows string CONCAT to exactly two ordered operands
+with `ACCEPT_NULLS`, and narrows arithmetic to homogeneous binary i64 invocations with explicit
+error semantics for overflow and division failures. PostgreSQL projects the same recursive
+expressions through the governed AST. Catalog presence for other relations/functions/types remains
 governance metadata, not execution or UI support evidence.
 
 ### TARGET beyond that slice
