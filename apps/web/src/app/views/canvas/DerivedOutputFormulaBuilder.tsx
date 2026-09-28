@@ -85,7 +85,11 @@ function FormulaNodeEditor({
       onChange({ kind, value: false });
       return;
     }
-    const function_ = candidates[0];
+    const function_ =
+      candidates.find(
+        (candidate) =>
+          candidate.minimumArgumentCount === 1 && candidate.maximumArgumentCount === 1
+      ) ?? candidates[0];
     if (function_ == null) return;
     onChange({
       kind: 'function',
