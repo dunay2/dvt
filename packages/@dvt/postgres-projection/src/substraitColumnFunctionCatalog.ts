@@ -11,6 +11,8 @@ export const STRING_DATA_TYPES = new Set([
   'bpchar',
 ]);
 
+export const I64_DATA_TYPES = new Set(['bigint', 'int8', 'i64']);
+
 export const TIMESTAMPTZ_DATA_TYPES = new Set([
   'timestamp with time zone',
   'timestamptz',
@@ -24,7 +26,7 @@ export function normalizeProjectionDataType(dataType: unknown): string {
 export type DvtSubstraitColumnFunction = Readonly<{
   capabilityId: string;
   name: string;
-  category: 'text' | 'date-time';
+  category: 'text' | 'date-time' | 'arithmetic';
   minimumArgumentCount: number;
   maximumArgumentCount?: number;
   expressionTemplate?: string;
@@ -79,6 +81,7 @@ export function resolveDvtSubstraitColumnFunctions(args: {
   );
   if (args.provider !== 'postgres' || normalizedTypes.length === 0) return [];
   const stringOperands = normalizedTypes.every((dataType) => STRING_DATA_TYPES.has(dataType));
+  const i64Operands = normalizedTypes.every((dataType) => I64_DATA_TYPES.has(dataType));
   const timestampOperand =
     normalizedTypes.length === 1 && TIMESTAMPTZ_DATA_TYPES.has(normalizedTypes[0]!);
 
@@ -110,6 +113,36 @@ export function resolveDvtSubstraitColumnFunctions(args: {
                 name: entry.identity.name,
                 category: 'text' as const,
                 ...range,
+              },
+            ]
+          : [];
+      }
+      const arithmetic =
+        entry.identity.urn === 'extension:io.substrait:functions_arithmetic' &&
+        ['add', 'subtract', 'multiply', 'divide'].includes(entry.identity.name) &&
+        entry.invocation?.signature === `${entry.identity.name}:i64_i64` &&
+        entry.invocation.argumentTypes.join('_') === 'i64_i64' &&
+        entry.invocation.outputType === 'i64';
+      if (i64Operands && arithmetic) {
+        const range = invocationArgumentRange(entry.invocation);
+        const admitted =
+          args.resolution === 'proposal'
+            ? admitsProposedArgumentCount(range, normalizedTypes.length)
+            : admitsCompleteArgumentCount(range, normalizedTypes.length);
+        const symbol = {
+          add: '+',
+          subtract: '-',
+          multiply: '*',
+          divide: '/',
+        }[entry.identity.name];
+        return admitted && symbol != null
+          ? [
+              {
+                capabilityId: entry.entryId,
+                name: entry.identity.name,
+                category: 'arithmetic' as const,
+                ...range,
+                expressionTemplate: `({0} ${symbol} {1})`,
               },
             ]
           : [];
