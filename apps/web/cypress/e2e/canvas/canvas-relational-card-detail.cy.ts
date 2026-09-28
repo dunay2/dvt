@@ -91,10 +91,14 @@ describe('Relational card detail', () => {
       const before = geometry();
       const count = $layout.find('[data-slot="canvas-relational-card-detail"]').length;
       for (const deltaY of [-800, 500, -150, 200]) {
-        cy.get('[data-slot="canvas-relational-tree-viewport"]').trigger('wheel', {
-          deltaY,
-          eventConstructor: 'WheelEvent',
-        });
+        cy.get(
+          '[data-slot="canvas-relational-tree-viewport"], [data-slot="canvas-relational-tree-draft-viewport"]'
+        )
+          .should('have.length', 1)
+          .trigger('wheel', {
+            deltaY,
+            eventConstructor: 'WheelEvent',
+          });
         cy.then(() => expect(geometry()).to.deep.equal(before));
         cy.get('[data-slot="canvas-relational-card-detail"]').should('have.length', count);
       }
