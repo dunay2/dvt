@@ -119,7 +119,7 @@ describe('selected relation derived-output section', () => {
       fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-trigger"]')!)
     );
     await act(async () =>
-      fireEvent.change(container.querySelector('[data-slot="derived-expression-kind"]')!, {
+      fireEvent.change(container.querySelector('[data-slot="derived-expression-node-kind"]')!, {
         target: { value: 'string-literal' },
       })
     );
