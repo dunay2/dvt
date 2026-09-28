@@ -103,6 +103,7 @@ export function GraphNodeExpressionComposer(props: {
           initialOperandFieldIds={props.initialOperandFieldIds}
           unavailableAliases={props.unavailableAliases}
           allowLiterals={false}
+          allowNested={false}
           copy={{
             functionLabel: props.copy.expressionComposerFunctionLabel,
             operandsLabel: props.copy.expressionComposerOperandsLabel,
@@ -119,12 +120,17 @@ export function GraphNodeExpressionComposer(props: {
           }}
           onCancel={props.onCancel}
           onSubmit={(request) => {
-            if (request.expression.kind !== 'function')
+            if (
+              request.expression.kind !== 'function' ||
+              request.expression.arguments.some((argument) => argument.kind !== 'field')
+            )
               return props.copy.expressionComposerRejectedLabel;
             const result = props.onApply({
               alias: request.alias,
-              capabilityId: request.expression.capabilityIds[0],
-              operandFieldIds: request.expression.operandFieldIds,
+              capabilityId: request.expression.capabilityId,
+              operandFieldIds: request.expression.arguments.map(
+                (argument) => (argument as { kind: 'field'; fieldId: string }).fieldId
+              ) as [string, ...string[]],
               nodeId: props.nodeId,
               columnId: props.columnId,
             });
