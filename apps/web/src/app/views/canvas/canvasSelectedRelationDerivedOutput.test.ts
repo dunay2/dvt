@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { resolveDvtSubstraitColumnFunctions } from '@dvt/postgres-projection';
 import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
+import { createDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { selectedUnaryScenario } from './canvasSelectedUnary.test-support';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
@@ -319,6 +320,78 @@ describe('selected relation derived output authoring', () => {
     expect(second.value.rexType).toMatchObject({
       case: 'literal',
       value: { literalType: { case: 'string', value: 'UNKNOWN' } },
+    });
+  });
+
+  it('builds nested i64 arithmetic from literal leaves without fake field lineage', async () => {
+    const session = new CanvasRelationAnalysisSession('nested-i64-arithmetic');
+    session.receive(
+      createDvtSubstraitProjectionDraft({
+        source: {
+          nodeId: 'source-metrics',
+          schema: 'raw',
+          table: 'metrics',
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              connectionId: 'warehouse-main',
+              provider: 'postgres',
+            },
+            sourceObjectId: 'raw.metrics',
+          },
+          fields: [{ name: 'seed', dataType: 'bigint' }],
+        },
+        targetNodeId: 'transform-metrics',
+        outputs: [{ fieldId: 'output:seed', name: 'seed', sourceFieldName: 'seed' }],
+      })
+    );
+    const add = resolveDvtSubstraitColumnFunctions({
+      dataTypes: ['bigint', 'bigint'],
+      provider: 'postgres',
+      resolution: 'complete',
+    }).find((entry) => entry.name === 'add');
+    if (add == null) throw new Error('Missing admitted ADD capability.');
+
+    const document = await applySelectedRelationDerivedOutput(session, {
+      intent: 'edit',
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      alias: 'formula_result',
+      expression: {
+        kind: 'function',
+        capabilityId: add.capabilityId,
+        arguments: [
+          {
+            kind: 'function',
+            capabilityId: add.capabilityId,
+            arguments: [
+              { kind: 'i64-literal', value: 1n },
+              { kind: 'i64-literal', value: 1n },
+            ],
+          },
+          { kind: 'i64-literal', value: 3n },
+        ],
+      },
+    });
+
+    const field = document.sidecar.fields.find(
+      (candidate) => candidate.displayName === 'formula_result'
+    );
+    expect(field?.sourceFieldId).toBeUndefined();
+    expect(field?.operandFieldIds).toBeUndefined();
+
+    const target = session.locate(session.rootId, session.revision);
+    if (target.relation.relType.case !== 'project') throw new Error('Expected ProjectRel.');
+    const outer = target.relation.relType.value.expressions.at(-1)?.rexType;
+    if (outer?.case !== 'scalarFunction') throw new Error('Expected outer ADD.');
+    const left = outer.value.arguments[0]?.argType;
+    const right = outer.value.arguments[1]?.argType;
+    if (left?.case !== 'value' || right?.case !== 'value') throw new Error('Expected ADD values.');
+    expect(left.value.rexType.case).toBe('scalarFunction');
+    expect(right.value.rexType).toMatchObject({
+      case: 'literal',
+      value: { literalType: { case: 'i64', value: 3n } },
     });
   });
 });
