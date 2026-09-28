@@ -9,6 +9,7 @@ import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-su
 import { setupWorkbenchTest, root, container } from './CanvasRelationalTreeWorkbench.test-support';
 import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
 
 describe('selected relation derived-output section', () => {
   setupWorkbenchTest();
@@ -100,5 +101,57 @@ describe('selected relation derived-output section', () => {
         (field: { displayName?: string }) => field.displayName === 'normalized_name'
       )
     ).toBe(true);
+  });
+
+  it('does not offer the edited output as its own formula operand', async () => {
+    const session = new CanvasRelationAnalysisSession('derived-output-self-reference-identity');
+    session.receive(connectedNamesProjectionDraft());
+    const relationId = session.rootId;
+    const document = await applySelectedRelationDerivedOutput(session, {
+      intent: 'edit',
+      relationId,
+      expectedRevision: session.revision,
+      alias: 'normalized_name',
+      formula: 'UPPER(first_name)',
+    });
+    const output = document.sidecar.fields.find(
+      (field) => field.parentFieldId == null && field.displayName === 'normalized_name'
+    );
+    if (output == null) throw new Error('Expected derived output.');
+    const onChange = vi.fn();
+
+    function Host(): React.JSX.Element {
+      const analysis = useCanvasRelationAnalysisSession(document, 'derived-output-self-reference');
+      return (
+        <CanvasRelationAnalysisContext.Provider value={analysis}>
+          <CanvasDerivedOutputSection relationId={relationId} onChange={onChange} />
+        </CanvasRelationAnalysisContext.Provider>
+      );
+    }
+
+    await act(async () => root.render(<Host />));
+    await waitFor(() =>
+      expect(
+        container.querySelector(
+          `[data-slot="canvas-derived-output"][data-field-id="${output.fieldId}"]`
+        )
+      ).not.toBeNull()
+    );
+    await act(async () =>
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          `[data-slot="canvas-derived-output"][data-field-id="${output.fieldId}"] button`
+        )!
+      )
+    );
+
+    const rootKind = container.querySelector<HTMLSelectElement>(
+      '[data-slot="derived-formula-node-kind"][data-depth="0"]'
+    )!;
+    await act(async () => fireEvent.change(rootKind, { target: { value: 'field' } }));
+    const fieldSelect = container.querySelector<HTMLSelectElement>(
+      '[data-slot="derived-formula-field"]'
+    )!;
+    expect([...fieldSelect.options].map((option) => option.value)).not.toContain(output.fieldId);
   });
 });
