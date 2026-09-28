@@ -113,7 +113,7 @@ export const DVT_SUBSTRAIT_STANDARD_CANDIDATES_V1: readonly DvtSubstraitStandard
     extensionCandidate('scalar-function', 'functions_string', name)
   ),
   extensionCandidate('scalar-function', 'functions_datetime', 'extract'),
-  ...['add', 'subtract', 'multiply'].map((name) =>
+  ...['add', 'subtract', 'multiply', 'divide'].map((name) =>
     extensionCandidate('scalar-function', 'functions_arithmetic', name)
   ),
   ...['coalesce', 'equal', 'not_equal', 'gt', 'gte', 'lt', 'lte', 'is_null', 'is_not_null'].map(

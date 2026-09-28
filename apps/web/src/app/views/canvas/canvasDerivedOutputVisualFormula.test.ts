@@ -69,6 +69,30 @@ describe('visual derived-output formula draft', () => {
     ).toEqual({ ok: true, formula: '((1 + 1) + 3)', dataType: 'bigint' });
   });
 
+  it('renders and validates admitted bigint division as a catalog function', () => {
+    const divide = capability('divide', ['bigint', 'bigint']);
+    const expression: DerivedOutputVisualFormula = {
+      kind: 'function',
+      capabilityId: divide,
+      arguments: [
+        { kind: 'field', fieldId: 'field:price' },
+        { kind: 'field', fieldId: 'field:quantity' },
+      ],
+    };
+
+    expect(formatDerivedOutputVisualFormula(expression, fields)).toBe('DIVIDE(price, quantity)');
+    expect(
+      validateDerivedOutputVisualFormula({ expression, fields, provider: 'postgres' })
+    ).toEqual({ ok: true, formula: 'DIVIDE(price, quantity)', dataType: 'bigint' });
+    expect(
+      resolveDvtSubstraitColumnFunctions({
+        dataTypes: ['double precision', 'double precision'],
+        provider: 'postgres',
+        resolution: 'complete',
+      }).some((candidate) => candidate.name === 'divide')
+    ).toBe(false);
+  });
+
   it('fails closed when a visual tree combines incompatible types', () => {
     const multiply = capability('multiply', ['bigint', 'bigint']);
     const expression: DerivedOutputVisualFormula = {

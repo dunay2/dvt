@@ -148,3 +148,32 @@ async function expectAppRoleTablePrivilege(
     expect(result.rows[0]?.has_privilege).toBe(expected);
   });
 }
+
+describeIfPg('PostgreSQL bigint DIVIDE semantics', () => {
+  const harness = usePostgresRlsProofHarness('dvt_divide_semantics_it');
+
+  it('truncates integer division toward zero', async () => {
+    await harness.withAppClient(async (client) => {
+      const result = await client.query<{ quotient: string }>(
+        `SELECT ('-5'::bigint / '2'::bigint) AS quotient`
+      );
+      expect(result.rows[0]?.quotient).toBe('-2');
+    });
+  });
+
+  it('raises division_by_zero for a zero bigint divisor', async () => {
+    await harness.withAppClient(async (client) => {
+      await expect(client.query(`SELECT '1'::bigint / '0'::bigint`)).rejects.toMatchObject({
+        code: '22012',
+      });
+    });
+  });
+
+  it('raises numeric_value_out_of_range for INT64_MIN divided by -1', async () => {
+    await harness.withAppClient(async (client) => {
+      await expect(
+        client.query(`SELECT '-9223372036854775808'::bigint / '-1'::bigint`)
+      ).rejects.toMatchObject({ code: '22003' });
+    });
+  });
+});
