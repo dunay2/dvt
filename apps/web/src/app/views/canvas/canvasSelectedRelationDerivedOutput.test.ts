@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { resolveDvtSubstraitColumnFunctions } from '@dvt/postgres-projection';
 import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
-import { createDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { selectedUnaryScenario } from './canvasSelectedUnary.test-support';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
@@ -325,27 +324,7 @@ describe('selected relation derived output authoring', () => {
 
   it('builds nested i64 arithmetic from literal leaves without fake field lineage', async () => {
     const session = new CanvasRelationAnalysisSession('nested-i64-arithmetic');
-    session.receive(
-      createDvtSubstraitProjectionDraft({
-        source: {
-          nodeId: 'source-metrics',
-          schema: 'raw',
-          table: 'metrics',
-          sourceRef: {
-            schemaVersion: 'connected-source-ref.v1',
-            connectionRef: {
-              schemaVersion: 'connection-ref.v1',
-              connectionId: 'warehouse-main',
-              provider: 'postgres',
-            },
-            sourceObjectId: 'raw.metrics',
-          },
-          fields: [{ name: 'seed', dataType: 'bigint' }],
-        },
-        targetNodeId: 'transform-metrics',
-        outputs: [{ fieldId: 'output:seed', name: 'seed', sourceFieldName: 'seed' }],
-      })
-    );
+    session.receive(connectedNamesProjectionDraft());
     const add = resolveDvtSubstraitColumnFunctions({
       dataTypes: ['bigint', 'bigint'],
       provider: 'postgres',
