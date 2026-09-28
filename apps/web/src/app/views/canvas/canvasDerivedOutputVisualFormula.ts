@@ -131,7 +131,36 @@ export function derivedOutputVisualFormulaCandidates(
     dataTypes: dataTypes.filter((dataType): dataType is string => dataType != null),
     provider,
     resolution: 'proposal',
+  }).filter(
+    // The current formula grammar has no component/timezone syntax for temporal functions.
+    // Do not expose a visual choice that cannot round-trip through compileDerivedOutputFormula.
+    (candidate) => candidate.category !== 'date-time'
+  );
+}
+
+export function compatibleDerivedOutputVisualFields(args: Readonly<{
+  expression: Extract<DerivedOutputVisualFormula, { kind: 'function' }>;
+  argumentIndex: number;
+  fields: readonly DerivedOutputField[];
+  provider: string;
+}>): readonly DerivedOutputField[] {
+  const compatible = args.fields.filter((field) => {
+    const arguments_ = args.expression.arguments.map((argument, index) =>
+      index === args.argumentIndex ? ({ kind: 'field', fieldId: field.fieldId } as const) : argument
+    );
+    const probe: DerivedOutputVisualFormula = {
+      kind: 'function',
+      capabilityId: args.expression.capabilityId,
+      arguments: arguments_ as [
+        DerivedOutputVisualFormula,
+        ...DerivedOutputVisualFormula[],
+      ],
+    };
+    return derivedOutputVisualFormulaCandidates(probe, args.fields, args.provider).some(
+      (candidate) => candidate.capabilityId === args.expression.capabilityId
+    );
   });
+  return compatible.length === 0 ? args.fields : compatible;
 }
 
 export function defaultDerivedOutputVisualFormula(
