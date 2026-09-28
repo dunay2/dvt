@@ -11,6 +11,10 @@ import { cloneLocalRelation, SubstraitAnalysisError } from '@dvt/substrait-analy
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { inspectProjectionDataType } from './canvasDvtSubstraitProjectionStructure';
 import { buildDvtSubstraitScalarFunction } from './canvasDvtSubstraitScalarFunction';
+import {
+  buildDvtSubstraitCalculatedExpression,
+  type DvtSubstraitCalculatedExpression,
+} from './canvasDvtSubstraitCalculatedExpression';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import { relationOutputMapping } from './canvasRelationOutputBindings';
 import {
@@ -19,12 +23,25 @@ import {
   type SelectedUnaryRequest,
 } from './canvasSelectedRelationUnary';
 
+type SelectedRelationLiteral = Extract<
+  DvtSubstraitCalculatedExpression,
+  { kind: 'string-literal' | 'timestamp-literal' }
+>;
+
 export type SelectedRelationDerivedOutputRequest = SelectedUnaryRequest &
-  Readonly<{
-    alias: string;
-    capabilityIds: readonly [string, ...string[]];
-    operandFieldIds: readonly [string, ...string[]];
-  }>;
+  Readonly<{ alias: string }> &
+  (
+    | Readonly<{
+        capabilityIds: readonly [string, ...string[]];
+        operandFieldIds: readonly [string, ...string[]];
+        literal?: never;
+      }>
+    | Readonly<{
+        literal: SelectedRelationLiteral;
+        capabilityIds?: never;
+        operandFieldIds?: never;
+      }>
+  );
 
 function rootFields<T extends Readonly<{ parentFieldId?: string; outputOrdinal: number }>>(
   fields: readonly T[]
@@ -101,18 +118,19 @@ export async function applySelectedRelationDerivedOutput(
     request.intent === 'edit'
       ? await session.query(request.relationId, request.signal)
       : prepared.schema;
+  const operandFieldIds = request.literal == null ? request.operandFieldIds : [];
   if (
     rootFields(available.bindings).some((field) => field.displayName === alias) ||
-    request.operandFieldIds.some(
+    operandFieldIds.some(
       (fieldId) => !rootFields(available.bindings).some((field) => field.fieldId === fieldId)
     )
   )
     reject('Derived-output alias or operand is unavailable.', request.relationId);
 
-  const expressions = request.operandFieldIds.map((fieldId) =>
+  const expressions = operandFieldIds.map((fieldId) =>
     resolveOperandExpression(prepared, fieldId)
   );
-  const dataTypes = request.operandFieldIds.map((fieldId) => {
+  const dataTypes = operandFieldIds.map((fieldId) => {
     const binding = rootFields(available.bindings).find((field) => field.fieldId === fieldId);
     return binding == null
       ? null
@@ -125,14 +143,23 @@ export async function applySelectedRelationDerivedOutput(
     reject('Derived-output operand cannot be projected.', request.relationId);
 
   const plan = clone(PlanSchema, { ...prepared.target.plan, relations: [] });
-  const expression = buildScalarChain({
-    plan,
-    capabilityIds: request.capabilityIds,
-    dataTypes: dataTypes.filter((type): type is string => type != null),
-    operands: expressions.filter((item): item is Expression => item != null),
-    provider: session.executionProvider(request.expectedRevision),
-  });
-  if (expression == null) reject('Derived-output capability is unavailable.', request.relationId);
+  let expression: Expression | null = null;
+  if (request.literal != null) {
+    try {
+      expression = buildDvtSubstraitCalculatedExpression(plan, request.literal);
+    } catch {
+      expression = null;
+    }
+  } else {
+    expression = buildScalarChain({
+      plan,
+      capabilityIds: request.capabilityIds,
+      dataTypes: dataTypes.filter((type): type is string => type != null),
+      operands: expressions.filter((item): item is Expression => item != null),
+      provider: session.executionProvider(request.expectedRevision),
+    });
+  }
+  if (expression == null) reject('Derived-output expression is unavailable.', request.relationId);
 
   const relation =
     request.intent === 'edit'
@@ -155,7 +182,7 @@ export async function applySelectedRelationDerivedOutput(
       rootFields(prepared.schema.bindings).length + project.expressions.length - 1
     );
   }
-  const dependencies = [...new Set(request.operandFieldIds)];
+  const dependencies = [...new Set(operandFieldIds)];
   const fields = [
     ...prepared.fields,
     {
