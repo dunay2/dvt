@@ -3,6 +3,7 @@ import { resolveDvtSubstraitColumnFunctions } from '@dvt/postgres-projection';
 
 import {
   compatibleDerivedOutputVisualFields,
+  derivedOutputVisualFormulaCandidates,
   formatDerivedOutputVisualFormula,
   parseDerivedOutputVisualFormula,
   validateDerivedOutputVisualFormula,
@@ -128,5 +129,19 @@ describe('visual derived-output formula draft', () => {
         provider: 'postgres',
       })
     ).toEqual([]);
+  });
+
+  it('does not advertise temporal functions that cannot round-trip through formula syntax', () => {
+    const timestampFields: readonly DerivedOutputField[] = [
+      { fieldId: 'field:created', name: 'created_at', dataType: 'timestamp with time zone' },
+    ];
+
+    expect(
+      derivedOutputVisualFormulaCandidates(
+        { kind: 'field', fieldId: 'field:created' },
+        timestampFields,
+        'postgres'
+      ).map((candidate) => candidate.category)
+    ).not.toContain('date-time');
   });
 });
