@@ -25,6 +25,7 @@ export type DvtSubstraitOutputExpressionCandidate =
   | Readonly<{ kind: 'field-ref'; inputFieldId: string }>
   | Readonly<{ kind: 'string-literal'; value: string }>
   | Readonly<{ kind: 'timestamp-literal'; value: string }>
+  | Readonly<{ kind: 'i64-literal'; value: bigint }>
   | Readonly<{
       kind: 'scalar-function';
       operandFieldIds: readonly [string, ...string[]];
@@ -62,6 +63,9 @@ function directCalculation(
       kind: 'timestamp-literal',
       value: new Date(parseIsoUtcToEpochMs(timestamp.data)).toISOString(),
     };
+  }
+  if (expression.kind === 'i64-literal') {
+    return { kind: 'i64-literal', value: expression.value };
   }
   return sourceOrdinal == null ? null : { kind: 'row-number', orderSourceOrdinal: sourceOrdinal };
 }
