@@ -7,7 +7,10 @@ import {
   SimpleExtensionDeclarationSchema,
   SimpleExtensionURNSchema,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/extensions/extensions_pb.js';
-import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import {
+  PlanSchema,
+  type Plan,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {
   TypeSchema,
   Type_I64Schema,
@@ -29,7 +32,7 @@ const operators = {
 } as const;
 
 function arithmetic(name: keyof typeof operators): {
-  plan: ReturnType<typeof create<typeof PlanSchema>>;
+  plan: Plan;
   fn: Expression_ScalarFunction;
 } {
   const capability = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
