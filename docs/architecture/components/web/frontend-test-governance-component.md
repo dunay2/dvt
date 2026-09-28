@@ -52,12 +52,13 @@ contract validation, or engine determinism tests.
 - Feature-owned focus suites may narrow local feedback loops without changing
   primary suite ownership.
 - Architecture tests are excluded from unit and presentation suites.
-- The `unit` and `architecture` primary suites default to Node. Unit tests that
-  exercise browser APIs, browser-backed persistence, or browser-derived language explicitly declare
-  `@vitest-environment jsdom`; this also keeps their environment consistent when
-  exact-file routing invokes the primary config. Presentation, focus suites and
-  the aggregate watch config retain jsdom. Environment selection does not change
-  file ownership or changed-suite routing.
+- The `unit` and `architecture` primary suites and their `canvas-unit` and
+  `canvas-architecture` focus suites default to Node. Tests that exercise browser
+  APIs, browser-backed persistence, or browser-derived language explicitly
+  declare `@vitest-environment jsdom`; the declaration applies in both primary
+  and Canvas focus routes. Presentation, mixed Canvas, other focus suites, and
+  the aggregate watch config retain jsdom. Environment selection does not
+  change file ownership or changed-suite routing.
 - Tests using `installWorkspaceScopeHarness` explicitly declare jsdom because
   the harness updates the real persisted session store. The catalog architecture
   guard checks this dependency. Localized presentation-model tests likewise keep

@@ -100,15 +100,16 @@ Warm-build note:
 
 ## Package Validation Commands
 
-The Web CI primary suites run with one isolated fork at a time. Unit and
-architecture suites default to Node; browser-dependent unit tests explicitly
-declare `@vitest-environment jsdom`, including tests of persisted session state
-and browser-derived language. The persisted workspace-scope test harness requires
-that declaration and has an architecture guard for it.
-Presentation and focus suites retain jsdom. Each test file gets a fresh fork so
-completed processes release module and DOM memory while
-the governed suite coverage remains unchanged. Do not enable `singleFork`: it
-disables this isolation and can exhaust the 4 GB worker limit.
+The Web CI suites run with one isolated fork at a time. Unit and architecture
+primary suites, and their `canvas-unit` and `canvas-architecture` focus suites,
+default to Node. Browser-dependent tests explicitly declare
+`@vitest-environment jsdom`, including tests of persisted session state and
+browser-derived language. The persisted workspace-scope test harness requires
+that declaration and has an architecture guard for it. Presentation, mixed
+Canvas, and other focus suites retain jsdom. Each test file gets a fresh fork
+so completed processes release module and DOM memory while the governed suite
+coverage remains unchanged. Do not enable `singleFork`: it disables this
+isolation and can exhaust the 4 GB worker limit.
 
 A hosted full-route baseline captured on 2026-09-04 took about 845 seconds:
 roughly 35 seconds for setup and dependency build, 320 seconds for 273 unit
