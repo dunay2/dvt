@@ -237,4 +237,41 @@ describe('JOIN normalization apply', () => {
 
     expect(session.revision).toBe(revision);
   });
+
+  it('normalizes surrounding alias whitespace consistently across create and lookup', async () => {
+    const { session } = selectedUnaryScenario();
+    const initial = await querySelectedJoin(session, session.rootId, session.revision);
+    const left = initial.fields.find((field) => field.inputIndex === 0)!;
+    const right = initial.fields.find((field) => field.inputIndex === 1)!;
+
+    await replaceSelectedJoinConditions(session, {
+      relationId: initial.relationId,
+      expectedRevision: session.revision,
+      conditions: [
+        {
+          left: functionOperand(capability('upper'), {
+            kind: 'field',
+            sourceFieldId: left.fieldId,
+          }),
+          right: { kind: 'field', sourceFieldId: right.fieldId },
+        },
+      ],
+    });
+
+    const selected = await querySelectedJoin(session, initial.relationId, session.revision);
+    const projected = projectJoinNormalization(selected);
+    if (projected.outcome !== 'available') throw new Error('Expected normalization proposal.');
+
+    await applyJoinNormalization(session, {
+      proposal: projected.proposal,
+      aliases: {
+        [projected.proposal.transformations[0]!.transformationKey]: '  left_normalized  ',
+      },
+    });
+
+    const normalized = await querySelectedJoin(session, initial.relationId, session.revision);
+    expect(
+      normalized.inputs[0]!.bindings.some((field) => field.displayName === 'left_normalized')
+    ).toBe(true);
+  });
 });
