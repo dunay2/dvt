@@ -48,11 +48,15 @@ describe('CanvasRelationalTreeOutput', () => {
       '[data-slot="canvas-relational-output-input-port"]'
     )!;
 
-    act(() => fireEvent.click(port));
+    act(() => {
+      fireEvent.click(port);
+    });
     expect(onOpen).toHaveBeenCalledTimes(1);
     expect(onDisconnect).not.toHaveBeenCalled();
 
-    act(() => fireEvent.keyDown(port, { key: 'Delete' }));
+    act(() => {
+      fireEvent.keyDown(port, { key: 'Delete' });
+    });
     expect(onDisconnect).toHaveBeenCalledTimes(1);
 
     await act(async () => fireEvent.contextMenu(port));

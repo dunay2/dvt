@@ -807,6 +807,13 @@ routed Web suites but failed formatting on the then-in-progress typed-literal
 correction. The final committed-tree rerun remains required; the intermediate
 run is not represented as green.
 
+The post-correction Contracts and PostgreSQL projection run passed 939 tests in
+97 files. The next pre-push run passed formatting but exposed two pre-existing
+floating-promise errors in `CanvasRelationalTreeOutput.test.tsx`. Its synchronous
+`act` callbacks now return void rather than the `fireEvent` boolean, matching the
+actual synchronous interaction. No assertions or lint rules were removed; the
+complete gate must be rerun after this correction.
+
 The earlier database incident and six outstanding broader browser failures are
 not resolved by these formula-specific proofs. Integration remains pending the
 complete branch gates. No new debt, stub, fake production adapter, disabled rule
