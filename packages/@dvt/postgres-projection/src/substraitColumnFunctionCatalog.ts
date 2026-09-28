@@ -109,9 +109,9 @@ export function resolveDvtSubstraitColumnFunctions(args: {
               ? 'fp64'
               : null
         );
-        const invocation = entry.overloads?.find((item) =>
-          types.every((type) => type != null && type === item.outputType)
-        );
+        const invocation = (
+          entry.overloads ?? (entry.invocation == null ? [] : [entry.invocation])
+        ).find((item) => types.every((type) => type != null && type === item.outputType));
         if (invocation == null) return [];
         const range = invocationArgumentRange(invocation);
         const admitted =

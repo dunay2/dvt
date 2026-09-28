@@ -331,7 +331,39 @@ describe('DVT Substrait capability catalog V1', () => {
       DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.filter(
         (entry) => entry.kind === 'standard' && entry.invocation !== undefined
       )
-    ).toHaveLength(3);
+    ).toHaveLength(4);
+  });
+
+  it('admits only the bounded i64 DIVIDE invocation and exact PostgreSQL error posture', () => {
+    const divideId = buildDvtSubstraitStandardCapabilityId('scalar-function', {
+      sourceKind: 'simple-extension',
+      urn: 'extension:io.substrait:functions_arithmetic',
+      name: 'divide',
+    });
+
+    expect(findCapability(divideId)).toMatchObject({
+      profileStatus: 'supported-profile',
+      invocation: {
+        signature: 'divide:i64_i64',
+        argumentTypes: ['i64', 'i64'],
+        minimumArgumentCount: 2,
+        maximumArgumentCount: 2,
+        outputType: 'i64',
+        options: [
+          { name: 'overflow', preference: ['ERROR'] },
+          { name: 'on_domain_error', preference: ['ERROR'] },
+          { name: 'on_division_by_zero', preference: ['ERROR'] },
+        ],
+      },
+      admission: {
+        productUseCaseRef: 'dvt:#3434',
+        canonicalFixtureRef: 'docs/evidence/ED-20260928-transform-bigint-divide.md',
+        semanticValidationRef: 'docs/evidence/ED-20260928-transform-bigint-divide.md',
+        negativeValidationRef: 'docs/evidence/ED-20260928-transform-bigint-divide.md',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
   });
 
   it('admits the official unbounded variadic COALESCE invocation for PostgreSQL text', () => {

@@ -55,7 +55,27 @@ const LOWER_ID = functionId('scalar-function', 'functions_string', 'lower');
 const CONCAT_ID = functionId('scalar-function', 'functions_string', 'concat');
 const COALESCE_ID = functionId('scalar-function', 'functions_comparison', 'coalesce');
 const EXTRACT_ID = functionId('scalar-function', 'functions_datetime', 'extract');
+const DIVIDE_ID = functionId('scalar-function', 'functions_arithmetic', 'divide');
 const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
+  {
+    entryIds: [DIVIDE_ID],
+    useCaseRefs: ['dvt:#3434'],
+    proofRef: 'docs/evidence/ED-20260928-transform-bigint-divide.md',
+    invocationByEntryId: {
+      [DIVIDE_ID]: {
+        signature: 'divide:i64_i64',
+        argumentTypes: ['i64', 'i64'],
+        minimumArgumentCount: 2,
+        maximumArgumentCount: 2,
+        outputType: 'i64',
+        options: [
+          { name: 'overflow', preference: ['ERROR'] },
+          { name: 'on_domain_error', preference: ['ERROR'] },
+          { name: 'on_division_by_zero', preference: ['ERROR'] },
+        ],
+      },
+    },
+  },
   ...['add', 'subtract', 'multiply'].map((name): SupportedCapabilityGroup => ({
     entryIds: [functionId('scalar-function', 'functions_arithmetic', name)],
     useCaseRefs: ['dvt:#3419'],
