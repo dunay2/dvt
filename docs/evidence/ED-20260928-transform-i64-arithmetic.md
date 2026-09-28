@@ -84,7 +84,6 @@ Substrait plan plus stable DVT RelationId/FieldId/provenance sidecar.
 Unsupported provider, mixed operand types, malformed arity/signature/options and out-of-range
 literals fail closed.
 
-
 ## Validation result
 
 GitHub CI on the governed branch completed the required routed checks successfully:
