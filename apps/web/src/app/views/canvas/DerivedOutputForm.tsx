@@ -4,46 +4,98 @@ import {
   DvtStringLiteralV1Schema,
   DvtTimestampLiteralV1Schema,
 } from '@dvt/contracts';
-import { useId, useMemo, useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
+
+import { DerivedExpressionBuilder } from './DerivedExpressionBuilder';
 import {
-  DerivedExpressionBuilder,
+  collectDerivedExpressionFieldIds,
+  type DerivedExpressionDraft,
   type DerivedExpressionFunction,
-  type DerivedExpressionMode,
-} from './DerivedExpressionBuilder';
+  type DerivedExpressionFunctionResolver,
+} from './DerivedExpressionNodeEditor';
 import type { DerivedOutputField } from './DerivedOutputOperands';
 
 export type DerivedOutputFunction = DerivedExpressionFunction;
+export type DerivedOutputFunctionResolver = DerivedExpressionFunctionResolver;
 export type DerivedOutputRequest = Readonly<{
   alias: string;
-  expression:
-    | Readonly<{
-        kind: 'function';
-        capabilityIds: readonly [string, ...string[]];
-        operandFieldIds: readonly [string, ...string[]];
-      }>
-    | Readonly<{ kind: 'string-literal'; value: string }>
-    | Readonly<{ kind: 'timestamp-literal'; value: string }>;
+  expression: DerivedExpressionDraft;
 }>;
-export type DerivedOutputFunctionResolver = (
-  fieldIds: readonly string[],
-  resolution: 'proposal' | 'complete'
-) => readonly DerivedOutputFunction[];
 
-function bounds(operation: DerivedOutputFunction, fieldCount: number) {
-  const minimum = Math.max(1, operation.minimumArgumentCount);
-  return { minimum, maximum: Math.max(minimum, operation.maximumArgumentCount ?? fieldCount) };
+function firstFieldId(expression: DerivedExpressionDraft): string | null {
+  return collectDerivedExpressionFieldIds(expression)[0] ?? null;
 }
 
-function normalize(
-  current: readonly string[],
+function operationFor(
+  expression: DerivedExpressionDraft,
   fields: readonly DerivedOutputField[],
-  range: Readonly<{ minimum: number; maximum: number }>
-): string[] {
-  const available = new Set(fields.map((field) => field.fieldId));
-  const next = current.filter((fieldId) => available.has(fieldId)).slice(0, range.maximum);
-  while (next.length < range.minimum && fields.length > 0)
-    next.push(fields[next.length % fields.length]!.fieldId);
-  return next;
+  resolveFunctions: DerivedOutputFunctionResolver
+): DerivedExpressionFunction | null {
+  if (expression.kind !== 'function') return null;
+  const fieldId = firstFieldId(expression) ?? fields[0]?.fieldId;
+  if (fieldId == null) return null;
+  return (
+    resolveFunctions([fieldId], 'proposal').find(
+      (candidate) => candidate.capabilityId === expression.capabilityId
+    ) ?? null
+  );
+}
+
+function validExpression(
+  expression: DerivedExpressionDraft,
+  fields: readonly DerivedOutputField[],
+  resolveFunctions: DerivedOutputFunctionResolver
+): boolean {
+  if (expression.kind === 'field')
+    return fields.some((field) => field.fieldId === expression.fieldId);
+  if (expression.kind === 'string-literal')
+    return DvtStringLiteralV1Schema.safeParse(expression.value).success;
+  if (expression.kind === 'timestamp-literal')
+    return DvtTimestampLiteralV1Schema.safeParse(expression.value).success;
+
+  const operation = operationFor(expression, fields, resolveFunctions);
+  if (operation == null) return false;
+  const minimum = Math.max(1, operation.minimumArgumentCount);
+  const maximum = Math.max(
+    minimum,
+    operation.maximumArgumentCount ?? Math.max(fields.length, minimum)
+  );
+  return (
+    expression.arguments.length >= minimum &&
+    expression.arguments.length <= maximum &&
+    expression.arguments.every((argument) => validExpression(argument, fields, resolveFunctions))
+  );
+}
+
+function initialExpression(
+  fields: readonly DerivedOutputField[],
+  resolveFunctions: DerivedOutputFunctionResolver,
+  initialCapabilityId?: string,
+  initialOperandFieldIds?: readonly [string, ...string[]],
+  initialMode?: 'function' | 'string-literal' | 'timestamp-literal'
+): DerivedExpressionDraft {
+  if (initialMode === 'string-literal') return { kind: 'string-literal', value: '' };
+  if (initialMode === 'timestamp-literal') return { kind: 'timestamp-literal', value: '' };
+  const fieldId = initialOperandFieldIds?.[0] ?? fields[0]?.fieldId ?? '';
+  const functions = fieldId.length === 0 ? [] : resolveFunctions([fieldId], 'proposal');
+  const operation =
+    functions.find((candidate) => candidate.capabilityId === initialCapabilityId) ?? functions[0];
+  if (operation == null) return { kind: 'field', fieldId };
+  const minimum = Math.max(1, operation.minimumArgumentCount);
+  const maximum = Math.max(
+    minimum,
+    operation.maximumArgumentCount ?? Math.max(fields.length, minimum)
+  );
+  const requested = [...(initialOperandFieldIds ?? [fieldId])].slice(0, maximum);
+  while (requested.length < minimum) requested.push(fieldId);
+  return {
+    kind: 'function',
+    capabilityId: operation.capabilityId,
+    arguments: requested.map((operandFieldId) => ({
+      kind: 'field' as const,
+      fieldId: operandFieldId,
+    })) as [DerivedExpressionDraft, ...DerivedExpressionDraft[]],
+  };
 }
 
 export function DerivedOutputForm({
@@ -53,6 +105,7 @@ export function DerivedOutputForm({
   initialOperandFieldIds,
   initialMode,
   allowLiterals = true,
+  allowNested = true,
   unavailableAliases = [],
   dataSlot = 'derived-output-form',
   copy,
@@ -64,8 +117,9 @@ export function DerivedOutputForm({
   resolveFunctions: DerivedOutputFunctionResolver;
   initialCapabilityId?: string;
   initialOperandFieldIds?: readonly [string, ...string[]];
-  initialMode?: DerivedExpressionMode;
+  initialMode?: 'function' | 'string-literal' | 'timestamp-literal';
   allowLiterals?: boolean;
+  allowNested?: boolean;
   unavailableAliases?: readonly string[];
   dataSlot?: string;
   copy: Readonly<{
@@ -78,9 +132,9 @@ export function DerivedOutputForm({
     previewLabel: string;
     formulaLabel?: string;
     wrapFunction?: string;
-    removeWrapper?: string;
     nodeTypeLabel?: string;
     functionNodeLabel?: string;
+    fieldNodeLabel?: string;
     stringLiteralNodeLabel?: string;
     timestampLiteralNodeLabel?: string;
     literalValueLabel?: string;
@@ -94,73 +148,30 @@ export function DerivedOutputForm({
   onSubmit: (request: DerivedOutputRequest) => Promise<string | null> | string | null;
   onApplied?: () => void;
 }>): JSX.Element | null {
-  const initial = initialOperandFieldIds ?? (fields[0] == null ? null : [fields[0].fieldId]);
-  const [fieldIds, setFieldIds] = useState<string[]>(() => (initial == null ? [] : [...initial]));
-  const [capabilityId, setCapabilityId] = useState(initialCapabilityId ?? '');
-  const [wrappers, setWrappers] = useState<string[]>([]);
-  const [mode, setMode] = useState<DerivedExpressionMode>(initialMode ?? 'function');
-  const [literalValue, setLiteralValue] = useState('');
+  const [expression, setExpression] = useState<DerivedExpressionDraft>(() =>
+    initialExpression(
+      fields,
+      resolveFunctions,
+      initialCapabilityId,
+      initialOperandFieldIds,
+      initialMode
+    )
+  );
   const [alias, setAlias] = useState('');
   const [busy, setBusy] = useState(false);
   const [commandError, setCommandError] = useState<string | null>(null);
   const errorId = useId();
-  const functions = useMemo(
-    () => resolveFunctions(fieldIds.slice(0, 1), 'proposal'),
-    [fieldIds, resolveFunctions]
-  );
-  const operation = functions.find((item) => item.capabilityId === capabilityId) ?? functions[0];
   if (fields.length === 0 && !allowLiterals) return null;
-  const range =
-    operation == null
-      ? { minimum: 1, maximum: Math.max(1, fields.length) }
-      : bounds(operation, fields.length);
-  const operands = normalize(fieldIds, fields, range);
-  const compatible =
-    operation != null &&
-    resolveFunctions(operands, 'complete').some(
-      (item) => item.capabilityId === operation.capabilityId
-    );
-  const wrapperCandidates =
-    operation?.category === 'text'
-      ? functions.filter(
-          (candidate) =>
-            candidate.category === 'text' &&
-            candidate.minimumArgumentCount === 1 &&
-            candidate.maximumArgumentCount === 1
-        )
-      : [];
-  const wrappersValid = wrappers.every((wrapperCapabilityId) =>
-    wrapperCandidates.some((candidate) => candidate.capabilityId === wrapperCapabilityId)
-  );
+
   const aliasInvalid = alias.length > 0 && !DvtSemanticFieldNameV1Schema.safeParse(alias).success;
   const aliasConflict = unavailableAliases.includes(alias);
-  const literalValid =
-    mode === 'string-literal'
-      ? DvtStringLiteralV1Schema.safeParse(literalValue).success
-      : mode === 'timestamp-literal'
-        ? DvtTimestampLiteralV1Schema.safeParse(literalValue).success
-        : true;
-  const expressionValid =
-    mode === 'function' ? compatible && wrappersValid && operation != null : literalValid;
+  const expressionValid = validExpression(expression, fields, resolveFunctions);
   const valid = alias.length > 0 && !aliasInvalid && !aliasConflict && expressionValid;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (
-      !valid ||
-      (mode === 'function' && operands.length === 0) ||
-      (mode === 'function' && operation == null)
-    )
-      return;
+    if (!valid) return;
     setBusy(true);
-    const expression: DerivedOutputRequest['expression'] =
-      mode === 'function'
-        ? {
-            kind: 'function',
-            capabilityIds: [operation!.capabilityId, ...wrappers] as [string, ...string[]],
-            operandFieldIds: operands as [string, ...string[]],
-          }
-        : { kind: mode, value: literalValue };
     const error = await onSubmit({ alias, expression });
     setBusy(false);
     setCommandError(error);
@@ -171,54 +182,19 @@ export function DerivedOutputForm({
     : aliasConflict
       ? copy.aliasConflict
       : commandError;
+
   return (
     <form data-slot={dataSlot} className="space-y-3" onSubmit={(event) => void submit(event)}>
       <DerivedExpressionBuilder
-        fields={
-          operation == null
-            ? fields
-            : fields.filter((candidate) => {
-                const probe =
-                  range.maximum === 1 ? [candidate.fieldId] : [operands[0]!, candidate.fieldId];
-                return resolveFunctions(probe, 'complete').some(
-                  (item) => item.capabilityId === operation.capabilityId
-                );
-              })
-        }
-        functions={functions}
-        mode={mode}
+        expression={expression}
+        fields={fields}
+        resolveFunctions={resolveFunctions}
         allowLiterals={allowLiterals}
-        literalValue={literalValue}
-        operation={operation}
-        operands={operands}
-        wrappers={wrappers}
-        minimum={range.minimum}
-        maximum={range.maximum}
+        allowNested={allowNested}
         busy={busy}
         copy={copy}
-        onModeChange={(nextMode) => {
-          setMode(nextMode);
-          setWrappers([]);
-          setCommandError(null);
-        }}
-        onLiteralValueChange={(nextValue) => {
-          setLiteralValue(nextValue);
-          setCommandError(null);
-        }}
-        onOperationChange={(nextCapabilityId) => {
-          const next = functions.find((item) => item.capabilityId === nextCapabilityId);
-          if (next == null) return;
-          setCapabilityId(next.capabilityId);
-          setFieldIds((current) => normalize(current, fields, bounds(next, fields.length)));
-          setWrappers([]);
-          setCommandError(null);
-        }}
-        onOperandsChange={(next) => {
-          setFieldIds([...next]);
-          setCommandError(null);
-        }}
-        onWrappersChange={(next) => {
-          setWrappers([...next]);
+        onChange={(next) => {
+          setExpression(next);
           setCommandError(null);
         }}
       />
