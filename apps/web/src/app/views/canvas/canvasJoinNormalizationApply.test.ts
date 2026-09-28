@@ -94,6 +94,7 @@ describe('JOIN normalization apply', () => {
     ).toEqual(['left', 'right']);
     if (normalized.conditions == null) throw new Error('Expected normalized conditions.');
     const condition = leaf(normalized.conditions, 0);
+    if (condition.right == null) throw new Error('Expected binary JOIN condition.');
     expect(condition.left.kind).toBe('field');
     expect(condition.right.kind).toBe('field');
   });
