@@ -150,7 +150,12 @@ function initialExpression(
   const fieldId = initialOperandFieldIds?.[0] ?? fields[0]?.fieldId ?? '';
   const functions = fieldId.length === 0 ? [] : resolveFunctions([fieldId], 'proposal');
   const operation =
-    functions.find((candidate) => candidate.capabilityId === initialCapabilityId) ?? functions[0];
+    functions.find((candidate) => candidate.capabilityId === initialCapabilityId) ??
+    functions.find(
+      (candidate) =>
+        candidate.minimumArgumentCount === 1 && candidate.maximumArgumentCount === 1
+    ) ??
+    functions[0];
   if (operation == null) return { kind: 'field', fieldId };
   const minimum = Math.max(1, operation.minimumArgumentCount);
   const maximum = Math.max(
