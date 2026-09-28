@@ -87,6 +87,8 @@ export type OperationalDrawerContribution = Readonly<{
     dataUnknownErrorTemplate: string;
     dataTruncatedTemplate: string;
     dataCaptionTemplate: string;
+    dataRowsLabel: string;
+    dataColumnsLabel: string;
     dataNullValue: string;
     tabsAriaLabel: string;
     severity: Readonly<Record<OperationalDrawerProblem['severity'], string>>;

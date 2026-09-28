@@ -332,9 +332,13 @@ commands or queries are still needed for a mature end-to-end workflow.
   verifies that token against the managed stable-table marker and reads the rows
   from the same repeatable-read snapshot. A missing or superseded marker fails
   closed; it never returns current rows under an older Run identity.
-- Presentation rule: column positioning and row sorting are local projections of
-  the returned sample. They never mutate the sample, canonical Canvas field order,
-  `FieldId`, lineage, or `ConfigureCanvasDvtNode` state.
+- Presentation rule: a Source card's Preview displays only its currently selected
+  output fields, in their selected order, even though the bounded query returns
+  physical columns. Field visibility, column positioning and row sorting are local
+  projections of the returned sample. They never mutate the sample, canonical
+  Canvas field order, `FieldId`, lineage, or `ConfigureCanvasDvtNode` state.
+- Negative evidence: a selected field absent from the returned sample must not
+  expose unselected physical fields or silently substitute another column.
 - Negative evidence: unknown or cross-scope connection/object, unsupported
   provider, timeout, failed query, malformed response, stale response after a new
   sample request, publication-token mismatch, and the server-enforced row limit.

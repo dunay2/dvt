@@ -6,6 +6,8 @@ import { CanvasModelOutputInspector } from './CanvasModelOutputInspector';
 import { RelationalInspectionPanel } from './relational-inspection/RelationalInspectionPanel';
 import { resolveRelationalInspection } from './relational-inspection/inspectionModel';
 import { CanvasTransformInspector } from './CanvasTransformInspector';
+import { CanvasSourceOccurrenceOutputs } from './CanvasSourceOccurrenceOutputs';
+import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 
 export type CanvasModelOutputInspectorState = Readonly<{
   open: boolean;
@@ -15,6 +17,7 @@ export type CanvasModelOutputInspectorState = Readonly<{
 
 export function CanvasRelationalTreeSideInspector({
   model,
+  authoring,
   transformNode,
   copy,
   expanded,
@@ -22,6 +25,7 @@ export function CanvasRelationalTreeSideInspector({
   modelOutput,
 }: Readonly<{
   model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
+  authoring?: CanvasRelationalTreeAuthoringContract;
   transformNode: CanonicalNode;
   copy: CanvasRelationalTreeWorkbenchCopy;
   expanded: boolean;
@@ -53,9 +57,30 @@ export function CanvasRelationalTreeSideInspector({
         onPendingChange={modelOutput.setPending}
       />
     );
+  const inspection = resolveRelationalInspection(model.selectedNode);
+  const selectedProducerId = model.projection.inputs.find(
+    (input) => input.relationId === inspection?.relationId
+  )?.sourceNodeId;
+  const sourceInput = model.inputs.find((input) => input.nodeId === selectedProducerId);
+  const publishedFieldNames =
+    (inspection?.relationId == null
+      ? undefined
+      : model.sourceOutputFieldsByRelationId.get(inspection.relationId)) ?? [];
   return (
     <RelationalInspectionPanel
-      inspection={resolveRelationalInspection(model.selectedNode)}
+      key={inspection?.relationId ?? inspection?.operation}
+      inspection={inspection}
+      sourceOutput={
+        inspection?.kind === 'source' && sourceInput != null ? (
+          <CanvasSourceOccurrenceOutputs
+            input={sourceInput}
+            publishedFieldNames={publishedFieldNames}
+            consumerNodeId={transformNode.id}
+            onMapInput={model.authoringAvailable ? authoring?.onMapInput : undefined}
+            onRemoveInput={model.authoringAvailable ? authoring?.onRemoveInput : undefined}
+          />
+        ) : undefined
+      }
       transformNode={transformNode}
       copy={copy}
       onClose={() => onExpandedChange(false)}

@@ -287,6 +287,19 @@ Whole-producer attachment and individual field mapping are distinct intents.
 The existing graph draft persists these bindings; no second store or semantic
 IR is introduced. Unconsumed producers remain pending until explicit semantic
 composition. Missing producer fields remain unresolved, never matched by name.
+The consumer Input card exposes removal of one binding through the same
+`ConfigureCanvasDvtNode` command seam. Removal preserves the producer dependency
+and consumer Output; a field consumed by a semantic operation is rejected until
+that operation is edited or removed. Once an unconsumed binding is removed, the
+producer output may be deselected when no other consumer requires it. The card
+must not offer a fake local-only deletion.
+Inside the Model, selecting a source occurrence opens its Output tab first.
+That occurrence's available fields are exactly the external producer's published
+fields, never the physical warehouse schema. Explicit Add/Remove actions edit
+the binding on this model's dependency edge, not the external Source or the
+final Model Output; an in-use field is rejected rather than silently rewriting
+an operation. The source Read schema remains physical, and any partial binding
+still requires the explicit Project operation described below.
 
 Partial physical inputs require an explicit Transform before relational
 composition. The selected Transform preserves the complete physical Read schema

@@ -5,6 +5,7 @@ import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { CanvasShellProps } from './canvasShell.types';
 import {
   CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
+  projectCanvasSourceDataSample,
   resolveCanvasSinkDataSampleTarget,
   resolveCanvasSourceDataSampleTarget,
   type CanvasSinkDataSampleTarget,
@@ -47,7 +48,11 @@ export function useCanvasNodeDataSample({
 }: CanvasNodeDataSampleArgs): Readonly<{
   dataSampleTabs: ReturnType<typeof useCanvasDataSample>['dataSampleTabs'];
   projectNode: (nodeId: string, data: DbtNodeData) => CanvasNodeDataSampleProjection;
-  openSource?: (nodeId: string, target: CanvasSourceDataSampleTarget) => void;
+  openSource?: (
+    nodeId: string,
+    target: CanvasSourceDataSampleTarget,
+    selectedFieldNames?: readonly string[]
+  ) => void;
 }> {
   const { dataSampleTabs, openDataSample } = useCanvasDataSample();
   const current = useRef<{ canvasId: string | null; nodes: readonly CanonicalNode[] } | null>(null);
@@ -58,17 +63,27 @@ export function useCanvasNodeDataSample({
     };
   }, [activeCanvasId, canonicalNodes]);
   const openSource = useCallback(
-    (nodeId: string, target: CanvasSourceDataSampleTarget) => {
+    (
+      nodeId: string,
+      target: CanvasSourceDataSampleTarget,
+      selectedFieldNames?: readonly string[]
+    ) => {
       if (warehouseSourceDataSampleQuery == null) return;
       openDataSample(nodeId, target.nodeName, () =>
-        warehouseSourceDataSampleQuery.previewSourceObjectRows({
-          connectionId: target.connectionId,
-          objectId: target.objectId,
-          ...(target.expectedPublicationToken == null
-            ? {}
-            : { expectedPublicationToken: target.expectedPublicationToken }),
-          limit: CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
-        })
+        warehouseSourceDataSampleQuery
+          .previewSourceObjectRows({
+            connectionId: target.connectionId,
+            objectId: target.objectId,
+            ...(target.expectedPublicationToken == null
+              ? {}
+              : { expectedPublicationToken: target.expectedPublicationToken }),
+            limit: CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
+          })
+          .then((sample) =>
+            selectedFieldNames == null
+              ? sample
+              : projectCanvasSourceDataSample(sample, selectedFieldNames)
+          )
       );
     },
     [openDataSample, warehouseSourceDataSampleQuery]
@@ -130,7 +145,19 @@ export function useCanvasNodeDataSample({
           ? () => openTransform(nodeId, data.name, semanticDigest)
           : undefined
         : sourceTarget != null && warehouseSourceDataSampleQuery != null
-          ? () => openSource(nodeId, sourceTarget)
+          ? () =>
+              openSource(
+                nodeId,
+                sourceTarget,
+                data.role === 'input' &&
+                  data.pluginKind === 'dvt:source' &&
+                  data.columns != null &&
+                  data.columns.length > 0
+                  ? data.columns
+                      .filter((column) => column.output !== false)
+                      .map((column) => column.sourceFieldName ?? column.name)
+                  : undefined
+              )
           : sinkTarget != null && runMaterializationSampleQuery != null
             ? () => openSink(nodeId, sinkTarget)
             : undefined;

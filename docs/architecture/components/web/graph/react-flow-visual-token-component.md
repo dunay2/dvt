@@ -73,10 +73,30 @@ barrel. The model header is content-sized and no longer reserves a last-run slot
 
 ## Explicit data action
 
-`CanvasNodeDataAction` owns the shared Execute chrome in outer graph cards and
+`CanvasNodeDataAction` owns the shared Preview chrome in outer graph cards and
 relational operation cards. Reuse `PreviewWarehouseSourceObjectRows` and
 `PreviewCanvasTransformRows`; visibility never invokes either query or changes
 their existing scope/authorization checks.
+
+Preview opens the bounded data sample in the operational drawer; it does not
+start a Run. An explicit Preview or Properties intent leaves focus mode so that
+the requested drawer or contextual node window is visible. Opening a card
+without its own editor selects Properties, not an unrelated Code tab.
+The outer Model card does not repeat inner operation details such as a Filter
+predicate; those remain in the selected operation's inspector.
+
+For a Source card, Preview presents the same selected output fields and order
+shown by its checks. The source query remains a bounded physical sample; the
+drawer projects its columns and matching row values locally. Unchecked fields
+must not leak into the visible sample.
+Source occurrences inside a Model obey the same external publication boundary in
+their Output inspector, pending-instance inspector, catalogue field count, zoomed lexical detail and
+Preview. The canonical physical Read is unchanged; these presentation projections
+cannot disclose fields that the producer has not published. An unavailable
+publication disables Preview instead of exposing the physical warehouse sample.
+The Data drawer identifies the sampled node, shows bounded row and column counts,
+and keeps headers, types, NULLs, sorting and truncation legible. These are
+read-only presentation details, not new query or authoring rails.
 
 The action is hidden at rest and revealed only while its card/action area is
 hovered or contains keyboard-visible focus. A mouse-selected card does not pin

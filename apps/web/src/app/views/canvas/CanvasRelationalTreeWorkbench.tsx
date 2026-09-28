@@ -1,4 +1,3 @@
-/** Owned concern: compose the source catalogue and central block Workbench for one Transform. */
 import { forwardRef, useEffect, useState } from 'react';
 import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
@@ -66,7 +65,11 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
   });
   return (
     <CanvasOperationPreviewProvider
-      ports={preview}
+      ports={
+        preview == null
+          ? undefined
+          : { ...preview, sourceOutputFieldsByRelationId: model.sourceOutputFieldsByRelationId }
+      }
       nodeId={transformNode.id}
       semanticDigest={model.projection?.semanticDigest ?? null}
       canEditModel={model.authoringAvailable}
@@ -114,6 +117,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
             >
               <CanvasRelationalTreeContent
                 model={model}
+                authoring={authoring}
                 transformNode={transformNode}
                 nodes={nodes}
                 edges={edges}

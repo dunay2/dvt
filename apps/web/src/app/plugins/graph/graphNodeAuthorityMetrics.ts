@@ -2,8 +2,6 @@
 
 import type { CanonicalNode } from '../../types/canonical';
 import { hasDbtCompatibilityMetadata } from '../../views/canvas/canvasDbtAuthoringModel';
-import { isCanvasNodePresentationCopy } from '../../components/canvas/canvasNodePresentationCopy.contract';
-import { buildDvtGraphNodeSemanticMetric } from '../dvt/dvtGraphNodeSemanticMetric';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import type {
   GraphNodeCardMetric,
@@ -82,12 +80,6 @@ export function buildAuthorityMetrics(
       numericValue(data.lastCost) ??
       node.lastCost;
     pushMetric(metrics, 'cost', 'Cost', cost == null ? null : `$${cost.toFixed(2)}`);
-    const semanticMetric = buildDvtGraphNodeSemanticMetric(
-      node,
-      data.presentationTruth,
-      isCanvasNodePresentationCopy(data.presentationCopy) ? data.presentationCopy.locale : undefined
-    );
-    if (semanticMetric != null) metrics.push(semanticMetric);
   }
   return metrics;
 }

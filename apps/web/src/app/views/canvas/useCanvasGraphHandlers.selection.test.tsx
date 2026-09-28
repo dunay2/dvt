@@ -8,6 +8,7 @@ import {
   resetGraphHandlersTestDoubles,
   restoreGraphHandlersTestDoubles,
 } from './useCanvasGraphHandlers.test.support';
+import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 
 type GraphHandlersHarness = ReturnType<typeof renderGraphHandlersHook>;
 
@@ -30,6 +31,7 @@ describe('useCanvasGraphHandlers explicit selection intents', () => {
   afterEach(() => {
     harness?.cleanup();
     harness = null;
+    useUiLayoutStore.setState({ focusMode: false });
     restoreGraphHandlersTestDoubles();
   });
 
@@ -65,6 +67,26 @@ describe('useCanvasGraphHandlers explicit selection intents', () => {
     });
 
     expect(setInspectorNode).toHaveBeenCalledWith('source-node', 'inputs-outputs');
+  });
+
+  it('leaves focus mode and reveals Properties on an explicit inspect gesture', async () => {
+    useUiLayoutStore.setState({ focusMode: true });
+    const setInspectorNode = vi.fn();
+    const toggleInspectorPanel = vi.fn();
+    const renderedHarness = renderSelectionHarness({
+      focusMode: true,
+      inspectorPanelVisible: false,
+      setInspectorNode,
+      toggleInspectorPanel,
+    });
+    harness = renderedHarness;
+    await renderedHarness.render();
+
+    act(() => renderedHarness.latest()?.handleInspectNode('source-node', 'general'));
+
+    expect(setInspectorNode).toHaveBeenCalledWith('source-node', 'general');
+    expect(useUiLayoutStore.getState().focusMode).toBe(false);
+    expect(toggleInspectorPanel).toHaveBeenCalledOnce();
   });
 
   it('adds and removes ids only through explicit execution-selection toggles', async () => {

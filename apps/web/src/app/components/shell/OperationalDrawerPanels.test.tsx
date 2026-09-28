@@ -35,6 +35,8 @@ function buildCanvasOperationalDrawerContribution(
       dataUnknownErrorTemplate: 'Sample failed for {nodeName}.',
       dataTruncatedTemplate: 'Showing {limit} rows.',
       dataCaptionTemplate: 'Sample from {nodeName}',
+      dataRowsLabel: 'rows',
+      dataColumnsLabel: 'columns',
       dataNullValue: 'NULL',
       tabsAriaLabel: 'Canvas operational drawer',
       severity: { info: 'Info', warning: 'Warning', error: 'Error' },
@@ -137,6 +139,18 @@ describe('OperationalDrawerPanels', () => {
         />
       );
     });
+    expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toContain(
+      'Sample from orders'
+    );
+    expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toContain(
+      '2 rows'
+    );
+    expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toContain(
+      '2 columns'
+    );
+    expect(
+      container.querySelector('[data-slot="bottom-operational-data-table"]')?.textContent
+    ).toContain('integer');
 
     const table = container.querySelector<HTMLTableElement>(
       '[data-slot="bottom-operational-data-table"]'
@@ -144,7 +158,9 @@ describe('OperationalDrawerPanels', () => {
     expect(table).not.toBeNull();
     expect(table?.querySelector('caption')?.textContent).toBe('Sample from orders');
     expect(
-      Array.from(table?.querySelectorAll('th[scope="col"]') ?? []).map((cell) => cell.textContent)
+      Array.from(table?.querySelectorAll('th[scope="col"] button') ?? []).map(
+        (cell) => cell.textContent
+      )
     ).toEqual(['order_id', 'customer']);
     const longValue = Array.from(
       table?.querySelectorAll<HTMLElement>('[data-slot="bottom-operational-data-value"][title]') ??

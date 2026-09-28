@@ -379,6 +379,8 @@ export type CanvasViewCopy = {
   readonly operationalDrawerDataUnknownErrorTemplate: string;
   readonly operationalDrawerDataTruncatedTemplate: string;
   readonly operationalDrawerDataCaptionTemplate: string;
+  readonly operationalDrawerDataRowsLabel: string;
+  readonly operationalDrawerDataColumnsLabel: string;
   readonly operationalDrawerDataNullValue: string;
   readonly operationalDrawerTabsAriaLabel: string;
   readonly operationalDrawerInfoSeverity: string;

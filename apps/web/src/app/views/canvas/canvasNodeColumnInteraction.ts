@@ -54,6 +54,7 @@ export function projectCanvasNodeColumnInteraction(
         columnPortDirections: inputsCurrent ? ['target', 'source'] : [],
         expressionInputColumns: [],
         onMapCanvasInput: inputsCurrent ? node.data.onMapCanvasInput : undefined,
+        onRemoveCanvasInput: inputsCurrent ? node.data.onRemoveCanvasInput : undefined,
         onColumnPortActivate: inputsCurrent ? node.data.onColumnPortActivate : undefined,
         onAutomapColumns: undefined,
         onApplyCanvasColumnFunction: undefined,
@@ -116,6 +117,7 @@ export function projectCanvasNodeColumnInteraction(
     ...node.data,
     onColumnPortActivate: canAuthorColumnMappings ? node.data.onColumnPortActivate : undefined,
     onMapCanvasInput: undefined,
+    onRemoveCanvasInput: undefined,
     onApplyCanvasColumnFunction: hasEditableProjection
       ? node.data.onApplyCanvasColumnFunction
       : undefined,

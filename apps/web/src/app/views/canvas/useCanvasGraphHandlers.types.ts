@@ -44,6 +44,7 @@ export type UseCanvasGraphHandlersResult = {
   activeColumnHandleId: string | null;
   handleColumnPortActivate: (identity: GraphNodeColumnPortIdentity) => void;
   handleMapCanvasInput: (identity: GraphNodeInputMapping) => void;
+  handleRemoveCanvasInput: (identity: GraphNodeInputMapping) => void;
   handleApplyCanvasColumnFunction: (
     identity: GraphNodeColumnFunctionApplyIdentity
   ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>;

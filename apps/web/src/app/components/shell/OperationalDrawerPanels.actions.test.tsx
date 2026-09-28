@@ -40,6 +40,8 @@ function buildContribution(
       dataUnknownErrorTemplate: 'Sample failed for {nodeName}.',
       dataTruncatedTemplate: 'Showing {limit} rows.',
       dataCaptionTemplate: 'Sample from {nodeName}',
+      dataRowsLabel: 'rows',
+      dataColumnsLabel: 'columns',
       dataNullValue: 'NULL',
       tabsAriaLabel: 'Canvas operational drawer',
       severity: { info: 'Info', warning: 'Warning', error: 'Error' },

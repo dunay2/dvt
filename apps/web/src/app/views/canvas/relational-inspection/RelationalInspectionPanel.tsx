@@ -8,6 +8,7 @@ import type { RelationalInspection } from './inspectionModel';
 import { CanvasRelationFields } from '../CanvasRelationFields';
 import { CanvasRelationOutputs } from '../CanvasRelationOutputs';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
+import type { ReactNode } from 'react';
 import { JoinConditionSummary } from './JoinConditionSummary';
 
 type InspectionContentProps = Readonly<{
@@ -50,6 +51,7 @@ export function RelationalInspectionPanel({
   onClose,
   onEdit,
   onOutputChange,
+  sourceOutput,
   ...content
 }: Readonly<{
   inspection: RelationalInspection | null;
@@ -58,11 +60,14 @@ export function RelationalInspectionPanel({
   onClose: () => void;
   onEdit?: () => void;
   onOutputChange?: (document: SubstraitDocument) => boolean;
+  sourceOutput?: ReactNode;
 }>): JSX.Element | null {
   if (inspection == null) return null;
   const output =
     inspection.relationId == null || inspection.kind === 'unsupported' ? null : inspection.kind ===
-        'source' || onOutputChange == null ? (
+      'source' ? (
+      (sourceOutput ?? null)
+    ) : onOutputChange == null ? (
       <CanvasRelationFields relationId={inspection.relationId} />
     ) : (
       <CanvasRelationOutputs
@@ -83,6 +88,7 @@ export function RelationalInspectionPanel({
       onEdit={inspection.kind === 'unsupported' ? undefined : onEdit}
       onClose={onClose}
       output={output}
+      initialTab={inspection.kind === 'source' ? 'output' : 'properties'}
     >
       <InspectionContent inspection={inspection} {...content} />
     </CanvasRelationalTreeEditorFrame>

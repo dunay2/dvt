@@ -117,7 +117,7 @@ describe('explicit source occurrence controls', () => {
     await act(async () => pending[0]!.click());
     expect(container.querySelectorAll('[role="treeitem"][aria-selected="true"]')).toHaveLength(1);
     const selectedFields = Array.from(
-      container.querySelectorAll('[data-slot="canvas-relation-fields"] [data-field-id]'),
+      container.querySelectorAll('[data-slot="source-occurrence-outputs"] [data-field-id]'),
       (node) => node.getAttribute('data-field-id')
     );
     for (const [alias, valid] of [
@@ -161,7 +161,7 @@ describe('explicit source occurrence controls', () => {
     ).toBe('Independent places');
     expect(
       Array.from(
-        container.querySelectorAll('[data-slot="canvas-relation-fields"] [data-field-id]'),
+        container.querySelectorAll('[data-slot="source-occurrence-outputs"] [data-field-id]'),
         (node) => node.getAttribute('data-field-id')
       )
     ).toEqual(selectedFields);

@@ -4,6 +4,7 @@ import type {
   CanvasInspectorNodeDraft,
   CanvasInspectorNodeDraftApplyResult,
 } from './canvasInspectorAuthoring.types';
+import type { GraphNodeInputMapping } from '../../plugins/graph/graphNodeColumnContracts';
 
 export type CanvasRelationalTreeApplyResult =
   | CanvasInspectorNodeDraftApplyResult
@@ -20,6 +21,8 @@ export type CanvasRelationalTreeAuthoringContract = Readonly<{
     nodeId: string,
     draft: CanvasInspectorNodeDraft
   ) => CanvasInspectorNodeDraftApplyResult;
+  onMapInput?: (mapping: GraphNodeInputMapping) => void;
+  onRemoveInput?: (mapping: GraphNodeInputMapping) => void;
 }>;
 
 export type CanvasRelationalTreeWorkbenchCopy = Pick<

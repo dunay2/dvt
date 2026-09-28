@@ -94,6 +94,7 @@ export function useCanvasNodeInteractionModel({
           onAttachSchemaToNode: canMutateGraph ? cardActions.onAttachSchemaToNode : undefined,
           onColumnPortActivate: canMutateGraph ? columnActions.onColumnPortActivate : undefined,
           onMapCanvasInput: canMutateGraph ? columnActions.onMapCanvasInput : undefined,
+          onRemoveCanvasInput: canMutateGraph ? columnActions.onRemoveCanvasInput : undefined,
           onApplyCanvasColumnFunction: canMutateGraph
             ? columnActions.onApplyCanvasColumnFunction
             : undefined,
@@ -172,6 +173,7 @@ export function useCanvasNodeInteractionModel({
       columnActions.onColumnViewChange,
       columnActions.onColumnPortActivate,
       columnActions.onMapCanvasInput,
+      columnActions.onRemoveCanvasInput,
       columnActions.onApplyCanvasColumnFunction,
       columnActions.onApplyCanvasStructuredField,
       columnActions.onAddCanvasCalculatedColumn,

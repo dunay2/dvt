@@ -15,7 +15,7 @@ export function useCanvasRelationalOperationExecution(node: CanvasRelationalTree
   if (node.relationId == null) return null;
   if (context == null || node.operator === 'unsupported')
     return {
-      label: copy.execute,
+      label: copy.previewAction,
       disabled: true,
       title: copy.unavailable,
       onExecute: () => undefined,
@@ -25,14 +25,20 @@ export function useCanvasRelationalOperationExecution(node: CanvasRelationalTree
       node.sourceRef,
       node.displayName ?? copy.data
     );
-    const disabled = target == null || context.onExecuteSource == null;
+    const selectedFieldNames = context.sourceOutputFieldsByRelationId?.get(node.relationId);
+    const disabled =
+      target == null || context.onExecuteSource == null || selectedFieldNames == null;
     return {
-      label: copy.execute,
+      label: copy.previewAction,
       disabled,
-      title: disabled ? copy.unavailable : copy.execute,
+      title: disabled ? copy.unavailable : copy.previewAction,
       onExecute: () => {
-        if (target != null)
-          context.onExecuteSource?.(`${context.nodeId}:${node.relationId}`, target);
+        if (!disabled && target != null && selectedFieldNames != null)
+          context.onExecuteSource?.(
+            `${context.nodeId}:${node.relationId}`,
+            target,
+            selectedFieldNames
+          );
       },
     };
   }
@@ -45,13 +51,13 @@ export function useCanvasRelationalOperationExecution(node: CanvasRelationalTree
     (context.canEditModel && context.preparePreview == null) ||
     (context.dataHost == null && context.onOpenData == null);
   return {
-    label: copy.execute,
+    label: copy.previewAction,
     disabled,
     title: context.unapplied
       ? copy.operationPreviewUnapplied
       : disabled
         ? copy.unavailable
-        : copy.execute,
+        : copy.previewAction,
     onExecute: () => {
       if (!disabled) context.execute(node.relationId!, label);
     },

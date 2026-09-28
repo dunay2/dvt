@@ -179,6 +179,8 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerDataUnknownErrorTemplate: 'No se ha podido cargar la muestra de {nodeName}.',
   operationalDrawerDataTruncatedTemplate: 'Se muestran las primeras {limit} filas.',
   operationalDrawerDataCaptionTemplate: 'Muestra de datos de {nodeName}',
+  operationalDrawerDataRowsLabel: 'filas',
+  operationalDrawerDataColumnsLabel: 'columnas',
   operationalDrawerDataNullValue: 'NULO',
   operationalDrawerTabsAriaLabel: 'Cajón operativo del Canvas',
   operationalDrawerInfoSeverity: 'Información',

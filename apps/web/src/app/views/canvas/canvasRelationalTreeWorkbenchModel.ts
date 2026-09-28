@@ -8,6 +8,41 @@ import type {
   CanvasRelationalTreeNode,
 } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeCatalogueItem } from './canvasRelationalTreeWorkbench.types';
+import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
+import {
+  isDvtSourceOutputProjectionNode,
+  readDvtSourceOutputProjection,
+} from './canvasDvtSourceSemanticAuthoring';
+
+export function projectCanvasSourceOccurrencePublication(
+  inputs: readonly CanvasRelationalTreeInput[],
+  pending: readonly PendingSourceOccurrence[],
+  nodes: readonly CanonicalNode[]
+): ReadonlyMap<string, readonly string[]> {
+  const fields = new Map<string, readonly string[]>();
+  const publicationFor = (sourceNodeId: string | null): readonly string[] | null => {
+    const producer = nodes.find((node) => node.id === sourceNodeId);
+    if (producer == null) return null;
+    try {
+      return (
+        readDvtSourceOutputProjection(producer)?.outputs.map((output) => output.sourceFieldName!) ??
+        null
+      );
+    } catch {
+      return null;
+    }
+  };
+  for (const input of inputs) {
+    if (input.relationId == null) continue;
+    const publication = publicationFor(input.sourceNodeId);
+    if (publication != null) fields.set(input.relationId, publication);
+  }
+  for (const occurrence of pending) {
+    const publication = publicationFor(occurrence.sourceNodeId);
+    if (publication != null) fields.set(occurrence.read.binding.relationId, publication);
+  }
+  return fields;
+}
 
 function sourceKey(sourceRef: ConnectedSourceRef): string {
   return [
@@ -40,7 +75,16 @@ function sourceFieldCount(
   sourceNodeId: string | null,
   nodes: readonly CanonicalNode[]
 ): number | null {
-  const columns = nodes.find((node) => node.id === sourceNodeId)?.metadata?.columns;
+  const node = nodes.find((candidate) => candidate.id === sourceNodeId);
+  if (node == null) return null;
+  if (isDvtSourceOutputProjectionNode(node)) {
+    try {
+      return readDvtSourceOutputProjection(node)?.outputs.length ?? 0;
+    } catch {
+      return 0;
+    }
+  }
+  const columns = node.metadata?.columns;
   return Array.isArray(columns) ? columns.length : null;
 }
 
@@ -90,6 +134,6 @@ export function projectPendingCanvasRelationalTreeCatalogue(
     sourceNodeId: input.nodeId,
     state: 'pending',
     treeLocator: null,
-    fieldCount: input.fields.length,
+    fieldCount: sourceFieldCount(input.nodeId, nodes) ?? input.fields.length,
   }));
 }

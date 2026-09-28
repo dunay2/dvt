@@ -175,6 +175,8 @@ export function buildCanvasOperationalDrawerContribution({
       dataUnknownErrorTemplate: copy.operationalDrawerDataUnknownErrorTemplate,
       dataTruncatedTemplate: copy.operationalDrawerDataTruncatedTemplate,
       dataCaptionTemplate: copy.operationalDrawerDataCaptionTemplate,
+      dataRowsLabel: copy.operationalDrawerDataRowsLabel,
+      dataColumnsLabel: copy.operationalDrawerDataColumnsLabel,
       dataNullValue: copy.operationalDrawerDataNullValue,
       tabsAriaLabel: copy.operationalDrawerTabsAriaLabel,
       severity: {

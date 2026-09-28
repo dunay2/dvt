@@ -35,6 +35,7 @@ type UseCanvasEdgeAuthoringHandlersResult = {
   activeColumnHandleId: string | null;
   handleColumnPortActivate: (identity: CanvasColumnHandleIdentity) => void;
   handleMapCanvasInput: (identity: GraphNodeInputMapping) => void;
+  handleRemoveCanvasInput: (identity: GraphNodeInputMapping) => void;
   handleToggleCanvasColumnOutput: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   handleReorderCanvasColumnOutput: (identity: GraphNodeColumnReorderIdentity) => void;
   handleRemoveColumnMapping: (mapping: CanvasColumnLineageEdgeData) => void;
@@ -171,6 +172,7 @@ export function useCanvasEdgeAuthoringHandlers(
     activeColumnHandleId: columnMappingHandlers.activeColumnHandleId,
     handleColumnPortActivate: columnMappingHandlers.handleColumnPortActivate,
     handleMapCanvasInput: columnMappingHandlers.handleMapCanvasInput,
+    handleRemoveCanvasInput: columnMappingHandlers.handleRemoveCanvasInput,
     handleToggleCanvasColumnOutput: columnMappingHandlers.handleToggleCanvasColumnOutput,
     handleReorderCanvasColumnOutput: columnMappingHandlers.handleReorderCanvasColumnOutput,
     handleRemoveColumnMapping: columnMappingHandlers.handleRemoveColumnMapping,

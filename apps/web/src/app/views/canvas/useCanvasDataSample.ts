@@ -48,6 +48,8 @@ export function useCanvasDataSample() {
           ? { status: 'error', nodeName, reason: unavailableReason }
           : { status: 'loading', nodeName }
       );
+      const layout = useUiLayoutStore.getState();
+      if (layout.focusMode) layout.toggleFocusMode();
       selectTab(tabId);
       showBottomDrawer(300);
       window.requestAnimationFrame(() => {

@@ -22,11 +22,13 @@ function DraftViewport({
   data,
   actions,
   onExpandRelation,
+  sourceOutputFieldsByRelationId,
 }: Readonly<{
   copy: CanvasRelationalTreeWorkbenchCopy;
   data: CanvasRelationalTreeAuthoringDto;
   actions: CanvasRelationalTreeAuthoringActions;
   onExpandRelation: (relationId: string | null) => void;
+  sourceOutputFieldsByRelationId?: ReadonlyMap<string, readonly string[]>;
 }>): JSX.Element {
   const {
     selectedRelationId,
@@ -100,6 +102,7 @@ function DraftViewport({
           style={{ zoom: viewport.zoom }}
         >
           <CanvasRelationalTreeLayout
+            sourceOutputFieldsByRelationId={sourceOutputFieldsByRelationId}
             occurrences={{
               pending: pendingSources,
               selectedId: data.selectedPendingId,

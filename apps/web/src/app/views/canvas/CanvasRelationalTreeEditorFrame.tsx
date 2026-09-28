@@ -25,6 +25,7 @@ export function CanvasRelationalTreeEditorFrame({
   hasExpression = true,
   readOnly = false,
   label,
+  initialTab = 'properties',
   onEdit,
   dataSlot = 'canvas-relational-tree-inline-editor',
 }: Readonly<{
@@ -37,6 +38,7 @@ export function CanvasRelationalTreeEditorFrame({
   hasExpression?: boolean;
   readOnly?: boolean;
   label?: string;
+  initialTab?: 'properties' | 'output';
   onEdit?: () => void;
   dataSlot?: string;
 }>): JSX.Element {
@@ -45,7 +47,7 @@ export function CanvasRelationalTreeEditorFrame({
   const presentation = resolveCanvasRelationalOperationPresentation(operation);
   const title = label ?? resolveCanvasViewCopy(language)[presentation.labelKey];
   const Icon = presentation.icon;
-  const [tab, setTab] = useState('properties');
+  const [tab, setTab] = useState<string>(initialTab);
   const activeTab =
     (!hasExpression && tab === 'tree') || (output == null && tab === 'output') ? 'properties' : tab;
   const [expressionHost, setExpressionHost] = useState<HTMLDivElement | null>(null);

@@ -41,6 +41,7 @@ export function CanvasRelationalTreeLayout({
   outputRelationId,
   onConnectOutput,
   onDisconnectOutput,
+  sourceOutputFieldsByRelationId,
 }: Readonly<{
   outputName: string;
   root: CanvasRelationalTreeNode | null;
@@ -54,6 +55,7 @@ export function CanvasRelationalTreeLayout({
   outputRelationId?: string | null;
   onConnectOutput?: (relationId: string) => void;
   onDisconnectOutput?: () => void;
+  sourceOutputFieldsByRelationId?: ReadonlyMap<string, readonly string[]>;
   selectedLocator: string;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
@@ -69,8 +71,8 @@ export function CanvasRelationalTreeLayout({
     () =>
       root == null
         ? { sizes: new Map(), graphs: new Map() }
-        : projectCanvasRelationalTreeDetails(root, semanticContext),
-    [root, semanticContext?.transformNode, semanticContext?.draft]
+        : projectCanvasRelationalTreeDetails(root, semanticContext, sourceOutputFieldsByRelationId),
+    [root, semanticContext?.transformNode, semanticContext?.draft, sourceOutputFieldsByRelationId]
   );
   const { projectLayout, setPosition, expanded, toggleDetail } = useRelationalLayout();
   const zoomRevealsDetail = Math.round(zoom * 100) >= CANVAS_RELATIONAL_DETAIL_ZOOM * 100;

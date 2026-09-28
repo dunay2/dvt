@@ -20,7 +20,8 @@ export type CanvasRelationalSemanticContext = Readonly<{
 
 export function projectCanvasRelationalTreeDetails(
   root: CanvasRelationalTreeNode,
-  context?: CanvasRelationalSemanticContext
+  context?: CanvasRelationalSemanticContext,
+  sourceOutputFieldsByRelationId?: ReadonlyMap<string, readonly string[]>
 ): Readonly<{
   graphs: ReadonlyMap<string, SemanticWorkbenchGraph>;
   sizes: ReadonlyMap<string, CanvasRelationalTreeNodeSize>;
@@ -58,7 +59,12 @@ export function projectCanvasRelationalTreeDetails(
       }
       const graph: SemanticWorkbenchGraph =
         ids.size === 0
-          ? projectCanvasRelationalStructureGraph(relation)
+          ? projectCanvasRelationalStructureGraph(
+              relation,
+              relation.operator === 'read' && sourceOutputFieldsByRelationId != null
+                ? (sourceOutputFieldsByRelationId.get(relation.relationId) ?? [])
+                : undefined
+            )
           : {
               nodes: [...ids].map((id) => nodes.get(id)!),
               edges,

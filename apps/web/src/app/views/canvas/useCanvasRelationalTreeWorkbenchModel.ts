@@ -10,6 +10,7 @@ import { projectAnalyzedCanvasRelationalTree } from './canvasRelationalTreeProje
 import {
   projectCanvasRelationalTreeCatalogue,
   projectPendingCanvasRelationalTreeCatalogue,
+  projectCanvasSourceOccurrencePublication,
 } from './canvasRelationalTreeWorkbenchModel';
 import type {
   CanvasRelationalTreeAuthoringContract,
@@ -54,6 +55,13 @@ export function useCanvasRelationalTreeWorkbenchModel(
     document: analysis.semantic?.document ?? null,
     authoring: args.authoring,
   });
+  const sourceOutputFieldsByRelationId = useMemo(() => {
+    return projectCanvasSourceOccurrencePublication(
+      projection?.inputs ?? [],
+      session.occurrences.pending,
+      args.nodes
+    );
+  }, [args.nodes, projection?.inputs, session.occurrences.pending]);
   const selection = useCanvasRelationalSelection(args.transformNode.id, projection);
   const { selectedLocator, selectTreeNode } = selection;
 
@@ -136,6 +144,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
     inputs,
     pendingAuthoring,
     projection,
+    sourceOutputFieldsByRelationId,
     ...selection,
     selectedRelationId: session.occurrences.selectedId ?? selection.selectedRelationId,
     selectRelation: (id: string | null) => {

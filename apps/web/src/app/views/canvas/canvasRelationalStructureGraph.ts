@@ -3,7 +3,8 @@ import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection'
 import type { SemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 
 export function projectCanvasRelationalStructureGraph(
-  relation: CanvasRelationalTreeNode
+  relation: CanvasRelationalTreeNode,
+  publishedFieldNames?: readonly string[]
 ): SemanticWorkbenchGraph {
   const nodes: SemanticWorkbenchGraph['nodes'] = [];
   const edges: SemanticWorkbenchGraph['edges'] = [];
@@ -30,7 +31,9 @@ export function projectCanvasRelationalStructureGraph(
       detail: 'Output',
     },
   });
+  const published = publishedFieldNames == null ? null : new Set(publishedFieldNames);
   for (const field of relation.output.fields) {
+    if (published != null && !published.has(field.displayName ?? '')) continue;
     nodes.push({
       id: field.fieldId,
       position: { x: 0, y: 0 },
