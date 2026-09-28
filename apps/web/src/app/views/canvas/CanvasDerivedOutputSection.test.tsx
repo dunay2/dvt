@@ -62,12 +62,18 @@ describe('selected relation derived-output section', () => {
       '[data-slot="derived-formula-node-kind"][data-depth="0"]'
     )!;
     await act(async () => fireEvent.change(rootKind, { target: { value: 'function' } }));
+    await waitFor(() =>
+      expect(
+        [
+          ...container.querySelector<HTMLSelectElement>(
+            '[data-slot="derived-formula-function"][data-depth="0"]'
+          )!.options,
+        ].map((option) => option.textContent)
+      ).toContain('UPPER')
+    );
     const functionSelect = container.querySelector<HTMLSelectElement>(
       '[data-slot="derived-formula-function"][data-depth="0"]'
     )!;
-    await waitFor(() =>
-      expect([...functionSelect.options].map((option) => option.textContent)).toContain('UPPER')
-    );
     const upper = [...functionSelect.options].find((option) => option.textContent === 'UPPER')!;
     await act(async () => fireEvent.change(functionSelect, { target: { value: upper.value } }));
     expect(container.querySelector('[data-slot="derived-formula-preview"]')?.textContent).toBe(
