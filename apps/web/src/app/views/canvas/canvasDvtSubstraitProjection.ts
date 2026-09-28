@@ -648,6 +648,9 @@ export function inspectDvtSubstraitProjectionDraft(
         component: 'YEAR';
         timezone: 'UTC';
       }>;
+  type I64ArithmeticFunctionName = 'add' | 'subtract' | 'multiply' | 'divide';
+  const isI64ArithmeticFunctionName = (value: string): value is I64ArithmeticFunctionName =>
+    value === 'add' || value === 'subtract' || value === 'multiply' || value === 'divide';
   const inspectedScalarDataType = (expression: InspectedScalar): string => {
     if (expression.kind === 'field-reference') {
       return inspectProjectionDataType(sourceTypes[expression.sourceOrdinal]!) ?? 'unknown';
@@ -655,13 +658,13 @@ export function inspectDvtSubstraitProjectionDraft(
     if (expression.kind === 'string-literal') return 'string';
     if (expression.kind === 'timestamp-literal') return 'timestamp with time zone';
     if (expression.kind === 'i64-literal') return 'bigint';
-    return expression.functionName === 'extract' ||
-      expression.functionName === 'add' ||
-      expression.functionName === 'subtract' ||
-      expression.functionName === 'multiply' ||
-      expression.functionName === 'divide'
-      ? 'bigint'
-      : 'string';
+    if (
+      expression.functionName === 'extract' ||
+      isI64ArithmeticFunctionName(expression.functionName)
+    ) {
+      return 'bigint';
+    }
+    return 'string';
   };
   const inspectScalar = (expression: Expression): InspectedScalar | null => {
     if (expression.rexType.case === 'selection') {
@@ -679,7 +682,8 @@ export function inspectDvtSubstraitProjectionDraft(
         : null;
     }
     if (expression.rexType.case === 'literal') {
-      const calculated = inspectDvtSubstraitCalculatedExpression(draft.plan, expression)?.calculation;
+      const inspected = inspectDvtSubstraitCalculatedExpression(draft.plan, expression);
+      const calculated = inspected?.calculation;
       if (calculated?.kind === 'string-literal')
         return { kind: 'string-literal', value: calculated.value };
       if (calculated?.kind === 'timestamp-literal')
@@ -721,15 +725,18 @@ export function inspectDvtSubstraitProjectionDraft(
       entry?.kind === 'standard' &&
       entry.identity.sourceKind === 'simple-extension' &&
       entry.identity.urn === 'extension:io.substrait:functions_arithmetic' &&
-      ['add', 'subtract', 'multiply', 'divide'].includes(entry.identity.name) &&
+      isI64ArithmeticFunctionName(entry.identity.name) &&
       entry.invocation?.outputType === 'i64';
-    const outputTypeMatches = temporalExtract || arithmeticI64
-      ? outputType?.case === 'i64' &&
-        outputType.value.typeVariationReference === 0 &&
-        outputType.value.nullability === Type_Nullability.NULLABLE
-      : outputType?.case === 'string' &&
+    let outputTypeMatches =
+      outputType?.case === 'string' &&
+      outputType.value.typeVariationReference === 0 &&
+      outputType.value.nullability === Type_Nullability.NULLABLE;
+    if (temporalExtract || arithmeticI64) {
+      outputTypeMatches =
+        outputType?.case === 'i64' &&
         outputType.value.typeVariationReference === 0 &&
         outputType.value.nullability === Type_Nullability.NULLABLE;
+    }
     if (
       entry == null ||
       entry.kind !== 'standard' ||
@@ -828,10 +835,7 @@ export function inspectDvtSubstraitProjectionDraft(
     }
     if (
       arithmeticI64 &&
-      (entry.identity.name === 'add' ||
-        entry.identity.name === 'subtract' ||
-        entry.identity.name === 'multiply' ||
-        entry.identity.name === 'divide') &&
+      isI64ArithmeticFunctionName(entry.identity.name) &&
       arguments_.length === 2
     ) {
       return {
@@ -854,63 +858,63 @@ export function inspectDvtSubstraitProjectionDraft(
     }
     return null;
   };
-  const publicScalar = (expression: InspectedScalar): DvtSubstraitScalarExpression =>
-    expression.kind === 'field-reference'
-      ? {
-          kind: 'field-reference',
-          sourceFieldName: sourceFields[expression.sourceOrdinal]!.displayName!,
-        }
-      : expression.kind === 'string-literal'
-        ? { kind: 'string-literal', value: expression.value }
-        : expression.kind === 'timestamp-literal'
-          ? { kind: 'timestamp-literal', value: expression.value }
-          : expression.kind === 'i64-literal'
-            ? { kind: 'i64-literal', value: expression.value }
-            : expression.functionName === 'coalesce'
-          ? {
-              kind: 'scalar-function',
-              functionName: 'coalesce',
-              arguments: expression.arguments.map(publicScalar) as [
-                DvtSubstraitScalarExpression,
-                DvtSubstraitScalarExpression,
-                ...DvtSubstraitScalarExpression[],
-              ],
-            }
-          : expression.functionName === 'concat'
-            ? {
-                kind: 'scalar-function',
-                functionName: 'concat',
-                arguments: [
-                  publicScalar(expression.arguments[0]),
-                  publicScalar(expression.arguments[1]),
-                ],
-                nullHandling: expression.nullHandling,
-              }
-            : expression.functionName === 'extract'
-              ? {
-                  kind: 'scalar-function',
-                  functionName: 'extract',
-                  arguments: [publicScalar(expression.arguments[0])],
-                  component: expression.component,
-                  timezone: expression.timezone,
-                }
-              : expression.functionName === 'add' ||
-                  expression.functionName === 'subtract' ||
-                  expression.functionName === 'multiply' ||
-                  expression.functionName === 'divide'
-                ? {
-                    kind: 'scalar-function',
-                    functionName: expression.functionName,
-                    arguments: [
-                      publicScalar(expression.arguments[0]),
-                      publicScalar(expression.arguments[1]),
-                    ],
-                  }
-                : {
-                    kind: 'scalar-function',
-                    functionName: expression.functionName,
-                    arguments: [publicScalar(expression.arguments[0])],
-                  };
+  const publicScalar = (expression: InspectedScalar): DvtSubstraitScalarExpression => {
+    if (expression.kind === 'field-reference') {
+      return {
+        kind: 'field-reference',
+        sourceFieldName: sourceFields[expression.sourceOrdinal]!.displayName!,
+      };
+    }
+    if (expression.kind === 'string-literal') {
+      return { kind: 'string-literal', value: expression.value };
+    }
+    if (expression.kind === 'timestamp-literal') {
+      return { kind: 'timestamp-literal', value: expression.value };
+    }
+    if (expression.kind === 'i64-literal') {
+      return { kind: 'i64-literal', value: expression.value };
+    }
+    if (expression.functionName === 'coalesce') {
+      return {
+        kind: 'scalar-function',
+        functionName: 'coalesce',
+        arguments: expression.arguments.map(publicScalar) as [
+          DvtSubstraitScalarExpression,
+          DvtSubstraitScalarExpression,
+          ...DvtSubstraitScalarExpression[],
+        ],
+      };
+    }
+    if (expression.functionName === 'concat') {
+      return {
+        kind: 'scalar-function',
+        functionName: 'concat',
+        arguments: [publicScalar(expression.arguments[0]!), publicScalar(expression.arguments[1]!)],
+        nullHandling: expression.nullHandling,
+      };
+    }
+    if (expression.functionName === 'extract') {
+      return {
+        kind: 'scalar-function',
+        functionName: 'extract',
+        arguments: [publicScalar(expression.arguments[0]!)],
+        component: expression.component,
+        timezone: expression.timezone,
+      };
+    }
+    if (isI64ArithmeticFunctionName(expression.functionName)) {
+      return {
+        kind: 'scalar-function',
+        functionName: expression.functionName,
+        arguments: [publicScalar(expression.arguments[0]!), publicScalar(expression.arguments[1]!)],
+      };
+    }
+    return {
+      kind: 'scalar-function',
+      functionName: expression.functionName,
+      arguments: [publicScalar(expression.arguments[0]!)],
+    };
+  };
   const scalarOperations = (expression: DvtSubstraitScalarExpression): readonly string[] =>
     expression.kind !== 'scalar-function'
       ? []
@@ -934,10 +938,7 @@ export function inspectDvtSubstraitProjectionDraft(
       expression.functionName === 'concat' ||
       expression.functionName === 'coalesce' ||
       expression.functionName === 'extract' ||
-      expression.functionName === 'add' ||
-      expression.functionName === 'subtract' ||
-      expression.functionName === 'multiply' ||
-      expression.functionName === 'divide'
+      isI64ArithmeticFunctionName(expression.functionName)
     ) {
       return null;
     }
@@ -972,19 +973,29 @@ export function inspectDvtSubstraitProjectionDraft(
     if (mapping < sourceFields.length) return dvtSubstraitExpression.field(mapping);
     return project.expressions[mapping - sourceFields.length] ?? null;
   };
+  const bigintJsonReplacer = (_key: string, value: unknown): unknown => {
+    return typeof value === 'bigint' ? `${value}n` : value;
+  };
+  const scalarKey = (expression: InspectedScalar): string =>
+    JSON.stringify(publicScalar(expression), bigintJsonReplacer);
   const expressionsMatch = (left: Expression, right: Expression): boolean => {
     const leftScalar = inspectScalar(left);
     const rightScalar = inspectScalar(right);
     return (
-      leftScalar != null &&
-      rightScalar != null &&
-      JSON.stringify(publicScalar(leftScalar), (_key, value) =>
-        typeof value === 'bigint' ? `${value}n` : value
-      ) ===
-        JSON.stringify(publicScalar(rightScalar), (_key, value) =>
-          typeof value === 'bigint' ? `${value}n` : value
-        )
+      leftScalar != null && rightScalar != null && scalarKey(leftScalar) === scalarKey(rightScalar)
     );
+  };
+  const scalarExpressionDataType = (expression: DvtSubstraitScalarExpression): string => {
+    if (expression.kind === 'i64-literal') return 'bigint';
+    if (expression.kind === 'timestamp-literal') return 'timestamp with time zone';
+    if (
+      expression.kind === 'scalar-function' &&
+      (expression.functionName === 'extract' ||
+        isI64ArithmeticFunctionName(expression.functionName))
+    ) {
+      return 'bigint';
+    }
+    return 'string';
   };
   const outputs = mappings.value.outputMapping.map((mapping, outputOrdinal) => {
     const expressionOrdinal = mapping - sourceFields.length;
@@ -1064,18 +1075,7 @@ export function inspectDvtSubstraitProjectionDraft(
       ...lineage,
       dataType:
         scalarExpression != null
-          ? scalarExpression.kind === 'scalar-function' &&
-            (scalarExpression.functionName === 'extract' ||
-              scalarExpression.functionName === 'add' ||
-              scalarExpression.functionName === 'subtract' ||
-              scalarExpression.functionName === 'multiply' ||
-              scalarExpression.functionName === 'divide')
-            ? 'bigint'
-            : scalarExpression.kind === 'i64-literal'
-              ? 'bigint'
-              : scalarExpression.kind === 'timestamp-literal'
-                ? 'timestamp with time zone'
-                : 'string'
+          ? scalarExpressionDataType(scalarExpression)
           : calculation == null
             ? sourceField == null
               ? 'unknown'
