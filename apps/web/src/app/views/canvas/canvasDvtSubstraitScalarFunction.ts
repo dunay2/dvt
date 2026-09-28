@@ -50,6 +50,7 @@ export function buildDvtSubstraitScalarFunction(
     entry.identity.urn === 'extension:io.substrait:functions_datetime' &&
     entry.identity.name === 'extract' &&
     signature === 'extract:req_ptstz_str';
+  const i64Output = entry.invocation?.outputType === 'i64';
   const declaration = dvtSubstraitExpression.ensureScalarFunction(args.plan, {
     urn: entry.identity.urn,
     name: signature,
@@ -61,7 +62,7 @@ export function buildDvtSubstraitScalarFunction(
       : args.operands,
     leadingEnumArguments: extractYearUtc ? ['YEAR'] : undefined,
     options: entry.invocation?.options,
-    outputType: extractYearUtc
+    outputType: extractYearUtc || i64Output
       ? create(TypeSchema, {
           kind: {
             case: 'i64',
