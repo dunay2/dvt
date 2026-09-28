@@ -1,4 +1,3 @@
-import { create } from '@bufbuild/protobuf';
 import {
   ExpressionSchema,
   RelSchema,
@@ -6,6 +5,7 @@ import {
   type Rel,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { Type_Nullability } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
+import { create } from '@bufbuild/protobuf';
 import {
   decodeDvtSubstraitPlanV1,
   encodeDvtSubstraitPlanV1,
