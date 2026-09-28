@@ -34,8 +34,11 @@ describe('selected relation derived output authoring', () => {
       relationId: inputId,
       expectedRevision: session.revision,
       alias: 'normalized_name',
-      capabilityIds: [capability('upper')] as const,
-      operandFieldIds: [sourceFieldId],
+      expression: {
+        kind: 'function',
+        capabilityId: capability('upper'),
+        arguments: [{ kind: 'field', fieldId: sourceFieldId }],
+      },
     });
 
     const nextRoot = session.locate(session.rootId, session.revision);
@@ -60,8 +63,11 @@ describe('selected relation derived output authoring', () => {
       relationId: projectId,
       expectedRevision: session.revision,
       alias: 'trimmed_name',
-      capabilityIds: [capability('trim')],
-      operandFieldIds: [sourceFieldId],
+      expression: {
+        kind: 'function',
+        capabilityId: capability('trim'),
+        arguments: [{ kind: 'field', fieldId: sourceFieldId }],
+      },
     });
     const trimmedField = trimmed.sidecar.fields.find(
       (field) => field.relationId === projectId && field.displayName === 'trimmed_name'
@@ -71,8 +77,11 @@ describe('selected relation derived output authoring', () => {
       relationId: projectId,
       expectedRevision: session.revision,
       alias: 'normalized_name',
-      capabilityIds: [capability('upper')],
-      operandFieldIds: [trimmedField.fieldId],
+      expression: {
+        kind: 'function',
+        capabilityId: capability('upper'),
+        arguments: [{ kind: 'field', fieldId: trimmedField.fieldId }],
+      },
     });
 
     expect(
@@ -104,8 +113,17 @@ describe('selected relation derived output authoring', () => {
       relationId: projectId,
       expectedRevision: session.revision,
       alias: 'normalized_name',
-      capabilityIds: [capability('trim'), capability('upper')],
-      operandFieldIds: [sourceFieldId],
+      expression: {
+        kind: 'function',
+        capabilityId: capability('upper'),
+        arguments: [
+          {
+            kind: 'function',
+            capabilityId: capability('trim'),
+            arguments: [{ kind: 'field', fieldId: sourceFieldId }],
+          },
+        ],
+      },
     });
 
     const target = session.locate(projectId, session.revision);
@@ -130,8 +148,11 @@ describe('selected relation derived output authoring', () => {
       relationId: session.rootId,
       expectedRevision: revision,
       alias: schema.bindings[0]!.displayName!,
-      capabilityIds: [capability('upper')] as const,
-      operandFieldIds: [schema.bindings[0]!.fieldId] as const,
+      expression: {
+        kind: 'function' as const,
+        capabilityId: capability('upper'),
+        arguments: [{ kind: 'field' as const, fieldId: schema.bindings[0]!.fieldId }] as const,
+      },
     };
     await expect(applySelectedRelationDerivedOutput(session, request)).rejects.toThrow();
     await expect(
@@ -153,8 +174,11 @@ describe('selected relation derived output authoring', () => {
       relationId: leftId,
       expectedRevision: session.revision,
       alias: 'normalized_name',
-      capabilityIds: [capability('upper')],
-      operandFieldIds: [sourceFieldId],
+      expression: {
+        kind: 'function',
+        capabilityId: capability('upper'),
+        arguments: [{ kind: 'field', fieldId: sourceFieldId }],
+      },
     });
     const branchField = branchDocument.sidecar.fields.find(
       (field) => field.displayName === 'normalized_name'
@@ -197,8 +221,11 @@ describe('selected relation derived output authoring', () => {
       relationId: joinId,
       expectedRevision: session.revision,
       alias: 'final_name',
-      capabilityIds: [capability('trim')],
-      operandFieldIds: [reusableField.fieldId],
+      expression: {
+        kind: 'function',
+        capabilityId: capability('trim'),
+        arguments: [{ kind: 'field', fieldId: reusableField.fieldId }],
+      },
     });
     const finalField = finalDocument.sidecar.fields.find(
       (field) => field.displayName === 'final_name'
@@ -226,7 +253,7 @@ describe('selected relation derived output authoring', () => {
       relationId,
       expectedRevision: session.revision,
       alias: 'channel',
-      literal: { kind: 'string-literal', value: 'web' },
+      expression: { kind: 'string-literal', value: 'web' },
     });
 
     const field = document.sidecar.fields.find((candidate) => candidate.displayName === 'channel');
@@ -238,5 +265,60 @@ describe('selected relation derived output authoring', () => {
     expect(expression?.case).toBe('literal');
     if (expression?.case !== 'literal') throw new Error('Expected literal expression.');
     expect(expression.value.literalType).toEqual({ case: 'string', value: 'web' });
+  });
+
+  it('builds a branched COALESCE expression from a nested function and a literal', async () => {
+    const session = new CanvasRelationAnalysisSession('branched-derived-output');
+    session.receive(connectedNamesProjectionDraft());
+    const relationId = session.rootId;
+    const source = await session.query(relationId);
+    const sourceFieldId = source.bindings.find(
+      (field) => field.parentFieldId == null && field.displayName === 'first_name'
+    )!.fieldId;
+    const coalesce = resolveDvtSubstraitColumnFunctions({
+      dataTypes: ['string', 'string'],
+      provider: 'postgres',
+      resolution: 'complete',
+    }).find((entry) => entry.name === 'coalesce');
+    if (coalesce == null) throw new Error('Missing COALESCE capability.');
+
+    const document = await applySelectedRelationDerivedOutput(session, {
+      intent: 'edit',
+      relationId,
+      expectedRevision: session.revision,
+      alias: 'display_name',
+      expression: {
+        kind: 'function',
+        capabilityId: coalesce.capabilityId,
+        arguments: [
+          {
+            kind: 'function',
+            capabilityId: capability('trim'),
+            arguments: [{ kind: 'field', fieldId: sourceFieldId }],
+          },
+          { kind: 'string-literal', value: 'UNKNOWN' },
+        ],
+      },
+    });
+
+    const field = document.sidecar.fields.find((candidate) => candidate.displayName === 'display_name');
+    expect(field?.sourceFieldId).toBe(sourceFieldId);
+    const target = session.locate(relationId, session.revision);
+    if (target.relation.relType.case !== 'project') throw new Error('Expected ProjectRel.');
+    const root = target.relation.relType.value.expressions.at(-1)?.rexType;
+    expect(root?.case).toBe('scalarFunction');
+    if (root?.case !== 'scalarFunction') throw new Error('Expected COALESCE scalar.');
+    expect(root.value.arguments).toHaveLength(2);
+    const first = root.value.arguments[0]?.argType;
+    const second = root.value.arguments[1]?.argType;
+    expect(first?.case).toBe('value');
+    expect(second?.case).toBe('value');
+    if (first?.case !== 'value' || second?.case !== 'value')
+      throw new Error('Expected value arguments.');
+    expect(first.value.rexType.case).toBe('scalarFunction');
+    expect(second.value.rexType).toMatchObject({
+      case: 'literal',
+      value: { literalType: { case: 'string', value: 'UNKNOWN' } },
+    });
   });
 });
