@@ -65,8 +65,10 @@ describe('selected relation derived-output section', () => {
     const functionSelect = container.querySelector<HTMLSelectElement>(
       '[data-slot="derived-formula-function"][data-depth="0"]'
     )!;
-    const upper = [...functionSelect.options].find((option) => option.textContent === 'UPPER');
-    if (upper == null) throw new Error('Expected UPPER capability.');
+    await waitFor(() =>
+      expect([...functionSelect.options].map((option) => option.textContent)).toContain('UPPER')
+    );
+    const upper = [...functionSelect.options].find((option) => option.textContent === 'UPPER')!;
     await act(async () => fireEvent.change(functionSelect, { target: { value: upper.value } }));
     expect(container.querySelector('[data-slot="derived-formula-preview"]')?.textContent).toBe(
       'UPPER(first_name)'
