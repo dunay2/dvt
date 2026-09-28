@@ -104,6 +104,7 @@ export function GraphNodeExpressionComposer(props: {
           unavailableAliases={props.unavailableAliases}
           allowLiterals={false}
           allowNested={false}
+          legacySlots
           copy={{
             functionLabel: props.copy.expressionComposerFunctionLabel,
             operandsLabel: props.copy.expressionComposerOperandsLabel,
