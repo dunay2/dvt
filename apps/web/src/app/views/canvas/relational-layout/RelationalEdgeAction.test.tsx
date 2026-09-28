@@ -44,10 +44,14 @@ describe('RelationalEdgeAction', () => {
     const edge = container.querySelector<SVGPathElement>('[data-slot="test-edge"]')!;
     expect(edge.classList.contains('focus:outline-none')).toBe(true);
 
-    act(() => fireEvent.click(edge));
+    act(() => {
+      fireEvent.click(edge);
+    });
     expect(onSelect).toHaveBeenCalledTimes(1);
     expect(onDisconnect).not.toHaveBeenCalled();
-    act(() => fireEvent.keyDown(edge, { key: 'Delete' }));
+    act(() => {
+      fireEvent.keyDown(edge, { key: 'Delete' });
+    });
     expect(onDisconnect).toHaveBeenCalledTimes(1);
 
     await act(async () => fireEvent.contextMenu(edge));
