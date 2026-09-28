@@ -149,8 +149,8 @@ SQL rendering, provider execution, joins, aggregates, windows, or a universal vi
 
 ## AS-IS: Exact Admitted Capability Set
 
-The capability catalog contains a broader standard-first candidate dictionary, but only a
-small pilot subset is currently promoted to `supported-profile` on `main`:
+The capability catalog contains a broader standard-first candidate dictionary, while the
+implemented authoring surface promotes only a bounded proven subset to `supported-profile`:
 
 | Category        | Supported pilot semantic identity                               |
 | --------------- | --------------------------------------------------------------- |
@@ -160,11 +160,16 @@ small pilot subset is currently promoted to `supported-profile` on `main`:
 | expression form | `substrait.Expression` / `rex_type.selection`                   |
 | expression form | `substrait.Expression` / `rex_type.scalar_function`             |
 | type            | `substrait.Type` / `kind.string`                                |
+| type            | `substrait.Type` / `kind.i64`                                   |
 | scalar function | `extension:io.substrait:functions_string` / `trim`              |
 | scalar function | `extension:io.substrait:functions_string` / `upper`             |
 | scalar function | `extension:io.substrait:functions_string` / `lower`             |
 | scalar function | `extension:io.substrait:functions_string` / `concat`            |
 | scalar function | `extension:io.substrait:functions_comparison` / `coalesce:any1` |
+| scalar function | `extension:io.substrait:functions_arithmetic` / `add:i64_i64`    |
+| scalar function | `extension:io.substrait:functions_arithmetic` / `subtract:i64_i64` |
+| scalar function | `extension:io.substrait:functions_arithmetic` / `multiply:i64_i64` |
+| scalar function | `extension:io.substrait:functions_arithmetic` / `divide:i64_i64` |
 
 Substrait defines string CONCAT with the variadic signature `concat:str`. The admitted DVT
 profile deliberately narrows that standard function to exactly two ordered string operands
@@ -173,8 +178,16 @@ operands; the PostgreSQL renderer projects the recursive expression through its 
 and keeps null propagation explicit.
 
 Substrait defines `coalesce:any1` with a minimum of two operands and no maximum. DVT admits
-that official identity for the bounded PostgreSQL text slice. One catalog-driven expression
-composer consumes every admitted scalar operation: a proposal may be offered with one or more
+that official identity for the bounded PostgreSQL text slice.
+
+For numeric formulas DVT admits only the exact binary i64 signatures
+`add:i64_i64`, `subtract:i64_i64`, `multiply:i64_i64` and `divide:i64_i64`.
+The profile selects `overflow=ERROR` for all four operations and additionally selects
+`on_domain_error=ERROR` and `on_division_by_zero=ERROR` for divide. The PostgreSQL target
+uses bigint operators `+`, `-`, `*` and `/`; fp64, decimal, mixed numeric types and implicit
+coercion remain outside this cut.
+
+One catalog-driven expression composer consumes every admitted scalar operation: a proposal may be offered with one or more
 compatible operands while it remains below the optional maximum, but it is complete only when
 the ordered `FieldId` list satisfies both catalog bounds. Only a complete proposal reaches the
 existing authoring command. Operand order is semantic and is preserved through Apply and
