@@ -71,9 +71,30 @@ test('GitHub collaboration governance keeps ownership, dependency, and PR policy
     assert.equal(result.status, status, result.stdout + result.stderr);
   }
 
-  assert.match(prQualityGate, /run: pnpm pr:validate-title "\$PR_TITLE"/u);
+  assert.match(prQualityGate, /run: node scripts\/validate-pr-title\.cjs "\$PR_TITLE"/u);
   assert.match(prQualityGate, /PR_TITLE: \$\{\{ github\.event\.pull_request\.title \}\}/u);
   assert.doesNotMatch(prQualityGate, /amannn\/action-semantic-pull-request/u);
+});
+
+test('PR metadata rejects invalid submissions immediately after checkout and before dependency setup', () => {
+  const workflow = yaml.load(readText('.github/workflows/pr-quality-gate.yml'));
+  const steps = workflow.jobs['pr-checks'].steps;
+  assert.deepEqual(
+    steps.slice(0, 4).map((step) => step.name),
+    [
+      'Checkout',
+      'Check PR title follows Conventional Commits',
+      'Check PR size',
+      'Check if description is present',
+    ]
+  );
+  for (const step of steps.slice(1, 4)) {
+    assert.equal(step.if, "github.event_name == 'pull_request'");
+  }
+  assert.equal(steps[1].run, 'node scripts/validate-pr-title.cjs "$PR_TITLE"');
+  assert.equal(steps[2].run, 'node tools/ci/check-pr-size.mjs');
+  assert.equal(steps[3].run, 'node tools/ci/check-pr-description.mjs');
+  assert.ok(steps.findIndex((step) => step.uses === './.github/actions/setup-node-pnpm') > 3);
 });
 
 test('trusted PR metadata mutation is isolated from candidate-code validation', () => {
