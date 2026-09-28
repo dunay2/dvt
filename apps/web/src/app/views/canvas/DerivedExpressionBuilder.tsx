@@ -8,6 +8,7 @@ import {
   type DerivedExpressionCopy,
   type DerivedExpressionDraft,
   type DerivedExpressionFunctionResolver,
+  type DerivedExpressionTypeResolver,
 } from './DerivedExpressionNodeEditor';
 import type { DerivedOutputField } from './DerivedOutputOperands';
 
@@ -15,6 +16,7 @@ export function DerivedExpressionBuilder({
   expression,
   fields,
   resolveFunctions,
+  resolveFunctionsForTypes,
   allowLiterals,
   allowNested,
   busy,
@@ -24,6 +26,7 @@ export function DerivedExpressionBuilder({
   expression: DerivedExpressionDraft;
   fields: readonly DerivedOutputField[];
   resolveFunctions: DerivedExpressionFunctionResolver;
+  resolveFunctionsForTypes?: DerivedExpressionTypeResolver;
   allowLiterals: boolean;
   allowNested: boolean;
   busy: boolean;
@@ -54,6 +57,7 @@ export function DerivedExpressionBuilder({
           expression={expression}
           fields={fields}
           resolveFunctions={resolveFunctions}
+          resolveFunctionsForTypes={resolveFunctionsForTypes}
           allowLiterals={allowLiterals}
           allowNested={allowNested}
           busy={busy}
@@ -82,7 +86,12 @@ export function DerivedExpressionBuilder({
       <div className="rounded border border-(--border-subtle) p-2 text-xs">
         <span className="text-(--text-muted)">{copy.previewLabel}</span>
         <code data-slot="graph-node-column-function-expression" className="mt-1 block">
-          {formatDerivedExpression(expression, fields, resolveFunctions)}
+          {formatDerivedExpression(
+            expression,
+            fields,
+            resolveFunctions,
+            resolveFunctionsForTypes
+          )}
         </code>
       </div>
     </fieldset>
