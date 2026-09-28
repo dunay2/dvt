@@ -22,7 +22,11 @@ import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 export type DvtSubstraitCalculatedExpression =
   | Readonly<{ kind: 'string-literal'; value: string }>
   | Readonly<{ kind: 'timestamp-literal'; value: string }>
+  | Readonly<{ kind: 'i64-literal'; value: bigint }>
   | Readonly<{ kind: 'row-number'; orderSourceOrdinal: number }>;
+
+const I64_MIN = -9_223_372_036_854_775_808n;
+const I64_MAX = 9_223_372_036_854_775_807n;
 
 const capabilityId = (category: 'expression-form' | 'type', selector: string) =>
   buildDvtSubstraitStandardCapabilityId(category, {
@@ -57,7 +61,9 @@ export function buildDvtSubstraitCalculatedExpression(
       ? [capabilityId('type', 'kind.string')]
       : calculation.kind === 'timestamp-literal'
         ? [capabilityId('type', 'kind.precision_timestamp_tz')]
-        : []),
+        : calculation.kind === 'i64-literal'
+          ? [capabilityId('type', 'kind.i64')]
+          : []),
   ]);
   if (calculation.kind === 'string-literal') {
     return dvtSubstraitExpression.literal({ dataType: 'string', value: calculation.value });
@@ -67,6 +73,12 @@ export function buildDvtSubstraitCalculatedExpression(
       dataType: 'precisionTimestampTz',
       value: calculation.value,
     });
+  }
+  if (calculation.kind === 'i64-literal') {
+    if (calculation.value < I64_MIN || calculation.value > I64_MAX) {
+      throw new Error('Calculated i64 literal is outside the signed 64-bit range.');
+    }
+    return dvtSubstraitExpression.literal({ dataType: 'i64', value: calculation.value });
   }
   const functionReference = rowNumberFunction.ensure(plan);
   return create(ExpressionSchema, {
@@ -106,6 +118,9 @@ export function inspectDvtSubstraitCalculatedExpression(
         calculation: { kind: 'timestamp-literal', value: literal.value },
         functionAnchors: [],
       };
+    }
+    if (literal?.dataType === 'i64') {
+      return { calculation: { kind: 'i64-literal', value: literal.value }, functionAnchors: [] };
     }
     return null;
   }
