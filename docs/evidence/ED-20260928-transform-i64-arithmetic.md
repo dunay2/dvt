@@ -1,6 +1,6 @@
 ---
 title: Transform i64 arithmetic evidence
-status: Draft
+status: Accepted
 date: 2026-09-28
 owners:
   - web
@@ -83,3 +83,16 @@ Substrait plan plus stable DVT RelationId/FieldId/provenance sidecar.
 
 Unsupported provider, mixed operand types, malformed arity/signature/options and out-of-range
 literals fail closed.
+
+
+## Validation result
+
+GitHub CI on the governed branch completed the required routed checks successfully:
+
+- Contracts & Determinism — PASS.
+- Test Suite required gate — PASS.
+- PR Quality Gate — PASS.
+- CI Code Quality affected-workspace build/lint/typecheck — PASS.
+
+Dependency Review and CodeQL were skipped by repository routing for this diff. No rule, test,
+lint threshold or provider guard was relaxed.
