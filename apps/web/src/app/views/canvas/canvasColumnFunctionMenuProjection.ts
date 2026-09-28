@@ -43,10 +43,11 @@ function addMenu(args: {
   });
   const category = items[0]?.category;
   if (category == null || items.length === 0) return;
+  const menuCategory = category === 'arithmetic' ? ('numeric' as const) : category;
   const value = {
     columnId: args.columnId,
     dataType: args.dataType,
-    menu: { category, items },
+    menu: { category: menuCategory, items },
   };
   args.menus.set(args.columnId, value);
   args.menus.set(args.name, value);
