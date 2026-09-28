@@ -17,10 +17,35 @@ import type { DerivedOutputField } from './DerivedOutputOperands';
 
 export type DerivedOutputFunction = DerivedExpressionFunction;
 export type DerivedOutputFunctionResolver = DerivedExpressionFunctionResolver;
+export type DerivedOutputExpression =
+  | Readonly<{ kind: 'field'; fieldId: string }>
+  | Readonly<{ kind: 'string-literal'; value: string }>
+  | Readonly<{ kind: 'timestamp-literal'; value: string }>
+  | Readonly<{ kind: 'i64-literal'; value: bigint }>
+  | Readonly<{
+      kind: 'function';
+      capabilityId: string;
+      arguments: readonly [DerivedOutputExpression, ...DerivedOutputExpression[]];
+    }>;
+
 export type DerivedOutputRequest = Readonly<{
   alias: string;
-  expression: DerivedExpressionDraft;
+  expression: DerivedOutputExpression;
 }>;
+
+const I64_MIN = -9_223_372_036_854_775_808n;
+const I64_MAX = 9_223_372_036_854_775_807n;
+const I64_LITERAL = /^-?(?:0|[1-9]\d*)$/;
+
+function parseI64Literal(value: string): bigint | null {
+  if (!I64_LITERAL.test(value)) return null;
+  try {
+    const parsed = BigInt(value);
+    return parsed < I64_MIN || parsed > I64_MAX ? null : parsed;
+  } catch {
+    return null;
+  }
+}
 
 function firstFieldId(expression: DerivedExpressionDraft): string | null {
   return collectDerivedExpressionFieldIds(expression)[0] ?? null;
@@ -32,13 +57,12 @@ function operationFor(
   resolveFunctions: DerivedOutputFunctionResolver
 ): DerivedExpressionFunction | null {
   if (expression.kind !== 'function') return null;
-  const fieldId = firstFieldId(expression) ?? fields[0]?.fieldId;
-  if (fieldId == null) return null;
-  return (
-    resolveFunctions([fieldId], 'proposal').find(
-      (candidate) => candidate.capabilityId === expression.capabilityId
-    ) ?? null
-  );
+  const fieldId = firstFieldId(expression);
+  const functions =
+    fieldId == null
+      ? fields.flatMap((field) => resolveFunctions([field.fieldId], 'proposal'))
+      : resolveFunctions([fieldId], 'proposal');
+  return functions.find((candidate) => candidate.capabilityId === expression.capabilityId) ?? null;
 }
 
 function validExpression(
@@ -52,6 +76,7 @@ function validExpression(
     return DvtStringLiteralV1Schema.safeParse(expression.value).success;
   if (expression.kind === 'timestamp-literal')
     return DvtTimestampLiteralV1Schema.safeParse(expression.value).success;
+  if (expression.kind === 'i64-literal') return parseI64Literal(expression.value) != null;
 
   const operation = operationFor(expression, fields, resolveFunctions);
   if (operation == null) return false;
@@ -67,15 +92,38 @@ function validExpression(
   );
 }
 
+function normalizeExpression(
+  expression: DerivedExpressionDraft
+): DerivedOutputExpression | null {
+  if (expression.kind === 'field') return expression;
+  if (expression.kind === 'string-literal' || expression.kind === 'timestamp-literal') {
+    return expression;
+  }
+  if (expression.kind === 'i64-literal') {
+    const value = parseI64Literal(expression.value);
+    return value == null ? null : { kind: 'i64-literal', value };
+  }
+  const arguments_ = expression.arguments.map(normalizeExpression);
+  if (arguments_.some((argument) => argument == null)) return null;
+  return {
+    kind: 'function',
+    capabilityId: expression.capabilityId,
+    arguments: arguments_.filter(
+      (argument): argument is DerivedOutputExpression => argument != null
+    ) as [DerivedOutputExpression, ...DerivedOutputExpression[]],
+  };
+}
+
 function initialExpression(
   fields: readonly DerivedOutputField[],
   resolveFunctions: DerivedOutputFunctionResolver,
   initialCapabilityId?: string,
   initialOperandFieldIds?: readonly [string, ...string[]],
-  initialMode?: 'function' | 'string-literal' | 'timestamp-literal'
+  initialMode?: 'function' | 'string-literal' | 'timestamp-literal' | 'i64-literal'
 ): DerivedExpressionDraft {
   if (initialMode === 'string-literal') return { kind: 'string-literal', value: '' };
   if (initialMode === 'timestamp-literal') return { kind: 'timestamp-literal', value: '' };
+  if (initialMode === 'i64-literal') return { kind: 'i64-literal', value: '' };
   const fieldId = initialOperandFieldIds?.[0] ?? fields[0]?.fieldId ?? '';
   const functions = fieldId.length === 0 ? [] : resolveFunctions([fieldId], 'proposal');
   const operation =
@@ -117,7 +165,7 @@ export function DerivedOutputForm({
   resolveFunctions: DerivedOutputFunctionResolver;
   initialCapabilityId?: string;
   initialOperandFieldIds?: readonly [string, ...string[]];
-  initialMode?: 'function' | 'string-literal' | 'timestamp-literal';
+  initialMode?: 'function' | 'string-literal' | 'timestamp-literal' | 'i64-literal';
   allowLiterals?: boolean;
   allowNested?: boolean;
   unavailableAliases?: readonly string[];
@@ -137,6 +185,7 @@ export function DerivedOutputForm({
     fieldNodeLabel?: string;
     stringLiteralNodeLabel?: string;
     timestampLiteralNodeLabel?: string;
+    i64LiteralNodeLabel?: string;
     literalValueLabel?: string;
     aliasLabel: string;
     aliasInvalid: string;
@@ -171,8 +220,10 @@ export function DerivedOutputForm({
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!valid) return;
+    const normalized = normalizeExpression(expression);
+    if (normalized == null) return;
     setBusy(true);
-    const error = await onSubmit({ alias, expression });
+    const error = await onSubmit({ alias, expression: normalized });
     setBusy(false);
     setCommandError(error);
     if (error == null) onApplied?.();
