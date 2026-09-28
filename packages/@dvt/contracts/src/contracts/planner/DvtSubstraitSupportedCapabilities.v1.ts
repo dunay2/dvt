@@ -52,6 +52,10 @@ const LOWER_ID = functionId('scalar-function', 'functions_string', 'lower');
 const CONCAT_ID = functionId('scalar-function', 'functions_string', 'concat');
 const COALESCE_ID = functionId('scalar-function', 'functions_comparison', 'coalesce');
 const EXTRACT_ID = functionId('scalar-function', 'functions_datetime', 'extract');
+const ADD_I64_ID = functionId('scalar-function', 'functions_arithmetic', 'add');
+const SUBTRACT_I64_ID = functionId('scalar-function', 'functions_arithmetic', 'subtract');
+const MULTIPLY_I64_ID = functionId('scalar-function', 'functions_arithmetic', 'multiply');
+const DIVIDE_I64_ID = functionId('scalar-function', 'functions_arithmetic', 'divide');
 const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
   {
     entryIds: [
@@ -125,6 +129,49 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
         maximumArgumentCount: 3,
         outputType: 'i64',
         options: [],
+      },
+    },
+  },
+  {
+    entryIds: [ADD_I64_ID, SUBTRACT_I64_ID, MULTIPLY_I64_ID, DIVIDE_I64_ID],
+    useCaseRefs: ['dvt:#3434'],
+    proofRef: 'docs/evidence/ED-20260928-transform-i64-arithmetic.md',
+    invocationByEntryId: {
+      [ADD_I64_ID]: {
+        signature: 'add:i64_i64',
+        argumentTypes: ['i64', 'i64'],
+        minimumArgumentCount: 2,
+        maximumArgumentCount: 2,
+        outputType: 'i64',
+        options: [{ name: 'overflow', preference: ['ERROR'] }],
+      },
+      [SUBTRACT_I64_ID]: {
+        signature: 'subtract:i64_i64',
+        argumentTypes: ['i64', 'i64'],
+        minimumArgumentCount: 2,
+        maximumArgumentCount: 2,
+        outputType: 'i64',
+        options: [{ name: 'overflow', preference: ['ERROR'] }],
+      },
+      [MULTIPLY_I64_ID]: {
+        signature: 'multiply:i64_i64',
+        argumentTypes: ['i64', 'i64'],
+        minimumArgumentCount: 2,
+        maximumArgumentCount: 2,
+        outputType: 'i64',
+        options: [{ name: 'overflow', preference: ['ERROR'] }],
+      },
+      [DIVIDE_I64_ID]: {
+        signature: 'divide:i64_i64',
+        argumentTypes: ['i64', 'i64'],
+        minimumArgumentCount: 2,
+        maximumArgumentCount: 2,
+        outputType: 'i64',
+        options: [
+          { name: 'overflow', preference: ['ERROR'] },
+          { name: 'on_domain_error', preference: ['ERROR'] },
+          { name: 'on_division_by_zero', preference: ['ERROR'] },
+        ],
       },
     },
   },
