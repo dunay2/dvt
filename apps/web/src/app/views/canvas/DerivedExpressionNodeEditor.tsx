@@ -28,6 +28,11 @@ export type DerivedExpressionFunctionResolver = (
   resolution: 'proposal' | 'complete'
 ) => readonly DerivedExpressionFunction[];
 
+export type DerivedExpressionTypeResolver = (
+  dataTypes: readonly string[],
+  resolution: 'proposal' | 'complete'
+) => readonly DerivedExpressionFunction[];
+
 export type DerivedExpressionCopy = Readonly<{
   functionLabel: string;
   operandsLabel: string;
@@ -91,11 +96,50 @@ function normalizeArguments(
   return next as [DerivedExpressionDraft, ...DerivedExpressionDraft[]];
 }
 
+export function inferDerivedExpressionDataType(
+  expression: DerivedExpressionDraft,
+  fields: readonly DerivedOutputField[],
+  resolveFunctionsForTypes?: DerivedExpressionTypeResolver
+): string | null {
+  if (expression.kind === 'field')
+    return fields.find((field) => field.fieldId === expression.fieldId)?.dataType ?? null;
+  if (expression.kind === 'string-literal') return 'string';
+  if (expression.kind === 'timestamp-literal') return 'timestamp with time zone';
+  if (expression.kind === 'i64-literal') return 'bigint';
+
+  const argumentTypes = expression.arguments.map((argument) =>
+    inferDerivedExpressionDataType(argument, fields, resolveFunctionsForTypes)
+  );
+  if (argumentTypes.some((dataType) => dataType == null)) return null;
+  const resolved =
+    resolveFunctionsForTypes?.(
+      argumentTypes.filter((dataType): dataType is string => dataType != null),
+      'complete'
+    ).find((candidate) => candidate.capabilityId === expression.capabilityId) ?? null;
+  const category = resolved?.category;
+  if (category === 'text') return 'string';
+  if (category === 'date-time' || category === 'arithmetic') return 'bigint';
+  return null;
+}
+
 function proposalFunctions(
   expression: DerivedExpressionDraft,
   fields: readonly DerivedOutputField[],
-  resolveFunctions: DerivedExpressionFunctionResolver
+  resolveFunctions: DerivedExpressionFunctionResolver,
+  resolveFunctionsForTypes?: DerivedExpressionTypeResolver
 ): readonly DerivedExpressionFunction[] {
+  const dataTypes =
+    expression.kind === 'function'
+      ? expression.arguments
+          .map((argument) => inferDerivedExpressionDataType(argument, fields, resolveFunctionsForTypes))
+          .filter((dataType): dataType is string => dataType != null)
+      : [inferDerivedExpressionDataType(expression, fields, resolveFunctionsForTypes)].filter(
+          (dataType): dataType is string => dataType != null
+        );
+  if (resolveFunctionsForTypes != null && dataTypes.length > 0) {
+    return resolveFunctionsForTypes(dataTypes, 'proposal');
+  }
+
   const fieldId = firstFieldId(expression);
   const candidates =
     fieldId == null
@@ -109,7 +153,8 @@ function proposalFunctions(
 export function formatDerivedExpression(
   expression: DerivedExpressionDraft,
   fields: readonly DerivedOutputField[],
-  resolveFunctions: DerivedExpressionFunctionResolver
+  resolveFunctions: DerivedExpressionFunctionResolver,
+  resolveFunctionsForTypes?: DerivedExpressionTypeResolver
 ): string {
   if (expression.kind === 'field')
     return fields.find((field) => field.fieldId === expression.fieldId)?.name ?? expression.fieldId;
@@ -117,12 +162,17 @@ export function formatDerivedExpression(
   if (expression.kind === 'timestamp-literal')
     return `TIMESTAMP_TZ(${JSON.stringify(expression.value)})`;
   if (expression.kind === 'i64-literal') return expression.value;
-  const functions = proposalFunctions(expression, fields, resolveFunctions);
+  const functions = proposalFunctions(
+    expression,
+    fields,
+    resolveFunctions,
+    resolveFunctionsForTypes
+  );
   const operation =
     functions.find((candidate) => candidate.capabilityId === expression.capabilityId) ??
     functions[0];
   const argumentsText = expression.arguments.map((argument) =>
-    formatDerivedExpression(argument, fields, resolveFunctions)
+    formatDerivedExpression(argument, fields, resolveFunctions, resolveFunctionsForTypes)
   );
   if (operation == null) return `?(${argumentsText.join(', ')})`;
   if (operation.expressionTemplate != null) {
@@ -139,6 +189,7 @@ export function DerivedExpressionNodeEditor({
   expression,
   fields,
   resolveFunctions,
+  resolveFunctionsForTypes,
   allowLiterals,
   allowNested,
   busy,
@@ -149,6 +200,7 @@ export function DerivedExpressionNodeEditor({
   expression: DerivedExpressionDraft;
   fields: readonly DerivedOutputField[];
   resolveFunctions: DerivedExpressionFunctionResolver;
+  resolveFunctionsForTypes?: DerivedExpressionTypeResolver;
   allowLiterals: boolean;
   allowNested: boolean;
   busy: boolean;
@@ -157,7 +209,12 @@ export function DerivedExpressionNodeEditor({
   onChange: (expression: DerivedExpressionDraft) => void;
 }>): JSX.Element {
   const probeFieldId = firstFieldId(expression) ?? fields[0]?.fieldId ?? null;
-  const functions = proposalFunctions(expression, fields, resolveFunctions);
+  const functions = proposalFunctions(
+    expression,
+    fields,
+    resolveFunctions,
+    resolveFunctionsForTypes
+  );
   const selectedFunction =
     expression.kind === 'function'
       ? functions.find((candidate) => candidate.capabilityId === expression.capabilityId) ??
@@ -321,6 +378,7 @@ export function DerivedExpressionNodeEditor({
                 expression={argument}
                 fields={fields}
                 resolveFunctions={resolveFunctions}
+                resolveFunctionsForTypes={resolveFunctionsForTypes}
                 allowLiterals={allowLiterals}
                 allowNested={allowNested}
                 busy={busy}
