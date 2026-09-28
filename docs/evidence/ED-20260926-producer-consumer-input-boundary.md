@@ -814,6 +814,21 @@ floating-promise errors in `CanvasRelationalTreeOutput.test.tsx`. Its synchronou
 actual synchronous interaction. No assertions or lint rules were removed; the
 complete gate must be rerun after this correction.
 
+The equivalent synchronous-return fixes in `RelationalEdgeAction.test.tsx` and
+`RelationalCardDisclosure.test.tsx` also passed their targeted tests (one and
+four respectively). A complete ESLint API audit of all 537 files selected by the
+canonical changed-file filter, using the repository configuration and zero
+allowed warnings, still failed with five errors and one warning in earlier
+branch work: three asynchronous handlers assigned to void callbacks in
+`useCanvasEdgeAuthoringHandlers.ts`, one in `useCanvasGraphHandlers.ts`, one
+unawaited calculated-column call in `useCanvasGraphHandlers.edgeAuthoring.test.tsx`,
+and a missing explicit helper return type in
+`dvt-relational-authoring-draft.contract.test.ts`. No suppression was added.
+The repeated pre-push attempts were stopped once this audit established the
+remaining failures; no successful pre-push stamp or integration readiness is
+claimed. These findings, the six browser failures and the database incident
+remain explicit blockers outside the validated formula-specific story.
+
 The earlier database incident and six outstanding broader browser failures are
 not resolved by these formula-specific proofs. Integration remains pending the
 complete branch gates. No new debt, stub, fake production adapter, disabled rule
