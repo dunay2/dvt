@@ -323,6 +323,18 @@ export function DerivedExpressionNodeEditor({
 
   const range = bounds(selectedFunction, fields.length);
   const argumentsValue = normalizeArguments(selectedFunction, expression.arguments, fields);
+  const legacyCompatibleFields =
+    legacySlots && argumentsValue[0]?.kind === 'field'
+      ? fields.filter((field) => {
+          const probe =
+            range.maximum === 1
+              ? [field.fieldId]
+              : [argumentsValue[0]!.fieldId, field.fieldId];
+          return resolveFunctions(probe, 'complete').some(
+            (candidate) => candidate.capabilityId === selectedFunction.capabilityId
+          );
+        })
+      : fields;
   const updateArguments = (next: readonly DerivedExpressionDraft[]) =>
     onChange({
       kind: 'function',
@@ -369,20 +381,24 @@ export function DerivedExpressionNodeEditor({
         <span className="text-xs text-(--text-muted)">{copy.operandsLabel}</span>
         {argumentsValue.map((argument, index) => {
           const compatibleFields =
-            allowNested || expression.arguments.some((candidate) => candidate.kind !== 'field')
-              ? fields
-              : fields.filter((field) => {
-                  const next = argumentsValue.map((candidate, slot) =>
-                    slot === index ? ({ kind: 'field', fieldId: field.fieldId } as const) : candidate
-                  );
-                  const fieldIds = next.flatMap((candidate) =>
-                    candidate.kind === 'field' ? [candidate.fieldId] : []
-                  );
-                  if (fieldIds.length !== next.length) return true;
-                  return resolveFunctions(fieldIds, 'complete').some(
-                    (candidate) => candidate.capabilityId === selectedFunction.capabilityId
-                  );
-                });
+            legacySlots
+              ? legacyCompatibleFields
+              : allowNested || expression.arguments.some((candidate) => candidate.kind !== 'field')
+                ? fields
+                : fields.filter((field) => {
+                    const next = argumentsValue.map((candidate, slot) =>
+                      slot === index
+                        ? ({ kind: 'field', fieldId: field.fieldId } as const)
+                        : candidate
+                    );
+                    const fieldIds = next.flatMap((candidate) =>
+                      candidate.kind === 'field' ? [candidate.fieldId] : []
+                    );
+                    if (fieldIds.length !== next.length) return true;
+                    return resolveFunctions(fieldIds, 'complete').some(
+                      (candidate) => candidate.capabilityId === selectedFunction.capabilityId
+                    );
+                  });
           return (
             <div
               key={index}
@@ -470,13 +486,8 @@ export function DerivedExpressionNodeEditor({
               argument.kind === 'field' ? [argument.fieldId] : []
             );
             const candidate =
-              fields.find(
-                (field) =>
-                  !currentFieldIds.includes(field.fieldId) &&
-                  resolveFunctions([...currentFieldIds, field.fieldId], 'complete').some(
-                    (operation) => operation.capabilityId === selectedFunction.capabilityId
-                  )
-              ) ?? fields.find((field) => !currentFieldIds.includes(field.fieldId));
+              legacyCompatibleFields.find((field) => !currentFieldIds.includes(field.fieldId)) ??
+              legacyCompatibleFields[0];
             if (candidate != null) {
               updateArguments([...argumentsValue, { kind: 'field', fieldId: candidate.fieldId }]);
             }
