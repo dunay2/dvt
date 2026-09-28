@@ -888,8 +888,8 @@ export function inspectDvtSubstraitProjectionDraft(
         kind: 'scalar-function',
         functionName: 'concat',
         arguments: [
-          publicScalar(expression.arguments[0]),
-          publicScalar(expression.arguments[1]),
+          publicScalar(expression.arguments[0]!),
+          publicScalar(expression.arguments[1]!),
         ],
         nullHandling: expression.nullHandling,
       };
@@ -898,7 +898,7 @@ export function inspectDvtSubstraitProjectionDraft(
       return {
         kind: 'scalar-function',
         functionName: 'extract',
-        arguments: [publicScalar(expression.arguments[0])],
+        arguments: [publicScalar(expression.arguments[0]!)],
         component: expression.component,
         timezone: expression.timezone,
       };
@@ -908,15 +908,15 @@ export function inspectDvtSubstraitProjectionDraft(
         kind: 'scalar-function',
         functionName: expression.functionName,
         arguments: [
-          publicScalar(expression.arguments[0]),
-          publicScalar(expression.arguments[1]),
+          publicScalar(expression.arguments[0]!),
+          publicScalar(expression.arguments[1]!),
         ],
       };
     }
     return {
       kind: 'scalar-function',
       functionName: expression.functionName,
-      arguments: [publicScalar(expression.arguments[0])],
+      arguments: [publicScalar(expression.arguments[0]!)],
     };
   };
   const scalarOperations = (expression: DvtSubstraitScalarExpression): readonly string[] =>
