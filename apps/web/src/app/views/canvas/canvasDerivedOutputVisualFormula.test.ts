@@ -104,4 +104,29 @@ describe('visual derived-output formula draft', () => {
       }).map((field) => field.fieldId)
     ).toEqual(['field:price', 'field:quantity']);
   });
+
+  it('returns no field choices when the selected function has no compatible field', () => {
+    const multiply = capability('multiply', ['bigint', 'bigint']);
+    const textOnlyFields: readonly DerivedOutputField[] = [
+      { fieldId: 'field:first', name: 'first_name', dataType: 'string' },
+      { fieldId: 'field:last', name: 'last_name', dataType: 'string' },
+    ];
+    const expression: Extract<DerivedOutputVisualFormula, { kind: 'function' }> = {
+      kind: 'function',
+      capabilityId: multiply,
+      arguments: [
+        { kind: 'number-literal', value: '2' },
+        { kind: 'number-literal', value: '3' },
+      ],
+    };
+
+    expect(
+      compatibleDerivedOutputVisualFields({
+        expression,
+        argumentIndex: 1,
+        fields: textOnlyFields,
+        provider: 'postgres',
+      })
+    ).toEqual([]);
+  });
 });
