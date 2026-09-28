@@ -1,0 +1,29 @@
+---
+id: R-20260928-I64-ARITHMETIC-DRIFT
+title: Integer Transform formulas could drift from admitted Substrait or PostgreSQL semantics
+status: Open
+date: 2026-09-28
+owners:
+  - web
+  - packages/@dvt/contracts
+  - packages/@dvt/postgres-projection
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    DVT admits only the exact Substrait v0.101.0 add, subtract, multiply and divide i64 scalar
+    signatures with binary arity. Overflow is ERROR for every operation; divide also fixes domain
+    error and division-by-zero to ERROR. Capability projection accepts only homogeneous i64/bigint
+    operands for PostgreSQL, authoring persists the exact capability identity and options in the
+    canonical Substrait expression, and target lowering uses the governed PostgreSQL AST operators.
+    Signed i64 literals are range checked. Mixed types, unsupported providers, malformed options,
+    signatures, arity and out-of-range literals fail closed.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/evidence/ED-20260928-transform-i64-arithmetic.md
+    - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
+    - packages/@dvt/postgres-projection/test/relationalI64Arithmetic.test.ts
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedExpression.i64.test.ts
+  follow_up:
+    - fp64, decimal arithmetic, mixed numeric types and coercion require independent admission and target proof.
