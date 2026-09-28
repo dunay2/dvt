@@ -94,7 +94,8 @@ const en = {
   derivedOutput: {
     add: 'Add derived field',
     formulaLabel: 'Formula',
-    formulaHint: "Combine fields, constants and functions. Use '' for empty text.",
+    formulaHint: 'Build the formula from fields, constants, functions and admitted operators.',
+    formulaInvalid: 'Complete a compatible formula before saving.',
     update: 'Save changes',
     functionLabel: 'Function',
     nodeTypeLabel: 'Node type',
@@ -217,7 +218,8 @@ const es: typeof en = {
   derivedOutput: {
     add: 'Añadir campo derivado',
     formulaLabel: 'Fórmula',
-    formulaHint: "Combina campos, constantes y funciones. Usa '' para texto vacío.",
+    formulaHint: 'Construye la fórmula con campos, constantes, funciones y operadores admitidos.',
+    formulaInvalid: 'Completa una fórmula compatible antes de guardar.',
     update: 'Guardar cambios',
     functionLabel: 'Función',
     nodeTypeLabel: 'Tipo de nodo',
