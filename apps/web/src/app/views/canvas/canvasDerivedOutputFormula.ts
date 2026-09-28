@@ -1,6 +1,7 @@
 /** Input syntax only: compile directly to canonical Substrait; never persist a formula AST. */
 import type { Expression } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import { create } from '@bufbuild/protobuf';
+import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {
   resolveDvtSubstraitColumnFunctions,
   resolveFunctionReference,
@@ -252,4 +253,26 @@ export function describeDerivedOutputFormula(
   return operator != null && args.length === 2
     ? `(${args[0]} ${operator} ${args[1]})`
     : `${name.toUpperCase()}(${args.join(', ')})`;
+}
+
+export function validateDerivedOutputFormula(
+  args: Readonly<{
+    formula: string;
+    fields: readonly Omit<FormulaField, 'expression'>[];
+    provider: string;
+  }>
+): boolean {
+  try {
+    const result = compileDerivedOutputFormula({
+      ...args,
+      plan: create(PlanSchema),
+      fields: args.fields.map((field, ordinal) => ({
+        ...field,
+        expression: dvtSubstraitExpression.field(ordinal),
+      })),
+    });
+    return result.expression.rexType.case !== 'selection';
+  } catch {
+    return false;
+  }
 }

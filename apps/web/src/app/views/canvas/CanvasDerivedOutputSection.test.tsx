@@ -10,6 +10,8 @@ import { setupWorkbenchTest, root, container } from './CanvasRelationalTreeWorkb
 import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
+import { CanvasRelationalScalarTree } from './CanvasRelationalScalarTree';
+import { CANVAS_RELATIONAL_FIELD_DRAG_TYPE } from './canvasRelationalTreeDrag';
 
 describe('selected relation derived-output section', () => {
   setupWorkbenchTest();
@@ -58,28 +60,10 @@ describe('selected relation derived-output section', () => {
     await act(async () =>
       fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-trigger"]')!)
     );
-    expect(container.querySelector('textarea[name="formula"]')).toBeNull();
-    const rootKind = container.querySelector<HTMLSelectElement>(
-      '[data-slot="derived-formula-node-kind"][data-depth="0"]'
-    )!;
-    await act(async () => fireEvent.change(rootKind, { target: { value: 'function' } }));
-    await waitFor(() =>
-      expect(
-        [
-          ...container.querySelector<HTMLSelectElement>(
-            '[data-slot="derived-formula-function"][data-depth="0"]'
-          )!.options,
-        ].map((option) => option.textContent)
-      ).toContain('UPPER')
-    );
-    const functionSelect = container.querySelector<HTMLSelectElement>(
-      '[data-slot="derived-formula-function"][data-depth="0"]'
-    )!;
-    const upper = [...functionSelect.options].find((option) => option.textContent === 'UPPER')!;
-    await act(async () => fireEvent.change(functionSelect, { target: { value: upper.value } }));
-    expect(container.querySelector('[data-slot="derived-formula-preview"]')?.textContent).toBe(
-      'UPPER(first_name)'
-    );
+    const formula = container.querySelector<HTMLTextAreaElement>('textarea[name="formula"]')!;
+    expect(formula).not.toBeNull();
+    expect(formula.value).toBe('');
+    await act(async () => fireEvent.change(formula, { target: { value: 'UPPER(first_name)' } }));
     await act(async () =>
       fireEvent.change(container.querySelector<HTMLInputElement>('input[name="alias"]')!, {
         target: { value: 'normalized_name' },
@@ -145,13 +129,145 @@ describe('selected relation derived-output section', () => {
       )
     );
 
-    const rootKind = container.querySelector<HTMLSelectElement>(
-      '[data-slot="derived-formula-node-kind"][data-depth="0"]'
-    )!;
-    await act(async () => fireEvent.change(rootKind, { target: { value: 'field' } }));
-    const fieldSelect = container.querySelector<HTMLSelectElement>(
-      '[data-slot="derived-formula-field"]'
-    )!;
-    expect([...fieldSelect.options].map((option) => option.value)).not.toContain(output.fieldId);
+    const formula = container.querySelector<HTMLTextAreaElement>('textarea[name="formula"]')!;
+    expect(formula.value).toBe('UPPER(first_name)');
+    await act(async () =>
+      fireEvent.change(formula, { target: { value: 'UPPER(normalized_name)' } })
+    );
+    await act(async () => fireEvent.submit(container.querySelector('form')!));
+    expect(onChange).not.toHaveBeenCalled();
+    expect(container.querySelector('[role="alert"]')).not.toBeNull();
+  });
+
+  it('keeps a typed draft but refuses to rebind it silently after a semantic revision', async () => {
+    const document = connectedNamesProjectionDraft();
+    const lookup = new CanvasRelationAnalysisSession('stale-formula-test');
+    lookup.receive(document);
+    const relationId = lookup.rootId;
+    const updated = await applySelectedRelationDerivedOutput(lookup, {
+      intent: 'edit',
+      relationId,
+      expectedRevision: lookup.revision,
+      alias: 'other_output',
+      formula: "'concurrent change'",
+    });
+    const onChange = vi.fn();
+    function Host({ snapshot }: { snapshot: typeof document }): React.JSX.Element {
+      const analysis = useCanvasRelationAnalysisSession(snapshot, 'stale-formula-form');
+      return (
+        <CanvasRelationAnalysisContext.Provider value={analysis}>
+          <CanvasDerivedOutputSection relationId={relationId} onChange={onChange} />
+        </CanvasRelationAnalysisContext.Provider>
+      );
+    }
+    await act(async () => root.render(<Host snapshot={document} />));
+    await waitFor(() =>
+      expect(container.querySelector('[data-slot="canvas-derived-output-trigger"]')).not.toBeNull()
+    );
+    await act(async () =>
+      fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-trigger"]')!)
+    );
+    await act(async () => {
+      fireEvent.change(container.querySelector('input[name="alias"]')!, {
+        target: { value: 'mine' },
+      });
+      fireEvent.change(container.querySelector('textarea[name="formula"]')!, {
+        target: { value: 'UPPER(first_name)' },
+      });
+    });
+    await act(async () => root.render(<Host snapshot={updated} />));
+    expect(container.querySelector<HTMLTextAreaElement>('textarea[name="formula"]')!.value).toBe(
+      'UPPER(first_name)'
+    );
+    await act(async () => fireEvent.submit(container.querySelector('form')!));
+    expect(onChange).not.toHaveBeenCalled();
+    expect(container.querySelector('[role="alert"]')).not.toBeNull();
+    lookup.dispose();
+  });
+
+  it('inserts a scoped field drag at the caret without publishing, navigating or accepting foreign/stale payloads', async () => {
+    const document = connectedNamesProjectionDraft();
+    const indexed = indexSubstraitRelations(document);
+    if (!indexed.ok) throw indexed.error;
+    const relationId = indexed.index.rootId;
+    const field = indexed.index.relations.get(indexed.index.relations.get(relationId)!.inputs[0]!)!
+      .fields[0]!;
+    const onChange = vi.fn();
+    const outsideDrop = vi.fn();
+    function Host(): React.JSX.Element {
+      const analysis = useCanvasRelationAnalysisSession(document, 'operand-drag-test');
+      return (
+        <CanvasRelationAnalysisContext.Provider value={analysis}>
+          <div onDrop={outsideDrop}>
+            <CanvasRelationalScalarTree
+              compact
+              graph={{
+                relationId,
+                relationCount: 0,
+                expressionCount: 0,
+                edges: [],
+                nodes: [
+                  {
+                    id: 'operand',
+                    position: { x: 0, y: 0 },
+                    data: {
+                      label: `FIELD\n${field.displayName}`,
+                      detail: field.displayName!,
+                      semanticKind: 'field',
+                      semanticGroup: 'transformation',
+                      fieldReference: { relationId: field.relationId, fieldId: field.fieldId },
+                    },
+                  },
+                ],
+              }}
+            />
+            <CanvasDerivedOutputSection relationId={relationId} onChange={onChange} />
+          </div>
+        </CanvasRelationAnalysisContext.Provider>
+      );
+    }
+    await act(async () => root.render(<Host />));
+    await waitFor(() =>
+      expect(container.querySelector('[data-slot="canvas-derived-output-trigger"]')).not.toBeNull()
+    );
+    await act(async () =>
+      fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-trigger"]')!)
+    );
+    const formula = container.querySelector<HTMLTextAreaElement>('textarea[name="formula"]')!;
+    await act(async () => fireEvent.change(formula, { target: { value: 'UPPER()' } }));
+    formula.setSelectionRange(6, 6);
+    const data = new Map<string, string>();
+    const dataTransfer = {
+      setData: (type: string, value: string) => data.set(type, value),
+      getData: (type: string) => data.get(type) ?? '',
+      types: [CANVAS_RELATIONAL_FIELD_DRAG_TYPE],
+    };
+    await act(async () =>
+      fireEvent.dragStart(container.querySelector('[data-semantic-node-id="operand"]')!, {
+        dataTransfer,
+      })
+    );
+    const payload = JSON.parse(data.get(CANVAS_RELATIONAL_FIELD_DRAG_TYPE)!);
+    for (const invalid of [
+      '{',
+      'null',
+      JSON.stringify({ ...payload, rootId: 'foreign' }),
+      JSON.stringify({ ...payload, revision: payload.revision + 1 }),
+      JSON.stringify({ ...payload, fieldId: 'unavailable' }),
+      JSON.stringify({ ...payload, relationId: 'foreign' }),
+    ]) {
+      data.set(CANVAS_RELATIONAL_FIELD_DRAG_TYPE, invalid);
+      await act(async () => fireEvent.drop(formula, { dataTransfer }));
+      expect(formula.value).toBe('UPPER()');
+      expect(onChange).not.toHaveBeenCalled();
+    }
+    data.set(CANVAS_RELATIONAL_FIELD_DRAG_TYPE, JSON.stringify(payload));
+    await act(async () => fireEvent.drop(formula, { dataTransfer }));
+    expect(formula.value).toBe(`UPPER("${field.displayName}")`);
+    expect(outsideDrop).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
+    await act(async () => fireEvent.keyDown(formula, { key: 'Escape' }));
+    expect(container.querySelector('form')).toBeNull();
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

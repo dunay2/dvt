@@ -123,6 +123,9 @@ export function CanvasRelationOutputs({
             dropPlacement={reorder.dropPlacement(key)}
             reorderLabel={editorCopy.reorderOutput}
             reorderHint={editorCopy.reorderOutputHint}
+            inclusionLabel={
+              field.output == null ? editorCopy.addOutputField : editorCopy.removeOutputField
+            }
             onDragStart={(event) => {
               if (canReorder) reorder.startDrag(key, event);
             }}

@@ -57,23 +57,21 @@ export function projectCanvasRelationalTreeDetails(
           pending.push(edge.source);
         }
       }
-      const graph: SemanticWorkbenchGraph =
-        ids.size === 0
-          ? projectCanvasRelationalStructureGraph(
-              relation,
-              relation.operator === 'read' && sourceOutputFieldsByRelationId != null
-                ? (sourceOutputFieldsByRelationId.get(relation.relationId) ?? [])
-                : undefined
-            )
-          : {
-              nodes: [...ids].map((id) => nodes.get(id)!),
-              edges,
-              relationCount: 0,
-              expressionCount: ids.size,
-              relationId: relation.relationId,
-            };
+      const structure = projectCanvasRelationalStructureGraph(
+        relation,
+        sourceOutputFieldsByRelationId
+      );
+      const graph: SemanticWorkbenchGraph = {
+        ...structure,
+        nodes: [...structure.nodes, ...[...ids].map((id) => nodes.get(id)!)],
+        edges: [...structure.edges, ...edges],
+        expressionCount: ids.size,
+      };
       graphs.set(relation.locator, graph);
-      sizes.set(relation.locator, { width: 420, height: 76 + 16 + graph.nodes.length * 32 });
+      sizes.set(relation.locator, {
+        width: 420,
+        height: 76 + Math.min(352, 16 + graph.nodes.length * 32),
+      });
     }
     relation.children.forEach((child) => visit(child.node));
   };

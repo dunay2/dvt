@@ -17,6 +17,7 @@ import {
   expressionsOwnedByRelation,
 } from './semanticWorkbenchRelationMetadata';
 import { projectSemanticRelationDetails } from './semanticRelationDetailProjection';
+import { relationOutputMapping } from './canvasRelationOutputBindings';
 
 export function projectSemanticWorkbenchRelations(
   draft: SubstraitDocument,
@@ -117,12 +118,31 @@ export function projectSemanticWorkbenchRelations(
         style: { stroke: '#4f8cff', strokeWidth: 1.5 },
       });
     }
-    for (const ownedExpression of ownedExpressions) {
+    for (const [expressionOrdinal, ownedExpression] of ownedExpressions.entries()) {
       const expressionId = addExpression(
         ownedExpression,
         expressionFields,
         rel.relType.case === 'join' ? { joinRelationId: id } : undefined
       );
+      if (rel.relType.case === 'project') {
+        const mapping = relationOutputMapping(
+          rel,
+          expressionFields.length + ownedExpressions.length
+        );
+        const outputOrdinal = mapping.indexOf(expressionFields.length + expressionOrdinal);
+        const field = draft.sidecar.fields.find(
+          (item) =>
+            item.relationId === id &&
+            item.parentFieldId == null &&
+            item.outputOrdinal === outputOrdinal
+        );
+        const expressionNode = nodes.find((item) => item.id === expressionId);
+        if (field != null && expressionNode != null)
+          expressionNode.data = {
+            ...expressionNode.data,
+            fieldReference: { fieldId: field.fieldId, relationId: id },
+          };
+      }
       edges.push({
         id: nextId('edge'),
         source: expressionId,

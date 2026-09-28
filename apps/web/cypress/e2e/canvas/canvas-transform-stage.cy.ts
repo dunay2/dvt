@@ -49,13 +49,7 @@ describe('Semantic dataset Transform', () => {
     cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
     cy.get(form).within(() => {
       cy.get('input[name="alias"]').type('normalized_name');
-      cy.get('[data-slot="derived-formula-node-kind"][data-depth="0"]').select('function');
-      cy.get('[data-slot="derived-formula-function"][data-depth="0"]').select('UPPER');
-      cy.get('[data-slot="derived-formula-argument"][data-depth="0"][data-argument-index="0"]')
-        .find('[data-slot="derived-formula-node-kind"]')
-        .select('string-literal');
-      cy.get('[data-slot="derived-formula-literal"]').type('hola');
-      cy.get('[data-slot="derived-formula-preview"]').should('contain', "UPPER('hola')");
+      cy.get('textarea[name="formula"]').type("UPPER('hola')");
       cy.get('button[type="submit"]').should('be.enabled').click();
     });
     cy.get(form).should('not.exist');
@@ -63,8 +57,7 @@ describe('Semantic dataset Transform', () => {
     cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
     cy.get(form).within(() => {
       cy.get('input[name="alias"]').type('fallback_name');
-      cy.get('[data-slot="derived-formula-node-kind"][data-depth="0"]').select('string-literal');
-      cy.get('[data-slot="derived-formula-preview"]').should('have.text', "''");
+      cy.get('textarea[name="formula"]').type("''");
       cy.get('button[type="submit"]').should('be.enabled').click();
     });
     cy.get(form).should('not.exist');
@@ -72,23 +65,7 @@ describe('Semantic dataset Transform', () => {
     cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
     cy.get(form).within(() => {
       cy.get('input[name="alias"]').type('total');
-      cy.get('[data-slot="derived-formula-node-kind"][data-depth="0"]').select('number-literal');
-      cy.get('[data-slot="derived-formula-literal"]').clear().type('2');
-      cy.get('[data-slot="derived-formula-node-kind"][data-depth="0"]').select('function');
-      cy.get('[data-slot="derived-formula-function"][data-depth="0"]').select('MULTIPLY');
-      cy.get('[data-slot="derived-formula-argument"][data-depth="0"][data-argument-index="0"]')
-        .find('[data-slot="derived-formula-node-kind"]')
-        .select('function');
-      cy.get('[data-slot="derived-formula-function"][data-depth="1"]').first().select('ADD');
-      cy.get('[data-slot="derived-formula-argument"][data-depth="1"][data-argument-index="1"]')
-        .find('[data-slot="derived-formula-literal"]')
-        .clear()
-        .type('3');
-      cy.get('[data-slot="derived-formula-argument"][data-depth="0"][data-argument-index="1"]')
-        .find('[data-slot="derived-formula-literal"]')
-        .clear()
-        .type('4');
-      cy.get('[data-slot="derived-formula-preview"]').should('have.text', '((2 + 3) * 4)');
+      cy.get('textarea[name="formula"]').type('(2 + 3) * 4');
       cy.get('button[type="submit"]').should('be.enabled').click();
     });
     cy.get(form).should('not.exist');
@@ -102,23 +79,10 @@ describe('Semantic dataset Transform', () => {
       .then((fieldId) => {
         cy.get('@editableOutput').find('button').click();
         cy.get(form).within(() => {
-          cy.get('[data-slot="derived-formula-preview"]').should('have.text', "''");
-          cy.get('[data-slot="derived-formula-node-kind"][data-depth="0"]').select('function');
-          cy.get('[data-slot="derived-formula-function"][data-depth="0"]').select('CONCAT');
-          cy.get('[data-slot="derived-formula-argument"][data-depth="0"][data-argument-index="0"]')
-            .find('[data-slot="derived-formula-literal"]')
-            .type('hola');
-          cy.get('[data-slot="derived-formula-argument"][data-depth="0"][data-argument-index="1"]')
-            .find('[data-slot="derived-formula-node-kind"]')
-            .select('function');
-          cy.get('[data-slot="derived-formula-function"][data-depth="1"]').select('CONCAT');
-          cy.get('[data-slot="derived-formula-argument"][data-depth="1"][data-argument-index="0"]')
-            .find('[data-slot="derived-formula-literal"]')
-            .type(' ');
-          cy.get('[data-slot="derived-formula-argument"][data-depth="1"][data-argument-index="1"]')
-            .find('[data-slot="derived-formula-literal"]')
-            .type('mundo');
-          cy.get('[data-slot="derived-formula-preview"]').should('contain', 'CONCAT');
+          cy.get('textarea[name="formula"]')
+            .should('have.value', "''")
+            .clear()
+            .type("CONCAT('hola', ' ', 'mundo')");
           cy.get('button[type="submit"]').click();
         });
         cy.get(inspector)
@@ -129,12 +93,12 @@ describe('Semantic dataset Transform', () => {
     cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();
     cy.get(inspector).find('input').filter('[value="normalized_name"]').should('exist');
     cy.get(inspector)
-      .find('input[type="checkbox"]')
+      .find('[data-slot="relation-output-toggle"]')
       .first()
-      .as('outputCheckbox')
+      .as('outputToggle')
       .focus()
-      .uncheck()
-      .should('not.be.checked')
+      .click()
+      .should('have.attr', 'data-included', 'false')
       .and('be.focused');
     cy.window().then((window) => {
       const dataTransfer = new window.DataTransfer();
@@ -171,7 +135,43 @@ describe('Semantic dataset Transform', () => {
       .find('button')
       .click();
     cy.get(form).find('input[name="alias"]').should('have.value', 'fallback_name');
-    cy.get(form).find('[data-slot="derived-formula-preview"]').should('contain', "'mundo'");
+    cy.get(form).find('textarea[name="formula"]').invoke('val').should('contain', "'mundo'");
+    cy.get(card).closest('li').find('[data-slot="canvas-relational-node-expand"]').click();
+    cy.get(card)
+      .closest('li')
+      .find('[data-slot="canvas-relational-card-detail"]')
+      .should('contain.text', 'INPUT')
+      .and('contain.text', 'OUTPUT');
+    let writesBeforeDrag = 0;
+    cy.then(() => {
+      writesBeforeDrag = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get(form)
+      .find('textarea[name="formula"]')
+      .clear()
+      .type('UPPER()')
+      .then(($field) => {
+        $field[0]!.setSelectionRange(6, 6);
+      });
+    cy.window().then((window) => {
+      const dataTransfer = new window.DataTransfer();
+      cy.get(card)
+        .closest('li')
+        .find(
+          '[data-slot="canvas-relational-expression-node"][data-kind="expression"][draggable="true"]'
+        )
+        .first()
+        .trigger('dragstart', { dataTransfer });
+      cy.get(form)
+        .find('textarea[name="formula"]')
+        .trigger('dragover', { dataTransfer })
+        .trigger('drop', { dataTransfer })
+        .should('have.value', 'UPPER("normalized_name")');
+    });
+    cy.get(form).find('button[type="submit"]').should('be.enabled');
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBeforeDrag)
+    );
     cy.screenshot('transform-name-formula-edit');
     cy.get(form).find('[data-slot="canvas-derived-output-cancel"]').click();
     cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();

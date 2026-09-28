@@ -1,6 +1,9 @@
 /** Owned concern: render the existing scalar graph as connected, nested expression nodes. */
 import type { SemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 import { CanvasRelationalScalarGraph } from './CanvasRelationalScalarGraph';
+import { useContext } from 'react';
+import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
+import { writeCanvasRelationalFieldDrag } from './canvasRelationalTreeDrag';
 
 export function CanvasRelationalScalarTree({
   graph,
@@ -11,6 +14,7 @@ export function CanvasRelationalScalarTree({
   compact?: boolean;
   onSelectCondition?: (index: number, operand?: 'left' | 'right') => void;
 }>): JSX.Element {
+  const analysis = useContext(CanvasRelationAnalysisContext);
   if (!compact)
     return <CanvasRelationalScalarGraph graph={graph} onSelectCondition={onSelectCondition} />;
   const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
@@ -34,6 +38,19 @@ export function CanvasRelationalScalarTree({
             data-slot="canvas-relational-expression-node"
             data-kind={node.data.semanticKind}
             data-semantic-node-id={id}
+            draggable={node.data.fieldReference != null && analysis?.error === null}
+            onDragStart={(event) => {
+              event.stopPropagation();
+              if (node.data.fieldReference == null || analysis == null || analysis.error != null) {
+                event.preventDefault();
+                return;
+              }
+              writeCanvasRelationalFieldDrag(event.dataTransfer, {
+                ...node.data.fieldReference,
+                rootId: analysis.session.rootId,
+                revision: analysis.revision,
+              });
+            }}
             title={node.data.detail}
             className={`inline-flex max-w-full items-baseline gap-2 rounded border border-(--border-subtle) bg-(--surface-panel) px-2 py-1 font-mono text-[13px] leading-5 ${compact ? 'whitespace-nowrap' : 'flex-wrap'}`}
           >

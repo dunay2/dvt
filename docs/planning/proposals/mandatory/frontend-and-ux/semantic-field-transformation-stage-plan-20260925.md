@@ -2,7 +2,7 @@
 title: Semantic Field Transformation Stage Plan
 status: Active
 owner: Web / Canvas / VTX2
-last_reviewed: 2026-09-25
+last_reviewed: 2026-09-28
 planning_type: implementation-plan
 ---
 
@@ -15,9 +15,8 @@ Semantic Editor. One disposable card summarizes emitted direct, scalar-derived
 and Window-derived fields. It does not add a relation, expression AST, runtime
 step, persisted visual stage or final-output editor.
 
-The Transform instance `Output` tab remains the sole owner of final inclusion,
-alias and ordering. This stage only explains and authors fields that may later
-be selected there.
+The Transform instance owns final inclusion, alias and ordering. Its `Output`
+tab and card trees are adapters to that same owner, not separate selections.
 
 ## Current And Target
 
@@ -56,6 +55,86 @@ projection authority and fails closed.
 | Preview transformed rows              | Boundary drift          | Reuse query adapter           | `CanvasTransformDataSample`      | `PreviewCanvasTransformRows`  | row/schema oracle                     | new runtime step            |
 
 ## Delivery Boundaries
+
+### Advanced field-flow editor (#3422)
+
+The accepted interaction supersedes the read-only-only card detail below and
+the isolated formula-selector cut #3451. Do not integrate the latter on its own.
+Replace the parallel visual-formula draft with name plus formula, using the
+existing compiler and canonical Substrait expressions. A published derived field
+is also an available operand; dragging it references its stable field identity,
+not a copied expression from an untrusted drag payload.
+
+```mermaid
+flowchart LR
+  Before[Card: expression OR structure] --> Passive[Passive detail]
+  Separate[Separate visual formula AST] --> Compiler[Existing Substrait compiler]
+  Document[Scoped canonical document] --> Projection[Input fields + local expressions + Output fields]
+  Projection --> Gesture[Field or expression gesture]
+  Gesture --> Formula[Insert admitted operand in formula]
+  Gesture --> Mapping[Existing connection and mapping admission]
+  Gesture --> Removal[Existing dependency-aware removal]
+  Formula --> Command[ConfigureCanvasDvtNode]
+  Mapping --> Command
+  Removal --> Command
+  Command --> Document
+  Header[Header movement] --> Layout[Presentation coordinates only]
+```
+
+Every supported card shows local Input and Output fields alongside its owned
+expression tree. Input groups contain the exact child publication, never a
+physical schema or a copied upstream expression subtree. Apply the outer source
+publication boundary to both a Read card and any Input group referencing it.
+Use names and aliases for labels and titles; keep technical identities only in
+machine-readable references or explicitly secondary technical disclosure.
+Display identities are namespaced by group so Input and Output can reference
+the same field without duplicate visual nodes.
+The complete local tree remains available in a keyboard-scrollable detail area.
+Bound that area's height in the geometry projection; adding Input/Output rows
+must not grow a single card beyond the viewport or detach its ports from its
+rendered bounds. The component consumes that height rather than recalculating it.
+
+Drag transport carries scoped references only. Resolve operands against the
+target's current admitted field model; reject foreign, stale, malformed or
+unavailable references. Dropping into a formula replaces the current text
+selection and does not save, move a card or navigate. Published expressions
+remain named field references; arithmetic, composition and constants are still
+compiled by the one admitted expression compiler. JOIN owns predicates, not
+field transformations.
+
+A field drop into Input adds only the dragged column, not the producer's entire
+schema. Repeating the drop is idempotent; further columns require explicit adds.
+This does not change relational dataset ports into scalar ports. Partial inputs
+must obey the existing explicit Transform boundary before composition; never
+insert a hidden Project inside JOIN or silently widen a partial selection.
+
+A compatible Input drop uses the existing relation/mapping command and its
+algebra, arity, cycle, type and dependency checks. Do not persist visual column
+edges. A selected output dropped explicitly on the Canvas background invokes
+removal; a successful target drop consumes the gesture first. Invalid targets,
+Escape, drag cancellation or lost capture never imply removal. Explicit add and
+remove actions remain keyboard accessible. The Output inspector uses named
+add/remove buttons instead of selection checkboxes, retaining focus and the
+existing dependency-aware output command after each action.
+Header movement and field dragging must have disjoint interaction boundaries.
+
+Main Canvas left-click opens the existing fixed inspector. Source inspection
+starts at Output; Model double-click retains semantic-editor navigation.
+Embedded controls, Preview and drag must not trigger card navigation.
+
+| Scenario                                      | Opportunity                          | Fowler pattern / owner                                       | Rail                                     | Tests and allowed surfaces                                                                                                                                             |
+| --------------------------------------------- | ------------------------------------ | ------------------------------------------------------------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Input fields disappear when expressions exist | Alternate read projections hide flow | Compose local presentation in CanvasRelationalTreeProjection | ProjectCanvasRelationalTree              | Existing detail/structure projectors; canonical projection tests and card-detail browser flow; no upstream tree copy or unpublished field                              |
+| Two formula trees drift                       | Duplicate representation             | Remove parallel draft; syntax adapter to Substrait           | ConfigureCanvasDvtNode                   | Existing formula form/compiler/authoring model, compact tree and drag transport; constants, compound fields, edit identity, malformed/stale/foreign drop, cancellation |
+| Drag changes flow or removes output           | UI mutation authority                | Existing revision-bound command and input mapping owners     | ConfigureCanvasDvtNode; CreateCanvasEdge | Existing output and staged-operation commands; connected consumer, cycle, arity, type, dependency and readonly tests; browser apply/save/reopen                        |
+| Card click differs between canvases           | Gesture ambiguity                    | Reuse fixed inspector adapter                                | Existing Canvas inspection query         | Existing card interaction adapter and tests; left-click, embedded controls, drag and double-click separation                                                           |
+
+Allowed surfaces are existing Canvas views/components/graph plugins and their
+unit, architecture and Cypress tests. No engine, planner, API, provider execution
+or application database changes. Refresh the existing feature mechanization
+declarations before implementation. Do not claim completion of the editor from
+the read-projection or formula-operand cut alone: cross-card mapping, removal,
+dependency feedback and complete save/reopen proof remain acceptance gates.
 
 ### Card detail convergence (#3422)
 

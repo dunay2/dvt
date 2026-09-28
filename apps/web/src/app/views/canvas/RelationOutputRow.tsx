@@ -1,6 +1,6 @@
 /** Controlled output presentation; mutations belong to the relation command owner. */
 import { useId } from 'react';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Plus, X } from 'lucide-react';
 import type { DragEventHandler, KeyboardEventHandler } from 'react';
 import { Input } from '../../components/ui/input';
 import type { CanvasViewCopy } from './canvasCopy.types';
@@ -22,6 +22,7 @@ export function RelationOutputRow({
   dropPlacement,
   reorderLabel,
   reorderHint,
+  inclusionLabel,
   onDragStart,
   onDragEnd,
   onDragOver,
@@ -43,6 +44,7 @@ export function RelationOutputRow({
   dropPlacement?: 'before' | 'after';
   reorderLabel: string;
   reorderHint: string;
+  inclusionLabel: string;
   onDragStart: DragEventHandler<HTMLDivElement>;
   onDragEnd: DragEventHandler<HTMLDivElement>;
   onDragOver: DragEventHandler<HTMLDivElement>;
@@ -88,17 +90,27 @@ export function RelationOutputRow({
           <span className="min-w-0 flex-1 truncate">{field.name}</span>
         ) : (
           <>
-            <input
-              type="checkbox"
-              checked={field.output != null}
+            <button
+              type="button"
+              data-slot="relation-output-toggle"
+              data-field-name={field.name}
+              data-included={field.output != null}
               disabled={disabled}
               aria-disabled={busy || undefined}
               aria-busy={busy || undefined}
-              aria-label={field.name}
-              onChange={(event) => {
-                if (!busy) onInclude(event.currentTarget.checked);
+              aria-label={`${inclusionLabel}: ${field.name}`}
+              title={inclusionLabel}
+              className="grid size-7 shrink-0 place-items-center rounded text-(--text-muted) hover:bg-(--surface-selected) disabled:opacity-40"
+              onClick={() => {
+                if (!busy) onInclude(field.output == null);
               }}
-            />
+            >
+              {field.output == null ? (
+                <Plus aria-hidden="true" className="size-3.5" />
+              ) : (
+                <X aria-hidden="true" className="size-3.5" />
+              )}
+            </button>
             <Input
               aria-label={field.name}
               value={name}

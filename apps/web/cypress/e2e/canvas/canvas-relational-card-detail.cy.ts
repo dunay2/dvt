@@ -3,7 +3,10 @@ import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { getE2eApiCalls } from '../../support/e2eApiStub';
-import { visitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
+import {
+  visitWorkbenchCanvas,
+  connectWorkbenchProducer,
+} from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import {
   semanticDocumentFromWrite,
@@ -22,12 +25,27 @@ describe('Relational card detail', () => {
       .focus();
     cy.focused().should('have.attr', 'data-slot', 'canvas-node-shell').type('{enter}');
     cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
+    cy.get('[data-slot="canvas-relational-output-input-port"]').focus().type('{del}');
+    cy.get('[data-operator="join"]').closest('li').as('producer', { type: 'static' });
     for (const operation of ['sort', 'fetch']) {
       workbenchOperation(operation).click();
+      cy.get('[data-pending-operation="true"]').last().as('operation', { type: 'static' });
+      connectWorkbenchProducer('@producer', '@operation');
       if (operation === 'fetch')
-        cy.contains('[role="dialog"] label', 'LIMIT').find('input').clear().type('73');
-      cy.get('[role="dialog"] button[type="submit"]').click();
+        cy.contains('[data-slot="canvas-relational-operator-form"] label', 'LIMIT')
+          .find('input')
+          .clear()
+          .type('73')
+          .should('have.value', '73');
+      cy.get('[data-slot="canvas-relational-operator-form"] button[type="submit"]').click();
+      if (operation === 'fetch') cy.get('@operation').should('contain.text', '73');
+      cy.get('@operation').as('producer', { type: 'static' });
     }
+    connectWorkbenchProducer(
+      '@producer',
+      '[data-slot="canvas-relational-output-input-port"]',
+      null
+    );
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
     cy.wrap(null).should(() => {
       const lastWrite = semanticWrites('join-transform').at(-1);

@@ -44,6 +44,12 @@ export function CanvasDerivedOutputSection({
           initial={editing.initial}
           fields={model.fields.filter((field) => field.fieldId !== editing.outputFieldId)}
           provider={model.provider}
+          dragScope={{
+            ...model.dragScope,
+            references: model.dragScope.references.filter(
+              (field) => field.fieldId !== editing.outputFieldId
+            ),
+          }}
           copy={copy.derivedOutput}
           unavailableAliases={model.fields
             .filter((field) => field.fieldId !== editing.outputFieldId)
@@ -54,6 +60,7 @@ export function CanvasDerivedOutputSection({
               applySelectedRelationDerivedOutput(session, {
                 ...identity,
                 ...request,
+                expectedRevision: model.dragScope.revision,
                 outputFieldId: editing.outputFieldId,
                 intent: model.intent,
               })

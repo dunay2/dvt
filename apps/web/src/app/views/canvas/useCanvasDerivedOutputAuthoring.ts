@@ -33,12 +33,34 @@ export function useCanvasDerivedOutputAuthoring(relationId: string) {
         const dataType = derivedOutputDataType(schema.result!.fields[field.outputOrdinal]!.type);
         return dataType == null
           ? []
-          : [{ fieldId: field.fieldId, name: field.displayName ?? field.fieldId, dataType }];
+          : [{ fieldId: field.fieldId, name: field.displayName ?? '', dataType }];
       });
+    const available = [schema.result, input.result].flatMap((result) =>
+      result.bindings
+        .filter(
+          (field) =>
+            field.parentFieldId == null &&
+            analysis.session.allowsInputSchema(result.fields[field.outputOrdinal]!)
+        )
+        .flatMap((field) => {
+          const dataType = derivedOutputDataType(result.fields[field.outputOrdinal]!.type);
+          return dataType == null || field.displayName == null
+            ? []
+            : [
+                {
+                  fieldId: field.fieldId,
+                  relationId: field.relationId,
+                  sourceFieldId: field.sourceFieldId,
+                  name: field.displayName,
+                  dataType,
+                },
+              ];
+        })
+    );
     const inputNames = input.result.bindings
       .filter((field) => field.parentFieldId == null)
       .sort((a, b) => a.outputOrdinal - b.outputOrdinal)
-      .map((field) => field.displayName ?? field.fieldId);
+      .map((field) => field.displayName ?? '');
     const project = target.relation.relType;
     const mapping =
       project.case === 'project'
@@ -61,8 +83,16 @@ export function useCanvasDerivedOutputAuthoring(relationId: string) {
             },
           ];
     });
+    const operands = available.filter(
+      (field, index) => available.findIndex((item) => item.name === field.name) === index
+    );
+    const references = available.filter((field) => {
+      const operand = operands.find((item) => item.name === field.name)!;
+      return operand.fieldId === field.fieldId || operand.sourceFieldId === field.fieldId;
+    });
     return {
-      fields,
+      fields: operands,
+      dragScope: { rootId: analysis.session.rootId, revision: analysis.revision, references },
       outputs,
       intent: target.relation.relType.case === 'project' ? ('edit' as const) : ('insert' as const),
       provider: analysis.session.executionProvider(analysis.revision),

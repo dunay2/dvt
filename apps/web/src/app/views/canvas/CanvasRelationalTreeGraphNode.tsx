@@ -100,6 +100,8 @@ export function CanvasRelationalTreeGraphNode({
             id={detailId}
             data-slot="canvas-relational-card-detail"
             data-relation-id={placed.node.relationId ?? undefined}
+            tabIndex={0}
+            aria-label={copy.relationalTreeDetailLabel}
             className={styles.semanticDetail}
           >
             <CanvasRelationalScalarTree graph={semanticGraph} compact />

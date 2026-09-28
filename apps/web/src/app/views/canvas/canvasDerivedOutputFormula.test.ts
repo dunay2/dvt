@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   compileDerivedOutputFormula,
   describeDerivedOutputFormula,
+  validateDerivedOutputFormula,
 } from './canvasDerivedOutputFormula';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 
@@ -112,6 +113,22 @@ describe('Transform name and formula syntax adapter', () => {
         provider: 'postgres',
       }).fieldIds
     ).toEqual(result.fieldIds);
+  });
+
+  it.each([
+    ["''", true],
+    ["'hola'", true],
+    ['(price + price) * quantity', true],
+    ['price / quantity', true],
+    ['UPPER(first_name)', true],
+    ['first_name', false],
+    ['"first_name"', false],
+    ['price * first_name', false],
+    ['UPPER(missing)', false],
+    ['', false],
+    ['1e999', false],
+  ])('validates the one formula syntax and distinguishes passthrough: %s', (formula, expected) => {
+    expect(validateDerivedOutputFormula({ formula, fields, provider: 'postgres' })).toBe(expected);
   });
 
   it('keeps fp64 divide outside the admitted formula profile', () => {

@@ -5,6 +5,7 @@ import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-
 import {
   expressionStageDraft,
   projectExpressionStage,
+  withScalarOutput,
 } from './canvasRelationalExpressionStage.test-support';
 import { applyDvtSubstraitFetch, applyDvtSubstraitSort } from './canvasSortFetch.test-support';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
@@ -39,7 +40,9 @@ function projectDetails(
 
 function roots(graph: SemanticWorkbenchGraph): SemanticWorkbenchGraph['nodes'] {
   const operands = new Set(graph.edges.map((edge) => edge.source));
-  return graph.nodes.filter((node) => !operands.has(node.id));
+  return graph.nodes.filter(
+    (node) => !operands.has(node.id) && !['group', 'relation'].includes(node.data.semanticKind)
+  );
 }
 
 describe('relational card detail projection', () => {
@@ -94,7 +97,8 @@ describe('relational card detail projection', () => {
       root.children.length
     );
     expect(graph.nodes.filter((node) => node.data.semanticKind === 'field')).toHaveLength(
-      root.output.fields.length
+      root.output.fields.length +
+        root.children.reduce((count, child) => count + child.node.output.fields.length, 0)
     );
     expect(new Set(graph.nodes.map((node) => node.id)).size).toBe(graph.nodes.length);
   });
@@ -129,7 +133,7 @@ describe('relational card detail projection', () => {
     const graph = graphs.get(root.locator);
     expect(graph).toBeDefined();
     expect(roots(graph!).map((node) => node.data.label)).toEqual(expected);
-    expect(graph!.nodes).toHaveLength(2);
+    expect(roots(graph!)).toHaveLength(2);
   });
 
   it('shows direct Project and Read local fields without copying the upstream tree', () => {
@@ -138,7 +142,11 @@ describe('relational card detail projection', () => {
     for (const relation of [root, source]) {
       const graph = graphs.get(relation.locator);
       expect(graph).toBeDefined();
-      const fields = graph!.nodes.filter((node) => node.data.semanticKind === 'field');
+      const fields = graph!.nodes.filter((node) =>
+        graph!.edges.some(
+          (edge) => edge.source === node.id && edge.target === `${relation.locator}/output`
+        )
+      );
       expect(fields.map((field) => field.data.fieldReference?.fieldId)).toEqual(
         relation.output.fields.map((field) => field.fieldId)
       );
@@ -165,6 +173,36 @@ describe('relational card detail projection', () => {
         .nodes.filter((item) => item.data.semanticKind === 'field')
         .map((item) => item.data.detail)
     ).toEqual([first]);
+    const parentGraph = details.graphs.get(projection.root.locator)!;
+    const input = parentGraph.nodes.find((item) => item.data.semanticKind === 'relation')!;
+    const inputFields = parentGraph.edges
+      .filter((edge) => edge.target === input.id)
+      .map((edge) => parentGraph.nodes.find((item) => item.id === edge.source)!.data.detail);
+    expect(inputFields).toEqual([first]);
+  });
+
+  it('keeps local Input and Output fields visible alongside a named derived expression', () => {
+    const { root, graphs, sizes } = projectDetails(withScalarOutput(expressionStageDraft()));
+    const graph = graphs.get(root.locator)!;
+    const input = graph.nodes.find((item) => item.data.semanticKind === 'relation')!;
+    const output = graph.nodes.find((item) => item.data.label === 'OUTPUT')!;
+    expect(input).toBeDefined();
+    expect(output).toBeDefined();
+    for (const [group, fields] of [
+      [input, root.children[0]!.node.output.fields],
+      [output, root.output.fields],
+    ] as const) {
+      const ids = graph.edges.filter((edge) => edge.target === group.id).map((edge) => edge.source);
+      expect(
+        ids.map((id) => graph.nodes.find((item) => item.id === id)!.data.fieldReference?.fieldId)
+      ).toEqual(fields.map((field) => field.fieldId));
+    }
+    expect(graph.nodes.some((item) => item.data.semanticKind === 'expression')).toBe(true);
+    expect(
+      graph.nodes.find((item) => item.data.semanticKind === 'expression')?.data.fieldReference
+    ).toEqual({ relationId: root.relationId, fieldId: root.output.fields.at(-1)!.fieldId });
+    expect(new Set(graph.nodes.map((item) => item.id)).size).toBe(graph.nodes.length);
+    expect(sizes.get(root.locator)!.height).toBeLessThanOrEqual(428);
   });
 
   it('does not project details without semantic context or invent detail for unsupported cards', () => {
@@ -173,5 +211,24 @@ describe('relational card detail projection', () => {
     const root = { ...projection.root, operator: 'unsupported' as const };
     const detail = projectCanvasRelationalTreeDetails(root, { transformNode: node });
     expect(detail.graphs.has(root.locator)).toBe(false);
+  });
+
+  it('bounds tall details without dropping any local output field', () => {
+    const { node, projection } = projectExpressionStage(expressionStageDraft());
+    const root = {
+      ...projection.root,
+      output: {
+        ...projection.root.output,
+        fields: Array.from({ length: 24 }, (_, index) => ({
+          ...projection.root.output.fields[0]!,
+          fieldId: `column-${index}`,
+          displayName: `column_${index}`,
+        })),
+      },
+    };
+    const details = projectCanvasRelationalTreeDetails(root, { transformNode: node });
+    const graph = details.graphs.get(root.locator)!;
+    expect(graph.edges.filter((edge) => edge.target === `${root.locator}/output`)).toHaveLength(24);
+    expect(details.sizes.get(root.locator)!.height).toBe(428);
   });
 });
