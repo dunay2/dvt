@@ -37,7 +37,9 @@ export function CanvasDerivedOutputSection({
       {editing != null && initialField != null ? (
         <DerivedOutputForm
           fields={model.fields}
-          initialOperandFieldIds={[initialField.fieldId]}
+          {...(initialField == null
+            ? { initialMode: 'string-literal' as const }
+            : { initialOperandFieldIds: [initialField.fieldId] as const })}
           dataSlot="canvas-derived-output-form"
           copy={copy.derivedOutput}
           unavailableAliases={model.fields.map((field) => field.name)}
@@ -55,14 +57,22 @@ export function CanvasDerivedOutputSection({
                 });
           }}
           onCancel={() => setEditing(null)}
-          onSubmit={async ({ capabilityIds, ...request }) => {
+          onSubmit={async ({ alias, expression }) => {
             const applied = await command.execute((session, identity) =>
-              applySelectedRelationDerivedOutput(session, {
-                ...identity,
-                ...request,
-                capabilityIds,
-                intent: model.intent,
-              })
+              expression.kind === 'function'
+                ? applySelectedRelationDerivedOutput(session, {
+                    ...identity,
+                    alias,
+                    capabilityIds: expression.capabilityIds,
+                    operandFieldIds: expression.operandFieldIds,
+                    intent: model.intent,
+                  })
+                : applySelectedRelationDerivedOutput(session, {
+                    ...identity,
+                    alias,
+                    literal: expression,
+                    intent: model.intent,
+                  })
             );
             return applied ? null : copy.derivedOutput.failed;
           }}
@@ -72,7 +82,7 @@ export function CanvasDerivedOutputSection({
         <button
           type="button"
           data-slot="canvas-derived-output-trigger"
-          disabled={initialField == null}
+          disabled={model.fields.length === 0}
           onClick={() => setEditing(current)}
           className="flex items-center gap-1 rounded px-2 py-1.5 text-xs text-(--status-info) hover:bg-(--surface-selected)"
         >
