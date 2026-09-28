@@ -7,10 +7,7 @@ import {
   SimpleExtensionDeclarationSchema,
   SimpleExtensionURNSchema,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/extensions/extensions_pb.js';
-import {
-  PlanSchema,
-  type Plan,
-} from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {
   TypeSchema,
   Type_I64Schema,
