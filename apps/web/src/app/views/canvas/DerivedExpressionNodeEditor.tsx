@@ -375,11 +375,13 @@ export function DerivedExpressionNodeEditor({
                   const next = argumentsValue.map((candidate, slot) =>
                     slot === index ? ({ kind: 'field', fieldId: field.fieldId } as const) : candidate
                   );
-                  if (next.some((candidate) => candidate.kind !== 'field')) return true;
-                  return resolveFunctions(
-                    next.map((candidate) => candidate.fieldId),
-                    'complete'
-                  ).some((candidate) => candidate.capabilityId === selectedFunction.capabilityId);
+                  const fieldIds = next.flatMap((candidate) =>
+                    candidate.kind === 'field' ? [candidate.fieldId] : []
+                  );
+                  if (fieldIds.length !== next.length) return true;
+                  return resolveFunctions(fieldIds, 'complete').some(
+                    (candidate) => candidate.capabilityId === selectedFunction.capabilityId
+                  );
                 });
           return (
             <div
@@ -459,7 +461,26 @@ export function DerivedExpressionNodeEditor({
             legacySlots ? 'graph-node-expression-add-operand' : 'derived-expression-add-argument'
           }
           disabled={busy || argumentsValue.length >= range.maximum}
-          onClick={() => updateArguments([...argumentsValue, defaultField(fields, probeFieldId)])}
+          onClick={() => {
+            if (!legacySlots) {
+              updateArguments([...argumentsValue, defaultField(fields, probeFieldId)]);
+              return;
+            }
+            const currentFieldIds = argumentsValue.flatMap((argument) =>
+              argument.kind === 'field' ? [argument.fieldId] : []
+            );
+            const candidate =
+              fields.find(
+                (field) =>
+                  !currentFieldIds.includes(field.fieldId) &&
+                  resolveFunctions([...currentFieldIds, field.fieldId], 'complete').some(
+                    (operation) => operation.capabilityId === selectedFunction.capabilityId
+                  )
+              ) ?? fields.find((field) => !currentFieldIds.includes(field.fieldId));
+            if (candidate != null) {
+              updateArguments([...argumentsValue, { kind: 'field', fieldId: candidate.fieldId }]);
+            }
+          }
           className="flex items-center gap-1 text-xs text-(--status-info) disabled:opacity-40"
         >
           <Plus className="size-3" />
