@@ -9,9 +9,11 @@ import { useId, useState, type FormEvent } from 'react';
 import { DerivedExpressionBuilder } from './DerivedExpressionBuilder';
 import {
   collectDerivedExpressionFieldIds,
+  inferDerivedExpressionDataType,
   type DerivedExpressionDraft,
   type DerivedExpressionFunction,
   type DerivedExpressionFunctionResolver,
+  type DerivedExpressionTypeResolver,
 } from './DerivedExpressionNodeEditor';
 import type { DerivedOutputField } from './DerivedOutputOperands';
 
@@ -54,21 +56,34 @@ function firstFieldId(expression: DerivedExpressionDraft): string | null {
 function operationFor(
   expression: DerivedExpressionDraft,
   fields: readonly DerivedOutputField[],
-  resolveFunctions: DerivedOutputFunctionResolver
+  resolveFunctions: DerivedOutputFunctionResolver,
+  resolveFunctionsForTypes?: DerivedExpressionTypeResolver,
+  resolution: 'proposal' | 'complete' = 'proposal'
 ): DerivedExpressionFunction | null {
   if (expression.kind !== 'function') return null;
+  const argumentTypes = expression.arguments
+    .map((argument) => inferDerivedExpressionDataType(argument, fields, resolveFunctionsForTypes))
+    .filter((dataType): dataType is string => dataType != null);
+  if (resolveFunctionsForTypes != null && argumentTypes.length === expression.arguments.length) {
+    return (
+      resolveFunctionsForTypes(argumentTypes, resolution).find(
+        (candidate) => candidate.capabilityId === expression.capabilityId
+      ) ?? null
+    );
+  }
   const fieldId = firstFieldId(expression);
   const functions =
     fieldId == null
-      ? fields.flatMap((field) => resolveFunctions([field.fieldId], 'proposal'))
-      : resolveFunctions([fieldId], 'proposal');
+      ? fields.flatMap((field) => resolveFunctions([field.fieldId], resolution))
+      : resolveFunctions([fieldId], resolution);
   return functions.find((candidate) => candidate.capabilityId === expression.capabilityId) ?? null;
 }
 
 function validExpression(
   expression: DerivedExpressionDraft,
   fields: readonly DerivedOutputField[],
-  resolveFunctions: DerivedOutputFunctionResolver
+  resolveFunctions: DerivedOutputFunctionResolver,
+  resolveFunctionsForTypes?: DerivedExpressionTypeResolver
 ): boolean {
   if (expression.kind === 'field')
     return fields.some((field) => field.fieldId === expression.fieldId);
@@ -78,7 +93,13 @@ function validExpression(
     return DvtTimestampLiteralV1Schema.safeParse(expression.value).success;
   if (expression.kind === 'i64-literal') return parseI64Literal(expression.value) != null;
 
-  const operation = operationFor(expression, fields, resolveFunctions);
+  const operation = operationFor(
+    expression,
+    fields,
+    resolveFunctions,
+    resolveFunctionsForTypes,
+    'complete'
+  );
   if (operation == null) return false;
   const minimum = Math.max(1, operation.minimumArgumentCount);
   const maximum = Math.max(
@@ -88,7 +109,9 @@ function validExpression(
   return (
     expression.arguments.length >= minimum &&
     expression.arguments.length <= maximum &&
-    expression.arguments.every((argument) => validExpression(argument, fields, resolveFunctions))
+    expression.arguments.every((argument) =>
+      validExpression(argument, fields, resolveFunctions, resolveFunctionsForTypes)
+    )
   );
 }
 
@@ -149,6 +172,7 @@ function initialExpression(
 export function DerivedOutputForm({
   fields,
   resolveFunctions,
+  resolveFunctionsForTypes,
   initialCapabilityId,
   initialOperandFieldIds,
   initialMode,
@@ -163,6 +187,7 @@ export function DerivedOutputForm({
 }: Readonly<{
   fields: readonly DerivedOutputField[];
   resolveFunctions: DerivedOutputFunctionResolver;
+  resolveFunctionsForTypes?: DerivedExpressionTypeResolver;
   initialCapabilityId?: string;
   initialOperandFieldIds?: readonly [string, ...string[]];
   initialMode?: 'function' | 'string-literal' | 'timestamp-literal' | 'i64-literal';
@@ -214,7 +239,12 @@ export function DerivedOutputForm({
 
   const aliasInvalid = alias.length > 0 && !DvtSemanticFieldNameV1Schema.safeParse(alias).success;
   const aliasConflict = unavailableAliases.includes(alias);
-  const expressionValid = validExpression(expression, fields, resolveFunctions);
+  const expressionValid = validExpression(
+    expression,
+    fields,
+    resolveFunctions,
+    resolveFunctionsForTypes
+  );
   const valid = alias.length > 0 && !aliasInvalid && !aliasConflict && expressionValid;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -240,6 +270,7 @@ export function DerivedOutputForm({
         expression={expression}
         fields={fields}
         resolveFunctions={resolveFunctions}
+        resolveFunctionsForTypes={resolveFunctionsForTypes}
         allowLiterals={allowLiterals}
         allowNested={allowNested}
         busy={busy}
