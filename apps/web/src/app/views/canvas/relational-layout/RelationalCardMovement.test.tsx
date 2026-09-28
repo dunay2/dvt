@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /** Owned concern: moving cards changes presentation, never semantic selection or order. */
-import React, { act } from 'react';
+import React, { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CanvasRelationalTreeLayout } from '../CanvasRelationalTreeLayout';
@@ -31,6 +31,15 @@ const tree: CanvasRelationalTreeNode = {
   ],
 };
 
+function ControlledLayout({ children }: Readonly<{ children: React.ReactNode }>): JSX.Element {
+  const [positions, setPositions] = useState<ReadonlyMap<string, CardPosition>>(() => new Map());
+  return (
+    <RelationalLayoutSession initialPositions={positions} onPositionsChange={setPositions}>
+      {children}
+    </RelationalLayoutSession>
+  );
+}
+
 describe('Relational card movement', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -40,7 +49,7 @@ describe('Relational card movement', () => {
   const render = (viewKey = 'inspection'): void =>
     act(() =>
       root.render(
-        <RelationalLayoutSession>
+        <ControlledLayout>
           <CanvasRelationalTreeLayout
             key={viewKey}
             root={tree}
@@ -52,7 +61,7 @@ describe('Relational card movement', () => {
             onExpand={expand}
             onManualLayout={manual}
           />
-        </RelationalLayoutSession>
+        </ControlledLayout>
       )
     );
   const card = (): HTMLButtonElement =>
@@ -188,6 +197,48 @@ describe('Relational card movement', () => {
     });
     expect(select).not.toHaveBeenCalled();
     expect(expand).not.toHaveBeenCalled();
+  });
+
+  it('keeps the other cards stationary when the first manually moved card is the root operation', () => {
+    const held = container.querySelector<HTMLElement>('[data-relational-card-id="join"]')!;
+    Object.assign(held, {
+      setPointerCapture: vi.fn(),
+      releasePointerCapture: vi.fn(),
+      hasPointerCapture: () => true,
+    });
+    const sourcePosition = position();
+    const terminalPosition = output().getAttribute('style');
+    const origin = held.parentElement!.getAttribute('style');
+    pointerAt(held, 'pointerdown', 100, 100);
+    for (const delta of [10, 20, 30, 20, 10]) {
+      pointerAt(held, 'pointermove', 100 + delta, 100 + delta);
+      expect(held.parentElement!.getAttribute('style')).not.toBe(origin);
+      expect(position()).toEqual(sourcePosition);
+      expect(output().getAttribute('style')).toBe(terminalPosition);
+    }
+    pointerAt(held, 'pointercancel', 110, 110);
+    expect(held.parentElement!.getAttribute('style')).toBe(origin);
+    expect(output().getAttribute('style')).toBe(terminalPosition);
+  });
+
+  it('retains the scrollable extent when the last card moves inward, including after release', () => {
+    const held = output();
+    const layout = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-relational-tree-layout"]'
+    )!;
+    const before = layout.getAttribute('style');
+    Object.assign(held, {
+      setPointerCapture: vi.fn(),
+      releasePointerCapture: vi.fn(),
+      hasPointerCapture: () => true,
+    });
+    outputPointer('pointerdown', 100, 100);
+    for (const delta of [-10, -20, -30, -20, -10]) {
+      outputPointer('pointermove', 100 + delta, 100);
+      expect(layout.getAttribute('style')).toBe(before);
+    }
+    outputPointer('pointerup', 90, 100);
+    expect(layout.getAttribute('style')).toBe(before);
   });
   it('moves a pending operation without selecting or connecting it', () => {
     act(() =>

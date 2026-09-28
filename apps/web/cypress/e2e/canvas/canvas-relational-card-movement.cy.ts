@@ -204,6 +204,70 @@ describe('Relational card movement', () => {
     );
   });
 
+  for (const axis of ['horizontal', 'vertical'] as const) {
+    it(`keeps the held card under the pointer when the ${axis} scrollable bounds contract`, () => {
+      cy.get(join).click();
+      cy.get(source).closest('li').find('[data-slot="canvas-relational-node-expand"]').click();
+      for (let step = 0; step < 5; step++)
+        cy.get('[data-slot="canvas-relational-tree-zoom"]')
+          .siblings('button[aria-label="Zoom in"]')
+          .click();
+      if (axis === 'vertical') {
+        cy.get(output).find('[data-slot="canvas-relational-tree-output-open"]').focus();
+        for (let step = 0; step < 20; step++)
+          cy.get(output)
+            .find('[data-slot="canvas-relational-tree-output-open"]')
+            .trigger('keydown', { key: 'ArrowDown', altKey: true, shiftKey: true });
+      }
+      cy.get(output).scrollIntoView();
+      cy.get(viewport).then(($viewport) => {
+        const surface = $viewport[0];
+        if (axis === 'horizontal') {
+          expect(surface.scrollWidth).to.be.greaterThan(surface.clientWidth);
+          surface.scrollLeft = surface.scrollWidth;
+        } else {
+          expect(surface.scrollHeight).to.be.greaterThan(surface.clientHeight);
+          surface.scrollTop = surface.scrollHeight;
+        }
+      });
+      cy.get(output).then(($card) => {
+        const held = $card[0];
+        const before = held.getBoundingClientRect();
+        const writes = semanticWrites('join-transform').length;
+        const requests = getE2eApiCalls(/\/(data-sample|preview|runs|execute)(\/|$)/).length;
+        const dx = axis === 'horizontal' ? -100 : 0;
+        const dy = axis === 'vertical' ? -100 : 0;
+        moveWorkbenchCard(output, dx, dy, (element, stepX, stepY) => {
+          expect(element).to.equal(held);
+          const bounds = element.getBoundingClientRect();
+          const surface = element.closest(viewport)!;
+          const layout = element.closest<HTMLElement>(
+            '[data-slot="canvas-relational-tree-layout"]'
+          )!;
+          expect(
+            bounds.left,
+            `held card follows pointer ${JSON.stringify({ stepX, scroll: surface.scrollLeft, width: surface.scrollWidth, layout: layout.style.width, left: element.style.left, dragging: element.dataset.dragging })}`
+          ).to.be.closeTo(before.left + stepX, 1);
+          expect(bounds.top, 'held card follows vertical pointer').to.be.closeTo(
+            before.top + stepY,
+            1
+          );
+        });
+        cy.get(output).should(($released) => {
+          expect($released[0].getBoundingClientRect().left).to.be.closeTo(before.left + dx, 1);
+          expect($released[0].getBoundingClientRect().top).to.be.closeTo(before.top + dy, 1);
+        });
+        verifyCompleteTreeFit(viewport);
+        cy.then(() => {
+          expect(semanticWrites('join-transform')).to.have.length(writes);
+          expect(getE2eApiCalls(/\/(data-sample|preview|runs|execute)(\/|$)/)).to.have.length(
+            requests
+          );
+        });
+      });
+    });
+  }
+
   it('pans with the explicit hand without moving or selecting a card', () => {
     for (let step = 0; step < 5; step++)
       cy.get('[data-slot="canvas-model-editor"] button[aria-label="Zoom in"]').click();

@@ -24,7 +24,14 @@ type CanvasRelationalTreeContentProps = Readonly<{
 }>;
 
 export function CanvasRelationalTreeContent(props: CanvasRelationalTreeContentProps): JSX.Element {
-  return <CanvasRelationalTreeContentView {...props} />;
+  return (
+    <div
+      data-slot="canvas-relational-tree-surface"
+      className="relative h-full min-h-0 w-full min-w-0 overflow-hidden"
+    >
+      <CanvasRelationalTreeContentView {...props} />
+    </div>
+  );
 }
 
 function CanvasRelationalTreeContentView({

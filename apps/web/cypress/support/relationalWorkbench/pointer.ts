@@ -24,7 +24,12 @@ export function hoverWorkbenchCard(selector: string, verticalFraction = 0.5): vo
   });
 }
 
-export function moveWorkbenchCard(selector: string, dx: number, dy: number): void {
+export function moveWorkbenchCard(
+  selector: string,
+  dx: number,
+  dy: number,
+  observe?: (element: HTMLElement, dx: number, dy: number) => void
+): void {
   cy.get(selector)
     .should('be.visible')
     .then(($card) => {
@@ -32,7 +37,16 @@ export function moveWorkbenchCard(selector: string, dx: number, dy: number): voi
       const events = [
         { type: 'mouseMoved', x, y, buttons: 0 },
         { type: 'mousePressed', x, y, buttons: 1, button: 'left', clickCount: 1 },
-        { type: 'mouseMoved', x: x + dx * scale, y: y + dy * scale, buttons: 1, button: 'left' },
+        ...Array.from({ length: observe == null ? 1 : 10 }, (_, index) => {
+          const fraction = (index + 1) / (observe == null ? 1 : 10);
+          return {
+            type: 'mouseMoved',
+            x: x + dx * fraction * scale,
+            y: y + dy * fraction * scale,
+            buttons: 1,
+            button: 'left',
+          };
+        }),
         {
           type: 'mouseReleased',
           x: x + dx * scale,
@@ -50,6 +64,11 @@ export function moveWorkbenchCard(selector: string, dx: number, dy: number): voi
               params,
             }) as Promise<unknown>
         );
+        if (params.type === 'mouseMoved' && params.buttons === 1 && observe != null) {
+          cy.get(selector).should(($held) =>
+            observe($held[0], (params.x - x) / scale, (params.y - y) / scale)
+          );
+        }
       });
     });
 }

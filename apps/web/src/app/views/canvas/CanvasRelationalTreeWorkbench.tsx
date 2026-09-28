@@ -111,29 +111,24 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
             occurrences={model.authoringAvailable ? model.session.occurrences : undefined}
           />
           <CanvasRelationAnalysisContext.Provider value={model.session.analysis}>
-            <div
-              data-slot="canvas-relational-tree-surface"
-              className="relative h-full min-h-0 w-full min-w-0 overflow-hidden"
-            >
-              <CanvasRelationalTreeContent
-                model={model}
-                authoring={authoring}
-                transformNode={transformNode}
-                nodes={nodes}
-                edges={edges}
-                copy={copy}
-                expanded={expanded}
-                onExpandedChange={setExpanded}
-                onPendingConditionChange={setPendingCondition}
-                pendingCondition={pendingCondition}
-                onSelectRelation={navigation.select}
-                modelOutput={{
-                  open: modelOutputOpen,
-                  setOpen: setModelOutputOpen,
-                  setPending: setPendingCompositionOutput,
-                }}
-              />
-            </div>
+            <CanvasRelationalTreeContent
+              model={model}
+              authoring={authoring}
+              transformNode={transformNode}
+              nodes={nodes}
+              edges={edges}
+              copy={copy}
+              expanded={expanded}
+              onExpandedChange={setExpanded}
+              onPendingConditionChange={setPendingCondition}
+              pendingCondition={pendingCondition}
+              onSelectRelation={navigation.select}
+              modelOutput={{
+                open: modelOutputOpen,
+                setOpen: setModelOutputOpen,
+                setPending: setPendingCompositionOutput,
+              }}
+            />
           </CanvasRelationAnalysisContext.Provider>
         </div>
       </RelationalLayoutSession>

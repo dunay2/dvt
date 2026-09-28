@@ -56,13 +56,9 @@ export function CanvasRelationalTreeAuthoring({
     operations: data.stagedOperations,
     sources: data.pendingSources,
   });
-  const close = () => {
-    actions.selectRelation(null);
-    onExpandedChange(false);
-  };
-  const expand = (id: string | null) => {
+  const expand = (id: string | null, open = true) => {
     actions.selectRelation(id);
-    onExpandedChange(true);
+    onExpandedChange(open);
   };
   return (
     <CanvasRelationalTreeAuthoringTemplate
@@ -116,7 +112,7 @@ export function CanvasRelationalTreeAuthoring({
             }
             actions={{
               rename: (alias) => actions.renamePending(pending.read.binding.relationId, alias),
-              close,
+              close: () => expand(null, false),
             }}
             onPendingChange={onPendingConditionChange}
           />

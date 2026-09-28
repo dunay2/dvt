@@ -21,7 +21,8 @@ export function useCanvasRelationalTreeViewport(fitPadding = 32): Readonly<{
   ReturnType<typeof useRelationalViewportPan> {
   const viewportRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const { autoFit, scroll, zoom, setZoom, minimumZoom, setMinimumZoom } = useRelationalLayout();
+  const { autoFit, scroll, zoom, setZoom, minimumZoom, setMinimumZoom, contentSize, setExtent } =
+    useRelationalLayout();
   const pan = useRelationalViewportPan();
   const setManualZoom = useCallback(
     (value: number) => {
@@ -31,13 +32,19 @@ export function useCanvasRelationalTreeViewport(fitPadding = 32): Readonly<{
     [autoFit, setZoom]
   );
   useCanvasRelationalTreeWheelZoom(viewportRef, contentRef, zoom, setManualZoom, minimumZoom);
-  const center = useCallback((nextZoom: number) => {
-    const viewport = viewportRef.current;
-    const content = contentRef.current;
-    if (viewport == null || content == null) return;
-    viewport.scrollLeft = Math.max(0, (content.offsetWidth * nextZoom - viewport.clientWidth) / 2);
-    viewport.scrollTop = 0;
-  }, []);
+  const center = useCallback(
+    (nextZoom: number) => {
+      const viewport = viewportRef.current;
+      const content = contentRef.current;
+      if (viewport == null || content == null) return;
+      viewport.scrollLeft = Math.max(
+        0,
+        ((contentSize.current?.width ?? content.offsetWidth) * nextZoom - viewport.clientWidth) / 2
+      );
+      viewport.scrollTop = 0;
+    },
+    [contentSize]
+  );
 
   const fit = useCallback(() => {
     const viewport = viewportRef.current;
@@ -53,15 +60,16 @@ export function useCanvasRelationalTreeViewport(fitPadding = 32): Readonly<{
     const nextZoom = calculateCanvasRelationalTreeFit({
       viewportWidth: viewport.clientWidth,
       viewportHeight: viewport.clientHeight,
-      contentWidth: content.offsetWidth,
-      contentHeight: content.offsetHeight,
+      contentWidth: contentSize.current?.width ?? content.offsetWidth,
+      contentHeight: contentSize.current?.height ?? content.offsetHeight,
       padding: fitPadding,
     });
     autoFit.current = false;
+    setExtent(null);
     setZoom(nextZoom);
     setMinimumZoom(Math.min(CANVAS_RELATIONAL_TREE_MIN_ZOOM, nextZoom));
     requestAnimationFrame(() => center(nextZoom));
-  }, [autoFit, center, fitPadding, setMinimumZoom, setZoom]);
+  }, [autoFit, center, contentSize, fitPadding, setExtent, setMinimumZoom, setZoom]);
 
   useLayoutEffect(() => {
     const viewport = viewportRef.current;

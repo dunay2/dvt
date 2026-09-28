@@ -29,18 +29,30 @@ type Drag = {
 export function useRelationalCardMovement(
   cards: readonly RelationalMovableCard[],
   zoom: number,
-  commitPosition: (id: string, position: CardPosition) => void,
+  commitPosition: (
+    id: string,
+    position: CardPosition,
+    visiblePositions: ReadonlyMap<string, CardPosition>
+  ) => void,
   onManualLayout?: () => void,
   enabled = true
 ) {
   const drag = useRef<Drag | null>(null);
   const suppressClick = useRef(false);
   const setPosition = (id: string, position: CardPosition) => {
-    const card = cards.find((item) => item.id === id);
-    commitPosition(id, {
-      x: authoredCoordinate(position.x, card?.expansionOrigin?.x, card?.offset?.x),
-      y: authoredCoordinate(position.y, card?.expansionOrigin?.y, card?.offset?.y),
-    });
+    const visiblePositions = new Map(
+      cards.map((card) => {
+        const displayed = card.id === id ? position : card;
+        return [
+          card.id,
+          {
+            x: authoredCoordinate(displayed.x, card.expansionOrigin?.x, card.offset?.x),
+            y: authoredCoordinate(displayed.y, card.expansionOrigin?.y, card.offset?.y),
+          },
+        ];
+      })
+    );
+    commitPosition(id, visiblePositions.get(id)!, visiblePositions);
   };
   const locate = (target: EventTarget) => {
     const element = (target as Element).closest<HTMLElement>('[data-relational-card-id]');
