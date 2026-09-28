@@ -47,6 +47,7 @@ Command/query rail:
 | `PublishReleaseCandidateIntegrityCheck`  | command | Repository release governance       | `ReleaseCandidateCheckPublicationService`     | `PORT-CI-RELEASE-CANDIDATE-CHECK-PUBLISH` and GitHub Checks adapter   | Fails closed when the check is not opened and completed on the exact PR head SHA, candidate assessment receives write authority, or the final assessment failure is not published. |
 | `ApplyPullRequestFileLabels`             | command | Repository collaboration governance | `PullRequestFileLabelPolicy` policy object    | `PORT-CI-APPLY-PR-FILE-LABELS` and `.github/workflows/pr-labeler.yml` | Fails when candidate code receives write authority, candidate configuration controls labels, or the trusted adapter checks out or executes candidate code.                         |
 | `LintChangedMarkdownFiles`               | query   | Repository Markdown governance      | `ChangedMarkdownFileSet` read model           | `scripts/lint-markdown-changed.cjs` and `verify:prepush`              | Fails when generated Markdown artifacts are passed explicitly to markdownlint despite repository ignore policy.                                                                    |
+| `ValidatePullRequestMetadata`            | query   | Repository delivery governance      | `PullRequestMetadataPolicy` policy object     | `.github/workflows/pr-quality-gate.yml` and existing Node validators  | Rejects an invalid title, excessive size, or short description before dependency setup; non-PR events skip only these PR-specific checks.                                          |
 
 ## Invariants
 
@@ -112,6 +113,39 @@ Command/query rail:
     workflow composition boundary MUST project only its nested `policy` into
     `AssessReleaseCandidateIntegrity`; passing the envelope as domain policy is
     forbidden.
+
+## Early pull-request metadata rejection
+
+`ValidatePullRequestMetadata` reads the title, changed-line counts, labels,
+and body from the GitHub pull-request event. Its result is a validation pass or
+failure, never a metadata mutation. The repository-delivery policy owns the
+rules; the existing Node validators are its application ports and
+`pr-quality-gate.yml` is the event adapter. The rail is **implemented** and
+idempotent for a given event payload. It needs no tenant data, secrets, pnpm
+install, or candidate-code execution; non-PR events do not supply PR metadata
+and skip these checks. Negative tests cover invalid titles, oversize PRs,
+short descriptions, and step-order regression.
+
+Current state: a metadata failure may arrive only after dependency setup and
+code, documentation, and architecture validation.
+
+```mermaid
+flowchart LR
+  Checkout --> Install --> CodeChecks[Code and governance checks] --> Metadata[PR metadata checks]
+  Metadata --> Reject[Possible rejection]
+```
+
+Target: after checkout, the same validators run with the runner's existing
+Node. A rejected PR stops before the expensive setup; a valid PR continues
+through every unchanged code and governance gate. This is a step-order change,
+not a new policy or a reduction in validation coverage.
+
+```mermaid
+flowchart LR
+  Checkout --> Metadata[Title, size, description via Node]
+  Metadata -->|invalid| Reject[Fail job]
+  Metadata -->|valid or non-PR event| Install[Existing setup and remaining checks]
+```
 
 ## Transitions
 
