@@ -8,6 +8,9 @@ import {
   projectCanvasStagedOperation,
   type CanvasStagedOperationKind,
 } from './canvasStagedOperation';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
+import { configureCanvasStagedTransform } from './canvasStagedTransformConfiguration';
 
 describe('staged operation projection', () => {
   it.each([
@@ -34,6 +37,27 @@ describe('staged operation projection', () => {
       operation: 'inner_join',
       inputs: [null, null],
     });
+  });
+
+  it('projects configured staged outputs and their exact producer inputs without another card', async () => {
+    const document = connectedNamesProjectionDraft();
+    const source = new CanvasRelationAnalysisSession('staged-card');
+    source.receive(document);
+    const field = (await source.query(source.rootId)).bindings[1]!;
+    const staged = await configureCanvasStagedTransform(
+      { id: 'pending-operation:one', operation: 'field_transform', inputs: [source.rootId] },
+      document,
+      field.fieldId
+    );
+    const projected = projectCanvasStagedOperation(staged);
+    expect(projected.locator).toBe(staged.id);
+    expect(projected.output.fields.map((output) => output.displayName)).toEqual([
+      field.displayName,
+    ]);
+    expect(projected.children).toHaveLength(1);
+    expect(projected.children[0]!.node.relationId).toBe(source.rootId);
+    expect(projected.children[0]!.node.output.fields.length).toBeGreaterThan(1);
+    source.dispose();
   });
 
   it('rejects direct and transitive operation cycles in either connection order', () => {

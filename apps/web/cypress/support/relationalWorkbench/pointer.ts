@@ -95,7 +95,7 @@ export function dragWorkbenchField(
             to.x + (targetOffset == null ? 0 : (targetOffset.x - bounds.width / 2) * to.scale);
           const y =
             to.y + (targetOffset == null ? 0 : (targetOffset.y - bounds.height / 2) * to.scale);
-          cy.then(async () => {
+          cy.then({ timeout: 15_000 }, async () => {
             const protocol = (command: string, params = {}): Promise<unknown> =>
               Cypress.automation('remote:debugger:protocol', {
                 command,

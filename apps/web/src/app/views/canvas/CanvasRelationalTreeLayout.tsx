@@ -1,22 +1,15 @@
-/** Owned concern: render deterministic graph geometry without creating a second Canvas authority. */
-import { useMemo, useState } from 'react';
-import { useRelationalLayout } from './relational-layout/RelationalLayoutSession';
-import { useRelationalCardMovement } from './relational-layout/useRelationalCardMovement';
-import {
-  CANVAS_RELATIONAL_DETAIL_ZOOM,
-  projectCanvasRelationalTreeDetails,
-  type CanvasRelationalSemanticContext,
-} from './canvasRelationalTreeDetails';
+/** Owned concern: assemble the relational graph's presentation layers without semantic authority. */
+import { useState } from 'react';
+import type { CanvasRelationalSemanticContext } from './canvasRelationalTreeDetails';
+import { useCanvasRelationalTreePlacement } from './useCanvasRelationalTreePlacement';
 
 import { RelationalTreeEdges } from './relational-layout/RelationalTreeEdges';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { SourceOccurrenceActions } from './relational-source-occurrence/sourceOccurrenceActions';
-import { projectPendingSourceOccurrence } from './canvasRelationalTreeAuthoringProjection';
-import { projectCanvasStagedOperation, type CanvasStagedOperation } from './canvasStagedOperation';
+import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { CanvasRelationalTreeOutput } from './CanvasRelationalTreeOutput';
 import { CanvasRelationalTreeNodes } from './CanvasRelationalTreeNodes';
-import { projectCanvasRelationalMovableCards } from './projectCanvasRelationalMovableCards';
 
 export function CanvasRelationalTreeLayout({
   outputName,
@@ -67,49 +60,17 @@ export function CanvasRelationalTreeLayout({
   onManualLayout?: () => void;
   onOpenOutput?: () => void;
 }>): JSX.Element {
-  const detail = useMemo(
-    () =>
-      root == null
-        ? { sizes: new Map(), graphs: new Map() }
-        : projectCanvasRelationalTreeDetails(root, semanticContext, sourceOutputFieldsByRelationId),
-    [root, semanticContext?.transformNode, semanticContext?.draft, sourceOutputFieldsByRelationId]
-  );
-  const { projectLayout, setPosition, expanded, toggleDetail } = useRelationalLayout();
-  const zoomRevealsDetail = Math.round(zoom * 100) >= CANVAS_RELATIONAL_DETAIL_ZOOM * 100;
-  const sizes = useMemo(() => {
-    const visible = new Map(detail.sizes);
-    const visit = (node: CanvasRelationalTreeNode): void => {
-      if (!zoomRevealsDetail && !expanded.has(node.relationId ?? node.locator))
-        visible.delete(node.locator);
-      node.children.forEach((child) => visit(child.node));
-    };
-    if (root != null) visit(root);
-    return visible;
-  }, [root, detail, expanded, zoomRevealsDetail]);
-  const detachedSources = useMemo(
-    () => occurrences?.pending.map(projectPendingSourceOccurrence) ?? [],
-    [occurrences?.pending]
-  );
-  const detachedOperations = useMemo(
-    () => stagedOperations.map(projectCanvasStagedOperation),
-    [stagedOperations]
-  );
-  const detached = useMemo(
-    () => [...detachedSources, ...detachedOperations],
-    [detachedSources, detachedOperations]
-  );
-  const layout = useMemo(
-    () => projectLayout(root, sizes, detached),
-    [root, sizes, detached, projectLayout]
-  );
-  const movableCards = useMemo(() => projectCanvasRelationalMovableCards(layout), [layout]);
-  const movement = useRelationalCardMovement(
-    movableCards,
-    zoom,
-    setPosition,
-    onManualLayout,
-    !panMode
-  );
+  const { layout, movement, graphs, expanded, zoomRevealsDetail, toggleDetail } =
+    useCanvasRelationalTreePlacement({
+      root,
+      semanticContext,
+      sourceOutputFieldsByRelationId,
+      stagedOperations,
+      pendingSources: occurrences?.pending,
+      zoom,
+      panMode,
+      onManualLayout,
+    });
   const [selectedConnectionSource, setSelectedConnectionSource] = useState<string | null>(null);
   const effectiveOutputRelationId =
     outputRelationId === undefined ? (root?.relationId ?? null) : outputRelationId;
@@ -154,7 +115,7 @@ export function CanvasRelationalTreeLayout({
       )}
       <CanvasRelationalTreeNodes
         layout={layout}
-        graphs={detail.graphs}
+        graphs={graphs}
         expanded={expanded}
         zoomRevealsDetail={zoomRevealsDetail}
         toggleDetail={toggleDetail}

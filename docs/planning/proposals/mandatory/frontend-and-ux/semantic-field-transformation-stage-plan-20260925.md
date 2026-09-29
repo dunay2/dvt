@@ -185,6 +185,63 @@ or hidden persisted mapping intentions for unconfigured binary operations.
 | ----------------------------------- | -------------------------------------------- | -------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | Initialize Transform from one field | Whole-producer connection loses field intent | Existing command plus atomic candidate | DvtNodeAuthoringMetadata / ConfigureCanvasDvtNode | Shared staged admission, staged Transform configuration, lifecycle hook, passive Input port | Single-field/identity/SQL/reopen unit tests; async race and gesture presentation tests; existing Transform Cypress flow | New rail, DTO, AST, implicit JOIN Project, database writes |
 
+#### Chained field-driven Transform connection (#3422, first vertical)
+
+The initial connection above reads only the Model's current analysis session. A
+configured but unapplied Transform owns a semantic document, yet its detached card
+is projected as an empty pending node. Consequently its published expression is
+neither visible as a field token nor admitted as the producer of another pending
+Transform. A relation-port gesture can connect the entire producer, but that
+loses the requested single-field intent.
+
+```mermaid
+flowchart LR
+  A[Configured staged Transform A] --> Empty[Empty detached card projection]
+  Empty --> NoField[No published field gesture]
+  NoField --> RootOnly[Connection adapter checks Model-root session only]
+  RootOnly --> Reject[Transform B remains pending]
+```
+
+Derive A's local Input, Output and expression tree from its existing semantic
+document, using the same relational-tree query as an applied relation. A field
+drag carries A's relation and stable field identity, never a copied expression.
+The existing staged connection admission checks the single-consumer, arity,
+cycle and occupied-port rules. Resolve the exact producer document from the
+staged operation; validate publication in its own disposable analysis session;
+build B's Project with just that field; then recheck both operation identities,
+the producer document and editability before one atomic draft update. Do not
+publish an intermediate relation-only connection or add another persisted AST.
+
+```mermaid
+flowchart LR
+  A[Staged A semantic document] --> Tree[Existing local tree projection]
+  Tree --> Field[Published Output field token]
+  Field --> Admission[Existing staged connection admission]
+  Admission --> Source[Resolve A's exact semantic document]
+  Source --> Validate[Published field validation]
+  Validate --> Candidate[Isolated B Project with one output]
+  Candidate --> Recheck[Source, target and permissions unchanged]
+  Recheck --> Draft[One draft update]
+  Draft --> Preview[Existing Preview and save/reopen rails]
+```
+
+Acceptance is `Source → Transform A → Transform B → Output`: A publishes
+`key = UPPER(TRIM(client_id))`; dragging `key` to B selects only that result;
+Preview, Apply and reopen preserve field identity and results. A stale or
+unpublished field, changed producer, occupied target, fan-out, cycle, readonly
+draft, invalid drop or cancelled gesture leaves the draft unchanged. Header
+movement remains layout-only. The existing one-output-edge rule still applies.
+
+| Scenario                                             | Owner / rail                                                                         | Implementation surface                                                                                 | Proof                                                                    | Excluded                                                             |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| Chain one published result between staged Transforms | DvtNodeAuthoringMetadata / ConfigureCanvasDvtNode; ProjectCanvasRelationalTree query | Existing staged document resolver, card detail projection, scoped field gesture and connection adapter | Projection, command/race, native drag, SQL/Preview and save/reopen tests | New DTO, parallel formula model, JOIN normalization, database writes |
+
+The first implementation proof covers native field drag, nested formula SQL,
+atomic Apply and save/reopen. Provider-backed Preview remains an acceptance
+check: the current local live runner reseeds shared `public` and `raw` tables,
+so it must not be used for this proof. The later isolated PostgreSQL vertical
+must exercise Preview without touching those tables.
+
 ```mermaid
 flowchart LR
   Before[Card: expression OR structure] --> Passive[Passive detail]
@@ -611,6 +668,14 @@ not new command/query rails or mutation permissions.
 Extract the oversized existing Workbench projector by projection versus layout
 responsibility only where needed for this change. Delete the moved bodies;
 retain one expression projector and one compact renderer, with bounded files.
+
+The relational canvas layout remains a composition boundary, not a second
+semantic authority. Its current component mixes geometry derivation, card
+movement and JSX with connection-selection state. Keep geometry and movement
+in one presentation hook; leave the component to assemble edge, output and node
+layers. Connection gestures may remain local UI state, but semantic connection
+and removal commands stay in the existing action owners. The layout hook must
+not read or write the workspace draft, call providers or infer new field flow.
 
 - Read path: `ProjectCanvasRelationalTree`.
 - Write path: `ConfigureCanvasDvtNode`, then `SaveWorkspaceGraphDraft`.

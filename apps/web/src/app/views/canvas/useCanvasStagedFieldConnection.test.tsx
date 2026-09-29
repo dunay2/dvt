@@ -6,6 +6,7 @@ import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-su
 import { setupWorkbenchTest, root } from './CanvasRelationalTreeWorkbench.test-support';
 import { useCanvasStagedFieldConnection } from './useCanvasStagedFieldConnection';
 import { decodeCanvasStagedOperation } from './canvasStagedOperationDocument';
+import { configureCanvasStagedTransform } from './canvasStagedTransformConfiguration';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
 import type { CanvasRelationalFieldReference } from './canvasRelationalTreeDrag';
 
@@ -107,6 +108,90 @@ describe('field connection lifetime', () => {
     ]);
     reopened.dispose();
     state.session.dispose();
+  });
+
+  it('connects only a published staged Transform result into another pending Transform', async () => {
+    const document = connectedNamesProjectionDraft();
+    const session = new CanvasRelationAnalysisSession('chained-field');
+    session.receive(document);
+    const field = (await session.query(session.rootId)).bindings[1]!;
+    const first = await configureCanvasStagedTransform(
+      { id: 'pending-operation:first', operation: 'field_transform', inputs: [session.rootId] },
+      document,
+      field.fieldId
+    );
+    const next = new CanvasRelationAnalysisSession('chained-field-reference');
+    next.receive(decodeCanvasStagedOperation(first));
+    const published = (await next.query(first.id)).bindings[0]!;
+    let operations: readonly CanvasStagedOperation[] = [
+      first,
+      { id: 'pending-operation:second', operation: 'field_transform', inputs: [null] },
+    ];
+    const writes = vi.fn();
+    let connect!: ReturnType<typeof useCanvasStagedFieldConnection>;
+    function Host(): null {
+      connect = useCanvasStagedFieldConnection(
+        {
+          editable: true,
+          start: () => true,
+          operations,
+          setOperations: (update) => {
+            operations = update(operations);
+            writes();
+          },
+          selectedId: null,
+          setSelectedId: vi.fn(),
+          producerIds: [session.rootId, first.id],
+          consumedProducerIds: [],
+        },
+        { session, document, error: null, revision: session.revision, refresh: vi.fn() }
+      );
+      return null;
+    }
+    await act(async () => root.render(<Host />));
+    const stagedReference: CanvasRelationalFieldReference = {
+      rootId: first.id,
+      revision: 0,
+      relationId: first.id,
+      fieldId: published.fieldId,
+      producerPlanSha256: first.semanticDocument!.semanticPlan.sha256,
+    };
+    expect(
+      await connect(
+        { ...stagedReference, producerPlanSha256: '0'.repeat(64) },
+        'pending-operation:second',
+        0,
+        new AbortController().signal
+      )
+    ).toBe(false);
+    expect(writes).not.toHaveBeenCalled();
+    expect(
+      await connect(stagedReference, 'pending-operation:second', 0, new AbortController().signal)
+    ).toBe(true);
+    expect(writes).toHaveBeenCalledTimes(1);
+    expect(operations[1]!.inputs).toEqual([first.id]);
+    const reopened = new CanvasRelationAnalysisSession('chained-reopened');
+    reopened.receive(decodeCanvasStagedOperation(operations[1]));
+    expect((await reopened.query(operations[1]!.id)).bindings.map((f) => f.displayName)).toEqual([
+      published.displayName,
+    ]);
+    const replacement = await configureCanvasStagedTransform(
+      { id: first.id, operation: 'field_transform', inputs: [session.rootId] },
+      document,
+      (await session.query(session.rootId)).bindings[0]!.fieldId
+    );
+    operations = [
+      replacement,
+      { id: 'pending-operation:second', operation: 'field_transform', inputs: [null] },
+    ];
+    await act(async () => root.render(<Host />));
+    expect(
+      await connect(stagedReference, 'pending-operation:second', 0, new AbortController().signal)
+    ).toBe(false);
+    expect(writes).toHaveBeenCalledTimes(1);
+    reopened.dispose();
+    next.dispose();
+    session.dispose();
   });
 
   it.each([

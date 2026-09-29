@@ -4,6 +4,8 @@ import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { createSourceDocument } from './canvasSourceDocument';
 import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import type { CanvasRelationalFieldReference } from './canvasRelationalTreeDrag';
 
 export function decodeCanvasStagedOperation(
   operation: CanvasStagedOperation | undefined
@@ -73,6 +75,53 @@ export function resolveCanvasStagedProducerDocument(args: {
   if (source != null) return createSourceDocument([source.read], source.read);
   if (args.canonical == null) return null;
   return projectCanvasStagedDocument(args.canonical, relationId);
+}
+
+/** Open the exact authority behind a field drag; staged plans carry their own revision scope. */
+export function openCanvasStagedFieldProducer(args: {
+  reference: CanvasRelationalFieldReference;
+  operations: readonly CanvasStagedOperation[];
+  canonical: SubstraitDocument | null;
+  canonicalSession: CanvasRelationAnalysisSession | null;
+}): Readonly<{
+  document: SubstraitDocument;
+  session: CanvasRelationAnalysisSession;
+  dispose: () => void;
+}> | null {
+  const staged = args.operations.find((operation) => operation.id === args.reference.relationId);
+  if (staged != null) {
+    if (
+      args.reference.rootId !== staged.id ||
+      args.reference.producerPlanSha256 == null ||
+      args.reference.producerPlanSha256 !== staged.semanticDocument?.semanticPlan.sha256
+    )
+      return null;
+    const document = decodeCanvasStagedOperation(staged);
+    if (document == null) return null;
+    const session = new CanvasRelationAnalysisSession(`${staged.id}:field-producer`);
+    try {
+      session.receive(document);
+      if (session.rootId !== staged.id) {
+        session.dispose();
+        return null;
+      }
+      return { document, session, dispose: () => session.dispose() };
+    } catch {
+      session.dispose();
+      return null;
+    }
+  }
+  if (
+    args.reference.producerPlanSha256 != null ||
+    args.canonical == null ||
+    args.canonicalSession == null
+  )
+    return null;
+  return {
+    document: args.canonical,
+    session: args.canonicalSession,
+    dispose: () => undefined,
+  };
 }
 
 export function assignCanvasStagedRoot(

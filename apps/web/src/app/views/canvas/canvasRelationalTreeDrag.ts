@@ -11,10 +11,12 @@ export const CANVAS_RELATIONAL_FIELD_DRAG_TYPE = 'application/x-dvt-relational-f
 
 export type CanvasRelationalFieldReference = Readonly<{
   rootId: string;
+  /** Canonical-session revision; staged producers are scoped by their plan digest instead. */
   revision: number;
   relationId: string;
   fieldId: string;
   selectedOutput?: boolean;
+  producerPlanSha256?: string;
 }>;
 
 export function writeCanvasRelationalFieldDrag(
@@ -31,10 +33,8 @@ export function readCanvasRelationalFieldDrag(
   try {
     const value: unknown = JSON.parse(dataTransfer.getData(CANVAS_RELATIONAL_FIELD_DRAG_TYPE));
     if (value == null || typeof value !== 'object') return null;
-    const { rootId, revision, relationId, fieldId, selectedOutput } = value as Record<
-      string,
-      unknown
-    >;
+    const { rootId, revision, relationId, fieldId, selectedOutput, producerPlanSha256 } =
+      value as Record<string, unknown>;
     if (
       typeof rootId !== 'string' ||
       rootId.length === 0 ||
@@ -45,7 +45,9 @@ export function readCanvasRelationalFieldDrag(
       typeof revision !== 'number' ||
       !Number.isSafeInteger(revision) ||
       revision < 0 ||
-      (selectedOutput != null && typeof selectedOutput !== 'boolean')
+      (selectedOutput != null && typeof selectedOutput !== 'boolean') ||
+      (producerPlanSha256 != null &&
+        (typeof producerPlanSha256 !== 'string' || !/^[0-9a-f]{64}$/.test(producerPlanSha256)))
     )
       return null;
     return {
@@ -54,6 +56,7 @@ export function readCanvasRelationalFieldDrag(
       relationId,
       fieldId,
       ...(selectedOutput === true ? { selectedOutput: true } : {}),
+      ...(producerPlanSha256 == null ? {} : { producerPlanSha256 }),
     };
   } catch {
     return null;
