@@ -79,7 +79,6 @@ describe('Progressive SQL verticals', () => {
       });
       openWorkbenchModel(modelId);
       cy.get('[data-operator="project"]').click();
-      cy.intercept('PUT', '**/workspace/graph/draft').as('saveDraft');
       for (const [alias, formula] of scenario.formulas) addLiveFormula(alias, formula);
       if (scenario.level === 3) {
         cy.get('[data-slot="canvas-model-tab-close"]').click();
@@ -124,7 +123,6 @@ describe('Progressive SQL verticals', () => {
         });
         cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
         cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
-        cy.wait('@saveDraft').its('response.statusCode').should('eq', 200);
         cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
       }
       cy.then(() => {

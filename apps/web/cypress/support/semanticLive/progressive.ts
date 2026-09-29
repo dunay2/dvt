@@ -8,6 +8,7 @@ import {
 } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { CanvasRelationAnalysisSession } from '../../../src/app/views/canvas/canvasRelationAnalysisSession';
 import { insertSelectedRelationTransform } from '../../../src/app/views/canvas/canvasSelectedRelationTransform';
+import { readLiveGraphDraft } from '../liveProtectedRuntime';
 
 import { leftJoinDocument, modelId } from './fixture';
 
@@ -28,6 +29,10 @@ export async function progressiveDocument(level: number): Promise<DvtSubstraitSe
 }
 
 export function addLiveFormula(alias: string, formula: string): void {
+  let previousRevision: string;
+  readLiveGraphDraft().then(({ body }) => {
+    previousRevision = body.record.revision;
+  });
   cy.get(
     '[data-slot="canvas-transform-inspector"] [data-slot="canvas-derived-output-trigger"]'
   ).click();
@@ -39,8 +44,10 @@ export function addLiveFormula(alias: string, formula: string): void {
     cy.get('button[type="submit"]').should('be.enabled').click();
   });
   cy.get('[data-slot="canvas-derived-output-form"]').should('not.exist');
-  cy.wait('@saveDraft').its('response.statusCode').should('eq', 200);
   cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
+  readLiveGraphDraft().then(({ body }) => {
+    expect(body.record.revision, 'Formula is durably saved').not.to.equal(previousRevision);
+  });
 }
 
 export const progressiveScenarios = [
