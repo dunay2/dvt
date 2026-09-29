@@ -23,7 +23,7 @@ export function useCanvasRelationalAuthoringDraftHydration(
     hydrateExisting: () => boolean;
     state: DraftState;
   }>
-): void {
+): boolean {
   const { reset, restoreIncomplete } = args.state;
   const persisted = useMemo(
     () => readCanvasRelationalAuthoringDraft(args.transformNode),
@@ -42,4 +42,5 @@ export function useCanvasRelationalAuthoringDraftHydration(
     args.hydrateExisting();
     restoreIncomplete(restored);
   }, [args.enabled, args.hydrateExisting, reset, restoreIncomplete, restored]);
+  return persisted != null && restored == null;
 }

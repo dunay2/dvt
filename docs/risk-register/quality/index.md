@@ -132,6 +132,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Ordered relation semantics could drift across Canvas, Preview, Run, and PostgreSQL](R-20260920-SUBSTRAIT-ORDER-FETCH-DRIFT.yaml)
 - [Packaged compatibility schema can drift from canonical root compatibility matrix](R-20260612-CONTRACTS-COMPAT-SCHEMA-PARITY.yaml)
 - [Partial source catalog pages may hide or misidentify warehouse objects](R-20260907-GH-2173-LAZY-SOURCE-CATALOG.yaml)
+- [Pending source restore could silently rebind fields after producer drift](R-20260929-PENDING-SOURCE-IDENTITY.yaml)
 - [Persisted plan decisions could diverge from the authorized executable graph](R-20260801-PLAN-EXECUTION-DECISIONS.yaml)
 - [Persisted plan record contracts can drift back into dual truth and invalid state acceptance](R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml)
 - [Persisted plans may contain retired SQL-first step kinds](R-20260903-VTX2-RUNTIME-STEP-HARDCUT.yaml)

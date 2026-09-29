@@ -41,7 +41,7 @@ import ModelTemplateSource from './CanvasModelEditor.templates.tsx?raw';
 import ModelToolbarSource from './CanvasModelToolbar.tsx?raw';
 import ModelDataPanelSource from './CanvasModelDataPanel.tsx?raw';
 import CodeWorkbenchSource from './DvtTransformCodeWorkbenchContent.tsx?raw';
-import ApplyCommandSource from './useCanvasRelationalTreeApplyCommand.ts?raw';
+import ApplyCommandSource from './canvasRelationalTreeApplyCommand.ts?raw';
 import WorkbenchModelSource from './useCanvasRelationalTreeWorkbenchModel.ts?raw';
 import AuthoringSessionSource from './useCanvasRelationalTreeAuthoringSession.ts?raw';
 import GraphAuthoringSource from './useCanvasRelationalGraphAuthoring.ts?raw';
@@ -54,8 +54,31 @@ import ExistingSeedSource from './useCanvasRelationalTreeExistingSeed.ts?raw';
 import OperandSlotsSource from './useCanvasRelationalOperandSlots.ts?raw';
 import ProjectionAuthoringSource from './canvasRelationalTreeProjectionAuthoring.ts?raw';
 import UseViewportSource from './useCanvasRelationalTreeViewport.ts?raw';
+import PendingSource from './relational-source-occurrence/pendingSourceOccurrence.ts?raw';
+import ApplyDraftSource from './canvasRelationalTreeApplyDraft.ts?raw';
+import CatalogueProjectionSource from './canvasRelationalTreeCatalogue.ts?raw';
 
 describe('Canvas relational-tree Workbench architecture', () => {
+  it('keeps persistence policy and presentation projection out of the React session and source identity', () => {
+    expect(AuthoringSessionSource).toContain('prepareCanvasRelationalTreeApply');
+    expect(AuthoringSessionSource).not.toContain('createCanvasRelationalAuthoringDraft');
+    expect(AuthoringSessionSource).not.toContain('canonicalizeCanvasInspectorNodeDraft');
+    expect(AuthoringSessionSource).not.toContain('areCanvasInspectorNodeDraftsEqual');
+    expect(WorkbenchModelSource).not.toContain('configuredProducerIds');
+    expect(PendingSource).not.toMatch(/canvasRelationalTree|buildCanvasRelationalTreeRelation/);
+    for (const pure of [
+      ApplyDraftSource,
+      ApplyCommandSource,
+      CatalogueProjectionSource,
+      PendingSource,
+    ]) {
+      expect(pure).not.toMatch(/from ['"]react['"]|\buse(?:State|Effect|Callback|Memo)\s*\(/);
+    }
+    expect(CatalogueProjectionSource).not.toMatch(
+      /encodeDvt|onApplyNodeDraft|restorePendingSourceOccurrence/
+    );
+    expect(ApplyDraftSource).not.toMatch(/JSX|\.tsx|onApplyNodeDraft/);
+  });
   it('keeps query consumption, catalogue, graph and contextual detail in bounded components', () => {
     expect(InspectionSource.split('\n').length).toBeLessThan(80);
     expect(InspectionModelSource.split('\n').length).toBeLessThan(120);
@@ -143,7 +166,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(combined).not.toContain('applyDvtSubstraitSemanticDocument');
     expect(combined).not.toContain('encodeDvtSubstrait');
     expect(combined).not.toContain('create(');
-    expect(AuthoringSessionSource).toContain('useCanvasRelationalTreeApplyCommand');
+    expect(AuthoringSessionSource).toContain('createCanvasRelationalTreeApplyCommand');
     expect(AuthoringSessionSource).toContain('useCanvasRelationalTreeExistingSeed');
     expect(AuthoringSessionSource).toContain('useCanvasRelationalTreeRemoval');
     expect(RemovalSessionSource).toContain('useRelationRemoval');

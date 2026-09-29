@@ -151,6 +151,7 @@ Evidence documents that justify or validate relevant changes.
 - [LEFT JOIN end to end](ED-20260919-left-join-end-to-end.md)
 - [MW-D2 Temporal Worker Routing By Capability](ed-20260513-mw-d2-temporal-worker-routing.md)
 - [Opaque DVT authoring identity evidence](ED-20260906-opaque-dvt-authoring-identity.md)
+- [Pending source identity and authoring responsibility boundaries](ED-20260929-pending-source-identity.md)
 - [Planner environment input removal evidence](ED-20260902-planner-environment-contract-truth.md)
 - [Planner json-canonicalize 2.0.0 Upgrade](ED-20260603-planner-json-canonicalize-2-upgrade.md)
 - [Plugin Admission Architecture Hardening](ed-20260429-plugin-admission-architecture.md)

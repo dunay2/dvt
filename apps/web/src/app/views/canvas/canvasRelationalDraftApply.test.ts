@@ -2,7 +2,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { graphJoin, graphModel } from './canvasRelationGraph.test-support';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
-import { useCanvasRelationalTreeApplyCommand } from './useCanvasRelationalTreeApplyCommand';
+import { createCanvasRelationalTreeApplyCommand } from './canvasRelationalTreeApplyCommand';
+import { prepareCanvasRelationalTreeApply } from './canvasRelationalTreeApplyDraft';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import {
   areCanvasInspectorNodeDraftsEqual,
@@ -11,12 +12,102 @@ import {
 } from './canvasInspectorAuthoringModel';
 
 describe('canonical draft apply', () => {
+  it('does not clear an untouched session but detects an explicitly cleared model', () => {
+    const { document, session } = graphJoin();
+    const args = {
+      transformNode: graphModel(document),
+      active: false,
+      joinDraft: null,
+      operation: null,
+      hasSelectedInputs: false,
+      pending: { sources: [], operations: [], outputRelationId: null, positions: new Map() },
+      baselineOutputId: session.rootId,
+      semanticRootId: session.rootId,
+    };
+    const untouched = prepareCanvasRelationalTreeApply({
+      ...args,
+      pending: { ...args.pending, outputRelationId: session.rootId },
+    });
+    expect(untouched).toMatchObject({
+      cleared: false,
+      hasIncompleteGraph: false,
+      hasDraftChanges: false,
+    });
+    const cleared = prepareCanvasRelationalTreeApply({ ...args, active: true });
+    expect(cleared.cleared).toBe(true);
+    expect(cleared.hasDraftChanges).toBe(true);
+    expect(cleared.request.relationalAuthoringDraft).toBeNull();
+  });
+
+  it('retains an explicit output disconnection without clearing its canonical producer', () => {
+    const { document, session } = graphJoin();
+    const prepared = prepareCanvasRelationalTreeApply({
+      transformNode: graphModel(document),
+      active: true,
+      joinDraft: document,
+      operation: 'inner_join',
+      hasSelectedInputs: true,
+      pending: { sources: [], operations: [], outputRelationId: null, positions: new Map() },
+      baselineOutputId: session.rootId,
+      semanticRootId: session.rootId,
+    });
+    expect(prepared).toMatchObject({
+      cleared: false,
+      hasIncompleteGraph: true,
+      hasDraftChanges: true,
+    });
+    expect(prepared.request.relationalAuthoringDraft).toMatchObject({
+      outputRelationId: null,
+      sources: [],
+      operations: [],
+    });
+    expect(prepared.request.joinDraft).toBe(document);
+  });
+
+  it('prepares an incomplete operation through the same request dispatched by Apply', () => {
+    const prepared = prepareCanvasRelationalTreeApply({
+      transformNode: graphModel(),
+      active: true,
+      joinDraft: null,
+      operation: null,
+      hasSelectedInputs: false,
+      pending: {
+        sources: [],
+        operations: [{ id: 'pending:filter', operation: 'filter', inputs: [null] }],
+        outputRelationId: 'pending:filter',
+        positions: new Map(),
+      },
+      baselineOutputId: null,
+      semanticRootId: null,
+    });
+    expect(prepared).toMatchObject({
+      cleared: false,
+      hasIncompleteGraph: true,
+      hasDraftChanges: true,
+    });
+    const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' as const }));
+    const apply = createCanvasRelationalTreeApplyCommand({
+      ...prepared.request,
+      editable: true,
+      authoring: { canEditNode: true, onApplyNodeDraft },
+      reject: vi.fn(),
+      reset: vi.fn(),
+    });
+    expect(apply().outcome).toBe('no_changes');
+    expect(onApplyNodeDraft).toHaveBeenCalledWith(
+      'model',
+      expect.objectContaining({
+        relationalAuthoringDraft: prepared.request.relationalAuthoringDraft,
+      })
+    );
+  });
+
   it.each(['projection', 'union_all'] as const)(
     'rejects missing %s documents instead of inventing one',
     (operation) => {
       const transformNode = graphModel();
       const onApplyNodeDraft = vi.fn();
-      const apply = useCanvasRelationalTreeApplyCommand({
+      const apply = createCanvasRelationalTreeApplyCommand({
         editable: true,
         authoring: { canEditNode: true, onApplyNodeDraft },
         transformNode,
@@ -48,7 +139,7 @@ describe('canonical draft apply', () => {
       outputRelationId: null,
       positions: {},
     };
-    const apply = useCanvasRelationalTreeApplyCommand({
+    const apply = createCanvasRelationalTreeApplyCommand({
       editable: true,
       authoring: { canEditNode: true, onApplyNodeDraft },
       transformNode,
@@ -70,7 +161,7 @@ describe('canonical draft apply', () => {
     const { document } = graphJoin();
     const transformNode = graphModel(document);
     const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' as const }));
-    const apply = useCanvasRelationalTreeApplyCommand({
+    const apply = createCanvasRelationalTreeApplyCommand({
       editable: true,
       authoring: { canEditNode: true, onApplyNodeDraft },
       transformNode,
@@ -109,7 +200,7 @@ describe('canonical draft apply', () => {
       outputRelationId: 'pending-operation:aggregate',
       positions: {},
     };
-    const apply = useCanvasRelationalTreeApplyCommand({
+    const apply = createCanvasRelationalTreeApplyCommand({
       editable: true,
       authoring: { canEditNode: true, onApplyNodeDraft },
       transformNode,
@@ -151,7 +242,7 @@ describe('canonical draft apply', () => {
       outputRelationId: session.rootId,
       positions: {},
     };
-    const apply = useCanvasRelationalTreeApplyCommand({
+    const apply = createCanvasRelationalTreeApplyCommand({
       editable: true,
       authoring: { canEditNode: true, onApplyNodeDraft },
       transformNode,

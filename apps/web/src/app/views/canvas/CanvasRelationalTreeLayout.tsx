@@ -12,7 +12,7 @@ import { RelationalTreeEdges } from './relational-layout/RelationalTreeEdges';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { SourceOccurrenceActions } from './relational-source-occurrence/sourceOccurrenceActions';
-import { projectPendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
+import { projectPendingSourceOccurrence } from './canvasRelationalTreeAuthoringProjection';
 import { projectCanvasStagedOperation, type CanvasStagedOperation } from './canvasStagedOperation';
 import { CanvasRelationalTreeOutput } from './CanvasRelationalTreeOutput';
 import { CanvasRelationalTreeNodes } from './CanvasRelationalTreeNodes';

@@ -8,6 +8,7 @@
  */
 import { z } from 'zod';
 
+import { decodeDvtSubstraitPlanV1 } from './DvtSubstraitPlanBinary.v1.js';
 import { DvtSubstraitSemanticDocumentV1Schema } from './DvtSubstraitSemanticDocument.v1.js';
 
 export const DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY = 'relationalAuthoringDraft' as const;
@@ -68,7 +69,7 @@ const SourceSchema = z
     relationId: NonBlankStringSchema,
     sourceNodeId: NonBlankStringSchema,
     displayName: NonBlankStringSchema,
-    fieldIds: z.array(NonBlankStringSchema).min(1),
+    semanticDocument: DvtSubstraitSemanticDocumentV1Schema,
   })
   .strict();
 const OperationDraftSchema = z
@@ -102,11 +103,30 @@ export const DvtRelationalAuthoringDraftV1Schema = z
       });
     }
     draft.sources.forEach((source, index) => {
-      if (new Set(source.fieldIds).size !== source.fieldIds.length)
+      const document = source.semanticDocument;
+      let validRead = false;
+      try {
+        const plan = decodeDvtSubstraitPlanV1(document);
+        const root = plan.relations[0]?.relType;
+        const relation = root?.case === 'root' ? root.value.input : null;
+        validRead = plan.relations.length === 1 && relation?.relType.case === 'read';
+      } catch {
+        // The nested semantic-document parser reports corrupt bytes; never throw from safeParse.
+      }
+      if (
+        !validRead ||
+        document.sidecar.relations.length !== 1 ||
+        document.sidecar.relations[0]?.relationId !== source.relationId ||
+        document.sidecar.fields.length === 0 ||
+        (document.sidecar.relations[0]?.sourceRef == null &&
+          document.sidecar.relations[0]?.producerRef == null) ||
+        (document.sidecar.relations[0]?.producerRef != null &&
+          document.sidecar.relations[0].producerRef.nodeId !== source.sourceNodeId)
+      )
         context.addIssue({
           code: 'custom',
-          path: ['sources', index, 'fieldIds'],
-          message: 'Occurrence field identities must be unique.',
+          path: ['sources', index, 'semanticDocument'],
+          message: 'A pending source must own one canonical Read with matching provenance.',
         });
     });
     draft.operations.forEach((operation, index) => {

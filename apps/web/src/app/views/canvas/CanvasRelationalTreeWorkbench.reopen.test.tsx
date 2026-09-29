@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
 /** Owned concern: relational workbench reopen behavior. */
 import React, { act } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { createCanvasRelationalAuthoringDraft } from './canvasRelationalAuthoringDraft';
+import { createPendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
+import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
+import { renderOperationWorkbench } from './CanvasRelationalTreeWorkbench.operation-drag.test-support';
 import { createCustomerOrdersJoin } from './canvasJoin.test-support';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
@@ -27,6 +31,60 @@ import {
 
 describe('Canvas relational-tree Workbench reopen', () => {
   setupWorkbenchTest();
+  it.each(['reorder', 'rename'] as const)(
+    'reopens a pending occurrence without silently reconstructing its identity (%s)',
+    async (change) => {
+      const source = sourceNode('customers', 'customers');
+      source.metadata!.columns = [
+        { name: 'customer_id', type: 'text' },
+        { name: 'name', type: 'text' },
+      ];
+      const target = transformNode();
+      const input = resolveCanvasDvtCompositionInputs({
+        nodes: [source, target],
+        edges: [edge(source.id)],
+        targetNodeId: target.id,
+      })[0]!;
+      const occurrence = createPendingSourceOccurrence(input);
+      target.metadata = {
+        ...target.metadata,
+        relationalAuthoringDraft: createCanvasRelationalAuthoringDraft({
+          sources: [occurrence],
+          operations: [],
+          outputRelationId: null,
+          positions: new Map(),
+        }),
+      };
+      const before = JSON.stringify(target);
+      source.metadata!.columns =
+        change === 'reorder'
+          ? [
+              { name: 'name', type: 'text' },
+              { name: 'customer_id', type: 'text' },
+            ]
+          : [
+              { name: 'other_id', type: 'text' },
+              { name: 'name', type: 'text' },
+            ];
+      const apply = vi.fn();
+      await renderOperationWorkbench(target, [source], apply);
+      if (change === 'reorder') {
+        expect(
+          container.querySelector('[data-pending="true"][data-operator="read"]')
+        ).not.toBeNull();
+        expect(
+          container.querySelector('[data-slot="canvas-relational-tree-unavailable"]')
+        ).toBeNull();
+      } else {
+        expect(
+          container.querySelector('[data-slot="canvas-relational-tree-unavailable"]')?.textContent
+        ).toBe(COPY.relationalTreeInputIdentityUnavailableMessage);
+        expect(container.querySelector('[data-slot="canvas-relational-tree-apply"]')).toBeNull();
+      }
+      expect(apply).not.toHaveBeenCalled();
+      expect(JSON.stringify(target)).toBe(before);
+    }
+  );
   it('reopens an existing JOIN as a producer for a staged JOIN and a pending Source', async () => {
     const customers = {
       ...sourceNode('customers', 'customers'),

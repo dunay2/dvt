@@ -64,7 +64,7 @@ function CanvasRelationalTreeContentView({
       />
     );
   }
-  if (model.projection == null)
+  if (model.projection == null || model.session.restorationUnavailable)
     return (
       <section
         data-slot="canvas-relational-tree-unavailable"

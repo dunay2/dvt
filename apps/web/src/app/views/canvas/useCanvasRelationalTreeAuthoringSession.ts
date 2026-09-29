@@ -3,22 +3,16 @@ import { useCallback } from 'react';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type * as W from './canvasRelationalTreeWorkbench.types';
-import { useCanvasRelationalTreeApplyCommand } from './useCanvasRelationalTreeApplyCommand';
+import { createCanvasRelationalTreeApplyCommand } from './canvasRelationalTreeApplyCommand';
 import { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 import { useCanvasRelationalTreeExistingSeed } from './useCanvasRelationalTreeExistingSeed';
 import { useCanvasRelationalTreeRemoval } from './useCanvasRelationalTreeRemoval';
 import type { CanvasRelationalTreeProjection } from './canvasRelationalTreeProjection';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { useCanvasRelationalTreeAnalysisContext } from './useCanvasRelationalTreeAnalysisContext';
-import { createCanvasRelationalAuthoringDraft } from './canvasRelationalAuthoringDraft';
 import { useCanvasRelationalAuthoringDraftHydration } from './useCanvasRelationalAuthoringDraftHydration';
 import { useCanvasRelationalGraphAuthoring } from './useCanvasRelationalGraphAuthoring';
-import {
-  areCanvasInspectorNodeDraftsEqual,
-  canonicalizeCanvasInspectorNodeDraft,
-  createCanvasInspectorNodeDraft,
-} from './canvasInspectorAuthoringModel';
-import { createCanvasRelationalTreeApplyDraft } from './canvasRelationalTreeApplyDraft';
+import { prepareCanvasRelationalTreeApply } from './canvasRelationalTreeApplyDraft';
 export function useCanvasRelationalTreeAuthoringSession(
   args: Readonly<{
     enabled: boolean;
@@ -32,14 +26,13 @@ export function useCanvasRelationalTreeAuthoringSession(
   }>
 ) {
   const { authoring, edges, enabled, inputs, nodes, transformNode } = args;
-  const editable = authoring?.canEditNode === true;
   const state = useCanvasRelationalTreeDraftState();
   const { hydrateExisting, baselineDraft, seed } = useCanvasRelationalTreeExistingSeed({
     document: args.document,
     projection: args.projection,
     onHydrate: state.hydrate,
   });
-  useCanvasRelationalAuthoringDraftHydration({
+  const restorationUnavailable = useCanvasRelationalAuthoringDraftHydration({
     enabled,
     transformNode,
     document: args.document,
@@ -47,6 +40,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     hydrateExisting,
     state,
   });
+  const editable = authoring?.canEditNode === true && !restorationUnavailable;
   const effectiveDraft = !state.active && seed != null ? seed.draft : state.joinDraft;
   const { analysis } = useCanvasRelationalTreeAnalysisContext({
     document: effectiveDraft,
@@ -54,55 +48,29 @@ export function useCanvasRelationalTreeAuthoringSession(
     nodes,
     edges,
   });
-  const effectiveInputIds =
-    !state.active && seed != null ? seed.inputIds : state.slots.selectedInputIds;
   const effectiveOutputRelationId =
     (!state.active && seed != null ? seed.outputRelationId : state.outputRelationId) ?? null;
-  const cleared =
-    state.active &&
-    state.joinDraft == null &&
-    state.operation == null &&
-    state.slots.selectedInputIds.length === 0 &&
-    state.pendingSources.length === 0 &&
-    state.stagedOperations.length === 0;
-  const outputChanged = effectiveOutputRelationId !== (seed?.outputRelationId ?? null);
-  const outputSelectsSemanticRoot =
-    analysis?.document != null &&
-    effectiveOutputRelationId != null &&
-    effectiveOutputRelationId === analysis.session.rootId;
-  const hasIncompleteGraph =
-    state.pendingSources.length > 0 ||
-    state.stagedOperations.length > 0 ||
-    (outputChanged && !outputSelectsSemanticRoot);
-  const relationalAuthoringDraft = hasIncompleteGraph
-    ? createCanvasRelationalAuthoringDraft({
-        sources: state.pendingSources,
-        operations: state.stagedOperations,
-        outputRelationId: effectiveOutputRelationId,
-        positions: state.positions,
-      })
-    : undefined;
-  const applyOperation = !state.active && seed != null ? seed.operation : state.operation;
-  const applyDraft = createCanvasRelationalTreeApplyDraft({
+  const prepared = prepareCanvasRelationalTreeApply({
     transformNode,
-    relationalAuthoringDraft: cleared ? null : relationalAuthoringDraft,
+    active: state.active,
     joinDraft: state.joinDraft,
-    operation: applyOperation,
+    operation: !state.active && seed != null ? seed.operation : state.operation,
+    hasSelectedInputs: state.slots.selectedInputIds.length > 0,
+    pending: {
+      sources: state.pendingSources,
+      operations: state.stagedOperations,
+      outputRelationId: effectiveOutputRelationId,
+      positions: state.positions,
+    },
+    baselineOutputId: seed?.outputRelationId ?? null,
+    semanticRootId: analysis?.document == null ? null : analysis.session.rootId,
   });
-  const hasDraftChanges = !areCanvasInspectorNodeDraftsEqual(
-    createCanvasInspectorNodeDraft(transformNode),
-    canonicalizeCanvasInspectorNodeDraft(transformNode, applyDraft)
-  );
-  const apply = useCanvasRelationalTreeApplyCommand({
-    cleared,
-    relationalAuthoringDraft: cleared ? null : relationalAuthoringDraft,
+  const apply = createCanvasRelationalTreeApplyCommand({
+    ...prepared.request,
     authoring,
     editable,
-    joinDraft: state.joinDraft,
-    operation: applyOperation,
     reject: state.setApplyRejection,
     reset: state.reset,
-    transformNode,
   });
   const start = useCallback(() => {
     if (!enabled || !editable) return false;
@@ -128,10 +96,11 @@ export function useCanvasRelationalTreeAuthoringSession(
     accept: state.hydrate,
   });
   return {
+    restorationUnavailable,
     analysis,
     ...graph,
     removal,
-    cleared,
+    cleared: prepared.cleared,
     applyRejection: state.applyRejection,
     active: state.active,
     baselineDraft,
@@ -148,7 +117,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     start,
     positions: state.positions,
     setPositions: state.setPositions,
-    hasIncompleteGraph,
-    hasDraftChanges,
+    hasIncompleteGraph: prepared.hasIncompleteGraph,
+    hasDraftChanges: prepared.hasDraftChanges,
   } as const;
 }
