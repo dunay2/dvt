@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+/** Gesture-provider behavior against the canonical selection adapter. */
 import React, { act, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { fireEvent } from '@testing-library/dom';
