@@ -189,7 +189,9 @@ describe('SourceColumnsPanel', () => {
     expect(actorId.getAttribute('aria-selected')).toBe('true');
     expect(document.activeElement).toBe(actorId);
     expect(container.querySelector('[data-slot="source-column-detail"]')).toBeNull();
-    act(() => fireEvent.keyDown(actorId, { key: 'Enter' }));
+    act(() => {
+      fireEvent.keyDown(actorId, { key: 'Enter' });
+    });
     expect(container.querySelector('[data-slot="source-column-row"]')).toBeNull();
     expect(container.querySelector('[data-slot="source-column-detail"]')?.textContent).toContain(
       'actor_id'
@@ -201,11 +203,11 @@ describe('SourceColumnsPanel', () => {
 
   it('returns to the filtered list with focus and navigates only matching columns', () => {
     render();
-    act(() =>
+    act(() => {
       fireEvent.input(container.querySelector('[data-slot="source-columns-search"]')!, {
         target: { value: '_id' },
-      })
-    );
+      });
+    });
     act(() => container.querySelector<HTMLButtonElement>('[data-column-name="event_id"]')!.click());
     const detail = (): Element => container.querySelector('[data-slot="source-column-detail"]')!;
     expect(detail().querySelector('h3')?.textContent).toBe('event_id');
@@ -230,27 +232,29 @@ describe('SourceColumnsPanel', () => {
     expect(
       container.querySelector<HTMLButtonElement>('[data-slot="source-column-next"]')!.disabled
     ).toBe(true);
-    act(() => fireEvent.keyDown(detail(), { key: 'Escape' }));
+    act(() => {
+      fireEvent.keyDown(detail(), { key: 'Escape' });
+    });
     expect(document.activeElement?.getAttribute('data-column-name')).toBe('tenant_id');
   });
 
   it('filters only real key facts and keeps empty results coherent', () => {
     render();
-    act(() =>
+    act(() => {
       fireEvent.change(container.querySelector('[data-slot="source-columns-filter"]')!, {
         target: { value: 'key' },
-      })
-    );
+      });
+    });
     expect(
       Array.from(container.querySelectorAll<HTMLElement>('[data-column-name]')).map(
         (row) => row.dataset.columnName
       )
     ).toEqual(['event_id', 'tenant_id']);
-    act(() =>
+    act(() => {
       fireEvent.input(container.querySelector('[data-slot="source-columns-search"]')!, {
         target: { value: 'missing' },
-      })
-    );
+      });
+    });
     expect(container.querySelector('[data-slot="source-column-row"]')).toBeNull();
     expect(container.textContent).toContain('No columns match');
   });
