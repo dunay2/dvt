@@ -1,5 +1,11 @@
 /** Adapt one field token's gestures to the existing selection and connection commands. */
-import { useContext, type DragEvent, type KeyboardEvent } from 'react';
+import {
+  useContext,
+  type DragEvent,
+  type KeyboardEvent,
+  type MouseEvent,
+  type PointerEvent,
+} from 'react';
 import type { SemanticWorkbenchNodeData } from './semanticWorkbenchProjection';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import { useCanvasRelationalFieldSelection } from './CanvasRelationalFieldSelectionProvider';
@@ -100,12 +106,20 @@ export function useCanvasRelationalFieldToken(
     if (actions?.enabled && data.fieldTargetRelationId != null && source != null)
       actions.add(source, data.fieldTargetRelationId);
   };
+  const onRemovePointerDown = (event: PointerEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+  };
+  const onRemoveClick = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    removeExpression();
+  };
   return {
     reference,
     interactive,
     keyboardShortcut,
     showRemove: expression && actions != null,
-    removeExpression,
+    onRemovePointerDown,
+    onRemoveClick,
     onDragStart,
     onDragEnd: () => actions?.end(),
     onKeyDown,

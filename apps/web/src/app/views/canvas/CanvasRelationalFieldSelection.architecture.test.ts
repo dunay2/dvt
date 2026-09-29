@@ -20,6 +20,8 @@ describe('tree field selection boundaries', () => {
       expect(view.split('\n').length).toBeLessThan(200);
     }
     expect(token).toContain('onDragEnd={token.onDragEnd}');
+    expect(token).toContain('onClick={token.onRemoveClick}');
+    expect(token).not.toMatch(/actions\.|removeExpression\(|onClick=\{\(event\)/);
     expect(tokenGestures).toContain('onDragEnd: () => actions?.end()');
   });
   it('shares graph admission and keeps async lifetime separate from port presentation', () => {

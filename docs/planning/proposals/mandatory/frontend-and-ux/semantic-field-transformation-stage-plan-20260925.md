@@ -669,6 +669,14 @@ Extract the oversized existing Workbench projector by projection versus layout
 responsibility only where needed for this change. Delete the moved bodies;
 retain one expression projector and one compact renderer, with bounded files.
 
+The relational canvas layout remains a composition boundary, not a second
+semantic authority. Its current component mixes geometry derivation, card
+movement and JSX with connection-selection state. Keep geometry and movement
+in one presentation hook; leave the component to assemble edge, output and node
+layers. Connection gestures may remain local UI state, but semantic connection
+and removal commands stay in the existing action owners. The layout hook must
+not read or write the workspace draft, call providers or infer new field flow.
+
 - Read path: `ProjectCanvasRelationalTree`.
 - Write path: `ConfigureCanvasDvtNode`, then `SaveWorkspaceGraphDraft`.
 - Data path: `PreviewCanvasTransformRows`; Preview/Run ignore visual-stage state.

@@ -61,11 +61,8 @@ export function CanvasRelationalFieldToken({
           disabled={!token.interactive}
           aria-label={`${copy.removeOutputField}: ${title}`}
           title={copy.removeOutputField}
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => {
-            event.stopPropagation();
-            token.removeExpression();
-          }}
+          onPointerDown={token.onRemovePointerDown}
+          onClick={token.onRemoveClick}
         >
           <X aria-hidden="true" size={12} />
         </button>
