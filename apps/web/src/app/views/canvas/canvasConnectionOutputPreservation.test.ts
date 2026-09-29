@@ -28,6 +28,8 @@ import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { composeSourceRelation } from './canvasComposeSourceRelation';
 import { projectInteractiveCanvasColumns } from './canvasGraphNodeColumnProjection';
 import { createSourceDocument } from './canvasSourceDocument';
+import { createCanvasRelationalAnalysisReader } from './canvasRelationalAnalysisMemo';
+import { setDvtSourceOutputIncluded } from './canvasDvtSourceSemanticAuthoring';
 
 function scenario(): { model: CanonicalNode; nodes: CanonicalNode[]; draft: CanvasDraftSession } {
   const client = graphSource('client');
@@ -67,6 +69,95 @@ function scenario(): { model: CanonicalNode; nodes: CanonicalNode[]; draft: Canv
 }
 
 describe('connection preserves authored output', () => {
+  it('keeps the tree inspectable when Source withdraws a field still named by a saved binding', () => {
+    const { model, nodes } = scenario();
+    const result = setDvtSourceOutputIncluded(nodes[0]!, 'client_id', false);
+    if (result.outcome !== 'applied') throw new Error('Expected source publication update');
+    const edges = [
+      {
+        sourceId: 'client',
+        targetId: model.id,
+        inputBindings: {
+          version: 'v1' as const,
+          fields: ['client_id', 'country'].map((producerFieldId) => ({
+            inputId: producerFieldId,
+            producerFieldId,
+          })),
+        },
+      },
+    ];
+    const before = structuredClone(edges);
+    const tree = projectCanvasRelationalTree({
+      node: model,
+      nodes: [result.node, nodes[1]!, model],
+      edges,
+    });
+    expect(tree.ok).toBe(true);
+    if (!tree.ok) throw new Error('Expected inspectable withdrawn field');
+    expect(tree.projection.root.output.fields).toEqual([]);
+    expect(tree.projection.root.unavailableFields?.map((field) => field.displayName)).toEqual([
+      'id_cliente',
+    ]);
+    expect(edges).toEqual(before);
+  });
+  it('recomputes a retained document when only persisted Input bindings change and recovers on reconnection', () => {
+    const { model, nodes, draft } = scenario();
+    const read = createCanvasRelationalAnalysisReader();
+    const graph = { node: model, nodes, edges: draft.workingSet.visibleEdges };
+    const initial = read(graph);
+    const changed = read({
+      ...graph,
+      edges: [
+        {
+          sourceId: 'client',
+          targetId: model.id,
+          metadata: {
+            inputBindings: {
+              version: 'v1',
+              fields: [{ inputId: 'country-input', producerFieldId: 'country' }],
+            },
+          },
+        },
+      ],
+    });
+    expect(changed).not.toBe(initial);
+    expect(changed.failure).toBeNull();
+    expect(
+      changed.semantic?.publication?.get(changed.semantic.index.rootId)?.unavailableFieldIds
+    ).toEqual(['output-id']);
+    const restored = read(graph);
+    expect(restored.semantic?.publication).toBeUndefined();
+    expect(restored.semantic?.digest).toBe(initial.semantic?.digest);
+  });
+  it('retains a withdrawn reference for repair without publishing it or counting it', async () => {
+    const { model, nodes } = scenario();
+    const before = structuredClone(model);
+    const graph = {
+      node: model,
+      nodes,
+      edges: [
+        {
+          sourceId: 'client',
+          targetId: model.id,
+          inputBindings: {
+            version: 'v1' as const,
+            fields: [{ inputId: 'country-input', producerFieldId: 'country' }],
+          },
+        },
+      ],
+    };
+    const tree = projectCanvasRelationalTree(graph);
+    expect(tree.ok).toBe(true);
+    if (!tree.ok) throw new Error('Expected inspectable retained document');
+    expect(tree.projection.root.output.fields).toEqual([]);
+    expect(tree.projection.root.unavailableFields?.map((field) => field.displayName)).toEqual([
+      'id_cliente',
+    ]);
+    expect(tree.projection.root.projectionSummary?.passthroughFieldCount).toBe(0);
+    const truth = await projectCanvasNodePresentationTruth(graph);
+    expect(truth.columns.visible.filter((field) => field.selected !== false)).toEqual([]);
+    expect(model).toEqual(before);
+  });
   it('exposes only published producer fields to a consumer and never copies producer operations', async () => {
     const { model: producer, nodes, draft } = scenario();
     const consumer = { ...graphModel(), id: 'consumer', name: 'Consumer' };
@@ -194,7 +285,9 @@ describe('connection preserves authored output', () => {
         edges: result.draftSession.workingSet.visibleEdges,
       };
       const truth = await projectCanvasNodePresentationTruth(graph);
-      expect(truth.columns.declared.map((column) => column.name)).toEqual(['id_cliente']);
+      expect(truth.columns.declared.map((column) => column.name)).toEqual(
+        intent === 'additional' ? ['id_cliente'] : []
+      );
       expect(
         truth.columns.inherited
           .filter((column) => column.sourceNodeId === 'orders')
@@ -206,6 +299,10 @@ describe('connection preserves authored output', () => {
       const tree = projectCanvasRelationalTree(graph);
       expect(tree.ok).toBe(true);
       if (!tree.ok) throw new Error('Expected inspectable incomplete draft');
+      if (intent !== 'additional')
+        expect(tree.projection.root.unavailableFields?.map((field) => field.displayName)).toEqual([
+          'id_cliente',
+        ]);
       expect(tree.projection.inputs).toContainEqual(
         expect.objectContaining({ sourceNodeId: 'orders', state: 'pending' })
       );

@@ -46,6 +46,7 @@ export function useCanvasRelationalOperationExecution(node: CanvasRelationalTree
   const label = resolveCanvasViewCopy(language)[presentation.labelKey];
   const disabled =
     context.unapplied ||
+    context.unavailableRelationIds?.has(node.relationId) === true ||
     context.query == null ||
     context.semanticDigest == null ||
     (context.canEditModel && context.preparePreview == null) ||

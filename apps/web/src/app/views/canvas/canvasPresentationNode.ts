@@ -19,6 +19,8 @@ import { presentCanvasFilterSummary } from './canvasPresentationFilterSummary';
 import { resolveCanvasProducerDocument } from './canvasProducerDocument';
 import { projectCanvasInputBindings } from './canvasInputBindings';
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
+import { deriveSubstraitPublication } from '@dvt/substrait-analysis';
+import { resolveUnmappedCanvasReadFields } from './canvasInputFieldEligibility';
 
 export async function projectCanvasPresentationNode(
   args: CanvasPresentationQuery,
@@ -142,10 +144,32 @@ export async function projectCanvasPresentationNode(
       signal,
     });
     signal?.throwIfAborted();
-    const columns =
+    const rawColumns =
       args.node.role === 'input'
         ? projectSourceSelection(base.columns.declared, declared)
         : await presentRelationOutputSelection(semantic, declared, fieldInputs, sources, signal);
+    const denied = nativeModel
+      ? resolveUnmappedCanvasReadFields({
+          ...args,
+          nodeId: args.node.id,
+          document: semantic.document,
+        })
+      : new Set<string>();
+    const unavailable =
+      denied.size === 0
+        ? new Set<string>()
+        : new Set(
+            deriveSubstraitPublication(semantic.document, denied).get(semantic.index.rootId)
+              ?.unavailableFieldIds
+          );
+    const columns =
+      unavailable.size === 0
+        ? rawColumns
+        : canvasColumnTruth(
+            rawColumns.declared.filter((field) => !unavailable.has(field.reference ?? '')),
+            rawColumns.inherited,
+            rawColumns.visible.filter((field) => !unavailable.has(field.reference ?? ''))
+          );
     const filterSummary =
       args.node.role === 'input' ? undefined : await presentCanvasFilterSummary(semantic, signal);
     return {

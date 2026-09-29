@@ -21,6 +21,8 @@ export type CanvasOperationPreviewPorts = Readonly<{
     selectedFieldNames?: readonly string[]
   ) => void;
   sourceOutputFieldsByRelationId?: ReadonlyMap<string, readonly string[]>;
+  inputRevision?: string;
+  unavailableRelationIds?: ReadonlySet<string>;
 }>;
 
 export const CanvasOperationPreviewContext = createContext<
@@ -66,15 +68,25 @@ export function CanvasOperationPreviewProvider({
     preparePreview: ports?.preparePreview,
     relationId: requested?.relationId,
     copy: previewCopy,
-    blocked: state.unapplied,
+    blocked:
+      state.unapplied ||
+      (requested != null && ports?.unavailableRelationIds?.has(requested.relationId) === true),
+    inputRevision: ports?.inputRevision,
   });
   const { reset } = data;
   useEffect(() => {
     setRequested(null);
     reset();
-  }, [ports?.canvasId, state.nodeId, state.semanticDigest, state.unapplied, reset]);
+  }, [
+    ports?.canvasId,
+    state.nodeId,
+    state.semanticDigest,
+    state.unapplied,
+    ports?.inputRevision,
+    reset,
+  ]);
   const execute = (relationId: string, label: string): void => {
-    if (!data.available) return;
+    if (!data.available || ports?.unavailableRelationIds?.has(relationId)) return;
     ports?.onOpenData?.();
     setRequested({
       nodeId: state.nodeId,

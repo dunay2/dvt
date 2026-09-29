@@ -10,6 +10,7 @@ import {
 } from './semanticWorkbenchProjection';
 import type { CanvasRelationalTreeNodeSize } from './canvasRelationalTreeGeometryMetrics';
 import { projectCanvasRelationalStructureGraph } from './canvasRelationalStructureGraph';
+import { flattenCanvasRelationalTree } from './canvasRelationalTreeWorkbenchModel';
 
 export const CANVAS_RELATIONAL_DETAIL_ZOOM = 1.2;
 
@@ -37,7 +38,23 @@ export function projectCanvasRelationalTreeDetails(
           createCanvasRelationalTreeNodeDraft(context.transformNode, 'inner_join', context.draft)
         );
   const projection = projectSemanticWorkbenchGraph(node, { view: 'unlaid' });
-  const nodes = new Map(projection.nodes.map((item) => [item.id, item]));
+  const unavailable = new Set(
+    flattenCanvasRelationalTree(root).flatMap((relation) =>
+      (relation.unavailableFields ?? []).map((field) => field.fieldId)
+    )
+  );
+  const nodes = new Map(
+    projection.nodes.map((item) => {
+      const reference = item.data.fieldReference;
+      return [
+        item.id,
+        reference != null &&
+        (unavailable.has(reference.fieldId) || unavailable.has(reference.sourceFieldId ?? ''))
+          ? { ...item, data: { ...item.data, unavailable: true, fieldReference: undefined } }
+          : item,
+      ];
+    })
+  );
   const inputs = new Map<string, SemanticWorkbenchGraph['edges']>();
   for (const edge of projection.edges) {
     if (edge.data?.semanticEdgeKind !== 'expression') continue;
@@ -59,7 +76,14 @@ export function projectCanvasRelationalTreeDetails(
       }
       const structure = projectCanvasRelationalStructureGraph(
         relation,
-        sourceOutputFieldsByRelationId
+        sourceOutputFieldsByRelationId,
+        new Set(
+          projection.nodes
+            .filter((item) => ids.has(item.id))
+            .flatMap((item) =>
+              item.data.fieldReference == null ? [] : [item.data.fieldReference.fieldId]
+            )
+        )
       );
       const graph: SemanticWorkbenchGraph = {
         ...structure,

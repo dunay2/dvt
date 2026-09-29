@@ -7,16 +7,18 @@ import {
   type ProducerGraph,
 } from '@dvt/substrait-analysis';
 import { ConnectedSourceRefSchema, type ConnectedSourceRef } from '@dvt/contracts';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanonicalNode } from '../../types/canonical';
 import { resolveCanvasPhysicalCompositionInput } from './canvasPhysicalCompositionInput';
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { bindCanvasSubstraitInputs, physicalReadMatches } from './canvasSubstraitInputBinding';
+import { readDvtSourceOutputProjection } from './canvasDvtSourceSemanticAuthoring';
+import { readCanvasInputBindings, type CanvasInputBindingEdge } from './canvasInputBindings';
 
 type Args = Readonly<{
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
-  edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
+  edges: readonly CanvasInputBindingEdge[];
 }>;
 
 export function resolveCanvasSubstraitGraphBindings(
@@ -70,7 +72,25 @@ export function resolveCanvasSubstraitGraphBindings(
     }
     documents.set(id, document);
   }
-  const graph = { targetId: args.node.id, documents, sources: physicalSources, edges: args.edges };
+  const graph = {
+    targetId: args.node.id,
+    documents,
+    sources: physicalSources,
+    edges: args.edges.map((edge) => ({ ...edge, inputBindings: readCanvasInputBindings(edge) })),
+    sourcePublications: new Map(
+      [...physicalSources.keys()].map(
+        (id) =>
+          [
+            id,
+            new Set(
+              readDvtSourceOutputProjection(nodes.get(id)!)?.outputs.map(
+                (field) => field.sourceFieldName!
+              ) ?? []
+            ),
+          ] as const
+      )
+    ),
+  };
   const result = resolveProducerGraph(graph).get(args.node.id);
   if (result == null)
     throw new Error('PostgreSQL output projection requires canonical Substrait authority.');

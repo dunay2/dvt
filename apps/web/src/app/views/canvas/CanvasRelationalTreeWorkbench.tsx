@@ -68,7 +68,12 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
       ports={
         preview == null
           ? undefined
-          : { ...preview, sourceOutputFieldsByRelationId: model.sourceOutputFieldsByRelationId }
+          : {
+              ...preview,
+              sourceOutputFieldsByRelationId: model.sourceOutputFieldsByRelationId,
+              inputRevision: model.inputRevision,
+              unavailableRelationIds: model.unavailableRelationIds,
+            }
       }
       nodeId={transformNode.id}
       semanticDigest={model.projection?.semanticDigest ?? null}

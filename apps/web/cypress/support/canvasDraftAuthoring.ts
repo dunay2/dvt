@@ -62,6 +62,7 @@ export type StubCanvasDraftReadOptions = {
   substraitNInputJoin?: boolean;
   substraitUnionAll?: boolean;
   projectionModel?: boolean;
+  projectionInputFields?: readonly string[];
   substraitUnsupported?: boolean;
   title?: string;
   readOnly?: boolean;
@@ -101,6 +102,7 @@ export function buildCanvasAuthoringDraft({
   substraitNInputJoin = false,
   substraitUnionAll = false,
   projectionModel = false,
+  projectionInputFields,
   substraitUnsupported = false,
   title,
   largeGraph = false,
@@ -558,6 +560,19 @@ export function buildCanvasAuthoringDraft({
           sourceId: 'source-customers',
           targetId: 'transform-customers',
           relation: 'lineage',
+          ...(projectionInputFields == null
+            ? {}
+            : {
+                metadata: {
+                  inputBindings: {
+                    version: 'v1' as const,
+                    fields: projectionInputFields.map((producerFieldId) => ({
+                      inputId: `input:${producerFieldId}`,
+                      producerFieldId,
+                    })),
+                  },
+                },
+              }),
         },
       ],
     });

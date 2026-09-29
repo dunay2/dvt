@@ -19,9 +19,18 @@ export function resolveCanvasPhysicalInputBindings(
     throw new SubstraitAnalysisError('invalid_binding', 'Producer publication is unavailable.');
   const published = publication.outputs.map((field) => field.sourceFieldName!);
   if (bindings != null) {
-    if (bindings.fields.some((field) => !published.includes(field.producerFieldId)))
+    if (
+      bindings.fields.some(
+        (field) =>
+          !publication.source.fields.some((physical) => physical.name === field.producerFieldId)
+      )
+    )
       throw new SubstraitAnalysisError('invalid_binding', 'Input binding is unresolved.');
-    return bindings;
+    // Resolve the admitted input without rewriting saved slots or authored expressions.
+    return {
+      ...bindings,
+      fields: bindings.fields.filter((field) => published.includes(field.producerFieldId)),
+    };
   }
   if (
     published.length === publication.source.fields.length &&

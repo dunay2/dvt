@@ -5,7 +5,13 @@ import { E2E_PROJECT_WORKSPACE, stubShellBootstrapApis } from '../workspaceSessi
 
 export function stubWorkbenchScenario(
   scenario:
-    'saved-join' | 'pending-join' | 'partial-join' | 'pending-chain' | 'pending-set' | 'projection'
+    | 'saved-join'
+    | 'pending-join'
+    | 'partial-join'
+    | 'pending-chain'
+    | 'pending-set'
+    | 'projection'
+    | 'withdrawn-projection'
 ): void {
   stubShellBootstrapApis({ scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'] });
   stubE2eJsonApi('GET', '/workspace/context', {
@@ -18,7 +24,8 @@ export function stubWorkbenchScenario(
     plugins: { dvt: { available: true } },
   });
   stubStatefulCanvasDraftAuthoring({
-    projectionModel: scenario === 'projection',
+    projectionModel: scenario === 'projection' || scenario === 'withdrawn-projection',
+    ...(scenario === 'withdrawn-projection' ? { projectionInputFields: ['country'] } : {}),
     substraitInnerJoin: scenario === 'saved-join',
     substraitNInputJoin: scenario === 'partial-join' || scenario === 'pending-chain',
     substraitPendingComposition: scenario === 'pending-join' || scenario === 'pending-chain',

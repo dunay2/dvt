@@ -2,7 +2,7 @@
 title: Semantic Field Transformation Stage Plan
 status: Active
 owner: Web / Canvas / VTX2
-last_reviewed: 2026-09-28
+last_reviewed: 2026-09-29
 planning_type: implementation-plan
 ---
 
@@ -55,6 +55,46 @@ projection authority and fails closed.
 | Preview transformed rows              | Boundary drift          | Reuse query adapter           | `CanvasTransformDataSample`      | `PreviewCanvasTransformRows`  | row/schema oracle                     | new runtime step            |
 
 ## Delivery Boundaries
+
+### Withdrawn input publication (#3422 regression)
+
+Reconnecting a Source with fewer admitted columns must not revive its physical
+schema inside a retained Transform. Keep the authored Substrait document and
+stable identities for repair; do not silently remove expressions or insert a
+Project into JOIN. An unavailable dependency is not a published output.
+
+```mermaid
+flowchart LR
+  Before[Outer selection] --> Display[Read/Input display filter only]
+  Saved[Unchanged authored document] --> Wrong[Unfiltered Output and cached Preview]
+  Publication[Connected publication and explicit Input bindings] --> Analysis[Shared Substrait dependency analysis]
+  Saved --> Analysis
+  Analysis --> Valid[Valid Output fields and counts]
+  Analysis --> Broken[Retained references with red unavailable diagnostic]
+  Analysis --> Query[Preview admission before provider access]
+  Publication --> Revision[Invalidate old and in-flight row samples]
+```
+
+Reuse `ProjectCanvasRelationalTree` (Canvas semantic inspection) and
+`PreviewCanvasTransformRows` (protected Canvas data query), including their
+current authorization and draft-save ports. Dependency facts belong to
+`@dvt/substrait-analysis`, not React, a second DTO, or a second expression AST.
+Value lineage comes from canonical schema derivation. Missing predicate,
+grouping, ordering or other row dependencies invalidate the relation; an
+independent constant does not acquire an invented field dependency.
+
+Output excludes unavailable fields. A separate diagnostic retains their names
+in red for repair, with no draggable published-field reference. Counters use
+valid outputs. Preview of an authored operation with unavailable dependencies
+fails closed; it does not silently execute a rewritten partial operation.
+Changing admitted inputs invalidates existing and in-flight samples even when
+the semantic plan hash is unchanged. Restoring the same input repairs the read
+model without authoring writes or identity changes.
+
+| Scenario                                   | Opportunity                              | Pattern                                   | Owner / rail                                           | Proof                                                                         | Excluded                                     |
+| ------------------------------------------ | ---------------------------------------- | ----------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------- | -------------------------------------------- |
+| Source publication shrinks after reconnect | Presentation filter hides semantic drift | Shared dependency projection              | Substrait analysis / ProjectCanvasRelationalTree       | Direct, derived, constant, row-dependency and restore cases                   | Persisted validity flags; hidden projections |
+| Old sample survives unchanged plan hash    | Incomplete query identity                | Input-revision invalidation and admission | CanvasTransformDataSample / PreviewCanvasTransformRows | Old and in-flight samples rejected; provider not called for invalid operation | New endpoint; database mutation              |
 
 ### Advanced field-flow editor (#3422)
 

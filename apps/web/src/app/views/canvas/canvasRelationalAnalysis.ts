@@ -3,15 +3,19 @@ import {
   indexSubstraitRelations,
   type SubstraitDocument,
   type SubstraitRelationIndex,
+  deriveSubstraitPublication,
+  type RelationPublication,
 } from '@dvt/substrait-analysis';
 import type { ConnectedSourceRef } from '@dvt/contracts';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanonicalNode } from '../../types/canonical';
+import type { CanvasInputBindingEdge } from './canvasInputBindings';
 import {
   resolveCanvasDvtCompositionInputs,
   type CanvasDvtCompositionInput,
 } from './canvasDvtCompositionInputCatalog';
 import { resolveCanvasProducerDocument } from './canvasProducerDocument';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { resolveUnmappedCanvasReadFields } from './canvasInputFieldEligibility';
 import type {
   CanvasRelationalTreeInput,
   CanvasRelationalTreeProjectionResult,
@@ -20,7 +24,7 @@ import type {
 export type CanvasRelationalAnalysisArgs = Readonly<{
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
-  edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
+  edges: readonly CanvasInputBindingEdge[];
 }>;
 type Failure = Extract<CanvasRelationalTreeProjectionResult, { ok: false }>['failure']['code'];
 export type CanvasRelationalAnalysis = Readonly<{
@@ -34,6 +38,7 @@ export type CanvasRelationalAnalysis = Readonly<{
     index: SubstraitRelationIndex;
     digest: string;
     document: SubstraitDocument;
+    publication?: ReadonlyMap<string, RelationPublication>;
   }> | null;
   failure: Failure | null;
 }>;
@@ -154,6 +159,7 @@ export function analyzeCanvasRelations(
     const document = resolveCanvasProducerDocument(args.node, args.nodes)!;
     const indexed = indexSubstraitRelations(document);
     if (!indexed.ok) return { ...base, failure: 'invalid-semantic-authority' };
+    const denied = resolveUnmappedCanvasReadFields({ ...args, nodeId: args.node.id, document });
     return {
       ...base,
       failure: null,
@@ -164,6 +170,7 @@ export function analyzeCanvasRelations(
         index: indexed.index,
         digest: authority.semanticDocument.semanticPlan.sha256,
         document,
+        ...(denied.size === 0 ? {} : { publication: deriveSubstraitPublication(document, denied) }),
       },
       projectedInputs: projectInputs(indexed.index, inputs, producers),
     };

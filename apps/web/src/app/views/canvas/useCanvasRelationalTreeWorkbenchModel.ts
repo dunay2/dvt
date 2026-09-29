@@ -11,6 +11,7 @@ import {
   projectCanvasRelationalTreeCatalogue,
   projectPendingCanvasRelationalTreeCatalogue,
   projectCanvasSourceOccurrencePublication,
+  flattenCanvasRelationalTree,
 } from './canvasRelationalTreeWorkbenchModel';
 import type {
   CanvasRelationalTreeAuthoringContract,
@@ -59,9 +60,17 @@ export function useCanvasRelationalTreeWorkbenchModel(
     return projectCanvasSourceOccurrencePublication(
       projection?.inputs ?? [],
       session.occurrences.pending,
-      args.nodes
+      args.nodes,
+      args.edges,
+      args.transformNode.id
     );
-  }, [args.nodes, projection?.inputs, session.occurrences.pending]);
+  }, [
+    args.nodes,
+    args.edges,
+    args.transformNode.id,
+    projection?.inputs,
+    session.occurrences.pending,
+  ]);
   const selection = useCanvasRelationalSelection(args.transformNode.id, projection);
   const { selectedLocator, selectTreeNode } = selection;
 
@@ -139,6 +148,16 @@ export function useCanvasRelationalTreeWorkbenchModel(
   };
 
   return {
+    inputRevision: JSON.stringify(
+      inputs.map((input) => [input.nodeId, input.fields, input.inputBindings])
+    ),
+    unavailableRelationIds: new Set(
+      projection == null
+        ? []
+        : flattenCanvasRelationalTree(projection.root)
+            .filter((node) => node.rowUnavailable || (node.unavailableFields?.length ?? 0) > 0)
+            .flatMap((node) => (node.relationId == null ? [] : [node.relationId]))
+    ),
     authoringAvailable,
     catalogue,
     inputs,

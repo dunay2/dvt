@@ -1,17 +1,23 @@
 /** Resolve dependency ownership once for presentation, authoring and execution adapters. */
-import type { ConnectedSourceRef, ConnectionRef } from '@dvt/contracts';
+import type { ConnectedSourceRef, ConnectionRef, DvtInputBindingsV1 } from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
 
 import { SubstraitAnalysisError, type SubstraitDocument } from './document.js';
 import { resolveProducerDocuments } from './producerDocuments.js';
 import { resolveProducerInput } from './producerInput.js';
+import { requireProducerPublication } from './producerPublication.js';
 import { indexSubstraitRelations, type SubstraitRelationIndex } from './relationIndex.js';
 
 export type ProducerGraph = Readonly<{
   targetId: string;
   documents: ReadonlyMap<string, SubstraitDocument>;
   sources: ReadonlyMap<string, ConnectedSourceRef>;
-  edges: readonly Readonly<{ sourceId: string; targetId: string }>[];
+  edges: readonly Readonly<{
+    sourceId: string;
+    targetId: string;
+    inputBindings?: DvtInputBindingsV1;
+  }>[];
+  sourcePublications?: ReadonlyMap<string, ReadonlySet<string>>;
 }>;
 export type ResolvedProducer = Readonly<{
   document: SubstraitDocument;
@@ -82,7 +88,9 @@ export function resolveProducerGraph(graph: ProducerGraph): ReadonlyMap<string, 
       connections.some((ref) => jcsCanonicalize(ref) !== jcsCanonicalize(connection))
     )
       reject('Producer inputs must share one execution connection.');
-    resolved.set(item.id, { document: document!, index: indexed.index, connection: connection! });
+    const current = { document: document!, index: indexed.index, connection: connection! };
+    requireProducerPublication(graph, item.id, current);
+    resolved.set(item.id, current);
     visiting.delete(item.id);
   }
   return resolved;

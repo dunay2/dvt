@@ -17,6 +17,7 @@ export type CanvasModelDataQueryOptions = Readonly<{
   canvasId: string;
   nodeId: string;
   semanticDigest: string | null;
+  inputRevision?: string;
   relationId?: string;
   canEditModel: boolean;
   query?: ICanvasTransformDataSampleQueryPort;
@@ -86,6 +87,7 @@ export function useCanvasModelDataQuery({
   preparePreview,
   copy,
   blocked,
+  inputRevision,
 }: CanvasModelDataQueryOptions) {
   const [sample, setSample] = useState<TransformDataSampleResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -100,6 +102,7 @@ export function useCanvasModelDataQuery({
     setLoading(false);
     setError(null);
   }, []);
+  useEffect(() => reset(), [canvasId, nodeId, semanticDigest, inputRevision, blocked, reset]);
   useEffect(
     () => () => {
       requestId.current += 1;

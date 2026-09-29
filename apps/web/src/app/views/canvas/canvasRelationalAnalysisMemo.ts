@@ -4,6 +4,7 @@ import {
   type CanvasRelationalAnalysis,
   type CanvasRelationalAnalysisArgs,
 } from './canvasRelationalAnalysis';
+import { readCanvasInputBindings } from './canvasInputBindings';
 
 export function createCanvasRelationalAnalysisReader(): (
   args: CanvasRelationalAnalysisArgs
@@ -22,6 +23,10 @@ export function createCanvasRelationalAnalysisReader(): (
       role,
       metadata,
       ...[...sourceIds].sort(),
+      ...args.edges
+        .filter((edge) => edge.targetId === id)
+        .map((edge) => JSON.stringify([edge.sourceId, readCanvasInputBindings(edge) ?? null]))
+        .sort(),
       ...args.nodes
         .filter((node) => sourceIds.has(node.id))
         .flatMap((node) => [node.id, node.kind, node.role, node.metadata]),

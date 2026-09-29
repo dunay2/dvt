@@ -62,11 +62,22 @@ describe('selected operation data preview', () => {
     controls.remove();
     useApplicationLanguageStore.setState({ language: 'en' });
   });
-  function render(relationId: string, unapplied = false): void {
+  function render(
+    relationId: string,
+    unapplied = false,
+    inputRevision = '',
+    unavailableRelationIds?: ReadonlySet<string>
+  ): void {
     act(() =>
       root.render(
         <CanvasOperationPreviewProvider
-          ports={{ canvasId: 'canvas-test', query, dataHost: container }}
+          ports={{
+            canvasId: 'canvas-test',
+            query,
+            dataHost: container,
+            inputRevision,
+            unavailableRelationIds,
+          }}
           nodeId="model"
           semanticDigest={digest}
           canEditModel={false}
@@ -82,6 +93,29 @@ describe('selected operation data preview', () => {
       controls.querySelector<HTMLButtonElement>('[data-slot="test-execute"]')!.click();
     });
   }
+  it('clears old rows when admitted inputs change without changing the plan hash', async () => {
+    query.previewTransformRows.mockResolvedValue(sample('join-1'));
+    render('join-1', false, 'both');
+    await preview();
+    expect(container.textContent).toContain('intermediate-result');
+    render('join-1', false, 'country-only', new Set(['join-1']));
+    expect(container.textContent).not.toContain('intermediate-result');
+    await preview();
+    expect(query.previewTransformRows).toHaveBeenCalledOnce();
+  });
+  it('rejects an in-flight sample after a publication change', async () => {
+    let resolve!: (result: TransformDataSampleResponse) => void;
+    query.previewTransformRows.mockReturnValue(
+      new Promise((done) => {
+        resolve = done;
+      })
+    );
+    render('join-1', false, 'both');
+    await preview();
+    render('join-1', false, 'country-only');
+    await act(async () => resolve(sample('join-1')));
+    expect(container.textContent).not.toContain('intermediate-result');
+  });
   it.each([
     { language: 'es' as const, count: 3, limit: 20, truncated: false, expected: '3/20 registros' },
     { language: 'es' as const, count: 0, limit: 20, truncated: false, expected: '0/20 registros' },

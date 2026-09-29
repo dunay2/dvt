@@ -4,7 +4,8 @@ import type { SemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 
 export function projectCanvasRelationalStructureGraph(
   relation: CanvasRelationalTreeNode,
-  sourceOutputFieldsByRelationId?: ReadonlyMap<string, readonly string[]>
+  sourceOutputFieldsByRelationId?: ReadonlyMap<string, readonly string[]>,
+  expressionFieldIds: ReadonlySet<string> = new Set()
 ): SemanticWorkbenchGraph {
   const nodes: SemanticWorkbenchGraph['nodes'] = [];
   const edges: SemanticWorkbenchGraph['edges'] = [];
@@ -56,6 +57,20 @@ export function projectCanvasRelationalStructureGraph(
     },
   });
   addFields(relation, output);
+  for (const field of relation.unavailableFields ?? []) {
+    if (relation.operator === 'read' || expressionFieldIds.has(field.fieldId)) continue;
+    nodes.push({
+      id: `${relation.locator}/unavailable/${field.fieldId}`,
+      position: { x: 0, y: 0 },
+      data: {
+        label: `⚠\n${field.displayName ?? ''}`,
+        semanticKind: 'field',
+        semanticGroup: 'transformation',
+        detail: field.displayName ?? '',
+        unavailable: true,
+      },
+    });
+  }
   return {
     nodes,
     edges,
