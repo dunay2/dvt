@@ -158,15 +158,12 @@ describe('Canvas relational-tree Workbench apply', () => {
 
       expect(applied).toHaveLength(1);
       const saved = applied[0]?.relationalAuthoringDraft;
-      expect(saved).toMatchObject({
-        sources: [],
-        operations: [],
-      });
-      expect(saved?.outputRelationId).not.toBeNull();
+      expect(saved).toBeNull();
       const persisted = applyCanvasInspectorNodeDraft(transform, applied[0]!);
       await act(async () => {
         root.render(
           <CanvasRelationalTreeWorkbench
+            ref={workbench}
             transformNode={persisted}
             nodes={[customers, orders, persisted]}
             edges={[edge(customers.id), edge(orders.id)]}
@@ -179,10 +176,10 @@ describe('Canvas relational-tree Workbench apply', () => {
         );
         await Promise.resolve();
       });
+      expect(workbench.current).toMatchObject({ hasUnappliedChanges: false, canApply: false });
       expect(
-        container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')
-          ?.disabled
-      ).toBe(true);
+        container.querySelector('[data-slot="canvas-relational-tree-inspection"]')
+      ).not.toBeNull();
       expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(0);
       expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(1);
       expect(

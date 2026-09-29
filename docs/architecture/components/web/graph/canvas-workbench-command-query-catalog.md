@@ -352,6 +352,14 @@ consumer. Negative tests cover fan-out across operations and Output, reuse of
 one instance on both JOIN ports, direct source-to-Output admission and occupied
 ports. Disconnect/reconnect and two aliased instances remain positive cases.
 
+Once Apply absorbs every pending source and operation into the canonical tree,
+retire the completed authoring draft. A non-null terminal snapshot with no
+pending cards is redundant: the canonical root alone owns Model Output. It must
+not override a later root insertion on read, edit, save or reopen. Retain drafts
+with pending cards and explicitly disconnected (`null`) Output; neither is a
+completed snapshot. Regress a completed Transform followed by Filter insertion:
+Transform feeds Filter only, and Filter feeds Model Output.
+
 ```mermaid
 flowchart LR
   A[Source instance A] -->|one consumer| J[JOIN Input L]

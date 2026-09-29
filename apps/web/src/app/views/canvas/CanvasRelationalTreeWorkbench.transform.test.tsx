@@ -128,7 +128,7 @@ describe('Transform card in the production Workbench', () => {
     await waitFor(() => expect(applied).toHaveBeenCalledOnce());
     const saved = applied.mock.calls[0]![0];
     expect(saved.dvt).toMatchObject({ mode: 'substrait', shape: 'projection' });
-    expect(saved.relationalAuthoringDraft).toMatchObject({ sources: [], operations: [] });
+    expect(saved.relationalAuthoringDraft).toBeNull();
     expect(container.querySelectorAll('[data-pending-operation="true"]')).toHaveLength(0);
     await act(async () => fireEvent.click(container.querySelector('[data-operator="project"]')!));
     await waitFor(() => {

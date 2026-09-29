@@ -12,13 +12,24 @@ import { restorePendingSourceOccurrence } from './relational-source-occurrence/p
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
 
+/** A completed tree owns its terminal through its canonical root, not a draft snapshot. */
+export function retainIncompleteCanvasRelationalAuthoringDraft(
+  draft: DvtRelationalAuthoringDraftV1
+): DvtRelationalAuthoringDraftV1 | null {
+  return draft.sources.length === 0 &&
+    draft.operations.length === 0 &&
+    draft.outputRelationId !== null
+    ? null
+    : draft;
+}
+
 export function readCanvasRelationalAuthoringDraft(
   node: CanonicalNode
 ): DvtRelationalAuthoringDraftV1 | null {
   const value = node.metadata?.[DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY];
   if (value == null) return null;
   const parsed = DvtRelationalAuthoringDraftV1Schema.safeParse(value);
-  return parsed.success ? parsed.data : null;
+  return parsed.success ? retainIncompleteCanvasRelationalAuthoringDraft(parsed.data) : null;
 }
 
 export function createCanvasRelationalAuthoringDraft(

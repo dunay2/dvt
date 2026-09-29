@@ -145,10 +145,6 @@ describe('Canvas relational-tree Workbench mixed-cross', () => {
       value: { type: JoinRel_JoinType.LEFT },
     });
     expect(indexed.index.relations.size).toBe(5);
-    expect(applied[0]?.relationalAuthoringDraft).toMatchObject({
-      sources: [],
-      operations: [],
-      outputRelationId: indexed.index.rootId,
-    });
+    expect(applied[0]?.relationalAuthoringDraft).toBeNull();
   });
 });
