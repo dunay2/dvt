@@ -12,6 +12,7 @@ import {
 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { retainIncompleteCanvasRelationalAuthoringDraft } from './canvasRelationalAuthoringDraft';
 import {
   applyDbtNodeAuthoringMetadata,
   createDbtNodeAuthoringMetadata,
@@ -124,7 +125,11 @@ export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspe
       ? { semanticAuthoringIssue: dvtResolution.reason }
       : {}),
     ...(relationalAuthoringDraft.success
-      ? { relationalAuthoringDraft: relationalAuthoringDraft.data }
+      ? {
+          relationalAuthoringDraft: retainIncompleteCanvasRelationalAuthoringDraft(
+            relationalAuthoringDraft.data
+          ),
+        }
       : {}),
     ...(objectFilePostgresDraft == null ? {} : { objectFilePostgres: objectFilePostgresDraft }),
     ...(httpJsonArtifactDraft == null ? {} : { httpJsonArtifact: httpJsonArtifactDraft }),
@@ -397,9 +402,12 @@ export function applyCanvasInspectorNodeDraft(
         : applyHttpJsonArtifactAuthoringDraft(baseNode, draft.httpJsonArtifact, workspaceScope);
   if (draft.relationalAuthoringDraft === undefined) return applied;
   const metadata = { ...applied.metadata };
-  if (draft.relationalAuthoringDraft === null)
-    delete metadata[DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY];
-  else metadata[DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY] = draft.relationalAuthoringDraft;
+  const incomplete =
+    draft.relationalAuthoringDraft == null
+      ? null
+      : retainIncompleteCanvasRelationalAuthoringDraft(draft.relationalAuthoringDraft);
+  if (incomplete === null) delete metadata[DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY];
+  else metadata[DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY] = incomplete;
   return { ...applied, metadata };
 }
 

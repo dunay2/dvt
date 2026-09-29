@@ -174,11 +174,7 @@ describe('canonical draft apply', () => {
         }),
       })
     );
-    expect(saved?.relationalAuthoringDraft).toMatchObject({
-      sources: [],
-      operations: [],
-      outputRelationId: session.rootId,
-    });
+    expect(saved?.relationalAuthoringDraft).toBeNull();
     expect(
       areCanvasInspectorNodeDraftsEqual(
         createCanvasInspectorNodeDraft(transformNode),

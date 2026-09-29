@@ -95,11 +95,7 @@ describe('Canvas relational-tree Workbench cross', () => {
     );
     expect(applied).toHaveLength(1);
     expect(applied[0]?.dvt).toMatchObject({ mode: 'substrait', shape: 'cross_join' });
-    expect(applied[0]?.relationalAuthoringDraft).toMatchObject({
-      sources: [],
-      operations: [],
-      outputRelationId: stagedCross!.getAttribute('data-relation-id'),
-    });
+    expect(applied[0]?.relationalAuthoringDraft).toBeNull();
   });
 
   it('reopens a persisted CROSS and connects another staged CROSS without a predicate editor', async () => {

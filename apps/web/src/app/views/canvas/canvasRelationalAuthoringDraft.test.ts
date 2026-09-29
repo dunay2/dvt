@@ -1,9 +1,38 @@
 import { describe, expect, it } from 'vitest';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
-import { graphJoin } from './canvasRelationGraph.test-support';
-import { restoreCanvasRelationalAuthoringDraft } from './canvasRelationalAuthoringDraft';
+import { graphJoin, graphModel } from './canvasRelationGraph.test-support';
+import {
+  readCanvasRelationalAuthoringDraft,
+  restoreCanvasRelationalAuthoringDraft,
+} from './canvasRelationalAuthoringDraft';
+import {
+  applyCanvasInspectorNodeDraft,
+  createCanvasInspectorNodeDraft,
+} from './canvasInspectorAuthoringModel';
 
 describe('relational authoring draft restoration', () => {
+  it.each([false, true])(
+    'retires completed wiring without reviving it on save (disconnected: %s)',
+    (disconnected) => {
+      const { document, session } = graphJoin();
+      const draft = {
+        version: 'v1' as const,
+        sources: [],
+        operations: [],
+        outputRelationId: disconnected ? null : session.rootId,
+        positions: {},
+      };
+      const model = graphModel(document);
+      model.metadata = { ...model.metadata, relationalAuthoringDraft: draft };
+      const expected = disconnected ? draft : null;
+      expect(readCanvasRelationalAuthoringDraft(model)).toEqual(expected);
+      const inspector = createCanvasInspectorNodeDraft(model);
+      expect(inspector.relationalAuthoringDraft ?? null).toEqual(expected);
+      const saved = applyCanvasInspectorNodeDraft(model, inspector);
+      expect(saved.metadata?.relationalAuthoringDraft ?? null).toEqual(expected);
+    }
+  );
+
   it('restores only work that is not already part of the applied semantic tree', () => {
     const { document, session } = graphJoin();
     const indexed = indexSubstraitRelations(document);

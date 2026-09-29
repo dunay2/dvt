@@ -13,6 +13,7 @@ import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemantic
 import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 import type { CanvasStagedOperationKind } from './canvasStagedOperation';
 import { isCanvasSetOperation } from './canvasRelationalOperationChoices';
+import { retainIncompleteCanvasRelationalAuthoringDraft } from './canvasRelationalAuthoringDraft';
 
 function appliedOperation(
   operation: CanvasStagedOperationKind,
@@ -49,16 +50,18 @@ function resolveAppliedSemantic(args: {
 function removeAppliedRelations(
   draft: DvtRelationalAuthoringDraftV1,
   document: SubstraitDocument | null
-): DvtRelationalAuthoringDraftV1 {
+): DvtRelationalAuthoringDraftV1 | null {
   if (document == null) return draft;
   const indexed = indexSubstraitRelations(document);
   if (!indexed.ok) return draft;
   const appliedIds = new Set(indexed.index.relations.keys());
-  return DvtRelationalAuthoringDraftV1Schema.parse({
-    ...draft,
-    sources: draft.sources.filter((source) => !appliedIds.has(source.relationId)),
-    operations: draft.operations.filter((operation) => !appliedIds.has(operation.relationId)),
-  });
+  return retainIncompleteCanvasRelationalAuthoringDraft(
+    DvtRelationalAuthoringDraftV1Schema.parse({
+      ...draft,
+      sources: draft.sources.filter((source) => !appliedIds.has(source.relationId)),
+      operations: draft.operations.filter((operation) => !appliedIds.has(operation.relationId)),
+    })
+  );
 }
 
 export function createCanvasRelationalTreeApplyDraft(args: {
