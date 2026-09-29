@@ -3,6 +3,9 @@ export {
   dvtSubstraitExpressionReader,
 } from './substraitExpressionReader.js';
 export { resolveFunctionReference } from './substrait-profile/functionReference.js';
+export { sumOverload } from './substrait-profile/sum.js';
+export { createSumFunction } from './substraitSumFunction.js';
+export { inspectFunctionProfile } from './substrait-profile/functions.js';
 export {
   createDvtSubstraitFetchDraft,
   createDvtSubstraitSortDraft,

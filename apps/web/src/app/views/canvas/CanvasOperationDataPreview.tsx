@@ -38,17 +38,23 @@ export const CanvasOperationPreviewContext = createContext<
 >(null);
 
 export function CanvasOperationPreviewProvider({
-  ports,
+  ports: transport,
+  scope,
   children,
   ...state
 }: Readonly<{
   ports?: CanvasOperationPreviewPorts;
+  scope?: Pick<
+    CanvasOperationPreviewPorts,
+    'sourceOutputFieldsByRelationId' | 'inputRevision' | 'unavailableRelationIds'
+  >;
   nodeId: string;
   semanticDigest: string | null;
   canEditModel: boolean;
   unapplied: boolean;
   children: ReactNode;
 }>): JSX.Element {
+  const ports = transport == null ? undefined : { ...transport, ...scope };
   const [requested, setRequested] = useState<{
     nodeId: string;
     relationId: string;

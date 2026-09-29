@@ -57,4 +57,15 @@ describe('Canvas relational Expression/Derive stage projection', () => {
       'Substrait connected-source projection is invalid.'
     );
   });
+
+  it('projects Expression stage details without changing canonical semantic bytes or digest', () => {
+    const draft = withScalarOutput();
+    const before = globalThis.structuredClone(draft);
+    const digest = draft.sidecar.semanticPlanSha256;
+
+    projectExpressionStage(draft);
+
+    expect(draft).toEqual(before);
+    expect(draft.sidecar.semanticPlanSha256).toBe(digest);
+  });
 });

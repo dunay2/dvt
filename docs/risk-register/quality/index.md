@@ -51,6 +51,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Capability evidence can drift into unsupported semantic or provider claims](R-20260903-SUBSTRAIT-CAPABILITY-ADMISSION.yaml)
 - [Capability matrix tests and docs governance can drift after doc relocations](R-20260409-CAPABILITY-MATRIX-DOCS-GOVERNANCE-DRIFT.yaml)
 - [Capability-routed Temporal workers require operational queue alignment](R-20260513-MW-D2-TEMPORAL-WORKER-ROUTING.yaml)
+- [Catalog expressions could diverge from PostgreSQL result semantics](R-20260929-SQL-EXPRESSION-PHYSICAL-DRIFT.yaml)
 - [CI rebuild dedupe or job consolidation could hide missing explicit build prerequisites](R-20260409-CI-REBUILD-DEDUPE-AND-ADAPTER-POSTGRES-CONSOLIDATION.yaml)
 - [Compiled-code hard cut invalidates histories and payloads that depend on the retired wire model](R-20260905-ARTIFACT-COMPILED-CODE-HARD-CUT.yaml)
 - [Concurrent cancel deliveries could dispatch duplicate provider commands](R-20260802-RUN-CANCEL-SUBMISSION-RECEIPT.yaml)

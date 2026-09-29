@@ -43,7 +43,7 @@ class FormulaReader {
   ) {
     if (args.formula.length > 8192) throw new Error('Formula is too long.');
     const pattern =
-      /\s*(?:('(?:[^']|'')*')|("(?:[^"]|"")*")|(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|([A-Za-z_][A-Za-z_0-9]*)|([()+*/,-]))/y;
+      /\s*(?:('(?:[^']|'')*')|("(?:[^"]|"")*")|(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|([A-Za-z_][A-Za-z_0-9]*)|(<=|>=|<>|!=|[=<>()+*/,-]))/y;
     let offset = 0;
     while (offset < args.formula.length) {
       if (args.formula.slice(offset).trim() === '') break;
@@ -68,6 +68,13 @@ class FormulaReader {
   private take(symbol: string): boolean {
     const token = this.tokens[this.cursor];
     if (token?.kind !== 'symbol' || token.value !== symbol) return false;
+    this.cursor += 1;
+    return true;
+  }
+
+  private word(word: string): boolean {
+    const token = this.tokens[this.cursor];
+    if (token?.kind !== 'name' || token.value.toUpperCase() !== word) return false;
     this.cursor += 1;
     return true;
   }
@@ -112,7 +119,7 @@ class FormulaReader {
     if (this.depth > 64) throw new Error('Formula nesting is too deep.');
     try {
       if (this.take('(')) {
-        const value = this.sum();
+        const value = this.disjunction();
         if (!this.take(')')) throw new Error('Expected closing parenthesis.');
         return value;
       }
@@ -148,10 +155,11 @@ class FormulaReader {
         throw new Error('Expected a field, constant or function.');
       if (token.kind === 'name' && this.take('(')) {
         if (token.value.toUpperCase() === 'CAST') return this.nullCast();
+        if (token.value.toUpperCase() === 'EXTRACT') return this.extractYear();
         const operands: FormulaValue[] = [];
         if (!this.take(')')) {
           do {
-            operands.push(this.sum());
+            operands.push(this.disjunction());
           } while (this.take(','));
           if (!this.take(')')) throw new Error('Expected closing parenthesis.');
         }
@@ -198,6 +206,17 @@ class FormulaReader {
     return formulaNull(typeName, false);
   }
 
+  private extractYear(): FormulaValue {
+    if (!this.word('YEAR') || !this.word('FROM')) throw new Error('EXTRACT requires YEAR FROM.');
+    const value = this.sum();
+    if (!this.word('AT') || !this.word('TIME') || !this.word('ZONE'))
+      throw new Error("EXTRACT requires AT TIME ZONE 'UTC'.");
+    const zone = this.tokens[this.cursor++];
+    if (zone?.kind !== 'string' || zone.value !== 'UTC' || !this.take(')'))
+      throw new Error('Only UTC year extraction is admitted.');
+    return this.call('extract year (UTC)', [value]);
+  }
+
   private product(): FormulaValue {
     let value = this.atom();
     while (true) {
@@ -216,8 +235,41 @@ class FormulaReader {
     }
   }
 
+  private comparison(): FormulaValue {
+    const left = this.sum();
+    if (this.word('IS')) {
+      const negated = this.word('NOT');
+      if (!this.word('NULL')) throw new Error('Expected NULL after IS or IS NOT.');
+      return this.call(negated ? 'is_not_null' : 'is_null', [left]);
+    }
+    for (const [symbol, name] of [
+      ['=', 'equal'],
+      ['<>', 'not_equal'],
+      ['!=', 'not_equal'],
+      ['>', 'gt'],
+      ['>=', 'gte'],
+      ['<', 'lt'],
+      ['<=', 'lte'],
+    ]) {
+      if (this.take(symbol!)) return this.call(name!, [left, this.sum()]);
+    }
+    return left;
+  }
+
+  private conjunction(): FormulaValue {
+    let value = this.comparison();
+    while (this.word('AND')) value = this.call('and', [value, this.comparison()]);
+    return value;
+  }
+
+  private disjunction(): FormulaValue {
+    let value = this.conjunction();
+    while (this.word('OR')) value = this.call('or', [value, this.conjunction()]);
+    return value;
+  }
+
   read(): FormulaValue {
-    const value = this.sum();
+    const value = this.disjunction();
     if (this.cursor !== this.tokens.length) throw new Error('Unexpected formula suffix.');
     return value;
   }
@@ -238,7 +290,8 @@ export function describeDerivedOutputFormula(
   if (ordinal != null) {
     const name = inputNames[ordinal];
     if (name == null) return null;
-    return /^[A-Za-z_][A-Za-z_0-9]*$/.test(name) && !/^(true|false|null)$/i.test(name)
+    return /^[A-Za-z_][A-Za-z_0-9]*$/.test(name) &&
+      !/^(true|false|null|and|or|is|not|cast|extract|year|from|at|time|zone)$/i.test(name)
       ? name
       : `"${name.replaceAll('"', '""')}"`;
   }
@@ -269,6 +322,25 @@ export function describeDerivedOutputFormula(
   if (fn.case !== 'scalarFunction') return null;
   const reference = resolveFunctionReference(plan, fn.value.functionReference);
   if (!reference.ok) return null;
+  if (
+    reference.value.urn === 'extension:io.substrait:functions_datetime' &&
+    reference.value.name === 'extract:req_ptstz_str'
+  ) {
+    const [component, operand, zone] = fn.value.arguments.map((argument) => argument.argType);
+    if (
+      fn.value.arguments.length !== 3 ||
+      component?.case !== 'enum' ||
+      component.value !== 'YEAR' ||
+      operand?.case !== 'value' ||
+      zone?.case !== 'value'
+    )
+      return null;
+    const timezone = dvtSubstraitExpression.literalValue(zone.value);
+    const argument = describeDerivedOutputFormula(plan, operand.value, inputNames);
+    return timezone?.dataType === 'string' && timezone.value === 'UTC' && argument != null
+      ? `EXTRACT(YEAR FROM ${argument} AT TIME ZONE 'UTC')`
+      : null;
+  }
   const args = fn.value.arguments.map((argument) =>
     argument.argType.case === 'value'
       ? describeDerivedOutputFormula(plan, argument.argType.value, inputNames)

@@ -1,0 +1,28 @@
+---
+id: R-20260929-SQL-EXPRESSION-PHYSICAL-DRIFT
+title: Catalog expressions could diverge from PostgreSQL result semantics
+status: Open
+date: 2026-09-29
+owners:
+  - packages/@dvt/postgres-projection
+severity: High
+probability: Low
+---
+mitigation:
+  summary: >
+    One pinned capability catalog and shared target bindings own admission. SUM i64 explicitly casts
+    PostgreSQL's widened numeric result back to bigint and rejects unsupported invocation modes.
+    Real PostgreSQL tests cover NULL, Unicode, empty values, UTC extraction, physical types and
+    overflow. Physical CTAS nullability is projected separately from logical REQUIRED; publication
+    still checks exact candidate and target digests. Progressive browser flows verify persisted
+    semantic identity through Preview and protected Run.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/adr/ADR-0066-postgresql-stable-table-publication.md
+    - docs/evidence/ED-20260929-sql-expression-verticals.md
+    - apps/api/test/integration/dvtScalarSql.integration.test.ts
+    - apps/api/test/integration/dvtSumSql.integration.test.ts
+    - apps/web/cypress/e2e/canvas/canvas-sql-progressive-live.cy.ts
+  follow_up:
+    - Keep unsupported types and invocation forms closed until their own conformance evidence
+      exists.

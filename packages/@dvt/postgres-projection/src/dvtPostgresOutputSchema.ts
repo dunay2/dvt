@@ -43,7 +43,8 @@ export function projectDvtPostgresOutputSchemaV1(
     ordinal: output.outputOrdinal,
     name: output.name,
     postgresType: POSTGRES_TYPE_BY_SEMANTIC_TYPE[normalizeProjectionDataType(output.dataType)],
-    nullable: output.nullable ?? true,
+    // CREATE TABLE AS preserves values and types, not logical NOT NULL guarantees.
+    nullable: true,
     defaultExpression: null,
     generatedExpression: null,
     collation: null,

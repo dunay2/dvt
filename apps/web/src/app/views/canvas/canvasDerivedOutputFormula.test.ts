@@ -79,6 +79,70 @@ describe('Transform name and formula syntax adapter', () => {
   });
 
   it.each([
+    ['COALESCE(price, NULL, 0)', 'bigint'],
+    ['COALESCE(NULL, 2.5)', 'double precision'],
+    ['COALESCE(NULL, false)', 'boolean'],
+    ["CONCAT_WS('-', first_name, NULL, last_name)", 'string'],
+    ['price * quantity >= 10 AND first_name IS NOT NULL', 'boolean'],
+    ["first_name = 'Ada' OR quantity <> 0 AND price <= 50", 'boolean'],
+    ['IS_NULL(NULL)', 'boolean'],
+    ['AND(GT(price, 2), IS_NOT_NULL(first_name))', 'boolean'],
+  ])('compiles admitted typed SQL and round trips it: %s', (formula, dataType) => {
+    const plan = create(PlanSchema);
+    const result = compileDerivedOutputFormula({
+      formula: formula!,
+      fields,
+      plan,
+      provider: 'postgres',
+    });
+    expect(result.dataType).toBe(dataType);
+    const reopened = compileDerivedOutputFormula({
+      formula: describeDerivedOutputFormula(
+        plan,
+        result.expression,
+        fields.map((field) => field.name)
+      )!,
+      fields,
+      plan: create(PlanSchema),
+      provider: 'postgres',
+    });
+    expect(reopened.dataType).toBe(dataType);
+    expect(reopened.fieldIds).toEqual(result.fieldIds);
+  });
+
+  it('round trips the admitted UTC extraction without losing enum or timezone arguments', () => {
+    const temporalFields = [
+      {
+        fieldId: 'time',
+        name: 'occurred_at',
+        dataType: 'timestamp with time zone',
+        expression: dvtSubstraitExpression.field(0),
+      },
+    ];
+    const plan = create(PlanSchema);
+    const formula = "EXTRACT(YEAR FROM occurred_at AT TIME ZONE 'UTC')";
+    const result = compileDerivedOutputFormula({
+      formula,
+      fields: temporalFields,
+      plan,
+      provider: 'postgres',
+    });
+    expect(result.dataType).toBe('bigint');
+    expect(describeDerivedOutputFormula(plan, result.expression, ['occurred_at'])).toBe(formula);
+  });
+
+  it.each([
+    'COALESCE(price, 2.5)',
+    'AND(price, true)',
+    'price = first_name',
+    'price IS TRUE',
+    'price < quantity < 2',
+    "EXTRACT(MONTH FROM price AT TIME ZONE 'UTC')",
+  ])('rejects incompatible or unadmitted SQL without widening types: %s', (formula) => {
+    expect(validateDerivedOutputFormula({ formula, fields, provider: 'postgres' })).toBe(false);
+  });
+
+  it.each([
     ['NULL', 'string'],
     ['null', 'string'],
     ['COALESCE(UPPER("first_name"), NULL)', 'string'],

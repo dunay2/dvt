@@ -5,15 +5,13 @@ import type { IndexedRelation, SchemaField } from '@dvt/substrait-analysis';
 
 import {
   pgColumnRef,
-  pgCountRows,
   pgQualifiedColumnRef,
   pgRangeVar,
   type PostgresAstNode,
 } from '../postgresAst.js';
 import type { DvtPostgresOrderKey } from '../sortFetchPostgresProjection.js';
-import { countProfile } from '../substrait-profile/count.js';
-import { inspectFunctionProfile } from '../substrait-profile/functions.js';
 
+import { aggregateSql } from './aggregates.js';
 import { expressionSql, predicateSql } from './expressions.js';
 import { joinSql } from './joins.js';
 import { orderClause, sortDirection } from './ordering.js';
@@ -82,14 +80,7 @@ const handlers = {
     const groups = aggregate.groupingExpressions.map(
       (expression) => expressionSql(expression, scope).ast
     );
-    const measures = aggregate.measures.map((measure) => {
-      if (measure.filter != null || measure.measure == null)
-        return unsupported('Filtered aggregates are outside the admitted profile.');
-      const profile = inspectFunctionProfile(scope.plan, measure.measure);
-      if (!profile.ok || profile.value !== countProfile)
-        return unsupported('Aggregate function is outside the admitted profile.');
-      return pgCountRows();
-    });
+    const measures = aggregate.measures.map((measure) => aggregateSql(measure, scope));
     return {
       columns: [...groups, ...measures],
       from: [inputRange(inputs[0]!, 'i0')],

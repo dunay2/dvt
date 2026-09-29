@@ -150,3 +150,11 @@ export function projectPendingCanvasRelationalTreeCatalogue(
     fieldCount: sourceFieldCount(input.nodeId, nodes) ?? input.fields.length,
   }));
 }
+
+export function unavailableCanvasRelationIds(root?: CanvasRelationalTreeNode): ReadonlySet<string> {
+  return new Set(
+    (root == null ? [] : flattenCanvasRelationalTree(root))
+      .filter((node) => node.rowUnavailable || (node.unavailableFields?.length ?? 0) > 0)
+      .flatMap((node) => (node.relationId == null ? [] : [node.relationId]))
+  );
+}

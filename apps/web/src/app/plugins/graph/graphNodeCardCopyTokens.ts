@@ -50,7 +50,10 @@ type GraphNodeCardCopy = Readonly<{
   columnOutputAriaLabelTemplate: string;
   columnAvailableInputAriaLabelTemplate: string;
   columnFunctionCategoryLabels: Readonly<
-    Record<'text' | 'numeric' | 'date-time' | 'conversion' | 'aggregate' | 'window', string>
+    Record<
+      'text' | 'numeric' | 'date-time' | 'boolean' | 'conversion' | 'aggregate' | 'window',
+      string
+    >
   >;
   noCompatibleColumnFunctionsLabel: string;
   noColumnActionsLabel: string;
@@ -173,6 +176,7 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
     text: 'Text functions',
     numeric: 'Numeric functions',
     'date-time': 'Date and time functions',
+    boolean: 'Boolean functions',
     conversion: 'Conversion functions',
     aggregate: 'Aggregate functions',
     window: 'Window functions',
@@ -303,6 +307,7 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
     text: 'Funciones de texto',
     numeric: 'Funciones numéricas',
     'date-time': 'Funciones de fecha y hora',
+    boolean: 'Funciones booleanas',
     conversion: 'Funciones de conversión',
     aggregate: 'Funciones de agregación',
     window: 'Funciones de ventana',

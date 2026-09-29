@@ -15,10 +15,10 @@ export function configureFormulaEditor(
         root: [
           [/'([^']|'')*'/, 'string'],
           [/"([^"]|"")*"/, 'variable'],
-          [/\b(?:true|false|null|cast|as)\b/i, 'keyword'],
+          [/\b(?:true|false|null|cast|as|and|or|is|not|year|from|at|time|zone)\b/i, 'keyword'],
           [/\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b/, 'number'],
           [/[A-Za-z_]\w*(?=\s*\()/, 'type.identifier'],
-          [/[+*/-]/, 'operator'],
+          [/[+*/=<>!-]/, 'operator'],
         ],
       },
     });
@@ -65,7 +65,8 @@ export function configureFormulaEditor(
                 : monaco.languages.CompletionItemKind.Value,
           insertText:
             item.kind === 'function'
-              ? `${item.text}(${Array.from({ length: item.argumentCount ?? 1 }, (_, index) => `\${${index + 1}}`).join(', ')})`
+              ? (item.template?.replace('{column}', '${1}') ??
+                `${item.text}(${Array.from({ length: item.argumentCount ?? 1 }, (_, index) => `\${${index + 1}}`).join(', ')})`)
               : item.text,
           insertTextRules:
             item.kind === 'function'

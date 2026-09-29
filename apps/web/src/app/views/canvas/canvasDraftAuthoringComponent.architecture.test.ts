@@ -37,7 +37,8 @@ describe('canvas draft authoring component architecture', () => {
     expect(GRAPH_STRATEGY_CONTRACTS_SOURCE).not.toContain('authoringPolicy');
     expect(GRAPH_STRATEGY_CONTRACTS_SOURCE).not.toContain('surfacePolicy');
     expect(SURFACE_STRATEGY_CONTRACTS_SOURCE).toContain('CanvasSurfaceStrategy');
-    expect(SURFACE_STRATEGY_CONTRACTS_SOURCE).toContain('contextual-overlay');
+    expect(SURFACE_STRATEGY_CONTRACTS_SOURCE).toContain("placement: 'right-inspector'");
+    expect(SURFACE_STRATEGY_CONTRACTS_SOURCE).not.toContain('contextual-overlay');
     expect(DVT_TRANSFORMATION_STRATEGY_SOURCE).not.toContain('authoringPolicy');
     expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('CanvasGraphStrategy');
     expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('graphStrategy');

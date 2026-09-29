@@ -10,6 +10,10 @@ const PANEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasNodeWorkbenchPanel.tsx'
 );
+const PANEL_CONTROLLER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasNodeWorkbenchController.ts'
+);
 const AUTHORING_SECTION_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasInspectorAuthoringSection.tsx'
@@ -33,7 +37,9 @@ describe('Canvas node workbench draft controller architecture', () => {
     expect(CONTROLLER_SOURCE).not.toContain('DbtAuthoringFields');
     expect(CONTROLLER_SOURCE).not.toContain('DvtAuthoringFields');
 
-    expect(PANEL_SOURCE).toContain(
+    expect(PANEL_SOURCE).toContain('useCanvasNodeWorkbenchController(props)');
+    expect(PANEL_SOURCE).not.toContain('useCanvasNodeWorkbenchDraftController');
+    expect(PANEL_CONTROLLER_SOURCE).toContain(
       'useCanvasNodeWorkbenchDraftController(node, authoring.workspaceScope)'
     );
     expect(PANEL_SOURCE).not.toContain('authoritativeNodeRef');

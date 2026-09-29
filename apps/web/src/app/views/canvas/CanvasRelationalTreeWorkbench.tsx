@@ -65,16 +65,12 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
   });
   return (
     <CanvasOperationPreviewProvider
-      ports={
-        preview == null
-          ? undefined
-          : {
-              ...preview,
-              sourceOutputFieldsByRelationId: model.sourceOutputFieldsByRelationId,
-              inputRevision: model.inputRevision,
-              unavailableRelationIds: model.unavailableRelationIds,
-            }
-      }
+      ports={preview}
+      scope={{
+        sourceOutputFieldsByRelationId: model.sourceOutputFieldsByRelationId,
+        inputRevision: model.inputRevision,
+        unavailableRelationIds: model.unavailableRelationIds,
+      }}
       nodeId={transformNode.id}
       semanticDigest={model.projection?.semanticDigest ?? null}
       canEditModel={model.authoringAvailable}

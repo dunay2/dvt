@@ -6,11 +6,13 @@ import { resolveFunctionReference, type FunctionIdentity } from './functionRefer
 import { unsupportedProfile, type ProfileInspection } from './inspection.js';
 import type { FunctionProfile, ProfileFunction } from './invocation.js';
 import { rowNumberProfile } from './rowNumber.js';
+import { sumProfiles } from './sum.js';
 
 /** Executable bindings only. Semantic support remains owned by the contracts catalogue. */
 export const functionProfiles = [
   countProfile,
   rowNumberProfile,
+  ...sumProfiles,
 ] as const satisfies readonly FunctionProfile[];
 
 function profileKey(kind: ProfileFunction['$typeName'], identity: FunctionIdentity): string {
@@ -36,7 +38,9 @@ export function inspectFunctionProfile(
       entry.profileStatus === 'supported-profile' &&
       entry.identity.sourceKind === 'simple-extension' &&
       entry.identity.urn === profile.identity.urn &&
-      entry.identity.name === profile.identity.name
+      entry.identity.name === profile.identity.name.split(':')[0] &&
+      (!profile.identity.name.includes(':') ||
+        entry.overloads?.some((overload) => overload.signature === profile.identity.name))
   );
   if (!supported) return unsupportedProfile('unsupported-catalogue-capability');
   const inspection = profile.inspect(fn);

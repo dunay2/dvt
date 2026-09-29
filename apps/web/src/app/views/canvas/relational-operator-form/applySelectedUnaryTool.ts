@@ -13,6 +13,8 @@ type UnaryFormRequest = SelectedUnaryRequest &
     tool: 'filter' | 'sort' | 'fetch' | 'aggregate' | 'window';
     alias: string;
     fieldId: string;
+    aggregateFunction?: 'count' | 'sum';
+    measureFieldId?: string;
     partitionFieldIds?: readonly string[];
     value: string;
     capabilityId: string;

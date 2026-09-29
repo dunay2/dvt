@@ -30,6 +30,7 @@ Evidence documents that justify or validate relevant changes.
 - [Canvas happy-path draggable proof after create/save](ed-20260503-canvas-happy-path-draggable-proof.md)
 - [Canvas Multi-Worksheet Draft Contract](ed-20260527-canvas-multi-worksheet-draft.md)
 - [Canvas Workflow E2E Usability Restoration](ed-20260601-canvas-workflow-e2e-usability.md)
+- [Catalog SQL expression authoring and progressive PostgreSQL verticals](ED-20260929-sql-expression-verticals.md)
 - [Compact selected-operation data preview](ED-20260919-selected-operation-preview.md)
 - [Context](ED-20260404-mw-a2-graph-source-cardinality-and-boundary-hardening.md)
 - [Context](ED-20260405-mwa2-policy-unbounded-precedence.md)

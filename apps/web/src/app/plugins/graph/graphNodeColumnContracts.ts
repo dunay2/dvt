@@ -30,7 +30,7 @@ export type GraphNodeColumn = Readonly<{
   targetHandleId?: string;
   children?: readonly GraphNodeColumn[];
   functionMenu?: Readonly<{
-    category: 'text' | 'numeric' | 'date-time' | 'conversion' | 'aggregate' | 'window';
+    category: 'text' | 'numeric' | 'date-time' | 'boolean' | 'conversion' | 'aggregate' | 'window';
     items: readonly GraphNodeColumnFunction[];
   }>;
 }>;

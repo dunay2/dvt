@@ -114,7 +114,38 @@ export function OperatorFormFields({
         </label>
       )}
       {tool.id === 'aggregate' ? (
-        <p className="text-(--text-muted)">COUNT(*) → {values.alias}</p>
+        <>
+          <label className="block">
+            {copy.measure}
+            <select
+              value={values.aggregateFunction}
+              onChange={(event) =>
+                change({ aggregateFunction: event.target.value === 'sum' ? 'sum' : 'count' })
+              }
+            >
+              <option value="count">COUNT(*)</option>
+              <option value="sum" disabled={!tool.measureFields?.length}>
+                SUM
+              </option>
+            </select>
+          </label>
+          {values.aggregateFunction === 'sum' ? (
+            <label className="block">
+              {copy.measureField}
+              <select
+                required
+                value={values.measureFieldId}
+                onChange={(event) => change({ measureFieldId: event.target.value })}
+              >
+                {tool.measureFields?.map((field) => (
+                  <option key={field.fieldId} value={field.fieldId}>
+                    {field.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+        </>
       ) : null}
     </>
   );

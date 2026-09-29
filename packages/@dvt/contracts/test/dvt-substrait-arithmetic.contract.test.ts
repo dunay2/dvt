@@ -6,6 +6,24 @@ import {
 } from '../src/index.js';
 
 describe('bounded arithmetic signatures', () => {
+  it('admits the official variadic CONCAT_WS signature without inventing NULL handling options', () => {
+    const entry = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
+      (candidate) =>
+        candidate.kind === 'standard' &&
+        candidate.identity.sourceKind === 'simple-extension' &&
+        candidate.identity.name === 'concat_ws'
+    );
+    expect(entry).toMatchObject({
+      profileStatus: 'supported-profile',
+      invocation: {
+        signature: 'concat_ws:str_str',
+        argumentTypes: ['str', 'str'],
+        minimumArgumentCount: 2,
+        outputType: 'str',
+        options: [],
+      },
+    });
+  });
   it.each(['add', 'subtract', 'multiply'])('admits exact numeric overloads for %s', (name) => {
     const entry = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
       (candidate) =>

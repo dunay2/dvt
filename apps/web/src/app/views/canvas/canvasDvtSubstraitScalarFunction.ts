@@ -1,13 +1,6 @@
 /** Build one admitted scalar expression independently of relation placement. */
-import { create } from '@bufbuild/protobuf';
 import type { Expression } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import {
-  TypeSchema,
-  Type_I64Schema,
-  Type_Nullability,
-  Type_StringSchema,
-} from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1 } from '@dvt/contracts';
 import {
   admitsCompleteArgumentCount,
@@ -46,7 +39,7 @@ export function buildDvtSubstraitScalarFunction(
   }
 
   const invocation = capability.invocation ?? entry.invocation;
-  const signature = invocation?.signature ?? `${entry.identity.name}:str`;
+  const signature = capability.signature;
   const extractYearUtc =
     entry.identity.urn === 'extension:io.substrait:functions_datetime' &&
     entry.identity.name === 'extract' &&
@@ -62,26 +55,6 @@ export function buildDvtSubstraitScalarFunction(
       : args.operands,
     leadingEnumArguments: extractYearUtc ? ['YEAR'] : undefined,
     options: invocation?.options,
-    outputType:
-      capability.category === 'numeric'
-        ? create(TypeSchema, {
-            kind:
-              invocation?.outputType === 'i64'
-                ? { case: 'i64', value: { nullability: Type_Nullability.NULLABLE } }
-                : { case: 'fp64', value: { nullability: Type_Nullability.NULLABLE } },
-          })
-        : extractYearUtc
-          ? create(TypeSchema, {
-              kind: {
-                case: 'i64',
-                value: create(Type_I64Schema, { nullability: Type_Nullability.NULLABLE }),
-              },
-            })
-          : create(TypeSchema, {
-              kind: {
-                case: 'string',
-                value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
-              },
-            }),
+    outputType: capability.outputType,
   });
 }

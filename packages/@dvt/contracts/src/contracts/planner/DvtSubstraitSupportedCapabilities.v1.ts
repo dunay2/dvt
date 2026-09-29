@@ -53,10 +53,41 @@ interface SupportedCapabilityGroup {
 
 const LOWER_ID = functionId('scalar-function', 'functions_string', 'lower');
 const CONCAT_ID = functionId('scalar-function', 'functions_string', 'concat');
+const CONCAT_WS_ID = functionId('scalar-function', 'functions_string', 'concat_ws');
 const COALESCE_ID = functionId('scalar-function', 'functions_comparison', 'coalesce');
 const EXTRACT_ID = functionId('scalar-function', 'functions_datetime', 'extract');
 const DIVIDE_ID = functionId('scalar-function', 'functions_arithmetic', 'divide');
+const SUM_ID = functionId('aggregate-function', 'functions_arithmetic', 'sum');
 const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
+  {
+    entryIds: [SUM_ID],
+    useCaseRefs: ['dvt:#3456'],
+    proofRef: 'apps/api/test/integration/dvtSumSql.integration.test.ts',
+    overloadsByEntryId: {
+      [SUM_ID]: ['i64', 'fp64'].map((type) => ({
+        signature: `sum:${type}`,
+        argumentTypes: [type],
+        minimumArgumentCount: 1,
+        maximumArgumentCount: 1,
+        outputType: type,
+        options: [{ name: 'overflow', preference: ['ERROR'] }],
+      })),
+    },
+  },
+  {
+    entryIds: [CONCAT_WS_ID],
+    useCaseRefs: ['dvt:#3456'],
+    proofRef: 'apps/api/test/integration/dvtScalarSql.integration.test.ts',
+    invocationByEntryId: {
+      [CONCAT_WS_ID]: {
+        signature: 'concat_ws:str_str',
+        argumentTypes: ['str', 'str'],
+        minimumArgumentCount: 2,
+        outputType: 'str',
+        options: [],
+      },
+    },
+  },
   {
     entryIds: [DIVIDE_ID],
     useCaseRefs: ['dvt:#3434'],

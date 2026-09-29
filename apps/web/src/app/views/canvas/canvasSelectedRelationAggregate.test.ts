@@ -3,8 +3,77 @@ import { deriveSubstraitSchemas, indexSubstraitRelations } from '@dvt/substrait-
 import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { applySelectedRelationAggregate } from './canvasSelectedRelationAggregate';
+import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
+import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
 
 describe('selected Aggregate authoring', () => {
+  it.each(['2', '2.5'])(
+    'sums the numeric expression %s and preserves its identity when edited',
+    async (formula) => {
+      const session = new CanvasRelationAnalysisSession('sum-authoring');
+      session.receive(connectedNamesProjectionDraft());
+      await applySelectedRelationDerivedOutput(session, {
+        intent: 'edit',
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        alias: 'amount',
+        formula,
+      });
+      const input = await session.query(session.rootId);
+      const request = {
+        intent: 'insert' as const,
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        fieldId: input.bindings[0]!.fieldId,
+        alias: 'total',
+        aggregateFunction: 'sum' as const,
+        measureFieldId: input.bindings.at(-1)!.fieldId,
+      };
+      const document = await applySelectedRelationAggregate(session, request);
+      const projected = await projectSubstraitToPostgresSql(document);
+      expect(projected.sql).toContain('sum(');
+      expect(projected.projection.outputs.at(-1)).toMatchObject({
+        name: 'total',
+        dataType: formula === '2' ? 'i64' : 'fp64',
+        nullable: true,
+      });
+      const before = (await session.query(session.rootId)).bindings.map((field) => field.fieldId);
+      await applySelectedRelationAggregate(session, {
+        ...request,
+        intent: 'edit',
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        alias: 'revenue',
+      });
+      expect((await session.query(session.rootId)).bindings.map((field) => field.fieldId)).toEqual(
+        before
+      );
+      session.dispose();
+    }
+  );
+
+  it.each(['missing', 'text'])(
+    'rejects a %s SUM operand without changing the document',
+    async (operand) => {
+      const session = new CanvasRelationAnalysisSession('sum-negative');
+      session.receive(connectedNamesProjectionDraft());
+      const input = await session.query(session.rootId);
+      const revision = session.revision;
+      await expect(
+        applySelectedRelationAggregate(session, {
+          intent: 'insert',
+          relationId: session.rootId,
+          expectedRevision: revision,
+          fieldId: input.bindings[0]!.fieldId,
+          alias: 'total',
+          aggregateFunction: 'sum',
+          measureFieldId: operand === 'missing' ? 'foreign' : input.bindings[0]!.fieldId,
+        })
+      ).rejects.toThrow();
+      expect(session.revision).toBe(revision);
+      session.dispose();
+    }
+  );
   it('groups a projected instance without requiring JOIN or SET and preserves identity on edit', async () => {
     const document = connectedNamesProjectionDraft();
     const session = new CanvasRelationAnalysisSession('aggregate-test');

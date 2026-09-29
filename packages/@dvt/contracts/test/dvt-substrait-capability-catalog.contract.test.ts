@@ -331,7 +331,7 @@ describe('DVT Substrait capability catalog V1', () => {
       DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.filter(
         (entry) => entry.kind === 'standard' && entry.invocation !== undefined
       )
-    ).toHaveLength(4);
+    ).toHaveLength(5);
   });
 
   it('admits only the bounded i64 DIVIDE invocation and exact PostgreSQL error posture', () => {
@@ -550,7 +550,21 @@ describe('DVT Substrait capability catalog V1', () => {
     });
 
     expect(arithmetic).not.toBe(decimal);
-    expect(findCapability(arithmetic)).toMatchObject({ profileStatus: 'candidate-standard' });
+    expect(findCapability(arithmetic)).toMatchObject({
+      profileStatus: 'supported-profile',
+      overloads: [
+        {
+          signature: 'sum:i64',
+          outputType: 'i64',
+          options: [{ name: 'overflow', preference: ['ERROR'] }],
+        },
+        {
+          signature: 'sum:fp64',
+          outputType: 'fp64',
+          options: [{ name: 'overflow', preference: ['ERROR'] }],
+        },
+      ],
+    });
     expect(findCapability(decimal)).toMatchObject({ profileStatus: 'candidate-standard' });
   });
 

@@ -326,6 +326,58 @@ named TRIM field and COALESCE with NULL at a short viewport, then Apply/reopen.
 This extends the existing formula and PostgreSQL expression adapters, not the
 inspector's semantic responsibilities or the set of command/query rails.
 
+### Catalog SQL reachability and progressive verticals (#3456)
+
+Complete formula reachability for admitted scalar capabilities before widening
+the semantic profile. Comparisons, boolean composition and null predicates must
+use the existing shared capability resolver and PostgreSQL bindings. COALESCE
+accepts homogeneous text, bigint, fp64 and boolean operands, preserving typed NULL and rejecting
+implicit mixed-type coercion. UTC year extraction must round-trip its canonical
+enum and timezone arguments; it must not become session-timezone-dependent.
+SQL comparison and boolean syntax is a disposable input adapter to the same
+Substrait expressions, not an alternate AST, SQL engine or persistence format.
+
+```mermaid
+flowchart LR
+  Current[Catalog support] --> Gap[Partial formula reachability]
+  Catalog[Canonical admitted signatures] --> Resolver[Shared capability projection]
+  Resolver --> Formula[Formula syntax and assistance]
+  Formula --> Canonical[Typed Substrait and stable sidecar]
+  Canonical --> Save[Existing Apply and save/reopen]
+  Save --> Preview[Protected row and plan Preview]
+  Preview --> Run[Existing Run and PostgreSQL publication]
+  Oracle[Independent expected schema and rows] --> Run
+```
+
+The pre-implementation Fowler matrix and permitted surfaces are recorded in
+[issue #3456](https://github.com/dunay2/dvt/issues/3456#issuecomment-5888153013).
+Use the existing scalar resolver, builder, compiler/formatter, assistance and
+target binding owners. No new command, DTO, function registry or JOIN-owned
+calculation is introduced. Candidate functions such as CONCAT_WS and SUM require
+their exact pinned Substrait signature, type/null/error behavior and independent
+PostgreSQL conformance before visual exposure. Catalog presence alone is not
+support, and this work does not promise all PostgreSQL builtins.
+
+Prove progressive verticals: a named expression/constant/NULL over one Source;
+multiple composed fields and selected outputs; pre- and post-JOIN Transforms;
+then grouped, ordered and Window composition where admitted. Each level must
+cover canonical persistence/reopen, row/schema oracles and applicable protected
+Preview/Run. Imported fixture proof must be distinguished from user authoring
+through the actual editor. Prepare reproducible review scenarios with expected
+results. Use a newly allocated database for fixture seeding: existing user
+tables are never disposable test fixtures. Do not relax validation or replace
+provider execution with mock success to close a vertical.
+
+The first protected Run exposed a physical/logical schema boundary: Substrait
+correctly marks `''` and non-null predicates as required, but PostgreSQL
+`CREATE TABLE AS` creates nullable columns. Preserve that logical information
+for analysis and Preview. The existing physical output-schema projection must
+fingerprint the actual nullable CTAS columns, rather than inventing NOT NULL
+constraints. ADR-0066 candidate and target digest checks remain exact; no
+automatic migration or adapter bypass is introduced. Regression evidence must
+compare projected nullability with PostgreSQL catalog metadata and complete a
+protected Run containing an empty-string and a NULL output.
+
 ### Card detail convergence (#3422)
 
 Every admitted relational card exposes an explicitly collapsible read-only

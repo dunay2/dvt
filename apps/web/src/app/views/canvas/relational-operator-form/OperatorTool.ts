@@ -9,6 +9,9 @@ export type CanvasRelationalOperatorTool = Readonly<{
   fields: readonly Readonly<{ fieldId: string; name: string; dataType?: string }>[];
   alias?: string;
   fieldId?: string;
+  aggregateFunction?: 'count' | 'sum';
+  measureFieldId?: string;
+  measureFields?: readonly Readonly<{ fieldId: string; name: string }>[];
   partitionFieldIds?: readonly string[];
   value?: string;
   capabilityId?: string;

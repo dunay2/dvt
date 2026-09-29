@@ -1,8 +1,16 @@
 /** Owns shared catalog-driven function admission; no Canvas or runtime dependency. */
 import {
+  TypeSchema,
+  Type_Nullability,
+  type Type,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
+import { create } from '@bufbuild/protobuf';
+import {
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
   type DvtSubstraitFunctionInvocationV1,
 } from '@dvt/contracts';
+
+import { scalarBindings, scalarResultType } from './relationalSql/scalarBindings.js';
 
 export const STRING_DATA_TYPES = new Set([
   'text',
@@ -27,7 +35,9 @@ export function normalizeProjectionDataType(dataType: unknown): string {
 export type DvtSubstraitColumnFunction = Readonly<{
   capabilityId: string;
   name: string;
-  category: 'text' | 'date-time' | 'numeric';
+  category: 'text' | 'date-time' | 'numeric' | 'boolean';
+  signature: string;
+  outputType: Type;
   invocation?: DvtSubstraitFunctionInvocationV1;
   minimumArgumentCount: number;
   maximumArgumentCount?: number;
@@ -82,7 +92,27 @@ export function resolveDvtSubstraitColumnFunctions(args: {
     normalizeProjectionDataType
   );
   if (args.provider !== 'postgres' || normalizedTypes.length === 0) return [];
-  const stringOperands = normalizedTypes.every((dataType) => STRING_DATA_TYPES.has(dataType));
+  const types = normalizedTypes.map((type): Type | null => {
+    const nullability = Type_Nullability.NULLABLE;
+    if (TIMESTAMPTZ_DATA_TYPES.has(type))
+      return create(TypeSchema, {
+        kind: { case: 'precisionTimestampTz', value: { precision: 3, nullability } },
+      });
+    const kind = STRING_DATA_TYPES.has(type)
+      ? 'string'
+      : ['bigint', 'int8', 'i64'].includes(type)
+        ? 'i64'
+        : ['double precision', 'float8', 'fp64'].includes(type)
+          ? 'fp64'
+          : ['boolean', 'bool'].includes(type)
+            ? 'bool'
+            : null;
+    return kind == null
+      ? null
+      : create(TypeSchema, { kind: { case: kind, value: { nullability } } });
+  });
+  if (types.some((type) => type == null)) return [];
+  const operands = types as Type[];
   const timestampOperand =
     normalizedTypes.length === 1 && TIMESTAMPTZ_DATA_TYPES.has(normalizedTypes[0]!);
 
@@ -95,57 +125,6 @@ export function resolveDvtSubstraitColumnFunctions(args: {
         entry.identity.sourceKind !== 'simple-extension'
       ) {
         return [];
-      }
-      const textFunction =
-        entry.identity.urn === 'extension:io.substrait:functions_string' ||
-        (entry.identity.urn === 'extension:io.substrait:functions_comparison' &&
-          entry.identity.name === 'coalesce' &&
-          entry.invocation?.signature === 'coalesce:any1');
-      if (entry.identity.urn === 'extension:io.substrait:functions_arithmetic') {
-        const types = normalizedTypes.map((type) =>
-          ['bigint', 'int8', 'i64'].includes(type)
-            ? 'i64'
-            : ['double precision', 'float8', 'fp64'].includes(type)
-              ? 'fp64'
-              : null
-        );
-        const invocation = (
-          entry.overloads ?? (entry.invocation == null ? [] : [entry.invocation])
-        ).find((item) => types.every((type) => type != null && type === item.outputType));
-        if (invocation == null) return [];
-        const range = invocationArgumentRange(invocation);
-        const admitted =
-          args.resolution === 'proposal'
-            ? admitsProposedArgumentCount(range, types.length)
-            : admitsCompleteArgumentCount(range, types.length);
-        return admitted
-          ? [
-              {
-                capabilityId: entry.entryId,
-                name: entry.identity.name,
-                category: 'numeric' as const,
-                invocation,
-                ...range,
-              },
-            ]
-          : [];
-      }
-      if (stringOperands && textFunction) {
-        const range = invocationArgumentRange(entry.invocation);
-        const admitted =
-          args.resolution === 'proposal'
-            ? admitsProposedArgumentCount(range, normalizedTypes.length)
-            : admitsCompleteArgumentCount(range, normalizedTypes.length);
-        return admitted
-          ? [
-              {
-                capabilityId: entry.entryId,
-                name: entry.identity.name,
-                category: 'text' as const,
-                ...range,
-              },
-            ]
-          : [];
       }
       if (
         timestampOperand &&
@@ -163,13 +142,60 @@ export function resolveDvtSubstraitColumnFunctions(args: {
             capabilityId: entry.entryId,
             name: 'extract year (UTC)',
             category: 'date-time' as const,
+            signature: entry.invocation.signature,
+            outputType: scalarResultType(scalarBindings['extract']!, operands),
             minimumArgumentCount: 1,
             maximumArgumentCount: 1,
             expressionTemplate: "EXTRACT(YEAR FROM {column} AT TIME ZONE 'UTC')",
           },
         ];
       }
-      return [];
+      const invocation =
+        entry.overloads?.find((item) =>
+          operands.every((type) => type.kind.case === item.outputType)
+        ) ?? entry.invocation;
+      if (entry.overloads != null && invocation == null) return [];
+      const key = invocation?.signature ?? entry.identity.name;
+      const binding = Object.hasOwn(scalarBindings, key)
+        ? scalarBindings[key]
+        : Object.hasOwn(scalarBindings, entry.identity.name)
+          ? scalarBindings[entry.identity.name]
+          : undefined;
+      if (
+        binding == null ||
+        binding.arguments != null ||
+        entry.identity.urn !== `extension:io.substrait:${binding.family}` ||
+        !binding.accepts(operands)
+      )
+        return [];
+      const range = {
+        minimumArgumentCount: binding.minimum,
+        ...(binding.maximum == null ? {} : { maximumArgumentCount: binding.maximum }),
+      };
+      const admitted =
+        args.resolution === 'proposal'
+          ? admitsProposedArgumentCount(range, operands.length)
+          : admitsCompleteArgumentCount(range, operands.length);
+      if (!admitted) return [];
+      const outputType = scalarResultType(binding, operands);
+      return [
+        {
+          capabilityId: entry.entryId,
+          name: entry.identity.name,
+          signature: invocation?.signature ?? binding.signature,
+          outputType,
+          category:
+            outputType.kind.case === 'bool'
+              ? 'boolean'
+              : outputType.kind.case === 'string'
+                ? 'text'
+                : outputType.kind.case === 'precisionTimestampTz'
+                  ? 'date-time'
+                  : 'numeric',
+          ...(invocation == null ? {} : { invocation }),
+          ...range,
+        },
+      ];
     }
   );
 }

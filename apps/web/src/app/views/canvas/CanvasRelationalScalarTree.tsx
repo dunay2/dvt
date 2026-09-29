@@ -38,7 +38,7 @@ export function CanvasRelationalScalarTree({
         key={id}
         className="relative pl-3 before:absolute before:left-0 before:top-4 before:w-2 before:border-t before:border-(--border-default)"
       >
-        <div className={compact ? 'flex h-8 min-w-0 items-center' : 'py-1'}>
+        <div className="flex h-8 min-w-0 items-center">
           <span
             data-slot="canvas-relational-expression-node"
             data-kind={node.data.semanticKind}
@@ -60,7 +60,7 @@ export function CanvasRelationalScalarTree({
             title={
               node.data.unavailable ? `${copy.unavailable}: ${node.data.detail}` : node.data.detail
             }
-            className={`inline-flex max-w-full items-baseline gap-2 rounded border border-(--border-subtle) bg-(--surface-panel) px-2 py-1 font-mono text-[13px] leading-5 ${compact ? 'whitespace-nowrap' : 'flex-wrap'}`}
+            className="inline-flex max-w-full items-baseline gap-2 whitespace-nowrap rounded border border-(--border-subtle) bg-(--surface-panel) px-2 py-1 font-mono text-[13px] leading-5"
           >
             <span
               className={
@@ -76,9 +76,7 @@ export function CanvasRelationalScalarTree({
                 className={
                   node.data.unavailable
                     ? 'truncate text-(--status-danger)'
-                    : compact
-                      ? 'truncate text-(--text-strong)'
-                      : 'break-all text-(--text-strong)'
+                    : 'truncate text-(--text-strong)'
                 }
               >
                 {detail.join(' ')}
@@ -96,11 +94,7 @@ export function CanvasRelationalScalarTree({
     <div
       data-slot="canvas-relational-expression-tree"
       data-relation-id={graph.relationId}
-      className={
-        compact
-          ? 'min-w-0 p-2'
-          : 'sticky top-0 min-w-0 overflow-auto rounded border border-(--border-subtle) bg-(--surface-panel) p-2'
-      }
+      className="min-w-0 p-2"
     >
       <ul>
         {graph.nodes.filter((node) => !operands.has(node.id)).map((node) => renderNode(node.id))}
