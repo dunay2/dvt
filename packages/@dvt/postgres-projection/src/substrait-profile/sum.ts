@@ -7,12 +7,15 @@ import {
   Type_Nullability,
   type Type,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
-import { DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1 } from '@dvt/contracts';
+import {
+  DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
+  type DvtSubstraitFunctionInvocationV1,
+} from '@dvt/contracts';
 
 import { unsupportedProfile } from './inspection.js';
 import type { FunctionProfile } from './invocation.js';
 
-export function sumOverload(type: Type) {
+export function sumOverload(type: Type): DvtSubstraitFunctionInvocationV1 | undefined {
   const kind = type.kind;
   if ((kind.case !== 'i64' && kind.case !== 'fp64') || kind.value.typeVariationReference !== 0)
     return undefined;

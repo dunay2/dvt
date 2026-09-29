@@ -3,6 +3,7 @@ import {
   AggregateFunctionSchema,
   AggregationPhase,
   AggregateFunction_AggregationInvocation,
+  type AggregateFunction,
   type Expression,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import {
@@ -14,7 +15,11 @@ import { clone, create } from '@bufbuild/protobuf';
 
 import { sumOverload } from './substrait-profile/sum.js';
 
-export function createSumFunction(reference: number, operand: Expression, type: Type) {
+export function createSumFunction(
+  reference: number,
+  operand: Expression,
+  type: Type
+): AggregateFunction {
   const overload = sumOverload(type);
   if (overload == null) throw new Error('SUM requires an admitted numeric operand.');
   const outputType = clone(TypeSchema, type);
