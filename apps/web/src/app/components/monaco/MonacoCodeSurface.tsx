@@ -83,7 +83,7 @@ export default function MonacoCodeSurface({
       data-testid={isReadOnly ? 'monaco-code-viewer' : 'monaco-code-editor'}
     >
       <Editor
-        onMount={onMount}
+        onMount={isReadOnly ? undefined : onMount}
         height="100%"
         language={language}
         onChange={

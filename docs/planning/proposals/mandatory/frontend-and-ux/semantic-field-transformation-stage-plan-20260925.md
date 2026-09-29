@@ -271,6 +271,15 @@ Completions are scoped to the editor model and disposed on close. Opening a
 second editor cannot leak field names across models. Monaco remains lazily
 loaded with existing local workers; no new dependency, CDN or backend is needed.
 
+`DerivedOutputFormulaEditor` is the sole editable Monaco host in Canvas. This
+explicitly supersedes the earlier blanket Canvas-host prohibition for that leaf
+only; it does not grant Code/workspace-file authority to the shell or formulas.
+Artifacts and Templates continue through `MonacoCodeViewer`, whose API has no
+mount callback or change handler. The shared surface must suppress an editable
+mount callback when `readOnly` is true. Architecture tests distinguish erased
+type imports from runtime hosting, reject other Canvas hosts, and behavior tests
+prove a readonly caller never receives the mutable editor handle.
+
 | Scenario                                           | Opportunity                                  | Owner / pattern                                                 | Rail                        | Proof                                                                                                    |
 | -------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------- |
 | Build a compound expression without guessing names | Isolated text presentation                   | Existing authoring model and compiler / assisted syntax adapter | ConfigureCanvasDvtNode      | Field click/drop, nested function insertion, constants, completion, edit/save/reopen                     |
