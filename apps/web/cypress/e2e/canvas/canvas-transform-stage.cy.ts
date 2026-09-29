@@ -423,6 +423,8 @@ describe('Semantic dataset Transform', () => {
         writesBeforeRemoval
       )
     );
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+    cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
     visitWorkbenchCanvas();
     openModel();
     cy.get(card).click();
@@ -488,6 +490,8 @@ describe('Semantic dataset Transform', () => {
         writesBeforeRemoval
       )
     );
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+    cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
     visitWorkbenchCanvas();
     openModel();
     cy.get(card).click();

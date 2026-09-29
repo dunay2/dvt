@@ -89,32 +89,43 @@ describe('scoped tree field selection', () => {
     expect((await reopened.query(rootId)).bindings).toEqual(after);
   });
 
-  it('removes a composed expression without breaking canonical validation or SQL projection', async () => {
-    const { session, reference } = scenario();
-    await applySelectedRelationDerivedOutput(session, {
-      intent: 'edit',
-      relationId: session.rootId,
-      expectedRevision: session.revision,
-      alias: 'greeting',
-      formula: "CONCAT(UPPER(first_name), ' hola')",
-    });
-    const field = (await session.query(session.rootId)).bindings.find(
-      (f) => f.displayName === 'greeting'
-    )!;
-    const next = await selectCanvasRelationalField(
-      session,
-      reference(session.rootId, field.fieldId, true),
-      { kind: 'remove' }
-    );
-    expect((await session.query(session.rootId)).bindings.map((f) => f.displayName)).toEqual([
-      'first_name',
-      'last_name',
-    ]);
-    const sql = await projectSubstraitToPostgresSql(next!);
-    expect(sql.projection.outputs.map((f) => f.name)).toEqual(['first_name', 'last_name']);
-    const relation = session.locate(session.rootId, session.revision).relation;
-    expect(relation.relType.case === 'project' && relation.relType.value.expressions).toEqual([]);
-  });
+  it.each([
+    "CONCAT(UPPER(first_name), ' hola')",
+    'UPPER(TRIM(first_name))',
+    '2 * 3 + 1',
+    "''",
+    'NULL',
+    'CAST(NULL AS BIGINT)',
+    'COALESCE(first_name, NULL)',
+  ])(
+    'removes the complete expression %s without breaking inputs, validation or SQL projection',
+    async (formula) => {
+      const { session, reference } = scenario();
+      await applySelectedRelationDerivedOutput(session, {
+        intent: 'edit',
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        alias: 'greeting',
+        formula,
+      });
+      const field = (await session.query(session.rootId)).bindings.find(
+        (f) => f.displayName === 'greeting'
+      )!;
+      const next = await selectCanvasRelationalField(
+        session,
+        reference(session.rootId, field.fieldId, true),
+        { kind: 'remove' }
+      );
+      expect((await session.query(session.rootId)).bindings.map((f) => f.displayName)).toEqual([
+        'first_name',
+        'last_name',
+      ]);
+      const sql = await projectSubstraitToPostgresSql(next!);
+      expect(sql.projection.outputs.map((f) => f.name)).toEqual(['first_name', 'last_name']);
+      const relation = session.locate(session.rootId, session.revision).relation;
+      expect(relation.relType.case === 'project' && relation.relType.value.expressions).toEqual([]);
+    }
+  );
 
   it.each([
     'foreign-root',
