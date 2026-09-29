@@ -54,6 +54,11 @@ export function RelationOutputRow({
   orderingOnly?: boolean;
 }>) {
   const errorId = useId();
+  const displayName = field.output == null ? (field.expression ?? name) : name;
+  const inclusionName =
+    field.output != null && field.expression != null
+      ? `${name}: ${field.expression}`
+      : (field.expression ?? field.name);
   return (
     <div
       data-slot="relation-output-field"
@@ -98,7 +103,7 @@ export function RelationOutputRow({
               disabled={disabled}
               aria-disabled={busy || undefined}
               aria-busy={busy || undefined}
-              aria-label={`${inclusionLabel}: ${field.name}`}
+              aria-label={`${inclusionLabel}: ${inclusionName}`}
               title={inclusionLabel}
               className="grid size-7 shrink-0 place-items-center rounded text-(--text-muted) hover:bg-(--surface-selected) disabled:opacity-40"
               onClick={() => {
@@ -111,15 +116,25 @@ export function RelationOutputRow({
                 <X aria-hidden="true" className="size-3.5" />
               )}
             </button>
-            <Input
-              aria-label={field.name}
-              value={name}
-              disabled={disabled || field.output == null}
-              aria-invalid={error == null ? undefined : true}
-              aria-describedby={error == null ? undefined : errorId}
-              onChange={(event) => onNameChange(event.currentTarget.value)}
-              onBlur={(event) => onRename(event.currentTarget.value)}
-            />
+            <div className="min-w-0 flex-1">
+              <Input
+                aria-label={displayName}
+                value={displayName}
+                disabled={disabled || field.output == null}
+                aria-invalid={error == null ? undefined : true}
+                aria-describedby={error == null ? undefined : errorId}
+                onChange={(event) => onNameChange(event.currentTarget.value)}
+                onBlur={(event) => onRename(event.currentTarget.value)}
+              />
+              {field.expression != null && field.output != null ? (
+                <code
+                  data-slot="relation-output-expression"
+                  className="block break-words text-xs text-(--text-muted)"
+                >
+                  {field.expression}
+                </code>
+              ) : null}
+            </div>
           </>
         )}
         <span className="text-xs text-(--text-muted)">{field.schema.type.kind.case}</span>

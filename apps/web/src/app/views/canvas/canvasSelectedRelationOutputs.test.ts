@@ -7,6 +7,14 @@ import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetc
 import { createSourceSet } from './canvasSourceSet';
 import { source } from './canvasRelationalOperator.test-support';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
+import { withWindowOutput } from './canvasRelationalExpressionStage.test-support';
+import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
+import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
+import {
+  decodeDvtSubstraitSemanticDocument,
+  encodeDvtSubstraitSemanticDocument,
+} from './canvasDvtSubstraitSemanticDocument';
 
 async function slots(
   session: CanvasRelationAnalysisSession
@@ -19,6 +27,62 @@ async function slots(
 }
 
 describe('canonical relation output editing', () => {
+  it.each([
+    ['TRIM(first_name)', 'trim(first_name)'],
+    ['UPPER(TRIM(first_name))', 'upper(trim(first_name))'],
+    ['2 * 3', '2 * 3'],
+    ['2 * (3 + 4)', '2 * (3 + 4)'],
+    ["''", "''"],
+    ['NULL', 'NULL'],
+  ])(
+    'recognizes and republishes %s without publishing its inputs',
+    async (formula, description) => {
+      const session = new CanvasRelationAnalysisSession('output-expression');
+      session.receive(connectedNamesProjectionDraft());
+      await applySelectedRelationDerivedOutput(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        intent: 'edit',
+        alias: 'calculated',
+        formula,
+      });
+      const published = (await slots(session)).at(-1)!;
+      expect(published).toMatchObject({ name: 'calculated', expression: description });
+      await changeSelectedRelationOutputs(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        outputs: [],
+      });
+      const excluded = (await slots(session)).at(-1)!;
+      expect(excluded).toMatchObject({ output: undefined, expression: description });
+      const selected = await changeSelectedRelationOutputs(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        outputs: [{ slot: excluded.slot, alias: 'result' }],
+      });
+      const reopened = new CanvasRelationAnalysisSession('reopened');
+      reopened.receive(
+        decodeDvtSubstraitSemanticDocument(encodeDvtSubstraitSemanticDocument(selected))
+      );
+      expect(
+        (await reopened.query(reopened.rootId)).bindings.map((field) => field.displayName)
+      ).toEqual(['result']);
+      expect((await slots(reopened)).filter((field) => field.output != null)).toMatchObject([
+        { name: 'result', expression: description },
+      ]);
+      const sql = await projectSubstraitToPostgresSql(selected);
+      expect(sql.projection.outputs.map((field) => field.name)).toEqual(['result']);
+    }
+  );
+
+  it('describes a Window output using its canonical function and ordering', async () => {
+    const session = new CanvasRelationAnalysisSession('window-output');
+    session.receive(withWindowOutput());
+    expect((await slots(session)).at(-1)).toMatchObject({
+      expression: 'row_number() OVER (ORDER BY customer_code ASC NULLS LAST)',
+      name: 'customer_position',
+    });
+  });
   it('reorders, renames, clears and restores JOIN outputs over transformed operands', async () => {
     const { session, root } = selectedUnaryScenario();
     for (const relationId of root.inputs)

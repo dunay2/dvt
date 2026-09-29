@@ -41,8 +41,9 @@ flowchart LR
 
 Canonical authority is the pinned Substrait plan plus the DVT identity sidecar.
 Existing Window authoring from #3230/#2764 and expression authoring from #2919
-are reused. An un-emitted authored expression is invalid under the current DVT
-projection authority and fails closed.
+are reused. Retained non-emitted definitions are not published outputs. Execution
+readiness is still owned by the canonical Preview admission, not their visibility
+in the repairable authoring tree.
 
 ## Fowler Matrix
 
@@ -245,6 +246,33 @@ remove actions remain keyboard accessible. The Output inspector uses named
 add/remove buttons instead of selection checkboxes, retaining focus and the
 existing dependency-aware output command after each action.
 Header movement and field dragging must have disjoint interaction boundaries.
+
+#### Recognizable calculated outputs (#3422)
+
+The Output inspector currently drops expression provenance and presents an
+excluded Project expression as `expression_3`. The card separately renders a
+published field and a detached formula root. Neither view makes the calculated
+output distinguishable from its input operand. Reuse the canonical expression
+description in the existing output-slot read model, alongside the editable alias.
+An unselected expression shows its formula, not an anonymous slot label. Inclusion
+still uses the existing output command; inspection must not select excluded fields.
+The card attaches each published expression root to OUTPUT, replacing only its
+duplicate field token. Non-emitted definitions remain repairable/removable outside
+OUTPUT. No new DTO, expression model, persistence or command is introduced.
+
+```mermaid
+flowchart LR
+  Before[Slot alias only and detached formula] --> Ambiguous[Anonymous output candidate]
+  Canonical[Project expressions + emit + sidecar] --> Projection[Existing output-slot projection]
+  Projection --> Inspector[Alias plus recognizable formula and real inclusion state]
+  Canonical --> Card[Published expression under OUTPUT; input operand stays under INPUT]
+  Select[Explicit add] --> Command[Existing output command: calculated slot only]
+  Command --> Preview[Canonical selected schema and Preview SQL]
+```
+
+| Scenario                                           | Opportunity                   | Pattern / owner                                      | Rail                                                | Surfaces and proof                                                                                                                                     | Out of scope                                                                                                    |
+| -------------------------------------------------- | ----------------------------- | ---------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| Recognize and publish a retained calculated result | Presentation loses provenance | Existing read model / CanvasRelationalTreeProjection | ProjectCanvasRelationalTree; ConfigureCanvasDvtNode | Output slot/row and card-detail projection; scalar, nested, arithmetic, literal, NULL, Window, empty-selection and reopen tests; existing browser flow | Automatic publication, alias recovery absent from the saved document, new AST/DTO, application database changes |
 
 #### Remove the complete derived expression, not its operand (#3422)
 

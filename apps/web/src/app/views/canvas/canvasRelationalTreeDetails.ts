@@ -53,10 +53,52 @@ export function projectCanvasRelationalTreeDetails(
         sourceOutputFieldsByRelationId,
         expressions.referencedFields
       );
+      // Replace only a published output's duplicate token with its canonical root.
+      // Walking the same edge preserves output order and never publishes a retained definition.
+      const roots = new Map(
+        expressions.nodes.flatMap((expression) =>
+          expression.data.projectExpressionOrdinal != null && expression.data.fieldReference != null
+            ? [[expression.data.fieldReference.fieldId, expression.id] as const]
+            : []
+        )
+      );
+      const replacements = new Map(
+        structure.nodes.flatMap((field) => {
+          const rootId =
+            field.data.fieldSelection === 'output'
+              ? roots.get(field.data.fieldReference?.fieldId ?? '')
+              : undefined;
+          return rootId == null ? [] : [[field.id, rootId] as const];
+        })
+      );
+      const outputNames = new Map(
+        relation.output.fields.map((field) => [field.fieldId, field.displayName])
+      );
       const graph: SemanticWorkbenchGraph = {
         ...structure,
-        nodes: [...structure.nodes, ...expressions.nodes],
-        edges: [...structure.edges, ...expressions.edges],
+        nodes: [
+          ...structure.nodes.filter((field) => !replacements.has(field.id)),
+          ...expressions.nodes.map((expression) => {
+            const name = outputNames.get(expression.data.fieldReference?.fieldId ?? '');
+            return expression.data.projectExpressionOrdinal == null || name == null
+              ? expression
+              : {
+                  ...expression,
+                  data: {
+                    ...expression.data,
+                    label: `${expression.data.label.split('\n')[0]}\n${name}`,
+                    detail: `${name} = ${expression.data.expression ?? expression.data.detail}`,
+                  },
+                };
+          }),
+        ],
+        edges: [
+          ...structure.edges.map((edge) => ({
+            ...edge,
+            source: replacements.get(edge.source) ?? edge.source,
+          })),
+          ...expressions.edges,
+        ],
         expressionCount: expressions.nodes.length,
       };
       graphs.set(relation.locator, graph);
