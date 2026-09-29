@@ -19,3 +19,28 @@
   outline: 2px solid var(--border-focus, #38bdf8);
   outline-offset: 2px;
 }
+
+.remove {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-left: 0.25rem;
+  border-radius: 0.25rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.remove:hover:not(:disabled) {
+  background: var(--surface-panel);
+  color: var(--status-danger);
+}
+.remove:focus-visible {
+  outline: 2px solid var(--border-focus, #38bdf8);
+  outline-offset: 2px;
+}
+.remove:disabled {
+  cursor: default;
+  opacity: 0.5;
+}

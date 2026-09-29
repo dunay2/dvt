@@ -9,6 +9,9 @@ import {
   selectCanvasRelationalField,
 } from './canvasRelationalFieldSelection';
 import type { CanvasRelationalFieldReference } from './canvasRelationalTreeDrag';
+import { querySelectedJoin } from './canvasSelectedJoin';
+import { replaceSelectedJoinConditions } from './canvasSelectedJoinPredicate';
+import { removeCanvasRelationalExpression } from './canvasRelationalFieldSelection';
 
 function scenario(): {
   session: CanvasRelationAnalysisSession;
@@ -109,6 +112,8 @@ describe('scoped tree field selection', () => {
     ]);
     const sql = await projectSubstraitToPostgresSql(next!);
     expect(sql.projection.outputs.map((f) => f.name)).toEqual(['first_name', 'last_name']);
+    const relation = session.locate(session.rootId, session.revision).relation;
+    expect(relation.relType.case === 'project' && relation.relType.value.expressions).toEqual([]);
   });
 
   it.each([
@@ -169,5 +174,43 @@ describe('scoped tree field selection', () => {
     reopened.receive(document);
     expect(await session.query(session.rootId)).toEqual(before);
     expect((await reopened.query(reopened.rootId)).fields).toEqual(before.fields);
+  });
+
+  it('rejects complete expression removal when a JOIN consumes the derived output', async () => {
+    const { session, root } = selectedUnaryScenario();
+    const derivedDocument = await applySelectedRelationDerivedOutput(session, {
+      intent: 'insert',
+      relationId: root.inputs[0]!,
+      expectedRevision: session.revision,
+      alias: 'trimmed_name',
+      formula: 'TRIM(name)',
+    });
+    const join = await querySelectedJoin(session, session.rootId, session.revision);
+    const derived = derivedDocument.sidecar.fields.find(
+      (field) => field.displayName === 'trimmed_name'
+    )!;
+    const right = join.fields.find((field) => field.inputIndex === 1)!;
+    await replaceSelectedJoinConditions(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      conditions: [
+        {
+          left: { kind: 'field', sourceFieldId: derived.fieldId },
+          right: { kind: 'field', sourceFieldId: right.fieldId },
+        },
+      ],
+    });
+    const revision = session.revision;
+    const before = await session.query(session.rootId);
+    const expressionId = session.locate(session.rootId, revision).inputs[0]!;
+    await expect(
+      removeCanvasRelationalExpression(session, {
+        relationId: expressionId,
+        expectedRevision: revision,
+        expressionOrdinal: 0,
+      })
+    ).rejects.toThrow();
+    expect(session.revision).toBe(revision);
+    expect(await session.query(session.rootId)).toEqual(before);
   });
 });

@@ -1,4 +1,4 @@
-/** One emit/alias command for selected relations; it never rewrites predicates or input subtrees. */
+/** One output command; explicit Project-expression removal never rewrites its input subtree. */
 import { allocateDvtFieldId, DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
 import {
   cloneLocalRelation,
@@ -14,6 +14,7 @@ export type RelationOutputEdit = Readonly<{
   expectedRevision: number;
   signal?: AbortSignal;
   outputs: readonly Readonly<{ slot: number; alias?: string }>[];
+  removeExpressionOrdinal?: number;
 }>;
 
 export async function changeSelectedRelationOutputs(
@@ -53,11 +54,27 @@ export async function changeSelectedRelationOutputs(
     readRelationStructure(target.relation).inputs
   );
   const common = readRelationStructure(relation).common!;
+  let mapping = selected.map((entry) => entry.slot);
+  if (request.removeExpressionOrdinal != null) {
+    const ordinal = request.removeExpressionOrdinal;
+    const inputCount = inputs.reduce((count, input) => count + input.fields.length, 0);
+    const removedSlot = inputCount + ordinal;
+    if (
+      relation.relType.case !== 'project' ||
+      !Number.isInteger(ordinal) ||
+      ordinal < 0 ||
+      ordinal >= relation.relType.value.expressions.length ||
+      mapping.includes(removedSlot)
+    )
+      throw new SubstraitAnalysisError('invalid_binding', 'Expression removal is not admitted.');
+    relation.relType.value.expressions.splice(ordinal, 1);
+    mapping = mapping.map((slot) => (slot > removedSlot ? slot - 1 : slot));
+  }
   common.emitKind = {
     case: 'emit',
     value: {
       $typeName: 'substrait.RelCommon.Emit',
-      outputMapping: selected.map((entry) => entry.slot),
+      outputMapping: mapping,
     },
   };
   const retainedIds = new Set(

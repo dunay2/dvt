@@ -14,6 +14,7 @@ import { useRelationCommand } from './useRelationCommand';
 import {
   canvasRelationalFieldConsumers,
   selectCanvasRelationalField,
+  removeCanvasRelationalExpression,
 } from './canvasRelationalFieldSelection';
 import {
   CANVAS_RELATIONAL_FIELD_DRAG_TYPE,
@@ -30,6 +31,7 @@ type FieldSelectionActions = Readonly<{
   end: () => void;
   add: (reference: CanvasRelationalFieldReference, relationId: string) => void;
   remove: (reference: CanvasRelationalFieldReference) => void;
+  removeExpression: (relationId: string, expressionOrdinal: number) => void;
   connect: (reference: CanvasRelationalFieldReference, id: string, port: number) => void;
   backgroundDragOver: (event: DragEvent<HTMLDivElement>) => boolean;
   backgroundDrop: (event: DragEvent<HTMLDivElement>) => boolean;
@@ -118,6 +120,13 @@ export function CanvasRelationalFieldSelectionProvider({
     },
     add: (reference, relationId) => edit(reference, { kind: 'add', relationId }),
     remove: (reference) => edit(reference, { kind: 'remove' }),
+    removeExpression: (relationId, expressionOrdinal) => {
+      if (!editable) return;
+      setAffected([]);
+      void command.executeAt(relationId, (session, request) =>
+        removeCanvasRelationalExpression(session, { ...request, expressionOrdinal })
+      );
+    },
     connect: (reference, id, port) => {
       if (!editable || connection.current != null || !isActive(reference)) return;
       const controller = new AbortController();

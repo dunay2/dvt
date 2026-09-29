@@ -404,6 +404,10 @@ describe('Semantic dataset Transform', () => {
       .closest('li')
       .find('[data-field-selection="output"]')
       .should('not.contain.text', 'total');
+    cy.get(card)
+      .closest('li')
+      .find('[data-slot="canvas-relational-expression-remove"]')
+      .should('have.length', 3);
     let writesBeforeRemoval = 0;
     cy.then(() => {
       writesBeforeRemoval = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
@@ -436,5 +440,71 @@ describe('Semantic dataset Transform', () => {
           'true'
         );
       });
+    // Reproduce the reported TRIM: exclude its output, then delete its complete definition.
+    cy.get(card)
+      .closest('li')
+      .find('[data-slot="canvas-relational-node-expand"]')
+      .then(($button) => {
+        if ($button.attr('aria-expanded') !== 'true') cy.wrap($button).click();
+      });
+    cy.get(inspector)
+      .find('[data-slot="relation-output-toggle"][data-field-name="CAMPO_PRUEBA"]')
+      .click()
+      .should('have.attr', 'data-included', 'false');
+    const tree = '[data-operator="project"]';
+    let retainedOutputIds: string[] = [];
+    cy.get(tree)
+      .closest('li')
+      .find(selectedFields)
+      .then(($fields) => {
+        retainedOutputIds = [...$fields].map((field) => field.dataset.fieldId!);
+      });
+    cy.get(tree)
+      .closest('li')
+      .find('[data-kind="expression"]')
+      .contains('TRIM')
+      .closest('[data-slot="canvas-relational-expression-node"]')
+      .should(($token) => expect($token).not.to.have.attr('data-field-id'))
+      .parent()
+      .find('[data-slot="canvas-relational-expression-remove"]')
+      .should('be.enabled')
+      .click();
+    cy.get(tree)
+      .closest('li')
+      .find('[data-slot="canvas-relational-card-detail"]')
+      .should('not.contain.text', 'TRIM');
+    cy.get(tree)
+      .closest('li')
+      .find(selectedFields)
+      .should(($fields) => {
+        expect([...$fields].map((field) => field.dataset.fieldId)).to.deep.equal(retainedOutputIds);
+      });
+    cy.then(() => {
+      writesBeforeRemoval = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+    cy.wrap(null).should(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.be.greaterThan(
+        writesBeforeRemoval
+      )
+    );
+    visitWorkbenchCanvas();
+    openModel();
+    cy.get(card).click();
+    cy.get(inspector)
+      .find('[data-slot="canvas-derived-output"]')
+      .should('have.length', 2)
+      .and('not.contain.text', 'CAMPO_PRUEBA');
+    cy.get(card)
+      .closest('li')
+      .find('[data-slot="canvas-relational-node-expand"]')
+      .then(($button) => {
+        if ($button.attr('aria-expanded') !== 'true') cy.wrap($button).click();
+      });
+    cy.get(card)
+      .closest('li')
+      .find('[data-slot="canvas-relational-card-detail"]')
+      .should('not.contain.text', 'TRIM');
+    cy.screenshot('transform-trim-definition-removed');
   });
 });

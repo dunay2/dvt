@@ -3,7 +3,10 @@ import { SubstraitAnalysisError } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import type { CanvasRelationalFieldReference } from './canvasRelationalTreeDrag';
 import { relationOutputSlots } from './canvasRelationOutputSchema';
-import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
+import {
+  changeSelectedRelationOutputs,
+  type RelationOutputEdit,
+} from './canvasSelectedRelationOutputs';
 
 export async function readCanvasRelationalPublishedField(
   session: CanvasRelationAnalysisSession,
@@ -53,6 +56,18 @@ export async function selectCanvasRelationalField(
       : slots.find((entry) => entry.fields[0]?.sourceFieldId === reference.fieldId);
   if (slot == null)
     throw new SubstraitAnalysisError('invalid_binding', 'Field is not an admitted direct output.');
+  const inputCount = inputs.reduce((count, input) => count + input.fields.length, 0);
+  if (
+    target.kind === 'remove' &&
+    location.relation.relType.case === 'project' &&
+    slot.slot >= inputCount
+  )
+    return removeCanvasRelationalExpression(session, {
+      relationId,
+      expectedRevision: reference.revision,
+      expressionOrdinal: slot.slot - inputCount,
+      signal,
+    });
   if (target.kind === 'add' && slot.output != null) return null;
   const outputs = (
     target.kind === 'remove' ? selected.filter((entry) => entry !== slot) : [...selected, slot]
@@ -62,6 +77,28 @@ export async function selectCanvasRelationalField(
     expectedRevision: reference.revision,
     outputs,
     signal,
+  });
+}
+
+/** Delete a complete Project definition, including its output, through the same atomic command. */
+export async function removeCanvasRelationalExpression(
+  session: CanvasRelationAnalysisSession,
+  request: Omit<RelationOutputEdit, 'outputs' | 'removeExpressionOrdinal'> &
+    Readonly<{ expressionOrdinal: number }>
+) {
+  request.signal?.throwIfAborted();
+  const target = session.locate(request.relationId, request.expectedRevision);
+  const inputs = await Promise.all(target.inputs.map((id) => session.query(id, request.signal)));
+  const removedSlot =
+    inputs.reduce((count, input) => count + input.fields.length, 0) + request.expressionOrdinal;
+  const outputs = relationOutputSlots(target, inputs)
+    .filter((slot) => slot.output != null && slot.slot !== removedSlot)
+    .sort((left, right) => left.output!.outputOrdinal - right.output!.outputOrdinal)
+    .map((slot) => ({ slot: slot.slot, alias: slot.name }));
+  return changeSelectedRelationOutputs(session, {
+    ...request,
+    outputs,
+    removeExpressionOrdinal: request.expressionOrdinal,
   });
 }
 

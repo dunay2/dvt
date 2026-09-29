@@ -246,6 +246,50 @@ add/remove buttons instead of selection checkboxes, retaining focus and the
 existing dependency-aware output command after each action.
 Header movement and field dragging must have disjoint interaction boundaries.
 
+#### Remove the complete derived expression, not its operand (#3422)
+
+The user explicitly wants to remove the complete `TRIM(client_id)` expression,
+not the input `client_id` or its separate passthrough output. Current output
+selection changes emit and sidecar bindings but retains Project expressions.
+A non-emitted expression therefore remains visible without a published FieldId
+and cannot be removed through a field-only gesture. Hiding it is not deletion.
+
+```mermaid
+flowchart LR
+  Before[Remove emitted binding only] --> Ghost[Expression remains without field identity]
+  Root[Exact Project expression root] --> Remove[Existing output command with explicit expression removal]
+  Remove --> Expressions[Remove exactly one canonical expression]
+  Remove --> Mapping[Rebase remaining emit slots and retain field identities]
+  Mapping --> Validation[Existing dependency validation and atomic commit]
+  Expressions --> Validation
+```
+
+Expose the existing Project expression ordinal as a scoped, revision-bound
+presentation address, not an invented FieldId or new persisted DTO. The shared
+projector labels only root expressions as removable, never their operands or
+Filter/JOIN predicates. A root has an explicit accessible remove action even
+when not emitted. Selected derived-field Delete/drag-out removes that same
+canonical definition through `ConfigureCanvasDvtNode`; ordinary Output
+inclusion/exclusion remains selection, not deletion.
+
+Extend the existing output command with one checked expression-removal intent.
+Remove exactly its published aliases, delete that Project expression, and rebase
+remaining emit slots. Preserve inputs, other expressions and retained FieldIds.
+Reuse the same downstream validation, cancellation, stale-revision and read-only
+boundaries; no new command rail or independent mutation implementation. An
+unpublished definition can be deleted directly without first re-adding it.
+
+Prove emitted and non-emitted scalar/Window deletion, reordered slots, operand
+and passthrough preservation, stale/invalid/readonly rejection and dependent
+JOIN rejection. The existing browser flow must exercise the root remove action,
+complete-tree disappearance and Apply/save/reopen, rather than only asserting
+the selected field token disappeared. Do not change stored user drafts as part
+of verification.
+
+| Scenario                               | Opportunity                                                 | Fowler pattern                                | DDD owner / rail                                                                                                | Surfaces and proof                                                                                               | Out of scope                                                   |
+| -------------------------------------- | ----------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Delete one complete Project expression | Field-only identity cannot address an unselected definition | Explicit local address, shared atomic command | DvtNodeAuthoringMetadata / ConfigureCanvasDvtNode; CanvasRelationalTreeProjection / ProjectCanvasRelationalTree | Existing output command, gesture provider and root token; pure removal tests and existing Transform browser flow | New rail, AST, persisted DTO, hidden cleanup, operand deletion |
+
 Staged unary forms must retain their query inputs while only presentation state
 changes. The authoring presenter currently reconstructs a producer document on
 every pending-edit update; the new analysis snapshot briefly clears its field
