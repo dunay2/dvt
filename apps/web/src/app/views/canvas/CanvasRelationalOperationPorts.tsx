@@ -74,7 +74,13 @@ export function CanvasRelationalOperationPorts({
             onDragOver={(event) => {
               event.preventDefault();
               event.stopPropagation();
-              event.dataTransfer.dropEffect = 'link';
+              event.dataTransfer.dropEffect = event.dataTransfer.types.includes(
+                CANVAS_RELATIONAL_FIELD_DRAG_TYPE
+              )
+                ? fields?.enabled
+                  ? 'copy'
+                  : 'none'
+                : 'link';
             }}
             onDrop={(event) => {
               if (event.dataTransfer.types.includes(CANVAS_RELATIONAL_FIELD_DRAG_TYPE)) {

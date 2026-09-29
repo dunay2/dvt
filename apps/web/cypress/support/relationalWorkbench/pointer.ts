@@ -72,3 +72,100 @@ export function moveWorkbenchCard(
       });
     });
 }
+
+/** Native HTML drag: capture the real writer, never synthesize a field reference. */
+export function dragWorkbenchField(
+  sourceSelector: string,
+  targetSelector: string,
+  targetOffset?: Readonly<{ x: number; y: number }>
+): void {
+  cy.get(sourceSelector)
+    .should('be.visible')
+    .then(($source) => {
+      const source = $source[0]!;
+      const window = source.ownerDocument.defaultView! as Cypress.AUTWindow;
+      const writer = cy.spy(window.DataTransfer.prototype, 'setData');
+      cy.get(targetSelector)
+        .should('be.visible')
+        .then(($target) => {
+          const from = browserPoint(source);
+          const to = browserPoint($target[0]!);
+          const bounds = $target[0]!.getBoundingClientRect();
+          const x =
+            to.x + (targetOffset == null ? 0 : (targetOffset.x - bounds.width / 2) * to.scale);
+          const y =
+            to.y + (targetOffset == null ? 0 : (targetOffset.y - bounds.height / 2) * to.scale);
+          cy.then(async () => {
+            const protocol = (command: string, params = {}): Promise<unknown> =>
+              Cypress.automation('remote:debugger:protocol', {
+                command,
+                params,
+              }) as Promise<unknown>;
+            await protocol('Input.setInterceptDrags', { enabled: true });
+            try {
+              await protocol('Input.dispatchMouseEvent', {
+                type: 'mouseMoved',
+                x: from.x,
+                y: from.y,
+                buttons: 0,
+              });
+              await protocol('Input.dispatchMouseEvent', {
+                type: 'mousePressed',
+                x: from.x,
+                y: from.y,
+                buttons: 1,
+                button: 'left',
+                clickCount: 1,
+              });
+              await protocol('Input.dispatchMouseEvent', {
+                type: 'mouseMoved',
+                x: from.x + 10,
+                y: from.y + 10,
+                buttons: 1,
+                button: 'left',
+              });
+              await protocol('Input.dispatchMouseEvent', {
+                type: 'mouseMoved',
+                x,
+                y,
+                buttons: 1,
+                button: 'left',
+              });
+              expect(source.isConnected, 'field token identity during native drag').to.equal(true);
+              expect(writer.callCount, 'production dragstart writes its payload').to.be.greaterThan(
+                0
+              );
+              const transfer = writer.firstCall.thisValue as DataTransfer;
+              expect(transfer.effectAllowed, 'production field drag effect').to.be.oneOf([
+                'copy',
+                'copyMove',
+              ]);
+              const items = writer
+                .getCalls()
+                .map((call) => ({ mimeType: call.args[0], data: call.args[1] }));
+              const dragOperationsMask = transfer.effectAllowed === 'copyMove' ? 17 : 1;
+              for (const type of ['dragEnter', 'dragOver', 'drop']) {
+                await protocol('Input.dispatchDragEvent', {
+                  type,
+                  x,
+                  y,
+                  data: { items, dragOperationsMask },
+                });
+              }
+            } finally {
+              writer.restore();
+              await protocol('Input.cancelDragging');
+              await protocol('Input.dispatchMouseEvent', {
+                type: 'mouseReleased',
+                x,
+                y,
+                buttons: 0,
+                button: 'left',
+                clickCount: 1,
+              });
+              await protocol('Input.setInterceptDrags', { enabled: false });
+            }
+          });
+        });
+    });
+}

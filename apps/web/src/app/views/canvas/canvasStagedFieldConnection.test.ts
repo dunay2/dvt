@@ -63,7 +63,8 @@ describe('initial field-driven Transform connection', () => {
 
   it('validates root, revision and publication before admitting the field', async () => {
     const source = new CanvasRelationAnalysisSession('source');
-    source.receive(connectedNamesProjectionDraft());
+    const document = connectedNamesProjectionDraft();
+    source.receive(document);
     const field = (await source.query(source.rootId)).bindings[0]!;
     const reference = {
       rootId: source.rootId,
@@ -78,8 +79,11 @@ describe('initial field-driven Transform connection', () => {
       ).rejects.toThrow();
     }
     const schema = await source.query(source.rootId);
-    source.receive(connectedNamesProjectionDraft(), new Set(schema.fields[0]!.sourceFieldIds));
-    await expect(readCanvasRelationalPublishedField(source, reference)).rejects.toThrow();
+    source.receive(document, new Set(schema.fields[0]!.sourceFieldIds));
+    expect(source.revision).toBe(reference.revision);
+    await expect(readCanvasRelationalPublishedField(source, reference)).rejects.toThrow(
+      'Field is not published'
+    );
     source.dispose();
   });
 

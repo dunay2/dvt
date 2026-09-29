@@ -129,6 +129,19 @@ dependency loss; show affected field/relation names without technical IDs. Do no
 claim that a removed expression is supported until canonical validation and
 Preview lowering both pass.
 
+Field tokens use native HTML drag-and-drop, not pointer capture. Its
+[processing model](https://html.spec.whatwg.org/multipage/dnd.html#drag-and-drop-processing-model)
+hands control to the browser with `pointercancel` after `dragstart`; that event
+and the ensuing capture loss must not cancel an active HTML drag. Escape or
+`dragend` without an accepted drop clears the gesture without a semantic write.
+Header movement retains its separate pointer-capture cancellation boundary.
+Native browser pointer input must cover field connection and removal; synthetic
+`drop` events alone cannot prove this lifecycle or `effectAllowed` compatibility.
+Extend the existing Cypress pointer driver for native HTML drags: Chromium drag
+interception prevents a host drag loop from hanging the runner. Replay only the
+payload actually written by the production `dragstart` handler, through trusted
+browser drag events; do not fabricate field references or semantic results.
+
 | Scenario                                | Opportunity                               | Fowler pattern                           | DDD owner / rail                                  | Implementation surfaces                                                               | Unit/package test                                                                        | Architecture test                                                    | User-flow test                                                         | Out of scope                                                  |
 | --------------------------------------- | ----------------------------------------- | ---------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------- |
 | Add/remove one tree field or expression | Missing adapter; hidden gesture authority | Presentation Model plus existing command | DvtNodeAuthoringMetadata / ConfigureCanvasDvtNode | Relational field transfer, compact tokens, viewport boundary, existing output command | Single-field, identity, derived output, dependency, stale/foreign and readonly rejection | Passive tree cannot import semantic writers; bounded gesture adapter | Output drop, background remove, keyboard, invalid/cancel, Apply/reopen | New AST, per-field edges, JOIN normalization, database writes |

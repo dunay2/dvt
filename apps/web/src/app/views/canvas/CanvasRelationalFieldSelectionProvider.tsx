@@ -169,7 +169,7 @@ export function CanvasRelationalFieldSelectionProvider({
         <div
           role="alert"
           data-slot="canvas-field-selection-error"
-          className="absolute bottom-3 left-3 z-20 max-w-sm rounded border border-(--status-danger) bg-(--surface-panel) p-3 text-sm"
+          className="pointer-events-none absolute bottom-16 left-3 z-20 max-w-sm rounded border border-(--status-danger) bg-(--surface-panel) p-3 text-sm"
         >
           <p>{copy.fieldSelectionRejected}</p>
           {affected.length > 0 ? (

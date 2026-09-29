@@ -1,6 +1,7 @@
 /** Real editor + stateful draft transport: Transform owns dataset field authoring. */
 import { getE2eApiCalls } from '../../support/e2eApiStub';
 import { visitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
+import { dragWorkbenchField } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 const inspector = '[data-slot="canvas-transform-inspector"]';
@@ -31,22 +32,34 @@ describe('Semantic dataset Transform', () => {
       .click();
     const input = '[data-pending-operation="true"] [data-slot="canvas-relational-input-port"]';
     let fieldName = '';
+    const lifecycle: string[] = [];
+    cy.window().then((window) => {
+      for (const type of ['dragstart', 'pointercancel', 'dragover', 'drop', 'dragend']) {
+        window.document.addEventListener(
+          type,
+          (event) => {
+            if (type !== 'dragover' || !lifecycle.at(-1)?.startsWith('dragover'))
+              lifecycle.push(`${type}:${event.isTrusted}`);
+          },
+          true
+        );
+      }
+    });
     const dropField = (): void => {
-      cy.window().then((window) => {
-        const dataTransfer = new window.DataTransfer();
-        cy.get('[data-operator="join"]')
-          .closest('li')
-          .find('[data-field-selection="output"]')
-          .last()
-          .then(($field) => {
-            fieldName = $field.attr('title')!;
-          })
-          .trigger('dragstart', { dataTransfer });
-        cy.get(input).trigger('dragover', { dataTransfer }).trigger('drop', { dataTransfer });
-      });
+      cy.get('[data-slot="canvas-relational-tree-fit"]').click();
+      cy.get('[data-operator="join"]')
+        .closest('li')
+        .find('[data-field-selection="output"]')
+        .last()
+        .as('connectionField')
+        .then(($field) => {
+          fieldName = $field.attr('title')!;
+          dragWorkbenchField('@connectionField', input);
+        });
     };
     // A producer already consumed by terminal Output cannot silently acquire fan-out.
     dropField();
+    cy.then(() => expect(lifecycle, 'trusted browser drag lifecycle').to.include('drop:true'));
     cy.get('[data-slot="canvas-field-selection-error"]').should('be.visible');
     cy.get(input).should('not.have.attr', 'data-connected');
     cy.get('[data-slot="canvas-relational-output-input-port"]').focus().type('{del}');
@@ -380,21 +393,13 @@ describe('Semantic dataset Transform', () => {
       cy.get('@totalToken').should('exist');
     });
     // Explicit background drop removes exactly this expression; Apply/reopen proves persistence.
-    cy.window().then((window) => {
-      const dataTransfer = new window.DataTransfer();
-      cy.get('@totalToken').trigger('dragstart', { dataTransfer });
-      cy.then(() =>
-        expect(
-          JSON.parse(dataTransfer.getData('application/x-dvt-relational-field'))
-        ).to.have.property('selectedOutput', true)
-      );
-      // The viewport center is occupied by a card: target its empty padding explicitly.
-      cy.get(
-        '[data-slot="canvas-relational-tree-viewport"], [data-slot="canvas-relational-tree-draft-viewport"]'
-      )
-        .trigger('dragover', 5, 5, { dataTransfer })
-        .trigger('drop', 5, 5, { dataTransfer });
-    });
+    cy.get('@totalToken').scrollIntoView();
+    // The viewport center is occupied by a card: target its empty padding explicitly.
+    dragWorkbenchField(
+      '@totalToken',
+      '[data-slot="canvas-relational-tree-viewport"], [data-slot="canvas-relational-tree-draft-viewport"]',
+      { x: 5, y: 5 }
+    );
     cy.get(card)
       .closest('li')
       .find('[data-field-selection="output"]')

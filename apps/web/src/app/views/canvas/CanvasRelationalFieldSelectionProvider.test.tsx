@@ -161,6 +161,8 @@ describe('relational tree selection gestures', () => {
     const dataTransfer = transfer();
     await act(async () => {
       fireEvent.dragStart(outputs()[1]!, { dataTransfer });
+      fireEvent.pointerCancel(outputs()[1]!);
+      fireEvent.lostPointerCapture(outputs()[1]!);
       fireEvent.drop(container.querySelector('[data-testid="background"]')!, { dataTransfer });
     });
     expect(outputs()).toHaveLength(1);
@@ -174,7 +176,7 @@ describe('relational tree selection gestures', () => {
     expect(writes).toHaveBeenCalledTimes(2);
   });
 
-  it.each(['invalid-card', 'escape', 'lost-capture', 'end', 'input'])(
+  it.each(['invalid-card', 'escape', 'lost-capture-then-cancel', 'end', 'input'])(
     'does not remove on %s',
     async (kind) => {
       const writes = await mount();
@@ -190,8 +192,11 @@ describe('relational tree selection gestures', () => {
         if (kind === 'input')
           fireEvent.drop(container.querySelector('[data-testid="background"]')!, { dataTransfer });
         if (kind === 'escape') fireEvent.keyDown(token, { key: 'Escape' });
-        if (kind === 'lost-capture') fireEvent.lostPointerCapture(token);
-        if (kind === 'escape' || kind === 'lost-capture')
+        if (kind === 'lost-capture-then-cancel') {
+          fireEvent.lostPointerCapture(token);
+          fireEvent.dragEnd(token, { dataTransfer });
+        }
+        if (kind === 'escape' || kind === 'lost-capture-then-cancel')
           fireEvent.drop(container.querySelector('[data-testid="background"]')!, { dataTransfer });
         fireEvent.dragEnd(token, { dataTransfer });
       });
@@ -221,6 +226,12 @@ describe('relational tree selection gestures', () => {
       const dataTransfer = transfer();
       await act(async () => {
         fireEvent.dragStart(outputs()[0]!, { dataTransfer });
+        fireEvent.pointerCancel(outputs()[0]!);
+        fireEvent.lostPointerCapture(outputs()[0]!);
+        fireEvent.dragOver(container.querySelector('[data-slot="canvas-relational-input-port"]')!, {
+          dataTransfer,
+        });
+        expect(dataTransfer.dropEffect).toBe(kind === 'readonly' ? 'none' : 'copy');
         if (kind === 'cancelled') fireEvent.keyDown(outputs()[0]!, { key: 'Escape' });
         fireEvent.drop(container.querySelector('[data-slot="canvas-relational-input-port"]')!, {
           dataTransfer,

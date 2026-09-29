@@ -62,8 +62,6 @@ export function CanvasRelationalFieldToken({
         actions?.begin(reference);
       }}
       onDragEnd={() => actions?.end()}
-      onLostPointerCapture={() => actions?.end()}
-      onPointerCancel={() => actions?.end()}
       onKeyDown={(event) => {
         if (event.key === 'Escape') {
           actions?.end();
