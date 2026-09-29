@@ -239,6 +239,50 @@ declarations before implementation. Do not claim completion of the editor from
 the read-projection or formula-operand cut alone: cross-card mapping, removal,
 dependency feedback and complete save/reopen proof remain acceptance gates.
 
+### Assisted expression workspace (#3422)
+
+The isolated name/textarea form is not the advanced editor. Replace its text
+surface with the existing lazy Monaco editor, with scoped completions and
+selection-preserving insertion. Beside the formula, expose searchable admitted
+fields (names and types, click or drag), catalog-derived function signatures and
+literal/operator insertion. Functions come from the existing provider capability
+resolver, not an independently maintained UI catalog. Function insertion wraps
+the selected expression; field insertion replaces the selection. All gestures
+edit only the disposable text draft until the existing explicit submit command.
+
+```mermaid
+flowchart LR
+  Before[Isolated textarea] --> Guess[User guesses fields and syntax]
+  Fields[Admitted current operands] --> Palette[Search, click, drag and completion]
+  Catalog[Existing capability resolver] --> Palette
+  Palette --> Draft[One formula text draft in lazy Monaco]
+  Draft --> Compiler[Existing Substrait compiler]
+  Compiler --> Feedback[Type, dependencies and canonical expression tree]
+  Draft --> Submit[Existing revision-bound derived-output command]
+```
+
+Compiler diagnostics, not a second parser or JavaScript evaluation, determine
+whether saving is allowed. The existing scalar tree renderer can show the
+compiled draft as read-only feedback alongside its result type and dependencies;
+it is not a second editable expression tree or persisted model. This supersedes
+the older Properties-only textual summary restriction while preserving one
+compiler and one renderer. Local validity is not provider execution readiness.
+Completions are scoped to the editor model and disposed on close. Opening a
+second editor cannot leak field names across models. Monaco remains lazily
+loaded with existing local workers; no new dependency, CDN or backend is needed.
+
+| Scenario                                           | Opportunity                                  | Owner / pattern                                                 | Rail                        | Proof                                                                                                    |
+| -------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Build a compound expression without guessing names | Isolated text presentation                   | Existing authoring model and compiler / assisted syntax adapter | ConfigureCanvasDvtNode      | Field click/drop, nested function insertion, constants, completion, edit/save/reopen                     |
+| Show useful feedback without duplicated semantics  | Boolean validation hides the compiler result | Canonical expression projection / presentation model            | ProjectCanvasRelationalTree | Type and dependency feedback, invalid/stale/foreign inputs, no provider call or publication while typing |
+
+Allowed surfaces add only the existing shared Monaco wrapper's optional mount
+callback, Canvas formula presentation/adapter files and their tests. No new
+command, DTO or AST. Negative tests retain self-reference rejection, explicit
+cancel, unchanged authoring during insertion, and revision-bound submission.
+Cross-card mapping and drag-out removal remain separate acceptance obligations;
+this workspace alone does not close the complete field-flow editor.
+
 ### Card detail convergence (#3422)
 
 Every admitted relational card exposes an explicitly collapsible read-only

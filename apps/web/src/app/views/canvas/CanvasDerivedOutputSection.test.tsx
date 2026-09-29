@@ -12,9 +12,64 @@ import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
 import { CanvasRelationalScalarTree } from './CanvasRelationalScalarTree';
 import { CANVAS_RELATIONAL_FIELD_DRAG_TYPE } from './canvasRelationalTreeDrag';
+import { DerivedOutputFormulaForm } from './DerivedOutputFormulaForm';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+
+vi.mock('../../components/monaco/MonacoCodeEditor', async () => ({
+  MonacoCodeEditor: (await import('./formulaMonaco.test-support')).FormulaMonacoTestSurface,
+}));
+vi.mock('./canvasFormulaMonaco', () => ({ configureFormulaEditor: () => () => undefined }));
 
 describe('selected relation derived-output section', () => {
   setupWorkbenchTest();
+
+  it('inserts an operand by click, wraps the selection and shows compiler feedback before any command', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(null);
+    await act(async () =>
+      root.render(
+        <DerivedOutputFormulaForm
+          fields={[{ fieldId: 'name', name: 'customer', dataType: 'string' }]}
+          provider="postgres"
+          dragScope={{
+            rootId: 'root',
+            revision: 1,
+            references: [{ fieldId: 'name', relationId: 'read', name: 'customer' }],
+          }}
+          copy={resolveCanvasSemanticEditorCopy('en').derivedOutput}
+          unavailableAliases={[]}
+          onSubmit={onSubmit}
+          onCancel={vi.fn()}
+        />
+      )
+    );
+    const formula = container.querySelector<HTMLTextAreaElement>('textarea')!;
+    await act(async () =>
+      fireEvent.click(container.querySelector('[data-slot="formula-operand"]')!)
+    );
+    expect(formula.value).toBe('"customer"');
+    expect(container.querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled).toBe(
+      true
+    );
+    formula.setSelectionRange(0, formula.value.length);
+    await act(async () =>
+      fireEvent.click(container.querySelectorAll('.formula-palette-tabs button')[1]!)
+    );
+    const upper = [
+      ...container.querySelectorAll<HTMLButtonElement>('[data-slot="formula-operand"]'),
+    ].find((button) => button.title === 'UPPER(arg1)')!;
+    await act(async () => fireEvent.click(upper));
+    expect(formula.value).toBe('UPPER("customer")');
+    expect(container.querySelector('.formula-result')?.textContent).toContain('string');
+    expect(container.querySelector('.formula-result')?.textContent).toContain('customer');
+    expect(onSubmit).not.toHaveBeenCalled();
+    await act(async () =>
+      fireEvent.change(container.querySelector('input[name="alias"]')!, {
+        target: { value: 'normalized' },
+      })
+    );
+    await act(async () => fireEvent.submit(container.querySelector('form')!));
+    expect(onSubmit).toHaveBeenCalledWith({ alias: 'normalized', formula: 'UPPER("customer")' });
+  });
 
   it('stays read-only until requested and commits one revision-bound document', async () => {
     const document = connectedNamesProjectionDraft();
@@ -63,6 +118,9 @@ describe('selected relation derived-output section', () => {
     const formula = container.querySelector<HTMLTextAreaElement>('textarea[name="formula"]')!;
     expect(formula).not.toBeNull();
     expect(formula.value).toBe('');
+    expect(
+      container.querySelectorAll('[data-slot="formula-operand"][data-kind="field"]').length
+    ).toBeGreaterThan(0);
     await act(async () => fireEvent.change(formula, { target: { value: 'UPPER(first_name)' } }));
     await act(async () =>
       fireEvent.change(container.querySelector<HTMLInputElement>('input[name="alias"]')!, {

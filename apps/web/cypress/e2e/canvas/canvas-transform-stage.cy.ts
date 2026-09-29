@@ -6,6 +6,8 @@ import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenari
 const inspector = '[data-slot="canvas-transform-inspector"]';
 const form = '[data-slot="canvas-derived-output-form"]';
 const card = '[data-slot="canvas-relational-tree-node"][data-operator="project"]';
+const formulaInput = '[data-slot="formula-editor"] .monaco-editor textarea';
+const formulaText = '[data-slot="formula-editor"] .view-lines';
 
 function openModel(): void {
   cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]')
@@ -49,7 +51,12 @@ describe('Semantic dataset Transform', () => {
     cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
     cy.get(form).within(() => {
       cy.get('input[name="alias"]').type('normalized_name');
-      cy.get('textarea[name="formula"]').type("UPPER('hola')");
+      cy.get('[data-slot="formula-operand"][data-kind="field"]').should('not.be.empty');
+      cy.contains('.formula-palette-tabs button', 'Functions').click();
+      cy.contains('[data-slot="formula-operand"]', 'UPPER').click();
+      cy.get(formulaInput).type("'hola'", { force: true });
+      cy.get(formulaText).should('contain.text', "UPPER('hola')");
+      cy.get('.formula-result').should('contain.text', 'string').and('contain.text', 'UPPER');
       cy.get('button[type="submit"]').should('be.enabled').click();
     });
     cy.get(form).should('not.exist');
@@ -57,7 +64,9 @@ describe('Semantic dataset Transform', () => {
     cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
     cy.get(form).within(() => {
       cy.get('input[name="alias"]').type('fallback_name');
-      cy.get('textarea[name="formula"]').type("''");
+      cy.get(formulaInput).should('exist');
+      cy.contains('.formula-tools button', 'Empty text').click();
+      cy.get('.formula-result').should('contain.text', 'no field dependencies');
       cy.get('button[type="submit"]').should('be.enabled').click();
     });
     cy.get(form).should('not.exist');
@@ -65,7 +74,8 @@ describe('Semantic dataset Transform', () => {
     cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
     cy.get(form).within(() => {
       cy.get('input[name="alias"]').type('total');
-      cy.get('textarea[name="formula"]').type('(2 + 3) * 4');
+      cy.get(formulaInput).type('(2 + 3) * 4', { force: true });
+      cy.get('.formula-result').should('contain.text', 'bigint').and('contain.text', 'MULTIPLY');
       cy.get('button[type="submit"]').should('be.enabled').click();
     });
     cy.get(form).should('not.exist');
@@ -79,10 +89,8 @@ describe('Semantic dataset Transform', () => {
       .then((fieldId) => {
         cy.get('@editableOutput').find('button').click();
         cy.get(form).within(() => {
-          cy.get('textarea[name="formula"]')
-            .should('have.value', "''")
-            .clear()
-            .type("CONCAT('hola', ' ', 'mundo')");
+          cy.get(formulaText).should('contain.text', "''");
+          cy.get(formulaInput).type("{selectall}CONCAT('hola', ' ', 'mundo')", { force: true });
           cy.get('button[type="submit"]').click();
         });
         cy.get(inspector)
@@ -135,7 +143,7 @@ describe('Semantic dataset Transform', () => {
       .find('button')
       .click();
     cy.get(form).find('input[name="alias"]').should('have.value', 'fallback_name');
-    cy.get(form).find('textarea[name="formula"]').invoke('val').should('contain', "'mundo'");
+    cy.get(formulaText).should('contain.text', "'mundo'");
     cy.get(card).closest('li').find('[data-slot="canvas-relational-node-expand"]').click();
     cy.get(card)
       .closest('li')
@@ -146,13 +154,7 @@ describe('Semantic dataset Transform', () => {
     cy.then(() => {
       writesBeforeDrag = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
-    cy.get(form)
-      .find('textarea[name="formula"]')
-      .clear()
-      .type('UPPER()')
-      .then(($field) => {
-        $field[0]!.setSelectionRange(6, 6);
-      });
+    cy.get(formulaInput).type('{selectall}UPPER(){leftarrow}', { force: true });
     cy.window().then((window) => {
       const dataTransfer = new window.DataTransfer();
       cy.get(card)
@@ -162,17 +164,44 @@ describe('Semantic dataset Transform', () => {
         )
         .first()
         .trigger('dragstart', { dataTransfer });
-      cy.get(form)
-        .find('textarea[name="formula"]')
+      cy.get('[data-slot="formula-editor"]')
         .trigger('dragover', { dataTransfer })
-        .trigger('drop', { dataTransfer })
-        .should('have.value', 'UPPER("normalized_name")');
+        .trigger('drop', { dataTransfer });
+      cy.get(formulaText).should('contain.text', 'UPPER("normalized_name")');
     });
     cy.get(form).find('button[type="submit"]').should('be.enabled');
     cy.then(() =>
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBeforeDrag)
     );
     cy.screenshot('transform-name-formula-edit');
+    cy.get(form).screenshot('transform-assisted-form');
+    cy.get(formulaInput)
+      .type('{selectall}UPP', { force: true })
+      // Monaco's keyboard input is intentionally covered by its rendered code layer.
+      .trigger('keydown', {
+        key: ' ',
+        code: 'Space',
+        keyCode: 32,
+        which: 32,
+        ctrlKey: true,
+        force: true,
+      });
+    cy.get('.suggest-widget.visible').should('contain.text', 'UPPER');
+    cy.get(formulaInput).type('{esc}', { force: true });
+    cy.get(form).should('exist');
+    cy.get(formulaInput).trigger('keydown', {
+      key: ' ',
+      code: 'Space',
+      keyCode: 32,
+      which: 32,
+      ctrlKey: true,
+      force: true,
+    });
+    cy.get('.suggest-widget.visible').contains('.monaco-list-row', 'UPPER').click();
+    cy.get(formulaText).should('contain.text', 'UPPER()');
+    cy.get(formulaInput).type('{selectall}UPPER(missing)', { force: true });
+    cy.get('.formula-diagnostic').should('contain.text', 'Unknown');
+    cy.get(form).find('button[type="submit"]').should('be.disabled');
     cy.get(form).find('[data-slot="canvas-derived-output-cancel"]').click();
     cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();
     cy.get(inspector).find('input').filter('[value="fallback_name"]').should('exist');

@@ -262,17 +262,32 @@ export function validateDerivedOutputFormula(
     provider: string;
   }>
 ): boolean {
+  return inspectDerivedOutputFormula(args).ok;
+}
+
+export function inspectDerivedOutputFormula(
+  args: Parameters<typeof validateDerivedOutputFormula>[0]
+) {
   try {
+    const plan = create(PlanSchema);
     const result = compileDerivedOutputFormula({
       ...args,
-      plan: create(PlanSchema),
+      plan,
       fields: args.fields.map((field, ordinal) => ({
         ...field,
         expression: dvtSubstraitExpression.field(ordinal),
       })),
     });
-    return result.expression.rexType.case !== 'selection';
-  } catch {
-    return false;
+    if (result.expression.rexType.case === 'selection')
+      return {
+        ok: false as const,
+        message: 'Use Output to pass through a field, or compose an expression.',
+      };
+    return { ok: true as const, ...result, plan };
+  } catch (error) {
+    return {
+      ok: false as const,
+      message: error instanceof Error ? error.message : 'Invalid formula.',
+    };
   }
 }

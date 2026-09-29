@@ -1,16 +1,19 @@
-/** One text draft; field drops insert admitted references, never a second expression AST. */
-import { useId, useState, type FormEvent } from 'react';
+/** One text draft submitted through the existing revision-bound command. */
+import { useMemo, useState, type FormEvent } from 'react';
 import { DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Textarea } from '../../components/ui/textarea';
 import type { CanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import type { DerivedOutputField } from './DerivedOutputOperands';
-import { validateDerivedOutputFormula } from './canvasDerivedOutputFormula';
-import {
-  CANVAS_RELATIONAL_FIELD_DRAG_TYPE,
-  readCanvasRelationalFieldDrag,
-} from './canvasRelationalTreeDrag';
+import { formulaSuggestions, projectFormulaFeedback } from './canvasFormulaAssist';
+import { DerivedOutputFormulaEditor } from './DerivedOutputFormulaEditor';
+import { DerivedOutputFormulaFeedback } from './DerivedOutputFormulaFeedback';
+
+export type DerivedOutputFormulaDragScope = Readonly<{
+  rootId: string;
+  revision: number;
+  references: readonly Readonly<{ relationId: string; fieldId: string; name: string }>[];
+}>;
 
 export function DerivedOutputFormulaForm({
   initial,
@@ -25,11 +28,7 @@ export function DerivedOutputFormulaForm({
   initial?: Readonly<{ alias: string; formula: string }>;
   fields: readonly DerivedOutputField[];
   provider: string;
-  dragScope: Readonly<{
-    rootId: string;
-    revision: number;
-    references: readonly Readonly<{ relationId: string; fieldId: string; name: string }>[];
-  }>;
+  dragScope: DerivedOutputFormulaDragScope;
   unavailableAliases: readonly string[];
   copy: CanvasSemanticEditorCopy['derivedOutput'];
   onSubmit: (request: Readonly<{ alias: string; formula: string }>) => Promise<string | null>;
@@ -39,21 +38,28 @@ export function DerivedOutputFormulaForm({
   const [formula, setFormula] = useState(initial?.formula ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const id = useId();
-  const valid = validateDerivedOutputFormula({ formula, fields, provider });
+  const feedback = useMemo(
+    () => projectFormulaFeedback(formula, fields, provider),
+    [formula, fields, provider]
+  );
+  const suggestions = useMemo(() => formulaSuggestions(fields, provider), [fields, provider]);
+  const aliasError =
+    alias.trim() === ''
+      ? null
+      : !DvtSemanticFieldNameV1Schema.safeParse(alias.trim()).success
+        ? copy.aliasInvalid
+        : unavailableAliases.includes(alias.trim())
+          ? copy.aliasConflict
+          : null;
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (busy) return;
-    if (!DvtSemanticFieldNameV1Schema.safeParse(alias.trim()).success) {
-      setError(copy.aliasInvalid);
+    if (alias.trim() === '' || aliasError != null) {
+      setError(aliasError ?? copy.aliasInvalid);
       return;
     }
-    if (unavailableAliases.includes(alias.trim())) {
-      setError(copy.aliasConflict);
-      return;
-    }
-    if (!valid) {
-      setError(copy.formulaInvalid);
+    if (!feedback.ok) {
+      setError(feedback.message);
       return;
     }
     setBusy(true);
@@ -74,7 +80,8 @@ export function DerivedOutputFormulaForm({
       aria-busy={busy}
       onSubmit={(event) => void submit(event)}
       onKeyDown={(event) => {
-        if (event.key === 'Escape' && !busy) {
+        // Monaco owns Escape while its completion widget is open.
+        if (event.key === 'Escape' && !event.defaultPrevented && !busy) {
           event.stopPropagation();
           onCancel();
         }
@@ -87,74 +94,31 @@ export function DerivedOutputFormulaForm({
           value={alias}
           autoFocus
           disabled={busy}
+          aria-invalid={aliasError != null}
           onChange={(event) => {
             setAlias(event.currentTarget.value);
             setError(null);
           }}
         />
       </label>
-      <label className="block space-y-1 text-xs">
-        <span>{copy.formulaLabel}</span>
-        <Textarea
-          name="formula"
-          value={formula}
-          disabled={busy}
-          spellCheck={false}
-          aria-describedby={id}
-          aria-invalid={formula.trim() !== '' && !valid}
-          className="min-h-24 font-mono"
-          onChange={(event) => {
-            setFormula(event.currentTarget.value);
-            setError(null);
-          }}
-          onDragOver={(event) => {
-            if (busy || !event.dataTransfer.types.includes(CANVAS_RELATIONAL_FIELD_DRAG_TYPE))
-              return;
-            event.preventDefault();
-            event.stopPropagation();
-            event.dataTransfer.dropEffect = 'copy';
-          }}
-          onDrop={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            const reference = readCanvasRelationalFieldDrag(event.dataTransfer);
-            const field =
-              reference == null ||
-              reference.rootId !== dragScope.rootId ||
-              reference.revision !== dragScope.revision
-                ? undefined
-                : dragScope.references.find(
-                    (item) =>
-                      item.fieldId === reference.fieldId && item.relationId === reference.relationId
-                  );
-            if (busy) return;
-            if (field == null) {
-              setError(copy.formulaInvalid);
-              return;
-            }
-            const operand = '"' + field.name.replaceAll('"', '""') + '"';
-            const textarea = event.currentTarget;
-            const cursor = textarea.selectionStart + operand.length;
-            setFormula(
-              formula.slice(0, textarea.selectionStart) +
-                operand +
-                formula.slice(textarea.selectionEnd)
-            );
-            setError(null);
-            requestAnimationFrame(() => {
-              textarea.focus();
-              textarea.setSelectionRange(cursor, cursor);
-            });
-          }}
-        />
-      </label>
-      <p id={id} className="text-xs text-(--text-muted)">
-        {error ?? (formula.trim() !== '' && !valid ? copy.formulaInvalid : copy.formulaHint)}
-      </p>
-      {error == null ? null : (
-        <span role="alert" className="sr-only">
-          {error}
-        </span>
+      <DerivedOutputFormulaEditor
+        formula={formula}
+        suggestions={suggestions}
+        dragScope={dragScope}
+        copy={copy}
+        disabled={busy}
+        diagnostic={formula.trim() !== '' && !feedback.ok ? feedback.message : undefined}
+        onChange={(value) => {
+          setFormula(value);
+          setError(null);
+        }}
+        onInvalidDrop={() => setError(copy.formulaInvalid)}
+      />
+      <DerivedOutputFormulaFeedback feedback={feedback} copy={copy} empty={formula.trim() === ''} />
+      {error == null && aliasError == null ? null : (
+        <p role="alert" className="formula-diagnostic">
+          {error ?? aliasError}
+        </p>
       )}
       <div className="flex justify-end gap-2">
         <Button
@@ -167,7 +131,11 @@ export function DerivedOutputFormulaForm({
         >
           {copy.cancel}
         </Button>
-        <Button type="submit" size="sm" disabled={busy || alias.trim() === '' || !valid}>
+        <Button
+          type="submit"
+          size="sm"
+          disabled={busy || alias.trim() === '' || aliasError != null || !feedback.ok}
+        >
           {initial == null ? copy.save : copy.update}
         </Button>
       </div>
