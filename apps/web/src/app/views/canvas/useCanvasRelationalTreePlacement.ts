@@ -40,16 +40,6 @@ export function useCanvasRelationalTreePlacement({
   );
   const { projectLayout, setPosition, expanded, toggleDetail } = useRelationalLayout();
   const zoomRevealsDetail = Math.round(zoom * 100) >= CANVAS_RELATIONAL_DETAIL_ZOOM * 100;
-  const sizes = useMemo(() => {
-    const visible = new Map(detail.sizes);
-    const visit = (node: CanvasRelationalTreeNode): void => {
-      if (!zoomRevealsDetail && !expanded.has(node.relationId ?? node.locator))
-        visible.delete(node.locator);
-      node.children.forEach((child) => visit(child.node));
-    };
-    if (root != null) visit(root);
-    return visible;
-  }, [root, detail, expanded, zoomRevealsDetail]);
   const detachedSources = useMemo(
     () => pendingSources?.map(projectPendingSourceOccurrence) ?? [],
     [pendingSources]
@@ -58,6 +48,17 @@ export function useCanvasRelationalTreePlacement({
     () => [...detachedSources, ...stagedOperations.map(projectCanvasStagedOperation)],
     [detachedSources, stagedOperations]
   );
+  const sizes = useMemo(() => {
+    const visible = new Map(detail.sizes);
+    const visit = (node: CanvasRelationalTreeNode): void => {
+      if (!zoomRevealsDetail && !expanded.has(node.relationId ?? node.locator))
+        visible.delete(node.locator);
+      node.children.forEach((child) => visit(child.node));
+    };
+    if (root != null) visit(root);
+    detached.forEach(visit);
+    return visible;
+  }, [root, detached, detail, expanded, zoomRevealsDetail]);
   const layout = useMemo(
     () => projectLayout(root, sizes, detached),
     [root, sizes, detached, projectLayout]

@@ -12,6 +12,7 @@ import {
   previewWorkbenchModel,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
+import { connectStagedTransformChain } from '../../support/relationalWorkbench/transformChainJourney';
 import { readPersistedDocument } from '../../support/semanticLive/canonicalAssertions';
 import { executePersistedModel } from '../../support/semanticLive/execution';
 import {
@@ -78,7 +79,18 @@ describe('Progressive SQL verticals', () => {
         importSemanticModel(document, { name: `SQL vertical ${scenario.level}`, resultRelation });
       });
       openWorkbenchModel(modelId);
-      cy.get('[data-operator="project"]').click();
+      if (scenario.level === 1) {
+        connectStagedTransformChain(
+          '[data-operator="read"]',
+          'client_id',
+          'CAMPO_PRUEBA',
+          'COALESCE(UPPER(TRIM("client_id")), NULL)'
+        );
+        cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+        cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
+        cy.get('[data-operator="project"]').should('have.length', 2);
+      }
+      cy.get('[data-operator="project"]').first().click();
       for (const [alias, formula] of scenario.formulas) addLiveFormula(alias, formula);
       if (scenario.level === 3) {
         cy.get('[data-slot="canvas-model-tab-close"]').click();
@@ -94,12 +106,21 @@ describe('Progressive SQL verticals', () => {
         });
         cy.get('[data-operator="aggregate"]').click();
         stageUnary('window', '[data-operator="aggregate"]');
+        cy.get('[data-slot="canvas-relational-tree-node"][data-presentation="window"]')
+          .should('have.attr', 'data-relation-id')
+          .invoke('attr', 'data-relation-id')
+          .as('windowRelationId', { type: 'static' });
         cy.get('[data-slot="canvas-staged-operation-inspector"] form').within(() => {
           cy.contains('label', 'ORDER BY').find('select').select('revenue');
           cy.contains('label', 'Result name').find('input').clear().type('rank');
           cy.get('button[type="submit"]').click();
         });
-        stageUnary('sort', '[data-operator="window"]');
+        cy.get<string>('@windowRelationId').then((relationId) => {
+          stageUnary(
+            'sort',
+            `[data-slot="canvas-relational-tree-node"][data-relation-id="${relationId}"]`
+          );
+        });
         cy.get('[data-slot="canvas-staged-operation-inspector"] form').within(() => {
           cy.get('select').first().select('revenue');
           cy.get('select[aria-label="Direction and nulls 1"]').select('DESC · NULLS LAST');
