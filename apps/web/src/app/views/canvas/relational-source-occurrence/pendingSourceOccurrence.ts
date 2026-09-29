@@ -1,4 +1,4 @@
-/** A detached draft Read uses the same canonical identity and projection as a connected Read. */
+/** Preserve and validate the canonical identity of a detached draft Read. */
 import {
   indexSubstraitRelations,
   resolveProducerInput,
@@ -9,8 +9,6 @@ import { TypeSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/type_
 import { jcsCanonicalize } from '@dvt/crypto';
 import type { CanvasDvtCompositionInput } from '../canvasDvtCompositionInputCatalog';
 import { createCanvasInputRead, sourceFieldType } from '../canvasSourceRelation';
-import { createSourceDocument } from '../canvasSourceDocument';
-import { buildCanvasRelationalTreeRelation } from '../canvasRelationalTreeRelationProjection';
 import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
 import { decodeDvtSubstraitSemanticDocument } from '../canvasDvtSubstraitSemanticDocument';
 
@@ -27,7 +25,6 @@ export function createPendingSourceOccurrence(
     read: createCanvasInputRead(input, 1),
   };
 }
-
 export function restorePendingSourceOccurrence(
   input: CanvasDvtCompositionInput,
   source: DvtRelationalAuthoringDraftV1['sources'][number]
@@ -86,13 +83,4 @@ function validatePendingSourceInput(
       );
     })
   );
-}
-
-export function projectPendingSourceOccurrence({ read }: PendingSourceOccurrence) {
-  const result = indexSubstraitRelations(createSourceDocument([read], read));
-  if (!result.ok) throw result.error;
-  return buildCanvasRelationalTreeRelation({
-    index: result.index,
-    digest: read.binding.relationId,
-  });
 }

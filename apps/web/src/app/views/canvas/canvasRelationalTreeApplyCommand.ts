@@ -10,7 +10,7 @@ import type {
   RelationalApplyRejection,
 } from './canvasRelationalTreeWorkbench.types';
 
-export function useCanvasRelationalTreeApplyCommand(args: {
+export function createCanvasRelationalTreeApplyCommand(args: {
   authoring?: CanvasRelationalTreeAuthoringContract;
   editable: boolean;
   relationalAuthoringDraft?: DvtRelationalAuthoringDraftV1 | null;

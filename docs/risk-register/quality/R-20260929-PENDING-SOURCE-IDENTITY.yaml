@@ -1,0 +1,28 @@
+---
+id: R-20260929-PENDING-SOURCE-IDENTITY
+title: Pending source restore could silently rebind fields after producer drift
+status: Open
+date: 2026-09-29
+owners:
+  - apps/web
+  - packages/@dvt/contracts
+severity: High
+probability: Low
+---
+mitigation:
+  summary: >
+    Persist the canonical Read and provenance in the existing authoring contract. Restore exact
+    saved identities only after physical-source or model-producer validation. Reject incompatible
+    sources explicitly without implicit writes. Retire the positional snapshot shape in place; no
+    parallel reader or migration. Keep React coordination, pure Apply policy, identity validation
+    and view projection separate, with direct behavior tests and architecture guards.
+  evidence:
+    - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
+    - docs/evidence/ED-20260929-pending-source-identity.md
+    - packages/@dvt/contracts/test/dvt-relational-authoring-draft.contract.test.ts
+    - apps/web/src/app/views/canvas/canvasRelationalAuthoringDraft.test.ts
+    - apps/web/src/app/views/canvas/CanvasRelationalTreeWorkbench.architecture.test.ts
+    - apps/web/cypress/e2e/canvas/canvas-relational-workbench-chain-persistence.cy.ts
+  follow_up:
+    - Preserve negative producer-drift tests when extending source admission.
+    - Deploy the current reader and writer together; never restore positional binding.

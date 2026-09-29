@@ -7,7 +7,19 @@ import {
   projectCanvasRelationalTree,
   type CanvasRelationalTreeProjection,
 } from './canvasRelationalTreeProjection';
-import type { SubstraitDocument } from '@dvt/substrait-analysis';
+import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
+import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
+import { createSourceDocument } from './canvasSourceDocument';
+import { buildCanvasRelationalTreeRelation } from './canvasRelationalTreeRelationProjection';
+
+export function projectPendingSourceOccurrence({ read }: PendingSourceOccurrence) {
+  const result = indexSubstraitRelations(createSourceDocument([read], read));
+  if (!result.ok) throw result.error;
+  return buildCanvasRelationalTreeRelation({
+    index: result.index,
+    digest: read.binding.relationId,
+  });
+}
 
 export function projectCanvasRelationalTreeAuthoringDraft(
   args: Readonly<{

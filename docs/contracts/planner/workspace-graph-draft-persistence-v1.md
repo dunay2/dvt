@@ -158,6 +158,22 @@ reorder with equal cardinality, physical rename/add/remove/type changes, produce
 aliases and publication changes, independent occurrences, dependent expressions,
 unsupported positional payloads and no implicit hydration writes.
 
+The React session only coordinates hydration, analysis and existing commands.
+The pure apply-draft projector owns incomplete/cleared/change decisions and the
+exact persistence request. Occurrence identity code does not import tree
+presentation; pending Read rendering belongs to the existing authoring query
+projector. Catalogue projection owns presentation selection and participation,
+not persistence or producer identity validation.
+
+```mermaid
+flowchart LR
+  Session[React session coordinator] --> Apply[Pure apply-draft preparation]
+  Apply --> Command[Existing ConfigureCanvasDvtNode port]
+  Hydrate[Read-only hydration] --> Identity[Occurrence provenance validation]
+  Identity --> Query[Authoring tree projector]
+  Query --> View[Canvas presentation]
+```
+
 ### String categories
 
 Every editable string admitted into `WorkspaceGraphAuthoringDraft` has one

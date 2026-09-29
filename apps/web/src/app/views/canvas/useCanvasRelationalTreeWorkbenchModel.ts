@@ -10,6 +10,9 @@ import { projectAnalyzedCanvasRelationalTree } from './canvasRelationalTreeProje
 import {
   projectCanvasRelationalTreeCatalogue,
   projectPendingCanvasRelationalTreeCatalogue,
+  projectCanvasRelationalCatalogueSelection,
+} from './canvasRelationalTreeCatalogue';
+import {
   projectCanvasSourceOccurrencePublication,
   unavailableCanvasRelationIds,
 } from './canvasRelationalTreeWorkbenchModel';
@@ -86,43 +89,15 @@ export function useCanvasRelationalTreeWorkbenchModel(
             nodes: args.nodes,
             root: projection.root,
           });
-    if (!authoringAvailable) {
-      return base.map((item) => ({
-        ...item,
-        selected: item.treeLocator != null && item.treeLocator === selectedLocator,
-      }));
-    }
-    const configuredProducerIds = new Set(
-      session.staged.operations.flatMap((operation) =>
-        operation.semanticDocument == null
-          ? []
-          : operation.inputs.filter((input): input is string => input != null)
-      )
-    );
-    return base.map((item) => {
-      const selectedOccurrence = session.occurrences.pending.find(
-        (occurrence) =>
-          occurrence.sourceNodeId === item.sourceNodeId &&
-          occurrence.read.binding.relationId === session.occurrences.selectedId
-      );
-      return {
-        ...item,
-        state:
-          item.sourceNodeId != null &&
-          session.occurrences.pending.some(
-            (occurrence) =>
-              occurrence.sourceNodeId === item.sourceNodeId &&
-              configuredProducerIds.has(occurrence.read.binding.relationId)
-          )
-            ? ('participating' as const)
-            : item.state,
-        selectable: item.fieldCount !== 0,
-        selected: selectedOccurrence != null,
-        reason: null,
-      };
+    return projectCanvasRelationalCatalogueSelection({
+      catalogue: base,
+      authoringAvailable,
+      selectedLocator,
+      pending: session.occurrences.pending,
+      selectedOccurrenceId: session.occurrences.selectedId,
+      operations: session.staged.operations,
     });
   }, [
-    args.authoring?.canEditNode,
     args.nodes,
     composition?.state,
     inputs,

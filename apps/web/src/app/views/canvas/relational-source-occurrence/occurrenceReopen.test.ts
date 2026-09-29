@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { resolveCanvasRelationalTreeExistingDraft } from '../canvasRelationalTreeExistingDraft';
 import { projectCanvasRelationalTree } from '../canvasRelationalTreeProjection';
-import { projectCanvasRelationalTreeCatalogue } from '../canvasRelationalTreeWorkbenchModel';
+import { projectCanvasRelationalTreeCatalogue } from '../canvasRelationalTreeCatalogue';
 import { occurrenceGraph } from './occurrence.test.fixtures';
 
 describe('source occurrence reopening', () => {
