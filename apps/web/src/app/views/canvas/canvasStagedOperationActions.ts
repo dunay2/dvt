@@ -1,7 +1,6 @@
 /** Commands for the discardable staged-operation presentation model. */
 import {
   connectCanvasStagedOperation,
-  createsCanvasStagedOperationCycle,
   createCanvasStagedOperation,
   disconnectCanvasStagedOperation,
   type CanvasStagedOperation,
@@ -14,6 +13,7 @@ import {
 } from './canvasStagedOperationDocument';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
+import { admitCanvasStagedConnection } from './canvasStagedConnectionAdmission';
 
 export function createCanvasStagedOperationActions(
   args: Readonly<{
@@ -62,29 +62,12 @@ export function createCanvasStagedOperationActions(
     },
     clearSelection: () => args.setSelectedId(null),
     connect: (id: string, port: number, relationId: string) => {
-      if (
-        !args.editable ||
-        id === relationId ||
-        !args.producerIds.includes(relationId) ||
-        args.consumedProducerIds.includes(relationId)
-      )
-        return;
+      if (!args.editable) return;
       args.setOperations((current) => {
-        if (
-          current.some((operation) =>
-            operation.inputs.some(
-              (input, ordinal) => input === relationId && (operation.id !== id || ordinal !== port)
-            )
-          )
-        )
-          return current;
-        if (createsCanvasStagedOperationCycle(current, relationId, id)) return current;
+        const target = admitCanvasStagedConnection(args, current, id, port, relationId);
+        if (target == null) return current;
         return current.map((operation) => {
-          if (
-            operation.id !== id ||
-            (operation.inputs[port] != null && operation.inputs[port] !== relationId)
-          )
-            return operation;
+          if (operation !== target) return operation;
           const connected = connectCanvasStagedOperation(operation, port, relationId);
           return args.configure?.(connected) ?? connected;
         });

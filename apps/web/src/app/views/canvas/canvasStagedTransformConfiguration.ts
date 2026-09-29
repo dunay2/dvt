@@ -5,10 +5,12 @@ import { insertSelectedRelationTransform } from './canvasSelectedRelationTransfo
 import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { assignCanvasStagedRoot } from './canvasStagedOperationDocument';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 
 export async function configureCanvasStagedTransform(
   operation: CanvasStagedOperation,
-  producer: SubstraitDocument | null
+  producer: SubstraitDocument | null,
+  fieldId?: string
 ): Promise<CanvasStagedOperation> {
   if (
     operation.operation !== 'field_transform' ||
@@ -21,14 +23,29 @@ export async function configureCanvasStagedTransform(
   try {
     session.receive(producer);
     if (session.rootId !== operation.inputs[0]) return operation;
+    const selected =
+      fieldId == null
+        ? null
+        : (await session.query(session.rootId)).bindings.find(
+            (field) => field.fieldId === fieldId && field.parentFieldId == null
+          );
+    if (fieldId != null && selected == null) return operation;
     const result = await insertSelectedRelationTransform(session, {
       relationId: session.rootId,
       expectedRevision: session.revision,
     });
+    const document =
+      selected == null
+        ? result.document
+        : await changeSelectedRelationOutputs(session, {
+            relationId: result.relationId,
+            expectedRevision: session.revision,
+            outputs: [{ slot: selected.outputOrdinal, alias: selected.displayName ?? '' }],
+          });
     return {
       ...operation,
       semanticDocument: encodeDvtSubstraitSemanticDocument(
-        assignCanvasStagedRoot(result.document, operation.id)
+        assignCanvasStagedRoot(document, operation.id)
       ),
     };
   } catch {

@@ -26,6 +26,7 @@ export type SemanticWorkbenchNodeData = Readonly<{
   joinConditionIndex?: number;
   fieldReference?: Readonly<{ fieldId: string; relationId: string; sourceFieldId?: string }>;
   fieldSelection?: 'input' | 'output';
+  projectExpressionOrdinal?: number;
   fieldTargetRelationId?: string;
 }>;
 

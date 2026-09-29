@@ -1,6 +1,15 @@
 /** Real editor + stateful draft transport: Transform owns dataset field authoring. */
+import {
+  DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
+  DvtTransformAuthoringAuthorityV1Schema,
+  type WorkspaceGraphAuthoringDraft,
+} from '@dvt/contracts';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
+
+import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { getE2eApiCalls } from '../../support/e2eApiStub';
 import { visitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
+import { dragWorkbenchField } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 const inspector = '[data-slot="canvas-transform-inspector"]';
@@ -8,6 +17,29 @@ const form = '[data-slot="canvas-derived-output-form"]';
 const card = '[data-slot="canvas-relational-tree-node"][data-operator="project"]';
 const formulaInput = '[data-slot="formula-editor"] .monaco-editor textarea';
 const formulaText = '[data-slot="formula-editor"] .view-lines';
+
+function expectSavedExpressionCount(count: number): void {
+  cy.wrap(null).should(() => {
+    const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as {
+      draft: WorkspaceGraphAuthoringDraft;
+    };
+    const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
+      saved.draft.nodes.find((node) => node.id === 'join-transform')!.metadata?.[
+        DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY
+      ]
+    );
+    const indexed = indexSubstraitRelations(
+      decodeDvtSubstraitSemanticDocument(authority.semanticDocument)
+    );
+    if (!indexed.ok) throw indexed.error;
+    const project = [...indexed.index.relations.values()].find(
+      (entry) => entry.relation.relType.case === 'project'
+    )!.relation.relType;
+    expect(project.case).to.equal('project');
+    if (project.case === 'project')
+      expect(project.value.expressions, 'saved expression definitions').to.have.length(count);
+  });
+}
 
 function openModel(): void {
   cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]')
@@ -18,6 +50,88 @@ function openModel(): void {
 }
 
 describe('Semantic dataset Transform', () => {
+  it('connects exactly one dragged Output field into an empty Transform and keeps it after reopen', () => {
+    cy.viewport(1280, 720);
+    stubWorkbenchScenario('saved-join');
+    visitWorkbenchCanvas();
+    openModel();
+    cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
+    cy.get('[data-operation="field_transform"]').click();
+    cy.get('[data-operator="join"]')
+      .closest('li')
+      .find('[data-slot="canvas-relational-node-expand"]')
+      .click();
+    const input = '[data-pending-operation="true"] [data-slot="canvas-relational-input-port"]';
+    let fieldName = '';
+    const lifecycle: string[] = [];
+    cy.window().then((window) => {
+      for (const type of ['dragstart', 'pointercancel', 'dragover', 'drop', 'dragend']) {
+        window.document.addEventListener(
+          type,
+          (event) => {
+            if (type !== 'dragover' || !lifecycle.at(-1)?.startsWith('dragover'))
+              lifecycle.push(`${type}:${event.isTrusted}`);
+          },
+          true
+        );
+      }
+    });
+    const dropField = (): void => {
+      cy.get('[data-slot="canvas-relational-tree-fit"]').click();
+      cy.get('[data-operator="join"]')
+        .closest('li')
+        .find('[data-field-selection="output"]')
+        .last()
+        .as('connectionField')
+        .then(($field) => {
+          fieldName = $field.attr('title')!;
+          dragWorkbenchField('@connectionField', input);
+        });
+    };
+    // A producer already consumed by terminal Output cannot silently acquire fan-out.
+    dropField();
+    cy.then(() => expect(lifecycle, 'trusted browser drag lifecycle').to.include('drop:true'));
+    cy.get('[data-slot="canvas-field-selection-error"]').should('be.visible');
+    cy.get(input).should('not.have.attr', 'data-connected');
+    cy.get('[data-slot="canvas-relational-output-input-port"]').focus().type('{del}');
+    dropField();
+    cy.get(input).should('have.attr', 'data-connected', 'true');
+    cy.get('[data-slot="canvas-field-selection-error"]').should('not.exist');
+    cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();
+    const included = '[data-slot="relation-output-toggle"][data-included="true"]';
+    cy.get(inspector)
+      .find(included)
+      .should('have.length', 1)
+      .should(($field) => expect($field.attr('data-field-name')).to.equal(fieldName));
+    cy.window().then((window) => {
+      const dataTransfer = new window.DataTransfer();
+      cy.get('[data-pending-operation="true"] [data-slot="canvas-relational-output-port"]').trigger(
+        'dragstart',
+        { dataTransfer }
+      );
+      cy.get('[data-slot="canvas-relational-output-input-port"]')
+        .trigger('dragover', { dataTransfer })
+        .trigger('drop', { dataTransfer });
+    });
+    let writes = 0;
+    cy.then(() => {
+      writes = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+    cy.wrap(null).should(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.be.greaterThan(writes)
+    );
+    visitWorkbenchCanvas();
+    openModel();
+    cy.get(card).click();
+    cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();
+    cy.get(inspector)
+      .find(included)
+      .should('have.length', 1)
+      .should(($field) => expect($field.attr('data-field-name')).to.equal(fieldName));
+    cy.screenshot('transform-single-field-connection-reopened');
+  });
+
   it('adds fields in one fixed inspector, persists, and reopens the same Transform', () => {
     cy.viewport(1280, 720);
     stubWorkbenchScenario('saved-join');
@@ -310,25 +424,21 @@ describe('Semantic dataset Transform', () => {
       cy.get('@totalToken').should('exist');
     });
     // Explicit background drop removes exactly this expression; Apply/reopen proves persistence.
-    cy.window().then((window) => {
-      const dataTransfer = new window.DataTransfer();
-      cy.get('@totalToken').trigger('dragstart', { dataTransfer });
-      cy.then(() =>
-        expect(
-          JSON.parse(dataTransfer.getData('application/x-dvt-relational-field'))
-        ).to.have.property('selectedOutput', true)
-      );
-      // The viewport center is occupied by a card: target its empty padding explicitly.
-      cy.get(
-        '[data-slot="canvas-relational-tree-viewport"], [data-slot="canvas-relational-tree-draft-viewport"]'
-      )
-        .trigger('dragover', 5, 5, { dataTransfer })
-        .trigger('drop', 5, 5, { dataTransfer });
-    });
+    cy.get('@totalToken').scrollIntoView();
+    // The viewport center is occupied by a card: target its empty padding explicitly.
+    dragWorkbenchField(
+      '@totalToken',
+      '[data-slot="canvas-relational-tree-viewport"], [data-slot="canvas-relational-tree-draft-viewport"]',
+      { x: 5, y: 5 }
+    );
     cy.get(card)
       .closest('li')
       .find('[data-field-selection="output"]')
       .should('not.contain.text', 'total');
+    cy.get(card)
+      .closest('li')
+      .find('[data-slot="canvas-relational-expression-remove"]')
+      .should('have.length', 3);
     let writesBeforeRemoval = 0;
     cy.then(() => {
       writesBeforeRemoval = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
@@ -344,6 +454,9 @@ describe('Semantic dataset Transform', () => {
         writesBeforeRemoval
       )
     );
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+    cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
+    expectSavedExpressionCount(3);
     visitWorkbenchCanvas();
     openModel();
     cy.get(card).click();
@@ -361,5 +474,74 @@ describe('Semantic dataset Transform', () => {
           'true'
         );
       });
+    // Reproduce the reported TRIM: exclude its output, then delete its complete definition.
+    cy.get(card)
+      .closest('li')
+      .find('[data-slot="canvas-relational-node-expand"]')
+      .then(($button) => {
+        if ($button.attr('aria-expanded') !== 'true') cy.wrap($button).click();
+      });
+    cy.get(inspector)
+      .find('[data-slot="relation-output-toggle"][data-field-name="CAMPO_PRUEBA"]')
+      .click()
+      .should('have.attr', 'data-included', 'false');
+    const tree = '[data-operator="project"]';
+    let retainedOutputIds: string[] = [];
+    cy.get(tree)
+      .closest('li')
+      .find(selectedFields)
+      .then(($fields) => {
+        retainedOutputIds = [...$fields].map((field) => field.dataset.fieldId!);
+      });
+    cy.get(tree)
+      .closest('li')
+      .find('[data-kind="expression"]')
+      .contains('TRIM')
+      .closest('[data-slot="canvas-relational-expression-node"]')
+      .should(($token) => expect($token).not.to.have.attr('data-field-id'))
+      .parent()
+      .find('[data-slot="canvas-relational-expression-remove"]')
+      .should('be.enabled')
+      .click();
+    cy.get(tree)
+      .closest('li')
+      .find('[data-slot="canvas-relational-card-detail"]')
+      .should('not.contain.text', 'TRIM');
+    cy.get(tree)
+      .closest('li')
+      .find(selectedFields)
+      .should(($fields) => {
+        expect([...$fields].map((field) => field.dataset.fieldId)).to.deep.equal(retainedOutputIds);
+      });
+    cy.then(() => {
+      writesBeforeRemoval = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+    cy.wrap(null).should(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.be.greaterThan(
+        writesBeforeRemoval
+      )
+    );
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+    cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
+    expectSavedExpressionCount(2);
+    visitWorkbenchCanvas();
+    openModel();
+    cy.get(card).click();
+    cy.get(inspector)
+      .find('[data-slot="canvas-derived-output"]')
+      .should('have.length', 2)
+      .and('not.contain.text', 'CAMPO_PRUEBA');
+    cy.get(card)
+      .closest('li')
+      .find('[data-slot="canvas-relational-node-expand"]')
+      .then(($button) => {
+        if ($button.attr('aria-expanded') !== 'true') cy.wrap($button).click();
+      });
+    cy.get(card)
+      .closest('li')
+      .find('[data-slot="canvas-relational-card-detail"]')
+      .should('not.contain.text', 'TRIM');
+    cy.screenshot('transform-trim-definition-removed');
   });
 });

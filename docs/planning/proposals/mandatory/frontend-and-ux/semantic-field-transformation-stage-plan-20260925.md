@@ -129,6 +129,19 @@ dependency loss; show affected field/relation names without technical IDs. Do no
 claim that a removed expression is supported until canonical validation and
 Preview lowering both pass.
 
+Field tokens use native HTML drag-and-drop, not pointer capture. Its
+[processing model](https://html.spec.whatwg.org/multipage/dnd.html#drag-and-drop-processing-model)
+hands control to the browser with `pointercancel` after `dragstart`; that event
+and the ensuing capture loss must not cancel an active HTML drag. Escape or
+`dragend` without an accepted drop clears the gesture without a semantic write.
+Header movement retains its separate pointer-capture cancellation boundary.
+Native browser pointer input must cover field connection and removal; synthetic
+`drop` events alone cannot prove this lifecycle or `effectAllowed` compatibility.
+Extend the existing Cypress pointer driver for native HTML drags: Chromium drag
+interception prevents a host drag loop from hanging the runner. Replay only the
+payload actually written by the production `dragstart` handler, through trusted
+browser drag events; do not fabricate field references or semantic results.
+
 | Scenario                                | Opportunity                               | Fowler pattern                           | DDD owner / rail                                  | Implementation surfaces                                                               | Unit/package test                                                                        | Architecture test                                                    | User-flow test                                                         | Out of scope                                                  |
 | --------------------------------------- | ----------------------------------------- | ---------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------- |
 | Add/remove one tree field or expression | Missing adapter; hidden gesture authority | Presentation Model plus existing command | DvtNodeAuthoringMetadata / ConfigureCanvasDvtNode | Relational field transfer, compact tokens, viewport boundary, existing output command | Single-field, identity, derived output, dependency, stale/foreign and readonly rejection | Passive tree cannot import semantic writers; bounded gesture adapter | Output drop, background remove, keyboard, invalid/cancel, Apply/reopen | New AST, per-field edges, JOIN normalization, database writes |
@@ -139,6 +152,37 @@ Replace the parallel visual-formula draft with name plus formula, using the
 existing compiler and canonical Substrait expressions. A published derived field
 is also an available operand; dragging it references its stable field identity,
 not a copied expression from an untrusted drag payload.
+
+#### Initial field-driven Transform connection
+
+The existing relation-port command connects the whole producer; field tokens
+currently cannot initialize a pending Transform. Reuse `ConfigureCanvasDvtNode`
+and the staged connection admission policy for this intent. A published field
+from the current canonical document can initialize an empty Transform Input.
+Prepare its Project and single-field emit together before publishing either.
+The producer stays unchanged, including its other fields and expression IDs.
+
+```mermaid
+flowchart LR
+  Before[Relation port] --> All[Connected Transform with all fields]
+  Field[Scoped published field] --> Admission[Existing arity / cycle / single-consumer admission]
+  Admission --> Candidate[Isolated Project plus one selected output]
+  Candidate --> Recheck[Current revision / permissions / target / graph]
+  Recheck --> Commit[One staged connection and canonical document]
+  Recheck --> Reject[Unchanged graph and visible rejection]
+```
+
+The command rejects foreign/stale/unavailable fields, occupied or removed targets,
+unsupported target kinds, cycles, fan-out and readonly drafts. Cancelled work or
+changes during preparation cannot publish a late connection. An invalid port drop
+must not bubble into background removal. The gesture never implicitly disconnects
+the producer from terminal Output. Subsequent selection uses the existing Output
+editor; this slice does not invent JOIN predicates, cross-scope field identities,
+or hidden persisted mapping intentions for unconfigured binary operations.
+
+| Scenario                            | Opportunity                                  | Fowler pattern                         | DDD owner / rail                                  | Implementation surfaces                                                                     | Proof                                                                                                                   | Out of scope                                               |
+| ----------------------------------- | -------------------------------------------- | -------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Initialize Transform from one field | Whole-producer connection loses field intent | Existing command plus atomic candidate | DvtNodeAuthoringMetadata / ConfigureCanvasDvtNode | Shared staged admission, staged Transform configuration, lifecycle hook, passive Input port | Single-field/identity/SQL/reopen unit tests; async race and gesture presentation tests; existing Transform Cypress flow | New rail, DTO, AST, implicit JOIN Project, database writes |
 
 ```mermaid
 flowchart LR
@@ -201,6 +245,71 @@ remove actions remain keyboard accessible. The Output inspector uses named
 add/remove buttons instead of selection checkboxes, retaining focus and the
 existing dependency-aware output command after each action.
 Header movement and field dragging must have disjoint interaction boundaries.
+
+#### Remove the complete derived expression, not its operand (#3422)
+
+The user explicitly wants to remove the complete `TRIM(client_id)` expression,
+not the input `client_id` or its separate passthrough output. Current output
+selection changes emit and sidecar bindings but retains Project expressions.
+A non-emitted expression therefore remains visible without a published FieldId
+and cannot be removed through a field-only gesture. Hiding it is not deletion.
+
+```mermaid
+flowchart LR
+  Before[Remove emitted binding only] --> Ghost[Expression remains without field identity]
+  Root[Exact Project expression root] --> Remove[Existing output command with explicit expression removal]
+  Remove --> Expressions[Remove exactly one canonical expression]
+  Remove --> Mapping[Rebase remaining emit slots and retain field identities]
+  Mapping --> Validation[Existing dependency validation and atomic commit]
+  Expressions --> Validation
+```
+
+Expose the existing Project expression ordinal as a scoped, revision-bound
+presentation address, not an invented FieldId or new persisted DTO. The shared
+projector labels only root expressions as removable, never their operands or
+Filter/JOIN predicates. A root has an explicit accessible remove action even
+when not emitted. Selected derived-field Delete/drag-out removes that same
+canonical definition through `ConfigureCanvasDvtNode`; ordinary Output
+inclusion/exclusion remains selection, not deletion.
+
+Extend the existing output command with one checked expression-removal intent.
+Remove exactly its published aliases, delete that Project expression, and rebase
+remaining emit slots. Preserve inputs, other expressions and retained FieldIds.
+Reuse the same downstream validation, cancellation, stale-revision and read-only
+boundaries; no new command rail or independent mutation implementation. An
+unpublished definition can be deleted directly without first re-adding it.
+
+Prove emitted and non-emitted scalar/Window deletion, reordered slots, operand
+and passthrough preservation, stale/invalid/readonly rejection and dependent
+JOIN rejection. The existing browser flow must exercise the root remove action,
+complete-tree disappearance and Apply/save/reopen, rather than only asserting
+the selected field token disappeared. Do not change stored user drafts as part
+of verification.
+
+The reopen proof exposed a premature durable indication in the existing
+`SaveWorkspaceGraphDraft` lifecycle: its debounce kept the previous `Synced`
+label, and the scheduling effect reset `saving` to idle while a request was in
+flight. Keep the existing save status pending from scheduling through the
+request acknowledgement; only an acknowledged matching signature can return
+to idle. Do not add a second save rail, status store, or transport DTO.
+
+```mermaid
+flowchart LR
+  Edit[Applied document edit] --> Debounce[Existing debounce: pending]
+  Debounce --> Request[Existing save command: pending]
+  Request --> Receipt[Matching save acknowledgement]
+  Receipt --> Durable[Saved or Synced]
+  Request --> Failure[Failure or conflict: not durable]
+```
+
+Verify debounce, in-flight, matching-acknowledgement and failure status without
+changing retry or authorization policy. The browser proof also decodes the
+saved canonical document to assert the remaining expression count before
+reloading; a request count or status label alone is not persistence evidence.
+
+| Scenario                               | Opportunity                                                 | Fowler pattern                                | DDD owner / rail                                                                                                | Surfaces and proof                                                                                               | Out of scope                                                   |
+| -------------------------------------- | ----------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Delete one complete Project expression | Field-only identity cannot address an unselected definition | Explicit local address, shared atomic command | DvtNodeAuthoringMetadata / ConfigureCanvasDvtNode; CanvasRelationalTreeProjection / ProjectCanvasRelationalTree | Existing output command, gesture provider and root token; pure removal tests and existing Transform browser flow | New rail, AST, persisted DTO, hidden cleanup, operand deletion |
 
 Staged unary forms must retain their query inputs while only presentation state
 changes. The authoring presenter currently reconstructs a producer document on

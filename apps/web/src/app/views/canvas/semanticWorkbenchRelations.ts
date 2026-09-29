@@ -137,10 +137,13 @@ export function projectSemanticWorkbenchRelations(
             item.outputOrdinal === outputOrdinal
         );
         const expressionNode = nodes.find((item) => item.id === expressionId);
-        if (field != null && expressionNode != null)
+        if (expressionNode != null)
           expressionNode.data = {
             ...expressionNode.data,
-            fieldReference: { fieldId: field.fieldId, relationId: id },
+            projectExpressionOrdinal: expressionOrdinal,
+            ...(field == null
+              ? {}
+              : { fieldReference: { fieldId: field.fieldId, relationId: id } }),
           };
       }
       edges.push({

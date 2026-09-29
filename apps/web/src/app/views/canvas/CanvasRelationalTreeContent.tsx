@@ -33,6 +33,7 @@ export function CanvasRelationalTreeContent(props: CanvasRelationalTreeContentPr
       <CanvasRelationalFieldSelectionProvider
         enabled={props.model.authoringAvailable && !props.pendingCondition}
         onChange={props.model.session.setJoinDraft}
+        onConnect={props.model.session.staged.connectField}
       >
         <CanvasRelationalTreeContentView {...props} />
       </CanvasRelationalFieldSelectionProvider>
