@@ -69,10 +69,19 @@ export function CanvasRelationalTreeLayout({
 }>): JSX.Element {
   const detail = useMemo(
     () =>
-      root == null
-        ? { sizes: new Map(), graphs: new Map() }
-        : projectCanvasRelationalTreeDetails(root, semanticContext, sourceOutputFieldsByRelationId),
-    [root, semanticContext?.transformNode, semanticContext?.draft, sourceOutputFieldsByRelationId]
+      projectCanvasRelationalTreeDetails(
+        root,
+        semanticContext,
+        sourceOutputFieldsByRelationId,
+        stagedOperations
+      ),
+    [
+      root,
+      semanticContext?.transformNode,
+      semanticContext?.draft,
+      sourceOutputFieldsByRelationId,
+      stagedOperations,
+    ]
   );
   const { projectLayout, setPosition, expanded, toggleDetail } = useRelationalLayout();
   const zoomRevealsDetail = Math.round(zoom * 100) >= CANVAS_RELATIONAL_DETAIL_ZOOM * 100;
@@ -90,13 +99,9 @@ export function CanvasRelationalTreeLayout({
     () => occurrences?.pending.map(projectPendingSourceOccurrence) ?? [],
     [occurrences?.pending]
   );
-  const detachedOperations = useMemo(
-    () => stagedOperations.map(projectCanvasStagedOperation),
-    [stagedOperations]
-  );
   const detached = useMemo(
-    () => [...detachedSources, ...detachedOperations],
-    [detachedSources, detachedOperations]
+    () => [...detachedSources, ...stagedOperations.map(projectCanvasStagedOperation)],
+    [detachedSources, stagedOperations]
   );
   const layout = useMemo(
     () => projectLayout(root, sizes, detached),

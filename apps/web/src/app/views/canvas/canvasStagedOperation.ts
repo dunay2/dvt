@@ -1,6 +1,9 @@
 /** Discardable operation nodes with algebra-defined, freely connectable Input ports. */
 import { allocateDvtRelationId } from '@dvt/contracts';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
+import { decodeCanvasStagedOperation } from './canvasStagedOperationDocument';
+import { buildCanvasRelationalTreeRelation } from './canvasRelationalTreeRelationProjection';
 import type { CanvasRelationalOperatorTool } from './relational-operator-form/OperatorTool';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import type {
@@ -129,6 +132,12 @@ function operatorFor(operation: CanvasStagedOperationKind): CanvasRelationalTree
 export function projectCanvasStagedOperation(
   staged: CanvasStagedOperation
 ): CanvasRelationalTreeNode {
+  const document = decodeCanvasStagedOperation(staged);
+  const indexed = document == null ? null : indexSubstraitRelations(document);
+  if (indexed?.ok && indexed.index.rootId === staged.id) {
+    const root = buildCanvasRelationalTreeRelation({ index: indexed.index, digest: staged.id });
+    return { ...root, locator: staged.id, operation: staged.operation };
+  }
   return {
     locator: staged.id,
     operator: operatorFor(staged.operation),

@@ -8,8 +8,82 @@ import { admitCanvasStagedConnection } from './canvasStagedConnectionAdmission';
 import { readCanvasRelationalPublishedField } from './canvasRelationalFieldSelection';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
+import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { projectCanvasStagedOperation } from './canvasStagedOperation';
+import { projectCanvasRelationalTreeDetails } from './canvasRelationalTreeDetails';
+import {
+  projectExpressionStage,
+  expressionStageDraft,
+} from './canvasRelationalExpressionStage.test-support';
 
 describe('initial field-driven Transform connection', () => {
+  it('chains a calculated key through a second staged Transform and SQL projection', async () => {
+    const source = connectedNamesProjectionDraft();
+    const sourceSession = new CanvasRelationAnalysisSession('chained-source');
+    sourceSession.receive(source);
+    const first = await configureCanvasStagedTransform(
+      {
+        id: 'pending-operation:first',
+        operation: 'field_transform',
+        inputs: [sourceSession.rootId],
+      },
+      source
+    );
+    const firstSession = new CanvasRelationAnalysisSession('chained-first');
+    firstSession.receive(decodeCanvasStagedOperation(first));
+    const calculated = await applySelectedRelationDerivedOutput(firstSession, {
+      relationId: first.id,
+      expectedRevision: firstSession.revision,
+      intent: 'edit',
+      alias: 'key',
+      formula: 'UPPER(TRIM(last_name))',
+    });
+    firstSession.receive(calculated);
+    const key = (await firstSession.query(first.id)).bindings.find(
+      (field) => field.displayName === 'key'
+    )!;
+    const selected = await changeSelectedRelationOutputs(firstSession, {
+      relationId: first.id,
+      expectedRevision: firstSession.revision,
+      outputs: [{ slot: key.outputOrdinal, alias: 'key' }],
+    });
+    const configuredFirst = {
+      ...first,
+      semanticDocument: encodeDvtSubstraitSemanticDocument(selected),
+    };
+    const projected = projectCanvasStagedOperation(configuredFirst);
+    const details = projectCanvasRelationalTreeDetails(
+      null,
+      {
+        transformNode: projectExpressionStage(expressionStageDraft()).node,
+      },
+      undefined,
+      [configuredFirst]
+    );
+    expect(
+      details.graphs
+        .get(configuredFirst.id)
+        ?.nodes.some((node) => node.data.label.includes('UPPER'))
+    ).toBe(true);
+    expect(projected.output.fields.map((field) => field.displayName)).toEqual(['key']);
+    const second = await configureCanvasStagedTransform(
+      { id: 'pending-operation:second', operation: 'field_transform', inputs: [first.id] },
+      selected,
+      key.fieldId
+    );
+    const reopened = new CanvasRelationAnalysisSession('chained-reopened');
+    reopened.receive(decodeCanvasStagedOperation(second));
+    expect((await reopened.query(second.id)).bindings.map((field) => field.displayName)).toEqual([
+      'key',
+    ]);
+    const sql = await projectSubstraitToPostgresSql(decodeCanvasStagedOperation(second)!);
+    expect(sql.projection.outputs.map((field) => field.name)).toEqual(['key']);
+    expect(sql.sql).toMatch(/upper\s*\(\s*btrim\s*\(/i);
+    reopened.dispose();
+    firstSession.dispose();
+    sourceSession.dispose();
+  });
   it.each(['direct', 'expression'])(
     'selects only the dragged %s and preserves producer identity through reopen',
     async (kind) => {

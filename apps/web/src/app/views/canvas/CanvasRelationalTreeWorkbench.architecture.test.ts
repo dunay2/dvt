@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import DetailSource from './CanvasRelationalExpressionTree.tsx?raw';
 import GeometrySource from './canvasRelationalTreeGeometry.ts?raw';
 import GraphNodeSource from './CanvasRelationalTreeGraphNode.tsx?raw';
+import GraphCardDetailSource from './CanvasRelationalTreeCardDetail.tsx?raw';
 import NodeButtonSource from './CanvasRelationalTreeNodeButton.tsx?raw';
 import CardMenuSource from './CanvasRelationalTreeCardMenu.tsx?raw';
 import InspectionSource from './CanvasRelationalTreeInspection.tsx?raw';
@@ -190,7 +191,8 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(DetailSource).toContain("view: 'relation-expressions'");
     expect(DetailSource).not.toContain('GitMerge');
     expect(CardDetailSource).toContain('projectSemanticWorkbenchGraph');
-    expect(GraphNodeSource).toContain('CanvasRelationalScalarTree');
+    expect(GraphNodeSource).toContain('CanvasRelationalTreeCardDetail');
+    expect(GraphCardDetailSource).toContain('CanvasRelationalScalarTree');
     expect(DetailSource).toContain('CanvasRelationalScalarTree');
     expect(CardDetailSource).not.toContain('onApplyNodeDraft');
     expect(AuthoringSource).toContain('selectedRelationId');

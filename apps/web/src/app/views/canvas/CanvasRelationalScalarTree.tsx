@@ -9,10 +9,12 @@ export function CanvasRelationalScalarTree({
   graph,
   compact = false,
   onSelectCondition,
+  stagedFieldScope,
 }: Readonly<{
   graph: SemanticWorkbenchGraph;
   compact?: boolean;
   onSelectCondition?: (index: number, operand?: 'left' | 'right') => void;
+  stagedFieldScope?: Readonly<{ rootId: string; producerPlanSha256: string }>;
 }>): JSX.Element {
   const copy = resolveCanvasSemanticEditorCopy(
     useApplicationLanguageStore((state) => state.language)
@@ -39,6 +41,7 @@ export function CanvasRelationalScalarTree({
           <CanvasRelationalFieldToken
             id={id}
             data={node.data}
+            stagedFieldScope={stagedFieldScope}
             relationId={graph.relationId}
             title={
               node.data.unavailable ? `${copy.unavailable}: ${node.data.detail}` : node.data.detail

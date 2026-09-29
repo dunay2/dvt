@@ -3,8 +3,8 @@ import { ChevronDown } from 'lucide-react';
 import { useId } from 'react';
 import { CanvasNodeDataAction } from '../../components/canvas/CanvasNodeDataAction';
 import { useCanvasRelationalOperationExecution } from './useCanvasRelationalOperationExecution';
-import { CanvasRelationalScalarTree } from './CanvasRelationalScalarTree';
 import { CanvasRelationalTreeCardMenu } from './CanvasRelationalTreeCardMenu';
+import { CanvasRelationalTreeCardDetail } from './CanvasRelationalTreeCardDetail';
 import { CanvasRelationalTreeNodeButton } from './CanvasRelationalTreeNodeButton';
 import type { SemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 import type { CanvasRelationalTreePlacedNode } from './canvasRelationalTreeGeometry';
@@ -96,16 +96,13 @@ export function CanvasRelationalTreeGraphNode({
           </div>
         )}
         {!detailed ? null : (
-          <div
+          <CanvasRelationalTreeCardDetail
             id={detailId}
-            data-slot="canvas-relational-card-detail"
-            data-relation-id={placed.node.relationId ?? undefined}
-            tabIndex={0}
-            aria-label={copy.relationalTreeDetailLabel}
-            className={styles.semanticDetail}
-          >
-            <CanvasRelationalScalarTree graph={semanticGraph} compact />
-          </div>
+            relationId={placed.node.relationId ?? undefined}
+            label={copy.relationalTreeDetailLabel}
+            graph={semanticGraph}
+            stagedOperation={stagedOperation}
+          />
         )}
         {semanticGraph == null || onToggleDetail == null ? null : (
           <button
