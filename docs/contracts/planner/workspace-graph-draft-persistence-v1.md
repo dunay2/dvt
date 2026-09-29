@@ -118,6 +118,48 @@ flowchart LR
 
 ## Canvas authoring field budgets
 
+### Incomplete relational source identity
+
+The existing `DvtRelationalAuthoringDraft.v1` contract persists each pending source occurrence as a
+single canonical Substrait Read document and its existing DVT identity sidecar.
+The source node reference identifies the producer; the saved Read owns local
+RelationId, FieldIds, field hierarchy and ordinals. It does not copy the producer's
+operations. The former positional `fieldIds` snapshot is unsupported: missing
+provenance must not be guessed from array order or display names.
+
+```mermaid
+flowchart LR
+  Saved[Saved Read and identity sidecar] --> Validate[Validate current producer]
+  Current[Current source or published fields] --> Validate
+  Validate -->|compatible| Restore[Restore unchanged occurrence]
+  Validate -->|incompatible| Reject[Explicit unavailable state; no write]
+```
+
+For model producers, validate the saved `producerRef` by stable published FieldId
+and admitted type; reorder or alias changes cannot change the local reference.
+Additional published fields do not widen a saved occurrence. Removed fields or
+incompatible types make restoration unavailable. Physical sources require the
+same connected source reference and the same physical column names and types;
+physical order may change, but rename, addition, removal or type change must
+reject rather than silently bind another column. Physical names are source
+identifiers, not display aliases.
+
+Hydration is read-only. An incompatible saved occurrence blocks editing and
+preview of that incomplete draft and displays an explicit diagnostic. It does
+not silently discard pending operations, initialize a replacement document, or
+save a repair. Existing protected draft scope, revision and format outcomes
+continue to govern persistence. The current contract is corrected in place:
+no second version, compatibility reader or automatic data migration is introduced.
+Previously stored positional snapshots are rejected, not guessed or rewritten.
+
+The existing `SaveWorkspaceGraphDraft`, `ConfigureCanvasDvtNode` and
+`ProjectCanvasRelationalTree` rails own this boundary. Required regressions cover
+reorder with equal cardinality, physical rename/add/remove/type changes, producer
+aliases and publication changes, independent occurrences, dependent expressions,
+unsupported positional payloads and no implicit hydration writes.
+
+### String categories
+
 Every editable string admitted into `WorkspaceGraphAuthoringDraft` has one
 contract-owned category, unit, normalization and maximum. The closed PCV1-I1
 census and implementation sequence live in

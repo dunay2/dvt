@@ -11,6 +11,8 @@ import type { PendingSourceOccurrence } from './relational-source-occurrence/pen
 import { restorePendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
+import { createSourceDocument } from './canvasSourceDocument';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 /** A completed tree owns its terminal through its canonical root, not a draft snapshot. */
 export function retainIncompleteCanvasRelationalAuthoringDraft(
@@ -50,7 +52,9 @@ export function createCanvasRelationalAuthoringDraft(
       relationId: source.read.binding.relationId,
       sourceNodeId: source.sourceNodeId,
       displayName: source.read.binding.displayName,
-      fieldIds: source.read.fields.map((field) => field.fieldId),
+      semanticDocument: encodeDvtSubstraitSemanticDocument(
+        createSourceDocument([source.read], source.read)
+      ),
     })),
     operations: args.operations.map((operation) => ({
       relationId: operation.id,

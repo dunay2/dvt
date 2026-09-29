@@ -1,18 +1,46 @@
+import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import { toBinary } from '@bufbuild/protobuf';
+import { sha256Hex } from '@dvt/crypto';
 import { describe, expect, it } from 'vitest';
 
 import {
   DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY,
   DvtRelationalAuthoringDraftV1Schema,
   WorkspaceGraphAuthoringDraftSchema,
+  decodeDvtSubstraitPlanV1,
 } from '../src/index.js';
 
 import { buildDvtSubstraitSemanticDocumentFixture } from './fixtures/dvtSubstraitSemanticDocument.js';
 
+const sourceDocument = buildDvtSubstraitSemanticDocumentFixture();
+const sourcePlan = decodeDvtSubstraitPlanV1(sourceDocument);
+const sourceRoot = sourcePlan.relations[0]!.relType;
+if (sourceRoot.case !== 'root' || sourceRoot.value.input?.relType.case !== 'project')
+  throw new Error('Expected the canonical projection fixture.');
+sourceRoot.value.input = sourceRoot.value.input.relType.value.input;
+const sourceBytes = toBinary(PlanSchema, sourcePlan);
+sourceDocument.semanticPlan.bytesBase64 = Buffer.from(sourceBytes).toString('base64');
+sourceDocument.semanticPlan.sha256 = sha256Hex(sourceBytes);
+sourceDocument.sidecar.semanticPlanSha256 = sourceDocument.semanticPlan.sha256;
+sourceDocument.sidecar.relations = [sourceDocument.sidecar.relations[0]!];
+sourceDocument.sidecar.relations[0]!.sourceRef = {
+  schemaVersion: 'connected-source-ref.v1',
+  connectionRef: {
+    schemaVersion: 'connection-ref.v1',
+    connectionId: 'warehouse',
+    provider: 'postgres',
+  },
+  sourceObjectId: 'public.customers',
+};
+sourceDocument.sidecar.fields = sourceDocument.sidecar.fields.map((field) => ({
+  ...field,
+  relationId: 'relation:source-node',
+}));
 const source = {
-  relationId: 'relation:customers',
+  relationId: 'relation:source-node',
   sourceNodeId: 'customers',
   displayName: 'customers',
-  fieldIds: ['field:customer-id'],
+  semanticDocument: sourceDocument,
 };
 const operation = {
   relationId: 'relation:join',
@@ -52,6 +80,52 @@ function workspace(value: unknown): { nodes: { pluginId: string }[]; [key: strin
 }
 
 describe('DVT relational authoring draft v1', () => {
+  it('reports corrupt source bytes as validation errors rather than throwing', () => {
+    const bytes = Uint8Array.from([255]);
+    const digest = sha256Hex(bytes);
+    const document = {
+      ...sourceDocument,
+      semanticPlan: {
+        ...sourceDocument.semanticPlan,
+        bytesBase64: Buffer.from(bytes).toString('base64'),
+        sha256: digest,
+      },
+      sidecar: { ...sourceDocument.sidecar, semanticPlanSha256: digest },
+    };
+    expect(
+      DvtRelationalAuthoringDraftV1Schema.safeParse({
+        ...relationalDraft,
+        sources: [{ ...source, semanticDocument: document }],
+      }).success
+    ).toBe(false);
+  });
+  it('rejects positional snapshots and sources that copy producer operators', () => {
+    expect(
+      DvtRelationalAuthoringDraftV1Schema.safeParse({
+        ...relationalDraft,
+        sources: [
+          {
+            relationId: source.relationId,
+            sourceNodeId: source.sourceNodeId,
+            displayName: source.displayName,
+            fieldIds: ['former-positional-id'],
+          },
+        ],
+      }).success
+    ).toBe(false);
+    expect(
+      DvtRelationalAuthoringDraftV1Schema.safeParse({
+        ...relationalDraft,
+        sources: [{ ...source, semanticDocument: buildDvtSubstraitSemanticDocumentFixture() }],
+      }).success
+    ).toBe(false);
+    expect(
+      DvtRelationalAuthoringDraftV1Schema.safeParse({
+        ...relationalDraft,
+        sources: [{ ...source, relationId: 'foreign-relation' }],
+      }).success
+    ).toBe(false);
+  });
   it('persists incomplete ports and layout without a semantic document', () => {
     expect(DvtRelationalAuthoringDraftV1Schema.parse(relationalDraft)).toEqual(relationalDraft);
     expect(WorkspaceGraphAuthoringDraftSchema.safeParse(workspace(relationalDraft)).success).toBe(

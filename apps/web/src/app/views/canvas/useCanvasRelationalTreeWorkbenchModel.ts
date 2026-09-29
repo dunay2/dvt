@@ -45,7 +45,6 @@ export function useCanvasRelationalTreeWorkbenchModel(
       composition?.state === 'single-input' ||
       composition?.state === 'canonical') &&
     inputs.length >= 1;
-  const authoringAvailable = pendingAuthoring && args.authoring?.canEditNode === true;
   const session = useCanvasRelationalTreeAuthoringSession({
     enabled: pendingAuthoring,
     transformNode: args.transformNode,
@@ -56,6 +55,8 @@ export function useCanvasRelationalTreeWorkbenchModel(
     document: analysis.semantic?.document ?? null,
     authoring: args.authoring,
   });
+  const authoringAvailable =
+    pendingAuthoring && args.authoring?.canEditNode === true && !session.restorationUnavailable;
   const sourceOutputFieldsByRelationId = useMemo(() => {
     return projectCanvasSourceOccurrencePublication(
       projection?.inputs ?? [],
@@ -132,13 +133,15 @@ export function useCanvasRelationalTreeWorkbenchModel(
     session.staged.operations,
     selectedLocator,
   ]);
-  const unavailableMessage = result.ok
-    ? null
-    : result.failure.code === 'invalid-semantic-authority'
-      ? args.copy.relationalTreeInvalidMessage
-      : result.failure.code === 'input-identity-unavailable'
-        ? args.copy.relationalTreeInputIdentityUnavailableMessage
-        : args.copy.relationalTreeUnavailableMessage;
+  const unavailableMessage = session.restorationUnavailable
+    ? args.copy.relationalTreeInputIdentityUnavailableMessage
+    : result.ok
+      ? null
+      : result.failure.code === 'invalid-semantic-authority'
+        ? args.copy.relationalTreeInvalidMessage
+        : result.failure.code === 'input-identity-unavailable'
+          ? args.copy.relationalTreeInputIdentityUnavailableMessage
+          : args.copy.relationalTreeUnavailableMessage;
   const selectCatalogueItem = (item: CanvasRelationalTreeCatalogueItem): void => {
     if (!session.active && projection != null && item.treeLocator != null)
       selectTreeNode(item.treeLocator);
