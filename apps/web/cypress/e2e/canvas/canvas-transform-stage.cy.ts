@@ -18,6 +18,76 @@ function openModel(): void {
 }
 
 describe('Semantic dataset Transform', () => {
+  it('connects exactly one dragged Output field into an empty Transform and keeps it after reopen', () => {
+    cy.viewport(1280, 720);
+    stubWorkbenchScenario('saved-join');
+    visitWorkbenchCanvas();
+    openModel();
+    cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
+    cy.get('[data-operation="field_transform"]').click();
+    cy.get('[data-operator="join"]')
+      .closest('li')
+      .find('[data-slot="canvas-relational-node-expand"]')
+      .click();
+    const input = '[data-pending-operation="true"] [data-slot="canvas-relational-input-port"]';
+    let fieldName = '';
+    const dropField = (): void => {
+      cy.window().then((window) => {
+        const dataTransfer = new window.DataTransfer();
+        cy.get('[data-operator="join"]')
+          .closest('li')
+          .find('[data-field-selection="output"]')
+          .last()
+          .then(($field) => {
+            fieldName = $field.attr('title')!;
+          })
+          .trigger('dragstart', { dataTransfer });
+        cy.get(input).trigger('dragover', { dataTransfer }).trigger('drop', { dataTransfer });
+      });
+    };
+    // A producer already consumed by terminal Output cannot silently acquire fan-out.
+    dropField();
+    cy.get('[data-slot="canvas-field-selection-error"]').should('be.visible');
+    cy.get(input).should('not.have.attr', 'data-connected');
+    cy.get('[data-slot="canvas-relational-output-input-port"]').focus().type('{del}');
+    dropField();
+    cy.get(input).should('have.attr', 'data-connected', 'true');
+    cy.get('[data-slot="canvas-field-selection-error"]').should('not.exist');
+    cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();
+    const included = '[data-slot="relation-output-toggle"][data-included="true"]';
+    cy.get(inspector)
+      .find(included)
+      .should('have.length', 1)
+      .should(($field) => expect($field.attr('data-field-name')).to.equal(fieldName));
+    cy.window().then((window) => {
+      const dataTransfer = new window.DataTransfer();
+      cy.get('[data-pending-operation="true"] [data-slot="canvas-relational-output-port"]').trigger(
+        'dragstart',
+        { dataTransfer }
+      );
+      cy.get('[data-slot="canvas-relational-output-input-port"]')
+        .trigger('dragover', { dataTransfer })
+        .trigger('drop', { dataTransfer });
+    });
+    let writes = 0;
+    cy.then(() => {
+      writes = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+    cy.wrap(null).should(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.be.greaterThan(writes)
+    );
+    visitWorkbenchCanvas();
+    openModel();
+    cy.get(card).click();
+    cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();
+    cy.get(inspector)
+      .find(included)
+      .should('have.length', 1)
+      .should(($field) => expect($field.attr('data-field-name')).to.equal(fieldName));
+    cy.screenshot('transform-single-field-connection-reopened');
+  });
+
   it('adds fields in one fixed inspector, persists, and reopens the same Transform', () => {
     cy.viewport(1280, 720);
     stubWorkbenchScenario('saved-join');

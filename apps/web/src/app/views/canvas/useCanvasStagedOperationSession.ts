@@ -2,6 +2,8 @@
 import { createCanvasStagedOperationActions } from './canvasStagedOperationActions';
 import type { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
+import { useCanvasStagedFieldConnection } from './useCanvasStagedFieldConnection';
+import type { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 
 type DraftState = Pick<
   ReturnType<typeof useCanvasRelationalTreeDraftState>,
@@ -18,10 +20,11 @@ export function useCanvasStagedOperationSession(
     producerIds: readonly string[];
     consumedProducerIds: readonly string[];
     configure?: (operation: CanvasStagedOperation) => CanvasStagedOperation;
+    analysis: ReturnType<typeof useCanvasRelationAnalysisSession>;
     state: DraftState;
   }>
 ) {
-  return createCanvasStagedOperationActions({
+  const commands = {
     editable: args.editable,
     start: args.start,
     operations: args.state.stagedOperations,
@@ -31,5 +34,7 @@ export function useCanvasStagedOperationSession(
     producerIds: args.producerIds,
     consumedProducerIds: args.consumedProducerIds,
     configure: args.configure,
-  });
+  };
+  const connectField = useCanvasStagedFieldConnection(commands, args.analysis);
+  return { ...createCanvasStagedOperationActions(commands), connectField };
 }

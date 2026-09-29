@@ -17,6 +17,7 @@ import { setupWorkbenchTest, root, container } from './CanvasRelationalTreeWorkb
 import { COPY } from './CanvasRelationalTreeWorkbench.test-support';
 import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.fixtures';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
+import { CanvasRelationalOperationPorts } from './CanvasRelationalOperationPorts';
 
 function FieldSelectionSurface({
   document,
@@ -34,6 +35,14 @@ function FieldSelectionSurface({
     >
       <div data-slot="canvas-relational-card">
         <button type="button">Invalid card target</button>
+        <CanvasRelationalOperationPorts
+          relationId="pending-operation:one"
+          staged={{ id: 'pending-operation:one', operation: 'field_transform', inputs: [null] }}
+          copy={COPY}
+          selectedSource={null}
+          onSelectSource={() => undefined}
+          onConnect={() => undefined}
+        />
         {[input, relation].map((owner) =>
           owner.fields.map((field) => (
             <CanvasRelationalFieldToken
@@ -75,7 +84,11 @@ function FieldSelectionSurface({
 
 describe('relational tree selection gestures', () => {
   setupWorkbenchTest();
-  const mount = async (enabled = true, portal?: HTMLElement): Promise<ReturnType<typeof vi.fn>> => {
+  const mount = async (
+    enabled = true,
+    portal?: HTMLElement,
+    onConnect?: React.ComponentProps<typeof CanvasRelationalFieldSelectionProvider>['onConnect']
+  ): Promise<ReturnType<typeof vi.fn>> => {
     const initial = connectedNamesProjectionDraft();
     const writes = vi.fn();
     function Host(): React.JSX.Element {
@@ -85,6 +98,7 @@ describe('relational tree selection gestures', () => {
         <CanvasRelationAnalysisContext.Provider value={analysis}>
           <CanvasRelationalFieldSelectionProvider
             enabled={enabled}
+            onConnect={onConnect}
             onChange={(next) => {
               writes(next);
               setDocument(next);
@@ -198,6 +212,26 @@ describe('relational tree selection gestures', () => {
     });
     expect(writes).not.toHaveBeenCalled();
   });
+
+  it.each(['accepted', 'rejected', 'cancelled', 'readonly'])(
+    'routes the field drop through the Input port: %s, never background removal',
+    async (kind) => {
+      const connect = vi.fn(async () => kind === 'accepted');
+      const writes = await mount(kind !== 'readonly', undefined, connect);
+      const dataTransfer = transfer();
+      await act(async () => {
+        fireEvent.dragStart(outputs()[0]!, { dataTransfer });
+        if (kind === 'cancelled') fireEvent.keyDown(outputs()[0]!, { key: 'Escape' });
+        fireEvent.drop(container.querySelector('[data-slot="canvas-relational-input-port"]')!, {
+          dataTransfer,
+        });
+      });
+      expect(connect).toHaveBeenCalledTimes(kind === 'cancelled' || kind === 'readonly' ? 0 : 1);
+      expect(writes).not.toHaveBeenCalled();
+      expect(outputs()).toHaveLength(2);
+      expect(container.querySelector('[role="alert"]') != null).toBe(kind === 'rejected');
+    }
+  );
 
   it('receives a background drop in the production Workbench viewport', async () => {
     const graph = occurrenceGraph();

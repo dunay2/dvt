@@ -1,5 +1,13 @@
 /** One transient gesture boundary; semantic decisions stay in the canonical command adapter. */
-import { createContext, useContext, useRef, useState, type DragEvent, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type DragEvent,
+  type ReactNode,
+} from 'react';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import { useRelationCommand } from './useRelationCommand';
@@ -14,6 +22,7 @@ import {
 } from './canvasRelationalTreeDrag';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import type { useCanvasStagedFieldConnection } from './useCanvasStagedFieldConnection';
 
 type FieldSelectionActions = Readonly<{
   enabled: boolean;
@@ -21,6 +30,7 @@ type FieldSelectionActions = Readonly<{
   end: () => void;
   add: (reference: CanvasRelationalFieldReference, relationId: string) => void;
   remove: (reference: CanvasRelationalFieldReference) => void;
+  connect: (reference: CanvasRelationalFieldReference, id: string, port: number) => void;
   backgroundDragOver: (event: DragEvent<HTMLDivElement>) => boolean;
   backgroundDrop: (event: DragEvent<HTMLDivElement>) => boolean;
 }>;
@@ -30,10 +40,12 @@ export const useCanvasRelationalFieldSelection = () => useContext(FieldSelection
 export function CanvasRelationalFieldSelectionProvider({
   enabled,
   onChange,
+  onConnect,
   children,
 }: Readonly<{
   enabled: boolean;
   onChange: (document: SubstraitDocument) => void | boolean;
+  onConnect?: ReturnType<typeof useCanvasStagedFieldConnection>;
   children: ReactNode;
 }>) {
   const analysis = useContext(CanvasRelationAnalysisContext);
@@ -41,12 +53,30 @@ export function CanvasRelationalFieldSelectionProvider({
     useApplicationLanguageStore((state) => state.language)
   );
   const active = useRef<CanvasRelationalFieldReference | null>(null);
+  const connection = useRef<AbortController | null>(null);
+  const [connectionState, setConnectionState] = useState<'idle' | 'busy' | 'error'>('idle');
+  useEffect(() => {
+    setConnectionState('idle');
+    return () => {
+      connection.current?.abort();
+      connection.current = null;
+    };
+  }, [enabled]);
   const [affected, setAffected] = useState<readonly string[]>([]);
   const command = useRelationCommand('', (document) => {
     if (document !== analysis?.document) return onChange(document);
   });
   const editable =
-    enabled && analysis?.document != null && analysis.error == null && command.state !== 'busy';
+    enabled &&
+    analysis?.document != null &&
+    analysis.error == null &&
+    command.state !== 'busy' &&
+    connectionState !== 'busy';
+  const isActive = (reference: CanvasRelationalFieldReference) =>
+    active.current?.fieldId === reference.fieldId &&
+    active.current.revision === reference.revision &&
+    active.current.rootId === reference.rootId &&
+    active.current.relationId === reference.relationId;
   const edit = (
     reference: CanvasRelationalFieldReference,
     target: Parameters<typeof selectCanvasRelationalField>[2]
@@ -88,6 +118,24 @@ export function CanvasRelationalFieldSelectionProvider({
     },
     add: (reference, relationId) => edit(reference, { kind: 'add', relationId }),
     remove: (reference) => edit(reference, { kind: 'remove' }),
+    connect: (reference, id, port) => {
+      if (!editable || connection.current != null || !isActive(reference)) return;
+      const controller = new AbortController();
+      connection.current = controller;
+      setAffected([]);
+      setConnectionState('busy');
+      void (onConnect?.(reference, id, port, controller.signal) ?? Promise.resolve(false))
+        .then((accepted) => {
+          if (!controller.signal.aborted) setConnectionState(accepted ? 'idle' : 'error');
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) setConnectionState('error');
+        })
+        .finally(() => {
+          if (connection.current === controller) connection.current = null;
+        });
+      active.current = null;
+    },
     backgroundDragOver: (event) => {
       if (!event.dataTransfer.types.includes(CANVAS_RELATIONAL_FIELD_DRAG_TYPE)) return false;
       event.stopPropagation();
@@ -105,10 +153,7 @@ export function CanvasRelationalFieldSelectionProvider({
         editable &&
         reference?.selectedOutput === true &&
         background(event) &&
-        active.current?.fieldId === reference.fieldId &&
-        active.current.revision === reference.revision &&
-        active.current.rootId === reference.rootId &&
-        active.current.relationId === reference.relationId
+        isActive(reference)
       ) {
         event.preventDefault();
         edit(reference, { kind: 'remove' });
@@ -120,7 +165,7 @@ export function CanvasRelationalFieldSelectionProvider({
   return (
     <FieldSelectionContext.Provider value={actions}>
       {children}
-      {command.state === 'error' ? (
+      {command.state === 'error' || connectionState === 'error' ? (
         <div
           role="alert"
           data-slot="canvas-field-selection-error"

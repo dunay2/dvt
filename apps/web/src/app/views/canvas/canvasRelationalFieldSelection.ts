@@ -5,10 +5,9 @@ import type { CanvasRelationalFieldReference } from './canvasRelationalTreeDrag'
 import { relationOutputSlots } from './canvasRelationOutputSchema';
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 
-export async function selectCanvasRelationalField(
+export async function readCanvasRelationalPublishedField(
   session: CanvasRelationAnalysisSession,
   reference: CanvasRelationalFieldReference,
-  target: Readonly<{ kind: 'remove' } | { kind: 'add'; relationId: string }>,
   signal?: AbortSignal
 ) {
   signal?.throwIfAborted();
@@ -23,6 +22,17 @@ export async function selectCanvasRelationalField(
   );
   if (field == null || !session.allowsInputSchema(source.fields[field.outputOrdinal]!))
     throw new SubstraitAnalysisError('invalid_binding', 'Field is not published.');
+  session.locate(reference.relationId, reference.revision);
+  return field;
+}
+
+export async function selectCanvasRelationalField(
+  session: CanvasRelationAnalysisSession,
+  reference: CanvasRelationalFieldReference,
+  target: Readonly<{ kind: 'remove' } | { kind: 'add'; relationId: string }>,
+  signal?: AbortSignal
+) {
+  await readCanvasRelationalPublishedField(session, reference, signal);
   if (target.kind === 'add' && target.relationId === reference.relationId) return null;
   const relationId = target.kind === 'remove' ? reference.relationId : target.relationId;
   const location = session.locate(relationId, reference.revision);

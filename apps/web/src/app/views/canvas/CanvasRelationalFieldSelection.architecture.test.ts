@@ -3,6 +3,10 @@ import command from './canvasRelationalFieldSelection.ts?raw';
 import gestures from './CanvasRelationalFieldSelectionProvider.tsx?raw';
 import token from './CanvasRelationalFieldToken.tsx?raw';
 import tree from './CanvasRelationalScalarTree.tsx?raw';
+import admission from './canvasStagedConnectionAdmission.ts?raw';
+import connection from './useCanvasStagedFieldConnection.ts?raw';
+import operations from './canvasStagedOperationActions.ts?raw';
+import ports from './CanvasRelationalOperationPorts.tsx?raw';
 
 describe('tree field selection boundaries', () => {
   it('keeps selection authority in the existing command, not the view or drag-end', () => {
@@ -15,5 +19,17 @@ describe('tree field selection boundaries', () => {
       expect(view.split('\n').length).toBeLessThan(200);
     }
     expect(token).toContain('onDragEnd={() => actions?.end()}');
+  });
+  it('shares graph admission and keeps async lifetime separate from port presentation', () => {
+    expect(admission).not.toMatch(/from ['"]react['"]|\.tsx|localStorage/);
+    for (const adapter of [connection, operations])
+      expect(adapter).toContain('admitCanvasStagedConnection');
+    expect(connection).toContain('configureCanvasStagedTransform');
+    expect(connection).not.toMatch(
+      /createDvt|\.sidecar|\.plan|localStorage|fetch\(|field_transform/
+    );
+    expect(ports).not.toMatch(/configureCanvas|admitCanvas|changeSelected|\.plan|\.sidecar/);
+    expect(connection.split('\n').length).toBeLessThan(130);
+    expect(gestures.split('\n').length).toBeLessThan(210);
   });
 });

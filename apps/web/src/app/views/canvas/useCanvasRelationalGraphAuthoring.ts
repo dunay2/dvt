@@ -30,6 +30,7 @@ export function useCanvasRelationalGraphAuthoring(
     ...state.stagedOperations.map((operation) => operation.id),
   ];
   const staged = useCanvasStagedOperationSession({
+    analysis,
     editable,
     start,
     producerIds,

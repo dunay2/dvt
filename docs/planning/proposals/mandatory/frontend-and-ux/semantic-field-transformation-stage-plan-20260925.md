@@ -140,6 +140,37 @@ existing compiler and canonical Substrait expressions. A published derived field
 is also an available operand; dragging it references its stable field identity,
 not a copied expression from an untrusted drag payload.
 
+#### Initial field-driven Transform connection
+
+The existing relation-port command connects the whole producer; field tokens
+currently cannot initialize a pending Transform. Reuse `ConfigureCanvasDvtNode`
+and the staged connection admission policy for this intent. A published field
+from the current canonical document can initialize an empty Transform Input.
+Prepare its Project and single-field emit together before publishing either.
+The producer stays unchanged, including its other fields and expression IDs.
+
+```mermaid
+flowchart LR
+  Before[Relation port] --> All[Connected Transform with all fields]
+  Field[Scoped published field] --> Admission[Existing arity / cycle / single-consumer admission]
+  Admission --> Candidate[Isolated Project plus one selected output]
+  Candidate --> Recheck[Current revision / permissions / target / graph]
+  Recheck --> Commit[One staged connection and canonical document]
+  Recheck --> Reject[Unchanged graph and visible rejection]
+```
+
+The command rejects foreign/stale/unavailable fields, occupied or removed targets,
+unsupported target kinds, cycles, fan-out and readonly drafts. Cancelled work or
+changes during preparation cannot publish a late connection. An invalid port drop
+must not bubble into background removal. The gesture never implicitly disconnects
+the producer from terminal Output. Subsequent selection uses the existing Output
+editor; this slice does not invent JOIN predicates, cross-scope field identities,
+or hidden persisted mapping intentions for unconfigured binary operations.
+
+| Scenario                            | Opportunity                                  | Fowler pattern                         | DDD owner / rail                                  | Implementation surfaces                                                                     | Proof                                                                                                                   | Out of scope                                               |
+| ----------------------------------- | -------------------------------------------- | -------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Initialize Transform from one field | Whole-producer connection loses field intent | Existing command plus atomic candidate | DvtNodeAuthoringMetadata / ConfigureCanvasDvtNode | Shared staged admission, staged Transform configuration, lifecycle hook, passive Input port | Single-field/identity/SQL/reopen unit tests; async race and gesture presentation tests; existing Transform Cypress flow | New rail, DTO, AST, implicit JOIN Project, database writes |
+
 ```mermaid
 flowchart LR
   Before[Card: expression OR structure] --> Passive[Passive detail]

@@ -2,10 +2,13 @@
 import type { CanvasStagedOperation } from './canvasStagedOperation';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import {
+  CANVAS_RELATIONAL_FIELD_DRAG_TYPE,
+  readCanvasRelationalFieldDrag,
   readCanvasRelationalRelationDrag,
   writeCanvasRelationalRelationDrag,
 } from './canvasRelationalTreeDrag';
 import portStyles from './CanvasRelationalPorts.module.css';
+import { useCanvasRelationalFieldSelection } from './CanvasRelationalFieldSelectionProvider';
 
 export function CanvasRelationalOperationPorts({
   relationId,
@@ -22,6 +25,7 @@ export function CanvasRelationalOperationPorts({
   onSelectSource: (relationId: string) => void;
   onConnect: (operationId: string, port: number, relationId: string) => void;
 }>): JSX.Element | null {
+  const fields = useCanvasRelationalFieldSelection();
   if (relationId == null) return null;
   const output = (
     <button
@@ -73,6 +77,13 @@ export function CanvasRelationalOperationPorts({
               event.dataTransfer.dropEffect = 'link';
             }}
             onDrop={(event) => {
+              if (event.dataTransfer.types.includes(CANVAS_RELATIONAL_FIELD_DRAG_TYPE)) {
+                event.preventDefault();
+                event.stopPropagation();
+                const reference = readCanvasRelationalFieldDrag(event.dataTransfer);
+                if (reference != null) fields?.connect(reference, staged.id, port);
+                return;
+              }
               const source = readCanvasRelationalRelationDrag(event.dataTransfer);
               if (source == null) return;
               event.preventDefault();
