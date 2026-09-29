@@ -13,7 +13,12 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
-function visitInputs(disconnected = false, secondProducer = false, language = 'en'): void {
+function visitInputs(
+  disconnected = false,
+  secondProducer = false,
+  language = 'en',
+  sourceInspectorOrdering = false
+): void {
   cy.viewport(1920, 1080);
   stubShellBootstrapApis({ scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'] });
   stubE2eJsonApi('GET', '/workspace/context', {
@@ -30,6 +35,7 @@ function visitInputs(disconnected = false, secondProducer = false, language = 'e
     columnMapping: true,
     columnMappingDisconnected: disconnected,
     columnMappingSecondSource: secondProducer,
+    sourceInspectorOrdering,
   });
   visitWithE2eWorkspaceSession('/canvas', {
     onBeforeLoad(window) {
@@ -100,6 +106,70 @@ function dropPublishedField(producerId: string, name: string): void {
 }
 
 describe('Producer fields enter Input; Output is passive', () => {
+  it('drags one published column from source properties into a disconnected Model and reloads it', () => {
+    visitInputs(true, false, 'en', true);
+    cy.viewport(1280, 720);
+    node('source-orders').find('[data-slot="canvas-node-shell"]').click(40, 18);
+    cy.get('.react-flow__controls-fitview').click();
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
+    const field = '[data-slot="source-column-row"][data-column-name="customer"]';
+    cy.get(field).should('be.visible').and('have.attr', 'draggable', 'true');
+    const drop = (): Cypress.Chainable<void> =>
+      cy.window().then((window) => {
+        const dataTransfer = new window.DataTransfer();
+        cy.get(field).trigger('dragstart', { dataTransfer });
+        node('model-orders')
+          .find('[data-slot="canvas-node-shell"]')
+          .trigger('dragover', { dataTransfer })
+          .trigger('drop', { dataTransfer });
+        cy.get(field).trigger('dragend', { dataTransfer });
+      });
+    drop();
+    node('model-orders').contains('[role="tab"]', 'Input (1)').should('be.visible');
+    drop();
+    node('model-orders').contains('[role="tab"]', 'Input (1)').should('be.visible');
+    expand('model-orders');
+    node('model-orders')
+      .find('[data-slot="graph-node-column-piece"]')
+      .should('have.length', 1)
+      .and('contain.text', 'customer');
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
+    cy.wrap(null).should(() => {
+      const body = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+        | {
+            draft: {
+              edges: Array<{
+                sourceId: string;
+                targetId: string;
+                metadata?: { inputBindings?: { fields: unknown[] } };
+              }>;
+            };
+          }
+        | undefined;
+      const bindings = body?.draft.edges.filter(
+        (edge) => edge.sourceId === 'source-orders' && edge.targetId === 'model-orders'
+      );
+      expect(bindings).to.have.length(1);
+      expect(bindings?.[0]?.metadata?.inputBindings?.fields).to.deep.equal([
+        { inputId: 'input:source-orders:customer', producerFieldId: 'customer' },
+      ]);
+    });
+    assertSavedWithoutSemantics();
+    cy.screenshot('source-properties-one-field');
+    cy.on('window:before:load', installE2eApiFetchStub);
+    cy.reload();
+    node('model-orders').contains('[role="tab"]', 'Input (1)').should('be.visible');
+    node('model-orders').contains('[role="tab"]', 'Output (0)').should('be.visible');
+  });
+
   it('connects a producer without inventing operations or published fields', () => {
     visitInputs(true);
     connectCanvasNodes('Orders source', 'Orders Model');

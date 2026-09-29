@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-/** Owned concern: prove contextual NodeWorkbench overlay gating outside CanvasShell tests. */
+/** Owned concern: prove fixed NodeWorkbench inspector gating outside CanvasShell tests. */
 import React, { act } from 'react';
 import { fireEvent } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
@@ -86,31 +86,30 @@ function renderOverlay(
 describe('CanvasNodeWorkbenchOverlay', () => {
   let container: HTMLDivElement;
   let root: Root;
-
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
     workbenchState.props = null;
-    (
-      globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
-    ).IS_REACT_ACT_ENVIRONMENT = true;
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   });
-
   afterEach(() => {
-    act(() => {
-      root.unmount();
-    });
+    act(() => root.unmount());
     container.remove();
-    vi.clearAllMocks();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
-  it('renders the node workbench only for a selected node in contextual overlay posture', () => {
+  it('renders the existing inspector as a fixed sibling without node-relative geometry', () => {
     renderOverlay(root);
-
-    expect(container.querySelector('[data-slot="canvas-node-workbench-overlay"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="canvas-node-workbench-panel"]')).not.toBeNull();
+    const inspector = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-node-workbench-overlay"]'
+    )!;
+    expect(inspector.tagName).toBe('ASIDE');
+    expect(inspector.className).toContain('border-l');
+    expect(inspector.className).not.toContain('absolute');
+    expect(inspector.style.left).toBe('');
+    expect(inspector.style.top).toBe('');
     expect(workbenchState.props).toMatchObject({
       node: NODE,
       nodes: [NODE],
@@ -119,344 +118,118 @@ describe('CanvasNodeWorkbenchOverlay', () => {
       preferredTabRequestId: 7,
       primarySectionIds: dvtCanvasSurfaceStrategy.nodeWorkbench.sections,
     });
+    expect(workbenchState.props?.dragHandleProps).toBeUndefined();
   });
 
-  it('keeps default workbenches compact and gives Source the approved desktop work surface', () => {
+  it('preserves card focus on opening and authoring focus on parent rerenders', () => {
+    const card = document.createElement('button');
+    document.body.appendChild(card);
+    card.focus();
+    const frame = vi.spyOn(window, 'requestAnimationFrame');
     renderOverlay(root);
-
-    const defaultOverlay = container.querySelector<HTMLElement>(
-      '[data-slot="canvas-node-workbench-overlay"]'
+    expect(document.activeElement).toBe(card);
+    expect(frame).not.toHaveBeenCalled();
+    const input = container.querySelector<HTMLInputElement>(
+      '[data-testid="node-authoring-input"]'
     )!;
-    expect(defaultOverlay.className).toContain('w-[min(28rem,calc(100%-2rem))]');
-    expect(defaultOverlay.className).toContain('h-[min(40rem,calc(100%-2rem))]');
+    input.focus();
+    renderOverlay(root);
+    expect(document.activeElement).toBe(input);
+    expect(frame).not.toHaveBeenCalled();
+    card.remove();
+  });
 
+  it('does not reopen or reposition the panel when the selected source changes', () => {
+    renderOverlay(root);
+    const inspector = container.querySelector('[data-slot="canvas-node-workbench-overlay"]');
     renderOverlay(root, {
       panels: {
-        activeRunId: 'run-42',
-        inspectorAuthoring: {
-          canEditNode: true,
-          onApplyNodeDraft: vi.fn(),
-        },
+        activeRunId: null,
+        inspectorAuthoring: { canEditNode: false, onApplyNodeDraft: vi.fn() },
         inspectorGraphEdges: [],
         inspectorGraphNodes: [SOURCE_NODE],
         inspectorNode: SOURCE_NODE,
-        inspectorPreferredTabId: 'general',
+        inspectorPreferredTabId: 'columns',
         inspectorPreferredTabRequestId: 8,
         inspectorWorkbenchContributions: [],
-        registeredPlugins: new Set(['dvt.warehouse-source']),
+        registeredPlugins: new Set(),
       },
     });
-
-    const sourceOverlay = container.querySelector<HTMLElement>(
-      '[data-slot="canvas-node-workbench-overlay"]'
-    )!;
-    expect(sourceOverlay.className).toContain('w-[min(52rem,calc(100%-2rem))]');
-    expect(sourceOverlay.className).toContain('h-[min(56rem,calc(100%-2rem))]');
+    expect(container.querySelector('[data-slot="canvas-node-workbench-overlay"]')).toBe(inspector);
+    expect(workbenchState.props?.node).toBe(SOURCE_NODE);
+    expect(workbenchState.props?.authoring).toMatchObject({ canEditNode: false });
   });
 
-  it('opens semi-docked beside the inspected graph card', () => {
-    vi.spyOn(container, 'getBoundingClientRect').mockReturnValue(new DOMRect(20, 40, 1_000, 700));
-    const graphNode = document.createElement('div');
-    graphNode.className = 'react-flow__node';
-    graphNode.dataset.id = NODE.id;
-    vi.spyOn(graphNode, 'getBoundingClientRect').mockReturnValue(new DOMRect(100, 80, 320, 240));
-    document.body.appendChild(graphNode);
-
-    renderOverlay(root);
-
-    const overlay = container.querySelector<HTMLElement>(
-      '[data-slot="canvas-node-workbench-overlay"]'
-    )!;
-    const localCardLeft = 80;
-    const localCardRight = 400;
-    const localCardTop = 40;
-
-    expect(Number.parseFloat(overlay.style.left)).toBeGreaterThan(localCardLeft);
-    expect(Number.parseFloat(overlay.style.left)).toBeLessThan(localCardRight);
-    expect(Number.parseFloat(overlay.style.top)).toBeGreaterThan(localCardTop);
-    graphNode.remove();
-  });
-
-  it('moves from the header when the browser declines synthetic pointer capture', () => {
-    renderOverlay(root);
-
-    const overlay = container.querySelector<HTMLElement>(
-      '[data-slot="canvas-node-workbench-overlay"]'
-    );
-    const dragHandle = container.querySelector<HTMLElement>(
-      '[data-testid="canvas-node-workbench-drag-handle"]'
-    );
-
-    expect(overlay).not.toBeNull();
-    expect(dragHandle).not.toBeNull();
-    dragHandle!.setPointerCapture = vi.fn(() => {
-      throw new DOMException('No active pointer', 'NotFoundError');
-    });
-
-    const initialLeft = Number.parseFloat(overlay!.style.left);
-    const initialTop = Number.parseFloat(overlay!.style.top);
-
-    expect(Number.isFinite(initialLeft)).toBe(true);
-    expect(Number.isFinite(initialTop)).toBe(true);
-
-    act(() => {
-      fireEvent.pointerDown(dragHandle!, {
-        pointerId: 1,
-        button: 0,
-        clientX: 100,
-        clientY: 80,
-      });
-      fireEvent.pointerMove(overlay!, {
-        pointerId: 1,
-        clientX: 52,
-        clientY: 112,
-      });
-      fireEvent.pointerUp(overlay!, { pointerId: 1 });
-    });
-
-    expect(Number.parseFloat(overlay!.style.left)).toBe(initialLeft - 48);
-    expect(Number.parseFloat(overlay!.style.top)).toBe(initialTop + 32);
-    expect(dragHandle!.setPointerCapture).toHaveBeenCalledWith(1);
-  });
-
-  it('keeps pointer movement within the visible work surface', () => {
-    renderOverlay(root);
-
-    const overlay = container.querySelector<HTMLElement>(
-      '[data-slot="canvas-node-workbench-overlay"]'
-    )!;
-    const dragHandle = container.querySelector<HTMLElement>(
-      '[data-testid="canvas-node-workbench-drag-handle"]'
-    )!;
-
-    act(() => {
-      fireEvent.pointerDown(dragHandle, {
-        pointerId: 2,
-        button: 0,
-        clientX: 100,
-        clientY: 80,
-      });
-      fireEvent.pointerMove(overlay, {
-        pointerId: 2,
-        clientX: 5_000,
-        clientY: 5_000,
-      });
-      fireEvent.pointerUp(overlay, { pointerId: 2 });
-    });
-
-    expect(Number.parseFloat(overlay.style.left)).toBeLessThanOrEqual(window.innerWidth - 448 - 16);
-    expect(Number.parseFloat(overlay.style.top)).toBeLessThanOrEqual(window.innerHeight - 640 - 16);
-  });
-
-  it('exposes an accessible keyboard drag handle', () => {
-    renderOverlay(root);
-
-    const overlay = container.querySelector<HTMLElement>(
-      '[data-slot="canvas-node-workbench-overlay"]'
-    )!;
-    const dragHandle = container.querySelector<HTMLElement>(
-      '[data-testid="canvas-node-workbench-drag-handle"]'
-    )!;
-    const initialLeft = Number.parseFloat(overlay.style.left);
-
-    expect(dragHandle.tabIndex).toBe(0);
-    expect(dragHandle.getAttribute('role')).toBe('button');
-    expect(dragHandle.getAttribute('aria-label')).toBeTruthy();
-
-    act(() => {
-      fireEvent.keyDown(dragHandle, { key: 'ArrowLeft' });
-    });
-
-    expect(Number.parseFloat(overlay.style.left)).toBe(initialLeft - 8);
-  });
-
-  it('restores focus to the inspected graph node after closing the workbench', async () => {
+  it('closes on Escape from its panel, not from another surface or an already handled gesture', () => {
     const onHide = vi.fn();
-    const graphNode = document.createElement('div');
-    graphNode.className = 'react-flow__node';
-    graphNode.dataset.id = NODE.id;
-    graphNode.tabIndex = 0;
-    document.body.appendChild(graphNode);
     renderOverlay(root, { onHide });
-
-    act(() => {
-      (workbenchState.props?.onClose as (() => void) | undefined)?.();
+    act(() => fireEvent.keyDown(document.body, { key: 'Escape' }));
+    expect(onHide).not.toHaveBeenCalled();
+    const input = container.querySelector('input')!;
+    const handled = new KeyboardEvent('keydown', {
+      key: 'Escape',
+      bubbles: true,
+      cancelable: true,
     });
-    await act(async () => {
-      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
-    });
-
-    expect(onHide).toHaveBeenCalledTimes(1);
-    expect(document.activeElement).toBe(graphNode);
-    graphNode.remove();
+    handled.preventDefault();
+    act(() => input.dispatchEvent(handled));
+    expect(onHide).not.toHaveBeenCalled();
+    act(() => fireEvent.keyDown(input, { key: 'Escape' }));
+    expect(onHide).toHaveBeenCalledOnce();
   });
 
-  it('preserves a newer canvas interaction before closing focus restoration runs', async () => {
-    const graphNode = document.createElement('div');
-    graphNode.className = 'react-flow__node';
-    graphNode.dataset.id = NODE.id;
-    graphNode.tabIndex = 0;
-    document.body.appendChild(graphNode);
-    const canvasControl = document.createElement('button');
-    document.body.appendChild(canvasControl);
-    renderOverlay(root, { onHide: vi.fn() });
-    await act(async () => {
-      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
-    });
-    let closingFrame: FrameRequestCallback | undefined;
-    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
-      closingFrame = callback;
-      return 18;
-    });
-
-    act(() => {
-      (workbenchState.props?.onClose as (() => void) | undefined)?.();
-      canvasControl.focus();
-      closingFrame!(0);
-    });
-
-    expect(document.activeElement).toBe(canvasControl);
-    canvasControl.remove();
-    graphNode.remove();
-  });
-
-  it.each(['authoring input', 'external control'])(
-    'preserves later focus on the %s before the opening animation frame runs',
-    (target) => {
-      let openingFrame: FrameRequestCallback | undefined;
-      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
-        openingFrame = callback;
-        return 1;
-      });
-      vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
-      const externalControl = document.createElement('button');
-      renderOverlay(root);
-      container.appendChild(externalControl);
-      const input = container.querySelector<HTMLInputElement>(
-        '[data-testid="node-authoring-input"]'
-      )!;
-      const focusedControl = target === 'authoring input' ? input : externalControl;
-      focusedControl.focus();
-      expect(document.activeElement).toBe(focusedControl);
-
-      act(() => openingFrame!(0));
-
-      expect(document.activeElement).toBe(focusedControl);
-    }
-  );
-
-  it.each(['body', 'opener', 'removed opener'])(
-    'focuses the selected tab from %s when no later interaction supersedes opening',
-    (target) => {
-      let openingFrame: FrameRequestCallback | undefined;
-      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
-        openingFrame = callback;
-        return 1;
-      });
-      vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
-      const opener = document.createElement('button');
-      document.body.appendChild(opener);
-      if (target !== 'body') opener.focus();
-      renderOverlay(root);
-      if (target === 'removed opener') opener.remove();
-
-      act(() => openingFrame!(0));
-
-      opener.remove();
-      expect(document.activeElement).toBe(container.querySelector('[role="tab"]'));
-    }
-  );
-
-  it('cancels pending opening focus when the workbench closes', () => {
-    vi.spyOn(window, 'requestAnimationFrame').mockReturnValue(17);
-    const cancelFrame = vi
-      .spyOn(window, 'cancelAnimationFrame')
-      .mockImplementation(() => undefined);
+  it.each([false, true])('restores card focus unless a newer interaction owns it (%s)', (newer) => {
+    const card = document.createElement('div');
+    card.className = 'react-flow__node';
+    card.dataset.id = NODE.id;
+    card.tabIndex = 0;
+    const control = document.createElement('button');
+    document.body.append(card, control);
     renderOverlay(root);
-
-    renderOverlay(root, {
-      layout: {
-        focusMode: false,
-        inspectorPanelVisible: false,
-        surfaceStrategy: dvtCanvasSurfaceStrategy,
-      },
+    const input = container.querySelector<HTMLInputElement>('input')!;
+    input.focus();
+    let closeFrame: FrameRequestCallback | undefined;
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      closeFrame = callback;
+      return 1;
     });
-
-    expect(cancelFrame).toHaveBeenCalledWith(17);
-    expect(container.querySelector('[data-slot="canvas-node-workbench-overlay"]')).toBeNull();
+    act(() => {
+      (workbenchState.props!.onClose as () => void)();
+      if (newer) control.focus();
+      closeFrame!(0);
+    });
+    expect(document.activeElement).toBe(newer ? control : card);
+    card.remove();
+    control.remove();
   });
 
-  it('does not steal authoring focus when parent callbacks rerender', async () => {
-    renderOverlay(root, { onHide: vi.fn() });
-    await act(async () => {
-      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
-    });
-    const authoringInput = container.querySelector<HTMLInputElement>(
-      '[data-testid="node-authoring-input"]'
-    )!;
-    authoringInput.focus();
-
-    renderOverlay(root, { onHide: vi.fn() });
-    await act(async () => {
-      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
-    });
-
-    expect(document.activeElement).toBe(authoringInput);
-  });
-
-  it('does not mount node workbench chrome when the surface strategy is unavailable', () => {
-    renderOverlay(root, {
-      layout: {
-        focusMode: false,
-        inspectorPanelVisible: true,
-        surfaceStrategy: null,
-      },
-    });
-
-    expect(container.querySelector('[data-slot="canvas-node-workbench-overlay"]')).toBeNull();
-    expect(workbenchState.props).toBeNull();
-  });
-
-  it('does not render when focus mode, hidden inspector, or missing node makes the workbench inactive', () => {
-    const inactiveStates: Array<Partial<React.ComponentProps<typeof CanvasNodeWorkbenchOverlay>>> =
-      [
-        {
-          layout: {
-            focusMode: true,
-            inspectorPanelVisible: true,
-            surfaceStrategy: dvtCanvasSurfaceStrategy,
-          },
+  it.each(['focus', 'hidden', 'strategy', 'node'])(
+    'does not mount an inactive inspector (%s)',
+    (reason) => {
+      renderOverlay(root, {
+        layout: {
+          focusMode: reason === 'focus',
+          inspectorPanelVisible: reason !== 'hidden',
+          surfaceStrategy: reason === 'strategy' ? null : dvtCanvasSurfaceStrategy,
         },
-        {
-          layout: {
-            focusMode: false,
-            inspectorPanelVisible: false,
-            surfaceStrategy: dvtCanvasSurfaceStrategy,
-          },
-        },
-        {
-          panels: {
-            activeRunId: 'run-42',
-            inspectorAuthoring: {
-              canEditNode: true,
-              onApplyNodeDraft: vi.fn(),
-            },
-            inspectorGraphEdges: [],
-            inspectorGraphNodes: [NODE],
-            inspectorNode: null,
-            inspectorPreferredTabId: null,
-            inspectorPreferredTabRequestId: 0,
-            inspectorWorkbenchContributions: [],
-            registeredPlugins: new Set(['dbt']),
-          },
-        },
-      ];
-
-    for (const inactiveState of inactiveStates) {
-      renderOverlay(root, inactiveState);
-
+        ...(reason === 'node'
+          ? {
+              panels: {
+                activeRunId: null,
+                inspectorAuthoring: { canEditNode: false, onApplyNodeDraft: vi.fn() },
+                inspectorGraphEdges: [],
+                inspectorGraphNodes: [],
+                inspectorNode: null,
+                inspectorPreferredTabId: null,
+                inspectorPreferredTabRequestId: 0,
+                inspectorWorkbenchContributions: [],
+                registeredPlugins: new Set<string>(),
+              },
+            }
+          : {}),
+      });
       expect(container.querySelector('[data-slot="canvas-node-workbench-overlay"]')).toBeNull();
       expect(workbenchState.props).toBeNull();
     }
-  });
+  );
 });

@@ -1,10 +1,6 @@
-/** Owned concern: render the Canvas-owned contextual node workbench panel. */
+/** Render the node-workbench header and container using its coordinated view state. */
 import { CircleHelp, X } from 'lucide-react';
-import { useEffect, useMemo, useState, type HTMLAttributes, type ReactNode } from 'react';
-import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
 
-import { getInspectorPanels } from '../../plugins/registry';
-import { PluginContributionBoundary } from '../../plugins/PluginContributionBoundary';
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import {
   inspectorStatusDotClasses,
@@ -14,363 +10,27 @@ import { Button } from '../../components/ui/button';
 import { ScrollArea } from '../../components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { cn } from '../../components/ui/utils';
-import type { CanvasNodeWorkbenchSectionPolicyId } from '../../plugins/canvasSurfaceStrategyContracts';
-import { NodePropertiesTabs } from '../../components/inspector/NodePropertiesTabs';
-import type {
-  NodePropertiesReadModel,
-  NodePropertySectionId,
-} from '../../components/inspector/nodePropertiesContracts';
-import { buildNodePropertiesReadModel } from '../../components/inspector/nodePropertiesReadModel';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { CanvasInspectorAuthoringSection } from './CanvasInspectorAuthoringSection';
-import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
-import {
-  resolveCanvasNodeWorkbenchContributions,
-  type CanvasNodeWorkbenchContribution,
-} from './canvasNodeWorkbenchContribution';
-import { resolveCanvasNodeWorkbenchSectionModel } from './canvasNodeWorkbenchSectionStrategy';
-import { resolveCanvasViewCopy } from './canvasCopyCatalog';
-import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
-import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualTokens';
-import { useCanvasNodePresentation } from './useCanvasNodePresentations';
-import { useCanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
-import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import { DvtTransformCodeWorkbenchContent } from './DvtTransformCodeWorkbenchContent';
-import { isDbtCompatibleModel, reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
-import { useCanvasColumnCommentCellRenderer } from './useCanvasColumnCommentCellRenderer';
 import { SourceNodeWorkbenchHeaderIdentity } from './SourceNodeWorkbenchHeaderIdentity';
-import { SourceOverviewPanel } from './SourceOverviewPanel';
-import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
-import { buildNodeWorkbenchReadModel } from './canvasNodeWorkbenchReadModel';
+import { CanvasNodeWorkbenchSections } from './CanvasNodeWorkbenchSections';
+import {
+  useCanvasNodeWorkbenchController,
+  type CanvasNodeWorkbenchPanelProps,
+} from './useCanvasNodeWorkbenchController';
 
-export type CanvasNodeWorkbenchPanelProps = Readonly<{
-  node: CanonicalNode;
-  nodes: readonly CanonicalNode[];
-  edges: readonly CanonicalEdge[];
-  activeRunId: string | null;
-  registeredPlugins?: ReadonlySet<string>;
-  preferredTabId?: string | null;
-  preferredTabRequestId?: number;
-  primarySectionIds?: readonly CanvasNodeWorkbenchSectionPolicyId[];
-  authoring: CanvasInspectorAuthoringContract;
-  contributions?: readonly CanvasNodeWorkbenchContribution[];
-  dragHandleProps?: CanvasNodeWorkbenchDragHandleProps;
-  onOpenSemanticEditor?: () => void;
-  onClose: () => void;
-}>;
+export type { CanvasNodeWorkbenchPanelProps } from './useCanvasNodeWorkbenchController';
 
-export type CanvasNodeWorkbenchDragHandleProps = HTMLAttributes<HTMLDivElement> &
-  Readonly<{
-    'data-slot'?: string;
-  }>;
-
-function resolveActiveNodeWorkbenchTab({
-  activeTab,
-  model,
-  panelIds,
-}: Readonly<{
-  activeTab?: string;
-  model: NodePropertiesReadModel;
-  panelIds: readonly string[];
-}>): string {
-  if (
-    activeTab != null &&
-    (model.sections.some((section) => section.id === activeTab) || panelIds.includes(activeTab))
-  ) {
-    return activeTab;
-  }
-
-  return model.sections[0]?.id ?? 'general';
-}
-
-function readDvtTransformAuthoringMode(
-  node: CanonicalNode
-): (typeof DVT_TRANSFORM_AUTHORING_MODE)[keyof typeof DVT_TRANSFORM_AUTHORING_MODE] | null {
-  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return null;
-  try {
-    return readDvtTransformAuthoringAuthority(node)?.mode ?? null;
-  } catch {
-    return null;
-  }
-}
-
-function renderWorkbenchContributions(
-  contributions: readonly CanvasNodeWorkbenchContribution[] | undefined,
-  nodeId: string
-): ReactNode {
-  if (contributions == null || contributions.length === 0) {
-    return null;
-  }
-
-  return contributions.map((contribution) => (
-    <PluginContributionBoundary
-      key={contribution.id}
-      resetKey={`${nodeId}:${contribution.id}`}
-      fallback={null}
-    >
-      {contribution.content}
-    </PluginContributionBoundary>
-  ));
-}
-
-function buildContributionChildrenBySection(
-  contributionsBySection: ReadonlyMap<
-    NodePropertySectionId,
-    readonly CanvasNodeWorkbenchContribution[]
-  >,
-  nodeId: string
-): Partial<Record<NodePropertySectionId, ReactNode>> {
-  return Object.fromEntries(
-    Array.from(contributionsBySection, ([sectionId, contributions]) => [
-      sectionId,
-      renderWorkbenchContributions(contributions, nodeId),
-    ])
-  );
-}
-
-export function CanvasNodeWorkbenchPanel({
-  node: canonicalNode,
-  nodes,
-  edges,
-  activeRunId,
-  registeredPlugins = new Set(),
-  preferredTabId = null,
-  preferredTabRequestId = 0,
-  primarySectionIds,
-  authoring,
-  contributions = [],
-  dragHandleProps,
-  onOpenSemanticEditor,
-  onClose,
-}: CanvasNodeWorkbenchPanelProps): JSX.Element {
-  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
-  const copy = resolveCanvasViewCopy(applicationLanguage);
-  const semanticEditorCopy = resolveCanvasSemanticEditorCopy(applicationLanguage);
-  const workspaceLayoutKey =
-    authoring.workspaceScope == null
-      ? null
-      : `${authoring.workspaceScope.tenantId}::${authoring.workspaceScope.projectId}::${authoring.workspaceScope.environmentId}`;
-  const node = useMemo(
-    () => reconcileDbtModelConnectedOrigin({ node: canonicalNode, nodes, edges }),
-    [canonicalNode, edges, nodes]
-  );
-  const [activeTab, setActiveTab] = useState<string | undefined>(() => preferredTabId ?? undefined);
-  const [appliedPreferredTabKey, setAppliedPreferredTabKey] = useState<string | null>(null);
-  const draftController = useCanvasNodeWorkbenchDraftController(node, authoring.workspaceScope);
-  const renderTableCell = useCanvasColumnCommentCellRenderer({ copy, authoring, draftController });
-  const presentationTruth = useCanvasNodePresentation({ node, nodes, edges });
-  const dvtTransformAuthoringMode = readDvtTransformAuthoringMode(node);
-  const semanticDvtTransform =
-    node.pluginId === 'dvt' && node.kind === 'dvt:transform' && !isDbtCompatibleModel(node);
-  const canonicalSubstraitTransformAuthority =
-    dvtTransformAuthoringMode === DVT_TRANSFORM_AUTHORING_MODE.substrait;
-  const canonicalDvtRelationColumnAuthority =
-    canonicalSubstraitTransformAuthority ||
-    (node.kind === 'dvt:source' &&
-      draftController.draft.dvt?.kind === 'source' &&
-      draftController.draft.dvt.semantic != null);
-  const approvedWarehouseSourceOverview =
-    node.kind === 'dvt:source' && node.pluginId === 'dvt.warehouse-source';
-  const baseModel = buildNodePropertiesReadModel({
-    node,
-    nodes,
-    edges,
-    presentationCopy: buildCanvasNodePresentationCopy(copy, applicationLanguage),
-    presentationTruth,
-  });
-  const contributionModel = resolveCanvasNodeWorkbenchContributions(node.id, contributions);
-  const contributedSectionIds = new Set<NodePropertySectionId>([
-    ...contributionModel.beforeBodyBySection.keys(),
-    ...contributionModel.afterBodyBySection.keys(),
-  ]);
-  const unfilteredModel = buildNodeWorkbenchReadModel({
-    codeTruth: presentationTruth.code,
-    model: baseModel,
-    node,
-    canEditNode: authoring.canEditNode,
-    supersededRowIdsBySection: contributionModel.supersededRowIdsBySection,
-    supersededSectionIds: contributionModel.supersededSectionIds,
-    contributedSectionIds,
-  });
-  const panels = getInspectorPanels(node, { activeRunId, registeredPlugins });
-  const sectionModel = resolveCanvasNodeWorkbenchSectionModel({
-    nodeKind: node.kind,
-    canEditNode: authoring.canEditNode,
-    canOpenNodeCode: contributedSectionIds.has('code'),
-    strategySectionIds: primarySectionIds ?? [
-      'code',
-      'properties',
-      'columns',
-      'inputs-outputs',
-      'tests',
-    ],
-    contributedSectionIds,
-    sections: unfilteredModel.sections,
-  });
-  const model = {
-    ...unfilteredModel,
-    sections: sectionModel.sections.map((section) =>
-      approvedWarehouseSourceOverview && section.id === 'general'
-        ? { ...section, rows: [] }
-        : section
-    ),
-  };
-  const resolvedPrimarySectionIds = sectionModel.primarySectionIds;
-  const panelIds = panels.map((panel) => panel.id);
-  const resolvedActiveTab = resolveActiveNodeWorkbenchTab({ activeTab, model, panelIds });
-  const containsCanonicalCodeOutput =
-    resolvedActiveTab === 'code' &&
-    canonicalSubstraitTransformAuthority &&
-    presentationTruth.code.kind === 'canonical';
+export function CanvasNodeWorkbenchPanel(props: CanvasNodeWorkbenchPanelProps): JSX.Element {
+  const controller = useCanvasNodeWorkbenchController(props);
+  const { node, copy, containsCanonicalCodeOutput } = controller;
+  const { onClose } = props;
   const dotClass = inspectorStatusDotClasses[node.status] ?? inspectorStatusDotClasses.idle;
-  const preferredTabKey =
-    preferredTabId == null ? null : `${node.id}:${preferredTabId}:${preferredTabRequestId}`;
-  const renderAuthoringSection = (
-    section: 'general' | 'columns' | 'code' | 'sink'
-  ): JSX.Element => (
-    <div data-slot="canvas-node-workbench-authoring" className="space-y-3 pt-1">
-      <CanvasInspectorAuthoringSection
-        node={node}
-        nodes={nodes}
-        edges={edges}
-        authoring={authoring}
-        section={section}
-        draftController={draftController}
-      />
-    </div>
-  );
-  const sectionBeforeChildren = buildContributionChildrenBySection(
-    contributionModel.beforeBodyBySection,
-    node.id
-  );
-  const sectionAfterChildren = buildContributionChildrenBySection(
-    contributionModel.afterBodyBySection,
-    node.id
-  );
-  if (semanticDvtTransform) {
-    const codeDescription = baseModel.sections.find(
-      (section) => section.id === 'code'
-    )?.description;
-    sectionAfterChildren.code = (
-      <>
-        {sectionAfterChildren.code}
-        <DvtTransformCodeWorkbenchContent
-          key={`${node.id}:${presentationTruth.code.kind === 'canonical' ? presentationTruth.code.digest : presentationTruth.code.kind}`}
-          transformNode={node}
-          nodes={nodes}
-          edges={edges}
-          {...(presentationTruth.code.kind === 'canonical'
-            ? { canonicalContent: presentationTruth.code.content }
-            : {})}
-          canonicalDescription={codeDescription}
-          openSemanticEditorLabel={semanticEditorCopy.openEditorAction}
-          {...(onOpenSemanticEditor == null ? {} : { onOpenSemanticEditor })}
-          copy={copy}
-        />
-      </>
-    );
-  }
-  const handleActiveTabChange = (nextTabId: string): void => {
-    setActiveTab(nextTabId);
-  };
-
-  if (approvedWarehouseSourceOverview) {
-    sectionBeforeChildren.general = (
-      <>
-        <SourceOverviewPanel
-          node={node}
-          nodes={nodes}
-          edges={edges}
-          readModel={baseModel}
-          authoring={authoring}
-          draftController={draftController}
-        />
-        {sectionBeforeChildren.general}
-      </>
-    );
-  }
-
-  if (authoring.canEditNode) {
-    if (!approvedWarehouseSourceOverview) {
-      sectionBeforeChildren.general = (
-        <>
-          {renderAuthoringSection('general')}
-          {sectionBeforeChildren.general}
-        </>
-      );
-    }
-    for (const sectionId of ['code', 'sink'] as const) {
-      if (sectionId === 'code' && semanticDvtTransform) continue;
-      sectionAfterChildren[sectionId] = (
-        <>
-          {sectionAfterChildren[sectionId]}
-          {renderAuthoringSection(sectionId)}
-        </>
-      );
-    }
-    if (canonicalDvtRelationColumnAuthority) {
-      sectionAfterChildren.columns = (
-        <>
-          {sectionAfterChildren.columns}
-          {renderAuthoringSection('columns')}
-        </>
-      );
-    }
-  }
-
-  useEffect(() => {
-    if (preferredTabKey == null || preferredTabKey === appliedPreferredTabKey) {
-      return;
-    }
-
-    setActiveTab(preferredTabId ?? undefined);
-    setAppliedPreferredTabKey(preferredTabKey);
-  }, [appliedPreferredTabKey, preferredTabId, preferredTabKey]);
-
-  useEffect(() => {
-    if (activeTab !== resolvedActiveTab) {
-      setActiveTab(resolvedActiveTab);
-    }
-  }, [activeTab, resolvedActiveTab]);
-
-  const workbenchTabs = (
-    <NodePropertiesTabs
-      node={node}
-      model={model}
-      activeRunId={activeRunId}
-      panels={panels}
-      activeTab={resolvedActiveTab}
-      primarySectionIds={resolvedPrimarySectionIds}
-      persistentSectionIds={contributedSectionIds.has('code') ? ['code'] : undefined}
-      sectionBeforeChildren={sectionBeforeChildren}
-      sectionAfterChildren={sectionAfterChildren}
-      fillAvailableHeight={containsCanonicalCodeOutput}
-      moreLabel={copy.nodeWorkbenchMoreLabel}
-      slotPrefix="canvas-node-workbench"
-      surface="workbench"
-      showSectionCountBadge
-      sourceListOrdering={{ canReorder: authoring.canEditNode, workspaceLayoutKey }}
-      renderTableCell={renderTableCell}
-      onActiveTabChange={handleActiveTabChange}
-      onHide={onClose}
-    />
-  );
-
   return (
     <div
       data-slot="canvas-node-workbench-panel"
       className="flex h-full min-h-0 min-w-0 w-full flex-col"
     >
       <div className={inspectorVisualClasses.contextPanelHeaderRow}>
-        <div
-          {...dragHandleProps}
-          className={cn(
-            'min-w-0 flex-1',
-            dragHandleProps != null && canvasNodeWorkbenchVisualTokens.dragHandle,
-            dragHandleProps?.className
-          )}
-        >
+        <div className="min-w-0 flex-1">
           {node.kind === 'dvt:source' ? (
             <SourceNodeWorkbenchHeaderIdentity node={node} />
           ) : (
@@ -431,11 +91,13 @@ export function CanvasNodeWorkbenchPanel({
           data-slot="canvas-node-workbench-contained-body"
           className="min-h-0 flex-1 overflow-hidden p-4"
         >
-          {workbenchTabs}
+          <CanvasNodeWorkbenchSections {...props} controller={controller} />
         </div>
       ) : (
         <ScrollArea className="min-h-0 flex-1">
-          <div className="space-y-4 p-4">{workbenchTabs}</div>
+          <div className="space-y-4 p-4">
+            <CanvasNodeWorkbenchSections {...props} controller={controller} />
+          </div>
         </ScrollArea>
       )}
     </div>

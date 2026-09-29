@@ -1042,16 +1042,14 @@ describe('Canvas workbench screen composition', () => {
         expect(renderedLines.join('\n')).to.equal(MODEL_SQL);
       });
 
-    cy.get('[data-slot="canvas-node-workbench-overlay"]')
-      .invoke('attr', 'style')
-      .then((initialStyle) => {
-        cy.get('[data-slot="canvas-node-workbench-drag-handle"]')
-          .focus()
-          .type('{leftarrow}{uparrow}');
-        cy.get('[data-slot="canvas-node-workbench-overlay"]')
-          .invoke('attr', 'style')
-          .should('not.equal', initialStyle);
-      });
+    cy.get('[data-slot="canvas-node-workbench-drag-handle"]').should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should(($panel) => {
+      expect($panel[0]!.tagName).to.equal('ASIDE');
+      expect($panel[0]!.style.left).to.equal('');
+      expect($panel[0]!.getBoundingClientRect().right).to.be.at.most(
+        $panel[0]!.ownerDocument.defaultView!.innerWidth
+      );
+    });
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-overlay"]');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('.react-flow__node[data-id="model_orders"]').should('be.focused');

@@ -10,9 +10,14 @@ import {
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,
 } from './canvasDvtSubstraitProjection';
-import { readCanvasPublishedInputFields } from './canvasPublishedInputFields';
+import {
+  projectCanvasPublishedInputFields,
+  readCanvasPublishedInputFields,
+} from './canvasPublishedInputFields';
+import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
 import { canvasDraftEdgeExecutionGate } from './canvasDraftEdgeExecutionGate';
 import { buildCanvasCanonicalSnapshot } from './canvasCanonicalSnapshot';
+import { getPluginPortMap } from '../../plugins/registry';
 
 function producer(id: string): CanonicalNode {
   return {
@@ -107,6 +112,98 @@ const producers = new Map(
 );
 
 describe('consumer Input binding command', () => {
+  it('projects transfer candidates from publication, never from an alias or hidden physical field', () => {
+    const truth = buildCanvasNodePresentationTruth({ node: first, nodes, edges: [] });
+    const columns = {
+      ...truth.columns,
+      visible: [
+        {
+          name: 'Customer alias',
+          sourceFieldName: 'id',
+          type: 'text',
+          provenance: 'declared' as const,
+          selected: true,
+        },
+        { name: 'country', type: 'text', provenance: 'declared' as const, selected: false },
+      ],
+    };
+    expect(projectCanvasPublishedInputFields(first, { ...truth, columns })).toEqual([
+      { columnId: 'id', name: 'Customer alias', type: 'text' },
+    ]);
+    for (const state of ['pending', 'unavailable'] as const) {
+      expect(
+        projectCanvasPublishedInputFields(first, { ...truth, columns: { ...columns, state } })
+      ).toEqual([]);
+    }
+  });
+  it('atomically connects a producer with only the dragged field and keeps other bindings and gates', async () => {
+    const draftSession = session();
+    draftSession.workingSet.visibleEdges = [
+      {
+        sourceId: first.id,
+        targetId: consumer.id,
+        executionGate: 'closed',
+        inputBindings: { version: 'v1', fields: [{ inputId: 'original', producerFieldId: 'id' }] },
+      },
+    ];
+    const before = structuredClone(draftSession);
+    const args = {
+      draftSession,
+      canonicalNodesById,
+      pluginPortMap: getPluginPortMap(),
+      source: { nodeId: second.id, columnId: 'country' },
+      target: { nodeId: consumer.id },
+    };
+    const result = await bindCanvasInputField(args);
+    expect(result.outcome).toBe('applied');
+    if (result.outcome !== 'applied') throw new Error('Expected one-field admission');
+    expect(result.draftSession.workingSet.visibleEdges).toEqual([
+      before.workingSet.visibleEdges[0],
+      {
+        sourceId: second.id,
+        targetId: consumer.id,
+        inputBindings: {
+          version: 'v1',
+          fields: [
+            { inputId: canvasInputSlotId(second.id, 'country'), producerFieldId: 'country' },
+          ],
+        },
+      },
+    ]);
+    expect(result.draftSession.localNodeCatalog).toBe(draftSession.localNodeCatalog);
+    expect(draftSession).toEqual(before);
+    expect(await bindCanvasInputField({ ...args, draftSession: result.draftSession })).toEqual(
+      result
+    );
+  });
+
+  it.each(['missing', 'cycle', 'policy', 'readonly', 'hidden', 'self', 'aborted'])(
+    'does not create a dependency on rejected field admission: %s',
+    async (reason) => {
+      const draftSession = session();
+      draftSession.workingSet.visibleEdges =
+        reason === 'cycle' ? [{ sourceId: consumer.id, targetId: second.id }] : [];
+      if (reason === 'hidden') draftSession.workingSet.visibleNodeIds = [first.id, consumer.id];
+      const before = structuredClone(draftSession);
+      const abort = new AbortController();
+      if (reason === 'aborted') abort.abort();
+      const result = bindCanvasInputField({
+        draftSession,
+        canonicalNodesById,
+        pluginPortMap: reason === 'policy' ? new Map() : getPluginPortMap(),
+        editable: reason !== 'readonly',
+        signal: abort.signal,
+        source: {
+          nodeId: reason === 'self' ? consumer.id : second.id,
+          columnId: reason === 'missing' ? 'absent' : 'id',
+        },
+        target: { nodeId: consumer.id },
+      });
+      if (reason === 'aborted') await expect(result).rejects.toThrow();
+      else expect(await result).toMatchObject({ outcome: 'rejected' });
+      expect(draftSession).toEqual(before);
+    }
+  );
   it('keeps mappings through reconciliation snapshots and independently merges a remote gate', () => {
     const base = { sourceId: first.id, targetId: consumer.id };
     const inputBindings = {

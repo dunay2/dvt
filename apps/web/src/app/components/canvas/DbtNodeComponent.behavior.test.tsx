@@ -29,6 +29,54 @@ describe('DbtNodeComponent behavior', () => {
     vi.restoreAllMocks();
   });
 
+  it.each([true, false])(
+    'accepts one field on the Model body only when editable (%s)',
+    (canMutateGraph) => {
+      const onMapCanvasInput = vi.fn();
+      const onInspectNode = vi.fn();
+      const onOpenNode = vi.fn();
+      const nodeProps = {
+        id: 'model',
+        selected: false,
+        data: {
+          name: 'Model',
+          status: 'idle',
+          pluginId: 'dvt',
+          pluginKind: 'dvt:transform',
+          canMutateGraph,
+          onMapCanvasInput,
+          onInspectNode,
+          onOpenNode,
+        },
+      } as unknown as ComponentProps<typeof DbtNodeComponent>;
+      act(() =>
+        root.render(
+          <ReactFlowProvider>
+            <DbtNodeComponent {...nodeProps} />
+          </ReactFlowProvider>
+        )
+      );
+      const identity = { nodeId: 'source', columnId: 'country' };
+      act(() =>
+        fireEvent.drop(container.querySelector('[data-slot="canvas-node-shell"]')!, {
+          dataTransfer: {
+            types: ['application/x-dvt-canvas-field'],
+            getData: (mime: string) =>
+              mime === 'application/x-dvt-canvas-field' ? JSON.stringify(identity) : '',
+          },
+        })
+      );
+      expect(onMapCanvasInput).toHaveBeenCalledTimes(canMutateGraph ? 1 : 0);
+      if (canMutateGraph)
+        expect(onMapCanvasInput).toHaveBeenCalledWith({
+          target: { nodeId: 'model' },
+          source: identity,
+        });
+      expect(onInspectNode).not.toHaveBeenCalled();
+      expect(onOpenNode).not.toHaveBeenCalled();
+    }
+  );
+
   it('delegates every projected operation to the existing Canvas command callbacks', () => {
     const onInspectNode = vi.fn();
     const onDuplicateNode = vi.fn();
@@ -66,7 +114,37 @@ describe('DbtNodeComponent behavior', () => {
     expect(onRemoveNode).toHaveBeenCalledWith('model.orders');
   });
 
-  it('retrieves source data only through the explicit Play action', () => {
+  it.each([
+    ['dvt:source', 'input', 'columns'],
+    ['dvt:transform', 'transform', 'general'],
+  ] as const)('inspects %s on click without opening or running it', (pluginKind, role, tab) => {
+    const onSelectNode = vi.fn();
+    const onInspectNode = vi.fn();
+    const onOpenNode = vi.fn();
+    const onToggleNodeSelection = vi.fn();
+    const projection = projectCanvasNodeFlowAdapter({
+      nodeId: 'node',
+      data: {
+        name: 'Node',
+        status: 'idle',
+        pluginKind,
+        role,
+        onSelectNode,
+        onInspectNode,
+        onOpenNode,
+        onToggleNodeSelection,
+      },
+      selected: false,
+      onColumnLayoutChange: vi.fn(),
+    });
+    projection.selectNode?.();
+    expect(onSelectNode).toHaveBeenCalledWith('node');
+    expect(onInspectNode).toHaveBeenCalledWith('node', tab);
+    expect(onOpenNode).not.toHaveBeenCalled();
+    expect(onToggleNodeSelection).not.toHaveBeenCalled();
+  });
+
+  it('retrieves source data only through the explicit Preview action', () => {
     const onInspectNode = vi.fn();
     const onOpenSourceDataSample = vi.fn();
     const nodeProps = {

@@ -5,6 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
+import { getPluginPortMap } from '../../plugins/registry';
 import { type CanvasDraftSession } from './canvasDraftSession';
 import type { CanvasDraftSessionCommandRunner } from './useCanvasWorkspaceDraftSession';
 import { readDvtSourceOutputProjection } from './canvasDvtSourceSemanticAuthoring';
@@ -116,6 +117,67 @@ describe('useCanvasColumnAuthoringCommandRunner', () => {
     act(() => root.unmount());
     container.remove();
   });
+
+  it.each(['serial', 'stale'] as const)(
+    'keeps one-field connection admission inside the %s draft boundary',
+    async (scenario) => {
+      const model = { ...buildProjectionTransform(), metadata: {} };
+      let runner!: CanvasColumnAuthoringCommandRunner;
+      let currentSession: CanvasDraftSession = {
+        syncState: 'editing',
+        baseline: { record: null },
+        draftRevision: 'rev-1',
+        workingSet: {
+          visibleNodeIds: [source.id, model.id],
+          visibleEdges: [],
+          pendingExplicitNodeIds: [],
+        },
+        localNodeCatalog: { [source.id]: source, [model.id]: model },
+      };
+      const runDraftSessionCommand: CanvasDraftSessionCommandRunner = (command) => {
+        const result = command(currentSession);
+        if (result.outcome === 'applied') currentSession = result.draftSession;
+        return result;
+      };
+      function Harness(): null {
+        runner = useCanvasColumnAuthoringCommandRunner({
+          state: {
+            canonicalNodesById: new Map([
+              [source.id, source],
+              [model.id, model],
+            ]),
+            draftSession: currentSession,
+          },
+          effects: { runDraftSessionCommand },
+        });
+        return null;
+      }
+      act(() => root.render(<Harness />));
+      const map = (columnId: string): ReturnType<CanvasColumnAuthoringCommandRunner['mapInput']> =>
+        runner.mapInput(
+          { source: { nodeId: source.id, columnId }, target: { nodeId: model.id } },
+          getPluginPortMap()
+        );
+      const first = map('customer');
+      if (scenario === 'stale') {
+        await Promise.resolve();
+        currentSession = { ...currentSession, draftRevision: 'rev-2' };
+        expect(await first).toMatchObject({ outcome: 'rejected' });
+        expect(currentSession.workingSet.visibleEdges).toEqual([]);
+      } else {
+        const second = map('amount');
+        expect(await first).toMatchObject({ outcome: 'applied' });
+        expect(await second).toMatchObject({ outcome: 'applied' });
+        expect(currentSession.workingSet.visibleEdges).toHaveLength(1);
+        expect(
+          currentSession.workingSet.visibleEdges[0]?.inputBindings?.fields.map(
+            (field) => field.producerFieldId
+          )
+        ).toEqual(['customer', 'amount']);
+      }
+      expect(currentSession.localNodeCatalog?.[model.id]?.metadata).toEqual({});
+    }
+  );
 
   it('serializes two calculated-output submissions over the latest draft', async () => {
     const transform = buildProjectionTransform();

@@ -78,9 +78,11 @@ export function CanvasShellReadOnlyBannerSlot({
 export function CanvasShellContextualWorkbenchSplit({
   baseSurface,
   workbench,
+  inspector,
 }: Readonly<{
   baseSurface: ReactNode;
   workbench?: import('./canvasShell.types').CanvasShellContextualWorkbench;
+  inspector?: ReactNode;
 }>): JSX.Element {
   const docked = workbench?.presentation === 'docked';
   const positionController = useCanvasNodeWorkbenchPosition(workbench != null && !docked);
@@ -106,6 +108,7 @@ export function CanvasShellContextualWorkbenchSplit({
       >
         {baseSurface}
       </div>
+      {workbench == null ? inspector : null}
       {workbench == null || docked ? (
         panel
       ) : (

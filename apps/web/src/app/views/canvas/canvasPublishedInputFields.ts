@@ -3,6 +3,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import type { CanvasInputBindingEdge, CanvasPublishedInputField } from './canvasInputBindings';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 
 export async function readCanvasPublishedInputFields(
   args: Readonly<{
@@ -18,7 +19,22 @@ export async function readCanvasPublishedInputFields(
   if (!isModel && !isSource) return [];
   if (isModel && readDvtTransformAuthoringAuthority(args.node) == null) return [];
   const truth = await projectCanvasNodePresentationTruth(args, undefined, signal);
-  if (truth.columns.state === 'unavailable') return [];
+  return projectCanvasPublishedInputFields(args.node, truth);
+}
+
+export function projectCanvasPublishedInputFields(
+  node: CanonicalNode,
+  truth: CanvasNodePresentationTruth
+): readonly CanvasPublishedInputField[] {
+  const isModel = node.pluginId === 'dvt' && node.kind === 'dvt:transform';
+  const isSource =
+    ['dvt', 'dvt.warehouse-source'].includes(node.pluginId) && node.kind === 'dvt:source';
+  if (
+    (!isModel && !isSource) ||
+    truth.columns.state === 'unavailable' ||
+    truth.columns.state === 'pending'
+  )
+    return [];
   return truth.columns.visible.flatMap((column) => {
     const columnId = isModel ? column.reference : (column.sourceFieldName ?? column.name);
     return column.selected === false || columnId == null

@@ -114,7 +114,8 @@ describe('resolveCanvasGraphStrategy', () => {
 
     expect(strategy.id).toBe('dvt-transformation-contextual-canvas');
     expect(strategy.sourceImport.openedFrom).toEqual(['canvas-context-menu', 'command-palette']);
-    expect(strategy.nodeWorkbench.openedFrom).toEqual(['double-click']);
+    expect(strategy.nodeWorkbench.openedFrom).toEqual(['click', 'double-click']);
+    expect(strategy.nodeWorkbench.placement).toBe('right-inspector');
     expect(strategy.nodeWorkbench.sections).toEqual([
       'properties',
       'columns',

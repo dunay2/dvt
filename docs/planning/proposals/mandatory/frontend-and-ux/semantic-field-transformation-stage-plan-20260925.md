@@ -104,6 +104,15 @@ field transformations.
 
 A field drop into Input adds only the dragged column, not the producer's entire
 schema. Repeating the drop is idempotent; further columns require explicit adds.
+The main Canvas Source-properties column list uses the same field-transfer
+adapter as card Output. Its transfer candidates come from the current published
+column read model, not from the physical schema scanner. List reordering remains
+presentation only. Dropping onto the Model body or its Input list invokes the
+same input-binding command. When the producer is not connected, that command
+first uses existing edge admission inside the same draft transaction and creates
+an explicitly empty binding before adding the one column. A rejected column,
+cycle, incompatible port, readonly or stale command commits neither edge nor
+binding. Output and model operations remain untouched; no hidden projection.
 This does not change relational dataset ports into scalar ports. Partial inputs
 must obey the existing explicit Transform boundary before composition; never
 insert a hidden Project inside JOIN or silently widen a partial selection.
@@ -129,6 +138,52 @@ focus and typed LIMIT through pending-state renders, then Apply and reopen.
 Main Canvas left-click opens the existing fixed inspector. Source inspection
 starts at Output; Model double-click retains semantic-editor navigation.
 Embedded controls, Preview and drag must not trigger card navigation.
+This explicitly supersedes the selection-only click and floating node Properties
+policy in `canvas-node-workbench-hardening-plan-20260808.md`. Reuse
+`InspectCanvasNode`, the existing panel and draft controller; no new inspector
+DTO, store or command. The shell owns its fixed right slot. Retire only the
+node inspector's position controller and draggable header; the independent
+contextual Code workbench retains its movement behavior.
+
+```mermaid
+flowchart LR
+  Before[Click selects only] --> Double[Double click] --> Floating[Floating Properties]
+  Click[Card click] --> Inspect[Existing InspectCanvasNode] --> Right[Fixed right panel]
+  Source[Source] --> Output[Existing columns/Output section] --> Right
+  Model[Model double click or Enter] --> Editor[Existing semantic editor]
+```
+
+Opening Properties must not remount the Canvas, mutate execution selection,
+request data or steal focus from the card or an embedded control. Explicit Code
+and Properties section requests still win over the initial Source preference.
+Escape closes Properties only from inside that panel, never from another editor.
+Closing restores card focus unless a newer interaction has already moved focus.
+Replace node-overlay movement tests with fixed-slot, focus, keyboard, readonly
+and unchanged-viewport proof; retain contextual Code movement coverage.
+
+The existing `CanvasNodeWorkbenchPanel` combines node reconciliation, authority
+reads, section policy, tab synchronization effects and editor markup. Split at
+those boundaries before adding another gesture: one controller coordinates the
+existing read-model and draft owners, a sections component composes their editors,
+and the panel renders the header and container. Reuse the existing section policy
+and contribution resolver; do not add a DTO, semantic rule, store or command.
+Resolve the active tab from the current node and explicit section request plus
+the user's last choice, without effects mirroring derived tab state. Changing
+unrelated props must preserve the selected tab and mounted editor.
+
+```mermaid
+flowchart LR
+  Before[Panel: reconciliation + policy + state + markup] --> Split[Separate owners]
+  Owners[Existing presentation, draft and section owners] --> Controller[Workbench controller]
+  Controller --> Panel[Header and container]
+  Controller --> Sections[Tabs, contributions and existing editors]
+  Sections --> Commands[Existing authoring commands only]
+```
+
+Keep each new React component below 200 lines. Guard the panel against importing
+authority readers, stores or reconciliation services; retain behavior tests for
+Source, native Model, dbt Model, Sink, readonly, contributions and explicit tab
+requests. This refactor changes no authoring or publication rule.
 
 | Scenario                                      | Opportunity                          | Fowler pattern / owner                                       | Rail                                     | Tests and allowed surfaces                                                                                                                                             |
 | --------------------------------------------- | ------------------------------------ | ------------------------------------------------------------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -293,7 +293,7 @@ export function useDbtProjectFilesAuthorityController(
   const openNodeWorkbench = useCallback(
     async (
       nodeId: string,
-      preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | 'code' | null
+      preferredTabId?: 'general' | 'columns' | 'inputs-outputs' | 'tests' | 'code' | null
     ) => {
       if (!canonicalNodesById.has(nodeId)) {
         return;

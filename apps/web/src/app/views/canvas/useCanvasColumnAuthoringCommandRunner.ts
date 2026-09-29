@@ -21,6 +21,7 @@ import { useCanvasRelationOutputCommand } from './useCanvasRelationOutputCommand
 import { useCanvasColumnDraftCommand } from './useCanvasColumnDraftCommand';
 import { bindCanvasInputField, removeCanvasInputField } from './canvasInputBindingAuthoring';
 import { applyCanvasStructuredField } from './canvasStructuredFieldAuthoring';
+import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
 
 type CanvasColumnAuthoringCommandRunnerState = {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
@@ -37,7 +38,10 @@ type UseCanvasColumnAuthoringCommandRunnerArgs = {
 };
 
 export type CanvasColumnAuthoringCommandRunner = {
-  mapInput: (identity: GraphNodeInputMapping) => Promise<CanvasColumnMappingResult>;
+  mapInput: (
+    identity: GraphNodeInputMapping,
+    pluginPortMap?: PluginPortMap
+  ) => Promise<CanvasColumnMappingResult>;
   removeInput: (identity: GraphNodeInputMapping) => Promise<CanvasColumnMappingResult>;
   toggleOutput: (
     identity: GraphNodeColumnOutputToggleIdentity
@@ -63,10 +67,16 @@ export function useCanvasColumnAuthoringCommandRunner({
   const submit = useCanvasColumnDraftCommand(runDraftSessionCommand);
   const runOutput = useCanvasRelationOutputCommand(canonicalNodesById, submit);
   const mapInput = useCallback(
-    (identity: GraphNodeInputMapping) =>
+    (identity: GraphNodeInputMapping, pluginPortMap?: PluginPortMap) =>
       submit(
         (draftSession, signal) =>
-          bindCanvasInputField({ draftSession, canonicalNodesById, ...identity, signal }),
+          bindCanvasInputField({
+            draftSession,
+            canonicalNodesById,
+            ...identity,
+            signal,
+            pluginPortMap,
+          }),
         () => ({ outcome: 'rejected' as const, reason: 'invalid_transform_authority' as const })
       ),
     [canonicalNodesById, submit]

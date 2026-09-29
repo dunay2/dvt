@@ -205,15 +205,15 @@ describe('CanvasShell operational drawer registration', () => {
           id: 'read-only-file-canvas',
           sourceImport: { placement: 'contextual-modal', openedFrom: [] },
           nodeWorkbench: {
-            placement: 'contextual-overlay',
-            openedFrom: ['double-click'],
+            placement: 'right-inspector',
+            openedFrom: ['click', 'double-click'],
             sections: ['properties', 'columns', 'tests', 'code'],
           },
           operationalDrawer: null,
           globalNavigation: {
             workbenchTabs: 'retired',
             fixedResourcePanel: 'retired',
-            fixedInspectorPanel: 'retired',
+            fixedInspectorPanel: 'contextual',
           },
         },
       },

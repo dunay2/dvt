@@ -14,6 +14,9 @@ import { readCanvasPublishedInputFields } from './canvasPublishedInputFields';
 import { canvasInputBindingIsConsumed } from './canvasInputBindingUsage';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
+import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
+import { resolveCanvasEdgeCreationTransaction } from './canvasEdgeAdmissionTransaction';
+import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 
 type InputCommand = Readonly<{
   draftSession: CanvasDraftSession;
@@ -96,16 +99,49 @@ function persistInputs(
 }
 
 export async function bindCanvasInputField(
-  args: InputCommand & Readonly<{ source: CanvasColumnMappingSource }>
+  command: InputCommand &
+    Readonly<{ source: CanvasColumnMappingSource; pluginPortMap?: PluginPortMap }>
 ): Promise<CanvasColumnMappingResult> {
+  let args = command;
+  args.signal?.throwIfAborted();
   if (args.editable === false) return rejected('read_only');
-  if (
-    !args.draftSession.workingSet.visibleEdges.some(
-      (edge) => edge.sourceId === args.source.nodeId && edge.targetId === args.target.nodeId
-    )
-  )
-    return rejected('source_not_connected');
   try {
+    if (
+      !args.draftSession.workingSet.visibleEdges.some(
+        (edge) => edge.sourceId === args.source.nodeId && edge.targetId === args.target.nodeId
+      )
+    ) {
+      if (args.pluginPortMap == null) return rejected('source_not_connected');
+      const nodes = resolveCanvasDraftNodes(args.draftSession, args.canonicalNodesById);
+      const transaction = await resolveCanvasEdgeCreationTransaction({
+        canonicalNodesById: new Map(nodes.map((node) => [node.id, node])),
+        draftSession: args.draftSession,
+        pluginPortMap: args.pluginPortMap,
+        connection: {
+          source: args.source.nodeId,
+          target: args.target.nodeId,
+          sourceHandle: null,
+          targetHandle: null,
+        },
+        edges: args.draftSession.workingSet.visibleEdges.map((edge) => ({
+          id: `${edge.sourceId}->${edge.targetId}`,
+          source: edge.sourceId,
+          target: edge.targetId,
+        })),
+      });
+      if (transaction.outcome === 'noop') return rejected('invalid_input_bindings');
+      args = {
+        ...args,
+        draftSession: canvasDraftSession.workingSet.replaceEdges(
+          transaction.draftSession,
+          transaction.draftSession.workingSet.visibleEdges.map((edge) =>
+            edge.sourceId === args.source.nodeId && edge.targetId === args.target.nodeId
+              ? { ...edge, inputBindings: { version: 'v1', fields: [] } }
+              : edge
+          )
+        ),
+      };
+    }
     const context = await readInputs(args);
     if (context == null) return rejected('target_not_canonical_transform');
     const field = context.producers

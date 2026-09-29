@@ -17,6 +17,8 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 import type { CanonicalNode } from '../../types/canonical';
 import { useCanvasInspectorListOrder } from './useCanvasInspectorListOrder';
 import { useInspectorListReorder } from './useInspectorListReorder';
+import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContracts';
+import { writeGraphColumnTransfer } from '../../plugins/graph/graphColumnTransfer';
 
 const COPY = {
   en: {
@@ -35,6 +37,7 @@ const COPY = {
     listLabel: 'Source columns',
     reorder: 'Reorder column',
     reorderHint: 'Drag or press Alt+Up/Down to reorder.',
+    transferHint: 'Drag this column onto a Model to add it to Input.',
     reordered: 'Column reordered',
     textFamily: 'Text',
     structuredFamily: 'Structured',
@@ -62,6 +65,7 @@ const COPY = {
     listLabel: 'Columnas del origen',
     reorder: 'Reordenar columna',
     reorderHint: 'Arrastra o pulsa Alt+Arriba/Abajo para reordenar.',
+    transferHint: 'Arrastra esta columna a un modelo para añadirla a Input.',
     reordered: 'Columna reordenada',
     textFamily: 'Texto',
     structuredFamily: 'Estructurado',
@@ -221,12 +225,14 @@ export function SourceColumnsPanel({
   afterBody,
   canReorder = false,
   workspaceLayoutKey = null,
+  transferColumns = [],
 }: Readonly<{
   node: CanonicalNode;
   beforeBody?: ReactNode;
   afterBody?: ReactNode;
   canReorder?: boolean;
   workspaceLayoutKey?: string | null;
+  transferColumns?: readonly GraphNodeColumn[];
 }>): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = applicationLanguage.trim().toLowerCase().startsWith('es') ? COPY.es : COPY.en;
@@ -328,6 +334,9 @@ export function SourceColumnsPanel({
                 {filteredFacts.map((columnFacts, index) => {
                   const selected = selectedFacts?.column.name === columnFacts.column.name;
                   const dropPlacement = reorder.dropPlacement(columnFacts.column.name);
+                  const transferColumn = transferColumns.find(
+                    (column) => (column.id ?? column.name) === columnFacts.column.name
+                  );
                   return (
                     <li key={columnFacts.column.name}>
                       <button
@@ -337,14 +346,20 @@ export function SourceColumnsPanel({
                         }}
                         type="button"
                         role="option"
-                        draggable={reorder.canReorder}
+                        draggable={reorder.canReorder || transferColumn != null}
+                        title={transferColumn == null ? undefined : copy.transferHint}
                         aria-selected={selected}
                         tabIndex={selected ? 0 : -1}
                         data-slot="source-column-row"
                         data-column-name={columnFacts.column.name}
                         data-drop-placement={dropPlacement}
                         onClick={() => setSelectedName(columnFacts.column.name)}
-                        onDragStart={(event) => reorder.startDrag(columnFacts.column.name, event)}
+                        onDragStart={(event) => {
+                          event.stopPropagation();
+                          reorder.startDrag(columnFacts.column.name, event);
+                          if (transferColumn != null)
+                            writeGraphColumnTransfer(event, node.id, transferColumn);
+                        }}
                         onDragEnd={reorder.endDrag}
                         onDragOver={(event) => reorder.dragOver(columnFacts.column.name, event)}
                         onDragLeave={reorder.dragLeave}
@@ -375,7 +390,7 @@ export function SourceColumnsPanel({
                             )}
                           />
                         )}
-                        {reorder.canReorder ? (
+                        {reorder.canReorder || transferColumn != null ? (
                           <GripVertical
                             data-slot="source-column-drag-handle"
                             aria-hidden="true"

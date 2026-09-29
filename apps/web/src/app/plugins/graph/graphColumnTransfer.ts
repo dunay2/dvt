@@ -13,7 +13,9 @@ export function writeGraphColumnTransfer(
   event.dataTransfer.effectAllowed = 'linkMove';
 }
 
-export function graphColumnTransferTarget(props: GraphNodeColumnSectionProps) {
+export function graphColumnTransferTarget(
+  props: Pick<GraphNodeColumnSectionProps, 'nodeId' | 'onInputMapping'>
+) {
   return {
     onDragOver(event: DragEvent) {
       if (props.onInputMapping == null || !event.dataTransfer.types.includes(mime)) return;

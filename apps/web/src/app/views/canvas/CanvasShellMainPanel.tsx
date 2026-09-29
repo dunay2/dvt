@@ -1,5 +1,6 @@
 /** Owned concern: compose Canvas chrome state, viewport, and center-surface overlay inside the main shell panel. */
 import { CanvasGraphStatusOverlay } from './CanvasGraphStatusOverlay';
+import type { ReactNode } from 'react';
 import {
   CanvasShellContextualWorkbenchSplit,
   CanvasShellMainPanelFrame,
@@ -163,6 +164,7 @@ function CanvasShellMainSurface({
   onOpenSourceImport,
   onOpenCanvasSettings,
   contextMenuPresenter,
+  inspector,
 }: Pick<
   CanvasShellMainPanelProps,
   | 'layout'
@@ -172,7 +174,7 @@ function CanvasShellMainSurface({
   | 'onOpenSourceImport'
   | 'onOpenCanvasSettings'
   | 'contextMenuPresenter'
->): JSX.Element {
+> & { inspector: ReactNode }): JSX.Element {
   const viewport = (
     <CanvasShellViewport
       layout={layout}
@@ -204,6 +206,7 @@ function CanvasShellMainSurface({
     <CanvasShellContextualWorkbenchSplit
       baseSurface={baseSurface}
       workbench={layout.contextualWorkbench}
+      inspector={inspector}
     />
   );
 }
@@ -266,20 +269,20 @@ export function CanvasShellMainPanel({
         onOpenSourceImport={onOpenSourceImport}
         onOpenCanvasSettings={onOpenCanvasSettings}
         contextMenuPresenter={contextMenuPresenter}
+        inspector={
+          <CanvasShellNodeWorkbenchOverlay
+            layout={layout}
+            panels={panels}
+            chromeCommands={chromeCommands}
+            onOpenModelEditor={onOpenModelEditor}
+          />
+        }
       />
       {shouldShowGraphStatusOverlay ? (
         <CanvasGraphStatusOverlay
           activeCanvas={panels.activeCanvas}
           draftStatusState={chromeState.draftStatusState}
           onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
-        />
-      ) : null}
-      {layout.contextualWorkbench == null ? (
-        <CanvasShellNodeWorkbenchOverlay
-          layout={layout}
-          panels={panels}
-          chromeCommands={chromeCommands}
-          onOpenModelEditor={onOpenModelEditor}
         />
       ) : null}
     </CanvasShellMainPanelFrame>

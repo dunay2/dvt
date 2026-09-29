@@ -28,6 +28,7 @@ import type {
 } from '../../plugins/graph/graphNodeColumnContracts';
 import type { CanvasNodeContextMenuCopy } from './canvasNodeContextMenuModel';
 import { projectCanvasNodeFlowAdapter } from './canvasNodeFlowAdapterProjection';
+import { graphColumnTransferTarget } from '../../plugins/graph/graphColumnTransfer';
 
 // ---------------------------------------------------------------------------
 // Canvas node data
@@ -67,7 +68,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   selectedForExecution?: boolean;
   onInspectNode?: (
     nodeId: string,
-    preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | 'code' | null
+    preferredTabId?: 'general' | 'columns' | 'inputs-outputs' | 'tests' | 'code' | null
   ) => void;
   onOpenNode?: (nodeId: string) => void;
   onSelectNode?: (nodeId: string) => void;
@@ -150,6 +151,10 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   };
 
   const Renderer = projection.Renderer;
+  const fieldTransfer = graphColumnTransferTarget({
+    nodeId: id,
+    onInputMapping: projection.onInputMapping,
+  });
 
   return (
     <CanvasNodeShell
@@ -169,8 +174,14 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
           ? projection.openNode
           : undefined
       }
-      onDragOver={handleSchemaResourceDragOver}
-      onDrop={handleSchemaResourceDrop}
+      onDragOver={(event) => {
+        fieldTransfer.onDragOver(event);
+        if (!event.defaultPrevented) handleSchemaResourceDragOver(event);
+      }}
+      onDrop={(event) => {
+        fieldTransfer.onDrop(event);
+        if (!event.defaultPrevented) handleSchemaResourceDrop(event);
+      }}
     >
       <PluginContributionBoundary
         resetKey={`${id}:renderer:${projection.canonicalNode.pluginId}:${projection.canonicalNode.kind}`}
