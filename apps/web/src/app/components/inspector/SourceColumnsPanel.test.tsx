@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import { SourceColumnsPanel } from './SourceColumnsPanel';
+import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContracts';
 
 const sourceNode: CanonicalNode = {
   id: 'source.auth-audit-events',
@@ -58,17 +59,46 @@ describe('SourceColumnsPanel', () => {
     container.remove();
   });
 
-  function render(node: CanonicalNode = sourceNode, canReorder = false): void {
+  function render(
+    node: CanonicalNode = sourceNode,
+    canReorder = false,
+    transferColumns?: readonly GraphNodeColumn[]
+  ): void {
     act(() =>
       root.render(
         <SourceColumnsPanel
           node={node}
           canReorder={canReorder}
+          transferColumns={transferColumns}
           workspaceLayoutKey="tenant::project::dev"
         />
       )
     );
   }
+
+  it('transfers only the published dragged column by identity without selecting or mutating it', () => {
+    const before = structuredClone(sourceNode);
+    render(sourceNode, false, [{ id: 'actor_id', name: 'Actor alias', type: 'text' }]);
+    const actor = container.querySelector<HTMLButtonElement>('[data-column-name="actor_id"]')!;
+    const event = container.querySelector<HTMLButtonElement>('[data-column-name="event_id"]')!;
+    expect(actor.draggable).toBe(true);
+    expect(event.draggable).toBe(false);
+    const dataTransfer = { setData: vi.fn(), effectAllowed: 'none' };
+    act(() => {
+      fireEvent.dragStart(actor, { dataTransfer });
+      fireEvent.dragEnd(actor, { dataTransfer });
+    });
+    expect(dataTransfer.setData).toHaveBeenCalledExactlyOnceWith(
+      'application/x-dvt-canvas-field',
+      JSON.stringify({ nodeId: sourceNode.id, columnId: 'actor_id' })
+    );
+    expect(event.getAttribute('aria-selected')).toBe('true');
+    expect(sourceNode).toEqual(before);
+    render(sourceNode, false, []);
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-column-name="actor_id"]')!.draggable
+    ).toBe(false);
+  });
 
   it('renders one-line type cues and only authoritative PK/UK/NN facts', () => {
     render();

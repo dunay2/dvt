@@ -15,6 +15,7 @@ export type SemanticWorkbenchNodeData = Readonly<{
   semanticGroup: SemanticWorkbenchGroup;
   relationKind?: 'read' | 'filter' | 'project' | 'join' | 'aggregate' | 'set' | 'unknown';
   detail: string;
+  unavailable?: boolean;
   expression?: string;
   inputSummary?: string;
   outputSummary?: string;

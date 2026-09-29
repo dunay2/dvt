@@ -1,6 +1,11 @@
 /** Owned concern: render the existing scalar graph as connected, nested expression nodes. */
 import type { SemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 import { CanvasRelationalScalarGraph } from './CanvasRelationalScalarGraph';
+import { useContext } from 'react';
+import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
+import { writeCanvasRelationalFieldDrag } from './canvasRelationalTreeDrag';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 
 export function CanvasRelationalScalarTree({
   graph,
@@ -11,6 +16,10 @@ export function CanvasRelationalScalarTree({
   compact?: boolean;
   onSelectCondition?: (index: number, operand?: 'left' | 'right') => void;
 }>): JSX.Element {
+  const analysis = useContext(CanvasRelationAnalysisContext);
+  const copy = resolveCanvasSemanticEditorCopy(
+    useApplicationLanguageStore((state) => state.language)
+  );
   if (!compact)
     return <CanvasRelationalScalarGraph graph={graph} onSelectCondition={onSelectCondition} />;
   const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
@@ -33,15 +42,43 @@ export function CanvasRelationalScalarTree({
           <span
             data-slot="canvas-relational-expression-node"
             data-kind={node.data.semanticKind}
+            data-unavailable={node.data.unavailable || undefined}
             data-semantic-node-id={id}
-            title={node.data.detail}
+            draggable={node.data.fieldReference != null && analysis?.error === null}
+            onDragStart={(event) => {
+              event.stopPropagation();
+              if (node.data.fieldReference == null || analysis == null || analysis.error != null) {
+                event.preventDefault();
+                return;
+              }
+              writeCanvasRelationalFieldDrag(event.dataTransfer, {
+                ...node.data.fieldReference,
+                rootId: analysis.session.rootId,
+                revision: analysis.revision,
+              });
+            }}
+            title={
+              node.data.unavailable ? `${copy.unavailable}: ${node.data.detail}` : node.data.detail
+            }
             className={`inline-flex max-w-full items-baseline gap-2 rounded border border-(--border-subtle) bg-(--surface-panel) px-2 py-1 font-mono text-[13px] leading-5 ${compact ? 'whitespace-nowrap' : 'flex-wrap'}`}
           >
-            <span className="shrink-0 font-semibold text-cyan-300">{kind}</span>
+            <span
+              className={
+                node.data.unavailable
+                  ? 'shrink-0 font-semibold text-(--status-danger)'
+                  : 'shrink-0 font-semibold text-cyan-300'
+              }
+            >
+              {kind}
+            </span>
             {detail.length === 0 || detail.join(' ').toUpperCase() === kind ? null : (
               <span
                 className={
-                  compact ? 'truncate text-(--text-strong)' : 'break-all text-(--text-strong)'
+                  node.data.unavailable
+                    ? 'truncate text-(--status-danger)'
+                    : compact
+                      ? 'truncate text-(--text-strong)'
+                      : 'break-all text-(--text-strong)'
                 }
               >
                 {detail.join(' ')}

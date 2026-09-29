@@ -60,7 +60,7 @@ describe('selected Filter form', () => {
       const frame = container.querySelector('[data-canvas-inspector]')!;
       const control =
         gesture === 'include'
-          ? container.querySelector<HTMLElement>('input[type="checkbox"]')!
+          ? container.querySelector<HTMLElement>('[data-slot="relation-output-toggle"]')!
           : container.querySelector<HTMLElement>('[data-slot="relation-output-field"]')!;
       control.focus();
       if (gesture === 'drag') {
@@ -81,7 +81,9 @@ describe('selected Filter form', () => {
       expect(container.querySelector('[data-slot="canvas-operation-output-tab"]')).toBe(tab);
       expect(tab.getAttribute('aria-selected')).toBe('true');
       expect(document.activeElement).toBe(control);
-      if (gesture !== 'include') {
+      if (gesture === 'include') {
+        expect(control.getAttribute('data-included')).toBe('false');
+      } else {
         expect(container.querySelectorAll('[data-slot="relation-output-field"]')[1]).toBe(control);
       }
     }

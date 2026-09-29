@@ -1,6 +1,7 @@
 /** Input syntax only: compile directly to canonical Substrait; never persist a formula AST. */
 import type { Expression } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import { create } from '@bufbuild/protobuf';
+import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {
   resolveDvtSubstraitColumnFunctions,
   resolveFunctionReference,
@@ -8,6 +9,7 @@ import {
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import { buildDvtSubstraitScalarFunction } from './canvasDvtSubstraitScalarFunction';
 import { derivedOutputDataType } from './canvasDerivedOutputExpression';
+import { bindFormulaNulls, formulaNull } from './canvasFormulaNull';
 
 export type FormulaField = Readonly<{
   fieldId: string;
@@ -19,6 +21,7 @@ type FormulaValue = Readonly<{
   expression: Expression;
   dataType: string;
   fieldIds: readonly string[];
+  untypedNull?: boolean;
 }>;
 type FormulaToken = Readonly<{
   kind: 'string' | 'number' | 'name' | 'quoted' | 'symbol';
@@ -69,7 +72,8 @@ class FormulaReader {
     return true;
   }
 
-  private call(name: string, operands: readonly FormulaValue[]): FormulaValue {
+  private call(name: string, supplied: readonly FormulaValue[]): FormulaValue {
+    const operands = bindFormulaNulls(name, supplied, this.args.provider);
     // The admitted binary CONCAT is associative with ACCEPT_NULLS; no new variadic signature.
     if (name.toLowerCase() === 'concat' && operands.length > 2)
       return operands
@@ -143,6 +147,7 @@ class FormulaReader {
       if (token.kind !== 'name' && token.kind !== 'quoted')
         throw new Error('Expected a field, constant or function.');
       if (token.kind === 'name' && this.take('(')) {
+        if (token.value.toUpperCase() === 'CAST') return this.nullCast();
         const operands: FormulaValue[] = [];
         if (!this.take(')')) {
           do {
@@ -161,6 +166,7 @@ class FormulaReader {
           dataType: 'boolean',
           fieldIds: [],
         };
+      if (token.kind === 'name' && token.value.toUpperCase() === 'NULL') return formulaNull();
       const fields = this.args.fields.filter((field) => field.name === token.value);
       if (fields.length !== 1) throw new Error(`Unknown or ambiguous field: ${token.value}.`);
       return {
@@ -171,6 +177,25 @@ class FormulaReader {
     } finally {
       this.depth -= 1;
     }
+  }
+
+  private nullCast(): FormulaValue {
+    for (const word of ['NULL', 'AS']) {
+      const token = this.tokens[this.cursor++];
+      if (token?.kind !== 'name' || token.value.toUpperCase() !== word)
+        throw new Error('Only CAST(NULL AS type) is supported.');
+    }
+    const token = this.tokens[this.cursor++];
+    if (token?.kind !== 'name') throw new Error('Expected a NULL type.');
+    let typeName = token.value.toUpperCase();
+    if (typeName === 'DOUBLE') {
+      const precision = this.tokens[this.cursor++];
+      if (precision?.kind !== 'name' || precision.value.toUpperCase() !== 'PRECISION')
+        throw new Error('Expected DOUBLE PRECISION.');
+      typeName += ' PRECISION';
+    }
+    if (!this.take(')')) throw new Error('Expected closing parenthesis.');
+    return formulaNull(typeName, false);
   }
 
   private product(): FormulaValue {
@@ -213,9 +238,21 @@ export function describeDerivedOutputFormula(
   if (ordinal != null) {
     const name = inputNames[ordinal];
     if (name == null) return null;
-    return /^[A-Za-z_][A-Za-z_0-9]*$/.test(name) && !/^(true|false)$/i.test(name)
+    return /^[A-Za-z_][A-Za-z_0-9]*$/.test(name) && !/^(true|false|null)$/i.test(name)
       ? name
       : `"${name.replaceAll('"', '""')}"`;
+  }
+  const nullType = dvtSubstraitExpression.nullType(expression);
+  if (nullType != null) {
+    const typeName =
+      nullType.kind.case === 'string'
+        ? 'TEXT'
+        : nullType.kind.case === 'i64'
+          ? 'BIGINT'
+          : nullType.kind.case === 'fp64'
+            ? 'DOUBLE PRECISION'
+            : 'BOOLEAN';
+    return typeName === 'TEXT' ? 'NULL' : `CAST(NULL AS ${typeName})`;
   }
   const literal = dvtSubstraitExpression.literalValue(expression);
   if (literal != null) {
@@ -252,4 +289,41 @@ export function describeDerivedOutputFormula(
   return operator != null && args.length === 2
     ? `(${args[0]} ${operator} ${args[1]})`
     : `${name.toUpperCase()}(${args.join(', ')})`;
+}
+
+export function validateDerivedOutputFormula(
+  args: Readonly<{
+    formula: string;
+    fields: readonly Omit<FormulaField, 'expression'>[];
+    provider: string;
+  }>
+): boolean {
+  return inspectDerivedOutputFormula(args).ok;
+}
+
+export function inspectDerivedOutputFormula(
+  args: Parameters<typeof validateDerivedOutputFormula>[0]
+) {
+  try {
+    const plan = create(PlanSchema);
+    const result = compileDerivedOutputFormula({
+      ...args,
+      plan,
+      fields: args.fields.map((field, ordinal) => ({
+        ...field,
+        expression: dvtSubstraitExpression.field(ordinal),
+      })),
+    });
+    if (result.expression.rexType.case === 'selection')
+      return {
+        ok: false as const,
+        message: 'Use Output to pass through a field, or compose an expression.',
+      };
+    return { ok: true as const, ...result, plan };
+  } catch (error) {
+    return {
+      ok: false as const,
+      message: error instanceof Error ? error.message : 'Invalid formula.',
+    };
+  }
 }

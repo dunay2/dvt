@@ -1,7 +1,7 @@
 /** Owned concern: project one canonical Substrait relation subtree into the Canvas tree read model. */
 import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { sortDirectionLabel } from './semanticWorkbenchRelationMetadata';
-import type { SubstraitRelationIndex } from '@dvt/substrait-analysis';
+import type { SubstraitRelationIndex, RelationPublication } from '@dvt/substrait-analysis';
 import { dvtSubstraitExpressionReader } from '@dvt/postgres-projection';
 
 import { canvasPresentationOperationForRel } from './canvasRelationalOperationPresentation';
@@ -109,7 +109,11 @@ function sortFetchSummary(rel: Rel, index: SubstraitRelationIndex): string | nul
 }
 
 export function buildCanvasRelationalTreeRelation(
-  args: Readonly<{ index: SubstraitRelationIndex; digest: string }>
+  args: Readonly<{
+    index: SubstraitRelationIndex;
+    digest: string;
+    publication?: ReadonlyMap<string, RelationPublication>;
+  }>
 ): CanvasRelationalTreeNode {
   const { index, digest } = args;
   const paths = new Map([[index.rootId, 'root']]);
@@ -127,7 +131,19 @@ export function buildCanvasRelationalTreeRelation(
   for (const id of index.postorder) {
     const entry = index.relations.get(id)!;
     const rel = entry.relation;
-    const projectStage = projectCanvasRelationalProjectStage(rel, index, entry.inputs);
+    const validity = args.publication?.get(id);
+    const unavailable = new Set(validity?.unavailableFieldIds);
+    const fields = fieldsForRelation(index, id);
+    const projectStage = projectCanvasRelationalProjectStage(
+      rel,
+      index,
+      entry.inputs,
+      new Set(
+        fields
+          .filter((field) => !unavailable.has(field.fieldId))
+          .map((field) => field.outputOrdinal)
+      )
+    );
     const windows = projectStage?.summary.windowFieldCount ?? 0;
     nodes.set(id, {
       locator: `rel:${digest}:${paths.get(id)}`,
@@ -137,7 +153,9 @@ export function buildCanvasRelationalTreeRelation(
       relationId: id,
       displayName: sortFetchSummary(rel, index) ?? entry.binding.displayName ?? null,
       sourceRef: entry.binding.sourceRef ?? null,
-      output: { fields: fieldsForRelation(index, id) },
+      output: { fields: fields.filter((field) => !unavailable.has(field.fieldId)) },
+      unavailableFields: fields.filter((field) => unavailable.has(field.fieldId)),
+      rowUnavailable: validity?.rowUnavailable ?? false,
       expressionRefs: relationExpressionRefs(rel),
       ...(projectStage == null ? {} : { projectionSummary: projectStage.summary }),
       decorations: windows === 0 ? [] : [{ kind: 'window', count: windows }],

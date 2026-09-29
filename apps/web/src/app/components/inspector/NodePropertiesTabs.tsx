@@ -21,6 +21,7 @@ import { SourceColumnsPanel } from './SourceColumnsPanel';
 import { SourceInputsOutputsPanel } from './SourceInputsOutputsPanel';
 import type { NodePropertiesReadModel, NodePropertySection } from './nodePropertiesContracts';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContracts';
 
 export type NodePropertiesTabsProps = Readonly<{
   node: CanonicalNode;
@@ -43,6 +44,7 @@ export type NodePropertiesTabsProps = Readonly<{
     canReorder: boolean;
     workspaceLayoutKey: string | null;
   }>;
+  sourceTransferColumns?: readonly GraphNodeColumn[];
   renderTableCell?: (context: NodePropertyTableCellRenderContext) => ReactNode;
   onActiveTabChange: (tab: string) => void;
   onHide: () => void;
@@ -137,6 +139,7 @@ export function NodePropertiesTabs({
   surface = 'inspector',
   showSectionCountBadge = false,
   sourceListOrdering,
+  sourceTransferColumns,
   renderTableCell,
   onActiveTabChange,
   onHide,
@@ -294,6 +297,7 @@ export function NodePropertiesTabs({
                 afterBody={afterBody}
                 canReorder={sourceListOrdering?.canReorder}
                 workspaceLayoutKey={sourceListOrdering?.workspaceLayoutKey}
+                transferColumns={sourceTransferColumns}
               />
             ) : sourceInputsOutputs ? (
               <SourceInputsOutputsPanel

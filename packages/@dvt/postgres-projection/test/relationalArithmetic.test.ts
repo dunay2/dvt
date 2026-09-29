@@ -77,6 +77,75 @@ function arithmetic(name: string, type: 'i64' | 'fp64'): ReturnType<typeof scala
 }
 
 describe('arithmetic PostgreSQL projection', () => {
+  it.each(['string', 'i64', 'fp64', 'bool'] as const)(
+    'renders a typed %s NULL without changing the declared result',
+    async (kind) => {
+      const { document } = scalarFixture(true);
+      const root = document.plan.relations[0]!.relType;
+      if (root.case !== 'root' || root.value.input?.relType.case !== 'project')
+        throw new Error('Expected Project');
+      root.value.input.relType.value.expressions = [
+        create(ExpressionSchema, {
+          rexType: {
+            case: 'literal',
+            value: {
+              literalType: {
+                case: 'null',
+                value: { kind: { case: kind, value: { nullability: Type_Nullability.NULLABLE } } },
+              },
+            },
+          },
+        }),
+      ];
+      document.sidecar.semanticPlanSha256 = encodeDvtSubstraitPlanV1(document.plan).sha256;
+      const result = await projectSubstraitToPostgresSql(document);
+      expect(result.sql).toMatch(/NULL::|CAST\(NULL AS/);
+      expect(result.sql).toContain(
+        { string: 'text', i64: 'bigint', fp64: 'float8', bool: 'boolean' }[kind]
+      );
+      expect(result.projection.outputs).toMatchObject([{ dataType: kind }]);
+    }
+  );
+
+  it.each(['required', 'variation', 'unbound'] as const)(
+    'rejects %s NULL without emitting SQL',
+    async (fault) => {
+      const { document } = scalarFixture(true);
+      const root = document.plan.relations[0]!.relType;
+      if (root.case !== 'root' || root.value.input?.relType.case !== 'project')
+        throw new Error('Expected Project');
+      root.value.input.relType.value.expressions = [
+        create(ExpressionSchema, {
+          rexType: {
+            case: 'literal',
+            value: {
+              literalType: {
+                case: 'null',
+                value: {
+                  kind:
+                    fault === 'unbound'
+                      ? { case: 'unbound', value: {} }
+                      : {
+                          case: 'string',
+                          value: {
+                            nullability:
+                              fault === 'required'
+                                ? Type_Nullability.REQUIRED
+                                : Type_Nullability.NULLABLE,
+                            typeVariationReference: fault === 'variation' ? 1 : 0,
+                          },
+                        },
+                },
+              },
+            },
+          },
+        }),
+      ];
+      document.sidecar.semanticPlanSha256 = encodeDvtSubstraitPlanV1(document.plan).sha256;
+      await expect(projectSubstraitToPostgresSql(document)).rejects.toThrow();
+    }
+  );
+
   it('retains the declared type and negative zero for standalone numeric constants', () => {
     expect(pgI64Literal(2n)).toMatchObject({
       TypeCast: { typeName: { names: [{ String: { sval: 'bigint' } }] } },

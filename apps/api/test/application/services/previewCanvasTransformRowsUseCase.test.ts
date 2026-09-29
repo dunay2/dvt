@@ -132,6 +132,21 @@ function harness(
 }
 
 describe('PreviewCanvasTransformRowsUseCase', () => {
+  it('rejects a retained operation whose connected Input no longer admits its fields before probing data', async () => {
+    const { useCase, previewTransformRows, executeWithAuthorizedDraft } = harness();
+    const resolved = await executeWithAuthorizedDraft();
+    resolved.value.authorizedDraft.draft.edges = resolved.value.authorizedDraft.draft.edges.map(
+      (edge: { sourceId: string; targetId: string }) => ({
+        ...edge,
+        metadata: { inputBindings: { version: 'v1', fields: [] } },
+      })
+    );
+    executeWithAuthorizedDraft.mockResolvedValue(resolved);
+    await expect(useCase.execute(request, context())).rejects.toMatchObject({
+      reason: 'projection_unsupported',
+    });
+    expect(previewTransformRows).not.toHaveBeenCalled();
+  });
   it('samples the selected first JOIN rather than the final three-source Model', async () => {
     const { useCase, previewTransformRows, relationId, semanticPlanSha256 } = harness(
       request.canvasId,

@@ -2,7 +2,7 @@
 title: Semantic Field Transformation Stage Plan
 status: Active
 owner: Web / Canvas / VTX2
-last_reviewed: 2026-09-25
+last_reviewed: 2026-09-29
 planning_type: implementation-plan
 ---
 
@@ -15,9 +15,8 @@ Semantic Editor. One disposable card summarizes emitted direct, scalar-derived
 and Window-derived fields. It does not add a relation, expression AST, runtime
 step, persisted visual stage or final-output editor.
 
-The Transform instance `Output` tab remains the sole owner of final inclusion,
-alias and ordering. This stage only explains and authors fields that may later
-be selected there.
+The Transform instance owns final inclusion, alias and ordering. Its `Output`
+tab and card trees are adapters to that same owner, not separate selections.
 
 ## Current And Target
 
@@ -56,6 +55,276 @@ projection authority and fails closed.
 | Preview transformed rows              | Boundary drift          | Reuse query adapter           | `CanvasTransformDataSample`      | `PreviewCanvasTransformRows`  | row/schema oracle                     | new runtime step            |
 
 ## Delivery Boundaries
+
+### Withdrawn input publication (#3422 regression)
+
+Reconnecting a Source with fewer admitted columns must not revive its physical
+schema inside a retained Transform. Keep the authored Substrait document and
+stable identities for repair; do not silently remove expressions or insert a
+Project into JOIN. An unavailable dependency is not a published output.
+
+```mermaid
+flowchart LR
+  Before[Outer selection] --> Display[Read/Input display filter only]
+  Saved[Unchanged authored document] --> Wrong[Unfiltered Output and cached Preview]
+  Publication[Connected publication and explicit Input bindings] --> Analysis[Shared Substrait dependency analysis]
+  Saved --> Analysis
+  Analysis --> Valid[Valid Output fields and counts]
+  Analysis --> Broken[Retained references with red unavailable diagnostic]
+  Analysis --> Query[Preview admission before provider access]
+  Publication --> Revision[Invalidate old and in-flight row samples]
+```
+
+Reuse `ProjectCanvasRelationalTree` (Canvas semantic inspection) and
+`PreviewCanvasTransformRows` (protected Canvas data query), including their
+current authorization and draft-save ports. Dependency facts belong to
+`@dvt/substrait-analysis`, not React, a second DTO, or a second expression AST.
+Value lineage comes from canonical schema derivation. Missing predicate,
+grouping, ordering or other row dependencies invalidate the relation; an
+independent constant does not acquire an invented field dependency.
+
+Output excludes unavailable fields. A separate diagnostic retains their names
+in red for repair, with no draggable published-field reference. Counters use
+valid outputs. Preview of an authored operation with unavailable dependencies
+fails closed; it does not silently execute a rewritten partial operation.
+Changing admitted inputs invalidates existing and in-flight samples even when
+the semantic plan hash is unchanged. Restoring the same input repairs the read
+model without authoring writes or identity changes.
+
+| Scenario                                   | Opportunity                              | Pattern                                   | Owner / rail                                           | Proof                                                                         | Excluded                                     |
+| ------------------------------------------ | ---------------------------------------- | ----------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------- | -------------------------------------------- |
+| Source publication shrinks after reconnect | Presentation filter hides semantic drift | Shared dependency projection              | Substrait analysis / ProjectCanvasRelationalTree       | Direct, derived, constant, row-dependency and restore cases                   | Persisted validity flags; hidden projections |
+| Old sample survives unchanged plan hash    | Incomplete query identity                | Input-revision invalidation and admission | CanvasTransformDataSample / PreviewCanvasTransformRows | Old and in-flight samples rejected; provider not called for invalid operation | New endpoint; database mutation              |
+
+### Advanced field-flow editor (#3422)
+
+The accepted interaction supersedes the read-only-only card detail below and
+the isolated formula-selector cut #3451. Do not integrate the latter on its own.
+Replace the parallel visual-formula draft with name plus formula, using the
+existing compiler and canonical Substrait expressions. A published derived field
+is also an available operand; dragging it references its stable field identity,
+not a copied expression from an untrusted drag payload.
+
+```mermaid
+flowchart LR
+  Before[Card: expression OR structure] --> Passive[Passive detail]
+  Separate[Separate visual formula AST] --> Compiler[Existing Substrait compiler]
+  Document[Scoped canonical document] --> Projection[Input fields + local expressions + Output fields]
+  Projection --> Gesture[Field or expression gesture]
+  Gesture --> Formula[Insert admitted operand in formula]
+  Gesture --> Mapping[Existing connection and mapping admission]
+  Gesture --> Removal[Existing dependency-aware removal]
+  Formula --> Command[ConfigureCanvasDvtNode]
+  Mapping --> Command
+  Removal --> Command
+  Command --> Document
+  Header[Header movement] --> Layout[Presentation coordinates only]
+```
+
+Every supported card shows local Input and Output fields alongside its owned
+expression tree. Input groups contain the exact child publication, never a
+physical schema or a copied upstream expression subtree. Apply the outer source
+publication boundary to both a Read card and any Input group referencing it.
+Use names and aliases for labels and titles; keep technical identities only in
+machine-readable references or explicitly secondary technical disclosure.
+Display identities are namespaced by group so Input and Output can reference
+the same field without duplicate visual nodes.
+The complete local tree remains available in a keyboard-scrollable detail area.
+Bound that area's height in the geometry projection; adding Input/Output rows
+must not grow a single card beyond the viewport or detach its ports from its
+rendered bounds. The component consumes that height rather than recalculating it.
+
+Drag transport carries scoped references only. Resolve operands against the
+target's current admitted field model; reject foreign, stale, malformed or
+unavailable references. Dropping into a formula replaces the current text
+selection and does not save, move a card or navigate. Published expressions
+remain named field references; arithmetic, composition and constants are still
+compiled by the one admitted expression compiler. JOIN owns predicates, not
+field transformations.
+
+A field drop into Input adds only the dragged column, not the producer's entire
+schema. Repeating the drop is idempotent; further columns require explicit adds.
+The main Canvas Source-properties column list uses the same field-transfer
+adapter as card Output. Its transfer candidates come from the current published
+column read model, not from the physical schema scanner. List reordering remains
+presentation only. Dropping onto the Model body or its Input list invokes the
+same input-binding command. When the producer is not connected, that command
+first uses existing edge admission inside the same draft transaction and creates
+an explicitly empty binding before adding the one column. A rejected column,
+cycle, incompatible port, readonly or stale command commits neither edge nor
+binding. Output and model operations remain untouched; no hidden projection.
+This does not change relational dataset ports into scalar ports. Partial inputs
+must obey the existing explicit Transform boundary before composition; never
+insert a hidden Project inside JOIN or silently widen a partial selection.
+
+A compatible Input drop uses the existing relation/mapping command and its
+algebra, arity, cycle, type and dependency checks. Do not persist visual column
+edges. A selected output dropped explicitly on the Canvas background invokes
+removal; a successful target drop consumes the gesture first. Invalid targets,
+Escape, drag cancellation or lost capture never imply removal. Explicit add and
+remove actions remain keyboard accessible. The Output inspector uses named
+add/remove buttons instead of selection checkboxes, retaining focus and the
+existing dependency-aware output command after each action.
+Header movement and field dragging must have disjoint interaction boundaries.
+
+Staged unary forms must retain their query inputs while only presentation state
+changes. The authoring presenter currently reconstructs a producer document on
+every pending-edit update; the new analysis snapshot briefly clears its field
+query and unmounts the form. Memoize that existing subtree projection against
+its semantic inputs, not the pending UI flag. Do not add another draft store,
+delay input events or accept stale semantic revisions. Prove DOM identity,
+focus and typed LIMIT through pending-state renders, then Apply and reopen.
+
+Main Canvas left-click opens the existing fixed inspector. Source inspection
+starts at Output; Model double-click retains semantic-editor navigation.
+Embedded controls, Preview and drag must not trigger card navigation.
+This explicitly supersedes the selection-only click and floating node Properties
+policy in `canvas-node-workbench-hardening-plan-20260808.md`. Reuse
+`InspectCanvasNode`, the existing panel and draft controller; no new inspector
+DTO, store or command. The shell owns its fixed right slot. Retire only the
+node inspector's position controller and draggable header; the independent
+contextual Code workbench retains its movement behavior.
+
+```mermaid
+flowchart LR
+  Before[Click selects only] --> Double[Double click] --> Floating[Floating Properties]
+  Click[Card click] --> Inspect[Existing InspectCanvasNode] --> Right[Fixed right panel]
+  Source[Source] --> Output[Existing columns/Output section] --> Right
+  Model[Model double click or Enter] --> Editor[Existing semantic editor]
+```
+
+Opening Properties must not remount the Canvas, mutate execution selection,
+request data or steal focus from the card or an embedded control. Explicit Code
+and Properties section requests still win over the initial Source preference.
+Escape closes Properties only from inside that panel, never from another editor.
+Closing restores card focus unless a newer interaction has already moved focus.
+Replace node-overlay movement tests with fixed-slot, focus, keyboard, readonly
+and unchanged-viewport proof; retain contextual Code movement coverage.
+
+The existing `CanvasNodeWorkbenchPanel` combines node reconciliation, authority
+reads, section policy, tab synchronization effects and editor markup. Split at
+those boundaries before adding another gesture: one controller coordinates the
+existing read-model and draft owners, a sections component composes their editors,
+and the panel renders the header and container. Reuse the existing section policy
+and contribution resolver; do not add a DTO, semantic rule, store or command.
+Resolve the active tab from the current node and explicit section request plus
+the user's last choice, without effects mirroring derived tab state. Changing
+unrelated props must preserve the selected tab and mounted editor.
+
+```mermaid
+flowchart LR
+  Before[Panel: reconciliation + policy + state + markup] --> Split[Separate owners]
+  Owners[Existing presentation, draft and section owners] --> Controller[Workbench controller]
+  Controller --> Panel[Header and container]
+  Controller --> Sections[Tabs, contributions and existing editors]
+  Sections --> Commands[Existing authoring commands only]
+```
+
+Keep each new React component below 200 lines. Guard the panel against importing
+authority readers, stores or reconciliation services; retain behavior tests for
+Source, native Model, dbt Model, Sink, readonly, contributions and explicit tab
+requests. This refactor changes no authoring or publication rule.
+
+| Scenario                                      | Opportunity                          | Fowler pattern / owner                                       | Rail                                     | Tests and allowed surfaces                                                                                                                                             |
+| --------------------------------------------- | ------------------------------------ | ------------------------------------------------------------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Input fields disappear when expressions exist | Alternate read projections hide flow | Compose local presentation in CanvasRelationalTreeProjection | ProjectCanvasRelationalTree              | Existing detail/structure projectors; canonical projection tests and card-detail browser flow; no upstream tree copy or unpublished field                              |
+| Two formula trees drift                       | Duplicate representation             | Remove parallel draft; syntax adapter to Substrait           | ConfigureCanvasDvtNode                   | Existing formula form/compiler/authoring model, compact tree and drag transport; constants, compound fields, edit identity, malformed/stale/foreign drop, cancellation |
+| Drag changes flow or removes output           | UI mutation authority                | Existing revision-bound command and input mapping owners     | ConfigureCanvasDvtNode; CreateCanvasEdge | Existing output and staged-operation commands; connected consumer, cycle, arity, type, dependency and readonly tests; browser apply/save/reopen                        |
+| Card click differs between canvases           | Gesture ambiguity                    | Reuse fixed inspector adapter                                | Existing Canvas inspection query         | Existing card interaction adapter and tests; left-click, embedded controls, drag and double-click separation                                                           |
+
+Allowed surfaces are existing Canvas views/components/graph plugins and their
+unit, architecture and Cypress tests. No engine, planner, API, provider execution
+or application database changes. Refresh the existing feature mechanization
+declarations before implementation. Do not claim completion of the editor from
+the read-projection or formula-operand cut alone: cross-card mapping, removal,
+dependency feedback and complete save/reopen proof remain acceptance gates.
+
+### Assisted expression workspace (#3422)
+
+The isolated name/textarea form is not the advanced editor. Replace its text
+surface with the existing lazy Monaco editor, with scoped completions and
+selection-preserving insertion. Beside the formula, expose searchable admitted
+fields (names and types, click or drag), catalog-derived function signatures and
+literal/operator insertion. Functions come from the existing provider capability
+resolver, not an independently maintained UI catalog. Function insertion wraps
+the selected expression; field insertion replaces the selection. All gestures
+edit only the disposable text draft until the existing explicit submit command.
+
+```mermaid
+flowchart LR
+  Before[Isolated textarea] --> Guess[User guesses fields and syntax]
+  Fields[Admitted current operands] --> Palette[Search, click, drag and completion]
+  Catalog[Existing capability resolver] --> Palette
+  Palette --> Draft[One formula text draft in lazy Monaco]
+  Draft --> Compiler[Existing Substrait compiler]
+  Compiler --> Feedback[Type, dependencies and canonical expression tree]
+  Draft --> Submit[Existing revision-bound derived-output command]
+```
+
+Compiler diagnostics, not a second parser or JavaScript evaluation, determine
+whether saving is allowed. The existing scalar tree renderer can show the
+compiled draft as read-only feedback alongside its result type and dependencies;
+it is not a second editable expression tree or persisted model. This supersedes
+the older Properties-only textual summary restriction while preserving one
+compiler and one renderer. Local validity is not provider execution readiness.
+Completions are scoped to the editor model and disposed on close. Opening a
+second editor cannot leak field names across models. Monaco remains lazily
+loaded with existing local workers; no new dependency, CDN or backend is needed.
+
+`DerivedOutputFormulaEditor` is the sole editable Monaco host in Canvas. This
+explicitly supersedes the earlier blanket Canvas-host prohibition for that leaf
+only; it does not grant Code/workspace-file authority to the shell or formulas.
+Artifacts and Templates continue through `MonacoCodeViewer`, whose API has no
+mount callback or change handler. The shared surface must suppress an editable
+mount callback when `readOnly` is true. Architecture tests distinguish erased
+type imports from runtime hosting, reject other Canvas hosts, and behavior tests
+prove a readonly caller never receives the mutable editor handle.
+
+| Scenario                                           | Opportunity                                  | Owner / pattern                                                 | Rail                        | Proof                                                                                                    |
+| -------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Build a compound expression without guessing names | Isolated text presentation                   | Existing authoring model and compiler / assisted syntax adapter | ConfigureCanvasDvtNode      | Field click/drop, nested function insertion, constants, completion, edit/save/reopen                     |
+| Show useful feedback without duplicated semantics  | Boolean validation hides the compiler result | Canonical expression projection / presentation model            | ProjectCanvasRelationalTree | Type and dependency feedback, invalid/stale/foreign inputs, no provider call or publication while typing |
+
+Allowed surfaces add only the existing shared Monaco wrapper's optional mount
+callback, Canvas formula presentation/adapter files and their tests. No new
+command, DTO or AST. Negative tests retain self-reference rejection, explicit
+cancel, unchanged authoring during insertion, and revision-bound submission.
+Cross-card mapping and drag-out removal remain separate acceptance obligations;
+this workspace alone does not close the complete field-flow editor.
+
+### NULL literals and reachable formula actions (#3422)
+
+The formula adapter must recognize case-insensitive `NULL` as a literal, not
+as a field. Quoted `"null"` remains a field and `'null'` remains text. Reuse
+Substrait's typed nullable literal and the existing schema analysis; no null
+sentinel may be persisted as a field or a second expression representation.
+Resolve a bare NULL operand against the existing admitted function signatures.
+A standalone NULL (or an all-NULL text expression) defaults to nullable text.
+`CAST(NULL AS TEXT|BIGINT|DOUBLE PRECISION|BOOLEAN)` makes the type explicit and
+preserves typed literal edit/reopen. This is bounded null-literal syntax, not
+admission of arbitrary casts or new function signatures. Incompatible operands,
+unsupported casts, unknown functions and malformed types still fail closed.
+
+```mermaid
+flowchart LR
+  Before[NULL parsed as field] --> Error[Unknown field]
+  Formula[Formula NULL token] --> Bind[Existing catalog resolves operand type]
+  Bind --> Literal[Canonical typed nullable literal]
+  Literal --> Command[ConfigureCanvasDvtNode]
+  Literal --> Tree[ProjectCanvasRelationalTree]
+  Command --> Preview[PreviewCanvasTransformRows: typed SQL NULL]
+```
+
+The PostgreSQL renderer must preserve the declared nullable type with a typed
+NULL cast, rejecting unbound, required or unsupported types and variations.
+Null is distinct from empty text throughout tree display, save/reopen and Preview.
+The existing explicit formula submit/cancel actions remain visible within the
+inspector while its content scrolls. The model-level Apply action does not
+silently submit an unfinished formula. Missing names, conflicts and invalid
+formulas expose the blocking reason alongside those actions. Prove the user's
+named TRIM field and COALESCE with NULL at a short viewport, then Apply/reopen.
+This extends the existing formula and PostgreSQL expression adapters, not the
+inspector's semantic responsibilities or the set of command/query rails.
 
 ### Card detail convergence (#3422)
 

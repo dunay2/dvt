@@ -50,6 +50,8 @@ export type CanvasRelationalTreeNode = Readonly<{
   displayName: string | null;
   sourceRef: ConnectedSourceRef | null;
   output: Readonly<{ fields: readonly CanvasRelationalTreeField[] }>;
+  unavailableFields?: readonly CanvasRelationalTreeField[];
+  rowUnavailable?: boolean;
   expressionRefs: readonly CanvasRelationalTreeExpressionRef[];
   projectionSummary?: Readonly<{
     passthroughFieldCount: number;

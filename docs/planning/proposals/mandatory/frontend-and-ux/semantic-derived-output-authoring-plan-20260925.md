@@ -2,7 +2,7 @@
 title: Semantic Derived Output Authoring Plan
 status: Active
 owner: Web / Canvas / VTX2
-last_reviewed: 2026-09-25
+last_reviewed: 2026-09-28
 planning_type: implementation-plan
 ---
 
@@ -257,6 +257,16 @@ the updated snapshots remains `ConfigureCanvasDvtNode` and the existing draft.
 - No provider query is allowed during inspection or composition.
 
 ## Scope Guard
+
+The advanced interaction approved in #3422 is governed by the
+[field-flow editor design](semantic-field-transformation-stage-plan-20260925.md#advanced-field-flow-editor-3422).
+It replaces the separate visual formula draft and the isolated #3451 delivery.
+Input/Output trees and name-plus-formula edit the same canonical document.
+Field/expression drags insert admitted references, not serialized AST authority;
+publication, revision, dependency and explicit-apply boundaries remain unchanged.
+The earlier checkbox-specific acceptance describes stability, not a requirement
+to retain checkboxes. Explicit add/remove and drag interactions preserve those
+same focus, viewport and command guarantees.
 
 ### Name and formula editing
 

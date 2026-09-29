@@ -13,7 +13,8 @@ export type CanvasRelationalProjectStage = Readonly<{
 export function projectCanvasRelationalProjectStage(
   rel: Rel,
   index: SubstraitRelationIndex,
-  inputRelationIds: readonly string[]
+  inputRelationIds: readonly string[],
+  availableOutputOrdinals?: ReadonlySet<number>
 ): CanvasRelationalProjectStage | null {
   if (rel.relType.case !== 'project') return null;
   const inputFieldCount =
@@ -29,7 +30,10 @@ export function projectCanvasRelationalProjectStage(
   if (emitted.some((ordinal) => ordinal < 0 || ordinal >= availableFieldCount)) {
     throw new Error('ProjectRel emits an unavailable field.');
   }
-  const expressions = emitted
+  const published = emitted.filter(
+    (_, ordinal) => availableOutputOrdinals == null || availableOutputOrdinals.has(ordinal)
+  );
+  const expressions = published
     .filter((ordinal) => ordinal >= inputFieldCount)
     .map((ordinal) => project.expressions[ordinal - inputFieldCount]!);
   const scalarFieldCount = expressions.filter(
@@ -39,7 +43,7 @@ export function projectCanvasRelationalProjectStage(
   return {
     operation: 'field_transform',
     summary: {
-      passthroughFieldCount: emitted.filter((ordinal) => ordinal < inputFieldCount).length,
+      passthroughFieldCount: published.filter((ordinal) => ordinal < inputFieldCount).length,
       scalarFieldCount,
       windowFieldCount,
     },

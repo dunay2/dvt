@@ -32,7 +32,8 @@ describe('CanvasShellMainPanel architecture', () => {
     expect(MAIN_PANEL_SOURCE).not.toContain('absolute top-16 right-4 bottom-4');
 
     expect(NODE_WORKBENCH_OVERLAY_SOURCE).toContain('data-slot="canvas-node-workbench-overlay"');
-    expect(NODE_WORKBENCH_OVERLAY_SOURCE).toContain('function CanvasNodeWorkbenchOverlaySurface');
+    expect(NODE_WORKBENCH_OVERLAY_SOURCE).toContain('<aside');
+    expect(NODE_WORKBENCH_OVERLAY_SOURCE).not.toContain('useCanvasNodeWorkbenchPosition');
     expect(NODE_WORKBENCH_OVERLAY_SOURCE).toContain('CanvasNodeWorkbenchPanel');
     expect(NODE_WORKBENCH_OVERLAY_SOURCE).not.toContain('CanvasInspectorPanel');
   });

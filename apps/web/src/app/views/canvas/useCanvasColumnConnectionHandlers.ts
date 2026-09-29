@@ -19,10 +19,12 @@ import { type CanvasColumnLineageEdgeData } from './canvasColumnLineageEdgeModel
 import type { CanvasEdgeAuthoringContracts } from './canvasGraphHandlerContracts';
 import { canvasViewCopy } from './copy';
 import type { CanvasColumnAuthoringCommandRunner } from './useCanvasColumnAuthoringCommandRunner';
+import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
 
 export function useCanvasColumnConnectionHandlers(
   { policy }: CanvasEdgeAuthoringContracts,
-  columnAuthoringCommandRunner: CanvasColumnAuthoringCommandRunner
+  columnAuthoringCommandRunner: CanvasColumnAuthoringCommandRunner,
+  pluginPortMap?: PluginPortMap
 ) {
   const [pendingSource, setPendingSource] = useState<CanvasColumnHandleIdentity | null>(null);
   const { canEditEdges } = policy;
@@ -33,7 +35,7 @@ export function useCanvasColumnConnectionHandlers(
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
-      void columnAuthoringCommandRunner.mapInput(identity).then((result) => {
+      void columnAuthoringCommandRunner.mapInput(identity, pluginPortMap).then((result) => {
         if (result.outcome === 'rejected') toast.error(formatColumnMappingRejection(result.reason));
         else {
           setPendingSource(null);
@@ -41,7 +43,7 @@ export function useCanvasColumnConnectionHandlers(
         }
       });
     },
-    [canEditEdges, columnAuthoringCommandRunner]
+    [canEditEdges, columnAuthoringCommandRunner, pluginPortMap]
   );
   const tryColumnConnection = useCanvasColumnMappingGesture(canEditEdges, handleMapCanvasInput);
 

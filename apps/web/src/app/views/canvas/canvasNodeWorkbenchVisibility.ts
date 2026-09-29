@@ -15,7 +15,7 @@ export function isCanvasNodeWorkbenchVisible({
   hasInspectorNode,
 }: CanvasNodeWorkbenchVisibilityInput): boolean {
   return (
-    surfaceStrategy?.nodeWorkbench.placement === 'contextual-overlay' &&
+    surfaceStrategy?.nodeWorkbench.placement === 'right-inspector' &&
     !focusMode &&
     inspectorPanelVisible &&
     hasInspectorNode

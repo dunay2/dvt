@@ -44,18 +44,20 @@ export function CanvasRelationalTreeAuthoring({
   const staged = data.stagedOperations.find(
     (operation) => operation.id === data.selectedStagedOperationId
   );
-  const editingDocument = useMemo(
-    () =>
-      staged == null ? null : resolveCanvasStagedEditingDocument(staged, data.stagedOperations),
-    [staged, data.stagedOperations]
+  const { editingDocument, producerDocument } = useMemo(
+    () => ({
+      editingDocument:
+        staged == null ? null : resolveCanvasStagedEditingDocument(staged, data.stagedOperations),
+      producerDocument: resolveCanvasStagedProducerDocument({
+        relationId: staged?.inputs[0] ?? null,
+        canonical: data.draft,
+        operations: data.stagedOperations,
+        sources: data.pendingSources,
+      }),
+    }),
+    [staged, data.draft, data.stagedOperations, data.pendingSources]
   );
   const reservedAliases = data.pendingSources.map((item) => item.read.binding.displayName);
-  const producerDocument = resolveCanvasStagedProducerDocument({
-    relationId: staged?.inputs[0] ?? null,
-    canonical: data.draft,
-    operations: data.stagedOperations,
-    sources: data.pendingSources,
-  });
   const expand = (id: string | null, open = true) => {
     actions.selectRelation(id);
     onExpandedChange(open);

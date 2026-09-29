@@ -1,6 +1,5 @@
-/** Owned concern: render the contextual NodeWorkbench overlay presentation shell. */
-import { useCallback, useEffect, type HTMLAttributes, type ReactNode, type RefObject } from 'react';
-
+/** Owned concern: present the existing node workbench in the fixed right inspector slot. */
+import { useCallback, useRef } from 'react';
 import type {
   CanvasShellChromeCommands,
   CanvasShellLayout,
@@ -8,13 +7,10 @@ import type {
 } from './canvasShell.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { cn } from '../../components/ui/utils';
 import { findCanvasGraphNodeElement } from './canvasNodeWorkbenchDomGeometry';
-import type { CanvasNodeWorkbenchPosition } from './canvasNodeWorkbenchPositionModel';
 import { isCanvasNodeWorkbenchVisible } from './canvasNodeWorkbenchVisibility';
 import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualTokens';
 import { CanvasNodeWorkbenchPanel } from './CanvasNodeWorkbenchPanel';
-import { useCanvasNodeWorkbenchPosition } from './useCanvasNodeWorkbenchPosition';
 
 export type CanvasNodeWorkbenchOverlayProps = Readonly<{
   layout: Pick<CanvasShellLayout, 'focusMode' | 'inspectorPanelVisible' | 'surfaceStrategy'>;
@@ -34,50 +30,6 @@ export type CanvasNodeWorkbenchOverlayProps = Readonly<{
   onHide: CanvasShellChromeCommands['onHideInspector'];
 }>;
 
-function CanvasNodeWorkbenchOverlaySurface({
-  accessibleLabel,
-  children,
-  onPointerCancel,
-  onPointerMove,
-  onPointerUp,
-  position,
-  sourceLayout,
-  surfaceRef,
-}: Readonly<{
-  accessibleLabel: string;
-  children: ReactNode;
-  onPointerCancel: HTMLAttributes<HTMLDivElement>['onPointerCancel'];
-  onPointerMove: HTMLAttributes<HTMLDivElement>['onPointerMove'];
-  onPointerUp: HTMLAttributes<HTMLDivElement>['onPointerUp'];
-  position: CanvasNodeWorkbenchPosition;
-  sourceLayout: boolean;
-  surfaceRef: RefObject<HTMLDivElement>;
-}>): JSX.Element {
-  return (
-    <div
-      ref={surfaceRef}
-      data-slot="canvas-node-workbench-overlay"
-      role="dialog"
-      aria-label={accessibleLabel}
-      className={cn(
-        canvasNodeWorkbenchVisualTokens.overlay,
-        sourceLayout
-          ? canvasNodeWorkbenchVisualTokens.sourceOverlaySize
-          : canvasNodeWorkbenchVisualTokens.defaultOverlaySize
-      )}
-      style={{
-        left: `${position.left}px`,
-        top: `${position.top}px`,
-      }}
-      onPointerCancel={onPointerCancel}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-    >
-      {children}
-    </div>
-  );
-}
-
 export function CanvasNodeWorkbenchOverlay({
   layout,
   panels,
@@ -94,11 +46,11 @@ export function CanvasNodeWorkbenchOverlay({
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasViewCopy(applicationLanguage);
   const inspectorNodeId = panels.inspectorNode?.id ?? null;
-  const positionController = useCanvasNodeWorkbenchPosition(visible, inspectorNodeId);
+  const surfaceRef = useRef<HTMLElement>(null);
 
   const hideAndRestoreNodeFocus = useCallback((): void => {
     const closingFocus = document.activeElement;
-    const closingSurface = positionController.surfaceRef.current;
+    const closingSurface = surfaceRef.current;
     onHide();
     window.requestAnimationFrame(() => {
       const activeElement = document.activeElement;
@@ -108,70 +60,25 @@ export function CanvasNodeWorkbenchOverlay({
         activeElement !== closingFocus &&
         activeElement.isConnected &&
         !closingSurface?.contains(activeElement)
-      ) {
+      )
         return;
-      }
       findCanvasGraphNodeElement(inspectorNodeId)?.focus({ preventScroll: true });
     });
-  }, [inspectorNodeId, onHide, positionController.surfaceRef]);
+  }, [inspectorNodeId, onHide]);
 
-  useEffect(() => {
-    if (!visible) {
-      return;
-    }
-
-    const surface = positionController.surfaceRef.current;
-    const openingFocus = surface?.ownerDocument.activeElement;
-    const focusFrame = window.requestAnimationFrame(() => {
-      if (surface == null) return;
-      const activeElement = surface.ownerDocument.activeElement;
-      // Opening focus must not override a newer interaction before this frame.
-      if (
-        surface.contains(activeElement) ||
-        (activeElement !== openingFocus && activeElement !== surface.ownerDocument.body)
-      ) {
-        return;
-      }
-      surface
-        .querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
-        ?.focus({ preventScroll: true });
-    });
-
-    return () => {
-      window.cancelAnimationFrame(focusFrame);
-    };
-  }, [inspectorNodeId, positionController.surfaceRef, visible]);
-
-  useEffect(() => {
-    if (!visible) {
-      return;
-    }
-
-    const closeOnEscape = (event: KeyboardEvent): void => {
-      if (event.key !== 'Escape') {
-        return;
-      }
-
-      event.preventDefault();
-      hideAndRestoreNodeFocus();
-    };
-
-    document.addEventListener('keydown', closeOnEscape);
-    return () => {
-      document.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [hideAndRestoreNodeFocus, visible]);
-
-  if (!visible || surfaceStrategy == null || panels.inspectorNode == null) {
-    return null;
-  }
+  if (!visible || surfaceStrategy == null || panels.inspectorNode == null) return null;
   return (
-    <CanvasNodeWorkbenchOverlaySurface
-      accessibleLabel={copy.inspectorEditablePropertiesTitle}
-      position={positionController.position}
-      sourceLayout={panels.inspectorNode.kind === 'dvt:source'}
-      surfaceRef={positionController.surfaceRef}
-      {...positionController.surfacePointerProps}
+    <aside
+      ref={surfaceRef}
+      data-slot="canvas-node-workbench-overlay"
+      aria-label={copy.inspectorEditablePropertiesTitle}
+      className={canvasNodeWorkbenchVisualTokens.inspector}
+      onKeyDown={(event) => {
+        if (event.key !== 'Escape' || event.defaultPrevented) return;
+        event.preventDefault();
+        event.stopPropagation();
+        hideAndRestoreNodeFocus();
+      }}
     >
       <CanvasNodeWorkbenchPanel
         node={panels.inspectorNode}
@@ -188,14 +95,7 @@ export function CanvasNodeWorkbenchOverlay({
         {...(onOpenModelEditor == null
           ? {}
           : { onOpenSemanticEditor: () => onOpenModelEditor(panels.inspectorNode!.id) })}
-        dragHandleProps={{
-          'aria-label': copy.nodeWorkbenchMoveLabel,
-          'data-slot': 'canvas-node-workbench-drag-handle',
-          role: 'button',
-          tabIndex: 0,
-          ...positionController.dragHandleProps,
-        }}
       />
-    </CanvasNodeWorkbenchOverlaySurface>
+    </aside>
   );
 }

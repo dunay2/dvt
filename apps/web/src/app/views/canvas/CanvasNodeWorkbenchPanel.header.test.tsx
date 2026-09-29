@@ -56,12 +56,6 @@ describe('CanvasNodeWorkbenchPanel header hardening', () => {
           edges={[]}
           activeRunId={null}
           authoring={{ canEditNode: true, onApplyNodeDraft: vi.fn() }}
-          dragHandleProps={{
-            'aria-label': 'Move node workbench',
-            'data-slot': 'canvas-node-workbench-drag-handle',
-            role: 'button',
-            tabIndex: 0,
-          }}
           onClose={onClose}
         />
       );
@@ -69,7 +63,7 @@ describe('CanvasNodeWorkbenchPanel header hardening', () => {
     return onClose;
   }
 
-  it('keeps contextual help and close as right-side accessible actions outside the drag handle', async () => {
+  it('keeps help and close as right-side accessible actions without a movement handle', async () => {
     const onClose = await renderPanel();
     const actions = container.querySelector<HTMLElement>(
       '[data-slot="canvas-node-workbench-header-actions"]'
@@ -86,7 +80,7 @@ describe('CanvasNodeWorkbenchPanel header hardening', () => {
 
     expect(actions).not.toBeNull();
     expect(actions?.className).toContain('ml-auto');
-    expect(dragHandle?.contains(actions!)).toBe(false);
+    expect(dragHandle).toBeNull();
     expect(help?.getAttribute('aria-label')).toBe('Editable properties');
     expect(close?.getAttribute('aria-label')).toBe('Close');
     expect(help?.querySelector('svg')).not.toBeNull();

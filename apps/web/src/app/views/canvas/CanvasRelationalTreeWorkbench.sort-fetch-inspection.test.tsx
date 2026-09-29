@@ -1,10 +1,15 @@
 // @vitest-environment jsdom
 /** Owned concern: inspect applied ordering and limits without routing them to JOIN predicates. */
 import React, { act } from 'react';
+import { fireEvent, getByLabelText, waitFor } from '@testing-library/dom';
 import { describe, expect, it, vi } from 'vitest';
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { createCustomerOrdersJoin } from './canvasJoin.test-support';
-import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import {
+  encodeDvtSubstraitSemanticDocument,
+  decodeDvtSubstraitSemanticDocument,
+} from './canvasDvtSubstraitSemanticDocument';
+import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import {
   applyDvtSubstraitSort,
   applyDvtSubstraitFetch,
@@ -16,6 +21,15 @@ import {
   createDvtTransformAuthoringMetadata,
 } from './canvasDvtTransformAuthoring';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
+import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.fixtures';
+import {
+  instantiateWorkbenchSource,
+  connectStagedWorkbenchUnaryOperation,
+  connectWorkbenchOutput,
+  disconnectWorkbenchOutput,
+} from './CanvasRelationalTreeWorkbench.gestures.test-support';
+import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import {
   setupWorkbenchTest,
   COPY,
@@ -29,6 +43,64 @@ import {
 
 describe('applied Sort/Fetch inspection', () => {
   setupWorkbenchTest();
+
+  it('retains a pending Fetch form and its LIMIT while reporting unsaved changes', async () => {
+    const graph = occurrenceGraph();
+    const applied = vi.fn<CanvasRelationalTreeAuthoringContract['onApplyNodeDraft']>(() => ({
+      outcome: 'no_changes' as const,
+    }));
+    await act(async () =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={graph.targetNode}
+          nodes={graph.nodes}
+          edges={graph.edges}
+          copy={COPY}
+          authoring={{ canEditNode: true, onApplyNodeDraft: applied }}
+        />
+      )
+    );
+    await instantiateWorkbenchSource(
+      container.querySelector('[data-slot="canvas-relational-tree-source"]')!
+    );
+    await disconnectWorkbenchOutput(container);
+    await act(async () =>
+      fireEvent.click(container.querySelector('[data-slot="canvas-operation-menu-trigger"]')!)
+    );
+    await act(async () => fireEvent.click(document.querySelector('[data-operation="fetch"]')!));
+    const operation = await connectStagedWorkbenchUnaryOperation();
+    await waitFor(() => expect(getByLabelText(container, 'LIMIT')).toBeTruthy());
+    const input = getByLabelText(container, 'LIMIT') as HTMLInputElement;
+    input.focus();
+    await act(async () => fireEvent.change(input, { target: { value: '7' } }));
+    expect(getByLabelText(container, 'LIMIT')).toBe(input);
+    expect(input.value).toBe('7');
+    expect(document.activeElement).toBe(input);
+    await act(async () => fireEvent.change(input, { target: { value: '73' } }));
+    expect(getByLabelText(container, 'LIMIT')).toBe(input);
+    await act(async () => fireEvent.submit(input.closest('form')!));
+    await connectWorkbenchOutput(
+      container,
+      operation.querySelector<HTMLElement>('[data-slot="canvas-relational-output-port"]')!
+    );
+    await act(async () =>
+      fireEvent.click(container.querySelector('[data-slot="canvas-relational-tree-apply"]')!)
+    );
+    await waitFor(() => expect(applied).toHaveBeenCalledOnce());
+    const saved = applyCanvasInspectorNodeDraft(graph.targetNode, applied.mock.calls[0]![1]);
+    const authority = readDvtTransformAuthoringAuthority(saved);
+    if (authority == null) throw new Error('Expected canonical output');
+    const fetch = decodeDvtSubstraitSemanticDocument(authority.semanticDocument).plan.relations[0]!
+      .relType;
+    expect(fetch.case === 'root' && fetch.value.input?.relType).toMatchObject({
+      case: 'fetch',
+      value: {
+        countExpr: {
+          rexType: { case: 'literal', value: { literalType: { case: 'i64', value: 73n } } },
+        },
+      },
+    });
+  });
 
   it.each(
     (['sort', 'fetch'] as const).flatMap((operation) =>

@@ -7,6 +7,40 @@ import {
 export const CANVAS_RELATIONAL_SOURCE_DRAG_TYPE = 'application/x-dvt-relational-source';
 export const CANVAS_RELATIONAL_OPERATION_DRAG_TYPE = 'application/x-dvt-relational-operation';
 export const CANVAS_RELATIONAL_RELATION_DRAG_TYPE = 'application/x-dvt-relational-relation';
+export const CANVAS_RELATIONAL_FIELD_DRAG_TYPE = 'application/x-dvt-relational-field';
+
+export function writeCanvasRelationalFieldDrag(
+  dataTransfer: DataTransfer,
+  reference: Readonly<{ rootId: string; revision: number; relationId: string; fieldId: string }>
+): void {
+  dataTransfer.effectAllowed = 'copy';
+  dataTransfer.setData(CANVAS_RELATIONAL_FIELD_DRAG_TYPE, JSON.stringify(reference));
+}
+
+export function readCanvasRelationalFieldDrag(
+  dataTransfer: DataTransfer
+): Readonly<{ rootId: string; revision: number; relationId: string; fieldId: string }> | null {
+  try {
+    const value: unknown = JSON.parse(dataTransfer.getData(CANVAS_RELATIONAL_FIELD_DRAG_TYPE));
+    if (value == null || typeof value !== 'object') return null;
+    const { rootId, revision, relationId, fieldId } = value as Record<string, unknown>;
+    if (
+      typeof rootId !== 'string' ||
+      rootId.length === 0 ||
+      typeof relationId !== 'string' ||
+      relationId.length === 0 ||
+      typeof fieldId !== 'string' ||
+      fieldId.length === 0 ||
+      typeof revision !== 'number' ||
+      !Number.isSafeInteger(revision) ||
+      revision < 0
+    )
+      return null;
+    return { rootId, revision, relationId, fieldId };
+  } catch {
+    return null;
+  }
+}
 
 export function writeCanvasRelationalSourceDrag(dataTransfer: DataTransfer, nodeId: string): void {
   dataTransfer.effectAllowed = 'copyMove';

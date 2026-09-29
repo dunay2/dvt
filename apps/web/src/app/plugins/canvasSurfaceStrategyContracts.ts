@@ -1,8 +1,9 @@
 /** Owned concern: define canvas runtime surface policy without graph mapping logic. */
 
-export type CanvasSurfaceLaunchPoint = 'canvas-context-menu' | 'command-palette' | 'double-click';
+export type CanvasSurfaceLaunchPoint =
+  'canvas-context-menu' | 'command-palette' | 'click' | 'double-click';
 
-export type CanvasSurfacePlacement = 'contextual-modal' | 'contextual-overlay' | 'bottom-drawer';
+export type CanvasSurfacePlacement = 'contextual-modal' | 'right-inspector' | 'bottom-drawer';
 
 export type CanvasNodeWorkbenchSectionPolicyId =
   | 'properties'
@@ -22,7 +23,7 @@ export type CanvasNodeWorkbenchSectionPolicyId =
 export type CanvasGlobalNavigationPolicy = {
   workbenchTabs: 'retired';
   fixedResourcePanel: 'retired';
-  fixedInspectorPanel: 'retired';
+  fixedInspectorPanel: 'contextual';
 };
 
 export type CanvasSourceImportSurfacePolicy = {
@@ -34,8 +35,8 @@ export type CanvasSourceImportSurfacePolicy = {
 };
 
 export type CanvasNodeWorkbenchSurfacePolicy = {
-  placement: 'contextual-overlay';
-  openedFrom: readonly Extract<CanvasSurfaceLaunchPoint, 'double-click'>[];
+  placement: 'right-inspector';
+  openedFrom: readonly Extract<CanvasSurfaceLaunchPoint, 'click' | 'double-click'>[];
   sections: readonly CanvasNodeWorkbenchSectionPolicyId[];
 };
 
@@ -55,7 +56,7 @@ export type CanvasSurfaceStrategy = Readonly<{
 export const contextualCanvasGlobalNavigationPolicy: CanvasGlobalNavigationPolicy = {
   workbenchTabs: 'retired',
   fixedResourcePanel: 'retired',
-  fixedInspectorPanel: 'retired',
+  fixedInspectorPanel: 'contextual',
 };
 
 export const contextualCanvasOperationalDrawerPolicy: CanvasOperationalDrawerSurfacePolicy = {

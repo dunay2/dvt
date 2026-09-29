@@ -26,7 +26,10 @@ function supportsExpression(expression: Expression, inputCount: number): boolean
   const ordinal = dvtSubstraitExpression.fieldOrdinal(expression);
   if (ordinal != null) return ordinal >= 0 && ordinal < inputCount;
   if (expression.rexType.case === 'literal')
-    return dvtSubstraitExpression.literalValue(expression) != null;
+    return (
+      dvtSubstraitExpression.literalValue(expression) != null ||
+      dvtSubstraitExpression.nullType(expression) != null
+    );
   return (
     expression.rexType.case === 'scalarFunction' &&
     expression.rexType.value.arguments.every(

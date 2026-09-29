@@ -1,45 +1,25 @@
-/** One local name/visual-formula draft. Typing never mutates the semantic document. */
-import { useId, useState, type FormEvent } from 'react';
+/** One text draft submitted through the existing revision-bound command. */
+import { useId, useMemo, useState, type FormEvent } from 'react';
 import { DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
-
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import type { CanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
-import { DerivedOutputFormulaBuilder } from './DerivedOutputFormulaBuilder';
 import type { DerivedOutputField } from './DerivedOutputOperands';
-import {
-  defaultDerivedOutputVisualFormula,
-  parseDerivedOutputVisualFormula,
-  validateDerivedOutputVisualFormula,
-  type DerivedOutputVisualFormula,
-} from './canvasDerivedOutputVisualFormula';
+import { formulaSuggestions, projectFormulaFeedback } from './canvasFormulaAssist';
+import { DerivedOutputFormulaEditor } from './DerivedOutputFormulaEditor';
+import { DerivedOutputFormulaFeedback } from './DerivedOutputFormulaFeedback';
 
-function initialExpression(args: Readonly<{
-  formula?: string;
-  fields: readonly DerivedOutputField[];
-  provider: string;
-}>): Readonly<{ expression: DerivedOutputVisualFormula; parseFailed: boolean }> {
-  if (args.formula == null) {
-    return { expression: defaultDerivedOutputVisualFormula(args.fields), parseFailed: false };
-  }
-  try {
-    return {
-      expression: parseDerivedOutputVisualFormula({
-        formula: args.formula,
-        fields: args.fields,
-        provider: args.provider,
-      }),
-      parseFailed: false,
-    };
-  } catch {
-    return { expression: defaultDerivedOutputVisualFormula(args.fields), parseFailed: true };
-  }
-}
+export type DerivedOutputFormulaDragScope = Readonly<{
+  rootId: string;
+  revision: number;
+  references: readonly Readonly<{ relationId: string; fieldId: string; name: string }>[];
+}>;
 
 export function DerivedOutputFormulaForm({
   initial,
   fields,
   provider,
+  dragScope,
   unavailableAliases,
   copy,
   onSubmit,
@@ -48,39 +28,44 @@ export function DerivedOutputFormulaForm({
   initial?: Readonly<{ alias: string; formula: string }>;
   fields: readonly DerivedOutputField[];
   provider: string;
+  dragScope: DerivedOutputFormulaDragScope;
   unavailableAliases: readonly string[];
   copy: CanvasSemanticEditorCopy['derivedOutput'];
   onSubmit: (request: Readonly<{ alias: string; formula: string }>) => Promise<string | null>;
   onCancel: () => void;
 }>): JSX.Element {
-  const initialDraft = initialExpression({ formula: initial?.formula, fields, provider });
   const [alias, setAlias] = useState(initial?.alias ?? '');
-  const [expression, setExpression] = useState(initialDraft.expression);
-  const [parseFailed, setParseFailed] = useState(initialDraft.parseFailed);
+  const reasonId = useId();
+  const [formula, setFormula] = useState(initial?.formula ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const id = useId();
-  const validation = validateDerivedOutputVisualFormula({ expression, fields, provider });
-  const formulaInvalid = parseFailed || !validation.ok;
-
+  const feedback = useMemo(
+    () => projectFormulaFeedback(formula, fields, provider),
+    [formula, fields, provider]
+  );
+  const suggestions = useMemo(() => formulaSuggestions(fields, provider), [fields, provider]);
+  const aliasError =
+    alias.trim() === ''
+      ? copy.aliasRequired
+      : !DvtSemanticFieldNameV1Schema.safeParse(alias.trim()).success
+        ? copy.aliasInvalid
+        : unavailableAliases.includes(alias.trim())
+          ? copy.aliasConflict
+          : null;
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (busy) return;
-    if (!DvtSemanticFieldNameV1Schema.safeParse(alias.trim()).success) {
-      setError(copy.aliasInvalid);
+    if (alias.trim() === '' || aliasError != null) {
+      setError(aliasError ?? copy.aliasInvalid);
       return;
     }
-    if (unavailableAliases.includes(alias.trim())) {
-      setError(copy.aliasConflict);
-      return;
-    }
-    if (formulaInvalid || !validation.ok) {
-      setError(copy.formulaInvalid);
+    if (!feedback.ok) {
+      setError(feedback.message);
       return;
     }
     setBusy(true);
     try {
-      const failure = await onSubmit({ alias: alias.trim(), formula: validation.formula });
+      const failure = await onSubmit({ alias: alias.trim(), formula });
       setError(failure);
       if (failure == null) onCancel();
     } catch {
@@ -89,15 +74,15 @@ export function DerivedOutputFormulaForm({
       setBusy(false);
     }
   };
-
   return (
     <form
       data-slot="canvas-derived-output-form"
-      className="space-y-3"
+      className="formula-form"
       aria-busy={busy}
       onSubmit={(event) => void submit(event)}
       onKeyDown={(event) => {
-        if (event.key === 'Escape' && !busy) {
+        // Monaco owns Escape while its completion widget is open.
+        if (event.key === 'Escape' && !event.defaultPrevented && !busy) {
           event.stopPropagation();
           onCancel();
         }
@@ -110,52 +95,55 @@ export function DerivedOutputFormulaForm({
           value={alias}
           autoFocus
           disabled={busy}
+          aria-invalid={aliasError != null}
+          aria-describedby={reasonId}
           onChange={(event) => {
             setAlias(event.currentTarget.value);
             setError(null);
           }}
         />
       </label>
-
-      <DerivedOutputFormulaBuilder
-        expression={expression}
-        fields={fields}
-        provider={provider}
-        busy={busy}
+      <DerivedOutputFormulaEditor
+        formula={formula}
+        suggestions={suggestions}
+        dragScope={dragScope}
         copy={copy}
-        onChange={(next) => {
-          setExpression(next);
-          setParseFailed(false);
+        disabled={busy}
+        diagnostic={formula.trim() !== '' && !feedback.ok ? feedback.message : undefined}
+        onChange={(value) => {
+          setFormula(value);
           setError(null);
         }}
+        onInvalidDrop={() => setError(copy.formulaInvalid)}
       />
-
-      <p id={id} className="text-xs text-(--text-muted)">
-        {error ?? (formulaInvalid ? copy.formulaInvalid : copy.formulaHint)}
-      </p>
-      {error == null ? null : (
-        <span role="alert" className="sr-only">
-          {error}
-        </span>
-      )}
-      <div className="flex justify-end gap-2">
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          data-slot="canvas-derived-output-cancel"
-          onClick={onCancel}
-          disabled={busy}
+      <DerivedOutputFormulaFeedback feedback={feedback} copy={copy} empty={formula.trim() === ''} />
+      <div className="formula-actions">
+        <p
+          id={reasonId}
+          role={error != null || aliasError != null ? 'alert' : 'status'}
+          className="formula-save-reason"
         >
-          {copy.cancel}
-        </Button>
-        <Button
-          type="submit"
-          size="sm"
-          disabled={busy || alias.trim() === '' || formulaInvalid}
-        >
-          {initial == null ? copy.save : copy.update}
-        </Button>
+          {error ?? aliasError ?? (!feedback.ok ? copy.formulaInvalid : copy.applyHint)}
+        </p>
+        <div className="formula-action-buttons">
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            data-slot="canvas-derived-output-cancel"
+            onClick={onCancel}
+            disabled={busy}
+          >
+            {copy.cancel}
+          </Button>
+          <Button
+            type="submit"
+            size="sm"
+            disabled={busy || alias.trim() === '' || aliasError != null || !feedback.ok}
+          >
+            {initial == null ? copy.save : copy.update}
+          </Button>
+        </div>
       </div>
     </form>
   );

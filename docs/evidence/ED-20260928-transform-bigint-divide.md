@@ -16,7 +16,7 @@ code_refs:
   - packages/@dvt/postgres-projection/test/relationalArithmetic.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresAppRoleRuntime.integration.test.ts
   - apps/web/src/app/views/canvas/canvasDerivedOutputFormula.ts
-  - apps/web/src/app/views/canvas/canvasDerivedOutputVisualFormula.ts
+  - apps/web/src/app/views/canvas/DerivedOutputFormulaForm.tsx
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test
@@ -72,14 +72,13 @@ precedence level as multiplication. It lowers through
 `compileDerivedOutputFormula`, resolves the admitted capability from the
 catalog, and writes the canonical typed Substrait scalar expression.
 
-The visual Formula Builder consumes the same capability projection. It exposes
-the admitted operation as the catalog-driven `DIVIDE` function node, validates
-the serialized formula through the existing compiler, and keeps fp64 DIVIDE
-unavailable. The bounded formula grammar itself owns the equivalent infix `/`
-syntax and round-trip.
+The name/formula editor consumes this same compiler and capability projection.
+Its validation keeps fp64 DIVIDE unavailable. The bounded formula grammar owns
+the equivalent infix `/` syntax and round-trip. #3422 retires the redundant
+visual Formula Builder; no arithmetic capability or provider proof is retired.
 
 Persistence remains the existing typed Substrait plan plus the stable DVT
-identity/provenance sidecar. The visual tree remains ephemeral.
+identity/provenance sidecar. Card trees are disposable projections of that plan.
 
 ## Negative guarantees
 
@@ -93,8 +92,8 @@ identity/provenance sidecar. The visual tree remains ephemeral.
 ## Validation status
 
 Executable proof is carried by the arithmetic projection suite, the
-provider-native PostgreSQL integration cases, formula compiler tests, visual
-formula tests, capability-catalog contracts and the repository's governed
+provider-native PostgreSQL integration cases, formula compiler and editor
+validation tests, capability-catalog contracts and the repository's governed
 pull-request checks.
 
 The reviewed head `3cd8aad9eddafae4fab9b1cc7a18bcc03c46da1a` completed Dependency Review,

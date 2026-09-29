@@ -34,3 +34,4 @@ export {
 export { inputIdentityMap, rebaseRelationInput } from './relationInputRemap.js';
 export { refreshProducerInputs } from './refreshProducerInputs.js';
 export { resolveProducerDocuments } from './producerDocuments.js';
+export { deriveSubstraitPublication, type RelationPublication } from './relationPublication.js';

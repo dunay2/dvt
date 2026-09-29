@@ -22,7 +22,12 @@ export function GraphNodeColumnViews(props: GraphNodeColumnSectionProps) {
         props.onViewChange?.(next);
       }}
       className={graphNodeColumnClasses.views}
-      {...(view === 'input' ? graphColumnTransferTarget(props) : {})}
+      {...(view === 'input'
+        ? graphColumnTransferTarget(props)
+        : {
+            onDragOver: (event) => event.stopPropagation(),
+            onDrop: (event) => event.stopPropagation(),
+          })}
     >
       <TabsList className={graphNodeColumnClasses.viewList} {...canvasNodeEmbeddedControlProps}>
         <TabsTrigger value="input" className={graphNodeColumnClasses.viewTrigger}>

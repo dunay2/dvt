@@ -26,10 +26,18 @@ it('retains the same viewport and local disclosure state across inspector open, 
       </button>
     );
   }
-  const render = (workbench?: CanvasShellContextualWorkbench): void => {
+  const render = (workbench?: CanvasShellContextualWorkbench, inspectedNode?: string): void => {
     act(() =>
       root.render(
-        <CanvasShellContextualWorkbenchSplit baseSurface={<Viewport />} workbench={workbench} />
+        <CanvasShellContextualWorkbenchSplit
+          baseSurface={<Viewport />}
+          workbench={workbench}
+          inspector={
+            inspectedNode == null ? null : (
+              <aside data-testid="node-inspector">{inspectedNode}</aside>
+            )
+          }
+        />
       )
     );
   };
@@ -37,6 +45,10 @@ it('retains the same viewport and local disclosure state across inspector open, 
     render();
     const viewport = container.querySelector<HTMLButtonElement>('[data-testid="viewport-state"]')!;
     act(() => viewport.click());
+    render(undefined, 'Source');
+    expect(container.querySelector('aside')?.previousElementSibling?.contains(viewport)).toBe(true);
+    render(undefined, 'Model');
+    expect(container.querySelector('aside')?.textContent).toBe('Model');
     const workbench: CanvasShellContextualWorkbench = {
       id: 'output-expression',
       presentation: 'docked',
@@ -46,6 +58,7 @@ it('retains the same viewport and local disclosure state across inspector open, 
       requestClose: async () => true,
     };
     render(workbench);
+    expect(container.querySelector('[data-testid="node-inspector"]')).toBeNull();
     render({ ...workbench, title: 'Another output' });
     render();
     expect(container.querySelector('[data-testid="viewport-state"]')).toBe(viewport);

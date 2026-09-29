@@ -1,0 +1,123 @@
+.formula-form {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.formula-actions {
+  position: sticky;
+  bottom: -0.75rem;
+  z-index: 1;
+  background: var(--surface-panel);
+  border-top: 1px solid var(--border-subtle);
+  padding: 0.65rem 0;
+}
+.formula-save-reason {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+.formula-action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+.formula-workspace {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.formula-palette,
+.formula-result {
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.5rem;
+  padding: 0.65rem;
+}
+.formula-palette-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+.formula-palette-tabs button {
+  padding-bottom: 0.4rem;
+  font-size: 0.75rem;
+  border-bottom: 2px solid transparent;
+}
+.formula-palette-tabs button[aria-pressed='true'] {
+  color: var(--status-info);
+  border-color: var(--status-info);
+}
+.formula-palette-items {
+  max-height: 9rem;
+  overflow: auto;
+  margin-top: 0.4rem;
+}
+.formula-palette-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.4rem;
+  border-radius: 0.25rem;
+  text-align: left;
+  font-size: 0.75rem;
+}
+.formula-palette-item:hover,
+.formula-tools button:hover {
+  background: var(--surface-panel);
+}
+.formula-palette-item[draggable='true'] {
+  cursor: grab;
+}
+.formula-palette-item > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.formula-palette-item small {
+  margin-left: auto;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.formula-editor-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+.formula-editor-heading small,
+.formula-muted {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+.formula-code-surface {
+  height: 10rem;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.4rem;
+}
+.formula-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.formula-tools button {
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+.formula-tools button:disabled,
+.formula-palette-item:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.formula-diagnostic {
+  color: var(--status-danger);
+  font-size: 0.75rem;
+}
+.formula-result-tree {
+  max-height: 12rem;
+  overflow: auto;
+}

@@ -319,27 +319,6 @@ async function renderNodePanel(
   });
 }
 
-async function renderMovablePanel(root: Root): Promise<void> {
-  await act(async () => {
-    root.render(
-      <CanvasNodeWorkbenchPanel
-        node={SOURCE_NODE}
-        nodes={[SOURCE_NODE]}
-        edges={[]}
-        activeRunId={null}
-        authoring={{ canEditNode: true, onApplyNodeDraft: vi.fn() }}
-        dragHandleProps={{
-          'aria-label': 'Move node workbench',
-          'data-slot': 'canvas-node-workbench-drag-handle',
-          role: 'button',
-          tabIndex: 0,
-        }}
-        onClose={vi.fn()}
-      />
-    );
-  });
-}
-
 describe('CanvasNodeWorkbenchPanel', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -365,9 +344,42 @@ describe('CanvasNodeWorkbenchPanel', () => {
   });
 
   it('composes the shared node properties presentation component instead of duplicating it', () => {
-    expect(CanvasNodeWorkbenchPanelSource).toContain('NodePropertiesTabs');
+    expect(CanvasNodeWorkbenchPanelSource).toContain('CanvasNodeWorkbenchSections');
+    for (const dependency of [
+      'reconcileDbtModelConnectedOrigin',
+      'readDvtTransformAuthoringAuthority',
+      'buildNodePropertiesReadModel',
+      'resolveCanvasNodeWorkbenchSectionModel',
+      'getInspectorPanels',
+      'useEffect',
+      'useState',
+    ])
+      expect(CanvasNodeWorkbenchPanelSource).not.toContain(dependency);
     expect(CanvasNodeWorkbenchPanelSource).not.toContain('function renderSectionBody');
     expect(CanvasNodeWorkbenchPanelSource).not.toContain('PRIMARY_NODE_WORKBENCH_SECTION_IDS');
+  });
+
+  it('preserves a chosen tab until a new explicit request or node selection', async () => {
+    await renderNodePanel(root, SOURCE_NODE, 'columns');
+    const overview = container.querySelector('[data-slot="canvas-node-workbench-tab-general"]')!;
+    await act(async () => {
+      fireEvent.mouseDown(overview, { button: 0, ctrlKey: false });
+    });
+    expect(overview.getAttribute('aria-selected')).toBe('true');
+    await renderNodePanel(root, SOURCE_NODE, 'columns');
+    expect(overview.getAttribute('aria-selected')).toBe('true');
+    await renderNodePanel(root, SOURCE_NODE, 'columns', undefined, 2);
+    expect(
+      container
+        .querySelector('[data-slot="canvas-node-workbench-tab-columns"]')
+        ?.getAttribute('aria-selected')
+    ).toBe('true');
+    await renderNodePanel(root, MODEL_NODE, 'code');
+    expect(
+      container
+        .querySelector('[data-slot="canvas-node-workbench-tab-code"]')
+        ?.getAttribute('aria-selected')
+    ).toBe('true');
   });
 
   it('renders the approved Source tabs without an overflow bucket', async () => {
@@ -465,8 +477,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
   });
 
-  it('keeps the accessible movement handle separate from the close command', async () => {
-    await renderMovablePanel(root);
+  it('retains a close command without the retired node movement handle', async () => {
+    await renderPanel(root);
 
     const panel = container.querySelector<HTMLElement>('[data-slot="canvas-node-workbench-panel"]');
     const dragHandle = container.querySelector<HTMLElement>(
@@ -478,10 +490,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
 
     expect(panel?.className).toContain('min-w-0');
     expect(panel?.className).toContain('w-full');
-    expect(dragHandle?.getAttribute('role')).toBe('button');
-    expect(dragHandle?.tabIndex).toBe(0);
+    expect(dragHandle).toBeNull();
     expect(closeButton?.textContent).toBe('Close');
-    expect(dragHandle?.contains(closeButton!)).toBe(false);
   });
 
   it('connects writable Source lists to workspace-scoped layout persistence', async () => {

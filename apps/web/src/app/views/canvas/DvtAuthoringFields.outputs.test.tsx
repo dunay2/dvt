@@ -35,7 +35,7 @@ describe.each(Object.entries(documents))('%s relation output editor', (_kind, do
   }));
   const outputs = (): HTMLInputElement[] => [
     ...view.container.querySelectorAll<HTMLInputElement>(
-      '[data-slot="relation-output-field"] input:not([type="checkbox"])'
+      '[data-slot="relation-output-field"] input'
     ),
   ];
   const setup = async (): Promise<ReturnType<typeof buildDvtNode>> => {
@@ -88,7 +88,7 @@ describe.each(Object.entries(documents))('%s relation output editor', (_kind, do
     await setup();
     const before = view.draftJson();
     const selectedCount = view.container.querySelectorAll(
-      '[data-slot="relation-output-field"] input[type="checkbox"]:checked'
+      '[data-slot="relation-output-toggle"][data-included="true"]'
     ).length;
     const duplicate = outputs()[1]!.value;
     await act(async () => {
@@ -99,31 +99,27 @@ describe.each(Object.entries(documents))('%s relation output editor', (_kind, do
     expect(view.draftJson()).toBe(before);
     await act(async () =>
       fireEvent.click(
-        view.container.querySelector<HTMLInputElement>(
-          '[data-slot="relation-output-field"] input[type="checkbox"]'
-        )!
+        view.container.querySelector<HTMLButtonElement>('[data-slot="relation-output-toggle"]')!
       )
     );
     expect(view.container.querySelector('[aria-invalid="true"]')).toBeNull();
     expect(view.outputNameDraftsJson()).toBe('{}');
     expect(
-      view.container.querySelectorAll(
-        '[data-slot="relation-output-field"] input[type="checkbox"]:checked'
-      )
+      view.container.querySelectorAll('[data-slot="relation-output-toggle"][data-included="true"]')
     ).toHaveLength(selectedCount - 1);
   });
 
   it('keeps the activated output control mounted and focused', async () => {
     await setup();
-    const checkbox = view.container.querySelector<HTMLInputElement>(
-      '[data-slot="relation-output-field"] input[type="checkbox"]'
+    const toggle = view.container.querySelector<HTMLButtonElement>(
+      '[data-slot="relation-output-toggle"]'
     )!;
-    checkbox.focus();
+    toggle.focus();
 
-    await act(async () => fireEvent.click(checkbox));
+    await act(async () => fireEvent.click(toggle));
 
-    expect(checkbox.isConnected).toBe(true);
-    expect(documentOf(view.container).activeElement).toBe(checkbox);
+    expect(toggle.isConnected).toBe(true);
+    expect(documentOf(view.container).activeElement).toBe(toggle);
   });
 });
 function documentOf(element: HTMLElement): Document {

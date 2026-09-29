@@ -145,7 +145,8 @@ export function useCanvasEdgeAuthoringHandlers(
   });
   const columnMappingHandlers = useCanvasColumnConnectionHandlers(
     { state, effects, policy },
-    columnAuthoringCommandRunner
+    columnAuthoringCommandRunner,
+    pluginPortMap
   );
 
   const createNodeConnection = useCanvasConnectionCreationHandler({

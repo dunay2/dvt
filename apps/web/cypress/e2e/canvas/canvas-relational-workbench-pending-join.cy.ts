@@ -54,16 +54,16 @@ describe('Workbench pending binary operations', () => {
     const row = '[data-slot="relation-output-field"]';
     cy.get(row).first().as('firstRow', { type: 'static' });
     cy.get('@firstRow')
-      .find('input[type="checkbox"]')
+      .find('[data-slot="relation-output-toggle"]')
       .focus()
-      .uncheck()
-      .should('not.be.checked')
+      .click()
+      .should('have.attr', 'data-included', 'false')
       .and('be.focused');
     cy.get('@outputTab').should('have.attr', 'aria-selected', 'true');
     cy.get('@firstRow')
-      .find('input[type="checkbox"]')
-      .check()
-      .should('be.checked')
+      .find('[data-slot="relation-output-toggle"]')
+      .click()
+      .should('have.attr', 'data-included', 'true')
       .and('be.focused');
     cy.window().then((window) => {
       const dataTransfer = new window.DataTransfer();
@@ -123,10 +123,9 @@ describe('Workbench pending binary operations', () => {
         .should('be.visible')
         .find('[data-slot="canvas-operation-output-tab"]')
         .click();
-      cy.get('[data-slot="canvas-staged-operation-inspector"] input[type="checkbox"]').should(
-        'have.length.greaterThan',
-        0
-      );
+      cy.get(
+        '[data-slot="canvas-staged-operation-inspector"] [data-slot="relation-output-toggle"]'
+      ).should('have.length.greaterThan', 0);
       connectWorkbenchProducer(
         '@binary',
         '[data-slot="canvas-relational-output-input-port"]',

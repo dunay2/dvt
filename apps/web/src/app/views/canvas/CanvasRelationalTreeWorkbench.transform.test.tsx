@@ -102,14 +102,19 @@ describe('Transform card in the production Workbench', () => {
     const inspector = container.querySelector('[data-slot="canvas-transform-inspector"]')!;
     expect(inspector.parentElement?.classList.contains('canvas-operation-workspace')).toBe(true);
     await waitFor(() =>
-      expect(inspector.querySelectorAll('input[type="checkbox"]')).toHaveLength(4)
+      expect(inspector.querySelectorAll('[data-slot="relation-output-toggle"]')).toHaveLength(4)
     );
-    const checkbox = inspector.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
-    const label = checkbox.getAttribute('aria-label')!;
-    checkbox.focus();
-    await act(async () => fireEvent.click(checkbox));
-    await waitFor(() => expect(checkbox.checked).toBe(false));
-    expect(document.activeElement).toBe(checkbox);
+    expect(inspector.querySelector('input[type="checkbox"]')).toBeNull();
+    const toggle = inspector.querySelector<HTMLButtonElement>(
+      '[data-slot="relation-output-toggle"]'
+    )!;
+    const label = toggle.getAttribute('data-field-name')!;
+    expect(toggle.getAttribute('aria-label')).toContain('Remove');
+    toggle.focus();
+    await act(async () => fireEvent.click(toggle));
+    await waitFor(() => expect(toggle.getAttribute('data-included')).toBe('false'));
+    expect(toggle.getAttribute('aria-label')).toContain('Add');
+    expect(document.activeElement).toBe(toggle);
     await connectWorkbenchOutput(
       container,
       staged.querySelector<HTMLElement>('[data-slot="canvas-relational-output-port"]')!
@@ -127,11 +132,11 @@ describe('Transform card in the production Workbench', () => {
     expect(container.querySelectorAll('[data-pending-operation="true"]')).toHaveLength(0);
     await act(async () => fireEvent.click(container.querySelector('[data-operator="project"]')!));
     await waitFor(() => {
-      const restored = container.querySelector<HTMLInputElement>(
-        `[data-slot="canvas-transform-inspector"] input[type="checkbox"][aria-label="${label}"]`
+      const restored = container.querySelector<HTMLButtonElement>(
+        `[data-slot="canvas-transform-inspector"] [data-slot="relation-output-toggle"][data-field-name="${label}"]`
       );
       expect(restored).not.toBeNull();
-      expect(restored!.checked).toBe(false);
+      expect(restored!.getAttribute('data-included')).toBe('false');
     });
   });
 

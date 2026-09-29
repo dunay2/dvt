@@ -6,6 +6,8 @@ import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenari
 const inspector = '[data-slot="canvas-transform-inspector"]';
 const form = '[data-slot="canvas-derived-output-form"]';
 const card = '[data-slot="canvas-relational-tree-node"][data-operator="project"]';
+const formulaInput = '[data-slot="formula-editor"] .monaco-editor textarea';
+const formulaText = '[data-slot="formula-editor"] .view-lines';
 
 function openModel(): void {
   cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]')
@@ -49,13 +51,22 @@ describe('Semantic dataset Transform', () => {
     cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
     cy.get(form).within(() => {
       cy.get('input[name="alias"]').type('normalized_name');
-      cy.get('[data-slot="derived-formula-node-kind"][data-depth="0"]').select('function');
-      cy.get('[data-slot="derived-formula-function"][data-depth="0"]').select('UPPER');
-      cy.get('[data-slot="derived-formula-argument"][data-depth="0"][data-argument-index="0"]')
-        .find('[data-slot="derived-formula-node-kind"]')
-        .select('string-literal');
-      cy.get('[data-slot="derived-formula-literal"]').type('hola');
-      cy.get('[data-slot="derived-formula-preview"]').should('contain', "UPPER('hola')");
+      cy.get('[data-slot="formula-operand"][data-kind="field"]').should('not.be.empty');
+      cy.contains('.formula-palette-tabs button', 'Functions').click();
+      cy.contains('[data-slot="formula-operand"]', 'UPPER').click();
+      cy.get(formulaInput).type("'hola'", { force: true });
+      cy.get(formulaText).should('contain.text', "UPPER('hola')");
+      cy.get('.formula-result').should('contain.text', 'string').and('contain.text', 'UPPER');
+      cy.get(formulaInput).type("{selectall}COALESCE(UPPER('hola'), NULL)", { force: true });
+      cy.get('.formula-result')
+        .should('contain.text', 'NULL')
+        .and('not.contain.text', '[object Object]');
+      cy.get('[data-slot="formula-editor"] .squiggly-error').should('not.exist');
+      cy.get('button[type="submit"]').should(($button) => {
+        const bounds = $button[0]!.getBoundingClientRect();
+        expect(bounds.bottom).to.be.lessThan(720);
+        expect(bounds.top).to.be.greaterThan(0);
+      });
       cy.get('button[type="submit"]').should('be.enabled').click();
     });
     cy.get(form).should('not.exist');
@@ -63,8 +74,9 @@ describe('Semantic dataset Transform', () => {
     cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
     cy.get(form).within(() => {
       cy.get('input[name="alias"]').type('fallback_name');
-      cy.get('[data-slot="derived-formula-node-kind"][data-depth="0"]').select('string-literal');
-      cy.get('[data-slot="derived-formula-preview"]').should('have.text', "''");
+      cy.get(formulaInput).should('exist');
+      cy.contains('.formula-tools button', 'Empty text').click();
+      cy.get('.formula-result').should('contain.text', 'no field dependencies');
       cy.get('button[type="submit"]').should('be.enabled').click();
     });
     cy.get(form).should('not.exist');
@@ -72,23 +84,8 @@ describe('Semantic dataset Transform', () => {
     cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
     cy.get(form).within(() => {
       cy.get('input[name="alias"]').type('total');
-      cy.get('[data-slot="derived-formula-node-kind"][data-depth="0"]').select('number-literal');
-      cy.get('[data-slot="derived-formula-literal"]').clear().type('2');
-      cy.get('[data-slot="derived-formula-node-kind"][data-depth="0"]').select('function');
-      cy.get('[data-slot="derived-formula-function"][data-depth="0"]').select('MULTIPLY');
-      cy.get('[data-slot="derived-formula-argument"][data-depth="0"][data-argument-index="0"]')
-        .find('[data-slot="derived-formula-node-kind"]')
-        .select('function');
-      cy.get('[data-slot="derived-formula-function"][data-depth="1"]').first().select('ADD');
-      cy.get('[data-slot="derived-formula-argument"][data-depth="1"][data-argument-index="1"]')
-        .find('[data-slot="derived-formula-literal"]')
-        .clear()
-        .type('3');
-      cy.get('[data-slot="derived-formula-argument"][data-depth="0"][data-argument-index="1"]')
-        .find('[data-slot="derived-formula-literal"]')
-        .clear()
-        .type('4');
-      cy.get('[data-slot="derived-formula-preview"]').should('have.text', '((2 + 3) * 4)');
+      cy.get(formulaInput).type('(2 + 3) * 4', { force: true });
+      cy.get('.formula-result').should('contain.text', 'bigint').and('contain.text', 'MULTIPLY');
       cy.get('button[type="submit"]').should('be.enabled').click();
     });
     cy.get(form).should('not.exist');
@@ -102,23 +99,8 @@ describe('Semantic dataset Transform', () => {
       .then((fieldId) => {
         cy.get('@editableOutput').find('button').click();
         cy.get(form).within(() => {
-          cy.get('[data-slot="derived-formula-preview"]').should('have.text', "''");
-          cy.get('[data-slot="derived-formula-node-kind"][data-depth="0"]').select('function');
-          cy.get('[data-slot="derived-formula-function"][data-depth="0"]').select('CONCAT');
-          cy.get('[data-slot="derived-formula-argument"][data-depth="0"][data-argument-index="0"]')
-            .find('[data-slot="derived-formula-literal"]')
-            .type('hola');
-          cy.get('[data-slot="derived-formula-argument"][data-depth="0"][data-argument-index="1"]')
-            .find('[data-slot="derived-formula-node-kind"]')
-            .select('function');
-          cy.get('[data-slot="derived-formula-function"][data-depth="1"]').select('CONCAT');
-          cy.get('[data-slot="derived-formula-argument"][data-depth="1"][data-argument-index="0"]')
-            .find('[data-slot="derived-formula-literal"]')
-            .type(' ');
-          cy.get('[data-slot="derived-formula-argument"][data-depth="1"][data-argument-index="1"]')
-            .find('[data-slot="derived-formula-literal"]')
-            .type('mundo');
-          cy.get('[data-slot="derived-formula-preview"]').should('contain', 'CONCAT');
+          cy.get(formulaText).should('contain.text', "''");
+          cy.get(formulaInput).type("{selectall}CONCAT('hola', ' ', 'mundo')", { force: true });
           cy.get('button[type="submit"]').click();
         });
         cy.get(inspector)
@@ -126,15 +108,33 @@ describe('Semantic dataset Transform', () => {
           .should('contain', 'fallback_name')
           .and('contain', 'CONCAT');
       });
+    cy.viewport(1280, 600);
+    cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
+    cy.get(form).within(() => {
+      cy.get('input[name="alias"]').type('CAMPO_PRUEBA');
+      cy.get('[data-slot="formula-operand"][data-kind="field"]').first().click();
+      cy.get(formulaInput).type('{selectall}', { force: true });
+      cy.contains('.formula-palette-tabs button', 'Functions').click();
+      cy.contains('[data-slot="formula-operand"]', 'TRIM').click();
+      cy.get('.formula-result').should('contain.text', 'TRIM');
+      cy.get('button[type="submit"]')
+        .should('be.enabled')
+        .and(($button) => {
+          expect($button[0]!.getBoundingClientRect().bottom).to.be.lessThan(600);
+        })
+        .click();
+    });
+    cy.get(form).should('not.exist');
+    cy.viewport(1280, 720);
     cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();
     cy.get(inspector).find('input').filter('[value="normalized_name"]').should('exist');
     cy.get(inspector)
-      .find('input[type="checkbox"]')
+      .find('[data-slot="relation-output-toggle"]')
       .first()
-      .as('outputCheckbox')
+      .as('outputToggle')
       .focus()
-      .uncheck()
-      .should('not.be.checked')
+      .click()
+      .should('have.attr', 'data-included', 'false')
       .and('be.focused');
     cy.window().then((window) => {
       const dataTransfer = new window.DataTransfer();
@@ -160,7 +160,9 @@ describe('Semantic dataset Transform', () => {
     cy.get(form).should('not.exist');
     cy.get(inspector)
       .find('[data-slot="canvas-derived-output"]')
-      .should('have.length', 3)
+      .should('have.length', 4)
+      .and('contain', 'CAMPO_PRUEBA')
+      .and('contain', 'NULL')
       .and('contain', 'CONCAT')
       .and('contain', 'total');
     cy.screenshot('transform-name-formula-properties');
@@ -171,8 +173,66 @@ describe('Semantic dataset Transform', () => {
       .find('button')
       .click();
     cy.get(form).find('input[name="alias"]').should('have.value', 'fallback_name');
-    cy.get(form).find('[data-slot="derived-formula-preview"]').should('contain', "'mundo'");
+    cy.get(formulaText).should('contain.text', "'mundo'");
+    cy.get(card).closest('li').find('[data-slot="canvas-relational-node-expand"]').click();
+    cy.get(card)
+      .closest('li')
+      .find('[data-slot="canvas-relational-card-detail"]')
+      .should('contain.text', 'INPUT')
+      .and('contain.text', 'OUTPUT');
+    let writesBeforeDrag = 0;
+    cy.then(() => {
+      writesBeforeDrag = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get(formulaInput).type('{selectall}UPPER(){leftarrow}', { force: true });
+    cy.window().then((window) => {
+      const dataTransfer = new window.DataTransfer();
+      cy.get(card)
+        .closest('li')
+        .find(
+          '[data-slot="canvas-relational-expression-node"][data-kind="expression"][draggable="true"]'
+        )
+        .first()
+        .trigger('dragstart', { dataTransfer });
+      cy.get('[data-slot="formula-editor"]')
+        .trigger('dragover', { dataTransfer })
+        .trigger('drop', { dataTransfer });
+      cy.get(formulaText).should('contain.text', 'UPPER("normalized_name")');
+      cy.get('[data-slot="formula-editor"] .squiggly-error').should('not.exist');
+    });
+    cy.get(form).find('button[type="submit"]').should('be.enabled');
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBeforeDrag)
+    );
     cy.screenshot('transform-name-formula-edit');
+    cy.get(form).screenshot('transform-assisted-form');
+    cy.get(formulaInput)
+      .type('{selectall}UPP', { force: true })
+      // Monaco's keyboard input is intentionally covered by its rendered code layer.
+      .trigger('keydown', {
+        key: ' ',
+        code: 'Space',
+        keyCode: 32,
+        which: 32,
+        ctrlKey: true,
+        force: true,
+      });
+    cy.get('.suggest-widget.visible').should('contain.text', 'UPPER');
+    cy.get(formulaInput).type('{esc}', { force: true });
+    cy.get(form).should('exist');
+    cy.get(formulaInput).trigger('keydown', {
+      key: ' ',
+      code: 'Space',
+      keyCode: 32,
+      which: 32,
+      ctrlKey: true,
+      force: true,
+    });
+    cy.get('.suggest-widget.visible').contains('.monaco-list-row', 'UPPER').click();
+    cy.get(formulaText).should('contain.text', 'UPPER()');
+    cy.get(formulaInput).type('{selectall}UPPER(missing)', { force: true });
+    cy.get('.formula-diagnostic').should('contain.text', 'Unknown');
+    cy.get(form).find('button[type="submit"]').should('be.disabled');
     cy.get(form).find('[data-slot="canvas-derived-output-cancel"]').click();
     cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();
     cy.get(inspector).find('input').filter('[value="fallback_name"]').should('exist');

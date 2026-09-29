@@ -1,6 +1,7 @@
 /** Owned concern: guard Templates route Monaco preview semantics and documentation closure. */
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
+import ts from 'typescript';
 
 import { describe, expect, it } from 'vitest';
 
@@ -16,13 +17,20 @@ interface MonacoAuthorityFixture {
   source: string;
 }
 
-const CANVAS_MONACO_EDITOR_OWNERS = new Set<string>();
+const CANVAS_MONACO_EDITOR_OWNERS = new Set(['views/canvas/DerivedOutputFormulaEditor.tsx']);
 const CANVAS_MONACO_READ_ONLY_OWNERS = new Set([
   'views/canvas/DbtModelCodeAuthoringSection.tsx',
   'views/canvas/DvtTransformOutputView.tsx',
 ]);
 
 const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
+  {
+    label: 'Type-only editor handles do not grant runtime Monaco hosting',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/canvasFormulaMonaco.ts',
+    source:
+      "import type { MonacoCodeEditorMount } from '../../components/monaco/MonacoCodeEditor'; type Mount = MonacoCodeEditorMount;",
+  },
   {
     label: 'Templates preview delegates read-only rendering to MonacoCodeViewer',
     surface: 'templates-preview',
@@ -46,6 +54,13 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
 const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
   expectedViolation: string;
 })[] = [
+  {
+    label: 'A formula helper cannot become another editable Monaco host',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/canvasFormulaMonaco.ts',
+    source: "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
+    expectedViolation: 'MonacoCodeEditor outside a governed Canvas authoring leaf',
+  },
   {
     label: 'Templates preview cannot acquire editable Monaco authority',
     surface: 'templates-preview',
@@ -105,6 +120,14 @@ function collectMonacoAuthorityViolations({
   source,
 }: Omit<MonacoAuthorityFixture, 'label'>): string[] {
   const violations: string[] = [];
+  if (/monaco/i.test(source))
+    source = ts.transpileModule(source, {
+      compilerOptions: {
+        jsx: ts.JsxEmit.Preserve,
+        verbatimModuleSyntax: true,
+        removeComments: true,
+      },
+    }).outputText;
 
   if (source.includes('@monaco-editor/react')) {
     violations.push('@monaco-editor/react');

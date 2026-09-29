@@ -46,7 +46,7 @@ describe('Initialize a canonical Transform', () => {
       expect(read.binding.sourceRef).toEqual(input.metadata!.connectedSourceRef);
       expect(
         view.container.querySelectorAll(
-          '[data-slot="relation-output-field"] input[type="checkbox"]:checked'
+          '[data-slot="relation-output-toggle"][data-included="true"]'
         )
       ).toHaveLength(columns.length);
     }

@@ -96,7 +96,7 @@ export type GraphNodeRendererData = Readonly<{
   algebraicDrop?: GraphNodeAlgebraicDrop;
   onInspectNode?: (
     nodeId: string,
-    preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | 'code' | null
+    preferredTabId?: 'general' | 'columns' | 'inputs-outputs' | 'tests' | 'code' | null
   ) => void;
   onOpenSourceDataSample?: (nodeId: string) => void;
   onOpenOperationalDetails?: (

@@ -1,4 +1,5 @@
 /** Render one authorized Substrait relation without selecting a reader by tree shape. */
+import { readDvtInputBindings } from '@dvt/contracts';
 import {
   projectSubstraitProducerGraph,
   type DvtPostgresOrderKey,
@@ -6,6 +7,7 @@ import {
 } from '@dvt/postgres-projection';
 
 import { requireDvtProjectedSourceCoverage } from './dvtSourceCoverage.js';
+import { dvtSourcePublication } from './dvtSourcePublication.js';
 import type { DvtTerminalTransformClosure } from './resolveDvtTerminalTransformClosure.js';
 
 export type DvtPostgresTransformProjection = Readonly<{
@@ -28,7 +30,16 @@ export async function projectDvtPostgresTransform(
     targetId: closure.transform.id,
     documents: closure.documents,
     sources: new Map(closure.sources.map(({ node, ref }) => [node.id, ref])),
-    edges: closure.edges,
+    edges: closure.edges.map((edge) => {
+      const inputBindings = readDvtInputBindings(edge);
+      return { ...edge, ...(inputBindings == null ? {} : { inputBindings }) };
+    }),
+    sourcePublications: new Map(
+      closure.sources.flatMap(({ node }) => {
+        const fields = dvtSourcePublication(node);
+        return fields == null ? [] : [[node.id, fields] as const];
+      })
+    ),
     ...(relationId == null ? {} : { relationId }),
   });
   requireDvtProjectedSourceCoverage(

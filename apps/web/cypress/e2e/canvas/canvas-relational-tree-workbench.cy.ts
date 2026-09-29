@@ -1,10 +1,64 @@
 /** Owned concern: keyboard Model entry and workspace navigation, without authoring scenarios. */
+import { getE2eApiCalls, waitForE2eApiCall } from '../../support/e2eApiStub';
 import { visitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Workbench navigation', () => {
   beforeEach(() => {
     stubWorkbenchScenario('saved-join');
+  });
+  it('opens a fixed source inspector on click without replacing the Canvas or requesting rows', () => {
+    cy.viewport(1280, 720);
+    visitWorkbenchCanvas();
+    // The saved fixture is reconciled once on startup; inspection must add no writes.
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    // Wait for the fixture's initial fit (capped at 82%), not an arbitrary delay.
+    cy.get('.react-flow__viewport')
+      .should(($viewport) => {
+        expect($viewport[0]!.style.transform).to.contain('scale(0.82)');
+      })
+      .then(($viewport) => {
+        const viewport = $viewport[0]!;
+        const transform = viewport.getAttribute('style');
+        const writesBeforeInspection = getE2eApiCalls('/workspace/graph/draft', 'PUT');
+        cy.get('.react-flow__node [data-slot="canvas-node-shell"]').first().click(40, 18);
+        cy.get('[data-slot="canvas-node-workbench-overlay"]')
+          .should('be.visible')
+          .and(($panel) => {
+            expect($panel[0]!.tagName).to.equal('ASIDE');
+            const bounds = $panel[0]!.getBoundingClientRect();
+            expect(bounds.right).to.be.closeTo(1280, 30);
+            expect(bounds.width).to.be.at.most(450);
+          });
+        cy.get('[data-slot="canvas-node-workbench-tab-columns"]').should(
+          'have.attr',
+          'aria-selected',
+          'true'
+        );
+        cy.get('[data-slot="canvas-node-workbench-drag-handle"]').should('not.exist');
+        cy.get('.react-flow__viewport').should(($current) => {
+          expect($current[0]).to.equal(viewport);
+          expect($current.attr('style')).to.equal(transform);
+        });
+        cy.get('[data-slot="canvas-node-workbench-close"]').click();
+        cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+        cy.get('.react-flow__viewport').should(($current) =>
+          expect($current[0]).to.equal(viewport)
+        );
+        cy.then(() => {
+          expect(
+            getE2eApiCalls('/workspace/graph/draft', 'PUT').map((call) => call.body)
+          ).to.deep.equal(writesBeforeInspection.map((call) => call.body));
+        });
+      });
+    cy.then(() => {
+      const calls = getE2eApiCalls(/.*/);
+      expect(
+        calls
+          .filter((call) => /sample|preview/.test(call.url.pathname))
+          .map((call) => call.url.pathname)
+      ).to.deep.equal([]);
+    });
   });
   it('opens and closes the Model by its supported keyboard and workspace controls', () => {
     cy.viewport(1280, 720);
