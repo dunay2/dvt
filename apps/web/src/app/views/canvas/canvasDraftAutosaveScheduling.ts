@@ -71,6 +71,8 @@ function resolveAutosaveOutcome(args: {
     return { kind: 'clear_and_idle' };
   }
 
+  if (args.draftSession.syncState === 'saving') return { kind: 'wait' };
+
   if (args.draftSession.syncState !== 'editing') {
     return { kind: 'idle_if_saving' };
   }
@@ -130,6 +132,7 @@ function scheduleCanvasDraftAutosave(args: {
   refreshWorkspaceFilesAfterSave: boolean;
 }): () => void {
   clearSaveDebounce(args.refs);
+  args.setDraftSaveStatus('saving');
 
   args.refs.saveDebounceTimerRef.current = globalThis.setTimeout(() => {
     performCanvasDraftAutosave({

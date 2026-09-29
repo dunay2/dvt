@@ -286,6 +286,27 @@ complete-tree disappearance and Apply/save/reopen, rather than only asserting
 the selected field token disappeared. Do not change stored user drafts as part
 of verification.
 
+The reopen proof exposed a premature durable indication in the existing
+`SaveWorkspaceGraphDraft` lifecycle: its debounce kept the previous `Synced`
+label, and the scheduling effect reset `saving` to idle while a request was in
+flight. Keep the existing save status pending from scheduling through the
+request acknowledgement; only an acknowledged matching signature can return
+to idle. Do not add a second save rail, status store, or transport DTO.
+
+```mermaid
+flowchart LR
+  Edit[Applied document edit] --> Debounce[Existing debounce: pending]
+  Debounce --> Request[Existing save command: pending]
+  Request --> Receipt[Matching save acknowledgement]
+  Receipt --> Durable[Saved or Synced]
+  Request --> Failure[Failure or conflict: not durable]
+```
+
+Verify debounce, in-flight, matching-acknowledgement and failure status without
+changing retry or authorization policy. The browser proof also decodes the
+saved canonical document to assert the remaining expression count before
+reloading; a request count or status label alone is not persistence evidence.
+
 | Scenario                               | Opportunity                                                 | Fowler pattern                                | DDD owner / rail                                                                                                | Surfaces and proof                                                                                               | Out of scope                                                   |
 | -------------------------------------- | ----------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | Delete one complete Project expression | Field-only identity cannot address an unselected definition | Explicit local address, shared atomic command | DvtNodeAuthoringMetadata / ConfigureCanvasDvtNode; CanvasRelationalTreeProjection / ProjectCanvasRelationalTree | Existing output command, gesture provider and root token; pure removal tests and existing Transform browser flow | New rail, AST, persisted DTO, hidden cleanup, operand deletion |

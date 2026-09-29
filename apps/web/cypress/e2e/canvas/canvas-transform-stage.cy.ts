@@ -1,4 +1,12 @@
 /** Real editor + stateful draft transport: Transform owns dataset field authoring. */
+import {
+  DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
+  DvtTransformAuthoringAuthorityV1Schema,
+  type WorkspaceGraphAuthoringDraft,
+} from '@dvt/contracts';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
+
+import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { getE2eApiCalls } from '../../support/e2eApiStub';
 import { visitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
 import { dragWorkbenchField } from '../../support/relationalWorkbench/pointer';
@@ -9,6 +17,29 @@ const form = '[data-slot="canvas-derived-output-form"]';
 const card = '[data-slot="canvas-relational-tree-node"][data-operator="project"]';
 const formulaInput = '[data-slot="formula-editor"] .monaco-editor textarea';
 const formulaText = '[data-slot="formula-editor"] .view-lines';
+
+function expectSavedExpressionCount(count: number): void {
+  cy.wrap(null).should(() => {
+    const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as {
+      draft: WorkspaceGraphAuthoringDraft;
+    };
+    const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
+      saved.draft.nodes.find((node) => node.id === 'join-transform')!.metadata?.[
+        DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY
+      ]
+    );
+    const indexed = indexSubstraitRelations(
+      decodeDvtSubstraitSemanticDocument(authority.semanticDocument)
+    );
+    if (!indexed.ok) throw indexed.error;
+    const project = [...indexed.index.relations.values()].find(
+      (entry) => entry.relation.relType.case === 'project'
+    )!.relation.relType;
+    expect(project.case).to.equal('project');
+    if (project.case === 'project')
+      expect(project.value.expressions, 'saved expression definitions').to.have.length(count);
+  });
+}
 
 function openModel(): void {
   cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]')
@@ -425,6 +456,7 @@ describe('Semantic dataset Transform', () => {
     );
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
     cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
+    expectSavedExpressionCount(3);
     visitWorkbenchCanvas();
     openModel();
     cy.get(card).click();
@@ -492,6 +524,7 @@ describe('Semantic dataset Transform', () => {
     );
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
     cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
+    expectSavedExpressionCount(2);
     visitWorkbenchCanvas();
     openModel();
     cy.get(card).click();

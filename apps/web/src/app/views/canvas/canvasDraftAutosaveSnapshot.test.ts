@@ -6,8 +6,60 @@ import { buildCurrentDraftPayload } from './canvasDraftLifecycleSnapshot';
 import { createCanvasDraftRepository } from './canvasDraftRepository';
 import { buildAuthoringPort } from './canvasDraftRepository.test.fixtures';
 import { canvasDraftSession } from './canvasDraftSession';
+import { runCanvasDraftAutosaveEffect } from './canvasDraftAutosaveScheduling';
+import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 
 describe('autosave snapshot acknowledgement', () => {
+  it.each(['debounce', 'in flight', 'acknowledged', 'failed'] as const)(
+    'reports durability truthfully during %s',
+    async (phase) => {
+      const repository = createCanvasDraftRepository(buildAuthoringPort());
+      const record = (await repository.readGraphDraft())!;
+      const session = canvasDraftSession.machine.bootstrap({
+        remoteDraft: record,
+        canonicalNodeIds: [],
+        canonicalEdges: [],
+      });
+      let status: DraftSaveStatus = phase === 'in flight' ? 'saving' : 'idle';
+      const cleanup = runCanvasDraftAutosaveEffect({
+        draftRepository: repository,
+        graphAuthorityQuery: { isPending: false, isError: false },
+        graphDraftQuery: { isPending: false, isError: false, data: undefined },
+        draftQueryCache: {
+          fetchLatestRemoteDraftState: repository.readGraphDraftState,
+          fetchLatestRemoteDraft: repository.readGraphDraft,
+          replaceRemoteDraftState: vi.fn(),
+          refreshWorkspaceFilesAfterSourceRemoval: vi.fn(),
+        },
+        draftSession:
+          phase === 'in flight' ? canvasDraftSession.machine.markSaving(session) : session,
+        setDraftSession: vi.fn(),
+        currentDraftPayloadSignature: 'edited-expression',
+        currentDraftPayload: record.draft,
+        canPersistGraphDraft: true,
+        canPersistCurrentDraft: true,
+        refs: {
+          saveDebounceTimerRef: { current: null },
+          lastSavedSignatureRef: {
+            current: phase === 'acknowledged' ? 'edited-expression' : 'before',
+          },
+          lastFailedSignatureRef: { current: phase === 'failed' ? 'edited-expression' : null },
+          saveAttemptGenerationRef: { current: 0 },
+          nextSaveAttemptIdRef: { current: 0 },
+          activeSaveAttemptRef: { current: null },
+        },
+        setDraftSaveStatus: (update) => {
+          status = typeof update === 'function' ? update(status) : update;
+        },
+        createDraftIdempotencyKey: () => 'status-test',
+      });
+      cleanup?.();
+      expect(status).toBe(
+        phase === 'acknowledged' ? 'idle' : phase === 'failed' ? 'failed' : 'saving'
+      );
+    }
+  );
+
   it.each(['before send', 'after send', 'no edit'] as const)(
     'preserves only changes outside the request: %s',
     async (timing) => {
