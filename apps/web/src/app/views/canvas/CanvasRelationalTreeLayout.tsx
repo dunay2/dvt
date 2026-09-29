@@ -4,9 +4,9 @@ import { useRelationalLayout } from './relational-layout/RelationalLayoutSession
 import { useRelationalCardMovement } from './relational-layout/useRelationalCardMovement';
 import {
   CANVAS_RELATIONAL_DETAIL_ZOOM,
-  projectCanvasRelationalTreeDetails,
   type CanvasRelationalSemanticContext,
 } from './canvasRelationalTreeDetails';
+import { useCanvasRelationalTreeDetails } from './useCanvasRelationalTreeDetails';
 
 import { RelationalTreeEdges } from './relational-layout/RelationalTreeEdges';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
@@ -67,21 +67,11 @@ export function CanvasRelationalTreeLayout({
   onManualLayout?: () => void;
   onOpenOutput?: () => void;
 }>): JSX.Element {
-  const detail = useMemo(
-    () =>
-      projectCanvasRelationalTreeDetails(
-        root,
-        semanticContext,
-        sourceOutputFieldsByRelationId,
-        stagedOperations
-      ),
-    [
-      root,
-      semanticContext?.transformNode,
-      semanticContext?.draft,
-      sourceOutputFieldsByRelationId,
-      stagedOperations,
-    ]
+  const detail = useCanvasRelationalTreeDetails(
+    root,
+    semanticContext,
+    sourceOutputFieldsByRelationId,
+    stagedOperations
   );
   const { projectLayout, setPosition, expanded, toggleDetail } = useRelationalLayout();
   const zoomRevealsDetail = Math.round(zoom * 100) >= CANVAS_RELATIONAL_DETAIL_ZOOM * 100;

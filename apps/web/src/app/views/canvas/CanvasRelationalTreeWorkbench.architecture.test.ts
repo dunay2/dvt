@@ -17,6 +17,7 @@ import ScalarGraphSource from './CanvasRelationalScalarGraph.tsx?raw';
 import SelectedOperatorSource from './CanvasRelationalTreeSelectedOperatorEditor.tsx?raw';
 import MetricsSource from './canvasRelationalTreeGeometryMetrics.ts?raw';
 import LayoutSource from './CanvasRelationalTreeLayout.tsx?raw';
+import DetailHookSource from './useCanvasRelationalTreeDetails.ts?raw';
 import NodeLayerSource from './CanvasRelationalTreeNodes.tsx?raw';
 import OperationPortsSource from './CanvasRelationalOperationPorts.tsx?raw';
 import OutputSource from './CanvasRelationalTreeOutput.tsx?raw';
@@ -88,6 +89,8 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(CatalogueSource.split('\n').length).toBeLessThan(120);
     expect(TreeSource.split('\n').length).toBeLessThan(150);
     expect(LayoutSource.split('\n').length).toBeLessThan(190);
+    expect(DetailHookSource).toContain('projectCanvasRelationalTreeDetails');
+    expect(DetailHookSource.split('\n').length).toBeLessThan(40);
     expect(NodeLayerSource.split('\n').length).toBeLessThan(140);
     expect(OperationPortsSource.split('\n').length).toBeLessThan(120);
     expect(OutputSource.split('\n').length).toBeLessThan(120);
