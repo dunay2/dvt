@@ -98,6 +98,41 @@ model without authoring writes or identity changes.
 
 ### Advanced field-flow editor (#3422)
 
+#### Tree selection acceptance
+
+The compact tree currently publishes field drag references but has no receiver
+for Output selection or background removal. Complete these adapters using
+`changeSelectedRelationOutputs` and `useRelationCommand`, not another semantic
+command. A drop onto an existing relation's Input/Output selects only an already
+admitted direct input field; it cannot connect an unrelated branch, widen a Read,
+or introduce an implicit Project into JOIN. Pending connection composition remains
+owned by the existing staged-operation connection command.
+
+```mermaid
+flowchart LR
+  Before[Scoped drag reference] --> NoReceiver[No selection receiver]
+  Token[Input / published Output token] --> Adapter[Revision-bound gesture adapter]
+  Adapter --> Add[Existing output selection command]
+  Background[Explicit background drop of selected Output] --> Remove[Same selection command]
+  Add --> Draft[Canonical working document]
+  Remove --> Draft
+  Invalid[Invalid target / cancel / stale / readonly] --> Unchanged[No write]
+```
+
+Only a token explicitly identified as selected Output can request removal on the
+Canvas background. Drag end is never a removal command. Drops on cards, controls,
+formula editors and the inspector cannot bubble into background removal. Keyboard
+Enter on an Input field adds it; Delete on a selected Output removes it through
+the same command. Retained fields keep their identity and order. An existing
+selection is an idempotent no-op. The canonical command still rejects downstream
+dependency loss; show affected field/relation names without technical IDs. Do not
+claim that a removed expression is supported until canonical validation and
+Preview lowering both pass.
+
+| Scenario                                | Opportunity                               | Fowler pattern                           | DDD owner / rail                                  | Implementation surfaces                                                               | Unit/package test                                                                        | Architecture test                                                    | User-flow test                                                         | Out of scope                                                  |
+| --------------------------------------- | ----------------------------------------- | ---------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Add/remove one tree field or expression | Missing adapter; hidden gesture authority | Presentation Model plus existing command | DvtNodeAuthoringMetadata / ConfigureCanvasDvtNode | Relational field transfer, compact tokens, viewport boundary, existing output command | Single-field, identity, derived output, dependency, stale/foreign and readonly rejection | Passive tree cannot import semantic writers; bounded gesture adapter | Output drop, background remove, keyboard, invalid/cancel, Apply/reopen | New AST, per-field edges, JOIN normalization, database writes |
+
 The accepted interaction supersedes the read-only-only card detail below and
 the isolated formula-selector cut #3451. Do not integrate the latter on its own.
 Replace the parallel visual-formula draft with name plus formula, using the

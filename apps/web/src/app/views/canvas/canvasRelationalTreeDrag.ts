@@ -9,21 +9,32 @@ export const CANVAS_RELATIONAL_OPERATION_DRAG_TYPE = 'application/x-dvt-relation
 export const CANVAS_RELATIONAL_RELATION_DRAG_TYPE = 'application/x-dvt-relational-relation';
 export const CANVAS_RELATIONAL_FIELD_DRAG_TYPE = 'application/x-dvt-relational-field';
 
+export type CanvasRelationalFieldReference = Readonly<{
+  rootId: string;
+  revision: number;
+  relationId: string;
+  fieldId: string;
+  selectedOutput?: boolean;
+}>;
+
 export function writeCanvasRelationalFieldDrag(
   dataTransfer: DataTransfer,
-  reference: Readonly<{ rootId: string; revision: number; relationId: string; fieldId: string }>
+  reference: CanvasRelationalFieldReference
 ): void {
-  dataTransfer.effectAllowed = 'copy';
+  dataTransfer.effectAllowed = reference.selectedOutput ? 'copyMove' : 'copy';
   dataTransfer.setData(CANVAS_RELATIONAL_FIELD_DRAG_TYPE, JSON.stringify(reference));
 }
 
 export function readCanvasRelationalFieldDrag(
   dataTransfer: DataTransfer
-): Readonly<{ rootId: string; revision: number; relationId: string; fieldId: string }> | null {
+): CanvasRelationalFieldReference | null {
   try {
     const value: unknown = JSON.parse(dataTransfer.getData(CANVAS_RELATIONAL_FIELD_DRAG_TYPE));
     if (value == null || typeof value !== 'object') return null;
-    const { rootId, revision, relationId, fieldId } = value as Record<string, unknown>;
+    const { rootId, revision, relationId, fieldId, selectedOutput } = value as Record<
+      string,
+      unknown
+    >;
     if (
       typeof rootId !== 'string' ||
       rootId.length === 0 ||
@@ -33,10 +44,17 @@ export function readCanvasRelationalFieldDrag(
       fieldId.length === 0 ||
       typeof revision !== 'number' ||
       !Number.isSafeInteger(revision) ||
-      revision < 0
+      revision < 0 ||
+      (selectedOutput != null && typeof selectedOutput !== 'boolean')
     )
       return null;
-    return { rootId, revision, relationId, fieldId };
+    return {
+      rootId,
+      revision,
+      relationId,
+      fieldId,
+      ...(selectedOutput === true ? { selectedOutput: true } : {}),
+    };
   } catch {
     return null;
   }

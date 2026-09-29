@@ -43,6 +43,9 @@ describe('Canvas relational-tree source drag lifecycle', () => {
     const values = new Map<string, string>();
     const dataTransfer = {
       effectAllowed: 'move',
+      get types(): string[] {
+        return [...values.keys()];
+      },
       getData: (type: string) => values.get(type) ?? '',
       setData: (type: string, value: string) => values.set(type, value),
     };
