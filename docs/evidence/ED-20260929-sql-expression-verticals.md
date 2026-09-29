@@ -1,6 +1,6 @@
 ---
 title: Catalog SQL expression authoring and progressive PostgreSQL verticals
-status: Verified
+status: final
 date: 2026-09-29
 owners:
   - apps/web
@@ -94,6 +94,11 @@ API authorization, Temporal and browser execution are used; no data-response moc
 - API PostgreSQL integration: 17 tests passed on PostgreSQL 16.12, including
   physical CTAS metadata, NULL behavior and both SUM overflow cases.
 - Target projection publisher: four API application tests passed.
+- Incorporated the useful provider proof from PR #3448: the isolated PostgreSQL
+  Expression → JOIN → Expression test passed, as did all six expression-stage
+  projection tests. The oracle proves pre-JOIN `UPPER(order_id)` and post-JOIN
+  `UPPER(country)` without changing semantic bytes or digest. No transformations
+  are embedded in the JOIN predicate and no runtime step representation is added.
 - Web and API-test typechecks, contract/projection typechecks and scoped lint passed.
 - All three browser verticals passed end-to-end: 3 passed, 0 failed, 0 pending,
   0 skipped in 1 minute 55 seconds (browser execution, excluding stack startup).
