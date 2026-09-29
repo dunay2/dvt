@@ -87,8 +87,10 @@ describe('Progressive SQL verticals', () => {
           'COALESCE(UPPER(TRIM("client_id")), NULL)'
         );
         cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
-        cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
+        cy.get('[data-pending-operation="true"]').should('not.exist');
+        cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
         cy.get('[data-operator="project"]').should('have.length', 2);
+        cy.get('[data-slot="canvas-relational-tree-fit"]').click();
       }
       cy.get('[data-operator="project"]').first().click();
       for (const [alias, formula] of scenario.formulas) addLiveFormula(alias, formula);
@@ -107,8 +109,8 @@ describe('Progressive SQL verticals', () => {
         cy.get('[data-operator="aggregate"]').click();
         stageUnary('window', '[data-operator="aggregate"]');
         cy.get('[data-slot="canvas-relational-tree-node"][data-presentation="window"]')
-          .should('have.attr', 'data-relation-id')
           .invoke('attr', 'data-relation-id')
+          .should('be.a', 'string')
           .as('windowRelationId', { type: 'static' });
         cy.get('[data-slot="canvas-staged-operation-inspector"] form').within(() => {
           cy.contains('label', 'ORDER BY').find('select').select('revenue');
@@ -143,7 +145,7 @@ describe('Progressive SQL verticals', () => {
             .trigger('drop', { dataTransfer });
         });
         cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
-        cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
+        cy.get('[data-pending-operation="true"]').should('not.exist');
         cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
       }
       cy.then(() => {
