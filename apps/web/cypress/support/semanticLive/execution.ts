@@ -28,7 +28,20 @@ function waitForCompletedRun(runId: string, attempt = 0): Cypress.Chainable<void
   });
 }
 
-export function executePersistedModel(semanticSha: string): void {
+export function executePersistedModel(
+  semanticSha: string,
+  expected: Readonly<{
+    columns: readonly string[];
+    rows: readonly (readonly unknown[])[];
+    screenshot: string;
+    resultRelation?: string;
+  }> = {
+    columns: expectedColumns,
+    rows: expectedRows,
+    screenshot: 'semantic-live-published-result',
+  }
+): void {
+  const target = expected.resultRelation ?? resultRelation;
   let planSha = '';
   cy.intercept('POST', '**/plans/preview').as('livePlan');
   selectCanvasClosure([modelId]);
@@ -72,7 +85,7 @@ export function executePersistedModel(semanticSha: string): void {
       expect(completed).to.have.length(1);
       expect(completed[0]?.payload?.resultEvidence).to.deep.include({
         evidenceType: 'dvt-postgres-publication',
-        rowsWritten: 2,
+        rowsWritten: expected.rows.length,
       });
       expect(completed[0]?.payload?.resultEvidence?.plan?.sha256).to.equal(planSha);
     });
@@ -80,12 +93,12 @@ export function executePersistedModel(semanticSha: string): void {
   cy.get('[data-slot="run-result-tab"]').click();
   cy.get('[data-slot="run-dvt-postgres-publication-card"]', { timeout: 30_000 }).should(
     'contain.text',
-    resultRelation
+    target
   );
   const query = new URLSearchParams({
     ...resolveLiveWorkspaceSession(),
     kind: 'name-search',
-    name: resultRelation,
+    name: target,
   });
   cy.request({
     url: `${String(Cypress.env('apiBaseUrl'))}/workspace/warehouse/connections/local-postgres-proof/objects?${query}`,
@@ -100,7 +113,7 @@ export function executePersistedModel(semanticSha: string): void {
         ({ locator }) =>
           locator.kind === 'relation' &&
           locator.schema === String(Cypress.env('postgresTargetSchema')) &&
-          locator.name === resultRelation
+          locator.name === target
       );
       expect(matches).to.have.length(1);
       const sampleQuery = new URLSearchParams({
@@ -116,12 +129,12 @@ export function executePersistedModel(semanticSha: string): void {
     .then(({ status, body }) => {
       expect(status).to.equal(200);
       expect(body.columns.map((column: { name: string }) => column.name)).to.deep.equal(
-        expectedColumns
+        expected.columns
       );
       // A published table has no inherent row order; ordering is asserted on the data-query rail.
       expect(body.rows.map((row: { values: unknown[] }) => row.values).sort()).to.deep.equal(
-        [...expectedRows].sort()
+        [...expected.rows].sort()
       );
     });
-  cy.screenshot('semantic-live-published-result');
+  cy.screenshot(expected.screenshot);
 }

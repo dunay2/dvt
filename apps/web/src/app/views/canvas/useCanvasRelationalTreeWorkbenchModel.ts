@@ -11,7 +11,7 @@ import {
   projectCanvasRelationalTreeCatalogue,
   projectPendingCanvasRelationalTreeCatalogue,
   projectCanvasSourceOccurrencePublication,
-  flattenCanvasRelationalTree,
+  unavailableCanvasRelationIds,
 } from './canvasRelationalTreeWorkbenchModel';
 import type {
   CanvasRelationalTreeAuthoringContract,
@@ -151,13 +151,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
     inputRevision: JSON.stringify(
       inputs.map((input) => [input.nodeId, input.fields, input.inputBindings])
     ),
-    unavailableRelationIds: new Set(
-      projection == null
-        ? []
-        : flattenCanvasRelationalTree(projection.root)
-            .filter((node) => node.rowUnavailable || (node.unavailableFields?.length ?? 0) > 0)
-            .flatMap((node) => (node.relationId == null ? [] : [node.relationId]))
-    ),
+    unavailableRelationIds: unavailableCanvasRelationIds(projection?.root),
     authoringAvailable,
     catalogue,
     inputs,

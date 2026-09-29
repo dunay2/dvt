@@ -1,6 +1,8 @@
 /** Owned concern: localized copy for the operator form component. */
 export const operatorFormCopy = {
   en: {
+    measure: 'Aggregate function',
+    measureField: 'Measure field',
     field: 'Field',
     priority: 'Keys in priority order',
     direction: 'Direction and nulls',
@@ -18,6 +20,8 @@ export const operatorFormCopy = {
     description: 'On the current model output. Changes remain in the draft.',
   },
   es: {
+    measure: 'Función de agregado',
+    measureField: 'Campo de la medida',
     field: 'Campo',
     priority: 'Claves en orden de prioridad',
     direction: 'Dirección y nulos',

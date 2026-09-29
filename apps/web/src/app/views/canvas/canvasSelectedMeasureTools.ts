@@ -1,4 +1,5 @@
-import { countFunction, rowNumberFunction } from './canvasMeasureFunctions';
+import { countFunction, sumFunction, rowNumberFunction } from './canvasMeasureFunctions';
+import { sumOverload } from '@dvt/postgres-projection';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 /** Presentation of selected aggregate/window messages; inputs come from shared analysis. */
 import type { SelectedRelationInput } from './useSelectedRelationInput';
@@ -25,17 +26,27 @@ export function aggregateTool(input: SelectedRelationInput): CanvasRelationalOpe
   const message = input.target.relation.relType;
   const aggregate = input.intent === 'edit' && message.case === 'aggregate' ? message.value : null;
   const ordinal = dvtSubstraitExpression.fieldOrdinal(aggregate?.groupingExpressions[0]);
+  const isSum = aggregate != null && sumFunction.matches(input.target.plan, aggregate);
+  const operand = aggregate?.measures[0]?.measure?.arguments[0]?.argType;
+  const measureOrdinal =
+    operand?.case === 'value' ? dvtSubstraitExpression.fieldOrdinal(operand.value) : null;
   return {
     id: 'aggregate',
     active: input.intent === 'edit',
     fields,
+    aggregateFunction: isSum ? 'sum' : 'count',
+    measureFields: fields.filter(
+      (field) => sumOverload(input.schema.fields[field.ordinal]!.type) != null
+    ),
+    measureFieldId: fields.find((field) => field.ordinal === measureOrdinal)?.fieldId,
     enabled:
       fields.length > 0 &&
       (input.intent === 'insert' ||
         (aggregate != null &&
           aggregate.groupingExpressions.length === 1 &&
           aggregate.measures.length === 1 &&
-          countFunction.matches(input.target.plan, aggregate) &&
+          (countFunction.matches(input.target.plan, aggregate) ||
+            (isSum && measureOrdinal != null)) &&
           ordinal != null)),
     fieldId: fields.find((field) => field.ordinal === ordinal)?.fieldId,
     alias:

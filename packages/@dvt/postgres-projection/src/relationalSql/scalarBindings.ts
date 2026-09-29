@@ -1,4 +1,12 @@
 /** Executable target bindings, independent of the surrounding relation shape. */
+import type { Expression_ScalarFunction } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import {
+  TypeSchema,
+  Type_Nullability,
+  type Type,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
+import { clone, create } from '@bufbuild/protobuf';
+
 import { pgString, pgStringLiteral, type PostgresAstNode } from '../postgresAst.js';
 import { pgAnd, pgOr, pgComparison, pgNullTest } from '../postgresPredicateAst.js';
 
@@ -10,7 +18,8 @@ type Binding = Readonly<{
   minimum: number;
   maximum?: number;
   accepts: ScalarArgumentGuard;
-  output: 'string' | 'bool' | 'i64' | 'fp64';
+  output: 'string' | 'bool' | 'i64' | 'fp64' | 'operand';
+  arguments?: (fn: Expression_ScalarFunction) => boolean;
   required?: boolean;
   sql: (args: readonly PostgresAstNode[]) => PostgresAstNode;
 }>;
@@ -131,16 +140,27 @@ export const scalarBindings: Readonly<Record<string, Binding>> = {
     family: 'functions_comparison',
     signature: 'coalesce:any1',
     minimum: 2,
+    accepts: (types) => comparable(types) && types[0]?.kind.case !== 'precisionTimestampTz',
+    output: 'operand',
+    sql: (args) => ({ CoalesceExpr: { args } }),
+  },
+  concat_ws: {
+    family: 'functions_string',
+    signature: 'concat_ws:str_str',
+    minimum: 2,
     accepts: sameType('string'),
     output: 'string',
-    sql: (args) => ({ CoalesceExpr: { args } }),
+    // Pinned Substrait concat_ws.test: skip NULL values, but NULL separator returns NULL.
+    sql: (args) => call('concat_ws', args),
   },
   extract: {
     family: 'functions_datetime',
     signature: 'extract:req_ptstz_str',
     minimum: 2,
     maximum: 2,
-    accepts: utcYear,
+    accepts: (types) =>
+      types[0]?.kind.case === 'precisionTimestampTz' && types[1]?.kind.case === 'string',
+    arguments: utcYear,
     output: 'i64',
     sql: (args) => ({
       TypeCast: {
@@ -160,3 +180,15 @@ export const scalarBindings: Readonly<Record<string, Binding>> = {
   is_null: nullTest('is_null', false),
   is_not_null: nullTest('is_not_null', true),
 };
+
+/** Canonical result type shared by authoring admission and executable lowering. */
+export function scalarResultType(binding: Binding, types: readonly Type[]): Type {
+  const nullability = binding.required ? Type_Nullability.REQUIRED : Type_Nullability.NULLABLE;
+  const type =
+    binding.output === 'operand'
+      ? clone(TypeSchema, types[0]!)
+      : create(TypeSchema, { kind: { case: binding.output, value: { nullability } } });
+  if (type.kind.value != null && 'nullability' in type.kind.value)
+    type.kind.value.nullability = nullability;
+  return type;
+}

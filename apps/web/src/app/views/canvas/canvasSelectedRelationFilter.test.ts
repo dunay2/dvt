@@ -77,10 +77,30 @@ describe('selected relation Filter command', () => {
         throw new Error('Canonical document did not reopen');
       expect(reopened.metadata.plan).toEqual(filtered.plan);
       expect(reopened.metadata.sidecar).toEqual(filtered.sidecar);
+      const sources = [...index.relations.values()]
+        .filter((entry) => entry.binding.sourceRef != null)
+        .map((entry) => ({
+          ...saved,
+          id: entry.binding.relationId,
+          name: entry.binding.displayName!,
+          kind: 'dvt:source' as const,
+          role: 'input' as const,
+          metadata: {
+            schema: 'raw',
+            tableName: entry.binding.displayName!,
+            connectedSourceRef: entry.binding.sourceRef,
+            columns: entry.fields.map((field) => ({ name: field.displayName!, type: 'text' })),
+          },
+        }));
       const card = await projectCanvasNodePresentationTruth({
         node: saved,
-        nodes: [saved],
-        edges: [],
+        nodes: [...sources, saved],
+        edges: sources.map((source) => ({
+          id: `${source.id}-model`,
+          sourceId: source.id,
+          targetId: saved.id,
+          relation: 'lineage' as const,
+        })),
       });
       expect(card.columns.state).toBe('ready');
       expect(card.columns.declared).toHaveLength(baseline.fields.length);

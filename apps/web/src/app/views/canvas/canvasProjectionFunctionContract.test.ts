@@ -42,8 +42,21 @@ describe('Canonical scalar authoring contract', () => {
       provider: 'postgres',
     });
 
-    expect(textFunctions.map((item) => item.name)).toEqual(['lower', 'trim', 'upper']);
-    expect(textFunctions.every((item) => item.category === 'text')).toBe(true);
+    expect(textFunctions.map((item) => item.name)).toEqual([
+      'is_not_null',
+      'is_null',
+      'lower',
+      'trim',
+      'upper',
+    ]);
+    expect(
+      textFunctions.filter((item) => item.category === 'text').map((item) => item.name)
+    ).toEqual(['lower', 'trim', 'upper']);
+    expect(
+      textFunctions
+        .filter((item) => item.category === 'boolean')
+        .every((item) => item.outputType.kind.case === 'bool')
+    ).toBe(true);
     expect(textFunctions.every((item) => item.capabilityId.includes('scalar-function'))).toBe(true);
     expect(
       resolveDvtSubstraitColumnFunctions({ dataType: 'integer', provider: 'postgres' })

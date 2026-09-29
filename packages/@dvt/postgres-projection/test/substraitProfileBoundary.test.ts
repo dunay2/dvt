@@ -18,7 +18,9 @@ it('binds unique executable validators to existing supported standard capabiliti
         entry.profileStatus === 'supported-profile' &&
         entry.identity.sourceKind === 'simple-extension' &&
         entry.identity.urn === profile.identity.urn &&
-        entry.identity.name === profile.identity.name
+        entry.identity.name === profile.identity.name.split(':')[0] &&
+        (!profile.identity.name.includes(':') ||
+          entry.overloads?.some((overload) => overload.signature === profile.identity.name))
     );
     expect(entries).toHaveLength(1);
   }

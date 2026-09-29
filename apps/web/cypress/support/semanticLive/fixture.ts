@@ -77,7 +77,10 @@ export function visitSemanticCanvas(): void {
   cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
 }
 
-export function importSemanticModel(document: DvtSubstraitSemanticDocumentV1): void {
+export function importSemanticModel(
+  document: DvtSubstraitSemanticDocumentV1,
+  options?: Readonly<{ name: string; resultRelation: string }>
+): void {
   const schema: unknown = Cypress.env('postgresTargetSchema');
   if (typeof schema !== 'string' || !schema.trim())
     throw new Error('Isolated PostgreSQL target schema is required');
@@ -109,7 +112,7 @@ export function importSemanticModel(document: DvtSubstraitSemanticDocumentV1): v
   const model = {
     ...transformTemplate,
     id: modelId,
-    name: 'Ordered European clients',
+    name: options?.name ?? 'Ordered European clients',
     metadata: {
       config: {
         materialized: 'table',
@@ -117,7 +120,7 @@ export function importSemanticModel(document: DvtSubstraitSemanticDocumentV1): v
           schemaVersion: 'dvt-transform-result-target.v1',
           connectionRef: sources[0]!.metadata.connectedSourceRef.connectionRef,
           schema,
-          relation: resultRelation,
+          relation: options?.resultRelation ?? resultRelation,
         },
       },
       transformAuthoring: { version: 'v1', mode: 'substrait', semanticDocument: document },

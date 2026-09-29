@@ -128,7 +128,23 @@ describe('ProjectCanvasRelationalTree admitted shapes', () => {
       targetNode(),
       encodeDvtSubstraitSemanticDocument(windowed)
     );
-    const result = projectCanvasRelationalTree({ node: transform, nodes: [transform], edges: [] });
+    const source: CanonicalNode = {
+      ...orders,
+      id: 'customers',
+      name: 'customers',
+      metadata: {
+        schema: 'public',
+        tableName: 'customers',
+        connectedSourceRef: pilot.sidecar.relations.find((relation) => relation.sourceRef != null)!
+          .sourceRef,
+        columns: ['name', 'email', 'country'].map((name) => ({ name, type: 'string' })),
+      },
+    };
+    const result = projectCanvasRelationalTree({
+      node: transform,
+      nodes: [source, transform],
+      edges: [{ sourceId: source.id, targetId: transform.id }],
+    });
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;

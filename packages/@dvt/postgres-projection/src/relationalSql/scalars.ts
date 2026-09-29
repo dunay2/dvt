@@ -2,13 +2,15 @@
 import type { Expression_ScalarFunction } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import type { Type } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
-import { Type_Nullability } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
+import { TypeSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
+import { equals } from '@bufbuild/protobuf';
 import { DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1 } from '@dvt/contracts';
 
 import type { PostgresAstNode } from '../postgresAst.js';
 import { resolveFunctionReference } from '../substrait-profile/functionReference.js';
 
-import { scalarBindings } from './scalarBindings.js';
+import { valuesOnly } from './scalarArguments.js';
+import { scalarBindings, scalarResultType } from './scalarBindings.js';
 import { unsupported } from './scope.js';
 
 export function scalarSql(
@@ -50,17 +52,16 @@ export function scalarSql(
     identity.name !== (invocation?.signature ?? binding.signature) ||
     args.length < binding.minimum ||
     (binding.maximum != null && args.length > binding.maximum) ||
-    !binding.accepts(fn, types) ||
+    !binding.accepts(types) ||
+    !(binding.arguments ?? valuesOnly)(fn) ||
     fn.options.length !== options.length ||
     fn.options.some(
       (option, ordinal) =>
         option.name !== options[ordinal]?.name ||
         option.preference.join() !== options[ordinal]?.preference.join()
     ) ||
-    fn.outputType?.kind.case !== binding.output ||
-    fn.outputType.kind.value.typeVariationReference !== 0 ||
-    fn.outputType.kind.value.nullability !==
-      (binding.required ? Type_Nullability.REQUIRED : Type_Nullability.NULLABLE)
+    fn.outputType == null ||
+    !equals(TypeSchema, fn.outputType, scalarResultType(binding, types))
   )
     return unsupported('Scalar invocation differs from the admitted signature.');
   return binding.sql(args);

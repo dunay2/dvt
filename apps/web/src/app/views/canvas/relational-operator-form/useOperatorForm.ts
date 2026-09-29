@@ -12,6 +12,8 @@ import { useRelationRemoval } from '../useRelationRemoval';
 
 export type OperatorFormValues = Readonly<{
   fieldId: string;
+  aggregateFunction: 'count' | 'sum';
+  measureFieldId: string;
   partitionFieldIds: readonly string[];
   alias: string;
   value: string;
@@ -48,6 +50,8 @@ export function useOperatorForm({
   const language = useApplicationLanguageStore((state) => state.language);
   const [values, setValues] = useState<OperatorFormValues>(() => ({
     fieldId: tool.fieldId ?? tool.fields[0]?.fieldId ?? '',
+    aggregateFunction: tool.aggregateFunction ?? 'count',
+    measureFieldId: tool.measureFieldId ?? tool.measureFields?.[0]?.fieldId ?? '',
     partitionFieldIds: tool.partitionFieldIds ?? [],
     alias: tool.alias ?? (tool.id === 'window' ? 'row_number' : 'total'),
     value: tool.value ?? '',

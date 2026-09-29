@@ -53,6 +53,30 @@ describe('selected relation derived output authoring', () => {
       );
     }
   );
+  it.each([
+    ['COALESCE(NULL, 10)', 'i64', true],
+    ['COALESCE(NULL, 2.5)', 'fp64', true],
+    ['COALESCE(NULL, false)', 'bool', true],
+    ["first_name IS NULL OR first_name = 'Ada'", 'bool', true],
+    ['first_name IS NOT NULL', 'bool', false],
+  ] as const)('persists and lowers the typed formula %s', async (formula, type, nullable) => {
+    const session = new CanvasRelationAnalysisSession('typed-formula');
+    session.receive(connectedNamesProjectionDraft());
+    const document = await applySelectedRelationDerivedOutput(session, {
+      intent: 'edit',
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      alias: 'typed_result',
+      formula,
+    });
+    const projected = await projectSubstraitToPostgresSql(document);
+    expect(projected.projection.outputs.at(-1)).toMatchObject({
+      name: 'typed_result',
+      dataType: type,
+      nullable,
+    });
+    session.dispose();
+  });
   it('creates an empty string and edits its formula without changing FieldId or neighbors', async () => {
     const session = new CanvasRelationAnalysisSession('formula-edit');
     session.receive(connectedNamesProjectionDraft());

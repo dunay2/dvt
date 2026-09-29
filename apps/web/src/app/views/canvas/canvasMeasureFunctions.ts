@@ -7,13 +7,20 @@ import {
   Expression_WindowFunctionSchema,
   type AggregateRel,
   type Expression_WindowFunction,
+  type Expression,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
   buildDvtSubstraitStandardCapabilityId,
 } from '@dvt/contracts';
-import { resolveFunctionReference } from '@dvt/postgres-projection';
+import {
+  resolveFunctionReference,
+  createSumFunction,
+  sumOverload,
+  inspectFunctionProfile,
+} from '@dvt/postgres-projection';
+import type { Type } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import { sourceFieldType } from './canvasSourceRelation';
 
@@ -31,6 +38,7 @@ function ensure(
   const id = buildDvtSubstraitStandardCapabilityId(kind, {
     sourceKind: 'simple-extension',
     ...identity,
+    name: identity.name.split(':')[0]!,
   });
   if (
     !DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.some(
@@ -71,6 +79,28 @@ export const countFunction = {
         })
       )
     );
+  },
+};
+
+export const sumFunction = {
+  create(plan: Plan, operand: Expression, type: Type) {
+    const overload = sumOverload(type);
+    if (overload == null) throw new Error('SUM requires an admitted numeric operand.');
+    const reference = ensure(
+      plan,
+      {
+        urn: 'extension:io.substrait:functions_arithmetic',
+        name: overload.signature,
+      },
+      'aggregate-function'
+    );
+    return createSumFunction(reference, operand, type);
+  },
+  matches(plan: Plan, aggregate: AggregateRel): boolean {
+    const measure = aggregate.measures[0];
+    if (measure?.measure == null || measure.filter != null) return false;
+    const profile = inspectFunctionProfile(plan, measure.measure);
+    return profile.ok && profile.value.identity.name.startsWith('sum:');
   },
 };
 

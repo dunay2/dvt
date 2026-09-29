@@ -51,15 +51,16 @@ export function DerivedOutputFormulaEditor({
     if (disabled || current == null || model == null || range == null) return;
     const start = model.getOffsetAt(range.getStartPosition());
     const selected = model.getValueInRange(range);
-    const text =
-      item.kind === 'function'
-        ? `${item.text}(${selected}${', '.repeat(Math.max(0, (item.argumentCount ?? 1) - 1))})`
-        : item.text;
+    const template =
+      item.template ??
+      `${item.text}({column}${', '.repeat(Math.max(0, (item.argumentCount ?? 1) - 1))})`;
+    const text = item.kind === 'function' ? template.replace('{column}', selected) : item.text;
     current.pushUndoStop();
     current.executeEdits('formula-insert', [{ range, text, forceMoveMarkers: true }]);
     current.setPosition(
       model.getPositionAt(
-        start + (item.kind === 'function' ? item.text.length + 1 + selected.length : text.length)
+        start +
+          (item.kind === 'function' ? template.indexOf('{column}') + selected.length : text.length)
       )
     );
     current.pushUndoStop();

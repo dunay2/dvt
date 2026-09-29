@@ -56,10 +56,38 @@ describe('assisted formula projection', () => {
     expect(suggestions.find((item) => item.label === 'CONCAT')?.argumentCount).toBe(2);
     expect(suggestions.some((item) => item.label === 'UPPER')).toBe(true);
     expect(suggestions.some((item) => item.label === 'MULTIPLY')).toBe(true);
+    for (const label of [
+      'EQUAL',
+      'NOT_EQUAL',
+      'GT',
+      'GTE',
+      'LT',
+      'LTE',
+      'AND',
+      'OR',
+      'IS_NULL',
+      'IS_NOT_NULL',
+    ])
+      expect(
+        suggestions.some((item) => item.label === label),
+        label
+      ).toBe(true);
     expect(suggestions.some((item) => item.text === "''")).toBe(true);
     expect(suggestions.some((item) => item.label === 'SELECT')).toBe(false);
     expect(formulaSuggestions(fields, 'unknown').some((item) => item.kind === 'function')).toBe(
       false
     );
+  });
+
+  it('offers the exact admitted UTC extraction template for a timestamp field', () => {
+    const temporal = [
+      { fieldId: 'time', name: 'occurred_at', dataType: 'timestamp with time zone' },
+    ];
+    expect(
+      formulaSuggestions(temporal, 'postgres').find((item) => item.label === 'EXTRACT YEAR (UTC)')
+    ).toMatchObject({
+      argumentCount: 1,
+      template: "EXTRACT(YEAR FROM {column} AT TIME ZONE 'UTC')",
+    });
   });
 });

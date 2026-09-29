@@ -21,7 +21,16 @@ describe('scoped formula completion', () => {
         typeof configureFormulaEditor
       >[0],
       monaco as unknown as Parameters<typeof configureFormulaEditor>[1],
-      [{ label: 'customer name', text: '"customer name"', detail: 'string', kind: 'field' }]
+      [
+        { label: 'customer name', text: '"customer name"', detail: 'string', kind: 'field' },
+        {
+          label: 'EXTRACT YEAR (UTC)',
+          text: 'EXTRACT',
+          detail: 'UTC year',
+          kind: 'function',
+          template: "EXTRACT(YEAR FROM {column} AT TIME ZONE 'UTC')",
+        },
+      ]
     );
     const provider = (
       register.mock.calls as unknown as [
@@ -38,6 +47,9 @@ describe('scoped formula completion', () => {
     expect(
       provider.provideCompletionItems(model, { lineNumber: 1 }).suggestions[0]!.insertText
     ).toBe('"customer name"');
+    expect(
+      provider.provideCompletionItems(model, { lineNumber: 1 }).suggestions[1]!.insertText
+    ).toBe("EXTRACT(YEAR FROM ${1} AT TIME ZONE 'UTC')");
     cleanup();
     expect(dispose).toHaveBeenCalledOnce();
   });

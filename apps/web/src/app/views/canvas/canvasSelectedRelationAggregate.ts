@@ -1,11 +1,12 @@
-import { countFunction } from './canvasMeasureFunctions';
+import { countFunction, sumFunction } from './canvasMeasureFunctions';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
-/** COUNT grouping is a local AggregateRel edit, independent of the operand's relation kind. */
+/** Grouping is a local AggregateRel edit, independent of the operand's relation kind. */
 import { clone, create } from '@bufbuild/protobuf';
 import {
   RelSchema,
   AggregationPhase,
   AggregateFunction_AggregationInvocation,
+  AggregateFunctionSchema,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { allocateDvtFieldId, DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
@@ -22,7 +23,13 @@ import { bindRelationOutputs, relationOutputMapping } from './canvasRelationOutp
 
 export async function applySelectedRelationAggregate(
   session: CanvasRelationAnalysisSession,
-  request: SelectedUnaryRequest & Readonly<{ fieldId: string; alias: string }>
+  request: SelectedUnaryRequest &
+    Readonly<{
+      fieldId: string;
+      alias: string;
+      aggregateFunction?: 'count' | 'sum';
+      measureFieldId?: string;
+    }>
 ) {
   const prepared = await prepareSelectedRelationUnary(session, request, 'aggregate');
   const { target, input, binding, schema } = prepared;
@@ -37,7 +44,24 @@ export async function applySelectedRelationAggregate(
       request.relationId
     );
   const plan = clone(PlanSchema, { ...target.plan, relations: [] });
-  const functionReference = countFunction.ensure(plan);
+  const operand = schema.bindings.find(
+    (field) => field.fieldId === request.measureFieldId && field.parentFieldId == null
+  );
+  if (request.aggregateFunction === 'sum' && operand == null)
+    throw new SubstraitAnalysisError('invalid_binding', 'SUM requires an available input field.');
+  const measure =
+    request.aggregateFunction === 'sum'
+      ? sumFunction.create(
+          plan,
+          dvtSubstraitExpression.field(operand!.outputOrdinal),
+          schema.fields[operand!.outputOrdinal]!.type
+        )
+      : create(AggregateFunctionSchema, {
+          functionReference: countFunction.ensure(plan),
+          phase: AggregationPhase.INITIAL_TO_RESULT,
+          invocation: AggregateFunction_AggregationInvocation.ALL,
+          outputType: countFunction.resultType(),
+        });
   const relation =
     request.intent === 'edit'
       ? cloneLocalRelation(target.relation, [input.relation])
@@ -49,16 +73,7 @@ export async function applySelectedRelationAggregate(
               input: input.relation,
               groupingExpressions: [dvtSubstraitExpression.field(group.outputOrdinal)],
               groupings: [{ expressionReferences: [0] }],
-              measures: [
-                {
-                  measure: {
-                    functionReference,
-                    phase: AggregationPhase.INITIAL_TO_RESULT,
-                    invocation: AggregateFunction_AggregationInvocation.ALL,
-                    outputType: countFunction.resultType(),
-                  },
-                },
-              ],
+              measures: [{ measure }],
             },
           },
         });
@@ -68,14 +83,15 @@ export async function applySelectedRelationAggregate(
   if (
     aggregate.groupingExpressions.length !== 1 ||
     aggregate.measures.length !== 1 ||
-    !countFunction.matches(plan, aggregate)
+    (!countFunction.matches(plan, aggregate) && !sumFunction.matches(plan, aggregate))
   )
     throw new SubstraitAnalysisError(
       'unsupported_relation',
-      'This grouping is not editable by the COUNT form.',
+      'This grouping is outside the admitted aggregate form.',
       request.relationId
     );
   aggregate.groupingExpressions = [dvtSubstraitExpression.field(group.outputOrdinal)];
+  aggregate.measures[0]!.measure = measure;
   const natural = [
     ...retainCompositionOutputs(
       createRelationPassthroughFields(binding.relationId, schema.bindings),

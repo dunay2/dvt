@@ -20,14 +20,14 @@ describe('DVT PostgreSQL output schema projection', () => {
       { name: 'amount', postgresType: 'double precision' },
       { name: 'ordered_at', postgresType: 'timestamp with time zone' },
     ]);
-    expect(schema?.columns.map(({ nullable }) => nullable)).toEqual([
-      false,
-      true,
-      true,
-      true,
-      true,
-    ]);
+    expect(schema?.columns.map(({ nullable }) => nullable)).toEqual([true, true, true, true, true]);
     expect(schema && createDvtPostgresOutputSchemaDigestV1(schema)).toMatch(/^[0-9a-f]{64}$/u);
+  });
+
+  it('keeps logical required fields separate from nullable CREATE TABLE AS columns', () => {
+    const output = { name: 'empty_text', dataType: 'string', outputOrdinal: 0, nullable: false };
+    expect(projectDvtPostgresOutputSchemaV1([output])?.columns[0]?.nullable).toBe(true);
+    expect(output.nullable).toBe(false);
   });
 
   it.each([

@@ -12,6 +12,7 @@ export type FormulaSuggestion = Readonly<{
   kind: 'field' | 'function' | 'literal';
   fieldId?: string;
   argumentCount?: number;
+  template?: string;
 }>;
 
 export function formulaSuggestions(
@@ -19,12 +20,18 @@ export function formulaSuggestions(
   provider: string
 ): readonly FormulaSuggestion[] {
   const functions = [
-    ...new Set([...fields.map((field) => field.dataType), 'string', 'bigint', 'double precision']),
+    ...new Set([
+      ...fields.map((field) => field.dataType),
+      'string',
+      'bigint',
+      'double precision',
+      'boolean',
+    ]),
   ]
     .flatMap((dataType) =>
       resolveDvtSubstraitColumnFunctions({ dataType, provider, resolution: 'proposal' })
     )
-    .filter((fn) => /^[a-z_]+$/i.test(fn.name));
+    .filter((fn) => /^[a-z_]+$/i.test(fn.name) || fn.expressionTemplate != null);
   return [
     ...fields.map((field): FormulaSuggestion => ({
       kind: 'field',
@@ -39,8 +46,11 @@ export function formulaSuggestions(
         kind: 'function',
         label: fn.name.toUpperCase(),
         text: fn.name.toUpperCase(),
-        detail: `${fn.name.toUpperCase()}(${Array.from({ length: fn.minimumArgumentCount }, (_, index) => `arg${index + 1}`).join(', ')})`,
+        detail:
+          fn.expressionTemplate?.replace('{column}', 'arg1') ??
+          `${fn.name.toUpperCase()}(${Array.from({ length: fn.minimumArgumentCount }, (_, index) => `arg${index + 1}`).join(', ')})`,
         argumentCount: fn.minimumArgumentCount,
+        ...(fn.expressionTemplate == null ? {} : { template: fn.expressionTemplate }),
       })),
     ...["''", 'NULL', '0', 'true', 'false'].map((text): FormulaSuggestion => ({
       kind: 'literal',
