@@ -31,7 +31,7 @@ describe('DbtNodeComponent behavior', () => {
 
   it.each([true, false])(
     'accepts one field on the Model body only when editable (%s)',
-    (canMutateGraph) => {
+    async (canMutateGraph) => {
       const onMapCanvasInput = vi.fn();
       const onInspectNode = vi.fn();
       const onOpenNode = vi.fn();
@@ -57,7 +57,7 @@ describe('DbtNodeComponent behavior', () => {
         )
       );
       const identity = { nodeId: 'source', columnId: 'country' };
-      act(() =>
+      await act(() =>
         fireEvent.drop(container.querySelector('[data-slot="canvas-node-shell"]')!, {
           dataTransfer: {
             types: ['application/x-dvt-canvas-field'],

@@ -160,10 +160,10 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     expect(workbenchState.props?.authoring).toMatchObject({ canEditNode: false });
   });
 
-  it('closes on Escape from its panel, not from another surface or an already handled gesture', () => {
+  it('closes on Escape from its panel, not from another surface or an already handled gesture', async () => {
     const onHide = vi.fn();
     renderOverlay(root, { onHide });
-    act(() => fireEvent.keyDown(document.body, { key: 'Escape' }));
+    await act(() => fireEvent.keyDown(document.body, { key: 'Escape' }));
     expect(onHide).not.toHaveBeenCalled();
     const input = container.querySelector('input')!;
     const handled = new KeyboardEvent('keydown', {
@@ -172,9 +172,9 @@ describe('CanvasNodeWorkbenchOverlay', () => {
       cancelable: true,
     });
     handled.preventDefault();
-    act(() => input.dispatchEvent(handled));
+    await act(() => input.dispatchEvent(handled));
     expect(onHide).not.toHaveBeenCalled();
-    act(() => fireEvent.keyDown(input, { key: 'Escape' }));
+    await act(() => fireEvent.keyDown(input, { key: 'Escape' }));
     expect(onHide).toHaveBeenCalledOnce();
   });
 

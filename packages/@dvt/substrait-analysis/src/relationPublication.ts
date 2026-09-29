@@ -49,7 +49,7 @@ export function deriveSubstraitPublication(
   for (const id of index.postorder) {
     const entry = index.relations.get(id)!;
     const input = entry.inputs.flatMap((inputId) => schemas.get(inputId)!);
-    const missing = (ids: readonly string[]) =>
+    const missing = (ids: readonly string[]): boolean =>
       ids.some((fieldId) => unavailableReadFieldIds.has(fieldId));
     const rowUnavailable =
       entry.inputs.some((inputId) => publication.get(inputId)!.rowUnavailable) ||
