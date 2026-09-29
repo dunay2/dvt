@@ -79,7 +79,7 @@ export function projectFormulaFeedback(
   return {
     ok: true as const,
     dataType: compiled.dataType,
-    graph,
+    graph: { ...graph, expressionCount: projector.count },
     dependencies: compiled.fieldIds.flatMap((id) => fields.filter((field) => field.fieldId === id)),
   };
 }

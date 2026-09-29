@@ -13,6 +13,7 @@ describe('assisted formula projection', () => {
     expect(feedback.ok).toBe(true);
     if (!feedback.ok) throw new Error(feedback.message);
     expect(feedback.dataType).toBe('bigint');
+    expect(feedback.graph.expressionCount).toBe(feedback.graph.nodes.length);
     expect(feedback.dependencies.map((field) => field.fieldId)).toEqual(['price-id', 'qty-id']);
     expect(feedback.graph.nodes.map((node) => node.data.label).join(' ')).toContain('MULTIPLY');
     expect(feedback.graph.nodes.some((node) => node.data.fieldReference != null)).toBe(false);
