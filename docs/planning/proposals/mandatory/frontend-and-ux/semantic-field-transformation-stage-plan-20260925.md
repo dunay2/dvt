@@ -237,10 +237,30 @@ movement remains layout-only. The existing one-output-edge rule still applies.
 | Chain one published result between staged Transforms | DvtNodeAuthoringMetadata / ConfigureCanvasDvtNode; ProjectCanvasRelationalTree query | Existing staged document resolver, card detail projection, scoped field gesture and connection adapter | Projection, command/race, native drag, SQL/Preview and save/reopen tests | New DTO, parallel formula model, JOIN normalization, database writes |
 
 The first implementation proof covers native field drag, nested formula SQL,
-atomic Apply and save/reopen. Provider-backed Preview remains an acceptance
-check: the current local live runner reseeds shared `public` and `raw` tables,
-so it must not be used for this proof. The later isolated PostgreSQL vertical
-must exercise Preview without touching those tables.
+atomic Apply and save/reopen. Complete provider acceptance through the existing
+protected live runner, pointing it only at a newly allocated PostgreSQL instance
+with a private volume and explicit connection binding. The runner seeds
+`public` and `raw` fixtures, so a shared or user database is forbidden. Verify
+the target port and mount before launch; retain the ordinary authenticated
+Preview, planning, Run and publication adapters.
+
+Use one focused staged-chain browser journey in both the fast gesture regression
+and the first live vertical. Start that vertical from a Read, author A and B
+through the editor, and drag only A's calculated result into B. Add empty-text
+and NULL outputs in B, save/reopen, and compare exact schema and row oracles
+through Preview and published PostgreSQL results. Setup imports are not proof
+of authoring a Transform. Keep runtime assertions and UI gestures in their
+existing separate support owners; do not add another runner or grow the stage
+specification into a second test framework.
+
+The live composition also exercises staged-card disclosure: a configured but
+unapplied card uses expanded geometry only when explicitly expanded or when
+zoom reveals details, exactly like an applied card. Derive both sets of visible
+sizes in `useCanvasRelationalTreePlacement`; the view does not repair geometry
+or own semantic writes. A Window remains a canonical Project after configuration;
+browser gestures address its existing relation identity, not its former pending
+operator tag. Cover collapse/expand/zoom with an isolated hook regression and
+retain the complete Window/Sort/Fetch provider oracle.
 
 ```mermaid
 flowchart LR

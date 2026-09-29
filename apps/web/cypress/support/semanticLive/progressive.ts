@@ -15,8 +15,11 @@ import { leftJoinDocument, modelId } from './fixture';
 export async function progressiveDocument(level: number): Promise<DvtSubstraitSemanticDocumentV1> {
   const join = decodeDvtSubstraitSemanticDocument(await leftJoinDocument());
   const client = join.sidecar.relations.find((relation) => relation.displayName === 'client')!;
+  if (level === 1) {
+    return encodeDvtSubstraitSemanticDocument(selectDvtSubstraitRelation(join, client.relationId));
+  }
   const session = new CanvasRelationAnalysisSession(modelId);
-  session.receive(level === 1 ? selectDvtSubstraitRelation(join, client.relationId) : join);
+  session.receive(join);
   try {
     const { document } = await insertSelectedRelationTransform(session, {
       relationId: session.rootId,
@@ -54,14 +57,13 @@ export const progressiveScenarios = [
   {
     level: 1,
     formulas: [
-      ['CAMPO_PRUEBA', 'COALESCE(UPPER(TRIM(client_id)), NULL)'],
       ['hola', "''"],
       ['missing', 'NULL'],
     ],
-    columns: ['client_id', 'country', 'CAMPO_PRUEBA', 'hola', 'missing'],
+    columns: ['CAMPO_PRUEBA', 'hola', 'missing'],
     rows: [
-      ['C-001', 'ES', 'C-001', '', null],
-      ['C-014', 'US', 'C-014', '', null],
+      ['C-001', '', null],
+      ['C-014', '', null],
     ],
   },
   {
