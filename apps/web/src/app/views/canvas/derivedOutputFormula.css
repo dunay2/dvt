@@ -1,3 +1,26 @@
+.formula-form {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.formula-actions {
+  position: sticky;
+  bottom: -0.75rem;
+  z-index: 1;
+  background: var(--surface-panel);
+  border-top: 1px solid var(--border-subtle);
+  padding: 0.65rem 0;
+}
+.formula-save-reason {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+.formula-action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
 .formula-workspace {
   display: grid;
   gap: 0.5rem;

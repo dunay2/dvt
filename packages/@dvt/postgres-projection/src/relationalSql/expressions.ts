@@ -55,6 +55,25 @@ function lower(
     if (rex.value.typeVariationReference !== 0)
       return unsupported('Literal type variation is outside the admitted PostgreSQL profile.');
     const type = deriveExpressionSchema(expression, scope.fields).type;
+    if (rex.value.literalType.case === 'null') {
+      if (dvtSubstraitExpressionReader.nullType(expression) == null)
+        return unsupported('NULL type is outside the admitted PostgreSQL profile.');
+      const names: Partial<Record<NonNullable<Type['kind']['case']>, string>> = {
+        string: 'text',
+        i64: 'bigint',
+        fp64: 'float8',
+        bool: 'boolean',
+      };
+      return {
+        ast: {
+          TypeCast: {
+            arg: { A_Const: { isnull: true } },
+            typeName: { names: [pgString(names[type.kind.case!]!)], typemod: -1 },
+          },
+        },
+        type,
+      };
+    }
     const value = dvtSubstraitExpressionReader.literalValue(expression);
     if (value == null) return unsupported('Literal is outside the admitted PostgreSQL profile.');
     const renderers = {

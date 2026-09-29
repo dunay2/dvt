@@ -78,6 +78,69 @@ describe('Transform name and formula syntax adapter', () => {
     expect(reopened.fieldIds).toEqual(result.fieldIds);
   });
 
+  it.each([
+    ['NULL', 'string'],
+    ['null', 'string'],
+    ['COALESCE(UPPER("first_name"), NULL)', 'string'],
+    ['COALESCE(NULL, NULL)', 'string'],
+    ['TRIM(NULL)', 'string'],
+    ['price * NULL', 'bigint'],
+    ['NULL + 2.5', 'double precision'],
+    ['CAST(NULL AS BIGINT)', 'bigint'],
+    ['CAST(NULL AS DOUBLE PRECISION)', 'double precision'],
+    ['CAST(NULL AS BOOLEAN)', 'boolean'],
+  ])('binds and round trips typed NULL: %s', (formula, dataType) => {
+    const plan = create(PlanSchema);
+    const result = compileDerivedOutputFormula({
+      formula: formula!,
+      fields,
+      plan,
+      provider: 'postgres',
+    });
+    expect(result.dataType).toBe(dataType);
+    const text = describeDerivedOutputFormula(
+      plan,
+      result.expression,
+      fields.map((field) => field.name)
+    );
+    expect(text).not.toBeNull();
+    const reopened = compileDerivedOutputFormula({
+      formula: text!,
+      fields,
+      plan: create(PlanSchema),
+      provider: 'postgres',
+    });
+    expect(reopened.dataType).toBe(result.dataType);
+    expect(reopened.fieldIds).toEqual(result.fieldIds);
+    if (result.expression.rexType.case === 'literal')
+      expect(result.expression.rexType.value.literalType.case).toBe('null');
+  });
+
+  it.each([
+    'CAST(NULL AS UUID)',
+    'CAST(1 AS TEXT)',
+    'UPPER(CAST(NULL AS BIGINT))',
+    'UPPER(NULL, NULL)',
+    'missing(NULL)',
+  ])('does not widen function or cast admission for %s', (formula) => {
+    expect(validateDerivedOutputFormula({ formula, fields, provider: 'postgres' })).toBe(false);
+  });
+
+  it('distinguishes a quoted null field, null text and empty text from NULL', () => {
+    const args = {
+      fields: [{ ...fields[0]!, name: 'null' }],
+      plan: create(PlanSchema),
+      provider: 'postgres',
+    };
+    expect(compileDerivedOutputFormula({ ...args, formula: '"null"' }).fieldIds).toEqual(['first']);
+    expect(describeDerivedOutputFormula(args.plan, fields[0]!.expression, ['null'])).toBe('"null"');
+    for (const formula of ["'null'", "''"])
+      expect(compileDerivedOutputFormula({ ...args, formula }).expression.rexType).toMatchObject({
+        case: 'literal',
+        value: { literalType: { case: 'string' } },
+      });
+  });
+
   it('compiles multiplication and preserves precedence with constants', () => {
     const result = compileDerivedOutputFormula({
       formula: '(price + 2) * quantity',

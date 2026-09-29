@@ -292,6 +292,40 @@ cancel, unchanged authoring during insertion, and revision-bound submission.
 Cross-card mapping and drag-out removal remain separate acceptance obligations;
 this workspace alone does not close the complete field-flow editor.
 
+### NULL literals and reachable formula actions (#3422)
+
+The formula adapter must recognize case-insensitive `NULL` as a literal, not
+as a field. Quoted `"null"` remains a field and `'null'` remains text. Reuse
+Substrait's typed nullable literal and the existing schema analysis; no null
+sentinel may be persisted as a field or a second expression representation.
+Resolve a bare NULL operand against the existing admitted function signatures.
+A standalone NULL (or an all-NULL text expression) defaults to nullable text.
+`CAST(NULL AS TEXT|BIGINT|DOUBLE PRECISION|BOOLEAN)` makes the type explicit and
+preserves typed literal edit/reopen. This is bounded null-literal syntax, not
+admission of arbitrary casts or new function signatures. Incompatible operands,
+unsupported casts, unknown functions and malformed types still fail closed.
+
+```mermaid
+flowchart LR
+  Before[NULL parsed as field] --> Error[Unknown field]
+  Formula[Formula NULL token] --> Bind[Existing catalog resolves operand type]
+  Bind --> Literal[Canonical typed nullable literal]
+  Literal --> Command[ConfigureCanvasDvtNode]
+  Literal --> Tree[ProjectCanvasRelationalTree]
+  Command --> Preview[PreviewCanvasTransformRows: typed SQL NULL]
+```
+
+The PostgreSQL renderer must preserve the declared nullable type with a typed
+NULL cast, rejecting unbound, required or unsupported types and variations.
+Null is distinct from empty text throughout tree display, save/reopen and Preview.
+The existing explicit formula submit/cancel actions remain visible within the
+inspector while its content scrolls. The model-level Apply action does not
+silently submit an unfinished formula. Missing names, conflicts and invalid
+formulas expose the blocking reason alongside those actions. Prove the user's
+named TRIM field and COALESCE with NULL at a short viewport, then Apply/reopen.
+This extends the existing formula and PostgreSQL expression adapters, not the
+inspector's semantic responsibilities or the set of command/query rails.
+
 ### Card detail convergence (#3422)
 
 Every admitted relational card exposes an explicitly collapsible read-only

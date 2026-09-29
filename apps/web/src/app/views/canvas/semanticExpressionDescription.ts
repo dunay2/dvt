@@ -9,7 +9,7 @@ export function literalLabel(expression: Expression): string {
   if (value?.dataType === 'precisionTimestampTz') return value.value;
   const literal = expression.rexType.value.literalType;
   if (literal.case === 'string') return `'${literal.value.replaceAll("'", "''")}'`;
-  if (literal.case === undefined) return 'NULL';
+  if (literal.case === 'null' || literal.case === undefined) return 'NULL';
   return String(literal.value);
 }
 

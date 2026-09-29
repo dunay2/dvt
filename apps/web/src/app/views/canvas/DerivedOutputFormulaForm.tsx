@@ -1,5 +1,5 @@
 /** One text draft submitted through the existing revision-bound command. */
-import { useMemo, useState, type FormEvent } from 'react';
+import { useId, useMemo, useState, type FormEvent } from 'react';
 import { DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -35,6 +35,7 @@ export function DerivedOutputFormulaForm({
   onCancel: () => void;
 }>): JSX.Element {
   const [alias, setAlias] = useState(initial?.alias ?? '');
+  const reasonId = useId();
   const [formula, setFormula] = useState(initial?.formula ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +46,7 @@ export function DerivedOutputFormulaForm({
   const suggestions = useMemo(() => formulaSuggestions(fields, provider), [fields, provider]);
   const aliasError =
     alias.trim() === ''
-      ? null
+      ? copy.aliasRequired
       : !DvtSemanticFieldNameV1Schema.safeParse(alias.trim()).success
         ? copy.aliasInvalid
         : unavailableAliases.includes(alias.trim())
@@ -76,7 +77,7 @@ export function DerivedOutputFormulaForm({
   return (
     <form
       data-slot="canvas-derived-output-form"
-      className="space-y-3"
+      className="formula-form"
       aria-busy={busy}
       onSubmit={(event) => void submit(event)}
       onKeyDown={(event) => {
@@ -95,6 +96,7 @@ export function DerivedOutputFormulaForm({
           autoFocus
           disabled={busy}
           aria-invalid={aliasError != null}
+          aria-describedby={reasonId}
           onChange={(event) => {
             setAlias(event.currentTarget.value);
             setError(null);
@@ -115,29 +117,33 @@ export function DerivedOutputFormulaForm({
         onInvalidDrop={() => setError(copy.formulaInvalid)}
       />
       <DerivedOutputFormulaFeedback feedback={feedback} copy={copy} empty={formula.trim() === ''} />
-      {error == null && aliasError == null ? null : (
-        <p role="alert" className="formula-diagnostic">
-          {error ?? aliasError}
+      <div className="formula-actions">
+        <p
+          id={reasonId}
+          role={error != null || aliasError != null ? 'alert' : 'status'}
+          className="formula-save-reason"
+        >
+          {error ?? aliasError ?? (!feedback.ok ? copy.formulaInvalid : copy.applyHint)}
         </p>
-      )}
-      <div className="flex justify-end gap-2">
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          data-slot="canvas-derived-output-cancel"
-          onClick={onCancel}
-          disabled={busy}
-        >
-          {copy.cancel}
-        </Button>
-        <Button
-          type="submit"
-          size="sm"
-          disabled={busy || alias.trim() === '' || aliasError != null || !feedback.ok}
-        >
-          {initial == null ? copy.save : copy.update}
-        </Button>
+        <div className="formula-action-buttons">
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            data-slot="canvas-derived-output-cancel"
+            onClick={onCancel}
+            disabled={busy}
+          >
+            {copy.cancel}
+          </Button>
+          <Button
+            type="submit"
+            size="sm"
+            disabled={busy || alias.trim() === '' || aliasError != null || !feedback.ok}
+          >
+            {initial == null ? copy.save : copy.update}
+          </Button>
+        </div>
       </div>
     </form>
   );

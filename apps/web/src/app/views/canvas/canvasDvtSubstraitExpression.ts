@@ -94,6 +94,7 @@ export const dvtSubstraitExpression = {
     });
   },
   literalValue: dvtSubstraitExpressionReader.literalValue,
+  nullType: dvtSubstraitExpressionReader.nullType,
 
   ensureScalarFunction(
     plan: Plan,

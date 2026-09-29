@@ -42,7 +42,7 @@ export function formulaSuggestions(
         detail: `${fn.name.toUpperCase()}(${Array.from({ length: fn.minimumArgumentCount }, (_, index) => `arg${index + 1}`).join(', ')})`,
         argumentCount: fn.minimumArgumentCount,
       })),
-    ...["''", '0', 'true', 'false'].map((text): FormulaSuggestion => ({
+    ...["''", 'NULL', '0', 'true', 'false'].map((text): FormulaSuggestion => ({
       kind: 'literal',
       label: text,
       text,

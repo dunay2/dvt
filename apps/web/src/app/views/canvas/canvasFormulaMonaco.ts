@@ -15,7 +15,7 @@ export function configureFormulaEditor(
         root: [
           [/'([^']|'')*'/, 'string'],
           [/"([^"]|"")*"/, 'variable'],
-          [/\b(?:true|false)\b/i, 'keyword'],
+          [/\b(?:true|false|null|cast|as)\b/i, 'keyword'],
           [/\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b/, 'number'],
           [/[A-Za-z_]\w*(?=\s*\()/, 'type.identifier'],
           [/[+*/-]/, 'operator'],

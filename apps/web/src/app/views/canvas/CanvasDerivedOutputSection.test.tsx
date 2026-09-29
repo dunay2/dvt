@@ -43,6 +43,9 @@ describe('selected relation derived-output section', () => {
       )
     );
     const formula = container.querySelector<HTMLTextAreaElement>('textarea')!;
+    expect(container.querySelector('.formula-save-reason')?.textContent).toContain(
+      'Enter an output name'
+    );
     await act(async () =>
       fireEvent.click(container.querySelector('[data-slot="formula-operand"]')!)
     );
@@ -69,6 +72,43 @@ describe('selected relation derived-output section', () => {
     );
     await act(async () => fireEvent.submit(container.querySelector('form')!));
     expect(onSubmit).toHaveBeenCalledWith({ alias: 'normalized', formula: 'UPPER("customer")' });
+  });
+
+  it('submits a named NULL constant through the same explicit action', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(null);
+    const onCancel = vi.fn();
+    await act(async () =>
+      root.render(
+        <DerivedOutputFormulaForm
+          fields={[]}
+          provider="postgres"
+          dragScope={{ rootId: 'root', revision: 1, references: [] }}
+          copy={resolveCanvasSemanticEditorCopy('en').derivedOutput}
+          unavailableAliases={[]}
+          onSubmit={onSubmit}
+          onCancel={onCancel}
+        />
+      )
+    );
+    await act(async () =>
+      fireEvent.change(container.querySelector('input[name="alias"]')!, {
+        target: { value: 'CAMPO_PRUEBA' },
+      })
+    );
+    const insertNull = [
+      ...container.querySelectorAll<HTMLButtonElement>('.formula-tools button'),
+    ].find((button) => button.textContent === 'NULL')!;
+    await act(async () => fireEvent.click(insertNull));
+    expect(container.querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled).toBe(
+      false
+    );
+    expect(container.querySelector('.formula-save-reason')?.textContent).toContain(
+      'Save this field first'
+    );
+    expect(onSubmit).not.toHaveBeenCalled();
+    await act(async () => fireEvent.submit(container.querySelector('form')!));
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith({ alias: 'CAMPO_PRUEBA', formula: 'NULL' });
+    expect(onCancel).toHaveBeenCalledOnce();
   });
 
   it('stays read-only until requested and commits one revision-bound document', async () => {

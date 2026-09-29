@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { resolveDvtSubstraitColumnFunctions } from '@dvt/postgres-projection';
+import {
+  resolveDvtSubstraitColumnFunctions,
+  projectSubstraitToPostgresSql,
+} from '@dvt/postgres-projection';
 import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { selectedUnaryScenario } from './canvasSelectedUnary.test-support';
@@ -21,6 +24,35 @@ function capability(name: 'trim' | 'upper'): string {
 }
 
 describe('selected relation derived output authoring', () => {
+  it.each(['NULL', 'COALESCE(TRIM(first_name), NULL)', 'CAST(NULL AS BIGINT)'])(
+    'publishes and renders the authored NULL expression: %s',
+    async (formula) => {
+      const session = new CanvasRelationAnalysisSession('null-authoring');
+      session.receive(connectedNamesProjectionDraft());
+      const document = await applySelectedRelationDerivedOutput(session, {
+        intent: 'edit',
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        alias: 'CAMPO_PRUEBA',
+        formula,
+      });
+      const field = document.sidecar.fields.find((entry) => entry.displayName === 'CAMPO_PRUEBA')!;
+      expect(field).toBeDefined();
+      const projection = await projectSubstraitToPostgresSql(document);
+      expect(projection.sql).toContain('NULL');
+      expect(projection.projection.outputs.at(-1)).toMatchObject({
+        name: 'CAMPO_PRUEBA',
+        nullable: true,
+      });
+      const reopened = new CanvasRelationAnalysisSession('null-reopened');
+      reopened.receive(document);
+      const schema = await reopened.query(reopened.rootId);
+      expect(schema.bindings.at(-1)?.fieldId).toBe(field.fieldId);
+      expect(schema.fields.at(-1)?.type.kind.case).toBe(
+        formula.includes('BIGINT') ? 'i64' : 'string'
+      );
+    }
+  );
   it('creates an empty string and edits its formula without changing FieldId or neighbors', async () => {
     const session = new CanvasRelationAnalysisSession('formula-edit');
     session.receive(connectedNamesProjectionDraft());

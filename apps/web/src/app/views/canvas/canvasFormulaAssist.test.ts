@@ -25,6 +25,20 @@ describe('assisted formula projection', () => {
     expect(projectFormulaFeedback('price', fields, 'postgres').ok).toBe(false);
   });
 
+  it('shows NULL as a literal, not an object or a field dependency', () => {
+    const feedback = projectFormulaFeedback(
+      'COALESCE(UPPER("customer name"), NULL)',
+      fields,
+      'postgres'
+    );
+    expect(feedback.ok).toBe(true);
+    if (!feedback.ok) throw new Error(feedback.message);
+    expect(feedback.dependencies.map((field) => field.name)).toEqual(['customer name']);
+    expect(feedback.graph.nodes.some((node) => node.data.label.includes('NULL'))).toBe(true);
+    expect(JSON.stringify(feedback.graph)).not.toContain('[object Object]');
+    expect(formulaSuggestions(fields, 'postgres').some((item) => item.text === 'NULL')).toBe(true);
+  });
+
   it.each(['price * unknown', 'price +', 'price * "customer name"', '1; select secret'])(
     'reports the compiler failure: %s',
     (formula) => {

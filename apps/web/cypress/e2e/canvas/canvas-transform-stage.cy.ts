@@ -57,6 +57,16 @@ describe('Semantic dataset Transform', () => {
       cy.get(formulaInput).type("'hola'", { force: true });
       cy.get(formulaText).should('contain.text', "UPPER('hola')");
       cy.get('.formula-result').should('contain.text', 'string').and('contain.text', 'UPPER');
+      cy.get(formulaInput).type("{selectall}COALESCE(UPPER('hola'), NULL)", { force: true });
+      cy.get('.formula-result')
+        .should('contain.text', 'NULL')
+        .and('not.contain.text', '[object Object]');
+      cy.get('[data-slot="formula-editor"] .squiggly-error').should('not.exist');
+      cy.get('button[type="submit"]').should(($button) => {
+        const bounds = $button[0]!.getBoundingClientRect();
+        expect(bounds.bottom).to.be.lessThan(720);
+        expect(bounds.top).to.be.greaterThan(0);
+      });
       cy.get('button[type="submit"]').should('be.enabled').click();
     });
     cy.get(form).should('not.exist');
@@ -98,6 +108,24 @@ describe('Semantic dataset Transform', () => {
           .should('contain', 'fallback_name')
           .and('contain', 'CONCAT');
       });
+    cy.viewport(1280, 600);
+    cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').click();
+    cy.get(form).within(() => {
+      cy.get('input[name="alias"]').type('CAMPO_PRUEBA');
+      cy.get('[data-slot="formula-operand"][data-kind="field"]').first().click();
+      cy.get(formulaInput).type('{selectall}', { force: true });
+      cy.contains('.formula-palette-tabs button', 'Functions').click();
+      cy.contains('[data-slot="formula-operand"]', 'TRIM').click();
+      cy.get('.formula-result').should('contain.text', 'TRIM');
+      cy.get('button[type="submit"]')
+        .should('be.enabled')
+        .and(($button) => {
+          expect($button[0]!.getBoundingClientRect().bottom).to.be.lessThan(600);
+        })
+        .click();
+    });
+    cy.get(form).should('not.exist');
+    cy.viewport(1280, 720);
     cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();
     cy.get(inspector).find('input').filter('[value="normalized_name"]').should('exist');
     cy.get(inspector)
@@ -132,7 +160,9 @@ describe('Semantic dataset Transform', () => {
     cy.get(form).should('not.exist');
     cy.get(inspector)
       .find('[data-slot="canvas-derived-output"]')
-      .should('have.length', 3)
+      .should('have.length', 4)
+      .and('contain', 'CAMPO_PRUEBA')
+      .and('contain', 'NULL')
       .and('contain', 'CONCAT')
       .and('contain', 'total');
     cy.screenshot('transform-name-formula-properties');
@@ -168,6 +198,7 @@ describe('Semantic dataset Transform', () => {
         .trigger('dragover', { dataTransfer })
         .trigger('drop', { dataTransfer });
       cy.get(formulaText).should('contain.text', 'UPPER("normalized_name")');
+      cy.get('[data-slot="formula-editor"] .squiggly-error').should('not.exist');
     });
     cy.get(form).find('button[type="submit"]').should('be.enabled');
     cy.then(() =>
