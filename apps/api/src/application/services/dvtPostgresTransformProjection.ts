@@ -30,7 +30,10 @@ export async function projectDvtPostgresTransform(
     targetId: closure.transform.id,
     documents: closure.documents,
     sources: new Map(closure.sources.map(({ node, ref }) => [node.id, ref])),
-    edges: closure.edges.map((edge) => ({ ...edge, inputBindings: readDvtInputBindings(edge) })),
+    edges: closure.edges.map((edge) => {
+      const inputBindings = readDvtInputBindings(edge);
+      return { ...edge, ...(inputBindings == null ? {} : { inputBindings }) };
+    }),
     sourcePublications: new Map(
       closure.sources.flatMap(({ node }) => {
         const fields = dvtSourcePublication(node);
