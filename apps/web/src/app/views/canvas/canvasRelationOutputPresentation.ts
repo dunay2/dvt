@@ -23,7 +23,7 @@ export async function presentRelationOutputSelection(
       )
     )
   ).flat();
-  const slots = relationOutputSlots(root, inputs);
+  const slots = relationOutputSlots({ ...root, plan: entry.document.plan }, inputs);
   signal?.throwIfAborted();
   const byReference = new Map(columns.map((column) => [column.reference, column]));
   const hidden = slots

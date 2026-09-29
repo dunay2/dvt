@@ -2,6 +2,7 @@
 import type { Expression } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
+import { sortDirectionLabel } from './semanticWorkbenchRelationMetadata';
 
 export function literalLabel(expression: Expression): string {
   if (expression.rexType.case !== 'literal') return 'literal';
@@ -58,6 +59,31 @@ export function createSemanticExpressionDescription(plan: Plan) {
       }
       case 'literal':
         return literalLabel(expression);
+      case 'windowFunction': {
+        const window = expression.rexType.value;
+        const args = window.arguments.flatMap((argument) =>
+          argument.argType.case === 'value'
+            ? [describeExpression(argument.argType.value, fields)]
+            : argument.argType.case === 'enum'
+              ? [argument.argType.value]
+              : []
+        );
+        const partitions = window.partitions.map((item) => describeExpression(item, fields));
+        const sorts = window.sorts.flatMap((sort) =>
+          sort.expr == null
+            ? []
+            : [
+                `${describeExpression(sort.expr, fields)} ${sort.sortKind.case === 'direction' ? sortDirectionLabel(sort.sortKind.value) : ''}`.trim(),
+              ]
+        );
+        const scope = [
+          partitions.length === 0 ? '' : `PARTITION BY ${partitions.join(', ')}`,
+          sorts.length === 0 ? '' : `ORDER BY ${sorts.join(', ')}`,
+        ]
+          .filter(Boolean)
+          .join(' ');
+        return `${functionName(window.functionReference)}(${args.join(', ')}) OVER (${scope})`;
+      }
       case 'scalarFunction': {
         const scalar = expression.rexType.value;
         const name = functionName(scalar.functionReference);
@@ -78,7 +104,7 @@ export function createSemanticExpressionDescription(plan: Plan) {
             : args.length === 2 && operator !== name
               ? `${args[0]} ${operator} ${args[1]}`
               : `${operator}(${args.join(', ')})`;
-        return nested && (name === 'and' || name === 'or') ? `(${detail})` : detail;
+        return nested && args.length === 2 && operator !== name ? `(${detail})` : detail;
       }
       default:
         return expression.rexType.case ?? 'expression';

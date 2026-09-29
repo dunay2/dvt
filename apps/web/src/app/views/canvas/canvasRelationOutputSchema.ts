@@ -5,15 +5,18 @@ import {
   type IndexedRelation,
   type RelationAnalysisResult,
   type SchemaField,
+  type SubstraitDocument,
 } from '@dvt/substrait-analysis';
 import { relationOutputMapping } from './canvasRelationOutputBindings';
 import { joinOutputScope } from './canvasSelectedJoinType';
+import { createSemanticExpressionDescription } from './semanticExpressionDescription';
 
 type Fields = readonly DvtSubstraitFieldBindingV1[];
 export type RelationOutputSlot = Readonly<{
   slot: number;
   key: string;
   name: string;
+  expression?: string;
   schema: SchemaField;
   output: DvtSubstraitFieldBindingV1 | undefined;
   fields: Fields;
@@ -42,7 +45,7 @@ function inputOrigins(
 }
 
 export function relationOutputSlots(
-  entry: IndexedRelation,
+  entry: IndexedRelation & Pick<SubstraitDocument, 'plan'>,
   inputs: readonly RelationAnalysisResult[]
 ): readonly RelationOutputSlot[] {
   const natural = deriveOperatorSchema(
@@ -51,6 +54,8 @@ export function relationOutputSlots(
   );
   const mapping = relationOutputMapping(entry.relation, natural.length);
   const origins = inputOrigins(entry, inputs);
+  const inputNames = origins.map((fields) => fields[0]?.displayName ?? '');
+  const describe = createSemanticExpressionDescription(entry.plan).describeExpression;
   const fieldsById = new Map(
     [...inputs.flatMap((input) => input.bindings), ...entry.fields].map((field) => [
       field.fieldId,
@@ -116,6 +121,18 @@ export function relationOutputSlots(
       );
     };
     append(schema, [], output);
-    return { slot, key, name, schema, output, fields };
+    const expression =
+      entry.relation.relType.case === 'project'
+        ? entry.relation.relType.value.expressions[slot - origins.length]
+        : undefined;
+    return {
+      slot,
+      key,
+      name,
+      schema,
+      output,
+      fields,
+      ...(expression == null ? {} : { expression: describe(expression, inputNames) }),
+    };
   });
 }

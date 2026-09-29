@@ -14,9 +14,63 @@ import { CanvasRelationalFieldSelectionProvider } from './CanvasRelationalFieldS
 import { CanvasRelationalScalarTree } from './CanvasRelationalScalarTree';
 import { projectSemanticWorkbenchRelations } from './semanticWorkbenchRelations';
 import { relationalExpressionSlices } from './canvasRelationalExpressionSlice';
+import { CanvasRelationOutputs } from './CanvasRelationOutputs';
 
 describe('remove a complete expression from its tree root', () => {
   setupWorkbenchTest();
+  it.each([false, true])(
+    'shows the excluded formula and adds only its result (readonly=%s)',
+    async (disabled) => {
+      const session = new CanvasRelationAnalysisSession('output-inspector');
+      session.receive(connectedNamesProjectionDraft());
+      await applySelectedRelationDerivedOutput(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        intent: 'edit',
+        alias: 'trimmed_name',
+        formula: 'TRIM(first_name)',
+      });
+      const initial = await changeSelectedRelationOutputs(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        outputs: [],
+      });
+      const writes = vi.fn();
+      function Host(): React.JSX.Element {
+        const [document, setDocument] = useState(initial);
+        const analysis = useCanvasRelationAnalysisSession(document, 'output-inspector');
+        return (
+          <CanvasRelationAnalysisContext.Provider value={analysis}>
+            <CanvasRelationOutputs
+              relationId={session.rootId}
+              disabled={disabled}
+              onChange={(next) => {
+                writes(next);
+                setDocument(next);
+              }}
+            />
+          </CanvasRelationAnalysisContext.Provider>
+        );
+      }
+      await act(async () => root.render(<Host />));
+      const rows = [...container.querySelectorAll('[data-slot="relation-output-field"]')];
+      expect(rows).toHaveLength(3);
+      const calculated = rows[2]!;
+      expect(calculated.querySelector('input')?.value).toBe('trim(first_name)');
+      const add = calculated.querySelector<HTMLButtonElement>('button')!;
+      expect(add.getAttribute('aria-label')).toContain('trim(first_name)');
+      expect(add.disabled).toBe(disabled);
+      await act(async () => add.click());
+      expect(writes).toHaveBeenCalledTimes(disabled ? 0 : 1);
+      if (disabled) return;
+      session.receive(writes.mock.calls[0]![0]);
+      expect((await session.query(session.rootId)).bindings).toHaveLength(1);
+      expect(container.querySelectorAll('[data-included="true"]')).toHaveLength(1);
+      expect(
+        calculated.querySelector('[data-slot="relation-output-expression"]')?.textContent
+      ).toBe('trim(first_name)');
+    }
+  );
   it.each([
     { emitted: true, gesture: 'click', editable: true },
     { emitted: false, gesture: 'click', editable: true },

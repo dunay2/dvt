@@ -485,6 +485,21 @@ describe('Semantic dataset Transform', () => {
       .find('[data-slot="relation-output-toggle"][data-field-name="CAMPO_PRUEBA"]')
       .click()
       .should('have.attr', 'data-included', 'false');
+    // An excluded calculated result must remain recognizable, not just expression_N.
+    cy.get(inspector)
+      .find('[data-slot="relation-output-toggle"][data-included="false"]')
+      .filter('[aria-label*="trim("]')
+      .as('calculatedOutput', { type: 'static' })
+      .closest('[data-slot="relation-output-field"]')
+      .find('input')
+      .should(($input) => expect($input.val()).to.match(/^trim\(.+\)$/));
+    cy.get('@calculatedOutput').click().should('have.attr', 'data-included', 'true');
+    cy.get('@calculatedOutput')
+      .closest('[data-slot="relation-output-field"]')
+      .find('[data-slot="relation-output-expression"]')
+      .should('contain.text', 'trim(');
+    cy.screenshot('transform-recognizable-calculated-output');
+    cy.get('@calculatedOutput').click().should('have.attr', 'data-included', 'false');
     const tree = '[data-operator="project"]';
     let retainedOutputIds: string[] = [];
     cy.get(tree)
