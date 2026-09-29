@@ -62,7 +62,7 @@ export const progressiveScenarios = [
     formulas: [
       ['label', "CONCAT_WS('/', client_id, COALESCE(country, 'UNKNOWN'))"],
       ['line_total', '(2.5 + 2.5) * 2.0'],
-      ['unmatched', "country IS NULL OR client_id = 'C-001'"],
+      ['unmatched', "(country IS NULL OR client_id = 'C-999') AND client_id <> ''"],
     ],
     columns: [
       'order_id',
@@ -74,16 +74,18 @@ export const progressiveScenarios = [
       'unmatched',
     ],
     rows: [
-      ['1', 'C-001', 'C-001', 'ES', 'C-001/ES', '10', 'true'],
+      ['1', 'C-001', 'C-001', 'ES', 'C-001/ES', '10', 'false'],
       ['2', 'C-014', null, null, 'C-014/UNKNOWN', '10', 'true'],
-      ['3', 'C-001', 'C-001', 'ES', 'C-001/ES', '10', 'true'],
+      ['3', 'C-001', 'C-001', 'ES', 'C-001/ES', '10', 'false'],
     ],
   },
   {
     level: 3,
     formulas: [
       ['region', "COALESCE(country, 'UNKNOWN')"],
-      ['line_total', '12.5 * 2.0'],
+      ['unit_price', '12.5'],
+      ['quantity', '2.0'],
+      ['line_total', 'unit_price * quantity'],
     ],
     columns: ['region', 'revenue', 'rank'],
     rows: [['ES', '50', '2']],

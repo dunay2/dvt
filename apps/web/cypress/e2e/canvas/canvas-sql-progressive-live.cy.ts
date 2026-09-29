@@ -123,7 +123,9 @@ describe('Progressive SQL verticals', () => {
             .trigger('drop', { dataTransfer });
         });
         cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
-        cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+        cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
+        cy.wait('@saveDraft').its('response.statusCode').should('eq', 200);
+        cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
       }
       cy.then(() => {
         expect(requests, 'Editing does not run data queries').to.equal(0);
