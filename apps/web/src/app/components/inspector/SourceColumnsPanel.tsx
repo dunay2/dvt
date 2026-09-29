@@ -1,223 +1,21 @@
-/** Owned concern: render imported Source columns as a fast schema scanner with focused detail. */
-import { GripVertical } from 'lucide-react';
-import {
-  SourceObjectColumnSchema,
-  SourceObjectConstraintSchema,
-  resolveSourceObjectColumnConstraintSemantics,
-  type SourceObjectColumn,
-  type SourceObjectConstraint,
-} from '@dvt/contracts';
+/** Owned concern: coordinate Source column inspection, focus and existing transfer/order gestures. */
+import { Search, ListFilter } from 'lucide-react';
 import { useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-
-import { Badge } from '../ui/badge';
-import { Input } from '../ui/input';
-import { cn } from '../ui/utils';
-import { inspectorVisualClasses } from './inspectorVisualTokens';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type { CanonicalNode } from '../../types/canonical';
-import { useCanvasInspectorListOrder } from './useCanvasInspectorListOrder';
-import { useInspectorListReorder } from './useInspectorListReorder';
 import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContracts';
 import { writeGraphColumnTransfer } from '../../plugins/graph/graphColumnTransfer';
-
-const COPY = {
-  en: {
-    search: 'Search columns...',
-    columns: 'columns',
-    noColumns: 'No columns are available for this Source.',
-    noMatches: 'No columns match the current search.',
-    exactType: 'Physical type',
-    nullability: 'Nullability',
-    constraints: 'Constraints',
-    notNull: 'Not null',
-    nullable: 'Nullable',
-    primaryKey: 'Primary key',
-    unique: 'Unique',
-    none: '—',
-    listLabel: 'Source columns',
-    reorder: 'Reorder column',
-    reorderHint: 'Drag or press Alt+Up/Down to reorder.',
-    transferHint: 'Drag this column onto a Model to add it to Input.',
-    reordered: 'Column reordered',
-    textFamily: 'Text',
-    structuredFamily: 'Structured',
-    uuidFamily: 'UUID',
-    dateTimeFamily: 'Date/time',
-    networkFamily: 'Network',
-    numericFamily: 'Numeric',
-    booleanFamily: 'Boolean',
-    binaryFamily: 'Binary',
-    otherFamily: 'Other',
-  },
-  es: {
-    search: 'Buscar columnas...',
-    columns: 'columnas',
-    noColumns: 'No hay columnas disponibles para este origen.',
-    noMatches: 'Ninguna columna coincide con la búsqueda.',
-    exactType: 'Tipo físico',
-    nullability: 'Nulabilidad',
-    constraints: 'Restricciones',
-    notNull: 'No nulo',
-    nullable: 'Nullable',
-    primaryKey: 'Clave primaria',
-    unique: 'Única',
-    none: '—',
-    listLabel: 'Columnas del origen',
-    reorder: 'Reordenar columna',
-    reorderHint: 'Arrastra o pulsa Alt+Arriba/Abajo para reordenar.',
-    transferHint: 'Arrastra esta columna a un modelo para añadirla a Input.',
-    reordered: 'Columna reordenada',
-    textFamily: 'Texto',
-    structuredFamily: 'Estructurado',
-    uuidFamily: 'UUID',
-    dateTimeFamily: 'Fecha/hora',
-    networkFamily: 'Red',
-    numericFamily: 'Numérico',
-    booleanFamily: 'Booleano',
-    binaryFamily: 'Binario',
-    otherFamily: 'Otro',
-  },
-} as const;
-
-type SourceColumnFacts = Readonly<{
-  column: SourceObjectColumn;
-  primaryKey: boolean;
-  independentlyUnique: boolean;
-}>;
-
-type TypeCue = Readonly<{
-  token: string;
-  labelKey:
-    | 'textFamily'
-    | 'structuredFamily'
-    | 'uuidFamily'
-    | 'dateTimeFamily'
-    | 'networkFamily'
-    | 'numericFamily'
-    | 'booleanFamily'
-    | 'binaryFamily'
-    | 'otherFamily';
-}>;
-
-function readSourceColumnFacts(node: CanonicalNode): readonly SourceColumnFacts[] {
-  const metadata = node.metadata ?? {};
-  const parsedColumns = SourceObjectColumnSchema.array().safeParse(metadata.columns);
-  if (!parsedColumns.success) return [];
-
-  const parsedConstraints = SourceObjectConstraintSchema.array().safeParse(metadata.constraints);
-  const constraints: SourceObjectConstraint[] = parsedConstraints.success
-    ? parsedConstraints.data
-    : [];
-
-  return parsedColumns.data.map((column) => ({
-    column,
-    ...resolveSourceObjectColumnConstraintSemantics({ constraints }, column.name),
-  }));
-}
-
-function resolveTypeCue(type: string): TypeCue {
-  const normalized = type.trim().toLowerCase();
-  if (/(^|\W)(char|varchar|text|string)/.test(normalized)) {
-    return { token: 'T', labelKey: 'textFamily' };
-  }
-  if (/(json|jsonb|array|struct|map)/.test(normalized)) {
-    return { token: '{}', labelKey: 'structuredFamily' };
-  }
-  if (/uuid/.test(normalized)) {
-    return { token: 'U', labelKey: 'uuidFamily' };
-  }
-  if (/(date|time|timestamp|interval)/.test(normalized)) {
-    return { token: 'DT', labelKey: 'dateTimeFamily' };
-  }
-  if (/(inet|cidr|macaddr)/.test(normalized)) {
-    return { token: 'IP', labelKey: 'networkFamily' };
-  }
-  if (/(int|numeric|decimal|number|real|double|float|serial)/.test(normalized)) {
-    return { token: '#', labelKey: 'numericFamily' };
-  }
-  if (/(bool|boolean)/.test(normalized)) {
-    return { token: 'B', labelKey: 'booleanFamily' };
-  }
-  if (/(bytea|binary|blob)/.test(normalized)) {
-    return { token: '01', labelKey: 'binaryFamily' };
-  }
-  return { token: '·', labelKey: 'otherFamily' };
-}
-
-function ConstraintBadges({ facts }: Readonly<{ facts: SourceColumnFacts }>): JSX.Element {
-  const showUnique = facts.independentlyUnique && !facts.primaryKey;
-  const showNotNull = !facts.column.nullable && !facts.primaryKey;
-
-  return (
-    <span className="ml-auto flex shrink-0 items-center gap-1">
-      {facts.primaryKey ? (
-        <Badge
-          data-slot="source-column-badge-pk"
-          variant="secondary"
-          className="border border-(--status-success) bg-transparent px-1.5 py-0 text-[10px] text-(--status-success)"
-        >
-          PK
-        </Badge>
-      ) : null}
-      {showUnique ? (
-        <Badge
-          data-slot="source-column-badge-uk"
-          variant="secondary"
-          className="border border-(--status-info) bg-transparent px-1.5 py-0 text-[10px] text-(--status-info)"
-        >
-          UK
-        </Badge>
-      ) : null}
-      {showNotNull ? (
-        <Badge
-          data-slot="source-column-badge-nn"
-          variant="secondary"
-          className="px-1.5 py-0 text-[10px]"
-        >
-          NN
-        </Badge>
-      ) : null}
-    </span>
-  );
-}
-
-function TypeFamilyCue({
-  type,
-  labels,
-}: Readonly<{
-  type: string;
-  labels: (typeof COPY)['en'] | (typeof COPY)['es'];
-}>): JSX.Element {
-  const cue = resolveTypeCue(type);
-  return (
-    <span
-      data-slot="source-column-type-cue"
-      title={`${labels[cue.labelKey]} · ${type}`}
-      aria-label={`${labels[cue.labelKey]}: ${type}`}
-      className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-md border border-(--border-subtle) bg-(--surface-selected) px-1 font-mono text-[10px] font-semibold text-(--status-info)"
-    >
-      {cue.token}
-    </span>
-  );
-}
-
-function DetailFact({ label, value }: Readonly<{ label: string; value: string }>): JSX.Element {
-  return (
-    <div className="contents">
-      <dt className={inspectorVisualClasses.inspectorLabel}>{label}</dt>
-      <dd className="min-w-0 break-words text-(--text-primary)">{value}</dd>
-    </div>
-  );
-}
-
-function constraintText(
-  facts: SourceColumnFacts,
-  copy: (typeof COPY)['en'] | (typeof COPY)['es']
-): string {
-  if (facts.primaryKey) return copy.primaryKey;
-  if (facts.independentlyUnique) return copy.unique;
-  return copy.none;
-}
+import { useCanvasInspectorListOrder } from './useCanvasInspectorListOrder';
+import { useInspectorListReorder } from './useInspectorListReorder';
+import {
+  matchesSourceColumn,
+  readSourceColumnFacts,
+  type SourceColumnFilter,
+} from './sourceColumnFacts';
+import { sourceColumnsCopy } from './sourceColumnsCopy';
+import { SourceColumnRow } from './SourceColumnRow';
+import { SourceColumnDetail } from './SourceColumnDetail';
+import styles from './SourceColumns.module.css';
 
 export function SourceColumnsPanel({
   node,
@@ -226,6 +24,8 @@ export function SourceColumnsPanel({
   canReorder = false,
   workspaceLayoutKey = null,
   transferColumns = [],
+  detailColumnName,
+  onDetailColumnChange,
 }: Readonly<{
   node: CanonicalNode;
   beforeBody?: ReactNode;
@@ -233,14 +33,20 @@ export function SourceColumnsPanel({
   canReorder?: boolean;
   workspaceLayoutKey?: string | null;
   transferColumns?: readonly GraphNodeColumn[];
+  detailColumnName: string | null;
+  onDetailColumnChange: (name: string | null) => void;
 }>): JSX.Element {
-  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
-  const copy = applicationLanguage.trim().toLowerCase().startsWith('es') ? COPY.es : COPY.en;
+  const language = useApplicationLanguageStore((state) => state.language);
+  const copy = language.toLowerCase().startsWith('es')
+    ? sourceColumnsCopy.es
+    : sourceColumnsCopy.en;
   const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<SourceColumnFilter>('all');
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const [reorderStatus, setReorderStatus] = useState('');
   const reorderHintId = useId();
   const rowRefs = useRef(new Map<string, HTMLButtonElement>());
+  const returnFocus = useRef<string | null>(null);
   const canonicalFacts = useMemo(() => readSourceColumnFacts(node), [node]);
   const canonicalNames = useMemo(
     () => canonicalFacts.map(({ column }) => column.name),
@@ -252,196 +58,173 @@ export function SourceColumnsPanel({
     listId: 'columns',
     canonicalIds: canonicalNames,
   });
-  const facts = useMemo(() => {
-    const factsByName = new Map(canonicalFacts.map((facts) => [facts.column.name, facts]));
-    return listOrder.orderedIds.flatMap((name) => {
-      const columnFacts = factsByName.get(name);
-      return columnFacts == null ? [] : [columnFacts];
-    });
-  }, [canonicalFacts, listOrder.orderedIds]);
-  const filteredFacts = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    return normalizedQuery.length === 0
-      ? facts
-      : facts.filter(({ column }) => column.name.toLowerCase().includes(normalizedQuery));
-  }, [facts, query]);
-  const selectedFacts =
-    filteredFacts.find(({ column }) => column.name === selectedName) ?? filteredFacts[0] ?? null;
+  const factsByName = new Map(canonicalFacts.map((facts) => [facts.column.name, facts]));
+  const visible = listOrder.orderedIds.flatMap((name) => {
+    const facts = factsByName.get(name);
+    return facts != null && matchesSourceColumn(facts, query, filter) ? [facts] : [];
+  });
+  const selected = visible.find(({ column }) => column.name === selectedName) ?? visible[0];
+  const position = visible.findIndex(({ column }) => column.name === detailColumnName);
   const reorder = useInspectorListReorder({
     orderedIds: listOrder.orderedIds,
-    visibleIds: filteredFacts.map(({ column }) => column.name),
+    visibleIds: visible.map(({ column }) => column.name),
     enabled: canReorder && listOrder.canPersist,
     onMove: listOrder.move,
-    onMoved: (movedName) => {
-      setSelectedName(movedName);
-      rowRefs.current.get(movedName)?.focus();
-      setReorderStatus(copy.reordered + ': ' + movedName);
+    onMoved: (name) => {
+      setSelectedName(name);
+      rowRefs.current.get(name)?.focus();
+      setReorderStatus(`${copy.reordered}: ${name}`);
     },
   });
-
-  const moveSelection = (
-    event: KeyboardEvent<HTMLButtonElement>,
-    currentIndex: number,
-    targetIndex: number
-  ): void => {
-    if (targetIndex === currentIndex || targetIndex < 0 || targetIndex >= filteredFacts.length)
-      return;
+  const moveSelection = (event: KeyboardEvent<HTMLButtonElement>, index: number): void => {
     event.preventDefault();
-    const nextName = filteredFacts[targetIndex]!.column.name;
-    setSelectedName(nextName);
-    rowRefs.current.get(nextName)?.focus();
+    event.stopPropagation();
+    const name = visible[index]?.column.name;
+    if (name == null) return;
+    setSelectedName(name);
+    rowRefs.current.get(name)?.focus();
+  };
+  const openDetail = (name: string): void => {
+    setSelectedName(name);
+    onDetailColumnChange(name);
   };
 
   return (
-    <div data-slot="canvas-source-columns" className="space-y-3">
-      {beforeBody}
-      <div className="flex items-center gap-3">
-        <Input
-          data-slot="source-columns-search"
-          aria-label={copy.search}
-          placeholder={copy.search}
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          className="max-w-[22rem] text-xs md:text-xs"
+    <div data-slot="canvas-source-columns" className={styles.panel}>
+      {detailColumnName != null ? (
+        <SourceColumnDetail
+          facts={factsByName.get(detailColumnName) ?? null}
+          copy={copy}
+          position={position}
+          count={visible.length}
+          onBack={() => {
+            returnFocus.current = visible.some(({ column }) => column.name === detailColumnName)
+              ? detailColumnName
+              : (visible[0]?.column.name ?? null);
+            onDetailColumnChange(null);
+          }}
+          onPrevious={() => {
+            const name = visible[position - 1]?.column.name;
+            if (name != null) openDetail(name);
+          }}
+          onNext={() => {
+            const name = visible[position + 1]?.column.name;
+            if (name != null) openDetail(name);
+          }}
         />
-        <span
-          data-slot="source-columns-visible-count"
-          className="ml-auto text-xs text-(--text-muted)"
-        >
-          {filteredFacts.length} {copy.columns}
-        </span>
-      </div>
-
-      <div className="grid min-h-[36rem] grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] overflow-hidden rounded-lg border border-(--border-subtle) bg-(--surface-panel)">
-        <section className="min-w-0 border-r border-(--border-subtle) p-3">
-          {facts.length === 0 ? (
-            <p className={inspectorVisualClasses.inspectorSubtle}>{copy.noColumns}</p>
-          ) : filteredFacts.length === 0 ? (
-            <p className={inspectorVisualClasses.inspectorSubtle}>{copy.noMatches}</p>
+      ) : (
+        <>
+          {beforeBody}
+          <div className={styles.toolbar}>
+            <div className={styles.search}>
+              <Search aria-hidden="true" />
+              <input
+                type="search"
+                data-slot="source-columns-search"
+                aria-label={copy.search}
+                placeholder={copy.search}
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </div>
+            <label className={styles.filter} data-active={filter !== 'all'} title={copy.filter}>
+              <ListFilter aria-hidden="true" />
+              <select
+                data-slot="source-columns-filter"
+                aria-label={copy.filter}
+                value={filter}
+                onChange={(event) => setFilter(event.target.value as SourceColumnFilter)}
+              >
+                <option value="all">{copy.all}</option>
+                <option value="key">{copy.key}</option>
+                <option value="not-null">{copy.notNull}</option>
+                <option value="nullable">{copy.nullable}</option>
+              </select>
+            </label>
+          </div>
+          <p
+            data-slot="source-columns-visible-count"
+            className={query.trim() || filter !== 'all' ? styles.count : 'sr-only'}
+          >
+            {visible.length} / {canonicalFacts.length} {copy.columns}
+          </p>
+          {visible.length === 0 ? (
+            <p className={styles.empty}>
+              {canonicalFacts.length === 0 ? copy.noColumns : copy.noMatches}
+            </p>
           ) : (
             <>
-              {reorder.canReorder ? (
-                <p id={reorderHintId} className="sr-only">
-                  {copy.reorderHint}
-                </p>
-              ) : null}
+              <p id={reorderHintId} className="sr-only">
+                {reorder.canReorder ? copy.reorderHint : ''}
+              </p>
               <ul
                 role="listbox"
                 aria-label={copy.listLabel}
                 aria-describedby={reorder.canReorder ? reorderHintId : undefined}
-                className="space-y-1"
+                className={styles.list}
               >
-                {filteredFacts.map((columnFacts, index) => {
-                  const selected = selectedFacts?.column.name === columnFacts.column.name;
-                  const dropPlacement = reorder.dropPlacement(columnFacts.column.name);
-                  const transferColumn = transferColumns.find(
-                    (column) => (column.id ?? column.name) === columnFacts.column.name
+                {visible.map((facts, index) => {
+                  const name = facts.column.name;
+                  const transfer = transferColumns.find(
+                    (column) => (column.id ?? column.name) === name
                   );
                   return (
-                    <li key={columnFacts.column.name}>
-                      <button
-                        ref={(element) => {
-                          if (element == null) rowRefs.current.delete(columnFacts.column.name);
-                          else rowRefs.current.set(columnFacts.column.name, element);
+                    <li key={name}>
+                      <SourceColumnRow
+                        facts={facts}
+                        copy={copy}
+                        buttonProps={{
+                          ref: (element) => {
+                            if (element == null) rowRefs.current.delete(name);
+                            else {
+                              rowRefs.current.set(name, element);
+                              if (returnFocus.current === name) {
+                                element.focus();
+                                returnFocus.current = null;
+                              }
+                            }
+                          },
+                          draggable: reorder.canReorder || transfer != null,
+                          title: transfer == null ? undefined : copy.transferHint,
+                          'aria-selected': selected?.column.name === name,
+                          tabIndex: selected?.column.name === name ? 0 : -1,
+                          onClick: () => openDetail(name),
+                          onDragStart: (event) => {
+                            event.stopPropagation();
+                            reorder.startDrag(name, event);
+                            if (transfer != null)
+                              writeGraphColumnTransfer(event, node.id, transfer);
+                          },
+                          onDragEnd: reorder.endDrag,
+                          onDragOver: (event) => reorder.dragOver(name, event),
+                          onDragLeave: reorder.dragLeave,
+                          onDrop: (event) => reorder.drop(name, event),
+                          onKeyDown: (event) => {
+                            if (reorder.moveWithKeyboard(name, event)) return;
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              openDetail(name);
+                            } else if (event.key === 'ArrowDown') moveSelection(event, index + 1);
+                            else if (event.key === 'ArrowUp') moveSelection(event, index - 1);
+                            else if (event.key === 'Home') moveSelection(event, 0);
+                            else if (event.key === 'End') moveSelection(event, visible.length - 1);
+                          },
+                          ...{ 'data-drop-placement': reorder.dropPlacement(name) },
                         }}
-                        type="button"
-                        role="option"
-                        draggable={reorder.canReorder || transferColumn != null}
-                        title={transferColumn == null ? undefined : copy.transferHint}
-                        aria-selected={selected}
-                        tabIndex={selected ? 0 : -1}
-                        data-slot="source-column-row"
-                        data-column-name={columnFacts.column.name}
-                        data-drop-placement={dropPlacement}
-                        onClick={() => setSelectedName(columnFacts.column.name)}
-                        onDragStart={(event) => {
-                          event.stopPropagation();
-                          reorder.startDrag(columnFacts.column.name, event);
-                          if (transferColumn != null)
-                            writeGraphColumnTransfer(event, node.id, transferColumn);
-                        }}
-                        onDragEnd={reorder.endDrag}
-                        onDragOver={(event) => reorder.dragOver(columnFacts.column.name, event)}
-                        onDragLeave={reorder.dragLeave}
-                        onDrop={(event) => reorder.drop(columnFacts.column.name, event)}
-                        onKeyDown={(event) => {
-                          if (reorder.moveWithKeyboard(columnFacts.column.name, event)) return;
-                          if (event.key === 'ArrowDown') moveSelection(event, index, index + 1);
-                          else if (event.key === 'ArrowUp') moveSelection(event, index, index - 1);
-                          else if (event.key === 'Home') moveSelection(event, index, 0);
-                          else if (event.key === 'End') {
-                            moveSelection(event, index, filteredFacts.length - 1);
-                          }
-                        }}
-                        className={cn(
-                          'relative flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-(--focus-ring)',
-                          selected
-                            ? 'border-(--focus-ring) bg-(--surface-selected) text-(--text-strong)'
-                            : 'border-transparent bg-(--surface-elevated) text-(--text-primary) hover:bg-(--surface-selected)'
-                        )}
-                      >
-                        {dropPlacement == null ? null : (
-                          <span
-                            data-slot="source-column-drop-indicator"
-                            aria-hidden="true"
-                            className={cn(
-                              'pointer-events-none absolute left-1 right-1 h-0.5 bg-(--status-info)',
-                              dropPlacement === 'before' ? 'top-0' : 'bottom-0'
-                            )}
-                          />
-                        )}
-                        {reorder.canReorder || transferColumn != null ? (
-                          <GripVertical
-                            data-slot="source-column-drag-handle"
-                            aria-hidden="true"
-                            className="size-4 shrink-0 cursor-grab text-(--text-muted)"
-                          />
-                        ) : null}
-                        <TypeFamilyCue type={columnFacts.column.type} labels={copy} />
-                        <span className="min-w-0 flex-1 truncate font-medium">
-                          {columnFacts.column.name}
-                        </span>
-                        <ConstraintBadges facts={columnFacts} />
-                      </button>
+                      />
                     </li>
                   );
                 })}
               </ul>
             </>
           )}
-          <p className="sr-only" role="status" aria-live="polite">
-            {reorderStatus}
-          </p>
-        </section>
-
-        <section data-slot="source-column-detail" className="min-w-0 p-5">
-          {selectedFacts == null ? (
-            <p className={inspectorVisualClasses.inspectorSubtle}>
-              {facts.length === 0 ? copy.noColumns : copy.noMatches}
-            </p>
-          ) : (
-            <div className="space-y-6">
-              <div className="flex items-start gap-3">
-                <TypeFamilyCue type={selectedFacts.column.type} labels={copy} />
-                <h3 className="min-w-0 flex-1 truncate text-sm font-semibold text-(--text-strong)">
-                  {selectedFacts.column.name}
-                </h3>
-                <ConstraintBadges facts={selectedFacts} />
-              </div>
-
-              <dl className="grid grid-cols-[minmax(7rem,0.34fr)_minmax(0,1fr)] gap-x-4 gap-y-4 text-xs">
-                <DetailFact label={copy.exactType} value={selectedFacts.column.type} />
-                <DetailFact
-                  label={copy.nullability}
-                  value={selectedFacts.column.nullable ? copy.nullable : copy.notNull}
-                />
-                <DetailFact label={copy.constraints} value={constraintText(selectedFacts, copy)} />
-              </dl>
-            </div>
-          )}
-        </section>
-      </div>
-      {afterBody}
+          {afterBody}
+        </>
+      )}
+      <p className="sr-only" role="status" aria-live="polite">
+        {reorderStatus}
+      </p>
     </div>
   );
 }
