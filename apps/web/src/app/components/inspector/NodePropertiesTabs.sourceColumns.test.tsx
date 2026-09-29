@@ -105,4 +105,28 @@ describe('NodePropertiesTabs Source Columns presentation', () => {
     expect(container.querySelector('[data-slot="canvas-source-columns"]')).toBeNull();
     expect(container.querySelector('[data-slot="node-property-column-disclosure"]')).not.toBeNull();
   });
+
+  it('replaces the tab rail with detail navigation and restores it on Back', () => {
+    render(sourceNode);
+    const tabs = (): HTMLElement =>
+      container.querySelector('[data-slot="node-inspector-core-tabs-list"]')!;
+    expect(tabs().hidden).toBe(false);
+    act(() => container.querySelector<HTMLButtonElement>('[data-column-name="id"]')!.click());
+    expect(tabs().hidden).toBe(true);
+    expect(container.querySelector('[data-slot="source-column-detail"] h3')?.textContent).toBe(
+      'id'
+    );
+    act(() =>
+      container.querySelector<HTMLButtonElement>('[data-slot="source-columns-back"]')!.click()
+    );
+    expect(tabs().hidden).toBe(false);
+    expect(document.activeElement?.getAttribute('data-column-name')).toBe('id');
+    act(() => container.querySelector<HTMLButtonElement>('[data-column-name="id"]')!.click());
+    render(genericNode);
+    expect(tabs().hidden).toBe(false);
+    expect(container.querySelector('[data-slot="source-column-detail"]')).toBeNull();
+    render(sourceNode);
+    expect(tabs().hidden).toBe(false);
+    expect(container.querySelector('[data-slot="source-column-detail"]')).toBeNull();
+  });
 });

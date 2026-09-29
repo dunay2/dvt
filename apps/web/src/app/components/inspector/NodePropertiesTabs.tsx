@@ -1,5 +1,5 @@
 /** Owned concern: render passive node properties from a table-like Inspector read model. */
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 
 import type { InspectorPanelContribution } from '../../plugins/contracts/PluginManifest';
 import { resolveString } from '../../plugins/contracts/PluginManifest';
@@ -145,6 +145,23 @@ export function NodePropertiesTabs({
   onHide,
 }: NodePropertiesTabsProps): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
+  const [sourceColumnDetail, setSourceColumnDetail] = useState<{
+    nodeId: string;
+    name: string;
+  } | null>(null);
+  if (
+    sourceColumnDetail != null &&
+    (sourceColumnDetail.nodeId !== node.id || activeTab !== 'columns')
+  ) {
+    setSourceColumnDetail(null);
+  }
+  const detailColumnName =
+    node.kind === 'dvt:source' &&
+    node.pluginId === 'dvt.warehouse-source' &&
+    activeTab === 'columns' &&
+    sourceColumnDetail?.nodeId === node.id
+      ? sourceColumnDetail.name
+      : null;
   const slots =
     slotPrefix == null
       ? {
@@ -199,8 +216,10 @@ export function NodePropertiesTabs({
     >
       <div
         data-slot={slots.list}
+        hidden={detailColumnName != null}
         className={cn(
           inspectorVisualClasses.contextPanelFlatTabsList,
+          detailColumnName != null && 'hidden',
           surface === 'workbench' && 'flex-nowrap overflow-hidden'
         )}
       >
@@ -292,7 +311,12 @@ export function NodePropertiesTabs({
           >
             {sourceColumns ? (
               <SourceColumnsPanel
+                key={node.id}
                 node={node}
+                detailColumnName={detailColumnName}
+                onDetailColumnChange={(name) =>
+                  setSourceColumnDetail(name == null ? null : { nodeId: node.id, name })
+                }
                 beforeBody={beforeBody}
                 afterBody={afterBody}
                 canReorder={sourceListOrdering?.canReorder}

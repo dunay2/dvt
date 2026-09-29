@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import React, { act } from 'react';
+import React, { act, useState, type ComponentProps } from 'react';
 import { fireEvent } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -39,6 +39,22 @@ const sourceNode: CanonicalNode = {
   },
 };
 
+function SourceColumnsHarness(
+  props: Omit<
+    ComponentProps<typeof SourceColumnsPanel>,
+    'detailColumnName' | 'onDetailColumnChange'
+  >
+): JSX.Element {
+  const [detailColumnName, onDetailColumnChange] = useState<string | null>(null);
+  return (
+    <SourceColumnsPanel
+      {...props}
+      detailColumnName={detailColumnName}
+      onDetailColumnChange={onDetailColumnChange}
+    />
+  );
+}
+
 describe('SourceColumnsPanel', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -66,7 +82,8 @@ describe('SourceColumnsPanel', () => {
   ): void {
     act(() =>
       root.render(
-        <SourceColumnsPanel
+        <SourceColumnsHarness
+          key={node.id}
           node={node}
           canReorder={canReorder}
           transferColumns={transferColumns}
@@ -100,7 +117,7 @@ describe('SourceColumnsPanel', () => {
     ).toBe(false);
   });
 
-  it('renders one-line type cues and only authoritative PK/UK/NN facts', () => {
+  it('renders two-line full-width rows and only authoritative PK/UK/NN facts', () => {
     render();
 
     const rows = Array.from(
@@ -110,12 +127,16 @@ describe('SourceColumnsPanel', () => {
     expect(
       rows.every((row) => row.querySelectorAll('[data-slot="source-column-type-cue"]').length === 1)
     ).toBe(true);
-    expect(rows.every((row) => row.textContent?.includes('nullable') !== true)).toBe(true);
+    expect(container.querySelector('[data-slot="source-column-detail"]')).toBeNull();
+    expect(
+      rows.every((row) => row.querySelector('[data-slot="source-column-summary"]') != null)
+    ).toBe(true);
 
     const eventId = container.querySelector<HTMLButtonElement>('[data-column-name="event_id"]')!;
     expect(eventId.textContent).toContain('T');
     expect(eventId.textContent).toContain('PK');
     expect(eventId.textContent).not.toContain('NN');
+    expect(eventId.textContent).toContain('text · Not null');
 
     const actorId = container.querySelector<HTMLButtonElement>('[data-column-name="actor_id"]')!;
     expect(actorId.textContent).toContain('NN');
@@ -153,7 +174,7 @@ describe('SourceColumnsPanel', () => {
     expect(container.textContent).not.toContain('event_id');
   });
 
-  it('moves semantic selection with the keyboard and updates focused detail', () => {
+  it('moves focus without opening detail until the row is activated', () => {
     render();
 
     const eventId = container.querySelector<HTMLButtonElement>('[data-column-name="event_id"]')!;
@@ -167,12 +188,102 @@ describe('SourceColumnsPanel', () => {
 
     expect(actorId.getAttribute('aria-selected')).toBe('true');
     expect(document.activeElement).toBe(actorId);
+    expect(container.querySelector('[data-slot="source-column-detail"]')).toBeNull();
+    act(() => fireEvent.keyDown(actorId, { key: 'Enter' }));
+    expect(container.querySelector('[data-slot="source-column-row"]')).toBeNull();
     expect(container.querySelector('[data-slot="source-column-detail"]')?.textContent).toContain(
       'actor_id'
     );
     expect(container.querySelector('[data-slot="source-column-detail"]')?.textContent).toContain(
       'Not null'
     );
+  });
+
+  it('returns to the filtered list with focus and navigates only matching columns', () => {
+    render();
+    act(() =>
+      fireEvent.input(container.querySelector('[data-slot="source-columns-search"]')!, {
+        target: { value: '_id' },
+      })
+    );
+    act(() => container.querySelector<HTMLButtonElement>('[data-column-name="event_id"]')!.click());
+    const detail = (): Element => container.querySelector('[data-slot="source-column-detail"]')!;
+    expect(detail().querySelector('h3')?.textContent).toBe('event_id');
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-slot="source-column-previous"]')!.disabled
+    ).toBe(true);
+    act(() =>
+      container.querySelector<HTMLButtonElement>('[data-slot="source-column-next"]')!.click()
+    );
+    expect(detail().querySelector('h3')?.textContent).toBe('actor_id');
+    act(() =>
+      container.querySelector<HTMLButtonElement>('[data-slot="source-columns-back"]')!.click()
+    );
+    expect(container.querySelector('[data-slot="source-column-detail"]')).toBeNull();
+    expect(
+      container.querySelector<HTMLInputElement>('[data-slot="source-columns-search"]')!.value
+    ).toBe('_id');
+    expect(document.activeElement?.getAttribute('data-column-name')).toBe('actor_id');
+    act(() =>
+      container.querySelector<HTMLButtonElement>('[data-column-name="tenant_id"]')!.click()
+    );
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-slot="source-column-next"]')!.disabled
+    ).toBe(true);
+    act(() => fireEvent.keyDown(detail(), { key: 'Escape' }));
+    expect(document.activeElement?.getAttribute('data-column-name')).toBe('tenant_id');
+  });
+
+  it('filters only real key facts and keeps empty results coherent', () => {
+    render();
+    act(() =>
+      fireEvent.change(container.querySelector('[data-slot="source-columns-filter"]')!, {
+        target: { value: 'key' },
+      })
+    );
+    expect(
+      Array.from(container.querySelectorAll<HTMLElement>('[data-column-name]')).map(
+        (row) => row.dataset.columnName
+      )
+    ).toEqual(['event_id', 'tenant_id']);
+    act(() =>
+      fireEvent.input(container.querySelector('[data-slot="source-columns-search"]')!, {
+        target: { value: 'missing' },
+      })
+    );
+    expect(container.querySelector('[data-slot="source-column-row"]')).toBeNull();
+    expect(container.textContent).toContain('No columns match');
+  });
+
+  it('does not retain column detail or search when switching Source', () => {
+    render();
+    act(() => container.querySelector<HTMLButtonElement>('[data-column-name="event_id"]')!.click());
+    render({
+      ...sourceNode,
+      id: 'other-source',
+      metadata: { columns: [{ name: 'other', type: 'text', nullable: true }] },
+    });
+    expect(container.querySelector('[data-slot="source-column-detail"]')).toBeNull();
+    expect(container.querySelector('[data-column-name="other"]')).not.toBeNull();
+    expect(container.textContent).not.toContain('event_id');
+  });
+
+  it('does not display stale facts if an open column is removed from the Source', () => {
+    render();
+    act(() => container.querySelector<HTMLButtonElement>('[data-column-name="event_id"]')!.click());
+    render({
+      ...sourceNode,
+      metadata: { columns: [{ name: 'remaining', type: 'text', nullable: true }] },
+    });
+    expect(container.textContent).toContain('This column is no longer available');
+    expect(container.querySelector('[data-slot="source-column-detail"] h3')).toBeNull();
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-slot="source-column-next"]')!.disabled
+    ).toBe(true);
+    act(() =>
+      container.querySelector<HTMLButtonElement>('[data-slot="source-columns-back"]')!.click()
+    );
+    expect(document.activeElement?.getAttribute('data-column-name')).toBe('remaining');
   });
 
   it('reorders fields with pointer and persists presentation without changing Source metadata', () => {

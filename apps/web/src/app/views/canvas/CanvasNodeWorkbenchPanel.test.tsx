@@ -529,6 +529,10 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.textContent).toContain('order_id');
     expect(container.textContent).toContain('integer');
     expect(container.textContent).toContain('Not null');
+    expect(container.querySelector('[data-slot="source-column-detail"]')).toBeNull();
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-column-name="order_id"]')!.click()
+    );
     expect(container.textContent).toContain('Primary key');
 
     await renderPanel(root, 'inputs-outputs');
