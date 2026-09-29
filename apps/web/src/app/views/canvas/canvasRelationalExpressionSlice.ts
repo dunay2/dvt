@@ -36,7 +36,12 @@ export function relationalExpressionSlices(
       }
     }
     return {
-      nodes: [...ids].map((id) => nodes.get(id)!),
+      nodes: [...ids].map((id) => {
+        const node = nodes.get(id)!;
+        return node.data.fieldReference?.relationId === relationId
+          ? { ...node, data: { ...node.data, fieldSelection: 'output' as const } }
+          : node;
+      }),
       edges,
       referencedFields: new Set(
         projection.nodes

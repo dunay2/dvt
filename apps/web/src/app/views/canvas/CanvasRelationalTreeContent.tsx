@@ -7,6 +7,7 @@ import { CanvasRelationalTreeAuthoring } from './CanvasRelationalTreeAuthoring';
 import { projectCanvasRelationalTreeAuthoringView } from './canvasRelationalTreeAuthoringView';
 import { CanvasRelationalTreeInspection } from './CanvasRelationalTreeInspection';
 import type { CanvasModelOutputInspectorState } from './CanvasRelationalTreeSideInspector';
+import { CanvasRelationalFieldSelectionProvider } from './CanvasRelationalFieldSelectionProvider';
 
 type CanvasRelationalTreeContentProps = Readonly<{
   model: ReturnType<typeof useCanvasRelationalTreeWorkbenchModel>;
@@ -29,7 +30,12 @@ export function CanvasRelationalTreeContent(props: CanvasRelationalTreeContentPr
       data-slot="canvas-relational-tree-surface"
       className="relative h-full min-h-0 w-full min-w-0 overflow-hidden"
     >
-      <CanvasRelationalTreeContentView {...props} />
+      <CanvasRelationalFieldSelectionProvider
+        enabled={props.model.authoringAvailable && !props.pendingCondition}
+        onChange={props.model.session.setJoinDraft}
+      >
+        <CanvasRelationalTreeContentView {...props} />
+      </CanvasRelationalFieldSelectionProvider>
     </div>
   );
 }

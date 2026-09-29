@@ -122,7 +122,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
               expanded={expanded}
               onExpandedChange={setExpanded}
               onPendingConditionChange={setPendingCondition}
-              pendingCondition={pendingCondition}
+              pendingCondition={pendingCondition || pendingCompositionOutput}
               onSelectRelation={navigation.select}
               modelOutput={{
                 open: modelOutputOpen,

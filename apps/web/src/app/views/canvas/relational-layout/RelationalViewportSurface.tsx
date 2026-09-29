@@ -1,6 +1,7 @@
 /** Owned concern: one cursor and pointer boundary for both relational views. */
 import type { DragEventHandler, ReactNode } from 'react';
 import type { useCanvasRelationalTreeViewport } from '../useCanvasRelationalTreeViewport';
+import { useCanvasRelationalFieldSelection } from '../CanvasRelationalFieldSelectionProvider';
 
 export function RelationalViewportSurface({
   viewport,
@@ -15,6 +16,7 @@ export function RelationalViewportSurface({
   onDragOver: DragEventHandler<HTMLDivElement>;
   onDrop: DragEventHandler<HTMLDivElement>;
 }>) {
+  const fields = useCanvasRelationalFieldSelection();
   return (
     <div
       ref={viewport.viewportRef}
@@ -36,8 +38,12 @@ export function RelationalViewportSurface({
       onPointerCancel={viewport.onPointerCancel}
       onLostPointerCapture={viewport.onLostPointerCapture}
       onClickCapture={viewport.onClickCapture}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
+      onDragOver={(event) => {
+        if (!fields?.backgroundDragOver(event)) onDragOver(event);
+      }}
+      onDrop={(event) => {
+        if (!fields?.backgroundDrop(event)) onDrop(event);
+      }}
     >
       {children}
     </div>

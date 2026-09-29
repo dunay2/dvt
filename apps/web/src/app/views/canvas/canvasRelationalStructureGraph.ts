@@ -26,6 +26,8 @@ export function projectCanvasRelationalStructureGraph(
           semanticGroup: 'transformation',
           detail: field.displayName ?? '',
           fieldReference: { fieldId: field.fieldId, relationId: owner.relationId! },
+          fieldSelection:
+            owner === relation ? (relation.operator === 'read' ? undefined : 'output') : 'input',
         },
       });
       edges.push({ id, source: id, target: group, data: { semanticEdgeKind: 'expression' } });
@@ -41,6 +43,7 @@ export function projectCanvasRelationalStructureGraph(
         semanticKind: 'relation',
         semanticGroup: 'transformation',
         detail: child.node.substraitKind,
+        fieldTargetRelationId: relation.relationId!,
       },
     });
     addFields(child.node, id);
@@ -54,6 +57,7 @@ export function projectCanvasRelationalStructureGraph(
       semanticKind: 'group',
       semanticGroup: 'transformation',
       detail: 'Output',
+      fieldTargetRelationId: relation.operator === 'read' ? undefined : relation.relationId!,
     },
   });
   addFields(relation, output);

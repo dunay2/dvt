@@ -157,6 +157,9 @@ export function dragSourceTo(source: HTMLElement, target: HTMLElement): void {
   const values = new Map<string, string>();
   const dataTransfer = {
     effectAllowed: 'move',
+    get types(): string[] {
+      return [...values.keys()];
+    },
     getData: (type: string) => values.get(type) ?? '',
     setData: (type: string, value: string) => values.set(type, value),
   };

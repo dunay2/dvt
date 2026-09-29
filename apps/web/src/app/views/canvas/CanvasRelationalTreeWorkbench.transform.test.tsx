@@ -138,6 +138,23 @@ describe('Transform card in the production Workbench', () => {
       expect(restored).not.toBeNull();
       expect(restored!.getAttribute('data-included')).toBe('false');
     });
+    const appliedCard = container.querySelector('[data-operator="project"]')!.closest('li')!;
+    await act(async () =>
+      fireEvent.click(appliedCard.querySelector('[data-slot="canvas-relational-node-expand"]')!)
+    );
+    const output = appliedCard.querySelector<HTMLElement>('[data-field-selection="output"]')!;
+    expect(output.getAttribute('role')).toBe('button');
+    await act(async () =>
+      fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-trigger"]')!)
+    );
+    expect(output.hasAttribute('tabindex')).toBe(false);
+    await act(async () => fireEvent.keyDown(output, { key: 'Delete' }));
+    expect(applied).toHaveBeenCalledOnce();
+    expect(container.querySelector('[data-slot="canvas-derived-output-form"]')).not.toBeNull();
+    await act(async () =>
+      fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-cancel"]')!)
+    );
+    expect(output.getAttribute('role')).toBe('button');
   });
 
   it('denies Transform insertion in a read-only Model', async () => {
