@@ -61,6 +61,7 @@ describe('Progressive SQL verticals', () => {
     expect(hasLiveProtectedRuntimeEnv(), 'Requires the live protected runner').to.equal(true);
     resetE2eApiStubs();
     cy.viewport(1600, 1100);
+    Cypress.Screenshot.defaults({ scale: true });
     seedLiveSelectedClosureDraft({ emptyCanvas: true });
     visitSemanticCanvas();
   });
@@ -172,6 +173,23 @@ describe('Progressive SQL verticals', () => {
           response!.body.rows.map((row: { values: unknown[] }) => row.values).sort()
         ).to.deep.equal([...scenario.rows].sort());
       });
+      cy.get('[data-slot="bottom-operational-data-table"]')
+        .should('be.visible')
+        .within(() => {
+          cy.get('thead [data-column-id]').should(($columns) => {
+            expect([...$columns].map((column) => column.textContent)).to.deep.equal(
+              scenario.columns
+            );
+          });
+          cy.get('tbody tr').should(($rows) => {
+            const rows = [...$rows].map((row) =>
+              [...row.querySelectorAll('td')].map((cell) => cell.textContent)
+            );
+            expect(rows.sort()).to.deep.equal(
+              scenario.rows.map((row) => row.map((value) => String(value ?? 'NULL'))).sort()
+            );
+          });
+        });
       cy.screenshot(`sql-vertical-${scenario.level}-preview`);
       readLiveGraphDraft().then(({ body }) => {
         cy.writeFile(`../../tmp/sql-vertical-3456/level-${scenario.level}-draft.json`, body);
