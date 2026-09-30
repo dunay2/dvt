@@ -1,4 +1,9 @@
-/** @ownedConcern Preserve absence and read failure as distinct start-run authority observations. */
+/**
+ * @baseline ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency
+ * @ownedConcern Preserve absence and read failure as distinct start-run authority observations.
+ * @decision Capture observation outcomes without granting mutation authority.
+ * @version 1.0.0
+ */
 export type StartRunAuthorityRead<T> =
   | { readonly kind: 'found'; readonly value: T }
   | { readonly kind: 'missing' }

@@ -1,4 +1,9 @@
-/** @ownedConcern Report start failures without granting mutation authority or masking causal errors. */
+/**
+ * @baseline ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency
+ * @ownedConcern Report start failures without granting mutation authority or masking causal errors.
+ * @decision Isolate fail-soft diagnostic transport from run and intent mutation decisions.
+ * @version 1.0.0
+ */
 import type { EngineRunRef } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 

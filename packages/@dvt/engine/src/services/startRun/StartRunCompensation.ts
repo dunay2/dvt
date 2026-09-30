@@ -1,4 +1,9 @@
-/** @ownedConcern Execute the existing cancellation then intent-cleanup compensation sequence. */
+/**
+ * @baseline ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency
+ * @ownedConcern Execute the existing cancellation then intent-cleanup compensation sequence.
+ * @decision Keep compensation sequencing in one owner without claiming confirmed termination.
+ * @version 1.0.0
+ */
 import type { EngineRunRef } from '@dvt/contracts';
 
 import type { IProviderAdapter } from '../../adapters/IProviderAdapter.js';

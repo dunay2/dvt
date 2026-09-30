@@ -1,4 +1,9 @@
-/** @ownedConcern Apply a selected pending-intent transition, preserving effect ordering and failure reporting. */
+/**
+ * @baseline ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency
+ * @ownedConcern Apply a selected pending-intent transition, preserving effect ordering and failure reporting.
+ * @decision Apply decisions without re-reading or reinterpreting their authority evidence.
+ * @version 1.0.0
+ */
 import type { EngineRunRef } from '@dvt/contracts';
 
 import type { IProviderAdapter } from '../../adapters/IProviderAdapter.js';

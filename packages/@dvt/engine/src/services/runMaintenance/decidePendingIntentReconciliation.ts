@@ -1,4 +1,9 @@
-/** @ownedConcern Select the existing pending-intent transition from explicit observations, without I/O. */
+/**
+ * @baseline ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency
+ * @ownedConcern Select the existing pending-intent transition from explicit observations, without I/O.
+ * @decision Make transition selection pure while preserving existing reconciliation semantics.
+ * @version 1.0.0
+ */
 import type { CanonicalRunStatus, EngineRunRef } from '@dvt/contracts';
 
 export type PendingIntentObservation =
