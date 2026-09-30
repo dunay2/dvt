@@ -1,4 +1,9 @@
-/** @ownedConcern Prove logical-start duplicate rejection against an isolated Temporal server. */
+/**
+ * @baseline ADR-0001: Temporal Integration Test Policy
+ * @decision Use the existing prepared harness, environment client and sole teardown owner.
+ * @ownedConcern Prove logical-start duplicate rejection against an isolated Temporal server.
+ * @version 1.0.0
+ */
 import { asNonBlankString } from '@dvt/contracts';
 import { WorkflowExecutionAlreadyStartedError } from '@temporalio/client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
