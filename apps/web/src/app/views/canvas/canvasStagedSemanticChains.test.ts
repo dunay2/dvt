@@ -116,14 +116,11 @@ describe('catalog-wide configured semantic chains', () => {
           .map((field) => field.fieldId)
           .sort()
       ).toEqual(target.fields.map((field) => field.fieldId).sort());
-      expect(
-        harness
-          .commands()
-          .updateConfiguration(output, {
-            operation: 'field_transform',
-            semanticDocument: encodeDvtSubstraitSemanticDocument(renamed),
-          })
-      ).toBe(true);
+      const accepted = harness.commands().updateConfiguration(output, {
+        operation: 'field_transform',
+        semanticDocument: encodeDvtSubstraitSemanticDocument(renamed),
+      });
+      expect(accepted).toBe(true);
       assertRoundtrip(output);
       const revision = session.revision;
       await expect(
