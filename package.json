@@ -83,7 +83,7 @@
     "test:determinism": "pnpm --filter @dvt/engine test --testNamePattern determinism",
     "test:replay": "pnpm --filter @dvt/engine test --testNamePattern replay",
     "test:coverage": "pnpm -r test -- --coverage",
-    "test:coverage:engine": "pnpm --filter @dvt/engine test -- --coverage",
+    "test:coverage:engine": "pnpm --filter @dvt/engine test --coverage",
     "test:ci-tools": "node tools/ci/ci-tool-test-suite.mjs all",
     "test:ci-tools:static": "node tools/ci/ci-tool-test-suite.mjs static",
     "test:ci-tools:executable": "pnpm --filter @dvt/crypto build && node tools/ci/ci-tool-test-suite.mjs executable",

@@ -189,6 +189,16 @@ with zero pending or skipped tests. Partial runtime configuration fails.
 
 ## Determinism and Replay
 
+Engine coverage runs through `pnpm test:coverage:engine`, which preserves the
+package dependency-preparation lifecycle and forwards `--coverage` directly.
+The package config consumes the single `engineCoveragePolicy` from root
+`vitest.config.ts`: 65% statements/lines/functions and 55% branches, including
+unexecuted source. Test Suite requires the fresh `coverage-final.json` artifact;
+missing reports fail the job. Executable positive/negative coverage contracts
+live in `tools/ci/engine-coverage.test.mjs`. Coverage routing and this evidence
+contract are described in the
+[Engine Coverage Scope Gate Component](../architecture/components/ci-governance/engine-coverage-scope-gate-component.md).
+
 | Capability                           | Command                 | Source                                                                                                         |
 | ------------------------------------ | ----------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Determinism lint gate                | `pnpm lint:determinism` | [`package.json`](../../package.json)                                                                           |

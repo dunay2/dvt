@@ -25,5 +25,12 @@ mitigations:
     adapter-postgres job.'
   - 'Validation included local Postgres-backed adapter-postgres execution plus pnpm test:ci-tools
     and pnpm verify:prepush.'
-review_after: 2026-06-01
+  - '2026-09-30 / #3494: engine coverage retains the test/pretest lifecycle, forwards the actual
+    coverage flag and reuses one root threshold policy. Executable negative coverage tests reject
+    low coverage and include unexecuted source; Test Suite requires coverage-final.json and fails if
+    the report is missing. This closes false-green evidence before any later deduplication.'
+evidence:
+  - docs/evidence/ed-20260930-engine-coverage-evidence.md
+  - https://github.com/dunay2/dvt/issues/3494
+review_after: 2026-10-30
 ---
