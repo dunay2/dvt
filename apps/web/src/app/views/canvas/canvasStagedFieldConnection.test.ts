@@ -10,7 +10,7 @@ import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
-import { projectCanvasStagedOperation } from './canvasStagedOperation';
+import { projectCanvasStagedOperation } from './canvasStagedOperationProjection';
 import { projectCanvasRelationalTreeDetails } from './canvasRelationalTreeDetails';
 import {
   projectExpressionStage,

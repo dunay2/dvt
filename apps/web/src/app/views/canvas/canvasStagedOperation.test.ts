@@ -8,15 +8,41 @@ import {
   createCanvasStagedOperation,
   deriveCanvasStagedCompositionState,
   disconnectCanvasStagedOperation,
-  projectCanvasStagedOperation,
   readCanvasStagedCompositionSignature,
   type CanvasStagedOperationKind,
 } from './canvasStagedOperation';
+import { projectCanvasStagedOperation } from './canvasStagedOperationProjection';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
 import { configureCanvasStagedTransform } from './canvasStagedTransformConfiguration';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 describe('staged operation projection', () => {
+  it.each([NaN, 0.5, Infinity, -1, 2])(
+    'rejects malformed input port %s without mutation',
+    (port) => {
+      const operation = createCanvasStagedOperation('inner_join');
+      expect(connectCanvasStagedOperation(operation, port, 'source')).toBe(operation);
+      expect(disconnectCanvasStagedOperation(operation, port)).toBe(operation);
+      expect(operation.inputs).toEqual([null, null]);
+    }
+  );
+
+  it('invalidates configured semantics only when an input actually changes', () => {
+    const operation = {
+      ...createCanvasStagedOperation('field_transform'),
+      inputs: ['original'],
+      semanticDocument: encodeDvtSubstraitSemanticDocument(connectedNamesProjectionDraft()),
+    };
+    expect(connectCanvasStagedOperation(operation, 0, 'original')).toBe(operation);
+    const changed = connectCanvasStagedOperation(operation, 0, 'replacement');
+    expect(changed.id).toBe(operation.id);
+    expect(changed.inputs).toEqual(['replacement']);
+    expect(changed.semanticDocument).toBeUndefined();
+    expect(operation.semanticDocument).toBeDefined();
+    expect(operation.inputs).toEqual(['original']);
+  });
+
   it.each([
     ['field_transform', 'project'],
     ['inner_join', 'join'],

@@ -11,6 +11,7 @@ import { createSourceDocument } from './canvasSourceDocument';
 import { canvasInputConnection } from './canvasSourceRelation';
 import {
   canvasStagedOperationAppliedOperation,
+  deriveCanvasStagedCompositionState,
   readCanvasStagedCompositionSignature,
   type CanvasStagedOperation,
 } from './canvasStagedOperation';
@@ -67,11 +68,16 @@ export function configureCanvasStagedBinary(
   const signature = readCanvasStagedCompositionSignature(operation.operation);
   if (signature.configuration !== 'binary') return operation;
   const canonicalOperation = canvasStagedOperationAppliedOperation(operation.operation, null);
-  if (operation.inputs.length !== 2 || operation.inputs.some((input) => input == null)) {
+  const state = deriveCanvasStagedCompositionState(operation);
+  if (
+    operation.inputs.length !== signature.inputs.length ||
+    state === 'unbound' ||
+    state === 'partially-bound'
+  ) {
     const { semanticDocument: _discarded, ...pending } = operation;
     return operation.semanticDocument == null ? operation : pending;
   }
-  if (operation.semanticDocument != null) return operation;
+  if (state === 'configured') return operation;
   try {
     const documents = operation.inputs.map((relationId) =>
       resolveCanvasStagedProducerDocument({ relationId, canonical, operations, sources })

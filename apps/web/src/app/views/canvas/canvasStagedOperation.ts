@@ -1,28 +1,15 @@
 /** Discardable operation nodes with algebra-defined, freely connectable Input ports. */
-import {
-  allocateDvtRelationId,
-  type DvtSubstraitSemanticDocumentV1,
-} from '@dvt/contracts';
-import { indexSubstraitRelations } from '@dvt/substrait-analysis';
-import { decodeCanvasStagedOperation } from './canvasStagedOperationDocument';
-import { buildCanvasRelationalTreeRelation } from './canvasRelationalTreeRelationProjection';
+import { allocateDvtRelationId, type DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
 import type { CanvasRelationalOperatorTool } from './relational-operator-form/OperatorTool';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
-import type {
-  CanvasRelationalTreeNode,
-  CanvasRelationalTreeOperator,
-} from './canvasRelationalTreeProjection';
+import type { CanvasRelationalTreeOperator } from './canvasRelationalTreeProjection';
 
 export type CanvasStagedOperationKind =
   CanvasRelationalOperation | CanvasRelationalOperatorTool['id'] | 'field_transform';
 export type CanvasStagedConnectionIntent = 'relation' | 'field';
 export type CanvasStagedConfigurationStrategy = 'manual' | 'transform' | 'binary';
 export type CanvasStagedEditorKind = 'properties' | 'transform' | 'binary' | 'unary';
-export type CanvasStagedCompositionState =
-  | 'unbound'
-  | 'partially-bound'
-  | 'ready'
-  | 'configured';
+export type CanvasStagedCompositionState = 'unbound' | 'partially-bound' | 'ready' | 'configured';
 
 export type CanvasStagedOperation = Readonly<{
   id: string;
@@ -79,7 +66,7 @@ function binary(
   };
 }
 
-const compositionSignatures = {
+export const canvasStagedCompositionSignatures = {
   projection: unary('project', 'projection', relationInput, 'manual', 'properties'),
   field_transform: unary(
     'project',
@@ -108,16 +95,16 @@ const compositionSignatures = {
   except_distinct: binary('set', 'except_distinct'),
   intersect_all: binary('set', 'intersect_all'),
   except_all: binary('set', 'except_all'),
-} satisfies Record<CanvasStagedOperationKind, CanvasStagedCompositionSignature>;
+} as const satisfies Record<CanvasStagedOperationKind, CanvasStagedCompositionSignature>;
 
 export function readCanvasStagedCompositionSignature(
   operation: CanvasStagedOperationKind
 ): CanvasStagedCompositionSignature {
-  return compositionSignatures[operation];
+  return canvasStagedCompositionSignatures[operation];
 }
 
 export function isCanvasStagedOperationKind(value: string): value is CanvasStagedOperationKind {
-  return Object.hasOwn(compositionSignatures, value);
+  return Object.hasOwn(canvasStagedCompositionSignatures, value);
 }
 
 export function canvasStagedOperationArity(operation: CanvasStagedOperationKind): 1 | 2 {
@@ -171,18 +158,32 @@ export function connectCanvasStagedOperation(
   port: number,
   relationId: string
 ): CanvasStagedOperation {
-  if (port < 0 || port >= operation.inputs.length || relationId.trim().length === 0)
+  if (
+    !Number.isInteger(port) ||
+    port < 0 ||
+    port >= operation.inputs.length ||
+    port >= canvasStagedOperationArity(operation.operation) ||
+    relationId.trim().length === 0 ||
+    operation.inputs[port] === relationId
+  )
     return operation;
   const inputs = [...operation.inputs];
   inputs[port] = relationId;
-  return { ...operation, inputs };
+  const { semanticDocument: _discarded, ...pending } = operation;
+  return { ...pending, inputs };
 }
 
 export function disconnectCanvasStagedOperation(
   operation: CanvasStagedOperation,
   port: number
 ): CanvasStagedOperation {
-  if (port < 0 || port >= operation.inputs.length || operation.inputs[port] == null)
+  if (
+    !Number.isInteger(port) ||
+    port < 0 ||
+    port >= operation.inputs.length ||
+    port >= canvasStagedOperationArity(operation.operation) ||
+    operation.inputs[port] == null
+  )
     return operation;
   const inputs = [...operation.inputs];
   inputs[port] = null;
@@ -204,28 +205,4 @@ export function createsCanvasStagedOperationCycle(
     return byId.get(id)?.inputs.some((input) => input != null && dependsOn(input)) ?? false;
   };
   return dependsOn(producerId);
-}
-
-export function projectCanvasStagedOperation(
-  staged: CanvasStagedOperation
-): CanvasRelationalTreeNode {
-  const document = decodeCanvasStagedOperation(staged);
-  const indexed = document == null ? null : indexSubstraitRelations(document);
-  if (indexed?.ok && indexed.index.rootId === staged.id) {
-    const root = buildCanvasRelationalTreeRelation({ index: indexed.index, digest: staged.id });
-    return { ...root, locator: staged.id, operation: staged.operation };
-  }
-  return {
-    locator: staged.id,
-    operator: readCanvasStagedCompositionSignature(staged.operation).operator,
-    substraitKind: 'pending',
-    operation: staged.operation,
-    relationId: staged.id,
-    displayName: null,
-    sourceRef: null,
-    output: { fields: [] },
-    expressionRefs: [],
-    decorations: [],
-    children: [],
-  };
 }

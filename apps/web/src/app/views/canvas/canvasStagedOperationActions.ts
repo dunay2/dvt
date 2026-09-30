@@ -66,9 +66,10 @@ export function createCanvasStagedOperationActions(
       args.setOperations((current) => {
         const target = admitCanvasStagedConnection(args, current, id, port, relationId);
         if (target == null) return current;
+        const connected = connectCanvasStagedOperation(target, port, relationId);
+        if (connected === target) return current;
         return current.map((operation) => {
           if (operation !== target) return operation;
-          const connected = connectCanvasStagedOperation(operation, port, relationId);
           return args.configure?.(connected) ?? connected;
         });
       });
@@ -77,8 +78,12 @@ export function createCanvasStagedOperationActions(
     disconnect: (id: string, port: number) => {
       if (!args.editable) return;
       args.setOperations((current) => {
+        const target = current.find((operation) => operation.id === id);
+        if (target == null) return current;
+        const detached = disconnectCanvasStagedOperation(target, port);
+        if (detached === target) return current;
         const disconnected = current.map((operation) =>
-          operation.id === id ? disconnectCanvasStagedOperation(operation, port) : operation
+          operation === target ? detached : operation
         );
         return invalidateConsumers(disconnected, new Set([id]));
       });

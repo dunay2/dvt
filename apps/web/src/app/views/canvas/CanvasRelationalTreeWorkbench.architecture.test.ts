@@ -59,8 +59,26 @@ import UseViewportSource from './useCanvasRelationalTreeViewport.ts?raw';
 import PendingSource from './relational-source-occurrence/pendingSourceOccurrence.ts?raw';
 import ApplyDraftSource from './canvasRelationalTreeApplyDraft.ts?raw';
 import CatalogueProjectionSource from './canvasRelationalTreeCatalogue.ts?raw';
+import StagedOperationSource from './canvasStagedOperation.ts?raw';
+import StagedOperationProjectionSource from './canvasStagedOperationProjection.ts?raw';
+import CompositionTruthSource from './canvasRelationalCompositionTruth.ts?raw';
+import TransformAuthoringSource from './canvasDvtTransformAuthoring.ts?raw';
 
 describe('Canvas relational-tree Workbench architecture', () => {
+  it('keeps staged mutations independent of card queries and reuses the composition catalog', () => {
+    expect(StagedOperationSource).not.toMatch(
+      /indexSubstraitRelations|decodeCanvasStagedOperation|buildCanvasRelationalTreeRelation|from ['"]react['"]/
+    );
+    expect(StagedOperationProjectionSource).not.toMatch(
+      /connectCanvasStagedOperation|disconnectCanvasStagedOperation|encodeDvtSubstrait|from ['"]react['"]/
+    );
+    for (const reader of [CompositionTruthSource, TransformAuthoringSource, ExistingDraftSource]) {
+      expect(reader).toContain('isCanvasCompositionOperation');
+      expect(reader).not.toMatch(
+        /isCanvasJoinOperation|isCanvasSetOperation|operation === 'cross_join'/
+      );
+    }
+  });
   it('keeps persistence policy and presentation projection out of the React session and source identity', () => {
     expect(AuthoringSessionSource).toContain('prepareCanvasRelationalTreeApply');
     expect(AuthoringSessionSource).not.toContain('createCanvasRelationalAuthoringDraft');

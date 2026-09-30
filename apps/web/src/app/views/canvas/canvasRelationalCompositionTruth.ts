@@ -10,8 +10,7 @@ import {
   type CanvasRelationalAnalysisArgs,
 } from './canvasRelationalAnalysis';
 import { canvasPresentationOperationForRel } from './canvasRelationalOperationPresentation';
-import { isCanvasSetOperation } from './canvasRelationalOperationChoices';
-import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
+import { isCanvasCompositionOperation } from './canvasRelationalOperationChoices';
 
 function compositionOperation(
   analysis: CanvasRelationalAnalysis
@@ -21,12 +20,7 @@ function compositionOperation(
   while (entry != null) {
     if (analysis.connectedModelRelationIds.includes(entry.binding.relationId)) return null;
     const operation = canvasPresentationOperationForRel(entry.relation);
-    if (
-      isCanvasJoinOperation(operation) ||
-      isCanvasSetOperation(operation) ||
-      operation === 'cross_join'
-    )
-      return operation;
+    if (isCanvasCompositionOperation(operation)) return operation;
     entry = entry.inputs.length === 1 ? index!.relations.get(entry.inputs[0]!) : undefined;
   }
   return null;

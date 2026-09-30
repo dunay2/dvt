@@ -10,7 +10,8 @@ import { useCanvasRelationalTreeDetails } from './useCanvasRelationalTreeDetails
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { SourceOccurrenceActions } from './relational-source-occurrence/sourceOccurrenceActions';
 import { projectPendingSourceOccurrence } from './canvasRelationalTreeAuthoringProjection';
-import { projectCanvasStagedOperation, type CanvasStagedOperation } from './canvasStagedOperation';
+import type { CanvasStagedOperation } from './canvasStagedOperation';
+import { projectCanvasStagedOperation } from './canvasStagedOperationProjection';
 import { projectCanvasRelationalMovableCards } from './projectCanvasRelationalMovableCards';
 
 export function useCanvasRelationalTreePlacement({
