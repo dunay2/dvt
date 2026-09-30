@@ -38,14 +38,16 @@ describe('staged operation projection', () => {
     expect(readCanvasStagedCompositionSignature('inner_join')).toMatchObject({
       output: 'relation',
       operator: 'join',
+      configuration: 'binary',
     });
-    expect(readCanvasStagedCompositionSignature('field_transform').inputs[0]?.accepts).toEqual([
-      'relation',
-      'field',
-    ]);
-    expect(readCanvasStagedCompositionSignature('filter').inputs[0]?.accepts).toEqual([
-      'relation',
-    ]);
+    expect(readCanvasStagedCompositionSignature('field_transform')).toMatchObject({
+      configuration: 'transform',
+      inputs: [{ accepts: ['relation', 'field'] }],
+    });
+    expect(readCanvasStagedCompositionSignature('filter')).toMatchObject({
+      configuration: 'manual',
+      inputs: [{ accepts: ['relation'] }],
+    });
     expect(canvasStagedOperationArity('inner_join')).toBe(2);
     expect(deriveCanvasStagedCompositionState(join)).toBe('unbound');
 
@@ -89,6 +91,18 @@ describe('staged operation projection', () => {
     expect(projected.children).toHaveLength(1);
     expect(projected.children[0]!.node.relationId).toBe(source.rootId);
     expect(projected.children[0]!.node.output.fields.length).toBeGreaterThan(1);
+    source.dispose();
+  });
+
+  it('does not route manual operations through Transform configuration', async () => {
+    const document = connectedNamesProjectionDraft();
+    const source = new CanvasRelationAnalysisSession('manual-configuration');
+    source.receive(document);
+    const filter = {
+      ...createCanvasStagedOperation('filter'),
+      inputs: [source.rootId],
+    };
+    expect(await configureCanvasStagedTransform(filter, document)).toBe(filter);
     source.dispose();
   });
 

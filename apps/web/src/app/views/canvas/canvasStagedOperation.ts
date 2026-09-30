@@ -16,6 +16,7 @@ import type {
 export type CanvasStagedOperationKind =
   CanvasRelationalOperation | CanvasRelationalOperatorTool['id'] | 'field_transform';
 export type CanvasStagedConnectionIntent = 'relation' | 'field';
+export type CanvasStagedConfigurationStrategy = 'manual' | 'transform' | 'binary';
 export type CanvasStagedCompositionState =
   | 'unbound'
   | 'partially-bound'
@@ -42,6 +43,7 @@ export type CanvasStagedCompositionSignature = Readonly<{
   output: 'relation';
   operator: CanvasRelationalTreeOperator;
   appliedOperation: CanvasRelationalOperation | 'inherit';
+  configuration: CanvasStagedConfigurationStrategy;
 }>;
 
 const relationInput: CanvasStagedCompositionInput = { accepts: ['relation'] };
@@ -54,9 +56,10 @@ const fieldSeededRelationInput: CanvasStagedCompositionInput = {
 function unary(
   operator: CanvasRelationalTreeOperator,
   appliedOperation: CanvasRelationalOperation | 'inherit' = 'inherit',
-  input: CanvasStagedCompositionInput = relationInput
+  input: CanvasStagedCompositionInput = relationInput,
+  configuration: CanvasStagedConfigurationStrategy = 'manual'
 ): CanvasStagedCompositionSignature {
-  return { inputs: [input], output: 'relation', operator, appliedOperation };
+  return { inputs: [input], output: 'relation', operator, appliedOperation, configuration };
 }
 
 function binary(
@@ -68,12 +71,13 @@ function binary(
     output: 'relation',
     operator,
     appliedOperation,
+    configuration: 'binary',
   };
 }
 
 const compositionSignatures = {
   projection: unary('project', 'projection'),
-  field_transform: unary('project', 'projection', fieldSeededRelationInput),
+  field_transform: unary('project', 'projection', fieldSeededRelationInput, 'transform'),
   filter: unary('filter'),
   aggregate: unary('aggregate'),
   window: unary('window'),
