@@ -216,6 +216,35 @@ Reconciliation logic:
    - If run does not exist: `adapter.cancelRun(intent.engineRunRef)`, then `markResolved(ref)`.
    - If cancel fails (adapter unavailable, network error): report in `cancelFailed[]` for retry on next sweep.
 
+#### Authority-read failure boundary
+
+Metadata and intent reads used to decide start failure or reconciliation MUST
+preserve `found`, `missing`, and `failed` as different outcomes. A rejected read,
+including a non-`Error` rejection, MUST NOT be converted to `null`.
+
+- DISPATCHED reconciliation with failed metadata authority returns `deferred`,
+  issues no provider call, and leaves the intent and canonical run unchanged.
+- Start failure handling requires successfully read metadata and intent in
+  addition to its own `created` preparation and an eligible phase. Missing intent
+  identity, a missing intent record, or failure of either read suppresses
+  `RunFailed`; the original start error is rethrown unchanged.
+- Diagnostics are best-effort and use bounded reason codes. Their failure cannot
+  grant mutation authority or replace the original start error.
+
+These rules govern the existing rails, not new services:
+
+| Command                                           | Owner and application port               | Adapter and scope                                                                             | Rejection proof                                             |
+| ------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `IWorkflowEngine.startRun`                        | Runtime / `StartRunApplicationFlow`      | Existing authorized tenant/project/environment entry; failure policy consumes own preparation | Failed/missing metadata or intent does not emit `RunFailed` |
+| `IRunMaintenanceService.reconcileOrphanedIntents` | Runtime / `StartRunIntentReconciliation` | Existing worker, service-context bounded batch; dry run is read-only                          | Failed metadata defers without cancel/resolve/expire        |
+| `IRunMaintenanceService.reconcileStartRunIntent`  | Runtime / `StartRunIntentReconciliation` | Existing recovery use case, tenant authorization before lookup                                | Inconclusive reconciliation remains blocked, not confirmed  |
+
+An authority read is evidence, not an ownership fence. Exclusive claim and
+cross-resource fencing remain tracked in [#2678](https://github.com/dunay2/dvt/issues/2678).
+Durable unknown outcomes, late RPC completion and confirmed compensation remain
+tracked in [#2679](https://github.com/dunay2/dvt/issues/2679). This read-boundary
+correction does not certify those separate guarantees.
+
 ### 3.5 Error types
 
 Two new error classes extending `DvtError`:

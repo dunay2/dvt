@@ -1,5 +1,6 @@
 import { readCanonicalRunStatus } from '../../core/lifecycle/coreRuntime.js';
 import { SnapshotProjector } from '../../core/SnapshotProjector.js';
+import { readStartRunAuthority } from '../startRun/readStartRunAuthority.js';
 
 import {
   RUN_MAINTENANCE_MESSAGE,
@@ -33,11 +34,6 @@ type RunMetadata = Awaited<
   ReturnType<RunMaintenanceServiceDeps['stateStoreRead']['getRunMetadataByRunId']>
 >;
 
-type RunMetadataReadResult =
-  | { readonly kind: 'found'; readonly metadata: NonNullable<RunMetadata> }
-  | { readonly kind: 'missing' }
-  | { readonly kind: 'failed'; readonly error: unknown };
-
 type CanonicalRunStatusReadResult =
   | { readonly kind: 'found'; readonly status: CanonicalRunStatus }
   | { readonly kind: 'failed'; readonly error: unknown };
@@ -57,11 +53,13 @@ export class PendingIntentReconciliationPolicy {
     intent: OrphanedIntent,
     traceContext: RunMaintenanceTraceContext
   ): Promise<ReconcileOrphanedIntentOutcome> {
-    const metadataRead = await this.readRunMetadata(intent);
+    const metadataRead = await readStartRunAuthority(() =>
+      this.deps.stateStoreRead.getRunMetadataByRunId(intent.tenantId, intent.runId)
+    );
     if (metadataRead.kind === 'failed') {
       return this.deferMetadataReadFailure(intent, metadataRead.error, traceContext);
     }
-    const existingMeta = metadataRead.kind === 'found' ? metadataRead.metadata : null;
+    const existingMeta = metadataRead.kind === 'found' ? metadataRead.value : null;
     const adapter = this.deps.adapters.get(intent.provider);
 
     if (!this.hasLookupRunRef(adapter)) {
@@ -330,18 +328,6 @@ export class PendingIntentReconciliationPolicy {
       },
     });
     return { deferred: intent.intentId };
-  }
-
-  private async readRunMetadata(intent: OrphanedIntent): Promise<RunMetadataReadResult> {
-    try {
-      const metadata = await this.deps.stateStoreRead.getRunMetadataByRunId(
-        intent.tenantId,
-        intent.runId
-      );
-      return metadata === null ? { kind: 'missing' } : { kind: 'found', metadata };
-    } catch (error) {
-      return { kind: 'failed', error };
-    }
   }
 
   private deferMetadataReadFailure(

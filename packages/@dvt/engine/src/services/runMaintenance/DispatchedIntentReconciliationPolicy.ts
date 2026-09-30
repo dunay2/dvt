@@ -1,3 +1,5 @@
+import { readStartRunAuthority } from '../startRun/readStartRunAuthority.js';
+
 import {
   RUN_MAINTENANCE_MESSAGE,
   RUN_MAINTENANCE_METRIC,
@@ -26,9 +28,15 @@ export class DispatchedIntentReconciliationPolicy {
     intent: OrphanedIntent,
     traceContext: RunMaintenanceTraceContext
   ): Promise<ReconcileOrphanedIntentOutcome> {
-    const existingMeta = await this.getRunMetadata(intent);
+    const metadata = await readStartRunAuthority(() =>
+      this.deps.stateStoreRead.getRunMetadataByRunId(intent.tenantId, intent.runId)
+    );
+    if (metadata.kind === 'failed') {
+      this.reportMetadataReadFailure(intent, traceContext);
+      return { deferred: intent.intentId };
+    }
 
-    if (existingMeta !== null) {
+    if (metadata.kind === 'found') {
       await this.deps.intentStore.markResolved({
         tenantId: intent.tenantId,
         intentId: intent.intentId,
@@ -94,13 +102,25 @@ export class DispatchedIntentReconciliationPolicy {
     }
   }
 
-  private async getRunMetadata(
-    intent: OrphanedIntent
-  ): Promise<Awaited<
-    ReturnType<RunMaintenanceServiceDeps['stateStoreRead']['getRunMetadataByRunId']>
-  > | null> {
-    return this.deps.stateStoreRead
-      .getRunMetadataByRunId(intent.tenantId, intent.runId)
-      .catch(() => null);
+  private reportMetadataReadFailure(
+    intent: OrphanedIntent,
+    traceContext: RunMaintenanceTraceContext
+  ): void {
+    this.deps.observability.incrementCounter(
+      RUN_MAINTENANCE_METRIC.intentDeferredMetadataReadFailedTotal,
+      {
+        provider: intent.provider,
+        operation: RUN_MAINTENANCE_OPERATION.reconcileOrphanedIntents,
+      }
+    );
+    this.deps.observability.warn({
+      msg: RUN_MAINTENANCE_MESSAGE.dispatchedIntentMetadataReadFailed,
+      context: traceContext,
+      attributes: {
+        intentId: intent.intentId,
+        runId: intent.runId,
+        reasonCode: 'metadata_read_failed',
+      },
+    });
   }
 }

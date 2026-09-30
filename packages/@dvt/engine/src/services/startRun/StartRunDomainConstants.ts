@@ -14,6 +14,8 @@ export const START_RUN_MESSAGE = {
     'Provider workflow started but intent persistence failed; leaving reconciliation to maintenance worker',
   skipRunFailedPendingIntent:
     'Skipping RunFailed emission after startRun error because intent remains pending',
+  skipRunFailedUnavailableAuthority:
+    'Skipping RunFailed emission because start-run authority could not be established',
   runFailedEmissionFailed: 'RunFailed emission failed after startRun error',
 } as const;
 

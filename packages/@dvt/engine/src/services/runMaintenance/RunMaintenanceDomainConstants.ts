@@ -24,6 +24,8 @@ export const RUN_MAINTENANCE_MESSAGE = {
     'Expired orphaned PENDING intent because the bootstrapped run is already terminal',
   dispatchedIntentResolvedBootstrapped:
     'Resolved orphaned DISPATCHED intent (run already bootstrapped)',
+  dispatchedIntentMetadataReadFailed:
+    'Keeping orphaned DISPATCHED intent unresolved because run metadata could not be read',
   dispatchedIntentMissingAdapterOrRef:
     'Cannot cancel orphaned intent: adapter or engineRunRef missing',
   dispatchedIntentCancelled: 'Cancelled orphaned provider workflow from DISPATCHED intent',

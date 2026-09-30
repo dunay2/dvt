@@ -5,6 +5,7 @@
 import type { StartRunTraceContext } from '../../core/lifecycle/StartRunTraceContext.js';
 import { toErrorMessage } from '../../utils/errorUtils.js';
 
+import { readStartRunAuthority } from './readStartRunAuthority.js';
 import { START_RUN_FAILURE_REASON, START_RUN_MESSAGE } from './StartRunDomainConstants.js';
 import type { StartRunEventFactory } from './StartRunEventFactory.js';
 import type { IStartRunFailurePolicy, StartRunErrorContext } from './StartRunTypes.js';
@@ -137,19 +138,41 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
       throw error;
     }
 
-    const failMeta = await this.getFailureMetadata(resolvedContext.tenantId, resolvedContext.runId);
-    if (failMeta === null) throw error;
-
-    const pendingIntent = await this.getPendingIntent(
-      resolvedContext.tenantId,
-      errorContext.intentId
-    );
-    if (pendingIntent?.status === 'PENDING') {
-      this.reportSkipRunFailedPendingIntent(pendingIntent, traceContext);
+    const { intentId } = errorContext;
+    if (intentId === undefined) {
+      this.reportUnavailableAuthority('intent_missing', traceContext);
       throw error;
     }
 
-    await this.emitRunFailedBestEffort(failMeta, traceContext);
+    const metadata = await readStartRunAuthority(() =>
+      this.deps.stateStoreRead.getRunMetadataByRunId(
+        resolvedContext.tenantId,
+        resolvedContext.runId
+      )
+    );
+    if (metadata.kind !== 'found') {
+      this.reportUnavailableAuthority(
+        metadata.kind === 'failed' ? 'metadata_read_failed' : 'metadata_missing',
+        traceContext
+      );
+      throw error;
+    }
+    const intent = await readStartRunAuthority(() =>
+      this.deps.intentStore.getIntent({ tenantId: resolvedContext.tenantId, intentId })
+    );
+    if (intent.kind !== 'found') {
+      this.reportUnavailableAuthority(
+        intent.kind === 'failed' ? 'intent_read_failed' : 'intent_missing',
+        traceContext
+      );
+      throw error;
+    }
+    if (intent.value.status === 'PENDING') {
+      this.reportSkipRunFailedPendingIntent(intent.value, traceContext);
+      throw error;
+    }
+
+    await this.emitRunFailedBestEffort(metadata.value, traceContext);
     throw error;
   }
 
@@ -219,16 +242,20 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
     }
   }
 
-  private async getFailureMetadata(tenantId: string, runId: string): Promise<RunMetadata | null> {
-    return this.deps.stateStoreRead.getRunMetadataByRunId(tenantId, runId).catch(() => null);
-  }
-
-  private async getPendingIntent(
-    tenantId: string,
-    intentId: string | undefined
-  ): Promise<Awaited<ReturnType<IStartRunIntentStore['getIntent']>> | null> {
-    if (intentId === undefined) return null;
-    return this.deps.intentStore.getIntent({ tenantId, intentId }).catch(() => null);
+  private reportUnavailableAuthority(
+    reasonCode:
+      'metadata_read_failed' | 'metadata_missing' | 'intent_read_failed' | 'intent_missing',
+    traceContext: StartRunTraceContext
+  ): void {
+    try {
+      this.deps.observability.logs.warn({
+        msg: START_RUN_MESSAGE.skipRunFailedUnavailableAuthority,
+        context: traceContext,
+        attributes: { reasonCode },
+      });
+    } catch {
+      // Diagnostics cannot grant authority or replace the original start error.
+    }
   }
 
   private async emitRunFailedBestEffort(
