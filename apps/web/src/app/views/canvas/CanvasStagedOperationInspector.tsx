@@ -15,7 +15,6 @@ import { resolveCanvasRelationalOperationPresentation } from './canvasRelational
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import styles from './CanvasStagedOperationInspector.module.css';
 
-
 export function CanvasStagedOperationInspector({
   staged,
   editingDocument,
@@ -37,12 +36,8 @@ export function CanvasStagedOperationInspector({
     update: Pick<CanvasStagedOperation, 'operation' | 'semanticDocument'>
   ) => void | boolean;
 }>): JSX.Element {
-  if (
-    (isCanvasJoinOperation(staged.operation) ||
-      isCanvasSetOperation(staged.operation) ||
-      staged.operation === 'cross_join') &&
-    staged.semanticDocument != null
-  )
+  const editor = readCanvasStagedCompositionSignature(staged.operation).editor;
+  if (editor === 'binary' && staged.semanticDocument != null)
     return (
       <CanvasStagedBinaryInspector
         staged={staged}
