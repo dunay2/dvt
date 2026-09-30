@@ -122,13 +122,8 @@ describe('IntentReconcilerWorker', () => {
     expect(reconcile).toHaveBeenCalledTimes(1);
 
     inFlight.resolve({
+      ...resultType(),
       inspected: 1,
-      expired: [],
-      resolved: [],
-      cancelled: [],
-      cancelFailed: [],
-      deferred: [],
-      escalated: [],
     });
     await Promise.resolve();
     await vi.advanceTimersByTimeAsync(20);
@@ -207,12 +202,8 @@ describe('IntentReconcilerWorker', () => {
       .fn()
       .mockRejectedValueOnce(infraError)
       .mockResolvedValueOnce({
+        ...resultType(),
         inspected: 1,
-        expired: [],
-        resolved: [],
-        cancelled: [],
-        cancelFailed: [],
-        deferred: [],
       })
       .mockRejectedValueOnce(infraError);
     const { worker, metrics } = setupTest(reconcile, {
@@ -258,12 +249,8 @@ describe('IntentReconcilerWorker', () => {
     worker.start();
     await vi.advanceTimersByTimeAsync(0);
     inFlight.resolve({
+      ...resultType(),
       inspected: 1,
-      expired: [],
-      resolved: [],
-      cancelled: [],
-      cancelFailed: [],
-      deferred: [],
     });
     await vi.advanceTimersByTimeAsync(0);
 
@@ -281,12 +268,12 @@ describe('IntentReconcilerWorker', () => {
 
   it('emits resolved_total and cancelFailed_total metrics with the exact reconcile result sizes', async () => {
     const reconcile = vi.fn().mockResolvedValue({
+      ...resultType(),
       inspected: 7,
       expired: ['e1'],
       resolved: ['r1', 'r2', 'r3'],
       cancelled: ['c1', 'c2'],
       cancelFailed: ['f1', 'f2', 'f3'],
-      deferred: [],
     });
     const { worker, metrics } = setupTest(reconcile, {
       intervalMs: 10_000,
