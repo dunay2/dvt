@@ -133,6 +133,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/monaco/index.md
   - docs/architecture/components/web/monaco/monaco-bundle-isolation-component.md
   - docs/architecture/components/web/monaco/monaco-bundle-isolation-user-stories.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
   - docs/planning/closeouts/20260522-f17e-monaco-bundle-isolation-closeout.md
   - docs/planning/proposals/mandatory/frontend-and-ux/f17e-monaco-bundle-isolation-plan-20260522.md
 forbiddenImplementationSurfaces:
