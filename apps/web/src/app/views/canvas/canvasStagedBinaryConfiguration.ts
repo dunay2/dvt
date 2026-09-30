@@ -10,6 +10,7 @@ import { joinConditionFields } from './canvasSelectedJoin';
 import { createSourceDocument } from './canvasSourceDocument';
 import { canvasInputConnection } from './canvasSourceRelation';
 import {
+  canvasStagedOperationAppliedOperation,
   readCanvasStagedCompositionSignature,
   type CanvasStagedOperation,
 } from './canvasStagedOperation';
@@ -65,6 +66,7 @@ export function configureCanvasStagedBinary(
 ): CanvasStagedOperation {
   const signature = readCanvasStagedCompositionSignature(operation.operation);
   if (signature.configuration !== 'binary') return operation;
+  const canonicalOperation = canvasStagedOperationAppliedOperation(operation.operation, null);
   if (operation.inputs.length !== 2 || operation.inputs.some((input) => input == null)) {
     const { semanticDocument: _discarded, ...pending } = operation;
     return operation.semanticDocument == null ? operation : pending;
@@ -83,9 +85,9 @@ export function configureCanvasStagedBinary(
       binding: {
         relationId: operation.id,
         relAnchor: nextAnchor,
-        displayName: operation.operation,
+        displayName: canonicalOperation,
       },
-      operation: operation.operation,
+      operation: canonicalOperation,
       inputs: operands.map((operand) => operand.root),
       schemas: operands.map((operand) => operand.schema),
       predicate: signature.operator === 'join' ? compositionPredicate(operands) : undefined,
