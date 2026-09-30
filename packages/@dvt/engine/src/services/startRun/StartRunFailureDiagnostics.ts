@@ -16,9 +16,13 @@ import {
   START_RUN_MESSAGE,
   START_RUN_METRIC,
 } from './StartRunDomainConstants.js';
-import type { IStartRunFailurePolicy } from './StartRunTypes.js';
-
-type ResolutionContext = Parameters<IStartRunFailurePolicy['markIntentResolvedBestEffort']>[0];
+type ResolutionContext = {
+  intentId: string;
+  tenantId: string;
+  runId: string;
+  provider: EngineRunRef['provider'];
+  traceContext: StartRunTraceContext;
+};
 type DiagnosticDeps = {
   observability: IObservability;
   clock: IClock;
@@ -146,8 +150,8 @@ export class StartRunFailureDiagnostics {
       this.deps.observability.logs.error({
         msg:
           reason === 'bootstrap'
-            ? START_RUN_MESSAGE.compensationCancelFailed
-            : START_RUN_MESSAGE.providerRefReconciliationCancelFailed,
+            ? START_RUN_MESSAGE.compensationPersistenceFailed
+            : START_RUN_MESSAGE.providerRefCompensationPersistenceFailed,
         context,
         err: error,
         attributes: {

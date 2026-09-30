@@ -26,7 +26,7 @@ const pendingStatus: CanonicalRunStatus = {
 };
 
 describe('RunStartDispatchResolver', () => {
-  it('returns the persisted provider reference after the run leaves pending', async () => {
+  it('does not treat a non-pending snapshot as confirmation of provider dispatch', async () => {
     const intentStore = { getIntent: vi.fn() };
     const resolver = new RunStartDispatchResolver(intentStore as never, {
       startRunIntentId: vi.fn(),
@@ -34,11 +34,11 @@ describe('RunStartDispatchResolver', () => {
 
     await expect(
       resolver.resolve(metadata, { runId: 'run-a', status: 'RUNNING' })
-    ).resolves.toEqual({ kind: 'confirmed', runRef: metadata.providerRef });
-    expect(intentStore.getIntent).not.toHaveBeenCalled();
+    ).resolves.toEqual({ kind: 'unconfirmed' });
+    expect(intentStore.getIntent).toHaveBeenCalledOnce();
   });
 
-  it('returns the dispatched provider reference for a pending canonical snapshot', async () => {
+  it('returns the confirmed provider reference for a pending canonical snapshot', async () => {
     const dispatchedRunRef = {
       ...metadata.providerRef,
       workflowId: asNonBlankString('actual-workflow'),
@@ -49,8 +49,10 @@ describe('RunStartDispatchResolver', () => {
         tenantId: 'tenant-a',
         runId: 'run-a',
         provider: 'temporal',
-        status: 'DISPATCHED',
-        engineRunRef: dispatchedRunRef,
+        status: 'RESOLVED',
+        providerOutcome: { kind: 'started', runRef: dispatchedRunRef },
+        compensation: { kind: 'not_required' },
+        reconciliation: { kind: 'pending' },
       }),
     };
     const idempotency = { startRunIntentId: vi.fn().mockReturnValue('intent-a') };
@@ -71,7 +73,23 @@ describe('RunStartDispatchResolver', () => {
     null,
     { status: 'PENDING' },
     { status: 'DISPATCHED' },
-    { status: 'EXPIRED', engineRunRef: metadata.providerRef },
+    { status: 'EXPIRED', providerOutcome: { kind: 'not_requested' } },
+    {
+      status: 'DISPATCHED',
+      providerOutcome: { kind: 'started', runRef: metadata.providerRef },
+      compensation: { kind: 'required' },
+    },
+    {
+      status: 'RESOLVED',
+      providerOutcome: { kind: 'started', runRef: metadata.providerRef },
+      compensation: { kind: 'confirmed' },
+    },
+    {
+      status: 'RESOLVED',
+      providerOutcome: { kind: 'started', runRef: metadata.providerRef },
+      compensation: { kind: 'not_required' },
+      reconciliation: { kind: 'escalated' },
+    },
   ])('fails closed when pending dispatch evidence is incomplete: %j', async (intent) => {
     const resolver = new RunStartDispatchResolver(
       { getIntent: vi.fn().mockResolvedValue(intent) } as never,

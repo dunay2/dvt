@@ -14,22 +14,16 @@ export interface RunMaintenanceServiceDeps {
   observability: import('@dvt/observability').IObservability;
 }
 
-export type OrphanedIntent = {
-  readonly intentId: string;
-  readonly tenantId: string;
-  readonly runId: string;
-  readonly provider: import('@dvt/contracts').EngineRunRef['provider'];
-  readonly status: string;
-  readonly engineRunRef?: import('@dvt/contracts').EngineRunRef;
-};
+export type OrphanedIntent = Readonly<import('../../ports/IStartRunIntentStore.js').StartRunIntent>;
 
 export type ReconcileOrphanedIntentOutcome = {
+  readonly reasonCode?: import('../../ports/IStartRunIntentStore.js').StartRunReconciliationReason;
   readonly expired?: string;
   readonly resolved?: string;
   readonly cancelled?: string;
   readonly cancelFailed?: string;
   readonly deferred?: string;
-  readonly readyToDispatch?: string;
+  readonly escalated?: string;
 };
 
 export function buildMaintenanceContext(tenantId: string): {

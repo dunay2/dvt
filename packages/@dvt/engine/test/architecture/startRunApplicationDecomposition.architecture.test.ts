@@ -42,7 +42,7 @@ describe('StartRun application decomposition architecture', () => {
       'IStartRunAdmissionService',
       'StartRunIntentService',
       'admissionService.admit',
-      'intentService.createIntent',
+      'intentService.claimIntent',
       'executionService.executeStartRun',
       'failurePolicy.handleStartRunError',
     ]) {
@@ -53,7 +53,7 @@ describe('StartRun application decomposition architecture', () => {
       'private async createStartRunIntent',
       'planIntegrityValidator.fetchAndValidate',
       'toScopedPlanRef(',
-      'intentStore.createIntent',
+      'intentStore.claimIntent',
       'idempotency.startRunIntentId',
       'guard.resolveAdapter',
       'guard.assertExecutionPolicyAllowed',

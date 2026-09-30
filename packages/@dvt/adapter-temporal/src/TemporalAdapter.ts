@@ -26,7 +26,7 @@ import {
   parseSignalRequest,
 } from '@dvt/contracts';
 import { RUN_PLAN_WORKFLOW, WorkflowSignals } from '@dvt/contracts';
-import type { IProviderAdapter } from '@dvt/engine';
+import type { IProviderAdapter, ProviderRunObservation } from '@dvt/engine';
 import { WorkflowIdConflictPolicy, WorkflowIdReusePolicy } from '@temporalio/client';
 
 import type { TemporalAdapterConfig } from './config.js';
@@ -39,6 +39,7 @@ import {
   toTemporalRunRef,
   toTemporalTaskQueue,
   toTemporalWorkflowId,
+  toStartRunObservation,
 } from './WorkflowMapper.js';
 import type { WorkflowStepActivityRouting } from './workflows/runPlanWorkflow.types.js';
 
@@ -63,7 +64,7 @@ interface WorkflowClientLike {
     firstExecutionRunId?: string;
   }>;
   withAbortSignal?<R>(abortSignal: globalThis.AbortSignal, fn: () => Promise<R>): Promise<R>;
-  getHandle(workflowId: string): WorkflowHandleLike;
+  getHandle(workflowId: string, runId?: string): WorkflowHandleLike;
 }
 
 export interface TemporalAdapterDeps {
@@ -144,10 +145,12 @@ export class TemporalAdapter implements IProviderAdapter {
     });
   }
 
-  async cancelRun(runRef: EngineRunRef): Promise<void> {
+  async cancelRun(runRef: EngineRunRef, executionId?: string): Promise<void> {
     const validatedRunRef = parseEngineRunRef(runRef);
     const workflowClient = await this.getClient();
-    await workflowClient.getHandle(validatedRunRef.workflowId).cancel();
+    if (executionId !== undefined && !executionId.trim())
+      throw new Error('TEMPORAL_EXECUTION_ID_REQUIRED');
+    await workflowClient.getHandle(validatedRunRef.workflowId, executionId).cancel();
   }
 
   async getProviderStatusView(runRef: EngineRunRef): Promise<ProviderRunStatusView> {
@@ -189,23 +192,24 @@ export class TemporalAdapter implements IProviderAdapter {
    * Returns null when the workflow does not exist on the Temporal server.
    * Propagates any non-not-found error (network failure, auth error, etc.).
    */
-  async lookupRunRef(runId: string, tenantId: string): Promise<EngineRunRef | null> {
+  async observeStartRun(runId: string, tenantId: string): Promise<ProviderRunObservation> {
     const workflowId = toTemporalWorkflowId(runId);
     const taskQueue = toTemporalTaskQueue(tenantId, this.deps.config);
     const client = await this.getClient();
     const handle = client.getHandle(workflowId);
     try {
-      await this.describeWithTimeout(client, handle);
-      return toTemporalRunRef({
+      const description = await this.describeWithTimeout(client, handle);
+      const runRef = toTemporalRunRef({
         tenantId,
         workflowId,
         runId,
         config: this.deps.config,
         taskQueue,
       });
+      return toStartRunObservation(description, runRef);
     } catch (error) {
       if (isWorkflowNotFound(error)) {
-        return null;
+        return { kind: 'missing_at_observation' };
       }
       throw error;
     }
@@ -245,23 +249,22 @@ export class TemporalAdapter implements IProviderAdapter {
   private async describeWithTimeout(
     client: WorkflowClientLike,
     handle: WorkflowHandleLike
-  ): Promise<void> {
+  ): Promise<unknown> {
     // Real Temporal workflow clients expose BaseClient.withAbortSignal().
     // Prefer that path so lookup probes stop the underlying RPC on timeout.
     if (typeof client.withAbortSignal === 'function') {
-      await withAbortSignalTimeout(
+      return withAbortSignalTimeout(
         (signal) => client.withAbortSignal!(signal, () => handle.describe()),
         this.deps.config.timeouts.requestTimeoutMs,
-        'lookupRunRef.describe'
+        'observeStartRun.describe'
       );
-      return;
     }
 
     // Test doubles and minimal injected clients may not implement SDK helpers.
-    await withTimeoutMs(
+    return withTimeoutMs(
       handle.describe(),
       this.deps.config.timeouts.requestTimeoutMs,
-      'lookupRunRef.describe'
+      'observeStartRun.describe'
     );
   }
 }

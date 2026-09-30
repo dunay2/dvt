@@ -53,16 +53,20 @@ export interface ReconcileOrphanedIntentsResult {
    * is executed.
    */
   deferred: string[];
+  /** Durable escalation requires operator attention; it is not a successful start. */
+  escalated: string[];
 }
 
 export interface ReconcileStartRunIntentOptions {
   tenantId: string;
   intentId: string;
+  /** Minimum store-clock age before maintenance may rotate acquisition authority. */
+  minimumAgeMs?: number;
 }
 
 export type ReconcileStartRunIntentResult =
   | Readonly<{ kind: 'confirmed' }>
-  | Readonly<{ kind: 'ready_to_dispatch' }>
+  | Readonly<{ kind: 'escalated' }>
   | Readonly<{ kind: 'missing' }>
   | Readonly<{ kind: 'blocked' }>;
 

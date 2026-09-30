@@ -6,22 +6,17 @@ class RecordingMigrationClient {
   public readonly queries: Array<{ sql: string; params?: unknown[] }> = [];
   public releaseCalls = 0;
 
-  constructor(private readonly appliedVersions: ReadonlySet<string> = new Set<string>()) {}
+  constructor(private readonly existing = false) {}
 
   async query(
     sql: string,
     params?: unknown[]
-  ): Promise<{ rows: { exists: boolean }[]; rowCount: number }> {
+  ): Promise<{ rows: Record<string, unknown>[]; rowCount: number }> {
     this.queries.push({ sql, params });
-    if (
-      sql.includes('SELECT EXISTS') &&
-      Array.isArray(params) &&
-      params.length >= 2 &&
-      typeof params[1] === 'string'
-    ) {
-      return { rows: [{ exists: this.appliedVersions.has(params[1]) }], rowCount: 1 };
+    if (sql.includes('to_regclass') && this.existing) {
+      return { rows: [{ relation: 'DvtOps.start_run_intents' }], rowCount: 1 };
     }
-    return { rows: [{ exists: false }], rowCount: 0 };
+    return { rows: [], rowCount: 0 };
   }
 
   release(): void {
@@ -78,46 +73,27 @@ describe('StartRunIntentSchemaManager migration locking', () => {
     expect(migrationSql).toContain("'start-run-intent-reconciler'");
     expect(migrationSql).toContain("tenant_id = current_setting('dvt.tenant_id', true)");
     expect(client.queries.flatMap((query) => query.params ?? [])).toContain(
-      '20260426_005_start_run_intents_table_scoped_service_owner_rls'
-    );
-    expect(client.queries.flatMap((query) => query.params ?? [])).toContain(
-      '20260512_006_start_run_intents_tenant_mode_rls_hardening'
+      '20260930_owned_start_protocol'
     );
   });
 
-  it('reapplies hardened tenant-mode RLS when earlier start-run intent RLS migrations are already recorded', async () => {
-    const client = new RecordingMigrationClient(
-      new Set([
-        '20260305_001_start_run_intents_base',
-        '20260305_002_start_run_intents_status_enum_upgrade',
-        '20260425_003_start_run_intents_rls_baseline',
-        '20260425_004_start_run_intents_service_owner_rls_hardening',
-        '20260426_005_start_run_intents_table_scoped_service_owner_rls',
-      ])
-    );
+  it('refuses an existing legacy registry without attempting DDL or row updates', async () => {
+    const client = new RecordingMigrationClient(true);
     const manager = new StartRunIntentSchemaManager({
-      pool: {
-        connect: async () => client,
-      } as never,
+      pool: { connect: async () => client } as never,
       schema: 'DvtOps',
     });
-
-    await manager.migrate();
-
-    const insertedVersions = client.queries
-      .filter(
-        (query) => query.sql.includes('INSERT INTO') && query.sql.includes('schema_migrations')
+    await expect(manager.migrate()).rejects.toThrow('START_RUN_INTENT_SCHEMA_INCOMPATIBLE');
+    expect(
+      client.queries.some((query) =>
+        /^(CREATE|ALTER|DROP|INSERT|UPDATE|DELETE)\b/i.test(query.sql.trim())
       )
-      .map((query) => query.params?.[1]);
-    expect(insertedVersions).toEqual(['20260512_006_start_run_intents_tenant_mode_rls_hardening']);
-
-    const migrationSql = client.queries.map((query) => query.sql).join('\n');
-    expect(migrationSql).toContain('DROP POLICY IF EXISTS dvt_tenant_isolation');
-    expect(migrationSql).toContain("current_setting('dvt.access_mode', true) = 'tenant'");
-    expect(migrationSql).toContain("tenant_id = current_setting('dvt.tenant_id', true)");
+    ).toBe(false);
+    expect(client.queries.at(-1)?.sql).toContain('pg_advisory_unlock');
+    expect(client.releaseCalls).toBe(1);
   });
 
-  it('records hardening migration descriptions as idempotent reapplications, not historical snapshots', async () => {
+  it('records only the current initializer identity without legacy conversion', async () => {
     const client = new RecordingMigrationClient();
     const manager = new StartRunIntentSchemaManager({
       pool: {
@@ -135,17 +111,8 @@ describe('StartRunIntentSchemaManager migration locking', () => {
       .map((query) => query.params?.[2])
       .filter((value): value is string => typeof value === 'string');
 
-    expect(descriptions).toContain(
-      'Enable forced RLS for start_run_intents; hardening steps remain idempotent and do not preserve a historical policy snapshot'
-    );
-    expect(descriptions).toContain(
-      'Reapply current start_run_intents policy with service-owner hardening; idempotent and not a historical policy snapshot'
-    );
-    expect(descriptions).toContain(
-      'Reapply current start_run_intents policy with table-scoped reconciler ownership; idempotent and not a historical policy snapshot'
-    );
-    expect(descriptions).toContain(
-      'Reapply current start_run_intents policy requiring explicit tenant access mode; idempotent and not a historical policy snapshot'
-    );
+    expect(descriptions).toEqual([
+      'Exclusive start ownership protocol; initialize only, no legacy conversion',
+    ]);
   });
 });

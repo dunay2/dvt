@@ -55,11 +55,8 @@ it('emits warning and metric when markResolved fails after dispatch', async () =
   const { engine, intentStore } = createEngine({ adapters, observability: obs });
   vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('intent resolve boom'));
 
-  await expect(engine.startRun(makePlanRef(), makeContext('obs-resolve-warn-1'))).resolves.toEqual(
-    expect.objectContaining({
-      provider: 'temporal',
-      runId: 'obs-resolve-warn-1',
-    })
+  await expect(engine.startRun(makePlanRef(), makeContext('obs-resolve-warn-1'))).rejects.toThrow(
+    /resolve boom/
   );
 
   expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
@@ -76,27 +73,26 @@ it('emits warning and metric when markResolved fails on no-estimate bootstrap-su
 
   await expect(
     engine.startRun(makePlanRef(), makeContext('obs-no-estimate-resolve-warn-1'))
-  ).resolves.toEqual(
-    expect.objectContaining({
-      provider: 'temporal',
-      runId: 'obs-no-estimate-resolve-warn-1',
-    })
-  );
+  ).rejects.toThrow(/resolve boom/);
 
   expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
   expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
 });
 
-it('preserves bootstrap error and emits warning/metric when markResolved also fails on compensation path', async () => {
-  const { obs, counters, warns } = makeTrackingObservability();
+it('preserves bootstrap error and reports durable compensation persistence failure', async () => {
+  const { obs } = makeTrackingObservability();
+  const error = vi.spyOn(obs.logs, 'error');
   const adapters = makeAdapters();
   const store = new InMemoryTxStore();
-  const originalBootstrap = store.bootstrapRunTx.bind(store);
-  store.bootstrapRunTx = async (input) => {
-    if (input.metadata.runId === 'obs-compensation-resolve-warn-1') {
+  const originalBootstrap = store.applyStartRunWrite.bind(store);
+  store.applyStartRunWrite = async (receipt, write) => {
+    if (
+      write.kind === 'bootstrap' &&
+      write.input.metadata.runId === 'obs-compensation-resolve-warn-1'
+    ) {
       throw new Error('bootstrap boom');
     }
-    return originalBootstrap(input);
+    return originalBootstrap(receipt, write);
   };
 
   const { engine, intentStore } = createEngine({
@@ -104,19 +100,21 @@ it('preserves bootstrap error and emits warning/metric when markResolved also fa
     observability: obs,
     stateStore: store,
   });
-  vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(
-    new Error('compensation resolve boom')
+  vi.spyOn(intentStore, 'recordReconciliation').mockRejectedValueOnce(
+    new Error('compensation write boom')
   );
 
   await expect(
     engine.startRun(makePlanRef(), makeContext('obs-compensation-resolve-warn-1'))
   ).rejects.toThrow(/bootstrap boom/);
 
-  expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
-  expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
+  expect(error).toHaveBeenCalledWith(
+    expect.objectContaining({ msg: 'Compensation persistence failed after bootstrap error' })
+  );
+  expect((await intentStore.listOrphaned(0, Date.now()))[0]?.status).toBe('DISPATCHED');
 });
 
-it('keeps startRun non-fatal when observability throws while reporting markResolved failure', async () => {
+it('preserves the completion error when observability throws while reporting markResolved failure', async () => {
   const { engine } = setupMarkResolvedFailTest({
     collectorOverrides: undefined,
     adapterOverrides: undefined,
@@ -125,9 +123,7 @@ it('keeps startRun non-fatal when observability throws while reporting markResol
 
   await expect(
     engine.startRun(makePlanRef(), makeContext('obs-telemetry-fail-soft-1'))
-  ).resolves.toEqual(
-    expect.objectContaining({ provider: 'temporal', runId: 'obs-telemetry-fail-soft-1' })
-  );
+  ).rejects.toThrow(/resolve boom/);
 });
 
 it('still emits warning when metric reporting fails for markResolved failure', async () => {
@@ -147,9 +143,7 @@ it('still emits warning when metric reporting fails for markResolved failure', a
 
   await expect(
     engine.startRun(makePlanRef(), makeContext('obs-metrics-fail-warn-still-emits-1'))
-  ).resolves.toEqual(
-    expect.objectContaining({ provider: 'temporal', runId: 'obs-metrics-fail-warn-still-emits-1' })
-  );
+  ).rejects.toThrow(/resolve boom/);
 
   expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
 });
@@ -168,9 +162,7 @@ it('still emits warning with semantic attributes when metrics counter creation f
     failOnce: true,
   });
 
-  await expect(engine.startRun(makePlanRef(), makeContext(runId))).resolves.toEqual(
-    expect.objectContaining({ provider: 'temporal', runId })
-  );
+  await expect(engine.startRun(makePlanRef(), makeContext(runId))).rejects.toThrow(/resolve boom/);
 
   const warning = warnEntries.find(
     (entry) => entry.msg === 'markResolved failed; leaving intent cleanup to reconciliation worker'
@@ -188,7 +180,7 @@ it('still emits warning with semantic attributes when metrics counter creation f
   expect(metricCalls).toHaveLength(0);
 });
 
-it('keeps startRun non-fatal when both metric and warning sinks throw on markResolved failure', async () => {
+it('preserves the completion error when both metric and warning sinks throw on markResolved failure', async () => {
   const { engine } = setupMarkResolvedFailTest({
     collectorOverrides: {
       counter(name: string, labels?: Record<string, string>) {
@@ -206,18 +198,17 @@ it('keeps startRun non-fatal when both metric and warning sinks throw on markRes
 
   await expect(
     engine.startRun(makePlanRef(), makeContext('obs-both-sinks-fail-soft-1'))
-  ).resolves.toEqual(
-    expect.objectContaining({ provider: 'temporal', runId: 'obs-both-sinks-fail-soft-1' })
-  );
+  ).rejects.toThrow(/resolve boom/);
 });
 
 it('emits one warning per failed markResolved under concurrent starts', async () => {
   const { engine, warns } = setupMarkResolvedFailTest();
 
-  await Promise.all([
+  const results = await Promise.allSettled([
     engine.startRun(makePlanRef(), makeContext('obs-concurrent-1')),
     engine.startRun(makePlanRef(), makeContext('obs-concurrent-2')),
   ]);
+  expect(results.map((result) => result.status)).toEqual(['rejected', 'rejected']);
 
   const warningMsg = 'markResolved failed; leaving intent cleanup to reconciliation worker';
   expect(warns.filter((msg) => msg === warningMsg)).toHaveLength(2);
@@ -228,12 +219,7 @@ it('records expected metric labels when markResolved fails', async () => {
 
   await expect(
     engine.startRun(makePlanRef(), makeContext('obs-metric-labels-on-resolve-fail-1'))
-  ).resolves.toEqual(
-    expect.objectContaining({
-      provider: 'temporal',
-      runId: 'obs-metric-labels-on-resolve-fail-1',
-    })
-  );
+  ).rejects.toThrow(/resolve boom/);
 
   expect(metricCalls).toContainEqual(
     expect.objectContaining({
@@ -256,7 +242,10 @@ it('emits one warning per failed markResolved under burst concurrency', async ()
   const { engine, warns } = setupMarkResolvedFailTest();
 
   const runIds = Array.from({ length: 5 }, (_, idx) => `obs-concurrent-burst-${idx + 1}`);
-  await Promise.all(runIds.map((runId) => engine.startRun(makePlanRef(), makeContext(runId))));
+  const results = await Promise.allSettled(
+    runIds.map((runId) => engine.startRun(makePlanRef(), makeContext(runId)))
+  );
+  expect(results.map((result) => result.status)).toEqual(runIds.map(() => 'rejected'));
 
   const warningMsg = 'markResolved failed; leaving intent cleanup to reconciliation worker';
   expect(warns.filter((msg) => msg === warningMsg)).toHaveLength(runIds.length);
@@ -266,12 +255,7 @@ it('emits warning with stable payload shape on markResolved failure', async () =
   const runId = 'obs-warning-payload-shape-1';
   const { engine, warnEntries } = setupMarkResolvedFailTest({ failOnce: true });
 
-  await expect(engine.startRun(makePlanRef(), makeContext(runId))).resolves.toEqual(
-    expect.objectContaining({
-      provider: 'temporal',
-      runId,
-    })
-  );
+  await expect(engine.startRun(makePlanRef(), makeContext(runId))).rejects.toThrow(/resolve boom/);
 
   const warning = warnEntries.find(
     (entry) => entry.msg === 'markResolved failed; leaving intent cleanup to reconciliation worker'
@@ -323,12 +307,7 @@ it('attempts metric emission before warning emission when markResolved fails', a
 
   await expect(
     engine.startRun(makePlanRef(), makeContext('obs-order-metric-before-warning-1'))
-  ).resolves.toEqual(
-    expect.objectContaining({
-      provider: 'temporal',
-      runId: 'obs-order-metric-before-warning-1',
-    })
-  );
+  ).rejects.toThrow(/resolve boom/);
 
   expect(calls).toEqual(expect.arrayContaining(['metric.counter', 'metric.add', 'log.warn']));
   expect(calls.indexOf('metric.add')).toBeGreaterThanOrEqual(0);
@@ -339,7 +318,10 @@ it('emits one warning per failed markResolved under high burst concurrency', asy
   const { engine, warns } = setupMarkResolvedFailTest();
 
   const runIds = Array.from({ length: 20 }, (_, idx) => `obs-concurrent-high-burst-${idx + 1}`);
-  await Promise.all(runIds.map((runId) => engine.startRun(makePlanRef(), makeContext(runId))));
+  const results = await Promise.allSettled(
+    runIds.map((runId) => engine.startRun(makePlanRef(), makeContext(runId)))
+  );
+  expect(results.map((result) => result.status)).toEqual(runIds.map(() => 'rejected'));
 
   const warningMsg = 'markResolved failed; leaving intent cleanup to reconciliation worker';
   expect(warns.filter((msg) => msg === warningMsg)).toHaveLength(runIds.length);
@@ -359,7 +341,10 @@ it('keeps warning cardinality stable across repeated burst rounds', async () => 
       { length: burstSize },
       (_, idx) => `obs-concurrent-round-${round + 1}-${idx + 1}`
     );
-    await Promise.all(runIds.map((runId) => engine.startRun(makePlanRef(), makeContext(runId))));
+    const results = await Promise.allSettled(
+      runIds.map((runId) => engine.startRun(makePlanRef(), makeContext(runId)))
+    );
+    expect(results.map((result) => result.status)).toEqual(runIds.map(() => 'rejected'));
   }
 
   const warningMsg = 'markResolved failed; leaving intent cleanup to reconciliation worker';
@@ -408,12 +393,7 @@ it('falls back to stderr when both observability sinks fail', async () => {
 
     await expect(
       engine.startRun(makePlanRef(), makeContext('obs-fallback-stderr-1'))
-    ).resolves.toEqual(
-      expect.objectContaining({
-        provider: 'temporal',
-        runId: 'obs-fallback-stderr-1',
-      })
-    );
+    ).rejects.toThrow(/resolve boom/);
 
     expect(stderrSpy).toHaveBeenCalledWith(
       expect.stringContaining(

@@ -24,6 +24,7 @@ export interface StateStoreRoleBindings {
 }
 
 const REQUIRED_METHODS = [
+  'applyStartRunWrite',
   'bootstrapRunTx',
   'bootstrapRecoveryRunTx',
   'appendAndEnqueueTx',

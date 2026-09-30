@@ -17,6 +17,12 @@ risk: >
   or grant failure authority before bootstrap succeeds. Failed authority reads can also be confused
   with confirmed absence and grant cancellation or RunFailed authority incorrectly.
 mitigations:
+  - Exclusive receipt acquisition, store-time revision reclaim and transactional fencing guard
+    canonical bootstrap, provider binding and failure writes in both storage adapters.
+  - Unknown provider outcomes precede the dispatch RPC. Observation-only reconciliation persists
+    bounded backoff/escalation and never automatically redispatches a missing provider execution.
+  - Compensation remains required until cancellation or termination is observed for the exact
+    execution. Acknowledgement, missing history and incompatible terminal outcomes are not success.
   - Typed readonly preparation and explicit phase travel through the existing start coordinator,
     execution service and common failure handler.
   - Created authority originates only after successful fresh or recovery bootstrap.
@@ -33,8 +39,9 @@ mitigations:
   - Temporal start explicitly rejects both running identity conflicts and reuse of retained closed
     workflow IDs; it propagates duplicate errors without retries or synthetic success.
 limitations:
-  - This first cut does not add an exclusive intent claim; GH-2678 owns fencing.
-  - Pre-catch compensation and unknown provider outcomes remain governed by GH-2679.
+  - The ownership/observation cut requires exact-SHA acceptance and independent review before
+    integration; local implementation and directed proofs alone do not close GH-2678.
+  - GH-2679 remains open for positive safe-redispatch acceptance. This cut deliberately forbids it.
   - Temporal identity rejection is bounded by namespace retention/history deletion and is not
     exclusive Engine ownership, resource-side fencing, or safe redispatch authorization.
   - GH-2676 closed its bounded preparation-authority cut; it does not certify the remaining

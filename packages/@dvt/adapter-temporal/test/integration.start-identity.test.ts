@@ -6,13 +6,17 @@
  */
 import { asNonBlankString } from '@dvt/contracts';
 import { WorkflowExecutionAlreadyStartedError } from '@temporalio/client';
+import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { loadTemporalAdapterConfig } from '../src/config.js';
 import { TemporalAdapter } from '../src/TemporalAdapter.js';
 import type { TemporalWorkerHost } from '../src/TemporalWorkerHost.js';
 
 import {
   assertWorkflowArtifactPresentInCi,
+  createPlanRef,
+  createRunContext,
   createSingleRunDbtTimeSkippingHarness,
   INTEGRATION_TEST_TIMEOUT,
   mkLinearPlan,
@@ -98,6 +102,107 @@ describe('Temporal logical-start identity (service-backed)', () => {
         WorkflowExecutionAlreadyStartedError
       );
       expect((await childHandle.describe()).runId).toBe(terminated.runId);
+    },
+    INTEGRATION_TEST_TIMEOUT
+  );
+});
+
+describe('Temporal retained-identity boundary (full local server)', () => {
+  let env: TestWorkflowEnvironment | undefined;
+
+  beforeAll(async () => {
+    // DeleteWorkflowExecution is intentionally not emulated by the time-skipping
+    // service. This evidence requires the real local Temporal server instead.
+    env = await TestWorkflowEnvironment.createLocal();
+  }, INTEGRATION_TEST_TIMEOUT);
+
+  afterAll(async () => {
+    await env?.teardown();
+  }, INTEGRATION_TEST_TIMEOUT);
+
+  it(
+    'observes cancellation acknowledgement as active until the exact execution terminates',
+    async () => {
+      if (!env) throw new Error('Temporal local environment not initialized');
+      const config = loadTemporalAdapterConfig({
+        TEMPORAL_NAMESPACE: 'default',
+        TEMPORAL_TASK_QUEUE: 'unpolled-cancel-observation',
+        TEMPORAL_IDENTITY: 'cancel-observation-test',
+      });
+      const adapter = new TemporalAdapter({ workflowClient: env.client.workflow, config });
+      const ctx = createRunContext(RunId.of('cancel-observation-only'));
+      const planRef = createPlanRef(
+        'cancel-observation-plan',
+        Buffer.from(JSON.stringify(mkLinearPlan(1)))
+      );
+      const runRef = await adapter.startRun(planRef, ctx);
+      const active = await adapter.observeStartRun(ctx.runId, ctx.tenantId);
+      if (active.kind !== 'active') throw new Error('Expected unpolled workflow to be active');
+      await adapter.cancelRun(runRef, active.target.executionId);
+      expect(await adapter.observeStartRun(ctx.runId, ctx.tenantId)).toEqual(active);
+      await env.client.workflow
+        .getHandle(runRef.workflowId, active.target.executionId)
+        .terminate('Isolated cancellation-observation cleanup');
+      expect(await adapter.observeStartRun(ctx.runId, ctx.tenantId)).toEqual({
+        kind: 'terminal',
+        target: active.target,
+        disposition: 'terminated',
+      });
+    },
+    INTEGRATION_TEST_TIMEOUT
+  );
+
+  it(
+    'does not claim durable deduplication after provider history is removed',
+    async () => {
+      if (!env) throw new Error('Temporal local environment not initialized');
+      const temporalConfig = loadTemporalAdapterConfig({
+        TEMPORAL_NAMESPACE: 'default',
+        TEMPORAL_TASK_QUEUE: 'unpolled-dedup-boundary',
+        TEMPORAL_IDENTITY: 'dedup-boundary-test',
+      });
+      const ctx = createRunContext(RunId.of('dedup-boundary-only'));
+      const planRef = createPlanRef(
+        'dedup-boundary-plan',
+        Buffer.from(JSON.stringify(mkLinearPlan(1)))
+      );
+      const isolatedAdapter = new TemporalAdapter({
+        workflowClient: env.client.workflow,
+        config: {
+          ...temporalConfig,
+          connection: { ...temporalConfig.connection, taskQueue: 'unpolled-dedup-boundary' },
+        },
+      });
+      const isolatedContext = { ...ctx, runId: asNonBlankString('dedup-boundary-only') };
+      const first = await isolatedAdapter.startRun(planRef, isolatedContext);
+      const firstHandle = env.client.workflow.getHandle(first.workflowId);
+      const firstExecution = await firstHandle.describe();
+      await firstHandle.terminate('Isolated deduplication-boundary test');
+
+      await expect(isolatedAdapter.startRun(planRef, isolatedContext)).rejects.toBeInstanceOf(
+        WorkflowExecutionAlreadyStartedError
+      );
+
+      // Only this test's execution in its ephemeral server is removed. A retained
+      // closed execution is a prerequisite of REJECT_DUPLICATE, not a tombstone.
+      await env.client.workflowService.deleteWorkflowExecution({
+        namespace: temporalConfig.connection.namespace,
+        workflowExecution: { workflowId: first.workflowId, runId: firstExecution.runId },
+      });
+      await expect
+        .poll(
+          async () =>
+            (await isolatedAdapter.observeStartRun(isolatedContext.runId, ctx.tenantId)).kind,
+          { timeout: 60_000, interval: 500 }
+        )
+        .toBe('missing_at_observation');
+
+      const second = await isolatedAdapter.startRun(planRef, isolatedContext);
+      const secondHandle = env.client.workflow.getHandle(second.workflowId);
+      const secondExecution = await secondHandle.describe();
+      expect(second.workflowId).toBe(first.workflowId);
+      expect(secondExecution.runId).not.toBe(firstExecution.runId);
+      await secondHandle.terminate('Isolated deduplication-boundary test cleanup');
     },
     INTEGRATION_TEST_TIMEOUT
   );

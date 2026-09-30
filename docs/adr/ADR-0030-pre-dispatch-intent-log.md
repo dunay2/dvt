@@ -2,318 +2,206 @@
 
 - Status: Accepted
 - Date: 2026-03-03
+- Decision update: 2026-09-30, exclusive ownership and observation-only reconciliation
 - Owners: Engine Domain
-- Related files:
-  - [IStartRunIntentStore.ts](../../packages/@dvt/engine/src/ports/IStartRunIntentStore.ts) (new)
-  - [InMemoryStartRunIntentStore.ts](../../packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts) (new)
-  - [intentErrors.ts](../../packages/@dvt/engine/src/contracts/intentErrors.ts) (new)
-  - [WorkflowEngine.ts](../../packages/@dvt/engine/src/core/WorkflowEngine.ts) (modified)
-  - [RunMaintenanceService.ts](../../packages/@dvt/engine/src/services/RunMaintenanceService.ts) (modified)
-  - [IRunMaintenanceService.ts](../../packages/@dvt/engine/src/ports/IRunMaintenanceService.ts) (modified)
-  - [ADR-0003 — Execution Model](./ADR-0003-execution-model.md)
-  - [ADR-0013 — bootstrapRunTx Atomicity](./ADR-0013-run-state-store-bootstrapRunTx.md)
-  - [ADR-0014 — Adapter-First Execution](./ADR-0014-run-driven-adapter-model.md)
-  - [ADR-0029 — Run Maintenance Service Extraction](./ADR-0029-run-maintenance-service.md)
-
----
+- Governing design: Planning DB `GH-2678-START-OWNERSHIP-PROTOCOL`
+- Approval and scope: [#2678](https://github.com/dunay2/dvt/issues/2678),
+  [#2679 observation-only decision](https://github.com/dunay2/dvt/issues/2679#issuecomment-5920617269)
 
 ## 1. Context
 
-### 1.1 The distributed consistency gap in startRun()
+A timeout is not evidence that the provider rejected a start. The request may
+complete after its caller loses its response or ownership. A deterministic
+intent identity alone also does not prevent two callers from dispatching.
+Metadata existence grants neither acquisition authority nor cancellation
+confirmation.
 
-`WorkflowEngine.startRun()` follows the adapter-first execution model (ADR-0014): the provider workflow is created via `adapter.startRun()` **before** the engine persists run metadata via `stateStore.bootstrapRunTx()`. This ordering is intentional — it ensures that provider references (`engineRunRef`) are available for atomic bootstrap (ADR-0013), eliminating a two-phase write gap.
+Temporal rejects duplicate identities while their histories are retained.
+Retention expiry or deletion removes that protection. Therefore a point-in-time
+missing workflow is not a durable negative proof and MUST NOT authorize
+automatic redispatch. Safe positive redispatch remains outside this slice and
+open in #2679; this ADR does not certify it.
 
-However, this creates a crash-consistency window:
+## 2. Decision and rationale
 
-```
-1.  validateStartRunPreconditions()        ← pure validation
-2.  adapter.startRun() → engineRunRef      ← side effect: provider workflow exists
-    ┌─── CRASH WINDOW ───────────────────────────────────────┐
-    │ Process crash here → orphaned provider workflow         │
-    │ DVT+ has no record of the workflow                      │
-    │ Compensation (cancelRun) never fires                    │
-    └────────────────────────────────────────────────────────┘
-3.  stateStore.bootstrapRunTx()            ← atomically persist run
-4.  On bootstrap failure: adapter.cancelRun()  ← compensation
-```
+Use the existing start-intent aggregate, canonical state store, provider adapter
+and maintenance worker. Do not add another command, reconciliation store,
+worker, migration path or versioned protocol alongside them.
 
-The existing compensation logic (step 4) only handles exceptions during bootstrap. It does not protect against process death, OOM kills, or node failures between steps 2 and 3.
+- Atomic acquisition returns an opaque claim receipt only to the winner.
+  A losing caller gets an existing-intent observation, never a receipt.
+- Explicit reclaim rotates the token using revision compare-and-set and
+  store-owned age/due time. Reading an intent never acquires it.
+- Persist dispatch authorization as `providerOutcome.kind = unknown` before
+  the provider RPC. It authorizes one request, not a retry.
+- Fence canonical bootstrap, provider binding and failure writes with the same
+  intent-row lock, retained until the canonical transaction commits.
+- Keep provider outcome, compensation and retry/escalation state distinct
+  within that aggregate. Cancellation acknowledgement is not termination.
+- Observe and reconcile, or escalate durably. Do not resend an unknown start.
 
-### 1.2 Why existing mechanisms are insufficient
+### Alternatives rejected
 
-| Mechanism                   | Handles exceptions | Handles process crash      | Detects orphaned workflows |
-| --------------------------- | ------------------ | -------------------------- | -------------------------- |
-| `try/catch` compensation    | Yes                | No                         | No                         |
-| Adapter-level timeouts      | N/A                | Partial (provider may TTL) | No                         |
-| Manual ops review           | N/A                | N/A                        | Ad-hoc, not systematic     |
-| **Pre-dispatch intent log** | Yes                | **Yes**                    | **Yes**                    |
+| Alternative                                           | Reason                                                                    |
+| ----------------------------------------------------- | ------------------------------------------------------------------------- |
+| Return the same receipt for an idempotent create      | Both callers gain dispatch authority                                      |
+| Check ownership before an unfenced canonical write    | Ownership can change between check and commit                             |
+| Retry after provider lookup returns missing           | Absence is point-in-time; late completion and retention remain possible   |
+| Resolve immediately after cancel acknowledgement      | The execution may still be active                                         |
+| Add parallel PENDING and DISPATCHED behavior policies | Both need the same observation, canonical-state and compensation decision |
+| Convert existing rows into new claims automatically   | Conversion invents authority and loses uncertainty; hard cut instead      |
 
-Without an intent log, a crash between `adapter.startRun()` and `bootstrapRunTx()` leaves a provider workflow (e.g., a Temporal workflow) running indefinitely with no DVT+ record to track, cancel, or reconcile it.
+## 3. Existing command and query rails
 
----
+| Rail                                              | Owner / DDD object               | Port and adapter                                          | Scope and negative proof                                                                                           |
+| ------------------------------------------------- | -------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `IWorkflowEngine.startRun`                        | Runtime / StartRunIntent and Run | StartRunApplicationService; existing Engine and API entry | Tenant/project/environment admission; duplicate and stale callers produce no provider dispatch or canonical writes |
+| `IRunMaintenanceService.reconcileOrphanedIntents` | Runtime / StartRunIntent         | Existing intent reconciler worker and store               | Bounded service-context scan; dry run has no mutations                                                             |
+| `IRunMaintenanceService.reconcileStartRunIntent`  | Runtime / StartRunIntent         | Existing recovery use case                                | Tenant authorization before lookup; unknown or escalated is not confirmed                                          |
+| `IStartRunIntentQueryStore.getIntent`             | Runtime / intent read model      | Existing tenant-scoped query store                        | No claim token returned; cross-tenant lookup reveals no record                                                     |
+| `IRunStartDispatchResolver.resolve`               | API / run-control readiness      | Existing API resolver                                     | Only resolved, started, uncompensated, scope-matched intent confirms dispatch                                      |
 
-## 2. Alternatives Considered
+Planning DB owns rail identities and implementation bindings. This table
+explains those existing boundaries; it is not a parallel rail catalog.
 
-### Option A: Reverse call order (bootstrap first, then adapter)
+## 4. Protocol
 
-Persist run metadata before calling `adapter.startRun()`. If the adapter call fails, roll back the bootstrap.
-
-**Rationale for rejection**: Violates ADR-0014 (adapter-first). The `engineRunRef` would not be available at bootstrap time, requiring a two-phase write (bootstrap without refs, then update with refs). This reintroduces the gap that ADR-0013 explicitly closes. Additionally, rolling back a committed `bootstrapRunTx` is not supported — the event store is append-only.
-
-### Option B: Write-ahead log in IRunStateStore
-
-Add intent tracking as a column or table within the event store itself.
-
-**Rationale for rejection**: The event store (`IRunStateStore`) is scoped to run lifecycle persistence (events, metadata, projections). Intent tracking has a fundamentally different lifecycle: intents are short-lived, transient records that exist only during the `startRun()` call window. Mixing these concerns in the same store violates separation of concerns (ADR-0003) and complicates the state store contract.
-
-### Option C: Adapter-level idempotency only
-
-Rely on the adapter's workflowId derivation from runId (StartRunIdempotency spec §3.3) to deduplicate on retry. Accept the orphaned workflow as harmless.
-
-**Rationale for rejection**: While workflowId derivation provides dedup on retry, it does not solve the actual orphan — the provider workflow continues running, consuming resources and potentially producing side effects. Without a record in DVT+, there is no way to cancel, monitor, or reconcile it. This is unacceptable for production systems.
-
-### Option D: Separate pre-dispatch intent store (selected)
-
-Create a dedicated `IStartRunIntentStore` port. Persist an intent record in PENDING status **before** `adapter.startRun()`. Transition through DISPATCHED to RESOLVED on the happy path. A reconciliation job in `RunMaintenanceService` periodically scans for orphaned intents and cancels the associated provider workflows.
-
-**Why this option**:
-
-- Covers both exception and process-crash scenarios.
-- Maintains adapter-first ordering (ADR-0014) and atomic bootstrap (ADR-0013).
-- Clean separation: intent tracking is orthogonal to event-sourced run state.
-- Reconciliation is automated, idempotent, and observable.
-- Required dependency ensures no deployment can skip the consistency guarantee.
-
----
-
-## 3. Decision
-
-### 3.1 New port: `IStartRunIntentStore`
-
-A new port interface at `engine/src/ports/IStartRunIntentStore.ts`:
-
-```typescript
-type StartRunIntentStatus = 'PENDING' | 'DISPATCHED' | 'RESOLVED' | 'EXPIRED';
-
-interface StartRunIntent {
-  intentId: string;
-  tenantId: string;
-  runId: string;
-  provider: EngineRunRef['provider'];
-  status: StartRunIntentStatus;
-  engineRunRef?: EngineRunRef; // set after adapter.startRun() returns
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface StartRunIntentRef {
-  tenantId: string;
-  intentId: string;
-}
-
-interface IStartRunIntentStore {
-  createIntent(input: CreateIntentInput): Promise<StartRunIntent>;
-  markDispatched(ref: StartRunIntentRef, engineRunRef: EngineRunRef): Promise<void>;
-  markResolved(ref: StartRunIntentRef): Promise<void>;
-  markExpired(ref: StartRunIntentRef): Promise<void>;
-  listOrphaned(thresholdMs: number, nowMs: number, limit?: number): Promise<StartRunIntent[]>;
-  getIntent(ref: StartRunIntentRef): Promise<StartRunIntent | null>;
-}
+```mermaid
+flowchart TD
+    A[Admission and plan integrity] --> B[Atomic claim]
+    B -->|existing| X[Reject duplicate without effects]
+    B -->|acquired| C[Optional fenced preparation]
+    C --> D[Persist unknown before RPC]
+    D --> E[One provider start request]
+    E -->|valid response| F[Persist started]
+    F --> G[Fenced bootstrap or provider binding]
+    G --> H[Owner-fenced resolution]
+    E -->|timeout or lost response| M[Existing maintenance worker]
+    G -->|persistence failure| R[Record compensation required]
+    R --> M
+    M --> O[Observe canonical state and exact provider execution]
+    O -->|compatible active execution| G
+    O -->|orphan or terminal canonical| K[Persist cancel target and backoff]
+    K --> L[Cancel exact execution; remain unresolved]
+    L --> M
+    O -->|confirmed cancellation or termination| T[Confirm compensation]
+    O -->|missing or failed read| N[Bounded defer or durable escalation]
 ```
 
-Tenant-scoped command/query operations MUST receive `StartRunIntentRef`.
-`listOrphaned()` is the only unscoped operation because it is a maintenance
-sweep and runs under an explicit service context in production adapters.
+### Ownership and persistence
 
-Intent lifecycle state machine:
+`claimIntent` returns `acquired | existing`. Mutations require a
+`StartRunIntentClaimReceipt`; its opaque token is not part of query results,
+logs, metrics or public DTOs. `reclaimIntent` returns `acquired | not_acquired`.
 
-```
-PENDING ──adapter.startRun()──▶ DISPATCHED ──bootstrapRunTx()──▶ RESOLVED
-    │                               │
-    └── reconcile (expire) ──▶ EXPIRED
-                                    └── reconcile (cancel) ──▶ RESOLVED
-```
+Mutation results distinguish `applied`, `already_applied`, `not_owner`,
+`missing`, `conflict` and `invalid_state`. An already-authorized dispatch
+MUST NOT send another provider request. PostgreSQL acquisition uses an insert
+followed by a fresh READ COMMITTED statement snapshot when there is a conflict.
 
-Valid transitions:
+Both canonical and intent writes use the same acquisition fence. Bootstrap
+retains the atomic metadata/events/outbox semantics of ADR-0013. Equal estimated
+and returned references do not bypass the fenced provider-binding check.
+Compensation-required or escalated intents cannot adopt a provider reference.
 
-- `PENDING → DISPATCHED` — after `adapter.startRun()` returns successfully
-- `PENDING → EXPIRED` — reconciliation: no provider workflow was created
-- `DISPATCHED → RESOLVED` — after `bootstrapRunTx()` succeeds, or reconciliation resolves
-- `PENDING → RESOLVED` — after compensation (bootstrap failure on `PENDING` is possible if `markDispatched` was skipped)
+### Outcomes and lifecycle
 
-All other transitions throw `IntentInvalidTransitionError`.
+| State or evidence                                                                             | Allowed action                                                                                     |
+| --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| PENDING, not requested, positively missing                                                    | Expire without provider command                                                                    |
+| PENDING, unknown, missing or failed observation                                               | Defer or escalate; never expire, confirm, fail the run or redispatch from that evidence            |
+| Observed active provider, compatible nonterminal canonical run, no compensation               | Persist started, fence adoption, resolve                                                           |
+| Observed active provider with no canonical run, terminal canonical run or sticky compensation | Persist compensation and exact execution identity before cancel; do not resolve on acknowledgement |
+| Same execution observed cancelled or terminated                                               | Confirm compensation and resolve the intent; do not report successful dispatch                     |
+| Incompatible terminal outcome or replacement execution                                        | Escalate without cancelling a different execution                                                  |
+| RESOLVED or EXPIRED                                                                           | No automatic acquisition or additional effects                                                     |
 
-### 3.2 Modified `startRun()` flow
+`PENDING -> RESOLVED` is prohibited. Normal resolution requires DISPATCHED
+with a started outcome and no required compensation. Compensation resolution
+requires the separate exact-execution confirmation command.
 
-The `WorkflowEngine.startRun()` method now includes three intent store calls:
+### Reconciliation and bounded scheduling
 
-```
-1.  validateStartRunPreconditions()            (existing)
-2.  checkOutboxRateLimit()                     (existing)
-3.  getAdapterOrThrow() + validateCapabilities (existing)
-4.  intentStore.createIntent()                 [NEW] status=PENDING
-5.  adapter.startRun() → runRef               (existing)
-6.  intentStore.markDispatched({ tenantId, intentId }, runRef)[NEW] status=DISPATCHED
-7.  bootstrapRunTx()                           (existing)
-8.  intentStore.markResolved({ tenantId, intentId })[NEW] status=RESOLVED
-    On bootstrap failure:
-      adapter.cancelRun()                      (existing compensation)
-      intentStore.markResolved(ref) best-effort[NEW]
-```
+The observer reads metadata and canonical status before accessing the provider.
+Failed reads remain failures, including non-Error rejections. Effects do not
+re-read the evidence on which the decision was based. Pure decisions share only
+canonical terminal-status and retry-budget constants, not runtime collaborators.
 
-Key implementation details:
+Retry attempts, next due time and bounded reason codes are persisted in the
+intent. The policy allows at most eight observations/attempt decisions, with
+30s, 60s, 120s, 240s and then 300s backoff. The last inconclusive attempt
+escalates; it does not issue another cancellation. Worker scan cadence and the
+configured reclaim age may delay an otherwise due attempt further.
 
-- `createIntent` is called **before** any adapter interaction (step 4).
-- `markResolved` after success and after compensation both use `.catch(() => {})` — best-effort. If the intent store call fails, the reconciliation job will clean it up on the next sweep.
-- The `intentId` is derived deterministically from `(tenantId, runId)` using the
-  start-run idempotency policy. A fresh UUID per call violates INV-INTENT-011.
+Escalated records leave automated scans and remain available to authorized
+inspection. Operators must inspect the recorded reason and exact provider
+identity; they must not reset unknown to not-requested or replay the start.
+An operator remediation command is not introduced by this slice.
 
-### 3.3 Crash scenario coverage
+The batch reports `expired`, `resolved`, `cancelled`, `cancelFailed`,
+`deferred` and `escalated` separately. Metrics use bounded provider/outcome/reason
+labels; logs provide tenant/run/intent correlation without acquisition tokens.
+Diagnostic failures cannot grant authority or alter a decision.
 
-- Between steps 4 and 5: `PENDING`; expire because no workflow exists.
-- Between steps 5 and 6: `PENDING`; expire because retry relies on
-  workflowId-from-runId dedup.
-- Between steps 6 and 7: `DISPATCHED`; cancel workflow via stored
-  `engineRunRef`.
-- Between steps 7 and 8: `DISPATCHED`; metadata exists, so call
-  `markResolved(ref)` without cancelling.
+### Failure handling
 
-### 3.4 Reconciliation via `RunMaintenanceService`
+Failure emission still requires this invocation's created preparation, an
+eligible phase, successfully read metadata and started intent, and a valid
+receipt at canonical commit. Reused recovery preparation does not grant
+failure authority. Completion persistence failure rejects without emitting
+RunFailed or cancelling a successfully bound provider.
 
-A new method `reconcileOrphanedIntents()` is added to `IRunMaintenanceService` (extending ADR-0029):
+Bootstrap or provider-binding failure records sticky compensation for the
+existing worker. If that record cannot be persisted, preserve the original
+error and leave reconciliation evidence unresolved; never synthesize success.
 
-```typescript
-interface ReconcileOrphanedIntentsOptions {
-  thresholdMs: number;
-  limit?: number;
-  dryRun?: boolean;
-}
+## 5. Hard-cut deployment
 
-interface ReconcileOrphanedIntentsResult {
-  inspected: number;
-  expired: string[]; // PENDING intents expired
-  resolved: string[]; // DISPATCHED intents resolved after bootstrap was already persisted
-  cancelled: string[]; // DISPATCHED intents cancelled after orphaned workflow cleanup
-  cancelFailed: string[]; // cancellation failed, retry next sweep
-}
-```
+The port and schema changes require all consumers to deploy together. There is
+one supported schema and no compatibility adapter, field alias, dual write or
+backfill.
 
-Compatibility note:
+The initializer creates the current schema only when the intent table is
+absent. Existing incompatible registry, columns or tenant-isolation flags cause
+`START_RUN_INTENT_SCHEMA_INCOMPATIBLE`; verification does not repair or convert
+the table. An operator must stop old writers, back up and classify existing
+intents and their provider executions, and obtain an explicit disposition before
+retiring an incompatible table. Do not infer successful or absent provider
+effects from old rows. Production reset is not authorized by this ADR.
 
-- `ReconcileOrphanedIntentsResult` is exported from `@dvt/engine`; adding the
-  required `resolved` bucket is a breaking interface change.
-- Implementations MUST return `resolved` on every call, including `[]` when no
-  bootstrapped `DISPATCHED` intents were resolved.
-- Consumers and implementations MUST be upgraded in lockstep across this
-  boundary; mixed-version worker/service pairings are not supported.
+## 6. Verification invariants
 
-Reconciliation logic:
+- **INV-INTENT-001**: acquire exclusively before any provider start.
+- **INV-INTENT-002**: persist unknown before RPC and started only from valid positive evidence.
+- **INV-INTENT-003**: confirm start only after fenced canonical preparation/binding and intent resolution.
+- **INV-INTENT-004**: compensation acknowledgement never resolves the intent.
+- **INV-INTENT-005**: intent persistence and canonical fencing are mandatory dependencies.
+- **INV-INTENT-006**: normal lifecycle is PENDING -> DISPATCHED -> RESOLVED.
+- **INV-INTENT-007**: only never-authorized PENDING intents may expire.
+- **INV-INTENT-008**: metadata presence alone cannot authorize adoption or resolution.
+- **INV-INTENT-009**: scans contain only aged, due, active, non-escalated intents with stable bounded ordering.
+- **INV-INTENT-010**: cancellation failures persist retry state and remain unresolved.
+- **INV-INTENT-011**: deterministic identity includes tenant, run, logical attempt and provider; active tenant/run uniqueness prevents parallel claims.
+- **INV-INTENT-012**: unknown provider absence never grants automatic redispatch.
+- **INV-INTENT-013**: cancellation confirmation identifies the exact observed execution.
+- **INV-INTENT-014**: batch result categories distinguish adoption, compensation, deferral and escalation.
+- **INV-INTENT-015**: every stale-receipt write leaves canonical and intent state unchanged.
+- **INV-INTENT-016**: failed observations never become confirmed absence.
 
-1. `intentStore.listOrphaned(thresholdMs, nowMs, limit)` — find PENDING + DISPATCHED intents older than threshold, ordered by `createdAt` ASC.
-2. For each PENDING intent: `markExpired(ref)` — no provider workflow to cancel.
-3. For each DISPATCHED intent:
-   - Check `stateStore.getRunMetadataByRunId()` — if run exists, `markResolved(ref)`. This handles the crash-between-bootstrap-and-markResolved scenario without issuing a spurious cancel.
-   - If run does not exist: `adapter.cancelRun(intent.engineRunRef)`, then `markResolved(ref)`.
-   - If cancel fails (adapter unavailable, network error): report in `cancelFailed[]` for retry on next sweep.
+## 7. Evidence and limitations
 
-#### Authority-read failure boundary
+Real PostgreSQL tests use independent connections and a non-owner application
+role. They exercise acquisition races, revision reclaim, the transaction fence,
+RLS and preservation of incompatible schemas. Temporal service-backed tests
+prove retained-identity rejection, the history-deletion counterexample, and
+cancellation acknowledgement without termination.
 
-Metadata and intent reads used to decide start failure or reconciliation MUST
-preserve `found`, `missing`, and `failed` as different outcomes. A rejected read,
-including a non-`Error` rejection, MUST NOT be converted to `null`.
+These proofs do not establish perpetual provider deduplication, cross-region
+provider fencing, automatic redispatch safety or an operator remediation API.
+#2679 remains open for its positive safe-redispatch acceptance.
 
-- DISPATCHED reconciliation with failed metadata authority returns `deferred`,
-  issues no provider call, and leaves the intent and canonical run unchanged.
-- Start failure handling requires successfully read metadata and intent in
-  addition to its own `created` preparation and an eligible phase. Missing intent
-  identity, a missing intent record, or failure of either read suppresses
-  `RunFailed`; the original start error is rethrown unchanged.
-- Diagnostics are best-effort and use bounded reason codes. Their failure cannot
-  grant mutation authority or replace the original start error.
-
-These rules govern the existing rails, not new services:
-
-| Command                                           | Owner and application port               | Adapter and scope                                                                             | Rejection proof                                             |
-| ------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `IWorkflowEngine.startRun`                        | Runtime / `StartRunApplicationFlow`      | Existing authorized tenant/project/environment entry; failure policy consumes own preparation | Failed/missing metadata or intent does not emit `RunFailed` |
-| `IRunMaintenanceService.reconcileOrphanedIntents` | Runtime / `StartRunIntentReconciliation` | Existing worker, service-context bounded batch; dry run is read-only                          | Failed metadata defers without cancel/resolve/expire        |
-| `IRunMaintenanceService.reconcileStartRunIntent`  | Runtime / `StartRunIntentReconciliation` | Existing recovery use case, tenant authorization before lookup                                | Inconclusive reconciliation remains blocked, not confirmed  |
-
-An authority read is evidence, not an ownership fence. Exclusive claim and
-cross-resource fencing remain tracked in [#2678](https://github.com/dunay2/dvt/issues/2678).
-Durable unknown outcomes, late RPC completion and confirmed compensation remain
-tracked in [#2679](https://github.com/dunay2/dvt/issues/2679). This read-boundary
-correction does not certify those separate guarantees.
-
-### 3.5 Error types
-
-Two new error classes extending `DvtError`:
-
-- `IntentNotFoundError` (`code: 'INTENT_NOT_FOUND'`) — thrown when an operation references a non-existent intent.
-- `IntentInvalidTransitionError` (`code: 'INTENT_INVALID_TRANSITION'`) — thrown on illegal state transitions (e.g., `RESOLVED → PENDING`).
-
-### 3.6 Dependency requirements
-
-`intentStore` is a **required** dependency on `WorkflowEngineDeps`. The engine's `validateDependencies()` method rejects construction if `intentStore` is not provided. This ensures that no deployment can skip the crash-consistency guarantee.
-
-`RunMaintenanceServiceDeps` is extended with `intentStore` and `adapters` (the adapter map) to support reconciliation.
-
----
-
-## 4. Consequences
-
-### Positive
-
-- **Closes the crash-consistency gap**: orphaned provider workflows are detected and cancelled automatically.
-- **Reconciliation is automated and idempotent**: the sweep can run repeatedly without side effects on already-resolved intents.
-- **Required dependency**: ensures the consistency guarantee cannot be accidentally omitted.
-- **Observable**: metrics (`dvt.intent.expired_total`, `dvt.intent.expired_after_cancel_total`, `dvt.intent.cancelled_total`, `dvt.intent.resolved_total`, `dvt.intent.reconcile.resolved_total`) and structured logs provide operational visibility into orphan detection and cleanup.
-- **Extends the existing `RunMaintenanceService`** (ADR-0029) pattern: no new service class needed.
-
-### Negative / Trade-offs
-
-- **Additional dependency and port**: one more interface to implement for production (e.g., a Postgres-backed intent store).
-- **Breaking interface change**: `ReconcileOrphanedIntentsResult` now requires a
-  `resolved[]` bucket, so external or mixed-version implementations of
-  `IRunMaintenanceService` must be updated together with the worker.
-- **PENDING crash gap**: a crash between `adapter.startRun()` return and `markDispatched()` leaves the intent in PENDING (not DISPATCHED), so the reconciler cannot use `engineRunRef` to cancel. Mitigated by workflowId derivation from runId (StartRunIdempotency spec §3.3), which enables natural dedup on retry.
-- **Threshold tuning**: the reconciliation threshold must be set above the maximum expected `adapter.startRun()` latency to avoid false positives on slow responses.
-
-### Out of scope
-
-- **Production intent store implementation** (Postgres, DynamoDB, etc.) — only the in-memory implementation for tests is provided.
-- **Periodic scheduler / cron** for invoking `reconcileOrphanedIntents()` — the scheduler is a separate infrastructure concern.
-- **Multi-region reconciliation** — single-region assumption for now.
-
----
-
-## 5. Verification Invariants
-
-- **INV-INTENT-001**: `createIntent()` MUST be called **before** `adapter.startRun()` in the `startRun()` flow.
-- **INV-INTENT-002**: `markDispatched(ref)` MUST be called immediately after `adapter.startRun()` returns, attaching the `engineRunRef`.
-- **INV-INTENT-003**: `markResolved(ref)` MUST be called after `bootstrapRunTx()` succeeds.
-- **INV-INTENT-004**: `markResolved(ref)` on the compensation path is best-effort (`.catch(() => {})`).
-- **INV-INTENT-005**: `intentStore` is a required dependency - `WorkflowEngine` MUST reject construction without it.
-- **INV-INTENT-006**: The happy path transitions are `PENDING -> DISPATCHED -> RESOLVED`.
-- **INV-INTENT-007**: Reconciliation expires PENDING intents beyond the threshold via `markExpired(ref)`.
-- **INV-INTENT-008**: Reconciliation checks `stateStore.getRunMetadataByRunId()` before cancelling a DISPATCHED intent - if the run exists, it marks the intent resolved without cancelling.
-- **INV-INTENT-009**: `listOrphaned()` returns only PENDING and DISPATCHED intents older than the threshold, ordered by `createdAt` ASC.
-- **INV-INTENT-010**: Failed cancellations are reported in `cancelFailed[]` for retry on the next sweep.
-- **INV-INTENT-011**: Callers of `createIntent()` MUST derive `intentId` deterministically from `(tenantId, runId)` - e.g., `canonicalHash(tenantId | runId | "startRun")` following the ADR-0008 pattern - so that a scheduler crash-restart produces the same `intentId` and the idempotency-on-`intentId` guarantee absorbs the retry. Generating a fresh UUID on every invocation violates this invariant. Implementations MUST throw `IntentActiveConflictError` if a different `intentId` is submitted for a `(tenantId, runId)` pair that already has an active (PENDING or DISPATCHED) intent.
-- **INV-INTENT-012**: If PENDING intent reconciliation finds a provider workflow via `lookupRunRef()`, the reconciler MUST cancel that workflow and then mark the intent `EXPIRED`.
-- **INV-INTENT-013**: If DISPATCHED intent reconciliation does not find bootstrapped run metadata, the reconciler MUST cancel the provider workflow and then report the intent in `cancelled[]`.
-- **INV-INTENT-014**: `ReconcileOrphanedIntentsResult` MUST expose `resolved[]` separately from `cancelled[]`; implementations MUST return both arrays on every call, including empty arrays.
-
----
-
-## 6. References
-
-- [ADR-0003 — Execution Model Sovereignty](./ADR-0003-execution-model.md) — Engine domain boundary
-- [ADR-0013 — bootstrapRunTx Atomicity](./ADR-0013-run-state-store-bootstrapRunTx.md) — Provider refs in atomic bootstrap
-- [ADR-0014 — Adapter-First Execution Order](./ADR-0014-run-driven-adapter-model.md) — Why adapter is called before state persistence
-- [ADR-0029 — Run Maintenance Service Extraction](./ADR-0029-run-maintenance-service.md) — Reconciliation added to this service
-- [Temporal Engine Policies](../architecture/components/engine/adapters/temporal/engine-policies.md) — workflowId derivation from `runId`
-
----
-
-End of ADR-0030
+The detailed entry, admission and failure contracts remain in
+[StartRunProtocol](../architecture/components/engine/contracts/engine/StartRunProtocol.v1.md).
+Related authorities: [ADR-0013](ADR-0013-run-state-store-bootstrapRunTx.md),
+[ADR-0029](ADR-0029-run-maintenance-service.md),
+[ADR-0031](ADR-0031-adapter-tenant-isolation.md).

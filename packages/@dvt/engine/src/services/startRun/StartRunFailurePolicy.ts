@@ -1,5 +1,10 @@
 /** @ownedConcern Guard start-run failure writes using preparation and authority observations. */
 import type { StartRunTraceContext } from '../../core/lifecycle/StartRunTraceContext.js';
+import {
+  requireStartRunMutation,
+  StartRunIntentMutationRejectedError,
+} from '../../domain/startRunIntentPolicy.js';
+import type { StartRunIntentClaimReceipt } from '../../ports/IStartRunIntentStore.js';
 import { toErrorMessage } from '../../utils/errorUtils.js';
 
 import { readStartRunAuthority } from './readStartRunAuthority.js';
@@ -17,7 +22,7 @@ type ResolvedRunContext = import('@dvt/contracts').ResolvedRunContext;
 type IObservability = import('@dvt/observability').IObservability;
 type RunMetadata = import('../../contracts/runEvents.js').RunMetadata;
 type IRunStateStoreRead = import('../../ports/IRunStateStore.js').IRunStateStoreRead;
-type IRunStateStoreWrite = import('../../ports/IRunStateStore.js').IRunStateStoreWrite;
+type IRunStateStoreWrite = import('../../ports/IRunStateStore.js').IStartRunStateStoreWrite;
 type IStartRunIntentStore = import('../../ports/IStartRunIntentStore.js').IStartRunIntentStore;
 type IClock = import('../../utils/clock.js').IClock;
 
@@ -67,19 +72,6 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
     });
   }
 
-  async markIntentResolvedBestEffort(
-    input: Parameters<IStartRunFailurePolicy['markIntentResolvedBestEffort']>[0]
-  ): Promise<void> {
-    try {
-      await this.deps.intentStore.markResolved({
-        tenantId: input.tenantId,
-        intentId: input.intentId,
-      });
-    } catch (error) {
-      this.diagnostics.markResolvedFailed(error, input);
-    }
-  }
-
   async handleStartRunError(input: {
     error: unknown;
     resolvedContext: ResolvedRunContext;
@@ -89,6 +81,7 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
   }): Promise<never> {
     const { error, resolvedContext, metricTags, traceContext, errorContext } = input;
     this.diagnostics.startFailed(error, resolvedContext.targetAdapter, metricTags, traceContext);
+    if (error instanceof StartRunIntentMutationRejectedError) throw error;
     if (error instanceof PostStartIntentPersistenceError) {
       this.diagnostics.postStartPersistenceFailed(error, traceContext);
       throw error;
@@ -96,12 +89,13 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
     if (
       errorContext.preparation?.disposition !== 'created' ||
       errorContext.phase === 'admission' ||
+      errorContext.phase === 'completion' ||
       errorContext.phase === 'intent'
     )
       throw error;
 
-    const { intentId } = errorContext;
-    if (intentId === undefined) {
+    const { receipt } = errorContext;
+    if (receipt === undefined) {
       this.diagnostics.unavailableAuthority(START_RUN_AUTHORITY_REASON.intentMissing, traceContext);
       throw error;
     }
@@ -120,9 +114,7 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
       );
       throw error;
     }
-    const intent = await readStartRunAuthority(() =>
-      this.deps.intentStore.getIntent({ tenantId: resolvedContext.tenantId, intentId })
-    );
+    const intent = await readStartRunAuthority(() => this.deps.intentStore.getIntent(receipt));
     if (intent.kind !== 'found') {
       this.diagnostics.unavailableAuthority(
         intent.kind === 'failed'
@@ -132,24 +124,30 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
       );
       throw error;
     }
-    if (intent.value.status === 'PENDING') {
+    if (intent.value.providerOutcome.kind !== 'started') {
       this.diagnostics.pendingIntent(intent.value, traceContext);
       throw error;
     }
-    await this.emitRunFailedBestEffort(metadata.value, traceContext);
+    await this.emitRunFailedBestEffort(metadata.value, receipt, traceContext);
     throw error;
   }
 
   private async emitRunFailedBestEffort(
     meta: RunMetadata,
+    receipt: StartRunIntentClaimReceipt,
     traceContext: StartRunTraceContext
   ): Promise<void> {
     try {
-      await this.deps.stateStoreWrite.appendAndEnqueueTx(meta.runId, [
-        this.deps.eventFactory.buildRunEvent(meta, 'RunFailed', {
-          reason: START_RUN_FAILURE_REASON.startRunFailure,
-        }),
-      ]);
+      requireStartRunMutation(
+        await this.deps.stateStoreWrite.applyStartRunWrite(receipt, {
+          kind: 'fail',
+          events: [
+            this.deps.eventFactory.buildRunEvent(meta, 'RunFailed', {
+              reason: START_RUN_FAILURE_REASON.startRunFailure,
+            }),
+          ],
+        })
+      );
     } catch (error) {
       this.diagnostics.runFailedEmissionFailed(error, traceContext);
     }

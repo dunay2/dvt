@@ -19,16 +19,26 @@ import type {
   RecoveryRunBootstrapFactory,
   RecoveryRunBootstrapResult,
   RunBootstrapInput,
+  StartRunWrite,
+  StartRunWriteResult,
 } from '../ports/IRunStateStore.js';
+import type { StartRunIntentClaimReceipt } from '../ports/IStartRunIntentStore.js';
 
 import { InMemoryOutboxState } from './InMemoryOutboxState.js';
 import { InMemoryRunStateCore } from './InMemoryRunStateCore.js';
+import { InMemoryStartRunIntentStore } from './InMemoryStartRunIntentStore.js';
 
 export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQuery, IOutboxStorage {
   private readonly runState: InMemoryRunStateCore;
   private readonly outbox: InMemoryOutboxState;
+  readonly startRunIntents: InMemoryStartRunIntentStore;
 
-  constructor(deps?: { outboxNowMs?: () => number; outboxShardCount?: number }) {
+  constructor(deps?: {
+    outboxNowMs?: () => number;
+    outboxShardCount?: number;
+    startRunIntents?: InMemoryStartRunIntentStore;
+  }) {
+    this.startRunIntents = deps?.startRunIntents ?? new InMemoryStartRunIntentStore();
     const outboxDeps: ConstructorParameters<typeof InMemoryOutboxState>[0] = {};
     if (deps?.outboxNowMs !== undefined) {
       outboxDeps.nowMs = deps.outboxNowMs;
@@ -38,8 +48,16 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
     }
     this.outbox = new InMemoryOutboxState(outboxDeps);
     this.runState = new InMemoryRunStateCore({
+      startRunIntents: this.startRunIntents,
       commitOutbox: (runId, events) => this.outbox.enqueueTx(runId, events),
     });
+  }
+
+  applyStartRunWrite(
+    receipt: StartRunIntentClaimReceipt,
+    write: StartRunWrite
+  ): Promise<StartRunWriteResult> {
+    return this.runState.applyStartRunWrite(receipt, write);
   }
 
   getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {

@@ -3,7 +3,7 @@
  * @baseline ADR-0003: Execution Model Sovereignty
  * @baseline ADR-0012: Plan Integrity Ownership
  * @baseline ADR-0014: Run-Driven Adapter Model
- * @baseline ADR-0030: Pre-Dispatch Intent Log (lookupRunRef? for PENDING intent reconciliation)
+ * @baseline ADR-0030: Pre-Dispatch Intent Log and observation-only reconciliation
  * @decision Define an adapter contract oriented to run-driven execution and explicit signaling
  *   while keeping plan-integrity ownership in the engine entry point.
  * @consequence The engine retains semantic control and allows swapping runtimes without breaking the domain.
@@ -17,6 +17,18 @@ import type {
   SignalRequest,
 } from '@dvt/contracts';
 
+export type ProviderExecutionTarget = Readonly<{ runRef: EngineRunRef; executionId: string }>;
+export type ProviderTerminalDisposition =
+  'cancelled' | 'terminated' | 'completed' | 'failed' | 'timed_out' | 'other';
+export type ProviderRunObservation =
+  | Readonly<{ kind: 'missing_at_observation' }>
+  | Readonly<{ kind: 'active'; target: ProviderExecutionTarget }>
+  | Readonly<{
+      kind: 'terminal';
+      target: ProviderExecutionTarget;
+      disposition: ProviderTerminalDisposition;
+    }>;
+
 export interface IProviderAdapter {
   readonly provider: EngineRunRef['provider'];
 
@@ -29,7 +41,8 @@ export interface IProviderAdapter {
    * before executing fetched plan material.
    */
   startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef>;
-  cancelRun(runRef: EngineRunRef): Promise<void>;
+  /** When supplied, executionId MUST target that exact execution, never its replacement. */
+  cancelRun(runRef: EngineRunRef, executionId?: string): Promise<void>;
   getProviderStatusView(runRef: EngineRunRef): Promise<ProviderRunStatusView>;
   signal(runRef: EngineRunRef, request: SignalRequest): Promise<void>;
   signalSemanticsVersions(): readonly SignalSemanticsVersion[];
@@ -56,17 +69,6 @@ export interface IProviderAdapter {
    */
   capabilities?(): readonly string[];
 
-  /**
-   * ADR-0030 §3.3 - Pre-dispatch intent reconciliation.
-   *
-   * Given a runId and tenantId, derive the provider's workflowId (per StartRunIdempotency §3.3)
-   * and return the EngineRunRef if the workflow exists on the provider side, or null otherwise.
-   *
-   * Used by ReconcileOrphanedIntents to detect and cancel provider workflows that were
-   * started (adapter.startRun() returned) but never recorded (markDispatched() was not called
-   * before process crash).
-   *
-   * Optional: adapters that omit this method treat all PENDING intents as having no workflow.
-   */
-  lookupRunRef?(runId: string, tenantId: string): Promise<EngineRunRef | null>;
+  /** Missing is only a point-in-time observation; absent support MUST defer reconciliation. */
+  observeStartRun?(runId: string, tenantId: string): Promise<ProviderRunObservation>;
 }

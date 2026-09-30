@@ -36,6 +36,14 @@ describe('start failure authority reads', () => {
       const metadata = vi.spyOn(fixture.store, 'getRunMetadataByRunId').mockResolvedValue(null);
       const append = vi.spyOn(fixture.store, 'appendAndEnqueueTx');
       const original = new Error('original start failure');
+      const claim = await fixture.intentStore.claimIntent({
+        intentId: 'authority',
+        tenantId: context.tenantId,
+        runId: context.runId,
+        provider: 'temporal',
+        createdAt: fixture.clock.nowIsoUtc(),
+      });
+      if (claim.kind !== 'acquired') throw new Error('Expected acquisition');
       const policy = new StartRunFailurePolicy({
         stateStoreRead: fixture.store,
         stateStoreWrite: fixture.store,
@@ -55,8 +63,8 @@ describe('start failure authority reads', () => {
           traceContext: { ...context },
           errorContext: {
             preparation: { disposition: 'created', runRef: ref },
-            phase: 'completion',
-            ...(missing === 'identity' ? {} : { intentId: 'missing-record' }),
+            phase: 'provider_dispatch',
+            ...(missing === 'identity' ? {} : { receipt: claim.receipt }),
           },
         })
       ).rejects.toBe(original);
@@ -91,7 +99,6 @@ describe('start failure authority reads', () => {
       const fixture = createWorkflowEngineFixture({ adapter, observability });
       const readMetadata = fixture.store.getRunMetadataByRunId.bind(fixture.store);
       const readIntent = fixture.intentStore.getIntent.bind(fixture.intentStore);
-      const bootstrap = fixture.store.bootstrapRunTx.bind(fixture.store);
       let before: unknown;
       const snapshot = async (): Promise<unknown> => ({
         metadata: await readMetadata(context.tenantId, context.runId),
@@ -107,13 +114,12 @@ describe('start failure authority reads', () => {
           ),
         }),
       });
-      vi.spyOn(fixture.store, 'bootstrapRunTx').mockImplementation(async (input) => {
-        const result = await bootstrap(input);
+      vi.spyOn(adapter, 'startRun').mockImplementation(async () => {
         before = globalThis.structuredClone(await snapshot());
         if (boundary === 'metadata')
           vi.spyOn(fixture.store, 'getRunMetadataByRunId').mockRejectedValue(fault);
         else vi.spyOn(fixture.intentStore, 'getIntent').mockRejectedValue(fault);
-        return result;
+        throw original;
       });
 
       await expect(

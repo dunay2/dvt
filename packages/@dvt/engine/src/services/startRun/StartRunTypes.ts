@@ -11,6 +11,7 @@ import type {
 
 import type { IProviderAdapter } from '../../adapters/IProviderAdapter.js';
 import type { StartRunTraceContext } from '../../core/lifecycle/StartRunTraceContext.js';
+import type { StartRunIntentClaimReceipt } from '../../ports/IStartRunIntentStore.js';
 
 export interface StartRunExecutionPolicyAdmission {
   plan: ExecutionPlan;
@@ -61,7 +62,7 @@ export type StartRunPhase =
 export interface StartRunErrorContext {
   preparation: StartRunPreparation | null;
   phase: StartRunPhase;
-  intentId?: string;
+  receipt?: StartRunIntentClaimReceipt;
 }
 
 export interface StartRunExecutionInput {
@@ -69,7 +70,7 @@ export interface StartRunExecutionInput {
   planRef: PlanRef;
   resolvedContext: ResolvedRunContext;
   traceContext: StartRunTraceContext;
-  intentId: string;
+  receipt: StartRunIntentClaimReceipt;
   errorContext: StartRunErrorContext;
 }
 
@@ -81,14 +82,6 @@ export interface IStartRunExecutionService {
 }
 
 export interface IStartRunFailurePolicy {
-  markIntentResolvedBestEffort(input: {
-    intentId: string;
-    tenantId: string;
-    runId: string;
-    provider: EngineRunRef['provider'];
-    traceContext: StartRunTraceContext;
-  }): Promise<void>;
-
   handleStartRunError(input: {
     error: unknown;
     resolvedContext: ResolvedRunContext;

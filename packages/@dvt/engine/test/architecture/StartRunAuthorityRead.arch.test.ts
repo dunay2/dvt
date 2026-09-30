@@ -6,8 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 const policies = [
   '../../src/services/startRun/StartRunFailurePolicy.ts',
-  '../../src/services/runMaintenance/PendingIntentReconciliationPolicy.ts',
-  '../../src/services/runMaintenance/DispatchedIntentReconciliationPolicy.ts',
+  '../../src/services/runMaintenance/StartRunIntentReconciliationPolicy.ts',
 ];
 
 describe('start-run authority read boundary', () => {
