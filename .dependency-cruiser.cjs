@@ -45,12 +45,8 @@ module.exports = {
       from: { path: '(^|/)domain/' },
       to: {
         path: [
-          '^node:fs$',
-          '^fs$',
-          '^node:http$',
-          '^http$',
-          '^node:https$',
-          '^https$',
+          '^(?:node:)?(?:fs|https?)(?:/|$)',
+          '(^|/)infrastructure/',
           '^node_modules/.pnpm/(?:react|react-dom|fastify|@fastify|pg|@temporalio)',
         ],
       },
