@@ -2,7 +2,10 @@
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { insertSelectedRelationTransform } from './canvasSelectedRelationTransform';
-import type { CanvasStagedOperation } from './canvasStagedOperation';
+import {
+  readCanvasStagedCompositionSignature,
+  type CanvasStagedOperation,
+} from './canvasStagedOperation';
 import { assignCanvasStagedRoot } from './canvasStagedOperationDocument';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
@@ -13,7 +16,7 @@ export async function configureCanvasStagedTransform(
   fieldId?: string
 ): Promise<CanvasStagedOperation> {
   if (
-    operation.operation !== 'field_transform' ||
+    readCanvasStagedCompositionSignature(operation.operation).configuration !== 'transform' ||
     operation.semanticDocument != null ||
     operation.inputs[0] == null ||
     producer == null

@@ -1,7 +1,10 @@
 /** Keep staged operation semantics aligned with their connected producers. */
 import { useCallback, useEffect } from 'react';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
-import type { CanvasStagedOperation } from './canvasStagedOperation';
+import {
+  readCanvasStagedCompositionSignature,
+  type CanvasStagedOperation,
+} from './canvasStagedOperation';
 import { configureCanvasStagedBinary } from './canvasStagedBinaryConfiguration';
 import { resolveCanvasStagedProducerDocument } from './canvasStagedOperationDocument';
 import { configureCanvasStagedTransform } from './canvasStagedTransformConfiguration';
@@ -16,15 +19,19 @@ export function useCanvasStagedOperationConfiguration(args: {
   state: DraftState;
 }) {
   const { analysis, inputs, state } = args;
-  const configure = useCallback(
-    (operation: CanvasStagedOperation) =>
-      configureCanvasStagedBinary(
-        operation,
-        inputs,
-        state.pendingSources,
-        state.stagedOperations,
-        analysis?.document
-      ),
+  const configureImmediate = useCallback(
+    (operation: CanvasStagedOperation) => {
+      const strategy = readCanvasStagedCompositionSignature(operation.operation).configuration;
+      return strategy === 'binary'
+        ? configureCanvasStagedBinary(
+            operation,
+            inputs,
+            state.pendingSources,
+            state.stagedOperations,
+            analysis?.document
+          )
+        : operation;
+    },
     [analysis?.document, inputs, state.pendingSources, state.stagedOperations]
   );
   useEffect(() => {
@@ -32,8 +39,9 @@ export function useCanvasStagedOperationConfiguration(args: {
     const snapshot = state.stagedOperations;
     void Promise.all(
       snapshot.map(async (operation) => {
-        const joined = configure(operation);
-        if (joined.semanticDocument != null) return joined;
+        const strategy = readCanvasStagedCompositionSignature(operation.operation).configuration;
+        if (strategy === 'binary') return configureImmediate(operation);
+        if (strategy === 'manual') return operation;
         return configureCanvasStagedTransform(
           operation,
           resolveCanvasStagedProducerDocument({
@@ -70,10 +78,10 @@ export function useCanvasStagedOperationConfiguration(args: {
     };
   }, [
     analysis,
-    configure,
+    configureImmediate,
     state.pendingSources,
     state.setStagedOperations,
     state.stagedOperations,
   ]);
-  return configure;
+  return configureImmediate;
 }

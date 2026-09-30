@@ -6,12 +6,14 @@ import { createCanonicalComposition } from './canvasCanonicalComposition';
 import { mergeCanvasCompositionOperands } from './canvasCompositionOperands';
 import { resolveCanvasDvtJoinFieldPair } from './canvasDvtJoinTypeAdmission';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
-import { isCanvasSetOperation } from './canvasRelationalOperationChoices';
-import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 import { joinConditionFields } from './canvasSelectedJoin';
 import { createSourceDocument } from './canvasSourceDocument';
 import { canvasInputConnection } from './canvasSourceRelation';
-import type { CanvasStagedOperation } from './canvasStagedOperation';
+import {
+  canvasStagedOperationAppliedOperation,
+  readCanvasStagedCompositionSignature,
+  type CanvasStagedOperation,
+} from './canvasStagedOperation';
 import { resolveCanvasStagedProducerDocument } from './canvasStagedOperationDocument';
 import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 
@@ -62,9 +64,9 @@ export function configureCanvasStagedBinary(
   operations: readonly CanvasStagedOperation[],
   canonical: SubstraitDocument | null = null
 ): CanvasStagedOperation {
-  const kind = operation.operation;
-  if (!isCanvasJoinOperation(kind) && !isCanvasSetOperation(kind) && kind !== 'cross_join')
-    return operation;
+  const signature = readCanvasStagedCompositionSignature(operation.operation);
+  if (signature.configuration !== 'binary') return operation;
+  const canonicalOperation = canvasStagedOperationAppliedOperation(operation.operation, null);
   if (operation.inputs.length !== 2 || operation.inputs.some((input) => input == null)) {
     const { semanticDocument: _discarded, ...pending } = operation;
     return operation.semanticDocument == null ? operation : pending;
@@ -80,11 +82,15 @@ export function configureCanvasStagedBinary(
     const { plan, operands, nextAnchor } = mergeCanvasCompositionOperands(resolved);
     const root = createCanonicalComposition({
       plan,
-      binding: { relationId: operation.id, relAnchor: nextAnchor, displayName: kind },
-      operation: kind,
+      binding: {
+        relationId: operation.id,
+        relAnchor: nextAnchor,
+        displayName: canonicalOperation,
+      },
+      operation: canonicalOperation,
       inputs: operands.map((operand) => operand.root),
       schemas: operands.map((operand) => operand.schema),
-      predicate: isCanvasJoinOperation(kind) ? compositionPredicate(operands) : undefined,
+      predicate: signature.operator === 'join' ? compositionPredicate(operands) : undefined,
     });
     return {
       ...operation,
