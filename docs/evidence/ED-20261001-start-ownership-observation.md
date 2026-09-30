@@ -24,6 +24,7 @@ evidence:
     - pnpm --filter @dvt/adapter-temporal test
     - pnpm --filter @dvt/adapter-temporal test:integration
     - pnpm --filter dvt-api test:unit
+    - pnpm --filter dvt-api test:integration:ci
     - pnpm arch:deps
     - pnpm lint:determinism
 ---
@@ -81,7 +82,15 @@ replaced by the current observation contract and negative lifecycle scenarios.
   12 tests with real disposable test servers, including retained-ID rejection,
   deletion allowing a new execution, and cancel acknowledgement while still active.
 - API unit suite: 1,254 tests passed; 27 existing conditional tests were omitted
-  by this unit invocation. This is not API PostgreSQL integration acceptance.
+  by this unit invocation. The separate complete `test:integration:ci` invocation
+  passed 135 tests without skips against disposable PostgreSQL and Temporal.
+  The first invocation failed eight tests: three test compositions used separate
+  memory authorities, four submitted the unregistered SPARK_JOB kind, and one
+  preview did not enable its dbt capability. The fixtures now share the same
+  authority and use a canonical LOAD_OBJECT_FILE_TO_POSTGRES queued plan with
+  explicit test capabilities. No production admission rule was changed.
+  These route scenarios prove authentication, plan persistence, dispatch,
+  control and recovery wiring; they do not prove execution of the load activity.
 - Source TypeScript passed for Engine, PostgreSQL, Temporal and API; Temporal
   test TypeScript and API test TypeScript also passed. Scoped ESLint,
   determinism pre-commit and `pnpm arch:deps` passed.
@@ -104,7 +113,9 @@ database or shared Temporal service was modified. Temporal integration reports
 the test server's existing missing heartbeat-capability warning; heartbeat
 conformance is not claimed.
 
-An additional noncanonical Engine `tsconfig.test.json` check failed: it inherits
+An initial API diagnostic named a nonexistent `tsconfig.test.json`; the actual
+`pnpm --filter dvt-api exec tsc -p test/tsconfig.json --noEmit` passed. An
+additional noncanonical Engine `tsconfig.test.json` check failed: it inherits
 a source-only root/composite project and includes test fixtures with invalid
 branded values. No configuration or type rule was weakened. That diagnostic is
 not represented as a passing test-typecheck gate.
@@ -120,6 +131,10 @@ The initializer verifies schema identity, column types and RLS flags. It is not
 a comprehensive detector for arbitrary administrator modifications to all
 constraints, indexes or policies. These tests assume the installed declared
 schema and do not claim protection against a privileged schema rewrite.
+
+The first `pnpm verify:prepush` attempt rejected two Markdown issue references
+interpreted as headings; the references were corrected without relaxing lint.
+Final prepush acceptance is recorded separately on the PR for its committed SHA.
 
 Issue #2679 remains open for positive safe-redispatch acceptance. This cut never
 resends automatically. Independent final review, final prepush and required PR

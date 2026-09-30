@@ -39,11 +39,7 @@ import {
   SnapshotProjector,
   StartRunAdmissionGuard,
 } from '@dvt/engine/runtime';
-import {
-  InMemoryProviderAdapter,
-  InMemoryStartRunIntentStore,
-  InMemoryTxStore,
-} from '@dvt/engine/testing';
+import { InMemoryProviderAdapter, InMemoryTxStore } from '@dvt/engine/testing';
 import { createNoopObservability } from '@dvt/observability';
 import { PlannerFacade } from '@dvt/planner';
 import { describe, it, expect } from 'vitest';
@@ -171,7 +167,7 @@ function createStack(
     stateStoreWrite: store,
     idempotency,
     clock,
-    intentStore: new InMemoryStartRunIntentStore(),
+    intentStore: store.startRunIntents,
     observability: createNoopObservability(),
     planFetcher,
   });

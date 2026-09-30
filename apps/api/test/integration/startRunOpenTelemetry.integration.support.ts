@@ -136,7 +136,9 @@ export async function createStartRunOpenTelemetryProof(
     ['temporal', temporalAdapter],
   ]);
   const clock = new SequenceClock(asIsoUtcString('2026-08-03T00:00:00.000Z'));
-  const stateStore = new InMemoryTxStore();
+  const stateStore = new InMemoryTxStore({
+    startRunIntents: new InMemoryStartRunIntentStore(clock),
+  });
   const engineRuntime = buildWorkflowEngine({
     security: {
       authorizer: new AllowAllAuthorizer(),
@@ -145,7 +147,7 @@ export async function createStartRunOpenTelemetryProof(
     persistence: {
       stateStoreRead: stateStore,
       stateStoreWrite: stateStore,
-      intentStore: new InMemoryStartRunIntentStore(clock),
+      intentStore: stateStore.startRunIntents,
       planFetcher: planStore,
     },
     runtime: { adapters },
