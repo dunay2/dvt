@@ -188,37 +188,40 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
     const now = this.now();
     let result;
     try {
-      result = await this.withTenantContext(input.tenantId, (client) =>
-        client.query<IntentRow>(
+      result = await this.withTenantContext(input.tenantId, async (client) => {
+        const inserted = await client.query<IntentRow>(
           `
-            WITH inserted AS (
-              INSERT INTO ${quoteIdentifier(this.schema)}.start_run_intents (
-                intent_id,
-                tenant_id,
-                run_id,
-                provider,
-                status,
-                engine_run_ref,
-                created_at,
-                updated_at
-              )
-              VALUES ($1, $2, $3, $4, 'PENDING', NULL, $5::timestamptz, $6::timestamptz)
-              ON CONFLICT (intent_id) DO NOTHING
-              RETURNING ${INTENT_SELECT_COLUMNS}
+            INSERT INTO ${quoteIdentifier(this.schema)}.start_run_intents (
+              intent_id,
+              tenant_id,
+              run_id,
+              provider,
+              status,
+              engine_run_ref,
+              created_at,
+              updated_at
             )
-            SELECT ${INTENT_SELECT_COLUMNS}
-            FROM inserted
-            UNION ALL
+            VALUES ($1, $2, $3, $4, 'PENDING', NULL, $5::timestamptz, $6::timestamptz)
+            ON CONFLICT (intent_id) DO NOTHING
+            RETURNING ${INTENT_SELECT_COLUMNS}
+          `,
+          [input.intentId, input.tenantId, input.runId, input.provider, input.createdAt, now]
+        );
+        if (inserted.rows.length > 0) return inserted;
+
+        // A conflict can wait for a row invisible to the INSERT's snapshot.
+        // A separate statement sees the committed winner at READ COMMITTED,
+        // without updating it or leaving this tenant-scoped transaction.
+        return client.query<IntentRow>(
+          `
             SELECT ${INTENT_SELECT_COLUMNS}
             FROM ${quoteIdentifier(this.schema)}.start_run_intents
             WHERE intent_id = $1
               AND tenant_id = $2
-              AND NOT EXISTS (SELECT 1 FROM inserted)
-            LIMIT 1
           `,
-          [input.intentId, input.tenantId, input.runId, input.provider, input.createdAt, now]
-        )
-      );
+          [input.intentId, input.tenantId]
+        );
+      });
     } catch (error: unknown) {
       if (isActiveIntentConflict(error)) {
         throw new IntentActiveConflictError(input.tenantId, input.runId);
