@@ -11,6 +11,37 @@ const policies = [
 ];
 
 describe('start-run authority read boundary', () => {
+  it('uses centralized diagnostic identifiers in the failure policy', () => {
+    const path = policies[0]!;
+    const source = ts.createSourceFile(
+      path,
+      readFileSync(new URL(path, import.meta.url), 'utf8'),
+      ts.ScriptTarget.Latest,
+      true
+    );
+    const violations: string[] = [];
+    const visit = (node: ts.Node): void => {
+      if (
+        ts.isCallExpression(node) &&
+        ts.isPropertyAccessExpression(node.expression) &&
+        ['counter', 'histogram', 'gauge'].includes(node.expression.name.text) &&
+        node.arguments[0] &&
+        ts.isStringLiteralLike(node.arguments[0])
+      ) {
+        violations.push(node.arguments[0].text);
+      }
+      if (
+        ts.isPropertyAssignment(node) &&
+        node.name.getText(source) === 'msg' &&
+        ts.isStringLiteralLike(node.initializer)
+      )
+        violations.push(node.initializer.text);
+      ts.forEachChild(node, visit);
+    };
+    visit(source);
+    expect(violations).toEqual([]);
+  });
+
   it.each(policies)('%s does not convert caught authority failures to null', (path) => {
     const source = ts.createSourceFile(
       path,

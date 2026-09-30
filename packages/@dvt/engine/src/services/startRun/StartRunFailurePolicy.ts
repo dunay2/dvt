@@ -6,7 +6,12 @@ import type { StartRunTraceContext } from '../../core/lifecycle/StartRunTraceCon
 import { toErrorMessage } from '../../utils/errorUtils.js';
 
 import { readStartRunAuthority } from './readStartRunAuthority.js';
-import { START_RUN_FAILURE_REASON, START_RUN_MESSAGE } from './StartRunDomainConstants.js';
+import {
+  START_RUN_AUTHORITY_REASON,
+  START_RUN_FAILURE_REASON,
+  START_RUN_MESSAGE,
+  START_RUN_METRIC,
+} from './StartRunDomainConstants.js';
 import type { StartRunEventFactory } from './StartRunEventFactory.js';
 import type { IStartRunFailurePolicy, StartRunErrorContext } from './StartRunTypes.js';
 
@@ -28,7 +33,7 @@ export class PostStartIntentPersistenceError extends Error {
   ) {
     const cause =
       originalError instanceof Error ? originalError : new Error(toErrorMessage(originalError));
-    super(`Intent persistence failed after adapter.startRun succeeded: ${cause.message}`, {
+    super(`${START_RUN_MESSAGE.intentPersistenceError}: ${cause.message}`, {
       cause,
     });
     this.name = 'PostStartIntentPersistenceError';
@@ -74,7 +79,7 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
     } catch (error) {
       try {
         this.deps.observability.metrics
-          .counter('dvt.intent.mark_resolved_failed_total', {
+          .counter(START_RUN_METRIC.intentMarkResolvedFailedTotal, {
             tenantId: input.tenantId,
             provider: input.provider,
             operation: 'markResolved',
@@ -105,7 +110,7 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
           ) {
             this.lastStderrFallbackAtMs = nowMs;
             process.stderr.write(
-              `[dvt][StartRunApplicationService] markResolved observability reporting failed; intentId=${input.intentId} runId=${input.runId} tenantId=${input.tenantId}\n`
+              `${START_RUN_MESSAGE.markResolvedReportingFailed} intentId=${input.intentId} runId=${input.runId} tenantId=${input.tenantId}\n`
             );
           }
         } catch {
@@ -140,7 +145,7 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
 
     const { intentId } = errorContext;
     if (intentId === undefined) {
-      this.reportUnavailableAuthority('intent_missing', traceContext);
+      this.reportUnavailableAuthority(START_RUN_AUTHORITY_REASON.intentMissing, traceContext);
       throw error;
     }
 
@@ -152,7 +157,9 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
     );
     if (metadata.kind !== 'found') {
       this.reportUnavailableAuthority(
-        metadata.kind === 'failed' ? 'metadata_read_failed' : 'metadata_missing',
+        metadata.kind === 'failed'
+          ? START_RUN_AUTHORITY_REASON.metadataReadFailed
+          : START_RUN_AUTHORITY_REASON.metadataMissing,
         traceContext
       );
       throw error;
@@ -162,7 +169,9 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
     );
     if (intent.kind !== 'found') {
       this.reportUnavailableAuthority(
-        intent.kind === 'failed' ? 'intent_read_failed' : 'intent_missing',
+        intent.kind === 'failed'
+          ? START_RUN_AUTHORITY_REASON.intentReadFailed
+          : START_RUN_AUTHORITY_REASON.intentMissing,
         traceContext
       );
       throw error;
@@ -183,7 +192,7 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
     traceContext: StartRunTraceContext
   ): void {
     try {
-      this.deps.observability.metrics.counter('dvt.run.start_failed_total', metricTags).add(1);
+      this.deps.observability.metrics.counter(START_RUN_METRIC.startFailedTotal, metricTags).add(1);
     } catch {
       // no-op: observability reporting must not hide the domain error.
     }
@@ -243,8 +252,7 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
   }
 
   private reportUnavailableAuthority(
-    reasonCode:
-      'metadata_read_failed' | 'metadata_missing' | 'intent_read_failed' | 'intent_missing',
+    reasonCode: (typeof START_RUN_AUTHORITY_REASON)[keyof typeof START_RUN_AUTHORITY_REASON],
     traceContext: StartRunTraceContext
   ): void {
     try {
