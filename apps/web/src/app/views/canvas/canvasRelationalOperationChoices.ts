@@ -1,25 +1,40 @@
 /** Project operation choices from typed operand facts and the canonical capability catalog. */
-import {
-  DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
-  buildDvtSubstraitStandardCapabilityId,
-} from '@dvt/contracts';
+import { DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1 } from '@dvt/contracts';
 
 const operations = {
-  inner_join: ['join', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_INNER'],
-  left_join: ['join', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT'],
-  right_join: ['join', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT'],
-  full_outer_join: ['join', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_OUTER'],
-  left_semi_join: ['join', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT_SEMI'],
-  left_anti_join: ['join', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT_ANTI'],
-  right_semi_join: ['join', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT_SEMI'],
-  right_anti_join: ['join', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT_ANTI'],
-  cross_join: ['cross', 'substrait.CrossRel', undefined],
-  union_all: ['set', 'substrait.SetRel', 'SetOp.SET_OP_UNION_ALL'],
-  union_distinct: ['set', 'substrait.SetRel', 'SetOp.SET_OP_UNION_DISTINCT'],
-  intersect_distinct: ['set', 'substrait.SetRel', 'SetOp.SET_OP_INTERSECTION_MULTISET'],
-  except_distinct: ['set', 'substrait.SetRel', 'SetOp.SET_OP_MINUS_PRIMARY'],
-  intersect_all: ['set', 'substrait.SetRel', 'SetOp.SET_OP_INTERSECTION_MULTISET_ALL'],
-  except_all: ['set', 'substrait.SetRel', 'SetOp.SET_OP_MINUS_PRIMARY_ALL'],
+  inner_join: ['join', 'substrait/core/relation/substrait.JoinRel/JoinType.JOIN_TYPE_INNER'],
+  left_join: ['join', 'substrait/core/relation/substrait.JoinRel/JoinType.JOIN_TYPE_LEFT'],
+  right_join: ['join', 'substrait/core/relation/substrait.JoinRel/JoinType.JOIN_TYPE_RIGHT'],
+  full_outer_join: ['join', 'substrait/core/relation/substrait.JoinRel/JoinType.JOIN_TYPE_OUTER'],
+  left_semi_join: [
+    'join',
+    'substrait/core/relation/substrait.JoinRel/JoinType.JOIN_TYPE_LEFT_SEMI',
+  ],
+  left_anti_join: [
+    'join',
+    'substrait/core/relation/substrait.JoinRel/JoinType.JOIN_TYPE_LEFT_ANTI',
+  ],
+  right_semi_join: [
+    'join',
+    'substrait/core/relation/substrait.JoinRel/JoinType.JOIN_TYPE_RIGHT_SEMI',
+  ],
+  right_anti_join: [
+    'join',
+    'substrait/core/relation/substrait.JoinRel/JoinType.JOIN_TYPE_RIGHT_ANTI',
+  ],
+  cross_join: ['cross', 'substrait/core/relation/substrait.CrossRel'],
+  union_all: ['set', 'substrait/core/relation/substrait.SetRel/SetOp.SET_OP_UNION_ALL'],
+  union_distinct: ['set', 'substrait/core/relation/substrait.SetRel/SetOp.SET_OP_UNION_DISTINCT'],
+  intersect_distinct: [
+    'set',
+    'substrait/core/relation/substrait.SetRel/SetOp.SET_OP_INTERSECTION_MULTISET',
+  ],
+  except_distinct: ['set', 'substrait/core/relation/substrait.SetRel/SetOp.SET_OP_MINUS_PRIMARY'],
+  intersect_all: [
+    'set',
+    'substrait/core/relation/substrait.SetRel/SetOp.SET_OP_INTERSECTION_MULTISET_ALL',
+  ],
+  except_all: ['set', 'substrait/core/relation/substrait.SetRel/SetOp.SET_OP_MINUS_PRIMARY_ALL'],
 } as const;
 
 export type CanvasRelationalOperation = keyof typeof operations | 'projection';
@@ -66,18 +81,23 @@ export function isCanvasSetOperation(
   );
 }
 
-function isAdmitted(message: string, selector?: string): boolean {
-  const id = buildDvtSubstraitStandardCapabilityId('relation', {
-    sourceKind: 'core',
-    message,
-    ...(selector == null ? {} : { selector }),
-  });
-  return DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.some(
-    (entry) =>
-      entry.kind === 'standard' &&
-      entry.entryId === id &&
-      entry.profileStatus === 'supported-profile'
+function capabilityAvailability(
+  capabilityId: string
+): 'available' | 'semantically-unavailable' | 'target-unavailable' {
+  const entry = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
+    (candidate) => candidate.entryId === capabilityId
   );
+  if (
+    entry?.kind !== 'standard' ||
+    entry.profileStatus !== 'supported-profile' ||
+    entry.admission?.visualExposure?.status !== 'exposed'
+  )
+    return 'semantically-unavailable';
+  const target = entry.admission.targetConformance?.find(({ targetId }) => targetId === 'postgres');
+  // Mapping permits authoring; it does not assert provider acceptance or runtime readiness.
+  return target?.status === 'mapped' || target?.status === 'provider-accepted'
+    ? 'available'
+    : 'target-unavailable';
 }
 
 const availabilityFor = {
@@ -103,11 +123,12 @@ export function resolveCanvasRelationalOperationChoices(
       keyof typeof operations,
       (typeof operations)[keyof typeof operations],
     ][]
-  ).map(([operation, [family, message, selector]]) => {
+  ).map(([operation, [family, capabilityId]]) => {
+    const capability = capabilityAvailability(capabilityId);
     const availability: CanvasRelationalOperationAvailability = facts.readOnly
       ? 'read-only'
-      : !isAdmitted(message, selector)
-        ? 'semantically-unavailable'
+      : capability !== 'available'
+        ? capability
         : facts.inputCount < 2
           ? 'needs-input'
           : !facts.sameConnection
@@ -130,9 +151,7 @@ export function resolveCanvasRelationalProjectionChoice(
 ): CanvasRelationalOperationChoice {
   const availability = readOnly
     ? 'read-only'
-    : isAdmitted('substrait.ProjectRel')
-      ? 'available'
-      : 'semantically-unavailable';
+    : capabilityAvailability('substrait/core/relation/substrait.ProjectRel');
   return { operation: 'projection', availability, selectable: availability === 'available' };
 }
 
