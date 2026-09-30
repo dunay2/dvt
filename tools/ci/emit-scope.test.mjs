@@ -182,7 +182,7 @@ test('emit-scope fails closed for an uncatalogued CI configuration', () => {
   assert.equal(qualityScope.temporal_postgres_changed, true);
 });
 
-test('emit-scope test mode routes test:determinism script changes to determinism job', () => {
+test('emit-scope test mode routes test:determinism script changes to full engine evidence', () => {
   const scope = computeWorkflowModeScopeOutputs('test', ['package.json'], {
     packageJsonChange: packageJsonScriptChange(
       'test:determinism',
@@ -193,9 +193,10 @@ test('emit-scope test mode routes test:determinism script changes to determinism
 
   assert.equal(scope.root_build_sensitive, false);
   assert.equal(scope.determinism_relevant, true);
+  assert.equal(scope.coverage_relevant, true);
 });
 
-test('emit-scope test mode routes test:replay script changes to determinism job', () => {
+test('emit-scope test mode routes test:replay script changes to full engine evidence', () => {
   const scope = computeWorkflowModeScopeOutputs('test', ['package.json'], {
     packageJsonChange: packageJsonScriptChange(
       'test:replay',
@@ -206,6 +207,29 @@ test('emit-scope test mode routes test:replay script changes to determinism job'
 
   assert.equal(scope.root_build_sensitive, false);
   assert.equal(scope.determinism_relevant, true);
+  assert.equal(scope.coverage_relevant, true);
+});
+
+test('coverage retains every displaced engine matrix and conservative root trigger', () => {
+  for (const file of [
+    'turbo.json',
+    'tsconfig.json',
+    'vitest.config.ts',
+    'pnpm-lock.yaml',
+    'package.json',
+    '.github/actions/setup-node-pnpm/action.yml',
+    'scripts/run-turbo-workspace-task.cjs',
+    'scripts/unclassified-runtime.cjs',
+    'tools/ci/policy/unknown-policy.json',
+    'packages/@dvt/contracts/src/index.ts',
+    'packages/@dvt/engine/vitest.config.ts',
+    'packages/@dvt/engine/test/replay.test.ts',
+  ]) {
+    assert.equal(computeWorkflowModeScopeOutputs('test', [file]).coverage_relevant, true, file);
+  }
+  for (const file of ['docs/guides/unrelated.md', '.github/workflows/test.yml']) {
+    assert.equal(computeWorkflowModeScopeOutputs('test', [file]).coverage_relevant, false, file);
+  }
 });
 
 test('emit-scope test mode marks engine changes coverage relevant', () => {

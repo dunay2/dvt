@@ -109,9 +109,45 @@ fixture: unexecuted source must be counted and low coverage must return nonzero.
 A fully covered control must succeed. The fixture is isolated under `tmp/` and
 removed after the test. No mock replaces the coverage provider.
 
-The implementation plan and red/green evidence are tracked in
-[#3494](https://github.com/dunay2/dvt/issues/3494). Repeated engine executions
-remain a separate #2928 cut; this fix does not change job topology or names.
+The coverage-command repair is tracked in
+[#3494](https://github.com/dunay2/dvt/issues/3494). The single-execution cut is
+governed by [#2928](https://github.com/dunay2/dvt/issues/2928).
+
+## Single Engine Evidence Lane
+
+Within Test Suite, Engine Coverage Gate owns the entire engine test suite,
+including architecture, determinism and replay tests. The generic package matrix
+excludes engine, and no separate determinism/replay job repeats its collection.
+Local focus commands remain available. Real adapter/provider integrations and
+the Code Quality main/manual baseline remain independent and unchanged.
+
+`coverage_relevant` includes the union of the displaced routes: engine package
+scope, determinism scope, existing coverage scope and root-build-sensitive
+changes (including conservative unknown classifications). The shared scope
+policy owns this union; the workflow has no path classifier of its own.
+
+```mermaid
+flowchart LR
+    Scope[Shared semantic scope: union of engine triggers] --> Coverage[All engine tests with V8 once]
+    Coverage --> Aggregate[Test Suite Required for Merge]
+    Other[Other package and integration lanes] --> Aggregate
+```
+
+The existing required aggregate implements `ValidateTestSuiteEvidenceResult`, a
+CI Governance query owned by `TestSuiteEvidenceResult`. Its inputs are the
+current event, draft posture, detector outputs and this run's named job results;
+its output is an accepted/rejected check status. Its application port is
+`Test Suite Required for Merge`, adapted by the workflow's GitHub script. It
+reads workflow metadata only, has no tenant/application data access, and cannot
+reuse another SHA's successful result.
+
+For ready PRs, the detector must succeed and each selected lane must succeed.
+Only out-of-scope lanes may be skipped. Drafts require the detector and heavy
+lanes to be skipped; `ready_for_review` recalculates the current SHA's scope.
+Push and manual events require every lane. Missing/malformed scope, missing
+results, failure, cancellation and unsupported events reject. The check name
+and repository protections remain unchanged. Executable workflow tests in
+`tools/ci/test-suite-outcome.test.mjs` protect these outcomes.
 
 ## DDD Objects
 
@@ -128,6 +164,8 @@ remain a separate #2928 cut; this fix does not change job topology or names.
   `coverage_relevant=true`.
 - Every pattern in the governed engine workspace scope must be covered by the
   engine coverage scope.
+- Root-build-sensitive and determinism routes must also select coverage, even
+  when they do not match a literal engine source path.
 - `coverage_relevant` must also remain true for contracts, root package
   dependency changes, root Vitest config, TypeScript config, and lockfiles.
 - Test Suite workflow YAML changes stay on CI-tool contract and changed-file

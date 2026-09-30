@@ -359,7 +359,6 @@ test('contracts and test workflows consume semantic scope outputs instead of inl
   assertWorkflowContains(testWorkflow, 'run: ${{ matrix.command }}');
   assertWorkflowContains(testWorkflow, 'name: Adapter Temporal Tests');
   assertWorkflowContains(testWorkflow, 'steps.scope.outputs.adapter_temporal');
-  assertWorkflowContains(testWorkflow, 'steps.scope.outputs.determinism_relevant');
   assertWorkflowContains(testWorkflow, 'steps.scope.outputs.coverage_relevant');
   assertWorkflowContains(testWorkflow, 'steps.scope.outputs.root_build_sensitive');
 
@@ -387,7 +386,6 @@ test('Test Suite heavy PR lanes are gated at job level by one detector', () => {
     'adapter_temporal: ${{ steps.scope.outputs.adapter_temporal }}',
     'web: ${{ steps.scope.outputs.web }}',
     'root_build_sensitive: ${{ steps.scope.outputs.root_build_sensitive }}',
-    'determinism_relevant: ${{ steps.scope.outputs.determinism_relevant }}',
     'coverage_relevant: ${{ steps.scope.outputs.coverage_relevant }}',
     'postgres_capability_changed: ${{ steps.scope.outputs.postgres_capability_changed }}',
   ]) {
@@ -397,7 +395,6 @@ test('Test Suite heavy PR lanes are gated at job level by one detector', () => {
   for (const predicate of [
     "needs.detect_test_matrix.outputs.adapter_temporal == 'true'",
     "needs.detect_test_matrix.outputs.web == 'true'",
-    "needs.detect_test_matrix.outputs.determinism_relevant == 'true'",
     "needs.detect_test_matrix.outputs.coverage_relevant == 'true'",
     "needs.detect_test_matrix.outputs.postgres_capability_changed == 'true'",
   ]) {
@@ -466,7 +463,6 @@ test('test and contract workflows expose stable merge-blocking outcomes', () => 
     'adapter-temporal',
     'web-frontend-tests',
     'adapter-postgres',
-    'test-determinism',
     'coverage',
   ]);
   assert.equal(contractsAggregator.name, 'Contracts Required for Merge');
@@ -480,8 +476,8 @@ test('test and contract workflows expose stable merge-blocking outcomes', () => 
 
   for (const aggregator of [testAggregator, contractsAggregator]) {
     assert.equal(aggregator.if, 'always()');
-    assert.match(aggregator.steps[0].with.script, /\['failure', 'cancelled'\]/u);
   }
+  assert.match(contractsAggregator.steps[0].with.script, /\['failure', 'cancelled'\]/u);
 });
 
 test('code quality workflow exposes a stable merge-blocking outcome', () => {

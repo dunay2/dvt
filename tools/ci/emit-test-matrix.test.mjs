@@ -12,6 +12,7 @@ import {
 const DEDICATED_TEST_PACKAGES = new Set([
   '@dvt/adapter-postgres',
   '@dvt/adapter-temporal',
+  '@dvt/engine',
   '@dvt/web',
 ]);
 
