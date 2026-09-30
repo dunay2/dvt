@@ -25,8 +25,10 @@ type PendingIntentReconciliationPolicyDeps = Pick<
 export class PendingIntentReconciliationPolicy {
   private readonly projector = new SnapshotProjector();
   private readonly effects: PendingIntentReconciliationEffects;
+  private readonly deps: Pick<PendingIntentReconciliationPolicyDeps, 'adapters' | 'stateStoreRead'>;
 
-  constructor(private readonly deps: PendingIntentReconciliationPolicyDeps) {
+  constructor(deps: PendingIntentReconciliationPolicyDeps) {
+    this.deps = { adapters: deps.adapters, stateStoreRead: deps.stateStoreRead };
     this.effects = new PendingIntentReconciliationEffects({
       intentStore: deps.intentStore,
       stateStoreWrite: deps.stateStoreWrite,

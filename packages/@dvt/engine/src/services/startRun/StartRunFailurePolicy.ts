@@ -46,8 +46,18 @@ export interface StartRunFailurePolicyDeps {
 
 export class StartRunFailurePolicy implements IStartRunFailurePolicy {
   private readonly diagnostics: StartRunFailureDiagnostics;
+  private readonly deps: Pick<
+    StartRunFailurePolicyDeps,
+    'stateStoreRead' | 'stateStoreWrite' | 'intentStore' | 'eventFactory'
+  >;
 
-  constructor(private readonly deps: StartRunFailurePolicyDeps) {
+  constructor(deps: StartRunFailurePolicyDeps) {
+    this.deps = {
+      stateStoreRead: deps.stateStoreRead,
+      stateStoreWrite: deps.stateStoreWrite,
+      intentStore: deps.intentStore,
+      eventFactory: deps.eventFactory,
+    };
     this.diagnostics = new StartRunFailureDiagnostics({
       observability: deps.observability,
       clock: deps.clock,

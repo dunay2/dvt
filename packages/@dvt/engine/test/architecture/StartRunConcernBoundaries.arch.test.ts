@@ -12,6 +12,7 @@ describe('start-run concern boundaries', () => {
   it('keeps diagnostic transport and throttle state out of the failure policy', () => {
     const policy = source('startRun/StartRunFailurePolicy');
     expect(policy).not.toMatch(/process\.stderr|lastStderrFallbackAtMs|\.metrics\.|\.logs\./);
+    expect(policy).not.toMatch(/this\.deps\.observability|this\.deps\.clock/);
   });
 
   it('has one compensation owner outside start sequencing', () => {
@@ -35,6 +36,9 @@ describe('start-run concern boundaries', () => {
   });
 
   it('does not let the observation coordinator mutate or report', () => {
+    expect(source('runMaintenance/PendingIntentReconciliationPolicy')).not.toMatch(
+      /this\.deps\.intentStore|this\.deps\.stateStoreWrite/
+    );
     expect(source('runMaintenance/PendingIntentReconciliationPolicy')).not.toMatch(
       /\.markResolved\(|\.markDispatched\(|\.markExpired\(|\.saveProviderRef\(|\.cancelRun\(|\.warn\(|\.info\(|\.error\(/
     );

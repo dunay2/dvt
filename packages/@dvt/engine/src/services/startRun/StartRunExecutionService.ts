@@ -37,10 +37,13 @@ export interface StartRunExecutionServiceDeps {
 export class StartRunExecutionService implements IStartRunExecutionService {
   private readonly diagnostics: StartRunFailureDiagnostics;
   private readonly compensation: StartRunCompensation;
+  private readonly deps: Omit<StartRunExecutionServiceDeps, 'observability'>;
 
-  constructor(private readonly deps: StartRunExecutionServiceDeps) {
+  constructor(deps: StartRunExecutionServiceDeps) {
+    const { observability, ...executionDeps } = deps;
+    this.deps = executionDeps;
     this.diagnostics = new StartRunFailureDiagnostics({
-      observability: deps.observability,
+      observability,
       clock: deps.clock,
     });
     this.compensation = new StartRunCompensation({

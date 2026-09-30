@@ -17,7 +17,12 @@ import {
 } from './RunMaintenanceDomainConstants.js';
 import type { RunMaintenanceObservabilityFacade } from './RunMaintenanceObservabilityFacade.js';
 
-type EffectDeps = Pick<RunMaintenanceServiceDeps, 'intentStore' | 'stateStoreWrite'> & {
+type EffectDeps = {
+  intentStore: Pick<
+    RunMaintenanceServiceDeps['intentStore'],
+    'markDispatched' | 'markResolved' | 'markExpired'
+  >;
+  stateStoreWrite: Pick<RunMaintenanceServiceDeps['stateStoreWrite'], 'saveProviderRef'>;
   observability: RunMaintenanceObservabilityFacade;
 };
 const DEFER_DIAGNOSTICS = {
@@ -46,7 +51,7 @@ export class PendingIntentReconciliationEffects {
     decision: PendingIntentDecision,
     intent: OrphanedIntent,
     context: RunMaintenanceTraceContext,
-    adapter: IProviderAdapter | undefined
+    adapter: Pick<IProviderAdapter, 'cancelRun'> | undefined
   ): Promise<ReconcileOrphanedIntentOutcome> {
     switch (decision.kind) {
       case 'defer':
@@ -109,7 +114,7 @@ export class PendingIntentReconciliationEffects {
     intent: OrphanedIntent,
     runRef: EngineRunRef,
     context: RunMaintenanceTraceContext,
-    adapter: IProviderAdapter
+    adapter: Pick<IProviderAdapter, 'cancelRun'>
   ): Promise<ReconcileOrphanedIntentOutcome> {
     try {
       await adapter.cancelRun(runRef);
