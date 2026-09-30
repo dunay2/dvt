@@ -14,9 +14,7 @@ import {
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
-import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
-import type { CanvasStagedOperationKind } from './canvasStagedOperation';
-import { isCanvasSetOperation } from './canvasRelationalOperationChoices';
+import { canvasStagedOperationAppliedOperation } from './canvasStagedOperation';
 import {
   createCanvasRelationalAuthoringDraft,
   retainIncompleteCanvasRelationalAuthoringDraft,
@@ -73,16 +71,6 @@ export function prepareCanvasRelationalTreeApply(
   };
 }
 
-function appliedOperation(
-  operation: CanvasStagedOperationKind,
-  fallback: CanvasRelationalOperation | null
-): CanvasRelationalOperation | null {
-  if (operation === 'field_transform') return 'projection';
-  if (isCanvasJoinOperation(operation) || isCanvasSetOperation(operation)) return operation;
-  if (operation === 'cross_join' || operation === 'projection') return operation;
-  return fallback ?? 'projection';
-}
-
 function resolveAppliedSemantic(args: {
   relationalAuthoringDraft?: DvtRelationalAuthoringDraftV1 | null;
   joinDraft: SubstraitDocument | null;
@@ -96,7 +84,8 @@ function resolveAppliedSemantic(args: {
       candidate.relationId === args.relationalAuthoringDraft?.outputRelationId &&
       candidate.semanticDocument != null
   );
-  const operation = output == null ? null : appliedOperation(output.operation, args.operation);
+  const operation =
+    output == null ? null : canvasStagedOperationAppliedOperation(output.operation, args.operation);
   if (output?.semanticDocument == null || operation == null)
     return { document: args.joinDraft, operation: args.operation };
   return {

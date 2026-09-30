@@ -1,7 +1,9 @@
 /** Discardable operation nodes with algebra-defined, freely connectable Input ports. */
-import { allocateDvtRelationId } from '@dvt/contracts';
+import {
+  allocateDvtRelationId,
+  type DvtSubstraitSemanticDocumentV1,
+} from '@dvt/contracts';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
-import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
 import { decodeCanvasStagedOperation } from './canvasStagedOperationDocument';
 import { buildCanvasRelationalTreeRelation } from './canvasRelationalTreeRelationProjection';
 import type { CanvasRelationalOperatorTool } from './relational-operator-form/OperatorTool';
@@ -13,6 +15,12 @@ import type {
 
 export type CanvasStagedOperationKind =
   CanvasRelationalOperation | CanvasRelationalOperatorTool['id'] | 'field_transform';
+export type CanvasStagedConnectionIntent = 'relation' | 'field';
+export type CanvasStagedCompositionState =
+  | 'unbound'
+  | 'partially-bound'
+  | 'ready'
+  | 'configured';
 
 export type CanvasStagedOperation = Readonly<{
   id: string;
@@ -21,41 +29,117 @@ export type CanvasStagedOperation = Readonly<{
   semanticDocument?: DvtSubstraitSemanticDocumentV1;
 }>;
 
-const binary = new Set<CanvasStagedOperationKind>([
-  'inner_join',
-  'left_join',
-  'right_join',
-  'full_outer_join',
-  'left_semi_join',
-  'left_anti_join',
-  'right_semi_join',
-  'right_anti_join',
-  'cross_join',
-  'union_all',
-  'union_distinct',
-  'intersect_distinct',
-  'except_distinct',
-  'intersect_all',
-  'except_all',
-]);
+type CanvasStagedCompositionInput = Readonly<{
+  accepts: readonly CanvasStagedConnectionIntent[];
+  requiresEmptyFor?: readonly CanvasStagedConnectionIntent[];
+  requiresUnconfiguredFor?: readonly CanvasStagedConnectionIntent[];
+}>;
 
-const operations = new Set<CanvasStagedOperationKind>([
-  'projection',
-  'field_transform',
-  'filter',
-  'aggregate',
-  'window',
-  'sort',
-  'fetch',
-  ...binary,
-]);
+export type CanvasStagedCompositionSignature = Readonly<{
+  inputs:
+    | readonly [CanvasStagedCompositionInput]
+    | readonly [CanvasStagedCompositionInput, CanvasStagedCompositionInput];
+  output: 'relation';
+  operator: CanvasRelationalTreeOperator;
+  appliedOperation: CanvasRelationalOperation | 'inherit';
+}>;
+
+const relationInput: CanvasStagedCompositionInput = { accepts: ['relation'] };
+const fieldSeededRelationInput: CanvasStagedCompositionInput = {
+  accepts: ['relation', 'field'],
+  requiresEmptyFor: ['field'],
+  requiresUnconfiguredFor: ['field'],
+};
+
+function unary(
+  operator: CanvasRelationalTreeOperator,
+  appliedOperation: CanvasRelationalOperation | 'inherit' = 'inherit',
+  input: CanvasStagedCompositionInput = relationInput
+): CanvasStagedCompositionSignature {
+  return { inputs: [input], output: 'relation', operator, appliedOperation };
+}
+
+function binary(
+  operator: CanvasRelationalTreeOperator,
+  appliedOperation: CanvasRelationalOperation
+): CanvasStagedCompositionSignature {
+  return {
+    inputs: [relationInput, relationInput],
+    output: 'relation',
+    operator,
+    appliedOperation,
+  };
+}
+
+const compositionSignatures = {
+  projection: unary('project', 'projection'),
+  field_transform: unary('project', 'projection', fieldSeededRelationInput),
+  filter: unary('filter'),
+  aggregate: unary('aggregate'),
+  window: unary('window'),
+  sort: unary('sort'),
+  fetch: unary('fetch'),
+  inner_join: binary('join', 'inner_join'),
+  left_join: binary('join', 'left_join'),
+  right_join: binary('join', 'right_join'),
+  full_outer_join: binary('join', 'full_outer_join'),
+  left_semi_join: binary('join', 'left_semi_join'),
+  left_anti_join: binary('join', 'left_anti_join'),
+  right_semi_join: binary('join', 'right_semi_join'),
+  right_anti_join: binary('join', 'right_anti_join'),
+  cross_join: binary('cross', 'cross_join'),
+  union_all: binary('set', 'union_all'),
+  union_distinct: binary('set', 'union_distinct'),
+  intersect_distinct: binary('set', 'intersect_distinct'),
+  except_distinct: binary('set', 'except_distinct'),
+  intersect_all: binary('set', 'intersect_all'),
+  except_all: binary('set', 'except_all'),
+} satisfies Record<CanvasStagedOperationKind, CanvasStagedCompositionSignature>;
+
+export function readCanvasStagedCompositionSignature(
+  operation: CanvasStagedOperationKind
+): CanvasStagedCompositionSignature {
+  return compositionSignatures[operation];
+}
 
 export function isCanvasStagedOperationKind(value: string): value is CanvasStagedOperationKind {
-  return operations.has(value as CanvasStagedOperationKind);
+  return Object.hasOwn(compositionSignatures, value);
 }
 
 export function canvasStagedOperationArity(operation: CanvasStagedOperationKind): 1 | 2 {
-  return binary.has(operation) ? 2 : 1;
+  return readCanvasStagedCompositionSignature(operation).inputs.length;
+}
+
+export function canvasStagedOperationAcceptsConnection(
+  operation: CanvasStagedOperation,
+  port: number,
+  intent: CanvasStagedConnectionIntent
+): boolean {
+  if (!Number.isInteger(port) || port < 0) return false;
+  const input = readCanvasStagedCompositionSignature(operation.operation).inputs[port];
+  if (input == null || !input.accepts.includes(intent)) return false;
+  if (input.requiresEmptyFor?.includes(intent) && operation.inputs[port] != null) return false;
+  if (input.requiresUnconfiguredFor?.includes(intent) && operation.semanticDocument != null)
+    return false;
+  return true;
+}
+
+export function deriveCanvasStagedCompositionState(
+  operation: CanvasStagedOperation
+): CanvasStagedCompositionState {
+  const arity = canvasStagedOperationArity(operation.operation);
+  const connected = operation.inputs.slice(0, arity).filter((input) => input != null).length;
+  if (connected === 0) return 'unbound';
+  if (connected < arity) return 'partially-bound';
+  return operation.semanticDocument == null ? 'ready' : 'configured';
+}
+
+export function canvasStagedOperationAppliedOperation(
+  operation: CanvasStagedOperationKind,
+  fallback: CanvasRelationalOperation | null
+): CanvasRelationalOperation {
+  const applied = readCanvasStagedCompositionSignature(operation).appliedOperation;
+  return applied === 'inherit' ? (fallback ?? 'projection') : applied;
 }
 
 export function createCanvasStagedOperation(
@@ -108,27 +192,6 @@ export function createsCanvasStagedOperationCycle(
   return dependsOn(producerId);
 }
 
-function operatorFor(operation: CanvasStagedOperationKind): CanvasRelationalTreeOperator {
-  if (operation === 'projection' || operation === 'field_transform') return 'project';
-  if (operation === 'cross_join') return 'cross';
-  if (operation.includes('join')) return 'join';
-  if (
-    operation.startsWith('union') ||
-    operation.startsWith('intersect') ||
-    operation.startsWith('except')
-  )
-    return 'set';
-  if (
-    operation === 'filter' ||
-    operation === 'aggregate' ||
-    operation === 'sort' ||
-    operation === 'fetch'
-  )
-    return operation;
-  if (operation === 'window') return 'window';
-  return 'unsupported';
-}
-
 export function projectCanvasStagedOperation(
   staged: CanvasStagedOperation
 ): CanvasRelationalTreeNode {
@@ -140,7 +203,7 @@ export function projectCanvasStagedOperation(
   }
   return {
     locator: staged.id,
-    operator: operatorFor(staged.operation),
+    operator: readCanvasStagedCompositionSignature(staged.operation).operator,
     substraitKind: 'pending',
     operation: staged.operation,
     relationId: staged.id,

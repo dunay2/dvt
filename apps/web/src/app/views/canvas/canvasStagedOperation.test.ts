@@ -1,11 +1,15 @@
 /** Pending cards must preserve the operation users chose before configuration. */
 import { describe, expect, it } from 'vitest';
 import {
+  canvasStagedOperationAppliedOperation,
+  canvasStagedOperationArity,
   connectCanvasStagedOperation,
   createsCanvasStagedOperationCycle,
   createCanvasStagedOperation,
+  deriveCanvasStagedCompositionState,
   disconnectCanvasStagedOperation,
   projectCanvasStagedOperation,
+  readCanvasStagedCompositionSignature,
   type CanvasStagedOperationKind,
 } from './canvasStagedOperation';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
@@ -29,6 +33,33 @@ describe('staged operation projection', () => {
     }
   );
 
+  it('derives composition contracts and staged state without persisting another status', () => {
+    const join = createCanvasStagedOperation('inner_join');
+    expect(readCanvasStagedCompositionSignature('inner_join')).toMatchObject({
+      output: 'relation',
+      operator: 'join',
+    });
+    expect(readCanvasStagedCompositionSignature('field_transform').inputs[0]?.accepts).toEqual([
+      'relation',
+      'field',
+    ]);
+    expect(readCanvasStagedCompositionSignature('filter').inputs[0]?.accepts).toEqual([
+      'relation',
+    ]);
+    expect(canvasStagedOperationArity('inner_join')).toBe(2);
+    expect(deriveCanvasStagedCompositionState(join)).toBe('unbound');
+
+    const partial = connectCanvasStagedOperation(join, 0, 'producer:left');
+    expect(deriveCanvasStagedCompositionState(partial)).toBe('partially-bound');
+    const ready = connectCanvasStagedOperation(partial, 1, 'producer:right');
+    expect(deriveCanvasStagedCompositionState(ready)).toBe('ready');
+
+    expect(canvasStagedOperationAppliedOperation('field_transform', null)).toBe('projection');
+    expect(canvasStagedOperationAppliedOperation('inner_join', null)).toBe('inner_join');
+    expect(canvasStagedOperationAppliedOperation('filter', 'left_join')).toBe('left_join');
+    expect(canvasStagedOperationAppliedOperation('filter', null)).toBe('projection');
+  });
+
   it('connects and disconnects ports without changing the selected operation', () => {
     const staged = createCanvasStagedOperation('inner_join');
     const connected = connectCanvasStagedOperation(staged, 1, 'producer:right');
@@ -49,6 +80,7 @@ describe('staged operation projection', () => {
       document,
       field.fieldId
     );
+    expect(deriveCanvasStagedCompositionState(staged)).toBe('configured');
     const projected = projectCanvasStagedOperation(staged);
     expect(projected.locator).toBe(staged.id);
     expect(projected.output.fields.map((output) => output.displayName)).toEqual([
