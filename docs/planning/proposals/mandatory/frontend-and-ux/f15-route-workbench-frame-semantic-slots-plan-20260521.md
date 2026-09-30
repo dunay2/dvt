@@ -76,9 +76,8 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/architecture/components/web/main-workspace-views-and-ux.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
   - docs/architecture/components/web/ux-implementation-guide.md
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
 allowedImplementationSurfaces:
   - apps/web/src/app/components/workbench/RouteWorkbenchFrame.tsx
   - apps/web/src/app/components/workbench/RouteWorkbenchFrame.test.tsx
@@ -101,7 +100,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/index.md
   - docs/architecture/components/web/route-workbench-frame-component.md
   - docs/architecture/components/web/route-workbench-frame-user-stories.md
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
   - docs/planning/proposals/mandatory/frontend-and-ux/f15-route-workbench-frame-semantic-slots-plan-20260521.md
 forbiddenImplementationSurfaces:
   - apps/api/**

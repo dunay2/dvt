@@ -1,6 +1,6 @@
 /**
- * Owned concern: validate that the DVT workbench UX draft is dispositioned into
- * governed frontend delivery work instead of remaining a parallel UX backlog.
+ * Owned concern: validate the current DVT workbench UX authority and the
+ * disposition of historical input without retaining a parallel UX backlog.
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -15,28 +15,44 @@ import {
 
 const requiredFiles = [
   'docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md',
-  'docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md',
   'docs/architecture/components/web/workbench-ux-canon-component.md',
   'docs/architecture/components/web/workbench-ux-canon-user-stories.md',
-  'docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md',
+  'docs/architecture/components/web/screen-manuals-and-user-stories.md',
   'docs/architecture/components/web/index.md',
   'docs/planning/proposals/portfolio-map-20260403.md',
 ];
 
-test('DVT workbench UX draft canonization has semantic ownership', () => {
+test('DVT workbench UX canonization preserves current authority and semantic ownership', () => {
   assertFilesExist(requiredFiles);
-  assertCanonPlan(
+  const canonPlan = assertCanonPlan(
     'docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md'
   );
 
   assertContains(
-    'docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md',
-    'canonical_disposition: F-MAND-WORKBENCH-UX'
+    'docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md',
+    'featureId: F-MAND-WORKBENCH-UX'
   );
   assertContains(
-    'docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md',
-    'accepted_subset: dvt-workbench-ux-canon-plan-20260524'
+    'docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md',
+    'screen-manuals-and-user-stories.md'
   );
+  assertContains('docs/planning/state/github-mvp-issue-workflow.md', 'is the only task backlog');
+  assert.doesNotMatch(
+    canonPlan,
+    /\bPlanning\s+DB\s+tasks?\b/u,
+    'Executable UX work belongs to GitHub Issues, not Planning DB tasks'
+  );
+  assert.match(
+    canonPlan,
+    /cypressFlows:\s*\n\s+- N\/A[^\n]*\bGitHub issue\b/u,
+    'Canon-only Cypress disposition must route future execution to its governing GitHub issue'
+  );
+  const screenManual = readRepoFile(
+    'docs/architecture/components/web/screen-manuals-and-user-stories.md'
+  );
+  assert.match(screenManual, /Process Map as the persistent primary surface/u);
+  assert.match(screenManual, /Code and node details opened contextually/u);
+  assert.match(screenManual, /### Shell workspace context/u);
 
   const componentGuide = readRepoFile(
     'docs/architecture/components/web/workbench-ux-canon-component.md'

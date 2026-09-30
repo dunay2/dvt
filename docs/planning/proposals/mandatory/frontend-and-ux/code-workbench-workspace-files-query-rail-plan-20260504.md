@@ -10,9 +10,10 @@ planning_type: mandatory-proposal
 
 This proposal mechanizes the Code workbench read-only workspace files slice.
 
-The governing analysis and implementation plan live in:
+The current component and user-story owners remain below; the historical
+analysis is retained only as exact-Git provenance:
 
-- `buzon/20260504-codex-fowler-code-tab-workspace-files-analysis-and-plan.md`
+- [Fowler analysis and plan for Code tab workspace files](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/buzon/20260504-codex-fowler-code-tab-workspace-files-analysis-and-plan.md)
 - `docs/architecture/components/web/code-workbench-workspace-files-component.md`
 - `docs/architecture/components/web/code-workbench-workspace-files-user-stories.md`
 

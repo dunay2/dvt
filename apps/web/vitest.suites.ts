@@ -114,6 +114,7 @@ export const WEB_VITEST_SUITES: Record<WebVitestSuiteName, WebVitestSuiteDefinit
   'shell-session': {
     include: [
       'src/app/components/TopAppBar.{test,spec}.{ts,tsx}',
+      'src/app/components/TopAppBar.architecture.test.ts',
       'src/app/components/shell/**/*.{test,spec}.{ts,tsx}',
       'src/app/services/AppServicesContext.{test,spec}.{ts,tsx}',
       'src/app/services/api/createApiClient.{test,spec}.{ts,tsx}',

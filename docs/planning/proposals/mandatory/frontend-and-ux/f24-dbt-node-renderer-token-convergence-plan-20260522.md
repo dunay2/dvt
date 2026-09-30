@@ -44,7 +44,6 @@ governingSources:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/architecture/components/web/iconography-and-design-tokens-contract.md
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
   - docs/guides/ai-work-protocol.md
 allowedImplementationSurfaces:
   - apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx

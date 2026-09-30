@@ -42,7 +42,7 @@ feature-mechanization governance.
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/planning/status/canonical-doc-code-matrix.md`
 - `docs/architecture/system-delivery-status.md`
-- `docs/planning/proposals/dvt-canvas-workbench-proposal-v2-repo-validated.md`
+- [DVT+ — Propuesta de cambio UI/DDD: Canvas contextual + Project Assets — V2 validada contra repo](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/docs/planning/proposals/dvt-canvas-workbench-proposal-v2-repo-validated.md)
   as local input only; it is not treated as canonical repository governance.
 
 ## Feature Mechanization First Gate

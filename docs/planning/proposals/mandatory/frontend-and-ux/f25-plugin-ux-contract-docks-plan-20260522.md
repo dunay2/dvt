@@ -68,7 +68,6 @@ allowedImplementationSurfaces:
   - apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts
   - apps/web/src/app/plugins/monitoring/monitoringContributions.ts
   - docs/architecture/components/web/plugins/plugin-ux-integration-contract.md
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
   - docs/planning/closeouts/**
   - docs/planning/state/agent-lane-e.yaml
 forbiddenImplementationSurfaces:
@@ -117,7 +116,6 @@ redGreenCycles:
     expectedFailure: The plugin UX integration component guide is missing.
     patchSurfaces:
       - docs/architecture/components/web/plugins/plugin-ux-integration-contract.md
-      - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
       - apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts
     greenTest: pnpm --filter @dvt/web test -- src/app/plugins/pluginRuntimeProjection.architecture.test.ts
 symbols:

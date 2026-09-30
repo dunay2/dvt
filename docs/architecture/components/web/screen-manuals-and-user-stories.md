@@ -50,6 +50,16 @@ The user always understands:
 - Language changed: shell, active route, menus, tooltips, and open contextual
   surfaces use the selected language without a page reload.
 
+### Shell workspace context
+
+Global context lives in compact top-bar labels. The identity badge is a
+read-only presentation model; scope changes use the separate governed
+project-selection flow rather than mutating those labels.
+
+The [Shell Workspace Context Component](./appshell/shell-workspace-context-component.md)
+and [Shell Workspace Context User Stories](./appshell/shell-workspace-context-user-stories.md)
+own its API, invariants, transitions, and authorized selection behavior.
+
 ### F-04 Data source behavior
 
 - Users should not see route-specific wiring differences between `mock` and
