@@ -13,7 +13,8 @@ context: >
   invocation's run.
 risk: >
   A future coordinator or recovery change could discard the created/reused preparation disposition
-  or grant failure authority before bootstrap succeeds.
+  or grant failure authority before bootstrap succeeds. Failed authority reads can also be confused
+  with confirmed absence and grant cancellation or RunFailed authority incorrectly.
 mitigations:
   - Typed readonly preparation and explicit phase travel through the existing start coordinator,
     execution service and common failure handler.
@@ -23,6 +24,11 @@ mitigations:
   - StartRunProtocol documents the authority requirement and the remaining boundary.
   - PostgreSQL metadata collisions must preserve the canonical Engine error class, child runId and
     original cause; real database regressions cover reuse and reservation rollback.
+  - Authority reads preserve found, missing and failed. Failed DISPATCHED metadata reads defer;
+    failed or missing start failure authority suppresses RunFailed and preserves the original error.
+  - Decision tables and architecture guards isolate pending reconciliation decisions from effects,
+    diagnostic transport from failure authority, and shared compensation from start sequencing.
+  - Full-state negative tests include non-Error rejections and throwing diagnostic sinks.
 limitations:
   - This first cut does not add an exclusive intent claim; GH-2678 owns fencing.
   - Pre-catch compensation and unknown provider outcomes remain governed by GH-2679.

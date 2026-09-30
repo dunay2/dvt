@@ -1,4 +1,6 @@
 export const RUN_MAINTENANCE_MESSAGE = {
+  pendingIntentCancelWithoutAdapter:
+    'Pending intent cancellation requires the observed provider adapter',
   skipStuckRunWithoutCreatedAt: 'Skipping stuck-run candidate without createdAt',
   transitionedStuckRunToFailed: 'Transitioned stuck run to RunFailed',
   transitionedCancellingRunToFailed: 'Transitioned cancelling run to RunFailed',

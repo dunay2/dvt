@@ -11,6 +11,71 @@ import {
 } from '../helpers/workflowEngine.fixture.js';
 
 describe('maintenance authority read boundary', () => {
+  it.each(['lookup', 'canonical_status', 'adoption'] as const)(
+    'keeps pending intent and run unchanged when %s fails',
+    async (boundary) => {
+      const lookupRunRef = vi.fn();
+      const cancelRun = vi.fn(async () => {});
+      const adapter = makeTemporalAdapter({ lookupRunRef, cancelRun });
+      const fixture = createWorkflowEngineFixture({ adapter });
+      const context = {
+        tenantId: 'tenant-pending',
+        projectId: 'project',
+        environmentId: 'test',
+        runId: 'pending-run',
+        targetAdapter: 'temporal' as const,
+      };
+      const runRef = await fixture.engine.startRun(
+        makePlanRefForPlan(makeDefaultExecutionPlan()),
+        context
+      );
+      const intent = await fixture.intentStore.createIntent({
+        intentId: 'pending-intent',
+        tenantId: context.tenantId,
+        runId: context.runId,
+        provider: 'temporal',
+        createdAt: '2000-01-01T00:00:00.000Z',
+      });
+      const intentRef = { tenantId: intent.tenantId, intentId: intent.intentId };
+      const getSnapshot = fixture.store.getSnapshot.bind(fixture.store);
+      const snapshot = async (): Promise<unknown> => ({
+        intent: await fixture.intentStore.getIntent(intentRef),
+        metadata: await fixture.store.getRunMetadataByRunId(context.tenantId, context.runId),
+        events: await fixture.store.listEvents(context.tenantId, context.runId),
+        snapshot: await getSnapshot(context.tenantId, context.runId),
+      });
+      const before = globalThis.structuredClone(await snapshot());
+      if (boundary === 'lookup') lookupRunRef.mockRejectedValue('lookup response lost');
+      if (boundary === 'canonical_status') {
+        lookupRunRef.mockResolvedValue(null);
+        vi.spyOn(fixture.store, 'getSnapshot').mockRejectedValue(
+          new Error('canonical read failed')
+        );
+      }
+      if (boundary === 'adoption') {
+        lookupRunRef.mockResolvedValue(runRef);
+        vi.spyOn(fixture.store, 'saveProviderRef').mockRejectedValue(
+          new Error('adoption write failed')
+        );
+      }
+      const service = new RunMaintenanceService({
+        stateStoreRead: fixture.store,
+        stateStoreWrite: fixture.store,
+        intentStore: fixture.intentStore,
+        adapters: fixture.adapters,
+        authorizer: new AllowAllAuthorizer(),
+        clock: fixture.clock,
+        idempotency: fixture.idempotency,
+        observability: createNoopObservability(),
+      });
+      await expect(service.reconcileStartRunIntent(intentRef)).resolves.toEqual({
+        kind: 'blocked',
+      });
+      expect(cancelRun).not.toHaveBeenCalled();
+      expect(await snapshot()).toEqual(before);
+    }
+  );
+
   it.each([
     { mode: 'batch', fault: new Error('metadata unavailable'), throwingDiagnostics: false },
     { mode: 'single', fault: new Error('metadata unavailable'), throwingDiagnostics: false },

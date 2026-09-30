@@ -348,6 +348,16 @@ The same read distinction applies to the existing maintenance policies: a
 failed DISPATCHED metadata read defers reconciliation without cancellation or
 intent mutation, rather than entering the confirmed-missing path.
 
+The failure policy owns guarded failure writes, not diagnostic transport.
+Failure diagnostics owns metric/log identifiers and throttled stderr fallback,
+and has no persistence or provider dependency. Start execution delegates its
+shared cancellation/intent-cleanup sequence to one compensation collaborator.
+Pending reconciliation separates ordered observations, a pure transition
+decision, and application of the selected effect. These are internal concern
+boundaries on the existing rails, not additional application commands. Moving
+the existing effects does not establish exclusive ownership or confirmed
+provider cancellation; those protocol guarantees remain separately required.
+
 Fresh execution acquires preparation authority only after its own `bootstrapRunTx`
 succeeds. Recovery preserves a readonly `created | reused` result from its
 preparation boundary: an existing child and a child found after a bootstrap

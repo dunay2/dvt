@@ -11,8 +11,8 @@ const policies = [
 ];
 
 describe('start-run authority read boundary', () => {
-  it('uses centralized diagnostic identifiers in the failure policy', () => {
-    const path = policies[0]!;
+  it('uses centralized diagnostic identifiers in failure diagnostics', () => {
+    const path = '../../src/services/startRun/StartRunFailureDiagnostics.ts';
     const source = ts.createSourceFile(
       path,
       readFileSync(new URL(path, import.meta.url), 'utf8'),
