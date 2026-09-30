@@ -198,7 +198,7 @@ cancellation acknowledgement without termination.
 
 These proofs do not establish perpetual provider deduplication, cross-region
 provider fencing, automatic redispatch safety or an operator remediation API.
-#2679 remains open for its positive safe-redispatch acceptance.
+Issue #2679 remains open for its positive safe-redispatch acceptance.
 
 The detailed entry, admission and failure contracts remain in
 [StartRunProtocol](../architecture/components/engine/contracts/engine/StartRunProtocol.v1.md).

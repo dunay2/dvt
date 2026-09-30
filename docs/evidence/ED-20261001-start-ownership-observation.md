@@ -121,7 +121,7 @@ a comprehensive detector for arbitrary administrator modifications to all
 constraints, indexes or policies. These tests assume the installed declared
 schema and do not claim protection against a privileged schema rewrite.
 
-#2679 remains open for positive safe-redispatch acceptance. This cut never
+Issue #2679 remains open for positive safe-redispatch acceptance. This cut never
 resends automatically. Independent final review, final prepush and required PR
 gates must be recorded before integration; no completed merge or issue closure
 is claimed here.
