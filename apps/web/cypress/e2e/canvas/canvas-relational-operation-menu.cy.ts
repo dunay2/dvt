@@ -25,13 +25,27 @@ describe('Compact semantic operation menu', () => {
       .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
     cy.get(search).should('be.focused');
     cy.get('[data-operation="filter"]')
-      .should('have.attr', 'aria-disabled', 'true')
-      .and('contain.text', 'Select a source');
+      .should('have.attr', 'aria-disabled', 'false')
+      .and('have.attr', 'draggable', 'true');
     cy.get(search).type('does-not-exist');
     cy.contains('No matching operations.').should('be.visible');
     cy.get(search).type('{esc}');
     cy.get(trigger).should('be.focused');
     cy.get('[role="listbox"]').should('not.exist');
+    cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
+  });
+  it('places a pending Filter without an Input and cancels without semantic writes', () => {
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]').should('not.exist');
+    cy.get(trigger).click();
+    cy.get('[data-operation="filter"]').scrollIntoView().click();
+    cy.get('[data-pending-operation="true"] [data-operator="filter"]').should('exist');
+    cy.get('[data-slot="canvas-staged-operation-inspector"]')
+      .should('contain.text', 'Pending')
+      .find('[data-slot="canvas-staged-operation-input-property"]')
+      .should('contain.text', 'Missing');
+    cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+    cy.get('[data-pending-operation="true"]').should('not.exist');
     cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
   });
   it('chooses the exact JOIN by search and keyboard, then cancels without persisting it', () => {

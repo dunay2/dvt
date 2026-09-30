@@ -13,10 +13,16 @@ mitigation:
     Supported-profile entries require typed standard-first evidence. Semantic, target, and visual
     postures remain independent; provider-native support cannot be inferred from mapping. Bounded
     DVT proposals fail when a reviewed standard identity exists or upstream-gap evidence is absent.
+    Issue #3485 removes internal mapped/exposed defaults: every group explicitly declares target and
+    visual postures. Web references published capability IDs and rejects absent exposure or
+    unavailable PostgreSQL conformance without treating mapping as runtime readiness.
   evidence:
     - docs/evidence/ED-20260903-vtx2-standard-first-capability-admission.md
     - docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-standard-first-capability-admission-plan-20260903.md
     - packages/@dvt/contracts/test/dvt-substrait-capability-admission.contract.test.ts
     - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
+    - docs/evidence/ed-20260930-explicit-capability-admission.md
+    - packages/@dvt/contracts/test/dvt-substrait-admission-types.contract.test.ts
+    - apps/web/src/app/views/canvas/canvasRelationalOperationChoices.capabilities.test.ts
   follow_up:
     - Require this admission contract before structured-type work can unblock issue #2771.
