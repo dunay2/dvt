@@ -490,6 +490,7 @@ export const SCOPE_MODES = {
 const EXCLUDED_TEST_PACKAGE_NAMES = new Set([
   '@dvt/adapter-postgres',
   '@dvt/adapter-temporal',
+  '@dvt/engine',
   '@dvt/web',
 ]);
 
@@ -763,23 +764,27 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
   }
 
   if (mode === 'test') {
+    const rootBuildSensitive = Boolean(
+      scope.root_build_sensitive ||
+      scope.root_config ||
+      runtimeWorkspaceFanout ||
+      packageJsonChange?.rootBuildSensitive
+    );
+    const determinismRelevant = Boolean(
+      scope.determinism_relevant ||
+      packageJsonChange?.determinismSensitive ||
+      packageJsonChange?.rootBuildSensitive
+    );
     return {
       ...scope,
-      root_build_sensitive: Boolean(
-        scope.root_build_sensitive ||
-        scope.root_config ||
-        runtimeWorkspaceFanout ||
-        packageJsonChange?.rootBuildSensitive
-      ),
+      root_build_sensitive: rootBuildSensitive,
       postgres_capability_changed: Boolean(
         scope.postgres_capability_changed || packageJsonChange?.postgresCapabilitySensitive
       ),
-      determinism_relevant: Boolean(
-        scope.determinism_relevant ||
-        packageJsonChange?.determinismSensitive ||
-        packageJsonChange?.rootBuildSensitive
+      determinism_relevant: determinismRelevant,
+      coverage_relevant: Boolean(
+        scope.coverage_relevant || scope.engine || determinismRelevant || rootBuildSensitive
       ),
-      coverage_relevant: Boolean(scope.coverage_relevant || packageJsonChange?.rootBuildSensitive),
     };
   }
 

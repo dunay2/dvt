@@ -25,6 +25,7 @@ export const EXECUTABLE_CI_TOOL_TESTS = Object.freeze([
   'tools/ci/precommit-hook-wiring.test.mjs',
   'tools/ci/state-store-role-binding-architecture.test.mjs',
   'tools/ci/sync-docs-status-policy.test.mjs',
+  'tools/ci/test-suite-outcome.test.mjs',
   'tools/ci/workflow-pattern-parity.test.mjs',
 ]);
 

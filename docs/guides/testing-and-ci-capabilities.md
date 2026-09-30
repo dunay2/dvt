@@ -511,8 +511,8 @@ not a production deployment. The upstream release and build instructions are
   `pnpm ci:full`. CI tool contract tests remain separate. It does not own
   ADR-0000 traceability or package test execution.
   Source: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
-- `Test Suite`: package tests, affected test routing, Turbo-backed root build
-  coverage for full-root lanes, coverage, determinism/replay tests. On pull
+- `Test Suite`: package tests, affected test routing, dependency graph builds,
+  and one complete engine suite with coverage, determinism and replay. On pull
   requests, the heavy dedicated lanes consume one detector job and are skipped
   at job level when their semantic scope is false.
   Source: [`.github/workflows/test.yml`](../../.github/workflows/test.yml)
@@ -622,7 +622,8 @@ The engine coverage scope is documented as the
 For pull requests, `coverage_relevant` is true for the governed engine
 workspace scope, including package-level configuration such as
 `packages/@dvt/engine/vitest.config.ts`. It also remains true for contracts,
-root test configuration, and lockfiles. Workflow YAML changes stay on the CI
+root test configuration, lockfiles, determinism-sensitive commands and every
+root-build-sensitive classification, including unknown inputs. Workflow YAML changes stay on the CI
 contract and changed-file validation rail instead of opening coverage by
 themselves. Unrelated docs-only changes can keep the coverage job closed.
 
@@ -649,7 +650,7 @@ Current workflow consumers:
 - [`.github/workflows/test.yml`](../../.github/workflows/test.yml) uses
   `emit-scope --mode test` once in `detect_test_matrix` for PR test routing
   across the web app, workers, and library workspaces. Dedicated web,
-  adapter-temporal, adapter-postgres, determinism/replay, and engine coverage
+  adapter-temporal, adapter-postgres, and engine coverage
   jobs consume that detector's outputs at job level, so irrelevant PRs do not
   spend a runner on checkout, dependency setup, or repeated scope detection.
   Draft PRs keep those heavy lanes closed, and the workflow listens for
@@ -657,13 +658,11 @@ Current workflow consumers:
   restores affected package test coverage. It also listens for
   `converted_to_draft` so ready-to-draft transitions cancel in-flight test
   runs and return the workflow to the skipped draft posture.
-  Its push/manual full-suite lane and PR `root_build_sensitive` fast-path both
-  run `pnpm build`, so the merge gate exercises the same Turbo-backed root
-  build path that local root builds now use. Non-root PR affected dependency
-  builds use `node scripts/run-turbo-workspace-task.cjs build` with the PR base
-  filter, avoiding a manually maintained package-to-build map. Cacheable
+  Push/manual and root-build-sensitive PRs select the full package matrix and
+  dedicated lanes. Each selected package builds its dependency graph through
+  `node scripts/run-turbo-workspace-task.cjs build`. Cacheable
   dependency graph preparation for the dedicated web, adapter-temporal,
-  adapter-postgres, determinism/replay, and engine coverage lanes also uses the
+  adapter-postgres, and engine coverage lanes also uses the
   same wrapper with the existing package filters; the test, coverage, and
   integration commands remain explicit package commands. The API package matrix command uses
   `pnpm --filter dvt-api test:ci` after this Turbo build step, so CI avoids
@@ -674,14 +673,18 @@ Current workflow consumers:
   orchestration helper cannot skip `Test Suite`. Test workflow YAML changes are
   treated as CI policy changes: they stay covered by static/executable CI tool
   contracts and changed-file checks without forcing package tests, web frontend
-  tests, determinism/replay, coverage, or adapter-postgres integration by
-  filename alone. Adapter-postgres integration,
-  determinism/replay, and engine coverage also consume the shared
+  tests, coverage, or adapter-postgres integration by
+  filename alone. Adapter-postgres integration and engine coverage consume the shared
   `emit-scope --mode test` read model instead of local `dorny/paths-filter`
   package-root rules. Engine
   coverage uses the same governed `packages/@dvt/engine/**` package boundary as
-  engine package test routing, so engine Vitest config changes cannot bypass
-  threshold enforcement. For ordinary web PRs, the web lane runs
+  engine package scope, so engine Vitest config changes cannot bypass
+  threshold enforcement. Engine is excluded from the generic package matrix:
+  coverage runs all its tests once, including determinism and replay; local
+  focused commands remain available. `Test Suite Required for Merge` requires
+  success for each selected lane and accepts skipped only for justified scope
+  or draft posture. Missing scope/results and cancelled/failed jobs reject.
+  For ordinary web PRs, the web lane runs
   `pnpm test:web:changed` with `GIT_BASE` pointing at the pull-request base ref.
   The same lane runs `pnpm test:web:ci` for pushes to `main`, manual workflow
   runs, and root-build-sensitive pull requests. `test:web:ci` expands to
