@@ -27,6 +27,7 @@ import {
 } from '@dvt/contracts';
 import { RUN_PLAN_WORKFLOW, WorkflowSignals } from '@dvt/contracts';
 import type { IProviderAdapter } from '@dvt/engine';
+import { WorkflowIdConflictPolicy, WorkflowIdReusePolicy } from '@temporalio/client';
 
 import type { TemporalAdapterConfig } from './config.js';
 import type { TemporalClientManager } from './TemporalClient.js';
@@ -126,6 +127,8 @@ export class TemporalAdapter implements IProviderAdapter {
     const started = await workflowClient.start(RUN_PLAN_WORKFLOW, {
       taskQueue,
       workflowId,
+      workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
+      workflowIdConflictPolicy: WorkflowIdConflictPolicy.FAIL,
       args: [workflowInput],
     });
 

@@ -5,6 +5,7 @@ date: 2026-09-06
 owners:
   - '@dvt/engine'
   - '@dvt/adapter-postgres'
+  - '@dvt/adapter-temporal'
 severity: High
 probability: Low
 context: >
@@ -29,8 +30,12 @@ mitigations:
   - Decision tables and architecture guards isolate pending reconciliation decisions from effects,
     diagnostic transport from failure authority, and shared compensation from start sequencing.
   - Full-state negative tests include non-Error rejections and throwing diagnostic sinks.
+  - Temporal start explicitly rejects both running identity conflicts and reuse of retained closed
+    workflow IDs; it propagates duplicate errors without retries or synthetic success.
 limitations:
   - This first cut does not add an exclusive intent claim; GH-2678 owns fencing.
   - Pre-catch compensation and unknown provider outcomes remain governed by GH-2679.
+  - Temporal identity rejection is bounded by namespace retention/history deletion and is not
+    exclusive Engine ownership, resource-side fencing, or safe redispatch authorization.
   - GH-2676 closed its bounded preparation-authority cut; it does not certify the remaining
     ownership and provider-effect invariants tracked by GH-2678 and GH-2679.
