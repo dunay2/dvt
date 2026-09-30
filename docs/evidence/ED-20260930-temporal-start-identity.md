@@ -1,6 +1,6 @@
 ---
 title: Temporal retained start identity rejection
-status: Active
+status: final
 date: 2026-09-30
 owners:
   - '@dvt/adapter-temporal'
