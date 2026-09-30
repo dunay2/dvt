@@ -2,7 +2,7 @@
 title: Engine Coverage Scope Gate Component
 status: Accepted
 owner: Engineering / CI Governance
-last_reviewed: 2026-05-15
+last_reviewed: 2026-09-30
 planning_type: architecture
 ---
 
@@ -65,6 +65,53 @@ The component does not own:
 
 No new user-facing command is introduced. This slice changes an internal CI
 query read model consumed by GitHub Actions.
+
+## Coverage Evidence Consumer
+
+Routing does not prove that the selected job actually measures coverage.
+The existing `pnpm test:coverage:engine` command implements the
+`ValidateEngineCoverageEvidence` query in CI Governance, owned by the
+`EngineCoverageEvidence` policy. Its input is the checked-out engine source,
+tests and Vitest policy; its output is the validation exit status and JSON
+coverage report. Vitest is the CLI adapter, and Test Suite is the remote
+consumer. This is separate from the routing-only scope query above.
+
+The command retains the engine package test/pretest lifecycle and passes
+`--coverage` directly to Vitest. An extra `--` separator would disable the
+coverage flag in the installed Vitest CLI and is rejected by the executable
+contract. Root `vitest.config.ts` owns `engineCoveragePolicy`: V8, the existing
+65% statement/line/function and 55% branch thresholds, all source files, clean
+reports, and text/JSON/HTML/LCOV reporters. The engine config reuses that policy
+and owns only its package-relative source inclusion/exclusion paths.
+
+This query reads repository files and writes disposable reports only. Local
+operators and GitHub workflows need no application database or tenant data;
+workflow contents access remains read-only. Every invocation cleans its report
+directory, so an earlier report cannot satisfy the current execution. The
+workflow uploads `coverage/coverage-final.json` explicitly and treats a missing
+file as an error. A passing unit suite without coverage is not valid evidence.
+
+```mermaid
+flowchart LR
+    Scope[coverage_relevant] --> Command[pnpm test:coverage:engine]
+    Command --> Lifecycle[Engine test and pretest lifecycle]
+    Lifecycle --> Vitest[Vitest with coverage enabled]
+    Policy[Single root coverage policy] --> Vitest
+    Vitest --> Thresholds[Tests and thresholds must pass]
+    Vitest --> Report[Fresh coverage-final.json]
+    Report --> Upload[Required artifact: missing means failure]
+```
+
+`tools/ci/engine-coverage.test.mjs` belongs to the executable CI-tool partition.
+It checks the installed CLI argument parser, resolves both actual configs,
+checks the workflow artifact contract, and executes a real Vitest negative
+fixture: unexecuted source must be counted and low coverage must return nonzero.
+A fully covered control must succeed. The fixture is isolated under `tmp/` and
+removed after the test. No mock replaces the coverage provider.
+
+The implementation plan and red/green evidence are tracked in
+[#3494](https://github.com/dunay2/dvt/issues/3494). Repeated engine executions
+remain a separate #2928 cut; this fix does not change job topology or names.
 
 ## DDD Objects
 
