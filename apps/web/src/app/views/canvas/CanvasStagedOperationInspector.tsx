@@ -7,20 +7,14 @@ import {
   CanvasStagedUnaryOperationInspector,
   type ConfigurableStagedOperation,
 } from './CanvasStagedUnaryOperationInspector';
-import type { CanvasStagedOperation } from './canvasStagedOperation';
-import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
-import { isCanvasSetOperation } from './canvasRelationalOperationChoices';
+import {
+  readCanvasStagedCompositionSignature,
+  type CanvasStagedOperation,
+} from './canvasStagedOperation';
 import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import styles from './CanvasStagedOperationInspector.module.css';
 
-const configurable = new Set<ConfigurableStagedOperation>([
-  'filter',
-  'aggregate',
-  'window',
-  'sort',
-  'fetch',
-]);
 
 export function CanvasStagedOperationInspector({
   staged,
@@ -60,7 +54,7 @@ export function CanvasStagedOperationInspector({
         transformNode={transformNode}
       />
     );
-  if (staged.operation === 'field_transform' && staged.semanticDocument != null)
+  if (editor === 'transform' && staged.semanticDocument != null)
     return (
       <CanvasStagedTransformInspector
         staged={staged}
@@ -69,11 +63,11 @@ export function CanvasStagedOperationInspector({
         onClose={onClose}
         onPendingChange={onPendingChange}
         onChange={(semanticDocument) =>
-          onUpdate({ operation: 'field_transform', semanticDocument })
+          onUpdate({ operation: staged.operation, semanticDocument })
         }
       />
     );
-  if (configurable.has(staged.operation as ConfigurableStagedOperation) && producerDocument != null)
+  if (editor === 'unary' && producerDocument != null)
     return (
       <CanvasStagedUnaryOperationInspector
         operation={staged.operation as ConfigurableStagedOperation}
