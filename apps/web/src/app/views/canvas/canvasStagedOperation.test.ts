@@ -39,15 +39,19 @@ describe('staged operation projection', () => {
       output: 'relation',
       operator: 'join',
       configuration: 'binary',
+      editor: 'binary',
     });
     expect(readCanvasStagedCompositionSignature('field_transform')).toMatchObject({
       configuration: 'transform',
+      editor: 'transform',
       inputs: [{ accepts: ['relation', 'field'] }],
     });
     expect(readCanvasStagedCompositionSignature('filter')).toMatchObject({
       configuration: 'manual',
+      editor: 'unary',
       inputs: [{ accepts: ['relation'] }],
     });
+    expect(readCanvasStagedCompositionSignature('projection').editor).toBe('properties');
     expect(canvasStagedOperationArity('inner_join')).toBe(2);
     expect(deriveCanvasStagedCompositionState(join)).toBe('unbound');
 

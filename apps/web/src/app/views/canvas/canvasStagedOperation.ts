@@ -17,6 +17,7 @@ export type CanvasStagedOperationKind =
   CanvasRelationalOperation | CanvasRelationalOperatorTool['id'] | 'field_transform';
 export type CanvasStagedConnectionIntent = 'relation' | 'field';
 export type CanvasStagedConfigurationStrategy = 'manual' | 'transform' | 'binary';
+export type CanvasStagedEditorKind = 'properties' | 'transform' | 'binary' | 'unary';
 export type CanvasStagedCompositionState =
   | 'unbound'
   | 'partially-bound'
@@ -44,6 +45,7 @@ export type CanvasStagedCompositionSignature = Readonly<{
   operator: CanvasRelationalTreeOperator;
   appliedOperation: CanvasRelationalOperation | 'inherit';
   configuration: CanvasStagedConfigurationStrategy;
+  editor: CanvasStagedEditorKind;
 }>;
 
 const relationInput: CanvasStagedCompositionInput = { accepts: ['relation'] };
@@ -57,9 +59,10 @@ function unary(
   operator: CanvasRelationalTreeOperator,
   appliedOperation: CanvasRelationalOperation | 'inherit' = 'inherit',
   input: CanvasStagedCompositionInput = relationInput,
-  configuration: CanvasStagedConfigurationStrategy = 'manual'
+  configuration: CanvasStagedConfigurationStrategy = 'manual',
+  editor: CanvasStagedEditorKind = 'unary'
 ): CanvasStagedCompositionSignature {
-  return { inputs: [input], output: 'relation', operator, appliedOperation, configuration };
+  return { inputs: [input], output: 'relation', operator, appliedOperation, configuration, editor };
 }
 
 function binary(
@@ -72,12 +75,19 @@ function binary(
     operator,
     appliedOperation,
     configuration: 'binary',
+    editor: 'binary',
   };
 }
 
 const compositionSignatures = {
-  projection: unary('project', 'projection'),
-  field_transform: unary('project', 'projection', fieldSeededRelationInput, 'transform'),
+  projection: unary('project', 'projection', relationInput, 'manual', 'properties'),
+  field_transform: unary(
+    'project',
+    'projection',
+    fieldSeededRelationInput,
+    'transform',
+    'transform'
+  ),
   filter: unary('filter'),
   aggregate: unary('aggregate'),
   window: unary('window'),
