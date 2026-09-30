@@ -97,11 +97,8 @@ describe('Transform result destination', () => {
     cy.wrap(null).should(() => expect(savedConfig()).to.deep.equal({ materialized: 'table' }));
     cy.get(overlay).find('button[aria-label="Close"]').click();
     cy.get(`${node} [data-slot="graph-node-card-title"]`).dblclick();
-    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data:model-orders"]').should(
-      'have.attr',
-      'aria-selected',
-      'true'
-    );
+    cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
+    cy.get('[data-slot="canvas-model-main-tab"]').should('have.attr', 'aria-selected', 'true');
     cy.get(overlay).should('not.exist');
   });
 });

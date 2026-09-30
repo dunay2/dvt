@@ -7,10 +7,9 @@ import {
   createCanvasInspectorNodeDraft,
   validateCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
-import { resolveInheritedDvtConnectionRef } from './canvasDvtAuthoringModel';
+import { resolveDvtConnectionProvenance } from './canvasDvtConnectionProvenance';
 import { DvtSinkAuthoringSection } from './DvtSinkAuthoringSection';
 import { DvtTransformResultTargetFields } from './DvtTransformResultTargetFields';
-import { resolveDvtResultTargetConnection } from './canvasDvtResultTargetConnection';
 import { DvtSourceAuthoringSection } from './DvtSourceAuthoringSection';
 import { DvtSubstraitCompositionStart } from './DvtSubstraitCompositionStart';
 import { DvtRelationAuthoringSection } from './DvtRelationAuthoringSection';
@@ -61,6 +60,7 @@ export function DvtAuthoringFields({
   }
 
   if (draft.dvt.kind === 'transform') {
+    const provenance = resolveDvtConnectionProvenance({ node, nodes, edges });
     const materializationField = (
       <div className="space-y-4">
         <DvtTransformMaterializationField
@@ -71,7 +71,7 @@ export function DvtAuthoringFields({
         />
         <DvtTransformResultTargetFields
           target={draft.dvt.resultTarget}
-          connection={resolveDvtResultTargetConnection({ node, nodes, edges })}
+          connection={provenance.kind === 'resolved' ? provenance.connectionRef : undefined}
           disabled={disabled}
           errors={errors.dvt}
           onChange={(resultTarget) =>
@@ -134,7 +134,7 @@ export function DvtAuthoringFields({
   }
 
   if (section !== 'all' && section !== 'general') return null;
-  const inheritedConnectionRef = resolveInheritedDvtConnectionRef({ node, nodes, edges });
+  const provenance = resolveDvtConnectionProvenance({ node, nodes, edges });
   return (
     <DvtSinkAuthoringSection
       node={node}
@@ -142,7 +142,9 @@ export function DvtAuthoringFields({
       draft={draft.dvt}
       errors={errors.dvt}
       destinationTarget={formatQualifiedTarget([draft.dvt.schema, draft.dvt.table]) || '-'}
-      inheritedConnectionId={inheritedConnectionRef?.connectionId}
+      inheritedConnectionId={
+        provenance.kind === 'resolved' ? provenance.connectionRef.connectionId : undefined
+      }
       onChange={onChange}
     />
   );

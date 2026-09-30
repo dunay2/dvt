@@ -42,6 +42,21 @@ governed reference, not an inherited runtime default. Changing graph bindings
 does not silently rewrite a saved target. With no unambiguous PostgreSQL input
 binding, the surface cannot offer that confirmation.
 
+The Canvas provenance read model examines every upstream lineage branch, using
+the existing Source connection authority validator and ConnectionRef equality.
+Equal fan-in and diamond paths yield one common connection independently of node
+or edge order. Conflicting references, incomplete branches, malformed or missing
+Source authority, cycles, missing/duplicate reachable nodes and unsupported
+intermediates cannot supply a candidate. An unbound graph supplies none.
+Non-lineage edges do not confer connection authority. Traversal is iterative and
+performs no provider I/O or draft mutation.
+
+The same read model supplies the terminal Sink's inherited-connection display
+and Transform Inputs/Outputs context. A proven common connection is shown on
+every lineage input, never attributed to one arbitrary branch. An unresolved
+graph shows no inherited connection. This does not invalidate, rewrite or replace
+an explicitly saved result target and is not an execution-admission decision.
+
 In the editable UI draft only, `null` requests explicit removal. An omitted
 target leaves an existing target untouched during unrelated semantic edits.
 Neither null nor undefined is serialized as a persisted target value.
