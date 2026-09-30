@@ -2,10 +2,10 @@
  * @file packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
  * @baseline ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)
  * @baseline ADR-0003: Execution Model
- * @baseline ADR-0030: Pre-Dispatch Intent Log - lookupRunRef for PENDING intent reconciliation
+ * @baseline ADR-0030: Pre-Dispatch Intent Log and observation-only reconciliation
  * @decision Section 3 - Provider adapter delegates run lifecycle to Temporal workflow primitives
  * @decision Section 5 - Provider status uses workflow handle.describe() and returns provider-native live status
- * @decision ADR-0030 section 3.3 - lookupRunRef derives workflowId from runId and probes Temporal to detect orphans
+ * @decision Observe exact Temporal executions without treating missing history as non-execution proof
  * @consequence Temporal provider operations remain deterministic and aligned with engine lifecycle semantics
  * @version 1.2.0
  * @date 2026-03-08
@@ -50,7 +50,7 @@ interface WorkflowHandleLike {
   /**
    * Fetches the workflow execution description from the Temporal server.
    * Throws a WorkflowNotFoundError (name === 'WorkflowNotFoundError') when the
-   * workflow does not exist. Used by lookupRunRef for orphan detection.
+   * workflow does not exist. Observation distinguishes this from a failed read.
    */
   describe(): Promise<unknown>;
 }

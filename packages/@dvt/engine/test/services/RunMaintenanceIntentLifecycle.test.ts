@@ -10,6 +10,25 @@ import { StartRunEventFactory } from '../../src/services/startRun/StartRunEventF
 import { startRunMaintenanceFixture } from '../helpers/startRunMaintenance.fixture.js';
 
 describe('Start intent maintenance lifecycle', () => {
+  it('persists bounded backoff when canonical adoption rejects a changed state', async () => {
+    const { service, store, intentStore, receipt, advance, adapter } =
+      await startRunMaintenanceFixture();
+    vi.spyOn(store, 'applyStartRunWrite').mockResolvedValue('invalid_state');
+    const start = vi.spyOn(adapter, 'startRun');
+    const cancel = vi.spyOn(adapter, 'cancelRun');
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const outcome = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
+      expect(attempt < 7 ? outcome.deferred : outcome.escalated).toEqual([receipt.intentId]);
+      expect((await service.reconcileOrphanedIntents({ thresholdMs: 0 })).inspected).toBe(0);
+      advance();
+    }
+    expect(await intentStore.getIntent(receipt)).toMatchObject({
+      reconciliation: { kind: 'escalated', reason: 'adoption_failed' },
+    });
+    expect(start).not.toHaveBeenCalled();
+    expect(cancel).not.toHaveBeenCalled();
+  });
+
   it.each(['unknown', 'started'] as const)(
     'adopts observed active execution after %s outcome without redispatch',
     async (outcome) => {

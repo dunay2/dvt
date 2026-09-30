@@ -42,7 +42,10 @@ export class StartRunIntentReconciliationPolicy {
         this.deps.adapters.get(intent.provider)
       );
     } catch (error) {
-      if (error instanceof StartRunIntentMutationRejectedError)
+      if (
+        error instanceof StartRunIntentMutationRejectedError &&
+        (error.outcome === 'not_owner' || error.outcome === 'missing')
+      )
         return { deferred: intent.intentId };
       // Persist a bounded retry only if authority/storage are still available.
       try {
