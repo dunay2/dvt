@@ -78,6 +78,7 @@
         "Transformation-flow verification lives outside the Temporal baseline suite",
         "Type-check activity dependency fixtures against the scoped engine-dispatch plan query",
         "Type-check workflow mapping fixtures against canonical execution plan and task queue contracts",
+        "Use the existing prepared harness, environment client and sole teardown owner.",
         "Verify that only executeStep activity proxies receive capability task queues",
         "Verify workflow layer order follows resolved DVT execution segments and lifecycle guards"
       ],
@@ -98,6 +99,7 @@
         "packages/@dvt/adapter-temporal/src/workflows/workflowInputParsingHelpers.ts",
         "packages/@dvt/adapter-temporal/test/activityDeps.typecheck.ts",
         "packages/@dvt/adapter-temporal/test/helpers/contractFixtures.ts",
+        "packages/@dvt/adapter-temporal/test/integration.start-identity.test.ts",
         "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts",
         "packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts",
         "packages/@dvt/adapter-temporal/test/runPlanWorkflow.layers.order.test.ts",

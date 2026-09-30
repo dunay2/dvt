@@ -32,7 +32,21 @@ Primary implementation references:
 - Returned run reference uses:
   - `namespace` from Temporal config
   - `workflowId` from Temporal start response
-  - `runId = firstExecutionRunId` when available, else fallback to `ctx.runId`.
+  - `runId = ctx.runId` (the canonical logical identity, not Temporal's execution ID).
+
+`TemporalAdapter.startRun` explicitly uses `REJECT_DUPLICATE` for a retained
+closed workflow ID and `FAIL` for an already running workflow ID. Duplicate
+requests propagate the provider error; they never terminate the winner, silently
+attach to it as a successful start, or create a replacement execution. Business
+recovery dispatches with a distinct child logical run ID.
+
+This provider protection is bounded by Temporal namespace retention and explicit
+history deletion. It is not exclusive Engine ownership, eternal deduplication, or
+permission to redispatch an unknown start. Claim/fencing and unknown-outcome
+reconciliation remain governed by #2678/#2679. The
+[Temporal WorkflowOptions contract](https://typescript.temporal.io/api/interfaces/client.WorkflowOptions)
+defines the provider policies; the service-backed identity test checks the
+installed SDK/server behavior for running, completed and terminated executions.
 
 ### 1.2 Status source of truth
 
