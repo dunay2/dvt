@@ -31,6 +31,7 @@ export function createCanvasStagedOperationActions(
   }>
 ) {
   const remove = (id: string) => {
+    if (!args.editable) return;
     args.setOperations((current) => {
       const detached = current
         .filter((operation) => operation.id !== id)
@@ -89,6 +90,7 @@ export function createCanvasStagedOperationActions(
       });
     },
     disconnectProducer: (relationId: string) => {
+      if (!args.editable) return;
       args.setOperations((current) => {
         const invalidated = new Set<string>();
         const disconnected = current.map((operation) => {
