@@ -29,8 +29,15 @@ mitigations:
   - Decision tables and architecture guards isolate pending reconciliation decisions from effects,
     diagnostic transport from failure authority, and shared compensation from start sequencing.
   - Full-state negative tests include non-Error rejections and throwing diagnostic sinks.
+  - Candidate PostgreSQL intent visibility tests cover commit, rollback, cross-tenant collisions and
+    serialization errors without mutating the winning tuple. This candidate is not an independently
+    safe integration; the coordinated claim/fencing boundary remains mandatory.
 limitations:
   - This first cut does not add an exclusive intent claim; GH-2678 owns fencing.
   - Pre-catch compensation and unknown provider outcomes remain governed by GH-2679.
+  - Correct concurrent create visibility preserves identity idempotency only; it does not grant
+    exclusive ownership or fence a later provider or canonical-state effect. An actual Engine
+    diagnostic with real PostgreSQL intents and a provider double observes two dispatches after the
+    candidate fix, blocking its standalone integration despite passing repository tests.
   - GH-2676 closed its bounded preparation-authority cut; it does not certify the remaining
     ownership and provider-effect invariants tracked by GH-2678 and GH-2679.
