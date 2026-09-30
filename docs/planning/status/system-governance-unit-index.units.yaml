@@ -1229,6 +1229,8 @@ units:
     owns:
       - packages/@dvt/engine/src/services/runMaintenance/**
       - packages/@dvt/engine/src/workers/**
+      - packages/@dvt/engine/test/services/PendingIntentDecision.test.ts
+      - packages/@dvt/engine/test/services/RunMaintenanceAuthorityRead.test.ts
       - packages/@dvt/engine/test/services/RunMaintenanceService.test.ts
       - packages/@dvt/engine/test/workers/**
     childrenRequired: false

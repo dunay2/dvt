@@ -333,9 +333,30 @@ Current failure behavior:
      recovery whose child was prepared but whose intent could not be persisted
    - perform these authority/phase checks before reading metadata or intent for
      failure emission; neither metadata existence nor error text grants authority
-   - if metadata does not exist yet, rethrow without emitting `RunFailed`
+   - read authority as `found | missing | failed`; a rejected read is not absence
+   - if metadata does not exist yet or its read fails, rethrow the original
+     start error without emitting `RunFailed`
+   - if intent identity is unavailable, the record is missing, or its read fails,
+     rethrow that same original error without emitting `RunFailed`
    - if the tracked intent is still `PENDING`, rethrow without emitting `RunFailed`
-   - otherwise append `RunFailed` best-effort through `appendAndEnqueueTx(...)`
+   - only with successfully read metadata and a found non-pending intent, append
+     `RunFailed` best-effort through `appendAndEnqueueTx(...)`
+
+Authority-read diagnostics use bounded reason codes and are best-effort. A
+throwing logging or metrics sink cannot enable a write or mask the start error.
+The same read distinction applies to the existing maintenance policies: a
+failed DISPATCHED metadata read defers reconciliation without cancellation or
+intent mutation, rather than entering the confirmed-missing path.
+
+The failure policy owns guarded failure writes, not diagnostic transport.
+Failure diagnostics owns metric/log identifiers and throttled stderr fallback,
+and has no persistence or provider dependency. Start execution delegates its
+shared cancellation/intent-cleanup sequence to one compensation collaborator.
+Pending reconciliation separates ordered observations, a pure transition
+decision, and application of the selected effect. These are internal concern
+boundaries on the existing rails, not additional application commands. Moving
+the existing effects does not establish exclusive ownership or confirmed
+provider cancellation; those protocol guarantees remain separately required.
 
 Fresh execution acquires preparation authority only after its own `bootstrapRunTx`
 succeeds. Recovery preserves a readonly `created | reused` result from its

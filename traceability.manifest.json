@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-09-28",
+  "generated": "2026-09-30",
   "repo": {
     "sha": "local"
   },
@@ -684,14 +684,19 @@
       "number": "ADR-0030",
       "decisions": [
         "ADR-0030 section 3.3 - lookupRunRef derives workflowId from runId and probes Temporal to detect orphans",
+        "Apply decisions without re-reading or reinterpreting their authority evidence.",
         "Batch maintenance operations (detectStuckRuns) separated from IWorkflowEngine lifecycle",
         "Batch/operational maintenance operations are separated from lifecycle methods on IWorkflowEngine",
         "Canonical command/query contract for start-run intent durability",
         "Canonical transition policy for start-run intent lifecycle",
+        "Capture observation outcomes without granting mutation authority.",
         "Define an adapter contract oriented to run-driven execution and explicit signaling",
         "In-memory intent store for unit tests; mirrors InMemoryTxStore patterns",
         "Intent errors are defined in the canonical contracts package",
+        "Isolate fail-soft diagnostic transport from run and intent mutation decisions.",
+        "Keep compensation sequencing in one owner without claiming confirmed termination.",
         "Keep deterministic start-run intent creation in a named phase service.",
+        "Make transition selection pure while preserving existing reconciliation semantics.",
         "Periodic reconciler with single-flight execution and infra-only backoff",
         "Runtime bootstrap may require both core state-store and start-run intent schema migrations",
         "SQL-backed intent store with explicit status-transition guards",
@@ -715,7 +720,12 @@
         "packages/@dvt/engine/src/ports/IRunMaintenanceService.ts",
         "packages/@dvt/engine/src/ports/IStartRunIntentStore.ts",
         "packages/@dvt/engine/src/services/RunMaintenanceService.ts",
+        "packages/@dvt/engine/src/services/runMaintenance/PendingIntentReconciliationEffects.ts",
+        "packages/@dvt/engine/src/services/runMaintenance/decidePendingIntentReconciliation.ts",
+        "packages/@dvt/engine/src/services/startRun/StartRunCompensation.ts",
+        "packages/@dvt/engine/src/services/startRun/StartRunFailureDiagnostics.ts",
         "packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts",
+        "packages/@dvt/engine/src/services/startRun/readStartRunAuthority.ts",
         "packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts",
         "packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts"
       ],

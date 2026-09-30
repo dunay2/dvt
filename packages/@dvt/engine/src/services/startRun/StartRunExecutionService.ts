@@ -1,12 +1,11 @@
 /**
- * @ownedConcern Dispatch admitted start-run requests to provider adapters and
- * bootstrap run state with compensation.
+ * @ownedConcern Sequence admitted dispatch, bootstrap and provider-reference persistence.
  */
 import type { StartRunTraceContext } from '../../core/lifecycle/StartRunTraceContext.js';
-import { toErrorMessage } from '../../utils/errorUtils.js';
 
-import { START_RUN_MESSAGE } from './StartRunDomainConstants.js';
+import { StartRunCompensation } from './StartRunCompensation.js';
 import type { StartRunEventFactory } from './StartRunEventFactory.js';
+import { StartRunFailureDiagnostics } from './StartRunFailureDiagnostics.js';
 import { PostStartIntentPersistenceError } from './StartRunFailurePolicy.js';
 import type {
   IStartRunExecutionService,
@@ -36,7 +35,22 @@ export interface StartRunExecutionServiceDeps {
 }
 
 export class StartRunExecutionService implements IStartRunExecutionService {
-  constructor(private readonly deps: StartRunExecutionServiceDeps) {}
+  private readonly diagnostics: StartRunFailureDiagnostics;
+  private readonly compensation: StartRunCompensation;
+  private readonly deps: Omit<StartRunExecutionServiceDeps, 'observability'>;
+
+  constructor(deps: StartRunExecutionServiceDeps) {
+    const { observability, ...executionDeps } = deps;
+    this.deps = executionDeps;
+    this.diagnostics = new StartRunFailureDiagnostics({
+      observability,
+      clock: deps.clock,
+    });
+    this.compensation = new StartRunCompensation({
+      failurePolicy: deps.failurePolicy,
+      diagnostics: this.diagnostics,
+    });
+  }
 
   async executeStartRun(input: StartRunExecutionInput): Promise<EngineRunRef> {
     input.errorContext.phase = 'bootstrap';
@@ -162,26 +176,14 @@ export class StartRunExecutionService implements IStartRunExecutionService {
         traceContext,
       });
     } catch (bootstrapError) {
-      await adapter.cancelRun(runRef).catch((cancelErr: unknown) => {
-        try {
-          this.deps.observability.logs.error({
-            msg: START_RUN_MESSAGE.compensationCancelFailed,
-            context: traceContext,
-            err: cancelErr,
-            attributes: {
-              error: toErrorMessage(cancelErr),
-            },
-          });
-        } catch {
-          // no-op: observability reporting must not hide the bootstrap error.
-        }
-      });
-      await this.deps.failurePolicy.markIntentResolvedBestEffort({
+      await this.compensation.compensate({
+        adapter,
+        runRef,
         intentId,
+        traceContext,
+        reason: 'bootstrap',
         tenantId: bootMeta.tenantId,
         runId: bootMeta.runId,
-        provider: bootMeta.providerRef.provider,
-        traceContext,
       });
       throw bootstrapError;
     }
@@ -206,46 +208,22 @@ export class StartRunExecutionService implements IStartRunExecutionService {
         runRef
       );
     } catch (reconcileError) {
-      try {
-        this.deps.observability.logs.error({
-          msg: START_RUN_MESSAGE.providerRefReconciliationFailed,
-          context: traceContext,
-          err: reconcileError,
-          attributes: {
-            runId: resolvedContext.runId,
-            provider: runRef.provider,
-            estimatedRunRef: JSON.stringify(estimatedRef),
-            actualRunRef: JSON.stringify(runRef),
-          },
-        });
-      } catch {
-        // no-op: observability reporting must not hide the reconciliation error.
-      }
-
-      await adapter.cancelRun(runRef).catch((cancelErr: unknown) => {
-        try {
-          this.deps.observability.logs.error({
-            msg: START_RUN_MESSAGE.providerRefReconciliationCancelFailed,
-            context: traceContext,
-            err: cancelErr,
-            attributes: {
-              error: toErrorMessage(cancelErr),
-              provider: runRef.provider,
-            },
-          });
-        } catch {
-          // no-op: observability reporting must not hide the reconciliation error.
-        }
-      });
-
-      await this.deps.failurePolicy.markIntentResolvedBestEffort({
+      this.diagnostics.providerRefReconciliationFailed(
+        reconcileError,
+        resolvedContext.runId,
+        estimatedRef,
+        runRef,
+        traceContext
+      );
+      await this.compensation.compensate({
+        adapter,
+        runRef,
         intentId,
+        traceContext,
+        reason: 'provider_ref_reconciliation',
         tenantId: resolvedContext.tenantId,
         runId: resolvedContext.runId,
-        provider: runRef.provider,
-        traceContext,
       });
-
       throw reconcileError;
     }
   }

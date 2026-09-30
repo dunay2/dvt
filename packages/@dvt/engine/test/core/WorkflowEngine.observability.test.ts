@@ -417,7 +417,7 @@ it('falls back to stderr when both observability sinks fail', async () => {
 
     expect(stderrSpy).toHaveBeenCalledWith(
       expect.stringContaining(
-        '[dvt][StartRunApplicationService] markResolved observability reporting failed;'
+        '[dvt][StartRunFailurePolicy] markResolved observability reporting failed;'
       )
     );
   } finally {
