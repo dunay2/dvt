@@ -1,7 +1,7 @@
 /** Owned concern: nodePropertyTopologyRows. */
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { resolveInheritedDvtConnectionRef } from '../../views/canvas/canvasDvtAuthoringModel';
+import { resolveDvtConnectionProvenance } from '../../views/canvas/canvasDvtConnectionProvenance';
 import type { NodePropertyRow, NodePropertyTableRow } from './nodePropertiesContracts';
 import { addRow, formatWords } from './nodePropertyValues';
 import { NODE_PROPERTY_ROW_ID } from './nodePropertiesContracts';
@@ -78,30 +78,18 @@ export function buildInputsOutputsRows(
 ): readonly NodePropertyTableRow[] {
   const nodeById = new Map(nodes.map((candidate) => [candidate.id, candidate]));
   const rows: NodePropertyTableRow[] = [];
-  const inheritedConnectionRef =
+  const provenance =
     node.pluginId === 'dvt' && node.kind === 'dvt:transform'
-      ? resolveInheritedDvtConnectionRef({ node, nodes, edges })
+      ? resolveDvtConnectionProvenance({ node, nodes, edges })
       : undefined;
   const inheritedConnection =
-    inheritedConnectionRef == null
-      ? undefined
-      : `${inheritedConnectionRef.provider} · ${inheritedConnectionRef.connectionId}`;
-  let inheritedConnectionProjected = false;
+    provenance?.kind === 'resolved'
+      ? `${provenance.connectionRef.provider} · ${provenance.connectionRef.connectionId}`
+      : undefined;
 
   for (const edge of edges) {
     if (edge.targetId === node.id) {
       const upstreamNode = nodeById.get(edge.sourceId);
-      const upstreamConnectionRef =
-        upstreamNode == null || inheritedConnectionRef == null
-          ? undefined
-          : resolveInheritedDvtConnectionRef({ node: upstreamNode, nodes, edges });
-      const projectsInheritedConnection: boolean =
-        !inheritedConnectionProjected &&
-        inheritedConnectionRef != null &&
-        upstreamConnectionRef != null &&
-        inheritedConnectionRef.provider === upstreamConnectionRef.provider &&
-        inheritedConnectionRef.connectionId === upstreamConnectionRef.connectionId;
-      inheritedConnectionProjected ||= projectsInheritedConnection;
       rows.push({
         id: `input:${edge.id}`,
         cells: {
@@ -109,7 +97,7 @@ export function buildInputsOutputsRows(
           node: upstreamNode?.name ?? edge.sourceId,
           nodeId: edge.sourceId,
           relation: edge.relation,
-          ...(projectsInheritedConnection && inheritedConnection != null
+          ...(edge.relation === 'lineage' && inheritedConnection != null
             ? { connection: inheritedConnection }
             : {}),
         },

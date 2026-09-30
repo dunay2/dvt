@@ -31,10 +31,7 @@ export type {
   DvtSubstraitTransformAuthoringMetadata,
   DvtUninitializedTransformAuthoringMetadata,
 } from './canvasDvtAuthoringTypes';
-export {
-  resolveEffectiveDvtConnectionRef,
-  resolveInheritedDvtConnectionRef,
-} from './canvasDvtSourceAuthoring';
+export { resolveEffectiveDvtConnectionRef } from './canvasDvtSourceAuthoring';
 
 export function resolveDvtNodeAuthoringMetadata(
   node: CanonicalNode

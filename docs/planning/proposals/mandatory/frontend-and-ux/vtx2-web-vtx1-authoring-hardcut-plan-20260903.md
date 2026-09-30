@@ -450,7 +450,6 @@ symbols:
   - { <<: *vtx2Symbol, name: readDvtNodeConfig, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
   - { <<: *vtx2Symbol, name: readDvtString, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
   - { <<: *vtx2Symbol, name: resolveEffectiveDvtConnectionRef, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
-  - { <<: *vtx2Symbol, name: resolveInheritedDvtConnectionRef, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
   - { <<: *vtx2Symbol, name: validateDvtSourceAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
   - { <<: *vtx2Symbol, name: withDvtConfig, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
   - { <<: *vtx2Symbol, name: TransformMetadata, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoring.ts }

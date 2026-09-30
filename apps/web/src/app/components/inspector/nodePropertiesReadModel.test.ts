@@ -272,7 +272,7 @@ describe('nodePropertiesReadModel', () => {
     }
   );
 
-  it('projects a fan-in transform connection once on the input branch that supplies it', () => {
+  it('does not project an arbitrary inherited connection for conflicting fan-in', () => {
     const primarySource = buildSourceNode();
     const secondarySource = buildSourceNode({
       id: 'src-returns',
@@ -315,11 +315,43 @@ describe('nodePropertiesReadModel', () => {
     ).not.toHaveProperty('connection');
     expectTableCells(inputsOutputs, 'input:edge-returns-transform', {
       node: 'Returns Source',
-      connection: 'postgres · warehouse-secondary',
     });
     expect(
       inputsOutputs.tableRows.filter((row) => row.cells.connection !== undefined)
-    ).toHaveLength(1);
+    ).toHaveLength(0);
+  });
+
+  it('projects the proven common connection on every lineage input independently of edge order', () => {
+    const source = buildSourceNode();
+    const other = buildSourceNode({ id: 'other', name: 'Other' });
+    const edges: CanonicalEdge[] = [
+      graphEdges[0]!,
+      { id: 'other', sourceId: 'other', targetId: downstreamNode.id, relation: 'lineage' },
+      { id: 'validation', sourceId: 'other', targetId: downstreamNode.id, relation: 'validation' },
+    ];
+    for (const ordered of [edges, [...edges].reverse()]) {
+      const model = buildNodePropertiesReadModel({
+        node: downstreamNode,
+        nodes: [source, other, downstreamNode],
+        edges: ordered,
+        presentationCopy,
+      });
+      const rows = sectionById(model, 'inputs-outputs').tableRows;
+      expect(
+        rows
+          .filter((row) => row.cells.connection)
+          .map((row) => row.id)
+          .sort()
+      ).toEqual(['input:edge-source-transform', 'input:other']);
+      expect(
+        rows
+          .filter((row) => row.cells.connection)
+          .every((row) => row.cells.connection === 'postgres · warehouse-prod')
+      ).toBe(true);
+      expect(rows.find((row) => row.id === 'input:validation')?.cells).not.toHaveProperty(
+        'connection'
+      );
+    }
   });
 
   it.each([
