@@ -8,7 +8,7 @@ import {
 } from './canvasOutputProjection.test-support';
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
 import { analyzeCanvasRelations } from './canvasRelationalAnalysis';
-import { createCanvasRelationalTreeOperationDraft } from './canvasRelationalTreeOperationDraft';
+import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
 import { canvasInputSlotId } from './canvasInputBindings';
 import { resolveCanvasProducerDocument } from './canvasProducerDocument';
 import { composeDvtSubstraitProjectionFields } from './canvasDvtSubstraitStructuredFieldMutation';
@@ -58,12 +58,10 @@ describe('explicit Transform from a model producer', () => {
       nodes: [SOURCE, published, consumer],
       edges,
     });
-    const draft = createCanvasRelationalTreeOperationDraft({
-      operation: 'projection',
-      inputs,
-      selectedInputIds: [producer.id],
+    const draft = createCanvasRelationalTreeProjectionDraft({
+      input: inputs[0]!,
       targetNodeId: consumer.id,
-    })!;
+    });
     const { index, schemas } = deriveSubstraitSchemas(draft);
     expect(index.relations.size).toBe(2);
     const producerSchemas = deriveSubstraitSchemas(structured);
@@ -121,10 +119,8 @@ describe('explicit Transform from a model producer', () => {
           { ...dependency, ...(inputBindings == null ? {} : { metadata: { inputBindings } }) },
         ],
       });
-      const document = createCanvasRelationalTreeOperationDraft({
-        operation: 'projection',
-        inputs,
-        selectedInputIds: [producer.id],
+      const document = createCanvasRelationalTreeProjectionDraft({
+        input: inputs[0]!,
         targetNodeId: consumer.id,
       });
       expect(document).not.toBeNull();

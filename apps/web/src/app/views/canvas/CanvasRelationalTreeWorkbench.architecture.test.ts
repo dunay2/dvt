@@ -65,6 +65,17 @@ import CompositionTruthSource from './canvasRelationalCompositionTruth.ts?raw';
 import TransformAuthoringSource from './canvasDvtTransformAuthoring.ts?raw';
 
 describe('Canvas relational-tree Workbench architecture', () => {
+  it('retires guided draft factories without compatibility exports', () => {
+    const retired = import.meta.glob([
+      './canvasRelationalTreeOperationDraft.ts',
+      './canvasRelationalTreeUnionAuthoring.ts',
+    ]);
+    expect(Object.keys(retired)).toEqual([]);
+    expect(AuthoringModelSource).not.toMatch(
+      /createCanvasRelationalTreeInitialJoinDraft|resolveCanvasRelationalTreeAuthoringChoices/
+    );
+    expect(AuthoringModelSource).toContain('createCanvasRelationalTreeNodeDraft');
+  });
   it('keeps staged mutations independent of card queries and reuses the composition catalog', () => {
     expect(StagedOperationSource).not.toMatch(
       /indexSubstraitRelations|decodeCanvasStagedOperation|buildCanvasRelationalTreeRelation|from ['"]react['"]/
