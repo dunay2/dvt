@@ -9,8 +9,12 @@ import {
 } from './canvasDvtSubstraitProjection';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
-import { createCanvasRelationalTreeOperationDraft } from './canvasRelationalTreeOperationDraft';
-import { resolveCanvasRelationalTreeAuthoringChoices } from './canvasRelationalTreeAuthoringModel';
+import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
+import { configureCanvasStagedBinary } from './canvasStagedBinaryConfiguration';
+import { decodeCanvasStagedOperation } from './canvasStagedOperationDocument';
+import { createPendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
+import { compositionKinds } from './canvasCompositionSequence.test-support';
+import { readCanvasStagedCompositionSignature } from './canvasStagedOperation';
 import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindings';
 import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
@@ -99,11 +103,10 @@ describe('explicit composition consumes producer references', () => {
   it('keeps independent aliases for repeated model inputs without copying their operations', async () => {
     const graph = fixture(2);
     const input = graph.inputs[0]!;
-    const initial = createCanvasRelationalTreeOperationDraft({
-      ...graph,
-      operation: 'projection',
-      selectedInputIds: [input.nodeId],
-    })!;
+    const initial = createCanvasRelationalTreeProjectionDraft({
+      input,
+      targetNodeId: graph.targetNodeId,
+    });
     const session = new CanvasRelationAnalysisSession('consumer', input.producer!.connection);
     session.receive(initial);
     const composed = await composeSourceRelation(session, {
@@ -137,11 +140,10 @@ describe('explicit composition consumes producer references', () => {
   });
   it('rejects a pending occurrence with a stale producer FieldId before changing the session', async () => {
     const graph = fixture(2);
-    const initial = createCanvasRelationalTreeOperationDraft({
-      ...graph,
-      operation: 'projection',
-      selectedInputIds: [graph.inputs[0]!.nodeId],
-    })!;
+    const initial = createCanvasRelationalTreeProjectionDraft({
+      input: graph.inputs[0]!,
+      targetNodeId: graph.targetNodeId,
+    });
     const input = graph.inputs[1]!;
     const session = new CanvasRelationAnalysisSession('consumer', input.producer!.connection);
     session.receive(initial);
@@ -160,18 +162,12 @@ describe('explicit composition consumes producer references', () => {
     expect(session.revision).toBe(revision);
     session.dispose();
   });
-  it.each([1, 2] as const)('offers JOIN, CROSS and SET for %i model producers', (models) => {
-    const graph = fixture(models);
-    const choices = resolveCanvasRelationalTreeAuthoringChoices({ ...graph, readOnly: false });
-    for (const operation of ['inner_join', 'cross_join', 'union_all']) {
-      expect(choices.find((choice) => choice.operation === operation)?.selectable).toBe(true);
-    }
-  });
   it.each([1, 2] as const)(
     'does not clone operations for %i model producers and emits SQL through the existing profile',
     async (models) => {
       const graph = fixture(models);
       const before = JSON.stringify(graph.nodes);
+      const sources = graph.inputs.map(createPendingSourceOccurrence);
       for (const operation of [
         'inner_join',
         'cross_join',
@@ -180,8 +176,19 @@ describe('explicit composition consumes producer references', () => {
         'intersect_distinct',
         'except_distinct',
       ] as const) {
-        const document = createCanvasRelationalTreeOperationDraft({ ...graph, operation })!;
+        const configured = configureCanvasStagedBinary(
+          {
+            id: 'composition',
+            operation,
+            inputs: sources.map((source) => source.read.binding.relationId),
+          },
+          [...graph.inputs].reverse(),
+          sources,
+          []
+        );
+        const document = decodeCanvasStagedOperation(configured)!;
         const { index } = deriveSubstraitSchemas(document);
+        expect(index.relations.get(index.rootId)!.inputs).toEqual(configured.inputs);
         expect(index.relations.size).toBe(3);
         expect(
           [...index.relations.values()].filter((entry) => entry.binding.producerRef != null)
@@ -212,26 +219,29 @@ describe('explicit composition consumes producer references', () => {
     'rejects different execution connections with %i model producers',
     (models) => {
       const graph = fixture(models, true);
-      const choices = resolveCanvasRelationalTreeAuthoringChoices({ ...graph, readOnly: false });
-      expect(choices.every((choice) => !choice.selectable)).toBe(true);
-      expect(
-        createCanvasRelationalTreeOperationDraft({ ...graph, operation: 'inner_join' })
-      ).toBeNull();
-      expect(
-        createCanvasRelationalTreeOperationDraft({ ...graph, operation: 'cross_join' })
-      ).toBeNull();
-      expect(() =>
-        createCanvasRelationalTreeOperationDraft({ ...graph, operation: 'union_all' })
-      ).toThrow(/same execution connection/);
+      const sources = graph.inputs.map(createPendingSourceOccurrence);
+      const before = JSON.stringify({ graph, sources });
+      for (const operation of compositionKinds.filter(
+        (kind) => readCanvasStagedCompositionSignature(kind).configuration === 'binary'
+      )) {
+        const pending = {
+          id: 'composition',
+          operation,
+          inputs: sources.map((source) => source.read.binding.relationId),
+        };
+        const configured = configureCanvasStagedBinary(pending, graph.inputs, sources, []);
+        expect(configured).toBe(pending);
+        expect(decodeCanvasStagedOperation(configured)).toBeNull();
+      }
+      expect(JSON.stringify({ graph, sources })).toBe(before);
     }
   );
   it('appends a second model through the canonical composition command and rejects a foreign connection', async () => {
     const graph = fixture(2);
-    const initial = createCanvasRelationalTreeOperationDraft({
-      ...graph,
-      operation: 'projection',
-      selectedInputIds: [graph.selectedInputIds[0]!],
-    })!;
+    const initial = createCanvasRelationalTreeProjectionDraft({
+      input: graph.inputs[0]!,
+      targetNodeId: graph.targetNodeId,
+    });
     const first = graph.inputs[0]!.producer!;
     const session = new CanvasRelationAnalysisSession('consumer', first.connection);
     session.receive(initial);
