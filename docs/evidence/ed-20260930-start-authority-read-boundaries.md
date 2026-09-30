@@ -88,7 +88,7 @@ its 25 fixture checks pass, but that routed omission is not glossary validation.
 This cut does not establish exclusive ownership or cross-resource fencing
 ([#2678](https://github.com/dunay2/dvt/issues/2678)). Durable unknown outcomes,
 late RPCs, cancellation confirmation and bounded retry/escalation remain under
-#2679. The refactor preserves those current protocol semantics; extracting an
+[GH-2679](https://github.com/dunay2/dvt/issues/2679). The refactor preserves those current protocol semantics; extracting an
 effect is not evidence that the effect is safe under concurrency.
 
 No PostgreSQL/Temporal concurrency proof is claimed. No shared application
