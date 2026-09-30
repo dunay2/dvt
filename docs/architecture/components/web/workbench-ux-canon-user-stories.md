@@ -10,14 +10,14 @@ planning_type: user-stories
 
 ## Frontend Maintainer
 
-As a frontend maintainer, I need the v0.4 workbench UX draft to point to the
-active workbench contract, so I do not copy draft-only menu, shell, or label
-ideas into code without a task-owned behavior change.
+As a frontend maintainer, I need current workbench rules to resolve to the
+existing screen manual, so historical menu, shell, or label ideas cannot become
+code changes without their governing GitHub issue.
 
 Acceptance:
 
-- the draft names `F-MAND-WORKBENCH-UX` as its canonical disposition;
-- the active contract remains `workbench-ui-contract-and-component-inventory.md`;
+- the retained canon identifies `F-MAND-WORKBENCH-UX` and keeps historical input in Git;
+- current Process Map and contextual placement use `screen-manuals-and-user-stories.md`;
 - future shell behavior changes must name a command/query rail.
 
 ## Canvas Maintainer

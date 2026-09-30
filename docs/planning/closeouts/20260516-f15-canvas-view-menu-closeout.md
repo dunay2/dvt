@@ -15,7 +15,7 @@ author: AI (Codex)
 - `AGENTS.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/command-query-rail-governance.md`
-- `docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md`
+- [UX v0.4 design input (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md)
 - `docs/architecture/components/web/graph/canvas-shell-component.md`
 - `docs/architecture/components/web/graph/canvas-route-presentation-component.md`
 - Planning task `E F-15`
@@ -93,7 +93,7 @@ governingSources:
   - docs/planning/status/governance-document-rule-inventory.md
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/architecture/command-query-rail-governance.md
-  - docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
 allowedImplementationSurfaces:
   - apps/web/src/app/components/shell/ShellMenu.tsx
   - apps/web/src/app/views/Canvas.draftRecovery.test.tsx

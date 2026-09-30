@@ -185,12 +185,18 @@ describe('web Vitest changed-file routing', () => {
   it('keeps exact changed-test routing aligned with runnable suite include globs', () => {
     const plan = resolveWebVitestChangedSuitePlan([
       'apps/web/src/app/components/inspector/NodePropertiesTabs.sectionContent.test.tsx',
+      'apps/web/src/app/components/TopAppBar.architecture.test.ts',
     ]);
 
     expect(plan.commandPlan).toEqual([
       {
         config: 'vitest.canvas-presentation.config.ts',
         filePaths: ['src/app/components/inspector/NodePropertiesTabs.sectionContent.test.tsx'],
+        kind: 'vitest-files',
+      },
+      {
+        config: 'vitest.shell-session.config.ts',
+        filePaths: ['src/app/components/TopAppBar.architecture.test.ts'],
         kind: 'vitest-files',
       },
     ]);

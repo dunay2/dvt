@@ -44,8 +44,7 @@ flowchart LR
 - `Execution Runtime`
   Current sources: [Execution Runtime domain view](../domains/execution-runtime.md),
   [Engine Roadmap](../../architecture/components/engine/roadmap/engine-phases.md),
-  [WorkflowEngine hexagonal derivation plan 2026-04-03](../proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md),
-  [Runtime hardening, shared-kernel, and operations roadmap 2026-04-10](../proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
+  [WorkflowEngine hexagonal derivation plan 2026-04-03](../proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md)
   Near-term target: keep the landed `TF-C2` PostgreSQL runtime vertical stable,
   keep the accepted `TF-C3` plugin-backed DBT runtime path aligned with its
   runbook and canary evidence, and close the remaining `WE-HX` hardening waves,
@@ -63,8 +62,7 @@ flowchart LR
   routes through retention, worker-scaling, and broader open scale tasks instead
   of being hidden under the PlanRef payload line.
 - `API and Admission`
-  Current sources: [API and Admission domain view](../domains/api-and-admission.md),
-  [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md)
+  Current sources: [API and Admission domain view](../domains/api-and-admission.md)
   Near-term target: keep the now-closed preview-persist boundary truthful as
   the fixed protected ingress, build on the landed `runExecutionContext`
   artifact wiring, the standalone `apps/temporal-worker` composition root, the
@@ -73,11 +71,7 @@ flowchart LR
   semantics into the kernel.
 - `Planner and Contracts`
   Current sources: [Planner and Contracts domain view](../domains/planner-and-contracts.md),
-  [Transformation Flow Product Decisions 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md),
-  [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md),
-  [Contract pack and read boundary reset plan 2026-04-10](../proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md),
-  [TF-A1-C SRP and extensibility hardening plan 2026-04-14](../proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md),
-  [Runtime hardening, shared-kernel, and operations roadmap 2026-04-10](../proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
+  [TF-A1-C SRP and extensibility hardening plan 2026-04-14](../proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md)
   Near-term target: complete #2600 by removing the remaining SQL-first runtime
   handlers after the preview/contract hard cut. VTX2 Substrait remains the sole
   DVT authoring authority, while the shared generic preview and stored-plan

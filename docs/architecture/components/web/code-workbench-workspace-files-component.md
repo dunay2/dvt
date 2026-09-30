@@ -24,9 +24,15 @@ Use with:
 
 - [Command And Query Rail Governance](../../command-query-rail-governance.md)
 - [Fowler Opportunity Planning Governance](../../fowler-opportunity-planning-governance.md)
-- [Workbench UI Contract And Component Inventory](./workbench-ui-contract-and-component-inventory.md)
+- [Screen Manuals And User Stories](./screen-manuals-and-user-stories.md)
 - [Web Auth, Project Onboarding, And Actionable Product Gaps](../../../planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md)
-- `buzon/20260504-codex-fowler-code-tab-workspace-files-analysis-and-plan.md`
+
+## Historical provenance
+
+These inputs explain earlier implementation decisions; they are not current
+governing sources. Current contracts and the authorities above remain in force.
+
+- [Fowler analysis and plan for Code tab workspace files](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/buzon/20260504-codex-fowler-code-tab-workspace-files-analysis-and-plan.md)
 
 ## Owned Concern
 

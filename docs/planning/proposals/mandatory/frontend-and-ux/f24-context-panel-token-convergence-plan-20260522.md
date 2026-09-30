@@ -53,7 +53,6 @@ governingSources:
   - docs/planning/status/governance-document-rule-inventory.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
   - docs/guides/ai-work-protocol.md
 allowedImplementationSurfaces:
   - apps/web/src/app/components/DbtExplorer.tsx

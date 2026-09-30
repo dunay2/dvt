@@ -39,7 +39,7 @@ governingSources:
   - docs/planning/status/governance-document-rule-inventory.md
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/architecture/command-query-rail-governance.md
-  - docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
 allowedImplementationSurfaces:
   - apps/web/src/app/components/shell/ShellMenu.tsx
   - apps/web/src/app/views/Canvas.draftRecovery.test.tsx

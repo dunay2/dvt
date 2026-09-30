@@ -23,7 +23,7 @@ shared lazy Monaco gateways, but route modules and Canvas modules must not pull
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md`
-- `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`
+- `docs/architecture/components/web/screen-manuals-and-user-stories.md`
 
 ## Current State
 
@@ -133,7 +133,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/monaco/index.md
   - docs/architecture/components/web/monaco/monaco-bundle-isolation-component.md
   - docs/architecture/components/web/monaco/monaco-bundle-isolation-user-stories.md
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
   - docs/planning/closeouts/20260522-f17e-monaco-bundle-isolation-closeout.md
   - docs/planning/proposals/mandatory/frontend-and-ux/f17e-monaco-bundle-isolation-plan-20260522.md
 forbiddenImplementationSurfaces:

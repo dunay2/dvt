@@ -34,7 +34,7 @@ This review records the architectural diagnosis and the first applied slice:
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`
+- [Former component inventory (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md)
 - `docs/architecture/components/web/graph/canvas-shell-component.md`
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md`

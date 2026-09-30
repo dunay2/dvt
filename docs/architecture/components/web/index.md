@@ -23,7 +23,7 @@ out of the active tree.
 ## Component Decomposition
 
 - shell and bootstrap:
-  [Main workspace views and UX](./main-workspace-views-and-ux.md),
+  [Screen Manuals And User Stories](./screen-manuals-and-user-stories.md),
   [App bootstrap screen component](./app-bootstrap-screen-component.md),
   [Admin route position component](./admin-route-position-component.md),
   [API client auth component](./api-client-auth-component.md),
@@ -72,9 +72,7 @@ out of the active tree.
   [RunWorkspaceStateView.tsx](../../../../apps/web/src/app/views/runs/RunWorkspaceStateView.tsx)
 - service factories and facades:
   [plansService.ts](../../../../apps/web/src/app/services/plans/plansService.ts),
-  [runsService.ts](../../../../apps/web/src/app/services/runs/runsService.ts),
-  [workspaceService.ts](../../../../apps/web/src/app/services/workspace/workspaceService.ts),
-  [runWorkspaceFacade.ts](../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)
+  [runsService.ts](../../../../apps/web/src/app/services/runs/runsService.ts)
 - plugin and contribution boundary:
   [Plugin Contributions Developer Guide](./plugin-contributions-developer-guide.md),
   [registry.ts](../../../../apps/web/src/app/plugins/registry.ts)
@@ -137,14 +135,10 @@ Runtime run behavior is implemented through the presentation port and API
 adapter. Current command/query ownership is read from Planning DB rather than a
 compiled API rail vocabulary.
 
-The current roadmap reference for frontend and UX work is
-`docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md`.
-The former `docs/planning/proposals/frontend-roadmap-20260219.md` location is no
-longer an active path.
+Frontend product sequencing follows the [Roadmap Of Record](../../../planning/roadmap/index.md).
+Current delivery status and acceptance remain in the governing GitHub issues.
 
 ## Related Pages
 
 - [Read subsystem](../../system/subsystems/read/index.md)
 - [Canonical run lifecycle subsystem](../../system/subsystems/canonical-run-lifecycle/index.md)
-- [DVT Component Map](../../component-map.md)
-- [System Delivery Status](../../system-delivery-status.md)

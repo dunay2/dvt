@@ -53,7 +53,7 @@ governingSources:
   - docs/planning/status/governance-document-rule-inventory.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+  - docs/architecture/components/web/plugins/plugin-ux-integration-contract.md
   - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/05-plugin-ux-integration-contract.md
   - docs/guides/ai-work-protocol.md
 allowedImplementationSurfaces:
@@ -63,7 +63,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/plugins/pluginsCapabilityTable.architecture.test.ts
   - apps/web/src/app/views/plugins/pluginsViewModel.ts
   - docs/architecture/components/web/plugins/**
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+  - docs/architecture/components/web/plugins/plugin-ux-integration-contract.md
   - docs/planning/closeouts/**
   - docs/planning/state/agent-lane-e.yaml
 forbiddenImplementationSurfaces:

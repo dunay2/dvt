@@ -54,7 +54,6 @@ governingSources:
   - docs/planning/status/governance-document-rule-inventory.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
   - docs/guides/ai-work-protocol.md
 allowedImplementationSurfaces:
   - apps/web/src/app/components/monaco/monacoVisualTokens.ts
@@ -64,7 +63,6 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/monaco/MonacoDiffSurface.tsx
   - apps/web/src/app/components/workbench/RouteWorkbenchFrame.tsx
   - docs/architecture/components/web/monaco/**
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
   - docs/planning/closeouts/**
   - docs/planning/state/agent-lane-e.yaml
 forbiddenImplementationSurfaces:
