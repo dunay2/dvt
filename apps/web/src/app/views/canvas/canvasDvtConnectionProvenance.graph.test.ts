@@ -80,6 +80,19 @@ describe('Canvas connection provenance graph invariants', () => {
     }
   });
 
+  it('rejects incoming lineage on a Source instead of concealing a cycle behind its authority', () => {
+    for (const edges of [
+      [edge('s', 't'), edge('t', 's')],
+      [edge('s', 't'), edge('missing', 's')],
+    ]) {
+      expect(resolve({ node: transform, nodes: [source, transform], edges })).toEqual({
+        kind: 'invalid',
+        reasons: ['source-has-inputs'],
+        sourceNodeIds: ['s'],
+      });
+    }
+  });
+
   it('rejects duplicate reachable identities and unsupported intermediate nodes', () => {
     for (const nodes of [
       [source, source, transform],

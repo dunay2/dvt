@@ -49,7 +49,8 @@ or edge order. Conflicting references, incomplete branches, malformed or missing
 Source authority, cycles, missing/duplicate reachable nodes and unsupported
 intermediates cannot supply a candidate. An unbound graph supplies none.
 Non-lineage edges do not confer connection authority. Traversal is iterative and
-performs no provider I/O or draft mutation.
+performs no provider I/O or draft mutation. A Source is a terminal authority
+boundary; incoming lineage on a Source is invalid, including cycles through it.
 
 The same read model supplies the terminal Sink's inherited-connection display
 and Transform Inputs/Outputs context. A proven common connection is shown on

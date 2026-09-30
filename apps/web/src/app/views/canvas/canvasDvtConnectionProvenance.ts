@@ -14,6 +14,7 @@ type InvalidLineageReason =
   | 'duplicate-node'
   | 'missing-node'
   | 'unsupported-node'
+  | 'source-has-inputs'
   | 'invalid-source-connection'
   | 'incomplete-lineage';
 
@@ -78,6 +79,7 @@ export function resolveDvtConnectionProvenance(
     if (node.kind === 'dvt:source') {
       sources.add(node.id);
       completed.add(node.id);
+      if ((inputs.get(node.id)?.length ?? 0) > 0) reasons.add('source-has-inputs');
       if (
         node.pluginId !== DVT_AUTHORING_PLUGIN_ID &&
         node.pluginId !== DVT_WAREHOUSE_SOURCE_PLUGIN_ID
