@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import {
+  isCanvasCompositionOperation,
   resolveCanvasRelationalOperationChoices,
   type CanvasRelationalOperationAvailability,
 } from './canvasRelationalOperationChoices';
@@ -55,6 +56,29 @@ function availability(args: {
 }
 
 describe('resolveCanvasRelationalOperationChoices', () => {
+  it('classifies every composition operation without treating projection or unary tools as composition', () => {
+    for (const operation of [
+      'inner_join',
+      'left_join',
+      'right_join',
+      'full_outer_join',
+      'left_semi_join',
+      'left_anti_join',
+      'right_semi_join',
+      'right_anti_join',
+      'cross_join',
+      'union_all',
+      'union_distinct',
+      'intersect_distinct',
+      'except_distinct',
+      'intersect_all',
+      'except_all',
+    ])
+      expect(isCanvasCompositionOperation(operation)).toBe(true);
+    for (const operation of ['projection', 'filter', 'aggregate', 'window', null, undefined])
+      expect(isCanvasCompositionOperation(operation)).toBe(false);
+  });
+
   it('separates a pending JOIN predicate from an available schema-compatible UNION ALL', () => {
     expect(availability({ unionAllAvailable: true })).toEqual({
       inner_join: 'needs-predicate',
