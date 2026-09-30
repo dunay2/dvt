@@ -5,9 +5,13 @@
  * @version 1.0.0
  * @date 2026-03-05
  */
+import { asIsoUtcString } from '@dvt/contracts';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { IRunMaintenanceService } from '../../src/ports/IRunMaintenanceService.js';
+import type {
+  IRunMaintenanceService,
+  ReconcileOrphanedIntentsResult,
+} from '../../src/ports/IRunMaintenanceService.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 import {
   IntentReconcilerWorker,
@@ -43,6 +47,9 @@ function makeMaintenance(
       skipped: 0,
     }),
     reconcileOrphanedIntents: reconcile,
+    reconcileStartRunIntent: async () => {
+      throw new Error('The batch worker must not invoke single-intent reconciliation');
+    },
   };
 }
 
@@ -73,7 +80,7 @@ function setupTest(
   vi.useFakeTimers();
   const metrics = makeMetrics();
   const resolvedDeps: IntentReconcilerWorkerDeps = {
-    clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
+    clock: new SequenceClock(asIsoUtcString('2026-02-12T00:00:00.000Z')),
     ...deps,
   };
   const worker = new IntentReconcilerWorker(
@@ -86,14 +93,15 @@ function setupTest(
   return { worker, metrics };
 }
 
-const resultType = (): {
-  inspected: number;
-  expired: string[];
-  resolved: string[];
-  cancelled: string[];
-  cancelFailed: string[];
-  deferred: string[];
-} => ({ inspected: 0, expired: [], resolved: [], cancelled: [], cancelFailed: [], deferred: [] });
+const resultType = (): ReconcileOrphanedIntentsResult => ({
+  inspected: 0,
+  expired: [],
+  resolved: [],
+  cancelled: [],
+  cancelFailed: [],
+  deferred: [],
+  escalated: [],
+});
 
 describe('IntentReconcilerWorker', () => {
   afterEach(() => {
@@ -120,6 +128,7 @@ describe('IntentReconcilerWorker', () => {
       cancelled: [],
       cancelFailed: [],
       deferred: [],
+      escalated: [],
     });
     await Promise.resolve();
     await vi.advanceTimersByTimeAsync(20);
