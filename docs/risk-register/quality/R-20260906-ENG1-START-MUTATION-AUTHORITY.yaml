@@ -32,4 +32,5 @@ mitigations:
 limitations:
   - This first cut does not add an exclusive intent claim; GH-2678 owns fencing.
   - Pre-catch compensation and unknown provider outcomes remain governed by GH-2679.
-  - GH-2676 remains open until the global invariant is proven on those paths.
+  - GH-2676 closed its bounded preparation-authority cut; it does not certify the remaining
+    ownership and provider-effect invariants tracked by GH-2678 and GH-2679.

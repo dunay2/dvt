@@ -76,9 +76,12 @@ exercise the real Engine and maintenance orchestration. Compensation tests
 characterize exact provider reference, cancellation-before-cleanup ordering and
 throwing diagnostic sinks; they do not certify cancellation confirmation.
 
-The full Engine suite and TypeScript check passed during refactoring. Final
-hook-normalized validation, exact base/head mechanization and integration state
-are recorded in the governing issue and implementation PR.
+The hook-normalized full Engine suite passed: 71 files, 527 tests. Engine
+typecheck, architecture dependency checks, determinism lint and the canonical
+contract fixture validator also passed. Final prepush, exact base/head
+mechanization and integration state are recorded in the governing issue and
+implementation PR. The contract validator reports a missing glossary source;
+its 25 fixture checks pass, but that routed omission is not glossary validation.
 
 ## Explicit Limits
 
