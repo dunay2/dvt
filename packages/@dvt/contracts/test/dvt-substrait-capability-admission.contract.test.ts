@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { URL } from 'node:url';
 
+import { sha256HexUtf8 } from '@dvt/crypto';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -9,6 +10,7 @@ import {
   DvtSubstraitStandardCapabilityV1Schema,
   assertDvtSubstraitExtensionProposalV1,
   buildDvtSubstraitStandardCapabilityId,
+  serializeDvtSubstraitCapabilityCatalogV1,
   type DvtSubstraitStandardCapabilityV1,
 } from '../src/substrait.js';
 
@@ -59,6 +61,38 @@ function extensionProposal(overrides: Record<string, unknown> = {}): Record<stri
 }
 
 describe('DVT Substrait standard-first capability admission', () => {
+  it('preserves the published catalog across the explicit-posture hard cut (#3485)', () => {
+    // Captured from main ee66b4d before changing the internal group declarations.
+    expect(
+      sha256HexUtf8(serializeDvtSubstraitCapabilityCatalogV1(DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1))
+    ).toBe('f36095bf7065f4bf342e57895b9c0d58de8d76161b0c46943abcc3993a0fed88');
+  });
+
+  it.each([
+    { targetConformance: undefined },
+    { targetConformance: [] },
+    { targetConformance: [{ targetId: 'postgres', status: 'mapped', evidenceRefs: [] }] },
+    { targetConformance: [{ targetId: 'postgres', evidenceRefs: ['dvt:#3485'] }] },
+    {
+      targetConformance: Array.from({ length: 2 }, () => ({
+        targetId: 'postgres',
+        status: 'mapped',
+        evidenceRefs: ['dvt:#3485'],
+      })),
+    },
+    { visualExposure: undefined },
+    { visualExposure: { status: 'exposed', evidenceRefs: [] } },
+    { visualExposure: { status: 'not-exposed', rationale: '' } },
+  ])('rejects incomplete or ambiguous admission posture: %j', (posture) => {
+    const lower = lowerCapability();
+    expect(
+      DvtSubstraitStandardCapabilityV1Schema.safeParse({
+        ...lower,
+        admission: { ...lower.admission, ...posture },
+      }).success
+    ).toBe(false);
+  });
+
   it('keeps every admitted local proof resolvable after implementation hard cuts', () => {
     const proofs = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.flatMap((entry) =>
       entry.kind === 'standard' && entry.admission != null
