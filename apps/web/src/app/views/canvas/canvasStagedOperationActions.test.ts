@@ -32,6 +32,46 @@ function actionsFor(state: {
 }
 
 describe('staged operation commands', () => {
+  it('does not publish another graph for a repeated connection', () => {
+    const operations: readonly CanvasStagedOperation[] = [
+      { id: 'first', operation: 'field_transform', inputs: ['left'] },
+    ];
+    const state = { operations };
+    actionsFor(state).connect('first', 0, 'left');
+    expect(state.operations).toBe(operations);
+  });
+
+  it('does not invalidate configured consumers when a disconnect is rejected', async () => {
+    const document = connectedNamesProjectionDraft();
+    const session = new CanvasRelationAnalysisSession('invalid-disconnect');
+    try {
+      session.receive(document);
+      const producer: CanvasStagedOperation = {
+        id: session.rootId,
+        operation: 'field_transform',
+        inputs: session.locate(session.rootId, session.revision).inputs,
+        semanticDocument: encodeDvtSubstraitSemanticDocument(document),
+      };
+      const consumer = await configureCanvasStagedTransform(
+        { id: 'consumer', operation: 'field_transform', inputs: [producer.id] },
+        document
+      );
+      expect(consumer.semanticDocument).toBeDefined();
+      const operations = [producer, consumer];
+      const state = { operations };
+      const actions = actionsFor(state);
+      for (const port of [-1, NaN, 0.5, 1]) {
+        actions.disconnect(producer.id, port);
+        expect(state.operations).toBe(operations);
+        expect(state.operations[1]).toBe(consumer);
+      }
+      actions.disconnect('missing', 0);
+      expect(state.operations).toBe(operations);
+    } finally {
+      session.dispose();
+    }
+  });
+
   it('connects both JOIN ports atomically in either order', () => {
     const state = {
       operations: [

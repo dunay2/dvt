@@ -23,8 +23,7 @@ import {
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
-import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
-import { isCanvasSetOperation } from './canvasRelationalOperationChoices';
+import { isCanvasCompositionOperation } from './canvasRelationalOperationChoices';
 import { canvasPresentationOperationForRel } from './canvasRelationalOperationPresentation';
 import { DVT_TRANSFORM_MATERIALIZATIONS } from './canvasDvtMaterializationPolicy';
 
@@ -82,12 +81,7 @@ export function resolveDvtTransformAuthoringMetadata(
     entry = indexed.index.relations.get(entry.inputs[0]!)!;
   }
   const operation = canvasPresentationOperationForRel(entry.relation);
-  if (
-    isCanvasJoinOperation(operation) ||
-    isCanvasSetOperation(operation) ||
-    operation === 'cross_join'
-  )
-    shape = operation;
+  if (isCanvasCompositionOperation(operation)) shape = operation;
   if (entry.relation.relType.case === 'read' && entry.binding.sourceRef == null) shape = 'pilot';
   return {
     outcome: 'resolved',

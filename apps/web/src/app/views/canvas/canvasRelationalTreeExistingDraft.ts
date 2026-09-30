@@ -1,9 +1,10 @@
 /** Reopen the already analyzed canonical document, without reclassifying tree shapes. */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanvasRelationalTreeProjection } from './canvasRelationalTreeProjection';
-import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
-import { isCanvasSetOperation } from './canvasRelationalOperationChoices';
-import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
+import {
+  isCanvasCompositionOperation,
+  type CanvasRelationalOperation,
+} from './canvasRelationalOperationChoices';
 
 export type CanvasRelationalTreeExistingDraft = Readonly<{
   draft: SubstraitDocument;
@@ -30,12 +31,7 @@ export function resolveCanvasRelationalTreeExistingDraft(
   return {
     draft: args.document,
     outputRelationId: args.projection.root.relationId,
-    operation:
-      isCanvasJoinOperation(operation) ||
-      isCanvasSetOperation(operation) ||
-      operation === 'cross_join'
-        ? operation
-        : 'projection',
+    operation: isCanvasCompositionOperation(operation) ? operation : 'projection',
     // Ordered physical provenance for every occurrence; not a set of occurrence identities.
     inputIds: inputIds.filter((nodeId): nodeId is string => nodeId != null),
   };

@@ -3,6 +3,7 @@ import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { insertSelectedRelationTransform } from './canvasSelectedRelationTransform';
 import {
+  deriveCanvasStagedCompositionState,
   readCanvasStagedCompositionSignature,
   type CanvasStagedOperation,
 } from './canvasStagedOperation';
@@ -17,8 +18,7 @@ export async function configureCanvasStagedTransform(
 ): Promise<CanvasStagedOperation> {
   if (
     readCanvasStagedCompositionSignature(operation.operation).configuration !== 'transform' ||
-    operation.semanticDocument != null ||
-    operation.inputs[0] == null ||
+    deriveCanvasStagedCompositionState(operation) !== 'ready' ||
     producer == null
   )
     return operation;

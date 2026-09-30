@@ -23,6 +23,7 @@ const operations = {
 } as const;
 
 export type CanvasRelationalOperation = keyof typeof operations | 'projection';
+export type CanvasCompositionOperation = Exclude<CanvasRelationalOperation, 'projection'>;
 export type CanvasSetOperation = {
   [K in keyof typeof operations]: (typeof operations)[K][0] extends 'set' ? K : never;
 }[keyof typeof operations];
@@ -48,6 +49,12 @@ export type CanvasOperationFacts = Readonly<{
   predicateAvailable: boolean;
   sets: Readonly<Partial<Record<CanvasSetOperation, boolean>>>;
 }>;
+
+export function isCanvasCompositionOperation(
+  operation: string | null | undefined
+): operation is CanvasCompositionOperation {
+  return operation != null && Object.hasOwn(operations, operation);
+}
 
 export function isCanvasSetOperation(
   operation: string | null | undefined

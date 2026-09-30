@@ -11,7 +11,8 @@ import {
 import type { CanvasRelationalTreeNodeSize } from './canvasRelationalTreeGeometryMetrics';
 import { flattenCanvasRelationalTree } from './canvasRelationalTreeWorkbenchModel';
 import { relationalExpressionSlices } from './canvasRelationalExpressionSlice';
-import { projectCanvasStagedOperation, type CanvasStagedOperation } from './canvasStagedOperation';
+import type { CanvasStagedOperation } from './canvasStagedOperation';
+import { projectCanvasStagedOperation } from './canvasStagedOperationProjection';
 import { decodeCanvasStagedOperation } from './canvasStagedOperationDocument';
 import { projectCanvasRelationalDetailGraph } from './canvasRelationalDetailGraph';
 
