@@ -29,7 +29,6 @@ describe('pending field presentation', () => {
             data: {
               presentationTruth: { ...initial, columns: { ...initial.columns, state } },
               onColumnPortActivate: command,
-              onApplyCanvasColumnFunction: command,
               onApplyCanvasStructuredField: command,
               onAddCanvasCalculatedColumn: command,
               onToggleCanvasColumnOutput: command,
