@@ -103,6 +103,22 @@ describe('relational authoring draft restoration', () => {
     expect(JSON.parse(JSON.stringify(draft))).toEqual(draft);
   });
 
+  it.each(['missing', 'out-of-range'] as const)(
+    'refuses restoring a Read with %s identities',
+    (fault) => {
+      const draft = createCanvasRelationalAuthoringDraft({
+        sources: [createPendingSourceOccurrence(input)],
+        operations: [],
+        outputRelationId: null,
+        positions: new Map(),
+      });
+      const fields = draft.sources[0]!.semanticDocument.sidecar.fields;
+      if (fault === 'missing') fields.pop();
+      else fields[0]!.outputOrdinal = fields.length;
+      expect(restoreCanvasRelationalAuthoringDraft(draft, [input])).toBeNull();
+    }
+  );
+
   it.each(['rename', 'add', 'remove', 'type', 'source'] as const)(
     'rejects incompatible physical provenance without silently restoring another field (%s)',
     (change) => {

@@ -3,11 +3,19 @@ import {
   RelSchema,
   type Expression,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {
   TypeSchema,
   Type_Nullability,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
-import { create } from '@bufbuild/protobuf';
+import { create, toBinary } from '@bufbuild/protobuf';
+import {
+  DvtRelationalAuthoringDraftV1Schema,
+  DVT_SUBSTRAIT_PROFILE_REF_V1,
+  DVT_SUBSTRAIT_PLAN_ENCODING,
+  DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
+} from '@dvt/contracts';
+import { sha256Hex } from '@dvt/crypto';
 import { describe, expect, it } from 'vitest';
 
 import type { SubstraitDocument } from '../src/document.js';
@@ -157,6 +165,53 @@ describe('composable structured schema', () => {
     const child = deriveExpressionSchema(selection(0, 1), result.schemas.get('r2')!);
     expect(child.sourceFieldIds).toEqual(['child:label']);
     expect(child.type.kind.value).toMatchObject({ nullability: Type_Nullability.NULLABLE });
+    const bytes = toBinary(PlanSchema, document.plan);
+    const digest = sha256Hex(bytes);
+    const pending = {
+      version: 'v1',
+      outputRelationId: null,
+      operations: [],
+      positions: {},
+      sources: [
+        {
+          relationId: 'r2',
+          sourceNodeId: 'records',
+          displayName: 'records',
+          semanticDocument: {
+            schemaVersion: DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
+            profile: DVT_SUBSTRAIT_PROFILE_REF_V1,
+            semanticPlan: {
+              encoding: DVT_SUBSTRAIT_PLAN_ENCODING,
+              bytesBase64: Buffer.from(bytes).toString('base64'),
+              sha256: digest,
+            },
+            sidecar: {
+              ...document.sidecar,
+              semanticPlanSha256: digest,
+              relations: [
+                {
+                  ...document.sidecar.relations[0]!,
+                  sourceRef: {
+                    schemaVersion: 'connected-source-ref.v1',
+                    connectionRef: {
+                      schemaVersion: 'connection-ref.v1',
+                      connectionId: 'warehouse',
+                      provider: 'postgres',
+                    },
+                    sourceObjectId: 'raw.records',
+                  },
+                },
+              ],
+            },
+          },
+        },
+      ],
+    };
+    // Both boundaries consume the same nested coverage policy; neither repairs the input.
+    expect(DvtRelationalAuthoringDraftV1Schema.safeParse(pending).success).toBe(true);
+    document.sidecar.fields.pop();
+    expect(DvtRelationalAuthoringDraftV1Schema.safeParse(pending).success).toBe(false);
+    expect(() => deriveSubstraitSchemas(document)).toThrow(/exactly one stable identity/);
   });
 
   it.each(['missing-name', 'bad-child-ordinal'] as const)(

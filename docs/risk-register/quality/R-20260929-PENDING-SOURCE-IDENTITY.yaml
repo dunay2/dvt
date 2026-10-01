@@ -15,10 +15,18 @@ mitigation:
     saved identities only after physical-source or model-producer validation. Reject incompatible
     sources explicitly without implicit writes. Retire the positional snapshot shape in place; no
     parallel reader or migration. Keep React coordination, pure Apply policy, identity validation
-    and view projection separate, with direct behavior tests and architecture guards.
+    and view projection separate, with direct behavior tests and architecture guards. Pending Read
+    schemas also require complete root and nested struct identity coverage through one shared
+    contract-owned policy. Persistence and schema derivation reject missing, duplicate, out-of-range
+    or extra bindings. Restore runs existing schema derivation before exposing fields; previously
+    incomplete saved state fails explicitly without repair, migration or write.
   evidence:
     - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
     - docs/evidence/ED-20260929-pending-source-identity.md
+    - docs/evidence/ED-20261001-pending-read-coverage.md
+    - packages/@dvt/contracts/test/dvt-read-field-coverage.test.ts
+    - packages/@dvt/substrait-analysis/test/schemaHierarchy.test.ts
+    - apps/web/cypress/e2e/canvas/canvas-pending-read-coverage.cy.ts
     - packages/@dvt/contracts/test/dvt-relational-authoring-draft.contract.test.ts
     - apps/web/src/app/views/canvas/canvasRelationalAuthoringDraft.test.ts
     - apps/web/src/app/views/canvas/CanvasRelationalTreeWorkbench.architecture.test.ts

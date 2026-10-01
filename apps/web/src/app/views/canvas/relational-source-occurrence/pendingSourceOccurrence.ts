@@ -1,6 +1,7 @@
 /** Preserve and validate the canonical identity of a detached draft Read. */
 import {
   indexSubstraitRelations,
+  deriveRelationSchema,
   resolveProducerInput,
   type IndexedRelation,
 } from '@dvt/substrait-analysis';
@@ -36,6 +37,7 @@ export function restorePendingSourceOccurrence(
     if (!indexed.ok || indexed.index.relations.size !== 1) return null;
     const read = indexed.index.relations.get(source.relationId);
     if (read == null || !validatePendingSourceInput(read, input)) return null;
+    deriveRelationSchema(read, []);
     return {
       sourceNodeId: source.sourceNodeId,
       read: {
