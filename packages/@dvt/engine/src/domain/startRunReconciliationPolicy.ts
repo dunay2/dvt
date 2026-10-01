@@ -1,6 +1,8 @@
 /**
  * @baseline ADR-0030: Durable reconciliation and confirmed compensation
  * @ownedConcern Pure compensation and bounded retry transitions within the start intent aggregate.
+ * @decision Preserve compensation until terminal confirmation and bound retries with durable escalation.
+ * @version 1.0.0
  */
 import { epochMsToIsoUtc } from '@dvt/contracts';
 

@@ -3,6 +3,7 @@
  * @baseline ADR-0030: Pre-dispatch intent ownership
  * @decision Serialize intent writes with the canonical start-write critical section.
  * @consequence Reclaim cannot interleave with a write authorized by an older receipt.
+ * @version 1.0.0
  */
 import type { EngineRunRef } from '@dvt/contracts';
 import { randomUuidV4 } from '@dvt/crypto';

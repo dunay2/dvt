@@ -3,6 +3,7 @@
  * @baseline ADR-0030: Pre-dispatch intent ownership
  * @decision Keep start-specific invariants separate from storage locking and event persistence.
  * @consequence Both in-memory adapters use the same fenced start-write semantics.
+ * @version 1.0.0
  */
 import { TERMINAL_RUN_STATUSES } from '@dvt/run-domain';
 

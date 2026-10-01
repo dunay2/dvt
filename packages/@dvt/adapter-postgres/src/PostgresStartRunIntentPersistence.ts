@@ -4,6 +4,7 @@
  * @baseline ADR-0031: Tenant-isolated storage
  * @decision Lock the intent row on the caller's transaction without exposing its stored token.
  * @consequence Canonical writes and intent transitions share the same ownership boundary.
+ * @version 1.0.0
  */
 import type { StartRunIntent, StartRunIntentClaimReceipt, StartRunIntentRef } from '@dvt/engine';
 import type { PoolClient } from 'pg';

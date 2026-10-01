@@ -1,6 +1,8 @@
 /**
  * @baseline ADR-0030: Unknown provider outcomes and sticky compensation
  * @ownedConcern Pure reconciliation decisions; no network, persistence or diagnostic transport.
+ * @decision Choose adoption, compensation or bounded observation without treating a missing observation as proof of no start.
+ * @version 1.0.0
  */
 import type { CanonicalRunStatus, EngineRunRef } from '@dvt/contracts';
 import { TERMINAL_RUN_STATUSES } from '@dvt/run-domain';

@@ -3,6 +3,7 @@
  * @baseline ADR-0030: Pre-dispatch intent ownership
  * @decision Reject cross-scope payloads before any canonical mutation.
  * @consequence Storage adapters share the same start-write scope rules.
+ * @version 1.0.0
  */
 import type { StartRunWrite } from '../ports/IRunStateStore.js';
 import type { StartRunIntentClaimReceipt } from '../ports/IStartRunIntentStore.js';

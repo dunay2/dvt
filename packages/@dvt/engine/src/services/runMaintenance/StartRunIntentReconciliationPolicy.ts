@@ -1,4 +1,9 @@
-/** @baseline ADR-0030 @ownedConcern Observe canonical/provider authority and delegate pure decisions and fenced effects. */
+/**
+ * @baseline ADR-0030: Unknown provider outcomes and sticky compensation
+ * @ownedConcern Observe canonical/provider authority and delegate pure decisions and fenced effects.
+ * @decision Keep failed authority reads distinct from absence and retry rejected effects under current ownership.
+ * @version 1.0.0
+ */
 import { readCanonicalRunStatus } from '../../core/lifecycle/coreRuntime.js';
 import { SnapshotProjector } from '../../core/SnapshotProjector.js';
 import { StartRunIntentMutationRejectedError } from '../../domain/startRunIntentPolicy.js';

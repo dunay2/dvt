@@ -4,6 +4,7 @@
  * @baseline ADR-0031: Tenant-isolated storage
  * @decision Reject incompatible intent tables before DDL or data mutation.
  * @consequence Deployment requires an explicit, evidence-backed hard cut, never implicit backfill.
+ * @version 1.0.0
  */
 import type { Pool, PoolClient } from 'pg';
 

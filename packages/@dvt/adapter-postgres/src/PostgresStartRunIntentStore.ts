@@ -4,6 +4,7 @@
  * @baseline ADR-0031: Tenant-isolated storage
  * @decision Evaluate every transition under the same row lock used by canonical writes.
  * @consequence Losing or stale callers cannot obtain dispatch authority.
+ * @version 1.0.0
  */
 import {
   IntentActiveConflictError,

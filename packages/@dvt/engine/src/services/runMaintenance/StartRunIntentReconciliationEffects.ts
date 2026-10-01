@@ -1,4 +1,9 @@
-/** @baseline ADR-0030 @ownedConcern Apply owner-fenced reconciliation effects in their required order. */
+/**
+ * @baseline ADR-0030: Unknown provider outcomes and sticky compensation
+ * @ownedConcern Apply owner-fenced reconciliation effects in their required order.
+ * @decision Persist exact-execution cancellation authority before the RPC and require terminal confirmation.
+ * @version 1.0.0
+ */
 import type { IProviderAdapter } from '../../adapters/IProviderAdapter.js';
 import { requireStartRunMutation } from '../../domain/startRunIntentPolicy.js';
 import type { StartRunIntentClaimReceipt } from '../../ports/IStartRunIntentStore.js';
