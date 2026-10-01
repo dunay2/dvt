@@ -70,7 +70,10 @@ export function useCanvasDataSample() {
       if (layout.focusMode) layout.toggleFocusMode();
       selectTab(tabId);
       showBottomDrawer(300);
+      const opener = document.activeElement;
       window.requestAnimationFrame(() => {
+        if (document.activeElement !== opener || requestIdsRef.current.get(tabId) !== requestId)
+          return;
         Array.from(
           document.querySelectorAll<HTMLButtonElement>(
             '[data-slot="bottom-operational-drawer-tab"]'

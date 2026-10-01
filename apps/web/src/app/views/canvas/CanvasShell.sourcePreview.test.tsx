@@ -164,3 +164,37 @@ it('does not invalidate samples or query again for unchanged publication', async
   expect(dataState()?.status).toBe('ready');
   expect(query).toHaveBeenCalledOnce();
 });
+
+it.each(['unchanged', 'moved', 'withdrawn'] as const)(
+  'honors current user focus and publication when the drawer frame is delayed (%s)',
+  async (state) => {
+    let frame!: FrameRequestCallback;
+    const schedule = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      frame = callback;
+      return 1;
+    });
+    const opener = document.createElement('button');
+    const nextControl = document.createElement('button');
+    const tab = document.createElement('button');
+    tab.dataset.slot = 'bottom-operational-drawer-tab';
+    tab.dataset.tab = 'data:orders';
+    document.body.append(opener, nextControl, tab);
+    try {
+      const data = await render('ready');
+      opener.focus();
+      await preview(data);
+      if (state === 'moved') nextControl.focus();
+      if (state === 'withdrawn') await render('pending');
+      act(() => frame(0));
+      expect(document.activeElement).toBe(
+        state === 'unchanged' ? tab : state === 'moved' ? nextControl : opener
+      );
+      expect(query).toHaveBeenCalledOnce();
+    } finally {
+      schedule.mockRestore();
+      opener.remove();
+      nextControl.remove();
+      tab.remove();
+    }
+  }
+);
