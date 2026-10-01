@@ -30,6 +30,7 @@ describe('Completed relational layout persistence', () => {
     const join = '[data-slot="canvas-relational-tree-node"][data-operator="join"]';
     let relationId = '';
     let moved = { x: 0, y: 0 };
+    let persistedPosition: unknown;
     let rootId = '';
     let baselineWrites = 0;
     cy.then(() => {
@@ -79,9 +80,12 @@ describe('Completed relational layout persistence', () => {
           operations: [],
           positions: (retained as { positions: unknown }).positions,
         });
-        expect(
-          (retained as { positions: Record<string, unknown> }).positions[relationId]
-        ).to.deep.equal(moved);
+        const position = (retained as { positions: Record<string, { x: number; y: number }> })
+          .positions[relationId]!;
+        expect(position.x).to.be.closeTo(moved.x, 0.001);
+        expect(position.y).to.be.closeTo(moved.y, 0.001);
+        if (iteration === 1) persistedPosition = position;
+        else expect(position).to.deep.equal(persistedPosition);
         expect(
           Object.keys((retained as { positions: Record<string, unknown> }).positions)
         ).to.deep.equal([relationId]);

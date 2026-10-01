@@ -78,6 +78,10 @@ HTTP test adapter on temporary port 4173. It proves front-end draft requests and
 reload behavior, not live PostgreSQL, API CAS durability or provider execution.
 The initial fixture-bootstrap save race was corrected by awaiting that existing
 request before counting writes; it is not hidden as a product pass.
+At a narrower viewport, serialized coordinates differed from rounded CSS strings
+by less than 0.0001 pixels. The browser oracle now compares CSS with 0.001-pixel
+tolerance and independently requires exact serialized-coordinate equality between
+the two Apply writes. It does not round or modify the persisted product data.
 
 ## Integration and integrity
 
