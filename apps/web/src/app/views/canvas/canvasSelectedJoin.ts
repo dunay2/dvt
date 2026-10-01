@@ -3,7 +3,6 @@ import { SubstraitAnalysisError, type RelationAnalysisResult } from '@dvt/substr
 import type { DvtSubstraitJoinDataType } from '@dvt/postgres-projection';
 import { inspectJoinConditionChain } from './canvasDvtSubstraitJoinConditionInspection';
 import { mapDvtSubstraitJoinConditionOperands } from './canvasDvtSubstraitJoinCondition';
-import { mapDvtSubstraitJoinOperandFields } from './canvasDvtSubstraitJoinOperand';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { createCanvasFieldAliasLabels } from './canvasFieldAliasLabels';
 import type { DvtSubstraitFieldBindingV1 } from '@dvt/contracts';
@@ -91,12 +90,12 @@ export async function querySelectedJoin(
     target.relation.relType.value.expression
   );
   const mapped = inspected?.map((condition) =>
-    mapDvtSubstraitJoinConditionOperands(condition, (operand) =>
-      mapDvtSubstraitJoinOperandFields(operand, (field) => {
-        const binding = byOrdinal.get(field.ordinal);
-        return binding == null ? null : { kind: 'field' as const, sourceFieldId: binding.fieldId };
-      })
-    )
+    mapDvtSubstraitJoinConditionOperands(condition, (operand) => {
+      if (operand.kind === 'function') return null;
+      if (operand.kind === 'literal') return operand;
+      const binding = byOrdinal.get(operand.ordinal);
+      return binding == null ? null : { kind: 'field' as const, sourceFieldId: binding.fieldId };
+    })
   );
   return {
     relationId,

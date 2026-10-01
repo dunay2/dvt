@@ -4,7 +4,6 @@ import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { querySelectedJoin } from './canvasSelectedJoin';
 import { replaceSelectedJoinConditions } from './canvasSelectedJoinPredicate';
 import type { DvtSubstraitJoinPredicateCondition } from './canvasDvtSubstraitJoinCondition';
-import { resolveDvtSubstraitJoinUnaryFunctions } from './canvasDvtSubstraitJoinOperand';
 import {
   decodeDvtSubstraitSemanticDocument,
   encodeDvtSubstraitSemanticDocument,
@@ -12,33 +11,20 @@ import {
 
 describe('canonical condition persistence', () => {
   it.each(['equal', 'not_equal', 'gt', 'gte', 'lt', 'lte', 'is_null', 'is_not_null'] as const)(
-    'roundtrips %s with nested functions, literals and grouped conditions without identity churn',
+    'roundtrips %s with fields, literals and grouped conditions without identity churn',
     async (operator) => {
       const { session } = selectedUnaryScenario();
       const selected = await querySelectedJoin(session, session.rootId, session.revision);
-      const functions = resolveDvtSubstraitJoinUnaryFunctions({
-        dataType: 'string',
-        provider: 'postgres',
-      });
       const field = {
         kind: 'field' as const,
         sourceFieldId: selected.fields.find((value) => value.inputIndex === 1)!.fieldId,
       };
-      const nested = {
-        kind: 'function' as const,
-        capabilityId: functions[0]!.capabilityId,
-        input: {
-          kind: 'function' as const,
-          capabilityId: functions[1]!.capabilityId,
-          input: field,
-        },
-      };
       const compared: DvtSubstraitJoinPredicateCondition =
         operator === 'is_null' || operator === 'is_not_null'
-          ? { left: nested, operator }
+          ? { left: field, operator }
           : {
               left: { kind: 'literal', literal: { dataType: 'string', value: 'a' } },
-              right: nested,
+              right: field,
               operator,
             };
       const conditions: readonly DvtSubstraitJoinPredicateCondition[] = [

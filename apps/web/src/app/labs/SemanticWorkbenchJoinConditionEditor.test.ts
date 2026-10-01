@@ -1,9 +1,38 @@
 import { describe, expect, it } from 'vitest';
+import { resolveDvtSubstraitJoinUnaryFunctions } from '@dvt/postgres-projection';
 
 import type { DvtSubstraitJoinPredicateCondition } from '../views/canvas/canvasDvtSubstraitJoinCondition';
 import { projectSemanticWorkbenchJoinConditionRows } from '../views/canvas/join-condition/conditionRows';
+import { editConditionDraft } from '../views/canvas/join-condition/conditionDraft';
 
 describe('SemanticWorkbenchJoinConditionEditor', () => {
+  it('does not unwrap an unsupported scalar operand into an editable field draft', () => {
+    const capabilityId = resolveDvtSubstraitJoinUnaryFunctions({
+      dataType: 'string',
+      provider: 'postgres',
+    })[0]!.capabilityId;
+    const rows = projectSemanticWorkbenchJoinConditionRows({
+      conditions: [
+        {
+          left: {
+            kind: 'function',
+            capabilityId,
+            input: { kind: 'field', sourceFieldId: 'country' },
+          },
+          right: { kind: 'literal', literal: { dataType: 'string', value: 'ES' } },
+        },
+      ],
+      fieldLabelById: new Map([['country', 'client.country']]),
+    });
+    const row = rows[0]!;
+    if (row.kind !== 'comparison') throw new Error('Expected comparison.');
+    expect(
+      editConditionDraft(
+        [{ fieldId: 'country', label: 'client.country', dataType: 'string', inputIndex: 0 }],
+        row
+      )
+    ).toBeNull();
+  });
   it('labels null predicates without a right operand', () => {
     const rows = projectSemanticWorkbenchJoinConditionRows({
       conditions: [

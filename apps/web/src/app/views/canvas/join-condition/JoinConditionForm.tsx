@@ -3,7 +3,6 @@ import { Braces, X } from 'lucide-react';
 import type { DvtSubstraitJoinDataType } from '@dvt/postgres-projection';
 import { Button } from '../../../components/ui/button';
 import { SemanticWorkbenchJoinOperandEditor } from '../SemanticWorkbenchJoinOperandEditor';
-import { resolveDvtSubstraitJoinUnaryFunctions } from '../canvasDvtSubstraitJoinOperand';
 import {
   DVT_SUBSTRAIT_JOIN_PREDICATE_OPERATORS,
   DVT_SUBSTRAIT_JOIN_CONDITION_COMBINATIONS,
@@ -39,10 +38,6 @@ export function JoinConditionForm({
   onSave: () => void;
 }>) {
   const fieldOptions = fields.filter((field) => field.dataType === draft.dataType);
-  const functions = resolveDvtSubstraitJoinUnaryFunctions({
-    dataType: draft.dataType,
-    provider: 'postgres',
-  });
   const dataTypes = [...new Set(fields.map((field) => field.dataType))];
   return (
     <div
@@ -117,7 +112,6 @@ export function JoinConditionForm({
           operand={draft.left}
           dataType={draft.dataType}
           fields={fieldOptions}
-          functions={functions}
           onChange={(left) => onChange({ ...draft, left })}
         />
         <label className="mt-2 block text-xs text-(--text-muted)">
@@ -146,7 +140,6 @@ export function JoinConditionForm({
             operand={draft.right}
             dataType={draft.dataType}
             fields={fieldOptions}
-            functions={functions}
             onChange={(right) => onChange({ ...draft, right })}
           />
         )}

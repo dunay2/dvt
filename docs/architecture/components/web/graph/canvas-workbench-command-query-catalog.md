@@ -160,6 +160,25 @@ DDD ownership rules:
 
 <!-- markdownlint-enable MD060 -->
 
+## JOIN Operand Authoring Boundary
+
+Under `ConfigureCanvasDvtNode`, JOIN comparisons accept only fields already
+produced by their inputs and typed literals. Scalar calculations belong to the
+upstream Transform; the JOIN condition editor must not offer function chains or
+compile them through another mutation path. Comparison operators, NULL tests and
+AND/OR condition groups remain predicate semantics, not field transformations.
+
+The selected JOIN command rejects function-bearing operands atomically. The
+existing query may show an imported canonical expression, but exposes no editable
+condition projection for that unsupported shape. It must not unwrap functions,
+rewrite the plan or migrate computations upstream. The original expression tree
+remains inspectable with an explicit unavailable-form notice. Revision, field
+scope, writable-draft and persistence checks remain unchanged.
+
+Proof covers both ports, nested/grouped/null predicates, literal validation,
+computed upstream fields, save/reopen identity and no mutation on rejection.
+This implements the #3416 / #3422 boundary without reviving #3420.
+
 ## Column Menu Lifecycle
 
 The contextual menu primitive owns content presence, modality and focus cleanup.

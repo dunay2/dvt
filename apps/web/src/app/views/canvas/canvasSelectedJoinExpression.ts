@@ -44,7 +44,6 @@ export function buildSelectedJoinExpression(
     );
   const expressionOf = (operand: DvtSubstraitJoinPredicateOperand) =>
     buildDvtSubstraitJoinOperandExpression({
-      plan,
       operand,
       fieldExpression: (field) => {
         const binding = fields.get(field.sourceFieldId);

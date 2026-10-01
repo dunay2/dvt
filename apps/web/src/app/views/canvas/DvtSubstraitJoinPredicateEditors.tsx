@@ -50,7 +50,10 @@ export function DvtSubstraitJoinPredicateEditors({
           conditions={null}
           onSelectCondition={() => undefined}
         />
-        <p role="status">Esta expresión no se puede editar con el formulario de condiciones.</p>
+        <p role="status">
+          Esta expresión no se puede editar con el formulario de condiciones. El JOIN compara campos
+          y valores; crea los cálculos en un Transform previo.
+        </p>
       </>
     );
   return (

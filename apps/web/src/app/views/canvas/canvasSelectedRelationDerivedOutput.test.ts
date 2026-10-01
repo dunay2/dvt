@@ -243,7 +243,7 @@ describe('selected relation derived output authoring', () => {
     expect(session.revision).toBe(revision);
   });
 
-  it('reuses a branch derivation in JOIN, derives after JOIN, and reloads stable identities', async () => {
+  it('compares two derived branches in JOIN, derives after JOIN, and reloads stable identities', async () => {
     const { session, root } = selectedUnaryScenario();
     const joinId = root.binding.relationId;
     const leftId = root.inputs[0]!;
@@ -262,10 +262,20 @@ describe('selected relation derived output authoring', () => {
     const branchField = branchDocument.sidecar.fields.find(
       (field) => field.displayName === 'normalized_name'
     )!;
+    await applySelectedRelationDerivedOutput(session, {
+      intent: 'insert',
+      relationId: root.inputs[1]!,
+      expectedRevision: session.revision,
+      alias: 'normalized_key',
+      formula: 'UPPER(TRIM(customer_id))',
+    });
     const selectedJoin = await querySelectedJoin(session, joinId, session.revision);
     expect(selectedJoin.fields.some((field) => field.fieldId === branchField.fieldId)).toBe(true);
 
-    const rightField = selectedJoin.fields.find((field) => field.inputIndex === 1)!;
+    const rightBinding = selectedJoin.inputs[1]!.bindings.find(
+      (field) => field.displayName === 'normalized_key'
+    )!;
+    const rightField = selectedJoin.fields.find((field) => field.fieldId === rightBinding.fieldId)!;
     await replaceSelectedJoinConditions(session, {
       relationId: joinId,
       expectedRevision: session.revision,
@@ -317,5 +327,6 @@ describe('selected relation derived output authoring', () => {
     if (condition == null || isDvtSubstraitJoinConditionGroup(condition))
       throw new Error('Expected comparison condition.');
     expect(condition.left).toEqual({ kind: 'field', sourceFieldId: branchField.fieldId });
+    expect(condition.right).toEqual({ kind: 'field', sourceFieldId: rightField.fieldId });
   });
 });

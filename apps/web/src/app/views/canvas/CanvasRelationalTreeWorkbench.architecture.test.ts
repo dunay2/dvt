@@ -65,8 +65,26 @@ import CompositionTruthSource from './canvasRelationalCompositionTruth.ts?raw';
 import TransformAuthoringSource from './canvasDvtTransformAuthoring.ts?raw';
 import AnalysisMemoSource from './canvasRelationalAnalysisMemo.ts?raw';
 import AnalysisDependenciesSource from './canvasRelationalAnalysisDependencies.ts?raw';
+import JoinOperandSource from './canvasDvtSubstraitJoinOperand.ts?raw';
+import JoinOperandEditorSource from './SemanticWorkbenchJoinOperandEditor.tsx?raw';
+import JoinFormSource from './join-condition/JoinConditionForm.tsx?raw';
+import JoinOperandDraftSource from './join-condition/operandDraft.ts?raw';
 
 describe('Canvas relational-tree Workbench architecture', () => {
+  it('retires JOIN scalar creation without moving its compiler into presentation', () => {
+    expect(Object.keys(import.meta.glob('./join-condition/JoinOperandFunctionChain.tsx'))).toEqual(
+      []
+    );
+    for (const source of [JoinOperandEditorSource, JoinFormSource, JoinOperandDraftSource]) {
+      expect(source).not.toMatch(
+        /functionIds|JoinOperandFunctionChain|resolveDvtSubstraitJoinUnaryFunctions/
+      );
+    }
+    expect(JoinOperandSource).not.toMatch(
+      /ensureScalarFunction|\.scalarFunction\(|from ['"]react['"]/
+    );
+    expect(JoinOperandSource).toContain('SubstraitAnalysisError');
+  });
   it('keeps memo freshness separate from React, semantic validation and mutations', () => {
     expect(AnalysisMemoSource).toContain('canvasRelationalAnalysisDependencies(args)');
     expect(AnalysisMemoSource).toContain('analyzeCanvasRelations(args)');
