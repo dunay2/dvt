@@ -6,7 +6,6 @@ export type SemanticWorkbenchJoinOperandDraft = Readonly<{
   kind: 'field' | 'literal';
   fieldId: string;
   rawValue: string;
-  functionIds: readonly string[];
 }>;
 
 export type SemanticWorkbenchJoinFieldOption = Readonly<{
@@ -60,14 +59,7 @@ export function buildSemanticWorkbenchJoinOperand(args: {
   draft: SemanticWorkbenchJoinOperandDraft;
   dataType: DvtSubstraitJoinDataType;
 }): DvtSubstraitJoinPredicateOperand | null {
-  const base: DvtSubstraitJoinPredicateOperand | null =
-    args.draft.kind === 'field'
-      ? { kind: 'field', sourceFieldId: args.draft.fieldId }
-      : parseJoinLiteral(args.dataType, args.draft.rawValue);
-  return base == null
-    ? null
-    : args.draft.functionIds.reduce<DvtSubstraitJoinPredicateOperand>(
-        (input, capabilityId) => ({ kind: 'function', capabilityId, input }),
-        base
-      );
+  return args.draft.kind === 'field'
+    ? { kind: 'field', sourceFieldId: args.draft.fieldId }
+    : parseJoinLiteral(args.dataType, args.draft.rawValue);
 }

@@ -1,6 +1,4 @@
 import type { DvtSubstraitJoinDataType } from '@dvt/postgres-projection';
-import type { DvtSubstraitJoinUnaryFunction } from './canvasDvtSubstraitJoinOperand';
-import { JoinOperandFunctionChain } from './join-condition/JoinOperandFunctionChain';
 import { selectStyle } from './join-condition/operandStyles';
 import {
   defaultSemanticWorkbenchJoinLiteralValue,
@@ -12,7 +10,6 @@ export function SemanticWorkbenchJoinOperandEditor(props: {
   operand: SemanticWorkbenchJoinOperandDraft;
   dataType: DvtSubstraitJoinDataType;
   fields: readonly SemanticWorkbenchJoinFieldOption[];
-  functions: readonly DvtSubstraitJoinUnaryFunction[];
   onChange: (operand: SemanticWorkbenchJoinOperandDraft) => void;
 }) {
   return (
@@ -74,24 +71,6 @@ export function SemanticWorkbenchJoinOperandEditor(props: {
           />
         )}
       </div>
-      <details className="mt-2" open={props.operand.functionIds.length > 0 ? true : undefined}>
-        <summary className="cursor-pointer text-[10px] text-(--text-muted)">
-          Funciones
-          {props.operand.functionIds.length > 0 ? ` (${props.operand.functionIds.length})` : ''}
-        </summary>
-        <JoinOperandFunctionChain
-          side={props.side}
-          baseLabel={
-            props.operand.kind === 'field'
-              ? (props.fields.find((field) => field.fieldId === props.operand.fieldId)?.label ??
-                props.operand.fieldId)
-              : `${props.dataType} ${JSON.stringify(props.operand.rawValue)}`
-          }
-          functionIds={props.operand.functionIds}
-          functions={props.functions}
-          onChange={(functionIds) => props.onChange({ ...props.operand, functionIds })}
-        />
-      </details>
     </div>
   );
 }

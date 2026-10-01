@@ -13,6 +13,7 @@ import {
 import { graphJoin, appendGraphSource } from './canvasRelationGraph.test-support';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { querySelectedJoin } from './canvasSelectedJoin';
+import { functionBearingJoinFixture } from './canvasJoin.test-support';
 import {
   encodeDvtSubstraitSemanticDocument,
   decodeDvtSubstraitSemanticDocument,
@@ -20,6 +21,40 @@ import {
 
 describe('exact JOIN predicate selection', () => {
   setupWorkbenchTest();
+  it.each([0, 1] as const)(
+    'inspects imported function operands on port %s without an editable form or mutation',
+    async (port) => {
+      const document = functionBearingJoinFixture(port);
+      const before = encodeDvtSubstraitSemanticDocument(document);
+      const session = new CanvasRelationAnalysisSession('inspection');
+      session.receive(document);
+      const selected = await querySelectedJoin(session, session.rootId, session.revision);
+      expect(selected.conditions).toBeNull();
+      let writes = 0;
+      await act(async () =>
+        root.render(
+          <RelationAnalysisTestHost document={document}>
+            <CanvasRelationalTreeJoinEditor
+              copy={COPY}
+              selectedRelationId={session.rootId}
+              onChange={() => {
+                writes++;
+              }}
+            />
+          </RelationAnalysisTestHost>
+        )
+      );
+      expect(container.textContent).toContain('TRIM');
+      expect(container.textContent).toContain('Transform previo');
+      expect(
+        container.querySelector('[data-slot="dvt-substrait-join-predicate-editors"]')
+      ).toBeNull();
+      expect(container.querySelector('[aria-label="Editar condición"]')).toBeNull();
+      expect(writes).toBe(0);
+      expect(encodeDvtSubstraitSemanticDocument(document)).toEqual(before);
+      session.dispose();
+    }
+  );
   it.each(['inner', 'outer'] as const)(
     'edits only the selected %s JOIN and retains the other predicate',
     async (selection) => {

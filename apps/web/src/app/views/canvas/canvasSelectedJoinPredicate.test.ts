@@ -6,8 +6,50 @@ import { dvtSubstraitTextComparison } from './canvasDvtSubstraitTextComparison';
 import { querySelectedJoin } from './canvasSelectedJoin';
 import { replaceSelectedJoinConditions } from './canvasSelectedJoinPredicate';
 import { resolveDvtSubstraitJoinUnaryFunctions } from './canvasDvtSubstraitJoinOperand';
+import type { DvtSubstraitJoinPredicateCondition } from './canvasDvtSubstraitJoinCondition';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 describe('selected JOIN predicate', () => {
+  it.each(['left', 'right', 'group', 'null'] as const)(
+    'rejects nested scalar operands in %s without changing the document or revision',
+    async (position) => {
+      const { session, document } = selectedUnaryScenario();
+      const snapshot = encodeDvtSubstraitSemanticDocument(document);
+      const before = await querySelectedJoin(session, session.rootId, session.revision);
+      const capability = resolveDvtSubstraitJoinUnaryFunctions({
+        dataType: 'string',
+        provider: 'postgres',
+      })[0]!;
+      const field = { kind: 'field' as const, sourceFieldId: before.fields[0]!.fieldId };
+      const nested = {
+        kind: 'function' as const,
+        capabilityId: capability.capabilityId,
+        input: { kind: 'function' as const, capabilityId: capability.capabilityId, input: field },
+      };
+      const comparison = {
+        left: position === 'right' ? field : nested,
+        right: position === 'right' ? nested : field,
+      };
+      const condition: DvtSubstraitJoinPredicateCondition =
+        position === 'null'
+          ? { left: nested, operator: 'is_null' }
+          : position === 'group'
+            ? { kind: 'group', conditions: [before.conditions![0]!, comparison] }
+            : comparison;
+      await expect(
+        replaceSelectedJoinConditions(session, {
+          relationId: before.relationId,
+          expectedRevision: before.revision,
+          conditions: [condition],
+        })
+      ).rejects.toThrow(/Transform/);
+      expect(session.revision).toBe(before.revision);
+      expect(session.hasDocument(document)).toBe(true);
+      expect(encodeDvtSubstraitSemanticDocument(document)).toEqual(snapshot);
+      expect(await querySelectedJoin(session, session.rootId, session.revision)).toEqual(before);
+      session.dispose();
+    }
+  );
   it.each([0, 1] as const)(
     'edits both predicate operands after transforming input %s',
     async (port) => {
@@ -25,23 +67,14 @@ describe('selected JOIN predicate', () => {
       const operands = selected.inputs.map(
         (input) => session.locate(input.relationId, session.revision).relation
       );
-      const capability = resolveDvtSubstraitJoinUnaryFunctions({
-        dataType: 'string',
-        provider: 'postgres',
-      })[0]!;
       const condition = {
         left: {
-          kind: 'function' as const,
-          capabilityId: capability.capabilityId,
-          input: { kind: 'field' as const, sourceFieldId: selected.fields[0]!.fieldId },
+          kind: 'field' as const,
+          sourceFieldId: selected.fields[0]!.fieldId,
         },
         right: {
-          kind: 'function' as const,
-          capabilityId: capability.capabilityId,
-          input: {
-            kind: 'field' as const,
-            sourceFieldId: selected.fields.find((field) => field.inputIndex === 1)!.fieldId,
-          },
+          kind: 'field' as const,
+          sourceFieldId: selected.fields.find((field) => field.inputIndex === 1)!.fieldId,
         },
       };
       await replaceSelectedJoinConditions(session, {

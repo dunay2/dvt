@@ -10,7 +10,7 @@ import {
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Workbench predicates', () => {
-  it('opens properties, protects a pending edit and saves nested functions with source lineage', () => {
+  it('opens properties, protects a pending edit and saves a field comparison with source lineage', () => {
     stubWorkbenchScenario('pending-chain');
     authorFourSourceChain();
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
@@ -20,6 +20,7 @@ describe('Workbench predicates', () => {
     cy.get(cards).first().click();
     cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').should('be.visible');
     cy.then(() => expect(semanticWrites('join-transform')).to.have.length(1));
+    cy.get('[data-slot="canvas-relational-edit"]:visible').click();
     cy.get(`${editor} [aria-label="Editar condición"]`).first().click();
     cy.get(editor).should('have.length', 1).and('contain.text', 'tickets');
     cy.get(`${editor} [aria-label="Comparador de la condición"]`).select('not_equal');
@@ -31,19 +32,12 @@ describe('Workbench predicates', () => {
     cy.contains('[role="alertdialog"] button', 'Seguir editando').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
     cy.get(`${editor} [aria-label="Comparador de la condición"]`).should('have.value', 'not_equal');
-    cy.get(`${editor} details`).first().find('summary').click();
-    const functions = `${editor} [aria-label="Añadir función exterior al operando izquierdo"]`;
-    cy.get(functions).select('LOWER');
-    cy.get(functions).select('UPPER');
-    cy.get(`${editor} [data-slot="semantic-operand-function-tree"]`)
-      .first()
-      .should('contain.text', 'UPPER(')
-      .and('contain.text', 'LOWER(');
+    cy.get(`${editor} [aria-label^="Añadir función"]`).should('not.exist');
+    cy.get(`${editor} [data-slot="semantic-operand-function-tree"]`).should('not.exist');
     cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
     cy.get('[data-slot="canvas-relational-expression-tree"]:visible')
       .should('contain.text', 'NOT_EQUAL')
-      .and('contain.text', 'UPPER')
-      .and('contain.text', 'LOWER');
+      .and('contain.text', 'FIELD');
     cy.get('[data-slot="canvas-operation-properties-tab"]:visible').click();
     cy.contains(`${editor} button`, 'Guardar condición').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled');
@@ -53,7 +47,7 @@ describe('Workbench predicates', () => {
     cy.get(`${editor} [aria-label="Comparador de la condición"]`).should('not.exist');
     cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').should(
       'contain.text',
-      'UPPER'
+      '!='
     );
     cy.then(async () => {
       const document = decodeDvtSubstraitSemanticDocument(
@@ -79,14 +73,9 @@ describe('Workbench predicates', () => {
           })
         ).to.deep.equal(['equal', 'equal', 'not_equal']);
         const condition = selected[2]!.conditions![0]!;
-        if (
-          condition.kind === 'group' ||
-          condition.left.kind !== 'function' ||
-          condition.left.input.kind !== 'function' ||
-          condition.left.input.input.kind !== 'field'
-        )
-          throw new Error('Expected a nested function applied to the selected input field');
-        const fieldId = condition.left.input.input.sourceFieldId;
+        if (condition.kind === 'group' || condition.left.kind !== 'field')
+          throw new Error('Expected the selected produced field without a JOIN-side calculation');
+        const fieldId = condition.left.sourceFieldId;
         const input = selected[2]!.inputs[0]!;
         const field = input.bindings.find((binding) => binding.fieldId === fieldId)!;
         const physicalIds = input.fields[field.outputOrdinal]!.sourceFieldIds;

@@ -43,12 +43,11 @@ function defaultOperands(
   if (left == null) return null;
   const right = compatible.find((field) => field.inputIndex !== left.inputIndex) ?? compatible[1];
   return {
-    left: { kind: 'field' as const, fieldId: left.fieldId, rawValue: '', functionIds: [] },
+    left: { kind: 'field' as const, fieldId: left.fieldId, rawValue: '' },
     right: {
       kind: right == null ? ('literal' as const) : ('field' as const),
       fieldId: right?.fieldId ?? left.fieldId,
       rawValue: defaultSemanticWorkbenchJoinLiteralValue(dataType),
-      functionIds: [],
     },
   };
 }
@@ -81,16 +80,11 @@ export function changeConditionDataType(
 function operandDraft(
   operand: DvtSubstraitJoinPredicateOperand,
   fallback: string
-): SemanticWorkbenchJoinOperandDraft {
-  const functionIds: string[] = [];
-  let base = operand;
-  while (base.kind === 'function') {
-    functionIds.unshift(base.capabilityId);
-    base = base.input;
-  }
-  return base.kind === 'field'
-    ? { kind: 'field', fieldId: base.sourceFieldId, rawValue: '', functionIds }
-    : { kind: 'literal', fieldId: fallback, rawValue: String(base.literal.value), functionIds };
+): SemanticWorkbenchJoinOperandDraft | null {
+  if (operand.kind === 'function') return null;
+  return operand.kind === 'field'
+    ? { kind: 'field', fieldId: operand.sourceFieldId, rawValue: '' }
+    : { kind: 'literal', fieldId: fallback, rawValue: String(operand.literal.value) };
 }
 
 export function editConditionDraft(
@@ -106,18 +100,20 @@ export function editConditionDraft(
     : resolveDvtSubstraitJoinOperandDataType(row.condition.right, typeFor);
   const fallback = fields.find((field) => field.dataType === dataType);
   if (dataType == null || dataType !== rightType || fallback == null) return null;
+  const left = operandDraft(row.condition.left, fallback.fieldId);
+  const right = unary
+    ? {
+        kind: 'literal' as const,
+        fieldId: fallback.fieldId,
+        rawValue: defaultSemanticWorkbenchJoinLiteralValue(dataType),
+      }
+    : operandDraft(row.condition.right, fallback.fieldId);
+  if (left == null || right == null) return null;
   return {
     conditionKey: row.conditionKey,
     dataType,
-    left: operandDraft(row.condition.left, fallback.fieldId),
-    right: unary
-      ? {
-          kind: 'literal',
-          fieldId: fallback.fieldId,
-          rawValue: defaultSemanticWorkbenchJoinLiteralValue(dataType),
-          functionIds: [],
-        }
-      : operandDraft(row.condition.right, fallback.fieldId),
+    left,
+    right,
     operator: row.condition.operator ?? 'equal',
     combination: row.condition.combination ?? 'and',
     combinationEditable: row.combinationEditable,

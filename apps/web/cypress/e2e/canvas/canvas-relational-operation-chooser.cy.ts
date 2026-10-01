@@ -1,13 +1,27 @@
 /** Discovery, cancellation and predicate authoring use the same canonical command rail. */
 import { CanvasRelationAnalysisSession } from '../../../src/app/views/canvas/canvasRelationAnalysisSession';
 import { querySelectedJoin } from '../../../src/app/views/canvas/canvasSelectedJoin';
-import { visitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
+import {
+  connectWorkbenchProducer,
+  visitWorkbenchCanvas,
+} from '../../support/relationalWorkbench/navigation';
 import {
   openPendingRelationalOperationChooser,
   stubPendingComposition,
 } from '../../support/relationalWorkbench/pendingComposition';
 import { semanticWrites } from '../../support/relationalWorkbench/persistence';
 import { savedOutputs } from '../../support/relationalWorkbench/savedOutputs';
+
+function connectDiscoveredJoin(): void {
+  cy.get('[data-pending-operation="true"]').last().as('join');
+  for (const [port, name] of ['customers', 'orders'].entries()) {
+    cy.contains('[data-slot="canvas-relational-tree-node"][data-operator="read"]', name)
+      .closest('li')
+      .as('source');
+    connectWorkbenchProducer('@source', '@join', port);
+  }
+  connectWorkbenchProducer('@join', '[data-slot="canvas-relational-output-input-port"]', null);
+}
 
 describe('Canonical operation discovery', () => {
   it('opens with the keyboard and cancels without saving semantic authority', () => {
@@ -20,17 +34,17 @@ describe('Canonical operation discovery', () => {
     cy.get('[data-slot="canvas-relational-tree-block-canvas"]').should('be.visible');
     cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
   });
-  it('saves a composed field expression and literal predicate only after Apply', () => {
+  it('saves a field and typed literal predicate only after Apply', () => {
     stubPendingComposition();
     visitWorkbenchCanvas();
     openPendingRelationalOperationChooser();
     cy.get('[data-slot="dvt-select-operation-inner-join"]').click();
+    connectDiscoveredJoin();
     cy.get('[data-operator="join"]').click();
     cy.get('[aria-label="Editar condición"]').click();
     cy.get('[aria-label="Tipo del operando derecho"]').select('literal');
     cy.get('[aria-label="Valor literal del operando derecho"]').type('1');
-    cy.get('[data-slot="semantic-workbench-join-izquierdo-operand"] summary').click();
-    cy.get('[aria-label="Añadir función exterior al operando izquierdo"]').select('LOWER');
+    cy.get('[aria-label^="Añadir función"]').should('not.exist');
     cy.get('[aria-label="Comparador de la condición"]').select('not_equal');
     cy.contains('button', 'Guardar condición').click();
     cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
@@ -51,7 +65,7 @@ describe('Canonical operation discovery', () => {
           kind: 'literal',
           literal: { dataType: 'string', value: '1' },
         });
-        expect(condition.left.kind).to.equal('function');
+        expect(condition.left.kind).to.equal('field');
       } finally {
         session.dispose();
       }
@@ -62,6 +76,7 @@ describe('Canonical operation discovery', () => {
     visitWorkbenchCanvas();
     openPendingRelationalOperationChooser();
     cy.get('[data-slot="dvt-select-operation-inner-join"]').click();
+    connectDiscoveredJoin();
     cy.get('[data-operator="join"]').click();
     cy.get('[aria-label="Editar condición"]').click();
     cy.get('[aria-label="Tipo de dato de la condición"]').should('have.value', 'i64');
