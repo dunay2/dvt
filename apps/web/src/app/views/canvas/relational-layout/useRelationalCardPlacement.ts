@@ -24,6 +24,7 @@ export function useRelationalCardPlacement(
   const [extent, setExtent] = useState<Extent>(null);
   const autoFit = useRef(true);
   const provisional = useRef<{
+    id: string;
     positions: Positions;
     expansion: Expansion;
     extent: Extent;
@@ -82,6 +83,7 @@ export function useRelationalCardPlacement(
   const previewPosition = useCallback(
     (id: string, position: CardPosition, visiblePositions: Positions) => {
       provisional.current ??= {
+        id,
         positions: positionsRef.current,
         expansion: expansionFrame.current,
         extent,
@@ -102,13 +104,18 @@ export function useRelationalCardPlacement(
         autoFit.current = before.autoFit;
         setExtent(before.extent);
         setPositions(before.positions);
-      } else onPositionsChange?.(positionsRef.current);
+      } else {
+        const next = new Map(before.positions).set(before.id, positionsRef.current.get(before.id)!);
+        positionsRef.current = next;
+        setPositions(next);
+        onPositionsChange?.(next);
+      }
     },
     [onPositionsChange]
   );
   const setPosition = useCallback(
-    (id: string, position: CardPosition, visiblePositions = EMPTY_POSITIONS) => {
-      const next = place(id, position, visiblePositions);
+    (id: string, position: CardPosition) => {
+      const next = place(id, position, EMPTY_POSITIONS);
       onPositionsChange?.(next);
     },
     [onPositionsChange, place]
