@@ -22,6 +22,24 @@ export function useCanvasDataSample() {
   const selectTab = useOperationalDrawerContributionStore(
     (state) => state.selectOperationalDrawerTab
   );
+  const invalidateDataSample = useCallback((nodeId: string) => {
+    const tabId: OperationalDrawerDataTabId = `data:${nodeId}`;
+    requestIdsRef.current.set(tabId, (requestIdsRef.current.get(tabId) ?? 0) + 1);
+    setDataSampleTabs((tabs) =>
+      tabs.map((tab) =>
+        tab.id !== tabId || tab.dataSample.status === 'idle'
+          ? tab
+          : {
+              ...tab,
+              dataSample: {
+                status: 'error',
+                nodeName: tab.dataSample.nodeName,
+                reason: 'unavailable',
+              },
+            }
+      )
+    );
+  }, []);
   const openDataSample = useCallback(
     (
       nodeId: string,
@@ -87,5 +105,5 @@ export function useCanvasDataSample() {
     },
     []
   );
-  return { dataSampleTabs, openDataSample };
+  return { dataSampleTabs, openDataSample, invalidateDataSample };
 }

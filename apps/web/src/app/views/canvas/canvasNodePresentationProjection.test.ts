@@ -95,6 +95,34 @@ function buildCanonicalTransform(): CanonicalNode {
 }
 
 describe('projectCanvasNodePresentationTruth', () => {
+  it('publishes an imported Source default selection as explicitly ready', async () => {
+    const truth = await projectCanvasNodePresentationTruth({
+      node: SOURCE,
+      nodes: [SOURCE],
+      edges: [],
+    });
+    expect(truth.columns.state).toBe('ready');
+    expect(truth.columns.visible.map((column) => column.name)).toEqual([
+      'order_id',
+      'customer',
+      'amount',
+    ]);
+  });
+
+  it('does not fall back to imported physical columns for malformed Source authority', async () => {
+    const source = {
+      ...SOURCE,
+      metadata: { ...SOURCE.metadata, transformAuthoring: { broken: true } },
+    };
+    const truth = await projectCanvasNodePresentationTruth({
+      node: source,
+      nodes: [source],
+      edges: [],
+    });
+    expect(truth.columns.state).toBe('unavailable');
+    expect(truth.columns.visible).toEqual([]);
+  });
+
   it('exposes canonical filter code while preserving the Source column presentation', async () => {
     const source = resolveDvtSubstraitProjectionSource(SOURCE);
     const capability = resolveDvtSubstraitFilterCapabilities({ dataType: 'text' })[0];

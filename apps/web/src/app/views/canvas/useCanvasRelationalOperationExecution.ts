@@ -27,7 +27,10 @@ export function useCanvasRelationalOperationExecution(node: CanvasRelationalTree
     );
     const selectedFieldNames = context.sourceOutputFieldsByRelationId?.get(node.relationId);
     const disabled =
-      target == null || context.onExecuteSource == null || selectedFieldNames == null;
+      target == null ||
+      context.onExecuteSource == null ||
+      selectedFieldNames == null ||
+      selectedFieldNames.length === 0;
     return {
       label: copy.previewAction,
       disabled,

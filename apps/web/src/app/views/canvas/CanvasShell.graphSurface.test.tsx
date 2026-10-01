@@ -24,6 +24,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import { dvtGraphNodeCardStrategy } from '../../plugins/dvt/dvtGraphNodeCardStrategy';
 import { sharedSourceModelGraphNodeCardStrategy } from '../../plugins/graph/sharedSourceModelGraphNodeCardStrategy';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
+import { canvasColumnTruth } from './canvasPresentationColumns';
 
 describe('CanvasShell graph base surface', () => {
   let container: HTMLDivElement;
@@ -311,6 +312,33 @@ describe('CanvasShell graph base surface', () => {
               role: 'input',
               pluginKind: 'dvt:source',
               status: 'idle',
+              presentationTruth: {
+                code: { kind: 'unavailable' },
+                columns: {
+                  ...canvasColumnTruth(
+                    [
+                      {
+                        name: 'orders.customer',
+                        sourceFieldName: 'customer',
+                        type: 'text',
+                        provenance: 'declared',
+                        selected: true,
+                      },
+                      {
+                        name: 'orders.amount',
+                        sourceFieldName: 'amount',
+                        type: 'numeric',
+                        provenance: 'declared',
+                        selected: true,
+                      },
+                      { name: 'order_id', type: 'text', provenance: 'declared', selected: false },
+                      { name: 'client_id', type: 'text', provenance: 'declared', selected: false },
+                    ],
+                    []
+                  ),
+                  state: 'ready',
+                },
+              },
               columns: [
                 {
                   name: 'orders.customer',

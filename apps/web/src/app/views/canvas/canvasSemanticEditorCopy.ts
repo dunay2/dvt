@@ -149,7 +149,7 @@ const es: typeof en = {
   operationData: 'Datos · operación',
   selectOperation: 'Abre una operación para previsualizar su salida.',
   viewData: 'Ver datos',
-  previewAction: 'Preview',
+  previewAction: 'Vista previa',
   openEditor: 'Haz doble clic para abrir el editor semántico',
   openEditorAction: 'Abrir editor semántico',
   model: 'Transformación relacional',

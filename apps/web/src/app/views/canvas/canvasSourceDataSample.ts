@@ -80,6 +80,24 @@ export function resolveCanvasSourceDataSampleTarget(
   return resolveCanvasConnectedSourceDataSampleTarget(data.metadata?.connectedSourceRef, data.name);
 }
 
+/** Admit the Source card from published truth, never from its cached display columns. */
+export function resolveCanvasSourceSamplePublication(data: DbtNodeData) {
+  const target = resolveCanvasSourceDataSampleTarget(data);
+  if (target == null) return null;
+  if (data.pluginKind !== 'dvt:source') return { target, selectedFieldNames: undefined };
+  const truth = data.presentationTruth;
+  if (truth?.columns.state !== 'ready') return null;
+  const selectedFieldNames = truth.columns.visible
+    .filter((column) => column.selected !== false)
+    .map((column) => column.sourceFieldName ?? column.name);
+  if (selectedFieldNames.length === 0) return null;
+  return {
+    target,
+    selectedFieldNames,
+    semanticDigest: truth.code.kind === 'canonical' ? truth.code.digest : undefined,
+  };
+}
+
 export function resolveCanvasConnectedSourceDataSampleTarget(
   sourceRef: unknown,
   nodeName: string

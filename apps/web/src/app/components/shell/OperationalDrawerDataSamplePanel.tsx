@@ -55,15 +55,6 @@ export function OperationalDrawerDataSamplePanel({
         {formatDataSampleTemplate(template, { nodeName: state.nodeName, limit: '' })}
       </p>
     );
-  } else if (state.sample.rows.length === 0) {
-    content = (
-      <OperationalDrawerEmptyState>
-        {formatDataSampleTemplate(contribution.copy.dataEmptyTemplate, {
-          nodeName: state.nodeName,
-          limit: String(state.sample.limit),
-        })}
-      </OperationalDrawerEmptyState>
-    );
   } else {
     const caption = formatDataSampleTemplate(contribution.copy.dataCaptionTemplate, {
       nodeName: state.nodeName,
@@ -102,6 +93,14 @@ export function OperationalDrawerDataSamplePanel({
           rows={state.sample.rows}
           nullValueLabel={contribution.copy.dataNullValue}
         />
+        {state.sample.rows.length === 0 ? (
+          <OperationalDrawerEmptyState>
+            {formatDataSampleTemplate(contribution.copy.dataEmptyTemplate, {
+              nodeName: state.nodeName,
+              limit: String(state.sample.limit),
+            })}
+          </OperationalDrawerEmptyState>
+        ) : null}
       </>
     );
   }

@@ -257,6 +257,15 @@ describe('OperationalDrawerPanels', () => {
       );
     });
     expect(container.textContent).toContain('orders returned no rows.');
+    expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toContain(
+      '0 rows'
+    );
+    expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toContain(
+      '1 columns'
+    );
+    expect(container.querySelector('thead')?.textContent).toContain('order_id');
+    expect(container.querySelector('thead')?.textContent).toContain('integer');
+    expect(container.querySelectorAll('tbody tr')).toHaveLength(0);
     expect(container.textContent).not.toContain('Could not read customers.');
   });
 

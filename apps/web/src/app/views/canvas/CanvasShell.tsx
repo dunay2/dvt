@@ -86,6 +86,7 @@ export default function CanvasShell({
     openSource,
   } = useCanvasNodeDataSample({
     activeCanvasId: panels.activeCanvasId,
+    nodes: graph.nodesWithImpact,
     canvasTransformDataSampleQuery,
     prepareModelPreview,
     canonicalNodes: panels.inspectorGraphNodes,

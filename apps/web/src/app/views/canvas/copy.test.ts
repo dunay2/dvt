@@ -3,6 +3,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { sourceOccurrenceCopy } from './relational-source-occurrence/sourceOccurrenceCopy';
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 import type { CanvasViewCopy } from './canvasCopy.types';
@@ -53,6 +54,10 @@ const INSPECTOR_DRAFT_ERROR_COPY_KEYS = [
 ])[];
 
 describe('canvas copy catalog', () => {
+  it('localizes data Preview without confusing it with Run', () => {
+    expect(resolveCanvasSemanticEditorCopy('es').previewAction).toBe('Vista previa');
+    expect(resolveCanvasSemanticEditorCopy('en').previewAction).toBe('Preview');
+  });
   it.each(['en-US', 'es-ES'])(
     'resolves instance copy through the canonical locale catalogs (%s)',
     (locale) => {
