@@ -33,6 +33,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProducerReference.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProductNeeds.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitReadFieldCoverage.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitStandardCandidates.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts`
