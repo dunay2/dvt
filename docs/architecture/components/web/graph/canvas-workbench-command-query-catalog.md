@@ -369,6 +369,15 @@ with pending cards and explicitly disconnected (`null`) Output; neither is a
 completed snapshot. Regress a completed Transform followed by Filter insertion:
 Transform feeds Filter only, and Filter feeds Model Output.
 
+Retirement concerns terminal wiring, not layout. Preserve nonempty positions in
+the existing authoring DTO without `outputRelationId`; absence follows the current
+canonical root on restore. Explicit `null` remains a disconnected Output, and
+pending sources or operations require explicit terminal intent. Operation Apply
+and later inspector saves preserve card coordinates without creating semantics,
+replaying a historical root or invoking Preview/Run.
+Movement alone retains its existing discardable-session behavior; this does not
+add an autosave or change navigation/cancellation ownership.
+
 ```mermaid
 flowchart LR
   A[Source instance A] -->|one consumer| J[JOIN Input L]

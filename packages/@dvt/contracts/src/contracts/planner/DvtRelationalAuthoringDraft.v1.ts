@@ -86,11 +86,21 @@ export const DvtRelationalAuthoringDraftV1Schema = z
     version: z.literal(DVT_RELATIONAL_AUTHORING_DRAFT_VERSION),
     sources: z.array(SourceSchema),
     operations: z.array(OperationDraftSchema),
-    outputRelationId: NonBlankStringSchema.nullable(),
+    outputRelationId: NonBlankStringSchema.nullable().optional(),
     positions: z.record(NonBlankStringSchema, PositionSchema),
   })
   .strict()
   .superRefine((draft, context) => {
+    if (
+      draft.outputRelationId === undefined &&
+      (draft.sources.length > 0 || draft.operations.length > 0)
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['outputRelationId'],
+        message: 'Pending authoring requires explicit terminal intent.',
+      });
+    }
     const ids = [
       ...draft.sources.map((source) => source.relationId),
       ...draft.operations.map((operation) => operation.relationId),

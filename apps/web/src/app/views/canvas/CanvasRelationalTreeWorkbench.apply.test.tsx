@@ -158,7 +158,13 @@ describe('Canvas relational-tree Workbench apply', () => {
 
       expect(applied).toHaveLength(1);
       const saved = applied[0]?.relationalAuthoringDraft;
-      expect(saved).toBeNull();
+      expect(saved).toEqual({
+        version: 'v1',
+        sources: [],
+        operations: [],
+        positions: expect.any(Object),
+      });
+      expect(Object.keys(saved!.positions).length).toBeGreaterThan(0);
       const persisted = applyCanvasInspectorNodeDraft(transform, applied[0]!);
       await act(async () => {
         root.render(

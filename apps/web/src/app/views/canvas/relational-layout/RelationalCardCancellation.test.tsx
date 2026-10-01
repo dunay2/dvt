@@ -177,6 +177,32 @@ describe('Relational card cancellation boundary', () => {
     expect(coordinates(held().parentElement!)).toEqual(before);
   });
 
+  it.each(['pointer', 'keyboard'])(
+    'commits only the moved identity via %s so automatic Output can reflow',
+    (gesture) => {
+      initial.set('temporarily-hidden-card', { x: 600, y: 300 });
+      render();
+      if (gesture === 'pointer') {
+        start();
+        pointer('pointerup');
+      } else
+        act(() => {
+          held().dispatchEvent(
+            new KeyboardEvent('keydown', { bubbles: true, altKey: true, key: 'ArrowRight' })
+          );
+        });
+      const position = coordinates(held().parentElement!);
+      expect(publish).toHaveBeenCalledTimes(1);
+      expect(layoutState.positions).toEqual(
+        new Map([...initial, ['source', { x: position[0]!, y: position[1]! }]])
+      );
+      const terminal = coordinates(output());
+      render(filtered, 'editing');
+      expect(coordinates(output())[0]).toBeGreaterThan(terminal[0]!);
+      expect(coordinates(held().parentElement!)).toEqual(position);
+    }
+  );
+
   it('does not let another pointer finish the drag', () => {
     render();
     start();

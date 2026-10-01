@@ -174,6 +174,24 @@ flowchart LR
   Query --> View[Canvas presentation]
 ```
 
+### Completed relational layout
+
+Completed relational authoring retains nonempty `positions` in the existing v1
+DTO but omits `outputRelationId`. Absence is allowed only when `sources` and
+`operations` are empty: the current canonical semantic root owns Output.
+`outputRelationId: null` means explicitly disconnected, while a string denotes
+pending explicit wiring. Coordinates remain finite and nonnegative and confer no
+semantic authority. No new version, migration or compatibility reader is added.
+An empty completed snapshot is omitted entirely. Operation completion and
+subsequent inspector saves preserve positions by stable card ID. Movement alone
+does not become a save command.
+
+Only explicitly moved cards belong to the retained manual-position map. A drag
+may temporarily freeze other visible cards, but acceptance must not turn those
+automatic coordinates into persisted manual positions. Automatic Output follows
+the current canonical root after subsequent insertions; an explicitly moved
+Output remains manual. Pointer and keyboard movement obey the same boundary.
+
 ### String categories
 
 Every editable string admitted into `WorkspaceGraphAuthoringDraft` has one

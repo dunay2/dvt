@@ -18,11 +18,11 @@ import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemantic
 export function retainIncompleteCanvasRelationalAuthoringDraft(
   draft: DvtRelationalAuthoringDraftV1
 ): DvtRelationalAuthoringDraftV1 | null {
-  return draft.sources.length === 0 &&
-    draft.operations.length === 0 &&
-    draft.outputRelationId !== null
-    ? null
-    : draft;
+  if (draft.sources.length > 0 || draft.operations.length > 0 || draft.outputRelationId === null)
+    return draft;
+  if (Object.keys(draft.positions).length === 0) return null;
+  const { outputRelationId: _retiredTerminal, ...layout } = draft;
+  return layout;
 }
 
 export function readCanvasRelationalAuthoringDraft(
@@ -42,10 +42,6 @@ export function createCanvasRelationalAuthoringDraft(
     positions: ReadonlyMap<string, CardPosition>;
   }>
 ): DvtRelationalAuthoringDraftV1 {
-  const nodeIds = new Set([
-    ...args.sources.map((source) => source.read.binding.relationId),
-    ...args.operations.map((operation) => operation.id),
-  ]);
   return DvtRelationalAuthoringDraftV1Schema.parse({
     version: 'v1',
     sources: args.sources.map((source) => ({
@@ -65,7 +61,7 @@ export function createCanvasRelationalAuthoringDraft(
         : { semanticDocument: operation.semanticDocument }),
     })),
     outputRelationId: args.outputRelationId,
-    positions: Object.fromEntries([...args.positions].filter(([id]) => nodeIds.has(id))),
+    positions: Object.fromEntries(args.positions),
   });
 }
 
@@ -100,7 +96,12 @@ export function restoreCanvasRelationalAuthoringDraft(
           ? {}
           : { semanticDocument: operation.semanticDocument }),
       })),
-    outputRelationId: draft.outputRelationId,
+    outputRelationId:
+      draft.outputRelationId === undefined
+        ? indexed?.ok === true
+          ? indexed.index.rootId
+          : null
+        : draft.outputRelationId,
     positions: new Map(Object.entries(draft.positions)),
   };
 }

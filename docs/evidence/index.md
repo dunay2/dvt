@@ -32,6 +32,7 @@ Evidence documents that justify or validate relevant changes.
 - [Canvas Workflow E2E Usability Restoration](ed-20260601-canvas-workflow-e2e-usability.md)
 - [Catalog SQL expression authoring and progressive PostgreSQL verticals](ED-20260929-sql-expression-verticals.md)
 - [Compact selected-operation data preview](ED-20260919-selected-operation-preview.md)
+- [Completed relational layout retention](ED-20261001-relational-layout-retention.md)
 - [Context](ED-20260404-mw-a2-graph-source-cardinality-and-boundary-hardening.md)
 - [Context](ED-20260405-mwa2-policy-unbounded-precedence.md)
 - [CROSS JOIN end to end](ED-20260919-cross-join-end-to-end.md)

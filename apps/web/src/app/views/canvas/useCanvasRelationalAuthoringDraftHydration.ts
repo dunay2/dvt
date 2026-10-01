@@ -11,7 +11,7 @@ import {
 
 type DraftState = Pick<
   ReturnType<typeof useCanvasRelationalTreeDraftState>,
-  'reset' | 'restoreIncomplete'
+  'reset' | 'restoreIncomplete' | 'setPositions'
 >;
 
 export function useCanvasRelationalAuthoringDraftHydration(
@@ -24,7 +24,7 @@ export function useCanvasRelationalAuthoringDraftHydration(
     state: DraftState;
   }>
 ): boolean {
-  const { reset, restoreIncomplete } = args.state;
+  const { reset, restoreIncomplete, setPositions } = args.state;
   const persisted = useMemo(
     () => readCanvasRelationalAuthoringDraft(args.transformNode),
     [args.transformNode]
@@ -39,8 +39,20 @@ export function useCanvasRelationalAuthoringDraftHydration(
   useEffect(() => {
     reset();
     if (!args.enabled || restored == null) return;
+    if (persisted?.outputRelationId === undefined) {
+      setPositions(restored.positions);
+      return;
+    }
     args.hydrateExisting();
     restoreIncomplete(restored);
-  }, [args.enabled, args.hydrateExisting, reset, restoreIncomplete, restored]);
+  }, [
+    args.enabled,
+    args.hydrateExisting,
+    persisted,
+    reset,
+    restoreIncomplete,
+    restored,
+    setPositions,
+  ]);
   return persisted != null && restored == null;
 }

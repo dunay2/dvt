@@ -80,6 +80,44 @@ function workspace(value: unknown): { nodes: { pluginId: string }[]; [key: strin
 }
 
 describe('DVT relational authoring draft v1', () => {
+  it('accepts layout-only state without a terminal snapshot at the workspace boundary', () => {
+    const layout = {
+      version: 'v1',
+      sources: [],
+      operations: [],
+      positions: relationalDraft.positions,
+    };
+    expect(DvtRelationalAuthoringDraftV1Schema.parse(layout)).toEqual(layout);
+    expect(WorkspaceGraphAuthoringDraftSchema.safeParse(workspace(layout)).success).toBe(true);
+  });
+
+  it.each([
+    { sources: [source], operations: [] },
+    { sources: [], operations: [operation] },
+  ])('rejects absent terminal intent while work is pending: %j', (pending) => {
+    expect(
+      DvtRelationalAuthoringDraftV1Schema.safeParse({
+        version: 'v1',
+        ...pending,
+        positions: {},
+      }).success
+    ).toBe(false);
+  });
+
+  it.each([
+    { x: -1, y: 0 },
+    { x: 0, y: Infinity },
+    { x: NaN, y: 0 },
+  ])('rejects invalid layout-only coordinates %j', (position) => {
+    expect(
+      DvtRelationalAuthoringDraftV1Schema.safeParse({
+        version: 'v1',
+        sources: [],
+        operations: [],
+        positions: { card: position },
+      }).success
+    ).toBe(false);
+  });
   it('reports corrupt source bytes as validation errors rather than throwing', () => {
     const bytes = Uint8Array.from([255]);
     const digest = sha256Hex(bytes);
