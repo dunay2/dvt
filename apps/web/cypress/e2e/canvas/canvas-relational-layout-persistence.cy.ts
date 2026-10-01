@@ -21,7 +21,7 @@ import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenari
 describe('Completed relational layout persistence', () => {
   it('keeps moved cards through Apply, reload and a later canonical root insertion', () => {
     stubWorkbenchScenario('saved-join');
-    cy.viewport(1440, 900);
+    cy.viewport(1200, 680);
     visitWorkbenchCanvas();
     openWorkbenchModel();
     verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
