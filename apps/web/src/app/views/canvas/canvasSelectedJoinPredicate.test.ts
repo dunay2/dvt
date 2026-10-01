@@ -7,12 +7,14 @@ import { querySelectedJoin } from './canvasSelectedJoin';
 import { replaceSelectedJoinConditions } from './canvasSelectedJoinPredicate';
 import { resolveDvtSubstraitJoinUnaryFunctions } from './canvasDvtSubstraitJoinOperand';
 import type { DvtSubstraitJoinPredicateCondition } from './canvasDvtSubstraitJoinCondition';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 describe('selected JOIN predicate', () => {
   it.each(['left', 'right', 'group', 'null'] as const)(
     'rejects nested scalar operands in %s without changing the document or revision',
     async (position) => {
       const { session, document } = selectedUnaryScenario();
+      const snapshot = encodeDvtSubstraitSemanticDocument(document);
       const before = await querySelectedJoin(session, session.rootId, session.revision);
       const capability = resolveDvtSubstraitJoinUnaryFunctions({
         dataType: 'string',
@@ -43,6 +45,7 @@ describe('selected JOIN predicate', () => {
       ).rejects.toThrow(/Transform/);
       expect(session.revision).toBe(before.revision);
       expect(session.hasDocument(document)).toBe(true);
+      expect(encodeDvtSubstraitSemanticDocument(document)).toEqual(snapshot);
       expect(await querySelectedJoin(session, session.rootId, session.revision)).toEqual(before);
       session.dispose();
     }
