@@ -2,6 +2,7 @@ export * from './types/contracts.js';
 export * from './types/artifacts.js';
 export * from './workflows.js';
 export * from './substrait.js';
+export * from './contracts/data-access/DataAccess.v1.js';
 export * from './contracts/source-import/index.js';
 export * from './contracts/canvas/index.js';
 export * from './contracts/dbt-project/index.js';

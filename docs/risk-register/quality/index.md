@@ -117,6 +117,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Join predicates could drift between Canvas, Substrait, samples, and PostgreSQL](R-20260911-SEMANTIC-WORKBENCH-JOIN-DRIFT.yaml)
 - [Legacy ExecutionPlanV2 imports can break after canonical naming retirement](R-20260401-EXECUTIONPLANV2-CANONICAL-NAMING-BREAK.yaml)
 - [Lineage stale-claimer concurrency remains timestamp-fenced without lease tokens](R-20260328-RCB5F2-LINEAGE-CLAIM-RACE.md)
+- [LIVE or LOCAL labels could outrun the protected data execution boundary](R-20261001-DAM1-MODE-BOUNDARY.yaml)
 - [Local dev-stack Temporal bootstrap can drift from production runtime assumptions](R-20260427-DEV-STACK-TEMPORAL-BOOTSTRAP.yaml)
 - [Logical Read occurrences could be confused with physical dependency coverage](R-20260921-READ-OCCURRENCE-PHYSICAL-COVERAGE.yaml)
 - [Malformed PlanRef digests could cross the public validation boundary](R-20260813-PLAN-REF-DIGEST-BOUNDARY.yaml)

@@ -1,0 +1,20 @@
+id: R-20261001-DAM1-MODE-BOUNDARY
+title: LIVE or LOCAL labels could outrun the protected data execution boundary
+status: Open
+date: 2026-10-01
+owners:
+  - '@dvt/contracts'
+  - dvt-api
+  - web
+severity: High
+probability: Medium
+description: >-
+  A typed mode selection alone cannot prove that the protected Preview/Run rail authorized and
+  resolved a READY local generation or that a LIVE result came from the current remote provider.
+  Exposing a mode label before the data path is wired could misstate provenance.
+mitigations:
+  - Keep the new contract unwired and existing preview behavior unchanged in DAM1.01
+  - Require authorization and READY-generation resolution before LOCAL calculation
+  - Reject provisional or missing generations and never substitute the latest generation
+  - Preserve no-fallback LIVE/LOCAL behavior through DAM1.05-DAM1.07 implementation
+  - Prove provider and browser provenance, pagination and zero hidden reads in DAM1.10
