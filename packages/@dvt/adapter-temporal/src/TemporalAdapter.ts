@@ -182,14 +182,14 @@ export class TemporalAdapter implements IProviderAdapter {
   }
 
   /**
-   * ADR-0030 section 3.3 - Probes the Temporal server to determine whether a workflow
-   * for the given runId exists, without requiring a stored EngineRunRef.
+   * ADR-0030 - Observes the exact Temporal execution for the given logical runId
+   * without requiring a stored EngineRunRef.
    *
-   * Used by RunMaintenanceService.reconcileOrphanedIntents() to detect the crash
-   * scenario where adapter.startRun() returned successfully but markDispatched()
-   * was never called.
+   * Used by RunMaintenanceService.reconcileOrphanedIntents() to reconcile an
+   * uncertain start or observe whether compensation has reached a terminal state.
    *
-   * Returns null when the workflow does not exist on the Temporal server.
+   * Returns missing_at_observation when the workflow is not found; this does not
+   * prove that a start never occurred or authorize another start request.
    * Propagates any non-not-found error (network failure, auth error, etc.).
    */
   async observeStartRun(runId: string, tenantId: string): Promise<ProviderRunObservation> {
