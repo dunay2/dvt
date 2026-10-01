@@ -63,8 +63,21 @@ import StagedOperationSource from './canvasStagedOperation.ts?raw';
 import StagedOperationProjectionSource from './canvasStagedOperationProjection.ts?raw';
 import CompositionTruthSource from './canvasRelationalCompositionTruth.ts?raw';
 import TransformAuthoringSource from './canvasDvtTransformAuthoring.ts?raw';
+import AnalysisMemoSource from './canvasRelationalAnalysisMemo.ts?raw';
+import AnalysisDependenciesSource from './canvasRelationalAnalysisDependencies.ts?raw';
 
 describe('Canvas relational-tree Workbench architecture', () => {
+  it('keeps memo freshness separate from React, semantic validation and mutations', () => {
+    expect(AnalysisMemoSource).toContain('canvasRelationalAnalysisDependencies(args)');
+    expect(AnalysisMemoSource).toContain('analyzeCanvasRelations(args)');
+    expect(AnalysisDependenciesSource).toContain('readDvtTransformAuthoringAuthority');
+    expect(AnalysisDependenciesSource).toContain('readCanvasInputBindings');
+    for (const source of [AnalysisMemoSource, AnalysisDependenciesSource]) {
+      expect(source).not.toMatch(
+        /from ['"]react['"]|fetch\(|onApplyNodeDraft|applyDvt|encodeDvt|deriveSubstrait|resolveProducerGraph|zustand/
+      );
+    }
+  });
   it('retires guided draft factories without compatibility exports', () => {
     const retired = import.meta.glob([
       './canvasRelationalTreeOperationDraft.ts',

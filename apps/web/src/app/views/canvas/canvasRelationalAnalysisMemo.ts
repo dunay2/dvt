@@ -4,7 +4,7 @@ import {
   type CanvasRelationalAnalysis,
   type CanvasRelationalAnalysisArgs,
 } from './canvasRelationalAnalysis';
-import { readCanvasInputBindings } from './canvasInputBindings';
+import { canvasRelationalAnalysisDependencies } from './canvasRelationalAnalysisDependencies';
 
 export function createCanvasRelationalAnalysisReader(): (
   args: CanvasRelationalAnalysisArgs
@@ -12,25 +12,7 @@ export function createCanvasRelationalAnalysisReader(): (
   let previous: { dependencies: readonly unknown[]; result: CanvasRelationalAnalysis } | null =
     null;
   return (args) => {
-    const sourceIds = new Set(
-      args.edges.filter((edge) => edge.targetId === args.node.id).map((edge) => edge.sourceId)
-    );
-    const { id, pluginId, kind, role, metadata } = args.node;
-    const dependencies = [
-      id,
-      pluginId,
-      kind,
-      role,
-      metadata,
-      ...[...sourceIds].sort(),
-      ...args.edges
-        .filter((edge) => edge.targetId === id)
-        .map((edge) => JSON.stringify([edge.sourceId, readCanvasInputBindings(edge) ?? null]))
-        .sort(),
-      ...args.nodes
-        .filter((node) => sourceIds.has(node.id))
-        .flatMap((node) => [node.id, node.kind, node.role, node.metadata]),
-    ];
+    const dependencies = canvasRelationalAnalysisDependencies(args);
     if (
       previous != null &&
       dependencies.length === previous.dependencies.length &&
