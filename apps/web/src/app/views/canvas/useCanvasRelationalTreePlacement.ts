@@ -39,7 +39,8 @@ export function useCanvasRelationalTreePlacement({
     sourceOutputFieldsByRelationId,
     stagedOperations
   );
-  const { projectLayout, setPosition, expanded, toggleDetail } = useRelationalLayout();
+  const session = useRelationalLayout();
+  const { projectLayout, expanded, toggleDetail } = session;
   const zoomRevealsDetail = Math.round(zoom * 100) >= CANVAS_RELATIONAL_DETAIL_ZOOM * 100;
   const detachedSources = useMemo(
     () => pendingSources?.map(projectPendingSourceOccurrence) ?? [],
@@ -65,12 +66,6 @@ export function useCanvasRelationalTreePlacement({
     [root, sizes, detached, projectLayout]
   );
   const movableCards = useMemo(() => projectCanvasRelationalMovableCards(layout), [layout]);
-  const movement = useRelationalCardMovement(
-    movableCards,
-    zoom,
-    setPosition,
-    onManualLayout,
-    !panMode
-  );
+  const movement = useRelationalCardMovement(movableCards, zoom, session, onManualLayout, !panMode);
   return { layout, movement, graphs: detail.graphs, expanded, zoomRevealsDetail, toggleDetail };
 }

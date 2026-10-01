@@ -28,7 +28,8 @@ export function moveWorkbenchCard(
   selector: string,
   dx: number,
   dy: number,
-  observe?: (element: HTMLElement, dx: number, dy: number) => void
+  observe?: (element: HTMLElement, dx: number, dy: number) => void,
+  beforeRelease?: () => void
 ): void {
   cy.get(selector)
     .should('be.visible')
@@ -57,6 +58,7 @@ export function moveWorkbenchCard(
         },
       ];
       events.forEach((params) => {
+        if (params.type === 'mouseReleased') beforeRelease?.();
         cy.then(
           () =>
             Cypress.automation('remote:debugger:protocol', {
