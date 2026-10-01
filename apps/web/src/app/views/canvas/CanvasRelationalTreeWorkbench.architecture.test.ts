@@ -71,6 +71,19 @@ import JoinFormSource from './join-condition/JoinConditionForm.tsx?raw';
 import JoinOperandDraftSource from './join-condition/operandDraft.ts?raw';
 
 describe('Canvas relational-tree Workbench architecture', () => {
+  it('has no second scalar editor on passive Model cards', () => {
+    expect(
+      Object.keys(
+        import.meta.glob([
+          './canvasColumnFunctionMenuProjection.ts',
+          './canvasColumnFunctionAuthoring.ts',
+          './DerivedOutputForm.tsx',
+          './DerivedOutputOperands.tsx',
+          '../../plugins/graph/GraphNodeExpressionComposer.tsx',
+        ])
+      )
+    ).toEqual([]);
+  });
   it('retires JOIN scalar creation without moving its compiler into presentation', () => {
     expect(Object.keys(import.meta.glob('./join-condition/JoinOperandFunctionChain.tsx'))).toEqual(
       []

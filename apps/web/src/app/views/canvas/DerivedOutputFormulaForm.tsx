@@ -4,7 +4,7 @@ import { DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import type { CanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
-import type { DerivedOutputField } from './DerivedOutputOperands';
+import type { DerivedOutputField } from './canvasFormulaAssist';
 import { formulaSuggestions, projectFormulaFeedback } from './canvasFormulaAssist';
 import { DerivedOutputFormulaEditor } from './DerivedOutputFormulaEditor';
 import { DerivedOutputFormulaFeedback } from './DerivedOutputFormulaFeedback';

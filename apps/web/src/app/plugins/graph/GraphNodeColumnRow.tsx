@@ -5,7 +5,6 @@ import { CanvasNodePortHandle } from '../../components/canvas/CanvasNodePortHand
 import { graphColumnInspectionProps, type GraphNodeColumnInspect } from './graphColumnInspection';
 import type {
   GraphNodeColumn,
-  GraphNodeColumnCompositionFunctionResolver,
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
@@ -19,7 +18,6 @@ import {
   GraphNodeColumnTooltip,
   type GraphNodeColumnCopy,
 } from './GraphNodeColumnPiece';
-import { GraphNodeExpressionComposer } from './GraphNodeExpressionComposer';
 import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 import type { GraphNodeColumnReorderController } from './useGraphNodeColumnReorder';
 
@@ -34,7 +32,6 @@ export function GraphNodeColumnRow(props: {
   showSourceName?: boolean;
   reorder: GraphNodeColumnReorderController;
   unavailableAliases: readonly string[];
-  expressionOperandCandidates: readonly GraphNodeColumn[];
   structuredAppendCandidates: readonly GraphNodeColumn[];
   compositionRequest?: Readonly<{
     sourceColumn: GraphNodeColumn;
@@ -45,16 +42,13 @@ export function GraphNodeColumnRow(props: {
   onFocusFulfilled?: () => void;
   onFunctionApplied?: (createdFieldId: string) => void;
   onCreateAlias?: () => void;
-  resolveColumnCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onColumnFunctionApply?: GraphNodeColumnSectionProps['onColumnFunctionApply'];
   onStructuredFieldApply?: GraphNodeColumnSectionProps['onStructuredFieldApply'];
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
 }): ReactElement {
   const pieceRef = useRef<HTMLDivElement>(null);
   const [keyboardFunctionMenuOpen, setKeyboardFunctionMenuOpen] = useState(false);
-  const [pendingFunction, setPendingFunction] = useState<string | null>(null);
   const { column, nodeId, copy, reorder } = props;
   const columnId = column.id ?? column.name;
   const isOutput = column.output !== false;
@@ -146,47 +140,17 @@ export function GraphNodeColumnRow(props: {
         onCreateAlias={props.onCreateAlias}
         onStructuredFieldApply={props.onStructuredFieldApply}
         onColumnOutputToggle={props.onColumnOutputToggle}
-        onRequest={
-          props.onColumnFunctionApply == null
-            ? undefined
-            : (capabilityId) => {
-                if (column.functionMenu?.items.some((item) => item.capabilityId === capabilityId))
-                  setPendingFunction(capabilityId);
-              }
-        }
       />
       {nodeId == null ? null : (
         <GraphNodeColumnDropCompositionFlow
           nodeId={nodeId}
-          targetColumn={column}
           request={props.compositionRequest}
-          operandCandidates={props.expressionOperandCandidates}
           unavailableNames={props.unavailableAliases}
-          copy={copy}
           onDismiss={() => props.onCompositionDismiss?.()}
-          resolveCompositionFunctions={props.resolveColumnCompositionFunctions}
-          onFunctionApply={props.onColumnFunctionApply}
           onFunctionApplied={props.onFunctionApplied}
           onStructuredFieldApply={props.onStructuredFieldApply}
         />
       )}
-      {nodeId != null && pendingFunction != null && props.onColumnFunctionApply != null ? (
-        <GraphNodeExpressionComposer
-          key={`${columnId}:${pendingFunction}`}
-          nodeId={nodeId}
-          columnId={columnId}
-          functions={column.functionMenu?.items ?? []}
-          initialCapabilityId={pendingFunction}
-          initialOperandFieldIds={[columnId]}
-          operandCandidates={props.expressionOperandCandidates}
-          resolveCompositionFunctions={props.resolveColumnCompositionFunctions}
-          unavailableAliases={props.unavailableAliases}
-          copy={copy}
-          onCancel={() => setPendingFunction(null)}
-          onApply={props.onColumnFunctionApply}
-          onApplied={props.onFunctionApplied}
-        />
-      ) : null}
       {nodeId != null &&
       column.sourceHandleId != null &&
       props.portDirections.includes('source') ? (

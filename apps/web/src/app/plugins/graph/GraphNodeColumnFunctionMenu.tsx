@@ -26,8 +26,6 @@ import type { GraphNodeColumn } from './graphNodeColumnContracts';
 import type { GraphNodeColumnCopy } from './GraphNodeColumnPiece';
 import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 
-type FunctionMenu = NonNullable<GraphNodeColumn['functionMenu']>;
-
 function actionSlot(action: CanvasColumnContextMenuAction): string | undefined {
   if (action.id === 'invoke-function') return 'graph-node-column-function';
   if (action.id === 'create-alias') return 'graph-node-column-alias-action';
@@ -39,13 +37,11 @@ function actionSlot(action: CanvasColumnContextMenuAction): string | undefined {
 export function GraphNodeColumnFunctionMenu(props: {
   nodeId: string;
   columnId: string;
-  menu?: FunctionMenu;
   columnName: string;
   appendCandidates?: readonly GraphNodeColumn[];
   copy: GraphNodeColumnCopy;
   keyboardOpen: boolean;
   onKeyboardOpenChange: (open: boolean) => void;
-  onRequest?: (capabilityId: string) => void;
   onCreateAlias?: () => void;
   onStructuredAppend?: (column: GraphNodeColumn) => void;
   onStructuredRemove?: () => void;
@@ -54,11 +50,6 @@ export function GraphNodeColumnFunctionMenu(props: {
 }): ReactElement {
   const pendingPointerFunction = useRef<(() => void) | null>(null);
   const pendingKeyboardFunction = useRef<(() => void) | null>(null);
-  const categoryLabel =
-    props.menu == null
-      ? props.copy.columnActionsLabelTemplate.replace('{column}', props.columnName)
-      : props.copy.columnFunctionCategoryLabels[props.menu.category];
-  const expressionItems = props.menu?.items ?? [];
   const model = buildCanvasColumnContextMenuModel({
     target: {
       kind: 'column',
@@ -66,16 +57,9 @@ export function GraphNodeColumnFunctionMenu(props: {
       columnId: props.columnId,
       columnName: props.columnName,
     },
-    label: categoryLabel,
+    label: props.copy.columnActionsLabelTemplate.replace('{column}', props.columnName),
     createAliasLabel:
       props.onCreateAlias == null ? undefined : props.copy.calculatedColumnKindLabels['field-ref'],
-    functions:
-      props.onRequest == null
-        ? []
-        : expressionItems.map((item) => ({
-            id: item.capabilityId,
-            label: item.name.toUpperCase(),
-          })),
     appendFields:
       props.onStructuredAppend == null
         ? []
@@ -85,18 +69,12 @@ export function GraphNodeColumnFunctionMenu(props: {
           })),
     removeStructuredFieldLabel:
       props.onStructuredRemove == null ? undefined : props.copy.removeStructuredFieldLabel,
-    unavailableLabel:
-      props.menu == null
-        ? props.copy.noColumnActionsLabel
-        : props.copy.noCompatibleColumnFunctionsLabel,
+    unavailableLabel: props.copy.noColumnActionsLabel,
   });
   const selectAction = (action: CanvasColumnContextMenuAction, channel: 'pointer' | 'keyboard') => {
     if (action.disabled) return;
-    if (action.id === 'invoke-function' || action.id === 'create-alias') {
-      const request =
-        action.id === 'invoke-function'
-          ? () => props.onRequest?.(action.targetId)
-          : () => props.onCreateAlias?.();
+    if (action.id === 'create-alias') {
+      const request = () => props.onCreateAlias?.();
       if (channel === 'pointer') pendingPointerFunction.current = request;
       else pendingKeyboardFunction.current = request;
       return;

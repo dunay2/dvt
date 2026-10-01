@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import { derivedOutputDataType } from './canvasDerivedOutputExpression';
 import { useCanvasRelationFields } from './useCanvasRelationFields';
-import type { DerivedOutputField } from './DerivedOutputOperands';
+import type { DerivedOutputField } from './canvasFormulaAssist';
 import { useSelectedRelation } from './useSelectedRelation';
 import { describeDerivedOutputFormula } from './canvasDerivedOutputFormula';
 import { relationOutputMapping } from './canvasRelationOutputBindings';

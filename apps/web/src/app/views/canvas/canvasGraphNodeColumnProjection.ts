@@ -29,14 +29,6 @@ function readInteractiveColumns(node: Node): GraphNodeColumn[] {
 export function projectInteractiveCanvasColumns(
   node: Node,
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>,
-  functionMenus?: ReadonlyMap<
-    string,
-    Readonly<{
-      columnId: string;
-      dataType: string;
-      menu: NonNullable<GraphNodeColumn['functionMenu']>;
-    }>
-  >,
   columnOverrides?: GraphNodeColumn[]
 ): GraphNodeColumn[] {
   const columns = columnOverrides ?? readInteractiveColumns(node);
@@ -61,9 +53,6 @@ export function projectInteractiveCanvasColumns(
       columnOverrides != null || presentationColumn == null
         ? (column.id ?? column.name)
         : (presentationColumn.reference ?? column.id ?? column.name);
-    const functionProjection =
-      functionMenus?.get(id) ?? (column.id == null ? functionMenus?.get(column.name) : undefined);
-    const interactiveId = functionProjection?.columnId ?? id;
     const sourceColumnId =
       sourceNode?.kind === 'dvt:transform'
         ? presentationColumn?.provenance === 'inherited'
@@ -72,9 +61,7 @@ export function projectInteractiveCanvasColumns(
         : (presentationColumn?.sourceFieldName ?? presentationColumn?.name);
     return {
       ...column,
-      id: interactiveId,
-      type: functionProjection?.dataType ?? column.type,
-      ...(functionProjection == null ? {} : { functionMenu: functionProjection.menu }),
+      id,
       ...(sourceNodeId == null || sourceColumnId == null
         ? {}
         : { source: { nodeId: sourceNodeId, columnId: sourceColumnId } }),
@@ -84,13 +71,13 @@ export function projectInteractiveCanvasColumns(
             sourceHandleId: createCanvasColumnHandleId({
               direction: 'source',
               nodeId: node.id,
-              columnId: interactiveId,
+              columnId: id,
             }),
           }),
       targetHandleId: createCanvasColumnHandleId({
         direction: 'target',
         nodeId: node.id,
-        columnId: interactiveId,
+        columnId: id,
       }),
     };
   });

@@ -157,7 +157,7 @@ The command rejects or fails closed for:
 - `canvasDvtTransformAuthoringAuthority.test.ts`
 - `canvasColumnMappingAuthoring.test.ts`
 - `canvasColumnLineageProjection.test.ts`
-- `canvasColumnFunctionAuthoring.test.ts`
+- `canvasSelectedRelationDerivedOutput.test.ts`
 - `canvasAlgebraicComposition.test.ts`
 - `canvasDvtSubstraitPilot.test.ts`
 - `canvasDvtSubstraitFilter.test.ts`

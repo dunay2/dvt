@@ -1,9 +1,14 @@
 /** Read-only assistance over the existing compiler and capability catalog; no formula AST. */
 import { resolveDvtSubstraitColumnFunctions } from '@dvt/postgres-projection';
-import type { DerivedOutputField } from './DerivedOutputOperands';
 import { inspectDerivedOutputFormula } from './canvasDerivedOutputFormula';
 import { createSemanticExpressionProjector } from './semanticExpressionGraphProjection';
 import type { SemanticWorkbenchGraph } from './semanticWorkbenchProjection';
+
+export type DerivedOutputField = Readonly<{
+  fieldId: string;
+  name: string;
+  dataType: string;
+}>;
 
 export type FormulaSuggestion = Readonly<{
   label: string;

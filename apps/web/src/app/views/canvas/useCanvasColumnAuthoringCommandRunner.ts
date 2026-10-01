@@ -4,7 +4,6 @@ import { useCallback, useMemo } from 'react';
 import type {
   GraphNodeCalculatedColumnIdentity,
   GraphNodeInputMapping,
-  GraphNodeColumnFunctionApplyIdentity,
   GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnReorderIdentity,
@@ -14,7 +13,6 @@ import type { CanonicalNode } from '../../types/canonical';
 import { applyToggleOutput, applyReorderOutput } from './canvasColumnOutputCommandAdapter';
 import type { CanvasColumnMappingResult } from './canvasColumnMappingModel';
 import { applyCanvasCalculatedColumn } from './canvasCalculatedColumnAuthoring';
-import { applyCanvasColumnFunction } from './canvasColumnFunctionAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type { CanvasDraftSessionCommandRunner } from './useCanvasWorkspaceDraftSession';
 import { useCanvasRelationOutputCommand } from './useCanvasRelationOutputCommand';
@@ -47,9 +45,6 @@ export type CanvasColumnAuthoringCommandRunner = {
     identity: GraphNodeColumnOutputToggleIdentity
   ) => Promise<CanvasColumnMappingResult>;
   reorderOutput: (identity: GraphNodeColumnReorderIdentity) => Promise<CanvasColumnMappingResult>;
-  applyFunction: (
-    identity: GraphNodeColumnFunctionApplyIdentity
-  ) => Promise<GraphNodeColumnFunctionApplyResult>;
   addCalculated: (
     identity: GraphNodeCalculatedColumnIdentity
   ) => Promise<GraphNodeColumnFunctionApplyResult>;
@@ -106,26 +101,6 @@ export function useCanvasColumnAuthoringCommandRunner({
     [canonicalNodesById, runOutput]
   );
 
-  const applyFunction = useCallback(
-    async (
-      identity: GraphNodeColumnFunctionApplyIdentity
-    ): Promise<GraphNodeColumnFunctionApplyResult> => {
-      const result = await submit(
-        (currentDraftSession) =>
-          applyCanvasColumnFunction({
-            draftSession: currentDraftSession,
-            canonicalNodesById,
-            identity,
-          }),
-        () => ({ outcome: 'rejected' as const, reason: 'invalid_document' as const })
-      );
-      return result.outcome === 'applied'
-        ? { outcome: 'applied', createdFieldId: result.createdFieldId }
-        : result;
-    },
-    [canonicalNodesById, submit]
-  );
-
   const addCalculated = useCallback(
     async (
       identity: GraphNodeCalculatedColumnIdentity
@@ -168,18 +143,9 @@ export function useCanvasColumnAuthoringCommandRunner({
       removeInput,
       toggleOutput,
       reorderOutput,
-      applyFunction,
       addCalculated,
       applyStructured,
     }),
-    [
-      addCalculated,
-      applyFunction,
-      applyStructured,
-      reorderOutput,
-      toggleOutput,
-      mapInput,
-      removeInput,
-    ]
+    [addCalculated, applyStructured, reorderOutput, toggleOutput, mapInput, removeInput]
   );
 }

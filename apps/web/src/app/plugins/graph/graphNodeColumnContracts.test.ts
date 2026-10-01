@@ -32,7 +32,7 @@ describe('graph node column interaction contracts', () => {
 
     expect(onReorder).toHaveBeenCalledOnce();
     expect(onToggle).toHaveBeenCalledOnce();
-    expect(interactions.onColumnFunctionApply).toBeUndefined();
+    expect(interactions).not.toHaveProperty('onColumnFunctionApply');
     expect(interactions.onStructuredFieldApply).toBeUndefined();
   });
 });

@@ -2,7 +2,6 @@ import type { Edge, Node, ReactFlowProps } from '@xyflow/react';
 import type {
   GraphNodeCalculatedColumnIdentity,
   GraphNodeInputMapping,
-  GraphNodeColumnFunctionApplyIdentity,
   GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnPortIdentity,
   GraphNodeStructuredFieldIdentity,
@@ -45,9 +44,6 @@ export type UseCanvasGraphHandlersResult = {
   handleColumnPortActivate: (identity: GraphNodeColumnPortIdentity) => void;
   handleMapCanvasInput: (identity: GraphNodeInputMapping) => void;
   handleRemoveCanvasInput: (identity: GraphNodeInputMapping) => void;
-  handleApplyCanvasColumnFunction: (
-    identity: GraphNodeColumnFunctionApplyIdentity
-  ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>;
   handleApplyCanvasStructuredField: (
     identity: GraphNodeStructuredFieldIdentity
   ) => GraphNodeColumnFunctionApplyResult;

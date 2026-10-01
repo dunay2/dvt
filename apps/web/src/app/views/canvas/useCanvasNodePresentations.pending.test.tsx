@@ -39,7 +39,6 @@ describe('pending field presentation', () => {
           },
           {
             canonicalNodesById: new Map(nodes.map((value) => [value.id, value])),
-            columnFunctionNodes: nodes,
             columnFunctionEdges: edges,
             readOnlyColumnLineageNodeIds: new Set(),
           }

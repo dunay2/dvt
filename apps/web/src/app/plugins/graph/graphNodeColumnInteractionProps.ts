@@ -5,9 +5,7 @@ import type {
   GraphNodeInputMapping,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
-  GraphNodeColumnFunctionApplyIdentity,
   GraphNodeColumnFunctionApplyResult,
-  GraphNodeColumnCompositionFunctionResolver,
   GraphNodeStructuredFieldIdentity,
   GraphNodeCalculatedColumnIdentity,
   GraphNodeColumnOutputToggleIdentity,
@@ -63,17 +61,6 @@ export function resolveGraphNodeColumnInteractionProps(args: {
     onColumnPortActivate:
       typeof data.onColumnPortActivate === 'function'
         ? (data.onColumnPortActivate as (identity: GraphNodeColumnPortIdentity) => void)
-        : undefined,
-    onColumnFunctionApply:
-      args.nodeRole === 'transform' && typeof data.onApplyCanvasColumnFunction === 'function'
-        ? (data.onApplyCanvasColumnFunction as (
-            identity: GraphNodeColumnFunctionApplyIdentity
-          ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>)
-        : undefined,
-    resolveColumnCompositionFunctions:
-      args.nodeRole === 'transform' &&
-      typeof data.resolveCanvasColumnCompositionFunctions === 'function'
-        ? (data.resolveCanvasColumnCompositionFunctions as GraphNodeColumnCompositionFunctionResolver)
         : undefined,
     onStructuredFieldApply:
       args.nodeRole === 'transform' && typeof data.onApplyCanvasStructuredField === 'function'

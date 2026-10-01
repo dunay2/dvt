@@ -4,7 +4,6 @@ import type {
   GraphNodeColumn,
   GraphNodeInputMapping,
   GraphNodeCalculatedColumnIdentity,
-  GraphNodeColumnFunctionApplyIdentity,
   GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnPortIdentity,
@@ -30,9 +29,6 @@ export type CanvasColumnActions = {
   onMapCanvasInput?: (identity: GraphNodeInputMapping) => void;
   onRemoveCanvasInput?: (identity: GraphNodeInputMapping) => void;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onApplyCanvasColumnFunction?: (
-    identity: GraphNodeColumnFunctionApplyIdentity
-  ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>;
   onApplyCanvasStructuredField?: (
     identity: GraphNodeStructuredFieldIdentity
   ) => GraphNodeColumnFunctionApplyResult;
@@ -92,7 +88,6 @@ export function buildCanvasNodeInteractionPresentation({
       onColumnPortActivate: handlers.onColumnPortActivate,
       onMapCanvasInput: handlers.onMapCanvasInput,
       onRemoveCanvasInput: handlers.onRemoveCanvasInput,
-      onApplyCanvasColumnFunction: handlers.onApplyCanvasColumnFunction,
       onApplyCanvasStructuredField: handlers.onApplyCanvasStructuredField,
       onAddCanvasCalculatedColumn: handlers.onAddCanvasCalculatedColumn,
       onToggleCanvasColumnOutput: handlers.onToggleCanvasColumnOutput,

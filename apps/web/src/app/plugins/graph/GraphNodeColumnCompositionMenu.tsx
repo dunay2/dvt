@@ -1,4 +1,4 @@
-/** Owned concern: choose an admitted function after a centre field drop. */
+/** Owned concern: offer explicit structured-field composition after a centre field drop. */
 import type { ReactElement } from 'react';
 
 import {
@@ -9,17 +9,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu';
-import type { GraphNodeColumn, GraphNodeColumnFunction } from './graphNodeColumnContracts';
-import type { GraphNodeColumnCopy } from './GraphNodeColumnPiece';
+import type { GraphNodeColumn } from './graphNodeColumnContracts';
 import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 
 export function GraphNodeColumnCompositionMenu(props: {
   sourceColumn: GraphNodeColumn;
   targetColumn: GraphNodeColumn;
-  compatibleFunctions: readonly GraphNodeColumnFunction[];
-  copy: GraphNodeColumnCopy;
   onOpenChange: (open: boolean) => void;
-  onRequest: (capabilityId: string) => void;
   structuredFieldLabel: string;
   onStructuredRequest: () => void;
 }): ReactElement {
@@ -48,22 +44,6 @@ export function GraphNodeColumnCompositionMenu(props: {
           >
             {props.structuredFieldLabel}
           </DropdownMenuItem>
-          {props.compatibleFunctions.length === 0 ? (
-            <DropdownMenuItem disabled>
-              {props.copy.noCompatibleColumnFunctionsLabel}
-            </DropdownMenuItem>
-          ) : (
-            props.compatibleFunctions.map((item) => (
-              <DropdownMenuItem
-                key={item.capabilityId}
-                data-slot="graph-node-column-composition-function"
-                data-capability-id={item.capabilityId}
-                onSelect={() => requestAnimationFrame(() => props.onRequest(item.capabilityId))}
-              >
-                {item.name.toUpperCase()}
-              </DropdownMenuItem>
-            ))
-          )}
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -29,20 +29,8 @@ describe('GraphNodeColumnFunctionMenu pointer lifecycle', () => {
               id: 'output:customer',
               name: 'customer',
               type: 'text',
-              functionMenu: {
-                category: 'text',
-                items: [
-                  {
-                    capabilityId: 'capability:trim',
-                    name: 'trim',
-                    minimumArgumentCount: 1,
-                    maximumArgumentCount: 1,
-                  },
-                ],
-              },
             },
           ]}
-          onColumnFunctionApply={vi.fn()}
         />
       );
     });

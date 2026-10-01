@@ -55,7 +55,6 @@ export function useCanvasControllerPresentation({
       onMapCanvasInput: graphHandlers.handleMapCanvasInput,
       onRemoveCanvasInput: graphHandlers.handleRemoveCanvasInput,
       onColumnPortActivate: graphHandlers.handleColumnPortActivate,
-      onApplyCanvasColumnFunction: graphHandlers.handleApplyCanvasColumnFunction,
       onApplyCanvasStructuredField: graphHandlers.handleApplyCanvasStructuredField,
       onAddCanvasCalculatedColumn: graphHandlers.handleAddCanvasCalculatedColumn,
       onToggleCanvasColumnOutput: graphHandlers.handleToggleCanvasColumnOutput,

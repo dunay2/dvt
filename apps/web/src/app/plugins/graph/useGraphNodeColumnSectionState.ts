@@ -19,9 +19,7 @@ export function useGraphNodeColumnSectionState(props: GraphNodeColumnSectionProp
     nodeId: props.nodeId,
     onColumnReorder: props.onColumnReorder,
     onColumnComposeRequest:
-      props.onColumnFunctionApply == null && props.onStructuredFieldApply == null
-        ? undefined
-        : setCompositionRequest,
+      props.onStructuredFieldApply == null ? undefined : setCompositionRequest,
   });
   const visibleColumns = showAllColumns
     ? columnReorder.orderedColumns
