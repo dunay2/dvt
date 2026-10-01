@@ -15,6 +15,7 @@ describe('Canvas live data exploration', () => {
   });
 
   it('explores Source and Model rows without a plan preview or published Run', () => {
+    cy.viewport(1920, 1080);
     let previewRequests = 0;
     let runRequests = 0;
 
@@ -39,8 +40,21 @@ describe('Canvas live data exploration', () => {
       'sourceRows'
     );
 
-    visitWithLiveWorkspaceSession('/canvas');
-    getVisibleCanvasNode('dvt-transform-1').find('[data-slot="canvas-node-execute"]').click();
+    visitWithLiveWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        window.localStorage.setItem(
+          'dvt-web-application-language',
+          JSON.stringify({ state: { language: 'es' }, version: 0 })
+        );
+      },
+    });
+    cy.press(Cypress.Keyboard.Keys.TAB);
+    getVisibleCanvasNode('dvt-transform-1')
+      .find('[data-slot="canvas-node-execute"]')
+      .focus()
+      .should('be.enabled')
+      .and('have.css', 'opacity', '1');
+    cy.press(Cypress.Keyboard.Keys.SPACE);
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data:dvt-transform-1"]').should(
       'have.attr',
       'aria-selected',
@@ -60,8 +74,22 @@ describe('Canvas live data exploration', () => {
       .should('contain.text', 'customer')
       .and('contain.text', 'Ada');
 
-    getVisibleCanvasNode('source-1').find('[data-slot="canvas-node-execute"]').click();
-    cy.wait('@sourceRows', { timeout: 30_000 }).its('response.statusCode').should('equal', 200);
+    cy.press(Cypress.Keyboard.Keys.TAB);
+    getVisibleCanvasNode('source-1')
+      .find('[data-slot="canvas-node-execute"]')
+      .focus()
+      .should('be.enabled')
+      .and('have.css', 'opacity', '1');
+    cy.press(Cypress.Keyboard.Keys.SPACE);
+    cy.wait('@sourceRows', { timeout: 30_000 }).then(({ response }) => {
+      expect(response?.statusCode).to.equal(200);
+      expect(response?.body.columns.map((column: { name: string }) => column.name)).to.deep.equal([
+        'order_id',
+        'client_id',
+        'customer',
+        'amount',
+      ]);
+    });
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data:source-1"]').should(
       'have.attr',
       'aria-selected',
@@ -70,12 +98,20 @@ describe('Canvas live data exploration', () => {
     cy.get('[data-slot="bottom-operational-drawer-data"]')
       .should('contain.text', 'customer')
       .and('contain.text', 'Ada');
+    cy.get('[data-slot="bottom-operational-data-table"] thead [data-column-id]')
+      .should('have.length', 1)
+      .and('have.text', 'customer');
+    cy.get('[data-slot="bottom-operational-data-table"] tbody tr').should('have.length', 3);
+    cy.screenshot('source-published-preview');
     openWorkbenchModel('dvt-transform-1');
+    cy.press(Cypress.Keyboard.Keys.TAB);
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]')
       .parent()
       .find('[data-slot="canvas-node-execute"]')
+      .should('contain.text', 'Vista previa')
       .focus()
-      .click();
+      .should('have.css', 'opacity', '1');
+    cy.press(Cypress.Keyboard.Keys.SPACE);
     cy.wait('@sourceRows', { timeout: 30_000 }).then(({ request, response }) => {
       expect(response?.statusCode).to.equal(200);
       expect(new URL(request.url).searchParams.get('objectId')).to.equal('relation/dvt/raw/orders');

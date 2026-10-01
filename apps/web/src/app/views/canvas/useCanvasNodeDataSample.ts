@@ -5,9 +5,7 @@ import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { CanvasShellProps } from './canvasShell.types';
 import {
   CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
-  projectCanvasSourceDataSample,
   resolveCanvasSinkDataSampleTarget,
-  resolveCanvasSourceDataSampleTarget,
   type CanvasSinkDataSampleTarget,
   type CanvasSourceDataSampleTarget,
 } from './canvasSourceDataSample';
@@ -15,6 +13,7 @@ import { useCanvasDataSample } from './useCanvasDataSample';
 import type { CanonicalNode } from '../../types/canonical';
 import { queryCanvasModelDataSample } from './useCanvasModelDataQuery';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { useCanvasSourceDataSample } from './useCanvasSourceDataSample';
 
 type CanvasNodeDataSampleProjection = Readonly<{
   canOpen: boolean;
@@ -34,6 +33,7 @@ type CanvasNodeDataSampleArgs = Pick<
     activeCanvasId: string | null;
     canonicalNodes: readonly CanonicalNode[];
     canEditModel: boolean;
+    nodes: CanvasShellProps['graph']['nodesWithImpact'];
   }>;
 
 export function useCanvasNodeDataSample({
@@ -45,6 +45,7 @@ export function useCanvasNodeDataSample({
   prepareModelPreview,
   canonicalNodes,
   canEditModel,
+  nodes,
 }: CanvasNodeDataSampleArgs): Readonly<{
   dataSampleTabs: ReturnType<typeof useCanvasDataSample>['dataSampleTabs'];
   projectNode: (nodeId: string, data: DbtNodeData) => CanvasNodeDataSampleProjection;
@@ -54,7 +55,14 @@ export function useCanvasNodeDataSample({
     selectedFieldNames?: readonly string[]
   ) => void;
 }> {
-  const { dataSampleTabs, openDataSample } = useCanvasDataSample();
+  const { dataSampleTabs, openDataSample, invalidateDataSample } = useCanvasDataSample();
+  const { openSource, projectSource } = useCanvasSourceDataSample({
+    canvasId: activeCanvasId,
+    nodes,
+    query: warehouseSourceDataSampleQuery,
+    openDataSample,
+    invalidateDataSample,
+  });
   const current = useRef<{ canvasId: string | null; nodes: readonly CanonicalNode[] } | null>(null);
   useEffect(() => {
     current.current = { canvasId: activeCanvasId, nodes: canonicalNodes };
@@ -62,32 +70,6 @@ export function useCanvasNodeDataSample({
       current.current = null;
     };
   }, [activeCanvasId, canonicalNodes]);
-  const openSource = useCallback(
-    (
-      nodeId: string,
-      target: CanvasSourceDataSampleTarget,
-      selectedFieldNames?: readonly string[]
-    ) => {
-      if (warehouseSourceDataSampleQuery == null) return;
-      openDataSample(nodeId, target.nodeName, () =>
-        warehouseSourceDataSampleQuery
-          .previewSourceObjectRows({
-            connectionId: target.connectionId,
-            objectId: target.objectId,
-            ...(target.expectedPublicationToken == null
-              ? {}
-              : { expectedPublicationToken: target.expectedPublicationToken }),
-            limit: CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
-          })
-          .then((sample) =>
-            selectedFieldNames == null
-              ? sample
-              : projectCanvasSourceDataSample(sample, selectedFieldNames)
-          )
-      );
-    },
-    [openDataSample, warehouseSourceDataSampleQuery]
-  );
   const openSink = useCallback(
     (nodeId: string, target: CanvasSinkDataSampleTarget) => {
       if (runMaterializationSampleQuery == null) return;
@@ -135,7 +117,6 @@ export function useCanvasNodeDataSample({
       const isNativeTransform = data.pluginKind === 'dvt:transform';
       const code = data.presentationTruth?.code;
       const semanticDigest = code?.kind === 'canonical' ? code.digest : null;
-      const sourceTarget = resolveCanvasSourceDataSampleTarget(data);
       const sinkTarget = resolveCanvasSinkDataSampleTarget(data, runSnapshot);
       const onOpen = isNativeTransform
         ? activeCanvasId != null &&
@@ -144,23 +125,10 @@ export function useCanvasNodeDataSample({
           (!canEditModel || prepareModelPreview != null)
           ? () => openTransform(nodeId, data.name, semanticDigest)
           : undefined
-        : sourceTarget != null && warehouseSourceDataSampleQuery != null
-          ? () =>
-              openSource(
-                nodeId,
-                sourceTarget,
-                data.role === 'input' &&
-                  data.pluginKind === 'dvt:source' &&
-                  data.columns != null &&
-                  data.columns.length > 0
-                  ? data.columns
-                      .filter((column) => column.output !== false)
-                      .map((column) => column.sourceFieldName ?? column.name)
-                  : undefined
-              )
-          : sinkTarget != null && runMaterializationSampleQuery != null
+        : (projectSource(nodeId) ??
+          (sinkTarget != null && runMaterializationSampleQuery != null
             ? () => openSink(nodeId, sinkTarget)
-            : undefined;
+            : undefined));
 
       return { canOpen: onOpen != null, onOpen, sinkResult: sinkTarget };
     },
@@ -170,17 +138,16 @@ export function useCanvasNodeDataSample({
       canEditModel,
       prepareModelPreview,
       openSink,
-      openSource,
+      projectSource,
       openTransform,
       runMaterializationSampleQuery,
       runSnapshot,
-      warehouseSourceDataSampleQuery,
     ]
   );
 
   return {
     dataSampleTabs,
     projectNode,
-    openSource: warehouseSourceDataSampleQuery == null ? undefined : openSource,
+    openSource,
   };
 }

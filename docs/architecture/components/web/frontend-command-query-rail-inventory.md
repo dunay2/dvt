@@ -339,6 +339,14 @@ commands or queries are still needed for a mature end-to-end workflow.
   Canvas field order, `FieldId`, lineage, or `ConfigureCanvasDvtNode` state.
 - Negative evidence: a selected field absent from the returned sample must not
   expose unselected physical fields or silently substitute another column.
+- Source admission requires ready semantic publication with at least one selected
+  output. Pending, unavailable, missing and empty publications do not query the
+  provider. Published names and order come from the presentation read model, not
+  a stale card-column copy. Changed publication invalidates its previous and
+  in-flight samples without an implicit refresh or draft write.
+- A successful zero-row sample retains its typed headers and row/column summary
+  alongside the empty notice. Empty results are not unavailable results; this
+  same drawer rule applies to Transform samples.
 - Negative evidence: unknown or cross-scope connection/object, unsupported
   provider, timeout, failed query, malformed response, stale response after a new
   sample request, publication-token mismatch, and the server-enforced row limit.

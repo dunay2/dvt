@@ -30,7 +30,9 @@ const sample = {
 };
 
 describe('Canvas explicit data action', () => {
+  let emptyResults = false;
   beforeEach(() => {
+    emptyResults = false;
     cy.viewport(1920, 1080);
     stubShellBootstrapApis({
       scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
@@ -49,18 +51,19 @@ describe('Canvas explicit data action', () => {
       authoringGenerated: true,
       terminalTransformPreview: true,
     });
-    stubE2eJsonApi(
-      'GET',
-      sourcePath,
-      SourceDataSampleResponseSchema.parse({
+    stubE2eApi('GET', sourcePath, () => ({
+      body: SourceDataSampleResponseSchema.parse({
         ...sample,
+        columns: [...sample.columns, { name: 'unpublished', type: 'text', nullable: true }],
+        rows: emptyResults ? [] : [{ values: ['Ada', 'must stay hidden'] }],
         connectionId: 'local-postgres-proof',
         objectId: 'relation/dvt/raw/orders',
-      })
-    );
+      }),
+    }));
     stubE2eApi('GET', transformPath, ({ url }) => ({
       body: TransformDataSampleResponseSchema.parse({
         ...sample,
+        rows: emptyResults ? [] : sample.rows,
         canvasId: url.pathname.split('/')[4],
         transformNodeId: 'dvt-transform-1',
         draftRevision: 'revision-1',
@@ -167,7 +170,9 @@ describe('Canvas explicit data action', () => {
       );
       cy.get('[data-slot="bottom-operational-drawer-data"]')
         .should('contain.text', 'customer')
-        .and('contain.text', 'Ada');
+        .and('contain.text', 'Ada')
+        .and('not.contain.text', 'unpublished')
+        .and('not.contain.text', 'must stay hidden');
       cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
       cy.then(() => {
         expect(getE2eApiCalls(path, 'GET')).to.have.length(1);
@@ -203,4 +208,26 @@ describe('Canvas explicit data action', () => {
       expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
     });
   });
+
+  for (const nodeId of ['source-1', 'dvt-transform-1']) {
+    it(`retains typed headers and a summary for empty ${nodeId} results`, () => {
+      const path = nodeId === 'source-1' ? sourcePath : transformPath;
+      emptyResults = true;
+      const card = `.react-flow__node[data-id="${nodeId}"]`;
+      hoverWorkbenchCard(card);
+      cy.get(card).find('[data-slot="canvas-node-execute"]').focus().should('be.enabled').click();
+      waitForE2eApiCall(path, 'GET');
+      cy.get('[data-slot="data-sample-summary"]')
+        .should('contain.text', '0 rows')
+        .and('contain.text', '1 columns');
+      cy.get('[data-slot="bottom-operational-data-table"] thead')
+        .should('contain.text', 'customer')
+        .and('contain.text', 'string');
+      cy.get('[data-slot="bottom-operational-data-table"] tbody tr').should('not.exist');
+      cy.get('[data-slot="bottom-operational-drawer-data"]').should(
+        'contain.text',
+        'returned no rows'
+      );
+    });
+  }
 });
