@@ -22,8 +22,6 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
     portDirections = [],
     activeColumnHandleId,
     onColumnPortActivate,
-    onColumnFunctionApply,
-    resolveColumnCompositionFunctions,
     onStructuredFieldApply,
     onCalculatedColumnAdd,
     onColumnOutputToggle,
@@ -85,7 +83,6 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
                 view={props.view}
                 showSourceName={props.showSourceName ?? column.sourceNodeName != null}
                 reorder={section.columnReorder}
-                expressionOperandCandidates={section.columnReorder.orderedColumns}
                 unavailableAliases={section.columnReorder.orderedColumns
                   .filter(
                     (candidate) => (candidate.id ?? candidate.name) !== (column.id ?? column.name)
@@ -124,8 +121,6 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
                     : () => setAliasFieldId(column.sourceReference ?? column.id ?? column.name)
                 }
                 onColumnPortActivate={onColumnPortActivate}
-                onColumnFunctionApply={onColumnFunctionApply}
-                resolveColumnCompositionFunctions={resolveColumnCompositionFunctions}
                 onStructuredFieldApply={onStructuredFieldApply}
                 onColumnOutputToggle={onColumnOutputToggle}
                 onColumnReorder={onColumnReorder}

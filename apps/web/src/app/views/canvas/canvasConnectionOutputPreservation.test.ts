@@ -199,17 +199,7 @@ describe('connection preserves authored output', () => {
         position: { x: 0, y: 0 },
         data: { columns: [{ id: 'orders.client_id', name: 'client_id', type: 'string' }] },
       },
-      new Map(),
-      new Map([
-        [
-          'client_id',
-          {
-            columnId: 'client-output-id',
-            dataType: 'string',
-            menu: { category: 'text', items: [] },
-          },
-        ],
-      ])
+      new Map()
     );
     expect(columns[0]?.id).toBe('orders.client_id');
     expect(columns[0]?.functionMenu).toBeUndefined();

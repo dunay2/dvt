@@ -102,7 +102,6 @@ export function useCanvasGraphHandlers({
     },
     [setNodes]
   );
-  const handleApplyCanvasColumnFunction = columnCommandRunner.applyFunction;
   const handleColumnViewChange = useCallback(
     (nodeId: string, view: 'input' | 'output') => {
       setNodes((current) =>
@@ -132,7 +131,6 @@ export function useCanvasGraphHandlers({
     ...nodeAuthoringHandlers,
     handleColumnDisclosureChange,
     handleColumnViewChange,
-    handleApplyCanvasColumnFunction,
     handleApplyCanvasStructuredField,
     handleAddCanvasCalculatedColumn,
     resolveCanvasAlgebraicCompositionOperations: algebraicComposition.resolveOperations,

@@ -47,7 +47,6 @@ export function GraphNodeColumnViews(props: GraphNodeColumnSectionProps) {
           portDirections={view === 'input' ? ['target'] : ['source']}
           onColumnOutputToggle={undefined}
           onColumnReorder={undefined}
-          onColumnFunctionApply={undefined}
           onCalculatedColumnAdd={undefined}
           onStructuredFieldApply={undefined}
           onAutomap={undefined}

@@ -12,11 +12,9 @@ import {
 import { afterEach } from 'vitest';
 import * as validation from './transformationGraphValidation';
 import * as lineage from './canvasColumnLineageProjection';
-import * as menus from './canvasColumnFunctionMenuProjection';
 const semanticProjectionCounters = {
   transformationValidation: vi.spyOn(validation, 'validateTransformationGraph'),
   columnLineage: vi.spyOn(lineage, 'projectCanvasColumnLineage'),
-  columnFunctionMenus: vi.spyOn(menus, 'projectCanvasColumnFunctionMenus'),
 };
 afterEach(() => vi.clearAllMocks());
 
@@ -63,10 +61,8 @@ describe('Canvas read model geometry', () => {
       expect(before).toHaveLength(30);
       expect(semanticProjectionCounters.transformationValidation).toHaveBeenCalledTimes(1);
       expect(semanticProjectionCounters.columnLineage).toHaveBeenCalledTimes(1);
-      expect(semanticProjectionCounters.columnFunctionMenus).toHaveBeenCalledTimes(30);
       semanticProjectionCounters.transformationValidation.mockClear();
       semanticProjectionCounters.columnLineage.mockClear();
-      semanticProjectionCounters.columnFunctionMenus.mockClear();
 
       const movedSourceNode = {
         ...graphNodes[0]!,
@@ -94,7 +90,6 @@ describe('Canvas read model geometry', () => {
 
       expect(semanticProjectionCounters.transformationValidation).toHaveBeenCalledTimes(0);
       expect(semanticProjectionCounters.columnLineage).toHaveBeenCalledTimes(0);
-      expect(semanticProjectionCounters.columnFunctionMenus).toHaveBeenCalledTimes(0);
 
       const retainedData = after?.[12]?.data as ReadModelNodeData;
       (retainedData.onInspectNode as (nodeId: string) => void)(canonicalNodes[12]!.id);
@@ -104,7 +99,7 @@ describe('Canvas read model geometry', () => {
     }
   });
 
-  it('materializes semantic inputs only for mutation and reuses them across geometry changes', async () => {
+  it('does not materialize a retired function catalogue during mutation or geometry changes', async () => {
     const args = buildReadModelArgs({ canMutateGraph: false });
     const values = vi.spyOn(args.graphModel.canonicalNodesById, 'values');
     const mounted = await renderReadModel(args);
@@ -120,9 +115,9 @@ describe('Canvas read model geometry', () => {
       await mounted.rerender(moved);
       expect(values).not.toHaveBeenCalled();
       await mounted.rerender({ ...moved, canMutateGraph: true });
-      expect(values).toHaveBeenCalledTimes(1);
+      expect(values).not.toHaveBeenCalled();
       await mounted.rerender({ ...args, canMutateGraph: true });
-      expect(values).toHaveBeenCalledTimes(1);
+      expect(values).not.toHaveBeenCalled();
     } finally {
       await mounted.cleanup();
       values.mockRestore();

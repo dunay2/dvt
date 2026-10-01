@@ -270,6 +270,12 @@ the fields defined by explicit operations inside the model. Connecting another
 producer cannot select outputs, restore excluded fields, copy producer operations
 or invent a JOIN/Transform.
 
+The retired card scalar-function menu, operand dropdown form and direct function
+callback adapter are removed, not repaired or re-enabled. Scalar formula editing
+belongs to the existing semantic Transform editor. Its compiler and expression
+projection own arithmetic/infix and function display; passive Model Output does
+not build a second function catalog or formula preview.
+
 ```mermaid
 flowchart LR
     Producer[Producer published output] --> Input[Consumer input bindings]

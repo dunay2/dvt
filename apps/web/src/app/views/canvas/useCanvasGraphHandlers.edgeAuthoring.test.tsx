@@ -786,22 +786,22 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       setDraftSession,
     });
     await harness.render();
-    const concat = resolveDvtSubstraitColumnFunctions({
-      dataTypes: ['text', 'text'],
+    const upper = resolveDvtSubstraitColumnFunctions({
+      dataTypes: ['text'],
       provider: 'postgres',
-    }).find((item) => item.name === 'concat');
-    if (concat == null) throw new Error('Expected admitted concat capability.');
+    }).find((item) => item.name === 'upper');
+    if (upper == null) throw new Error('Expected admitted upper capability.');
 
     let functionResult:
       | Readonly<{ outcome: 'applied'; createdFieldId: string }>
       | Readonly<{ outcome: 'rejected' }>
       | undefined;
     await act(async () => {
-      functionResult = await harness.latest()?.handleApplyCanvasColumnFunction({
+      functionResult = await harness.latest()?.handleAddCanvasCalculatedColumn({
         nodeId: transform.id,
-        columnId: 'output:order_id',
-        operandFieldIds: ['output:order_id', 'output:customer'],
-        capabilityId: concat.capabilityId,
+        kind: 'scalar-function',
+        inputFieldId: 'output:customer',
+        capabilityId: upper.capabilityId,
         alias: 'order_customer',
       });
     });
@@ -833,10 +833,8 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         ? inspection.projection.outputs.find((output) => output.name === 'order_customer')
         : null
     ).toMatchObject({
-      scalarExpression: {
-        kind: 'scalar-function',
-        functionName: 'concat',
-      },
+      sourceFieldName: 'customer',
+      operations: ['upper'],
     });
 
     let calculatedSession = nextSession;

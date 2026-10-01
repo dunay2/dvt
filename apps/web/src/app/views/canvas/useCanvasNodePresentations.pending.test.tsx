@@ -29,7 +29,6 @@ describe('pending field presentation', () => {
             data: {
               presentationTruth: { ...initial, columns: { ...initial.columns, state } },
               onColumnPortActivate: command,
-              onApplyCanvasColumnFunction: command,
               onApplyCanvasStructuredField: command,
               onAddCanvasCalculatedColumn: command,
               onToggleCanvasColumnOutput: command,
@@ -39,7 +38,6 @@ describe('pending field presentation', () => {
           },
           {
             canonicalNodesById: new Map(nodes.map((value) => [value.id, value])),
-            columnFunctionNodes: nodes,
             columnFunctionEdges: edges,
             readOnlyColumnLineageNodeIds: new Set(),
           }

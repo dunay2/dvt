@@ -15,7 +15,6 @@ type Props = Pick<
   appendCandidates: readonly GraphNodeColumn[];
   keyboardOpen: boolean;
   onKeyboardOpenChange: (open: boolean) => void;
-  onRequest?: (capabilityId: string) => void;
   onCreateAlias?: () => void;
   piece: ReactElement;
   tooltip: ReactElement;
@@ -35,14 +34,12 @@ export function GraphNodeColumnActions(props: Props): ReactElement {
     <GraphNodeColumnFunctionMenu
       nodeId={nodeId}
       columnId={columnId}
-      menu={column.functionMenu}
       columnName={column.name}
       appendCandidates={props.appendCandidates}
       copy={props.copy}
       keyboardOpen={props.keyboardOpen}
       onKeyboardOpenChange={props.onKeyboardOpenChange}
       onCreateAlias={props.onCreateAlias}
-      onRequest={props.onRequest}
       onStructuredAppend={
         column.children == null || props.onStructuredFieldApply == null
           ? undefined

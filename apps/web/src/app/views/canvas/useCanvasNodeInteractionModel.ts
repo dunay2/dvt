@@ -63,10 +63,6 @@ export function useCanvasNodeInteractionModel({
     () => getGraphNodeCardStrategies(runtimeCapabilities),
     [runtimeCapabilities]
   );
-  const columnFunctionNodes = useMemo(
-    () => (canMutateGraph ? [...graphModel.canonicalNodesById.values()] : undefined),
-    [canMutateGraph, graphModel.canonicalNodesById]
-  );
   const columnFunctionEdges = useMemo(
     () =>
       !canMutateGraph
@@ -95,9 +91,6 @@ export function useCanvasNodeInteractionModel({
           onColumnPortActivate: canMutateGraph ? columnActions.onColumnPortActivate : undefined,
           onMapCanvasInput: canMutateGraph ? columnActions.onMapCanvasInput : undefined,
           onRemoveCanvasInput: canMutateGraph ? columnActions.onRemoveCanvasInput : undefined,
-          onApplyCanvasColumnFunction: canMutateGraph
-            ? columnActions.onApplyCanvasColumnFunction
-            : undefined,
           onApplyCanvasStructuredField: canMutateGraph
             ? columnActions.onApplyCanvasStructuredField
             : undefined,
@@ -123,7 +116,6 @@ export function useCanvasNodeInteractionModel({
       }).map((node) => {
         const projected = projectCanvasNodeColumnInteraction(node, {
           canonicalNodesById: graphModel.canonicalNodesById,
-          columnFunctionNodes,
           columnFunctionEdges,
           readOnlyColumnLineageNodeIds,
         });
@@ -159,7 +151,6 @@ export function useCanvasNodeInteractionModel({
       canMutateGraph,
       canSelectExecution,
       columnFunctionEdges,
-      columnFunctionNodes,
       columnLevelLineageEnabled,
       cardActions.onInspectNode,
       cardActions.onSetNodeMaterialization,
@@ -174,7 +165,6 @@ export function useCanvasNodeInteractionModel({
       columnActions.onColumnPortActivate,
       columnActions.onMapCanvasInput,
       columnActions.onRemoveCanvasInput,
-      columnActions.onApplyCanvasColumnFunction,
       columnActions.onApplyCanvasStructuredField,
       columnActions.onAddCanvasCalculatedColumn,
       columnActions.onReorderCanvasColumnOutput,

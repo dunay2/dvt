@@ -4,7 +4,6 @@ import {
   canAuthorCanvasColumnMappings,
   readCanvasColumnMappingInputFields,
 } from './canvasColumnProjectionAuthority';
-import { projectCanvasColumnFunctionMenus } from './canvasColumnFunctionMenuProjection';
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import { isDvtSourceOutputProjectionNode } from './canvasDvtSourceSemanticAuthoring';
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
@@ -17,7 +16,6 @@ import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthorin
 
 type ColumnInteractionContext = {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
-  columnFunctionNodes: CanonicalNode[] | undefined;
   columnFunctionEdges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[] | undefined;
   readOnlyColumnLineageNodeIds: ReadonlySet<string>;
 };
@@ -25,7 +23,6 @@ export function projectCanvasNodeColumnInteraction(
   node: Node,
   {
     canonicalNodesById,
-    columnFunctionNodes,
     columnFunctionEdges,
     readOnlyColumnLineageNodeIds,
   }: ColumnInteractionContext
@@ -57,12 +54,10 @@ export function projectCanvasNodeColumnInteraction(
         onRemoveCanvasInput: inputsCurrent ? node.data.onRemoveCanvasInput : undefined,
         onColumnPortActivate: inputsCurrent ? node.data.onColumnPortActivate : undefined,
         onAutomapColumns: undefined,
-        onApplyCanvasColumnFunction: undefined,
         onApplyCanvasStructuredField: undefined,
         onAddCanvasCalculatedColumn: undefined,
         onToggleCanvasColumnOutput: undefined,
         onReorderCanvasColumnOutput: undefined,
-        resolveCanvasColumnCompositionFunctions: undefined,
       },
     };
   }
@@ -77,27 +72,9 @@ export function projectCanvasNodeColumnInteraction(
     canonicalNode?.role === 'transform' &&
     !canAuthorColumnMappings &&
     readOnlyColumnLineageNodeIds.has(canonicalNode.id);
-  const functionProjection =
-    columnsCurrent &&
-    columnFunctionNodes != null &&
-    columnFunctionEdges != null &&
-    canonicalNode != null
-      ? projectCanvasColumnFunctionMenus({
-          node: canonicalNode,
-          nodes: columnFunctionNodes,
-          edges: columnFunctionEdges,
-        })
-      : { hasEditableProjection: false, supportsCalculatedColumns: false };
-  const columnFunctionMenus = functionProjection.menus;
-  const interactiveColumns = projectInteractiveCanvasColumns(
-    node,
-    canonicalNodesById,
-    columnFunctionMenus
-  );
-  const hasEditableProjection = functionProjection.hasEditableProjection;
+  const interactiveColumns = projectInteractiveCanvasColumns(node, canonicalNodesById);
   const hasMaterializableMappingInput =
     canAuthorColumnMappings &&
-    !hasEditableProjection &&
     canonicalNode != null &&
     columnFunctionEdges != null &&
     columnFunctionEdges.some((edge) => {
@@ -118,27 +95,17 @@ export function projectCanvasNodeColumnInteraction(
     onColumnPortActivate: canAuthorColumnMappings ? node.data.onColumnPortActivate : undefined,
     onMapCanvasInput: undefined,
     onRemoveCanvasInput: undefined,
-    onApplyCanvasColumnFunction: hasEditableProjection
-      ? node.data.onApplyCanvasColumnFunction
-      : undefined,
-    resolveCanvasColumnCompositionFunctions: hasEditableProjection
-      ? functionProjection.resolveCompositionFunctions
-      : undefined,
-    onApplyCanvasStructuredField: hasEditableProjection
-      ? node.data.onApplyCanvasStructuredField
-      : undefined,
-    onAddCanvasCalculatedColumn: functionProjection.supportsCalculatedColumns
-      ? node.data.onAddCanvasCalculatedColumn
-      : undefined,
-    expressionInputColumns: functionProjection.expressionInputs,
+    onApplyCanvasStructuredField: undefined,
+    onAddCanvasCalculatedColumn: undefined,
+    expressionInputColumns: [],
     onToggleCanvasColumnOutput:
-      (canAuthorColumnMappings && (hasEditableProjection || hasMaterializableMappingInput)) ||
+      (canAuthorColumnMappings && hasMaterializableMappingInput) ||
       canAuthorDbtModelColumns ||
       canProjectSourceOutputs
         ? node.data.onToggleCanvasColumnOutput
         : undefined,
     onReorderCanvasColumnOutput:
-      hasEditableProjection || canAuthorDbtModelColumns || canProjectSourceOutputs
+      canAuthorDbtModelColumns || canProjectSourceOutputs
         ? node.data.onReorderCanvasColumnOutput
         : undefined,
     onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,

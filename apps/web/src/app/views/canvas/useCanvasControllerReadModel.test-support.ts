@@ -57,7 +57,6 @@ export function buildReadModelArgs(
     },
     columnActions: {
       onColumnPortActivate: vi.fn(),
-      onApplyCanvasColumnFunction: vi.fn(),
       onApplyCanvasStructuredField: vi.fn(),
       onAddCanvasCalculatedColumn: vi.fn(),
       onToggleCanvasColumnOutput: vi.fn(),

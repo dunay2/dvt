@@ -19,7 +19,6 @@ const READ_MODEL_COMMANDS = [
   'handleToggleNodeSelection',
   'handleAttachSchemaToNode',
   'handleColumnPortActivate',
-  'handleApplyCanvasColumnFunction',
   'handleApplyCanvasStructuredField',
   'handleAddCanvasCalculatedColumn',
   'handleToggleCanvasColumnOutput',
