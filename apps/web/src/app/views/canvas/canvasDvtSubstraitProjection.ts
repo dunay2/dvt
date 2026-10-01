@@ -73,6 +73,7 @@ import {
   sortedRelationFields,
 } from './canvasDvtSubstraitProjectionStructure';
 import { inspectChainedDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjectionChainInspection';
+import { projectionOperandLineageMatches } from './canvasProjectionOperandLineage';
 export { canonicalizeDvtSubstraitProjectionDataType } from './canvasDvtSubstraitProjectionStructure';
 
 const ZERO_SHA256 = '0'.repeat(64);
@@ -893,15 +894,6 @@ export function inspectDvtSubstraitProjectionDraft(
     if (mapping < sourceFields.length) return dvtSubstraitExpression.field(mapping);
     return project.expressions[mapping - sourceFields.length] ?? null;
   };
-  const expressionsMatch = (left: Expression, right: Expression): boolean => {
-    const leftScalar = inspectScalar(left);
-    const rightScalar = inspectScalar(right);
-    return (
-      leftScalar != null &&
-      rightScalar != null &&
-      JSON.stringify(publicScalar(leftScalar)) === JSON.stringify(publicScalar(rightScalar))
-    );
-  };
   const outputs = mappings.value.outputMapping.map((mapping, outputOrdinal) => {
     const expressionOrdinal = mapping - sourceFields.length;
     const resolvedExpression =
@@ -928,29 +920,18 @@ export function inspectDvtSubstraitProjectionDraft(
     const targetField = targetFields[outputOrdinal];
     const persistedOperandFieldIds = targetField?.operandFieldIds;
     const rawExpression = mappedExpression(outputOrdinal);
-    const rawScalarArguments =
-      rawExpression?.rexType.case === 'scalarFunction'
-        ? rawExpression.rexType.value.arguments.flatMap((argument) =>
-            argument.argType.case === 'value' ? [argument.argType.value] : []
-          )
-        : [];
     const persistedOperandsMatch =
       persistedOperandFieldIds != null &&
-      persistedOperandFieldIds.length === rawScalarArguments.length &&
-      persistedOperandFieldIds.every((fieldId, index) => {
+      rawExpression != null &&
+      projectionOperandLineageMatches(rawExpression, persistedOperandFieldIds, (fieldId) => {
+        if (fieldId === targetField?.fieldId) return null;
         const operandField = targetFields.find((field) => field.fieldId === fieldId);
         const inputField = sourceFields.find((field) => field.fieldId === fieldId);
-        const operandExpression =
-          operandField != null
-            ? mappedExpression(operandField.outputOrdinal)
-            : inputField == null
-              ? null
-              : dvtSubstraitExpression.field(inputField.outputOrdinal);
-        return (
-          fieldId !== targetField?.fieldId &&
-          operandExpression != null &&
-          expressionsMatch(operandExpression, rawScalarArguments[index]!)
-        );
+        return operandField != null
+          ? mappedExpression(operandField.outputOrdinal)
+          : inputField == null
+            ? null
+            : dvtSubstraitExpression.field(inputField.outputOrdinal);
       });
     if (
       resolvedExpression == null ||
