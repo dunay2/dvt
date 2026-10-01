@@ -251,6 +251,7 @@ export {
   DvtRelationalAuthoringDraftV1Schema,
 } from './contracts/planner/DvtRelationalAuthoringDraft.v1.js';
 export type { DvtRelationalAuthoringDraftV1 } from './contracts/planner/DvtRelationalAuthoringDraft.v1.js';
+export { validateDvtSubstraitReadFieldCoverageV1 } from './contracts/planner/DvtSubstraitReadFieldCoverage.v1.js';
 export {
   WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE,
   WorkspaceGraphAuthoringCommandSchema,

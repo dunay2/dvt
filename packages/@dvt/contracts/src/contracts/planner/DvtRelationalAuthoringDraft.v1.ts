@@ -9,6 +9,7 @@
 import { z } from 'zod';
 
 import { decodeDvtSubstraitPlanV1 } from './DvtSubstraitPlanBinary.v1.js';
+import { validateDvtSubstraitReadFieldCoverageV1 } from './DvtSubstraitReadFieldCoverage.v1.js';
 import { DvtSubstraitSemanticDocumentV1Schema } from './DvtSubstraitSemanticDocument.v1.js';
 
 export const DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY = 'relationalAuthoringDraft' as const;
@@ -120,6 +121,18 @@ export const DvtRelationalAuthoringDraftV1Schema = z
         const root = plan.relations[0]?.relType;
         const relation = root?.case === 'root' ? root.value.input : null;
         validRead = plan.relations.length === 1 && relation?.relType.case === 'read';
+        if (validRead && relation?.relType.case === 'read') {
+          const error = validateDvtSubstraitReadFieldCoverageV1(
+            relation.relType.value.baseSchema?.struct?.types ?? [],
+            document.sidecar.fields
+          );
+          if (error != null)
+            context.addIssue({
+              code: 'custom',
+              path: ['sources', index, 'semanticDocument', 'sidecar', 'fields'],
+              message: error,
+            });
+        }
       } catch {
         // The nested semantic-document parser reports corrupt bytes; never throw from safeParse.
       }

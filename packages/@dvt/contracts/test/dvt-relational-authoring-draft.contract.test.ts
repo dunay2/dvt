@@ -80,6 +80,39 @@ function workspace(value: unknown): { nodes: { pluginId: string }[]; [key: strin
 }
 
 describe('DVT relational authoring draft v1', () => {
+  describe.each(['physical', 'producer'] as const)('%s pending Read coverage', (kind) => {
+    it.each(['complete', 'missing', 'duplicate-position', 'out-of-range', 'wrong-parent'] as const)(
+      'validates %s field identities at both persisted boundaries',
+      (fault) => {
+        const draft = globalThis.structuredClone(relationalDraft);
+        const document = draft.sources[0]!.semanticDocument;
+        const fields = document.sidecar.fields;
+        if (fault === 'missing') fields.pop();
+        if (fault === 'duplicate-position') fields[1]!.outputOrdinal = 0;
+        if (fault === 'out-of-range') fields[2]!.outputOrdinal = 3;
+        if (fault === 'wrong-parent') fields[1]!.parentFieldId = fields[0]!.fieldId;
+        if (kind === 'producer') {
+          const relation = document.sidecar.relations[0]!;
+          delete relation.sourceRef;
+          relation.producerRef = {
+            nodeId: source.sourceNodeId,
+            fields: fields.map((field) => ({
+              fieldId: field.fieldId,
+              producerFieldId: `producer:${field.fieldId}`,
+            })),
+          };
+        }
+        fields.reverse();
+        expect(DvtRelationalAuthoringDraftV1Schema.safeParse(draft).success).toBe(
+          fault === 'complete'
+        );
+        expect(WorkspaceGraphAuthoringDraftSchema.safeParse(workspace(draft)).success).toBe(
+          fault === 'complete'
+        );
+      }
+    );
+  });
+
   it('accepts layout-only state without a terminal snapshot at the workspace boundary', () => {
     const layout = {
       version: 'v1',

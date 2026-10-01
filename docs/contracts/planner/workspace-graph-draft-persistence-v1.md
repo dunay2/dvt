@@ -192,6 +192,19 @@ automatic coordinates into persisted manual positions. Automatic Output follows
 the current canonical root after subsequent insertions; an explicitly moved
 Output remains manual. Pointer and keyboard movement obey the same boundary.
 
+### Pending Read identity coverage
+
+Pending source Reads require complete stable field identity coverage of their
+saved `baseSchema`: exactly one sidecar binding per root field and nested struct
+field, at the correct parent and sibling ordinal. List/map fields remain single
+bound fields under the existing structural analysis model. Missing, duplicate,
+out-of-range or extra bindings reject the draft on both write and read. The same
+contract-owned policy governs Read schema derivation and pending-source restore,
+for physical sources and producer-backed inputs alike. Binding array order does
+not matter; opaque identities are preserved, never regenerated from position or
+display name. Invalid stored state uses the existing format-error outcome, with
+no migration, silent repair, fallback or save on reopen.
+
 ### String categories
 
 Every editable string admitted into `WorkspaceGraphAuthoringDraft` has one

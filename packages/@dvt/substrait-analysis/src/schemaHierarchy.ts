@@ -1,6 +1,9 @@
 /** Structural field positions belong to Substrait; identities belong to the sidecar. */
 import type { Type } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
-import type { DvtSubstraitFieldBindingV1 } from '@dvt/contracts';
+import {
+  validateDvtSubstraitReadFieldCoverageV1,
+  type DvtSubstraitFieldBindingV1,
+} from '@dvt/contracts';
 
 import {
   invalidSchema,
@@ -55,6 +58,8 @@ export function deriveReadFields(
   types: readonly Type[],
   bindings: readonly DvtSubstraitFieldBindingV1[]
 ): readonly SchemaField[] {
+  const coverageError = validateDvtSubstraitReadFieldCoverageV1(types, bindings);
+  if (coverageError != null) return invalidSchema(coverageError);
   type MutableField = { type: Type; sourceFieldIds: string[]; children?: MutableField[] };
   const fields: MutableField[] = [];
   const pending = [{ types, fields }];
@@ -74,9 +79,7 @@ export function deriveReadFields(
   const check = [...fields];
   while (check.length > 0) {
     const field = check.pop()!;
-    const id = identities.get(field);
-    if (id == null) return invalidSchema('A Read field has no stable identity binding.');
-    field.sourceFieldIds = [id];
+    field.sourceFieldIds = [identities.get(field)!];
     check.push(...(field.children ?? []));
   }
   return fields;

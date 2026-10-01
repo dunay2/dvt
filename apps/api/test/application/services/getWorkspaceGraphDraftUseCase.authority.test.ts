@@ -10,6 +10,7 @@ import type {
 } from '../../../src/application/ports/workspaceGraphDraft.js';
 import { GetWorkspaceGraphDraftUseCase } from '../../../src/application/services/getWorkspaceGraphDraftUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
+import { buildPendingReadDraftFixture } from '../../fixtures/pendingReadDraftFixture.js';
 import {
   buildWorkspaceGraphDraft,
   TEST_WORKSPACE_SCOPE,
@@ -83,6 +84,27 @@ function buildUseCase(
 }
 
 describe('GetWorkspaceGraphDraftUseCase authoring authority', () => {
+  it.each(['complete', 'missing', 'out-of-range'] as const)(
+    'reads pending Read coverage as %s',
+    async (coverage) => {
+      const { draft, pending } = buildPendingReadDraftFixture();
+      const fields = pending.sources[0]!.semanticDocument.sidecar.fields;
+      if (coverage === 'missing') fields.pop();
+      if (coverage === 'out-of-range') fields[0]!.outputOrdinal = fields.length;
+      const before = globalThis.structuredClone(draft);
+      const result = await buildUseCase('canonical-canvas', undefined, { draft }).execute(DECISION);
+      expect(result).toMatchObject(
+        coverage === 'complete'
+          ? { httpStatus: 200, response: { kind: 'ok' } }
+          : {
+              httpStatus: 422,
+              response: { kind: 'format_error', formatError: { reason: 'corrupt_payload' } },
+            }
+      );
+      expect(draft).toEqual(before);
+    }
+  );
+
   it('returns the active graph-draft authority when the Canvas identity is explicit', async () => {
     const result = await buildUseCase('main-canvas').execute(DECISION);
 
