@@ -1,14 +1,50 @@
 // @vitest-environment jsdom
 import React, { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { setupWorkbenchTest, COPY, root } from './CanvasRelationalTreeWorkbench.test-support';
+import {
+  setupWorkbenchTest,
+  COPY,
+  root,
+  container,
+} from './CanvasRelationalTreeWorkbench.test-support';
 import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.fixtures';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import * as analysis from './canvasRelationalAnalysis';
+import { analysisChain, withdrawChainSource } from './canvasRelationalAnalysisMemo.test-support';
+import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 
 describe('Workbench shared analysis lifecycle', () => {
   setupWorkbenchTest();
   afterEach(() => vi.restoreAllMocks());
+
+  it('removes the mounted consumer tree on indirect withdrawal and restores it without reopening', async () => {
+    const graph = analysisChain();
+    const analyze = vi.spyOn(analysis, 'analyzeCanvasRelations');
+    const render = async (nodes: typeof graph.nodes): Promise<void> => {
+      await act(async () =>
+        root.render(
+          <CanvasRelationalTreeWorkbench
+            transformNode={graph.node}
+            nodes={nodes}
+            edges={graph.edges}
+            copy={COPY}
+          />
+        )
+      );
+    };
+    await render(graph.nodes);
+    expect(container.querySelector('[data-slot="canvas-relational-tree-node"]')).not.toBeNull();
+    expect(container.textContent).not.toContain(COPY.relationalTreeInputIdentityUnavailableMessage);
+    expect(analyze).toHaveBeenCalledTimes(1);
+    await render(withdrawChainSource(graph.nodes));
+    expect(container.textContent).toContain(COPY.relationalTreeInputIdentityUnavailableMessage);
+    expect(container.querySelector('[data-slot="canvas-relational-tree-node"]')).toBeNull();
+    expect(analyze).toHaveBeenCalledTimes(2);
+    await render(graph.nodes);
+    expect(container.textContent).not.toContain(COPY.relationalTreeInputIdentityUnavailableMessage);
+    expect(container.querySelector('[data-slot="canvas-relational-tree-node"]')).not.toBeNull();
+    expect(analyze).toHaveBeenCalledTimes(3);
+  });
 
   it('shares one structural analysis and does not repeat it when selecting another occurrence', async () => {
     const graph = occurrenceGraph();

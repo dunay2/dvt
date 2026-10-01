@@ -274,6 +274,15 @@ label would retain the ownership error.
 - `SaveWorkspaceGraphDraft` preserves incomplete authoring; preview readiness
   remains distinct from draft persistence.
 
+Relational inspection memoization follows the complete dependency closure, not
+only direct incoming edges. Changes to a reachable producer's identity,
+publication or input bindings invalidate its consumers. Canonical sidecar
+producer references remain dependencies even when a connection is missing;
+restoring a missing producer must invalidate the unavailable result. Traversal
+is cycle-bounded and never repairs semantic authority. Unrelated branches and
+layout-only changes do not invalidate the analysis. The cache is disposable:
+its result must agree with a fresh `ProjectCanvasRelationalTree` analysis.
+
 Adapters are the card transfer/connection handlers and semantic editor. Scope
 is the active editable workspace draft and authorized direct dependencies.
 Negative tests reject foreign producers, unavailable/excluded fields, Output
