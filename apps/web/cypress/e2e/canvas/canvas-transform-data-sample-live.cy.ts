@@ -48,11 +48,13 @@ describe('Canvas live data exploration', () => {
         );
       },
     });
+    cy.press(Cypress.Keyboard.Keys.TAB);
     getVisibleCanvasNode('dvt-transform-1')
       .find('[data-slot="canvas-node-execute"]')
       .focus()
       .should('be.enabled')
-      .click();
+      .and('have.css', 'opacity', '1');
+    cy.press(Cypress.Keyboard.Keys.SPACE);
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data:dvt-transform-1"]').should(
       'have.attr',
       'aria-selected',
@@ -72,11 +74,13 @@ describe('Canvas live data exploration', () => {
       .should('contain.text', 'customer')
       .and('contain.text', 'Ada');
 
+    cy.press(Cypress.Keyboard.Keys.TAB);
     getVisibleCanvasNode('source-1')
       .find('[data-slot="canvas-node-execute"]')
       .focus()
       .should('be.enabled')
-      .click();
+      .and('have.css', 'opacity', '1');
+    cy.press(Cypress.Keyboard.Keys.SPACE);
     cy.wait('@sourceRows', { timeout: 30_000 }).then(({ response }) => {
       expect(response?.statusCode).to.equal(200);
       expect(response?.body.columns.map((column: { name: string }) => column.name)).to.deep.equal([
@@ -100,12 +104,14 @@ describe('Canvas live data exploration', () => {
     cy.get('[data-slot="bottom-operational-data-table"] tbody tr').should('have.length', 3);
     cy.screenshot('source-published-preview');
     openWorkbenchModel('dvt-transform-1');
+    cy.press(Cypress.Keyboard.Keys.TAB);
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]')
       .parent()
       .find('[data-slot="canvas-node-execute"]')
       .should('contain.text', 'Vista previa')
       .focus()
-      .click();
+      .should('have.css', 'opacity', '1');
+    cy.press(Cypress.Keyboard.Keys.SPACE);
     cy.wait('@sourceRows', { timeout: 30_000 }).then(({ request, response }) => {
       expect(response?.statusCode).to.equal(200);
       expect(new URL(request.url).searchParams.get('objectId')).to.equal('relation/dvt/raw/orders');
