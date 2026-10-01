@@ -25,28 +25,44 @@ describe('start-run concern boundaries', () => {
     );
   });
 
-  it('keeps the pending decision free of runtime imports and I/O', () => {
-    const text = source('runMaintenance/decidePendingIntentReconciliation');
+  it('keeps reconciliation decisions free of I/O and permits only canonical value constants', () => {
+    const text = source('runMaintenance/decideStartRunIntentReconciliation');
     const ast = ts.createSourceFile('decision.ts', text, ts.ScriptTarget.Latest, true);
     const runtimeImports = ast.statements.filter(
       (node) => ts.isImportDeclaration(node) && !node.importClause?.isTypeOnly
     );
-    expect(runtimeImports).toEqual([]);
+    // Shared lifecycle and retry-budget constants are values, not collaborators.
+    // Exact bindings prevent admitting an adapter, service or other runtime dependency.
+    expect(runtimeImports.map((node) => node.getText(ast))).toEqual([
+      "import { TERMINAL_RUN_STATUSES } from '@dvt/run-domain';",
+      "import { RECONCILIATION_MAX_ATTEMPTS } from '../../domain/startRunReconciliationPolicy.js';",
+    ]);
     expect(text).not.toMatch(/\basync\b|\bawait\b|Date\.|process\.|\.metrics\.|\.logs\./);
   });
 
   it('does not let the observation coordinator mutate or report', () => {
-    expect(source('runMaintenance/PendingIntentReconciliationPolicy')).not.toMatch(
+    expect(source('runMaintenance/StartRunIntentReconciliationPolicy')).not.toMatch(
       /this\.deps\.intentStore|this\.deps\.stateStoreWrite/
     );
-    expect(source('runMaintenance/PendingIntentReconciliationPolicy')).not.toMatch(
+    expect(source('runMaintenance/StartRunIntentReconciliationPolicy')).not.toMatch(
       /\.markResolved\(|\.markDispatched\(|\.markExpired\(|\.saveProviderRef\(|\.cancelRun\(|\.warn\(|\.info\(|\.error\(/
     );
   });
 
   it('does not let the effect executor re-read transition evidence', () => {
-    expect(source('runMaintenance/PendingIntentReconciliationEffects')).not.toMatch(
-      /stateStoreRead|\.lookupRunRef\(|\.getIntent\(|\.getRunMetadata|\.getSnapshot\(/
+    expect(source('runMaintenance/StartRunIntentReconciliationEffects')).not.toMatch(
+      /stateStoreRead|\.observeStartRun\(|\.getIntent\(|\.getRunMetadata|\.getSnapshot\(/
     );
+  });
+
+  it('does not redispatch during reconciliation or cancel synchronously during start compensation', () => {
+    for (const path of [
+      'RunMaintenanceOrphanedIntentService',
+      'StartRunIntentReconciliationPolicy',
+      'StartRunIntentReconciliationEffects',
+    ]) {
+      expect(source(`runMaintenance/${path}`)).not.toMatch(/\.startRun\(/);
+    }
+    expect(source('startRun/StartRunCompensation')).not.toMatch(/\.cancelRun\(|\.markResolved\(/);
   });
 });

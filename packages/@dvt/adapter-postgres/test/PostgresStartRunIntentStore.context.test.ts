@@ -18,11 +18,11 @@ class RecordingClient {
     if (isSessionControlSql(text)) {
       return { rows: [] };
     }
-    if (text.includes('WITH inserted AS')) {
+    if (text.includes('INSERT INTO')) {
       return { rows: [buildIntentRow()] as T[] };
     }
-    if (text.includes('WITH updated AS')) {
-      return { rows: [{ outcome: 'UPDATED', current_status: 'PENDING' }] as T[] };
+    if (text.includes('clock_timestamp() AS now')) {
+      return { rows: [{ now: new Date(NOW) }] as T[] };
     }
     if (text.includes('FROM "dvt".start_run_intents')) {
       return { rows: [buildIntentRow()] as T[] };
@@ -61,21 +61,21 @@ describe('PostgresStartRunIntentStore contextual access', () => {
     const store = new PostgresStartRunIntentStore({
       pool: pool as never,
       schema: 'dvt',
-      now: () => NOW,
       schemaManager: {
         migrate: async () => undefined,
       } as never,
     });
 
     await store.migrate();
-    await store.createIntent({
+    const claim = await store.claimIntent({
       intentId: 'intent-1',
       tenantId: 'tenant-1',
       runId: 'run-1',
       provider: 'temporal',
       createdAt: NOW,
     });
-    await store.markResolved({ tenantId: 'tenant-1', intentId: 'intent-1' });
+    if (claim.kind !== 'acquired') throw new Error('Missing claim');
+    expect(await store.markExpired(claim.receipt)).toBe('applied');
     await store.listOrphaned(60_000, Date.parse(NOW), 10);
     await store.getIntent({ tenantId: 'tenant-1', intentId: 'intent-1' });
 
@@ -112,7 +112,11 @@ function buildIntentRow(): Record<string, unknown> {
     run_id: 'run-1',
     provider: 'temporal',
     status: 'PENDING',
-    engine_run_ref: null,
+    provider_outcome: { kind: 'not_requested' },
+    compensation: { kind: 'not_required' },
+    reconciliation: { kind: 'pending', attempts: 0, nextAttemptAt: NOW },
+    revision: 0,
+    owned: true,
     created_at: NOW,
     updated_at: NOW,
   };

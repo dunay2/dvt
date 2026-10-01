@@ -9,6 +9,7 @@
  */
 import { asNonBlankString } from '@dvt/contracts';
 import type { EngineRunRef, ProviderRunStatusView, RunStatus } from '@dvt/contracts';
+import type { ProviderRunObservation } from '@dvt/engine';
 
 import type { TemporalAdapterConfig, TemporalTaskQueueName } from './config.js';
 
@@ -98,4 +99,34 @@ export function extractRuntimeStatusFromDescribe(describeResult: unknown): strin
     throw new Error('TEMPORAL_DESCRIBE_MISSING_STATUS: describe() result has no status.name');
   }
   return statusName;
+}
+
+/** Reconciliation is fail-closed; diagnostic status strings are never Engine decision inputs. */
+export function toStartRunObservation(
+  description: unknown,
+  runRef: EngineRunRef
+): ProviderRunObservation {
+  const status = extractRuntimeStatusFromDescribe(description);
+  const executionId = (description as { runId?: unknown }).runId;
+  if (typeof executionId !== 'string' || !executionId.trim())
+    throw new Error('TEMPORAL_DESCRIBE_MISSING_EXECUTION_ID');
+  const target = { runRef, executionId };
+  switch (status) {
+    case 'RUNNING':
+      return { kind: 'active', target };
+    case 'COMPLETED':
+      return { kind: 'terminal', target, disposition: 'completed' };
+    case 'FAILED':
+      return { kind: 'terminal', target, disposition: 'failed' };
+    case 'CANCELLED':
+      return { kind: 'terminal', target, disposition: 'cancelled' };
+    case 'TERMINATED':
+      return { kind: 'terminal', target, disposition: 'terminated' };
+    case 'TIMED_OUT':
+      return { kind: 'terminal', target, disposition: 'timed_out' };
+    case 'CONTINUED_AS_NEW':
+      return { kind: 'terminal', target, disposition: 'other' };
+    default:
+      throw new Error('TEMPORAL_RECONCILIATION_STATUS_UNSUPPORTED');
+  }
 }

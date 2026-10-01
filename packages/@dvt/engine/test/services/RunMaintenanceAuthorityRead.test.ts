@@ -1,78 +1,54 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { createNoopObservability } from '../../../observability/src/noopObservability.js';
-import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
-import { RunMaintenanceService } from '../../src/services/RunMaintenanceService.js';
-import {
-  createWorkflowEngineFixture,
-  makeDefaultExecutionPlan,
-  makePlanRefForPlan,
-  makeTemporalAdapter,
-} from '../helpers/workflowEngine.fixture.js';
+import { startRunMaintenanceFixture } from '../helpers/startRunMaintenance.fixture.js';
+
+type Store = Awaited<ReturnType<typeof startRunMaintenanceFixture>>['store'];
+type CanonicalState = {
+  metadata: Awaited<ReturnType<Store['getRunMetadataByRunId']>>;
+  events: Awaited<ReturnType<Store['listEvents']>>;
+  snapshot: Awaited<ReturnType<Store['getSnapshot']>>;
+};
 
 describe('maintenance authority read boundary', () => {
-  it.each(['lookup', 'canonical_status', 'adoption'] as const)(
-    'keeps pending intent and run unchanged when %s fails',
+  it.each(['provider', 'canonical_status', 'adoption'] as const)(
+    'keeps canonical state unchanged and records a retry when %s fails',
     async (boundary) => {
-      const lookupRunRef = vi.fn();
-      const cancelRun = vi.fn(async () => {});
-      const adapter = makeTemporalAdapter({ lookupRunRef, cancelRun });
-      const fixture = createWorkflowEngineFixture({ adapter });
-      const context = {
-        tenantId: 'tenant-pending',
-        projectId: 'project',
-        environmentId: 'test',
-        runId: 'pending-run',
-        targetAdapter: 'temporal' as const,
-      };
-      const runRef = await fixture.engine.startRun(
-        makePlanRefForPlan(makeDefaultExecutionPlan()),
-        context
-      );
-      const intent = await fixture.intentStore.createIntent({
-        intentId: 'pending-intent',
-        tenantId: context.tenantId,
-        runId: context.runId,
-        provider: 'temporal',
-        createdAt: '2000-01-01T00:00:00.000Z',
+      const fixture = await startRunMaintenanceFixture();
+      const { service, store, intentStore, adapter, receipt, context } = fixture;
+      const readSnapshot = store.getSnapshot.bind(store);
+      const canonical = async (): Promise<CanonicalState> => ({
+        metadata: await store.getRunMetadataByRunId(context.tenantId, context.runId),
+        events: await store.listEvents(context.tenantId, context.runId),
+        snapshot: await readSnapshot(context.tenantId, context.runId),
       });
-      const intentRef = { tenantId: intent.tenantId, intentId: intent.intentId };
-      const getSnapshot = fixture.store.getSnapshot.bind(fixture.store);
-      const snapshot = async (): Promise<unknown> => ({
-        intent: await fixture.intentStore.getIntent(intentRef),
-        metadata: await fixture.store.getRunMetadataByRunId(context.tenantId, context.runId),
-        events: await fixture.store.listEvents(context.tenantId, context.runId),
-        snapshot: await getSnapshot(context.tenantId, context.runId),
+      const before = globalThis.structuredClone(await canonical());
+      const cancel = vi.spyOn(adapter, 'cancelRun');
+      const start = vi.spyOn(adapter, 'startRun');
+      const observe = vi.spyOn(adapter, 'observeStartRun');
+      if (boundary === 'provider') observe.mockRejectedValue('response lost');
+      if (boundary === 'canonical_status')
+        vi.spyOn(store, 'getSnapshot').mockRejectedValue(new Error('read failed'));
+      if (boundary === 'adoption')
+        vi.spyOn(store, 'applyStartRunWrite').mockRejectedValue(new Error('write failed'));
+      expect(await service.reconcileStartRunIntent(receipt)).toEqual({ kind: 'blocked' });
+      expect(await canonical()).toEqual(before);
+      expect(cancel).not.toHaveBeenCalled();
+      expect(start).not.toHaveBeenCalled();
+      if (boundary === 'canonical_status') expect(observe).not.toHaveBeenCalled();
+      expect(await intentStore.getIntent(receipt)).toMatchObject({
+        status: boundary === 'adoption' ? 'DISPATCHED' : 'PENDING',
+        compensation: { kind: 'not_required' },
+        reconciliation: {
+          kind: 'pending',
+          attempts: 1,
+          reason:
+            boundary === 'provider'
+              ? 'provider_failed'
+              : boundary === 'canonical_status'
+                ? 'status_failed'
+                : 'adoption_failed',
+        },
       });
-      const before = globalThis.structuredClone(await snapshot());
-      if (boundary === 'lookup') lookupRunRef.mockRejectedValue('lookup response lost');
-      if (boundary === 'canonical_status') {
-        lookupRunRef.mockResolvedValue(null);
-        vi.spyOn(fixture.store, 'getSnapshot').mockRejectedValue(
-          new Error('canonical read failed')
-        );
-      }
-      if (boundary === 'adoption') {
-        lookupRunRef.mockResolvedValue(runRef);
-        vi.spyOn(fixture.store, 'saveProviderRef').mockRejectedValue(
-          new Error('adoption write failed')
-        );
-      }
-      const service = new RunMaintenanceService({
-        stateStoreRead: fixture.store,
-        stateStoreWrite: fixture.store,
-        intentStore: fixture.intentStore,
-        adapters: fixture.adapters,
-        authorizer: new AllowAllAuthorizer(),
-        clock: fixture.clock,
-        idempotency: fixture.idempotency,
-        observability: createNoopObservability(),
-      });
-      await expect(service.reconcileStartRunIntent(intentRef)).resolves.toEqual({
-        kind: 'blocked',
-      });
-      expect(cancelRun).not.toHaveBeenCalled();
-      expect(await snapshot()).toEqual(before);
     }
   );
 
@@ -81,79 +57,53 @@ describe('maintenance authority read boundary', () => {
     { mode: 'single', fault: new Error('metadata unavailable'), throwingDiagnostics: false },
     { mode: 'batch', fault: 'non-Error rejection', throwingDiagnostics: true },
   ])(
-    'defers $mode reconciliation without effects on failed reads',
+    'defers $mode reconciliation after failed metadata reads',
     async ({ mode, fault, throwingDiagnostics }) => {
-      const cancel = vi.fn(async () => {});
-      const adapter = makeTemporalAdapter({ cancelRun: cancel });
-      const fixture = createWorkflowEngineFixture({ adapter });
-      const context = {
-        tenantId: 'tenant-maintenance',
-        projectId: 'project',
-        environmentId: 'test',
-        runId: 'maintenance-run',
-        targetAdapter: 'temporal' as const,
-      };
-      const runRef = await fixture.engine.startRun(
-        makePlanRefForPlan(makeDefaultExecutionPlan()),
-        context
-      );
-      const intent = await fixture.intentStore.createIntent({
-        intentId: 'maintenance-intent',
-        tenantId: context.tenantId,
-        runId: context.runId,
-        provider: 'temporal',
-        createdAt: '2000-01-01T00:00:00.000Z',
-      });
-      const intentRef = { tenantId: intent.tenantId, intentId: intent.intentId };
-      await fixture.intentStore.markDispatched(intentRef, runRef);
-      const readMetadata = fixture.store.getRunMetadataByRunId.bind(fixture.store);
-      const snapshot = async (): Promise<unknown> => ({
-        intent: await fixture.intentStore.getIntent(intentRef),
+      const { service, store, intentStore, adapter, receipt, context, observability } =
+        await startRunMaintenanceFixture({ outcome: 'started' });
+      const readMetadata = store.getRunMetadataByRunId.bind(store);
+      const canonical = async (): Promise<CanonicalState> => ({
         metadata: await readMetadata(context.tenantId, context.runId),
-        events: await fixture.store.listEvents(context.tenantId, context.runId),
-        snapshot: await fixture.store.getSnapshot(context.tenantId, context.runId),
+        events: await store.listEvents(context.tenantId, context.runId),
+        snapshot: await store.getSnapshot(context.tenantId, context.runId),
       });
-      const before = globalThis.structuredClone(await snapshot());
-      const observability = createNoopObservability();
+      const before = globalThis.structuredClone(await canonical());
+      const cancel = vi.spyOn(adapter, 'cancelRun');
+      const observe = vi.spyOn(adapter, 'observeStartRun');
+      const start = vi.spyOn(adapter, 'startRun');
       const warn = vi.spyOn(observability.logs, 'warn');
       if (throwingDiagnostics) {
         warn.mockImplementation(() => {
-          throw new Error('log sink down');
+          throw new Error('sink down');
         });
         vi.spyOn(observability.metrics, 'counter').mockImplementation(() => {
-          throw new Error('metric sink down');
+          throw new Error('sink down');
         });
       }
-      vi.spyOn(fixture.store, 'getRunMetadataByRunId').mockRejectedValue(fault);
-      const service = new RunMaintenanceService({
-        stateStoreRead: fixture.store,
-        stateStoreWrite: fixture.store,
-        intentStore: fixture.intentStore,
-        adapters: fixture.adapters,
-        authorizer: new AllowAllAuthorizer(),
-        clock: fixture.clock,
-        idempotency: fixture.idempotency,
-        observability,
-      });
-
-      if (mode === 'single') {
-        await expect(service.reconcileStartRunIntent(intentRef)).resolves.toEqual({
-          kind: 'blocked',
-        });
-      } else {
-        await expect(service.reconcileOrphanedIntents({ thresholdMs: 1 })).resolves.toMatchObject({
-          deferred: [intent.intentId],
+      vi.spyOn(store, 'getRunMetadataByRunId').mockRejectedValue(fault);
+      if (mode === 'single')
+        expect(await service.reconcileStartRunIntent(receipt)).toEqual({ kind: 'blocked' });
+      else
+        expect(await service.reconcileOrphanedIntents({ thresholdMs: 1 })).toEqual({
+          inspected: 1,
+          deferred: [receipt.intentId],
           resolved: [],
           expired: [],
           cancelled: [],
           cancelFailed: [],
+          escalated: [],
         });
-      }
+      expect(await canonical()).toEqual(before);
       expect(cancel).not.toHaveBeenCalled();
-      expect(await snapshot()).toEqual(before);
+      expect(observe).not.toHaveBeenCalled();
+      expect(start).not.toHaveBeenCalled();
+      expect(await intentStore.getIntent(receipt)).toMatchObject({
+        status: 'DISPATCHED',
+        reconciliation: { kind: 'pending', attempts: 1, reason: 'metadata_failed' },
+      });
       expect(warn).toHaveBeenCalledWith(
         expect.objectContaining({
-          attributes: expect.objectContaining({ reasonCode: 'metadata_read_failed' }),
+          attributes: expect.objectContaining({ reasonCode: 'metadata_failed' }),
         })
       );
     }

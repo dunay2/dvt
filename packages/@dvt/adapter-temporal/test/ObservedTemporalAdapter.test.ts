@@ -24,7 +24,7 @@ const BASE_RUN_CONTEXT = createResolvedRunContext({
   originRunId: 'run-1',
 });
 const START_RUN_COUNTER = 'dvt.temporal.start_run_total';
-const LOOKUP_RUN_REF_COUNTER = 'dvt.temporal.lookup_run_ref_total';
+const OBSERVE_START_RUN_COUNTER = 'dvt.temporal.observe_start_run_total';
 const PING_COUNTER = 'dvt.temporal.ping_total';
 
 type WorkflowHandleMock = ReturnType<typeof makeWorkflowHandleMock>;
@@ -92,7 +92,10 @@ function makeWorkflowNotFoundError(): Error {
 describe('ObservedTemporalAdapter', () => {
   it('observes Temporal workflow submission through the startRun rail', async () => {
     const { adapter, workflowClient, metrics, spans } = makeObservedLookupAdapter(() =>
-      makeWorkflowHandleMock(async () => ({ status: { name: 'Running' } }))
+      makeWorkflowHandleMock(async () => ({
+        status: { name: 'RUNNING' },
+        runId: 'actual-execution',
+      }))
     );
 
     const runRef = await adapter.startRun(BASE_PLAN_REF, BASE_RUN_CONTEXT);
@@ -123,7 +126,10 @@ describe('ObservedTemporalAdapter', () => {
 
   it('preserves deterministic run reference estimation from the wrapped adapter', () => {
     const { adapter } = makeObservedLookupAdapter(() =>
-      makeWorkflowHandleMock(async () => ({ status: { name: 'Running' } }))
+      makeWorkflowHandleMock(async () => ({
+        status: { name: 'RUNNING' },
+        runId: 'actual-execution',
+      }))
     );
 
     expect(adapter.estimateRunRef?.(BASE_RUN_CONTEXT)).toEqual(
@@ -139,7 +145,10 @@ describe('ObservedTemporalAdapter', () => {
 
   it('preserves startRun rejection while recording a failed submission', async () => {
     const { adapter, workflowClient, metrics } = makeObservedLookupAdapter(() =>
-      makeWorkflowHandleMock(async () => ({ status: { name: 'Running' } }))
+      makeWorkflowHandleMock(async () => ({
+        status: { name: 'RUNNING' },
+        runId: 'actual-execution',
+      }))
     );
     workflowClient.start.mockRejectedValueOnce(new Error('Temporal unavailable'));
 
@@ -154,38 +163,47 @@ describe('ObservedTemporalAdapter', () => {
     });
   });
 
-  it('emits found observability for lookupRunRef', async () => {
-    const handle = makeWorkflowHandleMock(async () => ({ status: { name: 'Running' } }));
+  it('emits found observability for observeStartRun', async () => {
+    const handle = makeWorkflowHandleMock(async () => ({
+      status: { name: 'RUNNING' },
+      runId: 'actual-execution',
+    }));
     const { adapter, workflowClient, logs, metrics } = makeObservedLookupAdapter(() => handle);
 
-    const result = await adapter.lookupRunRef('run-abc', 'tenant1');
+    const result = await adapter.observeStartRun('run-abc', 'tenant1');
 
-    expect(result).toEqual(createLookupRunRef('run-abc', 'tenant1'));
+    expect(result).toEqual({
+      kind: 'active',
+      target: {
+        executionId: 'actual-execution',
+        runRef: createObservedRunRef('run-abc', 'tenant1'),
+      },
+    });
     expect(workflowClient.getHandle).toHaveBeenCalledWith('run-abc');
-    expectLookupRunRefMetric(metrics, 'found');
+    expectObservedRunRefMetric(metrics, 'found');
     expect(logs.info).toHaveBeenCalled();
   });
 
-  it('emits missing observability for lookupRunRef when workflow is absent', async () => {
+  it('emits missing observability for observeStartRun when workflow is absent', async () => {
     const handle = makeWorkflowHandleMock(async () => {
       throw makeWorkflowNotFoundError();
     });
     const { adapter, metrics } = makeObservedLookupAdapter(() => handle);
 
-    const result = await adapter.lookupRunRef('run-missing', 'tenant1');
+    const result = await adapter.observeStartRun('run-missing', 'tenant1');
 
-    expect(result).toBeNull();
-    expectLookupRunRefMetric(metrics, 'missing');
+    expect(result).toEqual({ kind: 'missing_at_observation' });
+    expectObservedRunRefMetric(metrics, 'missing');
   });
 
-  it('emits error observability for lookupRunRef failures', async () => {
+  it('emits error observability for observeStartRun failures', async () => {
     const handle = makeWorkflowHandleMock(async () => {
       throw new Error('ECONNREFUSED');
     });
     const { adapter, logs, metrics } = makeObservedLookupAdapter(() => handle);
 
-    await expect(adapter.lookupRunRef('run-abc', 'tenant1')).rejects.toThrow('ECONNREFUSED');
-    expectLookupRunRefMetric(metrics, 'error');
+    await expect(adapter.observeStartRun('run-abc', 'tenant1')).rejects.toThrow('ECONNREFUSED');
+    expectObservedRunRefMetric(metrics, 'error');
     expect(logs.error).toHaveBeenCalled();
   });
 
@@ -213,7 +231,7 @@ describe('ObservedTemporalAdapter', () => {
   });
 });
 
-function createLookupRunRef(
+function createObservedRunRef(
   workflowId: string,
   tenantId: string
 ): ReturnType<typeof createTemporalRunRef> {
@@ -226,13 +244,13 @@ function createLookupRunRef(
   });
 }
 
-function expectLookupRunRefMetric(
+function expectObservedRunRefMetric(
   metrics: ObservedLookupAdapterFixture['metrics'],
   result: 'found' | 'missing' | 'error'
 ): void {
-  expect(metrics.counter).toHaveBeenCalledWith(LOOKUP_RUN_REF_COUNTER, {
+  expect(metrics.counter).toHaveBeenCalledWith(OBSERVE_START_RUN_COUNTER, {
     adapter: 'temporal',
-    operation: 'lookupRunRef',
+    operation: 'observeStartRun',
     result,
   });
 }

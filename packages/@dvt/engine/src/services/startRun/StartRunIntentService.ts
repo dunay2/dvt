@@ -11,7 +11,10 @@
 import type { EngineRunRef, ResolvedRunContext } from '@dvt/contracts';
 
 import type { IdempotencyKeyBuilder } from '../../core/idempotency.js';
-import type { IStartRunIntentStore } from '../../ports/IStartRunIntentStore.js';
+import type {
+  IStartRunIntentStore,
+  StartRunIntentClaimResult,
+} from '../../ports/IStartRunIntentStore.js';
 import type { IClock } from '../../utils/clock.js';
 
 export interface StartRunIntentServiceDeps {
@@ -23,10 +26,10 @@ export interface StartRunIntentServiceDeps {
 export class StartRunIntentService {
   constructor(private readonly deps: StartRunIntentServiceDeps) {}
 
-  async createIntent(
+  async claimIntent(
     resolvedContext: ResolvedRunContext,
     provider: EngineRunRef['provider']
-  ): Promise<string> {
+  ): Promise<StartRunIntentClaimResult> {
     const intentId = this.deps.idempotency.startRunIntentId(
       resolvedContext.tenantId,
       resolvedContext.runId,
@@ -34,14 +37,12 @@ export class StartRunIntentService {
       provider
     );
 
-    await this.deps.intentStore.createIntent({
+    return this.deps.intentStore.claimIntent({
       intentId,
       tenantId: resolvedContext.tenantId,
       runId: resolvedContext.runId,
       provider,
       createdAt: this.deps.clock.nowIsoUtc(),
     });
-
-    return intentId;
   }
 }

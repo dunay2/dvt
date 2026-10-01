@@ -11,6 +11,7 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
+import type { StartRunIntentClaimReceipt, StartRunWrite, StartRunWriteResult } from '@dvt/engine';
 import type { ArchivedTerminalSnapshot, TerminalSnapshotPinResult } from '@dvt/state-store';
 import type { ILineageOutboxStore } from '@dvt/traceability-service';
 
@@ -95,6 +96,13 @@ export class PostgresStateStoreRuntime {
 
   protected async bootstrapRunTxInternal(input: RunBootstrapInput): Promise<AppendResult> {
     return this.runStateCoordinator.bootstrapRunTx(input);
+  }
+
+  protected applyStartRunWriteInternal(
+    receipt: StartRunIntentClaimReceipt,
+    write: StartRunWrite
+  ): Promise<StartRunWriteResult> {
+    return this.runStateCoordinator.applyStartRunWrite(receipt, write);
   }
 
   protected async bootstrapRecoveryRunTxInternal(

@@ -4,7 +4,7 @@
  * Unit tests for temporalErrorPolicy — isWorkflowNotFound and normalizeTemporalErrorCode.
  *
  * These functions were previously private to TemporalAdapter and tested only
- * indirectly through lookupRunRef. Extracting them to a dedicated module allows
+ * indirectly through observeStartRun. Extracting them to a dedicated module allows
  * direct testing and reuse across all adapter methods.
  */
 import { describe, expect, it } from 'vitest';

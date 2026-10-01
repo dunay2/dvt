@@ -19,7 +19,7 @@ import type { IObservability } from '@dvt/observability';
 
 import { toErrorMessage } from '../utils/errorUtils.js';
 
-import type { IProviderAdapter } from './IProviderAdapter.js';
+import type { IProviderAdapter, ProviderRunObservation } from './IProviderAdapter.js';
 
 export type AdapterCircuitBreakerState = 'closed' | 'open' | 'half_open';
 
@@ -34,11 +34,7 @@ export interface AdapterCircuitBreakerSnapshot {
 }
 
 export type AdapterCircuitBreakerOperation =
-  | 'startRun'
-  | 'cancelRun'
-  | 'signal'
-  | 'getProviderStatusView'
-  | 'lookupRunRef';
+  'startRun' | 'cancelRun' | 'signal' | 'getProviderStatusView' | 'observeStartRun';
 
 export interface AdapterCircuitBreakerOptions {
   failureThreshold?: number;
@@ -75,7 +71,7 @@ export class CircuitBreakingProviderAdapter implements IProviderAdapter {
   readonly ping?: () => Promise<void>;
   readonly estimateRunRef?: (ctx: ResolvedRunContext) => EngineRunRef;
   readonly capabilities?: () => readonly string[];
-  readonly lookupRunRef?: (runId: string, tenantId: string) => Promise<EngineRunRef | null>;
+  readonly observeStartRun?: (runId: string, tenantId: string) => Promise<ProviderRunObservation>;
 
   private state: AdapterCircuitBreakerState = 'closed';
   private failureCount = 0;
@@ -101,9 +97,9 @@ export class CircuitBreakingProviderAdapter implements IProviderAdapter {
     if (delegate.ping) this.ping = () => delegate.ping!();
     if (delegate.estimateRunRef) this.estimateRunRef = (ctx) => delegate.estimateRunRef!(ctx);
     if (delegate.capabilities) this.capabilities = () => delegate.capabilities!();
-    if (delegate.lookupRunRef) {
-      this.lookupRunRef = (runId, tenantId) =>
-        this.executeProtected('lookupRunRef', () => delegate.lookupRunRef!(runId, tenantId));
+    if (delegate.observeStartRun) {
+      this.observeStartRun = (runId, tenantId) =>
+        this.executeProtected('observeStartRun', () => delegate.observeStartRun!(runId, tenantId));
     }
     snapshots.set(this, () => this.snapshot());
     this.emitStateGauge();
@@ -113,8 +109,8 @@ export class CircuitBreakingProviderAdapter implements IProviderAdapter {
     return this.executeProtected('startRun', () => this.delegate.startRun(planRef, ctx));
   }
 
-  cancelRun(runRef: EngineRunRef): Promise<void> {
-    return this.executeProtected('cancelRun', () => this.delegate.cancelRun(runRef));
+  cancelRun(runRef: EngineRunRef, executionId?: string): Promise<void> {
+    return this.executeProtected('cancelRun', () => this.delegate.cancelRun(runRef, executionId));
   }
 
   getProviderStatusView(runRef: EngineRunRef): Promise<ProviderRunStatusView> {

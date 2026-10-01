@@ -146,7 +146,7 @@ describeIfPg('protected runtime integration', () => {
     const flow = await exerciseSelectedClosurePreviewFlow(runtime);
 
     expect(flow.saveResponse.statusCode).toBe(200);
-    expect(flow.previewResponse.statusCode).toBe(200);
+    expect(flow.previewResponse.statusCode, JSON.stringify(flow.previewResponse.json())).toBe(200);
 
     const preview = parsePlanPreviewPersistResponse(flow.previewResponse.json());
     expect(preview.plan.steps.map((step) => step.stepId)).toEqual([

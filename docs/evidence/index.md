@@ -143,6 +143,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED-20260502 S08 Temporal Legacy Removal](ed-20260502-s08-temporal-legacy-removal.md)
 - [Engine Coverage Must Produce Real Threshold Evidence](ed-20260930-engine-coverage-evidence.md)
 - [Engine Public API Surface Split](ed-20260514-ea-20260429-05-engine-public-api-surface.md)
+- [Exclusive Start Ownership And Observation-Only Reconciliation](ED-20261001-start-ownership-observation.md)
 - [Explicit Capability Admission](ed-20260930-explicit-capability-admission.md)
 - [Explicit Transform result destination authoring](ED-20260914-transform-result-target.md)
 - [GH-2173 bounded lazy source catalog evidence](ED-20260907-gh-2173-lazy-source-catalog.md)

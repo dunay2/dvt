@@ -1,5 +1,5 @@
 /**
- * @file packages/@dvt/adapter-temporal/test/helpers/lookupRunRefHarness.ts
+ * @file packages/@dvt/adapter-temporal/test/helpers/observeStartRunHarness.ts
  * @baseline ADR-0007: Run Cancellation
  * @baseline ADR-0015: getRunStatus Read-Model Separation
  * @decision Mock Temporal workflow handles through the adapter read/control boundary
@@ -78,7 +78,7 @@ export function makeAdapter(
   };
 }
 
-export function createLookupRunRef(
+export function createObservedRunRef(
   workflowId: string,
   tenantId: string
 ): ReturnType<typeof createTemporalRunRef> {

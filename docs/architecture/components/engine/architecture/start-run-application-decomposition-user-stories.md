@@ -2,7 +2,7 @@
 title: Start-run application decomposition user stories
 status: Active
 owner: Architecture / Engine
-last_reviewed: 2026-05-12
+last_reviewed: 2026-10-01
 ---
 
 # Start-Run Application Decomposition User Stories
@@ -32,8 +32,8 @@ intent for the same run.
 Acceptance:
 
 - `StartRunIntentService` derives `intentId` through `IdempotencyKeyBuilder`
-- `IStartRunIntentStore.createIntent` is called before dispatch
-- repeated creation with the same semantic input returns the same intent id
+- `IStartRunIntentStore.claimIntent` is called before dispatch
+- repeated acquisition returns existing state without a receipt; it cannot dispatch
 
 ### US-WE-HX-3-003: Dispatch isolation
 
@@ -46,7 +46,7 @@ Acceptance:
 
 - `StartRunApplicationService` calls `executeStartRun(...)`
 - bootstrap behavior remains in `StartRunExecutionService`
-- compensation on bootstrap failure remains in the execution/failure policies
+- `StartRunCompensation` persists the compensation obligation; maintenance observes and confirms its terminal result
 
 ### US-WE-HX-3-004: Failure policy isolation
 
@@ -77,15 +77,15 @@ Acceptance:
 
 ## Negative Scenarios
 
-| Scenario                               | Expected behavior                                       | Guard                                                        |
-| -------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------ |
-| invalid tenant access                  | reject before plan integrity or provider dispatch       | `StartRunAdmissionService` sequencing test                   |
-| invalid plan identity                  | reject before intent creation and dispatch              | `StartRunAdmissionService` and existing plan integrity tests |
-| unsupported provider capability        | reject before intent creation and dispatch              | `StartRunAdmissionGuard.assertExecutionPolicyAllowed`        |
-| duplicate run id                       | reject before intent creation and dispatch              | `StartRunValidationPolicy` via admission                     |
-| intent-store active conflict           | reject before provider dispatch                         | `StartRunIntentService` plus store contract                  |
-| bootstrap failure after provider start | cancel best-effort, resolve intent best-effort, rethrow | `StartRunExecutionService` existing tests                    |
-| observability sink failure             | continue or rethrow the domain error, never hide it     | existing start-run service tests                             |
+| Scenario                               | Expected behavior                                                                     | Guard                                                        |
+| -------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| invalid tenant access                  | reject before plan integrity or provider dispatch                                     | `StartRunAdmissionService` sequencing test                   |
+| invalid plan identity                  | reject before intent creation and dispatch                                            | `StartRunAdmissionService` and existing plan integrity tests |
+| unsupported provider capability        | reject before intent creation and dispatch                                            | `StartRunAdmissionGuard.assertExecutionPolicyAllowed`        |
+| duplicate run id                       | reject before intent creation and dispatch                                            | `StartRunValidationPolicy` via admission                     |
+| intent-store active conflict           | reject before provider dispatch                                                       | `StartRunIntentService` plus store contract                  |
+| bootstrap failure after provider start | persist compensation required, rethrow; resolve only on positive terminal observation | `StartRunExecutionService` existing tests                    |
+| observability sink failure             | continue or rethrow the domain error, never hide it                                   | existing start-run service tests                             |
 
 ## Scenario Coverage Matrix
 

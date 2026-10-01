@@ -2,7 +2,7 @@
 title: Start-run application decomposition component
 status: Active
 owner: Architecture / Engine
-last_reviewed: 2026-05-12
+last_reviewed: 2026-10-01
 ---
 
 # Start-Run Application Decomposition Component
@@ -28,6 +28,11 @@ diagramPack: docs/architecture/components/engine/architecture/start-run-applicat
 
 ## Purpose
 
+The current ownership, observation-only recovery and hard-cut rules are normative
+in [StartRunProtocol](../contracts/engine/StartRunProtocol.v1.md) and
+[ADR-0030](../../../../adr/ADR-0030-pre-dispatch-intent-log.md).
+No reconciliation path automatically redispatches an unknown start.
+
 This component owns the internal `@dvt/engine` start-run application flow after
 the `WorkflowEngine` facade has normalized public inputs and built the
 start-run trace context.
@@ -45,9 +50,9 @@ The API is local to the engine package.
 | ---------------------------- | ------------- | ----------------------------------------------------------------------------------------------- |
 | `StartRunApplicationService` | `@dvt/engine` | Orchestrates the phase services and preserves caller-visible behavior.                          |
 | `StartRunAdmissionService`   | `@dvt/engine` | Coordinates pre-dispatch admission, provider resolution, plan integrity, and capability checks. |
-| `StartRunIntentService`      | `@dvt/engine` | Creates deterministic pre-dispatch intents before provider side effects.                        |
+| `StartRunIntentService`      | `@dvt/engine` | Acquires deterministic pre-dispatch intents with exclusive receipts.                            |
 | `StartRunExecutionService`   | `@dvt/engine` | Dispatches to the provider adapter and bootstraps run state.                                    |
-| `StartRunFailurePolicy`      | `@dvt/engine` | Reports failures, resolves intents best-effort, and emits guarded `RunFailed` events.           |
+| `StartRunFailurePolicy`      | `@dvt/engine` | Chooses guarded failure writes; delegates diagnostic transport.                                 |
 | `StartRunEventFactory`       | `@dvt/engine` | Builds deterministic run metadata and lifecycle event inputs.                                   |
 | `StartRunValidationPolicy`   | `@dvt/engine` | Validates tenant, plan reference, run identity, duplicates, and capabilities.                   |
 
@@ -120,9 +125,9 @@ sequenceDiagram
   UseCase->>App: startRun(planRef, resolvedContext, traceContext)
   App->>Admission: admit(planRef, resolvedContext)
   Admission-->>App: adapter + verified artifact
-  App->>Intent: createIntent(resolvedContext, adapter.provider)
-  Intent-->>App: intentId
-  App->>Exec: executeStartRun(adapter, planRef, resolvedContext, traceContext, intentId)
+  App->>Intent: claimIntent(resolvedContext, adapter.provider)
+  Intent-->>App: acquired intent + opaque receipt (or existing/conflict)
+  App->>Exec: executeStartRun(adapter, planRef, resolvedContext, traceContext, receipt)
   Exec-->>App: EngineRunRef
   App-->>UseCase: EngineRunRef
 
@@ -138,10 +143,10 @@ stateDiagram-v2
   Admitted --> IntentPending: deterministic intent persisted
   IntentPending --> Dispatched: provider start returns
   Dispatched --> Bootstrapped: run metadata + RunQueued persisted
-  Bootstrapped --> Resolved: intent resolved best-effort
+  Bootstrapped --> Resolved: owner-fenced intent resolution
   IntentPending --> Failed: pre-dispatch failure
   Dispatched --> Compensating: bootstrap or provider-ref reconciliation failure
-  Compensating --> Failed: cancel best-effort + rethrow
+  Compensating --> Failed: durable compensation obligation + rethrow
 ```
 
 ## Drift Guards

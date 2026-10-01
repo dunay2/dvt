@@ -1,8 +1,8 @@
 /**
- * @file test/TemporalAdapter.lookupRunRef.test.ts
- * @baseline ADR-0030: Pre-Dispatch Intent Log - Section 3.3 lookupRunRef for PENDING intent reconciliation
+ * @file test/TemporalAdapter.observeStartRun.test.ts
+ * @baseline ADR-0030: Pre-Dispatch Intent Log - Section 3.3 observeStartRun for PENDING intent reconciliation
  *
- * Integration-oriented unit tests for TemporalAdapter.lookupRunRef.
+ * Integration-oriented unit tests for TemporalAdapter.observeStartRun.
  */
 import { describe, expect, it, vi } from 'vitest';
 
@@ -13,7 +13,7 @@ import {
   createWithAbortSignalMock,
   makeAdapter,
   makeWorkflowHandleMock,
-} from './helpers/lookupRunRefHarness.js';
+} from './helpers/observeStartRunHarness.js';
 
 function makeError(args: { name: string; message: string; code?: number | string }): Error {
   return Object.assign(new Error(args.message), {
@@ -22,20 +22,29 @@ function makeError(args: { name: string; message: string; code?: number | string
   });
 }
 
-describe('TemporalAdapter.lookupRunRef', () => {
-  it('returns EngineRunRef when workflow exists on Temporal', async () => {
-    const handle = makeWorkflowHandleMock(async () => ({ status: { name: 'Running' } }));
+describe('TemporalAdapter.observeStartRun', () => {
+  it('returns an active observation with the exact execution identity', async () => {
+    const handle = makeWorkflowHandleMock(async () => ({
+      status: { name: 'RUNNING' },
+      runId: 'actual-execution',
+    }));
     const { adapter, workflowClient } = makeAdapter(() => handle);
 
-    const result = await adapter.lookupRunRef('run-abc', 'tenant1');
+    const result = await adapter.observeStartRun('run-abc', 'tenant1');
 
     expect(result).toMatchObject({
-      provider: 'temporal',
-      tenantId: 'tenant1',
-      namespace: 'dvt-test',
-      workflowId: 'run-abc',
-      runId: 'run-abc',
-      taskQueue: 'q-main-tenant1',
+      kind: 'active',
+      target: {
+        executionId: 'actual-execution',
+        runRef: {
+          provider: 'temporal',
+          tenantId: 'tenant1',
+          namespace: 'dvt-test',
+          workflowId: 'run-abc',
+          runId: 'run-abc',
+          taskQueue: 'q-main-tenant1',
+        },
+      },
     });
     expect(workflowClient.getHandle).toHaveBeenCalledWith('run-abc');
     expect(handle.describe).toHaveBeenCalledOnce();
@@ -59,13 +68,15 @@ describe('TemporalAdapter.lookupRunRef', () => {
           code: 5,
         }),
     ],
-  ])('returns null when Temporal reports %s', async (_label, makeMissingError) => {
+  ])('reports point-in-time absence when Temporal reports %s', async (_label, makeMissingError) => {
     const handle = makeWorkflowHandleMock(async () => {
       throw makeMissingError();
     });
     const { adapter } = makeAdapter(() => handle);
 
-    await expect(adapter.lookupRunRef('run-missing', 'tenant1')).resolves.toBeNull();
+    await expect(adapter.observeStartRun('run-missing', 'tenant1')).resolves.toEqual({
+      kind: 'missing_at_observation',
+    });
     expect(handle.cancel).not.toHaveBeenCalled();
   });
 
@@ -80,7 +91,7 @@ describe('TemporalAdapter.lookupRunRef', () => {
     });
     const { adapter } = makeAdapter(() => handle);
 
-    await expect(adapter.lookupRunRef('run-abc', 'tenant1')).rejects.toBe(unexpectedError);
+    await expect(adapter.observeStartRun('run-abc', 'tenant1')).rejects.toBe(unexpectedError);
   });
 
   it('propagates non-ServiceError failures unchanged', async () => {
@@ -94,7 +105,7 @@ describe('TemporalAdapter.lookupRunRef', () => {
     });
     const { adapter } = makeAdapter(() => handle);
 
-    await expect(adapter.lookupRunRef('run-abc', 'tenant1')).rejects.toBe(networkError);
+    await expect(adapter.observeStartRun('run-abc', 'tenant1')).rejects.toBe(networkError);
   });
 
   it('propagates non-Error throwables even when they resemble ServiceError', async () => {
@@ -104,29 +115,35 @@ describe('TemporalAdapter.lookupRunRef', () => {
     });
     const { adapter } = makeAdapter(() => handle);
 
-    await expect(adapter.lookupRunRef('run-abc', 'tenant1')).rejects.toBe(nonErrorThrowable);
+    await expect(adapter.observeStartRun('run-abc', 'tenant1')).rejects.toBe(nonErrorThrowable);
   });
 
   it('derives workflowId consistently from the runId', async () => {
     const capturedWorkflowIds: string[] = [];
-    const handle = makeWorkflowHandleMock(async () => ({}));
+    const handle = makeWorkflowHandleMock(async () => ({
+      status: { name: 'RUNNING' },
+      runId: 'actual-execution',
+    }));
     const { adapter, workflowClient } = makeAdapter((workflowId) => {
       capturedWorkflowIds.push(workflowId);
       return handle;
     });
 
-    await adapter.lookupRunRef('my-run-id', 'my-tenant');
+    await adapter.observeStartRun('my-run-id', 'my-tenant');
 
     expect(capturedWorkflowIds).toEqual(['my-run-id']);
     expect(workflowClient.getHandle).toHaveBeenCalledWith('my-run-id');
   });
 
   it('uses workflowClient.withAbortSignal when the Temporal SDK client exposes it', async () => {
-    const handle = makeWorkflowHandleMock(async () => ({ status: { name: 'Running' } }));
+    const handle = makeWorkflowHandleMock(async () => ({
+      status: { name: 'RUNNING' },
+      runId: 'actual-execution',
+    }));
     const withAbortSignal = createWithAbortSignalMock();
     const { adapter } = makeAdapter(() => handle, { withAbortSignal });
 
-    await adapter.lookupRunRef('run-abc', 'tenant1');
+    await adapter.observeStartRun('run-abc', 'tenant1');
 
     expect(withAbortSignal).toHaveBeenCalledOnce();
     expect(handle.describe).toHaveBeenCalledOnce();
@@ -148,8 +165,8 @@ describe('TemporalAdapter.lookupRunRef', () => {
       }),
     });
 
-    await expect(timeoutAdapter.lookupRunRef('run-abc', 'tenant1')).rejects.toThrow(
-      'lookupRunRef.describe timed out after 20ms'
+    await expect(timeoutAdapter.observeStartRun('run-abc', 'tenant1')).rejects.toThrow(
+      'observeStartRun.describe timed out after 20ms'
     );
     expect(withAbortSignal).toHaveBeenCalledOnce();
   });
@@ -163,8 +180,8 @@ describe('TemporalAdapter.lookupRunRef', () => {
       }),
     });
 
-    await expect(timeoutAdapter.lookupRunRef('run-abc', 'tenant1')).rejects.toThrow(
-      'lookupRunRef.describe timed out after 20ms'
+    await expect(timeoutAdapter.observeStartRun('run-abc', 'tenant1')).rejects.toThrow(
+      'observeStartRun.describe timed out after 20ms'
     );
   });
 });

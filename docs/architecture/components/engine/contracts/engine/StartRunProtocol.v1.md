@@ -4,7 +4,7 @@
 
 **Status**: ACTIVE  
 **Version**: v1  
-**Stability**: Contracts - breaking changes require version bump  
+**Stability**: Single supported hard cut; consumers deploy in lockstep, no parallel protocol  
 **Consumers**: Engine reviewers, API orchestration, adapter implementers, state-store reviewers  
 **References**:
 [ADR-0012-plan-integrity-ownership.md](../../../../../adr/ADR-0012-plan-integrity-ownership.md),
@@ -51,14 +51,14 @@ The current implementation units are:
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | Public facade           | [`WorkflowEngine`](../../../../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)                                                      | Parses `PlanRef` and `RunContext`, then delegates to facade-facing use cases                                                  |
 | Facade start use case   | [`WorkflowStartRunUseCase`](../../../../../../packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts)   | Resolves initial run lineage, builds trace context, and delegates to the start-run application service                        |
-| Application coordinator | [`StartRunApplicationService`](../../../../../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)                       | Sequences admission, intent creation, dispatch, success metrics, and failure policy                                           |
+| Application coordinator | [`StartRunApplicationService`](../../../../../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)                       | Sequences admission, exclusive intent acquisition, dispatch, success metrics, and failure policy                              |
 | Admission service       | [`StartRunAdmissionService`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts)                     | Coordinates admission, provider resolution, scoped integrity verification, and capability/run-execution-context checks        |
 | Admission boundary      | [`StartRunAdmissionGuard`](../../../../../../packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts)                               | Runs preconditions, adapter resolution, capability checks, and runExecutionContext admission                                  |
 | Validation policy       | [`StartRunValidationPolicy`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts)                     | Tenant access, `PlanRef` policy, schema/version validation, run-id validation, duplicate-run rejection, capability validation |
 | Context admission       | [`RunExecutionContextAdmissionPolicy`](../../../../../../packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts) | Validates `runExecutionContextRef` alignment and compatibility fingerprints                                                   |
-| Intent creation         | [`StartRunIntentService`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts)                           | Derives deterministic pre-dispatch intent ids and persists `PENDING` intents                                                  |
+| Intent acquisition      | [`StartRunIntentService`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts)                           | Derives deterministic intent identity and acquires an exclusive claim                                                         |
 | Dispatch + bootstrap    | [`StartRunExecutionService`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts)                     | Calls provider adapter, marks intent dispatched, bootstraps run state, compensates on bootstrap failure                       |
-| Failure handling        | [`StartRunFailurePolicy`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts)                           | Logs/metrics, best-effort intent resolution, guarded `RunFailed` emission after this invocation prepared the run              |
+| Failure handling        | [`StartRunFailurePolicy`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts)                           | Owns guarded failure writes; diagnostics and durable compensation have separate collaborators                                 |
 | Metadata/event factory  | [`StartRunEventFactory`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunEventFactory.ts)                             | Constructs `RunMetadata`, `RunQueued`, provider-ref updates, and failure events                                               |
 
 ---
@@ -68,62 +68,44 @@ The current implementation units are:
 ```mermaid
 sequenceDiagram
     participant Caller
-    participant Engine as WorkflowEngine
-    participant UseCase as WorkflowStartRunUseCase
     participant App as StartRunApplicationService
-    participant Admission as StartRunAdmissionService
-    participant Guard as StartRunAdmissionGuard
-    participant Verifier as PlanIntegrityValidator
-    participant IntentSvc as StartRunIntentService
     participant Intent as IStartRunIntentStore
     participant Exec as StartRunExecutionService
     participant Adapter as IProviderAdapter
-    participant State as IRunStateStore
-    participant Failure as StartRunFailurePolicy
-
-    Caller->>Engine: startRun(planRef, runContext)
-    Engine->>UseCase: startRun(validatedPlanRef, normalizedContext)
-    UseCase->>App: startRun(validatedPlanRef, resolvedContext, traceContext)
-    App->>Admission: admit(planRef, resolvedContext)
-    Admission->>Guard: assertStartRunAllowed(planRef, resolvedContext)
-    Admission->>Guard: resolveAdapter(resolvedContext)
-    Admission->>Verifier: fetchAndValidate(scopedPlanRef, planFetcher)
-    Admission->>Guard: assertExecutionPolicyAllowed(plan, planRef, executionPolicy, resolvedContext, adapter)
-    App->>IntentSvc: createIntent(resolvedContext, adapter.provider)
-    IntentSvc->>Intent: createIntent(intentId, tenantId, runId, provider)
-    App->>Exec: executeStartRun(...)
-
-    alt adapter exposes estimateRunRef()
-        Exec->>State: bootstrapRunTx(run_metadata.providerRef + RunQueued)
-        Exec->>Adapter: startRun(planRef, resolvedContext)
-        Exec->>Intent: markDispatched({tenantId, intentId}, runRef)
-        Exec->>Exec: reconcile estimatedRef vs runRef
-        alt same provider, different late-bound fields
-            Exec->>State: saveProviderRef(tenantId, runId, runRef)
-            Exec->>Failure: markIntentResolvedBestEffort(...)
-        else cross-provider or invalid update
-            Exec->>Adapter: cancelRun(runRef) best-effort
-            Exec->>Failure: markIntentResolvedBestEffort(...)
-            Failure-->>Caller: rethrow reconciliation error
-        else exact match
-            Exec->>Failure: markIntentResolvedBestEffort(...)
+    participant State as IStartRunStateStoreWrite
+    participant Worker as Existing maintenance worker
+    Caller->>App: admitted start request
+    App->>Intent: claimIntent(deterministic identity)
+    alt existing intent
+        App-->>Caller: reject without acquisition or dispatch
+    else acquired receipt
+        App->>Exec: execute with receipt
+        opt estimated reference
+            Exec->>State: applyStartRunWrite(receipt, bootstrap)
         end
-    else no estimateRunRef()
-        Exec->>Adapter: startRun(planRef, resolvedContext)
-        Exec->>Intent: markDispatched({tenantId, intentId}, runRef)
-        Exec->>State: bootstrapRunTx(run_metadata.providerRef + RunQueued)
-        Exec->>Failure: markIntentResolvedBestEffort(...)
+        Exec->>Intent: authorizeDispatch(receipt), persist unknown
+        Exec->>Adapter: one startRun request
+        alt positive response
+            Exec->>Intent: markDispatched(receipt, validated runRef)
+            Exec->>State: fenced bootstrap or provider binding
+            Exec->>Intent: markResolved(receipt)
+            Exec-->>Caller: confirmed reference
+        else timeout or response unavailable
+            Exec-->>Caller: error, outcome remains unknown
+        end
+        opt bootstrap or binding failure
+            Exec->>Intent: record required compensation
+            Exec-->>Caller: original error
+        end
     end
-
-    opt bootstrap failure after provider start
-        Exec->>Adapter: cancelRun(runRef)
-        Exec->>Failure: markIntentResolvedBestEffort(...)
-        Failure-->>Caller: rethrow bootstrap error
-    end
-
-    opt other handled failure
-        App->>Failure: handleStartRunError(...)
-        Failure->>State: appendAndEnqueueTx(RunFailed) only with own preparation and eligible phase
+    Worker->>Intent: reclaim aged, due revision with rotated receipt
+    Worker->>State: observe metadata and canonical status
+    Worker->>Adapter: observeStartRun(logical run, tenant)
+    Note over Worker,Adapter: No automatic startRun call from reconciliation
+    Worker->>Intent: defer, escalate, adopt or record exact cancel target
+    opt compensation required
+        Worker->>Adapter: cancelRun(runRef, exact executionId)
+        Note over Worker,Intent: Acknowledgement remains unresolved; later terminal observation confirms
     end
 ```
 
@@ -194,212 +176,121 @@ The integrity phase currently performs:
 
 This is the authoritative integrity gate mandated by ADR-0012.
 
-### 4.3 Intent Creation
+### 4.3 Intent acquisition
 
-The intent phase is already implemented by:
+`StartRunIntentService.claimIntent()` derives the deterministic identity from
+tenant, logical run, logical attempt and provider, then calls the existing store.
+Only an atomic winner receives a `StartRunIntentClaimReceipt`. Existing-intent
+queries do not return its token. A duplicate caller does not continue dispatch.
 
-- [`StartRunIntentService.createIntent()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts)
-- [`IStartRunIntentStore.createIntent()`](../../../../../../packages/@dvt/engine/src/ports/IStartRunIntentStore.ts)
-- [`IdempotencyKeyBuilder.startRunIntentId()`](../../../../../../packages/@dvt/engine/src/core/idempotency.ts)
-
-The intent phase currently performs:
-
-1. derive a deterministic `intentId`
-2. persist a `PENDING` intent before provider dispatch
-3. attach:
-   - `tenantId`
-   - `runId`
-   - `provider`
-   - `createdAt`
-
-This is the crash-consistency entry point mandated by ADR-0030.
-All post-create intent command/query operations use the tenant-scoped
-`StartRunIntentRef { tenantId, intentId }`; only maintenance scanning uses the
-unscoped `listOrphaned(...)` service-context path.
+Reclaim is a distinct maintenance operation: revision compare-and-set, store
+time, minimum age and persisted next-attempt time must all permit it. Reclaim
+rotates the token and invalidates every older receipt. The same intent fence
+must be held across canonical writes, not just checked before a transaction.
 
 ### 4.4 Dispatch
 
-The dispatch phase is already implemented by:
+Before the provider request, `authorizeDispatch(receipt)` atomically changes
+`not_requested` to `unknown`. Repeating authorization cannot issue another
+request. After a positive result, validate the discriminated EngineRunRef before
+persisting `started` through `markDispatched(receipt, runRef)`.
 
-- [`StartRunExecutionService.executeStartRun()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts)
-- [`StartRunExecutionService.startAdapterAndMarkDispatched()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts)
+Timeout, lost response, malformed result or post-start persistence failure
+preserves uncertainty. Such evidence cannot authorize expiry, RunFailed,
+synthetic success or automatic resend. Late completion cannot give a stale
+caller canonical-write authority.
 
-The dispatch phase currently performs:
+The adapter receives the approved immutable PlanRef and resolved context.
+Providers that fetch plans at runtime must revalidate PlanRef.sha256.
 
-1. choose between:
-   - `startRunWithEstimatedRef()`
-   - `startRunWithoutEstimatedRef()`
-2. call `adapter.startRun(planRef, resolvedContext)`
-3. enforce adapter-start timeout through `withTimeout(...)`
-4. persist `DISPATCHED` intent state via `markDispatched({ tenantId, intentId }, runRef)`
-5. treat post-start intent persistence failure as a first-class error
-   (`PostStartIntentPersistenceError`)
+### 4.5 Bootstrap and binding
 
-The adapter receives the engine-approved immutable `PlanRef` plus the resolved
-run context. Provider runtimes that fetch plan material at runtime MUST
-revalidate `PlanRef.sha256` before execution.
+The two existing branches remain:
 
-### 4.5 Bootstrap Behavior
+- Estimated reference: fenced bootstrap of metadata, RunQueued and outbox;
+  authorize and dispatch; persist started; fenced provider binding; resolve.
+- No estimate: authorize and dispatch; persist started; fenced bootstrap;
+  resolve.
 
-Bootstrap behavior is already implemented by:
+`applyStartRunWrite(receipt, command)` owns the transaction boundary for
+`bootstrap | bind_provider | fail`. PostgreSQL retains the intent lock until
+canonical commit and observes the current event-derived status even if its
+snapshot is stale. In-memory adapters share the same acquisition authority and
+run lock. Cross-scope, stale, terminal or escalated writes fail closed.
 
-- [`StartRunExecutionService.startRunWithEstimatedRef()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts)
-- [`StartRunExecutionService.startRunWithoutEstimatedRef()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts)
-- [`StartRunExecutionService.bootstrapRunTxWithCompensation()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts)
-- [`StartRunEventFactory.buildRunMetadata()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunEventFactory.ts)
-- [`StartRunEventFactory.buildRunEvent()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunEventFactory.ts)
+Provider binding runs even when estimated and returned references are equal.
+A compensation-required intent cannot bootstrap or adopt the provider.
+There is no path that turns a rejected fence into successful completion.
 
-There are two current bootstrap branches.
+### 4.6 Failure handling and compensation
 
-In both branches, `RunMetadata.providerRef` persists one canonical
-discriminated `EngineRunRef`. There is no flat provider bag in the current
-protocol. The only provider-ref update seam is `saveProviderRef(...)`, which
-accepts a discriminated update and MUST reject provider discriminator changes.
+`StartRunFailurePolicy` preserves the original error. It may emit RunFailed only
+with this invocation's created preparation, an eligible phase, successful
+metadata/intent reads, a started outcome and a valid receipt at commit.
+Admission, intent and completion failures do not grant failure authority.
+A reused recovery child never becomes the caller's created preparation.
 
-#### Branch A: adapter provides `estimateRunRef()`
+`StartRunCompensation` records sticky required compensation after bootstrap or
+binding failure. It neither calls cancelRun nor marks the intent resolved.
+A failed compensation write is reported without masking the original error.
+The existing maintenance rail subsequently observes the provider.
 
-Implemented by `startRunWithEstimatedRef()`.
+Completion is not best-effort success: a rejected or failed markResolved rejects
+the call, preserves the canonical run and leaves reconciliation available.
 
-Current order:
+### 4.7 Observation-only maintenance
 
-1. derive estimated provider ref
-2. build `RunMetadata` from the estimated ref
-3. atomically call `bootstrapRunTx(...)` with:
-   - `run_metadata`
-   - first event: `RunQueued`
-4. call `adapter.startRun(...)`
-5. mark the intent `DISPATCHED`
-6. if the refs are equal, mark the intent resolved best-effort
-7. if the refs differ but keep the same provider:
-   - reconcile persisted metadata through `saveProviderRef(...)`
-   - mark the intent resolved best-effort
-8. if reconciliation rejects the update:
-   - cancel the provider run best-effort
-   - mark the intent resolved best-effort
-   - rethrow the reconciliation error
+One observation/decision/effect policy applies to PENDING and DISPATCHED:
 
-#### Branch B: adapter does not provide `estimateRunRef()`
+1. Read metadata and canonical status. Failed reads are not absence.
+2. Observe the provider through `observeStartRun`: point-in-time missing,
+   active exact execution or terminal exact execution with disposition.
+3. Decide using canonical status, provider evidence, sticky compensation and
+   remaining retry budget. The pure decision admits only shared value constants,
+   not I/O or runtime collaborators.
+4. Apply fenced effects without re-reading decision evidence.
+5. Record bounded diagnostics outside decision and effect ownership.
 
-Implemented by `startRunWithoutEstimatedRef()`.
+An active compatible provider can be adopted only into a nonterminal run without
+required compensation. An orphan or terminal canonical run requires compensation.
+Record its exact execution ID and next due time before cancelRun. Success of that
+RPC does not resolve the intent. Only subsequent cancelled/terminated evidence for
+that exact execution confirms compensation; another execution or incompatible
+terminal result escalates.
 
-Current order:
+A missing observation after authorization never means safe redispatch. Persist
+bounded retry/backoff or escalation. Escalated records are excluded from further
+automatic sweeps and never reported as confirmed by the API. The approved budget,
+state invariants and hard-cut rules are normative in
+[ADR-0030](../../../../../adr/ADR-0030-pre-dispatch-intent-log.md).
 
-1. call `adapter.startRun(...)`
-2. mark the intent `DISPATCHED`
-3. build `RunMetadata` from the actual provider ref
-4. atomically call `bootstrapRunTx(...)` with:
-   - `run_metadata`
-   - first event: `RunQueued`
-5. best-effort resolve the intent
+`reconcileStartRunIntent` remains tenant-authorized.
+`reconcileOrphanedIntents` remains a bounded service-context batch, with
+read-only dry run and separate expired/resolved/cancelled/cancelFailed/deferred/
+escalated buckets. This adds no worker or public operator-remediation command.
 
-In both branches:
+### 4.8 Conformance and remaining boundary
 
-- `bootstrapRunTx` is the only write path for initial run metadata
-- the first persisted lifecycle fact is `RunQueued`
-- `RunMetadata` and `RunQueued` are built by `StartRunEventFactory`
+Tests must compare canonical metadata, ordered events, snapshots and intent
+state after duplicate or stale-owner rejection. Receipt rotation must be tested
+with deterministic barriers, including estimated, non-estimated and prepared
+recovery paths. Failed observation tests allow only acquisition/retry metadata
+updates; they forbid canonical mutation and provider commands.
 
-### 4.6 Failure Handling And Compensation
+Real PostgreSQL proofs require independent connections, a non-owner application
+role, RLS, conflict visibility and a fence held until canonical commit. A failed
+bootstrap preserves the canonical Engine RunAlreadyExistsError and rolls back
+the losing recovery reservation.
 
-Failure handling is already implemented by:
+Real Temporal proofs must distinguish logical workflow ID from exact execution
+ID, cancellation acknowledgement from terminal observation, and retained history
+deduplication from durable absence. History removal permits a new execution with
+the same workflow identity. Therefore #2679's positive safe-redispatch acceptance
+remains open; observation-only completion does not close it.
 
-- [`StartRunExecutionService.bootstrapRunTxWithCompensation()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts)
-- [`StartRunFailurePolicy.handleStartRunError()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts)
-- [`StartRunFailurePolicy.markIntentResolvedBestEffort()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts)
-
-Current failure behavior:
-
-1. if bootstrap fails after provider start in the non-estimated branch:
-   - call `adapter.cancelRun(runRef)` as compensation
-   - best-effort resolve the intent
-   - rethrow the bootstrap error
-2. if `estimateRunRef()` is implemented and `startRun()` returns a different
-   `EngineRunRef`:
-   - attempt `saveProviderRef(...)` reconciliation using the actual
-     discriminated provider ref
-   - if the update changes provider discriminator or fails validation,
-     log the reconciliation error
-   - call `adapter.cancelRun(runRef)` best-effort
-   - best-effort resolve the intent
-   - rethrow the reconciliation error
-3. if `markDispatched(...)` fails after `adapter.startRun(...)` succeeded:
-   - raise `PostStartIntentPersistenceError`
-   - log/report the failure
-   - do not fabricate a synthetic success path
-4. if a start-run error reaches `StartRunFailurePolicy.handleStartRunError(...)`:
-   - report metrics/logging and preserve `PostStartIntentPersistenceError`
-   - require a typed preparation receipt with disposition `created`, returned
-     from this invocation's successful bootstrap; `reused` grants no failure authority
-   - reject admission/intent-phase failures without canonical mutation, including
-     recovery whose child was prepared but whose intent could not be persisted
-   - perform these authority/phase checks before reading metadata or intent for
-     failure emission; neither metadata existence nor error text grants authority
-   - read authority as `found | missing | failed`; a rejected read is not absence
-   - if metadata does not exist yet or its read fails, rethrow the original
-     start error without emitting `RunFailed`
-   - if intent identity is unavailable, the record is missing, or its read fails,
-     rethrow that same original error without emitting `RunFailed`
-   - if the tracked intent is still `PENDING`, rethrow without emitting `RunFailed`
-   - only with successfully read metadata and a found non-pending intent, append
-     `RunFailed` best-effort through `appendAndEnqueueTx(...)`
-
-Authority-read diagnostics use bounded reason codes and are best-effort. A
-throwing logging or metrics sink cannot enable a write or mask the start error.
-The same read distinction applies to the existing maintenance policies: a
-failed DISPATCHED metadata read defers reconciliation without cancellation or
-intent mutation, rather than entering the confirmed-missing path.
-
-The failure policy owns guarded failure writes, not diagnostic transport.
-Failure diagnostics owns metric/log identifiers and throttled stderr fallback,
-and has no persistence or provider dependency. Start execution delegates its
-shared cancellation/intent-cleanup sequence to one compensation collaborator.
-Pending reconciliation separates ordered observations, a pure transition
-decision, and application of the selected effect. These are internal concern
-boundaries on the existing rails, not additional application commands. Moving
-the existing effects does not establish exclusive ownership or confirmed
-provider cancellation; those protocol guarantees remain separately required.
-
-Fresh execution acquires preparation authority only after its own `bootstrapRunTx`
-succeeds. Recovery preserves a readonly `created | reused` result from its
-preparation boundary: an existing child and a child found after a bootstrap
-collision are both `reused`. A failed bootstrap cannot fail the winner's run.
-The coordinator transports that result and the current phase through the existing
-execution and failure services.
-
-This protects common failure reporting. It does not establish exclusive ownership
-of a deterministic start intent: non-estimated dispatch and reused recovery can
-perform intent/reconciliation/compensation effects before reaching this handler.
-Those pre-existing concurrent-dispatch limitations remain tracked by
-[#2678](https://github.com/dunay2/dvt/issues/2678) and provider-outcome work in
-[#2679](https://github.com/dunay2/dvt/issues/2679). The global invariant in
-[#2676](https://github.com/dunay2/dvt/issues/2676) remains open until those paths
-are also proven.
-
-### 4.7 Start Failure Authority Conformance
-
-PostgreSQL conformance also requires a duplicate metadata insert in either
-bootstrap path to throw the exported Engine RunAlreadyExistsError class with
-the child logical runId and original PostgreSQL cause. The transaction must roll
-back the losing recovery reservation. The real recovery-service/PostgreSQL
-regression in adapter-postgres/test/smoke.test.ts must observe created then reused
-preparations, preserve the winner's persisted state and allocate the next attempt
-without a gap. This proves the preparation boundary; it does not certify provider
-dispatch or exclusive intent ownership.
-
-The [mutation-authority regressions](../../../../../../packages/@dvt/engine/test/core/WorkflowEngine.startMutationAuthority.test.ts)
-exercise this protocol through the actual Engine application services and
-in-memory transactional stores. They MUST compare complete metadata, ordered
-events, snapshot and intent after duplicate/admission rejection. Deterministic
-barriers MUST cover a dispatched winner with a losing bootstrap, both recovery
-reuse paths, and a run appearing during capability/context admission. An owned
-reconciliation failure MUST retain its legitimate failure event and compensation.
-
-Run these proofs with
-`pnpm --filter @dvt/engine exec vitest run test/core/WorkflowEngine.startMutationAuthority.test.ts`.
-The [ARC evidence](../../../../../evidence/ed-20260906-eng1-start-mutation-authority.md)
-records the local observations and remaining boundaries. A Planning DB execution
-evidence record using this protocol as its governed source MUST bind the actual
-CI job, the tested commit, and this document's exact committed content hash.
-The protocol declares the obligation; the authenticated job supplies its result.
+Planning DB acceptance evidence must bind the actual tested Git base/head and
+committed governing document hashes. Local passing tests alone are not
+integration approval.
 
 ---
 
@@ -437,47 +328,24 @@ Implemented today by:
 - [`StartRunExecutionService.bootstrapRunTxWithCompensation()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts)
 - [`IRunStateStore.bootstrapRunTx`](../../../../../../packages/@dvt/engine/src/ports/IRunStateStore.ts)
 
-### 5.3 ADR-0030: Pre-Dispatch Intent Log
+### 5.3 ADR-0030: ownership and uncertainty
 
-This protocol MUST preserve:
+The normative lifecycle and failure rules are those of
+[ADR-0030](../../../../../adr/ADR-0030-pre-dispatch-intent-log.md). In particular:
+exclusive claim before dispatch; unknown before RPC; fenced canonical writes;
+durable compensation; confirmation only from positive execution evidence;
+bounded defer/escalation; no automatic redispatch.
 
-- intent creation before provider dispatch
-- `markDispatched(...)` after provider dispatch returns
-- `markResolved(...)` on success and best-effort resolution on cleanup
-- intent-store dependency as mandatory engine wiring
-- reconciliation-compatible intent lifecycle:
-  - `PENDING`
-  - `DISPATCHED`
-  - `RESOLVED`
-  - `EXPIRED`
+## 6) Review checklist
 
-Implemented today by:
-
-- [`StartRunIntentService.createIntent()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts)
-- [`StartRunExecutionService.startAdapterAndMarkDispatched()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts)
-- [`StartRunFailurePolicy.markIntentResolvedBestEffort()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts)
-- mandatory dependency checks in [`WorkflowEngine.validateDependencies()`](../../../../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
-
----
-
-## 6) Review Checklist
-
-Reviewers can verify the protocol by checking:
-
-1. `WorkflowEngine.startRun()` delegates only to the facade start-run use case
-   after parsing public input
-2. admission happens before integrity and before any provider side effect
-3. integrity verification happens before adapter dispatch
-4. an intent is created before provider dispatch
-5. provider dispatch marks the intent `DISPATCHED`
-6. in the estimated branch, `estimateRunRef()` and `startRun()` either return
-   the same `EngineRunRef` or reconcile through a same-provider
-   `saveProviderRef(...)` update; cross-provider drift fails closed
-7. one of the two documented bootstrap branches executes
-8. `RunQueued` is the first persisted lifecycle event
-9. bootstrap failure in the non-estimated branch compensates with `cancelRun`
-10. common start failure emission requires this invocation's created preparation, an eligible phase, persisted metadata and the existing intent guards
-
-No new protocol is defined by this artifact.
-
-It documents the current protocol already implemented in code.
+1. Existing public entry, admission, integrity and authorization boundaries remain.
+2. Only a claim winner sends a provider start, and durable unknown precedes it.
+3. Every bootstrap/bind/fail commit is fenced with the current receipt.
+4. Equal references do not bypass fencing.
+5. An RPC timeout or missing lookup never creates confirmed absence.
+6. Compensation remains required after cancellation acknowledgement.
+7. Exact execution identity prevents cancelling a replacement execution.
+8. Unknown and compensated intents are not API-confirmed dispatch.
+9. Tests cover storage, Engine, provider, worker and API consumers.
+10. One hard-cut schema is deployed in lockstep, with explicit rejection of old
+    state and no conversion, hidden fallback or compatibility branch.

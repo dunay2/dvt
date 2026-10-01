@@ -3,11 +3,11 @@
  */
 export const START_RUN_MESSAGE = {
   startingRun: 'Starting run',
-  compensationCancelFailed: 'Compensation cancelRun failed after bootstrap error',
+  compensationPersistenceFailed: 'Compensation persistence failed after bootstrap error',
   providerRefReconciliationFailed:
     'ProviderRef reconciliation failed after adapter.startRun returned a different EngineRunRef',
-  providerRefReconciliationCancelFailed:
-    'Compensation cancelRun failed after providerRef reconciliation failure',
+  providerRefCompensationPersistenceFailed:
+    'Compensation persistence failed after providerRef reconciliation failure',
   markResolvedFailed: 'markResolved failed; leaving intent cleanup to reconciliation worker',
   markResolvedReportingFailed:
     '[dvt][StartRunFailurePolicy] markResolved observability reporting failed;',

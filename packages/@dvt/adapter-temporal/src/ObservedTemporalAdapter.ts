@@ -6,7 +6,7 @@ import type {
   SignalSemanticsVersion,
   SignalRequest,
 } from '@dvt/contracts';
-import type { IProviderAdapter } from '@dvt/engine';
+import type { IProviderAdapter, ProviderRunObservation } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
 
 import type { TemporalAdapterConfig } from './config.js';
@@ -21,7 +21,6 @@ import { toTemporalTaskQueue, toTemporalWorkflowId } from './WorkflowMapper.js';
 interface TemporalOperationalAdapter extends IProviderAdapter {
   readonly capabilities?: () => readonly string[];
   readonly estimateRunRef?: (ctx: ResolvedRunContext) => EngineRunRef;
-  readonly lookupRunRef?: (runId: string, tenantId: string) => Promise<EngineRunRef | null>;
   readonly ping?: () => Promise<void>;
 }
 
@@ -81,8 +80,8 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
     });
   }
 
-  cancelRun(runRef: EngineRunRef): Promise<void> {
-    return this.deps.adapter.cancelRun(runRef);
+  cancelRun(runRef: EngineRunRef, executionId?: string): Promise<void> {
+    return this.deps.adapter.cancelRun(runRef, executionId);
   }
 
   getProviderStatusView(runRef: EngineRunRef): Promise<ProviderRunStatusView> {
@@ -101,9 +100,9 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
     return this.deps.adapter.capabilities?.() ?? [];
   }
 
-  async lookupRunRef(runId: string, tenantId: string): Promise<EngineRunRef | null> {
-    if (!this.deps.adapter.lookupRunRef) {
-      return null;
+  async observeStartRun(runId: string, tenantId: string): Promise<ProviderRunObservation> {
+    if (!this.deps.adapter.observeStartRun) {
+      throw new Error('TEMPORAL_START_OBSERVATION_UNSUPPORTED');
     }
 
     const workflowId = toTemporalWorkflowId(runId);
@@ -113,20 +112,20 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
     return runObservedTemporalOperation({
       observability: this.observability,
       context,
-      spanName: 'temporal.lookupRunRef',
+      spanName: 'temporal.observeStartRun',
       spanAttributes: {
         workflowId,
         namespace: this.deps.config.connection.namespace,
       },
-      counterName: 'dvt.temporal.lookup_run_ref_total',
-      durationName: 'dvt.temporal.lookup_run_ref.duration_ms',
-      metricOperation: 'lookupRunRef',
-      run: () => this.deps.adapter.lookupRunRef!(runId, tenantId),
-      onSuccess: (runRef) =>
-        runRef === null
+      counterName: 'dvt.temporal.observe_start_run_total',
+      durationName: 'dvt.temporal.observe_start_run.duration_ms',
+      metricOperation: 'observeStartRun',
+      run: () => this.deps.adapter.observeStartRun!(runId, tenantId),
+      onSuccess: (observation) =>
+        observation.kind === 'missing_at_observation'
           ? {
               result: 'missing',
-              logMessage: 'Temporal workflow missing during lookupRunRef',
+              logMessage: 'Temporal workflow missing at observation',
               logLevel: 'info',
               logAttributes: {
                 workflowId,
@@ -135,7 +134,7 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
             }
           : {
               result: 'found',
-              logMessage: 'Temporal workflow found during lookupRunRef',
+              logMessage: 'Temporal workflow observed',
               logLevel: 'info',
               logAttributes: {
                 workflowId,
@@ -144,7 +143,7 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
             },
       onError: (error) => ({
         result: 'error',
-        logMessage: 'Temporal lookupRunRef failed',
+        logMessage: 'Temporal start observation failed',
         logLevel: 'error',
         logAttributes: {
           workflowId,

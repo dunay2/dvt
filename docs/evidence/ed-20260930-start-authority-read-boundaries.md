@@ -12,10 +12,9 @@ code_refs:
   - packages/@dvt/engine/src/services/startRun/StartRunFailureDiagnostics.ts
   - packages/@dvt/engine/src/services/startRun/StartRunCompensation.ts
   - packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts
-  - packages/@dvt/engine/src/services/runMaintenance/DispatchedIntentReconciliationPolicy.ts
-  - packages/@dvt/engine/src/services/runMaintenance/PendingIntentReconciliationPolicy.ts
-  - packages/@dvt/engine/src/services/runMaintenance/decidePendingIntentReconciliation.ts
-  - packages/@dvt/engine/src/services/runMaintenance/PendingIntentReconciliationEffects.ts
+  - packages/@dvt/engine/src/services/runMaintenance/StartRunIntentReconciliationPolicy.ts
+  - packages/@dvt/engine/src/services/runMaintenance/decideStartRunIntentReconciliation.ts
+  - packages/@dvt/engine/src/services/runMaintenance/StartRunIntentReconciliationEffects.ts
 evidence:
   tests:
     - pnpm --filter @dvt/engine exec vitest run --coverage
@@ -25,6 +24,12 @@ evidence:
 ---
 
 # Start Authority Read Boundaries And Concern Isolation
+
+Historical evidence for the read-boundary cut. The old PENDING/DISPATCHED
+policy modules have since been retired; `code_refs` now identify their current
+owners. The measurements and limitations below describe the earlier cut, not
+the present protocol. Current ownership, observation and compensation evidence
+is in [the subsequent hard-cut record](ED-20261001-start-ownership-observation.md).
 
 ## Governed Claim
 

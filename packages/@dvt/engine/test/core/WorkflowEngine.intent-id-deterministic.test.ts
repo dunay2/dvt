@@ -13,7 +13,7 @@ import { createEngine, makeAdapters, makeContext, makePlanRef } from './Workflow
 describe('WorkflowEngine startRun intent id determinism', () => {
   it('uses deterministic intent id derived from tenant, run, attempt, and adapter', async () => {
     const { engine, intentStore } = createEngine({ adapters: makeAdapters() });
-    const createSpy = vi.spyOn(intentStore, 'createIntent');
+    const createSpy = vi.spyOn(intentStore, 'claimIntent');
     const builder = new IdempotencyKeyBuilder();
 
     await engine.startRun(makePlanRef(), makeContext('deterministic-run-1'));
@@ -26,7 +26,7 @@ describe('WorkflowEngine startRun intent id determinism', () => {
 
   it('rejects caller-owned logicalAttemptId at the public boundary', async () => {
     const { engine, intentStore } = createEngine({ adapters: makeAdapters() });
-    const createSpy = vi.spyOn(intentStore, 'createIntent');
+    const createSpy = vi.spyOn(intentStore, 'claimIntent');
 
     try {
       await engine.startRun(makePlanRef(), {

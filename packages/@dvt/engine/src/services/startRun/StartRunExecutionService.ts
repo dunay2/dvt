@@ -1,7 +1,15 @@
 /**
  * @ownedConcern Sequence admitted dispatch, bootstrap and provider-reference persistence.
  */
+import { parseEngineRunRef } from '@dvt/contracts';
+
+import { normalizeEngineRunRef } from '../../core/lifecycle/coreRuntime.js';
 import type { StartRunTraceContext } from '../../core/lifecycle/StartRunTraceContext.js';
+import {
+  requireStartRunMutation,
+  StartRunIntentMutationRejectedError,
+} from '../../domain/startRunIntentPolicy.js';
+import type { StartRunIntentClaimReceipt } from '../../ports/IStartRunIntentStore.js';
 
 import { StartRunCompensation } from './StartRunCompensation.js';
 import type { StartRunEventFactory } from './StartRunEventFactory.js';
@@ -9,15 +17,13 @@ import { StartRunFailureDiagnostics } from './StartRunFailureDiagnostics.js';
 import { PostStartIntentPersistenceError } from './StartRunFailurePolicy.js';
 import type {
   IStartRunExecutionService,
-  IStartRunFailurePolicy,
   StartRunErrorContext,
   StartRunExecutionInput,
 } from './StartRunTypes.js';
 
 type EngineRunRef = import('@dvt/contracts').EngineRunRef;
 type IObservability = import('@dvt/observability').IObservability;
-type IProviderAdapter = import('../../adapters/IProviderAdapter.js').IProviderAdapter;
-type IRunStateStoreWrite = import('../../ports/IRunStateStore.js').IRunStateStoreWrite;
+type IRunStateStoreWrite = import('../../ports/IRunStateStore.js').IStartRunStateStoreWrite;
 type IStartRunIntentStore = import('../../ports/IStartRunIntentStore.js').IStartRunIntentStore;
 type IClock = import('../../utils/clock.js').IClock;
 
@@ -25,7 +31,6 @@ export interface StartRunExecutionServiceDeps {
   stateStoreWrite: IRunStateStoreWrite;
   intentStore: IStartRunIntentStore;
   eventFactory: StartRunEventFactory;
-  failurePolicy: IStartRunFailurePolicy;
   observability: IObservability;
   clock: IClock;
   timeouts?: {
@@ -47,7 +52,7 @@ export class StartRunExecutionService implements IStartRunExecutionService {
       clock: deps.clock,
     });
     this.compensation = new StartRunCompensation({
-      failurePolicy: deps.failurePolicy,
+      intentStore: deps.intentStore,
       diagnostics: this.diagnostics,
     });
   }
@@ -71,47 +76,40 @@ export class StartRunExecutionService implements IStartRunExecutionService {
       runRef,
     });
     input.errorContext.phase = 'completion';
-    await this.deps.failurePolicy.markIntentResolvedBestEffort({
-      intentId: input.intentId,
-      tenantId: input.resolvedContext.tenantId,
-      runId: input.resolvedContext.runId,
-      provider: input.resolvedContext.targetAdapter,
-      traceContext: input.traceContext,
-    });
+    await this.completeIntent(input.receipt, input.traceContext, runRef.provider);
     return runRef;
   }
 
   private async startRunWithEstimatedRef(
     input: StartRunExecutionInput & { estimatedRef: EngineRunRef }
   ): Promise<EngineRunRef> {
-    const { planRef, estimatedRef, resolvedContext, traceContext, intentId, errorContext } = input;
+    const { planRef, estimatedRef, resolvedContext, traceContext, receipt, errorContext } = input;
     const bootMeta = this.deps.eventFactory.buildRunMetadata(
       resolvedContext,
       planRef,
       estimatedRef,
       this.deps.clock.nowIsoUtc()
     );
-    await this.deps.stateStoreWrite.bootstrapRunTx({
-      metadata: bootMeta,
-      firstEvents: [this.deps.eventFactory.buildRunEvent(bootMeta, 'RunQueued')],
-    });
+    requireStartRunMutation(
+      await this.deps.stateStoreWrite.applyStartRunWrite(receipt, {
+        kind: 'bootstrap',
+        input: {
+          metadata: bootMeta,
+          firstEvents: [this.deps.eventFactory.buildRunEvent(bootMeta, 'RunQueued')],
+        },
+      })
+    );
     errorContext.preparation = { disposition: 'created', runRef: estimatedRef };
 
     const runRef = await this.startAdapterAndMarkDispatched(input);
     await this.reconcileEstimatedRunRef({ ...input, runRef });
     errorContext.phase = 'completion';
-    await this.deps.failurePolicy.markIntentResolvedBestEffort({
-      intentId,
-      tenantId: resolvedContext.tenantId,
-      runId: resolvedContext.runId,
-      provider: resolvedContext.targetAdapter,
-      traceContext,
-    });
+    await this.completeIntent(receipt, traceContext, runRef.provider);
     return runRef;
   }
 
   private async startRunWithoutEstimatedRef(input: StartRunExecutionInput): Promise<EngineRunRef> {
-    const { adapter, planRef, resolvedContext, traceContext, intentId, errorContext } = input;
+    const { planRef, resolvedContext, traceContext, receipt, errorContext } = input;
     const runRef = await this.startAdapterAndMarkDispatched(input);
     const bootMeta = this.deps.eventFactory.buildRunMetadata(
       resolvedContext,
@@ -121,9 +119,8 @@ export class StartRunExecutionService implements IStartRunExecutionService {
     );
     await this.bootstrapRunTxWithCompensation({
       bootMeta,
-      adapter,
       runRef,
-      intentId,
+      receipt,
       traceContext,
       errorContext,
     });
@@ -133,59 +130,79 @@ export class StartRunExecutionService implements IStartRunExecutionService {
   private async startAdapterAndMarkDispatched(
     input: StartRunExecutionInput
   ): Promise<EngineRunRef> {
-    const { adapter, planRef, resolvedContext, intentId, errorContext } = input;
+    const { adapter, planRef, resolvedContext, receipt, errorContext } = input;
     errorContext.phase = 'provider_dispatch';
-    const runRef = await this.withTimeout(
-      adapter.startRun(planRef, resolvedContext),
-      this.deps.timeouts?.adapterCallMs ?? 30_000,
-      'adapter.startRun'
+    const authorization = await this.deps.intentStore.authorizeDispatch(receipt);
+    if (authorization === 'already_applied')
+      throw new StartRunIntentMutationRejectedError('invalid_state');
+    requireStartRunMutation(authorization);
+    const runRef = normalizeEngineRunRef(
+      parseEngineRunRef(
+        await this.withTimeout(
+          adapter.startRun(planRef, resolvedContext),
+          this.deps.timeouts?.adapterCallMs ?? 30_000,
+          'adapter.startRun'
+        )
+      )
     );
     try {
-      await this.deps.intentStore.markDispatched(
-        { tenantId: resolvedContext.tenantId, intentId },
-        runRef
-      );
+      requireStartRunMutation(await this.deps.intentStore.markDispatched(receipt, runRef));
     } catch (markDispatchedError) {
-      throw new PostStartIntentPersistenceError(intentId, runRef, markDispatchedError);
+      throw new PostStartIntentPersistenceError(receipt.intentId, runRef, markDispatchedError);
     }
     return runRef;
   }
 
   private async bootstrapRunTxWithCompensation(input: {
     bootMeta: ReturnType<StartRunEventFactory['buildRunMetadata']>;
-    adapter: IProviderAdapter;
     runRef: EngineRunRef;
-    intentId: string;
+    receipt: StartRunIntentClaimReceipt;
     traceContext: StartRunTraceContext;
     errorContext: StartRunErrorContext;
   }): Promise<void> {
-    const { bootMeta, adapter, runRef, intentId, traceContext, errorContext } = input;
+    const { bootMeta, runRef, receipt, traceContext, errorContext } = input;
     errorContext.phase = 'bootstrap';
     try {
-      await this.deps.stateStoreWrite.bootstrapRunTx({
-        metadata: bootMeta,
-        firstEvents: [this.deps.eventFactory.buildRunEvent(bootMeta, 'RunQueued')],
-      });
+      requireStartRunMutation(
+        await this.deps.stateStoreWrite.applyStartRunWrite(receipt, {
+          kind: 'bootstrap',
+          input: {
+            metadata: bootMeta,
+            firstEvents: [this.deps.eventFactory.buildRunEvent(bootMeta, 'RunQueued')],
+          },
+        })
+      );
       errorContext.preparation = { disposition: 'created', runRef };
-      errorContext.phase = 'completion';
-      await this.deps.failurePolicy.markIntentResolvedBestEffort({
-        intentId,
-        tenantId: bootMeta.tenantId,
-        runId: bootMeta.runId,
-        provider: bootMeta.providerRef.provider,
-        traceContext,
-      });
     } catch (bootstrapError) {
+      if (bootstrapError instanceof StartRunIntentMutationRejectedError) throw bootstrapError;
       await this.compensation.compensate({
-        adapter,
         runRef,
-        intentId,
+        receipt,
         traceContext,
         reason: 'bootstrap',
-        tenantId: bootMeta.tenantId,
-        runId: bootMeta.runId,
       });
       throw bootstrapError;
+    }
+    errorContext.phase = 'completion';
+    await this.completeIntent(receipt, traceContext, runRef.provider);
+  }
+
+  private async completeIntent(
+    receipt: StartRunIntentClaimReceipt,
+    traceContext: StartRunTraceContext,
+    provider: EngineRunRef['provider']
+  ): Promise<void> {
+    try {
+      requireStartRunMutation(await this.deps.intentStore.markResolved(receipt));
+    } catch (error) {
+      this.diagnostics.markResolvedFailed(error, {
+        intentId: receipt.intentId,
+        tenantId: receipt.tenantId,
+        runId: receipt.runId,
+        provider,
+        traceContext,
+      });
+      throw error;
     }
   }
 
@@ -195,19 +212,17 @@ export class StartRunExecutionService implements IStartRunExecutionService {
       runRef: EngineRunRef;
     }
   ): Promise<void> {
-    const { adapter, resolvedContext, estimatedRef, runRef, traceContext, intentId } = input;
+    const { resolvedContext, estimatedRef, runRef, traceContext, receipt } = input;
     input.errorContext.phase = 'provider_ref_reconciliation';
-    if (engineRunRefsEqual(estimatedRef, runRef)) {
-      return;
-    }
-
     try {
-      await this.deps.stateStoreWrite.saveProviderRef(
-        resolvedContext.tenantId,
-        resolvedContext.runId,
-        runRef
+      requireStartRunMutation(
+        await this.deps.stateStoreWrite.applyStartRunWrite(receipt, {
+          kind: 'bind_provider',
+          providerRef: runRef,
+        })
       );
     } catch (reconcileError) {
+      if (reconcileError instanceof StartRunIntentMutationRejectedError) throw reconcileError;
       this.diagnostics.providerRefReconciliationFailed(
         reconcileError,
         resolvedContext.runId,
@@ -216,13 +231,10 @@ export class StartRunExecutionService implements IStartRunExecutionService {
         traceContext
       );
       await this.compensation.compensate({
-        adapter,
         runRef,
-        intentId,
+        receipt,
         traceContext,
         reason: 'provider_ref_reconciliation',
-        tenantId: resolvedContext.tenantId,
-        runId: resolvedContext.runId,
       });
       throw reconcileError;
     }
@@ -248,17 +260,4 @@ export class StartRunExecutionService implements IStartRunExecutionService {
       if (timeoutId) clearTimeout(timeoutId);
     }
   }
-}
-
-function engineRunRefsEqual(left: EngineRunRef, right: EngineRunRef): boolean {
-  if (
-    left.provider !== right.provider ||
-    left.tenantId !== right.tenantId ||
-    left.workflowId !== right.workflowId ||
-    left.runId !== right.runId
-  ) {
-    return false;
-  }
-
-  return left.namespace === right.namespace && left.taskQueue === right.taskQueue;
 }

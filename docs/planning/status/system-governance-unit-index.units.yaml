@@ -551,7 +551,7 @@ units:
     parent: SYS-DVT
     level: component
     status: review
-    ownedConcern:
+    ownedConcern: >-
       Derive provider-neutral relation indexing, output schemas, field dependencies and exact
       subtree selection from Substrait.
     owns:
@@ -988,7 +988,7 @@ units:
     parent: SYS-RUNTIME-ROOT
     level: component
     status: coverage-required
-    ownedConcern:
+    ownedConcern: >-
       Shared portable encoding, digest, JCS, secure entropy, and UUID primitives without domain
       identity policy
     owns:
@@ -1226,13 +1226,16 @@ units:
     parent: SYS-RUNTIME-ENGINE-CORE
     level: component
     status: coverage-required
+    ownedConcern: >-
+      Own run maintenance and start-intent reconciliation through the existing maintenance service
+      and worker.
     owns:
       - packages/@dvt/engine/src/services/runMaintenance/**
       - packages/@dvt/engine/src/workers/**
-      - packages/@dvt/engine/test/services/PendingIntentDecision.test.ts
-      - packages/@dvt/engine/test/services/RunMaintenanceAuthorityRead.test.ts
       - packages/@dvt/engine/test/services/RunMaintenanceService.test.ts
       - packages/@dvt/engine/test/workers/**
+      - packages/@dvt/engine/test/services/RunMaintenanceIntentLifecycle.test.ts
+      - packages/@dvt/engine/test/services/RunMaintenanceAuthorityRead.test.ts
     childrenRequired: false
     dddOwner: AS
     cqRails: RT-C01, RT-Q01
