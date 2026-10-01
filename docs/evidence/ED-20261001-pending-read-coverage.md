@@ -89,6 +89,10 @@ type-aware lint unchanged. All package production sources and touched tests pass
 the fast lint, and full web/API lint passes. No unrelated file or lint rule is
 altered to mask resolver differences.
 
+The first remote quality run rejected the new policy file's missing
+`@baseline ADR-0064` traceability header. The header was added without changing
+behavior; the ADR-0000 traceability gate is rerun locally before republishing.
+
 ## Compatibility and integrity
 
 The evaluator classifies the full diff ARC-2: evidence and risk update required;

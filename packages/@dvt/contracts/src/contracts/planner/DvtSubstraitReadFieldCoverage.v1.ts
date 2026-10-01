@@ -1,4 +1,11 @@
-/** One identity per addressable Read schema field; never infer or repair identities. */
+/**
+ * One identity per addressable Read schema field; never infer or repair identities.
+ *
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Share complete Read field coverage between persistence and schema derivation.
+ * @consequence Missing or extra identities fail closed without migration or positional repair.
+ * @version 1.0.0
+ */
 import type { Type } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 
 import type { DvtSubstraitHierarchyFieldV1 } from './DvtSubstraitFieldBindingHierarchy.v1.js';
