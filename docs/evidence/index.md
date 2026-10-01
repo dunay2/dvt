@@ -36,6 +36,7 @@ Evidence documents that justify or validate relevant changes.
 - [Context](ED-20260404-mw-a2-graph-source-cardinality-and-boundary-hardening.md)
 - [Context](ED-20260405-mwa2-policy-unbounded-precedence.md)
 - [CROSS JOIN end to end](ED-20260919-cross-join-end-to-end.md)
+- [DAM1 explicit mode contract](ED-20261001-dam1-mode-contract.md)
 - [DBT Authoring Run Vertical And Plan-Store Replay Reuse](ed-20260526-dbt-authoring-run-plan-store-reuse.md)
 - [DBT step capability admission](ed-20260603-dbt-step-capability-admission.md)
 - [Dev Stack Local Temporal Bootstrap](ed-20260427-dev-stack-local-temporal-bootstrap.md)
