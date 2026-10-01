@@ -1,6 +1,7 @@
 /** Owned concern: translate pointer/keyboard gestures to local card positions only. */
-import { useRef, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
+import { useEffect, useRef, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
 import type { CardPosition } from '../canvasRelationalTreeGeometry';
+import type { useRelationalCardPlacement } from './useRelationalCardPlacement';
 
 export type RelationalMovableCard = Readonly<
   CardPosition & {
@@ -29,17 +30,16 @@ type Drag = {
 export function useRelationalCardMovement(
   cards: readonly RelationalMovableCard[],
   zoom: number,
-  commitPosition: (
-    id: string,
-    position: CardPosition,
-    visiblePositions: ReadonlyMap<string, CardPosition>
-  ) => void,
+  placement: Pick<
+    ReturnType<typeof useRelationalCardPlacement>,
+    'setPosition' | 'previewPosition' | 'finishMovement'
+  >,
   onManualLayout?: () => void,
   enabled = true
 ) {
   const drag = useRef<Drag | null>(null);
   const suppressClick = useRef(false);
-  const setPosition = (id: string, position: CardPosition) => {
+  const setPosition = (id: string, position: CardPosition, provisional = false) => {
     const visiblePositions = new Map(
       cards.map((card) => {
         const displayed = card.id === id ? position : card;
@@ -52,7 +52,8 @@ export function useRelationalCardMovement(
         ];
       })
     );
-    commitPosition(id, visiblePositions.get(id)!, visiblePositions);
+    const update = provisional ? placement.previewPosition : placement.setPosition;
+    update(id, visiblePositions.get(id)!, visiblePositions);
   };
   const locate = (target: EventTarget) => {
     const element = (target as Element).closest<HTMLElement>('[data-relational-card-id]');
@@ -65,10 +66,13 @@ export function useRelationalCardMovement(
     drag.current = null;
     delete current.target.dataset.dragging;
     suppressClick.current = current.moved;
-    if (cancel && current.moved) setPosition(current.id, current.origin);
+    if (current.moved) placement.finishMovement(cancel);
     if (current.target.hasPointerCapture(current.pointerId))
       current.target.releasePointerCapture(current.pointerId);
   };
+  const cancelOnUnmount = useRef(finish);
+  cancelOnUnmount.current = finish;
+  useEffect(() => () => cancelOnUnmount.current(true), []);
   return {
     onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
       if (!enabled || event.button !== 0 || drag.current != null) return;
@@ -95,13 +99,17 @@ export function useRelationalCardMovement(
       if (!current.moved && Math.hypot(dx, dy) < 4) return;
       event.preventDefault();
       event.stopPropagation();
+      current.target.dataset.dragging = 'true';
+      setPosition(
+        current.id,
+        {
+          x: Math.max(0, current.origin.x + dx / current.zoom),
+          y: Math.max(0, current.origin.y + dy / current.zoom),
+        },
+        true
+      );
       if (!current.moved) onManualLayout?.();
       current.moved = true;
-      current.target.dataset.dragging = 'true';
-      setPosition(current.id, {
-        x: Math.max(0, current.origin.x + dx / current.zoom),
-        y: Math.max(0, current.origin.y + dy / current.zoom),
-      });
     },
     onPointerUp: (event: PointerEvent<HTMLDivElement>) => {
       if (drag.current?.pointerId === event.pointerId) finish(false);
@@ -128,6 +136,7 @@ export function useRelationalCardMovement(
       suppressClick.current = false;
       if (
         !enabled ||
+        drag.current != null ||
         !event.altKey ||
         !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)
       )

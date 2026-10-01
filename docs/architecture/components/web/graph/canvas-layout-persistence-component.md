@@ -2,7 +2,7 @@
 title: Canvas Layout Persistence Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-09-09
+last_reviewed: 2026-10-01
 planning_type: architecture
 ---
 
@@ -69,6 +69,18 @@ Canonical local C&Q catalog:
 | `setCanvasInspectorListOrder(...)`           | `canvasInteractionStore.ts`           | Persist one reconciled Inspector list order for a workspace and Source node.                 |
 
 ## Invariants
+
+The relational editor uses the same settled-gesture boundary within its local
+layout session. `useRelationalCardMovement` translates events;
+`useRelationalCardPlacement` owns provisional coordinates, geometry and their
+confirmation; `RelationalLayoutSession` composes viewport and disclosure state.
+Pointer frames never invoke the position-publication callback. Release invokes
+it once. Escape, pointer cancellation, lost capture and an abandoned view restore
+the pre-drag position map, expansion frame and scroll extent without publishing.
+Restoration must preserve missing entries: an automatic card must remain free
+to reflow after a later graph change. Keyboard moves and explicit card placement
+remain settled one-shot changes. None of these adapters writes graph semantics,
+calls protected draft persistence, or starts Preview/data execution.
 
 - Node-position persistence only runs after the route-local layout store has
   completed automatic hydration.
@@ -249,6 +261,10 @@ Indirect consumers:
 ## Negative Coverage
 
 Primary tests:
+
+- `apps/web/src/app/views/canvas/relational-layout/RelationalCardCancellation.test.tsx`
+- `apps/web/src/app/views/canvas/CanvasRelationalTreeLayout.architecture.test.ts`
+- `apps/web/cypress/e2e/canvas/canvas-relational-card-cancellation.cy.ts`
 
 - `apps/web/src/app/views/canvas/useCanvasController.persistence.test.tsx`
 - `apps/web/src/app/views/canvas/useCanvasViewportGraphModel.layout.test.tsx`
