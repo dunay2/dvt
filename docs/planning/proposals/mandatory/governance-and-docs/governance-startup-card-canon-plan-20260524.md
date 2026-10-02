@@ -19,7 +19,6 @@ planning_type: proposal
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/planning/state/github-mvp-issue-workflow.md`
-- `docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md`
 
 ## Fowler Analysis
 
@@ -88,7 +87,8 @@ Use an **Intent Router** pattern:
    includes the mandatory validation level.
 
 Task lifecycle, priority, ownership, blockers, acceptance, evidence, and closure
-belong to GitHub Issues. Planning DB remains authoritative for architecture,
+belong to GitHub Issues.
+The planning-route closeout baseline remains issue/PR evidence + `pnpm verify:prepush`. Planning DB remains authoritative for architecture,
 capabilities, relationships, command/query rails, feature mechanization, and
 governed evidence where its rails apply; it is not a task tracker.
 
@@ -168,7 +168,6 @@ governingSources:
   - docs/planning/state/github-mvp-issue-workflow.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md
 allowedImplementationSurfaces:
   - README.md
   - buzon/20260524-codex-fowler-governance-startup-card-canon.md
@@ -181,8 +180,6 @@ allowedImplementationSurfaces:
   - docs/planning/index.md
   - docs/planning/proposals/index.md
   - docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md
-  - docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md
-  - docs/planning/proposals/portfolio-map-20260403.md
   - docs/planning/roadmap/index.md
   - docs/planning/state/github-mvp-issue-workflow.md
   - docs/planning/status/**
@@ -238,12 +235,10 @@ redGreenCycles:
     patchSurfaces:
       - tools/ci/startup-card-canon.test.mjs
       - docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md
-      - docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md
       - docs/architecture/components/ci-governance/governance-startup-card-canon-component.md
       - docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md
       - docs/architecture/components/ci-governance/index.md
       - docs/planning/domains/documentation-governance.md
-      - docs/planning/proposals/portfolio-map-20260403.md
       - buzon/20260524-codex-fowler-governance-startup-card-canon.md
     greenTest: node --test tools/ci/startup-card-canon.test.mjs
   - id: governance-startup-card-baseline-review

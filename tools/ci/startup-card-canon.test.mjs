@@ -19,7 +19,6 @@ const requiredFiles = [
   'docs/architecture/components/ci-governance/governance-startup-card-canon-component.md',
   'docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md',
   'docs/planning/domains/documentation-governance.md',
-  'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md',
 ];
 
 const requiredRails = [
@@ -59,7 +58,6 @@ const planningAuthorityFiles = [
   'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md',
   'docs/architecture/components/ci-governance/governance-startup-card-canon-component.md',
   'docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md',
-  'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md',
 ];
 
 const planningDomainEntrypoints = [
@@ -103,7 +101,6 @@ const baseActivePlanningEntrypoints = [
   'docs/planning/gaps/index.md',
   'docs/planning/proposals/mandatory/frontend-and-ux/index.md',
   'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md',
-  'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md',
   'scripts/sync-docs.cjs',
 ];
 
@@ -400,7 +397,7 @@ test('planning startup artifacts preserve GitHub task authority', () => {
 
   assert.match(
     readRepoFile(
-      'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md'
+      'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md'
     ),
     /issue\/PR evidence \+ `pnpm verify:prepush`/,
     'planning route must preserve the GitHub issue/PR closeout baseline'
@@ -416,9 +413,9 @@ test('active domain and roadmap routing expand the retired-surface guard', () =>
   );
   assert.ok(
     linkedActivePlanningPlans.includes(
-      'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md'
+      'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md'
     ),
-    'documentation governance active proposal routing must be scanned regardless of destination status'
+    'documentation governance current canon routing must be scanned'
   );
   assert.ok(
     linkedCurrentRoadmapDocuments.includes(
