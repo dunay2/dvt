@@ -158,7 +158,6 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       evidenceAcceptance: 'accepted',
       evidenceRefs: [
         'docs/architecture/components/web/code-workbench-workspace-files-component.md',
-        'docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-workspace-files-query-rail-plan-20260504.md',
         'apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts',
         'apps/web/src/app/services/workspace/workspacePorts.files.test.ts',
         'apps/web/src/app/views/CodeView.test.tsx',
@@ -179,7 +178,6 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
         'docs/architecture/components/web/graph/canvas-plan-run-readiness-component.md',
         'docs/architecture/components/web/graph/canvas-plan-run-readiness-user-stories.md',
         'docs/architecture/components/api/index.md',
-        'docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md',
         'apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts',
         'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartGuards.test.tsx',
         'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartSuccess.test.tsx',

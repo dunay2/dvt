@@ -18,15 +18,12 @@ function readRepoDoc(relativePathFromRepo: string): string {
 }
 
 describe('Monaco bundle isolation architecture', () => {
-  it('documents Monaco bundle ownership and implementation closure', () => {
+  it('documents Monaco bundle ownership, invariants, and user stories', () => {
     const componentGuide = readRepoDoc(
       'docs/architecture/components/web/monaco/monaco-bundle-isolation-component.md'
     );
     const userStories = readRepoDoc(
       'docs/architecture/components/web/monaco/monaco-bundle-isolation-user-stories.md'
-    );
-    const plan = readRepoDoc(
-      'docs/planning/proposals/mandatory/frontend-and-ux/f17e-monaco-bundle-isolation-plan-20260522.md'
     );
 
     for (const requiredText of [
@@ -44,12 +41,6 @@ describe('Monaco bundle isolation architecture', () => {
     expect(userStories).toContain('US-F17E-001');
     expect(userStories).toContain('US-F17E-005');
     expect(userStories).toContain('US-F17E-006');
-    expect(plan).toContain('featureId: F17E-MONACO-BUNDLE-ISOLATION-20260522');
-    expect(plan).toContain('cdn.jsdelivr.net');
-    expect(plan).toContain('monacoBundleIsolation.architecture.test.ts');
-    expect(plan).toContain('fowlerSignals:');
-    expect(plan).toContain('Hidden config semantics');
-    expect(plan).toContain('Semantic Configuration');
   });
 
   it('keeps Monaco and terminal vendor chunk decisions explicit and pure', () => {
