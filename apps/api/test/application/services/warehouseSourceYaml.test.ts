@@ -130,6 +130,30 @@ describe('warehouse source YAML projection', () => {
     expect(new Set(logicalSourceKeys)).toHaveLength(2);
   });
 
+  it('bounds long source identities without merging distinct catalogs', () => {
+    const sourceObjects = ['a', 'b'].map((suffix) =>
+      sourceObject({
+        connectionId: 'live-postgres-proof-long-connection-id',
+        catalog: `dvt_proof_source_import_${suffix.repeat(16)}`,
+      })
+    );
+    const updates = buildWarehouseSourceYamlUpdates({
+      existingFiles: new Map(),
+      groupingStrategy: 'schema',
+      includeColumns: false,
+      addTests: false,
+      addFreshness: false,
+      sourceObjects,
+    });
+    const names = updates.flatMap((update) =>
+      readExistingSourceDocument(update.content).sources.map((source) => source.name)
+    );
+
+    expect(names).toHaveLength(2);
+    expect(new Set(names).size).toBe(2);
+    expect(names.every((name) => Buffer.byteLength(name, 'utf8') <= 63)).toBe(true);
+  });
+
   it('keeps colliding physical schemas distinct when they are imported in separate batches', () => {
     const first = sourceObject({ schema: 'Sales/ERP Ops', name: 'open_orders' });
     const second = sourceObject({ schema: 'Sales ERP Ops', name: 'closed_orders' });

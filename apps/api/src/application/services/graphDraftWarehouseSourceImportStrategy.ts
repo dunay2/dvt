@@ -32,9 +32,9 @@ import {
   type WarehouseSourceImportStrategyResult,
 } from './warehouseSourceImportPlan.js';
 import {
+  buildCanonicalSourceName,
   buildWarehouseSourceYamlPath,
   sourceObjectIdentity,
-  toStableYamlIdentifierPart,
   type WarehouseSourceYamlBinding,
 } from './warehouseSourceYaml.js';
 
@@ -299,11 +299,7 @@ function toSourceNode(
 ): WorkspaceGraphAuthoringNode {
   const schema = sourceObject.locator.schema.toLowerCase();
   const tableName = sourceYamlBinding?.tableName ?? sourceObject.locator.name.toLowerCase();
-  const sourceName =
-    sourceYamlBinding?.sourceName ??
-    [sourceObject.connectionId, sourceObject.locator.catalog, sourceObject.locator.schema]
-      .map(toStableYamlIdentifierPart)
-      .join('_');
+  const sourceName = sourceYamlBinding?.sourceName ?? buildCanonicalSourceName(sourceObject);
 
   return {
     id: nodeId,
