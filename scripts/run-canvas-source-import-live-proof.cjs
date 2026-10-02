@@ -272,6 +272,7 @@ class CanvasSourceImportLiveProofRunner {
     return buildLiveCypressInvocation({
       platform,
       inheritedEnv: this.env,
+      repoRoot: path.resolve(__dirname, '..'),
       webPackageRoot: this.webPackageRoot,
       localSpecPaths: this.localSpecPaths,
       containerSpecPaths: this.specPath.split(','),

@@ -212,6 +212,7 @@ class CanvasFirstAuthoringLiveProofRunner {
     return buildLiveCypressInvocation({
       platform,
       inheritedEnv: this.env,
+      repoRoot: path.resolve(__dirname, '..'),
       webPackageRoot: this.webPackageRoot,
       localSpecPaths: [this.localSpecPath],
       containerSpecPaths: [this.specPath],

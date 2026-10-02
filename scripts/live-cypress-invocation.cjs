@@ -1,10 +1,10 @@
 'use strict';
-const path = require('node:path');
 
 /** Owns the host-specific Cypress invocation for live protected-runtime proofs. */
 function buildLiveCypressInvocation({
   platform = process.platform,
   inheritedEnv = process.env,
+  repoRoot,
   webPackageRoot,
   localSpecPaths,
   containerSpecPaths,
@@ -38,7 +38,7 @@ function buildLiveCypressInvocation({
     };
   }
 
-  const repoRoot = path.resolve(webPackageRoot, '../..').replaceAll('\\', '/');
+  const containerRepoRoot = repoRoot.replaceAll('\\', '/');
   const dockerEnv = Object.entries(cypressEnv).flatMap(([name, value]) => [
     '-e',
     `CYPRESS_${name}=${value}`,
@@ -50,7 +50,7 @@ function buildLiveCypressInvocation({
       '--rm',
       '-t',
       '-v',
-      `${repoRoot}:/repo`,
+      `${containerRepoRoot}:/repo`,
       '-w',
       '/repo/apps/web',
       ...dockerEnv,
