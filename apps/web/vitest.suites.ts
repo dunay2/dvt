@@ -168,6 +168,16 @@ const WEB_VITEST_CHANGED_SUITE_ORDER: readonly WebVitestChangedSuiteName[] = [
   'architecture',
 ] as const;
 
+const WEB_VITEST_GOVERNANCE_TEST_PATHS = [
+  'src/testing/vitestSuites.architecture.test.ts',
+  'src/testing/vitestSuites.catalog.architecture.test.ts',
+  'src/testing/vitestSuites.changedFileDiscovery.architecture.test.ts',
+  'src/testing/vitestSuites.changedRouting.architecture.test.ts',
+  'src/testing/vitestSuites.changedRoutingGovernance.architecture.test.ts',
+  'src/testing/vitestSuites.rawIntake.architecture.test.ts',
+  'src/testing/vitestSuites.sizePolicy.architecture.test.ts',
+] as const;
+
 export function createWebVitestConfig(suiteName: WebVitestSuiteName): UserConfig {
   const suite = WEB_VITEST_SUITES[suiteName];
 
@@ -252,20 +262,6 @@ export function classifyWebVitestFile(filePath: string): {
   };
 }
 
-function tryAddGovernanceSuite(
-  filePath: string,
-  webPath: string,
-  selectedSuites: Set<WebVitestChangedSuiteName>,
-  forcedSuites: Set<WebVitestChangedSuiteName>
-): boolean {
-  if (isWebVitestGovernancePath(filePath) || isWebVitestGovernancePath(webPath)) {
-    selectedSuites.add('architecture');
-    forcedSuites.add('architecture');
-    return true;
-  }
-  return false;
-}
-
 function tryAddFocusSuite(
   webPath: string,
   selectedSuites: Set<WebVitestChangedSuiteName>
@@ -318,26 +314,17 @@ function tryAddClassifiedSuite(
 }
 
 function resolveSuiteForWebPath(
-  filePath: string,
   webPath: string,
-  selectedSuites: Set<WebVitestChangedSuiteName>,
-  forcedSuites: Set<WebVitestChangedSuiteName>
+  selectedSuites: Set<WebVitestChangedSuiteName>
 ): void {
-  if (
-    tryAddGovernanceSuite(filePath, webPath, selectedSuites, forcedSuites) ||
-    tryAddFocusSuite(webPath, selectedSuites) ||
-    tryAddClassifiedSuite(webPath, selectedSuites)
-  ) {
-    return;
+  if (!tryAddFocusSuite(webPath, selectedSuites)) {
+    tryAddClassifiedSuite(webPath, selectedSuites);
   }
 }
 
-function resolveChangedSuiteForWebPath(
-  filePath: string,
-  webPath: string
-): WebVitestChangedSuiteName | null {
+function resolveChangedSuiteForWebPath(webPath: string): WebVitestChangedSuiteName | null {
   const selectedSuites = new Set<WebVitestChangedSuiteName>();
-  resolveSuiteForWebPath(filePath, webPath, selectedSuites, new Set<WebVitestChangedSuiteName>());
+  resolveSuiteForWebPath(webPath, selectedSuites);
 
   return WEB_VITEST_CHANGED_SUITE_ORDER.find((suiteName) => selectedSuites.has(suiteName)) ?? null;
 }
@@ -372,7 +359,6 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
   requiresDependencies: boolean;
 } {
   const selectedSuites = new Set<WebVitestChangedSuiteName>();
-  const forcedSuites = new Set<WebVitestChangedSuiteName>();
   const exactTestPaths = new Map<WebVitestChangedSuiteName, Set<string>>();
   const changedWebPaths = new Set(
     filePaths
@@ -410,20 +396,17 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
 
   for (const filePath of filePaths) {
     const webPath = normalizeWebVitestChangedPath(filePath);
-    if (!webPath) {
-      if (isWebVitestGovernancePath(filePath)) {
-        addExactTestPath('architecture', 'src/testing/vitestSuites.architecture.test.ts');
+    if (isWebVitestGovernancePath(filePath) || (webPath && isWebVitestGovernancePath(webPath))) {
+      for (const guardPath of WEB_VITEST_GOVERNANCE_TEST_PATHS) {
+        addExactTestPath('architecture', guardPath);
       }
       continue;
     }
 
-    if (isWebVitestGovernancePath(filePath) || isWebVitestGovernancePath(webPath)) {
-      addExactTestPath('architecture', 'src/testing/vitestSuites.architecture.test.ts');
-      continue;
-    }
+    if (!webPath) continue;
 
-    if (isWebVitestTestPath(webPath) && !isWebVitestGovernancePath(filePath)) {
-      const suiteName = resolveChangedSuiteForWebPath(filePath, webPath);
+    if (isWebVitestTestPath(webPath)) {
+      const suiteName = resolveChangedSuiteForWebPath(webPath);
       if (suiteName) {
         addExactTestPath(suiteName, webPath);
       }
@@ -431,15 +414,22 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
     }
 
     const directChangedTestPath = findDirectChangedTestPath(webPath);
-    if (directChangedTestPath && !isWebVitestGovernancePath(filePath)) {
-      const suiteName = resolveChangedSuiteForWebPath(filePath, directChangedTestPath);
+    if (directChangedTestPath) {
+      const suiteName = resolveChangedSuiteForWebPath(directChangedTestPath);
       if (suiteName) {
         addExactTestPath(suiteName, directChangedTestPath);
         continue;
       }
     }
 
-    resolveSuiteForWebPath(filePath, webPath, selectedSuites, forcedSuites);
+    resolveSuiteForWebPath(webPath, selectedSuites);
+  }
+
+  for (const primary of WEB_VITEST_PRIMARY_SUITE_NAMES) {
+    if (!selectedSuites.has(primary)) continue;
+    const coveredCanvasSuite = `canvas-${primary}` as const;
+    selectedSuites.delete(coveredCanvasSuite);
+    exactTestPaths.delete(coveredCanvasSuite);
   }
 
   const suites = WEB_VITEST_CHANGED_SUITE_ORDER.filter(
@@ -450,7 +440,7 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
       left.localeCompare(right)
     );
 
-    if (selectedSuites.has(suiteName) && (exactPaths.length === 0 || forcedSuites.has(suiteName))) {
+    if (selectedSuites.has(suiteName)) {
       return [{ kind: 'shell', command: WEB_VITEST_CHANGED_SUITE_COMMANDS[suiteName] }];
     }
 

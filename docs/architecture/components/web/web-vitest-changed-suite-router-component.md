@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-05-31
+last_reviewed: 2026-10-02
 planning_type: architecture
 ---
 
@@ -62,16 +62,24 @@ Tests` pull-request lane while preserving full primary-suite coverage on
 - When a changed source file and its same-stem `*.test.*` or `*.spec.*` file
   both appear in the same diff, the router may run that exact test file instead
   of the broader suite.
-- When a non-governance change set selects a focus or primary suite and also
-  contains exact changed tests for that same suite, the router runs the exact
-  tests instead of duplicating them with the broader suite command.
+- A source without a directly paired changed test requires its complete suite.
+  Unrelated exact tests in that suite cannot cancel this requirement. When a
+  complete suite is required, its exact tests are included by that run rather
+  than executed again in a separate batch.
 - Exact changed-test execution is batched by Vitest config, so one changed set
   with many architecture files still pays for one Vitest process for that
   architecture config.
 - Governance changes to the suite catalog, configs, package scripts, router
-  adapter, or router docs route to the governed router architecture guard
-  `src/testing/vitestSuites.architecture.test.ts` instead of the broad
-  architecture suite.
+  adapter, or router docs run all current `src/testing/vitestSuites*.architecture.test.ts`
+  guards in one exact batch instead of the broad architecture suite. The
+  inventory contract detects guards omitted after a split or addition.
+- A complete primary suite absorbs its equivalent Canvas focus suite, including
+  exact focus tests. The catalog contract proves file-set containment and equal
+  execution configuration outside include/exclude patterns. An exact primary
+  batch is not a complete suite and cannot absorb a Canvas focus run.
+- Monaco, shell-session, and workspace-services retain their own execution
+  contexts: their jsdom defaults are not interchangeable with Node primary
+  suites. This normalization does not change environments, isolation or workers.
 - Source files without a changed same-stem test keep the existing suite
   fallback, so unpaired source edits do not silently lose coverage.
 - Non-Canvas `.tsx` paths route to `presentation`.
@@ -90,7 +98,7 @@ stateDiagram-v2
   [*] --> ChangedFiles
   ChangedFiles --> GovernedPath: suite catalog/config/docs
   ChangedFiles --> PairedSource: source plus changed same-stem test
-  ChangedFiles --> ExactSuiteTests: non-governance source plus exact tests
+  ChangedFiles --> RequiredSuite: source without a paired changed test
   ChangedFiles --> CanvasPath: Canvas route, canvas component, or inspector surface
   ChangedFiles --> MonacoPath: Monaco route/editor surface
   ChangedFiles --> ShellSessionPath: shell/session/scope/composition surface
@@ -99,7 +107,7 @@ stateDiagram-v2
   ChangedFiles --> TsPath: non-Canvas TS
   GovernedPath --> ArchitectureCommand
   PairedSource --> ExactTestBatch
-  ExactSuiteTests --> ExactTestBatch
+  RequiredSuite --> CompleteSuite
   CanvasPath --> CanvasUnitCommand: .ts
   CanvasPath --> CanvasPresentationCommand: .tsx
   CanvasPath --> CanvasArchitectureCommand: architecture
@@ -110,14 +118,16 @@ stateDiagram-v2
   TsPath --> UnitCommand
   ArchitectureCommand --> Evidence
   ExactTestBatch --> Evidence
-  CanvasUnitCommand --> Evidence
-  CanvasPresentationCommand --> Evidence
-  CanvasArchitectureCommand --> Evidence
+  CanvasUnitCommand --> EquivalentCoverage
+  CanvasPresentationCommand --> EquivalentCoverage
+  CanvasArchitectureCommand --> EquivalentCoverage
   MonacoCommand --> Evidence
   ShellSessionCommand --> Evidence
   WorkspaceServicesCommand --> Evidence
-  PresentationCommand --> Evidence
-  UnitCommand --> Evidence
+  PresentationCommand --> EquivalentCoverage
+  UnitCommand --> EquivalentCoverage
+  CompleteSuite --> EquivalentCoverage
+  EquivalentCoverage --> Evidence: absorb only complete equivalent coverage
 ```
 
 ## Consumers
@@ -153,4 +163,7 @@ flowchart LR
 - Do not duplicate include/exclude glob semantics in the command adapter.
 - Do not spawn one Vitest process per exact test when the same config can run
   the exact filters together.
+- Do not suppress an unpaired source's suite because another test was changed.
+- Do not exclude Cypress changes under this Vitest-only cut. Browser evidence
+  routing remains pending in [#3540](https://github.com/dunay2/dvt/issues/3540).
 - Do not make source files under `apps/web/src/testing/**` production services.
