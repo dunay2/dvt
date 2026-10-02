@@ -163,6 +163,10 @@ const SCRIPT_FILE_RULES = [
   ],
   [/^scripts\/run-dev-stack(\.[\w-]+)?(\.test)?\.cjs$/u, 'dev-local'],
   [
+    /^scripts\/(disposable-postgres-database|live-cypress-invocation|live-governed-project)\.cjs$/u,
+    'dev-local',
+  ],
+  [
     /^scripts\/run-(canvas-first-authoring|canvas-source-import|het[12]-public-vertical|selected-closure)-live-proof\.cjs$/u,
     'dev-local',
   ],
