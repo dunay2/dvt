@@ -192,6 +192,13 @@ test('classifies current command file paths without broad script-directory assum
     classifyScriptFilePath('scripts/run-canvas-source-import-live-proof.cjs').domain,
     'dev-local'
   );
+  for (const helper of [
+    'disposable-postgres-database',
+    'live-cypress-invocation',
+    'live-governed-project',
+  ]) {
+    assert.equal(classifyScriptFilePath(`scripts/${helper}.cjs`).domain, 'dev-local');
+  }
   assert.equal(
     classifyScriptFilePath('scripts/run-het1-public-vertical-live-proof.cjs').domain,
     'dev-local'

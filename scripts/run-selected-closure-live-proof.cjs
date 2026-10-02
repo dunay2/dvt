@@ -8,16 +8,20 @@ const { mkdir, rm, writeFile } = require('node:fs/promises');
 const http = require('node:http');
 const https = require('node:https');
 const path = require('node:path');
-const { Client } = require('pg');
 const readline = require('node:readline');
 const { pathToFileURL } = require('node:url');
 const yaml = require('js-yaml');
+const {
+  allocateDisposablePostgresDatabase,
+  installDisposablePostgresInterruptCleanup,
+} = require('./disposable-postgres-database.cjs');
 
 const {
   buildCoordinatedTemporalWorkerEnv,
   buildLocalDbtArtifactEnv,
   ensureLocalWarehouseConnectionViaApi,
   resolveDatabaseUrl,
+  resolvePostgresCredentialBindings,
   seedLocalPostgresProofData,
   shouldBootstrapLocalPostgres,
   waitForUrlOrProcessExit,
@@ -36,7 +40,8 @@ const DEFAULT_READY_TIMEOUT_MS = 240_000;
 const DEFAULT_POLL_INTERVAL_MS = 500;
 const POSTGRES_BOOTSTRAP_SCRIPT = path.resolve(__dirname, 'run-local-postgres.cjs');
 const TEMPORAL_PACKAGE_ROOT = path.resolve(__dirname, '../packages/@dvt/adapter-temporal');
-const DEFAULT_SPEC_RELATIVE_PATH = 'apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts';
+const DEFAULT_SPEC_RELATIVE_PATH =
+  'apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts';
 const CYPRESS_IMAGE = 'cypress/included:15.18.1';
 const LOCAL_AUTH_HOST = '127.0.0.1';
 const API_BIND_HOST = '0.0.0.0';
@@ -48,10 +53,6 @@ const SELECTED_CLOSURE_LIVE_PROOF_ROOT = path.resolve(
 const LIVE_PROOF_DBT_PROFILE = 'dvt_live_proof';
 const GENERATED_CANVAS_DBT_PROFILE = 'default';
 const LOCAL_TEMPORAL_TEST_SERVER_ROOT = path.resolve(__dirname, '../.dvt/temporal-test-server');
-
-function quoteIdentifier(identifier) {
-  return `"${identifier.replaceAll('"', '""')}"`;
-}
 
 function allocateLiveProofSchema() {
   return `dvt_live_selected_closure_${Date.now()}_${process.pid}`;
@@ -218,17 +219,6 @@ async function closeReaders(processHandle) {
   processHandle.stderrReader.close();
 }
 
-async function dropSchemaIfExists(databaseUrl, schema) {
-  const client = new Client({ connectionString: databaseUrl });
-  await client.connect();
-
-  try {
-    await client.query(`DROP SCHEMA IF EXISTS ${quoteIdentifier(schema)} CASCADE`);
-  } finally {
-    await client.end();
-  }
-}
-
 function readNonEmptyEnv(value) {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
 }
@@ -372,6 +362,9 @@ function buildLiveProofCypressDockerInvocation(
     ...(args.postgresTargetSchema === undefined
       ? []
       : ['-e', `CYPRESS_postgresTargetSchema=${args.postgresTargetSchema}`]),
+    ...(args.postgresDatabaseName === undefined
+      ? []
+      : ['-e', `CYPRESS_postgresDatabaseName=${args.postgresDatabaseName}`]),
     CYPRESS_IMAGE,
     '--project',
     '/repo/apps/web',
@@ -419,6 +412,9 @@ function buildLiveProofCypressNativeInvocation(args) {
       ...(args.postgresTargetSchema === undefined
         ? {}
         : { CYPRESS_postgresTargetSchema: args.postgresTargetSchema }),
+      ...(args.postgresDatabaseName === undefined
+        ? {}
+        : { CYPRESS_postgresDatabaseName: args.postgresDatabaseName }),
     },
   };
 }
@@ -576,9 +572,7 @@ function buildLiveProofApiEnv({
     HOST: API_BIND_HOST,
     PORT: String(DEFAULT_API_PORT),
     DATABASE_URL: databaseUrl,
-    DVT_POSTGRES_CREDENTIAL_BINDINGS:
-      readNonEmptyEnv(sourceEnv.DVT_POSTGRES_CREDENTIAL_BINDINGS) ??
-      JSON.stringify({ 'postgres:local-postgres-proof': databaseUrl }),
+    DVT_POSTGRES_CREDENTIAL_BINDINGS: resolvePostgresCredentialBindings(databaseUrl, sourceEnv),
     DVT_PG_SCHEMA: liveProofSchema,
     DVT_DBT_ANALYZER_PROFILES_DIR: profilesDirectory,
     DVT_READYZ_ENABLED: 'true',
@@ -666,33 +660,37 @@ async function main() {
   if (cypressHeaded && cypressRuntime !== 'native') {
     throw new Error('Headed Chrome requires DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME=native.');
   }
-  const { databaseUrl, shouldBootstrap } = resolveLiveProofDatabaseUrl();
+  const { databaseUrl: adminDatabaseUrl, shouldBootstrap } = resolveLiveProofDatabaseUrl();
   ensureLocalPostgresReady(shouldBootstrap);
-
-  const { TestWorkflowEnvironment } = await loadTemporalTesting();
-  const timeSkippingOptions = buildLiveProofTemporalTimeSkippingOptions();
-  const temporalEnv = timeSkippingOptions
-    ? await TestWorkflowEnvironment.createTimeSkipping(timeSkippingOptions)
-    : await TestWorkflowEnvironment.createTimeSkipping();
-  const localProtectedRuntimeAuth = await startLocalProtectedRuntimeAuth({
-    env: process.env,
-    host: LOCAL_AUTH_HOST,
-  });
-  const restrictedPrincipalId = `${localProtectedRuntimeAuth.principalId}-without-run-start`;
-  const restrictedPrincipalToken = await localProtectedRuntimeAuth.issueBearerToken({
-    principalId: restrictedPrincipalId,
-  });
+  const lease = await allocateDisposablePostgresDatabase(adminDatabaseUrl, 'selected_closure');
+  const databaseUrl = lease.url;
+  let temporalEnv;
+  let localProtectedRuntimeAuth;
   const liveProofSchema = allocateLiveProofSchema();
   const processHandles = [];
 
   async function shutdown() {
     await Promise.all(processHandles.map((handle) => terminateProcess(handle)));
     await Promise.all(processHandles.map((handle) => closeReaders(handle)));
-    await localProtectedRuntimeAuth.close();
-    await temporalEnv.teardown();
+    await localProtectedRuntimeAuth?.close();
+    await temporalEnv?.teardown();
   }
+  const removeInterruptCleanup = installDisposablePostgresInterruptCleanup(lease, shutdown);
 
   try {
+    const { TestWorkflowEnvironment } = await loadTemporalTesting();
+    const timeSkippingOptions = buildLiveProofTemporalTimeSkippingOptions();
+    temporalEnv = timeSkippingOptions
+      ? await TestWorkflowEnvironment.createTimeSkipping(timeSkippingOptions)
+      : await TestWorkflowEnvironment.createTimeSkipping();
+    localProtectedRuntimeAuth = await startLocalProtectedRuntimeAuth({
+      env: process.env,
+      host: LOCAL_AUTH_HOST,
+    });
+    const restrictedPrincipalId = `${localProtectedRuntimeAuth.principalId}-without-run-start`;
+    const restrictedPrincipalToken = await localProtectedRuntimeAuth.issueBearerToken({
+      principalId: restrictedPrincipalId,
+    });
     const hasExternallyManagedAnalyzerProfile =
       readNonEmptyEnv(process.env.DVT_DBT_ANALYZER_PROFILES_DIR) !== undefined;
     const apiEnv = buildLiveProofApiEnv({
@@ -828,18 +826,23 @@ async function main() {
         restrictedApiBearerToken: restrictedPrincipalToken.bearerToken,
         workspaceScope: localProtectedRuntimeAuth.workspaceScope,
         postgresTargetSchema: liveProofSchema,
+        postgresDatabaseName: lease.name,
         specPath,
         headed: cypressHeaded,
       },
       cypressRuntime
     );
   } finally {
-    await shutdown();
-    await dropSchemaIfExists(databaseUrl, liveProofSchema);
-    await rm(path.join(SELECTED_CLOSURE_LIVE_PROOF_ROOT, liveProofSchema), {
-      recursive: true,
-      force: true,
-    });
+    removeInterruptCleanup();
+    try {
+      await shutdown();
+    } finally {
+      await lease.dispose();
+      await rm(path.join(SELECTED_CLOSURE_LIVE_PROOF_ROOT, liveProofSchema), {
+        recursive: true,
+        force: true,
+      });
+    }
   }
 }
 

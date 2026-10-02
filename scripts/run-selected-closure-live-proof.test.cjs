@@ -25,7 +25,7 @@ const { defaultPgUrl } = require('./run-local-postgres.cjs');
 test('resolveLiveProofSpecPath keeps the selected-closure proof as the default', () => {
   assert.equal(
     resolveLiveProofSpecPath([]),
-    '/repo/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
+    '/repo/apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts'
   );
 });
 
@@ -70,6 +70,7 @@ test('buildLiveProofCypressDockerInvocation isolates the one governed spec in Cy
           environmentId: 'dev',
         },
         postgresTargetSchema: 'proof_schema',
+        postgresDatabaseName: 'dvt_proof_selected_closure_1234',
       },
       'C:/repo',
       { platform: 'linux' }
@@ -98,6 +99,8 @@ test('buildLiveProofCypressDockerInvocation isolates the one governed spec in Cy
       'CYPRESS_workspaceEnvironmentId=dev',
       '-e',
       'CYPRESS_postgresTargetSchema=proof_schema',
+      '-e',
+      'CYPRESS_postgresDatabaseName=dvt_proof_selected_closure_1234',
       'cypress/included:15.18.1',
       '--project',
       '/repo/apps/web',
@@ -125,6 +128,7 @@ test('buildLiveProofCypressDockerInvocation mirrors Windows junction targets rea
         environmentId: 'dev',
       },
       postgresTargetSchema: 'proof_schema',
+      postgresDatabaseName: 'dvt_proof_selected_closure_1234',
     },
     'C:/repo',
     {
@@ -156,6 +160,7 @@ test('buildLiveProofCypressNativeInvocation targets the already running host sta
         environmentId: 'dev',
       },
       postgresTargetSchema: 'proof_schema',
+      postgresDatabaseName: 'dvt_proof_selected_closure_1234',
     }),
     {
       command: process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm',
@@ -181,6 +186,7 @@ test('buildLiveProofCypressNativeInvocation targets the already running host sta
         CYPRESS_workspaceProjectId: 'project',
         CYPRESS_workspaceEnvironmentId: 'dev',
         CYPRESS_postgresTargetSchema: 'proof_schema',
+        CYPRESS_postgresDatabaseName: 'dvt_proof_selected_closure_1234',
       },
     }
   );
@@ -293,7 +299,7 @@ test('resolveLiveProofSpecPath rejects spec lists and glob patterns', () => {
     () =>
       resolveLiveProofSpecPath([
         '--spec',
-        'apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts,apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts',
+        'apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts,apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
       ]),
     /exactly one literal Cypress spec path/
   );

@@ -16,7 +16,7 @@ export const FIRST_AUTHORING_DEFAULTS: readonly CanvasFirstAuthoringDefault[] = 
     node: {
       id: 'dvt-transform-1',
       kind: 'dvt:transform',
-      name: 'Transform 1',
+      name: 'Model 1',
     },
   },
 ];

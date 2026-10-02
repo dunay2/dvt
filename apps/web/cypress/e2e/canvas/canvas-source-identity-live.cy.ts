@@ -11,7 +11,10 @@ import {
   readLiveGraphDraft,
   resolveLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
-import { importLivePostgresSource } from '../../support/liveWarehouseSourceImport';
+import {
+  importLivePostgresSource,
+  livePostgresDatabaseName,
+} from '../../support/liveWarehouseSourceImport';
 import { seedE2eWorkspaceSession } from '../../support/workspaceSession';
 
 describe('Shared Canvas imported Source identity', () => {
@@ -62,7 +65,7 @@ describe('Shared Canvas imported Source identity', () => {
         expect(node.id).to.match(identityPattern);
         expect(node.metadata).to.have.nested.property(
           'connectedSourceRef.sourceObjectId',
-          'relation/dvt/public/source_1'
+          `relation/${livePostgresDatabaseName()}/public/source_1`
         );
         cy.get('.react-flow__node[data-id="' + node.id + '"]')
           .should('be.visible')

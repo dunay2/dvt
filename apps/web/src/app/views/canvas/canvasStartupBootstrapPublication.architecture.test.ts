@@ -205,17 +205,25 @@ describe('canvas startup bootstrap publication architecture', () => {
     expect(cypressHelperSource).toContain("kind?: string }).kind).to.equal('not_found')");
     expect(cypressHelperSource).toContain('dvt-web-canvas-interaction');
     expect(cypressHelperSource).toContain('waitForLiveFirstAuthoringLayoutPositionChange');
-    expect(cypressSpecSource).toContain('dragFirstAuthoringNodeFromCardBody');
+    expect(cypressSpecSource).toContain('dragCanvasNodeByViewportDelta');
     expect(cypressSpecSource).toContain('skipWhenFirstAuthoringLiveEnvIsMissing');
     expect(cypressSpecSource).not.toContain('this.skip()');
     expect(cypressSpecSource).toContain('waitForLiveFirstAuthoringLayoutPositionChange');
     expect(cypressSpecSource).not.toContain('waitForLiveFirstAuthoringDraftNodePositionChange');
-    expect(cypressSpecSource).toContain('/transform 1/i');
+    expect(cypressSpecSource).toContain('/model 1/i');
     expect(cypressSpecSource).not.toContain("id: 'dbt'");
-    expect(cypressSpecSource).not.toContain('Model 1');
-    expect(liveRunnerSource).toContain('CYPRESS_requireLiveProtectedRuntime=1');
+    expect(liveRunnerSource).toContain("requireLiveProtectedRuntime: '1'");
+    expect(liveRunnerSource).toContain('buildLiveCypressInvocation');
+    expect(liveRunnerSource).toContain('createGovernedProject({');
+    expect(liveRunnerSource).toContain('firstAuthoringProjectId: args.workspaceScope.projectId');
+    expect(liveRunnerSource).not.toContain('buildFirstAuthoringWorkspaceScopes');
     expect(liveRunnerSource).toContain('VITE_PROJECT_OPTIONS');
     expect(liveRunnerSource).toContain('canvas-first-authoring-live.cy.ts');
+    expect(liveRunnerSource).toContain(
+      "['--filter', 'dvt-api', 'exec', 'tsx', 'watch', 'src/server.ts']"
+    );
+    expect(liveRunnerSource).not.toContain("['--filter', 'dvt-api', 'dev']");
+    expect(liveRunnerSource).not.toContain("'dbt'].map");
     expect(implementationPlanSource).toContain(
       'pnpm --filter @dvt/web test:e2e:first-authoring:live'
     );

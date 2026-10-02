@@ -18,6 +18,7 @@ import {
   seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
+import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';
 
 describe('DVT terminal Transform Preview and Run live', () => {
   beforeEach(function () {
@@ -69,6 +70,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
     seedLiveSelectedClosureDraft({
       authoringGenerated: true,
       terminalTransformPreview: true,
+      sourceDatabaseName: livePostgresDatabaseName(),
       terminalTransformResultTarget: { schema: targetSchema, relation: targetRelation },
       title: 'DVT terminal Transform Run',
     });
@@ -145,7 +147,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
 
     cy.get('[data-slot="run-itinerary-card"]', { timeout: 30_000 })
       .should('be.visible')
-      .and('contain.text', 'Completada');
+      .and('contain.text', 'completed');
     cy.get('[data-slot="run-result-tab"]').click();
     cy.get('[data-slot="run-dvt-postgres-publication-card"]', { timeout: 30_000 })
       .should('be.visible')
@@ -175,7 +177,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
         .should('equal', 200);
       cy.get('[data-slot="run-itinerary-card"]', { timeout: 30_000 })
         .should('be.visible')
-        .and('contain.text', 'Completada');
+        .and('contain.text', 'completed');
       cy.get('[data-slot="run-result-tab"]').click();
       cy.get('[data-slot="run-dvt-publication-plan-sha"]').should(($value) => {
         expect($value.text()).to.equal(previewSha);
@@ -192,6 +194,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
     seedLiveSelectedClosureDraft({
       authoringGenerated: true,
       terminalTransformPreview: true,
+      sourceDatabaseName: livePostgresDatabaseName(),
       title: 'DVT stale Preview guard',
     });
     cy.intercept('POST', '**/plans/preview').as('dvtPreviewBeforeEdit');
@@ -246,6 +249,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
     seedLiveSelectedClosureDraft({
       authoringGenerated: true,
       terminalTransformPreview: true,
+      sourceDatabaseName: livePostgresDatabaseName(),
       terminalTransformResultTarget: {
         schema: targetSchemaValue.trim(),
         relation: 'unsupported_view_result',

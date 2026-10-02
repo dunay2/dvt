@@ -18,6 +18,7 @@ import {
   seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
+import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';
 
 describe('N-input DVT Run live', () => {
   beforeEach(function () {
@@ -224,7 +225,7 @@ describe('N-input DVT Run live', () => {
 
     const sampleQuery = new URLSearchParams({
       ...resolveLiveWorkspaceSession(),
-      objectId: `relation/dvt/${targetSchema}/${targetRelation}`,
+      objectId: `relation/${livePostgresDatabaseName()}/${targetSchema}/${targetRelation}`,
       limit: '10',
     });
     cy.request({

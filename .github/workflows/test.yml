@@ -227,11 +227,6 @@ jobs:
           TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
           TURBO_TEAM: ${{ github.event_name != 'pull_request' && secrets.TURBO_TEAM || '' }}
 
-      - name: Prove adapter-postgres app-role runtime and direct RLS
-        run:
-          pnpm --filter @dvt/adapter-postgres test -- PostgresAppRoleRuntime.integration.test.ts
-          PostgresTenantRlsEnforcement.integration.test.ts
-
       - name: Run adapter-postgres full suite
         run: pnpm test:adapter-postgres
 

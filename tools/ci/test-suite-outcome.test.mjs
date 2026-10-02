@@ -1,6 +1,6 @@
 /** @ownedConcern Require scope-complete evidence from the actual Test Suite workflow. */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 import { runInNewContext } from 'node:vm';
 
@@ -74,6 +74,38 @@ test('Test Suite keeps one engine evidence owner and a complete stable aggregate
   assert.ok(
     !commands.some((command) => /testNamePattern|test:determinism|test:replay/u.test(command))
   );
+});
+
+test('PostgreSQL integration files run once in the full suite with the real database posture', () => {
+  const postgresJob = workflow.jobs['adapter-postgres'];
+  const commands = postgresJob.steps.map((step) => step.run).filter(Boolean);
+  const rootPackage = JSON.parse(readFileSync('package.json', 'utf8'));
+  const adapterPackage = JSON.parse(
+    readFileSync('packages/@dvt/adapter-postgres/package.json', 'utf8')
+  );
+  const vitestConfig = readFileSync('packages/@dvt/adapter-postgres/vitest.config.ts', 'utf8');
+
+  assert.equal(postgresJob.env.DVT_PG_INTEGRATION, '1');
+  assert.equal(commands.filter((command) => command === 'pnpm test:adapter-postgres').length, 1);
+  assert.ok(
+    !commands.some((command) =>
+      /PostgresAppRoleRuntime\.integration\.test\.ts|PostgresTenantRlsEnforcement\.integration\.test\.ts/u.test(
+        command
+      )
+    )
+  );
+  assert.equal(
+    rootPackage.scripts['test:adapter-postgres'],
+    'pnpm --filter @dvt/adapter-postgres test'
+  );
+  assert.match(adapterPackage.scripts.test, /vitest run.*--config vitest\.config\.ts/u);
+  assert.match(vitestConfig, /include:\s*\['test\/\*\*\/\*\.test\.ts'\]/u);
+  for (const file of [
+    'PostgresAppRoleRuntime.integration.test.ts',
+    'PostgresTenantRlsEnforcement.integration.test.ts',
+  ]) {
+    assert.ok(existsSync(`packages/@dvt/adapter-postgres/test/${file}`));
+  }
 });
 
 test('ready PRs accept every scope combination only with its selected evidence', () => {

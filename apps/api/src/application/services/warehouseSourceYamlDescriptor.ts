@@ -17,9 +17,11 @@ export const DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR: WarehouseSourceYamlArtifactDes
     );
   },
   sourceNameForSourceObject: (sourceObject) =>
-    [sourceObject.connectionId, sourceObject.locator.catalog, sourceObject.locator.schema]
-      .map(toStableYamlIdentifierPart)
-      .join('_'),
+    boundPostgresSourceName(
+      [sourceObject.connectionId, sourceObject.locator.catalog, sourceObject.locator.schema]
+        .map(toStableYamlIdentifierPart)
+        .join('_')
+    ),
   tableNameForSourceObject: (sourceObject) => toStableYamlIdentifierPart(sourceObject.locator.name),
   generatedFreshness: {
     warnAfterCount: 24,
@@ -84,6 +86,12 @@ export function toStableYamlIdentifierPart(part: string): string {
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '');
   return normalized.length > 0 ? normalized : 'unnamed';
+}
+
+export function boundPostgresSourceName(name: string): string {
+  if (name.length <= 63) return name;
+  const digest = createHash('sha256').update(name).digest('hex').slice(0, 12);
+  return `${name.slice(0, 50)}_${digest}`;
 }
 
 export function toCollisionResistantYamlIdentifierPart(part: string): string {

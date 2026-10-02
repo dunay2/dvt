@@ -53,6 +53,17 @@ Default local endpoints:
 - API health: `http://127.0.0.1:3000/healthz`
 - Web: `http://127.0.0.1:5173/`
 
+The local PostgreSQL container holds two separate product databases: `dvt` for
+application state (`DATABASE_URL`) and `dvt_demo` for deterministic source
+fixtures (`DVT_LOCAL_POSTGRES_WAREHOUSE_URL`). The local warehouse connection
+and its `postgres:local-postgres-proof` credential use `dvt_demo`; startup never
+seeds fixtures into `DATABASE_URL`. `pnpm postgres:local:up` provisions the
+warehouse database without removing existing data. If an existing scoped
+warehouse catalog still points to `dvt`, startup stops with a reconciliation
+error; it does not silently change saved Source bindings. Back up and classify
+existing local tables before removing any of them. The Planning DB is a
+separate authority and is not either product database.
+
 The wrapper script accepts optional flags:
 
 ```bash
