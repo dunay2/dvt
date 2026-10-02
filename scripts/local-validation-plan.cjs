@@ -28,6 +28,11 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/ai-preflight.test.cjs': 'scripts/ai-preflight.test.cjs',
   'scripts/closeout-changed.cjs': 'scripts/closeout-changed.test.cjs',
   'scripts/closeout-changed.test.cjs': 'scripts/closeout-changed.test.cjs',
+  'scripts/run-selected-closure-live-proof.cjs': 'scripts/run-selected-closure-live-proof.test.cjs',
+  'scripts/run-selected-closure-live-proof.test.cjs':
+    'scripts/run-selected-closure-live-proof.test.cjs',
+  'scripts/run-dev-stack.cjs': 'scripts/run-dev-stack.test.cjs',
+  'scripts/run-dev-stack.test.cjs': 'scripts/run-dev-stack.test.cjs',
   'scripts/check-governance-unit-coverage.cjs': 'scripts/check-governance-unit-coverage.test.cjs',
   'scripts/check-governance-unit-coverage.test.cjs':
     'scripts/check-governance-unit-coverage.test.cjs',

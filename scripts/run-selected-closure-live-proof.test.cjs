@@ -22,6 +22,19 @@ const {
 } = require('./run-selected-closure-live-proof.cjs');
 const { defaultPgUrl } = require('./run-local-postgres.cjs');
 
+test('selected closure explicitly prepares an available worker before starting the API', async () => {
+  const source = await readFile(
+    path.join(__dirname, 'run-selected-closure-live-proof.cjs'),
+    'utf8'
+  );
+  assert.ok(
+    /if \(temporalWorkerRuntime === 'available'\) \{\s+prepareTemporalWorkerRuntimeDependencies\(apiEnv\);\s+\}\s+const apiHandle = spawnProcess\('api-live-proof'/.test(
+      source
+    ),
+    'Available workers must be prepared before API startup, without swallowing preparation failures'
+  );
+});
+
 test('resolveLiveProofSpecPath keeps the selected-closure proof as the default', () => {
   assert.equal(
     resolveLiveProofSpecPath([]),

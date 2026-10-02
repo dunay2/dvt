@@ -54,6 +54,46 @@ test('buildFocusedChangedTestPlan validates changes to the changed-file lint gat
   assert.deepEqual(labels, ['node --test scripts/check-changed.test.cjs']);
 });
 
+test('runtime runner source and test changes select their isolated contract exactly once', () => {
+  for (const name of ['run-selected-closure-live-proof', 'run-dev-stack']) {
+    const source = `scripts/${name}.cjs`;
+    const contract = `scripts/${name}.test.cjs`;
+    for (const files of [[source], [contract], [source, contract]]) {
+      const plan = buildFocusedChangedTestPlan(files);
+      assert.deepEqual(plan.map(commandLabel), [`node --test ${contract}`], files.join(', '));
+      assert.equal(plan[0].kind, 'test');
+    }
+  }
+});
+
+test('runtime runner contracts retain mixed Web and adjacent script obligations', () => {
+  const labels = labelsFor([
+    'scripts/run-selected-closure-live-proof.cjs',
+    'scripts/run-selected-closure-live-proof.test.cjs',
+    'scripts/run-dev-stack.cjs',
+    'scripts/run-dev-stack.test.cjs',
+    'scripts/git-local-changes.cjs',
+    'apps/web/src/app/views/canvas/CanvasView.test.tsx',
+  ]);
+
+  for (const expected of [
+    'node --test scripts/run-selected-closure-live-proof.test.cjs',
+    'node --test scripts/run-dev-stack.test.cjs',
+    'node --test scripts/git-local-changes.test.cjs',
+    'pnpm test:web:changed',
+    'node scripts/check-changed.cjs',
+    'pnpm docs:feature-mechanization:implementation',
+  ]) {
+    assert.equal(labels.filter((label) => label === expected).length, 1, expected);
+  }
+});
+
+test('unrelated script changes do not select runtime runner contracts', () => {
+  assert.deepEqual(focusedLabelsFor(['scripts/ai-preflight.cjs']), [
+    'node --test scripts/ai-preflight.test.cjs',
+  ]);
+});
+
 test('buildVerifyChangedPlan keeps docs-only iteration on changed-file gates', () => {
   const labels = labelsFor(['docs/planning/templates/component-engineering-record-template.md']);
 
