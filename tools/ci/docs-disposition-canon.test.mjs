@@ -122,6 +122,9 @@ test('retired historical packs and generators cannot return', () => {
   const retiredPaths = [
     'docs/planning/proposals/mandatory/frontend-and-ux/superseded',
     'docs/planning/proposals/mandatory/frontend-and-ux/archive-candidates',
+    'docs/planning/proposals/mandatory/frontend-and-ux/implemented-capabilities',
+    'docs/planning/proposals/mandatory/frontend-and-ux/implemented-technical',
+    'docs/planning/proposals/mandatory/frontend-and-ux/pending-work',
     'docs/archive',
     'docs/planning/archive',
     'docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md',
@@ -166,7 +169,10 @@ test('retired historical packs and generators cannot return', () => {
   assert.doesNotMatch(frontendClassification, /\.\/superseded\//u);
   assert.doesNotMatch(frontendClassification, /archive-candidates\//u);
   assert.doesNotMatch(frontendClassification, /move to archive|put it in superseded/u);
-  assert.ok(frontendClassification.includes('History stays in Git.'));
+  assert.doesNotMatch(
+    frontendClassification,
+    /(?:implemented-capabilities|implemented-technical|pending-work)\//u
+  );
 
   const { scripts } = JSON.parse(readRepoFile('package.json'));
   assert.equal(Object.hasOwn(scripts, 'docs:gov:planner-stage-1-1'), false);
@@ -803,7 +809,7 @@ test('retired PR drafts and historical intake have no files or live consumers', 
   assertFilesExist([
     'docs/planning/state/github-mvp-issue-workflow.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/frontend-component-reflection-inventory-plan-20260604.md',
-    'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md',
+    'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md',
   ]);
 });
 
@@ -1296,64 +1302,37 @@ test('current task guidance no longer routes work through retired planning group
     'docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md',
     'docs/guides/testing-and-ci-capabilities.md',
     'docs/planning/domains/execution-runtime.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/authoring-graph-lab-roadmap-plan-20260603.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/canvas-inspector-plugin-authoring-fields-plan-20260604.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-context-properties-panel-plan-20260604.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-identity-policy-plan-20260601.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/canvas-visible-i18n-debt-plan-20260508.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-2-autosave-e2e-proof-plan-20260508.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-3-project-snapshot-roundtrip-plan-20260511.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/e-dvt-inspector-panels-plan-20260601.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/e-source-import-commercial-hardening-plan-20260531.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/f15f-canvas-workbench-screen-consolidation-plan-20260519.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/f15g-first-canvas-creation-capability-plan-20260519.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/f15h-first-canvas-draft-capability-split-plan-20260520.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/f19-marquez-public-data-visual-system-plan-20260522.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/f24-context-panel-token-convergence-plan-20260522.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/f24-monaco-visual-token-convergence-plan-20260522.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/f25-plugin-capability-table-plan-20260522.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/implemented-capabilities/index.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/implemented-technical/index.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/index.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/pending-work/index.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/sql-canvas-demanding-user-flow-review-plan-20260608.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md',
-    'docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md',
-    'docs/planning/proposals/mandatory/governance-and-docs/arc-state-store-policy-routing-plan-20260510.md',
-    'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md',
     'docs/planning/proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md',
     'docs/planning/proposals/mandatory/governance-and-docs/ci-governance-parity-implementation-plan-20260502.md',
     'docs/planning/proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md',
     'docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md',
     'docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md',
     'docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md',
-    'docs/planning/proposals/mandatory/runtime-and-contracts/ar-a5-plan-identity-determinism-verification-20260506.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-execution-capacity-admission-user-stories-20260424.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-dbt-plugin-package-extraction-plan-20260514.md',
-    'docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/dbt-step-capability-admission-plan-20260603.md',
-    'docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md',
-    'docs/planning/proposals/mandatory/runtime-and-contracts/run-events-hash-partitioning-plan-20260513.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/tenant-run-identity-platform-owned-run-id-plan-20260423.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md',
     'docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md',
-    'docs/planning/proposals/nice-to-have/architecture/todo.md',
-    'docs/planning/proposals/portfolio-map-20260403.md',
     'docs/planning/roadmap/diagrams/execution-dependency-gates.md',
     'docs/planning/roadmap/diagrams/index.md',
     'docs/planning/status/ai-efficiency-adoption-status.md',
@@ -1435,7 +1414,7 @@ test('retired historical validation records have no current files or references'
 // Refs #3004: dated implementation journals are historical Git content, not live authority.
 // Retained mechanization paths below describe previously allowed/changed surfaces only.
 // They are NOT governing sources, component guides, user stories, or evidence presence rules.
-test('historical implementation journals stay retired without erasing mechanization history', async () => {
+test('historical implementation journals stay retired without erasing mechanization history', async (t) => {
   const { sha256Hex, sha256HexUtf8 } = await import('@dvt/crypto');
   const { readFileSync } = await import('node:fs');
   const { extractFeatureMechanizationManifests } =
@@ -1644,134 +1623,68 @@ test('historical implementation journals stay retired without erasing mechanizat
     'fc22a93392805d36a71a6081292f82b4836801d77d8981d750e56831d41a434c',
     'fd53d7bfd0d64e569d582e1c53fa4f9dcc3c564d1a070e91865b4096bd0bca96',
   ]);
-  // SHA256([consumer path, featureId, exact field path, retired value]) -> original count.
-  // Removing a historical field is allowed; moving, duplicating or adding a reference is not.
+  // Frozen from authorized records at 88de00da81de1bfd33dacc8e46311faa6523703a.
+  // Keep consumer, feature, role, cycle, value and multiplicity; surface-set order is not identity.
+  // The 67 exceptions whose consumer documents were retired by #3489 no longer grant permission.
   const historicalFields = {
-    '00e64b9d2beb74df36cf27d5bf9b297d7f6b2382efdd18eb81aa2e1a62555552': 1,
-    '02407fac664b18f92a94ef565d52cb1ced254b0f1261f618338463be80330e2a': 1,
-    '089a5aadb89fc4575d5ec0e3d44452a922a869d9761f9bedc9749351e1502f4c': 1,
-    '08b65fb81d5a6d0bf92ef6d4254010eaf279e9a6018cb3c3eac803590c1d0cd2': 1,
-    '0947244414776ecf423c60bc56301a7b6e6586cb5fa4e167bff6da3d08236898': 1,
-    '0b50e7ad8746f8ae91f8247732353b927c4098a10316d43059c66f76a562853f': 1,
-    '0ced64764a04d4b9567e43ca62f53c59a65c3373cabfc5c9cf283f55ddacfb69': 1,
-    '0ecd5a2fc080b0e6484eaef111290909d6de84650345005d2e2b8dada64b223e': 1,
-    '0fa452208770c570db63c3cc41b4695f1c3f118309cbd2aa66e7f7c0ef355113': 1,
-    '15ccf143b4da28c728fb301ab16252bb20e9d5a4d6e63b235f8d680cf76b9624': 1,
-    '17e23e789dc388c0a71d59bb37768fe6210b15dfd389338795dc34aeafe7cee5': 1,
-    '1ccd0fe771f4f3d0ce3b1bc451e8957326691a052735aad82454fb4a189acbea': 1,
-    '1d62330dd208aedfc13b3c68736d68d9df9d10ee46169488377214d54abd0063': 1,
-    '1df0b1843e3fc3964824ac8ea71f9ceb564b741081f742e65c297e309b7d75a2': 1,
-    '1ea960e042fc59039e2c0106ab5d487a74c17606032943b7a9542ef28633de30': 1,
-    '203050e3a848669696f2c1bee8327ca2fff90bf9736da42d0db3d16da46eacdf': 1,
-    '26842844633dcc52b77556a9e22e18a6d3dcb479a7d25d73e28ec58e2b6c2ed2': 1,
-    '29f8ee59b553c3d0948fae2e2ed8b18e8d09ceb8ba59db0b4f99431f2e0a23eb': 1,
-    '2c590418d766af6d87fb69e420b9639465f816e9844407d6544b113a08fa5e56': 1,
-    '2d51059803279dca700d2e9e95d978b7353585b0131b5c038f14f82ee2e058dd': 1,
-    '2dc486fb32445aa0f45499df93065527bdbbbe582e7ca241461950195254a4c1': 1,
-    '2dc5835d831532a88bb932bdcdb121ca3d90fa9f94a9f76063a06f9c5da239b3': 1,
-    '2e5e6fefe00470028cfac78cf8f77bc5cfb39a2c921242125837aadd21c43aa7': 1,
-    '2fb596e3d0074d9be09c2eabebd544dbc79abd8cd6972bbd746b78e86628449f': 1,
-    '3004c9fd9b4327b6030ae9eac3367fc3989059e9c9c7d487198cf45ae5839f56': 1,
-    '31f56ac0e89878d1c0cc68235d6a5a599260b243897285a9be7cd6c8cc0108fb': 1,
-    '3323a720f43f630ef4a49e5828d56f3be6b4067638ef285cc4f6df96c94ec403': 1,
-    '36babfe468f2969d0a217081b8a6af080dc84b5cc3d397591e7f43084d9d033c': 1,
-    '374e1aaddd33f9d61e1f478c4f40717f365c1b5c0b41992ed13b3a77951d8824': 1,
-    '3bd046b029a6a6bec884086498bac1c30b0c27d369e583c0e80d52fb4d30c46f': 1,
-    '41915388c20137fd4f4ef39b0fb087d378c374611f863c807864e4891e32cff4': 1,
-    '4351661a6b910733d64e03c1c9bb80349dfb805c1c8e1cf9e733e3e35e7cc5cf': 1,
-    '446f241c878ace369e01cd24285c60f3a8e494c329cca200c6af82f24a772d2f': 1,
-    '46831229d908b133d651a1030e08b69ba923a9913fd30cbb3feb74699c89f68d': 1,
-    '4e6e448c1efeb31cad26f7d1a509966708acf393383f71eaa51e842cf9c15ab1': 1,
-    '4f6224a844a04a347987d1f6acb0ed2faea1c5a11dd8cbaf7034b131b6c30ee6': 1,
-    '4fa3d6d08f822b9926635da45ae7cd8aecfc40f32abf0386bd99756b535a14de': 1,
-    '551fe0e7cd80680be89382d324230dedb35246c5818823fe078ba7a267cc8f20': 1,
-    '55d717bae7b4b39f44a71f05ddbbf6951001ead93569a61f2ae5182a17c83c46': 1,
-    '580d3b9fe51c301af2108c8616ce5445bdee0e6659213b74127fc9f2c80a8ceb': 1,
-    '5b91f75e68a71f8fc7d15102efd343b76e836922a67b7921d8d61ebc616db638': 1,
-    '5d9add8148adb06eebad88dfcb9330127b16861ba88cb6882aee1d4cadfd762a': 1,
-    '5dd06ec0126b4c2d809d7f50eb14feac838e1370f50cbbf05e3d5aa3e1a2e5cb': 1,
-    '611d8cea03e71728b6e9649aba81c4f29d79903e56510c8bc4ca0b6a03b790d7': 1,
-    '6349ea8455ec76cb00a2c0a1d82eb6579f7ffa28dd5d994ff7c5f39158aa4bba': 1,
-    '64603ed2e5373f0ed4300ad01c47e08616020a6e391345745b8c47f3b8c18413': 1,
-    '6a0eccf9c678984bd2040d3173f676ebe72990128977b983c19ef418f3c32334': 1,
-    '6b16f5a50619f039adb0ad40e80a133cee1284eb901452dc8a361d2ed515c4b8': 1,
-    '6be8753f38f697f73c8d8a87249113f03975e393ecf7b60c80af16b617ba86d3': 1,
-    '6cf15d7304cca98555d7393e7b4a82989749df0608fbafd642a267e69d3eb636': 1,
-    '6ea12cf725e25827b3df790d1dc6633949c5208482ddc06225b4807ace2e9be2': 1,
-    '6fa2331ae8392bc480a198b4ee9151087d3c23f4ea63163b94900c3c9e7bc9bd': 1,
-    '7005050b1ce35815846de42290328f8b671e769e025fd8fd227b2d84332ee00b': 1,
-    '7208edf6edb5ae9369fa6be48e1551c149873df9c112b90a38031ec524b6089b': 1,
-    '72153d7cd38d5770357fb72606966cd3c9b0ca9e8f0b8e1c39138333bc3b74ae': 1,
-    '7554313dc97750031f7319b7fcf2ecc356e4d417bc8b22598689e39939ceb7d5': 1,
-    '76c5756934405aefb526e92a7523458e53eef2a5d8935badf4c0fb726b3830f2': 1,
-    '77c854fd41d7bf769da775d0aaca68ff31f4c6468032f06998936cad65250632': 1,
-    '796a83255ea9db9c8b031f73499901189500735cd37cdf1ec80ade39503ab6dc': 1,
-    '7aa2ff1b62c7a332c1fe1f217cb2015d7568d15e9044e448c4374a45a00aceb6': 1,
-    '7ef3ad08e6b37e493f3f03c3cac36747e58996293ed578918c7c93475fc65904': 1,
-    '805ba2f455fb183d8de23984fa6fcdf1f80596bd258c286e80c8be6c447dc215': 1,
-    '809407b7cfee13d190b23b42512353b71176366901129e5d3d3a48e3f1ec24f2': 1,
-    '81f328dbaab4f695977629cd3d18d244eda0cff1045eb4f1786b1b9cba551750': 1,
-    '83af8076558b2811f496ac28136f5574bfd9ebb733482ec652e39bd328212c29': 1,
-    '88d64910db4ed3d6dab81c7d8a260b0974d97dfde1e976be9c41a870cf0bfc93': 1,
-    '8e463adc181ee015b718c002551bb472cb60b94f1292c34af0cdae7b7701f303': 1,
-    '8fa9bc1972d228a082dd74f0f58031f634f474abdb96aa3604e812c74b7c0481': 1,
-    '8ffbe23eb3f496cc1423e8c3179abc59d83463c5cefce513e236d0c9991dc104': 1,
-    '95658ae8412bc1b56c9e805e084b6615ba62cff26767795b05822ba483e84bad': 1,
-    '97d773d94d99126c950dda084706fff8238a6c29660ba6da93219a99448114f5': 1,
-    '9a2785a9e100ca52a558c8b07635d409ad66885ad0c733118ae4f54e08aa0f31': 1,
-    '9a55faa83779df9c78f289f59e674127d0db3fedd664cfa1c938db8f5f6cfc20': 1,
-    '9bcb6eaaa234ea04a253066cef7139f67b410729ab955e37484242e65c0460e3': 1,
-    a1aed06f44f429be7808bb7eb1f622f66803859856d7cd4c56a4a09126841133: 1,
-    a1fab5397a2dbfb54e51aee97f7cdb6ed6b08bdbafe236ec13ebc2a98362c8a1: 1,
-    a4e631251b6b0898d5d557ab9737dd15806e14250e802a728b1caecfe0720b71: 1,
-    a769903cecb9bda561be440fdb54a617d156ec6c6032d15840c5fdd29ee13695: 1,
-    a81f2c5e1c3d8b73d139819d9fd20b25d3d3a3c19af24036196eb298c774526d: 1,
-    aba5128c8e15a18d150ce3d26e53d88c5a6e6d36ebf52f614b5c10958616f5ee: 1,
-    b0fbceb814e6fca9682fbbeb1e45ac22b33d35cbfbcdd55a624a3fcb02cac1a8: 1,
-    b665a4566b43b3adb691729e44c4dfdab1b106d56d72cb2d1e7966ab2341a6a7: 1,
-    b9aacbe9d9d2ff14489f7751815b48595e6600622665a325f39d963bb7b8546c: 1,
-    bb1fd7532fa49a096da84b56e7b915446598b8e5681fbadc1dfa286dc65e566c: 1,
-    bcce9be025a67e816b3ee2420834224433eeec5926d5575e9b72bb7ea6ebdf6f: 1,
-    c24444f2c226e69d3920f9e07d905bf5904459a6ea0a8dd5a9316bd41dc57627: 1,
-    c2b45dba3b5ff3a5b335e5f76563f382edb1c045155a3a5bcee2bc8c398acdec: 1,
-    c5d437dd6f8dc713602ce109f27f297a5b1e5cda6b05f1097edae7a96353e6ae: 1,
-    c70cdad150ecd2f33637c313d8a27cd43cf143e6aad68b6bee6d4b1d16c3295f: 1,
-    c7d6be26eecbdcf601169d40588d8612b2b43d5a65b653f610e4dfe10d6015fc: 1,
-    cce1e038444fff56f8069b3c330387bf3bf1c29b62f9f3753b58194fe0d56d4b: 1,
-    cdba3c1c43c8c927d5b7f1da401bfe94f4d6355c1bd677ce90fb14518bd8a435: 1,
-    d0ff64e3f1bd9eb5617a1b2fc3181e47a1d20d76fbc65f091d42041c7db3b920: 1,
-    d231d6c6874f866e87a85f0e947ad676d511c6e47aba51aa3b2630d8f70f3a51: 1,
-    d5dd23333afbd532470049c3e180a0cba469af5e89dd13ac235fc732b4b1e896: 1,
-    d648690abb6241cf388bc9a2cb92804c9dc4fabd5b1865e30aee58ba9161667c: 1,
-    d67f586c6c6ab3865879e36d480e75a156474863f322647a5ce1f1e58a7b80e4: 1,
-    d6c8df291faf99f966810634bc24b7ef4952f6c992b97b7dd87239f62529365f: 1,
-    d6d191dc60be9a7177e86577ee7e49935df671b888f57e14aa93806a975d2bc4: 1,
-    d7427c3482a5f35982a9182c4f5e1b95d353e09aa4aea4ae7dcf0d9983578363: 1,
-    d808980e869272a588e742f03e2249546a38f5ff0ea96855e54d78c6a3fff6a7: 1,
-    da673704d3202c0ec49afd2344843e71bee7a1fa3a578d834758882a7e16bc5b: 1,
-    da8b391ce9266a7142ba610b894a034a99f4de6e0e824afe594010a3f3765ce6: 1,
-    db3d081a88e8c2b25d5c46600b7ef79fdd894f6484e4cc2fb62ddd26a49d75ca: 1,
-    dc6cab9fde2925dfbb63e067e6ea24e7b5669e148872353782fbbe1fcafe8008: 1,
-    dd1be916e00d070529528e7746906194405279ca2f22974e4ae6dc4a589765cf: 1,
-    de5ccbb13ff792411cbc9487706459cd877645b81d6333382e5c27b7b878161d: 1,
-    e0c49fb50b1d7cde84c0b7e6cfaf3b457963cdab50fc017158e3859cfa5c3485: 1,
-    e3aa47bce25b361a7e98a14f4d1191457915f641e6773ba14f308627d646e396: 1,
-    e5a4dba51859b03b827fba36b0441d107cd395e6a1cd8f2bd8e2a31176537b1c: 1,
-    e68c9a84fde0015b8cf9b46eeea7264bf90c1ee4d006be4803455774b092f99b: 1,
-    ec8e5d018458dc3cb1afd708e58de234d100e695ff03c71cdf03f01acc4629b8: 1,
-    f0220c9e13c0f688674c074f08edafe7daf70c5b997074d3320f64a899746aac: 1,
-    f0940c2a67cbc8bfbd052181c649f5e43d4e0e2df6530c441653052200c05932: 1,
-    f13055751da50cf30643d3c1194d98d9a2ac5ed439593746588a5f5b8fec5f31: 1,
-    f1deeb8b1ed44377feecb4ea9e96800f544da7ddbfd9a6901ba7df768c3f6ddd: 1,
-    f4bafeb2c718e75cbe36af880d593c55cbccc99d33380b75703fbe6ffc87ba9c: 1,
-    f4d981e724c19c54e5e7dca00cf8ed5c9ba2b9a470eb462c994484731ae45142: 1,
-    f7ce7acaadab8e79792e64c504ca3c96e63e739260bd2ad81ce36fd31f6d8c2f: 1,
-    fb11d9698a289c45a265ed9ed1588d005abfaf683d2039fe4e68315638fdba4c: 1,
-    fb70c4e1df243d30677d59919a93955af4f4235bbf8a2068c4d292bf22651f2d: 1,
-    fca82ff989d82f85e99d9e82e0a3e1e2c9d9de0bf8222f886b19b2ad6d4a2155: 1,
-    fcf9613a4b083d8383ea9b15f9268aed9df1b6b47b18900bf56a62db0916f441: 1,
-    ff143dc016bcde8d805a45aa685f2ddf0fe3d38e35e12cfc14eb930d7ca27ab4: 1,
-    fff7ff5bd6c2daedc933327a1dd7aab8042f58977465ae14ab2b3bc35469dec5: 1,
+    '0b0ea150286e12983ce194555ce716f9944424b535e1ab50874ede047f8c520b': 1,
+    '0e566278e802940cd6cd0c6397a55af42c717c0172381a911a5283178d171366': 1,
+    '1850837a3457efec253668158ee1ec3cedb054a0d09fc391870c7ecb6c9900aa': 1,
+    '19e61004b7e0beeedbc629811b239670525be70241894020a089bcb85770aaff': 1,
+    '22f52febd4ce4ab3cec7441d6315ca8fe0e3c93946ec9d42e3f078651134a7e1': 1,
+    '267c0768c854358d826c61ab57640bb3043a7da1df8e88c851c67d81d3f1f86e': 1,
+    '2ae13aef7168067603af78ab056a5c36b7670bb7cc37071289dbdab0a860f651': 1,
+    '2c04b1c707952fb2685cedac2a5c410a16385d44cc984efc0b610666586eb85f': 1,
+    '2fa64fddb0d887f68a14c0b7047114c79e5863c67df2644ca3bebbbd639d5bd7': 1,
+    '322a145747abf1207969771e6e9f4a6bba16c29b30450174c555b646c3d536aa': 1,
+    '3357bdfec1daee5c90b7670dce4053e2029ac3b0f5e9bbf549c9c5f0a34fe32a': 1,
+    '3a7192731028b974130658e65aab203c6b776bcd50c22b550b55f5c09667ef7d': 1,
+    '3ac2258d98cf6998f916bac476585cfc51eafc7791458b103ea7fa6d93abf446': 1,
+    '4a2a14c8acfa5cc3e49bc9cee87ee6fb2e72a2f275ca159c626f63cd563a4c59': 1,
+    '4bf6fa9ca40c5323a9aa66685f3faf29ac4b6f78b738a23281590318612f51d0': 1,
+    '4e34106a25a5d326fd8fe471448b0f0cbf0f97df3459b35f1e62f567d827798f': 1,
+    '528cd40bb73ba30d2dd09e1fc8178cb5207b5a678150720e767fb202d219dfb5': 1,
+    '5841e5062887ad58c146a094030582fb359d3958994eb085b2636e3e45a75cf0': 1,
+    '59c56f579bc9d4787bbbd3a9e91f53f8745c043dc193587b7bd3b77184d615e6': 1,
+    '5b4db112991c3d106595f6e31391d9478291d588aa48bfa0278ba0799f1e95fd': 1,
+    '640f9717b50c1741a32c6943fd76843ae19cc37552067c704d034ac5826a9866': 1,
+    '68bc0805839b0e9e56579896e08c837c953c0cdaf19ca55487f34ac0cae0642f': 1,
+    '716cd445266c654325de8fb8a22ab29a0183b641bbc26feb8fb988cdd346204c': 1,
+    '7929b683d81d532c3e8e4ecf5f0aa6f5670762ddecb89e1d8b4bdba32522008b': 1,
+    '80d9c736bb5444af1a6334eb7e0fe73e2130fbcfc699974238400d324506a233': 1,
+    '8588d3b632d15da8896f5a0b6d0be18537ea6645d1b46f59706252cdf9363129': 1,
+    '8594ed01ad20df24a4e299ed149fcbdd949252e7aa06e9aef52b76bd51d0da3a': 1,
+    '88a10e5c67a48c4438069bc77a89f53fba9fc737b8e10827d691b1664e9fdf65': 1,
+    '8965f7d7ff08a229b7f23a252a42624ea25269fce622356611bf19b97cf03d5a': 1,
+    '966946aa1cbc6edd5a3ddc7ed7e5c1cb7c996d477fa17919acb82a2ccd7dadcb': 1,
+    a83af9fda4f799fd0fd2dcac1084a582b4d7b15002cce8db9ce954f72f7986ed: 1,
+    b00303370dbd960c21eca143a9ff11a66f9121b245a944eb76cb2c0e6e1b3ea1: 1,
+    b43542f50a0713b66294a2abd7e54b4b62815ab3450c3bc74ab9c74c2ded5685: 1,
+    b851575c9e710779fba395460f397be5e4d805f96d0bf34ce0127e81854265f2: 1,
+    b86f4d26d88a76c30efa1e112d54c9a624ca55a7010d8ba24adc172d685474c4: 1,
+    b87d99759b597a5e4c514cf8d7e8b60253bd7baac76d59fbef469f3f99e08a9a: 1,
+    bfbc322451162c25242175c6f0541eab161397e2d2484316e4f16efa5a861250: 1,
+    c51e054f0be609e8f833f60d7747cf077e7a63de21454635add90e2b418b04ea: 1,
+    c7412f513419dfcaf16a861636fdaeeb8fd0fa43158add242f8a690173e68856: 1,
+    c7517d4ed0257f41fe93961f2b538879c79bbd6491cc67fdb85d1cafb19b43bc: 1,
+    c924bbf64a72d7bd7e530d72406159589478d2ee89517ef4a1aecdf4be9d8fd4: 1,
+    cdc749bacb14668fec7e7c40ec87af429453e1604ae9fa635f4f955c63d8f752: 1,
+    ce7875ab2ebb1957cb6fcb1680a6830246ece6c7b5b96f2e4147d8c0780115f3: 1,
+    d20ce461083a5ae6e13f2661e38f4ab1f75d8f89b92167567d95a1df8fa57894: 1,
+    d2cf41effb970a5f4f7ce73636240c78adef3ab017bec84e9b0b9c810f0d32c8: 1,
+    d92b7c3b2bdfce44b3911443c60996822a26d1263cd034881128a0f5e81754b6: 1,
+    daa4417a1c4e219b021cdbda2718a7bacd064888522b4ea57bb502d092b21477: 1,
+    de95888bc3248ead8d72269ae1cad2535489e59f4b032e85bd3fda7e1816155a: 1,
+    e0879261e94ada663b9d0663c87d4e2c4282f91d7655a019085a4b2c2829008b: 1,
+    e53e602aaca4c212d48c7cdd11877c4b7610542b59a911ce1365396a40759f42: 1,
+    eded4e0742a00a67473d3e4b185fe8cf33278b824b4f873e181123a8880e55e2: 1,
+    efce9cf05d252452ebad2e133fb7ddefe832db733369258fb8db9db368317cda: 1,
+    f0b6d5a23b53bf7d05e1aedfa230da2cb4b230d7fe05cfdabe4ca519587c166f: 1,
+    f2728f4bee8ea9411eb95749f2d6481e228d2f8492dd6bc1953c2795a9e641c9: 1,
+    f3fe6f4a731397475d41d6789e16302d182fbd01dc29f98965fae74d5e235599: 1,
+    f99a4e992a4e8396b5cc058b2c6844b29a376d45a494e481fd421d343c980296: 1,
+    fa9a538d8c19cfc28d7ef6eddf90278b8b064b174e4e00f4af25a53061117fdd: 1,
+    fd0d5611c37a480dce1e2fa5e4816e3b89ddb8c0636aae698914935ec8f42af8: 1,
   };
   // SHA256([consumer path, exact trimmed command line]) -> original count.
   const recordedCommands = {
@@ -1780,12 +1693,53 @@ test('historical implementation journals stay retired without erasing mechanizat
     f2b92a391063e3103d755f364fff208a7e0f9c126cc445eed48da3930183206b: 1,
   };
   const identity = (value) => sha256HexUtf8(JSON.stringify(value));
+  const historicalIdentity = (consumer, feature, keys, value, parentIsArray) => {
+    assert.equal(parentIsArray, true, 'Historical surface must be an array entry');
+    return identity([consumer, feature, keys.slice(0, -1), value]);
+  };
   const counts = new Map();
   const consume = (allowed, key, context) => {
     const count = (counts.get(key) || 0) + 1;
     assert.ok(Object.hasOwn(allowed, key) && count <= allowed[key], context);
     counts.set(key, count);
   };
+  await t.test('historical reference identity ignores only surface-set order', () => {
+    const keys = ['redGreenCycles', '0', 'patchSurfaces', '7'];
+    const reference = ['consumer.md', 'feature', keys, 'retired.md'];
+    const key = historicalIdentity(...reference, true);
+    const allowed = { [key]: 1 };
+    assert.equal(
+      historicalIdentity('consumer.md', 'feature', [...keys.slice(0, -1), '6'], 'retired.md', true),
+      key
+    );
+    consume(allowed, key, 'Original reference');
+    assert.throws(() => consume(allowed, key, 'Duplicated reference'), /Duplicated reference/u);
+    for (const changed of [
+      ['other.md', reference[1], keys, reference[3]],
+      [reference[0], 'other-feature', keys, reference[3]],
+      [reference[0], reference[1], ['redGreenCycles', '1', 'patchSurfaces', '7'], reference[3]],
+      [reference[0], reference[1], ['allowedImplementationSurfaces', '7'], reference[3]],
+      [reference[0], reference[1], keys, 'new-retired.md'],
+    ]) {
+      assert.throws(
+        () => consume(allowed, historicalIdentity(...changed, true), 'New or moved reference'),
+        /New or moved reference/u
+      );
+    }
+    for (const objectKey of ['foo', '7']) {
+      assert.throws(
+        () =>
+          historicalIdentity(
+            'consumer.md',
+            'feature',
+            [...keys.slice(0, -1), objectKey],
+            'retired.md',
+            false
+          ),
+        /Historical surface must be an array entry/u
+      );
+    }
+  });
   const names = new Set(
     retired.map((path) => posix.basename(path).toLowerCase().replace(/\.md$/u, ''))
   );
@@ -1825,7 +1779,7 @@ test('historical implementation journals stay retired without erasing mechanizat
       assert.ok(record?.manifest && !record.parseError, `Invalid manifest in ${path}`);
       const manifest = record.manifest;
       let remaining = raw;
-      const visit = (value, keys = []) => {
+      const visit = (value, keys = [], parentIsArray = false) => {
         if (typeof value === 'string' && hasRetiredName(value)) {
           const allowedRole =
             (keys.length === 2 && keys[0] === 'allowedImplementationSurfaces') ||
@@ -1833,12 +1787,12 @@ test('historical implementation journals stay retired without erasing mechanizat
           assert.ok(allowedRole, `Retired journal used as authority: ${path} ${keys.join('.')}`);
           consume(
             historicalFields,
-            identity([path, manifest.featureId, keys, value]),
+            historicalIdentity(path, manifest.featureId, keys, value, parentIsArray),
             `New or moved historical field in ${path} ${keys.join('.')}`
           );
           remaining = remaining.replace(value, '');
         } else if (Array.isArray(value)) {
-          value.forEach((item, index) => visit(item, [...keys, String(index)]));
+          value.forEach((item, index) => visit(item, [...keys, String(index)], true));
         } else if (value && typeof value === 'object') {
           for (const [key, item] of Object.entries(value)) {
             assert.equal(hasRetiredName(key), false, `Retired name in manifest key: ${path}`);
