@@ -810,6 +810,7 @@ module.exports = {
   parseArgs,
   resolveDatabaseUrl,
   resolveLocalWarehouseUrl,
+  resolvePostgresCredentialBindings,
   shouldBootstrapLocalPostgres,
   buildApiEnv,
   buildLocalDbtArtifactEnv,

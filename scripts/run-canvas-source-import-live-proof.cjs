@@ -13,7 +13,17 @@ const readline = require('node:readline');
 const { pathToFileURL } = require('node:url');
 
 const { defaultPgUrl } = require('./run-local-postgres.cjs');
-const { buildLocalDbtArtifactEnv, seedLocalPostgresProofData } = require('./run-dev-stack.cjs');
+const { buildLiveCypressInvocation } = require('./live-cypress-invocation.cjs');
+const { buildInitialTenantAccess, createGovernedProject } = require('./live-governed-project.cjs');
+const {
+  allocateDisposablePostgresDatabase,
+  installDisposablePostgresInterruptCleanup,
+} = require('./disposable-postgres-database.cjs');
+const {
+  buildLocalDbtArtifactEnv,
+  resolvePostgresCredentialBindings,
+  seedLocalPostgresProofData,
+} = require('./run-dev-stack.cjs');
 const {
   LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
   resolveDevWorkspaceScope,
@@ -21,7 +31,10 @@ const {
 } = require('./run-dev-stack.auth.cjs');
 
 class CanvasSourceImportLiveProofRunner {
-  constructor(env = process.env, specFile = 'canvas-source-import-live-clean.cy.ts') {
+  constructor(
+    env = process.env,
+    specFiles = ['canvas-source-identity-live.cy.ts', 'canvas-source-import-live-clean.cy.ts']
+  ) {
     this.env = env;
     this.pnpmCommand = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
     this.apiPort = 3300;
@@ -31,8 +44,13 @@ class CanvasSourceImportLiveProofRunner {
     this.postgresBootstrapScript = path.resolve(__dirname, 'run-local-postgres.cjs');
     this.temporalPackageRoot = path.resolve(__dirname, '../packages/@dvt/adapter-temporal');
     this.webPackageRoot = path.resolve(__dirname, '../apps/web');
-    this.localSpecPath = path.resolve(this.webPackageRoot, 'cypress/e2e/canvas/' + specFile);
-    this.specPath = '/repo/apps/web/cypress/e2e/canvas/' + specFile;
+    const selectedSpecs = Array.isArray(specFiles) ? specFiles : [specFiles];
+    this.localSpecPaths = selectedSpecs.map((file) =>
+      path.resolve(this.webPackageRoot, 'cypress/e2e/canvas/' + file)
+    );
+    this.specPath = selectedSpecs
+      .map((file) => '/repo/apps/web/cypress/e2e/canvas/' + file)
+      .join(',');
     this.cypressImage = 'cypress/included:15.18.1';
     this.localAuthHost = '127.0.0.1';
     this.apiBindHost = '0.0.0.0';
@@ -56,20 +74,6 @@ class CanvasSourceImportLiveProofRunner {
     return [...new Set(scopes.map((scope) => scope[key]))]
       .map((value) => `${value}|${value}`)
       .join(',');
-  }
-
-  buildInitialTenantAccess(tenantId, tenantActions) {
-    if (typeof tenantId !== 'string' || tenantId.trim().length === 0) {
-      throw new Error('A tenant id is required for the source-import live proof');
-    }
-
-    return [
-      {
-        tenantId: tenantId.trim(),
-        allowedActions: [...tenantActions],
-        projectAccess: [],
-      },
-    ];
   }
 
   buildApiProcessArgs() {
@@ -239,20 +243,9 @@ class CanvasSourceImportLiveProofRunner {
     processHandle.stderrReader.close();
   }
 
-  async dropSchemaIfExists(databaseUrl, schema) {
-    const client = new Client({ connectionString: databaseUrl });
-    await client.connect();
-
-    try {
-      await client.query(`DROP SCHEMA IF EXISTS ${this.quoteIdentifier(schema)} CASCADE`);
-    } finally {
-      await client.end();
-    }
-  }
-
   async seedProtectedRuntimeGrants(args) {
     const tenantAccess = JSON.stringify(
-      this.buildInitialTenantAccess(args.tenantId, args.tenantActions)
+      buildInitialTenantAccess(args.tenantId, args.tenantActions)
     );
     const client = new Client({ connectionString: args.databaseUrl });
 
@@ -274,128 +267,31 @@ class CanvasSourceImportLiveProofRunner {
     }
   }
 
-  async createGovernedProject(args) {
-    const response = await fetch(`${args.apiBaseUrl}/projects`, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${args.bearerToken}`,
-        'Content-Type': 'application/json',
-        'Idempotency-Key': args.idempotencyKey,
-      },
-      body: JSON.stringify({ tenantId: args.tenantId, name: args.name }),
-    });
-    const body = await response.json();
-    if (response.status !== 200 && response.status !== 201) {
-      throw new Error(
-        `Governed project creation failed with ${response.status}: ${JSON.stringify(body)}`
-      );
-    }
-
-    const workspace = body?.defaultWorkspace;
-    if (
-      workspace === null ||
-      typeof workspace !== 'object' ||
-      typeof workspace.tenantId !== 'string' ||
-      typeof workspace.projectId !== 'string' ||
-      typeof workspace.projectName !== 'string' ||
-      typeof workspace.environmentId !== 'string'
-    ) {
-      throw new Error('Governed project creation returned an invalid default workspace');
-    }
-    return workspace;
-  }
-
   buildCypressInvocation(args, platform = process.platform) {
-    if (platform === 'win32') {
-      const env = {
-        ...this.env,
-        CYPRESS_baseUrl: `http://127.0.0.1:${args.webPort}`,
-        CYPRESS_apiBaseUrl: `http://127.0.0.1:${args.apiPort}`,
-        CYPRESS_apiBearerToken: args.apiBearerToken,
-        CYPRESS_workspaceTenantId: args.workspaceScope.tenantId,
-        CYPRESS_workspaceProjectId: args.workspaceScope.projectId,
-        CYPRESS_workspaceEnvironmentId: args.workspaceScope.environmentId,
-        CYPRESS_firstAuthoringProjectId: args.workspaceScope.projectId,
-        CYPRESS_secondaryWorkspaceTenantId: args.secondaryWorkspaceScope.tenantId,
-        CYPRESS_secondaryWorkspaceProjectId: args.secondaryWorkspaceScope.projectId,
-        CYPRESS_secondaryWorkspaceEnvironmentId: args.secondaryWorkspaceScope.environmentId,
-        CYPRESS_firstAuthoringRunId: args.sourceImportRunId,
-        CYPRESS_requireLiveProtectedRuntime: '1',
-      };
-      delete env.ELECTRON_RUN_AS_NODE;
-
-      return {
-        command: 'pnpm.cmd',
-        args: [
-          'exec',
-          'cypress',
-          'run',
-          '--config-file',
-          'cypress.config.ts',
-          '--spec',
-          this.localSpecPath,
-        ],
-        options: {
-          cwd: this.webPackageRoot,
-          stdio: 'inherit',
-          env,
-          shell: true,
-          windowsHide: true,
-        },
-      };
-    }
-
-    const repoRoot = path.resolve(__dirname, '..').replaceAll('\\', '/');
-    const dockerArgs = [
-      'run',
-      '--rm',
-      '-t',
-      '-v',
-      `${repoRoot}:/repo`,
-      '-w',
-      '/repo/apps/web',
-      '-e',
-      `CYPRESS_baseUrl=http://host.docker.internal:${args.webPort}`,
-      '-e',
-      `CYPRESS_apiBaseUrl=http://host.docker.internal:${args.apiPort}`,
-      '-e',
-      `CYPRESS_apiBearerToken=${args.apiBearerToken}`,
-      '-e',
-      `CYPRESS_workspaceTenantId=${args.workspaceScope.tenantId}`,
-      '-e',
-      `CYPRESS_workspaceProjectId=${args.workspaceScope.projectId}`,
-      '-e',
-      `CYPRESS_workspaceEnvironmentId=${args.workspaceScope.environmentId}`,
-      '-e',
-      `CYPRESS_firstAuthoringProjectId=${args.workspaceScope.projectId}`,
-      '-e',
-      `CYPRESS_secondaryWorkspaceTenantId=${args.secondaryWorkspaceScope.tenantId}`,
-      '-e',
-      `CYPRESS_secondaryWorkspaceProjectId=${args.secondaryWorkspaceScope.projectId}`,
-      '-e',
-      `CYPRESS_secondaryWorkspaceEnvironmentId=${args.secondaryWorkspaceScope.environmentId}`,
-      '-e',
-      `CYPRESS_firstAuthoringRunId=${args.sourceImportRunId}`,
-      '-e',
-      'CYPRESS_requireLiveProtectedRuntime=1',
-      this.cypressImage,
-      '--project',
-      '/repo/apps/web',
-      '--config-file',
-      '/repo/apps/web/cypress.config.ts',
-      '--spec',
-      this.specPath,
-    ];
-
-    return {
-      command: 'docker',
-      args: dockerArgs,
-      options: {
-        stdio: 'inherit',
-        windowsHide: true,
+    const host = platform === 'win32' ? '127.0.0.1' : 'host.docker.internal';
+    return buildLiveCypressInvocation({
+      platform,
+      inheritedEnv: this.env,
+      webPackageRoot: this.webPackageRoot,
+      localSpecPaths: this.localSpecPaths,
+      containerSpecPaths: this.specPath.split(','),
+      cypressImage: this.cypressImage,
+      cypressEnv: {
+        baseUrl: `http://${host}:${args.webPort}`,
+        apiBaseUrl: `http://${host}:${args.apiPort}`,
+        apiBearerToken: args.apiBearerToken,
+        workspaceTenantId: args.workspaceScope.tenantId,
+        workspaceProjectId: args.workspaceScope.projectId,
+        workspaceEnvironmentId: args.workspaceScope.environmentId,
+        firstAuthoringProjectId: args.workspaceScope.projectId,
+        secondaryWorkspaceTenantId: args.secondaryWorkspaceScope.tenantId,
+        secondaryWorkspaceProjectId: args.secondaryWorkspaceScope.projectId,
+        secondaryWorkspaceEnvironmentId: args.secondaryWorkspaceScope.environmentId,
+        firstAuthoringRunId: args.sourceImportRunId,
+        postgresDatabaseName: args.postgresDatabaseName,
+        requireLiveProtectedRuntime: '1',
       },
-    };
+    });
   }
 
   async runCypress(args) {
@@ -418,8 +314,8 @@ class CanvasSourceImportLiveProofRunner {
 
   async run() {
     this.ensureLocalPostgresReady();
-
-    const { TestWorkflowEnvironment } = await this.loadTemporalTesting();
+    const lease = await allocateDisposablePostgresDatabase(defaultPgUrl, 'source_import');
+    const databaseUrl = lease.url;
     const processContext = {
       temporalEnv: null,
       localProtectedRuntimeAuth: null,
@@ -431,9 +327,13 @@ class CanvasSourceImportLiveProofRunner {
       __dirname,
       `../.dvt/live-proofs/source-import/${liveProofSchema}/workspace-files`
     );
+    const removeInterruptCleanup = installDisposablePostgresInterruptCleanup(lease, () =>
+      this.shutdown(processContext)
+    );
 
     try {
-      await seedLocalPostgresProofData(defaultPgUrl);
+      const { TestWorkflowEnvironment } = await this.loadTemporalTesting();
+      await seedLocalPostgresProofData(databaseUrl);
 
       processContext.temporalEnv = await this.createTemporalEnvironment(TestWorkflowEnvironment);
       processContext.localProtectedRuntimeAuth = await startLocalProtectedRuntimeAuth({
@@ -445,10 +345,8 @@ class CanvasSourceImportLiveProofRunner {
       const apiHandle = this.spawnProcess('api-source-import-proof', this.buildApiProcessArgs(), {
         HOST: this.apiBindHost,
         PORT: String(this.apiPort),
-        DATABASE_URL: defaultPgUrl,
-        DVT_POSTGRES_CREDENTIAL_BINDINGS:
-          this.env.DVT_POSTGRES_CREDENTIAL_BINDINGS ??
-          JSON.stringify({ 'postgres:local-postgres-proof': defaultPgUrl }),
+        DATABASE_URL: databaseUrl,
+        DVT_POSTGRES_CREDENTIAL_BINDINGS: resolvePostgresCredentialBindings(databaseUrl, this.env),
         DVT_PG_SCHEMA: liveProofSchema,
         DVT_READYZ_ENABLED: 'true',
         DVT_VERSION_ENABLED: 'true',
@@ -487,7 +385,7 @@ class CanvasSourceImportLiveProofRunner {
       );
 
       await this.seedProtectedRuntimeGrants({
-        databaseUrl: defaultPgUrl,
+        databaseUrl,
         schema: liveProofSchema,
         principalId: processContext.localProtectedRuntimeAuth.principalId,
         tenantActions: LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
@@ -496,14 +394,14 @@ class CanvasSourceImportLiveProofRunner {
 
       const apiBaseUrl = `http://127.0.0.1:${this.apiPort}`;
       const bearerToken = processContext.localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN;
-      const sourceImportWorkspaceScope = await this.createGovernedProject({
+      const sourceImportWorkspaceScope = await createGovernedProject({
         apiBaseUrl,
         bearerToken,
         tenantId: baseWorkspaceScope.tenantId,
         name: `Source import ${sourceImportRunId}`,
         idempotencyKey: `source-import-${sourceImportRunId}-a`,
       });
-      const secondaryWorkspaceScope = await this.createGovernedProject({
+      const secondaryWorkspaceScope = await createGovernedProject({
         apiBaseUrl,
         bearerToken,
         tenantId: baseWorkspaceScope.tenantId,
@@ -558,21 +456,21 @@ class CanvasSourceImportLiveProofRunner {
         workspaceScope: sourceImportWorkspaceScope,
         secondaryWorkspaceScope,
         sourceImportRunId,
+        postgresDatabaseName: lease.name,
       });
     } finally {
-      await this.shutdown(processContext);
-      await this.dropSchemaIfExists(defaultPgUrl, liveProofSchema);
+      removeInterruptCleanup();
+      try {
+        await this.shutdown(processContext);
+      } finally {
+        await lease.dispose();
+      }
     }
   }
 }
 
 async function main() {
-  for (const specFile of [
-    'canvas-source-identity-live.cy.ts',
-    'canvas-source-import-live-clean.cy.ts',
-  ]) {
-    await new CanvasSourceImportLiveProofRunner(process.env, specFile).run();
-  }
+  await new CanvasSourceImportLiveProofRunner().run();
 }
 
 module.exports = {

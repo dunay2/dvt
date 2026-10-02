@@ -8,6 +8,7 @@ import {
   hasLiveProtectedRuntimeEnv,
   seedLiveSelectedClosureDraft,
 } from '../../support/liveProtectedRuntime';
+import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';
 import {
   authorLineageFormula,
   inspectLineageOutput,
@@ -39,7 +40,7 @@ describe('Live nested formula lineage', () => {
           table: 'client',
           sourceRef: {
             schemaVersion: 'connected-source-ref.v1',
-            sourceObjectId: 'relation/dvt/raw/client',
+            sourceObjectId: `relation/${livePostgresDatabaseName()}/raw/client`,
             connectionRef: {
               schemaVersion: 'connection-ref.v1',
               provider: 'postgres',

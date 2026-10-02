@@ -21,7 +21,7 @@ const sqlCanvas: CanvasFirstAuthoringCanvas = { kind: 'sql', title: 'SQL canvas'
 const transformationNode: CanvasFirstAuthoringNode = {
   id: 'dvt-transform-1',
   kind: 'dvt:transform',
-  name: 'Transform 1',
+  name: 'Model 1',
 };
 const dbtNode: CanvasFirstAuthoringNode = {
   id: 'dbt-model-1',

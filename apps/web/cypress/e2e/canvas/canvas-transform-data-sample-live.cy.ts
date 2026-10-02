@@ -6,6 +6,7 @@ import {
   seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
+import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';
 import { openWorkbenchModel } from '../../support/relationalWorkbench/navigation';
 
 describe('Canvas live data exploration', () => {
@@ -22,6 +23,7 @@ describe('Canvas live data exploration', () => {
     seedLiveSelectedClosureDraft({
       authoringGenerated: true,
       terminalTransformPreview: true,
+      sourceDatabaseName: livePostgresDatabaseName(),
       title: 'Transform row exploration',
     });
     cy.intercept('POST', '**/plans/preview', (request) => {
@@ -114,7 +116,9 @@ describe('Canvas live data exploration', () => {
     cy.press(Cypress.Keyboard.Keys.SPACE);
     cy.wait('@sourceRows', { timeout: 30_000 }).then(({ request, response }) => {
       expect(response?.statusCode).to.equal(200);
-      expect(new URL(request.url).searchParams.get('objectId')).to.equal('relation/dvt/raw/orders');
+      expect(new URL(request.url).searchParams.get('objectId')).to.equal(
+        `relation/${livePostgresDatabaseName()}/raw/orders`
+      );
       expect(response?.body.rows).to.have.length(3);
     });
     cy.get('[data-slot="bottom-operational-drawer-data"]').should('contain.text', 'Ada');

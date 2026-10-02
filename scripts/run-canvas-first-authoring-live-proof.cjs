@@ -13,6 +13,12 @@ const readline = require('node:readline');
 const { pathToFileURL } = require('node:url');
 
 const { defaultPgUrl } = require('./run-local-postgres.cjs');
+const { buildLiveCypressInvocation } = require('./live-cypress-invocation.cjs');
+const { buildInitialTenantAccess, createGovernedProject } = require('./live-governed-project.cjs');
+const {
+  allocateDisposablePostgresDatabase,
+  installDisposablePostgresInterruptCleanup,
+} = require('./disposable-postgres-database.cjs');
 const {
   LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
   resolveDevWorkspaceScope,
@@ -29,6 +35,11 @@ class CanvasFirstAuthoringLiveProofRunner {
     this.pollIntervalMs = 500;
     this.postgresBootstrapScript = path.resolve(__dirname, 'run-local-postgres.cjs');
     this.temporalPackageRoot = path.resolve(__dirname, '../packages/@dvt/adapter-temporal');
+    this.webPackageRoot = path.resolve(__dirname, '../apps/web');
+    this.localSpecPath = path.resolve(
+      this.webPackageRoot,
+      'cypress/e2e/canvas/canvas-first-authoring-live.cy.ts'
+    );
     this.specPath = '/repo/apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts';
     this.cypressImage = 'cypress/included:15.18.1';
     this.localAuthHost = '127.0.0.1';
@@ -47,14 +58,6 @@ class CanvasFirstAuthoringLiveProofRunner {
 
   allocateFirstAuthoringRunId() {
     return `${Date.now().toString(36)}-${process.pid.toString(36)}`;
-  }
-
-  buildFirstAuthoringWorkspaceScopes(baseScope, runId) {
-    return ['transformation', 'dbt'].map((variant) => ({
-      tenantId: baseScope.tenantId,
-      projectId: `${baseScope.projectId}-tf-e2-m-c-first-authoring-${variant}-${runId}`,
-      environmentId: baseScope.environmentId,
-    }));
   }
 
   formatWorkspaceOptions(scopes, key) {
@@ -180,35 +183,10 @@ class CanvasFirstAuthoringLiveProofRunner {
     processHandle.stderrReader.close();
   }
 
-  async dropSchemaIfExists(databaseUrl, schema) {
-    const client = new Client({ connectionString: databaseUrl });
-    await client.connect();
-
-    try {
-      await client.query(`DROP SCHEMA IF EXISTS ${this.quoteIdentifier(schema)} CASCADE`);
-    } finally {
-      await client.end();
-    }
-  }
-
   async seedProtectedRuntimeGrants(args) {
-    const projectAccess = args.workspaceScopes.map((scope) => ({
-      projectId: scope.projectId,
-      allowedActions: [],
-      environmentAccess: [
-        {
-          environmentId: scope.environmentId,
-          allowedActions: [],
-        },
-      ],
-    }));
-    const tenantAccess = JSON.stringify([
-      {
-        tenantId: args.workspaceScope.tenantId,
-        allowedActions: [...args.tenantActions],
-        projectAccess,
-      },
-    ]);
+    const tenantAccess = JSON.stringify(
+      buildInitialTenantAccess(args.tenantId, args.tenantActions)
+    );
     const client = new Client({ connectionString: args.databaseUrl });
 
     await client.connect();
@@ -229,45 +207,32 @@ class CanvasFirstAuthoringLiveProofRunner {
     }
   }
 
-  async runCypress(args) {
-    const repoRoot = path.resolve(__dirname, '..').replaceAll('\\', '/');
-    const dockerArgs = [
-      'run',
-      '--rm',
-      '-t',
-      '-v',
-      `${repoRoot}:/repo`,
-      '-w',
-      '/repo/apps/web',
-      '-e',
-      `CYPRESS_baseUrl=http://host.docker.internal:${args.webPort}`,
-      '-e',
-      `CYPRESS_apiBaseUrl=http://host.docker.internal:${args.apiPort}`,
-      '-e',
-      `CYPRESS_apiBearerToken=${args.apiBearerToken}`,
-      '-e',
-      `CYPRESS_workspaceTenantId=${args.workspaceScope.tenantId}`,
-      '-e',
-      `CYPRESS_workspaceProjectId=${args.workspaceScope.projectId}`,
-      '-e',
-      `CYPRESS_workspaceEnvironmentId=${args.workspaceScope.environmentId}`,
-      '-e',
-      `CYPRESS_firstAuthoringRunId=${args.firstAuthoringRunId}`,
-      '-e',
-      'CYPRESS_requireLiveProtectedRuntime=1',
-      this.cypressImage,
-      '--project',
-      '/repo/apps/web',
-      '--config-file',
-      '/repo/apps/web/cypress.config.ts',
-      '--spec',
-      this.specPath,
-    ];
-
-    const child = spawn('docker', dockerArgs, {
-      stdio: 'inherit',
-      windowsHide: true,
+  buildCypressInvocation(args, platform = process.platform) {
+    const host = platform === 'win32' ? '127.0.0.1' : 'host.docker.internal';
+    return buildLiveCypressInvocation({
+      platform,
+      inheritedEnv: this.env,
+      webPackageRoot: this.webPackageRoot,
+      localSpecPaths: [this.localSpecPath],
+      containerSpecPaths: [this.specPath],
+      cypressImage: this.cypressImage,
+      cypressEnv: {
+        baseUrl: `http://${host}:${args.webPort}`,
+        apiBaseUrl: `http://${host}:${args.apiPort}`,
+        apiBearerToken: args.apiBearerToken,
+        workspaceTenantId: args.workspaceScope.tenantId,
+        workspaceProjectId: args.workspaceScope.projectId,
+        workspaceEnvironmentId: args.workspaceScope.environmentId,
+        firstAuthoringProjectId: args.workspaceScope.projectId,
+        firstAuthoringRunId: args.firstAuthoringRunId,
+        requireLiveProtectedRuntime: '1',
+      },
     });
+  }
+
+  async runCypress(args) {
+    const invocation = this.buildCypressInvocation(args);
+    const child = spawn(invocation.command, invocation.args, invocation.options);
 
     const [exitCode] = await once(child, 'exit');
 
@@ -285,8 +250,8 @@ class CanvasFirstAuthoringLiveProofRunner {
 
   async run() {
     this.ensureLocalPostgresReady();
-
-    const { TestWorkflowEnvironment } = await this.loadTemporalTesting();
+    const lease = await allocateDisposablePostgresDatabase(defaultPgUrl, 'first_authoring');
+    const databaseUrl = lease.url;
     const processContext = {
       temporalEnv: null,
       localProtectedRuntimeAuth: null,
@@ -294,27 +259,26 @@ class CanvasFirstAuthoringLiveProofRunner {
     const liveProofSchema = this.allocateLiveProofSchema();
     const firstAuthoringRunId = this.allocateFirstAuthoringRunId();
     const baseWorkspaceScope = resolveDevWorkspaceScope(this.env);
-    const firstAuthoringScopes = this.buildFirstAuthoringWorkspaceScopes(
-      baseWorkspaceScope,
-      firstAuthoringRunId
+    const removeInterruptCleanup = installDisposablePostgresInterruptCleanup(lease, () =>
+      this.shutdown(processContext)
     );
-    const firstAuthoringProjectIds = firstAuthoringScopes.map((scope) => scope.projectId);
 
     try {
+      const { TestWorkflowEnvironment } = await this.loadTemporalTesting();
       processContext.temporalEnv = await TestWorkflowEnvironment.createTimeSkipping();
       processContext.localProtectedRuntimeAuth = await startLocalProtectedRuntimeAuth({
         env: this.env,
         host: this.localAuthHost,
-        additionalProjectIds: firstAuthoringProjectIds,
+        assertedProjectIds: [],
       });
 
       const apiHandle = this.spawnProcess(
         'api-first-authoring-proof',
-        ['--filter', 'dvt-api', 'dev'],
+        ['--filter', 'dvt-api', 'exec', 'tsx', 'watch', 'src/server.ts'],
         {
           HOST: this.apiBindHost,
           PORT: String(this.apiPort),
-          DATABASE_URL: defaultPgUrl,
+          DATABASE_URL: databaseUrl,
           DVT_PG_SCHEMA: liveProofSchema,
           DVT_READYZ_ENABLED: 'true',
           DVT_VERSION_ENABLED: 'true',
@@ -349,13 +313,21 @@ class CanvasFirstAuthoringLiveProofRunner {
       );
 
       await this.seedProtectedRuntimeGrants({
-        databaseUrl: defaultPgUrl,
+        databaseUrl,
         schema: liveProofSchema,
         principalId: processContext.localProtectedRuntimeAuth.principalId,
         tenantActions: LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
-        workspaceScope: processContext.localProtectedRuntimeAuth.workspaceScope,
-        workspaceScopes: firstAuthoringScopes,
+        tenantId: baseWorkspaceScope.tenantId,
       });
+
+      const firstAuthoringWorkspaceScope = await createGovernedProject({
+        apiBaseUrl: `http://127.0.0.1:${this.apiPort}`,
+        bearerToken: processContext.localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
+        tenantId: baseWorkspaceScope.tenantId,
+        name: `First authoring ${firstAuthoringRunId}`,
+        idempotencyKey: `first-authoring-${firstAuthoringRunId}`,
+      });
+      const firstAuthoringScopes = [firstAuthoringWorkspaceScope];
 
       const webHandle = this.spawnProcess(
         'web-first-authoring-proof',
@@ -371,13 +343,13 @@ class CanvasFirstAuthoringLiveProofRunner {
           '--strictPort',
         ],
         {
-          VITE_API_BASE_URL: `http://host.docker.internal:${this.apiPort}`,
+          VITE_API_BASE_URL: `http://${
+            process.platform === 'win32' ? '127.0.0.1' : 'host.docker.internal'
+          }:${this.apiPort}`,
           ...processContext.localProtectedRuntimeAuth.webEnv,
-          VITE_DEFAULT_TENANT_ID: processContext.localProtectedRuntimeAuth.workspaceScope.tenantId,
-          VITE_DEFAULT_PROJECT_ID:
-            processContext.localProtectedRuntimeAuth.workspaceScope.projectId,
-          VITE_DEFAULT_ENVIRONMENT_ID:
-            processContext.localProtectedRuntimeAuth.workspaceScope.environmentId,
+          VITE_DEFAULT_TENANT_ID: firstAuthoringWorkspaceScope.tenantId,
+          VITE_DEFAULT_PROJECT_ID: firstAuthoringWorkspaceScope.projectId,
+          VITE_DEFAULT_ENVIRONMENT_ID: firstAuthoringWorkspaceScope.environmentId,
           VITE_TENANT_OPTIONS: this.formatWorkspaceOptions(firstAuthoringScopes, 'tenantId'),
           VITE_PROJECT_OPTIONS: this.formatWorkspaceOptions(firstAuthoringScopes, 'projectId'),
           VITE_ENVIRONMENT_OPTIONS: this.formatWorkspaceOptions(
@@ -403,12 +375,16 @@ class CanvasFirstAuthoringLiveProofRunner {
         apiPort: this.apiPort,
         webPort: this.webPort,
         apiBearerToken: processContext.localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
-        workspaceScope: processContext.localProtectedRuntimeAuth.workspaceScope,
+        workspaceScope: firstAuthoringWorkspaceScope,
         firstAuthoringRunId,
       });
     } finally {
-      await this.shutdown(processContext);
-      await this.dropSchemaIfExists(defaultPgUrl, liveProofSchema);
+      removeInterruptCleanup();
+      try {
+        await this.shutdown(processContext);
+      } finally {
+        await lease.dispose();
+      }
     }
   }
 }

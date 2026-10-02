@@ -3,7 +3,8 @@
  * protected runtime without draft endpoint intercepts or seeded success.
  */
 import {
-  clickCanvasContextMenuItem,
+  clickCanvasAddCatalogAction,
+  clickCanvasContextMenuAction,
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
 import {
@@ -14,18 +15,16 @@ import {
   waitForLiveFirstAuthoringDraftNode,
   waitForLiveFirstAuthoringLayoutPositionChange,
 } from '../../support/canvasFirstAuthoring';
+import { dragCanvasNodeByViewportDelta } from '../../support/canvasGraphAuthoring';
 import { seedE2eWorkspaceSession } from '../../support/workspaceSession';
 
 describe('Canvas first-authoring live protected runtime', () => {
   const canvas = {
     id: 'transformation',
-    createButton: 'Transformation',
-    addCatalogItem: 'Add model',
-    firstNodeName: /transform 1/i,
+    firstNodeName: /model 1/i,
   } as const;
 
   type FirstAuthoringNodeState = Readonly<{ nodeId: string; left: number; top: number }>;
-  type DragPoint = Readonly<{ x: number; y: number }>;
 
   function visitFirstAuthoringCanvas(): void {
     const session = resolveLiveFirstAuthoringWorkspaceSession(canvas.id);
@@ -65,56 +64,6 @@ describe('Canvas first-authoring live protected runtime', () => {
     });
   }
 
-  function buildMouseDragEvent(
-    point: DragPoint,
-    buttons: number,
-    view: Cypress.AUTWindow
-  ): MouseEventInit {
-    return {
-      bubbles: true,
-      button: 0,
-      buttons,
-      cancelable: true,
-      clientX: point.x,
-      screenX: point.x,
-      screenY: point.y,
-      view,
-      clientY: point.y,
-    };
-  }
-
-  function dispatchMouseDragEvent(
-    target: EventTarget,
-    view: Cypress.AUTWindow,
-    type: 'mousedown' | 'mousemove' | 'mouseup',
-    point: DragPoint,
-    buttons: number
-  ): void {
-    target.dispatchEvent(new view.MouseEvent(type, buildMouseDragEvent(point, buttons, view)));
-  }
-
-  function dragFirstAuthoringNodeFromCardBody(nodeName: FirstAuthoringNodeLabel): void {
-    getFirstAuthoringNode(nodeName).then(($node) => {
-      const rect = $node[0].getBoundingClientRect();
-      const start = {
-        x: rect.left + rect.width / 2,
-        y: rect.top + rect.height / 2,
-      };
-      const middle = { x: start.x + 24, y: start.y + 18 };
-      const end = { x: start.x + 96, y: start.y + 72 };
-
-      cy.window().then((window) => {
-        dispatchMouseDragEvent($node[0], window, 'mousedown', start, 1);
-        dispatchMouseDragEvent(window, window, 'mousemove', middle, 1);
-      });
-      getFirstAuthoringNode(nodeName).should('have.class', 'dragging');
-      cy.window().then((window) => {
-        dispatchMouseDragEvent(window, window, 'mousemove', end, 1);
-        dispatchMouseDragEvent(window, window, 'mouseup', end, 0);
-      });
-    });
-  }
-
   function assertFirstAuthoringNodeMovedFrom(
     nodeName: FirstAuthoringNodeLabel,
     alias: string
@@ -123,20 +72,6 @@ describe('Canvas first-authoring live protected runtime', () => {
       getFirstAuthoringNode(nodeName).should(($node) => {
         const rect = $node[0].getBoundingClientRect();
         const distance = Math.abs(rect.left - before.left) + Math.abs(rect.top - before.top);
-
-        expect(distance).to.be.greaterThan(20);
-      });
-    });
-  }
-
-  function assertFirstAuthoringNodeRestoredAwayFromOriginal(
-    nodeName: FirstAuthoringNodeLabel,
-    alias: string
-  ): void {
-    cy.get<FirstAuthoringNodeState>(`@${alias}`).then((original) => {
-      getFirstAuthoringNode(nodeName).should(($node) => {
-        const rect = $node[0].getBoundingClientRect();
-        const distance = Math.abs(rect.left - original.left) + Math.abs(rect.top - original.top);
 
         expect(distance).to.be.greaterThan(20);
       });
@@ -153,18 +88,18 @@ describe('Canvas first-authoring live protected runtime', () => {
     assertLiveFirstAuthoringDraftScopeIsClean(canvas.id);
     visitFirstAuthoringCanvas();
 
-    cy.contains('Create canvas', { timeout: 20_000 }).should('be.visible');
-    cy.get('[data-slot="canvas-playground-empty-state"]').within(() => {
-      cy.contains('button', canvas.createButton).should('be.enabled').click();
-    });
+    cy.get('[data-slot="canvas-playground-template-choice"]', { timeout: 20_000 })
+      .should('have.length', 1)
+      .should('be.enabled')
+      .click();
     waitForLiveFirstAuthoringDraftRecord(canvas.id);
 
-    cy.get('[data-slot="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-testid="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
     cy.get('[data-slot="canvas-empty-state"]').should('not.exist');
     cy.contains('button', /^Add first /).should('not.exist');
     openCanvasContextMenuAt(360, 260);
-    clickCanvasContextMenuItem('Add...');
-    clickCanvasContextMenuItem(canvas.addCatalogItem);
+    clickCanvasContextMenuAction('open-add-node-catalog');
+    clickCanvasAddCatalogAction('create-node', 'dvt:transform');
 
     getFirstAuthoringNode(canvas.firstNodeName);
     captureFirstAuthoringNodeState(canvas.firstNodeName, 'beforeDragState');
@@ -172,7 +107,9 @@ describe('Canvas first-authoring live protected runtime', () => {
       waitForLiveFirstAuthoringDraftNode(canvas.id, before.nodeId).as('beforeDragDraftPosition')
     );
 
-    dragFirstAuthoringNodeFromCardBody(canvas.firstNodeName);
+    cy.get<FirstAuthoringNodeState>('@beforeDragState').then((before) => {
+      dragCanvasNodeByViewportDelta('Model 1', { x: 96, y: 72 }, { nodeId: before.nodeId });
+    });
     assertFirstAuthoringNodeMovedFrom(canvas.firstNodeName, 'beforeDragState');
     captureFirstAuthoringNodeState(canvas.firstNodeName, 'afterDragState');
     cy.get<FirstAuthoringNodeState>('@beforeDragState').then((before) => {
@@ -180,10 +117,16 @@ describe('Canvas first-authoring live protected runtime', () => {
         waitForLiveFirstAuthoringLayoutPositionChange(canvas.id, before.nodeId, beforeDraftPosition)
       );
     });
+    getFirstAuthoringNode(canvas.firstNodeName)
+      .then(($node) => $node[0]!.style.transform)
+      .as('savedGraphPosition');
 
     cy.reload();
 
-    getFirstAuthoringNode(canvas.firstNodeName);
-    assertFirstAuthoringNodeRestoredAwayFromOriginal(canvas.firstNodeName, 'beforeDragState');
+    cy.get<string>('@savedGraphPosition').then((savedPosition) => {
+      getFirstAuthoringNode(canvas.firstNodeName).should(($node) => {
+        expect($node[0]!.style.transform).to.equal(savedPosition);
+      });
+    });
   });
 });

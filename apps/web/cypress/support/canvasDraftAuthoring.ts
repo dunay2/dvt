@@ -46,6 +46,7 @@ export type StubCanvasDraftReadOptions = {
   importedWarehouseSource?: boolean;
   authoringGenerated?: boolean;
   terminalTransformPreview?: boolean;
+  sourceDatabaseName?: string;
   terminalTransformResultTarget?: {
     schema: string;
     relation: string;
@@ -89,6 +90,7 @@ export function buildCanvasAuthoringDraft({
   importedWarehouseSource = false,
   authoringGenerated = false,
   terminalTransformPreview = false,
+  sourceDatabaseName = 'dvt',
   terminalTransformResultTarget,
   columnMapping = false,
   columnMappingDisconnected = false,
@@ -907,7 +909,8 @@ export function buildCanvasAuthoringDraft({
   }
 
   if (authoringGenerated) {
-    const connectionId = terminalTransformPreview ? 'local-postgres-proof' : 'warehouse-a';
+    const usesProofSource = terminalTransformPreview || sourceDatabaseName !== 'dvt';
+    const connectionId = usesProofSource ? 'local-postgres-proof' : 'warehouse-a';
     const semanticDocument = encodeDvtSubstraitProjectionDocument(
       createDvtSubstraitProjectionDraft({
         source: {
@@ -921,7 +924,9 @@ export function buildCanvasAuthoringDraft({
               provider: 'postgres',
               connectionId,
             },
-            sourceObjectId: terminalTransformPreview ? 'relation/dvt/raw/orders' : 'raw.orders',
+            sourceObjectId: usesProofSource
+              ? `relation/${sourceDatabaseName}/raw/orders`
+              : 'raw.orders',
           },
           fields: [
             ...(terminalTransformPreview
@@ -965,7 +970,7 @@ export function buildCanvasAuthoringDraft({
         {
           id: 'source-1',
           name: 'Source 1',
-          pluginId: terminalTransformPreview ? 'dvt.warehouse-source' : 'dvt',
+          pluginId: usesProofSource ? 'dvt.warehouse-source' : 'dvt',
           kind: 'dvt:source',
           role: 'input',
           status: 'idle',
@@ -981,7 +986,9 @@ export function buildCanvasAuthoringDraft({
                 provider: 'postgres',
                 connectionId,
               },
-              sourceObjectId: terminalTransformPreview ? 'relation/dvt/raw/orders' : 'raw.orders',
+              sourceObjectId: usesProofSource
+                ? `relation/${sourceDatabaseName}/raw/orders`
+                : 'raw.orders',
             },
             columns: [
               ...(terminalTransformPreview

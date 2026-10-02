@@ -58,6 +58,46 @@ wrong credential binding, stale catalog metadata and an unavailable warehouse.
 - #3534 owns the overall cut and the eventual disposition of old fixtures and
   generated schemas. Classification and backup precede any deletion.
 
+The older live runners currently generate schemas in persistent `dvt`. Each
+runner instead allocates a uniquely named database in the local PostgreSQL
+cluster before starting its API. The same run-scoped URL is passed to the API,
+warehouse fixture seeder, credential binding, grant setup and cleanup. Normal
+completion and caught failures close child processes before dropping that exact
+database; SIGINT/SIGTERM invoke the same cleanup. An abrupt host or container
+death is not recoverable by an in-process handler, so orphaned names remain
+identifiable by a reserved prefix and require inventory before manual removal.
+
+Source Import exposes one further boundary: the generated dbt source name
+combines connection, catalog and schema. Those values are individually valid
+but their concatenation can exceed the 63-byte PostgreSQL identifier policy,
+particularly for a run-scoped database. A graph-draft import then fails after
+discovery with a server error. The canonical name builder must bound the final
+identifier and append a deterministic digest when truncation is required;
+normal short names stay unchanged, and graph metadata and dbt YAML must share
+the same name. The existing `ImportWarehouseSources` command remains the sole
+owner of the externally visible import behavior.
+
+```mermaid
+flowchart LR
+  I[Connection, catalog, schema] --> N[Canonical source name]
+  N --> V{63 bytes or less?}
+  V -- yes --> S[Keep existing short name]
+  V -- no --> H[Bounded prefix plus stable digest]
+  S --> Y[dbt YAML and graph metadata]
+  H --> Y
+```
+
+```mermaid
+flowchart LR
+  R[One live proof invocation] --> T[(dvt_proof_* database)]
+  R --> A[API / worker / browser]
+  A --> T
+  R --> C[Scoped cleanup]
+  C --> T
+  D[(persistent dvt)] --- X[No proof writes]
+  W[(persistent dvt_demo)] --- X
+```
+
 Governing sources: `AGENTS.md`, ADR-0058, ADR-0061, ADR-0066,
 `docs/architecture/command-query-rail-governance.md` and
 `docs/architecture/fowler-opportunity-planning-governance.md` and

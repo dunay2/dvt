@@ -63,11 +63,16 @@ describe('Canvas source import live proof architecture', () => {
       testPath: CYPRESS_SPEC_PATH,
       validationCommand: 'pnpm test:web:e2e:source-import:live',
     });
-    expect(liveRunnerSource).toContain('CYPRESS_requireLiveProtectedRuntime=1');
+    expect(liveRunnerSource).toContain("requireLiveProtectedRuntime: '1'");
+    expect(liveRunnerSource).toContain('buildLiveCypressInvocation');
     expect(liveRunnerSource).toContain('canvas-source-import-live-clean.cy.ts');
+    expect(liveRunnerSource).toContain('canvas-source-identity-live.cy.ts');
+    expect(liveRunnerSource).toContain('new CanvasSourceImportLiveProofRunner().run()');
     expect(liveRunnerSource).toContain("DVT_TEMPORAL_DBT_ENABLED: 'true'");
 
-    expect(cypressSpecSource).toContain('assertLiveFirstAuthoringDraftScopeIsClean');
+    expect(cypressSpecSource).toContain('readLiveGraphDraft(session, { failOnStatusCode: false })');
+    expect(cypressSpecSource).toContain('secondaryWorkspaceProjectId');
+    expect(cypressSpecSource).toContain('canvas-playground-template-choice');
     expect(cypressSpecSource).toContain('readLiveGraphDraft(');
     expect(cypressSpecSource).toContain('openCanvasContextMenuAt');
     expect(cypressSpecSource).toContain("clickCanvasContextMenuAction('open-add-node-catalog')");
@@ -89,6 +94,7 @@ describe('Canvas source import live proof architecture', () => {
     expect(liveInteractionSource).not.toContain('stubE2eJsonApi');
     expect(liveInteractionSource).not.toContain('stubCanvasDraft');
     expect(liveInteractionSource).not.toContain('seedLiveSelectedClosureDraft');
+    expect(cypressSpecSource).not.toContain('Create canvas');
     expect(liveInteractionSource).not.toContain("method: 'PUT'");
     expect(liveInteractionSource).not.toContain('method: "PUT"');
   });
