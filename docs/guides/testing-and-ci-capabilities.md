@@ -92,11 +92,14 @@ Warm-build note:
 
 `Test Suite` keeps package selection in `computeTestPackageMatrix`; the matrix
 emitter only groups that selected set for execution. API retains its own
-`test:ci` row. Other selected packages share one runner and one Turbo build of
-their dependency graphs, followed by their existing `test` scripts in separate
-processes. Web, engine coverage, PostgreSQL and Temporal retain dedicated lanes.
+`test:ci` row. Other selected packages use at most two runner groups, partitioned
+by even/odd positions in the complete non-API package catalog before intersecting
+with the selection. Narrow or reordered diffs therefore keep the same group
+ownership. Each group shares one Turbo build of its dependency graphs, followed
+by its existing `test` scripts in separate processes. Web, engine coverage,
+PostgreSQL and Temporal retain dedicated lanes.
 
-The shared package row uses pnpm's recursive execution with one package at a
+Each shared package row uses pnpm's recursive execution with one package at a
 time, topological ordering and `--no-bail`. It executes `pnpm run test` in
 each selected package rather than recursive `run test`, which can silently omit
 a package without that script. A missing script or failed package rejects the

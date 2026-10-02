@@ -12,6 +12,7 @@ import {
 function groupPackageTests(entries) {
   const api = entries.filter(({ pkg }) => pkg === 'dvt-api');
   const packages = entries.filter(({ pkg }) => pkg !== 'dvt-api');
+  const catalog = TEST_PACKAGE_ENTRIES.filter(({ pkg }) => pkg !== 'dvt-api');
   for (const entry of packages) {
     if (entry.command !== `pnpm --filter ${entry.pkg} test`) {
       throw new Error(`Unsupported shared package test command: ${entry.command}`);
@@ -19,7 +20,12 @@ function groupPackageTests(entries) {
   }
   const include = [
     { name: 'api', entries: api },
-    { name: 'packages', entries: packages },
+    ...[0, 1].map((bucket) => ({
+      name: `packages-${bucket + 1}`,
+      entries: packages.filter(
+        ({ pkg }) => catalog.findIndex((entry) => entry.pkg === pkg) % 2 === bucket
+      ),
+    })),
   ]
     .filter((group) => group.entries.length > 0)
     .map((group) => {

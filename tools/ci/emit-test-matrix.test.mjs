@@ -186,14 +186,14 @@ test('runner grouping preserves the canonical selected set without duplicate pac
     assert.deepEqual(selectedPackages(matrix), expected);
     assert.equal(new Set(selectedPackages(matrix)).size, expected.length);
     assert.equal(matrix.anyTests, expected.length > 0);
-    assert.ok(matrix.include.length <= 2);
+    assert.ok(matrix.include.length <= 3);
     for (const group of matrix.include) {
       assert.ok(group.packages.length > 0);
       assert.equal(group.buildFilters, group.packages.map((pkg) => `--filter=${pkg}`).join(' '));
       if (group.name === 'api') {
         assert.deepEqual(group.packages, ['dvt-api']);
       } else {
-        assert.equal(group.name, 'packages');
+        assert.ok(['packages-1', 'packages-2'].includes(group.name));
         assert.ok(!group.packages.includes('dvt-api'));
         assert.match(group.command, /--recursive --no-bail --workspace-concurrency=1 --sort/u);
         assert.ok(group.command.endsWith(' exec pnpm run test'));
@@ -203,10 +203,42 @@ test('runner grouping preserves the canonical selected set without duplicate pac
   }
 });
 
+test('package buckets retain catalog ownership across narrow and reordered diffs', () => {
+  const full = buildNonPullRequestTestMatrixOutputs();
+  assert.deepEqual(
+    full.include.map(({ name }) => name),
+    ['api', 'packages-1', 'packages-2']
+  );
+  const ownership = new Map(
+    full.include.flatMap(({ name, packages }) => packages.map((pkg) => [pkg, name]))
+  );
+  const packagePaths = TEST_PACKAGE_ENTRIES.map(({ pkg }) => {
+    const workspace = WORKSPACE_ENTRIES.find((entry) => entry.pkg === pkg);
+    return workspace.patterns[0].replace('/**', '/src/example.ts');
+  });
+  for (const paths of [
+    ...packagePaths.map((file) => [file]),
+    packagePaths.slice(1),
+    packagePaths.slice(1).reverse(),
+  ]) {
+    const matrix = buildTestMatrixOutputs(paths);
+    const expected = computeTestPackageMatrix(paths)
+      .include.map(({ pkg }) => pkg)
+      .sort();
+    assert.ok(expected.length > 0, paths.join(','));
+    assert.deepEqual(selectedPackages(matrix), expected);
+    for (const { name, packages } of matrix.include) {
+      for (const pkg of packages) {
+        assert.equal(name, ownership.get(pkg), `${pkg} changed bucket for ${paths.join(',')}`);
+      }
+    }
+  }
+});
+
 test('shared package execution runs existing scripts and rejects failures or missing scripts', () => {
   const matrix = buildTestMatrixOutputs([
     'packages/@dvt/artifacts/test/example.test.ts',
-    'packages/@dvt/crypto/test/example.test.ts',
+    'packages/@dvt/observability-otel/test/example.test.ts',
   ]);
   const group = matrix.include[0];
   assert.equal(matrix.include.length, 1);
