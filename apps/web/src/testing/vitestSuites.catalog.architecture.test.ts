@@ -130,7 +130,7 @@ describe('web Vitest suite catalog', () => {
 
     expect(packageJson.scripts.pretest).toBe('pnpm run test:deps');
     expect(packageJson.scripts['test:deps']).toBe(
-      'node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter "@dvt/web^..." build'
+      'node ../../scripts/skip-pretest-if-ci.cjs || node ../../scripts/build-workspace-runtime-deps.cjs @dvt/web --include-package @dvt/planner'
     );
     expect(packageJson.scripts.test).toBe(
       WEB_VITEST_PRIMARY_SUITE_NAMES.map((suiteName) => `pnpm run test:${suiteName}:run`).join(

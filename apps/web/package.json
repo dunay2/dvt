@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "pretest": "pnpm run test:deps",
-    "test:deps": "node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"@dvt/web^...\" build",
+    "test:deps": "node ../../scripts/skip-pretest-if-ci.cjs || node ../../scripts/build-workspace-runtime-deps.cjs @dvt/web --include-package @dvt/planner",
     "build": "vite build",
     "build:e2e": "vite build --mode e2e",
     "dev": "vite",
