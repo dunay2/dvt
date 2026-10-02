@@ -88,6 +88,27 @@ Warm-build note:
   `pnpm ci:affected:typecheck` path no longer depends on silent `--if-present`
   skips for the current TypeScript package inventory.
 
+## Package Test Runner Groups
+
+`Test Suite` keeps package selection in `computeTestPackageMatrix`; the matrix
+emitter only groups that selected set for execution. API retains its own
+`test:ci` row. Other selected packages share one runner and one Turbo build of
+their dependency graphs, followed by their existing `test` scripts in separate
+processes. Web, engine coverage, PostgreSQL and Temporal retain dedicated lanes.
+
+The shared package row uses pnpm's recursive execution with one package at a
+time, topological ordering and `--no-bail`. It executes `pnpm run test` in
+each selected package rather than recursive `run test`, which can silently omit
+a package without that script. A missing script or failed package rejects the
+row after the remaining selected packages finish. Serial package execution
+avoids new cross-package races for shared ports or files. Empty selections produce no
+row. The existing required aggregate and scope rules are unchanged.
+
+`run-turbo-workspace-task.cjs` accepts repeated `--filter` arguments for the
+single union build; its no-filter affected-workspace default is unchanged.
+Each runner group has a stable Turbo-cache producer identity. Dependency build
+cache hits do not replace the package test execution.
+
 ## Operational Preflight Helpers
 
 | Capability                  | Command                                                                                                                | Source                                             |
