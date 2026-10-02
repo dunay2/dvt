@@ -161,7 +161,6 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/index.md
   - docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md
   - docs/architecture/components/web/screen-manuals-and-user-stories.md
-  - docs/planning/proposals/portfolio-map-20260403.md
   - docs/planning/status/**
   - tools/ci/workbench-ux-canon.test.mjs
 forbiddenImplementationSurfaces:
@@ -214,7 +213,6 @@ redGreenCycles:
       - docs/architecture/components/web/workbench-ux-canon-user-stories.md
       - docs/architecture/components/web/screen-manuals-and-user-stories.md
       - docs/architecture/components/web/index.md
-      - docs/planning/proposals/portfolio-map-20260403.md
       - buzon/20260524-codex-fowler-workbench-ux-canon.md
     greenTest: node --test tools/ci/workbench-ux-canon.test.mjs
 symbols:

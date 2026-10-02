@@ -74,8 +74,7 @@ formatting, link health, or generated index shape.
 
 ## Decision
 
-Accept the target operating model from
-[Documentation Usability Change Plan](./documentation-usability-change-plan-20260308.md)
+Preserve the target operating model canonized from the retired 2026-03-08 input
 and promote its long-lived semantics into the
 [Documentation Usability Canon Component](../../../architecture/components/ci-governance/documentation-usability-canon-component.md).
 
@@ -107,7 +106,6 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/planning/proposals/mandatory/governance-and-docs/documentation-usability-change-plan-20260308.md
 allowedImplementationSurfaces:
   - buzon/20260524-codex-fowler-documentation-usability-canon.md
   - docs/.manifest.json
@@ -118,8 +116,6 @@ allowedImplementationSurfaces:
   - docs/planning/index.md
   - docs/planning/proposals/index.md
   - docs/planning/proposals/mandatory/governance-and-docs/documentation-usability-canon-plan-20260524.md
-  - docs/planning/proposals/mandatory/governance-and-docs/documentation-usability-change-plan-20260308.md
-  - docs/planning/proposals/portfolio-map-20260403.md
   - docs/planning/state/agent-lane-a.md
   - docs/planning/state/execution-workboard.md
   - docs/planning/state/open-task-route.md # Task: GOV-PROP-DISP-1
@@ -174,12 +170,10 @@ redGreenCycles:
     patchSurfaces:
       - tools/ci/documentation-usability-canon.test.mjs
       - docs/planning/proposals/mandatory/governance-and-docs/documentation-usability-canon-plan-20260524.md
-      - docs/planning/proposals/mandatory/governance-and-docs/documentation-usability-change-plan-20260308.md
       - docs/architecture/components/ci-governance/documentation-usability-canon-component.md
       - docs/architecture/components/ci-governance/documentation-usability-canon-user-stories.md
       - docs/architecture/components/ci-governance/index.md
       - docs/planning/domains/documentation-governance.md
-      - docs/planning/proposals/portfolio-map-20260403.md
       - buzon/20260524-codex-fowler-documentation-usability-canon.md
     greenTest: node --test tools/ci/documentation-usability-canon.test.mjs
 symbols:
