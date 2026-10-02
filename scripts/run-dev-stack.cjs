@@ -7,7 +7,7 @@ const http = require('node:http');
 const https = require('node:https');
 const path = require('node:path');
 const readline = require('node:readline');
-const { defaultPgUrl } = require('./run-local-postgres.cjs');
+const { defaultPgUrl, defaultWarehousePgUrl } = require('./run-local-postgres.cjs');
 const buildLocalPostgresProofSeedSql = require('./run-dev-stack.postgres-seed.cjs');
 const {
   LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
@@ -117,12 +117,58 @@ function resolveDatabaseUrl(options, env = process.env) {
   return readNonEmptyEnv(env.DATABASE_URL) ?? (options.skipPostgres ? undefined : defaultPgUrl);
 }
 
+function resolveLocalWarehouseUrl(options, env = process.env) {
+  const warehouseUrl =
+    readNonEmptyEnv(env.DVT_LOCAL_POSTGRES_WAREHOUSE_URL) ??
+    (shouldBootstrapLocalPostgres(options, env) ? defaultWarehousePgUrl : undefined);
+  const databaseUrl = resolveDatabaseUrl(options, env);
+  if (warehouseUrl !== undefined && databaseUrl !== undefined) {
+    const app = new URL(databaseUrl);
+    const warehouse = new URL(warehouseUrl);
+    const localHosts = new Set(['localhost', '127.0.0.1', '[::1]']);
+    const appHost = localHosts.has(app.hostname) ? 'localhost' : app.hostname;
+    const warehouseHost = localHosts.has(warehouse.hostname) ? 'localhost' : warehouse.hostname;
+    if (
+      appHost === warehouseHost &&
+      (app.port || '5432') === (warehouse.port || '5432') &&
+      decodeURIComponent(app.pathname) === decodeURIComponent(warehouse.pathname)
+    ) {
+      throw new Error('Local warehouse and application state must use a different database');
+    }
+  }
+  return warehouseUrl;
+}
+
+function resolvePostgresCredentialBindings(warehouseUrl, env = process.env) {
+  const configured = readNonEmptyEnv(env.DVT_POSTGRES_CREDENTIAL_BINDINGS);
+  if (configured === undefined) {
+    return warehouseUrl === undefined
+      ? undefined
+      : JSON.stringify({ [LOCAL_POSTGRES_CREDENTIAL_REF]: warehouseUrl });
+  }
+  if (warehouseUrl === undefined) return configured;
+  let bindings;
+  try {
+    bindings = JSON.parse(configured);
+  } catch {
+    throw new Error('DVT_POSTGRES_CREDENTIAL_BINDINGS must be valid JSON');
+  }
+  if (bindings?.[LOCAL_POSTGRES_CREDENTIAL_REF] !== warehouseUrl) {
+    throw new Error(
+      'Local warehouse credential binding must match DVT_LOCAL_POSTGRES_WAREHOUSE_URL'
+    );
+  }
+  return configured;
+}
+
 function shouldBootstrapLocalPostgres(options, env = process.env) {
   return !options.skipPostgres && readNonEmptyEnv(env.DATABASE_URL) === undefined;
 }
 
 function buildApiEnv(options, env = process.env) {
   const databaseUrl = resolveDatabaseUrl(options, env);
+  const warehouseUrl = resolveLocalWarehouseUrl(options, env);
+  const credentialBindings = resolvePostgresCredentialBindings(warehouseUrl, env);
   const temporalEnv = databaseUrl === undefined ? {} : buildTemporalApiEnv(options, env);
   const dbtArtifactEnv = buildLocalDbtArtifactEnv(env);
 
@@ -137,11 +183,13 @@ function buildApiEnv(options, env = process.env) {
       ? {}
       : {
           DATABASE_URL: databaseUrl,
-          DVT_POSTGRES_CREDENTIAL_BINDINGS:
-            readNonEmptyEnv(env.DVT_POSTGRES_CREDENTIAL_BINDINGS) ??
-            JSON.stringify({ [LOCAL_POSTGRES_CREDENTIAL_REF]: databaseUrl }),
+          ...(warehouseUrl === undefined ? {} : { DVT_LOCAL_POSTGRES_WAREHOUSE_URL: warehouseUrl }),
+          ...(credentialBindings === undefined
+            ? {}
+            : { DVT_POSTGRES_CREDENTIAL_BINDINGS: credentialBindings }),
           DVT_TEMPORAL_DVT_POSTGRES_ENABLED:
-            readNonEmptyEnv(env.DVT_TEMPORAL_DVT_POSTGRES_ENABLED) ?? 'true',
+            readNonEmptyEnv(env.DVT_TEMPORAL_DVT_POSTGRES_ENABLED) ??
+            (credentialBindings === undefined ? 'false' : 'true'),
           DVT_DB_READY_ENABLED: 'true',
         }),
   };
@@ -293,8 +341,8 @@ function request(url) {
   });
 }
 
-function sendJsonCommand(url, bearerToken, payload, timeoutMs = 15_000) {
-  const body = JSON.stringify(payload);
+function sendAuthorizedJson(url, bearerToken, method, payload, timeoutMs = 15_000) {
+  const body = payload === undefined ? undefined : JSON.stringify(payload);
   const endpoint = new URL(url);
   const transport = endpoint.protocol === 'https:' ? https : http;
 
@@ -302,13 +350,14 @@ function sendJsonCommand(url, bearerToken, payload, timeoutMs = 15_000) {
     const req = transport.request(
       endpoint,
       {
-        method: 'POST',
+        method,
         timeout: timeoutMs,
         headers: {
           Accept: 'application/json',
           Authorization: `Bearer ${bearerToken}`,
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(body),
+          ...(body === undefined
+            ? {}
+            : { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }),
         },
       },
       (response) => {
@@ -337,10 +386,12 @@ async function ensureLocalWarehouseConnectionViaApi(args) {
   endpoint.searchParams.set('projectId', args.workspaceScope.projectId);
   endpoint.searchParams.set('environmentId', args.workspaceScope.environmentId);
 
-  const response = await sendJsonCommand(
+  const expected = buildLocalWarehouseConnectionRequest(args.databaseUrl);
+  const response = await sendAuthorizedJson(
     endpoint.href,
     args.bearerToken,
-    buildLocalWarehouseConnectionRequest(args.databaseUrl),
+    'POST',
+    expected,
     args.commandTimeoutMs
   );
   if (response.statusCode === 201) {
@@ -357,6 +408,30 @@ async function ensureLocalWarehouseConnectionViaApi(args) {
   if (response.statusCode !== 409 || responseReason !== 'warehouse_connection_duplicate') {
     throw new Error(
       `Local warehouse connection command failed with ${response.statusCode}: ${response.body}`
+    );
+  }
+
+  const catalogResponse = await sendAuthorizedJson(
+    endpoint.href,
+    args.bearerToken,
+    'GET',
+    undefined,
+    args.commandTimeoutMs
+  );
+  if (catalogResponse.statusCode !== 200) {
+    throw new Error(`Local warehouse catalog query failed with ${catalogResponse.statusCode}`);
+  }
+  const catalog = JSON.parse(catalogResponse.body);
+  const existing = Array.isArray(catalog)
+    ? catalog.find((connection) => connection?.id === LOCAL_POSTGRES_CONNECTION_ID)
+    : undefined;
+  if (
+    existing?.database !== expected.database ||
+    existing?.name !== expected.name ||
+    existing?.type !== expected.type
+  ) {
+    throw new Error(
+      `Local warehouse connection existing database ${existing?.database ?? 'unavailable'} differs from expected ${expected.database}; reconcile the scoped catalog and Source bindings explicitly`
     );
   }
 
@@ -510,8 +585,9 @@ async function main() {
   const apiBaseUrl = `http://${options.host}:${options.apiPort}`;
   const webBaseUrl = `http://${options.host}:${options.webPort}`;
   const databaseUrl = resolveDatabaseUrl(options);
+  const warehouseUrl = resolveLocalWarehouseUrl(options);
   const seedLocalWarehouseProof = Boolean(
-    databaseUrl && shouldBootstrapLocalPostgres(options, process.env)
+    warehouseUrl && shouldBootstrapLocalPostgres(options, process.env)
   );
   let localProtectedRuntimeAuth;
   let localTemporalService;
@@ -550,9 +626,9 @@ async function main() {
         }
       : {}),
   });
-  if (seedLocalWarehouseProof && apiEnv.DATABASE_URL) {
+  if (seedLocalWarehouseProof && warehouseUrl) {
     console.log('[dev-stack] Seeding local Postgres proof source data');
-    await seedLocalPostgresProofData(apiEnv.DATABASE_URL);
+    await seedLocalPostgresProofData(warehouseUrl);
   }
   const processHandles = [];
   let shuttingDown = false;
@@ -650,9 +726,9 @@ async function main() {
           `${seededGrant.workspaceScope.environmentId})`
       );
 
-      if (seedLocalWarehouseProof) {
+      if (seedLocalWarehouseProof && warehouseUrl) {
         const statusCode = await ensureLocalWarehouseConnectionViaApi({
-          databaseUrl: apiEnv.DATABASE_URL,
+          databaseUrl: warehouseUrl,
           apiBaseUrl,
           bearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
           workspaceScope: localProtectedRuntimeAuth.workspaceScope,
@@ -733,6 +809,7 @@ async function main() {
 module.exports = {
   parseArgs,
   resolveDatabaseUrl,
+  resolveLocalWarehouseUrl,
   shouldBootstrapLocalPostgres,
   buildApiEnv,
   buildLocalDbtArtifactEnv,

@@ -6,6 +6,7 @@ const http = require('node:http');
 const {
   parseArgs,
   resolveDatabaseUrl,
+  resolveLocalWarehouseUrl,
   shouldBootstrapLocalPostgres,
   buildApiEnv,
   buildCoordinatedTemporalWorkerEnv,
@@ -16,6 +17,7 @@ const {
   prepareTemporalWorkerRuntimeDependencies,
   buildLocalPostgresProofSeedSql,
   buildLocalWarehouseConnectionRequest,
+  seedLocalPostgresProofData,
   ensureLocalWarehouseConnectionViaApi,
   waitForUrlOrProcessExit,
 } = require('./run-dev-stack.cjs');
@@ -23,7 +25,7 @@ const {
   resolveTemporalCliExecutable,
   startLocalTemporalService,
 } = require('./run-dev-stack.temporal.cjs');
-const { defaultPgUrl } = require('./run-local-postgres.cjs');
+const { defaultPgUrl, defaultWarehousePgUrl } = require('./run-local-postgres.cjs');
 
 test('parseArgs enables skip-postgres explicitly', () => {
   const options = parseArgs(['--host', '0.0.0.0', '--skip-postgres', '--test-only']);
@@ -46,6 +48,71 @@ test('resolveDatabaseUrl falls back to canonical local postgres when not configu
   const databaseUrl = resolveDatabaseUrl({ skipPostgres: false }, {});
 
   assert.equal(databaseUrl, defaultPgUrl);
+});
+
+test('local warehouse defaults to a different database and never inherits an explicit app URL', () => {
+  assert.equal(resolveLocalWarehouseUrl({ skipPostgres: false }, {}), defaultWarehousePgUrl);
+  assert.equal(
+    resolveLocalWarehouseUrl({ skipPostgres: false }, { DATABASE_URL: defaultPgUrl }),
+    undefined
+  );
+  assert.equal(resolveLocalWarehouseUrl({ skipPostgres: true }, {}), undefined);
+});
+
+test('local warehouse rejects a database name shared with application state', () => {
+  assert.throws(
+    () =>
+      resolveLocalWarehouseUrl(
+        { skipPostgres: false },
+        { DATABASE_URL: defaultPgUrl, DVT_LOCAL_POSTGRES_WAREHOUSE_URL: defaultPgUrl }
+      ),
+    /different database/
+  );
+  assert.throws(
+    () =>
+      resolveLocalWarehouseUrl(
+        { skipPostgres: false },
+        {
+          DATABASE_URL: 'postgresql://app:secret@localhost/dvt',
+          DVT_LOCAL_POSTGRES_WAREHOUSE_URL: 'postgresql://warehouse:secret@127.0.0.1:5432/dvt',
+        }
+      ),
+    /different database/
+  );
+  assert.equal(
+    resolveLocalWarehouseUrl(
+      { skipPostgres: false },
+      {
+        DATABASE_URL: 'postgresql://app:secret@state.example/dvt',
+        DVT_LOCAL_POSTGRES_WAREHOUSE_URL: 'postgresql://warehouse:secret@warehouse.example/dvt',
+      }
+    ),
+    'postgresql://warehouse:secret@warehouse.example/dvt'
+  );
+});
+
+test('local warehouse rejects an explicit credential binding to the application database', () => {
+  assert.throws(
+    () =>
+      buildApiEnv(
+        { host: '127.0.0.1', apiPort: 3000, skipPostgres: false },
+        {
+          DVT_POSTGRES_CREDENTIAL_BINDINGS: JSON.stringify({
+            'postgres:local-postgres-proof': defaultPgUrl,
+          }),
+        }
+      ),
+    /credential binding must match/
+  );
+});
+
+test('local warehouse preserves a matching explicit credential binding', () => {
+  const bindings = JSON.stringify({ 'postgres:local-postgres-proof': defaultWarehousePgUrl });
+  const apiEnv = buildApiEnv(
+    { host: '127.0.0.1', apiPort: 3000, skipPostgres: false },
+    { DVT_POSTGRES_CREDENTIAL_BINDINGS: bindings }
+  );
+  assert.equal(apiEnv.DVT_POSTGRES_CREDENTIAL_BINDINGS, bindings);
 });
 
 test('shouldBootstrapLocalPostgres only triggers when DATABASE_URL is absent and bootstrap is enabled', () => {
@@ -75,10 +142,10 @@ test('buildApiEnv injects readiness flags and local postgres defaults for the co
   assert.equal(apiEnv.DVT_READYZ_ENABLED, 'true');
   assert.equal(apiEnv.DVT_DB_READY_ENABLED, 'true');
   assert.equal(apiEnv.DATABASE_URL, defaultPgUrl);
-  assert.equal(apiEnv.DVT_LOCAL_POSTGRES_WAREHOUSE_URL, undefined);
+  assert.equal(apiEnv.DVT_LOCAL_POSTGRES_WAREHOUSE_URL, defaultWarehousePgUrl);
   assert.equal(
     apiEnv.DVT_POSTGRES_CREDENTIAL_BINDINGS,
-    JSON.stringify({ 'postgres:local-postgres-proof': defaultPgUrl })
+    JSON.stringify({ 'postgres:local-postgres-proof': defaultWarehousePgUrl })
   );
   assert.equal(apiEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'true');
   assert.equal(apiEnv.TEMPORAL_ADDRESS, '127.0.0.1:7233');
@@ -213,7 +280,7 @@ test('buildCoordinatedTemporalWorkerEnv derives worker queue from local tenant, 
   assert.equal(workerEnv.TEMPORAL_TASK_QUEUE, 'dvt-temporal-tenant');
   assert.equal(
     workerEnv.DVT_POSTGRES_CREDENTIAL_BINDINGS,
-    JSON.stringify({ 'postgres:local-postgres-proof': defaultPgUrl })
+    JSON.stringify({ 'postgres:local-postgres-proof': defaultWarehousePgUrl })
   );
   assert.equal(workerEnv.DVT_TEMPORAL_DVT_POSTGRES_ENABLED, 'true');
 });
@@ -443,11 +510,18 @@ test('buildLocalPostgresProofSeedSql creates real default source tables for Canv
   assert.match(sql, /ANALYZE raw\.order_details/);
 });
 
-test('buildLocalWarehouseConnectionRequest uses the protected connection command contract', () => {
-  assert.deepEqual(buildLocalWarehouseConnectionRequest(defaultPgUrl), {
+test('warehouse seed fails when its database is unavailable', async () => {
+  await assert.rejects(
+    seedLocalPostgresProofData('postgresql://warehouse:secret@127.0.0.1:1/dvt_demo'),
+    /ECONNREFUSED|connect/
+  );
+});
+
+test('buildLocalWarehouseConnectionRequest uses the separate warehouse database', () => {
+  assert.deepEqual(buildLocalWarehouseConnectionRequest(defaultWarehousePgUrl), {
     name: 'Local Postgres proof',
     type: 'postgres',
-    database: 'dvt',
+    database: 'dvt_demo',
     credentialRef: 'postgres:local-postgres-proof',
   });
 });
@@ -504,13 +578,24 @@ test('ensureLocalWarehouseConnectionViaApi scopes and authenticates the real com
   }
 });
 
-test('ensureLocalWarehouseConnectionViaApi accepts only the canonical duplicate conflict', async () => {
-  const server = http.createServer((_request, response) => {
-    response.writeHead(409, { 'content-type': 'application/json' });
+test('ensureLocalWarehouseConnectionViaApi verifies a duplicate against the catalog', async () => {
+  const server = http.createServer((request, response) => {
+    response.writeHead(request.method === 'GET' ? 200 : 409, {
+      'content-type': 'application/json',
+    });
     response.end(
-      JSON.stringify({
-        error: { type: 'conflict', reason: 'warehouse_connection_duplicate' },
-      })
+      JSON.stringify(
+        request.method === 'GET'
+          ? [
+              {
+                id: 'local-postgres-proof',
+                name: 'Local Postgres proof',
+                type: 'postgres',
+                database: 'dvt_demo',
+              },
+            ]
+          : { error: { type: 'conflict', reason: 'warehouse_connection_duplicate' } }
+      )
     );
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -519,7 +604,7 @@ test('ensureLocalWarehouseConnectionViaApi accepts only the canonical duplicate 
     const address = server.address();
     assert.ok(address && typeof address !== 'string');
     const statusCode = await ensureLocalWarehouseConnectionViaApi({
-      databaseUrl: defaultPgUrl,
+      databaseUrl: defaultWarehousePgUrl,
       apiBaseUrl: `http://127.0.0.1:${address.port}`,
       bearerToken: 'proof-token',
       workspaceScope: {
@@ -530,6 +615,46 @@ test('ensureLocalWarehouseConnectionViaApi accepts only the canonical duplicate 
     });
 
     assert.equal(statusCode, 409);
+  } finally {
+    await new Promise((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve()))
+    );
+  }
+});
+
+test('ensureLocalWarehouseConnectionViaApi rejects a duplicate bound to the app database', async () => {
+  const server = http.createServer((request, response) => {
+    response.writeHead(request.method === 'GET' ? 200 : 409, {
+      'content-type': 'application/json',
+    });
+    response.end(
+      JSON.stringify(
+        request.method === 'GET'
+          ? [
+              {
+                id: 'local-postgres-proof',
+                name: 'Local Postgres proof',
+                type: 'postgres',
+                database: 'dvt',
+              },
+            ]
+          : { error: { type: 'conflict', reason: 'warehouse_connection_duplicate' } }
+      )
+    );
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address !== 'string');
+    await assert.rejects(
+      ensureLocalWarehouseConnectionViaApi({
+        databaseUrl: defaultWarehousePgUrl,
+        apiBaseUrl: `http://127.0.0.1:${address.port}`,
+        bearerToken: 'proof-token',
+        workspaceScope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
+      }),
+      /existing.*dvt.*dvt_demo/
+    );
   } finally {
     await new Promise((resolve, reject) =>
       server.close((error) => (error ? reject(error) : resolve()))
