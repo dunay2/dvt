@@ -12,7 +12,7 @@ import {
 } from './DvtSubstraitCompositionStartSection.test-support';
 describe('Composition start predicate', () => {
   const view = useCompositionStartHarness();
-  it('edits the first JOIN with the canonical operand, function, comparison, and boolean grammar', async () => {
+  it('edits the first JOIN with fields, literals, comparisons, and boolean predicates', async () => {
     const onStartInnerJoin = vi.fn();
     await act(async () => {
       view.root.render(
@@ -39,13 +39,12 @@ describe('Composition start predicate', () => {
     const rightKind = view.container.querySelector<HTMLSelectElement>(
       '[aria-label="Tipo del operando derecho"]'
     )!;
-    const leftFunction = view.container.querySelector<HTMLSelectElement>(
-      '[data-slot="semantic-workbench-join-izquierdo-operand"] [aria-label="Añadir función exterior al operando izquierdo"]'
-    )!;
-    const functionId = Array.from(leftFunction.options).find(
-      (option) => option.value !== ''
-    )?.value;
-    expect(functionId).toBeTruthy();
+    expect(
+      view.container.querySelector('[aria-label="Añadir función exterior al operando izquierdo"]')
+    ).toBeNull();
+    expect(
+      view.container.querySelector('[aria-label="Añadir función exterior al operando derecho"]')
+    ).toBeNull();
 
     await act(async () => {
       fireEvent.change(rightKind, { target: { value: 'literal' } });
@@ -57,7 +56,6 @@ describe('Composition start predicate', () => {
         )!,
         { target: { value: '1' } }
       );
-      fireEvent.change(leftFunction, { target: { value: functionId } });
       fireEvent.change(
         view.container.querySelector<HTMLSelectElement>(
           '[aria-label="Comparador de la condición"]'
@@ -134,7 +132,10 @@ describe('Composition start predicate', () => {
     const conditions = inspection.projection.joins[0]?.conditions ?? [];
     expect(conditions).toHaveLength(3);
     expect(conditions[0]).toMatchObject({
-      left: { kind: 'function', capabilityId: functionId },
+      left: {
+        kind: 'field',
+        sourceFieldId: inspection.projection.inputs[0]?.fields[0]?.fieldId,
+      },
       right: { kind: 'literal', literal: { dataType: 'string', value: '1' } },
       operator: 'not_equal',
     });
