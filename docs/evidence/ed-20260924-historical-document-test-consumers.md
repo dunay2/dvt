@@ -67,3 +67,46 @@ literal; no product risk is closed by retiring a report.
 
 [R-20260924-HISTORICAL-DOCUMENT-TEST-CONSUMERS](../risk-register/quality/r-20260924-historical-document-test-consumers.yaml)
 tracks regression and unreconciled operational relationship risk.
+
+# Follow-up: consumers left behind by PR #3489 (2026-10-02)
+
+This follow-up does not reattribute the historical results above. Its baseline is
+`0693e5392e68025dbd66372cad92a8c7c4e90d48`; its hook-normalized test change is
+`b8607940674770e7995b31eaf31c2ed4219a33da`. The complete diff evaluator reports
+ARC-2 because the PostgreSQL adapter test is affected, with evidence and risk
+updates required; no rollout note or compatibility matrix is required.
+
+The [design and retirement rationale](https://github.com/dunay2/dvt/issues/2925#issuecomment-5956744219)
+preceded implementation. The main PostgreSQL job had 304 passing tests and one
+proposal-presence failure; the main Web architecture run had 25 failures in
+16 files caused by deleted proposals, while unit and presentation tests passed.
+
+Only test consumers change: sixteen Web architecture guards, their shared alpha
+fixture and one PostgreSQL architecture guard. Retired proposal reads and
+report-heading assertions are removed; current component, contract, source,
+scenario and negative assertions remain. The two alpha evidence references were
+test-only historical links; all seventeen alpha acceptance/rejection cases,
+the nine rails, evaluator and file-existence validation remain. PostgreSQL
+retains five component architecture cases and all nine rollback behavior cases.
+No product implementation, database schema or data changes.
+
+Validation performed for this test change:
+
+- Focused Web architecture execution: 16 files, 68 cases passed. Web lint and
+  typecheck passed after canonical dependency preparation. An initial typecheck
+  correctly failed on two missing build outputs in the fresh worktree; preparing
+  those dependencies resolved it without changing types or rules.
+- `pnpm --dir packages/@dvt/adapter-postgres exec vitest run --config vitest.config.ts test/PostgresSchemaRollbackZeroDowntime.architecture.test.ts test/PostgresSchemaManager.rollback.test.ts`:
+  14 cases passed; package ESLint and TypeScript checking passed.
+- `pnpm --filter @dvt/contracts run schema:verify`: 25 cases passed.
+- `pnpm validate:contracts`: three plan fixtures, 24 checks passed. The command
+  reported its existing missing optional glossary/result artifact; this does not
+  constitute a live golden-path execution or new evidence for those artifacts.
+- Effective Planning DB implementation-surface and symbol checks passed before
+  commit; no authority write or projection rebuild was needed for this follow-up.
+- Independent inspection confirmed the alpha fixture has no product consumers.
+
+The final documentation commit, exact base/head implementation gate, pre-push
+and CI results are recorded in the implementation PR linked from issue #2925.
+These initial focused results do not claim that a later candidate already passed
+those gates. No test bypass, relaxed rule, added stub or new debt is introduced.

@@ -10,7 +10,9 @@ probability: Low
 description: >
   Removing old report-presence assertions can accidentally remove a current behavioral or
   architecture requirement. Operated evidence relationships and independent review have not been
-  accepted in this best-effort cut.
+  accepted in this best-effort cut. The 2026-10-02 follow-up also reconciles test consumers left
+  behind by PR 3489; a missing historical proposal must not be confused with a missing current
+  component or behavioral proof.
 mitigation: >
   Preserve current contracts, component guides, user stories, evidence, risk records and all
   feature-mechanization blocks. Keep each behavioral assertion; use current-owner assertions instead
@@ -18,5 +20,9 @@ mitigation: >
   golden fixtures, CI-tool partitions and the normal prepush gate. Exercise individual restoration,
   relocation and authority-reference negatives. Record operated reconciliation and independent
   review in issue 3004 when actually executed; do not infer them from bootstrap CI or close this
-  risk merely on merge.
+  risk merely on merge. For the 2026-10-02 follow-up, preserve all alpha acceptance/rejection cases,
+  its evaluator and existence checks, the five PostgreSQL component checks and nine rollback
+  behavior cases. Independent inspection verifies that the two removed alpha evidence references are
+  test-only. Keep this broader relationship risk open; no Planning DB reconciliation is claimed by
+  that test-consumer repair.
 ---
