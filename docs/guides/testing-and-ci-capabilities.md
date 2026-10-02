@@ -337,6 +337,9 @@ Command semantics:
   `scripts/verify-changed.test.cjs`, `scripts/verify-prepush.*` runs
   `scripts/verify-prepush.test.cjs`, and the shared
   `scripts/local-validation-plan.cjs` contract still runs both suites.
+- Changes to `run-selected-closure-live-proof` or `run-dev-stack` source/tests
+  select the matching contract once through this same focused catalog for
+  pre-push and PR Quality, retaining test-process Git-environment isolation.
 - CI tooling edits under `tools/ci/*.mjs` and changed `tools/ci/*.test.mjs`
   route to direct adjacent `node --test` suites when that test file exists.
   The full `pnpm test:ci-tools` contract remains a broader merge/CI-tooling
