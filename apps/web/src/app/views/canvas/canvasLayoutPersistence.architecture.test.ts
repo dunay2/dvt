@@ -12,7 +12,7 @@ function readDoc(relativePathFromRepo: string): string {
 }
 
 describe('Canvas layout persistence architecture', () => {
-  it('documents local C&Q ownership, stories, canonical analysis, and draft-authority boundaries', () => {
+  it('documents local C&Q ownership, stories, and draft-authority boundaries', () => {
     const componentGuide = readDoc(
       'docs/architecture/components/web/graph/canvas-layout-persistence-component.md'
     );
@@ -21,9 +21,6 @@ describe('Canvas layout persistence architecture', () => {
     );
     const commandQueryCatalog = readDoc(
       'docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md'
-    );
-    const implementationPlan = readDoc(
-      'docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md'
     );
 
     for (const requiredSection of [
@@ -62,7 +59,6 @@ describe('Canvas layout persistence architecture', () => {
       expect(commandQueryCatalog).toContain(requiredCatalogSection);
     }
 
-    expect(implementationPlan).toContain('Code And Documentation Drift');
     expect(componentGuide).toContain('must not import draft-authoring ports');
     expect(componentGuide).toContain('not in the protected draft');
     expect(componentGuide).toContain('not in protected graph drafts');

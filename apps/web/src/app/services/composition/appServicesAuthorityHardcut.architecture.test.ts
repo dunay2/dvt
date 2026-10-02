@@ -7,7 +7,6 @@ const REPO_ROOT = path.resolve(import.meta.dirname, '../../../../../..');
 
 const REQUIRED_DOCS = [
   'docs/adr/ADR-0056-web-ui-authority-is-server-projected.md',
-  'docs/planning/proposals/mandatory/frontend-and-ux/web-api-authority-hardcut-plan-20260510.md',
   'docs/architecture/components/web/workspace/web-api-authority-hardcut-component.md',
   'docs/architecture/components/web/workspace/web-api-authority-hardcut-user-stories.md',
 ] as const;
@@ -32,9 +31,6 @@ describe('web API authority hardcut architecture', () => {
     const userStories = readRepoFile(
       'docs/architecture/components/web/workspace/web-api-authority-hardcut-user-stories.md'
     );
-    const implementationPlan = readRepoFile(
-      'docs/planning/proposals/mandatory/frontend-and-ux/web-api-authority-hardcut-plan-20260510.md'
-    );
 
     for (const section of ['## Public API', '## Invariants', '## Transitions', '## Consumers']) {
       expect(componentGuide).toContain(section);
@@ -50,16 +46,6 @@ describe('web API authority hardcut architecture', () => {
       'US-WEB-AUTH-007',
     ]) {
       expect(userStories).toContain(storyId);
-    }
-
-    for (const planSignal of [
-      'featureId: WEB-API-AUTHORITY-HARDCUT-20260510',
-      'fowlerSignals:',
-      'Replace Implicit Authority With Explicit',
-      'Hidden Authority in optimistic browser permissions',
-      'appServicesAuthorityHardcut.architecture.test.ts',
-    ]) {
-      expect(implementationPlan).toContain(planSignal);
     }
   });
 

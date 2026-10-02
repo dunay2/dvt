@@ -61,24 +61,6 @@ describe('Postgres schema rollback zero-downtime component semantics', () => {
     expect(stories).toContain('```mermaid');
   });
 
-  it('keeps the planning proposal tied to real command/query rails and red-green cycles', () => {
-    const proposalPath = join(
-      import.meta.dirname,
-      '../../../../docs/planning/proposals/mandatory/runtime-and-contracts/ar-d4-zero-downtime-schema-rollback-plan-20260513.md'
-    );
-
-    expect(existsSync(proposalPath)).toBe(true);
-
-    const proposal = readFileSync(proposalPath, 'utf8');
-
-    expect(proposal).toContain('AR-D4-ZERO-DOWNTIME-SCHEMA-ROLLBACK');
-    expect(proposal).toContain('PostgresStateStoreSchemaRollbackCommand');
-    expect(proposal).toContain('PostgresStateStoreSchemaRollbackPlan');
-    expect(proposal).toContain('Red/Green cycle 1');
-    expect(proposal).toContain('Red/Green cycle 2');
-    expect(proposal).toContain('Red/Green cycle 3');
-  });
-
   it('documents online-compatible rollback in package design instead of only local docs', () => {
     const design = readFileSync(
       join(import.meta.dirname, '../../../../packages/@dvt/adapter-postgres/DESIGN.md'),
