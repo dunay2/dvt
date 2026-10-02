@@ -26,6 +26,19 @@ const budgetKeys = [
   'DVT_LOCAL_DATA_MAX_CONCURRENT_SESSIONS',
 ] as const;
 
+const invalidBudgets = [
+  undefined,
+  '',
+  '0',
+  '-1',
+  '1.5',
+  '1e3',
+  'NaN',
+  'Infinity',
+  '9007199254740992',
+  '1GB',
+];
+
 describe('local data configuration', () => {
   it.each([undefined, 'false', ' FALSE '])('keeps %s disabled without evaluating paths', (flag) => {
     expect(
@@ -39,7 +52,7 @@ describe('local data configuration', () => {
     );
   });
 
-  it('is validated by the existing environment entry point without claiming runtime readiness', () => {
+  it('validates configuration without advertising native readiness', () => {
     expect(loadEnv({}).localData).toEqual({ kind: 'disabled' });
     expect(loadEnv(valid).localData).toEqual({
       kind: 'configured',
@@ -55,7 +68,7 @@ describe('local data configuration', () => {
   });
 
   it.each(budgetKeys)('requires a positive exact integer for %s', (key) => {
-    for (const value of [undefined, '', '0', '-1', '1.5', '1e3', 'NaN', 'Infinity', '9007199254740992', '1GB']) {
+    for (const value of invalidBudgets) {
       expect(() => readLocalDataConfiguration({ ...valid, [key]: value })).toThrow(new RegExp(key));
     }
   });
@@ -64,12 +77,14 @@ describe('local data configuration', () => {
     'requires an explicit non-root absolute directory for %s',
     (key) => {
       for (const value of [undefined, '', '.', 'relative/path', '\0', path.parse(root).root]) {
-        expect(() => readLocalDataConfiguration({ ...valid, [key]: value })).toThrow(new RegExp(key));
+        expect(() => readLocalDataConfiguration({ ...valid, [key]: value })).toThrow(
+          new RegExp(key)
+        );
       }
     }
   );
 
-  it.each([root, path.join(root, 'nested'), path.dirname(root), path.join(root, 'child', '..')])(
+  it.each([root, path.join(root, 'nested'), path.dirname(root)])(
     'rejects overlapping authoring storage %s',
     (workspaceFilesRoot) => {
       expect(() =>
@@ -84,11 +99,11 @@ describe('local data configuration', () => {
     ).toBe('configured');
   });
 
-  it('normalizes paths, accepts explicit case-normalized true and does not mutate input', () => {
+  it('normalizes paths and explicit true without mutating input', () => {
     const input = Object.freeze({
       ...valid,
       DVT_LOCAL_DATA_ENABLED: ' TRUE ',
-      DVT_LOCAL_DATA_ROOT: path.join(root, 'child', '..'),
+      DVT_LOCAL_DATA_ROOT: `${root}${path.sep}child${path.sep}..`,
     });
     const before = { ...input };
     const result = readLocalDataConfiguration(input);
