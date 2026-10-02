@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router User Stories
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-05-20
+last_reviewed: 2026-10-02
 planning_type: architecture
 ---
 
@@ -90,8 +90,9 @@ Acceptance:
 
 - Given a changed suite governance file
 - When the changed-suite plan is resolved
-- Then the selected command is a direct Vitest run for
-  `src/testing/vitestSuites.architecture.test.ts`.
+- Then one direct Vitest batch runs all current
+  `src/testing/vitestSuites*.architecture.test.ts` guards, including behavioral
+  routing and catalog checks, not just the original documentation guard.
 
 ## US-4A Canvas Architecture Change
 
@@ -163,6 +164,10 @@ Acceptance:
 - Given only the source file is changed
 - When the changed-suite plan is resolved
 - Then the router falls back to the governed suite for that file type.
+- Given another changed source has no directly paired changed test
+- Then that source's complete suite remains required even if the diff contains
+  an unrelated exact test from the same suite; the complete suite includes that
+  exact test without running it a second time.
 
 ## US-5B Canvas Component With Explicit Focus Tests
 
@@ -173,8 +178,8 @@ full presentation lane only because the component lives outside
 
 Acceptance:
 
-- Given changed Canvas/Inspector component files and changed exact Canvas focus
-  tests for the same lane
+- Given changed Canvas/Inspector component files and their directly paired
+  changed exact Canvas focus tests, without another unpaired source in that lane
 - When the changed-suite plan is resolved
 - Then the selected commands are direct `vitest run` batches using
   `vitest.canvas-unit.config.ts`, `vitest.canvas-presentation.config.ts`, or
@@ -182,6 +187,22 @@ Acceptance:
 - Then the selected suites do not include the full `unit`, `presentation`, or
   `architecture` primary suite unless a non-Canvas or governance file also
   selects one.
+
+## US-5C Mixed Canvas And General Changes
+
+As a developer changing Canvas and general Web code together, I want complete
+primary coverage to run once instead of repeating its equivalent Canvas subset.
+
+Acceptance:
+
+- Given both a complete primary suite and its equivalent Canvas focus suite
+  are required
+- Then the primary run includes all focus tests with the same environment and
+  isolation, without a second focus process.
+- Given only exact primary tests are selected
+- Then a required complete Canvas focus suite remains in the plan.
+- Monaco, Shell and Workspace focus contexts are not discarded when their
+  execution environment differs from primary coverage.
 
 ## US-6 Pull-Request Web Change
 

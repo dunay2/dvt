@@ -2,7 +2,7 @@
 title: Frontend Test Governance Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-09-05
+last_reviewed: 2026-10-02
 planning_type: architecture
 ---
 
@@ -49,6 +49,9 @@ contract validation, or engine determinism tests.
 - Every web Vitest file belongs to exactly one primary suite.
 - Focus suites may overlap with primary ownership only when they are explicitly
   listed in `WEB_VITEST_FOCUS_SUITE_NAMES`.
+- Catalog overlap does not require duplicate execution: the changed-suite plan
+  absorbs a Canvas focus run only into its complete primary equivalent, with
+  file containment and execution-configuration equivalence guarded by tests.
 - Feature-owned focus suites may narrow local feedback loops without changing
   primary suite ownership.
 - Architecture tests are excluded from unit and presentation suites.
