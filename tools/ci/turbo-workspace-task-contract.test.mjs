@@ -37,25 +37,25 @@ test('Turbo workspace wrapper accepts governed task names and defaults to the af
   );
   assert.deepEqual(parseArgs(['typecheck']), {
     task: 'typecheck',
-    filter: DEFAULT_FILTER,
+    filters: [DEFAULT_FILTER],
   });
   assert.deepEqual(parseArgs(['typecheck'], { GIT_BASE: 'origin/release/2026-06' }), {
     task: 'typecheck',
-    filter: '...[origin/release/2026-06]',
+    filters: ['...[origin/release/2026-06]'],
   });
   assert.deepEqual(parseArgs(['test', '--filter', '@dvt/engine']), {
     task: 'test',
-    filter: '@dvt/engine',
+    filters: ['@dvt/engine'],
   });
   assert.deepEqual(parseArgs(['build', '--filter=@dvt/web']), {
     task: 'build',
-    filter: '@dvt/web',
+    filters: ['@dvt/web'],
   });
   assert.deepEqual(parseArgs(['lint', '--filter=dvt-api']), {
     task: 'lint',
-    filter: 'dvt-api',
+    filters: ['dvt-api'],
   });
-  assert.deepEqual(buildTurboArgs('typecheck', '@dvt/contracts'), [
+  assert.deepEqual(buildTurboArgs('typecheck', ['@dvt/contracts']), [
     'exec',
     'turbo',
     'run',
@@ -63,6 +63,26 @@ test('Turbo workspace wrapper accepts governed task names and defaults to the af
     '--filter=@dvt/contracts',
   ]);
   assert.deepEqual([...SUPPORTED_TASKS], ['build', 'lint', 'test', 'typecheck']);
+});
+
+test('Turbo workspace wrapper builds the union of repeated filters in one invocation', () => {
+  const parsed = parseArgs(['build', '--filter=@dvt/contracts', '--filter', '@dvt/planner']);
+  assert.deepEqual(parsed, { task: 'build', filters: ['@dvt/contracts', '@dvt/planner'] });
+  assert.deepEqual(buildTurboArgs(parsed.task, parsed.filters), [
+    'exec',
+    'turbo',
+    'run',
+    'build',
+    '--filter=@dvt/contracts',
+    '--filter=@dvt/planner',
+  ]);
+  for (const args of [
+    ['build', '--filter'],
+    ['build', '--filter='],
+    ['build', '--filter', '--filter=@dvt/contracts'],
+    ['build', '--unknown'],
+  ])
+    assert.throws(() => parseArgs(args), /Missing value|Unsupported argument/u);
 });
 
 test('turbo.json declares governed build, lint, typecheck, and test task contracts', () => {
@@ -146,7 +166,7 @@ test('root affected commands and CI matrix lint/build/typecheck steps use the Tu
   );
   assert.ok(
     testWorkflow.includes(
-      'node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}'
+      'node scripts/run-turbo-workspace-task.cjs build ${{ matrix.buildFilters }}'
     )
   );
   assert.equal(testWorkflow.includes('declare -A seen'), false);
@@ -206,7 +226,7 @@ test('GitHub workflows restrict optional remote Turbo cache credentials to trust
   assertTrustedTurboEnv(
     findStepContainingCommand(
       testWorkflow,
-      'node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}'
+      'node scripts/run-turbo-workspace-task.cjs build ${{ matrix.buildFilters }}'
     ),
     'package matrix dependency build'
   );

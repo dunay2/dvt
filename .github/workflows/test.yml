@@ -80,7 +80,7 @@ jobs:
           turbo-cache-variant: ${{ matrix.name }}
 
       - name: Build package dependency graph
-        run: node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}
+        run: node scripts/run-turbo-workspace-task.cjs build ${{ matrix.buildFilters }}
         env:
           TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
           TURBO_TEAM: ${{ github.event_name != 'pull_request' && secrets.TURBO_TEAM || '' }}
