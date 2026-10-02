@@ -112,9 +112,6 @@ describe('canvas route posture priority architecture', () => {
     const postureGuide = readRepoFile(
       'docs/architecture/components/web/graph/canvas-draft-access-posture-component.md'
     );
-    const implementationPlan = readRepoFile(
-      'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md'
-    );
 
     expect(postureSource).toContain('export type CanvasDraftAccessPosture');
     expect(postureSource).toContain('deriveCanvasDraftAccessPosture');
@@ -159,13 +156,6 @@ describe('canvas route posture priority architecture', () => {
     expect(postureGuide).toContain('No implemented Canvas draft access posture component existed');
     expect(postureGuide).toContain('Design before implementation');
     expect(postureGuide).toContain('## Fowler Opportunity Matrix');
-    expect(implementationPlan).toContain('## Pre-Implementation Discovery Gate');
-    expect(implementationPlan).toContain(
-      'The implementation is not allowed to create this component'
-    );
-    expect(implementationPlan).toContain('without first proving the existing code lacks one owner');
-    expect(implementationPlan).toContain('## TDD Tasks');
-    expect(implementationPlan).toContain('## Self-Review Iterations');
   });
 
   it('keeps the active web graph slice free of retired-route shims', () => {

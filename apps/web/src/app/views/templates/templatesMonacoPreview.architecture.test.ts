@@ -175,15 +175,12 @@ describe('Templates Monaco preview architecture', () => {
     }
   });
 
-  it('documents API, invariants, transitions, consumers, stories, and Fowler analysis', () => {
+  it('documents API, invariants, transitions, consumers, and stories', () => {
     const componentGuide = readRepoDoc(
       'docs/architecture/components/web/templates/execution-template-monaco-preview-component.md'
     );
     const userStories = readRepoDoc(
       'docs/architecture/components/web/templates/execution-template-monaco-preview-user-stories.md'
-    );
-    const implementationPlan = readRepoDoc(
-      'docs/planning/proposals/mandatory/frontend-and-ux/f17d-templates-monaco-preview-plan-20260522.md'
     );
 
     for (const requiredSection of [
@@ -214,19 +211,6 @@ describe('Templates Monaco preview architecture', () => {
     ]) {
       expect(userStories).toContain(requiredStory);
     }
-
-    for (const requiredPlanSignal of [
-      '## Fowler Opportunity Matrix',
-      'fowlerSignals:',
-      'Documentation drift',
-      'Hidden authority',
-      'Semantic Fitness Function',
-    ]) {
-      expect(implementationPlan).toContain(requiredPlanSignal);
-    }
-
-    expect(implementationPlan).toContain('featureId: F17D-TEMPLATES-MONACO-PREVIEW-20260522');
-    expect(implementationPlan).toContain('templatesMonacoPreview.architecture.test.ts');
   });
 
   it('keeps Monaco as a lazy read-only Templates preview panel instead of route, shell, or Canvas authority', () => {

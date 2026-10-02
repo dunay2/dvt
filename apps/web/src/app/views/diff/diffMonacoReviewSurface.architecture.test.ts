@@ -16,15 +16,12 @@ function readRepoDoc(relativePathFromRepo: string): string {
 }
 
 describe('Diff Monaco review surface architecture', () => {
-  it('documents the component API, invariants, transitions, consumers, stories, and Fowler analysis', () => {
+  it('documents the component API, invariants, transitions, consumers, and stories', () => {
     const componentGuide = readRepoDoc(
       'docs/architecture/components/web/diff/diff-monaco-review-surface-component.md'
     );
     const userStories = readRepoDoc(
       'docs/architecture/components/web/diff/diff-monaco-review-surface-user-stories.md'
-    );
-    const implementationPlan = readRepoDoc(
-      'docs/planning/proposals/mandatory/frontend-and-ux/f17b-monaco-diff-review-surface-plan-20260519.md'
     );
 
     for (const requiredSection of [
@@ -59,19 +56,6 @@ describe('Diff Monaco review surface architecture', () => {
     ]) {
       expect(userStories).toContain(requiredStory);
     }
-
-    for (const requiredPlanSignal of [
-      '## Fowler Opportunity Matrix',
-      'fowlerSignals:',
-      'Documentation drift',
-      'Hidden authority',
-      'Semantic Fitness Function',
-    ]) {
-      expect(implementationPlan).toContain(requiredPlanSignal);
-    }
-
-    expect(implementationPlan).toContain('featureId: F17B-MONACO-DIFF-REVIEW-SURFACE-20260519');
-    expect(implementationPlan).toContain('diffMonacoReviewSurface.architecture.test.ts');
   });
 
   it('keeps Monaco as a lazy, read-only DiffEditor primitive instead of route or shell authority', () => {

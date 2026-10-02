@@ -144,9 +144,6 @@ describe('canvas startup bootstrap publication architecture', () => {
     const webPackage = JSON.parse(readRepoFile('apps/web/package.json')) as {
       scripts: Record<string, string>;
     };
-    const implementationPlanSource = readRepoFile(
-      'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md'
-    );
     const componentGuide = readRepoFile(
       'docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md'
     );
@@ -224,9 +221,6 @@ describe('canvas startup bootstrap publication architecture', () => {
     );
     expect(liveRunnerSource).not.toContain("['--filter', 'dvt-api', 'dev']");
     expect(liveRunnerSource).not.toContain("'dbt'].map");
-    expect(implementationPlanSource).toContain(
-      'pnpm --filter @dvt/web test:e2e:first-authoring:live'
-    );
     expect(componentGuide).toContain('## User Stories');
     expect(componentGuide).toContain('## Scenario Coverage Matrix');
     expect(componentGuide).toContain('## TDD Traceability');

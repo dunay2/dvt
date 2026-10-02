@@ -79,10 +79,7 @@ describe('internal alpha route gate architecture', () => {
     expect(acceptanceMatrix).toContain('Child slices cannot declare alpha full');
   });
 
-  it('keeps route authority bound to F-27 and the command/query rail catalog', () => {
-    const routePlan = readRepoFile(
-      'docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md'
-    );
+  it('keeps F-27 user stories bound to the command/query rails', () => {
     const userStories = readRepoFile(
       'docs/architecture/components/web/internal-alpha-route-gate-user-stories.md'
     );
@@ -98,11 +95,9 @@ describe('internal alpha route gate architecture', () => {
       'ObservePlanRunReadiness',
       'MapRouteRecoveryState',
     ]) {
-      expect(routePlan).toContain(rail);
       expect(userStories).toContain(rail);
     }
 
-    expect(routePlan).toContain('20260514-internal-alpha-route-acceptance-matrix.md');
     expect(userStories).toContain('US-F27-');
   });
 

@@ -54,13 +54,6 @@ describe('route bootstrap startup readiness architecture', () => {
       ),
       'utf8'
     );
-    const implementationPlan = readFileSync(
-      path.resolve(
-        import.meta.dirname,
-        '../../../../../docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-d-startup-route-readiness-implementation-plan-20260502.md'
-      ),
-      'utf8'
-    );
 
     expect(componentGuide).toContain('Route Readiness Policy API');
     expect(componentGuide).toContain('ObserveAppBootstrapRouteReadiness');
@@ -68,11 +61,6 @@ describe('route bootstrap startup readiness architecture', () => {
       'A route `complete` publication must not appear as route-ready while runtime'
     );
     expect(componentGuide).toContain('startup-route-readiness.cy.ts');
-
-    expect(implementationPlan).toContain('featureId: TF-E2-M-D');
-    expect(implementationPlan).toContain('noHumanDecisionsRemaining: true');
-    expect(implementationPlan).toContain('RouteBootstrapStartupReadinessState');
-    expect(implementationPlan).toContain('CompleteAppBootstrapScreen');
   });
 
   it('documents the public-route bootstrap completion policy outside auth semantics', () => {

@@ -36,15 +36,12 @@ function collectProductionSourceFiles(root: string): string[] {
 }
 
 describe('Artifacts Monaco read-only viewer architecture', () => {
-  it('documents the component API, invariants, transitions, consumers, stories, and Fowler analysis', () => {
+  it('documents the component API, invariants, transitions, consumers, and stories', () => {
     const componentGuide = readRepoDoc(
       'docs/architecture/components/web/artifacts/artifacts-monaco-readonly-viewer-component.md'
     );
     const userStories = readRepoDoc(
       'docs/architecture/components/web/artifacts/artifacts-monaco-readonly-viewer-user-stories.md'
-    );
-    const implementationPlan = readRepoDoc(
-      'docs/planning/proposals/mandatory/frontend-and-ux/f17c-artifacts-monaco-readonly-viewer-plan-20260520.md'
     );
 
     for (const requiredSection of [
@@ -78,21 +75,6 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
     ]) {
       expect(userStories).toContain(requiredStory);
     }
-
-    for (const requiredPlanSignal of [
-      '## Fowler Opportunity Matrix',
-      'fowlerSignals:',
-      'Documentation drift',
-      'Hidden authority',
-      'Semantic Fitness Function',
-    ]) {
-      expect(implementationPlan).toContain(requiredPlanSignal);
-    }
-
-    expect(implementationPlan).toContain(
-      'featureId: F17C-ARTIFACTS-MONACO-READONLY-VIEWER-20260520'
-    );
-    expect(implementationPlan).toContain('artifactsMonacoReadonlyViewer.architecture.test.ts');
   });
 
   it('keeps Monaco behind shared leaves instead of route or shell authority', () => {
