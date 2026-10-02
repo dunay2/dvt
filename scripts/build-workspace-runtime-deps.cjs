@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
 const path = require('node:path');
+const { readFileSync } = require('node:fs');
 const { spawnSync } = require('node:child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
+const packageNamePattern = /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/u;
 
 function fail(message) {
   console.error(message);
@@ -67,6 +69,12 @@ function parseArgs(argv) {
     index += 1;
   }
 
+  for (const name of [packageName, ...includePackages]) {
+    if (!packageNamePattern.test(name)) {
+      fail(`INVALID_WORKSPACE_PACKAGE_NAME: ${name}`);
+    }
+  }
+
   return { packageName, includePackages, buildSelf };
 }
 
@@ -75,11 +83,12 @@ function isWorkspacePackage(entry) {
     entry &&
     typeof entry.name === 'string' &&
     typeof entry.path === 'string' &&
-    path.resolve(entry.path).startsWith(repoRoot)
+    (path.resolve(entry.path) === repoRoot ||
+      path.resolve(entry.path).startsWith(`${repoRoot}${path.sep}`))
   );
 }
 
-function readRuntimeClosure(packageName) {
+function readRuntimeClosure(packageName, buildSelf = false) {
   const result = runPnpm(
     ['list', '--filter-prod', `${packageName}...`, '--json', '--depth', '-1'],
     { encoding: 'utf8' }
@@ -92,8 +101,8 @@ function readRuntimeClosure(packageName) {
     fail(`INVALID_PNPM_JSON: ${error.message}`);
   }
 
-  if (!Array.isArray(packages) || packages.length === 0) {
-    fail(`WORKSPACE_PACKAGE_NOT_FOUND: ${packageName}`);
+  if (!Array.isArray(packages)) {
+    fail('INVALID_PNPM_PACKAGE_LIST');
   }
 
   const closure = new Set();
@@ -102,6 +111,15 @@ function readRuntimeClosure(packageName) {
       continue;
     }
 
+    if (!packageNamePattern.test(entry.name)) {
+      fail(`INVALID_WORKSPACE_PACKAGE_NAME: ${entry.name}`);
+    }
+    if (buildSelf && entry.name === packageName) {
+      const manifest = JSON.parse(readFileSync(path.join(entry.path, 'package.json'), 'utf8'));
+      if (typeof manifest.scripts?.build !== 'string' || !manifest.scripts.build.trim()) {
+        fail(`WORKSPACE_BUILD_SCRIPT_MISSING: ${entry.name}`);
+      }
+    }
     closure.add(entry.name);
   }
 
@@ -117,11 +135,12 @@ function buildPackages(packageNames) {
     return;
   }
 
-  const args = ['--workspace-concurrency=4'];
+  // pnpm owns the production closure; Turbo owns ordering, hashes and outputs.
+  // --only preserves that exact closure instead of adding devDependencies.
+  const args = ['exec', 'turbo', 'run', 'build', '--only', '--concurrency=4'];
   for (const packageName of packageNames) {
-    args.push('--filter', packageName);
+    args.push(`--filter=${packageName}`);
   }
-  args.push('--if-present', 'run', 'build');
 
   runPnpm(args, {
     env: { ...process.env, DVT_CI: '1' },
@@ -129,26 +148,16 @@ function buildPackages(packageNames) {
   });
 }
 
-function buildPackageSelf(packageName) {
-  runPnpm(['--filter', packageName, 'build'], {
-    env: { ...process.env, DVT_CI: '1' },
-    stdio: 'inherit',
-  });
-}
-
 function main() {
   const { packageName, includePackages, buildSelf } = parseArgs(process.argv.slice(2));
-  const selectedPackages = readRuntimeClosure(packageName);
-  selectedPackages.delete(packageName);
-
-  for (const includePackage of includePackages) {
+  const selectedPackages = readRuntimeClosure(packageName, buildSelf);
+  if (!buildSelf) {
+    selectedPackages.delete(packageName);
+  }
+  for (const includePackage of new Set(includePackages)) {
     for (const depName of readRuntimeClosure(includePackage)) {
       selectedPackages.add(depName);
     }
-  }
-
-  if (buildSelf) {
-    selectedPackages.delete(packageName);
   }
 
   const packagesToBuild = [...selectedPackages].sort();
@@ -158,10 +167,6 @@ function main() {
   }
 
   buildPackages(packagesToBuild);
-
-  if (buildSelf) {
-    buildPackageSelf(packageName);
-  }
 }
 
 main();
