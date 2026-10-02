@@ -722,8 +722,15 @@ Frontend Tests` lane and the main/manual `Full CI` baseline both set the same we
   Vitest old-space value through `NODE_OPTIONS`, so the Vitest parent process
   and forked workers inherit the limit in GitHub Actions. Public web suite
   commands also run `test:deps` before their raw `*:run` delegates so split-suite
-  execution preserves the package dependency-build contract. The web
-  architecture suite checks that these package scripts, Vitest config delegates,
+  execution preserves the package dependency-build contract. Local `test:deps`
+  reuses `scripts/build-workspace-runtime-deps.cjs` with the explicit planner
+  test dependency. That helper selects the production closure through pnpm and
+  runs its exact package set in one Turbo build, including the consumer when
+  `--build-self` is requested. Turbo orders the selected tasks and reuses valid
+  outputs; missing or invalidated cache entries compile normally. It does not
+  expand the runtime closure to unrelated development dependencies. Temporal
+  integration keeps its explicit prepare-then-test sequence under ADR-0001.
+  The web architecture suite checks that these package scripts, Vitest config delegates,
   and workflow commands stay aligned with `apps/web/vitest.suites.ts`.
 - [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml) uses
   `emit-scope --mode contracts` for contract, determinism, and golden routing.
@@ -757,6 +764,31 @@ are recorded on the PR under the approved
 GitHub does not independently enforce this local control. Repository manifest
 validation is DB-free and does not alone trigger CI database preparation; other
 DB-backed governance checks retain their existing preparation.
+
+## Runtime Dependency Preparation Rail
+
+`PrepareWorkspaceRuntimeDependencies` names the existing operational command,
+not another CLI or a second dependency graph. Its owner is the CI tooling
+`WorkspaceRuntimeBuildPolicy`; its application port and adapter are
+`scripts/build-workspace-runtime-deps.cjs` (Node CLI invoking pnpm and Turbo).
+Inputs are a workspace package, optional included packages, and `--build-self`.
+The command returns a successful process exit only after the selected builds
+succeed, or an explicit failure. It writes disposable build/cache outputs only.
+
+The scope is the caller's checked-out repository with host execution authority;
+it does not access tenant data or grant additional permissions. pnpm owns the
+production dependency closure and Turbo owns ordering and content-addressed
+reuse. Included closures are additive, including a consumer required transitively
+by an explicitly included package. Self-build requires an actual build script.
+No package wildcard, implicit global build, persistent database, or test-result
+cache is introduced. Independent selected tasks retain the existing concurrency
+bound of four.
+
+`tools/ci/workspace-runtime-preparation.test.mjs` checks the command boundary:
+invalid arguments and package names, absent packages/scripts, malformed discovery,
+out-of-repository paths, empty closures, and failed or signalled child processes
+must not report successful preparation. Clean-output and cache-restoration
+execution evidence is recorded in [#2877](https://github.com/dunay2/dvt/issues/2877).
 
 ## Notes
 

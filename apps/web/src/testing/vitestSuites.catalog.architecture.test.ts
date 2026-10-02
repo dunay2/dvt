@@ -17,7 +17,7 @@ import {
   WEB_VITEST_PRIMARY_SUITE_NAMES,
   WEB_VITEST_SUITES,
 } from '../../vitest.suites';
-import { listWebVitestFiles, webRoot } from './vitestSuites.architecture.support';
+import { listWebVitestFiles, suiteMatchesFile, webRoot } from './vitestSuites.architecture.support';
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -130,7 +130,7 @@ describe('web Vitest suite catalog', () => {
 
     expect(packageJson.scripts.pretest).toBe('pnpm run test:deps');
     expect(packageJson.scripts['test:deps']).toBe(
-      'node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter "@dvt/web^..." build'
+      'node ../../scripts/skip-pretest-if-ci.cjs || node ../../scripts/build-workspace-runtime-deps.cjs @dvt/web --include-package @dvt/planner'
     );
     expect(packageJson.scripts.test).toBe(
       WEB_VITEST_PRIMARY_SUITE_NAMES.map((suiteName) => `pnpm run test:${suiteName}:run`).join(
@@ -189,6 +189,30 @@ describe('web Vitest suite catalog', () => {
       "createWebVitestConfig('all')"
     );
   });
+
+  it.each(WEB_VITEST_PRIMARY_SUITE_NAMES)(
+    'proves Canvas %s absorption preserves every file and execution setting',
+    (primary) => {
+      const focus = `canvas-${primary}` as const;
+      const files = listWebVitestFiles();
+      const primaryFiles = files.filter((filePath) => suiteMatchesFile(primary, filePath));
+      const focusFiles = files.filter((filePath) => suiteMatchesFile(focus, filePath));
+      expect(focusFiles.length).toBeGreaterThan(0);
+      expect(new Set([...primaryFiles, ...focusFiles])).toEqual(new Set(primaryFiles));
+      for (const ci of ['', '1']) {
+        vi.stubEnv('DVT_CI', ci);
+        vi.stubEnv('CI', '');
+        expect(createWebVitestConfig(focus)).toEqual({
+          ...createWebVitestConfig(primary),
+          test: {
+            ...createWebVitestConfig(primary).test,
+            include: WEB_VITEST_SUITES[focus].include,
+            exclude: WEB_VITEST_SUITES[focus].exclude,
+          },
+        });
+      }
+    }
+  );
 
   it('bounds CI Vitest workers without removing primary suite coverage', () => {
     vi.stubEnv('DVT_CI', '1');

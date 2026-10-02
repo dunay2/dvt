@@ -73,10 +73,10 @@ describe('web Vitest changed-file routing', () => {
     ).toMatchObject({
       commands: [
         'pnpm exec vitest run --config vitest.canvas-unit.config.ts src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts',
-        'pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx',
+        WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation'],
         'pnpm exec vitest run --config vitest.canvas-architecture.config.ts src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts',
       ],
-      requiresDependencies: false,
+      requiresDependencies: true,
       suites: ['canvas-unit', 'canvas-presentation', 'canvas-architecture'],
     });
 
@@ -98,10 +98,10 @@ describe('web Vitest changed-file routing', () => {
           'src/app/components/canvas/canvasNodeContextMenuModel.test.ts',
           'src/app/components/inspector/nodePropertiesReadModel.test.ts',
         ].join(' '),
-        'pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/components/inspector/NodePropertiesTabs.sectionContent.test.tsx',
+        WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation'],
         'pnpm exec vitest run --config vitest.canvas-architecture.config.ts src/app/components/canvas/DbtNodeComponent.architecture.test.ts',
       ],
-      requiresDependencies: false,
+      requiresDependencies: true,
       suites: ['canvas-unit', 'canvas-presentation', 'canvas-architecture'],
     });
   });
@@ -180,6 +180,68 @@ describe('web Vitest changed-file routing', () => {
       requiresDependencies: false,
       suites: [],
     });
+  });
+
+  it.each([
+    ['unit', 'src/app/lib/first.ts', 'src/app/lib/second.ts'],
+    ['canvas-presentation', 'src/app/views/canvas/First.tsx', 'src/app/views/canvas/Second.tsx'],
+  ] as const)('preserves the %s obligation of an unpaired source', (suite, first, second) => {
+    const firstTest = first.replace(/\.(tsx?)$/, '.test.$1');
+    for (const changed of [
+      [second, firstTest],
+      [first, firstTest, second],
+    ]) {
+      const plan = resolveWebVitestChangedSuitePlan(changed);
+      expect(plan.commands).toEqual([WEB_VITEST_CHANGED_SUITE_COMMANDS[suite]]);
+      expect(plan.requiresDependencies).toBe(true);
+    }
+  });
+
+  it.each([
+    ['unit', 'src/app/views/canvas/canvasDraftScope.ts', 'src/app/lib/general.ts'],
+    ['presentation', 'src/app/views/canvas/CanvasToolbar.tsx', 'src/app/Root.tsx'],
+  ] as const)(
+    'executes complete %s coverage only once for mixed Canvas changes',
+    (primary, focus, general) => {
+      const focusTest = focus.replace(/\.(tsx?)$/, '.test.$1');
+      for (const changed of [
+        [focus, general],
+        [focusTest, general],
+        [focus, focusTest, general],
+      ]) {
+        const plan = resolveWebVitestChangedSuitePlan(changed);
+        expect(plan.commands).toEqual([WEB_VITEST_CHANGED_SUITE_COMMANDS[primary]]);
+        expect(plan.suites).toEqual([primary]);
+        expect(resolveWebVitestChangedSuitePlan([...changed].reverse())).toEqual(plan);
+      }
+    }
+  );
+
+  it('does not mistake an exact primary batch for full coverage', () => {
+    const plan = resolveWebVitestChangedSuitePlan([
+      'src/app/views/canvas/CanvasToolbar.tsx',
+      'src/app/Root.test.tsx',
+    ]);
+    expect(plan.suites).toEqual(['canvas-presentation', 'presentation']);
+    expect(plan.commandPlan).toEqual([
+      { kind: 'shell', command: WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation'] },
+      {
+        kind: 'vitest-files',
+        config: 'vitest.presentation.config.ts',
+        filePaths: ['src/app/Root.test.tsx'],
+      },
+    ]);
+  });
+
+  it.each([
+    ['monaco', 'src/app/views/code/codeViewCopy.ts'],
+    ['shell-session', 'src/app/components/shell/appBuildMetadata.ts'],
+    ['workspace-services', 'src/app/services/workspace/sourceObjectMetricEvidence.ts'],
+  ] as const)('preserves the %s environment alongside primary coverage', (focus, file) => {
+    expect(resolveWebVitestChangedSuitePlan([file, 'src/app/lib/general.ts']).suites).toEqual([
+      focus,
+      'unit',
+    ]);
   });
 
   it('keeps exact changed-test routing aligned with runnable suite include globs', () => {
