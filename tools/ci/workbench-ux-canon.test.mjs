@@ -19,7 +19,6 @@ const requiredFiles = [
   'docs/architecture/components/web/workbench-ux-canon-user-stories.md',
   'docs/architecture/components/web/screen-manuals-and-user-stories.md',
   'docs/architecture/components/web/index.md',
-  'docs/planning/proposals/portfolio-map-20260403.md',
 ];
 
 test('DVT workbench UX canonization preserves current authority and semantic ownership', () => {
@@ -84,8 +83,5 @@ test('DVT workbench UX canonization preserves current authority and semantic own
   }
 
   assertContains('docs/architecture/components/web/index.md', 'Workbench UX Canon Component');
-  assertContains(
-    'docs/planning/proposals/portfolio-map-20260403.md',
-    'DVT Workbench UX Canon Plan 2026-05-24'
-  );
+  assert.match(canonPlan, /Historical inputs remain in Git/u);
 });

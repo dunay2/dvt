@@ -18,7 +18,6 @@ const requiredFiles = [
   'docs/architecture/components/ci-governance/documentation-usability-canon-component.md',
   'docs/architecture/components/ci-governance/documentation-usability-canon-user-stories.md',
   'docs/planning/domains/documentation-governance.md',
-  'docs/planning/proposals/mandatory/governance-and-docs/documentation-usability-change-plan-20260308.md',
 ];
 
 const requiredRails = [
