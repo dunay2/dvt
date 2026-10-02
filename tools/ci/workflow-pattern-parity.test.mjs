@@ -152,66 +152,6 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
       ADAPTER_POSTGRES_RELEVANT_PATTERNS
     )
   );
-  assert.ok(
-    matchesAnyPattern(
-      'packages/@dvt/adapter-postgres/src/index.ts',
-      PR_QUALITY_SCOPE_PATTERNS.temporal_postgres_changed
-    )
-  );
-  assert.ok(
-    matchesAnyPattern(
-      'packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts',
-      PR_QUALITY_SCOPE_PATTERNS.temporal_postgres_changed
-    )
-  );
-  assert.ok(
-    matchesAnyPattern(
-      'scripts/build-workspace-runtime-deps.cjs',
-      PR_QUALITY_SCOPE_PATTERNS.temporal_changed
-    )
-  );
-  assert.ok(
-    matchesAnyPattern(
-      'scripts/build-workspace-runtime-deps.cjs',
-      PR_QUALITY_SCOPE_PATTERNS.temporal_postgres_changed
-    )
-  );
-  assert.ok(
-    matchesAnyPattern(
-      'scripts/build-workspace-runtime-deps.cjs',
-      PR_QUALITY_SCOPE_PATTERNS.temporal_transformation_changed
-    )
-  );
-  assert.ok(
-    matchesAnyPattern(
-      'packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts',
-      PR_QUALITY_SCOPE_PATTERNS.temporal_transformation_changed
-    )
-  );
-  assert.ok(
-    matchesAnyPattern(
-      'packages/@dvt/adapter-temporal/src/index.ts',
-      PR_QUALITY_SCOPE_PATTERNS.temporal_transformation_changed
-    )
-  );
-  assert.ok(
-    matchesAnyPattern(
-      'packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts',
-      PR_QUALITY_SCOPE_PATTERNS.temporal_transformation_changed
-    )
-  );
-  assert.ok(
-    matchesAnyPattern(
-      'packages/@dvt/adapter-temporal/src/index.ts',
-      PR_QUALITY_SCOPE_PATTERNS.temporal_postgres_changed
-    )
-  );
-  assert.ok(
-    matchesAnyPattern(
-      'packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts',
-      PR_QUALITY_SCOPE_PATTERNS.temporal_postgres_changed
-    )
-  );
   assert.ok(matchesAnyPattern('tsconfig.base.json', ADAPTER_POSTGRES_RELEVANT_PATTERNS));
   assert.ok(matchesAnyPattern('tsconfig.json', ADAPTER_POSTGRES_RELEVANT_PATTERNS));
   assert.equal(
@@ -234,11 +174,6 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
   assert.equal(
     computeWorkflowModeScopeOutputs('test', ['tools/ci/emit-scope.mjs']).root_build_sensitive,
     false
-  );
-  assert.equal(
-    computeWorkflowModeScopeOutputs('test', ['scripts/unclassified-runtime.cjs'])
-      .root_build_sensitive,
-    true
   );
   assert.ok(
     matchesAnyPattern('scripts/skip-prebuild-if-orchestrated.cjs', TEST_SCOPE_PATTERNS.any_test)

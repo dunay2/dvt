@@ -2,6 +2,9 @@
 {
   const fs = require('node:fs');
   const path = require('node:path');
+  const os = require('node:os');
+  const { execFileSync } = require('node:child_process');
+  const { createGitRepositoryEnvironment } = require('./lib/git-repository-environment.cjs');
 
   const test = require('node:test');
   const assert = require('node:assert/strict');
@@ -11,7 +14,6 @@
     buildPrepushStamp,
     classifyPrepushScope,
     commandLabel,
-    computePrepushValidationFingerprint,
     isPrepushStampValid,
     main,
     parseArgs,
@@ -198,44 +200,115 @@
     assert.equal(isPrepushStampValid(stamp, expectedDifferentContent), false);
   });
 
-  test('reusable prepush validation fingerprint excludes branch upstream refs', () => {
-    const commands = [];
-    const baseRef = process.env.GIT_BASE || 'origin/main';
-    const outputByCommand = new Map([
-      ['rev-parse --verify HEAD', 'head-a\n'],
-      [`rev-parse --verify ${baseRef}`, 'base-a\n'],
-      ['rev-parse --verify @{u}', 'upstream-a\n'],
-      [`diff --binary --diff-filter=ACMRD ${baseRef}...HEAD`, 'base-diff\n'],
-      ['diff --binary --diff-filter=ACMRD @{u}...HEAD', 'upstream-diff\n'],
-      ['diff --cached --binary --diff-filter=ACMRD', 'cached\n'],
-      ['diff --binary --diff-filter=ACMRD', 'worktree\n'],
-      ['ls-files --others --exclude-standard', ''],
-    ]);
-    const runGitText = (args) => {
-      const command = args.join(' ');
-      commands.push(command);
-      return outputByCommand.get(command) ?? '';
+  function prepushRepository(t) {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-prepush-identity-'));
+    t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+    const env = {
+      ...createGitRepositoryEnvironment(),
+      GIT_AUTHOR_NAME: 'Prepush fixture',
+      GIT_AUTHOR_EMAIL: 'fixture@example.invalid',
+      GIT_COMMITTER_NAME: 'Prepush fixture',
+      GIT_COMMITTER_EMAIL: 'fixture@example.invalid',
     };
+    delete env.GIT_BASE;
+    delete env.GIT_HEAD;
+    const git = (...args) => execFileSync('git', args, { cwd: root, env, encoding: 'utf8' }).trim();
+    const write = (name, content) => fs.writeFileSync(path.join(root, name), content);
+    const commit = (parent) => {
+      git('add', '--all');
+      const head = git(
+        'commit-tree',
+        git('write-tree'),
+        ...(parent ? ['-p', parent] : []),
+        '-m',
+        'Fixture'
+      );
+      git('update-ref', 'HEAD', head);
+      return head;
+    };
+    git('init', '--quiet', '--initial-branch=fixture');
+    write('sample.txt', 'before\n');
+    const base = commit();
+    git('update-ref', 'refs/remotes/origin/main', base);
+    write('sample.txt', 'after\n');
+    const head = commit(base);
+    const inspect = (baseRef = 'origin/main', headRef, failure) => {
+      const script = `
+        const { buildPrepushStamp, listPrepushChangedFiles } = require(${JSON.stringify(__filename.replace('.test.cjs', '.cjs'))});
+        const options = { repoRootPath: process.cwd() };
+        if (${JSON.stringify(failure)} !== undefined) options.runGitText = (args) => {
+          if (args[0] === ${JSON.stringify(failure)}) throw new Error('Required Git query failed');
+          return require('node:child_process').execFileSync('git', args, { encoding: 'utf8' });
+        };
+        console.log(JSON.stringify(buildPrepushStamp(listPrepushChangedFiles(options), options)));
+      `;
+      return JSON.parse(
+        execFileSync(process.execPath, ['-e', script], {
+          cwd: root,
+          env: { ...env, GIT_BASE: baseRef, ...(headRef ? { GIT_HEAD: headRef } : {}) },
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'pipe'],
+        })
+      );
+    };
+    return { git, write, commit, base, head, inspect };
+  }
 
-    const first = computePrepushValidationFingerprint(['scripts/verify-prepush.cjs'], {
-      runGitText,
-    });
-    outputByCommand.set('rev-parse --verify @{u}', 'upstream-b\n');
-    outputByCommand.set('diff --binary --diff-filter=ACMRD @{u}...HEAD', 'branch-diff\n');
-    const second = computePrepushValidationFingerprint(['scripts/verify-prepush.cjs'], {
-      runGitText,
-    });
-    outputByCommand.set(`diff --binary --diff-filter=ACMRD ${baseRef}...HEAD`, 'changed\n');
-    const changedBaseDiff = computePrepushValidationFingerprint(['scripts/verify-prepush.cjs'], {
-      runGitText,
-    });
+  test('real Git identities reuse equivalent aliases without hiding changed inputs or modes', (t) => {
+    const { git, write, commit, base, head, inspect } = prepushRepository(t);
+    const local = inspect(); // First push has no upstream: the validation is still usable.
+    assert.deepEqual(inspect(base), local, 'base alias and SHA identify the same validation');
 
-    assert.equal(first, second);
-    assert.notEqual(first, changedBaseDiff);
-    assert.ok(commands.includes('rev-parse --verify HEAD'));
-    assert.ok(commands.includes(`rev-parse --verify ${baseRef}`));
-    assert.ok(!commands.includes('rev-parse --verify @{u}'));
-    assert.ok(!commands.includes('diff --binary --diff-filter=ACMRD @{u}...HEAD'));
+    const snapshot = inspect(base, 'HEAD');
+    assert.deepEqual(inspect('origin/main', head), snapshot);
+    assert.equal(
+      isPrepushStampValid(snapshot, local),
+      false,
+      'snapshot is not worktree validation'
+    );
+    assert.equal(
+      isPrepushStampValid(inspect(base, base), snapshot),
+      false,
+      'selected head changed'
+    );
+
+    git('update-ref', 'refs/heads/tracking', base);
+    git('branch', '--set-upstream-to=tracking');
+    const tracked = inspect();
+    assert.notEqual(tracked.stateFingerprint, local.stateFingerprint);
+    assert.equal(tracked.validationFingerprint, local.validationFingerprint);
+    assert.equal(isPrepushStampValid(tracked, local), true);
+
+    git('update-ref', 'refs/remotes/origin/main', head);
+    assert.equal(isPrepushStampValid(inspect(), local), false, 'base ref moved');
+    git('update-ref', 'refs/remotes/origin/main', base);
+    commit(head);
+    assert.equal(
+      isPrepushStampValid(inspect(), local),
+      false,
+      'HEAD changed even with identical tree'
+    );
+    git('update-ref', 'HEAD', head);
+
+    write('sample.txt', 'staged\n');
+    git('add', 'sample.txt');
+    const staged = inspect();
+    assert.equal(isPrepushStampValid(staged, local), false);
+    write('sample.txt', 'unstaged\n');
+    const unstaged = inspect();
+    assert.equal(isPrepushStampValid(unstaged, staged), false);
+    write('extra.txt', 'one\n');
+    const untracked = inspect();
+    write('extra.txt', 'two\n');
+    assert.equal(isPrepushStampValid(inspect(), untracked), false, 'untracked bytes changed');
+
+    assert.throws(() => inspect('missing-base'), 'unresolved base must fail closed');
+    assert.throws(() => inspect(base, 'missing-head'), 'unresolved selected head must fail closed');
+    assert.throws(() => inspect(base, undefined, 'diff'), 'failed diff is not empty evidence');
+    assert.throws(
+      () => inspect(base, undefined, 'ls-files'),
+      'failed inventory is not empty evidence'
+    );
   });
 
   test('manual prepush reuses a matching validation stamp before rerunning changed checks', () => {

@@ -71,7 +71,8 @@
   function untrackedFileFingerprint(changedFiles, options = {}) {
     const root = options.repoRootPath || repoRoot;
     const hash = createSha256Hasher();
-    const untracked = safeRunGitText(['ls-files', '--others', '--exclude-standard'], options)
+    const git = options.runGitText || runGitText;
+    const untracked = git(['ls-files', '--others', '--exclude-standard'], options)
       .split(/\r?\n/)
       .map((line) => line.trim().replace(/\\/g, '/'))
       .filter(Boolean)
@@ -81,9 +82,7 @@
     for (const filePath of untracked) {
       hash.update(utf8Bytes(`path:${filePath}\0`));
       const absolutePath = path.resolve(root, filePath);
-      if (fs.existsSync(absolutePath)) {
-        hash.update(fs.readFileSync(absolutePath));
-      }
+      hash.update(fs.readFileSync(absolutePath));
       hash.update(utf8Bytes('\0'));
     }
 
@@ -92,43 +91,50 @@
 
   function computePrepushStateFingerprint(changedFiles, options = {}) {
     const hash = createSha256Hasher();
-    const baseRef = process.env.GIT_BASE || 'origin/main';
-    const parts = [
-      ['rev-parse', '--verify', 'HEAD'],
-      ['rev-parse', '--verify', baseRef],
-      ['rev-parse', '--verify', '@{u}'],
-      ['diff', '--binary', '--diff-filter=ACMRD', `${baseRef}...HEAD`],
-      ['diff', '--binary', '--diff-filter=ACMRD', '@{u}...HEAD'],
-      ['diff', '--cached', '--binary', '--diff-filter=ACMRD'],
-      ['diff', '--binary', '--diff-filter=ACMRD'],
-    ];
-
-    hash.update(utf8Bytes(JSON.stringify(changedFiles)));
-    for (const args of parts) {
-      hash.update(utf8Bytes(`\n$ git ${args.join(' ')}\n`));
-      hash.update(utf8Bytes(safeRunGitText(args, options)));
+    hash.update(
+      utf8Bytes(
+        options.validationFingerprint || computePrepushValidationFingerprint(changedFiles, options)
+      )
+    );
+    // A first push legitimately has no upstream; required validation evidence is never optional.
+    const upstream = safeRunGitText(['rev-parse', '--verify', '@{u}^{commit}'], options).trim();
+    hash.update(utf8Bytes(`\nupstream:${upstream}\n`));
+    if (upstream) {
+      const git = options.runGitText || runGitText;
+      hash.update(
+        utf8Bytes(git(['diff', '--binary', '--diff-filter=ACMRD', `${upstream}...HEAD`], options))
+      );
     }
-    hash.update(utf8Bytes('\nuntracked\n'));
-    hash.update(utf8Bytes(untrackedFileFingerprint(changedFiles, options)));
-
     return hash.digestHex();
   }
 
   function computePrepushValidationFingerprint(changedFiles, options = {}) {
     const hash = createSha256Hasher();
     const baseRef = process.env.GIT_BASE || 'origin/main';
+    const git = options.runGitText || runGitText;
+    const [head, base, comparisonHead] = ['HEAD', baseRef, process.env.GIT_HEAD || 'HEAD'].map(
+      (ref) => git(['rev-parse', '--verify', '--end-of-options', `${ref}^{commit}`], options).trim()
+    );
     const parts = [
-      ['rev-parse', '--verify', 'HEAD'],
-      ['rev-parse', '--verify', baseRef],
-      ['diff', '--binary', '--diff-filter=ACMRD', `${baseRef}...HEAD`],
+      ['diff', '--binary', '--diff-filter=ACMRD', `${base}...${head}`],
       ['diff', '--cached', '--binary', '--diff-filter=ACMRD'],
       ['diff', '--binary', '--diff-filter=ACMRD'],
     ];
 
-    hash.update(utf8Bytes(JSON.stringify(changedFiles)));
+    hash.update(
+      utf8Bytes(
+        JSON.stringify({
+          changedFiles,
+          head,
+          base,
+          comparisonHead,
+          snapshot: Boolean(process.env.GIT_HEAD),
+        })
+      )
+    );
     for (const args of parts) {
       hash.update(utf8Bytes(`\n$ git ${args.join(' ')}\n`));
-      hash.update(utf8Bytes(safeRunGitText(args, options)));
+      hash.update(utf8Bytes(git(args, options)));
     }
     hash.update(utf8Bytes('\nuntracked\n'));
     hash.update(utf8Bytes(untrackedFileFingerprint(changedFiles, options)));
@@ -145,14 +151,19 @@
   }
 
   function buildPrepushStamp(changedFiles, options = {}) {
+    const validationFingerprint =
+      options.validationFingerprint || computePrepushValidationFingerprint(changedFiles, options);
     return {
       version: STAMP_VERSION,
       validationLevel: validationLevel(options),
       changedFiles: [...changedFiles],
       stateFingerprint:
-        options.stateFingerprint || computePrepushStateFingerprint(changedFiles, options),
-      validationFingerprint:
-        options.validationFingerprint || computePrepushValidationFingerprint(changedFiles, options),
+        options.stateFingerprint ||
+        computePrepushStateFingerprint(changedFiles, {
+          ...options,
+          validationFingerprint,
+        }),
+      validationFingerprint,
     };
   }
 

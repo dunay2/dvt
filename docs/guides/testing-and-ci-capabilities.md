@@ -114,6 +114,11 @@ cache hits do not replace the package test execution.
 
 ## Operational Preflight Helpers
 
+CI scope workflows consume the semantic outputs of `tools/ci/emit-scope.mjs`.
+The unused YAML path-filter generator is retired. The existing PostgreSQL policy
+smoke retains real policy validation and its TypeScript-config canary; scope
+matching and workflow wiring stay covered by their current contract tests.
+
 | Capability                  | Command                                                                                                                | Source                                             |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
 | Repo hygiene diagnostics    | `powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main`                                      | [`scripts/hygiene.ps1`](../../scripts/hygiene.ps1) |
@@ -789,6 +794,11 @@ invalid arguments and package names, absent packages/scripts, malformed discover
 out-of-repository paths, empty closures, and failed or signalled child processes
 must not report successful preparation. Clean-output and cache-restoration
 execution evidence is recorded in [#2877](https://github.com/dunay2/dvt/issues/2877).
+
+The selected-closure live-proof runner reuses the dev stack's explicit worker
+preparation before starting the API or worker. It skips that preparation only
+when the proof explicitly requires an unavailable worker. Preparation failure
+aborts startup; a previous local build is not a runtime prerequisite.
 
 ## Notes
 

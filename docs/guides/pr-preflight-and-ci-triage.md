@@ -32,6 +32,11 @@ Use this guide for implementation slices and PR-green recovery work.
      `HEAD` and local changed-file fingerprint already passed the manual gate,
      the hook skips the duplicate changed-slice run. If the tree changed, it
      runs the gate again.
+   - Git aliases and their resolved commit SHAs are equivalent inputs only
+     within the same validation mode. Explicit `GIT_HEAD` selects snapshot
+     semantics in downstream gates; it is not interchangeable with local
+     worktree validation. Moved refs, changed content, or unavailable Git
+     evidence must not reuse a successful stamp.
 5. If CI is red, use log-first triage:
    - extract failed job logs first
    - patch root cause

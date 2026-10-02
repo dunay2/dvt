@@ -20,6 +20,7 @@ const {
   buildCoordinatedTemporalWorkerEnv,
   buildLocalDbtArtifactEnv,
   ensureLocalWarehouseConnectionViaApi,
+  prepareTemporalWorkerRuntimeDependencies,
   resolveDatabaseUrl,
   resolvePostgresCredentialBindings,
   seedLocalPostgresProofData,
@@ -706,6 +707,10 @@ async function main() {
       await prepareLiveProofDbtAnalyzerProfile(apiEnv);
     }
     await seedSelectedClosureLocalWarehouseProof(apiEnv);
+
+    if (temporalWorkerRuntime === 'available') {
+      prepareTemporalWorkerRuntimeDependencies(apiEnv);
+    }
 
     const apiHandle = spawnProcess('api-live-proof', ['--filter', 'dvt-api', 'dev'], apiEnv);
     processHandles.push(apiHandle);
