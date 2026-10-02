@@ -154,7 +154,7 @@ const SCRIPT_FILE_RULES = [
   [/^scripts\/lib\/feature-mechanization-git-fixture\.cjs$/u, 'test-tooling'],
   [/^tools\/docs\/.+\.ts$/u, 'docs-governance'],
   [
-    /^scripts\/(ai-preflight|closeout-changed|commit|fix-changed|format-markdown-changed|git-local-changes|local-validation-plan|pr-closeout|run-determinism-precommit|setup-git-hooks|validate-pr-title|verify-changed|verify-prepush)\.cjs$/u,
+    /^scripts\/(ai-preflight|closeout-changed|commit|fix-changed|format-markdown-changed|git-local-changes|lib\/git-repository-environment|local-validation-plan|pr-closeout|run-determinism-precommit|setup-git-hooks|validate-pr-title|verify-changed|verify-prepush)\.cjs$/u,
     'developer-workflow',
   ],
   [

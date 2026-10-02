@@ -98,6 +98,16 @@ The component does not own:
 - `verify:changed` is an iteration helper, not a replacement for the full
   `verify:prepush` closeout gate.
 - Any skipped full-scan behavior must remain covered by `verify:prepush`.
+- The canonical plan marks test steps explicitly, including package-script
+  aliases. `executeCommandPlan` removes Git's repository-local environment
+  variables only from those child processes. Git itself supplies the variable
+  names through `git rev-parse --local-env-vars`; fixtures and their real Git
+  reads must not inherit the hook caller's repository, index or object store.
+- Isolation clones the environment without changing the parent. Comparison
+  inputs such as `GIT_BASE` and `GIT_HEAD` remain available. Ordinary docs,
+  lint, type-check and feature-validation steps retain their original Git
+  environment, including an explicitly selected index. Isolation does not
+  change test selection, hooks or production query behavior.
 
 ## Transitions
 

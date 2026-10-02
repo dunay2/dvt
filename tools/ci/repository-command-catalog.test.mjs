@@ -229,6 +229,24 @@ test('keeps the isolated Git fixture in test validation without runtime fan-out'
   assert.equal(classifyScriptFilePath('scripts/lib/unclassified-fixture.cjs').domain, 'unknown');
 });
 
+test('classifies the test-process Git boundary without weakening unknown helper scope', () => {
+  assert.deepEqual(classifyScriptFilePath('scripts/lib/git-repository-environment.cjs'), {
+    path: 'scripts/lib/git-repository-environment.cjs',
+    domain: 'developer-workflow',
+    sensitivity: 'developer-workflow',
+    runtimeFanout: false,
+    changedFileValidationRelevant: true,
+  });
+  assert.equal(
+    classifyScriptFilePath('scripts/lib/git-repository-environment.test.cjs').domain,
+    'test-tooling'
+  );
+  const unknown = classifyScriptFilePath('scripts/lib/unclassified-environment.cjs');
+  assert.equal(unknown.domain, 'unknown');
+  assert.equal(unknown.runtimeFanout, true);
+  assert.equal(unknown.changedFileValidationRelevant, true);
+});
+
 test('discovers repository command files deterministically', () => {
   const files = discoverRepositoryCommandFiles();
 
