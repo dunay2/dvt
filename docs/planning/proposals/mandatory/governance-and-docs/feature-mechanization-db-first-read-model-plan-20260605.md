@@ -138,6 +138,37 @@ native JSONB precision, atomic failure/replay, and a real PostgreSQL transaction
 whose rollback is checked before the authorized batch is applied. GitHub remains
 the task journal; historical runs are not relabeled as current proof.
 
+### Refresh the content identity of an existing local declaration
+
+The same catalog command accepts an exclusive `sourceContent: { path, commit }`
+change for a local row. This is not a declaration replay or an import. The
+ordinary record operation merges symbols and cycles, so replaying it merely to
+refresh a document hash can alter unrelated authority. The current-content
+override updates the governed file read model, not local declaration rows.
+
+```mermaid
+flowchart LR
+  Head[Exact clean HEAD document] --> Proof[Existing governed-source snapshot reader]
+  Proof --> CAS[Explicit local row and full native row digest]
+  CAS --> Update[Hash and revision only]
+  Update --> Audit[Native before/after audit and unchanged winners]
+```
+
+`path` must equal the stored source path and `commit` must be the full current
+HEAD commit. Reuse the existing governed-source snapshot reader to require a
+clean, tracked regular file and derive its canonical content hash and blob.
+Reject imported rows, other patch modes, stale revisions or row digests, dirty
+files, different paths, symbolic links and a changed HEAD. The update must keep
+the source path, timestamps, raw manifests, symbols, arrays, ownership and both
+effective and canonical winner maps unchanged. Only `source_content_sha256`
+and the local revision may change; the existing native SQL audit and idempotent
+batch receipt remain mandatory. A caller selects every row explicitly.
+
+Tests must reject each boundary violation and prove through PostgreSQL rollback
+that the native metadata and winner maps are identical before applying a batch.
+This preserves the distinction between current Git content and semantic
+authority; it neither reconstructs authority from Git nor weakens freshness.
+
 ## Single-team validation boundary
 
 The approved single-team posture in

@@ -225,6 +225,65 @@ test('native retirement SQL binds only selectors, keeps ordinal arrays and never
   assert.ok(Object.values(columns).every((expression) => expression.includes('$99::jsonb')));
 });
 
+test('current source content changes only a local hash and revision with exclusive exact-row proof', () => {
+  const { row, snapshot, request } = featureMechanizationRetirementFixture();
+  row.revision = 7;
+  snapshot.origin = 'local';
+  const change = request.changes[0];
+  change.origin = 'local';
+  delete change.evidenceRetirement;
+  change.sourceContent = { path: row.source_path, commit: 'a'.repeat(40) };
+  const proof = {
+    path: row.source_path,
+    commit: change.sourceContent.commit,
+    head: change.sourceContent.commit,
+    blob: 'd'.repeat(40),
+    contentSha256: 'c'.repeat(64),
+  };
+  const proofs = new Map([[`current:${proof.commit}:${proof.path}`, proof]]);
+  const before = structuredClone(row);
+  assert.deepEqual(planCatalogReconciliation(request, [snapshot], proofs)[0].after, {
+    ...before,
+    revision: 8,
+    source_content_sha256: proof.contentSha256,
+  });
+  assert.deepEqual(row, before);
+  for (const alter of [
+    (item) => {
+      item.origin = 'imported';
+    },
+    (item) => {
+      item.reference = { authorityRef: 'other.md' };
+    },
+    (item) => {
+      item.evidenceRetirement = {};
+    },
+    (item) => {
+      item.source = item.sourceContent;
+    },
+    (item) => {
+      item.sourceContent.extra = true;
+    },
+    (item) => {
+      item.sourceContent.path = '../other.md';
+    },
+    (item) => {
+      item.sourceContent.path = 'other.md';
+    },
+    (item) => {
+      item.sourceContent.commit = 'short';
+    },
+    (item) => {
+      item.expectedRowSha256 = '0'.repeat(64);
+    },
+  ]) {
+    const invalid = structuredClone(request);
+    alter(invalid.changes[0]);
+    assert.throws(() => planCatalogReconciliation(invalid, [snapshot], proofs), /CATALOG/);
+  }
+  assert.throws(() => planCatalogReconciliation(request, [snapshot], new Map()), /CATALOG/);
+});
+
 test('evidence history accepts a current regular file but rejects an unrelated commit or missing blob', () => {
   const fs = require('node:fs');
   const os = require('node:os');
@@ -233,6 +292,7 @@ test('evidence history accepts a current regular file but rejects an unrelated c
   const { createGitRepositoryEnvironment } = require('../lib/git-repository-environment.cjs');
   const {
     verifyEvidenceRetirementHistory,
+    verifyCurrentSourceContent,
   } = require('../planning-db/catalog-reconciliation-write.cjs');
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-evidence-history-'));
   const git = (...args) =>
@@ -256,7 +316,21 @@ test('evidence history accepts a current regular file but rejects an unrelated c
     evidenceRetirement.historicalRef = `https://github.com/dunay2/dvt/blob/${commit}/proof.cy.ts`;
     const options = { repoRoot: directory };
     assert.equal(verifyEvidenceRetirementHistory(evidenceRetirement, options).commit, commit);
+    const sourceContent = { path: 'proof.cy.ts', commit };
+    const currentProof = verifyCurrentSourceContent(sourceContent, 'proof.cy.ts', options);
+    assert.equal(currentProof.head, commit);
+    assert.equal(currentProof.blob, git('rev-parse', `${commit}:proof.cy.ts`));
+    assert.match(currentProof.contentSha256, /^[a-f0-9]{64}$/u);
+    assert.throws(
+      () => verifyCurrentSourceContent(sourceContent, 'other.md', options),
+      /CATALOG-SOURCE-PATH/
+    );
     const unrelated = git('commit-tree', tree, '-m', 'Unrelated fixture');
+    assert.throws(
+      () =>
+        verifyCurrentSourceContent({ ...sourceContent, commit: unrelated }, 'proof.cy.ts', options),
+      /CATALOG-SOURCE-HEAD/
+    );
     assert.throws(
       () =>
         verifyEvidenceRetirementHistory(
@@ -279,6 +353,11 @@ test('evidence history accepts a current regular file but rejects an unrelated c
           options
         ),
       /BLOB/
+    );
+    fs.appendFileSync(path.join(directory, 'proof.cy.ts'), 'uncommitted content\n');
+    assert.throws(
+      () => verifyCurrentSourceContent(sourceContent, 'proof.cy.ts', options),
+      /unmodified relative to HEAD/
     );
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });

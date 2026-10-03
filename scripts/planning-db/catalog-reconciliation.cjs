@@ -56,7 +56,15 @@ function parseCatalogReconciliation(value) {
   for (const change of value.changes) {
     object(
       change,
-      ['origin', 'railId', 'expectedRowSha256', 'source', 'reference', 'evidenceRetirement'],
+      [
+        'origin',
+        'railId',
+        'expectedRowSha256',
+        'source',
+        'reference',
+        'evidenceRetirement',
+        'sourceContent',
+      ],
       'change'
     );
     if (!['imported', 'local'].includes(change.origin))
@@ -67,10 +75,19 @@ function parseCatalogReconciliation(value) {
     const key = `${change.origin}:${change.railId}`;
     if (targets.has(key)) throw new Error('CATALOG-REQUEST: Duplicate target.');
     targets.add(key);
-    if (!change.source && !change.reference && !change.evidenceRetirement)
+    if (!change.source && !change.reference && !change.evidenceRetirement && !change.sourceContent)
       throw new Error(
-        'CATALOG-REQUEST: Explicit source, reference or evidence retirement patch required.'
+        'CATALOG-REQUEST: Explicit source, reference, evidence retirement or current content patch required.'
       );
+    if (
+      Object.hasOwn(change, 'sourceContent') &&
+      (change.origin !== 'local' ||
+        ['source', 'reference', 'evidenceRetirement'].some((key) => Object.hasOwn(change, key)))
+    ) {
+      throw new Error(
+        'CATALOG-SOURCE-CONTENT: Current content requires an exclusive local-row patch.'
+      );
+    }
     if (Object.hasOwn(change, 'evidenceRetirement')) {
       if (Object.hasOwn(change, 'source') || Object.hasOwn(change, 'reference'))
         throw new Error(
@@ -78,14 +95,16 @@ function parseCatalogReconciliation(value) {
         );
       validateFeatureMechanizationEvidenceRetirementCommand(change.evidenceRetirement);
     }
-    if (Object.hasOwn(change, 'source')) {
-      object(change.source, ['commit', 'path'], 'source');
-      if (!/^[a-f0-9]{40}$/u.test(change.source.commit || ''))
+    for (const key of ['source', 'sourceContent']) {
+      if (!Object.hasOwn(change, key)) continue;
+      const source = change[key];
+      object(source, ['commit', 'path'], key);
+      if (!/^[a-f0-9]{40}$/u.test(source.commit || ''))
         throw new Error('CATALOG-REQUEST: Full Git commit required.');
-      text(change.source.path, 'source.path');
+      text(source.path, `${key}.path`);
       if (
-        /[:\\]/u.test(change.source.path) ||
-        change.source.path.split('/').some((part) => !part || part === '.' || part === '..')
+        /[:\\]/u.test(source.path) ||
+        source.path.split('/').some((part) => !part || part === '.' || part === '..')
       ) {
         throw new Error('CATALOG-REQUEST: Repository-relative POSIX source path required.');
       }
@@ -132,6 +151,23 @@ function planCatalogReconciliation(request, storedRows, sourceProofs) {
         );
       }
       after.source_path = proof.sourcePath;
+      after.source_content_sha256 = proof.contentSha256;
+    }
+    if (change.sourceContent) {
+      const source = change.sourceContent;
+      proof = sourceProofs.get(`current:${source.commit}:${source.path}`);
+      if (
+        !proof ||
+        source.path !== before.source_path ||
+        proof.path !== source.path ||
+        proof.commit !== source.commit ||
+        proof.head !== source.commit ||
+        !/^[a-f0-9]{64}$/u.test(proof.contentSha256 || '')
+      ) {
+        throw new Error(
+          `CATALOG-SOURCE-CONTENT: ${change.railId} requires its exact clean HEAD source proof.`
+        );
+      }
       after.source_content_sha256 = proof.contentSha256;
     }
     if (change.reference) {

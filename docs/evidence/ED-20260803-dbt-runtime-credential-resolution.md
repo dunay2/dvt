@@ -31,7 +31,7 @@ evidence:
     - pnpm --filter dvt-temporal-worker typecheck
     - pnpm --filter dvt-api typecheck
     - DATABASE_URL=postgres://dvt:dvt@localhost:5432/dvt pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts
-    - 'Historical browser proof: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
+    - 'Historical browser proof: https://github.com/dunay2/dvt/blob/c6e5933760d749e60f748a8120e6ae814211a08d/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
 ---
 
 ## Decision
@@ -62,8 +62,8 @@ inserts and reads with forced RLS, and rejects committed-row updates or deletes.
 
 ## Evidence
 
-The historical selected-closure browser invocation is pinned to its original
-Git revision above. It is not a current runnable route or evidence that the new
+The historical selected-closure browser source is pinned to the revision preserved
+with this evidence record. This is not an exact execution-SHA receipt. It is not a current runnable route or evidence that the new
 terminal DVT proof covers DBT credential resolution. The focused DBT runtime,
 authorization and cleanup tests listed here retain those obligations.
 

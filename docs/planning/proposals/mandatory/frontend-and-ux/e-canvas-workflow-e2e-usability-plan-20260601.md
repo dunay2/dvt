@@ -258,7 +258,7 @@ also verifies cursor recovery, event identity/order and the rendered timeline
 against the live API.
 
 Symbol-level historical Cypress references are pinned to the
-[original proof revision](https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts); they are not claims that the current terminal smoke
+[retired proof source](https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts); they are not claims that the current terminal smoke
 covers every historical UI or SQL-first implementation symbol. Obsolete test
 symbol declarations and the retired live-cycle entry have been removed;
 Git retains the original declarations and execution history.

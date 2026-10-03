@@ -6,6 +6,7 @@ const { randomUuidV4, sha256Hex } = require('@dvt/crypto');
 const { createGitRepositoryEnvironment } = require('../lib/git-repository-environment.cjs');
 const { defaultPgUrl } = require('../planning-db-run.cjs');
 const { assertPlanningDbCurrentSchemaReady, schemaName } = require('../planning-db-schema.cjs');
+const { readGovernedSourceSnapshots } = require('./governed-source-refresh-write-rail.cjs');
 const {
   catalogRowHash,
   parseCatalogReconciliation,
@@ -62,6 +63,34 @@ function verifyHistoricalSource(source, expectedPath, options = {}) {
 function verifyEvidenceRetirementHistory(request, options = {}) {
   const source = validateFeatureMechanizationEvidenceRetirementCommand(request);
   return verifyHistoricalSource(source, request.surface, { ...options, requireAbsent: false });
+}
+
+function verifyCurrentSourceContent(source, expectedPath, options = {}) {
+  if (source.path !== expectedPath)
+    throw new Error('CATALOG-SOURCE-PATH: Current content path must equal the stored source.');
+  const repoRoot = options.repoRoot || path.resolve(__dirname, '..', '..');
+  const snapshot = readGovernedSourceSnapshots({
+    paths: [source.path],
+    repoRoot,
+    git: (args) =>
+      execFileSync('git', ['--literal-pathspecs', ...args], {
+        cwd: repoRoot,
+        env: createGitRepositoryEnvironment(),
+        encoding: null,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        maxBuffer: 16 * 1024 * 1024,
+      }),
+  });
+  if (snapshot.sourceCommitSha !== source.commit)
+    throw new Error('CATALOG-SOURCE-HEAD: Current content commit must equal HEAD.');
+  const current = snapshot.sources[0];
+  return {
+    commit: source.commit,
+    head: source.commit,
+    path: current.path,
+    blob: current.blobSha,
+    contentSha256: current.contentHash,
+  };
 }
 
 async function applyCatalogReconciliation(input, options = {}) {
@@ -205,11 +234,19 @@ async function applyCatalogReconciliation(input, options = {}) {
             verifyEvidenceRetirementHistory(change.evidenceRetirement, options)
           );
       }
+      if (change.sourceContent) {
+        const key = `current:${change.sourceContent.commit}:${change.sourceContent.path}`;
+        if (!sourceProofs.has(key))
+          sourceProofs.set(
+            key,
+            verifyCurrentSourceContent(change.sourceContent, before.source_path, options)
+          );
+      }
     }
     const planned = planCatalogReconciliation(request, selected.rows, sourceProofs);
     const previousWinners = await winners();
     for (const [index, entry] of planned.entries()) {
-      const { before, after, origin, proof } = entry;
+      const { before, after, origin } = entry;
       const values = [after.rail_id];
       const bind = (value) => {
         values.push(value);
@@ -232,13 +269,19 @@ async function applyCatalogReconciliation(input, options = {}) {
         }
         entry.evidenceHistory = sourceProofs.get(`evidence:${retirement.historicalRef}`);
       }
-      if (proof) {
+      if (request.changes[index].source) {
         assignments.push(
           `source_path = ${bind(after.source_path)}`,
           `source_content_sha256 = ${bind(after.source_content_sha256)}`
         );
         preserved.push(...assignments);
         changedColumns.push('source_path', 'source_content_sha256');
+      }
+      if (request.changes[index].sourceContent) {
+        const content = `source_content_sha256 = ${bind(after.source_content_sha256)}`;
+        assignments.push(content);
+        preserved.push(content);
+        changedColumns.push('source_content_sha256');
       }
       const reference = request.changes[index].reference;
       if (reference) {
@@ -286,7 +329,7 @@ async function applyCatalogReconciliation(input, options = {}) {
       );
     }
     const affectedPaths = planned
-      .filter((entry) => entry.proof)
+      .filter((entry) => entry.proof && entry.before.source_path !== entry.after.source_path)
       .map((entry) => entry.before.source_path);
     const references = await client.query(
       `with affected_references as (
@@ -378,4 +421,5 @@ module.exports = {
   applyCatalogReconciliation,
   verifyHistoricalSource,
   verifyEvidenceRetirementHistory,
+  verifyCurrentSourceContent,
 };

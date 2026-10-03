@@ -15,7 +15,7 @@ code_refs:
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.sql.ts
   - packages/@dvt/adapter-temporal/src/activities/stepActivityValidation.ts
   - apps/temporal-worker/src/runtime/temporalWorkerPostgresProfile.ts
-  - https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+  - https://github.com/dunay2/dvt/blob/4b2041116470a4e1d06302e66911c1ea8fc4c5fe/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
 evidence:
   tests:
     - pnpm --filter dvt-api test -- test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
@@ -24,13 +24,14 @@ evidence:
     - pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts
     - pnpm --filter @dvt/web test -- src/app/views/canvas/transformationGraphValidation.test.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx src/app/views/runs/RunStates.test.tsx
     - node --test scripts/run-dev-stack.test.cjs scripts/run-dev-stack.auth.test.cjs
-    - 'Historical browser proof: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
+    - 'Historical browser proof: https://github.com/dunay2/dvt/blob/4b2041116470a4e1d06302e66911c1ea8fc4c5fe/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
 ---
 
 # Canvas Workflow E2E Usability Restoration
 
-This record preserves the historical validation; the retired browser proof is
-linked at its exact Git revision, not renamed as a new execution. Current live
+This record preserves the historical validation; the retired browser source is
+linked at the revision preserved with this record, not renamed as a new execution
+or presented as an exact execution-SHA receipt. Current live
 commands are `pnpm --filter @dvt/web test:e2e:selected-closure:live` and
 `pnpm --filter @dvt/web test:e2e:source-import:live`, with run-scoped disposable
 databases. Their results must be recorded separately from this evidence.
